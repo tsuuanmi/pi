@@ -32,6 +32,7 @@
 		"@earendil-works/pi-ai": "^0.79.6",
 		"ignore": "7.0.5",
 		"typebox": "1.1.38",
+		"undici": "8.5.0",
 		"yaml": "2.9.0"
 	},
 	"keywords": [
@@ -53,8 +54,8 @@
 	},
 	"devDependencies": {
 		"@types/node": "24.12.4",
-		"@vitest/coverage-v8": "3.2.4",
+		"@vitest/coverage-v8": "3.2.6",
 		"typescript": "5.9.3",
-		"vitest": "3.2.4"
+		"vitest": "3.2.6"
 	}
 }
