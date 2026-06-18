@@ -1,5 +1,5 @@
 /**
- * Shared utilities for Google Generative AI and Google Vertex providers.
+ * Shared utilities for Google Generative AI providers.
  */
 
 import { type Content, FinishReason, FunctionCallingConfigMode, type Part } from "@google/genai";
@@ -7,7 +7,7 @@ import type { Context, ImageContent, Model, StopReason, TextContent, Tool } from
 import { sanitizeSurrogates } from "../utils/sanitize-unicode.ts";
 import { transformMessages } from "./transform-messages.ts";
 
-type GoogleApiType = "google-generative-ai" | "google-vertex";
+type GoogleApiType = "google-generative-ai";
 
 /**
  * Thinking level for Gemini 3 models.
@@ -18,7 +18,7 @@ export type GoogleThinkingLevel = "THINKING_LEVEL_UNSPECIFIED" | "MINIMAL" | "LO
 /**
  * Determines whether a streamed Gemini `Part` should be treated as "thinking".
  *
- * Protocol note (Gemini / Vertex AI thought signatures):
+ * Protocol note (Gemini thought signatures):
  * - `thought: true` is the definitive marker for thinking content (thought summaries).
  * - `thoughtSignature` is an encrypted representation of the model's internal thought process
  *   used to preserve reasoning context across multi-turn interactions.

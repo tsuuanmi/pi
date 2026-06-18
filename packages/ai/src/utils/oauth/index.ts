@@ -4,20 +4,11 @@
  * This module handles login, token refresh, and credential storage
  * for OAuth-based providers:
  * - Anthropic (Claude Pro/Max)
- * - GitHub Copilot
  */
 
 // Anthropic
 export { anthropicOAuthProvider, loginAnthropic, refreshAnthropicToken } from "./anthropic.ts";
 export * from "./device-code.ts";
-// GitHub Copilot
-export {
-	getGitHubCopilotBaseUrl,
-	githubCopilotOAuthProvider,
-	loginGitHubCopilot,
-	normalizeDomain,
-	refreshGitHubCopilotToken,
-} from "./github-copilot.ts";
 // OpenAI Codex (ChatGPT OAuth)
 export {
 	loginOpenAICodex,
@@ -35,15 +26,10 @@ export * from "./types.ts";
 // ============================================================================
 
 import { anthropicOAuthProvider } from "./anthropic.ts";
-import { githubCopilotOAuthProvider } from "./github-copilot.ts";
 import { openaiCodexOAuthProvider } from "./openai-codex.ts";
 import type { OAuthCredentials, OAuthProviderId, OAuthProviderInfo, OAuthProviderInterface } from "./types.ts";
 
-const BUILT_IN_OAUTH_PROVIDERS: OAuthProviderInterface[] = [
-	anthropicOAuthProvider,
-	githubCopilotOAuthProvider,
-	openaiCodexOAuthProvider,
-];
+const BUILT_IN_OAUTH_PROVIDERS: OAuthProviderInterface[] = [anthropicOAuthProvider, openaiCodexOAuthProvider];
 
 const oauthProviderRegistry = new Map<string, OAuthProviderInterface>(
 	BUILT_IN_OAUTH_PROVIDERS.map((provider) => [provider.id, provider]),

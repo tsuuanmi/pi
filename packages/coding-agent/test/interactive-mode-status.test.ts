@@ -379,7 +379,7 @@ describe("InteractiveMode.createBaseAutocompleteProvider", () => {
 			}
 		).prototype.createBaseAutocompleteProvider;
 		const models = [
-			{ id: "gpt-5.2-codex", provider: "github-copilot", name: "GPT-5.2 Codex" },
+			{ id: "gpt-5.2-codex", provider: "openai-codex", name: "GPT-5.2 Codex" },
 			{ id: "gpt-5.5", provider: "openai-codex", name: "GPT-5.5" },
 		];
 		const fakeThis: FakeInteractiveMode = {
@@ -404,7 +404,7 @@ describe("InteractiveMode.createBaseAutocompleteProvider", () => {
 
 		expect(suggestions?.items.map((item) => item.value)).toEqual([
 			"openai-codex/gpt-5.5",
-			"github-copilot/gpt-5.2-codex",
+			"openai-codex/gpt-5.2-codex",
 		]);
 	});
 });

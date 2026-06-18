@@ -280,11 +280,11 @@ describe("AuthStorage", () => {
 
 			try {
 				writeAuthJson({
-					opencode: { type: "api_key", key: "public" },
+					"custom-provider": { type: "api_key", key: "public" },
 				});
 
 				authStorage = AuthStorage.create(authJsonPath);
-				const apiKey = await authStorage.getApiKey("opencode");
+				const apiKey = await authStorage.getApiKey("custom-provider");
 
 				expect(apiKey).toBe("public");
 			} finally {
