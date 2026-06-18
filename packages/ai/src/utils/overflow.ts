@@ -1,7 +1,7 @@
 import type { AssistantMessage } from "../types.ts";
 
 /**
- * Regex patterns to detect context overflow errors from different providers.
+ * Regex patterns to detect context overflow errors from supported providers.
  *
  * These patterns match error messages returned when the input exceeds
  * the model's context window.
@@ -10,26 +10,12 @@ import type { AssistantMessage } from "../types.ts";
  *
  * - Anthropic: "prompt is too long: X tokens > Y maximum" or "request_too_large"
  * - OpenAI (Completions & Responses): "exceeds the context window", "exceeds the model's maximum context length of X tokens"
- * - OpenAI-compatible proxies (LiteLLM): "exceeds the model's maximum context length (X)"
- * - Google: "The input token count (1196265) exceeds the maximum number of tokens allowed (1048575)"
- * - xAI: "This model's maximum prompt length is 131072 but the request contains 537812 tokens"
- * - llama.cpp: "the request exceeds the available context size, try increasing it"
- * - LM Studio: "tokens to keep from the initial prompt is greater than the context length"
- * - Ollama: Some deployments truncate silently, others return errors like "prompt too long; exceeded max context length by X tokens"
  */
 const OVERFLOW_PATTERNS = [
 	/prompt is too long/i, // Anthropic token overflow
 	/request_too_large/i, // Anthropic request byte-size overflow (HTTP 413)
 	/exceeds the context window/i, // OpenAI (Completions & Responses API)
-	/exceeds (?:the )?(?:model'?s )?maximum context length(?: of [\d,]+ tokens?|\s*\([\d,]+\))/i, // OpenAI-compatible proxies (LiteLLM)
-	/input token count.*exceeds the maximum/i, // Google (Gemini)
-	/maximum prompt length is \d+/i, // xAI (Grok)
-	/exceeds the available context size/i, // llama.cpp server
-	/greater than the context length/i, // LM Studio
-	/prompt too long; exceeded (?:max )?context length/i, // Ollama explicit overflow error
-	/context[_ ]length[_ ]exceeded/i, // Generic fallback
-	/too many tokens/i, // Generic fallback
-	/token limit exceeded/i, // Generic fallback
+	/exceeds (?:the )?(?:model'?s )?maximum context length(?: of [\d,]+ tokens?|\s*\([\d,]+\))/i, // OpenAI
 ];
 
 /**

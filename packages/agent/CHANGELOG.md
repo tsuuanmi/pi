@@ -1,6 +1,8 @@
-# Changelog
-
 ## [Unreleased]
+
+### Breaking Changes
+
+- Removed the `thinkingBudgets` option from `Agent`, `AgentOptions`, and the proxy serializable stream options (token-based thinking budgets were removed from `@earendil-works/pi-ai`).
 
 ## [0.79.6] - 2026-06-16
 

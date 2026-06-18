@@ -976,17 +976,14 @@ function mapStopReason(reason: ChatCompletionChunk.Choice["finish_reason"] | str
 }
 
 /**
- * Detect compatibility settings from provider and baseUrl for known providers.
- * Provider takes precedence over URL-based detection since it's explicitly configured.
+ * Default compatibility settings for OpenAI-compatible providers.
  * Returns a fully resolved OpenAICompletionsCompat object with all fields set.
  */
-function detectCompat(model: Model<"openai-completions">): ResolvedOpenAICompletionsCompat {
-	const isXai = model.provider === "xai" || model.baseUrl.includes("api.x.ai");
-
+function detectCompat(): ResolvedOpenAICompletionsCompat {
 	return {
-		supportsStore: !isXai,
-		supportsDeveloperRole: !isXai,
-		supportsReasoningEffort: !isXai,
+		supportsStore: true,
+		supportsDeveloperRole: true,
+		supportsReasoningEffort: true,
 		supportsUsageInStreaming: true,
 		maxTokensField: "max_completion_tokens",
 		requiresToolResultName: false,
@@ -1003,10 +1000,10 @@ function detectCompat(model: Model<"openai-completions">): ResolvedOpenAIComplet
 
 /**
  * Get resolved compatibility settings for a model.
- * Uses explicit model.compat if provided, otherwise auto-detects from provider/URL.
+ * Uses explicit model.compat if provided, otherwise uses defaults.
  */
 function getCompat(model: Model<"openai-completions">): ResolvedOpenAICompletionsCompat {
-	const detected = detectCompat(model);
+	const detected = detectCompat();
 	if (!model.compat) return detected;
 
 	return {

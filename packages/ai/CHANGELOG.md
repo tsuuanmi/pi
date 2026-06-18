@@ -1,6 +1,15 @@
-# Changelog
-
 ## [Unreleased]
+
+### Breaking Changes
+
+- Removed the Google Generative AI (`google-generative-ai`) and xAI providers, models, env-key resolution, and overflow detection. The library now ships built-in support for `anthropic-messages`, `openai-responses`, `openai-codex-responses`, and `openai-completions` (generic OpenAI-compatible).
+- Removed legacy Anthropic budget-based thinking (`thinking.type: "enabled"` / `thinkingBudgetTokens`), the `fine-grained-tool-streaming-2025-05-14` and `interleaved-thinking-2025-05-14` beta headers, the `forceAdaptiveThinking` and `supportsEagerToolInputStreaming` compat flags, and `ThinkingBudgets` / `SimpleStreamOptions.thinkingBudgets`. Reasoning Anthropic models now always use adaptive thinking and per-tool `eager_input_streaming`.
+- Removed legacy plain-string `textSignature` parsing in the OpenAI Responses provider; only `TextSignatureV1` JSON signatures are replayed.
+- Removed third-party overflow detection patterns (Google, xAI, llama.cpp, LM Studio, Ollama, generic fallbacks); only Anthropic and OpenAI patterns remain.
+
+### Removed
+
+- Removed the `@google/genai` dependency and the `./google` package export, plus `GoogleOptions`, `GoogleThinkingLevel`, `streamGoogle`/`streamSimpleGoogle`, and Google/xAI models from the generated model catalog.
 
 ### Added
 

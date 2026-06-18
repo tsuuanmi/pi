@@ -32,9 +32,7 @@ pi
 | Provider | Environment Variable | `auth.json` key |
 |----------|----------------------|------------------|
 | Anthropic | `ANTHROPIC_API_KEY` | `anthropic` |
-| Google Gemini | `GEMINI_API_KEY` | `google` |
 | OpenAI | `OPENAI_API_KEY` | `openai` |
-| xAI | `XAI_API_KEY` | `xai` |
 
 OpenAI Codex uses OAuth/subscription login.
 
@@ -45,9 +43,7 @@ Store credentials in `~/.pi/agent/auth.json`:
 ```json
 {
   "anthropic": { "type": "api_key", "key": "sk-ant-..." },
-  "google": { "type": "api_key", "key": "..." },
   "openai": { "type": "api_key", "key": "sk-..." },
-  "xai": { "type": "api_key", "key": "xai-..." }
 }
 ```
 

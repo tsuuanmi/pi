@@ -522,7 +522,7 @@ describe("AuthStorage", () => {
 			writeAuthJson({
 				anthropic: { type: "api_key", key: "old-anthropic" },
 				openai: { type: "api_key", key: "openai-key" },
-				google: { type: "api_key", key: "google-key" },
+				custom: { type: "api_key", key: "custom-key" },
 			});
 
 			authStorage.set("anthropic", { type: "api_key", key: "new-anthropic" });
@@ -530,7 +530,7 @@ describe("AuthStorage", () => {
 			const updated = JSON.parse(readFileSync(authJsonPath, "utf-8")) as Record<string, { key: string }>;
 			expect(updated.anthropic.key).toBe("new-anthropic");
 			expect(updated.openai.key).toBe("openai-key");
-			expect(updated.google.key).toBe("google-key");
+			expect(updated.custom.key).toBe("custom-key");
 		});
 
 		test("remove preserves unrelated external edits", () => {
@@ -545,7 +545,7 @@ describe("AuthStorage", () => {
 			writeAuthJson({
 				anthropic: { type: "api_key", key: "anthropic-key" },
 				openai: { type: "api_key", key: "openai-key" },
-				google: { type: "api_key", key: "google-key" },
+				custom: { type: "api_key", key: "custom-key" },
 			});
 
 			authStorage.remove("anthropic");
@@ -553,7 +553,7 @@ describe("AuthStorage", () => {
 			const updated = JSON.parse(readFileSync(authJsonPath, "utf-8")) as Record<string, { key: string }>;
 			expect(updated.anthropic).toBeUndefined();
 			expect(updated.openai.key).toBe("openai-key");
-			expect(updated.google.key).toBe("google-key");
+			expect(updated.custom.key).toBe("custom-key");
 		});
 
 		test("does not overwrite malformed auth file after load error", () => {

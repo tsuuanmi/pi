@@ -10,7 +10,7 @@ interface CapturedRequest {
 	body: Record<string, unknown>;
 }
 
-function createModel(baseUrl: string, compat?: Model<"anthropic-messages">["compat"]): Model<"anthropic-messages"> {
+function createModel(baseUrl: string): Model<"anthropic-messages"> {
 	return {
 		id: "claude-opus-4-8",
 		name: "Claude Opus 4.8",
@@ -22,7 +22,6 @@ function createModel(baseUrl: string, compat?: Model<"anthropic-messages">["comp
 		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
 		contextWindow: 200000,
 		maxTokens: 32000,
-		compat: { forceAdaptiveThinking: true, ...compat },
 	};
 }
 
@@ -52,10 +51,7 @@ function writeEmptySseResponse(response: ServerResponse): void {
 	response.end();
 }
 
-async function captureAnthropicRequest(
-	compat: Model<"anthropic-messages">["compat"],
-	context: Context,
-): Promise<CapturedRequest> {
+async function captureAnthropicRequest(context: Context): Promise<CapturedRequest> {
 	let capturedRequest: CapturedRequest | undefined;
 
 	const server = createServer(async (request, response) => {
@@ -70,7 +66,7 @@ async function captureAnthropicRequest(
 	const address = server.address() as AddressInfo;
 
 	try {
-		const stream = streamAnthropic(createModel(`http://127.0.0.1:${address.port}`, compat), context, {
+		const stream = streamAnthropic(createModel(`http://127.0.0.1:${address.port}`), context, {
 			apiKey: "test-key",
 			cacheRetention: "none",
 		});
@@ -98,23 +94,16 @@ function getFirstTool(body: Record<string, unknown>): Record<string, unknown> {
 	return tools[0] as Record<string, unknown>;
 }
 
-describe("Anthropic eager tool input streaming compatibility", () => {
-	it("sends per-tool eager_input_streaming by default", async () => {
-		const request = await captureAnthropicRequest(undefined, createContext());
+describe("Anthropic eager tool input streaming", () => {
+	it("sends per-tool eager_input_streaming when tools are present", async () => {
+		const request = await captureAnthropicRequest(createContext());
 
 		expect(getFirstTool(request.body).eager_input_streaming).toBe(true);
 		expect(request.headers["anthropic-beta"]).toBeUndefined();
 	});
 
-	it("uses the legacy fine-grained tool streaming beta when eager tool input streaming is disabled", async () => {
-		const request = await captureAnthropicRequest({ supportsEagerToolInputStreaming: false }, createContext());
-
-		expect(getFirstTool(request.body).eager_input_streaming).toBeUndefined();
-		expect(request.headers["anthropic-beta"]).toBe("fine-grained-tool-streaming-2025-05-14");
-	});
-
-	it("does not send the legacy fine-grained tool streaming beta when there are no tools", async () => {
-		const request = await captureAnthropicRequest({ supportsEagerToolInputStreaming: false }, createContext([]));
+	it("does not send the anthropic-beta header when there are no tools", async () => {
+		const request = await captureAnthropicRequest(createContext([]));
 
 		expect(request.body.tools).toBeUndefined();
 		expect(request.headers["anthropic-beta"]).toBeUndefined();

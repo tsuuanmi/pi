@@ -210,13 +210,6 @@ const agent = new Agent({
     }
   },
 
-  // Custom thinking budgets for token-based providers
-  thinkingBudgets: {
-    minimal: 128,
-    low: 512,
-    medium: 1024,
-    high: 2048,
-  },
 });
 ```
 
@@ -279,17 +272,10 @@ agent.state.messages.push(message);
 agent.reset();
 ```
 
-### Session and Thinking Budgets
+### Session
 
 ```typescript
 agent.sessionId = "session-123";
-
-agent.thinkingBudgets = {
-  minimal: 128,
-  low: 512,
-  medium: 1024,
-  high: 2048,
-};
 ```
 
 ### Control

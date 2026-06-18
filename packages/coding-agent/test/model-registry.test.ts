@@ -164,23 +164,19 @@ describe("ModelRegistry", () => {
 			});
 
 			const registry = ModelRegistry.create(authStorage, modelsJsonPath);
-			const googleModels = getModelsForProvider(registry, "google");
+			const openaiModels = getModelsForProvider(registry, "openai");
 
-			// Google models should still have their original baseUrl
-			expect(googleModels.length).toBeGreaterThan(0);
-			expect(googleModels[0].baseUrl).not.toBe("https://my-proxy.example.com/v1");
+			// OpenAI models should still have their original baseUrl
+			expect(openaiModels.length).toBeGreaterThan(0);
+			expect(openaiModels[0].baseUrl).not.toBe("https://my-proxy.example.com/v1");
 		});
 
 		test("can mix baseUrl override and models merge", () => {
 			writeRawModelsJson({
 				// baseUrl-only for anthropic
 				anthropic: overrideConfig("https://anthropic-proxy.example.com/v1"),
-				// Add custom model for google (merged with built-ins)
-				google: providerConfig(
-					"https://google-proxy.example.com/v1",
-					[{ id: "gemini-custom" }],
-					"google-generative-ai",
-				),
+				// Add custom model for openai (merged with built-ins)
+				openai: providerConfig("https://openai-proxy.example.com/v1", [{ id: "gpt-custom" }], "openai-responses"),
 			});
 
 			const registry = ModelRegistry.create(authStorage, modelsJsonPath);
@@ -190,10 +186,10 @@ describe("ModelRegistry", () => {
 			expect(anthropicModels.length).toBeGreaterThan(1);
 			expect(anthropicModels[0].baseUrl).toBe("https://anthropic-proxy.example.com/v1");
 
-			// Google: built-ins plus custom model
-			const googleModels = getModelsForProvider(registry, "google");
-			expect(googleModels.length).toBeGreaterThan(1);
-			expect(googleModels.some((m) => m.id === "gemini-custom")).toBe(true);
+			// OpenAI: built-ins plus custom model
+			const openaiModels = getModelsForProvider(registry, "openai");
+			expect(openaiModels.length).toBeGreaterThan(1);
+			expect(openaiModels.some((m) => m.id === "gpt-custom")).toBe(true);
 		});
 
 		test("refresh() picks up baseUrl override changes", () => {
@@ -291,7 +287,7 @@ describe("ModelRegistry", () => {
 
 			const registry = ModelRegistry.create(authStorage, modelsJsonPath);
 
-			expect(getModelsForProvider(registry, "google").length).toBeGreaterThan(0);
+			expect(getModelsForProvider(registry, "anthropic").length).toBeGreaterThan(0);
 			expect(getModelsForProvider(registry, "openai").length).toBeGreaterThan(0);
 		});
 
@@ -428,35 +424,6 @@ describe("ModelRegistry", () => {
 			expect(model?.thinkingLevelMap).toEqual({ minimal: null, high: "max" });
 			expect(compat?.supportsStrictMode).toBe(false);
 			expect(compat?.cacheControlFormat).toBe("anthropic");
-		});
-
-		test("compat schema accepts Anthropic eager tool input streaming flag", () => {
-			writeRawModelsJson({
-				demo: {
-					baseUrl: "https://example.com",
-					apiKey: "DEMO_KEY",
-					api: "anthropic-messages",
-					compat: {
-						supportsEagerToolInputStreaming: false,
-					},
-					models: [
-						{
-							id: "demo-model",
-							reasoning: true,
-							input: ["text"],
-							cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-							contextWindow: 1000,
-							maxTokens: 100,
-						},
-					],
-				},
-			});
-
-			const registry = ModelRegistry.create(authStorage, modelsJsonPath);
-			const compat = registry.find("demo", "demo-model")?.compat as AnthropicMessagesCompat | undefined;
-
-			expect(registry.getError()).toBeUndefined();
-			expect(compat?.supportsEagerToolInputStreaming).toBe(false);
 		});
 
 		test("compat schema accepts long cache retention flag", () => {

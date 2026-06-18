@@ -6,7 +6,7 @@
  * 1. Summarizes ALL messages (messagesToSummarize + turnPrefixMessages)
  * 2. Discards all old turns completely, keeping only the summary
  *
- * This example also demonstrates using a different model (Gemini Flash) for summarization,
+ * This example also demonstrates using a different model for summarization,
  * which can be cheaper/faster than the main conversation model.
  *
  * Usage:
@@ -24,10 +24,10 @@ export default function (pi: ExtensionAPI) {
 		const { preparation, branchEntries: _, signal } = event;
 		const { messagesToSummarize, turnPrefixMessages, tokensBefore, firstKeptEntryId, previousSummary } = preparation;
 
-		// Use Gemini Flash for summarization (cheaper/faster than most conversation models)
-		const model = ctx.modelRegistry.find("google", "gemini-2.5-flash");
+		// Use a cheap/fast model for summarization.
+		const model = ctx.modelRegistry.find("openai", "gpt-5.3-codex-spark");
 		if (!model) {
-			ctx.ui.notify(`Could not find Gemini Flash model, using default compaction`, "warning");
+			ctx.ui.notify(`Could not find summarization model, using default compaction`, "warning");
 			return;
 		}
 

@@ -80,8 +80,8 @@ pi.registerProvider("openai", {
 });
 
 // Both baseUrl and headers
-pi.registerProvider("google", {
-  baseUrl: "https://ai-gateway.corp.com/google",
+pi.registerProvider("my-provider", {
+  baseUrl: "https://ai-gateway.corp.com/v1",
   headers: {
     "X-Corp-Auth": "$CORP_AUTH_TOKEN"  // env var or literal
   }
@@ -198,7 +198,6 @@ The `api` field determines which streaming implementation is used:
 | `openai-completions` | OpenAI Chat Completions API and compatibles |
 | `openai-responses` | OpenAI Responses API |
 | `openai-codex-responses` | OpenAI Codex Responses API |
-| `google-generative-ai` | Google Generative AI API |
 
 Most OpenAI-compatible providers work with `openai-completions`. Use model-level `thinkingLevelMap` for model-specific thinking levels, and `compat` for provider quirks:
 
@@ -227,7 +226,7 @@ models: [{
 
 Use `cacheControlFormat: "anthropic"` for OpenAI-compatible providers that expose Anthropic-style prompt caching via `cache_control` on the system prompt, last tool definition, and last user/assistant text content.
 
-For Anthropic-compatible providers using `api: "anthropic-messages"`, set `compat.forceAdaptiveThinking: true` on models or providers whose upstream model requires adaptive thinking (`thinking.type: "adaptive"` plus `output_config.effort`). Built-in adaptive Claude models set this automatically. Set `compat.allowEmptySignature: true` only for providers that emit empty thinking signatures and expect `signature: ""` on replay.
+Pi uses adaptive thinking (`thinking.type: "adaptive"` plus `output_config.effort`) for all reasoning Anthropic models. Set `compat.allowEmptySignature: true` only for providers that emit empty thinking signatures and expect `signature: ""` on replay.
 
 ### Auth Header
 
@@ -366,7 +365,6 @@ For providers with non-standard APIs, implement `streamSimple`. Study the existi
 - [anthropic.ts](https://github.com/earendil-works/pi-mono/blob/main/packages/ai/src/providers/anthropic.ts) - Anthropic Messages API
 - [openai-completions.ts](https://github.com/earendil-works/pi-mono/blob/main/packages/ai/src/providers/openai-completions.ts) - OpenAI Chat Completions
 - [openai-responses.ts](https://github.com/earendil-works/pi-mono/blob/main/packages/ai/src/providers/openai-responses.ts) - OpenAI Responses API
-- [google.ts](https://github.com/earendil-works/pi-mono/blob/main/packages/ai/src/providers/google.ts) - Google Generative AI
 
 ### Stream Pattern
 
@@ -711,11 +709,9 @@ interface ProviderModelConfig {
     cacheControlFormat?: "anthropic";
 
     // anthropic-messages
-    supportsEagerToolInputStreaming?: boolean;
     supportsLongCacheRetention?: boolean;
     sendSessionAffinityHeaders?: boolean;
     supportsCacheControlOnTools?: boolean;
-    forceAdaptiveThinking?: boolean;
     allowEmptySignature?: boolean;
   };
 }

@@ -41,7 +41,6 @@ Unified LLM API with automatic model discovery, provider configuration, token an
   - [Provider-Scoped Environment Overrides](#provider-scoped-environment-overrides)
   - [Checking Environment Variables](#checking-environment-variables)
 - [OAuth Providers](#oauth-providers)
-  - [Vertex AI](#vertex-ai)
   - [CLI Login](#cli-login)
   - [Programmatic OAuth](#programmatic-oauth)
   - [Login Flow Example](#login-flow-example)
@@ -58,14 +57,11 @@ Unified LLM API with automatic model discovery, provider configuration, token an
 - **DeepSeek**
 - **NVIDIA NIM**
 - **Anthropic**
-- **Google**
-- **Vertex AI** (Gemini via Vertex AI)
 - **Mistral**
 - **Groq**
 - **Cerebras**
 - **Cloudflare AI Gateway**
 - **Cloudflare Workers AI**
-- **xAI**
 - **OpenRouter**
 - **Vercel AI Gateway**
 - **ZAI** (with separate Coding Plan China provider)
@@ -229,8 +225,8 @@ const weatherTool: Tool = {
   })
 };
 
-// Note: For Google API compatibility, use StringEnum helper instead of Type.Enum
-// Type.Enum generates anyOf/const patterns that Google doesn't support
+// Note: Use the StringEnum helper instead of Type.Enum
+// Type.Enum generates anyOf/const patterns that some providers don't support
 
 const bookMeetingTool: Tool = {
   name: 'book_meeting',
@@ -334,7 +330,6 @@ for await (const event of s) {
 - Arrays may be incomplete
 - Nested objects may be partially populated
 - At minimum, `arguments` will be an empty object `{}`, never `undefined`
-- The Google provider does not support function call streaming. Instead, you will receive a single `toolcall_delta` event with the full arguments.
 
 ### Validating Tool Arguments
 
@@ -440,7 +435,7 @@ Do not use `stream()` or `complete()` for image generation. Image generation is 
 ```typescript
 import { getImageModel, generateImages } from '@mariozechner/pi-ai';
 
-const model = getImageModel('openrouter', 'google/gemini-2.5-flash-image');
+const model = getImageModel('openrouter', 'openai/gpt-image-1');
 
 const result = await generateImages(model, {
   input: [{ type: 'text', text: 'Generate a red circle on a plain white background.' }]
@@ -505,8 +500,6 @@ import { getModel, streamSimple, completeSimple } from '@earendil-works/pi-ai';
 // Many models across providers support thinking/reasoning
 const model = getModel('anthropic', 'claude-sonnet-4-20250514');
 // or getModel('openai', 'gpt-5-mini');
-// or getModel('google', 'gemini-2.5-flash');
-// or getModel('xai', 'grok-code-fast-1');
 // or getModel('groq', 'openai/gpt-oss-20b');
 // or getModel('cerebras', 'gpt-oss-120b');
 // or getModel('openrouter', 'z-ai/glm-4.5v');
@@ -551,17 +544,9 @@ await complete(openaiModel, context, {
 const anthropicModel = getModel('anthropic', 'claude-sonnet-4-20250514');
 await complete(anthropicModel, context, {
   thinkingEnabled: true,
-  thinkingBudgetTokens: 8192  // Optional token limit
+  effort: 'high'  // adaptive thinking effort
 });
 
-// Google Gemini Thinking
-const googleModel = getModel('google', 'gemini-2.5-flash');
-await complete(googleModel, context, {
-  thinking: {
-    enabled: true,
-    budgetTokens: 8192  // -1 for dynamic, 0 to disable
-  }
-});
 ```
 
 ### Streaming Thinking Content
@@ -703,8 +688,6 @@ The callback is supported by `stream`, `complete`, `streamSimple`, and `complete
 The library uses a registry of API implementations. Built-in APIs include:
 
 - **`anthropic-messages`**: Anthropic Messages API (`streamAnthropic`, `AnthropicOptions`)
-- **`google-generative-ai`**: Google Generative AI API (`streamGoogle`, `GoogleOptions`)
-- **`google-vertex`**: Google Vertex AI API (`streamGoogleVertex`, `GoogleVertexOptions`)
 - **`mistral-conversations`**: Mistral Conversations API (`streamMistral`, `MistralOptions`)
 - **`openai-completions`**: OpenAI Chat Completions API (`streamOpenAICompletions`, `OpenAICompletionsOptions`)
 - **`openai-responses`**: OpenAI Responses API (`streamOpenAIResponses`, `OpenAIResponsesOptions`)
@@ -802,10 +785,9 @@ Notes:
 
 A **provider** offers models through a specific API. For example:
 - **Anthropic** models use the `anthropic-messages` API
-- **Google** models use the `google-generative-ai` API
 - **OpenAI** models use the `openai-responses` API
 - **Mistral** models use the `mistral-conversations` API
-- **xAI, Cerebras, Groq, NVIDIA NIM, Together AI, etc.** models use the `openai-completions` API (OpenAI-compatible)
+- **Cerebras, Groq, NVIDIA NIM, Together AI, etc.** models use the `openai-completions` API (OpenAI-compatible)
 
 ### Querying Providers and Models
 
@@ -814,7 +796,7 @@ import { getProviders, getModels, getModel } from '@earendil-works/pi-ai';
 
 // Get all available providers
 const providers = getProviders();
-console.log(providers); // ['openai', 'anthropic', 'google', 'xai', 'groq', ...]
+console.log(providers); // ['openai', 'anthropic', 'openai-codex', ...]
 
 // Get all models from a provider (fully typed)
 const anthropicModels = getModels('anthropic');
@@ -927,7 +909,7 @@ const ollamaReasoningModel: Model<'openai-completions'> = {
 
 ### OpenAI Compatibility Settings
 
-The `openai-completions` API is implemented by many providers with minor differences. By default, the library auto-detects compatibility settings based on `baseUrl` for a small set of known OpenAI-compatible providers (Cerebras, xAI, Chutes, DeepSeek, NVIDIA NIM, Together AI, zAi, OpenCode, Cloudflare Workers AI, etc.). For custom proxies or unknown endpoints, you can override these settings via the `compat` field. For `openai-responses` models, the compat field supports Responses-specific flags.
+The `openai-completions` API is implemented by many providers with minor differences. For custom proxies or unknown endpoints, you can override compatibility settings via the `compat` field. For `openai-responses` models, the compat field supports Responses-specific flags.
 
 ```typescript
 interface OpenAICompletionsCompat {
@@ -973,7 +955,7 @@ const claude = getModel('anthropic', 'claude-sonnet-4-20250514');
 
 const options: AnthropicOptions = {
   thinkingEnabled: true,
-  thinkingBudgetTokens: 2048
+  effort: 'high'
 };
 
 await streamAnthropic(claude, context, options);
@@ -1015,10 +997,6 @@ context.messages.push({ role: 'user', content: 'Is that calculation correct?' })
 const gptResponse = await complete(gpt5, context);
 context.messages.push(gptResponse);
 
-// Switch to Gemini
-const gemini = getModel('google', 'gemini-2.5-flash');
-context.messages.push({ role: 'user', content: 'What was the original question?' });
-const geminiResponse = await complete(gemini, context);
 ```
 
 ### Provider Compatibility
@@ -1110,14 +1088,11 @@ In Node.js environments, you can set environment variables to avoid passing API 
 | Anthropic | `ANTHROPIC_API_KEY` or `ANTHROPIC_OAUTH_TOKEN` |
 | DeepSeek | `DEEPSEEK_API_KEY` |
 | NVIDIA NIM | `NVIDIA_API_KEY` |
-| Google | `GEMINI_API_KEY` |
-| Vertex AI | `GOOGLE_CLOUD_API_KEY` or `GOOGLE_CLOUD_PROJECT` (or `GCLOUD_PROJECT`) + `GOOGLE_CLOUD_LOCATION` + ADC |
 | Mistral | `MISTRAL_API_KEY` |
 | Groq | `GROQ_API_KEY` |
 | Cerebras | `CEREBRAS_API_KEY` |
 | Cloudflare AI Gateway | `CLOUDFLARE_API_KEY` + `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_GATEWAY_ID` |
 | Cloudflare Workers AI | `CLOUDFLARE_API_KEY` + `CLOUDFLARE_ACCOUNT_ID` |
-| xAI | `XAI_API_KEY` |
 | Fireworks | `FIREWORKS_API_KEY` |
 | Together AI | `TOGETHER_API_KEY` |
 | OpenRouter | `OPENROUTER_API_KEY` |
@@ -1148,7 +1123,7 @@ const response = await complete(model, context, {
 
 ### Provider-Scoped Environment Overrides
 
-Pass `env` in stream options to scope provider configuration to a request. Values in `env` are used before process environment variables for API key discovery and provider configuration such as Cloudflare account IDs, Azure OpenAI settings, Vertex project/location, Bedrock settings, `PI_CACHE_RETENTION`, and `HTTP_PROXY`/`HTTPS_PROXY`.
+Pass `env` in stream options to scope provider configuration to a request. Values in `env` are used before process environment variables for API key discovery and provider configuration such as Cloudflare account IDs, Azure OpenAI settings, Bedrock settings, `PI_CACHE_RETENTION`, and `HTTP_PROXY`/`HTTPS_PROXY`.
 
 ```typescript
 const model = getModel('cloudflare-ai-gateway', 'workers-ai/@cf/moonshotai/kimi-k2.6');
@@ -1181,49 +1156,6 @@ Several providers require OAuth authentication instead of static API keys:
 - **OpenAI Codex** (ChatGPT Plus/Pro subscription, access to GPT-5.x Codex models)
 - **GitHub Copilot** (Copilot subscription)
 
-For paid Cloud Code Assist subscriptions, set `GOOGLE_CLOUD_PROJECT` or `GOOGLE_CLOUD_PROJECT_ID` to your project ID.
-
-### Vertex AI
-
-Vertex AI models support either a Google Cloud API key or Application Default Credentials (ADC):
-
-- **API key**: Set `GOOGLE_CLOUD_API_KEY` or pass `apiKey` in the call options.
-- **Local development (ADC)**: Run `gcloud auth application-default login`
-- **CI/Production (ADC)**: Set `GOOGLE_APPLICATION_CREDENTIALS` to point to a service account JSON key file
-
-When using ADC, also set `GOOGLE_CLOUD_PROJECT` (or `GCLOUD_PROJECT`) and `GOOGLE_CLOUD_LOCATION`. You can also pass `project`/`location` in the call options. When using `GOOGLE_CLOUD_API_KEY`, `project` and `location` are not required.
-
-Example:
-
-```bash
-# Local (uses your user credentials)
-gcloud auth application-default login
-export GOOGLE_CLOUD_PROJECT="my-project"
-export GOOGLE_CLOUD_LOCATION="us-central1"
-
-# CI/Production (service account key file)
-export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
-```
-
-```typescript
-import { getModel, complete } from '@earendil-works/pi-ai';
-
-(async () => {
-  const model = getModel('google-vertex', 'gemini-2.5-flash');
-  const response = await complete(model, {
-    messages: [{ role: 'user', content: 'Hello from Vertex AI' }]
-  }, {
-    apiKey: process.env.GOOGLE_CLOUD_API_KEY,
-  });
-
-  for (const block of response.content) {
-    if (block.type === 'text') console.log(block.text);
-  }
-})().catch(console.error);
-```
-
-Official docs: [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials)
-
 ### CLI Login
 
 The quickest way to authenticate:
@@ -1246,7 +1178,6 @@ import {
   loginAnthropic,
   loginOpenAICodex,
   loginGitHubCopilot,
-  loginGeminiCli,
 
   // Token management
   refreshOAuthToken,   // (provider, credentials) => new credentials
@@ -1372,7 +1303,7 @@ Create or update test files to cover the new provider:
 
 For `cross-provider-handoff.test.ts`, add at least one provider/model pair. If the provider exposes multiple model families (for example GPT and Claude), add at least one pair per family.
 
-For providers with non-standard auth (AWS, Google Vertex), create a utility like `bedrock-utils.ts` with credential detection helpers.
+For providers with non-standard auth (AWS), create a utility like `bedrock-utils.ts` with credential detection helpers.
 
 #### 6. Coding Agent Integration (`../coding-agent/`)
 

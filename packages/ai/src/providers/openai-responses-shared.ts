@@ -46,8 +46,7 @@ function encodeTextSignatureV1(id: string, phase?: TextSignatureV1["phase"]): st
 function parseTextSignature(
 	signature: string | undefined,
 ): { id: string; phase?: TextSignatureV1["phase"] } | undefined {
-	if (!signature) return undefined;
-	if (signature.startsWith("{")) {
+	if (signature?.startsWith("{")) {
 		try {
 			const parsed = JSON.parse(signature) as Partial<TextSignatureV1>;
 			if (parsed.v === 1 && typeof parsed.id === "string") {
@@ -57,10 +56,10 @@ function parseTextSignature(
 				return { id: parsed.id };
 			}
 		} catch {
-			// Fall through to legacy plain-string handling.
+			// Malformed JSON signature; ignore.
 		}
 	}
-	return { id: signature };
+	return undefined;
 }
 
 export interface OpenAIResponsesStreamOptions {

@@ -3,12 +3,7 @@ import type { AssistantMessageEventStream } from "./utils/event-stream.ts";
 
 export type { AssistantMessageEventStream } from "./utils/event-stream.ts";
 
-export type KnownApi =
-	| "openai-completions"
-	| "openai-responses"
-	| "openai-codex-responses"
-	| "anthropic-messages"
-	| "google-generative-ai";
+export type KnownApi = "openai-completions" | "openai-responses" | "openai-codex-responses" | "anthropic-messages";
 
 export type Api = KnownApi | (string & {});
 
@@ -16,7 +11,7 @@ export type KnownImagesApi = never;
 
 export type ImagesApi = KnownImagesApi | (string & {});
 
-export type KnownProvider = "anthropic" | "google" | "openai" | "openai-codex" | "xai";
+export type KnownProvider = "anthropic" | "openai" | "openai-codex";
 export type Provider = KnownProvider | string;
 
 export type KnownImagesProvider = never;
@@ -26,14 +21,6 @@ export type ImagesProvider = KnownImagesProvider | string;
 export type ThinkingLevel = "minimal" | "low" | "medium" | "high" | "xhigh";
 export type ModelThinkingLevel = "off" | ThinkingLevel;
 export type ThinkingLevelMap = Partial<Record<ModelThinkingLevel, string | null>>;
-
-/** Token budgets for each thinking level (token-based providers only) */
-export interface ThinkingBudgets {
-	minimal?: number;
-	low?: number;
-	medium?: number;
-	high?: number;
-}
 
 // Base options all providers share
 export type CacheRetention = "none" | "short" | "long";
@@ -170,8 +157,6 @@ export type ProviderImagesOptions = ImagesOptions & Record<string, unknown>;
 // Unified options with reasoning passed to streamSimple() and completeSimple()
 export interface SimpleStreamOptions extends StreamOptions {
 	reasoning?: ThinkingLevel;
-	/** Custom token budgets for thinking levels (token-based providers only) */
-	thinkingBudgets?: ThinkingBudgets;
 }
 
 // Generic StreamFunction with typed options.
@@ -203,7 +188,7 @@ export interface TextSignatureV1 {
 export interface TextContent {
 	type: "text";
 	text: string;
-	textSignature?: string; // e.g., for OpenAI responses, message metadata (legacy id string or TextSignatureV1 JSON)
+	textSignature?: string; // for OpenAI responses, message metadata (TextSignatureV1 JSON)
 }
 
 export interface ThinkingContent {
@@ -227,7 +212,7 @@ export interface ToolCall {
 	id: string;
 	name: string;
 	arguments: Record<string, any>;
-	thoughtSignature?: string; // Google-specific: opaque signature for reusing thought context
+	thoughtSignature?: string; // opaque signature for reusing reasoning/thought context on tool calls
 }
 
 export interface Usage {
@@ -386,14 +371,6 @@ export interface OpenAIResponsesCompat {
 
 /** Compatibility settings for Anthropic Messages-compatible APIs. */
 export interface AnthropicMessagesCompat {
-	/**
-	 * Whether the provider accepts per-tool `eager_input_streaming`.
-	 * When false, the Anthropic provider omits `tools[].eager_input_streaming`
-	 * and sends the legacy `fine-grained-tool-streaming-2025-05-14` beta header
-	 * for tool-enabled requests.
-	 * Default: true.
-	 */
-	supportsEagerToolInputStreaming?: boolean;
 	/** Whether the provider supports Anthropic long cache retention (`cache_control.ttl: "1h"`). Default: true. */
 	supportsLongCacheRetention?: boolean;
 	/**
@@ -415,16 +392,6 @@ export interface AnthropicMessagesCompat {
 	 * Default: true.
 	 */
 	supportsTemperature?: boolean;
-	/**
-	 * Whether to force adaptive thinking (`thinking.type: "adaptive"` plus
-	 * `output_config.effort`) regardless of the model id. Built-in models that
-	 * require adaptive thinking set this in generated metadata. Custom
-	 * Anthropic-compatible providers can set this to `true` for any model whose
-	 * upstream requires the adaptive format. Set to `false` to
-	 * opt out on overridden built-in models.
-	 * Default: false.
-	 */
-	forceAdaptiveThinking?: boolean;
 	/** Whether to replay empty thinking signatures as `signature: ""` instead of converting thinking to text. Default: false. */
 	allowEmptySignature?: boolean;
 }

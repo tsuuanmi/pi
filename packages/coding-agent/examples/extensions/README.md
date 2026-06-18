@@ -180,14 +180,14 @@ export default function (pi: ExtensionAPI) {
 
 ## Key Patterns
 
-**Use StringEnum for string parameters** (required for Google API compatibility):
+**Use StringEnum for string parameters** (for provider compatibility):
 ```typescript
 import { StringEnum } from "@earendil-works/pi-ai";
 
 // Good
 action: StringEnum(["list", "add"] as const)
 
-// Bad - doesn't work with Google
+// Bad - doesn't work with some providers
 action: Type.Union([Type.Literal("list"), Type.Literal("add")])
 ```
 

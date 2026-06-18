@@ -325,17 +325,7 @@ export function streamGitLabDuo(
 
 			const innerStream =
 				cfg.backend === "anthropic"
-					? streamSimpleAnthropic(
-							{
-								...(modelWithBaseUrl as Model<"anthropic-messages">),
-								compat: {
-									...(modelWithBaseUrl as Model<"anthropic-messages">).compat,
-									forceAdaptiveThinking: true,
-								},
-							},
-							context,
-							streamOptions,
-						)
+					? streamSimpleAnthropic(modelWithBaseUrl as Model<"anthropic-messages">, context, streamOptions)
 					: streamSimpleOpenAIResponses(modelWithBaseUrl as Model<"openai-responses">, context, streamOptions);
 
 			for await (const event of innerStream) stream.push(event);

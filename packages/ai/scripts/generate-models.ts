@@ -43,33 +43,6 @@ function mergeThinkingLevelMap(model: Model<Api>, map: NonNullable<Model<Api>["t
 	model.thinkingLevelMap = { ...model.thinkingLevelMap, ...map };
 }
 
-function isGemini3ProModel(modelId: string): boolean {
-	return /gemini-3(?:\.\d+)?-pro/.test(modelId.toLowerCase());
-}
-
-function isGemini3FlashModel(modelId: string): boolean {
-	const id = modelId.toLowerCase();
-	return /gemini-3(?:\.\d+)?-flash/.test(id) || id === "gemini-flash-latest" || id === "gemini-flash-lite-latest";
-}
-
-function isGemma4Model(modelId: string): boolean {
-	return /gemma-?4/.test(modelId.toLowerCase());
-}
-
-function isAnthropicAdaptiveThinkingModel(modelId: string): boolean {
-	return (
-		modelId.includes("opus-4-6") ||
-		modelId.includes("opus-4.6") ||
-		modelId.includes("opus-4-7") ||
-		modelId.includes("opus-4.7") ||
-		modelId.includes("opus-4-8") ||
-		modelId.includes("opus-4.8") ||
-		modelId.includes("sonnet-4-6") ||
-		modelId.includes("sonnet-4.6") ||
-		modelId.includes("fable-5")
-	);
-}
-
 function isAnthropicTemperatureUnsupportedModel(modelId: string): boolean {
 	const id = modelId.toLowerCase();
 	return id.includes("opus-4-7") || id.includes("opus-4.7") || id.includes("opus-4-8") || id.includes("opus-4.8");
@@ -105,27 +78,15 @@ function applyThinkingLevelMetadata(model: Model<Api>): void {
 	if (model.api === "anthropic-messages" && model.id.includes("fable-5")) {
 		mergeThinkingLevelMap(model, { off: null, xhigh: "xhigh" });
 	}
-	if (model.api === "anthropic-messages" && isAnthropicAdaptiveThinkingModel(model.id)) {
-		model.compat = { ...model.compat, forceAdaptiveThinking: true };
-	}
 	if (model.api === "anthropic-messages" && isAnthropicTemperatureUnsupportedModel(model.id)) {
 		model.compat = { ...model.compat, supportsTemperature: false };
-	}
-	if (model.api === "google-generative-ai" && isGemini3ProModel(model.id)) {
-		mergeThinkingLevelMap(model, { off: null, minimal: null, low: "LOW", medium: null, high: "HIGH" });
-	}
-	if (model.api === "google-generative-ai" && isGemini3FlashModel(model.id)) {
-		mergeThinkingLevelMap(model, { off: null });
-	}
-	if (model.api === "google-generative-ai" && isGemma4Model(model.id)) {
-		mergeThinkingLevelMap(model, { off: null, minimal: "MINIMAL", low: null, medium: null, high: "HIGH" });
 	}
 }
 
 function fromModelsDev(
 	providerModels: Record<string, unknown> | undefined,
-	provider: "anthropic" | "google" | "openai" | "xai",
-	api: "anthropic-messages" | "google-generative-ai" | "openai-responses" | "openai-completions",
+	provider: "anthropic" | "openai",
+	api: "anthropic-messages" | "openai-responses",
 	baseUrl: string,
 ): Model<Api>[] {
 	if (!providerModels) return [];
@@ -161,9 +122,7 @@ async function loadModelsDevData(): Promise<Model<Api>[]> {
 		const data = await response.json();
 		return [
 			...fromModelsDev(data.anthropic?.models, "anthropic", "anthropic-messages", "https://api.anthropic.com"),
-			...fromModelsDev(data.google?.models, "google", "google-generative-ai", "https://generativelanguage.googleapis.com/v1beta"),
 			...fromModelsDev(data.openai?.models, "openai", "openai-responses", "https://api.openai.com/v1"),
-			...fromModelsDev(data.xai?.models, "xai", "openai-completions", "https://api.x.ai/v1"),
 		];
 	} catch (error) {
 		console.error("Failed to load models.dev data:", error);
@@ -240,19 +199,6 @@ function addMissingModels(allModels: Model<Api>[]): void {
 		contextWindow: 1000000,
 		maxTokens: 64000,
 	});
-	addIfMissing({
-		id: "gemini-3.1-flash-lite-preview",
-		name: "Gemini 3.1 Flash Lite Preview",
-		api: "google-generative-ai",
-		baseUrl: "https://generativelanguage.googleapis.com/v1beta",
-		provider: "google",
-		reasoning: true,
-		input: ["text", "image"],
-		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-		contextWindow: 1048576,
-		maxTokens: 65536,
-	});
-
 	const openAiBase = {
 		api: "openai-responses" as const,
 		baseUrl: "https://api.openai.com/v1",
@@ -344,38 +290,6 @@ function addMissingModels(allModels: Model<Api>[]): void {
 		input: ["text", "image"],
 		cost: { input: 5, output: 30, cacheRead: 0.5, cacheWrite: 0 },
 		contextWindow: 272000,
-	});
-
-	const xaiBase = {
-		api: "openai-completions" as const,
-		baseUrl: "https://api.x.ai/v1",
-		provider: "xai" as const,
-		reasoning: false,
-		input: ["text"] as ("text" | "image")[],
-	};
-	addIfMissing({
-		...xaiBase,
-		id: "grok-3",
-		name: "Grok 3",
-		cost: { input: 3, output: 15, cacheRead: 0.75, cacheWrite: 0 },
-		contextWindow: 131072,
-		maxTokens: 8192,
-	});
-	addIfMissing({
-		...xaiBase,
-		id: "grok-3-fast",
-		name: "Grok 3 Fast",
-		cost: { input: 5, output: 25, cacheRead: 1.25, cacheWrite: 0 },
-		contextWindow: 131072,
-		maxTokens: 8192,
-	});
-	addIfMissing({
-		...xaiBase,
-		id: "grok-code-fast-1",
-		name: "Grok Code Fast 1",
-		cost: { input: 0.2, output: 1.5, cacheRead: 0.02, cacheWrite: 0 },
-		contextWindow: 32768,
-		maxTokens: 8192,
 	});
 }
 

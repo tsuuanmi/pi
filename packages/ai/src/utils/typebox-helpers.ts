@@ -1,7 +1,7 @@
 import { type TUnsafe, Type } from "typebox";
 
 /**
- * Creates a string enum schema compatible with Google's API and other providers
+ * Creates a string enum schema compatible with providers
  * that don't support anyOf/const patterns.
  *
  * @example

@@ -362,7 +362,6 @@ function streamCustomAnthropic(
 			const isOAuth = isOAuthToken(apiKey);
 
 			// Configure client based on auth type
-			const betaFeatures = ["fine-grained-tool-streaming-2025-05-14", "interleaved-thinking-2025-05-14"];
 			const clientOptions: any = {
 				baseURL: model.baseUrl,
 				dangerouslyAllowBrowser: true,
@@ -374,7 +373,7 @@ function streamCustomAnthropic(
 				clientOptions.defaultHeaders = {
 					accept: "application/json",
 					"anthropic-dangerous-direct-browser-access": "true",
-					"anthropic-beta": `claude-code-20250219,oauth-2025-04-20,${betaFeatures.join(",")}`,
+					"anthropic-beta": "claude-code-20250219,oauth-2025-04-20",
 					"user-agent": "claude-cli/2.1.2 (external, cli)",
 					"x-app": "cli",
 				};
@@ -383,7 +382,6 @@ function streamCustomAnthropic(
 				clientOptions.defaultHeaders = {
 					accept: "application/json",
 					"anthropic-dangerous-direct-browser-access": "true",
-					"anthropic-beta": betaFeatures.join(","),
 				};
 			}
 
@@ -427,19 +425,17 @@ function streamCustomAnthropic(
 				params.tools = convertTools(context.tools, isOAuth);
 			}
 
-			// Handle thinking/reasoning
+			// Handle thinking/reasoning (adaptive thinking)
 			if (options?.reasoning && model.reasoning) {
-				const defaultBudgets: Record<string, number> = {
-					minimal: 1024,
-					low: 4096,
-					medium: 10240,
-					high: 20480,
+				const effortByLevel: Record<string, string> = {
+					minimal: "low",
+					low: "low",
+					medium: "medium",
+					high: "high",
+					xhigh: "xhigh",
 				};
-				const customBudget = options.thinkingBudgets?.[options.reasoning as keyof typeof options.thinkingBudgets];
-				params.thinking = {
-					type: "enabled",
-					budget_tokens: customBudget ?? defaultBudgets[options.reasoning] ?? 10240,
-				};
+				params.thinking = { type: "adaptive", display: "summarized" } as any;
+				(params as any).output_config = { effort: effortByLevel[options.reasoning] ?? "high" };
 			}
 
 			const anthropicStream = client.messages.stream({ ...params }, { signal: options?.signal });

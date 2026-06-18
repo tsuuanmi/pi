@@ -13,10 +13,8 @@ import type { ModelRegistry } from "./model-registry.ts";
 /** Default model IDs for each known provider */
 export const defaultModelPerProvider: Record<KnownProvider, string> = {
 	anthropic: "claude-opus-4-8",
-	google: "gemini-3.1-pro-preview",
 	openai: "gpt-5.4",
 	"openai-codex": "gpt-5.5",
-	xai: "grok-4.20-0309-reasoning",
 };
 
 export interface ScopedModel {

@@ -14,10 +14,6 @@
 			"types": "./dist/providers/anthropic.d.ts",
 			"import": "./dist/providers/anthropic.js"
 		},
-		"./google": {
-			"types": "./dist/providers/google.d.ts",
-			"import": "./dist/providers/google.js"
-		},
 		"./openai-codex-responses": {
 			"types": "./dist/providers/openai-codex-responses.d.ts",
 			"import": "./dist/providers/openai-codex-responses.js"
@@ -52,7 +48,6 @@
 	},
 	"dependencies": {
 		"@anthropic-ai/sdk": "0.91.1",
-		"@google/genai": "1.52.0",
 		"http-proxy-agent": "7.0.2",
 		"https-proxy-agent": "7.0.6",
 		"openai": "6.26.0",
@@ -64,7 +59,6 @@
 		"llm",
 		"openai",
 		"anthropic",
-		"gemini",
 		"unified",
 		"api"
 	],

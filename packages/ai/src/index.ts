@@ -9,8 +9,6 @@ export * from "./images-api-registry.ts";
 export * from "./models.ts";
 export type { AnthropicEffort, AnthropicOptions, AnthropicThinkingDisplay } from "./providers/anthropic.ts";
 export * from "./providers/faux.ts";
-export type { GoogleOptions } from "./providers/google.ts";
-export type { GoogleThinkingLevel } from "./providers/google-shared.ts";
 export * from "./providers/images/register-builtins.ts";
 export type {
 	OpenAICodexResponsesOptions,

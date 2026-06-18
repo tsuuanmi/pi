@@ -4,7 +4,7 @@ import { streamSimple } from "../src/stream.ts";
 import type { Context, Model, SimpleStreamOptions } from "../src/types.ts";
 
 interface AnthropicThinkingPayload {
-	thinking?: { type: string; budget_tokens?: number; display?: string };
+	thinking?: { type: string; display?: string };
 	output_config?: { effort?: string };
 }
 
@@ -21,10 +21,10 @@ function makeContext(): Context {
 	};
 }
 
-function makeCustomModel(compat?: Model<"anthropic-messages">["compat"]): Model<"anthropic-messages"> {
+function makeCustomModel(): Model<"anthropic-messages"> {
 	return {
-		// Id intentionally does not match any built-in adaptive substring. This
-		// mirrors corporate proxy schemes such as `anthropic--claude-opus-latest`.
+		// Id intentionally does not match any built-in substring. This mirrors
+		// corporate proxy schemes such as `anthropic--claude-opus-latest`.
 		id: "vendor--claude-opus-latest",
 		name: "Vendor Proxy Opus Latest",
 		api: "anthropic-messages",
@@ -35,7 +35,6 @@ function makeCustomModel(compat?: Model<"anthropic-messages">["compat"]): Model<
 		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
 		contextWindow: 200000,
 		maxTokens: 32000,
-		compat,
 	};
 }
 
@@ -68,16 +67,9 @@ async function capturePayload(
 	return capturedPayload;
 }
 
-describe("Anthropic forceAdaptiveThinking compat override", () => {
-	it("sends legacy thinking payload for custom model ids by default", async () => {
+describe("Anthropic adaptive thinking", () => {
+	it("sends adaptive thinking payload for custom model ids", async () => {
 		const payload = await capturePayload(makeCustomModel(), { reasoning: "medium" });
-
-		expect(payload.thinking?.type).toBe("enabled");
-		expect(payload.output_config).toBeUndefined();
-	});
-
-	it("sends adaptive thinking payload when compat.forceAdaptiveThinking is true", async () => {
-		const payload = await capturePayload(makeCustomModel({ forceAdaptiveThinking: true }), { reasoning: "medium" });
 
 		expect(payload.thinking).toEqual({ type: "adaptive", display: "summarized" });
 		expect(payload.output_config).toEqual({ effort: "medium" });
@@ -90,19 +82,15 @@ describe("Anthropic forceAdaptiveThinking compat override", () => {
 		expect(payload.output_config).toEqual({ effort: "xhigh" });
 	});
 
-	it("allows built-in adaptive models to opt out with compat.forceAdaptiveThinking false", async () => {
-		const model: Model<"anthropic-messages"> = {
-			...getModel("anthropic", "claude-opus-4-8"),
-			compat: { forceAdaptiveThinking: false },
-		};
-		const payload = await capturePayload(model, { reasoning: "medium" });
+	it("uses adaptive thinking for built-in Claude Opus 4.8", async () => {
+		const payload = await capturePayload(getModel("anthropic", "claude-opus-4-8"), { reasoning: "medium" });
 
-		expect(payload.thinking?.type).toBe("enabled");
-		expect(payload.output_config).toBeUndefined();
+		expect(payload.thinking).toEqual({ type: "adaptive", display: "summarized" });
+		expect(payload.output_config).toEqual({ effort: "medium" });
 	});
 
-	it("preserves thinking.type=disabled when reasoning is off regardless of override", async () => {
-		const payload = await capturePayload(makeCustomModel({ forceAdaptiveThinking: true }));
+	it("preserves thinking.type=disabled when reasoning is off", async () => {
+		const payload = await capturePayload(makeCustomModel());
 
 		expect(payload.thinking).toEqual({ type: "disabled" });
 		expect(payload.output_config).toBeUndefined();

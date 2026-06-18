@@ -8,9 +8,7 @@ function getApiKeyEnvVars(provider: string): readonly string[] | undefined {
 	}
 
 	const envMap: Record<string, string> = {
-		google: "GEMINI_API_KEY",
 		openai: "OPENAI_API_KEY",
-		xai: "XAI_API_KEY",
 	};
 
 	const envVar = envMap[provider];
