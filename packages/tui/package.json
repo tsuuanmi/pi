@@ -3,6 +3,10 @@
 	"version": "0.79.6",
 	"description": "Terminal User Interface library with differential rendering for efficient text-based applications",
 	"type": "module",
+	"os": [
+		"darwin",
+		"linux"
+	],
 	"main": "dist/index.js",
 	"scripts": {
 		"clean": "shx rm -rf dist",
@@ -12,7 +16,6 @@
 	},
 	"files": [
 		"dist/**/*",
-		"native/win32/prebuilds/**/*.node",
 		"native/darwin/prebuilds/**/*.node",
 		"README.md"
 	],

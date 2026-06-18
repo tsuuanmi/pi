@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- Removed Windows-specific terminal input helper packaging and Windows Terminal key heuristics.
+
 ### Added
 
 - Exported `sliceByColumn` for ANSI-aware horizontal column slicing.

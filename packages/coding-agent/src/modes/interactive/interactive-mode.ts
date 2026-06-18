@@ -3447,10 +3447,7 @@ export class InteractiveMode {
 	private registerSignalHandlers(): void {
 		this.unregisterSignalHandlers();
 
-		const signals: NodeJS.Signals[] = ["SIGTERM"];
-		if (process.platform !== "win32") {
-			signals.push("SIGHUP");
-		}
+		const signals: NodeJS.Signals[] = ["SIGTERM", "SIGHUP"];
 
 		for (const signal of signals) {
 			const handler = () => {
@@ -3492,11 +3489,6 @@ export class InteractiveMode {
 	}
 
 	private handleCtrlZ(): void {
-		if (process.platform === "win32") {
-			this.showStatus("Suspend to background is not supported on Windows");
-			return;
-		}
-
 		// Keep the event loop alive while suspended. Without this, stopping the TUI
 		// can leave Node with no ref'ed handles, causing the process to exit on fg
 		// before the SIGCONT handler gets a chance to restore the terminal.
@@ -3668,13 +3660,12 @@ export class InteractiveMode {
 
 			process.stdout.write(`Launching external editor: ${editorCmd}\nPi will resume when the editor exits.\n`);
 
-			// Do not use spawnSync here. On Windows, synchronous child_process calls can keep
+			// Do not use spawnSync here. Synchronous child_process calls can keep
 			// Node/libuv's console input read active after ui.stop() pauses stdin, racing
 			// vim/nvim for the console input buffer until Ctrl+C cancels the pending read.
 			const status = await new Promise<number | null>((resolve) => {
 				const child = spawn(editor, [...editorArgs, tmpFile], {
 					stdio: "inherit",
-					shell: process.platform === "win32",
 				});
 				child.on("error", () => resolve(null));
 				child.on("close", (code) => resolve(code));
@@ -5467,7 +5458,7 @@ export class InteractiveMode {
 | Key | Action |
 |-----|--------|
 | \`${submit}\` | Send message |
-| \`${newLine}\` | New line${process.platform === "win32" ? " (Ctrl+Enter on Windows Terminal)" : ""} |
+| \`${newLine}\` | New line |
 | \`${deleteWordBackward}\` | Delete word backwards |
 | \`${deleteWordForward}\` | Delete word forwards |
 | \`${deleteToLineStart}\` | Delete to start of line |

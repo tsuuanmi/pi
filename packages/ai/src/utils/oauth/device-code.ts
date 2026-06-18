@@ -1,7 +1,7 @@
 const CANCEL_MESSAGE = "Login cancelled";
 const TIMEOUT_MESSAGE = "Device flow timed out";
 const SLOW_DOWN_TIMEOUT_MESSAGE =
-	"Device flow timed out after one or more slow_down responses. This is often caused by clock drift in WSL or VM environments. Please sync or restart the VM clock and try again.";
+	"Device flow timed out after one or more slow_down responses. This is often caused by clock drift in VM environments. Please sync or restart the VM clock and try again.";
 const MINIMUM_INTERVAL_MS = 1000;
 // RFC 8628 section 3.2: if the authorization server omits `interval`, the client must use 5 seconds.
 const DEFAULT_POLL_INTERVAL_SECONDS = 5;

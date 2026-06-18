@@ -112,10 +112,6 @@
       "title": "Platform Setup",
       "items": [
         {
-          "title": "Windows",
-          "path": "windows.md"
-        },
-        {
           "title": "Termux on Android",
           "path": "termux.md"
         },

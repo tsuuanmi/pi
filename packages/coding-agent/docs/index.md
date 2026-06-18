@@ -71,7 +71,6 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 ## Platform setup
 
-- [Windows](windows.md)
 - [Termux on Android](termux.md)
 - [tmux](tmux.md)
 - [Terminal setup](terminal-setup.md)

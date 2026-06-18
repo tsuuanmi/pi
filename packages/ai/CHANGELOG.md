@@ -15,6 +15,10 @@
 
 - Added GLM-5.2 model to the OpenCode Go subscription model catalog ([#5860](https://github.com/earendil-works/pi/issues/5860)).
 
+### Changed
+
+- Generalized the OAuth device-code timeout hint to refer to VM clock drift instead of WSL.
+
 ## [0.79.6] - 2026-06-16
 
 ### Fixed

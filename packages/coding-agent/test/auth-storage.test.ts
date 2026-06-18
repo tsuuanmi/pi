@@ -274,9 +274,9 @@ describe("AuthStorage", () => {
 			}
 		});
 
-		test("literal public API key is not corrupted by the Windows PUBLIC env var", async () => {
+		test("literal public API key is not corrupted by a PUBLIC env var", async () => {
 			const originalPublic = process.env.PUBLIC;
-			process.env.PUBLIC = "C:\\Users\\Public";
+			process.env.PUBLIC = "/tmp/public";
 
 			try {
 				writeAuthJson({

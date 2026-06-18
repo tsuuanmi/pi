@@ -17,7 +17,7 @@ import { spawnProcess, waitForChildProcess } from "../../../src/utils/child-proc
  * reading while a genuinely idle held-open handle still releases after the
  * grace elapses. Both behaviours are covered below.
  */
-describe.skipIf(process.platform === "win32")("issue #5303 bash output truncation past exit", () => {
+describe("issue #5303 bash output truncation past exit", () => {
 	let child: ChildProcessByStdio<null, Readable, Readable> | undefined;
 
 	afterEach(() => {

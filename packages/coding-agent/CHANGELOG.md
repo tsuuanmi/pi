@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- Removed Windows-specific runtime, packaging, binary release, docs, and test support; pi now targets Linux and macOS.
 - Removed Google Gemini, Google Vertex, and xAI from the built-in provider display names, default model map, env-key resolution, help text, and docs. Custom OpenAI-compatible providers (e.g. Ollama Cloud) still work via `openai-completions`.
 - Removed the `thinkingBudgets` setting and `SettingsManager.getThinkingBudgets()`.
 - Removed the `forceAdaptiveThinking` and `supportsEagerToolInputStreaming` Anthropic compat flags from the model registry schema; Anthropic models now always use adaptive thinking and per-tool `eager_input_streaming`.
@@ -12,6 +13,7 @@
 
 ### Changed
 
+- Simplified shell, clipboard, tool download, signal handling, self-update, and release code paths for Linux/macOS-only support.
 - Updated extension docs, examples, runtime help, trust prompts, and config labels to use the configured project config directory instead of hardcoded `.pi` paths.
 
 ### Fixed

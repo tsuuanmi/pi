@@ -66,7 +66,7 @@ export function normalizePath(input: string, options: PathInputOptions = {}): st
 	if (options.expandTilde ?? true) {
 		const home = options.homeDir ?? homedir();
 		if (normalized === "~") return home;
-		if (normalized.startsWith("~/") || (process.platform === "win32" && normalized.startsWith("~\\"))) {
+		if (normalized.startsWith("~/")) {
 			return join(home, normalized.slice(2));
 		}
 	}

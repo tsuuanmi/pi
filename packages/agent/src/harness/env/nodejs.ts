@@ -110,7 +110,6 @@ async function runCommand(
 		try {
 			child = spawn(command, args, {
 				stdio: ["ignore", "pipe", "ignore"],
-				windowsHide: true,
 			});
 		} catch {
 			resolve({ stdout: "", status: null });
@@ -135,10 +134,7 @@ async function runCommand(
 }
 
 async function findBashOnPath(): Promise<string | null> {
-	const result =
-		process.platform === "win32"
-			? await runCommand("where", ["bash.exe"], 5000)
-			: await runCommand("which", ["bash"], 5000);
+	const result = await runCommand("which", ["bash"], 5000);
 	if (result.status !== 0 || !result.stdout) return null;
 	const firstMatch = result.stdout.trim().split(/\r?\n/)[0];
 	return firstMatch && (await pathExists(firstMatch)) ? firstMatch : null;
@@ -153,24 +149,6 @@ async function getShellConfig(
 		}
 		return err(new ExecutionError("shell_unavailable", `Custom shell path not found: ${customShellPath}`));
 	}
-	if (process.platform === "win32") {
-		const candidates: string[] = [];
-		const programFiles = process.env.ProgramFiles;
-		if (programFiles) candidates.push(`${programFiles}\\Git\\bin\\bash.exe`);
-		const programFilesX86 = process.env["ProgramFiles(x86)"];
-		if (programFilesX86) candidates.push(`${programFilesX86}\\Git\\bin\\bash.exe`);
-		for (const candidate of candidates) {
-			if (await pathExists(candidate)) {
-				return ok({ shell: candidate, args: ["-c"] });
-			}
-		}
-		const bashOnPath = await findBashOnPath();
-		if (bashOnPath) {
-			return ok({ shell: bashOnPath, args: ["-c"] });
-		}
-		return err(new ExecutionError("shell_unavailable", "No bash shell found"));
-	}
-
 	if (await pathExists("/bin/bash")) {
 		return ok({ shell: "/bin/bash", args: ["-c"] });
 	}
@@ -190,19 +168,6 @@ function getShellEnv(baseEnv?: NodeJS.ProcessEnv, extraEnv?: Record<string, stri
 }
 
 function killProcessTree(pid: number): void {
-	if (process.platform === "win32") {
-		try {
-			spawn("taskkill", ["/F", "/T", "/PID", String(pid)], {
-				stdio: "ignore",
-				detached: true,
-				windowsHide: true,
-			});
-		} catch {
-			// Ignore errors.
-		}
-		return;
-	}
-
 	try {
 		process.kill(-pid, "SIGKILL");
 	} catch {
@@ -276,10 +241,9 @@ export class NodeExecutionEnv implements ExecutionEnv {
 			try {
 				child = spawn(shellConfig.value.shell, [...shellConfig.value.args, command], {
 					cwd,
-					detached: process.platform !== "win32",
+					detached: true,
 					env: getShellEnv(this.shellEnv, options?.env),
 					stdio: ["ignore", "pipe", "pipe"],
-					windowsHide: true,
 				});
 			} catch (error) {
 				const cause = toError(error);

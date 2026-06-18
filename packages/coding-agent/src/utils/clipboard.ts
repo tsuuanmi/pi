@@ -68,9 +68,6 @@ export async function copyToClipboard(text: string): Promise<void> {
 			if (p === "darwin") {
 				execSync("pbcopy", options);
 				copied = true;
-			} else if (p === "win32") {
-				execSync("clip", options);
-				copied = true;
 			} else {
 				// Linux. Try Termux, Wayland, or X11 clipboard tools.
 				if (process.env.TERMUX_VERSION) {
