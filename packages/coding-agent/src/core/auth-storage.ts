@@ -437,6 +437,35 @@ export class AuthStorage {
 	}
 
 	/**
+	 * Remove one named account for a provider.
+	 */
+	removeAccount(provider: string, accountName: string): boolean {
+		const entry = this.data[provider];
+		if (isAuthCredential(entry)) {
+			if (accountName !== "default") return false;
+			this.remove(provider);
+			return true;
+		}
+		if (!isAuthAccountCollection(entry) || !entry.accounts[accountName]) return false;
+
+		const accounts = { ...entry.accounts };
+		delete accounts[accountName];
+		const remainingAccountNames = Object.keys(accounts);
+		if (remainingAccountNames.length === 0) {
+			this.remove(provider);
+			return true;
+		}
+
+		const nextEntry: AuthAccountCollection = {
+			active: entry.active === accountName ? remainingAccountNames[0] : entry.active,
+			accounts,
+		};
+		this.data[provider] = nextEntry;
+		this.persistProviderChange(provider, nextEntry);
+		return true;
+	}
+
+	/**
 	 * List all providers with credentials.
 	 */
 	list(): string[] {
@@ -629,7 +658,7 @@ export class AuthStorage {
 					}
 
 					// Refresh truly failed - return undefined so model discovery skips this provider
-					// User can /login to re-authenticate (credentials preserved for retry)
+					// User can /account add to re-authenticate (credentials preserved for retry)
 					return undefined;
 				}
 			} else {

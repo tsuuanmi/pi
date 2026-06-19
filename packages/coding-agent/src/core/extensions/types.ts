@@ -1279,7 +1279,7 @@ export interface ExtensionAPI {
 	 *
 	 * If `models` is provided: replaces all existing models for this provider.
 	 * If only `baseUrl` is provided: overrides the URL for existing models.
-	 * If `oauth` is provided: registers OAuth provider for /login support.
+	 * If `oauth` is provided: registers OAuth provider for /account add support.
 	 * If `streamSimple` is provided: registers a custom API stream handler.
 	 *
 	 * During initial extension load this call is queued and applied once the
@@ -1369,9 +1369,9 @@ export interface ProviderConfig {
 	authHeader?: boolean;
 	/** Models to register. If provided, replaces all existing models for this provider. */
 	models?: ProviderModelConfig[];
-	/** OAuth provider for /login support. The `id` is set automatically from the provider name. */
+	/** OAuth provider for /account add support. The `id` is set automatically from the provider name. */
 	oauth?: {
-		/** Display name for the provider in login UI. */
+		/** Display name for the provider in account UI. */
 		name: string;
 		/** Run the login flow, return credentials to persist. */
 		login(callbacks: OAuthLoginCallbacks): Promise<OAuthCredentials>;

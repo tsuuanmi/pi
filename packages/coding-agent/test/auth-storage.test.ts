@@ -628,6 +628,23 @@ describe("AuthStorage", () => {
 			expect(await authStorage.getApiKey("anthropic")).toBe("stored-key");
 		});
 
+		test("removes one named account and preserves remaining accounts", async () => {
+			authStorage = AuthStorage.create(authJsonPath);
+
+			authStorage.set("custom-provider", { type: "api_key", key: "first-key" }, "first");
+			authStorage.set("custom-provider", { type: "api_key", key: "second-key" }, "second");
+
+			expect(authStorage.removeAccount("custom-provider", "second")).toBe(true);
+			expect(authStorage.getAccountNames("custom-provider")).toEqual(["first"]);
+			expect(authStorage.getActiveAccount("custom-provider")).toBe("first");
+			expect(await authStorage.getApiKey("custom-provider")).toBe("first-key");
+
+			const persisted = JSON.parse(readFileSync(authJsonPath, "utf-8")) as {
+				"custom-provider": { active: string; accounts: Record<string, { key: string }> };
+			};
+			expect(persisted["custom-provider"].accounts).toEqual({ first: { type: "api_key", key: "first-key" } });
+		});
+
 		test("refreshes only the active OAuth account", async () => {
 			const providerId = `test-oauth-accounts-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 			registerOAuthProvider({

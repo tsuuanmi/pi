@@ -90,14 +90,14 @@ Or use your existing subscription:
 
 ```bash
 pi
-/login  # Then select provider
+/account add  # Then select provider
 ```
 
-For multiple accounts on one provider, name each login and switch manually:
+For multiple accounts on one provider, name each account and switch manually or with `/account`:
 
 ```text
-/login openai-codex main
-/login openai-codex backup
+/account add openai-codex main
+/account add openai-codex backup
 /account openai-codex backup
 ```
 
@@ -109,7 +109,7 @@ Then just talk to pi. By default, pi gives the model four tools: `read`, `write`
 
 ## Providers & Models
 
-For each built-in provider, pi maintains a list of tool-capable models, updated with every release. Authenticate via subscription (`/login`) or API key, then select any model from that provider via `/model` (or Ctrl+L).
+For each built-in provider, pi maintains a list of tool-capable models, updated with every release. Authenticate via subscription (`/account add`) or API key, then select any model from that provider via `/model` (or Ctrl+L).
 
 **Subscriptions:**
 - Anthropic Claude Pro/Max
@@ -182,8 +182,8 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 
 | Command | Description |
 |---------|-------------|
-| `/login`, `/logout` | Configure or remove provider authentication |
-| `/account` | Open account selector or switch stored provider accounts |
+| `/provider` | Add custom provider models |
+| `/account` | Add, open, switch, or remove stored provider accounts |
 | `/model` | Switch models |
 | `/settings` | Thinking level, theme, message delivery, transport |
 | `/resume` | Pick from previous sessions |

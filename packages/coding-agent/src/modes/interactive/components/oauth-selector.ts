@@ -37,14 +37,14 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 	private allProviders: AuthSelectorProvider[];
 	private filteredProviders: AuthSelectorProvider[];
 	private selectedIndex: number = 0;
-	private mode: "login" | "logout";
+	private mode: "add" | "remove";
 	private authStorage: AuthStorage;
 	private getAuthStatus: (providerId: string) => AuthStatus;
 	private onSelectCallback: (providerId: string) => void;
 	private onCancelCallback: () => void;
 
 	constructor(
-		mode: "login" | "logout",
+		mode: "add" | "remove",
 		authStorage: AuthStorage,
 		providers: AuthSelectorProvider[],
 		onSelect: (providerId: string) => void,
@@ -66,7 +66,7 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 		this.addChild(new Spacer(1));
 
 		// Add title
-		const title = mode === "login" ? "Select provider to configure:" : "Select provider to logout:";
+		const title = mode === "add" ? "Select provider to add account:" : "Select provider to remove accounts:";
 		this.addChild(new TruncatedText(theme.fg("accent", theme.bold(title)), 1, 0));
 		this.addChild(new Spacer(1));
 
@@ -140,9 +140,9 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 		if (this.filteredProviders.length === 0) {
 			const message =
 				this.allProviders.length === 0
-					? this.mode === "login"
+					? this.mode === "add"
 						? "No providers available"
-						: "No providers logged in. Use /login first."
+						: "No stored accounts. Use /account add first."
 					: "No matching providers";
 			this.listContainer.addChild(new TruncatedText(theme.fg("muted", `  ${message}`), 1, 0));
 		}

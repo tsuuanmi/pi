@@ -236,7 +236,7 @@ describe("ModelRegistry", () => {
 			expect(model?.baseUrl).toBe("https://api.anthropic.com");
 		});
 
-		test("non-built-in provider custom models still require baseUrl and apiKey", () => {
+		test("non-built-in provider custom models still require baseUrl", () => {
 			writeRawModelsJson({
 				"my-custom-provider": {
 					models: [
@@ -252,6 +252,21 @@ describe("ModelRegistry", () => {
 
 			const registry = ModelRegistry.create(authStorage, modelsJsonPath);
 			expect(registry.getError()).toContain("baseUrl");
+		});
+
+		test("non-built-in provider custom models can use auth.json instead of models.json apiKey", () => {
+			writeRawModelsJson({
+				"my-custom-provider": {
+					baseUrl: "https://custom.example.com/v1",
+					api: "openai-completions",
+					models: [{ id: "my-model" }],
+				},
+			});
+
+			const registry = ModelRegistry.create(authStorage, modelsJsonPath);
+			expect(registry.getError()).toBeUndefined();
+			expect(registry.find("my-custom-provider", "my-model")).toBeDefined();
+			expect(registry.getAvailable().some((model) => model.provider === "my-custom-provider")).toBe(false);
 		});
 
 		test("custom provider with same name as built-in merges with built-in models", () => {

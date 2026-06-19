@@ -32,7 +32,7 @@ Then run it in a project directory:
 pi
 ```
 
-Authenticate with `/login` for subscription providers, or set an API key such as `ANTHROPIC_API_KEY` before starting pi.
+Authenticate with `/account add` for subscription providers, or set an API key such as `ANTHROPIC_API_KEY` before starting pi.
 
 For the full first-run flow, see [Quickstart](quickstart.md).
 

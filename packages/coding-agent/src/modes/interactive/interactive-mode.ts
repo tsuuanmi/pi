@@ -9,6 +9,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import {
+	type Api,
 	type AssistantMessage,
 	getProviders,
 	type ImageContent,
@@ -92,6 +93,7 @@ import { getChangelogPath, getNewEntries, normalizeChangelogLinks, parseChangelo
 import { copyToClipboard } from "../../utils/clipboard.ts";
 import { extensionForImageMimeType, readClipboardImage } from "../../utils/clipboard-image.ts";
 import { parseGitUrl } from "../../utils/git.ts";
+import { stripJsonComments } from "../../utils/json.ts";
 import { getCwdRelativePath } from "../../utils/paths.ts";
 import { getPiUserAgent } from "../../utils/pi-user-agent.ts";
 import { killTrackedDetachedChildren } from "../../utils/shell.ts";
@@ -223,7 +225,7 @@ function hasDefaultModelProvider(providerId: string): providerId is keyof typeof
 
 const BUILT_IN_MODEL_PROVIDERS = new Set<string>(getProviders());
 
-export function isApiKeyLoginProvider(
+export function isApiKeyAccountProvider(
 	providerId: string,
 	oauthProviderIds: ReadonlySet<string>,
 	builtInProviderIds: ReadonlySet<string> = BUILT_IN_MODEL_PROVIDERS,
@@ -2610,24 +2612,14 @@ export class InteractiveMode {
 				this.editor.setText("");
 				return;
 			}
-			if (text === "/login") {
-				this.showOAuthSelector("login");
+			if (text === "/provider" || text.startsWith("/provider ")) {
 				this.editor.setText("");
-				return;
-			}
-			if (text.startsWith("/login ")) {
-				this.editor.setText("");
-				await this.handleLoginCommand(text);
+				this.handleProviderCommand(text);
 				return;
 			}
 			if (text === "/account" || text.startsWith("/account ")) {
 				this.editor.setText("");
-				this.handleAccountCommand(text);
-				return;
-			}
-			if (text === "/logout") {
-				this.showOAuthSelector("logout");
-				this.editor.setText("");
+				await this.handleAccountCommand(text);
 				return;
 			}
 			if (text === "/new") {
@@ -4564,20 +4556,158 @@ export class InteractiveMode {
 		}
 	}
 
-	private findLoginProviderOption(providerId: string): AuthSelectorProvider | undefined {
-		return this.getLoginProviderOptions().find((provider) => provider.id === providerId);
+	private tokenizeCommand(text: string): string[] {
+		const tokens: string[] = [];
+		let current = "";
+		let quote: '"' | "'" | undefined;
+		let escaping = false;
+
+		for (const char of text) {
+			if (escaping) {
+				current += char;
+				escaping = false;
+				continue;
+			}
+			if (char === "\\") {
+				escaping = true;
+				continue;
+			}
+			if (quote) {
+				if (char === quote) {
+					quote = undefined;
+				} else {
+					current += char;
+				}
+				continue;
+			}
+			if (char === '"' || char === "'") {
+				quote = char;
+				continue;
+			}
+			if (/\s/.test(char)) {
+				if (current) {
+					tokens.push(current);
+					current = "";
+				}
+				continue;
+			}
+			current += char;
+		}
+
+		if (escaping) current += "\\";
+		if (current) tokens.push(current);
+		return tokens;
 	}
 
-	private async handleLoginCommand(text: string): Promise<void> {
-		const [, providerId, accountName, extra] = text.split(/\s+/);
-		if (!providerId || extra) {
-			this.showStatus("Usage: /login <provider> [account]");
+	private parseProviderAddOptions(tokens: string[]): Map<string, string[]> {
+		const options = new Map<string, string[]>();
+		let positionalProviderId: string | undefined;
+		for (let index = 2; index < tokens.length; index++) {
+			const token = tokens[index];
+			if (!token.startsWith("--")) {
+				if (positionalProviderId) {
+					throw new Error(`Unexpected argument: ${token}`);
+				}
+				positionalProviderId = token;
+				continue;
+			}
+
+			const name = token.slice(2);
+			const value = tokens[index + 1];
+			if (!value || value.startsWith("--")) {
+				throw new Error(`Missing value for --${name}`);
+			}
+			index++;
+			options.set(name, [...(options.get(name) ?? []), value]);
+		}
+		if (positionalProviderId) {
+			options.set("provider", [positionalProviderId, ...(options.get("provider") ?? [])]);
+		}
+		return options;
+	}
+
+	private normalizeProviderApi(options: Map<string, string[]>): Api {
+		const api = options.get("api")?.[0];
+		const compat = options.get("compat")?.[0];
+		if (api && compat) {
+			throw new Error("Use either --api or --compat, not both.");
+		}
+
+		const value = api ?? compat;
+		if (value === "openai") return "openai-completions";
+		if (value === "anthropic") return "anthropic-messages";
+		if (value === "openai-completions" || value === "openai-responses" || value === "anthropic-messages") {
+			return value;
+		}
+		throw new Error("Set --api to openai-completions, openai-responses, or anthropic-messages.");
+	}
+
+	private handleProviderCommand(text: string): void {
+		const tokens = this.tokenizeCommand(text);
+		if (tokens[1] !== "add") {
+			this.showStatus(
+				"Usage: /provider add <provider> --api <openai-completions|openai-responses|anthropic-messages> --base-url <url> --model <model>",
+			);
 			return;
 		}
 
-		const providerOption = this.findLoginProviderOption(providerId);
+		try {
+			const options = this.parseProviderAddOptions(tokens);
+			const providerId = options.get("provider")?.[0];
+			const baseUrl = options.get("base-url")?.[0];
+			const modelIds = options.get("model") ?? [];
+			if (!providerId || !baseUrl || modelIds.length === 0) {
+				throw new Error("Required: <provider>, --base-url <url>, and at least one --model <model>.");
+			}
+
+			const api = this.normalizeProviderApi(options);
+			this.upsertModelsJsonProvider(providerId, baseUrl, api, modelIds);
+
+			this.session.modelRegistry.refresh();
+			void this.updateAvailableProviderCount();
+			this.footer.invalidate();
+			this.updateEditorBorderColor();
+			this.showStatus(`Added provider ${providerId}. Add keys with /account add ${providerId} <account>.`);
+		} catch (error) {
+			this.showError(`Provider add failed: ${error instanceof Error ? error.message : String(error)}`);
+		}
+	}
+
+	private upsertModelsJsonProvider(providerId: string, baseUrl: string, api: Api, modelIds: string[]): void {
+		const modelsPath = path.join(getAgentDir(), "models.json");
+		fs.mkdirSync(path.dirname(modelsPath), { recursive: true, mode: 0o700 });
+		const config = fs.existsSync(modelsPath)
+			? (JSON.parse(stripJsonComments(fs.readFileSync(modelsPath, "utf-8"))) as {
+					providers?: Record<string, { baseUrl?: string; api?: string; models?: Array<{ id: string }> }>;
+				})
+			: {};
+		const providers = config.providers ?? {};
+		const existingProvider = providers[providerId] ?? {};
+		const models = [...(existingProvider.models ?? [])];
+		const existingModelIds = new Set(models.map((model) => model.id));
+		for (const modelId of modelIds) {
+			if (!existingModelIds.has(modelId)) {
+				models.push({ id: modelId });
+			}
+		}
+
+		providers[providerId] = {
+			...existingProvider,
+			baseUrl,
+			api,
+			models,
+		};
+		fs.writeFileSync(modelsPath, `${JSON.stringify({ ...config, providers }, null, 2)}\n`, { mode: 0o600 });
+	}
+
+	private findAccountProviderOption(providerId: string): AuthSelectorProvider | undefined {
+		return this.getAccountProviderOptions().find((provider) => provider.id === providerId);
+	}
+
+	private async addProviderAccount(providerId: string, accountName?: string): Promise<void> {
+		const providerOption = this.findAccountProviderOption(providerId);
 		if (!providerOption) {
-			this.showError(`Unknown login provider: ${providerId}`);
+			this.showError(`Unknown account provider: ${providerId}`);
 			return;
 		}
 
@@ -4623,13 +4753,43 @@ export class InteractiveMode {
 		this.showStatus(`Switched ${providerId} to account ${accountName}`);
 	}
 
+	private refreshAccountState(): void {
+		this.session.modelRegistry.refresh();
+		void this.updateAvailableProviderCount();
+		this.footer.invalidate();
+		this.updateEditorBorderColor();
+	}
+
+	private removeProviderAccount(providerId: string, accountName: string): void {
+		const authStorage = this.session.modelRegistry.authStorage;
+		const accounts = authStorage.getAccountNames(providerId);
+		if (!authStorage.removeAccount(providerId, accountName)) {
+			this.showError(`No account named "${accountName}" for ${providerId}. Available: ${accounts.join(", ")}`);
+			return;
+		}
+
+		this.refreshAccountState();
+		this.showStatus(`Removed ${providerId} account ${accountName}`);
+	}
+
+	private removeAllProviderAccounts(providerId: string): void {
+		if (!this.session.modelRegistry.authStorage.has(providerId)) {
+			this.showError(`No stored accounts for ${providerId}.`);
+			return;
+		}
+
+		this.session.modelRegistry.authStorage.remove(providerId);
+		this.refreshAccountState();
+		this.showStatus(`Removed all stored accounts for ${providerId}`);
+	}
+
 	private showAccountSelector(providerId?: string): void {
 		const options = this.buildAccountOptions(providerId);
 		if (options.length === 0) {
 			this.showStatus(
 				providerId
-					? `No stored accounts for ${providerId}. Use /login ${providerId} <account> first.`
-					: "No stored provider accounts. Use /login first.",
+					? `No stored accounts for ${providerId}. Use /account add ${providerId} <account> first.`
+					: "No stored provider accounts. Use /account add first.",
 			);
 			return;
 		}
@@ -4650,8 +4810,44 @@ export class InteractiveMode {
 		});
 	}
 
-	private handleAccountCommand(text: string): void {
+	private async handleAccountCommand(text: string): Promise<void> {
 		const parts = text.split(/\s+/);
+		const action = parts[1];
+
+		if (action === "add") {
+			const providerId = parts[2];
+			const accountName = parts[3];
+			if (parts.length > 4) {
+				this.showStatus("Usage: /account add [provider] [account]");
+				return;
+			}
+			if (!providerId) {
+				this.showAccountAddAuthTypeSelector();
+				return;
+			}
+			await this.addProviderAccount(providerId, accountName);
+			return;
+		}
+
+		if (action === "remove") {
+			const providerId = parts[2];
+			const accountName = parts[3];
+			if (parts.length > 4) {
+				this.showStatus("Usage: /account remove [provider] [account]");
+				return;
+			}
+			if (!providerId) {
+				this.showAccountRemoveProviderSelector();
+				return;
+			}
+			if (!accountName) {
+				this.removeAllProviderAccounts(providerId);
+				return;
+			}
+			this.removeProviderAccount(providerId, accountName);
+			return;
+		}
+
 		const providerId = parts[1];
 		const accountName = parts[2];
 		if (parts.length > 3) {
@@ -4667,7 +4863,7 @@ export class InteractiveMode {
 		this.switchProviderAccount(providerId, accountName);
 	}
 
-	private getLoginProviderOptions(authType?: "oauth" | "api_key"): AuthSelectorProvider[] {
+	private getAccountProviderOptions(authType?: "oauth" | "api_key"): AuthSelectorProvider[] {
 		const authStorage = this.session.modelRegistry.authStorage;
 		const oauthProviders = authStorage.getOAuthProviders();
 		const oauthProviderIds = new Set(oauthProviders.map((provider) => provider.id));
@@ -4679,7 +4875,7 @@ export class InteractiveMode {
 
 		const modelProviders = new Set(this.session.modelRegistry.getAll().map((model) => model.provider));
 		for (const providerId of modelProviders) {
-			if (!isApiKeyLoginProvider(providerId, oauthProviderIds)) {
+			if (!isApiKeyAccountProvider(providerId, oauthProviderIds)) {
 				continue;
 			}
 			options.push({
@@ -4693,7 +4889,7 @@ export class InteractiveMode {
 		return filteredOptions.sort((a, b) => a.name.localeCompare(b.name));
 	}
 
-	private getLogoutProviderOptions(): AuthSelectorProvider[] {
+	private getStoredAccountProviderOptions(): AuthSelectorProvider[] {
 		const authStorage = this.session.modelRegistry.authStorage;
 		const options: AuthSelectorProvider[] = [];
 
@@ -4712,17 +4908,17 @@ export class InteractiveMode {
 		return options.sort((a, b) => a.name.localeCompare(b.name));
 	}
 
-	private showLoginAuthTypeSelector(): void {
+	private showAccountAddAuthTypeSelector(): void {
 		const subscriptionLabel = "Use a subscription";
 		const apiKeyLabel = "Use an API key";
 		this.showSelector((done) => {
 			const selector = new ExtensionSelectorComponent(
-				"Select authentication method:",
+				"Select account type to add:",
 				[subscriptionLabel, apiKeyLabel],
 				(option) => {
 					done();
 					const authType = option === subscriptionLabel ? "oauth" : "api_key";
-					this.showLoginProviderSelector(authType);
+					this.showAccountAddProviderSelector(authType);
 				},
 				() => {
 					done();
@@ -4733,8 +4929,8 @@ export class InteractiveMode {
 		});
 	}
 
-	private showLoginProviderSelector(authType: "oauth" | "api_key"): void {
-		const providerOptions = this.getLoginProviderOptions(authType);
+	private showAccountAddProviderSelector(authType: "oauth" | "api_key"): void {
+		const providerOptions = this.getAccountProviderOptions(authType);
 		if (providerOptions.length === 0) {
 			this.showStatus(
 				authType === "oauth" ? "No subscription providers available." : "No API key providers available.",
@@ -4744,7 +4940,7 @@ export class InteractiveMode {
 
 		this.showSelector((done) => {
 			const selector = new OAuthSelectorComponent(
-				"login",
+				"add",
 				this.session.modelRegistry.authStorage,
 				providerOptions,
 				async (providerId: string) => {
@@ -4763,7 +4959,7 @@ export class InteractiveMode {
 				},
 				() => {
 					done();
-					this.showLoginAuthTypeSelector();
+					this.showAccountAddAuthTypeSelector();
 				},
 				(providerId) => this.session.modelRegistry.getProviderAuthStatus(providerId),
 			);
@@ -4771,44 +4967,25 @@ export class InteractiveMode {
 		});
 	}
 
-	private async showOAuthSelector(mode: "login" | "logout"): Promise<void> {
-		if (mode === "login") {
-			this.showLoginAuthTypeSelector();
-			return;
-		}
-
-		const providerOptions = this.getLogoutProviderOptions();
+	private showAccountRemoveProviderSelector(): void {
+		const providerOptions = this.getStoredAccountProviderOptions();
 		if (providerOptions.length === 0) {
 			this.showStatus(
-				"No stored credentials to remove. /logout only removes credentials saved by /login; environment variables and models.json config are unchanged.",
+				"No stored credentials to remove. /account remove only removes credentials saved in auth.json; environment variables and models.json config are unchanged.",
 			);
 			return;
 		}
 
+		const providerLabels = providerOptions.map((provider) => `${provider.name} (${provider.id})`);
 		this.showSelector((done) => {
-			const selector = new OAuthSelectorComponent(
-				mode,
-				this.session.modelRegistry.authStorage,
-				providerOptions,
-				async (providerId: string) => {
+			const selector = new ExtensionSelectorComponent(
+				"Select provider to remove stored accounts:",
+				providerLabels,
+				(option) => {
 					done();
-
-					const providerOption = providerOptions.find((provider) => provider.id === providerId);
-					if (!providerOption) {
-						return;
-					}
-
-					try {
-						this.session.modelRegistry.authStorage.logout(providerOption.id);
-						this.session.modelRegistry.refresh();
-						await this.updateAvailableProviderCount();
-						const message =
-							providerOption.authType === "oauth"
-								? `Logged out of ${providerOption.name}`
-								: `Removed stored API key for ${providerOption.name}. Environment variables and models.json config are unchanged.`;
-						this.showStatus(message);
-					} catch (error: unknown) {
-						this.showError(`Logout failed: ${error instanceof Error ? error.message : String(error)}`);
+					const providerOption = providerOptions[providerLabels.indexOf(option)];
+					if (providerOption) {
+						this.removeAllProviderAccounts(providerOption.id);
 					}
 				},
 				() => {
@@ -4832,7 +5009,7 @@ export class InteractiveMode {
 		const accountSuffix = accountName ? ` account ${accountName}` : "";
 		const actionLabel =
 			authType === "oauth"
-				? `Logged in to ${providerName}${accountSuffix}`
+				? `Added account for ${providerName}${accountSuffix}`
 				: `Saved API key for ${providerName}${accountSuffix}`;
 
 		let selectedModel: Model<any> | undefined;
@@ -5046,7 +5223,7 @@ export class InteractiveMode {
 			restoreEditor();
 			const errorMsg = error instanceof Error ? error.message : String(error);
 			if (errorMsg !== "Login cancelled") {
-				this.showError(`Failed to login to ${providerName}: ${errorMsg}`);
+				this.showError(`Failed to add account for ${providerName}: ${errorMsg}`);
 			}
 		}
 	}

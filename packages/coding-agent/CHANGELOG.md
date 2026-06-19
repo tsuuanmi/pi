@@ -7,12 +7,14 @@
 - Removed the `thinkingBudgets` setting and `SettingsManager.getThinkingBudgets()`.
 - Removed the `forceAdaptiveThinking` and `supportsEagerToolInputStreaming` Anthropic compat flags from the model registry schema; Anthropic models now always use adaptive thinking and per-tool `eager_input_streaming`.
 - Removed the `/scoped-models`, `/clone`, `/arminsayshi`, and `/dementedelves` interactive slash commands, along with their dedicated components, keybindings, and tests.
+- Removed the `/login` and `/logout` interactive slash commands; use `/account add` and `/account remove` instead.
 
 ### Added
 
 - Added a default `lsp` tool with minimal TypeScript/JavaScript, Python, and Rust Language Server Protocol support for status, diagnostics, symbols, hover, definitions, and references.
 - Added `pi --tmux` to launch interactive startup inside a new tmux session.
-- Added stored account profiles for provider auth, with `/login <provider> [account]`, an interactive `/account` selector, and `/account <provider> <account>` for manual switching without logging out.
+- Added stored account profiles for provider auth, with `/account add <provider> [account]`, an interactive `/account` selector, and `/account <provider> <account>` for manual switching.
+- Added `/provider add` for creating custom OpenAI/Anthropic-compatible providers from interactive mode, plus `/account remove <provider> [account]` for deleting one or all stored provider accounts.
 - Exported `CONFIG_DIR_NAME` from the coding-agent public API so extensions can resolve project config paths without hardcoding `.pi`.
 
 ### Changed

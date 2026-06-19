@@ -4,7 +4,7 @@ import { AuthStorage } from "../src/core/auth-storage.ts";
 import { KeybindingsManager } from "../src/core/keybindings.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../src/core/provider-display-names.ts";
 import { OAuthSelectorComponent } from "../src/modes/interactive/components/oauth-selector.ts";
-import { isApiKeyLoginProvider } from "../src/modes/interactive/interactive-mode.ts";
+import { isApiKeyAccountProvider } from "../src/modes/interactive/interactive-mode.ts";
 import { initTheme } from "../src/modes/interactive/theme/theme.ts";
 import { stripAnsi } from "../src/utils/ansi.ts";
 
@@ -31,11 +31,11 @@ describe("OAuthSelectorComponent", () => {
 		const oauthProviderIds = new Set(["anthropic", "custom-oauth"]);
 		const builtInProviderIds = new Set(["anthropic", "openai"]);
 
-		expect(isApiKeyLoginProvider("anthropic", oauthProviderIds, builtInProviderIds)).toBe(true);
+		expect(isApiKeyAccountProvider("anthropic", oauthProviderIds, builtInProviderIds)).toBe(true);
 		expect(BUILT_IN_PROVIDER_DISPLAY_NAMES.anthropic).toBe("Anthropic");
-		expect(isApiKeyLoginProvider("openai", oauthProviderIds, builtInProviderIds)).toBe(true);
-		expect(isApiKeyLoginProvider("custom-oauth", oauthProviderIds, builtInProviderIds)).toBe(false);
-		expect(isApiKeyLoginProvider("custom-api", oauthProviderIds, builtInProviderIds)).toBe(true);
+		expect(isApiKeyAccountProvider("openai", oauthProviderIds, builtInProviderIds)).toBe(true);
+		expect(isApiKeyAccountProvider("custom-oauth", oauthProviderIds, builtInProviderIds)).toBe(false);
+		expect(isApiKeyAccountProvider("custom-api", oauthProviderIds, builtInProviderIds)).toBe(true);
 	});
 
 	it("shows stored OAuth auth distinctly in the API key selector", () => {
@@ -48,7 +48,7 @@ describe("OAuthSelectorComponent", () => {
 			},
 		});
 		const selector = new OAuthSelectorComponent(
-			"login",
+			"add",
 			authStorage,
 			[{ id: "anthropic", name: "Anthropic", authType: "api_key" }],
 			() => {},
@@ -65,7 +65,7 @@ describe("OAuthSelectorComponent", () => {
 		process.env.OPENAI_API_KEY = "test-openai-key";
 		const authStorage = AuthStorage.inMemory();
 		const selector = new OAuthSelectorComponent(
-			"login",
+			"add",
 			authStorage,
 			[{ id: "openai", name: "OpenAI", authType: "api_key" }],
 			() => {},
@@ -82,7 +82,7 @@ describe("OAuthSelectorComponent", () => {
 	it("shows custom provider environment API key auth from status resolver", () => {
 		const authStorage = AuthStorage.inMemory();
 		const selector = new OAuthSelectorComponent(
-			"login",
+			"add",
 			authStorage,
 			[{ id: "ollama", name: "ollama", authType: "api_key" }],
 			() => {},
@@ -100,7 +100,7 @@ describe("OAuthSelectorComponent", () => {
 	it("shows models.json API key auth as configured", () => {
 		const authStorage = AuthStorage.inMemory();
 		const selector = new OAuthSelectorComponent(
-			"login",
+			"add",
 			authStorage,
 			[{ id: "local-proxy", name: "local-proxy", authType: "api_key" }],
 			() => {},
@@ -118,7 +118,7 @@ describe("OAuthSelectorComponent", () => {
 	it("shows models.json command auth as configured", () => {
 		const authStorage = AuthStorage.inMemory();
 		const selector = new OAuthSelectorComponent(
-			"login",
+			"add",
 			authStorage,
 			[{ id: "op-proxy", name: "op-proxy", authType: "api_key" }],
 			() => {},

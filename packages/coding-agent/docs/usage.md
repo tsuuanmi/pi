@@ -35,8 +35,8 @@ Type `/` in the editor to open command completion. Extensions can register custo
 
 | Command | Description |
 |---------|-------------|
-| `/login`, `/logout` | Manage OAuth or API-key credentials |
-| `/account` | Open account selector or switch stored provider accounts |
+| `/provider` | Add custom provider models |
+| `/account` | Add, open, switch, or remove stored provider accounts |
 | `/model` | Switch models |
 | `/settings` | Thinking level, theme, message delivery, transport |
 | `/resume` | Pick from previous sessions |

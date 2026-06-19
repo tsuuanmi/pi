@@ -4,22 +4,22 @@ Pi supports subscription-based providers via OAuth and API key providers via env
 
 ## Subscriptions
 
-Use `/login` in interactive mode, then select a provider:
+Use `/account add` in interactive mode, then select a provider:
 
 - ChatGPT Plus/Pro (Codex)
 - Claude Pro/Max
 
-Use `/logout` to clear credentials. Tokens are stored in `~/.pi/agent/auth.json` and auto-refresh when expired.
+Use `/account remove` to clear credentials. Tokens are stored in `~/.pi/agent/auth.json` and auto-refresh when expired.
 
 To store multiple accounts for one provider, pass an account name:
 
 ```text
-/login openai-codex main
-/login openai-codex backup
+/account add openai-codex main
+/account add openai-codex backup
 /account openai-codex backup
 ```
 
-`/account` opens an account selector with provider, provider ID, account name, and active status. `/account <provider>` opens the same selector filtered to one provider. `/account <provider> <account>` switches directly without opening the selector. `/logout` removes the stored credentials for the selected provider, including all named accounts for that provider.
+`/account` opens an account selector with provider, provider ID, account name, and active status. `/account <provider>` opens the same selector filtered to one provider. `/account <provider> <account>` switches directly without opening the selector. `/account remove <provider> <account>` removes one named account. `/account remove <provider>` removes all stored credentials for that provider.
 
 ### OpenAI Codex
 
@@ -32,7 +32,7 @@ Anthropic subscription auth is active for Claude Pro/Max accounts. Third-party h
 
 ## API Keys
 
-Use `/login` in interactive mode and select a provider to store an API key in `auth.json`, `/login <provider> <account>` to store a named account, or set credentials via environment variable:
+Use `/account add` in interactive mode and select a provider to store an API key in `auth.json`, `/account add <provider> <account>` to store a named account, or set credentials via environment variable:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
@@ -44,7 +44,7 @@ pi
 | Anthropic | `ANTHROPIC_API_KEY` | `anthropic` |
 | OpenAI | `OPENAI_API_KEY` | `openai` |
 
-OpenAI Codex uses OAuth/subscription login.
+OpenAI Codex uses OAuth/subscription accounts.
 
 ## Auth File
 
@@ -90,11 +90,13 @@ API key credentials can also include provider-scoped environment values. These v
 
 Use this when pi should use different provider settings than the project shell environment.
 
-The `key` field supports command execution, environment interpolation, and literals; see [models.md](./models.md) for the full config value syntax. OAuth credentials are also stored here after `/login` and managed automatically.
+The `key` field supports command execution, environment interpolation, and literals; see [models.md](./models.md) for the full config value syntax. OAuth credentials are also stored here after `/account add` and managed automatically.
+
+When a custom provider also has `apiKey` in `models.json`, `auth.json` wins. The `models.json` key is only a fallback when there is no active stored account or environment key.
 
 ## Custom Providers
 
-Custom providers can be added through `models.json`; see [models.md](./models.md) and [custom-provider.md](./custom-provider.md). For providers that need custom API implementations or OAuth flows, create an extension; see [custom-provider.md](./custom-provider.md).
+Custom providers can be added with `/provider add` or through `models.json`; see [models.md](./models.md) and [custom-provider.md](./custom-provider.md). For providers that need custom API implementations or OAuth flows, create an extension; see [custom-provider.md](./custom-provider.md).
 
 ## Resolution Order
 

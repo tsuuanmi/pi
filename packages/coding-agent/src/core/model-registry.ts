@@ -450,12 +450,10 @@ export class ModelRegistry {
 					);
 				}
 			} else if (!isBuiltIn) {
-				// Non-built-in providers with custom models require endpoint + auth.
+				// Non-built-in providers with custom models require an endpoint. Auth can come from
+				// auth.json, environment variables, or models.json apiKey fallback.
 				if (!providerConfig.baseUrl) {
 					throw new Error(`Provider ${providerName}: "baseUrl" is required when defining custom models.`);
-				}
-				if (!providerConfig.apiKey) {
-					throw new Error(`Provider ${providerName}: "apiKey" is required when defining custom models.`);
 				}
 			}
 			// Built-in providers with custom models: baseUrl/apiKey/api are optional,
@@ -729,7 +727,7 @@ export class ModelRegistry {
 	 *
 	 * If provider has models: replaces all existing models for this provider.
 	 * If provider has only baseUrl/headers: overrides existing models' URLs.
-	 * If provider has oauth: registers OAuth provider for /login support.
+	 * If provider has oauth: registers OAuth provider for /account add support.
 	 */
 	registerProvider(providerName: string, config: ProviderConfigInput): void {
 		this.validateProviderConfig(providerName, config);
@@ -877,7 +875,7 @@ export interface ProviderConfigInput {
 	streamSimple?: (model: Model<Api>, context: Context, options?: SimpleStreamOptions) => AssistantMessageEventStream;
 	headers?: Record<string, string>;
 	authHeader?: boolean;
-	/** OAuth provider for /login support */
+	/** OAuth provider for /account add support */
 	oauth?: Omit<OAuthProviderInterface, "id">;
 	models?: Array<{
 		id: string;

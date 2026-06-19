@@ -1,6 +1,6 @@
 # Custom Models
 
-Add custom providers and models (Ollama, vLLM, LM Studio, proxies) via `~/.pi/agent/models.json`.
+Add custom providers and models (Ollama, vLLM, LM Studio, proxies) with `/provider add` or via `~/.pi/agent/models.json`.
 
 ## Table of Contents
 
@@ -13,6 +13,26 @@ Add custom providers and models (Ollama, vLLM, LM Studio, proxies) via `~/.pi/ag
 - [Per-model Overrides](#per-model-overrides)
 - [Anthropic Messages Compatibility](#anthropic-messages-compatibility)
 - [OpenAI Compatibility](#openai-compatibility)
+
+## Slash Command
+
+Add a provider/model without editing files manually:
+
+```text
+/provider add ollama-cloud --api openai-completions --base-url https://ollama.com/v1 --model gpt-oss:120b
+```
+
+`--compat openai` is shorthand for `--api openai-completions`; `--compat anthropic` is shorthand for `--api anthropic-messages`.
+
+Add one or more API keys as named accounts:
+
+```text
+/account add ollama-cloud personal
+/account add ollama-cloud work
+/account ollama-cloud work
+```
+
+This writes provider/model config to `models.json` and credentials to `auth.json`. Use `/account remove ollama-cloud work` to remove one stored key, or `/account remove ollama-cloud` to remove all stored keys for that provider.
 
 ## Minimal Example
 
@@ -34,7 +54,7 @@ For local models (Ollama, LM Studio, vLLM), only `id` is required per model:
 }
 ```
 
-The `apiKey` is required but Ollama ignores it, so any value works.
+The `apiKey` is optional when credentials are stored with `/account add` or supplied by provider environment variables. Local Ollama ignores API keys, so any value works if you choose to keep one in `models.json`.
 
 Some OpenAI-compatible servers do not understand the `developer` role used for reasoning-capable models. For those providers, set `compat.supportsDeveloperRole` to `false` so pi sends the system prompt as a `system` message instead. If the server also does not support `reasoning_effort`, set `compat.supportsReasoningEffort` to `false` too.
 
@@ -107,7 +127,7 @@ Set `api` at provider level (default for all models) or model level (override pe
 |-------|-------------|
 | `baseUrl` | API endpoint URL |
 | `api` | API type (see above) |
-| `apiKey` | API key (see value resolution below) |
+| `apiKey` | Optional API key fallback (see value resolution below). Prefer `/account add <provider> <account>` for switchable keys. |
 | `headers` | Custom headers (see value resolution below) |
 | `authHeader` | Set `true` to add `Authorization: Bearer <apiKey>` automatically |
 | `models` | Array of model configurations |

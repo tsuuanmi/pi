@@ -1638,7 +1638,7 @@ pi.registerProvider("anthropic", {
   baseUrl: "https://proxy.example.com"
 });
 
-// Register provider with OAuth support for /login
+// Register provider with OAuth support for /account add
 pi.registerProvider("corporate-ai", {
   baseUrl: "https://ai.corp.com",
   api: "openai-responses",
@@ -1663,14 +1663,14 @@ pi.registerProvider("corporate-ai", {
 ```
 
 **Config options:**
-- `name` - Display name for the provider in UI such as `/login`.
+- `name` - Display name for the provider account UI.
 - `baseUrl` - API endpoint URL. Required when defining models.
 - `apiKey` - API key literal, environment interpolation (`$ENV_VAR` or `${ENV_VAR}`), or leading `!command`. Required when defining models (unless `oauth` provided). `$$` escapes `$`, and `$!` escapes a literal `!` without triggering command execution.
 - `api` - API type: `"anthropic-messages"`, `"openai-completions"`, `"openai-responses"`, etc.
 - `headers` - Custom headers to include in requests.
 - `authHeader` - If true, adds `Authorization: Bearer` header automatically.
 - `models` - Array of model definitions. If provided, replaces all existing models for this provider. Model definitions can set `baseUrl` to override the provider endpoint for that model.
-- `oauth` - OAuth provider config for `/login` support. When provided, the provider appears in the login menu.
+- `oauth` - OAuth provider config for `/account add` support. When provided, the provider appears in the account-add menu.
 - `streamSimple` - Custom streaming implementation for non-standard APIs.
 
 See [custom-provider.md](custom-provider.md) for advanced topics: custom streaming APIs, OAuth details, model definition reference.

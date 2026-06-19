@@ -244,7 +244,7 @@ pi.registerProvider("custom-api", {
 
 ## OAuth Support
 
-Add OAuth/SSO authentication that integrates with `/login`:
+Add OAuth/SSO authentication that integrates with `/account add`:
 
 ```typescript
 import type { OAuthCredentials, OAuthLoginCallbacks } from "@earendil-works/pi-ai";
@@ -315,7 +315,7 @@ pi.registerProvider("corporate-ai", {
 });
 ```
 
-After registration, users can authenticate via `/login corporate-ai`.
+After registration, users can authenticate via `/account add corporate-ai`.
 
 ### OAuthLoginCallbacks
 
@@ -612,7 +612,7 @@ Run tests with your provider/model pairs to verify compatibility.
 
 ```typescript
 interface ProviderConfig {
-  /** Display name for the provider in UI such as /login. */
+  /** Display name for provider account UI. */
   name?: string;
 
   /** API endpoint URL. Required when defining models. */
@@ -640,7 +640,7 @@ interface ProviderConfig {
   /** Models to register. If provided, replaces all existing models for this provider. */
   models?: ProviderModelConfig[];
 
-  /** OAuth provider for /login support. */
+  /** OAuth provider for /account add support. */
   oauth?: {
     name: string;
     login(callbacks: OAuthLoginCallbacks): Promise<OAuthCredentials>;

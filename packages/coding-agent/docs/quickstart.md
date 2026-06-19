@@ -41,17 +41,17 @@ pi
 
 ## Authenticate
 
-Pi can use subscription providers through `/login`, or API-key providers through environment variables or the auth file.
+Pi can use subscription providers through `/account add`, or API-key providers through environment variables or the auth file.
 
-### Option 1: subscription login
+### Option 1: subscription account
 
 Start pi and run:
 
 ```text
-/login
+/account add
 ```
 
-Then select a provider. Built-in subscription logins include Claude Pro/Max and ChatGPT Plus/Pro (Codex).
+Then select a provider. Built-in subscription accounts include Claude Pro/Max and ChatGPT Plus/Pro (Codex).
 
 ### Option 2: API key
 
@@ -62,7 +62,7 @@ export ANTHROPIC_API_KEY=sk-ant-...
 pi
 ```
 
-You can also run `/login` and select an API-key provider to store the key in `~/.pi/agent/auth.json`.
+You can also run `/account add` and select an API-key provider to store the key in `~/.pi/agent/auth.json`.
 
 See [Providers](providers.md) for all supported providers, environment variables, and cloud-provider setup.
 
