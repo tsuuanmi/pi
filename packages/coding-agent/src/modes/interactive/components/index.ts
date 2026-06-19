@@ -1,4 +1,5 @@
 // UI Components for extensions
+export { AccountSelectorComponent, type AccountSelectorOption } from "./account-selector.ts";
 export { ArminComponent } from "./armin.ts";
 export { AssistantMessageComponent } from "./assistant-message.ts";
 export { BashExecutionComponent } from "./bash-execution.ts";

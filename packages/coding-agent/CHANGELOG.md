@@ -9,6 +9,7 @@
 
 ### Added
 
+- Added stored account profiles for provider auth, with `/login <provider> [account]`, an interactive `/account` selector, and `/account <provider> <account>` for manual switching without logging out.
 - Exported `CONFIG_DIR_NAME` from the coding-agent public API so extensions can resolve project config paths without hardcoding `.pi`.
 
 ### Changed

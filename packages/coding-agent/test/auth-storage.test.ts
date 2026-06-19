@@ -593,6 +593,83 @@ describe("AuthStorage", () => {
 		});
 	});
 
+	describe("account profiles", () => {
+		test("stores multiple accounts and switches the active credential", async () => {
+			authStorage = AuthStorage.create(authJsonPath);
+
+			authStorage.set("openai-codex", { type: "api_key", key: "first-key" }, "first");
+			authStorage.set("openai-codex", { type: "api_key", key: "second-key" }, "second");
+
+			expect(authStorage.getAccountNames("openai-codex")).toEqual(["first", "second"]);
+			expect(authStorage.getActiveAccount("openai-codex")).toBe("second");
+			expect(await authStorage.getApiKey("openai-codex")).toBe("second-key");
+
+			expect(authStorage.switchAccount("openai-codex", "first")).toBe(true);
+			expect(authStorage.getActiveAccount("openai-codex")).toBe("first");
+			expect(await authStorage.getApiKey("openai-codex")).toBe("first-key");
+
+			const persisted = JSON.parse(readFileSync(authJsonPath, "utf-8")) as {
+				"openai-codex": { active: string; accounts: Record<string, { key: string }> };
+			};
+			expect(persisted["openai-codex"].active).toBe("first");
+			expect(persisted["openai-codex"].accounts.second.key).toBe("second-key");
+		});
+
+		test("single stored credentials behave as the default account", async () => {
+			writeAuthJson({
+				anthropic: { type: "api_key", key: "stored-key" },
+			});
+
+			authStorage = AuthStorage.create(authJsonPath);
+
+			expect(authStorage.getAccountNames("anthropic")).toEqual(["default"]);
+			expect(authStorage.getActiveAccount("anthropic")).toBe("default");
+			expect(authStorage.switchAccount("anthropic", "default")).toBe(true);
+			expect(await authStorage.getApiKey("anthropic")).toBe("stored-key");
+		});
+
+		test("refreshes only the active OAuth account", async () => {
+			const providerId = `test-oauth-accounts-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+			registerOAuthProvider({
+				id: providerId,
+				name: "Test OAuth Accounts",
+				async login() {
+					throw new Error("Not used in this test");
+				},
+				async refreshToken(credentials) {
+					return {
+						...credentials,
+						access: `refreshed-${credentials.refresh}`,
+						expires: Date.now() + 60_000,
+					};
+				},
+				getApiKey(credentials) {
+					return credentials.access;
+				},
+			});
+
+			writeAuthJson({
+				[providerId]: {
+					active: "backup",
+					accounts: {
+						main: { type: "oauth", refresh: "main", access: "main-access", expires: Date.now() + 60_000 },
+						backup: { type: "oauth", refresh: "backup", access: "expired-backup", expires: Date.now() - 1 },
+					},
+				},
+			});
+
+			authStorage = AuthStorage.create(authJsonPath);
+
+			expect(await authStorage.getApiKey(providerId)).toBe("refreshed-backup");
+
+			const persisted = JSON.parse(readFileSync(authJsonPath, "utf-8")) as {
+				[key: string]: { accounts: Record<string, { access: string }> };
+			};
+			expect(persisted[providerId].accounts.main.access).toBe("main-access");
+			expect(persisted[providerId].accounts.backup.access).toBe("refreshed-backup");
+		});
+	});
+
 	describe("auth status", () => {
 		test("does not expose stored API keys or OAuth tokens", () => {
 			authStorage = AuthStorage.inMemory({

@@ -33,7 +33,14 @@ export type OAuthCredential = {
 
 export type AuthCredential = ApiKeyCredential | OAuthCredential;
 
-export type AuthStorageData = Record<string, AuthCredential>;
+export type AuthAccountCollection = {
+	active?: string;
+	accounts: Record<string, AuthCredential>;
+};
+
+export type AuthStorageEntry = AuthCredential | AuthAccountCollection;
+
+export type AuthStorageData = Record<string, AuthStorageEntry>;
 
 export type AuthStatus = {
 	configured: boolean;
@@ -47,6 +54,26 @@ type LockResult<T> = {
 };
 
 const AUTH_FILE_WRITE_OPTIONS = { encoding: "utf-8", mode: 0o600 } as const;
+
+function isAuthCredential(value: AuthStorageEntry | undefined): value is AuthCredential {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		"type" in value &&
+		(value.type === "api_key" || value.type === "oauth")
+	);
+}
+
+function isAuthAccountCollection(value: AuthStorageEntry | undefined): value is AuthAccountCollection {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		!("type" in value) &&
+		"accounts" in value &&
+		typeof value.accounts === "object" &&
+		value.accounts !== null
+	);
+}
 
 export interface AuthStorageBackend {
 	withLock<T>(fn: (current: string | undefined) => LockResult<T>): T;
@@ -258,6 +285,52 @@ export class AuthStorage {
 		return JSON.parse(content) as AuthStorageData;
 	}
 
+	private getActiveAccountName(entry: AuthStorageEntry | undefined): string | undefined {
+		if (!isAuthAccountCollection(entry)) return undefined;
+		if (entry.active && entry.accounts[entry.active]) return entry.active;
+		return Object.keys(entry.accounts)[0];
+	}
+
+	private getActiveCredential(entry: AuthStorageEntry | undefined): AuthCredential | undefined {
+		if (isAuthCredential(entry)) return entry;
+		const activeAccount = this.getActiveAccountName(entry);
+		return activeAccount ? entry?.accounts[activeAccount] : undefined;
+	}
+
+	private setCredentialInEntry(
+		entry: AuthStorageEntry | undefined,
+		credential: AuthCredential,
+		accountName?: string,
+	): AuthStorageEntry {
+		if (!accountName) {
+			if (isAuthAccountCollection(entry)) {
+				const activeAccount = this.getActiveAccountName(entry) ?? "default";
+				return {
+					active: activeAccount,
+					accounts: { ...entry.accounts, [activeAccount]: credential },
+				};
+			}
+			return credential;
+		}
+
+		const accounts: Record<string, AuthCredential> = isAuthAccountCollection(entry)
+			? { ...entry.accounts }
+			: isAuthCredential(entry)
+				? { default: entry }
+				: {};
+		accounts[accountName] = credential;
+		return { active: accountName, accounts };
+	}
+
+	private replaceActiveCredential(entry: AuthStorageEntry | undefined, credential: AuthCredential): AuthStorageEntry {
+		if (!isAuthAccountCollection(entry)) return credential;
+		const activeAccount = this.getActiveAccountName(entry) ?? "default";
+		return {
+			active: activeAccount,
+			accounts: { ...entry.accounts, [activeAccount]: credential },
+		};
+	}
+
 	/**
 	 * Reload credentials from storage.
 	 */
@@ -276,7 +349,7 @@ export class AuthStorage {
 		}
 	}
 
-	private persistProviderChange(provider: string, credential: AuthCredential | undefined): void {
+	private persistProviderChange(provider: string, entry: AuthStorageEntry | undefined): void {
 		if (this.loadError) {
 			return;
 		}
@@ -285,8 +358,8 @@ export class AuthStorage {
 			this.storage.withLock((current) => {
 				const currentData = this.parseStorageData(current);
 				const merged: AuthStorageData = { ...currentData };
-				if (credential) {
-					merged[provider] = credential;
+				if (entry) {
+					merged[provider] = entry;
 				} else {
 					delete merged[provider];
 				}
@@ -301,23 +374,59 @@ export class AuthStorage {
 	 * Get credential for a provider.
 	 */
 	get(provider: string): AuthCredential | undefined {
-		return this.data[provider] ?? undefined;
+		return this.getActiveCredential(this.data[provider]);
+	}
+
+	/**
+	 * Get names for stored accounts for a provider.
+	 */
+	getAccountNames(provider: string): string[] {
+		const entry = this.data[provider];
+		if (isAuthAccountCollection(entry)) return Object.keys(entry.accounts);
+		if (isAuthCredential(entry)) return ["default"];
+		return [];
+	}
+
+	/**
+	 * Get the active stored account name for a provider.
+	 */
+	getActiveAccount(provider: string): string | undefined {
+		const entry = this.data[provider];
+		if (isAuthAccountCollection(entry)) return this.getActiveAccountName(entry);
+		if (isAuthCredential(entry)) return "default";
+		return undefined;
+	}
+
+	/**
+	 * Switch the active account for a provider.
+	 */
+	switchAccount(provider: string, accountName: string): boolean {
+		const entry = this.data[provider];
+		if (isAuthAccountCollection(entry)) {
+			if (!entry.accounts[accountName]) return false;
+			const nextEntry: AuthAccountCollection = { ...entry, active: accountName };
+			this.data[provider] = nextEntry;
+			this.persistProviderChange(provider, nextEntry);
+			return true;
+		}
+		return accountName === "default" && isAuthCredential(entry);
 	}
 
 	/**
 	 * Get provider-scoped environment values for an API key credential.
 	 */
 	getProviderEnv(provider: string): Record<string, string> | undefined {
-		const cred = this.data[provider];
+		const cred = this.get(provider);
 		return cred?.type === "api_key" && cred.env ? { ...cred.env } : undefined;
 	}
 
 	/**
 	 * Set credential for a provider.
 	 */
-	set(provider: string, credential: AuthCredential): void {
-		this.data[provider] = credential;
-		this.persistProviderChange(provider, credential);
+	set(provider: string, credential: AuthCredential, accountName?: string): void {
+		const entry = this.setCredentialInEntry(this.data[provider], credential, accountName);
+		this.data[provider] = entry;
+		this.persistProviderChange(provider, entry);
 	}
 
 	/**
@@ -381,8 +490,13 @@ export class AuthStorage {
 	/**
 	 * Get all credentials (for passing to getOAuthApiKey).
 	 */
-	getAll(): AuthStorageData {
-		return { ...this.data };
+	getAll(): Record<string, AuthCredential> {
+		const credentials: Record<string, AuthCredential> = {};
+		for (const [provider, entry] of Object.entries(this.data)) {
+			const credential = this.getActiveCredential(entry);
+			if (credential) credentials[provider] = credential;
+		}
+		return credentials;
 	}
 
 	drainErrors(): Error[] {
@@ -394,14 +508,14 @@ export class AuthStorage {
 	/**
 	 * Login to an OAuth provider.
 	 */
-	async login(providerId: OAuthProviderId, callbacks: OAuthLoginCallbacks): Promise<void> {
+	async login(providerId: OAuthProviderId, callbacks: OAuthLoginCallbacks, accountName?: string): Promise<void> {
 		const provider = getOAuthProvider(providerId);
 		if (!provider) {
 			throw new Error(`Unknown OAuth provider: ${providerId}`);
 		}
 
 		const credentials = await provider.login(callbacks);
-		this.set(providerId, { type: "oauth", ...credentials });
+		this.set(providerId, { type: "oauth", ...credentials }, accountName);
 	}
 
 	/**
@@ -428,7 +542,7 @@ export class AuthStorage {
 			this.data = currentData;
 			this.loadError = null;
 
-			const cred = currentData[providerId];
+			const cred = this.getActiveCredential(currentData[providerId]);
 			if (cred?.type !== "oauth") {
 				return { result: null };
 			}
@@ -439,8 +553,9 @@ export class AuthStorage {
 
 			const oauthCreds: Record<string, OAuthCredentials> = {};
 			for (const [key, value] of Object.entries(currentData)) {
-				if (value.type === "oauth") {
-					oauthCreds[key] = value;
+				const credential = this.getActiveCredential(value);
+				if (credential?.type === "oauth") {
+					oauthCreds[key] = credential;
 				}
 			}
 
@@ -451,7 +566,10 @@ export class AuthStorage {
 
 			const merged: AuthStorageData = {
 				...currentData,
-				[providerId]: { type: "oauth", ...refreshed.newCredentials },
+				[providerId]: this.replaceActiveCredential(currentData[providerId], {
+					type: "oauth",
+					...refreshed.newCredentials,
+				}),
 			};
 			this.data = merged;
 			this.loadError = null;
@@ -477,7 +595,7 @@ export class AuthStorage {
 			return runtimeKey;
 		}
 
-		const cred = this.data[providerId];
+		const cred = this.get(providerId);
 
 		if (cred?.type === "api_key") {
 			return resolveConfigValue(cred.key, cred.env);
@@ -504,7 +622,7 @@ export class AuthStorage {
 					this.recordError(error);
 					// Refresh failed - re-read file to check if another instance succeeded
 					this.reload();
-					const updatedCred = this.data[providerId];
+					const updatedCred = this.get(providerId);
 
 					if (updatedCred?.type === "oauth" && Date.now() < updatedCred.expires) {
 						// Another instance refreshed successfully, use those credentials

@@ -11,6 +11,16 @@ Use `/login` in interactive mode, then select a provider:
 
 Use `/logout` to clear credentials. Tokens are stored in `~/.pi/agent/auth.json` and auto-refresh when expired.
 
+To store multiple accounts for one provider, pass an account name:
+
+```text
+/login openai-codex main
+/login openai-codex backup
+/account openai-codex backup
+```
+
+`/account` opens an account selector with provider, provider ID, account name, and active status. `/account <provider>` opens the same selector filtered to one provider. `/account <provider> <account>` switches directly without opening the selector. `/logout` removes the stored credentials for the selected provider, including all named accounts for that provider.
+
 ### OpenAI Codex
 
 - Requires ChatGPT Plus or Pro subscription
@@ -22,7 +32,7 @@ Anthropic subscription auth is active for Claude Pro/Max accounts. Third-party h
 
 ## API Keys
 
-Use `/login` in interactive mode and select a provider to store an API key in `auth.json`, or set credentials via environment variable:
+Use `/login` in interactive mode and select a provider to store an API key in `auth.json`, `/login <provider> <account>` to store a named account, or set credentials via environment variable:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
@@ -43,7 +53,21 @@ Store credentials in `~/.pi/agent/auth.json`:
 ```json
 {
   "anthropic": { "type": "api_key", "key": "sk-ant-..." },
-  "openai": { "type": "api_key", "key": "sk-..." },
+  "openai": { "type": "api_key", "key": "sk-..." }
+}
+```
+
+Named accounts use an `accounts` object and an `active` account pointer:
+
+```json
+{
+  "openai-codex": {
+    "active": "backup",
+    "accounts": {
+      "main": { "type": "oauth", "refresh": "...", "access": "...", "expires": 1790000000000 },
+      "backup": { "type": "oauth", "refresh": "...", "access": "...", "expires": 1790000000000 }
+    }
+  }
 }
 ```
 

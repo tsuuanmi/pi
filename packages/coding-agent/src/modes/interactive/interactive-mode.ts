@@ -96,6 +96,7 @@ import { getPiUserAgent } from "../../utils/pi-user-agent.ts";
 import { killTrackedDetachedChildren } from "../../utils/shell.ts";
 import { ensureTool } from "../../utils/tools-manager.ts";
 import { checkForNewPiVersion, type LatestPiRelease } from "../../utils/version-check.ts";
+import { AccountSelectorComponent, type AccountSelectorOption } from "./components/account-selector.ts";
 import { ArminComponent } from "./components/armin.ts";
 import { AssistantMessageComponent } from "./components/assistant-message.ts";
 import { BashExecutionComponent } from "./components/bash-execution.ts";
@@ -2624,6 +2625,16 @@ export class InteractiveMode {
 				this.editor.setText("");
 				return;
 			}
+			if (text.startsWith("/login ")) {
+				this.editor.setText("");
+				await this.handleLoginCommand(text);
+				return;
+			}
+			if (text === "/account" || text.startsWith("/account ")) {
+				this.editor.setText("");
+				this.handleAccountCommand(text);
+				return;
+			}
 			if (text === "/logout") {
 				this.showOAuthSelector("logout");
 				this.editor.setText("");
@@ -4639,6 +4650,109 @@ export class InteractiveMode {
 		}
 	}
 
+	private findLoginProviderOption(providerId: string): AuthSelectorProvider | undefined {
+		return this.getLoginProviderOptions().find((provider) => provider.id === providerId);
+	}
+
+	private async handleLoginCommand(text: string): Promise<void> {
+		const [, providerId, accountName, extra] = text.split(/\s+/);
+		if (!providerId || extra) {
+			this.showStatus("Usage: /login <provider> [account]");
+			return;
+		}
+
+		const providerOption = this.findLoginProviderOption(providerId);
+		if (!providerOption) {
+			this.showError(`Unknown login provider: ${providerId}`);
+			return;
+		}
+
+		if (providerOption.authType === "oauth") {
+			await this.showLoginDialog(providerOption.id, providerOption.name, accountName);
+		} else {
+			await this.showApiKeyLoginDialog(providerOption.id, providerOption.name, accountName);
+		}
+	}
+
+	private buildAccountOptions(providerFilter?: string): AccountSelectorOption[] {
+		const authStorage = this.session.modelRegistry.authStorage;
+		const providers = authStorage.list().filter((provider) => !providerFilter || provider === providerFilter);
+		return providers
+			.flatMap((providerId) => {
+				const activeAccount = authStorage.getActiveAccount(providerId);
+				return authStorage.getAccountNames(providerId).map((accountName) => ({
+					providerId,
+					providerName: this.session.modelRegistry.getProviderDisplayName(providerId),
+					accountName,
+					active: accountName === activeAccount,
+				}));
+			})
+			.sort((a, b) => {
+				const providerCompare = a.providerName.localeCompare(b.providerName);
+				if (providerCompare !== 0) return providerCompare;
+				if (a.active !== b.active) return a.active ? -1 : 1;
+				return a.accountName.localeCompare(b.accountName);
+			});
+	}
+
+	private switchProviderAccount(providerId: string, accountName: string): void {
+		const authStorage = this.session.modelRegistry.authStorage;
+		const accounts = authStorage.getAccountNames(providerId);
+		if (!authStorage.switchAccount(providerId, accountName)) {
+			this.showError(`No account named "${accountName}" for ${providerId}. Available: ${accounts.join(", ")}`);
+			return;
+		}
+
+		this.session.modelRegistry.refresh();
+		this.footer.invalidate();
+		this.updateEditorBorderColor();
+		this.showStatus(`Switched ${providerId} to account ${accountName}`);
+	}
+
+	private showAccountSelector(providerId?: string): void {
+		const options = this.buildAccountOptions(providerId);
+		if (options.length === 0) {
+			this.showStatus(
+				providerId
+					? `No stored accounts for ${providerId}. Use /login ${providerId} <account> first.`
+					: "No stored provider accounts. Use /login first.",
+			);
+			return;
+		}
+
+		this.showSelector((done) => {
+			const selector = new AccountSelectorComponent(
+				options,
+				(option) => {
+					done();
+					this.switchProviderAccount(option.providerId, option.accountName);
+				},
+				() => {
+					done();
+					this.ui.requestRender();
+				},
+			);
+			return { component: selector, focus: selector };
+		});
+	}
+
+	private handleAccountCommand(text: string): void {
+		const parts = text.split(/\s+/);
+		const providerId = parts[1];
+		const accountName = parts[2];
+		if (parts.length > 3) {
+			this.showStatus("Usage: /account [provider] [account]");
+			return;
+		}
+
+		if (!providerId || !accountName) {
+			this.showAccountSelector(providerId);
+			return;
+		}
+
+		this.switchProviderAccount(providerId, accountName);
+	}
+
 	private getLoginProviderOptions(authType?: "oauth" | "api_key"): AuthSelectorProvider[] {
 		const authStorage = this.session.modelRegistry.authStorage;
 		const oauthProviders = authStorage.getOAuthProviders();
@@ -4797,10 +4911,15 @@ export class InteractiveMode {
 		providerName: string,
 		authType: "oauth" | "api_key",
 		previousModel: Model<any> | undefined,
+		accountName?: string,
 	): Promise<void> {
 		this.session.modelRegistry.refresh();
 
-		const actionLabel = authType === "oauth" ? `Logged in to ${providerName}` : `Saved API key for ${providerName}`;
+		const accountSuffix = accountName ? ` account ${accountName}` : "";
+		const actionLabel =
+			authType === "oauth"
+				? `Logged in to ${providerName}${accountSuffix}`
+				: `Saved API key for ${providerName}${accountSuffix}`;
 
 		let selectedModel: Model<any> | undefined;
 		let selectionError: string | undefined;
@@ -4844,7 +4963,7 @@ export class InteractiveMode {
 		}
 	}
 
-	private async showApiKeyLoginDialog(providerId: string, providerName: string): Promise<void> {
+	private async showApiKeyLoginDialog(providerId: string, providerName: string, accountName?: string): Promise<void> {
 		const previousModel = this.session.model;
 
 		const dialog = new LoginDialogComponent(
@@ -4874,10 +4993,10 @@ export class InteractiveMode {
 				throw new Error("API key cannot be empty.");
 			}
 
-			this.session.modelRegistry.authStorage.set(providerId, { type: "api_key", key: apiKey });
+			this.session.modelRegistry.authStorage.set(providerId, { type: "api_key", key: apiKey }, accountName);
 
 			restoreEditor();
-			await this.completeProviderAuthentication(providerId, providerName, "api_key", previousModel);
+			await this.completeProviderAuthentication(providerId, providerName, "api_key", previousModel, accountName);
 		} catch (error: unknown) {
 			restoreEditor();
 			const errorMsg = error instanceof Error ? error.message : String(error);
@@ -4915,7 +5034,7 @@ export class InteractiveMode {
 		});
 	}
 
-	private async showLoginDialog(providerId: string, providerName: string): Promise<void> {
+	private async showLoginDialog(providerId: string, providerName: string, accountName?: string): Promise<void> {
 		const providerInfo = this.session.modelRegistry.authStorage
 			.getOAuthProviders()
 			.find((provider) => provider.id === providerId);
@@ -4957,53 +5076,57 @@ export class InteractiveMode {
 		};
 
 		try {
-			await this.session.modelRegistry.authStorage.login(providerId as OAuthProviderId, {
-				onAuth: (info: { url: string; instructions?: string }) => {
-					dialog.showAuth(info.url, info.instructions);
+			await this.session.modelRegistry.authStorage.login(
+				providerId as OAuthProviderId,
+				{
+					onAuth: (info: { url: string; instructions?: string }) => {
+						dialog.showAuth(info.url, info.instructions);
 
-					if (usesCallbackServer) {
-						// Show input for manual paste, racing with callback
-						dialog
-							.showManualInput("Paste redirect URL below, or complete login in browser:")
-							.then((value) => {
-								if (value && manualCodeResolve) {
-									manualCodeResolve(value);
-									manualCodeResolve = undefined;
-								}
-							})
-							.catch(() => {
-								if (manualCodeReject) {
-									manualCodeReject(new Error("Login cancelled"));
-									manualCodeReject = undefined;
-								}
-							});
-					}
-					// For Anthropic: onPrompt is called immediately after
+						if (usesCallbackServer) {
+							// Show input for manual paste, racing with callback
+							dialog
+								.showManualInput("Paste redirect URL below, or complete login in browser:")
+								.then((value) => {
+									if (value && manualCodeResolve) {
+										manualCodeResolve(value);
+										manualCodeResolve = undefined;
+									}
+								})
+								.catch(() => {
+									if (manualCodeReject) {
+										manualCodeReject(new Error("Login cancelled"));
+										manualCodeReject = undefined;
+									}
+								});
+						}
+						// For Anthropic: onPrompt is called immediately after
+					},
+
+					onDeviceCode: (info) => {
+						dialog.showDeviceCode(info);
+						dialog.showWaiting("Waiting for authentication...");
+					},
+
+					onPrompt: async (prompt: { message: string; placeholder?: string }) => {
+						return dialog.showPrompt(prompt.message, prompt.placeholder);
+					},
+
+					onProgress: (message: string) => {
+						dialog.showProgress(message);
+					},
+
+					onSelect: (prompt: OAuthSelectPrompt) => this.showOAuthLoginSelect(dialog, prompt),
+
+					onManualCodeInput: () => manualCodePromise,
+
+					signal: dialog.signal,
 				},
-
-				onDeviceCode: (info) => {
-					dialog.showDeviceCode(info);
-					dialog.showWaiting("Waiting for authentication...");
-				},
-
-				onPrompt: async (prompt: { message: string; placeholder?: string }) => {
-					return dialog.showPrompt(prompt.message, prompt.placeholder);
-				},
-
-				onProgress: (message: string) => {
-					dialog.showProgress(message);
-				},
-
-				onSelect: (prompt: OAuthSelectPrompt) => this.showOAuthLoginSelect(dialog, prompt),
-
-				onManualCodeInput: () => manualCodePromise,
-
-				signal: dialog.signal,
-			});
+				accountName,
+			);
 
 			// Success
 			restoreEditor();
-			await this.completeProviderAuthentication(providerId, providerName, "oauth", previousModel);
+			await this.completeProviderAuthentication(providerId, providerName, "oauth", previousModel, accountName);
 		} catch (error: unknown) {
 			restoreEditor();
 			const errorMsg = error instanceof Error ? error.message : String(error);

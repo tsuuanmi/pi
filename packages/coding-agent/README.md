@@ -93,6 +93,14 @@ pi
 /login  # Then select provider
 ```
 
+For multiple accounts on one provider, name each login and switch manually:
+
+```text
+/login openai-codex main
+/login openai-codex backup
+/account openai-codex backup
+```
+
 Then just talk to pi. By default, pi gives the model four tools: `read`, `write`, `edit`, and `bash`. The model uses these to fulfill your requests. Add capabilities via [skills](#skills), [prompt templates](#prompt-templates), [extensions](#extensions), or [pi packages](#pi-packages).
 
 **Platform notes:** pi supports Linux and macOS. See [Termux (Android)](docs/termux.md), [tmux](docs/tmux.md), [Terminal setup](docs/terminal-setup.md), and [Shell aliases](docs/shell-aliases.md).
@@ -174,7 +182,8 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 
 | Command | Description |
 |---------|-------------|
-| `/login`, `/logout` | OAuth authentication |
+| `/login`, `/logout` | Configure or remove provider authentication |
+| `/account` | Open account selector or switch stored provider accounts |
 | `/model` | Switch models |
 | `/scoped-models` | Enable/disable models for Ctrl+P cycling |
 | `/settings` | Thinking level, theme, message delivery, transport |
