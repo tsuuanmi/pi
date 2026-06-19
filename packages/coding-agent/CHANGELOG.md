@@ -6,6 +6,7 @@
 - Removed Google Gemini, Google Vertex, and xAI from the built-in provider display names, default model map, env-key resolution, help text, and docs. Custom OpenAI-compatible providers (e.g. Ollama Cloud) still work via `openai-completions`.
 - Removed the `thinkingBudgets` setting and `SettingsManager.getThinkingBudgets()`.
 - Removed the `forceAdaptiveThinking` and `supportsEagerToolInputStreaming` Anthropic compat flags from the model registry schema; Anthropic models now always use adaptive thinking and per-tool `eager_input_streaming`.
+- Removed the `/scoped-models`, `/clone`, `/arminsayshi`, and `/dementedelves` interactive slash commands, along with their dedicated components, keybindings, and tests.
 
 ### Added
 
@@ -21,6 +22,10 @@
 
 - Fixed `/model` autocomplete and model selection searches to match provider/model queries regardless of whether the provider or model token is typed first.
 - Fixed the tree navigator to horizontally pan deep entries so the selected item remains readable ([#5830](https://github.com/earendil-works/pi/issues/5830)).
+
+### Removed
+
+- Removed repo-local `.pi` prompt templates, extensions, and skills.
 
 ## [0.79.6] - 2026-06-16
 

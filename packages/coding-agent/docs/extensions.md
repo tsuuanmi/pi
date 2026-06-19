@@ -316,7 +316,7 @@ user sends another prompt ◄─────────────────
   ├─► session_start { reason: "new" | "resume", previousSessionFile? }
   └─► resources_discover { reason: "startup" }
 
-/fork or /clone
+/fork
   ├─► session_before_fork (can cancel)
   ├─► session_shutdown
   ├─► session_start { reason: "fork", previousSessionFile }
@@ -416,19 +416,19 @@ Do cleanup work in `session_shutdown`, then reestablish any in-memory state in `
 
 #### session_before_fork
 
-Fired when forking via `/fork` or cloning via `/clone`.
+Fired when forking via `/fork`.
 
 ```typescript
 pi.on("session_before_fork", async (event, ctx) => {
   // event.entryId - ID of the selected entry
-  // event.position - "before" for /fork, "at" for /clone
-  return { cancel: true }; // Cancel fork/clone
+  // event.position - "before" for /fork
+  return { cancel: true }; // Cancel fork
   // OR
   return { skipConversationRestore: true }; // Reserved for future conversation restore control
 });
 ```
 
-After a successful fork or clone, pi emits `session_shutdown` for the old extension instance, reloads and rebinds extensions for the new session, then emits `session_start` with `reason: "fork"` and `previousSessionFile`.
+After a successful fork, pi emits `session_shutdown` for the old extension instance, reloads and rebinds extensions for the new session, then emits `session_start` with `reason: "fork"` and `previousSessionFile`.
 Do cleanup work in `session_shutdown`, then reestablish any in-memory state in `session_start`.
 
 #### session_before_compact / session_compact

@@ -29,7 +29,6 @@ For the JSONL file format and SessionManager API, see [Session Format](session-f
 | `/session` | Show session info |
 | `/tree` | Navigate the current session tree |
 | `/fork` | Create a new session from a previous user message |
-| `/clone` | Duplicate the current active branch into a new session |
 | `/compact [prompt]` | Summarize older context; see [Compaction](compaction.md) |
 | `/export [file]` | Export session to HTML |
 | `/share` | Upload as private GitHub gist with shareable HTML link |
@@ -115,16 +114,16 @@ Selecting an assistant, tool, compaction, or other non-user entry:
 
 Selecting the root user message resets the leaf to an empty conversation and places the original prompt in the editor.
 
-## `/tree`, `/fork`, and `/clone`
+## `/tree` and `/fork`
 
-| Feature | `/tree` | `/fork` | `/clone` |
-|---------|---------|---------|----------|
-| Output | Same session file | New session file | New session file |
-| View | Full tree | User-message selector | Current active branch |
-| Typical use | Explore alternatives in place | Start a new session from an earlier prompt | Duplicate current work before continuing |
-| Summary | Optional branch summary | None | None |
+| Feature | `/tree` | `/fork` |
+|---------|---------|---------|
+| Output | Same session file | New session file |
+| View | Full tree | User-message selector |
+| Typical use | Explore alternatives in place | Start a new session from an earlier prompt |
+| Summary | Optional branch summary | None |
 
-Use `/tree` when you want to keep alternatives together. Use `/fork` or `/clone` when you want a separate session file.
+Use `/tree` when you want to keep alternatives together. Use `/fork` when you want a separate session file.
 
 ## Branch Summaries
 
