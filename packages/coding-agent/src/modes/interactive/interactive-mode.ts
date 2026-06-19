@@ -77,6 +77,7 @@ import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "../../core/htt
 import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.ts";
 import { createCompactionSummaryMessage } from "../../core/messages.ts";
 import { defaultModelPerProvider, findExactModelReferenceMatch } from "../../core/model-resolver.ts";
+import { fetchOpenAICodexUsageSummary, getCodexUsageCacheTtlMs } from "../../core/openai-codex-usage.ts";
 import { DefaultPackageManager } from "../../core/package-manager.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/provider-display-names.ts";
 import type { ResourceDiagnostic } from "../../core/resource-loader.ts";
@@ -290,6 +291,8 @@ export class InteractiveMode {
 	private changelogMarkdown: string | undefined = undefined;
 	private startupNoticesShown = false;
 	private anthropicSubscriptionWarningShown = false;
+	private codexUsageRefreshInFlight = false;
+	private codexUsageLastFetchMs = 0;
 
 	// Status line tracking (for mutating immediately-sequential status updates)
 	private lastStatusSpacer: Spacer | undefined = undefined;
@@ -747,6 +750,7 @@ export class InteractiveMode {
 
 		// Initialize available provider count for footer display
 		await this.updateAvailableProviderCount();
+		void this.refreshCodexUsageSummary(true);
 	}
 
 	/**
@@ -1625,6 +1629,8 @@ export class InteractiveMode {
 		this.footer.setSession(this.session);
 		this.footer.setAutoCompactEnabled(this.session.autoCompactionEnabled);
 		this.footerDataProvider.setCwd(this.sessionManager.getCwd());
+		this.footerDataProvider.setCodexUsageSummary(null);
+		this.codexUsageLastFetchMs = 0;
 		this.hideThinkingBlock = this.settingsManager.getHideThinkingBlock();
 		this.ui.setShowHardwareCursor(this.settingsManager.getShowHardwareCursor());
 		this.ui.setClearOnShrink(this.settingsManager.getClearOnShrink());
@@ -2907,6 +2913,7 @@ export class InteractiveMode {
 			}
 
 			case "agent_end":
+				void this.refreshCodexUsageSummary(false);
 				if (this.settingsManager.getShowTerminalProgress()) {
 					this.ui.terminal.setProgress(false);
 				}
@@ -3576,6 +3583,7 @@ export class InteractiveMode {
 			} else {
 				this.footer.invalidate();
 				this.updateEditorBorderColor();
+				void this.refreshCodexUsageSummary(true);
 				const thinkingStr =
 					result.model.reasoning && result.thinkingLevel !== "off" ? ` (thinking: ${result.thinkingLevel})` : "";
 				this.showStatus(`Switched to ${result.model.name || result.model.id}${thinkingStr}`);
@@ -4124,6 +4132,7 @@ export class InteractiveMode {
 				await this.session.setModel(model);
 				this.footer.invalidate();
 				this.updateEditorBorderColor();
+				void this.refreshCodexUsageSummary(true);
 				this.showStatus(`Model: ${model.id}`);
 				void this.maybeWarnAboutAnthropicSubscriptionAuth(model);
 			} catch (error) {
@@ -4158,6 +4167,35 @@ export class InteractiveMode {
 		const models = await this.getModelCandidates();
 		const uniqueProviders = new Set(models.map((m) => m.provider));
 		this.footerDataProvider.setAvailableProviderCount(uniqueProviders.size);
+	}
+
+	private async refreshCodexUsageSummary(force: boolean): Promise<void> {
+		const model = this.session.model;
+		if (!model || model.provider !== "openai-codex" || !this.session.modelRegistry.isUsingOAuth(model)) {
+			this.footerDataProvider.setCodexUsageSummary(null);
+			return;
+		}
+
+		const now = Date.now();
+		if (this.codexUsageRefreshInFlight || (!force && now - this.codexUsageLastFetchMs < getCodexUsageCacheTtlMs())) {
+			return;
+		}
+
+		this.codexUsageRefreshInFlight = true;
+		this.codexUsageLastFetchMs = now;
+		const provider = model.provider;
+		const modelId = model.id;
+		try {
+			const summary = await fetchOpenAICodexUsageSummary(this.session.modelRegistry, model);
+			if (this.session.model?.provider === provider && this.session.model.id === modelId) {
+				this.footerDataProvider.setCodexUsageSummary(summary);
+				this.ui.requestRender();
+			}
+		} catch {
+			// Quota display is best-effort. Keep the footer usable if Codex usage is unavailable.
+		} finally {
+			this.codexUsageRefreshInFlight = false;
+		}
 	}
 
 	private async maybeWarnAboutAnthropicSubscriptionAuth(
@@ -4256,6 +4294,7 @@ export class InteractiveMode {
 						await this.session.setModel(model);
 						this.footer.invalidate();
 						this.updateEditorBorderColor();
+						void this.refreshCodexUsageSummary(true);
 						done();
 						this.showStatus(`Model: ${model.id}`);
 						void this.maybeWarnAboutAnthropicSubscriptionAuth(model);
@@ -4825,6 +4864,7 @@ export class InteractiveMode {
 		await this.updateAvailableProviderCount();
 		this.footer.invalidate();
 		this.updateEditorBorderColor();
+		void this.refreshCodexUsageSummary(true);
 		if (selectedModel) {
 			this.showStatus(`${actionLabel}. Selected ${selectedModel.id}. Credentials saved to ${getAuthPath()}`);
 			void this.maybeWarnAboutAnthropicSubscriptionAuth(selectedModel);

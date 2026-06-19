@@ -2,6 +2,7 @@ import { visibleWidth } from "@earendil-works/pi-tui";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { AgentSession } from "../src/core/agent-session.ts";
 import type { ReadonlyFooterDataProvider } from "../src/core/footer-data-provider.ts";
+import type { CodexUsageSummary } from "../src/core/openai-codex-usage.ts";
 import { FooterComponent, formatCwdForFooter } from "../src/modes/interactive/components/footer.ts";
 import { initTheme } from "../src/modes/interactive/theme/theme.ts";
 import { stripAnsi } from "../src/utils/ansi.ts";
@@ -60,11 +61,15 @@ function createSession(options: {
 	return session as unknown as AgentSession;
 }
 
-function createFooterData(providerCount: number): ReadonlyFooterDataProvider {
+function createFooterData(
+	providerCount: number,
+	codexUsageSummary: CodexUsageSummary | null = null,
+): ReadonlyFooterDataProvider {
 	const provider = {
 		getGitBranch: () => "main",
 		getExtensionStatuses: () => new Map<string, string>(),
 		getAvailableProviderCount: () => providerCount,
+		getCodexUsageSummary: () => codexUsageSummary,
 		onBranchChange: (callback: () => void) => {
 			void callback;
 			return () => {};
@@ -125,7 +130,7 @@ describe("FooterComponent width handling", () => {
 		}
 	});
 
-	it("shows the latest cache hit rate when cache usage is present", () => {
+	it("does not show cache stats", () => {
 		const session = createSession({
 			sessionName: "",
 			usage: {
@@ -139,6 +144,16 @@ describe("FooterComponent width handling", () => {
 		const footer = new FooterComponent(session, createFooterData(1));
 
 		const statsLine = stripAnsi(footer.render(120)[1]);
-		expect(statsLine).toContain("CH25.0%");
+		expect(statsLine).toContain("Usage: ↑100 ↓10");
+		expect(statsLine).not.toContain("cache");
+	});
+
+	it("shows OpenAI Codex quota when available", () => {
+		const session = createSession({ sessionName: "", provider: "openai-codex" });
+		const footer = new FooterComponent(session, createFooterData(1, { text: "5H 12.3% 1W 67.9%", status: "ok" }));
+
+		const statsLine = stripAnsi(footer.render(120)[1]);
+		expect(statsLine).toContain("Quota: 5H 12.3% 1W 67.9%");
+		expect(statsLine).toContain("Context: 12.3%/200k (auto)");
 	});
 });
