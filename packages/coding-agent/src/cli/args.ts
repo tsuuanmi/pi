@@ -22,6 +22,7 @@ export interface Args {
 	session?: string;
 	print?: boolean;
 	listModels?: string | true;
+	tmux?: boolean;
 	verbose?: boolean;
 	messages: string[];
 	fileArgs: string[];
@@ -89,6 +90,8 @@ export function parseArgs(args: string[]): Args {
 				result.messages.push(next);
 				i++;
 			}
+		} else if (arg === "--tmux") {
+			result.tmux = true;
 		} else if (arg === "--list-models") {
 			// Check if next arg is a search pattern (not a flag or file arg)
 			if (i + 1 < args.length && !args[i + 1].startsWith("-") && !args[i + 1].startsWith("@")) {
@@ -160,6 +163,7 @@ ${chalk.bold("Options:")}
   --name, -n <name>              Set session display name
   --thinking <level>             Set thinking level: off, minimal, low, medium, high, xhigh
   --list-models [search]         List available models (with optional fuzzy search)
+  --tmux                         Launch interactive startup inside a new tmux session
   --verbose                      Force verbose startup (overrides quietStartup setting)
   --help, -h                     Show this help
   --version, -v                  Show version number
@@ -169,6 +173,9 @@ Extensions can register additional flags (e.g., --plan from plan-mode extension)
 ${chalk.bold("Examples:")}
   # Interactive mode
   ${APP_NAME}
+
+  # Launch interactive mode in tmux
+  ${APP_NAME} --tmux
 
   # Interactive mode with initial prompt
   ${APP_NAME} "List all .ts files in src/"

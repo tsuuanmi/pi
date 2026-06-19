@@ -153,6 +153,13 @@ describe("parseArgs", () => {
 		});
 	});
 
+	describe("--tmux flag", () => {
+		test("parses --tmux flag", () => {
+			const result = parseArgs(["--tmux"]);
+			expect(result.tmux).toBe(true);
+		});
+	});
+
 	describe("messages and file args", () => {
 		test("parses plain text messages", () => {
 			const result = parseArgs(["hello", "world"]);

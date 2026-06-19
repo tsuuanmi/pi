@@ -11,6 +11,7 @@ import chalk from "chalk";
 import { type Args, type Mode, parseArgs, printHelp } from "./cli/args.ts";
 import { processFileArguments } from "./cli/file-processor.ts";
 import { buildInitialMessage } from "./cli/initial-message.ts";
+import { launchDefaultTmuxIfNeeded } from "./cli/launch-tmux.ts";
 import { listModels } from "./cli/list-models.ts";
 import { createProjectTrustContext } from "./cli/project-trust.ts";
 import { selectSession } from "./cli/session-picker.ts";
@@ -391,6 +392,10 @@ export async function main(args: string[], options?: MainOptions) {
 	if (parsed.version) {
 		console.log(VERSION);
 		process.exit(0);
+	}
+
+	if (launchDefaultTmuxIfNeeded({ parsed, rawArgs: args, cwd })) {
+		return;
 	}
 
 	let appMode = resolveAppMode(parsed, process.stdin.isTTY, process.stdout.isTTY);
