@@ -10,6 +10,7 @@
 
 ### Added
 
+- Added a default `lsp` tool with minimal TypeScript/JavaScript, Python, and Rust Language Server Protocol support for status, diagnostics, symbols, hover, definitions, and references.
 - Added `pi --tmux` to launch interactive startup inside a new tmux session.
 - Added stored account profiles for provider auth, with `/login <provider> [account]`, an interactive `/account` selector, and `/account <provider> <account>` for manual switching without logging out.
 - Exported `CONFIG_DIR_NAME` from the coding-agent public API so extensions can resolve project config paths without hardcoding `.pi`.

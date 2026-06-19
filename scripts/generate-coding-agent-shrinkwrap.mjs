@@ -10,7 +10,9 @@ const codingAgentDir = join(repoRoot, "packages/coding-agent");
 const rootLockfilePath = join(repoRoot, "package-lock.json");
 const shrinkwrapPath = join(codingAgentDir, "npm-shrinkwrap.json");
 const internalPackagePrefix = "@earendil-works/pi-";
-const allowedInstallScriptPackages = new Map([]);
+const allowedInstallScriptPackages = new Map([
+	["fsevents@2.3.3", "Optional macOS file watcher pulled in by pyright for the bundled Python language server."],
+]);
 
 const args = new Set(process.argv.slice(2));
 const checkOnly = args.has("--check");
