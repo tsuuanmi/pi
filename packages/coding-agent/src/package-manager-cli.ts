@@ -48,7 +48,6 @@ interface PackageCommandOptions {
 	updateTarget?: UpdateTarget;
 	local: boolean;
 	force: boolean;
-	projectTrustOverride?: boolean;
 	help: boolean;
 	invalidOption?: string;
 	invalidArgument?: string;
@@ -69,13 +68,13 @@ function reportSettingsErrors(settingsManager: SettingsManager, context: string)
 function getPackageCommandUsage(command: PackageCommand): string {
 	switch (command) {
 		case "install":
-			return `${APP_NAME} install <source> [-l] [--approve|--no-approve]`;
+			return `${APP_NAME} install <source> [-l]`;
 		case "remove":
-			return `${APP_NAME} remove <source> [-l] [--approve|--no-approve]`;
+			return `${APP_NAME} remove <source> [-l]`;
 		case "update":
-			return `${APP_NAME} update [source|self|pi] [--self] [--extensions] [--extension <source>] [--approve|--no-approve] [--force]`;
+			return `${APP_NAME} update [source|self|pi] [--self] [--extensions] [--force]`;
 		case "list":
-			return `${APP_NAME} list [--approve|--no-approve]`;
+			return `${APP_NAME} list`;
 	}
 }
 
@@ -89,8 +88,6 @@ Install a package and add it to settings.
 
 Options:
   -l, --local       Install project-locally (${CONFIG_DIR_NAME}/settings.json)
-  -a, --approve     Trust project-local files for this command
-  -na, --no-approve Ignore project-local files for this command
 
 Examples:
   ${APP_NAME} install npm:@foo/bar
@@ -111,8 +108,6 @@ Alias: ${APP_NAME} uninstall <source> [-l]
 
 Options:
   -l, --local       Remove from project settings (${CONFIG_DIR_NAME}/settings.json)
-  -a, --approve     Trust project-local files for this command
-  -na, --no-approve Ignore project-local files for this command
 
 Examples:
   ${APP_NAME} remove npm:@foo/bar
@@ -129,9 +124,6 @@ Update pi and installed packages.
 Options:
   --self                  Update pi only
   --extensions            Update installed packages only
-  --extension <source>    Update one package only
-  -a, --approve           Trust project-local files for this command
-  -na, --no-approve       Ignore project-local files for this command
   --force                 Reinstall pi even if the current version is latest
 
 Short forms:
@@ -146,10 +138,6 @@ Short forms:
   ${getPackageCommandUsage("list")}
 
 List installed packages from user and project settings.
-
-Options:
-  -a, --approve      Trust project-local files for this command
-  -na, --no-approve  Ignore project-local files for this command
 `);
 			return;
 	}
@@ -169,7 +157,6 @@ function parsePackageCommand(args: string[]): PackageCommandOptions | undefined 
 
 	let local = false;
 	let force = false;
-	let projectTrustOverride: boolean | undefined;
 	let help = false;
 	let invalidOption: string | undefined;
 	let invalidArgument: string | undefined;
@@ -178,7 +165,6 @@ function parsePackageCommand(args: string[]): PackageCommandOptions | undefined 
 	let source: string | undefined;
 	let selfFlag = false;
 	let extensionsFlag = false;
-	let extensionFlagSource: string | undefined;
 
 	for (let index = 0; index < rest.length; index++) {
 		const arg = rest[index];
@@ -214,40 +200,11 @@ function parsePackageCommand(args: string[]): PackageCommandOptions | undefined 
 			continue;
 		}
 
-		if (arg === "--approve" || arg === "-a") {
-			projectTrustOverride = true;
-			continue;
-		}
-
-		if (arg === "--no-approve" || arg === "-na") {
-			projectTrustOverride = false;
-			continue;
-		}
-
 		if (arg === "--force") {
 			if (command === "update") {
 				force = true;
 			} else {
 				invalidOption = invalidOption ?? arg;
-			}
-			continue;
-		}
-
-		if (arg === "--extension") {
-			if (command !== "update") {
-				invalidOption = invalidOption ?? arg;
-				continue;
-			}
-
-			const value = rest[index + 1];
-			if (!value || value.startsWith("-")) {
-				missingOptionValue = missingOptionValue ?? arg;
-			} else if (extensionFlagSource) {
-				conflictingOptions = conflictingOptions ?? "--extension can only be provided once";
-				index++;
-			} else {
-				extensionFlagSource = value;
-				index++;
 			}
 			continue;
 		}
@@ -266,15 +223,7 @@ function parsePackageCommand(args: string[]): PackageCommandOptions | undefined 
 
 	let updateTarget: UpdateTarget | undefined;
 	if (command === "update") {
-		if (extensionFlagSource) {
-			if (selfFlag || extensionsFlag) {
-				conflictingOptions = conflictingOptions ?? "--extension cannot be combined with --self or --extensions";
-			}
-			if (source) {
-				conflictingOptions = conflictingOptions ?? "--extension cannot be combined with a positional source";
-			}
-			updateTarget = { type: "extensions", source: extensionFlagSource };
-		} else if (source) {
+		if (source) {
 			const sourceIsSelf = source === "self" || source === "pi";
 			if (sourceIsSelf) {
 				updateTarget = extensionsFlag ? { type: "all" } : { type: "self" };
@@ -302,7 +251,6 @@ function parsePackageCommand(args: string[]): PackageCommandOptions | undefined 
 		updateTarget,
 		local,
 		force,
-		projectTrustOverride,
 		help,
 		invalidOption,
 		invalidArgument,
@@ -402,18 +350,6 @@ async function runSelfUpdate(command: SelfUpdateCommand): Promise<void> {
 	}
 }
 
-function parseProjectTrustOverride(args: readonly string[]): boolean | undefined {
-	let trustOverride: boolean | undefined;
-	for (const arg of args) {
-		if (arg === "--approve" || arg === "-a") {
-			trustOverride = true;
-		} else if (arg === "--no-approve" || arg === "-na") {
-			trustOverride = false;
-		}
-	}
-	return trustOverride;
-}
-
 export interface PackageCommandRuntimeOptions {
 	extensionFactories?: ExtensionFactory[];
 }
@@ -436,7 +372,6 @@ function reportProjectTrustWarnings(warnings: readonly string[]): void {
 async function createCommandSettingsManager(options: {
 	cwd: string;
 	agentDir: string;
-	projectTrustOverride?: boolean;
 	useSavedProjectTrustOnly?: boolean;
 	extensionFactories?: ExtensionFactory[];
 }): Promise<CommandSettingsResult> {
@@ -445,20 +380,19 @@ async function createCommandSettingsManager(options: {
 	const trustStore = new ProjectTrustStore(options.agentDir);
 	if (options.useSavedProjectTrustOnly) {
 		const savedProjectTrusted = trustStore.get(options.cwd) === true;
-		settingsManager.setProjectTrusted(options.projectTrustOverride ?? savedProjectTrusted);
+		settingsManager.setProjectTrusted(savedProjectTrusted);
 		return { settingsManager, projectTrustWarnings };
 	}
 
 	const appMode = getCommandAppMode();
-	const extensionsResult =
-		options.projectTrustOverride === undefined && hasTrustRequiringProjectResources(options.cwd)
-			? await new DefaultResourceLoader({
-					cwd: options.cwd,
-					agentDir: options.agentDir,
-					settingsManager,
-					extensionFactories: options.extensionFactories,
-				}).loadProjectTrustExtensions()
-			: undefined;
+	const extensionsResult = hasTrustRequiringProjectResources(options.cwd)
+		? await new DefaultResourceLoader({
+				cwd: options.cwd,
+				agentDir: options.agentDir,
+				settingsManager,
+				extensionFactories: options.extensionFactories,
+			}).loadProjectTrustExtensions()
+		: undefined;
 	for (const error of extensionsResult?.errors ?? []) {
 		projectTrustWarnings.push(`Failed to load extension "${error.path}": ${error.error}`);
 	}
@@ -466,7 +400,6 @@ async function createCommandSettingsManager(options: {
 	const projectTrusted = await resolveProjectTrusted({
 		cwd: options.cwd,
 		trustStore,
-		trustOverride: options.projectTrustOverride,
 		defaultProjectTrust: settingsManager.getDefaultProjectTrust(),
 		extensionsResult,
 		projectTrustContext: createProjectTrustContext({
@@ -494,7 +427,6 @@ export async function handleConfigCommand(
 	const { settingsManager, projectTrustWarnings } = await createCommandSettingsManager({
 		cwd,
 		agentDir,
-		projectTrustOverride: parseProjectTrustOverride(args),
 		extensionFactories: runtimeOptions.extensionFactories,
 	});
 	reportProjectTrustWarnings(projectTrustWarnings);
@@ -568,13 +500,14 @@ export async function handlePackageCommand(
 	const { settingsManager, projectTrustWarnings } = await createCommandSettingsManager({
 		cwd,
 		agentDir,
-		projectTrustOverride: options.projectTrustOverride,
 		useSavedProjectTrustOnly: options.command === "update",
 		extensionFactories: runtimeOptions.extensionFactories,
 	});
 	reportProjectTrustWarnings(projectTrustWarnings);
 	if (!settingsManager.isProjectTrusted() && writesProjectPackageConfig) {
-		console.error(chalk.red("Project is not trusted. Use --approve to modify local package config."));
+		console.error(
+			chalk.red("Project is not trusted. Trust the project in config before modifying local package config."),
+		);
 		process.exitCode = 1;
 		return true;
 	}

@@ -318,7 +318,7 @@ export function resolveCliModel(options: {
 	}
 
 	// Important: use *all* models here, not just models with pre-configured auth.
-	// This allows "--api-key" to be used for first-time setup.
+	// First-time setup can select a model before credentials are configured.
 	const availableModels = modelRegistry.getAll();
 	if (availableModels.length === 0) {
 		return {

@@ -3,7 +3,7 @@
  *
  * These tests verify:
  * - Forking from a single message works
- * - Forking in --no-session mode (in-memory only)
+ * - Forking in in-memory sessions
  * - getUserMessagesForForking returns correct entries
  */
 
@@ -107,7 +107,7 @@ describe.skipIf(!API_KEY)("AgentSession forking", () => {
 		expect(existsSync(session.sessionFile!)).toBe(false);
 	});
 
-	it("should support in-memory forking in --no-session mode", async () => {
+	it("should support in-memory forking", async () => {
 		await createSession(true);
 
 		expect(session.sessionFile).toBeUndefined();

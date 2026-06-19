@@ -50,7 +50,7 @@ This is a test skill.
 		expect(session.resourceLoader.getSkills().skills.some((s) => s.name === "test-skill")).toBe(true);
 	});
 
-	it("should have empty skills when resource loader returns none (--no-skills)", async () => {
+	it("should have empty skills when resource loader returns none", async () => {
 		const resourceLoader: ResourceLoader = {
 			getExtensions: () => ({ extensions: [], errors: [], runtime: createExtensionRuntime() }),
 			getSkills: () => ({ skills: [], diagnostics: [] }),

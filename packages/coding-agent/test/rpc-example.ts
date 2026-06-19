@@ -15,7 +15,6 @@ async function main() {
 		cliPath: join(__dirname, "../dist/cli.js"),
 		provider: "anthropic",
 		model: "claude-sonnet-4-20250514",
-		args: ["--no-session"],
 	});
 
 	// Stream events to console

@@ -58,49 +58,46 @@ describe("formatResumeCommand", () => {
 		expect(formatResumeCommand(sessionManager)).toBe(`${APP_NAME} --session test-session`);
 	});
 
-	it("includes unquoted safe session dirs for non-default session dirs", () => {
+	it("uses the session file path for non-default session dirs", () => {
 		setStdoutIsTTY(true);
 		const sessionFile = createTempFile();
 		const sessionManager = createSessionManager({
 			sessionFile,
 			sessionId: "test-session",
-			sessionDir: "/tmp/custom-pi-sessions",
 			usesDefaultSessionDir: false,
 		});
 
-		expect(formatResumeCommand(sessionManager)).toBe(
-			`${APP_NAME} --session-dir /tmp/custom-pi-sessions --session test-session`,
-		);
+		expect(formatResumeCommand(sessionManager)).toBe(`${APP_NAME} --session ${sessionFile}`);
 	});
 
-	it("quotes session dirs containing spaces", () => {
+	it("quotes non-default session file paths containing spaces", () => {
 		setStdoutIsTTY(true);
-		const sessionFile = createTempFile();
+		const dir = mkdtempSync(join(tmpdir(), "pi format resume command "));
+		tempDirs.push(dir);
+		const sessionFile = join(dir, "session.jsonl");
+		writeFileSync(sessionFile, "\n");
 		const sessionManager = createSessionManager({
 			sessionFile,
 			sessionId: "test-session",
-			sessionDir: "/tmp/custom pi sessions",
 			usesDefaultSessionDir: false,
 		});
 
-		expect(formatResumeCommand(sessionManager)).toBe(
-			`${APP_NAME} --session-dir '/tmp/custom pi sessions' --session test-session`,
-		);
+		expect(formatResumeCommand(sessionManager)).toBe(`${APP_NAME} --session '${sessionFile}'`);
 	});
 
-	it("quotes session dirs containing single quotes", () => {
+	it("quotes non-default session file paths containing single quotes", () => {
 		setStdoutIsTTY(true);
-		const sessionFile = createTempFile();
+		const dir = mkdtempSync(join(tmpdir(), "pi-format-resume-command-'"));
+		tempDirs.push(dir);
+		const sessionFile = join(dir, "session.jsonl");
+		writeFileSync(sessionFile, "\n");
 		const sessionManager = createSessionManager({
 			sessionFile,
 			sessionId: "test-session",
-			sessionDir: "/tmp/custom pi's sessions",
 			usesDefaultSessionDir: false,
 		});
 
-		expect(formatResumeCommand(sessionManager)).toBe(
-			`${APP_NAME} --session-dir '/tmp/custom pi'\\''s sessions' --session test-session`,
-		);
+		expect(formatResumeCommand(sessionManager)).toBe(`${APP_NAME} --session '${sessionFile.replace(/'/g, `'\\''`)}'`);
 	});
 
 	it("returns undefined when stdout is not a TTY", () => {

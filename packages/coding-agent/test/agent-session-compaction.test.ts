@@ -159,7 +159,7 @@ describe.skipIf(!API_KEY)("AgentSession compaction e2e", () => {
 		}
 	}, 120000);
 
-	it("should work with --no-session mode (in-memory only)", async () => {
+	it("should work with in-memory sessions", async () => {
 		createSession(true); // in-memory mode
 
 		// Send prompts

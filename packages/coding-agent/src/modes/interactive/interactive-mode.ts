@@ -214,11 +214,8 @@ export function formatResumeCommand(sessionManager: SessionManager): string | un
 	const sessionFile = sessionManager.getSessionFile();
 	if (!sessionFile || !fs.existsSync(sessionFile)) return undefined;
 
-	const args = [APP_NAME];
-	if (!sessionManager.usesDefaultSessionDir()) {
-		args.push("--session-dir", quoteIfNeeded(sessionManager.getSessionDir()));
-	}
-	args.push("--session", sessionManager.getSessionId());
+	const args = [APP_NAME, "--session"];
+	args.push(quoteIfNeeded(sessionManager.usesDefaultSessionDir() ? sessionManager.getSessionId() : sessionFile));
 	return args.join(" ");
 }
 
@@ -4310,7 +4307,7 @@ export class InteractiveMode {
 			return;
 		}
 
-		// Check if session has scoped models (from previous session-only changes or CLI --models)
+		// Check if session has scoped models from settings or session-only changes
 		const sessionScopedModels = this.session.scopedModels;
 		const hasSessionScope = sessionScopedModels.length > 0;
 
