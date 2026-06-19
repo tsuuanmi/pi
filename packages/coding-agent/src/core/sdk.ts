@@ -16,6 +16,7 @@ import type { ResourceLoader } from "./resource-loader.ts";
 import { DefaultResourceLoader } from "./resource-loader.ts";
 import { getDefaultSessionDir, SessionManager } from "./session-manager.ts";
 import { SettingsManager } from "./settings-manager.ts";
+import type { SubagentManager } from "./subagents.ts";
 import { time } from "./timings.ts";
 import {
 	createBashTool,
@@ -81,6 +82,10 @@ export interface CreateAgentSessionOptions {
 	settingsManager?: SettingsManager;
 	/** Session start event metadata for extension runtime startup. */
 	sessionStartEvent?: SessionStartEvent;
+	/** Optional Pi-native subagent manager for extensions/tools. */
+	subagentManager?: SubagentManager;
+	/** Skip workflow continuation prompts (set for subagent sessions). */
+	skipWorkflowContinuation?: boolean;
 }
 
 /** Result from createAgentSession */
@@ -383,6 +388,8 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		excludedToolNames,
 		extensionRunnerRef,
 		sessionStartEvent: options.sessionStartEvent,
+		subagentManager: options.subagentManager,
+		skipWorkflowContinuation: options.skipWorkflowContinuation,
 	});
 	const extensionsResult = resourceLoader.getExtensions();
 

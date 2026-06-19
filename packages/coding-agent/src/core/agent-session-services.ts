@@ -15,6 +15,7 @@ import {
 import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "./sdk.ts";
 import type { SessionManager } from "./session-manager.ts";
 import { SettingsManager } from "./settings-manager.ts";
+import { SubagentManager } from "./subagents.ts";
 
 /**
  * Non-fatal issues collected while creating services or sessions.
@@ -63,6 +64,7 @@ export interface CreateAgentSessionFromServicesOptions {
 	excludeTools?: CreateAgentSessionOptions["excludeTools"];
 	noTools?: CreateAgentSessionOptions["noTools"];
 	customTools?: ToolDefinition[];
+	skipWorkflowContinuation?: boolean;
 }
 
 /**
@@ -203,5 +205,7 @@ export async function createAgentSessionFromServices(
 		noTools: options.noTools,
 		customTools: options.customTools,
 		sessionStartEvent: options.sessionStartEvent,
+		subagentManager: new SubagentManager(options.services),
+		skipWorkflowContinuation: options.skipWorkflowContinuation ?? false,
 	});
 }

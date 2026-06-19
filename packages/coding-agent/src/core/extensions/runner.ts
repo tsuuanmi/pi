@@ -10,6 +10,7 @@ import type { ResourceDiagnostic } from "../diagnostics.ts";
 import type { KeybindingsConfig } from "../keybindings.ts";
 import type { ModelRegistry } from "../model-registry.ts";
 import type { SessionManager } from "../session-manager.ts";
+import type { SubagentManager } from "../subagents.ts";
 import type { BuildSystemPromptOptions } from "../system-prompt.ts";
 import type {
 	BeforeAgentStartEvent,
@@ -267,6 +268,8 @@ export class ExtensionRunner {
 	private cwd: string;
 	private sessionManager: SessionManager;
 	private modelRegistry: ModelRegistry;
+	private subagentManager: SubagentManager | undefined;
+	private skipWorkflowContinuation: boolean;
 	private errorListeners: Set<ExtensionErrorListener> = new Set();
 	private getModel: () => Model<any> | undefined = () => undefined;
 	private isIdleFn: () => boolean = () => true;
@@ -295,6 +298,8 @@ export class ExtensionRunner {
 		cwd: string,
 		sessionManager: SessionManager,
 		modelRegistry: ModelRegistry,
+		subagentManager?: SubagentManager,
+		skipWorkflowContinuation?: boolean,
 	) {
 		this.extensions = extensions;
 		this.runtime = runtime;
@@ -302,6 +307,8 @@ export class ExtensionRunner {
 		this.cwd = cwd;
 		this.sessionManager = sessionManager;
 		this.modelRegistry = modelRegistry;
+		this.subagentManager = subagentManager;
+		this.skipWorkflowContinuation = skipWorkflowContinuation ?? false;
 	}
 
 	bindCore(
@@ -400,6 +407,10 @@ export class ExtensionRunner {
 	setUIContext(uiContext?: ExtensionUIContext, mode: ExtensionMode = "print"): void {
 		this.uiContext = uiContext ?? noOpUIContext;
 		this.mode = mode;
+	}
+
+	setSubagentManager(subagentManager: SubagentManager | undefined): void {
+		this.subagentManager = subagentManager;
 	}
 
 	getUIContext(): ExtensionUIContext {
@@ -645,6 +656,14 @@ export class ExtensionRunner {
 			get model() {
 				runner.assertActive();
 				return getModel();
+			},
+			get subagents() {
+				runner.assertActive();
+				return runner.subagentManager;
+			},
+			get skipWorkflowContinuation() {
+				runner.assertActive();
+				return runner.skipWorkflowContinuation;
 			},
 			isIdle: () => {
 				runner.assertActive();

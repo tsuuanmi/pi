@@ -247,6 +247,18 @@ export {
 	type SkillFrontmatter,
 } from "./core/skills.ts";
 export { createSyntheticSourceInfo } from "./core/source-info.ts";
+export {
+	type SubagentAwaitOptions,
+	type SubagentAwaitResult,
+	type SubagentDelivery,
+	SubagentManager,
+	type SubagentRecord,
+	type SubagentResumeFailureReason,
+	type SubagentResumeResult,
+	type SubagentRunRequest,
+	type SubagentRunResult,
+	type SubagentStatus,
+} from "./core/subagents.ts";
 // Tools
 export {
 	type BashOperations,

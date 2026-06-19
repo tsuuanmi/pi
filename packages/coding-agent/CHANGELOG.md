@@ -16,6 +16,8 @@
 - Added stored account profiles for provider auth, with `/account add <provider> [account]`, an interactive `/account` selector, and `/account <provider> <account>` for manual switching.
 - Added `/provider add` for creating custom OpenAI/Anthropic-compatible providers from interactive mode, plus `/account remove <provider> [account]` for deleting one or all stored provider accounts.
 - Exported `CONFIG_DIR_NAME` from the coding-agent public API so extensions can resolve project config paths without hardcoding `.pi`.
+- Added built-in Pi workflow commands, tools, and skills for deep-interview, ralplan, team, and ultragoal planning/execution flows.
+- Added a Pi-native `SubagentManager` with durable records under `.pi/workflows/subagents/`, spawn/await/resume/steer/pause/cancel, timeout-aware await, and an audit `index.jsonl`; exposed as `ctx.subagents` and via `subagent_spawn`, `subagent_status`, `subagent_await`, `subagent_resume`, `subagent_steer`, `subagent_pause`, and `subagent_cancel` tools. `ralplan_run_agent` now runs role agents through this manager first (with Planner resume + fallback) and falls back to subprocess execution.
 
 ### Changed
 

@@ -12,6 +12,25 @@ import { SettingsManager } from "../src/core/settings-manager.ts";
 import type { Skill } from "../src/core/skills.ts";
 import { createSyntheticSourceInfo } from "../src/core/source-info.ts";
 
+const BUILT_IN_WORKFLOW_COMMANDS = new Set(["deep-interview", "ralplan", "team", "ultragoal"]);
+const BUILT_IN_SUBAGENT_TOOLS = new Set([
+	"subagent_spawn",
+	"subagent_status",
+	"subagent_await",
+	"subagent_resume",
+	"subagent_cancel",
+	"subagent_steer",
+	"subagent_pause",
+]);
+
+function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions: T[]): T[] {
+	return extensions.filter(
+		(extension) =>
+			!extension.path.endsWith("/src/extensions/workflows.ts") &&
+			!extension.path.endsWith("/dist/extensions/workflows.js"),
+	);
+}
+
 describe("DefaultResourceLoader", () => {
 	let tempDir: string;
 	let agentDir: string;
@@ -37,6 +56,36 @@ describe("DefaultResourceLoader", () => {
 			expect(loader.getSkills().skills).toEqual([]);
 			expect(loader.getPrompts().prompts).toEqual([]);
 			expect(loader.getThemes().themes).toEqual([]);
+		});
+
+		it("should discover built-in workflow skills and commands", async () => {
+			const loader = new DefaultResourceLoader({ cwd, agentDir });
+			await loader.reload();
+
+			const skillNames = new Set(loader.getSkills().skills.map((skill) => skill.name));
+			expect(skillNames.has("deep-interview")).toBe(true);
+			expect(skillNames.has("ralplan")).toBe(true);
+			expect(skillNames.has("team")).toBe(true);
+			expect(skillNames.has("ultragoal")).toBe(true);
+
+			const extensionsResult = loader.getExtensions();
+			const sessionManager = SessionManager.inMemory();
+			const authStorage = AuthStorage.create(join(tempDir, "auth.json"));
+			const modelRegistry = ModelRegistry.create(authStorage);
+			const runner = new ExtensionRunner(
+				extensionsResult.extensions,
+				extensionsResult.runtime,
+				cwd,
+				sessionManager,
+				modelRegistry,
+			);
+			expect(runner.getCommand("deep-interview")?.description).toContain("Socratic");
+			expect(runner.getCommand("ralplan")?.description).toContain("consensus");
+			expect(runner.getCommand("team")?.description).toContain("parallel");
+			expect(runner.getCommand("ultragoal")?.description).toContain("goal");
+			for (const toolName of BUILT_IN_SUBAGENT_TOOLS) {
+				expect(runner.getToolDefinition(toolName)).toBeDefined();
+			}
 		});
 
 		it("should discover skills from agentDir", async () => {
@@ -179,12 +228,13 @@ Project skill`,
 			await loader.reload();
 
 			const extensionsResult = loader.getExtensions();
-			expect(extensionsResult.extensions).toHaveLength(1);
+			const loadedExtensions = withoutBuiltInWorkflowExtensions(extensionsResult.extensions);
+			expect(loadedExtensions).toHaveLength(1);
 			expect(extensionsResult.errors).toEqual([]);
 
 			// mergePaths processes project paths before user paths, so the project
 			// alias is the canonical survivor.
-			expect(extensionsResult.extensions[0].path).toBe(join(cwd, ".pi", "extensions", "shared.ts"));
+			expect(loadedExtensions[0].path).toBe(join(cwd, ".pi", "extensions", "shared.ts"));
 		});
 
 		it("should load user extensions before trust and reuse them after trust resolves", async () => {
@@ -227,10 +277,9 @@ export default function(pi) {
 			});
 
 			const extensionsResult = loader.getExtensions();
-			expect(extensionsResult.extensions.map((extension) => extension.path)).toEqual([
-				join(cwd, ".pi", "extensions", "project.ts"),
-				join(userExtDir, "user.ts"),
-			]);
+			expect(
+				withoutBuiltInWorkflowExtensions(extensionsResult.extensions).map((extension) => extension.path),
+			).toEqual([join(cwd, ".pi", "extensions", "project.ts"), join(userExtDir, "user.ts")]);
 			expect(globalState[loadCountKey]).toBe(1);
 		});
 
@@ -272,7 +321,7 @@ export default function(pi) {
 			await loader.reload();
 
 			const extensionsResult = loader.getExtensions();
-			expect(extensionsResult.extensions).toHaveLength(2);
+			expect(withoutBuiltInWorkflowExtensions(extensionsResult.extensions)).toHaveLength(2);
 			expect(extensionsResult.errors.some((e) => e.error.includes('Command "/deploy" conflicts'))).toBe(false);
 
 			const sessionManager = SessionManager.inMemory();
@@ -291,7 +340,9 @@ export default function(pi) {
 			expect(runner.getCommand("project-only")?.description).toBe("project only");
 			expect(runner.getCommand("user-only")?.description).toBe("user only");
 
-			const commands = runner.getRegisteredCommands();
+			const commands = runner
+				.getRegisteredCommands()
+				.filter((command) => !BUILT_IN_WORKFLOW_COMMANDS.has(command.invocationName));
 			expect(commands.map((command) => command.invocationName)).toEqual([
 				"deploy:1",
 				"project-only",
@@ -415,7 +466,7 @@ Project skill content`,
 				true,
 			);
 			expect(loader.getAgentsFiles().agentsFiles.some((file) => file.path === join(cwd, "AGENTS.md"))).toBe(true);
-			expect(loader.getExtensions().extensions).toHaveLength(0);
+			expect(withoutBuiltInWorkflowExtensions(loader.getExtensions().extensions)).toHaveLength(0);
 			expect(loader.getExtensions().errors).toEqual([]);
 			expect(loader.getSkills().skills.some((skill) => skill.name === "project-skill")).toBe(false);
 			expect(loader.getPrompts().prompts.some((prompt) => prompt.name === "project")).toBe(false);
