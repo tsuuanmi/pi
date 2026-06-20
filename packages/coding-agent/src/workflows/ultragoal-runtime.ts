@@ -157,6 +157,16 @@ function normalizePlan(raw: unknown): UltragoalPlan {
 	};
 }
 
+function remainingGoalCount(status: UltragoalStatus): number {
+	return (
+		status.counts.pending +
+		status.counts.active +
+		status.counts.failed +
+		status.counts.blocked +
+		status.counts.review_blocked
+	);
+}
+
 function emptyCounts(): Record<UltragoalGoalStatus, number> {
 	return { pending: 0, active: 0, complete: 0, failed: 0, blocked: 0, review_blocked: 0, superseded: 0 };
 }
@@ -221,7 +231,10 @@ function buildUltragoalHud(status: UltragoalStatus): WorkflowHudSummary {
 							: undefined,
 			},
 			{ label: "done", value: String(status.counts.complete), priority: 20 },
-			{ label: "pending", value: String(status.counts.pending), priority: 30 },
+			// "pending" = remaining (non-terminal) goals, not raw counts.pending.
+			// Without this, starting a goal (pending -> active) would drop the
+			// pending chip before done increments, making the HUD look stale.
+			{ label: "pending", value: String(remainingGoalCount(status)), priority: 30 },
 			...(status.currentGoal ? [{ label: "goal", value: status.currentGoal.id, priority: 5 }] : []),
 		],
 		updated_at: nowIso(),

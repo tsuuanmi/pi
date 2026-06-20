@@ -150,4 +150,53 @@ describe("ultragoal workflow runtime", () => {
 		const active = await readWorkflowActiveState(cwd);
 		expect(active?.active_workflows.some((entry) => entry.skill === "ultragoal")).toBe(false);
 	});
+
+	it("HUD pending chip reflects remaining work, not raw counts.pending", async () => {
+		await createUltragoalPlan(cwd, {
+			brief: "@goal Add runtime\nImplement runtime-owned state.\n@goal Verify runtime\nRun focused checks.",
+		});
+
+		async function chip(label: string): Promise<string | undefined> {
+			const active = await readWorkflowActiveState(cwd);
+			return active?.active_workflows
+				.find((entry) => entry.skill === "ultragoal")
+				?.hud?.chips?.find((chipItem) => chipItem.label === label)?.value;
+		}
+
+		// Before any goal starts: done=0, pending=2 (remaining).
+		expect(await chip("done")).toBe("0");
+		expect(await chip("pending")).toBe("2");
+
+		// Starting a goal moves it pending -> active. Without the fix, the
+		// pending chip would drop to 1 (raw counts.pending) before done moves,
+		// making the HUD look stale. With the fix, pending stays at remaining=2.
+		await startNextUltragoalGoal(cwd);
+		expect(await chip("done")).toBe("0");
+		expect(await chip("pending")).toBe("2");
+
+		// Completing a goal increments done and decrements remaining.
+		await checkpointUltragoalGoal(cwd, {
+			goalId: "G001",
+			status: "complete",
+			evidence: "Implemented runtime-owned state and verified behavior with focused automated checks.",
+			qualityGate: { status: "passed", command: "npm run check" },
+		});
+		expect(await chip("done")).toBe("1");
+		expect(await chip("pending")).toBe("1");
+	});
+
+	it("marks ultragoal complete and demotes active state", async () => {
+		await createUltragoalPlan(cwd, { brief: "Single approved concrete goal with verification criteria." });
+		await startNextUltragoalGoal(cwd);
+		await checkpointUltragoalGoal(cwd, {
+			goalId: "G001",
+			status: "complete",
+			evidence: "Completed the single approved goal and verified the intended behavior successfully.",
+			qualityGate: { status: "verified" },
+		});
+		const status = await getUltragoalStatus(cwd);
+		expect(status.status).toBe("complete");
+		const active = await readWorkflowActiveState(cwd);
+		expect(active?.active_workflows.some((entry) => entry.skill === "ultragoal")).toBe(false);
+	});
 });
