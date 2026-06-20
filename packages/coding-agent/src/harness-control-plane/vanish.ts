@@ -84,13 +84,18 @@ export function validateVanish(evidence: unknown): VanishValidation {
 	if (!Array.isArray(forbiddenActions)) {
 		return { valid: false, reason: "vanish-forbidden-actions-missing" };
 	}
-	// Dirty deltas must be preserved, never clean-restarted.
+	// Dirty deltas must be preserved, never clean-restarted, and must explicitly forbid the
+	// destructive actions (restart-clean/delete/reset). All three are required (Gajae-style
+	// defense-in-depth): a tampered receipt that keeps `restart-clean` but drops `delete`/`reset`
+	// must still fail closed. `buildVanishEvidence` always emits all three for dirty deltas.
 	if (gitDelta === "dirty") {
 		if (classification === "restart-clean") {
 			return { valid: false, reason: "vanish-dirty-never-clean-restarted" };
 		}
-		if (!forbiddenActions.includes("restart-clean")) {
-			return { valid: false, reason: "vanish-dirty-missing-forbidden-clean" };
+		for (const action of ["restart-clean", "delete", "reset"]) {
+			if (!forbiddenActions.includes(action)) {
+				return { valid: false, reason: `vanish-dirty-missing-forbidden:${action}` };
+			}
 		}
 		if (preservation !== "stash" || typeof stashRef !== "string" || stashRef.length === 0) {
 			return { valid: false, reason: "vanish-dirty-requires-stash" };

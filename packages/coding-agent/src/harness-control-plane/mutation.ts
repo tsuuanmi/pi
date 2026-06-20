@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { withFileMutationQueue } from "../core/tools/file-mutation-queue.ts";
+import { ReceiptConsistencyError, validateReceiptFamilyConsistency } from "./receipt-consistency.ts";
 import { assertTransition, buildStateView, nextAllowedActions } from "./state-machine.ts";
 import {
 	appendRuntimeEvent,
@@ -93,6 +94,13 @@ export async function mutateRuntimeSession(input: RuntimeMutationInput): Promise
 			evidence: input.evidence ?? {},
 		};
 		const receipt: RuntimeReceipt = { ...receiptSeed, contentSha256: sha256Json(receiptSeed) };
+
+		// Phase 3 receipt lifecycle-target consistency guard. Runs AFTER the in-memory receipt is
+		// constructed and BEFORE any write so a contradiction throws with zero orphan writes (no
+		// events/receipts/state are appended for an invalid receipt). Write-path only; pre-Phase-3
+		// receipts are grandfathered and not re-validated on read.
+		const consistency = validateReceiptFamilyConsistency(receipt);
+		if (!consistency.valid) throw new ReceiptConsistencyError(receipt, consistency.contradiction ?? "unknown");
 
 		for (const event of events) await appendRuntimeEvent(input.root, input.sessionId, event);
 		await appendRuntimeReceipt(input.root, input.sessionId, receipt);

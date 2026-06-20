@@ -5,6 +5,7 @@ import { mutateRuntimeSession } from "./mutation.ts";
 import { preserveDirtyWorktree } from "./preserve.ts";
 import type { HarnessRpc } from "./rpc-adapter.ts";
 import { singleFlightAccept } from "./rpc-adapter.ts";
+import { seamUnsupported } from "./seams.ts";
 import { buildResponse } from "./state-machine.ts";
 import { readRuntimeReceipts, readSessionState } from "./storage.ts";
 import type {
@@ -636,6 +637,9 @@ export async function recoverPrimitive(opts: {
 
 		if (classification === "fallback-harness-exec") {
 			// Provider-agnostic fallback resolves to blocked in Phase 2 (no real cross-harness exec).
+			// Surface the permanently-blocked seam by name (no silent degrade) while preserving the
+			// Phase 1/2 observable output (reason + blockers unchanged).
+			const seam = seamUnsupported("cross-harness-omx-fallback");
 			const next: SessionState = {
 				...opts.state,
 				lifecycle: "blocked",
@@ -654,7 +658,7 @@ export async function recoverPrimitive(opts: {
 					{
 						kind: "recovery_blocked",
 						severity: "critical",
-						evidence: { reason: "fallback-harness-exec-requested" },
+						evidence: { reason: "fallback-harness-exec-requested", seam: seam.evidence },
 					},
 				],
 				evidence: {
@@ -662,6 +666,7 @@ export async function recoverPrimitive(opts: {
 					accepted: false,
 					reason: "fallback-harness-exec-requested",
 					vanishReceiptId: vanish.receipt.receiptId,
+					seam: seam,
 				},
 			});
 			return buildResponse(
@@ -672,6 +677,7 @@ export async function recoverPrimitive(opts: {
 					accepted: false,
 					reason: "fallback-harness-exec-requested",
 					vanishReceiptId: vanish.receipt.receiptId,
+					seam: seam,
 				},
 				false,
 			);

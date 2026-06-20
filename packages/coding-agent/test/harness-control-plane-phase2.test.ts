@@ -167,6 +167,11 @@ describe("harness control-plane phase 2 — preserve + vanish", () => {
 		// dirty without forbidden clean -> invalid.
 		const noForbidden = { ...evidence, forbiddenActions: [] };
 		expect(validateVanish(noForbidden).valid).toBe(false);
+		// dirty keeping restart-clean but dropping delete/reset -> invalid (Gajae-style all-three guard).
+		const missingDelete = { ...evidence, forbiddenActions: ["restart-clean", "reset"] };
+		expect(validateVanish(missingDelete).valid).toBe(false);
+		const missingReset = { ...evidence, forbiddenActions: ["restart-clean", "delete"] };
+		expect(validateVanish(missingReset).valid).toBe(false);
 		// dirty classified restart-clean -> invalid (dirty never clean-restarted).
 		const cleanRestart = { ...evidence, classification: "restart-clean" };
 		expect(validateVanish(cleanRestart).valid).toBe(false);

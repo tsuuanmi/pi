@@ -1,5 +1,12 @@
 import { execFileSync, spawn } from "node:child_process";
 import { callEndpoint } from "../harness-control-plane/control-endpoint.ts";
+import type { GcContext } from "../harness-control-plane/gc-adapter.ts";
+import {
+	collectGcReport,
+	computeGcExitCode,
+	gcPidProbe,
+	HarnessLeasesGcStoreAdapter,
+} from "../harness-control-plane/gc-adapter.ts";
 import { mutateRuntimeSession } from "../harness-control-plane/mutation.ts";
 import { operate } from "../harness-control-plane/operate.ts";
 import {
@@ -44,6 +51,8 @@ interface ParsedWorkflowCommand {
 	input?: string;
 	json: boolean;
 	help: boolean;
+	prune: boolean;
+	dryRun: boolean;
 }
 
 function usage(): string {
@@ -57,6 +66,7 @@ function usage(): string {
   pi workflow validate --input '{"sessionId":"h-...","checks":[{"name":"check","command":"npm run check"}]}' --json
   pi workflow finalize --input '{"sessionId":"h-..."}' --json
   pi workflow operate --input '{"sessionId":"h-...","goal":"...","maxIterations":10}' --json
+  pi workflow gc [--prune] [--dry-run] --json
   pi workflow events --input '{"sessionId":"h-..."}' --json
   pi workflow retire --input '{"sessionId":"h-..."}' --json
 
@@ -65,7 +75,7 @@ State root: PI_HARNESS_STATE_ROOT or <workspace>/.pi/state/harness
 }
 
 function parseWorkflowArgs(args: string[]): ParsedWorkflowCommand {
-	const parsed: ParsedWorkflowCommand = { verb: "observe", json: false, help: false };
+	const parsed: ParsedWorkflowCommand = { verb: "observe", json: false, help: false, prune: false, dryRun: false };
 	let verbSet = false;
 	for (let i = 0; i < args.length; i++) {
 		const arg = args[i];
@@ -75,6 +85,14 @@ function parseWorkflowArgs(args: string[]): ParsedWorkflowCommand {
 		}
 		if (arg === "--json") {
 			parsed.json = true;
+			continue;
+		}
+		if (arg === "--prune") {
+			parsed.prune = true;
+			continue;
+		}
+		if (arg === "--dry-run") {
+			parsed.dryRun = true;
 			continue;
 		}
 		if (arg === "--input") {
@@ -455,8 +473,29 @@ async function runOwner(input: Record<string, unknown>): Promise<WorkflowCommand
 	return new Promise(() => undefined);
 }
 
-async function dispatch(parsed: ParsedWorkflowCommand): Promise<WorkflowCommandResult> {
+async function gc(args: {
+	prune: boolean;
+	dryRun: boolean;
+	json: boolean;
+	input?: Record<string, unknown>;
+	cwd: string;
+}): Promise<WorkflowCommandResult> {
+	const input = args.input ?? {};
+	const root = resolveHarnessRoot({
+		root: inputString(input, "root"),
+		cwd: inputString(input, "workspace") ?? args.cwd,
+	});
+	const prune = args.prune && !args.dryRun;
+	const ctx: GcContext = { roots: [root], probe: gcPidProbe, prune, dryRun: !prune };
+	const report = await collectGcReport([HarnessLeasesGcStoreAdapter], ctx);
+	return { status: computeGcExitCode(report), stdout: output(report, args.json), stderr: "" };
+}
+
+async function dispatch(parsed: ParsedWorkflowCommand, cwd: string): Promise<WorkflowCommandResult> {
 	if (parsed.help) return { status: 0, stdout: usage(), stderr: "" };
+	if (parsed.verb !== "gc" && (parsed.prune || parsed.dryRun)) {
+		throw new Error(`--prune/--dry-run are only supported for pi workflow gc, not ${parsed.verb}`);
+	}
 	const input = parseInput(parsed.input);
 	if (parsed.verb === "start") return start(input, parsed.json);
 	if (parsed.verb === "owner") return runOwner(input);
@@ -467,6 +506,7 @@ async function dispatch(parsed: ParsedWorkflowCommand): Promise<WorkflowCommandR
 	if (parsed.verb === "validate") return validate(input, parsed.json);
 	if (parsed.verb === "finalize") return finalize(input, parsed.json);
 	if (parsed.verb === "operate") return operateCmd(input, parsed.json);
+	if (parsed.verb === "gc") return gc({ prune: parsed.prune, dryRun: parsed.dryRun, json: parsed.json, input, cwd });
 	if (parsed.verb === "events") return events(input, parsed.json);
 	if (parsed.verb === "retire") return retire(input, parsed.json);
 	throw new Error(`unsupported pi workflow verb: ${parsed.verb}`);
@@ -475,7 +515,7 @@ async function dispatch(parsed: ParsedWorkflowCommand): Promise<WorkflowCommandR
 export async function runWorkflowCommand(args: string[], cwd = process.cwd()): Promise<WorkflowCommandResult> {
 	try {
 		if (args[0] === "state") return await runStateCommand(args.slice(1), cwd);
-		return await dispatch(parseWorkflowArgs(args));
+		return await dispatch(parseWorkflowArgs(args), cwd);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
 		return { status: 1, stdout: "", stderr: `Error: ${message}\n` };
