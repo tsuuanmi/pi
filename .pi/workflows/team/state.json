@@ -1,0 +1,32 @@
+{
+  "input": ".pi/plans/ralplan/simulated-run/final.md",
+  "current_phase": "complete",
+  "active": false,
+  "skill": "team",
+  "version": 1,
+  "updated_at": "2026-06-20T02:25:23.656Z",
+  "receipt": {
+    "version": 1,
+    "skill": "team",
+    "owner": "pi-workflow",
+    "command": "pi workflow state write",
+    "state_path": "/home/superman/workspaces/pi/.pi/workflows/team/state.json",
+    "storage_path": "/home/superman/workspaces/pi/.pi/workflows/team/state.json",
+    "mutated_at": "2026-06-20T02:25:23.656Z",
+    "mutation_id": "1c671283-4341-4484-bdfb-c9473edb0bc5",
+    "content_sha256": {
+      "algorithm": "sha256",
+      "value": "22a468ff5d7bcc657dedb808486774a17e1b5a2e771f0f17bc3b1fe67fd8af31",
+      "covered_path": "/home/superman/workspaces/pi/.pi/workflows/team/state.json",
+      "computed_at": "2026-06-20T02:25:23.656Z"
+    }
+  },
+  "team_id": "word-count-team-1",
+  "task_counts": {
+    "pending": 0,
+    "blocked": 0,
+    "in_progress": 0,
+    "completed": 1,
+    "failed": 0
+  }
+}

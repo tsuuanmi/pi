@@ -1,0 +1,334 @@
+import { execFileSync, spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { callEndpoint } from "../harness-control-plane/control-endpoint.ts";
+import { mutateRuntimeSession } from "../harness-control-plane/mutation.ts";
+import { RuntimeOwner, resolveOwner } from "../harness-control-plane/owner.ts";
+import { PiRpc } from "../harness-control-plane/rpc-adapter.ts";
+import { buildResponse, submitUnavailableReason } from "../harness-control-plane/state-machine.ts";
+import {
+	canonicalWorkspacePath,
+	defaultRepoName,
+	generateSessionId,
+	readEvents,
+	readSessionState,
+	removeSession,
+	resolveHarnessRoot,
+	sessionPaths,
+	writeSessionState,
+} from "../harness-control-plane/storage.ts";
+import {
+	type GitDelta,
+	type Observation,
+	SESSION_SCHEMA_VERSION,
+	type SessionHandle,
+	type SessionState,
+} from "../harness-control-plane/types.ts";
+import { runStateCommand } from "./state-command.ts";
+
+interface WorkflowCommandResult {
+	status: number;
+	stdout: string;
+	stderr: string;
+}
+
+interface ParsedWorkflowCommand {
+	verb: string;
+	input?: string;
+	json: boolean;
+	help: boolean;
+}
+
+function usage(): string {
+	return `Usage:
+  pi workflow state <skill> read --json
+  pi workflow start --input '{"workspace":".","sessionId":"optional","detach":true}' --json
+  pi workflow submit --input '{"sessionId":"h-...","prompt":"work"}' --json
+  pi workflow observe --input '{"sessionId":"h-..."}' --json
+  pi workflow events --input '{"sessionId":"h-..."}' --json
+  pi workflow retire --input '{"sessionId":"h-..."}' --json
+
+State root: PI_HARNESS_STATE_ROOT or <workspace>/.pi/state/harness
+`;
+}
+
+function parseWorkflowArgs(args: string[]): ParsedWorkflowCommand {
+	const parsed: ParsedWorkflowCommand = { verb: "observe", json: false, help: false };
+	let verbSet = false;
+	for (let i = 0; i < args.length; i++) {
+		const arg = args[i];
+		if (arg === "--help" || arg === "-h") {
+			parsed.help = true;
+			continue;
+		}
+		if (arg === "--json") {
+			parsed.json = true;
+			continue;
+		}
+		if (arg === "--input") {
+			const value = args[++i];
+			if (value === undefined) throw new Error("--input requires a value");
+			parsed.input = value;
+			continue;
+		}
+		if (arg.startsWith("-")) throw new Error(`unknown workflow option: ${arg}`);
+		if (!verbSet) {
+			parsed.verb = arg;
+			verbSet = true;
+			continue;
+		}
+		throw new Error(`unknown workflow argument: ${arg}`);
+	}
+	return parsed;
+}
+
+function parseInput(raw: string | undefined): Record<string, unknown> {
+	if (!raw?.trim()) return {};
+	const parsed = JSON.parse(raw) as unknown;
+	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("input must be a JSON object");
+	return parsed as Record<string, unknown>;
+}
+
+function gitOutput(workspace: string, args: string[]): string | null {
+	try {
+		return execFileSync("git", args, {
+			cwd: workspace,
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "ignore"],
+		}).trim();
+	} catch {
+		return null;
+	}
+}
+
+function gitDeltaFor(workspace: string): { gitDelta: GitDelta; branch: string | null; deleted: boolean } {
+	if (!existsSync(workspace)) return { gitDelta: "unknown", branch: null, deleted: true };
+	const branch = gitOutput(workspace, ["rev-parse", "--abbrev-ref", "HEAD"]);
+	const porcelain = gitOutput(workspace, ["status", "--porcelain"]);
+	return {
+		gitDelta: porcelain === null ? "unknown" : porcelain.length > 0 ? "dirty" : "clean",
+		branch: branch && branch !== "HEAD" ? branch : null,
+		deleted: false,
+	};
+}
+
+function inputString(input: Record<string, unknown>, key: string): string | undefined {
+	const value = input[key];
+	return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function sessionIdFromInput(input: Record<string, unknown>): string {
+	const sessionId = inputString(input, "sessionId") ?? inputString(input, "session");
+	if (!sessionId) throw new Error("sessionId is required");
+	return sessionId;
+}
+
+function output(value: unknown, json: boolean): string {
+	return json ? `${JSON.stringify(value, null, 2)}\n` : `${JSON.stringify(value)}\n`;
+}
+
+function buildHandle(input: Record<string, unknown>, root: string, sessionId: string, now: string): SessionHandle {
+	const workspace = canonicalWorkspacePath(inputString(input, "workspace") ?? process.cwd());
+	const paths = sessionPaths(root, sessionId);
+	const branch = inputString(input, "branch") ?? gitDeltaFor(workspace).branch;
+	return {
+		sessionId,
+		harness: "pi",
+		mode: input.mode === "review" ? "review" : "implement",
+		repo: inputString(input, "repo") ?? defaultRepoName(workspace),
+		workspace,
+		branch,
+		base: inputString(input, "base") ?? null,
+		issueOrPr: inputString(input, "issueOrPr") ?? inputString(input, "pr") ?? inputString(input, "issue") ?? null,
+		processHandle: { kind: "runtime-owner", ownerId: null, pid: null },
+		rpcHandle: { kind: "rpc-subprocess", pid: null, sessionDir: paths.piSessionDir },
+		ownerHandle: { leasePath: paths.lease, endpoint: null, heartbeatAt: null },
+		routerHandle: { kind: "default-in-owner", policy: "workflow-runtime", eventsPath: paths.events },
+		viewportHandle: { kind: "event-monitor", tmuxSessionName: null, viewOnly: true },
+		startedAt: now,
+		updatedAt: now,
+	};
+}
+
+function spawnDetachedOwner(input: Record<string, unknown>): number | null {
+	const entry = process.argv[1];
+	if (!entry) throw new Error("cannot determine Pi CLI entrypoint for detached workflow owner");
+	const child = spawn(
+		process.execPath,
+		[...process.execArgv, entry, "workflow", "owner", "--input", JSON.stringify(input)],
+		{
+			cwd: inputString(input, "workspace") ?? process.cwd(),
+			env: process.env,
+			detached: true,
+			stdio: "ignore",
+		},
+	);
+	child.unref();
+	return child.pid ?? null;
+}
+
+async function start(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
+	const workspace = canonicalWorkspacePath(inputString(input, "workspace") ?? process.cwd());
+	const root = resolveHarnessRoot({ root: inputString(input, "root"), cwd: workspace });
+	const sessionId = inputString(input, "sessionId") ?? generateSessionId();
+	const now = new Date().toISOString();
+	const handle = buildHandle(input, root, sessionId, now);
+	const state: SessionState = {
+		schemaVersion: SESSION_SCHEMA_VERSION,
+		sessionId,
+		lifecycle: "started",
+		harness: "pi",
+		handle,
+		retries: {},
+		blockers: [],
+		createdAt: now,
+		updatedAt: now,
+	};
+	const mutation = await mutateRuntimeSession({
+		root,
+		sessionId,
+		verb: "start",
+		writer: { ownerId: "workflow-cli", leaseEpoch: 0 },
+		nextState: state,
+		events: [{ kind: "workflow_started", evidence: { sessionId, workspace } }],
+		evidence: { handle, root },
+	});
+	const ownerPid = input.detach === true ? spawnDetachedOwner({ ...input, workspace, root, sessionId }) : null;
+	return {
+		status: 0,
+		stdout: output(buildResponse(state, false, { handle, root, ownerPid, receipt: mutation.receipt }), json),
+		stderr: "",
+	};
+}
+
+function observeState(state: SessionState): Observation {
+	const { gitDelta, branch, deleted } = gitDeltaFor(state.handle.workspace);
+	const ownerLive = false;
+	const submitReason = submitUnavailableReason(state.lifecycle, ownerLive);
+	return {
+		lifecycle: state.lifecycle,
+		ownerLive,
+		cwd: state.handle.workspace,
+		branch: branch ?? state.handle.branch,
+		gitDelta,
+		lastActivityAt: state.updatedAt,
+		observedSignals: ["SessionStart"],
+		risk: deleted ? "deleted-worktree" : !ownerLive && gitDelta === "dirty" ? "vanished-dirty" : "normal",
+		readyForSubmit: submitReason === null,
+		submitUnavailableReason: submitReason,
+	};
+}
+
+async function loadState(input: Record<string, unknown>): Promise<{ root: string; state: SessionState }> {
+	const sessionId = sessionIdFromInput(input);
+	const root = resolveHarnessRoot({
+		root: inputString(input, "root"),
+		cwd: inputString(input, "workspace") ?? process.cwd(),
+	});
+	const state = await readSessionState(root, sessionId);
+	if (!state) throw new Error(`session_not_found:${sessionId}`);
+	return { root, state };
+}
+
+async function routeToOwner(
+	root: string,
+	state: SessionState,
+	verb: string,
+	input: Record<string, unknown>,
+): Promise<unknown | undefined> {
+	const owner = await resolveOwner(root, state.sessionId);
+	if (!owner.live || !owner.socketPath) return undefined;
+	return callEndpoint(owner.socketPath, { verb, input });
+}
+
+async function observe(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
+	const { root, state } = await loadState(input);
+	const ownerResponse = await routeToOwner(root, state, "observe", input).catch(() => undefined);
+	if (ownerResponse) return { status: 0, stdout: output(ownerResponse, json), stderr: "" };
+	const observation = observeState(state);
+	return {
+		status: 0,
+		stdout: output(
+			buildResponse(state, observation.ownerLive, { observation }, true, observation.submitUnavailableReason),
+			json,
+		),
+		stderr: "",
+	};
+}
+
+async function submit(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
+	const { root, state } = await loadState(input);
+	const ownerResponse = await routeToOwner(root, state, "submit", input).catch(() => undefined);
+	if (ownerResponse) return { status: 0, stdout: output(ownerResponse, json), stderr: "" };
+	const reason = "owner-not-live";
+	return {
+		status: 1,
+		stdout: output(buildResponse(state, false, { accepted: false, reason }, false, reason), json),
+		stderr: "",
+	};
+}
+
+async function events(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
+	const { root, state } = await loadState(input);
+	const after = typeof input.afterCursor === "number" ? input.afterCursor : 0;
+	const rows = await readEvents(root, state.sessionId, after);
+	return { status: 0, stdout: output(buildResponse(state, false, { events: rows }), json), stderr: "" };
+}
+
+async function retire(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
+	const { root, state } = await loadState(input);
+	const ownerResponse = await routeToOwner(root, state, "retire", input).catch(() => undefined);
+	if (ownerResponse) return { status: 0, stdout: output(ownerResponse, json), stderr: "" };
+	const now = new Date().toISOString();
+	const next: SessionState = {
+		...state,
+		lifecycle: "retired",
+		updatedAt: now,
+		handle: { ...state.handle, updatedAt: now },
+	};
+	await writeSessionState(root, next);
+	if (input.remove === true) await removeSession(root, next.sessionId);
+	return {
+		status: 0,
+		stdout: output(buildResponse(next, false, { retired: true, removed: input.remove === true }), json),
+		stderr: "",
+	};
+}
+
+async function runOwner(input: Record<string, unknown>): Promise<WorkflowCommandResult> {
+	const { root, state } = await loadState(input);
+	const rpc = new PiRpc({ cwd: state.handle.workspace, sessionDir: sessionPaths(root, state.sessionId).piSessionDir });
+	const owner = new RuntimeOwner({ root, sessionId: state.sessionId, rpc });
+	await owner.start();
+	return new Promise(() => undefined);
+}
+
+async function dispatch(parsed: ParsedWorkflowCommand): Promise<WorkflowCommandResult> {
+	if (parsed.help) return { status: 0, stdout: usage(), stderr: "" };
+	const input = parseInput(parsed.input);
+	if (parsed.verb === "start") return start(input, parsed.json);
+	if (parsed.verb === "owner") return runOwner(input);
+	if (parsed.verb === "submit") return submit(input, parsed.json);
+	if (parsed.verb === "observe") return observe(input, parsed.json);
+	if (parsed.verb === "events") return events(input, parsed.json);
+	if (parsed.verb === "retire") return retire(input, parsed.json);
+	throw new Error(`unsupported pi workflow verb: ${parsed.verb}`);
+}
+
+export async function runWorkflowCommand(args: string[], cwd = process.cwd()): Promise<WorkflowCommandResult> {
+	try {
+		if (args[0] === "state") return await runStateCommand(args.slice(1), cwd);
+		return await dispatch(parseWorkflowArgs(args));
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		return { status: 1, stdout: "", stderr: `Error: ${message}\n` };
+	}
+}
+
+export async function handleWorkflowCommand(args: string[]): Promise<boolean> {
+	if (args[0] !== "workflow") return false;
+	const result = await runWorkflowCommand(args.slice(1));
+	if (result.stdout) process.stdout.write(result.stdout);
+	if (result.stderr) process.stderr.write(result.stderr);
+	process.exitCode = result.status;
+	return true;
+}

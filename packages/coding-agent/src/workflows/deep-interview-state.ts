@@ -1,5 +1,12 @@
 import { createHash } from "node:crypto";
 
+/**
+ * Default deep-interview ambiguity threshold. The interview is considered
+ * ready to finalize once ambiguity is at or below this value. Single default,
+ * no per-mode fallback tiers.
+ */
+export const DEFAULT_DEEP_INTERVIEW_THRESHOLD = 0.05;
+
 export type DeepInterviewRoundLifecycle = "answered" | "pending_scoring" | "scored";
 export type DeepInterviewTriggerKind = "A" | "B" | "C" | "D";
 export type DeepInterviewTriggerStatus = "active" | "disputed" | "unresolved";
@@ -345,7 +352,10 @@ export function projectCompactState(value: unknown, options: { lastN?: number } 
 		};
 	}
 	return {
-		threshold: typeof envelope.threshold === "number" ? envelope.threshold : (inner.threshold as number | undefined),
+		threshold:
+			typeof envelope.threshold === "number"
+				? envelope.threshold
+				: ((inner.threshold as number | undefined) ?? DEFAULT_DEEP_INTERVIEW_THRESHOLD),
 		threshold_source:
 			typeof envelope.threshold_source === "string"
 				? envelope.threshold_source

@@ -1,0 +1,32 @@
+{
+  "resolution": "standard",
+  "state": {
+    "current_ambiguity": 0.2,
+    "established_facts": [
+      "User wants a word count tool"
+    ],
+    "initial_idea": "Add a count_words tool to the agent",
+    "threshold": 0.5
+  },
+  "current_phase": "complete",
+  "active": false,
+  "skill": "deep-interview",
+  "version": 1,
+  "updated_at": "2026-06-20T02:37:52.367Z",
+  "receipt": {
+    "version": 1,
+    "skill": "deep-interview",
+    "owner": "pi-workflow",
+    "command": "pi workflow state clear",
+    "state_path": "/home/superman/workspaces/pi/.pi/workflows/deep-interview/state.json",
+    "storage_path": "/home/superman/workspaces/pi/.pi/workflows/deep-interview/state.json",
+    "mutated_at": "2026-06-20T02:37:52.367Z",
+    "mutation_id": "44350fbf-7052-477f-a54a-19093de63fcd",
+    "content_sha256": {
+      "algorithm": "sha256",
+      "value": "6f744472b0b891859c78ee582fa823002b303f0d156d8af97718c29ed8540eee",
+      "covered_path": "/home/superman/workspaces/pi/.pi/workflows/deep-interview/state.json",
+      "computed_at": "2026-06-20T02:37:52.367Z"
+    }
+  }
+}

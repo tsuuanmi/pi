@@ -19,15 +19,11 @@ Deep Interview turns a vague idea into a concrete specification before any mutat
 
 1. Read active state with `pi_workflow_state` for `skill: "deep-interview"`. If no state exists, initialize it with `pi_workflow_state` `action: write`:
    - `active: true`, `phase: "interviewing"`
-   - `data.mode`: one of `quick` (threshold 0.60), `standard` (threshold 0.50), or `deep` (threshold 0.35). Parse `--quick`/`--standard`/`--deep` flags from arguments; default to `standard`.
-   - `data.threshold` and `data.threshold_source`: set from the mode above.
+   - `data.mode`: one of `quick`, `standard`, or `deep`. Parse `--quick`/`--standard`/`--deep` flags from arguments; default to `standard`. The mode is only a depth hint; it does not change the threshold.
+   - `data.threshold`: `0.05` (5%) and `data.threshold_source`: `"default"`.
    - `data.resolution`: same as mode.
-   - `data.state`: `{ initial_idea: "<the user's idea text, stripping flags>", rounds: [], established_facts: [], current_ambiguity: 1, threshold: <number>, threshold_source: "flag:--<mode>", orchestration: { status: "interviewing", question_plan: [] } }`
-2. Resolve or confirm the interview mode:
-   - `quick`: threshold 0.60
-   - `standard`: threshold 0.50
-   - `deep`: threshold 0.35
-   - default: `standard`
+   - `data.state`: `{ initial_idea: "<the user's idea text, stripping flags>", rounds: [], established_facts: [], current_ambiguity: 1, threshold: 0.05, threshold_source: "default", orchestration: { status: "interviewing", question_plan: [] } }`
+2. Resolve or confirm the interview mode. The mode (`quick`/`standard`/`deep`, default `standard`) signals intended depth only; the ambiguity threshold is always `0.05` (5%).
 3. Classify the request as greenfield or brownfield. For brownfield, inspect relevant files first.
 4. Ask a Round 0 topology question before scoring: list 1–6 top-level components/outcomes and ask whether to add, remove, merge, split, or defer any.
 5. Repeat until ambiguity is at or below threshold, the user exits early, or the interview reaches a practical stopping point:

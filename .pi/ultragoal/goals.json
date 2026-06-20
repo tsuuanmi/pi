@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "brief": "Implement approved plan for Pi workflow/runtime/agent harness improvements in phases. Start with phase 1-2 foundations: runtime event/receipt contracts, storage diagnostics, canonical receipts.jsonl, v1 compatibility diagnostics, and shared mutation boundary. Preserve centralized `pi workflow`; no top-level `pi harness` or `pi state`. Run targeted tests and npm run check.",
+  "goalMode": "aggregate",
+  "objective": "Complete all approved goals with verification",
+  "goals": [
+    {
+      "id": "G001",
+      "title": "Implement approved plan for Pi workflow/runtime/agent harness improvements in...",
+      "objective": "Implement approved plan for Pi workflow/runtime/agent harness improvements in phases. Start with phase 1-2 foundations: runtime event/receipt contracts, storage diagnostics, canonical receipts.jsonl, v1 compatibility diagnostics, and shared mutation boundary. Preserve centralized `pi workflow`; no top-level `pi harness` or `pi state`. Run targeted tests and npm run check.",
+      "status": "complete",
+      "createdAt": "2026-06-20T03:27:53.260Z",
+      "updatedAt": "2026-06-20T03:31:14.017Z",
+      "startedAt": "2026-06-20T03:27:55.574Z",
+      "completedAt": "2026-06-20T03:31:14.017Z",
+      "evidence": "Implemented initial approved phase foundations: added runtime event/receipt contracts in harness-control-plane/types.ts, canonical receipts/events JSONL helpers and diagnostics in storage.ts, shared mutateRuntimeSession boundary in mutation.ts, and routed `pi workflow start` through the boundary so start emits event+receipt+state projection. Updated workflow tests to cover centralized workflow state and start receipt. Verified targeted workflows test and npm run check.",
+      "completionVerification": {
+        "schemaVersion": 1,
+        "receiptId": "6f144acb-2e48-41f5-9544-b87f0439b791",
+        "verifiedAt": "2026-06-20T03:31:14.017Z",
+        "goalId": "G001",
+        "goalStatusBeforeCheckpoint": "active",
+        "qualityGateHash": "62409cb573ad762d91736d2ff924c24820b71f1085e30a86036828997d883b1d",
+        "planHashBeforeCheckpoint": "e22d6f49fd29f6082b4bc351594f71e6bbe84ea9969ace6769fb32f9ce13eed3",
+        "checkpointLedgerEventId": "1a0f2ea0-5d53-465a-a93a-2621ea27a965"
+      }
+    }
+  ],
+  "createdAt": "2026-06-20T03:27:53.260Z",
+  "updatedAt": "2026-06-20T03:31:14.017Z"
+}

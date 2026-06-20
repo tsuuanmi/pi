@@ -142,17 +142,37 @@ export async function writeJsonAtomic(
 	});
 }
 
+/**
+ * Resolve a workflow input that may be either a file path or literal content.
+ *
+ * Only attempt the file-path interpretation when `raw` plausibly looks like a
+ * path: a single line (no newlines) and short enough to be a real path component.
+ * Multi-line markdown or any string exceeding the platform path/name length
+ * limits is treated as literal content, avoiding `ENAMETOOLONG` (and other
+ * non-ENOENT/ENOTDIR stat errors) from being thrown for large inline blobs.
+ */
 export async function readFileOrLiteral(raw: string, cwd: string): Promise<string> {
+	// Inline content (newlines) or anything far exceeding path length limits is
+	// literal; never send it to stat (which would throw ENAMETOOLONG).
+	if (raw.includes("\n") || raw.length > MAX_PATH_PLAUSIBLE_LENGTH) {
+		return raw;
+	}
 	const candidate = isAbsolute(raw) ? raw : resolve(cwd, raw);
 	try {
 		const info = await stat(candidate);
 		if (info.isFile()) return readFile(candidate, "utf8");
 	} catch (error) {
 		const err = error as NodeJS.ErrnoException;
-		if (err.code !== "ENOENT" && err.code !== "ENOTDIR") throw error;
+		// ENOENT/ENOTDIR: not a file path, treat as literal. Any other stat error
+		// (e.g. ENAMETOOLONG for an over-long single-line string) also means "not a
+		// file path"; fall through to literal rather than throwing.
+		if (err.code !== "ENOENT" && err.code !== "ENOTDIR" && err.code !== "ENAMETOOLONG") throw error;
 	}
 	return raw;
 }
+
+/** Strings longer than this are treated as literal content, not file paths. */
+const MAX_PATH_PLAUSIBLE_LENGTH = 4096;
 
 export async function writeTextArtifact(
 	path: string,

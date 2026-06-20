@@ -1,0 +1,34 @@
+{
+  "input": "Plan updates to Pi to close current workflow/runtime/agent harness gaps versus Gajae, while keeping the centralized `pi workflow` interface.",
+  "current_phase": "handoff",
+  "active": false,
+  "skill": "ralplan",
+  "version": 1,
+  "updated_at": "2026-06-20T03:27:48.596Z",
+  "receipt": {
+    "version": 1,
+    "skill": "ralplan",
+    "owner": "pi-workflow",
+    "command": "pi workflow state write",
+    "state_path": "/home/superman/workspaces/pi/.pi/workflows/ralplan/state.json",
+    "storage_path": "/home/superman/workspaces/pi/.pi/workflows/ralplan/state.json",
+    "mutated_at": "2026-06-20T03:27:48.596Z",
+    "mutation_id": "82ade221-b34e-4d2e-9215-b9c9c36be0ad",
+    "content_sha256": {
+      "algorithm": "sha256",
+      "value": "002af4601f8becc3c004b0a1d87282684ab1473c1fda3f4744862879e6e4357a",
+      "covered_path": "/home/superman/workspaces/pi/.pi/workflows/ralplan/state.json",
+      "computed_at": "2026-06-20T03:27:48.596Z"
+    }
+  },
+  "phase": "planner",
+  "run_id": "run-2",
+  "latest_artifact_path": "/home/superman/workspaces/pi/.pi/plans/ralplan/run-2/stage-01-final.md",
+  "planner_subagent_id": "none",
+  "planner_resumable": false,
+  "pending_approval_path": "/home/superman/workspaces/pi/.pi/plans/ralplan/run-2/pending-approval.md",
+  "approved": true,
+  "approval_target": "ultragoal",
+  "approval_note": "User approved implementation plan for Pi workflow/runtime/agent harness improvements.",
+  "approved_at": "2026-06-20T03:27:48.596Z"
+}

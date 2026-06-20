@@ -1,0 +1,4 @@
+{"event_id":"evt-2026-06-20-0225-c6e5","ts":"2026-06-20T02:25:13.786Z","type":"team_started","message":"Implement word count tool and add tests.","data":{"worker_count":2}}
+{"event_id":"evt-2026-06-20-0225-0d1d","ts":"2026-06-20T02:25:15.771Z","type":"task_created","task_id":"task-logic","message":"Implement Logic"}
+{"event_id":"evt-2026-06-20-0225-2ae8","ts":"2026-06-20T02:25:18.942Z","type":"task_transitioned","task_id":"task-logic","message":"completed","data":{"status":"completed"}}
+{"event_id":"evt-2026-06-20-0225-d442","ts":"2026-06-20T02:25:23.656Z","type":"team_closed","message":"Successfully simulated the full pipeline: Deep Interview -> Ralplan -> Ultragoal -> Team. All state transitions were verified.","data":{"phase":"complete"}}

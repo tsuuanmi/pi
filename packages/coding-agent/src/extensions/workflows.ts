@@ -235,7 +235,7 @@ type TeamMessageInput = Static<typeof teamMessageSchema>;
 
 const teamCompleteSchema = Type.Object({
 	teamId: Type.Optional(Type.String()),
-	phase: Type.Optional(Type.String()),
+	phase: Type.Optional(Type.String({ description: "complete, failed, or cancelled. Defaults to complete." })),
 	summary: Type.Optional(Type.String()),
 });
 type TeamCompleteInput = Static<typeof teamCompleteSchema>;
@@ -250,7 +250,12 @@ const ultragoalCheckpointSchema = Type.Object({
 	goalId: Type.String(),
 	status: Type.String(),
 	evidence: Type.Optional(Type.String()),
-	qualityGate: Type.Optional(Type.Record(Type.String(), Type.Unknown())),
+	qualityGate: Type.Optional(
+		Type.Record(Type.String(), Type.Unknown(), {
+			description:
+				"Required for status 'complete'. Must be an object with 'status' set to 'passed', 'verified', or 'covered'.",
+		}),
+	),
 });
 type UltragoalCheckpointInput = Static<typeof ultragoalCheckpointSchema>;
 

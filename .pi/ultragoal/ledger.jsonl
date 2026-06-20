@@ -1,0 +1,16 @@
+{"eventId":"67403e6d-4b4c-4867-bdac-50762222d356","event":"plan_created","goalIds":["G001"],"timestamp":"2026-06-20T02:24:50.640Z"}
+{"eventId":"27b7860b-c92c-4fdf-84ea-a97dfc640166","event":"goal_started","goalId":"G001","timestamp":"2026-06-20T02:24:54.259Z"}
+{"eventId":"7d59ebf2-8988-4b27-84c7-af00cbd092f9","event":"goal_checkpointed","goalId":"G001","status":"complete","statusBefore":"active","evidenceSha256":"a7c1114ecd32adb9900b1345720c9d3d30ee4dabae7af5266c9af57247b92041","timestamp":"2026-06-20T02:25:02.150Z"}
+{"eventId":"cf004021-8d53-4f17-8651-6dc2172b570c","event":"plan_created","goalIds":["G001"],"timestamp":"2026-06-20T02:43:12.267Z"}
+{"eventId":"017f13df-134a-478a-9246-8aba2f71cd79","event":"goal_started","goalId":"G001","timestamp":"2026-06-20T02:43:14.108Z"}
+{"eventId":"19539bdc-1a67-4916-881a-d82edf542281","event":"goal_checkpointed","goalId":"G001","status":"complete","statusBefore":"active","evidenceSha256":"0276b155c011941c8415a3359550feca01efce321fdbe0c2bd96d01a03d86871","timestamp":"2026-06-20T02:46:26.783Z"}
+{"eventId":"b7802181-13de-4f86-bf7b-29e66f205ecf","event":"plan_created","goalIds":["G001"],"timestamp":"2026-06-20T02:49:15.072Z"}
+{"eventId":"8a1aaa93-1b44-4114-9c21-04878b7fa9e5","event":"goal_started","goalId":"G001","timestamp":"2026-06-20T02:49:17.167Z"}
+{"eventId":"def1423b-89f8-4bf9-8e56-189d953edf56","event":"goal_checkpointed","goalId":"G001","status":"complete","statusBefore":"active","evidenceSha256":"365354fc43c8686f32a011b479f97fad5c3f881d2cba31d78e49d949cec5cda8","timestamp":"2026-06-20T02:53:05.042Z"}
+{"eventId":"5c2076b4-c699-4b90-8337-8b2bc68faa34","event":"plan_created","goalIds":["G001"],"timestamp":"2026-06-20T02:54:30.189Z"}
+{"eventId":"110cb0e3-185a-49ff-872a-9e360d97b55b","event":"goal_started","goalId":"G001","timestamp":"2026-06-20T02:54:33.134Z"}
+{"eventId":"006ecbfe-47f5-48e4-965c-2d882bb48373","event":"goal_checkpointed","goalId":"G001","status":"complete","statusBefore":"active","evidenceSha256":"a5ed001e8579e40bb4d421e3a6606f6b1f90ef0c91de133fdf37ce4e52fbf1fe","timestamp":"2026-06-20T03:01:06.121Z"}
+{"eventId":"1b4aea78-9d3d-4c35-80ae-5a770281a18e","event":"goal_checkpointed","goalId":"G001","status":"complete","statusBefore":"complete","evidenceSha256":"b850d30f433aded7c09b1d3706b6bb884c360bdc1c4c48fe8a94b2c9c7f442e8","timestamp":"2026-06-20T03:06:29.096Z"}
+{"eventId":"21918ba6-8c70-44ab-8330-51c05bcf840d","event":"plan_created","goalIds":["G001"],"timestamp":"2026-06-20T03:27:53.261Z"}
+{"eventId":"c9d7ba55-5653-4d74-adad-c502b0c63b77","event":"goal_started","goalId":"G001","timestamp":"2026-06-20T03:27:55.575Z"}
+{"eventId":"1a0f2ea0-5d53-465a-a93a-2621ea27a965","event":"goal_checkpointed","goalId":"G001","status":"complete","statusBefore":"active","evidenceSha256":"d01e42e1fbf2a15e05fbce924bee48d63252d4065d58b5260d3e96fe2c6e4224","timestamp":"2026-06-20T03:31:14.017Z"}

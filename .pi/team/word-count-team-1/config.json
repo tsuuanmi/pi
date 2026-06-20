@@ -1,0 +1,26 @@
+{
+  "team_id": "word-count-team-1",
+  "display_name": "word-count-team-1",
+  "task": "Implement word count tool and add tests.",
+  "phase": "complete",
+  "workers": [
+    {
+      "id": "worker-1",
+      "name": "Worker 1",
+      "role": "implementation",
+      "status": "idle",
+      "assigned_tasks": [],
+      "updated_at": "2026-06-20T02:25:13.785Z"
+    },
+    {
+      "id": "worker-2",
+      "name": "Worker 2",
+      "role": "verification",
+      "status": "idle",
+      "assigned_tasks": [],
+      "updated_at": "2026-06-20T02:25:13.785Z"
+    }
+  ],
+  "created_at": "2026-06-20T02:25:13.785Z",
+  "updated_at": "2026-06-20T02:25:23.655Z"
+}

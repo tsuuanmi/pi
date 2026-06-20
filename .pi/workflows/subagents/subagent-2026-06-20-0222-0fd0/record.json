@@ -1,0 +1,19 @@
+{
+  "id": "subagent-2026-06-20-0222-0fd0",
+  "role": "planner",
+  "label": "ralplan planner planner#1",
+  "agent_profile": "planner",
+  "thinking_level": "high",
+  "status": "failed",
+  "cwd": "/home/superman/workspaces/pi",
+  "resumable": true,
+  "created_at": "2026-06-20T02:22:34.535Z",
+  "updated_at": "2026-06-20T02:23:54.586Z",
+  "last_prompt_sha256": "52937b1f42013ec8134acbecbf96e79b05c2c01208632f4f2d6ed599e3865896",
+  "started_at": "2026-06-20T02:22:34.541Z",
+  "session_id": "subagent-2026-06-20-0222-0fd0",
+  "session_file": "/home/superman/.pi/agent/sessions/--home-superman-workspaces-pi--/2026-06-20T02-22-34-540Z_subagent-2026-06-20-0222-0fd0.jsonl",
+  "completed_at": "2026-06-20T02:23:54.586Z",
+  "result_text": "",
+  "error_text": "Request was aborted."
+}

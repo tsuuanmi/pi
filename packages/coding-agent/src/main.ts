@@ -16,6 +16,7 @@ import { listModels } from "./cli/list-models.ts";
 import { createProjectTrustContext } from "./cli/project-trust.ts";
 import { selectSession } from "./cli/session-picker.ts";
 import { shouldRunFirstTimeSetup, showFirstTimeSetup, showStartupSelector } from "./cli/startup-ui.ts";
+import { handleWorkflowCommand } from "./cli/workflow-command.ts";
 import { ENV_SESSION_DIR, expandTildePath, getAgentDir, VERSION } from "./config.ts";
 import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "./core/agent-session-runtime.ts";
 import {
@@ -374,6 +375,12 @@ export async function main(args: string[], options?: MainOptions) {
 	}
 
 	if (await handleConfigCommand(args, { extensionFactories: options?.extensionFactories })) {
+		return;
+	}
+
+	if (await handleWorkflowCommand(args)) {
+		const exitCode = process.exitCode ?? 0;
+		process.exit(exitCode);
 		return;
 	}
 

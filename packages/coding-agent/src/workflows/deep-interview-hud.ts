@@ -1,4 +1,5 @@
 import type { WorkflowHudChip, WorkflowHudSummary } from "./active-state.ts";
+import { DEFAULT_DEEP_INTERVIEW_THRESHOLD } from "./deep-interview-state.ts";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -64,7 +65,7 @@ export function deriveDeepInterviewHud(
 			? payload.rounds
 			: undefined;
 	const ambiguity = pickNumber("current_ambiguity") ?? latestScoredAmbiguity(rounds);
-	const threshold = pickNumber("threshold");
+	const threshold = pickNumber("threshold") ?? DEFAULT_DEEP_INTERVIEW_THRESHOLD;
 	const rawTopology = isPlainObject(state.topology)
 		? state.topology
 		: isPlainObject(payload.topology)
