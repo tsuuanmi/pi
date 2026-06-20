@@ -82,10 +82,12 @@ export interface CreateAgentSessionOptions {
 	settingsManager?: SettingsManager;
 	/** Session start event metadata for extension runtime startup. */
 	sessionStartEvent?: SessionStartEvent;
-	/** Optional Pi-native subagent manager for extensions/tools. */
-	subagentManager?: SubagentManager;
+	/** Optional Pi-native subagent manager for extensions/tools. Set to null to explicitly disable. */
+	subagentManager?: SubagentManager | null;
 	/** Skip workflow continuation prompts (set for subagent sessions). */
 	skipWorkflowContinuation?: boolean;
+	/** Extra system prompt appended to this session's rebuilt base prompt. */
+	extraSystemPrompt?: string;
 }
 
 /** Result from createAgentSession */
@@ -388,8 +390,9 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		excludedToolNames,
 		extensionRunnerRef,
 		sessionStartEvent: options.sessionStartEvent,
-		subagentManager: options.subagentManager,
+		subagentManager: options.subagentManager ?? undefined,
 		skipWorkflowContinuation: options.skipWorkflowContinuation,
+		extraSystemPrompt: options.extraSystemPrompt,
 	});
 	const extensionsResult = resourceLoader.getExtensions();
 

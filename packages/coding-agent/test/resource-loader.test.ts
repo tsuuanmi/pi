@@ -23,6 +23,8 @@ const BUILT_IN_SUBAGENT_TOOLS = new Set([
 	"subagent_pause",
 ]);
 
+const BUILT_IN_WORKFLOW_AGENT_TOOLS = new Set(["team_spawn_task_agent", "ultragoal_spawn_goal_agent"]);
+
 function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions: T[]): T[] {
 	return extensions.filter(
 		(extension) =>
@@ -84,6 +86,9 @@ describe("DefaultResourceLoader", () => {
 			expect(runner.getCommand("team")?.description).toContain("parallel");
 			expect(runner.getCommand("ultragoal")?.description).toContain("goal");
 			for (const toolName of BUILT_IN_SUBAGENT_TOOLS) {
+				expect(runner.getToolDefinition(toolName)).toBeDefined();
+			}
+			for (const toolName of BUILT_IN_WORKFLOW_AGENT_TOOLS) {
 				expect(runner.getToolDefinition(toolName)).toBeDefined();
 			}
 		});

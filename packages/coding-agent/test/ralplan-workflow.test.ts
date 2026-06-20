@@ -195,46 +195,34 @@ describe("ralplan workflow runtime", () => {
 		expect(result.output).toBe("planner receipt");
 	});
 
-	it("falls back to fresh planner spawn when planner resume is unavailable", async () => {
+	it("fails clearly when planner resume is unavailable", async () => {
 		const calls: string[] = [];
-		const result = await runRalplanAgent(cwd, {
-			role: "planner",
-			runId: "run-resume",
-			stage: "revision",
-			stageN: 2,
-			task: "Revise it.",
-			plannerSubagentId: "old-planner",
-			attemptResume: true,
-			subagentManager: {
-				resume: async () => {
-					calls.push("resume");
-					return { ok: false, reason: "context_unavailable" };
+		await expect(
+			runRalplanAgent(cwd, {
+				role: "planner",
+				runId: "run-resume",
+				stage: "revision",
+				stageN: 2,
+				task: "Revise it.",
+				plannerSubagentId: "old-planner",
+				attemptResume: true,
+				subagentManager: {
+					resume: async () => {
+						calls.push("resume");
+						return { ok: false, reason: "context_unavailable" };
+					},
+					spawn: async () => {
+						calls.push("spawn");
+						throw new Error("spawn should not be called");
+					},
 				},
-				spawn: async () => {
-					calls.push("spawn");
-					return {
-						record: {
-							id: "new-planner",
-							role: "ralplan:planner",
-							status: "completed",
-							cwd,
-							resumable: true,
-							created_at: "2026-01-01T00:00:00.000Z",
-							updated_at: "2026-01-01T00:00:01.000Z",
-						},
-						messages: [],
-						output: "revision receipt",
-					};
-				},
-			},
-		});
+			}),
+		).rejects.toThrow("ralplan planner resume failed: context_unavailable");
 
-		expect(calls).toEqual(["resume", "spawn"]);
-		expect(result.planner_subagent_id).toBe("new-planner");
-		expect(result.fallback_reason).toBe("context_unavailable");
+		expect(calls).toEqual(["resume"]);
 	});
 
-	it("persists planner identity and fallback metadata", async () => {
+	it("persists planner identity metadata", async () => {
 		const planner = await writeRalplanArtifact(cwd, {
 			runId: "run-7",
 			stage: "planner",
@@ -255,29 +243,10 @@ describe("ralplan workflow runtime", () => {
 			artifact: "# Revision",
 			plannerSubagentId: "planner-2",
 			plannerResumable: false,
-			fallbackReason: "no_runner",
-			fallbackAttemptedId: "planner-1",
-			fallbackStageN: 2,
-			fallbackReceiptPath: planner.path,
 		});
-		expect(revision.plannerState?.fallbackReason).toBe("no_runner");
+		expect(revision.plannerState).toMatchObject({ plannerSubagentId: "planner-2", plannerResumable: false });
 		state = await readWorkflowState(cwd, "ralplan");
 		expect(state?.planner_subagent_id).toBe("planner-2");
 		expect(state?.planner_resumable).toBe(false);
-		expect(state?.planner_fallback_reason).toBe("no_runner");
-		expect(state?.planner_fallback_attempted_id).toBe("planner-1");
-		expect(state?.planner_fallback_stage_n).toBe(2);
-	});
-
-	it("requires complete planner fallback metadata", async () => {
-		await expect(
-			writeRalplanArtifact(cwd, {
-				runId: "run-8",
-				stage: "revision",
-				stageN: 2,
-				artifact: "# Revision",
-				fallbackReason: "no_runner",
-			}),
-		).rejects.toThrow(/fallbackAttemptedId/);
 	});
 });

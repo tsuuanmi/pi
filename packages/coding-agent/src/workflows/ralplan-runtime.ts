@@ -5,21 +5,9 @@ import { ralplanIndexPath, ralplanPendingApprovalPath, ralplanStageArtifactPath,
 import { appendJsonlIdempotent, readFileOrLiteral, sha256, writeTextArtifact } from "./state-writer.ts";
 import { activeRalplanRunId, defaultWorkflowId, readWorkflowState, writeWorkflowState } from "./workflow-state.ts";
 
-export type RalplanPlannerFallbackReason =
-	| "context_unavailable"
-	| "not_found"
-	| "no_runner"
-	| "resume_failed"
-	| "process_restart"
-	| "missing_record";
-
 export interface RalplanPlannerStateUpdate {
 	plannerSubagentId?: string;
 	plannerResumable?: boolean;
-	fallbackReason?: RalplanPlannerFallbackReason;
-	fallbackAttemptedId?: string;
-	fallbackStageN?: number;
-	fallbackReceiptPath?: string;
 }
 
 export interface RalplanWriteArtifactInput extends RalplanPlannerStateUpdate {
@@ -107,15 +95,6 @@ const RALPLAN_PHASE_LOCK = new Set([
 	"cancelled",
 	"canceled",
 	"inactive",
-]);
-
-const RALPLAN_FALLBACK_REASONS = new Set<string>([
-	"context_unavailable",
-	"not_found",
-	"no_runner",
-	"resume_failed",
-	"process_restart",
-	"missing_record",
 ]);
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -258,33 +237,6 @@ function plannerStateUpdate(input: RalplanWriteArtifactInput): RalplanPlannerSta
 		update.plannerSubagentId = input.plannerSubagentId;
 	}
 	if (input.plannerResumable !== undefined) update.plannerResumable = input.plannerResumable;
-	const hasFallback =
-		input.fallbackReason !== undefined ||
-		input.fallbackAttemptedId !== undefined ||
-		input.fallbackStageN !== undefined ||
-		input.fallbackReceiptPath !== undefined;
-	if (hasFallback) {
-		if (!input.fallbackReason || !RALPLAN_FALLBACK_REASONS.has(input.fallbackReason)) {
-			throw new Error(`invalid fallbackReason: ${input.fallbackReason ?? "missing"}`);
-		}
-		if (!input.fallbackAttemptedId) throw new Error("fallbackAttemptedId is required with fallback metadata");
-		if (!isSafePlannerId(input.fallbackAttemptedId)) {
-			throw new Error(`invalid fallbackAttemptedId: ${input.fallbackAttemptedId}`);
-		}
-		const fallbackStageN = input.fallbackStageN;
-		if (
-			!Number.isInteger(fallbackStageN) ||
-			fallbackStageN === undefined ||
-			fallbackStageN < 1 ||
-			fallbackStageN > 999
-		) {
-			throw new Error("fallbackStageN must be an integer in 1..999 with fallback metadata");
-		}
-		update.fallbackReason = input.fallbackReason;
-		update.fallbackAttemptedId = input.fallbackAttemptedId;
-		update.fallbackStageN = fallbackStageN;
-		if (input.fallbackReceiptPath !== undefined) update.fallbackReceiptPath = input.fallbackReceiptPath;
-	}
 	return Object.keys(update).length > 0 ? update : undefined;
 }
 
@@ -293,14 +245,6 @@ function plannerStatePatch(update: RalplanPlannerStateUpdate | undefined): Recor
 	return {
 		...(update.plannerSubagentId !== undefined ? { planner_subagent_id: update.plannerSubagentId } : {}),
 		...(update.plannerResumable !== undefined ? { planner_resumable: update.plannerResumable } : {}),
-		...(update.fallbackReason !== undefined ? { planner_fallback_reason: update.fallbackReason } : {}),
-		...(update.fallbackAttemptedId !== undefined
-			? { planner_fallback_attempted_id: update.fallbackAttemptedId }
-			: {}),
-		...(update.fallbackStageN !== undefined ? { planner_fallback_stage_n: update.fallbackStageN } : {}),
-		...(update.fallbackReceiptPath !== undefined
-			? { planner_fallback_receipt_path: update.fallbackReceiptPath }
-			: {}),
 	};
 }
 

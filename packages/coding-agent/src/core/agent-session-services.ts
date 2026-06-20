@@ -65,6 +65,10 @@ export interface CreateAgentSessionFromServicesOptions {
 	noTools?: CreateAgentSessionOptions["noTools"];
 	customTools?: ToolDefinition[];
 	skipWorkflowContinuation?: boolean;
+	/** Extra system prompt appended to this session's rebuilt base prompt. */
+	extraSystemPrompt?: string;
+	/** Explicitly set to null to prevent subagent nesting. Omit to create a default manager. */
+	subagentManager?: SubagentManager | null;
 }
 
 /**
@@ -205,7 +209,11 @@ export async function createAgentSessionFromServices(
 		noTools: options.noTools,
 		customTools: options.customTools,
 		sessionStartEvent: options.sessionStartEvent,
-		subagentManager: new SubagentManager(options.services),
+		subagentManager:
+			options.subagentManager === null
+				? undefined
+				: (options.subagentManager ?? new SubagentManager(options.services)),
 		skipWorkflowContinuation: options.skipWorkflowContinuation ?? false,
+		extraSystemPrompt: options.extraSystemPrompt,
 	});
 }

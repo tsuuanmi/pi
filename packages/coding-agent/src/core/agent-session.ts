@@ -185,10 +185,12 @@ export interface AgentSessionConfig {
 	extensionRunnerRef?: { current?: ExtensionRunner };
 	/** Session start event metadata emitted when extensions bind to this runtime. */
 	sessionStartEvent?: SessionStartEvent;
-	/** Optional Pi-native subagent manager for extensions/tools. */
-	subagentManager?: SubagentManager;
+	/** Optional Pi-native subagent manager for extensions/tools. Set to null to explicitly disable. */
+	subagentManager?: SubagentManager | null;
 	/** Skip workflow continuation prompt injection (set for subagent sessions). */
 	skipWorkflowContinuation?: boolean;
+	/** Extra system prompt appended to the rebuilt base prompt for this session. */
+	extraSystemPrompt?: string;
 }
 
 export interface ExtensionBindings {
@@ -307,6 +309,7 @@ export class AgentSession {
 	private _baseToolsOverride?: Record<string, AgentTool>;
 	private _sessionStartEvent: SessionStartEvent;
 	private _skipWorkflowContinuation: boolean;
+	private _extraSystemPrompt?: string;
 	private _subagentManager?: SubagentManager;
 	private _extensionUIContext?: ExtensionUIContext;
 	private _extensionMode: ExtensionMode = "print";
@@ -345,7 +348,8 @@ export class AgentSession {
 		this._baseToolsOverride = config.baseToolsOverride;
 		this._sessionStartEvent = config.sessionStartEvent ?? { type: "session_start", reason: "startup" };
 		this._skipWorkflowContinuation = config.skipWorkflowContinuation ?? false;
-		this._subagentManager = config.subagentManager;
+		this._extraSystemPrompt = config.extraSystemPrompt;
+		this._subagentManager = config.subagentManager ?? undefined;
 
 		// Always subscribe to agent events for internal handling
 		// (session persistence, extensions, auto-compaction, retry logic)
@@ -937,7 +941,8 @@ export class AgentSession {
 			toolSnippets,
 			promptGuidelines,
 		};
-		return buildSystemPrompt(this._baseSystemPromptOptions);
+		const prompt = buildSystemPrompt(this._baseSystemPromptOptions);
+		return this._extraSystemPrompt ? `${prompt}\n\n${this._extraSystemPrompt}` : prompt;
 	}
 
 	// =========================================================================

@@ -25,7 +25,6 @@ import { ralplanRoleForStage, runRalplanAgent } from "../workflows/ralplan-agent
 import {
 	approveRalplanPlan,
 	doctorRalplan,
-	type RalplanPlannerFallbackReason,
 	readRalplanCompactStatus,
 	readRalplanStatus,
 	writeRalplanArtifact,
@@ -146,16 +145,17 @@ const ralplanWriteArtifactSchema = Type.Object({
 		Type.String({ description: "Persisted Planner role-agent id for planner/revision stages." }),
 	),
 	plannerResumable: Type.Optional(Type.Boolean({ description: "Whether the Planner role-agent is known resumable." })),
-	fallbackReason: Type.Optional(Type.String({ description: "Planner fallback reason when resume was unavailable." })),
-	fallbackAttemptedId: Type.Optional(Type.String({ description: "Planner id whose resume was attempted." })),
-	fallbackStageN: Type.Optional(Type.Number({ description: "Stage iteration where Planner fallback occurred." })),
-	fallbackReceiptPath: Type.Optional(Type.String({ description: "Fresh fallback Planner artifact receipt/path." })),
 });
 
 type RalplanWriteArtifactInput = Static<typeof ralplanWriteArtifactSchema>;
 
 const ralplanRunAgentSchema = Type.Object({
 	role: Type.Optional(Type.String({ description: "planner, architect, or critic. Defaults from stage." })),
+	agent: Type.Optional(Type.String({ description: "Agent profile name. Defaults to the role name." })),
+	model: Type.Optional(Type.String({ description: "Override agent profile model as provider/model." })),
+	thinkingLevel: Type.Optional(Type.String({ description: "Override agent profile thinking level." })),
+	tools: Type.Optional(Type.Array(Type.String({ description: "Override agent profile tools." }))),
+	excludeTools: Type.Optional(Type.Array(Type.String({ description: "Tool names to disable for this role agent." }))),
 	task: Type.String({ description: "Role-agent task prompt." }),
 	stage: Type.String({ description: "planner, architect, critic, or revision" }),
 	stageN: Type.Number({ description: "Positive stage iteration number" }),
@@ -170,7 +170,6 @@ const ralplanRunAgentSchema = Type.Object({
 	attemptResume: Type.Optional(
 		Type.Boolean({ description: "Whether this pass is attempting to resume the persisted Planner." }),
 	),
-	fallbackReason: Type.Optional(Type.String({ description: "Fallback reason when Planner resume is unavailable." })),
 	dryRun: Type.Optional(
 		Type.Boolean({ description: "Plan and record the role-agent invocation without spawning Pi." }),
 	),
@@ -265,12 +264,43 @@ const ultragoalStartNextSchema = Type.Object({
 });
 type UltragoalStartNextInput = Static<typeof ultragoalStartNextSchema>;
 
+const teamSpawnTaskAgentSchema = Type.Object({
+	teamId: Type.Optional(Type.String({ description: "Team run id. Defaults to the active team." })),
+	taskId: Type.String({ description: "Task id to assign to the subagent." }),
+	agent: Type.Optional(Type.String({ description: "Agent profile name. Defaults to worker." })),
+	model: Type.Optional(Type.String({ description: "Override agent profile model as provider/model." })),
+	thinkingLevel: Type.Optional(Type.String({ description: "Override agent profile thinking level." })),
+	tools: Type.Optional(Type.Array(Type.String({ description: "Allowed tool names for the subagent." }))),
+	excludeTools: Type.Optional(Type.Array(Type.String({ description: "Tool names to disable for the subagent." }))),
+});
+type TeamSpawnTaskAgentInput = Static<typeof teamSpawnTaskAgentSchema>;
+
+const ultragoalSpawnGoalAgentSchema = Type.Object({
+	goalId: Type.String({ description: "Goal id to assign to the subagent." }),
+	agent: Type.Optional(Type.String({ description: "Agent profile name. Defaults to worker." })),
+	model: Type.Optional(Type.String({ description: "Override agent profile model as provider/model." })),
+	thinkingLevel: Type.Optional(Type.String({ description: "Override agent profile thinking level." })),
+	tools: Type.Optional(Type.Array(Type.String({ description: "Allowed tool names for the subagent." }))),
+	excludeTools: Type.Optional(Type.Array(Type.String({ description: "Tool names to disable for the subagent." }))),
+});
+type UltragoalSpawnGoalAgentInput = Static<typeof ultragoalSpawnGoalAgentSchema>;
+
 const subagentSpawnSchema = Type.Object({
-	role: Type.String({ description: "Subagent role label." }),
+	agent: Type.Optional(
+		Type.String({ description: "Agent profile name from .pi/agents, agentDir/agents, or built-ins." }),
+	),
+	role: Type.Optional(
+		Type.String({ description: "Subagent role label. Defaults to agent profile name or subagent." }),
+	),
 	prompt: Type.String({ description: "User task prompt for the subagent." }),
+	model: Type.Optional(Type.String({ description: "Override agent profile model as provider/model." })),
+	thinkingLevel: Type.Optional(Type.String({ description: "Override agent profile thinking level." })),
 	systemPrompt: Type.Optional(Type.String({ description: "Additional role/system instructions." })),
 	tools: Type.Optional(Type.Array(Type.String({ description: "Allowed tool names for this subagent." }))),
-	persistent: Type.Optional(Type.Boolean({ description: "Defaults to true. False uses an in-memory session." })),
+	excludeTools: Type.Optional(Type.Array(Type.String({ description: "Tool names to disable for this subagent." }))),
+	persistent: Type.Optional(
+		Type.Boolean({ description: "Defaults to profile or true. False uses an in-memory session." }),
+	),
 	detached: Type.Optional(Type.Boolean({ description: "Return immediately after spawning." })),
 	label: Type.Optional(Type.String({ description: "Human-readable subagent label." })),
 });
@@ -284,6 +314,11 @@ type SubagentIdInput = Static<typeof subagentIdSchema>;
 const subagentStatusSchema = Type.Object({
 	id: Type.Optional(Type.String({ description: "Subagent id. Omit to list recent records." })),
 	limit: Type.Optional(Type.Number({ description: "Maximum records when listing. Defaults to 10." })),
+	verbosity: Type.Optional(
+		Type.String({
+			description: "Output verbosity: receipt (default, truncated), preview (<=2000 chars), or full (requires id).",
+		}),
+	),
 });
 type SubagentStatusInput = Static<typeof subagentStatusSchema>;
 
@@ -291,6 +326,9 @@ const subagentAwaitSchema = Type.Object({
 	id: Type.String({ description: "Subagent id." }),
 	timeoutMs: Type.Optional(
 		Type.Number({ description: "Await timeout in milliseconds. Returns reason=timeout when exceeded." }),
+	),
+	verbosity: Type.Optional(
+		Type.String({ description: "Output verbosity: receipt (default, truncated), preview (<=2000 chars), or full." }),
 	),
 });
 type SubagentAwaitInput = Static<typeof subagentAwaitSchema>;
@@ -315,6 +353,7 @@ type SubagentPauseInput = Static<typeof subagentPauseSchema>;
 
 type DeepInterviewHandoff = "ralplan" | "team" | "ultragoal" | "stop";
 type RalplanApprovalTarget = "ultragoal" | "team" | "stop";
+type AgentThinkingLevel = "off" | "minimal" | "low" | "medium" | "high";
 
 function assertDeepInterviewHandoff(value: string | undefined): asserts value is DeepInterviewHandoff | undefined {
 	if (value === undefined) return;
@@ -331,16 +370,10 @@ function assertRalplanRole(value: string | undefined): asserts value is "planner
 	if (!["planner", "architect", "critic"].includes(value)) throw new Error(`unknown ralplan agent role: ${value}`);
 }
 
-function assertRalplanFallbackReason(
-	value: string | undefined,
-): asserts value is RalplanPlannerFallbackReason | undefined {
+function assertAgentThinkingLevel(value: string | undefined): asserts value is AgentThinkingLevel | undefined {
 	if (value === undefined) return;
-	if (
-		!["context_unavailable", "not_found", "no_runner", "resume_failed", "process_restart", "missing_record"].includes(
-			value,
-		)
-	) {
-		throw new Error(`invalid ralplan fallback reason: ${value}`);
+	if (!["off", "minimal", "low", "medium", "high"].includes(value)) {
+		throw new Error(`invalid agent thinkingLevel: ${value}`);
 	}
 }
 
@@ -630,15 +663,71 @@ function requireSubagentManager(ctx: ExtensionContext) {
 	return ctx.subagents;
 }
 
+const RECEIPT_MAX = 280;
+const PREVIEW_MAX = 2000;
+const FULL_MAX = 12000;
+type SubagentVerbosity = "receipt" | "preview" | "full";
+
+function normalizeSubagentVerbosity(value: string | undefined): SubagentVerbosity {
+	if (value === undefined) return "receipt";
+	if (value === "receipt" || value === "preview" || value === "full") return value;
+	throw new Error(`invalid subagent verbosity: ${value}`);
+}
+
+function truncateOutput(text: string | undefined, verbosity: SubagentVerbosity): string {
+	if (!text) return "";
+	const max = verbosity === "full" ? FULL_MAX : verbosity === "preview" ? PREVIEW_MAX : RECEIPT_MAX;
+	if (text.length <= max) return text;
+	return `${text.slice(0, max)}\n...[truncated]`;
+}
+
+function formatSubagentRecord(
+	record:
+		| {
+				id: string;
+				role: string;
+				status: string;
+				created_at?: string;
+				updated_at?: string;
+				result_text?: string;
+				error_text?: string;
+				session_file?: string;
+		  }
+		| undefined,
+	verbosity: SubagentVerbosity,
+): string {
+	if (!record) return "Subagent not found";
+	const output = truncateOutput(record.result_text ?? record.error_text, verbosity);
+	return JSON.stringify(
+		{
+			id: record.id,
+			role: record.role,
+			status: record.status,
+			created_at: record.created_at,
+			updated_at: record.updated_at,
+			...(output ? { output } : {}),
+			...(record.session_file ? { session_file: record.session_file } : {}),
+		},
+		null,
+		2,
+	);
+}
+
 async function executeSubagentSpawn(params: SubagentSpawnInput, ctx: ExtensionContext, signal?: AbortSignal) {
+	assertAgentThinkingLevel(params.thinkingLevel);
 	const result = await requireSubagentManager(ctx).spawn({
+		agent: params.agent,
 		role: params.role,
 		prompt: params.prompt,
+		model: params.model,
+		thinkingLevel: params.thinkingLevel,
 		systemPrompt: params.systemPrompt,
 		tools: params.tools,
+		excludeTools: params.excludeTools,
 		persistent: params.persistent,
 		detached: params.detached,
 		label: params.label,
+		parentSessionId: ctx.sessionManager.getSessionId(),
 		signal,
 	});
 	return {
@@ -649,22 +738,33 @@ async function executeSubagentSpawn(params: SubagentSpawnInput, ctx: ExtensionCo
 
 async function executeSubagentStatus(params: SubagentStatusInput, ctx: ExtensionContext) {
 	const manager = requireSubagentManager(ctx);
+	const verbosity = normalizeSubagentVerbosity(params.verbosity);
+	if (verbosity === "full" && !params.id) {
+		throw new Error("verbosity=full requires an explicit subagent id.");
+	}
 	if (params.id) {
 		const record = await manager.read(params.id);
 		return {
-			content: [{ type: "text" as const, text: JSON.stringify({ record: record ?? null }, null, 2) }],
+			content: [{ type: "text" as const, text: formatSubagentRecord(record, verbosity) }],
 			details: workflowReceipt({ record: record ?? null }),
 		};
 	}
 	const limit = Math.max(1, Math.min(50, Math.floor(params.limit ?? 10)));
 	const records = (await manager.list()).slice(0, limit);
+	const summary = records.map((r) => ({
+		id: r.id,
+		role: r.role,
+		status: r.status,
+		output: truncateOutput(r.result_text ?? r.error_text, verbosity),
+	}));
 	return {
-		content: [{ type: "text" as const, text: JSON.stringify({ records }, null, 2) }],
+		content: [{ type: "text" as const, text: JSON.stringify(summary, null, 2) }],
 		details: workflowReceipt({ records }),
 	};
 }
 
 async function executeSubagentAwait(params: SubagentAwaitInput, ctx: ExtensionContext) {
+	const verbosity = normalizeSubagentVerbosity(params.verbosity);
 	const result = await requireSubagentManager(ctx).waitFor(params.id, { timeoutMs: params.timeoutMs });
 	if (!result.ok) {
 		return {
@@ -681,7 +781,7 @@ async function executeSubagentAwait(params: SubagentAwaitInput, ctx: ExtensionCo
 		};
 	}
 	return {
-		content: [{ type: "text" as const, text: `Subagent ${result.result.record.id} ${result.result.record.status}` }],
+		content: [{ type: "text" as const, text: formatSubagentRecord(result.result.record, verbosity) }],
 		details: workflowReceipt({ ok: true, record: result.result.record, output: result.result.output }),
 	};
 }
@@ -746,7 +846,7 @@ async function executeSubagentCancel(params: SubagentIdInput, ctx: ExtensionCont
 async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: ExtensionContext, signal?: AbortSignal) {
 	assertRalplanStage(params.stage);
 	assertRalplanRole(params.role);
-	assertRalplanFallbackReason(params.fallbackReason);
+	assertAgentThinkingLevel(params.thinkingLevel);
 	if (
 		params.stage !== "planner" &&
 		params.stage !== "architect" &&
@@ -764,6 +864,11 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Extensi
 		ctx.cwd,
 		{
 			role,
+			agent: params.agent,
+			model: params.model,
+			thinkingLevel: params.thinkingLevel,
+			tools: params.tools,
+			excludeTools: params.excludeTools,
 			task: params.task,
 			stage: params.stage,
 			stageN: params.stageN,
@@ -772,7 +877,6 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Extensi
 			deliberate: params.deliberate,
 			plannerSubagentId: params.plannerSubagentId,
 			attemptResume: params.attemptResume,
-			fallbackReason: params.fallbackReason,
 			dryRun: params.dryRun,
 			subagentManager: ctx.subagents,
 		},
@@ -795,7 +899,6 @@ async function executeRalplanWriteArtifact(params: RalplanWriteArtifactInput, ct
 		throw new Error(`invalid stageN: ${params.stageN}`);
 	}
 	if (params.runId) assertSafePathComponent(params.runId, "runId");
-	assertRalplanFallbackReason(params.fallbackReason);
 	const result = await writeRalplanArtifact(ctx.cwd, {
 		stage: params.stage,
 		stageN: params.stageN,
@@ -803,10 +906,6 @@ async function executeRalplanWriteArtifact(params: RalplanWriteArtifactInput, ct
 		runId: params.runId,
 		plannerSubagentId: params.plannerSubagentId,
 		plannerResumable: params.plannerResumable,
-		fallbackReason: params.fallbackReason,
-		fallbackAttemptedId: params.fallbackAttemptedId,
-		fallbackStageN: params.fallbackStageN,
-		fallbackReceiptPath: params.fallbackReceiptPath,
 	});
 	return {
 		content: [
@@ -873,6 +972,7 @@ async function executeRalplanDoctor(params: RalplanRunInput, ctx: ExtensionConte
 async function executeTeamStart(params: TeamStartInput, ctx: ExtensionContext) {
 	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
 	const result = await startTeam(ctx.cwd, { task: params.task, teamId: params.teamId });
+	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Started team ${result.team_id}` }],
 		details: workflowReceipt({ ...result }),
@@ -901,6 +1001,7 @@ async function executeTeamCreateTask(params: TeamCreateTaskInput, ctx: Extension
 	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
 	if (params.id) assertSafePathComponent(params.id, "taskId");
 	const result = await createTeamTask(ctx.cwd, params);
+	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Created team task ${result.id}` }],
 		details: workflowReceipt({ ...result }),
@@ -912,6 +1013,7 @@ async function executeTeamTransitionTask(params: TeamTransitionTaskInput, ctx: E
 	assertSafePathComponent(params.taskId, "taskId");
 	if (params.workerId) assertSafePathComponent(params.workerId, "workerId");
 	const result = await transitionTeamTask(ctx.cwd, params);
+	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Updated team task ${result.id} to ${result.status}` }],
 		details: workflowReceipt({ ...result }),
@@ -944,9 +1046,64 @@ async function executeTeamComplete(params: TeamCompleteInput, ctx: ExtensionCont
 		phase: params.phase,
 		summary: params.summary,
 	});
+	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Closed team ${result.team_id} as ${result.phase}` }],
 		details: workflowReceipt({ ...result }),
+	};
+}
+
+async function executeTeamSpawnTaskAgent(params: TeamSpawnTaskAgentInput, ctx: ExtensionContext, signal?: AbortSignal) {
+	assertAgentThinkingLevel(params.thinkingLevel);
+	const snapshot = await readTeamSnapshot(ctx.cwd, params.teamId);
+	const task = snapshot.tasks.find((t) => t.id === params.taskId);
+	if (!task) throw new Error(`team task not found: ${params.taskId}`);
+	const result = await requireSubagentManager(ctx).spawn({
+		agent: params.agent ?? "worker",
+		role: `team-worker-${task.id}`,
+		model: params.model,
+		thinkingLevel: params.thinkingLevel,
+		prompt: `Execute team task "${task.title}": ${task.description}${task.owner ? ` (owner: ${task.owner})` : ""}`,
+		systemPrompt: `You are a team worker executing task "${task.title}" (id: ${task.id}). Follow the task description precisely and report completion with evidence.`,
+		tools: params.tools,
+		excludeTools: params.excludeTools,
+		persistent: true,
+		label: `team-${snapshot.team_id}-${task.id}`,
+		parentSessionId: ctx.sessionManager.getSessionId(),
+		signal,
+	});
+	return {
+		content: [{ type: "text" as const, text: `Spawned subagent ${result.record.id} for task ${task.id}` }],
+		details: workflowReceipt({ task, subagent: result.record }),
+	};
+}
+
+async function executeUltragoalSpawnGoalAgent(
+	params: UltragoalSpawnGoalAgentInput,
+	ctx: ExtensionContext,
+	signal?: AbortSignal,
+) {
+	assertAgentThinkingLevel(params.thinkingLevel);
+	const status = await getUltragoalStatus(ctx.cwd);
+	const goal = status.goals.find((g) => g.id === params.goalId);
+	if (!goal) throw new Error(`ultragoal goal not found: ${params.goalId}`);
+	const result = await requireSubagentManager(ctx).spawn({
+		agent: params.agent ?? "worker",
+		role: `ultragoal-worker-${goal.id}`,
+		model: params.model,
+		thinkingLevel: params.thinkingLevel,
+		prompt: `Achieve goal "${goal.title}": ${goal.objective}`,
+		systemPrompt: `You are an ultragoal worker executing goal "${goal.title}" (id: ${goal.id}). Complete the goal and provide checkpoint evidence.`,
+		tools: params.tools,
+		excludeTools: params.excludeTools,
+		persistent: true,
+		label: `ultragoal-${goal.id}`,
+		parentSessionId: ctx.sessionManager.getSessionId(),
+		signal,
+	});
+	return {
+		content: [{ type: "text" as const, text: `Spawned subagent ${result.record.id} for goal ${goal.id}` }],
+		details: workflowReceipt({ goal, subagent: result.record }),
 	};
 }
 
@@ -955,6 +1112,7 @@ async function executeUltragoalCreatePlan(params: UltragoalCreatePlanInput, ctx:
 		throw new Error(`invalid ultragoal goalMode: ${params.goalMode}`);
 	}
 	const result = await createUltragoalPlan(ctx.cwd, { brief: params.brief, goalMode: params.goalMode });
+	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Created ultragoal plan with ${result.goals.length} goals` }],
 		details: workflowReceipt({ ...result }),
@@ -979,6 +1137,7 @@ async function executeUltragoalReadCompact(_params: object, ctx: ExtensionContex
 
 async function executeUltragoalStartNext(params: UltragoalStartNextInput, ctx: ExtensionContext) {
 	const result = await startNextUltragoalGoal(ctx.cwd, params.retryFailed);
+	await syncWorkflowHudUi(ctx);
 	return {
 		content: [
 			{
@@ -992,6 +1151,7 @@ async function executeUltragoalStartNext(params: UltragoalStartNextInput, ctx: E
 
 async function executeUltragoalCheckpoint(params: UltragoalCheckpointInput, ctx: ExtensionContext) {
 	const result = await checkpointUltragoalGoal(ctx.cwd, params);
+	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Checkpointed ultragoal ${result.id} as ${result.status}` }],
 		details: workflowReceipt({ ...result }),
@@ -1300,6 +1460,16 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 	});
 
 	pi.registerTool({
+		name: "team_spawn_task_agent",
+		label: "Team Spawn Task Agent",
+		description: "Spawn a subagent to execute a team task.",
+		promptSnippet: "Spawn agent for team task",
+		promptGuidelines: ["Use team_spawn_task_agent to assign a team task to an autonomous subagent worker."],
+		parameters: teamSpawnTaskAgentSchema,
+		execute: async (_toolCallId, params, signal, _onUpdate, ctx) => executeTeamSpawnTaskAgent(params, ctx, signal),
+	});
+
+	pi.registerTool({
 		name: "ultragoal_create_plan",
 		label: "Ultragoal Plan Create",
 		description: "Create a Pi-native ultragoal plan from an approved brief.",
@@ -1350,5 +1520,18 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 		],
 		parameters: ultragoalCheckpointSchema,
 		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeUltragoalCheckpoint(params, ctx),
+	});
+
+	pi.registerTool({
+		name: "ultragoal_spawn_goal_agent",
+		label: "Ultragoal Spawn Goal Agent",
+		description: "Spawn a subagent to achieve an ultragoal goal.",
+		promptSnippet: "Spawn agent for ultragoal goal",
+		promptGuidelines: [
+			"Use ultragoal_spawn_goal_agent to assign an ultragoal goal to an autonomous subagent worker.",
+		],
+		parameters: ultragoalSpawnGoalAgentSchema,
+		execute: async (_toolCallId, params, signal, _onUpdate, ctx) =>
+			executeUltragoalSpawnGoalAgent(params, ctx, signal),
 	});
 }

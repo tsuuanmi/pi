@@ -17,7 +17,15 @@
 - Added `/provider add` for creating custom OpenAI/Anthropic-compatible providers from interactive mode, plus `/account remove <provider> [account]` for deleting one or all stored provider accounts.
 - Exported `CONFIG_DIR_NAME` from the coding-agent public API so extensions can resolve project config paths without hardcoding `.pi`.
 - Added built-in Pi workflow commands, tools, and skills for deep-interview, ralplan, team, and ultragoal planning/execution flows.
-- Added a Pi-native `SubagentManager` with durable records under `.pi/workflows/subagents/`, spawn/await/resume/steer/pause/cancel, timeout-aware await, and an audit `index.jsonl`; exposed as `ctx.subagents` and via `subagent_spawn`, `subagent_status`, `subagent_await`, `subagent_resume`, `subagent_steer`, `subagent_pause`, and `subagent_cancel` tools. `ralplan_run_agent` now runs role agents through this manager first (with Planner resume + fallback) and falls back to subprocess execution.
+- Added a Pi-native `SubagentManager` with durable records under `.pi/workflows/subagents/`, spawn/await/resume/steer/pause/cancel, timeout-aware await, and an audit `index.jsonl`; exposed as `ctx.subagents` and via `subagent_spawn`, `subagent_status`, `subagent_await`, `subagent_resume`, `subagent_steer`, `subagent_pause`, and `subagent_cancel` tools. `ralplan_run_agent` now requires this manager for role-agent dispatch.
+- Added cooperative `shouldPause` to the agent loop (`AgentOptions.shouldPause`) so subagent `pause()` stops at turn boundaries instead of aborting mid-prompt.
+- Added `team_spawn_task_agent` and `ultragoal_spawn_goal_agent` tools that spawn subagent workers for team tasks and ultragoal goals.
+- Added reusable agent profiles (`planner`, `architect`, `critic`, `worker`) with project/global JSON overrides for per-agent model, thinking level, tools, system prompt, and persistence defaults.
+- Added `skipWorkflowContinuation` flag on `AgentSession`/`ExtensionContext` to prevent workflow continuation prompts from leaking into subagent sessions.
+- Subagent sessions no longer receive a `SubagentManager` to prevent unbounded nesting; orchestration stays in the parent.
+- Added live spawn, resume, pause, cancel, and await tests using the faux provider.
+- Added `verbosity` parameter to `subagent_status` and `subagent_await` tools for receipt/preview/full output truncation.
+- Team and ultragoal state-mutating tools now call `syncWorkflowHudUi` to keep the HUD in sync.
 
 ### Changed
 

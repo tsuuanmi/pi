@@ -111,6 +111,8 @@ export interface AgentOptions {
 	transport?: Transport;
 	maxRetryDelayMs?: number;
 	toolExecution?: ToolExecutionMode;
+	/** Cooperative pause callback. Checked after each turn; when true the agent stops gracefully. */
+	shouldPause?: () => boolean;
 }
 
 class PendingMessageQueue {
@@ -193,6 +195,8 @@ export class Agent {
 	public maxRetryDelayMs?: number;
 	/** Tool execution strategy for assistant messages that contain multiple tool calls. */
 	public toolExecution: ToolExecutionMode;
+	/** Cooperative pause callback. Checked after each turn; when true the agent stops gracefully. */
+	public shouldPause?: () => boolean;
 
 	constructor(options: AgentOptions = {}) {
 		this._state = createMutableAgentState(options.initialState);
@@ -211,6 +215,7 @@ export class Agent {
 		this.transport = options.transport ?? "auto";
 		this.maxRetryDelayMs = options.maxRetryDelayMs;
 		this.toolExecution = options.toolExecution ?? "parallel";
+		this.shouldPause = options.shouldPause;
 	}
 
 	/**
@@ -439,6 +444,7 @@ export class Agent {
 				return this.steeringQueue.drain();
 			},
 			getFollowUpMessages: async () => this.followUpQueue.drain(),
+			shouldStopAfterTurn: this.shouldPause ? () => this.shouldPause?.() === true : undefined,
 		};
 	}
 
