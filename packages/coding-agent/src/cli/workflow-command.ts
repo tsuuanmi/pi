@@ -2,6 +2,12 @@ import { execFileSync, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { callEndpoint } from "../harness-control-plane/control-endpoint.ts";
 import { mutateRuntimeSession } from "../harness-control-plane/mutation.ts";
+import {
+	classifyPrimitive,
+	finalizePrimitive,
+	recoverPrimitive,
+	validatePrimitive,
+} from "../harness-control-plane/operations.ts";
 import { RuntimeOwner, resolveOwner } from "../harness-control-plane/owner.ts";
 import { PiRpc } from "../harness-control-plane/rpc-adapter.ts";
 import { buildResponse, submitUnavailableReason } from "../harness-control-plane/state-machine.ts";
@@ -10,6 +16,7 @@ import {
 	defaultRepoName,
 	generateSessionId,
 	readEvents,
+	readRuntimeReceipts,
 	readSessionState,
 	removeSession,
 	resolveHarnessRoot,
@@ -44,6 +51,10 @@ function usage(): string {
   pi workflow start --input '{"workspace":".","sessionId":"optional","detach":true}' --json
   pi workflow submit --input '{"sessionId":"h-...","prompt":"work"}' --json
   pi workflow observe --input '{"sessionId":"h-..."}' --json
+  pi workflow classify --input '{"sessionId":"h-..."}' --json
+  pi workflow recover --input '{"sessionId":"h-..."}' --json
+  pi workflow validate --input '{"sessionId":"h-...","checks":[{"name":"check","command":"npm run check"}]}' --json
+  pi workflow finalize --input '{"sessionId":"h-..."}' --json
   pi workflow events --input '{"sessionId":"h-..."}' --json
   pi workflow retire --input '{"sessionId":"h-..."}' --json
 
@@ -240,6 +251,21 @@ async function routeToOwner(
 	return callEndpoint(owner.socketPath, { verb, input });
 }
 
+function primitiveStatus(response: unknown): number {
+	if (!response || typeof response !== "object" || Array.isArray(response)) return 1;
+	return (response as { ok?: unknown }).ok === false ? 1 : 0;
+}
+
+async function waitForOwnerLive(root: string, sessionId: string, timeoutMs = 2_000): Promise<boolean> {
+	const started = Date.now();
+	while (Date.now() - started < timeoutMs) {
+		const owner = await resolveOwner(root, sessionId);
+		if (owner.live && owner.socketPath) return true;
+		await new Promise((resolve) => setTimeout(resolve, 50));
+	}
+	return false;
+}
+
 async function observe(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
 	const ownerResponse = await routeToOwner(root, state, "observe", input).catch(() => undefined);
@@ -258,13 +284,77 @@ async function observe(input: Record<string, unknown>, json: boolean): Promise<W
 async function submit(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
 	const ownerResponse = await routeToOwner(root, state, "submit", input).catch(() => undefined);
-	if (ownerResponse) return { status: 0, stdout: output(ownerResponse, json), stderr: "" };
+	if (ownerResponse)
+		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
 	const reason = "owner-not-live";
 	return {
 		status: 1,
 		stdout: output(buildResponse(state, false, { accepted: false, reason }, false, reason), json),
 		stderr: "",
 	};
+}
+
+async function classify(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
+	const { root, state } = await loadState(input);
+	const ownerResponse = await routeToOwner(root, state, "classify", input).catch(() => undefined);
+	if (ownerResponse)
+		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
+	const receipts = await readRuntimeReceipts(root, state.sessionId);
+	const response = await classifyPrimitive({ state, ownerLive: false, input, receipts: receipts.rows });
+	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
+}
+
+async function recover(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
+	const { root, state } = await loadState(input);
+	const ownerResponse = await routeToOwner(root, state, "recover", input).catch(() => undefined);
+	if (ownerResponse)
+		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
+	const receipts = await readRuntimeReceipts(root, state.sessionId);
+	const response = await recoverPrimitive({
+		root,
+		state,
+		ownerLive: false,
+		input,
+		receipts: receipts.rows,
+		writer: { ownerId: "workflow-cli", leaseEpoch: 0 },
+		spawnOwner: async () => {
+			spawnDetachedOwner({ ...input, root, workspace: state.handle.workspace, sessionId: state.sessionId });
+			return waitForOwnerLive(root, state.sessionId);
+		},
+	});
+	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
+}
+
+async function validate(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
+	const { root, state } = await loadState(input);
+	const ownerResponse = await routeToOwner(root, state, "validate", input).catch(() => undefined);
+	if (ownerResponse)
+		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
+	const response = await validatePrimitive({
+		root,
+		state,
+		ownerLive: false,
+		input,
+		writer: { ownerId: "workflow-cli", leaseEpoch: 0 },
+	});
+	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
+}
+
+async function finalize(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
+	const { root, state } = await loadState(input);
+	const ownerResponse = await routeToOwner(root, state, "finalize", input).catch(() => undefined);
+	if (ownerResponse)
+		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
+	const receipts = await readRuntimeReceipts(root, state.sessionId);
+	const response = await finalizePrimitive({
+		root,
+		state,
+		ownerLive: false,
+		input,
+		receipts: receipts.rows,
+		writer: { ownerId: "workflow-cli", leaseEpoch: 0 },
+	});
+	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
 }
 
 async function events(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
@@ -309,6 +399,10 @@ async function dispatch(parsed: ParsedWorkflowCommand): Promise<WorkflowCommandR
 	if (parsed.verb === "owner") return runOwner(input);
 	if (parsed.verb === "submit") return submit(input, parsed.json);
 	if (parsed.verb === "observe") return observe(input, parsed.json);
+	if (parsed.verb === "classify") return classify(input, parsed.json);
+	if (parsed.verb === "recover") return recover(input, parsed.json);
+	if (parsed.verb === "validate") return validate(input, parsed.json);
+	if (parsed.verb === "finalize") return finalize(input, parsed.json);
 	if (parsed.verb === "events") return events(input, parsed.json);
 	if (parsed.verb === "retire") return retire(input, parsed.json);
 	throw new Error(`unsupported pi workflow verb: ${parsed.verb}`);

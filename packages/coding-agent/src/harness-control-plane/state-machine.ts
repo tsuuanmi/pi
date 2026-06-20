@@ -11,11 +11,11 @@ const SUBMIT_READY_LIFECYCLES: ReadonlySet<HarnessLifecycle> = new Set(["started
 
 const TRANSITIONS: Record<HarnessLifecycle, readonly HarnessLifecycle[]> = {
 	new: ["started", "blocked", "retired"],
-	started: ["submitted", "observing", "recovering", "blocked", "retired"],
-	submitted: ["observing", "recovering", "validating", "blocked", "retired"],
+	started: ["submitted", "observing", "recovering", "validating", "finalizing", "blocked", "retired"],
+	submitted: ["observing", "recovering", "validating", "finalizing", "blocked", "retired"],
 	observing: ["submitted", "recovering", "validating", "finalizing", "blocked", "retired"],
 	recovering: ["started", "submitted", "observing", "blocked", "retired"],
-	validating: ["finalizing", "observing", "blocked", "retired"],
+	validating: ["finalizing", "completed", "observing", "blocked", "retired"],
 	finalizing: ["completed", "blocked", "retired"],
 	completed: ["retired"],
 	blocked: ["started", "submitted", "observing", "recovering", "validating", "retired"],

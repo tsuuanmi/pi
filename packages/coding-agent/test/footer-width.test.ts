@@ -64,10 +64,11 @@ function createSession(options: {
 function createFooterData(
 	providerCount: number,
 	codexUsageSummary: CodexUsageSummary | null = null,
+	extensionStatuses = new Map<string, string>(),
 ): ReadonlyFooterDataProvider {
 	const provider = {
 		getGitBranch: () => "main",
-		getExtensionStatuses: () => new Map<string, string>(),
+		getExtensionStatuses: () => extensionStatuses,
 		getAvailableProviderCount: () => providerCount,
 		getCodexUsageSummary: () => codexUsageSummary,
 		onBranchChange: (callback: () => void) => {
@@ -155,5 +156,26 @@ describe("FooterComponent width handling", () => {
 		const statsLine = stripAnsi(footer.render(120)[1]);
 		expect(statsLine).toContain("Quota: 5H 12.3% 1W 67.9%");
 		expect(statsLine).toContain("Context: 12.3%/200k (auto)");
+	});
+
+	it("renders extension statuses on the quota stats line", () => {
+		const session = createSession({ sessionName: "", provider: "openai-codex" });
+		const footer = new FooterComponent(
+			session,
+			createFooterData(
+				1,
+				{ text: "5H 12.3% 1W 67.9%", status: "ok" },
+				new Map([
+					["workflow", "Workflow active"],
+					["mcp", "MCP 1/2"],
+				]),
+			),
+		);
+
+		const lines = footer.render(120);
+		const statsLine = stripAnsi(lines[1]);
+		expect(lines).toHaveLength(2);
+		expect(statsLine).toContain("Quota: 5H 12.3% 1W 67.9%");
+		expect(statsLine).toContain("Status: MCP 1/2 Workflow active");
 	});
 });

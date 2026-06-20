@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { ControlServer, type EndpointRequest } from "./control-endpoint.ts";
+import { classifyPrimitive, finalizePrimitive, recoverPrimitive, validatePrimitive } from "./operations.ts";
 import { type HarnessRpc, singleFlightAccept } from "./rpc-adapter.ts";
 import {
 	acquireLease,
@@ -11,7 +12,14 @@ import {
 	type SessionLease,
 } from "./session-lease.ts";
 import { buildResponse, buildStateView, nextAllowedActions, submitUnavailableReason } from "./state-machine.ts";
-import { appendEvent, readEvents, readSessionState, sessionPaths, writeSessionState } from "./storage.ts";
+import {
+	appendEvent,
+	readEvents,
+	readRuntimeReceipts,
+	readSessionState,
+	sessionPaths,
+	writeSessionState,
+} from "./storage.ts";
 import type { Observation, PrimitiveResponse, SessionState } from "./types.ts";
 
 const DEFAULT_TTL_MS = 30_000;
@@ -162,9 +170,64 @@ export class RuntimeOwner {
 				observation.submitUnavailableReason,
 			);
 		}
+		if (req.verb === "classify") return this.#classify(req.input);
+		if (req.verb === "recover") return this.#recover(req.input);
+		if (req.verb === "validate") return this.#validate(req.input);
+		if (req.verb === "finalize") return this.#finalize(req.input);
 		if (req.verb === "submit") return this.#submit(req.input);
 		if (req.verb === "retire") return this.#retire();
 		return { ok: false, error: `owner_unsupported_verb:${req.verb}` };
+	}
+
+	async #classify(input: Record<string, unknown>): Promise<PrimitiveResponse> {
+		const state = await this.#loadState();
+		const receipts = await readRuntimeReceipts(this.#root, this.#sessionId);
+		return classifyPrimitive({
+			state,
+			ownerLive: true,
+			input,
+			rpc: this.#rpc,
+			receipts: receipts.rows,
+			extraEvidence: { ownerRouted: true },
+		});
+	}
+
+	async #recover(input: Record<string, unknown>): Promise<PrimitiveResponse> {
+		const state = await this.#loadState();
+		const receipts = await readRuntimeReceipts(this.#root, this.#sessionId);
+		return recoverPrimitive({
+			root: this.#root,
+			state,
+			ownerLive: true,
+			input,
+			rpc: this.#rpc,
+			receipts: receipts.rows,
+			writer: { ownerId: this.ownerId, leaseEpoch: this.#leaseEpoch },
+		});
+	}
+
+	async #validate(input: Record<string, unknown>): Promise<PrimitiveResponse> {
+		const state = await this.#loadState();
+		return validatePrimitive({
+			root: this.#root,
+			state,
+			ownerLive: true,
+			input,
+			writer: { ownerId: this.ownerId, leaseEpoch: this.#leaseEpoch },
+		});
+	}
+
+	async #finalize(input: Record<string, unknown>): Promise<PrimitiveResponse> {
+		const state = await this.#loadState();
+		const receipts = await readRuntimeReceipts(this.#root, this.#sessionId);
+		return finalizePrimitive({
+			root: this.#root,
+			state,
+			ownerLive: true,
+			input,
+			receipts: receipts.rows,
+			writer: { ownerId: this.ownerId, leaseEpoch: this.#leaseEpoch },
+		});
 	}
 
 	async #submit(input: Record<string, unknown>): Promise<PrimitiveResponse> {

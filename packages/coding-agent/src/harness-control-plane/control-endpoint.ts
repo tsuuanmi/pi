@@ -1,5 +1,6 @@
-import { rm } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import { createServer, type Server } from "node:net";
+import { dirname } from "node:path";
 
 export interface EndpointRequest {
 	verb: string;
@@ -42,6 +43,7 @@ export class ControlServer {
 	}
 
 	async listen(): Promise<void> {
+		await mkdir(dirname(this.#socketPath), { recursive: true });
 		await rm(this.#socketPath, { force: true });
 		await new Promise<void>((resolve, reject) => {
 			this.#server.once("error", reject);
