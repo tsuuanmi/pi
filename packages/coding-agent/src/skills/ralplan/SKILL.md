@@ -17,7 +17,7 @@ Ralplan is Pi's consensus planning workflow. It produces a durable pending-appro
 
 ## Workflow
 
-1. Read active state with `pi_workflow_state` for `skill: "ralplan"`.
+1. Read active state with `pi_workflow_state` for `skill: "ralplan"`. If no state exists, initialize it with `pi_workflow_state` `action: write`: `active: true`, `phase: "planner"`, `data.input` set to the task or spec path. A run ID will be assigned automatically on the first artifact write.
 2. Read run status with `ralplan_status`. If resuming an existing run or state appears inconsistent, run `ralplan_doctor` before writing new artifacts.
 3. If the input is a file path, read it. If it is a task, inspect enough context to plan safely.
 4. Run the Planner with `ralplan_run_agent` using `role: "planner"`, `stage: "planner"`, and `stageN: 1`. The role agent must create and persist a planner artifact containing:

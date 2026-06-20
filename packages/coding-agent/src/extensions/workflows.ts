@@ -1,5 +1,5 @@
 import { type Static, Type } from "typebox";
-import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "../core/extensions/types.ts";
+import type { ExtensionAPI, ExtensionContext } from "../core/extensions/types.ts";
 import {
 	formatWorkflowHudLine,
 	readWorkflowActiveState,
@@ -15,12 +15,7 @@ import {
 	readDeepInterviewStateCompact,
 } from "../workflows/deep-interview-runtime.ts";
 import { type DeepInterviewTriggerMetadata, projectCompactState } from "../workflows/deep-interview-state.ts";
-import {
-	deepInterviewIndexPath,
-	deepInterviewSpecPath,
-	type WorkflowSkill,
-	workflowStatePath,
-} from "../workflows/paths.ts";
+import { deepInterviewIndexPath, deepInterviewSpecPath, workflowStatePath } from "../workflows/paths.ts";
 import { ralplanRoleForStage, runRalplanAgent } from "../workflows/ralplan-agents.ts";
 import {
 	approveRalplanPlan,
@@ -375,65 +370,6 @@ function assertAgentThinkingLevel(value: string | undefined): asserts value is A
 	if (!["off", "minimal", "low", "medium", "high"].includes(value)) {
 		throw new Error(`invalid agent thinkingLevel: ${value}`);
 	}
-}
-
-function resolveDeepInterviewSeed(args: string): {
-	mode: "quick" | "standard" | "deep";
-	threshold: number;
-	idea: string;
-} {
-	const tokens = args.split(/\s+/).filter(Boolean);
-	const mode = tokens.includes("--quick") ? "quick" : tokens.includes("--deep") ? "deep" : "standard";
-	const threshold = mode === "quick" ? 0.6 : mode === "deep" ? 0.35 : 0.5;
-	const idea = tokens.filter((token) => token !== "--quick" && token !== "--standard" && token !== "--deep").join(" ");
-	return { mode, threshold, idea };
-}
-
-async function seedWorkflow(ctx: ExtensionCommandContext, skill: WorkflowSkill, args: string): Promise<void> {
-	const phase = skill === "ralplan" ? "planner" : skill === "deep-interview" ? "interviewing" : "approved-execution";
-	const patch: Record<string, unknown> = {
-		active: true,
-		current_phase: phase,
-		input: args,
-	};
-	if (skill === "deep-interview") {
-		const seed = resolveDeepInterviewSeed(args);
-		patch.mode = seed.mode;
-		patch.resolution = seed.mode;
-		patch.threshold = seed.threshold;
-		patch.threshold_source = `flag:--${seed.mode}`;
-		patch.state = {
-			initial_idea: seed.idea,
-			rounds: [],
-			established_facts: [],
-			current_ambiguity: 1,
-			threshold: seed.threshold,
-			threshold_source: `flag:--${seed.mode}`,
-			orchestration: { status: "interviewing", question_plan: [] },
-		};
-	}
-	if (skill === "ralplan") {
-		patch.run_id = (await activeRalplanRunId(ctx.cwd)) ?? defaultWorkflowId("ralplan");
-	}
-	const state = await writeWorkflowState(ctx.cwd, skill, patch);
-	await syncWorkflowActiveState(ctx.cwd, {
-		skill,
-		active: state.active,
-		phase: state.current_phase,
-		state_path: workflowStatePath(ctx.cwd, skill),
-		hud: skill === "deep-interview" ? deriveDeepInterviewHud(state, { phase: state.current_phase }) : undefined,
-	});
-}
-
-function registerWorkflowCommand(pi: ExtensionAPI, skill: WorkflowSkill, description: string): void {
-	pi.registerCommand(skill, {
-		description,
-		handler: async (args, ctx) => {
-			await seedWorkflow(ctx, skill, args);
-			ctx.ui.notify(`${skill} state initialized under .pi/workflows/${skill}/state.json`, "info");
-			pi.sendUserMessage(`/skill:${skill} ${args}`.trim());
-		},
-	});
 }
 
 async function executeWorkflowState(params: WorkflowStateInput, ctx: ExtensionContext) {
@@ -1175,11 +1111,6 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 		if (!continuationPrompt) return undefined;
 		return { systemPrompt: `${event.systemPrompt}\n\n${continuationPrompt}` };
 	});
-
-	registerWorkflowCommand(pi, "deep-interview", "Start a Socratic requirements interview");
-	registerWorkflowCommand(pi, "ralplan", "Start consensus planning and persist a pending-approval plan");
-	registerWorkflowCommand(pi, "team", "Coordinate approved parallel execution workstreams");
-	registerWorkflowCommand(pi, "ultragoal", "Run approved goal-tracked autonomous execution");
 
 	pi.registerTool({
 		name: "pi_workflow_state",

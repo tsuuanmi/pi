@@ -17,7 +17,12 @@ Deep Interview turns a vague idea into a concrete specification before any mutat
 
 ## Workflow
 
-1. Read active state with `pi_workflow_state` for `skill: "deep-interview"`.
+1. Read active state with `pi_workflow_state` for `skill: "deep-interview"`. If no state exists, initialize it with `pi_workflow_state` `action: write`:
+   - `active: true`, `phase: "interviewing"`
+   - `data.mode`: one of `quick` (threshold 0.60), `standard` (threshold 0.50), or `deep` (threshold 0.35). Parse `--quick`/`--standard`/`--deep` flags from arguments; default to `standard`.
+   - `data.threshold` and `data.threshold_source`: set from the mode above.
+   - `data.resolution`: same as mode.
+   - `data.state`: `{ initial_idea: "<the user's idea text, stripping flags>", rounds: [], established_facts: [], current_ambiguity: 1, threshold: <number>, threshold_source: "flag:--<mode>", orchestration: { status: "interviewing", question_plan: [] } }`
 2. Resolve or confirm the interview mode:
    - `quick`: threshold 0.60
    - `standard`: threshold 0.50
@@ -39,9 +44,9 @@ Deep Interview turns a vague idea into a concrete specification before any mutat
 6. Before writing the spec, restate the goal in one sentence and ask the user to confirm it.
 7. Write the final spec with `deep_interview_write_spec`.
 8. Ask the user what to do next:
-   - Refine with `/ralplan <spec path>` (recommended for non-trivial work)
-   - Execute with `/ultragoal <spec path>` only when the spec is already simple and implementation-ready
-   - Coordinate with `/team <spec path>` only when parallel workers are explicitly useful
+   - Refine with `/skill:ralplan <spec path>` (recommended for non-trivial work)
+   - Execute with `/skill:ultragoal <spec path>` only when the spec is already simple and implementation-ready
+   - Coordinate with `/skill:team <spec path>` only when parallel workers are explicitly useful
    - Stop
 
 ## Final Spec Shape

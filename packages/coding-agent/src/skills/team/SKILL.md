@@ -10,29 +10,30 @@ Team coordinates multiple implementation workstreams. Use it only after the user
 
 ## Boundaries
 
-- If the request is vague or lacks acceptance criteria, route to `/ralplan` first.
-- If a single autonomous worker is enough, prefer `/ultragoal`.
+- If the request is vague or lacks acceptance criteria, route to `/skill:ralplan` first.
+- If a single autonomous worker is enough, prefer `/skill:ultragoal`.
 - Do not start implementation until the user has approved execution in the current session or provided a clearly approved plan.
 - Keep workers scoped to non-overlapping files or components when possible.
 
 ## Workflow
 
 1. Read the approved plan or task.
-2. Start or resume runtime coordination with `team_start`, then use `team_snapshot` or `team_read_compact` to inspect current state.
-3. Split work into independent workstreams with clear ownership, files, and verification.
-4. For each worker, define:
+2. Read active state with `pi_workflow_state` for `skill: "team"`. If no state exists, initialize it with `pi_workflow_state` `action: write`: `active: true`, `phase: "approved-execution"`, `data.input` set to the plan path or task.
+3. Start or resume runtime coordination with `team_start`, then use `team_snapshot` or `team_read_compact` to inspect current state.
+4. Split work into independent workstreams with clear ownership, files, and verification.
+5. For each worker, define:
    - objective
    - allowed files/areas
    - constraints
    - expected output
    - verification commands
-5. Persist each workstream with `team_create_task`.
-6. Use `team_transition_task` for task starts, blocking, failure, and completion. Completed tasks require completion evidence.
-7. Use `team_send_message` to record cross-workstream coordination decisions.
-8. Coordinate implementation in the main session unless an installed extension provides real subagent/process orchestration.
-9. Merge results carefully, resolve conflicts, and run requested checks.
-10. Close the run with `team_complete` after integration/verification, then summarize completed work, changed files, verification, and remaining risks.
+6. Persist each workstream with `team_create_task`.
+7. Use `team_transition_task` for task starts, blocking, failure, and completion. Completed tasks require completion evidence.
+8. Use `team_send_message` to record cross-workstream coordination decisions.
+9. Coordinate implementation in the main session unless an installed extension provides real subagent/process orchestration.
+10. Merge results carefully, resolve conflicts, and run requested checks.
+11. Close the run with `team_complete` after integration/verification, then summarize completed work, changed files, verification, and remaining risks.
 
 ## Gate
 
-If there is no approved plan or the task is underspecified, stop and ask whether to run `/ralplan` first.
+If there is no approved plan or the task is underspecified, stop and ask whether to run `/skill:ralplan` first.
