@@ -27,7 +27,8 @@ export type HarnessVerb =
 	| "retire"
 	| "events"
 	| "monitor"
-	| "operate";
+	| "operate"
+	| "vanish";
 
 export interface NextAllowedAction {
 	verb: HarnessVerb;

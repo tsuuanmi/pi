@@ -1,15 +1,17 @@
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync } from "node:fs";
 import { callEndpoint } from "../harness-control-plane/control-endpoint.ts";
 import { mutateRuntimeSession } from "../harness-control-plane/mutation.ts";
+import { operate } from "../harness-control-plane/operate.ts";
 import {
+	buildClassificationInput,
+	buildWorkspaceMarker,
 	classifyPrimitive,
 	finalizePrimitive,
 	recoverPrimitive,
 	validatePrimitive,
 } from "../harness-control-plane/operations.ts";
 import { RuntimeOwner, resolveOwner } from "../harness-control-plane/owner.ts";
-import { PiRpc } from "../harness-control-plane/rpc-adapter.ts";
+import { type HarnessRpc, PiRpc } from "../harness-control-plane/rpc-adapter.ts";
 import { buildResponse, submitUnavailableReason } from "../harness-control-plane/state-machine.ts";
 import {
 	canonicalWorkspacePath,
@@ -24,7 +26,6 @@ import {
 	writeSessionState,
 } from "../harness-control-plane/storage.ts";
 import {
-	type GitDelta,
 	type Observation,
 	SESSION_SCHEMA_VERSION,
 	type SessionHandle,
@@ -55,6 +56,7 @@ function usage(): string {
   pi workflow recover --input '{"sessionId":"h-..."}' --json
   pi workflow validate --input '{"sessionId":"h-...","checks":[{"name":"check","command":"npm run check"}]}' --json
   pi workflow finalize --input '{"sessionId":"h-..."}' --json
+  pi workflow operate --input '{"sessionId":"h-...","goal":"...","maxIterations":10}' --json
   pi workflow events --input '{"sessionId":"h-..."}' --json
   pi workflow retire --input '{"sessionId":"h-..."}' --json
 
@@ -111,17 +113,6 @@ function gitOutput(workspace: string, args: string[]): string | null {
 	}
 }
 
-function gitDeltaFor(workspace: string): { gitDelta: GitDelta; branch: string | null; deleted: boolean } {
-	if (!existsSync(workspace)) return { gitDelta: "unknown", branch: null, deleted: true };
-	const branch = gitOutput(workspace, ["rev-parse", "--abbrev-ref", "HEAD"]);
-	const porcelain = gitOutput(workspace, ["status", "--porcelain"]);
-	return {
-		gitDelta: porcelain === null ? "unknown" : porcelain.length > 0 ? "dirty" : "clean",
-		branch: branch && branch !== "HEAD" ? branch : null,
-		deleted: false,
-	};
-}
-
 function inputString(input: Record<string, unknown>, key: string): string | undefined {
 	const value = input[key];
 	return typeof value === "string" && value.trim() ? value.trim() : undefined;
@@ -140,15 +131,17 @@ function output(value: unknown, json: boolean): string {
 function buildHandle(input: Record<string, unknown>, root: string, sessionId: string, now: string): SessionHandle {
 	const workspace = canonicalWorkspacePath(inputString(input, "workspace") ?? process.cwd());
 	const paths = sessionPaths(root, sessionId);
-	const branch = inputString(input, "branch") ?? gitDeltaFor(workspace).branch;
+	const branch = inputString(input, "branch") ?? gitOutput(workspace, ["rev-parse", "--abbrev-ref", "HEAD"]);
+	const headRev = gitOutput(workspace, ["rev-parse", "HEAD"]);
+	const base = inputString(input, "base") ?? (headRev && headRev !== "HEAD" ? headRev : null);
 	return {
 		sessionId,
 		harness: "pi",
 		mode: input.mode === "review" ? "review" : "implement",
 		repo: inputString(input, "repo") ?? defaultRepoName(workspace),
 		workspace,
-		branch,
-		base: inputString(input, "base") ?? null,
+		branch: branch && branch !== "HEAD" ? branch : null,
+		base,
 		issueOrPr: inputString(input, "issueOrPr") ?? inputString(input, "pr") ?? inputString(input, "issue") ?? null,
 		processHandle: { kind: "runtime-owner", ownerId: null, pid: null },
 		rpcHandle: { kind: "rpc-subprocess", pid: null, sessionDir: paths.piSessionDir },
@@ -212,18 +205,23 @@ async function start(input: Record<string, unknown>, json: boolean): Promise<Wor
 }
 
 function observeState(state: SessionState): Observation {
-	const { gitDelta, branch, deleted } = gitDeltaFor(state.handle.workspace);
+	const marker = buildWorkspaceMarker(state.handle.workspace, state.handle.base);
 	const ownerLive = false;
 	const submitReason = submitUnavailableReason(state.lifecycle, ownerLive);
 	return {
 		lifecycle: state.lifecycle,
 		ownerLive,
 		cwd: state.handle.workspace,
-		branch: branch ?? state.handle.branch,
-		gitDelta,
+		branch: state.handle.branch,
+		gitDelta: marker.gitDelta,
 		lastActivityAt: state.updatedAt,
 		observedSignals: ["SessionStart"],
-		risk: deleted ? "deleted-worktree" : !ownerLive && gitDelta === "dirty" ? "vanished-dirty" : "normal",
+		risk:
+			marker.risk === "deleted"
+				? "deleted-worktree"
+				: !ownerLive && marker.gitDelta === "dirty"
+					? "vanished-dirty"
+					: "normal",
 		readyForSubmit: submitReason === null,
 		submitUnavailableReason: submitReason,
 	};
@@ -254,6 +252,25 @@ async function routeToOwner(
 function primitiveStatus(response: unknown): number {
 	if (!response || typeof response !== "object" || Array.isArray(response)) return 1;
 	return (response as { ok?: unknown }).ok === false ? 1 : 0;
+}
+
+class NoopRpc implements HarnessRpc {
+	async getState() {
+		return { isStreaming: false, steeringQueueDepth: 0, followupQueueDepth: 0 };
+	}
+	async sendPrompt(): Promise<{ commandId: string; ack: boolean }> {
+		return { commandId: "noop", ack: false };
+	}
+	eventCursor(): number {
+		return 0;
+	}
+	async waitForAgentStart(): Promise<{ cursor: number } | null> {
+		return null;
+	}
+	async close(): Promise<void> {}
+	isLive(): boolean {
+		return false;
+	}
 }
 
 async function waitForOwnerLive(root: string, sessionId: string, timeoutMs = 2_000): Promise<boolean> {
@@ -357,6 +374,52 @@ async function finalize(input: Record<string, unknown>, json: boolean): Promise<
 	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
 }
 
+async function operateCmd(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
+	const { root, state } = await loadState(input);
+	const ownerResponse = await routeToOwner(root, state, "operate", input).catch(() => undefined);
+	if (ownerResponse)
+		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
+	const goal = inputString(input, "goal");
+	if (!goal)
+		return {
+			status: 1,
+			stdout: output(
+				buildResponse(state, false, { accepted: false, reason: "empty-goal" }, false, "empty-goal"),
+				json,
+			),
+			stderr: "",
+		};
+	const maxIterations = typeof input.maxIterations === "number" ? input.maxIterations : undefined;
+	const acceptanceTimeoutMs = typeof input.acceptanceTimeoutMs === "number" ? input.acceptanceTimeoutMs : undefined;
+	const result = await operate({
+		root,
+		sessionId: state.sessionId,
+		goal,
+		ownerLive: false,
+		writer: { ownerId: "workflow-cli", leaseEpoch: 0 },
+		rpc: new NoopRpc(),
+		spawnOwner: async () => {
+			const owner = await resolveOwner(root, state.sessionId);
+			if (owner.live) return true;
+			spawnDetachedOwner({ ...input, root, workspace: state.handle.workspace, sessionId: state.sessionId });
+			return waitForOwnerLive(root, state.sessionId);
+		},
+		observe: async (sessionState) => {
+			const owner = await resolveOwner(root, sessionState.sessionId);
+			const receipts = await readRuntimeReceipts(root, sessionState.sessionId);
+			return buildClassificationInput({
+				state: sessionState,
+				ownerLive: owner.live,
+				receipts: receipts.rows,
+				input,
+			});
+		},
+		maxIterations,
+		acceptanceTimeoutMs,
+	});
+	return { status: result.completed ? 0 : 1, stdout: output(result, json), stderr: "" };
+}
+
 async function events(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
 	const after = typeof input.afterCursor === "number" ? input.afterCursor : 0;
@@ -403,6 +466,7 @@ async function dispatch(parsed: ParsedWorkflowCommand): Promise<WorkflowCommandR
 	if (parsed.verb === "recover") return recover(input, parsed.json);
 	if (parsed.verb === "validate") return validate(input, parsed.json);
 	if (parsed.verb === "finalize") return finalize(input, parsed.json);
+	if (parsed.verb === "operate") return operateCmd(input, parsed.json);
 	if (parsed.verb === "events") return events(input, parsed.json);
 	if (parsed.verb === "retire") return retire(input, parsed.json);
 	throw new Error(`unsupported pi workflow verb: ${parsed.verb}`);

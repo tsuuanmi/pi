@@ -2,10 +2,11 @@ import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mutateRuntimeSession } from "./mutation.ts";
+import { preserveDirtyWorktree } from "./preserve.ts";
 import type { HarnessRpc } from "./rpc-adapter.ts";
 import { singleFlightAccept } from "./rpc-adapter.ts";
 import { buildResponse } from "./state-machine.ts";
-import { readSessionState } from "./storage.ts";
+import { readRuntimeReceipts, readSessionState } from "./storage.ts";
 import type {
 	GitDelta,
 	HarnessLifecycle,
@@ -14,14 +15,21 @@ import type {
 	RuntimeWriter,
 	SessionState,
 } from "./types.ts";
+import {
+	buildVanishEvidence,
+	requiresVanishBeforeAction,
+	type VanishClassification,
+	validateVanish,
+} from "./vanish.ts";
 
 export type WorkspaceMarkerStatus = "available" | "not-git" | "git-unavailable" | "unknown" | "deleted";
 export type WorkspaceRisk = "normal" | "dirty" | "deleted" | "unknown" | "not-git";
 export type RecoveryDecisionKind =
 	| "continue"
 	| "reinject-prompt"
-	| "respawn-owner"
-	| "validation-repair"
+	| "restart-clean"
+	| "restart-preserve-delta"
+	| "fallback-harness-exec"
 	| "finalize-blocked"
 	| "human-check"
 	| "blocked";
@@ -53,7 +61,8 @@ export interface ClassificationInput {
 
 export interface RetryBudget {
 	reinjectPrompt: number;
-	ownerRespawn: number;
+	zeroDeltaVanish: number;
+	dirtyVanishPreserve: number;
 	validationRepair: number;
 }
 
@@ -109,7 +118,8 @@ export interface ValidationReceiptSummary {
 
 const DEFAULT_RETRY_BUDGET: RetryBudget = {
 	reinjectPrompt: 2,
-	ownerRespawn: 1,
+	zeroDeltaVanish: 1,
+	dirtyVanishPreserve: 1,
 	validationRepair: 2,
 };
 
@@ -138,7 +148,7 @@ function gitOutput(workspace: string, args: string[]): string | null {
 	}
 }
 
-export function buildWorkspaceMarker(workspace: string): WorkspaceMarker {
+export function buildWorkspaceMarker(workspace: string, base?: string | null): WorkspaceMarker {
 	if (!existsSync(workspace)) {
 		return { workspace, status: "deleted", head: null, gitDelta: "unknown", risk: "deleted" };
 	}
@@ -151,7 +161,15 @@ export function buildWorkspaceMarker(workspace: string): WorkspaceMarker {
 	if (porcelain === null) {
 		return { workspace, status: "git-unavailable", head, gitDelta: "unknown", risk: "unknown" };
 	}
-	const gitDelta: GitDelta = porcelain.length > 0 ? "dirty" : "clean";
+	let gitDelta: GitDelta;
+	if (porcelain.length > 0) {
+		gitDelta = "dirty";
+	} else if (base !== null && base !== undefined && head !== null && head !== base) {
+		// porcelain-clean but HEAD advanced past the recorded base: a commit landed with no working-tree change.
+		gitDelta = "zero-delta";
+	} else {
+		gitDelta = "clean";
+	}
 	return { workspace, status: "available", head, gitDelta, risk: gitDelta === "dirty" ? "dirty" : "normal" };
 }
 
@@ -164,10 +182,14 @@ export function parseRetryBudget(input: Record<string, unknown>, state: SessionS
 			typeof source.reinjectPrompt === "number"
 				? source.reinjectPrompt
 				: DEFAULT_RETRY_BUDGET.reinjectPrompt - (state.retries.reinjectPrompt ?? 0),
-		ownerRespawn:
-			typeof source.ownerRespawn === "number"
-				? source.ownerRespawn
-				: DEFAULT_RETRY_BUDGET.ownerRespawn - (state.retries.ownerRespawn ?? 0),
+		zeroDeltaVanish:
+			typeof source.zeroDeltaVanish === "number"
+				? source.zeroDeltaVanish
+				: DEFAULT_RETRY_BUDGET.zeroDeltaVanish - (state.retries.zeroDeltaVanish ?? 0),
+		dirtyVanishPreserve:
+			typeof source.dirtyVanishPreserve === "number"
+				? source.dirtyVanishPreserve
+				: DEFAULT_RETRY_BUDGET.dirtyVanishPreserve - (state.retries.dirtyVanishPreserve ?? 0),
 		validationRepair:
 			typeof source.validationRepair === "number"
 				? source.validationRepair
@@ -239,7 +261,7 @@ export async function buildClassificationInput(opts: {
 		state: opts.state,
 		ownerLive: opts.ownerLive,
 		runtime: { ownerLive: opts.ownerLive, rpcLive, rpcIdle, lastFrameAt },
-		workspace: buildWorkspaceMarker(opts.state.handle.workspace),
+		workspace: buildWorkspaceMarker(opts.state.handle.workspace, opts.state.handle.base),
 		recentSignals: Array.isArray(opts.input?.signals)
 			? opts.input.signals.filter((item): item is string => typeof item === "string")
 			: [],
@@ -260,104 +282,176 @@ export function classifyRecovery(input: ClassificationInput): RecoveryDecision {
 			blockers: [`lifecycle-terminal:${lifecycle}`],
 		};
 	}
-	if (input.workspace.risk === "deleted" || input.workspace.risk === "dirty" || input.workspace.risk === "unknown") {
+	// Deleted worktree / path mismatch is human-check in both branches (never recreate over unknown data).
+	if (input.workspace.risk === "deleted") {
 		return {
 			classification: "human-check",
-			reason: `unsafe-workspace:${input.workspace.risk}`,
+			reason: "deleted-worktree",
 			severity: "critical",
 			ownerRequired: false,
 			blocked: true,
-			blockers: [`unsafe-workspace:${input.workspace.risk}`],
+			blockers: ["deleted-worktree"],
 		};
 	}
-	if (
-		input.recentSignals.includes("no-ack") ||
-		input.recentSignals.includes("no-agent-start-within-timeout") ||
-		input.recentSignals.includes("prompt-not-accepted")
-	) {
-		if (input.retryBudget.reinjectPrompt > 0) {
+	if (input.ownerLive) {
+		// Owner is live: act on observed signals, not on gitDelta (a dirty tree is normal mid-work).
+		if (
+			input.recentSignals.includes("no-ack") ||
+			input.recentSignals.includes("no-agent-start-within-timeout") ||
+			input.recentSignals.includes("prompt-not-accepted")
+		) {
+			if (input.retryBudget.reinjectPrompt > 0) {
+				return {
+					classification: "reinject-prompt",
+					reason: "prompt-not-accepted",
+					severity: "warn",
+					ownerRequired: true,
+					blocked: false,
+					blockers: [],
+				};
+			}
 			return {
-				classification: "reinject-prompt",
-				reason: "prompt-not-accepted",
-				severity: "warn",
-				ownerRequired: true,
-				blocked: false,
-				blockers: [],
-			};
-		}
-		return {
-			classification: "blocked",
-			reason: "reinject-prompt-budget-exhausted",
-			severity: "critical",
-			ownerRequired: false,
-			blocked: true,
-			blockers: ["reinject-prompt-budget-exhausted"],
-		};
-	}
-	if (
-		input.recentSignals.includes("validation-failed") ||
-		(input.latestValidation && !input.latestValidation.evidence?.overallPassed)
-	) {
-		if (input.retryBudget.validationRepair > 0) {
-			return {
-				classification: "validation-repair",
-				reason: "validation-failed-budget-remains",
-				severity: "warn",
-				ownerRequired: true,
-				blocked: false,
-				blockers: [],
-			};
-		}
-		return {
-			classification: "blocked",
-			reason: "validation-repair-budget-exhausted",
-			severity: "critical",
-			ownerRequired: false,
-			blocked: true,
-			blockers: ["validation-repair-budget-exhausted"],
-		};
-	}
-	if (!input.ownerLive) {
-		if (input.retryBudget.ownerRespawn > 0) {
-			return {
-				classification: "respawn-owner",
-				reason: "owner-not-live",
-				severity: "warn",
+				classification: "blocked",
+				reason: "reinject-prompt-budget-exhausted",
+				severity: "critical",
 				ownerRequired: false,
+				blocked: true,
+				blockers: ["reinject-prompt-budget-exhausted"],
+			};
+		}
+		if (
+			input.recentSignals.includes("validation-failed") ||
+			(input.latestValidation && !input.latestValidation.evidence?.overallPassed)
+		) {
+			if (input.retryBudget.validationRepair > 0) {
+				return {
+					classification: "continue",
+					reason: "validation-failed-repair-budget-remains",
+					severity: "warn",
+					ownerRequired: true,
+					blocked: false,
+					blockers: [],
+				};
+			}
+			return {
+				classification: "blocked",
+				reason: "validation-repair-budget-exhausted",
+				severity: "critical",
+				ownerRequired: false,
+				blocked: true,
+				blockers: ["validation-repair-budget-exhausted"],
+			};
+		}
+		if (input.runtime.rpcIdle === false) {
+			return {
+				classification: "continue",
+				reason: "runtime-busy",
+				severity: "info",
+				ownerRequired: true,
 				blocked: false,
 				blockers: [],
 			};
 		}
-		return {
-			classification: "blocked",
-			reason: "owner-respawn-budget-exhausted",
-			severity: "critical",
-			ownerRequired: false,
-			blocked: true,
-			blockers: ["owner-respawn-budget-exhausted"],
-		};
-	}
-	if (input.runtime.rpcIdle === false) {
 		return {
 			classification: "continue",
-			reason: "runtime-busy",
+			reason: "healthy",
 			severity: "info",
 			ownerRequired: true,
 			blocked: false,
 			blockers: [],
 		};
 	}
-	return {
-		classification: "continue",
-		reason: "healthy",
-		severity: "info",
-		ownerRequired: input.ownerLive,
-		blocked: false,
-		blockers: [],
-	};
+	// Owner / RPC vanished: branch on git delta. Every destructive branch requires a vanish receipt.
+	if (input.workspace.risk === "not-git" || input.workspace.gitDelta === "unknown") {
+		return {
+			classification: "human-check",
+			reason: "owner-vanished-unknown-delta",
+			severity: "critical",
+			ownerRequired: false,
+			blocked: true,
+			blockers: ["owner-vanished-unknown-delta"],
+		};
+	}
+	switch (input.workspace.gitDelta) {
+		case "clean":
+			return {
+				classification: "restart-clean",
+				reason: "owner-vanished-clean",
+				severity: "warn",
+				ownerRequired: true,
+				blocked: false,
+				blockers: [],
+			};
+		case "zero-delta":
+			if (input.retryBudget.zeroDeltaVanish > 0) {
+				return {
+					classification: "restart-clean",
+					reason: "owner-vanished-zero-delta",
+					severity: "warn",
+					ownerRequired: true,
+					blocked: false,
+					blockers: [],
+				};
+			}
+			return {
+				classification: "fallback-harness-exec",
+				reason: "zero-delta-vanish-budget-exhausted",
+				severity: "critical",
+				ownerRequired: true,
+				blocked: false,
+				blockers: [],
+			};
+		case "dirty":
+			if (input.retryBudget.dirtyVanishPreserve > 0) {
+				return {
+					classification: "restart-preserve-delta",
+					reason: "owner-vanished-dirty-delta",
+					severity: "critical",
+					ownerRequired: true,
+					blocked: false,
+					blockers: [],
+				};
+			}
+			return {
+				classification: "fallback-harness-exec",
+				reason: "dirty-vanish-preserve-budget-exhausted",
+				severity: "critical",
+				ownerRequired: true,
+				blocked: false,
+				blockers: [],
+			};
+		default:
+			return {
+				classification: "human-check",
+				reason: "owner-vanished-unknown-delta",
+				severity: "critical",
+				ownerRequired: false,
+				blocked: true,
+				blockers: ["owner-vanished-unknown-delta"],
+			};
+	}
 }
 
-export function updateRetry(state: SessionState, key: keyof RetryBudget): SessionState {
+function budgetKeyFor(decision: RecoveryDecision, gitDelta: GitDelta): keyof RetryBudget | null {
+	switch (decision.classification) {
+		case "reinject-prompt":
+			return "reinjectPrompt";
+		case "restart-clean":
+			// `clean` consumes nothing; `zero-delta` consumes one vanish budget.
+			return gitDelta === "zero-delta" ? "zeroDeltaVanish" : null;
+		case "restart-preserve-delta":
+			return "dirtyVanishPreserve";
+		case "continue":
+			// `continue` consumes validationRepair only when repairing a validation failure.
+			return decision.reason === "validation-failed-repair-budget-remains" ? "validationRepair" : null;
+		default:
+			return null;
+	}
+}
+
+export function consumeBudget(state: SessionState, decision: RecoveryDecision, gitDelta: GitDelta): SessionState {
+	const key = budgetKeyFor(decision, gitDelta);
+	if (!key) return state;
 	return { ...state, retries: { ...state.retries, [key]: (state.retries[key] ?? 0) + 1 } };
 }
 
@@ -374,6 +468,44 @@ export async function classifyPrimitive(opts: {
 	return buildResponse(opts.state, opts.ownerLive, { ...(opts.extraEvidence ?? {}), decision, classificationInput });
 }
 
+async function writeVanishReceipt(opts: {
+	root: string;
+	state: SessionState;
+	ownerLive: boolean;
+	writer: RuntimeWriter;
+	decision: RecoveryDecision;
+	gitDelta: GitDelta;
+}): Promise<{ receipt: RuntimeReceipt; revalidated: boolean; vanishOk: boolean }> {
+	const classification = opts.decision.classification as VanishClassification;
+	const preserve = preserveDirtyWorktree(opts.state.handle.workspace);
+	const evidence = buildVanishEvidence(opts.gitDelta, preserve, classification);
+	const vanishMutation = await mutateRuntimeSession({
+		root: opts.root,
+		sessionId: opts.state.sessionId,
+		verb: "vanish",
+		writer: opts.writer,
+		nextState: { ...opts.state, updatedAt: new Date().toISOString() },
+		ownerLive: opts.ownerLive,
+		events: [
+			{
+				kind: "vanish_receipt",
+				severity: "critical",
+				evidence: { classification: opts.decision.classification, gitDelta: opts.gitDelta },
+			},
+		],
+		evidence,
+	});
+	// Re-read + revalidate the just-written vanish receipt from disk (fail-closed: closes the
+	// tamper-after-write + receipt-log-corruption gap that mutateRuntimeSession does not catch).
+	const reread = await readRuntimeReceipts(opts.root, opts.state.sessionId);
+	const row = [...reread.rows].reverse().find((receipt) => receipt.receiptId === vanishMutation.receipt.receiptId);
+	const hashOk = row ? isRuntimeReceiptValid(row) : false;
+	const vanishOk = row ? validateVanish(row.evidence).valid : false;
+	// A corrupt receipt log (malformed line) is fail-closed: never proceed over an untrustworthy log.
+	const revalidated = reread.diagnostics.length === 0 && row !== undefined && hashOk;
+	return { receipt: vanishMutation.receipt, revalidated, vanishOk };
+}
+
 export async function recoverPrimitive(opts: {
 	root: string;
 	state: SessionState;
@@ -383,10 +515,34 @@ export async function recoverPrimitive(opts: {
 	writer: RuntimeWriter;
 	spawnOwner?: () => Promise<boolean>;
 	receipts?: RuntimeReceipt[];
+	/** Injected by the operate loop to skip buildClassificationInput (no double git I/O). */
+	classificationInput?: ClassificationInput;
 }): Promise<PrimitiveResponse> {
-	const classificationInput = await buildClassificationInput(opts);
+	const classificationInput = opts.classificationInput ?? (await buildClassificationInput(opts));
 	const decision = classifyRecovery(classificationInput);
+	const gitDelta = classificationInput.workspace.gitDelta;
+
 	if (decision.blocked) return buildResponse(opts.state, opts.ownerLive, { decision, accepted: false }, false);
+
+	if (decision.classification === "continue") {
+		// No destructive action. Consume validationRepair only when repairing a validation failure.
+		if (decision.reason === "validation-failed-repair-budget-remains") {
+			const next = consumeBudget({ ...opts.state, updatedAt: new Date().toISOString() }, decision, gitDelta);
+			const mutation = await mutateRuntimeSession({
+				root: opts.root,
+				sessionId: opts.state.sessionId,
+				verb: "recover",
+				writer: opts.writer,
+				nextState: next,
+				ownerLive: opts.ownerLive,
+				events: [{ kind: "validation_repair_continued", evidence: { reason: decision.reason } }],
+				evidence: { decision, accepted: true },
+			});
+			return buildResponse(mutation.state, opts.ownerLive, { decision, accepted: true, receipt: mutation.receipt });
+		}
+		return buildResponse(opts.state, opts.ownerLive, { decision, accepted: true });
+	}
+
 	if (decision.classification === "reinject-prompt") {
 		const prompt = inputString(opts.input ?? {}, "prompt");
 		if (!prompt || !opts.rpc)
@@ -403,9 +559,10 @@ export async function recoverPrimitive(opts: {
 		);
 		if (!result.accepted)
 			return buildResponse(opts.state, opts.ownerLive, { decision, accepted: false, result }, false);
-		const next = updateRetry(
+		const next = consumeBudget(
 			{ ...opts.state, lifecycle: "observing", updatedAt: new Date().toISOString() },
-			"reinjectPrompt",
+			decision,
+			gitDelta,
 		);
 		const mutation = await mutateRuntimeSession({
 			root: opts.root,
@@ -424,18 +581,121 @@ export async function recoverPrimitive(opts: {
 		});
 		return buildResponse(mutation.state, opts.ownerLive, { decision, accepted: true, receipt: mutation.receipt });
 	}
-	if (decision.classification === "respawn-owner") {
+
+	if (decision.classification === "human-check") {
+		return buildResponse(
+			opts.state,
+			opts.ownerLive,
+			{ decision, accepted: false, reason: "human-check-required" },
+			false,
+		);
+	}
+
+	if (requiresVanishBeforeAction(decision.classification)) {
+		const classification = decision.classification as VanishClassification;
+		const vanish = await writeVanishReceipt({
+			root: opts.root,
+			state: opts.state,
+			ownerLive: opts.ownerLive,
+			writer: opts.writer,
+			decision,
+			gitDelta,
+		});
+		if (!vanish.revalidated || !vanish.vanishOk) {
+			const next: SessionState = {
+				...opts.state,
+				lifecycle: "blocked",
+				blockers: ["invalid-vanish-receipt"],
+				updatedAt: new Date().toISOString(),
+			};
+			const mutation = await mutateRuntimeSession({
+				root: opts.root,
+				sessionId: opts.state.sessionId,
+				verb: "recover",
+				writer: opts.writer,
+				accepted: false,
+				nextState: next,
+				ownerLive: opts.ownerLive,
+				events: [
+					{ kind: "recovery_blocked", severity: "critical", evidence: { reason: "invalid-vanish-receipt" } },
+				],
+				evidence: {
+					decision,
+					accepted: false,
+					reason: "invalid-vanish-receipt",
+					vanishReceiptId: vanish.receipt.receiptId,
+				},
+			});
+			return buildResponse(
+				mutation.state,
+				opts.ownerLive,
+				{ decision, accepted: false, reason: "invalid-vanish-receipt", vanishReceiptId: vanish.receipt.receiptId },
+				false,
+			);
+		}
+
+		if (classification === "fallback-harness-exec") {
+			// Provider-agnostic fallback resolves to blocked in Phase 2 (no real cross-harness exec).
+			const next: SessionState = {
+				...opts.state,
+				lifecycle: "blocked",
+				blockers: decision.blockers,
+				updatedAt: new Date().toISOString(),
+			};
+			const mutation = await mutateRuntimeSession({
+				root: opts.root,
+				sessionId: opts.state.sessionId,
+				verb: "recover",
+				writer: opts.writer,
+				accepted: false,
+				nextState: next,
+				ownerLive: opts.ownerLive,
+				events: [
+					{
+						kind: "recovery_blocked",
+						severity: "critical",
+						evidence: { reason: "fallback-harness-exec-requested" },
+					},
+				],
+				evidence: {
+					decision,
+					accepted: false,
+					reason: "fallback-harness-exec-requested",
+					vanishReceiptId: vanish.receipt.receiptId,
+				},
+			});
+			return buildResponse(
+				mutation.state,
+				opts.ownerLive,
+				{
+					decision,
+					accepted: false,
+					reason: "fallback-harness-exec-requested",
+					vanishReceiptId: vanish.receipt.receiptId,
+				},
+				false,
+			);
+		}
+
+		// restart-clean / restart-preserve-delta: respawn the owner. Re-submit is the operate loop's job.
 		const live = opts.spawnOwner ? await opts.spawnOwner() : false;
-		if (!live)
+		if (!live) {
 			return buildResponse(
 				opts.state,
 				opts.ownerLive,
-				{ decision, accepted: false, reason: "owner-liveness-proof-failed" },
+				{
+					decision,
+					accepted: false,
+					reason: "owner-liveness-proof-failed",
+					vanishReceiptId: vanish.receipt.receiptId,
+				},
 				false,
 			);
-		const next = updateRetry(
+		}
+		const next = consumeBudget(
 			{ ...opts.state, lifecycle: "started", updatedAt: new Date().toISOString() },
-			"ownerRespawn",
+			decision,
+			gitDelta,
 		);
 		const mutation = await mutateRuntimeSession({
 			root: opts.root,
@@ -444,17 +704,20 @@ export async function recoverPrimitive(opts: {
 			writer: opts.writer,
 			nextState: next,
 			ownerLive: true,
-			events: [{ kind: "owner_respawned", evidence: { reason: decision.reason } }],
-			evidence: { decision, livenessProved: true },
+			events: [
+				{ kind: "owner_respawned", evidence: { reason: decision.reason, classification: decision.classification } },
+			],
+			evidence: { decision, livenessProved: true, vanishReceiptId: vanish.receipt.receiptId },
 		});
-		return buildResponse(mutation.state, true, { decision, accepted: true, receipt: mutation.receipt });
+		return buildResponse(mutation.state, true, {
+			decision,
+			accepted: true,
+			receipt: mutation.receipt,
+			vanishReceiptId: vanish.receipt.receiptId,
+		});
 	}
-	return buildResponse(
-		opts.state,
-		opts.ownerLive,
-		{ decision, accepted: false, reason: "no-phase1-recovery-action" },
-		false,
-	);
+
+	return buildResponse(opts.state, opts.ownerLive, { decision, accepted: false, reason: "no-recovery-action" }, false);
 }
 
 function boundOutput(text: string): { summary: string; truncated: boolean } {
@@ -555,7 +818,7 @@ export async function validatePrimitive(opts: {
 		sessionId: opts.state.sessionId,
 		checks: results,
 		overallPassed: passed,
-		workspaceMarker: buildWorkspaceMarker(opts.state.handle.workspace),
+		workspaceMarker: buildWorkspaceMarker(opts.state.handle.workspace, opts.state.handle.base),
 		retryBudget: {
 			consumed: opts.state.retries.validationRepair ?? 0,
 			remaining: parseRetryBudget(opts.input, opts.state).validationRepair,
@@ -626,7 +889,7 @@ export async function finalizePrimitive(opts: {
 	receipts: RuntimeReceipt[];
 }): Promise<PrimitiveResponse> {
 	const selected = findValidationReceipt(opts.receipts, opts.state, opts.input);
-	const currentMarker = buildWorkspaceMarker(opts.state.handle.workspace);
+	const currentMarker = buildWorkspaceMarker(opts.state.handle.workspace, opts.state.handle.base);
 	const blockers: string[] = [];
 	if (!selected) blockers.push("validation-receipt-missing-or-ambiguous");
 	if (selected && !selected.valid) blockers.push("validation-receipt-invalid");

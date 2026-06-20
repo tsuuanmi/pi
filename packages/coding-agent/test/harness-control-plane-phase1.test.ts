@@ -109,32 +109,28 @@ describe("harness control-plane phase 1", () => {
 		expect(result.status).toBe(0);
 		const parsed = JSON.parse(result.stdout) as { ok: boolean; evidence: { decision: { classification: string } } };
 		expect(parsed.ok).toBe(true);
-		expect(parsed.evidence.decision.classification).toBe("respawn-owner");
+		expect(parsed.evidence.decision.classification).toBe("restart-clean");
+		expect(parsed.evidence.decision.classification).not.toBe("respawn-owner");
 		expect(await readSessionState(root, sessionId)).toEqual(before);
 		expect((await readRuntimeReceipts(root, sessionId)).rows).toHaveLength(0);
 	});
 
-	it("blocks dirty workspace recovery without consuming budget", async () => {
-		await runWorkflowCommand(
-			[
-				"validate",
-				"--input",
-				JSON.stringify({ workspace: cwd, sessionId, checks: [{ name: "ok", command: "true" }] }),
-				"--json",
-			],
-			cwd,
-		);
+	it("classifies dirty owner-vanished workspace as restart-preserve-delta, never restart-clean", async () => {
 		await writeFile(join(cwd, "dirty.txt"), "dirty", "utf8");
 		const result = await runWorkflowCommand(
-			["recover", "--input", JSON.stringify({ workspace: cwd, sessionId }), "--json"],
+			["classify", "--input", JSON.stringify({ workspace: cwd, sessionId }), "--json"],
 			cwd,
 		);
-		expect(result.status).toBe(1);
-		const parsed = JSON.parse(result.stdout) as { ok: boolean; evidence: { decision: { blockers: string[] } } };
-		expect(parsed.ok).toBe(false);
-		expect(parsed.evidence.decision.blockers[0]).toMatch(/unsafe-workspace/);
-		const state = await readSessionState(root, sessionId);
-		expect(state?.retries.ownerRespawn).toBeUndefined();
+		expect(result.status).toBe(0);
+		const parsed = JSON.parse(result.stdout) as {
+			ok: boolean;
+			evidence: { decision: { classification: string; blocked: boolean } };
+		};
+		expect(parsed.ok).toBe(true);
+		expect(parsed.evidence.decision.classification).toBe("restart-preserve-delta");
+		expect(parsed.evidence.decision.classification).not.toBe("restart-clean");
+		expect(parsed.evidence.decision.blocked).toBe(false);
+		expect((await readRuntimeReceipts(root, sessionId)).rows).toHaveLength(0);
 	});
 
 	it("validates checks, writes a receipt, and finalizes with fresh evidence", async () => {
@@ -219,6 +215,7 @@ describe("harness control-plane phase 1", () => {
 			ownerLive: true,
 			input: { signals: ["validation-failed"] },
 		});
-		expect(classifyRecovery(validation).classification).toBe("validation-repair");
+		expect(classifyRecovery(validation).classification).toBe("continue");
+		expect(classifyRecovery(validation).classification).not.toBe("validation-repair");
 	});
 });

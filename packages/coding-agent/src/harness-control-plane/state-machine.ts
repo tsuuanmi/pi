@@ -70,6 +70,7 @@ export function nextAllowedActions(
 	add("recover", !terminal, terminal ? `lifecycle-terminal:${lifecycle}` : undefined);
 	add("validate", !terminal, terminal ? `lifecycle-terminal:${lifecycle}` : undefined);
 	add("finalize", !terminal, terminal ? `lifecycle-terminal:${lifecycle}` : undefined);
+	add("operate", !terminal, terminal ? `lifecycle-terminal:${lifecycle}` : undefined);
 	add("retire", lifecycle !== "retired", lifecycle === "retired" ? "already-retired" : undefined);
 
 	return actions;

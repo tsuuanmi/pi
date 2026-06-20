@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { ControlServer, type EndpointRequest } from "./control-endpoint.ts";
-import { classifyPrimitive, finalizePrimitive, recoverPrimitive, validatePrimitive } from "./operations.ts";
+import { operate } from "./operate.ts";
+import {
+	buildClassificationInput,
+	classifyPrimitive,
+	finalizePrimitive,
+	recoverPrimitive,
+	validatePrimitive,
+} from "./operations.ts";
 import { type HarnessRpc, singleFlightAccept } from "./rpc-adapter.ts";
 import {
 	acquireLease,
@@ -174,6 +181,7 @@ export class RuntimeOwner {
 		if (req.verb === "recover") return this.#recover(req.input);
 		if (req.verb === "validate") return this.#validate(req.input);
 		if (req.verb === "finalize") return this.#finalize(req.input);
+		if (req.verb === "operate") return this.#operate(req.input);
 		if (req.verb === "submit") return this.#submit(req.input);
 		if (req.verb === "retire") return this.#retire();
 		return { ok: false, error: `owner_unsupported_verb:${req.verb}` };
@@ -227,6 +235,39 @@ export class RuntimeOwner {
 			input,
 			receipts: receipts.rows,
 			writer: { ownerId: this.ownerId, leaseEpoch: this.#leaseEpoch },
+		});
+	}
+
+	async #operate(input: Record<string, unknown>): Promise<unknown> {
+		const goal = typeof input.goal === "string" ? input.goal : "";
+		const state = await this.#loadState();
+		if (!goal) return buildResponse(state, true, { accepted: false, reason: "empty-goal" }, false, "empty-goal");
+		const maxIterations = typeof input.maxIterations === "number" ? input.maxIterations : undefined;
+		const acceptanceTimeoutMs = typeof input.acceptanceTimeoutMs === "number" ? input.acceptanceTimeoutMs : undefined;
+		return operate({
+			root: this.#root,
+			sessionId: this.#sessionId,
+			goal,
+			ownerLive: true,
+			writer: { ownerId: this.ownerId, leaseEpoch: this.#leaseEpoch },
+			rpc: this.#rpc,
+			// Owner is in-process and live; the vanished branch (which calls spawnOwner) is unreachable here.
+			spawnOwner: async () => true,
+			observe: async (sessionState) => {
+				const receipts = await readRuntimeReceipts(this.#root, this.#sessionId);
+				return buildClassificationInput({
+					state: sessionState,
+					ownerLive: true,
+					rpc: this.#rpc,
+					receipts: receipts.rows,
+					input,
+				});
+			},
+			maxIterations,
+			acceptanceTimeoutMs,
+			emit: async (kind, evidence) => {
+				await this.#emit(kind, evidence);
+			},
 		});
 	}
 
