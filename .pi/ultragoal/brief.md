@@ -1,1 +1,0 @@
-Implement approved plan for Pi workflow/runtime/agent harness improvements in phases. Start with phase 1-2 foundations: runtime event/receipt contracts, storage diagnostics, canonical receipts.jsonl, v1 compatibility diagnostics, and shared mutation boundary. Preserve centralized `pi workflow`; no top-level `pi harness` or `pi state`. Run targeted tests and npm run check.

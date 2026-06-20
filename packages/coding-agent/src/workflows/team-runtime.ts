@@ -283,7 +283,7 @@ function buildTeamHud(snapshot: TeamSnapshot): WorkflowHudSummary {
 	};
 }
 
-async function syncTeamState(cwd: string, snapshot: TeamSnapshot): Promise<void> {
+async function syncTeamState(cwd: string, snapshot: TeamSnapshot, sessionId?: string): Promise<void> {
 	const active = snapshot.phase !== "missing" && snapshot.phase !== "complete" && snapshot.phase !== "cancelled";
 	const state = await writeWorkflowState(cwd, "team", {
 		active,
@@ -291,18 +291,23 @@ async function syncTeamState(cwd: string, snapshot: TeamSnapshot): Promise<void>
 		team_id: snapshot.team_id,
 		task_counts: snapshot.task_counts,
 	});
-	await syncWorkflowActiveState(cwd, {
-		skill: "team",
-		active: state.active,
-		phase: state.current_phase,
-		state_path: workflowStatePath(cwd, "team"),
-		hud: buildTeamHud(snapshot),
-	});
+	await syncWorkflowActiveState(
+		cwd,
+		{
+			skill: "team",
+			active: state.active,
+			phase: state.current_phase,
+			state_path: workflowStatePath(cwd, "team"),
+			hud: buildTeamHud(snapshot),
+		},
+		sessionId ? { sessionId } : undefined,
+	);
 }
 
 export async function startTeam(
 	cwd: string,
 	input: { task: string; teamId?: string; workers?: Array<{ id?: string; name?: string; role?: string }> },
+	sessionId?: string,
 ): Promise<TeamSnapshot> {
 	const task = (await readFileOrLiteral(input.task, cwd)).trim();
 	if (!task) throw new Error("team task is required");
@@ -332,7 +337,7 @@ export async function startTeam(
 	await writeJsonAtomic(teamConfigPath(cwd, teamId), { ...config }, { cwd });
 	await appendTeamEvent(cwd, teamId, { type: "team_started", message: task, data: { worker_count: workers.length } });
 	const snapshot = await readTeamSnapshot(cwd, teamId);
-	await syncTeamState(cwd, snapshot);
+	await syncTeamState(cwd, snapshot, sessionId);
 	return snapshot;
 }
 
@@ -380,6 +385,7 @@ export async function readTeamSnapshot(cwd: string, teamIdInput?: string): Promi
 export async function createTeamTask(
 	cwd: string,
 	input: { teamId?: string; id?: string; title: string; description: string; owner?: string; dependsOn?: string[] },
+	sessionId?: string,
 ): Promise<TeamTask> {
 	const teamId = await resolveTeamId(cwd, input.teamId);
 	const id = input.id?.trim() || `task-${sha256(`${input.title}\n${input.description}`).slice(0, 12)}`;
@@ -400,7 +406,7 @@ export async function createTeamTask(
 	});
 	await writeJsonAtomic(teamTaskPath(cwd, teamId, id), { ...task }, { cwd });
 	await appendTeamEvent(cwd, teamId, { type: "task_created", task_id: id, message: task.title });
-	await syncTeamState(cwd, await readTeamSnapshot(cwd, teamId));
+	await syncTeamState(cwd, await readTeamSnapshot(cwd, teamId), sessionId);
 	return task;
 }
 
@@ -413,6 +419,7 @@ export async function transitionTeamTask(
 		workerId?: string;
 		evidence?: Omit<TeamCompletionEvidence, "recorded_at">;
 	},
+	sessionId?: string,
 ): Promise<TeamTask> {
 	const teamId = await resolveTeamId(cwd, input.teamId);
 	assertSafeId("task_id", input.taskId);
@@ -445,7 +452,7 @@ export async function transitionTeamTask(
 		message: status,
 		data: { status },
 	});
-	await syncTeamState(cwd, await readTeamSnapshot(cwd, teamId));
+	await syncTeamState(cwd, await readTeamSnapshot(cwd, teamId), sessionId);
 	return next;
 }
 
@@ -479,6 +486,7 @@ export async function sendTeamMessage(
 export async function completeTeam(
 	cwd: string,
 	input: { teamId?: string; phase?: "complete" | "failed" | "cancelled"; summary?: string },
+	sessionId?: string,
 ): Promise<TeamSnapshot> {
 	const teamId = await resolveTeamId(cwd, input.teamId);
 	const config = await readTeamConfig(cwd, teamId);
@@ -488,7 +496,7 @@ export async function completeTeam(
 	await writeJsonAtomic(teamConfigPath(cwd, teamId), next, { cwd });
 	await appendTeamEvent(cwd, teamId, { type: "team_closed", message: input.summary ?? phase, data: { phase } });
 	const snapshot = await readTeamSnapshot(cwd, teamId);
-	await syncTeamState(cwd, snapshot);
+	await syncTeamState(cwd, snapshot, sessionId);
 	return snapshot;
 }
 

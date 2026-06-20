@@ -184,20 +184,24 @@ async function writePlan(cwd: string, plan: UltragoalPlan): Promise<void> {
 	await writeJsonAtomic(ultragoalGoalsPath(cwd), { ...plan }, { cwd });
 }
 
-async function syncUltragoalState(cwd: string, status: UltragoalStatus): Promise<void> {
+async function syncUltragoalState(cwd: string, status: UltragoalStatus, sessionId?: string): Promise<void> {
 	const state = await writeWorkflowState(cwd, "ultragoal", {
 		active: status.status !== "complete" && status.status !== "missing",
 		current_phase: status.status,
 		current_goal_id: status.currentGoal?.id,
 		counts: status.counts,
 	});
-	await syncWorkflowActiveState(cwd, {
-		skill: "ultragoal",
-		active: state.active,
-		phase: state.current_phase,
-		state_path: workflowStatePath(cwd, "ultragoal"),
-		hud: buildUltragoalHud(status),
-	});
+	await syncWorkflowActiveState(
+		cwd,
+		{
+			skill: "ultragoal",
+			active: state.active,
+			phase: state.current_phase,
+			state_path: workflowStatePath(cwd, "ultragoal"),
+			hud: buildUltragoalHud(status),
+		},
+		sessionId ? { sessionId } : undefined,
+	);
 }
 
 function buildUltragoalHud(status: UltragoalStatus): WorkflowHudSummary {
@@ -234,6 +238,7 @@ export async function readUltragoalPlan(cwd: string): Promise<UltragoalPlan | un
 export async function createUltragoalPlan(
 	cwd: string,
 	input: { brief: string; goalMode?: UltragoalGoalMode },
+	sessionId?: string,
 ): Promise<UltragoalPlan> {
 	const brief = (await readFileOrLiteral(input.brief, cwd)).trim();
 	if (!brief) throw new Error("ultragoal brief is required");
@@ -256,7 +261,7 @@ export async function createUltragoalPlan(
 	};
 	await writePlan(cwd, plan);
 	await appendLedger(cwd, { event: "plan_created", goalIds: plan.goals.map((goal) => goal.id) });
-	await syncUltragoalState(cwd, await getUltragoalStatus(cwd));
+	await syncUltragoalState(cwd, await getUltragoalStatus(cwd), sessionId);
 	return plan;
 }
 
@@ -296,6 +301,7 @@ export async function getUltragoalStatus(cwd: string): Promise<UltragoalStatus> 
 export async function startNextUltragoalGoal(
 	cwd: string,
 	retryFailed = false,
+	sessionId?: string,
 ): Promise<{ plan: UltragoalPlan; goal?: UltragoalGoal; allComplete: boolean }> {
 	const plan = await readUltragoalPlan(cwd);
 	if (!plan) throw new Error("No ultragoal plan found. Create one first.");
@@ -309,7 +315,7 @@ export async function startNextUltragoalGoal(
 		plan.updatedAt = now;
 		await writePlan(cwd, plan);
 		await appendLedger(cwd, { event: "goal_started", goalId: goal.id });
-		await syncUltragoalState(cwd, await getUltragoalStatus(cwd));
+		await syncUltragoalState(cwd, await getUltragoalStatus(cwd), sessionId);
 	}
 	return { plan, goal, allComplete: false };
 }
@@ -328,6 +334,7 @@ function validateCompletionEvidence(evidence: string, qualityGate: unknown): voi
 export async function checkpointUltragoalGoal(
 	cwd: string,
 	input: { goalId: string; status: string; evidence?: string; qualityGate?: unknown },
+	sessionId?: string,
 ): Promise<UltragoalGoal> {
 	const plan = await readUltragoalPlan(cwd);
 	if (!plan) throw new Error("No ultragoal plan found. Create one first.");
@@ -363,7 +370,7 @@ export async function checkpointUltragoalGoal(
 	}
 	plan.updatedAt = now;
 	await writePlan(cwd, plan);
-	await syncUltragoalState(cwd, await getUltragoalStatus(cwd));
+	await syncUltragoalState(cwd, await getUltragoalStatus(cwd), sessionId);
 	return goal;
 }
 

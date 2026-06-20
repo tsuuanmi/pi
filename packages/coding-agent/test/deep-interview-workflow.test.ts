@@ -2,7 +2,7 @@ import { readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "../src/core/extensions/types.ts";
+import type { ExtensionAPI, ExtensionContext } from "../src/core/extensions/types.ts";
 import workflowsExtension from "../src/extensions/workflows.ts";
 import { formatWorkflowHudLine, readWorkflowActiveState } from "../src/workflows/active-state.ts";
 import {
@@ -26,51 +26,37 @@ interface CapturedTool {
 	): Promise<unknown>;
 }
 
-type CapturedCommandHandler = (args: string, ctx: ExtensionCommandContext) => Promise<void>;
-
 function createWorkflowToolHarness(cwd: string): {
 	tool(name: string): CapturedTool;
-	command(name: string): CapturedCommandHandler;
 	ctx: ExtensionContext;
-	commandCtx: ExtensionCommandContext;
 	messages: string[];
 } {
 	const tools = new Map<string, CapturedTool>();
-	const commands = new Map<string, CapturedCommandHandler>();
 	const messages: string[] = [];
 	const api = {
 		registerTool(tool: CapturedTool): void {
 			tools.set(tool.name, tool);
 		},
-		registerCommand(name: string, options: { handler: CapturedCommandHandler }): void {
-			commands.set(name, options.handler);
-		},
+		registerCommand(): void {},
 		on(): void {},
 		sendUserMessage(content: string): void {
 			messages.push(content);
 		},
 	} as unknown as ExtensionAPI;
 	workflowsExtension(api);
-	const ctx = { cwd, mode: "json", hasUI: false } as unknown as ExtensionContext;
-	const commandCtx = {
+	const ctx = {
 		cwd,
 		mode: "json",
 		hasUI: false,
-		ui: { notify(): void {} },
-	} as unknown as ExtensionCommandContext;
+		sessionManager: { getSessionId: () => "test-session-id" },
+	} as unknown as ExtensionContext;
 	return {
 		tool(name: string): CapturedTool {
 			const found = tools.get(name);
 			if (!found) throw new Error(`tool not registered: ${name}`);
 			return found;
 		},
-		command(name: string): CapturedCommandHandler {
-			const found = commands.get(name);
-			if (!found) throw new Error(`command not registered: ${name}`);
-			return found;
-		},
 		ctx,
-		commandCtx,
 		messages,
 	};
 }
@@ -84,28 +70,6 @@ describe("deep-interview workflow runtime", () => {
 
 	afterEach(async () => {
 		await rm(cwd, { recursive: true, force: true });
-	});
-
-	it("seeds canonical deep-interview state from command args", async () => {
-		const harness = createWorkflowToolHarness(cwd);
-		await harness.command("deep-interview")("--quick Build a reporting dashboard", harness.commandCtx);
-
-		const state = await readWorkflowState(cwd, "deep-interview");
-		const nested = state?.state as
-			| {
-					initial_idea?: string;
-					current_ambiguity?: number;
-					threshold?: number;
-					orchestration?: { status?: string; question_plan?: unknown[] };
-			  }
-			| undefined;
-		expect(state?.current_phase).toBe("interviewing");
-		expect(state?.threshold).toBe(0.6);
-		expect(nested?.initial_idea).toBe("Build a reporting dashboard");
-		expect(nested?.current_ambiguity).toBe(1);
-		expect(nested?.threshold).toBe(0.6);
-		expect(nested?.orchestration?.status).toBe("interviewing");
-		expect(harness.messages).toEqual(["/skill:deep-interview --quick Build a reporting dashboard"]);
 	});
 
 	it("normalizes legacy flattened state into canonical nested state", () => {
@@ -279,7 +243,9 @@ describe("deep-interview workflow runtime", () => {
 		expect(nested?.rounds).toHaveLength(1);
 		expect(nested?.established_facts).toHaveLength(1);
 		expect(
-			(await readWorkflowActiveState(cwd))?.active_workflows.some((entry) => entry.skill === "deep-interview"),
+			(await readWorkflowActiveState(cwd, { sessionId: "test-session-id" }))?.active_workflows.some(
+				(entry) => entry.skill === "deep-interview",
+			),
 		).toBe(false);
 	});
 
@@ -313,7 +279,7 @@ describe("deep-interview workflow runtime", () => {
 		expect(ralplanState?.active).toBe(true);
 		expect(ralplanState?.current_phase).toBe("planner");
 		expect(ralplanState?.input).toBe(specPath);
-		const active = await readWorkflowActiveState(cwd);
+		const active = await readWorkflowActiveState(cwd, { sessionId: "test-session-id" });
 		expect(active?.active_workflows.some((entry) => entry.skill === "deep-interview")).toBe(false);
 		expect(active?.active_workflows.some((entry) => entry.skill === "ralplan")).toBe(true);
 	});

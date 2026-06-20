@@ -3,11 +3,13 @@ import { appendFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs
 import { dirname, join } from "node:path";
 import type { AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core";
 import type { Api, AssistantMessage, Model } from "@earendil-works/pi-ai";
+import { extractYieldFromMessages, type YieldDetails } from "../tools/yield.ts";
 import { type AgentProfile, loadAgentProfile } from "./agent-profiles.ts";
 import type { AgentSession } from "./agent-session.ts";
 import { type AgentSessionServices, createAgentSessionFromServices } from "./agent-session-services.ts";
 import type { ExtensionUIContext } from "./extensions/types.ts";
 import { SessionManager } from "./session-manager.ts";
+import { renderSubagentProgress, type SubagentProgress, SubagentProgressTracker } from "./subagent-progress.ts";
 import { withFileMutationQueue } from "./tools/file-mutation-queue.ts";
 
 export type SubagentStatus = "queued" | "running" | "paused" | "completed" | "failed" | "cancelled";
@@ -52,6 +54,8 @@ export interface SubagentRecord {
 	last_prompt_sha256?: string;
 	result_text?: string;
 	error_text?: string;
+	/** Structured yield result if the subagent called the yield tool. */
+	yield_result?: YieldDetails;
 }
 
 export interface SubagentRunResult {
@@ -66,7 +70,13 @@ export interface SubagentAwaitOptions {
 
 export type SubagentAwaitResult =
 	| { ok: true; result: SubagentRunResult; timedOut?: false }
-	| { ok: false; reason: "not_found" | "timeout"; record?: SubagentRecord; timedOut?: true };
+	| {
+			ok: false;
+			reason: "not_found" | "timeout";
+			record?: SubagentRecord;
+			timedOut?: true;
+			progress?: SubagentProgress;
+	  };
 
 export type SubagentResumeResult =
 	| { ok: true; result: SubagentRunResult }
@@ -243,9 +253,21 @@ function parseModelRef(ref: string): { provider: string; modelId: string } {
 export class SubagentManager {
 	private readonly live = new Map<string, LiveSubagent>();
 	private readonly services: AgentSessionServices;
+	private readonly progressTracker = new SubagentProgressTracker();
 
 	constructor(services: AgentSessionServices) {
 		this.services = services;
+	}
+
+	/** Get the retained progress snapshot for a subagent. */
+	getProgress(id: string): SubagentProgress | undefined {
+		return this.progressTracker.getProgress(id);
+	}
+
+	/** Render a progress snapshot as a diagnostic string for timeout/failure display. */
+	renderProgress(id: string): string | undefined {
+		const progress = this.progressTracker.getProgress(id);
+		return progress ? renderSubagentProgress(progress) : undefined;
 	}
 
 	private root(): string {
@@ -410,6 +432,8 @@ export class SubagentManager {
 			session_id: session.sessionId,
 			session_file: session.sessionFile,
 		});
+		// Start progress tracking so retained snapshots survive timeout/failure
+		this.progressTracker.startTracking(record.id, (handler) => session.subscribe(handler));
 		try {
 			if (signal.aborted) throw new Error("subagent aborted");
 			const abort = () => void session.abort();
@@ -422,6 +446,7 @@ export class SubagentManager {
 			// Cooperative pause: shouldStopAfterTurn exited the loop gracefully.
 			// prompt() resolved normally but the agent stopped mid-run.
 			if (live?.pauseRequested) {
+				this.progressTracker.markTerminal(record.id, "paused");
 				const pausedRecord = await this.writeRecord({
 					...((await this.read(record.id)) ?? record),
 					status: "paused",
@@ -439,13 +464,17 @@ export class SubagentManager {
 			const messages = session.state.messages;
 			const errorText = isAssistantError(messages);
 			const output = finalAssistantOutput(messages);
+			const yieldResult = extractYieldFromMessages(messages);
+			const terminalStatus = errorText ? "failed" : "completed";
+			this.progressTracker.markTerminal(record.id, terminalStatus);
 			const completed = await this.writeRecord({
 				...((await this.read(record.id)) ?? record),
-				status: errorText ? "failed" : "completed",
+				status: terminalStatus,
 				updated_at: nowIso(),
 				completed_at: nowIso(),
 				result_text: output,
 				error_text: errorText,
+				...(yieldResult ? { yield_result: yieldResult } : {}),
 				session_file: session.sessionFile,
 				session_id: session.sessionId,
 			});
@@ -456,6 +485,7 @@ export class SubagentManager {
 			const paused = live?.pauseRequested === true;
 			const message = error instanceof Error ? error.message : String(error);
 			if (paused) {
+				this.progressTracker.markTerminal(record.id, "paused");
 				const pausedRecord = await this.writeRecord({
 					...((await this.read(record.id)) ?? record),
 					status: "paused",
@@ -471,9 +501,11 @@ export class SubagentManager {
 					output: finalAssistantOutput(session.state.messages),
 				};
 			}
+			const failStatus = signal.aborted ? "cancelled" : "failed";
+			this.progressTracker.markTerminal(record.id, failStatus);
 			const failed = await this.writeRecord({
 				...((await this.read(record.id)) ?? record),
-				status: signal.aborted ? "cancelled" : "failed",
+				status: failStatus,
 				updated_at: nowIso(),
 				completed_at: nowIso(),
 				error_text: message,
@@ -510,7 +542,13 @@ export class SubagentManager {
 				]);
 				if (result === "timeout") {
 					const record = await this.read(id);
-					return { ok: false, reason: "timeout", record, timedOut: true };
+					return {
+						ok: false,
+						reason: "timeout",
+						record,
+						timedOut: true,
+						progress: this.progressTracker.getProgress(id),
+					};
 				}
 				return { ok: true, result };
 			}

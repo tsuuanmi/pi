@@ -1,6 +1,13 @@
 import { type Static, Type } from "typebox";
 import type { ExtensionAPI, ExtensionContext } from "../core/extensions/types.ts";
+import { renderSubagentProgress } from "../core/subagent-progress.ts";
+import { createFetchToolDefinition } from "../tools/fetch.ts";
+import { createGithubToolDefinition } from "../tools/github.ts";
+import { createReportFindingToolDefinition } from "../tools/report-finding.ts";
+import { createYieldToolDefinition } from "../tools/yield.ts";
 import {
+	applyHandoffToActiveState,
+	collapsePlanningPipeline,
 	formatWorkflowHudLine,
 	readWorkflowActiveState,
 	syncWorkflowActiveState,
@@ -378,6 +385,8 @@ function assertAgentThinkingLevel(value: string | undefined): asserts value is A
 }
 
 async function executeWorkflowState(params: WorkflowStateInput, ctx: ExtensionContext) {
+	const sessionId = ctx.sessionManager.getSessionId();
+	const sessionOpts = sessionId ? { sessionId } : undefined;
 	assertWorkflowSkill(params.skill);
 	const action = params.action ?? "read";
 	if (action === "read") {
@@ -392,16 +401,20 @@ async function executeWorkflowState(params: WorkflowStateInput, ctx: ExtensionCo
 		if (params.phase) patch.current_phase = params.phase;
 		if (typeof params.active === "boolean") patch.active = params.active;
 		const state = await writeWorkflowState(ctx.cwd, params.skill, patch);
-		await syncWorkflowActiveState(ctx.cwd, {
-			skill: params.skill,
-			active: state.active,
-			phase: state.current_phase,
-			state_path: workflowStatePath(ctx.cwd, params.skill),
-			hud:
-				params.skill === "deep-interview"
-					? deriveDeepInterviewHud(state, { phase: state.current_phase })
-					: undefined,
-		});
+		await syncWorkflowActiveState(
+			ctx.cwd,
+			{
+				skill: params.skill,
+				active: state.active,
+				phase: state.current_phase,
+				state_path: workflowStatePath(ctx.cwd, params.skill),
+				hud:
+					params.skill === "deep-interview"
+						? deriveDeepInterviewHud(state, { phase: state.current_phase })
+						: undefined,
+			},
+			sessionOpts,
+		);
 		return {
 			content: [{ type: "text" as const, text: `Updated ${workflowStatePath(ctx.cwd, params.skill)}` }],
 			details: workflowReceipt({ state, path: workflowStatePath(ctx.cwd, params.skill) }),
@@ -412,16 +425,20 @@ async function executeWorkflowState(params: WorkflowStateInput, ctx: ExtensionCo
 			current_phase: params.phase ?? "complete",
 			...(params.data ?? {}),
 		});
-		await syncWorkflowActiveState(ctx.cwd, {
-			skill: params.skill,
-			active: state.active,
-			phase: state.current_phase,
-			state_path: workflowStatePath(ctx.cwd, params.skill),
-			hud:
-				params.skill === "deep-interview"
-					? deriveDeepInterviewHud(state, { phase: state.current_phase })
-					: undefined,
-		});
+		await syncWorkflowActiveState(
+			ctx.cwd,
+			{
+				skill: params.skill,
+				active: state.active,
+				phase: state.current_phase,
+				state_path: workflowStatePath(ctx.cwd, params.skill),
+				hud:
+					params.skill === "deep-interview"
+						? deriveDeepInterviewHud(state, { phase: state.current_phase })
+						: undefined,
+			},
+			sessionOpts,
+		);
 		return {
 			content: [{ type: "text" as const, text: `Cleared ${params.skill} workflow state` }],
 			details: workflowReceipt({ state, path: workflowStatePath(ctx.cwd, params.skill) }),
@@ -431,15 +448,19 @@ async function executeWorkflowState(params: WorkflowStateInput, ctx: ExtensionCo
 }
 
 async function executeDeepInterviewPlanQuestion(params: DeepInterviewPlanQuestionInput, ctx: ExtensionContext) {
-	const result = await planDeepInterviewQuestion(ctx.cwd, {
-		round: params.round,
-		questionId: params.questionId,
-		questionText: params.questionText,
-		component: params.component,
-		dimension: params.dimension,
-		ambiguity: params.ambiguity,
-		rationale: params.rationale,
-	});
+	const result = await planDeepInterviewQuestion(
+		ctx.cwd,
+		{
+			round: params.round,
+			questionId: params.questionId,
+			questionText: params.questionText,
+			component: params.component,
+			dimension: params.dimension,
+			ambiguity: params.ambiguity,
+			rationale: params.rationale,
+		},
+		ctx.sessionManager.getSessionId(),
+	);
 	return {
 		content: [{ type: "text" as const, text: `Planned deep-interview question round ${params.round}` }],
 		details: workflowReceipt({ ...result }),
@@ -460,18 +481,22 @@ function normalizeDeepInterviewTriggers(
 }
 
 async function executeDeepInterviewRecordAnswer(params: DeepInterviewRecordAnswerInput, ctx: ExtensionContext) {
-	const result = await appendOrMergeDeepInterviewRound(ctx.cwd, {
-		interviewId: params.interviewId,
-		round: params.round,
-		round_id: params.roundId,
-		questionId: params.questionId,
-		questionText: params.questionText,
-		component: params.component,
-		dimension: params.dimension,
-		ambiguity: params.ambiguity,
-		selectedOptions: params.selectedOptions,
-		customInput: params.customInput,
-	});
+	const result = await appendOrMergeDeepInterviewRound(
+		ctx.cwd,
+		{
+			interviewId: params.interviewId,
+			round: params.round,
+			round_id: params.roundId,
+			questionId: params.questionId,
+			questionText: params.questionText,
+			component: params.component,
+			dimension: params.dimension,
+			ambiguity: params.ambiguity,
+			selectedOptions: params.selectedOptions,
+			customInput: params.customInput,
+		},
+		ctx.sessionManager.getSessionId(),
+	);
 	return {
 		content: [
 			{
@@ -484,15 +509,19 @@ async function executeDeepInterviewRecordAnswer(params: DeepInterviewRecordAnswe
 }
 
 async function executeDeepInterviewRecordScoring(params: DeepInterviewRecordScoringInput, ctx: ExtensionContext) {
-	const result = await enrichDeepInterviewRoundScoring(ctx.cwd, {
-		interviewId: params.interviewId,
-		round: params.round,
-		round_id: params.roundId,
-		questionId: params.questionId,
-		scores: params.scores,
-		ambiguity: params.ambiguity,
-		triggers: normalizeDeepInterviewTriggers(params.triggers),
-	});
+	const result = await enrichDeepInterviewRoundScoring(
+		ctx.cwd,
+		{
+			interviewId: params.interviewId,
+			round: params.round,
+			round_id: params.roundId,
+			questionId: params.questionId,
+			scores: params.scores,
+			ambiguity: params.ambiguity,
+			triggers: normalizeDeepInterviewTriggers(params.triggers),
+		},
+		ctx.sessionManager.getSessionId(),
+	);
 	return {
 		content: [{ type: "text" as const, text: `Recorded deep-interview scoring round ${params.round}` }],
 		details: workflowReceipt({ ...result }),
@@ -508,6 +537,7 @@ async function executeDeepInterviewReadCompact(params: DeepInterviewReadCompactI
 }
 
 async function executeDeepInterviewWriteSpec(params: DeepInterviewWriteSpecInput, ctx: ExtensionContext) {
+	const sessionId = ctx.sessionManager.getSessionId();
 	assertDeepInterviewHandoff(params.handoff);
 	const slug = params.slug?.trim() || defaultWorkflowId("spec");
 	assertSafePathComponent(slug, "slug");
@@ -523,12 +553,16 @@ async function executeDeepInterviewWriteSpec(params: DeepInterviewWriteSpecInput
 		},
 		{ cwd: ctx.cwd },
 	);
-	await finalizeDeepInterviewSpecState(ctx.cwd, {
-		slug,
-		path: result.path,
-		sha256: result.sha256,
-		handoff: params.handoff,
-	});
+	await finalizeDeepInterviewSpecState(
+		ctx.cwd,
+		{
+			slug,
+			path: result.path,
+			sha256: result.sha256,
+			handoff: params.handoff,
+		},
+		sessionId,
+	);
 	if (params.handoff === "ralplan") {
 		const state = await writeWorkflowState(ctx.cwd, "ralplan", {
 			active: true,
@@ -536,11 +570,20 @@ async function executeDeepInterviewWriteSpec(params: DeepInterviewWriteSpecInput
 			run_id: (await activeRalplanRunId(ctx.cwd)) ?? defaultWorkflowId("ralplan"),
 			input: result.path,
 		});
-		await syncWorkflowActiveState(ctx.cwd, {
-			skill: "ralplan",
-			active: state.active,
-			phase: state.current_phase,
-			state_path: workflowStatePath(ctx.cwd, "ralplan"),
+		// Atomic handoff: demote deep-interview + promote target in one write.
+		await applyHandoffToActiveState({
+			cwd: ctx.cwd,
+			caller: {
+				skill: "deep-interview",
+				phase: "handoff",
+				state_path: workflowStatePath(ctx.cwd, "deep-interview"),
+			},
+			callee: {
+				skill: "ralplan",
+				phase: state.current_phase,
+				state_path: workflowStatePath(ctx.cwd, "ralplan"),
+			},
+			...(sessionId ? { sessionId } : {}),
 		});
 	} else if (params.handoff === "team" || params.handoff === "ultragoal") {
 		const state = await writeWorkflowState(ctx.cwd, params.handoff, {
@@ -548,11 +591,19 @@ async function executeDeepInterviewWriteSpec(params: DeepInterviewWriteSpecInput
 			current_phase: "approved-execution",
 			input: result.path,
 		});
-		await syncWorkflowActiveState(ctx.cwd, {
-			skill: params.handoff,
-			active: state.active,
-			phase: state.current_phase,
-			state_path: workflowStatePath(ctx.cwd, params.handoff),
+		await applyHandoffToActiveState({
+			cwd: ctx.cwd,
+			caller: {
+				skill: "deep-interview",
+				phase: "handoff",
+				state_path: workflowStatePath(ctx.cwd, "deep-interview"),
+			},
+			callee: {
+				skill: params.handoff,
+				phase: state.current_phase,
+				state_path: workflowStatePath(ctx.cwd, params.handoff),
+			},
+			...(sessionId ? { sessionId } : {}),
 		});
 	}
 	return {
@@ -561,10 +612,37 @@ async function executeDeepInterviewWriteSpec(params: DeepInterviewWriteSpecInput
 	};
 }
 
+function syncMcpHudUi(ctx: ExtensionContext): void {
+	const infos = ctx.getMcpServerInfos();
+	if (infos.length === 0) {
+		ctx.ui.setStatus("mcp", undefined);
+		ctx.ui.setWidget("mcp", undefined);
+		return;
+	}
+	const connected = infos.filter((info) => info.status === "connected");
+	const failed = infos.filter((info) => info.status === "failed");
+	const disconnected = infos.filter((info) => info.status === "disconnected");
+	const toolCount = infos.reduce((sum, info) => sum + info.toolCount, 0);
+	const summary = [
+		`MCP ${connected.length}/${infos.length}`,
+		`${toolCount} tool${toolCount === 1 ? "" : "s"}`,
+		...(failed.length > 0 ? [`${failed.length} failed`] : []),
+		...(disconnected.length > 0 ? [`${disconnected.length} disconnected`] : []),
+	].join(" | ");
+	ctx.ui.setStatus("mcp", summary);
+	if (ctx.mode !== "tui") return;
+	const lines = infos.map((info) => {
+		const suffix = info.error ? ` — ${info.error}` : ` — ${info.toolCount} tool${info.toolCount === 1 ? "" : "s"}`;
+		return `${info.name}: ${info.status}${suffix}`;
+	});
+	ctx.ui.setWidget("mcp", ["MCP", ...lines], { placement: "aboveEditor" });
+}
+
 async function syncWorkflowHudUi(ctx: ExtensionContext): Promise<void> {
+	const sessionId = ctx.sessionManager.getSessionId();
 	let active: WorkflowActiveState | undefined;
 	try {
-		active = await readWorkflowActiveState(ctx.cwd);
+		active = await readWorkflowActiveState(ctx.cwd, sessionId ? { sessionId } : undefined);
 	} catch {
 		ctx.ui.setStatus("workflow", undefined);
 		ctx.ui.setWidget("workflow", undefined);
@@ -576,13 +654,16 @@ async function syncWorkflowHudUi(ctx: ExtensionContext): Promise<void> {
 		ctx.ui.setWidget("workflow", undefined);
 		return;
 	}
-	const lines = entries.map(formatWorkflowHudLine);
+	// Collapse the planning pipeline (DI → ralplan → ultragoal) to the most
+	// recent stage so the HUD doesn't show stale upstream skills.
+	const hudEntries = collapsePlanningPipeline(entries);
+	const lines = hudEntries.map(formatWorkflowHudLine);
 	ctx.ui.setStatus("workflow", lines[0]);
 	if (ctx.mode === "tui") ctx.ui.setWidget("workflow", ["Workflow", ...lines], { placement: "aboveEditor" });
 }
 
-async function buildDeepInterviewContinuationPrompt(cwd: string): Promise<string | undefined> {
-	const active = await readWorkflowActiveState(cwd).catch(() => undefined);
+async function buildDeepInterviewContinuationPrompt(cwd: string, sessionId?: string): Promise<string | undefined> {
+	const active = await readWorkflowActiveState(cwd, sessionId ? { sessionId } : undefined).catch(() => undefined);
 	const deepInterview = active?.active_workflows.find((entry) => entry.skill === "deep-interview" && entry.active);
 	if (!deepInterview) return undefined;
 	const state = await readWorkflowState(cwd, "deep-interview").catch(() => undefined);
@@ -705,16 +786,18 @@ async function executeSubagentStatus(params: SubagentStatusInput, ctx: Extension
 }
 
 async function executeSubagentAwait(params: SubagentAwaitInput, ctx: ExtensionContext) {
+	const manager = requireSubagentManager(ctx);
 	const verbosity = normalizeSubagentVerbosity(params.verbosity);
-	const result = await requireSubagentManager(ctx).waitFor(params.id, { timeoutMs: params.timeoutMs });
+	const result = await manager.waitFor(params.id, { timeoutMs: params.timeoutMs });
 	if (!result.ok) {
+		const progressText = result.progress ? `\n\n${renderSubagentProgress(result.progress)}` : "";
 		return {
 			content: [
 				{
 					type: "text" as const,
 					text:
 						result.reason === "timeout"
-							? `Subagent ${params.id} await timed out after ${params.timeoutMs}ms`
+							? `Subagent ${params.id} await timed out after ${params.timeoutMs}ms${progressText}`
 							: `Subagent ${params.id} not found`,
 				},
 			],
@@ -840,14 +923,18 @@ async function executeRalplanWriteArtifact(params: RalplanWriteArtifactInput, ct
 		throw new Error(`invalid stageN: ${params.stageN}`);
 	}
 	if (params.runId) assertSafePathComponent(params.runId, "runId");
-	const result = await writeRalplanArtifact(ctx.cwd, {
-		stage: params.stage,
-		stageN: params.stageN,
-		artifact: params.artifact,
-		runId: params.runId,
-		plannerSubagentId: params.plannerSubagentId,
-		plannerResumable: params.plannerResumable,
-	});
+	const result = await writeRalplanArtifact(
+		ctx.cwd,
+		{
+			stage: params.stage,
+			stageN: params.stageN,
+			artifact: params.artifact,
+			runId: params.runId,
+			plannerSubagentId: params.plannerSubagentId,
+			plannerResumable: params.plannerResumable,
+		},
+		ctx.sessionManager.getSessionId(),
+	);
 	return {
 		content: [
 			{
@@ -887,6 +974,7 @@ async function executeRalplanApprove(params: RalplanApproveInput, ctx: Extension
 		approved: params.approved,
 		target: params.target,
 		note: params.note,
+		sessionId: ctx.sessionManager.getSessionId(),
 	});
 	return {
 		content: [
@@ -912,7 +1000,11 @@ async function executeRalplanDoctor(params: RalplanRunInput, ctx: ExtensionConte
 
 async function executeTeamStart(params: TeamStartInput, ctx: ExtensionContext) {
 	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
-	const result = await startTeam(ctx.cwd, { task: params.task, teamId: params.teamId });
+	const result = await startTeam(
+		ctx.cwd,
+		{ task: params.task, teamId: params.teamId },
+		ctx.sessionManager.getSessionId(),
+	);
 	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Started team ${result.team_id}` }],
@@ -941,7 +1033,7 @@ async function executeTeamReadCompact(params: TeamRunInput, ctx: ExtensionContex
 async function executeTeamCreateTask(params: TeamCreateTaskInput, ctx: ExtensionContext) {
 	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
 	if (params.id) assertSafePathComponent(params.id, "taskId");
-	const result = await createTeamTask(ctx.cwd, params);
+	const result = await createTeamTask(ctx.cwd, params, ctx.sessionManager.getSessionId());
 	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Created team task ${result.id}` }],
@@ -953,7 +1045,7 @@ async function executeTeamTransitionTask(params: TeamTransitionTaskInput, ctx: E
 	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
 	assertSafePathComponent(params.taskId, "taskId");
 	if (params.workerId) assertSafePathComponent(params.workerId, "workerId");
-	const result = await transitionTeamTask(ctx.cwd, params);
+	const result = await transitionTeamTask(ctx.cwd, params, ctx.sessionManager.getSessionId());
 	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Updated team task ${result.id} to ${result.status}` }],
@@ -982,11 +1074,15 @@ async function executeTeamComplete(params: TeamCompleteInput, ctx: ExtensionCont
 	) {
 		throw new Error(`invalid team completion phase: ${params.phase}`);
 	}
-	const result = await completeTeam(ctx.cwd, {
-		teamId: params.teamId,
-		phase: params.phase,
-		summary: params.summary,
-	});
+	const result = await completeTeam(
+		ctx.cwd,
+		{
+			teamId: params.teamId,
+			phase: params.phase,
+			summary: params.summary,
+		},
+		ctx.sessionManager.getSessionId(),
+	);
 	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Closed team ${result.team_id} as ${result.phase}` }],
@@ -1052,7 +1148,11 @@ async function executeUltragoalCreatePlan(params: UltragoalCreatePlanInput, ctx:
 	if (params.goalMode !== undefined && params.goalMode !== "aggregate" && params.goalMode !== "per-story") {
 		throw new Error(`invalid ultragoal goalMode: ${params.goalMode}`);
 	}
-	const result = await createUltragoalPlan(ctx.cwd, { brief: params.brief, goalMode: params.goalMode });
+	const result = await createUltragoalPlan(
+		ctx.cwd,
+		{ brief: params.brief, goalMode: params.goalMode },
+		ctx.sessionManager.getSessionId(),
+	);
 	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Created ultragoal plan with ${result.goals.length} goals` }],
@@ -1077,7 +1177,7 @@ async function executeUltragoalReadCompact(_params: object, ctx: ExtensionContex
 }
 
 async function executeUltragoalStartNext(params: UltragoalStartNextInput, ctx: ExtensionContext) {
-	const result = await startNextUltragoalGoal(ctx.cwd, params.retryFailed);
+	const result = await startNextUltragoalGoal(ctx.cwd, params.retryFailed, ctx.sessionManager.getSessionId());
 	await syncWorkflowHudUi(ctx);
 	return {
 		content: [
@@ -1091,7 +1191,7 @@ async function executeUltragoalStartNext(params: UltragoalStartNextInput, ctx: E
 }
 
 async function executeUltragoalCheckpoint(params: UltragoalCheckpointInput, ctx: ExtensionContext) {
-	const result = await checkpointUltragoalGoal(ctx.cwd, params);
+	const result = await checkpointUltragoalGoal(ctx.cwd, params, ctx.sessionManager.getSessionId());
 	await syncWorkflowHudUi(ctx);
 	return {
 		content: [{ type: "text" as const, text: `Checkpointed ultragoal ${result.id} as ${result.status}` }],
@@ -1102,6 +1202,7 @@ async function executeUltragoalCheckpoint(params: UltragoalCheckpointInput, ctx:
 export default function workflowsExtension(pi: ExtensionAPI): void {
 	pi.on("session_start", async (_event, ctx) => {
 		await syncWorkflowHudUi(ctx);
+		syncMcpHudUi(ctx);
 	});
 	pi.on("turn_end", async (_event, ctx) => {
 		await syncWorkflowHudUi(ctx);
@@ -1112,7 +1213,7 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 	pi.on("before_agent_start", async (event, ctx) => {
 		if (ctx.skipWorkflowContinuation) return undefined;
 		await syncWorkflowHudUi(ctx);
-		const continuationPrompt = await buildDeepInterviewContinuationPrompt(ctx.cwd);
+		const continuationPrompt = await buildDeepInterviewContinuationPrompt(ctx.cwd, ctx.sessionManager.getSessionId());
 		if (!continuationPrompt) return undefined;
 		return { systemPrompt: `${event.systemPrompt}\n\n${continuationPrompt}` };
 	});
@@ -1470,4 +1571,13 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 		execute: async (_toolCallId, params, signal, _onUpdate, ctx) =>
 			executeUltragoalSpawnGoalAgent(params, ctx, signal),
 	});
+
+	// Subagent structured completion and intermediate reporting tools.
+	// These are available to subagent sessions for structured output.
+	pi.registerTool(createYieldToolDefinition());
+	pi.registerTool(createReportFindingToolDefinition());
+
+	// Additional high-ROI tools.
+	pi.registerTool(createFetchToolDefinition());
+	pi.registerTool(createGithubToolDefinition());
 }

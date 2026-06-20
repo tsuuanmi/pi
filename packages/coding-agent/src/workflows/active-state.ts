@@ -1,5 +1,5 @@
 import { type WorkflowSkill, workflowActiveStatePath } from "./paths.ts";
-import { readExistingStateForMutation, writeJsonAtomic } from "./state-writer.ts";
+import { isEntryStale, readExistingStateForMutation, writeJsonAtomic } from "./state-writer.ts";
 
 export type WorkflowHudSeverity = "info" | "warning" | "blocked" | "error" | "success";
 
@@ -24,8 +24,18 @@ export interface WorkflowActiveEntry {
 	active: boolean;
 	phase?: string;
 	updated_at: string;
+	/** Session id that owns this entry. Empty/undefined = global fallback. */
+	session_id?: string;
 	hud?: WorkflowHudSummary;
 	state_path?: string;
+	/** Skill that handed off TO this entry (caller of the handoff). */
+	handoff_from?: string;
+	/** Skill this entry handed off TO (callee of the handoff). */
+	handoff_to?: string;
+	/** Timestamp of the handoff transition. */
+	handoff_at?: string;
+	/** True when the entry's updated_at is outside the freshness window. */
+	stale?: boolean;
 }
 
 export interface WorkflowActiveState {
@@ -33,6 +43,11 @@ export interface WorkflowActiveState {
 	active: boolean;
 	updated_at: string;
 	active_workflows: WorkflowActiveEntry[];
+}
+
+/** Options for session-scoped active-state operations. */
+export interface SessionScopedOptions {
+	sessionId?: string;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -102,59 +117,333 @@ function normalizeEntry(value: unknown): WorkflowActiveEntry | undefined {
 		active: value.active !== false,
 		...(sanitizeText(value.phase, 80) ? { phase: sanitizeText(value.phase, 80) } : {}),
 		updated_at: updatedAt,
+		...(sanitizeText(value.session_id, 80) ? { session_id: sanitizeText(value.session_id, 80) } : {}),
 		...(normalizeWorkflowHudSummary(value.hud) ? { hud: normalizeWorkflowHudSummary(value.hud) } : {}),
 		...(sanitizeText(value.state_path, 240) ? { state_path: sanitizeText(value.state_path, 240) } : {}),
+		...(sanitizeText(value.handoff_from, 80) ? { handoff_from: sanitizeText(value.handoff_from, 80) } : {}),
+		...(sanitizeText(value.handoff_to, 80) ? { handoff_to: sanitizeText(value.handoff_to, 80) } : {}),
+		...(sanitizeText(value.handoff_at, 40) ? { handoff_at: sanitizeText(value.handoff_at, 40) } : {}),
+		...(value.stale === true ? { stale: true } : {}),
 	};
 }
 
-export async function readWorkflowActiveState(cwd: string): Promise<WorkflowActiveState | undefined> {
-	const read = await readExistingStateForMutation(workflowActiveStatePath(cwd));
+/**
+ * Entry key for dedup: `skill::session_id`. The same skill can have a
+ * global entry (no session_id) and a session-specific entry, both visible
+ * to a session-scoped read.
+ */
+function entryKey(entry: WorkflowActiveEntry): string {
+	return `${entry.skill}::${entry.session_id ?? ""}`;
+}
+
+/**
+ * Session ownership rank for a row visible to a `sessionId` read. A row owned
+ * by the exact session outranks a session-less (global) fallback row, which
+ * outranks a foreign-session row. With no scope session, every row ranks
+ * equally. (Aligned with gajae-code's `sessionScopeRank`.)
+ */
+function sessionScopeRank(entry: WorkflowActiveEntry, sessionId?: string): number {
+	const scope = sessionId?.trim() ?? "";
+	if (!scope) return 0;
+	const entrySession = entry.session_id?.trim() ?? "";
+	if (entrySession === scope) return 2;
+	if (!entrySession) return 1;
+	return 0;
+}
+
+function entryRecency(entry: WorkflowActiveEntry): number {
+	const ms = entry.updated_at ? Date.parse(entry.updated_at) : Number.NaN;
+	return ms;
+}
+
+/**
+ * Pick the surviving row for a single skill within a session-scoped visible set.
+ * Precedence: session ownership rank, then newer timestamp, then active over
+ * inactive. (Aligned with gajae-code's `moreVisibleEntry`.)
+ */
+function moreVisibleEntry(
+	incumbent: WorkflowActiveEntry,
+	challenger: WorkflowActiveEntry,
+	sessionId?: string,
+): WorkflowActiveEntry {
+	const scopeDelta = sessionScopeRank(incumbent, sessionId) - sessionScopeRank(challenger, sessionId);
+	if (scopeDelta !== 0) return scopeDelta > 0 ? incumbent : challenger;
+	const ri = entryRecency(incumbent);
+	const rc = entryRecency(challenger);
+	const vi = Number.isFinite(ri);
+	const vc = Number.isFinite(rc);
+	if (vi && vc && ri !== rc) return ri > rc ? incumbent : challenger;
+	if (vi !== vc) return vi ? incumbent : challenger;
+	const incumbentActive = incumbent.active;
+	const challengerActive = challenger.active;
+	if (incumbentActive !== challengerActive) return incumbentActive ? incumbent : challenger;
+	return incumbent;
+}
+
+/**
+ * Collapse entries to a single row per skill, picking the most visible entry.
+ * (Aligned with gajae-code's `dedupeVisibleBySkill`.)
+ */
+function dedupeVisibleBySkill(entries: WorkflowActiveEntry[], sessionId?: string): WorkflowActiveEntry[] {
+	const winners = new Map<string, WorkflowActiveEntry>();
+	for (const entry of entries) {
+		const current = winners.get(entry.skill);
+		winners.set(entry.skill, current ? moreVisibleEntry(current, entry, sessionId) : entry);
+	}
+	return [...winners.values()];
+}
+
+/**
+ * Filter root entries visible to a session-scoped read. A row is visible if its
+ * session_id matches the scope, or if it has no session_id (global fallback).
+ * Foreign-session rows are hidden. With no scope session, all rows are visible.
+ * (Aligned with gajae-code's `filterRootEntriesForSession`.)
+ */
+function filterEntriesForSession(entries: WorkflowActiveEntry[], sessionId?: string): WorkflowActiveEntry[] {
+	const scope = sessionId?.trim() ?? "";
+	if (!scope) return entries;
+	return entries.filter((entry) => {
+		const entrySession = entry.session_id?.trim() ?? "";
+		return !entrySession || entrySession === scope;
+	});
+}
+
+/**
+ * Read all entries (active + inactive) from the root state file.
+ * Returns undefined when the file is absent. Corrupt files are tolerated.
+ */
+async function readAllEntries(filePath: string): Promise<WorkflowActiveEntry[] | undefined> {
+	const read = await readExistingStateForMutation(filePath);
 	if (read.kind === "absent") return undefined;
-	if (read.kind === "corrupt") throw new Error(`workflow active state is corrupt: ${read.error}`);
-	const activeWorkflows = Array.isArray(read.value.active_workflows)
-		? read.value.active_workflows
-				.map(normalizeEntry)
-				.filter((entry): entry is WorkflowActiveEntry => entry !== undefined)
-		: [];
+	if (read.kind === "corrupt") return [];
+	if (!Array.isArray(read.value.active_workflows)) return [];
+	return read.value.active_workflows
+		.map(normalizeEntry)
+		.filter((entry): entry is WorkflowActiveEntry => entry !== undefined);
+}
+
+/**
+ * Read the workflow active state for a project, optionally scoped to a session.
+ *
+ * When `sessionId` is provided, entries are filtered by session ownership
+ * (matching session_id or global fallback) and deduped per skill, with
+ * session-specific entries outranking global ones. When omitted, all entries
+ * are visible. Only active entries are returned.
+ *
+ * Returns undefined when the state file is absent. Returns a defined state
+ * (possibly with empty active_workflows) when the file exists.
+ */
+export async function readWorkflowActiveState(
+	cwd: string,
+	options?: SessionScopedOptions,
+): Promise<WorkflowActiveState | undefined> {
+	const sessionId = options?.sessionId?.trim() || undefined;
+	const filePath = workflowActiveStatePath(cwd);
+	const allEntries = await readAllEntries(filePath);
+	if (allEntries === undefined) return undefined;
+
+	const visible = filterEntriesForSession(allEntries, sessionId);
+	const deduped = dedupeVisibleBySkill(visible, sessionId);
+	const nowMs = Date.now();
+	const activeWorkflows = deduped
+		.filter((entry) => entry.active)
+		.map((entry) => {
+			const stale = isEntryStale(entry.updated_at, nowMs);
+			if (!stale) return entry;
+			// Escalate HUD severity to warning for stale entries, unless a more
+			// severe status (error/blocked) is already set.
+			const hud = entry.hud;
+			if (hud && (hud.severity === "error" || hud.severity === "blocked")) {
+				return { ...entry, stale: true };
+			}
+			const patchedHud = hud
+				? { ...hud, severity: "warning" as WorkflowHudSeverity }
+				: ({ version: 1, severity: "warning" as WorkflowHudSeverity } as WorkflowHudSummary);
+			return { ...entry, stale: true, hud: patchedHud };
+		})
+		.sort((a, b) => a.skill.localeCompare(b.skill));
+
+	const updatedAt = allEntries[0]?.updated_at ?? new Date(0).toISOString();
+
 	return {
 		version: 1,
-		active: activeWorkflows.some((entry) => entry.active),
-		updated_at: sanitizeText(read.value.updated_at, 40) ?? new Date(0).toISOString(),
-		active_workflows: activeWorkflows.filter((entry) => entry.active),
+		active: activeWorkflows.length > 0,
+		updated_at: updatedAt,
+		active_workflows: activeWorkflows,
 	};
 }
 
+/**
+ * Sync workflow active state for a project, optionally scoped to a session.
+ *
+ * The entry is tagged with `session_id` (when provided) and upserted into the
+ * root `active-state.json` by `skill::session_id` key. When `active` is false,
+ * the entry is kept (not deleted) so a session-scoped deactivation can override
+ * a stale global active row on merged reads. The active filter is applied at
+ * read time by `readWorkflowActiveState`.
+ */
 export async function syncWorkflowActiveState(
 	cwd: string,
-	entry: Omit<WorkflowActiveEntry, "updated_at"> & { updated_at?: string },
+	entry: Omit<WorkflowActiveEntry, "updated_at" | "session_id"> & { updated_at?: string; session_id?: string },
+	options?: SessionScopedOptions,
 ): Promise<WorkflowActiveState> {
+	const sessionId = options?.sessionId?.trim() || undefined;
 	const now = entry.updated_at ?? new Date().toISOString();
-	const prior = await readWorkflowActiveState(cwd).catch(() => undefined);
 	const nextEntry: WorkflowActiveEntry = {
 		...entry,
 		updated_at: now,
+		...(sessionId ? { session_id: sessionId } : {}),
 		...(entry.hud ? { hud: normalizeWorkflowHudSummary(entry.hud) } : {}),
+		...(sanitizeText(entry.handoff_from, 80) ? { handoff_from: sanitizeText(entry.handoff_from, 80) } : {}),
+		...(sanitizeText(entry.handoff_to, 80) ? { handoff_to: sanitizeText(entry.handoff_to, 80) } : {}),
+		...(sanitizeText(entry.handoff_at, 40) ? { handoff_at: sanitizeText(entry.handoff_at, 40) } : {}),
 	};
-	const merged = new Map<WorkflowSkill, WorkflowActiveEntry>();
-	for (const item of prior?.active_workflows ?? []) merged.set(item.skill, item);
-	if (nextEntry.active) merged.set(nextEntry.skill, nextEntry);
-	else merged.delete(nextEntry.skill);
-	const activeWorkflows = [...merged.values()].sort((a, b) => a.skill.localeCompare(b.skill));
-	const state: WorkflowActiveState = {
+
+	const filePath = workflowActiveStatePath(cwd);
+	const prior = (await readAllEntries(filePath)) ?? [];
+	const key = entryKey(nextEntry);
+	const merged = new Map<string, WorkflowActiveEntry>();
+	for (const item of prior) merged.set(entryKey(item), item);
+	merged.set(key, nextEntry);
+
+	const allEntries = [...merged.values()].sort((a, b) => a.skill.localeCompare(b.skill));
+	const activeWorkflows = allEntries.filter((e) => e.active);
+	await writeJsonAtomic(
+		filePath,
+		{
+			version: 1,
+			active: activeWorkflows.length > 0,
+			updated_at: now,
+			active_workflows: allEntries,
+		},
+		{ cwd },
+	);
+
+	return {
 		version: 1,
 		active: activeWorkflows.length > 0,
 		updated_at: now,
-		active_workflows: activeWorkflows,
+		active_workflows: activeWorkflows.sort((a, b) => a.skill.localeCompare(b.skill)),
 	};
-	await writeJsonAtomic(workflowActiveStatePath(cwd), { ...state }, { cwd });
-	return state;
+}
+
+/** Skills in the planning pipeline (DI → ralplan → ultragoal). */
+const PLANNING_PIPELINE_SKILLS = new Set<string>(["deep-interview", "ralplan", "ultragoal"]);
+
+/**
+ * Collapse the planning pipeline to a single entry — the most recently updated
+ * stage — so the HUD doesn't show stale upstream skills after a downstream
+ * skill has taken over. Non-pipeline skills are unaffected.
+ *
+ * (Aligned with gajae-code's `collapsePlanningPipeline`.)
+ */
+export function collapsePlanningPipeline(entries: readonly WorkflowActiveEntry[]): WorkflowActiveEntry[] {
+	const pipeline = entries.filter((entry) => PLANNING_PIPELINE_SKILLS.has(entry.skill));
+	if (pipeline.length <= 1) return [...entries];
+	let current = pipeline[0];
+	let currentRecency = entryRecency(current);
+	for (const entry of pipeline) {
+		const recency = entryRecency(entry);
+		const better = Number.isFinite(recency) && (!Number.isFinite(currentRecency) || recency > currentRecency);
+		if (better) {
+			current = entry;
+			currentRecency = recency;
+		}
+	}
+	return entries.filter((entry) => !PLANNING_PIPELINE_SKILLS.has(entry.skill) || entry === current);
 }
 
 export function formatWorkflowHudLine(entry: WorkflowActiveEntry): string {
+	const prefix = entry.stale ? "[stale] " : "";
 	const chips = entry.hud?.chips
 		?.slice()
 		.sort((a, b) => (a.priority ?? 100) - (b.priority ?? 100))
 		.map((chip) => `${chip.label}${chip.value ? `=${chip.value}` : ""}`)
 		.join(" ");
-	return [entry.skill, entry.phase, chips].filter(Boolean).join(" | ");
+	return [`${prefix}${entry.skill}`, entry.phase, chips].filter(Boolean).join(" | ");
+}
+
+/** Entry passed to `applyHandoffToActiveState` for the caller (demoted) side. */
+export interface HandoffSide {
+	skill: WorkflowSkill;
+	phase?: string;
+	state_path?: string;
+	hud?: WorkflowHudSummary;
+}
+
+/** Options for `applyHandoffToActiveState`. */
+export interface ApplyHandoffOptions {
+	cwd: string;
+	/** Skill being demoted (handing off). */
+	caller: HandoffSide;
+	/** Skill being promoted (receiving the handoff). */
+	callee: HandoffSide;
+	/** Session id to tag both entries with. */
+	sessionId?: string;
+	/** Shared timestamp; defaults to now. */
+	nowIso?: string;
+}
+
+/**
+ * Atomically apply a workflow-skill handoff in a single active-state write.
+ *
+ * The caller skill is demoted to `active: false` with `handoff_to` and
+ * `handoff_at`; the callee skill is promoted to `active: true` with
+ * `handoff_from` and `handoff_at`. Both entries are tagged with `session_id`
+ * when provided. All other entries are preserved. The write is atomic (single
+ * file mutation) so no partial state is observable during the transition.
+ *
+ * (Aligned with gajae-code's `applyHandoffToActiveState` but simplified for
+ * Pi's single-file active-state model.)
+ */
+export async function applyHandoffToActiveState(options: ApplyHandoffOptions): Promise<WorkflowActiveState> {
+	const now = options.nowIso ?? new Date().toISOString();
+	const sessionId = options.sessionId?.trim() || undefined;
+	const tag = sessionId ? { session_id: sessionId } : {};
+
+	const callerEntry: WorkflowActiveEntry = {
+		...options.caller,
+		active: false,
+		updated_at: now,
+		...tag,
+		handoff_to: options.callee.skill,
+		handoff_at: now,
+		...(options.caller.hud ? { hud: normalizeWorkflowHudSummary(options.caller.hud) } : {}),
+	};
+	const calleeEntry: WorkflowActiveEntry = {
+		...options.callee,
+		active: true,
+		updated_at: now,
+		...tag,
+		handoff_from: options.caller.skill,
+		handoff_at: now,
+		...(options.callee.hud ? { hud: normalizeWorkflowHudSummary(options.callee.hud) } : {}),
+	};
+
+	const filePath = workflowActiveStatePath(options.cwd);
+	const prior = (await readAllEntries(filePath)) ?? [];
+	const merged = new Map<string, WorkflowActiveEntry>();
+	for (const item of prior) merged.set(entryKey(item), item);
+	merged.set(entryKey(callerEntry), callerEntry);
+	merged.set(entryKey(calleeEntry), calleeEntry);
+
+	const allEntries = [...merged.values()].sort((a, b) => a.skill.localeCompare(b.skill));
+	const activeWorkflows = allEntries.filter((e) => e.active);
+	await writeJsonAtomic(
+		filePath,
+		{
+			version: 1,
+			active: activeWorkflows.length > 0,
+			updated_at: now,
+			active_workflows: allEntries,
+		},
+		{ cwd: options.cwd },
+	);
+
+	return {
+		version: 1,
+		active: activeWorkflows.length > 0,
+		updated_at: now,
+		active_workflows: activeWorkflows.sort((a, b) => a.skill.localeCompare(b.skill)),
+	};
 }

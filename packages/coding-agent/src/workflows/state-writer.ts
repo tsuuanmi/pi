@@ -109,6 +109,11 @@ export function stampWorkflowEnvelopeChecksum<T>(value: T, filePath: string, com
 	return envelope as T;
 }
 
+/** Receipt freshness window: 30 minutes. Entries older than this are stale. */
+export const WORKFLOW_RECEIPT_FRESH_MS = 30 * 60 * 1000;
+
+export type WorkflowReceiptStatus = "fresh" | "stale";
+
 export function createWorkflowReceipt(input: {
 	skill: string;
 	statePath: string;
@@ -116,6 +121,7 @@ export function createWorkflowReceipt(input: {
 	mutatedAt: string;
 	mutationId?: string;
 }): Record<string, unknown> {
+	const freshUntil = new Date(Date.parse(input.mutatedAt) + WORKFLOW_RECEIPT_FRESH_MS).toISOString();
 	return {
 		version: 1,
 		skill: input.skill,
@@ -124,8 +130,35 @@ export function createWorkflowReceipt(input: {
 		state_path: input.statePath,
 		storage_path: input.statePath,
 		mutated_at: input.mutatedAt,
+		fresh_until: freshUntil,
+		status: "fresh" as WorkflowReceiptStatus,
 		mutation_id: input.mutationId ?? randomUUID(),
 	};
+}
+
+/**
+ * Check whether a receipt is fresh or stale based on its `fresh_until` timestamp.
+ * Returns undefined when the receipt or timestamp is missing/malformed.
+ */
+export function workflowReceiptStatus(
+	receipt: { fresh_until?: string } | undefined,
+	nowMs: number = Date.now(),
+): WorkflowReceiptStatus | undefined {
+	if (!receipt?.fresh_until) return undefined;
+	const freshUntilMs = Date.parse(receipt.fresh_until);
+	if (!Number.isFinite(freshUntilMs)) return "stale";
+	return nowMs <= freshUntilMs ? "fresh" : "stale";
+}
+
+/**
+ * Check whether an `updated_at` timestamp is within the freshness window.
+ * Used for active-state entries that don't carry a full receipt.
+ */
+export function isEntryStale(updatedAt: string | undefined, nowMs: number = Date.now()): boolean {
+	if (!updatedAt) return true;
+	const ms = Date.parse(updatedAt);
+	if (!Number.isFinite(ms)) return true;
+	return nowMs > ms + WORKFLOW_RECEIPT_FRESH_MS;
 }
 
 export async function writeJsonAtomic(

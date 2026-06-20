@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { syncWorkflowActiveState, type WorkflowHudSummary } from "./active-state.ts";
+import { applyHandoffToActiveState, syncWorkflowActiveState, type WorkflowHudSummary } from "./active-state.ts";
 import type { RalplanStage, WorkflowSkill } from "./paths.ts";
 import { ralplanIndexPath, ralplanPendingApprovalPath, ralplanStageArtifactPath, workflowStatePath } from "./paths.ts";
 import { appendJsonlIdempotent, readFileOrLiteral, sha256, writeTextArtifact } from "./state-writer.ts";
@@ -298,6 +298,7 @@ export async function readRalplanCompactStatus(cwd: string, runId?: string): Pro
 export async function writeRalplanArtifact(
 	cwd: string,
 	input: RalplanWriteArtifactInput,
+	sessionId?: string,
 ): Promise<RalplanWriteArtifactResult> {
 	const runId = input.runId?.trim() || (await activeRalplanRunId(cwd)) || defaultWorkflowId("ralplan");
 	const content = await readFileOrLiteral(input.artifact, cwd);
@@ -354,13 +355,17 @@ export async function writeRalplanArtifact(
 		...plannerStatePatch(plannerState),
 	});
 	const status = await readRalplanStatus(cwd, runId);
-	await syncWorkflowActiveState(cwd, {
-		skill: "ralplan",
-		active: state.active,
-		phase: state.current_phase,
-		state_path: workflowStatePath(cwd, "ralplan"),
-		hud: buildRalplanHud(status),
-	});
+	await syncWorkflowActiveState(
+		cwd,
+		{
+			skill: "ralplan",
+			active: state.active,
+			phase: state.current_phase,
+			state_path: workflowStatePath(cwd, "ralplan"),
+			hud: buildRalplanHud(status),
+		},
+		sessionId ? { sessionId } : undefined,
+	);
 	return {
 		runId,
 		path: artifact.path,
@@ -376,7 +381,7 @@ export async function writeRalplanArtifact(
 
 export async function approveRalplanPlan(
 	cwd: string,
-	options: { runId?: string; target?: RalplanApprovalTarget; approved?: boolean; note?: string },
+	options: { runId?: string; target?: RalplanApprovalTarget; approved?: boolean; note?: string; sessionId?: string },
 ): Promise<RalplanApproveResult> {
 	const target = options.target ?? "ultragoal";
 	const approved = options.approved !== false;
@@ -401,12 +406,7 @@ export async function approveRalplanPlan(
 		approved_at: approved ? now : undefined,
 		rejected_at: approved ? undefined : now,
 	});
-	await syncWorkflowActiveState(cwd, {
-		skill: "ralplan",
-		active: false,
-		phase: ralplanState.current_phase,
-		state_path: workflowStatePath(cwd, "ralplan"),
-	});
+	const sessionOpts = options.sessionId ? { sessionId: options.sessionId } : undefined;
 	let targetState: Record<string, unknown> | undefined;
 	if (approved && target !== "stop") {
 		const targetSkill: WorkflowSkill = target;
@@ -417,12 +417,33 @@ export async function approveRalplanPlan(
 			source_workflow: "ralplan",
 			source_run_id: status.run_id,
 		});
-		await syncWorkflowActiveState(cwd, {
-			skill: targetSkill,
-			active: targetState.active === true,
-			phase: typeof targetState.current_phase === "string" ? targetState.current_phase : undefined,
-			state_path: workflowStatePath(cwd, targetSkill),
+		// Atomic handoff: demote ralplan + promote target in a single write.
+		await applyHandoffToActiveState({
+			cwd,
+			caller: {
+				skill: "ralplan",
+				phase: ralplanState.current_phase,
+				state_path: workflowStatePath(cwd, "ralplan"),
+			},
+			callee: {
+				skill: targetSkill,
+				phase: typeof targetState.current_phase === "string" ? targetState.current_phase : undefined,
+				state_path: workflowStatePath(cwd, targetSkill),
+			},
+			...(options.sessionId ? { sessionId: options.sessionId } : {}),
 		});
+	} else {
+		// No handoff target — just deactivate ralplan.
+		await syncWorkflowActiveState(
+			cwd,
+			{
+				skill: "ralplan",
+				active: false,
+				phase: ralplanState.current_phase,
+				state_path: workflowStatePath(cwd, "ralplan"),
+			},
+			sessionOpts,
+		);
 	}
 	return {
 		runId: status.run_id,

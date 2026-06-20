@@ -182,6 +182,7 @@ async function persistDeepInterviewEnvelope(
 	cwd: string,
 	envelope: DeepInterviewStateEnvelope,
 	command: string,
+	sessionId?: string,
 ): Promise<void> {
 	const normalized = normalizeDeepInterviewEnvelope(envelope);
 	const state = await replaceWorkflowState(
@@ -194,18 +195,23 @@ async function persistDeepInterviewEnvelope(
 		},
 		command,
 	);
-	await syncWorkflowActiveState(cwd, {
-		skill: "deep-interview",
-		active: state.active,
-		phase: state.current_phase,
-		state_path: workflowStatePath(cwd, "deep-interview"),
-		hud: deriveDeepInterviewHud(state, { phase: state.current_phase }),
-	});
+	await syncWorkflowActiveState(
+		cwd,
+		{
+			skill: "deep-interview",
+			active: state.active,
+			phase: state.current_phase,
+			state_path: workflowStatePath(cwd, "deep-interview"),
+			hud: deriveDeepInterviewHud(state, { phase: state.current_phase }),
+		},
+		sessionId ? { sessionId } : undefined,
+	);
 }
 
 export async function planDeepInterviewQuestion(
 	cwd: string,
 	input: DeepInterviewQuestionPlanInput,
+	sessionId?: string,
 ): Promise<{ question: DeepInterviewPlannedQuestion; statePath: string }> {
 	const envelope = await readDeepInterviewEnvelope(cwd);
 	const question: DeepInterviewPlannedQuestion = {
@@ -228,13 +234,14 @@ export async function planDeepInterviewQuestion(
 		question_plan: questionPlan,
 		waiting_since: question.planned_at,
 	});
-	await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview plan-question");
+	await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview plan-question", sessionId);
 	return { question, statePath: workflowStatePath(cwd, "deep-interview") };
 }
 
 export async function appendOrMergeDeepInterviewRound(
 	cwd: string,
 	input: DeepInterviewAnswerInput,
+	sessionId?: string,
 ): Promise<AppendOrMergeResult> {
 	const envelope = await readDeepInterviewEnvelope(cwd);
 	const pending = plannedQuestionOf(envelope);
@@ -269,7 +276,7 @@ export async function appendOrMergeDeepInterviewRound(
 			},
 			{ replace: false },
 		);
-		await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview record-answer");
+		await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview record-answer", sessionId);
 	}
 	return { action: result.action, record: result.record, statePath: workflowStatePath(cwd, "deep-interview") };
 }
@@ -277,6 +284,7 @@ export async function appendOrMergeDeepInterviewRound(
 export async function enrichDeepInterviewRoundScoring(
 	cwd: string,
 	input: DeepInterviewScoringInput,
+	sessionId?: string,
 ): Promise<{ record: DeepInterviewRoundRecord; statePath: string }> {
 	const envelope = await readDeepInterviewEnvelope(cwd);
 	const interviewId = input.interviewId ?? interviewIdOf(envelope);
@@ -306,13 +314,14 @@ export async function enrichDeepInterviewRoundScoring(
 			},
 		},
 	});
-	await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview score-round");
+	await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview score-round", sessionId);
 	return { record, statePath: workflowStatePath(cwd, "deep-interview") };
 }
 
 export async function finalizeDeepInterviewSpecState(
 	cwd: string,
 	input: { slug: string; path: string; sha256: string; handoff?: string },
+	sessionId?: string,
 ): Promise<{ statePath: string }> {
 	const envelope = await readDeepInterviewEnvelope(cwd);
 	const next = mergeDeepInterviewEnvelope(envelope, {
@@ -324,16 +333,26 @@ export async function finalizeDeepInterviewSpecState(
 		handoff: input.handoff,
 	});
 	const state = await replaceWorkflowState(cwd, "deep-interview", next, "pi deep-interview write-spec");
-	await syncWorkflowActiveState(cwd, {
-		skill: "deep-interview",
-		active: input.handoff ? false : state.active,
-		phase: state.current_phase,
-		state_path: workflowStatePath(cwd, "deep-interview"),
-		hud: deriveDeepInterviewHud(state, {
-			phase: state.current_phase,
-			specStatus: "persisted",
-		}),
-	});
+	// When handing off to another workflow, skip the active-state sync here —
+	// the caller will use `applyHandoffToActiveState` to demote deep-interview
+	// and promote the target atomically in a single write. For "stop" (or no
+	// handoff), sync directly since there is no target to promote.
+	if (!input.handoff || input.handoff === "stop") {
+		await syncWorkflowActiveState(
+			cwd,
+			{
+				skill: "deep-interview",
+				active: input.handoff ? false : state.active,
+				phase: state.current_phase,
+				state_path: workflowStatePath(cwd, "deep-interview"),
+				hud: deriveDeepInterviewHud(state, {
+					phase: state.current_phase,
+					specStatus: "persisted",
+				}),
+			},
+			sessionId ? { sessionId } : undefined,
+		);
+	}
 	return { statePath: workflowStatePath(cwd, "deep-interview") };
 }
 
