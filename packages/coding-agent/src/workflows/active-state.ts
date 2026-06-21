@@ -83,7 +83,7 @@ function normalizeHudChip(value: unknown): WorkflowHudChip | undefined {
 	};
 }
 
-export function normalizeWorkflowHudSummary(value: unknown): WorkflowHudSummary | undefined {
+function normalizeWorkflowHudSummary(value: unknown): WorkflowHudSummary | undefined {
 	if (!isPlainObject(value) || value.version !== 1) return undefined;
 	const chips = Array.isArray(value.chips)
 		? value.chips

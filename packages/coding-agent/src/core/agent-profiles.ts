@@ -25,7 +25,7 @@ export interface AgentProfileLoadResult {
 
 const THINKING_LEVELS = new Set<string>(["off", "minimal", "low", "medium", "high"]);
 
-export const BUILT_IN_AGENT_PROFILES: AgentProfile[] = [
+const BUILT_IN_AGENT_PROFILES: AgentProfile[] = [
 	{
 		name: "planner",
 		description: "Planner role for turning requirements into executable plans.",
@@ -127,7 +127,7 @@ async function loadProfileDir(dir: string): Promise<AgentProfileLoadResult> {
 	return result;
 }
 
-export async function loadAgentProfiles(options: {
+async function loadAgentProfiles(options: {
 	cwd: string;
 	agentDir: string;
 	settingsManager: SettingsManager;

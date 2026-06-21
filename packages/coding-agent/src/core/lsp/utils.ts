@@ -62,7 +62,7 @@ export function fileToUri(path: string): string {
 	return pathToFileURL(path).href;
 }
 
-export function uriToFile(uri: string): string {
+function uriToFile(uri: string): string {
 	return fileURLToPath(uri);
 }
 
@@ -88,7 +88,7 @@ export function findProjectRoot(filePath: string, cwd: string, server: ServerCon
 	}
 }
 
-export function toLspPosition(line: number, character: number): Position {
+function toLspPosition(line: number, character: number): Position {
 	return { line: Math.max(0, line - 1), character: Math.max(0, character - 1) };
 }
 

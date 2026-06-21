@@ -30,7 +30,7 @@ export function canonicalWorkspacePath(workspace: string): string {
 	return resolve(workspace);
 }
 
-export function assertSafeSessionId(id: string): void {
+function assertSafeSessionId(id: string): void {
 	if (!SESSION_ID_RE.test(id)) throw new Error(`unsafe_session_id:${id}`);
 }
 
@@ -66,7 +66,7 @@ export function sessionPaths(root: string, sessionId: string): SessionPaths {
 	};
 }
 
-export function controlSocketPath(root: string, sessionId: string): string {
+function controlSocketPath(root: string, sessionId: string): string {
 	const digest = createHash("sha256")
 		.update(`${resolve(root)}\0${sessionId}`)
 		.digest("hex");
@@ -193,6 +193,6 @@ export function defaultRepoName(workspace: string): string | null {
 	return existsSync(join(workspace, ".git")) ? basename(workspace) : null;
 }
 
-export function tempHarnessRoot(): string {
+function tempHarnessRoot(): string {
 	return join(tmpdir(), `pi-harness-${process.getuid?.() ?? "u"}`);
 }

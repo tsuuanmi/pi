@@ -10,7 +10,7 @@ function decodeCodePoint(codePoint: number): string | undefined {
 	return String.fromCodePoint(codePoint);
 }
 
-export function decodeHtmlEntity(entity: string): string | undefined {
+function decodeHtmlEntity(entity: string): string | undefined {
 	switch (entity) {
 		case "amp":
 			return "&";

@@ -3,7 +3,7 @@ import { join } from "node:path";
 export type WorkflowSkill = "deep-interview" | "ralplan" | "team" | "ultragoal";
 export type RalplanStage = "planner" | "architect" | "critic" | "revision" | "adr" | "final";
 
-export function piWorkflowRoot(cwd: string): string {
+function piWorkflowRoot(cwd: string): string {
 	return join(cwd, ".pi", "workflows");
 }
 
@@ -15,7 +15,7 @@ export function workflowActiveStatePath(cwd: string): string {
 	return join(piWorkflowRoot(cwd), "active-state.json");
 }
 
-export function piSpecsDir(cwd: string): string {
+function piSpecsDir(cwd: string): string {
 	return join(cwd, ".pi", "specs");
 }
 
@@ -27,15 +27,15 @@ export function deepInterviewIndexPath(cwd: string): string {
 	return join(piSpecsDir(cwd), "deep-interview-index.jsonl");
 }
 
-export function piPlansDir(cwd: string): string {
+function piPlansDir(cwd: string): string {
 	return join(cwd, ".pi", "plans");
 }
 
-export function ralplanRootDir(cwd: string): string {
+function ralplanRootDir(cwd: string): string {
 	return join(piPlansDir(cwd), "ralplan");
 }
 
-export function ralplanRunDir(cwd: string, runId: string): string {
+function ralplanRunDir(cwd: string, runId: string): string {
 	return join(ralplanRootDir(cwd), runId);
 }
 
@@ -51,7 +51,7 @@ export function ralplanPendingApprovalPath(cwd: string, runId: string): string {
 	return join(ralplanRunDir(cwd, runId), "pending-approval.md");
 }
 
-export function ultragoalDir(cwd: string): string {
+function ultragoalDir(cwd: string): string {
 	return join(cwd, ".pi", "ultragoal");
 }
 
@@ -71,7 +71,7 @@ export function teamDir(cwd: string): string {
 	return join(cwd, ".pi", "team");
 }
 
-export function teamRunDir(cwd: string, teamId: string): string {
+function teamRunDir(cwd: string, teamId: string): string {
 	return join(teamDir(cwd), teamId);
 }
 
@@ -79,7 +79,7 @@ export function teamConfigPath(cwd: string, teamId: string): string {
 	return join(teamRunDir(cwd, teamId), "config.json");
 }
 
-export function teamTasksDir(cwd: string, teamId: string): string {
+function teamTasksDir(cwd: string, teamId: string): string {
 	return join(teamRunDir(cwd, teamId), "tasks");
 }
 

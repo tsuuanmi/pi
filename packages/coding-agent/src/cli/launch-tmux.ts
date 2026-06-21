@@ -2,14 +2,14 @@ import { spawnSync } from "node:child_process";
 import * as path from "node:path";
 import type { Args } from "./args.ts";
 
-export const PI_DEFAULT_TMUX_SESSION = "pi";
-export const PI_TMUX_SESSION_PREFIX = `${PI_DEFAULT_TMUX_SESSION}_`;
-export const PI_TMUX_COMMAND_ENV = "PI_TMUX_COMMAND";
-export const PI_TMUX_PROFILE_ENV = "PI_TMUX_PROFILE";
-export const PI_TMUX_MOUSE_ENV = "PI_MOUSE";
-export const PI_TMUX_LAUNCHED_ENV = "PI_TMUX_LAUNCHED";
-export const PI_LAUNCH_POLICY_ENV = "PI_LAUNCH_POLICY";
-export const PI_TMUX_WINDOW_LABEL_MAX_WIDTH = 48;
+const PI_DEFAULT_TMUX_SESSION = "pi";
+const PI_TMUX_SESSION_PREFIX = `${PI_DEFAULT_TMUX_SESSION}_`;
+const PI_TMUX_COMMAND_ENV = "PI_TMUX_COMMAND";
+const PI_TMUX_PROFILE_ENV = "PI_TMUX_PROFILE";
+const PI_TMUX_MOUSE_ENV = "PI_MOUSE";
+const PI_TMUX_LAUNCHED_ENV = "PI_TMUX_LAUNCHED";
+const PI_LAUNCH_POLICY_ENV = "PI_LAUNCH_POLICY";
+const PI_TMUX_WINDOW_LABEL_MAX_WIDTH = 48;
 
 const PI_TMUX_PROFILE_OPTION = "@pi-profile";
 const PI_TMUX_PROFILE_VALUE = "1";
@@ -133,7 +133,7 @@ function sanitizeTmuxToken(value: string): string {
 	);
 }
 
-export function buildPiTmuxSessionSlug(value: string): string {
+function buildPiTmuxSessionSlug(value: string): string {
 	return sanitizeTmuxToken(value);
 }
 

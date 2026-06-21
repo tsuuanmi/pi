@@ -1,6 +1,6 @@
 import type { RalplanStage, WorkflowSkill } from "./paths.ts";
 
-export const WORKFLOW_STATE_VERSION = 1;
+const WORKFLOW_STATE_VERSION = 1;
 
 export interface WorkflowStateEnvelope {
 	skill: WorkflowSkill;
@@ -22,7 +22,7 @@ export function assertWorkflowSkill(value: string): asserts value is WorkflowSki
 	if (!isWorkflowSkill(value)) throw new Error(`unknown workflow skill: ${value}`);
 }
 
-export function isRalplanStage(value: string): value is RalplanStage {
+function isRalplanStage(value: string): value is RalplanStage {
 	return RALPLAN_STAGES.has(value);
 }
 

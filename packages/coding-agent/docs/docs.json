@@ -75,6 +75,23 @@
         {
           "title": "Custom Providers",
           "path": "custom-provider.md"
+        },
+        {
+          "title": "MCP",
+          "path": "mcp.md"
+        }
+      ]
+    },
+    {
+      "title": "Workflows & Subagents",
+      "items": [
+        {
+          "title": "Pi Workflow",
+          "path": "workflow.md"
+        },
+        {
+          "title": "Subagents",
+          "path": "subagents.md"
         }
       ]
     },

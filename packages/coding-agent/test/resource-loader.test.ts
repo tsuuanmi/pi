@@ -60,7 +60,7 @@ describe("DefaultResourceLoader", () => {
 			expect(loader.getThemes().themes).toEqual([]);
 		});
 
-		it("should discover built-in workflow skills and commands", async () => {
+		it("should discover built-in workflow skills and tools", async () => {
 			const loader = new DefaultResourceLoader({ cwd, agentDir });
 			await loader.reload();
 
@@ -81,10 +81,6 @@ describe("DefaultResourceLoader", () => {
 				sessionManager,
 				modelRegistry,
 			);
-			expect(runner.getCommand("deep-interview")?.description).toContain("Socratic");
-			expect(runner.getCommand("ralplan")?.description).toContain("consensus");
-			expect(runner.getCommand("team")?.description).toContain("parallel");
-			expect(runner.getCommand("ultragoal")?.description).toContain("goal");
 			for (const toolName of BUILT_IN_SUBAGENT_TOOLS) {
 				expect(runner.getToolDefinition(toolName)).toBeDefined();
 			}

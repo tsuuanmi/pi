@@ -16,7 +16,7 @@ export function shortenPath(path: unknown): string {
 	return path;
 }
 
-export function linkPath(styledText: string, rawPath: string, cwd: string): string {
+function linkPath(styledText: string, rawPath: string, cwd: string): string {
 	if (!getCapabilities().hyperlinks) return styledText;
 	const absolutePath = resolvePath(rawPath, cwd);
 	return hyperlink(styledText, pathToFileURL(absolutePath).href);

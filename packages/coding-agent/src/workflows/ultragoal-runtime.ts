@@ -241,7 +241,7 @@ function buildUltragoalHud(status: UltragoalStatus): WorkflowHudSummary {
 	};
 }
 
-export async function readUltragoalPlan(cwd: string): Promise<UltragoalPlan | undefined> {
+async function readUltragoalPlan(cwd: string): Promise<UltragoalPlan | undefined> {
 	const read = await readExistingStateForMutation(ultragoalGoalsPath(cwd));
 	if (read.kind === "absent") return undefined;
 	if (read.kind === "corrupt") throw new Error(`ultragoal plan is corrupt: ${read.error}`);

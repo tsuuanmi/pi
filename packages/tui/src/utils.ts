@@ -287,7 +287,7 @@ export function normalizeTerminalOutput(str: string): string {
 /**
  * Extract ANSI escape sequences from a string at the given position.
  */
-export function extractAnsiCode(str: string, pos: number): { code: string; length: number } | null {
+function extractAnsiCode(str: string, pos: number): { code: string; length: number } | null {
 	if (pos >= str.length || str[pos] !== "\x1b") return null;
 
 	const next = str[pos + 1];
@@ -804,13 +804,6 @@ export const PUNCTUATION_REGEX = /[(){}[\]<>.,;:'"!?+\-=*/\\|&%^$#@~`]/;
  */
 export function isWhitespaceChar(char: string): boolean {
 	return /\s/.test(char);
-}
-
-/**
- * Check if a character is punctuation.
- */
-export function isPunctuationChar(char: string): boolean {
-	return PUNCTUATION_REGEX.test(char);
 }
 
 function breakLongWord(word: string, width: number, tracker: AnsiCodeTracker): string[] {

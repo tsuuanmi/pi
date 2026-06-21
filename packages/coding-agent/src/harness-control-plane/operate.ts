@@ -16,8 +16,6 @@
 
 import {
 	type ClassificationInput,
-	classifyRecovery,
-	consumeBudget,
 	finalizePrimitive,
 	loadStateOrThrow,
 	type RecoveryDecision,
@@ -190,5 +188,4 @@ export async function operate(opts: OperateOptions): Promise<OperateResult> {
 	};
 }
 
-export { classifyRecovery, consumeBudget };
 export type { ClassificationInput, RecoveryDecision, RecoveryDecisionKind };

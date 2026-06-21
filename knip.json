@@ -1,0 +1,81 @@
+{
+	"$schema": "https://unpkg.com/knip@6.17.1/schema.json",
+	"workspaces": {
+		".": {
+			"entry": [
+				"scripts/browser-smoke-entry.ts",
+				"scripts/check-browser-smoke.mjs",
+				"scripts/check-lockfile-commit.mjs",
+				"scripts/check-pinned-deps.mjs",
+				"scripts/check-ts-relative-imports.mjs",
+				"scripts/cost.ts",
+				"scripts/edit-tool-stats.mjs",
+				"scripts/generate-coding-agent-shrinkwrap.mjs",
+				"scripts/local-release.mjs",
+				"scripts/profile-coding-agent-node.mjs",
+				"scripts/publish.mjs",
+				"scripts/read-tool-stats.mjs",
+				"scripts/release-notes.mjs",
+				"scripts/release.mjs",
+				"scripts/session-context-stats.mjs",
+				"scripts/session-transcripts.ts",
+				"scripts/stats.ts",
+				"scripts/sync-versions.js",
+				"scripts/tool-stats.ts"
+			],
+			"project": ["scripts/**/*.{js,mjs,ts}", "*.js", "*.mjs", "*.ts"],
+			"ignoreDependencies": ["tsx"]
+		},
+		"packages/ai": {
+			"entry": [
+				"src/cli.ts",
+				"src/index.ts",
+				"src/oauth.ts",
+				"src/providers/anthropic.ts",
+				"src/providers/openai-codex-responses.ts",
+				"src/providers/openai-completions.ts",
+				"src/providers/openai-responses.ts",
+				"scripts/generate-models.ts",
+				"scripts/generate-image-models.ts",
+				"scripts/generate-test-image.ts",
+				"test/codex-websocket-cached-probe.ts"
+			],
+			"project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
+		},
+		"packages/agent": {
+			"entry": ["src/index.ts", "src/node.ts", "vitest.harness.config.ts"],
+			"project": ["src/**/*.ts", "test/**/*.ts", "*.config.ts"]
+		},
+		"packages/tui": {
+			"entry": ["src/index.ts"],
+			"project": ["src/**/*.ts", "test/**/*.ts"]
+		},
+		"packages/coding-agent/examples/extensions/custom-provider-gitlab-duo": {
+			"entry": ["index.ts", "test.ts"],
+			"project": ["*.ts"]
+		},
+		"packages/coding-agent": {
+			"entry": [
+				"src/cli.ts",
+				"src/bun/cli.ts",
+				"src/index.ts",
+				"src/extensions/workflows.ts",
+				"src/utils/image-resize-worker.ts"
+			],
+			"project": ["src/**/*.ts", "test/**/*.ts"],
+			"ignoreFiles": ["src/utils/highlight-js-lib-index.d.ts"],
+			"ignoreDependencies": [
+				"@earendil-works/pi-ai",
+				"@earendil-works/pi-agent-core",
+				"@earendil-works/pi-tui",
+				"pyright",
+				"typescript-language-server"
+			]
+		}
+	},
+	"ignoreBinaries": ["gh", "pbcopy", "pi", "rustup", "termux-clipboard-set", "tmux", "trash", "which", "wl-copy", "xclip", "xsel"],
+	"rules": {
+		"types": "off"
+	}
+}
+

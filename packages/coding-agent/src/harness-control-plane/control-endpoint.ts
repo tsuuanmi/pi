@@ -7,7 +7,7 @@ export interface EndpointRequest {
 	input: Record<string, unknown>;
 }
 
-export class EndpointUnreachableError extends Error {
+class EndpointUnreachableError extends Error {
 	constructor(message: string) {
 		super(message);
 		this.name = "EndpointUnreachableError";

@@ -26,7 +26,7 @@ export type LeaseStatus = "missing" | "live" | "expiredAlive" | "dead" | "epermA
  * outcome (mapped to `alive`) so `classifyLeaseStatus` never marks them removable. */
 export type PidStatus = "alive" | "dead" | "eperm";
 
-export class LeaseError extends Error {
+class LeaseError extends Error {
 	readonly code: string;
 
 	constructor(message: string, code: string) {
@@ -80,7 +80,7 @@ export async function readLease(root: string, sessionId: string): Promise<Sessio
 	}
 }
 
-export function isExpired(lease: SessionLease, clock?: () => number): boolean {
+function isExpired(lease: SessionLease, clock?: () => number): boolean {
 	return Date.parse(lease.expiresAt) <= nowMs(clock);
 }
 

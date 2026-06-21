@@ -22,7 +22,7 @@ export interface DeferredSeamEntry {
 }
 
 /** Harnesses with a built control plane. Phase 3 ships only `pi`. */
-export const SUPPORTED_HARNESSES: readonly Harness[] = ["pi"];
+const SUPPORTED_HARNESSES: readonly Harness[] = ["pi"];
 
 /** The Pi-native deferred-seam set. `cross-harness-omx-fallback` is PERMANENTLY BLOCKED (no external
  * process spawn, ever); the rest are deferred/not-built and may land in future phases. */

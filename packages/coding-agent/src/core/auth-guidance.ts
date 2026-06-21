@@ -3,7 +3,7 @@ import { getDocsPath } from "../config.ts";
 
 const UNKNOWN_PROVIDER = "unknown";
 
-export function getProviderLoginHelp(): string {
+function getProviderLoginHelp(): string {
 	return [
 		"Use /account add to add a provider account via OAuth or API key. See:",
 		`  ${join(getDocsPath(), "providers.md")}`,

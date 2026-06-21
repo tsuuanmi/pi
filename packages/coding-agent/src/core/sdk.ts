@@ -30,7 +30,6 @@ import {
 	createReadTool,
 	createWriteTool,
 	type ToolName,
-	withFileMutationQueue,
 } from "./tools/index.ts";
 
 export interface CreateAgentSessionOptions {
@@ -117,7 +116,6 @@ export type { Skill } from "./skills.ts";
 export type { Tool } from "./tools/index.ts";
 
 export {
-	withFileMutationQueue,
 	// Tool factories (for custom cwd)
 	createCodingTools,
 	createReadOnlyTools,

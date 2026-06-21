@@ -1,9 +1,9 @@
 import { type Static, Type } from "typebox";
 import type { AgentTool, AgentToolResult } from "../../src/types.ts";
 
-export interface GetCurrentTimeResult extends AgentToolResult<{ utcTimestamp: number }> {}
+interface GetCurrentTimeResult extends AgentToolResult<{ utcTimestamp: number }> {}
 
-export async function getCurrentTime(timezone?: string): Promise<GetCurrentTimeResult> {
+async function getCurrentTime(timezone?: string): Promise<GetCurrentTimeResult> {
 	const date = new Date();
 	if (timezone) {
 		try {

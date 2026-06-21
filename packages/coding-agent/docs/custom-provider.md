@@ -27,6 +27,7 @@ See these complete provider examples:
 - [Testing Your Implementation](#testing-your-implementation)
 - [Config Reference](#config-reference)
 - [Model Definition Reference](#model-definition-reference)
+- [Account profiles](#account-profiles)
 
 ## Quick Reference
 
@@ -719,3 +720,47 @@ interface ProviderModelConfig {
 
 `string-thinking` sends a top-level string `thinking` value for custom OpenAI-compatible providers that require it.
 `cacheControlFormat: "anthropic"` applies Anthropic-style `cache_control` markers to the system prompt, last tool definition, and last user/assistant text content.
+
+## Account profiles
+
+Pi stores provider credentials in `~/.pi/agent/auth.json` and supports multiple stored accounts per provider ("account profiles"). One account per provider is active at a time. Account profiles are managed from interactive mode with the `/account` and `/provider` slash commands.
+
+Credentials are stored per provider as a collection of named accounts with an `active` marker. The active account's credential is the one used for model requests. Custom providers registered with `pi.registerProvider(..., { oauth })` also integrate with `/account add`.
+
+### Adding accounts
+
+```text
+/account add                     # interactive: choose account type, then provider
+/account add <provider>          # add an account for <provider> (prompts for the credential)
+/account add <provider> <account> # add and store as a named account <account>
+```
+
+With no arguments, `/account add` first asks whether to use a subscription (OAuth) or an API key, then lists the matching providers. With a provider only, pi prompts for the credential. With a provider and an account name, the credential is stored under that name and made active.
+
+### Listing and switching
+
+```text
+/account                              # interactive selector across all stored providers
+/account <provider>                  # interactive selector for <provider>'s accounts
+/account <provider> <account>         # switch <provider>'s active account to <account>
+```
+
+With no arguments (or just a provider), `/account` opens an interactive account selector. With both a provider and an account, it switches the active account directly.
+
+### Removing accounts
+
+```text
+/account remove                       # interactive: choose a provider, then remove all its accounts
+/account remove <provider>            # remove all stored accounts for <provider>
+/account remove <provider> <account>   # remove a single named account
+```
+
+`/account remove` only deletes credentials saved in `auth.json`; environment variables and `models.json` config are left untouched.
+
+### Adding custom providers interactively
+
+```text
+/provider add <provider> --api <openai-completions|openai-responses|anthropic-messages> --base-url <url> --model <model> [--model <model> ...]
+```
+
+`/provider add` writes a custom OpenAI/Anthropic-compatible provider into `~/.pi/agent/models.json`, refreshes the model registry, and prompts you to add a key with `/account add <provider> <account>`. Use `--compat` as an alias for `--api` (but not both). At least one `--model` is required.

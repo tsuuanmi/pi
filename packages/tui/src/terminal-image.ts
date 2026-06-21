@@ -240,12 +240,12 @@ export function encodeITerm2(
 	return `\x1b]1337;File=${params.join(";")}:${base64Data}\x07`;
 }
 
-export interface ImageCellSize {
+interface ImageCellSize {
 	columns: number;
 	rows: number;
 }
 
-export function calculateImageCellSize(
+function calculateImageCellSize(
 	imageDimensions: ImageDimensions,
 	maxWidthCells: number,
 	maxHeightCells?: number,

@@ -34,7 +34,7 @@ import { sanitizeServerName } from "./loader.ts";
 import { MCP_MAX_RESULT_BYTES, type MCPToolCallResult, type MCPToolDefinition } from "./types.ts";
 
 /** The prefix for MCP tool names in Pi: mcp__<server>__<tool> */
-export const MCP_TOOL_PREFIX = "mcp__";
+const MCP_TOOL_PREFIX = "mcp__";
 
 /**
  * Construct the Pi tool name for an MCP tool.
@@ -209,11 +209,7 @@ export function mcpResultToText(result: MCPToolCallResult): string {
  * The resulting tool uses closure capture over the MCP client for
  * execute() dispatch, meaning no extension API changes are needed.
  */
-export function createMcpToolDefinition(
-	serverName: string,
-	toolDef: MCPToolDefinition,
-	client: MCPClient,
-): ToolDefinition {
+function createMcpToolDefinition(serverName: string, toolDef: MCPToolDefinition, client: MCPClient): ToolDefinition {
 	const fullToolName = mcpToolName(serverName, toolDef.name);
 	const typeboxSchema = jsonSchemaToTypeBox(toolDef.inputSchema);
 

@@ -217,7 +217,7 @@ function getHomeDir(): string {
 	return process.env.HOME || homedir();
 }
 
-export function getExtensionTempFolder(agentDir: string): string {
+function getExtensionTempFolder(agentDir: string): string {
 	const tempFolder = join(agentDir, "tmp", "extensions");
 	mkdirSync(tempFolder, { recursive: true, mode: 0o700 });
 	chmodSync(tempFolder, 0o700);

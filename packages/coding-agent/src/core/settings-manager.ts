@@ -171,7 +171,7 @@ export interface SettingsError {
 	error: Error;
 }
 
-export class FileSettingsStorage implements SettingsStorage {
+class FileSettingsStorage implements SettingsStorage {
 	private globalSettingsPath: string;
 	private projectSettingsPath: string;
 
@@ -240,7 +240,7 @@ export class FileSettingsStorage implements SettingsStorage {
 	}
 }
 
-export class InMemorySettingsStorage implements SettingsStorage {
+class InMemorySettingsStorage implements SettingsStorage {
 	private global: string | undefined;
 	private project: string | undefined;
 

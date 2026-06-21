@@ -46,13 +46,6 @@ function assertPiTargetPath(targetPath: string, cwd: string | undefined): void {
 	}
 }
 
-export async function readJsonObject(path: string): Promise<Record<string, unknown> | undefined> {
-	const result = await readExistingStateForMutation(path);
-	if (result.kind === "absent") return undefined;
-	if (result.kind === "corrupt") throw new Error(result.error);
-	return result.value;
-}
-
 export async function readExistingStateForMutation(filePath: string): Promise<StrictMutationReadResult> {
 	try {
 		const raw = await readFile(filePath, "utf8");
@@ -89,7 +82,7 @@ function withoutReceiptChecksum(value: unknown): unknown {
 	return clone;
 }
 
-export function workflowEnvelopeContentSha256(value: unknown): string {
+function workflowEnvelopeContentSha256(value: unknown): string {
 	return sha256(JSON.stringify(canonicalizeJson(withoutReceiptChecksum(value))));
 }
 

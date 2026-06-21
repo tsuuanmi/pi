@@ -140,7 +140,7 @@ function nonEmptyString(value: unknown): value is string {
 	return typeof value === "string" && value.trim() !== "";
 }
 
-export function hashContent(value: string): string {
+function hashContent(value: string): string {
 	return createHash("sha256").update(value).digest("hex").slice(0, 32);
 }
 
@@ -215,7 +215,7 @@ function mergeRoundPair(existing: Record<string, unknown>, incoming: Record<stri
 	return merged;
 }
 
-export function mergeDeepInterviewRounds(
+function mergeDeepInterviewRounds(
 	existing: readonly Record<string, unknown>[],
 	incoming: readonly Record<string, unknown>[],
 ): Record<string, unknown>[] {

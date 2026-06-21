@@ -26,7 +26,7 @@ export function isTerminal(lifecycle: HarnessLifecycle): boolean {
 	return TERMINAL_LIFECYCLES.has(lifecycle);
 }
 
-export function canTransition(from: HarnessLifecycle, to: HarnessLifecycle): boolean {
+function canTransition(from: HarnessLifecycle, to: HarnessLifecycle): boolean {
 	return TRANSITIONS[from]?.includes(to) ?? false;
 }
 

@@ -174,7 +174,7 @@ export function buildWorkspaceMarker(workspace: string, base?: string | null): W
 	return { workspace, status: "available", head, gitDelta, risk: gitDelta === "dirty" ? "dirty" : "normal" };
 }
 
-export function parseRetryBudget(input: Record<string, unknown>, state: SessionState): RetryBudget {
+function parseRetryBudget(input: Record<string, unknown>, state: SessionState): RetryBudget {
 	const override = input.retryBudget;
 	const source =
 		override && typeof override === "object" && !Array.isArray(override) ? (override as Record<string, unknown>) : {};
@@ -219,10 +219,7 @@ function isValidationEvidence(value: unknown, sessionId: string): value is Valid
 	);
 }
 
-export function summarizeLatestValidation(
-	receipts: RuntimeReceipt[],
-	sessionId: string,
-): ValidationReceiptSummary | null {
+function summarizeLatestValidation(receipts: RuntimeReceipt[], sessionId: string): ValidationReceiptSummary | null {
 	for (let index = receipts.length - 1; index >= 0; index--) {
 		const receipt = receipts[index];
 		if (receipt?.verb !== "validate" || receipt.sessionId !== sessionId) continue;
@@ -860,7 +857,7 @@ function markersMatch(current: WorkspaceMarker, prior: WorkspaceMarker): boolean
 	);
 }
 
-export function findValidationReceipt(
+function findValidationReceipt(
 	receipts: RuntimeReceipt[],
 	state: SessionState,
 	input: Record<string, unknown>,

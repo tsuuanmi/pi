@@ -73,14 +73,21 @@ describe("regression #3592: no-builtin-tools keeps extension tools enabled", () 
 	it("keeps extension tools active when built-in defaults are disabled", async () => {
 		const session = await createSession({ noTools: "builtin" });
 
-		expect(
-			session
-				.getAllTools()
-				.map((tool) => tool.name)
-				.sort(),
-		).toEqual(["bash", "dynamic_tool", "edit", "find", "grep", "ls", "read", "write"]);
-		expect(session.getActiveToolNames()).toEqual(["dynamic_tool"]);
+		const allToolNames = session.getAllTools().map((tool) => tool.name);
+		for (const toolName of ["read", "bash", "edit", "write", "lsp", "dynamic_tool", "pi_workflow_state"]) {
+			expect(allToolNames).toContain(toolName);
+		}
+
+		const activeToolNames = session.getActiveToolNames();
+		expect(activeToolNames).toContain("dynamic_tool");
+		expect(activeToolNames).toContain("pi_workflow_state");
+		expect(activeToolNames).not.toContain("read");
+		expect(activeToolNames).not.toContain("bash");
+		expect(activeToolNames).not.toContain("edit");
+		expect(activeToolNames).not.toContain("write");
+		expect(activeToolNames).not.toContain("lsp");
 		expect(session.systemPrompt).toContain("- dynamic_tool: Run dynamic test behavior");
+		expect(session.systemPrompt).toContain("- pi_workflow_state:");
 		expect(session.systemPrompt).not.toContain("- read:");
 		expect(session.systemPrompt).not.toContain("- bash:");
 		session.dispose();
@@ -111,8 +118,14 @@ describe("regression #3592: no-builtin-tools keeps extension tools enabled", () 
 			noTools: "builtin",
 		});
 
-		expect(session.getActiveToolNames()).toEqual([]);
-		expect(session.systemPrompt).toContain("Available tools:\n(none)");
+		const activeToolNames = session.getActiveToolNames();
+		expect(activeToolNames).toContain("pi_workflow_state");
+		expect(activeToolNames).not.toContain("read");
+		expect(activeToolNames).not.toContain("bash");
+		expect(activeToolNames).not.toContain("edit");
+		expect(activeToolNames).not.toContain("write");
+		expect(activeToolNames).not.toContain("lsp");
+		expect(session.systemPrompt).toContain("- pi_workflow_state:");
 		expect(session.systemPrompt).not.toContain("- read:");
 		session.dispose();
 	});

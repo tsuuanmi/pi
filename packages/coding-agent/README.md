@@ -19,7 +19,7 @@
 
 Pi is a minimal terminal coding harness. Adapt pi to your workflows, not the other way around, without having to fork and modify pi internals. Extend it with TypeScript [Extensions](#extensions), [Skills](#skills), [Prompt Templates](#prompt-templates), and [Themes](#themes). Put your extensions, skills, prompt templates, and themes in [Pi Packages](#pi-packages) and share them with others via npm or git.
 
-Pi ships with powerful defaults but skips features like sub agents and plan mode. Instead, you can ask pi to build what you want or install a third party pi package that matches your workflow.
+Pi ships with powerful defaults but skips features that lock you into one workflow. Instead, you can ask pi to build what you want or install a third-party pi package that matches your workflow.
 
 Pi runs in four modes: interactive, print or JSON, RPC for process integration, and an SDK for embedding in your own apps. See [openclaw/openclaw](https://github.com/openclaw/openclaw) for a real-world SDK integration.
 
@@ -61,6 +61,7 @@ I regularly publish my own `pi-mono` work sessions here:
   - [Pi Packages](#pi-packages)
 - [Programmatic Usage](#programmatic-usage)
 - [Philosophy](#philosophy)
+- [Built-in Features](#built-in-features)
 - [CLI Reference](#cli-reference)
 
 ---
@@ -491,19 +492,26 @@ See [docs/rpc.md](docs/rpc.md) for the protocol.
 
 Pi is aggressively extensible so it doesn't have to dictate your workflow. Features that other tools bake in can be built with [extensions](#extensions), [skills](#skills), or installed from third-party [pi packages](#pi-packages). This keeps the core minimal while letting you shape pi to fit how you work.
 
-**No MCP.** Build CLI tools with READMEs (see [Skills](#skills)), or build an extension that adds MCP support. [Why?](https://mariozechner.at/posts/2025-11-02-what-if-you-dont-need-mcp/)
-
-**No sub-agents.** There's many ways to do this. Spawn pi instances via tmux, or build your own with [extensions](#extensions), or install a package that does it your way.
-
 **No permission popups.** Run in a container, or build your own confirmation flow with [extensions](#extensions) inline with your environment and security requirements.
-
-**No plan mode.** Write plans to files, or build it with [extensions](#extensions), or install a package.
 
 **No built-in to-dos.** They confuse models. Use a TODO.md file, or build your own with [extensions](#extensions).
 
 **No background bash.** Use tmux. Full observability, direct interaction.
 
 Read the [blog post](https://mariozechner.at/posts/2025-11-30-pi-coding-agent/) for the full rationale.
+
+---
+
+## Built-in Features
+
+Pi stays minimal, but ships a small set of built-in features so common workflows work out of the box. Each is documented in `docs/`.
+
+- **`lsp` tool** - minimal Language Server Protocol support (TypeScript/JavaScript, Python, Rust) for status, diagnostics, symbols, hover, definitions, and references.
+- **`pi --tmux`** - launch interactive startup inside a new tmux session. See [docs/tmux.md](docs/tmux.md).
+- **Account profiles** - store multiple accounts per provider and switch between them with `/account add`, `/account`, `/account <provider> <account>`, `/provider add`, and `/account remove`. See [Account profiles](docs/custom-provider.md#account-profiles) in the Custom Providers docs.
+- **MCP** - load Model Context Protocol servers and expose their tools to the agent. Managed with `pi mcp list/add/remove/test`. See [docs/mcp.md](docs/mcp.md).
+- **Pi workflow + skills** - a `pi workflow` control plane plus the built-in `deep-interview`, `ralplan`, `team`, and `ultragoal` skills for planning and parallel execution. See [docs/workflow.md](docs/workflow.md).
+- **Subagents** - a Pi-native `SubagentManager` with spawn/await/resume/steer/pause/cancel tools for isolated agent workers. See [docs/subagents.md](docs/subagents.md).
 
 ---
 
