@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
-import { applyHandoffToActiveState, syncWorkflowActiveState, type WorkflowHudSummary } from "./active-state.ts";
+import { applyHandoffToActiveState, syncWorkflowActiveState } from "./active-state.ts";
 import type { RalplanStage, WorkflowSkill } from "./paths.ts";
 import { ralplanIndexPath, ralplanPendingApprovalPath, ralplanStageArtifactPath, workflowStatePath } from "./paths.ts";
+import { buildRalplanHud } from "./ralplan-hud.ts";
 import { appendJsonlIdempotent, readFileOrLiteral, sha256, writeTextArtifact } from "./state-writer.ts";
 import { activeRalplanRunId, defaultWorkflowId, readWorkflowState, writeWorkflowState } from "./workflow-state.ts";
 
@@ -188,35 +189,6 @@ function summarizeRows(rows: readonly RalplanIndexRow[]): Pick<RalplanStatus, "i
 		latest = row;
 	}
 	return { iteration: iteration || undefined, stages, latest };
-}
-
-function buildRalplanHud(status: RalplanStatus): WorkflowHudSummary {
-	const stage =
-		status.latest?.stage ??
-		(typeof status.state?.current_phase === "string" ? status.state.current_phase : undefined);
-	return {
-		version: 1,
-		summary: status.latest ? `persisted ${status.latest.stage} stage ${status.latest.stage_n}` : undefined,
-		chips: [
-			...(status.pending_approval
-				? [{ label: "pending", value: "approval", priority: 5, severity: "warning" as const }]
-				: []),
-			...(stage ? [{ label: "stage", value: stage, priority: 10 }] : []),
-			...(status.iteration ? [{ label: "iter", value: String(status.iteration), priority: 30 }] : []),
-			...(Object.keys(status.stages).length > 0
-				? [
-						{
-							label: "stages",
-							value: Object.entries(status.stages)
-								.map(([key, value]) => `${key}:${value}`)
-								.join(","),
-							priority: 35,
-						},
-					]
-				: []),
-		],
-		updated_at: new Date().toISOString(),
-	};
 }
 
 function nextPhase(existingPhase: unknown, stage: RalplanStage): string {

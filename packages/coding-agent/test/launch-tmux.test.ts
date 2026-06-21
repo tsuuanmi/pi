@@ -58,7 +58,7 @@ describe("tmux launch", () => {
 			parsed: parseArgs(["--tmux"]),
 			rawArgs: ["--tmux"],
 			cwd: "/repo/project",
-			env: { PI_TMUX_SESSION: "pi-test", PI_TMUX_PROFILE: "0", PI_MOUSE: "0" },
+			env: { PI_TMUX_SESSION: "pi-test", PI_MOUSE: "0" },
 			argv: ["/usr/bin/node", "/usr/local/bin/pi"],
 			execPath: "/usr/bin/node",
 			tty: { stdin: true, stdout: true },
@@ -75,8 +75,12 @@ describe("tmux launch", () => {
 			"set-option",
 			"set-option",
 			"set-option",
+			"set-option",
+			"set-option",
+			"set-window-option",
 			"attach-session",
 		]);
+		expect(calls.map((call) => call.args)).toContainEqual(["set-option", "-g", "extended-keys", "on"]);
 	});
 
 	test("truncates long branch names in tmux window title", () => {

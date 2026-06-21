@@ -235,6 +235,7 @@ function buildPiTmuxProfileCommands(
 		});
 	if (envDisabled(env[PI_TMUX_PROFILE_ENV])) return commands;
 	commands.push(
+		{ description: "enable tmux extended keys", args: ["set-option", "-g", "extended-keys", "on"] },
 		{ description: "enable tmux clipboard integration", args: ["set-option", "-t", target, "set-clipboard", "on"] },
 		{
 			description: "make copy-mode selection readable",

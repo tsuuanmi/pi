@@ -3201,4 +3201,9 @@ export class AgentSession {
 	get extensionRunner(): ExtensionRunner {
 		return this._extensionRunner;
 	}
+
+	/** Subagent manager (undefined when subagents are disabled). */
+	get subagentManager(): SubagentManager | undefined {
+		return this._subagentManager;
+	}
 }

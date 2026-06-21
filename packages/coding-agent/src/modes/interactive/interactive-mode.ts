@@ -112,7 +112,6 @@ import { DynamicBorder } from "./components/dynamic-border.ts";
 import { ExtensionEditorComponent } from "./components/extension-editor.ts";
 import { ExtensionInputComponent } from "./components/extension-input.ts";
 import { ExtensionSelectorComponent } from "./components/extension-selector.ts";
-import { FooterComponent } from "./components/footer.ts";
 import { formatKeyText, keyDisplayText, keyHint, keyText, rawKeyHint } from "./components/keybinding-hints.ts";
 import { LoginDialogComponent } from "./components/login-dialog.ts";
 import { ModelSelectorComponent } from "./components/model-selector.ts";
@@ -120,6 +119,7 @@ import { type AuthSelectorProvider, OAuthSelectorComponent } from "./components/
 import { SessionSelectorComponent } from "./components/session-selector.ts";
 import { SettingsSelectorComponent } from "./components/settings-selector.ts";
 import { SkillInvocationMessageComponent } from "./components/skill-invocation-message.ts";
+import { StatusLineComponent } from "./components/status-line/index.ts";
 import { ToolExecutionComponent } from "./components/tool-execution.ts";
 import { TreeSelectorComponent } from "./components/tree-selector.ts";
 import { TrustSelectorComponent } from "./components/trust-selector.ts";
@@ -272,7 +272,7 @@ export class InteractiveMode {
 	private autocompleteProviderWrappers: AutocompleteProviderFactory[] = [];
 	private fdPath: string | undefined;
 	private editorContainer: Container;
-	private footer: FooterComponent;
+	private footer: StatusLineComponent;
 	private footerDataProvider: FooterDataProvider;
 	// Stored so the same manager can be injected into custom editors, selectors, and extension UI.
 	private keybindings: KeybindingsManager;
@@ -416,7 +416,9 @@ export class InteractiveMode {
 		this.editorContainer = new Container();
 		this.editorContainer.addChild(this.editor as Component);
 		this.footerDataProvider = new FooterDataProvider(this.sessionManager.getCwd());
-		this.footer = new FooterComponent(this.session, this.footerDataProvider);
+		this.footer = new StatusLineComponent(this.session, this.footerDataProvider, this.settingsManager, () =>
+			this.ui.requestRender(),
+		);
 		this.footer.setAutoCompactEnabled(this.session.autoCompactionEnabled);
 
 		// Load hide thinking block setting
@@ -747,6 +749,7 @@ export class InteractiveMode {
 
 		// Set up git branch watcher (uses provider instead of footer)
 		this.footerDataProvider.onBranchChange(() => {
+			this.footer.invalidate();
 			this.ui.requestRender();
 		});
 
@@ -2750,6 +2753,16 @@ export class InteractiveMode {
 				}
 				this.ui.requestRender();
 				break;
+
+			case "turn_end": {
+				// End-of-turn updates (including workflow HUD refreshes) need a render
+				// trigger after the core agent loop finishes. Extension-only lifecycle
+				// events such as session_start and before_agent_start do not flow through
+				// AgentSessionEvent, so they are covered by UI init, agent_start, and the
+				// HUD refresh callback instead.
+				this.ui.requestRender();
+				break;
+			}
 
 			case "queue_update":
 				this.updatePendingMessagesDisplay();

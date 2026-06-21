@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import { syncWorkflowActiveState, type WorkflowHudSummary } from "./active-state.ts";
+import { syncWorkflowActiveState } from "./active-state.ts";
 import { teamConfigPath, teamDir, teamEventsPath, teamMailboxPath, teamTaskPath, workflowStatePath } from "./paths.ts";
 import {
 	appendJsonl,
@@ -9,6 +9,7 @@ import {
 	sha256,
 	writeJsonAtomic,
 } from "./state-writer.ts";
+import { buildTeamHud } from "./team-hud.ts";
 import { defaultWorkflowId, readWorkflowState, writeWorkflowState } from "./workflow-state.ts";
 
 export type TeamPhase = "starting" | "running" | "awaiting_integration" | "complete" | "failed" | "cancelled";
@@ -257,30 +258,6 @@ async function listTasks(cwd: string, teamId: string): Promise<TeamTask[]> {
 		if (raw) tasks.push(normalizeTask(raw));
 	}
 	return tasks.sort((a, b) => a.id.localeCompare(b.id));
-}
-
-function buildTeamHud(snapshot: TeamSnapshot): WorkflowHudSummary {
-	return {
-		version: 1,
-		summary: snapshot.team_id ? `${snapshot.task_total} tasks` : "missing",
-		chips: [
-			{
-				label: "phase",
-				value: snapshot.phase,
-				priority: 10,
-				severity: snapshot.phase === "failed" ? "error" : snapshot.phase === "complete" ? "success" : undefined,
-			},
-			{ label: "done", value: String(snapshot.task_counts.completed), priority: 20 },
-			{ label: "active", value: String(snapshot.task_counts.in_progress), priority: 30 },
-			{
-				label: "blocked",
-				value: String(snapshot.task_counts.blocked),
-				priority: 40,
-				severity: snapshot.task_counts.blocked > 0 ? "warning" : undefined,
-			},
-		],
-		updated_at: nowIso(),
-	};
 }
 
 async function syncTeamState(cwd: string, snapshot: TeamSnapshot, sessionId?: string): Promise<void> {

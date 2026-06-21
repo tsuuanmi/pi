@@ -16,7 +16,6 @@ export type {
 	FirstTimeSetupOptions,
 	FirstTimeSetupResult,
 } from "./first-time-setup.ts";
-export { FooterComponent } from "./footer.ts";
 export { keyHint, keyText, rawKeyHint } from "./keybinding-hints.ts";
 export { LoginDialogComponent } from "./login-dialog.ts";
 export { ModelSelectorComponent } from "./model-selector.ts";
@@ -25,6 +24,8 @@ export { SessionSelectorComponent } from "./session-selector.ts";
 export { type SettingsCallbacks, type SettingsConfig, SettingsSelectorComponent } from "./settings-selector.ts";
 export { ShowImagesSelectorComponent } from "./show-images-selector.ts";
 export { SkillInvocationMessageComponent } from "./skill-invocation-message.ts";
+/** @deprecated Use `StatusLineComponent`. Constructor signature changed to `(session, footerData, settingsManager, requestRender)`. */
+export { StatusLineComponent, StatusLineComponent as FooterComponent } from "./status-line/index.ts";
 export { ThemeSelectorComponent } from "./theme-selector.ts";
 export { ThinkingSelectorComponent } from "./thinking-selector.ts";
 export { ToolExecutionComponent, type ToolExecutionOptions } from "./tool-execution.ts";

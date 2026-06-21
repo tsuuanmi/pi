@@ -7,11 +7,8 @@ import { createReportFindingToolDefinition } from "../tools/report-finding.ts";
 import { createYieldToolDefinition } from "../tools/yield.ts";
 import {
 	applyHandoffToActiveState,
-	collapsePlanningPipeline,
-	formatWorkflowHudLine,
 	readWorkflowActiveState,
 	syncWorkflowActiveState,
-	type WorkflowActiveState,
 } from "../workflows/active-state.ts";
 import { deriveDeepInterviewHud } from "../workflows/deep-interview-hud.ts";
 import {
@@ -638,28 +635,10 @@ function syncMcpHudUi(ctx: ExtensionContext): void {
 	ctx.ui.setWidget("mcp", ["MCP", ...lines], { placement: "aboveEditor" });
 }
 
-async function syncWorkflowHudUi(ctx: ExtensionContext): Promise<void> {
-	const sessionId = ctx.sessionManager.getSessionId();
-	let active: WorkflowActiveState | undefined;
-	try {
-		active = await readWorkflowActiveState(ctx.cwd, sessionId ? { sessionId } : undefined);
-	} catch {
-		ctx.ui.setStatus("workflow", undefined);
-		ctx.ui.setWidget("workflow", undefined);
-		return;
-	}
-	const entries = active?.active_workflows ?? [];
-	if (entries.length === 0) {
-		ctx.ui.setStatus("workflow", undefined);
-		ctx.ui.setWidget("workflow", undefined);
-		return;
-	}
-	// Collapse the planning pipeline (DI → ralplan → ultragoal) to the most
-	// recent stage so the HUD doesn't show stale upstream skills.
-	const hudEntries = collapsePlanningPipeline(entries);
-	const lines = hudEntries.map(formatWorkflowHudLine);
-	ctx.ui.setStatus("workflow", lines[0]);
-	if (ctx.mode === "tui") ctx.ui.setWidget("workflow", ["Workflow", ...lines], { placement: "aboveEditor" });
+async function syncWorkflowHudUi(_ctx: ExtensionContext): Promise<void> {
+	// The workflow HUD now renders from StatusLineComponent's background-refreshed
+	// active-state cache. Keep these hook registrations for lifecycle coverage,
+	// but do not mirror workflow data into extension status/widget slots.
 }
 
 async function buildDeepInterviewContinuationPrompt(cwd: string, sessionId?: string): Promise<string | undefined> {

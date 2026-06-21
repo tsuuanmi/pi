@@ -32,6 +32,7 @@
 
 ### Changed
 
+- Enabled tmux extended keys in the default `pi --tmux` profile.
 - Simplified shell, clipboard, tool download, signal handling, self-update, and release code paths for Linux/macOS-only support.
 - Stopped publishing coding-agent docs and examples in the npm package.
 - Updated extension docs, examples, runtime help, trust prompts, and config labels to use the configured project config directory instead of hardcoded `.pi` paths.

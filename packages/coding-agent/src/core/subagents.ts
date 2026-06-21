@@ -270,6 +270,16 @@ export class SubagentManager {
 		return progress ? renderSubagentProgress(progress) : undefined;
 	}
 
+	/**
+	 * Count of currently-live (non-terminal) subagents: running plus paused. A
+	 * subagent enters `live` when its run starts and leaves when the run promise
+	 * settles (resolves or rejects); paused runs stay live until they are
+	 * resumed-and-resolved or cancelled.
+	 */
+	getActiveCount(): number {
+		return this.live.size;
+	}
+
 	private root(): string {
 		return join(this.services.cwd, ".pi", "workflows", "subagents");
 	}

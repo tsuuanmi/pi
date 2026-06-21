@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { syncWorkflowActiveState, type WorkflowHudSummary } from "./active-state.ts";
+import { syncWorkflowActiveState } from "./active-state.ts";
 import { ultragoalBriefPath, ultragoalGoalsPath, ultragoalLedgerPath, workflowStatePath } from "./paths.ts";
 import {
 	appendJsonl,
@@ -9,6 +9,7 @@ import {
 	writeJsonAtomic,
 	writeTextArtifact,
 } from "./state-writer.ts";
+import { buildUltragoalHud } from "./ultragoal-hud.ts";
 import { readWorkflowState, writeWorkflowState } from "./workflow-state.ts";
 
 export type UltragoalGoalStatus =
@@ -157,16 +158,6 @@ function normalizePlan(raw: unknown): UltragoalPlan {
 	};
 }
 
-function remainingGoalCount(status: UltragoalStatus): number {
-	return (
-		status.counts.pending +
-		status.counts.active +
-		status.counts.failed +
-		status.counts.blocked +
-		status.counts.review_blocked
-	);
-}
-
 function emptyCounts(): Record<UltragoalGoalStatus, number> {
 	return { pending: 0, active: 0, complete: 0, failed: 0, blocked: 0, review_blocked: 0, superseded: 0 };
 }
@@ -212,33 +203,6 @@ async function syncUltragoalState(cwd: string, status: UltragoalStatus, sessionI
 		},
 		sessionId ? { sessionId } : undefined,
 	);
-}
-
-function buildUltragoalHud(status: UltragoalStatus): WorkflowHudSummary {
-	return {
-		version: 1,
-		summary: status.currentGoal ? `${status.currentGoal.id}: ${status.currentGoal.title}` : status.status,
-		chips: [
-			{
-				label: "status",
-				value: status.status,
-				priority: 10,
-				severity:
-					status.status === "blocked" || status.status === "failed"
-						? "warning"
-						: status.status === "complete"
-							? "success"
-							: undefined,
-			},
-			{ label: "done", value: String(status.counts.complete), priority: 20 },
-			// "pending" = remaining (non-terminal) goals, not raw counts.pending.
-			// Without this, starting a goal (pending -> active) would drop the
-			// pending chip before done increments, making the HUD look stale.
-			{ label: "pending", value: String(remainingGoalCount(status)), priority: 30 },
-			...(status.currentGoal ? [{ label: "goal", value: status.currentGoal.id, priority: 5 }] : []),
-		],
-		updated_at: nowIso(),
-	};
 }
 
 async function readUltragoalPlan(cwd: string): Promise<UltragoalPlan | undefined> {
