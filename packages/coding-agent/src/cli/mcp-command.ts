@@ -12,10 +12,10 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { MCPClient } from "../mcp/client.ts";
-import { loadMCPConfigFile } from "../mcp/loader.ts";
-import { HttpTransport } from "../mcp/transports/http.ts";
-import { StdioTransport } from "../mcp/transports/stdio.ts";
+import { MCPClient } from "../core/mcp/client.ts";
+import { loadMCPConfigFile } from "../core/mcp/loader.ts";
+import { HttpTransport } from "../core/mcp/transports/http.ts";
+import { StdioTransport } from "../core/mcp/transports/stdio.ts";
 import type { MCPConfigFile, MCPServerConfig, MCPServerTransport } from "../mcp/types.ts";
 
 interface McpCommandResult {

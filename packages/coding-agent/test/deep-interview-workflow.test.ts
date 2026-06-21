@@ -2,18 +2,18 @@ import { readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { ExtensionAPI, ExtensionContext } from "../src/core/extensions/types.ts";
-import workflowsExtension from "../src/extensions/workflows.ts";
-import { formatWorkflowHudLine, readWorkflowActiveState } from "../src/workflows/active-state.ts";
+import type { ExtensionAPI, ExtensionContext } from "../src/api/types.ts";
+import workflowsExtension from "../src/extensions/workflow-tools.ts";
 import {
 	appendOrMergeDeepInterviewRound,
 	enrichDeepInterviewRoundScoring,
 	finalizeDeepInterviewSpecState,
 	planDeepInterviewQuestion,
 	readDeepInterviewStateCompact,
-} from "../src/workflows/deep-interview-runtime.ts";
-import { normalizeDeepInterviewEnvelope } from "../src/workflows/deep-interview-state.ts";
-import { readWorkflowState, writeWorkflowState } from "../src/workflows/workflow-state.ts";
+} from "../src/workflows/deep-interview/deep-interview-runtime.ts";
+import { normalizeDeepInterviewEnvelope } from "../src/workflows/deep-interview/deep-interview-state.ts";
+import { formatWorkflowHudLine, readWorkflowActiveState } from "../src/workflows/shared/active-state.ts";
+import { readWorkflowState, writeWorkflowState } from "../src/workflows/shared/workflow-state.ts";
 
 interface CapturedTool {
 	name: string;

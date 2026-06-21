@@ -7,8 +7,8 @@ import type { ImageContent } from "@earendil-works/pi-ai";
 import chalk from "chalk";
 import { resolve } from "path";
 import { resolveReadPath } from "../core/tools/path-utils.ts";
-import { formatDimensionNote, resizeImage } from "../utils/image-resize.ts";
-import { detectSupportedImageMimeTypeFromFile } from "../utils/mime.ts";
+import { formatDimensionNote, resizeImage } from "../utils/image/image-resize.ts";
+import { detectSupportedImageMimeTypeFromFile } from "../utils/image/mime.ts";
 
 export interface ProcessedFiles {
 	text: string;

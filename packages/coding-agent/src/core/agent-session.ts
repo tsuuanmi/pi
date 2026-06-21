@@ -33,12 +33,11 @@ import {
 	resetApiProviders,
 	streamSimple,
 } from "@earendil-works/pi-ai";
-import { MCPManager } from "../mcp/manager.ts";
-import type { MCPServerInfo } from "../mcp/types.ts";
-import { getThemeByName, theme } from "../modes/interactive/theme/theme.ts";
-import { stripFrontmatter } from "../utils/frontmatter.ts";
-import { resolvePath } from "../utils/paths.ts";
-import { sleep } from "../utils/sleep.ts";
+import type { MCPServerInfo } from "../api/types.ts";
+import { getThemeByName, theme } from "../theme/theme.ts";
+import { stripFrontmatter } from "../utils/fs/frontmatter.ts";
+import { resolvePath } from "../utils/fs/paths.ts";
+import { sleep } from "../utils/system/sleep.ts";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "./auth-guidance.ts";
 import { type BashResult, executeBashWithOperations } from "./bash-executor.ts";
 import {
@@ -81,6 +80,7 @@ import {
 	wrapRegisteredTools,
 } from "./extensions/index.ts";
 import { emitSessionShutdownEvent } from "./extensions/runner.ts";
+import { MCPManager } from "./mcp/manager.ts";
 import type { BashExecutionMessage, CustomMessage } from "./messages.ts";
 import type { ModelRegistry } from "./model-registry.ts";
 import { expandPromptTemplate, type PromptTemplate } from "./prompt-templates.ts";

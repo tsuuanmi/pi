@@ -9,11 +9,11 @@ import {
 	type TruncationResult,
 	truncateTail,
 } from "../../../core/tools/truncate.ts";
-import { stripAnsi } from "../../../utils/ansi.ts";
-import { theme } from "../theme/theme.ts";
+import { theme } from "../../../theme/theme.ts";
+import { keyHint, keyText } from "../../../ui/rendering/keybinding-hints.ts";
+import { truncateToVisualLines } from "../../../ui/rendering/visual-truncate.ts";
+import { stripAnsi } from "../../../utils/terminal/ansi.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
-import { keyHint, keyText } from "./keybinding-hints.ts";
-import { truncateToVisualLines } from "./visual-truncate.ts";
 
 // Preview line limit when not expanded (matches tool execution behavior)
 const PREVIEW_LINES = 20;

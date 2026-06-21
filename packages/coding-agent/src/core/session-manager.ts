@@ -17,8 +17,8 @@ import { readdir, stat } from "fs/promises";
 import { join, resolve } from "path";
 import { createInterface } from "readline";
 import { StringDecoder } from "string_decoder";
-import { getAgentDir as getDefaultAgentDir, getSessionsDir } from "../config.ts";
-import { normalizePath, resolvePath } from "../utils/paths.ts";
+import { normalizePath, resolvePath } from "../utils/fs/paths.ts";
+import { getAgentDir as getDefaultAgentDir, getSessionsDir } from "./config.ts";
 import {
 	type BashExecutionMessage,
 	type CustomMessage,

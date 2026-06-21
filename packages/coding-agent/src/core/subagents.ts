@@ -3,11 +3,11 @@ import { appendFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs
 import { dirname, join } from "node:path";
 import type { AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core";
 import type { Api, AssistantMessage, Model } from "@earendil-works/pi-ai";
-import { extractYieldFromMessages, type YieldDetails } from "../tools/yield.ts";
+import type { ExtensionUIContext } from "../api/types.ts";
+import { extractYieldFromMessages, type YieldDetails } from "../workflows/harness-tools/yield.ts";
 import { type AgentProfile, loadAgentProfile } from "./agent-profiles.ts";
 import type { AgentSession } from "./agent-session.ts";
 import { type AgentSessionServices, createAgentSessionFromServices } from "./agent-session-services.ts";
-import type { ExtensionUIContext } from "./extensions/types.ts";
 import { SessionManager } from "./session-manager.ts";
 import { renderSubagentProgress, type SubagentProgress, SubagentProgressTracker } from "./subagent-progress.ts";
 import { withFileMutationQueue } from "./tools/file-mutation-queue.ts";

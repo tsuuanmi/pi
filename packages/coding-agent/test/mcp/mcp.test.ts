@@ -7,15 +7,15 @@ import { createServer, type Server, type ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { MCPClient } from "../../src/mcp/client.ts";
+import { MCPClient } from "../../src/core/mcp/client.ts";
 import {
 	isServerNameAmbiguous,
 	loadMCPConfigFile,
 	loadMCPConfigs,
 	sanitizeServerName,
 	validateMCPConfig,
-} from "../../src/mcp/loader.ts";
-import { MCPManager } from "../../src/mcp/manager.ts";
+} from "../../src/core/mcp/loader.ts";
+import { MCPManager } from "../../src/core/mcp/manager.ts";
 import {
 	createMcpToolDefinitions,
 	isMcpToolName,
@@ -24,9 +24,9 @@ import {
 	mcpToolName,
 	parseMcpToolName,
 	truncateMcpResult,
-} from "../../src/mcp/tool-bridge.ts";
-import { HttpTransport, parseSseEvents } from "../../src/mcp/transports/http.ts";
-import { StdioTransport } from "../../src/mcp/transports/stdio.ts";
+} from "../../src/core/mcp/tool-bridge.ts";
+import { HttpTransport, parseSseEvents } from "../../src/core/mcp/transports/http.ts";
+import { StdioTransport } from "../../src/core/mcp/transports/stdio.ts";
 import {
 	type JsonRpcNotification,
 	type JsonRpcRequest,

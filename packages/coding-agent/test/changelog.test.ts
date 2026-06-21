@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { type ChangelogEntry, normalizeChangelogLinks } from "../src/utils/changelog.ts";
+import { type ChangelogEntry, normalizeChangelogLinks } from "../src/utils/system/changelog.ts";
 
 const entry: ChangelogEntry = {
 	major: 0,

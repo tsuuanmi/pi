@@ -11,10 +11,10 @@ import {
 } from "@earendil-works/pi-tui";
 import type { ModelRegistry } from "../../../core/model-registry.ts";
 import type { SettingsManager } from "../../../core/settings-manager.ts";
+import { theme } from "../../../theme/theme.ts";
+import { keyHint } from "../../../ui/rendering/keybinding-hints.ts";
 import { getModelSearchText } from "../model-search.ts";
-import { theme } from "../theme/theme.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
-import { keyHint } from "./keybinding-hints.ts";
 
 interface ModelItem {
 	provider: string;

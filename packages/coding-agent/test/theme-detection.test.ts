@@ -5,7 +5,7 @@ import {
 	detectTerminalBackgroundTheme,
 	getThemeByName,
 	getThemeForRgbColor,
-} from "../src/modes/interactive/theme/theme.ts";
+} from "../src/theme/theme.ts";
 
 afterEach(() => {
 	resetCapabilitiesCache();

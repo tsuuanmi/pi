@@ -1,7 +1,7 @@
 import { resetCapabilitiesCache, setCapabilities } from "@earendil-works/pi-tui";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { highlightCode, initTheme } from "../src/modes/interactive/theme/theme.ts";
-import { highlight, renderHighlightedHtml, supportsLanguage } from "../src/utils/syntax-highlight.ts";
+import { highlightCode, initTheme } from "../src/theme/theme.ts";
+import { highlight, renderHighlightedHtml, supportsLanguage } from "../src/utils/terminal/syntax-highlight.ts";
 
 describe("syntax highlight renderer", () => {
 	it("renders highlighted spans with the provided theme", () => {

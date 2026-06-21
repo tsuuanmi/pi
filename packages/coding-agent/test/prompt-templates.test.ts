@@ -12,7 +12,7 @@ import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { afterAll, describe, expect, test } from "vitest";
-import { getAgentDir } from "../src/config.ts";
+import { getAgentDir } from "../src/core/config.ts";
 import {
 	expandPromptTemplate,
 	loadPromptTemplates,

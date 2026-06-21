@@ -3,17 +3,17 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { SubagentRunResult } from "../src/core/subagents.ts";
-import { readWorkflowActiveState } from "../src/workflows/active-state.ts";
-import { ralplanIndexPath } from "../src/workflows/paths.ts";
-import { ralplanRoleForStage, runRalplanAgent } from "../src/workflows/ralplan-agents.ts";
+import { ralplanRoleForStage, runRalplanAgent } from "../src/workflows/ralplan/ralplan-agents.ts";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
 	readRalplanCompactStatus,
 	readRalplanStatus,
 	writeRalplanArtifact,
-} from "../src/workflows/ralplan-runtime.ts";
-import { readWorkflowState } from "../src/workflows/workflow-state.ts";
+} from "../src/workflows/ralplan/ralplan-runtime.ts";
+import { readWorkflowActiveState } from "../src/workflows/shared/active-state.ts";
+import { ralplanIndexPath } from "../src/workflows/shared/paths.ts";
+import { readWorkflowState } from "../src/workflows/shared/workflow-state.ts";
 
 describe("ralplan workflow runtime", () => {
 	let cwd: string;

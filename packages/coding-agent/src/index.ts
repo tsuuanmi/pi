@@ -1,17 +1,6 @@
 // Core session management
 
 export { type Args, parseArgs } from "./cli/args.ts";
-
-// Config paths
-export {
-	CONFIG_DIR_NAME,
-	getAgentDir,
-	getDocsPath,
-	getExamplesPath,
-	getPackageDir,
-	getReadmePath,
-	VERSION,
-} from "./config.ts";
 export {
 	AgentSession,
 	type AgentSessionConfig,
@@ -57,6 +46,16 @@ export {
 	serializeConversation,
 	shouldCompact,
 } from "./core/compaction/index.ts";
+// Config paths
+export {
+	CONFIG_DIR_NAME,
+	getAgentDir,
+	getDocsPath,
+	getExamplesPath,
+	getPackageDir,
+	getReadmePath,
+	VERSION,
+} from "./core/config.ts";
 export { createEventBus, type EventBus, type EventBusController } from "./core/event-bus.ts";
 // Extension system
 export type {
@@ -386,11 +385,11 @@ export {
 	initTheme,
 	Theme,
 	type ThemeColor,
-} from "./modes/interactive/theme/theme.ts";
+} from "./theme/theme.ts";
 // Clipboard utilities
-export { copyToClipboard } from "./utils/clipboard.ts";
-export { parseFrontmatter, stripFrontmatter } from "./utils/frontmatter.ts";
-export { convertToPng } from "./utils/image-convert.ts";
-export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
+export { copyToClipboard } from "./utils/clipboard/clipboard.ts";
+export { parseFrontmatter, stripFrontmatter } from "./utils/fs/frontmatter.ts";
+export { convertToPng } from "./utils/image/image-convert.ts";
+export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image/image-resize.ts";
 // Shell utilities
-export { getShellConfig } from "./utils/shell.ts";
+export { getShellConfig } from "./utils/system/shell.ts";

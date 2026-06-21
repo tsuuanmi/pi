@@ -5,8 +5,8 @@ import { KeybindingsManager } from "../src/core/keybindings.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../src/core/provider-display-names.ts";
 import { OAuthSelectorComponent } from "../src/modes/interactive/components/oauth-selector.ts";
 import { isApiKeyAccountProvider } from "../src/modes/interactive/interactive-mode.ts";
-import { initTheme } from "../src/modes/interactive/theme/theme.ts";
-import { stripAnsi } from "../src/utils/ansi.ts";
+import { initTheme } from "../src/theme/theme.ts";
+import { stripAnsi } from "../src/utils/terminal/ansi.ts";
 
 const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
 

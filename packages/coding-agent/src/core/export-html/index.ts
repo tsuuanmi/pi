@@ -1,10 +1,10 @@
 import type { AgentState } from "@earendil-works/pi-agent-core";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { basename, join } from "path";
-import { APP_NAME, getExportTemplateDir } from "../../config.ts";
-import { getResolvedThemeColors, getThemeExportColors } from "../../modes/interactive/theme/theme.ts";
-import { normalizePath } from "../../utils/paths.ts";
-import type { ToolDefinition } from "../extensions/types.ts";
+import type { ToolDefinition } from "../../api/types.ts";
+import { getResolvedThemeColors, getThemeExportColors } from "../../theme/theme.ts";
+import { normalizePath } from "../../utils/fs/paths.ts";
+import { APP_NAME, getExportTemplateDir } from "../config.ts";
 import type { SessionEntry, SessionManager } from "../session-manager.ts";
 
 /**

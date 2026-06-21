@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createGithubToolDefinition } from "../src/tools/github.ts";
+import { createGithubToolDefinition } from "../src/workflows/harness-tools/github.ts";
 
 describe("github tool", () => {
 	it("registers the expected tool metadata", () => {

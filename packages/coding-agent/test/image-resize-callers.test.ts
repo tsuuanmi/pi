@@ -3,14 +3,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../src/utils/image-resize.js", () => ({
+vi.mock("../src/utils/image/image-resize.js", () => ({
+	convertToPng: vi.fn(),
 	resizeImage: vi.fn(),
 	formatDimensionNote: vi.fn(() => undefined),
 }));
 
 import { processFileArguments } from "../src/cli/file-processor.ts";
 import { createReadTool } from "../src/core/tools/read.ts";
-import { resizeImage } from "../src/utils/image-resize.ts";
+import { resizeImage } from "../src/utils/image/image-resize.ts";
 
 const TINY_PNG_BASE64 =
 	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==";

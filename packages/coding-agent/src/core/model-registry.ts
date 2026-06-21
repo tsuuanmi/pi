@@ -24,10 +24,10 @@ import { join } from "path";
 import { type Static, Type } from "typebox";
 import { Compile } from "typebox/compile";
 import type { TLocalizedValidationError } from "typebox/error";
-import { getAgentDir } from "../config.ts";
-import { stripJsonComments } from "../utils/json.ts";
-import { normalizePath } from "../utils/paths.ts";
+import { stripJsonComments } from "../utils/fs/json.ts";
+import { normalizePath } from "../utils/fs/paths.ts";
 import type { AuthStatus, AuthStorage } from "./auth-storage.ts";
+import { getAgentDir } from "./config.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "./provider-display-names.ts";
 import {
 	clearConfigValueCache,

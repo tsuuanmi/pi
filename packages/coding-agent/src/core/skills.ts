@@ -1,9 +1,9 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import ignore from "ignore";
 import { basename, dirname, join, relative, resolve, sep } from "path";
-import { CONFIG_DIR_NAME, getAgentDir } from "../config.ts";
-import { parseFrontmatter } from "../utils/frontmatter.ts";
-import { canonicalizePath, resolvePath } from "../utils/paths.ts";
+import { parseFrontmatter } from "../utils/fs/frontmatter.ts";
+import { canonicalizePath, resolvePath } from "../utils/fs/paths.ts";
+import { CONFIG_DIR_NAME, getAgentDir } from "./config.ts";
 import type { ResourceDiagnostic } from "./diagnostics.ts";
 import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.ts";
 

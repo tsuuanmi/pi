@@ -1,5 +1,6 @@
 import { Markdown, type MarkdownTheme } from "@earendil-works/pi-tui";
 import chalk from "chalk";
+import type { ExtensionFactory } from "./api/types.ts";
 import { selectConfig } from "./cli/config-selector.ts";
 import { createProjectTrustContext } from "./cli/project-trust.ts";
 import {
@@ -11,15 +12,14 @@ import {
 	PACKAGE_NAME,
 	type SelfUpdateCommand,
 	VERSION,
-} from "./config.ts";
-import type { ExtensionFactory } from "./core/extensions/types.ts";
+} from "./core/config.ts";
 import { DefaultPackageManager } from "./core/package-manager.ts";
 import { type AppMode, resolveProjectTrusted } from "./core/project-trust.ts";
 import { DefaultResourceLoader } from "./core/resource-loader.ts";
 import { SettingsManager } from "./core/settings-manager.ts";
 import { hasTrustRequiringProjectResources, ProjectTrustStore } from "./core/trust-manager.ts";
-import { spawnProcess } from "./utils/child-process.ts";
-import { getLatestPiRelease, isNewerPackageVersion } from "./utils/version-check.ts";
+import { spawnProcess } from "./utils/fs/child-process.ts";
+import { getLatestPiRelease, isNewerPackageVersion } from "./utils/system/version-check.ts";
 
 export type PackageCommand = "install" | "remove" | "update" | "list";
 

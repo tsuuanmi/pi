@@ -1,16 +1,16 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 import chalk from "chalk";
-import { CONFIG_DIR_NAME, getPackageDir } from "../config.ts";
-import { loadThemeFromPath, type Theme } from "../modes/interactive/theme/theme.ts";
+import { loadThemeFromPath, type Theme } from "../theme/theme.ts";
+import { CONFIG_DIR_NAME, getPackageDir } from "./config.ts";
 import type { ResourceDiagnostic } from "./diagnostics.ts";
 
 export type { ResourceCollision, ResourceDiagnostic } from "./diagnostics.ts";
 
-import { canonicalizePath, isLocalPath, resolvePath } from "../utils/paths.ts";
+import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "../api/types.ts";
+import { canonicalizePath, isLocalPath, resolvePath } from "../utils/fs/paths.ts";
 import { createEventBus, type EventBus } from "./event-bus.ts";
 import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "./extensions/loader.ts";
-import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "./extensions/types.ts";
 import { DefaultPackageManager, type PathMetadata, type ResolvedResource } from "./package-manager.ts";
 import type { PromptTemplate } from "./prompt-templates.ts";
 import { loadPromptTemplates } from "./prompt-templates.ts";
@@ -386,7 +386,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 		const cliEnabledPrompts = getEnabledPaths(cliExtensionPaths.prompts);
 		const cliEnabledThemes = getEnabledPaths(cliExtensionPaths.themes);
 
-		const builtInExtensionPaths = this.getBuiltInResourcePaths("extensions", "workflows");
+		const builtInExtensionPaths = this.getBuiltInResourcePaths("extensions", "workflow-tools");
 		const extensionPaths = this.noExtensions
 			? cliEnabledExtensions
 			: this.mergePaths([...cliEnabledExtensions, ...builtInExtensionPaths], enabledExtensions);

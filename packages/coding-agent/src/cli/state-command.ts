@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
-import { readWorkflowActiveState, syncWorkflowActiveState } from "../workflows/active-state.ts";
-import { type WorkflowSkill, workflowStatePath } from "../workflows/paths.ts";
-import { assertWorkflowSkill, isWorkflowSkill } from "../workflows/state-schema.ts";
-import { clearWorkflowState, readWorkflowState, writeWorkflowState } from "../workflows/workflow-state.ts";
+import { readWorkflowActiveState, syncWorkflowActiveState } from "../workflows/shared/active-state.ts";
+import { type WorkflowSkill, workflowStatePath } from "../workflows/shared/paths.ts";
+import { assertWorkflowSkill, isWorkflowSkill } from "../workflows/shared/state-schema.ts";
+import { clearWorkflowState, readWorkflowState, writeWorkflowState } from "../workflows/shared/workflow-state.ts";
 
 interface StateCommandResult {
 	status: number;

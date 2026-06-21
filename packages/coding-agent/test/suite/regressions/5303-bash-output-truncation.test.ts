@@ -1,7 +1,7 @@
 import type { ChildProcessByStdio } from "node:child_process";
 import type { Readable } from "node:stream";
 import { afterEach, describe, expect, it } from "vitest";
-import { spawnProcess, waitForChildProcess } from "../../../src/utils/child-process.ts";
+import { spawnProcess, waitForChildProcess } from "../../../src/utils/fs/child-process.ts";
 
 /**
  * Regression test for https://github.com/earendil-works/pi/issues/5303

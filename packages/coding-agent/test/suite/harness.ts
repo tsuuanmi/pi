@@ -22,7 +22,7 @@ import {
 	type CreateTestExtensionsResultInput,
 	createTestExtensionsResult,
 	createTestResourceLoader,
-} from "../utilities.ts";
+} from "../test-utils.ts";
 
 type MessageTextPart = { type: "text"; text: string };
 

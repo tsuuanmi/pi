@@ -10,8 +10,8 @@ import { convertToLlm } from "../../../src/core/messages.ts";
 import { ModelRegistry } from "../../../src/core/model-registry.ts";
 import { SessionManager } from "../../../src/core/session-manager.ts";
 import { SettingsManager } from "../../../src/core/settings-manager.ts";
-import { initTheme } from "../../../src/modes/interactive/theme/theme.ts";
-import { createTestResourceLoader } from "../../utilities.ts";
+import { initTheme } from "../../../src/theme/theme.ts";
+import { createTestResourceLoader } from "../../test-utils.ts";
 
 describe("regression #5596: missing configured theme export", () => {
 	const cleanups: Array<() => void> = [];

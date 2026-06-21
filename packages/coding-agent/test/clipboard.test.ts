@@ -1,7 +1,7 @@
 import { execSync, spawn } from "child_process";
 import { platform } from "os";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { copyToClipboard } from "../src/utils/clipboard.ts";
+import { copyToClipboard } from "../src/utils/clipboard/clipboard.ts";
 
 const mocks = vi.hoisted(() => {
 	return {
@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => {
 	};
 });
 
-vi.mock("../src/utils/clipboard-native.js", () => {
+vi.mock("../src/utils/clipboard/clipboard-native.js", () => {
 	return {
 		clipboard: mocks.clipboard,
 	};
@@ -34,7 +34,7 @@ vi.mock("os", () => {
 	};
 });
 
-vi.mock("../src/utils/clipboard-image.js", () => {
+vi.mock("../src/utils/image/clipboard-image.js", () => {
 	return {
 		isWaylandSession: mocks.isWaylandSession,
 	};

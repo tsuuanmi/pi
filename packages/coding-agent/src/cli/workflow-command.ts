@@ -1,14 +1,9 @@
 import { execFileSync, spawn } from "node:child_process";
-import { callEndpoint } from "../harness-control-plane/control-endpoint.ts";
-import type { GcContext } from "../harness-control-plane/gc-adapter.ts";
-import {
-	collectGcReport,
-	computeGcExitCode,
-	gcPidProbe,
-	HarnessLeasesGcStoreAdapter,
-} from "../harness-control-plane/gc-adapter.ts";
-import { mutateRuntimeSession } from "../harness-control-plane/mutation.ts";
-import { operate } from "../harness-control-plane/operate.ts";
+import { callEndpoint } from "../harness-runtime/endpoint.ts";
+import type { GcContext } from "../harness-runtime/gc.ts";
+import { collectGcReport, computeGcExitCode, gcPidProbe, HarnessLeasesGcStoreAdapter } from "../harness-runtime/gc.ts";
+import { mutateRuntimeSession } from "../harness-runtime/mutation.ts";
+import { RuntimeOwner, resolveOwner } from "../harness-runtime/owner.ts";
 import {
 	buildClassificationInput,
 	buildWorkspaceMarker,
@@ -16,10 +11,10 @@ import {
 	finalizePrimitive,
 	recoverPrimitive,
 	validatePrimitive,
-} from "../harness-control-plane/operations.ts";
-import { RuntimeOwner, resolveOwner } from "../harness-control-plane/owner.ts";
-import { type HarnessRpc, PiRpc } from "../harness-control-plane/rpc-adapter.ts";
-import { buildResponse, submitUnavailableReason } from "../harness-control-plane/state-machine.ts";
+} from "../harness-runtime/primitives.ts";
+import { type HarnessRpc, PiRpc } from "../harness-runtime/rpc.ts";
+import { operate } from "../harness-runtime/runner.ts";
+import { buildResponse, submitUnavailableReason } from "../harness-runtime/state.ts";
 import {
 	canonicalWorkspacePath,
 	defaultRepoName,
@@ -31,13 +26,13 @@ import {
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "../harness-control-plane/storage.ts";
+} from "../harness-runtime/storage.ts";
 import {
 	type Observation,
 	SESSION_SCHEMA_VERSION,
 	type SessionHandle,
 	type SessionState,
-} from "../harness-control-plane/types.ts";
+} from "../harness-runtime/types.ts";
 import { runStateCommand } from "./state-command.ts";
 
 interface WorkflowCommandResult {

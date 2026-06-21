@@ -1,5 +1,5 @@
 import { isAbsolute, relative, resolve, sep } from "node:path";
-import { type ThemeColor, theme } from "../../theme/theme.ts";
+import { type ThemeColor, theme } from "../../../../theme/theme.ts";
 import { getContextUsageLevel, getContextUsageThemeColor } from "./context-thresholds.ts";
 import type { RenderedSegment, SegmentContext, StatusLineSegment, StatusLineSegmentId } from "./types.ts";
 

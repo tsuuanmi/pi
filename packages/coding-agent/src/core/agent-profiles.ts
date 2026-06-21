@@ -2,8 +2,8 @@ import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
 import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
-import { CONFIG_DIR_NAME } from "../config.ts";
-import { stripJsonComments } from "../utils/json.ts";
+import { stripJsonComments } from "../utils/fs/json.ts";
+import { CONFIG_DIR_NAME } from "./config.ts";
 import type { SettingsManager } from "./settings-manager.ts";
 
 export interface AgentProfile {

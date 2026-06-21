@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "../src/cli/workflow-command.ts";
-import { buildResponse } from "../src/harness-control-plane/state-machine.ts";
+import { buildResponse } from "../src/harness-runtime/state.ts";
 import {
 	generateSessionId,
 	readRuntimeReceipts,
@@ -11,15 +11,15 @@ import {
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "../src/harness-control-plane/storage.ts";
-import { SESSION_SCHEMA_VERSION, type SessionState } from "../src/harness-control-plane/types.ts";
+} from "../src/harness-runtime/storage.ts";
+import { SESSION_SCHEMA_VERSION, type SessionState } from "../src/harness-runtime/types.ts";
 import {
 	appendJsonlIdempotent,
 	readExistingStateForMutation,
 	readFileOrLiteral,
 	writeTextArtifact,
-} from "../src/workflows/state-writer.ts";
-import { readWorkflowState, writeWorkflowState } from "../src/workflows/workflow-state.ts";
+} from "../src/workflows/shared/state-writer.ts";
+import { readWorkflowState, writeWorkflowState } from "../src/workflows/shared/workflow-state.ts";
 
 describe("workflow runtime", () => {
 	let cwd: string;

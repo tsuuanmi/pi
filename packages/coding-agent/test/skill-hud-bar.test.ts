@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderSkillHudBar } from "../src/modes/interactive/components/skill-hud/render.ts";
-import { collapsePlanningPipeline, type WorkflowActiveEntry } from "../src/workflows/active-state.ts";
+import { collapsePlanningPipeline, type WorkflowActiveEntry } from "../src/workflows/shared/active-state.ts";
 
 const ANSI_PATTERN = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 function stripAnsiLocal(text: string): string {

@@ -14,7 +14,7 @@ import {
 	createReadTool,
 	createWriteTool,
 } from "../src/index.ts";
-import * as shellModule from "../src/utils/shell.ts";
+import * as shellModule from "../src/utils/system/shell.ts";
 
 const readTool = createReadTool(process.cwd());
 const writeTool = createWriteTool(process.cwd());

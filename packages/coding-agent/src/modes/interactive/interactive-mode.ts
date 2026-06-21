@@ -50,6 +50,8 @@ import {
 } from "@earendil-works/pi-tui";
 import chalk from "chalk";
 import { spawn, spawnSync } from "child_process";
+import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "../../core/agent-session.ts";
+import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "../../core/agent-session-runtime.ts";
 import {
 	APP_NAME,
 	APP_TITLE,
@@ -59,9 +61,7 @@ import {
 	getDebugLogPath,
 	getShareViewerUrl,
 	VERSION,
-} from "../../config.ts";
-import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "../../core/agent-session.ts";
-import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "../../core/agent-session-runtime.ts";
+} from "../../core/config.ts";
 import type {
 	AutocompleteProviderFactory,
 	EditorFactory,
@@ -89,43 +89,6 @@ import type { SourceInfo } from "../../core/source-info.ts";
 import { isInstallTelemetryEnabled } from "../../core/telemetry.ts";
 import type { TruncationResult } from "../../core/tools/truncate.ts";
 import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../../core/trust-manager.ts";
-import { getChangelogPath, getNewEntries, normalizeChangelogLinks, parseChangelog } from "../../utils/changelog.ts";
-import { copyToClipboard } from "../../utils/clipboard.ts";
-import { extensionForImageMimeType, readClipboardImage } from "../../utils/clipboard-image.ts";
-import { parseGitUrl } from "../../utils/git.ts";
-import { stripJsonComments } from "../../utils/json.ts";
-import { getCwdRelativePath } from "../../utils/paths.ts";
-import { getPiUserAgent } from "../../utils/pi-user-agent.ts";
-import { killTrackedDetachedChildren } from "../../utils/shell.ts";
-import { ensureTool } from "../../utils/tools-manager.ts";
-import { checkForNewPiVersion, type LatestPiRelease } from "../../utils/version-check.ts";
-import { AccountSelectorComponent, type AccountSelectorOption } from "./components/account-selector.ts";
-import { AssistantMessageComponent } from "./components/assistant-message.ts";
-import { BashExecutionComponent } from "./components/bash-execution.ts";
-import { BorderedLoader } from "./components/bordered-loader.ts";
-import { BranchSummaryMessageComponent } from "./components/branch-summary-message.ts";
-import { CompactionSummaryMessageComponent } from "./components/compaction-summary-message.ts";
-import { CountdownTimer } from "./components/countdown-timer.ts";
-import { CustomEditor } from "./components/custom-editor.ts";
-import { CustomMessageComponent } from "./components/custom-message.ts";
-import { DynamicBorder } from "./components/dynamic-border.ts";
-import { ExtensionEditorComponent } from "./components/extension-editor.ts";
-import { ExtensionInputComponent } from "./components/extension-input.ts";
-import { ExtensionSelectorComponent } from "./components/extension-selector.ts";
-import { formatKeyText, keyDisplayText, keyHint, keyText, rawKeyHint } from "./components/keybinding-hints.ts";
-import { LoginDialogComponent } from "./components/login-dialog.ts";
-import { ModelSelectorComponent } from "./components/model-selector.ts";
-import { type AuthSelectorProvider, OAuthSelectorComponent } from "./components/oauth-selector.ts";
-import { SessionSelectorComponent } from "./components/session-selector.ts";
-import { SettingsSelectorComponent } from "./components/settings-selector.ts";
-import { SkillInvocationMessageComponent } from "./components/skill-invocation-message.ts";
-import { StatusLineComponent } from "./components/status-line/index.ts";
-import { ToolExecutionComponent } from "./components/tool-execution.ts";
-import { TreeSelectorComponent } from "./components/tree-selector.ts";
-import { TrustSelectorComponent } from "./components/trust-selector.ts";
-import { UserMessageComponent } from "./components/user-message.ts";
-import { UserMessageSelectorComponent } from "./components/user-message-selector.ts";
-import { getModelSearchText } from "./model-search.ts";
 import {
 	detectTerminalBackgroundTheme,
 	getAvailableThemes,
@@ -142,7 +105,49 @@ import {
 	Theme,
 	type ThemeColor,
 	theme,
-} from "./theme/theme.ts";
+} from "../../theme/theme.ts";
+import { formatKeyText, keyDisplayText, keyHint, keyText, rawKeyHint } from "../../ui/rendering/keybinding-hints.ts";
+import { copyToClipboard } from "../../utils/clipboard/clipboard.ts";
+import { parseGitUrl } from "../../utils/fs/git.ts";
+import { stripJsonComments } from "../../utils/fs/json.ts";
+import { getCwdRelativePath } from "../../utils/fs/paths.ts";
+import { extensionForImageMimeType, readClipboardImage } from "../../utils/image/clipboard-image.ts";
+import {
+	getChangelogPath,
+	getNewEntries,
+	normalizeChangelogLinks,
+	parseChangelog,
+} from "../../utils/system/changelog.ts";
+import { getPiUserAgent } from "../../utils/system/pi-user-agent.ts";
+import { killTrackedDetachedChildren } from "../../utils/system/shell.ts";
+import { ensureTool } from "../../utils/system/tool-installer.ts";
+import { checkForNewPiVersion, type LatestPiRelease } from "../../utils/system/version-check.ts";
+import { AccountSelectorComponent, type AccountSelectorOption } from "./components/account-selector.ts";
+import { AssistantMessageComponent } from "./components/assistant-message.ts";
+import { BashExecutionComponent } from "./components/bash-execution.ts";
+import { BorderedLoader } from "./components/bordered-loader.ts";
+import { BranchSummaryMessageComponent } from "./components/branch-summary-message.ts";
+import { CompactionSummaryMessageComponent } from "./components/compaction-summary-message.ts";
+import { CountdownTimer } from "./components/countdown-timer.ts";
+import { CustomEditor } from "./components/custom-editor.ts";
+import { CustomMessageComponent } from "./components/custom-message.ts";
+import { DynamicBorder } from "./components/dynamic-border.ts";
+import { ExtensionEditorComponent } from "./components/extension-editor.ts";
+import { ExtensionInputComponent } from "./components/extension-input.ts";
+import { ExtensionSelectorComponent } from "./components/extension-selector.ts";
+import { LoginDialogComponent } from "./components/login-dialog.ts";
+import { ModelSelectorComponent } from "./components/model-selector.ts";
+import { type AuthSelectorProvider, OAuthSelectorComponent } from "./components/oauth-selector.ts";
+import { SessionSelectorComponent } from "./components/session-selector.ts";
+import { SettingsSelectorComponent } from "./components/settings-selector.ts";
+import { SkillInvocationMessageComponent } from "./components/skill-invocation-message.ts";
+import { StatusLineComponent } from "./components/status-line/index.ts";
+import { ToolExecutionComponent } from "./components/tool-execution.ts";
+import { TreeSelectorComponent } from "./components/tree-selector.ts";
+import { TrustSelectorComponent } from "./components/trust-selector.ts";
+import { UserMessageComponent } from "./components/user-message.ts";
+import { UserMessageSelectorComponent } from "./components/user-message-selector.ts";
+import { getModelSearchText } from "./model-search.ts";
 
 /** Interface for components that can be expanded/collapsed */
 interface Expandable {

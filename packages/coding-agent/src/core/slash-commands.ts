@@ -1,4 +1,4 @@
-import { APP_NAME } from "../config.ts";
+import { APP_NAME } from "./config.ts";
 import type { SourceInfo } from "./source-info.ts";
 
 export type SlashCommandSource = "extension" | "prompt" | "skill";

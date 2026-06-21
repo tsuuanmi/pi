@@ -2,7 +2,8 @@ import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { readWorkflowActiveState } from "../src/workflows/active-state.ts";
+import { readWorkflowActiveState } from "../src/workflows/shared/active-state.ts";
+import { readWorkflowState } from "../src/workflows/shared/workflow-state.ts";
 import {
 	completeTeam,
 	createTeamTask,
@@ -11,15 +12,14 @@ import {
 	sendTeamMessage,
 	startTeam,
 	transitionTeamTask,
-} from "../src/workflows/team-runtime.ts";
+} from "../src/workflows/team/team-runtime.ts";
 import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
 	getUltragoalStatus,
 	readUltragoalCompact,
 	startNextUltragoalGoal,
-} from "../src/workflows/ultragoal-runtime.ts";
-import { readWorkflowState } from "../src/workflows/workflow-state.ts";
+} from "../src/workflows/ultragoal/ultragoal-runtime.ts";
 
 describe("team workflow runtime", () => {
 	let cwd: string;

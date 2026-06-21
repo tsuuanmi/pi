@@ -1,4 +1,4 @@
-import type { ThemeColor } from "../../theme/theme.ts";
+import type { ThemeColor } from "../../../../theme/theme.ts";
 
 export type ContextUsageLevel = "normal" | "warning" | "purple" | "error";
 

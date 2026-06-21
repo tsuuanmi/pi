@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { APP_NAME } from "../config.ts";
+import { APP_NAME } from "../core/config.ts";
 
 process.title = APP_NAME;
 process.emitWarning = (() => {}) as typeof process.emitWarning;

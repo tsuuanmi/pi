@@ -7,9 +7,9 @@ import type { AgentSession } from "../src/core/agent-session.ts";
 import type { ReadonlyFooterDataProvider } from "../src/core/footer-data-provider.ts";
 import type { SettingsManager, StatusLineSettings } from "../src/core/settings-manager.ts";
 import { StatusLineComponent } from "../src/modes/interactive/components/status-line/index.ts";
-import { initTheme } from "../src/modes/interactive/theme/theme.ts";
-import { stripAnsi } from "../src/utils/ansi.ts";
-import { syncWorkflowActiveState } from "../src/workflows/active-state.ts";
+import { initTheme } from "../src/theme/theme.ts";
+import { stripAnsi } from "../src/utils/terminal/ansi.ts";
+import { syncWorkflowActiveState } from "../src/workflows/shared/active-state.ts";
 
 beforeAll(() => {
 	initTheme("dark");

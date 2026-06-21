@@ -7,14 +7,14 @@ import {
 	readWorkflowActiveState,
 	syncWorkflowActiveState,
 	type WorkflowActiveEntry,
-} from "../src/workflows/active-state.ts";
-import type { WorkflowSkill } from "../src/workflows/paths.ts";
+} from "../src/workflows/shared/active-state.ts";
+import type { WorkflowSkill } from "../src/workflows/shared/paths.ts";
 import {
 	createWorkflowReceipt,
 	isEntryStale,
 	WORKFLOW_RECEIPT_FRESH_MS,
 	workflowReceiptStatus,
-} from "../src/workflows/state-writer.ts";
+} from "../src/workflows/shared/state-writer.ts";
 
 describe("receipt freshness and staleness", () => {
 	it("createWorkflowReceipt includes fresh_until and status", () => {

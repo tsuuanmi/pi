@@ -9,8 +9,8 @@ import {
 	sanitizeStatusText,
 } from "../src/modes/interactive/components/status-line/segments.ts";
 import type { SegmentContext } from "../src/modes/interactive/components/status-line/types.ts";
-import { initTheme } from "../src/modes/interactive/theme/theme.ts";
-import { stripAnsi } from "../src/utils/ansi.ts";
+import { initTheme } from "../src/theme/theme.ts";
+import { stripAnsi } from "../src/utils/terminal/ansi.ts";
 
 beforeAll(() => {
 	initTheme("dark");

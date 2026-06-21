@@ -1,4 +1,8 @@
 // UI Components for extensions
+
+export { type RenderDiffOptions, renderDiff } from "../../../ui/rendering/diff.ts";
+export { keyHint, keyText, rawKeyHint } from "../../../ui/rendering/keybinding-hints.ts";
+export { truncateToVisualLines, type VisualTruncateResult } from "../../../ui/rendering/visual-truncate.ts";
 export type { AccountSelectorOption } from "./account-selector.ts";
 export { AssistantMessageComponent } from "./assistant-message.ts";
 export { BashExecutionComponent } from "./bash-execution.ts";
@@ -7,7 +11,6 @@ export { BranchSummaryMessageComponent } from "./branch-summary-message.ts";
 export { CompactionSummaryMessageComponent } from "./compaction-summary-message.ts";
 export { CustomEditor } from "./custom-editor.ts";
 export { CustomMessageComponent } from "./custom-message.ts";
-export { type RenderDiffOptions, renderDiff } from "./diff.ts";
 export { DynamicBorder } from "./dynamic-border.ts";
 export { ExtensionEditorComponent } from "./extension-editor.ts";
 export { ExtensionInputComponent } from "./extension-input.ts";
@@ -16,7 +19,6 @@ export type {
 	FirstTimeSetupOptions,
 	FirstTimeSetupResult,
 } from "./first-time-setup.ts";
-export { keyHint, keyText, rawKeyHint } from "./keybinding-hints.ts";
 export { LoginDialogComponent } from "./login-dialog.ts";
 export { ModelSelectorComponent } from "./model-selector.ts";
 export { OAuthSelectorComponent } from "./oauth-selector.ts";
@@ -32,4 +34,3 @@ export { ToolExecutionComponent, type ToolExecutionOptions } from "./tool-execut
 export { TreeSelectorComponent } from "./tree-selector.ts";
 export { UserMessageComponent } from "./user-message.ts";
 export { UserMessageSelectorComponent } from "./user-message-selector.ts";
-export { truncateToVisualLines, type VisualTruncateResult } from "./visual-truncate.ts";

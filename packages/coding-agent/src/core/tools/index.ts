@@ -1,4 +1,4 @@
-export { createLspTool, createLspToolDefinition, type LspToolDetails, type LspToolInput } from "../lsp/tool.ts";
+export { createLspTool, createLspToolDefinition, type LspToolDetails, type LspToolInput } from "../lsp/lsp-tool.ts";
 export {
 	type BashOperations,
 	type BashSpawnContext,
@@ -70,8 +70,8 @@ export {
 } from "./write.ts";
 
 import type { AgentTool } from "@earendil-works/pi-agent-core";
-import type { ToolDefinition } from "../extensions/types.ts";
-import { createLspTool, createLspToolDefinition } from "../lsp/tool.ts";
+import type { ToolDefinition } from "../../api/types.ts";
+import { createLspTool, createLspToolDefinition } from "../lsp/lsp-tool.ts";
 import { type BashToolOptions, createBashTool, createBashToolDefinition } from "./bash.ts";
 import { createEditTool, createEditToolDefinition, type EditToolOptions } from "./edit.ts";
 import { createFindTool, createFindToolDefinition, type FindToolOptions } from "./find.ts";

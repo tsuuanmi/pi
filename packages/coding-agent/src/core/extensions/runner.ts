@@ -5,14 +5,6 @@
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { ImageContent, Model } from "@earendil-works/pi-ai";
 import type { KeyId } from "@earendil-works/pi-tui";
-import type { MCPServerInfo } from "../../mcp/types.ts";
-import { type Theme, theme } from "../../modes/interactive/theme/theme.ts";
-import type { ResourceDiagnostic } from "../diagnostics.ts";
-import type { KeybindingsConfig } from "../keybindings.ts";
-import type { ModelRegistry } from "../model-registry.ts";
-import type { SessionManager } from "../session-manager.ts";
-import type { SubagentManager } from "../subagents.ts";
-import type { BuildSystemPromptOptions } from "../system-prompt.ts";
 import type {
 	BeforeAgentStartEvent,
 	BeforeAgentStartEventResult,
@@ -38,6 +30,7 @@ import type {
 	InputEventResult,
 	InputSource,
 	LoadExtensionsResult,
+	MCPServerInfo,
 	MessageEndEvent,
 	MessageEndEventResult,
 	MessageRenderer,
@@ -62,7 +55,14 @@ import type {
 	ToolResultEventResult,
 	UserBashEvent,
 	UserBashEventResult,
-} from "./types.ts";
+} from "../../api/types.ts";
+import { type Theme, theme } from "../../theme/theme.ts";
+import type { ResourceDiagnostic } from "../diagnostics.ts";
+import type { KeybindingsConfig } from "../keybindings.ts";
+import type { ModelRegistry } from "../model-registry.ts";
+import type { SessionManager } from "../session-manager.ts";
+import type { SubagentManager } from "../subagents.ts";
+import type { BuildSystemPromptOptions } from "../system-prompt.ts";
 
 // Extension shortcuts compete with canonical keybinding ids from keybindings.json.
 // Only editor-global shortcuts are reserved here. Picker-specific bindings are not.

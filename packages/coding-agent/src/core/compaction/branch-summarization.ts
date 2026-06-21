@@ -15,7 +15,6 @@ import {
 	createCustomMessage,
 } from "../messages.ts";
 import type { ReadonlySessionManager, SessionEntry } from "../session-manager.ts";
-import { estimateTokens } from "./compaction.ts";
 import {
 	computeFileLists,
 	createFileOps,
@@ -24,7 +23,8 @@ import {
 	formatFileOperations,
 	SUMMARIZATION_SYSTEM_PROMPT,
 	serializeConversation,
-} from "./utils.ts";
+} from "./message-utils.ts";
+import { estimateTokens } from "./session-compaction.ts";
 
 // ============================================================================
 // Types
@@ -44,7 +44,7 @@ export interface BranchSummaryDetails {
 	modifiedFiles: string[];
 }
 
-export type { FileOperations } from "./utils.ts";
+export type { FileOperations } from "./message-utils.ts";
 
 export interface BranchPreparation {
 	/** Messages extracted for summarization, in chronological order */

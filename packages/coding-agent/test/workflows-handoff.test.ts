@@ -7,8 +7,8 @@ import {
 	readWorkflowActiveState,
 	syncWorkflowActiveState,
 	type WorkflowActiveEntry,
-} from "../src/workflows/active-state.ts";
-import { workflowActiveStatePath } from "../src/workflows/paths.ts";
+} from "../src/workflows/shared/active-state.ts";
+import { workflowActiveStatePath } from "../src/workflows/shared/paths.ts";
 
 async function readRawEntries(cwd: string): Promise<WorkflowActiveEntry[]> {
 	const raw = JSON.parse(await readFile(workflowActiveStatePath(cwd), "utf8"));

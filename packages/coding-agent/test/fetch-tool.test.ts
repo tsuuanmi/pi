@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createFetchToolDefinition, type FetchToolDetails } from "../src/tools/fetch.ts";
+import { createFetchToolDefinition, type FetchToolDetails } from "../src/workflows/harness-tools/fetch.ts";
 
 const fetchTool = createFetchToolDefinition();
 
