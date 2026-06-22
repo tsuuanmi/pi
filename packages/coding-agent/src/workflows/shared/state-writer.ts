@@ -74,7 +74,7 @@ function withoutReceiptChecksum(value: unknown): unknown {
 	return clone;
 }
 
-function workflowEnvelopeContentSha256(value: unknown): string {
+export function workflowEnvelopeContentSha256(value: unknown): string {
 	return sha256(JSON.stringify(canonicalizeJson(withoutReceiptChecksum(value))));
 }
 

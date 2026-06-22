@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { applyHandoffToActiveState, syncWorkflowActiveState } from "../shared/active-state.ts";
+import { syncWorkflowActiveState } from "../shared/active-state.ts";
+import { handoffWorkflow } from "../shared/handoff.ts";
 import type { RalplanStage, WorkflowSkill } from "../shared/paths.ts";
 import {
 	ralplanIndexPath,
@@ -377,57 +378,61 @@ export async function approveRalplanPlan(
 	}
 	await readFile(status.pending_approval_path, "utf8");
 	const now = new Date().toISOString();
-	const ralplanState = await writeWorkflowState(cwd, "ralplan", {
-		active: false,
-		current_phase: approved ? (target === "stop" ? "approved" : "handoff") : "rejected",
-		run_id: status.run_id,
-		pending_approval_path: status.pending_approval_path,
-		approved,
-		approval_target: target,
-		approval_note: options.note,
-		approved_at: approved ? now : undefined,
-		rejected_at: approved ? undefined : now,
-	});
 	const sessionOpts = options.sessionId ? { sessionId: options.sessionId } : undefined;
+	let ralplanState: Record<string, unknown>;
 	let targetState: Record<string, unknown> | undefined;
 	if (approved && target !== "stop") {
+		// Handoff branch: delegate the caller demote + callee promote + active-state
+		// apply to `handoffWorkflow` (transaction journal + both-side receipts +
+		// callee->caller->active-state write order). The ralplan approval metadata
+		// travels in the caller patch; the callee gets the plan input.
 		const targetSkill: WorkflowSkill = target;
-		targetState = await writeWorkflowState(
-			cwd,
-			targetSkill,
-			{
-				active: true,
-				current_phase: "approved-execution",
-				input: status.pending_approval_path,
-				source_workflow: "ralplan",
-				source_run_id: status.run_id,
-			},
-			"pi workflow state write",
-			{ operation: "handoff-receive" },
-		);
-		// Atomic handoff: demote ralplan + promote target in a single write.
-		await applyHandoffToActiveState({
+		const result = await handoffWorkflow({
 			cwd,
 			caller: {
 				skill: "ralplan",
-				phase: ralplanState.current_phase,
-				state_path: workflowStatePath(cwd, "ralplan"),
+				patch: {
+					run_id: status.run_id,
+					pending_approval_path: status.pending_approval_path,
+					approved,
+					approval_target: target,
+					approval_note: options.note,
+					approved_at: now,
+				},
+				...(options.sessionId ? { sessionId: options.sessionId } : {}),
 			},
 			callee: {
 				skill: targetSkill,
-				phase: typeof targetState.current_phase === "string" ? targetState.current_phase : undefined,
-				state_path: workflowStatePath(cwd, targetSkill),
+				patch: {
+					input: status.pending_approval_path,
+					source_workflow: "ralplan",
+					source_run_id: status.run_id,
+				},
+				...(options.sessionId ? { sessionId: options.sessionId } : {}),
 			},
-			...(options.sessionId ? { sessionId: options.sessionId } : {}),
+			command: "pi ralplan approve",
 		});
+		ralplanState = result.callerState;
+		targetState = result.calleeState;
 	} else {
-		// No handoff target — just deactivate ralplan.
+		// No handoff target (stop / rejected): just deactivate ralplan.
+		ralplanState = await writeWorkflowState(cwd, "ralplan", {
+			active: false,
+			current_phase: approved ? "approved" : "rejected",
+			run_id: status.run_id,
+			pending_approval_path: status.pending_approval_path,
+			approved,
+			approval_target: target,
+			approval_note: options.note,
+			approved_at: approved ? now : undefined,
+			rejected_at: approved ? undefined : now,
+		});
 		await syncWorkflowActiveState(
 			cwd,
 			{
 				skill: "ralplan",
 				active: false,
-				phase: ralplanState.current_phase,
+				phase: ralplanState.current_phase as string | undefined,
 				state_path: workflowStatePath(cwd, "ralplan"),
 			},
 			sessionOpts,

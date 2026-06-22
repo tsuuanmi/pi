@@ -1,162 +1,842 @@
-# Development Rules
+# AGENTS.md
 
-## Conversational Style
+# Agent Development Guide
 
-- Keep answers short and concise
-- No emojis in commits, issues, PR comments, or code
-- No fluff or cheerful filler text (e.g., "Thanks @user" not "Thanks so much @user!")
-- Technical prose only, be direct
-- When the user asks a question, answer it first before making edits or running implementation commands.
-- When responding to user feedback or an analysis, explicitly say whether you agree or disagree before saying what you changed.
+This file defines the rules every coding agent must follow in this repository.
 
-## Code Quality
+The goals are:
 
-- Read files in full before wide-ranging changes, before editing files you have not fully inspected, and when asked to investigate or audit. Do not rely on search snippets for broad changes.
-- No `any` unless absolutely necessary.
-- Inline single-line helpers that have only one call site.
-- Check node_modules for external API types; don't guess.
-- **No inline imports** (`await import()`, `import("pkg").Type`, dynamic type imports). Top-level imports only.
-- Never remove or downgrade code to fix type errors from outdated deps; upgrade the dep instead.
-- Use only erasable TypeScript syntax (Node strip-only mode) in code checked by the root config (`packages/*/src`, `packages/*/test`, `packages/coding-agent/examples`): no parameter properties, `enum`, `namespace`/`module`, `import =`, `export =`, or other constructs needing JS emit. Use explicit fields with constructor assignments.
-- Always ask before removing functionality or code that appears intentional.
-- Do not preserve backward compatibility unless the user asks for it.
-- Never hardcode key checks (e.g. `matchesKey(keyData, "ctrl+x")`). Add defaults to `DEFAULT_EDITOR_KEYBINDINGS` or `DEFAULT_APP_KEYBINDINGS` so they stay configurable.
-- Never modify `packages/ai/src/models.generated.ts` directly; update `packages/ai/scripts/generate-models.ts` instead, then regenerate. Including the resulting `models.generated.ts` diff is always OK, even if regeneration includes unrelated upstream model metadata changes.
+* understand docs and source before changing code;
+* make small, intentional changes;
+* keep the workspace and commit history clean;
+* avoid overwriting other agents' work;
+* verify changes with the right checks;
+* keep docs and changelogs synchronized with code.
 
-## Commands
+---
 
-- After code changes (not docs): `npm run check` (full output, no tail). Fix all errors, warnings, and infos before committing. Does not run tests.
-- Never run `npm run build` or `npm test` unless requested by the user.
-- Never run the full vitest suite directly: it includes e2e tests that activate when endpoint/auth env vars are present. For all non-e2e tests, run `./test.sh` from the repo root. Otherwise run specific tests from the package root: `node ../../node_modules/vitest/dist/cli.js --run test/specific.test.ts`.
-- If you create or modify a test file, run it and iterate on test or implementation until it passes.
-- For `packages/coding-agent/test/suite/`, use `test/suite/harness.ts` + the faux provider. No real provider APIs, keys, or paid tokens.
-- Put issue-specific regressions under `packages/coding-agent/test/suite/regressions/` named `<issue-number>-<short-slug>.test.ts`.
-- For ad-hoc scripts, `write` them to a temp file (e.g. `/tmp`), run, edit if needed, remove when done. Don't embed multi-line scripts in `bash` commands.
-- Never commit unless the user asks.
+## 1. Instruction Priority
 
-## Dependency and Install Security
+Follow instructions in this order:
 
-- Treat npm dep and lockfile changes as reviewed code. Direct external deps stay pinned to exact versions.
-- Hydrate/update locally with `npm install --ignore-scripts`; clean/CI-style with `npm ci --ignore-scripts`. Don't run lifecycle scripts unless the user asks.
-- If dep metadata changes, refresh `package-lock.json` with `npm install --package-lock-only --ignore-scripts`.
-- If `packages/coding-agent/npm-shrinkwrap.json` needs regen, run `node scripts/generate-coding-agent-shrinkwrap.mjs` (verify with `--check` or `npm run check`). New deps with lifecycle scripts require review and an explicit allowlist entry in that script; never add one silently.
-- Pre-commit blocks lockfile commits unless `PI_ALLOW_LOCKFILE_CHANGE=1`. Don't bypass unless the user wants the lockfile change committed.
+1. The user's latest explicit instruction.
+2. This `AGENTS.md`.
+3. Project docs such as `README.md`, `CONTRIBUTING.md`, package docs, and tool configs.
+4. Existing code patterns.
 
-## Git
+If the user's instruction conflicts with this file, explain the conflict and ask for explicit confirmation before overriding a safety rule.
 
-Multiple pi sessions may be running in this cwd at the same time, each modifying different files. Git operations that touch unstaged, staged, or untracked files outside your own changes will stomp on other sessions' work. Follow these rules:
+---
 
-Committing:
+## 2. Communication
 
-- Only commit files YOU changed in THIS session.
-- Stage explicit paths (`git add <path1> <path2>`); never `git add -A` / `git add .`.
-- Before committing, run `git status` and verify you are only staging your files.
-- `packages/ai/src/models.generated.ts` may always be included alongside your files.
-- Message format: `{feat,fix,docs}[(ai,tui,agent,coding-agent)]: <commit message> (optionally multiple lines)`. Message is informative and concise.
+* Be concise, direct, and technical.
+* No emojis in commits, issues, PR comments, code, or technical summaries.
+* No filler or excessive praise.
+* Answer the user's direct question before making edits or running implementation commands.
+* When responding to feedback or analysis, explicitly say whether you agree or disagree before explaining changes.
+* State assumptions when proceeding under uncertainty.
 
-Never run (destroys other agents' work or bypasses checks):
+Ask before proceeding when ambiguity affects correctness, data loss, public APIs, schemas, user-visible behavior, dependency changes, destructive operations, or removal of intentional functionality.
 
-- `git reset --hard`, `git checkout .`, `git clean -fd`, `git stash`, `git add -A`, `git add .`, `git commit --no-verify`.
+For low-risk ambiguity, state the assumption and proceed with the simplest reversible approach.
 
-If rebase conflicts occur:
+---
 
-- Resolve conflicts only in files you modified.
-- If a conflict is in a file you did not modify, abort and ask the user.
-- Never force push.
+## 3. Docs and Source First
 
-## Issues and PRs
+Before implementation, read both relevant documentation and affected source code.
 
-See `CONTRIBUTING.md` for the contributor gate (auto-close workflows, `lgtm`/`lgtmi`, quality bar).
+Docs explain intent. Source code is the ground truth.
 
-When reviewing PRs:
+Read relevant docs when the task touches:
 
-- Do not run `gh pr checkout`, `git switch`, or otherwise move the worktree to the PR branch unless the user explicitly asks.
-- Use `gh pr view`, `gh pr diff`, `gh api`, and local `git show`/`git diff` against fetched refs to inspect PR metadata, commits, and patches without changing branches.
-- If you need PR file contents, fetch/read them into temporary files or use `git show <ref>:<path>` without switching branches.
+* architecture;
+* public APIs;
+* CLI behavior;
+* configuration;
+* pipeline stages;
+* data flow;
+* schemas or data models;
+* generated outputs;
+* user-visible behavior.
 
-When creating issues:
+Read affected source files in full before editing them, making broad changes, investigating behavior, auditing correctness, or modifying files you have not fully inspected.
 
-- Add `pkg:*` labels for affected packages (`pkg:agent`, `pkg:ai`, `pkg:coding-agent`, `pkg:tui`); use all that apply.
+Do not rely only on search snippets for broad or sensitive changes.
 
-When posting issue/PR comments:
+If docs and source disagree, follow the source code and update the docs when documented behavior changes.
 
-- Write the comment to a temp file and post with `gh issue/pr comment --body-file` (never multi-line markdown via `--body`).
-- Keep comments concise, technical, in the user's tone.
-- End every AI-posted comment with the AI-generated disclaimer line specified by the originating prompt (e.g. `This comment is AI-generated by `/wr``).
+---
 
-When closing issues via commit:
+## 4. Standard Workflow
 
-- Include `fixes #<number>` or `closes #<number>` in the message so merging auto-closes the issue. For multiple issues, repeat the keyword per issue (`closes #1, closes #2`); a shared keyword (`closes #1, #2`) only closes the first.
+### Context
 
-## Testing pi Interactive Mode with tmux
+Before editing:
 
-Run the TUI in a controlled terminal (from the repo root):
+1. Read relevant docs.
+2. Read affected source files.
+3. Check existing patterns, utilities, naming conventions, and error handling.
+4. Identify affected source files, tests, docs, changelogs, generated files, configs, package files, and lockfiles.
+5. Identify the language-specific rules that apply: Python, TypeScript, Rust, or multiple languages.
+
+### Plan
+
+Before implementation, state briefly:
+
+1. what will change;
+2. what will stay the same;
+3. likely affected files;
+4. verification to run.
+
+Ask for confirmation only when the change is risky, destructive, blocking-ambiguous, or broader than requested.
+
+### Implement
+
+During implementation:
+
+1. Work in an isolated worktree when available.
+2. Create temporary backups in `/tmp` before editing files.
+3. Make surgical changes only.
+4. Follow existing style.
+5. Use existing utilities before adding new ones.
+6. Avoid unrelated cleanup.
+7. Avoid speculative abstractions.
+8. Preserve intentional behavior unless the user asks to change it.
+
+### Verify
+
+Before finalizing:
+
+1. Review diffs.
+2. Run required language-specific checks.
+3. Run only allowed tests.
+4. Confirm no backup files were created inside the repo.
+5. Update docs and changelogs when required.
+6. Confirm `git status` contains only intentional changes.
+
+### Final Response
+
+The final response must include:
+
+* what changed;
+* files modified;
+* verification commands run;
+* tests run or skipped;
+* docs and changelog status;
+* assumptions or risks.
+
+Keep it concise.
+
+---
+
+## 5. Worktree Rules
+
+Use an isolated worktree for implementation when available.
+
+Preferred command:
 
 ```bash
-tmux new-session -d -s pi-test -x 80 -y 24
-tmux send-keys -t pi-test "./pi-test.sh" Enter
-sleep 3 && tmux capture-pane -t pi-test -p     # capture after startup
-tmux send-keys -t pi-test "your prompt here" Enter
-tmux send-keys -t pi-test Escape               # special keys (also C-o for ctrl+o, etc.)
-tmux kill-session -t pi-test
+omx -w <branch>
 ```
 
-## Changelog
+Do not modify the main checkout directly when the repository provides a worktree workflow.
 
-Location: `packages/*/CHANGELOG.md` (one per package).
+Do not merge, push, delete branches, or remove worktrees unless the user asks.
 
-Sections under `## [Unreleased]`: `### Breaking Changes` (API changes requiring migration), `### Added`, `### Changed`, `### Fixed`, `### Removed`.
+Only clean up a worktree after the user-approved integration path is complete.
+
+---
+
+## 6. Temporary Backups
+
+Always store edit backups in `/tmp`.
+
+Do not create `.bak` files inside the repository.
+
+Do not create WIP commits only for checkpointing.
+
+Commit history must stay clean.
+
+### Backup Location
+
+Use:
+
+```text
+/tmp/agent-backups/<task-id>/
+```
+
+Mirror the original relative path inside the backup directory to avoid filename collisions.
+
+### Backup Workflow
+
+Before editing a file:
+
+```bash
+task_id="<short-task-name>"
+file="path/to/file"
+backup_root="/tmp/agent-backups/$task_id"
+
+mkdir -p "$backup_root/$(dirname "$file")"
+cp "$file" "$backup_root/$file.bak"
+```
+
+After editing:
+
+```bash
+diff "$backup_root/$file.bak" "$file"
+```
+
+To restore:
+
+```bash
+cp "$backup_root/$file.bak" "$file"
+```
+
+For risky multi-step edits, use step-specific backups:
+
+```text
+/tmp/agent-backups/<task-id>/step-1/path/to/file.bak
+/tmp/agent-backups/<task-id>/step-2/path/to/file.bak
+```
 
 Rules:
 
-- All new entries go under `## [Unreleased]`. Read the full section first and append to existing subsections; never duplicate them.
-- Released version sections (e.g. `## [0.12.2]`) are immutable; never modify them.
+* Create backups only for files you will edit.
+* Always keep backups outside the repo.
+* Never create in-repo `.bak` files.
+* Never commit backup files.
+* Do not use WIP commits as checkpoints.
+* Backups in `/tmp` may remain after the task.
+* Before checks and final response, confirm the repo contains no backup files.
 
-Attribution:
+---
 
-- Internal (from issues): `Fixed foo bar ([#123](https://github.com/earendil-works/pi-mono/issues/123))`
-- External contributions: `Added feature X ([#456](https://github.com/earendil-works/pi-mono/pull/456) by [@username](https://github.com/username))`
+## 7. Git Rules
 
-## Releasing
+Multiple agent sessions may be running in the same repository. Do not touch work that is not yours.
 
-**Lockstep versioning**: all packages share one version; every release updates all together. `patch` = fixes + additions, `minor` = breaking changes. No major releases.
+Safe commands:
 
-1. **Update CHANGELOGs**: ask the user whether they ran the `/cl` prompt on the latest commit on `main`. If not, they must run `/cl` first to audit and update each package's `[Unreleased]` section before releasing.
+```bash
+git status
+git diff
+git diff -- <path>
+git diff --stat
+git add <explicit-path>
+git restore -- <explicit-path>
+```
 
-2. **Local smoke test**: build an unpublished release and smoke test from outside the repo (so it can't resolve workspace files):
-   ```bash
-   npm run release:local -- --out /tmp/pi-local-release --force
-   cd /tmp
+Only restore files you modified in this session.
 
-   # Node package install smoke tests
-   /tmp/pi-local-release/node/pi --help
-   /tmp/pi-local-release/node/pi --version
-   /tmp/pi-local-release/node/pi --list-models
-   /tmp/pi-local-release/node/pi -p "Say exactly: ok"
-   /tmp/pi-local-release/node/pi
+Never run:
 
-   # Bun binary smoke tests
-   /tmp/pi-local-release/bun/pi --help
-   /tmp/pi-local-release/bun/pi --version
-   /tmp/pi-local-release/bun/pi --list-models
-   /tmp/pi-local-release/bun/pi -p "Say exactly: ok"
-   /tmp/pi-local-release/bun/pi
-   ```
-   Verify both Node and Bun startup, model/account listing, interactive startup, and at least one real prompt with the intended default provider. The bare commands `/tmp/pi-local-release/node/pi` and `/tmp/pi-local-release/bun/pi` start interactive mode; run each in tmux, submit a prompt, and wait for the model reply before considering the interactive smoke test passed. Failures are release blockers unless the user explicitly accepts the risk.
+```bash
+git reset --hard
+git checkout .
+git clean -fd
+git stash
+git add .
+git add -A
+git commit --no-verify
+```
 
-3. **Run the release script**:
-   ```bash
-   PI_ALLOW_LOCKFILE_CHANGE=1 npm_config_min_release_age=0 npm run release:patch    # fixes + additions
-   PI_ALLOW_LOCKFILE_CHANGE=1 npm_config_min_release_age=0 npm run release:minor    # breaking changes
-   ```
-   Use `npm_config_min_release_age=0` only for the release command. The repo's normal npm age gate can otherwise block the release lockfile refresh when the current workspace package version was published recently. Review any lockfile or shrinkwrap diffs the release creates before push.
+When staging is needed, stage explicit paths only:
 
-   The release script bumps all package versions, updates changelogs, regenerates release artifacts, runs `npm run check`, commits `Release vX.Y.Z`, tags `vX.Y.Z`, adds fresh `## [Unreleased]` changelog sections, commits `Add [Unreleased] section for next cycle`, then pushes `main` and the tag. Do not rerun the release script after a tag was pushed.
+```bash
+git add <path1> <path2>
+```
 
-4. **CI publishes npm packages**: pushing the `vX.Y.Z` tag triggers `.github/workflows/build-binaries.yml`. The `publish-npm` job uses npm trusted publishing through GitHub Actions OIDC with environment `npm-publish`; no local `npm publish`, `npm whoami`, OTP, or WebAuthn flow is required.
+Never stage the entire repository.
 
-5. **If CI publish fails**: inspect the failed `publish-npm` job. The publish helper is idempotent and skips package versions already present on npm, so rerun the tag workflow after fixing CI or transient npm issues. Do not rerun `npm run release:patch` or `npm run release:minor` for the same version.
+Never commit unless the user explicitly asks.
 
-## User Override
+When committing:
 
-If the user's instructions conflict with any rule in this document, ask for explicit confirmation before overriding. Only then execute their instructions.
+1. Run required checks first.
+2. Run `git status`.
+3. Stage explicit paths only.
+4. Run `git diff --cached`.
+5. Commit only files changed in this session.
+6. Use a concise, informative message.
+7. Do not create WIP checkpoint commits.
+
+Preferred commit format:
+
+```text
+<type>(<scope>): <message>
+```
+
+Common types:
+
+```text
+feat
+fix
+docs
+refactor
+test
+chore
+```
+
+If conflicts occur:
+
+* resolve conflicts only in files you modified;
+* if a conflict appears in a file you did not modify, stop and ask;
+* never force push unless the user explicitly confirms the risk.
+
+---
+
+## 8. Change Scope
+
+Every changed line must trace back to the task.
+
+Do not:
+
+* refactor unrelated code;
+* reformat unrelated files;
+* rename unrelated symbols;
+* remove unrelated dead code;
+* upgrade unrelated dependencies;
+* modify generated files directly;
+* change lockfiles unless required;
+* add new configuration unless needed.
+
+If unrelated issues are found, mention them instead of fixing them.
+
+Prefer the smallest correct change.
+
+Do not add speculative features, single-use abstractions, unused configuration, unnecessary flexibility, unnecessary error handling, or broad rewrites for small fixes.
+
+Before adding new logic, check for existing helpers, utilities, models, constants, validators, serializers, logging patterns, error types, CLI patterns, and test patterns.
+
+---
+
+## 9. Language Rules
+
+### Python
+
+Follow existing project style.
+
+Prefer standard library first, existing utilities, typed functions, small functions, explicit realistic error handling, and clear data models.
+
+When already used by the project, prefer:
+
+* Loguru for logging;
+* Pydantic for data models;
+* `pathlib` for path handling;
+* `pytest` conventions for tests.
+
+Avoid untyped public functions, broad `except Exception`, global mutable state, duplicate validation logic, speculative abstractions, and unrelated formatting changes.
+
+Use the project package manager. If the project uses `uv`, use `uv`.
+
+Common dependency commands:
+
+```bash
+uv add <package>
+uv sync
+```
+
+For Python source changes, run configured checks:
+
+```bash
+ruff check .
+ruff format .
+basedpyright
+```
+
+Use scoped paths when the project expects them:
+
+```bash
+ruff check src/ tests/
+ruff format src/ tests/
+basedpyright src/
+```
+
+Do not run the full test suite unless explicitly asked.
+
+Do not run:
+
+```bash
+pytest
+pytest tests/
+```
+
+unless the user asks.
+
+If the user asked you to create or modify a test, run only the relevant test file or test case:
+
+```bash
+pytest path/to/test_file.py -q
+pytest path/to/test_file.py::test_name -q
+```
+
+Do not run integration, network, credential-dependent, paid-provider, destructive, or long-running tests unless explicitly requested.
+
+---
+
+### TypeScript
+
+Follow existing project style.
+
+Prefer top-level imports, explicit public-boundary types, existing utilities and types, small functions, simple control flow, and strict type safety.
+
+Avoid `any` unless absolutely necessary, unsafe casts, duplicate type definitions, inline imports, dynamic type imports, broad formatting changes, and dependency downgrades to fix type errors.
+
+Do not use inline imports:
+
+```ts
+// Do not use
+await import("pkg");
+type X = import("pkg").X;
+```
+
+Use top-level imports instead.
+
+If the project runs TypeScript in strip-only mode, use only erasable TypeScript syntax.
+
+Avoid syntax requiring JavaScript emit:
+
+* `enum`;
+* `namespace`;
+* `module`;
+* parameter properties;
+* `import =`;
+* `export =`.
+
+Use explicit fields with constructor assignments:
+
+```ts
+class UserService {
+  private readonly client: Client;
+
+  constructor(client: Client) {
+    this.client = client;
+  }
+}
+```
+
+Check package types in `node_modules` or official type definitions. Do not guess external API shapes.
+
+Treat dependency and lockfile changes as reviewed code.
+
+For npm projects:
+
+```bash
+npm install --ignore-scripts
+npm ci --ignore-scripts
+npm install --package-lock-only --ignore-scripts
+```
+
+Do not run lifecycle scripts unless the user asks.
+
+After TypeScript source changes, run the repository-defined check command.
+
+Common commands:
+
+```bash
+npm run check
+npm run lint
+npm run typecheck
+npm run format:check
+```
+
+If project rules require full output, do not pipe to `tail`.
+
+Do not run build commands unless requested or required by project rules.
+
+Avoid:
+
+```bash
+npm run build
+```
+
+unless the user asks.
+
+Do not run full test suites unless explicitly asked.
+
+Avoid:
+
+```bash
+npm test
+vitest
+npx vitest
+```
+
+unless the user asks or the project specifically allows it.
+
+If the user asked you to create or modify a test file, run the specific test only:
+
+```bash
+npm run test -- path/to/test.ts
+node ./node_modules/vitest/vitest.mjs --run path/to/test.ts
+node ../../node_modules/vitest/dist/cli.js --run test/specific.test.ts
+```
+
+Do not run e2e, browser, provider-backed, network, paid-token, credential-dependent, destructive, or long-running tests unless explicitly requested.
+
+---
+
+### Rust
+
+Follow existing project style.
+
+Prefer standard library first, existing project modules, explicit error types, `Result` for fallible operations, small functions, clear ownership, minimal cloning, and existing logging/serialization patterns.
+
+Use project-adopted libraries when already present:
+
+* `log` or `tracing` for logging;
+* `serde` for serialization;
+* `clap` for CLI;
+* `thiserror` or existing error conventions for errors.
+
+Avoid unnecessary `clone`, broad rewrites, `unwrap` or `expect` in production code unless already accepted nearby, duplicate parsing or validation logic, unrelated formatting changes, and unnecessary features in `Cargo.toml`.
+
+Use Cargo.
+
+Common dependency commands:
+
+```bash
+cargo add <crate>
+cargo update -p <crate>
+```
+
+Avoid broad `Cargo.lock` updates unless required.
+
+For Rust source changes, run configured checks:
+
+```bash
+cargo fmt --check
+cargo clippy -- -D warnings
+```
+
+Use workspace commands when the project expects them:
+
+```bash
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+```
+
+Do not run builds unless requested or required by project rules.
+
+Avoid:
+
+```bash
+cargo build
+cargo build --release
+```
+
+unless the user asks.
+
+Do not run the full test suite unless explicitly asked.
+
+Avoid:
+
+```bash
+cargo test
+cargo test --workspace
+```
+
+unless the user asks.
+
+If the user asked you to create or modify a test, run only the relevant targeted test:
+
+```bash
+cargo test test_name
+cargo test -p crate_name test_name
+cargo test --test integration_file test_name
+```
+
+Do not run integration, network, credential-dependent, destructive, or long-running tests unless explicitly requested.
+
+---
+
+## 10. Generated Files
+
+Do not modify generated files directly unless project rules explicitly allow it.
+
+If a generated file must change:
+
+1. Find the generator.
+2. Modify the generator or source data.
+3. Regenerate the generated file.
+4. Review the generated diff.
+5. Mention generated files in the final response.
+
+Generated files may include:
+
+* `*.generated.ts`;
+* generated API clients;
+* generated schemas;
+* protobuf outputs;
+* OpenAPI outputs;
+* model metadata;
+* codegen snapshots.
+
+If unsure whether a file is generated, inspect headers, docs, and build scripts before editing.
+
+---
+
+## 11. Tests Policy
+
+Default rule: do not run full test suites unless explicitly asked.
+
+Do not create new tests unless explicitly asked.
+
+If the user asks you to create or modify tests, run only the relevant targeted tests and iterate until they pass.
+
+Do not run:
+
+* full test suites;
+* e2e tests;
+* integration tests requiring services;
+* network tests;
+* credential-dependent tests;
+* paid-provider tests;
+* destructive tests;
+* long-running benchmarks.
+
+If tests are skipped, state why in the final response.
+
+Example:
+
+```text
+Tests not run because full test suites are not run unless explicitly requested.
+```
+
+---
+
+## 12. Verification
+
+Before running lint, format, type check, tests, builds, or package commands:
+
+```bash
+git status
+find . -name "*.bak" -print
+```
+
+There must be no in-repo backup files.
+
+If `.bak` files are found, stop. Do not remove files that may belong to another user or tool without confirmation.
+
+Required verification by change type:
+
+* Docs-only changes: review Markdown and run docs lint if configured.
+* Python source changes: run configured Python lint, format, and type checks.
+* TypeScript source changes: run the configured TypeScript check command.
+* Rust source changes: run configured Rust format and clippy checks.
+* Dependency changes: use safe package-manager commands and review lockfile diffs.
+* Generated file changes: run the generator and review generated diffs.
+
+Before finalizing:
+
+```bash
+git diff
+git status
+```
+
+Confirm:
+
+* every changed line is intentional;
+* no unrelated files changed;
+* no backup files are inside the repo;
+* no temp files are inside the repo;
+* no accidental lockfile changes exist;
+* no unrelated formatting churn exists.
+
+---
+
+## 13. Documentation
+
+Update docs when source changes affect:
+
+* public APIs;
+* CLI behavior;
+* configuration;
+* data models;
+* schema fields;
+* column names;
+* pipeline stages;
+* generated outputs;
+* error messages;
+* setup steps;
+* user-visible behavior.
+
+Do not update docs for purely internal code changes unless the docs would otherwise become misleading.
+
+When updating docs:
+
+1. Read the relevant section first.
+2. Keep changes concise.
+3. Match existing doc style.
+4. Verify docs match the actual code.
+5. Do not rewrite unrelated sections.
+
+If no docs update is needed, say why in the final response.
+
+---
+
+## 14. Changelog
+
+Update changelogs for user-visible or behavior-relevant changes.
+
+Update changelog for:
+
+* features;
+* bug fixes;
+* behavior changes;
+* public API changes;
+* CLI changes;
+* config changes;
+* schema changes;
+* data model changes;
+* pipeline changes;
+* dependency changes that affect users;
+* breaking changes;
+* removed behavior.
+
+Do not update changelog for:
+
+* typo-only changes;
+* formatting-only changes;
+* comment-only changes;
+* internal refactors with no behavior change;
+* internal docs edits with no user-visible effect;
+
+unless the user asks.
+
+Use the project's existing changelog location and format.
+
+Common locations:
+
+```text
+CHANGELOG.md
+packages/*/CHANGELOG.md
+crates/*/CHANGELOG.md
+```
+
+If the project uses an `[Unreleased]` section, add entries there.
+
+Common sections:
+
+```text
+### Breaking Changes
+### Added
+### Changed
+### Fixed
+### Removed
+```
+
+Rules:
+
+* Read the full target changelog section first.
+* Append to existing subsections.
+* Do not duplicate subsections.
+* Do not edit released version sections unless explicitly asked.
+* Keep entries concise.
+* Use one bullet per change.
+* Prefix entries with a bold scope when the project uses scoped entries.
+
+Example:
+
+```md
+- **api**: Validate missing request fields before processing.
+```
+
+---
+
+## 15. Dependency Security
+
+Treat dependency and lockfile changes as code changes.
+
+General rules:
+
+* Do not add dependencies unless necessary.
+* Prefer existing dependencies.
+* Review lockfile diffs.
+* Do not run install scripts unless the user asks.
+* Do not bypass security gates silently.
+* Do not downgrade dependencies just to hide type or lint errors.
+* Explain dependency changes in the final response.
+
+Language-specific commands:
+
+Python:
+
+```bash
+uv add <package>
+uv sync
+```
+
+TypeScript:
+
+```bash
+npm install --ignore-scripts
+npm ci --ignore-scripts
+npm install --package-lock-only --ignore-scripts
+```
+
+Rust:
+
+```bash
+cargo add <crate>
+cargo update -p <crate>
+```
+
+Follow project-specific package manager conventions when they differ.
+
+---
+
+## 16. Final Checklist
+
+Before final response, verify:
+
+* [ ] Relevant docs were read.
+* [ ] Affected source files were read.
+* [ ] Existing patterns were checked.
+* [ ] Temporary backups were stored in `/tmp`.
+* [ ] No WIP checkpoint commits were created.
+* [ ] No in-repo `.bak` files exist.
+* [ ] Changes are surgical and task-related.
+* [ ] No unrelated formatting churn exists.
+* [ ] No unrelated dependency or lockfile changes exist.
+* [ ] Generated files were not edited directly unless allowed.
+* [ ] Required checks were run.
+* [ ] Full tests were not run unless requested.
+* [ ] Targeted tests were run only when allowed or requested.
+* [ ] Docs were updated when needed.
+* [ ] Changelog was updated when needed.
+* [ ] `git diff` was reviewed.
+* [ ] `git status` was reviewed.
+* [ ] Final response includes changes, files, verification, tests, docs/changelog status, assumptions, and risks.
+
+---
+
+## 17. Final Response Template
+
+```text
+Changed:
+- <summary>
+
+Files:
+- <file>: <what changed>
+
+Verification:
+- <command>: passed / failed / not run, with reason
+
+Tests:
+- <test command>
+- Not run because full test suites require explicit request
+
+Docs:
+- Updated <doc>
+- Not updated because <reason>
+
+Changelog:
+- Updated <changelog>
+- Not updated because <reason>
+
+Notes:
+- <assumptions or risks>
+```

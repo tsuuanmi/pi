@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { auditVerbForOperation, maybeAuditForStateWrite, safeAppendAuditEntry } from "./audit-log.ts";
 import { type WorkflowSkill, workflowStatePath } from "./paths.ts";
 import { coerceWorkflowState, type WorkflowStateEnvelope } from "./state-schema.ts";
 import {
@@ -8,6 +10,7 @@ import {
 	stampWorkflowEnvelopeChecksum,
 	writeJsonAtomic,
 } from "./state-writer.ts";
+import { auditOutOfBandAndThrowIfUnforced } from "./tamper-detection.ts";
 import {
 	clearWorkflowPhase,
 	initialWorkflowPhase,
@@ -21,6 +24,8 @@ export { defaultWorkflowId } from "./workflow-id.ts";
 export interface WorkflowStateWriteOptions {
 	operation?: WorkflowStateOperation;
 	force?: boolean;
+	/** Shared mutation id for both-side receipts + audit + transaction journal. Internal-only. */
+	mutationId?: string;
 }
 
 interface PriorPhaseInfo {
@@ -78,7 +83,7 @@ function workflowStateValidationError(input: {
 	);
 }
 
-function validateWorkflowStateWrite(input: {
+async function validateWorkflowStateWrite(input: {
 	skill: WorkflowSkill;
 	prior: StrictMutationReadResult;
 	patch: Record<string, unknown>;
@@ -86,7 +91,10 @@ function validateWorkflowStateWrite(input: {
 	operation: WorkflowStateOperation;
 	command: string;
 	force: boolean;
-}): void {
+	cwd: string;
+	path: string;
+	mutationId: string;
+}): Promise<void> {
 	const rawSkill = input.patch.skill;
 	if (typeof rawSkill === "string" && rawSkill !== input.skill) {
 		throw new Error(`workflow state skill mismatch: requested=${input.skill}; patch=${rawSkill}`);
@@ -145,6 +153,24 @@ function validateWorkflowStateWrite(input: {
 			force: input.force,
 		})
 	) {
+		// Audit-only durable evidence for a non-manifest-edge internal transition.
+		// Best-effort: never suppress the throw below. Scoped to this branch only
+		// (known from-phase -> known to-phase with no manifest edge); the
+		// skill-mismatch / unknown-phase throws are separate hard-blocks that emit
+		// no `invalid_transition_detected`. Forced writes return early above and
+		// never reach here.
+		await safeAppendAuditEntry(input.cwd, {
+			ts: new Date().toISOString(),
+			skill: input.skill,
+			category: "state",
+			verb: "invalid_transition_detected",
+			owner: "pi-workflow",
+			mutation_id: input.mutationId,
+			from_phase: priorPhase,
+			to_phase: nextPhase,
+			forced: false,
+			paths: [input.path],
+		});
 		throw workflowStateValidationError({
 			reason: "transition is not allowed by workflow manifest",
 			skill: input.skill,
@@ -168,8 +194,19 @@ async function persistWorkflowState(
 ): Promise<WorkflowStateEnvelope> {
 	const path = workflowStatePath(cwd, skill);
 	const mutatedAt = nowIso();
+	const mutationId = options.mutationId ?? randomUUID();
 	const next = coerceWorkflowState(skill, existingForMerge, patch, mutatedAt);
-	validateWorkflowStateWrite({
+	// Tamper seam: detect an out-of-band edit on the on-disk envelope; append an
+	// `out_of_band_detected` audit entry and hard-block the unforced write. An
+	// internal `force` bypasses the throw (the audit entry is appended regardless,
+	// with `forced:true`); the caller re-stamps a fresh checksum below.
+	await auditOutOfBandAndThrowIfUnforced(cwd, path, skill, {
+		mutationId,
+		forced: options.force ?? false,
+	});
+	// Transition gate (async: emits `invalid_transition_detected` before throwing
+	// on a non-manifest-edge internal transition; forced writes skip the gate).
+	await validateWorkflowStateWrite({
 		skill,
 		prior,
 		patch,
@@ -177,6 +214,9 @@ async function persistWorkflowState(
 		operation: options.operation ?? "write",
 		command,
 		force: options.force ?? false,
+		cwd,
+		path,
+		mutationId,
 	});
 	next.receipt = createWorkflowReceipt({
 		skill,
@@ -185,9 +225,42 @@ async function persistWorkflowState(
 		mutatedAt,
 		forced: options.force,
 		operation: options.operation,
+		mutationId,
 	});
 	const stamped = stampWorkflowEnvelopeChecksum(next, path, mutatedAt);
 	await writeJsonAtomic(path, stamped, { cwd });
+	const fromPhase =
+		prior.kind === "valid" && typeof prior.value.current_phase === "string" ? prior.value.current_phase : undefined;
+	const toPhase = next.current_phase;
+	// Audit the sanctioned write (state/<verb>). Best-effort; never fails the write.
+	await maybeAuditForStateWrite({
+		cwd,
+		skill,
+		path,
+		verb: auditVerbForOperation(options.operation),
+		mutationId,
+		fromPhase,
+		toPhase,
+		forced: options.force ?? false,
+	});
+	// Force bypass: record that a forced write overwrote mode-state. Fires on
+	// every forced write (not only tamper repairs), mirroring Gajae's
+	// `forceOverwrite` audit category. Deliberately broader than Gajae's
+	// separate raw-force surface (spec-controlling).
+	if (options.force) {
+		await safeAppendAuditEntry(cwd, {
+			ts: new Date().toISOString(),
+			skill,
+			category: "state",
+			verb: "force_overwrite",
+			owner: "pi-workflow",
+			mutation_id: mutationId,
+			...(fromPhase ? { from_phase: fromPhase } : {}),
+			...(toPhase ? { to_phase: toPhase } : {}),
+			forced: true,
+			paths: [path],
+		});
+	}
 	return stamped;
 }
 
@@ -213,6 +286,7 @@ export async function writeWorkflowState(
 	return persistWorkflowState(cwd, skill, prior, existing, patchForWrite, command, {
 		operation: options.operation ?? "write",
 		force: options.force,
+		mutationId: options.mutationId,
 	});
 }
 
@@ -232,6 +306,7 @@ export async function replaceWorkflowState(
 	return persistWorkflowState(cwd, skill, existingRead, {}, patch, command, {
 		operation: options.operation ?? "replace",
 		force: options.force,
+		mutationId: options.mutationId,
 	});
 }
 

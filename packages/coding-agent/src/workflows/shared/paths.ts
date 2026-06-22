@@ -15,6 +15,22 @@ export function workflowActiveStatePath(cwd: string): string {
 	return join(piWorkflowRoot(cwd), "active-state.json");
 }
 
+/** Root of the state-integrity core: audit log + transaction journals. */
+function piStateDir(cwd: string): string {
+	return join(cwd, ".pi", "state");
+}
+
+/** Single global audit trail (mirrors Gajae's `.gjc/state/audit.jsonl`). */
+export function auditLogPath(cwd: string): string {
+	return join(piStateDir(cwd), "audit.jsonl");
+}
+
+/** Per-mutation transaction journal for crash-recoverable handoffs. */
+export function transactionJournalPath(cwd: string, mutationId: string): string {
+	const encoded = encodeURIComponent(mutationId).replaceAll(".", "%2E");
+	return join(piStateDir(cwd), "transactions", `${encoded}.json`);
+}
+
 function piSpecsDir(cwd: string): string {
 	return join(cwd, ".pi", "specs");
 }

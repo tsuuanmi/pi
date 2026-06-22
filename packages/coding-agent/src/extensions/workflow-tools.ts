@@ -25,11 +25,8 @@ import {
 	readRalplanStatus,
 	writeRalplanArtifact,
 } from "../workflows/ralplan/ralplan-runtime.ts";
-import {
-	applyHandoffToActiveState,
-	readWorkflowActiveState,
-	syncWorkflowActiveState,
-} from "../workflows/shared/active-state.ts";
+import { readWorkflowActiveState, syncWorkflowActiveState } from "../workflows/shared/active-state.ts";
+import { handoffWorkflow } from "../workflows/shared/handoff.ts";
 import { deepInterviewIndexPath, deepInterviewSpecPath, workflowStatePath } from "../workflows/shared/paths.ts";
 import { workflowReceipt } from "../workflows/shared/receipts.ts";
 import { assertRalplanStage, assertSafePathComponent, assertWorkflowSkill } from "../workflows/shared/state-schema.ts";
@@ -616,70 +613,55 @@ async function executeDeepInterviewWriteSpec(params: DeepInterviewWriteSpecInput
 		},
 		{ cwd: ctx.cwd },
 	);
-	await finalizeDeepInterviewSpecState(
-		ctx.cwd,
-		{
-			slug,
-			path: result.path,
-			sha256: result.sha256,
-			handoff: params.handoff,
-		},
-		sessionId,
-	);
-	if (params.handoff === "ralplan") {
-		const state = await writeWorkflowState(
+	if (params.handoff === "ralplan" || params.handoff === "team" || params.handoff === "ultragoal") {
+		// Gajae-faithful two-step handoff (revises spec decision #3, which bypassed
+		// finalize and broke the cold-start case where no deep-interview state
+		// exists yet). Step 1: `finalizeDeepInterviewSpecState` persists the caller
+		// state with spec fields, active:true, current_phase:"handoff" (a regular
+		// write — NOT the handoff). Step 2: `handoffWorkflow` demotes the caller
+		// (active:false, handoff_to), promotes the callee, writes the transaction
+		// journal, and applies the active-state handoff. Same-phase handoff->handoff
+		// (handoff-send) is allowed by the transition gate (known same-phase returns
+		// early), so the demote does not throw. Spec fields travel via finalize; the
+		// caller patch below is empty. The spec-artifact + index writes above remain.
+		await finalizeDeepInterviewSpecState(
 			ctx.cwd,
-			"ralplan",
-			{
-				active: true,
-				current_phase: "planner",
-				run_id: (await activeRalplanRunId(ctx.cwd)) ?? defaultWorkflowId("ralplan"),
-				input: result.path,
-			},
-			"pi workflow state write",
-			{ operation: "handoff-receive" },
+			{ slug, path: result.path, sha256: result.sha256, handoff: params.handoff },
+			sessionId,
 		);
-		// Atomic handoff: demote deep-interview + promote target in one write.
-		await applyHandoffToActiveState({
+		const calleePatch =
+			params.handoff === "ralplan"
+				? {
+						run_id: (await activeRalplanRunId(ctx.cwd)) ?? defaultWorkflowId("ralplan"),
+						input: result.path,
+					}
+				: { input: result.path };
+		await handoffWorkflow({
 			cwd: ctx.cwd,
 			caller: {
 				skill: "deep-interview",
-				phase: "handoff",
-				state_path: workflowStatePath(ctx.cwd, "deep-interview"),
-			},
-			callee: {
-				skill: "ralplan",
-				phase: state.current_phase,
-				state_path: workflowStatePath(ctx.cwd, "ralplan"),
-			},
-			...(sessionId ? { sessionId } : {}),
-		});
-	} else if (params.handoff === "team" || params.handoff === "ultragoal") {
-		const state = await writeWorkflowState(
-			ctx.cwd,
-			params.handoff,
-			{
-				active: true,
-				current_phase: "approved-execution",
-				input: result.path,
-			},
-			"pi workflow state write",
-			{ operation: "handoff-receive" },
-		);
-		await applyHandoffToActiveState({
-			cwd: ctx.cwd,
-			caller: {
-				skill: "deep-interview",
-				phase: "handoff",
-				state_path: workflowStatePath(ctx.cwd, "deep-interview"),
+				patch: {},
+				...(sessionId ? { sessionId } : {}),
 			},
 			callee: {
 				skill: params.handoff,
-				phase: state.current_phase,
-				state_path: workflowStatePath(ctx.cwd, params.handoff),
+				patch: calleePatch,
+				...(sessionId ? { sessionId } : {}),
 			},
-			...(sessionId ? { sessionId } : {}),
+			command: "pi deep-interview write-spec",
 		});
+	} else {
+		// stop / no-handoff branch: finalize + direct active-state sync (unchanged).
+		await finalizeDeepInterviewSpecState(
+			ctx.cwd,
+			{
+				slug,
+				path: result.path,
+				sha256: result.sha256,
+				handoff: params.handoff,
+			},
+			sessionId,
+		);
 	}
 	return {
 		content: [{ type: "text" as const, text: `Persisted deep-interview spec at ${result.path}` }],
