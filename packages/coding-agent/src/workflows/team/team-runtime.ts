@@ -269,12 +269,18 @@ async function listTasks(cwd: string, teamId: string): Promise<TeamTask[]> {
 
 async function syncTeamState(cwd: string, snapshot: TeamSnapshot, sessionId?: string): Promise<void> {
 	const active = snapshot.phase !== "missing" && snapshot.phase !== "complete" && snapshot.phase !== "cancelled";
-	const state = await writeWorkflowState(cwd, "team", {
-		active,
-		current_phase: snapshot.phase,
-		team_id: snapshot.team_id,
-		task_counts: snapshot.task_counts,
-	});
+	const state = await writeWorkflowState(
+		cwd,
+		"team",
+		{
+			active,
+			current_phase: snapshot.phase,
+			team_id: snapshot.team_id,
+			task_counts: snapshot.task_counts,
+		},
+		"pi workflow state write",
+		{ operation: "runtime-sync" },
+	);
 	await syncWorkflowActiveState(
 		cwd,
 		{

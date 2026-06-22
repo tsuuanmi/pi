@@ -50,6 +50,7 @@ import {
 	startTeam,
 	transitionTeamTask,
 } from "../workflows/team/team-runtime.ts";
+import { ultragoalGuard } from "../workflows/ultragoal/ultragoal-guard.ts";
 import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
@@ -258,13 +259,78 @@ const ultragoalCheckpointSchema = Type.Object({
 	status: Type.String(),
 	evidence: Type.Optional(Type.String()),
 	qualityGate: Type.Optional(
-		Type.Record(Type.String(), Type.Unknown(), {
-			description:
-				"Required for status 'complete'. Must be an object with 'status' set to 'passed', 'verified', or 'covered'.",
-		}),
+		Type.Object(
+			{
+				executorQa: Type.Object(
+					{
+						artifactRefs: Type.Array(
+							Type.Object(
+								{
+									id: Type.String(),
+									kind: Type.String(),
+									description: Type.String(),
+									path: Type.Optional(Type.String()),
+									inlineEvidence: Type.Optional(Type.Unknown()),
+									verifiedReceipt: Type.Optional(Type.Unknown()),
+									receipt: Type.Optional(Type.Unknown()),
+								},
+								{
+									description:
+										"Artifact reference: id, kind, description, and a path/inlineEvidence/verifiedReceipt proof.",
+								},
+							),
+						),
+						surfaceEvidence: Type.Array(
+							Type.Object(
+								{
+									id: Type.String(),
+									status: Type.Optional(Type.String()),
+									surface: Type.String(),
+									contractRef: Type.String(),
+									invocation: Type.String(),
+									verdict: Type.Optional(Type.String()),
+									result: Type.Optional(Type.String()),
+									reason: Type.Optional(Type.String()),
+									artifactRefs: Type.Optional(Type.Array(Type.String())),
+								},
+								{
+									description:
+										"Surface evidence row: status, surface, contractRef, invocation, verdict/result, artifactRefs links.",
+								},
+							),
+						),
+					},
+					{ description: "Executor QA evidence with artifactRefs and surfaceEvidence rows." },
+				),
+				contractCoverage: Type.Array(
+					Type.Object(
+						{
+							id: Type.String(),
+							contractRef: Type.String(),
+							obligation: Type.String(),
+							status: Type.Optional(Type.String()),
+							reason: Type.Optional(Type.String()),
+							surfaceEvidenceRefs: Type.Optional(Type.Array(Type.String())),
+							artifactRefs: Type.Optional(Type.Array(Type.String())),
+						},
+						{ description: "Contract coverage row: contractRef, obligation, status, linked refs." },
+					),
+				),
+			},
+			{
+				description:
+					"Required for status 'complete'. Typed quality-gate rows (hard break): executorQa (artifactRefs + surfaceEvidence) and contractCoverage. Free-form {status} objects are rejected; the runtime validates the typed shape strictly.",
+			},
+		),
 	),
 });
 type UltragoalCheckpointInput = Static<typeof ultragoalCheckpointSchema>;
+
+const ultragoalGuardSchema = Type.Object({
+	goalId: Type.Optional(Type.String({ description: "Goal id to inspect. Defaults to the active goal." })),
+	currentObjective: Type.Optional(Type.String({ description: "Current objective text to match against the plan." })),
+});
+type UltragoalGuardInput = Static<typeof ultragoalGuardSchema>;
 
 const ultragoalStartNextSchema = Type.Object({
 	retryFailed: Type.Optional(Type.Boolean()),
@@ -421,10 +487,7 @@ async function executeWorkflowState(params: WorkflowStateInput, ctx: ExtensionCo
 		};
 	}
 	if (action === "clear") {
-		const state = await clearWorkflowState(ctx.cwd, params.skill, {
-			current_phase: params.phase ?? "complete",
-			...(params.data ?? {}),
-		});
+		const state = await clearWorkflowState(ctx.cwd, params.skill, params.data ?? {});
 		await syncWorkflowActiveState(
 			ctx.cwd,
 			{
@@ -564,12 +627,18 @@ async function executeDeepInterviewWriteSpec(params: DeepInterviewWriteSpecInput
 		sessionId,
 	);
 	if (params.handoff === "ralplan") {
-		const state = await writeWorkflowState(ctx.cwd, "ralplan", {
-			active: true,
-			current_phase: "planner",
-			run_id: (await activeRalplanRunId(ctx.cwd)) ?? defaultWorkflowId("ralplan"),
-			input: result.path,
-		});
+		const state = await writeWorkflowState(
+			ctx.cwd,
+			"ralplan",
+			{
+				active: true,
+				current_phase: "planner",
+				run_id: (await activeRalplanRunId(ctx.cwd)) ?? defaultWorkflowId("ralplan"),
+				input: result.path,
+			},
+			"pi workflow state write",
+			{ operation: "handoff-receive" },
+		);
 		// Atomic handoff: demote deep-interview + promote target in one write.
 		await applyHandoffToActiveState({
 			cwd: ctx.cwd,
@@ -586,11 +655,17 @@ async function executeDeepInterviewWriteSpec(params: DeepInterviewWriteSpecInput
 			...(sessionId ? { sessionId } : {}),
 		});
 	} else if (params.handoff === "team" || params.handoff === "ultragoal") {
-		const state = await writeWorkflowState(ctx.cwd, params.handoff, {
-			active: true,
-			current_phase: "approved-execution",
-			input: result.path,
-		});
+		const state = await writeWorkflowState(
+			ctx.cwd,
+			params.handoff,
+			{
+				active: true,
+				current_phase: "approved-execution",
+				input: result.path,
+			},
+			"pi workflow state write",
+			{ operation: "handoff-receive" },
+		);
 		await applyHandoffToActiveState({
 			cwd: ctx.cwd,
 			caller: {
@@ -1181,6 +1256,14 @@ async function executeUltragoalCheckpoint(params: UltragoalCheckpointInput, ctx:
 	};
 }
 
+async function executeUltragoalGuard(params: UltragoalGuardInput, ctx: ExtensionContext) {
+	const result = await ultragoalGuard(ctx.cwd, params);
+	return {
+		content: [{ type: "text" as const, text: `Ultragoal guard: ${result.state} — ${result.message}` }],
+		details: result,
+	};
+}
+
 export default function workflowsExtension(pi: ExtensionAPI): void {
 	pi.on("session_start", async (_event, ctx) => {
 		await syncWorkflowHudUi(ctx);
@@ -1539,6 +1622,19 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 		],
 		parameters: ultragoalCheckpointSchema,
 		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeUltragoalCheckpoint(params, ctx),
+	});
+
+	pi.registerTool({
+		name: "ultragoal_guard",
+		label: "Ultragoal Guard",
+		description:
+			"Read ultragoal verification state and report a 9-state diagnostic (inactive, unrelated_goal, active_verified_complete, active_missing_receipt, active_stale_receipt, active_missing_final_receipt, active_dirty_quality_gate, active_review_blocked_unrecorded, unreadable_fail_closed). Use before declaring an ultragoal goal complete to confirm the completion receipt is fresh.",
+		promptSnippet: "Check ultragoal completion receipt freshness",
+		promptGuidelines: [
+			"Use ultragoal_guard before treating a stored completion receipt as complete; it reports stale/missing/dirty receipts and fail-closed unreadable state.",
+		],
+		parameters: ultragoalGuardSchema,
+		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeUltragoalGuard(params, ctx),
 	});
 
 	pi.registerTool({

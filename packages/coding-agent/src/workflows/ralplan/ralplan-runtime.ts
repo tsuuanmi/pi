@@ -392,13 +392,19 @@ export async function approveRalplanPlan(
 	let targetState: Record<string, unknown> | undefined;
 	if (approved && target !== "stop") {
 		const targetSkill: WorkflowSkill = target;
-		targetState = await writeWorkflowState(cwd, targetSkill, {
-			active: true,
-			current_phase: "approved-execution",
-			input: status.pending_approval_path,
-			source_workflow: "ralplan",
-			source_run_id: status.run_id,
-		});
+		targetState = await writeWorkflowState(
+			cwd,
+			targetSkill,
+			{
+				active: true,
+				current_phase: "approved-execution",
+				input: status.pending_approval_path,
+				source_workflow: "ralplan",
+				source_run_id: status.run_id,
+			},
+			"pi workflow state write",
+			{ operation: "handoff-receive" },
+		);
 		// Atomic handoff: demote ralplan + promote target in a single write.
 		await applyHandoffToActiveState({
 			cwd,

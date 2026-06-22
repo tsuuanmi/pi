@@ -21,6 +21,35 @@ import {
 	startNextUltragoalGoal,
 } from "../src/workflows/ultragoal/ultragoal-runtime.ts";
 
+/** Minimal valid typed quality gate for cli-surface completion (no real artifacts). */
+function cliQualityGate(): Record<string, unknown> {
+	return {
+		executorQa: {
+			artifactRefs: [
+				{
+					id: "a1",
+					kind: "cli-replay",
+					description: "Ran focused checks",
+					verifiedReceipt: { verifiedAt: "2026-06-21T00:00:00.000Z", summary: "checks passed" },
+				},
+			],
+			surfaceEvidence: [
+				{
+					id: "s1",
+					surface: "cli",
+					contractRef: "plan#a",
+					invocation: "npm run check",
+					result: "passed",
+					artifactRefs: ["a1"],
+				},
+			],
+		},
+		contractCoverage: [
+			{ id: "c1", contractRef: "plan#a", obligation: "focused checks pass", status: "passed", artifactRefs: ["a1"] },
+		],
+	};
+}
+
 describe("team workflow runtime", () => {
 	let cwd: string;
 
@@ -119,7 +148,7 @@ describe("ultragoal workflow runtime", () => {
 				goalId: "G001",
 				status: "complete",
 				evidence: "too short",
-				qualityGate: { status: "passed" },
+				qualityGate: cliQualityGate(),
 			}),
 		).rejects.toThrow(/substantive/);
 
@@ -127,7 +156,7 @@ describe("ultragoal workflow runtime", () => {
 			goalId: "G001",
 			status: "complete",
 			evidence: "Implemented runtime-owned state and verified behavior with focused automated checks.",
-			qualityGate: { status: "passed", command: "npm run check" },
+			qualityGate: cliQualityGate(),
 		});
 		expect(completed.completionVerification?.checkpointLedgerEventId).toBeDefined();
 		const status = await getUltragoalStatus(cwd);
@@ -143,7 +172,7 @@ describe("ultragoal workflow runtime", () => {
 			goalId: "G001",
 			status: "complete",
 			evidence: "Completed the single approved goal and verified the intended behavior successfully.",
-			qualityGate: { status: "verified" },
+			qualityGate: cliQualityGate(),
 		});
 		const status = await getUltragoalStatus(cwd);
 		expect(status.status).toBe("complete");
@@ -179,7 +208,7 @@ describe("ultragoal workflow runtime", () => {
 			goalId: "G001",
 			status: "complete",
 			evidence: "Implemented runtime-owned state and verified behavior with focused automated checks.",
-			qualityGate: { status: "passed", command: "npm run check" },
+			qualityGate: cliQualityGate(),
 		});
 		expect(await chip("done")).toBe("1");
 		expect(await chip("pending")).toBe("1");
@@ -192,7 +221,7 @@ describe("ultragoal workflow runtime", () => {
 			goalId: "G001",
 			status: "complete",
 			evidence: "Completed the single approved goal and verified the intended behavior successfully.",
-			qualityGate: { status: "verified" },
+			qualityGate: cliQualityGate(),
 		});
 		const status = await getUltragoalStatus(cwd);
 		expect(status.status).toBe("complete");

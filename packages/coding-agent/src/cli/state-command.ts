@@ -194,6 +194,7 @@ export async function runStateCommand(args: string[], cwd = process.cwd()): Prom
 				skill,
 				{ active: false, current_phase: "handoff", handoff_to: parsed.to },
 				"pi state handoff",
+				{ operation: "handoff-send" },
 			);
 			await syncWorkflowActiveState(cwd, { skill, active: false, phase: "handoff", state_path: statePath });
 			const targetPath = workflowStatePath(cwd, parsed.to);
@@ -202,6 +203,7 @@ export async function runStateCommand(args: string[], cwd = process.cwd()): Prom
 				parsed.to,
 				{ active: true, current_phase: "handoff", handoff_from: skill },
 				"pi state handoff receive",
+				{ operation: "handoff-receive" },
 			);
 			await syncWorkflowActiveState(cwd, {
 				skill: parsed.to,

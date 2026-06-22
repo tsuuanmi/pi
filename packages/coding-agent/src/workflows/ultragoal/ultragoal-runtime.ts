@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { syncWorkflowActiveState } from "../shared/active-state.ts";
 import { ultragoalBriefPath, ultragoalGoalsPath, ultragoalLedgerPath, workflowStatePath } from "../shared/paths.ts";
 import {
@@ -11,39 +11,33 @@ import {
 } from "../shared/state-writer.ts";
 import { readWorkflowState, writeWorkflowState } from "../shared/workflow-state.ts";
 import { buildUltragoalHud } from "./ultragoal-hud.ts";
+import { validateExecutorQaEvidence } from "./ultragoal-quality-gate.ts";
+import {
+	buildCompletionReceipt,
+	chooseReceiptKind,
+	readUltragoalLedger,
+	type UltragoalCompletionVerification,
+	type UltragoalGoal,
+	type UltragoalGoalMode,
+	type UltragoalGoalStatus,
+	type UltragoalLedgerEvent,
+	type UltragoalPlan,
+	type UltragoalReceiptKind,
+	validateCompletionReceipt,
+} from "./ultragoal-receipt.ts";
 
-export type UltragoalGoalStatus =
-	| "pending"
-	| "active"
-	| "complete"
-	| "failed"
-	| "blocked"
-	| "review_blocked"
-	| "superseded";
-export type UltragoalGoalMode = "aggregate" | "per-story";
-
-export interface UltragoalGoal {
-	id: string;
-	title: string;
-	objective: string;
-	status: UltragoalGoalStatus;
-	createdAt: string;
-	updatedAt: string;
-	startedAt?: string;
-	completedAt?: string;
-	evidence?: string;
-	completionVerification?: Record<string, unknown>;
-}
-
-export interface UltragoalPlan {
-	version: 1;
-	brief: string;
-	goalMode: UltragoalGoalMode;
-	objective: string;
-	goals: UltragoalGoal[];
-	createdAt: string;
-	updatedAt: string;
-}
+// Re-export the plan/goal/receipt types so callers import a single source of
+// truth from the runtime entrypoint. The authoritative definitions live in
+// `ultragoal-receipt.ts`.
+export type {
+	UltragoalCompletionVerification,
+	UltragoalGoal,
+	UltragoalGoalMode,
+	UltragoalGoalStatus,
+	UltragoalLedgerEvent,
+	UltragoalPlan,
+	UltragoalReceiptKind,
+};
 
 export interface UltragoalStatus {
 	exists: boolean;
@@ -130,6 +124,9 @@ function normalizePlan(raw: unknown): UltragoalPlan {
 		brief: typeof raw.brief === "string" ? raw.brief : "",
 		goalMode: raw.goalMode === "per-story" ? "per-story" : "aggregate",
 		objective: typeof raw.objective === "string" ? raw.objective : "Complete all approved goals with verification",
+		objectiveAliases: Array.isArray(raw.objectiveAliases)
+			? raw.objectiveAliases.filter((alias): alias is string => typeof alias === "string")
+			: undefined,
 		goals: goals.map((item, index): UltragoalGoal => {
 			const record = isPlainObject(item) ? item : {};
 			const goalCreatedAt = typeof record.createdAt === "string" ? record.createdAt : createdAt;
@@ -149,7 +146,7 @@ function normalizePlan(raw: unknown): UltragoalPlan {
 				completedAt: typeof record.completedAt === "string" ? record.completedAt : undefined,
 				evidence: typeof record.evidence === "string" ? record.evidence : undefined,
 				completionVerification: isPlainObject(record.completionVerification)
-					? record.completionVerification
+					? (record.completionVerification as unknown as UltragoalCompletionVerification)
 					: undefined,
 			};
 		}),
@@ -175,7 +172,7 @@ function chooseNextGoal(plan: UltragoalPlan, retryFailed: boolean): UltragoalGoa
 }
 
 async function appendLedger(cwd: string, event: Record<string, unknown>): Promise<Record<string, unknown>> {
-	const entry = { eventId: crypto.randomUUID(), ...event, timestamp: nowIso() };
+	const entry = { eventId: randomUUID(), ...event, timestamp: nowIso() };
 	await appendJsonl(ultragoalLedgerPath(cwd), entry, { cwd });
 	return entry;
 }
@@ -186,12 +183,18 @@ async function writePlan(cwd: string, plan: UltragoalPlan): Promise<void> {
 }
 
 async function syncUltragoalState(cwd: string, status: UltragoalStatus, sessionId?: string): Promise<void> {
-	const state = await writeWorkflowState(cwd, "ultragoal", {
-		active: status.status !== "complete" && status.status !== "missing",
-		current_phase: status.status,
-		current_goal_id: status.currentGoal?.id,
-		counts: status.counts,
-	});
+	const state = await writeWorkflowState(
+		cwd,
+		"ultragoal",
+		{
+			active: status.status !== "complete" && status.status !== "missing",
+			current_phase: status.status,
+			current_goal_id: status.currentGoal?.id,
+			counts: status.counts,
+		},
+		"pi workflow state write",
+		{ operation: "runtime-sync" },
+	);
 	await syncWorkflowActiveState(
 		cwd,
 		{
@@ -205,12 +208,14 @@ async function syncUltragoalState(cwd: string, status: UltragoalStatus, sessionI
 	);
 }
 
-async function readUltragoalPlan(cwd: string): Promise<UltragoalPlan | undefined> {
+export async function readUltragoalPlan(cwd: string): Promise<UltragoalPlan | undefined> {
 	const read = await readExistingStateForMutation(ultragoalGoalsPath(cwd));
 	if (read.kind === "absent") return undefined;
 	if (read.kind === "corrupt") throw new Error(`ultragoal plan is corrupt: ${read.error}`);
 	return normalizePlan(read.value);
 }
+
+export { requiredGoals };
 
 export async function createUltragoalPlan(
 	cwd: string,
@@ -297,20 +302,43 @@ export async function startNextUltragoalGoal(
 	return { plan, goal, allComplete: false };
 }
 
-function validateCompletionEvidence(evidence: string, qualityGate: unknown): void {
+function validateCompletionEvidence(evidence: string): void {
 	const trimmed = evidence.trim();
 	if (trimmed.length < 32 || trimmed.split(/\s+/).filter((word) => /[a-z0-9]/i.test(word)).length < 5) {
 		throw new Error("completion evidence must be substantive");
 	}
-	if (!isPlainObject(qualityGate)) throw new Error("qualityGate must be an object for complete checkpoints");
-	if (qualityGate.status !== "passed" && qualityGate.status !== "verified" && qualityGate.status !== "covered") {
-		throw new Error("qualityGate status must be passed, verified, or covered for complete checkpoints");
-	}
 }
 
+export interface UltragoalCheckpointInput {
+	goalId: string;
+	status: string;
+	evidence?: string;
+	qualityGate?: unknown;
+}
+
+/**
+ * Checkpoint a goal. The write boundary is the trust boundary.
+ *
+ * For `complete`:
+ *  1. validate the typed quality gate (`validateExecutorQaEvidence`, hard break);
+ *  2. choose the receipt kind (`chooseReceiptKind`);
+ *  3. capture `goalJson` (the post-write goal snapshot, before the receipt is
+ *     attached) and `qualityGateJson` (the validated typed object);
+ *  4. append the `goal_checkpointed` ledger event carrying additive
+ *     `qualityGateJson` + `goalJson` + `completionVerification`;
+ *  5. build the receipt and attach it to the goal;
+ *  6. write the plan;
+ *  7. re-read the ledger and call `validateCompletionReceipt` with
+ *     `excludeEventId = checkpointLedgerEventId` to confirm the stored receipt
+ *     is fresh; refuse (throw) if it is stale/invalid.
+ *
+ * `goal.updatedAt` is set to the checkpoint `now`, matching the receipt's
+ * `verifiedAt`, so the drift check passes immediately. A later goal mutation
+ * bumps `updatedAt` past `verifiedAt` and the receipt goes stale.
+ */
 export async function checkpointUltragoalGoal(
 	cwd: string,
-	input: { goalId: string; status: string; evidence?: string; qualityGate?: unknown },
+	input: UltragoalCheckpointInput,
 	sessionId?: string,
 ): Promise<UltragoalGoal> {
 	const plan = await readUltragoalPlan(cwd);
@@ -319,9 +347,76 @@ export async function checkpointUltragoalGoal(
 	const goal = plan.goals.find((item) => item.id === input.goalId);
 	if (!goal) throw new Error(`unknown ultragoal goal: ${input.goalId}`);
 	const beforeStatus = goal.status;
-	if (status === "complete") validateCompletionEvidence(input.evidence ?? "", input.qualityGate);
 	const now = nowIso();
-	const event = await appendLedger(cwd, {
+
+	if (status === "complete") {
+		validateCompletionEvidence(input.evidence ?? "");
+		const typedQualityGate = await validateExecutorQaEvidence(cwd, input.qualityGate);
+		const receiptKind = chooseReceiptKind(plan, goal, status);
+		// Read the ledger BEFORE appending so the receipt basis captures the latest
+		// relevant prior event (the new checkpoint event is excluded via
+		// `excludeEventId` at both build and validation time).
+		const priorLedger = await readUltragoalLedger(cwd);
+		// Capture the post-write goal snapshot BEFORE attaching the receipt so the
+		// ledger event's `goalJson` excludes `completionVerification`.
+		const goalJson: Record<string, unknown> = {
+			...goal,
+			status,
+			updatedAt: now,
+			completedAt: now,
+			evidence: input.evidence?.trim(),
+			completionVerification: undefined,
+		};
+		const qualityGateJson: Record<string, unknown> = typedQualityGate as unknown as Record<string, unknown>;
+		const checkpointLedgerEventId = randomUUID();
+		const receipt = buildCompletionReceipt({
+			plan,
+			ledger: priorLedger,
+			goal,
+			receiptKind,
+			beforeStatus,
+			qualityGateJson,
+			goalJson,
+			now,
+			checkpointLedgerEventId,
+		});
+		goal.status = status;
+		goal.updatedAt = now;
+		goal.completedAt = now;
+		goal.evidence = input.evidence?.trim();
+		goal.completionVerification = receipt;
+		plan.updatedAt = now;
+		// Gajae parity: persist the plan FIRST, then append the ledger event with
+		// the explicit id and the receipt so the on-disk event carries
+		// `completionVerification` (the receipt references this event id).
+		await writePlan(cwd, plan);
+		await appendLedger(cwd, {
+			eventId: checkpointLedgerEventId,
+			event: "goal_checkpointed",
+			goalId: goal.id,
+			status,
+			statusBefore: beforeStatus,
+			evidenceSha256: input.evidence ? sha256(input.evidence) : undefined,
+			qualityGateJson,
+			goalJson,
+			completionVerification: receipt,
+		});
+		// Re-read the ledger (now includes the just-appended checkpoint event) and
+		// confirm the stored receipt is fresh. `excludeEventId` drops the receipt's
+		// own event so it does not self-stale.
+		const ledger = await readUltragoalLedger(cwd);
+		const diagnostic = validateCompletionReceipt({ plan, ledger, goal, receiptKind });
+		if (diagnostic.state !== "active_verified_complete") {
+			throw new Error(
+				`ultragoal complete checkpoint refused: ${diagnostic.message} Re-run verification with a valid typed quality gate.`,
+			);
+		}
+		await syncUltragoalState(cwd, await getUltragoalStatus(cwd), sessionId);
+		return goal;
+	}
+
+	// Non-complete statuses: no receipt, no quality gate required.
+	await appendLedger(cwd, {
 		event: "goal_checkpointed",
 		goalId: goal.id,
 		status,
@@ -331,20 +426,6 @@ export async function checkpointUltragoalGoal(
 	goal.status = status;
 	goal.updatedAt = now;
 	if (status === "active") goal.startedAt = goal.startedAt ?? now;
-	if (status === "complete") {
-		goal.completedAt = now;
-		goal.evidence = input.evidence?.trim();
-		goal.completionVerification = {
-			schemaVersion: 1,
-			receiptId: crypto.randomUUID(),
-			verifiedAt: now,
-			goalId: goal.id,
-			goalStatusBeforeCheckpoint: beforeStatus,
-			qualityGateHash: sha256(JSON.stringify(input.qualityGate)),
-			planHashBeforeCheckpoint: sha256(JSON.stringify(plan)),
-			checkpointLedgerEventId: event.eventId,
-		};
-	}
 	plan.updatedAt = now;
 	await writePlan(cwd, plan);
 	await syncUltragoalState(cwd, await getUltragoalStatus(cwd), sessionId);

@@ -2,6 +2,9 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { withFileMutationQueue } from "../../core/tools/file-mutation-queue.ts";
+import { canonicalizeJson } from "./canonical-json.ts";
+
+export { canonicalizeJson };
 
 export interface WriteArtifactResult {
 	path: string;
@@ -60,17 +63,6 @@ export async function readExistingStateForMutation(filePath: string): Promise<St
 	}
 }
 
-function canonicalizeJson(value: unknown): unknown {
-	if (Array.isArray(value)) return value.map(canonicalizeJson);
-	if (!isPlainObject(value)) return value;
-	const out: Record<string, unknown> = {};
-	for (const key of Object.keys(value).sort()) {
-		const item = value[key];
-		if (item !== undefined) out[key] = canonicalizeJson(item);
-	}
-	return out;
-}
-
 function withoutReceiptChecksum(value: unknown): unknown {
 	if (!isPlainObject(value)) return value;
 	const clone: Record<string, unknown> = { ...value };
@@ -113,6 +105,8 @@ export function createWorkflowReceipt(input: {
 	command: string;
 	mutatedAt: string;
 	mutationId?: string;
+	forced?: boolean;
+	operation?: string;
 }): Record<string, unknown> {
 	const freshUntil = new Date(Date.parse(input.mutatedAt) + WORKFLOW_RECEIPT_FRESH_MS).toISOString();
 	return {
@@ -126,6 +120,8 @@ export function createWorkflowReceipt(input: {
 		fresh_until: freshUntil,
 		status: "fresh" as WorkflowReceiptStatus,
 		mutation_id: input.mutationId ?? randomUUID(),
+		...(input.forced ? { forced: true } : {}),
+		...(input.operation ? { operation: input.operation } : {}),
 	};
 }
 

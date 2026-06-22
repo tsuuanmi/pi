@@ -1,4 +1,5 @@
 import type { RalplanStage, WorkflowSkill } from "./paths.ts";
+import { initialWorkflowPhase, PI_WORKFLOW_SKILLS } from "./workflow-manifest.ts";
 
 const WORKFLOW_STATE_VERSION = 1;
 
@@ -11,7 +12,7 @@ export interface WorkflowStateEnvelope {
 	[key: string]: unknown;
 }
 
-const WORKFLOW_SKILLS = new Set<string>(["deep-interview", "ralplan", "team", "ultragoal"]);
+const WORKFLOW_SKILLS = new Set<string>(PI_WORKFLOW_SKILLS);
 const RALPLAN_STAGES = new Set<string>(["planner", "architect", "critic", "revision", "adr", "final"]);
 
 export function isWorkflowSkill(value: string): value is WorkflowSkill {
@@ -55,7 +56,7 @@ export function coerceWorkflowState(
 				? patch.current_phase
 				: typeof existing.current_phase === "string"
 					? existing.current_phase
-					: "active",
+					: initialWorkflowPhase(skill),
 		updated_at: nowIso,
 	};
 }
