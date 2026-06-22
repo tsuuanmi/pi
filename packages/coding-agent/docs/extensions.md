@@ -4,7 +4,7 @@
 
 Extensions are TypeScript modules that extend pi's behavior. They can subscribe to lifecycle events, register custom tools callable by the LLM, add commands, and more.
 
-> **Placement for /reload:** Put extensions in `~/.pi/agent/extensions/` (global) or `.pi/extensions/` (project-local) for auto-discovery. Use `pi -e ./path.ts` only for quick tests. Extensions in auto-discovered locations can be hot-reloaded with `/reload`.
+> **Placement for /reload:** Put extensions in `~/.pi/agent/extensions/` (global) or `.pi/extensions/` (project-local) for auto-discovery. Extensions in auto-discovered locations can be hot-reloaded with `/reload`.
 
 **Key capabilities:**
 - **Custom tools** - Register tools the LLM can call via `pi.registerTool()`
@@ -99,10 +99,10 @@ export default function (pi: ExtensionAPI) {
 }
 ```
 
-Test with `--extension` (or `-e`) flag:
+Copy it into `~/.pi/agent/extensions/` (global) or `.pi/extensions/` (project-local) so pi auto-discovers it, then run `pi`. Use `/reload` to hot-reload after edits.
 
 ```bash
-pi -e ./my-extension.ts
+pi
 ```
 
 ## Extension Locations
@@ -345,7 +345,7 @@ exit (Ctrl+C, Ctrl+D, SIGHUP, SIGTERM)
 
 #### project_trust
 
-Fired before pi decides whether to trust a project with dynamic configs (`.pi` or `.agents/skills`). It runs during startup and when session replacement (for example `/resume`) enters a cwd whose trust has not been resolved in the current process. Only user/global extensions and CLI `-e` extensions participate; project-local extensions are not loaded until after trust is resolved.
+Fired before pi decides whether to trust a project with dynamic configs (`.pi` or `.agents/skills`). It runs during startup and when session replacement (for example `/resume`) enters a cwd whose trust has not been resolved in the current process. Only user/global extensions participate; project-local extensions are not loaded until after trust is resolved.
 
 ```typescript
 pi.on("project_trust", async (event, ctx) => {
@@ -500,11 +500,11 @@ pi.on("before_agent_start", async (event, ctx) => {
   // event.systemPrompt - current chained system prompt for this handler
   //   (includes changes from earlier before_agent_start handlers)
   // event.systemPromptOptions - structured options used to build the system prompt
-  //   .customPrompt - any custom system prompt (from --system-prompt, SYSTEM.md, or custom templates)
+  //   .customPrompt - any custom system prompt (from the SDK systemPrompt option, .pi/SYSTEM.md, or ~/.pi/agent/SYSTEM.md)
   //   .selectedTools - tools currently active in the prompt
   //   .toolSnippets - one-line descriptions for each tool
   //   .promptGuidelines - custom guideline bullets
-  //   .appendSystemPrompt - text from --append-system-prompt flags
+  //   .appendSystemPrompt - text from the SDK appendSystemPrompt option or a discovered APPEND_SYSTEM.md file
   //   .cwd - working directory
   //   .contextFiles - AGENTS.md files and other loaded context files
   //   .skills - loaded skills
@@ -1893,14 +1893,9 @@ pi.registerTool({
 Extensions can override built-in tools (`read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`) by registering a tool with the same name. Interactive mode displays a warning when this happens.
 
 ```bash
-# Extension's read tool replaces built-in read
-pi -e ./tool-override.ts
-```
-
-Alternatively, use `--no-builtin-tools` to start without any built-in tools while keeping extension tools enabled:
-```bash
-# No built-in tools, only extension tools
-pi --no-builtin-tools -e ./my-extension.ts
+# Copy the extension into an auto-discovered location, then run pi
+cp examples/extensions/tool-override.ts ~/.pi/agent/extensions/
+pi
 ```
 
 See [examples/extensions/tool-override.ts](../examples/extensions/tool-override.ts) for a complete example that overrides `read` with logging and access control.

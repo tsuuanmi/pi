@@ -33,19 +33,11 @@ pi update --extensions      # update packages and reconcile pinned git refs only
 pi update --self            # update pi only
 pi update --self --force    # reinstall pi even if current
 pi update npm:@foo/bar      # update one package
-pi update --extension npm:@foo/bar
 ```
 
 These commands manage pi packages, not the pi CLI installation. To uninstall pi itself, see [Quickstart](quickstart.md#uninstall).
 
 By default, `install` and `remove` write to user settings (`~/.pi/agent/settings.json`). Use `-l` to write to project settings (`.pi/settings.json`) instead. Project settings can be shared with your team, and pi installs any missing packages automatically on startup after the project is trusted.
-
-To try a package without installing it, use `--extension` or `-e`. This installs to a temporary directory for the current run only:
-
-```bash
-pi -e npm:@foo/bar
-pi -e git:github.com/user/repo
-```
 
 ## Package Sources
 

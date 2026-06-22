@@ -57,6 +57,12 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 - [Pi packages](packages.md) - bundle and share extensions, skills, prompts, and themes.
 - [Custom models](models.md) - add model entries for supported provider APIs.
 - [Custom providers](custom-provider.md) - implement custom APIs and OAuth flows.
+- [MCP](mcp.md) - load Model Context Protocol servers and expose their tools.
+
+## Workflows & subagents
+
+- [Pi workflow](workflow.md) - `pi workflow` control plane and built-in planning/execution skills.
+- [Subagents](subagents.md) - Pi-native `SubagentManager` for isolated agent workers.
 
 ## Programmatic usage
 

@@ -102,7 +102,6 @@ Custom providers can be added with `/provider add` or through `models.json`; see
 
 When resolving credentials for a provider:
 
-1. CLI `--api-key` flag
-2. `auth.json` entry (API key or OAuth token)
-3. Environment variable
-4. Custom provider keys from `models.json`
+1. `auth.json` entry (API key or OAuth token)
+2. Environment variable
+3. Custom provider keys from `models.json`

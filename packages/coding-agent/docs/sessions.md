@@ -9,10 +9,8 @@ Sessions auto-save to `~/.pi/agent/sessions/`, organized by working directory. E
 ```bash
 pi -c                  # Continue most recent session
 pi -r                  # Browse and select from past sessions
-pi --no-session        # Ephemeral mode; do not save
 pi --name "my task"    # Set session display name at startup
 pi --session <path|id> # Use a specific session file or partial session ID
-pi --fork <path|id>    # Fork a session file or partial session ID into a new session
 ```
 
 Use `/session` in interactive mode to see the current session file, session ID, message count, tokens, and cost.

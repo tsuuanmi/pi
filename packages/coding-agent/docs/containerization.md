@@ -29,11 +29,11 @@ cd ~/.pi/agent/extensions/gondolin
 npm install --ignore-scripts
 ```
 
-Run from the project you want mounted:
+Run from the project you want mounted. The Gondolin extension lives under `~/.pi/agent/extensions/`, which pi auto-discovers, so no flag is needed:
 
 ```bash
 cd /path/to/project
-pi -e ~/.pi/agent/extensions/gondolin
+pi
 ```
 
 The extension mounts the host cwd at `/workspace` in the VM and overrides `read`, `write`, `edit`, `bash`, `grep`, `find`, and `ls`.

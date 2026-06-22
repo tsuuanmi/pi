@@ -50,31 +50,10 @@ Unified LLM API with automatic model discovery, provider configuration, token an
 
 ## Supported Providers
 
-- **OpenAI**
-- **Ant Ling**
-- **Azure OpenAI (Responses)**
-- **OpenAI Codex** (ChatGPT Plus/Pro subscription, requires OAuth, see below)
-- **DeepSeek**
-- **NVIDIA NIM**
 - **Anthropic**
-- **Mistral**
-- **Groq**
-- **Cerebras**
-- **Cloudflare AI Gateway**
-- **Cloudflare Workers AI**
-- **OpenRouter**
-- **Vercel AI Gateway**
-- **ZAI** (with separate Coding Plan China provider)
-- **MiniMax**
-- **Together AI**
-- **GitHub Copilot** (requires OAuth, see below)
-- **Amazon Bedrock**
-- **OpenCode Zen**
-- **OpenCode Go**
-- **Fireworks** (uses Anthropic-compatible API)
-- **Kimi For Coding** (Moonshot AI, uses Anthropic-compatible API)
-- **Xiaomi MiMo** (uses Anthropic-compatible API; defaults to API billing endpoint, with separate Token Plan providers for `cn`/`ams`/`sgp` regions)
-- **Any OpenAI-compatible API**: Ollama, vLLM, LM Studio, etc.
+- **OpenAI**
+- **OpenAI Codex** (ChatGPT Plus/Pro subscription, requires OAuth, see below)
+- **Any OpenAI-compatible API**: Ollama, vLLM, LM Studio, LiteLLM, etc. (via custom models; see "Custom Models")
 
 ## Installation
 
@@ -430,63 +409,41 @@ Image generation uses a separate API surface from text/chat generation. Use `get
 
 Do not use `stream()` or `complete()` for image generation. Image generation is a one-shot API: `generateImages()` waits for the provider response and returns the final `AssistantImages` result.
 
-### Basic Image Generation
+No built-in image-generation providers ship with the library (`getImageProviders()` returns an empty list by default). Register a custom image-generation provider with `registerImagesApiProvider()`, add matching `ImagesModel` entries, then call `generateImages()`:
 
 ```typescript
-import { getImageModel, generateImages } from '@mariozechner/pi-ai';
+import { generateImages, registerImagesApiProvider } from '@earendil-works/pi-ai';
+import type { ImagesModel } from '@earendil-works/pi-ai';
 
-const model = getImageModel('openrouter', 'openai/gpt-image-1');
+registerImagesApiProvider({
+  api: 'my-image-api',
+  generateImages: async (model, context, options) => {
+    // call your image-generation backend and return AssistantImages
+    return { /* ... */ };
+  },
+});
+
+const model: ImagesModel<'my-image-api'> = {
+  id: 'my-image-1',
+  name: 'My Image 1',
+  api: 'my-image-api',
+  provider: 'my-provider',
+  input: ['text'],
+  output: ['image'],
+};
 
 const result = await generateImages(model, {
   input: [{ type: 'text', text: 'Generate a red circle on a plain white background.' }]
-}, {
-  apiKey: process.env.OPENROUTER_API_KEY
-});
-
-for (const block of result.output) {
-  if (block.type === 'text') {
-    console.log(block.text);
-  } else if (block.type === 'image') {
-    console.log(block.mimeType);
-    console.log(block.data.substring(0, 32));
-  }
-}
-```
-
-Some models also support image input:
-
-```typescript
-import { readFileSync } from 'fs';
-
-const imageBuffer = readFileSync('input.png');
-const result = await generateImages(model, {
-  input: [
-    { type: 'text', text: 'Create a variation of this image with a blue background.' },
-    { type: 'image', data: imageBuffer.toString('base64'), mimeType: 'image/png' }
-  ]
-}, {
-  apiKey: process.env.OPENROUTER_API_KEY
 });
 ```
-
-Check capabilities on the model metadata:
-
-```typescript
-console.log(model.input);   // ['text', 'image']
-console.log(model.output);  // ['image'] or ['image', 'text']
-```
-
-### Notes and Limitations
 
 - Use `getImageModel(...)`, not `getModel(...)`.
 - Use `generateImages()`, not `stream()` / `complete()`.
 - Image-generation models do not participate in tool calling.
 - Outputs are returned in `AssistantImages.output` and can include both base64-encoded `ImageContent` blocks and `TextContent` blocks.
-- Some models return only images, others return images plus text. Check `model.output`.
-- Some models accept image input, others are text-to-image only. Check `model.input`.
+- Some models accept image input, others are text-to-image only. Check `model.input`; some return only images, others images plus text. Check `model.output`.
 - Like the streaming APIs, image generation supports options such as `apiKey`, `signal`, `headers`, `onPayload`, and `onResponse`, and results may include `stopReason`, `responseId`, and `usage`.
 - If you want a model to analyze images in a conversation or call tools, use the regular `stream()` / `complete()` APIs with a model that supports image input.
-- At the moment, image generation is available through only one provider, OpenRouter.
 
 ## Thinking/Reasoning
 
@@ -500,9 +457,7 @@ import { getModel, streamSimple, completeSimple } from '@earendil-works/pi-ai';
 // Many models across providers support thinking/reasoning
 const model = getModel('anthropic', 'claude-sonnet-4-20250514');
 // or getModel('openai', 'gpt-5-mini');
-// or getModel('groq', 'openai/gpt-oss-20b');
-// or getModel('cerebras', 'gpt-oss-120b');
-// or getModel('openrouter', 'z-ai/glm-4.5v');
+// or getModel('openai-codex', 'gpt-5-codex');
 
 // Check if model supports reasoning
 if (model.reasoning) {
@@ -688,12 +643,9 @@ The callback is supported by `stream`, `complete`, `streamSimple`, and `complete
 The library uses a registry of API implementations. Built-in APIs include:
 
 - **`anthropic-messages`**: Anthropic Messages API (`streamAnthropic`, `AnthropicOptions`)
-- **`mistral-conversations`**: Mistral Conversations API (`streamMistral`, `MistralOptions`)
 - **`openai-completions`**: OpenAI Chat Completions API (`streamOpenAICompletions`, `OpenAICompletionsOptions`)
 - **`openai-responses`**: OpenAI Responses API (`streamOpenAIResponses`, `OpenAIResponsesOptions`)
 - **`openai-codex-responses`**: OpenAI Codex Responses API (`streamOpenAICodexResponses`, `OpenAICodexResponsesOptions`)
-- **`azure-openai-responses`**: Azure OpenAI Responses API (`streamAzureOpenAIResponses`, `AzureOpenAIResponsesOptions`)
-- **`bedrock-converse-stream`**: Amazon Bedrock Converse API (`streamBedrock`, `BedrockOptions`)
 
 ### Faux provider for tests
 
@@ -786,8 +738,7 @@ Notes:
 A **provider** offers models through a specific API. For example:
 - **Anthropic** models use the `anthropic-messages` API
 - **OpenAI** models use the `openai-responses` API
-- **Mistral** models use the `mistral-conversations` API
-- **Cerebras, Groq, NVIDIA NIM, Together AI, etc.** models use the `openai-completions` API (OpenAI-compatible)
+- **OpenAI-compatible servers** (Ollama, vLLM, LiteLLM, etc.) use the `openai-completions` API
 
 ### Querying Providers and Models
 
@@ -913,21 +864,20 @@ The `openai-completions` API is implemented by many providers with minor differe
 
 ```typescript
 interface OpenAICompletionsCompat {
-  supportsStore?: boolean;           // Whether provider supports the `store` field (default: true)
-  supportsDeveloperRole?: boolean;   // Whether provider supports `developer` role vs `system` (default: true)
-  supportsReasoningEffort?: boolean; // Whether provider supports `reasoning_effort` (default: true)
+  supportsStore?: boolean;           // Whether provider supports the `store` field (default: auto-detected from URL)
+  supportsDeveloperRole?: boolean;   // Whether provider supports `developer` role vs `system` (default: auto-detected from URL)
+  supportsReasoningEffort?: boolean; // Whether provider supports `reasoning_effort` (default: auto-detected from URL)
   supportsUsageInStreaming?: boolean; // Whether provider supports `stream_options: { include_usage: true }` (default: true)
+  maxTokensField?: 'max_completion_tokens' | 'max_tokens';  // Which field name to use (default: auto-detected from URL)
+  requiresToolResultName?: boolean;  // Whether tool results require the `name` field (default: auto-detected from URL)
+  requiresAssistantAfterToolResult?: boolean; // Whether tool results must be followed by an assistant message (default: auto-detected from URL)
+  requiresThinkingAsText?: boolean;  // Whether thinking blocks must be converted to text blocks with <thinking> delimiters (default: auto-detected from URL)
+  requiresReasoningContentOnAssistantMessages?: boolean; // Whether all replayed assistant messages must include empty reasoning_content when reasoning is enabled (default: auto-detected)
+  thinkingFormat?: 'openai' | 'string-thinking'; // Format for reasoning/thinking parameter. 'openai' uses reasoning_effort, 'string-thinking' uses a top-level `thinking` string (default: 'openai')
   supportsStrictMode?: boolean;      // Whether provider supports `strict` in tool definitions (default: true)
-  sendSessionAffinityHeaders?: boolean; // Whether to send `session_id`, `x-client-request-id`, and `x-session-affinity` from `sessionId` when caching is enabled (default: false)
-  maxTokensField?: 'max_completion_tokens' | 'max_tokens';  // Which field name to use (default: max_completion_tokens)
-  requiresToolResultName?: boolean;  // Whether tool results require the `name` field (default: false)
-  requiresAssistantAfterToolResult?: boolean; // Whether tool results must be followed by an assistant message (default: false)
-  requiresThinkingAsText?: boolean;  // Whether thinking blocks must be converted to text (default: false)
-  requiresReasoningContentOnAssistantMessages?: boolean; // Whether all replayed assistant messages must include empty reasoning_content when reasoning is enabled (default: auto-detected for DeepSeek)
-  thinkingFormat?: 'openai' | 'openrouter' | 'deepseek' | 'together' | 'zai' | 'qwen' | 'qwen-chat-template' | 'string-thinking' | 'ant-ling'; // Format for reasoning param: 'openai' uses reasoning_effort, 'openrouter' uses reasoning: { effort }, 'deepseek' uses thinking: { type } plus reasoning_effort when supported, 'together' uses reasoning: { enabled } plus reasoning_effort when supported, 'zai' uses enable_thinking, 'qwen' uses enable_thinking, 'qwen-chat-template' uses chat_template_kwargs.enable_thinking, 'string-thinking' uses top-level thinking, 'ant-ling' uses reasoning: { effort } only for mapped efforts (default: openai)
   cacheControlFormat?: 'anthropic';  // Anthropic-style cache_control on system prompt, last tool, and last user/assistant text content
-  openRouterRouting?: OpenRouterRouting; // OpenRouter routing preferences (default: {})
-  vercelGatewayRouting?: VercelGatewayRouting; // Vercel AI Gateway routing preferences (default: {})
+  sendSessionAffinityHeaders?: boolean; // Whether to send `session_id`, `x-client-request-id`, and `x-session-affinity` from `sessionId` when caching is enabled (default: false)
+  supportsLongCacheRetention?: boolean; // Whether the provider supports long prompt cache retention (`prompt_cache_retention: "24h"` or Anthropic-style `cache_control.ttl: "1h"`, depending on format). Default: true
 }
 
 interface OpenAIResponsesCompat {
@@ -1071,10 +1021,8 @@ const response = await complete(model, {
 
 ### Browser Compatibility Notes
 
-- Amazon Bedrock (`bedrock-converse-stream`) is not supported in browser environments.
 - OAuth login flows are not supported in browser environments. Use the `@earendil-works/pi-ai/oauth` entry point in Node.js.
-- In browser builds, Bedrock can still appear in model lists. Calls to Bedrock models fail at runtime.
-- Use a server-side proxy or backend service if you need Bedrock or OAuth-based auth from a web app.
+- Use a server-side proxy or backend service if you need OAuth-based auth from a web app.
 
 ### Environment Variables (Node.js only)
 
@@ -1082,31 +1030,8 @@ In Node.js environments, you can set environment variables to avoid passing API 
 
 | Provider | Environment Variable(s) |
 |----------|------------------------|
-| OpenAI | `OPENAI_API_KEY` |
-| Ant Ling | `ANT_LING_API_KEY` |
-| Azure OpenAI | `AZURE_OPENAI_API_KEY` + `AZURE_OPENAI_BASE_URL` (e.g. `https://{resource}.openai.azure.com`) or `AZURE_OPENAI_RESOURCE_NAME`. Supports `*.openai.azure.com` and `*.cognitiveservices.azure.com`; root endpoints auto-normalize to `/openai/v1`. Optional: `AZURE_OPENAI_API_VERSION` (default `v1`), `AZURE_OPENAI_DEPLOYMENT_NAME_MAP`. |
 | Anthropic | `ANTHROPIC_API_KEY` or `ANTHROPIC_OAUTH_TOKEN` |
-| DeepSeek | `DEEPSEEK_API_KEY` |
-| NVIDIA NIM | `NVIDIA_API_KEY` |
-| Mistral | `MISTRAL_API_KEY` |
-| Groq | `GROQ_API_KEY` |
-| Cerebras | `CEREBRAS_API_KEY` |
-| Cloudflare AI Gateway | `CLOUDFLARE_API_KEY` + `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_GATEWAY_ID` |
-| Cloudflare Workers AI | `CLOUDFLARE_API_KEY` + `CLOUDFLARE_ACCOUNT_ID` |
-| Fireworks | `FIREWORKS_API_KEY` |
-| Together AI | `TOGETHER_API_KEY` |
-| OpenRouter | `OPENROUTER_API_KEY` |
-| Vercel AI Gateway | `AI_GATEWAY_API_KEY` |
-| zAI | `ZAI_API_KEY` |
-| ZAI Coding Plan (China) | `ZAI_CODING_CN_API_KEY` |
-| MiniMax | `MINIMAX_API_KEY` |
-| OpenCode Zen / OpenCode Go | `OPENCODE_API_KEY` |
-| Kimi For Coding | `KIMI_API_KEY` |
-| Xiaomi MiMo (API billing) | `XIAOMI_API_KEY` |
-| Xiaomi MiMo Token Plan (China) | `XIAOMI_TOKEN_PLAN_CN_API_KEY` |
-| Xiaomi MiMo Token Plan (Amsterdam) | `XIAOMI_TOKEN_PLAN_AMS_API_KEY` |
-| Xiaomi MiMo Token Plan (Singapore) | `XIAOMI_TOKEN_PLAN_SGP_API_KEY` |
-| GitHub Copilot | `COPILOT_GITHUB_TOKEN` |
+| OpenAI | `OPENAI_API_KEY` |
 
 When set, the library automatically uses these keys:
 
@@ -1123,16 +1048,15 @@ const response = await complete(model, context, {
 
 ### Provider-Scoped Environment Overrides
 
-Pass `env` in stream options to scope provider configuration to a request. Values in `env` are used before process environment variables for API key discovery and provider configuration such as Cloudflare account IDs, Azure OpenAI settings, Bedrock settings, `PI_CACHE_RETENTION`, and `HTTP_PROXY`/`HTTPS_PROXY`.
+Pass `env` in stream options to scope provider configuration to a request. Values in `env` take precedence over process environment variables for API key discovery and provider configuration such as `PI_CACHE_RETENTION` and `HTTP_PROXY`/`HTTPS_PROXY`.
 
 ```typescript
-const model = getModel('cloudflare-ai-gateway', 'workers-ai/@cf/moonshotai/kimi-k2.6');
+const model = getModel('anthropic', 'claude-sonnet-4-20250514');
 
 const response = await complete(model, context, {
   env: {
-    CLOUDFLARE_API_KEY: '...',
-    CLOUDFLARE_ACCOUNT_ID: 'account-id',
-    CLOUDFLARE_GATEWAY_ID: 'gateway-id'
+    ANTHROPIC_API_KEY: 'sk-ant-per-request-key',
+    PI_CACHE_RETENTION: 'long',
   }
 });
 ```
@@ -1150,11 +1074,10 @@ const key = getEnvApiKey('openai');  // checks OPENAI_API_KEY
 
 ## OAuth Providers
 
-Several providers require OAuth authentication instead of static API keys:
+The following providers require OAuth authentication instead of static API keys:
 
 - **Anthropic** (Claude Pro/Max subscription)
 - **OpenAI Codex** (ChatGPT Plus/Pro subscription, access to GPT-5.x Codex models)
-- **GitHub Copilot** (Copilot subscription)
 
 ### CLI Login
 
@@ -1177,7 +1100,6 @@ import {
   // Login functions (return credentials, do not store)
   loginAnthropic,
   loginOpenAICodex,
-  loginGitHubCopilot,
 
   // Token management
   refreshOAuthToken,   // (provider, credentials) => new credentials
@@ -1192,10 +1114,10 @@ import {
 ### Login Flow Example
 
 ```typescript
-import { loginGitHubCopilot } from '@earendil-works/pi-ai/oauth';
+import { loginOpenAICodex } from '@earendil-works/pi-ai/oauth';
 import { writeFileSync } from 'fs';
 
-const credentials = await loginGitHubCopilot({
+const credentials = await loginOpenAICodex({
   onAuth: (url, instructions) => {
     console.log(`Open: ${url}`);
     if (instructions) console.log(instructions);
@@ -1207,7 +1129,7 @@ const credentials = await loginGitHubCopilot({
 });
 
 // Store credentials yourself
-const auth = { 'github-copilot': { type: 'oauth', ...credentials } };
+const auth = { 'openai-codex': { type: 'oauth', ...credentials } };
 writeFileSync('auth.json', JSON.stringify(auth, null, 2));
 ```
 
@@ -1224,15 +1146,15 @@ import { readFileSync, writeFileSync } from 'fs';
 const auth = JSON.parse(readFileSync('auth.json', 'utf-8'));
 
 // Get API key (refreshes if expired)
-const result = await getOAuthApiKey('github-copilot', auth);
+const result = await getOAuthApiKey('openai-codex', auth);
 if (!result) throw new Error('Not logged in');
 
 // Save refreshed credentials
-auth['github-copilot'] = { type: 'oauth', ...result.newCredentials };
+auth['openai-codex'] = { type: 'oauth', ...result.newCredentials };
 writeFileSync('auth.json', JSON.stringify(auth, null, 2));
 
 // Use the API key
-const model = getModel('github-copilot', 'gpt-4o');
+const model = getModel('openai-codex', 'gpt-5.5');
 const response = await complete(model, {
   messages: [{ role: 'user', content: 'Hello!' }]
 }, { apiKey: result.apiKey });
@@ -1241,10 +1163,6 @@ const response = await complete(model, {
 ### Provider Notes
 
 **OpenAI Codex**: Requires a ChatGPT Plus or Pro subscription. Provides access to GPT-5.x Codex models with extended context windows and reasoning capabilities. The library automatically handles session-based prompt caching when `sessionId` is provided in stream options. You can set `transport` in stream options to `"sse"`, `"websocket"`, or `"auto"` for Codex Responses transport selection. When using WebSocket with a `sessionId`, connections are reused per session and expire after 5 minutes of inactivity.
-
-**Azure OpenAI (Responses)**: Uses the Responses API only. Set `AZURE_OPENAI_API_KEY` and either `AZURE_OPENAI_BASE_URL` or `AZURE_OPENAI_RESOURCE_NAME`. `AZURE_OPENAI_BASE_URL` supports both `https://<resource>.openai.azure.com` and `https://<resource>.cognitiveservices.azure.com`; root endpoints are normalized to `.../openai/v1` automatically. Use `AZURE_OPENAI_API_VERSION` (defaults to `v1`) to override the API version if needed. Deployment names are treated as model IDs by default, override with `azureDeploymentName` or `AZURE_OPENAI_DEPLOYMENT_NAME_MAP` using comma-separated `model-id=deployment` pairs (for example `gpt-4o-mini=my-deployment,gpt-4o=prod`). Legacy deployment-based URLs are intentionally unsupported.
-
-**GitHub Copilot**: If you get "The requested model is not supported" error, enable the model manually in VS Code: open Copilot Chat, click the model selector, select the model (warning icon), and click "Enable".
 
 ## Development
 
@@ -1287,29 +1205,15 @@ Create a new provider file (for example `amazon-bedrock.ts`) that exports:
 
 #### 5. Tests (`test/`)
 
-Create or update test files to cover the new provider:
+Add tests under `packages/ai/test/` covering the new provider — streaming and tool use, token usage reporting, request abort, and context replay. The existing suites are provider-specific (for example `anthropic-sse-parsing.test.ts`, `openai-codex-stream.test.ts`, `openai-responses-message-id.test.ts`); follow that pattern. For scripted, deterministic flows, use the `registerFauxProvider()` helper (see "Faux provider for tests" above) instead of hitting a live API.
 
-- `stream.test.ts` - Basic streaming and tool use
-- `tokens.test.ts` - Token usage reporting
-- `abort.test.ts` - Request cancellation
-- `empty.test.ts` - Empty message handling
-- `context-overflow.test.ts` - Context limit errors
-- `image-limits.test.ts` - Image support (if applicable)
-- `unicode-surrogate.test.ts` - Unicode handling
-- `tool-call-without-result.test.ts` - Orphaned tool calls
-- `image-tool-result.test.ts` - Images in tool results
-- `total-tokens.test.ts` - Token counting accuracy
-- `cross-provider-handoff.test.ts` - Cross-provider context replay
-
-For `cross-provider-handoff.test.ts`, add at least one provider/model pair. If the provider exposes multiple model families (for example GPT and Claude), add at least one pair per family.
-
-For providers with non-standard auth (AWS), create a utility like `bedrock-utils.ts` with credential detection helpers.
+For providers with non-standard auth, add credential-detection helpers alongside `env-api-keys.ts` (and a matching `env-api-keys.test.ts` case).
 
 #### 6. Coding Agent Integration (`../coding-agent/`)
 
 Update `src/core/model-resolver.ts`:
 
-- Add a default model ID for the provider in `DEFAULT_MODELS`
+- Add a default model ID for the provider in `defaultModelPerProvider`
 
 Update `src/cli/args.ts`:
 

@@ -115,36 +115,12 @@ For each built-in provider, pi maintains a list of tool-capable models, updated 
 **Subscriptions:**
 - Anthropic Claude Pro/Max
 - OpenAI ChatGPT Plus/Pro (Codex)
-- GitHub Copilot
 
 **API keys:**
 - Anthropic
-- Ant Ling
 - OpenAI
-- Azure OpenAI
-- DeepSeek
-- NVIDIA NIM
-- Amazon Bedrock
-- Mistral
-- Groq
-- Cerebras
-- Cloudflare AI Gateway
-- Cloudflare Workers AI
-- OpenRouter
-- Vercel AI Gateway
-- ZAI
-- ZAI Coding Plan (China)
-- OpenCode Zen
-- OpenCode Go
-- Hugging Face
-- Fireworks
-- Together AI
-- Kimi For Coding
-- MiniMax
-- Xiaomi MiMo
-- Xiaomi MiMo Token Plan (China)
-- Xiaomi MiMo Token Plan (Amsterdam)
-- Xiaomi MiMo Token Plan (Singapore)
+
+Any other OpenAI-compatible API (Ollama, vLLM, LM Studio, LiteLLM, etc.) can be added as a custom model/provider; see [docs/models.md](docs/models.md) and [docs/custom-provider.md](docs/custom-provider.md).
 
 See [docs/providers.md](docs/providers.md) for detailed setup instructions.
 
@@ -196,7 +172,8 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 | `/fork` | Create a new session from a previous user message |
 | `/compact [prompt]` | Manually compact context, optional custom instructions |
 | `/copy` | Copy last assistant message to clipboard |
-| `/export [file]` | Export session to HTML file |
+| `/export [file]` | Export session to HTML (default) or `.jsonl` |
+| `/import <file>` | Import and resume a session from a JSONL file |
 | `/share` | Upload as private GitHub gist with shareable HTML link |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files (themes hot-reload automatically) |
 | `/hotkeys` | Show all keyboard shortcuts |
@@ -246,13 +223,11 @@ Sessions auto-save to `~/.pi/agent/sessions/` organized by working directory.
 ```bash
 pi -c                  # Continue most recent session
 pi -r                  # Browse and select from past sessions
-pi --no-session        # Ephemeral mode (don't save)
 pi --name "my task"    # Set session display name at startup
 pi --session <path|id> # Use specific session file or ID
-pi --fork <path|id>    # Fork specific session file or ID into a new session
 ```
 
-Use `/session` in interactive mode to see the current session ID before reusing it with `--session <id>` or `--fork <id>`.
+Use `/session` in interactive mode to see the current session ID before reusing it with `--session <id>`.
 
 ### Branching
 
@@ -265,8 +240,6 @@ Use `/session` in interactive mode to see the current session ID before reusing 
 - Press Shift+L to label entries as bookmarks and Shift+T to toggle label timestamps
 
 **`/fork`** - Create a new session file from a previous user message on the active branch. Opens a selector, copies the active path up to that point, and places the selected prompt in the editor for modification.
-
-**`--fork <path|id>`** - Fork an existing session file or partial session UUID directly from the CLI. This copies the full source session into a new session file in the current project.
 
 ### Compaction
 
@@ -295,13 +268,13 @@ See [docs/settings.md](docs/settings.md) for all options.
 
 On interactive startup, pi asks before trusting a project folder that contains project-local settings, resources, or project `.agents/skills` and has no saved decision for the folder or a parent folder in `~/.pi/agent/trust.json`. Trusting a project allows pi to load `.pi/settings.json` and `.pi` resources, install missing project packages, and execute project extensions.
 
-Before the trust decision, pi loads only context files, user/global extensions, and CLI `-e` extensions so they can handle the `project_trust` event. Project-local extensions, project package-managed extensions, and project settings are loaded only after the project is trusted. This split also applies when switching to a session from a different cwd whose trust has not been resolved in the current process.
+Before the trust decision, pi loads only context files and user/global extensions so they can handle the `project_trust` event. Project-local extensions, project package-managed extensions, and project settings are loaded only after the project is trusted. This split also applies when switching to a session from a different cwd whose trust has not been resolved in the current process.
 
-Non-interactive modes (`-p`, `--mode json`, and `--mode rpc`) do not show a trust prompt. Without an applicable saved trust decision, they use `defaultProjectTrust` from global settings: `ask` (default) and `never` ignore those project resources, while `always` trusts them. Pass `--approve`/`-a` or `--no-approve`/`-na` to override project trust for one run.
+Non-interactive modes (`-p`, `--mode json`, and `--mode rpc`) do not show a trust prompt. Without an applicable saved trust decision, they use `defaultProjectTrust` from global settings: `ask` (default) and `never` ignore those project resources, while `always` trusts them.
 
 If no extension or saved decision applies, `defaultProjectTrust` controls the fallback behavior. Set it to `"ask"`, `"always"`, or `"never"` in `~/.pi/agent/settings.json`, or change it with `/settings`.
 
-`pi config` and package commands use the same project trust flow, except `pi update` never prompts. Pass `--approve` to trust project-local settings for one command or `--no-approve` to ignore them.
+`pi config` and package commands use the same project trust flow, except `pi update` never prompts.
 
 Use `/trust` in interactive mode to save a project trust decision for future sessions, including trust for the immediate parent folder. It writes `~/.pi/agent/trust.json` only; the current session is not reloaded, so restart pi for changes to take effect.
 
@@ -325,7 +298,7 @@ Pi loads `AGENTS.md` (or `CLAUDE.md`) at startup from:
 
 Use for project instructions (`AGENTS.md`/`CLAUDE.md`), conventions, common commands. All matching files are concatenated.
 
-Disable context file loading with `--no-context-files` (or `-nc`).
+Disable context file loading via the SDK `noContextFiles` resource-loader option.
 
 ### System Prompt
 
@@ -531,12 +504,12 @@ pi update [source|self|pi]   # Update pi and packages (skips pinned packages)
 pi update --extensions       # Update packages only
 pi update --self             # Update pi only
 pi update --self --force     # Reinstall pi even if current
-pi update --extension <src>  # Update one package
+pi update <src>            # Update one package
 pi list                      # List installed packages
 pi config                    # Enable/disable package resources
 ```
 
-`pi config` and project package commands accept `--approve`/`--no-approve` to trust or ignore project-local settings for one command. `pi update` never prompts for project trust.
+`pi update` never prompts for project trust.
 
 ### Modes
 
@@ -546,7 +519,7 @@ pi config                    # Enable/disable package resources
 | `-p`, `--print` | Print response and exit |
 | `--mode json` | Output all events as JSON lines (see [docs/json.md](docs/json.md)) |
 | `--mode rpc` | RPC mode for process integration (see [docs/rpc.md](docs/rpc.md)) |
-| `--export <in> [out]` | Export session to HTML |
+| `--tmux` | Launch interactive startup inside a new tmux session |
 
 In print mode, pi also reads piped stdin and merges it into the initial prompt:
 
@@ -560,10 +533,10 @@ cat README.md | pi -p "Summarize this text"
 |--------|-------------|
 | `--provider <name>` | Provider (anthropic, openai, openai-codex, etc.) |
 | `--model <pattern>` | Model pattern or ID (supports `provider/id` and optional `:<thinking>`) |
-| `--api-key <key>` | API key (overrides env vars) |
 | `--thinking <level>` | `off`, `minimal`, `low`, `medium`, `high`, `xhigh` |
-| `--models <patterns>` | Comma-separated patterns for Ctrl+P cycling |
 | `--list-models [search]` | List available models |
+
+Ctrl+P model cycling uses the `enabledModels` setting (see [docs/settings.md](docs/settings.md#model-cycling)).
 
 ### Session Options
 
@@ -572,47 +545,23 @@ cat README.md | pi -p "Summarize this text"
 | `-c`, `--continue` | Continue most recent session |
 | `-r`, `--resume` | Browse and select session |
 | `--session <path\|id>` | Use specific session file or partial UUID |
-| `--fork <path\|id>` | Fork specific session file or partial UUID into a new session |
-| `--session-dir <dir>` | Custom session storage directory |
-| `--no-session` | Ephemeral mode (don't save) |
 | `--name <name>`, `-n <name>` | Set session display name at startup |
 
-### Tool Options
+Session storage directory is set via the `PI_CODING_AGENT_SESSION_DIR` environment variable or the `sessionDir` setting (see [docs/settings.md](docs/settings.md)).
 
-| Option | Description |
-|--------|-------------|
-| `--tools <list>`, `-t <list>` | Allowlist specific tool names across built-in, extension, and custom tools |
-| `--exclude-tools <list>`, `-xt <list>` | Disable specific tool names across built-in, extension, and custom tools |
-| `--no-builtin-tools`, `-nbt` | Disable built-in tools by default but keep extension/custom tools enabled |
-| `--no-tools`, `-nt` | Disable all tools by default |
+### Tools
 
-Available built-in tools: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`
+Available built-in tools: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`. Extensions can register additional tools or override built-ins (see [docs/extensions.md](docs/extensions.md)). The active tool set is controlled via the SDK (`customTools` / `setActiveTools`); there are no CLI flags for tool selection.
 
-### Resource Options
+### Resources
 
-| Option | Description |
-|--------|-------------|
-| `-e`, `--extension <source>` | Load extension from path, npm, or git (repeatable) |
-| `--no-extensions` | Disable extension discovery |
-| `--skill <path>` | Load skill (repeatable) |
-| `--no-skills` | Disable skill discovery |
-| `--prompt-template <path>` | Load prompt template (repeatable) |
-| `--no-prompt-templates` | Disable prompt template discovery |
-| `--theme <path>` | Load theme (repeatable) |
-| `--no-themes` | Disable theme discovery |
-| `--no-context-files`, `-nc` | Disable AGENTS.md and CLAUDE.md context file discovery |
-
-Combine `--no-*` with explicit flags to load exactly what you need, ignoring settings.json (e.g., `--no-extensions -e ./my-ext.ts`).
+Extensions, skills, prompt templates, and themes are auto-discovered from `~/.pi/agent/` and `.pi/` directories and can be added via the `extensions`, `skills`, `prompts`, and `themes` arrays in `settings.json`. There are no CLI flags for loading or disabling these; see [docs/extensions.md](docs/extensions.md), [docs/skills.md](docs/skills.md), [docs/prompt-templates.md](docs/prompt-templates.md), and [docs/themes.md](docs/themes.md).
 
 ### Other Options
 
 | Option | Description |
 |--------|-------------|
-| `--system-prompt <text>` | Replace default prompt (context files and skills still appended) |
-| `--append-system-prompt <text>` | Append to system prompt |
-| `--verbose` | Force verbose startup |
-| `-a`, `--approve` | Trust project-local files for this run |
-| `-na`, `--no-approve` | Ignore project-local files for this run |
+| `--verbose` | Force verbose startup (overrides `quietStartup` setting) |
 | `-h`, `--help` | Show help |
 | `-v`, `--version` | Show version |
 
@@ -650,15 +599,6 @@ pi --model openai/gpt-4o "Help me refactor"
 # Model with thinking level shorthand
 pi --model sonnet:high "Solve this complex problem"
 
-# Limit model cycling
-pi --models "claude-*,gpt-4o"
-
-# Read-only mode
-pi --tools read,grep,find,ls -p "Review the code"
-
-# Disable one extension or built-in tool while keeping the rest available
-pi --exclude-tools ask_question
-
 # High thinking level
 pi --thinking high "Solve this complex problem"
 ```
@@ -668,7 +608,7 @@ pi --thinking high "Solve this complex problem"
 | Variable | Description |
 |----------|-------------|
 | `PI_CODING_AGENT_DIR` | Override config directory (default: `~/.pi/agent`) |
-| `PI_CODING_AGENT_SESSION_DIR` | Override session storage directory (overridden by `--session-dir`) |
+| `PI_CODING_AGENT_SESSION_DIR` | Override session storage directory |
 | `PI_PACKAGE_DIR` | Override package directory (useful for Nix/Guix where store paths tokenize poorly) |
 | `PI_OFFLINE` | Disable startup network operations, including update checks, package update checks, and install/update telemetry |
 | `PI_SKIP_VERSION_CHECK` | Skip the Pi version update check at startup. This prevents the `pi.dev` latest-version request |

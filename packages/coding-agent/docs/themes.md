@@ -23,9 +23,6 @@ Pi loads themes from:
 - Project: `.pi/themes/*.json` (only after the project is trusted)
 - Packages: `themes/` directories or `pi.themes` entries in `package.json`
 - Settings: `themes` array with files or directories
-- CLI: `--theme <path>` (repeatable)
-
-Disable discovery with `--no-themes`.
 
 ## Selecting a Theme
 

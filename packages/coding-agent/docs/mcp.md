@@ -40,12 +40,13 @@ Example `.mcp.json`:
 pi mcp list
 pi mcp list --json
 pi mcp add filesystem --command npx --args -y @modelcontextprotocol/server-filesystem .
+pi mcp add filesystem --command npx --args -y @modelcontextprotocol/server-filesystem . --env API_KEY=sk-...
 pi mcp add remote --url https://example.com/mcp
 pi mcp remove filesystem
-pi mcp test filesystem
+pi mcp test filesystem --timeout 10
 ```
 
-`pi mcp test <server>` starts the configured server, performs the MCP initialize handshake, lists tools, and prints the tool count.
+`pi mcp add` writes to project `.mcp.json`. Use `--command <cmd>` (stdio) or `--url <url>` (HTTP/SSE); the two are mutually exclusive. `--args` consumes all following positional tokens as command arguments, and `--env KEY=VAL` (repeatable) sets environment variables on the stdio transport. `pi mcp test <name> [--timeout <sec>]` starts the configured server, performs the MCP initialize handshake, lists tools, and prints the tool count.
 
 ## Tool names
 

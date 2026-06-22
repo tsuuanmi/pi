@@ -14,8 +14,6 @@ Common options:
 - `--provider <name>`: Set the LLM provider (anthropic, openai, openai-codex, etc.)
 - `--model <pattern>`: Model pattern or ID (supports `provider/id` and optional `:<thinking>`)
 - `--name <name>` / `-n <name>`: Set the session display name at startup
-- `--no-session`: Disable session persistence
-- `--session-dir <path>`: Custom session storage directory
 
 ## Protocol Overview
 
@@ -288,7 +286,7 @@ Set the reasoning/thinking level for models that support it.
 
 Levels: `"off"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`
 
-Note: `"xhigh"` is only supported by OpenAI codex-max models.
+Note: `"xhigh"` is supported by select reasoning models; availability depends on the model's `thinkingLevelMap`.
 
 Response:
 ```json
@@ -715,9 +713,9 @@ Response:
   "success": true,
   "data": {
     "commands": [
-      {"name": "session-name", "description": "Set or clear session name", "source": "extension", "path": "/home/user/.pi/agent/extensions/session.ts"},
-      {"name": "fix-tests", "description": "Fix failing tests", "source": "prompt", "location": "project", "path": "/home/user/myproject/.pi/agent/prompts/fix-tests.md"},
-      {"name": "skill:brave-search", "description": "Web search via Brave API", "source": "skill", "location": "user", "path": "/home/user/.pi/agent/skills/brave-search/SKILL.md"}
+      {"name": "session-name", "description": "Set or clear session name", "source": "extension", "sourceInfo": {"path": "/home/user/.pi/agent/extensions/session.ts", "source": "auto", "scope": "user", "origin": "top-level"}},
+      {"name": "fix-tests", "description": "Fix failing tests", "source": "prompt", "sourceInfo": {"path": "/home/user/myproject/.pi/prompts/fix-tests.md", "source": "auto", "scope": "project", "origin": "top-level"}},
+      {"name": "skill:brave-search", "description": "Web search via Brave API", "source": "skill", "sourceInfo": {"path": "/home/user/.pi/agent/skills/brave-search/SKILL.md", "source": "auto", "scope": "user", "origin": "top-level"}}
     ]
   }
 }
@@ -730,11 +728,14 @@ Each command has:
   - `"extension"`: Registered via `pi.registerCommand()` in an extension
   - `"prompt"`: Loaded from a prompt template `.md` file
   - `"skill"`: Loaded from a skill directory (name is prefixed with `skill:`)
-- `location`: Where it was loaded from (optional, not present for extensions):
-  - `"user"`: User-level (`~/.pi/agent/`)
-  - `"project"`: Project-level (`./.pi/agent/`)
-  - `"path"`: Explicit path via CLI or settings
-- `path`: Absolute file path to the command source (optional)
+- `sourceInfo`: Canonical provenance for the owning resource (always present):
+  - `path`: Absolute file path to the command source
+  - `source`: How the resource was resolved (e.g. `"auto"` for auto-discovered, `"local"` for a settings entry, or a package source)
+  - `scope`: `"user"` (`~/.pi/agent/`), `"project"` (`./.pi/`), or `"temporary"`
+  - `origin`: `"top-level"` or `"package"`
+  - `baseDir` (optional): Base directory for package-managed resources
+
+Use `sourceInfo` as the canonical provenance field; do not infer ownership from command names or path parsing.
 
 **Note**: Built-in TUI commands (`/settings`, `/hotkeys`, etc.) are not included. They are handled only in interactive mode and would not execute if sent via `prompt`.
 
@@ -1320,7 +1321,7 @@ import subprocess
 import json
 
 proc = subprocess.Popen(
-    ["pi", "--mode", "rpc", "--no-session"],
+    ["pi", "--mode", "rpc"],
     stdin=subprocess.PIPE,
     stdout=subprocess.PIPE,
     text=True
@@ -1351,7 +1352,7 @@ for event in read_events():
 
 ## Example: Interactive Client (Node.js)
 
-See [`test/rpc-example.ts`](../test/rpc-example.ts) for a complete interactive example, or [`src/modes/rpc/rpc-client.ts`](../src/modes/rpc/rpc-client.ts) for a typed client implementation.
+See [`src/modes/rpc/rpc-client.ts`](../src/modes/rpc/rpc-client.ts) for a typed client implementation.
 
 For a complete example of handling the extension UI protocol, see [`examples/rpc-extension-ui.ts`](../examples/rpc-extension-ui.ts) which pairs with the [`examples/extensions/rpc-demo.ts`](../examples/extensions/rpc-demo.ts) extension.
 
@@ -1359,7 +1360,7 @@ For a complete example of handling the extension UI protocol, see [`examples/rpc
 const { spawn } = require("child_process");
 const { StringDecoder } = require("string_decoder");
 
-const agent = spawn("pi", ["--mode", "rpc", "--no-session"]);
+const agent = spawn("pi", ["--mode", "rpc"]);
 
 function attachJsonlReader(stream, onLine) {
     const decoder = new StringDecoder("utf8");
