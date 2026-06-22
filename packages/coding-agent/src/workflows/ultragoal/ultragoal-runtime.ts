@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { syncWorkflowActiveState } from "../shared/active-state.ts";
-import { ultragoalBriefPath, ultragoalGoalsPath, ultragoalLedgerPath, workflowStatePath } from "../shared/paths.ts";
+import {
+	ultragoalBriefPath,
+	ultragoalGoalsPath,
+	ultragoalLedgerPath,
+	workflowStatePath,
+} from "../shared/session-layout.ts";
 import {
 	appendJsonl,
 	readExistingStateForMutation,
@@ -171,15 +176,19 @@ function chooseNextGoal(plan: UltragoalPlan, retryFailed: boolean): UltragoalGoa
 	);
 }
 
-async function appendLedger(cwd: string, event: Record<string, unknown>): Promise<Record<string, unknown>> {
+async function appendLedger(
+	cwd: string,
+	event: Record<string, unknown>,
+	sessionId?: string,
+): Promise<Record<string, unknown>> {
 	const entry = { eventId: randomUUID(), ...event, timestamp: nowIso() };
-	await appendJsonl(ultragoalLedgerPath(cwd), entry, { cwd });
+	await appendJsonl(ultragoalLedgerPath(cwd, sessionId), entry, { cwd });
 	return entry;
 }
 
-async function writePlan(cwd: string, plan: UltragoalPlan): Promise<void> {
-	await writeTextArtifact(ultragoalBriefPath(cwd), plan.brief, { cwd });
-	await writeJsonAtomic(ultragoalGoalsPath(cwd), { ...plan }, { cwd });
+async function writePlan(cwd: string, plan: UltragoalPlan, sessionId?: string): Promise<void> {
+	await writeTextArtifact(ultragoalBriefPath(cwd, sessionId), plan.brief, { cwd });
+	await writeJsonAtomic(ultragoalGoalsPath(cwd, sessionId), { ...plan }, { cwd });
 }
 
 async function syncUltragoalState(cwd: string, status: UltragoalStatus, sessionId?: string): Promise<void> {
@@ -193,7 +202,7 @@ async function syncUltragoalState(cwd: string, status: UltragoalStatus, sessionI
 			counts: status.counts,
 		},
 		"pi workflow state write",
-		{ operation: "runtime-sync" },
+		{ operation: "runtime-sync", sessionId },
 	);
 	await syncWorkflowActiveState(
 		cwd,
@@ -201,15 +210,15 @@ async function syncUltragoalState(cwd: string, status: UltragoalStatus, sessionI
 			skill: "ultragoal",
 			active: state.active,
 			phase: state.current_phase,
-			state_path: workflowStatePath(cwd, "ultragoal"),
+			state_path: workflowStatePath(cwd, "ultragoal", sessionId),
 			hud: buildUltragoalHud(status),
 		},
-		sessionId ? { sessionId } : undefined,
+		{ sessionId },
 	);
 }
 
-export async function readUltragoalPlan(cwd: string): Promise<UltragoalPlan | undefined> {
-	const read = await readExistingStateForMutation(ultragoalGoalsPath(cwd));
+export async function readUltragoalPlan(cwd: string, sessionId?: string): Promise<UltragoalPlan | undefined> {
+	const read = await readExistingStateForMutation(ultragoalGoalsPath(cwd, sessionId));
 	if (read.kind === "absent") return undefined;
 	if (read.kind === "corrupt") throw new Error(`ultragoal plan is corrupt: ${read.error}`);
 	return normalizePlan(read.value);
@@ -241,14 +250,14 @@ export async function createUltragoalPlan(
 		createdAt: now,
 		updatedAt: now,
 	};
-	await writePlan(cwd, plan);
-	await appendLedger(cwd, { event: "plan_created", goalIds: plan.goals.map((goal) => goal.id) });
-	await syncUltragoalState(cwd, await getUltragoalStatus(cwd), sessionId);
+	await writePlan(cwd, plan, sessionId);
+	await appendLedger(cwd, { event: "plan_created", goalIds: plan.goals.map((goal) => goal.id) }, sessionId);
+	await syncUltragoalState(cwd, await getUltragoalStatus(cwd, sessionId), sessionId);
 	return plan;
 }
 
-export async function getUltragoalStatus(cwd: string): Promise<UltragoalStatus> {
-	const plan = await readUltragoalPlan(cwd);
+export async function getUltragoalStatus(cwd: string, sessionId?: string): Promise<UltragoalStatus> {
+	const plan = await readUltragoalPlan(cwd, sessionId);
 	const counts = emptyCounts();
 	if (!plan)
 		return {
@@ -256,9 +265,9 @@ export async function getUltragoalStatus(cwd: string): Promise<UltragoalStatus> 
 			status: "missing",
 			counts,
 			goals: [],
-			brief_path: ultragoalBriefPath(cwd),
-			goals_path: ultragoalGoalsPath(cwd),
-			ledger_path: ultragoalLedgerPath(cwd),
+			brief_path: ultragoalBriefPath(cwd, sessionId),
+			goals_path: ultragoalGoalsPath(cwd, sessionId),
+			ledger_path: ultragoalLedgerPath(cwd, sessionId),
 		};
 	for (const goal of plan.goals) counts[goal.status] += 1;
 	const currentGoal = plan.goals.find((goal) => SCHEDULABLE_STATUSES.has(goal.status));
@@ -274,9 +283,9 @@ export async function getUltragoalStatus(cwd: string): Promise<UltragoalStatus> 
 		currentGoal,
 		counts,
 		goals: plan.goals,
-		brief_path: ultragoalBriefPath(cwd),
-		goals_path: ultragoalGoalsPath(cwd),
-		ledger_path: ultragoalLedgerPath(cwd),
+		brief_path: ultragoalBriefPath(cwd, sessionId),
+		goals_path: ultragoalGoalsPath(cwd, sessionId),
+		ledger_path: ultragoalLedgerPath(cwd, sessionId),
 	};
 }
 
@@ -285,7 +294,7 @@ export async function startNextUltragoalGoal(
 	retryFailed = false,
 	sessionId?: string,
 ): Promise<{ plan: UltragoalPlan; goal?: UltragoalGoal; allComplete: boolean }> {
-	const plan = await readUltragoalPlan(cwd);
+	const plan = await readUltragoalPlan(cwd, sessionId);
 	if (!plan) throw new Error("No ultragoal plan found. Create one first.");
 	const goal = chooseNextGoal(plan, retryFailed);
 	if (!goal) return { plan, allComplete: requiredGoals(plan).every((item) => TERMINAL_STATUSES.has(item.status)) };
@@ -295,9 +304,9 @@ export async function startNextUltragoalGoal(
 		goal.startedAt = goal.startedAt ?? now;
 		goal.updatedAt = now;
 		plan.updatedAt = now;
-		await writePlan(cwd, plan);
-		await appendLedger(cwd, { event: "goal_started", goalId: goal.id });
-		await syncUltragoalState(cwd, await getUltragoalStatus(cwd), sessionId);
+		await writePlan(cwd, plan, sessionId);
+		await appendLedger(cwd, { event: "goal_started", goalId: goal.id }, sessionId);
+		await syncUltragoalState(cwd, await getUltragoalStatus(cwd, sessionId), sessionId);
 	}
 	return { plan, goal, allComplete: false };
 }
@@ -316,32 +325,12 @@ export interface UltragoalCheckpointInput {
 	qualityGate?: unknown;
 }
 
-/**
- * Checkpoint a goal. The write boundary is the trust boundary.
- *
- * For `complete`:
- *  1. validate the typed quality gate (`validateExecutorQaEvidence`, hard break);
- *  2. choose the receipt kind (`chooseReceiptKind`);
- *  3. capture `goalJson` (the post-write goal snapshot, before the receipt is
- *     attached) and `qualityGateJson` (the validated typed object);
- *  4. append the `goal_checkpointed` ledger event carrying additive
- *     `qualityGateJson` + `goalJson` + `completionVerification`;
- *  5. build the receipt and attach it to the goal;
- *  6. write the plan;
- *  7. re-read the ledger and call `validateCompletionReceipt` with
- *     `excludeEventId = checkpointLedgerEventId` to confirm the stored receipt
- *     is fresh; refuse (throw) if it is stale/invalid.
- *
- * `goal.updatedAt` is set to the checkpoint `now`, matching the receipt's
- * `verifiedAt`, so the drift check passes immediately. A later goal mutation
- * bumps `updatedAt` past `verifiedAt` and the receipt goes stale.
- */
 export async function checkpointUltragoalGoal(
 	cwd: string,
 	input: UltragoalCheckpointInput,
 	sessionId?: string,
 ): Promise<UltragoalGoal> {
-	const plan = await readUltragoalPlan(cwd);
+	const plan = await readUltragoalPlan(cwd, sessionId);
 	if (!plan) throw new Error("No ultragoal plan found. Create one first.");
 	const status = parseGoalStatus(input.status);
 	const goal = plan.goals.find((item) => item.id === input.goalId);
@@ -353,12 +342,7 @@ export async function checkpointUltragoalGoal(
 		validateCompletionEvidence(input.evidence ?? "");
 		const typedQualityGate = await validateExecutorQaEvidence(cwd, input.qualityGate);
 		const receiptKind = chooseReceiptKind(plan, goal, status);
-		// Read the ledger BEFORE appending so the receipt basis captures the latest
-		// relevant prior event (the new checkpoint event is excluded via
-		// `excludeEventId` at both build and validation time).
-		const priorLedger = await readUltragoalLedger(cwd);
-		// Capture the post-write goal snapshot BEFORE attaching the receipt so the
-		// ledger event's `goalJson` excludes `completionVerification`.
+		const priorLedger = await readUltragoalLedger(cwd, sessionId);
 		const goalJson: Record<string, unknown> = {
 			...goal,
 			status,
@@ -386,57 +370,58 @@ export async function checkpointUltragoalGoal(
 		goal.evidence = input.evidence?.trim();
 		goal.completionVerification = receipt;
 		plan.updatedAt = now;
-		// Gajae parity: persist the plan FIRST, then append the ledger event with
-		// the explicit id and the receipt so the on-disk event carries
-		// `completionVerification` (the receipt references this event id).
-		await writePlan(cwd, plan);
-		await appendLedger(cwd, {
-			eventId: checkpointLedgerEventId,
-			event: "goal_checkpointed",
-			goalId: goal.id,
-			status,
-			statusBefore: beforeStatus,
-			evidenceSha256: input.evidence ? sha256(input.evidence) : undefined,
-			qualityGateJson,
-			goalJson,
-			completionVerification: receipt,
-		});
-		// Re-read the ledger (now includes the just-appended checkpoint event) and
-		// confirm the stored receipt is fresh. `excludeEventId` drops the receipt's
-		// own event so it does not self-stale.
-		const ledger = await readUltragoalLedger(cwd);
+		await writePlan(cwd, plan, sessionId);
+		await appendLedger(
+			cwd,
+			{
+				eventId: checkpointLedgerEventId,
+				event: "goal_checkpointed",
+				goalId: goal.id,
+				status,
+				statusBefore: beforeStatus,
+				evidenceSha256: input.evidence ? sha256(input.evidence) : undefined,
+				qualityGateJson,
+				goalJson,
+				completionVerification: receipt,
+			},
+			sessionId,
+		);
+		const ledger = await readUltragoalLedger(cwd, sessionId);
 		const diagnostic = validateCompletionReceipt({ plan, ledger, goal, receiptKind });
 		if (diagnostic.state !== "active_verified_complete") {
 			throw new Error(
 				`ultragoal complete checkpoint refused: ${diagnostic.message} Re-run verification with a valid typed quality gate.`,
 			);
 		}
-		await syncUltragoalState(cwd, await getUltragoalStatus(cwd), sessionId);
+		await syncUltragoalState(cwd, await getUltragoalStatus(cwd, sessionId), sessionId);
 		return goal;
 	}
 
-	// Non-complete statuses: no receipt, no quality gate required.
-	await appendLedger(cwd, {
-		event: "goal_checkpointed",
-		goalId: goal.id,
-		status,
-		statusBefore: beforeStatus,
-		evidenceSha256: input.evidence ? sha256(input.evidence) : undefined,
-	});
+	await appendLedger(
+		cwd,
+		{
+			event: "goal_checkpointed",
+			goalId: goal.id,
+			status,
+			statusBefore: beforeStatus,
+			evidenceSha256: input.evidence ? sha256(input.evidence) : undefined,
+		},
+		sessionId,
+	);
 	goal.status = status;
 	goal.updatedAt = now;
 	if (status === "active") goal.startedAt = goal.startedAt ?? now;
 	plan.updatedAt = now;
-	await writePlan(cwd, plan);
-	await syncUltragoalState(cwd, await getUltragoalStatus(cwd), sessionId);
+	await writePlan(cwd, plan, sessionId);
+	await syncUltragoalState(cwd, await getUltragoalStatus(cwd, sessionId), sessionId);
 	return goal;
 }
 
-export async function readUltragoalCompact(cwd: string): Promise<Record<string, unknown>> {
-	const status = await getUltragoalStatus(cwd);
-	const state = await readWorkflowState(cwd, "ultragoal").catch(() => undefined);
+export async function readUltragoalCompact(cwd: string, sessionId?: string): Promise<Record<string, unknown>> {
+	const status = await getUltragoalStatus(cwd, sessionId);
+	const state = await readWorkflowState(cwd, "ultragoal", { sessionId }).catch(() => undefined);
 	return {
-		state_path: workflowStatePath(cwd, "ultragoal"),
+		state_path: workflowStatePath(cwd, "ultragoal", sessionId),
 		phase: state?.current_phase,
 		status: status.status,
 		counts: status.counts,

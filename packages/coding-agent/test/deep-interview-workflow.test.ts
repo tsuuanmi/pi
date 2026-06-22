@@ -15,6 +15,8 @@ import { normalizeDeepInterviewEnvelope } from "../src/workflows/deep-interview/
 import { formatWorkflowHudLine, readWorkflowActiveState } from "../src/workflows/shared/active-state.ts";
 import { readWorkflowState, writeWorkflowState } from "../src/workflows/shared/workflow-state.ts";
 
+const TEST_SESSION = "test-session-id";
+
 interface CapturedTool {
 	name: string;
 	execute(
@@ -48,7 +50,7 @@ function createWorkflowToolHarness(cwd: string): {
 		cwd,
 		mode: "json",
 		hasUI: false,
-		sessionManager: { getSessionId: () => "test-session-id" },
+		sessionManager: { getSessionId: () => TEST_SESSION },
 	} as unknown as ExtensionContext;
 	return {
 		tool(name: string): CapturedTool {
@@ -87,56 +89,78 @@ describe("deep-interview workflow runtime", () => {
 	});
 
 	it("records, deduplicates, and replaces answer shells", async () => {
-		await writeWorkflowState(cwd, "deep-interview", {
-			current_phase: "interviewing",
-			state: { interview_id: "interview-1", rounds: [], established_facts: [] },
-		});
+		await writeWorkflowState(
+			cwd,
+			"deep-interview",
+			{
+				current_phase: "interviewing",
+				state: { interview_id: "interview-1", rounds: [], established_facts: [] },
+			},
+			"pi test",
+			{ sessionId: TEST_SESSION },
+		);
 
-		const first = await appendOrMergeDeepInterviewRound(cwd, {
-			round: 1,
-			questionId: "q1",
-			questionText: "What is the goal?",
-			customInput: "Ship it",
-		});
-		const duplicate = await appendOrMergeDeepInterviewRound(cwd, {
-			round: 1,
-			questionId: "q1",
-			questionText: "What is the goal?",
-			customInput: "Ship it",
-		});
-		const replacement = await appendOrMergeDeepInterviewRound(cwd, {
-			round: 1,
-			questionId: "q1",
-			questionText: "What is the goal?",
-			customInput: "Ship v1",
-		});
+		const first = await appendOrMergeDeepInterviewRound(
+			cwd,
+			{
+				round: 1,
+				questionId: "q1",
+				questionText: "What is the goal?",
+				customInput: "Ship it",
+			},
+			TEST_SESSION,
+		);
+		const duplicate = await appendOrMergeDeepInterviewRound(
+			cwd,
+			{
+				round: 1,
+				questionId: "q1",
+				questionText: "What is the goal?",
+				customInput: "Ship it",
+			},
+			TEST_SESSION,
+		);
+		const replacement = await appendOrMergeDeepInterviewRound(
+			cwd,
+			{
+				round: 1,
+				questionId: "q1",
+				questionText: "What is the goal?",
+				customInput: "Ship v1",
+			},
+			TEST_SESSION,
+		);
 
 		expect(first.action).toBe("created");
 		expect(duplicate.action).toBe("noop");
 		expect(replacement.action).toBe("replaced");
-		const state = await readWorkflowState(cwd, "deep-interview");
+		const state = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
 		const rounds = (state?.state as { rounds?: Array<{ custom_input?: string }> }).rounds ?? [];
 		expect(rounds).toHaveLength(1);
 		expect(rounds[0].custom_input).toBe("Ship v1");
-		const active = await readWorkflowActiveState(cwd);
+		const active = await readWorkflowActiveState(cwd, { sessionId: TEST_SESSION });
 		const deepInterview = active?.active_workflows.find((entry) => entry.skill === "deep-interview");
 		expect(deepInterview?.phase).toBe("interviewing");
 		expect(deepInterview ? formatWorkflowHudLine(deepInterview) : "").toContain("deep-interview");
 	});
 
 	it("plans a question and records the next answer against pending orchestration", async () => {
-		await planDeepInterviewQuestion(cwd, {
-			round: 1,
-			questionId: "q1",
-			questionText: "What outcome matters most?",
-			component: "goal",
-			dimension: "goal",
-			ambiguity: 0.9,
-			rationale: "goal is weakest",
-		});
+		await planDeepInterviewQuestion(
+			cwd,
+			{
+				round: 1,
+				questionId: "q1",
+				questionText: "What outcome matters most?",
+				component: "goal",
+				dimension: "goal",
+				ambiguity: 0.9,
+				rationale: "goal is weakest",
+			},
+			TEST_SESSION,
+		);
 
-		await appendOrMergeDeepInterviewRound(cwd, { customInput: "Fast feedback" });
-		let state = await readWorkflowState(cwd, "deep-interview");
+		await appendOrMergeDeepInterviewRound(cwd, { customInput: "Fast feedback" }, TEST_SESSION);
+		let state = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
 		const answeredOrchestration = (
 			state?.state as { orchestration?: { status?: string; last_answered_question_id?: string } }
 		).orchestration;
@@ -146,13 +170,17 @@ describe("deep-interview workflow runtime", () => {
 			"What outcome matters most?",
 		);
 
-		await enrichDeepInterviewRoundScoring(cwd, {
-			round: 1,
-			questionId: "q1",
-			scores: { goal: 0.7 },
-			ambiguity: 0.3,
-		});
-		state = await readWorkflowState(cwd, "deep-interview");
+		await enrichDeepInterviewRoundScoring(
+			cwd,
+			{
+				round: 1,
+				questionId: "q1",
+				scores: { goal: 0.7 },
+				ambiguity: 0.3,
+			},
+			TEST_SESSION,
+		);
+		state = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
 		const scoredOrchestration = (
 			state?.state as { orchestration?: { status?: string; last_scored_question_id?: string } }
 		).orchestration;
@@ -172,7 +200,7 @@ describe("deep-interview workflow runtime", () => {
 				harness.ctx,
 			);
 
-		const state = await readWorkflowState(cwd, "deep-interview");
+		const state = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
 		const orchestration = (
 			state?.state as { orchestration?: { status?: string; next_question?: { question_id?: string } } }
 		).orchestration;
@@ -181,60 +209,86 @@ describe("deep-interview workflow runtime", () => {
 	});
 
 	it("rejects invalid ambiguity-raising trigger transitions", async () => {
-		await appendOrMergeDeepInterviewRound(cwd, {
-			round: 1,
-			questionId: "q1",
-			questionText: "Goal?",
-			customInput: "A",
-		});
-		await enrichDeepInterviewRoundScoring(cwd, {
-			round: 1,
-			questionId: "q1",
-			scores: { goal: 0.6 },
-			ambiguity: 0.4,
-		});
-		await appendOrMergeDeepInterviewRound(cwd, {
-			round: 2,
-			questionId: "q2",
-			questionText: "Constraint?",
-			customInput: "B",
-		});
-
-		await expect(
-			enrichDeepInterviewRoundScoring(cwd, {
+		await appendOrMergeDeepInterviewRound(
+			cwd,
+			{
+				round: 1,
+				questionId: "q1",
+				questionText: "Goal?",
+				customInput: "A",
+			},
+			TEST_SESSION,
+		);
+		await enrichDeepInterviewRoundScoring(
+			cwd,
+			{
+				round: 1,
+				questionId: "q1",
+				scores: { goal: 0.6 },
+				ambiguity: 0.4,
+			},
+			TEST_SESSION,
+		);
+		await appendOrMergeDeepInterviewRound(
+			cwd,
+			{
 				round: 2,
 				questionId: "q2",
-				scores: { goal: 0.8 },
-				ambiguity: 0.3,
-				triggers: [
-					{
-						kind: "A",
-						name: "contradiction",
-						status: "active",
-						component: "core",
-						dimension: "goal",
-					},
-				],
-			}),
+				questionText: "Constraint?",
+				customInput: "B",
+			},
+			TEST_SESSION,
+		);
+
+		await expect(
+			enrichDeepInterviewRoundScoring(
+				cwd,
+				{
+					round: 2,
+					questionId: "q2",
+					scores: { goal: 0.8 },
+					ambiguity: 0.3,
+					triggers: [
+						{
+							kind: "A",
+							name: "contradiction",
+							status: "active",
+							component: "core",
+							dimension: "goal",
+						},
+					],
+				},
+				TEST_SESSION,
+			),
 		).rejects.toThrow(/invalid/);
 	});
 
 	it("finalizes spec metadata without reintroducing flattened transcript state", async () => {
-		await writeWorkflowState(cwd, "deep-interview", {
-			active: true,
-			current_phase: "interviewing",
-			rounds: [{ round: 1, round_key: "legacy", lifecycle: "answered" }],
-			state: { interview_id: "interview-1", established_facts: [{ id: "F1" }] },
-		});
+		await writeWorkflowState(
+			cwd,
+			"deep-interview",
+			{
+				active: true,
+				current_phase: "interviewing",
+				rounds: [{ round: 1, round_key: "legacy", lifecycle: "answered" }],
+				state: { interview_id: "interview-1", established_facts: [{ id: "F1" }] },
+			},
+			"pi test",
+			{ sessionId: TEST_SESSION },
+		);
 
-		await finalizeDeepInterviewSpecState(cwd, {
-			slug: "final",
-			path: join(cwd, ".pi", "specs", "deep-interview-final.md"),
-			sha256: "abc",
-			handoff: "stop",
-		});
+		await finalizeDeepInterviewSpecState(
+			cwd,
+			{
+				slug: "final",
+				path: join(cwd, ".pi", "specs", "deep-interview-final.md"),
+				sha256: "abc",
+				handoff: "stop",
+			},
+			TEST_SESSION,
+		);
 
-		const state = await readWorkflowState(cwd, "deep-interview");
+		const state = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
 		expect(state?.rounds).toBeUndefined();
 		expect(state?.active).toBe(false);
 		expect(state?.current_phase).toBe("complete");
@@ -243,19 +297,23 @@ describe("deep-interview workflow runtime", () => {
 		expect(nested?.rounds).toHaveLength(1);
 		expect(nested?.established_facts).toHaveLength(1);
 		expect(
-			(await readWorkflowActiveState(cwd, { sessionId: "test-session-id" }))?.active_workflows.some(
+			(await readWorkflowActiveState(cwd, { sessionId: TEST_SESSION }))?.active_workflows.some(
 				(entry) => entry.skill === "deep-interview",
 			),
 		).toBe(false);
 	});
 
 	it("deep_interview_write_spec writes spec and seeds ralplan handoff", async () => {
-		await appendOrMergeDeepInterviewRound(cwd, {
-			round: 1,
-			questionId: "q1",
-			questionText: "Goal?",
-			customInput: "A",
-		});
+		await appendOrMergeDeepInterviewRound(
+			cwd,
+			{
+				round: 1,
+				questionId: "q1",
+				questionText: "Goal?",
+				customInput: "A",
+			},
+			TEST_SESSION,
+		);
 		const harness = createWorkflowToolHarness(cwd);
 		await harness
 			.tool("deep_interview_write_spec")
@@ -267,7 +325,7 @@ describe("deep-interview workflow runtime", () => {
 				harness.ctx,
 			);
 
-		const deepState = await readWorkflowState(cwd, "deep-interview");
+		const deepState = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
 		const specPath = deepState?.spec_path;
 		expect(typeof specPath).toBe("string");
 		expect(deepState?.current_phase).toBe("handoff");
@@ -275,11 +333,11 @@ describe("deep-interview workflow runtime", () => {
 		expect((deepState?.state as { rounds?: unknown[] }).rounds ?? []).toHaveLength(1);
 		expect(await readFile(specPath as string, "utf8")).toBe("# Final spec\n");
 
-		const ralplanState = await readWorkflowState(cwd, "ralplan");
+		const ralplanState = await readWorkflowState(cwd, "ralplan", { sessionId: TEST_SESSION });
 		expect(ralplanState?.active).toBe(true);
 		expect(ralplanState?.current_phase).toBe("planner");
 		expect(ralplanState?.input).toBe(specPath);
-		const active = await readWorkflowActiveState(cwd, { sessionId: "test-session-id" });
+		const active = await readWorkflowActiveState(cwd, { sessionId: TEST_SESSION });
 		expect(active?.active_workflows.some((entry) => entry.skill === "deep-interview")).toBe(false);
 		expect(active?.active_workflows.some((entry) => entry.skill === "ralplan")).toBe(true);
 	});
@@ -305,34 +363,46 @@ describe("deep-interview workflow runtime", () => {
 			.tool("deep_interview_write_spec")
 			.execute("tool-1", { slug: "team", spec: "# Team spec", handoff: "team" }, undefined, undefined, harness.ctx);
 
-		const deepState = await readWorkflowState(cwd, "deep-interview");
-		const teamState = await readWorkflowState(cwd, "team");
+		const deepState = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
+		const teamState = await readWorkflowState(cwd, "team", { sessionId: TEST_SESSION });
 		expect(teamState?.active).toBe(true);
 		expect(teamState?.current_phase).toBe("approved-execution");
 		expect(teamState?.input).toBe(deepState?.spec_path);
 	});
 
 	it("returns compact state projection", async () => {
-		await appendOrMergeDeepInterviewRound(cwd, {
-			round: 1,
-			questionId: "q1",
-			questionText: "Goal?",
-			customInput: "A",
-		});
-		await enrichDeepInterviewRoundScoring(cwd, {
-			round: 1,
-			questionId: "q1",
-			scores: { goal: 0.6 },
-			ambiguity: 0.4,
-		});
-		await appendOrMergeDeepInterviewRound(cwd, {
-			round: 2,
-			questionId: "q2",
-			questionText: "Criteria?",
-			customInput: "pending",
-		});
+		await appendOrMergeDeepInterviewRound(
+			cwd,
+			{
+				round: 1,
+				questionId: "q1",
+				questionText: "Goal?",
+				customInput: "A",
+			},
+			TEST_SESSION,
+		);
+		await enrichDeepInterviewRoundScoring(
+			cwd,
+			{
+				round: 1,
+				questionId: "q1",
+				scores: { goal: 0.6 },
+				ambiguity: 0.4,
+			},
+			TEST_SESSION,
+		);
+		await appendOrMergeDeepInterviewRound(
+			cwd,
+			{
+				round: 2,
+				questionId: "q2",
+				questionText: "Criteria?",
+				customInput: "pending",
+			},
+			TEST_SESSION,
+		);
 
-		const compact = await readDeepInterviewStateCompact(cwd, 1);
+		const compact = await readDeepInterviewStateCompact(cwd, TEST_SESSION, 1);
 		expect(compact.state.current_ambiguity).toBe(0.4);
 		expect(compact.state.orchestration?.status).toBe("pending_scoring");
 		expect(compact.state.recent_scored_rounds).toHaveLength(1);

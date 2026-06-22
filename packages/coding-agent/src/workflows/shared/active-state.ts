@@ -1,4 +1,5 @@
-import { type WorkflowSkill, workflowActiveStatePath } from "./paths.ts";
+import type { WorkflowSkill } from "./paths.ts";
+import { workflowActiveStatePath } from "./session-layout.ts";
 import { isEntryStale, readExistingStateForMutation, writeJsonAtomic } from "./state-writer.ts";
 
 export type WorkflowHudSeverity = "info" | "warning" | "blocked" | "error" | "success";
@@ -45,7 +46,7 @@ export interface WorkflowActiveState {
 	active_workflows: WorkflowActiveEntry[];
 }
 
-/** Options for session-scoped active-state operations. */
+/** Options for session-scoped active-state operations. Omitted sessionId uses legacy global state. */
 export interface SessionScopedOptions {
 	sessionId?: string;
 }
@@ -138,9 +139,7 @@ function entryKey(entry: WorkflowActiveEntry): string {
 
 /**
  * Session ownership rank for a row visible to a `sessionId` read. A row owned
- * by the exact session outranks a session-less (global) fallback row, which
- * outranks a foreign-session row. With no scope session, every row ranks
- * equally. (Aligned with gajae-code's `sessionScopeRank`.)
+ * by the exact session outranks a foreign-session row.
  */
 function sessionScopeRank(entry: WorkflowActiveEntry, sessionId?: string): number {
 	const scope = sessionId?.trim() ?? "";
@@ -204,7 +203,7 @@ function filterEntriesForSession(entries: WorkflowActiveEntry[], sessionId?: str
 	if (!scope) return entries;
 	return entries.filter((entry) => {
 		const entrySession = entry.session_id?.trim() ?? "";
-		return !entrySession || entrySession === scope;
+		return entrySession === scope || !entrySession;
 	});
 }
 
@@ -225,52 +224,22 @@ async function readAllEntries(filePath: string): Promise<WorkflowActiveEntry[] |
 /**
  * Read the workflow active state for a project, optionally scoped to a session.
  *
- * When `sessionId` is provided, entries are filtered by session ownership
- * (matching session_id or global fallback) and deduped per skill, with
- * session-specific entries outranking global ones. When omitted, all entries
- * are visible. Only active entries are returned.
- *
- * Returns undefined when the state file is absent. Returns a defined state
- * (possibly with empty active_workflows) when the file exists.
+ * When `sessionId` is omitted, the legacy global active-state file is read.
+ * Only active entries are returned. Returns undefined when the state file is absent.
  */
 export async function readWorkflowActiveState(
 	cwd: string,
-	options?: SessionScopedOptions,
+	options: SessionScopedOptions = {},
 ): Promise<WorkflowActiveState | undefined> {
-	const sessionId = options?.sessionId?.trim() || undefined;
-	const filePath = workflowActiveStatePath(cwd);
-	const allEntries = await readAllEntries(filePath);
-	if (allEntries === undefined) return undefined;
-
-	const visible = filterEntriesForSession(allEntries, sessionId);
+	const sessionId = options.sessionId?.trim() || undefined;
+	let sessionEntries = await readAllEntries(workflowActiveStatePath(cwd, sessionId));
+	if (sessionEntries === undefined && sessionId) {
+		sessionEntries = await readAllEntries(workflowActiveStatePath(cwd));
+	}
+	if (sessionEntries === undefined) return undefined;
+	const visible = filterEntriesForSession(sessionEntries, sessionId);
 	const deduped = dedupeVisibleBySkill(visible, sessionId);
-	const nowMs = Date.now();
-	const activeWorkflows = deduped
-		.filter((entry) => entry.active)
-		.map((entry) => {
-			const stale = isEntryStale(entry.updated_at, nowMs);
-			if (!stale) return entry;
-			// Escalate HUD severity to warning for stale entries, unless a more
-			// severe status (error/blocked) is already set.
-			const hud = entry.hud;
-			if (hud && (hud.severity === "error" || hud.severity === "blocked")) {
-				return { ...entry, stale: true };
-			}
-			const patchedHud = hud
-				? { ...hud, severity: "warning" as WorkflowHudSeverity }
-				: ({ version: 1, severity: "warning" as WorkflowHudSeverity } as WorkflowHudSummary);
-			return { ...entry, stale: true, hud: patchedHud };
-		})
-		.sort((a, b) => a.skill.localeCompare(b.skill));
-
-	const updatedAt = allEntries[0]?.updated_at ?? new Date(0).toISOString();
-
-	return {
-		version: 1,
-		active: activeWorkflows.length > 0,
-		updated_at: updatedAt,
-		active_workflows: activeWorkflows,
-	};
+	return buildActiveState(deduped);
 }
 
 /**
@@ -285,9 +254,9 @@ export async function readWorkflowActiveState(
 export async function syncWorkflowActiveState(
 	cwd: string,
 	entry: Omit<WorkflowActiveEntry, "updated_at" | "session_id"> & { updated_at?: string; session_id?: string },
-	options?: SessionScopedOptions,
+	options: SessionScopedOptions = {},
 ): Promise<WorkflowActiveState> {
-	const sessionId = options?.sessionId?.trim() || undefined;
+	const sessionId = options.sessionId?.trim() || undefined;
 	const now = entry.updated_at ?? new Date().toISOString();
 	const nextEntry: WorkflowActiveEntry = {
 		...entry,
@@ -299,7 +268,7 @@ export async function syncWorkflowActiveState(
 		...(sanitizeText(entry.handoff_at, 40) ? { handoff_at: sanitizeText(entry.handoff_at, 40) } : {}),
 	};
 
-	const filePath = workflowActiveStatePath(cwd);
+	const filePath = workflowActiveStatePath(cwd, sessionId);
 	const prior = (await readAllEntries(filePath)) ?? [];
 	const key = entryKey(nextEntry);
 	const merged = new Map<string, WorkflowActiveEntry>();
@@ -329,6 +298,38 @@ export async function syncWorkflowActiveState(
 
 /** Skills in the planning pipeline (DI → ralplan → ultragoal). */
 const PLANNING_PIPELINE_SKILLS = new Set<string>(["deep-interview", "ralplan", "ultragoal"]);
+
+/**
+ * Build the active-state response from deduped entries, applying staleness
+ * checks and HUD severity escalation.
+ */
+function buildActiveState(entries: WorkflowActiveEntry[]): WorkflowActiveState {
+	const nowMs = Date.now();
+	const activeWorkflows = entries
+		.filter((entry) => entry.active)
+		.map((entry) => {
+			const stale = isEntryStale(entry.updated_at, nowMs);
+			if (!stale) return entry;
+			const hud = entry.hud;
+			if (hud && (hud.severity === "error" || hud.severity === "blocked")) {
+				return { ...entry, stale: true };
+			}
+			const patchedHud = hud
+				? { ...hud, severity: "warning" as WorkflowHudSeverity }
+				: ({ version: 1, severity: "warning" as WorkflowHudSeverity } as WorkflowHudSummary);
+			return { ...entry, stale: true, hud: patchedHud };
+		})
+		.sort((a, b) => a.skill.localeCompare(b.skill));
+
+	const updatedAt = entries[0]?.updated_at ?? new Date(0).toISOString();
+
+	return {
+		version: 1,
+		active: activeWorkflows.length > 0,
+		updated_at: updatedAt,
+		active_workflows: activeWorkflows,
+	};
+}
 
 /**
  * Collapse the planning pipeline to a single entry — the most recently updated
@@ -371,14 +372,14 @@ export interface HandoffSide {
 	hud?: WorkflowHudSummary;
 }
 
-/** Options for `applyHandoffToActiveState`. */
+/** Options for `applyHandoffToActiveState`. sessionId is required. */
 export interface ApplyHandoffOptions {
 	cwd: string;
 	/** Skill being demoted (handing off). */
 	caller: HandoffSide;
 	/** Skill being promoted (receiving the handoff). */
 	callee: HandoffSide;
-	/** Session id to tag both entries with. */
+	/** Session id to tag both entries with. Omit to use legacy global active state. */
 	sessionId?: string;
 	/** Shared timestamp; defaults to now. */
 	nowIso?: string;
@@ -420,7 +421,7 @@ export async function applyHandoffToActiveState(options: ApplyHandoffOptions): P
 		...(options.callee.hud ? { hud: normalizeWorkflowHudSummary(options.callee.hud) } : {}),
 	};
 
-	const filePath = workflowActiveStatePath(options.cwd);
+	const filePath = workflowActiveStatePath(options.cwd, sessionId);
 	const prior = (await readAllEntries(filePath)) ?? [];
 	const merged = new Map<string, WorkflowActiveEntry>();
 	for (const item of prior) merged.set(entryKey(item), item);

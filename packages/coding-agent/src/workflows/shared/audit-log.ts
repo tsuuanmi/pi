@@ -45,6 +45,8 @@ export interface AuditEntry {
 	paths: string[];
 	expected_sha256?: string;
 	actual_sha256?: string;
+	/** Session id for session-scoped audit entries. */
+	session_id?: string;
 }
 
 /** Append one audit line to `.pi/state/audit.jsonl`. Throws on I/O failure. */

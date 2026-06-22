@@ -13,6 +13,8 @@
 
 ### Added
 
+- Added session-scoped workflow state/artifact paths under `.pi/_session-{id}/`, plus session resolution utilities and tests for isolated Pi workflow runs.
+- Added a ralplan pre-execution vagueness gate that redirects vague team/ultragoal dispatch prompts to planning unless explicitly forced.
 - Added a default `lsp` tool with minimal TypeScript/JavaScript, Python, and Rust Language Server Protocol support for status, diagnostics, symbols, hover, definitions, and references.
 - Added `pi --tmux` to launch interactive startup inside a new tmux session.
 - Added stored account profiles for provider auth, with `/account add <provider> [account]`, an interactive `/account` selector, and `/account <provider> <account>` for manual switching.
@@ -37,6 +39,7 @@
 
 ### Changed
 
+- Workflow runtime reads/writes now use explicit session ids from CLI/tool context for isolated state while retaining legacy global `.pi/` behavior for existing internal callers.
 - Workflow handoffs (`executeDeepInterviewWriteSpec`, `approveRalplanPlan`) now go through a single generic internal `handoffWorkflow` with callee->caller->active-state write order, both-side mode-state receipts (`handoff-send`/`handoff-receive`), and a transaction journal. The caller mode-state is now demoted to `active:false, current_phase:"handoff"` (Gajae parity; previously deep-interview stayed `active:true` after handoff). `executeDeepInterviewWriteSpec` follows Gajae's two-step model: `finalizeDeepInterviewSpecState` persists the caller state with spec fields (`active:true`, `current_phase:"handoff"`, a regular write), then `handoffWorkflow` demotes it and promotes the callee; the `stop`/no-handoff branch is unchanged. Audit verbs map operations to the Gajae-faithful set (`handoff-send`/`handoff-receive`->`handoff`; `force-repair`->`reconcile`; others->`write`/`clear`).
 - Enabled tmux extended keys in the default `pi --tmux` profile.
 - Simplified shell, clipboard, tool download, signal handling, self-update, and release code paths for Linux/macOS-only support.

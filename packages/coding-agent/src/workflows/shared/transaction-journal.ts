@@ -43,6 +43,8 @@ export interface WorkflowTransactionJournal {
 	callee: WorkflowTransactionSide;
 	paths: string[];
 	steps: WorkflowTransactionStep[];
+	/** Session id for session-scoped journal entries. */
+	session_id?: string;
 }
 
 function nowIso(): string {

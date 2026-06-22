@@ -1,6 +1,6 @@
 import { applyHandoffToActiveState } from "./active-state.ts";
 import type { WorkflowSkill } from "./paths.ts";
-import { workflowActiveStatePath, workflowStatePath } from "./paths.ts";
+import { workflowActiveStatePath, workflowStatePath } from "./session-layout.ts";
 import { assertWorkflowSkill, type WorkflowStateEnvelope } from "./state-schema.ts";
 import {
 	beginWorkflowTransactionJournal,
@@ -49,6 +49,8 @@ export interface HandoffWorkflowOptions {
 	mutationId?: string;
 	/** Internal force flag (bypasses tamper hard-block). No public surface. */
 	force?: boolean;
+	/** Session id for session-scoped path resolution. Omit to use legacy global state. */
+	sessionId?: string;
 	nowIso?: string;
 }
 
@@ -76,20 +78,30 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 	if (calleeSkill === callerSkill) {
 		throw new Error(`handoff target must differ from caller (both are "${callerSkill}")`);
 	}
-	const sessionId = options.caller.sessionId ?? options.callee.sessionId;
+
+	// Intra-session enforcement: mismatched session ids throw, one present uses
+	// for both. sessionId is always required at the HandoffWorkflowOptions level.
+	const callerSessionId = options.caller.sessionId?.trim() || undefined;
+	const calleeSessionId = options.callee.sessionId?.trim() || undefined;
+	if (callerSessionId && calleeSessionId && callerSessionId !== calleeSessionId) {
+		throw new Error(
+			`handoff session mismatch: caller has session ${callerSessionId} but callee has session ${calleeSessionId}`,
+		);
+	}
+	const sessionId = options.sessionId ?? callerSessionId ?? calleeSessionId;
 	const handoffAt = options.nowIso ?? new Date().toISOString();
 	const mutationId = options.mutationId ?? `${callerSkill}:handoff:${calleeSkill}:${handoffAt}`;
 	const force = options.force ?? false;
 
 	// Validation: caller must be the active workflow; callee must not already
 	// hold an active handoff from this caller.
-	const callerExisting = await readWorkflowState(cwd, callerSkill);
+	const callerExisting = await readWorkflowState(cwd, callerSkill, { sessionId });
 	if (!callerExisting || callerExisting.active !== true) {
 		throw new Error(
-			`handoff caller ${callerSkill} is not active (no active mode-state at ${workflowStatePath(cwd, callerSkill)})`,
+			`handoff caller ${callerSkill} is not active (no active mode-state at ${workflowStatePath(cwd, callerSkill, sessionId)})`,
 		);
 	}
-	const calleeExisting = await readWorkflowState(cwd, calleeSkill).catch(() => undefined);
+	const calleeExisting = await readWorkflowState(cwd, calleeSkill, { sessionId }).catch(() => undefined);
 	if (
 		calleeExisting &&
 		calleeExisting.active === true &&
@@ -99,19 +111,19 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		throw new Error(`handoff callee ${calleeSkill} already holds an active handoff from ${callerSkill}`);
 	}
 
-	const calleePath = workflowStatePath(cwd, calleeSkill);
-	const callerPath = workflowStatePath(cwd, callerSkill);
-	const activeStatePath = workflowActiveStatePath(cwd);
+	const calleePath = workflowStatePath(cwd, calleeSkill, sessionId);
+	const callerPath = workflowStatePath(cwd, callerSkill, sessionId);
+	const activeStatePath = workflowActiveStatePath(cwd, sessionId);
 
 	const callerSide: WorkflowTransactionSide = {
 		skill: callerSkill,
-		...(sessionId ? { sessionId } : {}),
+		sessionId,
 		phase: "handoff",
 	};
 	const calleeInitial = initialWorkflowPhase(calleeSkill);
 	const calleeSide: WorkflowTransactionSide = {
 		skill: calleeSkill,
-		...(sessionId ? { sessionId } : {}),
+		sessionId,
 		phase: calleeInitial,
 	};
 
@@ -124,9 +136,7 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		stepNames: HANDOFF_STEPS,
 	});
 
-	// 1. Write callee mode-state (promote). Tamper on the callee is caught here
-	//    by the universal persistWorkflowState seam; an unforced tampered callee
-	//    blocks before the caller is demoted (fail-fast).
+	// 1. Write callee mode-state (promote).
 	const calleeState = await writeWorkflowState(
 		cwd,
 		calleeSkill,
@@ -138,7 +148,7 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 			handoff_at: handoffAt,
 		},
 		options.command,
-		{ operation: "handoff-receive", force, mutationId },
+		{ operation: "handoff-receive", force, mutationId, sessionId },
 	);
 	await updateWorkflowTransactionJournal(cwd, mutationId, HANDOFF_STEPS[0]);
 
@@ -154,19 +164,16 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 			handoff_at: handoffAt,
 		},
 		options.command,
-		{ operation: "handoff-send", force, mutationId },
+		{ operation: "handoff-send", force, mutationId, sessionId },
 	);
 	await updateWorkflowTransactionJournal(cwd, mutationId, HANDOFF_STEPS[1]);
 
-	// 3. Crash-injection: throw after the caller write, before the active-state
-	//    apply. Leaves a pending journal with partial steps (orphan — repair
-	//    deferred to STATE-007).
+	// 3. Crash-injection
 	if (process.env.PI_WORKFLOW_HANDOFF_FAIL_AFTER_CALLER === mutationId) {
 		throw new Error(`injected handoff failure after caller write for ${mutationId}`);
 	}
 
-	// 4. Apply the active-state handoff (existing fn; handoff-receive operation
-	//    preserved for HUD continuity).
+	// 4. Apply the active-state handoff
 	await applyHandoffToActiveState({
 		cwd,
 		caller: {
@@ -179,11 +186,7 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 			phase: calleeInitial,
 			state_path: calleePath,
 		},
-		// `sessionId` tags both active-state entries via the top-level option
-		// (`applyHandoffToActiveState` derives `session_id` from it). Do NOT also
-		// pass it inside the side objects — `HandoffSide` has no `sessionId` field
-		// and a stray camelCase key would pollute the persisted entries.
-		...(sessionId ? { sessionId } : {}),
+		sessionId,
 		nowIso: handoffAt,
 	});
 	await updateWorkflowTransactionJournal(cwd, mutationId, HANDOFF_STEPS[2]);

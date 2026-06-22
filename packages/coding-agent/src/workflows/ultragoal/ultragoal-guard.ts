@@ -16,7 +16,7 @@
  * is produced when an active goal is `review_blocked`. `unreadable_fail_closed`
  * covers unreadable plan/ledger while an objective is active.
  */
-import { ultragoalGoalsPath, ultragoalLedgerPath } from "../shared/paths.ts";
+import { ultragoalGoalsPath, ultragoalLedgerPath } from "../shared/session-layout.ts";
 import {
 	readUltragoalLedger,
 	requiredGoals,
@@ -103,11 +103,12 @@ function findReceiptGoal(
  */
 export async function readUltragoalVerificationState(
 	cwd: string,
+	sessionId?: string,
 	input: UltragoalGuardInput = {},
 ): Promise<UltragoalGuardDiagnostic> {
 	let plan: UltragoalPlan | undefined;
 	try {
-		plan = await readUltragoalPlan(cwd);
+		plan = await readUltragoalPlan(cwd, sessionId);
 	} catch (error) {
 		return {
 			state: "unreadable_fail_closed",
@@ -116,14 +117,14 @@ export async function readUltragoalVerificationState(
 	}
 	let ledger: UltragoalLedgerEvent[];
 	try {
-		ledger = await readUltragoalLedger(cwd);
+		ledger = await readUltragoalLedger(cwd, sessionId);
 	} catch (error) {
 		if (error instanceof UltragoalLedgerUnreadable) {
 			return { state: "unreadable_fail_closed", message: error.message };
 		}
 		return {
 			state: "unreadable_fail_closed",
-			message: `Unable to read ultragoal ledger at ${ultragoalLedgerPath(cwd)}: ${error instanceof Error ? error.message : String(error)}`,
+			message: `Unable to read ultragoal ledger at ${ultragoalLedgerPath(cwd, sessionId)}: ${error instanceof Error ? error.message : String(error)}`,
 		};
 	}
 	if (!plan) return { state: "inactive", message: "No ultragoal plan exists." };
@@ -185,12 +186,15 @@ export async function readUltragoalVerificationState(
 /** Entrypoint for the `ultragoal_guard` tool. */
 export async function ultragoalGuard(
 	cwd: string,
+	sessionId?: string | UltragoalGuardInput,
 	input: UltragoalGuardInput = {},
 ): Promise<UltragoalGuardDiagnostic & { ledger_path: string; goals_path: string }> {
-	const diagnostic = await readUltragoalVerificationState(cwd, input);
+	const effectiveSessionId = typeof sessionId === "string" ? sessionId : undefined;
+	const effectiveInput = typeof sessionId === "object" && sessionId !== null ? sessionId : input;
+	const diagnostic = await readUltragoalVerificationState(cwd, effectiveSessionId, effectiveInput);
 	return {
 		...diagnostic,
-		ledger_path: ultragoalLedgerPath(cwd),
-		goals_path: ultragoalGoalsPath(cwd),
+		ledger_path: ultragoalLedgerPath(cwd, effectiveSessionId),
+		goals_path: ultragoalGoalsPath(cwd, effectiveSessionId),
 	};
 }

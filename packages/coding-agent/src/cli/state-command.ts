@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import { readWorkflowActiveState, syncWorkflowActiveState } from "../workflows/shared/active-state.ts";
-import { type WorkflowSkill, workflowStatePath } from "../workflows/shared/paths.ts";
+import type { WorkflowSkill } from "../workflows/shared/paths.ts";
+import { workflowActiveStatePath, workflowStatePath } from "../workflows/shared/session-layout.ts";
 import { assertWorkflowSkill, isWorkflowSkill } from "../workflows/shared/state-schema.ts";
 import { clearWorkflowState, readWorkflowState, writeWorkflowState } from "../workflows/shared/workflow-state.ts";
 
@@ -18,25 +19,30 @@ interface ParsedStateCommand {
 	to?: WorkflowSkill;
 	json: boolean;
 	help: boolean;
+	force: boolean;
+	session?: string;
 }
 
 const ACTIONS = new Set(["read", "write", "clear", "handoff", "active", "doctor"]);
 
 function usage(): string {
 	return `Usage:
-  pi workflow state <skill> read --json
-  pi workflow state <skill> write --input '{"current_phase":"planner","active":true}' --json
-  pi workflow state read --skill <skill> --json
-  pi workflow state write --skill <skill> --input '{"state":{"active":true}}' --json
-  pi workflow state <skill> clear --json
-  pi workflow state <skill> handoff --to <skill> --json
+  pi workflow state <skill> read [--session <id>] [--json]
+  pi workflow state <skill> write --input '{...}' [--force] [--session <id>] [--json]
+  pi workflow state <skill> clear [--force] [--session <id>] [--json]
+  pi workflow state <skill> handoff --to <skill> [--session <id>] [--json]
+  pi workflow state active [--session <id>] [--json]
+  pi workflow state <skill> doctor [--session <id>] [--json]
 
 Skills: deep-interview, ralplan, team, ultragoal
+Session: --session <id> or PI_SESSION_ID env var scopes state to a session.
+         If omitted, commands use the legacy global .pi/ workflow state.
+Force: use --force to clear or overwrite terminal/corrupt state.
 `;
 }
 
 function parseStateArgs(args: string[]): ParsedStateCommand {
-	const parsed: ParsedStateCommand = { action: "read", json: false, help: false };
+	const parsed: ParsedStateCommand = { action: "read", json: false, help: false, force: false };
 	let actionSet = false;
 
 	for (let i = 0; i < args.length; i++) {
@@ -47,6 +53,10 @@ function parseStateArgs(args: string[]): ParsedStateCommand {
 		}
 		if (arg === "--json") {
 			parsed.json = true;
+			continue;
+		}
+		if (arg === "--force" || arg === "-f") {
+			parsed.force = true;
 			continue;
 		}
 		if (arg === "--skill" || arg === "--mode") {
@@ -73,6 +83,12 @@ function parseStateArgs(args: string[]): ParsedStateCommand {
 			if (!value) throw new Error("--to requires a value");
 			assertWorkflowSkill(value);
 			parsed.to = value;
+			continue;
+		}
+		if (arg === "--session") {
+			const value = args[++i];
+			if (!value) throw new Error("--session requires a value");
+			parsed.session = value;
 			continue;
 		}
 		if (arg.startsWith("-")) throw new Error(`unknown state option: ${arg}`);
@@ -135,13 +151,20 @@ export async function runStateCommand(args: string[], cwd = process.cwd()): Prom
 	try {
 		const parsed = parseStateArgs(args);
 		if (parsed.help) return { status: 0, stdout: usage(), stderr: "" };
+
+		const envSessionId = process.env.PI_SESSION_ID?.trim();
+		const sessionId = parsed.session?.trim() || envSessionId || undefined;
+
 		if (parsed.action === "active") {
-			const state = (await readWorkflowActiveState(cwd)) ?? null;
+			const state = (await readWorkflowActiveState(cwd, { sessionId })) ?? null;
 			return {
 				status: 0,
 				stdout: formatOutput(
 					"read",
-					{ state, state_path: resolve(cwd, ".pi", "workflows", "active-state.json") },
+					{
+						state,
+						state_path: workflowActiveStatePath(cwd, sessionId),
+					},
 					parsed.json,
 				),
 				stderr: "",
@@ -149,41 +172,67 @@ export async function runStateCommand(args: string[], cwd = process.cwd()): Prom
 		}
 
 		const skill = requireSkill(parsed.skill, parsed.action);
-		const statePath = workflowStatePath(cwd, skill);
+
 		if (parsed.action === "read") {
-			const state = (await readWorkflowState(cwd, skill)) ?? null;
+			const state = (await readWorkflowState(cwd, skill, { sessionId })) ?? null;
 			return {
 				status: 0,
-				stdout: formatOutput("read", { ok: true, skill, state_path: statePath, state }, parsed.json),
+				stdout: formatOutput(
+					"read",
+					{ ok: true, skill, state_path: workflowStatePath(cwd, skill, sessionId), state },
+					parsed.json,
+				),
 				stderr: "",
 			};
 		}
 		if (parsed.action === "write") {
 			const patch = await resolveInput(parsed.input, cwd);
-			const state = await writeWorkflowState(cwd, skill, patch, "pi state write");
-			await syncWorkflowActiveState(cwd, {
-				skill,
-				active: state.active === true,
-				phase: typeof state.current_phase === "string" ? state.current_phase : undefined,
-				state_path: statePath,
+			const state = await writeWorkflowState(cwd, skill, patch, "pi state write", {
+				force: parsed.force,
+				sessionId,
 			});
+			await syncWorkflowActiveState(
+				cwd,
+				{
+					skill,
+					active: state.active,
+					phase: state.current_phase,
+					state_path: workflowStatePath(cwd, skill, sessionId),
+				},
+				{ sessionId },
+			);
 			return {
 				status: 0,
-				stdout: formatOutput("write", { ok: true, skill, state_path: statePath, state }, parsed.json),
+				stdout: formatOutput(
+					"write",
+					{ ok: true, skill, state_path: workflowStatePath(cwd, skill, sessionId), state },
+					parsed.json,
+				),
 				stderr: "",
 			};
 		}
 		if (parsed.action === "clear") {
-			const state = await clearWorkflowState(cwd, skill);
-			await syncWorkflowActiveState(cwd, {
-				skill,
-				active: false,
-				phase: state.current_phase,
-				state_path: statePath,
+			const state = await clearWorkflowState(cwd, skill, parsed.input ? await resolveInput(parsed.input, cwd) : {}, {
+				force: parsed.force,
+				sessionId,
 			});
+			await syncWorkflowActiveState(
+				cwd,
+				{
+					skill,
+					active: state.active,
+					phase: state.current_phase,
+					state_path: workflowStatePath(cwd, skill, sessionId),
+				},
+				{ sessionId },
+			);
 			return {
 				status: 0,
-				stdout: formatOutput("clear", { ok: true, skill, state_path: statePath, state }, parsed.json),
+				stdout: formatOutput(
+					"clear",
+					{ ok: true, skill, state_path: workflowStatePath(cwd, skill, sessionId), state },
+					parsed.json,
+				),
 				stderr: "",
 			};
 		}
@@ -194,23 +243,30 @@ export async function runStateCommand(args: string[], cwd = process.cwd()): Prom
 				skill,
 				{ active: false, current_phase: "handoff", handoff_to: parsed.to },
 				"pi state handoff",
-				{ operation: "handoff-send" },
+				{ operation: "handoff-send", sessionId },
 			);
-			await syncWorkflowActiveState(cwd, { skill, active: false, phase: "handoff", state_path: statePath });
-			const targetPath = workflowStatePath(cwd, parsed.to);
+			await syncWorkflowActiveState(
+				cwd,
+				{ skill, active: false, phase: "handoff", state_path: workflowStatePath(cwd, skill, sessionId) },
+				{ sessionId },
+			);
 			const targetState = await writeWorkflowState(
 				cwd,
 				parsed.to,
 				{ active: true, current_phase: "handoff", handoff_from: skill },
 				"pi state handoff receive",
-				{ operation: "handoff-receive" },
+				{ operation: "handoff-receive", sessionId },
 			);
-			await syncWorkflowActiveState(cwd, {
-				skill: parsed.to,
-				active: true,
-				phase: "handoff",
-				state_path: targetPath,
-			});
+			await syncWorkflowActiveState(
+				cwd,
+				{
+					skill: parsed.to,
+					active: true,
+					phase: "handoff",
+					state_path: workflowStatePath(cwd, parsed.to, sessionId),
+				},
+				{ sessionId },
+			);
 			return {
 				status: 0,
 				stdout: formatOutput(
@@ -219,9 +275,9 @@ export async function runStateCommand(args: string[], cwd = process.cwd()): Prom
 						ok: true,
 						skill,
 						to: parsed.to,
-						state_path: statePath,
+						state_path: workflowStatePath(cwd, skill, sessionId),
 						state,
-						target_state_path: targetPath,
+						target_state_path: workflowStatePath(cwd, parsed.to, sessionId),
 						target_state: targetState,
 					},
 					parsed.json,
@@ -230,10 +286,26 @@ export async function runStateCommand(args: string[], cwd = process.cwd()): Prom
 			};
 		}
 		if (parsed.action === "doctor") {
-			await readWorkflowState(cwd, skill);
+			try {
+				await readWorkflowState(cwd, skill, { sessionId });
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error);
+				if (message.includes("corrupt")) {
+					return {
+						status: 1,
+						stdout: "",
+						stderr: `CORRUPT ${workflowStatePath(cwd, skill, sessionId)}: ${message}\nHint: use --force to recover: pi workflow state ${skill} clear --force --session ${sessionId}\n`,
+					};
+				}
+				throw error;
+			}
 			return {
 				status: 0,
-				stdout: formatOutput("doctor", { ok: true, skill, state_path: statePath }, parsed.json),
+				stdout: formatOutput(
+					"doctor",
+					{ ok: true, skill, state_path: workflowStatePath(cwd, skill, sessionId), session_id: sessionId },
+					parsed.json,
+				),
 				stderr: "",
 			};
 		}

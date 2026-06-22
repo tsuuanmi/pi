@@ -4,7 +4,7 @@ import type { AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core"
 import type { Message } from "@earendil-works/pi-ai";
 import type { SubagentManager, SubagentRunResult } from "../../core/subagents.ts";
 import type { RalplanStage } from "../shared/paths.ts";
-import { workflowStatePath } from "../shared/paths.ts";
+import { workflowStatePath } from "../shared/session-layout.ts";
 import { writeJsonAtomic } from "../shared/state-writer.ts";
 import { activeRalplanRunId, defaultWorkflowId } from "../shared/workflow-state.ts";
 
@@ -97,8 +97,13 @@ function subagentMessages(result: SubagentRunResult): Message[] {
 async function writeRunRecord(
 	cwd: string,
 	result: Omit<RalplanAgentRunResult, "record_path">,
+	sessionId?: string,
 ): Promise<RalplanAgentRunResult> {
-	const recordPath = join(dirname(workflowStatePath(cwd, "ralplan")), "agents", `${result.agent_run_id}.json`);
+	const recordPath = join(
+		dirname(workflowStatePath(cwd, "ralplan", sessionId)),
+		"agents",
+		`${result.agent_run_id}.json`,
+	);
 	const withPath = { ...result, record_path: recordPath };
 	await writeJsonAtomic(recordPath, withPath, { cwd });
 	return withPath;
@@ -107,26 +112,31 @@ async function writeRunRecord(
 export async function runRalplanAgent(
 	cwd: string,
 	input: RalplanAgentRunInput,
+	sessionId?: string,
 	signal?: AbortSignal,
 ): Promise<RalplanAgentRunResult> {
 	if (!Number.isInteger(input.stageN) || input.stageN < 1 || input.stageN > 999)
 		throw new Error(`invalid stageN: ${input.stageN}`);
-	const runId = input.runId?.trim() || (await activeRalplanRunId(cwd)) || defaultWorkflowId("ralplan");
+	const runId = input.runId?.trim() || (await activeRalplanRunId(cwd, sessionId)) || defaultWorkflowId("ralplan");
 	const agentRunId = `ralagent-${randomUUID()}`;
 	const prompt = rolePrompt(input.role);
 	const task = buildTask(input, runId);
 	if (input.dryRun === true) {
-		return writeRunRecord(cwd, {
-			agent_run_id: agentRunId,
-			role: input.role,
-			run_id: runId,
-			stage: input.stage,
-			stage_n: input.stageN,
-			status: "planned",
-			planner_subagent_id: input.plannerSubagentId,
-			attempted_resume: input.attemptResume,
-			output: task,
-		});
+		return writeRunRecord(
+			cwd,
+			{
+				agent_run_id: agentRunId,
+				role: input.role,
+				run_id: runId,
+				stage: input.stage,
+				stage_n: input.stageN,
+				status: "planned",
+				planner_subagent_id: input.plannerSubagentId,
+				attempted_resume: input.attemptResume,
+				output: task,
+			},
+			sessionId,
+		);
 	}
 
 	if (!input.subagentManager) throw new Error("ralplan role agents require Pi-native subagents");
@@ -159,19 +169,23 @@ export async function runRalplanAgent(
 			signal,
 		});
 	}
-	return writeRunRecord(cwd, {
-		agent_run_id: agentRunId,
-		role: input.role,
-		run_id: runId,
-		stage: input.stage,
-		stage_n: input.stageN,
-		status: subagentResult.record.status === "completed" ? "completed" : "failed",
-		planner_subagent_id: subagentResult.record.id,
-		attempted_resume: input.attemptResume,
-		output: subagentResult.output,
-		stderr: subagentResult.record.error_text,
-		messages: subagentMessages(subagentResult),
-	});
+	return writeRunRecord(
+		cwd,
+		{
+			agent_run_id: agentRunId,
+			role: input.role,
+			run_id: runId,
+			stage: input.stage,
+			stage_n: input.stageN,
+			status: subagentResult.record.status === "completed" ? "completed" : "failed",
+			planner_subagent_id: subagentResult.record.id,
+			attempted_resume: input.attemptResume,
+			output: subagentResult.output,
+			stderr: subagentResult.record.error_text,
+			messages: subagentMessages(subagentResult),
+		},
+		sessionId,
+	);
 }
 
 export function ralplanRoleForStage(stage: RalplanStage): RalplanAgentRole {

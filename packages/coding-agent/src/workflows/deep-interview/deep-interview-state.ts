@@ -88,6 +88,10 @@ export interface DeepInterviewStateEnvelope {
 	threshold?: number;
 	threshold_source?: string;
 	state?: Record<string, unknown>;
+	/** Restated one-sentence goal covering all active components. Set via restate-goal gate. */
+	restated_goal?: string;
+	/** Closure override reasons when closure was accepted despite gaps. */
+	closure_overrides?: string[];
 	[key: string]: unknown;
 }
 

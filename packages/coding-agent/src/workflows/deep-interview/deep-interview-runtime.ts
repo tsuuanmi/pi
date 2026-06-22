@@ -1,13 +1,15 @@
 import { syncWorkflowActiveState } from "../shared/active-state.ts";
-import { workflowStatePath } from "../shared/paths.ts";
+import { workflowStatePath } from "../shared/session-layout.ts";
 import { readWorkflowState, replaceWorkflowState } from "../shared/workflow-state.ts";
 import { deriveDeepInterviewHud } from "./deep-interview-hud.ts";
 import {
 	answerHash,
+	type DeepInterviewEstablishedFact,
 	type DeepInterviewOrchestrationState,
 	type DeepInterviewPlannedQuestion,
 	type DeepInterviewRoundRecord,
 	type DeepInterviewStateEnvelope,
+	type DeepInterviewTriggerMetadata,
 	deriveRoundKey,
 	mergeDeepInterviewEnvelope,
 	normalizeDeepInterviewEnvelope,
@@ -174,15 +176,15 @@ function latestPriorScoredRound(
 	return prior;
 }
 
-async function readDeepInterviewEnvelope(cwd: string): Promise<DeepInterviewStateEnvelope> {
-	return normalizeDeepInterviewEnvelope(await readWorkflowState(cwd, "deep-interview"));
+async function readDeepInterviewEnvelope(cwd: string, sessionId: string): Promise<DeepInterviewStateEnvelope> {
+	return normalizeDeepInterviewEnvelope(await readWorkflowState(cwd, "deep-interview", { sessionId }));
 }
 
 async function persistDeepInterviewEnvelope(
 	cwd: string,
 	envelope: DeepInterviewStateEnvelope,
 	command: string,
-	sessionId?: string,
+	sessionId: string,
 ): Promise<void> {
 	const normalized = normalizeDeepInterviewEnvelope(envelope);
 	const state = await replaceWorkflowState(
@@ -194,6 +196,7 @@ async function persistDeepInterviewEnvelope(
 			current_phase: typeof normalized.current_phase === "string" ? normalized.current_phase : "interviewing",
 		},
 		command,
+		{ sessionId },
 	);
 	await syncWorkflowActiveState(
 		cwd,
@@ -201,19 +204,19 @@ async function persistDeepInterviewEnvelope(
 			skill: "deep-interview",
 			active: state.active,
 			phase: state.current_phase,
-			state_path: workflowStatePath(cwd, "deep-interview"),
+			state_path: workflowStatePath(cwd, "deep-interview", sessionId),
 			hud: deriveDeepInterviewHud(state, { phase: state.current_phase }),
 		},
-		sessionId ? { sessionId } : undefined,
+		{ sessionId },
 	);
 }
 
 export async function planDeepInterviewQuestion(
 	cwd: string,
 	input: DeepInterviewQuestionPlanInput,
-	sessionId?: string,
+	sessionId: string,
 ): Promise<{ question: DeepInterviewPlannedQuestion; statePath: string }> {
-	const envelope = await readDeepInterviewEnvelope(cwd);
+	const envelope = await readDeepInterviewEnvelope(cwd, sessionId);
 	const question: DeepInterviewPlannedQuestion = {
 		round: input.round,
 		question_id: input.questionId ?? `q${input.round}`,
@@ -235,15 +238,15 @@ export async function planDeepInterviewQuestion(
 		waiting_since: question.planned_at,
 	});
 	await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview plan-question", sessionId);
-	return { question, statePath: workflowStatePath(cwd, "deep-interview") };
+	return { question, statePath: workflowStatePath(cwd, "deep-interview", sessionId) };
 }
 
 export async function appendOrMergeDeepInterviewRound(
 	cwd: string,
 	input: DeepInterviewAnswerInput,
-	sessionId?: string,
+	sessionId: string,
 ): Promise<AppendOrMergeResult> {
-	const envelope = await readDeepInterviewEnvelope(cwd);
+	const envelope = await readDeepInterviewEnvelope(cwd, sessionId);
 	const pending = plannedQuestionOf(envelope);
 	const interviewId = input.interviewId ?? interviewIdOf(envelope);
 	const effectiveInput: DeepInterviewAnswerInput = {
@@ -278,15 +281,19 @@ export async function appendOrMergeDeepInterviewRound(
 		);
 		await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview record-answer", sessionId);
 	}
-	return { action: result.action, record: result.record, statePath: workflowStatePath(cwd, "deep-interview") };
+	return {
+		action: result.action,
+		record: result.record,
+		statePath: workflowStatePath(cwd, "deep-interview", sessionId),
+	};
 }
 
 export async function enrichDeepInterviewRoundScoring(
 	cwd: string,
 	input: DeepInterviewScoringInput,
-	sessionId?: string,
+	sessionId: string,
 ): Promise<{ record: DeepInterviewRoundRecord; statePath: string }> {
-	const envelope = await readDeepInterviewEnvelope(cwd);
+	const envelope = await readDeepInterviewEnvelope(cwd, sessionId);
 	const interviewId = input.interviewId ?? interviewIdOf(envelope);
 	const rounds = readRounds(envelope);
 	const { rounds: nextRounds, record } = enrichRoundWithScoring(rounds, { ...input, interviewId });
@@ -315,15 +322,15 @@ export async function enrichDeepInterviewRoundScoring(
 		},
 	});
 	await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview score-round", sessionId);
-	return { record, statePath: workflowStatePath(cwd, "deep-interview") };
+	return { record, statePath: workflowStatePath(cwd, "deep-interview", sessionId) };
 }
 
 export async function finalizeDeepInterviewSpecState(
 	cwd: string,
 	input: { slug: string; path: string; sha256: string; handoff?: string },
-	sessionId?: string,
+	sessionId: string,
 ): Promise<{ statePath: string }> {
-	const envelope = await readDeepInterviewEnvelope(cwd);
+	const envelope = await readDeepInterviewEnvelope(cwd, sessionId);
 	const next = mergeDeepInterviewEnvelope(envelope, {
 		active: input.handoff !== "stop",
 		current_phase: input.handoff && input.handoff !== "stop" ? "handoff" : "complete",
@@ -332,7 +339,7 @@ export async function finalizeDeepInterviewSpecState(
 		spec_sha256: input.sha256,
 		handoff: input.handoff,
 	});
-	const state = await replaceWorkflowState(cwd, "deep-interview", next, "pi deep-interview write-spec");
+	const state = await replaceWorkflowState(cwd, "deep-interview", next, "pi deep-interview write-spec", { sessionId });
 	// When handing off to another workflow, skip the active-state sync here —
 	// the caller will use `applyHandoffToActiveState` to demote deep-interview
 	// and promote the target atomically in a single write. For "stop" (or no
@@ -344,21 +351,160 @@ export async function finalizeDeepInterviewSpecState(
 				skill: "deep-interview",
 				active: input.handoff ? false : state.active,
 				phase: state.current_phase,
-				state_path: workflowStatePath(cwd, "deep-interview"),
+				state_path: workflowStatePath(cwd, "deep-interview", sessionId),
 				hud: deriveDeepInterviewHud(state, {
 					phase: state.current_phase,
 					specStatus: "persisted",
 				}),
 			},
-			sessionId ? { sessionId } : undefined,
+			{ sessionId },
 		);
 	}
-	return { statePath: workflowStatePath(cwd, "deep-interview") };
+	return { statePath: workflowStatePath(cwd, "deep-interview", sessionId) };
 }
 
-export async function readDeepInterviewStateCompact(cwd: string, lastN?: number) {
+export async function readDeepInterviewStateCompact(cwd: string, sessionId: string, lastN?: number) {
 	return {
-		state: projectCompactState(await readWorkflowState(cwd, "deep-interview"), { lastN }),
-		statePath: workflowStatePath(cwd, "deep-interview"),
+		state: projectCompactState(await readWorkflowState(cwd, "deep-interview", { sessionId }), { lastN }),
+		statePath: workflowStatePath(cwd, "deep-interview", sessionId),
 	};
+}
+
+// ---------------------------------------------------------------------------
+// Closure/Acceptance Guard + Restate-Goal Gate (Step 4)
+// ---------------------------------------------------------------------------
+
+export interface ClosureResult {
+	ok: boolean;
+	gaps: string[];
+}
+
+/**
+ * Closure acceptance guard for deep-interview.
+ *
+ * For each active (non-deferred) topology component, check the dimensions
+ * {goal, constraints, criteria} (+ context when brownfield). A dimension is
+ * covered if either (i) a matching established_facts entry exists, or (ii) a
+ * scored round has a finite scores[dimension] >= 0.0. An unresolved or disputed
+ * trigger on a material path blocks closure regardless of coverage.
+ */
+export function runClosureAcceptanceGuard(envelope: DeepInterviewStateEnvelope): ClosureResult {
+	const inner = (envelope.state ?? {}) as Record<string, unknown>;
+	const established: DeepInterviewEstablishedFact[] = Array.isArray(inner.established_facts)
+		? (inner.established_facts as DeepInterviewEstablishedFact[])
+		: [];
+	const rounds: DeepInterviewRoundRecord[] = Array.isArray(inner.rounds)
+		? (inner.rounds as DeepInterviewRoundRecord[])
+		: [];
+	const scoredRounds = rounds.filter((r) => r.lifecycle === "scored");
+
+	// Check for unresolved/disputed triggers on material paths
+	const unresolvedTriggers: DeepInterviewTriggerMetadata[] = [];
+	for (const round of scoredRounds) {
+		for (const trigger of round.triggers ?? []) {
+			if (trigger.status === "unresolved" || trigger.status === "disputed") {
+				unresolvedTriggers.push(trigger);
+			}
+		}
+	}
+
+	const gaps: string[] = [];
+
+	// Unresolved/disputed triggers block closure
+	for (const trigger of unresolvedTriggers) {
+		gaps.push(
+			`unresolved ${trigger.status} trigger ${trigger.kind} on ${trigger.component}/${trigger.dimension}: ${trigger.rationale ?? "no rationale"}`,
+		);
+	}
+
+	// Get active (non-deferred) components
+	const topology = inner.topology as
+		| { components?: Array<{ status?: string; name?: string; dimensions?: string[] }> }
+		| undefined;
+	const isBrownfield = Boolean(inner.codebase_context ?? inner.initial_context_summary);
+	const dimensions = ["goal", "constraints", "criteria"];
+	if (isBrownfield) dimensions.push("context");
+
+	const activeComponents = topology?.components?.filter((c) => c.status !== "deferred") ?? [];
+
+	if (activeComponents.length === 0) {
+		// No active components — closure is trivially ok
+		return { ok: gaps.length === 0, gaps };
+	}
+
+	for (const component of activeComponents) {
+		const componentName = component.name ?? "unknown";
+		for (const dimension of dimensions) {
+			// Check (i): matching established_facts entry
+			const hasFact = established.some(
+				(f) =>
+					!f.disputed &&
+					(f.component === componentName || !f.component) &&
+					(f.dimension === dimension || !f.dimension),
+			);
+
+			// Check (ii): scored round with finite score for this dimension
+			const hasScoredRound = scoredRounds.some(
+				(r) =>
+					r.scores &&
+					typeof r.scores[dimension] === "number" &&
+					Number.isFinite(r.scores[dimension] as number) &&
+					(r.scores[dimension] as number) >= 0 &&
+					(r.component === componentName || !r.component),
+			);
+
+			if (!hasFact && !hasScoredRound) {
+				gaps.push(`${componentName}/${dimension}: no established fact or scored round`);
+			}
+		}
+	}
+
+	return { ok: gaps.length === 0, gaps };
+}
+
+export interface RestateGoalInput {
+	restatedGoal: string;
+	confirm: "Yes" | "Adjust" | "Missing";
+	adjustment?: string;
+}
+
+/**
+ * Restate-goal gate: collapse agreed answers into a one-sentence goal covering
+ * every active component. Confirm (Yes crystallizes), Adjust (re-score), or
+ * Missing (add scope). Caps at two loops.
+ */
+export async function restateGoalGate(
+	cwd: string,
+	input: RestateGoalInput,
+	sessionId: string,
+): Promise<{ ok: boolean; restated_goal?: string; loops_remaining: number }> {
+	const envelope = await readDeepInterviewEnvelope(cwd, sessionId);
+	const inner = (envelope.state ?? {}) as Record<string, unknown>;
+
+	const currentLoops = typeof inner._restate_loops === "number" ? inner._restate_loops : 0;
+	if (currentLoops >= 2) {
+		return { ok: false, loops_remaining: 0 };
+	}
+
+	if (input.confirm === "Yes") {
+		const next = mergeDeepInterviewEnvelope(envelope, {
+			restated_goal: input.restatedGoal,
+		});
+		await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview restate-goal", sessionId);
+		return { ok: true, restated_goal: input.restatedGoal, loops_remaining: 2 - currentLoops - 1 };
+	}
+
+	if (input.confirm === "Adjust" || input.confirm === "Missing") {
+		const closureOverrides = Array.isArray(envelope.closure_overrides) ? [...envelope.closure_overrides] : [];
+		closureOverrides.push(`${input.confirm}: ${input.adjustment ?? input.restatedGoal}`);
+		const next = mergeDeepInterviewEnvelope(envelope, {
+			restated_goal: input.restatedGoal,
+			closure_overrides: closureOverrides,
+			state: { _restate_loops: currentLoops + 1 },
+		});
+		await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview restate-goal", sessionId);
+		return { ok: false, restated_goal: input.restatedGoal, loops_remaining: 2 - currentLoops - 1 };
+	}
+
+	return { ok: false, loops_remaining: 2 - currentLoops };
 }

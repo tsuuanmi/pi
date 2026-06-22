@@ -25,10 +25,15 @@ import {
 	readRalplanStatus,
 	writeRalplanArtifact,
 } from "../workflows/ralplan/ralplan-runtime.ts";
+import { maybeRedirectVagueExecution } from "../workflows/ralplan/vagueness-gate.ts";
 import { readWorkflowActiveState, syncWorkflowActiveState } from "../workflows/shared/active-state.ts";
 import { handoffWorkflow } from "../workflows/shared/handoff.ts";
-import { deepInterviewIndexPath, deepInterviewSpecPath, workflowStatePath } from "../workflows/shared/paths.ts";
 import { workflowReceipt } from "../workflows/shared/receipts.ts";
+import {
+	deepInterviewIndexPath,
+	deepInterviewSpecPath,
+	workflowStatePath,
+} from "../workflows/shared/session-layout.ts";
 import { assertRalplanStage, assertSafePathComponent, assertWorkflowSkill } from "../workflows/shared/state-schema.ts";
 import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "../workflows/shared/state-writer.ts";
 import {
@@ -63,6 +68,9 @@ const workflowStateSchema = Type.Object({
 	active: Type.Optional(Type.Boolean({ description: "Active flag for write actions" })),
 	data: Type.Optional(
 		Type.Record(Type.String(), Type.Unknown(), { description: "State fields to merge for write actions" }),
+	),
+	force: Type.Optional(
+		Type.Boolean({ description: "Force overwrite/clear of terminal or corrupt state. Defaults to false." }),
 	),
 });
 
@@ -449,59 +457,64 @@ function assertAgentThinkingLevel(value: string | undefined): asserts value is A
 
 async function executeWorkflowState(params: WorkflowStateInput, ctx: ExtensionContext) {
 	const sessionId = ctx.sessionManager.getSessionId();
-	const sessionOpts = sessionId ? { sessionId } : undefined;
 	assertWorkflowSkill(params.skill);
 	const action = params.action ?? "read";
 	if (action === "read") {
-		const state = (await readWorkflowState(ctx.cwd, params.skill)) ?? null;
+		const state = (await readWorkflowState(ctx.cwd, params.skill, { sessionId })) ?? null;
 		return {
 			content: [{ type: "text" as const, text: JSON.stringify({ state }, null, 2) }],
-			details: workflowReceipt({ state, path: workflowStatePath(ctx.cwd, params.skill) }),
+			details: workflowReceipt({ state, path: workflowStatePath(ctx.cwd, params.skill, sessionId) }),
 		};
 	}
 	if (action === "write") {
 		const patch: Record<string, unknown> = { ...(params.data ?? {}) };
 		if (params.phase) patch.current_phase = params.phase;
 		if (typeof params.active === "boolean") patch.active = params.active;
-		const state = await writeWorkflowState(ctx.cwd, params.skill, patch);
+		const state = await writeWorkflowState(ctx.cwd, params.skill, patch, "pi workflow state write", {
+			force: params.force,
+			sessionId,
+		});
 		await syncWorkflowActiveState(
 			ctx.cwd,
 			{
 				skill: params.skill,
 				active: state.active,
 				phase: state.current_phase,
-				state_path: workflowStatePath(ctx.cwd, params.skill),
+				state_path: workflowStatePath(ctx.cwd, params.skill, sessionId),
 				hud:
 					params.skill === "deep-interview"
 						? deriveDeepInterviewHud(state, { phase: state.current_phase })
 						: undefined,
 			},
-			sessionOpts,
+			{ sessionId },
 		);
 		return {
-			content: [{ type: "text" as const, text: `Updated ${workflowStatePath(ctx.cwd, params.skill)}` }],
-			details: workflowReceipt({ state, path: workflowStatePath(ctx.cwd, params.skill) }),
+			content: [{ type: "text" as const, text: `Updated ${workflowStatePath(ctx.cwd, params.skill, sessionId)}` }],
+			details: workflowReceipt({ state, path: workflowStatePath(ctx.cwd, params.skill, sessionId) }),
 		};
 	}
 	if (action === "clear") {
-		const state = await clearWorkflowState(ctx.cwd, params.skill, params.data ?? {});
+		const state = await clearWorkflowState(ctx.cwd, params.skill, params.data ?? {}, {
+			force: params.force,
+			sessionId,
+		});
 		await syncWorkflowActiveState(
 			ctx.cwd,
 			{
 				skill: params.skill,
 				active: state.active,
 				phase: state.current_phase,
-				state_path: workflowStatePath(ctx.cwd, params.skill),
+				state_path: workflowStatePath(ctx.cwd, params.skill, sessionId),
 				hud:
 					params.skill === "deep-interview"
 						? deriveDeepInterviewHud(state, { phase: state.current_phase })
 						: undefined,
 			},
-			sessionOpts,
+			{ sessionId },
 		);
 		return {
 			content: [{ type: "text" as const, text: `Cleared ${params.skill} workflow state` }],
-			details: workflowReceipt({ state, path: workflowStatePath(ctx.cwd, params.skill) }),
+			details: workflowReceipt({ state, path: workflowStatePath(ctx.cwd, params.skill, sessionId) }),
 		};
 	}
 	throw new Error(`unknown workflow state action: ${action}`);
@@ -589,7 +602,7 @@ async function executeDeepInterviewRecordScoring(params: DeepInterviewRecordScor
 }
 
 async function executeDeepInterviewReadCompact(params: DeepInterviewReadCompactInput, ctx: ExtensionContext) {
-	const result = await readDeepInterviewStateCompact(ctx.cwd, params.lastN);
+	const result = await readDeepInterviewStateCompact(ctx.cwd, ctx.sessionManager.getSessionId(), params.lastN);
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		details: workflowReceipt({ ...result }),
@@ -602,9 +615,9 @@ async function executeDeepInterviewWriteSpec(params: DeepInterviewWriteSpecInput
 	const slug = params.slug?.trim() || defaultWorkflowId("spec");
 	assertSafePathComponent(slug, "slug");
 	const content = await readFileOrLiteral(params.spec, ctx.cwd);
-	const result = await writeTextArtifact(deepInterviewSpecPath(ctx.cwd, slug), content, { cwd: ctx.cwd });
+	const result = await writeTextArtifact(deepInterviewSpecPath(ctx.cwd, slug, sessionId), content, { cwd: ctx.cwd });
 	await appendJsonl(
-		deepInterviewIndexPath(ctx.cwd),
+		deepInterviewIndexPath(ctx.cwd, sessionId),
 		{
 			slug,
 			path: result.path,
@@ -632,7 +645,7 @@ async function executeDeepInterviewWriteSpec(params: DeepInterviewWriteSpecInput
 		const calleePatch =
 			params.handoff === "ralplan"
 				? {
-						run_id: (await activeRalplanRunId(ctx.cwd)) ?? defaultWorkflowId("ralplan"),
+						run_id: (await activeRalplanRunId(ctx.cwd, sessionId)) ?? defaultWorkflowId("ralplan"),
 						input: result.path,
 					}
 				: { input: result.path };
@@ -641,14 +654,13 @@ async function executeDeepInterviewWriteSpec(params: DeepInterviewWriteSpecInput
 			caller: {
 				skill: "deep-interview",
 				patch: {},
-				...(sessionId ? { sessionId } : {}),
 			},
 			callee: {
 				skill: params.handoff,
 				patch: calleePatch,
-				...(sessionId ? { sessionId } : {}),
 			},
 			command: "pi deep-interview write-spec",
+			sessionId,
 		});
 	} else {
 		// stop / no-handoff branch: finalize + direct active-state sync (unchanged).
@@ -701,17 +713,17 @@ async function syncWorkflowHudUi(_ctx: ExtensionContext): Promise<void> {
 	// but do not mirror workflow data into extension status/widget slots.
 }
 
-async function buildDeepInterviewContinuationPrompt(cwd: string, sessionId?: string): Promise<string | undefined> {
-	const active = await readWorkflowActiveState(cwd, sessionId ? { sessionId } : undefined).catch(() => undefined);
+async function buildDeepInterviewContinuationPrompt(cwd: string, sessionId: string): Promise<string | undefined> {
+	const active = await readWorkflowActiveState(cwd, { sessionId }).catch(() => undefined);
 	const deepInterview = active?.active_workflows.find((entry) => entry.skill === "deep-interview" && entry.active);
 	if (!deepInterview) return undefined;
-	const state = await readWorkflowState(cwd, "deep-interview").catch(() => undefined);
+	const state = await readWorkflowState(cwd, "deep-interview", { sessionId }).catch(() => undefined);
 	if (!state || state.active === false) return undefined;
 	const compact = projectCompactState(state, { lastN: 3 });
 	return [
 		"Active Pi deep-interview runtime context:",
 		JSON.stringify(
-			{ state_path: workflowStatePath(cwd, "deep-interview"), hud: deepInterview.hud, compact },
+			{ state_path: workflowStatePath(cwd, "deep-interview", sessionId), hud: deepInterview.hud, compact },
 			null,
 			2,
 		),
@@ -943,6 +955,7 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Extensi
 			dryRun: params.dryRun,
 			subagentManager: ctx.subagents,
 		},
+		ctx.sessionManager.getSessionId(),
 		signal,
 	);
 	return {
@@ -989,7 +1002,7 @@ async function executeRalplanWriteArtifact(params: RalplanWriteArtifactInput, ct
 
 async function executeRalplanStatus(params: RalplanRunInput, ctx: ExtensionContext) {
 	if (params.runId) assertSafePathComponent(params.runId, "runId");
-	const status = await readRalplanStatus(ctx.cwd, params.runId);
+	const status = await readRalplanStatus(ctx.cwd, ctx.sessionManager.getSessionId(), params.runId);
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(status, null, 2) }],
 		details: workflowReceipt({ ...status }),
@@ -998,7 +1011,7 @@ async function executeRalplanStatus(params: RalplanRunInput, ctx: ExtensionConte
 
 async function executeRalplanReadCompact(params: RalplanRunInput, ctx: ExtensionContext) {
 	if (params.runId) assertSafePathComponent(params.runId, "runId");
-	const status = await readRalplanCompactStatus(ctx.cwd, params.runId);
+	const status = await readRalplanCompactStatus(ctx.cwd, ctx.sessionManager.getSessionId(), params.runId);
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(status, null, 2) }],
 		details: workflowReceipt({ ...status }),
@@ -1030,7 +1043,7 @@ async function executeRalplanApprove(params: RalplanApproveInput, ctx: Extension
 
 async function executeRalplanDoctor(params: RalplanRunInput, ctx: ExtensionContext) {
 	if (params.runId) assertSafePathComponent(params.runId, "runId");
-	const result = await doctorRalplan(ctx.cwd, params.runId);
+	const result = await doctorRalplan(ctx.cwd, ctx.sessionManager.getSessionId(), params.runId);
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		details: workflowReceipt({ ...result }),
@@ -1038,6 +1051,10 @@ async function executeRalplanDoctor(params: RalplanRunInput, ctx: ExtensionConte
 }
 
 async function executeTeamStart(params: TeamStartInput, ctx: ExtensionContext) {
+	const vagueness = maybeRedirectVagueExecution("team", params.task);
+	if (vagueness.redirect) {
+		throw new Error(vagueness.message);
+	}
 	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
 	const result = await startTeam(
 		ctx.cwd,
@@ -1053,7 +1070,7 @@ async function executeTeamStart(params: TeamStartInput, ctx: ExtensionContext) {
 
 async function executeTeamSnapshot(params: TeamRunInput, ctx: ExtensionContext) {
 	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
-	const result = await readTeamSnapshot(ctx.cwd, params.teamId);
+	const result = await readTeamSnapshot(ctx.cwd, ctx.sessionManager.getSessionId(), params.teamId);
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		details: workflowReceipt({ ...result }),
@@ -1062,7 +1079,7 @@ async function executeTeamSnapshot(params: TeamRunInput, ctx: ExtensionContext) 
 
 async function executeTeamReadCompact(params: TeamRunInput, ctx: ExtensionContext) {
 	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
-	const result = await readTeamCompact(ctx.cwd, params.teamId);
+	const result = await readTeamCompact(ctx.cwd, ctx.sessionManager.getSessionId(), params.teamId);
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		details: workflowReceipt({ ...result }),
@@ -1096,7 +1113,7 @@ async function executeTeamMessage(params: TeamMessageInput, ctx: ExtensionContex
 	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
 	assertSafePathComponent(params.from, "from");
 	assertSafePathComponent(params.to, "to");
-	const result = await sendTeamMessage(ctx.cwd, params);
+	const result = await sendTeamMessage(ctx.cwd, params, ctx.sessionManager.getSessionId());
 	return {
 		content: [{ type: "text" as const, text: `Sent team message ${result.message_id}` }],
 		details: workflowReceipt(result),
@@ -1131,7 +1148,7 @@ async function executeTeamComplete(params: TeamCompleteInput, ctx: ExtensionCont
 
 async function executeTeamSpawnTaskAgent(params: TeamSpawnTaskAgentInput, ctx: ExtensionContext, signal?: AbortSignal) {
 	assertAgentThinkingLevel(params.thinkingLevel);
-	const snapshot = await readTeamSnapshot(ctx.cwd, params.teamId);
+	const snapshot = await readTeamSnapshot(ctx.cwd, ctx.sessionManager.getSessionId(), params.teamId);
 	const task = snapshot.tasks.find((t) => t.id === params.taskId);
 	if (!task) throw new Error(`team task not found: ${params.taskId}`);
 	const result = await requireSubagentManager(ctx).spawn({
@@ -1160,7 +1177,7 @@ async function executeUltragoalSpawnGoalAgent(
 	signal?: AbortSignal,
 ) {
 	assertAgentThinkingLevel(params.thinkingLevel);
-	const status = await getUltragoalStatus(ctx.cwd);
+	const status = await getUltragoalStatus(ctx.cwd, ctx.sessionManager.getSessionId());
 	const goal = status.goals.find((g) => g.id === params.goalId);
 	if (!goal) throw new Error(`ultragoal goal not found: ${params.goalId}`);
 	const result = await requireSubagentManager(ctx).spawn({
@@ -1184,6 +1201,10 @@ async function executeUltragoalSpawnGoalAgent(
 }
 
 async function executeUltragoalCreatePlan(params: UltragoalCreatePlanInput, ctx: ExtensionContext) {
+	const vagueness = maybeRedirectVagueExecution("ultragoal", params.brief);
+	if (vagueness.redirect) {
+		throw new Error(vagueness.message);
+	}
 	if (params.goalMode !== undefined && params.goalMode !== "aggregate" && params.goalMode !== "per-story") {
 		throw new Error(`invalid ultragoal goalMode: ${params.goalMode}`);
 	}
@@ -1200,7 +1221,7 @@ async function executeUltragoalCreatePlan(params: UltragoalCreatePlanInput, ctx:
 }
 
 async function executeUltragoalStatus(_params: object, ctx: ExtensionContext) {
-	const result = await getUltragoalStatus(ctx.cwd);
+	const result = await getUltragoalStatus(ctx.cwd, ctx.sessionManager.getSessionId());
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		details: workflowReceipt({ ...result }),
@@ -1208,7 +1229,7 @@ async function executeUltragoalStatus(_params: object, ctx: ExtensionContext) {
 }
 
 async function executeUltragoalReadCompact(_params: object, ctx: ExtensionContext) {
-	const result = await readUltragoalCompact(ctx.cwd);
+	const result = await readUltragoalCompact(ctx.cwd, ctx.sessionManager.getSessionId());
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		details: workflowReceipt(result),
@@ -1216,7 +1237,7 @@ async function executeUltragoalReadCompact(_params: object, ctx: ExtensionContex
 }
 
 async function executeUltragoalStartNext(params: UltragoalStartNextInput, ctx: ExtensionContext) {
-	const result = await startNextUltragoalGoal(ctx.cwd, params.retryFailed, ctx.sessionManager.getSessionId());
+	const result = await startNextUltragoalGoal(ctx.cwd, params.retryFailed ?? false, ctx.sessionManager.getSessionId());
 	await syncWorkflowHudUi(ctx);
 	return {
 		content: [
@@ -1239,7 +1260,7 @@ async function executeUltragoalCheckpoint(params: UltragoalCheckpointInput, ctx:
 }
 
 async function executeUltragoalGuard(params: UltragoalGuardInput, ctx: ExtensionContext) {
-	const result = await ultragoalGuard(ctx.cwd, params);
+	const result = await ultragoalGuard(ctx.cwd, ctx.sessionManager.getSessionId(), params);
 	return {
 		content: [{ type: "text" as const, text: `Ultragoal guard: ${result.state} — ${result.message}` }],
 		details: result,

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { auditVerbForOperation, maybeAuditForStateWrite, safeAppendAuditEntry } from "./audit-log.ts";
-import { type WorkflowSkill, workflowStatePath } from "./paths.ts";
+import type { WorkflowSkill } from "./paths.ts";
+import { workflowStatePath } from "./session-layout.ts";
 import { coerceWorkflowState, type WorkflowStateEnvelope } from "./state-schema.ts";
 import {
 	createWorkflowReceipt,
@@ -26,6 +27,13 @@ export interface WorkflowStateWriteOptions {
 	force?: boolean;
 	/** Shared mutation id for both-side receipts + audit + transaction journal. Internal-only. */
 	mutationId?: string;
+	/** Session id for session-scoped path resolution. Omit to use legacy global state. */
+	sessionId?: string;
+}
+
+export interface WorkflowStateReadOptions {
+	/** Session id for session-scoped path resolution. Omit to use legacy global state. */
+	sessionId?: string;
 }
 
 interface PriorPhaseInfo {
@@ -36,8 +44,9 @@ interface PriorPhaseInfo {
 export async function readWorkflowState(
 	cwd: string,
 	skill: WorkflowSkill,
+	options: WorkflowStateReadOptions = {},
 ): Promise<Record<string, unknown> | undefined> {
-	const result = await readExistingStateForMutation(workflowStatePath(cwd, skill));
+	const result = await readExistingStateForMutation(workflowStatePath(cwd, skill, options.sessionId));
 	if (result.kind === "absent") return undefined;
 	if (result.kind === "corrupt") throw new Error(`workflow state is corrupt: ${result.error}`);
 	return result.value;
@@ -190,9 +199,9 @@ async function persistWorkflowState(
 	existingForMerge: Record<string, unknown>,
 	patch: Record<string, unknown>,
 	command: string,
-	options: WorkflowStateWriteOptions,
+	options: WorkflowStateWriteOptions = {},
 ): Promise<WorkflowStateEnvelope> {
-	const path = workflowStatePath(cwd, skill);
+	const path = workflowStatePath(cwd, skill, options.sessionId);
 	const mutatedAt = nowIso();
 	const mutationId = options.mutationId ?? randomUUID();
 	const next = coerceWorkflowState(skill, existingForMerge, patch, mutatedAt);
@@ -257,6 +266,7 @@ async function persistWorkflowState(
 			mutation_id: mutationId,
 			...(fromPhase ? { from_phase: fromPhase } : {}),
 			...(toPhase ? { to_phase: toPhase } : {}),
+			...(options.sessionId ? { session_id: options.sessionId } : {}),
 			forced: true,
 			paths: [path],
 		});
@@ -271,7 +281,7 @@ export async function writeWorkflowState(
 	command = "pi workflow state write",
 	options: WorkflowStateWriteOptions = {},
 ): Promise<WorkflowStateEnvelope> {
-	const path = workflowStatePath(cwd, skill);
+	const path = workflowStatePath(cwd, skill, options.sessionId);
 	const existingRead = await readExistingStateForMutation(path);
 	if (existingRead.kind === "corrupt") {
 		throw new Error(`workflow state is corrupt: ${existingRead.error}`);
@@ -287,6 +297,7 @@ export async function writeWorkflowState(
 		operation: options.operation ?? "write",
 		force: options.force,
 		mutationId: options.mutationId,
+		sessionId: options.sessionId,
 	});
 }
 
@@ -297,7 +308,7 @@ export async function replaceWorkflowState(
 	command = "pi workflow state replace",
 	options: WorkflowStateWriteOptions = {},
 ): Promise<WorkflowStateEnvelope> {
-	const path = workflowStatePath(cwd, skill);
+	const path = workflowStatePath(cwd, skill, options.sessionId);
 	const existingRead = await readExistingStateForMutation(path);
 	if (existingRead.kind === "corrupt") {
 		throw new Error(`workflow state is corrupt: ${existingRead.error}`);
@@ -307,6 +318,7 @@ export async function replaceWorkflowState(
 		operation: options.operation ?? "replace",
 		force: options.force,
 		mutationId: options.mutationId,
+		sessionId: options.sessionId,
 	});
 }
 
@@ -320,11 +332,12 @@ export async function clearWorkflowState(
 	return writeWorkflowState(cwd, skill, clearPatch, "pi workflow state clear", {
 		operation: options.operation ?? "clear",
 		force: options.force,
+		sessionId: options.sessionId,
 	});
 }
 
-export async function activeRalplanRunId(cwd: string): Promise<string | undefined> {
-	const state = await readWorkflowState(cwd, "ralplan");
+export async function activeRalplanRunId(cwd: string, sessionId?: string): Promise<string | undefined> {
+	const state = await readWorkflowState(cwd, "ralplan", { sessionId });
 	const candidate = typeof state?.run_id === "string" ? state.run_id.trim() : "";
 	return candidate || undefined;
 }

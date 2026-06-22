@@ -59,3 +59,22 @@ Include:
 - risk mitigations
 - rollback notes when applicable
 - execution approval status: `pending approval`
+
+## Pre-Execution Vagueness Gate
+
+- When `team` or `ultragoal` is dispatched with a vague prompt (no concrete signals and ≤ 15 words), the workflow tools redirect to `ralplan` with an explanatory message instead of starting execution. Concrete signals that pass the gate include: file paths, issue references (`#123`), snake_case/CamelCase symbols, numbered steps, acceptance/criteria/must/should language, error/exception/traceback, fenced code blocks.
+- The gate checks specificity, not file existence — a prompt naming a not-yet-created file still passes.
+- Prefix the prompt with `force:` or `!` to bypass the vagueness gate.
+
+## Receipt-Only Role-Agent Guidance
+
+- Planner, Architect, and Critic role agents must persist durable output with `ralplan_write_artifact` and return receipt-only summaries (run id, stage, stage_n, path). Do not inline the full artifact text in the parent conversation.
+
+## Session-Scoped Isolation
+
+- Ralplan workflow state and plan artifacts are isolated per session when `PI_SESSION_ID` or `--session` is set. A fresh session starts with no prior plan state by construction.
+- Without a session id, all reads and writes fall back to the global `.pi/` path.
+
+## Corrupt-State Recovery
+
+- If ralplan state becomes corrupt or stuck in a terminal phase, use `pi workflow state ralplan clear --force` to reset (optionally with `--session <id>`). The `--force` flag bypasses transition guards and re-seeds the state.

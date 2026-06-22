@@ -7,7 +7,7 @@ import {
 	ralplanPendingApprovalPath,
 	ralplanStageArtifactPath,
 	workflowStatePath,
-} from "../shared/paths.ts";
+} from "../shared/session-layout.ts";
 import { appendJsonlIdempotent, readFileOrLiteral, sha256, writeTextArtifact } from "../shared/state-writer.ts";
 import {
 	activeRalplanRunId,
@@ -159,12 +159,13 @@ function ralplanIndexKey(entry: unknown): string | undefined {
 async function readRalplanIndex(
 	cwd: string,
 	runId: string,
+	sessionId?: string,
 ): Promise<{
 	rows: RalplanIndexRow[];
 	invalidLines: RalplanInvalidIndexLine[];
 }> {
 	try {
-		const text = await readFile(ralplanIndexPath(cwd, runId), "utf8");
+		const text = await readFile(ralplanIndexPath(cwd, runId, sessionId), "utf8");
 		const rows: RalplanIndexRow[] = [];
 		const invalidLines: RalplanInvalidIndexLine[] = [];
 		text.split(/\r?\n/).forEach((line, index) => {
@@ -235,18 +236,20 @@ function isApprovalClosed(phase: unknown): boolean {
 	return phase === "approved" || phase === "handoff" || phase === "complete" || phase === "completed";
 }
 
-export async function readRalplanStatus(cwd: string, runIdInput?: string): Promise<RalplanStatus> {
-	const state = await readWorkflowState(cwd, "ralplan");
-	const runId = runIdInput?.trim() || (typeof state?.run_id === "string" ? state.run_id : undefined);
-	const index = runId ? await readRalplanIndex(cwd, runId) : { rows: [], invalidLines: [] };
+export async function readRalplanStatus(cwd: string, sessionId?: string, runIdInput?: string): Promise<RalplanStatus> {
+	const effectiveSessionId = runIdInput === undefined ? undefined : sessionId;
+	const effectiveRunIdInput = runIdInput === undefined ? sessionId : runIdInput;
+	const state = await readWorkflowState(cwd, "ralplan", { sessionId: effectiveSessionId });
+	const runId = effectiveRunIdInput?.trim() || (typeof state?.run_id === "string" ? state.run_id : undefined);
+	const index = runId ? await readRalplanIndex(cwd, runId, effectiveSessionId) : { rows: [], invalidLines: [] };
 	const summary = summarizeRows(index.rows);
-	const pendingApprovalPath = runId ? ralplanPendingApprovalPath(cwd, runId) : undefined;
+	const pendingApprovalPath = runId ? ralplanPendingApprovalPath(cwd, runId, effectiveSessionId) : undefined;
 	const statePendingPath = typeof state?.pending_approval_path === "string" ? state.pending_approval_path : undefined;
 	return {
 		run_id: runId,
-		state_path: workflowStatePath(cwd, "ralplan"),
+		state_path: workflowStatePath(cwd, "ralplan", effectiveSessionId),
 		state,
-		index_path: runId ? ralplanIndexPath(cwd, runId) : undefined,
+		index_path: runId ? ralplanIndexPath(cwd, runId, effectiveSessionId) : undefined,
 		rows: index.rows,
 		invalid_index_lines: index.invalidLines,
 		...summary,
@@ -257,8 +260,12 @@ export async function readRalplanStatus(cwd: string, runIdInput?: string): Promi
 	};
 }
 
-export async function readRalplanCompactStatus(cwd: string, runId?: string): Promise<RalplanCompactStatus> {
-	const status = await readRalplanStatus(cwd, runId);
+export async function readRalplanCompactStatus(
+	cwd: string,
+	sessionId?: string,
+	runId?: string,
+): Promise<RalplanCompactStatus> {
+	const status = await readRalplanStatus(cwd, sessionId, runId);
 	return {
 		run_id: status.run_id,
 		phase: typeof status.state?.current_phase === "string" ? status.state.current_phase : undefined,
@@ -283,12 +290,12 @@ export async function writeRalplanArtifact(
 	input: RalplanWriteArtifactInput,
 	sessionId?: string,
 ): Promise<RalplanWriteArtifactResult> {
-	const runId = input.runId?.trim() || (await activeRalplanRunId(cwd)) || defaultWorkflowId("ralplan");
+	const runId = input.runId?.trim() || (await activeRalplanRunId(cwd, sessionId)) || defaultWorkflowId("ralplan");
 	const content = await readFileOrLiteral(input.artifact, cwd);
 	const body = content.endsWith("\n") ? content : `${content}\n`;
 	const contentSha = sha256(body);
 	const plannerState = plannerStateUpdate(input);
-	const index = await readRalplanIndex(cwd, runId);
+	const index = await readRalplanIndex(cwd, runId, sessionId);
 	const existing = latestForStageN(index.rows, input.stage, input.stageN);
 	if (existing) {
 		if (existing.sha256 !== contentSha) {
@@ -303,17 +310,21 @@ export async function writeRalplanArtifact(
 			stageN: input.stageN,
 			sha256: contentSha,
 			createdAt: existing.created_at,
-			pendingApprovalPath: input.stage === "final" ? ralplanPendingApprovalPath(cwd, runId) : undefined,
+			pendingApprovalPath: input.stage === "final" ? ralplanPendingApprovalPath(cwd, runId, sessionId) : undefined,
 			deduplicated: true,
 			plannerState,
 		};
 	}
 
-	const artifact = await writeTextArtifact(ralplanStageArtifactPath(cwd, runId, input.stageN, input.stage), body, {
-		cwd,
-	});
+	const artifact = await writeTextArtifact(
+		ralplanStageArtifactPath(cwd, runId, input.stageN, input.stage, sessionId),
+		body,
+		{
+			cwd,
+		},
+	);
 	await appendJsonlIdempotent(
-		ralplanIndexPath(cwd, runId),
+		ralplanIndexPath(cwd, runId, sessionId),
 		{
 			stage: input.stage,
 			stage_n: input.stageN,
@@ -325,29 +336,35 @@ export async function writeRalplanArtifact(
 	);
 	let pendingApprovalPath: string | undefined;
 	if (input.stage === "final") {
-		pendingApprovalPath = ralplanPendingApprovalPath(cwd, runId);
+		pendingApprovalPath = ralplanPendingApprovalPath(cwd, runId, sessionId);
 		await writeTextArtifact(pendingApprovalPath, body, { cwd });
 	}
-	const previousState = await readWorkflowState(cwd, "ralplan").catch(() => undefined);
-	const state = await writeWorkflowState(cwd, "ralplan", {
-		active: true,
-		current_phase: nextPhase(previousState?.current_phase, input.stage),
-		run_id: runId,
-		latest_artifact_path: artifact.path,
-		pending_approval_path: pendingApprovalPath,
-		...plannerStatePatch(plannerState),
-	});
-	const status = await readRalplanStatus(cwd, runId);
+	const previousState = await readWorkflowState(cwd, "ralplan", { sessionId }).catch(() => undefined);
+	const state = await writeWorkflowState(
+		cwd,
+		"ralplan",
+		{
+			active: true,
+			current_phase: nextPhase(previousState?.current_phase, input.stage),
+			run_id: runId,
+			latest_artifact_path: artifact.path,
+			pending_approval_path: pendingApprovalPath,
+			...plannerStatePatch(plannerState),
+		},
+		"pi ralplan write-artifact",
+		{ sessionId },
+	);
+	const status = await readRalplanStatus(cwd, sessionId, runId);
 	await syncWorkflowActiveState(
 		cwd,
 		{
 			skill: "ralplan",
 			active: state.active,
 			phase: state.current_phase,
-			state_path: workflowStatePath(cwd, "ralplan"),
+			state_path: workflowStatePath(cwd, "ralplan", sessionId),
 			hud: buildRalplanHud(status),
 		},
-		sessionId ? { sessionId } : undefined,
+		{ sessionId },
 	);
 	return {
 		runId,
@@ -366,9 +383,10 @@ export async function approveRalplanPlan(
 	cwd: string,
 	options: { runId?: string; target?: RalplanApprovalTarget; approved?: boolean; note?: string; sessionId?: string },
 ): Promise<RalplanApproveResult> {
+	const sessionId = options.sessionId;
 	const target = options.target ?? "ultragoal";
 	const approved = options.approved !== false;
-	const status = await readRalplanStatus(cwd, options.runId);
+	const status = await readRalplanStatus(cwd, sessionId, options.runId);
 	if (!status.run_id)
 		throw new Error(
 			"cannot approve ralplan without a run_id: no artifacts have been persisted yet. Run the planner stage (ralplan_run_agent / ralplan_write_artifact) first, then run ralplan_doctor if the run still looks inconsistent.",
@@ -378,7 +396,6 @@ export async function approveRalplanPlan(
 	}
 	await readFile(status.pending_approval_path, "utf8");
 	const now = new Date().toISOString();
-	const sessionOpts = options.sessionId ? { sessionId: options.sessionId } : undefined;
 	let ralplanState: Record<string, unknown>;
 	let targetState: Record<string, unknown> | undefined;
 	if (approved && target !== "stop") {
@@ -399,7 +416,7 @@ export async function approveRalplanPlan(
 					approval_note: options.note,
 					approved_at: now,
 				},
-				...(options.sessionId ? { sessionId: options.sessionId } : {}),
+				sessionId,
 			},
 			callee: {
 				skill: targetSkill,
@@ -408,34 +425,41 @@ export async function approveRalplanPlan(
 					source_workflow: "ralplan",
 					source_run_id: status.run_id,
 				},
-				...(options.sessionId ? { sessionId: options.sessionId } : {}),
+				sessionId,
 			},
 			command: "pi ralplan approve",
+			sessionId,
 		});
 		ralplanState = result.callerState;
 		targetState = result.calleeState;
 	} else {
 		// No handoff target (stop / rejected): just deactivate ralplan.
-		ralplanState = await writeWorkflowState(cwd, "ralplan", {
-			active: false,
-			current_phase: approved ? "approved" : "rejected",
-			run_id: status.run_id,
-			pending_approval_path: status.pending_approval_path,
-			approved,
-			approval_target: target,
-			approval_note: options.note,
-			approved_at: approved ? now : undefined,
-			rejected_at: approved ? undefined : now,
-		});
+		ralplanState = await writeWorkflowState(
+			cwd,
+			"ralplan",
+			{
+				active: false,
+				current_phase: approved ? "approved" : "rejected",
+				run_id: status.run_id,
+				pending_approval_path: status.pending_approval_path,
+				approved,
+				approval_target: target,
+				approval_note: options.note,
+				approved_at: approved ? now : undefined,
+				rejected_at: approved ? undefined : now,
+			},
+			"pi ralplan approve-reject",
+			{ sessionId },
+		);
 		await syncWorkflowActiveState(
 			cwd,
 			{
 				skill: "ralplan",
 				active: false,
 				phase: ralplanState.current_phase as string | undefined,
-				state_path: workflowStatePath(cwd, "ralplan"),
+				state_path: workflowStatePath(cwd, "ralplan", sessionId),
 			},
-			sessionOpts,
+			{ sessionId },
 		);
 	}
 	return {
@@ -448,8 +472,8 @@ export async function approveRalplanPlan(
 	};
 }
 
-export async function doctorRalplan(cwd: string, runId?: string): Promise<RalplanDoctorResult> {
-	const status = await readRalplanStatus(cwd, runId);
+export async function doctorRalplan(cwd: string, sessionId?: string, runId?: string): Promise<RalplanDoctorResult> {
+	const status = await readRalplanStatus(cwd, sessionId, runId);
 	const problems: string[] = [];
 	const warnings: string[] = [];
 	if (!status.run_id) problems.push("missing ralplan run_id");

@@ -28,7 +28,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
 import { canonicalizeJson } from "../shared/canonical-json.ts";
-import { ultragoalLedgerPath } from "../shared/paths.ts";
+import { ultragoalLedgerPath } from "../shared/session-layout.ts";
 
 export type UltragoalGoalStatus =
 	| "pending"
@@ -540,8 +540,8 @@ export function validateCompletionReceipt(input: {
  * `Bun.*`) for portability, with ENOENT handling consistent with
  * `state-writer.ts`'s `readExistingStateForMutation`.
  */
-export async function readUltragoalLedger(cwd: string): Promise<UltragoalLedgerEvent[]> {
-	const path = ultragoalLedgerPath(cwd);
+export async function readUltragoalLedger(cwd: string, sessionId?: string): Promise<UltragoalLedgerEvent[]> {
+	const path = ultragoalLedgerPath(cwd, sessionId);
 	let raw: string;
 	try {
 		raw = await readFile(path, "utf8");

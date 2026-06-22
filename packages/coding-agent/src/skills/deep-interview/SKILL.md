@@ -60,3 +60,28 @@ Include:
 - technical context
 - transcript summary
 - recommended next step
+
+## Session-Scoped Isolation
+
+- Deep Interview workflow state and specs are isolated per session when `PI_SESSION_ID` or `--session` is set. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions.
+- Without a session id, all reads and writes fall back to the global `.pi/` path (backward-compatible).
+- Corrupt or stuck state can be recovered with `pi workflow state deep-interview clear --force` (optionally with `--session <id>` to target a specific session).
+
+## Corrupt-State Recovery
+
+- If deep-interview state becomes corrupt or stuck in a terminal phase, use `pi workflow state deep-interview clear --force` to reset. The `--force` flag bypasses normal transition guards and re-seeds the state for a fresh start.
+- The `pi workflow state deep-interview doctor` command reports the resolved session id and state path, and emits the `--force` recovery hint for terminal skills.
+
+## Closure/Acceptance Guard
+
+- Before writing the spec, the interview must pass a closure acceptance guard: for each **active** (non-deferred) topology component, every dimension in `{goal, constraints, criteria}` (+ `context` when brownfield) must have at least one of (i) a matching established fact, or (ii) a scored round with a finite score ≥ 0.0. An unresolved or disputed trigger on a material path blocks closure regardless of coverage.
+- If ambiguity is at or below threshold but the guard refuses, return to questioning with the message: "The math says ready, but I am not accepting it yet because {gap}."
+
+## Restate-Goal Gate
+
+- After passing the closure guard, restate the goal as one sentence covering every active component. Ask the user to confirm: **Yes** (crystallize the goal), **Adjust** (re-score and re-loop), or **Missing** (add scope and re-loop). The restate gate caps at two loops.
+- The `restated_goal` and `closure_overrides` are persisted as top-level envelope fields (via `mergeDeepInterviewEnvelope`, not hoisted).
+
+## Prompt-Budget Summarization
+
+- Use `deep_interview_read_compact` when resuming or when the transcript exceeds the prompt budget. The compact projection includes threshold, ambiguity, topology summary, recent scored rounds, established facts, unresolved triggers, and orchestration status — enough to continue without loading the full transcript.

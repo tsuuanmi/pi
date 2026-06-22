@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { readWorkflowActiveState, syncWorkflowActiveState } from "../src/workflows/shared/active-state.ts";
-import { workflowActiveStatePath } from "../src/workflows/shared/paths.ts";
+import { workflowActiveStatePath } from "../src/workflows/shared/session-layout.ts";
 
 describe("session-scoped workflow active state", () => {
 	let cwd: string;
@@ -17,24 +17,14 @@ describe("session-scoped workflow active state", () => {
 		await rm(cwd, { recursive: true, force: true });
 	});
 
-	it("writes global state when no sessionId is provided", async () => {
-		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" });
-
-		const state = await readWorkflowActiveState(cwd);
-		expect(state?.active_workflows).toHaveLength(1);
-		expect(state?.active_workflows[0]?.skill).toBe("ralplan");
-		expect(state?.active_workflows[0]?.phase).toBe("planner");
-		expect(state?.active_workflows[0]?.session_id).toBeUndefined();
-	});
-
-	it("tags entries with session_id when sessionId is provided", async () => {
+	it("writes and reads session-scoped state", async () => {
 		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" }, { sessionId });
 
-		// Session-scoped read sees the entry
 		const state = await readWorkflowActiveState(cwd, { sessionId });
 		expect(state?.active_workflows).toHaveLength(1);
 		expect(state?.active_workflows[0]?.skill).toBe("ralplan");
+		expect(state?.active_workflows[0]?.phase).toBe("planner");
 		expect(state?.active_workflows[0]?.session_id).toBe(sessionId);
 	});
 
@@ -44,93 +34,71 @@ describe("session-scoped workflow active state", () => {
 
 		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" }, { sessionId: sessionA });
 
-		// Session B should not see session A's entries
+		// Session B should not see session A's entries — session B has no state at all
 		const stateB = await readWorkflowActiveState(cwd, { sessionId: sessionB });
-		expect(stateB?.active_workflows).toHaveLength(0);
-		expect(stateB?.active).toBe(false);
+		expect(stateB).toBeUndefined();
 	});
 
-	it("global entries are visible to all sessions as fallback", async () => {
+	it("session entry takes precedence for the same skill within the same session", async () => {
 		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
-		// Write global entry (no session)
-		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" });
-
-		// Session-scoped read sees the global entry
-		const state = await readWorkflowActiveState(cwd, { sessionId });
-		expect(state?.active_workflows).toHaveLength(1);
-		expect(state?.active_workflows[0]?.skill).toBe("ralplan");
-		expect(state?.active_workflows[0]?.session_id).toBeUndefined();
-	});
-
-	it("session entry overrides global entry for the same skill", async () => {
-		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
-
-		// Global: ralplan in planner phase (earlier timestamp)
-		await syncWorkflowActiveState(cwd, {
-			skill: "ralplan",
-			active: true,
-			phase: "planner",
-			updated_at: "2026-01-01T00:00:00.000Z",
-		});
-		// Session: ralplan in architect phase (later timestamp)
+		// First write: planner phase
+		await syncWorkflowActiveState(
+			cwd,
+			{
+				skill: "ralplan",
+				active: true,
+				phase: "planner",
+				updated_at: "2026-01-01T00:00:00.000Z",
+			},
+			{ sessionId },
+		);
+		// Second write: architect phase (newer timestamp)
 		await syncWorkflowActiveState(
 			cwd,
 			{ skill: "ralplan", active: true, phase: "architect", updated_at: "2026-01-02T00:00:00.000Z" },
 			{ sessionId },
 		);
 
-		// Session-scoped read shows session's phase (outranks global)
 		const state = await readWorkflowActiveState(cwd, { sessionId });
 		const ralplan = state?.active_workflows.find((w) => w.skill === "ralplan");
 		expect(ralplan?.phase).toBe("architect");
 		expect(ralplan?.session_id).toBe(sessionId);
-
-		// Global read (no sessionId): all entries are visible with equal rank.
-		// The session entry is newer, so it wins the dedupe.
-		const globalState = await readWorkflowActiveState(cwd);
-		const globalRalplan = globalState?.active_workflows.find((w) => w.skill === "ralplan");
-		expect(globalRalplan?.phase).toBe("architect");
 	});
 
-	it("session deactivation overrides global activation for the same skill", async () => {
+	it("session deactivation hides the skill from session read", async () => {
 		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
-		// Global: ralplan active (earlier timestamp)
-		await syncWorkflowActiveState(cwd, {
-			skill: "ralplan",
-			active: true,
-			phase: "planner",
-			updated_at: "2026-01-01T00:00:00.000Z",
-		});
-		// Session: ralplan deactivated (later timestamp)
+		// Activate then deactivate ralplan in the same session
+		await syncWorkflowActiveState(
+			cwd,
+			{
+				skill: "ralplan",
+				active: true,
+				phase: "planner",
+				updated_at: "2026-01-01T00:00:00.000Z",
+			},
+			{ sessionId },
+		);
 		await syncWorkflowActiveState(
 			cwd,
 			{ skill: "ralplan", active: false, phase: "complete", updated_at: "2026-01-02T00:00:00.000Z" },
 			{ sessionId },
 		);
 
-		// Session-scoped read: ralplan is not active (session entry outranks global by ownership)
+		// Session-scoped read: ralplan is not active
 		const state = await readWorkflowActiveState(cwd, { sessionId });
 		expect(state?.active_workflows.find((w) => w.skill === "ralplan")).toBeUndefined();
-
-		// Global read (no sessionId): the session deactivation has a newer timestamp,
-		// so ralplan is inactive globally too (most recent entry wins).
-		const globalState = await readWorkflowActiveState(cwd);
-		expect(globalState?.active_workflows.find((w) => w.skill === "ralplan")).toBeUndefined();
-
-		// A different session does not see the deactivation (foreign-session rows are hidden,
-		// only the global active entry is visible as fallback)
-		const otherSession = "0192ffff-0000-0000-0000-000000000000";
-		const otherState = await readWorkflowActiveState(cwd, { sessionId: otherSession });
-		expect(otherState?.active_workflows.find((w) => w.skill === "ralplan")).toBeDefined();
-		expect(otherState?.active_workflows[0]?.active).toBe(true);
 	});
 
-	it("merges global and session entries for different skills", async () => {
+	it("merges entries for different skills within the same session", async () => {
 		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
-		await syncWorkflowActiveState(cwd, { skill: "deep-interview", active: true, phase: "interviewing" });
+		await syncWorkflowActiveState(
+			cwd,
+			{ skill: "deep-interview", active: true, phase: "interviewing" },
+			{ sessionId },
+		);
 		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" }, { sessionId });
 
 		const state = await readWorkflowActiveState(cwd, { sessionId });
@@ -140,32 +108,35 @@ describe("session-scoped workflow active state", () => {
 	});
 
 	it("returns undefined when state file is absent", async () => {
-		const state = await readWorkflowActiveState(cwd);
+		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+		const state = await readWorkflowActiveState(cwd, { sessionId });
 		expect(state).toBeUndefined();
 	});
 
 	it("returns defined state with empty active_workflows when file exists but no active entries", async () => {
-		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" });
-		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: false, phase: "complete" });
+		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" }, { sessionId });
+		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: false, phase: "complete" }, { sessionId });
 
-		const state = await readWorkflowActiveState(cwd);
+		const state = await readWorkflowActiveState(cwd, { sessionId });
 		expect(state).toBeDefined();
 		expect(state?.active).toBe(false);
 		expect(state?.active_workflows).toHaveLength(0);
 	});
 
 	it("tolerates corrupt state file without throwing", async () => {
-		const filePath = workflowActiveStatePath(cwd);
+		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+		const filePath = workflowActiveStatePath(cwd, sessionId);
 		await mkdir(join(filePath, ".."), { recursive: true });
 		await writeFile(filePath, "{ not valid json");
 
-		const state = await readWorkflowActiveState(cwd);
+		const state = await readWorkflowActiveState(cwd, { sessionId });
 		// Corrupt file is tolerated — returns defined state with no entries
 		expect(state).toBeDefined();
 		expect(state?.active_workflows).toHaveLength(0);
 	});
 
-	it("supports multiple sessions with independent state in a single file", async () => {
+	it("supports multiple sessions with independent state", async () => {
 		const sessionA = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 		const sessionB = "0192ffff-0000-0000-0000-000000000000";
 
@@ -179,9 +150,5 @@ describe("session-scoped workflow active state", () => {
 		const stateB = await readWorkflowActiveState(cwd, { sessionId: sessionB });
 		expect(stateB?.active_workflows).toHaveLength(1);
 		expect(stateB?.active_workflows[0]?.skill).toBe("team");
-
-		// Global read (no sessionId) sees all entries — the root file is the aggregate view
-		const globalState = await readWorkflowActiveState(cwd);
-		expect(globalState?.active_workflows).toHaveLength(2);
 	});
 });

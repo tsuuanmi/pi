@@ -8,7 +8,7 @@ import {
 	teamMailboxPath,
 	teamTaskPath,
 	workflowStatePath,
-} from "../shared/paths.ts";
+} from "../shared/session-layout.ts";
 import {
 	appendJsonl,
 	readExistingStateForMutation,
@@ -183,9 +183,14 @@ function taskCounts(tasks: readonly TeamTask[]): Record<TeamTaskStatus, number> 
 	return counts;
 }
 
-async function appendTeamEvent(cwd: string, teamId: string, event: Record<string, unknown>): Promise<void> {
+async function appendTeamEvent(
+	cwd: string,
+	teamId: string,
+	event: Record<string, unknown>,
+	sessionId?: string,
+): Promise<void> {
 	await appendJsonl(
-		teamEventsPath(cwd, teamId),
+		teamEventsPath(cwd, teamId, sessionId),
 		{ event_id: defaultWorkflowId("evt"), ts: nowIso(), ...event },
 		{ cwd },
 	);
@@ -198,8 +203,8 @@ async function readJsonObject(path: string): Promise<Record<string, unknown> | u
 	return read.value;
 }
 
-async function readTeamConfig(cwd: string, teamId: string): Promise<TeamConfig | undefined> {
-	const raw = await readJsonObject(teamConfigPath(cwd, teamId));
+async function readTeamConfig(cwd: string, teamId: string, sessionId?: string): Promise<TeamConfig | undefined> {
+	const raw = await readJsonObject(teamConfigPath(cwd, teamId, sessionId));
 	if (!raw) return undefined;
 	const now = nowIso();
 	const workers = Array.isArray(raw.workers) ? raw.workers : [];
@@ -237,22 +242,22 @@ async function readTeamConfig(cwd: string, teamId: string): Promise<TeamConfig |
 	};
 }
 
-async function activeTeamId(cwd: string): Promise<string | undefined> {
-	const state = await readWorkflowState(cwd, "team").catch(() => undefined);
+async function activeTeamId(cwd: string, sessionId?: string): Promise<string | undefined> {
+	const state = await readWorkflowState(cwd, "team", { sessionId }).catch(() => undefined);
 	return typeof state?.team_id === "string" ? state.team_id : undefined;
 }
 
-async function resolveTeamId(cwd: string, teamId?: string): Promise<string> {
-	const resolved = teamId?.trim() || (await activeTeamId(cwd));
+async function resolveTeamId(cwd: string, sessionId?: string, teamId?: string): Promise<string> {
+	const resolved = teamId?.trim() || (await activeTeamId(cwd, sessionId));
 	if (!resolved) throw new Error("missing team_id");
 	assertSafeId("team_id", resolved);
 	return resolved;
 }
 
-async function listTasks(cwd: string, teamId: string): Promise<TeamTask[]> {
+async function listTasks(cwd: string, teamId: string, sessionId?: string): Promise<TeamTask[]> {
 	let entries: string[];
 	try {
-		entries = await readdir(dirname(teamTaskPath(cwd, teamId, "placeholder")));
+		entries = await readdir(dirname(teamTaskPath(cwd, teamId, "placeholder", sessionId)));
 	} catch (error) {
 		const err = error as NodeJS.ErrnoException;
 		if (err.code === "ENOENT") return [];
@@ -261,7 +266,7 @@ async function listTasks(cwd: string, teamId: string): Promise<TeamTask[]> {
 	const tasks: TeamTask[] = [];
 	for (const entry of entries) {
 		if (!entry.endsWith(".json")) continue;
-		const raw = await readJsonObject(teamTaskPath(cwd, teamId, entry.slice(0, -5)));
+		const raw = await readJsonObject(teamTaskPath(cwd, teamId, entry.slice(0, -5), sessionId));
 		if (raw) tasks.push(normalizeTask(raw));
 	}
 	return tasks.sort((a, b) => a.id.localeCompare(b.id));
@@ -279,7 +284,7 @@ async function syncTeamState(cwd: string, snapshot: TeamSnapshot, sessionId?: st
 			task_counts: snapshot.task_counts,
 		},
 		"pi workflow state write",
-		{ operation: "runtime-sync" },
+		{ operation: "runtime-sync", sessionId },
 	);
 	await syncWorkflowActiveState(
 		cwd,
@@ -287,10 +292,10 @@ async function syncTeamState(cwd: string, snapshot: TeamSnapshot, sessionId?: st
 			skill: "team",
 			active: state.active,
 			phase: state.current_phase,
-			state_path: workflowStatePath(cwd, "team"),
+			state_path: workflowStatePath(cwd, "team", sessionId),
 			hud: buildTeamHud(snapshot),
 		},
-		sessionId ? { sessionId } : undefined,
+		{ sessionId },
 	);
 }
 
@@ -324,15 +329,22 @@ export async function startTeam(
 		created_at: now,
 		updated_at: now,
 	};
-	await writeJsonAtomic(teamConfigPath(cwd, teamId), { ...config }, { cwd });
-	await appendTeamEvent(cwd, teamId, { type: "team_started", message: task, data: { worker_count: workers.length } });
-	const snapshot = await readTeamSnapshot(cwd, teamId);
+	await writeJsonAtomic(teamConfigPath(cwd, teamId, sessionId), { ...config }, { cwd });
+	await appendTeamEvent(
+		cwd,
+		teamId,
+		{ type: "team_started", message: task, data: { worker_count: workers.length } },
+		sessionId,
+	);
+	const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
 	await syncTeamState(cwd, snapshot, sessionId);
 	return snapshot;
 }
 
-export async function readTeamSnapshot(cwd: string, teamIdInput?: string): Promise<TeamSnapshot> {
-	const teamId = teamIdInput?.trim() || (await activeTeamId(cwd));
+export async function readTeamSnapshot(cwd: string, sessionId?: string, teamIdInput?: string): Promise<TeamSnapshot> {
+	const effectiveSessionId = teamIdInput === undefined ? undefined : sessionId;
+	const effectiveTeamIdInput = teamIdInput === undefined ? sessionId : teamIdInput;
+	const teamId = effectiveTeamIdInput?.trim() || (await activeTeamId(cwd, effectiveSessionId));
 	if (!teamId)
 		return {
 			phase: "missing",
@@ -343,7 +355,7 @@ export async function readTeamSnapshot(cwd: string, teamIdInput?: string): Promi
 			updated_at: nowIso(),
 		};
 	assertSafeId("team_id", teamId);
-	const config = await readTeamConfig(cwd, teamId);
+	const config = await readTeamConfig(cwd, teamId, effectiveSessionId);
 	if (!config)
 		return {
 			team_id: teamId,
@@ -354,7 +366,7 @@ export async function readTeamSnapshot(cwd: string, teamIdInput?: string): Promi
 			tasks: [],
 			updated_at: nowIso(),
 		};
-	const tasks = await listTasks(cwd, teamId);
+	const tasks = await listTasks(cwd, teamId, effectiveSessionId);
 	const counts = taskCounts(tasks);
 	const phase =
 		config.phase === "running" && tasks.length > 0 && tasks.every((task) => task.status === "completed")
@@ -363,7 +375,7 @@ export async function readTeamSnapshot(cwd: string, teamIdInput?: string): Promi
 	return {
 		team_id: teamId,
 		phase,
-		state_dir: teamDir(cwd),
+		state_dir: teamDir(cwd, effectiveSessionId),
 		task_total: tasks.length,
 		task_counts: counts,
 		workers: config.workers,
@@ -377,10 +389,10 @@ export async function createTeamTask(
 	input: { teamId?: string; id?: string; title: string; description: string; owner?: string; dependsOn?: string[] },
 	sessionId?: string,
 ): Promise<TeamTask> {
-	const teamId = await resolveTeamId(cwd, input.teamId);
+	const teamId = await resolveTeamId(cwd, sessionId, input.teamId);
 	const id = input.id?.trim() || `task-${sha256(`${input.title}\n${input.description}`).slice(0, 12)}`;
 	assertSafeId("task_id", id);
-	const existing = await readJsonObject(teamTaskPath(cwd, teamId, id));
+	const existing = await readJsonObject(teamTaskPath(cwd, teamId, id, sessionId));
 	if (existing) throw new Error(`team task already exists: ${id}`);
 	const now = nowIso();
 	const task = normalizeTask({
@@ -394,9 +406,9 @@ export async function createTeamTask(
 		created_at: now,
 		updated_at: now,
 	});
-	await writeJsonAtomic(teamTaskPath(cwd, teamId, id), { ...task }, { cwd });
-	await appendTeamEvent(cwd, teamId, { type: "task_created", task_id: id, message: task.title });
-	await syncTeamState(cwd, await readTeamSnapshot(cwd, teamId), sessionId);
+	await writeJsonAtomic(teamTaskPath(cwd, teamId, id, sessionId), { ...task }, { cwd });
+	await appendTeamEvent(cwd, teamId, { type: "task_created", task_id: id, message: task.title }, sessionId);
+	await syncTeamState(cwd, await readTeamSnapshot(cwd, sessionId, teamId), sessionId);
 	return task;
 }
 
@@ -411,10 +423,10 @@ export async function transitionTeamTask(
 	},
 	sessionId?: string,
 ): Promise<TeamTask> {
-	const teamId = await resolveTeamId(cwd, input.teamId);
+	const teamId = await resolveTeamId(cwd, sessionId, input.teamId);
 	assertSafeId("task_id", input.taskId);
 	const current = normalizeTask(
-		(await readJsonObject(teamTaskPath(cwd, teamId, input.taskId))) ??
+		(await readJsonObject(teamTaskPath(cwd, teamId, input.taskId, sessionId))) ??
 			(() => {
 				throw new Error(`unknown team task: ${input.taskId}`);
 			})(),
@@ -434,23 +446,29 @@ export async function transitionTeamTask(
 		updated_at: now,
 		completed_at: status === "completed" ? now : current.completed_at,
 	};
-	await writeJsonAtomic(teamTaskPath(cwd, teamId, next.id), { ...next }, { cwd });
-	await appendTeamEvent(cwd, teamId, {
-		type: "task_transitioned",
-		task_id: next.id,
-		worker: input.workerId,
-		message: status,
-		data: { status },
-	});
-	await syncTeamState(cwd, await readTeamSnapshot(cwd, teamId), sessionId);
+	await writeJsonAtomic(teamTaskPath(cwd, teamId, next.id, sessionId), { ...next }, { cwd });
+	await appendTeamEvent(
+		cwd,
+		teamId,
+		{
+			type: "task_transitioned",
+			task_id: next.id,
+			worker: input.workerId,
+			message: status,
+			data: { status },
+		},
+		sessionId,
+	);
+	await syncTeamState(cwd, await readTeamSnapshot(cwd, sessionId, teamId), sessionId);
 	return next;
 }
 
 export async function sendTeamMessage(
 	cwd: string,
 	input: { teamId?: string; from: string; to: string; body: string; idempotencyKey?: string },
+	sessionId?: string,
 ): Promise<Record<string, unknown>> {
-	const teamId = await resolveTeamId(cwd, input.teamId);
+	const teamId = await resolveTeamId(cwd, sessionId, input.teamId);
 	assertSafeId("worker_id", input.from);
 	assertSafeId("worker_id", input.to);
 	const body = input.body.trim();
@@ -463,13 +481,18 @@ export async function sendTeamMessage(
 		created_at: nowIso(),
 		idempotency_key: input.idempotencyKey,
 	};
-	await appendJsonl(teamMailboxPath(cwd, teamId, input.to), message, { cwd });
-	await appendTeamEvent(cwd, teamId, {
-		type: "message_sent",
-		worker: input.from,
-		message: message.message_id,
-		data: { to_worker: input.to },
-	});
+	await appendJsonl(teamMailboxPath(cwd, teamId, input.to, sessionId), message, { cwd });
+	await appendTeamEvent(
+		cwd,
+		teamId,
+		{
+			type: "message_sent",
+			worker: input.from,
+			message: message.message_id,
+			data: { to_worker: input.to },
+		},
+		sessionId,
+	);
 	return message;
 }
 
@@ -478,20 +501,29 @@ export async function completeTeam(
 	input: { teamId?: string; phase?: "complete" | "failed" | "cancelled"; summary?: string },
 	sessionId?: string,
 ): Promise<TeamSnapshot> {
-	const teamId = await resolveTeamId(cwd, input.teamId);
-	const config = await readTeamConfig(cwd, teamId);
+	const teamId = await resolveTeamId(cwd, sessionId, input.teamId);
+	const config = await readTeamConfig(cwd, teamId, sessionId);
 	if (!config) throw new Error(`unknown team: ${teamId}`);
 	const phase = input.phase ?? "complete";
 	const next = { ...config, phase, updated_at: nowIso() };
-	await writeJsonAtomic(teamConfigPath(cwd, teamId), next, { cwd });
-	await appendTeamEvent(cwd, teamId, { type: "team_closed", message: input.summary ?? phase, data: { phase } });
-	const snapshot = await readTeamSnapshot(cwd, teamId);
+	await writeJsonAtomic(teamConfigPath(cwd, teamId, sessionId), next, { cwd });
+	await appendTeamEvent(
+		cwd,
+		teamId,
+		{ type: "team_closed", message: input.summary ?? phase, data: { phase } },
+		sessionId,
+	);
+	const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
 	await syncTeamState(cwd, snapshot, sessionId);
 	return snapshot;
 }
 
-export async function readTeamCompact(cwd: string, teamId?: string): Promise<Record<string, unknown>> {
-	const snapshot = await readTeamSnapshot(cwd, teamId);
+export async function readTeamCompact(
+	cwd: string,
+	sessionId?: string,
+	teamId?: string,
+): Promise<Record<string, unknown>> {
+	const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
 	return {
 		team_id: snapshot.team_id,
 		phase: snapshot.phase,
