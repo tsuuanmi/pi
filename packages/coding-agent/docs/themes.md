@@ -49,7 +49,7 @@ vim ~/.pi/agent/themes/my-theme.json
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/src/theme/theme-schema.json",
+  "$schema": "https://raw.githubusercontent.com/tsuuanmi/pi/main/packages/coding-agent/src/theme/theme-schema.json",
   "name": "my-theme",
   "vars": {
     "primary": "#00aaff",
@@ -119,7 +119,7 @@ vim ~/.pi/agent/themes/my-theme.json
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/src/theme/theme-schema.json",
+  "$schema": "https://raw.githubusercontent.com/tsuuanmi/pi/main/packages/coding-agent/src/theme/theme-schema.json",
   "name": "my-theme",
   "vars": {
     "blue": "#0066cc",

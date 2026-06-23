@@ -6,7 +6,7 @@ preview compiler (`tsgo`). Node `>=22.19.0` is required. All packages share one
 lockstep version (currently `0.79.6`) and are released together.
 
 - Repository: `git@github.com:@tsuuanmi/pi-ai.git` (local origin; upstream
-  issue/PR links reference `earendil-works/pi-mono`).
+  issue/PR links reference `tsuuanmi/pi`).
 - License: MIT. Author: Mario Zechner.
 - Website: https://pi.dev — Docs: https://pi.dev/docs/latest
 - Toolchain: `tsgo` (`@typescript/native-preview` 7.0.0-dev) for emit, Biome
@@ -38,9 +38,9 @@ lockstep version (currently `0.79.6`) and are released together.
     └── tui/               # @tsuuanmi/pi-tui
 ```
 
-Root workspaces: `packages/*` plus 5 example extensions declared as workspaces
+Root workspaces: `packages/*` plus 4 example extensions declared as workspaces
 (`with-deps`, `custom-provider-anthropic`, `custom-provider-gitlab-duo`,
-`sandbox`, `gondolin`).
+`sandbox`).
 
 Root scripts (`package.json`): `build`, `check`, `check:browser-smoke`,
 `check:pinned-deps`, `check:shrinkwrap`, `check:ts-imports`, `knip`,
@@ -618,9 +618,9 @@ compiled binary via `build:binary`). OS: darwin, linux. `piConfig.configDir =
   `13-session-runtime.ts` (custom-model, custom-prompt, skills, tools,
   extensions, context-files, prompt-templates, api-keys/oauth, settings,
   sessions, full-control, session-runtime).
-- `examples/extensions/` — 68 top-level `.ts` example extensions + 9
+- `examples/extensions/` — 68 top-level `.ts` example extensions + 8
   subdirectories: `custom-provider-anthropic` (600), `custom-provider-gitlab-duo`
-  (472), `doom-overlay` (555), `dynamic-resources` (15), `gondolin` (531),
+  (472), `doom-overlay` (555), `dynamic-resources` (15),
   `plan-mode` (508), `sandbox` (321), `subagent` (1,141), `with-deps` (32).
   Examples cover custom tools, UI overlays/widgets, provider plugins, games
   (snake, space-invaders, tic-tac-toe, doom overlay), permission gates, git
@@ -745,8 +745,7 @@ in `packages/*/src` and `test`), declaration + sourcemaps, `allowImportingTsExte
 `tsconfig.json` (root, `noEmit`): workspace path aliases mapping
 `@tsuuanmi/pi-ai`, `pi-agent-core`, `pi-coding-agent` (incl. `/hooks`),
 `pi-tui`, `typebox` to source. Includes `packages/*/src/**`,
-`packages/*/test/**`, `packages/coding-agent/examples/**`; excludes `dist/`
-and the `gondolin` example.
+`packages/*/test/**`, `packages/coding-agent/examples/**`; excludes `dist/`.
 
 ## Release
 

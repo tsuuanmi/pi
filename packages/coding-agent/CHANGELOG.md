@@ -240,7 +240,7 @@
 
 ### Added
 
-- Added containerization documentation and a Gondolin extension example for routing built-in tools into a local micro-VM.
+- Added containerization documentation for sandboxing pi with Docker or OpenShell.
 - Added Ant Ling provider selection and setup documentation.
 - Added MiniMax-M3 model support inherited from `@tsuuanmi/pi-ai` for the `minimax` and `minimax-cn` direct providers ([#5313](https://github.com/tsuuanmi/pi/issues/5313)).
 - Added NVIDIA NIM provider selection, setup documentation, and direct NIM request attribution headers.

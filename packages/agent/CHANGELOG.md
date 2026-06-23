@@ -17,7 +17,7 @@
 
 ### Fixed
 
-- Fixed late tool progress callbacks after tool settlement to be ignored instead of emitting stale `tool_execution_update` events ([#5573](https://github.com/earendil-works/pi/issues/5573)).
+- Fixed late tool progress callbacks after tool settlement to be ignored instead of emitting stale `tool_execution_update` events ([#5573](https://github.com/tsuuanmi/pi/issues/5573)).
 
 ## [0.79.1] - 2026-06-09
 
@@ -25,6 +25,6 @@
 
 ### Fixed
 
-- Fixed the compaction summarization system prompt to use neutral AI assistant wording for non-coding agents ([#5401](https://github.com/earendil-works/pi/issues/5401)).
+- Fixed the compaction summarization system prompt to use neutral AI assistant wording for non-coding agents ([#5401](https://github.com/tsuuanmi/pi/issues/5401)).
 
 ## [0.78.1] - 2026-06-04
