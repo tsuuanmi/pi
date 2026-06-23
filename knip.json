@@ -8,20 +8,13 @@
 				"scripts/check-lockfile-commit.mjs",
 				"scripts/check-pinned-deps.mjs",
 				"scripts/check-ts-relative-imports.mjs",
-				"scripts/cost.ts",
-				"scripts/edit-tool-stats.mjs",
 				"scripts/generate-coding-agent-shrinkwrap.mjs",
 				"scripts/local-release.mjs",
 				"scripts/profile-coding-agent-node.mjs",
 				"scripts/publish.mjs",
-				"scripts/read-tool-stats.mjs",
 				"scripts/release-notes.mjs",
 				"scripts/release.mjs",
-				"scripts/session-context-stats.mjs",
-				"scripts/session-transcripts.ts",
-				"scripts/stats.ts",
-				"scripts/sync-versions.js",
-				"scripts/tool-stats.ts"
+				"scripts/sync-versions.js"
 			],
 			"project": ["scripts/**/*.{js,mjs,ts}", "*.js", "*.mjs", "*.ts"],
 			"ignoreDependencies": ["tsx"]
@@ -36,6 +29,8 @@
 				"src/providers/openai-completions.ts",
 				"src/providers/openai-responses.ts",
 				"scripts/generate-models.ts",
+				"scripts/generate-image-models.ts",
+				"scripts/generate-test-image.ts",
 				"test/codex-websocket-cached-probe.ts"
 			],
 			"project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
@@ -57,7 +52,8 @@
 				"src/cli.ts",
 				"src/bun/cli.ts",
 				"src/index.ts",
-				"src/extensions/workflows.ts"
+				"src/extensions/workflows.ts",
+				"src/utils/image-resize-worker.ts"
 			],
 			"project": ["src/**/*.ts", "test/**/*.ts"],
 			"ignoreFiles": ["src/utils/highlight-js-lib-index.d.ts"],
@@ -75,4 +71,3 @@
 		"types": "off"
 	}
 }
-

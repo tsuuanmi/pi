@@ -27,7 +27,7 @@ lockstep version (currently `0.79.6`) and are released together.
 ├── knip.json              # dead-code / unused-export config
 ├── pi-test.sh             # local TUI smoke harness (used with tmux)
 ├── test.sh                # runs non-e2e vitest suites across packages
-├── scripts/              # release, publish, dep-pinning, profiling, shrinkwrap, smoke (~5,187 LOC)
+├── scripts/              # release, publish, dep-pinning, profiling, shrinkwrap, smoke (~2,587 LOC)
 ├── .github/              # CI workflows (build-binaries, npm trusted publishing)
 ├── .husky/               # git hooks (pre-commit lockfile guard)
 ├── .pi/                  # pi's own config/skills/workflow-state dir
@@ -51,12 +51,9 @@ Root scripts (`package.json`): `build`, `check`, `check:browser-smoke`,
 
 `scripts/`: `build-binaries.sh`, `browser-smoke-entry.ts`,
 `check-browser-smoke.mjs`, `check-lockfile-commit.mjs`, `check-pinned-deps.mjs`,
-`check-ts-relative-imports.mjs`, `cost.ts`, `edit-tool-stats.mjs`,
-`generate-coding-agent-shrinkwrap.mjs`, `local-release.mjs`,
-`profile-coding-agent-node.mjs`, `publish.mjs`, `read-tool-stats.mjs`,
-`release-notes.mjs`, `release.mjs`, `session-context-stats.mjs`,
-`session-transcripts.ts`, `stats.ts`, `sync-versions.js`, `tool-stats.ts`,
-`update-source-imports-to-ts.sh`.
+`check-ts-relative-imports.mjs`, `generate-coding-agent-shrinkwrap.mjs`,
+`local-release.mjs`, `profile-coding-agent-node.mjs`, `publish.mjs`,
+`release-notes.mjs`, `release.mjs`, `sync-versions.js`.
 
 ## Package summary
 
@@ -100,7 +97,7 @@ TypeScript source + tests (excludes `node_modules`, `dist`). Counts from
 | **Total** | **96,565** | **66,381** | **162,946** | **318** |
 
 678 TypeScript files total (incl. tests) outside `node_modules`/`dist`. Root
-`scripts/` add ~5,187 lines of JS/MJS/TS tooling. AI scripts include
+`scripts/` add ~2,587 lines of JS/MJS/TS tooling. AI scripts include
 `generate-models.ts`.
 
 ## Module usage analysis
