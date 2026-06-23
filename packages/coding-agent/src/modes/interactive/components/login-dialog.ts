@@ -1,5 +1,5 @@
-import { getOAuthProviders, type OAuthDeviceCodeInfo } from "@earendil-works/pi-ai/oauth";
-import { Container, type Focusable, getKeybindings, Input, Spacer, Text, type TUI } from "@earendil-works/pi-tui";
+import { getOAuthProviders, type OAuthDeviceCodeInfo } from "@tsuuanmi/pi-ai/oauth";
+import { Container, type Focusable, getKeybindings, Input, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
 import { theme } from "../../../theme/theme.ts";
 import { keyHint } from "../../../ui/rendering/keybinding-hints.ts";
 import { openBrowser } from "../../../utils/terminal/open-browser.ts";

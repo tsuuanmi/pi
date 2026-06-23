@@ -58,9 +58,9 @@
 			"project": ["src/**/*.ts", "test/**/*.ts"],
 			"ignoreFiles": ["src/utils/highlight-js-lib-index.d.ts"],
 			"ignoreDependencies": [
-				"@earendil-works/pi-ai",
-				"@earendil-works/pi-agent-core",
-				"@earendil-works/pi-tui",
+				"@tsuuanmi/pi-ai",
+				"@tsuuanmi/pi-agent-core",
+				"@tsuuanmi/pi-tui",
 				"pyright",
 				"typescript-language-server"
 			]

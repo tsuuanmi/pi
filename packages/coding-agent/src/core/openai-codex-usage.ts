@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import type { Api, Model } from "@earendil-works/pi-ai";
+import type { Api, Model } from "@tsuuanmi/pi-ai";
 import type { ModelRegistry } from "./model-registry.ts";
 
 const CODEX_USAGE_PATH = "wham/usage";

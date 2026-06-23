@@ -6,7 +6,7 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentMessage } from "@earendil-works/pi-agent-core";
+import type { AgentMessage } from "@tsuuanmi/pi-agent-core";
 import {
 	type Api,
 	type AssistantMessage,
@@ -15,7 +15,7 @@ import {
 	type Model,
 	type OAuthProviderId,
 	type OAuthSelectPrompt,
-} from "@earendil-works/pi-ai";
+} from "@tsuuanmi/pi-ai";
 import type {
 	AutocompleteItem,
 	AutocompleteProvider,
@@ -26,7 +26,7 @@ import type {
 	OverlayHandle,
 	OverlayOptions,
 	SlashCommand,
-} from "@earendil-works/pi-tui";
+} from "@tsuuanmi/pi-tui";
 import {
 	CombinedAutocompleteProvider,
 	type Component,
@@ -45,7 +45,7 @@ import {
 	TruncatedText,
 	TUI,
 	visibleWidth,
-} from "@earendil-works/pi-tui";
+} from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import { spawn } from "child_process";
 import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "../../core/agent-session.ts";

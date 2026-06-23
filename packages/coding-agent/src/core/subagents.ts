@@ -1,8 +1,8 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { appendFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core";
-import type { Api, AssistantMessage, Model } from "@earendil-works/pi-ai";
+import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import type { ExtensionUIContext } from "../api/types.ts";
 import { extractYieldFromMessages, type YieldDetails } from "../workflows/harness-tools/yield.ts";
 import { type AgentProfile, loadAgentProfile } from "./agent-profiles.ts";

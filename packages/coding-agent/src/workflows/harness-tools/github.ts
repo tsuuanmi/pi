@@ -9,7 +9,7 @@
  */
 
 import { execFile } from "node:child_process";
-import type { AgentToolResult } from "@earendil-works/pi-agent-core";
+import type { AgentToolResult } from "@tsuuanmi/pi-agent-core";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition } from "../../api/types.ts";
 

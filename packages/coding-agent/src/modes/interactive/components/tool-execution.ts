@@ -1,4 +1,4 @@
-import { Box, type Component, Container, Spacer, Text, type TUI } from "@earendil-works/pi-tui";
+import { Box, type Component, Container, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
 import type { ToolDefinition, ToolRenderContext } from "../../../api/types.ts";
 import { createAllToolDefinitions, type ToolName } from "../../../core/tools/index.ts";
 import { getTextOutput as getRenderedTextOutput } from "../../../core/tools/render-utils.ts";

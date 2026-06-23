@@ -1,4 +1,4 @@
-import type { TextContent } from "@earendil-works/pi-ai";
+import type { TextContent } from "@tsuuanmi/pi-ai";
 import type { AgentMessage } from "../../types.ts";
 import { createBranchSummaryMessage, createCompactionSummaryMessage, createCustomMessage } from "../messages.ts";
 import type {

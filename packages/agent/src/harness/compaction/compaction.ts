@@ -1,5 +1,5 @@
-import type { AssistantMessage, Model, TextContent, Usage } from "@earendil-works/pi-ai";
-import { completeSimple } from "@earendil-works/pi-ai";
+import type { AssistantMessage, Model, TextContent, Usage } from "@tsuuanmi/pi-ai";
+import { completeSimple } from "@tsuuanmi/pi-ai";
 import type { AgentMessage, ThinkingLevel } from "../../types.ts";
 import {
 	convertToLlm,

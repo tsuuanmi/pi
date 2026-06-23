@@ -63,7 +63,7 @@ Server names are sanitized before registration so tool names are safe for model 
 Extensions observe MCP tools through normal tool events. MCP tools behave like any other registered tool.
 
 ```typescript
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@tsuuanmi/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {
   pi.on("tool_call", (event) => {

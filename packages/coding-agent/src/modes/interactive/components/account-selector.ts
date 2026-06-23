@@ -1,12 +1,4 @@
-import {
-	Container,
-	type Focusable,
-	fuzzyFilter,
-	getKeybindings,
-	Input,
-	Spacer,
-	TruncatedText,
-} from "@earendil-works/pi-tui";
+import { Container, type Focusable, fuzzyFilter, getKeybindings, Input, Spacer, TruncatedText } from "@tsuuanmi/pi-tui";
 import { theme } from "../../../theme/theme.ts";
 import { keyHint, rawKeyHint } from "../../../ui/rendering/keybinding-hints.ts";
 import { DynamicBorder } from "./dynamic-border.ts";

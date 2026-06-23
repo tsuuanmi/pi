@@ -5,7 +5,7 @@ TypeScript monorepo built with npm workspaces and the TypeScript native
 preview compiler (`tsgo`). Node `>=22.19.0` is required. All packages share one
 lockstep version (currently `0.79.6`) and are released together.
 
-- Repository: `git@github.com:tsuuanmi/pi.git` (local origin; upstream
+- Repository: `git@github.com:@tsuuanmi/pi-ai.git` (local origin; upstream
   issue/PR links reference `earendil-works/pi-mono`).
 - License: MIT. Author: Mario Zechner.
 - Website: https://pi.dev — Docs: https://pi.dev/docs/latest
@@ -32,10 +32,10 @@ lockstep version (currently `0.79.6`) and are released together.
 ├── .husky/               # git hooks (pre-commit lockfile guard)
 ├── .pi/                  # pi's own config/skills/workflow-state dir
 └── packages/             # 4 workspace packages (+ 5 example extension workspaces)
-    ├── ai/                # @earendil-works/pi-ai
-    ├── agent/             # @earendil-works/pi-agent-core
-    ├── coding-agent/      # @earendil-works/pi-coding-agent  (the `pi` CLI)
-    └── tui/               # @earendil-works/pi-tui
+    ├── ai/                # @tsuuanmi/pi-ai
+    ├── agent/             # @tsuuanmi/pi-agent-core
+    ├── coding-agent/      # @tsuuanmi/pi-coding-agent  (the `pi` CLI)
+    └── tui/               # @tsuuanmi/pi-tui
 ```
 
 Root workspaces: `packages/*` plus 5 example extensions declared as workspaces
@@ -59,10 +59,10 @@ Root scripts (`package.json`): `build`, `check`, `check:browser-smoke`,
 
 | Package | npm name | Version | Description |
 | --- | --- | --- | --- |
-| `ai` | `@earendil-works/pi-ai` | 0.79.6 | Unified multi-provider LLM API with automatic model discovery, streaming, OAuth, and a `pi-ai` CLI. |
-| `agent` | `@earendil-works/pi-agent-core` | 0.79.6 | Agent runtime: tool-calling loop, transport abstraction, state management, harness, compaction, sessions, skills. |
-| `tui` | `@earendil-works/pi-tui` | 0.79.6 | Terminal UI library with differential rendering, components, editor, keybindings, and clipboard support. |
-| `coding-agent` | `@earendil-works/pi-coding-agent` | 0.79.6 | The `pi` CLI: interactive TUI coding agent, RPC mode, tools, skills, workflows, extensions, MCP, LSP. |
+| `ai` | `@tsuuanmi/pi-ai` | 0.79.6 | Unified multi-provider LLM API with automatic model discovery, streaming, OAuth, and a `pi-ai` CLI. |
+| `agent` | `@tsuuanmi/pi-agent-core` | 0.79.6 | Agent runtime: tool-calling loop, transport abstraction, state management, harness, compaction, sessions, skills. |
+| `tui` | `@tsuuanmi/pi-tui` | 0.79.6 | Terminal UI library with differential rendering, components, editor, keybindings, and clipboard support. |
+| `coding-agent` | `@tsuuanmi/pi-coding-agent` | 0.79.6 | The `pi` CLI: interactive TUI coding agent, RPC mode, tools, skills, workflows, extensions, MCP, LSP. |
 
 Dependency graph (build order): `tui` -> `ai` -> `agent` -> `coding-agent`.
 `coding-agent` depends on all three; `agent` depends on `ai`; `ai` and `tui`
@@ -79,7 +79,7 @@ are leaves.
 
 Key runtime deps:
 - `ai`: `@anthropic-ai/sdk` 0.91.1, `openai` 6.26.0, `partial-json` 0.1.7, `typebox` 1.1.38.
-- `agent`: `@earendil-works/pi-ai`, `ignore` 7.0.5, `typebox`, `yaml` 2.9.0.
+- `agent`: `@tsuuanmi/pi-ai`, `ignore` 7.0.5, `typebox`, `yaml` 2.9.0.
 - `tui`: `get-east-asian-width` 1.6.0, `marked` 18.0.5.
 - `coding-agent`: `pi-agent-core`, `pi-ai`, `pi-tui`, `chalk` 5.6.2, `diff` 8.0.4, `glob` 13.0.6, `highlight.js` 10.7.3, `hosted-git-info` 9.0.3, `ignore`, `jiti` 2.7.0, `minimatch` 10.2.5, `proper-lockfile` 4.1.2, `pyright` 1.1.410, `semver` 7.8.0, `typescript` 5.9.3, `typescript-language-server` 5.3.0, `typebox`, `undici` 8.5.0, `yaml`. Optional: `@mariozechner/clipboard` 0.3.9.
 
@@ -130,7 +130,7 @@ entry, worker, or type declaration). The three `public export` files
 
 ## `packages/agent` — agent runtime
 
-`@earendil-works/pi-agent-core` — 8,040 src LOC, 5,340 test LOC (25 + 19 files).
+`@tsuuanmi/pi-agent-core` — 8,040 src LOC, 5,340 test LOC (25 + 19 files).
 Description: "General-purpose agent with transport abstraction, state
 management, and attachment support." Exports `.` and `./node`. Docs (4):
 `agent-harness.md`, `durable-harness.md`, `hooks.md`, `observability.md`.
@@ -186,7 +186,7 @@ management, and attachment support." Exports `.` and `./node`. Docs (4):
 | `harness/utils/shell-output.ts` | 143 | Yes (leaf·2) | Normalizes shell command output (encoding, trailing newlines) before it's shown or stored. |
 ## `packages/ai` — unified LLM API
 
-`@earendil-works/pi-ai` — 10,161 src LOC, 5,448 test LOC (44 + 24 files).
+`@tsuuanmi/pi-ai` — 10,161 src LOC, 5,448 test LOC (44 + 24 files).
 Description: "Unified LLM API with automatic model discovery and provider
 configuration." Exports subpaths: `./anthropic`, `./openai-codex-responses`,
 `./openai-completions`, `./openai-responses`, `./oauth`. Ships `pi-ai` CLI.
@@ -271,7 +271,7 @@ configuration." Exports subpaths: `./anthropic`, `./openai-codex-responses`,
 
 ## `packages/coding-agent` — the `pi` CLI
 
-`@earendil-works/pi-coding-agent` — 66,447 src LOC, 42,332 test LOC (221 +
+`@tsuuanmi/pi-coding-agent` — 66,447 src LOC, 42,332 test LOC (221 +
 ~160 files). The flagship package. Ships the `pi` binary (Node CLI + Bun
 compiled binary via `build:binary`). OS: darwin, linux. `piConfig.configDir =
 ".pi"`. Exports `.` and `./hooks`.
@@ -655,7 +655,7 @@ Subdirs:
 
 ## `packages/tui` — terminal UI library
 
-`@earendil-works/pi-tui` — 11,917 src LOC, 13,261 test LOC (28 + 32 files).
+`@tsuuanmi/pi-tui` — 11,917 src LOC, 13,261 test LOC (28 + 32 files).
 Description: "Terminal User Interface library with differential rendering for
 efficient text-based applications." OS: darwin, linux. Ships native prebuilds
 for macOS modifiers.
@@ -743,7 +743,7 @@ binary assets.
 in `packages/*/src` and `test`), declaration + sourcemaps, `allowImportingTsExtensions`.
 
 `tsconfig.json` (root, `noEmit`): workspace path aliases mapping
-`@earendil-works/pi-ai`, `pi-agent-core`, `pi-coding-agent` (incl. `/hooks`),
+`@tsuuanmi/pi-ai`, `pi-agent-core`, `pi-coding-agent` (incl. `/hooks`),
 `pi-tui`, `typebox` to source. Includes `packages/*/src/**`,
 `packages/*/test/**`, `packages/coding-agent/examples/**`; excludes `dist/`
 and the `gondolin` example.

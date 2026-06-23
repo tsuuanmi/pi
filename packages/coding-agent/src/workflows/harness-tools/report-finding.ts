@@ -8,7 +8,7 @@
  * Aligned with gajae-code's `report_finding` tool but Pi-native: simpler
  * schema, findings stored on the SubagentManager for parent retrieval.
  */
-import type { AgentToolResult } from "@earendil-works/pi-agent-core";
+import type { AgentToolResult } from "@tsuuanmi/pi-agent-core";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition } from "../../api/types.ts";
 

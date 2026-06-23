@@ -1,4 +1,4 @@
-import { type Component, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import { type Component, truncateToWidth, visibleWidth } from "@tsuuanmi/pi-tui";
 import type { AgentSession } from "../../../../core/agent-session.ts";
 import { areExperimentalFeaturesEnabled } from "../../../../core/experimental.ts";
 import type { ReadonlyFooterDataProvider } from "../../../../core/footer-data-provider.ts";

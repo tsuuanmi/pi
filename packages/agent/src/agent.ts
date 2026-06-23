@@ -1,10 +1,4 @@
-import {
-	type Message,
-	type Model,
-	type SimpleStreamOptions,
-	streamSimple,
-	type Transport,
-} from "@earendil-works/pi-ai";
+import { type Message, type Model, type SimpleStreamOptions, streamSimple, type Transport } from "@tsuuanmi/pi-ai";
 import { runAgentLoop, runAgentLoopContinue } from "./agent-loop.ts";
 import type {
 	AfterToolCallContext,

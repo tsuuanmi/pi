@@ -6,7 +6,7 @@
  */
 
 import { createInterface } from "node:readline";
-import { modelsAreEqual } from "@earendil-works/pi-ai";
+import { modelsAreEqual } from "@tsuuanmi/pi-ai";
 import chalk from "chalk";
 import type { ExtensionFactory } from "./api/types.ts";
 import { type Args, type Mode, parseArgs, printHelp } from "./cli/args.ts";

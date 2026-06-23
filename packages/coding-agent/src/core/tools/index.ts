@@ -69,7 +69,7 @@ export {
 	type WriteToolOptions,
 } from "./write.ts";
 
-import type { AgentTool } from "@earendil-works/pi-agent-core";
+import type { AgentTool } from "@tsuuanmi/pi-agent-core";
 import type { ToolDefinition } from "../../api/types.ts";
 import { createLspTool, createLspToolDefinition } from "../lsp/lsp-tool.ts";
 import { type BashToolOptions, createBashTool, createBashToolDefinition } from "./bash.ts";

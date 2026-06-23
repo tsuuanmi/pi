@@ -11,7 +11,7 @@ import {
 	truncateToWidth,
 	visibleWidth,
 	wrapTextWithAnsi,
-} from "@earendil-works/pi-tui";
+} from "@tsuuanmi/pi-tui";
 import type { SessionTreeNode } from "../../../core/session-manager.ts";
 import { theme } from "../../../theme/theme.ts";
 import { formatKeyText, keyHint } from "../../../ui/rendering/keybinding-hints.ts";

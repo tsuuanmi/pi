@@ -1,4 +1,4 @@
-import { type AssistantMessage, type Model, streamSimple, type UserMessage } from "@earendil-works/pi-ai";
+import { type AssistantMessage, type Model, streamSimple, type UserMessage } from "@tsuuanmi/pi-ai";
 import { runAgentLoop } from "../agent-loop.ts";
 import type {
 	AgentContext,

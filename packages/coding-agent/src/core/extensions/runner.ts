@@ -2,9 +2,9 @@
  * Extension runner - executes extensions and manages their lifecycle.
  */
 
-import type { AgentMessage } from "@earendil-works/pi-agent-core";
-import type { Model } from "@earendil-works/pi-ai";
-import type { KeyId } from "@earendil-works/pi-tui";
+import type { AgentMessage } from "@tsuuanmi/pi-agent-core";
+import type { Model } from "@tsuuanmi/pi-ai";
+import type { KeyId } from "@tsuuanmi/pi-tui";
 import type {
 	BeforeAgentStartEvent,
 	BeforeAgentStartEventResult,

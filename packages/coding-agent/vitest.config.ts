@@ -14,10 +14,10 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: /^@earendil-works\/pi-ai$/, replacement: aiSrcIndex },
-			{ find: /^@earendil-works\/pi-ai\/oauth$/, replacement: aiSrcOAuth },
-			{ find: /^@earendil-works\/pi-agent-core$/, replacement: agentSrcIndex },
-			{ find: /^@earendil-works\/pi-tui$/, replacement: tuiSrcIndex },
+			{ find: /^@tsuuanmi\/pi-ai$/, replacement: aiSrcIndex },
+			{ find: /^@tsuuanmi\/pi-ai\/oauth$/, replacement: aiSrcOAuth },
+			{ find: /^@tsuuanmi\/pi-agent-core$/, replacement: agentSrcIndex },
+			{ find: /^@tsuuanmi\/pi-tui$/, replacement: tuiSrcIndex },
 			{ find: /^@mariozechner\/pi-ai$/, replacement: aiSrcIndex },
 			{ find: /^@mariozechner\/pi-ai\/oauth$/, replacement: aiSrcOAuth },
 			{ find: /^@mariozechner\/pi-agent-core$/, replacement: agentSrcIndex },

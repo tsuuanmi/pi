@@ -8,7 +8,7 @@
  * Aligned with gajae-code's `YieldTool` but Pi-native: simpler schema
  * validation (accepts any JSON object as data), no JTD schema processing.
  */
-import type { AgentMessage, AgentToolResult } from "@earendil-works/pi-agent-core";
+import type { AgentMessage, AgentToolResult } from "@tsuuanmi/pi-agent-core";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition } from "../../api/types.ts";
 

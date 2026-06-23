@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import type { Api, Model } from "@earendil-works/pi-ai";
+import type { Api, Model } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ModelRegistry } from "../src/core/model-registry.ts";
 import { fetchOpenAICodexUsageSummary } from "../src/core/openai-codex-usage.ts";

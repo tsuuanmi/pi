@@ -1,4 +1,4 @@
-import { Container, getKeybindings, Spacer, Text } from "@earendil-works/pi-tui";
+import { Container, getKeybindings, Spacer, Text } from "@tsuuanmi/pi-tui";
 import { APP_NAME } from "../../../core/config.ts";
 import { type TerminalTheme, theme } from "../../../theme/theme.ts";
 import { keyHint, rawKeyHint } from "../../../ui/rendering/keybinding-hints.ts";

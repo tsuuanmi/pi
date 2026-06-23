@@ -1,6 +1,6 @@
 import { join } from "node:path";
-import { Agent, type ThinkingLevel } from "@earendil-works/pi-agent-core";
-import { clampThinkingLevel, type Model, streamSimple } from "@earendil-works/pi-ai";
+import { Agent, type ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import { clampThinkingLevel, type Model, streamSimple } from "@tsuuanmi/pi-ai";
 import { resolvePath } from "../utils/fs/paths.ts";
 import { AgentSession } from "./agent-session.ts";
 import { formatNoModelsAvailableMessage } from "./auth-guidance.ts";
@@ -144,7 +144,7 @@ function getDefaultAgentDir(): string {
  * const { session } = await createAgentSession();
  *
  * // With explicit model
- * import { getModel } from '@earendil-works/pi-ai';
+ * import { getModel } from '@tsuuanmi/pi-ai';
  * const { session } = await createAgentSession({
  *   model: getModel('anthropic', 'claude-opus-4-5'),
  *   thinkingLevel: 'high',

@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@tsuuanmi/pi-coding-agent";
 
 /**
  * Observe MCP tool calls and results.
