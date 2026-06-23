@@ -980,18 +980,6 @@ The following providers require OAuth authentication instead of static API keys:
 - **Anthropic** (Claude Pro/Max subscription)
 - **OpenAI Codex** (ChatGPT Plus/Pro subscription, access to GPT-5.x Codex models)
 
-### CLI Login
-
-The quickest way to authenticate:
-
-```bash
-npx @tsuuanmi/pi-ai login              # interactive provider selection
-npx @tsuuanmi/pi-ai login anthropic    # login to specific provider
-npx @tsuuanmi/pi-ai list               # list available providers
-```
-
-Credentials are saved to `auth.json` in the current directory.
-
 ### Programmatic OAuth
 
 The library provides login and token refresh functions via the `@tsuuanmi/pi-ai/oauth` entry point. Credential storage is the caller's responsibility.

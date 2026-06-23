@@ -1,6 +1,5 @@
 import { getKeybindings } from "../keybindings.ts";
 import { decodeKittyPrintable } from "../keys.ts";
-import { KillRing } from "../kill-ring.ts";
 import { type Component, CURSOR_MARKER, type Focusable } from "../tui.ts";
 import { UndoStack } from "../undo-stack.ts";
 import { getGraphemeSegmenter, isWhitespaceChar, sliceByColumn, visibleWidth } from "../utils.ts";
@@ -29,9 +28,8 @@ export class Input implements Component, Focusable {
 	private pasteBuffer: string = "";
 	private isInPaste: boolean = false;
 
-	// Kill ring for Emacs-style kill/yank operations
-	private killRing = new KillRing();
-	private lastAction: "kill" | "yank" | "type-word" | null = null;
+	// Tracks the last editing action for undo coalescing.
+	private lastAction: "type-word" | null = null;
 
 	// Undo support
 	private undoStack = new UndoStack<InputState>();
@@ -131,16 +129,6 @@ export class Input implements Component, Focusable {
 
 		if (kb.matches(data, "tui.editor.deleteToLineEnd")) {
 			this.deleteToLineEnd();
-			return;
-		}
-
-		// Kill ring actions
-		if (kb.matches(data, "tui.editor.yank")) {
-			this.yank();
-			return;
-		}
-		if (kb.matches(data, "tui.editor.yankPop")) {
-			this.yankPop();
 			return;
 		}
 
@@ -249,9 +237,7 @@ export class Input implements Component, Focusable {
 	private deleteToLineStart(): void {
 		if (this.cursor === 0) return;
 		this.pushUndo();
-		const deletedText = this.value.slice(0, this.cursor);
-		this.killRing.push(deletedText, { prepend: true, accumulate: this.lastAction === "kill" });
-		this.lastAction = "kill";
+		this.lastAction = null;
 		this.value = this.value.slice(this.cursor);
 		this.cursor = 0;
 	}
@@ -259,17 +245,12 @@ export class Input implements Component, Focusable {
 	private deleteToLineEnd(): void {
 		if (this.cursor >= this.value.length) return;
 		this.pushUndo();
-		const deletedText = this.value.slice(this.cursor);
-		this.killRing.push(deletedText, { prepend: false, accumulate: this.lastAction === "kill" });
-		this.lastAction = "kill";
+		this.lastAction = null;
 		this.value = this.value.slice(0, this.cursor);
 	}
 
 	private deleteWordBackwards(): void {
 		if (this.cursor === 0) return;
-
-		// Save lastAction before cursor movement (moveWordBackwards resets it)
-		const wasKill = this.lastAction === "kill";
 
 		this.pushUndo();
 
@@ -278,9 +259,7 @@ export class Input implements Component, Focusable {
 		const deleteFrom = this.cursor;
 		this.cursor = oldCursor;
 
-		const deletedText = this.value.slice(deleteFrom, this.cursor);
-		this.killRing.push(deletedText, { prepend: true, accumulate: wasKill });
-		this.lastAction = "kill";
+		this.lastAction = null;
 
 		this.value = this.value.slice(0, deleteFrom) + this.value.slice(this.cursor);
 		this.cursor = deleteFrom;
@@ -289,9 +268,6 @@ export class Input implements Component, Focusable {
 	private deleteWordForward(): void {
 		if (this.cursor >= this.value.length) return;
 
-		// Save lastAction before cursor movement (moveWordForwards resets it)
-		const wasKill = this.lastAction === "kill";
-
 		this.pushUndo();
 
 		const oldCursor = this.cursor;
@@ -299,40 +275,9 @@ export class Input implements Component, Focusable {
 		const deleteTo = this.cursor;
 		this.cursor = oldCursor;
 
-		const deletedText = this.value.slice(this.cursor, deleteTo);
-		this.killRing.push(deletedText, { prepend: false, accumulate: wasKill });
-		this.lastAction = "kill";
+		this.lastAction = null;
 
 		this.value = this.value.slice(0, this.cursor) + this.value.slice(deleteTo);
-	}
-
-	private yank(): void {
-		const text = this.killRing.peek();
-		if (!text) return;
-
-		this.pushUndo();
-
-		this.value = this.value.slice(0, this.cursor) + text + this.value.slice(this.cursor);
-		this.cursor += text.length;
-		this.lastAction = "yank";
-	}
-
-	private yankPop(): void {
-		if (this.lastAction !== "yank" || this.killRing.length <= 1) return;
-
-		this.pushUndo();
-
-		// Delete the previously yanked text (still at end of ring before rotation)
-		const prevText = this.killRing.peek() || "";
-		this.value = this.value.slice(0, this.cursor - prevText.length) + this.value.slice(this.cursor);
-		this.cursor -= prevText.length;
-
-		// Rotate and insert new entry
-		this.killRing.rotate();
-		const text = this.killRing.peek() || "";
-		this.value = this.value.slice(0, this.cursor) + text + this.value.slice(this.cursor);
-		this.cursor += text.length;
-		this.lastAction = "yank";
 	}
 
 	private pushUndo(): void {

@@ -11,7 +11,6 @@ import {
 	getSelfUpdateUnavailableInstruction,
 	PACKAGE_NAME,
 	type SelfUpdateCommand,
-	VERSION,
 } from "./core/config.ts";
 import { DefaultPackageManager } from "./core/package-manager.ts";
 import { type AppMode, resolveProjectTrusted } from "./core/project-trust.ts";
@@ -19,7 +18,6 @@ import { DefaultResourceLoader } from "./core/resource-loader.ts";
 import { SettingsManager } from "./core/settings-manager.ts";
 import { hasTrustRequiringProjectResources, ProjectTrustStore } from "./core/trust-manager.ts";
 import { spawnProcess } from "./utils/fs/child-process.ts";
-import { getLatestPiRelease, isNewerPackageVersion } from "./utils/system/version-check.ts";
 
 export type PackageCommand = "install" | "remove" | "update" | "list";
 
@@ -309,22 +307,8 @@ interface SelfUpdatePlan {
 }
 
 async function getSelfUpdatePlan(force: boolean): Promise<SelfUpdatePlan> {
-	if (force) {
-		return { packageName: PACKAGE_NAME, shouldRun: true };
-	}
-
-	try {
-		const latestRelease = await getLatestPiRelease(VERSION);
-		const packageName = latestRelease?.packageName ?? PACKAGE_NAME;
-		if (!latestRelease || packageName !== PACKAGE_NAME || isNewerPackageVersion(latestRelease.version, VERSION)) {
-			return { packageName, shouldRun: true, ...(latestRelease?.note ? { note: latestRelease.note } : {}) };
-		}
-	} catch {
-		return { packageName: PACKAGE_NAME, shouldRun: true };
-	}
-
-	console.log(chalk.green(`${APP_NAME} is already up to date (v${VERSION})`));
-	return { packageName: PACKAGE_NAME, shouldRun: false };
+	void force;
+	return { packageName: PACKAGE_NAME, shouldRun: true };
 }
 
 async function runSelfUpdate(command: SelfUpdateCommand): Promise<void> {

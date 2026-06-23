@@ -58,12 +58,10 @@ Modifier combinations: `ctrl+shift+x`, `alt+ctrl+x`, `ctrl+shift+alt+x`, `ctrl+1
 | `tui.input.submit` | `enter` | Submit input |
 | `tui.input.tab` | `tab` | Tab / autocomplete |
 
-### TUI Kill Ring
+### TUI Undo
 
 | Keybinding id | Default | Description |
 |--------|---------|-------------|
-| `tui.editor.yank` | `ctrl+y` | Paste most recently deleted text |
-| `tui.editor.yankPop` | `alt+y` | Cycle through deleted text after yank |
 | `tui.editor.undo` | `ctrl+-` | Undo last edit |
 
 ### TUI Clipboard and Selection

@@ -77,7 +77,6 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 ## Platform setup
 
-- [Termux on Android](termux.md)
 - [tmux](tmux.md)
 - [Terminal setup](terminal-setup.md)
 - [Shell aliases](shell-aliases.md)

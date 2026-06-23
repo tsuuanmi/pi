@@ -357,7 +357,6 @@ export async function main(args: string[], options?: MainOptions) {
 	const offlineMode = isTruthyEnvFlag(process.env.PI_OFFLINE);
 	if (offlineMode) {
 		process.env.PI_OFFLINE = "1";
-		process.env.PI_SKIP_VERSION_CHECK = "1";
 	}
 
 	const cwd = process.cwd();

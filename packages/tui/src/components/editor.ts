@@ -1,7 +1,6 @@
 import type { AutocompleteProvider, AutocompleteSuggestions } from "../autocomplete.ts";
 import { getKeybindings } from "../keybindings.ts";
 import { decodePrintableKey, matchesKey } from "../keys.ts";
-import { KillRing } from "../kill-ring.ts";
 import { type Component, CURSOR_MARKER, type Focusable, type TUI } from "../tui.ts";
 import { UndoStack } from "../undo-stack.ts";
 import {
@@ -300,9 +299,8 @@ export class Editor implements Component, Focusable {
 	private historyIndex: number = -1; // -1 = not browsing, 0 = most recent, 1 = older, etc.
 	private historyDraft: EditorState | null = null;
 
-	// Kill ring for Emacs-style kill/yank operations
-	private killRing = new KillRing();
-	private lastAction: "kill" | "yank" | "type-word" | null = null;
+	// Tracks the last editing action for undo coalescing.
+	private lastAction: "type-word" | null = null;
 
 	// Character jump mode
 	private jumpMode: "forward" | "backward" | null = null;
@@ -739,16 +737,6 @@ export class Editor implements Component, Focusable {
 		}
 		if (kb.matches(data, "tui.editor.deleteCharForward") || matchesKey(data, "shift+delete")) {
 			this.handleForwardDelete();
-			return;
-		}
-
-		// Kill ring actions
-		if (kb.matches(data, "tui.editor.yank")) {
-			this.yank();
-			return;
-		}
-		if (kb.matches(data, "tui.editor.yankPop")) {
-			this.yankPop();
 			return;
 		}
 
@@ -1484,10 +1472,7 @@ export class Editor implements Component, Focusable {
 		if (this.state.cursorCol > 0) {
 			this.pushUndoSnapshot();
 
-			// Calculate text to be deleted and save to kill ring (backward deletion = prepend)
-			const deletedText = currentLine.slice(0, this.state.cursorCol);
-			this.killRing.push(deletedText, { prepend: true, accumulate: this.lastAction === "kill" });
-			this.lastAction = "kill";
+			this.lastAction = null;
 
 			// Delete from start of line up to cursor
 			this.state.lines[this.state.cursorLine] = currentLine.slice(this.state.cursorCol);
@@ -1495,10 +1480,9 @@ export class Editor implements Component, Focusable {
 		} else if (this.state.cursorLine > 0) {
 			this.pushUndoSnapshot();
 
-			// At start of line - merge with previous line, treating newline as deleted text
-			this.killRing.push("\n", { prepend: true, accumulate: this.lastAction === "kill" });
-			this.lastAction = "kill";
+			this.lastAction = null;
 
+			// At start of line - merge with previous line
 			const previousLine = this.state.lines[this.state.cursorLine - 1] || "";
 			this.state.lines[this.state.cursorLine - 1] = previousLine + currentLine;
 			this.state.lines.splice(this.state.cursorLine, 1);
@@ -1519,20 +1503,16 @@ export class Editor implements Component, Focusable {
 		if (this.state.cursorCol < currentLine.length) {
 			this.pushUndoSnapshot();
 
-			// Calculate text to be deleted and save to kill ring (forward deletion = append)
-			const deletedText = currentLine.slice(this.state.cursorCol);
-			this.killRing.push(deletedText, { prepend: false, accumulate: this.lastAction === "kill" });
-			this.lastAction = "kill";
+			this.lastAction = null;
 
 			// Delete from cursor to end of line
 			this.state.lines[this.state.cursorLine] = currentLine.slice(0, this.state.cursorCol);
 		} else if (this.state.cursorLine < this.state.lines.length - 1) {
 			this.pushUndoSnapshot();
 
-			// At end of line - merge with next line, treating newline as deleted text
-			this.killRing.push("\n", { prepend: false, accumulate: this.lastAction === "kill" });
-			this.lastAction = "kill";
+			this.lastAction = null;
 
+			// At end of line - merge with next line
 			const nextLine = this.state.lines[this.state.cursorLine + 1] || "";
 			this.state.lines[this.state.cursorLine] = currentLine + nextLine;
 			this.state.lines.splice(this.state.cursorLine + 1, 1);
@@ -1553,9 +1533,7 @@ export class Editor implements Component, Focusable {
 			if (this.state.cursorLine > 0) {
 				this.pushUndoSnapshot();
 
-				// Treat newline as deleted text (backward deletion = prepend)
-				this.killRing.push("\n", { prepend: true, accumulate: this.lastAction === "kill" });
-				this.lastAction = "kill";
+				this.lastAction = null;
 
 				const previousLine = this.state.lines[this.state.cursorLine - 1] || "";
 				this.state.lines[this.state.cursorLine - 1] = previousLine + currentLine;
@@ -1566,17 +1544,12 @@ export class Editor implements Component, Focusable {
 		} else {
 			this.pushUndoSnapshot();
 
-			// Save lastAction before cursor movement (moveWordBackwards resets it)
-			const wasKill = this.lastAction === "kill";
-
 			const oldCursorCol = this.state.cursorCol;
 			this.moveWordBackwards();
 			const deleteFrom = this.state.cursorCol;
 			this.setCursorCol(oldCursorCol);
 
-			const deletedText = currentLine.slice(deleteFrom, this.state.cursorCol);
-			this.killRing.push(deletedText, { prepend: true, accumulate: wasKill });
-			this.lastAction = "kill";
+			this.lastAction = null;
 
 			this.state.lines[this.state.cursorLine] =
 				currentLine.slice(0, deleteFrom) + currentLine.slice(this.state.cursorCol);
@@ -1598,9 +1571,7 @@ export class Editor implements Component, Focusable {
 			if (this.state.cursorLine < this.state.lines.length - 1) {
 				this.pushUndoSnapshot();
 
-				// Treat newline as deleted text (forward deletion = append)
-				this.killRing.push("\n", { prepend: false, accumulate: this.lastAction === "kill" });
-				this.lastAction = "kill";
+				this.lastAction = null;
 
 				const nextLine = this.state.lines[this.state.cursorLine + 1] || "";
 				this.state.lines[this.state.cursorLine] = currentLine + nextLine;
@@ -1609,17 +1580,12 @@ export class Editor implements Component, Focusable {
 		} else {
 			this.pushUndoSnapshot();
 
-			// Save lastAction before cursor movement (moveWordForwards resets it)
-			const wasKill = this.lastAction === "kill";
-
 			const oldCursorCol = this.state.cursorCol;
 			this.moveWordForwards();
 			const deleteTo = this.state.cursorCol;
 			this.setCursorCol(oldCursorCol);
 
-			const deletedText = currentLine.slice(this.state.cursorCol, deleteTo);
-			this.killRing.push(deletedText, { prepend: false, accumulate: wasKill });
-			this.lastAction = "kill";
+			this.lastAction = null;
 
 			this.state.lines[this.state.cursorLine] =
 				currentLine.slice(0, this.state.cursorCol) + currentLine.slice(deleteTo);
@@ -1844,127 +1810,6 @@ export class Editor implements Component, Focusable {
 				isAtomicSegment: isPasteMarker,
 			}),
 		);
-	}
-
-	/**
-	 * Yank (paste) the most recent kill ring entry at cursor position.
-	 */
-	private yank(): void {
-		if (this.killRing.length === 0) return;
-
-		this.pushUndoSnapshot();
-
-		const text = this.killRing.peek()!;
-		this.insertYankedText(text);
-
-		this.lastAction = "yank";
-	}
-
-	/**
-	 * Cycle through kill ring (only works immediately after yank or yank-pop).
-	 * Replaces the last yanked text with the previous entry in the ring.
-	 */
-	private yankPop(): void {
-		// Only works if we just yanked and have more than one entry
-		if (this.lastAction !== "yank" || this.killRing.length <= 1) return;
-
-		this.pushUndoSnapshot();
-
-		// Delete the previously yanked text (still at end of ring before rotation)
-		this.deleteYankedText();
-
-		// Rotate the ring: move end to front
-		this.killRing.rotate();
-
-		// Insert the new most recent entry (now at end after rotation)
-		const text = this.killRing.peek()!;
-		this.insertYankedText(text);
-
-		this.lastAction = "yank";
-	}
-
-	/**
-	 * Insert text at cursor position (used by yank operations).
-	 */
-	private insertYankedText(text: string): void {
-		this.exitHistoryBrowsing();
-		const lines = text.split("\n");
-
-		if (lines.length === 1) {
-			// Single line - insert at cursor
-			const currentLine = this.state.lines[this.state.cursorLine] || "";
-			const before = currentLine.slice(0, this.state.cursorCol);
-			const after = currentLine.slice(this.state.cursorCol);
-			this.state.lines[this.state.cursorLine] = before + text + after;
-			this.setCursorCol(this.state.cursorCol + text.length);
-		} else {
-			// Multi-line insert
-			const currentLine = this.state.lines[this.state.cursorLine] || "";
-			const before = currentLine.slice(0, this.state.cursorCol);
-			const after = currentLine.slice(this.state.cursorCol);
-
-			// First line merges with text before cursor
-			this.state.lines[this.state.cursorLine] = before + (lines[0] || "");
-
-			// Insert middle lines
-			for (let i = 1; i < lines.length - 1; i++) {
-				this.state.lines.splice(this.state.cursorLine + i, 0, lines[i] || "");
-			}
-
-			// Last line merges with text after cursor
-			const lastLineIndex = this.state.cursorLine + lines.length - 1;
-			this.state.lines.splice(lastLineIndex, 0, (lines[lines.length - 1] || "") + after);
-
-			// Update cursor position
-			this.state.cursorLine = lastLineIndex;
-			this.setCursorCol((lines[lines.length - 1] || "").length);
-		}
-
-		if (this.onChange) {
-			this.onChange(this.getText());
-		}
-	}
-
-	/**
-	 * Delete the previously yanked text (used by yank-pop).
-	 * The yanked text is derived from killRing[end] since it hasn't been rotated yet.
-	 */
-	private deleteYankedText(): void {
-		const yankedText = this.killRing.peek();
-		if (!yankedText) return;
-
-		const yankLines = yankedText.split("\n");
-
-		if (yankLines.length === 1) {
-			// Single line - delete backward from cursor
-			const currentLine = this.state.lines[this.state.cursorLine] || "";
-			const deleteLen = yankedText.length;
-			const before = currentLine.slice(0, this.state.cursorCol - deleteLen);
-			const after = currentLine.slice(this.state.cursorCol);
-			this.state.lines[this.state.cursorLine] = before + after;
-			this.setCursorCol(this.state.cursorCol - deleteLen);
-		} else {
-			// Multi-line delete - cursor is at end of last yanked line
-			const startLine = this.state.cursorLine - (yankLines.length - 1);
-			const startCol = (this.state.lines[startLine] || "").length - (yankLines[0] || "").length;
-
-			// Get text after cursor on current line
-			const afterCursor = (this.state.lines[this.state.cursorLine] || "").slice(this.state.cursorCol);
-
-			// Get text before yank start position
-			const beforeYank = (this.state.lines[startLine] || "").slice(0, startCol);
-
-			// Remove all lines from startLine to cursorLine and replace with merged line
-			this.state.lines.splice(startLine, yankLines.length, beforeYank + afterCursor);
-
-			// Update cursor
-			this.state.cursorLine = startLine;
-			this.setCursorCol(startCol);
-		}
-
-		if (this.onChange) {
-			this.onChange(this.getText());
-		}
 	}
 
 	private pushUndoSnapshot(): void {

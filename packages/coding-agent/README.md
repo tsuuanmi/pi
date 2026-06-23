@@ -104,7 +104,7 @@ For multiple accounts on one provider, name each account and switch manually or 
 
 Then just talk to pi. By default, pi gives the model four tools: `read`, `write`, `edit`, and `bash`. The model uses these to fulfill your requests. Add capabilities via [skills](#skills), [prompt templates](#prompt-templates), [extensions](#extensions), or [pi packages](#pi-packages).
 
-**Platform notes:** pi supports Linux and macOS. See [Termux (Android)](docs/termux.md), [tmux](docs/tmux.md), [Terminal setup](docs/terminal-setup.md), and [Shell aliases](docs/shell-aliases.md).
+**Platform notes:** pi supports Linux and macOS. See [tmux](docs/tmux.md), [Terminal setup](docs/terminal-setup.md), and [Shell aliases](docs/shell-aliases.md).
 
 ---
 
@@ -276,14 +276,9 @@ If no extension or saved decision applies, `defaultProjectTrust` controls the fa
 
 Use `/trust` in interactive mode to save a project trust decision for future sessions, including trust for the immediate parent folder. It writes `~/.pi/agent/trust.json` only; the current session is not reloaded, so restart pi for changes to take effect.
 
-### Telemetry and update checks
+### Startup network operations
 
-Pi has two separate startup features:
-
-- **Update check:** fetches `https://pi.dev/api/latest-version` to check whether a newer Pi version exists. Disable it with `PI_SKIP_VERSION_CHECK=1`. Disabling update checks only turns off this check.
-- **Install/update telemetry:** after first install or a changelog-detected update, sends an anonymous version ping to `https://pi.dev/api/report-install`. This setting also controls optional provider attribution headers for OpenRouter, Cloudflare, and direct NVIDIA NIM requests. Opt out by setting `enableInstallTelemetry` to `false` in `settings.json`, or by setting `PI_TELEMETRY=0`. This does not disable update checks; Pi may still contact `pi.dev` for the latest version unless update checks are disabled or offline mode is enabled.
-
-Use `--offline` or `PI_OFFLINE=1` to disable all startup network operations described here, including update checks, package update checks, and install/update telemetry.
+On startup, Pi checks for available package (extension) updates. Use `--offline` or `PI_OFFLINE=1` to disable all startup network operations, including package update checks.
 
 ---
 
@@ -336,8 +331,6 @@ Place in `~/.pi/agent/skills/`, `~/.agents/skills/`, `.pi/skills/`, or `.agents/
 
 ### Extensions
 
-<p align="center"><img src="docs/images/doom-extension.png" alt="Doom Extension" width="600"></p>
-
 TypeScript modules that extend pi with custom tools, commands, keyboard shortcuts, event handlers, and UI components.
 
 ```typescript
@@ -352,7 +345,7 @@ The default export can also be `async`. pi waits for async extension factories b
 
 **What's possible:**
 - Custom tools (or replace built-in tools entirely)
-- Sub-agents and plan mode
+- Sub-agents
 - Custom compaction and summarization
 - Permission gates and path protection
 - Custom editors and UI components
@@ -361,7 +354,6 @@ The default export can also be `async`. pi waits for async extension factories b
 - SSH and sandbox execution
 - MCP server integration
 - Make pi look like Claude Code
-- Games while waiting (yes, Doom runs)
 - ...anything you can dream up
 
 Place in `~/.pi/agent/extensions/`, `.pi/extensions/`, or a [pi package](#pi-packages) to share with others. See [docs/extensions.md](docs/extensions.md) and [examples/extensions/](examples/extensions/).
@@ -607,9 +599,7 @@ pi --thinking high "Solve this complex problem"
 | `PI_CODING_AGENT_DIR` | Override config directory (default: `~/.pi/agent`) |
 | `PI_CODING_AGENT_SESSION_DIR` | Override session storage directory |
 | `PI_PACKAGE_DIR` | Override package directory (useful for Nix/Guix where store paths tokenize poorly) |
-| `PI_OFFLINE` | Disable startup network operations, including update checks, package update checks, and install/update telemetry |
-| `PI_SKIP_VERSION_CHECK` | Skip the Pi version update check at startup. This prevents the `pi.dev` latest-version request |
-| `PI_TELEMETRY` | Override install/update telemetry and provider attribution headers. Use `1`/`true`/`yes` to enable or `0`/`false`/`no` to disable. This does not disable update checks |
+| `PI_OFFLINE` | Disable startup network operations, including package update checks |
 | `PI_CACHE_RETENTION` | Set to `long` for extended prompt cache (Anthropic: 1h, OpenAI: 24h) |
 | `VISUAL`, `EDITOR` | External editor for Ctrl+G |
 

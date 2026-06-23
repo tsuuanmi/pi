@@ -6,6 +6,7 @@
 - Removed legacy Anthropic budget-based thinking (`thinking.type: "enabled"` / `thinkingBudgetTokens`), the `fine-grained-tool-streaming-2025-05-14` and `interleaved-thinking-2025-05-14` beta headers, the `forceAdaptiveThinking` and `supportsEagerToolInputStreaming` compat flags, and `ThinkingBudgets` / `SimpleStreamOptions.thinkingBudgets`. Reasoning Anthropic models now always use adaptive thinking and per-tool `eager_input_streaming`.
 - Removed legacy plain-string `textSignature` parsing in the OpenAI Responses provider; only `TextSignatureV1` JSON signatures are replayed.
 - Removed third-party overflow detection patterns (Google, xAI, llama.cpp, LM Studio, Ollama, generic fallbacks); only Anthropic and OpenAI patterns remain.
+- Removed the standalone `pi-ai` CLI binary (the `bin.pi-ai` entry and `src/cli.ts`); the `@tsuuanmi/pi-ai` library and its `./oauth` subpath are unaffected. Use the `pi` CLI or the programmatic `@tsuuanmi/pi-ai/oauth` entry point instead.
 
 ### Removed
 

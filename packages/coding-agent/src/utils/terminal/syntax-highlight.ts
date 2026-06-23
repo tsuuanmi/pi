@@ -1,5 +1,4 @@
 import hljs from "highlight.js/lib/index.js";
-import { decodeHtmlEntityAt } from "../system/html.ts";
 
 export type HighlightFormatter = (text: string) => string;
 export type HighlightTheme = Partial<Record<string, HighlightFormatter>>;
@@ -112,15 +111,6 @@ export function renderHighlightedHtml(html: string, theme: HighlightTheme = {}):
 			}
 			index += SPAN_CLOSE.length;
 			continue;
-		}
-
-		if (html[index] === "&") {
-			const decoded = decodeHtmlEntityAt(html, index);
-			if (decoded) {
-				textBuffer += decoded.text;
-				index += decoded.length;
-				continue;
-			}
 		}
 
 		textBuffer += html[index];

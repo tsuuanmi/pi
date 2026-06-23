@@ -38,9 +38,8 @@ lockstep version (currently `0.79.6`) and are released together.
     └── tui/               # @tsuuanmi/pi-tui
 ```
 
-Root workspaces: `packages/*` plus 4 example extensions declared as workspaces
-(`with-deps`, `custom-provider-anthropic`, `custom-provider-gitlab-duo`,
-`sandbox`).
+Root workspaces: `packages/*` plus 1 example extension declared as a workspace
+(`with-deps`).
 
 Root scripts (`package.json`): `build`, `check`, `check:browser-smoke`,
 `check:pinned-deps`, `check:shrinkwrap`, `check:ts-imports`, `knip`,
@@ -122,9 +121,9 @@ Results across all 318 src files:
 
 **Net finding: zero dead/orphan source files.** Every module is either
 imported by other code or is a legitimate entry point (public export, binary
-entry, worker, or type declaration). The three `public export` files
-(`agent/src/node.ts`, `ai/src/cli.ts`, `ai/src/oauth.ts`) are the `./node`,
-`pi-ai` bin, and `./oauth` subpaths exposed to external consumers.
+entry, worker, or type declaration). The two `public export` files
+(`agent/src/node.ts`, `ai/src/oauth.ts`) are the `./node` and `./oauth`
+subpaths exposed to external consumers.
 
 ---
 
@@ -423,7 +422,6 @@ compiled binary via `build:binary`). OS: darwin, linux. `piConfig.configDir =
 | `core/provider-attribution.ts` | 15 | Yes (leaf·1) | Tags outputs with which provider produced them. |
 | `core/provider-display-names.ts` | 5 | Yes (leaf·3) | Maps provider ids to friendly display names. |
 | `core/diagnostics.ts` | 15 | Yes (4) | Collects and surfaces diagnostic info. |
-| `core/telemetry.ts` | 13 | Yes (leaf·1) | A telemetry stub (no-op by default). |
 | `core/timings.ts` | 31 | Yes (leaf·2) | Records timing of operations for profiling. |
 | `core/experimental.ts` | 3 | Yes (leaf·3) | Flags for experimental features. |
 | `core/defaults.ts` | 3 | Yes (leaf·3) | Default values for config/settings. |
@@ -520,9 +518,7 @@ compiled binary via `build:binary`). OS: darwin, linux. `piConfig.configDir =
 | Module | LOC | Used? | Key features |
 | --- | ---: | --- | --- |
 | `workflows/harness-tools/fetch.ts` | 169 | Yes (leaf·2) | The `fetch` harness tool — retrieves a URL and returns its content. |
-| `workflows/harness-tools/github.ts` | 121 | Yes (leaf·2) | The `github` harness tool — runs `gh` CLI commands for issues, PRs, and repos. |
 | `workflows/harness-tools/yield.ts` | 78 | Yes (leaf·3) | The `yield` harness tool — lets a subagent finish and return structured output. |
-| `workflows/harness-tools/report-finding.ts` | 50 | Yes (leaf·1) | The `report_finding` harness tool — lets a long-running subagent surface intermediate results. |
 | `workflows/shared/active-state.ts` | 449 | Yes (hub·20) | Tracks which workflow is currently active and its phase. High fan-in. |
 | `workflows/shared/workflow-manifest.ts` | 368 | Yes (leaf·3) | Reads the manifest that declares the available workflows and their schemas. |
 | `workflows/shared/workflow-state.ts` | 255 | Yes (12) | Reads and writes workflow state files under `.pi/workflows/`. |
@@ -572,8 +568,6 @@ compiled binary via `build:binary`). OS: darwin, linux. `piConfig.configDir =
 | `utils/system/tool-installer.ts` | 325 | Yes (leaf·3) | Installs external tools pi needs on demand (pyright, typescript-language-server). |
 | `utils/system/changelog.ts` | 196 | Yes (leaf·2) | Parses CHANGELOG.md files (used by the release tooling and the `/cl` audit). |
 | `utils/system/shell.ts` | 146 | Yes (8) | Detects the user's shell (bash/zsh/fish) and related env. |
-| `utils/system/version-check.ts` | 80 | Yes (leaf·3) | Checks npm for a newer pi version and notifies the user. |
-| `utils/system/html.ts` | 51 | Yes (leaf·1) | Small HTML helpers. |
 | `utils/system/pi-user-agent.ts` | 4 | Yes (leaf·3) | Builds pi's HTTP User-Agent string. |
 | `utils/system/sleep.ts` | 18 | Yes (leaf·1) | A simple sleep/wait helper. |
 
@@ -609,23 +603,20 @@ compiled binary via `build:binary`). OS: darwin, linux. `piConfig.configDir =
 `keybindings.md`, `settings.md`, `sessions.md`, `session-format.md`,
 `compaction.md`, `subagents.md`, `security.md`, `containerization.md`,
 `packages.md`, `shell-aliases.md`, `terminal-setup.md`, `tmux.md`,
-`termux.md`, `workflow.md`, `index.md`, `docs.json`. Plus images
-(`doom-extension.png`, `exy.png`, `interactive-mode.png`, `tree-view.png`).
+`workflow.md`, `index.md`, `docs.json`. Plus images
+(`exy.png`, `interactive-mode.png`, `tree-view.png`).
 
-### Examples (`packages/coding-agent/examples/`, 133 files)
+### Examples (`packages/coding-agent/examples/`, 100 files)
 
 - `examples/sdk/` — 13 SDK examples + README (755 LOC): `01-minimal.ts` …
   `13-session-runtime.ts` (custom-model, custom-prompt, skills, tools,
   extensions, context-files, prompt-templates, api-keys/oauth, settings,
   sessions, full-control, session-runtime).
-- `examples/extensions/` — 68 top-level `.ts` example extensions + 8
-  subdirectories: `custom-provider-anthropic` (600), `custom-provider-gitlab-duo`
-  (472), `doom-overlay` (555), `dynamic-resources` (15),
-  `plan-mode` (508), `sandbox` (321), `subagent` (1,141), `with-deps` (32).
-  Examples cover custom tools, UI overlays/widgets, provider plugins, games
-  (snake, space-invaders, tic-tac-toe, doom overlay), permission gates, git
-  integrations, status lines, message renderers, autocomplete, MCP observer,
-  plan mode, interactive shell, model status, etc.
+- `examples/extensions/` — 65 top-level `.ts` example extensions + 3
+  subdirectories: `dynamic-resources` (15), `subagent` (1,141), `with-deps` (32).
+  Examples cover custom tools, UI overlays/widgets, provider plugins, permission
+  gates, git integrations, status lines, message renderers, autocomplete, MCP
+  observer, interactive shell, model status, etc.
 - `examples/rpc-extension-ui.ts` — RPC extension UI demo.
 
 ### Theme (`src/theme/`)
@@ -678,7 +669,6 @@ for macOS modifiers.
 | --- | ---: | --- | --- |
 | `keys.ts` | 1388 | Yes (9) | Parses raw input bytes into named key events, including complex escape sequences. |
 | `keybindings.ts` | 244 | Yes (7) | Resolves keybinding config into actionable handlers. |
-| `kill-ring.ts` | 46 | Yes (leaf·2) | The kill ring — an Emacs-style clipboard for cut/copy within the editor. |
 | `undo-stack.ts` | 28 | Yes (leaf·2) | A simple undo/redo stack. |
 | `word-navigation.ts` | 117 | Yes (leaf·3) | Helpers for moving the cursor by word. |
 | `autocomplete.ts` | 786 | Yes (6) | The autocomplete dropdown component. |

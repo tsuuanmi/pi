@@ -11,9 +11,10 @@ describe("syntax highlight renderer", () => {
 		expect(rendered).toBe("[keyword:const] value");
 	});
 
-	it("decodes HTML entities emitted by highlight.js", () => {
-		const rendered = renderHighlightedHtml("&lt;tag attr=&quot;value&quot;&gt;&amp;#x41;&#65;&lt;/tag&gt;");
-		expect(rendered).toBe('<tag attr="value">&#x41;A</tag>');
+	it("passes through HTML entities emitted by highlight.js as-is", () => {
+		const input = "&lt;tag attr=&quot;value&quot;&gt;&amp;#x41;&#65;&lt;/tag&gt;";
+		const rendered = renderHighlightedHtml(input);
+		expect(rendered).toBe(input);
 	});
 
 	it("inherits parent formatting for unmapped nested scopes", () => {

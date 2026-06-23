@@ -185,8 +185,6 @@ const KEYBINDING_NAME_MIGRATIONS = {
 	deleteWordForward: "tui.editor.deleteWordForward",
 	deleteToLineStart: "tui.editor.deleteToLineStart",
 	deleteToLineEnd: "tui.editor.deleteToLineEnd",
-	yank: "tui.editor.yank",
-	yankPop: "tui.editor.yankPop",
 	undo: "tui.editor.undo",
 	newLine: "tui.input.newLine",
 	submit: "tui.input.submit",

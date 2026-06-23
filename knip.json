@@ -21,7 +21,6 @@
 		},
 		"packages/ai": {
 			"entry": [
-				"src/cli.ts",
 				"src/index.ts",
 				"src/oauth.ts",
 				"src/providers/anthropic.ts",
@@ -42,10 +41,6 @@
 		"packages/tui": {
 			"entry": ["src/index.ts"],
 			"project": ["src/**/*.ts", "test/**/*.ts"]
-		},
-		"packages/coding-agent/examples/extensions/custom-provider-gitlab-duo": {
-			"entry": ["index.ts", "test.ts"],
-			"project": ["*.ts"]
 		},
 		"packages/coding-agent": {
 			"entry": [

@@ -14,8 +14,6 @@ import {
 	projectCompactState,
 } from "../workflows/deep-interview/deep-interview-state.ts";
 import { createFetchToolDefinition } from "../workflows/harness-tools/fetch.ts";
-import { createGithubToolDefinition } from "../workflows/harness-tools/github.ts";
-import { createReportFindingToolDefinition } from "../workflows/harness-tools/report-finding.ts";
 import { createYieldToolDefinition } from "../workflows/harness-tools/yield.ts";
 import { ralplanRoleForStage, runRalplanAgent } from "../workflows/ralplan/ralplan-agents.ts";
 import {
@@ -1653,12 +1651,10 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 			executeUltragoalSpawnGoalAgent(params, ctx, signal),
 	});
 
-	// Subagent structured completion and intermediate reporting tools.
-	// These are available to subagent sessions for structured output.
+	// Subagent structured completion tool.
+	// Available to subagent sessions for structured output.
 	pi.registerTool(createYieldToolDefinition());
-	pi.registerTool(createReportFindingToolDefinition());
 
 	// Additional high-ROI tools.
 	pi.registerTool(createFetchToolDefinition());
-	pi.registerTool(createGithubToolDefinition());
 }
