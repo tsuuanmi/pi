@@ -1,5 +1,5 @@
 import { Marked, type Token, Tokenizer, type Tokens } from "marked";
-import { getCapabilities, hyperlink, isImageLine } from "../terminal-image.ts";
+import { getCapabilities, hyperlink } from "../capabilities.ts";
 import type { Component } from "../tui.ts";
 import { applyBackgroundToLine, visibleWidth, wrapTextWithAnsi } from "../utils.ts";
 
@@ -161,12 +161,8 @@ export class Markdown implements Component {
 		// Wrap lines (NO padding, NO background yet)
 		const wrappedLines: string[] = [];
 		for (const line of renderedLines) {
-			if (isImageLine(line)) {
-				wrappedLines.push(line);
-			} else {
-				for (const wrappedLine of wrapTextWithAnsi(line, contentWidth)) {
-					wrappedLines.push(wrappedLine);
-				}
+			for (const wrappedLine of wrapTextWithAnsi(line, contentWidth)) {
+				wrappedLines.push(wrappedLine);
 			}
 		}
 
@@ -177,11 +173,6 @@ export class Markdown implements Component {
 		const contentLines: string[] = [];
 
 		for (const line of wrappedLines) {
-			if (isImageLine(line)) {
-				contentLines.push(line);
-				continue;
-			}
-
 			const lineWithMargins = leftMargin + line + rightMargin;
 
 			if (bgFn) {

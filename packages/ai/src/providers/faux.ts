@@ -3,7 +3,6 @@ import type {
 	AssistantMessage,
 	AssistantMessageEventStream,
 	Context,
-	ImageContent,
 	Message,
 	Model,
 	SimpleStreamOptions,
@@ -38,7 +37,7 @@ export interface FauxModelDefinition {
 	id: string;
 	name?: string;
 	reasoning?: boolean;
-	input?: ("text" | "image")[];
+	input?: "text"[];
 	cost?: { input: number; output: number; cacheRead: number; cacheWrite: number };
 	contextWindow?: number;
 	maxTokens?: number;
@@ -133,18 +132,11 @@ function randomId(prefix: string): string {
 	return `${prefix}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
 }
 
-function contentToText(content: string | Array<TextContent | ImageContent>): string {
+function contentToText(content: string | TextContent[]): string {
 	if (typeof content === "string") {
 		return content;
 	}
-	return content
-		.map((block) => {
-			if (block.type === "text") {
-				return block.text;
-			}
-			return `[image:${block.mimeType}:${block.data.length}]`;
-		})
-		.join("\n");
+	return content.map((block) => block.text).join("\n");
 }
 
 function assistantContentToText(content: Array<TextContent | ThinkingContent | ToolCall>): string {
@@ -409,7 +401,7 @@ export function registerFauxProvider(options: RegisterFauxProviderOptions = {}):
 					id: DEFAULT_MODEL_ID,
 					name: DEFAULT_MODEL_NAME,
 					reasoning: false,
-					input: ["text", "image"] as ("text" | "image")[],
+					input: ["text"] as "text"[],
 					cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
 					contextWindow: 128000,
 					maxTokens: 16384,
@@ -422,7 +414,7 @@ export function registerFauxProvider(options: RegisterFauxProviderOptions = {}):
 		provider,
 		baseUrl: DEFAULT_BASE_URL,
 		reasoning: definition.reasoning ?? false,
-		input: definition.input ?? ["text", "image"],
+		input: definition.input ?? ["text"],
 		cost: definition.cost ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
 		contextWindow: definition.contextWindow ?? 128000,
 		maxTokens: definition.maxTokens ?? 16384,

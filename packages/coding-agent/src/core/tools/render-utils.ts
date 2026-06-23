@@ -1,7 +1,7 @@
 import * as os from "node:os";
 import { pathToFileURL } from "node:url";
-import type { ImageContent, TextContent } from "@earendil-works/pi-ai";
-import { getCapabilities, getImageDimensions, hyperlink, imageFallback } from "@earendil-works/pi-tui";
+import type { TextContent } from "@earendil-works/pi-ai";
+import { getCapabilities, hyperlink } from "@earendil-works/pi-tui";
 import type { Theme } from "../../theme/theme.ts";
 import { resolvePath } from "../../utils/fs/paths.ts";
 import { sanitizeBinaryOutput } from "../../utils/system/shell.ts";
@@ -36,35 +36,15 @@ export function normalizeDisplayText(text: string): string {
 	return text.replace(/\r/g, "");
 }
 
-export function getTextOutput(
-	result: { content: Array<{ type: string; text?: string; data?: string; mimeType?: string }> } | undefined,
-	showImages: boolean,
-): string {
+export function getTextOutput(result: { content: Array<{ type: string; text?: string }> } | undefined): string {
 	if (!result) return "";
 
 	const textBlocks = result.content.filter((c) => c.type === "text");
-	const imageBlocks = result.content.filter((c) => c.type === "image");
-
-	let output = textBlocks.map((c) => sanitizeBinaryOutput(stripAnsi(c.text || "")).replace(/\r/g, "")).join("\n");
-
-	const caps = getCapabilities();
-	if (imageBlocks.length > 0 && (!caps.images || !showImages)) {
-		const imageIndicators = imageBlocks
-			.map((img) => {
-				const mimeType = img.mimeType ?? "image/unknown";
-				const dims =
-					img.data && img.mimeType ? (getImageDimensions(img.data, img.mimeType) ?? undefined) : undefined;
-				return imageFallback(mimeType, dims);
-			})
-			.join("\n");
-		output = output ? `${output}\n${imageIndicators}` : imageIndicators;
-	}
-
-	return output;
+	return textBlocks.map((c) => sanitizeBinaryOutput(stripAnsi(c.text || "")).replace(/\r/g, "")).join("\n");
 }
 
 export type ToolRenderResultLike<TDetails> = {
-	content: (TextContent | ImageContent)[];
+	content: TextContent[];
 	details: TDetails;
 };
 

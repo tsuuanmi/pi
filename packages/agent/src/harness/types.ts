@@ -1,4 +1,4 @@
-import type { ImageContent, Model, SimpleStreamOptions, TextContent, Transport } from "@earendil-works/pi-ai";
+import type { Model, SimpleStreamOptions, TextContent, Transport } from "@earendil-works/pi-ai";
 import type { AgentEvent, AgentMessage, AgentTool, QueueMode, ThinkingLevel } from "../index.ts";
 import type { Session } from "./session/session.ts";
 
@@ -385,7 +385,7 @@ export interface CustomEntry<T = unknown> extends SessionTreeEntryBase {
 export interface CustomMessageEntry<T = unknown> extends SessionTreeEntryBase {
 	type: "custom_message";
 	customType: string;
-	content: string | (TextContent | ImageContent)[];
+	content: string | TextContent[];
 	details?: T;
 	display: boolean;
 }
@@ -526,7 +526,6 @@ export interface BeforeAgentStartEvent<
 > {
 	type: "before_agent_start";
 	prompt: string;
-	images?: ImageContent[];
 	systemPrompt: string;
 	resources: AgentHarnessResources<TSkill, TPromptTemplate>;
 }
@@ -567,7 +566,7 @@ export interface ToolResultEvent {
 	toolCallId: string;
 	toolName: string;
 	input: Record<string, unknown>;
-	content: Array<TextContent | ImageContent>;
+	content: Array<TextContent>;
 	details: unknown;
 	isError: boolean;
 }
@@ -682,7 +681,7 @@ export interface ToolCallResult {
 }
 
 export interface ToolResultPatch {
-	content?: Array<TextContent | ImageContent>;
+	content?: Array<TextContent>;
 	details?: unknown;
 	isError?: boolean;
 	terminate?: boolean;
@@ -723,9 +722,7 @@ export type AgentHarnessEventResultMap = {
 	settled: undefined;
 };
 
-export interface AgentHarnessPromptOptions {
-	images?: ImageContent[];
-}
+export interface AgentHarnessPromptOptions {}
 
 export interface AbortResult {
 	clearedSteer: AgentMessage[];

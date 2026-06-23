@@ -32,10 +32,7 @@ type RenderSessionContextThis = {
 	chatContainer: Container;
 	footer: { invalidate(): void };
 	ui: TUI;
-	settingsManager: {
-		getShowImages(): boolean;
-		getImageWidthCells(): number;
-	};
+	settingsManager: Record<string, never>;
 	sessionManager: { getCwd(): string };
 	session: { retryAttempt: number };
 	toolOutputExpanded: boolean;
@@ -60,10 +57,7 @@ function createFakeInteractiveModeThis(): RenderSessionContextThis {
 		chatContainer,
 		footer: { invalidate: vi.fn() },
 		ui: { requestRender: vi.fn() } as unknown as TUI,
-		settingsManager: {
-			getShowImages: () => false,
-			getImageWidthCells: () => 60,
-		},
+		settingsManager: {},
 		sessionManager: { getCwd: () => process.cwd() },
 		session: { retryAttempt: 0 },
 		toolOutputExpanded: false,

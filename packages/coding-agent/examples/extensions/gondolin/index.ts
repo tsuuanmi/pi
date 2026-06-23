@@ -87,14 +87,6 @@ function createGondolinReadOps(vm: VM, localCwd: string): ReadOperations {
 		access: async (filePath) => {
 			await vm.fs.access(toGuestPath(localCwd, filePath));
 		},
-		detectImageMimeType: async (filePath) => {
-			const ext = path.posix.extname(toGuestPath(localCwd, filePath)).toLowerCase();
-			if (ext === ".png") return "image/png";
-			if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
-			if (ext === ".gif") return "image/gif";
-			if (ext === ".webp") return "image/webp";
-			return null;
-		},
 	};
 }
 

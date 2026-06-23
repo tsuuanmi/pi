@@ -190,14 +190,13 @@ function rebuildBashResultRenderComponent(
 		details?: BashToolDetails;
 	},
 	options: ToolRenderResultOptions,
-	showImages: boolean,
 	startedAt: number | undefined,
 	endedAt: number | undefined,
 ): void {
 	const state = component.state;
 	component.clear();
 
-	let output = getTextOutput(result as any, showImages).trim();
+	let output = getTextOutput(result as any).trim();
 	const truncation = result.details?.truncation;
 	const fullOutputPath = result.details?.fullOutputPath;
 	if (!options.isPartial && truncation?.truncated && fullOutputPath && output.endsWith("]")) {
@@ -428,14 +427,7 @@ export function createBashToolDefinition(
 			}
 			const component =
 				(context.lastComponent as BashResultRenderComponent | undefined) ?? new BashResultRenderComponent();
-			rebuildBashResultRenderComponent(
-				component,
-				result as any,
-				options,
-				context.showImages,
-				state.startedAt,
-				state.endedAt,
-			);
+			rebuildBashResultRenderComponent(component, result as any, options, state.startedAt, state.endedAt);
 			component.invalidate();
 			return component;
 		},

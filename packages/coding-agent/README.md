@@ -172,9 +172,7 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 | `/fork` | Create a new session from a previous user message |
 | `/compact [prompt]` | Manually compact context, optional custom instructions |
 | `/copy` | Copy last assistant message to clipboard |
-| `/export [file]` | Export session to HTML (default) or `.jsonl` |
 | `/import <file>` | Import and resume a session from a JSONL file |
-| `/share` | Upload as private GitHub gist with shareable HTML link |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files (themes hot-reload automatically) |
 | `/hotkeys` | Show all keyboard shortcuts |
 | `/changelog` | Display version history |
@@ -571,7 +569,6 @@ Prefix files with `@` to include in the message:
 
 ```bash
 pi @prompt.md "Answer this"
-pi -p @screenshot.png "What's in this image?"
 pi @code.ts @test.ts "Review these files"
 ```
 

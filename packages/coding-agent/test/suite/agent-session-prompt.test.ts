@@ -115,35 +115,6 @@ describe("AgentSession prompt characterization", () => {
 		expect(harness.session.messages[harness.session.messages.length - 1]?.role).toBe("assistant");
 	});
 
-	it("preserves image attachments in the provider context", async () => {
-		const harness = await createHarness();
-		harnesses.push(harness);
-		let sawImage = false;
-
-		harness.setResponses([
-			(context) => {
-				const user = context.messages.find((message) => message.role === "user");
-				sawImage =
-					user?.role === "user" &&
-					typeof user.content !== "string" &&
-					user.content.some((part) => part.type === "image");
-				return fauxAssistantMessage("ok");
-			},
-		]);
-
-		await harness.session.prompt("describe", {
-			images: [
-				{
-					type: "image",
-					mimeType: "image/png",
-					data: "ZmFrZQ==",
-				},
-			],
-		});
-
-		expect(sawImage).toBe(true);
-	});
-
 	it("expands skill commands before sending the prompt", async () => {
 		const tempDir = join(tmpdir(), `pi-skill-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		mkdirSync(tempDir, { recursive: true });

@@ -128,7 +128,7 @@ Phase/settlement semantics are still provisional and need a full lifecycle pass.
 
 `skill` and `promptFromTemplate` resolve their resource from the same snapshot that is passed to the turn. They do not resolve resources separately.
 
-`steer`, `followUp`, and `nextTurn` accept text plus optional images and create user messages internally. `nextTurn` messages are inserted before the new user message on the next user-initiated turn.
+`steer`, `followUp`, and `nextTurn` accept text and create user messages internally. `nextTurn` messages are inserted before the new user message on the next user-initiated turn.
 
 Queue modes are live, not turn-snapshotted:
 
@@ -298,7 +298,7 @@ Done:
 - Save points refresh context, model, thinking level, stream options, and session snapshot state.
 - Pending session writes use session-entry shapes without generated fields.
 - Pending session writes flush at save points, settlement, and failure cleanup.
-- `steer`, `followUp`, and `nextTurn` create user messages from text plus optional images.
+- `steer`, `followUp`, and `nextTurn` create user messages from text.
 - `nextTurn` messages are inserted before the new user prompt.
 - Structural compaction/tree operations restore phase with `finally`.
 - Public harness failures normalize subsystem causes to `AgentHarnessError`.

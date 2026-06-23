@@ -3,7 +3,10 @@
 	"title": "Pi Coding Agent Theme",
 	"description": "Theme schema for Pi coding agent",
 	"type": "object",
-	"required": ["name", "colors"],
+	"required": [
+		"name",
+		"colors"
+	],
 	"properties": {
 		"$schema": {
 			"type": "string",
@@ -291,25 +294,6 @@
 				"bashMode": {
 					"$ref": "#/$defs/colorValue",
 					"description": "Editor border color in bash mode"
-				}
-			},
-			"additionalProperties": false
-		},
-		"export": {
-			"type": "object",
-			"description": "Optional colors for HTML export (defaults derived from userMessageBg if not specified)",
-			"properties": {
-				"pageBg": {
-					"$ref": "#/$defs/colorValue",
-					"description": "Page background color"
-				},
-				"cardBg": {
-					"$ref": "#/$defs/colorValue",
-					"description": "Card/container background color"
-				},
-				"infoBg": {
-					"$ref": "#/$defs/colorValue",
-					"description": "Info sections background (system prompt, notices)"
 				}
 			},
 			"additionalProperties": false

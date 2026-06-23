@@ -51,7 +51,7 @@ describe("syntax highlight renderer", () => {
 
 describe("theme syntax highlighting", () => {
 	beforeEach(() => {
-		setCapabilities({ images: null, trueColor: true, hyperlinks: false });
+		setCapabilities({ trueColor: true, hyperlinks: false });
 		initTheme("dark");
 	});
 

@@ -30,8 +30,6 @@ pi
 
 Clipboard operations use `termux-clipboard-set` and `termux-clipboard-get` when running in Termux. The Termux:API app must be installed for these to work.
 
-Image clipboard is not supported on Termux (the `ctrl+v` image paste feature will not work).
-
 ## Example AGENTS.md for Termux
 
 Create `~/.pi/agent/AGENTS.md` to help the agent understand the Termux environment:
@@ -95,7 +93,6 @@ termux-camera-photo out.jpg   # Take photo
 
 ## Limitations
 
-- **No image clipboard**: Termux clipboard API only supports text
 - **No native binaries**: Some optional native dependencies (like the clipboard module) are unavailable on Android ARM64 and are skipped during installation
 - **Storage access**: To access files in `/storage/emulated/0` (Downloads, etc.), run `termux-setup-storage` once to grant permissions
 

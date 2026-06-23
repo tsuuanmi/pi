@@ -1,4 +1,4 @@
-import type { AssistantMessage, ImageContent, Model, TextContent, Usage } from "@earendil-works/pi-ai";
+import type { AssistantMessage, Model, TextContent, Usage } from "@earendil-works/pi-ai";
 import { completeSimple } from "@earendil-works/pi-ai";
 import type { AgentMessage, ThinkingLevel } from "../../types.ts";
 import {
@@ -64,7 +64,7 @@ function getMessageFromEntry(entry: SessionTreeEntry): AgentMessage | undefined 
 	if (entry.type === "custom_message") {
 		return createCustomMessage(
 			entry.customType,
-			entry.content as string | (TextContent | ImageContent)[],
+			entry.content as string | TextContent[],
 			entry.display,
 			entry.details,
 			entry.timestamp,
@@ -198,9 +198,7 @@ export function shouldCompact(contextTokens: number, contextWindow: number, sett
 	return contextTokens > contextWindow - settings.reserveTokens;
 }
 
-const ESTIMATED_IMAGE_CHARS = 4800;
-
-function estimateTextAndImageContentChars(content: string | Array<{ type: string; text?: string }>): number {
+function estimateTextContentChars(content: string | Array<{ type: string; text?: string }>): number {
 	if (typeof content === "string") {
 		return content.length;
 	}
@@ -209,8 +207,6 @@ function estimateTextAndImageContentChars(content: string | Array<{ type: string
 	for (const block of content) {
 		if (block.type === "text" && block.text) {
 			chars += block.text.length;
-		} else if (block.type === "image") {
-			chars += ESTIMATED_IMAGE_CHARS;
 		}
 	}
 	return chars;
@@ -222,7 +218,7 @@ export function estimateTokens(message: AgentMessage): number {
 
 	switch (message.role) {
 		case "user": {
-			chars = estimateTextAndImageContentChars(
+			chars = estimateTextContentChars(
 				(message as { content: string | Array<{ type: string; text?: string }> }).content,
 			);
 			return Math.ceil(chars / 4);
@@ -242,7 +238,7 @@ export function estimateTokens(message: AgentMessage): number {
 		}
 		case "custom":
 		case "toolResult": {
-			chars = estimateTextAndImageContentChars(message.content);
+			chars = estimateTextContentChars(message.content);
 			return Math.ceil(chars / 4);
 		}
 		case "bashExecution": {

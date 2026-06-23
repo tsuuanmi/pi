@@ -51,7 +51,7 @@ interface GitLabModel {
 	baseUrl: string;
 	reasoning: boolean;
 	thinkingLevelMap?: ThinkingLevelMap;
-	input: ("text" | "image")[];
+	input: "text"[];
 	cost: { input: number; output: number; cacheRead: number; cacheWrite: number };
 	contextWindow: number;
 	maxTokens: number;
@@ -66,7 +66,7 @@ export const MODELS: GitLabModel[] = [
 		baseUrl: ANTHROPIC_PROXY_URL,
 		reasoning: true,
 		thinkingLevelMap: { xhigh: "max" },
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
 		contextWindow: 1000000,
 		maxTokens: 128000,
@@ -78,7 +78,7 @@ export const MODELS: GitLabModel[] = [
 		baseUrl: ANTHROPIC_PROXY_URL,
 		reasoning: true,
 		thinkingLevelMap: { xhigh: "max" },
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
 		contextWindow: 1000000,
 		maxTokens: 64000,
@@ -90,7 +90,7 @@ export const MODELS: GitLabModel[] = [
 		baseUrl: ANTHROPIC_PROXY_URL,
 		reasoning: true,
 		thinkingLevelMap: { xhigh: "max" },
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75 },
 		contextWindow: 200000,
 		maxTokens: 32000,
@@ -102,7 +102,7 @@ export const MODELS: GitLabModel[] = [
 		baseUrl: ANTHROPIC_PROXY_URL,
 		reasoning: true,
 		thinkingLevelMap: { xhigh: "max" },
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
 		contextWindow: 200000,
 		maxTokens: 16384,
@@ -114,7 +114,7 @@ export const MODELS: GitLabModel[] = [
 		baseUrl: ANTHROPIC_PROXY_URL,
 		reasoning: true,
 		thinkingLevelMap: { xhigh: "max" },
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 1, output: 5, cacheRead: 0.1, cacheWrite: 1.25 },
 		contextWindow: 200000,
 		maxTokens: 8192,
@@ -126,7 +126,7 @@ export const MODELS: GitLabModel[] = [
 		backend: "openai",
 		baseUrl: OPENAI_PROXY_URL,
 		reasoning: true,
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 5, output: 30, cacheRead: 0.5, cacheWrite: 0 },
 		contextWindow: 272000,
 		maxTokens: 128000,
@@ -137,7 +137,7 @@ export const MODELS: GitLabModel[] = [
 		backend: "openai",
 		baseUrl: OPENAI_PROXY_URL,
 		reasoning: true,
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 2.5, output: 10, cacheRead: 0, cacheWrite: 0 },
 		contextWindow: 128000,
 		maxTokens: 16384,
@@ -148,7 +148,7 @@ export const MODELS: GitLabModel[] = [
 		backend: "openai",
 		baseUrl: OPENAI_PROXY_URL,
 		reasoning: true,
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 0.15, output: 0.6, cacheRead: 0, cacheWrite: 0 },
 		contextWindow: 128000,
 		maxTokens: 16384,
@@ -159,7 +159,7 @@ export const MODELS: GitLabModel[] = [
 		backend: "openai",
 		baseUrl: OPENAI_PROXY_URL,
 		reasoning: true,
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 2.5, output: 10, cacheRead: 0, cacheWrite: 0 },
 		contextWindow: 128000,
 		maxTokens: 16384,

@@ -11,7 +11,6 @@ import {
 	type AssistantMessageEvent,
 	EventStream,
 	getModel,
-	type ImageContent,
 	type TextContent,
 } from "@earendil-works/pi-ai";
 import { Type } from "typebox";
@@ -206,8 +205,10 @@ describe("AgentSession concurrent prompt guard", () => {
 								return message.content;
 							}
 							return message.content
-								.filter((part): part is TextContent | ImageContent => typeof part === "object" && part !== null)
-								.filter((part): part is TextContent => part.type === "text")
+								.filter(
+									(part): part is TextContent =>
+										typeof part === "object" && part !== null && part.type === "text",
+								)
 								.map((part) => part.text)
 								.join("\n");
 						});

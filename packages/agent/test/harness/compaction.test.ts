@@ -256,14 +256,11 @@ describe("harness compaction", () => {
 			display: true,
 			timestamp: Date.now(),
 		};
-		const toolResultWithImage: AgentMessage = {
+		const toolResultMessage: AgentMessage = {
 			role: "toolResult",
 			toolCallId: "call-1",
 			toolName: "read",
-			content: [
-				{ type: "text", text: "tool text" },
-				{ type: "image", mimeType: "image/png", data: "abc" },
-			],
+			content: [{ type: "text", text: "tool text" }],
 			isError: false,
 			timestamp: Date.now(),
 		};
@@ -292,7 +289,7 @@ describe("harness compaction", () => {
 		expect(estimateTokens({ role: "user", content: "plain user", timestamp: Date.now() })).toBeGreaterThan(0);
 		expect(estimateTokens(assistantWithThinkingAndTool)).toBeGreaterThan(0);
 		expect(estimateTokens(customString)).toBeGreaterThan(0);
-		expect(estimateTokens(toolResultWithImage)).toBeGreaterThan(1000);
+		expect(estimateTokens(toolResultMessage)).toBeGreaterThan(0);
 		expect(estimateTokens(bashExecution)).toBeGreaterThan(0);
 		expect(estimateTokens(branchSummaryMessage)).toBeGreaterThan(0);
 		expect(estimateTokens(compactionSummaryMessage)).toBeGreaterThan(0);

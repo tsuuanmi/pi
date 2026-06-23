@@ -48,9 +48,7 @@ Type `/` in the editor to open command completion. Extensions can register custo
 | `/fork` | Create a new session from a previous user message |
 | `/compact [prompt]` | Manually compact context, optionally with custom instructions |
 | `/copy` | Copy last assistant message to clipboard |
-| `/export [file]` | Export session to HTML (default) or `.jsonl` |
 | `/import <file>` | Import and resume a session from a JSONL file |
-| `/share` | Upload as private GitHub gist with shareable HTML link |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files |
 | `/hotkeys` | Show all keyboard shortcuts |
 | `/changelog` | Display version history |
@@ -123,10 +121,6 @@ Use `/trust` in interactive mode to save a project trust decision for future ses
 
 
 ## Exporting and Sharing Sessions
-
-Use `/export [file]` to write a session to HTML.
-
-Use `/share` to upload a private GitHub gist with a shareable HTML link.
 
 If you use pi for open source work and want to publish sessions for model, prompt, tool, and evaluation research, see [`badlogic/pi-share-hf`](https://github.com/badlogic/pi-share-hf). It publishes sessions to Hugging Face datasets.
 
@@ -214,7 +208,6 @@ Prefix files with `@` to include them in the message:
 
 ```bash
 pi @prompt.md "Answer this"
-pi -p @screenshot.png "What's in this image?"
 pi @code.ts @test.ts "Review these files"
 ```
 

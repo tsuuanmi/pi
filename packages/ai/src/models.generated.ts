@@ -12,7 +12,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.8,
 				output: 4,
@@ -29,7 +29,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.8,
 				output: 4,
@@ -46,7 +46,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 3,
 				output: 15,
@@ -63,7 +63,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 3,
 				output: 15,
@@ -80,7 +80,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 3,
 				output: 15,
@@ -97,7 +97,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.25,
 				output: 1.25,
@@ -114,7 +114,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 15,
 				output: 75,
@@ -131,7 +131,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 3,
 				output: 15,
@@ -149,7 +149,7 @@ export const MODELS = {
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 10,
 				output: 50,
@@ -166,7 +166,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1,
 				output: 5,
@@ -183,7 +183,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1,
 				output: 5,
@@ -200,7 +200,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 15,
 				output: 75,
@@ -217,7 +217,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 15,
 				output: 75,
@@ -234,7 +234,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 15,
 				output: 75,
@@ -251,7 +251,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 15,
 				output: 75,
@@ -268,7 +268,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 5,
 				output: 25,
@@ -285,7 +285,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 5,
 				output: 25,
@@ -303,7 +303,7 @@ export const MODELS = {
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
 			thinkingLevelMap: {"xhigh":"max"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 5,
 				output: 25,
@@ -322,7 +322,7 @@ export const MODELS = {
 			compat: {"supportsTemperature":false},
 			reasoning: true,
 			thinkingLevelMap: {"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 5,
 				output: 25,
@@ -341,7 +341,7 @@ export const MODELS = {
 			compat: {"supportsTemperature":false},
 			reasoning: true,
 			thinkingLevelMap: {"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 5,
 				output: 25,
@@ -358,7 +358,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 3,
 				output: 15,
@@ -375,7 +375,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 3,
 				output: 15,
@@ -392,7 +392,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 3,
 				output: 15,
@@ -409,7 +409,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 3,
 				output: 15,
@@ -426,7 +426,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 3,
 				output: 15,
@@ -462,7 +462,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 10,
 				output: 30,
@@ -479,7 +479,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 2,
 				output: 8,
@@ -496,7 +496,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.4,
 				output: 1.6,
@@ -513,7 +513,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.1,
 				output: 0.4,
@@ -530,7 +530,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 2.5,
 				output: 10,
@@ -547,7 +547,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 5,
 				output: 15,
@@ -564,7 +564,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 2.5,
 				output: 10,
@@ -581,7 +581,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 2.5,
 				output: 10,
@@ -598,7 +598,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.15,
 				output: 0.6,
@@ -616,7 +616,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.25,
 				output: 10,
@@ -634,7 +634,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
 			thinkingLevelMap: {"off":null},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.25,
 				output: 10,
@@ -652,7 +652,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.25,
 				output: 10,
@@ -670,7 +670,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.25,
 				output: 2,
@@ -688,7 +688,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.05,
 				output: 0.4,
@@ -706,7 +706,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 15,
 				output: 120,
@@ -724,7 +724,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.25,
 				output: 10,
@@ -742,7 +742,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.25,
 				output: 10,
@@ -760,7 +760,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.25,
 				output: 10,
@@ -778,7 +778,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.25,
 				output: 10,
@@ -796,7 +796,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.25,
 				output: 2,
@@ -814,7 +814,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.75,
 				output: 14,
@@ -832,7 +832,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.75,
 				output: 14,
@@ -850,7 +850,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.75,
 				output: 14,
@@ -868,7 +868,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 21,
 				output: 168,
@@ -886,7 +886,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.75,
 				output: 14,
@@ -904,7 +904,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.75,
 				output: 14,
@@ -922,7 +922,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.75,
 				output: 14,
@@ -940,7 +940,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 2.5,
 				output: 15,
@@ -958,7 +958,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.75,
 				output: 4.5,
@@ -976,7 +976,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.2,
 				output: 1.25,
@@ -994,7 +994,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 30,
 				output: 180,
@@ -1012,7 +1012,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":"none","minimal":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 5,
 				output: 30,
@@ -1030,7 +1030,7 @@ export const MODELS = {
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
 			thinkingLevelMap: {"off":null,"minimal":null,"low":null,"xhigh":"xhigh"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 30,
 				output: 180,
@@ -1047,7 +1047,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 15,
 				output: 60,
@@ -1064,7 +1064,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 150,
 				output: 600,
@@ -1081,7 +1081,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 2,
 				output: 8,
@@ -1098,7 +1098,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 10,
 				output: 40,
@@ -1132,7 +1132,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 20,
 				output: 80,
@@ -1149,7 +1149,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 1.1,
 				output: 4.4,
@@ -1166,7 +1166,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 2,
 				output: 8,
@@ -1204,7 +1204,7 @@ export const MODELS = {
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
 			thinkingLevelMap: {"xhigh":"xhigh","minimal":"low"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 2.5,
 				output: 15,
@@ -1222,7 +1222,7 @@ export const MODELS = {
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
 			thinkingLevelMap: {"xhigh":"xhigh","minimal":"low"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 0.75,
 				output: 4.5,
@@ -1240,7 +1240,7 @@ export const MODELS = {
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
 			thinkingLevelMap: {"xhigh":"xhigh","minimal":"low"},
-			input: ["text", "image"],
+			input: ["text"],
 			cost: {
 				input: 5,
 				output: 30,

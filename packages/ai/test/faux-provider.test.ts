@@ -208,10 +208,7 @@ describe("faux provider", () => {
 			messages: [
 				{
 					role: "user",
-					content: [
-						{ type: "text", text: "hello" },
-						{ type: "image", mimeType: "image/png", data: "abcd" },
-					],
+					content: [{ type: "text", text: "hello" }],
 					timestamp: 1,
 				},
 				fauxAssistantMessage("prior"),
@@ -230,7 +227,7 @@ describe("faux provider", () => {
 		const response = await complete(registration.getModel(), context);
 		const promptText = [
 			"system:sys",
-			"user:hello\n[image:image/png:4]",
+			"user:hello",
 			"assistant:prior",
 			"toolResult:echo\ntool out",
 			`tools:${JSON.stringify([tool])}`,

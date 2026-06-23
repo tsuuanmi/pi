@@ -36,8 +36,6 @@
 				"src/providers/openai-completions.ts",
 				"src/providers/openai-responses.ts",
 				"scripts/generate-models.ts",
-				"scripts/generate-image-models.ts",
-				"scripts/generate-test-image.ts",
 				"test/codex-websocket-cached-probe.ts"
 			],
 			"project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
@@ -59,8 +57,7 @@
 				"src/cli.ts",
 				"src/bun/cli.ts",
 				"src/index.ts",
-				"src/extensions/workflows.ts",
-				"src/utils/image-resize-worker.ts"
+				"src/extensions/workflows.ts"
 			],
 			"project": ["src/**/*.ts", "test/**/*.ts"],
 			"ignoreFiles": ["src/utils/highlight-js-lib-index.d.ts"],

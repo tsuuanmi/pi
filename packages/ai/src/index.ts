@@ -3,13 +3,9 @@ export { Type } from "typebox";
 
 export * from "./api-registry.ts";
 export * from "./env-api-keys.ts";
-export * from "./image-models.ts";
-export * from "./images.ts";
-export * from "./images-api-registry.ts";
 export * from "./models.ts";
 export type { AnthropicEffort, AnthropicOptions, AnthropicThinkingDisplay } from "./providers/anthropic.ts";
 export * from "./providers/faux.ts";
-export * from "./providers/images/register-builtins.ts";
 export type {
 	OpenAICodexResponsesOptions,
 	OpenAICodexWebSocketDebugStats,

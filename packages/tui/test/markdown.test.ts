@@ -2,8 +2,8 @@ import assert from "node:assert";
 import { afterEach, describe, it } from "node:test";
 import type { Terminal as XtermTerminalType } from "@xterm/headless";
 import { Chalk } from "chalk";
+import { resetCapabilitiesCache, setCapabilities } from "../src/capabilities.ts";
 import { Markdown } from "../src/components/markdown.ts";
-import { resetCapabilitiesCache, setCapabilities } from "../src/terminal-image.ts";
 import { type Component, TUI } from "../src/tui.ts";
 import { defaultMarkdownTheme } from "./test-themes.ts";
 import { VirtualTerminal } from "./virtual-terminal.ts";
@@ -467,7 +467,7 @@ describe("Markdown component", () => {
 
 		it("should wrap long unbroken tokens inside table cells (not only at line start)", () => {
 			// Pin to no-hyperlinks so width checks work on plain text without OSC 8 sequences.
-			setCapabilities({ images: null, trueColor: false, hyperlinks: false });
+			setCapabilities({ trueColor: false, hyperlinks: false });
 			const url = "https://example.com/this/is/a/very/long/url/that/should/wrap";
 			const markdown = new Markdown(
 				`| Value |
@@ -1240,7 +1240,7 @@ bar`,
 
 		it("should not duplicate URL for autolinked emails", () => {
 			// Hyperlinks capability does not affect the mailto: display check.
-			setCapabilities({ images: null, trueColor: false, hyperlinks: false });
+			setCapabilities({ trueColor: false, hyperlinks: false });
 			const markdown = new Markdown("Contact user@example.com for help", 0, 0, defaultMarkdownTheme);
 
 			const lines = markdown.render(80);
@@ -1253,7 +1253,7 @@ bar`,
 		});
 
 		it("should not duplicate URL for bare URLs", () => {
-			setCapabilities({ images: null, trueColor: false, hyperlinks: false });
+			setCapabilities({ trueColor: false, hyperlinks: false });
 			const markdown = new Markdown("Visit https://example.com for more", 0, 0, defaultMarkdownTheme);
 
 			const lines = markdown.render(80);
@@ -1266,7 +1266,7 @@ bar`,
 		});
 
 		it("should show URL in parentheses when hyperlinks are not supported", () => {
-			setCapabilities({ images: null, trueColor: false, hyperlinks: false });
+			setCapabilities({ trueColor: false, hyperlinks: false });
 			const markdown = new Markdown("[click here](https://example.com)", 0, 0, defaultMarkdownTheme);
 
 			const lines = markdown.render(80);
@@ -1278,7 +1278,7 @@ bar`,
 		});
 
 		it("should show mailto URL in parentheses when hyperlinks are not supported", () => {
-			setCapabilities({ images: null, trueColor: false, hyperlinks: false });
+			setCapabilities({ trueColor: false, hyperlinks: false });
 			const markdown = new Markdown("[Email me](mailto:test@example.com)", 0, 0, defaultMarkdownTheme);
 
 			const lines = markdown.render(80);
@@ -1290,7 +1290,7 @@ bar`,
 		});
 
 		it("should emit OSC 8 hyperlink sequence when terminal supports hyperlinks", () => {
-			setCapabilities({ images: null, trueColor: false, hyperlinks: true });
+			setCapabilities({ trueColor: false, hyperlinks: true });
 			const markdown = new Markdown("[click here](https://example.com)", 0, 0, defaultMarkdownTheme);
 
 			const lines = markdown.render(80);
@@ -1311,7 +1311,7 @@ bar`,
 		});
 
 		it("should use OSC 8 for mailto links when terminal supports hyperlinks", () => {
-			setCapabilities({ images: null, trueColor: false, hyperlinks: true });
+			setCapabilities({ trueColor: false, hyperlinks: true });
 			const markdown = new Markdown("[Email me](mailto:test@example.com)", 0, 0, defaultMarkdownTheme);
 
 			const lines = markdown.render(80);
@@ -1325,7 +1325,7 @@ bar`,
 		});
 
 		it("should use OSC 8 for bare URLs when terminal supports hyperlinks", () => {
-			setCapabilities({ images: null, trueColor: false, hyperlinks: true });
+			setCapabilities({ trueColor: false, hyperlinks: true });
 			const markdown = new Markdown("Visit https://example.com for more", 0, 0, defaultMarkdownTheme);
 
 			const lines = markdown.render(80);

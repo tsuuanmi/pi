@@ -20,7 +20,6 @@ import type {
 	AssistantMessageEvent,
 	AssistantMessageEventStream,
 	Context,
-	ImageContent,
 	Model,
 	OAuthCredentials,
 	OAuthLoginCallbacks,
@@ -392,10 +391,7 @@ export interface ReplacedSessionContext extends ExtensionCommandContext {
 		options?: { triggerTurn?: boolean; deliverAs?: "steer" | "followUp" | "nextTurn" },
 	): Promise<void>;
 
-	sendUserMessage(
-		content: string | (TextContent | ImageContent)[],
-		options?: { deliverAs?: "steer" | "followUp" },
-	): Promise<void>;
+	sendUserMessage(content: string | TextContent[], options?: { deliverAs?: "steer" | "followUp" }): Promise<void>;
 }
 
 // ============================================================================
@@ -432,8 +428,6 @@ export interface ToolRenderContext<TState = any, TArgs = any> {
 	isPartial: boolean;
 	/** Whether the result view is expanded. */
 	expanded: boolean;
-	/** Whether inline images are currently shown in the TUI. */
-	showImages: boolean;
 	/** Whether the current result is an error. */
 	isError: boolean;
 }
@@ -667,8 +661,6 @@ export interface BeforeAgentStartEvent {
 	type: "before_agent_start";
 	/** The raw user prompt text (after expansion). */
 	prompt: string;
-	/** Images attached to the user prompt, if any. */
-	images?: ImageContent[];
 	/** The fully assembled system prompt string. */
 	systemPrompt: string;
 	/** Structured options used to build the system prompt. Extensions can inspect this to understand what Pi loaded without re-discovering resources. */
@@ -794,8 +786,6 @@ export interface InputEvent {
 	type: "input";
 	/** The input text */
 	text: string;
-	/** Attached images, if any */
-	images?: ImageContent[];
 	/** Where the input came from */
 	source: InputSource;
 	/** How the input will be delivered during streaming, or undefined when idle */
@@ -803,10 +793,7 @@ export interface InputEvent {
 }
 
 /** Result from input event handler */
-export type InputEventResult =
-	| { action: "continue" }
-	| { action: "transform"; text: string; images?: ImageContent[] }
-	| { action: "handled" };
+export type InputEventResult = { action: "continue" } | { action: "transform"; text: string } | { action: "handled" };
 
 // ============================================================================
 // Tool Events
@@ -877,7 +864,7 @@ interface ToolResultEventBase {
 	type: "tool_result";
 	toolCallId: string;
 	input: Record<string, unknown>;
-	content: (TextContent | ImageContent)[];
+	content: TextContent[];
 	isError: boolean;
 }
 
@@ -1041,7 +1028,7 @@ export interface UserBashEventResult {
 }
 
 export interface ToolResultEventResult {
-	content?: (TextContent | ImageContent)[];
+	content?: TextContent[];
 	details?: unknown;
 	isError?: boolean;
 }
@@ -1230,10 +1217,7 @@ export interface ExtensionAPI {
 	 * Send a user message to the agent. Always triggers a turn.
 	 * When the agent is streaming, use deliverAs to specify how to queue the message.
 	 */
-	sendUserMessage(
-		content: string | (TextContent | ImageContent)[],
-		options?: { deliverAs?: "steer" | "followUp" },
-	): void;
+	sendUserMessage(content: string | TextContent[], options?: { deliverAs?: "steer" | "followUp" }): void;
 
 	/** Append a custom entry to the session for state persistence (not sent to LLM). */
 	appendEntry<T = unknown>(customType: string, data?: T): void;
@@ -1307,7 +1291,7 @@ export interface ExtensionAPI {
 	 *       id: "claude-sonnet-4-20250514",
 	 *       name: "Claude 4 Sonnet (proxy)",
 	 *       reasoning: false,
-	 *       input: ["text", "image"],
+	 *       input: ["text"],
 	 *       cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
 	 *       contextWindow: 200000,
 	 *       maxTokens: 16384
@@ -1408,7 +1392,7 @@ export interface ProviderModelConfig {
 	/** Maps pi thinking levels to provider/model-specific values; null marks a level unsupported. */
 	thinkingLevelMap?: Model<Api>["thinkingLevelMap"];
 	/** Supported input types. */
-	input: ("text" | "image")[];
+	input: "text"[];
 	/** Cost per token (for tracking, can be 0). */
 	cost: { input: number; output: number; cacheRead: number; cacheWrite: number };
 	/** Maximum context window size in tokens. */
@@ -1456,7 +1440,7 @@ export type SendMessageHandler = <T = unknown>(
 ) => void;
 
 export type SendUserMessageHandler = (
-	content: string | (TextContent | ImageContent)[],
+	content: string | TextContent[],
 	options?: { deliverAs?: "steer" | "followUp" },
 ) => void;
 

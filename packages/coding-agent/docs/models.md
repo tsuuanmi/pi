@@ -192,7 +192,7 @@ If your command is slow, expensive, rate-limited, or should keep using a previou
 | `api` | No | provider's `api` | Override provider's API for this model |
 | `reasoning` | No | `false` | Supports extended thinking |
 | `thinkingLevelMap` | No | omitted | Maps pi thinking levels to provider values and marks unsupported levels (see below) |
-| `input` | No | `["text"]` | Input types: `["text"]` or `["text", "image"]` |
+| `input` | No | `["text"]` | Input types: `["text"]` |
 | `contextWindow` | No | `128000` | Context window size in tokens |
 | `maxTokens` | No | `16384` | Maximum output tokens |
 | `cost` | No | all zeros | `{"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}` (per million tokens) |
@@ -333,7 +333,7 @@ Some Anthropic-compatible providers emit thinking blocks with empty signatures a
         {
           "id": "claude-opus-4-7",
           "reasoning": true,
-          "input": ["text", "image"]
+          "input": ["text"]
         }
       ]
     }

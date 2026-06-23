@@ -64,7 +64,6 @@ export async function listModels(modelRegistry: ModelRegistry, searchPattern?: s
 		context: formatTokenCount(m.contextWindow),
 		maxOut: formatTokenCount(m.maxTokens),
 		thinking: m.reasoning ? "yes" : "no",
-		images: m.input.includes("image") ? "yes" : "no",
 	}));
 
 	const headers = {
@@ -73,7 +72,6 @@ export async function listModels(modelRegistry: ModelRegistry, searchPattern?: s
 		context: "context",
 		maxOut: "max-out",
 		thinking: "thinking",
-		images: "images",
 	};
 
 	const widths = {
@@ -82,7 +80,6 @@ export async function listModels(modelRegistry: ModelRegistry, searchPattern?: s
 		context: Math.max(headers.context.length, ...rows.map((r) => r.context.length)),
 		maxOut: Math.max(headers.maxOut.length, ...rows.map((r) => r.maxOut.length)),
 		thinking: Math.max(headers.thinking.length, ...rows.map((r) => r.thinking.length)),
-		images: Math.max(headers.images.length, ...rows.map((r) => r.images.length)),
 	};
 
 	// Print header
@@ -92,7 +89,6 @@ export async function listModels(modelRegistry: ModelRegistry, searchPattern?: s
 		headers.context.padEnd(widths.context),
 		headers.maxOut.padEnd(widths.maxOut),
 		headers.thinking.padEnd(widths.thinking),
-		headers.images.padEnd(widths.images),
 	].join("  ");
 	console.log(headerLine);
 
@@ -104,7 +100,6 @@ export async function listModels(modelRegistry: ModelRegistry, searchPattern?: s
 			row.context.padEnd(widths.context),
 			row.maxOut.padEnd(widths.maxOut),
 			row.thinking.padEnd(widths.thinking),
-			row.images.padEnd(widths.images),
 		].join("  ");
 		console.log(line);
 	}

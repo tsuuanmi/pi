@@ -9,48 +9,7 @@ import { performance } from "node:perf_hooks";
 import { isKeyRelease, matchesKey } from "./keys.ts";
 import type { Terminal } from "./terminal.ts";
 import { isOsc11BackgroundColorResponse, parseOsc11BackgroundColor, type RgbColor } from "./terminal-colors.ts";
-import { deleteKittyImage, getCapabilities, isImageLine, setCellDimensions } from "./terminal-image.ts";
 import { extractSegments, normalizeTerminalOutput, sliceByColumn, sliceWithWidth, visibleWidth } from "./utils.ts";
-
-const KITTY_SEQUENCE_PREFIX = "\x1b_G";
-
-interface KittyImageHeader {
-	ids: number[];
-	rows: number;
-}
-
-function parseKittyImageHeader(line: string): KittyImageHeader | undefined {
-	const sequenceStart = line.indexOf(KITTY_SEQUENCE_PREFIX);
-	if (sequenceStart === -1) return undefined;
-
-	const paramsStart = sequenceStart + KITTY_SEQUENCE_PREFIX.length;
-	const paramsEnd = line.indexOf(";", paramsStart);
-	if (paramsEnd === -1) return undefined;
-
-	const ids: number[] = [];
-	let rows = 1;
-	const params = line.slice(paramsStart, paramsEnd);
-	for (const param of params.split(",")) {
-		const [key, value] = param.split("=", 2);
-		if (value === undefined) continue;
-		const numberValue = Number(value);
-		if (!Number.isInteger(numberValue) || numberValue <= 0 || numberValue > 0xffffffff) continue;
-		if (key === "i") {
-			ids.push(numberValue);
-		} else if (key === "r") {
-			rows = numberValue;
-		}
-	}
-	return { ids, rows };
-}
-
-function extractKittyImageIds(line: string): number[] {
-	return parseKittyImageHeader(line)?.ids ?? [];
-}
-
-function extractKittyImageRows(line: string): number {
-	return parseKittyImageHeader(line)?.rows ?? 1;
-}
 
 /**
  * Component interface - all components must implement this
@@ -287,7 +246,6 @@ export class Container implements Component {
 export class TUI extends Container {
 	public terminal: Terminal;
 	private previousLines: string[] = [];
-	private previousKittyImageIds = new Set<number>();
 	private previousWidth = 0;
 	private previousHeight = 0;
 	private focusedComponent: Component | null = null;
@@ -629,7 +587,6 @@ export class TUI extends Container {
 			() => this.requestRender(),
 		);
 		this.terminal.hideCursor();
-		this.queryCellSize();
 		this.requestRender();
 	}
 
@@ -642,16 +599,6 @@ export class TUI extends Container {
 
 	removeInputListener(listener: InputListener): void {
 		this.inputListeners.delete(listener);
-	}
-
-	private queryCellSize(): void {
-		// Only query if terminal supports images (cell size is only used for image rendering)
-		if (!getCapabilities().images) {
-			return;
-		}
-		// Query terminal for cell size in pixels: CSI 16 t
-		// Response format: CSI 6 ; height ; width t
-		this.terminal.write("\x1b[16t");
 	}
 
 	stop(): void {
@@ -747,11 +694,6 @@ export class TUI extends Container {
 			data = current;
 		}
 
-		// Consume terminal cell size responses without blocking unrelated input.
-		if (this.consumeCellSizeResponse(data)) {
-			return;
-		}
-
 		// Global debug key handler (Shift+Ctrl+D)
 		if (matchesKey(data, "shift+ctrl+d") && this.onDebug) {
 			this.onDebug();
@@ -819,26 +761,6 @@ export class TUI extends Container {
 			query.resolve?.(rgb);
 			query.resolve = undefined;
 		}
-		return true;
-	}
-
-	private consumeCellSizeResponse(data: string): boolean {
-		// Response format: ESC [ 6 ; height ; width t
-		const match = data.match(/^\x1b\[6;(\d+);(\d+)t$/);
-		if (!match) {
-			return false;
-		}
-
-		const heightPx = parseInt(match[1], 10);
-		const widthPx = parseInt(match[2], 10);
-		if (heightPx <= 0 || widthPx <= 0) {
-			return true;
-		}
-
-		setCellDimensions({ widthPx, heightPx });
-		// Invalidate all components so images re-render with correct dimensions.
-		this.invalidate();
-		this.requestRender();
 		return true;
 	}
 
@@ -1047,83 +969,10 @@ export class TUI extends Container {
 	private applyLineResets(lines: string[]): string[] {
 		const reset = TUI.SEGMENT_RESET;
 		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			if (!isImageLine(line)) {
-				lines[i] = normalizeTerminalOutput(line) + reset;
-			}
+			lines[i] = normalizeTerminalOutput(lines[i]) + reset;
 		}
 		return lines;
 	}
-
-	private collectKittyImageIds(lines: string[]): Set<number> {
-		const ids = new Set<number>();
-		for (const line of lines) {
-			for (const id of extractKittyImageIds(line)) {
-				ids.add(id);
-			}
-		}
-		return ids;
-	}
-
-	private deleteKittyImages(ids: Iterable<number>): string {
-		let buffer = "";
-		for (const id of ids) {
-			buffer += deleteKittyImage(id);
-		}
-		return buffer;
-	}
-
-	private getKittyImageReservedRows(lines: string[], index: number, maxIndex = lines.length - 1): number {
-		const rows = extractKittyImageRows(lines[index] ?? "");
-		if (rows <= 1) return 1;
-
-		const maxRows = Math.min(rows, maxIndex - index + 1, lines.length - index);
-		let reservedRows = 1;
-		while (reservedRows < maxRows) {
-			const line = lines[index + reservedRows] ?? "";
-			if (isImageLine(line) || visibleWidth(line) > 0) break;
-			reservedRows++;
-		}
-		return reservedRows;
-	}
-
-	private expandChangedRangeForKittyImages(
-		firstChanged: number,
-		lastChanged: number,
-		newLines: string[],
-	): { firstChanged: number; lastChanged: number } {
-		let expandedFirstChanged = firstChanged;
-		let expandedLastChanged = lastChanged;
-		const expandForLines = (lines: string[]): void => {
-			for (let i = 0; i < lines.length; i++) {
-				if (extractKittyImageIds(lines[i]).length === 0) continue;
-				const blockEnd = i + this.getKittyImageReservedRows(lines, i) - 1;
-				if (i >= firstChanged || (i <= lastChanged && blockEnd >= firstChanged)) {
-					expandedFirstChanged = Math.min(expandedFirstChanged, i);
-					expandedLastChanged = Math.max(expandedLastChanged, blockEnd);
-				}
-			}
-		};
-
-		expandForLines(this.previousLines);
-		expandForLines(newLines);
-		return { firstChanged: expandedFirstChanged, lastChanged: expandedLastChanged };
-	}
-
-	private deleteChangedKittyImages(firstChanged: number, lastChanged: number): string {
-		if (firstChanged < 0 || lastChanged < firstChanged) return "";
-
-		const ids = new Set<number>();
-		const maxLine = Math.min(lastChanged, this.previousLines.length - 1);
-		for (let i = firstChanged; i <= maxLine; i++) {
-			for (const id of extractKittyImageIds(this.previousLines[i] ?? "")) {
-				ids.add(id);
-			}
-		}
-
-		return this.deleteKittyImages(ids);
-	}
-
 	/** Splice overlay content into a base line at a specific column. Single-pass optimized. */
 	private compositeLineAt(
 		baseLine: string,
@@ -1132,8 +981,6 @@ export class TUI extends Container {
 		overlayWidth: number,
 		totalWidth: number,
 	): string {
-		if (isImageLine(baseLine)) return baseLine;
-
 		// Single pass through baseLine extracts both before and after segments
 		const afterStart = startCol + overlayWidth;
 		const base = extractSegments(baseLine, startCol, afterStart, totalWidth - afterStart, true);
@@ -1237,25 +1084,11 @@ export class TUI extends Container {
 			this.fullRedrawCount += 1;
 			let buffer = "\x1b[?2026h"; // Begin synchronized output
 			if (clear) {
-				buffer += this.deleteKittyImages(this.previousKittyImageIds);
 				buffer += "\x1b[2J\x1b[H\x1b[3J"; // Clear screen, home, then clear scrollback
 			}
 			for (let i = 0; i < newLines.length; i++) {
 				if (i > 0) buffer += "\r\n";
-				const line = newLines[i];
-				const isImage = isImageLine(line);
-				const imageReservedRows = isImage ? this.getKittyImageReservedRows(newLines, i) : 1;
-				if (imageReservedRows > 1 && imageReservedRows <= height) {
-					for (let row = 1; row < imageReservedRows; row++) {
-						buffer += "\r\n";
-					}
-					buffer += `\x1b[${imageReservedRows - 1}A`;
-					buffer += line;
-					buffer += `\x1b[${imageReservedRows - 1}B`;
-					i += imageReservedRows - 1;
-					continue;
-				}
-				buffer += line;
+				buffer += newLines[i];
 			}
 			buffer += "\x1b[?2026l"; // End synchronized output
 			this.terminal.write(buffer);
@@ -1271,7 +1104,6 @@ export class TUI extends Container {
 			this.previousViewportTop = Math.max(0, bufferLength - height);
 			this.positionHardwareCursor(cursorPos, newLines.length);
 			this.previousLines = newLines;
-			this.previousKittyImageIds = this.collectKittyImageIds(newLines);
 			this.previousWidth = width;
 			this.previousHeight = height;
 		};
@@ -1338,11 +1170,6 @@ export class TUI extends Container {
 			}
 			lastChanged = newLines.length - 1;
 		}
-		if (firstChanged !== -1) {
-			const expandedRange = this.expandChangedRangeForKittyImages(firstChanged, lastChanged, newLines);
-			firstChanged = expandedRange.firstChanged;
-			lastChanged = expandedRange.lastChanged;
-		}
 		const appendStart = appendedLines && firstChanged === this.previousLines.length && firstChanged > 0;
 
 		// No changes - but still need to update hardware cursor position if it moved
@@ -1357,7 +1184,6 @@ export class TUI extends Container {
 		if (firstChanged >= newLines.length) {
 			if (this.previousLines.length > newLines.length) {
 				let buffer = "\x1b[?2026h";
-				buffer += this.deleteChangedKittyImages(firstChanged, lastChanged);
 				// Move to end of new content (clamp to 0 for empty content)
 				const targetRow = Math.max(0, newLines.length - 1);
 				if (targetRow < prevViewportTop) {
@@ -1395,7 +1221,6 @@ export class TUI extends Container {
 			}
 			this.positionHardwareCursor(cursorPos, newLines.length);
 			this.previousLines = newLines;
-			this.previousKittyImageIds = this.collectKittyImageIds(newLines);
 			this.previousWidth = width;
 			this.previousHeight = height;
 			this.previousViewportTop = prevViewportTop;
@@ -1413,7 +1238,6 @@ export class TUI extends Container {
 		// Render from first changed line to end
 		// Build buffer with all updates wrapped in synchronized output
 		let buffer = "\x1b[?2026h"; // Begin synchronized output
-		buffer += this.deleteChangedKittyImages(firstChanged, lastChanged);
 		const prevViewportBottom = prevViewportTop + height - 1;
 		const moveTargetRow = appendStart ? firstChanged - 1 : firstChanged;
 		if (moveTargetRow > prevViewportBottom) {
@@ -1445,31 +1269,9 @@ export class TUI extends Container {
 		for (let i = firstChanged; i <= renderEnd; i++) {
 			if (i > firstChanged) buffer += "\r\n";
 			const line = newLines[i];
-			const isImage = isImageLine(line);
-			const imageReservedRows = isImage ? this.getKittyImageReservedRows(newLines, i, renderEnd) : 1;
-			if (imageReservedRows > 1) {
-				const imageStartScreenRow = i - viewportTop;
-				if (imageStartScreenRow < 0 || imageStartScreenRow + imageReservedRows > height) {
-					logRedraw(
-						`kitty image pre-clear would scroll (${imageStartScreenRow} + ${imageReservedRows} > ${height})`,
-					);
-					fullRender(true);
-					return;
-				}
-
-				buffer += "\x1b[2K";
-				for (let row = 1; row < imageReservedRows; row++) {
-					buffer += "\r\n\x1b[2K";
-				}
-				buffer += `\x1b[${imageReservedRows - 1}A`;
-				buffer += line;
-				buffer += `\x1b[${imageReservedRows - 1}B`;
-				i += imageReservedRows - 1;
-				continue;
-			}
 
 			buffer += "\x1b[2K"; // Clear current line
-			if (!isImage && visibleWidth(line) > width) {
+			if (visibleWidth(line) > width) {
 				// Log all lines to crash file for debugging
 				const crashLogPath = path.join(os.homedir(), ".pi", "agent", "pi-crash.log");
 				const crashData = [
@@ -1566,7 +1368,6 @@ export class TUI extends Container {
 		this.positionHardwareCursor(cursorPos, newLines.length);
 
 		this.previousLines = newLines;
-		this.previousKittyImageIds = this.collectKittyImageIds(newLines);
 		this.previousWidth = width;
 		this.previousHeight = height;
 	}

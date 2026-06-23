@@ -46,10 +46,6 @@ Send a user prompt to the agent. The command response is emitted after the promp
 {"id": "req-1", "type": "prompt", "message": "Hello, world!"}
 ```
 
-With images:
-```json
-{"type": "prompt", "message": "What's in this image?", "images": [{"type": "image", "data": "base64-encoded-data", "mimeType": "image/png"}]}
-```
 
 **During streaming**: If the agent is already streaming, you must specify `streamingBehavior` to queue the message:
 
@@ -73,7 +69,6 @@ Response:
 
 `success: true` means the prompt was accepted, queued, or handled immediately. `success: false` means the prompt was rejected before acceptance. Failures after acceptance are reported through the normal event and message stream, not as a second `response` for the same request id.
 
-The `images` field is optional. Each image uses `ImageContent` format: `{"type": "image", "data": "base64-encoded-data", "mimeType": "image/png"}`.
 
 #### steer
 
@@ -83,12 +78,6 @@ Queue a steering message while the agent is running. It is delivered after the c
 {"type": "steer", "message": "Stop and do this instead"}
 ```
 
-With images:
-```json
-{"type": "steer", "message": "Look at this instead", "images": [{"type": "image", "data": "base64-encoded-data", "mimeType": "image/png"}]}
-```
-
-The `images` field is optional. Each image uses `ImageContent` format (same as `prompt`).
 
 Response:
 ```json
@@ -105,12 +94,6 @@ Queue a follow-up message to be processed after the agent finishes. Delivered on
 {"type": "follow_up", "message": "After you're done, also do this"}
 ```
 
-With images:
-```json
-{"type": "follow_up", "message": "Also check this image", "images": [{"type": "image", "data": "base64-encoded-data", "mimeType": "image/png"}]}
-```
-
-The `images` field is optional. Each image uses `ImageContent` format (same as `prompt`).
 
 Response:
 ```json
@@ -535,29 +518,6 @@ Response:
 `tokens` contains assistant usage totals for the current session state. `contextUsage` contains the actual current context-window estimate used for compaction and footer display.
 
 `contextUsage` is omitted when no model or context window is available. `contextUsage.tokens` and `contextUsage.percent` are `null` immediately after compaction until a fresh post-compaction assistant response provides valid usage data.
-
-#### export_html
-
-Export session to an HTML file.
-
-```json
-{"type": "export_html"}
-```
-
-With custom path:
-```json
-{"type": "export_html", "outputPath": "/tmp/session.html"}
-```
-
-Response:
-```json
-{
-  "type": "response",
-  "command": "export_html",
-  "success": true,
-  "data": {"path": "/tmp/session.html"}
-}
-```
 
 #### switch_session
 
@@ -1217,7 +1177,7 @@ Source files:
   "provider": "anthropic",
   "baseUrl": "https://api.anthropic.com",
   "reasoning": true,
-  "input": ["text", "image"],
+  "input": ["text"],
   "contextWindow": 200000,
   "maxTokens": 16384,
   "cost": {
@@ -1240,7 +1200,7 @@ Source files:
 }
 ```
 
-The `content` field can be a string or an array of `TextContent`/`ImageContent` blocks.
+The `content` field can be a string or an array of `TextContent` blocks.
 
 ### AssistantMessage
 
@@ -1296,21 +1256,6 @@ Created by the `bash` RPC command (not by LLM tool calls):
   "truncated": false,
   "fullOutputPath": null,
   "timestamp": 1733234567890
-}
-```
-
-### Attachment
-
-```json
-{
-  "id": "img1",
-  "type": "image",
-  "fileName": "photo.jpg",
-  "mimeType": "image/jpeg",
-  "size": 102400,
-  "content": "base64-encoded-data...",
-  "extractedText": null,
-  "preview": null
 }
 ```
 

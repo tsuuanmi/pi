@@ -73,7 +73,7 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
-	// Example with content array (text + images would go here)
+	// Example with content array
 	pi.registerCommand("askwith", {
 		description: "Send a user message with structured content",
 		handler: async (args, ctx) => {
@@ -87,7 +87,7 @@ export default function (pi: ExtensionAPI) {
 				return;
 			}
 
-			// sendUserMessage accepts string or (TextContent | ImageContent)[]
+			// sendUserMessage accepts string or TextContent[]
 			pi.sendUserMessage([
 				{ type: "text", text: `User request: ${args}` },
 				{ type: "text", text: "Please respond concisely." },

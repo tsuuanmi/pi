@@ -8,11 +8,19 @@ export {
 	CombinedAutocompleteProvider,
 	type SlashCommand,
 } from "./autocomplete.ts";
+// Capabilities
+export {
+	detectCapabilities,
+	getCapabilities,
+	hyperlink,
+	resetCapabilitiesCache,
+	setCapabilities,
+	type TerminalCapabilities,
+} from "./capabilities.ts";
 // Components
 export { Box } from "./components/box.ts";
 export { CancellableLoader } from "./components/cancellable-loader.ts";
 export { Editor, type EditorOptions, type EditorTheme } from "./components/editor.ts";
-export { Image, type ImageOptions, type ImageTheme } from "./components/image.ts";
 export { Input } from "./components/input.ts";
 export { Loader, type LoaderIndicatorOptions } from "./components/loader.ts";
 export { type DefaultTextStyle, Markdown, type MarkdownOptions, type MarkdownTheme } from "./components/markdown.ts";
@@ -63,34 +71,6 @@ export { StdinBuffer, type StdinBufferEventMap, type StdinBufferOptions } from "
 export { ProcessTerminal, type Terminal } from "./terminal.ts";
 // Terminal colors
 export { parseOsc11BackgroundColor, type RgbColor } from "./terminal-colors.ts";
-// Terminal image support
-export {
-	allocateImageId,
-	type CellDimensions,
-	calculateImageRows,
-	deleteAllKittyImages,
-	deleteKittyImage,
-	detectCapabilities,
-	encodeITerm2,
-	encodeKitty,
-	getCapabilities,
-	getCellDimensions,
-	getGifDimensions,
-	getImageDimensions,
-	getJpegDimensions,
-	getPngDimensions,
-	getWebpDimensions,
-	hyperlink,
-	type ImageDimensions,
-	type ImageProtocol,
-	type ImageRenderOptions,
-	imageFallback,
-	renderImage,
-	resetCapabilitiesCache,
-	setCapabilities,
-	setCellDimensions,
-	type TerminalCapabilities,
-} from "./terminal-image.ts";
 export {
 	type Component,
 	Container,

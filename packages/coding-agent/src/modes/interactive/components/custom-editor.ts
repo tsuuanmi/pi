@@ -11,7 +11,6 @@ export class CustomEditor extends Editor {
 	// Special handlers that can be dynamically replaced
 	public onEscape?: () => void;
 	public onCtrlD?: () => void;
-	public onPasteImage?: () => void;
 	/** Handler for extension-registered shortcuts. Returns true if handled. */
 	public onExtensionShortcut?: (data: string) => boolean;
 
@@ -30,12 +29,6 @@ export class CustomEditor extends Editor {
 	handleInput(data: string): void {
 		// Check extension-registered shortcuts first
 		if (this.onExtensionShortcut?.(data)) {
-			return;
-		}
-
-		// Check for paste image keybinding
-		if (this.keybindings.matches(data, "app.clipboard.pasteImage")) {
-			this.onPasteImage?.();
 			return;
 		}
 

@@ -218,13 +218,6 @@ describe("mcpResultToText", () => {
 		expect(mcpResultToText(result)).toBe("Hello\nWorld");
 	});
 
-	it("should handle image content blocks", () => {
-		const result: MCPToolCallResult = {
-			content: [{ type: "image", data: "base64data", mimeType: "image/png" }],
-		};
-		expect(mcpResultToText(result)).toContain("Image");
-	});
-
 	it("should handle resource content blocks", () => {
 		const result: MCPToolCallResult = {
 			content: [{ type: "resource", resource: { uri: "file:///test.txt", text: "content" } }],

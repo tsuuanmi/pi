@@ -1,10 +1,8 @@
 import {
-	type ImageContent,
 	type Message,
 	type Model,
 	type SimpleStreamOptions,
 	streamSimple,
-	type TextContent,
 	type Transport,
 } from "@earendil-works/pi-ai";
 import { runAgentLoop, runAgentLoopContinue } from "./agent-loop.ts";
@@ -323,14 +321,14 @@ export class Agent {
 
 	/** Start a new prompt from text, a single message, or a batch of messages. */
 	async prompt(message: AgentMessage | AgentMessage[]): Promise<void>;
-	async prompt(input: string, images?: ImageContent[]): Promise<void>;
-	async prompt(input: string | AgentMessage | AgentMessage[], images?: ImageContent[]): Promise<void> {
+	async prompt(input: string): Promise<void>;
+	async prompt(input: string | AgentMessage | AgentMessage[]): Promise<void> {
 		if (this.activeRun) {
 			throw new Error(
 				"Agent is already processing a prompt. Use steer() or followUp() to queue messages, or wait for completion.",
 			);
 		}
-		const messages = this.normalizePromptInput(input, images);
+		const messages = this.normalizePromptInput(input);
 		await this.runPromptMessages(messages);
 	}
 
@@ -364,10 +362,7 @@ export class Agent {
 		await this.runContinuation();
 	}
 
-	private normalizePromptInput(
-		input: string | AgentMessage | AgentMessage[],
-		images?: ImageContent[],
-	): AgentMessage[] {
+	private normalizePromptInput(input: string | AgentMessage | AgentMessage[]): AgentMessage[] {
 		if (Array.isArray(input)) {
 			return input;
 		}
@@ -376,11 +371,7 @@ export class Agent {
 			return [input];
 		}
 
-		const content: Array<TextContent | ImageContent> = [{ type: "text", text: input }];
-		if (images && images.length > 0) {
-			content.push(...images);
-		}
-		return [{ role: "user", content, timestamp: Date.now() }];
+		return [{ role: "user", content: [{ type: "text", text: input }], timestamp: Date.now() }];
 	}
 
 	private async runPromptMessages(

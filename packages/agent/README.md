@@ -245,10 +245,6 @@ During streaming, `agent.state.streamingMessage` contains the current partial as
 // Text prompt
 await agent.prompt("Hello");
 
-// With images
-await agent.prompt("What's in this image?", [
-  { type: "image", data: base64Data, mimeType: "image/jpeg" }
-]);
 
 // AgentMessage directly
 await agent.prompt({ role: "user", content: "Hello", timestamp: Date.now() });

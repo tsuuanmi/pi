@@ -14,7 +14,6 @@ import type {
 	AssistantMessage,
 	CacheRetention,
 	Context,
-	ImageContent,
 	Message,
 	Model,
 	ProviderEnv,
@@ -107,55 +106,11 @@ const fromClaudeCodeName = (name: string, tools?: Tool[]) => {
 };
 
 /**
- * Convert content blocks to Anthropic API format
+ * Convert content blocks to Anthropic API format.
+ * Returns concatenated text as a string (Anthropic accepts string content for tool results).
  */
-function convertContentBlocks(content: (TextContent | ImageContent)[]):
-	| string
-	| Array<
-			| { type: "text"; text: string }
-			| {
-					type: "image";
-					source: {
-						type: "base64";
-						media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
-						data: string;
-					};
-			  }
-	  > {
-	// If only text blocks, return as concatenated string for simplicity
-	const hasImages = content.some((c) => c.type === "image");
-	if (!hasImages) {
-		return sanitizeSurrogates(content.map((c) => (c as TextContent).text).join("\n"));
-	}
-
-	// If we have images, convert to content block array
-	const blocks = content.map((block) => {
-		if (block.type === "text") {
-			return {
-				type: "text" as const,
-				text: sanitizeSurrogates(block.text),
-			};
-		}
-		return {
-			type: "image" as const,
-			source: {
-				type: "base64" as const,
-				media_type: block.mimeType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-				data: block.data,
-			},
-		};
-	});
-
-	// If only images (no text), add placeholder text block
-	const hasText = blocks.some((b) => b.type === "text");
-	if (!hasText) {
-		blocks.unshift({
-			type: "text" as const,
-			text: "(see attached image)",
-		});
-	}
-
-	return blocks;
+function convertContentBlocks(content: TextContent[]): string {
+	return sanitizeSurrogates(content.map((c) => c.text).join("\n"));
 }
 
 export type AnthropicEffort = "low" | "medium" | "high" | "xhigh" | "max";
@@ -900,29 +855,11 @@ function convertMessages(
 					});
 				}
 			} else {
-				const blocks: ContentBlockParam[] = msg.content.map((item) => {
-					if (item.type === "text") {
-						return {
-							type: "text",
-							text: sanitizeSurrogates(item.text),
-						};
-					} else {
-						return {
-							type: "image",
-							source: {
-								type: "base64",
-								media_type: item.mimeType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-								data: item.data,
-							},
-						};
-					}
-				});
-				const filteredBlocks = blocks.filter((b) => {
-					if (b.type === "text") {
-						return b.text.trim().length > 0;
-					}
-					return true;
-				});
+				const blocks = msg.content.map((item) => ({
+					type: "text" as const,
+					text: sanitizeSurrogates(item.text),
+				}));
+				const filteredBlocks = blocks.filter((b) => b.text.trim().length > 0);
 				if (filteredBlocks.length === 0) continue;
 				params.push({
 					role: "user",
@@ -1028,10 +965,7 @@ function convertMessages(
 		if (lastMessage.role === "user") {
 			if (Array.isArray(lastMessage.content)) {
 				const lastBlock = lastMessage.content[lastMessage.content.length - 1];
-				if (
-					lastBlock &&
-					(lastBlock.type === "text" || lastBlock.type === "image" || lastBlock.type === "tool_result")
-				) {
+				if (lastBlock && (lastBlock.type === "text" || lastBlock.type === "tool_result")) {
 					(lastBlock as any).cache_control = cacheControl;
 				}
 			} else if (typeof lastMessage.content === "string") {

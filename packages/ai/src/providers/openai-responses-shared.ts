@@ -2,12 +2,9 @@ import type OpenAI from "openai";
 import type {
 	Tool as OpenAITool,
 	ResponseCreateParamsStreaming,
-	ResponseFunctionCallOutputItemList,
 	ResponseFunctionToolCall,
 	ResponseInput,
 	ResponseInputContent,
-	ResponseInputImage,
-	ResponseInputText,
 	ResponseOutputMessage,
 	ResponseReasoningItem,
 	ResponseStreamEvent,
@@ -17,7 +14,6 @@ import type {
 	Api,
 	AssistantMessage,
 	Context,
-	ImageContent,
 	Model,
 	StopReason,
 	TextContent,
@@ -140,19 +136,12 @@ export function convertResponsesMessages<TApi extends Api>(
 					content: [{ type: "input_text", text: sanitizeSurrogates(msg.content) }],
 				});
 			} else {
-				const content: ResponseInputContent[] = msg.content.map((item): ResponseInputContent => {
-					if (item.type === "text") {
-						return {
-							type: "input_text",
-							text: sanitizeSurrogates(item.text),
-						} satisfies ResponseInputText;
-					}
-					return {
-						type: "input_image",
-						detail: "auto",
-						image_url: `data:${item.mimeType};base64,${item.data}`,
-					} satisfies ResponseInputImage;
-				});
+				const content: ResponseInputContent[] = msg.content.map(
+					(item): ResponseInputContent => ({
+						type: "input_text",
+						text: sanitizeSurrogates(item.text),
+					}),
+				);
 				if (content.length === 0) continue;
 				messages.push({
 					role: "user",
@@ -223,35 +212,9 @@ export function convertResponsesMessages<TApi extends Api>(
 				.filter((c): c is TextContent => c.type === "text")
 				.map((c) => c.text)
 				.join("\n");
-			const hasImages = msg.content.some((c): c is ImageContent => c.type === "image");
-			const hasText = textResult.length > 0;
 			const [callId] = msg.toolCallId.split("|");
 
-			let output: string | ResponseFunctionCallOutputItemList;
-			if (hasImages && model.input.includes("image")) {
-				const contentParts: ResponseFunctionCallOutputItemList = [];
-
-				if (hasText) {
-					contentParts.push({
-						type: "input_text",
-						text: sanitizeSurrogates(textResult),
-					});
-				}
-
-				for (const block of msg.content) {
-					if (block.type === "image") {
-						contentParts.push({
-							type: "input_image",
-							detail: "auto",
-							image_url: `data:${block.mimeType};base64,${block.data}`,
-						});
-					}
-				}
-
-				output = contentParts;
-			} else {
-				output = sanitizeSurrogates(hasText ? textResult : "(see attached image)");
-			}
+			const output = sanitizeSurrogates(textResult || "(no output)");
 
 			messages.push({
 				type: "function_call_output",

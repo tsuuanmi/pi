@@ -3,13 +3,12 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { openBrowser } from "../packages/coding-agent/src/utils/open-browser.ts";
+import { openBrowser } from "../packages/coding-agent/src/utils/terminal/open-browser.ts";
 
 interface TextContent { type: "text"; text: string }
-interface ImageContent { type: "image"; data: string; mimeType?: string }
 interface ToolCallContent { type: "toolCall"; id: string; name: string; arguments?: Record<string, unknown> }
-type Content = TextContent | ImageContent | ToolCallContent | { type: string; [key: string]: unknown };
-interface Message { role?: string; content?: string | Content[]; toolCallId?: string; toolName?: string; details?: unknown }
+type Content = TextContent | ToolCallContent | { type: string; [key: string]: unknown };
+interface Message { role?: string; content?: string | Content[]; toolCallId?: string; toolName?: string; details?: unknown; isError?: boolean }
 interface Entry { type?: string; message?: Message }
 interface ToolStats { calls: number; results: number; estimatedTokens: number; samples: number[]; errors: number }
 interface BashCommandStats { calls: number; estimatedTokens: number; samples: number[] }
@@ -69,9 +68,12 @@ function contentText(content: Message["content"]): string {
 	if (!Array.isArray(content)) return "";
 	return content.map((block) => {
 		if (block.type === "text" && "text" in block && typeof block.text === "string") return block.text;
-		if (block.type === "image" && "data" in block && typeof block.data === "string") return block.data;
 		return JSON.stringify(block);
 	}).join("\n");
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null;
 }
 
 function getBashCommand(args: Record<string, unknown> | undefined): string | undefined {
@@ -123,10 +125,16 @@ for (const file of files) {
 		if (!message) continue;
 		if (message.role === "assistant" && Array.isArray(message.content)) {
 			for (const block of message.content) {
-				if (block.type !== "toolCall" || !("name" in block) || typeof block.name !== "string") continue;
+				if (
+					block.type !== "toolCall" ||
+					!("id" in block) ||
+					typeof block.id !== "string" ||
+					!("name" in block) ||
+					typeof block.name !== "string"
+				) continue;
 				const stats = getStats(tools, block.name, createToolStats);
 				stats.calls++;
-				const bashCommand = block.name === "bash" ? getBashCommand(block.arguments) : undefined;
+				const bashCommand = block.name === "bash" && isRecord(block.arguments) ? getBashCommand(block.arguments) : undefined;
 				callsById.set(block.id, { toolName: block.name, bashCommand });
 				if (bashCommand) getStats(bashCommands, commandKey(bashCommand), createBashStats).calls++;
 			}

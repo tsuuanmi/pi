@@ -194,8 +194,6 @@ export function mcpResultToText(result: MCPToolCallResult): string {
 	for (const block of result.content) {
 		if (block.type === "text") {
 			textParts.push(block.text);
-		} else if (block.type === "image") {
-			textParts.push(`[Image: ${block.mimeType}, ${block.data.length} bytes base64]`);
 		} else if (block.type === "resource") {
 			textParts.push(`[Resource: ${block.resource.uri}${block.resource.text ? ` ${block.resource.text}` : ""}]`);
 		}

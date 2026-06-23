@@ -149,7 +149,6 @@ For one-shot prompts:
 ```bash
 pi -p "Summarize this codebase"
 cat README.md | pi -p "Summarize this text"
-pi -p @screenshot.png "What's in this image?"
 ```
 
 Use `--mode json` for JSON event output or `--mode rpc` for process integration.

@@ -15,9 +15,6 @@ Unified LLM API with automatic model discovery, provider configuration, token an
   - [Streaming Tool Calls with Partial JSON](#streaming-tool-calls-with-partial-json)
   - [Validating Tool Arguments](#validating-tool-arguments)
   - [Complete Event Reference](#complete-event-reference)
-- [Image Input](#image-input)
-- [Image Generation](#image-generation)
-  - [Basic Image Generation](#basic-image-generation)
   - [Notes and Limitations](#notes-and-limitations)
 - [Thinking/Reasoning](#thinkingreasoning)
   - [Unified Interface](#unified-interface-streamsimplecompletesimple)
@@ -152,7 +149,7 @@ for (const call of toolCalls) {
       })
     : 'Unknown tool';
 
-  // Add tool result to context (supports text and images)
+  // Add tool result to context
   context.messages.push({
     role: 'toolResult',
     toolCallId: call.id,
@@ -221,11 +218,9 @@ const bookMeetingTool: Tool = {
 
 ### Handling Tool Calls
 
-Tool results use content blocks and can include both text and images:
+Tool results use text content blocks:
 
 ```typescript
-import { readFileSync } from 'fs';
-
 const context: Context = {
   messages: [{ role: 'user', content: 'What is the weather in London?' }],
   tools: [weatherTool]
@@ -252,19 +247,6 @@ for (const block of response.content) {
   }
 }
 
-// Tool results can also include images (for vision-capable models)
-const imageBuffer = readFileSync('chart.png');
-context.messages.push({
-  role: 'toolResult',
-  toolCallId: 'tool_xyz',
-  toolName: 'generate_chart',
-  content: [
-    { type: 'text', text: 'Generated chart showing temperature trends' },
-    { type: 'image', data: imageBuffer.toString('base64'), mimeType: 'image/png' }
-  ],
-  isError: false,
-  timestamp: Date.now()
-});
 ```
 
 ### Streaming Tool Calls with Partial JSON
@@ -366,84 +348,6 @@ All streaming events emitted during assistant message generation:
 | `error` | Error occurred | `reason`: Error type ("error" or "aborted"), `error`: AssistantMessage with partial content |
 
 Streaming events for different content blocks are not guaranteed to be contiguous. Providers may emit deltas for text, thinking, and tool calls in the same upstream chunk, and pi may surface corresponding events interleaved, for example `text_start`, `text_delta`, `toolcall_start`, `text_delta`, `toolcall_delta`. Consumers must use `contentIndex` to associate each delta/end event with its block and must not assume that a block's `*_start`/`*_delta`/`*_end` sequence is uninterrupted by events for other blocks.
-
-## Image Input
-
-Models with vision capabilities can process images. You can check if a model supports images via the `input` property. If you pass images to a non-vision model, they are silently ignored.
-
-```typescript
-import { readFileSync } from 'fs';
-import { getModel, complete } from '@earendil-works/pi-ai';
-
-const model = getModel('openai', 'gpt-4o-mini');
-
-// Check if model supports images
-if (model.input.includes('image')) {
-  console.log('Model supports vision');
-}
-
-const imageBuffer = readFileSync('image.png');
-const base64Image = imageBuffer.toString('base64');
-
-const response = await complete(model, {
-  messages: [{
-    role: 'user',
-    content: [
-      { type: 'text', text: 'What is in this image?' },
-      { type: 'image', data: base64Image, mimeType: 'image/png' }
-    ]
-  }]
-});
-
-// Access the response
-for (const block of response.content) {
-  if (block.type === 'text') {
-    console.log(block.text);
-  }
-}
-```
-
-## Image Generation
-
-Image generation uses a separate API surface from text/chat generation. Use `getImageModel()` / `getImageModels()` / `getImageProviders()` to discover image-generation models, and `generateImages()` to get the final result.
-
-Do not use `stream()` or `complete()` for image generation. Image generation is a one-shot API: `generateImages()` waits for the provider response and returns the final `AssistantImages` result.
-
-No built-in image-generation providers ship with the library (`getImageProviders()` returns an empty list by default). Register a custom image-generation provider with `registerImagesApiProvider()`, add matching `ImagesModel` entries, then call `generateImages()`:
-
-```typescript
-import { generateImages, registerImagesApiProvider } from '@earendil-works/pi-ai';
-import type { ImagesModel } from '@earendil-works/pi-ai';
-
-registerImagesApiProvider({
-  api: 'my-image-api',
-  generateImages: async (model, context, options) => {
-    // call your image-generation backend and return AssistantImages
-    return { /* ... */ };
-  },
-});
-
-const model: ImagesModel<'my-image-api'> = {
-  id: 'my-image-1',
-  name: 'My Image 1',
-  api: 'my-image-api',
-  provider: 'my-provider',
-  input: ['text'],
-  output: ['image'],
-};
-
-const result = await generateImages(model, {
-  input: [{ type: 'text', text: 'Generate a red circle on a plain white background.' }]
-});
-```
-
-- Use `getImageModel(...)`, not `getModel(...)`.
-- Use `generateImages()`, not `stream()` / `complete()`.
-- Image-generation models do not participate in tool calling.
-- Outputs are returned in `AssistantImages.output` and can include both base64-encoded `ImageContent` blocks and `TextContent` blocks.
-- Some models accept image input, others are text-to-image only. Check `model.input`; some return only images, others images plus text. Check `model.output`.
-- Like the streaming APIs, image generation supports options such as `apiKey`, `signal`, `headers`, `onPayload`, and `onResponse`, and results may include `stopReason`, `responseId`, and `usage`.
-- If you want a model to analyze images in a conversation or call tools, use the regular `stream()` / `complete()` APIs with a model that supports image input.
 
 ## Thinking/Reasoning
 
@@ -755,7 +659,6 @@ for (const model of anthropicModels) {
   console.log(`${model.id}: ${model.name}`);
   console.log(`  API: ${model.api}`); // 'anthropic-messages'
   console.log(`  Context: ${model.contextWindow} tokens`);
-  console.log(`  Vision: ${model.input.includes('image')}`);
   console.log(`  Reasoning: ${model.reasoning}`);
 }
 
@@ -793,7 +696,7 @@ const litellmModel: Model<'openai-completions'> = {
   provider: 'litellm',
   baseUrl: 'http://localhost:4000/v1',
   reasoning: false,
-  input: ['text', 'image'],
+  input: ['text'],
   cost: { input: 2.5, output: 10, cacheRead: 0, cacheWrite: 0 },
   contextWindow: 128000,
   maxTokens: 16384,
@@ -810,7 +713,7 @@ const proxyModel: Model<'anthropic-messages'> = {
   provider: 'custom-proxy',
   baseUrl: 'https://proxy.example.com/v1',
   reasoning: true,
-  input: ['text', 'image'],
+  input: ['text'],
   cost: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
   contextWindow: 200000,
   maxTokens: 8192,
@@ -953,7 +856,7 @@ context.messages.push(gptResponse);
 
 All providers can handle messages from other providers, including:
 - Text content
-- Tool calls and tool results (including images in tool results)
+- Tool calls and tool results
 - Thinking/reasoning blocks (transformed to tagged text for cross-provider compatibility)
 - Aborted messages with partial content
 
@@ -997,8 +900,6 @@ restored.messages.push({ role: 'user', content: 'Tell me more about its type sys
 const newModel = getModel('anthropic', 'claude-3-5-haiku-20241022');
 const continuation = await complete(newModel, restored);
 ```
-
-> **Note**: If the context contains images (encoded as base64 as shown in the Image Input section), those will also be serialized.
 
 ## Browser Usage
 
@@ -1196,11 +1097,10 @@ Create a new provider file (for example `amazon-bedrock.ts`) that exports:
 - Add credential detection in `env-api-keys.ts` for the new provider
 - Ensure `streamSimple` handles auth lookup via `getEnvApiKey()` or provider-specific auth
 
-#### 4. Model Generation (`scripts/generate-models.ts`, `scripts/generate-image-models.ts`)
+#### 4. Model Generation (`scripts/generate-models.ts`)
 
 - Add logic to fetch and parse models from the provider's source (e.g., models.dev API)
 - Map chat/tool-capable provider model data to the standardized `Model` interface via `scripts/generate-models.ts`
-- Map image-generation provider model data to the standardized `ImagesModel` interface via `scripts/generate-image-models.ts`
 - Handle provider-specific quirks (pricing format, capability flags, model ID transformations)
 
 #### 5. Tests (`test/`)

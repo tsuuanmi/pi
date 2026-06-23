@@ -24,10 +24,6 @@ interface ModelsDevModel {
 		cache_read?: number;
 		cache_write?: number;
 	};
-	modalities?: {
-		input?: string[];
-		output?: string[];
-	};
 }
 
 function supportsOpenAiXhigh(modelId: string): boolean {
@@ -101,7 +97,7 @@ function fromModelsDev(
 			provider,
 			baseUrl,
 			reasoning: m.reasoning === true,
-			input: m.modalities?.input?.includes("image") ? ["text", "image"] : ["text"],
+			input: ["text"],
 			cost: {
 				input: m.cost?.input || 0,
 				output: m.cost?.output || 0,
@@ -158,7 +154,7 @@ function addMissingModels(allModels: Model<Api>[]): void {
 		baseUrl: "https://api.anthropic.com",
 		provider: "anthropic",
 		reasoning: true,
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
 		contextWindow: 1000000,
 		maxTokens: 128000,
@@ -170,7 +166,7 @@ function addMissingModels(allModels: Model<Api>[]): void {
 		baseUrl: "https://api.anthropic.com",
 		provider: "anthropic",
 		reasoning: true,
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
 		contextWindow: 1000000,
 		maxTokens: 128000,
@@ -182,7 +178,7 @@ function addMissingModels(allModels: Model<Api>[]): void {
 		baseUrl: "https://api.anthropic.com",
 		provider: "anthropic",
 		reasoning: true,
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
 		contextWindow: 1000000,
 		maxTokens: 128000,
@@ -194,7 +190,7 @@ function addMissingModels(allModels: Model<Api>[]): void {
 		baseUrl: "https://api.anthropic.com",
 		provider: "anthropic",
 		reasoning: true,
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
 		contextWindow: 1000000,
 		maxTokens: 64000,
@@ -203,7 +199,7 @@ function addMissingModels(allModels: Model<Api>[]): void {
 		api: "openai-responses" as const,
 		baseUrl: "https://api.openai.com/v1",
 		provider: "openai" as const,
-		input: ["text", "image"] as ("text" | "image")[],
+		input: ["text" as const],
 	};
 	addIfMissing({
 		...openAiBase,
@@ -271,7 +267,7 @@ function addMissingModels(allModels: Model<Api>[]): void {
 		...codexBase,
 		id: "gpt-5.4",
 		name: "GPT-5.4",
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 2.5, output: 15, cacheRead: 0.25, cacheWrite: 0 },
 		contextWindow: 272000,
 	});
@@ -279,7 +275,7 @@ function addMissingModels(allModels: Model<Api>[]): void {
 		...codexBase,
 		id: "gpt-5.4-mini",
 		name: "GPT-5.4 mini",
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 0.75, output: 4.5, cacheRead: 0.075, cacheWrite: 0 },
 		contextWindow: 272000,
 	});
@@ -287,7 +283,7 @@ function addMissingModels(allModels: Model<Api>[]): void {
 		...codexBase,
 		id: "gpt-5.5",
 		name: "GPT-5.5",
-		input: ["text", "image"],
+		input: ["text"],
 		cost: { input: 5, output: 30, cacheRead: 0.5, cacheWrite: 0 },
 		contextWindow: 272000,
 	});

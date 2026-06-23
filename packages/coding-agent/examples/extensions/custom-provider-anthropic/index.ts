@@ -30,7 +30,6 @@ import {
 	type Context,
 	calculateCost,
 	createAssistantMessageEventStream,
-	type ImageContent,
 	type Message,
 	type Model,
 	type OAuthCredentials,
@@ -185,33 +184,8 @@ function sanitizeSurrogates(text: string): string {
 	return text.replace(/[\uD800-\uDFFF]/g, "\uFFFD");
 }
 
-function convertContentBlocks(
-	content: (TextContent | ImageContent)[],
-): string | Array<{ type: "text"; text: string } | { type: "image"; source: any }> {
-	const hasImages = content.some((c) => c.type === "image");
-	if (!hasImages) {
-		return sanitizeSurrogates(content.map((c) => (c as TextContent).text).join("\n"));
-	}
-
-	const blocks = content.map((block) => {
-		if (block.type === "text") {
-			return { type: "text" as const, text: sanitizeSurrogates(block.text) };
-		}
-		return {
-			type: "image" as const,
-			source: {
-				type: "base64" as const,
-				media_type: block.mimeType,
-				data: block.data,
-			},
-		};
-	});
-
-	if (!blocks.some((b) => b.type === "text")) {
-		blocks.unshift({ type: "text" as const, text: "(see attached image)" });
-	}
-
-	return blocks;
+function convertContentBlocks(content: TextContent[]): string {
+	return sanitizeSurrogates(content.map((c) => c.text).join("\n"));
 }
 
 function convertMessages(messages: Message[], isOAuth: boolean, _tools?: Tool[]): any[] {
@@ -226,16 +200,9 @@ function convertMessages(messages: Message[], isOAuth: boolean, _tools?: Tool[])
 					params.push({ role: "user", content: sanitizeSurrogates(msg.content) });
 				}
 			} else {
-				const blocks: ContentBlockParam[] = msg.content.map((item) =>
-					item.type === "text"
-						? { type: "text" as const, text: sanitizeSurrogates(item.text) }
-						: {
-								type: "image" as const,
-								source: { type: "base64" as const, media_type: item.mimeType as any, data: item.data },
-							},
-				);
-				if (blocks.length > 0) {
-					params.push({ role: "user", content: blocks });
+				const text = convertContentBlocks(msg.content);
+				if (text.trim()) {
+					params.push({ role: "user", content: text });
 				}
 			}
 		} else if (msg.role === "assistant") {
@@ -572,7 +539,7 @@ export default function (pi: ExtensionAPI) {
 				id: "claude-opus-4-5",
 				name: "Claude Opus 4.5 (Custom)",
 				reasoning: true,
-				input: ["text", "image"],
+				input: ["text"],
 				cost: { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
 				contextWindow: 200000,
 				maxTokens: 64000,
@@ -581,7 +548,7 @@ export default function (pi: ExtensionAPI) {
 				id: "claude-sonnet-4-5",
 				name: "Claude Sonnet 4.5 (Custom)",
 				reasoning: true,
-				input: ["text", "image"],
+				input: ["text"],
 				cost: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
 				contextWindow: 200000,
 				maxTokens: 64000,

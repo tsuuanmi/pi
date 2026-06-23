@@ -25,7 +25,7 @@ function createFauxRegistration(options: Parameters<typeof registerFauxProvider>
 function getTextContent(message: AssistantMessage | ToolResultMessage): string {
 	return message.content
 		.filter((block) => block.type === "text")
-		.map((block) => block.text)
+		.map((block) => (block as { text: string }).text)
 		.join("\n");
 }
 

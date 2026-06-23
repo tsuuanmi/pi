@@ -20,10 +20,7 @@ function getText(message: AgentSession["messages"][number]): string {
 	}
 	return typeof message.content === "string"
 		? message.content
-		: message.content
-				.filter((part): part is { type: "text"; text: string } => part.type === "text")
-				.map((part) => part.text)
-				.join("");
+		: message.content.map((part) => (part.type === "text" && "text" in part ? part.text : "")).join("");
 }
 
 describe("regression #2860: replaced session callbacks", () => {

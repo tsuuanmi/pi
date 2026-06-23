@@ -175,12 +175,12 @@ describe("ExtensionRunner", () => {
 		});
 
 		it("warns but allows when extension uses non-reserved built-in shortcut", async () => {
-			const pasteImageKey = Array.isArray(defaultKeybindings["app.clipboard.pasteImage"])
-				? (defaultKeybindings["app.clipboard.pasteImage"][0] ?? "")
-				: defaultKeybindings["app.clipboard.pasteImage"];
+			const dequeueKey = Array.isArray(defaultKeybindings["app.message.dequeue"])
+				? (defaultKeybindings["app.message.dequeue"][0] ?? "")
+				: defaultKeybindings["app.message.dequeue"];
 			const extCode = `
 				export default function(pi) {
-					pi.registerShortcut("${pasteImageKey}", {
+					pi.registerShortcut("${dequeueKey}", {
 						description: "Overrides non-reserved",
 						handler: async () => {},
 					});
@@ -194,10 +194,8 @@ describe("ExtensionRunner", () => {
 			const runner = new ExtensionRunner(result.extensions, result.runtime, tempDir, sessionManager, modelRegistry);
 			const shortcuts = runner.getShortcuts(defaultKeybindings);
 
-			expect(warnSpy).toHaveBeenCalledWith(
-				expect.stringContaining("built-in shortcut for app.clipboard.pasteImage"),
-			);
-			expect(shortcuts.has(pasteImageKey as KeyId)).toBe(true);
+			expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("built-in shortcut for app.message.dequeue"));
+			expect(shortcuts.has(dequeueKey as KeyId)).toBe(true);
 
 			warnSpy.mockRestore();
 		});
@@ -288,12 +286,10 @@ describe("ExtensionRunner", () => {
 
 			const result = await discoverAndLoadExtensions([], tempDir, tempDir);
 			const runner = new ExtensionRunner(result.extensions, result.runtime, tempDir, sessionManager, modelRegistry);
-			const keybindings = { ...defaultKeybindings, "app.clipboard.pasteImage": ["ctrl+x", "ctrl+y"] as KeyId[] };
+			const keybindings = { ...defaultKeybindings, "app.message.dequeue": ["ctrl+x", "ctrl+y"] as KeyId[] };
 			const shortcuts = runner.getShortcuts(keybindings);
 
-			expect(warnSpy).toHaveBeenCalledWith(
-				expect.stringContaining("built-in shortcut for app.clipboard.pasteImage"),
-			);
+			expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("built-in shortcut for app.message.dequeue"));
 			expect(shortcuts.has("ctrl+y")).toBe(true);
 
 			warnSpy.mockRestore();
@@ -683,7 +679,7 @@ describe("ExtensionRunner", () => {
 			runner.onError((error) => errors.push(error.error));
 			runner.bindCore(extensionActions, extensionContextActions);
 
-			const chained = await runner.emitBeforeAgentStart("hello", undefined, "base", {
+			const chained = await runner.emitBeforeAgentStart("hello", "base", {
 				cwd: tempDir,
 			});
 

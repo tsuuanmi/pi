@@ -188,7 +188,6 @@ unsubscribe = session.subscribe(() => {});
 ```typescript
 interface PromptOptions {
   expandPromptTemplates?: boolean;
-  images?: ImageContent[];
   streamingBehavior?: "steer" | "followUp";
   source?: InputSource;
   preflightResult?: (success: boolean) => void;
@@ -207,11 +206,6 @@ The `prompt()` method handles prompt templates, extension commands, and message 
 ```typescript
 // Basic prompt (when not streaming)
 await session.prompt("What files are here?");
-
-// With images
-await session.prompt("What's in this image?", {
-  images: [{ type: "image", source: { type: "base64", mediaType: "image/png", data: "..." } }]
-});
 
 // During streaming: must specify how to queue the message
 await session.prompt("Stop and do this instead", { streamingBehavior: "steer" });

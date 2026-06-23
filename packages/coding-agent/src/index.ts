@@ -229,7 +229,6 @@ export {
 export {
 	type CompactionSettings,
 	type DefaultProjectTrust,
-	type ImageSettings,
 	type PackageSource,
 	type RetrySettings,
 	SettingsManager,
@@ -363,7 +362,6 @@ export {
 	type SettingsCallbacks,
 	type SettingsConfig,
 	SettingsSelectorComponent,
-	ShowImagesSelectorComponent,
 	SkillInvocationMessageComponent,
 	ThemeSelectorComponent,
 	ThinkingSelectorComponent,
@@ -389,7 +387,5 @@ export {
 // Clipboard utilities
 export { copyToClipboard } from "./utils/clipboard/clipboard.ts";
 export { parseFrontmatter, stripFrontmatter } from "./utils/fs/frontmatter.ts";
-export { convertToPng } from "./utils/image/image-convert.ts";
-export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image/image-resize.ts";
 // Shell utilities
 export { getShellConfig } from "./utils/system/shell.ts";

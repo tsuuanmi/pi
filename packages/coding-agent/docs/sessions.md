@@ -28,8 +28,6 @@ For the JSONL file format and SessionManager API, see [Session Format](session-f
 | `/tree` | Navigate the current session tree |
 | `/fork` | Create a new session from a previous user message |
 | `/compact [prompt]` | Summarize older context; see [Compaction](compaction.md) |
-| `/export [file]` | Export session to HTML |
-| `/share` | Upload as private GitHub gist with shareable HTML link |
 
 ## Resuming and Deleting Sessions
 

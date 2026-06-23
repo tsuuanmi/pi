@@ -51,7 +51,7 @@ export default function (pi: ExtensionAPI) {
         id: "my-model",
         name: "My Model",
         reasoning: false,
-        input: ["text", "image"],
+        input: ["text"],
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
         contextWindow: 128000,
         maxTokens: 4096
@@ -140,7 +140,7 @@ pi.registerProvider("my-llm", {
       id: "my-llm-large",
       name: "My LLM Large",
       reasoning: true,        // supports extended thinking
-      input: ["text", "image"],
+      input: ["text"],
       cost: {
         input: 3.0,           // $/million tokens
         output: 15.0,
@@ -173,7 +173,7 @@ pi.registerProvider("my-llm", {
       id: "my-llm-large",
       name: "My LLM Large",
       reasoning: true,
-      input: ["text", "image"],
+      input: ["text"],
       cost: { input: 3.0, output: 15.0, cacheRead: 0.3, cacheWrite: 3.75 },
       contextWindow: 200000,
       maxTokens: 16384
@@ -600,10 +600,8 @@ Test your provider against the same test suites used by built-in providers. Copy
 | `abort.test.ts` | AbortSignal handling |
 | `empty.test.ts` | Empty/minimal responses |
 | `context-overflow.test.ts` | Context window limits |
-| `image-limits.test.ts` | Image input handling |
 | `unicode-surrogate.test.ts` | Unicode edge cases |
 | `tool-call-without-result.test.ts` | Tool call edge cases |
-| `image-tool-result.test.ts` | Images in tool results |
 | `total-tokens.test.ts` | Total token calculation |
 | `cross-provider-handoff.test.ts` | Context handoff between providers |
 
@@ -675,7 +673,7 @@ interface ProviderModelConfig {
   thinkingLevelMap?: Partial<Record<"off" | "minimal" | "low" | "medium" | "high" | "xhigh", string | null>>;
 
   /** Supported input types. */
-  input: ("text" | "image")[];
+  input: "text"[];
 
   /** Cost per million tokens (for usage tracking). */
   cost: {

@@ -11,7 +11,6 @@ const mocks = vi.hoisted(() => {
 		execSync: vi.fn(),
 		spawn: vi.fn(),
 		platform: vi.fn<() => NodeJS.Platform>(),
-		isWaylandSession: vi.fn<() => boolean>(),
 	};
 });
 
@@ -31,12 +30,6 @@ vi.mock("child_process", () => {
 vi.mock("os", () => {
 	return {
 		platform: mocks.platform,
-	};
-});
-
-vi.mock("../src/utils/image/clipboard-image.js", () => {
-	return {
-		isWaylandSession: mocks.isWaylandSession,
 	};
 });
 
@@ -63,9 +56,7 @@ beforeEach(() => {
 	mocks.execSync.mockReset();
 	mocks.spawn.mockReset();
 	mocks.platform.mockReset();
-	mocks.isWaylandSession.mockReset();
 	mockedPlatform.mockReturnValue("darwin");
-	mocks.isWaylandSession.mockReturnValue(false);
 	mocks.clipboard.setText.mockImplementation(async () => {
 		await new Promise((resolve) => setTimeout(resolve, 1));
 		nativeResolved = true;

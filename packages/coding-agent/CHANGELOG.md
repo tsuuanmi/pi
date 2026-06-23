@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- Removed image-related features from the MVP scope, including `ImageContent` public APIs, terminal image rendering, image paste/read/resize paths, image-generation APIs, and the `@silvia-odwyer/photon-node` dependency. Text clipboard copy and terminal hyperlink/color capability detection remain supported.
 - Removed Windows-specific runtime, packaging, binary release, docs, and test support; pi now targets Linux and macOS.
 - Removed all non-core providers from the built-in provider display names, default model map, model registry, provider attribution, env-key resolution, and CLI help text: Google Gemini, Google Vertex, xAI, Mistral, Amazon Bedrock, Groq, Cerebras, DeepSeek, NVIDIA NIM, Cloudflare (AI Gateway and Workers AI), OpenRouter, Vercel AI Gateway, ZAI (and ZAI Coding Plan China), Together AI, Fireworks, Kimi For Coding (Moonshot AI), Xiaomi MiMo (all regions), OpenCode Zen/Go, MiniMax, Hugging Face, GitHub Copilot, Azure OpenAI, and Ant Ling. Also removed `src/bun/register-bedrock.ts`, the `daxnuts` easter-egg component, and the `sdk-openrouter-attribution` test. The built-in providers are now Anthropic, OpenAI, and OpenAI Codex; custom OpenAI-compatible providers (e.g. Ollama Cloud) still work via `openai-completions` (see `docs/models.md` and `docs/custom-provider.md`).
 - Removed the `thinkingBudgets` setting and `SettingsManager.getThinkingBudgets()`.

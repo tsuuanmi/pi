@@ -99,13 +99,13 @@ describe("detectTerminalBackgroundTheme", () => {
 
 describe("theme color mode", () => {
 	it("uses terminal capabilities", () => {
-		setCapabilities({ images: null, trueColor: false, hyperlinks: false });
+		setCapabilities({ trueColor: false, hyperlinks: false });
 		const ansi256Theme = getThemeByName("dark");
 		if (!ansi256Theme) throw new Error("dark theme not found");
 		expect(ansi256Theme.getColorMode()).toBe("256color");
 		expect(ansi256Theme.getFgAnsi("accent")).toMatch(/^\x1b\[38;5;\d+m$/);
 
-		setCapabilities({ images: null, trueColor: true, hyperlinks: false });
+		setCapabilities({ trueColor: true, hyperlinks: false });
 		const truecolorTheme = getThemeByName("dark");
 		if (!truecolorTheme) throw new Error("dark theme not found");
 		expect(truecolorTheme.getColorMode()).toBe("truecolor");

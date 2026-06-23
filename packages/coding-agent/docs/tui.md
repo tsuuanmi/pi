@@ -255,19 +255,6 @@ const md = new Markdown(
 md.setText("Updated markdown");
 ```
 
-### Image
-
-Renders images in supported terminals (Kitty, iTerm2, Ghostty, WezTerm).
-
-```typescript
-const image = new Image(
-  base64Data,   // base64-encoded image
-  "image/png",  // MIME type
-  theme,        // ImageTheme
-  { maxWidthCells: 80, maxHeightCells: 24 }
-);
-```
-
 ## Keyboard Input
 
 Use `matchesKey()` for key detection:

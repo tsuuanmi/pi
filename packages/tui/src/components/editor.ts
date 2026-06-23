@@ -1009,7 +1009,7 @@ export class Editor implements Component, Focusable {
 
 	/**
 	 * Insert text at the current cursor position.
-	 * Used for programmatic insertion (e.g., clipboard image markers).
+	 * Used for programmatic insertion.
 	 * This is atomic for undo - single undo restores entire pre-insert state.
 	 */
 	insertTextAtCursor(text: string): void {

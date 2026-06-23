@@ -212,8 +212,7 @@ return traceOperation(
     provider: turnState.model.provider,
     model: turnState.model.id,
     promptLength: text.length,
-    imageCount: options?.images?.length ?? 0,
-  },
+      },
   () => this.executeTurn(turnState, text, options),
 );
 ```

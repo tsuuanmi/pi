@@ -62,10 +62,6 @@ export default function (pi: ExtensionAPI) {
 			const details = result.details as ReadToolDetails | undefined;
 			const content = result.content[0];
 
-			if (content?.type === "image") {
-				return new Text(theme.fg("success", "Image loaded"), 0, 0);
-			}
-
 			if (content?.type !== "text") {
 				return new Text(theme.fg("error", "No content"), 0, 0);
 			}

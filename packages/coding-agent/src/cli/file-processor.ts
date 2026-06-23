@@ -1,30 +1,23 @@
 /**
- * Process @file CLI arguments into text content and image attachments
+ * Process @file CLI arguments into text content
  */
 
 import { access, readFile, stat } from "node:fs/promises";
-import type { ImageContent } from "@earendil-works/pi-ai";
 import chalk from "chalk";
 import { resolve } from "path";
 import { resolveReadPath } from "../core/tools/path-utils.ts";
-import { formatDimensionNote, resizeImage } from "../utils/image/image-resize.ts";
-import { detectSupportedImageMimeTypeFromFile } from "../utils/image/mime.ts";
 
 export interface ProcessedFiles {
 	text: string;
-	images: ImageContent[];
 }
 
 export interface ProcessFileOptions {
-	/** Whether to auto-resize images to 2000x2000 max. Default: true */
-	autoResizeImages?: boolean;
+	/** Custom operations for file reading */
 }
 
-/** Process @file arguments into text content and image attachments */
-export async function processFileArguments(fileArgs: string[], options?: ProcessFileOptions): Promise<ProcessedFiles> {
-	const autoResizeImages = options?.autoResizeImages ?? true;
+/** Process @file arguments into text content */
+export async function processFileArguments(fileArgs: string[], _options?: ProcessFileOptions): Promise<ProcessedFiles> {
 	let text = "";
-	const images: ImageContent[] = [];
 
 	for (const fileArg of fileArgs) {
 		// Expand and resolve path (handles ~ expansion and macOS screenshot Unicode spaces)
@@ -45,55 +38,16 @@ export async function processFileArguments(fileArgs: string[], options?: Process
 			continue;
 		}
 
-		const mimeType = await detectSupportedImageMimeTypeFromFile(absolutePath);
-
-		if (mimeType) {
-			// Handle image file
-			const content = await readFile(absolutePath);
-
-			let attachment: ImageContent;
-			let dimensionNote: string | undefined;
-
-			if (autoResizeImages) {
-				const resized = await resizeImage(content, mimeType);
-				if (!resized) {
-					text += `<file name="${absolutePath}">[Image omitted: could not be resized below the inline image size limit.]</file>\n`;
-					continue;
-				}
-				dimensionNote = formatDimensionNote(resized);
-				attachment = {
-					type: "image",
-					mimeType: resized.mimeType,
-					data: resized.data,
-				};
-			} else {
-				attachment = {
-					type: "image",
-					mimeType,
-					data: content.toString("base64"),
-				};
-			}
-
-			images.push(attachment);
-
-			// Add text reference to image with optional dimension note
-			if (dimensionNote) {
-				text += `<file name="${absolutePath}">${dimensionNote}</file>\n`;
-			} else {
-				text += `<file name="${absolutePath}"></file>\n`;
-			}
-		} else {
-			// Handle text file
-			try {
-				const content = await readFile(absolutePath, "utf-8");
-				text += `<file name="${absolutePath}">\n${content}\n</file>\n`;
-			} catch (error: unknown) {
-				const message = error instanceof Error ? error.message : String(error);
-				console.error(chalk.red(`Error: Could not read file ${absolutePath}: ${message}`));
-				process.exit(1);
-			}
+		// Read text file content
+		try {
+			const content = await readFile(absolutePath, "utf-8");
+			text += `<file name="${absolutePath}">\n${content}\n</file>\n`;
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : String(error);
+			console.error(chalk.red(`Error: Could not read file ${absolutePath}: ${message}`));
+			process.exit(1);
 		}
 	}
 
-	return { text, images };
+	return { text };
 }

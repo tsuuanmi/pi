@@ -49,15 +49,6 @@ function createRemoteReadOps(remote: string, remoteCwd: string, localCwd: string
 	return {
 		readFile: (p) => sshExec(remote, `cat ${JSON.stringify(toRemote(p))}`),
 		access: (p) => sshExec(remote, `test -r ${JSON.stringify(toRemote(p))}`).then(() => {}),
-		detectImageMimeType: async (p) => {
-			try {
-				const r = await sshExec(remote, `file --mime-type -b ${JSON.stringify(toRemote(p))}`);
-				const m = r.toString().trim();
-				return ["image/jpeg", "image/png", "image/gif", "image/webp"].includes(m) ? m : null;
-			} catch {
-				return null;
-			}
-		},
 	};
 }
 

@@ -390,7 +390,6 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 				let preflightSucceeded = false;
 				void session
 					.prompt(command.message, {
-						images: command.images,
 						streamingBehavior: command.streamingBehavior,
 						source: "rpc",
 						preflightResult: (didSucceed) => {
@@ -409,12 +408,12 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 			}
 
 			case "steer": {
-				await session.steer(command.message, command.images);
+				await session.steer(command.message);
 				return success(id, "steer");
 			}
 
 			case "follow_up": {
-				await session.followUp(command.message, command.images);
+				await session.followUp(command.message);
 				return success(id, "follow_up");
 			}
 
@@ -563,11 +562,6 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 			case "get_session_stats": {
 				const stats = session.getSessionStats();
 				return success(id, "get_session_stats", stats);
-			}
-
-			case "export_html": {
-				const path = await session.exportToHtml(command.outputPath);
-				return success(id, "export_html", { path });
 			}
 
 			case "switch_session": {

@@ -3,7 +3,7 @@
  */
 
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
-import type { ImageContent, Model } from "@earendil-works/pi-ai";
+import type { Model } from "@earendil-works/pi-ai";
 import type { KeyId } from "@earendil-works/pi-tui";
 import type {
 	BeforeAgentStartEvent,
@@ -28,7 +28,6 @@ import type {
 	ExtensionUIContext,
 	InputEvent,
 	InputEventResult,
-	InputSource,
 	LoadExtensionsResult,
 	MCPServerInfo,
 	MessageEndEvent,
@@ -1005,7 +1004,6 @@ export class ExtensionRunner {
 
 	async emitBeforeAgentStart(
 		prompt: string,
-		images: ImageContent[] | undefined,
 		systemPrompt: string,
 		systemPromptOptions: BuildSystemPromptOptions,
 	): Promise<BeforeAgentStartCombinedResult | undefined> {
@@ -1030,7 +1028,6 @@ export class ExtensionRunner {
 					const event: BeforeAgentStartEvent = {
 						type: "before_agent_start",
 						prompt,
-						images,
 						systemPrompt: currentSystemPrompt,
 						systemPromptOptions,
 					};
@@ -1120,13 +1117,11 @@ export class ExtensionRunner {
 	/** Emit input event. Transforms chain, "handled" short-circuits. */
 	async emitInput(
 		text: string,
-		images: ImageContent[] | undefined,
-		source: InputSource,
+		source: InputEvent["source"],
 		streamingBehavior?: "steer" | "followUp",
 	): Promise<InputEventResult> {
 		const ctx = this.createContext();
 		let currentText = text;
-		let currentImages = images;
 
 		for (const ext of this.extensions) {
 			for (const handler of ext.handlers.get("input") ?? []) {
@@ -1134,7 +1129,6 @@ export class ExtensionRunner {
 					const event: InputEvent = {
 						type: "input",
 						text: currentText,
-						images: currentImages,
 						source,
 						streamingBehavior,
 					};
@@ -1142,7 +1136,6 @@ export class ExtensionRunner {
 					if (result?.action === "handled") return result;
 					if (result?.action === "transform") {
 						currentText = result.text;
-						currentImages = result.images ?? currentImages;
 					}
 				} catch (err) {
 					this.emitError({
@@ -1154,8 +1147,6 @@ export class ExtensionRunner {
 				}
 			}
 		}
-		return currentText !== text || currentImages !== images
-			? { action: "transform", text: currentText, images: currentImages }
-			: { action: "continue" };
+		return currentText !== text ? { action: "transform", text: currentText } : { action: "continue" };
 	}
 }

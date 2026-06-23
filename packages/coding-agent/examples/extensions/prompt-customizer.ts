@@ -26,7 +26,7 @@ function addToolGuidance(options: BuildSystemPromptOptions, basePrompt: string):
 
 	if (hasTool("read")) {
 		parts.push(
-			"• Use the `read` tool for file contents (supports text and images).",
+			"• Use the `read` tool for text file contents.",
 			"  - For large files, use `offset` and `limit` to read in chunks.",
 		);
 	}

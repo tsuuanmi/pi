@@ -35,34 +35,21 @@ describe("Input Event", () => {
 
 	it("returns continue when no handlers, undefined return, or explicit continue", async () => {
 		// No handlers
-		expect((await (await createRunner()).emitInput("x", undefined, "interactive")).action).toBe("continue");
+		expect((await (await createRunner()).emitInput("x", "interactive")).action).toBe("continue");
 		// Returns undefined
 		let r = await createRunner(`export default p => p.on("input", async () => {});`);
-		expect((await r.emitInput("x", undefined, "interactive")).action).toBe("continue");
+		expect((await r.emitInput("x", "interactive")).action).toBe("continue");
 		// Returns explicit continue
 		r = await createRunner(`export default p => p.on("input", async () => ({ action: "continue" }));`);
-		expect((await r.emitInput("x", undefined, "interactive")).action).toBe("continue");
+		expect((await r.emitInput("x", "interactive")).action).toBe("continue");
 	});
 
-	it("transforms text and preserves images when omitted", async () => {
+	it("transforms text", async () => {
 		const r = await createRunner(
 			`export default p => p.on("input", async e => ({ action: "transform", text: "T:" + e.text }));`,
 		);
-		const imgs = [{ type: "image" as const, data: "orig", mimeType: "image/png" }];
-		const result = await r.emitInput("hi", imgs, "interactive");
-		expect(result).toEqual({ action: "transform", text: "T:hi", images: imgs });
-	});
-
-	it("transforms and replaces images when provided", async () => {
-		const r = await createRunner(
-			`export default p => p.on("input", async () => ({ action: "transform", text: "X", images: [{ type: "image", data: "new", mimeType: "image/jpeg" }] }));`,
-		);
-		const result = await r.emitInput("hi", [{ type: "image", data: "orig", mimeType: "image/png" }], "interactive");
-		expect(result).toEqual({
-			action: "transform",
-			text: "X",
-			images: [{ type: "image", data: "new", mimeType: "image/jpeg" }],
-		});
+		const result = await r.emitInput("hi", "interactive");
+		expect(result).toEqual({ action: "transform", text: "T:hi" });
 	});
 
 	it("chains transforms across multiple handlers", async () => {
@@ -70,8 +57,8 @@ describe("Input Event", () => {
 			`export default p => p.on("input", async e => ({ action: "transform", text: e.text + "[1]" }));`,
 			`export default p => p.on("input", async e => ({ action: "transform", text: e.text + "[2]" }));`,
 		);
-		const result = await r.emitInput("X", undefined, "interactive");
-		expect(result).toEqual({ action: "transform", text: "X[1][2]", images: undefined });
+		const result = await r.emitInput("X", "interactive");
+		expect(result).toEqual({ action: "transform", text: "X[1][2]" });
 	});
 
 	it("short-circuits on handled and skips subsequent handlers", async () => {
@@ -80,7 +67,7 @@ describe("Input Event", () => {
 			`export default p => p.on("input", async () => ({ action: "handled" }));`,
 			`export default p => p.on("input", async () => { globalThis.testVar = true; });`,
 		);
-		expect(await r.emitInput("X", undefined, "interactive")).toEqual({ action: "handled" });
+		expect(await r.emitInput("X", "interactive")).toEqual({ action: "handled" });
 		expect((globalThis as any).testVar).toBe(false);
 	});
 
@@ -89,7 +76,7 @@ describe("Input Event", () => {
 			`export default p => p.on("input", async e => { globalThis.testVar = e.source; return { action: "continue" }; });`,
 		);
 		for (const source of ["interactive", "rpc", "extension"] as const) {
-			await r.emitInput("x", undefined, source);
+			await r.emitInput("x", source);
 			expect((globalThis as any).testVar).toBe(source);
 		}
 	});
@@ -98,11 +85,11 @@ describe("Input Event", () => {
 		const r = await createRunner(
 			`export default p => p.on("input", async e => { globalThis.testVar = e.streamingBehavior; return { action: "continue" }; });`,
 		);
-		await r.emitInput("x", undefined, "interactive", "steer");
+		await r.emitInput("x", "interactive", "steer");
 		expect((globalThis as any).testVar).toBe("steer");
-		await r.emitInput("x", undefined, "interactive", "followUp");
+		await r.emitInput("x", "interactive", "followUp");
 		expect((globalThis as any).testVar).toBe("followUp");
-		await r.emitInput("x", undefined, "interactive");
+		await r.emitInput("x", "interactive");
 		expect((globalThis as any).testVar).toBeUndefined();
 	});
 
@@ -110,7 +97,7 @@ describe("Input Event", () => {
 		const r = await createRunner(`export default p => p.on("input", async () => { throw new Error("boom"); });`);
 		const errs: string[] = [];
 		r.onError((e) => errs.push(e.error));
-		const result = await r.emitInput("x", undefined, "interactive");
+		const result = await r.emitInput("x", "interactive");
 		expect(result.action).toBe("continue");
 		expect(errs).toContain("boom");
 	});
