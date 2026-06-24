@@ -19,12 +19,12 @@ These are the intended ownership boundaries. If implementation chooses different
 
 | Contract area | Primary owner | Related owners |
 | --- | --- | --- |
-| Resource/discovery ownership and provider precedence | `packages/coding-agent/src/core/resource-loader.ts` or a new `src/core/resource-providers.ts` | `src/core/agent-profiles.ts`, `src/core/skills.ts`, `src/core/prompt-templates.ts`, `src/core/package-manager.ts` |
-| Agent definition parsing | `packages/coding-agent/src/core/agent-profiles.ts` or a new `src/core/agent-definitions.ts` | bundled role-agent prompt assets if added |
-| Trust policy | `packages/coding-agent/src/core/settings-manager.ts` and `src/core/project-trust.ts` | `src/core/resource-loader.ts`, `docs/security.md` |
-| Source metadata and diagnostics | `packages/coding-agent/src/core/source-info.ts` and `src/core/diagnostics.ts` | resource-specific loaders |
-| Scoped live registry | a new `packages/coding-agent/src/core/agent-registry.ts` | `src/core/agent-session.ts`, `src/core/subagents.ts`, `src/api/types.ts` |
-| Durable subagent/task/receipt state | `packages/coding-agent/src/core/subagents.ts` and future task modules | `.pi/workflows/subagents/`, workflow runtimes |
+| Resource/discovery ownership and provider precedence | `packages/coding-agent/src/core/skills/resource-loader.ts` or a new `src/core/resource-providers.ts` | `src/core/agents/agent-profiles.ts`, `src/core/skills/skills.ts`, `src/core/skills/prompt-templates.ts`, `src/core/package-manager/package-manager.ts` |
+| Agent definition parsing | `packages/coding-agent/src/core/agents/agent-profiles.ts` or a new `src/core/agents/agent-definitions.ts` | bundled role-agent prompt assets if added |
+| Trust policy | `packages/coding-agent/src/core/settings/settings-manager.ts` and `src/core/trust/project-trust.ts` | `src/core/skills/resource-loader.ts`, `docs/security.md` |
+| Source metadata and diagnostics | `packages/coding-agent/src/core/misc/source-info.ts` and `src/core/misc/diagnostics.ts` | resource-specific loaders |
+| Scoped live registry | a new `packages/coding-agent/src/core/agent-registry.ts` | `src/core/agent-session/agent-session.ts`, `src/core/subagents/subagents.ts`, `src/api/types.ts` |
+| Durable subagent/task/receipt state | `packages/coding-agent/src/core/subagents/subagents.ts` and future task modules | `.pi/workflows/subagents/`, workflow runtimes |
 | Self-hosting continuity | built-in workflow tools and skills | `src/workflows/*`, `src/extensions/workflow-tools.ts` |
 | Direct-port adaptation | each porting change owner | this document and code review checklist |
 | Worktree/tmux orchestration | future task/worktree modules and `src/harness-runtime/seams.ts` | docs/tmux.md, workflow docs |

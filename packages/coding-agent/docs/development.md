@@ -38,7 +38,7 @@ Change `name`, `configDir`, and `bin` field for your fork. Affects CLI banner, c
 
 Three execution modes: npm install, standalone binary, tsx from source.
 
-**Always use `src/core/config.ts`** for package assets:
+**Always use `src/core/config/config.ts`** for package assets:
 
 ```typescript
 import { getPackageDir, getThemesDir } from "./core/config.js";

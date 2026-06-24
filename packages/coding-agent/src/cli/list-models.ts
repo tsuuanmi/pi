@@ -5,8 +5,8 @@
 import type { Api, Model } from "@tsuuanmi/pi-ai";
 import { fuzzyFilter } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
-import { formatNoModelsAvailableMessage } from "../core/auth-guidance.ts";
-import type { ModelRegistry } from "../core/model-registry.ts";
+import { formatNoModelsAvailableMessage } from "../core/auth/auth-guidance.ts";
+import type { ModelRegistry } from "../core/model/model-registry.ts";
 
 /**
  * Format a number as human-readable (e.g., 200000 -> "200K", 1000000 -> "1M")

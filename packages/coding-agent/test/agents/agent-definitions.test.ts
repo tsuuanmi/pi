@@ -2,7 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { loadAgentDefinitions } from "../../src/core/agent-definitions.ts";
+import { loadAgentDefinitions } from "../../src/core/agents/agent-definitions.ts";
 
 function agentMd(name: string, description = `${name} description`, body = `${name} body`): string {
 	return `---

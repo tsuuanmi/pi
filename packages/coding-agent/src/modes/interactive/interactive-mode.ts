@@ -46,8 +46,8 @@ import {
 } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import { spawn } from "child_process";
-import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "../../core/agent-session.ts";
-import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "../../core/agent-session-runtime.ts";
+import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "../../core/agent-session/agent-session.ts";
+import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "../../core/agent-session/agent-session-runtime.ts";
 import {
 	APP_NAME,
 	APP_TITLE,
@@ -56,7 +56,7 @@ import {
 	getAuthPath,
 	getDebugLogPath,
 	VERSION,
-} from "../../core/config.ts";
+} from "../../core/config/config.ts";
 import type {
 	AutocompleteProviderFactory,
 	EditorFactory,
@@ -68,21 +68,21 @@ import type {
 	ExtensionWidgetOptions,
 	ProjectTrustContext,
 } from "../../core/extensions/index.ts";
-import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/footer-data-provider.ts";
-import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "../../core/http-dispatcher.ts";
-import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.ts";
-import { createCompactionSummaryMessage } from "../../core/messages.ts";
-import { defaultModelPerProvider, findExactModelReferenceMatch } from "../../core/model-resolver.ts";
-import { fetchOpenAICodexUsageSummary, getCodexUsageCacheTtlMs } from "../../core/openai-codex-usage.ts";
-import { DefaultPackageManager } from "../../core/package-manager.ts";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/provider-display-names.ts";
-import type { ResourceDiagnostic } from "../../core/resource-loader.ts";
-import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session-cwd.ts";
-import { type SessionContext, SessionManager } from "../../core/session-manager.ts";
-import { BUILTIN_SLASH_COMMANDS } from "../../core/slash-commands.ts";
-import type { SourceInfo } from "../../core/source-info.ts";
+import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/misc/footer-data-provider.ts";
+import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "../../core/exec/http-dispatcher.ts";
+import { type AppKeybinding, KeybindingsManager } from "../../core/settings/keybindings.ts";
+import { createCompactionSummaryMessage } from "../../core/misc/messages.ts";
+import { defaultModelPerProvider, findExactModelReferenceMatch } from "../../core/model/model-resolver.ts";
+import { fetchOpenAICodexUsageSummary, getCodexUsageCacheTtlMs } from "../../core/misc/openai-codex-usage.ts";
+import { DefaultPackageManager } from "../../core/package-manager/package-manager.ts";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/model/provider-display-names.ts";
+import type { ResourceDiagnostic } from "../../core/skills/resource-loader.ts";
+import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session-manager/session-cwd.ts";
+import { type SessionContext, SessionManager } from "../../core/session-manager/session-manager.ts";
+import { BUILTIN_SLASH_COMMANDS } from "../../core/skills/slash-commands.ts";
+import type { SourceInfo } from "../../core/misc/source-info.ts";
 import type { TruncationResult } from "../../core/tools/truncate.ts";
-import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../../core/trust-manager.ts";
+import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../../core/trust/trust-manager.ts";
 import {
 	detectTerminalBackgroundTheme,
 	getAvailableThemes,

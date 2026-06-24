@@ -10,8 +10,8 @@ import {
 	Spacer,
 	Text,
 } from "@tsuuanmi/pi-tui";
-import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "../../../core/http-dispatcher.ts";
-import type { DefaultProjectTrust, WarningSettings } from "../../../core/settings-manager.ts";
+import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "../../../core/exec/http-dispatcher.ts";
+import type { DefaultProjectTrust, WarningSettings } from "../../../core/settings/settings-manager.ts";
 import { getSelectListTheme, getSettingsListTheme, theme } from "../../../theme/theme.ts";
 import { keyDisplayText } from "../../../ui/rendering/keybinding-hints.ts";
 import { DynamicBorder } from "./dynamic-border.ts";

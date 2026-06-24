@@ -1,8 +1,8 @@
 import { setKeybindings } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "../../src/core/auth-storage.ts";
-import { KeybindingsManager } from "../../src/core/keybindings.ts";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../src/core/provider-display-names.ts";
+import { AuthStorage } from "../../src/core/auth/auth-storage.ts";
+import { KeybindingsManager } from "../../src/core/settings/keybindings.ts";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../src/core/model/provider-display-names.ts";
 import { OAuthSelectorComponent } from "../../src/modes/interactive/components/oauth-selector.ts";
 import { isApiKeyAccountProvider } from "../../src/modes/interactive/interactive-mode.ts";
 import { initTheme } from "../../src/theme/theme.ts";

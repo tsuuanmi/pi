@@ -8,7 +8,7 @@ Outputs all session events as JSON lines to stdout. Useful for integrating pi in
 
 ## Event Types
 
-Events are defined in [`AgentSessionEvent`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/agent-session.ts#L102):
+Events are defined in [`AgentSessionEvent`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/agent-session/agent-session.ts#L102):
 
 ```typescript
 type AgentSessionEvent =
@@ -49,7 +49,7 @@ Base messages from [`packages/ai/src/types.ts`](https://github.com/tsuuanmi/pi/b
 - `AssistantMessage` (line 140)
 - `ToolResultMessage` (line 152)
 
-Extended messages from [`packages/coding-agent/src/core/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/messages.ts#L29):
+Extended messages from [`packages/coding-agent/src/core/misc/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/misc/messages.ts#L29):
 - `BashExecutionMessage` (line 29)
 - `CustomMessage` (line 46)
 - `BranchSummaryMessage` (line 55)

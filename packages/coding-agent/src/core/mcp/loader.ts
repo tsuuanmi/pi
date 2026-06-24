@@ -13,7 +13,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { MCPConfigFile, MCPServerConfig } from "../../mcp/types.ts";
-import { CONFIG_DIR_NAME } from "../config.ts";
+import { CONFIG_DIR_NAME } from "../config/config.ts";
 
 export interface MCPLoadResult {
 	servers: Map<string, MCPServerConfig>;

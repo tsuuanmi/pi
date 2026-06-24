@@ -5,9 +5,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
 	type CreateAgentSessionRuntimeFactory,
 	createAgentSessionRuntime,
-} from "../../src/core/agent-session-runtime.ts";
-import { getMissingSessionCwdIssue, MissingSessionCwdError } from "../../src/core/session-cwd.ts";
-import { SessionManager } from "../../src/core/session-manager.ts";
+} from "../../src/core/agent-session/agent-session-runtime.ts";
+import { getMissingSessionCwdIssue, MissingSessionCwdError } from "../../src/core/session-manager/session-cwd.ts";
+import { SessionManager } from "../../src/core/session-manager/session-manager.ts";
 
 function createTempDir(name: string): string {
 	const dir = join(tmpdir(), `${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`);

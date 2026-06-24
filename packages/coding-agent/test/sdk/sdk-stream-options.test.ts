@@ -9,11 +9,11 @@ import {
 	type SimpleStreamOptions,
 } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "../../src/core/auth-storage.ts";
-import { ModelRegistry } from "../../src/core/model-registry.ts";
-import { createAgentSession } from "../../src/core/sdk.ts";
-import { SessionManager } from "../../src/core/session-manager.ts";
-import { SettingsManager } from "../../src/core/settings-manager.ts";
+import { AuthStorage } from "../../src/core/auth/auth-storage.ts";
+import { ModelRegistry } from "../../src/core/model/model-registry.ts";
+import { createAgentSession } from "../../src/core/sdk/sdk.ts";
+import { SessionManager } from "../../src/core/session-manager/session-manager.ts";
+import { SettingsManager } from "../../src/core/settings/settings-manager.ts";
 
 describe("createAgentSession stream options", () => {
 	let tempDir: string;

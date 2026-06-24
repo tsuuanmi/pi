@@ -7,10 +7,10 @@
 
 import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent-core";
 import type { Model } from "@tsuuanmi/pi-ai";
-import type { SessionStats } from "../../core/agent-session.ts";
-import type { BashResult } from "../../core/bash-executor.ts";
+import type { SessionStats } from "../../core/agent-session/agent-session.ts";
+import type { BashResult } from "../../core/exec/bash-executor.ts";
 import type { CompactionResult } from "../../core/compaction/index.ts";
-import type { SourceInfo } from "../../core/source-info.ts";
+import type { SourceInfo } from "../../core/misc/source-info.ts";
 
 // ============================================================================
 // RPC Commands (stdin)

@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, test, vi } from "vitest";
 import { type Component, Container, type Focusable, TUI } from "../../../tui/src/tui.ts";
 import { VirtualTerminal } from "../../../tui/test/virtual-terminal.ts";
 import type { AutocompleteProviderFactory } from "../../src/api/types.ts";
-import type { SourceInfo } from "../../src/core/source-info.ts";
+import type { SourceInfo } from "../../src/core/misc/source-info.ts";
 import { InteractiveMode } from "../../src/modes/interactive/interactive-mode.ts";
 import { initTheme } from "../../src/theme/theme.ts";
 

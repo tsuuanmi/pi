@@ -5,8 +5,8 @@
  *
  * Test with: npx tsx src/cli-new.ts [args...]
  */
-import { APP_NAME } from "./core/config.ts";
-import { configureHttpDispatcher } from "./core/http-dispatcher.ts";
+import { APP_NAME } from "./core/config/config.ts";
+import { configureHttpDispatcher } from "./core/exec/http-dispatcher.ts";
 import { main } from "./main.ts";
 
 process.title = APP_NAME;

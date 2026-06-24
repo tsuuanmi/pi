@@ -1,5 +1,5 @@
 import { Container, getKeybindings, Spacer, Text } from "@tsuuanmi/pi-tui";
-import { APP_NAME } from "../../../core/config.ts";
+import { APP_NAME } from "../../../core/config/config.ts";
 import { type TerminalTheme, theme } from "../../../theme/theme.ts";
 import { keyHint, rawKeyHint } from "../../../ui/rendering/keybinding-hints.ts";
 import { DynamicBorder } from "./dynamic-border.ts";

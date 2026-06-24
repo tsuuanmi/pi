@@ -12,7 +12,7 @@
  */
 
 import * as crypto from "node:crypto";
-import type { AgentSessionRuntime } from "../../core/agent-session-runtime.ts";
+import type { AgentSessionRuntime } from "../../core/agent-session/agent-session-runtime.ts";
 import type {
 	ExtensionUIContext,
 	ExtensionUIDialogOptions,
@@ -24,7 +24,7 @@ import {
 	takeOverStdout,
 	waitForRawStdoutBackpressure,
 	writeRawStdout,
-} from "../../core/output-guard.ts";
+} from "../../core/misc/output-guard.ts";
 import { type Theme, theme } from "../../theme/theme.ts";
 import { killTrackedDetachedChildren } from "../../utils/system/shell.ts";
 import { attachJsonlLineReader, serializeJsonLine } from "./jsonl.ts";

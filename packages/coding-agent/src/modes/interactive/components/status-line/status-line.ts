@@ -1,13 +1,13 @@
 import { type Component, truncateToWidth, visibleWidth } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "../../../../core/agent-session.ts";
-import { areExperimentalFeaturesEnabled } from "../../../../core/experimental.ts";
-import type { ReadonlyFooterDataProvider } from "../../../../core/footer-data-provider.ts";
+import type { AgentSession } from "../../../../core/agent-session/agent-session.ts";
+import { areExperimentalFeaturesEnabled } from "../../../../core/misc/experimental.ts";
+import type { ReadonlyFooterDataProvider } from "../../../../core/misc/footer-data-provider.ts";
 import type {
 	SettingsManager,
 	StatusLineSegmentId,
 	StatusLineSegmentOptions,
 	StatusLineSettings,
-} from "../../../../core/settings-manager.ts";
+} from "../../../../core/settings/settings-manager.ts";
 import { theme } from "../../../../theme/theme.ts";
 import {
 	collapsePlanningPipeline,

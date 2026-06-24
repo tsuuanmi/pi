@@ -11,7 +11,7 @@ export {
 	type PromptOptions,
 	parseSkillBlock,
 	type SessionStats,
-} from "./core/agent-session.ts";
+} from "./core/agent-session/agent-session.ts";
 // Auth and model registry
 export {
 	type ApiKeyCredential,
@@ -22,7 +22,7 @@ export {
 	FileAuthStorageBackend,
 	InMemoryAuthStorageBackend,
 	type OAuthCredential,
-} from "./core/auth-storage.ts";
+} from "./core/auth/auth-storage.ts";
 // Compaction
 export {
 	type BranchPreparation,
@@ -55,8 +55,8 @@ export {
 	getPackageDir,
 	getReadmePath,
 	VERSION,
-} from "./core/config.ts";
-export { createEventBus, type EventBus, type EventBusController } from "./core/event-bus.ts";
+} from "./core/config/config.ts";
+export { createEventBus, type EventBus, type EventBusController } from "./core/misc/event-bus.ts";
 // Extension system
 export type {
 	AgentEndEvent,
@@ -160,9 +160,9 @@ export {
 	wrapRegisteredTools,
 } from "./core/extensions/index.ts";
 // Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
-export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
-export { convertToLlm } from "./core/messages.ts";
-export { ModelRegistry } from "./core/model-registry.ts";
+export type { ReadonlyFooterDataProvider } from "./core/misc/footer-data-provider.ts";
+export { convertToLlm } from "./core/misc/messages.ts";
+export { ModelRegistry } from "./core/model/model-registry.ts";
 export type {
 	PackageManager,
 	PathMetadata,
@@ -170,10 +170,10 @@ export type {
 	ProgressEvent,
 	ResolvedPaths,
 	ResolvedResource,
-} from "./core/package-manager.ts";
-export { DefaultPackageManager } from "./core/package-manager.ts";
-export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "./core/resource-loader.ts";
-export { DefaultResourceLoader, loadProjectContextFiles } from "./core/resource-loader.ts";
+} from "./core/package-manager/package-manager.ts";
+export { DefaultPackageManager } from "./core/package-manager/package-manager.ts";
+export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "./core/skills/resource-loader.ts";
+export { DefaultResourceLoader, loadProjectContextFiles } from "./core/skills/resource-loader.ts";
 // SDK for programmatic usage
 export {
 	AgentSessionRuntime,
@@ -202,7 +202,7 @@ export {
 	createReadTool,
 	createWriteTool,
 	type PromptTemplate,
-} from "./core/sdk.ts";
+} from "./core/sdk/sdk.ts";
 export {
 	type BranchSummaryEntry,
 	buildSessionContext,
@@ -225,7 +225,7 @@ export {
 	SessionManager,
 	type SessionMessageEntry,
 	type ThinkingLevelChangeEntry,
-} from "./core/session-manager.ts";
+} from "./core/session-manager/session-manager.ts";
 export {
 	type CompactionSettings,
 	type DefaultProjectTrust,
@@ -233,7 +233,7 @@ export {
 	type RetrySettings,
 	SettingsManager,
 	type SettingsManagerCreateOptions,
-} from "./core/settings-manager.ts";
+} from "./core/settings/settings-manager.ts";
 // Skills
 export {
 	formatSkillsForPrompt,
@@ -243,8 +243,8 @@ export {
 	loadSkillsFromDir,
 	type Skill,
 	type SkillFrontmatter,
-} from "./core/skills.ts";
-export { createSyntheticSourceInfo } from "./core/source-info.ts";
+} from "./core/skills/skills.ts";
+export { createSyntheticSourceInfo } from "./core/misc/source-info.ts";
 export {
 	type SubagentAwaitOptions,
 	type SubagentAwaitResult,
@@ -256,7 +256,7 @@ export {
 	type SubagentRunRequest,
 	type SubagentRunResult,
 	type SubagentStatus,
-} from "./core/subagents.ts";
+} from "./core/subagents/subagents.ts";
 // Tools
 export {
 	type BashOperations,
@@ -316,7 +316,7 @@ export {
 	ProjectTrustStore,
 	type ProjectTrustStoreEntry,
 	type ProjectTrustUpdate,
-} from "./core/trust-manager.ts";
+} from "./core/trust/trust-manager.ts";
 // Main entry point
 export { type MainOptions, main } from "./main.ts";
 // Run modes for programmatic SDK usage

@@ -11,12 +11,12 @@ import {
 	getSelfUpdateUnavailableInstruction,
 	PACKAGE_NAME,
 	type SelfUpdateCommand,
-} from "./core/config.ts";
-import { DefaultPackageManager } from "./core/package-manager.ts";
-import { type AppMode, resolveProjectTrusted } from "./core/project-trust.ts";
-import { DefaultResourceLoader } from "./core/resource-loader.ts";
-import { SettingsManager } from "./core/settings-manager.ts";
-import { hasTrustRequiringProjectResources, ProjectTrustStore } from "./core/trust-manager.ts";
+} from "./core/config/config.ts";
+import { DefaultPackageManager } from "./core/package-manager/package-manager.ts";
+import { type AppMode, resolveProjectTrusted } from "./core/trust/project-trust.ts";
+import { DefaultResourceLoader } from "./core/skills/resource-loader.ts";
+import { SettingsManager } from "./core/settings/settings-manager.ts";
+import { hasTrustRequiringProjectResources, ProjectTrustStore } from "./core/trust/trust-manager.ts";
 import { spawnProcess } from "./utils/fs/child-process.ts";
 
 export type PackageCommand = "install" | "remove" | "update" | "list";

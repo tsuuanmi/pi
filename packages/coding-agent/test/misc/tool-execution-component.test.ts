@@ -3,7 +3,7 @@ import { Text, type TUI } from "@tsuuanmi/pi-tui";
 import { Type } from "typebox";
 import { beforeAll, describe, expect, test } from "vitest";
 import type { ToolDefinition } from "../../src/api/types.ts";
-import { getReadmePath } from "../../src/core/config.ts";
+import { getReadmePath } from "../../src/core/config/config.ts";
 import { type BashOperations, createBashToolDefinition } from "../../src/core/tools/bash.ts";
 import { createReadTool, createReadToolDefinition } from "../../src/core/tools/read.ts";
 import { createWriteToolDefinition } from "../../src/core/tools/write.ts";

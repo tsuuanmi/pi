@@ -12,13 +12,13 @@ import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { afterAll, describe, expect, test } from "vitest";
-import { getAgentDir } from "../../src/core/config.ts";
+import { getAgentDir } from "../../src/core/config/config.ts";
 import {
 	expandPromptTemplate,
 	loadPromptTemplates,
 	parseCommandArgs,
 	substituteArgs,
-} from "../../src/core/prompt-templates.ts";
+} from "../../src/core/skills/prompt-templates.ts";
 
 // ============================================================================
 // substituteArgs

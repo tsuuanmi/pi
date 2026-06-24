@@ -2,9 +2,9 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AuthStorage } from "../../src/core/auth-storage.ts";
-import { ENV_AGENT_DIR } from "../../src/core/config.ts";
-import { ModelRegistry } from "../../src/core/model-registry.ts";
+import { AuthStorage } from "../../src/core/auth/auth-storage.ts";
+import { ENV_AGENT_DIR } from "../../src/core/config/config.ts";
+import { ModelRegistry } from "../../src/core/model/model-registry.ts";
 import { runMigrations } from "../../src/migrations.ts";
 
 describe("config value env var syntax migration", () => {

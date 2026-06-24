@@ -39,25 +39,25 @@ import type {
 	TUI,
 } from "@tsuuanmi/pi-tui";
 import type { Static, TSchema } from "typebox";
-import type { BashResult } from "../core/bash-executor.ts";
+import type { BashResult } from "../core/exec/bash-executor.ts";
 import type { CompactionPreparation, CompactionResult } from "../core/compaction/index.ts";
-import type { EventBus } from "../core/event-bus.ts";
-import type { ExecOptions, ExecResult } from "../core/exec.ts";
-import type { ReadonlyFooterDataProvider } from "../core/footer-data-provider.ts";
-import type { KeybindingsManager } from "../core/keybindings.ts";
-import type { CustomMessage } from "../core/messages.ts";
-import type { ModelRegistry } from "../core/model-registry.ts";
+import type { EventBus } from "../core/misc/event-bus.ts";
+import type { ExecOptions, ExecResult } from "../core/exec/exec.ts";
+import type { ReadonlyFooterDataProvider } from "../core/misc/footer-data-provider.ts";
+import type { KeybindingsManager } from "../core/settings/keybindings.ts";
+import type { CustomMessage } from "../core/misc/messages.ts";
+import type { ModelRegistry } from "../core/model/model-registry.ts";
 import type {
 	BranchSummaryEntry,
 	CompactionEntry,
 	ReadonlySessionManager,
 	SessionEntry,
 	SessionManager,
-} from "../core/session-manager.ts";
-import type { SlashCommandInfo } from "../core/slash-commands.ts";
-import type { SourceInfo } from "../core/source-info.ts";
-import type { SubagentManager } from "../core/subagents.ts";
-import type { BuildSystemPromptOptions } from "../core/system-prompt.ts";
+} from "../core/session-manager/session-manager.ts";
+import type { SlashCommandInfo } from "../core/skills/slash-commands.ts";
+import type { SourceInfo } from "../core/misc/source-info.ts";
+import type { SubagentManager } from "../core/subagents/subagents.ts";
+import type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";
 import type { BashOperations } from "../core/tools/bash.ts";
 import type { EditToolDetails } from "../core/tools/edit.ts";
 import type {
@@ -77,10 +77,10 @@ import type {
 import type { MCPServerInfo } from "../mcp/types.ts";
 import type { Theme } from "../theme/theme.ts";
 
-export type { ExecOptions, ExecResult } from "../core/exec.ts";
-export type { BuildSystemPromptOptions } from "../core/system-prompt.ts";
+export type { ExecOptions, ExecResult } from "../core/exec/exec.ts";
+export type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";
 export type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode };
-export type { AppKeybinding, KeybindingsManager } from "../core/keybindings.ts";
+export type { AppKeybinding, KeybindingsManager } from "../core/settings/keybindings.ts";
 export type { MCPServerInfo } from "../mcp/types.ts";
 
 // ============================================================================

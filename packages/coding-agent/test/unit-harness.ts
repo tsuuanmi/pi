@@ -26,12 +26,12 @@ import type {
 	Usage,
 } from "@tsuuanmi/pi-ai";
 import { createAssistantMessageEventStream } from "@tsuuanmi/pi-ai";
-import { AgentSession, type AgentSessionEvent } from "../src/core/agent-session.ts";
-import { AuthStorage } from "../src/core/auth-storage.ts";
-import { ModelRegistry } from "../src/core/model-registry.ts";
-import { SessionManager } from "../src/core/session-manager.ts";
-import type { Settings } from "../src/core/settings-manager.ts";
-import { SettingsManager } from "../src/core/settings-manager.ts";
+import { AgentSession, type AgentSessionEvent } from "../src/core/agent-session/agent-session.ts";
+import { AuthStorage } from "../src/core/auth/auth-storage.ts";
+import { ModelRegistry } from "../src/core/model/model-registry.ts";
+import { SessionManager } from "../src/core/session-manager/session-manager.ts";
+import type { Settings } from "../src/core/settings/settings-manager.ts";
+import { SettingsManager } from "../src/core/settings/settings-manager.ts";
 import type { ExtensionFactory, ResourceLoader } from "../src/index.ts";
 import {
 	type CreateTestExtensionsResultInput,

@@ -13,8 +13,8 @@ import {
 	createBranchSummaryMessage,
 	createCompactionSummaryMessage,
 	createCustomMessage,
-} from "../messages.ts";
-import { buildSessionContext, type CompactionEntry, type SessionEntry } from "../session-manager.ts";
+} from "../misc/messages.ts";
+import { buildSessionContext, type CompactionEntry, type SessionEntry } from "../session-manager/session-manager.ts";
 import {
 	computeFileLists,
 	createFileOps,

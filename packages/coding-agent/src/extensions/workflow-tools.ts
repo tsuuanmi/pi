@@ -1,6 +1,6 @@
 import { type Static, Type } from "typebox";
 import type { ExtensionAPI, ExtensionContext } from "../api/types.ts";
-import { renderSubagentProgress } from "../core/subagent-progress.ts";
+import { renderSubagentProgress } from "../core/subagents/subagent-progress.ts";
 import { deriveDeepInterviewHud } from "../workflows/deep-interview/deep-interview-hud.ts";
 import {
 	appendOrMergeDeepInterviewRound,

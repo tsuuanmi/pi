@@ -15,9 +15,9 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import { CONFIG_DIR_NAME } from "../../../core/config.ts";
-import type { PathMetadata, ResolvedPaths, ResolvedResource } from "../../../core/package-manager.ts";
-import type { PackageSource, SettingsManager } from "../../../core/settings-manager.ts";
+import { CONFIG_DIR_NAME } from "../../../core/config/config.ts";
+import type { PathMetadata, ResolvedPaths, ResolvedResource } from "../../../core/package-manager/package-manager.ts";
+import type { PackageSource, SettingsManager } from "../../../core/settings/settings-manager.ts";
 import { theme } from "../../../theme/theme.ts";
 import { rawKeyHint } from "../../../ui/rendering/keybinding-hints.ts";
 import { DynamicBorder } from "./dynamic-border.ts";

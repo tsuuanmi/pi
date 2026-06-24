@@ -17,7 +17,7 @@ import {
 	Text,
 	type TUI,
 } from "@tsuuanmi/pi-tui";
-import type { KeybindingsManager } from "../../../core/keybindings.ts";
+import type { KeybindingsManager } from "../../../core/settings/keybindings.ts";
 import { getEditorTheme, theme } from "../../../theme/theme.ts";
 import { keyHint } from "../../../ui/rendering/keybinding-hints.ts";
 import { DynamicBorder } from "./dynamic-border.ts";

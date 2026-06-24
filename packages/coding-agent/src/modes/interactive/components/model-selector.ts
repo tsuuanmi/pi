@@ -9,8 +9,8 @@ import {
 	Text,
 	type TUI,
 } from "@tsuuanmi/pi-tui";
-import type { ModelRegistry } from "../../../core/model-registry.ts";
-import type { SettingsManager } from "../../../core/settings-manager.ts";
+import type { ModelRegistry } from "../../../core/model/model-registry.ts";
+import type { SettingsManager } from "../../../core/settings/settings-manager.ts";
 import { theme } from "../../../theme/theme.ts";
 import { keyHint } from "../../../ui/rendering/keybinding-hints.ts";
 import { getModelSearchText } from "../model-search.ts";

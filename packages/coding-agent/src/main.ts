@@ -19,31 +19,31 @@ import { createProjectTrustContext } from "./cli/project-trust.ts";
 import { selectSession } from "./cli/session-picker.ts";
 import { shouldRunFirstTimeSetup, showFirstTimeSetup, showStartupSelector } from "./cli/startup-ui.ts";
 import { handleWorkflowCommand } from "./cli/workflow-command.ts";
-import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "./core/agent-session-runtime.ts";
+import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "./core/agent-session/agent-session-runtime.ts";
 import {
 	type AgentSessionRuntimeDiagnostic,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
-} from "./core/agent-session-services.ts";
-import { formatNoModelsAvailableMessage } from "./core/auth-guidance.ts";
-import { AuthStorage } from "./core/auth-storage.ts";
-import { ENV_SESSION_DIR, expandTildePath, getAgentDir, VERSION } from "./core/config.ts";
-import { applyHttpProxySettings, configureHttpDispatcher } from "./core/http-dispatcher.ts";
-import type { ModelRegistry } from "./core/model-registry.ts";
-import { resolveCliModel, resolveModelScope, type ScopedModel } from "./core/model-resolver.ts";
-import { restoreStdout, takeOverStdout } from "./core/output-guard.ts";
-import { type AppMode, resolveProjectTrusted } from "./core/project-trust.ts";
-import type { CreateAgentSessionOptions } from "./core/sdk.ts";
+} from "./core/agent-session/agent-session-services.ts";
+import { formatNoModelsAvailableMessage } from "./core/auth/auth-guidance.ts";
+import { AuthStorage } from "./core/auth/auth-storage.ts";
+import { ENV_SESSION_DIR, expandTildePath, getAgentDir, VERSION } from "./core/config/config.ts";
+import { applyHttpProxySettings, configureHttpDispatcher } from "./core/exec/http-dispatcher.ts";
+import type { ModelRegistry } from "./core/model/model-registry.ts";
+import { resolveCliModel, resolveModelScope, type ScopedModel } from "./core/model/model-resolver.ts";
+import { restoreStdout, takeOverStdout } from "./core/misc/output-guard.ts";
+import { type AppMode, resolveProjectTrusted } from "./core/trust/project-trust.ts";
+import type { CreateAgentSessionOptions } from "./core/sdk/sdk.ts";
 import {
 	formatMissingSessionCwdPrompt,
 	getMissingSessionCwdIssue,
 	MissingSessionCwdError,
 	type SessionCwdIssue,
-} from "./core/session-cwd.ts";
-import { SessionManager } from "./core/session-manager.ts";
-import { SettingsManager } from "./core/settings-manager.ts";
-import { printTimings, resetTimings, time } from "./core/timings.ts";
-import { hasTrustRequiringProjectResources, ProjectTrustStore } from "./core/trust-manager.ts";
+} from "./core/session-manager/session-cwd.ts";
+import { SessionManager } from "./core/session-manager/session-manager.ts";
+import { SettingsManager } from "./core/settings/settings-manager.ts";
+import { printTimings, resetTimings, time } from "./core/misc/timings.ts";
+import { hasTrustRequiringProjectResources, ProjectTrustStore } from "./core/trust/trust-manager.ts";
 import { runMigrations, showDeprecationWarnings } from "./migrations.ts";
 import { InteractiveMode, runPrintMode, runRpcMode } from "./modes/index.ts";
 import { handleConfigCommand, handlePackageCommand } from "./package-manager-cli.ts";

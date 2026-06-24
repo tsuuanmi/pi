@@ -3,11 +3,11 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fauxAssistantMessage, fauxToolCall, registerFauxProvider } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "../../src/core/auth-storage.ts";
-import { ModelRegistry } from "../../src/core/model-registry.ts";
-import { DefaultResourceLoader } from "../../src/core/resource-loader.ts";
-import { SettingsManager } from "../../src/core/settings-manager.ts";
-import { SubagentManager, type SubagentRecord } from "../../src/core/subagents.ts";
+import { AuthStorage } from "../../src/core/auth/auth-storage.ts";
+import { ModelRegistry } from "../../src/core/model/model-registry.ts";
+import { DefaultResourceLoader } from "../../src/core/skills/resource-loader.ts";
+import { SettingsManager } from "../../src/core/settings/settings-manager.ts";
+import { SubagentManager, type SubagentRecord } from "../../src/core/subagents/subagents.ts";
 
 async function writeRecord(cwd: string, record: SubagentRecord): Promise<void> {
 	const path = join(cwd, ".pi", "workflows", "subagents", record.id, "record.json");

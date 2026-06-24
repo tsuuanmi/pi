@@ -9,7 +9,7 @@ import type { ToolDefinition, ToolRenderResultOptions } from "../../api/types.ts
 import { getLanguageFromPath, highlightCode, type Theme } from "../../theme/theme.ts";
 import { keyHint, keyText } from "../../ui/rendering/keybinding-hints.ts";
 import { formatPathRelativeToCwdOrAbsolute } from "../../utils/fs/paths.ts";
-import { getReadmePath } from "../config.ts";
+import { getReadmePath } from "../config/config.ts";
 import { resolveReadPathAsync, resolveToCwd } from "./path-utils.ts";
 import { getTextOutput, renderToolPath, replaceTabs, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";

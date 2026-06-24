@@ -4,12 +4,12 @@ import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent-core";
 import { type AssistantMessage, type AssistantMessageEvent, EventStream, getModel, type Model } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AgentSession } from "../../src/core/agent-session.ts";
-import type { AgentSessionRuntime } from "../../src/core/agent-session-runtime.ts";
-import { AuthStorage } from "../../src/core/auth-storage.ts";
-import { ModelRegistry } from "../../src/core/model-registry.ts";
-import { SessionManager } from "../../src/core/session-manager.ts";
-import { SettingsManager } from "../../src/core/settings-manager.ts";
+import { AgentSession } from "../../src/core/agent-session/agent-session.ts";
+import type { AgentSessionRuntime } from "../../src/core/agent-session/agent-session-runtime.ts";
+import { AuthStorage } from "../../src/core/auth/auth-storage.ts";
+import { ModelRegistry } from "../../src/core/model/model-registry.ts";
+import { SessionManager } from "../../src/core/session-manager/session-manager.ts";
+import { SettingsManager } from "../../src/core/settings/settings-manager.ts";
 import { runRpcMode } from "../../src/modes/rpc/rpc-mode.ts";
 import { createTestResourceLoader } from "../test-utils.ts";
 
@@ -18,7 +18,7 @@ const rpcIo = vi.hoisted(() => ({
 	lineHandler: undefined as ((line: string) => void) | undefined,
 }));
 
-vi.mock("../../src/core/output-guard.js", () => ({
+vi.mock("../../src/core/misc/output-guard.js", () => ({
 	flushRawStdout: vi.fn(async () => {}),
 	takeOverStdout: vi.fn(),
 	waitForRawStdoutBackpressure: vi.fn(async () => {}),

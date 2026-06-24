@@ -1,6 +1,6 @@
 import { visibleWidth } from "@tsuuanmi/pi-tui";
 import { beforeAll, describe, expect, it } from "vitest";
-import type { AgentSession } from "../../src/core/agent-session.ts";
+import type { AgentSession } from "../../src/core/agent-session/agent-session.ts";
 import {
 	computeUsageStats,
 	formatCwdForFooter,

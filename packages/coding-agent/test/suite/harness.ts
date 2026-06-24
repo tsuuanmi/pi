@@ -9,14 +9,14 @@ import type { AgentMessage, AgentTool } from "@tsuuanmi/pi-agent-core";
 import { Agent } from "@tsuuanmi/pi-agent-core";
 import type { FauxModelDefinition, FauxProviderRegistration, FauxResponseStep, Model } from "@tsuuanmi/pi-ai";
 import { registerFauxProvider } from "@tsuuanmi/pi-ai";
-import { AgentSession, type AgentSessionEvent } from "../../src/core/agent-session.ts";
-import { AuthStorage } from "../../src/core/auth-storage.ts";
+import { AgentSession, type AgentSessionEvent } from "../../src/core/agent-session/agent-session.ts";
+import { AuthStorage } from "../../src/core/auth/auth-storage.ts";
 import type { ExtensionRunner } from "../../src/core/extensions/index.ts";
-import { convertToLlm } from "../../src/core/messages.ts";
-import { ModelRegistry } from "../../src/core/model-registry.ts";
-import { SessionManager } from "../../src/core/session-manager.ts";
-import type { Settings } from "../../src/core/settings-manager.ts";
-import { SettingsManager } from "../../src/core/settings-manager.ts";
+import { convertToLlm } from "../../src/core/misc/messages.ts";
+import { ModelRegistry } from "../../src/core/model/model-registry.ts";
+import { SessionManager } from "../../src/core/session-manager/session-manager.ts";
+import type { Settings } from "../../src/core/settings/settings-manager.ts";
+import { SettingsManager } from "../../src/core/settings/settings-manager.ts";
 import type { ExtensionFactory, ResourceLoader } from "../../src/index.ts";
 import {
 	type CreateTestExtensionsResultInput,

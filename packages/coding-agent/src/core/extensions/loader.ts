@@ -34,11 +34,11 @@ import type {
 // avoiding a circular dependency. Extensions can import from @tsuuanmi/pi-coding-agent.
 import * as _bundledPiCodingAgent from "../../index.ts";
 import { resolvePath } from "../../utils/fs/paths.ts";
-import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "../config.ts";
-import { createEventBus, type EventBus } from "../event-bus.ts";
-import type { ExecOptions } from "../exec.ts";
-import { execCommand } from "../exec.ts";
-import { createSyntheticSourceInfo } from "../source-info.ts";
+import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "../config/config.ts";
+import { createEventBus, type EventBus } from "../misc/event-bus.ts";
+import type { ExecOptions } from "../exec/exec.ts";
+import { execCommand } from "../exec/exec.ts";
+import { createSyntheticSourceInfo } from "../misc/source-info.ts";
 
 /** Modules available to extensions via virtualModules (for compiled Bun binary) */
 const VIRTUAL_MODULES: Record<string, unknown> = {

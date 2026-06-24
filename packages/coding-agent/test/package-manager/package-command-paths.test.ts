@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSyn
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ENV_AGENT_DIR, PACKAGE_NAME } from "../../src/core/config.ts";
-import { ProjectTrustStore } from "../../src/core/trust-manager.ts";
+import { ENV_AGENT_DIR, PACKAGE_NAME } from "../../src/core/config/config.ts";
+import { ProjectTrustStore } from "../../src/core/trust/trust-manager.ts";
 import { main } from "../../src/main.ts";
 import { handlePackageCommand } from "../../src/package-manager-cli.ts";
 
