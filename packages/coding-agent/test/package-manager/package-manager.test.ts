@@ -4,7 +4,11 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { PassThrough } from "node:stream";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DefaultPackageManager, type ProgressEvent, type ResolvedResource } from "../../src/core/package-manager/package-manager.ts";
+import {
+	DefaultPackageManager,
+	type ProgressEvent,
+	type ResolvedResource,
+} from "../../src/core/package-manager/package-manager.ts";
 import { SettingsManager } from "../../src/core/settings/settings-manager.ts";
 
 function normalizeForMatch(value: string): string {

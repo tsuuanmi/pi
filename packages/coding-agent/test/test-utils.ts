@@ -9,13 +9,13 @@ import { Agent } from "@tsuuanmi/pi-agent-core";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { AgentSession } from "../src/core/agent-session/agent-session.ts";
 import { AuthStorage } from "../src/core/auth/auth-storage.ts";
-import { createEventBus } from "../src/core/misc/event-bus.ts";
 import type { Extension, ExtensionFactory, LoadExtensionsResult } from "../src/core/extensions/index.ts";
 import { createExtensionRuntime, loadExtensionFromFactory } from "../src/core/extensions/loader.ts";
+import { createEventBus } from "../src/core/misc/event-bus.ts";
 import { ModelRegistry } from "../src/core/model/model-registry.ts";
-import type { ResourceLoader } from "../src/core/skills/resource-loader.ts";
 import { SessionManager } from "../src/core/session-manager/session-manager.ts";
 import { SettingsManager } from "../src/core/settings/settings-manager.ts";
+import type { ResourceLoader } from "../src/core/skills/resource-loader.ts";
 import { createCodingTools } from "../src/index.ts";
 
 /**

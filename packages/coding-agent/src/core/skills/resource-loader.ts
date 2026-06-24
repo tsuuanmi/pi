@@ -3,7 +3,11 @@ import { homedir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
 import chalk from "chalk";
 import { loadThemeFromPath, type Theme } from "../../theme/theme.ts";
-import { type AgentProfileLoadResult, type LoadedAgentProfile, loadAgentDefinitions } from "../agents/agent-definitions.ts";
+import {
+	type AgentProfileLoadResult,
+	type LoadedAgentProfile,
+	loadAgentDefinitions,
+} from "../agents/agent-definitions.ts";
 import { CONFIG_DIR_NAME, getPackageDir } from "../config/config.ts";
 import type { ResourceDiagnostic } from "../misc/diagnostics.ts";
 
@@ -11,15 +15,15 @@ export type { ResourceCollision, ResourceDiagnostic } from "../misc/diagnostics.
 
 import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "../../api/types.ts";
 import { canonicalizePath, isLocalPath, resolvePath } from "../../utils/fs/paths.ts";
-import { createEventBus, type EventBus } from "../misc/event-bus.ts";
 import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "../extensions/loader.ts";
+import { createEventBus, type EventBus } from "../misc/event-bus.ts";
+import { createSourceInfo, type SourceInfo } from "../misc/source-info.ts";
 import { DefaultPackageManager, type PathMetadata, type ResolvedResource } from "../package-manager/package-manager.ts";
+import { SettingsManager } from "../settings/settings-manager.ts";
 import type { PromptTemplate } from "./prompt-templates.ts";
 import { loadPromptTemplatesWithDiagnostics } from "./prompt-templates.ts";
-import { SettingsManager } from "../settings/settings-manager.ts";
 import type { Skill } from "./skills.ts";
 import { loadSkills } from "./skills.ts";
-import { createSourceInfo, type SourceInfo } from "../misc/source-info.ts";
 
 export interface ResourceExtensionPaths {
 	skillPaths?: Array<{ path: string; metadata: PathMetadata }>;

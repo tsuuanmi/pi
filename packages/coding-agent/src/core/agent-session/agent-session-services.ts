@@ -6,15 +6,15 @@ import { AuthStorage } from "../auth/auth-storage.ts";
 import { getAgentDir } from "../config/config.ts";
 import type { SessionStartEvent, ToolDefinition } from "../extensions/index.ts";
 import { ModelRegistry } from "../model/model-registry.ts";
+import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "../sdk/sdk.ts";
+import type { SessionManager } from "../session-manager/session-manager.ts";
+import { SettingsManager } from "../settings/settings-manager.ts";
 import {
 	DefaultResourceLoader,
 	type DefaultResourceLoaderOptions,
 	type ResourceLoader,
 	type ResourceLoaderReloadOptions,
 } from "../skills/resource-loader.ts";
-import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "../sdk/sdk.ts";
-import type { SessionManager } from "../session-manager/session-manager.ts";
-import { SettingsManager } from "../settings/settings-manager.ts";
 import { SubagentManager } from "../subagents/subagents.ts";
 
 /**

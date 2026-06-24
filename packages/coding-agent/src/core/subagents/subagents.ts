@@ -5,12 +5,12 @@ import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent-core";
 import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import type { ExtensionUIContext } from "../../api/types.ts";
 import { extractYieldFromMessages, type YieldDetails } from "../../workflows/harness-tools/yield.ts";
-import { type AgentProfile, loadAgentProfile } from "../agents/agent-profiles.ts";
 import type { AgentSession } from "../agent-session/agent-session.ts";
 import { type AgentSessionServices, createAgentSessionFromServices } from "../agent-session/agent-session-services.ts";
+import { type AgentProfile, loadAgentProfile } from "../agents/agent-profiles.ts";
 import { SessionManager } from "../session-manager/session-manager.ts";
-import { renderSubagentProgress, type SubagentProgress, SubagentProgressTracker } from "./subagent-progress.ts";
 import { withFileMutationQueue } from "../tools/file-mutation-queue.ts";
+import { renderSubagentProgress, type SubagentProgress, SubagentProgressTracker } from "./subagent-progress.ts";
 
 export type SubagentStatus = "queued" | "running" | "paused" | "completed" | "failed" | "cancelled";
 export type SubagentResumeFailureReason = "context_unavailable" | "not_found" | "no_runner" | "resume_failed";

@@ -35,9 +35,9 @@ import type {
 import * as _bundledPiCodingAgent from "../../index.ts";
 import { resolvePath } from "../../utils/fs/paths.ts";
 import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "../config/config.ts";
-import { createEventBus, type EventBus } from "../misc/event-bus.ts";
 import type { ExecOptions } from "../exec/exec.ts";
 import { execCommand } from "../exec/exec.ts";
+import { createEventBus, type EventBus } from "../misc/event-bus.ts";
 import { createSyntheticSourceInfo } from "../misc/source-info.ts";
 
 /** Modules available to extensions via virtualModules (for compiled Bun binary) */

@@ -13,9 +13,9 @@ import {
 	type SelfUpdateCommand,
 } from "./core/config/config.ts";
 import { DefaultPackageManager } from "./core/package-manager/package-manager.ts";
-import { type AppMode, resolveProjectTrusted } from "./core/trust/project-trust.ts";
-import { DefaultResourceLoader } from "./core/skills/resource-loader.ts";
 import { SettingsManager } from "./core/settings/settings-manager.ts";
+import { DefaultResourceLoader } from "./core/skills/resource-loader.ts";
+import { type AppMode, resolveProjectTrusted } from "./core/trust/project-trust.ts";
 import { hasTrustRequiringProjectResources, ProjectTrustStore } from "./core/trust/trust-manager.ts";
 import { spawnProcess } from "./utils/fs/child-process.ts";
 

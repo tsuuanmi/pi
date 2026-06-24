@@ -1,8 +1,6 @@
 import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { resolvePath } from "../../utils/fs/paths.ts";
-import type { AgentSession } from "./agent-session.ts";
-import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "./agent-session-services.ts";
 import type {
 	ProjectTrustContext,
 	ReplacedSessionContext,
@@ -13,6 +11,8 @@ import { emitSessionShutdownEvent } from "../extensions/runner.ts";
 import type { CreateAgentSessionResult } from "../sdk/sdk.ts";
 import { assertSessionCwdExists } from "../session-manager/session-cwd.ts";
 import { SessionManager } from "../session-manager/session-manager.ts";
+import type { AgentSession } from "./agent-session.ts";
+import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "./agent-session-services.ts";
 
 /**
  * Result returned by runtime creation.

@@ -4,11 +4,11 @@ import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "../../src/core/auth/auth-storage.ts";
-import { DefaultResourceLoader } from "../../src/core/skills/resource-loader.ts";
 import type { ExtensionFactory } from "../../src/core/sdk/sdk.ts";
 import { createAgentSession } from "../../src/core/sdk/sdk.ts";
 import { SessionManager } from "../../src/core/session-manager/session-manager.ts";
 import { SettingsManager } from "../../src/core/settings/settings-manager.ts";
+import { DefaultResourceLoader } from "../../src/core/skills/resource-loader.ts";
 
 describe("AgentSession dynamic provider registration", () => {
 	let tempDir: string;

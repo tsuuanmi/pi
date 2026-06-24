@@ -5,8 +5,8 @@ import { fauxAssistantMessage, fauxToolCall, registerFauxProvider } from "@tsuua
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "../../src/core/auth/auth-storage.ts";
 import { ModelRegistry } from "../../src/core/model/model-registry.ts";
-import { DefaultResourceLoader } from "../../src/core/skills/resource-loader.ts";
 import { SettingsManager } from "../../src/core/settings/settings-manager.ts";
+import { DefaultResourceLoader } from "../../src/core/skills/resource-loader.ts";
 import { SubagentManager, type SubagentRecord } from "../../src/core/subagents/subagents.ts";
 
 async function writeRecord(cwd: string, record: SubagentRecord): Promise<void> {

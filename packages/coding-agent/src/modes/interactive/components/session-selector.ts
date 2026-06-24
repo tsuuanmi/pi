@@ -13,8 +13,8 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import { KeybindingsManager } from "../../../core/settings/keybindings.ts";
 import type { SessionInfo, SessionListProgress } from "../../../core/session-manager/session-manager.ts";
+import { KeybindingsManager } from "../../../core/settings/keybindings.ts";
 import { theme } from "../../../theme/theme.ts";
 import { keyHint, keyText } from "../../../ui/rendering/keybinding-hints.ts";
 import { canonicalizePath as _canonicalizePath } from "../../../utils/fs/paths.ts";

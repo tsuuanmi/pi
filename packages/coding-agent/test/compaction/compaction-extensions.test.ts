@@ -17,10 +17,10 @@ import {
 	type SessionCompactEvent,
 	type SessionEvent,
 } from "../../src/core/extensions/index.ts";
+import { createSyntheticSourceInfo } from "../../src/core/misc/source-info.ts";
 import { ModelRegistry } from "../../src/core/model/model-registry.ts";
 import { SessionManager } from "../../src/core/session-manager/session-manager.ts";
 import { SettingsManager } from "../../src/core/settings/settings-manager.ts";
-import { createSyntheticSourceInfo } from "../../src/core/misc/source-info.ts";
 import { createCodingTools } from "../../src/index.ts";
 import { createTestResourceLoader } from "../test-utils.ts";
 

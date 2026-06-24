@@ -5,12 +5,12 @@ import { pathToFileURL } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "../../src/core/auth/auth-storage.ts";
 import { ExtensionRunner } from "../../src/core/extensions/runner.ts";
+import { createSyntheticSourceInfo } from "../../src/core/misc/source-info.ts";
 import { ModelRegistry } from "../../src/core/model/model-registry.ts";
-import { DefaultResourceLoader } from "../../src/core/skills/resource-loader.ts";
 import { SessionManager } from "../../src/core/session-manager/session-manager.ts";
 import { SettingsManager } from "../../src/core/settings/settings-manager.ts";
+import { DefaultResourceLoader } from "../../src/core/skills/resource-loader.ts";
 import type { Skill } from "../../src/core/skills/skills.ts";
-import { createSyntheticSourceInfo } from "../../src/core/misc/source-info.ts";
 
 const BUILT_IN_WORKFLOW_COMMANDS = new Set(["deep-interview", "ralplan", "team", "ultragoal"]);
 const BUILT_IN_SUBAGENT_TOOLS = new Set([

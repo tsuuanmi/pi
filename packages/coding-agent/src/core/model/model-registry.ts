@@ -28,7 +28,6 @@ import { stripJsonComments } from "../../utils/fs/json.ts";
 import { normalizePath } from "../../utils/fs/paths.ts";
 import type { AuthStatus, AuthStorage } from "../auth/auth-storage.ts";
 import { getAgentDir } from "../config/config.ts";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "./provider-display-names.ts";
 import {
 	clearConfigValueCache,
 	getConfigValueEnvVarNames,
@@ -38,6 +37,7 @@ import {
 	resolveConfigValueUncached,
 	resolveHeadersOrThrow,
 } from "../config/resolve-config-value.ts";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "./provider-display-names.ts";
 
 // Schema for thinking level support and provider-specific values
 const ThinkingLevelMapValueSchema = Type.Union([Type.String(), Type.Null()]);

@@ -31,7 +31,6 @@ import { stripFrontmatter } from "../../utils/fs/frontmatter.ts";
 import { resolvePath } from "../../utils/fs/paths.ts";
 import { sleep } from "../../utils/system/sleep.ts";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "../auth/auth-guidance.ts";
-import { type BashResult, executeBashWithOperations } from "../exec/bash-executor.ts";
 import {
 	type CompactionResult,
 	calculateContextTokens,
@@ -43,6 +42,7 @@ import {
 	shouldCompact,
 } from "../compaction/index.ts";
 import { DEFAULT_THINKING_LEVEL } from "../config/defaults.ts";
+import { type BashResult, executeBashWithOperations } from "../exec/bash-executor.ts";
 import {
 	type ContextUsage,
 	type ExtensionCommandContextActions,
@@ -72,16 +72,20 @@ import {
 import { emitSessionShutdownEvent } from "../extensions/runner.ts";
 import { MCPManager } from "../mcp/manager.ts";
 import type { BashExecutionMessage, CustomMessage } from "../misc/messages.ts";
+import { createSyntheticSourceInfo, type SourceInfo } from "../misc/source-info.ts";
 import type { ModelRegistry } from "../model/model-registry.ts";
+import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "../session-manager/session-manager.ts";
+import {
+	CURRENT_SESSION_VERSION,
+	getLatestCompactionEntry,
+	type SessionHeader,
+} from "../session-manager/session-manager.ts";
+import type { SettingsManager } from "../settings/settings-manager.ts";
 import { expandPromptTemplate, type PromptTemplate } from "../skills/prompt-templates.ts";
 import type { ResourceExtensionPaths, ResourceLoader } from "../skills/resource-loader.ts";
-import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "../session-manager/session-manager.ts";
-import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "../session-manager/session-manager.ts";
-import type { SettingsManager } from "../settings/settings-manager.ts";
 import type { SlashCommandInfo } from "../skills/slash-commands.ts";
-import { createSyntheticSourceInfo, type SourceInfo } from "../misc/source-info.ts";
-import type { SubagentManager } from "../subagents/subagents.ts";
 import { type BuildSystemPromptOptions, buildSystemPrompt } from "../skills/system-prompt.ts";
+import type { SubagentManager } from "../subagents/subagents.ts";
 import { type BashOperations, createLocalBashOperations } from "../tools/bash.ts";
 import { createAllToolDefinitions } from "../tools/index.ts";
 import { createToolDefinitionFromAgentTool } from "../tools/tool-definition-wrapper.ts";

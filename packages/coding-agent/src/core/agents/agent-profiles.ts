@@ -1,6 +1,6 @@
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent-core";
-import { type AgentProfileLoadResult, type LoadedAgentProfile, loadAgentDefinitions } from "./agent-definitions.ts";
 import type { SettingsManager } from "../settings/settings-manager.ts";
+import { type AgentProfileLoadResult, type LoadedAgentProfile, loadAgentDefinitions } from "./agent-definitions.ts";
 
 export interface AgentProfile {
 	name: string;
