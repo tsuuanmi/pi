@@ -1,5 +1,5 @@
-import { getKeybindings } from "../keybindings.ts";
-import { decodeKittyPrintable } from "../keys.ts";
+import { getKeybindings } from "../input/keybindings.ts";
+import { decodeKittyPrintable } from "../input/keys.ts";
 import { type Component, CURSOR_MARKER, type Focusable } from "../tui.ts";
 import { UndoStack } from "../undo-stack.ts";
 import { getGraphemeSegmenter, isWhitespaceChar, sliceByColumn, visibleWidth } from "../utils.ts";

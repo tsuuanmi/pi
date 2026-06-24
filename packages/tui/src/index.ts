@@ -51,7 +51,7 @@ export {
 	KeybindingsManager,
 	setKeybindings,
 	TUI_KEYBINDINGS,
-} from "./keybindings.ts";
+} from "./input/keybindings.ts";
 // Keyboard input handling
 export {
 	decodeKittyPrintable,
@@ -64,9 +64,9 @@ export {
 	matchesKey,
 	parseKey,
 	setKittyProtocolActive,
-} from "./keys.ts";
+} from "./input/keys.ts";
 // Input buffering for batch splitting
-export { StdinBuffer, type StdinBufferEventMap, type StdinBufferOptions } from "./stdin-buffer.ts";
+export { StdinBuffer, type StdinBufferEventMap, type StdinBufferOptions } from "./input/stdin-buffer.ts";
 // Terminal interface and implementations
 export { ProcessTerminal, type Terminal } from "./terminal.ts";
 // Terminal colors

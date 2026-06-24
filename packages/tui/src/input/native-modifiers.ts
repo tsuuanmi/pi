@@ -28,8 +28,8 @@ function loadNativeModifiersHelper(): NativeModifiersHelper | undefined {
 	const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 	const nativePath = path.join("native", "darwin", "prebuilds", `darwin-${arch}`, "darwin-modifiers.node");
 	const candidates = [
+		path.join(moduleDir, "..", "..", nativePath),
 		path.join(moduleDir, "..", nativePath),
-		path.join(moduleDir, nativePath),
 		path.join(path.dirname(process.execPath), nativePath),
 	];
 
