@@ -105,6 +105,7 @@ export async function createTestExtensionsResult(
 
 export interface CreateTestResourceLoaderOptions {
 	extensionsResult?: LoadExtensionsResult;
+	agentProfiles?: ReturnType<ResourceLoader["getAgentProfiles"]>;
 }
 
 export function createTestResourceLoader(options: CreateTestResourceLoaderOptions = {}): ResourceLoader {
@@ -120,6 +121,7 @@ export function createTestResourceLoader(options: CreateTestResourceLoaderOption
 		getPrompts: () => ({ prompts: [], diagnostics: [] }),
 		getThemes: () => ({ themes: [], diagnostics: [] }),
 		getAgentsFiles: () => ({ agentsFiles: [] }),
+		getAgentProfiles: () => options.agentProfiles ?? { profiles: [], diagnostics: [] },
 		getSystemPrompt: () => undefined,
 		getAppendSystemPrompt: () => [],
 		extendResources: () => {},

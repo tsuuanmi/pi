@@ -23,6 +23,7 @@ function getReasoning(options: unknown): unknown {
 describe("SubagentManager", () => {
 	let cwd: string;
 	let manager: SubagentManager;
+	let resourceLoader: DefaultResourceLoader;
 
 	beforeEach(async () => {
 		cwd = join(tmpdir(), `pi-subagents-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -30,7 +31,7 @@ describe("SubagentManager", () => {
 		const settingsManager = SettingsManager.create(cwd, agentDir);
 		const authStorage = AuthStorage.create(join(agentDir, "auth.json"));
 		const modelRegistry = ModelRegistry.create(authStorage, join(agentDir, "models.json"));
-		const resourceLoader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
+		resourceLoader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
 		await resourceLoader.reload();
 		manager = new SubagentManager({
 			cwd,
@@ -160,6 +161,7 @@ describe("SubagentManager", () => {
 describe("SubagentManager live spawn and resume", () => {
 	let cwd: string;
 	let manager: SubagentManager;
+	let resourceLoader: DefaultResourceLoader;
 	let faux: ReturnType<typeof registerFauxProvider>;
 
 	beforeEach(async () => {
@@ -190,7 +192,7 @@ describe("SubagentManager live spawn and resume", () => {
 				},
 			],
 		});
-		const resourceLoader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
+		resourceLoader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
 		await resourceLoader.reload();
 		manager = new SubagentManager({
 			cwd,
@@ -242,21 +244,20 @@ describe("SubagentManager live spawn and resume", () => {
 
 	it("applies project agent profile model, thinking level, tools, and system prompt", async () => {
 		const model = faux.getModel();
-		const profileDir = join(cwd, ".pi", "agents");
+		const profileDir = join(cwd, ".agent", "agents");
 		await mkdir(profileDir, { recursive: true });
 		await writeFile(
-			join(profileDir, "architect.json"),
-			JSON.stringify(
-				{
-					model: `${model.provider}/${model.id}`,
-					thinkingLevel: "high",
-					tools: ["read"],
-					systemPrompt: "PROFILE SYSTEM PROMPT",
-					persistent: false,
-				},
-				null,
-				2,
-			),
+			join(profileDir, "architect.md"),
+			`---
+name: architect
+description: Architect override
+model: ${model.provider}/${model.id}
+thinkingLevel: high
+tools:
+  - read
+persistent: false
+---
+PROFILE SYSTEM PROMPT`,
 			"utf8",
 		);
 		const captured: Array<{ modelId: string; reasoning: unknown; tools: string[]; systemPrompt: string }> = [];
@@ -272,6 +273,8 @@ describe("SubagentManager live spawn and resume", () => {
 			},
 		]);
 
+		await resourceLoader.reload();
+
 		const result = await manager.spawn({ agent: "architect", prompt: "Use profile", cwd });
 
 		expect(result.record.agent_profile).toBe("architect");
@@ -283,11 +286,19 @@ describe("SubagentManager live spawn and resume", () => {
 	});
 
 	it("lets explicit subagent spawn overrides win over agent profiles", async () => {
-		const profileDir = join(cwd, ".pi", "agents");
+		const profileDir = join(cwd, ".agent", "agents");
 		await mkdir(profileDir, { recursive: true });
 		await writeFile(
-			join(profileDir, "worker.json"),
-			JSON.stringify({ thinkingLevel: "high", tools: ["read"], persistent: false }, null, 2),
+			join(profileDir, "worker.md"),
+			`---
+name: worker
+description: Worker override
+thinkingLevel: high
+tools:
+  - read
+persistent: false
+---
+Worker profile`,
 			"utf8",
 		);
 		const captured: Array<{ reasoning: unknown; tools: string[] }> = [];
@@ -297,6 +308,8 @@ describe("SubagentManager live spawn and resume", () => {
 				return fauxAssistantMessage("override");
 			},
 		]);
+
+		await resourceLoader.reload();
 
 		const result = await manager.spawn({
 			agent: "worker",

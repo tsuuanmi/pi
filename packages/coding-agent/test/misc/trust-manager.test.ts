@@ -56,6 +56,27 @@ describe("ProjectTrustStore", () => {
 			rmSync(join(cwd, ".pi"), { recursive: true, force: true });
 			mkdirSync(join(cwd, ".agents", "skills"), { recursive: true });
 			expect(hasTrustRequiringProjectResources(cwd)).toBe(true);
+
+			rmSync(join(cwd, ".agents"), { recursive: true, force: true });
+			mkdirSync(join(cwd, ".agent", "agents"), { recursive: true });
+			expect(hasTrustRequiringProjectResources(cwd)).toBe(true);
+
+			rmSync(join(cwd, ".agent"), { recursive: true, force: true });
+			mkdirSync(join(cwd, ".agents", "agents"), { recursive: true });
+			expect(hasTrustRequiringProjectResources(cwd)).toBe(true);
+
+			rmSync(join(cwd, ".agents"), { recursive: true, force: true });
+			mkdirSync(join(cwd, ".agent", "prompts"), { recursive: true });
+			expect(hasTrustRequiringProjectResources(cwd)).toBe(true);
+
+			rmSync(join(cwd, ".agent"), { recursive: true, force: true });
+			mkdirSync(join(cwd, ".agents", "rules"), { recursive: true });
+			expect(hasTrustRequiringProjectResources(cwd)).toBe(true);
+
+			rmSync(join(cwd, ".agents"), { recursive: true, force: true });
+			mkdirSync(join(cwd, ".agent"), { recursive: true });
+			writeFileSync(join(cwd, ".agent", "SYSTEM.md"), "system");
+			expect(hasTrustRequiringProjectResources(cwd)).toBe(true);
 		} finally {
 			if (originalHome === undefined) {
 				delete process.env.HOME;

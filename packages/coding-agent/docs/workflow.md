@@ -78,28 +78,46 @@ Workflows dispatch isolated role agents using reusable agent profiles. Four are 
 
 All built-in profiles default to `persistent: true` so their session context can be resumed.
 
-### Overrides
+### Standard `.agent` / `.agents` resources
 
-A profile can be overridden with a JSON file in one of these locations (later sources win):
+Pi also discovers standard agent resources from `.agent` and `.agents` directories:
 
-1. Global: `<agentDir>/agents/<name>.json` (e.g. `~/.pi/agent/agents/planner.json`).
-2. Project (trusted projects only): `.pi/agents/<name>.json`.
+- Skills: `skills/` under user `~/.agent`, `~/.agents`, and trusted project ancestors.
+- Prompts: `prompts/*.md` under user `~/.agent`, `~/.agents`, and trusted project ancestors.
+- Context files: `AGENTS.md` and `rules/*.{md,mdc}` under user `~/.agent`, `~/.agents`, and trusted project ancestors.
+- System prompts: `SYSTEM.md` and `APPEND_SYSTEM.md` under user `~/.agent`, `~/.agents`, and trusted project ancestors.
 
-Each JSON file may set any `AgentProfile` field:
+Existing Pi `.pi` and package/extension resource semantics remain supported. Project `.agent` / `.agents` resources are trust-gated; user home resources are treated as user scope, not project scope.
 
-```jsonc
-{
-  "name": "planner",          // defaults to the file basename if omitted
-  "description": "My planner", // optional
-  "model": "anthropic/claude-sonnet-4-20250514", // provider/model
-  "thinkingLevel": "high",     // off | minimal | low | medium | high
-  "tools": ["read", "grep", "find", "bash", "ralplan_write_artifact"],
-  "excludeTools": [],
-  "systemPrompt": "...",        // replaces the profile system prompt
-  "appendSystemPrompt": "...",  // appended to the profile/system prompt
-  "persistent": true            // false uses an in-memory session
-}
+### Agent definition files
+
+Profiles are authored as markdown files with YAML frontmatter. Pi discovers markdown profiles from:
+
+1. User: `~/.agent/agents/<name>.md` and `~/.agents/agents/<name>.md`.
+2. Project (trusted projects only): `.agent/agents/<name>.md` and `.agents/agents/<name>.md` in the current directory or ancestors.
+
+Project ancestor profiles closest to the current directory win over farther ancestors, user profiles, and bundled profiles. Duplicate losers are reported as diagnostics. The home directory is treated as user scope only, not as a project ancestor.
+
+```markdown
+---
+name: planner
+description: My planner
+model: anthropic/claude-sonnet-4-20250514
+thinkingLevel: high
+tools: read, grep, find, bash, ralplan_write_artifact
+excludeTools: []
+persistent: true
+---
+System prompt body for this profile.
 ```
+
+Supported fields are `name`, `description`, `model`, `thinkingLevel` (also `thinking-level` or `thinking`), `tools`, `excludeTools`, `systemPrompt`, `appendSystemPrompt`, and `persistent`. `tools` and `excludeTools` may be YAML arrays or comma-separated strings. `persistent` must be a boolean.
+
+Phase 1A recognizes but does not implement some Gajae-style fields. `forkContext`, `bashAllowedPrefixes`, and `spawns` fail closed and skip the profile because their behavior is safety-sensitive. `output`, `autoloadSkills`, `blocking`, and `hide` warn and are ignored.
+
+### Legacy JSON profiles removed
+
+Legacy JSON profile files such as `<agentDir>/agents/<name>.json` and `.pi/agents/<name>.json` are no longer loaded. Use markdown profiles under `.agent/agents` or `.agents/agents` instead.
 
 Per-invocation overrides (e.g. `model`, `thinkingLevel`, `tools`, `excludeTools` on `ralplan_run_agent`, `team_spawn_task_agent`, `ultragoal_spawn_goal_agent`, and the `subagent_*` tools) take precedence over the loaded profile.
 

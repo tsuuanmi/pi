@@ -444,6 +444,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 				resourceLoader: {
 					getPathMetadata: () => new Map(),
 					getAgentsFiles: () => ({ agentsFiles: options.contextFiles ?? [] }),
+					getAgentProfiles: () => ({ profiles: [], diagnostics: [] }),
 					getSkills: () => ({
 						skills: options.skills ?? [],
 						diagnostics: options.skillDiagnostics ?? [],

@@ -12,6 +12,7 @@ Pi considers a project to have resources that require trust when it finds any of
 - `.pi/extensions`, `.pi/skills`, `.pi/prompts`, or `.pi/themes`
 - `.pi/SYSTEM.md` or `.pi/APPEND_SYSTEM.md`
 - project `.agents/skills` in the current directory or an ancestor directory
+- project `.agent` or `.agents` resources such as `agents`, `skills`, `prompts`, `rules`, `AGENTS.md`, `SYSTEM.md`, or `APPEND_SYSTEM.md` in the current directory or an ancestor directory
 
 A bare `.pi` directory does not count as a project resource that requires trust.
 
@@ -21,6 +22,7 @@ Trusting a project allows pi to load project resources that require trust, inclu
 
 - `.pi/settings.json`
 - `.pi` resources such as extensions, skills, prompt templates, themes, and system prompt files
+- project `.agent` / `.agents` resources including agent definitions, skills, prompts, rules, context files, and system prompts
 - missing project packages configured through project settings
 - project-local extensions and project package-managed extensions
 

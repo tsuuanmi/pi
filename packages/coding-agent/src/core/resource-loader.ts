@@ -1,7 +1,9 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, resolve, sep } from "node:path";
+import { homedir } from "node:os";
+import { dirname, join, resolve, sep } from "node:path";
 import chalk from "chalk";
 import { loadThemeFromPath, type Theme } from "../theme/theme.ts";
+import { type AgentProfileLoadResult, type LoadedAgentProfile, loadAgentDefinitions } from "./agent-definitions.ts";
 import { CONFIG_DIR_NAME, getPackageDir } from "./config.ts";
 import type { ResourceDiagnostic } from "./diagnostics.ts";
 
@@ -13,7 +15,7 @@ import { createEventBus, type EventBus } from "./event-bus.ts";
 import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "./extensions/loader.ts";
 import { DefaultPackageManager, type PathMetadata, type ResolvedResource } from "./package-manager.ts";
 import type { PromptTemplate } from "./prompt-templates.ts";
-import { loadPromptTemplates } from "./prompt-templates.ts";
+import { loadPromptTemplatesWithDiagnostics } from "./prompt-templates.ts";
 import { SettingsManager } from "./settings-manager.ts";
 import type { Skill } from "./skills.ts";
 import { loadSkills } from "./skills.ts";
@@ -35,6 +37,7 @@ export interface ResourceLoader {
 	getPrompts(): { prompts: PromptTemplate[]; diagnostics: ResourceDiagnostic[] };
 	getThemes(): { themes: Theme[]; diagnostics: ResourceDiagnostic[] };
 	getAgentsFiles(): { agentsFiles: Array<{ path: string; content: string }> };
+	getAgentProfiles(): AgentProfileLoadResult;
 	getSystemPrompt(): string | undefined;
 	getAppendSystemPrompt(): string[];
 	extendResources(paths: ResourceExtensionPaths): void;
@@ -58,6 +61,12 @@ function resolvePromptInput(input: string | undefined, description: string): str
 	return input;
 }
 
+const STANDARD_AGENT_DIR_NAMES = [".agent", ".agents"] as const;
+
+function getHomeDir(): string {
+	return process.env.HOME || homedir();
+}
+
 function loadContextFileFromDir(dir: string): { path: string; content: string } | null {
 	const candidates = ["AGENTS.md", "AGENTS.MD", "CLAUDE.md", "CLAUDE.MD"];
 	for (const filename of candidates) {
@@ -76,20 +85,70 @@ function loadContextFileFromDir(dir: string): { path: string; content: string } 
 	return null;
 }
 
+function loadTextFile(path: string): { path: string; content: string } | null {
+	if (!existsSync(path)) return null;
+	try {
+		return { path, content: readFileSync(path, "utf-8") };
+	} catch (error) {
+		console.error(chalk.yellow(`Warning: Could not read ${path}: ${error}`));
+		return null;
+	}
+}
+
+function loadRulesFromDir(dir: string): Array<{ path: string; content: string }> {
+	if (!existsSync(dir)) return [];
+	const rules: Array<{ path: string; content: string }> = [];
+	try {
+		const entries = readdirSync(dir, { withFileTypes: true });
+		for (const entry of entries) {
+			const fullPath = join(dir, entry.name);
+			let isFile = entry.isFile();
+			if (entry.isSymbolicLink()) {
+				try {
+					isFile = statSync(fullPath).isFile();
+				} catch {
+					continue;
+				}
+			}
+			if (!isFile || (!entry.name.endsWith(".md") && !entry.name.endsWith(".mdc"))) continue;
+			const rule = loadTextFile(fullPath);
+			if (rule) rules.push(rule);
+		}
+	} catch (error) {
+		console.error(chalk.yellow(`Warning: Could not read rules directory ${dir}: ${error}`));
+	}
+	return rules;
+}
+
+function standardAgentDirsForBase(baseDir: string): string[] {
+	return STANDARD_AGENT_DIR_NAMES.map((dirName) => join(baseDir, dirName));
+}
+
 export function loadProjectContextFiles(options: {
 	cwd: string;
 	agentDir: string;
+	projectTrusted?: boolean;
 }): Array<{ path: string; content: string }> {
 	const resolvedCwd = resolvePath(options.cwd);
 	const resolvedAgentDir = resolvePath(options.agentDir);
+	const projectTrusted = options.projectTrusted ?? true;
+	const homeDir = resolvePath(getHomeDir());
 
 	const contextFiles: Array<{ path: string; content: string }> = [];
 	const seenPaths = new Set<string>();
 
-	const globalContext = loadContextFileFromDir(resolvedAgentDir);
-	if (globalContext) {
-		contextFiles.push(globalContext);
-		seenPaths.add(globalContext.path);
+	const addContextFile = (file: { path: string; content: string } | null): void => {
+		if (!file) return;
+		const canonicalPath = canonicalizePath(file.path);
+		if (seenPaths.has(canonicalPath)) return;
+		contextFiles.push(file);
+		seenPaths.add(canonicalPath);
+	};
+
+	addContextFile(loadContextFileFromDir(resolvedAgentDir));
+	for (const dir of standardAgentDirsForBase(homeDir)) {
+		addContextFile(loadTextFile(join(dir, "AGENTS.md")));
+		for (const rule of loadRulesFromDir(join(dir, "rules"))) addContextFile(rule);
 	}
 
 	const ancestorContextFiles: Array<{ path: string; content: string }> = [];
@@ -98,10 +157,23 @@ export function loadProjectContextFiles(options: {
 	const root = resolve("/");
 
 	while (true) {
+		const discovered: Array<{ path: string; content: string }> = [];
 		const contextFile = loadContextFileFromDir(currentDir);
-		if (contextFile && !seenPaths.has(contextFile.path)) {
-			ancestorContextFiles.unshift(contextFile);
-			seenPaths.add(contextFile.path);
+		if (contextFile) discovered.push(contextFile);
+		if (projectTrusted && currentDir !== homeDir) {
+			for (const dir of standardAgentDirsForBase(currentDir)) {
+				const standardContext = loadTextFile(join(dir, "AGENTS.md"));
+				if (standardContext) discovered.push(standardContext);
+				discovered.push(...loadRulesFromDir(join(dir, "rules")));
+			}
+		}
+		for (let index = discovered.length - 1; index >= 0; index--) {
+			const file = discovered[index]!;
+			const canonicalPath = canonicalizePath(file.path);
+			if (!seenPaths.has(canonicalPath)) {
+				ancestorContextFiles.unshift(file);
+				seenPaths.add(canonicalPath);
+			}
 		}
 
 		if (currentDir === root) break;
@@ -149,6 +221,7 @@ export interface DefaultResourceLoaderOptions {
 	agentsFilesOverride?: (base: { agentsFiles: Array<{ path: string; content: string }> }) => {
 		agentsFiles: Array<{ path: string; content: string }>;
 	};
+	agentProfilesOverride?: (base: AgentProfileLoadResult) => AgentProfileLoadResult;
 	systemPromptOverride?: (base: string | undefined) => string | undefined;
 	appendSystemPromptOverride?: (base: string[]) => string[];
 }
@@ -187,6 +260,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 	private agentsFilesOverride?: (base: { agentsFiles: Array<{ path: string; content: string }> }) => {
 		agentsFiles: Array<{ path: string; content: string }>;
 	};
+	private agentProfilesOverride?: (base: AgentProfileLoadResult) => AgentProfileLoadResult;
 	private systemPromptOverride?: (base: string | undefined) => string | undefined;
 	private appendSystemPromptOverride?: (base: string[]) => string[];
 
@@ -198,6 +272,8 @@ export class DefaultResourceLoader implements ResourceLoader {
 	private themes: Theme[];
 	private themeDiagnostics: ResourceDiagnostic[];
 	private agentsFiles: Array<{ path: string; content: string }>;
+	private agentProfiles: LoadedAgentProfile[];
+	private agentProfileDiagnostics: ResourceDiagnostic[];
 	private systemPrompt?: string;
 	private appendSystemPrompt: string[];
 	private lastSkillPaths: string[];
@@ -234,6 +310,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 		this.promptsOverride = options.promptsOverride;
 		this.themesOverride = options.themesOverride;
 		this.agentsFilesOverride = options.agentsFilesOverride;
+		this.agentProfilesOverride = options.agentProfilesOverride;
 		this.systemPromptOverride = options.systemPromptOverride;
 		this.appendSystemPromptOverride = options.appendSystemPromptOverride;
 
@@ -245,6 +322,8 @@ export class DefaultResourceLoader implements ResourceLoader {
 		this.themes = [];
 		this.themeDiagnostics = [];
 		this.agentsFiles = [];
+		this.agentProfiles = [];
+		this.agentProfileDiagnostics = [];
 		this.appendSystemPrompt = [];
 		this.lastSkillPaths = [];
 		this.extensionSkillSourceInfos = new Map();
@@ -272,6 +351,10 @@ export class DefaultResourceLoader implements ResourceLoader {
 
 	getAgentsFiles(): { agentsFiles: Array<{ path: string; content: string }> } {
 		return { agentsFiles: this.agentsFiles };
+	}
+
+	getAgentProfiles(): AgentProfileLoadResult {
+		return { profiles: this.agentProfiles, diagnostics: this.agentProfileDiagnostics };
 	}
 
 	getSystemPrompt(): string | undefined {
@@ -451,12 +534,24 @@ export class DefaultResourceLoader implements ResourceLoader {
 			}
 		}
 
+		const agentProfiles = loadAgentDefinitions({
+			cwd: this.cwd,
+			agentDir: this.agentDir,
+			projectTrusted: this.settingsManager.isProjectTrusted(),
+		});
+		const resolvedAgentProfiles = this.agentProfilesOverride
+			? this.agentProfilesOverride(agentProfiles)
+			: agentProfiles;
+		this.agentProfiles = resolvedAgentProfiles.profiles;
+		this.agentProfileDiagnostics = resolvedAgentProfiles.diagnostics;
+
 		const agentsFiles = {
 			agentsFiles: this.noContextFiles
 				? []
 				: loadProjectContextFiles({
 						cwd: this.cwd,
 						agentDir: this.agentDir,
+						projectTrusted: this.settingsManager.isProjectTrusted(),
 					}),
 		};
 		const resolvedAgentsFiles = this.agentsFilesOverride ? this.agentsFilesOverride(agentsFiles) : agentsFiles;
@@ -630,13 +725,17 @@ export class DefaultResourceLoader implements ResourceLoader {
 		if (this.noPromptTemplates && promptPaths.length === 0) {
 			promptsResult = { prompts: [], diagnostics: [] };
 		} else {
-			const allPrompts = loadPromptTemplates({
+			const loadedPrompts = loadPromptTemplatesWithDiagnostics({
 				cwd: this.cwd,
 				agentDir: this.agentDir,
 				promptPaths,
 				includeDefaults: false,
 			});
-			promptsResult = this.dedupePrompts(allPrompts);
+			const dedupedPrompts = this.dedupePrompts(loadedPrompts.prompts);
+			promptsResult = {
+				prompts: dedupedPrompts.prompts,
+				diagnostics: [...loadedPrompts.diagnostics, ...dedupedPrompts.diagnostics],
+			};
 		}
 		const resolvedPrompts = this.promptsOverride ? this.promptsOverride(promptsResult) : promptsResult;
 		this.prompts = resolvedPrompts.prompts.map((prompt) => ({
@@ -961,31 +1060,55 @@ export class DefaultResourceLoader implements ResourceLoader {
 	}
 
 	private discoverSystemPromptFile(): string | undefined {
-		const projectPath = join(this.cwd, CONFIG_DIR_NAME, "SYSTEM.md");
+		return this.discoverSinglePromptFile("SYSTEM.md");
+	}
+
+	private discoverAppendSystemPromptFile(): string | undefined {
+		return this.discoverSinglePromptFile("APPEND_SYSTEM.md");
+	}
+
+	private discoverSinglePromptFile(filename: "SYSTEM.md" | "APPEND_SYSTEM.md"): string | undefined {
+		const projectPath = join(this.cwd, CONFIG_DIR_NAME, filename);
 		if (this.settingsManager.isProjectTrusted() && existsSync(projectPath)) {
 			return projectPath;
 		}
 
-		const globalPath = join(this.agentDir, "SYSTEM.md");
+		if (this.settingsManager.isProjectTrusted()) {
+			for (const path of this.collectProjectStandardAgentFiles(filename)) {
+				if (existsSync(path)) return path;
+			}
+		}
+
+		const globalPath = join(this.agentDir, filename);
 		if (existsSync(globalPath)) {
 			return globalPath;
+		}
+
+		for (const dir of standardAgentDirsForBase(getHomeDir())) {
+			const path = join(dir, filename);
+			if (existsSync(path)) return path;
 		}
 
 		return undefined;
 	}
 
-	private discoverAppendSystemPromptFile(): string | undefined {
-		const projectPath = join(this.cwd, CONFIG_DIR_NAME, "APPEND_SYSTEM.md");
-		if (this.settingsManager.isProjectTrusted() && existsSync(projectPath)) {
-			return projectPath;
+	private collectProjectStandardAgentFiles(filename: string): string[] {
+		const homeDir = resolvePath(getHomeDir());
+		const paths: string[] = [];
+		let currentDir = this.cwd;
+		const root = resolve("/");
+		while (true) {
+			if (currentDir !== homeDir) {
+				for (const dir of standardAgentDirsForBase(currentDir)) {
+					paths.push(join(dir, filename));
+				}
+			}
+			if (currentDir === root) break;
+			const parentDir = dirname(currentDir);
+			if (parentDir === currentDir) break;
+			currentDir = parentDir;
 		}
-
-		const globalPath = join(this.agentDir, "APPEND_SYSTEM.md");
-		if (existsSync(globalPath)) {
-			return globalPath;
-		}
-
-		return undefined;
+		return paths;
 	}
 
 	private isUnderPath(target: string, root: string): boolean {

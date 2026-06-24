@@ -475,6 +475,247 @@ Project skill content`,
 			expect(loader.getThemes().themes.some((theme) => theme.name === "project-theme")).toBe(false);
 		});
 
+		it("should discover markdown agent profiles and surface diagnostics", async () => {
+			const originalHome = process.env.HOME;
+			process.env.HOME = tempDir;
+			try {
+				const projectAgentsDir = join(cwd, ".agent", "agents");
+				const userAgentsDir = join(tempDir, ".agents", "agents");
+				mkdirSync(projectAgentsDir, { recursive: true });
+				mkdirSync(userAgentsDir, { recursive: true });
+				writeFileSync(
+					join(projectAgentsDir, "worker.md"),
+					`---
+name: worker
+description: project worker
+---
+Project worker body`,
+				);
+				writeFileSync(
+					join(userAgentsDir, "worker.md"),
+					`---
+name: worker
+description: user worker
+---
+User worker body`,
+				);
+
+				const loader = new DefaultResourceLoader({ cwd, agentDir });
+				await loader.reload();
+
+				const { profiles, diagnostics } = loader.getAgentProfiles();
+				expect(profiles.find((profile) => profile.name === "worker")?.description).toBe("project worker");
+				expect(
+					diagnostics.some(
+						(diagnostic) => diagnostic.type === "collision" && diagnostic.collision?.resourceType === "agent",
+					),
+				).toBe(true);
+			} finally {
+				if (originalHome === undefined) delete process.env.HOME;
+				else process.env.HOME = originalHome;
+			}
+		});
+
+		it("should discover standard .agent and .agents skills and prompts", async () => {
+			const originalHome = process.env.HOME;
+			process.env.HOME = tempDir;
+			try {
+				const projectSkillDir = join(cwd, ".agent", "skills", "project-skill");
+				const userSkillDir = join(tempDir, ".agents", "skills", "user-skill");
+				const projectPromptDir = join(cwd, ".agents", "prompts");
+				const userPromptDir = join(tempDir, ".agent", "prompts");
+				mkdirSync(projectSkillDir, { recursive: true });
+				mkdirSync(userSkillDir, { recursive: true });
+				mkdirSync(projectPromptDir, { recursive: true });
+				mkdirSync(userPromptDir, { recursive: true });
+				writeFileSync(
+					join(projectSkillDir, "SKILL.md"),
+					`---
+name: project-skill
+description: Project standard skill
+---
+Project skill`,
+				);
+				writeFileSync(
+					join(userSkillDir, "SKILL.md"),
+					`---
+name: user-skill
+description: User standard skill
+---
+User skill`,
+				);
+				writeFileSync(join(projectPromptDir, "project.md"), "Project standard prompt");
+				writeFileSync(join(userPromptDir, "user.md"), "User standard prompt");
+
+				const loader = new DefaultResourceLoader({ cwd, agentDir });
+				await loader.reload();
+
+				const { skills } = loader.getSkills();
+				const { prompts } = loader.getPrompts();
+				expect(skills.find((skill) => skill.name === "project-skill")?.sourceInfo.scope).toBe("project");
+				expect(skills.find((skill) => skill.name === "project-skill")?.sourceInfo.baseDir).toBe(
+					join(cwd, ".agent"),
+				);
+				expect(skills.find((skill) => skill.name === "user-skill")?.sourceInfo.scope).toBe("user");
+				expect(prompts.find((prompt) => prompt.name === "project")?.sourceInfo.scope).toBe("project");
+				expect(prompts.find((prompt) => prompt.name === "user")?.sourceInfo.scope).toBe("user");
+			} finally {
+				if (originalHome === undefined) delete process.env.HOME;
+				else process.env.HOME = originalHome;
+			}
+		});
+
+		it("should report diagnostics for invalid standard prompt templates", async () => {
+			const projectPromptDir = join(cwd, ".agent", "prompts");
+			mkdirSync(projectPromptDir, { recursive: true });
+			const invalidPromptPath = join(projectPromptDir, "broken.md");
+			writeFileSync(
+				invalidPromptPath,
+				`---
+description: [unterminated
+---
+Broken prompt`,
+			);
+
+			const loader = new DefaultResourceLoader({ cwd, agentDir });
+			await loader.reload();
+
+			const { prompts, diagnostics } = loader.getPrompts();
+			expect(prompts.some((prompt) => prompt.name === "broken")).toBe(false);
+			expect(diagnostics.some((diagnostic) => diagnostic.path === invalidPromptPath)).toBe(true);
+		});
+
+		it("should skip untrusted project standard .agent resources while keeping user standard resources", async () => {
+			const originalHome = process.env.HOME;
+			process.env.HOME = tempDir;
+			try {
+				const projectSkillDir = join(cwd, ".agent", "skills", "project-skill");
+				const userSkillDir = join(tempDir, ".agent", "skills", "user-skill");
+				const projectPromptDir = join(cwd, ".agents", "prompts");
+				const userPromptDir = join(tempDir, ".agents", "prompts");
+				mkdirSync(projectSkillDir, { recursive: true });
+				mkdirSync(userSkillDir, { recursive: true });
+				mkdirSync(projectPromptDir, { recursive: true });
+				mkdirSync(userPromptDir, { recursive: true });
+				writeFileSync(
+					join(projectSkillDir, "SKILL.md"),
+					`---
+name: project-skill
+description: Project standard skill
+---
+Project skill`,
+				);
+				writeFileSync(
+					join(userSkillDir, "SKILL.md"),
+					`---
+name: user-skill
+description: User standard skill
+---
+User skill`,
+				);
+				writeFileSync(join(projectPromptDir, "project.md"), "Project standard prompt");
+				writeFileSync(join(userPromptDir, "user.md"), "User standard prompt");
+				writeFileSync(join(cwd, ".agent", "SYSTEM.md"), "Project standard system");
+				writeFileSync(join(tempDir, ".agent", "SYSTEM.md"), "User standard system");
+				const settingsManager = SettingsManager.create(cwd, agentDir, { projectTrusted: false });
+
+				const loader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
+				await loader.reload();
+
+				expect(loader.getSkills().skills.some((skill) => skill.name === "project-skill")).toBe(false);
+				expect(loader.getSkills().skills.some((skill) => skill.name === "user-skill")).toBe(true);
+				expect(loader.getPrompts().prompts.some((prompt) => prompt.name === "project")).toBe(false);
+				expect(loader.getPrompts().prompts.some((prompt) => prompt.name === "user")).toBe(true);
+				expect(loader.getSystemPrompt()).toBe("User standard system");
+			} finally {
+				if (originalHome === undefined) delete process.env.HOME;
+				else process.env.HOME = originalHome;
+			}
+		});
+
+		it("should discover standard AGENTS, rules, and system prompt files", async () => {
+			const originalHome = process.env.HOME;
+			process.env.HOME = tempDir;
+			try {
+				const projectAgentDir = join(cwd, ".agent");
+				const userAgentsDir = join(tempDir, ".agents");
+				mkdirSync(join(projectAgentDir, "rules"), { recursive: true });
+				mkdirSync(join(userAgentsDir, "rules"), { recursive: true });
+				writeFileSync(join(projectAgentDir, "AGENTS.md"), "Project standard context");
+				writeFileSync(join(projectAgentDir, "rules", "project-rule.mdc"), "Project rule");
+				writeFileSync(join(projectAgentDir, "SYSTEM.md"), "Project standard system");
+				writeFileSync(join(userAgentsDir, "AGENTS.md"), "User standard context");
+				writeFileSync(join(userAgentsDir, "rules", "user-rule.md"), "User rule");
+
+				const loader = new DefaultResourceLoader({ cwd, agentDir });
+				await loader.reload();
+
+				const paths = loader.getAgentsFiles().agentsFiles.map((file) => file.path);
+				expect(paths).toContain(join(userAgentsDir, "AGENTS.md"));
+				expect(paths).toContain(join(userAgentsDir, "rules", "user-rule.md"));
+				expect(paths).toContain(join(projectAgentDir, "AGENTS.md"));
+				expect(paths).toContain(join(projectAgentDir, "rules", "project-rule.mdc"));
+				expect(loader.getSystemPrompt()).toBe("Project standard system");
+			} finally {
+				if (originalHome === undefined) delete process.env.HOME;
+				else process.env.HOME = originalHome;
+			}
+		});
+
+		it("should skip project markdown agent profiles when project is not trusted", async () => {
+			const originalHome = process.env.HOME;
+			process.env.HOME = tempDir;
+			try {
+				const projectAgentsDir = join(cwd, ".agents", "agents");
+				mkdirSync(projectAgentsDir, { recursive: true });
+				writeFileSync(
+					join(projectAgentsDir, "planner.md"),
+					`---
+name: planner
+description: project planner
+---
+Project planner body`,
+				);
+				const settingsManager = SettingsManager.create(cwd, agentDir, { projectTrusted: false });
+
+				const loader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
+				await loader.reload();
+
+				expect(
+					loader.getAgentProfiles().profiles.find((profile) => profile.name === "planner")?.description,
+				).not.toBe("project planner");
+			} finally {
+				if (originalHome === undefined) delete process.env.HOME;
+				else process.env.HOME = originalHome;
+			}
+		});
+
+		it("should honor agent profile overrides for tests and custom loaders", async () => {
+			const loader = new DefaultResourceLoader({
+				cwd,
+				agentDir,
+				agentProfilesOverride: () => ({
+					profiles: [
+						{
+							name: "custom-agent",
+							description: "custom",
+							sourceInfo: {
+								path: "<test>",
+								providerId: "test",
+								providerDisplayName: "Test",
+								level: "temporary",
+								format: "markdown",
+							},
+						},
+					],
+					diagnostics: [],
+				}),
+			});
+			await loader.reload();
+
+			expect(loader.getAgentProfiles().profiles.map((profile) => profile.name)).toEqual(["custom-agent"]);
+		});
+
 		it("should discover APPEND_SYSTEM.md", async () => {
 			const piDir = join(cwd, ".pi");
 			mkdirSync(piDir, { recursive: true });

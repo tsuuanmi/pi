@@ -36,6 +36,17 @@ const TRUST_REQUIRING_PROJECT_CONFIG_RESOURCES = [
 	"APPEND_SYSTEM.md",
 ] as const;
 
+const TRUST_REQUIRING_STANDARD_AGENT_RESOURCES = [
+	"agents",
+	"skills",
+	"prompts",
+	"rules",
+	"SYSTEM.md",
+	"APPEND_SYSTEM.md",
+	"AGENTS.md",
+] as const;
+const STANDARD_AGENT_DIR_NAMES = [".agent", ".agents"] as const;
+
 function normalizeCwd(cwd: string): string {
 	return canonicalizePath(resolvePath(cwd));
 }
@@ -176,14 +187,14 @@ function withTrustFileLock<T>(path: string, fn: () => T): T {
 
 /**
  * Returns true when cwd has project-local resources that must be gated by
- * project trust: trust-requiring entries under cwd/.pi, or .agents/skills in
- * cwd or one of its ancestors. Returns false when no such project resources
- * exist. The user/global ~/.agents/skills directory is always treated as a
- * trusted user resource and is ignored here, even when cwd is $HOME.
+ * project trust: trust-requiring entries under cwd/.pi, or standard .agent/.agents
+ * resource entries in cwd or one of its ancestors. Returns false when no such
+ * project resources exist. User/global ~/.agent and ~/.agents resources are
+ * always treated as trusted user resources and ignored here, even when cwd is
+ * $HOME.
  */
 export function hasTrustRequiringProjectResources(cwd: string): boolean {
 	const homeDir = canonicalizePath(resolvePath(process.env.HOME || homedir()));
-	const userAgentsSkillsDir = join(homeDir, ".agents", "skills");
 	let currentDir = canonicalizePath(resolvePath(cwd));
 
 	const configDir = join(currentDir, CONFIG_DIR_NAME);
@@ -192,9 +203,13 @@ export function hasTrustRequiringProjectResources(cwd: string): boolean {
 	}
 
 	while (true) {
-		const agentsSkillsDir = join(currentDir, ".agents", "skills");
-		if (agentsSkillsDir !== userAgentsSkillsDir && existsSync(agentsSkillsDir)) {
-			return true;
+		if (currentDir !== homeDir) {
+			for (const standardDirName of STANDARD_AGENT_DIR_NAMES) {
+				const standardDir = join(currentDir, standardDirName);
+				if (TRUST_REQUIRING_STANDARD_AGENT_RESOURCES.some((entry) => existsSync(join(standardDir, entry)))) {
+					return true;
+				}
+			}
 		}
 
 		const parentDir = dirname(currentDir);

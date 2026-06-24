@@ -3,6 +3,7 @@ import { basename, dirname, join, resolve, sep } from "path";
 import { parseFrontmatter } from "../utils/fs/frontmatter.ts";
 import { resolvePath } from "../utils/fs/paths.ts";
 import { CONFIG_DIR_NAME } from "./config.ts";
+import type { ResourceDiagnostic } from "./diagnostics.ts";
 import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.ts";
 
 /**
@@ -100,7 +101,10 @@ export function substituteArgs(content: string, args: string[]): string {
 	);
 }
 
-function loadTemplateFromFile(filePath: string, sourceInfo: SourceInfo): PromptTemplate | null {
+function loadTemplateFromFileResult(
+	filePath: string,
+	sourceInfo: SourceInfo,
+): { template: PromptTemplate | null; diagnostics: ResourceDiagnostic[] } {
 	try {
 		const rawContent = readFileSync(filePath, "utf-8");
 		const { frontmatter, body } = parseFrontmatter<Record<string, string>>(rawContent);
@@ -119,26 +123,34 @@ function loadTemplateFromFile(filePath: string, sourceInfo: SourceInfo): PromptT
 		}
 
 		return {
-			name,
-			description,
-			...(frontmatter["argument-hint"] && { argumentHint: frontmatter["argument-hint"] }),
-			content: body,
-			sourceInfo,
-			filePath,
+			template: {
+				name,
+				description,
+				...(frontmatter["argument-hint"] && { argumentHint: frontmatter["argument-hint"] }),
+				content: body,
+				sourceInfo,
+				filePath,
+			},
+			diagnostics: [],
 		};
-	} catch {
-		return null;
+	} catch (error) {
+		const message = error instanceof Error ? error.message : "failed to parse prompt template";
+		return { template: null, diagnostics: [{ type: "warning", message, path: filePath }] };
 	}
 }
 
 /**
  * Scan a directory for .md files (non-recursive) and load them as prompt templates.
  */
-function loadTemplatesFromDir(dir: string, getSourceInfo: (filePath: string) => SourceInfo): PromptTemplate[] {
+function loadTemplatesFromDir(
+	dir: string,
+	getSourceInfo: (filePath: string) => SourceInfo,
+): { templates: PromptTemplate[]; diagnostics: ResourceDiagnostic[] } {
 	const templates: PromptTemplate[] = [];
+	const diagnostics: ResourceDiagnostic[] = [];
 
 	if (!existsSync(dir)) {
-		return templates;
+		return { templates, diagnostics };
 	}
 
 	try {
@@ -160,17 +172,24 @@ function loadTemplatesFromDir(dir: string, getSourceInfo: (filePath: string) => 
 			}
 
 			if (isFile && entry.name.endsWith(".md")) {
-				const template = loadTemplateFromFile(fullPath, getSourceInfo(fullPath));
-				if (template) {
-					templates.push(template);
+				const result = loadTemplateFromFileResult(fullPath, getSourceInfo(fullPath));
+				if (result.template) {
+					templates.push(result.template);
 				}
+				diagnostics.push(...result.diagnostics);
 			}
 		}
-	} catch {
-		return templates;
+	} catch (error) {
+		const message = error instanceof Error ? error.message : "failed to read prompt templates directory";
+		diagnostics.push({ type: "warning", message, path: dir });
 	}
 
-	return templates;
+	return { templates, diagnostics };
+}
+
+export interface LoadPromptTemplatesResult {
+	prompts: PromptTemplate[];
+	diagnostics: ResourceDiagnostic[];
 }
 
 export interface LoadPromptTemplatesOptions {
@@ -190,13 +209,14 @@ export interface LoadPromptTemplatesOptions {
  * 2. Project: cwd/{CONFIG_DIR_NAME}/prompts/
  * 3. Explicit prompt paths
  */
-export function loadPromptTemplates(options: LoadPromptTemplatesOptions): PromptTemplate[] {
+export function loadPromptTemplatesWithDiagnostics(options: LoadPromptTemplatesOptions): LoadPromptTemplatesResult {
 	const resolvedCwd = resolvePath(options.cwd);
 	const resolvedAgentDir = resolvePath(options.agentDir);
 	const promptPaths = options.promptPaths;
 	const includeDefaults = options.includeDefaults;
 
 	const templates: PromptTemplate[] = [];
+	const diagnostics: ResourceDiagnostic[] = [];
 
 	const globalPromptsDir = join(resolvedAgentDir, "prompts");
 	const projectPromptsDir = resolve(resolvedCwd, CONFIG_DIR_NAME, "prompts");
@@ -232,33 +252,52 @@ export function loadPromptTemplates(options: LoadPromptTemplatesOptions): Prompt
 	};
 
 	if (includeDefaults) {
-		templates.push(...loadTemplatesFromDir(globalPromptsDir, getSourceInfo));
-		templates.push(...loadTemplatesFromDir(projectPromptsDir, getSourceInfo));
+		const globalResult = loadTemplatesFromDir(globalPromptsDir, getSourceInfo);
+		templates.push(...globalResult.templates);
+		diagnostics.push(...globalResult.diagnostics);
+		const projectResult = loadTemplatesFromDir(projectPromptsDir, getSourceInfo);
+		templates.push(...projectResult.templates);
+		diagnostics.push(...projectResult.diagnostics);
 	}
 
 	// 3. Load explicit prompt paths
 	for (const rawPath of promptPaths) {
 		const resolvedPath = resolvePath(rawPath, resolvedCwd, { trim: true });
 		if (!existsSync(resolvedPath)) {
+			diagnostics.push({ type: "warning", message: "prompt template path does not exist", path: resolvedPath });
 			continue;
 		}
 
 		try {
 			const stats = statSync(resolvedPath);
 			if (stats.isDirectory()) {
-				templates.push(...loadTemplatesFromDir(resolvedPath, getSourceInfo));
+				const result = loadTemplatesFromDir(resolvedPath, getSourceInfo);
+				templates.push(...result.templates);
+				diagnostics.push(...result.diagnostics);
 			} else if (stats.isFile() && resolvedPath.endsWith(".md")) {
-				const template = loadTemplateFromFile(resolvedPath, getSourceInfo(resolvedPath));
-				if (template) {
-					templates.push(template);
+				const result = loadTemplateFromFileResult(resolvedPath, getSourceInfo(resolvedPath));
+				if (result.template) {
+					templates.push(result.template);
 				}
+				diagnostics.push(...result.diagnostics);
+			} else {
+				diagnostics.push({
+					type: "warning",
+					message: "prompt template path is not a markdown file",
+					path: resolvedPath,
+				});
 			}
-		} catch {
-			// Ignore read failures
+		} catch (error) {
+			const message = error instanceof Error ? error.message : "failed to read prompt template path";
+			diagnostics.push({ type: "warning", message, path: resolvedPath });
 		}
 	}
 
-	return templates;
+	return { prompts: templates, diagnostics };
+}
+
+export function loadPromptTemplates(options: LoadPromptTemplatesOptions): PromptTemplate[] {
+	return loadPromptTemplatesWithDiagnostics(options).prompts;
 }
 
 /**

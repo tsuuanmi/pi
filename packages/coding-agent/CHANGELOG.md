@@ -20,6 +20,8 @@
 
 ### Added
 
+- Added provider-style `.agent` / `.agents` discovery for trusted project and user skills, prompts, context/rule files, and system prompts.
+- Added markdown/frontmatter agent definitions from `.agent/agents` and `.agents/agents`, bundled markdown-backed role agents, structured agent-profile diagnostics, and removed legacy JSON agent profile loading.
 - Added session-scoped workflow state/artifact paths under `.pi/_session-{id}/`, plus session resolution utilities and tests for isolated Pi workflow runs.
 - Added a ralplan pre-execution vagueness gate that redirects vague team/ultragoal dispatch prompts to planning unless explicitly forced.
 - Added a default `lsp` tool with minimal TypeScript/JavaScript, Python, and Rust Language Server Protocol support for status, diagnostics, symbols, hover, definitions, and references.

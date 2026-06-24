@@ -29,7 +29,7 @@ Spawn an isolated agent session.
 
 ```jsonc
 {
-  "agent": "worker",                 // optional: agent profile name from .pi/agents, <agentDir>/agents, or built-ins
+  "agent": "worker",                 // optional: markdown agent profile name from .agent/agents, .agents/agents, or built-ins
   "role": "implementer",             // optional: role label; defaults to profile name or "subagent"
   "prompt": "Fix the failing tests",  // required: task prompt
   "model": "anthropic/claude-...",    // optional: provider/model override

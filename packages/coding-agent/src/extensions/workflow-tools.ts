@@ -363,7 +363,7 @@ type UltragoalSpawnGoalAgentInput = Static<typeof ultragoalSpawnGoalAgentSchema>
 
 const subagentSpawnSchema = Type.Object({
 	agent: Type.Optional(
-		Type.String({ description: "Agent profile name from .pi/agents, agentDir/agents, or built-ins." }),
+		Type.String({ description: "Agent profile name from .agent/agents, .agents/agents, or built-ins." }),
 	),
 	role: Type.Optional(
 		Type.String({ description: "Subagent role label. Defaults to agent profile name or subagent." }),

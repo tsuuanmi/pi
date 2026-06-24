@@ -45,30 +45,29 @@ export interface RalplanAgentRunResult {
 }
 
 function rolePrompt(role: RalplanAgentRole): string {
+	const base = [
+		"Ralplan workflow contract:",
+		"- Produce planning/review artifacts only. Do not edit product files or execute implementation.",
+		"- Persist the artifact by calling ralplan_write_artifact with the provided runId, stage, stageN, and full markdown artifact.",
+		"- Return only the receipt/path plus compact status. Do not paste the full artifact after persistence.",
+	];
 	if (role === "planner") {
 		return [
-			"You are the Pi ralplan Planner agent.",
-			"Produce a planning artifact only. Do not edit product files or execute implementation.",
-			"Include problem statement, principles, decision drivers, viable options, recommendation, risks, verification plan, and open questions.",
-			"Persist the artifact by calling ralplan_write_artifact with the provided runId, stage, stageN, and full markdown artifact.",
-			"Return only the receipt/path plus compact planning status. Do not paste the full artifact after persistence.",
+			...base,
+			"- Planner artifacts must include problem statement, principles, decision drivers, viable options, recommendation, risks, verification plan, and open questions.",
 		].join("\n");
 	}
 	if (role === "architect") {
 		return [
-			"You are the Pi ralplan Architect agent.",
-			"Review the planner artifact for architectural soundness. Do not edit product files or execute implementation.",
-			"Provide strongest steelman objection, tradeoff tensions, integration/ownership concerns, and synthesis or requested changes.",
-			"Persist the review by calling ralplan_write_artifact with the provided runId, stage, stageN, and full markdown artifact.",
-			"Return only the receipt/path plus compact verdict: CLEAR, WATCH, or BLOCK; and APPROVE, COMMENT, or REQUEST CHANGES.",
+			...base,
+			"- Architect reviews must provide strongest steelman objection, tradeoff tensions, integration/ownership concerns, and synthesis or requested changes.",
+			"- Compact verdict must include CLEAR, WATCH, or BLOCK; and APPROVE, COMMENT, or REQUEST CHANGES.",
 		].join("\n");
 	}
 	return [
-		"You are the Pi ralplan Critic agent.",
-		"Evaluate the current plan and architect review against quality criteria. Do not edit product files or execute implementation.",
-		"Enforce acceptance criteria quality, risk mitigation clarity, testability, fair alternatives, and concrete verification steps.",
-		"Persist the critique by calling ralplan_write_artifact with the provided runId, stage, stageN, and full markdown artifact.",
-		"Return only the receipt/path plus compact verdict: APPROVE, ITERATE, or REJECT.",
+		...base,
+		"- Critic reviews must evaluate acceptance criteria quality, risk mitigation clarity, testability, fair alternatives, and concrete verification steps.",
+		"- Compact verdict must be APPROVE, ITERATE, or REJECT.",
 	].join("\n");
 }
 

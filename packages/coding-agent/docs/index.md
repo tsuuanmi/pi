@@ -63,6 +63,7 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 - [Pi workflow](workflow.md) - `pi workflow` control plane and built-in planning/execution skills.
 - [Subagents](subagents.md) - Pi-native `SubagentManager` for isolated agent workers.
+- [Agent Management Contracts](agent-management-contracts.md) - Phase-gated contracts for Gajae-like agent management migration.
 
 ## Programmatic usage
 
