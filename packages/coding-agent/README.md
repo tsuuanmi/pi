@@ -356,7 +356,7 @@ The default export can also be `async`. pi waits for async extension factories b
 - Make pi look like Claude Code
 - ...anything you can dream up
 
-Place in `~/.pi/agent/extensions/`, `.pi/extensions/`, or a [pi package](#pi-packages) to share with others. See [docs/extensions.md](docs/extensions.md) and [examples/extensions/](examples/extensions/).
+Place in `~/.pi/agent/extensions/`, `.pi/extensions/`, or a [pi package](#pi-packages) to share with others. See [docs/extensions.md](docs/extensions.md).
 
 ### Themes
 
@@ -435,7 +435,7 @@ await session.prompt("What files are in the current directory?");
 
 For advanced multi-session runtime replacement, use `createAgentSessionRuntime()` and `AgentSessionRuntime`.
 
-See [docs/sdk.md](docs/sdk.md) and [examples/sdk/](examples/sdk/).
+See [docs/sdk.md](docs/sdk.md).
 
 ### RPC Mode
 

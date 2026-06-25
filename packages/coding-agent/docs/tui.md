@@ -184,7 +184,7 @@ await showMenu();  // First show
 await showMenu();  // "Back" = just call again
 ```
 
-See [overlay-qa-tests.ts](../examples/extensions/overlay-qa-tests.ts) for comprehensive examples covering anchors, margins, stacking, responsive visibility, and animation.
+See the overlay API section below for comprehensive examples covering anchors, margins, stacking, responsive visibility, and animation.
 
 ## Built-in Components
 
@@ -639,7 +639,7 @@ pi.registerCommand("pick", {
 });
 ```
 
-**Examples:** [preset.ts](../examples/extensions/preset.ts), [tools.ts](../examples/extensions/tools.ts)
+**Examples:** `preset.ts`, `tools.ts`
 
 ### Pattern 2: Async Operation with Cancel (BorderedLoader)
 
@@ -671,7 +671,7 @@ pi.registerCommand("fetch", {
 });
 ```
 
-**Examples:** [qna.ts](../examples/extensions/qna.ts), [handoff.ts](../examples/extensions/handoff.ts)
+**Examples:** `qna.ts`, `handoff.ts`
 
 ### Pattern 3: Settings/Toggles (SettingsList)
 
@@ -715,7 +715,7 @@ pi.registerCommand("settings", {
 });
 ```
 
-**Examples:** [tools.ts](../examples/extensions/tools.ts)
+**Examples:** `tools.ts`
 
 ### Pattern 4: Persistent Status Indicator
 
@@ -729,7 +729,7 @@ ctx.ui.setStatus("my-ext", ctx.ui.theme.fg("accent", "● active"));
 ctx.ui.setStatus("my-ext", undefined);
 ```
 
-**Examples:** [status-line.ts](../examples/extensions/status-line.ts), [preset.ts](../examples/extensions/preset.ts)
+**Examples:** `status-line.ts`, `preset.ts`
 
 ### Pattern 4b: Working Indicator Customization
 
@@ -759,7 +759,7 @@ ctx.ui.setWorkingIndicator();
 
 This only affects the normal streaming working indicator. Compaction and retry loaders keep their built-in styling. Custom frames are rendered verbatim, so extensions must add their own colors when needed.
 
-**Examples:** [working-indicator.ts](../examples/extensions/working-indicator.ts)
+**Examples:** `working-indicator.ts`
 
 ### Pattern 5: Widgets Above/Below Editor
 
@@ -789,7 +789,7 @@ ctx.ui.setWidget("my-widget", (_tui, theme) => {
 ctx.ui.setWidget("my-widget", undefined);
 ```
 
-**Examples:** [widget-placement.ts](../examples/extensions/widget-placement.ts)
+**Examples:** `widget-placement.ts`
 
 ### Pattern 6: Custom Footer
 
@@ -811,7 +811,7 @@ ctx.ui.setFooter(undefined); // restore default
 
 Token stats available via `ctx.sessionManager.getBranch()` and `ctx.model`.
 
-**Examples:** [custom-footer.ts](../examples/extensions/custom-footer.ts)
+**Examples:** `custom-footer.ts`
 
 ### Pattern 7: Custom Editor (vim mode, etc.)
 
@@ -887,7 +887,7 @@ export default function (pi: ExtensionAPI) {
 - **Factory pattern**: `setEditorComponent` receives a factory function that gets `tui`, `theme`, and `keybindings`
 - **Pass `undefined`** to restore the default editor: `ctx.ui.setEditorComponent(undefined)`
 
-**Examples:** [modal-editor.ts](../examples/extensions/modal-editor.ts)
+**Examples:** `modal-editor.ts`
 
 ## Key Rules
 
@@ -903,10 +903,10 @@ export default function (pi: ExtensionAPI) {
 
 ## Examples
 
-- **Selection UI**: [examples/extensions/preset.ts](../examples/extensions/preset.ts) - SelectList with DynamicBorder framing
-- **Async with cancel**: [examples/extensions/qna.ts](../examples/extensions/qna.ts) - BorderedLoader for LLM calls
-- **Settings toggles**: [examples/extensions/tools.ts](../examples/extensions/tools.ts) - SettingsList for tool enable/disable
-- **Working indicator**: [examples/extensions/working-indicator.ts](../examples/extensions/working-indicator.ts) - setWorkingIndicator
-- **Custom footer**: [examples/extensions/custom-footer.ts](../examples/extensions/custom-footer.ts) - setFooter with stats
-- **Custom editor**: [examples/extensions/modal-editor.ts](../examples/extensions/modal-editor.ts) - Vim-like modal editing
-- **Custom tool rendering**: [examples/extensions/todo.ts](../examples/extensions/todo.ts) - renderCall and renderResult
+- **Selection UI**: `preset.ts` - SelectList with DynamicBorder framing
+- **Async with cancel**: `qna.ts` - BorderedLoader for LLM calls
+- **Settings toggles**: `tools.ts` - SettingsList for tool enable/disable
+- **Working indicator**: `working-indicator.ts` - setWorkingIndicator
+- **Custom footer**: `custom-footer.ts` - setFooter with stats
+- **Custom editor**: `modal-editor.ts` - Vim-like modal editing
+- **Custom tool rendering**: `todo.ts` - renderCall and renderResult
