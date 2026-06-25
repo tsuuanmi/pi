@@ -473,7 +473,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 		const cliEnabledPrompts = getEnabledPaths(cliExtensionPaths.prompts);
 		const cliEnabledThemes = getEnabledPaths(cliExtensionPaths.themes);
 
-		const builtInExtensionPaths = this.getBuiltInResourcePaths("extensions", "workflow-tools");
+		const builtInExtensionPaths = this.getBuiltInResourcePaths("workflows", "workflows-extension");
 		const extensionPaths = this.noExtensions
 			? cliEnabledExtensions
 			: this.mergePaths([...cliEnabledExtensions, ...builtInExtensionPaths], enabledExtensions);
@@ -788,7 +788,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 		}
 	}
 
-	private getBuiltInResourcePaths(kind: "extensions" | "skills", basename?: string): string[] {
+	private getBuiltInResourcePaths(kind: "extensions" | "skills" | "workflows", basename?: string): string[] {
 		const packageDir = getPackageDir();
 		const srcOrDist = existsSync(join(packageDir, "src")) ? "src" : "dist";
 		const extension = srcOrDist === "src" ? ".ts" : ".js";

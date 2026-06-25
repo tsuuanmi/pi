@@ -28,8 +28,8 @@ const BUILT_IN_WORKFLOW_AGENT_TOOLS = new Set(["team_spawn_task_agent", "ultrago
 function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions: T[]): T[] {
 	return extensions.filter(
 		(extension) =>
-			!extension.path.endsWith("/src/extensions/workflow-tools.ts") &&
-			!extension.path.endsWith("/dist/extensions/workflow-tools.js"),
+			!extension.path.endsWith("/src/workflows/workflows-extension.ts") &&
+			!extension.path.endsWith("/dist/workflows/workflows-extension.js"),
 	);
 }
 

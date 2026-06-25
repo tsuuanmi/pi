@@ -3,7 +3,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { ExtensionAPI, ExtensionContext } from "../../src/api/types.ts";
-import workflowsExtension from "../../src/extensions/workflow-tools.ts";
 import {
 	appendOrMergeDeepInterviewRound,
 	enrichDeepInterviewRoundScoring,
@@ -14,6 +13,7 @@ import {
 import { normalizeDeepInterviewEnvelope } from "../../src/workflows/deep-interview/deep-interview-state.ts";
 import { formatWorkflowHudLine, readWorkflowActiveState } from "../../src/workflows/shared/active-state.ts";
 import { readWorkflowState, writeWorkflowState } from "../../src/workflows/shared/workflow-state.ts";
+import workflowsExtension from "../../src/workflows/workflows-extension.ts";
 
 const TEST_SESSION = "test-session-id";
 
