@@ -16,7 +16,7 @@ import { MCPClient } from "../core/mcp/client.ts";
 import { loadMCPConfigFile } from "../core/mcp/loader.ts";
 import { HttpTransport } from "../core/mcp/transports/http.ts";
 import { StdioTransport } from "../core/mcp/transports/stdio.ts";
-import type { MCPConfigFile, MCPServerConfig, MCPServerTransport } from "../mcp/types.ts";
+import type { MCPConfigFile, MCPServerConfig, MCPServerTransport } from "../core/mcp/types.ts";
 
 interface McpCommandResult {
 	status: number;

@@ -20,7 +20,7 @@ import {
 	type MCPToolCallResult,
 	type MCPToolDefinition,
 	type MCPTransport,
-} from "../../mcp/types.ts";
+} from "./types.ts";
 
 /** Type guard: narrow JsonRpcResponse to success response. */
 function isSuccessResponse(response: JsonRpcResponse): response is JsonRpcSuccessResponse {

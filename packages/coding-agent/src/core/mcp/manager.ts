@@ -6,6 +6,11 @@
  */
 
 import type { ToolDefinition as PiToolDefinition } from "../../api/types.ts";
+import { MCPClient } from "./client.ts";
+import { loadMCPConfigs, sanitizeServerName } from "./loader.ts";
+import { createMcpToolDefinitions } from "./tool-bridge.ts";
+import { HttpTransport } from "./transports/http.ts";
+import { StdioTransport } from "./transports/stdio.ts";
 import {
 	MCP_DEFAULT_RECONNECT_TIMEOUT_SEC,
 	MCP_DEFAULT_STARTUP_TIMEOUT_SEC,
@@ -13,12 +18,7 @@ import {
 	type MCPServerConfig,
 	type MCPServerInfo,
 	type MCPServerStatus,
-} from "../../mcp/types.ts";
-import { MCPClient } from "./client.ts";
-import { loadMCPConfigs, sanitizeServerName } from "./loader.ts";
-import { createMcpToolDefinitions } from "./tool-bridge.ts";
-import { HttpTransport } from "./transports/http.ts";
-import { StdioTransport } from "./transports/stdio.ts";
+} from "./types.ts";
 
 export interface MCPManagerOptions {
 	/** Working directory for the project. */

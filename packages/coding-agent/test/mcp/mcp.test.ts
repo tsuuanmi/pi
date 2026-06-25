@@ -34,7 +34,7 @@ import {
 	MCP_MAX_RESULT_BYTES,
 	type MCPToolCallResult,
 	type MCPTransport,
-} from "../../src/mcp/types.ts";
+} from "../../src/core/mcp/types.ts";
 
 // ============================================================================
 // Server Name Sanitization

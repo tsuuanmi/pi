@@ -29,9 +29,9 @@ export interface MCPToolDetails {
 
 import { type TSchema, Type } from "typebox";
 import type { ToolDefinition } from "../../api/types.ts";
-import { MCP_MAX_RESULT_BYTES, type MCPToolCallResult, type MCPToolDefinition } from "../../mcp/types.ts";
 import type { MCPClient } from "./client.ts";
 import { sanitizeServerName } from "./loader.ts";
+import { MCP_MAX_RESULT_BYTES, type MCPToolCallResult, type MCPToolDefinition } from "./types.ts";
 
 /** The prefix for MCP tool names in Pi: mcp__<server>__<tool> */
 const MCP_TOOL_PREFIX = "mcp__";

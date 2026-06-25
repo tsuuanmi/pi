@@ -42,6 +42,7 @@ import type { Static, TSchema } from "typebox";
 import type { CompactionPreparation, CompactionResult } from "../core/compaction/index.ts";
 import type { BashResult } from "../core/exec/bash-executor.ts";
 import type { ExecOptions, ExecResult } from "../core/exec/exec.ts";
+import type { MCPServerInfo } from "../core/mcp/types.ts";
 import type { EventBus } from "../core/misc/event-bus.ts";
 import type { ReadonlyFooterDataProvider } from "../core/misc/footer-data-provider.ts";
 import type { CustomMessage } from "../core/misc/messages.ts";
@@ -74,14 +75,13 @@ import type {
 	ReadToolInput,
 	WriteToolInput,
 } from "../core/tools/index.ts";
-import type { MCPServerInfo } from "../mcp/types.ts";
 import type { Theme } from "../theme/theme.ts";
 
 export type { ExecOptions, ExecResult } from "../core/exec/exec.ts";
 export type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";
 export type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode };
+export type { MCPServerInfo } from "../core/mcp/types.ts";
 export type { AppKeybinding, KeybindingsManager } from "../core/settings/keybindings.ts";
-export type { MCPServerInfo } from "../mcp/types.ts";
 
 // ============================================================================
 // UI Context
