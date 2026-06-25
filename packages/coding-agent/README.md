@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://pi.dev">pi.dev</a> domain graciously donated by
   <br /><br />
-  <a href="https://exe.dev"><img src="docs/images/exy.png" alt="Exy mascot" width="48" /><br />exe.dev</a>
+  <a href="https://exe.dev">exe.dev</a>
 </p>
 
 > New issues and PRs from new contributors are auto-closed by default. Maintainers review auto-closed issues daily. See [CONTRIBUTING.md](../../CONTRIBUTING.md).
@@ -130,8 +130,6 @@ See [docs/providers.md](docs/providers.md) for detailed setup instructions.
 
 ## Interactive Mode
 
-<p align="center"><img src="docs/images/interactive-mode.png" alt="Interactive Mode" width="600"></p>
-
 The interface from top to bottom:
 
 - **Startup header** - Shows shortcuts (`/hotkeys` for all), loaded AGENTS.md files, prompt templates, skills, and extensions
@@ -230,8 +228,6 @@ Use `/session` in interactive mode to see the current session ID before reusing 
 ### Branching
 
 **`/tree`** - Navigate the session tree in-place. Select any previous point, continue from there, and switch between branches. All history preserved in a single file.
-
-<p align="center"><img src="docs/images/tree-view.png" alt="Tree View" width="600"></p>
 
 - Search by typing, fold/unfold and jump between branches with Ctrl+←/Ctrl+→ or Alt+←/Alt+→, page with ←/→
 - Filter modes (Ctrl+O): default → no-tools → user-only → labeled-only → all
