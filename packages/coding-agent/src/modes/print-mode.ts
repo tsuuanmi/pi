@@ -8,7 +8,7 @@
 
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import type { AgentSessionRuntime } from "../core/agent-session/agent-session-runtime.ts";
-import { flushRawStdout, writeRawStdout } from "../core/misc/output-guard.ts";
+import { flushRawStdout, writeRawStdout } from "../modes/output-guard.ts";
 import { killTrackedDetachedChildren } from "../utils/system/shell.ts";
 
 /**

@@ -7,8 +7,8 @@ import type {
 	OverlayOptions,
 	TUI,
 } from "@tsuuanmi/pi-tui";
-import type { ReadonlyFooterDataProvider } from "../core/misc/footer-data-provider.ts";
 import type { KeybindingsManager } from "../core/settings/keybindings.ts";
+import type { ReadonlyFooterDataProvider } from "../core/usage/footer-data-provider.ts";
 import type { Theme } from "../theme/theme.ts";
 
 // ============================================================================

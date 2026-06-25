@@ -25,7 +25,7 @@ import {
 	createBranchSummaryMessage,
 	createCompactionSummaryMessage,
 	createCustomMessage,
-} from "../misc/messages.ts";
+} from "../messages/messages.ts";
 
 export const CURRENT_SESSION_VERSION = 3;
 

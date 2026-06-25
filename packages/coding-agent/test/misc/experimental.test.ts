@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { areExperimentalFeaturesEnabled } from "../../src/core/misc/experimental.ts";
+import { areExperimentalFeaturesEnabled } from "../../src/core/config/experimental.ts";
 
 describe("areExperimentalFeaturesEnabled", () => {
 	const originalPiExperimental = process.env.PI_EXPERIMENTAL;

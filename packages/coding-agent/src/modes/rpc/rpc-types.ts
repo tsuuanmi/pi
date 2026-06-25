@@ -10,7 +10,7 @@ import type { Model } from "@tsuuanmi/pi-ai";
 import type { SessionStats } from "../../core/agent-session/agent-session.ts";
 import type { CompactionResult } from "../../core/compaction/index.ts";
 import type { BashResult } from "../../core/exec/bash-executor.ts";
-import type { SourceInfo } from "../../core/misc/source-info.ts";
+import type { SourceInfo } from "../../core/resources/source-info.ts";
 
 // ============================================================================
 // RPC Commands (stdin)

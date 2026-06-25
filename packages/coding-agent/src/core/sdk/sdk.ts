@@ -8,8 +8,7 @@ import { AuthStorage } from "../auth/auth-storage.ts";
 import { getAgentDir } from "../config/config.ts";
 import { DEFAULT_THINKING_LEVEL } from "../config/defaults.ts";
 import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "../extensions/index.ts";
-import { convertToLlm } from "../misc/messages.ts";
-import { time } from "../misc/timings.ts";
+import { convertToLlm } from "../messages/messages.ts";
 import { ModelRegistry } from "../model/model-registry.ts";
 import { findInitialModel } from "../model/model-resolver.ts";
 import { mergeHeaderSources } from "../model/provider-attribution.ts";
@@ -18,6 +17,7 @@ import { SettingsManager } from "../settings/settings-manager.ts";
 import type { ResourceLoader } from "../skills/resource-loader.ts";
 import { DefaultResourceLoader } from "../skills/resource-loader.ts";
 import type { SubagentManager } from "../subagents/subagents.ts";
+import { time } from "../telemetry/timings.ts";
 import {
 	createBashTool,
 	createCodingTools,

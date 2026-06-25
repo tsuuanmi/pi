@@ -2,7 +2,7 @@ import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent-core";
 import type { AssistantMessageEvent, Model, TextContent, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { CompactionPreparation, CompactionResult } from "../core/compaction/index.ts";
 import type { BashResult } from "../core/exec/bash-executor.ts";
-import type { CustomMessage } from "../core/misc/messages.ts";
+import type { CustomMessage } from "../core/messages/messages.ts";
 import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "../core/session-manager/session-manager.ts";
 import type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";
 import type { BashOperations } from "../core/tools/bash.ts";

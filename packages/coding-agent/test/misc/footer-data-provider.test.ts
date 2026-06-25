@@ -37,7 +37,7 @@ vi.mock("child_process", () => ({
 	}),
 }));
 
-import { FooterDataProvider } from "../../src/core/misc/footer-data-provider.ts";
+import { FooterDataProvider } from "../../src/core/usage/footer-data-provider.ts";
 
 type WorktreeFixture = {
 	worktreeDir: string;

@@ -55,6 +55,7 @@ export {
 	getReadmePath,
 	VERSION,
 } from "./core/config/config.ts";
+export { createEventBus, type EventBus, type EventBusController } from "./core/events/event-bus.ts";
 // Extension system
 export type {
 	AgentEndEvent,
@@ -157,11 +158,7 @@ export {
 	wrapRegisteredTool,
 	wrapRegisteredTools,
 } from "./core/extensions/index.ts";
-export { createEventBus, type EventBus, type EventBusController } from "./core/misc/event-bus.ts";
-// Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
-export type { ReadonlyFooterDataProvider } from "./core/misc/footer-data-provider.ts";
-export { convertToLlm } from "./core/misc/messages.ts";
-export { createSyntheticSourceInfo } from "./core/misc/source-info.ts";
+export { convertToLlm } from "./core/messages/messages.ts";
 export { ModelRegistry } from "./core/model/model-registry.ts";
 export type {
 	PackageManager,
@@ -172,6 +169,7 @@ export type {
 	ResolvedResource,
 } from "./core/package-manager/package-manager.ts";
 export { DefaultPackageManager } from "./core/package-manager/package-manager.ts";
+export { createSyntheticSourceInfo } from "./core/resources/source-info.ts";
 // SDK for programmatic usage
 export {
 	AgentSessionRuntime,
@@ -315,6 +313,8 @@ export {
 	type ProjectTrustStoreEntry,
 	type ProjectTrustUpdate,
 } from "./core/trust/trust-manager.ts";
+// Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
+export type { ReadonlyFooterDataProvider } from "./core/usage/footer-data-provider.ts";
 // Main entry point
 export { type MainOptions, main } from "./main.ts";
 // Run modes for programmatic SDK usage

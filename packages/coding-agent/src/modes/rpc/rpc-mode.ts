@@ -24,7 +24,7 @@ import {
 	takeOverStdout,
 	waitForRawStdoutBackpressure,
 	writeRawStdout,
-} from "../../core/misc/output-guard.ts";
+} from "../../modes/output-guard.ts";
 import { type Theme, theme } from "../../theme/theme.ts";
 import { killTrackedDetachedChildren } from "../../utils/system/shell.ts";
 import { attachJsonlLineReader, serializeJsonLine } from "./jsonl.ts";

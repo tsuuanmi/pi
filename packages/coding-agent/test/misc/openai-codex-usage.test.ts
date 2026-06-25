@@ -1,8 +1,8 @@
 import { Buffer } from "node:buffer";
 import type { Api, Model } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchOpenAICodexUsageSummary } from "../../src/core/misc/openai-codex-usage.ts";
 import type { ModelRegistry } from "../../src/core/model/model-registry.ts";
+import { fetchOpenAICodexUsageSummary } from "../../src/core/usage/openai-codex-usage.ts";
 
 const originalFetch = globalThis.fetch;
 

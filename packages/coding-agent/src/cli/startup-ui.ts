@@ -1,7 +1,7 @@
 import { ProcessTerminal, setKeybindings, TUI } from "@tsuuanmi/pi-tui";
 import { existsSync } from "fs";
 import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, getSettingsPath, PACKAGE_NAME } from "../core/config/config.ts";
-import { areExperimentalFeaturesEnabled } from "../core/misc/experimental.ts";
+import { areExperimentalFeaturesEnabled } from "../core/config/experimental.ts";
 import { KeybindingsManager } from "../core/settings/keybindings.ts";
 import type { SettingsManager } from "../core/settings/settings-manager.ts";
 import { ExtensionInputComponent } from "../modes/interactive/components/extension-input.ts";

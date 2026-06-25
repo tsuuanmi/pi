@@ -56,8 +56,8 @@ import type {
 	UserBashEventResult,
 } from "../../api/types.ts";
 import { type Theme, theme } from "../../theme/theme.ts";
-import type { ResourceDiagnostic } from "../misc/diagnostics.ts";
 import type { ModelRegistry } from "../model/model-registry.ts";
+import type { ResourceDiagnostic } from "../resources/diagnostics.ts";
 import type { SessionManager } from "../session-manager/session-manager.ts";
 import type { KeybindingsConfig } from "../settings/keybindings.ts";
 import type { BuildSystemPromptOptions } from "../skills/system-prompt.ts";

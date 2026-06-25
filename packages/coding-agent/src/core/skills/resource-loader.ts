@@ -9,16 +9,16 @@ import {
 	loadAgentDefinitions,
 } from "../agents/agent-definitions.ts";
 import { CONFIG_DIR_NAME, getPackageDir } from "../config/config.ts";
-import type { ResourceDiagnostic } from "../misc/diagnostics.ts";
+import type { ResourceDiagnostic } from "../resources/diagnostics.ts";
 
-export type { ResourceCollision, ResourceDiagnostic } from "../misc/diagnostics.ts";
+export type { ResourceCollision, ResourceDiagnostic } from "../resources/diagnostics.ts";
 
 import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "../../api/types.ts";
 import { canonicalizePath, isLocalPath, resolvePath } from "../../utils/fs/paths.ts";
+import { createEventBus, type EventBus } from "../events/event-bus.ts";
 import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "../extensions/loader.ts";
-import { createEventBus, type EventBus } from "../misc/event-bus.ts";
-import { createSourceInfo, type SourceInfo } from "../misc/source-info.ts";
 import { DefaultPackageManager, type PathMetadata, type ResolvedResource } from "../package-manager/package-manager.ts";
+import { createSourceInfo, type SourceInfo } from "../resources/source-info.ts";
 import { SettingsManager } from "../settings/settings-manager.ts";
 import type { PromptTemplate } from "./prompt-templates.ts";
 import { loadPromptTemplatesWithDiagnostics } from "./prompt-templates.ts";

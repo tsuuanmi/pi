@@ -1,8 +1,8 @@
 import { homedir } from "os";
 import { join, resolve } from "path";
 import { describe, expect, it } from "vitest";
-import type { ResourceDiagnostic } from "../../src/core/misc/diagnostics.ts";
-import { createSyntheticSourceInfo } from "../../src/core/misc/source-info.ts";
+import type { ResourceDiagnostic } from "../../src/core/resources/diagnostics.ts";
+import { createSyntheticSourceInfo } from "../../src/core/resources/source-info.ts";
 import { formatSkillsForPrompt, loadSkills, loadSkillsFromDir, type Skill } from "../../src/core/skills/skills.ts";
 
 const fixturesDir = resolve(__dirname, "../fixtures/skills");

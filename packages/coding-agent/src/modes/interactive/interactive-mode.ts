@@ -72,13 +72,11 @@ import type {
 	ExtensionWidgetOptions,
 	ProjectTrustContext,
 } from "../../core/extensions/index.ts";
-import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/misc/footer-data-provider.ts";
-import { createCompactionSummaryMessage } from "../../core/misc/messages.ts";
-import { fetchOpenAICodexUsageSummary, getCodexUsageCacheTtlMs } from "../../core/misc/openai-codex-usage.ts";
-import type { SourceInfo } from "../../core/misc/source-info.ts";
+import { createCompactionSummaryMessage } from "../../core/messages/messages.ts";
 import { defaultModelPerProvider, findExactModelReferenceMatch } from "../../core/model/model-resolver.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/model/provider-display-names.ts";
 import { DefaultPackageManager } from "../../core/package-manager/package-manager.ts";
+import type { SourceInfo } from "../../core/resources/source-info.ts";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session-manager/session-cwd.ts";
 import { type SessionContext, SessionManager } from "../../core/session-manager/session-manager.ts";
 import { type AppKeybinding, KeybindingsManager } from "../../core/settings/keybindings.ts";
@@ -86,6 +84,8 @@ import type { ResourceDiagnostic } from "../../core/skills/resource-loader.ts";
 import { BUILTIN_SLASH_COMMANDS } from "../../core/skills/slash-commands.ts";
 import type { TruncationResult } from "../../core/tools/truncate.ts";
 import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../../core/trust/trust-manager.ts";
+import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/usage/footer-data-provider.ts";
+import { fetchOpenAICodexUsageSummary, getCodexUsageCacheTtlMs } from "../../core/usage/openai-codex-usage.ts";
 import {
 	detectTerminalBackgroundTheme,
 	getAvailableThemes,

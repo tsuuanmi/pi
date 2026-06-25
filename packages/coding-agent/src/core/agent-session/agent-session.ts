@@ -71,9 +71,9 @@ import {
 } from "../extensions/index.ts";
 import { emitSessionShutdownEvent } from "../extensions/runner.ts";
 import { MCPManager } from "../mcp/manager.ts";
-import type { BashExecutionMessage, CustomMessage } from "../misc/messages.ts";
-import { createSyntheticSourceInfo, type SourceInfo } from "../misc/source-info.ts";
+import type { BashExecutionMessage, CustomMessage } from "../messages/messages.ts";
 import type { ModelRegistry } from "../model/model-registry.ts";
+import { createSyntheticSourceInfo, type SourceInfo } from "../resources/source-info.ts";
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "../session-manager/session-manager.ts";
 import {
 	CURRENT_SESSION_VERSION,

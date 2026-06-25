@@ -158,7 +158,7 @@ export {
 	isToolCallEventType,
 	isWriteToolResult,
 } from "../../api/types.ts";
-export type { SourceInfo } from "../misc/source-info.ts";
+export type { SourceInfo } from "../resources/source-info.ts";
 export type { SlashCommandInfo, SlashCommandSource } from "../skills/slash-commands.ts";
 export {
 	createExtensionRuntime,

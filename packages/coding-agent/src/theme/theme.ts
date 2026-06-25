@@ -12,7 +12,7 @@ import chalk from "chalk";
 import { type Static, Type } from "typebox";
 import { Compile } from "typebox/compile";
 import { getCustomThemesDir, getThemesDir } from "../core/config/config.ts";
-import type { SourceInfo } from "../core/misc/source-info.ts";
+import type { SourceInfo } from "../core/resources/source-info.ts";
 import { closeWatcher, watchWithErrorHandler } from "../utils/fs/fs-watch.ts";
 import { highlight, supportsLanguage } from "../utils/terminal/syntax-highlight.ts";
 
