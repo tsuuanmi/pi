@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { withFileMutationQueue } from "../core/tools/file-mutation-queue.ts";
+import { withFileMutationQueue } from "../utils/fs/file-mutation-queue.ts";
 import { ReceiptConsistencyError, validateReceiptFamilyConsistency } from "./receipt-rules.ts";
 import { assertTransition, buildStateView, nextAllowedActions } from "./state.ts";
 import {

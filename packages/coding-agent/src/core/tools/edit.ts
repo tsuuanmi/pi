@@ -6,6 +6,7 @@ import { type Static, Type } from "typebox";
 import type { ToolDefinition } from "../../api/types.ts";
 import type { Theme } from "../../theme/theme.ts";
 import { renderDiff } from "../../ui/rendering/diff.ts";
+import { withFileMutationQueue } from "../../utils/fs/file-mutation-queue.ts";
 import {
 	applyEditsToNormalizedContent,
 	computeEditsDiff,
@@ -19,7 +20,6 @@ import {
 	restoreLineEndings,
 	stripBom,
 } from "./edit-diff.ts";
-import { withFileMutationQueue } from "./file-mutation-queue.ts";
 import { resolveToCwd } from "./path-utils.ts";
 import { renderToolPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";

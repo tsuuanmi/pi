@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
-import { withFileMutationQueue } from "../../core/tools/file-mutation-queue.ts";
+import { withFileMutationQueue } from "../../utils/fs/file-mutation-queue.ts";
 import { canonicalizeJson } from "./canonical-json.ts";
 
 export { canonicalizeJson };

@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { appendFile, mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
-import { withFileMutationQueue } from "../core/tools/file-mutation-queue.ts";
+import { withFileMutationQueue } from "../utils/fs/file-mutation-queue.ts";
 import { writeJsonAtomic } from "../workflows/shared/state-writer.ts";
 import type {
 	RuntimeLogDiagnostic,

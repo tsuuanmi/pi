@@ -307,7 +307,6 @@ export {
 	type WriteOperations,
 	type WriteToolInput,
 	type WriteToolOptions,
-	withFileMutationQueue,
 } from "./core/tools/index.ts";
 export {
 	hasTrustRequiringProjectResources,

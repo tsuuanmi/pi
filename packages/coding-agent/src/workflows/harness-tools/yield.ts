@@ -8,15 +8,10 @@
  * Aligned with gajae-code's `YieldTool` but Pi-native: simpler schema
  * validation (accepts any JSON object as data), no JTD schema processing.
  */
-import type { AgentMessage, AgentToolResult } from "@tsuuanmi/pi-agent-core";
+import type { AgentToolResult } from "@tsuuanmi/pi-agent-core";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition } from "../../api/types.ts";
-
-export interface YieldDetails {
-	data: unknown;
-	status: "success" | "aborted";
-	error?: string;
-}
+import type { YieldDetails } from "../../core/subagents/yield-result.ts";
 
 const yieldSchema = Type.Object({
 	result: Type.Union([
@@ -28,23 +23,6 @@ const yieldSchema = Type.Object({
 		}),
 	]),
 });
-
-/**
- * Check if an assistant message's tool results contain a yield call.
- * Returns the extracted YieldDetails if found, undefined otherwise.
- * Used by SubagentManager to detect structured completion.
- */
-export function extractYieldFromMessages(messages: readonly AgentMessage[]): YieldDetails | undefined {
-	// Walk messages in reverse to find the most recent yield tool result
-	for (let i = messages.length - 1; i >= 0; i--) {
-		const msg = messages[i];
-		if (msg?.role !== "toolResult") continue;
-		if (msg.toolName === "yield" && msg.details && typeof msg.details === "object") {
-			return msg.details as YieldDetails;
-		}
-	}
-	return undefined;
-}
 
 export function createYieldToolDefinition(): ToolDefinition<typeof yieldSchema, YieldDetails> {
 	return {
