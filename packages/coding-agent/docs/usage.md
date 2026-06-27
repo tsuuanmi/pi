@@ -179,7 +179,7 @@ Ctrl+P model cycling uses the `enabledModels` setting (see [Settings](settings.m
 |--------|-------------|
 | `-c`, `--continue` | Continue the most recent session |
 | `-r`, `--resume` | Browse and select a session |
-| `--session <path\|id>` | Use a specific session file or partial UUID |
+| `--session <path\|id>` | Use a specific session file or partial session ID |
 | `--name <name>`, `-n <name>` | Set session display name at startup |
 
 Session storage directory is set via the `PI_CODING_AGENT_SESSION_DIR` environment variable or the `sessionDir` setting (see [Settings](settings.md)).

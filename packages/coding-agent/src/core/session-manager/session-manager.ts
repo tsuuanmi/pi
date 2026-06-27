@@ -1,4 +1,4 @@
-import { type AgentMessage, uuidv7 } from "@tsuuanmi/pi-agent-core";
+import type { AgentMessage } from "@tsuuanmi/pi-agent-core";
 import type { Message, TextContent } from "@tsuuanmi/pi-ai";
 import { randomUUID } from "crypto";
 import {
@@ -201,7 +201,10 @@ export type ReadonlySessionManager = Pick<
 >;
 
 function createSessionId(): string {
-	return uuidv7();
+	const now = new Date().toISOString();
+	const date = now.slice(0, 10).replaceAll("-", "");
+	const time = now.slice(11, 19).replaceAll(":", "");
+	return `${date}-${time}`;
 }
 
 function assertValidSessionId(id: string): void {
@@ -327,7 +330,7 @@ export function buildSessionContext(
 	leafId?: string | null,
 	byId?: Map<string, SessionEntry>,
 ): SessionContext {
-	// Build uuid index if not available
+	// Build entry id index if not available
 	if (!byId) {
 		byId = new Map<string, SessionEntry>();
 		for (const entry of entries) {

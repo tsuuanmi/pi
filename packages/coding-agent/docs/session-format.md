@@ -5,7 +5,7 @@ Sessions are stored as JSONL (JSON Lines) files. Each line is a JSON object with
 ## File Location
 
 ```
-~/.pi/agent/sessions/--<path>--/<timestamp>_<uuid>.jsonl
+~/.pi/agent/sessions/--<path>--/<timestamp>_<session-id>.jsonl
 ```
 
 Where `<path>` is the working directory with `/` replaced by `-`.
@@ -183,13 +183,13 @@ interface SessionEntryBase {
 First line of the file. Metadata only, not part of the tree (no `id`/`parentId`).
 
 ```json
-{"type":"session","version":3,"id":"uuid","timestamp":"2024-12-03T14:00:00.000Z","cwd":"/path/to/project"}
+{"type":"session","version":3,"id":"20241203-140000","timestamp":"2024-12-03T14:00:00.000Z","cwd":"/path/to/project"}
 ```
 
 For sessions with a parent (created via `/fork` or `newSession({ parentSession })`):
 
 ```json
-{"type":"session","version":3,"id":"uuid","timestamp":"2024-12-03T14:00:00.000Z","cwd":"/path/to/project","parentSession":"/path/to/original/session.jsonl"}
+{"type":"session","version":3,"id":"20241203-140000","timestamp":"2024-12-03T14:00:00.000Z","cwd":"/path/to/project","parentSession":"/path/to/original/session.jsonl"}
 ```
 
 ### SessionMessageEntry

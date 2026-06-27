@@ -49,6 +49,7 @@
 
 ### Changed
 
+- New session IDs now use a compact creation timestamp format (`YYYYMMDD-HHMMSS`), and session-scoped project artifacts now live directly under `.pi/{sessionId}/` instead of `.pi/_session-{sessionId}/`.
 - Workflow runtime reads/writes now use explicit session ids from CLI/tool context for isolated state while retaining legacy global `.pi/` behavior for existing internal callers.
 - Workflow handoffs (`executeDeepInterviewWriteSpec`, `approveRalplanPlan`) now go through a single generic internal `handoffWorkflow` with callee->caller->active-state write order, both-side mode-state receipts (`handoff-send`/`handoff-receive`), and a transaction journal. The caller mode-state is now demoted to `active:false, current_phase:"handoff"` (Gajae parity; previously deep-interview stayed `active:true` after handoff). `executeDeepInterviewWriteSpec` follows Gajae's two-step model: `finalizeDeepInterviewSpecState` persists the caller state with spec fields (`active:true`, `current_phase:"handoff"`, a regular write), then `handoffWorkflow` demotes it and promotes the callee; the `stop`/no-handoff branch is unchanged. Audit verbs map operations to the Gajae-faithful set (`handoff-send`/`handoff-receive`->`handoff`; `force-repair`->`reconcile`; others->`write`/`clear`).
 - Enabled tmux extended keys in the default `pi --tmux` profile.

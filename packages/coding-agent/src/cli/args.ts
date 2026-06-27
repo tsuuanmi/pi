@@ -159,7 +159,7 @@ ${chalk.bold("Options:")}
   --print, -p                    Non-interactive mode: process prompt and exit
   --continue, -c                 Continue previous session
   --resume, -r                   Select a session to resume
-  --session <path|id>            Use specific session file or partial UUID
+  --session <path|id>            Use specific session file or partial session ID
   --name, -n <name>              Set session display name
   --thinking <level>             Set thinking level: off, minimal, low, medium, high, xhigh
   --list-models [search]         List available models (with optional fuzzy search)

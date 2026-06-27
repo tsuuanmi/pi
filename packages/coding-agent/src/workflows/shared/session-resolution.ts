@@ -13,7 +13,7 @@
 
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { PI_SESSION_PREFIX, piSessionRoot, sessionActivityPath, sessionIdFromDirName } from "./session-layout.ts";
+import { piSessionRoot, sessionActivityPath, sessionIdFromDirName } from "./session-layout.ts";
 
 // ---------------------------------------------------------------------------
 // Error types
@@ -143,7 +143,7 @@ export interface DetectedSession {
 }
 
 /**
- * Scan `.pi/` for `_session-*` directories and pick the latest one based
+ * Scan `.pi/` for session directories and pick the latest one based
  * on the `.session-activity.json` modification time. Directories without
  * an activity marker are ignored.
  *
@@ -160,7 +160,7 @@ export async function detectLatestSession(cwd: string): Promise<DetectedSession 
 		return undefined;
 	}
 
-	const sessionDirs = entries.filter((name) => name.startsWith(PI_SESSION_PREFIX));
+	const sessionDirs = entries.filter((name) => !name.startsWith("."));
 	if (sessionDirs.length === 0) return undefined;
 
 	// Check each session dir for an activity marker

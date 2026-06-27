@@ -6,7 +6,7 @@ pi --mode json "Your prompt"
 
 Outputs all session events as JSON lines to stdout. Useful for integrating pi into other tools or custom UIs.
 
-API usage logging, when enabled, is written only to the sidecar file at `<cwd>/.pi/_session-{encodedSessionId}/api-usage.jsonl`; it is never emitted on stdout.
+API usage logging, when enabled, is written only to the sidecar file at `<cwd>/.pi/{encodedSessionId}/api-usage.jsonl`; it is never emitted on stdout.
 
 ## Event Types
 
@@ -62,7 +62,7 @@ Extended messages from [`packages/coding-agent/src/core/misc/messages.ts`](https
 Each line is a JSON object. The first line is the session header:
 
 ```json
-{"type":"session","version":3,"id":"uuid","timestamp":"...","cwd":"/path"}
+{"type":"session","version":3,"id":"20260627-143522","timestamp":"...","cwd":"/path"}
 ```
 
 Followed by events as they occur:

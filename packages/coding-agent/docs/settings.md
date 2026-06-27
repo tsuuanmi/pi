@@ -68,7 +68,7 @@ On startup, Pi checks for available package (extension) updates. Use `--offline`
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `apiUsageLogging.enabled` | boolean | `true` | Write redacted sidecar API usage records to `<cwd>/.pi/_session-{encodedSessionId}/api-usage.jsonl` |
+| `apiUsageLogging.enabled` | boolean | `true` | Write redacted sidecar API usage records to `<cwd>/.pi/{encodedSessionId}/api-usage.jsonl` |
 
 See [API Usage Logging](api-usage-logging.md) for schema, privacy, and mode behavior.
 

@@ -18,9 +18,7 @@ describe("ApiUsageLogger", () => {
 		try {
 			await harness.session.prompt("hello Bearer abcdefghijklmnopqrstuvwxyz");
 			const logPath = apiUsageLogPath(harness.tempDir, harness.sessionManager.getSessionId());
-			expect(logPath).toBe(
-				join(harness.tempDir, ".pi", `_session-${harness.sessionManager.getSessionId()}`, "api-usage.jsonl"),
-			);
+			expect(logPath).toBe(join(harness.tempDir, ".pi", harness.sessionManager.getSessionId(), "api-usage.jsonl"));
 			const content = await waitForFile(logPath!);
 			const lines = content.trim().split("\n");
 			expect(lines).toHaveLength(1);

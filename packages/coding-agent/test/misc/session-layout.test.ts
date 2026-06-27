@@ -8,7 +8,6 @@ import {
 	auditLogPath,
 	decodeSessionSegment,
 	encodeSessionSegment,
-	PI_SESSION_PREFIX,
 	piGlobalRoot,
 	piSessionRoot,
 	sessionActivityPath,
@@ -75,20 +74,19 @@ describe("session-layout", () => {
 	});
 
 	describe("sessionDirName / sessionIdFromDirName", () => {
-		it("produces prefixed directory names", () => {
-			expect(sessionDirName("abc")).toBe("_session-abc");
+		it("produces bare encoded directory names", () => {
+			expect(sessionDirName("abc")).toBe("abc");
 		});
 
 		it("round-trips through encodeSessionSegment", () => {
 			const id = "test.session.id";
 			const dirName = sessionDirName(id);
-			expect(dirName).toContain(PI_SESSION_PREFIX);
+			expect(dirName).toBe("test%2Esession%2Eid");
 			expect(sessionIdFromDirName(dirName)).toBe(id);
 		});
 
-		it("returns undefined for non-session directory names", () => {
-			expect(sessionIdFromDirName("workflows")).toBeUndefined();
-			expect(sessionIdFromDirName("state")).toBeUndefined();
+		it("returns undefined for invalid encoded directory names", () => {
+			expect(sessionIdFromDirName("%E0%A4%A")).toBeUndefined();
 		});
 	});
 
@@ -100,7 +98,7 @@ describe("session-layout", () => {
 
 	describe("piSessionRoot", () => {
 		it("returns session-scoped root directory", () => {
-			expect(piSessionRoot("/project", "sess-1")).toBe(join("/project", ".pi", "_session-sess-1"));
+			expect(piSessionRoot("/project", "sess-1")).toBe(join("/project", ".pi", "sess-1"));
 		});
 	});
 
@@ -117,13 +115,13 @@ describe("session-layout", () => {
 
 		it("workflowStatePath resolves to session dir", () => {
 			expect(workflowStatePath(cwd, "ralplan", "sess-1")).toBe(
-				join(cwd, ".pi", "_session-sess-1", "workflows", "ralplan", "state.json"),
+				join(cwd, ".pi", "sess-1", "workflows", "ralplan", "state.json"),
 			);
 		});
 
 		it("workflowActiveStatePath resolves to session dir", () => {
 			expect(workflowActiveStatePath(cwd, "sess-1")).toBe(
-				join(cwd, ".pi", "_session-sess-1", "workflows", "active-state.json"),
+				join(cwd, ".pi", "sess-1", "workflows", "active-state.json"),
 			);
 		});
 
@@ -198,8 +196,8 @@ describe("session-resolution", () => {
 		});
 
 		it("returns the latest session with an activity marker", async () => {
-			await mkdir(join(cwd, ".pi", "_session-sess-1", "workflows"), { recursive: true });
-			await mkdir(join(cwd, ".pi", "_session-sess-2", "workflows"), { recursive: true });
+			await mkdir(join(cwd, ".pi", "sess-1", "workflows"), { recursive: true });
+			await mkdir(join(cwd, ".pi", "sess-2", "workflows"), { recursive: true });
 			await writeSessionActivityMarker(cwd, "sess-1");
 			// Delay so sess-2 has a clearly newer timestamp (beyond tie window)
 			await new Promise((resolve) => setTimeout(resolve, 1100));
@@ -210,7 +208,7 @@ describe("session-resolution", () => {
 		});
 
 		it("ignores sessions without activity markers", async () => {
-			await mkdir(join(cwd, ".pi", "_session-sess-1", "workflows"), { recursive: true });
+			await mkdir(join(cwd, ".pi", "sess-1", "workflows"), { recursive: true });
 			// No activity marker for sess-1
 
 			const result = await detectLatestSession(cwd);

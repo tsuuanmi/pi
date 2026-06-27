@@ -3,7 +3,7 @@
  *
  * Pure, acyclic path module. Two root functions:
  *   - `piGlobalRoot(cwd)` → `.pi/` (legacy/global state + state-integrity logs)
- *   - `piSessionRoot(cwd, sessionId)` → `.pi/_session-{encoded}/` when a session id is supplied
+ *   - `piSessionRoot(cwd, sessionId)` → `.pi/{encoded}/` when a session id is supplied
  *
  * Omitted session ids intentionally use the legacy global `.pi/` layout for
  * backward compatibility. CLI/tool surfaces still resolve and pass explicit
@@ -16,9 +16,6 @@ import type { RalplanStage, WorkflowSkill } from "./paths.ts";
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-/** Directory name prefix for session-scoped directories under `.pi/`. */
-export const PI_SESSION_PREFIX = "_session-";
 
 /** File name for the session activity marker within a session directory. */
 export const PI_SESSION_ACTIVITY_FILE = ".session-activity.json";
@@ -67,16 +64,15 @@ export function assertNonEmptySessionId(value: unknown, source: string): asserts
 // Session directory helpers
 // ---------------------------------------------------------------------------
 
-/** Return the directory name (not full path) for a session id, e.g. `_session-0192aaaa...`. */
+/** Return the directory name (not full path) for a session id, e.g. `20260627-143522`. */
 export function sessionDirName(id: string): string {
-	return `${PI_SESSION_PREFIX}${encodeSessionSegment(id)}`;
+	return encodeSessionSegment(id);
 }
 
-/** Extract the session id from a session directory name like `_session-0192aaaa...`. */
+/** Extract the session id from a session directory name like `20260627-143522`. */
 export function sessionIdFromDirName(name: string): string | undefined {
-	if (!name.startsWith(PI_SESSION_PREFIX)) return undefined;
 	try {
-		return decodeSessionSegment(name.slice(PI_SESSION_PREFIX.length));
+		return decodeSessionSegment(name);
 	} catch {
 		return undefined;
 	}
@@ -114,7 +110,7 @@ export function transactionJournalPath(cwd: string, mutationId: string): string 
 
 /**
  * Full path to the workflow state root. With a session id, this returns
- * `cwd/.pi/_session-{encoded}/`; without one, it returns the legacy global
+ * `cwd/.pi/{encoded}/`; without one, it returns the legacy global
  * `.pi/` root for backward compatibility.
  */
 export function piSessionRoot(cwd: string, sessionId?: string): string {
@@ -124,7 +120,7 @@ export function piSessionRoot(cwd: string, sessionId?: string): string {
 
 /**
  * Path to the session activity marker file for a given session.
- * `.pi/_session-{encoded}/.session-activity.json`
+ * `.pi/{encoded}/.session-activity.json`
  */
 export function sessionActivityPath(cwd: string, sessionId: string): string {
 	return join(piSessionRoot(cwd, sessionId), PI_SESSION_ACTIVITY_FILE);

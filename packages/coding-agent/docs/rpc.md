@@ -20,7 +20,7 @@ Common options:
 - **Commands**: JSON objects sent to stdin, one per line
 - **Responses**: JSON objects with `type: "response"` indicating command success/failure
 - **Events**: Agent events streamed to stdout as JSON lines
-- **API usage logs**: written only to the sidecar file at `<cwd>/.pi/_session-{encodedSessionId}/api-usage.jsonl` when enabled; never sent over stdout
+- **API usage logs**: written only to the sidecar file at `<cwd>/.pi/{encodedSessionId}/api-usage.jsonl` when enabled; never sent over stdout
 
 All commands support an optional `id` field for request/response correlation. If provided, the corresponding response will include the same `id`.
 

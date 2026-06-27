@@ -4,7 +4,7 @@ import { basename, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SessionManager } from "../../src/core/session-manager/session-manager.ts";
 
-const UUID_V7_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const TIMESTAMP_SESSION_ID_RE = /^\d{8}-\d{6}$/;
 
 describe("SessionManager.newSession with custom id", () => {
 	it("uses the provided id instead of generating one", () => {
@@ -30,22 +30,22 @@ describe("SessionManager.newSession with custom id", () => {
 		}
 	});
 
-	it("generates a UUIDv7 id when no id is provided", () => {
+	it("generates a timestamp id when no id is provided", () => {
 		const session = SessionManager.inMemory();
 		session.newSession();
 		const id = session.getSessionId();
 		expect(id).toBeDefined();
 		expect(id).not.toBe("");
-		expect(id).toMatch(UUID_V7_RE);
+		expect(id).toMatch(TIMESTAMP_SESSION_ID_RE);
 	});
 
-	it("generates a UUIDv7 id when options is provided without id", () => {
+	it("generates a timestamp id when options is provided without id", () => {
 		const session = SessionManager.inMemory();
 		session.newSession({ parentSession: "parent.jsonl" });
 		const id = session.getSessionId();
 		expect(id).toBeDefined();
 		expect(id).not.toBe("");
-		expect(id).toMatch(UUID_V7_RE);
+		expect(id).toMatch(TIMESTAMP_SESSION_ID_RE);
 	});
 
 	it("includes the custom id in the session header", () => {
@@ -57,9 +57,9 @@ describe("SessionManager.newSession with custom id", () => {
 		expect(header!.id).toBe("header-test-id");
 	});
 
-	it("generates a UUIDv7 id when constructed without an explicit id", () => {
+	it("generates a timestamp id when constructed without an explicit id", () => {
 		const session = SessionManager.inMemory();
-		expect(session.getSessionId()).toMatch(UUID_V7_RE);
+		expect(session.getSessionId()).toMatch(TIMESTAMP_SESSION_ID_RE);
 		expect(session.getHeader()!.id).toBe(session.getSessionId());
 	});
 
@@ -75,7 +75,7 @@ describe("SessionManager.newSession with custom id", () => {
 		expect(existsSync(sessionFile)).toBe(false);
 	});
 
-	it("generates a UUIDv7 id when creating a branched session", () => {
+	it("generates a timestamp id when creating a branched session", () => {
 		const session = SessionManager.inMemory();
 		const firstId = session.appendMessage({
 			role: "user",
@@ -85,11 +85,11 @@ describe("SessionManager.newSession with custom id", () => {
 
 		session.createBranchedSession(firstId);
 
-		expect(session.getSessionId()).toMatch(UUID_V7_RE);
+		expect(session.getSessionId()).toMatch(TIMESTAMP_SESSION_ID_RE);
 		expect(session.getHeader()!.id).toBe(session.getSessionId());
 	});
 
-	it("generates a UUIDv7 id when forking from another session file", () => {
+	it("generates a timestamp id when forking from another session file", () => {
 		const tempDir = mkdtempSync(join(tmpdir(), "pi-session-manager-"));
 		const sourcePath = join(tempDir, "source.jsonl");
 		writeFileSync(
@@ -132,7 +132,7 @@ describe("SessionManager.newSession with custom id", () => {
 		const forked = SessionManager.forkFrom(sourcePath, tempDir, tempDir);
 		const header = forked.getHeader();
 		expect(header).not.toBeNull();
-		expect(header!.id).toMatch(UUID_V7_RE);
+		expect(header!.id).toMatch(TIMESTAMP_SESSION_ID_RE);
 		expect(header!.parentSession).toBe(sourcePath);
 	});
 

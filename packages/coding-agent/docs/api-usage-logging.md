@@ -5,7 +5,7 @@ Pi writes one sidecar JSONL record for each completed logical LLM provider invoc
 Path:
 
 ```text
-<cwd>/.pi/_session-{encodedSessionId}/api-usage.jsonl
+<cwd>/.pi/{encodedSessionId}/api-usage.jsonl
 ```
 
 The log is written by `AgentSession`, so it applies to interactive, print, JSON, RPC, and SDK sessions. Records are sidecar files only; JSON and RPC stdout streams never include API usage records or logger diagnostics.

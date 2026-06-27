@@ -18,7 +18,6 @@ export {
 	deepInterviewSpecPath,
 	encodeSessionSegment,
 	PI_SESSION_ACTIVITY_FILE,
-	PI_SESSION_PREFIX,
 	piGlobalRoot,
 	piSessionRoot,
 	piSpecsDir,
