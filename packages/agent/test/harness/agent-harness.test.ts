@@ -6,8 +6,8 @@ import { InMemorySessionStorage } from "../../src/harness/session/memory-storage
 import { Session } from "../../src/harness/session/session.ts";
 import type { PromptTemplate, Skill } from "../../src/harness/types.ts";
 import type { AgentMessage, AgentTool } from "../../src/types.ts";
-import { calculateTool } from "../utils/calculate.ts";
-import { getCurrentTimeTool } from "../utils/get-current-time.ts";
+import { calculateTool } from "../helpers/calculate.ts";
+import { getCurrentTimeTool } from "../helpers/get-current-time.ts";
 
 interface AppSkill extends Skill {
 	source: "project" | "user";

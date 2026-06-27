@@ -4,7 +4,7 @@ import { AgentHarness } from "../../src/harness/agent-harness.ts";
 import { NodeExecutionEnv } from "../../src/harness/env/nodejs.ts";
 import { InMemorySessionStorage } from "../../src/harness/session/memory-storage.ts";
 import { Session } from "../../src/harness/session/session.ts";
-import { calculateTool } from "../utils/calculate.ts";
+import { calculateTool } from "../helpers/calculate.ts";
 
 const registrations: Array<{ unregister(): void }> = [];
 
