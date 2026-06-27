@@ -103,7 +103,7 @@ function findReceiptGoal(
  */
 export async function readUltragoalVerificationState(
 	cwd: string,
-	sessionId?: string,
+	sessionId: string,
 	input: UltragoalGuardInput = {},
 ): Promise<UltragoalGuardDiagnostic> {
 	let plan: UltragoalPlan | undefined;
@@ -186,15 +186,13 @@ export async function readUltragoalVerificationState(
 /** Entrypoint for the `ultragoal_guard` tool. */
 export async function ultragoalGuard(
 	cwd: string,
-	sessionId?: string | UltragoalGuardInput,
+	sessionId: string,
 	input: UltragoalGuardInput = {},
 ): Promise<UltragoalGuardDiagnostic & { ledger_path: string; goals_path: string }> {
-	const effectiveSessionId = typeof sessionId === "string" ? sessionId : undefined;
-	const effectiveInput = typeof sessionId === "object" && sessionId !== null ? sessionId : input;
-	const diagnostic = await readUltragoalVerificationState(cwd, effectiveSessionId, effectiveInput);
+	const diagnostic = await readUltragoalVerificationState(cwd, sessionId, input);
 	return {
 		...diagnostic,
-		ledger_path: ultragoalLedgerPath(cwd, effectiveSessionId),
-		goals_path: ultragoalGoalsPath(cwd, effectiveSessionId),
+		ledger_path: ultragoalLedgerPath(cwd, sessionId),
+		goals_path: ultragoalGoalsPath(cwd, sessionId),
 	};
 }

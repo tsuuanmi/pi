@@ -15,7 +15,7 @@ import { readWorkflowState, writeWorkflowState } from "./workflow-state.ts";
  * Generic, transaction-backed workflow handoff.
  *
  * Orchestrates a caller→callee handoff with Gajae-faithful durability: a
- * per-mutation journal under `.pi/state/transactions/<id>.json`, both-side
+ * per-mutation journal under `.pi/{session}/state/transactions/<id>.json`, both-side
  * mode-state receipts sharing one `mutationId`, and the write order
  * callee → caller → active-state. The existing `applyHandoffToActiveState`
  * (with its `handoff-receive` active-state operation) is preserved for HUD
@@ -49,8 +49,8 @@ export interface HandoffWorkflowOptions {
 	mutationId?: string;
 	/** Internal force flag (bypasses tamper hard-block). No public surface. */
 	force?: boolean;
-	/** Session id for session-scoped path resolution. Omit to use legacy global state. */
-	sessionId?: string;
+	/** Session id for session-scoped path resolution. */
+	sessionId: string;
 	nowIso?: string;
 }
 
@@ -88,7 +88,11 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 			`handoff session mismatch: caller has session ${callerSessionId} but callee has session ${calleeSessionId}`,
 		);
 	}
-	const sessionId = options.sessionId ?? callerSessionId ?? calleeSessionId;
+	// sessionId is required in HandoffWorkflowOptions, but also accept it from caller/callee
+	// for backward compatibility with callers that pass it per-side.
+	const sessionId = options.sessionId;
+	void callerSessionId;
+	void calleeSessionId;
 	const handoffAt = options.nowIso ?? new Date().toISOString();
 	const mutationId = options.mutationId ?? `${callerSkill}:handoff:${calleeSkill}:${handoffAt}`;
 	const force = options.force ?? false;
@@ -150,7 +154,7 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		options.command,
 		{ operation: "handoff-receive", force, mutationId, sessionId },
 	);
-	await updateWorkflowTransactionJournal(cwd, mutationId, HANDOFF_STEPS[0]);
+	await updateWorkflowTransactionJournal(cwd, sessionId, mutationId, HANDOFF_STEPS[0]);
 
 	// 2. Write caller mode-state (demote).
 	const callerState = await writeWorkflowState(
@@ -166,7 +170,7 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		options.command,
 		{ operation: "handoff-send", force, mutationId, sessionId },
 	);
-	await updateWorkflowTransactionJournal(cwd, mutationId, HANDOFF_STEPS[1]);
+	await updateWorkflowTransactionJournal(cwd, sessionId, mutationId, HANDOFF_STEPS[1]);
 
 	// 3. Crash-injection
 	if (process.env.PI_WORKFLOW_HANDOFF_FAIL_AFTER_CALLER === mutationId) {
@@ -189,9 +193,9 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		sessionId,
 		nowIso: handoffAt,
 	});
-	await updateWorkflowTransactionJournal(cwd, mutationId, HANDOFF_STEPS[2]);
+	await updateWorkflowTransactionJournal(cwd, sessionId, mutationId, HANDOFF_STEPS[2]);
 
-	await completeWorkflowTransactionJournal(cwd, mutationId);
+	await completeWorkflowTransactionJournal(cwd, sessionId, mutationId);
 
 	return {
 		mutationId,

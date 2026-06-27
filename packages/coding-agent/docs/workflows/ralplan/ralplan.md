@@ -4,12 +4,13 @@ Runtime workflow for the ralplan skill.
 
 ## Overview
 
-The ralplan workflow manages the planning state machine, persisting progress to `.pi/workflows/ralplan/`. It coordinates Planner, Architect, and Critic role agents through iterative review passes.
+The ralplan workflow manages the planning state machine, persisting progress under the current session root at `.pi/<session-id>/workflows/ralplan/`. It coordinates Planner, Architect, and Critic role agents through iterative review passes.
 
 ## State Files
 
-- `.pi/workflows/ralplan/state.json` — Current planning state
-- `.pi/plans/ralplan/<run-id>/` — Plan artifacts
+- `.pi/<session-id>/workflows/ralplan/state.json` — Current planning state
+- `.pi/<session-id>/workflows/ralplan/agents/` — Planner/Architect/Critic role-agent records
+- `.pi/<session-id>/plans/ralplan/<run-id>/` — Plan artifacts
 
 ## Role Agents
 

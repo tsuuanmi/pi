@@ -135,6 +135,7 @@ async function executeSubagentSpawn(params: SubagentSpawnInput, ctx: ExtensionCo
 		detached: params.detached,
 		label: params.label,
 		parentSessionId: ctx.sessionManager.getSessionId(),
+		storageSessionId: ctx.sessionManager.getSessionId(),
 		signal,
 	});
 	return {
@@ -149,15 +150,16 @@ async function executeSubagentStatus(params: SubagentStatusInput, ctx: Extension
 	if (verbosity === "full" && !params.id) {
 		throw new Error("verbosity=full requires an explicit subagent id.");
 	}
+	const sessionId = ctx.sessionManager.getSessionId();
 	if (params.id) {
-		const record = await manager.read(params.id);
+		const record = await manager.read(params.id, sessionId);
 		return {
 			content: [{ type: "text" as const, text: formatSubagentRecord(record, verbosity) }],
 			details: workflowReceipt({ record: record ?? null }),
 		};
 	}
 	const limit = Math.max(1, Math.min(50, Math.floor(params.limit ?? 10)));
-	const records = (await manager.list()).slice(0, limit);
+	const records = (await manager.list(sessionId)).slice(0, limit);
 	const summary = records.map((r) => ({
 		id: r.id,
 		role: r.role,
@@ -173,7 +175,10 @@ async function executeSubagentStatus(params: SubagentStatusInput, ctx: Extension
 async function executeSubagentAwait(params: SubagentAwaitInput, ctx: ExtensionContext) {
 	const manager = requireSubagentManager(ctx);
 	const verbosity = normalizeSubagentVerbosity(params.verbosity);
-	const result = await manager.waitFor(params.id, { timeoutMs: params.timeoutMs });
+	const result = await manager.waitFor(params.id, {
+		timeoutMs: params.timeoutMs,
+		sessionId: ctx.sessionManager.getSessionId(),
+	});
 	if (!result.ok) {
 		const progressText = result.progress ? `\n\n${renderSubagentProgress(result.progress)}` : "";
 		return {
@@ -196,7 +201,10 @@ async function executeSubagentAwait(params: SubagentAwaitInput, ctx: ExtensionCo
 }
 
 async function executeSubagentResume(params: SubagentResumeInput, ctx: ExtensionContext, signal?: AbortSignal) {
-	const result = await requireSubagentManager(ctx).resume(params.id, params.message, { signal });
+	const result = await requireSubagentManager(ctx).resume(params.id, params.message, {
+		signal,
+		storageSessionId: ctx.sessionManager.getSessionId(),
+	});
 	if (!result.ok) {
 		return {
 			content: [{ type: "text" as const, text: `Subagent ${params.id} resume failed: ${result.reason}` }],
@@ -211,7 +219,12 @@ async function executeSubagentResume(params: SubagentResumeInput, ctx: Extension
 
 async function executeSubagentSteer(params: SubagentSteerInput, ctx: ExtensionContext) {
 	const delivery = params.delivery === "followUp" ? "followUp" : "steer";
-	const result = await requireSubagentManager(ctx).steer(params.id, params.message, delivery);
+	const result = await requireSubagentManager(ctx).steer(
+		params.id,
+		params.message,
+		delivery,
+		ctx.sessionManager.getSessionId(),
+	);
 	if (!result.ok) {
 		return {
 			content: [{ type: "text" as const, text: `Subagent ${params.id} steer failed: ${result.reason}` }],
@@ -225,7 +238,7 @@ async function executeSubagentSteer(params: SubagentSteerInput, ctx: ExtensionCo
 }
 
 async function executeSubagentPause(params: SubagentPauseInput, ctx: ExtensionContext) {
-	const result = await requireSubagentManager(ctx).pause(params.id);
+	const result = await requireSubagentManager(ctx).pause(params.id, ctx.sessionManager.getSessionId());
 	return {
 		content: [
 			{
@@ -240,7 +253,7 @@ async function executeSubagentPause(params: SubagentPauseInput, ctx: ExtensionCo
 }
 
 async function executeSubagentCancel(params: SubagentIdInput, ctx: ExtensionContext) {
-	const record = await requireSubagentManager(ctx).cancel(params.id);
+	const record = await requireSubagentManager(ctx).cancel(params.id, ctx.sessionManager.getSessionId());
 	return {
 		content: [
 			{

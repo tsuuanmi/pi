@@ -4,13 +4,13 @@ Runtime workflow for the ultragoal skill.
 
 ## Overview
 
-The ultragoal workflow manages the goal-tracking state machine, persisting progress to `.pi/workflows/ultragoal/`. Each goal has quality gates that must pass before marking as complete.
+The ultragoal workflow manages the goal-tracking state machine, persisting progress under the current session root at `.pi/<session-id>/workflows/ultragoal/`. Each goal has quality gates that must pass before marking as complete.
 
 ## State Files
 
-- `.pi/workflows/ultragoal/state.json` — Current goal state
-- `.pi/workflows/ultragoal/goals.json` — Goal definitions
-- `.pi/workflows/ultragoal/ledger.jsonl` — Goal transition log
+- `.pi/<session-id>/workflows/ultragoal/state.json` — Current goal state
+- `.pi/<session-id>/ultragoal/goals.json` — Goal definitions
+- `.pi/<session-id>/ultragoal/ledger.jsonl` — Goal transition log
 
 ## Quality Gates
 

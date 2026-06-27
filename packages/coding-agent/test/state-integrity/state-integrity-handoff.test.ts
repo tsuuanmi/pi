@@ -28,7 +28,7 @@ function receiptOf(envelope: Record<string, unknown>): Record<string, unknown> {
 
 async function journalExists(cwd: string, mutationId: string): Promise<boolean> {
 	try {
-		await readFile(transactionJournalPath(cwd, mutationId), "utf8");
+		await readFile(transactionJournalPath(cwd, TEST_SESSION, mutationId), "utf8");
 		return true;
 	} catch (error) {
 		const err = error as NodeJS.ErrnoException;

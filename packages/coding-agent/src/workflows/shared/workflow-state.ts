@@ -27,13 +27,13 @@ export interface WorkflowStateWriteOptions {
 	force?: boolean;
 	/** Shared mutation id for both-side receipts + audit + transaction journal. Internal-only. */
 	mutationId?: string;
-	/** Session id for session-scoped path resolution. Omit to use legacy global state. */
-	sessionId?: string;
+	/** Session id for session-scoped path resolution. */
+	sessionId: string;
 }
 
 export interface WorkflowStateReadOptions {
-	/** Session id for session-scoped path resolution. Omit to use legacy global state. */
-	sessionId?: string;
+	/** Session id for session-scoped path resolution. */
+	sessionId: string;
 }
 
 interface PriorPhaseInfo {
@@ -44,7 +44,7 @@ interface PriorPhaseInfo {
 export async function readWorkflowState(
 	cwd: string,
 	skill: WorkflowSkill,
-	options: WorkflowStateReadOptions = {},
+	options: WorkflowStateReadOptions,
 ): Promise<Record<string, unknown> | undefined> {
 	const result = await readExistingStateForMutation(workflowStatePath(cwd, skill, options.sessionId));
 	if (result.kind === "absent") return undefined;
@@ -103,6 +103,7 @@ async function validateWorkflowStateWrite(input: {
 	cwd: string;
 	path: string;
 	mutationId: string;
+	sessionId: string;
 }): Promise<void> {
 	const rawSkill = input.patch.skill;
 	if (typeof rawSkill === "string" && rawSkill !== input.skill) {
@@ -168,7 +169,7 @@ async function validateWorkflowStateWrite(input: {
 		// skill-mismatch / unknown-phase throws are separate hard-blocks that emit
 		// no `invalid_transition_detected`. Forced writes return early above and
 		// never reach here.
-		await safeAppendAuditEntry(input.cwd, {
+		await safeAppendAuditEntry(input.cwd, input.sessionId, {
 			ts: new Date().toISOString(),
 			skill: input.skill,
 			category: "state",
@@ -199,9 +200,10 @@ async function persistWorkflowState(
 	existingForMerge: Record<string, unknown>,
 	patch: Record<string, unknown>,
 	command: string,
-	options: WorkflowStateWriteOptions = {},
+	options: WorkflowStateWriteOptions,
 ): Promise<WorkflowStateEnvelope> {
-	const path = workflowStatePath(cwd, skill, options.sessionId);
+	const sessionId = options.sessionId;
+	const path = workflowStatePath(cwd, skill, sessionId);
 	const mutatedAt = nowIso();
 	const mutationId = options.mutationId ?? randomUUID();
 	const next = coerceWorkflowState(skill, existingForMerge, patch, mutatedAt);
@@ -212,6 +214,7 @@ async function persistWorkflowState(
 	await auditOutOfBandAndThrowIfUnforced(cwd, path, skill, {
 		mutationId,
 		forced: options.force ?? false,
+		sessionId,
 	});
 	// Transition gate (async: emits `invalid_transition_detected` before throwing
 	// on a non-manifest-edge internal transition; forced writes skip the gate).
@@ -226,6 +229,7 @@ async function persistWorkflowState(
 		cwd,
 		path,
 		mutationId,
+		sessionId,
 	});
 	next.receipt = createWorkflowReceipt({
 		skill,
@@ -251,13 +255,14 @@ async function persistWorkflowState(
 		fromPhase,
 		toPhase,
 		forced: options.force ?? false,
+		sessionId,
 	});
 	// Force bypass: record that a forced write overwrote mode-state. Fires on
 	// every forced write (not only tamper repairs), mirroring Gajae's
 	// `forceOverwrite` audit category. Deliberately broader than Gajae's
 	// separate raw-force surface (spec-controlling).
 	if (options.force) {
-		await safeAppendAuditEntry(cwd, {
+		await safeAppendAuditEntry(cwd, sessionId, {
 			ts: new Date().toISOString(),
 			skill,
 			category: "state",
@@ -266,7 +271,7 @@ async function persistWorkflowState(
 			mutation_id: mutationId,
 			...(fromPhase ? { from_phase: fromPhase } : {}),
 			...(toPhase ? { to_phase: toPhase } : {}),
-			...(options.sessionId ? { session_id: options.sessionId } : {}),
+			session_id: sessionId,
 			forced: true,
 			paths: [path],
 		});
@@ -279,9 +284,10 @@ export async function writeWorkflowState(
 	skill: WorkflowSkill,
 	patch: Record<string, unknown>,
 	command = "pi workflow state write",
-	options: WorkflowStateWriteOptions = {},
+	options: WorkflowStateWriteOptions,
 ): Promise<WorkflowStateEnvelope> {
-	const path = workflowStatePath(cwd, skill, options.sessionId);
+	const sessionId = options.sessionId;
+	const path = workflowStatePath(cwd, skill, sessionId);
 	const existingRead = await readExistingStateForMutation(path);
 	if (existingRead.kind === "corrupt") {
 		throw new Error(`workflow state is corrupt: ${existingRead.error}`);
@@ -297,7 +303,7 @@ export async function writeWorkflowState(
 		operation: options.operation ?? "write",
 		force: options.force,
 		mutationId: options.mutationId,
-		sessionId: options.sessionId,
+		sessionId,
 	});
 }
 
@@ -306,9 +312,10 @@ export async function replaceWorkflowState(
 	skill: WorkflowSkill,
 	state: Record<string, unknown>,
 	command = "pi workflow state replace",
-	options: WorkflowStateWriteOptions = {},
+	options: WorkflowStateWriteOptions,
 ): Promise<WorkflowStateEnvelope> {
-	const path = workflowStatePath(cwd, skill, options.sessionId);
+	const sessionId = options.sessionId;
+	const path = workflowStatePath(cwd, skill, sessionId);
 	const existingRead = await readExistingStateForMutation(path);
 	if (existingRead.kind === "corrupt") {
 		throw new Error(`workflow state is corrupt: ${existingRead.error}`);
@@ -318,7 +325,7 @@ export async function replaceWorkflowState(
 		operation: options.operation ?? "replace",
 		force: options.force,
 		mutationId: options.mutationId,
-		sessionId: options.sessionId,
+		sessionId,
 	});
 }
 
@@ -326,7 +333,7 @@ export async function clearWorkflowState(
 	cwd: string,
 	skill: WorkflowSkill,
 	patch: Record<string, unknown> = {},
-	options: WorkflowStateWriteOptions = {},
+	options: WorkflowStateWriteOptions,
 ): Promise<WorkflowStateEnvelope> {
 	const clearPatch = { ...patch, active: false, current_phase: clearWorkflowPhase(skill) };
 	return writeWorkflowState(cwd, skill, clearPatch, "pi workflow state clear", {
@@ -336,7 +343,7 @@ export async function clearWorkflowState(
 	});
 }
 
-export async function activeRalplanRunId(cwd: string, sessionId?: string): Promise<string | undefined> {
+export async function activeRalplanRunId(cwd: string, sessionId: string): Promise<string | undefined> {
 	const state = await readWorkflowState(cwd, "ralplan", { sessionId });
 	const candidate = typeof state?.run_id === "string" ? state.run_id.trim() : "";
 	return candidate || undefined;

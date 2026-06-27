@@ -98,8 +98,10 @@ async function writeRunRecord(
 	result: Omit<RalplanAgentRunResult, "record_path">,
 	sessionId?: string,
 ): Promise<RalplanAgentRunResult> {
+	const storageSessionId = sessionId?.trim();
+	if (!storageSessionId) throw new Error("ralplan role-agent records require a session id");
 	const recordPath = join(
-		dirname(workflowStatePath(cwd, "ralplan", sessionId)),
+		dirname(workflowStatePath(cwd, "ralplan", storageSessionId)),
 		"agents",
 		`${result.agent_run_id}.json`,
 	);
@@ -114,9 +116,12 @@ export async function runRalplanAgent(
 	sessionId?: string,
 	signal?: AbortSignal,
 ): Promise<RalplanAgentRunResult> {
+	const storageSessionId = sessionId?.trim();
+	if (!storageSessionId) throw new Error("ralplan role-agent runs require a session id");
 	if (!Number.isInteger(input.stageN) || input.stageN < 1 || input.stageN > 999)
 		throw new Error(`invalid stageN: ${input.stageN}`);
-	const runId = input.runId?.trim() || (await activeRalplanRunId(cwd, sessionId)) || defaultWorkflowId("ralplan");
+	const runId =
+		input.runId?.trim() || (await activeRalplanRunId(cwd, storageSessionId)) || defaultWorkflowId("ralplan");
 	const agentRunId = `ralagent-${randomUUID()}`;
 	const prompt = rolePrompt(input.role);
 	const task = buildTask(input, runId);
@@ -134,7 +139,7 @@ export async function runRalplanAgent(
 				attempted_resume: input.attemptResume,
 				output: task,
 			},
-			sessionId,
+			storageSessionId,
 		);
 	}
 
@@ -142,6 +147,7 @@ export async function runRalplanAgent(
 	let subagentResult: SubagentRunResult;
 	if (input.attemptResume === true && input.plannerSubagentId) {
 		const resume = await input.subagentManager.resume(input.plannerSubagentId, task, {
+			storageSessionId,
 			agent: input.agent ?? input.role,
 			model: input.model,
 			thinkingLevel: input.thinkingLevel,
@@ -165,6 +171,8 @@ export async function runRalplanAgent(
 			tools: input.tools,
 			excludeTools: input.excludeTools,
 			persistent: true,
+			parentSessionId: storageSessionId,
+			storageSessionId,
 			signal,
 		});
 	}
@@ -183,7 +191,7 @@ export async function runRalplanAgent(
 			stderr: subagentResult.record.error_text,
 			messages: subagentMessages(subagentResult),
 		},
-		sessionId,
+		storageSessionId,
 	);
 }
 

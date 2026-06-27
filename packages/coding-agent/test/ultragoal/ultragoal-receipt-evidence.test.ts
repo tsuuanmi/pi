@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { assert, test } from "vitest";
 import { ultragoalLedgerPath } from "../../src/workflows/shared/paths.ts";
 import {
@@ -16,6 +16,8 @@ import {
 	type UltragoalPlan,
 	validateCompletionReceipt,
 } from "../../src/workflows/ultragoal/ultragoal-receipt.ts";
+
+const sessionId = "test-session-id";
 
 function makeGoal(id: string, objective: string, overrides: Partial<UltragoalGoal> = {}): UltragoalGoal {
 	return {
@@ -338,21 +340,22 @@ test("readUltragoalLedger: missing file => empty; corrupt line => UltragoalLedge
 	const dir = await mkdtemp(join(tmpdir(), "pi-ug-receipt-"));
 	try {
 		// Missing file => empty.
-		assert.deepEqual(await readUltragoalLedger(dir), []);
+		assert.deepEqual(await readUltragoalLedger(dir, sessionId), []);
 		await mkdir(join(dir, ".pi", "ultragoal"), { recursive: true });
-		const path = ultragoalLedgerPath(dir);
+		const path = ultragoalLedgerPath(dir, sessionId);
 		// Corrupt JSONL => typed error.
+		await mkdir(dirname(path), { recursive: true });
 		await writeFile(path, `${JSON.stringify({ eventId: "ok" })}\n{not valid json\n`);
 		let threw: unknown;
 		try {
-			await readUltragoalLedger(dir);
+			await readUltragoalLedger(dir, sessionId);
 		} catch (error) {
 			threw = error;
 		}
 		assert.ok(threw instanceof UltragoalLedgerUnreadable, `expected UltragoalLedgerUnreadable, got ${String(threw)}`);
 		// Valid => parsed.
 		await writeFile(path, `${JSON.stringify({ eventId: "e1", event: "plan_created" })}\n\n`);
-		const events = await readUltragoalLedger(dir);
+		const events = await readUltragoalLedger(dir, sessionId);
 		assert.strictEqual(events.length, 1);
 		assert.strictEqual(events[0].eventId, "e1");
 	} finally {

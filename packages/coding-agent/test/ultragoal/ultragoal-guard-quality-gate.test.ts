@@ -12,6 +12,8 @@ import {
 	startNextUltragoalGoal,
 } from "../../src/workflows/ultragoal/ultragoal-runtime.ts";
 
+const sessionId = "test-session-id";
+
 const PNG_CRC_TABLE = new Uint32Array(256).map((_, index) => {
 	let crc = index;
 	for (let bit = 0; bit < 8; bit += 1) crc = crc & 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1;
@@ -416,29 +418,29 @@ test("a valid web surface quality gate with non-uniform screenshot + automation 
 
 test("guard: inactive when no plan exists", async () => {
 	await withDir(async (cwd) => {
-		const diag = await ultragoalGuard(cwd);
+		const diag = await ultragoalGuard(cwd, sessionId);
 		assert.strictEqual(diag.state, "inactive");
 	});
 });
 
 test("guard: unrelated_goal when objective does not match", async () => {
 	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." });
-		await startNextUltragoalGoal(cwd);
-		const diag = await ultragoalGuard(cwd, { currentObjective: "totally unrelated objective text" });
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		const diag = await ultragoalGuard(cwd, sessionId, { currentObjective: "totally unrelated objective text" });
 		assert.strictEqual(diag.state, "unrelated_goal");
 	});
 });
 
 test("guard: active_missing_receipt when a complete goal has no fresh receipt", async () => {
 	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." });
-		await startNextUltragoalGoal(cwd);
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
 		// Mark the active goal complete WITHOUT going through the hardened checkpoint
 		// by writing a plan directly with status complete and no completionVerification.
 		// Easiest path: checkpoint as failed then the guard sees no receipt.
-		await checkpointUltragoalGoal(cwd, { goalId: "G001", status: "failed" });
-		const diag = await ultragoalGuard(cwd, { goalId: "G001" });
+		await checkpointUltragoalGoal(cwd, { goalId: "G001", status: "failed" }, sessionId);
+		const diag = await ultragoalGuard(cwd, sessionId, { goalId: "G001" });
 		// G001 is failed (terminal-ish) with no receipt -> missing receipt for per-goal.
 		assert.strictEqual(diag.state, "active_missing_receipt");
 	});
@@ -446,43 +448,51 @@ test("guard: active_missing_receipt when a complete goal has no fresh receipt", 
 
 test("guard: active_verified_complete after a valid typed checkpoint", async () => {
 	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." });
-		await startNextUltragoalGoal(cwd);
-		await checkpointUltragoalGoal(cwd, {
-			goalId: "G001",
-			status: "complete",
-			evidence: "Implemented and verified the runtime-owned state with focused automated checks.",
-			qualityGate: cliQualityGate(),
-		});
-		const diag = await ultragoalGuard(cwd, { goalId: "G001" });
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		await checkpointUltragoalGoal(
+			cwd,
+			{
+				goalId: "G001",
+				status: "complete",
+				evidence: "Implemented and verified the runtime-owned state with focused automated checks.",
+				qualityGate: cliQualityGate(),
+			},
+			sessionId,
+		);
+		const diag = await ultragoalGuard(cwd, sessionId, { goalId: "G001" });
 		assert.strictEqual(diag.state, "active_verified_complete", diag.message);
 	});
 });
 
 test("guard: active_review_blocked_unrecorded for a review_blocked active goal", async () => {
 	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." });
-		await startNextUltragoalGoal(cwd);
-		await checkpointUltragoalGoal(cwd, { goalId: "G001", status: "review_blocked" });
-		const diag = await ultragoalGuard(cwd, { goalId: "G001" });
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		await checkpointUltragoalGoal(cwd, { goalId: "G001", status: "review_blocked" }, sessionId);
+		const diag = await ultragoalGuard(cwd, sessionId, { goalId: "G001" });
 		assert.strictEqual(diag.state, "active_review_blocked_unrecorded", diag.message);
 	});
 });
 
 test("guard: story objective resolves to that goal's per-goal receipt (Gajae parity)", async () => {
 	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." });
-		await startNextUltragoalGoal(cwd);
-		await checkpointUltragoalGoal(cwd, {
-			goalId: "G001",
-			status: "complete",
-			evidence: "Implemented and verified the first goal with focused automated checks.",
-			qualityGate: cliQualityGate(),
-		});
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		await checkpointUltragoalGoal(
+			cwd,
+			{
+				goalId: "G001",
+				status: "complete",
+				evidence: "Implemented and verified the first goal with focused automated checks.",
+				qualityGate: cliQualityGate(),
+			},
+			sessionId,
+		);
 		// G002 still pending. A story objective matching G001's own objective text must
 		// take the per-goal branch (resolve G001's per-goal receipt), NOT the
 		// final-aggregate branch (which would find no final receipt and omit goalId).
-		const diag = await ultragoalGuard(cwd, { currentObjective: "Do A." });
+		const diag = await ultragoalGuard(cwd, sessionId, { currentObjective: "Do A." });
 		assert.strictEqual(diag.state, "active_missing_final_receipt", diag.message);
 		assert.strictEqual(diag.goalId, "G001", diag.message);
 	});
@@ -490,89 +500,111 @@ test("guard: story objective resolves to that goal's per-goal receipt (Gajae par
 
 test("guard: objective path flags any sibling review_blocked (Gajae parity)", async () => {
 	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." });
-		await startNextUltragoalGoal(cwd);
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
 		// G001 verified complete with a per-goal receipt; G002 is review_blocked.
-		await checkpointUltragoalGoal(cwd, {
-			goalId: "G001",
-			status: "complete",
-			evidence: "Implemented and verified the first goal with focused automated checks.",
-			qualityGate: cliQualityGate(),
-		});
-		await startNextUltragoalGoal(cwd);
-		await checkpointUltragoalGoal(cwd, { goalId: "G002", status: "review_blocked" });
+		await checkpointUltragoalGoal(
+			cwd,
+			{
+				goalId: "G001",
+				status: "complete",
+				evidence: "Implemented and verified the first goal with focused automated checks.",
+				qualityGate: cliQualityGate(),
+			},
+			sessionId,
+		);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		await checkpointUltragoalGoal(cwd, { goalId: "G002", status: "review_blocked" }, sessionId);
 		// Inspecting G001 by goalId still reports verified (focused per-goal view).
-		const perGoal = await ultragoalGuard(cwd, { goalId: "G001" });
+		const perGoal = await ultragoalGuard(cwd, sessionId, { goalId: "G001" });
 		assert.strictEqual(perGoal.state, "active_verified_complete", perGoal.message);
 		// The aggregate objective path sees the sibling blocker.
-		const objective = await ultragoalGuard(cwd);
+		const objective = await ultragoalGuard(cwd, sessionId);
 		assert.strictEqual(objective.state, "active_review_blocked_unrecorded", objective.message);
 	});
 });
 
 test("guard: objective path returns active_missing_final_receipt when a verified per-goal goal leaves siblings incomplete", async () => {
 	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." });
-		await startNextUltragoalGoal(cwd);
-		await checkpointUltragoalGoal(cwd, {
-			goalId: "G001",
-			status: "complete",
-			evidence: "Implemented and verified the first goal with focused automated checks.",
-			qualityGate: cliQualityGate(),
-		});
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		await checkpointUltragoalGoal(
+			cwd,
+			{
+				goalId: "G001",
+				status: "complete",
+				evidence: "Implemented and verified the first goal with focused automated checks.",
+				qualityGate: cliQualityGate(),
+			},
+			sessionId,
+		);
 		// G001 has a fresh per-goal receipt; G002 is still pending. The aggregate
 		// objective path must report incomplete required goals.
-		const diag = await ultragoalGuard(cwd);
+		const diag = await ultragoalGuard(cwd, sessionId);
 		assert.strictEqual(diag.state, "active_missing_final_receipt", diag.message);
 	});
 });
 
 test("guard: unreadable_fail_closed for a corrupt ledger", async () => {
 	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." });
-		await startNextUltragoalGoal(cwd);
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
 		await mkdir(join(cwd, ".pi", "ultragoal"), { recursive: true });
-		await writeFile(ultragoalLedgerPath(cwd), `${JSON.stringify({ eventId: "ok" })}\n{bad json\n`);
-		const diag = await ultragoalGuard(cwd, { goalId: "G001" });
+		await writeFile(ultragoalLedgerPath(cwd, sessionId), `${JSON.stringify({ eventId: "ok" })}\n{bad json\n`);
+		const diag = await ultragoalGuard(cwd, sessionId, { goalId: "G001" });
 		assert.strictEqual(diag.state, "unreadable_fail_closed", diag.message);
 	});
 });
 
 test("guard: active_missing_final_receipt when aggregate objective matches but no final receipt", async () => {
 	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." });
-		await startNextUltragoalGoal(cwd);
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
 		// Complete G001 with a per-goal receipt; the aggregate objective is still
 		// unmatched (no final-aggregate receipt yet).
-		await checkpointUltragoalGoal(cwd, {
-			goalId: "G001",
-			status: "complete",
-			evidence: "Implemented and verified the first goal with focused automated checks.",
-			qualityGate: cliQualityGate(),
+		await checkpointUltragoalGoal(
+			cwd,
+			{
+				goalId: "G001",
+				status: "complete",
+				evidence: "Implemented and verified the first goal with focused automated checks.",
+				qualityGate: cliQualityGate(),
+			},
+			sessionId,
+		);
+		const diag = await ultragoalGuard(cwd, sessionId, {
+			currentObjective: "Complete all approved goals with verification",
 		});
-		const diag = await ultragoalGuard(cwd, { currentObjective: "Complete all approved goals with verification" });
 		assert.strictEqual(diag.state, "active_missing_final_receipt", diag.message);
 	});
 });
 
 test("aggregate off-by-one: second-to-last goal is per-goal, last required goal is final-aggregate", async () => {
 	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." });
-		await startNextUltragoalGoal(cwd);
-		const first = await checkpointUltragoalGoal(cwd, {
-			goalId: "G001",
-			status: "complete",
-			evidence: "Implemented and verified the first goal with focused automated checks.",
-			qualityGate: cliQualityGate(),
-		});
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		const first = await checkpointUltragoalGoal(
+			cwd,
+			{
+				goalId: "G001",
+				status: "complete",
+				evidence: "Implemented and verified the first goal with focused automated checks.",
+				qualityGate: cliQualityGate(),
+			},
+			sessionId,
+		);
 		assert.strictEqual(first.completionVerification?.receiptKind, "per-goal", "G001 is not the last required goal");
-		await startNextUltragoalGoal(cwd);
-		const last = await checkpointUltragoalGoal(cwd, {
-			goalId: "G002",
-			status: "complete",
-			evidence: "Implemented and verified the final goal with focused automated checks.",
-			qualityGate: cliQualityGate(),
-		});
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		const last = await checkpointUltragoalGoal(
+			cwd,
+			{
+				goalId: "G002",
+				status: "complete",
+				evidence: "Implemented and verified the final goal with focused automated checks.",
+				qualityGate: cliQualityGate(),
+			},
+			sessionId,
+		);
 		assert.strictEqual(last.completionVerification?.receiptKind, "final-aggregate", "G002 is the last required goal");
 	});
 });

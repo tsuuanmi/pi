@@ -16,10 +16,12 @@ import {
 	writeWorkflowState,
 } from "../../src/workflows/shared/workflow-state.ts";
 
+const sessionId = "test-session-id";
+
 const SKILLS: WorkflowSkill[] = ["deep-interview", "ralplan", "team", "ultragoal"];
 
 async function seedState(cwd: string, skill: WorkflowSkill, state: Record<string, unknown>): Promise<void> {
-	const path = workflowStatePath(cwd, skill);
+	const path = workflowStatePath(cwd, skill, sessionId);
 	await mkdir(join(path, ".."), { recursive: true });
 	await writeFile(
 		path,
@@ -57,101 +59,148 @@ describe("workflow manifest state validation", () => {
 	});
 
 	it("defaults new and missing phases to the manifest initial phase", async () => {
-		const fresh = await writeWorkflowState(cwd, "ralplan", { run_id: "r1" });
+		const fresh = await writeWorkflowState(cwd, "ralplan", { run_id: "r1" }, "pi workflow state write", {
+			sessionId,
+		});
 		expect(fresh.current_phase).toBe("planner");
 
 		await seedState(cwd, "team", { team_id: "legacy" });
-		const repaired = await writeWorkflowState(cwd, "team", { task_counts: {} });
+		const repaired = await writeWorkflowState(cwd, "team", { task_counts: {} }, "pi workflow state write", {
+			sessionId,
+		});
 		expect(repaired.current_phase).toBe("approved-execution");
 	});
 
 	it("rejects unknown prior preservation but allows explicit known repair", async () => {
 		await seedState(cwd, "ralplan", { current_phase: "active", run_id: "r1" });
-		await expect(writeWorkflowState(cwd, "ralplan", { run_id: "r2" })).rejects.toThrow(
-			/unknown prior phase requires explicit known repair phase/,
+		await expect(
+			writeWorkflowState(cwd, "ralplan", { run_id: "r2" }, "pi workflow state write", { sessionId }),
+		).rejects.toThrow(/unknown prior phase requires explicit known repair phase/);
+		const repaired = await writeWorkflowState(
+			cwd,
+			"ralplan",
+			{ current_phase: "planner", run_id: "r2" },
+			"pi workflow state write",
+			{ sessionId },
 		);
-		const repaired = await writeWorkflowState(cwd, "ralplan", { current_phase: "planner", run_id: "r2" });
 		expect(repaired.current_phase).toBe("planner");
 
 		await seedState(cwd, "ralplan", { current_phase: "plannner", run_id: "r3" });
-		await expect(writeWorkflowState(cwd, "ralplan", { current_phase: "plannner" })).rejects.toThrow(
-			/unknown next phase/,
-		);
+		await expect(
+			writeWorkflowState(cwd, "ralplan", { current_phase: "plannner" }, "pi workflow state write", { sessionId }),
+		).rejects.toThrow(/unknown next phase/);
 	});
 
 	it("accepts only operation-aware known transitions", async () => {
-		await writeWorkflowState(cwd, "ralplan", { current_phase: "planner", run_id: "r1" });
-		await writeWorkflowState(cwd, "ralplan", { current_phase: "architect" });
-		await writeWorkflowState(cwd, "ralplan", { current_phase: "critic" });
-		const pending = await writeWorkflowState(cwd, "ralplan", { current_phase: "pending-approval" });
-		expect(pending.current_phase).toBe("pending-approval");
-		await expect(writeWorkflowState(cwd, "ralplan", { current_phase: "planner" })).rejects.toThrow(
-			/transition is not allowed/,
+		await writeWorkflowState(cwd, "ralplan", { current_phase: "planner", run_id: "r1" }, "pi workflow state write", {
+			sessionId,
+		});
+		await writeWorkflowState(cwd, "ralplan", { current_phase: "architect" }, "pi workflow state write", {
+			sessionId,
+		});
+		await writeWorkflowState(cwd, "ralplan", { current_phase: "critic" }, "pi workflow state write", { sessionId });
+		const pending = await writeWorkflowState(
+			cwd,
+			"ralplan",
+			{ current_phase: "pending-approval" },
+			"pi workflow state write",
+			{ sessionId },
 		);
+		expect(pending.current_phase).toBe("pending-approval");
+		await expect(
+			writeWorkflowState(cwd, "ralplan", { current_phase: "planner" }, "pi workflow state write", { sessionId }),
+		).rejects.toThrow(/transition is not allowed/);
 	});
 
 	it("distinguishes generic write from runtime-sync operation", async () => {
-		await writeWorkflowState(cwd, "ultragoal", { current_phase: "approved-execution" });
+		await writeWorkflowState(cwd, "ultragoal", { current_phase: "approved-execution" }, "pi workflow state write", {
+			sessionId,
+		});
 		await writeWorkflowState(cwd, "ultragoal", { current_phase: "pending" }, "runtime sync", {
 			operation: "runtime-sync",
+			sessionId,
 		});
 		await writeWorkflowState(cwd, "ultragoal", { current_phase: "active" }, "runtime sync", {
 			operation: "runtime-sync",
+			sessionId,
 		});
-		await expect(writeWorkflowState(cwd, "ultragoal", { current_phase: "pending" })).rejects.toThrow(
-			/transition is not allowed/,
-		);
+		await expect(
+			writeWorkflowState(cwd, "ultragoal", { current_phase: "pending" }, "pi workflow state write", { sessionId }),
+		).rejects.toThrow(/transition is not allowed/);
 		const projected = await writeWorkflowState(cwd, "ultragoal", { current_phase: "pending" }, "runtime sync", {
 			operation: "runtime-sync",
+			sessionId,
 		});
 		expect(projected.current_phase).toBe("pending");
 	});
 
 	it("validates replace against prior state instead of resetting history", async () => {
-		await writeWorkflowState(cwd, "team", { current_phase: "approved-execution" });
+		await writeWorkflowState(cwd, "team", { current_phase: "approved-execution" }, "pi workflow state write", {
+			sessionId,
+		});
 		await writeWorkflowState(cwd, "team", { current_phase: "running" }, "runtime sync", {
 			operation: "runtime-sync",
+			sessionId,
 		});
-		await clearWorkflowState(cwd, "team");
-		await expect(replaceWorkflowState(cwd, "team", { team_id: "new" })).rejects.toThrow(/transition is not allowed/);
-		const replaced = await replaceWorkflowState(cwd, "team", { current_phase: "running", team_id: "new" });
+		await clearWorkflowState(cwd, "team", {}, { sessionId });
+		await expect(
+			replaceWorkflowState(cwd, "team", { team_id: "new" }, "pi workflow state replace", { sessionId }),
+		).rejects.toThrow(/transition is not allowed/);
+		const replaced = await replaceWorkflowState(
+			cwd,
+			"team",
+			{ current_phase: "running", team_id: "new" },
+			"pi workflow state replace",
+			{ sessionId },
+		);
 		expect(replaced.current_phase).toBe("running");
 	});
 
 	it("clear writes only the manifest clear target", async () => {
-		await writeWorkflowState(cwd, "deep-interview", { current_phase: "interviewing" });
-		const cleared = await clearWorkflowState(cwd, "deep-interview", { current_phase: "handoff" });
+		await writeWorkflowState(cwd, "deep-interview", { current_phase: "interviewing" }, "pi workflow state write", {
+			sessionId,
+		});
+		const cleared = await clearWorkflowState(cwd, "deep-interview", { current_phase: "handoff" }, { sessionId });
 		expect(cleared.active).toBe(false);
 		expect(cleared.current_phase).toBe("complete");
 
 		await seedState(cwd, "team", { current_phase: "unknown_legacy" });
-		const repaired = await clearWorkflowState(cwd, "team");
+		const repaired = await clearWorkflowState(cwd, "team", {}, { sessionId });
 		expect(repaired.active).toBe(false);
 		expect(repaired.current_phase).toBe("complete");
 	});
 
 	it("keeps force internal and writer-generated", async () => {
-		await writeWorkflowState(cwd, "ralplan", { current_phase: "planner" });
+		await writeWorkflowState(cwd, "ralplan", { current_phase: "planner" }, "pi workflow state write", { sessionId });
 		await expect(
-			writeWorkflowState(cwd, "ralplan", { current_phase: "rejected", receipt: { forced: true } }),
+			writeWorkflowState(
+				cwd,
+				"ralplan",
+				{ current_phase: "rejected", receipt: { forced: true } },
+				"pi workflow state write",
+				{ sessionId },
+			),
 		).rejects.toThrow(/transition is not allowed/);
 		const forced = await writeWorkflowState(cwd, "ralplan", { current_phase: "rejected" }, "force repair", {
 			force: true,
 			operation: "force-repair",
+			sessionId,
 		});
 		expect(forced.current_phase).toBe("rejected");
 		expect(forced.receipt).toMatchObject({ forced: true, operation: "force-repair" });
 	});
 
 	it("rejects skill mismatch before coercion hides it", async () => {
-		await expect(writeWorkflowState(cwd, "ralplan", { skill: "team", current_phase: "planner" })).rejects.toThrow(
-			/skill mismatch/,
-		);
+		await expect(
+			writeWorkflowState(cwd, "ralplan", { skill: "team", current_phase: "planner" }, "pi workflow state write", {
+				sessionId,
+			}),
+		).rejects.toThrow(/skill mismatch/);
 	});
 
 	it("rejects typo phases through the CLI state command", async () => {
 		const result = await runWorkflowCommand(
-			["state", "ralplan", "write", "--input", '{"phase":"plannner"}', "--json"],
+			["state", "ralplan", "write", "--input", '{"phase":"plannner"}', "--session", sessionId, "--json"],
 			cwd,
 		);
 		expect(result.status).toBe(1);
@@ -159,7 +208,10 @@ describe("workflow manifest state validation", () => {
 	});
 
 	it("preserves generic handoff receive compatibility", async () => {
-		const result = await runWorkflowCommand(["state", "deep-interview", "handoff", "--to", "ralplan", "--json"], cwd);
+		const result = await runWorkflowCommand(
+			["state", "deep-interview", "handoff", "--to", "ralplan", "--session", sessionId, "--json"],
+			cwd,
+		);
 		expect(result.status).toBe(0);
 		const json = JSON.parse(result.stdout) as {
 			state: { current_phase: string };
@@ -170,40 +222,62 @@ describe("workflow manifest state validation", () => {
 	});
 
 	it("allows documented reinitialization flows after terminal states", async () => {
-		await writeWorkflowState(cwd, "ralplan", { current_phase: "planner" });
-		await writeWorkflowState(cwd, "ralplan", { current_phase: "architect" });
-		await writeWorkflowState(cwd, "ralplan", { current_phase: "critic" });
-		await writeWorkflowState(cwd, "ralplan", { current_phase: "pending-approval" });
+		await writeWorkflowState(cwd, "ralplan", { current_phase: "planner" }, "pi workflow state write", { sessionId });
+		await writeWorkflowState(cwd, "ralplan", { current_phase: "architect" }, "pi workflow state write", {
+			sessionId,
+		});
+		await writeWorkflowState(cwd, "ralplan", { current_phase: "critic" }, "pi workflow state write", { sessionId });
+		await writeWorkflowState(cwd, "ralplan", { current_phase: "pending-approval" }, "pi workflow state write", {
+			sessionId,
+		});
 		await writeWorkflowState(cwd, "ralplan", { current_phase: "handoff" }, "handoff", {
 			operation: "handoff-send",
+			sessionId,
 		});
-		const newPlan = await writeWorkflowState(cwd, "ralplan", { current_phase: "planner", run_id: "next" });
+		const newPlan = await writeWorkflowState(
+			cwd,
+			"ralplan",
+			{ current_phase: "planner", run_id: "next" },
+			"pi workflow state write",
+			{ sessionId },
+		);
 		expect(newPlan.current_phase).toBe("planner");
 
-		await writeWorkflowState(cwd, "ultragoal", { current_phase: "approved-execution" });
+		await writeWorkflowState(cwd, "ultragoal", { current_phase: "approved-execution" }, "pi workflow state write", {
+			sessionId,
+		});
 		await writeWorkflowState(cwd, "ultragoal", { current_phase: "pending" }, "runtime sync", {
 			operation: "runtime-sync",
+			sessionId,
 		});
 		await writeWorkflowState(cwd, "ultragoal", { current_phase: "active" }, "runtime sync", {
 			operation: "runtime-sync",
+			sessionId,
 		});
 		await writeWorkflowState(cwd, "ultragoal", { current_phase: "complete" }, "runtime sync", {
 			operation: "runtime-sync",
+			sessionId,
 		});
 		const newGoals = await writeWorkflowState(cwd, "ultragoal", { current_phase: "pending" }, "runtime sync", {
 			operation: "runtime-sync",
+			sessionId,
 		});
 		expect(newGoals.current_phase).toBe("pending");
 
-		await writeWorkflowState(cwd, "team", { current_phase: "approved-execution" });
+		await writeWorkflowState(cwd, "team", { current_phase: "approved-execution" }, "pi workflow state write", {
+			sessionId,
+		});
 		await writeWorkflowState(cwd, "team", { current_phase: "running" }, "runtime sync", {
 			operation: "runtime-sync",
+			sessionId,
 		});
 		await writeWorkflowState(cwd, "team", { current_phase: "complete" }, "runtime sync", {
 			operation: "runtime-sync",
+			sessionId,
 		});
 		const newTeam = await writeWorkflowState(cwd, "team", { current_phase: "running" }, "runtime sync", {
 			operation: "runtime-sync",
+			sessionId,
 		});
 		expect(newTeam.current_phase).toBe("running");
 	});

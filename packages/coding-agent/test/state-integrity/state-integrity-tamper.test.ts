@@ -6,9 +6,11 @@ import type { AuditEntry } from "../../src/workflows/shared/audit-log.ts";
 import { auditLogPath, workflowStatePath } from "../../src/workflows/shared/paths.ts";
 import { readWorkflowState, writeWorkflowState } from "../../src/workflows/shared/workflow-state.ts";
 
+const sessionId = "test-session-id";
+
 async function readAudit(cwd: string): Promise<AuditEntry[]> {
 	try {
-		const raw = await readFile(auditLogPath(cwd), "utf8");
+		const raw = await readFile(auditLogPath(cwd, sessionId), "utf8");
 		return raw
 			.split(/\r?\n/)
 			.map((line) => line.trim())
@@ -27,7 +29,7 @@ async function tamperEnvelope(
 	skill: "ultragoal",
 	mutate: (value: Record<string, unknown>) => void,
 ): Promise<void> {
-	const filePath = workflowStatePath(cwd, skill);
+	const filePath = workflowStatePath(cwd, skill, sessionId);
 	const raw = await readFile(filePath, "utf8");
 	const parsed = JSON.parse(raw) as Record<string, unknown>;
 	mutate(parsed);
@@ -49,9 +51,15 @@ describe("state-integrity tamper detection (STATE-004)", () => {
 
 	it("clean write stamps a checksum and emits no out_of_band_detected (first-ever write has no prior checksum)", async () => {
 		// First-ever write to a skill with no prior envelope → no checksum to compare.
-		await writeWorkflowState(cwd, "ultragoal", { active: true, current_phase: "approved-execution" });
+		await writeWorkflowState(
+			cwd,
+			"ultragoal",
+			{ active: true, current_phase: "approved-execution" },
+			"pi workflow state write",
+			{ sessionId },
+		);
 
-		const state = await readWorkflowState(cwd, "ultragoal");
+		const state = await readWorkflowState(cwd, "ultragoal", { sessionId });
 		expect(state?.receipt).toBeDefined();
 		const checksum = (state?.receipt as Record<string, unknown>).content_sha256 as
 			| Record<string, unknown>
@@ -66,8 +74,14 @@ describe("state-integrity tamper detection (STATE-004)", () => {
 	});
 
 	it("unforced write after an out-of-band edit hard-blocks and audits out_of_band_detected", async () => {
-		await writeWorkflowState(cwd, "ultragoal", { active: true, current_phase: "approved-execution" });
-		const beforeTamper = await readWorkflowState(cwd, "ultragoal");
+		await writeWorkflowState(
+			cwd,
+			"ultragoal",
+			{ active: true, current_phase: "approved-execution" },
+			"pi workflow state write",
+			{ sessionId },
+		);
+		const beforeTamper = await readWorkflowState(cwd, "ultragoal", { sessionId });
 		const expectedSha = ((beforeTamper?.receipt as Record<string, unknown>).content_sha256 as Record<string, unknown>)
 			.value as string;
 
@@ -76,9 +90,9 @@ describe("state-integrity tamper detection (STATE-004)", () => {
 			value.current_phase = "active";
 		});
 
-		await expect(writeWorkflowState(cwd, "ultragoal", { current_phase: "active" })).rejects.toThrow(
-			/out-of-band edit detected for ultragoal.*use --force to overwrite tampered mode-state/,
-		);
+		await expect(
+			writeWorkflowState(cwd, "ultragoal", { current_phase: "active" }, "pi workflow state write", { sessionId }),
+		).rejects.toThrow(/out-of-band edit detected for ultragoal.*use --force to overwrite tampered mode-state/);
 
 		const outOfBand = (await readAudit(cwd)).filter((e) => e.verb === "out_of_band_detected");
 		expect(outOfBand).toHaveLength(1);
@@ -90,7 +104,13 @@ describe("state-integrity tamper detection (STATE-004)", () => {
 	});
 
 	it("forced write after tamper proceeds, re-stamps, and emits the three-entry audit sequence", async () => {
-		await writeWorkflowState(cwd, "ultragoal", { active: true, current_phase: "approved-execution" });
+		await writeWorkflowState(
+			cwd,
+			"ultragoal",
+			{ active: true, current_phase: "approved-execution" },
+			"pi workflow state write",
+			{ sessionId },
+		);
 		await tamperEnvelope(cwd, "ultragoal", (value) => {
 			value.current_phase = "pending";
 		});
@@ -104,6 +124,7 @@ describe("state-integrity tamper detection (STATE-004)", () => {
 			{
 				operation: "write",
 				force: true,
+				sessionId,
 			},
 		);
 		const newSha = ((stamped.receipt as Record<string, unknown>).content_sha256 as Record<string, unknown>)
@@ -123,11 +144,18 @@ describe("state-integrity tamper detection (STATE-004)", () => {
 	});
 
 	it("forced write with no mismatch emits the two-entry audit sequence", async () => {
-		await writeWorkflowState(cwd, "ultragoal", { active: true, current_phase: "approved-execution" });
+		await writeWorkflowState(
+			cwd,
+			"ultragoal",
+			{ active: true, current_phase: "approved-execution" },
+			"pi workflow state write",
+			{ sessionId },
+		);
 
 		await writeWorkflowState(cwd, "ultragoal", { current_phase: "pending" }, "pi workflow state write", {
 			operation: "write",
 			force: true,
+			sessionId,
 		});
 
 		const entries = await readAudit(cwd);

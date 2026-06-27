@@ -5,6 +5,7 @@ import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent-core";
 import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import type { ExtensionUIContext } from "../../api/types.ts";
 import { withFileMutationQueue } from "../../utils/fs/file-mutation-queue.ts";
+import { sessionStateDir } from "../../workflows/shared/session-layout.ts";
 import type { AgentSession } from "../agent-session/agent-session.ts";
 import { type AgentSessionServices, createAgentSessionFromServices } from "../agent-session/agent-session-services.ts";
 import { type AgentProfile, loadAgentProfile } from "../agents/agent-profiles.ts";
@@ -30,6 +31,8 @@ export interface SubagentRunRequest {
 	detached?: boolean;
 	label?: string;
 	parentSessionId?: string;
+	/** Session id that owns durable subagent records. Defaults to parentSessionId. */
+	storageSessionId?: string;
 	signal?: AbortSignal;
 	resumeSessionFile?: string;
 }
@@ -66,6 +69,7 @@ export interface SubagentRunResult {
 
 export interface SubagentAwaitOptions {
 	timeoutMs?: number;
+	sessionId: string;
 }
 
 export type SubagentAwaitResult =
@@ -280,17 +284,18 @@ export class SubagentManager {
 		return this.live.size;
 	}
 
-	private root(): string {
-		return join(this.services.cwd, ".pi", "workflows", "subagents");
+	private root(sessionId: string): string {
+		if (!sessionId.trim()) throw new Error("subagent records require a session id");
+		return join(sessionStateDir(this.services.cwd, sessionId), "subagents");
 	}
 
-	private recordPath(id: string): string {
-		return join(this.root(), id, "record.json");
+	private recordPath(id: string, sessionId: string): string {
+		return join(this.root(sessionId), id, "record.json");
 	}
 
-	private async writeRecord(record: SubagentRecord): Promise<SubagentRecord> {
-		await writeJsonAtomic(this.recordPath(record.id), { ...record });
-		await appendJsonlAtomic(this.indexPath(), {
+	private async writeRecord(record: SubagentRecord, sessionId: string): Promise<SubagentRecord> {
+		await writeJsonAtomic(this.recordPath(record.id, sessionId), { ...record });
+		await appendJsonlAtomic(this.indexPath(sessionId), {
 			id: record.id,
 			role: record.role,
 			status: record.status,
@@ -300,39 +305,43 @@ export class SubagentManager {
 		return record;
 	}
 
-	private indexPath(): string {
-		return join(this.root(), "index.jsonl");
+	private indexPath(sessionId: string): string {
+		return join(this.root(sessionId), "index.jsonl");
 	}
 
 	private async writeTerminal(
 		record: SubagentRecord,
 		status: SubagentStatus,
+		sessionId: string,
 		extra?: Partial<SubagentRecord>,
 	): Promise<SubagentRecord> {
-		return this.writeRecord({
-			...record,
-			...extra,
-			status,
-			updated_at: nowIso(),
-			completed_at: nowIso(),
-		});
+		return this.writeRecord(
+			{
+				...record,
+				...extra,
+				status,
+				updated_at: nowIso(),
+				completed_at: nowIso(),
+			},
+			sessionId,
+		);
 	}
 
-	async read(id: string): Promise<SubagentRecord | undefined> {
-		const read = await readJsonObject(this.recordPath(id));
+	async read(id: string, sessionId: string): Promise<SubagentRecord | undefined> {
+		const read = await readJsonObject(this.recordPath(id, sessionId));
 		return read as unknown as SubagentRecord | undefined;
 	}
 
-	async list(): Promise<SubagentRecord[]> {
+	async list(sessionId: string): Promise<SubagentRecord[]> {
 		let entries: string[];
 		try {
-			entries = await readdir(this.root());
+			entries = await readdir(this.root(sessionId));
 		} catch (error) {
 			const err = error as NodeJS.ErrnoException;
 			if (err.code === "ENOENT") return [];
 			throw error;
 		}
-		const records = await Promise.all(entries.map((entry) => this.read(entry).catch(() => undefined)));
+		const records = await Promise.all(entries.map((entry) => this.read(entry, sessionId).catch(() => undefined)));
 		return records
 			.filter((record): record is SubagentRecord => record !== undefined)
 			.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
@@ -365,25 +374,31 @@ export class SubagentManager {
 		const resolved = await this.resolveRequest(request);
 		const id = defaultSubagentId();
 		const now = nowIso();
-		const record = await this.writeRecord({
-			id,
-			role: resolved.role,
-			label: resolved.label,
-			agent_profile: resolved.agent,
-			model: resolved.modelRef,
-			thinking_level: resolved.thinkingLevel,
-			status: "queued",
-			cwd: resolved.cwd ?? this.services.cwd,
-			parent_session_id: resolved.parentSessionId,
-			resumable: resolved.persistent !== false,
-			created_at: now,
-			updated_at: now,
-			last_prompt_sha256: hashText(resolved.prompt),
-		});
+		const storageSessionId = resolved.storageSessionId ?? resolved.parentSessionId;
+		if (!storageSessionId)
+			throw new Error("subagent spawn requires a session id (storageSessionId or parentSessionId)");
+		const record = await this.writeRecord(
+			{
+				id,
+				role: resolved.role,
+				label: resolved.label,
+				agent_profile: resolved.agent,
+				model: resolved.modelRef,
+				thinking_level: resolved.thinkingLevel,
+				status: "queued",
+				cwd: resolved.cwd ?? this.services.cwd,
+				parent_session_id: resolved.parentSessionId,
+				resumable: resolved.persistent !== false,
+				created_at: now,
+				updated_at: now,
+				last_prompt_sha256: hashText(resolved.prompt),
+			},
+			storageSessionId,
+		);
 		const run = this.runRecord(record, resolved);
 		if (request.detached) {
 			void run.catch(() => undefined);
-			return { record: (await this.read(id)) ?? record, messages: [], output: "" };
+			return { record: (await this.read(id, storageSessionId)) ?? record, messages: [], output: "" };
 		}
 		return run;
 	}
@@ -434,14 +449,20 @@ export class SubagentManager {
 		}
 		await bindSubagentExtensions(session);
 
-		await this.writeRecord({
-			...record,
-			status: "running",
-			started_at: nowIso(),
-			updated_at: nowIso(),
-			session_id: session.sessionId,
-			session_file: session.sessionFile,
-		});
+		const storageSessionId = request.storageSessionId ?? record.parent_session_id;
+		if (!storageSessionId)
+			throw new Error("subagent run requires a session id (storageSessionId or parentSessionId)");
+		await this.writeRecord(
+			{
+				...record,
+				status: "running",
+				started_at: nowIso(),
+				updated_at: nowIso(),
+				session_id: session.sessionId,
+				session_file: session.sessionFile,
+			},
+			storageSessionId,
+		);
 		// Start progress tracking so retained snapshots survive timeout/failure
 		this.progressTracker.startTracking(record.id, (handler) => session.subscribe(handler));
 		try {
@@ -457,13 +478,16 @@ export class SubagentManager {
 			// prompt() resolved normally but the agent stopped mid-run.
 			if (live?.pauseRequested) {
 				this.progressTracker.markTerminal(record.id, "paused");
-				const pausedRecord = await this.writeRecord({
-					...((await this.read(record.id)) ?? record),
-					status: "paused",
-					updated_at: nowIso(),
-					session_file: session.sessionFile,
-					session_id: session.sessionId,
-				});
+				const pausedRecord = await this.writeRecord(
+					{
+						...((await this.read(record.id, storageSessionId)) ?? record),
+						status: "paused",
+						updated_at: nowIso(),
+						session_file: session.sessionFile,
+						session_id: session.sessionId,
+					},
+					storageSessionId,
+				);
 				session.dispose();
 				return {
 					record: pausedRecord,
@@ -477,17 +501,20 @@ export class SubagentManager {
 			const yieldResult = extractYieldFromMessages(messages);
 			const terminalStatus = errorText ? "failed" : "completed";
 			this.progressTracker.markTerminal(record.id, terminalStatus);
-			const completed = await this.writeRecord({
-				...((await this.read(record.id)) ?? record),
-				status: terminalStatus,
-				updated_at: nowIso(),
-				completed_at: nowIso(),
-				result_text: output,
-				error_text: errorText,
-				...(yieldResult ? { yield_result: yieldResult } : {}),
-				session_file: session.sessionFile,
-				session_id: session.sessionId,
-			});
+			const completed = await this.writeRecord(
+				{
+					...((await this.read(record.id, storageSessionId)) ?? record),
+					status: terminalStatus,
+					updated_at: nowIso(),
+					completed_at: nowIso(),
+					result_text: output,
+					error_text: errorText,
+					...(yieldResult ? { yield_result: yieldResult } : {}),
+					session_file: session.sessionFile,
+					session_id: session.sessionId,
+				},
+				storageSessionId,
+			);
 			session.dispose();
 			return { record: completed, messages, output };
 		} catch (error) {
@@ -496,14 +523,17 @@ export class SubagentManager {
 			const message = error instanceof Error ? error.message : String(error);
 			if (paused) {
 				this.progressTracker.markTerminal(record.id, "paused");
-				const pausedRecord = await this.writeRecord({
-					...((await this.read(record.id)) ?? record),
-					status: "paused",
-					updated_at: nowIso(),
-					error_text: message,
-					session_file: session.sessionFile,
-					session_id: session.sessionId,
-				});
+				const pausedRecord = await this.writeRecord(
+					{
+						...((await this.read(record.id, storageSessionId)) ?? record),
+						status: "paused",
+						updated_at: nowIso(),
+						error_text: message,
+						session_file: session.sessionFile,
+						session_id: session.sessionId,
+					},
+					storageSessionId,
+				);
 				session.dispose();
 				return {
 					record: pausedRecord,
@@ -513,15 +543,18 @@ export class SubagentManager {
 			}
 			const failStatus = signal.aborted ? "cancelled" : "failed";
 			this.progressTracker.markTerminal(record.id, failStatus);
-			const failed = await this.writeRecord({
-				...((await this.read(record.id)) ?? record),
-				status: failStatus,
-				updated_at: nowIso(),
-				completed_at: nowIso(),
-				error_text: message,
-				session_file: session.sessionFile,
-				session_id: session.sessionId,
-			});
+			const failed = await this.writeRecord(
+				{
+					...((await this.read(record.id, storageSessionId)) ?? record),
+					status: failStatus,
+					updated_at: nowIso(),
+					completed_at: nowIso(),
+					error_text: message,
+					session_file: session.sessionFile,
+					session_id: session.sessionId,
+				},
+				storageSessionId,
+			);
 			session.dispose();
 			return {
 				record: failed,
@@ -531,15 +564,15 @@ export class SubagentManager {
 		}
 	}
 
-	async await(id: string): Promise<SubagentRunResult | undefined> {
+	async await(id: string, sessionId: string): Promise<SubagentRunResult | undefined> {
 		const live = this.live.get(id);
 		if (live) return live.promise;
-		const record = await this.read(id);
+		const record = await this.read(id, sessionId);
 		if (!record) return undefined;
 		return { record, messages: [], output: recordOutput(record) };
 	}
 
-	async waitFor(id: string, options?: SubagentAwaitOptions): Promise<SubagentAwaitResult> {
+	async waitFor(id: string, options: SubagentAwaitOptions): Promise<SubagentAwaitResult> {
 		const live = this.live.get(id);
 		if (live) {
 			if (options?.timeoutMs !== undefined && options.timeoutMs > 0) {
@@ -551,7 +584,7 @@ export class SubagentManager {
 					}),
 				]);
 				if (result === "timeout") {
-					const record = await this.read(id);
+					const record = await this.read(id, options.sessionId);
 					return {
 						ok: false,
 						reason: "timeout",
@@ -564,15 +597,15 @@ export class SubagentManager {
 			}
 			return { ok: true, result: await live.promise };
 		}
-		const record = await this.read(id);
+		const record = await this.read(id, options.sessionId);
 		if (!record) return { ok: false, reason: "not_found" };
 		return { ok: true, result: { record, messages: [], output: recordOutput(record) } };
 	}
 
-	async pause(id: string): Promise<{ ok: boolean; reason?: string; record?: SubagentRecord }> {
+	async pause(id: string, sessionId: string): Promise<{ ok: boolean; reason?: string; record?: SubagentRecord }> {
 		const live = this.live.get(id);
 		if (!live) {
-			const record = await this.read(id);
+			const record = await this.read(id, sessionId);
 			return { ok: false, reason: "not_running", record: record ?? undefined };
 		}
 		if (live.pauseRequested) return { ok: false, reason: "already_paused" };
@@ -586,28 +619,31 @@ export class SubagentManager {
 	async resume(
 		id: string,
 		message: string,
-		options?: Pick<
+		options: Pick<
 			SubagentRunRequest,
-			"agent" | "systemPrompt" | "tools" | "excludeTools" | "model" | "thinkingLevel" | "signal"
+			"agent" | "systemPrompt" | "tools" | "excludeTools" | "model" | "thinkingLevel" | "signal" | "storageSessionId"
 		>,
 	): Promise<SubagentResumeResult> {
-		const record = await this.read(id);
+		if (!options.storageSessionId) throw new Error("subagent resume requires a session id (storageSessionId)");
+		const storageSessionId = options.storageSessionId;
+		const record = await this.read(id, storageSessionId);
 		if (!record) return { ok: false, reason: "not_found" };
 		if (!record.resumable || !record.session_file) return { ok: false, reason: "context_unavailable", record };
 		try {
 			const resolved = await this.resolveRequest({
-				agent: options?.agent ?? record.agent_profile,
+				agent: options.agent ?? record.agent_profile,
 				role: record.role,
 				prompt: message,
 				cwd: record.cwd,
 				persistent: true,
 				resumeSessionFile: record.session_file,
-				systemPrompt: options?.systemPrompt,
-				tools: options?.tools,
-				excludeTools: options?.excludeTools,
-				model: options?.model ?? record.model,
-				thinkingLevel: options?.thinkingLevel ?? record.thinking_level,
-				signal: options?.signal,
+				systemPrompt: options.systemPrompt,
+				tools: options.tools,
+				excludeTools: options.excludeTools,
+				model: options.model ?? record.model,
+				thinkingLevel: options.thinkingLevel ?? record.thinking_level,
+				signal: options.signal,
+				storageSessionId,
 			});
 			const result = await this.runRecord(
 				{ ...record, status: "queued", updated_at: nowIso(), last_prompt_sha256: hashText(message) },
@@ -619,24 +655,29 @@ export class SubagentManager {
 		}
 	}
 
-	async steer(id: string, message: string, delivery: SubagentDelivery = "steer"): Promise<SubagentResumeResult> {
+	async steer(
+		id: string,
+		message: string,
+		delivery: SubagentDelivery = "steer",
+		sessionId: string,
+	): Promise<SubagentResumeResult> {
 		const live = this.live.get(id);
-		if (!live?.session) return this.resume(id, message);
+		if (!live?.session) return this.resume(id, message, { storageSessionId: sessionId });
 		if (delivery === "followUp") await live.session.sendUserMessage(message, { deliverAs: "followUp" });
 		else await live.session.sendUserMessage(message, { deliverAs: "steer" });
-		const record = await this.read(id);
+		const record = await this.read(id, sessionId);
 		return {
 			ok: true,
 			result: { record: record ?? (await live.promise).record, messages: [], output: record?.result_text ?? "" },
 		};
 	}
 
-	async cancel(id: string): Promise<SubagentRecord | undefined> {
+	async cancel(id: string, sessionId: string): Promise<SubagentRecord | undefined> {
 		const live = this.live.get(id);
 		if (live) live.controller.abort();
-		const record = await this.read(id);
+		const record = await this.read(id, sessionId);
 		if (!record) return undefined;
 		if (isTerminalStatus(record.status)) return record;
-		return this.writeTerminal(record, "cancelled");
+		return this.writeTerminal(record, "cancelled", sessionId);
 	}
 }

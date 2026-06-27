@@ -133,6 +133,7 @@ async function executeUltragoalSpawnGoalAgent(
 		persistent: true,
 		label: `ultragoal-${goal.id}`,
 		parentSessionId: ctx.sessionManager.getSessionId(),
+		storageSessionId: ctx.sessionManager.getSessionId(),
 		signal,
 	});
 	return {

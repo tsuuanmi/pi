@@ -155,6 +155,10 @@ export async function runStateCommand(args: string[], cwd = process.cwd()): Prom
 		const envSessionId = process.env.PI_SESSION_ID?.trim();
 		const sessionId = parsed.session?.trim() || envSessionId || undefined;
 
+		if (!sessionId) {
+			throw new Error("No session ID provided. Set PI_SESSION_ID env var or pass --session <id>.");
+		}
+
 		if (parsed.action === "active") {
 			const state = (await readWorkflowActiveState(cwd, { sessionId })) ?? null;
 			return {

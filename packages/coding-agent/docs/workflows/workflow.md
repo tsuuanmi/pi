@@ -1,6 +1,6 @@
 # Pi Workflow
 
-Pi ships a built-in workflow control plane (`pi workflow`) and four built-in [Skills](../core/skills/skills.md) for requirements gathering, planning, parallel execution, and goal-tracked execution. The control plane lives under `<workspace>/.pi/state/harness` (override with `PI_HARNESS_STATE_ROOT`) and the skills persist state under `.pi/workflows/<skill>/`.
+Pi ships a built-in workflow control plane (`pi workflow`) and four built-in [Skills](../core/skills/skills.md) for requirements gathering, planning, parallel execution, and goal-tracked execution. The control plane lives under `<workspace>/.pi/state/harness` (override with `PI_HARNESS_STATE_ROOT`) and workflow runtime artifacts persist under the current session root, e.g. `.pi/<session-id>/workflows/<skill>/` and `.pi/<session-id>/state/`.
 
 ## Built-in skills
 

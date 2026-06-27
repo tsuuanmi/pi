@@ -16,6 +16,8 @@ import {
 	workflowReceiptStatus,
 } from "../../src/workflows/shared/state-writer.ts";
 
+const sessionId = "test-session-id";
+
 describe("receipt freshness and staleness", () => {
 	it("createWorkflowReceipt includes fresh_until and status", () => {
 		const receipt = createWorkflowReceipt({
@@ -85,56 +87,72 @@ describe("active-state staleness detection", () => {
 
 	it("marks entries as stale when updated_at is outside the freshness window", async () => {
 		// Write an entry with a timestamp 45 minutes ago
-		await syncWorkflowActiveState(cwd, {
-			skill: "ralplan",
-			active: true,
-			phase: "planner",
-			updated_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-		});
+		await syncWorkflowActiveState(
+			cwd,
+			{
+				skill: "ralplan",
+				active: true,
+				phase: "planner",
+				updated_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+			},
+			{ sessionId },
+		);
 
-		const state = await readWorkflowActiveState(cwd);
+		const state = await readWorkflowActiveState(cwd, { sessionId });
 		const ralplan = state?.active_workflows.find((e) => e.skill === "ralplan");
 		expect(ralplan?.stale).toBe(true);
 	});
 
 	it("does not mark recent entries as stale", async () => {
-		await syncWorkflowActiveState(cwd, {
-			skill: "ralplan",
-			active: true,
-			phase: "planner",
-			updated_at: new Date().toISOString(),
-		});
+		await syncWorkflowActiveState(
+			cwd,
+			{
+				skill: "ralplan",
+				active: true,
+				phase: "planner",
+				updated_at: new Date().toISOString(),
+			},
+			{ sessionId },
+		);
 
-		const state = await readWorkflowActiveState(cwd);
+		const state = await readWorkflowActiveState(cwd, { sessionId });
 		const ralplan = state?.active_workflows.find((e) => e.skill === "ralplan");
 		expect(ralplan?.stale).toBeUndefined();
 	});
 
 	it("escalates HUD severity to warning for stale entries", async () => {
-		await syncWorkflowActiveState(cwd, {
-			skill: "ralplan",
-			active: true,
-			phase: "planner",
-			hud: { version: 1, summary: "Planning", severity: "info" },
-			updated_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-		});
+		await syncWorkflowActiveState(
+			cwd,
+			{
+				skill: "ralplan",
+				active: true,
+				phase: "planner",
+				hud: { version: 1, summary: "Planning", severity: "info" },
+				updated_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+			},
+			{ sessionId },
+		);
 
-		const state = await readWorkflowActiveState(cwd);
+		const state = await readWorkflowActiveState(cwd, { sessionId });
 		const ralplan = state?.active_workflows.find((e) => e.skill === "ralplan");
 		expect(ralplan?.stale).toBe(true);
 		expect(ralplan?.hud?.severity).toBe("warning");
 	});
 
 	it("preserves existing error severity for stale entries", async () => {
-		await syncWorkflowActiveState(cwd, {
-			skill: "ralplan",
-			active: true,
-			phase: "planner",
-			hud: { version: 1, summary: "Failed", severity: "error" },
-			updated_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-		});
+		await syncWorkflowActiveState(
+			cwd,
+			{
+				skill: "ralplan",
+				active: true,
+				phase: "planner",
+				hud: { version: 1, summary: "Failed", severity: "error" },
+				updated_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+			},
+			{ sessionId },
+		);
 
-		const state = await readWorkflowActiveState(cwd);
+		const state = await readWorkflowActiveState(cwd, { sessionId });
 		const ralplan = state?.active_workflows.find((e) => e.skill === "ralplan");
 		expect(ralplan?.hud?.severity).toBe("error");
 	});

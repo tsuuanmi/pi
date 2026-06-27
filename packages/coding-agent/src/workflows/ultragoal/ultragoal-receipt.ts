@@ -540,7 +540,7 @@ export function validateCompletionReceipt(input: {
  * `Bun.*`) for portability, with ENOENT handling consistent with
  * `state-writer.ts`'s `readExistingStateForMutation`.
  */
-export async function readUltragoalLedger(cwd: string, sessionId?: string): Promise<UltragoalLedgerEvent[]> {
+export async function readUltragoalLedger(cwd: string, sessionId: string): Promise<UltragoalLedgerEvent[]> {
 	const path = ultragoalLedgerPath(cwd, sessionId);
 	let raw: string;
 	try {

@@ -192,6 +192,7 @@ async function executeTeamSpawnTaskAgent(params: TeamSpawnTaskAgentInput, ctx: E
 		persistent: true,
 		label: `team-${snapshot.team_id}-${task.id}`,
 		parentSessionId: ctx.sessionManager.getSessionId(),
+		storageSessionId: ctx.sessionManager.getSessionId(),
 		signal,
 	});
 	return {

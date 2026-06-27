@@ -3,11 +3,10 @@
  *
  * Pure, acyclic path module. Two root functions:
  *   - `piGlobalRoot(cwd)` → `.pi/` (legacy/global state + state-integrity logs)
- *   - `piSessionRoot(cwd, sessionId)` → `.pi/{encoded}/` when a session id is supplied
+ *   - `piSessionRoot(cwd, sessionId)` → `.pi/{encoded}/`
  *
- * Omitted session ids intentionally use the legacy global `.pi/` layout for
- * backward compatibility. CLI/tool surfaces still resolve and pass explicit
- * session ids for isolated workflow state.
+ * Runtime workflow artifacts require an explicit session id. The global `.pi/`
+ * root is reserved for shared project config and explicitly global state only.
  */
 
 import { join } from "node:path";
@@ -83,25 +82,25 @@ export function sessionIdFromDirName(name: string): string | undefined {
 // ---------------------------------------------------------------------------
 
 /**
- * Global `.pi/` root. Used by audit-log, transaction-journal, and legacy
- * workflow callers that omit a session id.
+ * Global `.pi/` root. Reserved for shared project config and explicitly global
+ * state that is not owned by a workflow session.
  */
 export function piGlobalRoot(cwd: string): string {
 	return join(cwd, ".pi");
 }
 
-// State-integrity paths stay global regardless of session
+// Explicit global state directory for non-session-owned state.
 export function piStateDir(cwd: string): string {
 	return join(piGlobalRoot(cwd), "state");
 }
 
-export function auditLogPath(cwd: string): string {
-	return join(piStateDir(cwd), "audit.jsonl");
+export function auditLogPath(cwd: string, sessionId: string): string {
+	return join(sessionStateDir(cwd, sessionId), "audit.jsonl");
 }
 
-export function transactionJournalPath(cwd: string, mutationId: string): string {
+export function transactionJournalPath(cwd: string, sessionId: string, mutationId: string): string {
 	const encoded = encodeURIComponent(mutationId).replaceAll(".", "%2E");
-	return join(piStateDir(cwd), "transactions", `${encoded}.json`);
+	return join(sessionStateDir(cwd, sessionId), "transactions", `${encoded}.json`);
 }
 
 // ---------------------------------------------------------------------------
@@ -109,13 +108,11 @@ export function transactionJournalPath(cwd: string, mutationId: string): string 
 // ---------------------------------------------------------------------------
 
 /**
- * Full path to the workflow state root. With a session id, this returns
- * `cwd/.pi/{encoded}/`; without one, it returns the legacy global
- * `.pi/` root for backward compatibility.
+ * Full path to the workflow state root: `cwd/.pi/{encoded}/`.
  */
-export function piSessionRoot(cwd: string, sessionId?: string): string {
-	const trimmed = sessionId?.trim();
-	return trimmed ? join(cwd, ".pi", sessionDirName(trimmed)) : piGlobalRoot(cwd);
+export function piSessionRoot(cwd: string, sessionId: string): string {
+	assertNonEmptySessionId(sessionId, "piSessionRoot");
+	return join(cwd, ".pi", sessionDirName(sessionId.trim()));
 }
 
 /**
@@ -127,46 +124,50 @@ export function sessionActivityPath(cwd: string, sessionId: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Session-aware path builders (omitted sessionId uses legacy global layout)
+// Session-aware path builders (sessionId required)
 // ---------------------------------------------------------------------------
 
-export function piWorkflowRoot(cwd: string, sessionId?: string): string {
+export function sessionStateDir(cwd: string, sessionId: string): string {
+	return join(piSessionRoot(cwd, sessionId), "state");
+}
+
+export function piWorkflowRoot(cwd: string, sessionId: string): string {
 	return join(piSessionRoot(cwd, sessionId), "workflows");
 }
 
-export function workflowStatePath(cwd: string, skill: WorkflowSkill, sessionId?: string): string {
+export function workflowStatePath(cwd: string, skill: WorkflowSkill, sessionId: string): string {
 	return join(piWorkflowRoot(cwd, sessionId), skill, "state.json");
 }
 
-export function workflowActiveStatePath(cwd: string, sessionId?: string): string {
+export function workflowActiveStatePath(cwd: string, sessionId: string): string {
 	return join(piWorkflowRoot(cwd, sessionId), "active-state.json");
 }
 
-export function piSpecsDir(cwd: string, sessionId?: string): string {
+export function piSpecsDir(cwd: string, sessionId: string): string {
 	return join(piSessionRoot(cwd, sessionId), "specs");
 }
 
-export function deepInterviewSpecPath(cwd: string, slug: string, sessionId?: string): string {
+export function deepInterviewSpecPath(cwd: string, slug: string, sessionId: string): string {
 	return join(piSpecsDir(cwd, sessionId), `deep-interview-${slug}.md`);
 }
 
-export function deepInterviewIndexPath(cwd: string, sessionId?: string): string {
+export function deepInterviewIndexPath(cwd: string, sessionId: string): string {
 	return join(piSpecsDir(cwd, sessionId), "deep-interview-index.jsonl");
 }
 
-export function piPlansDir(cwd: string, sessionId?: string): string {
+export function piPlansDir(cwd: string, sessionId: string): string {
 	return join(piSessionRoot(cwd, sessionId), "plans");
 }
 
-function ralplanRootDir(cwd: string, sessionId?: string): string {
+function ralplanRootDir(cwd: string, sessionId: string): string {
 	return join(piPlansDir(cwd, sessionId), "ralplan");
 }
 
-function ralplanRunDir(cwd: string, runId: string, sessionId?: string): string {
+function ralplanRunDir(cwd: string, runId: string, sessionId: string): string {
 	return join(ralplanRootDir(cwd, sessionId), runId);
 }
 
-export function ralplanIndexPath(cwd: string, runId: string, sessionId?: string): string {
+export function ralplanIndexPath(cwd: string, runId: string, sessionId: string): string {
 	return join(ralplanRunDir(cwd, runId, sessionId), "index.jsonl");
 }
 
@@ -175,55 +176,55 @@ export function ralplanStageArtifactPath(
 	runId: string,
 	stageN: number,
 	stage: RalplanStage,
-	sessionId?: string,
+	sessionId: string,
 ): string {
 	return join(ralplanRunDir(cwd, runId, sessionId), `stage-${stageN.toString().padStart(2, "0")}-${stage}.md`);
 }
 
-export function ralplanPendingApprovalPath(cwd: string, runId: string, sessionId?: string): string {
+export function ralplanPendingApprovalPath(cwd: string, runId: string, sessionId: string): string {
 	return join(ralplanRunDir(cwd, runId, sessionId), "pending-approval.md");
 }
 
-export function ultragoalDir(cwd: string, sessionId?: string): string {
+export function ultragoalDir(cwd: string, sessionId: string): string {
 	return join(piSessionRoot(cwd, sessionId), "ultragoal");
 }
 
-export function ultragoalBriefPath(cwd: string, sessionId?: string): string {
+export function ultragoalBriefPath(cwd: string, sessionId: string): string {
 	return join(ultragoalDir(cwd, sessionId), "brief.md");
 }
 
-export function ultragoalGoalsPath(cwd: string, sessionId?: string): string {
+export function ultragoalGoalsPath(cwd: string, sessionId: string): string {
 	return join(ultragoalDir(cwd, sessionId), "goals.json");
 }
 
-export function ultragoalLedgerPath(cwd: string, sessionId?: string): string {
+export function ultragoalLedgerPath(cwd: string, sessionId: string): string {
 	return join(ultragoalDir(cwd, sessionId), "ledger.jsonl");
 }
 
-export function teamDir(cwd: string, sessionId?: string): string {
+export function teamDir(cwd: string, sessionId: string): string {
 	return join(piSessionRoot(cwd, sessionId), "team");
 }
 
-function teamRunDir(cwd: string, teamId: string, sessionId?: string): string {
+function teamRunDir(cwd: string, teamId: string, sessionId: string): string {
 	return join(teamDir(cwd, sessionId), teamId);
 }
 
-export function teamConfigPath(cwd: string, teamId: string, sessionId?: string): string {
+export function teamConfigPath(cwd: string, teamId: string, sessionId: string): string {
 	return join(teamRunDir(cwd, teamId, sessionId), "config.json");
 }
 
-function teamTasksDir(cwd: string, teamId: string, sessionId?: string): string {
+function teamTasksDir(cwd: string, teamId: string, sessionId: string): string {
 	return join(teamRunDir(cwd, teamId, sessionId), "tasks");
 }
 
-export function teamTaskPath(cwd: string, teamId: string, taskId: string, sessionId?: string): string {
+export function teamTaskPath(cwd: string, teamId: string, taskId: string, sessionId: string): string {
 	return join(teamTasksDir(cwd, teamId, sessionId), `${taskId}.json`);
 }
 
-export function teamEventsPath(cwd: string, teamId: string, sessionId?: string): string {
+export function teamEventsPath(cwd: string, teamId: string, sessionId: string): string {
 	return join(teamRunDir(cwd, teamId, sessionId), "events.jsonl");
 }
 
-export function teamMailboxPath(cwd: string, teamId: string, recipient: string, sessionId?: string): string {
+export function teamMailboxPath(cwd: string, teamId: string, recipient: string, sessionId: string): string {
 	return join(teamRunDir(cwd, teamId, sessionId), "mailbox", `${recipient}.jsonl`);
 }

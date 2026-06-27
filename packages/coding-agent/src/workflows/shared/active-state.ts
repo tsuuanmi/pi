@@ -46,9 +46,9 @@ export interface WorkflowActiveState {
 	active_workflows: WorkflowActiveEntry[];
 }
 
-/** Options for session-scoped active-state operations. Omitted sessionId uses legacy global state. */
+/** Options for session-scoped active-state operations. */
 export interface SessionScopedOptions {
-	sessionId?: string;
+	sessionId: string;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -224,18 +224,14 @@ async function readAllEntries(filePath: string): Promise<WorkflowActiveEntry[] |
 /**
  * Read the workflow active state for a project, optionally scoped to a session.
  *
- * When `sessionId` is omitted, the legacy global active-state file is read.
  * Only active entries are returned. Returns undefined when the state file is absent.
  */
 export async function readWorkflowActiveState(
 	cwd: string,
-	options: SessionScopedOptions = {},
+	options: SessionScopedOptions,
 ): Promise<WorkflowActiveState | undefined> {
-	const sessionId = options.sessionId?.trim() || undefined;
-	let sessionEntries = await readAllEntries(workflowActiveStatePath(cwd, sessionId));
-	if (sessionEntries === undefined && sessionId) {
-		sessionEntries = await readAllEntries(workflowActiveStatePath(cwd));
-	}
+	const sessionId = options.sessionId;
+	const sessionEntries = await readAllEntries(workflowActiveStatePath(cwd, sessionId));
 	if (sessionEntries === undefined) return undefined;
 	const visible = filterEntriesForSession(sessionEntries, sessionId);
 	const deduped = dedupeVisibleBySkill(visible, sessionId);
@@ -254,9 +250,9 @@ export async function readWorkflowActiveState(
 export async function syncWorkflowActiveState(
 	cwd: string,
 	entry: Omit<WorkflowActiveEntry, "updated_at" | "session_id"> & { updated_at?: string; session_id?: string },
-	options: SessionScopedOptions = {},
+	options: SessionScopedOptions,
 ): Promise<WorkflowActiveState> {
-	const sessionId = options.sessionId?.trim() || undefined;
+	const sessionId = options.sessionId;
 	const now = entry.updated_at ?? new Date().toISOString();
 	const nextEntry: WorkflowActiveEntry = {
 		...entry,
@@ -379,8 +375,8 @@ export interface ApplyHandoffOptions {
 	caller: HandoffSide;
 	/** Skill being promoted (receiving the handoff). */
 	callee: HandoffSide;
-	/** Session id to tag both entries with. Omit to use legacy global active state. */
-	sessionId?: string;
+	/** Session id to tag both entries with. */
+	sessionId: string;
 	/** Shared timestamp; defaults to now. */
 	nowIso?: string;
 }
@@ -399,8 +395,8 @@ export interface ApplyHandoffOptions {
  */
 export async function applyHandoffToActiveState(options: ApplyHandoffOptions): Promise<WorkflowActiveState> {
 	const now = options.nowIso ?? new Date().toISOString();
-	const sessionId = options.sessionId?.trim() || undefined;
-	const tag = sessionId ? { session_id: sessionId } : {};
+	const sessionId = options.sessionId;
+	const tag = { session_id: sessionId };
 
 	const callerEntry: WorkflowActiveEntry = {
 		...options.caller,

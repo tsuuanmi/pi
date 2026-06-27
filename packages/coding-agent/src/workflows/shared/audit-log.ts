@@ -6,8 +6,8 @@ import { auditLogPath } from "./paths.ts";
 /**
  * State-integrity audit log.
  *
- * Single global JSONL trail at `.pi/state/audit.jsonl` (mirrors Gajae's
- * `.gjc/state/audit.jsonl`). This milestone implements the `state`-integrity
+ * Session-scoped JSONL trail at `.pi/{session}/state/audit.jsonl` (mirrors
+ * Gajae's session-scoped audit layout). This milestone implements the `state`-integrity
  * coverage seam: every workflow mode-state write/clear/handoff/reconcile,
  * plus `out_of_band_detected` (tamper), `invalid_transition_detected`, and
  * `force_overwrite`. The schema is Gajae-faithful so the deferred
@@ -49,9 +49,9 @@ export interface AuditEntry {
 	session_id?: string;
 }
 
-/** Append one audit line to `.pi/state/audit.jsonl`. Throws on I/O failure. */
-export async function appendAuditEntry(cwd: string, entry: AuditEntry): Promise<void> {
-	const filePath = auditLogPath(cwd);
+/** Append one audit line to `.pi/{session}/state/audit.jsonl`. Throws on I/O failure. */
+export async function appendAuditEntry(cwd: string, sessionId: string, entry: AuditEntry): Promise<void> {
+	const filePath = auditLogPath(cwd, sessionId);
 	await mkdir(dirname(filePath), { recursive: true });
 	await appendFile(filePath, `${JSON.stringify(entry)}\n`, "utf8");
 }
@@ -61,9 +61,9 @@ export async function appendAuditEntry(cwd: string, entry: AuditEntry): Promise<
  * stderr) so a sanctioned state write never fails because the audit log was
  * unwritable. Returns true on success, false on swallowed failure.
  */
-export async function safeAppendAuditEntry(cwd: string, entry: AuditEntry): Promise<boolean> {
+export async function safeAppendAuditEntry(cwd: string, sessionId: string, entry: AuditEntry): Promise<boolean> {
 	try {
-		await appendAuditEntry(cwd, entry);
+		await appendAuditEntry(cwd, sessionId, entry);
 		return true;
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -98,8 +98,9 @@ export async function maybeAuditForStateWrite(input: {
 	toPhase?: string;
 	forced: boolean;
 	owner?: string;
+	sessionId: string;
 }): Promise<void> {
-	await safeAppendAuditEntry(input.cwd, {
+	await safeAppendAuditEntry(input.cwd, input.sessionId, {
 		ts: new Date().toISOString(),
 		skill: input.skill,
 		category: "state",
@@ -110,5 +111,6 @@ export async function maybeAuditForStateWrite(input: {
 		...(input.toPhase ? { to_phase: input.toPhase } : {}),
 		forced: input.forced,
 		paths: [input.path],
+		session_id: input.sessionId,
 	});
 }

@@ -178,18 +178,26 @@ describe("StatusLineComponent workflow HUD cache", () => {
 
 	it("collapses the cached planning pipeline before deriving the mode segment", async () => {
 		const cwd = await makeTempCwd();
-		await syncWorkflowActiveState(cwd, {
-			skill: "deep-interview",
-			active: true,
-			phase: "interview",
-			updated_at: "2026-06-21T00:00:00.000Z",
-		});
-		await syncWorkflowActiveState(cwd, {
-			skill: "ultragoal",
-			active: true,
-			phase: "execute",
-			updated_at: "2026-06-21T00:00:01.000Z",
-		});
+		await syncWorkflowActiveState(
+			cwd,
+			{
+				skill: "deep-interview",
+				active: true,
+				phase: "interview",
+				updated_at: "2026-06-21T00:00:00.000Z",
+			},
+			{ sessionId: "status-line-test-session" },
+		);
+		await syncWorkflowActiveState(
+			cwd,
+			{
+				skill: "ultragoal",
+				active: true,
+				phase: "execute",
+				updated_at: "2026-06-21T00:00:01.000Z",
+			},
+			{ sessionId: "status-line-test-session" },
+		);
 
 		const footer = makeComponent(createSession({ sessionName: "", cwd }));
 		const lines = await waitForRender(footer, 120, (rendered) =>

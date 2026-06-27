@@ -29,6 +29,7 @@ export {
 	sessionActivityPath,
 	sessionDirName,
 	sessionIdFromDirName,
+	sessionStateDir,
 	teamConfigPath,
 	teamDir,
 	teamEventsPath,

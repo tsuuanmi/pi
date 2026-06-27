@@ -85,7 +85,7 @@ export async function auditOutOfBandAndThrowIfUnforced(
 	cwd: string,
 	filePath: string,
 	skill: WorkflowSkill,
-	options: { mutationId: string; forced: boolean },
+	options: { mutationId: string; forced: boolean; sessionId: string },
 ): Promise<boolean> {
 	let mismatch: WorkflowEnvelopeIntegrityMismatch | undefined;
 	try {
@@ -95,7 +95,7 @@ export async function auditOutOfBandAndThrowIfUnforced(
 		return false;
 	}
 	if (!mismatch) return false;
-	await safeAppendAuditEntry(cwd, {
+	await safeAppendAuditEntry(cwd, options.sessionId, {
 		ts: new Date().toISOString(),
 		skill,
 		category: "state",
@@ -106,6 +106,7 @@ export async function auditOutOfBandAndThrowIfUnforced(
 		paths: [filePath],
 		expected_sha256: mismatch.expected,
 		actual_sha256: mismatch.actual,
+		session_id: options.sessionId,
 	});
 	if (!options.forced) {
 		throw new Error(

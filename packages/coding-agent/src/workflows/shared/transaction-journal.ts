@@ -6,7 +6,7 @@ import { transactionJournalPath } from "./paths.ts";
 /**
  * Per-mutation transaction journal for crash-recoverable workflow handoffs.
  *
- * One JSON file per handoff mutation at `.pi/state/transactions/<id>.json`
+ * One JSON file per handoff mutation at `.pi/{session}/state/transactions/<id>.json`
  * (mirrors Gajae's `.gjc/state/transactions/<id>.json`). The journal is
  * written **before** any mode-state mutation (`status:"pending"`), updated as
  * each step completes, and removed once the handoff is fully applied
@@ -44,7 +44,7 @@ export interface WorkflowTransactionJournal {
 	paths: string[];
 	steps: WorkflowTransactionStep[];
 	/** Session id for session-scoped journal entries. */
-	session_id?: string;
+	session_id: string;
 }
 
 function nowIso(): string {
@@ -64,7 +64,9 @@ export async function beginWorkflowTransactionJournal(input: {
 	paths: string[];
 	stepNames: readonly string[];
 }): Promise<string> {
-	const filePath = transactionJournalPath(input.cwd, input.mutationId);
+	const sessionId = input.caller.sessionId?.trim() || input.callee.sessionId?.trim();
+	if (!sessionId) throw new Error("workflow transaction journal requires a session id");
+	const filePath = transactionJournalPath(input.cwd, sessionId, input.mutationId);
 	const now = nowIso();
 	const journal: WorkflowTransactionJournal = {
 		version: 1,
@@ -76,6 +78,7 @@ export async function beginWorkflowTransactionJournal(input: {
 		callee: input.callee,
 		paths: input.paths,
 		steps: input.stepNames.map((step) => ({ step, status: "pending" })),
+		session_id: sessionId,
 	};
 	await mkdir(dirname(filePath), { recursive: true });
 	// O_EXCL create: a collision means a same-mutationId journal already exists.
@@ -93,8 +96,8 @@ export async function beginWorkflowTransactionJournal(input: {
 	return filePath;
 }
 
-async function readJournal(cwd: string, mutationId: string): Promise<WorkflowTransactionJournal> {
-	const filePath = transactionJournalPath(cwd, mutationId);
+async function readJournal(cwd: string, sessionId: string, mutationId: string): Promise<WorkflowTransactionJournal> {
+	const filePath = transactionJournalPath(cwd, sessionId, mutationId);
 	const raw = await readFile(filePath, "utf8");
 	return JSON.parse(raw) as WorkflowTransactionJournal;
 }
@@ -102,11 +105,12 @@ async function readJournal(cwd: string, mutationId: string): Promise<WorkflowTra
 /** Mark a named step `done` with a timestamp; bump `updated_at`. */
 export async function updateWorkflowTransactionJournal(
 	cwd: string,
+	sessionId: string,
 	mutationId: string,
 	stepName: string,
 ): Promise<string> {
-	const filePath = transactionJournalPath(cwd, mutationId);
-	const current = await readJournal(cwd, mutationId);
+	const filePath = transactionJournalPath(cwd, sessionId, mutationId);
+	const current = await readJournal(cwd, sessionId, mutationId);
 	const now = nowIso();
 	const steps = current.steps.map((entry) =>
 		entry.step === stepName ? { step: entry.step, status: "done" as const, at: now } : entry,
@@ -122,9 +126,13 @@ export async function updateWorkflowTransactionJournal(
  * unlink, so a crash between the two still leaves a `complete` journal (not a
  * misleading `pending` orphan). ENOENT on unlink is swallowed (already gone).
  */
-export async function completeWorkflowTransactionJournal(cwd: string, mutationId: string): Promise<void> {
-	const filePath = transactionJournalPath(cwd, mutationId);
-	const current = await readJournal(cwd, mutationId);
+export async function completeWorkflowTransactionJournal(
+	cwd: string,
+	sessionId: string,
+	mutationId: string,
+): Promise<void> {
+	const filePath = transactionJournalPath(cwd, sessionId, mutationId);
+	const current = await readJournal(cwd, sessionId, mutationId);
 	const now = nowIso();
 	const next: WorkflowTransactionJournal = { ...current, status: "complete", updated_at: now };
 	await writeFile(filePath, jsonText(next));

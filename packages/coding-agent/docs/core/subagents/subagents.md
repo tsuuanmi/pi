@@ -4,10 +4,10 @@ Pi ships a Pi-native `SubagentManager` that runs isolated agent sessions as suba
 
 ## Records and durability
 
-Each subagent is stored under `<workspace>/.pi/workflows/subagents/`:
+Each subagent is stored under the owning session's state tree:
 
 ```
-.pi/workflows/subagents/
+.pi/<session-id>/state/subagents/
   index.jsonl          # append-only audit log: one line per record write
   <subagent-id>/
     record.json        # full, atomically-written record (temp file + rename)
@@ -147,4 +147,4 @@ The team and ultragoal skills spawn subagent workers through dedicated tools rat
 - **`team_spawn_task_agent`** - spawn a subagent to execute a team task. Parameters: `teamId`, `taskId`, `agent` (defaults to `worker`), plus `model`/`thinkingLevel`/`tools`/`excludeTools` overrides.
 - **`ultragoal_spawn_goal_agent`** - spawn a subagent to execute an ultragoal goal. Parameters: `goalId`, `agent` (defaults to `worker`), plus the same overrides.
 
-Both reuse the parent session's `SubagentManager`, so spawned workers appear in `index.jsonl` and can be inspected with `subagent_status`/`subagent_await` like any other subagent. After a mutation, team and ultragoal state-mutating tools call `syncWorkflowHudUi` to keep the interactive HUD in sync.
+Both reuse the parent session's `SubagentManager`, so spawned workers appear in that session's `state/subagents/index.jsonl` and can be inspected with `subagent_status`/`subagent_await` like any other subagent. After a mutation, team and ultragoal state-mutating tools call `syncWorkflowHudUi` to keep the interactive HUD in sync.

@@ -21,6 +21,8 @@ import {
 } from "../../src/workflows/shared/state-writer.ts";
 import { readWorkflowState, writeWorkflowState } from "../../src/workflows/shared/workflow-state.ts";
 
+const sessionId = "test-session-id";
+
 describe("workflow runtime", () => {
 	let cwd: string;
 
@@ -34,7 +36,13 @@ describe("workflow runtime", () => {
 	});
 
 	it("writes workflow state with receipt and checksum", async () => {
-		const state = await writeWorkflowState(cwd, "ralplan", { current_phase: "planner", run_id: "run-1" });
+		const state = await writeWorkflowState(
+			cwd,
+			"ralplan",
+			{ current_phase: "planner", run_id: "run-1" },
+			"pi workflow state write",
+			{ sessionId },
+		);
 
 		expect(state.skill).toBe("ralplan");
 		expect(state.version).toBe(1);
@@ -42,18 +50,20 @@ describe("workflow runtime", () => {
 		expect(state.receipt).toMatchObject({ owner: "pi-workflow", skill: "ralplan" });
 		expect((state.receipt as Record<string, unknown>).content_sha256).toMatchObject({ algorithm: "sha256" });
 
-		const reread = await readWorkflowState(cwd, "ralplan");
+		const reread = await readWorkflowState(cwd, "ralplan", { sessionId });
 		expect(reread?.run_id).toBe("run-1");
 	});
 
 	it("reports corrupt state for mutation reads", async () => {
-		const path = join(cwd, ".pi", "workflows", "ralplan", "state.json");
-		await mkdir(join(cwd, ".pi", "workflows", "ralplan"), { recursive: true });
+		const path = join(cwd, ".pi", sessionId, "workflows", "ralplan", "state.json");
+		await mkdir(join(cwd, ".pi", sessionId, "workflows", "ralplan"), { recursive: true });
 		await writeFile(path, "not json", "utf8");
 
 		const result = await readExistingStateForMutation(path);
 		expect(result.kind).toBe("corrupt");
-		await expect(writeWorkflowState(cwd, "ralplan", { current_phase: "planner" })).rejects.toThrow(/corrupt/);
+		await expect(
+			writeWorkflowState(cwd, "ralplan", { current_phase: "planner" }, "pi workflow state write", { sessionId }),
+		).rejects.toThrow(/corrupt/);
 	});
 
 	it("rejects writes outside project .pi when cwd confinement is supplied", async () => {
@@ -62,7 +72,16 @@ describe("workflow runtime", () => {
 
 	it("supports pi workflow state as the centralized state command", async () => {
 		const written = await runWorkflowCommand(
-			["state", "ralplan", "write", "--input", '{"phase":"planner","active":true,"run_id":"run-2"}', "--json"],
+			[
+				"state",
+				"ralplan",
+				"write",
+				"--input",
+				'{"phase":"planner","active":true,"run_id":"run-2"}',
+				"--session",
+				sessionId,
+				"--json",
+			],
 			cwd,
 		);
 		expect(written.status).toBe(0);
@@ -73,7 +92,7 @@ describe("workflow runtime", () => {
 
 	it("supports pi workflow state handoff and active snapshot updates", async () => {
 		const handoff = await runWorkflowCommand(
-			["state", "deep-interview", "handoff", "--to", "ralplan", "--json"],
+			["state", "deep-interview", "handoff", "--to", "ralplan", "--session", sessionId, "--json"],
 			cwd,
 		);
 		expect(handoff.status).toBe(0);
@@ -84,7 +103,7 @@ describe("workflow runtime", () => {
 		expect(handoffJson.state.active).toBe(false);
 		expect(handoffJson.target_state.active).toBe(true);
 
-		const active = await runWorkflowCommand(["state", "active", "--json"], cwd);
+		const active = await runWorkflowCommand(["state", "active", "--session", sessionId, "--json"], cwd);
 		expect(active.status).toBe(0);
 		const activeJson = JSON.parse(active.stdout) as { state: { active_workflows?: Array<{ skill: string }> } };
 		expect(activeJson.state.active_workflows).toEqual([
@@ -92,6 +111,7 @@ describe("workflow runtime", () => {
 				skill: "ralplan",
 				active: true,
 				phase: "handoff",
+				session_id: sessionId,
 				state_path: expect.any(String),
 				updated_at: expect.any(String),
 			},

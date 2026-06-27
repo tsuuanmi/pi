@@ -125,12 +125,14 @@ describe("session-layout", () => {
 			);
 		});
 
-		it("auditLogPath stays global regardless of session", () => {
-			expect(auditLogPath(cwd)).toBe(join(cwd, ".pi", "state", "audit.jsonl"));
+		it("auditLogPath resolves to session state dir", () => {
+			expect(auditLogPath(cwd, "sess-1")).toBe(join(cwd, ".pi", "sess-1", "state", "audit.jsonl"));
 		});
 
-		it("transactionJournalPath stays global regardless of session", () => {
-			expect(transactionJournalPath(cwd, "mut-1")).toBe(join(cwd, ".pi", "state", "transactions", "mut-1.json"));
+		it("transactionJournalPath resolves to session state dir", () => {
+			expect(transactionJournalPath(cwd, "sess-1", "mut-1")).toBe(
+				join(cwd, ".pi", "sess-1", "state", "transactions", "mut-1.json"),
+			);
 		});
 	});
 });

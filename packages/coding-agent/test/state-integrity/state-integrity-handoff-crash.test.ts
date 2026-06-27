@@ -7,6 +7,8 @@ import { transactionJournalPath } from "../../src/workflows/shared/paths.ts";
 import type { WorkflowTransactionJournal } from "../../src/workflows/shared/transaction-journal.ts";
 import { writeWorkflowState } from "../../src/workflows/shared/workflow-state.ts";
 
+const sessionId = "test-session-id";
+
 const ENV_VAR = "PI_WORKFLOW_HANDOFF_FAIL_AFTER_CALLER";
 
 describe("state-integrity handoff crash-injection (STATE-006)", () => {
@@ -23,7 +25,9 @@ describe("state-integrity handoff crash-injection (STATE-006)", () => {
 	});
 
 	it("throws after the caller write and leaves a pending journal with callee/caller done and active-state pending", async () => {
-		await writeWorkflowState(cwd, "deep-interview", { active: true, current_phase: "interviewing" });
+		await writeWorkflowState(cwd, "deep-interview", { active: true, current_phase: "interviewing" }, "pi test", {
+			sessionId,
+		});
 		const mutationId = "deep-interview:handoff:ralplan:crash-test";
 		process.env[ENV_VAR] = mutationId;
 
@@ -34,11 +38,12 @@ describe("state-integrity handoff crash-injection (STATE-006)", () => {
 				callee: { skill: "ralplan", patch: { run_id: "run-1", input: "/spec.md" } },
 				command: "pi deep-interview write-spec",
 				mutationId,
+				sessionId,
 			}),
 		).rejects.toThrow(new RegExp(`injected handoff failure after caller write for ${mutationId}`));
 
 		// A pending journal remains (orphan — repair deferred to STATE-007).
-		const raw = await readFile(transactionJournalPath(cwd, mutationId), "utf8");
+		const raw = await readFile(transactionJournalPath(cwd, sessionId, mutationId), "utf8");
 		const journal = JSON.parse(raw) as WorkflowTransactionJournal;
 		expect(journal.version).toBe(1);
 		expect(journal.mutation_id).toBe(mutationId);

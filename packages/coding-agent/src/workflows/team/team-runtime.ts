@@ -187,7 +187,7 @@ async function appendTeamEvent(
 	cwd: string,
 	teamId: string,
 	event: Record<string, unknown>,
-	sessionId?: string,
+	sessionId: string,
 ): Promise<void> {
 	await appendJsonl(
 		teamEventsPath(cwd, teamId, sessionId),
@@ -203,7 +203,7 @@ async function readJsonObject(path: string): Promise<Record<string, unknown> | u
 	return read.value;
 }
 
-async function readTeamConfig(cwd: string, teamId: string, sessionId?: string): Promise<TeamConfig | undefined> {
+async function readTeamConfig(cwd: string, teamId: string, sessionId: string): Promise<TeamConfig | undefined> {
 	const raw = await readJsonObject(teamConfigPath(cwd, teamId, sessionId));
 	if (!raw) return undefined;
 	const now = nowIso();
@@ -242,19 +242,19 @@ async function readTeamConfig(cwd: string, teamId: string, sessionId?: string): 
 	};
 }
 
-async function activeTeamId(cwd: string, sessionId?: string): Promise<string | undefined> {
+async function activeTeamId(cwd: string, sessionId: string): Promise<string | undefined> {
 	const state = await readWorkflowState(cwd, "team", { sessionId }).catch(() => undefined);
 	return typeof state?.team_id === "string" ? state.team_id : undefined;
 }
 
-async function resolveTeamId(cwd: string, sessionId?: string, teamId?: string): Promise<string> {
+async function resolveTeamId(cwd: string, sessionId: string, teamId?: string): Promise<string> {
 	const resolved = teamId?.trim() || (await activeTeamId(cwd, sessionId));
 	if (!resolved) throw new Error("missing team_id");
 	assertSafeId("team_id", resolved);
 	return resolved;
 }
 
-async function listTasks(cwd: string, teamId: string, sessionId?: string): Promise<TeamTask[]> {
+async function listTasks(cwd: string, teamId: string, sessionId: string): Promise<TeamTask[]> {
 	let entries: string[];
 	try {
 		entries = await readdir(dirname(teamTaskPath(cwd, teamId, "placeholder", sessionId)));
@@ -272,7 +272,7 @@ async function listTasks(cwd: string, teamId: string, sessionId?: string): Promi
 	return tasks.sort((a, b) => a.id.localeCompare(b.id));
 }
 
-async function syncTeamState(cwd: string, snapshot: TeamSnapshot, sessionId?: string): Promise<void> {
+async function syncTeamState(cwd: string, snapshot: TeamSnapshot, sessionId: string): Promise<void> {
 	const active = snapshot.phase !== "missing" && snapshot.phase !== "complete" && snapshot.phase !== "cancelled";
 	const state = await writeWorkflowState(
 		cwd,
@@ -302,7 +302,7 @@ async function syncTeamState(cwd: string, snapshot: TeamSnapshot, sessionId?: st
 export async function startTeam(
 	cwd: string,
 	input: { task: string; teamId?: string; workers?: Array<{ id?: string; name?: string; role?: string }> },
-	sessionId?: string,
+	sessionId: string,
 ): Promise<TeamSnapshot> {
 	const task = (await readFileOrLiteral(input.task, cwd)).trim();
 	if (!task) throw new Error("team task is required");
@@ -341,11 +341,9 @@ export async function startTeam(
 	return snapshot;
 }
 
-export async function readTeamSnapshot(cwd: string, sessionId?: string, teamIdInput?: string): Promise<TeamSnapshot> {
-	const effectiveSessionId = teamIdInput === undefined ? undefined : sessionId;
-	const effectiveTeamIdInput = teamIdInput === undefined ? sessionId : teamIdInput;
-	const teamId = effectiveTeamIdInput?.trim() || (await activeTeamId(cwd, effectiveSessionId));
-	if (!teamId)
+export async function readTeamSnapshot(cwd: string, sessionId: string, teamId?: string): Promise<TeamSnapshot> {
+	const teamIdResolved = teamId?.trim() || (await activeTeamId(cwd, sessionId));
+	if (!teamIdResolved)
 		return {
 			phase: "missing",
 			task_total: 0,
@@ -354,11 +352,11 @@ export async function readTeamSnapshot(cwd: string, sessionId?: string, teamIdIn
 			tasks: [],
 			updated_at: nowIso(),
 		};
-	assertSafeId("team_id", teamId);
-	const config = await readTeamConfig(cwd, teamId, effectiveSessionId);
+	assertSafeId("team_id", teamIdResolved);
+	const config = await readTeamConfig(cwd, teamIdResolved, sessionId);
 	if (!config)
 		return {
-			team_id: teamId,
+			team_id: teamIdResolved,
 			phase: "missing",
 			task_total: 0,
 			task_counts: emptyCounts(),
@@ -366,16 +364,16 @@ export async function readTeamSnapshot(cwd: string, sessionId?: string, teamIdIn
 			tasks: [],
 			updated_at: nowIso(),
 		};
-	const tasks = await listTasks(cwd, teamId, effectiveSessionId);
+	const tasks = await listTasks(cwd, teamIdResolved, sessionId);
 	const counts = taskCounts(tasks);
 	const phase =
 		config.phase === "running" && tasks.length > 0 && tasks.every((task) => task.status === "completed")
 			? "awaiting_integration"
 			: config.phase;
 	return {
-		team_id: teamId,
+		team_id: teamIdResolved,
 		phase,
-		state_dir: teamDir(cwd, effectiveSessionId),
+		state_dir: teamDir(cwd, sessionId),
 		task_total: tasks.length,
 		task_counts: counts,
 		workers: config.workers,
@@ -387,7 +385,7 @@ export async function readTeamSnapshot(cwd: string, sessionId?: string, teamIdIn
 export async function createTeamTask(
 	cwd: string,
 	input: { teamId?: string; id?: string; title: string; description: string; owner?: string; dependsOn?: string[] },
-	sessionId?: string,
+	sessionId: string,
 ): Promise<TeamTask> {
 	const teamId = await resolveTeamId(cwd, sessionId, input.teamId);
 	const id = input.id?.trim() || `task-${sha256(`${input.title}\n${input.description}`).slice(0, 12)}`;
@@ -421,7 +419,7 @@ export async function transitionTeamTask(
 		workerId?: string;
 		evidence?: Omit<TeamCompletionEvidence, "recorded_at">;
 	},
-	sessionId?: string,
+	sessionId: string,
 ): Promise<TeamTask> {
 	const teamId = await resolveTeamId(cwd, sessionId, input.teamId);
 	assertSafeId("task_id", input.taskId);
@@ -466,7 +464,7 @@ export async function transitionTeamTask(
 export async function sendTeamMessage(
 	cwd: string,
 	input: { teamId?: string; from: string; to: string; body: string; idempotencyKey?: string },
-	sessionId?: string,
+	sessionId: string,
 ): Promise<Record<string, unknown>> {
 	const teamId = await resolveTeamId(cwd, sessionId, input.teamId);
 	assertSafeId("worker_id", input.from);
@@ -499,7 +497,7 @@ export async function sendTeamMessage(
 export async function completeTeam(
 	cwd: string,
 	input: { teamId?: string; phase?: "complete" | "failed" | "cancelled"; summary?: string },
-	sessionId?: string,
+	sessionId: string,
 ): Promise<TeamSnapshot> {
 	const teamId = await resolveTeamId(cwd, sessionId, input.teamId);
 	const config = await readTeamConfig(cwd, teamId, sessionId);
@@ -520,7 +518,7 @@ export async function completeTeam(
 
 export async function readTeamCompact(
 	cwd: string,
-	sessionId?: string,
+	sessionId: string,
 	teamId?: string,
 ): Promise<Record<string, unknown>> {
 	const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);

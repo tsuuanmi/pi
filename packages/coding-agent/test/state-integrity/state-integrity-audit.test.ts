@@ -6,9 +6,11 @@ import type { AuditEntry } from "../../src/workflows/shared/audit-log.ts";
 import { auditLogPath } from "../../src/workflows/shared/paths.ts";
 import { writeWorkflowState } from "../../src/workflows/shared/workflow-state.ts";
 
+const sessionId = "test-session-id";
+
 async function readAudit(cwd: string): Promise<AuditEntry[]> {
 	try {
-		const raw = await readFile(auditLogPath(cwd), "utf8");
+		const raw = await readFile(auditLogPath(cwd, sessionId), "utf8");
 		return raw
 			.split(/\r?\n/)
 			.map((line) => line.trim())
@@ -43,8 +45,16 @@ describe("state-integrity audit log (STATE-005)", () => {
 	});
 
 	it("audits every sanctioned mode-state write with the Gajae-faithful schema", async () => {
-		await writeWorkflowState(cwd, "ultragoal", { active: true, current_phase: "approved-execution" });
-		await writeWorkflowState(cwd, "ultragoal", { current_phase: "pending" });
+		await writeWorkflowState(
+			cwd,
+			"ultragoal",
+			{ active: true, current_phase: "approved-execution" },
+			"pi workflow state write",
+			{ sessionId },
+		);
+		await writeWorkflowState(cwd, "ultragoal", { current_phase: "pending" }, "pi workflow state write", {
+			sessionId,
+		});
 
 		const entries = await readAudit(cwd);
 		// Two sanctioned writes, both verb "write".
@@ -61,12 +71,18 @@ describe("state-integrity audit log (STATE-005)", () => {
 	});
 
 	it("emits invalid_transition_detected then throws on an unforced non-manifest-edge transition", async () => {
-		await writeWorkflowState(cwd, "ultragoal", { active: true, current_phase: "approved-execution" });
+		await writeWorkflowState(
+			cwd,
+			"ultragoal",
+			{ active: true, current_phase: "approved-execution" },
+			"pi workflow state write",
+			{ sessionId },
+		);
 
 		// approved-execution -> complete is not a manifest edge for operation "write".
-		await expect(writeWorkflowState(cwd, "ultragoal", { current_phase: "complete" })).rejects.toThrow(
-			/transition is not allowed by workflow manifest/,
-		);
+		await expect(
+			writeWorkflowState(cwd, "ultragoal", { current_phase: "complete" }, "pi workflow state write", { sessionId }),
+		).rejects.toThrow(/transition is not allowed by workflow manifest/);
 
 		const entries = await readAudit(cwd);
 		const invalid = entries.find((e) => e.verb === "invalid_transition_detected");
@@ -81,8 +97,14 @@ describe("state-integrity audit log (STATE-005)", () => {
 	});
 
 	it("best-effort: an unwritable audit log does not fail a sanctioned write", async () => {
-		await writeWorkflowState(cwd, "ultragoal", { active: true, current_phase: "approved-execution" });
-		const auditFile = auditLogPath(cwd);
+		await writeWorkflowState(
+			cwd,
+			"ultragoal",
+			{ active: true, current_phase: "approved-execution" },
+			"pi workflow state write",
+			{ sessionId },
+		);
+		const auditFile = auditLogPath(cwd, sessionId);
 		const before = await readAudit(cwd);
 		expect(before).toHaveLength(1);
 
@@ -90,7 +112,13 @@ describe("state-integrity audit log (STATE-005)", () => {
 		await chmod(auditFile, 0o400);
 		try {
 			// The sanctioned write must still succeed (audit append is best-effort).
-			const state = await writeWorkflowState(cwd, "ultragoal", { current_phase: "pending" });
+			const state = await writeWorkflowState(
+				cwd,
+				"ultragoal",
+				{ current_phase: "pending" },
+				"pi workflow state write",
+				{ sessionId },
+			);
 			expect(state.current_phase).toBe("pending");
 			const after = await readAudit(cwd);
 			// No new audit line could be appended (file read-only).
