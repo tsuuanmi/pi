@@ -64,7 +64,7 @@ pi
 
 You can also run `/account add` and select an API-key provider to store the key in `~/.pi/agent/auth.json`.
 
-See [Providers](providers.md) for all supported providers, environment variables, and cloud-provider setup.
+See [Providers](core/model/providers.md) for all supported providers, environment variables, and cloud-provider setup.
 
 ## First session
 
@@ -156,9 +156,9 @@ Use `--mode json` for JSON event output or `--mode rpc` for process integration.
 ## Next steps
 
 - [Using Pi](usage.md) - interactive mode, slash commands, sessions, context files, and CLI reference.
-- [Providers](providers.md) - authentication and model setup.
-- [Settings](settings.md) - global and project configuration.
-- [Keybindings](keybindings.md) - shortcuts and customization.
+- [Providers](core/model/providers.md) - authentication and model setup.
+- [Settings](core/settings/settings.md) - global and project configuration.
+- [Keybindings](modes/interactive/keybindings.md) - shortcuts and customization.
 - [Pi Packages](packages.md) - install shared extensions, skills, prompts, and themes.
 
-Platform notes: pi supports Linux and macOS. See [tmux](tmux.md), [Terminal setup](terminal-setup.md), and [Shell aliases](shell-aliases.md).
+Platform notes: pi supports Linux and macOS. See [tmux](utils/terminal/tmux.md), [Terminal setup](utils/terminal/terminal-setup.md), and [Shell aliases](utils/terminal/shell-aliases.md).

@@ -40,48 +40,75 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 - [Quickstart](quickstart.md) - install, authenticate, and run a first session.
 - [Using Pi](usage.md) - interactive mode, slash commands, context files, and CLI reference.
-- [Providers](providers.md) - subscription and API-key setup for built-in providers.
-- [Security](security.md) - project trust, sandbox boundaries, and vulnerability reporting.
+- [Settings](core/settings/settings.md) - global and project settings.
+- [Sessions](core/session-manager/sessions.md) - session management, branching, and tree navigation.
+- [Compaction](core/compaction/compaction.md) - context compaction and branch summarization.
+- [Security](core/trust/security.md) - project trust, sandbox boundaries, and vulnerability reporting.
 - [Containerization](containerization.md) - sandbox pi with Docker or OpenShell.
-- [Settings](settings.md) - global and project settings.
-- [Keybindings](keybindings.md) - default shortcuts and custom keybindings.
-- [Sessions](sessions.md) - session management, branching, and tree navigation.
-- [Compaction](compaction.md) - context compaction and branch summarization.
+
+## Models and providers
+
+- [Providers](core/model/providers.md) - subscription and API-key setup for built-in providers.
+- [Custom Models](core/model/models.md) - add model entries for supported provider APIs.
+- [Custom Providers](core/model/custom-provider.md) - implement custom APIs and OAuth flows.
+- [Authentication](core/auth/auth.md) - OAuth flows, token management, and API key resolution.
 
 ## Customization
 
-- [Extensions](extensions.md) - TypeScript modules for tools, commands, events, and custom UI.
-- [Skills](skills.md) - Agent Skills for reusable on-demand capabilities.
+- [Extensions](core/extensions/extensions.md) - TypeScript modules for tools, commands, events, and custom UI.
+- [Skills](core/skills/skills.md) - Agent Skills for reusable on-demand capabilities.
 - [Prompt templates](prompt-templates.md) - reusable prompts that expand from slash commands.
-- [Themes](themes.md) - built-in and custom terminal themes.
+- [Themes](theme/themes.md) - built-in and custom terminal themes.
 - [Pi packages](packages.md) - bundle and share extensions, skills, prompts, and themes.
-- [Custom models](models.md) - add model entries for supported provider APIs.
-- [Custom providers](custom-provider.md) - implement custom APIs and OAuth flows.
-- [MCP](mcp.md) - load Model Context Protocol servers and expose their tools.
+- [MCP](core/mcp/mcp.md) - load Model Context Protocol servers and expose their tools.
 
-## Workflows & subagents
+## Workflows and subagents
 
-- [Pi workflow](workflow.md) - `pi workflow` control plane and built-in planning/execution skills.
-- [Subagents](subagents.md) - Pi-native `SubagentManager` for isolated agent workers.
-- [Agent Management Contracts](agent-management-contracts.md) - Phase-gated contracts for Gajae-like agent management migration.
+- [Pi workflow](workflows/workflow.md) - `pi workflow` control plane and built-in planning/execution skills.
+- [Subagents](core/subagents/subagents.md) - Pi-native `SubagentManager` for isolated agent workers.
+- [Agent Management Contracts](core/subagents/agent-management-contracts.md) - Phase-gated contracts for agent management migration.
+
+## Skills
+
+- [Deep Interview](skills/deep-interview/deep-interview.md) - Socratic requirements interview with ambiguity scoring.
+- [Ralplan](skills/ralplan/ralplan.md) - Consensus planning with Planner, Architect, and Critic.
+- [Team](skills/team/team.md) - Coordinate parallel implementation workers.
+- [Ultragoal](skills/ultragoal/ultragoal.md) - Goal-tracked autonomous execution.
 
 ## Programmatic usage
 
-- [SDK](sdk.md) - embed pi in Node.js applications.
-- [RPC mode](rpc.md) - integrate over stdin/stdout JSONL.
-- [JSON event stream mode](json.md) - print mode with structured events.
-- [TUI components](tui.md) - build custom terminal UI for extensions.
+- [SDK](core/sdk/sdk.md) - embed pi in Node.js applications.
+- [API: RPC mode](api/rpc.md) - integrate over stdin/stdout JSONL.
+- [API: JSON event stream](api/json.md) - print mode with structured events.
+- [API usage logging](core/api-usage/api-usage-logging.md) - sidecar JSONL records for completed LLM invocations.
+- [TUI components](ui/tui.md) - build custom terminal UI for extensions.
 
 ## Reference
 
-- [Session format](session-format.md) - JSONL session file format, entry types, and SessionManager API.
+- [Session format](core/session-manager/session-format.md) - JSONL session file format, entry types, and SessionManager API.
+- [Agent Profiles](core/agents/agent-profiles.md) - Named agent configurations with model and tool overrides.
+- [Configuration](core/config/config.md) - Settings hierarchy and resolution.
+- [Events](core/events/events.md) - Agent lifecycle and UI event system.
+- [LSP](core/lsp/lsp.md) - Language Server Protocol integration.
+- [Messages](core/messages/messages.md) - Agent message types.
+- [Package manager](core/package-manager/package-manager.md) - Pi package distribution.
+- [Resources](core/resources/resources.md) - Resource loading and diagnostics.
+- [Telemetry](core/telemetry/telemetry.md) - Usage tracking.
+- [Tools](core/tools/tools.md) - Built-in tools and custom tool registration.
 
 ## Platform setup
 
-- [tmux](tmux.md)
-- [Terminal setup](terminal-setup.md)
-- [Shell aliases](shell-aliases.md)
+- [Terminal setup](utils/terminal/terminal-setup.md) - Kitty keyboard protocol and terminal configuration.
+- [tmux](utils/terminal/tmux.md) - tmux key forwarding setup.
+- [Shell aliases](utils/terminal/shell-aliases.md) - bash non-interactive mode and alias expansion.
+
+## Interactive mode
+
+- [Keybindings](modes/interactive/keybindings.md) - default shortcuts and custom keybindings.
 
 ## Development
 
 - [Development](development.md) - local setup, project structure, and debugging.
+- [CLI](cli/cli.md) - Command-line interface.
+- [Harness Runtime](harness-runtime/harness-runtime.md) - Execution environment for the coding agent.
+- [Bun](bun/bun.md) - Bun runtime support.

@@ -25,7 +25,7 @@ The editor can be replaced temporarily by built-in UI such as `/settings` or by 
 | Hidden shell command | `!!command` runs without sending output to the model |
 | External editor | Ctrl+G opens `$VISUAL` or `$EDITOR` |
 
-See [Keybindings](keybindings.md) for all shortcuts and customization.
+See [Keybindings](modes/interactive/keybindings.md) for all shortcuts and customization.
 
 ## Slash Commands
 
@@ -62,7 +62,7 @@ You can submit messages while the agent is still working:
 - **Alt+Up** retrieves queued messages back to the editor.
 
 
-Configure delivery in [Settings](settings.md) with `steeringMode` and `followUpMode`.
+Configure delivery in [Settings](core/settings/settings.md) with `steeringMode` and `followUpMode`.
 
 ## Sessions
 
@@ -82,7 +82,7 @@ Useful session commands:
 - `/fork` creates a new session from an earlier user message.
 - `/compact` summarizes older messages to free context.
 
-See [Sessions](sessions.md) and [Compaction](compaction.md) for details.
+See [Sessions](core/session-manager/sessions.md) and [Compaction](core/compaction/compaction.md) for details.
 
 ## Context Files
 
@@ -152,8 +152,8 @@ See [Pi Packages](packages.md) for package sources and security notes.
 |------|-------------|
 | default | Interactive mode |
 | `-p`, `--print` | Print response and exit |
-| `--mode json` | Output all events as JSON lines; see [JSON mode](json.md) |
-| `--mode rpc` | RPC mode over stdin/stdout; see [RPC mode](rpc.md) |
+| `--mode json` | Output all events as JSON lines; see [JSON mode](api/json.md) |
+| `--mode rpc` | RPC mode over stdin/stdout; see [RPC mode](api/rpc.md) |
 | `--tmux` | Launch interactive startup inside a new tmux session |
 
 In print mode, pi also reads piped stdin and merges it into the initial prompt:
@@ -182,15 +182,15 @@ Ctrl+P model cycling uses the `enabledModels` setting (see [Settings](settings.m
 | `--session <path\|id>` | Use a specific session file or partial session ID |
 | `--name <name>`, `-n <name>` | Set session display name at startup |
 
-Session storage directory is set via the `PI_CODING_AGENT_SESSION_DIR` environment variable or the `sessionDir` setting (see [Settings](settings.md)).
+Session storage directory is set via the `PI_CODING_AGENT_SESSION_DIR` environment variable or the `sessionDir` setting (see [Settings](core/settings/settings.md)).
 
 ### Tools
 
-Built-in tools: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`. Extensions can register additional tools or override built-ins (see [Extensions](extensions.md)). The active tool set is controlled via the SDK (`customTools` / `setActiveTools`); there are no CLI flags for tool selection.
+Built-in tools: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`. Extensions can register additional tools or override built-ins (see [Extensions](core/extensions/extensions.md)). The active tool set is controlled via the SDK (`customTools` / `setActiveTools`); there are no CLI flags for tool selection.
 
 ### Resources
 
-Extensions, skills, prompt templates, and themes are auto-discovered from `~/.pi/agent/` and `.pi/` directories and can be added via the `extensions`, `skills`, `prompts`, and `themes` arrays in `settings.json`. There are no CLI flags for loading or disabling these; see [Extensions](extensions.md), [Skills](skills.md), [Prompt Templates](prompt-templates.md), and [Themes](themes.md).
+Extensions, skills, prompt templates, and themes are auto-discovered from `~/.pi/agent/` and `.pi/` directories and can be added via the `extensions`, `skills`, `prompts`, and `themes` arrays in `settings.json`. There are no CLI flags for loading or disabling these; see [Extensions](core/extensions/extensions.md), [Skills](core/skills/skills.md), [Prompt Templates](prompt-templates.md), and [Themes](theme/themes.md).
 
 ### Other Options
 
