@@ -8,7 +8,7 @@ const errorLogPath = join(tmpdir(), "pi-browser-smoke-errors.log");
 
 try {
 	await build({
-		entryPoints: ["scripts/browser-smoke-entry.ts"],
+		entryPoints: ["packages/coding-agent/scripts/browser-smoke-entry.ts"],
 		bundle: true,
 		platform: "browser",
 		format: "esm",

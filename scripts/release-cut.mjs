@@ -3,8 +3,8 @@
  * Release script for pi-mono
  *
  * Usage:
- *   node scripts/release.mjs <major|minor|patch>
- *   node scripts/release.mjs <x.y.z>
+ *   node scripts/release-cut.mjs <major|minor|patch>
+ *   node scripts/release-cut.mjs <x.y.z>
  *
  * Steps:
  * 1. Check for uncommitted changes
@@ -27,7 +27,7 @@ const BUMP_TYPES = new Set(["major", "minor", "patch"]);
 const SEMVER_RE = /^\d+\.\d+\.\d+$/;
 
 if (!RELEASE_TARGET || (!BUMP_TYPES.has(RELEASE_TARGET) && !SEMVER_RE.test(RELEASE_TARGET))) {
-	console.error("Usage: node scripts/release.mjs <major|minor|patch|x.y.z>");
+	console.error("Usage: node scripts/release-cut.mjs <major|minor|patch|x.y.z>");
 	process.exit(1);
 }
 
@@ -92,7 +92,7 @@ function bumpOrSetVersion(target) {
 	}
 
 	console.log(`Setting explicit version (${target})...`);
-	run(`npm version ${target} -ws --no-git-tag-version && node scripts/sync-versions.js && npm install --package-lock-only --ignore-scripts`);
+	run(`npm version ${target} -ws --no-git-tag-version && node scripts/sync-versions.mjs && npm install --package-lock-only --ignore-scripts`);
 	return getVersion();
 }
 

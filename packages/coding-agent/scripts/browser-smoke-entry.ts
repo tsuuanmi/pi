@@ -17,9 +17,9 @@ import {
 	truncateHead,
 } from "@tsuuanmi/pi-agent-core";
 
-// Keep this entry browser-safe. It is bundled by scripts/check-browser-smoke.mjs
+// Keep this entry browser-safe. It is bundled by the check-browser-smoke script
 // to catch accidental Node-only runtime imports in browser-facing package exports.
-const model = getModel("google", "gemini-2.5-flash");
+const model = getModel("anthropic", "claude-3-5-sonnet-20241022");
 const schema = Type.Object({ prompt: Type.String() });
 const stream = createAssistantMessageEventStream();
 

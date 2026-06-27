@@ -33,7 +33,7 @@
 		"copy-assets": "shx mkdir -p dist/theme && shx cp src/theme/*.json dist/theme/ && shx mkdir -p dist/modes/interactive/assets && shx cp src/modes/interactive/assets/*.png dist/modes/interactive/assets/ && shx cp -r src/skills dist/",
 		"copy-binary-assets": "shx cp package.json dist/ && shx cp README.md dist/ && shx cp CHANGELOG.md dist/ && shx mkdir -p dist/theme && shx cp src/theme/*.json dist/theme/ && shx mkdir -p dist/assets && shx cp src/modes/interactive/assets/*.png dist/assets/ && shx cp -r src/skills dist/ && shx cp -r docs dist/",
 		"test": "vitest --run",
-		"shrinkwrap": "node ../../scripts/generate-coding-agent-shrinkwrap.mjs",
+		"shrinkwrap": "node scripts/generate-shrinkwrap.mjs",
 		"prepublishOnly": "npm run clean && npm run build && npm run shrinkwrap"
 	},
 	"dependencies": {
