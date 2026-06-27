@@ -1,8 +1,10 @@
 import type {
 	AssistantMessage,
 	AssistantMessageEvent,
+	Context,
 	Message,
 	Model,
+	ProviderResponse,
 	SimpleStreamOptions,
 	streamSimple,
 	TextContent,
@@ -33,6 +35,37 @@ export type StreamFn = (
  *   while tool-result message artifacts are emitted later in assistant source order.
  */
 export type ToolExecutionMode = "sequential" | "parallel";
+
+export interface ProviderRequestObserverStart {
+	requestId: string;
+	requestSequence: number;
+	model: Model<any>;
+	context: Context;
+	startedAt: number;
+}
+
+export interface ProviderRequestObserverPayload extends ProviderRequestObserverStart {
+	payload: unknown;
+}
+
+export interface ProviderRequestObserverResponse extends ProviderRequestObserverStart {
+	response: ProviderResponse;
+}
+
+export interface ProviderRequestObserverComplete extends ProviderRequestObserverStart {
+	completedAt: number;
+	durationMs: number;
+	message?: AssistantMessage;
+	error?: unknown;
+	aborted: boolean;
+}
+
+export interface ProviderRequestObserver {
+	onRequestStart?: (event: ProviderRequestObserverStart) => void | Promise<void>;
+	onRequestPayload?: (event: ProviderRequestObserverPayload) => void | Promise<void>;
+	onRequestResponse?: (event: ProviderRequestObserverResponse) => void | Promise<void>;
+	onRequestComplete?: (event: ProviderRequestObserverComplete) => void | Promise<void>;
+}
 
 /**
  * Controls how many queued user messages are injected when the agent loop reaches a queue drain point.
@@ -133,6 +166,9 @@ export interface PrepareNextTurnContext extends ShouldStopAfterTurnContext {}
 
 export interface AgentLoopConfig extends SimpleStreamOptions {
 	model: Model<any>;
+
+	/** Generic observer for logical provider invocations. Observer failures are ignored. */
+	providerRequestObserver?: ProviderRequestObserver;
 
 	/**
 	 * Converts AgentMessage[] to LLM-compatible Message[] before each LLM call.

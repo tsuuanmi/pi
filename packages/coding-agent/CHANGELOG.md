@@ -20,6 +20,7 @@
 
 ### Added
 
+- Added default-on redacted API usage JSONL sidecar logging per completed LLM provider invocation, with `apiUsageLogging.enabled` opt-out.
 - Added provider-style `.agent` / `.agents` discovery for trusted project and user skills, prompts, context/rule files, and system prompts.
 - Added markdown/frontmatter agent definitions from `.agent/agents` and `.agents/agents`, bundled markdown-backed role agents, structured agent-profile diagnostics, and removed legacy JSON agent profile loading.
 - Added session-scoped workflow state/artifact paths under `.pi/_session-{id}/`, plus session resolution utilities and tests for isolated Pi workflow runs.

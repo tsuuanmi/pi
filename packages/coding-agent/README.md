@@ -52,6 +52,7 @@ I regularly publish my own `pi-mono` work sessions here:
   - [Branching](#branching)
   - [Compaction](#compaction)
 - [Settings](#settings)
+- [API Usage Logging](docs/api-usage-logging.md)
 - [Context Files](#context-files)
 - [Customization](#customization)
   - [Prompt Templates](#prompt-templates)

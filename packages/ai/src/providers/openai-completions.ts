@@ -269,6 +269,7 @@ export const streamOpenAICompletions: StreamFunction<"openai-completions", OpenA
 				}
 				if (chunk.usage) {
 					output.usage = parseChunkUsage(chunk.usage, model);
+					output.usageProvenance = { type: "provider_reported", fields: Object.keys(chunk.usage) };
 				}
 
 				const choice = Array.isArray(chunk.choices) ? chunk.choices[0] : undefined;
@@ -278,6 +279,7 @@ export const streamOpenAICompletions: StreamFunction<"openai-completions", OpenA
 				// in choice.usage instead of the standard chunk.usage
 				if (!chunk.usage && (choice as any).usage) {
 					output.usage = parseChunkUsage((choice as any).usage, model);
+					output.usageProvenance = { type: "provider_reported", fields: Object.keys((choice as any).usage) };
 				}
 
 				if (choice.finish_reason) {

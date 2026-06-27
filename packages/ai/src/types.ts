@@ -153,6 +153,11 @@ export interface ToolCall {
 	thoughtSignature?: string; // opaque signature for reusing reasoning/thought context on tool calls
 }
 
+export type UsageProvenance =
+	| { type: "provider_reported"; fields: string[] }
+	| { type: "provider_unavailable"; reason: string }
+	| { type: "fallback_default"; reason: string };
+
 export interface Usage {
 	input: number;
 	output: number;
@@ -187,6 +192,7 @@ export interface AssistantMessage {
 	responseModel?: string; // Concrete `chunk.model` when different from the requested `model`.
 	responseId?: string; // Provider-specific response/message identifier when the upstream API exposes one
 	diagnostics?: AssistantMessageDiagnostic[]; // Redacted provider/runtime diagnostics for failures and recoveries.
+	usageProvenance?: UsageProvenance;
 	usage: Usage;
 	stopReason: StopReason;
 	errorMessage?: string;

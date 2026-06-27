@@ -44,6 +44,10 @@ export interface WarningSettings {
 	anthropicExtraUsage?: boolean; // default: true
 }
 
+export interface ApiUsageLoggingSettings {
+	enabled?: boolean; // default: true
+}
+
 /**
  * Status line segment identifiers. `thinking` is intentionally not a segment;
  * it is rendered inside `model` via `segmentOptions.model.showThinkingLevel`.
@@ -178,6 +182,7 @@ export interface Settings {
 	showHardwareCursor?: boolean; // Show terminal cursor while still positioning it for IME
 	markdown?: MarkdownSettings;
 	warnings?: WarningSettings;
+	apiUsageLogging?: ApiUsageLoggingSettings;
 	sessionDir?: string; // Custom session storage directory
 	httpProxy?: string; // Proxy URL applied as HTTP_PROXY and HTTPS_PROXY for Pi-managed HTTP clients
 	httpIdleTimeoutMs?: number; // HTTP header/body idle timeout in milliseconds; 0 disables it
@@ -1171,6 +1176,10 @@ export class SettingsManager {
 
 	getWarnings(): WarningSettings {
 		return { ...(this.settings.warnings ?? {}) };
+	}
+
+	getApiUsageLoggingEnabled(): boolean {
+		return this.settings.apiUsageLogging?.enabled ?? true;
 	}
 
 	setWarnings(warnings: WarningSettings): void {

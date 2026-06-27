@@ -469,6 +469,7 @@ export async function processResponsesStream<TApi extends Api>(
 					totalTokens: response.usage.total_tokens || 0,
 					cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
 				};
+				output.usageProvenance = { type: "provider_reported", fields: Object.keys(response.usage) };
 			}
 			calculateCost(model, output.usage);
 			if (options?.applyServiceTierPricing) {

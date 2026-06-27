@@ -30,6 +30,8 @@ import type { MCPServerInfo } from "../../api/types.ts";
 import { stripFrontmatter } from "../../utils/fs/frontmatter.ts";
 import { resolvePath } from "../../utils/fs/paths.ts";
 import { sleep } from "../../utils/system/sleep.ts";
+import { ApiUsageLogger } from "../api-usage/api-usage-logger.ts";
+import { apiUsageLogPath } from "../api-usage/path.ts";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "../auth/auth-guidance.ts";
 import {
 	type CompactionResult,
@@ -308,6 +310,7 @@ export class AgentSession {
 	private _skipWorkflowContinuation: boolean;
 	private _extraSystemPrompt?: string;
 	private _subagentManager?: SubagentManager;
+	private _apiUsageLogger?: ApiUsageLogger;
 	private _extensionUIContext?: ExtensionUIContext;
 	private _extensionMode: ExtensionMode = "print";
 	private _extensionCommandContextActions?: ExtensionCommandContextActions;
@@ -347,6 +350,7 @@ export class AgentSession {
 		this._skipWorkflowContinuation = config.skipWorkflowContinuation ?? false;
 		this._extraSystemPrompt = config.extraSystemPrompt;
 		this._subagentManager = config.subagentManager ?? undefined;
+		this._installApiUsageLogger();
 
 		// Always subscribe to agent events for internal handling
 		// (session persistence, extensions, auto-compaction, retry logic)
@@ -357,6 +361,26 @@ export class AgentSession {
 			activeToolNames: this._initialActiveToolNames,
 			includeAllExtensionTools: true,
 		});
+	}
+
+	private _installApiUsageLogger(): void {
+		if (!this.settingsManager.getApiUsageLoggingEnabled()) {
+			this.agent.providerRequestObserver = undefined;
+			return;
+		}
+		const sessionId = this.sessionManager.getSessionId();
+		const path = apiUsageLogPath(this._cwd, sessionId);
+		if (!path) {
+			this.agent.providerRequestObserver = undefined;
+			return;
+		}
+		this._apiUsageLogger = new ApiUsageLogger({
+			cwd: this._cwd,
+			sessionId,
+			path,
+			transport: this.settingsManager.getTransport(),
+		});
+		this.agent.providerRequestObserver = this._apiUsageLogger;
 	}
 
 	/** Model registry for API key resolution and model discovery */
@@ -2465,6 +2489,7 @@ export class AgentSession {
 		const previousFlagValues = this._extensionRunner.getFlagValues();
 		await emitSessionShutdownEvent(this._extensionRunner, { type: "session_shutdown", reason: "reload" });
 		await this.settingsManager.reload();
+		this._installApiUsageLogger();
 		this.syncQueueModesFromSettings();
 		resetApiProviders();
 		await this._stopMcpRuntime();

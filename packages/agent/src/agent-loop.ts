@@ -22,6 +22,21 @@ import type {
 	StreamFn,
 } from "./types.ts";
 
+let providerRequestSequence = 0;
+
+function createRequestId(): string {
+	return `llm_${Date.now().toString(36)}_${(++providerRequestSequence).toString(36)}`;
+}
+
+async function observeProviderRequest(callback: (() => void | Promise<void>) | undefined): Promise<void> {
+	if (!callback) return;
+	try {
+		await callback();
+	} catch {
+		// Provider request observers are best-effort and must not affect agent runs.
+	}
+}
+
 export type AgentEventSink = (event: AgentEvent) => Promise<void> | void;
 
 /**
@@ -296,67 +311,116 @@ async function streamAssistantResponse(
 	};
 
 	const streamFunction = streamFn || streamSimple;
+	const requestId = createRequestId();
+	const requestSequence = providerRequestSequence;
+	const startedAt = Date.now();
+	const observerBase = { requestId, requestSequence, model: config.model, context: llmContext, startedAt };
+	await observeProviderRequest(() => config.providerRequestObserver?.onRequestStart?.(observerBase));
+
+	let observedCompletion = false;
+	const observeCompletion = async (message: AssistantMessage | undefined, error?: unknown) => {
+		if (observedCompletion) return;
+		observedCompletion = true;
+		const completedAt = Date.now();
+		await observeProviderRequest(() =>
+			config.providerRequestObserver?.onRequestComplete?.({
+				...observerBase,
+				completedAt,
+				durationMs: completedAt - startedAt,
+				message,
+				error,
+				aborted: signal?.aborted === true || message?.stopReason === "aborted",
+			}),
+		);
+	};
 
 	// Resolve API key (important for expiring tokens)
 	const resolvedApiKey =
 		(config.getApiKey ? await config.getApiKey(config.model.provider) : undefined) || config.apiKey;
 
-	const response = await streamFunction(config.model, llmContext, {
-		...config,
-		apiKey: resolvedApiKey,
-		signal,
-	});
+	let response: Awaited<ReturnType<StreamFn>>;
+	try {
+		response = await streamFunction(config.model, llmContext, {
+			...config,
+			apiKey: resolvedApiKey,
+			signal,
+			onPayload: async (payload, model) => {
+				const nextPayload = await config.onPayload?.(payload, model);
+				const finalPayload = nextPayload === undefined ? payload : nextPayload;
+				await observeProviderRequest(() =>
+					config.providerRequestObserver?.onRequestPayload?.({ ...observerBase, payload: finalPayload }),
+				);
+				return nextPayload;
+			},
+			onResponse: async (providerResponse, model) => {
+				await config.onResponse?.(providerResponse, model);
+				await observeProviderRequest(() =>
+					config.providerRequestObserver?.onRequestResponse?.({ ...observerBase, response: providerResponse }),
+				);
+			},
+		});
+	} catch (error) {
+		await observeCompletion(undefined, error);
+		throw error;
+	}
 
 	let partialMessage: AssistantMessage | null = null;
 	let addedPartial = false;
 
-	for await (const event of response) {
-		switch (event.type) {
-			case "start":
-				partialMessage = event.partial;
-				context.messages.push(partialMessage);
-				addedPartial = true;
-				await emit({ type: "message_start", message: { ...partialMessage } });
-				break;
-
-			case "text_start":
-			case "text_delta":
-			case "text_end":
-			case "thinking_start":
-			case "thinking_delta":
-			case "thinking_end":
-			case "toolcall_start":
-			case "toolcall_delta":
-			case "toolcall_end":
-				if (partialMessage) {
+	try {
+		for await (const event of response) {
+			switch (event.type) {
+				case "start":
 					partialMessage = event.partial;
-					context.messages[context.messages.length - 1] = partialMessage;
-					await emit({
-						type: "message_update",
-						assistantMessageEvent: event,
-						message: { ...partialMessage },
-					});
-				}
-				break;
+					context.messages.push(partialMessage);
+					addedPartial = true;
+					await emit({ type: "message_start", message: { ...partialMessage } });
+					break;
 
-			case "done":
-			case "error": {
-				const finalMessage = await response.result();
-				if (addedPartial) {
-					context.messages[context.messages.length - 1] = finalMessage;
-				} else {
-					context.messages.push(finalMessage);
+				case "text_start":
+				case "text_delta":
+				case "text_end":
+				case "thinking_start":
+				case "thinking_delta":
+				case "thinking_end":
+				case "toolcall_start":
+				case "toolcall_delta":
+				case "toolcall_end":
+					if (partialMessage) {
+						partialMessage = event.partial;
+						context.messages[context.messages.length - 1] = partialMessage;
+						await emit({
+							type: "message_update",
+							assistantMessageEvent: event,
+							message: { ...partialMessage },
+						});
+					}
+					break;
+
+				case "done":
+				case "error": {
+					const finalMessage = await response.result();
+					await observeCompletion(finalMessage);
+					if (addedPartial) {
+						context.messages[context.messages.length - 1] = finalMessage;
+					} else {
+						context.messages.push(finalMessage);
+					}
+					if (!addedPartial) {
+						await emit({ type: "message_start", message: { ...finalMessage } });
+					}
+					await emit({ type: "message_end", message: finalMessage });
+					return finalMessage;
 				}
-				if (!addedPartial) {
-					await emit({ type: "message_start", message: { ...finalMessage } });
-				}
-				await emit({ type: "message_end", message: finalMessage });
-				return finalMessage;
 			}
 		}
+	} catch (error) {
+		await observeCompletion(undefined, error);
+		throw error;
 	}
 
 	const finalMessage = await response.result();
+	await observeCompletion(finalMessage);
 	if (addedPartial) {
 		context.messages[context.messages.length - 1] = finalMessage;
 	} else {
