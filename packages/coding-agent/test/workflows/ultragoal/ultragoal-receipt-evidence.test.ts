@@ -19,6 +19,14 @@ import {
 
 const sessionId = "test-session-id";
 
+function receiptQualityGateJson(): Record<string, unknown> {
+	return {
+		architectReview: { recommendation: "APPROVE" },
+		executorQa: { status: "passed" },
+		iteration: { status: "passed" },
+	};
+}
+
 function makeGoal(id: string, objective: string, overrides: Partial<UltragoalGoal> = {}): UltragoalGoal {
 	return {
 		id,
@@ -94,7 +102,7 @@ test("buildCompletionReceipt then validateCompletionReceipt is verified (self-st
 	const plan = makePlan([g1, g2]);
 	const ledger: UltragoalLedgerEvent[] = [{ eventId: "e0", event: "plan_created" }];
 	const now = "2026-06-21T12:00:00.000Z";
-	const qualityGateJson = { executorQa: { artifactRefs: [] }, contractCoverage: [] };
+	const qualityGateJson = receiptQualityGateJson();
 	const goalJson = { ...g1, status: "active", updatedAt: now };
 	const checkpointLedgerEventId = "evt-checkpoint-1";
 	const receipt = buildCompletionReceipt({
@@ -160,7 +168,7 @@ test("validateCompletionReceipt flags dirty quality gate", () => {
 	const g1 = makeGoal("G001", "one", { status: "active" });
 	const plan = makePlan([g1]);
 	const now = "2026-06-21T12:00:00.000Z";
-	const qualityGateJson = { executorQa: { artifactRefs: [] }, contractCoverage: [] };
+	const qualityGateJson = receiptQualityGateJson();
 	const goalJson = { ...g1, status: "active", updatedAt: now };
 	const checkpointLedgerEventId = "evt-1";
 	const receipt = buildCompletionReceipt({
@@ -207,7 +215,7 @@ test("validateCompletionReceipt flags stale when goal.updatedAt drifts from veri
 	const g1 = makeGoal("G001", "one", { status: "active" });
 	const plan = makePlan([g1]);
 	const now = "2026-06-21T12:00:00.000Z";
-	const qualityGateJson = { executorQa: {} };
+	const qualityGateJson = receiptQualityGateJson();
 	const goalJson = { ...g1, status: "active", updatedAt: now };
 	const checkpointLedgerEventId = "evt-1";
 	const receipt = buildCompletionReceipt({
@@ -255,7 +263,7 @@ test("sibling completion does not stale a sibling per-goal receipt (snapshot exc
 	const g2 = makeGoal("G002", "two", { status: "active" });
 	const plan = makePlan([g1, g2]);
 	const now1 = "2026-06-21T12:00:00.000Z";
-	const qualityGateJson = { executorQa: {} };
+	const qualityGateJson = receiptQualityGateJson();
 	const goalJson1 = { ...g1, status: "active", updatedAt: now1 };
 	const checkpointLedgerEventId1 = "evt-1";
 	const receipt1 = buildCompletionReceipt({

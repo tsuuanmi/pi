@@ -53,6 +53,7 @@ export interface UltragoalGoal {
 	startedAt?: string;
 	completedAt?: string;
 	evidence?: string;
+	steering?: { kind: string; blockedGoalId?: string };
 	completionVerification?: UltragoalCompletionVerification;
 }
 
@@ -77,7 +78,7 @@ export interface UltragoalPlan {
  * validation time.
  */
 export interface UltragoalCompletionVerification {
-	schemaVersion: 1;
+	schemaVersion: 2;
 	receiptId: string;
 	verifiedAt: string;
 	goalId: string;
@@ -87,6 +88,7 @@ export interface UltragoalCompletionVerification {
 	objective: string;
 	qualityGateHash: string;
 	goalSnapshotHash: string;
+	transitionSnapshotHash: string;
 	planGeneration: string;
 	basis: {
 		planHashBeforeCheckpoint: string;
@@ -114,6 +116,9 @@ export interface UltragoalLedgerEvent {
 	completionVerification?: UltragoalCompletionVerification;
 	qualityGateJson?: unknown;
 	goalJson?: unknown;
+	supersededGoalId?: string;
+	supersededGoalJson?: unknown;
+	supersessionEvidence?: string;
 	[key: string]: unknown;
 }
 
@@ -362,6 +367,7 @@ export function buildCompletionReceipt(input: {
 	beforeStatus: UltragoalGoalStatus;
 	qualityGateJson: Record<string, unknown>;
 	goalJson: Record<string, unknown>;
+	transitionJson?: Record<string, unknown>;
 	now: string;
 	checkpointLedgerEventId: string;
 }): UltragoalCompletionVerification {
@@ -375,7 +381,7 @@ export function buildCompletionReceipt(input: {
 		excludeEventId: input.checkpointLedgerEventId,
 	});
 	return {
-		schemaVersion: 1,
+		schemaVersion: 2,
 		receiptId: randomUUID(),
 		verifiedAt: input.now,
 		goalId: input.goal.id,
@@ -385,6 +391,7 @@ export function buildCompletionReceipt(input: {
 		objective: input.plan.objective,
 		qualityGateHash: hashStructuredValue(input.qualityGateJson),
 		goalSnapshotHash: hashStructuredValue(input.goalJson),
+		transitionSnapshotHash: hashStructuredValue(input.transitionJson ?? input.goalJson),
 		planGeneration: generation.planGeneration,
 		basis: generation.basis,
 		checkpointLedgerEventId: input.checkpointLedgerEventId,
@@ -448,7 +455,7 @@ export function validateCompletionReceipt(input: {
 		};
 	}
 	if (
-		receipt.schemaVersion !== 1 ||
+		receipt.schemaVersion !== 2 ||
 		receipt.goalId !== input.goal.id ||
 		receipt.receiptKind !== input.receiptKind ||
 		!receipt.planGeneration ||
@@ -494,6 +501,16 @@ export function validateCompletionReceipt(input: {
 		return {
 			state: "active_stale_receipt",
 			message: `Ultragoal ${input.goal.id} receipt goal snapshot hash does not match ledger.`,
+			goalId: input.goal.id,
+		};
+	}
+	const transitionSnapshot = event.supersededGoalJson
+		? { goalJson: event.goalJson, supersededGoalJson: event.supersededGoalJson }
+		: event.goalJson;
+	if (hashStructuredValue(transitionSnapshot) !== receipt.transitionSnapshotHash) {
+		return {
+			state: "active_stale_receipt",
+			message: `Ultragoal ${input.goal.id} receipt transition snapshot hash does not match ledger.`,
 			goalId: input.goal.id,
 		};
 	}

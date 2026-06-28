@@ -10,6 +10,8 @@ import {
 	createUltragoalPlan,
 	getUltragoalStatus,
 	readUltragoalCompact,
+	recordUltragoalBlockerClassification,
+	recordUltragoalReviewBlockers,
 	startNextUltragoalGoal,
 } from "./ultragoal-runtime.ts";
 
@@ -19,6 +21,17 @@ const ultragoalCreatePlanSchema = Type.Object({
 });
 type UltragoalCreatePlanInput = Static<typeof ultragoalCreatePlanSchema>;
 
+const artifactRefSchema = Type.Object({
+	id: Type.String(),
+	kind: Type.String(),
+	description: Type.String(),
+	path: Type.Optional(Type.String()),
+	inlineEvidence: Type.Optional(Type.Unknown()),
+	verifiedReceipt: Type.Optional(Type.Unknown()),
+	receipt: Type.Optional(Type.Unknown()),
+	replayExempt: Type.Optional(Type.Unknown()),
+});
+
 const ultragoalCheckpointSchema = Type.Object({
 	goalId: Type.String(),
 	status: Type.String(),
@@ -26,70 +39,60 @@ const ultragoalCheckpointSchema = Type.Object({
 	qualityGate: Type.Optional(
 		Type.Object(
 			{
-				executorQa: Type.Object(
-					{
-						artifactRefs: Type.Array(
-							Type.Object(
-								{
-									id: Type.String(),
-									kind: Type.String(),
-									description: Type.String(),
-									path: Type.Optional(Type.String()),
-									inlineEvidence: Type.Optional(Type.Unknown()),
-									verifiedReceipt: Type.Optional(Type.Unknown()),
-									receipt: Type.Optional(Type.Unknown()),
-								},
-								{
-									description:
-										"Artifact reference: id, kind, description, and a path/inlineEvidence/verifiedReceipt proof.",
-								},
-							),
-						),
-						surfaceEvidence: Type.Array(
-							Type.Object(
-								{
-									id: Type.String(),
-									status: Type.Optional(Type.String()),
-									surface: Type.String(),
-									contractRef: Type.String(),
-									invocation: Type.String(),
-									verdict: Type.Optional(Type.String()),
-									result: Type.Optional(Type.String()),
-									reason: Type.Optional(Type.String()),
-									artifactRefs: Type.Optional(Type.Array(Type.String())),
-								},
-								{
-									description:
-										"Surface evidence row: status, surface, contractRef, invocation, verdict/result, artifactRefs links.",
-								},
-							),
-						),
-					},
-					{ description: "Executor QA evidence with artifactRefs and surfaceEvidence rows." },
-				),
-				contractCoverage: Type.Array(
-					Type.Object(
-						{
-							id: Type.String(),
-							contractRef: Type.String(),
-							obligation: Type.String(),
-							status: Type.Optional(Type.String()),
-							reason: Type.Optional(Type.String()),
-							surfaceEvidenceRefs: Type.Optional(Type.Array(Type.String())),
-							artifactRefs: Type.Optional(Type.Array(Type.String())),
-						},
-						{ description: "Contract coverage row: contractRef, obligation, status, linked refs." },
-					),
-				),
+				architectReview: Type.Object({
+					architectureStatus: Type.String(),
+					productStatus: Type.String(),
+					codeStatus: Type.String(),
+					recommendation: Type.String(),
+					commands: Type.Array(Type.String()),
+					evidence: Type.String(),
+					blockers: Type.Array(Type.Unknown()),
+				}),
+				executorQa: Type.Object({
+					status: Type.String(),
+					e2eStatus: Type.String(),
+					redTeamStatus: Type.String(),
+					evidence: Type.String(),
+					e2eCommands: Type.Array(Type.String()),
+					redTeamCommands: Type.Array(Type.String()),
+					artifactRefs: Type.Array(artifactRefSchema),
+					surfaceEvidence: Type.Array(Type.Unknown()),
+					adversarialCases: Type.Array(Type.Unknown()),
+					contractCoverage: Type.Array(Type.Unknown()),
+					blockers: Type.Array(Type.Unknown()),
+					changedPaths: Type.Optional(Type.Array(Type.String())),
+				}),
+				iteration: Type.Object({
+					status: Type.String(),
+					fullRerun: Type.Boolean(),
+					rerunCommands: Type.Array(Type.String()),
+					evidence: Type.String(),
+					blockers: Type.Array(Type.Unknown()),
+				}),
 			},
 			{
 				description:
-					"Required for status 'complete'. Typed quality-gate rows (hard break): executorQa (artifactRefs + surfaceEvidence) and contractCoverage. Free-form {status} objects are rejected; the runtime validates the typed shape strictly.",
+					"Required for status 'complete'. Hard-break full quality gate: architectReview, executorQa, and iteration. Old executorQa+contractCoverage gates are rejected by runtime validation.",
 			},
 		),
 	),
 });
 type UltragoalCheckpointInput = Static<typeof ultragoalCheckpointSchema>;
+
+const ultragoalRecordReviewBlockersSchema = Type.Object({
+	goalId: Type.String(),
+	title: Type.String(),
+	objective: Type.String(),
+	evidence: Type.String(),
+});
+type UltragoalRecordReviewBlockersInput = Static<typeof ultragoalRecordReviewBlockersSchema>;
+
+const ultragoalClassifyBlockerSchema = Type.Object({
+	classification: Type.String(),
+	evidence: Type.String(),
+	goalId: Type.Optional(Type.String()),
+});
+type UltragoalClassifyBlockerInput = Static<typeof ultragoalClassifyBlockerSchema>;
 
 const ultragoalGuardSchema = Type.Object({
 	goalId: Type.Optional(Type.String({ description: "Goal id to inspect. Defaults to the active goal." })),
@@ -209,6 +212,30 @@ async function executeUltragoalGuard(params: UltragoalGuardInput, ctx: Extension
 	};
 }
 
+async function executeUltragoalRecordReviewBlockers(params: UltragoalRecordReviewBlockersInput, ctx: ExtensionContext) {
+	const result = await recordUltragoalReviewBlockers(ctx.cwd, params, ctx.sessionManager.getSessionId());
+	await syncWorkflowHudUi(ctx);
+	return {
+		content: [{ type: "text" as const, text: `Recorded review blockers for ultragoal ${params.goalId}` }],
+		details: workflowReceipt({ ...result }),
+	};
+}
+
+async function executeUltragoalClassifyBlocker(params: UltragoalClassifyBlockerInput, ctx: ExtensionContext) {
+	if (params.classification !== "human_blocked" && params.classification !== "resolvable") {
+		throw new Error('classification must be "human_blocked" or "resolvable"');
+	}
+	const result = await recordUltragoalBlockerClassification(
+		ctx.cwd,
+		{ classification: params.classification, evidence: params.evidence, goalId: params.goalId },
+		ctx.sessionManager.getSessionId(),
+	);
+	return {
+		content: [{ type: "text" as const, text: `Classified ultragoal blocker as ${params.classification}` }],
+		details: workflowReceipt({ ...result }),
+	};
+}
+
 export function registerUltragoalTools(pi: ExtensionAPI): void {
 	pi.registerTool({
 		name: "ultragoal_create_plan",
@@ -264,10 +291,37 @@ export function registerUltragoalTools(pi: ExtensionAPI): void {
 	});
 
 	pi.registerTool({
+		name: "ultragoal_record_review_blockers",
+		label: "Ultragoal Record Review Blockers",
+		description:
+			"Record review blockers by marking a goal review_blocked and appending a pending blocker-resolution goal.",
+		promptSnippet: "Record ultragoal review blockers",
+		promptGuidelines: [
+			"Use ultragoal_record_review_blockers when verification/review finds blockers that must become durable follow-up work.",
+		],
+		parameters: ultragoalRecordReviewBlockersSchema,
+		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
+			executeUltragoalRecordReviewBlockers(params, ctx),
+	});
+
+	pi.registerTool({
+		name: "ultragoal_classify_blocker",
+		label: "Ultragoal Classify Blocker",
+		description:
+			"Record a blocker triage classification. Only immediate latest human_blocked authorizes failed/blocked checkpoints.",
+		promptSnippet: "Classify ultragoal blocker",
+		promptGuidelines: [
+			"Use ultragoal_classify_blocker before failed/blocked checkpoints when the blocker is genuinely human-only.",
+		],
+		parameters: ultragoalClassifyBlockerSchema,
+		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeUltragoalClassifyBlocker(params, ctx),
+	});
+
+	pi.registerTool({
 		name: "ultragoal_guard",
 		label: "Ultragoal Guard",
 		description:
-			"Read ultragoal verification state and report a 9-state diagnostic (inactive, unrelated_goal, active_verified_complete, active_missing_receipt, active_stale_receipt, active_missing_final_receipt, active_dirty_quality_gate, active_review_blocked_unrecorded, unreadable_fail_closed). Use before declaring an ultragoal goal complete to confirm the completion receipt is fresh.",
+			"Read ultragoal verification state and report a diagnostic (inactive, unrelated_goal, active_verified_complete, active_missing_receipt, active_stale_receipt, active_missing_final_receipt, active_dirty_quality_gate, active_review_blocked_unrecorded, active_review_blocked_recorded, unreadable_fail_closed). Use before declaring an ultragoal goal complete to confirm the completion receipt is fresh.",
 		promptSnippet: "Check ultragoal completion receipt freshness",
 		promptGuidelines: [
 			"Use ultragoal_guard before treating a stored completion receipt as complete; it reports stale/missing/dirty receipts and fail-closed unreadable state.",

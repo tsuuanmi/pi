@@ -1,115 +1,20 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { deflateSync } from "node:zlib";
 import { assert, expect, test } from "vitest";
-import { ultragoalLedgerPath } from "../../../src/workflows/shared/paths.ts";
+import { ultragoalGoalsPath, ultragoalLedgerPath } from "../../../src/workflows/shared/paths.ts";
 import { ultragoalGuard } from "../../../src/workflows/ultragoal/ultragoal-guard.ts";
-import { validateExecutorQaEvidence } from "../../../src/workflows/ultragoal/ultragoal-quality-gate.ts";
+import { validateCompletionQualityGate } from "../../../src/workflows/ultragoal/ultragoal-quality-gate.ts";
 import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
+	recordUltragoalBlockerClassification,
+	recordUltragoalReviewBlockers,
 	startNextUltragoalGoal,
 } from "../../../src/workflows/ultragoal/ultragoal-runtime.ts";
 
 const sessionId = "test-session-id";
-
-const PNG_CRC_TABLE = new Uint32Array(256).map((_, index) => {
-	let crc = index;
-	for (let bit = 0; bit < 8; bit += 1) crc = crc & 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1;
-	return crc >>> 0;
-});
-
-function pngCrc32(bytes: Buffer): number {
-	let crc = 0xffffffff;
-	for (const byte of bytes) crc = PNG_CRC_TABLE[(crc ^ byte) & 0xff]! ^ (crc >>> 8);
-	return (crc ^ 0xffffffff) >>> 0;
-}
-
-function pngChunk(type: string, data: Buffer): Buffer {
-	const length = Buffer.alloc(4);
-	length.writeUInt32BE(data.length, 0);
-	const typeBuf = Buffer.from(type, "ascii");
-	const crcBuf = Buffer.alloc(4);
-	crcBuf.writeUInt32BE(pngCrc32(Buffer.concat([typeBuf, data])), 0);
-	return Buffer.concat([length, typeBuf, data, crcBuf]);
-}
-
-/** Build an RGBA PNG (color type 6, bit depth 8) from a pixel function. */
-function buildPng(
-	width: number,
-	height: number,
-	pixel: (x: number, y: number) => [number, number, number, number],
-): Buffer {
-	const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-	const ihdr = Buffer.alloc(13);
-	ihdr.writeUInt32BE(width, 0);
-	ihdr.writeUInt32BE(height, 4);
-	ihdr[8] = 8; // bit depth
-	ihdr[9] = 6; // color type RGBA
-	ihdr[10] = 0; // compression
-	ihdr[11] = 0; // filter
-	ihdr[12] = 0; // interlace
-	// Raw image data: each row prefixed with a filter byte (0 = none), then RGBA.
-	const rowLength = 1 + width * 4;
-	const raw = Buffer.alloc(rowLength * height);
-	for (let y = 0; y < height; y += 1) {
-		raw[y * rowLength] = 0; // filter: none
-		for (let x = 0; x < width; x += 1) {
-			const [r, g, b, a] = pixel(x, y);
-			const offset = y * rowLength + 1 + x * 4;
-			raw[offset] = r;
-			raw[offset + 1] = g;
-			raw[offset + 2] = b;
-			raw[offset + 3] = a;
-		}
-	}
-	const idat = deflateSync(raw);
-	return Buffer.concat([signature, pngChunk("IHDR", ihdr), pngChunk("IDAT", idat), pngChunk("IEND", Buffer.alloc(0))]);
-}
-
-function nonUniformPng(): Buffer {
-	return buildPng(320, 180, (x, y) => [(x * 7) % 256, (y * 5 + x) % 256, ((x ^ y) * 3) % 256, 255]);
-}
-
-function uniformPng(): Buffer {
-	return buildPng(320, 180, () => [128, 128, 128, 255]);
-}
-
-function truncatedPng(): Buffer {
-	const full = nonUniformPng();
-	return full.subarray(0, 40); // too short / no IEND
-}
-
-function validAutomationTranscript(): string {
-	return JSON.stringify({
-		schemaVersion: 1,
-		surface: "web",
-		tool: "playwright",
-		actions: [
-			{ type: "goto", url: "https://example.test", timestamp: 1, selector: "body" },
-			{ type: "click", selector: "#go", timestamp: 2 },
-		],
-		assertions: [{ status: "passed", timestamp: 3, selector: "#result" }],
-	});
-}
-
-function nonMonotonicTranscript(): string {
-	return JSON.stringify({
-		schemaVersion: 1,
-		surface: "web",
-		tool: "playwright",
-		actions: [
-			{ type: "goto", url: "https://example.test", timestamp: 5, selector: "body" },
-			{ type: "click", selector: "#go", timestamp: 1 },
-		],
-	});
-}
-
-function controlSequenceFreePty(): string {
-	// No ANSI escapes, but long enough printable run — should be rejected.
-	return "plain text output without any control sequences at all here it is".padEnd(600, "x");
-}
+const PASSED = "passed";
 
 async function withDir<T>(fn: (cwd: string) => Promise<T>): Promise<T> {
 	const cwd = await mkdtemp(join(tmpdir(), "pi-ug-qg-"));
@@ -120,333 +25,220 @@ async function withDir<T>(fn: (cwd: string) => Promise<T>): Promise<T> {
 	}
 }
 
-async function writeFixture(cwd: string, rel: string, bytes: Buffer | string): Promise<string> {
-	const path = join(cwd, rel);
-	await mkdir(join(path, ".."), { recursive: true });
-	await writeFile(path, bytes);
-	return path;
-}
-
-const PASSED = "passed";
-
-/** A typed cli-surface quality gate using a verifiedReceipt (no real artifacts needed). */
-function cliQualityGate(): Record<string, unknown> {
+function fullQualityGate(): Record<string, unknown> {
 	return {
+		architectReview: {
+			architectureStatus: "CLEAR",
+			productStatus: "CLEAR",
+			codeStatus: "CLEAR",
+			recommendation: "APPROVE",
+			commands: ["architect review"],
+			evidence: "Architect reviewed architecture, product, and code lanes with no blockers.",
+			blockers: [],
+		},
 		executorQa: {
+			status: PASSED,
+			e2eStatus: PASSED,
+			redTeamStatus: PASSED,
+			evidence: "Executor QA covered contracts, surfaces, and adversarial cases with durable proof.",
+			e2eCommands: ["npm run check"],
+			redTeamCommands: ["node -e console.log"],
 			artifactRefs: [
 				{
-					id: "a1",
-					kind: "cli-replay",
-					description: "Ran focused checks",
-					verifiedReceipt: { verifiedAt: "2026-06-21T00:00:00.000Z", summary: "checks passed" },
+					id: "api-report",
+					kind: "api-package-test-report",
+					description: "API/package behavior report",
+					verifiedReceipt: { verifiedAt: "2026-06-28T00:00:00.000Z", summary: "verified" },
+				},
+				{
+					id: "adversarial-report",
+					kind: "failure-mode-test-report",
+					description: "Adversarial behavior report",
+					verifiedReceipt: { verifiedAt: "2026-06-28T00:00:00.000Z", summary: "verified" },
 				},
 			],
 			surfaceEvidence: [
 				{
-					id: "s1",
-					surface: "cli",
-					contractRef: "plan#a",
-					invocation: "npm run check",
+					id: "surface-api",
+					surface: "api/package",
+					contractRef: "contract#a",
+					invocation: "package consumer test",
 					result: PASSED,
-					artifactRefs: ["a1"],
+					artifactRefs: ["api-report"],
 				},
 			],
+			adversarialCases: [
+				{
+					id: "case-invalid",
+					contractRef: "contract#a",
+					scenario: "invalid input",
+					expectedBehavior: "reject cleanly",
+					result: PASSED,
+					artifactRefs: ["adversarial-report"],
+				},
+			],
+			contractCoverage: [
+				{
+					id: "coverage-a",
+					contractRef: "contract#a",
+					obligation: "contract is covered",
+					status: PASSED,
+					surfaceEvidenceRefs: ["surface-api"],
+					adversarialCaseRefs: ["case-invalid"],
+				},
+			],
+			blockers: [],
 		},
-		contractCoverage: [
-			{ id: "c1", contractRef: "plan#a", obligation: "focused checks pass", status: PASSED, artifactRefs: ["a1"] },
-		],
+		iteration: {
+			status: PASSED,
+			fullRerun: true,
+			rerunCommands: ["npm run check"],
+			evidence: "Full verification reran after blocker resolution.",
+			blockers: [],
+		},
 	};
 }
 
-test("quality gate rejects free-form {status} objects (hard break)", async () => {
+async function readIfExists(path: string): Promise<string> {
+	try {
+		return await readFile(path, "utf8");
+	} catch {
+		return "";
+	}
+}
+
+test("quality gate rejects unsupported top-level keys", async () => {
 	await withDir(async (cwd) => {
-		await expect(validateExecutorQaEvidence(cwd, { status: "passed" })).rejects.toThrow(/free-form/);
+		await expect(validateCompletionQualityGate(cwd, { status: "passed", ...fullQualityGate() })).rejects.toThrow(
+			/unsupported keys: status/,
+		);
 	});
 });
 
-test("quality gate rejects stray top-level keys alongside typed rows (Gajae parity)", async () => {
+test("quality gate accepts the full architectReview/executorQa/iteration shape", async () => {
 	await withDir(async (cwd) => {
-		const gate = { status: "passed", ...cliQualityGate() };
-		await expect(validateExecutorQaEvidence(cwd, gate)).rejects.toThrow(/unsupported keys: status/);
+		await validateCompletionQualityGate(cwd, fullQualityGate());
 	});
 });
 
-test("quality gate rejects missing executorQa or contractCoverage", async () => {
+test("quality gate rejects failed statuses, non-empty blockers, and GJC CLI replay", async () => {
 	await withDir(async (cwd) => {
 		await expect(
-			validateExecutorQaEvidence(cwd, { executorQa: { artifactRefs: [], surfaceEvidence: [] } }),
-		).rejects.toThrow(/contractCoverage/);
-		await expect(
-			validateExecutorQaEvidence(cwd, {
-				contractCoverage: [{ id: "c1", contractRef: "p", obligation: "o", status: "passed" }],
+			validateCompletionQualityGate(cwd, {
+				...fullQualityGate(),
+				architectReview: { ...(fullQualityGate().architectReview as Record<string, unknown>), blockers: ["nope"] },
 			}),
-		).rejects.toThrow(/executorQa/);
-	});
-});
+		).rejects.toThrow(/architectReview.blockers/);
+		await expect(
+			validateCompletionQualityGate(cwd, {
+				...fullQualityGate(),
+				executorQa: { ...(fullQualityGate().executorQa as Record<string, unknown>), status: "failed" },
+			}),
+		).rejects.toThrow(/executorQa status/);
+		await expect(
+			validateCompletionQualityGate(cwd, {
+				...fullQualityGate(),
+				iteration: { ...(fullQualityGate().iteration as Record<string, unknown>), fullRerun: false },
+			}),
+		).rejects.toThrow(/fullRerun true/);
 
-test("quality gate rejects unknown artifactRefs id links", async () => {
-	await withDir(async (cwd) => {
-		const gate = {
-			executorQa: {
-				artifactRefs: [
-					{ id: "a1", kind: "cli-replay", description: "ran", verifiedReceipt: { verifiedAt: "t", summary: "s" } },
-				],
-				surfaceEvidence: [
-					{
-						id: "s1",
-						surface: "cli",
-						contractRef: "p",
-						invocation: "c",
-						result: "passed",
-						artifactRefs: ["a-missing"],
-					},
-				],
+		const gate = fullQualityGate();
+		const executorQa = gate.executorQa as Record<string, unknown>;
+		executorQa.artifactRefs = [
+			{
+				id: "gjc-cli",
+				kind: "cli-replay",
+				description: "GJC-specific replay must not be accepted in Pi",
+				inlineEvidence: {
+					schemaVersion: 1,
+					kind: "cli-replay",
+					replaySafe: true,
+					command: ["gjc", "status"],
+					recordedStdout: "",
+				},
 			},
-			contractCoverage: [{ id: "c1", contractRef: "p", obligation: "o", status: "passed", artifactRefs: ["a1"] }],
-		};
-		await expect(validateExecutorQaEvidence(cwd, gate)).rejects.toThrow(/unknown id/);
-	});
-});
-
-test("quality gate rejects contractCoverage with a non-not_applicable non-success row", async () => {
-	await withDir(async (cwd) => {
-		const gate = {
-			executorQa: {
-				artifactRefs: [
-					{ id: "a1", kind: "cli-replay", description: "ran", verifiedReceipt: { verifiedAt: "t", summary: "s" } },
-				],
-				surfaceEvidence: [
-					{ id: "s1", surface: "cli", contractRef: "p", invocation: "c", result: "passed", artifactRefs: ["a1"] },
-				],
+		];
+		executorQa.surfaceEvidence = [
+			{
+				id: "surface-cli",
+				surface: "cli",
+				contractRef: "contract#a",
+				invocation: "gjc status",
+				result: PASSED,
+				artifactRefs: ["gjc-cli"],
 			},
-			contractCoverage: [{ id: "c1", contractRef: "p", obligation: "o", status: "failed", artifactRefs: ["a1"] }],
-		};
-		await expect(validateExecutorQaEvidence(cwd, gate)).rejects.toThrow(/must be covered, passed, verified/);
-	});
-});
-
-test("quality gate rejects non-not_applicable surfaceEvidence row without artifactRefs links", async () => {
-	await withDir(async (cwd) => {
-		const gate = {
-			executorQa: {
-				artifactRefs: [
-					{ id: "a1", kind: "cli-replay", description: "ran", verifiedReceipt: { verifiedAt: "t", summary: "s" } },
-				],
-				surfaceEvidence: [{ id: "s1", surface: "cli", contractRef: "p", invocation: "c", result: "passed" }],
+		];
+		executorQa.adversarialCases = [
+			{
+				id: "case-invalid",
+				contractRef: "contract#a",
+				scenario: "invalid input",
+				expectedBehavior: "reject cleanly",
+				result: PASSED,
+				artifactRefs: ["gjc-cli"],
 			},
-			contractCoverage: [{ id: "c1", contractRef: "p", obligation: "o", status: "passed", artifactRefs: ["a1"] }],
-		};
-		await expect(validateExecutorQaEvidence(cwd, gate)).rejects.toThrow(/artifactRefs/);
-	});
-});
-
-test("quality gate accepts not_applicable rows with a reason and no links", async () => {
-	await withDir(async (cwd) => {
-		const gate = {
-			executorQa: {
-				artifactRefs: [
-					{ id: "a1", kind: "cli-replay", description: "ran", verifiedReceipt: { verifiedAt: "t", summary: "s" } },
-				],
-				surfaceEvidence: [
-					{ id: "s1", surface: "cli", contractRef: "p", invocation: "c", result: "passed", artifactRefs: ["a1"] },
-					{
-						id: "s2",
-						status: "not_applicable",
-						surface: "cli",
-						contractRef: "p#b",
-						invocation: "n/a",
-						reason: "out of scope",
-					},
-				],
+		];
+		executorQa.contractCoverage = [
+			{
+				id: "coverage-a",
+				contractRef: "contract#a",
+				obligation: "contract is covered",
+				status: PASSED,
+				surfaceEvidenceRefs: ["surface-cli"],
+				adversarialCaseRefs: ["case-invalid"],
 			},
-			contractCoverage: [
-				{ id: "c1", contractRef: "p", obligation: "o", status: "passed", artifactRefs: ["a1"] },
-				{ id: "c2", contractRef: "p#b", obligation: "n/a", status: "not_applicable", reason: "out of scope" },
-			],
-		};
-		await validateExecutorQaEvidence(cwd, gate);
+		];
+		await expect(validateCompletionQualityGate(cwd, gate)).rejects.toThrow(/allowlist/);
 	});
 });
 
-test("structural artifact validation rejects a uniform screenshot", async () => {
-	await withDir(async (cwd) => {
-		const png = uniformPng();
-		const path = await writeFixture(cwd, "shot.png", png);
-		const gate = {
-			executorQa: {
-				artifactRefs: [{ id: "a1", kind: "screenshot", description: "ui", path }],
-				surfaceEvidence: [
-					{
-						id: "s1",
-						surface: "native",
-						contractRef: "p",
-						invocation: "open",
-						result: "passed",
-						artifactRefs: ["a1"],
-					},
-				],
-			},
-			contractCoverage: [{ id: "c1", contractRef: "p", obligation: "o", status: "passed", artifactRefs: ["a1"] }],
-		};
-		await expect(validateExecutorQaEvidence(cwd, gate)).rejects.toThrow(/non-uniform|screenshot/);
-	});
-});
-
-test("structural artifact validation rejects a truncated png and a missing referenced file", async () => {
-	await withDir(async (cwd) => {
-		const truncated = truncatedPng();
-		const path = await writeFixture(cwd, "bad.png", truncated);
-		const gate = {
-			executorQa: {
-				artifactRefs: [{ id: "a1", kind: "screenshot", description: "ui", path }],
-				surfaceEvidence: [
-					{
-						id: "s1",
-						surface: "native",
-						contractRef: "p",
-						invocation: "open",
-						result: "passed",
-						artifactRefs: ["a1"],
-					},
-				],
-			},
-			contractCoverage: [{ id: "c1", contractRef: "p", obligation: "o", status: "passed", artifactRefs: ["a1"] }],
-		};
-		await expect(validateExecutorQaEvidence(cwd, gate)).rejects.toThrow(/decodable|screenshot|existing file/);
-
-		// Missing referenced file path.
-		const gateMissing = {
-			executorQa: {
-				artifactRefs: [{ id: "a2", kind: "screenshot", description: "ui", path: join(cwd, "nope.png") }],
-				surfaceEvidence: [
-					{
-						id: "s2",
-						surface: "native",
-						contractRef: "p",
-						invocation: "open",
-						result: "passed",
-						artifactRefs: ["a2"],
-					},
-				],
-			},
-			contractCoverage: [{ id: "c2", contractRef: "p", obligation: "o", status: "passed", artifactRefs: ["a2"] }],
-		};
-		await expect(validateExecutorQaEvidence(cwd, gateMissing)).rejects.toThrow(/existing file|screenshot|live proof/);
-	});
-});
-
-test("structural artifact validation rejects a non-monotonic automation transcript", async () => {
-	await withDir(async (cwd) => {
-		const shotPath = await writeFixture(cwd, "shot.png", nonUniformPng());
-		const transcriptPath = await writeFixture(cwd, "transcript.json", nonMonotonicTranscript());
-		const gate = {
-			executorQa: {
-				artifactRefs: [
-					{ id: "shot", kind: "screenshot", description: "ui", path: shotPath },
-					{ id: "auto", kind: "automation", description: "browser run", path: transcriptPath },
-				],
-				surfaceEvidence: [
-					{
-						id: "s1",
-						surface: "web",
-						contractRef: "p",
-						invocation: "run",
-						result: "passed",
-						artifactRefs: ["shot", "auto"],
-					},
-				],
-			},
-			contractCoverage: [
-				{ id: "c1", contractRef: "p", obligation: "o", status: "passed", artifactRefs: ["shot", "auto"] },
-			],
-		};
-		await expect(validateExecutorQaEvidence(cwd, gate)).rejects.toThrow(/monotonic|transcript/);
-	});
-});
-
-test("structural artifact validation rejects a PTY capture with no control sequences", async () => {
-	await withDir(async (cwd) => {
-		const path = await writeFixture(cwd, "pty.log", controlSequenceFreePty());
-		const gate = {
-			executorQa: {
-				artifactRefs: [{ id: "a1", kind: "pty", description: "terminal", path }],
-				surfaceEvidence: [
-					{
-						id: "s1",
-						surface: "native",
-						contractRef: "p",
-						invocation: "run",
-						result: "passed",
-						artifactRefs: ["a1"],
-					},
-				],
-			},
-			contractCoverage: [{ id: "c1", contractRef: "p", obligation: "o", status: "passed", artifactRefs: ["a1"] }],
-		};
-		await expect(validateExecutorQaEvidence(cwd, gate)).rejects.toThrow(/control sequences|PTY|transcript/);
-	});
-});
-
-test("a valid web surface quality gate with non-uniform screenshot + automation transcript passes", async () => {
-	await withDir(async (cwd) => {
-		const shotPath = await writeFixture(cwd, "shot.png", nonUniformPng());
-		const transcriptPath = await writeFixture(cwd, "transcript.json", validAutomationTranscript());
-		const gate = {
-			executorQa: {
-				artifactRefs: [
-					{ id: "shot", kind: "screenshot", description: "ui", path: shotPath },
-					{ id: "auto", kind: "automation", description: "browser run", path: transcriptPath },
-				],
-				surfaceEvidence: [
-					{
-						id: "s1",
-						surface: "web",
-						contractRef: "p",
-						invocation: "playwright run",
-						result: "passed",
-						artifactRefs: ["shot", "auto"],
-					},
-				],
-			},
-			contractCoverage: [
-				{ id: "c1", contractRef: "p", obligation: "o", status: "passed", artifactRefs: ["shot", "auto"] },
-			],
-		};
-		await validateExecutorQaEvidence(cwd, gate);
-	});
-});
-
-test("guard: inactive when no plan exists", async () => {
-	await withDir(async (cwd) => {
-		const diag = await ultragoalGuard(cwd, sessionId);
-		assert.strictEqual(diag.state, "inactive");
-	});
-});
-
-test("guard: unrelated_goal when objective does not match", async () => {
+test("checkpoint complete writes a schema-v2 receipt and guard verifies it", async () => {
 	await withDir(async (cwd) => {
 		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
 		await startNextUltragoalGoal(cwd, false, sessionId);
-		const diag = await ultragoalGuard(cwd, sessionId, { currentObjective: "totally unrelated objective text" });
-		assert.strictEqual(diag.state, "unrelated_goal");
-	});
-});
-
-test("guard: active_missing_receipt when a complete goal has no fresh receipt", async () => {
-	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
-		await startNextUltragoalGoal(cwd, false, sessionId);
-		// Mark the active goal complete WITHOUT going through the hardened checkpoint
-		// by writing a plan directly with status complete and no completionVerification.
-		// Easiest path: checkpoint as failed then the guard sees no receipt.
-		await checkpointUltragoalGoal(cwd, { goalId: "G001", status: "failed" }, sessionId);
+		const goal = await checkpointUltragoalGoal(
+			cwd,
+			{
+				goalId: "G001",
+				status: "complete",
+				evidence: "Implemented and verified the runtime-owned state with focused automated checks.",
+				qualityGate: fullQualityGate(),
+			},
+			sessionId,
+		);
+		assert.strictEqual(goal.completionVerification?.schemaVersion, 2);
 		const diag = await ultragoalGuard(cwd, sessionId, { goalId: "G001" });
-		// G001 is failed (terminal-ish) with no receipt -> missing receipt for per-goal.
-		assert.strictEqual(diag.state, "active_missing_receipt");
+		assert.strictEqual(diag.state, "active_verified_complete", diag.message);
 	});
 });
 
-test("guard: active_verified_complete after a valid typed checkpoint", async () => {
+test("invalid complete checkpoint rejects before mutating goals or ledger", async () => {
+	await withDir(async (cwd) => {
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		const goalsBefore = await readIfExists(ultragoalGoalsPath(cwd, sessionId));
+		const ledgerBefore = await readIfExists(ultragoalLedgerPath(cwd, sessionId));
+		await expect(
+			checkpointUltragoalGoal(
+				cwd,
+				{
+					goalId: "G001",
+					status: "complete",
+					evidence: "Implemented and verified the runtime-owned state with focused automated checks.",
+					qualityGate: {
+						...fullQualityGate(),
+						executorQa: { ...(fullQualityGate().executorQa as Record<string, unknown>), status: "failed" },
+					},
+				},
+				sessionId,
+			),
+		).rejects.toThrow(/executorQa status/);
+		assert.strictEqual(await readIfExists(ultragoalGoalsPath(cwd, sessionId)), goalsBefore);
+		assert.strictEqual(await readIfExists(ultragoalLedgerPath(cwd, sessionId)), ledgerBefore);
+	});
+});
+
+test("old schema completion receipts cannot prove completion", async () => {
 	await withDir(async (cwd) => {
 		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
 		await startNextUltragoalGoal(cwd, false, sessionId);
@@ -456,173 +248,276 @@ test("guard: active_verified_complete after a valid typed checkpoint", async () 
 				goalId: "G001",
 				status: "complete",
 				evidence: "Implemented and verified the runtime-owned state with focused automated checks.",
-				qualityGate: cliQualityGate(),
+				qualityGate: fullQualityGate(),
 			},
 			sessionId,
 		);
+		const goalsPath = ultragoalGoalsPath(cwd, sessionId);
+		const goalsJson = JSON.parse(await readFile(goalsPath, "utf8"));
+		goalsJson.goals[0].completionVerification.schemaVersion = 1;
+		await writeFile(goalsPath, JSON.stringify(goalsJson, null, 2));
 		const diag = await ultragoalGuard(cwd, sessionId, { goalId: "G001" });
-		assert.strictEqual(diag.state, "active_verified_complete", diag.message);
+		assert.strictEqual(diag.state, "active_stale_receipt", diag.message);
 	});
 });
 
-test("guard: active_review_blocked_unrecorded for a review_blocked active goal", async () => {
+test("record-review-blockers creates blocker goal and guard reports recorded blocker", async () => {
 	await withDir(async (cwd) => {
 		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
 		await startNextUltragoalGoal(cwd, false, sessionId);
-		await checkpointUltragoalGoal(cwd, { goalId: "G001", status: "review_blocked" }, sessionId);
+		const plan = await recordUltragoalReviewBlockers(
+			cwd,
+			{
+				goalId: "G001",
+				title: "Resolve review blockers",
+				objective: "Fix the review blockers and rerun verification.",
+				evidence: "Architect review found blocking verification issues.",
+			},
+			sessionId,
+		);
+		assert.strictEqual(plan.goals[0]?.status, "review_blocked");
+		assert.strictEqual(plan.goals[1]?.steering?.kind, "review_blocker");
+		assert.strictEqual(plan.goals[1]?.steering?.blockedGoalId, "G001");
 		const diag = await ultragoalGuard(cwd, sessionId, { goalId: "G001" });
-		assert.strictEqual(diag.state, "active_review_blocked_unrecorded", diag.message);
+		assert.strictEqual(diag.state, "active_review_blocked_recorded", diag.message);
 	});
 });
 
-test("guard: story objective resolves to that goal's per-goal receipt (Gajae parity)", async () => {
-	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." }, sessionId);
-		await startNextUltragoalGoal(cwd, false, sessionId);
-		await checkpointUltragoalGoal(
-			cwd,
-			{
-				goalId: "G001",
-				status: "complete",
-				evidence: "Implemented and verified the first goal with focused automated checks.",
-				qualityGate: cliQualityGate(),
-			},
-			sessionId,
-		);
-		// G002 still pending. A story objective matching G001's own objective text must
-		// take the per-goal branch (resolve G001's per-goal receipt), NOT the
-		// final-aggregate branch (which would find no final receipt and omit goalId).
-		const diag = await ultragoalGuard(cwd, sessionId, { currentObjective: "Do A." });
-		assert.strictEqual(diag.state, "active_missing_final_receipt", diag.message);
-		assert.strictEqual(diag.goalId, "G001", diag.message);
-	});
-});
-
-test("guard: objective path flags any sibling review_blocked (Gajae parity)", async () => {
-	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." }, sessionId);
-		await startNextUltragoalGoal(cwd, false, sessionId);
-		// G001 verified complete with a per-goal receipt; G002 is review_blocked.
-		await checkpointUltragoalGoal(
-			cwd,
-			{
-				goalId: "G001",
-				status: "complete",
-				evidence: "Implemented and verified the first goal with focused automated checks.",
-				qualityGate: cliQualityGate(),
-			},
-			sessionId,
-		);
-		await startNextUltragoalGoal(cwd, false, sessionId);
-		await checkpointUltragoalGoal(cwd, { goalId: "G002", status: "review_blocked" }, sessionId);
-		// Inspecting G001 by goalId still reports verified (focused per-goal view).
-		const perGoal = await ultragoalGuard(cwd, sessionId, { goalId: "G001" });
-		assert.strictEqual(perGoal.state, "active_verified_complete", perGoal.message);
-		// The aggregate objective path sees the sibling blocker.
-		const objective = await ultragoalGuard(cwd, sessionId);
-		assert.strictEqual(objective.state, "active_review_blocked_unrecorded", objective.message);
-	});
-});
-
-test("guard: objective path returns active_missing_final_receipt when a verified per-goal goal leaves siblings incomplete", async () => {
-	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." }, sessionId);
-		await startNextUltragoalGoal(cwd, false, sessionId);
-		await checkpointUltragoalGoal(
-			cwd,
-			{
-				goalId: "G001",
-				status: "complete",
-				evidence: "Implemented and verified the first goal with focused automated checks.",
-				qualityGate: cliQualityGate(),
-			},
-			sessionId,
-		);
-		// G001 has a fresh per-goal receipt; G002 is still pending. The aggregate
-		// objective path must report incomplete required goals.
-		const diag = await ultragoalGuard(cwd, sessionId);
-		assert.strictEqual(diag.state, "active_missing_final_receipt", diag.message);
-	});
-});
-
-test("guard: unreadable_fail_closed for a corrupt ledger", async () => {
+test("record-review-blockers rejects invalid and duplicate targets before mutation", async () => {
 	await withDir(async (cwd) => {
 		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
 		await startNextUltragoalGoal(cwd, false, sessionId);
-		await mkdir(join(cwd, ".pi", "ultragoal"), { recursive: true });
-		await writeFile(ultragoalLedgerPath(cwd, sessionId), `${JSON.stringify({ eventId: "ok" })}\n{bad json\n`);
-		const diag = await ultragoalGuard(cwd, sessionId, { goalId: "G001" });
-		assert.strictEqual(diag.state, "unreadable_fail_closed", diag.message);
+		const goalsBefore = await readIfExists(ultragoalGoalsPath(cwd, sessionId));
+		const ledgerBefore = await readIfExists(ultragoalLedgerPath(cwd, sessionId));
+		await expect(
+			recordUltragoalReviewBlockers(
+				cwd,
+				{ goalId: "G999", title: "Fix", objective: "Fix it", evidence: "review evidence" },
+				sessionId,
+			),
+		).rejects.toThrow(/unknown ultragoal goal/);
+		assert.strictEqual(await readIfExists(ultragoalGoalsPath(cwd, sessionId)), goalsBefore);
+		assert.strictEqual(await readIfExists(ultragoalLedgerPath(cwd, sessionId)), ledgerBefore);
+
+		await recordUltragoalReviewBlockers(
+			cwd,
+			{
+				goalId: "G001",
+				title: "Resolve review blockers",
+				objective: "Fix the review blockers and rerun verification.",
+				evidence: "Architect review found blocking verification issues.",
+			},
+			sessionId,
+		);
+		const goalsAfterRecord = await readIfExists(ultragoalGoalsPath(cwd, sessionId));
+		const ledgerAfterRecord = await readIfExists(ultragoalLedgerPath(cwd, sessionId));
+		await expect(
+			recordUltragoalReviewBlockers(
+				cwd,
+				{
+					goalId: "G001",
+					title: "Duplicate",
+					objective: "Duplicate blocker.",
+					evidence: "Duplicate review evidence.",
+				},
+				sessionId,
+			),
+		).rejects.toThrow(/active goal|already recorded/);
+		assert.strictEqual(await readIfExists(ultragoalGoalsPath(cwd, sessionId)), goalsAfterRecord);
+		assert.strictEqual(await readIfExists(ultragoalLedgerPath(cwd, sessionId)), ledgerAfterRecord);
 	});
 });
 
-test("guard: active_missing_final_receipt when aggregate objective matches but no final receipt", async () => {
+test("failed/blocked checkpoints require immediate latest matching human_blocked classification and are non-mutating on reject", async () => {
+	await withDir(async (cwd) => {
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		const goalsBefore = await readIfExists(ultragoalGoalsPath(cwd, sessionId));
+		const ledgerBefore = await readIfExists(ultragoalLedgerPath(cwd, sessionId));
+		await expect(checkpointUltragoalGoal(cwd, { goalId: "G001", status: "blocked" }, sessionId)).rejects.toThrow(
+			/human_blocked/,
+		);
+		assert.strictEqual(await readIfExists(ultragoalGoalsPath(cwd, sessionId)), goalsBefore);
+		assert.strictEqual(await readIfExists(ultragoalLedgerPath(cwd, sessionId)), ledgerBefore);
+
+		await recordUltragoalBlockerClassification(
+			cwd,
+			{ classification: "resolvable", evidence: "Can be fixed by the agent.", goalId: "G001" },
+			sessionId,
+		);
+		await expect(checkpointUltragoalGoal(cwd, { goalId: "G001", status: "blocked" }, sessionId)).rejects.toThrow(
+			/human_blocked/,
+		);
+
+		await recordUltragoalBlockerClassification(
+			cwd,
+			{ classification: "human_blocked", evidence: "Requires a human credential approval.", goalId: "G001" },
+			sessionId,
+		);
+		await checkpointUltragoalGoal(cwd, { goalId: "G001", status: "blocked" }, sessionId);
+	});
+});
+
+test("blocker classification rejects invalid inputs before appending ledger rows", async () => {
+	await withDir(async (cwd) => {
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		const ledgerBefore = await readIfExists(ultragoalLedgerPath(cwd, sessionId));
+		await expect(
+			recordUltragoalBlockerClassification(
+				cwd,
+				{ classification: "human_blocked", evidence: " ", goalId: "G001" },
+				sessionId,
+			),
+		).rejects.toThrow(/evidence is required/);
+		await expect(
+			recordUltragoalBlockerClassification(
+				cwd,
+				{ classification: "invalid" as "human_blocked", evidence: "Bad classification.", goalId: "G001" },
+				sessionId,
+			),
+		).rejects.toThrow(/classification/);
+		await expect(
+			recordUltragoalBlockerClassification(
+				cwd,
+				{ classification: "human_blocked", evidence: "Unknown target.", goalId: "G999" },
+				sessionId,
+			),
+		).rejects.toThrow(/unknown ultragoal goal/);
+		assert.strictEqual(await readIfExists(ultragoalLedgerPath(cwd, sessionId)), ledgerBefore);
+	});
+});
+
+test("failed/blocked authorization rejects mismatched and goal-less non-current classifications", async () => {
 	await withDir(async (cwd) => {
 		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." }, sessionId);
 		await startNextUltragoalGoal(cwd, false, sessionId);
-		// Complete G001 with a per-goal receipt; the aggregate objective is still
-		// unmatched (no final-aggregate receipt yet).
+		await recordUltragoalBlockerClassification(
+			cwd,
+			{ classification: "human_blocked", evidence: "Wrong goal is blocked.", goalId: "G002" },
+			sessionId,
+		);
+		await expect(checkpointUltragoalGoal(cwd, { goalId: "G001", status: "blocked" }, sessionId)).rejects.toThrow(
+			/does not match/,
+		);
+
+		await recordUltragoalBlockerClassification(
+			cwd,
+			{ classification: "human_blocked", evidence: "Current active goal is blocked." },
+			sessionId,
+		);
+		await expect(checkpointUltragoalGoal(cwd, { goalId: "G002", status: "blocked" }, sessionId)).rejects.toThrow(
+			/target goal to be active|current active goal/,
+		);
+		await checkpointUltragoalGoal(cwd, { goalId: "G001", status: "blocked" }, sessionId);
+	});
+});
+
+test("intervening ledger event stales a human_blocked classification", async () => {
+	await withDir(async (cwd) => {
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		await recordUltragoalBlockerClassification(
+			cwd,
+			{ classification: "human_blocked", evidence: "Requires a human credential approval.", goalId: "G001" },
+			sessionId,
+		);
+		await checkpointUltragoalGoal(cwd, { goalId: "G001", status: "active" }, sessionId);
+		await expect(checkpointUltragoalGoal(cwd, { goalId: "G001", status: "blocked" }, sessionId)).rejects.toThrow(
+			/human_blocked/,
+		);
+	});
+});
+
+test("failed/blocked checkpoints reject non-active targets before mutation", async () => {
+	await withDir(async (cwd) => {
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
+		await startNextUltragoalGoal(cwd, false, sessionId);
 		await checkpointUltragoalGoal(
 			cwd,
 			{
 				goalId: "G001",
 				status: "complete",
-				evidence: "Implemented and verified the first goal with focused automated checks.",
-				qualityGate: cliQualityGate(),
+				evidence: "Completed the active target with enough substantive verification evidence.",
+				qualityGate: fullQualityGate(),
 			},
 			sessionId,
 		);
-		const diag = await ultragoalGuard(cwd, sessionId, {
-			currentObjective: "Complete all approved goals with verification",
-		});
-		assert.strictEqual(diag.state, "active_missing_final_receipt", diag.message);
+		await recordUltragoalBlockerClassification(
+			cwd,
+			{ classification: "human_blocked", evidence: "Requires a human credential approval.", goalId: "G001" },
+			sessionId,
+		);
+		const goalsBefore = await readIfExists(ultragoalGoalsPath(cwd, sessionId));
+		const ledgerBefore = await readIfExists(ultragoalLedgerPath(cwd, sessionId));
+		await expect(checkpointUltragoalGoal(cwd, { goalId: "G001", status: "blocked" }, sessionId)).rejects.toThrow(
+			/target goal to be active/,
+		);
+		assert.strictEqual(await readIfExists(ultragoalGoalsPath(cwd, sessionId)), goalsBefore);
+		assert.strictEqual(await readIfExists(ultragoalLedgerPath(cwd, sessionId)), ledgerBefore);
 	});
 });
 
-test("aggregate off-by-one: second-to-last goal is per-goal, last required goal is final-aggregate", async () => {
+test("completing a blocker-resolution goal supersedes original review_blocked goal and can create final aggregate receipt", async () => {
 	await withDir(async (cwd) => {
-		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A.\n@goal B\nDo B." }, sessionId);
+		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
 		await startNextUltragoalGoal(cwd, false, sessionId);
-		const first = await checkpointUltragoalGoal(
+		await recordUltragoalReviewBlockers(
 			cwd,
 			{
 				goalId: "G001",
-				status: "complete",
-				evidence: "Implemented and verified the first goal with focused automated checks.",
-				qualityGate: cliQualityGate(),
+				title: "Resolve review blockers",
+				objective: "Fix blockers.",
+				evidence: "Verification found blockers.",
 			},
 			sessionId,
 		);
-		assert.strictEqual(first.completionVerification?.receiptKind, "per-goal", "G001 is not the last required goal");
 		await startNextUltragoalGoal(cwd, false, sessionId);
-		const last = await checkpointUltragoalGoal(
+		const blocker = await checkpointUltragoalGoal(
 			cwd,
 			{
 				goalId: "G002",
 				status: "complete",
-				evidence: "Implemented and verified the final goal with focused automated checks.",
-				qualityGate: cliQualityGate(),
+				evidence: "Resolved the blocker story and reran focused verification successfully.",
+				qualityGate: fullQualityGate(),
 			},
 			sessionId,
 		);
-		assert.strictEqual(last.completionVerification?.receiptKind, "final-aggregate", "G002 is the last required goal");
+		assert.strictEqual(blocker.completionVerification?.receiptKind, "final-aggregate");
+		const goalsJson = JSON.parse(await readFile(ultragoalGoalsPath(cwd, sessionId), "utf8"));
+		assert.strictEqual(goalsJson.goals[0].status, "superseded");
+		const diag = await ultragoalGuard(cwd, sessionId);
+		assert.strictEqual(diag.state, "active_verified_complete", diag.message);
 	});
 });
 
-test("no Bun.* APIs in new ultragoal modules (portability)", async () => {
-	for (const rel of [
-		"src/workflows/ultragoal/ultragoal-receipt.ts",
-		"src/workflows/ultragoal/ultragoal-artifacts.ts",
-		"src/workflows/ultragoal/ultragoal-quality-gate.ts",
-		"src/workflows/ultragoal/ultragoal-guard.ts",
-	]) {
-		const text = await readFile(join(import.meta.dirname, "..", "..", "..", rel), "utf8");
-		// Ignore comment lines (block-comment ` *` and line-comment `//`) so the
-		// rule only flags actual `Bun.` usage, not doc mentions.
-		const codeLines = text
-			.split(/\r?\n/)
-			.filter((line) => !/^\s*(\*|\/\/)/.test(line))
-			.join("\n");
-		assert.ok(!/\bBun\./.test(codeLines), `${rel} must not use Bun.* APIs`);
+test("plain briefs remain one goal and column-zero @goal delimiters split goals", async () => {
+	await withDir(async (cwd) => {
+		const plain = await createUltragoalPlan(cwd, { brief: "Do a plain single-goal task." }, `${sessionId}-plain`);
+		assert.strictEqual(plain.goals.length, 1);
+		const delimited = await createUltragoalPlan(
+			cwd,
+			{ brief: "@goal A\nDo A.\n  @goal not a delimiter\n@goal B\nDo B." },
+			`${sessionId}-delimited`,
+		);
+		assert.strictEqual(delimited.goals.length, 2);
+		assert.match(delimited.goals[0]?.objective ?? "", /@goal not a delimiter/);
+	});
+});
+
+test("no deferred Tier 2 tool names are registered or advertised in Ultragoal docs", async () => {
+	const toolsSource = await readFile(
+		join(import.meta.dirname, "..", "..", "..", "src", "workflows", "ultragoal", "ultragoal-tools.ts"),
+		"utf8",
+	);
+	const skillDoc = await readFile(
+		join(import.meta.dirname, "..", "..", "..", "src", "skills", "ultragoal", "SKILL.md"),
+		"utf8",
+	);
+	for (const source of [toolsSource, skillDoc]) {
+		assert.ok(!source.includes('name: "ultragoal_review"'));
+		assert.ok(!source.includes('name: "ultragoal_steer"'));
+		assert.ok(!source.includes("ultragoal_review"));
+		assert.ok(!source.includes("ultragoal_steer"));
 	}
 });

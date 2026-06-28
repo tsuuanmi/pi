@@ -16,7 +16,7 @@ import {
 } from "../shared/state-writer.ts";
 import { readWorkflowState, writeWorkflowState } from "../shared/workflow-state.ts";
 import { buildUltragoalHud } from "./ultragoal-hud.ts";
-import { validateExecutorQaEvidence } from "./ultragoal-quality-gate.ts";
+import { validateCompletionQualityGate } from "./ultragoal-quality-gate.ts";
 import {
 	buildCompletionReceipt,
 	chooseReceiptKind,
@@ -26,14 +26,12 @@ import {
 	type UltragoalGoalMode,
 	type UltragoalGoalStatus,
 	type UltragoalLedgerEvent,
+	UltragoalLedgerUnreadable,
 	type UltragoalPlan,
 	type UltragoalReceiptKind,
 	validateCompletionReceipt,
 } from "./ultragoal-receipt.ts";
 
-// Re-export the plan/goal/receipt types so callers import a single source of
-// truth from the runtime entrypoint. The authoritative definitions live in
-// `ultragoal-receipt.ts`.
 export type {
 	UltragoalCompletionVerification,
 	UltragoalGoal,
@@ -55,9 +53,18 @@ export interface UltragoalStatus {
 	ledger_path: string;
 }
 
+export type UltragoalBlockerClassification = "human_blocked" | "resolvable";
+
 const TERMINAL_STATUSES = new Set<UltragoalGoalStatus>(["complete", "superseded"]);
 const SCHEDULABLE_STATUSES = new Set<UltragoalGoalStatus>(["pending", "active", "failed"]);
 const GOAL_DELIMITER = /^@goal(?::|[ \t]+|$)[ \t]*(.*)$/;
+const BLOCKER_PENDING_STATUSES = new Set<UltragoalGoalStatus>([
+	"pending",
+	"active",
+	"failed",
+	"blocked",
+	"review_blocked",
+]);
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -120,6 +127,13 @@ function parseGoalsFromBrief(brief: string): Array<{ title: string; objective: s
 	});
 }
 
+function normalizeSteering(value: unknown): UltragoalGoal["steering"] | undefined {
+	if (!isPlainObject(value)) return undefined;
+	const kind = typeof value.kind === "string" ? value.kind : undefined;
+	if (!kind) return undefined;
+	return { kind, blockedGoalId: typeof value.blockedGoalId === "string" ? value.blockedGoalId : undefined };
+}
+
 function normalizePlan(raw: unknown): UltragoalPlan {
 	if (!isPlainObject(raw)) throw new Error("Invalid ultragoal plan: expected object");
 	const createdAt = typeof raw.createdAt === "string" ? raw.createdAt : nowIso();
@@ -150,6 +164,7 @@ function normalizePlan(raw: unknown): UltragoalPlan {
 				startedAt: typeof record.startedAt === "string" ? record.startedAt : undefined,
 				completedAt: typeof record.completedAt === "string" ? record.completedAt : undefined,
 				evidence: typeof record.evidence === "string" ? record.evidence : undefined,
+				steering: normalizeSteering(record.steering),
 				completionVerification: isPlainObject(record.completionVerification)
 					? (record.completionVerification as unknown as UltragoalCompletionVerification)
 					: undefined,
@@ -318,6 +333,70 @@ function validateCompletionEvidence(evidence: string): void {
 	}
 }
 
+function nonEmpty(value: string | undefined, field: string): string {
+	const trimmed = value?.trim();
+	if (!trimmed) throw new Error(`${field} is required`);
+	return trimmed;
+}
+
+function replaceGoal(plan: UltragoalPlan, replacement: UltragoalGoal): UltragoalPlan {
+	return { ...plan, goals: plan.goals.map((goal) => (goal.id === replacement.id ? replacement : goal)) };
+}
+
+function replaceGoals(plan: UltragoalPlan, replacements: UltragoalGoal[]): UltragoalPlan {
+	const byId = new Map(replacements.map((goal) => [goal.id, goal]));
+	return { ...plan, goals: plan.goals.map((goal) => byId.get(goal.id) ?? goal) };
+}
+
+function activeRecordedBlocker(plan: UltragoalPlan, blockedGoalId: string): UltragoalGoal | undefined {
+	return plan.goals.find(
+		(goal) =>
+			goal.steering?.kind === "review_blocker" &&
+			goal.steering.blockedGoalId === blockedGoalId &&
+			BLOCKER_PENDING_STATUSES.has(goal.status),
+	);
+}
+
+function currentActiveGoal(plan: UltragoalPlan): UltragoalGoal | undefined {
+	const active = plan.goals.filter((goal) => goal.status === "active");
+	return active.length === 1 ? active[0] : undefined;
+}
+
+async function assertFailedBlockedAuthorized(
+	cwd: string,
+	sessionId: string,
+	plan: UltragoalPlan,
+	goal: UltragoalGoal,
+	status: UltragoalGoalStatus,
+): Promise<void> {
+	if (status !== "failed" && status !== "blocked") return;
+	if (goal.status !== "active") {
+		throw new Error("failed/blocked checkpoints require the target goal to be active");
+	}
+	let ledger: UltragoalLedgerEvent[];
+	try {
+		ledger = await readUltragoalLedger(cwd, sessionId);
+	} catch (error) {
+		if (error instanceof UltragoalLedgerUnreadable) throw error;
+		throw new Error(`unable to read ultragoal ledger for blocker classification: ${String(error)}`);
+	}
+	const latest = ledger.at(-1);
+	if (latest?.event !== "blocker_classified" || latest.classification !== "human_blocked") {
+		throw new Error(
+			"failed/blocked checkpoints require the immediate latest blocker_classified human_blocked ledger event",
+		);
+	}
+	if (typeof latest.goalId === "string" && latest.goalId.trim().length > 0) {
+		if (latest.goalId !== goal.id)
+			throw new Error("latest human_blocked classification goalId does not match checkpoint goal");
+		return;
+	}
+	const active = currentActiveGoal(plan);
+	if (!active || active.id !== goal.id) {
+		throw new Error("goal-less human_blocked classification only authorizes the current active goal");
+	}
+}
+
 export interface UltragoalCheckpointInput {
 	goalId: string;
 	status: string;
@@ -340,8 +419,7 @@ export async function checkpointUltragoalGoal(
 
 	if (status === "complete") {
 		validateCompletionEvidence(input.evidence ?? "");
-		const typedQualityGate = await validateExecutorQaEvidence(cwd, input.qualityGate);
-		const receiptKind = chooseReceiptKind(plan, goal, status);
+		const typedQualityGate = await validateCompletionQualityGate(cwd, input.qualityGate);
 		const priorLedger = await readUltragoalLedger(cwd, sessionId);
 		const goalJson: Record<string, unknown> = {
 			...goal,
@@ -351,52 +429,76 @@ export async function checkpointUltragoalGoal(
 			evidence: input.evidence?.trim(),
 			completionVerification: undefined,
 		};
+		let supersededGoalJson: Record<string, unknown> | undefined;
+		let supersessionEvidence: string | undefined;
+		let transitionPlan = replaceGoal(plan, goalJson as unknown as UltragoalGoal);
+		if (goal.steering?.kind === "review_blocker" && goal.steering.blockedGoalId) {
+			const blockedGoal = plan.goals.find((item) => item.id === goal.steering?.blockedGoalId);
+			if (!blockedGoal || blockedGoal.status !== "review_blocked") {
+				throw new Error("review-blocker completion requires the blocked goal to still be review_blocked");
+			}
+			supersessionEvidence = `Resolved by verification blocker story ${goal.id}: ${input.evidence?.trim()}`;
+			supersededGoalJson = { ...blockedGoal, status: "superseded", updatedAt: now, evidence: supersessionEvidence };
+			transitionPlan = replaceGoals(transitionPlan, [supersededGoalJson as unknown as UltragoalGoal]);
+		}
+		transitionPlan.updatedAt = now;
+		const transitionGoal = transitionPlan.goals.find((item) => item.id === goal.id)!;
+		const receiptKind = chooseReceiptKind(transitionPlan, transitionGoal, status);
 		const qualityGateJson: Record<string, unknown> = typedQualityGate as unknown as Record<string, unknown>;
 		const checkpointLedgerEventId = randomUUID();
+		const transitionJson = supersededGoalJson ? { goalJson, supersededGoalJson } : goalJson;
 		const receipt = buildCompletionReceipt({
-			plan,
+			plan: transitionPlan,
 			ledger: priorLedger,
-			goal,
+			goal: goal,
 			receiptKind,
 			beforeStatus,
 			qualityGateJson,
 			goalJson,
+			transitionJson,
 			now,
 			checkpointLedgerEventId,
 		});
-		goal.status = status;
-		goal.updatedAt = now;
-		goal.completedAt = now;
-		goal.evidence = input.evidence?.trim();
-		goal.completionVerification = receipt;
-		plan.updatedAt = now;
-		await writePlan(cwd, plan, sessionId);
-		await appendLedger(
-			cwd,
-			{
-				eventId: checkpointLedgerEventId,
-				event: "goal_checkpointed",
-				goalId: goal.id,
-				status,
-				statusBefore: beforeStatus,
-				evidenceSha256: input.evidence ? sha256(input.evidence) : undefined,
-				qualityGateJson,
-				goalJson,
-				completionVerification: receipt,
-			},
-			sessionId,
-		);
-		const ledger = await readUltragoalLedger(cwd, sessionId);
-		const diagnostic = validateCompletionReceipt({ plan, ledger, goal, receiptKind });
+		const completedGoal: UltragoalGoal = {
+			...(goalJson as unknown as UltragoalGoal),
+			completionVerification: receipt,
+		};
+		const finalPlan = replaceGoal(transitionPlan, completedGoal);
+		const event = {
+			eventId: checkpointLedgerEventId,
+			event: "goal_checkpointed",
+			goalId: goal.id,
+			status,
+			statusBefore: beforeStatus,
+			evidenceSha256: input.evidence ? sha256(input.evidence) : undefined,
+			qualityGateJson,
+			goalJson,
+			supersededGoalId: supersededGoalJson ? goal.steering?.blockedGoalId : undefined,
+			supersededGoalJson,
+			supersessionEvidence,
+			completionVerification: receipt,
+		};
+		const diagnostic = validateCompletionReceipt({
+			plan: finalPlan,
+			ledger: [...priorLedger, event],
+			goal: completedGoal,
+			receiptKind,
+		});
 		if (diagnostic.state !== "active_verified_complete") {
-			throw new Error(
-				`ultragoal complete checkpoint refused: ${diagnostic.message} Re-run verification with a valid typed quality gate.`,
-			);
+			throw new Error(`ultragoal complete checkpoint refused before mutation: ${diagnostic.message}`);
 		}
+		await writePlan(cwd, finalPlan, sessionId);
+		await appendLedger(cwd, event, sessionId);
 		await syncUltragoalState(cwd, await getUltragoalStatus(cwd, sessionId), sessionId);
-		return goal;
+		return completedGoal;
 	}
 
+	await assertFailedBlockedAuthorized(cwd, sessionId, plan, goal, status);
+	const nextGoal: UltragoalGoal = { ...goal, status, updatedAt: now };
+	if (status === "active") nextGoal.startedAt = nextGoal.startedAt ?? now;
+	if (input.evidence?.trim()) nextGoal.evidence = input.evidence.trim();
+	const nextPlan = replaceGoal({ ...plan, updatedAt: now }, nextGoal);
+	await writePlan(cwd, nextPlan, sessionId);
 	await appendLedger(
 		cwd,
 		{
@@ -408,13 +510,67 @@ export async function checkpointUltragoalGoal(
 		},
 		sessionId,
 	);
-	goal.status = status;
-	goal.updatedAt = now;
-	if (status === "active") goal.startedAt = goal.startedAt ?? now;
-	plan.updatedAt = now;
-	await writePlan(cwd, plan, sessionId);
 	await syncUltragoalState(cwd, await getUltragoalStatus(cwd, sessionId), sessionId);
-	return goal;
+	return nextGoal;
+}
+
+export async function recordUltragoalReviewBlockers(
+	cwd: string,
+	input: { goalId: string; title: string; objective: string; evidence: string },
+	sessionId: string,
+): Promise<UltragoalPlan> {
+	const plan = await readUltragoalPlan(cwd, sessionId);
+	if (!plan) throw new Error("No ultragoal plan found. Create one first.");
+	const goal = plan.goals.find((item) => item.id === input.goalId);
+	if (!goal) throw new Error(`unknown ultragoal goal: ${input.goalId}`);
+	if (goal.status !== "active") throw new Error("record-review-blockers target must be the active goal");
+	if (activeRecordedBlocker(plan, goal.id)) throw new Error(`review blockers already recorded for ${goal.id}`);
+	const title = nonEmpty(input.title, "record-review-blockers title");
+	const objective = nonEmpty(input.objective, "record-review-blockers objective");
+	const evidence = nonEmpty(input.evidence, "record-review-blockers evidence");
+	const now = nowIso();
+	const blockerId = `G${String(plan.goals.length + 1).padStart(3, "0")}`;
+	const blockedGoal: UltragoalGoal = { ...goal, status: "review_blocked", updatedAt: now, evidence };
+	const blockerGoal: UltragoalGoal = {
+		id: blockerId,
+		title: clampTitle(title),
+		objective,
+		status: "pending",
+		createdAt: now,
+		updatedAt: now,
+		steering: { kind: "review_blocker", blockedGoalId: goal.id },
+	};
+	const nextPlan = replaceGoal({ ...plan, goals: [...plan.goals, blockerGoal], updatedAt: now }, blockedGoal);
+	await writePlan(cwd, nextPlan, sessionId);
+	await appendLedger(cwd, { event: "review_blockers_recorded", goalId: goal.id, blockerGoalId: blockerId }, sessionId);
+	await syncUltragoalState(cwd, await getUltragoalStatus(cwd, sessionId), sessionId);
+	return nextPlan;
+}
+
+export async function recordUltragoalBlockerClassification(
+	cwd: string,
+	input: { classification: UltragoalBlockerClassification; evidence: string; goalId?: string },
+	sessionId: string,
+): Promise<UltragoalLedgerEvent> {
+	const plan = await readUltragoalPlan(cwd, sessionId);
+	if (!plan) throw new Error("No ultragoal plan found. Create one first.");
+	if (input.classification !== "human_blocked" && input.classification !== "resolvable") {
+		throw new Error('classify-blocker classification must be "human_blocked" or "resolvable"');
+	}
+	const evidence = nonEmpty(input.evidence, "classify-blocker evidence");
+	const goalId = input.goalId?.trim();
+	if (goalId && !plan.goals.some((goal) => goal.id === goalId)) throw new Error(`unknown ultragoal goal: ${goalId}`);
+	const event = await appendLedger(
+		cwd,
+		{
+			event: "blocker_classified",
+			classification: input.classification,
+			...(goalId ? { goalId } : {}),
+			evidence,
+		},
+		sessionId,
+	);
+	return event as UltragoalLedgerEvent;
 }
 
 export async function readUltragoalCompact(cwd: string, sessionId: string): Promise<Record<string, unknown>> {

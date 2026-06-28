@@ -23,32 +23,78 @@ import {
 
 const sessionId = "test-session-id";
 
-/** Minimal valid typed quality gate for cli-surface completion (no real artifacts). */
+/** Minimal valid full quality gate for non-live API/package completion. */
 function cliQualityGate(): Record<string, unknown> {
 	return {
+		architectReview: {
+			architectureStatus: "CLEAR",
+			productStatus: "CLEAR",
+			codeStatus: "CLEAR",
+			recommendation: "APPROVE",
+			commands: ["architect review"],
+			evidence: "Architecture, product, and code review found no blockers.",
+			blockers: [],
+		},
 		executorQa: {
+			status: "passed",
+			e2eStatus: "passed",
+			redTeamStatus: "passed",
+			evidence: "Executor QA covered contracts and adversarial behavior with durable receipts.",
+			e2eCommands: ["npm run check"],
+			redTeamCommands: ["node -e console.log"],
 			artifactRefs: [
 				{
 					id: "a1",
-					kind: "cli-replay",
+					kind: "api-package-test-report",
 					description: "Ran focused checks",
 					verifiedReceipt: { verifiedAt: "2026-06-21T00:00:00.000Z", summary: "checks passed" },
+				},
+				{
+					id: "r1",
+					kind: "failure-mode-test-report",
+					description: "Ran focused failure-mode checks",
+					verifiedReceipt: { verifiedAt: "2026-06-21T00:00:00.000Z", summary: "red-team checks passed" },
 				},
 			],
 			surfaceEvidence: [
 				{
 					id: "s1",
-					surface: "cli",
+					surface: "api/package",
 					contractRef: "plan#a",
 					invocation: "npm run check",
 					result: "passed",
 					artifactRefs: ["a1"],
 				},
 			],
+			adversarialCases: [
+				{
+					id: "case-invalid",
+					contractRef: "plan#a",
+					scenario: "invalid input",
+					expectedBehavior: "reject cleanly",
+					result: "passed",
+					artifactRefs: ["r1"],
+				},
+			],
+			contractCoverage: [
+				{
+					id: "c1",
+					contractRef: "plan#a",
+					obligation: "focused checks pass",
+					status: "passed",
+					surfaceEvidenceRefs: ["s1"],
+					adversarialCaseRefs: ["case-invalid"],
+				},
+			],
+			blockers: [],
 		},
-		contractCoverage: [
-			{ id: "c1", contractRef: "plan#a", obligation: "focused checks pass", status: "passed", artifactRefs: ["a1"] },
-		],
+		iteration: {
+			status: "passed",
+			fullRerun: true,
+			rerunCommands: ["npm run check"],
+			evidence: "Final verification reran successfully after the implementation.",
+			blockers: [],
+		},
 	};
 }
 

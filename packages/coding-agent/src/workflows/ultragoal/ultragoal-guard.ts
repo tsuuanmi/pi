@@ -11,10 +11,11 @@
  * `ultragoal-runtime.ts`. Runtime MUST NOT import this module (the runtime
  * enforces at the write boundary; the guard is advisory). No back-edge.
  *
- * 9-state enum (per spec amendment): `active_review_blocked_recorded` is omitted
- * because Pi has no review-blocker recording tool; `active_review_blocked_unrecorded`
- * is produced when an active goal is `review_blocked`. `unreadable_fail_closed`
- * covers unreadable plan/ledger while an objective is active.
+ * 10-state enum: `active_review_blocked_recorded` is produced when a
+ * `review_blocked` goal has a matching durable blocker-resolution goal and
+ * `review_blockers_recorded` ledger event; `active_review_blocked_unrecorded`
+ * covers manual/legacy review-blocked state. `unreadable_fail_closed` covers
+ * unreadable plan/ledger while an objective is active.
  */
 import { ultragoalGoalsPath, ultragoalLedgerPath } from "../shared/session-layout.ts";
 import {
@@ -38,6 +39,7 @@ export type UltragoalGuardState =
 	| "active_missing_final_receipt"
 	| "active_dirty_quality_gate"
 	| "active_review_blocked_unrecorded"
+	| "active_review_blocked_recorded"
 	| "unreadable_fail_closed";
 
 export interface UltragoalGuardDiagnostic {
@@ -97,10 +99,51 @@ function findReceiptGoal(
  * Classification order (matches Gajae precedence, adapted to the 9-state enum):
  *  1. unreadable plan/ledger while an objective is active -> `unreadable_fail_closed`
  *  2. no plan / no current goal -> `inactive` or `unrelated_goal`
- *  3. active goal `review_blocked` -> `active_review_blocked_unrecorded`
+ *  3. active goal `review_blocked` -> recorded/unrecorded review-blocked state
  *  4. receipt validation via `validateCompletionReceipt` -> map receipt states
  *     to guard states (missing/stale/dirty/verified; final-aggregate distinct).
  */
+function hasRecordedReviewBlocker(
+	plan: UltragoalPlan,
+	ledger: readonly UltragoalLedgerEvent[],
+	blockedGoalId: string,
+): boolean {
+	const event = ledger.find(
+		(row) =>
+			row.event === "review_blockers_recorded" &&
+			row.goalId === blockedGoalId &&
+			typeof row.blockerGoalId === "string",
+	);
+	if (!event || typeof event.blockerGoalId !== "string") return false;
+	return plan.goals.some(
+		(goal) =>
+			goal.id === event.blockerGoalId &&
+			goal.steering?.kind === "review_blocker" &&
+			goal.steering.blockedGoalId === blockedGoalId &&
+			goal.status !== "complete" &&
+			goal.status !== "superseded",
+	);
+}
+
+function reviewBlockedDiagnostic(
+	plan: UltragoalPlan,
+	ledger: readonly UltragoalLedgerEvent[],
+	goal: UltragoalGoal,
+): UltragoalGuardDiagnostic {
+	if (hasRecordedReviewBlocker(plan, ledger, goal.id)) {
+		return {
+			state: "active_review_blocked_recorded",
+			message: `Ultragoal ${goal.id} has recorded review blockers; complete blocker work and rerun verification.`,
+			goalId: goal.id,
+		};
+	}
+	return {
+		state: "active_review_blocked_unrecorded",
+		message: `Ultragoal ${goal.id} is review-blocked without a recorded blocker goal; record and resolve blocker work, then rerun verification.`,
+		goalId: goal.id,
+	};
+}
+
 export async function readUltragoalVerificationState(
 	cwd: string,
 	sessionId: string,
@@ -134,13 +177,7 @@ export async function readUltragoalVerificationState(
 	if (input.goalId) {
 		const goal = plan.goals.find((item) => item.id === input.goalId);
 		if (!goal) return { state: "unrelated_goal", message: `No ultragoal goal found for ${input.goalId}.` };
-		if (goal.status === "review_blocked") {
-			return {
-				state: "active_review_blocked_unrecorded",
-				message: `Ultragoal ${goal.id} is review-blocked; record and resolve blocker work, then rerun verification.`,
-				goalId: goal.id,
-			};
-		}
+		if (goal.status === "review_blocked") return reviewBlockedDiagnostic(plan, ledger, goal);
 		const receiptKind: UltragoalReceiptKind = goal.completionVerification?.receiptKind ?? "per-goal";
 		const receipt = validateCompletionReceipt({ plan, ledger, goal, receiptKind });
 		return { state: receipt.state, message: receipt.message, goalId: receipt.goalId };
@@ -150,12 +187,8 @@ export async function readUltragoalVerificationState(
 	if (!objectiveMatches(currentObjective, plan)) {
 		return { state: "unrelated_goal", message: "Current goal is not an active ultragoal objective." };
 	}
-	if (plan.goals.some((goal) => goal.status === "review_blocked")) {
-		return {
-			state: "active_review_blocked_unrecorded",
-			message: "Ultragoal has review-blocked goals; record and resolve blocker work, then rerun verification.",
-		};
-	}
+	const reviewBlocked = plan.goals.find((goal) => goal.status === "review_blocked");
+	if (reviewBlocked) return reviewBlockedDiagnostic(plan, ledger, reviewBlocked);
 	const target = findReceiptGoal(plan, currentObjective);
 	if (!target) {
 		return {
