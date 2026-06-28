@@ -1,8 +1,9 @@
-import type { AutocompleteProvider, AutocompleteSuggestions } from "../autocomplete.ts";
+import type { AutocompleteProvider, AutocompleteSuggestions } from "../editor/autocomplete.ts";
+import { UndoStack } from "../editor/undo-stack.ts";
+import { findWordBackward, findWordForward } from "../editor/word-navigation.ts";
 import { getKeybindings } from "../input/keybindings.ts";
 import { decodePrintableKey, matchesKey } from "../input/keys.ts";
 import { type Component, CURSOR_MARKER, type Focusable, type TUI } from "../tui.ts";
-import { UndoStack } from "../undo-stack.ts";
 import {
 	cjkBreakRegex,
 	getGraphemeSegmenter,
@@ -11,7 +12,6 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "../utils.ts";
-import { findWordBackward, findWordForward } from "../word-navigation.ts";
 import { SelectList, type SelectListLayoutOptions, type SelectListTheme } from "./select-list.ts";
 
 const graphemeSegmenter = getGraphemeSegmenter();

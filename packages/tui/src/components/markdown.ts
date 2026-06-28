@@ -1,5 +1,5 @@
 import { Marked, type Token, Tokenizer, type Tokens } from "marked";
-import { getCapabilities, hyperlink } from "../capabilities.ts";
+import { getCapabilities, hyperlink } from "../terminal/capabilities.ts";
 import type { Component } from "../tui.ts";
 import { applyBackgroundToLine, visibleWidth, wrapTextWithAnsi } from "../utils.ts";
 

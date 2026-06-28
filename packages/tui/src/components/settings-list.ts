@@ -1,4 +1,4 @@
-import { fuzzyFilter } from "../fuzzy.ts";
+import { fuzzyFilter } from "../editor/fuzzy.ts";
 import { getKeybindings } from "../input/keybindings.ts";
 import type { Component } from "../tui.ts";
 import { truncateToWidth, visibleWidth, wrapTextWithAnsi } from "../utils.ts";

@@ -17,7 +17,7 @@
  * - When content exceeds the viewport and new lines arrive after a tool-call pause,
  *   some earlier PRE-TOOL lines near the bottom are overwritten by POST-TOOL lines.
  */
-import { ProcessTerminal } from "../src/terminal.ts";
+import { ProcessTerminal } from "../src/terminal/terminal.ts";
 import { type Component, TUI } from "../src/tui.ts";
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));

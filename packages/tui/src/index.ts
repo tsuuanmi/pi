@@ -1,22 +1,5 @@
 // Core TUI interfaces and classes
 
-// Autocomplete support
-export {
-	type AutocompleteItem,
-	type AutocompleteProvider,
-	type AutocompleteSuggestions,
-	CombinedAutocompleteProvider,
-	type SlashCommand,
-} from "./autocomplete.ts";
-// Capabilities
-export {
-	detectCapabilities,
-	getCapabilities,
-	hyperlink,
-	resetCapabilitiesCache,
-	setCapabilities,
-	type TerminalCapabilities,
-} from "./capabilities.ts";
 // Components
 export { Box } from "./components/box.ts";
 export { CancellableLoader } from "./components/cancellable-loader.ts";
@@ -35,10 +18,18 @@ export { type SettingItem, SettingsList, type SettingsListTheme } from "./compon
 export { Spacer } from "./components/spacer.ts";
 export { Text } from "./components/text.ts";
 export { TruncatedText } from "./components/truncated-text.ts";
+// Autocomplete support
+export {
+	type AutocompleteItem,
+	type AutocompleteProvider,
+	type AutocompleteSuggestions,
+	CombinedAutocompleteProvider,
+	type SlashCommand,
+} from "./editor/autocomplete.ts";
 // Editor component interface (for custom editors)
-export type { EditorComponent } from "./editor-component.ts";
+export type { EditorComponent } from "./editor/editor-component.ts";
 // Fuzzy matching
-export { type FuzzyMatch, fuzzyFilter, fuzzyMatch } from "./fuzzy.ts";
+export { type FuzzyMatch, fuzzyFilter, fuzzyMatch } from "./editor/fuzzy.ts";
 // Keybindings
 export {
 	getKeybindings,
@@ -67,10 +58,19 @@ export {
 } from "./input/keys.ts";
 // Input buffering for batch splitting
 export { StdinBuffer, type StdinBufferEventMap, type StdinBufferOptions } from "./input/stdin-buffer.ts";
+// Capabilities
+export {
+	detectCapabilities,
+	getCapabilities,
+	hyperlink,
+	resetCapabilitiesCache,
+	setCapabilities,
+	type TerminalCapabilities,
+} from "./terminal/capabilities.ts";
 // Terminal interface and implementations
-export { ProcessTerminal, type Terminal } from "./terminal.ts";
+export { ProcessTerminal, type Terminal } from "./terminal/terminal.ts";
 // Terminal colors
-export { parseOsc11BackgroundColor, type RgbColor } from "./terminal-colors.ts";
+export { parseOsc11BackgroundColor, type RgbColor } from "./terminal/terminal-colors.ts";
 export {
 	type Component,
 	Container,

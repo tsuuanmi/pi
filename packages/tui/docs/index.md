@@ -5,10 +5,10 @@ Minimal terminal UI framework with differential rendering and synchronized outpu
 ## Start here
 
 - [Core API](core-api.md) - `TUI`, `Terminal`, `Component`, and `Focusable` interfaces.
-- [Terminal Interface](terminal.md) - `ProcessTerminal`, `VirtualTerminal`, Kitty protocol negotiation, and bracketed paste.
-- [Terminal Capabilities](capabilities.md) - True color detection, OSC 8 hyperlink support, and tmux forwarding.
+- [Terminal Interface](terminal/terminal.md) - `ProcessTerminal`, `VirtualTerminal`, Kitty protocol negotiation, and bracketed paste.
+- [Terminal Capabilities](terminal/capabilities.md) - True color detection, OSC 8 hyperlink support, and tmux forwarding.
 - [Differential Rendering](rendering.md) - Three-strategy rendering system, synchronized output, and update protocols.
-- [Autocomplete](autocomplete.md) - `CombinedAutocompleteProvider`, slash commands, file path completion, and custom providers.
+- [Autocomplete](editor/autocomplete.md) - `CombinedAutocompleteProvider`, slash commands, file path completion, and custom providers.
 - [Utilities](utilities.md) - `visibleWidth`, `truncateToWidth`, `wrapTextWithAnsi`, `sliceByColumn`, `sliceWithWidth`, and ANSI-aware utilities.
 - [Custom Components](custom-components.md) - Building components, handling input, line width constraints, caching, and IME support.
 

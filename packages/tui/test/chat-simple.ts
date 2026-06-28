@@ -3,12 +3,12 @@
  */
 
 import chalk from "chalk";
-import { CombinedAutocompleteProvider } from "../src/autocomplete.ts";
 import { Editor } from "../src/components/editor.ts";
 import { Loader } from "../src/components/loader.ts";
 import { Markdown } from "../src/components/markdown.ts";
 import { Text } from "../src/components/text.ts";
-import { ProcessTerminal } from "../src/terminal.ts";
+import { CombinedAutocompleteProvider } from "../src/editor/autocomplete.ts";
+import { ProcessTerminal } from "../src/terminal/terminal.ts";
 import { TUI } from "../src/tui.ts";
 import { defaultEditorTheme, defaultMarkdownTheme } from "./test-themes.ts";
 

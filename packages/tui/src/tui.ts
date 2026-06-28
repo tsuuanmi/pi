@@ -7,8 +7,12 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { performance } from "node:perf_hooks";
 import { isKeyRelease, matchesKey } from "./input/keys.ts";
-import type { Terminal } from "./terminal.ts";
-import { isOsc11BackgroundColorResponse, parseOsc11BackgroundColor, type RgbColor } from "./terminal-colors.ts";
+import type { Terminal } from "./terminal/terminal.ts";
+import {
+	isOsc11BackgroundColorResponse,
+	parseOsc11BackgroundColor,
+	type RgbColor,
+} from "./terminal/terminal-colors.ts";
 import { extractSegments, normalizeTerminalOutput, sliceByColumn, sliceWithWidth, visibleWidth } from "./utils.ts";
 
 /**

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { matchesKey } from "../src/input/keys.ts";
-import { ProcessTerminal } from "../src/terminal.ts";
+import { ProcessTerminal } from "../src/terminal/terminal.ts";
 import { type Component, TUI } from "../src/tui.ts";
 import { truncateToWidth } from "../src/utils.ts";
 

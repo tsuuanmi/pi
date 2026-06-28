@@ -59,5 +59,5 @@ class EmacsEditor implements EditorComponent {
 
 ## See Also
 
-- [Custom Components](custom-components.md) - Building custom components
-- [Components](components/index.md) - Built-in components
+- [Custom Components](../custom-components.md) - Building custom components
+- [Components](../components/index.md) - Built-in components

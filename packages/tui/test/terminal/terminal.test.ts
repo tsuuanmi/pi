@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, it, mock } from "node:test";
-import { setKittyProtocolActive } from "../src/input/keys.ts";
-import { normalizeAppleTerminalInput, ProcessTerminal } from "../src/terminal.ts";
+import { setKittyProtocolActive } from "../../src/input/keys.ts";
+import { normalizeAppleTerminalInput, ProcessTerminal } from "../../src/terminal/terminal.ts";
 
 describe("normalizeAppleTerminalInput", () => {
 	it("rewrites Apple Terminal Return to CSI-u Shift+Enter when Shift is pressed", () => {

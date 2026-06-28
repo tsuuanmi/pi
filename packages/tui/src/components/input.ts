@@ -1,9 +1,9 @@
+import { UndoStack } from "../editor/undo-stack.ts";
+import { findWordBackward, findWordForward } from "../editor/word-navigation.ts";
 import { getKeybindings } from "../input/keybindings.ts";
 import { decodeKittyPrintable } from "../input/keys.ts";
 import { type Component, CURSOR_MARKER, type Focusable } from "../tui.ts";
-import { UndoStack } from "../undo-stack.ts";
 import { getGraphemeSegmenter, isWhitespaceChar, sliceByColumn, visibleWidth } from "../utils.ts";
-import { findWordBackward, findWordForward } from "../word-navigation.ts";
 
 const segmenter = getGraphemeSegmenter();
 
