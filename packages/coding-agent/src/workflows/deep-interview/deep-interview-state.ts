@@ -95,6 +95,39 @@ export interface DeepInterviewStateEnvelope {
 	[key: string]: unknown;
 }
 
+/**
+ * Scoring-time state patch carried by `deep_interview_record_scoring`. This is the
+ * ONLY safe channel for mid-interview `state` updates: it is merged into `state`
+ * through `mergeDeepInterviewEnvelope` (never clobbering `rounds`), unlike a raw
+ * `pi_workflow_state write` which shallow-merges `state` and would drop `rounds`.
+ *
+ * Two groups:
+ *  - Advisory counters drive the dialectic rhythm guard (`auto_answer_streak`),
+ *    lateral-panel milestone triggers (`ambiguity_milestone`), and spec metadata.
+ *  - `established_facts`, `ontology_snapshots`, and `topology` are full-list
+ *    replacements (read current, modify, write the full list). They close the gap
+ *    between the documented methodology and the runtime: the closure guard reads
+ *    `established_facts` for coverage, the HUD reads `topology.components[].
+ *    weakest_dimension` and `topology.last_targeted_component_id`, and the spec
+ *    reports ontology convergence from `ontology_snapshots`.
+ */
+export interface DeepInterviewAdvisoryMetadata {
+	auto_answer_streak?: number;
+	refined_rounds?: number[];
+	ambiguity_milestone?: string;
+	lateral_reviews?: unknown[];
+	lateral_panel_failures?: number;
+	auto_researched_rounds?: number[];
+	auto_answered_rounds?: number[];
+	architect_failures?: number;
+	/** Full-list replacement (opaque; the closure guard casts to established-fact shape). */
+	established_facts?: unknown[];
+	/** Full-list replacement of ontology snapshots; feeds spec convergence reporting. */
+	ontology_snapshots?: unknown[];
+	/** Full-list replacement; the HUD reads per-component weakest_dimension + last_targeted_component_id. */
+	topology?: unknown;
+}
+
 export interface DeepInterviewCompactState {
 	threshold?: number;
 	threshold_source?: string;
@@ -105,6 +138,16 @@ export interface DeepInterviewCompactState {
 	unresolved_triggers: DeepInterviewTriggerMetadata[];
 	recent_scored_rounds: DeepInterviewRoundRecord[];
 	pending_shells: DeepInterviewRoundRecord[];
+	auto_answer_streak?: number;
+	ambiguity_milestone?: string;
+	advisory_counters?: {
+		auto_researched_rounds: number;
+		auto_answered_rounds: number;
+		refined_rounds: number;
+		lateral_reviews: number;
+		lateral_panel_failures: number;
+		architect_failures: number;
+	};
 }
 
 export interface TransitionValidationResult {
@@ -355,6 +398,14 @@ export function projectCompactState(value: unknown, options: { lastN?: number } 
 			components: topology.components.map((component) => component.name ?? "").filter(Boolean),
 		};
 	}
+	const advisoryCounters = {
+		auto_researched_rounds: Array.isArray(inner.auto_researched_rounds) ? inner.auto_researched_rounds.length : 0,
+		auto_answered_rounds: Array.isArray(inner.auto_answered_rounds) ? inner.auto_answered_rounds.length : 0,
+		refined_rounds: Array.isArray(inner.refined_rounds) ? inner.refined_rounds.length : 0,
+		lateral_reviews: Array.isArray(inner.lateral_reviews) ? inner.lateral_reviews.length : 0,
+		lateral_panel_failures: typeof inner.lateral_panel_failures === "number" ? inner.lateral_panel_failures : 0,
+		architect_failures: typeof inner.architect_failures === "number" ? inner.architect_failures : 0,
+	};
 	return {
 		threshold:
 			typeof envelope.threshold === "number"
@@ -376,5 +427,8 @@ export function projectCompactState(value: unknown, options: { lastN?: number } 
 		unresolved_triggers: unresolved,
 		recent_scored_rounds: scored.slice(-lastN),
 		pending_shells: pending,
+		auto_answer_streak: typeof inner.auto_answer_streak === "number" ? inner.auto_answer_streak : undefined,
+		ambiguity_milestone: typeof inner.ambiguity_milestone === "string" ? inner.ambiguity_milestone : undefined,
+		advisory_counters: advisoryCounters,
 	};
 }

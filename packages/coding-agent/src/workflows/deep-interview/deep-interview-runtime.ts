@@ -4,6 +4,7 @@ import { readWorkflowState, replaceWorkflowState } from "../shared/workflow-stat
 import { deriveDeepInterviewHud } from "./deep-interview-hud.ts";
 import {
 	answerHash,
+	type DeepInterviewAdvisoryMetadata,
 	type DeepInterviewEstablishedFact,
 	type DeepInterviewOrchestrationState,
 	type DeepInterviewPlannedQuestion,
@@ -29,6 +30,7 @@ export interface DeepInterviewAnswerInput {
 	ambiguity?: number;
 	selectedOptions?: string[];
 	customInput?: string;
+	topology?: unknown;
 }
 
 export interface DeepInterviewQuestionPlanInput {
@@ -49,6 +51,8 @@ export interface DeepInterviewScoringInput {
 	scores: Record<string, number>;
 	ambiguity: number;
 	triggers?: DeepInterviewRoundRecord["triggers"];
+	/** Advisory methodology counters merged safely into `state` (never clobbers rounds). */
+	metadata?: DeepInterviewAdvisoryMetadata;
 }
 
 export type AppendOrMergeAction = "created" | "noop" | "replaced";
@@ -269,6 +273,7 @@ export async function appendOrMergeDeepInterviewRound(
 			{
 				state: {
 					rounds: result.rounds,
+					...(input.topology !== undefined ? { topology: input.topology } : {}),
 					orchestration: {
 						status: "pending_scoring",
 						next_dimension: effectiveInput.dimension,
@@ -312,6 +317,7 @@ export async function enrichDeepInterviewRoundScoring(
 		state: {
 			rounds: nextRounds,
 			current_ambiguity: input.ambiguity,
+			...(input.metadata ?? {}),
 			orchestration: {
 				status: "interviewing",
 				next_dimension: record.dimension,
@@ -421,7 +427,11 @@ export function runClosureAcceptanceGuard(envelope: DeepInterviewStateEnvelope):
 	const topology = inner.topology as
 		| { components?: Array<{ status?: string; name?: string; dimensions?: string[] }> }
 		| undefined;
-	const isBrownfield = Boolean(inner.codebase_context ?? inner.initial_context_summary);
+	// Brownfield is determined by the init-state `type` field (the authoritative
+	// signal). `codebase_context` is a fallback for legacy state lacking `type`.
+	// `initial_context_summary` is NOT a brownfield signal: it is set whenever the
+	// initial context was oversized, regardless of greenfield/brownfield.
+	const isBrownfield = inner.type === "brownfield" || Boolean(inner.codebase_context);
 	const dimensions = ["goal", "constraints", "criteria"];
 	if (isBrownfield) dimensions.push("context");
 

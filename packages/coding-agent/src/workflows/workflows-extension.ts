@@ -1,4 +1,5 @@
 import type { ExtensionAPI } from "../api/types.ts";
+import { getDeepInterviewMutationDecision } from "./deep-interview/deep-interview-mutation-guard.ts";
 import {
 	buildDeepInterviewContinuationPrompt,
 	registerDeepInterviewTools,
@@ -27,6 +28,18 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 		const continuationPrompt = await buildDeepInterviewContinuationPrompt(ctx.cwd, ctx.sessionManager.getSessionId());
 		if (!continuationPrompt) return undefined;
 		return { systemPrompt: `${event.systemPrompt}\n\n${continuationPrompt}` };
+	});
+
+	pi.on("tool_call", async (event, ctx) => {
+		if (event.toolName !== "edit" && event.toolName !== "write") return undefined;
+		const decision = await getDeepInterviewMutationDecision({
+			cwd: ctx.cwd,
+			sessionId: ctx.sessionManager.getSessionId(),
+			toolName: event.toolName,
+			input: event.input as Record<string, unknown>,
+		});
+		if (!decision.blocked) return undefined;
+		return { block: true, reason: decision.message };
 	});
 
 	registerWorkflowStateTool(pi);

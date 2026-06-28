@@ -14,8 +14,14 @@ import {
 	finalizeDeepInterviewSpecState,
 	planDeepInterviewQuestion,
 	readDeepInterviewStateCompact,
+	restateGoalGate,
+	runClosureAcceptanceGuard,
 } from "./deep-interview-runtime.ts";
-import { type DeepInterviewTriggerMetadata, projectCompactState } from "./deep-interview-state.ts";
+import {
+	type DeepInterviewTriggerMetadata,
+	normalizeDeepInterviewEnvelope,
+	projectCompactState,
+} from "./deep-interview-state.ts";
 
 const deepInterviewWriteSpecSchema = Type.Object({
 	slug: Type.Optional(Type.String({ description: "Safe slug for .pi/specs/deep-interview-<slug>.md" })),
@@ -48,6 +54,7 @@ const deepInterviewRecordAnswerSchema = Type.Object({
 	ambiguity: Type.Optional(Type.Number()),
 	selectedOptions: Type.Optional(Type.Array(Type.String())),
 	customInput: Type.Optional(Type.String()),
+	topology: Type.Optional(Type.Unknown()),
 });
 
 type DeepInterviewRecordAnswerInput = Static<typeof deepInterviewRecordAnswerSchema>;
@@ -67,6 +74,20 @@ const deepInterviewTriggerSchema = Type.Object({
 	rationale: Type.Optional(Type.String()),
 });
 
+const deepInterviewAdvisoryMetadataSchema = Type.Object({
+	auto_answer_streak: Type.Optional(Type.Number()),
+	refined_rounds: Type.Optional(Type.Array(Type.Number())),
+	ambiguity_milestone: Type.Optional(Type.String()),
+	lateral_reviews: Type.Optional(Type.Array(Type.Unknown())),
+	lateral_panel_failures: Type.Optional(Type.Number()),
+	auto_researched_rounds: Type.Optional(Type.Array(Type.Number())),
+	auto_answered_rounds: Type.Optional(Type.Array(Type.Number())),
+	architect_failures: Type.Optional(Type.Number()),
+	established_facts: Type.Optional(Type.Array(Type.Unknown())),
+	ontology_snapshots: Type.Optional(Type.Array(Type.Unknown())),
+	topology: Type.Optional(Type.Unknown()),
+});
+
 const deepInterviewRecordScoringSchema = Type.Object({
 	interviewId: Type.Optional(Type.String()),
 	round: Type.Number(),
@@ -75,6 +96,7 @@ const deepInterviewRecordScoringSchema = Type.Object({
 	scores: Type.Record(Type.String(), Type.Number()),
 	ambiguity: Type.Number(),
 	triggers: Type.Optional(Type.Array(deepInterviewTriggerSchema)),
+	metadata: Type.Optional(deepInterviewAdvisoryMetadataSchema),
 });
 
 type DeepInterviewRecordScoringInput = Static<typeof deepInterviewRecordScoringSchema>;
@@ -84,6 +106,16 @@ const deepInterviewReadCompactSchema = Type.Object({
 });
 
 type DeepInterviewReadCompactInput = Static<typeof deepInterviewReadCompactSchema>;
+
+const deepInterviewRestateGoalSchema = Type.Object({
+	restatedGoal: Type.String({ description: "One-sentence goal covering every active topology component" }),
+	confirm: Type.Union([Type.Literal("Yes"), Type.Literal("Adjust"), Type.Literal("Missing")], {
+		description: "Yes crystallizes; Adjust re-scores with adjusted wording; Missing adds scope and re-scores",
+	}),
+	adjustment: Type.Optional(Type.String({ description: "Exact correction text when confirm is Adjust or Missing" })),
+});
+
+type DeepInterviewRestateGoalInput = Static<typeof deepInterviewRestateGoalSchema>;
 
 async function executeDeepInterviewPlanQuestion(params: DeepInterviewPlanQuestionInput, ctx: ExtensionContext) {
 	const result = await planDeepInterviewQuestion(
@@ -132,6 +164,7 @@ async function executeDeepInterviewRecordAnswer(params: DeepInterviewRecordAnswe
 			ambiguity: params.ambiguity,
 			selectedOptions: params.selectedOptions,
 			customInput: params.customInput,
+			topology: params.topology,
 		},
 		ctx.sessionManager.getSessionId(),
 	);
@@ -157,6 +190,7 @@ async function executeDeepInterviewRecordScoring(params: DeepInterviewRecordScor
 			scores: params.scores,
 			ambiguity: params.ambiguity,
 			triggers: normalizeDeepInterviewTriggers(params.triggers),
+			metadata: params.metadata,
 		},
 		ctx.sessionManager.getSessionId(),
 	);
@@ -171,6 +205,42 @@ async function executeDeepInterviewReadCompact(params: DeepInterviewReadCompactI
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		details: workflowReceipt({ ...result }),
+	};
+}
+
+async function executeDeepInterviewRestateGoal(params: DeepInterviewRestateGoalInput, ctx: ExtensionContext) {
+	const result = await restateGoalGate(
+		ctx.cwd,
+		{ restatedGoal: params.restatedGoal, confirm: params.confirm, adjustment: params.adjustment },
+		ctx.sessionManager.getSessionId(),
+	);
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: result.ok
+					? `Deep-interview restate gate confirmed: ${params.restatedGoal}`
+					: `Deep-interview restate gate not confirmed (${params.confirm}); loops remaining: ${result.loops_remaining}`,
+			},
+		],
+		details: workflowReceipt({ ...result, restated_goal: params.restatedGoal, confirm: params.confirm }),
+	};
+}
+
+async function executeDeepInterviewClosureCheck(_params: Record<string, unknown>, ctx: ExtensionContext) {
+	const sessionId = ctx.sessionManager.getSessionId();
+	const envelope = await readWorkflowState(ctx.cwd, "deep-interview", { sessionId });
+	const result = runClosureAcceptanceGuard(normalizeDeepInterviewEnvelope(envelope));
+	return {
+		content: [
+			{
+				type: "text" as const,
+				text: result.ok
+					? "Deep-interview closure guard passed: every active component has goal/constraints/criteria coverage and no unresolved trigger blocks closure."
+					: `Deep-interview closure guard refused:${result.gaps.length > 0 ? `\n- ${result.gaps.join("\n- ")}` : ""}`,
+			},
+		],
+		details: workflowReceipt({ ...result, statePath: workflowStatePath(ctx.cwd, "deep-interview", sessionId) }),
 	};
 }
 
@@ -314,6 +384,33 @@ export function registerDeepInterviewTools(pi: ExtensionAPI): void {
 		],
 		parameters: deepInterviewReadCompactSchema,
 		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeDeepInterviewReadCompact(params, ctx),
+	});
+
+	pi.registerTool({
+		name: "deep_interview_closure_check",
+		label: "Deep Interview Closure Check",
+		description:
+			"Run the deep-interview closure/acceptance guard against current state. Returns ok plus the list of blocking gaps (unresolved triggers, uncovered active component/dimension pairs).",
+		promptSnippet: "Run the deep-interview closure acceptance guard before crystallizing the spec",
+		promptGuidelines: [
+			"Use deep_interview_closure_check before deep_interview_write_spec; if it refuses, ask one highest-impact follow-up and return to questioning instead of crystallizing.",
+		],
+		parameters: Type.Object({}),
+		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
+			executeDeepInterviewClosureCheck(params as Record<string, unknown>, ctx),
+	});
+
+	pi.registerTool({
+		name: "deep_interview_restate_goal",
+		label: "Deep Interview Restate Goal",
+		description:
+			"Confirm the one-sentence restated goal covering every active component. Yes crystallizes; Adjust/Missing route back through scoring (capped at two loops).",
+		promptSnippet: "Confirm the one-sentence restated goal before crystallizing the spec",
+		promptGuidelines: [
+			"Use deep_interview_restate_goal to confirm the restated goal after deep_interview_closure_check passes; it enforces the two-loop cap and records closure overrides safely.",
+		],
+		parameters: deepInterviewRestateGoalSchema,
+		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeDeepInterviewRestateGoal(params, ctx),
 	});
 
 	pi.registerTool({
