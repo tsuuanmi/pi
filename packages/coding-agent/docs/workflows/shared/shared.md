@@ -11,3 +11,7 @@ The `workflows/shared/` module provides common state management, subagent spawni
 - State file read/write helpers
 - Workflow phase management
 - Common type definitions
+
+## See Also
+
+- [Shared Package](../../../packages/workflows/shared/shared.md) - Package-level implementation details

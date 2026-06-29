@@ -22,4 +22,5 @@ The ralplan workflow manages the planning state machine, persisting progress und
 
 ## See Also
 
+- [Ralplan Package](../../../packages/workflows/ralplan/ralplan.md) - Package-level implementation details
 - [Ralplan Skill](../../skills/ralplan/ralplan.md)

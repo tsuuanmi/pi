@@ -1,6 +1,6 @@
 # Configuration
 
-Pi configuration system with global and project-level settings.
+Pi configuration system with global and project-level settings, experimental features, and config value resolution.
 
 ## Configuration Hierarchy
 
@@ -10,6 +10,8 @@ Settings are resolved in order of priority (highest wins):
 2. **Project settings** — `.pi/settings.json`
 3. **User settings** — `~/.pi/agent/settings.json`
 4. **Default values**
+
+Nested objects are deep-merged. For example, project `compaction.reserveTokens` overrides the global value while preserving other compaction settings.
 
 ## Settings File
 
@@ -28,6 +30,43 @@ Settings are resolved in order of priority (highest wins):
 }
 ```
 
+## Config Value Resolution
+
+`resolveConfigValue(config, env?)` resolves string values that may contain environment variable references:
+
+- Plain strings are returned as-is
+- `${ENV_VAR}` references are expanded using `process.env`
+- If the referenced env var is missing, the function returns `undefined`
+- An optional `env` record provides additional variables for resolution
+- `resolveConfigValueOrThrow(config, description, env?)` throws if resolution fails
+
+This is used by API key credentials and other configurable values that support environment variable interpolation.
+
+## Experimental Features
+
+Experimental features are gated behind the `PI_EXPERIMENTAL` environment variable:
+
+```typescript
+areExperimentalFeaturesEnabled(): boolean  // Returns true when PI_EXPERIMENTAL=1
+```
+
+Currently experimental features include:
+- First-time setup flow with analytics opt-in
+- Additional provider features
+
+Set `PI_EXPERIMENTAL=1` to enable experimental features:
+
+```bash
+PI_EXPERIMENTAL=1 pi
+```
+
+## Agent Directory
+
+`getAgentDir()` returns `~/.pi/agent/` by default. This can be overridden with the `PI_CODING_AGENT_DIR` environment variable.
+
+`getDocsPath()` returns the path to the bundled documentation directory, used by auth guidance messages.
+
 ## See Also
 
 - [Settings](../settings/settings.md) - Full settings reference
+- [Authentication](../auth/auth.md) - Auth configuration and credential storage

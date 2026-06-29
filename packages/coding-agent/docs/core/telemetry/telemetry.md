@@ -1,29 +1,45 @@
 # Telemetry
 
-Usage tracking and telemetry for Pi.
+Startup timing instrumentation for Pi.
 
 ## Overview
 
-Pi collects anonymous usage telemetry to improve the product. Telemetry is disabled by default and can be enabled via settings.
+Pi provides built-in startup timing instrumentation that profiles initialization phases. This is distinct from analytics telemetry — the timing module only measures startup performance and outputs to stderr.
 
-## Data Collected
+## Enabling Timing
 
-- Model usage (provider, model ID, token counts)
-- Feature usage (which tools and commands are used)
-- Performance metrics (response times, error rates)
+Set the `PI_TIMING=1` environment variable to enable startup timing:
 
-No source code, file contents, or personal data is collected.
-
-## Configuration
-
-```json
-{
-  "telemetry": {
-    "enabled": true
-  }
-}
+```bash
+PI_TIMING=1 pi
 ```
+
+When enabled, Pi prints a timing table to stderr at startup:
+
+```
+--- Startup Timings ---
+  config: 45ms
+  extensions: 120ms
+  session: 30ms
+  TOTAL: 195ms
+------------------------
+```
+
+## API
+
+```typescript
+/** Reset all timing measurements */
+function resetTimings(): void;
+
+/** Record a timing checkpoint with a label */
+function time(label: string): void;
+
+/** Print all recorded timings to stderr */
+function printTimings(): void;
+```
+
+Timing is a no-op when `PI_TIMING` is not set to `"1"`. The overhead of calling `time()` and `resetTimings()` is minimal (a single string comparison) when disabled.
 
 ## See Also
 
-- [API Usage Logging](../api-usage/api-usage-logging.md) - Local usage logs
+- [API Usage Logging](../api-usage/api-usage-logging.md) - Local usage logs with provider metrics

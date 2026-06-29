@@ -98,3 +98,8 @@ Not included yet:
 - server discovery marketplaces
 - prompt/resource MCP surfaces
 - per-tool approval gates
+
+## See Also
+
+- [MCP Package](../../packages/mcp/mcp.md) - Package-level implementation details
+- [MCP Transports](transports/transports.md) - Transport implementations

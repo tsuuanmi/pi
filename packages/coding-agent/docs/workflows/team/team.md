@@ -13,4 +13,5 @@ The team workflow manages the team coordination board, persisting state to `.pi/
 
 ## See Also
 
+- [Team Package](../../../packages/workflows/team/team.md) - Package-level implementation details
 - [Team Skill](../../skills/team/team.md)

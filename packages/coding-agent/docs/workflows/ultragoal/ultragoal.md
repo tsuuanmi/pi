@@ -22,4 +22,5 @@ Each goal completion requires:
 
 ## See Also
 
+- [Ultragoal Package](../../../packages/workflows/ultragoal/ultragoal.md) - Package-level implementation details
 - [Ultragoal Skill](../../skills/ultragoal/ultragoal.md)

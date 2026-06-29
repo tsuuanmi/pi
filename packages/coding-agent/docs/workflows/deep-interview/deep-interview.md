@@ -13,4 +13,5 @@ The deep-interview workflow manages the interview state machine, persisting prog
 
 ## See Also
 
+- [Deep Interview Package](../../../packages/workflows/deep-interview/deep-interview.md) - Package-level implementation details
 - [Deep Interview Skill](../../skills/deep-interview/deep-interview.md)

@@ -8,4 +8,5 @@ The `workflows/harness-tools/` module provides specialized tool implementations 
 
 ## See Also
 
+- [Harness Tools Package](../../../packages/workflows/harness-tools/harness-tools.md) - Package-level implementation details
 - [Tools](../../core/tools/tools.md) - Built-in tool system
