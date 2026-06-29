@@ -12,7 +12,7 @@ import {
 	visibleWidth,
 	wrapTextWithAnsi,
 } from "@tsuuanmi/pi-tui";
-import type { SessionTreeNode } from "../../../core/session-manager/session-manager.ts";
+import type { SessionTreeNode } from "../../../core/session/session-manager.ts";
 import { theme } from "../../../theme/theme.ts";
 import { formatKeyText, keyHint } from "../../../ui/rendering/keybinding-hints.ts";
 import { DynamicBorder } from "./dynamic-border.ts";

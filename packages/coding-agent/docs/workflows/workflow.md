@@ -67,7 +67,7 @@ The JSON report shape (committed contract) is:
 
 ## Reusable agent profiles
 
-Workflows dispatch isolated role agents using reusable agent profiles. Four are built in:
+Workflows dispatch isolated role agents using reusable agent profiles. The bundled `pi:workflows` package provides four default profiles:
 
 | Profile | Role | Default thinking | Default tools |
 |---------|------|------------------|---------------|
@@ -76,7 +76,7 @@ Workflows dispatch isolated role agents using reusable agent profiles. Four are 
 | `critic` | Risks, tests, edge cases, and failure modes. | `high` | `read`, `grep`, `find`, `bash`, `ralplan_write_artifact` |
 | `worker` | Execute an assigned task or goal. | `medium` | `read`, `bash`, `write`, `edit` |
 
-All built-in profiles default to `persistent: true` so their session context can be resumed.
+All bundled workflow profiles default to `persistent: true` so their session context can be resumed.
 
 ### Standard `.agent` / `.agents` resources
 
@@ -94,9 +94,10 @@ Existing Pi `.pi` and package/extension resource semantics remain supported. Pro
 Profiles are authored as markdown files with YAML frontmatter. Pi discovers markdown profiles from:
 
 1. User: `~/.agent/agents/<name>.md` and `~/.agents/agents/<name>.md`.
-2. Project (trusted projects only): `.agent/agents/<name>.md` and `.agents/agents/<name>.md` in the current directory or ancestors.
+2. Package: enabled package `agents/*.md` resources, including the bundled `pi:workflows` profiles.
+3. Project (trusted projects only): `.agent/agents/<name>.md` and `.agents/agents/<name>.md` in the current directory or ancestors.
 
-Project ancestor profiles closest to the current directory win over farther ancestors, user profiles, and bundled profiles. Duplicate losers are reported as diagnostics. The home directory is treated as user scope only, not as a project ancestor.
+Project ancestor profiles closest to the current directory win over farther ancestors, user profiles, and package profiles. Duplicate losers are reported as diagnostics. The home directory is treated as user scope only, not as a project ancestor.
 
 ```markdown
 ---

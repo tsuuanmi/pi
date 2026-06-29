@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ENV_AGENT_DIR, PACKAGE_NAME } from "../../src/core/config/config.ts";
 import { ProjectTrustStore } from "../../src/core/trust/trust-manager.ts";
 import { main } from "../../src/main.ts";
-import { handlePackageCommand } from "../../src/package-manager-cli.ts";
+import { handlePackageCommand } from "../../src/core/package-manager/package-manager-cli.ts";
 
 describe("package commands", () => {
 	let tempDir: string;

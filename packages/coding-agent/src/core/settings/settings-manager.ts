@@ -154,6 +154,7 @@ export type PackageSource =
 			prompts?: string[];
 			themes?: string[];
 			commands?: string[];
+			agents?: string[];
 	  };
 
 export interface Settings {

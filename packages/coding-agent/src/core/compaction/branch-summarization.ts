@@ -14,7 +14,7 @@ import {
 	createCompactionSummaryMessage,
 	createCustomMessage,
 } from "../messages/messages.ts";
-import type { ReadonlySessionManager, SessionEntry } from "../session-manager/session-manager.ts";
+import type { ReadonlySessionManager, SessionEntry } from "../session/session-manager.ts";
 import {
 	computeFileLists,
 	createFileOps,

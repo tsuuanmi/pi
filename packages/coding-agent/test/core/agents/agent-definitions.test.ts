@@ -36,20 +36,30 @@ describe("agent definitions", () => {
 		rmSync(tempDir, { recursive: true, force: true });
 	});
 
-	it("loads user markdown agents and bundled role agents", () => {
+	it("loads user markdown agents and package role agents", () => {
 		const userAgents = join(home, ".agent", "agents");
+		const packageAgents = join(tempDir, "package-agents");
 		mkdirSync(userAgents, { recursive: true });
+		mkdirSync(packageAgents, { recursive: true });
 		writeFileSync(join(userAgents, "foo.md"), agentMd("foo"));
+		writeFileSync(join(packageAgents, "planner.md"), agentMd("planner"));
+		writeFileSync(join(packageAgents, "worker.md"), agentMd("worker"));
 
-		const result = loadAgentDefinitions({ cwd, agentDir, projectTrusted: false });
+		const result = loadAgentDefinitions({
+			cwd,
+			agentDir,
+			projectTrusted: false,
+			packageAgentPaths: [join(packageAgents, "planner.md"), join(packageAgents, "worker.md")],
+		});
 		const names = result.profiles.map((profile) => profile.name);
 
 		expect(names).toContain("foo");
-		expect(names).toEqual(expect.arrayContaining(["planner", "architect", "critic", "worker"]));
+		expect(names).toEqual(expect.arrayContaining(["planner", "worker"]));
+		expect(result.profiles.find((profile) => profile.name === "planner")?.sourceInfo.level).toBe("package");
 		expect(result.profiles.find((profile) => profile.name === "foo")?.systemPrompt).toBe("foo body");
 	});
 
-	it("loads trusted project markdown before user and bundled agents", () => {
+	it("loads trusted project markdown before user and package agents", () => {
 		const projectRoot = join(home, "project");
 		mkdirSync(join(projectRoot, ".git"), { recursive: true });
 		const projectAgents = join(projectRoot, ".agent", "agents");
@@ -58,8 +68,10 @@ describe("agent definitions", () => {
 		mkdirSync(userAgents, { recursive: true });
 		writeFileSync(join(projectAgents, "worker.md"), agentMd("worker", "project worker", "project worker body"));
 		writeFileSync(join(userAgents, "worker.md"), agentMd("worker", "user worker", "user worker body"));
+		const packageAgent = join(tempDir, "package-worker.md");
+		writeFileSync(packageAgent, agentMd("worker", "package worker", "package worker body"));
 
-		const result = loadAgentDefinitions({ cwd, agentDir, projectTrusted: true });
+		const result = loadAgentDefinitions({ cwd, agentDir, projectTrusted: true, packageAgentPaths: [packageAgent] });
 		const worker = result.profiles.find((profile) => profile.name === "worker");
 
 		expect(worker?.description).toBe("project worker");

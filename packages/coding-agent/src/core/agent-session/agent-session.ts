@@ -74,12 +74,12 @@ import { emitSessionShutdownEvent } from "../extensions/runner.ts";
 import type { BashExecutionMessage, CustomMessage } from "../messages/messages.ts";
 import type { ModelRegistry } from "../model/model-registry.ts";
 import { createSyntheticSourceInfo, type SourceInfo } from "../resources/source-info.ts";
-import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "../session-manager/session-manager.ts";
+import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "../session/session-manager.ts";
 import {
 	CURRENT_SESSION_VERSION,
 	getLatestCompactionEntry,
 	type SessionHeader,
-} from "../session-manager/session-manager.ts";
+} from "../session/session-manager.ts";
 import type { SettingsManager } from "../settings/settings-manager.ts";
 import { expandPromptTemplate, type PromptTemplate } from "../skills/prompt-templates.ts";
 import type { ResourceExtensionPaths, ResourceLoader } from "../skills/resource-loader.ts";

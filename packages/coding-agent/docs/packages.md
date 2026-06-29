@@ -2,7 +2,7 @@
 
 # Pi Packages
 
-Pi packages bundle extensions, skills, prompt templates, themes, and pre-session commands so you can share them through npm or git. A package can declare resources in `package.json` under the `pi` key, or use conventional directories.
+Pi packages bundle extensions, skills, prompt templates, themes, pre-session commands, and reusable agent profiles so you can share them through npm or git. A package can declare resources in `package.json` under the `pi` key, or use conventional directories.
 
 ## Table of Contents
 
@@ -116,7 +116,8 @@ Add a `pi` manifest to `package.json` or use conventional directories. Include t
     "skills": ["./skills"],
     "prompts": ["./prompts"],
     "themes": ["./themes"],
-    "commands": ["./commands"]
+    "commands": ["./commands"],
+    "agents": ["./agents"]
   }
 }
 ```
@@ -155,10 +156,11 @@ If no `pi` manifest is present, pi auto-discovers resources from these directori
 - `prompts/` loads `.md` files
 - `themes/` loads `.json` files
 - `commands/` loads `.ts`, `.js`, `.mjs`, and `.cjs` files as pre-session package commands
+- `agents/` loads `.md` files as reusable agent profiles
 
 ## Dependencies
 
-Third party runtime dependencies belong in `dependencies` in `package.json`. Dependencies that do not register extensions, skills, prompt templates, or themes also belong in `dependencies`. When pi installs a package from npm or git, it runs `npm install`, so those dependencies are installed automatically.
+Third party runtime dependencies belong in `dependencies` in `package.json`. Dependencies that do not register extensions, skills, prompt templates, themes, or agent profiles also belong in `dependencies`. When pi installs a package from npm or git, it runs `npm install`, so those dependencies are installed automatically.
 
 Pi bundles core packages for extensions and skills. If you import any of these, list them in `peerDependencies` with a `"*"` range and do not bundle them: `tsuuanmi` (imported as `@tsuuanmi/pi-ai`), `@tsuuanmi/pi-agent-core`, `@tsuuanmi/pi-coding-agent`, `@tsuuanmi/pi-tui`, `typebox`.
 
@@ -193,7 +195,8 @@ Filter what a package loads using the object form in settings:
       "skills": [],
       "prompts": ["prompts/review.md"],
       "themes": ["+themes/legacy.json"],
-      "commands": []
+      "commands": [],
+      "agents": ["agents/planner.md"]
     }
   ]
 }
@@ -210,7 +213,7 @@ Filter what a package loads using the object form in settings:
 
 ## Enable and Disable Resources
 
-Use `pi config` to enable or disable extensions, skills, prompt templates, themes, and commands from installed packages, bundled `pi:` sources, and local directories. Works for both global (`~/.pi/agent`) and project (`.pi/`) scopes.
+Use `pi config` to enable or disable extensions, skills, prompt templates, themes, commands, and agent profiles from installed packages, bundled `pi:` sources, and local directories. Works for both global (`~/.pi/agent`) and project (`.pi/`) scopes.
 
 ## Scope and Deduplication
 

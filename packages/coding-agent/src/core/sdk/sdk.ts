@@ -13,7 +13,7 @@ import { convertToLlm } from "../messages/messages.ts";
 import { ModelRegistry } from "../model/model-registry.ts";
 import { findInitialModel } from "../model/model-resolver.ts";
 import { mergeHeaderSources } from "../model/provider-attribution.ts";
-import { getDefaultSessionDir, SessionManager } from "../session-manager/session-manager.ts";
+import { getDefaultSessionDir, SessionManager } from "../session/session-manager.ts";
 import { SettingsManager } from "../settings/settings-manager.ts";
 import type { ResourceLoader } from "../skills/resource-loader.ts";
 import { DefaultResourceLoader } from "../skills/resource-loader.ts";

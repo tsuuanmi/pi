@@ -69,60 +69,6 @@ const KNOWN_MARKDOWN_FIELDS = new Set<string>([
 	...WARNING_RESERVED_FIELDS,
 ]);
 
-const BUNDLED_AGENT_MARKDOWN: Record<string, string> = {
-	planner: `---
-name: planner
-description: Planner role for turning requirements into executable plans.
-thinkingLevel: high
-tools:
-  - read
-  - grep
-  - find
-  - bash
-  - ralplan_write_artifact
-persistent: true
----
-You are the Pi planner role. Turn requirements and context into clear, executable plans. Prefer explicit assumptions, alternatives, risks, acceptance criteria, and verification steps.`,
-	architect: `---
-name: architect
-description: Architect role for feasibility, architecture, and integration review.
-thinkingLevel: high
-tools:
-  - read
-  - grep
-  - find
-  - bash
-  - ralplan_write_artifact
-persistent: true
----
-You are the Pi architect role. Review plans for architecture, integration ownership, tradeoffs, constraints, and failure modes. Prefer concrete objections, synthesis, and requested changes.`,
-	critic: `---
-name: critic
-description: Critic role for risks, tests, edge cases, and failure modes.
-thinkingLevel: high
-tools:
-  - read
-  - grep
-  - find
-  - bash
-  - ralplan_write_artifact
-persistent: true
----
-You are the Pi critic role. Evaluate plans for acceptance quality, risk mitigation, testability, edge cases, and clear approve/iterate/reject verdicts.`,
-	worker: `---
-name: worker
-description: Implementation worker role for executing an assigned task or goal.
-thinkingLevel: medium
-tools:
-  - read
-  - bash
-  - write
-  - edit
-persistent: true
----
-You are the Pi worker role. Execute the assigned implementation or verification task narrowly, preserve unrelated work, and report concrete evidence.`,
-};
-
 function diagnostic(type: ResourceDiagnostic["type"], message: string, path?: string): ResourceDiagnostic {
 	return { type, message, ...(path ? { path } : {}) };
 }
@@ -288,6 +234,21 @@ function addMarkdownCandidates(candidates: Candidate[], dir: string, level: Agen
 	}
 }
 
+function addPackageAgentCandidates(candidates: Candidate[], paths: string[] | undefined): void {
+	for (const path of paths ?? []) {
+		candidates.push({
+			path,
+			sourceInfo: {
+				path,
+				providerId: "package-agents",
+				providerDisplayName: "Package agents",
+				level: "package",
+				format: "markdown",
+			},
+		});
+	}
+}
+
 function applyDuplicateResolution(
 	items: Array<{ profile: LoadedAgentProfile; path: string }>,
 	diagnostics: ResourceDiagnostic[],
@@ -318,6 +279,7 @@ export function loadAgentDefinitions(options: {
 	cwd: string;
 	agentDir: string;
 	projectTrusted: boolean;
+	packageAgentPaths?: string[];
 }): AgentProfileLoadResult {
 	const cwd = canonicalizePath(resolvePath(options.cwd));
 	void options.agentDir;
@@ -334,24 +296,12 @@ export function loadAgentDefinitions(options: {
 
 	addMarkdownCandidates(candidates, join(home, ".agent", "agents"), "user", home);
 	addMarkdownCandidates(candidates, join(home, ".agents", "agents"), "user", home);
+	addPackageAgentCandidates(candidates, options.packageAgentPaths);
 	const loaded: Array<{ profile: LoadedAgentProfile; path: string }> = [];
 	for (const candidate of candidates) {
 		const result = parseMarkdownProfile(candidate.path, readFileSync(candidate.path, "utf8"), candidate.sourceInfo);
 		diagnostics.push(...result.diagnostics);
 		if (result.profile) loaded.push({ profile: result.profile, path: candidate.path });
-	}
-
-	for (const [name, content] of Object.entries(BUNDLED_AGENT_MARKDOWN)) {
-		const path = `<bundled-agent:${name}>`;
-		const result = parseMarkdownProfile(path, content, {
-			path,
-			providerId: "bundled-agents",
-			providerDisplayName: "Bundled agents",
-			level: "bundled",
-			format: "bundled",
-		});
-		diagnostics.push(...result.diagnostics);
-		if (result.profile) loaded.push({ profile: result.profile, path });
 	}
 
 	return { profiles: applyDuplicateResolution(loaded, diagnostics), diagnostics };

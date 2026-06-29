@@ -220,7 +220,7 @@ export {
 	SessionManager,
 	type SessionMessageEntry,
 	type ThinkingLevelChangeEntry,
-} from "./core/session-manager/session-manager.ts";
+} from "./core/session/session-manager.ts";
 export {
 	type CompactionSettings,
 	type DefaultProjectTrust,

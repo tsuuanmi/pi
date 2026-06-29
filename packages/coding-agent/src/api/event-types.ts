@@ -3,7 +3,7 @@ import type { AssistantMessageEvent, Model, TextContent, ToolResultMessage } fro
 import type { CompactionPreparation, CompactionResult } from "../core/compaction/index.ts";
 import type { BashResult } from "../core/exec/bash-executor.ts";
 import type { CustomMessage } from "../core/messages/messages.ts";
-import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "../core/session-manager/session-manager.ts";
+import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "../core/session/session-manager.ts";
 import type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";
 import type { BashOperations } from "../core/tools/bash.ts";
 import type { EditToolDetails } from "../core/tools/edit.ts";

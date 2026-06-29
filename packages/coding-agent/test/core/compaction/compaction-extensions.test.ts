@@ -19,7 +19,7 @@ import {
 } from "../../../src/core/extensions/index.ts";
 import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
 import { createSyntheticSourceInfo } from "../../../src/core/resources/source-info.ts";
-import { SessionManager } from "../../../src/core/session-manager/session-manager.ts";
+import { SessionManager } from "../../../src/core/session/session-manager.ts";
 import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
 import { createCodingTools } from "../../../src/index.ts";
 import { createTestResourceLoader } from "../../test-utils.ts";

@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
 import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
 import { createAgentSession } from "../../../src/core/sdk/sdk.ts";
-import { SessionManager } from "../../../src/core/session-manager/session-manager.ts";
+import { SessionManager } from "../../../src/core/session/session-manager.ts";
 import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
 
 describe("createAgentSession stream options", () => {

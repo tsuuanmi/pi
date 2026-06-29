@@ -453,6 +453,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 		const enabledSkillResources = getEnabledResources(resolvedPaths.skills);
 		const enabledPrompts = getEnabledPaths(resolvedPaths.prompts);
 		const enabledThemes = getEnabledPaths(resolvedPaths.themes);
+		const enabledAgentProfiles = getEnabledPaths(resolvedPaths.agents);
 
 		const enabledSkills = enabledSkillResources.map((resource) => this.mapSkillPath(resource, metadataByPath));
 
@@ -540,6 +541,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 			cwd: this.cwd,
 			agentDir: this.agentDir,
 			projectTrusted: this.settingsManager.isProjectTrusted(),
+			packageAgentPaths: enabledAgentProfiles,
 		});
 		const resolvedAgentProfiles = this.agentProfilesOverride
 			? this.agentProfilesOverride(agentProfiles)
@@ -848,12 +850,14 @@ export class DefaultResourceLoader implements ResourceLoader {
 			join(this.agentDir, "prompts"),
 			join(this.agentDir, "themes"),
 			join(this.agentDir, "extensions"),
+			join(this.agentDir, "agents"),
 		];
 		const projectRoots = [
 			join(this.cwd, CONFIG_DIR_NAME, "skills"),
 			join(this.cwd, CONFIG_DIR_NAME, "prompts"),
 			join(this.cwd, CONFIG_DIR_NAME, "themes"),
 			join(this.cwd, CONFIG_DIR_NAME, "extensions"),
+			join(this.cwd, CONFIG_DIR_NAME, "agents"),
 		];
 
 		for (const root of agentRoots) {

@@ -9,8 +9,8 @@ import type {
 } from "../extensions/index.ts";
 import { emitSessionShutdownEvent } from "../extensions/runner.ts";
 import type { CreateAgentSessionResult } from "../sdk/sdk.ts";
-import { assertSessionCwdExists } from "../session-manager/session-cwd.ts";
-import { SessionManager } from "../session-manager/session-manager.ts";
+import { assertSessionCwdExists } from "../session/session-cwd.ts";
+import { SessionManager } from "../session/session-manager.ts";
 import type { AgentSession } from "./agent-session.ts";
 import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "./agent-session-services.ts";
 

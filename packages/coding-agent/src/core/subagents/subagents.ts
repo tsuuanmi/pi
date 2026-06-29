@@ -9,7 +9,7 @@ import type { AgentSession } from "../agent-session/agent-session.ts";
 import { type AgentSessionServices, createAgentSessionFromServices } from "../agent-session/agent-session-services.ts";
 import { type AgentProfile, loadAgentProfile } from "../agents/agent-profiles.ts";
 import { sessionStateDir } from "../session/session-layout.ts";
-import { SessionManager } from "../session-manager/session-manager.ts";
+import { SessionManager } from "../session/session-manager.ts";
 import { renderSubagentProgress, type SubagentProgress, SubagentProgressTracker } from "./subagent-progress.ts";
 import { extractYieldFromMessages, type YieldDetails } from "./yield-result.ts";
 

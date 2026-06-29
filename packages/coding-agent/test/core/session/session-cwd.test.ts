@@ -6,8 +6,8 @@ import {
 	type CreateAgentSessionRuntimeFactory,
 	createAgentSessionRuntime,
 } from "../../../src/core/agent-session/agent-session-runtime.ts";
-import { getMissingSessionCwdIssue, MissingSessionCwdError } from "../../../src/core/session-manager/session-cwd.ts";
-import { SessionManager } from "../../../src/core/session-manager/session-manager.ts";
+import { getMissingSessionCwdIssue, MissingSessionCwdError } from "../../../src/core/session/session-cwd.ts";
+import { SessionManager } from "../../../src/core/session/session-manager.ts";
 
 function createTempDir(name: string): string {
 	const dir = join(tmpdir(), `${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`);

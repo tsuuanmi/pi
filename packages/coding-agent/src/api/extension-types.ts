@@ -6,7 +6,7 @@ import type { EventBus } from "../core/events/event-bus.ts";
 import type { ExecOptions, ExecResult } from "../core/exec/exec.ts";
 import type { CustomMessage } from "../core/messages/messages.ts";
 import type { SourceInfo } from "../core/resources/source-info.ts";
-import type { SessionManager } from "../core/session-manager/session-manager.ts";
+import type { SessionManager } from "../core/session/session-manager.ts";
 import type { SlashCommandInfo } from "../core/skills/slash-commands.ts";
 import type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";
 import type { MCPServerInfo } from "../packages/mcp/runtime/types.ts";

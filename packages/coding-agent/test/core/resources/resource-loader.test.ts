@@ -7,7 +7,7 @@ import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
 import { ExtensionRunner } from "../../../src/core/extensions/runner.ts";
 import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
 import { createSyntheticSourceInfo } from "../../../src/core/resources/source-info.ts";
-import { SessionManager } from "../../../src/core/session-manager/session-manager.ts";
+import { SessionManager } from "../../../src/core/session/session-manager.ts";
 import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
 import { DefaultResourceLoader } from "../../../src/core/skills/resource-loader.ts";
 import type { Skill } from "../../../src/core/skills/skills.ts";
@@ -35,7 +35,9 @@ function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions
 			!extension.path.endsWith("/src/packages/lsp/extensions/lsp.ts") &&
 			!extension.path.endsWith("/dist/packages/lsp/extensions/lsp.js") &&
 			!extension.path.endsWith("/src/packages/mcp/extensions/mcp.ts") &&
-			!extension.path.endsWith("/dist/packages/mcp/extensions/mcp.js"),
+			!extension.path.endsWith("/dist/packages/mcp/extensions/mcp.js") &&
+			!extension.path.endsWith("/src/packages/providers/extensions/providers.ts") &&
+			!extension.path.endsWith("/dist/packages/providers/extensions/providers.js"),
 	);
 }
 

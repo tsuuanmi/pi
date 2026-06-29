@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setKeybindings } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { SessionInfo } from "../../../src/core/session-manager/session-manager.ts";
+import type { SessionInfo } from "../../../src/core/session/session-manager.ts";
 import { KeybindingsManager } from "../../../src/core/settings/keybindings.ts";
 import { SessionSelectorComponent } from "../../../src/modes/interactive/components/session-selector.ts";
 import { initTheme } from "../../../src/theme/theme.ts";

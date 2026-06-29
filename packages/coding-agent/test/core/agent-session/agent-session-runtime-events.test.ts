@@ -10,7 +10,7 @@ import {
 	createAgentSessionServices,
 } from "../../../src/core/agent-session/agent-session-runtime.ts";
 import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
-import { SessionManager } from "../../../src/core/session-manager/session-manager.ts";
+import { SessionManager } from "../../../src/core/session/session-manager.ts";
 import type {
 	ExtensionFactory,
 	SessionBeforeForkEvent,

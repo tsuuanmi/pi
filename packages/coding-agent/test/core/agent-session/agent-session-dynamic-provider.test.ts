@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
 import type { ExtensionFactory } from "../../../src/core/sdk/sdk.ts";
 import { createAgentSession } from "../../../src/core/sdk/sdk.ts";
-import { SessionManager } from "../../../src/core/session-manager/session-manager.ts";
+import { SessionManager } from "../../../src/core/session/session-manager.ts";
 import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
 import { DefaultResourceLoader } from "../../../src/core/skills/resource-loader.ts";
 

@@ -73,6 +73,7 @@ export interface ResolvedPaths {
 	prompts: ResolvedResource[];
 	themes: ResolvedResource[];
 	commands: ResolvedResource[];
+	agents: ResolvedResource[];
 }
 
 export type MissingSourceAction = "install" | "skip" | "error";
@@ -169,6 +170,7 @@ interface PiManifest {
 	prompts?: string[];
 	themes?: string[];
 	commands?: string[];
+	agents?: string[];
 }
 
 interface ResourceAccumulator {
@@ -177,6 +179,7 @@ interface ResourceAccumulator {
 	prompts: Map<string, { metadata: PathMetadata; enabled: boolean }>;
 	themes: Map<string, { metadata: PathMetadata; enabled: boolean }>;
 	commands: Map<string, { metadata: PathMetadata; enabled: boolean }>;
+	agents: Map<string, { metadata: PathMetadata; enabled: boolean }>;
 }
 
 /**
@@ -203,13 +206,16 @@ interface PackageFilter {
 	prompts?: string[];
 	themes?: string[];
 	commands?: string[];
+	agents?: string[];
 }
 
-type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands";
+type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands" | "agents";
+type TopLevelResourceType = "extensions" | "skills" | "prompts" | "themes";
 
 type BundledPackageName = "workflows" | "lsp" | "mcp" | "providers";
 
-const RESOURCE_TYPES: ResourceType[] = ["extensions", "skills", "prompts", "themes", "commands"];
+const RESOURCE_TYPES: ResourceType[] = ["extensions", "skills", "prompts", "themes", "commands", "agents"];
+const TOP_LEVEL_RESOURCE_TYPES: TopLevelResourceType[] = ["extensions", "skills", "prompts", "themes"];
 
 const BUNDLED_PACKAGE_SOURCES: Record<string, BundledPackageName> = {
 	"pi:workflows": "workflows",
@@ -226,6 +232,7 @@ const FILE_PATTERNS: Record<ResourceType, RegExp> = {
 	prompts: /\.md$/,
 	themes: /\.json$/,
 	commands: /\.(ts|js|mjs|cjs)$/,
+	agents: /\.md$/,
 };
 
 const IGNORE_FILE_NAMES = [".gitignore", ".ignore", ".fdignore"];
@@ -940,7 +947,7 @@ export class DefaultPackageManager implements PackageManager {
 		const globalBaseDir = this.agentDir;
 		const projectBaseDir = join(this.cwd, CONFIG_DIR_NAME);
 
-		for (const resourceType of RESOURCE_TYPES) {
+		for (const resourceType of TOP_LEVEL_RESOURCE_TYPES) {
 			const target = this.getTargetMap(accumulator, resourceType);
 			const globalEntries = (globalSettings[resourceType] ?? []) as string[];
 			const projectEntries = (projectSettings[resourceType] ?? []) as string[];
@@ -2354,6 +2361,7 @@ export class DefaultPackageManager implements PackageManager {
 			prompts: (globalSettings.prompts ?? []) as string[],
 			themes: (globalSettings.themes ?? []) as string[],
 			commands: [] as string[],
+			agents: [] as string[],
 		};
 		const projectOverrides = {
 			extensions: (projectSettings.extensions ?? []) as string[],
@@ -2361,6 +2369,7 @@ export class DefaultPackageManager implements PackageManager {
 			prompts: (projectSettings.prompts ?? []) as string[],
 			themes: (projectSettings.themes ?? []) as string[],
 			commands: [] as string[],
+			agents: [] as string[],
 		};
 
 		const userDirs = {
@@ -2368,12 +2377,14 @@ export class DefaultPackageManager implements PackageManager {
 			skills: join(globalBaseDir, "skills"),
 			prompts: join(globalBaseDir, "prompts"),
 			themes: join(globalBaseDir, "themes"),
+			agents: join(globalBaseDir, "agents"),
 		};
 		const projectDirs = {
 			extensions: join(projectBaseDir, "extensions"),
 			skills: join(projectBaseDir, "skills"),
 			prompts: join(projectBaseDir, "prompts"),
 			themes: join(projectBaseDir, "themes"),
+			agents: join(projectBaseDir, "agents"),
 		};
 		const userAgentsSkillDirs = AGENTS_STANDARD_DIR_NAMES.map((standardDir) =>
 			join(getHomeDir(), standardDir, "skills"),
@@ -2552,6 +2563,8 @@ export class DefaultPackageManager implements PackageManager {
 				return accumulator.themes;
 			case "commands":
 				return accumulator.commands;
+			case "agents":
+				return accumulator.agents;
 			default:
 				throw new Error(`Unknown resource type: ${resourceType}`);
 		}
@@ -2576,6 +2589,7 @@ export class DefaultPackageManager implements PackageManager {
 			prompts: new Map(),
 			themes: new Map(),
 			commands: new Map(),
+			agents: new Map(),
 		};
 	}
 
@@ -2605,6 +2619,7 @@ export class DefaultPackageManager implements PackageManager {
 			prompts: mapToResolved(accumulator.prompts),
 			themes: mapToResolved(accumulator.themes),
 			commands: mapToResolved(accumulator.commands),
+			agents: mapToResolved(accumulator.agents),
 		};
 	}
 

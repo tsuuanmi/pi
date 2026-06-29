@@ -7,7 +7,7 @@ import { getAgentDir } from "../config/config.ts";
 import type { SessionStartEvent, ToolDefinition } from "../extensions/index.ts";
 import { ModelRegistry } from "../model/model-registry.ts";
 import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "../sdk/sdk.ts";
-import type { SessionManager } from "../session-manager/session-manager.ts";
+import type { SessionManager } from "../session/session-manager.ts";
 import { SettingsManager } from "../settings/settings-manager.ts";
 import {
 	DefaultResourceLoader,

@@ -14,7 +14,7 @@ import {
 	createCompactionSummaryMessage,
 	createCustomMessage,
 } from "../messages/messages.ts";
-import { buildSessionContext, type CompactionEntry, type SessionEntry } from "../session-manager/session-manager.ts";
+import { buildSessionContext, type CompactionEntry, type SessionEntry } from "../session/session-manager.ts";
 import {
 	computeFileLists,
 	createFileOps,

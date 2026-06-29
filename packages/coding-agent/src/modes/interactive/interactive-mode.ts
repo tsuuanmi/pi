@@ -79,8 +79,8 @@ import { defaultModelPerProvider, findExactModelReferenceMatch } from "../../cor
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/model/provider-display-names.ts";
 import { DefaultPackageManager } from "../../core/package-manager/package-manager.ts";
 import type { SourceInfo } from "../../core/resources/source-info.ts";
-import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session-manager/session-cwd.ts";
-import { type SessionContext, SessionManager } from "../../core/session-manager/session-manager.ts";
+import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session/session-cwd.ts";
+import { type SessionContext, SessionManager } from "../../core/session/session-manager.ts";
 import { type AppKeybinding, KeybindingsManager } from "../../core/settings/keybindings.ts";
 import type { ResourceDiagnostic } from "../../core/skills/resource-loader.ts";
 import { BUILTIN_SLASH_COMMANDS } from "../../core/skills/slash-commands.ts";

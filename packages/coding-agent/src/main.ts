@@ -39,8 +39,8 @@ import {
 	getMissingSessionCwdIssue,
 	MissingSessionCwdError,
 	type SessionCwdIssue,
-} from "./core/session-manager/session-cwd.ts";
-import { SessionManager } from "./core/session-manager/session-manager.ts";
+} from "./core/session/session-cwd.ts";
+import { SessionManager } from "./core/session/session-manager.ts";
 import { SettingsManager } from "./core/settings/settings-manager.ts";
 import { printTimings, resetTimings, time } from "./core/telemetry/timings.ts";
 import { type AppMode, resolveProjectTrusted } from "./core/trust/project-trust.ts";
@@ -48,7 +48,7 @@ import { hasTrustRequiringProjectResources, ProjectTrustStore } from "./core/tru
 import { runMigrations, showDeprecationWarnings } from "./migrations.ts";
 import { InteractiveMode, runPrintMode, runRpcMode } from "./modes/index.ts";
 import { restoreStdout, takeOverStdout } from "./modes/output-guard.ts";
-import { handleConfigCommand, handlePackageCommand } from "./package-manager-cli.ts";
+import { handleConfigCommand, handlePackageCommand } from "./core/package-manager/package-manager-cli.ts";
 import { initTheme, stopThemeWatcher } from "./theme/theme.ts";
 import { resolvePath } from "./utils/fs/paths.ts";
 

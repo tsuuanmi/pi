@@ -5,6 +5,7 @@
 	"pi": {
 		"extensions": ["extensions/workflows.ts"],
 		"commands": ["commands/workflow.ts"],
-		"skills": ["skills/**/*.md"]
+		"skills": ["skills/**/*.md"],
+		"agents": ["agents/*.md"]
 	}
 }
