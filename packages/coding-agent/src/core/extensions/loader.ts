@@ -150,6 +150,7 @@ export function createExtensionRuntime(): ExtensionRuntime {
 		setThinkingLevel: notInitialized,
 		flagValues: new Map(),
 		pendingProviderRegistrations: [],
+		mcpServerInfoProviders: new Set(),
 		assertActive,
 		invalidate: (message) => {
 			state.staleMessage ??=
@@ -196,6 +197,24 @@ function createExtensionAPI(
 				sourceInfo: extension.sourceInfo,
 			});
 			runtime.refreshTools();
+		},
+
+		unregisterTool(name: string): void {
+			runtime.assertActive();
+			if (extension.tools.delete(name)) {
+				runtime.refreshTools();
+			}
+		},
+
+		registerMcpServerInfoProvider(provider: () => import("../../api/types.ts").MCPServerInfo[]): () => void {
+			runtime.assertActive();
+			runtime.mcpServerInfoProviders.add(provider);
+			return () => runtime.mcpServerInfoProviders.delete(provider);
+		},
+
+		refreshTools(options?: { includeAllExtensionTools?: boolean }): void {
+			runtime.assertActive();
+			runtime.refreshTools(options);
 		},
 
 		registerCommand(name: string, options: Omit<RegisteredCommand, "name" | "sourceInfo">): void {

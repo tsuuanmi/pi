@@ -2,8 +2,8 @@ import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { readWorkflowActiveState } from "../../../src/workflows/shared/active-state.ts";
-import { readWorkflowState } from "../../../src/workflows/shared/workflow-state.ts";
+import { readWorkflowActiveState } from "../../../src/packages/workflows/runtime/shared/active-state.ts";
+import { readWorkflowState } from "../../../src/packages/workflows/runtime/shared/workflow-state.ts";
 import {
 	completeTeam,
 	createTeamTask,
@@ -12,14 +12,14 @@ import {
 	sendTeamMessage,
 	startTeam,
 	transitionTeamTask,
-} from "../../../src/workflows/team/team-runtime.ts";
+} from "../../../src/packages/workflows/runtime/team/team-runtime.ts";
 import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
 	getUltragoalStatus,
 	readUltragoalCompact,
 	startNextUltragoalGoal,
-} from "../../../src/workflows/ultragoal/ultragoal-runtime.ts";
+} from "../../../src/packages/workflows/runtime/ultragoal/ultragoal-runtime.ts";
 
 const sessionId = "test-session-id";
 

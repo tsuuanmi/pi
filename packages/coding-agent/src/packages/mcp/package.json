@@ -1,0 +1,9 @@
+{
+	"name": "@tsuuanmi/pi-bundled-mcp",
+	"private": true,
+	"type": "module",
+	"pi": {
+		"extensions": ["extensions/mcp.ts"],
+		"commands": ["commands/mcp.ts"]
+	}
+}

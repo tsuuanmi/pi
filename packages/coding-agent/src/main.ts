@@ -14,11 +14,10 @@ import { processFileArguments } from "./cli/file-processor.ts";
 import { buildInitialMessage } from "./cli/initial-message.ts";
 import { launchDefaultTmuxIfNeeded } from "./cli/launch-tmux.ts";
 import { listModels } from "./cli/list-models.ts";
-import { handleMcpCommand } from "./cli/mcp-command.ts";
+import { dispatchPreSessionPackageCommand } from "./cli/package-command-dispatcher.ts";
 import { createProjectTrustContext } from "./cli/project-trust.ts";
 import { selectSession } from "./cli/session-picker.ts";
 import { shouldRunFirstTimeSetup, showFirstTimeSetup, showStartupSelector } from "./cli/startup-ui.ts";
-import { handleWorkflowCommand } from "./cli/workflow-command.ts";
 import {
 	type CreateAgentSessionRuntimeFactory,
 	createAgentSessionRuntime,
@@ -378,13 +377,7 @@ export async function main(args: string[], options?: MainOptions) {
 		return;
 	}
 
-	if (await handleMcpCommand(args)) {
-		const exitCode = process.exitCode ?? 0;
-		process.exit(exitCode);
-		return;
-	}
-
-	if (await handleWorkflowCommand(args)) {
+	if (await dispatchPreSessionPackageCommand(args, { extensionFactories: options?.extensionFactories })) {
 		const exitCode = process.exitCode ?? 0;
 		process.exit(exitCode);
 		return;

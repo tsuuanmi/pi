@@ -1280,7 +1280,9 @@ Register a custom tool callable by the LLM. See [Custom Tools](#custom-tools) fo
 
 `pi.registerTool()` works both during extension load and after startup. You can call it inside `session_start`, command handlers, or other event handlers. New tools are refreshed immediately in the same session, so they appear in `pi.getAllTools()` and are callable by the LLM without `/reload`.
 
-Use `pi.setActiveTools()` to enable or disable tools (including dynamically added tools) at runtime.
+Use `pi.setActiveTools()` to enable or disable tools (including dynamically added tools) at runtime. Use `pi.unregisterTool(name)` to remove a dynamically registered tool, for example when an extension-owned runtime disconnects from an external service.
+
+Use `pi.refreshTools({ includeAllExtensionTools: true })` after bulk dynamic changes when the current session should rebuild its visible tool registry from extension-owned tools.
 
 Use `promptSnippet` to opt a custom tool into a one-line entry in `Available tools`, and `promptGuidelines` to append tool-specific bullets to the default `Guidelines` section when the tool is active.
 
@@ -1323,6 +1325,23 @@ pi.registerTool({
   renderCall(args, theme, context) { ... },
   renderResult(result, options, theme, context) { ... },
 });
+```
+
+### pi.unregisterTool(name)
+
+Remove a dynamically registered tool by name. This is useful for package-owned runtimes that add and remove tools as external capabilities appear or disappear.
+
+```typescript
+pi.unregisterTool("my_dynamic_tool");
+```
+
+### pi.registerMcpServerInfoProvider(provider)
+
+Register a provider for MCP server status information displayed by generic UI/HUD surfaces. The method returns an unregister function that extensions should call during shutdown or reload cleanup.
+
+```typescript
+const unregister = pi.registerMcpServerInfoProvider(() => manager.getServerInfos());
+pi.on("session_shutdown", () => unregister());
 ```
 
 ### pi.sendMessage(message, options?)

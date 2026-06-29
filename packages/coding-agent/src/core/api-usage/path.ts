@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { piSessionRoot } from "../../workflows/shared/session-layout.ts";
+import { piSessionRoot } from "../session/session-layout.ts";
 
 export function apiUsageLogPath(cwd: string, sessionId: string): string | undefined {
 	const trimmed = sessionId.trim();

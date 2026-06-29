@@ -3,18 +3,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "../../../src/cli/workflow-command.ts";
-import { type WorkflowSkill, workflowStatePath } from "../../../src/workflows/shared/paths.ts";
-import { isWorkflowSkill } from "../../../src/workflows/shared/state-schema.ts";
+import { type WorkflowSkill, workflowStatePath } from "../../../src/packages/workflows/runtime/shared/paths.ts";
+import { isWorkflowSkill } from "../../../src/packages/workflows/runtime/shared/state-schema.ts";
 import {
 	getWorkflowManifest,
 	isKnownWorkflowPhase,
 	PI_WORKFLOW_SKILLS,
-} from "../../../src/workflows/shared/workflow-manifest.ts";
+} from "../../../src/packages/workflows/runtime/shared/workflow-manifest.ts";
 import {
 	clearWorkflowState,
 	replaceWorkflowState,
 	writeWorkflowState,
-} from "../../../src/workflows/shared/workflow-state.ts";
+} from "../../../src/packages/workflows/runtime/shared/workflow-state.ts";
 
 const sessionId = "test-session-id";
 

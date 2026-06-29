@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { WorkflowActiveState } from "../../src/workflows/shared/active-state.ts";
+import type { WorkflowActiveState } from "../../src/packages/workflows/runtime/shared/active-state.ts";
 import {
 	resolveWorkflowToolGroup,
 	sameToolSet,
 	selectWorkflowActiveTools,
 	WORKFLOW_OWNED_TOOLS,
-} from "../../src/workflows/shared/tool-groups.ts";
+} from "../../src/packages/workflows/runtime/shared/tool-groups.ts";
 
 function activeState(skill: "deep-interview" | "ralplan" | "team" | "ultragoal"): WorkflowActiveState {
 	return {

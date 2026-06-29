@@ -8,7 +8,7 @@ import {
 	type LoadedAgentProfile,
 	loadAgentDefinitions,
 } from "../agents/agent-definitions.ts";
-import { CONFIG_DIR_NAME, getPackageDir } from "../config/config.ts";
+import { CONFIG_DIR_NAME } from "../config/config.ts";
 import type { ResourceDiagnostic } from "../resources/diagnostics.ts";
 
 export type { ResourceCollision, ResourceDiagnostic } from "../resources/diagnostics.ts";
@@ -473,10 +473,9 @@ export class DefaultResourceLoader implements ResourceLoader {
 		const cliEnabledPrompts = getEnabledPaths(cliExtensionPaths.prompts);
 		const cliEnabledThemes = getEnabledPaths(cliExtensionPaths.themes);
 
-		const builtInExtensionPaths = this.getBuiltInResourcePaths("workflows", "workflows-extension");
 		const extensionPaths = this.noExtensions
 			? cliEnabledExtensions
-			: this.mergePaths([...cliEnabledExtensions, ...builtInExtensionPaths], enabledExtensions);
+			: this.mergePaths(cliEnabledExtensions, enabledExtensions);
 
 		const extensionsResult = await this.loadFinalExtensionSet(extensionPaths, preTrustExtensions);
 		for (const p of this.additionalExtensionPaths) {
@@ -490,10 +489,9 @@ export class DefaultResourceLoader implements ResourceLoader {
 		this.extensionsResult = this.extensionsOverride ? this.extensionsOverride(extensionsResult) : extensionsResult;
 		this.applyExtensionSourceInfo(this.extensionsResult.extensions, metadataByPath);
 
-		const builtInSkillPaths = this.getBuiltInResourcePaths("skills");
 		const skillPaths = this.noSkills
 			? this.mergePaths(cliEnabledSkills, this.additionalSkillPaths)
-			: this.mergePaths([...cliEnabledSkills, ...builtInSkillPaths, ...enabledSkills], this.additionalSkillPaths);
+			: this.mergePaths([...cliEnabledSkills, ...enabledSkills], this.additionalSkillPaths);
 
 		this.lastSkillPaths = skillPaths;
 		this.updateSkillsFromPaths(skillPaths, metadataByPath);
@@ -786,16 +784,6 @@ export class DefaultResourceLoader implements ResourceLoader {
 				tool.sourceInfo = extension.sourceInfo;
 			}
 		}
-	}
-
-	private getBuiltInResourcePaths(kind: "extensions" | "skills" | "workflows", basename?: string): string[] {
-		const packageDir = getPackageDir();
-		const srcOrDist = existsSync(join(packageDir, "src")) ? "src" : "dist";
-		const extension = srcOrDist === "src" ? ".ts" : ".js";
-		const resourcePath = basename
-			? join(packageDir, srcOrDist, kind, `${basename}${extension}`)
-			: join(packageDir, srcOrDist, kind);
-		return existsSync(resourcePath) ? [resourcePath] : [];
 	}
 
 	private findSourceInfoForPath(

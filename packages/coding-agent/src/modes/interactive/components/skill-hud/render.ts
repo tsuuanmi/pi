@@ -2,7 +2,7 @@ import {
 	collapsePlanningPipeline,
 	type WorkflowActiveEntry,
 	type WorkflowHudChip,
-} from "../../../../workflows/shared/active-state.ts";
+} from "../../../../packages/workflows/runtime/shared/active-state.ts";
 
 const ANSI_RESET_FG = "\x1b[39m";
 const ANSI_RESET_BOLD = "\x1b[22m";

@@ -153,6 +153,7 @@ export type PackageSource =
 			skills?: string[];
 			prompts?: string[];
 			themes?: string[];
+			commands?: string[];
 	  };
 
 export interface Settings {
@@ -176,11 +177,12 @@ export interface Settings {
 	collapseChangelog?: boolean; // Show condensed changelog after update (use /changelog for full)
 	enableAnalytics?: boolean; // default: false - opt-in analytics data sharing
 	trackingId?: string; // analytics tracking identifier, generated when analytics is enabled
-	packages?: PackageSource[]; // Array of npm/git package sources (string or object with filtering)
+	packages?: PackageSource[]; // Array of package sources (npm/git/local or reserved pi: bundles; string or object with filtering)
 	extensions?: string[]; // Array of local extension file paths or directories
 	skills?: string[]; // Array of local skill file paths or directories
 	prompts?: string[]; // Array of local prompt template paths or directories
 	themes?: string[]; // Array of local theme file paths or directories
+	commands?: string[]; // Array of local package command file paths or directories
 	enableSkillCommands?: boolean; // default: true - register skills as /skill:name commands
 	terminal?: TerminalSettings;
 	enabledModels?: string[]; // Model patterns for cycling

@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { assert, test } from "vitest";
-import { ultragoalLedgerPath } from "../../../src/workflows/shared/paths.ts";
+import { ultragoalLedgerPath } from "../../../src/packages/workflows/runtime/shared/paths.ts";
 import {
 	buildCompletionReceipt,
 	chooseReceiptKind,
@@ -15,7 +15,7 @@ import {
 	UltragoalLedgerUnreadable,
 	type UltragoalPlan,
 	validateCompletionReceipt,
-} from "../../../src/workflows/ultragoal/ultragoal-receipt.ts";
+} from "../../../src/packages/workflows/runtime/ultragoal/ultragoal-receipt.ts";
 
 const sessionId = "test-session-id";
 

@@ -2,8 +2,11 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { readWorkflowActiveState, syncWorkflowActiveState } from "../../../src/workflows/shared/active-state.ts";
-import { workflowActiveStatePath } from "../../../src/workflows/shared/session-layout.ts";
+import {
+	readWorkflowActiveState,
+	syncWorkflowActiveState,
+} from "../../../src/packages/workflows/runtime/shared/active-state.ts";
+import { workflowActiveStatePath } from "../../../src/packages/workflows/runtime/shared/session-layout.ts";
 
 describe("session-scoped workflow active state", () => {
 	let cwd: string;

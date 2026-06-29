@@ -1,10 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
-import { appendFile, mkdir, readFile, rm } from "node:fs/promises";
+import { appendFile, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { withFileMutationQueue } from "../utils/fs/file-mutation-queue.ts";
-import { writeJsonAtomic } from "../workflows/shared/state-writer.ts";
 import type {
 	RuntimeLogDiagnostic,
 	RuntimeLogReadResult,
@@ -71,6 +70,30 @@ function controlSocketPath(root: string, sessionId: string): string {
 		.update(`${resolve(root)}\0${sessionId}`)
 		.digest("hex");
 	return join(tempHarnessRoot(), `${digest.slice(0, 32)}.sock`);
+}
+
+function assertPiTargetPath(targetPath: string, cwd: string | undefined): void {
+	if (!cwd) return;
+	const piRoot = resolve(cwd, ".pi");
+	const target = resolve(targetPath);
+	const rel = relative(piRoot, target);
+	if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
+		throw new Error(`target path must be within project .pi/**: ${targetPath}`);
+	}
+}
+
+async function writeJsonAtomic(
+	path: string,
+	value: Record<string, unknown>,
+	options: { cwd?: string } = {},
+): Promise<void> {
+	assertPiTargetPath(path, options.cwd);
+	await withFileMutationQueue(path, async () => {
+		await mkdir(dirname(path), { recursive: true });
+		const temp = `${path}.${process.pid}.${Date.now()}.tmp`;
+		await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+		await rename(temp, path);
+	});
 }
 
 async function readJson<T>(file: string): Promise<T | null> {

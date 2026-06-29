@@ -10,8 +10,8 @@ import { createAgentSession } from "../../src/core/sdk/sdk.ts";
 import { SessionManager } from "../../src/core/session-manager/session-manager.ts";
 import { SettingsManager } from "../../src/core/settings/settings-manager.ts";
 import { DefaultResourceLoader } from "../../src/core/skills/resource-loader.ts";
-import { WORKFLOW_OWNED_TOOLS } from "../../src/workflows/shared/tool-groups.ts";
-import workflowsExtension from "../../src/workflows/workflows-extension.ts";
+import { WORKFLOW_OWNED_TOOLS } from "../../src/packages/workflows/runtime/shared/tool-groups.ts";
+import workflowsExtension from "../../src/packages/workflows/runtime/workflows-extension.ts";
 
 function createModel(): Model<Api> {
 	return {

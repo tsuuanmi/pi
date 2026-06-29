@@ -440,6 +440,10 @@ export class ExtensionRunner {
 		return Array.from(toolsByName.values());
 	}
 
+	getMcpServerInfos(): MCPServerInfo[] {
+		return Array.from(this.runtime.mcpServerInfoProviders).flatMap((provider) => provider());
+	}
+
 	/** Get a tool definition by name. Returns undefined if not found. */
 	getToolDefinition(toolName: string): RegisteredTool["definition"] | undefined {
 		for (const ext of this.extensions) {
@@ -702,7 +706,7 @@ export class ExtensionRunner {
 			},
 			getMcpServerInfos: () => {
 				runner.assertActive();
-				return runner.getMcpServerInfosFn();
+				return [...runner.getMcpServerInfosFn(), ...runner.getMcpServerInfos()];
 			},
 			compact: (options) => {
 				runner.assertActive();

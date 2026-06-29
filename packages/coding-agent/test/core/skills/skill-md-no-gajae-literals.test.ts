@@ -11,10 +11,10 @@ import { describe, expect, it } from "vitest";
 const GJC_PATTERN = /\b\.gjc\b|gjc-|GJC_SESSION_ID|\bgjc\b/;
 
 const FILES_TO_CHECK = [
-	"src/skills/deep-interview/SKILL.md",
-	"src/skills/ralplan/SKILL.md",
-	"src/workflows/shared/session-layout.ts",
-	"src/workflows/shared/session-resolution.ts",
+	"src/packages/workflows/skills/deep-interview/SKILL.md",
+	"src/packages/workflows/skills/ralplan/SKILL.md",
+	"src/packages/workflows/runtime/shared/session-layout.ts",
+	"src/packages/workflows/runtime/shared/session-resolution.ts",
 	// vagueness-gate.ts will be added in Step 3
 ];
 

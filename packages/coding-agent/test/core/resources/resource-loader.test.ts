@@ -28,8 +28,14 @@ const BUILT_IN_WORKFLOW_AGENT_TOOLS = new Set(["team_spawn_task_agent", "ultrago
 function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions: T[]): T[] {
 	return extensions.filter(
 		(extension) =>
-			!extension.path.endsWith("/src/workflows/workflows-extension.ts") &&
-			!extension.path.endsWith("/dist/workflows/workflows-extension.js"),
+			!extension.path.endsWith("/src/packages/workflows/extensions/workflows.ts") &&
+			!extension.path.endsWith("/dist/packages/workflows/extensions/workflows.js") &&
+			!extension.path.endsWith("/src/packages/workflows/runtime/workflows-extension.ts") &&
+			!extension.path.endsWith("/dist/packages/workflows/runtime/workflows-extension.js") &&
+			!extension.path.endsWith("/src/packages/lsp/extensions/lsp.ts") &&
+			!extension.path.endsWith("/dist/packages/lsp/extensions/lsp.js") &&
+			!extension.path.endsWith("/src/packages/mcp/extensions/mcp.ts") &&
+			!extension.path.endsWith("/dist/packages/mcp/extensions/mcp.js"),
 	);
 }
 
@@ -271,9 +277,9 @@ export default function(pi) {
 			const loader = new DefaultResourceLoader({ cwd, agentDir });
 			await loader.reload({
 				resolveProjectTrust: async ({ extensionsResult }) => {
-					expect(extensionsResult.extensions.map((extension) => extension.path)).toEqual([
-						join(userExtDir, "user.ts"),
-					]);
+					expect(
+						withoutBuiltInWorkflowExtensions(extensionsResult.extensions).map((extension) => extension.path),
+					).toEqual([join(userExtDir, "user.ts")]);
 					return true;
 				},
 			});

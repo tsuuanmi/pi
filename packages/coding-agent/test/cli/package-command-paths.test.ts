@@ -104,7 +104,8 @@ describe("package commands", () => {
 			await expect(main(["list"])).resolves.toBeUndefined();
 
 			const stdout = logSpy.mock.calls.map(([message]) => String(message)).join("\n");
-			expect(stdout).toContain("No packages installed.");
+			expect(stdout).toContain("User packages:");
+			expect(stdout).toContain("pi:workflows");
 			expect(stdout).not.toContain("Project packages:");
 		} finally {
 			logSpy.mockRestore();
@@ -249,7 +250,8 @@ describe("package commands", () => {
 			await expect(main(["list"])).resolves.toBeUndefined();
 
 			const stdout = logSpy.mock.calls.map(([message]) => String(message)).join("\n");
-			expect(stdout).toContain("No packages installed.");
+			expect(stdout).toContain("User packages:");
+			expect(stdout).toContain("pi:workflows");
 			expect(stdout).not.toContain("Project packages:");
 			expect(process.exitCode).toBeUndefined();
 		} finally {

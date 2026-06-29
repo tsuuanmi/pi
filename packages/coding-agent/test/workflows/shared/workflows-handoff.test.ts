@@ -7,8 +7,8 @@ import {
 	readWorkflowActiveState,
 	syncWorkflowActiveState,
 	type WorkflowActiveEntry,
-} from "../../../src/workflows/shared/active-state.ts";
-import { workflowActiveStatePath } from "../../../src/workflows/shared/session-layout.ts";
+} from "../../../src/packages/workflows/runtime/shared/active-state.ts";
+import { workflowActiveStatePath } from "../../../src/packages/workflows/runtime/shared/session-layout.ts";
 
 const TEST_SESSION = "test-session-id";
 

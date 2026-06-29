@@ -7,14 +7,14 @@ import {
 	readWorkflowActiveState,
 	syncWorkflowActiveState,
 	type WorkflowActiveEntry,
-} from "../../../src/workflows/shared/active-state.ts";
-import type { WorkflowSkill } from "../../../src/workflows/shared/paths.ts";
+} from "../../../src/packages/workflows/runtime/shared/active-state.ts";
+import type { WorkflowSkill } from "../../../src/packages/workflows/runtime/shared/paths.ts";
 import {
 	createWorkflowReceipt,
 	isEntryStale,
 	WORKFLOW_RECEIPT_FRESH_MS,
 	workflowReceiptStatus,
-} from "../../../src/workflows/shared/state-writer.ts";
+} from "../../../src/packages/workflows/runtime/shared/state-writer.ts";
 
 const sessionId = "test-session-id";
 

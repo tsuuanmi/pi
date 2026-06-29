@@ -8,7 +8,7 @@ import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
 import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
 import { DefaultResourceLoader } from "../../../src/core/skills/resource-loader.ts";
 import { SubagentManager, type SubagentRecord } from "../../../src/core/subagents/subagents.ts";
-import { sessionStateDir } from "../../../src/workflows/shared/session-layout.ts";
+import { sessionStateDir } from "../../../src/packages/workflows/runtime/shared/session-layout.ts";
 
 const TEST_SESSION = "test-session";
 

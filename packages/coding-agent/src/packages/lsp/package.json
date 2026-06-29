@@ -1,0 +1,8 @@
+{
+	"name": "@tsuuanmi/pi-bundled-lsp",
+	"private": true,
+	"type": "module",
+	"pi": {
+		"extensions": ["extensions/lsp.ts"]
+	}
+}

@@ -2,7 +2,7 @@
 
 # Pi Packages
 
-Pi packages bundle extensions, skills, prompt templates, and themes so you can share them through npm or git. A package can declare resources in `package.json` under the `pi` key, or use conventional directories.
+Pi packages bundle extensions, skills, prompt templates, themes, and pre-session commands so you can share them through npm or git. A package can declare resources in `package.json` under the `pi` key, or use conventional directories.
 
 ## Table of Contents
 
@@ -41,7 +41,7 @@ By default, `install` and `remove` write to user settings (`~/.pi/agent/settings
 
 ## Package Sources
 
-Pi accepts three source types in settings and `pi install`.
+Pi accepts package sources in settings and `pi install`. It also provides reserved first-party `pi:` sources as effective defaults: `pi:workflows`, `pi:lsp`, and `pi:mcp`. These bundled sources resolve through the package host like normal package sources and can be listed, updated, configured, and filtered. Add an explicit object entry for the same source to filter it; an empty resource filter such as `"extensions": []` disables all resources of that type.
 
 ### npm
 
@@ -115,7 +115,8 @@ Add a `pi` manifest to `package.json` or use conventional directories. Include t
     "extensions": ["./extensions"],
     "skills": ["./skills"],
     "prompts": ["./prompts"],
-    "themes": ["./themes"]
+    "themes": ["./themes"],
+    "commands": ["./commands"]
   }
 }
 ```
@@ -153,6 +154,7 @@ If no `pi` manifest is present, pi auto-discovers resources from these directori
 - `skills/` recursively finds `SKILL.md` folders and loads top-level `.md` files as skills
 - `prompts/` loads `.md` files
 - `themes/` loads `.json` files
+- `commands/` loads `.ts`, `.js`, `.mjs`, and `.cjs` files as pre-session package commands
 
 ## Dependencies
 
@@ -190,7 +192,8 @@ Filter what a package loads using the object form in settings:
       "extensions": ["extensions/*.ts", "!extensions/legacy.ts"],
       "skills": [],
       "prompts": ["prompts/review.md"],
-      "themes": ["+themes/legacy.json"]
+      "themes": ["+themes/legacy.json"],
+      "commands": []
     }
   ]
 }
@@ -207,7 +210,7 @@ Filter what a package loads using the object form in settings:
 
 ## Enable and Disable Resources
 
-Use `pi config` to enable or disable extensions, skills, prompt templates, and themes from installed packages and local directories. Works for both global (`~/.pi/agent`) and project (`.pi/`) scopes.
+Use `pi config` to enable or disable extensions, skills, prompt templates, themes, and commands from installed packages, bundled `pi:` sources, and local directories. Works for both global (`~/.pi/agent`) and project (`.pi/`) scopes.
 
 ## Scope and Deduplication
 

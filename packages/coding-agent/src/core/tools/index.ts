@@ -1,4 +1,3 @@
-export { createLspTool, createLspToolDefinition, type LspToolDetails, type LspToolInput } from "../lsp/lsp-tool.ts";
 export {
 	type BashOperations,
 	type BashSpawnContext,
@@ -70,7 +69,6 @@ export {
 
 import type { AgentTool } from "@tsuuanmi/pi-agent-core";
 import type { ToolDefinition } from "../../api/types.ts";
-import { createLspTool, createLspToolDefinition } from "../lsp/lsp-tool.ts";
 import { type BashToolOptions, createBashTool, createBashToolDefinition } from "./bash.ts";
 import { createEditTool, createEditToolDefinition, type EditToolOptions } from "./edit.ts";
 import { createFindTool, createFindToolDefinition, type FindToolOptions } from "./find.ts";
@@ -81,7 +79,7 @@ import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } fro
 
 export type Tool = AgentTool<any>;
 export type ToolDef = ToolDefinition<any, any>;
-export type ToolName = "read" | "bash" | "edit" | "write" | "grep" | "find" | "ls" | "lsp";
+export type ToolName = "read" | "bash" | "edit" | "write" | "grep" | "find" | "ls";
 export interface ToolsOptions {
 	read?: ReadToolOptions;
 	bash?: BashToolOptions;
@@ -101,7 +99,6 @@ export function createAllToolDefinitions(cwd: string, options?: ToolsOptions): R
 		grep: createGrepToolDefinition(cwd, options?.grep),
 		find: createFindToolDefinition(cwd, options?.find),
 		ls: createLsToolDefinition(cwd, options?.ls),
-		lsp: createLspToolDefinition(cwd),
 	};
 }
 
@@ -111,7 +108,6 @@ export function createCodingTools(cwd: string, options?: ToolsOptions): Tool[] {
 		createBashTool(cwd, options?.bash),
 		createEditTool(cwd, options?.edit),
 		createWriteTool(cwd, options?.write),
-		createLspTool(cwd),
 	];
 }
 

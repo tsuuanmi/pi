@@ -9,11 +9,17 @@ import {
 	finalizeDeepInterviewSpecState,
 	planDeepInterviewQuestion,
 	readDeepInterviewStateCompact,
-} from "../../../src/workflows/deep-interview/deep-interview-runtime.ts";
-import { normalizeDeepInterviewEnvelope } from "../../../src/workflows/deep-interview/deep-interview-state.ts";
-import { formatWorkflowHudLine, readWorkflowActiveState } from "../../../src/workflows/shared/active-state.ts";
-import { readWorkflowState, writeWorkflowState } from "../../../src/workflows/shared/workflow-state.ts";
-import workflowsExtension from "../../../src/workflows/workflows-extension.ts";
+} from "../../../src/packages/workflows/runtime/deep-interview/deep-interview-runtime.ts";
+import { normalizeDeepInterviewEnvelope } from "../../../src/packages/workflows/runtime/deep-interview/deep-interview-state.ts";
+import {
+	formatWorkflowHudLine,
+	readWorkflowActiveState,
+} from "../../../src/packages/workflows/runtime/shared/active-state.ts";
+import {
+	readWorkflowState,
+	writeWorkflowState,
+} from "../../../src/packages/workflows/runtime/shared/workflow-state.ts";
+import workflowsExtension from "../../../src/packages/workflows/runtime/workflows-extension.ts";
 
 const TEST_SESSION = "test-session-id";
 

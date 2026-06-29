@@ -42,7 +42,8 @@ interface PackageManagerInternals {
 	):
 		| { type: "npm"; spec: string; name: string; pinned: boolean }
 		| { type: "git"; repo: string; host: string; path: string; pinned: boolean; ref?: string }
-		| { type: "local"; path: string };
+		| { type: "local"; path: string }
+		| { type: "bundled"; name: "workflows" | "lsp" | "mcp"; path: string };
 	getNpmInstallPath(
 		source: { type: "npm"; spec: string; name: string; pinned: boolean },
 		scope: "user" | "project" | "temporary",
@@ -105,14 +106,26 @@ describe("DefaultPackageManager", () => {
 	});
 
 	describe("resolve", () => {
-		it("should return no package-sourced paths when no sources configured", async () => {
+		it("should include bundled first-party package defaults when no sources configured", async () => {
 			const result = await packageManager.resolve();
-			expect(result.extensions).toEqual([]);
+			expect(result.extensions.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
+			expect(result.extensions.some((r) => r.metadata.source === "pi:lsp" && r.enabled)).toBe(true);
+			expect(result.extensions.some((r) => r.metadata.source === "pi:mcp" && r.enabled)).toBe(true);
+			expect(result.commands.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
+			expect(result.commands.some((r) => r.metadata.source === "pi:mcp" && r.enabled)).toBe(true);
 			expect(result.prompts).toEqual([]);
 			expect(result.themes).toEqual([]);
-			expect(result.skills.every((r) => r.metadata.source === "auto" && r.metadata.origin === "top-level")).toBe(
+			expect(result.skills.every((r) => r.metadata.source === "auto" || r.metadata.source.startsWith("pi:"))).toBe(
 				true,
 			);
+		});
+
+		it("should disable bundled package resources with empty filters", async () => {
+			settingsManager.setPackages([{ source: "pi:lsp", extensions: [] }]);
+
+			const result = await packageManager.resolve();
+			expect(result.extensions.some((r) => r.metadata.source === "pi:lsp" && r.enabled)).toBe(false);
+			expect(result.extensions.some((r) => r.metadata.source === "pi:lsp" && !r.enabled)).toBe(true);
 		});
 
 		it("should resolve local extension paths from settings", async () => {
@@ -226,10 +239,12 @@ Content`,
 				symlinkSync(sharedThemesDir, join(tempDir, ".pi", "themes"), "dir");
 
 				const result = await packageManager.resolve();
+				const autoExtensions = result.extensions.filter((r) => r.metadata.source === "auto");
+				const autoSkills = result.skills.filter((r) => r.metadata.source === "auto");
 
 				expect({
-					extensions: result.extensions.length,
-					skills: result.skills.length,
+					extensions: autoExtensions.length,
+					skills: autoSkills.length,
 					prompts: result.prompts.length,
 					themes: result.themes.length,
 				}).toEqual({
@@ -241,8 +256,8 @@ Content`,
 
 				// Project auto-discovered has higher precedence than user auto-discovered,
 				// so the surviving entry should be scoped to project.
-				expect(result.extensions[0].metadata.scope).toBe("project");
-				expect(result.skills[0].metadata.scope).toBe("project");
+				expect(autoExtensions[0].metadata.scope).toBe("project");
+				expect(autoSkills[0].metadata.scope).toBe("project");
 				expect(result.prompts[0].metadata.scope).toBe("project");
 				expect(result.themes[0].metadata.scope).toBe("project");
 			} finally {
@@ -2290,7 +2305,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 
 			const result = await packageManager.resolve();
 			const allResources = [...result.extensions, ...result.skills, ...result.prompts, ...result.themes];
-			expect(allResources.some((r) => r.metadata.origin === "package")).toBe(false);
+			expect(allResources.some((r) => r.metadata.source === "npm:missing-package")).toBe(false);
 			expect(installParsedSourceSpy).not.toHaveBeenCalled();
 		});
 

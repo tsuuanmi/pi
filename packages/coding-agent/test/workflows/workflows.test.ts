@@ -18,8 +18,8 @@ import {
 	readExistingStateForMutation,
 	readFileOrLiteral,
 	writeTextArtifact,
-} from "../../src/workflows/shared/state-writer.ts";
-import { readWorkflowState, writeWorkflowState } from "../../src/workflows/shared/workflow-state.ts";
+} from "../../src/packages/workflows/runtime/shared/state-writer.ts";
+import { readWorkflowState, writeWorkflowState } from "../../src/packages/workflows/runtime/shared/workflow-state.ts";
 
 const sessionId = "test-session-id";
 

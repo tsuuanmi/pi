@@ -4,12 +4,12 @@ import type { AutocompleteItem, Component, KeyId } from "@tsuuanmi/pi-tui";
 import type { TSchema } from "typebox";
 import type { EventBus } from "../core/events/event-bus.ts";
 import type { ExecOptions, ExecResult } from "../core/exec/exec.ts";
-import type { MCPServerInfo } from "../core/mcp/types.ts";
 import type { CustomMessage } from "../core/messages/messages.ts";
 import type { SourceInfo } from "../core/resources/source-info.ts";
 import type { SessionManager } from "../core/session-manager/session-manager.ts";
 import type { SlashCommandInfo } from "../core/skills/slash-commands.ts";
 import type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";
+import type { MCPServerInfo } from "../packages/mcp/runtime/types.ts";
 import type { Theme } from "../theme/theme.ts";
 import type {
 	CompactOptions,
@@ -160,6 +160,15 @@ export interface ExtensionAPI {
 	registerTool<TParams extends TSchema = TSchema, TDetails = unknown, TState = any>(
 		tool: ToolDefinition<TParams, TDetails, TState>,
 	): void;
+
+	/** Unregister a previously registered tool by name. */
+	unregisterTool(name: string): void;
+
+	/** Refresh the host tool registry after dynamic tool changes. */
+	refreshTools(options?: { includeAllExtensionTools?: boolean }): void;
+
+	/** Register a provider for runtime MCP server status used by host UI/context APIs. */
+	registerMcpServerInfoProvider(provider: () => MCPServerInfo[]): () => void;
 
 	// =========================================================================
 	// Command, Shortcut, Flag Registration
@@ -392,7 +401,7 @@ export type GetCommandsHandler = () => SlashCommandInfo[];
 
 export type SetActiveToolsHandler = (toolNames: string[]) => void;
 
-export type RefreshToolsHandler = () => void;
+export type RefreshToolsHandler = (options?: { includeAllExtensionTools?: boolean }) => void;
 
 export type SetModelHandler = (model: Model<any>) => Promise<boolean>;
 
@@ -410,6 +419,7 @@ export interface ExtensionRuntimeState {
 	flagValues: Map<string, boolean | string>;
 	/** Provider registrations queued during extension loading, processed when runner binds */
 	pendingProviderRegistrations: Array<{ name: string; config: ProviderConfig; extensionPath: string }>;
+	mcpServerInfoProviders: Set<() => MCPServerInfo[]>;
 	/** Throws when this extension instance is stale after runtime replacement. */
 	assertActive: () => void;
 	/** Marks this extension instance as stale after runtime replacement or reload. */

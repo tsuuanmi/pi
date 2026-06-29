@@ -2,9 +2,9 @@ import { chmod, mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { AuditEntry } from "../../../src/workflows/shared/audit-log.ts";
-import { auditLogPath } from "../../../src/workflows/shared/paths.ts";
-import { writeWorkflowState } from "../../../src/workflows/shared/workflow-state.ts";
+import type { AuditEntry } from "../../../src/packages/workflows/runtime/shared/audit-log.ts";
+import { auditLogPath } from "../../../src/packages/workflows/runtime/shared/paths.ts";
+import { writeWorkflowState } from "../../../src/packages/workflows/runtime/shared/workflow-state.ts";
 
 const sessionId = "test-session-id";
 

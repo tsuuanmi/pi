@@ -8,12 +8,12 @@ import type {
 	StatusLineSettings,
 } from "../../../../core/settings/settings-manager.ts";
 import type { ReadonlyFooterDataProvider } from "../../../../core/usage/footer-data-provider.ts";
-import { theme } from "../../../../theme/theme.ts";
 import {
 	collapsePlanningPipeline,
 	readWorkflowActiveState,
 	type WorkflowActiveEntry,
-} from "../../../../workflows/shared/active-state.ts";
+} from "../../../../packages/workflows/runtime/shared/active-state.ts";
+import { theme } from "../../../../theme/theme.ts";
 import { renderSkillHudBar } from "../skill-hud/render.ts";
 import { type GitStatusSummary, runGitStatusPorcelain } from "./git-utils.ts";
 import { getPreset } from "./presets.ts";

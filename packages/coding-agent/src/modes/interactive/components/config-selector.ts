@@ -22,13 +22,14 @@ import { theme } from "../../../theme/theme.ts";
 import { rawKeyHint } from "../../../ui/rendering/keybinding-hints.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
 
-type ResourceType = "extensions" | "skills" | "prompts" | "themes";
+type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands";
 
 const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
 	extensions: "Extensions",
 	skills: "Skills",
 	prompts: "Prompts",
 	themes: "Themes",
+	commands: "Commands",
 };
 
 interface ResourceItem {
@@ -147,6 +148,7 @@ function buildGroups(resolved: ResolvedPaths, agentDir: string): ResourceGroup[]
 	addToGroup(resolved.skills, "skills");
 	addToGroup(resolved.prompts, "prompts");
 	addToGroup(resolved.themes, "themes");
+	addToGroup(resolved.commands, "commands");
 
 	// Sort groups: packages first, then top-level; user before project
 	const groups = Array.from(groupMap.values());
@@ -161,7 +163,7 @@ function buildGroups(resolved: ResolvedPaths, agentDir: string): ResourceGroup[]
 	});
 
 	// Sort subgroups within each group by type order, and items by name
-	const typeOrder: Record<ResourceType, number> = { extensions: 0, skills: 1, prompts: 2, themes: 3 };
+	const typeOrder: Record<ResourceType, number> = { extensions: 0, skills: 1, prompts: 2, themes: 3, commands: 4 };
 	for (const group of groups) {
 		group.subgroups.sort((a, b) => typeOrder[a.type] - typeOrder[b.type]);
 		for (const subgroup of group.subgroups) {

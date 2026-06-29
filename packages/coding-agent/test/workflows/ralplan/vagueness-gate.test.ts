@@ -3,7 +3,7 @@ import {
 	classifyPromptSpecificity,
 	maybeRedirectVagueExecution,
 	VAGUENESS_WORD_COUNT_THRESHOLD,
-} from "../../../src/workflows/ralplan/vagueness-gate.ts";
+} from "../../../src/packages/workflows/runtime/ralplan/vagueness-gate.ts";
 
 describe("vagueness-gate", () => {
 	describe("classifyPromptSpecificity", () => {

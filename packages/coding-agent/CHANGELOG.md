@@ -20,6 +20,7 @@
 
 ### Added
 
+- Added reserved bundled package sources `pi:workflows`, `pi:lsp`, and `pi:mcp`, plus filterable package `commands` resources and generic pre-session package-command dispatch for first-party `pi workflow` and `pi mcp` commands.
 - Added default-on retained-context optimization for future model replay: removable readable thinking blocks are stripped, oversized retained bash output is compressed with a head/tail marker, and inactive workflow-owned tools are pruned from model-visible tool schemas. Opt out with `retainedContext.stripThinking`, `retainedContext.compressBashOutput`, and the `workflows.pruneInactiveTools` extension flag.
 - Added Tier 2 retained-context tool-result optimization: provider-bound replay can dedupe content-identical repeated `read` results and summarize old unprotected `read`, `bash`, and `edit` results with deterministic summary records. Opt out with `retainedContext.dedupeReadResults` and `retainedContext.summarizeStaleToolResults`; tune stale summaries with `retainedContext.toolResultMaxBytes`.
 - Added default-on redacted API usage JSONL sidecar logging per completed LLM provider invocation, with `apiUsageLogging.enabled` opt-out.

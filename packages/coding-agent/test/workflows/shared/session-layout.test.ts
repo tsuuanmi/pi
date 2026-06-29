@@ -16,13 +16,13 @@ import {
 	transactionJournalPath,
 	workflowActiveStatePath,
 	workflowStatePath,
-} from "../../../src/workflows/shared/session-layout.ts";
+} from "../../../src/packages/workflows/runtime/shared/session-layout.ts";
 import {
 	detectLatestSession,
 	resolvePiSessionForRead,
 	resolvePiSessionForWrite,
 	writeSessionActivityMarker,
-} from "../../../src/workflows/shared/session-resolution.ts";
+} from "../../../src/packages/workflows/runtime/shared/session-resolution.ts";
 
 describe("session-layout", () => {
 	describe("encodeSessionSegment / decodeSessionSegment", () => {

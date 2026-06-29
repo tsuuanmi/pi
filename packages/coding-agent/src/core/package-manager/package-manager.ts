@@ -2,6 +2,7 @@ import type { ChildProcess, ChildProcessByStdio } from "node:child_process";
 import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
+import { fileURLToPath } from "node:url";
 
 function getEnv(): NodeJS.ProcessEnv {
 	if (process.platform !== "linux" || Object.keys(process.env).length > 0) {
@@ -71,6 +72,7 @@ export interface ResolvedPaths {
 	skills: ResolvedResource[];
 	prompts: ResolvedResource[];
 	themes: ResolvedResource[];
+	commands: ResolvedResource[];
 }
 
 export type MissingSourceAction = "install" | "skip" | "error";
@@ -138,7 +140,13 @@ type LocalSource = {
 	path: string;
 };
 
-type ParsedSource = NpmSource | GitSource | LocalSource;
+type BundledSource = {
+	type: "bundled";
+	name: BundledPackageName;
+	path: string;
+};
+
+type ParsedSource = NpmSource | GitSource | LocalSource | BundledSource;
 
 type InstalledSourceScope = Exclude<SourceScope, "temporary">;
 
@@ -160,6 +168,7 @@ interface PiManifest {
 	skills?: string[];
 	prompts?: string[];
 	themes?: string[];
+	commands?: string[];
 }
 
 interface ResourceAccumulator {
@@ -167,6 +176,7 @@ interface ResourceAccumulator {
 	skills: Map<string, { metadata: PathMetadata; enabled: boolean }>;
 	prompts: Map<string, { metadata: PathMetadata; enabled: boolean }>;
 	themes: Map<string, { metadata: PathMetadata; enabled: boolean }>;
+	commands: Map<string, { metadata: PathMetadata; enabled: boolean }>;
 }
 
 /**
@@ -192,17 +202,29 @@ interface PackageFilter {
 	skills?: string[];
 	prompts?: string[];
 	themes?: string[];
+	commands?: string[];
 }
 
-type ResourceType = "extensions" | "skills" | "prompts" | "themes";
+type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands";
 
-const RESOURCE_TYPES: ResourceType[] = ["extensions", "skills", "prompts", "themes"];
+type BundledPackageName = "workflows" | "lsp" | "mcp";
+
+const RESOURCE_TYPES: ResourceType[] = ["extensions", "skills", "prompts", "themes", "commands"];
+
+const BUNDLED_PACKAGE_SOURCES: Record<string, BundledPackageName> = {
+	"pi:workflows": "workflows",
+	"pi:lsp": "lsp",
+	"pi:mcp": "mcp",
+};
+
+const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows", "pi:lsp", "pi:mcp"];
 
 const FILE_PATTERNS: Record<ResourceType, RegExp> = {
 	extensions: /\.(ts|js)$/,
 	skills: /\.md$/,
 	prompts: /\.md$/,
 	themes: /\.json$/,
+	commands: /\.(ts|js|mjs|cjs)$/,
 };
 
 const IGNORE_FILE_NAMES = [".gitignore", ".ignore", ".fdignore"];
@@ -222,6 +244,10 @@ function getExtensionTempFolder(agentDir: string): string {
 	mkdirSync(tempFolder, { recursive: true, mode: 0o700 });
 	chmodSync(tempFolder, 0o700);
 	return tempFolder;
+}
+
+function getBundledPackageRoot(name: BundledPackageName): string {
+	return resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "packages", name);
 }
 
 function prefixIgnorePattern(line: string, prefix: string): string | null {
@@ -860,6 +886,9 @@ export class DefaultPackageManager implements PackageManager {
 			const path = this.resolvePathFromBase(parsed.path, baseDir);
 			return existsSync(path) ? path : undefined;
 		}
+		if (parsed.type === "bundled") {
+			return existsSync(parsed.path) ? parsed.path : undefined;
+		}
 		return undefined;
 	}
 
@@ -889,12 +918,17 @@ export class DefaultPackageManager implements PackageManager {
 		const globalSettings = this.settingsManager.getGlobalSettings();
 		const projectSettings = this.settingsManager.getProjectSettings();
 
-		// Collect all packages with scope (project first so cwd resources win collisions)
+		// Collect all packages with scope (project first so cwd resources win collisions).
+		// Bundled first-party packages are effective defaults; explicit settings entries
+		// for the same pi: source replace the default and may disable resources with [] filters.
 		const allPackages: Array<{ pkg: PackageSource; scope: SourceScope }> = [];
 		for (const pkg of projectSettings.packages ?? []) {
 			allPackages.push({ pkg, scope: "project" });
 		}
 		for (const pkg of globalSettings.packages ?? []) {
+			allPackages.push({ pkg, scope: "user" });
+		}
+		for (const pkg of BUNDLED_DEFAULT_PACKAGES) {
 			allPackages.push({ pkg, scope: "user" });
 		}
 
@@ -953,9 +987,13 @@ export class DefaultPackageManager implements PackageManager {
 		const globalSettings = this.settingsManager.getGlobalSettings();
 		const projectSettings = this.settingsManager.getProjectSettings();
 		const configuredPackages: ConfiguredPackage[] = [];
+		const seen = new Set<string>();
+		const configuredSources = new Set<string>();
 
 		for (const pkg of globalSettings.packages ?? []) {
 			const source = typeof pkg === "string" ? pkg : pkg.source;
+			seen.add(this.getPackageIdentity(source, "user"));
+			configuredSources.add(source.trim());
 			configuredPackages.push({
 				source,
 				scope: "user",
@@ -966,11 +1004,24 @@ export class DefaultPackageManager implements PackageManager {
 
 		for (const pkg of projectSettings.packages ?? []) {
 			const source = typeof pkg === "string" ? pkg : pkg.source;
+			seen.add(this.getPackageIdentity(source, "project"));
+			configuredSources.add(source.trim());
 			configuredPackages.push({
 				source,
 				scope: "project",
 				filtered: typeof pkg === "object",
 				installedPath: this.getInstalledPath(source, "project"),
+			});
+		}
+
+		for (const pkg of BUNDLED_DEFAULT_PACKAGES) {
+			const source = typeof pkg === "string" ? pkg : pkg.source;
+			if (seen.has(this.getPackageIdentity(source, "user")) || configuredSources.has(source.trim())) continue;
+			configuredPackages.push({
+				source,
+				scope: "user",
+				filtered: false,
+				installedPath: this.getInstalledPath(source, "user"),
 			});
 		}
 
@@ -982,6 +1033,9 @@ export class DefaultPackageManager implements PackageManager {
 		const scope: SourceScope = options?.local ? "project" : "user";
 		this.assertProjectTrustedForScope(scope);
 		await this.withProgress("install", source, `Installing ${source}...`, async () => {
+			if (parsed.type === "bundled") {
+				return;
+			}
 			if (parsed.type === "npm") {
 				await this.installNpm(parsed, scope, false);
 				return;
@@ -1011,6 +1065,9 @@ export class DefaultPackageManager implements PackageManager {
 		const scope: SourceScope = options?.local ? "project" : "user";
 		this.assertProjectTrustedForScope(scope);
 		await this.withProgress("remove", source, `Removing ${source}...`, async () => {
+			if (parsed.type === "bundled") {
+				return;
+			}
 			if (parsed.type === "npm") {
 				await this.uninstallNpm(parsed, scope);
 				return;
@@ -1049,6 +1106,12 @@ export class DefaultPackageManager implements PackageManager {
 			if (identity && this.getPackageIdentity(sourceStr, "project") !== identity) continue;
 			matched = true;
 			updateSources.push({ source: sourceStr, scope: "project" });
+		}
+		for (const pkg of BUNDLED_DEFAULT_PACKAGES) {
+			const sourceStr = typeof pkg === "string" ? pkg : pkg.source;
+			if (identity && this.getPackageIdentity(sourceStr, "user") !== identity) continue;
+			matched = true;
+			updateSources.push({ source: sourceStr, scope: "user" });
 		}
 
 		if (source && !matched) {
@@ -1182,7 +1245,7 @@ export class DefaultPackageManager implements PackageManager {
 			.map((entry) => async (): Promise<PackageUpdate | undefined> => {
 				const source = typeof entry.pkg === "string" ? entry.pkg : entry.pkg.source;
 				const parsed = this.parseSource(source);
-				if (parsed.type === "local" || parsed.pinned) {
+				if (parsed.type === "local" || parsed.type === "bundled" || parsed.pinned) {
 					return undefined;
 				}
 
@@ -1203,6 +1266,9 @@ export class DefaultPackageManager implements PackageManager {
 					};
 				}
 
+				if (parsed.type !== "git") {
+					return undefined;
+				}
 				const installedPath = this.getGitInstallPath(parsed, entry.scope);
 				if (!existsSync(installedPath)) {
 					return undefined;
@@ -1233,6 +1299,12 @@ export class DefaultPackageManager implements PackageManager {
 			const filter = typeof pkg === "object" ? pkg : undefined;
 			const parsed = this.parseSource(sourceStr);
 			const metadata: PathMetadata = { source: sourceStr, scope, origin: "package" };
+
+			if (parsed.type === "bundled") {
+				metadata.baseDir = parsed.path;
+				this.collectPackageResources(parsed.path, accumulator, filter, metadata);
+				continue;
+			}
 
 			if (parsed.type === "local") {
 				const baseDir = this.getBaseDirForScope(scope);
@@ -1337,6 +1409,9 @@ export class DefaultPackageManager implements PackageManager {
 		if (parsed.type === "git") {
 			return `git:${parsed.host}/${parsed.path}`;
 		}
+		if (parsed.type === "bundled") {
+			return `pi:${parsed.name}`;
+		}
 		return `local:${this.resolvePath(parsed.path)}`;
 	}
 
@@ -1347,6 +1422,9 @@ export class DefaultPackageManager implements PackageManager {
 		}
 		if (parsed.type === "git") {
 			return `git:${parsed.host}/${parsed.path}`;
+		}
+		if (parsed.type === "bundled") {
+			return `pi:${parsed.name}`;
 		}
 		const baseDir = this.getBaseDirForScope(scope);
 		return `local:${this.resolvePathFromBase(parsed.path, baseDir)}`;
@@ -1403,6 +1481,11 @@ export class DefaultPackageManager implements PackageManager {
 	}
 
 	private parseSource(source: string): ParsedSource {
+		const bundledName = BUNDLED_PACKAGE_SOURCES[source.trim()];
+		if (bundledName) {
+			return { type: "bundled", name: bundledName, path: getBundledPackageRoot(bundledName) };
+		}
+
 		if (source.startsWith("npm:")) {
 			const spec = source.slice("npm:".length).trim();
 			const { name, version } = this.parseNpmSpec(spec);
@@ -2269,12 +2352,14 @@ export class DefaultPackageManager implements PackageManager {
 			skills: (globalSettings.skills ?? []) as string[],
 			prompts: (globalSettings.prompts ?? []) as string[],
 			themes: (globalSettings.themes ?? []) as string[],
+			commands: [] as string[],
 		};
 		const projectOverrides = {
 			extensions: (projectSettings.extensions ?? []) as string[],
 			skills: (projectSettings.skills ?? []) as string[],
 			prompts: (projectSettings.prompts ?? []) as string[],
 			themes: (projectSettings.themes ?? []) as string[],
+			commands: [] as string[],
 		};
 
 		const userDirs = {
@@ -2464,6 +2549,8 @@ export class DefaultPackageManager implements PackageManager {
 				return accumulator.prompts;
 			case "themes":
 				return accumulator.themes;
+			case "commands":
+				return accumulator.commands;
 			default:
 				throw new Error(`Unknown resource type: ${resourceType}`);
 		}
@@ -2487,6 +2574,7 @@ export class DefaultPackageManager implements PackageManager {
 			skills: new Map(),
 			prompts: new Map(),
 			themes: new Map(),
+			commands: new Map(),
 		};
 	}
 
@@ -2515,6 +2603,7 @@ export class DefaultPackageManager implements PackageManager {
 			skills: mapToResolved(accumulator.skills),
 			prompts: mapToResolved(accumulator.prompts),
 			themes: mapToResolved(accumulator.themes),
+			commands: mapToResolved(accumulator.commands),
 		};
 	}
 

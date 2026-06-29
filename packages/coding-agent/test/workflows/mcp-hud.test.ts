@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ExtensionAPI, ExtensionContext } from "../../src/api/types.ts";
-import workflowsExtension from "../../src/workflows/workflows-extension.ts";
+import workflowsExtension from "../../src/packages/workflows/runtime/workflows-extension.ts";
 
 interface CapturedHandlers {
 	sessionStart?: (event: { type: "session_start"; reason: "startup" }, ctx: ExtensionContext) => Promise<void> | void;

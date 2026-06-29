@@ -2,10 +2,10 @@ import { mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { handoffWorkflow } from "../../../src/workflows/shared/handoff.ts";
-import { transactionJournalPath } from "../../../src/workflows/shared/paths.ts";
-import type { WorkflowTransactionJournal } from "../../../src/workflows/shared/transaction-journal.ts";
-import { writeWorkflowState } from "../../../src/workflows/shared/workflow-state.ts";
+import { handoffWorkflow } from "../../../src/packages/workflows/runtime/shared/handoff.ts";
+import { transactionJournalPath } from "../../../src/packages/workflows/runtime/shared/paths.ts";
+import type { WorkflowTransactionJournal } from "../../../src/packages/workflows/runtime/shared/transaction-journal.ts";
+import { writeWorkflowState } from "../../../src/packages/workflows/runtime/shared/workflow-state.ts";
 
 const sessionId = "test-session-id";
 

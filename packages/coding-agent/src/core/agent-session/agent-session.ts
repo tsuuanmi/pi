@@ -26,7 +26,6 @@ import {
 	resetApiProviders,
 	streamSimple,
 } from "@tsuuanmi/pi-ai";
-import type { MCPServerInfo } from "../../api/types.ts";
 import { stripFrontmatter } from "../../utils/fs/frontmatter.ts";
 import { resolvePath } from "../../utils/fs/paths.ts";
 import { sleep } from "../../utils/system/sleep.ts";
@@ -72,7 +71,6 @@ import {
 	wrapRegisteredTools,
 } from "../extensions/index.ts";
 import { emitSessionShutdownEvent } from "../extensions/runner.ts";
-import { MCPManager } from "../mcp/manager.ts";
 import type { BashExecutionMessage, CustomMessage } from "../messages/messages.ts";
 import type { ModelRegistry } from "../model/model-registry.ts";
 import { createSyntheticSourceInfo, type SourceInfo } from "../resources/source-info.ts";
@@ -297,8 +295,6 @@ export class AgentSession {
 
 	private _resourceLoader: ResourceLoader;
 	private _customTools: ToolDefinition[];
-	private _mcpManager?: MCPManager;
-	private _mcpToolDefinitions: Map<string, ToolDefinition> = new Map();
 	private _baseToolDefinitions: Map<string, ToolDefinition> = new Map();
 	private _cwd: string;
 	private _extensionRunnerRef?: { current?: ExtensionRunner };
@@ -764,7 +760,6 @@ export class AgentSession {
 		this._extensionRunner.invalidate(
 			"This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession(), ctx.fork(), ctx.switchSession(), or ctx.reload(). For newSession, fork, and switchSession, move post-replacement work into withSession and use the ctx passed to withSession. For reload, do not use the old ctx after await ctx.reload().",
 		);
-		void this._stopMcpRuntime();
 		this._disconnectFromAgent();
 		this._eventListeners = [];
 		cleanupSessionResources(this.sessionId);
@@ -827,11 +822,6 @@ export class AgentSession {
 
 	getToolDefinition(name: string): ToolDefinition | undefined {
 		return this._toolDefinitions.get(name)?.definition;
-	}
-
-	/** Current MCP server status, if MCP runtime has been initialized. */
-	getMcpServerInfos(): MCPServerInfo[] {
-		return this._mcpManager?.getServerInfos() ?? [];
 	}
 
 	/**
@@ -2088,32 +2078,6 @@ export class AgentSession {
 		return this.settingsManager.getCompactionEnabled();
 	}
 
-	private async _initializeMcpRuntime(): Promise<void> {
-		if (this._mcpManager) return;
-		const manager = new MCPManager({
-			cwd: this._cwd,
-			isProjectTrusted: this.settingsManager.isProjectTrusted(),
-		});
-		manager.onToolsChanged((added, removed) => {
-			for (const name of removed) {
-				this._mcpToolDefinitions.delete(name);
-			}
-			for (const definition of added) {
-				this._mcpToolDefinitions.set(definition.name, definition);
-			}
-			this._refreshToolRegistry({ includeAllExtensionTools: true });
-		});
-		this._mcpManager = manager;
-		await manager.initialize();
-	}
-
-	private async _stopMcpRuntime(): Promise<void> {
-		const manager = this._mcpManager;
-		this._mcpManager = undefined;
-		this._mcpToolDefinitions.clear();
-		if (manager) await manager.stopAll();
-	}
-
 	async bindExtensions(bindings: ExtensionBindings): Promise<void> {
 		if (bindings.uiContext !== undefined) {
 			this._extensionUIContext = bindings.uiContext;
@@ -2135,7 +2099,6 @@ export class AgentSession {
 		}
 
 		this._applyExtensionBindings(this._extensionRunner);
-		await this._initializeMcpRuntime();
 		await this._extensionRunner.emit(this._sessionStartEvent);
 		await this.extendResourcesFromExtensions(this._sessionStartEvent.reason === "reload" ? "reload" : "startup");
 	}
@@ -2278,7 +2241,7 @@ export class AgentSession {
 				getActiveTools: () => this.getActiveToolNames(),
 				getAllTools: () => this.getAllTools(),
 				setActiveTools: (toolNames) => this.setActiveToolsByName(toolNames),
-				refreshTools: () => this._refreshToolRegistry(),
+				refreshTools: (options) => this._refreshToolRegistry(options),
 				getCommands,
 				setModel: async (model) => {
 					if (!this.modelRegistry.hasConfiguredAuth(model)) return false;
@@ -2305,7 +2268,7 @@ export class AgentSession {
 					this._extensionShutdownHandler?.();
 				},
 				getContextUsage: () => this.getContextUsage(),
-				getMcpServerInfos: () => this.getMcpServerInfos(),
+				getMcpServerInfos: () => [],
 				compact: (options) => {
 					void (async () => {
 						try {
@@ -2342,13 +2305,8 @@ export class AgentSession {
 			(!allowedToolNames || allowedToolNames.has(name)) && !excludedToolNames?.has(name);
 
 		const registeredTools = this._extensionRunner.getAllRegisteredTools();
-		const mcpTools = Array.from(this._mcpToolDefinitions.values()).map((definition) => ({
-			definition,
-			sourceInfo: createSyntheticSourceInfo(`<mcp:${definition.name}>`, { source: "mcp" }),
-		}));
 		const allCustomTools = [
 			...registeredTools,
-			...mcpTools,
 			...this._customTools.map((definition) => ({
 				definition,
 				sourceInfo: createSyntheticSourceInfo(`<sdk:${definition.name}>`, { source: "sdk" }),
@@ -2492,14 +2450,12 @@ export class AgentSession {
 		this._installApiUsageLogger();
 		this.syncQueueModesFromSettings();
 		resetApiProviders();
-		await this._stopMcpRuntime();
 		await this._resourceLoader.reload();
 		this._buildRuntime({
 			activeToolNames: this.getActiveToolNames(),
 			flagValues: previousFlagValues,
 			includeAllExtensionTools: true,
 		});
-		await this._initializeMcpRuntime();
 
 		const hasBindings =
 			this._extensionUIContext ||

@@ -2,16 +2,16 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { assert, expect, test } from "vitest";
-import { ultragoalGoalsPath, ultragoalLedgerPath } from "../../../src/workflows/shared/paths.ts";
-import { ultragoalGuard } from "../../../src/workflows/ultragoal/ultragoal-guard.ts";
-import { validateCompletionQualityGate } from "../../../src/workflows/ultragoal/ultragoal-quality-gate.ts";
+import { ultragoalGoalsPath, ultragoalLedgerPath } from "../../../src/packages/workflows/runtime/shared/paths.ts";
+import { ultragoalGuard } from "../../../src/packages/workflows/runtime/ultragoal/ultragoal-guard.ts";
+import { validateCompletionQualityGate } from "../../../src/packages/workflows/runtime/ultragoal/ultragoal-quality-gate.ts";
 import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
 	recordUltragoalBlockerClassification,
 	recordUltragoalReviewBlockers,
 	startNextUltragoalGoal,
-} from "../../../src/workflows/ultragoal/ultragoal-runtime.ts";
+} from "../../../src/packages/workflows/runtime/ultragoal/ultragoal-runtime.ts";
 
 const sessionId = "test-session-id";
 const PASSED = "passed";
@@ -507,11 +507,22 @@ test("plain briefs remain one goal and column-zero @goal delimiters split goals"
 
 test("no deferred Tier 2 tool names are registered or advertised in Ultragoal docs", async () => {
 	const toolsSource = await readFile(
-		join(import.meta.dirname, "..", "..", "..", "src", "workflows", "ultragoal", "ultragoal-tools.ts"),
+		join(
+			import.meta.dirname,
+			"..",
+			"..",
+			"..",
+			"src",
+			"packages",
+			"workflows",
+			"runtime",
+			"ultragoal",
+			"ultragoal-tools.ts",
+		),
 		"utf8",
 	);
 	const skillDoc = await readFile(
-		join(import.meta.dirname, "..", "..", "..", "src", "skills", "ultragoal", "SKILL.md"),
+		join(import.meta.dirname, "..", "..", "..", "src", "packages", "workflows", "skills", "ultragoal", "SKILL.md"),
 		"utf8",
 	);
 	for (const source of [toolsSource, skillDoc]) {
