@@ -70,6 +70,7 @@
 
 ### Fixed
 
+- Fixed stale extension runners from emitting handlers after session replacement or reload, preventing stale context errors on later prompts.
 - Fixed `/model` autocomplete and model selection searches to match provider/model queries regardless of whether the provider or model token is typed first.
 - Fixed the tree navigator to horizontally pan deep entries so the selected item remains readable ([#5830](https://github.com/tsuuanmi/pi/issues/5830)).
 

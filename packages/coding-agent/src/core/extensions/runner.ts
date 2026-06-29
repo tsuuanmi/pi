@@ -529,6 +529,10 @@ export class ExtensionRunner {
 		}
 	}
 
+	private isStale(): boolean {
+		return this.staleMessage !== undefined;
+	}
+
 	private assertActive(): void {
 		if (this.staleMessage) {
 			throw new Error(this.staleMessage);
@@ -547,6 +551,7 @@ export class ExtensionRunner {
 	}
 
 	hasHandlers(eventType: string): boolean {
+		if (this.isStale()) return false;
 		for (const ext of this.extensions) {
 			const handlers = ext.handlers.get(eventType);
 			if (handlers && handlers.length > 0) {
@@ -759,6 +764,7 @@ export class ExtensionRunner {
 	}
 
 	async emit<TEvent extends RunnerEmitEvent>(event: TEvent): Promise<RunnerEmitResult<TEvent>> {
+		if (this.isStale()) return undefined as RunnerEmitResult<TEvent>;
 		const ctx = this.createContext();
 		let result: SessionBeforeEventResult | undefined;
 
@@ -793,6 +799,7 @@ export class ExtensionRunner {
 	}
 
 	async emitMessageEnd(event: MessageEndEvent): Promise<AgentMessage | undefined> {
+		if (this.isStale()) return undefined;
 		const ctx = this.createContext();
 		let currentMessage = event.message;
 		let modified = false;
@@ -835,6 +842,7 @@ export class ExtensionRunner {
 	}
 
 	async emitToolResult(event: ToolResultEvent): Promise<ToolResultEventResult | undefined> {
+		if (this.isStale()) return undefined;
 		const ctx = this.createContext();
 		const currentEvent: ToolResultEvent = { ...event };
 		let modified = false;
@@ -885,6 +893,7 @@ export class ExtensionRunner {
 	}
 
 	async emitToolCall(event: ToolCallEvent): Promise<ToolCallEventResult | undefined> {
+		if (this.isStale()) return undefined;
 		const ctx = this.createContext();
 		let result: ToolCallEventResult | undefined;
 
@@ -908,6 +917,7 @@ export class ExtensionRunner {
 	}
 
 	async emitUserBash(event: UserBashEvent): Promise<UserBashEventResult | undefined> {
+		if (this.isStale()) return undefined;
 		const ctx = this.createContext();
 
 		for (const ext of this.extensions) {
@@ -937,6 +947,7 @@ export class ExtensionRunner {
 	}
 
 	async emitContext(messages: AgentMessage[]): Promise<AgentMessage[]> {
+		if (this.isStale()) return messages;
 		const ctx = this.createContext();
 		let currentMessages = structuredClone(messages);
 
@@ -969,6 +980,7 @@ export class ExtensionRunner {
 	}
 
 	async emitBeforeProviderRequest(payload: unknown): Promise<unknown> {
+		if (this.isStale()) return payload;
 		const ctx = this.createContext();
 		let currentPayload = payload;
 
@@ -1007,6 +1019,7 @@ export class ExtensionRunner {
 		systemPrompt: string,
 		systemPromptOptions: BuildSystemPromptOptions,
 	): Promise<BeforeAgentStartCombinedResult | undefined> {
+		if (this.isStale()) return undefined;
 		let currentSystemPrompt = systemPrompt;
 		let observedRuntimeSystemPrompt = this.getSystemPromptFn?.() ?? systemPrompt;
 		const syncRuntimeSystemPrompt = () => {
@@ -1088,6 +1101,7 @@ export class ExtensionRunner {
 		promptPaths: Array<{ path: string; extensionPath: string }>;
 		themePaths: Array<{ path: string; extensionPath: string }>;
 	}> {
+		if (this.isStale()) return { skillPaths: [], promptPaths: [], themePaths: [] };
 		const ctx = this.createContext();
 		const skillPaths: Array<{ path: string; extensionPath: string }> = [];
 		const promptPaths: Array<{ path: string; extensionPath: string }> = [];
@@ -1134,6 +1148,7 @@ export class ExtensionRunner {
 		source: InputEvent["source"],
 		streamingBehavior?: "steer" | "followUp",
 	): Promise<InputEventResult> {
+		if (this.isStale()) return { action: "continue" };
 		const ctx = this.createContext();
 		let currentText = text;
 
