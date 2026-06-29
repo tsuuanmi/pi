@@ -1008,12 +1008,24 @@ export class ExtensionRunner {
 		systemPromptOptions: BuildSystemPromptOptions,
 	): Promise<BeforeAgentStartCombinedResult | undefined> {
 		let currentSystemPrompt = systemPrompt;
+		let observedRuntimeSystemPrompt = this.getSystemPromptFn?.() ?? systemPrompt;
+		const syncRuntimeSystemPrompt = () => {
+			const runtimeSystemPrompt = this.getSystemPromptFn?.() ?? currentSystemPrompt;
+			if (runtimeSystemPrompt === observedRuntimeSystemPrompt) return;
+			if (currentSystemPrompt === observedRuntimeSystemPrompt) {
+				currentSystemPrompt = runtimeSystemPrompt;
+			} else if (currentSystemPrompt.startsWith(observedRuntimeSystemPrompt)) {
+				currentSystemPrompt = `${runtimeSystemPrompt}${currentSystemPrompt.slice(observedRuntimeSystemPrompt.length)}`;
+			}
+			observedRuntimeSystemPrompt = runtimeSystemPrompt;
+		};
 		const ctx = Object.defineProperties(
 			{},
 			Object.getOwnPropertyDescriptors(this.createContext()),
 		) as ExtensionContext;
 		ctx.getSystemPrompt = () => {
 			this.assertActive();
+			syncRuntimeSystemPrompt();
 			return currentSystemPrompt;
 		};
 		const messages: NonNullable<BeforeAgentStartEventResult["message"]>[] = [];
@@ -1025,6 +1037,7 @@ export class ExtensionRunner {
 
 			for (const handler of handlers) {
 				try {
+					syncRuntimeSystemPrompt();
 					const event: BeforeAgentStartEvent = {
 						type: "before_agent_start",
 						prompt,
@@ -1032,6 +1045,7 @@ export class ExtensionRunner {
 						systemPromptOptions,
 					};
 					const handlerResult = await handler(event, ctx);
+					syncRuntimeSystemPrompt();
 
 					if (handlerResult) {
 						const result = handlerResult as BeforeAgentStartEventResult;

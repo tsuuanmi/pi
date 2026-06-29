@@ -48,6 +48,15 @@ export interface ApiUsageLoggingSettings {
 	enabled?: boolean; // default: true
 }
 
+export interface RetainedContextSettings {
+	stripThinking?: boolean; // default: true
+	compressBashOutput?: boolean; // default: true
+	bashMaxBytes?: number; // default: 16384
+	dedupeReadResults?: boolean; // default: true
+	summarizeStaleToolResults?: boolean; // default: true
+	toolResultMaxBytes?: number; // default: 96000
+}
+
 /**
  * Status line segment identifiers. `thinking` is intentionally not a segment;
  * it is rendered inside `model` via `segmentOptions.model.showThinkingLevel`.
@@ -183,6 +192,7 @@ export interface Settings {
 	markdown?: MarkdownSettings;
 	warnings?: WarningSettings;
 	apiUsageLogging?: ApiUsageLoggingSettings;
+	retainedContext?: RetainedContextSettings;
 	sessionDir?: string; // Custom session storage directory
 	httpProxy?: string; // Proxy URL applied as HTTP_PROXY and HTTPS_PROXY for Pi-managed HTTP clients
 	httpIdleTimeoutMs?: number; // HTTP header/body idle timeout in milliseconds; 0 disables it
@@ -1180,6 +1190,32 @@ export class SettingsManager {
 
 	getApiUsageLoggingEnabled(): boolean {
 		return this.settings.apiUsageLogging?.enabled ?? true;
+	}
+
+	getRetainedContextSettings(): {
+		stripThinking: boolean;
+		compressBashOutput: boolean;
+		bashMaxBytes: number;
+		dedupeReadResults: boolean;
+		summarizeStaleToolResults: boolean;
+		toolResultMaxBytes: number;
+	} {
+		const bashMaxBytes = this.settings.retainedContext?.bashMaxBytes;
+		const toolResultMaxBytes = this.settings.retainedContext?.toolResultMaxBytes;
+		return {
+			stripThinking: this.settings.retainedContext?.stripThinking ?? true,
+			compressBashOutput: this.settings.retainedContext?.compressBashOutput ?? true,
+			bashMaxBytes:
+				typeof bashMaxBytes === "number" && Number.isFinite(bashMaxBytes) && bashMaxBytes > 0
+					? Math.floor(bashMaxBytes)
+					: 16_384,
+			dedupeReadResults: this.settings.retainedContext?.dedupeReadResults ?? true,
+			summarizeStaleToolResults: this.settings.retainedContext?.summarizeStaleToolResults ?? true,
+			toolResultMaxBytes:
+				typeof toolResultMaxBytes === "number" && Number.isFinite(toolResultMaxBytes) && toolResultMaxBytes > 0
+					? Math.floor(toolResultMaxBytes)
+					: 96_000,
+		};
 	}
 
 	setWarnings(warnings: WarningSettings): void {

@@ -80,6 +80,31 @@ See [API Usage Logging](../api-usage/api-usage-logging.md) for schema, privacy, 
 }
 ```
 
+### Retained Context Optimization
+
+Retained-context optimization is replay-only: session files, restored history, UI display, raw tool output, and extension `context` hooks stay raw. Provider-bound replay, including `before_provider_request` payload observers, may see optimized summaries.
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `retainedContext.stripThinking` | boolean | `true` | Strip removable readable thinking blocks from future model replay while preserving signed/redacted/opaque continuity data |
+| `retainedContext.compressBashOutput` | boolean | `true` | Compress oversized retained bash outputs in provider-bound replay only |
+| `retainedContext.bashMaxBytes` | number | `16384` | UTF-8 byte budget for retained bash output compression |
+| `retainedContext.dedupeReadResults` | boolean | `true` | Replace older content-identical duplicate `read` results with deterministic summary records |
+| `retainedContext.summarizeStaleToolResults` | boolean | `true` | Summarize old unprotected non-error `read`, `bash`, and `edit` results when over budget |
+| `retainedContext.toolResultMaxBytes` | number | `96000` | Best-effort budget for unprotected eligible retained tool-result bytes |
+
+Duplicate read summaries require matching normalized path, offset/limit, SHA-256, and byte count. Same-path reads with different output fail open and remain raw for duplicate-dedupe purposes. Current/unconsumed batches, the latest completed batches, and `isError: true` tool results remain raw even if that exceeds the budget.
+
+```json
+{
+  "retainedContext": {
+    "dedupeReadResults": false,
+    "summarizeStaleToolResults": false,
+    "toolResultMaxBytes": 96000
+  }
+}
+```
+
 ### Warnings
 
 | Setting | Type | Default | Description |

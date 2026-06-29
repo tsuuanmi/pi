@@ -28,7 +28,6 @@ coverage/
 .pi_config/
 tui-debug.log
 compaction-results/
-.opencode/
 syntax.jsonl
 out.jsonl
 pi-*.html
@@ -38,3 +37,5 @@ todo.md
 plans/
 .pi/
 collect.sh
+
+temp/

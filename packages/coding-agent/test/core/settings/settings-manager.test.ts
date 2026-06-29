@@ -369,6 +369,58 @@ describe("SettingsManager", () => {
 		});
 	});
 
+	describe("retainedContext", () => {
+		it("should default retained context Tier 2 settings", () => {
+			const manager = SettingsManager.create(projectDir, agentDir);
+
+			expect(manager.getRetainedContextSettings()).toEqual({
+				stripThinking: true,
+				compressBashOutput: true,
+				bashMaxBytes: 16_384,
+				dedupeReadResults: true,
+				summarizeStaleToolResults: true,
+				toolResultMaxBytes: 96_000,
+			});
+		});
+
+		it("should load retained context Tier 2 opt-outs and budget", () => {
+			writeFileSync(
+				join(agentDir, "settings.json"),
+				JSON.stringify({
+					retainedContext: {
+						stripThinking: false,
+						compressBashOutput: false,
+						bashMaxBytes: 2048,
+						dedupeReadResults: false,
+						summarizeStaleToolResults: false,
+						toolResultMaxBytes: 64000,
+					},
+				}),
+			);
+			const manager = SettingsManager.create(projectDir, agentDir);
+
+			expect(manager.getRetainedContextSettings()).toEqual({
+				stripThinking: false,
+				compressBashOutput: false,
+				bashMaxBytes: 2048,
+				dedupeReadResults: false,
+				summarizeStaleToolResults: false,
+				toolResultMaxBytes: 64000,
+			});
+		});
+
+		it("should fall back for invalid retained context byte budgets", () => {
+			writeFileSync(
+				join(agentDir, "settings.json"),
+				JSON.stringify({ retainedContext: { bashMaxBytes: -1, toolResultMaxBytes: Number.POSITIVE_INFINITY } }),
+			);
+			const manager = SettingsManager.create(projectDir, agentDir);
+
+			expect(manager.getRetainedContextSettings().bashMaxBytes).toBe(16_384);
+			expect(manager.getRetainedContextSettings().toolResultMaxBytes).toBe(96_000);
+		});
+	});
+
 	describe("getSessionDir", () => {
 		it("should return undefined when not set", () => {
 			writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ theme: "dark" }));

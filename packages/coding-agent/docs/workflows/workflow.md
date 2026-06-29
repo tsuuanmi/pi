@@ -121,6 +121,10 @@ Legacy JSON profile files such as `<agentDir>/agents/<name>.json` and `.pi/agent
 
 Per-invocation overrides (e.g. `model`, `thinkingLevel`, `tools`, `excludeTools` on `ralplan_run_agent`, `team_spawn_task_agent`, `ultragoal_spawn_goal_agent`, and the `subagent_*` tools) take precedence over the loaded profile.
 
+## Model-visible workflow tools
+
+Pi prunes inactive workflow-owned tools from the model-visible tool list by default to reduce prompt size. The current `/skill:<name>` prompt selects that workflow's tool group for the turn; otherwise the active workflow state selects the group. When no workflow is active, workflow-owned tools are hidden while normal coding tools and custom non-workflow tools remain available. Hard filters such as explicit tool allowlists and `excludeTools` still take precedence. Disable the behavior with the `workflows.pruneInactiveTools` extension flag to restore previous workflow tool exposure.
+
 ## Internals (contributors)
 
 A few internals are noted here so contributors can extend the control plane without grepping for seams:

@@ -8,6 +8,7 @@ import { AuthStorage } from "../auth/auth-storage.ts";
 import { getAgentDir } from "../config/config.ts";
 import { DEFAULT_THINKING_LEVEL } from "../config/defaults.ts";
 import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "../extensions/index.ts";
+import { optimizeRetainedContext } from "../messages/context-optimization.ts";
 import { convertToLlm } from "../messages/messages.ts";
 import { ModelRegistry } from "../model/model-registry.ts";
 import { findInitialModel } from "../model/model-resolver.ts";
@@ -314,8 +315,8 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		sessionId: sessionManager.getSessionId(),
 		transformContext: async (messages) => {
 			const runner = extensionRunnerRef.current;
-			if (!runner) return messages;
-			return runner.emitContext(messages);
+			const transformed = runner ? await runner.emitContext(messages) : messages;
+			return optimizeRetainedContext(transformed, { ...settingsManager.getRetainedContextSettings(), cwd });
 		},
 		steeringMode: settingsManager.getSteeringMode(),
 		followUpMode: settingsManager.getFollowUpMode(),
