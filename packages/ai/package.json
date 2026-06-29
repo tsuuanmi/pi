@@ -18,6 +18,10 @@
 			"types": "./dist/providers/openai-codex-responses.d.ts",
 			"import": "./dist/providers/openai-codex-responses.js"
 		},
+		"./openai-codex-usage": {
+			"types": "./dist/providers/openai-codex-usage.d.ts",
+			"import": "./dist/providers/openai-codex-usage.js"
+		},
 		"./openai-completions": {
 			"types": "./dist/providers/openai-completions.d.ts",
 			"import": "./dist/providers/openai-completions.js"

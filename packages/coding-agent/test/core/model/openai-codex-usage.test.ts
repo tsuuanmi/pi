@@ -1,8 +1,6 @@
 import { Buffer } from "node:buffer";
-import type { Api, Model } from "@tsuuanmi/pi-ai";
+import { type Api, fetchOpenAICodexUsageSummary, type Model, type OpenAICodexUsageAuthProvider } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ModelRegistry } from "../../../src/core/model/model-registry.ts";
-import { fetchOpenAICodexUsageSummary } from "../../../src/core/usage/openai-codex-usage.ts";
 
 const originalFetch = globalThis.fetch;
 
@@ -29,11 +27,11 @@ function createCodexModel(baseUrl = "https://chatgpt.com"): Model<Api> {
 	};
 }
 
-function createModelRegistry(token: string): ModelRegistry {
+function createModelRegistry(token: string): OpenAICodexUsageAuthProvider {
 	return {
 		isUsingOAuth: () => true,
 		getApiKeyAndHeaders: async () => ({ ok: true, apiKey: token, headers: { "X-Test": "yes" } }),
-	} as unknown as ModelRegistry;
+	};
 }
 
 afterEach(() => {

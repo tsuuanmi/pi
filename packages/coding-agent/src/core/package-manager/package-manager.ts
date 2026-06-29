@@ -207,7 +207,7 @@ interface PackageFilter {
 
 type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands";
 
-type BundledPackageName = "workflows" | "lsp" | "mcp";
+type BundledPackageName = "workflows" | "lsp" | "mcp" | "providers";
 
 const RESOURCE_TYPES: ResourceType[] = ["extensions", "skills", "prompts", "themes", "commands"];
 
@@ -215,9 +215,10 @@ const BUNDLED_PACKAGE_SOURCES: Record<string, BundledPackageName> = {
 	"pi:workflows": "workflows",
 	"pi:lsp": "lsp",
 	"pi:mcp": "mcp",
+	"pi:providers": "providers",
 };
 
-const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows", "pi:lsp", "pi:mcp"];
+const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows", "pi:lsp", "pi:mcp", "pi:providers"];
 
 const FILE_PATTERNS: Record<ResourceType, RegExp> = {
 	extensions: /\.(ts|js)$/,

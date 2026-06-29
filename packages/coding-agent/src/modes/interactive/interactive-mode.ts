@@ -10,6 +10,8 @@ import type { AgentMessage } from "@tsuuanmi/pi-agent-core";
 import {
 	type Api,
 	type AssistantMessage,
+	fetchOpenAICodexUsageSummary,
+	getOpenAICodexUsageCacheTtlMs,
 	getProviders,
 	type Message,
 	type Model,
@@ -85,7 +87,6 @@ import { BUILTIN_SLASH_COMMANDS } from "../../core/skills/slash-commands.ts";
 import type { TruncationResult } from "../../core/tools/truncate.ts";
 import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../../core/trust/trust-manager.ts";
 import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/usage/footer-data-provider.ts";
-import { fetchOpenAICodexUsageSummary, getCodexUsageCacheTtlMs } from "../../core/usage/openai-codex-usage.ts";
 import {
 	detectTerminalBackgroundTheme,
 	getAvailableThemes,
@@ -4044,7 +4045,10 @@ export class InteractiveMode {
 		}
 
 		const now = Date.now();
-		if (this.codexUsageRefreshInFlight || (!force && now - this.codexUsageLastFetchMs < getCodexUsageCacheTtlMs())) {
+		if (
+			this.codexUsageRefreshInFlight ||
+			(!force && now - this.codexUsageLastFetchMs < getOpenAICodexUsageCacheTtlMs())
+		) {
 			return;
 		}
 

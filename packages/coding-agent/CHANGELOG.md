@@ -20,7 +20,7 @@
 
 ### Added
 
-- Added reserved bundled package sources `pi:workflows`, `pi:lsp`, and `pi:mcp`, plus filterable package `commands` resources and generic pre-session package-command dispatch for first-party `pi workflow` and `pi mcp` commands.
+- Added reserved bundled package sources `pi:workflows`, `pi:lsp`, `pi:mcp`, and `pi:providers`, plus filterable package `commands` resources and generic pre-session package-command dispatch for first-party `pi workflow` and `pi mcp` commands.
 - Added default-on retained-context optimization for future model replay: removable readable thinking blocks are stripped, oversized retained bash output is compressed with a head/tail marker, and inactive workflow-owned tools are pruned from model-visible tool schemas. Opt out with `retainedContext.stripThinking`, `retainedContext.compressBashOutput`, and the `workflows.pruneInactiveTools` extension flag.
 - Added Tier 2 retained-context tool-result optimization: provider-bound replay can dedupe content-identical repeated `read` results and summarize old unprotected `read`, `bash`, and `edit` results with deterministic summary records. Opt out with `retainedContext.dedupeReadResults` and `retainedContext.summarizeStaleToolResults`; tune stale summaries with `retainedContext.toolResultMaxBytes`.
 - Added default-on redacted API usage JSONL sidecar logging per completed LLM provider invocation, with `apiUsageLogging.enabled` opt-out.
@@ -60,6 +60,7 @@
 
 ### Changed
 
+- Moved OpenAI Codex quota usage helpers from coding-agent core into `@tsuuanmi/pi-ai`; coding-agent now consumes them through the AI package.
 - Workflow runtime artifacts now require an owning session (type-level `string`, not `string | undefined`) and persist under the existing `.pi/{sessionId}/` layout, including workflow audit logs, transaction journals, subagent records, and ralplan role-agent records; session directory names remain unchanged; the global `.pi/` root is reserved for shared project config only, with no silent fallback.
 - New session IDs now use a compact creation timestamp format (`YYYYMMDD-HHMMSS`), and session-scoped project artifacts now live directly under `.pi/{sessionId}/` instead of `.pi/_session-{sessionId}/`.
 - Workflow runtime reads/writes now use explicit session ids from CLI/tool context for isolated state while retaining legacy global `.pi/` behavior for existing internal callers.

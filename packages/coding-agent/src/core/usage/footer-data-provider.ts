@@ -1,8 +1,8 @@
+import type { OpenAICodexUsageSummary } from "@tsuuanmi/pi-ai";
 import { type ExecFileException, execFile, spawnSync } from "child_process";
 import { existsSync, type FSWatcher, readFileSync, statSync, unwatchFile, watchFile } from "fs";
 import { dirname, join, resolve } from "path";
 import { closeWatcher, FS_WATCH_RETRY_DELAY_MS, watchWithErrorHandler } from "../../utils/fs/fs-watch.ts";
-import type { CodexUsageSummary } from "./openai-codex-usage.ts";
 
 type GitPaths = {
 	repoDir: string;
@@ -98,7 +98,7 @@ export class FooterDataProvider {
 	private reftableTablesListPath: string | null = null;
 	private branchChangeCallbacks = new Set<() => void>();
 	private availableProviderCount = 0;
-	private codexUsageSummary: CodexUsageSummary | null = null;
+	private codexUsageSummary: OpenAICodexUsageSummary | null = null;
 	private refreshTimer: ReturnType<typeof setTimeout> | null = null;
 	private gitWatcherRetryTimer: ReturnType<typeof setTimeout> | null = null;
 	private refreshInFlight = false;
@@ -150,7 +150,7 @@ export class FooterDataProvider {
 	}
 
 	/** OpenAI Codex quota summary for footer display. */
-	getCodexUsageSummary(): CodexUsageSummary | null {
+	getCodexUsageSummary(): OpenAICodexUsageSummary | null {
 		return this.codexUsageSummary;
 	}
 
@@ -160,7 +160,7 @@ export class FooterDataProvider {
 	}
 
 	/** Internal: update OpenAI Codex quota summary */
-	setCodexUsageSummary(summary: CodexUsageSummary | null): void {
+	setCodexUsageSummary(summary: OpenAICodexUsageSummary | null): void {
 		this.codexUsageSummary = summary;
 	}
 

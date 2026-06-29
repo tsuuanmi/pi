@@ -14,6 +14,7 @@
 
 ### Added
 
+- Added OpenAI Codex quota usage helpers for provider integrations.
 - Added GLM-5.2 model to the OpenCode Go subscription model catalog ([#5860](https://github.com/tsuuanmi/pi/issues/5860)).
 
 ### Changed

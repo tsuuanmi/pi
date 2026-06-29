@@ -1,6 +1,4 @@
-import { Buffer } from "node:buffer";
-import type { Api, Model } from "@tsuuanmi/pi-ai";
-import type { ModelRegistry } from "../model/model-registry.ts";
+import type { Api, Model } from "../types.ts";
 
 const CODEX_USAGE_PATH = "wham/usage";
 const JWT_AUTH_CLAIM = "https://api.openai.com/auth";
@@ -11,11 +9,27 @@ const ONE_DAY_SECONDS = 24 * ONE_HOUR_SECONDS;
 const ONE_WEEK_SECONDS = 7 * ONE_DAY_SECONDS;
 const USAGE_CACHE_TTL_MS = 60_000;
 
-export type CodexUsageStatus = "ok" | "warning" | "exhausted" | "unknown";
+export type OpenAICodexUsageStatus = "ok" | "warning" | "exhausted" | "unknown";
 
-export type CodexUsageSummary = {
+export type OpenAICodexUsageSummary = {
 	text: string;
-	status: CodexUsageStatus;
+	status: OpenAICodexUsageStatus;
+};
+
+export type OpenAICodexRequestAuth =
+	| {
+			ok: true;
+			apiKey?: string;
+			headers?: Record<string, string>;
+	  }
+	| {
+			ok: false;
+			error: string;
+	  };
+
+export type OpenAICodexUsageAuthProvider = {
+	isUsingOAuth(model: Model<Api>): boolean;
+	getApiKeyAndHeaders(model: Model<Api>): Promise<OpenAICodexRequestAuth>;
 };
 
 type CodexUsagePayload = {
@@ -59,7 +73,9 @@ function toBoolean(value: unknown): boolean | undefined {
 function base64UrlDecode(input: string): string {
 	const base64 = input.replace(/-/g, "+").replace(/_/g, "/");
 	const padLength = (4 - (base64.length % 4)) % 4;
-	return Buffer.from(base64 + "=".repeat(padLength), "base64").toString("utf8");
+	const binary = globalThis.atob(base64 + "=".repeat(padLength));
+	const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+	return new TextDecoder().decode(bytes);
 }
 
 function parseJwt(token: string): JwtPayload | null {
@@ -131,7 +147,7 @@ function formatUsedPercent(usedPercent: number | undefined): string {
 	return `${clamped.toFixed(1)}%`;
 }
 
-function usageStatus(usedPercent: number | undefined, limitReached: boolean | undefined): CodexUsageStatus {
+function usageStatus(usedPercent: number | undefined, limitReached: boolean | undefined): OpenAICodexUsageStatus {
 	if (limitReached) return "exhausted";
 	if (usedPercent === undefined) return "unknown";
 	if (usedPercent >= 100) return "exhausted";
@@ -139,16 +155,16 @@ function usageStatus(usedPercent: number | undefined, limitReached: boolean | un
 	return "ok";
 }
 
-function worstStatus(statuses: CodexUsageStatus[]): CodexUsageStatus {
+function worstStatus(statuses: OpenAICodexUsageStatus[]): OpenAICodexUsageStatus {
 	if (statuses.includes("exhausted")) return "exhausted";
 	if (statuses.includes("warning")) return "warning";
 	if (statuses.includes("unknown")) return "unknown";
 	return "ok";
 }
 
-function buildSummary(parsed: ParsedLimit): CodexUsageSummary | null {
+function buildSummary(parsed: ParsedLimit): OpenAICodexUsageSummary | null {
 	const parts: string[] = [];
-	const statuses: CodexUsageStatus[] = [];
+	const statuses: OpenAICodexUsageStatus[] = [];
 	const windows: Array<["primary" | "secondary", ParsedUsageWindow | undefined]> = [
 		["primary", parsed.primary],
 		["secondary", parsed.secondary],
@@ -164,18 +180,18 @@ function buildSummary(parsed: ParsedLimit): CodexUsageSummary | null {
 	return { text: parts.join(" "), status: worstStatus(statuses) };
 }
 
-export function getCodexUsageCacheTtlMs(): number {
+export function getOpenAICodexUsageCacheTtlMs(): number {
 	return USAGE_CACHE_TTL_MS;
 }
 
 export async function fetchOpenAICodexUsageSummary(
-	modelRegistry: ModelRegistry,
+	authProvider: OpenAICodexUsageAuthProvider,
 	model: Model<Api>,
 	signal?: AbortSignal,
-): Promise<CodexUsageSummary | null> {
-	if (model.provider !== "openai-codex" || !modelRegistry.isUsingOAuth(model)) return null;
+): Promise<OpenAICodexUsageSummary | null> {
+	if (model.provider !== "openai-codex" || !authProvider.isUsingOAuth(model)) return null;
 
-	const auth = await modelRegistry.getApiKeyAndHeaders(model);
+	const auth = await authProvider.getApiKeyAndHeaders(model);
 	if (!auth.ok || !auth.apiKey) return null;
 
 	const accountId = extractAccountId(auth.apiKey);

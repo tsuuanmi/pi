@@ -1,0 +1,8 @@
+{
+	"name": "@tsuuanmi/pi-bundled-providers",
+	"private": true,
+	"type": "module",
+	"pi": {
+		"extensions": ["extensions/*.ts"]
+	}
+}
