@@ -3,7 +3,7 @@
  * Validates that the faux provider and session factory work correctly.
  */
 
-import type { AgentTool } from "@tsuuanmi/pi-agent-core";
+import type { AgentTool } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";

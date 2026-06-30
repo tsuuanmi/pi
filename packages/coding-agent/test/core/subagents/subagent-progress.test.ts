@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@tsuuanmi/pi-agent-core";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { renderSubagentProgress, SubagentProgressTracker } from "../../../src/core/subagents/subagent-progress.ts";
 import { extractYieldFromMessages, type YieldDetails } from "../../../src/core/subagents/yield-result.ts";

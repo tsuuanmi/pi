@@ -1,4 +1,4 @@
-import type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "@tsuuanmi/pi-agent-core";
+import type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "@tsuuanmi/pi-agent";
 import type { Component } from "@tsuuanmi/pi-tui";
 import type { Static, TSchema } from "typebox";
 import type { Theme } from "../theme/theme.ts";

@@ -9,8 +9,9 @@
  * but Pi-native: subscribes to Pi's `AgentEvent` stream rather than gajae's
  * executor callbacks.
  */
-import type { AgentMessage } from "../../types.ts";
+
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
+import type { AgentMessage } from "../../types.ts";
 
 /** Minimal event shape the tracker can consume (superset of AgentEvent). */
 interface TrackableEvent {

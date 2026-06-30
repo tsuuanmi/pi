@@ -1,5 +1,5 @@
 {
-	"name": "@tsuuanmi/pi-agent-core",
+	"name": "@tsuuanmi/pi-agent",
 	"version": "0.79.6",
 	"description": "General-purpose agent with transport abstraction, state management, and attachment support",
 	"type": "module",

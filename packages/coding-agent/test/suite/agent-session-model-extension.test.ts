@@ -1,4 +1,4 @@
-import type { AgentTool, ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type { AgentTool, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { fauxAssistantMessage, fauxToolCall, type Model } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";

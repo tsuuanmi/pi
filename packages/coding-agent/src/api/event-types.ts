@@ -1,4 +1,4 @@
-import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { AssistantMessageEvent, Model, TextContent, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { CompactionPreparation, CompactionResult } from "../core/compaction/index.ts";
 import type { BashResult } from "../core/exec/bash-executor.ts";

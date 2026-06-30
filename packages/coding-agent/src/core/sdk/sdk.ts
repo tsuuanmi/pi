@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { Agent, type ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import { Agent, type ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { clampThinkingLevel, type Model, streamSimple } from "@tsuuanmi/pi-ai";
 import { resolvePath } from "../../utils/fs/paths.ts";
 import { AgentSession } from "../agent-session/agent-session.ts";

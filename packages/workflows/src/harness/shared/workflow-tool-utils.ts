@@ -1,4 +1,4 @@
-import type { ExtensionContext } from "@tsuuanmi/pi-agent-core";
+import type { ExtensionContext } from "@tsuuanmi/pi-agent";
 
 export type DeepInterviewHandoff = "ralplan" | "team" | "ultragoal" | "stop";
 export type RalplanApprovalTarget = "ultragoal" | "team" | "stop";

@@ -1,5 +1,5 @@
 import { basename, dirname, isAbsolute, relative, resolve as resolvePath, sep } from "node:path";
-import type { AgentTool } from "@tsuuanmi/pi-agent-core";
+import type { AgentTool } from "@tsuuanmi/pi-agent";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import { Text } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";

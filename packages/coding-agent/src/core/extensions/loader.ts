@@ -7,7 +7,8 @@ import * as fs from "node:fs";
 import { createRequire } from "node:module";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import * as _bundledPiAgentCore from "@tsuuanmi/pi-agent-core";
+import * as _bundledPiAgent from "@tsuuanmi/pi-agent";
+import * as _bundledPiAgentNode from "@tsuuanmi/pi-agent/node";
 import * as _bundledPiAi from "@tsuuanmi/pi-ai";
 import * as _bundledPiAiOauth from "@tsuuanmi/pi-ai/oauth";
 import type { KeyId } from "@tsuuanmi/pi-tui";
@@ -49,13 +50,13 @@ const VIRTUAL_MODULES: Record<string, unknown> = {
 	"@sinclair/typebox": _bundledTypebox,
 	"@sinclair/typebox/compile": _bundledTypeboxCompile,
 	"@sinclair/typebox/value": _bundledTypeboxValue,
-	"@tsuuanmi/pi-agent-core": _bundledPiAgentCore,
+	"@tsuuanmi/pi-agent/node": _bundledPiAgentNode,
+	"@tsuuanmi/pi-agent": _bundledPiAgent,
 	"@tsuuanmi/pi-tui": _bundledPiTui,
 	"@tsuuanmi/pi-ai": _bundledPiAi,
 	"@tsuuanmi/pi-ai/oauth": _bundledPiAiOauth,
 	"@tsuuanmi/pi-coding-agent": _bundledPiCodingAgent,
 	"@tsuuanmi/pi-workflows": _bundledPiWorkflows,
-	"@mariozechner/pi-agent-core": _bundledPiAgentCore,
 	"@mariozechner/pi-tui": _bundledPiTui,
 	"@mariozechner/pi-ai": _bundledPiAi,
 	"@mariozechner/pi-ai/oauth": _bundledPiAiOauth,
@@ -90,7 +91,8 @@ function getAliases(): Record<string, string> {
 	};
 
 	const piCodingAgentEntry = packageIndex;
-	const piAgentCoreEntry = resolveWorkspaceOrImport("agent/dist/index.js", "@tsuuanmi/pi-agent-core");
+	const piAgentEntry = resolveWorkspaceOrImport("agent/dist/index.js", "@tsuuanmi/pi-agent");
+	const piAgentNodeEntry = resolveWorkspaceOrImport("agent/dist/node.js", "@tsuuanmi/pi-agent/node");
 	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@tsuuanmi/pi-tui");
 	const piAiEntry = resolveWorkspaceOrImport("ai/dist/index.js", "@tsuuanmi/pi-ai");
 	const piAiOauthEntry = resolveWorkspaceOrImport("ai/dist/oauth.js", "@tsuuanmi/pi-ai/oauth");
@@ -98,14 +100,14 @@ function getAliases(): Record<string, string> {
 
 	_aliases = {
 		"@tsuuanmi/pi-coding-agent": piCodingAgentEntry,
-		"@tsuuanmi/pi-agent-core": piAgentCoreEntry,
+		"@tsuuanmi/pi-agent/node": piAgentNodeEntry,
+		"@tsuuanmi/pi-agent": piAgentEntry,
 		"@tsuuanmi/pi-tui": piTuiEntry,
 		"@tsuuanmi/pi-ai": piAiEntry,
 		"@tsuuanmi/pi-ai/oauth": piAiOauthEntry,
 		"@tsuuanmi/pi-workflows": piWorkflowsEntry,
 		"@mariozechner/pi-coding-agent": piCodingAgentEntry,
 		"@mariozechner/pi-workflows": piWorkflowsEntry,
-		"@mariozechner/pi-agent-core": piAgentCoreEntry,
 		"@mariozechner/pi-tui": piTuiEntry,
 		"@mariozechner/pi-ai": piAiEntry,
 		"@mariozechner/pi-ai/oauth": piAiOauthEntry,

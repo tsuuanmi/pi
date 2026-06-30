@@ -261,7 +261,7 @@ function getBundledPackageRoot(name: BundledPackageName): string {
 	if (name === "workflows") {
 		const __dirname = dirname(fileURLToPath(import.meta.url));
 		const workspaceRoot = resolve(__dirname, "..", "..", "..", "..");
-		return resolve(workspaceRoot, "workflows", "src");
+		return resolve(workspaceRoot, "workflows");
 	}
 	return resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "packages", name);
 }

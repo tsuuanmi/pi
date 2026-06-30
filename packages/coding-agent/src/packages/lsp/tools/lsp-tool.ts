@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { readFile as fsReadFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AgentTool } from "@tsuuanmi/pi-agent-core";
+import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { Text } from "@tsuuanmi/pi-tui";
 import { type Static, Type } from "typebox";
 import type { ExtensionContext, ToolDefinition } from "../../../api/types.ts";

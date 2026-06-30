@@ -1,4 +1,4 @@
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent-core";
+import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { readWorkflowActiveState } from "../shared/active-state.ts";
 import { handoffWorkflow } from "../shared/handoff.ts";

@@ -1,7 +1,18 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { appendFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type {
+	AgentMessage,
+	SubagentAwaitOptions,
+	SubagentAwaitResult,
+	SubagentDelivery,
+	SubagentRecord,
+	SubagentResumeResult,
+	SubagentRunRequest,
+	SubagentRunResult,
+	SubagentStatus,
+	ThinkingLevel,
+} from "@tsuuanmi/pi-agent";
 import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import type { ExtensionUIContext } from "../../api/types.ts";
 import { withFileMutationQueue } from "../../utils/fs/file-mutation-queue.ts";
@@ -11,19 +22,8 @@ import { type AgentProfile, loadAgentProfile } from "../agents/agent-profiles.ts
 import { sessionStateDir } from "../session/session-layout.ts";
 import { SessionManager } from "../session/session-manager.ts";
 import { renderSubagentProgress, type SubagentProgress, SubagentProgressTracker } from "./subagent-progress.ts";
-import { extractYieldFromMessages, type YieldDetails } from "./yield-result.ts";
+import { extractYieldFromMessages } from "./yield-result.ts";
 
-import {
-	type SubagentAwaitOptions,
-	type SubagentAwaitResult,
-	type SubagentDelivery,
-	type SubagentRecord,
-	type SubagentResumeFailureReason,
-	type SubagentResumeResult,
-	type SubagentRunRequest,
-	type SubagentRunResult,
-	type SubagentStatus,
-} from "@tsuuanmi/pi-agent-core";
 export type {
 	SubagentAwaitOptions,
 	SubagentAwaitResult,
@@ -34,7 +34,7 @@ export type {
 	SubagentRunRequest,
 	SubagentRunResult,
 	SubagentStatus,
-} from "@tsuuanmi/pi-agent-core";
+} from "@tsuuanmi/pi-agent";
 
 interface LiveSubagent {
 	controller: AbortController;

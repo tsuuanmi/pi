@@ -1,4 +1,4 @@
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent-core";
+import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { getDeepInterviewMutationDecision } from "../harness/deep-interview/deep-interview-mutation-guard.ts";
 import {
 	buildDeepInterviewContinuationPrompt,

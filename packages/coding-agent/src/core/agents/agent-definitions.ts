@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { parseFrontmatter } from "../../utils/fs/frontmatter.ts";
 import { canonicalizePath, resolvePath } from "../../utils/fs/paths.ts";
 import type { ResourceDiagnostic } from "../resources/diagnostics.ts";

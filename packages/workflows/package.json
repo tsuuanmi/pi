@@ -34,17 +34,20 @@
 	},
 	"pi": {
 		"extensions": [
-			"extensions/workflows.ts"
+			"src/extensions/workflows.ts"
 		],
 		"skills": [
-			"skills/**/*.md"
+			"src/skills/**/*.md"
 		],
 		"agents": [
-			"agents/*.md"
+			"src/agents/*.md"
+		],
+		"commands": [
+			"src/cli/*.ts"
 		]
 	},
 	"dependencies": {
-		"@tsuuanmi/pi-agent-core": "0.79.6",
+		"@tsuuanmi/pi-agent": "0.79.6",
 		"@tsuuanmi/pi-ai": "0.79.6",
 		"typebox": "1.1.38"
 	},

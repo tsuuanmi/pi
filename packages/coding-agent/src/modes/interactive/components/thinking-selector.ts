@@ -1,4 +1,4 @@
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { Container, type SelectItem, SelectList, type SelectListLayoutOptions } from "@tsuuanmi/pi-tui";
 import { getSelectListTheme } from "../../../theme/theme.ts";
 import { DynamicBorder } from "./dynamic-border.ts";

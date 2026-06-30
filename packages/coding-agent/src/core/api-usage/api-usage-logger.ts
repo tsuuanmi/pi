@@ -6,7 +6,7 @@ import type {
 	ProviderRequestObserverPayload,
 	ProviderRequestObserverResponse,
 	ProviderRequestObserverStart,
-} from "@tsuuanmi/pi-agent-core";
+} from "@tsuuanmi/pi-agent";
 import { redactValue, safeHeaders } from "./redaction.ts";
 import { type SafeSerializeMetadata, safeSerialize, toJsonLine } from "./safe-serialize.ts";
 import type { ApiUsagePendingRequest, ApiUsageRecordV1, RedactionMetadata } from "./types.ts";

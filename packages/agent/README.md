@@ -1,17 +1,17 @@
-# @tsuuanmi/pi-agent-core
+# @tsuuanmi/pi-agent
 
 Stateful agent with tool execution and event streaming. Built on `@tsuuanmi/pi-ai`.
 
 ## Installation
 
 ```bash
-npm install @tsuuanmi/pi-agent-core
+npm install @tsuuanmi/pi-agent
 ```
 
 ## Quick Start
 
 ```typescript
-import { Agent } from "@tsuuanmi/pi-agent-core";
+import { Agent } from "@tsuuanmi/pi-agent";
 import { getModel } from "@tsuuanmi/pi-ai";
 
 const agent = new Agent({
@@ -337,7 +337,7 @@ Follow-up messages are checked only when there are no more tool calls and no ste
 Extend `AgentMessage` via declaration merging:
 
 ```typescript
-declare module "@tsuuanmi/pi-agent-core" {
+declare module "@tsuuanmi/pi-agent" {
   interface CustomAgentMessages {
     notification: { role: "notification"; text: string; timestamp: number };
   }
@@ -418,7 +418,7 @@ Return `terminate: true` from `execute()` or `afterToolCall` to hint that the ag
 For browser apps that proxy through a backend:
 
 ```typescript
-import { Agent, streamProxy } from "@tsuuanmi/pi-agent-core";
+import { Agent, streamProxy } from "@tsuuanmi/pi-agent";
 
 const agent = new Agent({
   streamFn: (model, context, options) =>
@@ -435,7 +435,7 @@ const agent = new Agent({
 For direct control without the Agent class:
 
 ```typescript
-import { agentLoop, agentLoopContinue } from "@tsuuanmi/pi-agent-core";
+import { agentLoop, agentLoopContinue } from "@tsuuanmi/pi-agent";
 
 const context: AgentContext = {
   systemPrompt: "You are helpful.",

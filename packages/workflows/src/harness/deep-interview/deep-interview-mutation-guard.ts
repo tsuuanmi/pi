@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { resolvePath } from "@tsuuanmi/pi-agent-core";
+import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { readWorkflowActiveState } from "../shared/active-state.ts";
 
 /**

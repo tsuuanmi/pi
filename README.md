@@ -21,7 +21,7 @@
 This is the home of the pi agent harness project including our self extensible coding agent.
 
 * **[@tsuuanmi/pi-coding-agent](packages/coding-agent)**: Interactive coding agent CLI
-* **[@tsuuanmi/pi-agent-core](packages/agent)**: Agent runtime with tool calling and state management
+* **[@tsuuanmi/pi-agent](packages/agent)**: Agent runtime with tool calling and state management
 * **[@tsuuanmi/pi-ai](packages/ai)**: Unified multi-provider LLM API (OpenAI, Anthropic, Google, …)
 
 To learn more about pi:
@@ -50,7 +50,7 @@ I regularly publish my own `pi-mono` work sessions here:
 | Package | Description |
 |---------|-------------|
 | **[@tsuuanmi/pi-ai](packages/ai)** | Unified multi-provider LLM API (OpenAI, Anthropic, Google, etc.) |
-| **[@tsuuanmi/pi-agent-core](packages/agent)** | Agent runtime with tool calling and state management |
+| **[@tsuuanmi/pi-agent](packages/agent)** | Agent runtime with tool calling and state management |
 | **[@tsuuanmi/pi-coding-agent](packages/coding-agent)** | Interactive coding agent CLI |
 | **[@tsuuanmi/pi-tui](packages/tui)** | Terminal UI library with differential rendering |
 

@@ -1,4 +1,4 @@
-import type { AgentTool } from "@tsuuanmi/pi-agent-core";
+import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { fauxAssistantMessage, fauxToolCall } from "@tsuuanmi/pi-ai";
 import type { ExtensionAPI } from "@tsuuanmi/pi-coding-agent";
 import { Type } from "typebox";

@@ -15,7 +15,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
-import type { Agent, AgentEvent, AgentMessage, AgentState, AgentTool, ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type { Agent, AgentEvent, AgentMessage, AgentState, AgentTool, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi-ai";
 import {
 	clampThinkingLevel,

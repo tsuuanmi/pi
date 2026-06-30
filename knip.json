@@ -53,7 +53,7 @@
 			"ignoreFiles": ["src/utils/highlight-js-lib-index.d.ts"],
 			"ignoreDependencies": [
 				"@tsuuanmi/pi-ai",
-				"@tsuuanmi/pi-agent-core",
+				"@tsuuanmi/pi-agent",
 				"@tsuuanmi/pi-tui",
 				"pyright",
 				"typescript-language-server"

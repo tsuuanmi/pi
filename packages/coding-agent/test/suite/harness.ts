@@ -5,8 +5,8 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AgentMessage, AgentTool } from "@tsuuanmi/pi-agent-core";
-import { Agent } from "@tsuuanmi/pi-agent-core";
+import type { AgentMessage, AgentTool } from "@tsuuanmi/pi-agent";
+import { Agent } from "@tsuuanmi/pi-agent";
 import type { FauxModelDefinition, FauxProviderRegistration, FauxResponseStep, Model } from "@tsuuanmi/pi-ai";
 import { registerFauxProvider } from "@tsuuanmi/pi-ai";
 import { AgentSession, type AgentSessionEvent } from "../../src/core/agent-session/agent-session.ts";

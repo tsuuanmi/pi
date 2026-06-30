@@ -15,7 +15,7 @@ import {
 	streamProxy,
 	toError,
 	truncateHead,
-} from "@tsuuanmi/pi-agent-core";
+} from "@tsuuanmi/pi-agent";
 
 // Keep this entry browser-safe. It is bundled by the check-browser-smoke script
 // to catch accidental Node-only runtime imports in browser-facing package exports.

@@ -1,1 +1,1 @@
-export { withFileMutationQueue } from "@tsuuanmi/pi-agent-core";
+export { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";

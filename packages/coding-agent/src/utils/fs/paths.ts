@@ -1,10 +1,10 @@
 export {
-	type PathInputOptions,
 	canonicalizePath,
 	formatPathRelativeToCwdOrAbsolute,
 	getCwdRelativePath,
 	isLocalPath,
 	markPathIgnoredByCloudSync,
 	normalizePath,
+	type PathInputOptions,
 	resolvePath,
-} from "@tsuuanmi/pi-agent-core";
+} from "@tsuuanmi/pi-agent/node";

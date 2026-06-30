@@ -2,7 +2,7 @@
  * Extension contract — the minimal host surface that workflow/extension
  * packages program against.
  *
- * This lives in @tsuuanmi/pi-agent-core (the lower layer) so that packages such
+ * This lives in @tsuuanmi/pi-agent (the lower layer) so that packages such
  * as @tsuuanmi/pi-workflows can depend only on agent-core and not on
  * @tsuuanmi/pi-coding-agent. @tsuuanmi/pi-coding-agent's full
  * `ExtensionAPI`/`ExtensionContext`/`ToolDefinition`/`SubagentManager` types
@@ -10,13 +10,10 @@
  * bivariance), so the host can pass its real objects where these minimal
  * contracts are expected.
  */
-import type {
-	AgentToolResult,
-	AgentToolUpdateCallback,
-	ToolExecutionMode,
-} from "../types.ts";
-import type { SubagentManager } from "../harness/subagents/subagent-manager.ts";
+
 import type { Static, TSchema } from "typebox";
+import type { SubagentManager } from "../harness/subagents/subagent-manager.ts";
+import type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "../types.ts";
 
 // ============================================================================
 // Tool contract
@@ -27,11 +24,7 @@ import type { Static, TSchema } from "typebox";
  * (`renderCall`/`renderResult`) and a render context on top of this; those are
  * omitted here so the contract does not pull in TUI/Theme types.
  */
-export interface ToolDefinition<
-	TParams extends TSchema = TSchema,
-	TDetails = unknown,
-	TState = any,
-> {
+export interface ToolDefinition<TParams extends TSchema = TSchema, TDetails = unknown, _TState = any> {
 	name: string;
 	label: string;
 	description: string;
@@ -51,10 +44,7 @@ export interface ToolDefinition<
 }
 
 /** Tool metadata returned by {@link ExtensionAPI.getAllTools}. */
-export type ToolInfo = Pick<
-	ToolDefinition,
-	"name" | "description" | "parameters" | "promptGuidelines"
-> & {
+export type ToolInfo = Pick<ToolDefinition, "name" | "description" | "parameters" | "promptGuidelines"> & {
 	sourceInfo: unknown;
 };
 
@@ -71,11 +61,7 @@ export interface ExtensionWidgetOptions {
 /** Minimal UI context used by workflow HUD/status updates. */
 export interface ExtensionUIContext {
 	setStatus(key: string, text: string | undefined): void;
-	setWidget(
-		key: string,
-		content: string[] | undefined,
-		options?: ExtensionWidgetOptions,
-	): void;
+	setWidget(key: string, content: string[] | undefined, options?: ExtensionWidgetOptions): void;
 }
 
 /** Minimal read-only session manager surface used by workflows. */
@@ -112,10 +98,7 @@ export interface ExtensionContext {
 
 /** Handler function type for events. */
 // biome-ignore lint/suspicious/noConfusingVoidType: void allows bare return statements
-export type ExtensionHandler<E, R = undefined> = (
-	event: E,
-	ctx: ExtensionContext,
-) => Promise<R | void> | R | void;
+export type ExtensionHandler<E, R = undefined> = (event: E, ctx: ExtensionContext) => Promise<R | void> | R | void;
 
 interface SessionStartEvent {
 	type: "session_start";
@@ -164,23 +147,12 @@ interface ToolCallEventResult {
 export interface ExtensionAPI {
 	on(event: "session_start", handler: ExtensionHandler<SessionStartEvent>): void;
 	on(event: "turn_end", handler: ExtensionHandler<TurnEndEvent>): void;
-	on(
-		event: "tool_execution_end",
-		handler: ExtensionHandler<ToolExecutionEndEvent>,
+	on(event: "tool_execution_end", handler: ExtensionHandler<ToolExecutionEndEvent>): void;
+	on(event: "before_agent_start", handler: ExtensionHandler<BeforeAgentStartEvent, BeforeAgentStartEventResult>): void;
+	on(event: "tool_call", handler: ExtensionHandler<ToolCallEvent, ToolCallEventResult>): void;
+	registerTool<TParams extends TSchema = TSchema, TDetails = unknown, _TState = any>(
+		tool: ToolDefinition<TParams, TDetails, _TState>,
 	): void;
-	on(
-		event: "before_agent_start",
-		handler: ExtensionHandler<BeforeAgentStartEvent, BeforeAgentStartEventResult>,
-	): void;
-	on(
-		event: "tool_call",
-		handler: ExtensionHandler<ToolCallEvent, ToolCallEventResult>,
-	): void;
-	registerTool<
-		TParams extends TSchema = TSchema,
-		TDetails = unknown,
-		TState = any,
-	>(tool: ToolDefinition<TParams, TDetails, TState>): void;
 	registerFlag?(
 		name: string,
 		options: {

@@ -5,7 +5,7 @@
  * Responses and events are emitted as JSON lines on stdout.
  */
 
-import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import type { SessionStats } from "../../core/agent-session/agent-session.ts";
 import type { CompactionResult } from "../../core/compaction/index.ts";

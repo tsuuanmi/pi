@@ -2,7 +2,7 @@
  * Model resolution, scoping, and initial selection
  */
 
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { type Api, type KnownProvider, type Model, modelsAreEqual } from "@tsuuanmi/pi-ai";
 import chalk from "chalk";
 import { minimatch } from "minimatch";

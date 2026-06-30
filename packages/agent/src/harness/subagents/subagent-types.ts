@@ -1,12 +1,12 @@
 /**
  * Subagent record, request, and result types.
  *
- * Shared by @tsuuanmi/pi-agent-core consumers (e.g. @tsuuanmi/pi-workflows) and
+ * Shared by @tsuuanmi/pi-agent consumers (e.g. @tsuuanmi/pi-workflows) and
  * @tsuuanmi/pi-coding-agent so the subagent contract lives in the lower layer.
  */
 import type { AgentMessage, ThinkingLevel } from "../../types.ts";
-import type { YieldDetails } from "./yield-result.ts";
 import type { SubagentProgress } from "./subagent-progress.ts";
+import type { YieldDetails } from "./yield-result.ts";
 
 export type SubagentStatus = "queued" | "running" | "paused" | "completed" | "failed" | "cancelled";
 export type SubagentResumeFailureReason = "context_unavailable" | "not_found" | "no_runner" | "resume_failed";

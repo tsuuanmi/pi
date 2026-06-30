@@ -1,5 +1,5 @@
 import { createInterface } from "node:readline";
-import type { AgentTool } from "@tsuuanmi/pi-agent-core";
+import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { Text } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import path from "path";

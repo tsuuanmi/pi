@@ -1,1 +1,1 @@
-export { attachJsonlLineReader, serializeJsonLine } from "@tsuuanmi/pi-agent-core";
+export { attachJsonlLineReader, serializeJsonLine } from "@tsuuanmi/pi-agent/node";

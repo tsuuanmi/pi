@@ -1,4 +1,4 @@
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Model, TextContent } from "@tsuuanmi/pi-ai";
 import type { AutocompleteItem, Component, KeyId } from "@tsuuanmi/pi-tui";
 import type { TSchema } from "typebox";

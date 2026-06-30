@@ -9,8 +9,7 @@
  * jina, parallel extract, etc.) but covers the core use case: fetch a URL and
  * return readable text content.
  */
-import type { AgentToolResult } from "@tsuuanmi/pi-agent-core";
-import type { ToolDefinition } from "@tsuuanmi/pi-agent-core";
+import type { AgentToolResult, ToolDefinition } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 
 export interface FetchToolDetails {

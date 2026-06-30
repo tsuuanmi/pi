@@ -13,7 +13,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { AgentToolResult } from "@tsuuanmi/pi-agent-core";
+import type { AgentToolResult } from "@tsuuanmi/pi-agent";
 
 /** Details returned by MCP tool executions. */
 export interface MCPToolDetails {

@@ -10,8 +10,8 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AgentTool } from "@tsuuanmi/pi-agent-core";
-import { Agent } from "@tsuuanmi/pi-agent-core";
+import type { AgentTool } from "@tsuuanmi/pi-agent";
+import { Agent } from "@tsuuanmi/pi-agent";
 import type {
 	AssistantMessage,
 	AssistantMessageEvent,

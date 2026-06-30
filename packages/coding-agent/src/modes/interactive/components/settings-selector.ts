@@ -1,4 +1,4 @@
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Transport } from "@tsuuanmi/pi-ai";
 import {
 	Container,

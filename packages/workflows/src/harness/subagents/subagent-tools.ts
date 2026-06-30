@@ -1,5 +1,5 @@
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent-core";
-import { renderSubagentProgress } from "@tsuuanmi/pi-agent-core";
+import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
+import { renderSubagentProgress } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "../shared/receipts.ts";
 import { assertAgentThinkingLevel, requireSubagentManager } from "../shared/workflow-tool-utils.ts";

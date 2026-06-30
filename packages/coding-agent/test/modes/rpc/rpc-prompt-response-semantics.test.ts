@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Agent } from "@tsuuanmi/pi-agent-core";
+import { Agent } from "@tsuuanmi/pi-agent";
 import { type AssistantMessage, type AssistantMessageEvent, EventStream, getModel, type Model } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AgentSession } from "../../../src/core/agent-session/agent-session.ts";

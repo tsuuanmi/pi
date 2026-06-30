@@ -4,7 +4,7 @@ Agent message types, custom message construction, and context optimization for c
 
 ## Overview
 
-Pi uses a rich message type system that extends the base `AgentMessage` types from `@tsuuanmi/pi-agent-core` with coding-agent-specific message types. Custom messages are transformed to LLM-compatible messages via `convertToLlm()`.
+Pi uses a rich message type system that extends the base `AgentMessage` types from `@tsuuanmi/pi-agent` with coding-agent-specific message types. Custom messages are transformed to LLM-compatible messages via `convertToLlm()`.
 
 ## Custom Message Types
 

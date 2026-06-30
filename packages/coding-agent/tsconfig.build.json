@@ -3,8 +3,8 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"paths": {
-			"@tsuuanmi/pi-agent-core": ["../agent/dist/index.d.ts"],
-			"@tsuuanmi/pi-agent-core/*": ["../agent/dist/*.d.ts"],
+			"@tsuuanmi/pi-agent": ["../agent/dist/index.d.ts"],
+			"@tsuuanmi/pi-agent/*": ["../agent/dist/*.d.ts"],
 			"@tsuuanmi/pi-ai": ["../ai/dist/index.d.ts"],
 			"@tsuuanmi/pi-ai/*": ["../ai/dist/*.d.ts", "../ai/dist/providers/*.d.ts"],
 			"@tsuuanmi/pi-tui": ["../tui/dist/index.d.ts"],

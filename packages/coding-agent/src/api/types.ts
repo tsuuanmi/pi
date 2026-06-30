@@ -5,7 +5,7 @@
  * package's aggregate public API entry point for extension types.
  */
 
-export type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "@tsuuanmi/pi-agent-core";
+export type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "@tsuuanmi/pi-agent";
 export type { ExecOptions, ExecResult } from "../core/exec/exec.ts";
 export type { AppKeybinding, KeybindingsManager } from "../core/settings/keybindings.ts";
 export type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";

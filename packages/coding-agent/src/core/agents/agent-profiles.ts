@@ -1,4 +1,4 @@
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent-core";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { SettingsManager } from "../settings/settings-manager.ts";
 import { type AgentProfileLoadResult, type LoadedAgentProfile, loadAgentDefinitions } from "./agent-definitions.ts";
 

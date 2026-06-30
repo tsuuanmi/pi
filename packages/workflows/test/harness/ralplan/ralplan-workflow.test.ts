@@ -1,7 +1,7 @@
 import { appendFile, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import type { SubagentRunResult } from "@tsuuanmi/pi-coding-agent";
+import type { SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi-coding-agent";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
@@ -223,7 +223,7 @@ describe("ralplan workflow runtime", () => {
 				stageN: 1,
 				task: "Plan it.",
 				subagentManager: {
-					spawn: async (request) => {
+					spawn: async (request: SubagentRunRequest) => {
 						spawnPrompt = request.prompt;
 						return subagentResult;
 					},

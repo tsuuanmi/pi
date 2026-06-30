@@ -24,12 +24,7 @@ export interface SubagentManager {
 			"agent" | "systemPrompt" | "tools" | "excludeTools" | "model" | "thinkingLevel" | "signal" | "storageSessionId"
 		>,
 	): Promise<SubagentResumeResult>;
-	steer(
-		id: string,
-		message: string,
-		delivery: "steer" | "followUp",
-		sessionId: string,
-	): Promise<SubagentResumeResult>;
+	steer(id: string, message: string, delivery: "steer" | "followUp", sessionId: string): Promise<SubagentResumeResult>;
 	pause(id: string, sessionId: string): Promise<{ ok: boolean; reason?: string; record?: SubagentRecord }>;
 	cancel(id: string, sessionId: string): Promise<SubagentRecord | undefined>;
 	read(id: string, sessionId: string): Promise<SubagentRecord | undefined>;

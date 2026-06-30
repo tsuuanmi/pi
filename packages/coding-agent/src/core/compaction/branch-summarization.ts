@@ -5,7 +5,7 @@
  * a summary of the branch being left so context isn't lost.
  */
 
-import type { AgentMessage, StreamFn } from "@tsuuanmi/pi-agent-core";
+import type { AgentMessage, StreamFn } from "@tsuuanmi/pi-agent";
 import type { Model, SimpleStreamOptions } from "@tsuuanmi/pi-ai";
 import { completeSimple } from "@tsuuanmi/pi-ai";
 import {

@@ -16,11 +16,10 @@ export default defineConfig({
 		alias: [
 			{ find: /^@tsuuanmi\/pi-ai$/, replacement: aiSrcIndex },
 			{ find: /^@tsuuanmi\/pi-ai\/oauth$/, replacement: aiSrcOAuth },
-			{ find: /^@tsuuanmi\/pi-agent-core$/, replacement: agentSrcIndex },
+			{ find: /^@tsuuanmi\/pi-agent$/, replacement: agentSrcIndex },
 			{ find: /^@tsuuanmi\/pi-tui$/, replacement: tuiSrcIndex },
 			{ find: /^@mariozechner\/pi-ai$/, replacement: aiSrcIndex },
 			{ find: /^@mariozechner\/pi-ai\/oauth$/, replacement: aiSrcOAuth },
-			{ find: /^@mariozechner\/pi-agent-core$/, replacement: agentSrcIndex },
 			{ find: /^@mariozechner\/pi-tui$/, replacement: tuiSrcIndex },
 		],
 	},

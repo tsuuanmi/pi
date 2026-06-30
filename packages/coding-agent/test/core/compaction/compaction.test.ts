@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@tsuuanmi/pi-agent-core";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Usage } from "@tsuuanmi/pi-ai";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { readFileSync } from "fs";

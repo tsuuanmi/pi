@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@tsuuanmi/pi-agent-core";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import { describe, expect, it } from "vitest";
 import { compressBashReplayOutput, optimizeRetainedContext } from "../../../src/core/messages/context-optimization.ts";

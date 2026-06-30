@@ -37,7 +37,7 @@
 		"prepublishOnly": "npm run clean && npm run build && npm run shrinkwrap"
 	},
 	"dependencies": {
-		"@tsuuanmi/pi-agent-core": "^0.79.6",
+		"@tsuuanmi/pi-agent": "^0.79.6",
 		"@tsuuanmi/pi-ai": "0.79.6",
 		"@tsuuanmi/pi-tui": "^0.79.6",
 		"@tsuuanmi/pi-workflows": "0.79.6",
