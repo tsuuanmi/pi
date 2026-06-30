@@ -1,4 +1,4 @@
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent-core";
 import { type Static, Type } from "typebox";
 import { deriveDeepInterviewHud } from "../deep-interview/deep-interview-hud.ts";
 import { syncWorkflowActiveState } from "./active-state.ts";

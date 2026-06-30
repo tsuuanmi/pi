@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { appendFile, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { withFileMutationQueue } from "@tsuuanmi/pi-coding-agent";
+import { withFileMutationQueue } from "@tsuuanmi/pi-agent-core";
 import type {
 	RuntimeLogDiagnostic,
 	RuntimeLogReadResult,

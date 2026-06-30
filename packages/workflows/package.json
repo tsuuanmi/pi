@@ -33,12 +33,19 @@
 		"test": "vitest --run"
 	},
 	"pi": {
-		"extensions": ["extensions/workflows.ts"],
-		"skills": ["skills/**/*.md"],
-		"agents": ["agents/*.md"]
+		"extensions": [
+			"extensions/workflows.ts"
+		],
+		"skills": [
+			"skills/**/*.md"
+		],
+		"agents": [
+			"agents/*.md"
+		]
 	},
 	"dependencies": {
-		"@tsuuanmi/pi-coding-agent": "0.79.6",
+		"@tsuuanmi/pi-agent-core": "0.79.6",
+		"@tsuuanmi/pi-ai": "0.79.6",
 		"typebox": "1.1.38"
 	},
 	"devDependencies": {

@@ -1,4 +1,4 @@
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent-core";
 import { type Static, Type } from "typebox";
 import { maybeRedirectVagueExecution } from "../ralplan/vagueness-gate.ts";
 import { workflowReceipt } from "../shared/receipts.ts";

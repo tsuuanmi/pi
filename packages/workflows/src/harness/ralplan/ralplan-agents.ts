@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent-core";
 import type { Message } from "@tsuuanmi/pi-ai";
-import type { SubagentManager, SubagentRunResult } from "@tsuuanmi/pi-coding-agent";
+import type { SubagentManager, SubagentRunResult } from "@tsuuanmi/pi-agent-core";
 import type { RalplanStage } from "../shared/paths.ts";
 import { workflowStatePath } from "../shared/session-layout.ts";
 import { writeJsonAtomic } from "../shared/state-writer.ts";

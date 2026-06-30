@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { withFileMutationQueue } from "@tsuuanmi/pi-coding-agent";
+import { withFileMutationQueue } from "@tsuuanmi/pi-agent-core";
 import { ReceiptConsistencyError, validateReceiptFamilyConsistency } from "./receipt-rules.ts";
 import { assertTransition, buildStateView, nextAllowedActions } from "./state.ts";
 import {

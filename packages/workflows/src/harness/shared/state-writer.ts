@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
-import { withFileMutationQueue } from "@tsuuanmi/pi-coding-agent";
+import { withFileMutationQueue } from "@tsuuanmi/pi-agent-core";
 import { canonicalizeJson } from "./canonical-json.ts";
 
 export { canonicalizeJson };

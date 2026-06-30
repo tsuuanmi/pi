@@ -42,3 +42,14 @@ export * from "./harness/utils/truncate.ts";
 export * from "./proxy.ts";
 // Types
 export * from "./types.ts";
+// Shared extension + subagent contract (lower-layer surface for pi-workflows etc.)
+export * from "./api/extension-contract.ts";
+export * from "./harness/subagents/subagent-types.ts";
+export * from "./harness/subagents/subagent-manager.ts";
+export * from "./harness/subagents/subagent-progress.ts";
+export * from "./harness/subagents/yield-result.ts";
+// Shared low-level filesystem/process utilities
+export * from "./harness/utils/file-mutation-queue.ts";
+export * from "./harness/utils/jsonl.ts";
+export * from "./harness/utils/child-process.ts";
+export * from "./harness/utils/paths.ts";

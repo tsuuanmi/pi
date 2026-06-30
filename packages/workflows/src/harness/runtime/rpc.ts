@@ -1,6 +1,6 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { serializeJsonLine } from "@tsuuanmi/pi-coding-agent";
+import { serializeJsonLine } from "@tsuuanmi/pi-agent-core";
 
 export interface RpcStateSnapshot {
 	isStreaming: boolean;

@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@tsuuanmi/pi-coding-agent";
+import type { ExtensionAPI } from "@tsuuanmi/pi-agent-core";
 import { createFetchToolDefinition } from "./fetch.ts";
 import { createYieldToolDefinition } from "./yield.ts";
 
