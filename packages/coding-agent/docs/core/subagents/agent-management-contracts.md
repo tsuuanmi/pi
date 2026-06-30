@@ -25,9 +25,9 @@ These are the intended ownership boundaries. If implementation chooses different
 | Source metadata and diagnostics | `packages/coding-agent/src/core/misc/source-info.ts` and `src/core/misc/diagnostics.ts` | resource-specific loaders |
 | Scoped live registry | a new `packages/coding-agent/src/core/agent-registry.ts` | `src/core/agent-session/agent-session.ts`, `src/core/subagents/subagents.ts`, `src/api/types.ts` |
 | Durable subagent/task/receipt state | `packages/coding-agent/src/core/subagents/subagents.ts` and future task modules | `.pi/workflows/subagents/`, workflow runtimes |
-| Self-hosting continuity | `pi:workflows` first-party package tools and skills | `src/packages/workflows/runtime/*`, `src/packages/workflows/skills/*` |
+| Self-hosting continuity | `pi:workflows` first-party package tools and skills | `packages/workflows/src/harness/*`, `packages/workflows/src/skills/*` |
 | Direct-port adaptation | each porting change owner | this document and code review checklist |
-| Worktree/tmux orchestration | future task/worktree modules and `src/harness-runtime/seams.ts` | docs/tmux.md, workflow docs |
+| Worktree/tmux orchestration | future task/worktree modules and `@tsuuanmi/pi-workflows` harness/runtime/seams.ts | docs/tmux.md, workflow docs |
 
 ## Resource discovery contract
 

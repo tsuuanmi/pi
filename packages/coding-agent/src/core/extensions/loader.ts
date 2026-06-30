@@ -33,6 +33,7 @@ import type {
 // NOTE: This import works because loader.ts exports are NOT re-exported from index.ts,
 // avoiding a circular dependency. Extensions can import from @tsuuanmi/pi-coding-agent.
 import * as _bundledPiCodingAgent from "../../index.ts";
+import * as _bundledPiWorkflows from "@tsuuanmi/pi-workflows";
 import { resolvePath } from "../../utils/fs/paths.ts";
 import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "../config/config.ts";
 import { createEventBus, type EventBus } from "../events/event-bus.ts";
@@ -53,6 +54,7 @@ const VIRTUAL_MODULES: Record<string, unknown> = {
 	"@tsuuanmi/pi-ai": _bundledPiAi,
 	"@tsuuanmi/pi-ai/oauth": _bundledPiAiOauth,
 	"@tsuuanmi/pi-coding-agent": _bundledPiCodingAgent,
+	"@tsuuanmi/pi-workflows": _bundledPiWorkflows,
 	"@mariozechner/pi-agent-core": _bundledPiAgentCore,
 	"@mariozechner/pi-tui": _bundledPiTui,
 	"@mariozechner/pi-ai": _bundledPiAi,
@@ -92,6 +94,7 @@ function getAliases(): Record<string, string> {
 	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@tsuuanmi/pi-tui");
 	const piAiEntry = resolveWorkspaceOrImport("ai/dist/index.js", "@tsuuanmi/pi-ai");
 	const piAiOauthEntry = resolveWorkspaceOrImport("ai/dist/oauth.js", "@tsuuanmi/pi-ai/oauth");
+	const piWorkflowsEntry = resolveWorkspaceOrImport("workflows/dist/index.js", "@tsuuanmi/pi-workflows");
 
 	_aliases = {
 		"@tsuuanmi/pi-coding-agent": piCodingAgentEntry,
@@ -99,7 +102,9 @@ function getAliases(): Record<string, string> {
 		"@tsuuanmi/pi-tui": piTuiEntry,
 		"@tsuuanmi/pi-ai": piAiEntry,
 		"@tsuuanmi/pi-ai/oauth": piAiOauthEntry,
+		"@tsuuanmi/pi-workflows": piWorkflowsEntry,
 		"@mariozechner/pi-coding-agent": piCodingAgentEntry,
+		"@mariozechner/pi-workflows": piWorkflowsEntry,
 		"@mariozechner/pi-agent-core": piAgentCoreEntry,
 		"@mariozechner/pi-tui": piTuiEntry,
 		"@mariozechner/pi-ai": piAiEntry,

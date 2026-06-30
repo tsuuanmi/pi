@@ -1,1 +1,1 @@
-export { handleWorkflowCommand, runWorkflowCommand } from "../packages/workflows/commands/workflow.ts";
+export { handleWorkflowCommand, runWorkflowCommand } from "@tsuuanmi/pi-workflows";

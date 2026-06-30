@@ -1,1 +1,1 @@
-export { runStateCommand } from "../packages/workflows/commands/state-command.ts";
+export { runStateCommand } from "@tsuuanmi/pi-workflows";

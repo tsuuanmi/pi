@@ -8,7 +8,9 @@
 			"@tsuuanmi/pi-ai": ["../ai/dist/index.d.ts"],
 			"@tsuuanmi/pi-ai/*": ["../ai/dist/*.d.ts", "../ai/dist/providers/*.d.ts"],
 			"@tsuuanmi/pi-tui": ["../tui/dist/index.d.ts"],
-			"@tsuuanmi/pi-tui/*": ["../tui/dist/*.d.ts", "../tui/dist/components/*.d.ts"]
+			"@tsuuanmi/pi-tui/*": ["../tui/dist/*.d.ts", "../tui/dist/components/*.d.ts"],
+			"@tsuuanmi/pi-workflows": ["../workflows/dist/index.d.ts"],
+			"@tsuuanmi/pi-workflows/*": ["../workflows/dist/*.d.ts"]
 		},
 		"rootDir": "./src"
 	},

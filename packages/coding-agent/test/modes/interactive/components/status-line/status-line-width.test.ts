@@ -7,7 +7,7 @@ import type { AgentSession } from "../../../../../src/core/agent-session/agent-s
 import type { SettingsManager, StatusLineSettings } from "../../../../../src/core/settings/settings-manager.ts";
 import type { ReadonlyFooterDataProvider } from "../../../../../src/core/usage/footer-data-provider.ts";
 import { StatusLineComponent } from "../../../../../src/modes/interactive/components/status-line/index.ts";
-import { syncWorkflowActiveState } from "../../../../../src/packages/workflows/runtime/shared/active-state.ts";
+import { syncWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import { initTheme } from "../../../../../src/theme/theme.ts";
 import { stripAnsi } from "../../../../../src/utils/terminal/ansi.ts";
 

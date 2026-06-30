@@ -64,16 +64,15 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 ## Workflows and subagents
 
-- [Pi workflow](workflows/workflow.md) - `pi workflow` control plane and built-in planning/execution skills.
 - [Subagents](core/subagents/subagents.md) - Pi-native `SubagentManager` for isolated agent workers.
 - [Agent Management Contracts](core/subagents/agent-management-contracts.md) - Phase-gated contracts for agent management migration.
 
 ## Skills
 
-- [Deep Interview](skills/deep-interview/deep-interview.md) - Socratic requirements interview with ambiguity scoring.
-- [Ralplan](skills/ralplan/ralplan.md) - Consensus planning with Planner, Architect, and Critic.
-- [Team](skills/team/team.md) - Coordinate parallel implementation workers.
-- [Ultragoal](skills/ultragoal/ultragoal.md) - Goal-tracked autonomous execution.
+- [Deep Interview](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/deep-interview/deep-interview.md) - Socratic requirements interview with ambiguity scoring.
+- [Ralplan](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/ralplan/ralplan.md) - Consensus planning with Planner, Architect, and Critic.
+- [Team](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/team/team.md) - Coordinate parallel implementation workers.
+- [Ultragoal](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/ultragoal/ultragoal.md) - Goal-tracked autonomous execution.
 
 ## Programmatic usage
 
@@ -110,5 +109,4 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 - [Development](development.md) - local setup, project structure, and debugging.
 - [CLI](cli/cli.md) - Command-line interface.
-- [Harness Runtime](harness-runtime/harness-runtime.md) - Execution environment for the coding agent.
 - [Bun](bun/bun.md) - Bun runtime support.

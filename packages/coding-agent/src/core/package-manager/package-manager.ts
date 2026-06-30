@@ -255,6 +255,14 @@ function getExtensionTempFolder(agentDir: string): string {
 }
 
 function getBundledPackageRoot(name: BundledPackageName): string {
+	// "workflows" is now a standalone workspace package at packages/workflows/src/,
+	// not an embedded package under src/packages/. Other bundled
+	// packages (lsp, mcp, providers) remain under src/packages/.
+	if (name === "workflows") {
+		const __dirname = dirname(fileURLToPath(import.meta.url));
+		const workspaceRoot = resolve(__dirname, "..", "..", "..", "..");
+		return resolve(workspaceRoot, "workflows", "src");
+	}
 	return resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "packages", name);
 }
 

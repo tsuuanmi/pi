@@ -1,0 +1,16 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"paths": {
+			"@tsuuanmi/pi-coding-agent": ["../coding-agent/dist/index.d.ts"],
+			"@tsuuanmi/pi-agent-core": ["../agent/dist/index.d.ts"],
+			"@tsuuanmi/pi-agent-core/*": ["../agent/dist/*.d.ts"],
+			"@tsuuanmi/pi-ai": ["../ai/dist/index.d.ts"],
+			"@tsuuanmi/pi-ai/*": ["../ai/dist/*.d.ts", "../ai/dist/providers/*.d.ts"]
+		}
+	},
+	"include": ["src/**/*.ts", "src/**/*.d.ts"],
+	"exclude": ["node_modules", "dist"]
+}

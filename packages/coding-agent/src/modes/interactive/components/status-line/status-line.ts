@@ -12,7 +12,7 @@ import {
 	collapsePlanningPipeline,
 	readWorkflowActiveState,
 	type WorkflowActiveEntry,
-} from "../../../../packages/workflows/runtime/shared/active-state.ts";
+} from "@tsuuanmi/pi-workflows";
 import { theme } from "../../../../theme/theme.ts";
 import { renderSkillHudBar } from "../skill-hud/render.ts";
 import { type GitStatusSummary, runGitStatusPorcelain } from "./git-utils.ts";

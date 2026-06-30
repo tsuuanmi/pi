@@ -3,7 +3,7 @@ import { renderSkillHudBar } from "../../../../../src/modes/interactive/componen
 import {
 	collapsePlanningPipeline,
 	type WorkflowActiveEntry,
-} from "../../../../../src/packages/workflows/runtime/shared/active-state.ts";
+} from "@tsuuanmi/pi-workflows";
 
 const ANSI_PATTERN = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 function stripAnsiLocal(text: string): string {

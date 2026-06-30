@@ -1,0 +1,58 @@
+{
+	"name": "@tsuuanmi/pi-workflows",
+	"version": "0.79.6",
+	"description": "Workflow runtime skills for Pi: deep-interview, ralplan, team, and ultragoal",
+	"private": true,
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./commands/state-command": {
+			"types": "./dist/commands/state-command.d.ts",
+			"import": "./dist/commands/state-command.js"
+		},
+		"./runtime/*": {
+			"types": "./dist/runtime/*.d.ts",
+			"import": "./dist/runtime/*.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"dist",
+		"skills",
+		"agents"
+	],
+	"scripts": {
+		"clean": "shx rm -rf dist",
+		"build": "tsgo -p tsconfig.build.json && npm run copy-assets",
+		"copy-assets": "shx mkdir -p dist/skills/deep-interview dist/skills/ralplan dist/skills/team dist/skills/ultragoal dist/agents && shx cp src/skills/deep-interview/SKILL.md dist/skills/deep-interview/ && shx cp src/skills/ralplan/SKILL.md dist/skills/ralplan/ && shx cp src/skills/team/SKILL.md dist/skills/team/ && shx cp src/skills/ultragoal/SKILL.md dist/skills/ultragoal/ && shx cp src/agents/*.md dist/agents/",
+		"test": "vitest --run"
+	},
+	"pi": {
+		"extensions": ["extensions/workflows.ts"],
+		"skills": ["skills/**/*.md"],
+		"agents": ["agents/*.md"]
+	},
+	"dependencies": {
+		"@tsuuanmi/pi-coding-agent": "0.79.6",
+		"typebox": "1.1.38"
+	},
+	"devDependencies": {
+		"@types/node": "24.12.4",
+		"typescript": "5.9.3",
+		"vitest": "3.2.6"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/tsuuanmi/pi.git",
+		"directory": "packages/workflows"
+	},
+	"engines": {
+		"node": ">=22.19.0"
+	}
+}

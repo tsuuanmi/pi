@@ -253,6 +253,8 @@ export {
 	type SubagentRunResult,
 	type SubagentStatus,
 } from "./core/subagents/subagents.ts";
+export { renderSubagentProgress } from "./core/subagents/subagent-progress.ts";
+export { type YieldDetails, extractYieldFromMessages } from "./core/subagents/yield-result.ts";
 // Tools
 export {
 	type BashOperations,
@@ -381,5 +383,9 @@ export {
 // Clipboard utilities
 export { copyToClipboard } from "./utils/clipboard/clipboard.ts";
 export { parseFrontmatter, stripFrontmatter } from "./utils/fs/frontmatter.ts";
+export { withFileMutationQueue } from "./utils/fs/file-mutation-queue.ts";
+export { resolvePath } from "./utils/fs/paths.ts";
+// JSONL utilities
+export { serializeJsonLine } from "./modes/rpc/jsonl.ts";
 // Shell utilities
 export { getShellConfig } from "./utils/system/shell.ts";
