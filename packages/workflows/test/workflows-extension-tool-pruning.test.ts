@@ -2,17 +2,17 @@ import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { type Api, type AssistantMessage, createAssistantMessageEventStream, type Model } from "@tsuuanmi/pi-ai";
+import {
+	AuthStorage,
+	createAgentSession,
+	DefaultResourceLoader,
+	ModelRegistry,
+	SessionManager,
+	SettingsManager,
+} from "@tsuuanmi/pi-coding-agent";
+import workflowsExtension, { WORKFLOW_OWNED_TOOLS } from "@tsuuanmi/pi-workflows";
 import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "@tsuuanmi/pi-coding-agent";
-import { ModelRegistry } from "@tsuuanmi/pi-coding-agent";
-import { createAgentSession } from "@tsuuanmi/pi-coding-agent";
-import { SessionManager } from "@tsuuanmi/pi-coding-agent";
-import { SettingsManager } from "@tsuuanmi/pi-coding-agent";
-import { DefaultResourceLoader } from "@tsuuanmi/pi-coding-agent";
-import workflowsExtension, {
-	WORKFLOW_OWNED_TOOLS,
-} from "@tsuuanmi/pi-workflows";
 
 function createModel(): Model<Api> {
 	return {

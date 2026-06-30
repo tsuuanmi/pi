@@ -1,11 +1,11 @@
-import { describe, expect, it } from "vitest";
 import {
 	resolveWorkflowToolGroup,
 	sameToolSet,
 	selectWorkflowActiveTools,
-	type WorkflowActiveState,
 	WORKFLOW_OWNED_TOOLS,
+	type WorkflowActiveState,
 } from "@tsuuanmi/pi-workflows";
+import { describe, expect, it } from "vitest";
 
 function activeState(skill: "deep-interview" | "ralplan" | "team" | "ultragoal"): WorkflowActiveState {
 	return {

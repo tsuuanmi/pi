@@ -3,6 +3,7 @@ import chalk from "chalk";
 import type { ExtensionFactory } from "../../api/types.ts";
 import { selectConfig } from "../../cli/config-selector.ts";
 import { createProjectTrustContext } from "../../cli/project-trust.ts";
+import { spawnProcess } from "../../utils/fs/child-process.ts";
 import {
 	APP_NAME,
 	CONFIG_DIR_NAME,
@@ -12,12 +13,11 @@ import {
 	PACKAGE_NAME,
 	type SelfUpdateCommand,
 } from "../config/config.ts";
-import { DefaultPackageManager } from "./package-manager.ts";
 import { SettingsManager } from "../settings/settings-manager.ts";
 import { DefaultResourceLoader } from "../skills/resource-loader.ts";
 import { type AppMode, resolveProjectTrusted } from "../trust/project-trust.ts";
 import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../trust/trust-manager.ts";
-import { spawnProcess } from "../../utils/fs/child-process.ts";
+import { DefaultPackageManager } from "./package-manager.ts";
 
 export type PackageCommand = "install" | "remove" | "update" | "list";
 

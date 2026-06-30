@@ -9,9 +9,8 @@
  * validation (accepts any JSON object as data), no JTD schema processing.
  */
 import type { AgentToolResult } from "@tsuuanmi/pi-agent-core";
+import type { ToolDefinition, YieldDetails } from "@tsuuanmi/pi-coding-agent";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition } from "@tsuuanmi/pi-coding-agent";
-import type { YieldDetails } from "@tsuuanmi/pi-coding-agent";
 
 const yieldSchema = Type.Object({
 	result: Type.Union([

@@ -1,7 +1,6 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { assert, test } from "vitest";
 import {
 	buildCompletionReceipt,
 	chooseReceiptKind,
@@ -16,6 +15,7 @@ import {
 	ultragoalLedgerPath,
 	validateCompletionReceipt,
 } from "@tsuuanmi/pi-workflows";
+import { assert, test } from "vitest";
 
 const sessionId = "test-session-id";
 

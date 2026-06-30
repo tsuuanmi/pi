@@ -1,12 +1,8 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { readWorkflowActiveState, syncWorkflowActiveState, workflowActiveStatePath } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-	readWorkflowActiveState,
-	syncWorkflowActiveState,
-	workflowActiveStatePath,
-} from "@tsuuanmi/pi-workflows";
 
 describe("session-scoped workflow active state", () => {
 	let cwd: string;

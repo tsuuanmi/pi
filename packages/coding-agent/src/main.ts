@@ -33,6 +33,7 @@ import { ENV_SESSION_DIR, expandTildePath, getAgentDir, VERSION } from "./core/c
 import { applyHttpProxySettings, configureHttpDispatcher } from "./core/exec/http-dispatcher.ts";
 import type { ModelRegistry } from "./core/model/model-registry.ts";
 import { resolveCliModel, resolveModelScope, type ScopedModel } from "./core/model/model-resolver.ts";
+import { handleConfigCommand, handlePackageCommand } from "./core/package-manager/package-manager-cli.ts";
 import type { CreateAgentSessionOptions } from "./core/sdk/sdk.ts";
 import {
 	formatMissingSessionCwdPrompt,
@@ -48,7 +49,6 @@ import { hasTrustRequiringProjectResources, ProjectTrustStore } from "./core/tru
 import { runMigrations, showDeprecationWarnings } from "./migrations.ts";
 import { InteractiveMode, runPrintMode, runRpcMode } from "./modes/index.ts";
 import { restoreStdout, takeOverStdout } from "./modes/output-guard.ts";
-import { handleConfigCommand, handlePackageCommand } from "./core/package-manager/package-manager-cli.ts";
 import { initTheme, stopThemeWatcher } from "./theme/theme.ts";
 import { resolvePath } from "./utils/fs/paths.ts";
 

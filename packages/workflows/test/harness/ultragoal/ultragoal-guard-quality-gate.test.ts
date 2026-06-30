@@ -1,7 +1,6 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assert, expect, test } from "vitest";
 import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
@@ -13,6 +12,7 @@ import {
 	ultragoalLedgerPath,
 	validateCompletionQualityGate,
 } from "@tsuuanmi/pi-workflows";
+import { assert, expect, test } from "vitest";
 
 const sessionId = "test-session-id";
 const PASSED = "passed";
@@ -508,15 +508,7 @@ test("plain briefs remain one goal and column-zero @goal delimiters split goals"
 
 test("no deferred Tier 2 tool names are registered or advertised in Ultragoal docs", async () => {
 	const toolsSource = await readFile(
-		join(
-			import.meta.dirname,
-			"..",
-			"..",
-			"src",
-			"runtime",
-			"ultragoal",
-			"ultragoal-tools.ts",
-		),
+		join(import.meta.dirname, "..", "..", "src", "runtime", "ultragoal", "ultragoal-tools.ts"),
 		"utf8",
 	);
 	const skillDoc = await readFile(

@@ -1,12 +1,7 @@
 import { execFileSync, spawn } from "node:child_process";
 import { callEndpoint } from "../harness/runtime/endpoint.ts";
 import type { GcContext } from "../harness/runtime/gc.ts";
-import {
-	collectGcReport,
-	computeGcExitCode,
-	gcPidProbe,
-	HarnessLeasesGcStoreAdapter,
-} from "../harness/runtime/gc.ts";
+import { collectGcReport, computeGcExitCode, gcPidProbe, HarnessLeasesGcStoreAdapter } from "../harness/runtime/gc.ts";
 import { mutateRuntimeSession } from "../harness/runtime/mutation.ts";
 import { RuntimeOwner, resolveOwner } from "../harness/runtime/owner.ts";
 import {

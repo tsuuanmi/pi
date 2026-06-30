@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
 import {
 	classifyPromptSpecificity,
 	maybeRedirectVagueExecution,
 	VAGUENESS_WORD_COUNT_THRESHOLD,
 } from "@tsuuanmi/pi-workflows";
+import { describe, expect, it } from "vitest";
 
 describe("vagueness-gate", () => {
 	describe("classifyPromptSpecificity", () => {

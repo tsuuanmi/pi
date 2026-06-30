@@ -2,13 +2,13 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fauxAssistantMessage, fauxToolCall, registerFauxProvider } from "@tsuuanmi/pi-ai";
+import { sessionStateDir } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
 import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
 import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
 import { DefaultResourceLoader } from "../../../src/core/skills/resource-loader.ts";
 import { SubagentManager, type SubagentRecord } from "../../../src/core/subagents/subagents.ts";
-import { sessionStateDir } from "@tsuuanmi/pi-workflows";
 
 const TEST_SESSION = "test-session";
 

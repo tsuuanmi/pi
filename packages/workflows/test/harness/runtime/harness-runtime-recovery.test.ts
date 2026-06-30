@@ -25,7 +25,11 @@ import {
 	writeSessionState,
 } from "../../../src/harness/runtime/storage.ts";
 import { SESSION_SCHEMA_VERSION, type SessionState } from "../../../src/harness/runtime/types.ts";
-import { buildVanishEvidence, requiresVanishBeforeAction, validateVanish } from "../../../src/harness/runtime/vanish.ts";
+import {
+	buildVanishEvidence,
+	requiresVanishBeforeAction,
+	validateVanish,
+} from "../../../src/harness/runtime/vanish.ts";
 
 const WRITER = { ownerId: "test", leaseEpoch: 0 };
 

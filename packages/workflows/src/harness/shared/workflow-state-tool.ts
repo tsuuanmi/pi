@@ -1,5 +1,5 @@
-import { type Static, Type } from "typebox";
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-coding-agent";
+import { type Static, Type } from "typebox";
 import { deriveDeepInterviewHud } from "../deep-interview/deep-interview-hud.ts";
 import { syncWorkflowActiveState } from "./active-state.ts";
 import { workflowReceipt } from "./receipts.ts";

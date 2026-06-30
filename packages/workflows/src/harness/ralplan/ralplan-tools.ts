@@ -1,5 +1,5 @@
-import { type Static, Type } from "typebox";
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-coding-agent";
+import { type Static, Type } from "typebox";
 import { workflowReceipt } from "../shared/receipts.ts";
 import { assertRalplanStage, assertSafePathComponent } from "../shared/state-schema.ts";
 import {

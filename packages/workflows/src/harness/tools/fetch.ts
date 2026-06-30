@@ -10,8 +10,8 @@
  * return readable text content.
  */
 import type { AgentToolResult } from "@tsuuanmi/pi-agent-core";
-import { type Static, Type } from "typebox";
 import type { ToolDefinition } from "@tsuuanmi/pi-coding-agent";
+import { type Static, Type } from "typebox";
 
 export interface FetchToolDetails {
 	url: string;

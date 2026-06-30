@@ -1,7 +1,6 @@
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	assertNonEmptySessionId,
 	assertSafePathComponent,
@@ -9,7 +8,7 @@ import {
 	decodeSessionSegment,
 	detectLatestSession,
 	encodeSessionSegment,
-	 piGlobalRoot,
+	piGlobalRoot,
 	piSessionRoot,
 	resolvePiSessionForRead,
 	resolvePiSessionForWrite,
@@ -21,6 +20,7 @@ import {
 	workflowStatePath,
 	writeSessionActivityMarker,
 } from "@tsuuanmi/pi-workflows";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("session-layout", () => {
 	describe("encodeSessionSegment / decodeSessionSegment", () => {

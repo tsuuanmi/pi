@@ -1,4 +1,5 @@
 import { type Component, truncateToWidth, visibleWidth } from "@tsuuanmi/pi-tui";
+import { collapsePlanningPipeline, readWorkflowActiveState, type WorkflowActiveEntry } from "@tsuuanmi/pi-workflows";
 import type { AgentSession } from "../../../../core/agent-session/agent-session.ts";
 import { areExperimentalFeaturesEnabled } from "../../../../core/config/experimental.ts";
 import type {
@@ -8,11 +9,6 @@ import type {
 	StatusLineSettings,
 } from "../../../../core/settings/settings-manager.ts";
 import type { ReadonlyFooterDataProvider } from "../../../../core/usage/footer-data-provider.ts";
-import {
-	collapsePlanningPipeline,
-	readWorkflowActiveState,
-	type WorkflowActiveEntry,
-} from "@tsuuanmi/pi-workflows";
 import { theme } from "../../../../theme/theme.ts";
 import { renderSkillHudBar } from "../skill-hud/render.ts";
 import { type GitStatusSummary, runGitStatusPorcelain } from "./git-utils.ts";

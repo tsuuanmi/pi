@@ -4,13 +4,13 @@ import {
 	buildDeepInterviewContinuationPrompt,
 	registerDeepInterviewTools,
 } from "../harness/deep-interview/deep-interview-tools.ts";
-import { registerHarnessTools } from "../harness/tools/harness-tools.ts";
 import { registerRalplanTools } from "../harness/ralplan/ralplan-tools.ts";
 import { readWorkflowActiveState } from "../harness/shared/active-state.ts";
 import { resolveWorkflowToolGroup, sameToolSet, selectWorkflowActiveTools } from "../harness/shared/tool-groups.ts";
 import { registerWorkflowStateTool, syncMcpHudUi, syncWorkflowHudUi } from "../harness/shared/workflow-state-tool.ts";
 import { registerSubagentTools } from "../harness/subagents/subagent-tools.ts";
 import { registerTeamTools } from "../harness/team/team-tools.ts";
+import { registerHarnessTools } from "../harness/tools/harness-tools.ts";
 import { registerUltragoalTools } from "../harness/ultragoal/ultragoal-tools.ts";
 
 async function applyWorkflowToolPruning(

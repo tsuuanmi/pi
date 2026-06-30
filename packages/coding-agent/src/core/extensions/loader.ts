@@ -12,6 +12,7 @@ import * as _bundledPiAi from "@tsuuanmi/pi-ai";
 import * as _bundledPiAiOauth from "@tsuuanmi/pi-ai/oauth";
 import type { KeyId } from "@tsuuanmi/pi-tui";
 import * as _bundledPiTui from "@tsuuanmi/pi-tui";
+import * as _bundledPiWorkflows from "@tsuuanmi/pi-workflows";
 import { createJiti } from "jiti/static";
 // Static imports of packages that extensions may use.
 // These MUST be static so Bun bundles them into the compiled binary.
@@ -33,7 +34,6 @@ import type {
 // NOTE: This import works because loader.ts exports are NOT re-exported from index.ts,
 // avoiding a circular dependency. Extensions can import from @tsuuanmi/pi-coding-agent.
 import * as _bundledPiCodingAgent from "../../index.ts";
-import * as _bundledPiWorkflows from "@tsuuanmi/pi-workflows";
 import { resolvePath } from "../../utils/fs/paths.ts";
 import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "../config/config.ts";
 import { createEventBus, type EventBus } from "../events/event-bus.ts";

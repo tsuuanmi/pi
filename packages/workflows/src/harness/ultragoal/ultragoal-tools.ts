@@ -1,5 +1,5 @@
-import { type Static, Type } from "typebox";
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-coding-agent";
+import { type Static, Type } from "typebox";
 import { maybeRedirectVagueExecution } from "../ralplan/vagueness-gate.ts";
 import { workflowReceipt } from "../shared/receipts.ts";
 import { syncWorkflowHudUi } from "../shared/workflow-state-tool.ts";

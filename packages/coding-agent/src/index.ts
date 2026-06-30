@@ -241,6 +241,7 @@ export {
 	type Skill,
 	type SkillFrontmatter,
 } from "./core/skills/skills.ts";
+export { renderSubagentProgress } from "./core/subagents/subagent-progress.ts";
 export {
 	type SubagentAwaitOptions,
 	type SubagentAwaitResult,
@@ -253,8 +254,7 @@ export {
 	type SubagentRunResult,
 	type SubagentStatus,
 } from "./core/subagents/subagents.ts";
-export { renderSubagentProgress } from "./core/subagents/subagent-progress.ts";
-export { type YieldDetails, extractYieldFromMessages } from "./core/subagents/yield-result.ts";
+export { extractYieldFromMessages, type YieldDetails } from "./core/subagents/yield-result.ts";
 // Tools
 export {
 	type BashOperations,
@@ -369,6 +369,8 @@ export {
 	UserMessageSelectorComponent,
 	type VisualTruncateResult,
 } from "./modes/interactive/components/index.ts";
+// JSONL utilities
+export { serializeJsonLine } from "./modes/rpc/jsonl.ts";
 // Theme utilities for custom tools and extensions
 export {
 	getLanguageFromPath,
@@ -382,10 +384,8 @@ export {
 } from "./theme/theme.ts";
 // Clipboard utilities
 export { copyToClipboard } from "./utils/clipboard/clipboard.ts";
-export { parseFrontmatter, stripFrontmatter } from "./utils/fs/frontmatter.ts";
 export { withFileMutationQueue } from "./utils/fs/file-mutation-queue.ts";
+export { parseFrontmatter, stripFrontmatter } from "./utils/fs/frontmatter.ts";
 export { resolvePath } from "./utils/fs/paths.ts";
-// JSONL utilities
-export { serializeJsonLine } from "./modes/rpc/jsonl.ts";
 // Shell utilities
 export { getShellConfig } from "./utils/system/shell.ts";

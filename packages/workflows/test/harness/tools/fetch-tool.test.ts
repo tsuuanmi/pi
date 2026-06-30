@@ -1,8 +1,5 @@
+import { createFetchToolDefinition, type FetchToolDetails } from "@tsuuanmi/pi-workflows";
 import { describe, expect, it } from "vitest";
-import {
-	createFetchToolDefinition,
-	type FetchToolDetails,
-} from "@tsuuanmi/pi-workflows";
 
 const fetchTool = createFetchToolDefinition();
 

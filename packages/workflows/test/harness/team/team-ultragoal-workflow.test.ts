@@ -1,7 +1,6 @@
 import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	checkpointUltragoalGoal,
 	completeTeam,
@@ -18,6 +17,7 @@ import {
 	startTeam,
 	transitionTeamTask,
 } from "@tsuuanmi/pi-workflows";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const sessionId = "test-session-id";
 

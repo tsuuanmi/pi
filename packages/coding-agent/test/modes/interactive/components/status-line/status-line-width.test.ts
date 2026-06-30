@@ -2,12 +2,12 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { visibleWidth } from "@tsuuanmi/pi-tui";
+import { syncWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { AgentSession } from "../../../../../src/core/agent-session/agent-session.ts";
 import type { SettingsManager, StatusLineSettings } from "../../../../../src/core/settings/settings-manager.ts";
 import type { ReadonlyFooterDataProvider } from "../../../../../src/core/usage/footer-data-provider.ts";
 import { StatusLineComponent } from "../../../../../src/modes/interactive/components/status-line/index.ts";
-import { syncWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import { initTheme } from "../../../../../src/theme/theme.ts";
 import { stripAnsi } from "../../../../../src/utils/terminal/ansi.ts";
 

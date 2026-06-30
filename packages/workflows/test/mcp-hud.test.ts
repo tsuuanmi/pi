@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-coding-agent";
 import workflowsExtension from "@tsuuanmi/pi-workflows";
+import { describe, expect, it } from "vitest";
 
 interface CapturedHandlers {
 	sessionStart?: (event: { type: "session_start"; reason: "startup" }, ctx: ExtensionContext) => Promise<void> | void;
