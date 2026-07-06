@@ -102,6 +102,19 @@ describe("truncate utilities", () => {
 		expect(result.outputBytes).toBe(5);
 	});
 
+	it("does not count a trailing newline as an extra output line", () => {
+		const content = "a\nb\n";
+		const head = truncateHead(content, { maxBytes: 100, maxLines: 2 });
+		const tail = truncateTail(content, { maxBytes: 100, maxLines: 2 });
+
+		expect(head.truncated).toBe(false);
+		expect(head.totalLines).toBe(2);
+		expect(head.outputLines).toBe(2);
+		expect(tail.truncated).toBe(false);
+		expect(tail.totalLines).toBe(2);
+		expect(tail.outputLines).toBe(2);
+	});
+
 	it("truncates an oversized single line with a trailing newline", () => {
 		const input = `${"X".repeat(300_000)}\n`;
 		const result = truncateTail(input, { maxBytes: 1024, maxLines: 100 });

@@ -6,7 +6,9 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentMessage } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, TruncationResult } from "@tsuuanmi/pi-agent";
+import { createCompactionSummaryMessage } from "@tsuuanmi/pi-agent";
+import { getCwdRelativePath } from "@tsuuanmi/pi-agent/node";
 import {
 	type Api,
 	type AssistantMessage,
@@ -74,7 +76,6 @@ import type {
 	ExtensionWidgetOptions,
 	ProjectTrustContext,
 } from "../../core/extensions/index.ts";
-import { createCompactionSummaryMessage } from "../../core/messages/messages.ts";
 import { defaultModelPerProvider, findExactModelReferenceMatch } from "../../core/model/model-resolver.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/model/provider-display-names.ts";
 import { DefaultPackageManager } from "../../core/package-manager/package-manager.ts";
@@ -84,7 +85,6 @@ import { type SessionContext, SessionManager } from "../../core/session/session-
 import { type AppKeybinding, KeybindingsManager } from "../../core/settings/keybindings.ts";
 import type { ResourceDiagnostic } from "../../core/skills/resource-loader.ts";
 import { BUILTIN_SLASH_COMMANDS } from "../../core/skills/slash-commands.ts";
-import type { TruncationResult } from "../../core/tools/truncate.ts";
 import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../../core/trust/trust-manager.ts";
 import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/usage/footer-data-provider.ts";
 import {
@@ -108,7 +108,6 @@ import { formatKeyText, keyDisplayText, keyHint, keyText, rawKeyHint } from "../
 import { copyToClipboard } from "../../utils/clipboard/clipboard.ts";
 import { parseGitUrl } from "../../utils/fs/git.ts";
 import { stripJsonComments } from "../../utils/fs/json.ts";
-import { getCwdRelativePath } from "../../utils/fs/paths.ts";
 import {
 	getChangelogPath,
 	getNewEntries,

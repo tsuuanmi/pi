@@ -1,5 +1,6 @@
 import { readdir as fsReaddir, stat as fsStat } from "node:fs/promises";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
+import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "@tsuuanmi/pi-agent";
 import { Text } from "@tsuuanmi/pi-tui";
 import nodePath from "path";
 import { type Static, Type } from "typebox";
@@ -9,7 +10,6 @@ import { keyHint } from "../../ui/rendering/keybinding-hints.ts";
 import { pathExists, resolveToCwd } from "./path-utils.ts";
 import { getTextOutput, renderToolPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
-import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "./truncate.ts";
 
 const lsSchema = Type.Object({
 	path: Type.Optional(Type.String({ description: "Directory to list (default: current directory)" })),

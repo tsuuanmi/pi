@@ -13,16 +13,20 @@ import type {
 	SubagentStatus,
 	ThinkingLevel,
 } from "@tsuuanmi/pi-agent";
+import {
+	extractYieldFromMessages,
+	renderSubagentProgress,
+	type SubagentProgress,
+	SubagentProgressTracker,
+} from "@tsuuanmi/pi-agent";
+import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import type { ExtensionUIContext } from "../../api/types.ts";
-import { withFileMutationQueue } from "../../utils/fs/file-mutation-queue.ts";
 import type { AgentSession } from "../agent-session/agent-session.ts";
 import { type AgentSessionServices, createAgentSessionFromServices } from "../agent-session/agent-session-services.ts";
 import { type AgentProfile, loadAgentProfile } from "../agents/agent-profiles.ts";
 import { sessionStateDir } from "../session/session-layout.ts";
 import { SessionManager } from "../session/session-manager.ts";
-import { renderSubagentProgress, type SubagentProgress, SubagentProgressTracker } from "./subagent-progress.ts";
-import { extractYieldFromMessages } from "./yield-result.ts";
 
 export type {
 	SubagentAwaitOptions,

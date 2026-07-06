@@ -1,9 +1,9 @@
+import { normalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Transport } from "@tsuuanmi/pi-ai";
 import { randomUUID } from "crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
-import { normalizePath, resolvePath } from "../../utils/fs/paths.ts";
 import { CONFIG_DIR_NAME, getAgentDir } from "../config/config.ts";
 import { DEFAULT_HTTP_IDLE_TIMEOUT_MS, parseHttpIdleTimeoutMs } from "../exec/http-dispatcher.ts";
 

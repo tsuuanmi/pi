@@ -3,7 +3,7 @@
  */
 
 import { spawn } from "node:child_process";
-import { waitForChildProcess } from "../../utils/fs/child-process.ts";
+import { waitForChildProcess } from "@tsuuanmi/pi-agent/node";
 
 /**
  * Options for executing shell commands.

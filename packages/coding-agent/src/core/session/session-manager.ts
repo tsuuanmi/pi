@@ -1,4 +1,12 @@
 import type { AgentMessage } from "@tsuuanmi/pi-agent";
+import {
+	type BashExecutionMessage,
+	type CustomMessage,
+	createBranchSummaryMessage,
+	createCompactionSummaryMessage,
+	createCustomMessage,
+} from "@tsuuanmi/pi-agent";
+import { normalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Message, TextContent } from "@tsuuanmi/pi-ai";
 import { randomUUID } from "crypto";
 import {
@@ -17,15 +25,7 @@ import { readdir, stat } from "fs/promises";
 import { join, resolve } from "path";
 import { createInterface } from "readline";
 import { StringDecoder } from "string_decoder";
-import { normalizePath, resolvePath } from "../../utils/fs/paths.ts";
 import { getAgentDir as getDefaultAgentDir, getSessionsDir } from "../config/config.ts";
-import {
-	type BashExecutionMessage,
-	type CustomMessage,
-	createBranchSummaryMessage,
-	createCompactionSummaryMessage,
-	createCustomMessage,
-} from "../messages/messages.ts";
 
 export const CURRENT_SESSION_VERSION = 3;
 

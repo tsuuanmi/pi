@@ -1,6 +1,6 @@
 import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
-import { resolvePath } from "../../utils/fs/paths.ts";
+import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type {
 	ProjectTrustContext,
 	ReplacedSessionContext,

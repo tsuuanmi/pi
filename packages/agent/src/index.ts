@@ -4,45 +4,18 @@ export * from "./agent.ts";
 export * from "./agent-loop.ts";
 // Shared extension + subagent contract (lower-layer surface for pi-workflows etc.)
 export * from "./api/extension-contract.ts";
-export * from "./harness/agent-harness.ts";
-export {
-	type BranchPreparation,
-	type BranchSummaryDetails,
-	type CollectEntriesResult,
-	collectEntriesForBranchSummary,
-	generateBranchSummary,
-	prepareBranchEntries,
-} from "./harness/compaction/branch-summarization.ts";
-export {
-	calculateContextTokens,
-	compact,
-	DEFAULT_COMPACTION_SETTINGS,
-	estimateContextTokens,
-	estimateTokens,
-	findCutPoint,
-	findTurnStartIndex,
-	generateSummary,
-	getLastAssistantUsage,
-	prepareCompaction,
-	serializeConversation,
-	shouldCompact,
-} from "./harness/compaction/compaction.ts";
+// Environment types (ExecutionEnv, FileSystem, Shell, Result, etc.)
+export * from "./harness/env/types.ts";
+// Messages (BashExecutionMessage, CustomMessage, convertToLlm, etc.)
 export * from "./harness/messages.ts";
-export * from "./harness/prompt-templates.ts";
-export * from "./harness/session/jsonl-repo.ts";
-export * from "./harness/session/memory-repo.ts";
-export * from "./harness/session/repo-utils.ts";
-export * from "./harness/session/session.ts";
-export { uuidv7 } from "./harness/session/uuid.ts";
-export * from "./harness/skills.ts";
+// Subagent types and utilities
 export * from "./harness/subagents/subagent-manager.ts";
 export * from "./harness/subagents/subagent-progress.ts";
 export * from "./harness/subagents/subagent-types.ts";
 export * from "./harness/subagents/yield-result.ts";
-export * from "./harness/system-prompt.ts";
-// Harness
-export * from "./harness/types.ts";
+// Shell output capture utilities
 export * from "./harness/utils/shell-output.ts";
+// Truncation utilities
 export * from "./harness/utils/truncate.ts";
 // Proxy utilities
 export * from "./proxy.ts";

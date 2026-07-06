@@ -1,6 +1,6 @@
 import { accessSync, constants } from "node:fs";
 import { access } from "node:fs/promises";
-import { normalizePath, resolvePath } from "../../utils/fs/paths.ts";
+import { normalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 
 const NARROW_NO_BREAK_SPACE = "\u202F";
 

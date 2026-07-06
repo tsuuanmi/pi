@@ -1,7 +1,11 @@
 import type { AgentMessage } from "@tsuuanmi/pi-agent";
+import {
+	extractYieldFromMessages,
+	renderSubagentProgress,
+	SubagentProgressTracker,
+	type YieldDetails,
+} from "@tsuuanmi/pi-agent";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { renderSubagentProgress, SubagentProgressTracker } from "../../../src/core/subagents/subagent-progress.ts";
-import { extractYieldFromMessages, type YieldDetails } from "../../../src/core/subagents/yield-result.ts";
 
 describe("SubagentProgressTracker", () => {
 	let tracker: SubagentProgressTracker;

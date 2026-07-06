@@ -1,7 +1,7 @@
 import { join } from "node:path";
-import { Agent, type ThinkingLevel } from "@tsuuanmi/pi-agent";
+import { Agent, convertToLlm, type ThinkingLevel } from "@tsuuanmi/pi-agent";
+import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { clampThinkingLevel, type Model, streamSimple } from "@tsuuanmi/pi-ai";
-import { resolvePath } from "../../utils/fs/paths.ts";
 import { AgentSession } from "../agent-session/agent-session.ts";
 import { formatNoModelsAvailableMessage } from "../auth/auth-guidance.ts";
 import { AuthStorage } from "../auth/auth-storage.ts";
@@ -9,7 +9,6 @@ import { getAgentDir } from "../config/config.ts";
 import { DEFAULT_THINKING_LEVEL } from "../config/defaults.ts";
 import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "../extensions/index.ts";
 import { optimizeRetainedContext } from "../messages/context-optimization.ts";
-import { convertToLlm } from "../messages/messages.ts";
 import { ModelRegistry } from "../model/model-registry.ts";
 import { findInitialModel } from "../model/model-resolver.ts";
 import { mergeHeaderSources } from "../model/provider-attribution.ts";

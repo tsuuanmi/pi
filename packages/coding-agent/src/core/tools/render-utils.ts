@@ -1,9 +1,9 @@
 import * as os from "node:os";
 import { pathToFileURL } from "node:url";
+import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import { getCapabilities, hyperlink } from "@tsuuanmi/pi-tui";
 import type { Theme } from "../../theme/theme.ts";
-import { resolvePath } from "../../utils/fs/paths.ts";
 import { sanitizeBinaryOutput } from "../../utils/system/shell.ts";
 import { stripAnsi } from "../../utils/terminal/ansi.ts";
 

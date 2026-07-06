@@ -6,14 +6,14 @@
  */
 
 import type { AgentMessage, StreamFn, ThinkingLevel } from "@tsuuanmi/pi-agent";
-import type { AssistantMessage, Context, Model, SimpleStreamOptions, Usage } from "@tsuuanmi/pi-ai";
-import { completeSimple } from "@tsuuanmi/pi-ai";
 import {
 	convertToLlm,
 	createBranchSummaryMessage,
 	createCompactionSummaryMessage,
 	createCustomMessage,
-} from "../messages/messages.ts";
+} from "@tsuuanmi/pi-agent";
+import type { AssistantMessage, Context, Model, SimpleStreamOptions, Usage } from "@tsuuanmi/pi-ai";
+import { completeSimple } from "@tsuuanmi/pi-ai";
 import { buildSessionContext, type CompactionEntry, type SessionEntry } from "../session/session-manager.ts";
 import {
 	computeFileLists,

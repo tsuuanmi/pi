@@ -1,5 +1,6 @@
 import { basename, dirname, isAbsolute, relative, resolve as resolvePath, sep } from "node:path";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
+import { formatPathRelativeToCwdOrAbsolute } from "@tsuuanmi/pi-agent/node";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import { Text } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
@@ -8,7 +9,6 @@ import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "../../api/types.ts";
 import { getLanguageFromPath, highlightCode, type Theme } from "../../theme/theme.ts";
 import { keyHint, keyText } from "../../ui/rendering/keybinding-hints.ts";
-import { formatPathRelativeToCwdOrAbsolute } from "../../utils/fs/paths.ts";
 import { getReadmePath } from "../config/config.ts";
 import { resolveReadPathAsync, resolveToCwd } from "./path-utils.ts";
 import { getTextOutput, renderToolPath, replaceTabs, str } from "./render-utils.ts";

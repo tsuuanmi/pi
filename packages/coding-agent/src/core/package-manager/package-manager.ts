@@ -25,14 +25,20 @@ function getEnv(): NodeJS.ProcessEnv {
 
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import type { Readable } from "node:stream";
+import {
+	canonicalizePath,
+	isLocalPath,
+	markPathIgnoredByCloudSync,
+	resolvePath,
+	spawnProcess,
+	spawnProcessSync,
+} from "@tsuuanmi/pi-agent/node";
 import { globSync } from "glob";
 import ignore from "ignore";
 import { minimatch } from "minimatch";
 import { maxSatisfying, rcompare, satisfies, valid, validRange } from "semver";
 import { isStdoutTakenOver } from "../../modes/output-guard.ts";
-import { spawnProcess, spawnProcessSync } from "../../utils/fs/child-process.ts";
 import { type GitSource, parseGitUrl } from "../../utils/fs/git.ts";
-import { canonicalizePath, isLocalPath, markPathIgnoredByCloudSync, resolvePath } from "../../utils/fs/paths.ts";
 import { CONFIG_DIR_NAME } from "../config/config.ts";
 import type { PackageSource, SettingsManager } from "../settings/settings-manager.ts";
 

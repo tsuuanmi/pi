@@ -2,13 +2,8 @@
  * Component for displaying bash command execution with streaming output.
  */
 
+import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, type TruncationResult, truncateTail } from "@tsuuanmi/pi-agent";
 import { Container, Loader, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
-import {
-	DEFAULT_MAX_BYTES,
-	DEFAULT_MAX_LINES,
-	type TruncationResult,
-	truncateTail,
-} from "../../../core/tools/truncate.ts";
 import { theme } from "../../../theme/theme.ts";
 import { keyHint, keyText } from "../../../ui/rendering/keybinding-hints.ts";
 import { truncateToVisualLines } from "../../../ui/rendering/visual-truncate.ts";

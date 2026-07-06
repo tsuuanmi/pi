@@ -1,5 +1,7 @@
 // Core session management
 
+export { convertToLlm, extractYieldFromMessages, renderSubagentProgress, type YieldDetails } from "@tsuuanmi/pi-agent";
+export { resolvePath, withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 export { type Args, parseArgs } from "./cli/args.ts";
 export {
 	AgentSession,
@@ -158,7 +160,6 @@ export {
 	wrapRegisteredTool,
 	wrapRegisteredTools,
 } from "./core/extensions/index.ts";
-export { convertToLlm } from "./core/messages/messages.ts";
 export { ModelRegistry } from "./core/model/model-registry.ts";
 export type {
 	PackageManager,
@@ -241,7 +242,6 @@ export {
 	type Skill,
 	type SkillFrontmatter,
 } from "./core/skills/skills.ts";
-export { renderSubagentProgress } from "./core/subagents/subagent-progress.ts";
 export {
 	type SubagentAwaitOptions,
 	type SubagentAwaitResult,
@@ -254,7 +254,6 @@ export {
 	type SubagentRunResult,
 	type SubagentStatus,
 } from "./core/subagents/subagents.ts";
-export { extractYieldFromMessages, type YieldDetails } from "./core/subagents/yield-result.ts";
 // Tools
 export {
 	type BashOperations,
@@ -384,8 +383,6 @@ export {
 } from "./theme/theme.ts";
 // Clipboard utilities
 export { copyToClipboard } from "./utils/clipboard/clipboard.ts";
-export { withFileMutationQueue } from "./utils/fs/file-mutation-queue.ts";
 export { parseFrontmatter, stripFrontmatter } from "./utils/fs/frontmatter.ts";
-export { resolvePath } from "./utils/fs/paths.ts";
 // Shell utilities
 export { getShellConfig } from "./utils/system/shell.ts";

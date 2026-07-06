@@ -1,4 +1,5 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
+import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { Box, Container, Spacer, Text } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
@@ -6,7 +7,6 @@ import { type Static, Type } from "typebox";
 import type { ToolDefinition } from "../../api/types.ts";
 import type { Theme } from "../../theme/theme.ts";
 import { renderDiff } from "../../ui/rendering/diff.ts";
-import { withFileMutationQueue } from "../../utils/fs/file-mutation-queue.ts";
 import {
 	applyEditsToNormalizedContent,
 	computeEditsDiff,

@@ -1,4 +1,5 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
+import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { Container, Text } from "@tsuuanmi/pi-tui";
 import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname } from "path";
@@ -6,7 +7,6 @@ import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "../../api/types.ts";
 import { getLanguageFromPath, highlightCode, type Theme } from "../../theme/theme.ts";
 import { keyHint } from "../../ui/rendering/keybinding-hints.ts";
-import { withFileMutationQueue } from "../../utils/fs/file-mutation-queue.ts";
 import { resolveToCwd } from "./path-utils.ts";
 import { normalizeDisplayText, renderToolPath, replaceTabs, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";

@@ -6,6 +6,7 @@
  * try to refresh tokens simultaneously.
  */
 
+import { normalizePath } from "@tsuuanmi/pi-agent/node";
 import {
 	findEnvKeys,
 	getEnvApiKey,
@@ -17,7 +18,6 @@ import { getOAuthApiKey, getOAuthProvider, getOAuthProviders } from "@tsuuanmi/p
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
-import { normalizePath } from "../../utils/fs/paths.ts";
 import { getAgentDir } from "../config/config.ts";
 import { resolveConfigValue } from "../config/resolve-config-value.ts";
 

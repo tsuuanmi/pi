@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
+import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Model } from "@tsuuanmi/pi-ai";
-import { resolvePath } from "../../utils/fs/paths.ts";
 import { AuthStorage } from "../auth/auth-storage.ts";
 import { getAgentDir } from "../config/config.ts";
 import type { SessionStartEvent, ToolDefinition } from "../extensions/index.ts";

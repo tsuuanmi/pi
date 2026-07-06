@@ -1,6 +1,6 @@
+import type { CustomMessage } from "@tsuuanmi/pi-agent";
 import type { Model, TextContent } from "@tsuuanmi/pi-ai";
 import type { CompactionResult } from "../core/compaction/index.ts";
-import type { CustomMessage } from "../core/messages/messages.ts";
 import type { ModelRegistry } from "../core/model/model-registry.ts";
 import type { ReadonlySessionManager, SessionManager } from "../core/session/session-manager.ts";
 import type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";

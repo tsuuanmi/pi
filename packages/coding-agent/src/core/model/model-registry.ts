@@ -2,6 +2,7 @@
  * Model registry - manages built-in and custom models, provides API key resolution.
  */
 
+import { normalizePath } from "@tsuuanmi/pi-agent/node";
 import {
 	type AnthropicMessagesCompat,
 	type Api,
@@ -25,7 +26,6 @@ import { type Static, Type } from "typebox";
 import { Compile } from "typebox/compile";
 import type { TLocalizedValidationError } from "typebox/error";
 import { stripJsonComments } from "../../utils/fs/json.ts";
-import { normalizePath } from "../../utils/fs/paths.ts";
 import type { AuthStatus, AuthStorage } from "../auth/auth-storage.ts";
 import { getAgentDir } from "../config/config.ts";
 import {

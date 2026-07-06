@@ -6,7 +6,7 @@ import {
 	ok,
 	type Result,
 	toError,
-} from "../types.ts";
+} from "../env/types.ts";
 import { DEFAULT_MAX_BYTES, truncateTail } from "./truncate.ts";
 
 export interface ShellCaptureOptions extends Omit<ExecutionEnvExecOptions, "onStdout" | "onStderr"> {

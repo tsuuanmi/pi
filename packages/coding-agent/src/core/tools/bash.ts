@@ -1,6 +1,8 @@
 import { constants } from "node:fs";
 import { access as fsAccess } from "node:fs/promises";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
+import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "@tsuuanmi/pi-agent";
+import { waitForChildProcess } from "@tsuuanmi/pi-agent/node";
 import { Container, Text, truncateToWidth } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
@@ -8,7 +10,6 @@ import type { ToolDefinition, ToolRenderResultOptions } from "../../api/types.ts
 import { theme } from "../../theme/theme.ts";
 import { keyHint } from "../../ui/rendering/keybinding-hints.ts";
 import { truncateToVisualLines } from "../../ui/rendering/visual-truncate.ts";
-import { waitForChildProcess } from "../../utils/fs/child-process.ts";
 import {
 	getShellConfig,
 	getShellEnv,
@@ -19,7 +20,6 @@ import {
 import { OutputAccumulator } from "./output-accumulator.ts";
 import { getTextOutput, invalidArgText, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
-import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "./truncate.ts";
 
 const bashSchema = Type.Object({
 	command: Type.String({ description: "Bash command to execute" }),

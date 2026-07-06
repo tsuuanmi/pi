@@ -13,8 +13,8 @@ import type { ResourceDiagnostic } from "../resources/diagnostics.ts";
 
 export type { ResourceCollision, ResourceDiagnostic } from "../resources/diagnostics.ts";
 
+import { canonicalizePath, isLocalPath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "../../api/types.ts";
-import { canonicalizePath, isLocalPath, resolvePath } from "../../utils/fs/paths.ts";
 import { createEventBus, type EventBus } from "../events/event-bus.ts";
 import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "../extensions/loader.ts";
 import { DefaultPackageManager, type PathMetadata, type ResolvedResource } from "../package-manager/package-manager.ts";

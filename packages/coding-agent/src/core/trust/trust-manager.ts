@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { canonicalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import lockfile from "proper-lockfile";
-import { canonicalizePath, resolvePath } from "../../utils/fs/paths.ts";
 import { CONFIG_DIR_NAME } from "../config/config.ts";
 
 export type ProjectTrustDecision = boolean | null;

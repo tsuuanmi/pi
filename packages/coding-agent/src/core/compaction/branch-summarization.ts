@@ -6,14 +6,14 @@
  */
 
 import type { AgentMessage, StreamFn } from "@tsuuanmi/pi-agent";
-import type { Model, SimpleStreamOptions } from "@tsuuanmi/pi-ai";
-import { completeSimple } from "@tsuuanmi/pi-ai";
 import {
 	convertToLlm,
 	createBranchSummaryMessage,
 	createCompactionSummaryMessage,
 	createCustomMessage,
-} from "../messages/messages.ts";
+} from "@tsuuanmi/pi-agent";
+import type { Model, SimpleStreamOptions } from "@tsuuanmi/pi-ai";
+import { completeSimple } from "@tsuuanmi/pi-ai";
 import type { ReadonlySessionManager, SessionEntry } from "../session/session-manager.ts";
 import {
 	computeFileLists,

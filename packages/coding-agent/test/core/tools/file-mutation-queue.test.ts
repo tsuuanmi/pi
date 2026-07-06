@@ -1,10 +1,10 @@
 import { access, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { afterEach, describe, expect, it } from "vitest";
 import { createEditTool } from "../../../src/core/tools/edit.ts";
 import { createWriteTool } from "../../../src/core/tools/write.ts";
-import { withFileMutationQueue } from "../../../src/utils/fs/file-mutation-queue.ts";
 
 function delay(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));

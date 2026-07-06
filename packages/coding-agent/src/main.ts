@@ -6,6 +6,7 @@
  */
 
 import { createInterface } from "node:readline";
+import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { modelsAreEqual } from "@tsuuanmi/pi-ai";
 import chalk from "chalk";
 import type { ExtensionFactory } from "./api/types.ts";
@@ -50,7 +51,6 @@ import { runMigrations, showDeprecationWarnings } from "./migrations.ts";
 import { InteractiveMode, runPrintMode, runRpcMode } from "./modes/index.ts";
 import { restoreStdout, takeOverStdout } from "./modes/output-guard.ts";
 import { initTheme, stopThemeWatcher } from "./theme/theme.ts";
-import { resolvePath } from "./utils/fs/paths.ts";
 
 /**
  * Read all content from piped stdin.

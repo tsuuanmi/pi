@@ -9,6 +9,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as _bundledPiAgent from "@tsuuanmi/pi-agent";
 import * as _bundledPiAgentNode from "@tsuuanmi/pi-agent/node";
+import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import * as _bundledPiAi from "@tsuuanmi/pi-ai";
 import * as _bundledPiAiOauth from "@tsuuanmi/pi-ai/oauth";
 import type { KeyId } from "@tsuuanmi/pi-tui";
@@ -35,7 +36,6 @@ import type {
 // NOTE: This import works because loader.ts exports are NOT re-exported from index.ts,
 // avoiding a circular dependency. Extensions can import from @tsuuanmi/pi-coding-agent.
 import * as _bundledPiCodingAgent from "../../index.ts";
-import { resolvePath } from "../../utils/fs/paths.ts";
 import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "../config/config.ts";
 import { createEventBus, type EventBus } from "../events/event-bus.ts";
 import type { ExecOptions } from "../exec/exec.ts";

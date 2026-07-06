@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { unlink } from "node:fs/promises";
 import * as os from "node:os";
+import { canonicalizePath as _canonicalizePath } from "@tsuuanmi/pi-agent/node";
 import {
 	type Component,
 	Container,
@@ -17,7 +18,6 @@ import type { SessionInfo, SessionListProgress } from "../../../core/session/ses
 import { KeybindingsManager } from "../../../core/settings/keybindings.ts";
 import { theme } from "../../../theme/theme.ts";
 import { keyHint, keyText } from "../../../ui/rendering/keybinding-hints.ts";
-import { canonicalizePath as _canonicalizePath } from "../../../utils/fs/paths.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
 import { filterAndSortSessions, hasSessionName, type NameFilter, type SortMode } from "./session-selector-search.ts";
 

@@ -1,9 +1,8 @@
+import { normalizePath, spawnProcessSync } from "@tsuuanmi/pi-agent/node";
 import { accessSync, constants, existsSync, readFileSync, realpathSync } from "fs";
 import { homedir } from "os";
 import { basename, dirname, join, resolve, sep } from "path";
 import { fileURLToPath } from "url";
-import { spawnProcessSync } from "../../utils/fs/child-process.ts";
-import { normalizePath } from "../../utils/fs/paths.ts";
 
 // =============================================================================
 // Package Detection

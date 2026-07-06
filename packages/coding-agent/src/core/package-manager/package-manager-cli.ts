@@ -1,9 +1,9 @@
+import { spawnProcess } from "@tsuuanmi/pi-agent/node";
 import { Markdown, type MarkdownTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import type { ExtensionFactory } from "../../api/types.ts";
 import { selectConfig } from "../../cli/config-selector.ts";
 import { createProjectTrustContext } from "../../cli/project-trust.ts";
-import { spawnProcess } from "../../utils/fs/child-process.ts";
 import {
 	APP_NAME,
 	CONFIG_DIR_NAME,

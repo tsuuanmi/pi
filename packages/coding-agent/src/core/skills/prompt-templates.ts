@@ -1,7 +1,7 @@
+import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { basename, dirname, join, resolve, sep } from "path";
 import { parseFrontmatter } from "../../utils/fs/frontmatter.ts";
-import { resolvePath } from "../../utils/fs/paths.ts";
 import { CONFIG_DIR_NAME } from "../config/config.ts";
 import type { ResourceDiagnostic } from "../resources/diagnostics.ts";
 import { createSyntheticSourceInfo, type SourceInfo } from "../resources/source-info.ts";

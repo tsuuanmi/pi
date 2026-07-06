@@ -15,7 +15,17 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
-import type { Agent, AgentEvent, AgentMessage, AgentState, AgentTool, ThinkingLevel } from "@tsuuanmi/pi-agent";
+import type {
+	Agent,
+	AgentEvent,
+	AgentMessage,
+	AgentState,
+	AgentTool,
+	BashExecutionMessage,
+	CustomMessage,
+	ThinkingLevel,
+} from "@tsuuanmi/pi-agent";
+import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi-ai";
 import {
 	clampThinkingLevel,
@@ -27,7 +37,6 @@ import {
 	streamSimple,
 } from "@tsuuanmi/pi-ai";
 import { stripFrontmatter } from "../../utils/fs/frontmatter.ts";
-import { resolvePath } from "../../utils/fs/paths.ts";
 import { sleep } from "../../utils/system/sleep.ts";
 import { ApiUsageLogger } from "../api-usage/api-usage-logger.ts";
 import { apiUsageLogPath } from "../api-usage/path.ts";
@@ -71,7 +80,6 @@ import {
 	wrapRegisteredTools,
 } from "../extensions/index.ts";
 import { emitSessionShutdownEvent } from "../extensions/runner.ts";
-import type { BashExecutionMessage, CustomMessage } from "../messages/messages.ts";
 import type { ModelRegistry } from "../model/model-registry.ts";
 import { createSyntheticSourceInfo, type SourceInfo } from "../resources/source-info.ts";
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "../session/session-manager.ts";

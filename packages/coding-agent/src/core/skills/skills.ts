@@ -1,8 +1,8 @@
+import { canonicalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import ignore from "ignore";
 import { basename, dirname, join, relative, resolve, sep } from "path";
 import { parseFrontmatter } from "../../utils/fs/frontmatter.ts";
-import { canonicalizePath, resolvePath } from "../../utils/fs/paths.ts";
 import { CONFIG_DIR_NAME, getAgentDir } from "../config/config.ts";
 import type { ResourceDiagnostic } from "../resources/diagnostics.ts";
 import { createSyntheticSourceInfo, type SourceInfo } from "../resources/source-info.ts";

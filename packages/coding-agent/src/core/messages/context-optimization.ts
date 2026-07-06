@@ -1,8 +1,7 @@
 import { createHash } from "node:crypto";
 import { isAbsolute, normalize, resolve } from "node:path";
-import type { AgentMessage } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, BashExecutionMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, TextContent, ThinkingContent, ToolCall, ToolResultMessage } from "@tsuuanmi/pi-ai";
-import type { BashExecutionMessage } from "./messages.ts";
 
 export interface RetainedContextOptimizationOptions {
 	stripThinking: boolean;
