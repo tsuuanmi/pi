@@ -26,6 +26,7 @@
 - Added default-on redacted API usage JSONL sidecar logging per completed LLM provider invocation, with `apiUsageLogging.enabled` opt-out.
 - Added provider-style `.agent` / `.agents` discovery for trusted project and user skills, prompts, context/rule files, and system prompts.
 - Added markdown/frontmatter agent definitions from `.agent/agents`, `.agents/agents`, and package `agents` resources; `pi:workflows` provides markdown-backed role agents. Also added structured agent-profile diagnostics and removed legacy JSON agent profile loading.
+- Added categorized `/settings` sections and a unified Model & thinking → Roles editor for the Main session and agent roles, with searchable per-role model selection and per-agent thinking-level overrides; provider-qualified overrides route subagents through the selected provider/model pair. Removed the duplicate interactive `/model` selector and model-cycling shortcuts in favor of this settings flow.
 - Added session-scoped workflow state/artifact paths under `.pi/_session-{id}/`, plus session resolution utilities and tests for isolated Pi workflow runs.
 - Added a ralplan pre-execution vagueness gate that redirects vague team/ultragoal dispatch prompts to planning unless explicitly forced.
 - Added a default `lsp` tool with minimal TypeScript/JavaScript, Python, and Rust Language Server Protocol support for status, diagnostics, symbols, hover, definitions, and references.
@@ -60,6 +61,7 @@
 
 ### Changed
 
+- Workflow tools are now model-visible by default; enable `workflows.pruneInactiveTools` to hide inactive workflow tool groups.
 - Moved bundled workflow agent profiles out of coding-agent core and into the `pi:workflows` package as package `agents` resources.
 - Moved OpenAI Codex quota usage helpers from coding-agent core into `@tsuuanmi/pi-ai`; coding-agent now consumes them through the AI package.
 - Workflow runtime artifacts now require an owning session (type-level `string`, not `string | undefined`) and persist under the existing `.pi/{sessionId}/` layout, including workflow audit logs, transaction journals, subagent records, and ralplan role-agent records; session directory names remain unchanged; the global `.pi/` root is reserved for shared project config only, with no silent fallback.

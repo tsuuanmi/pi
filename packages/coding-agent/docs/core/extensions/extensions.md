@@ -326,7 +326,7 @@ user sends another prompt ◄─────────────────
   ├─► session_before_tree (can cancel or customize)
   └─► session_tree
 
-/model or Ctrl+P (model selection/cycling)
+model changes (`/settings`, extension APIs, or session restore)
   ├─► thinking_level_select (if model change changes/clamps thinking level)
   └─► model_select
 
@@ -656,7 +656,7 @@ Header availability depends on provider and transport. Providers that abstract H
 
 #### model_select
 
-Fired when the model changes via `/model` command, model cycling (`Ctrl+P`), or session restore.
+Fired when the model changes via `/settings`, extension APIs, or session restore.
 
 ```typescript
 pi.on("model_select", async (event, ctx) => {
@@ -1512,7 +1512,7 @@ Each entry has this shape:
 
 Use `sourceInfo` as the canonical provenance field. Do not infer ownership from command names or from ad hoc path parsing.
 
-Built-in interactive commands (like `/model` and `/settings`) are not included here. They are handled only in interactive
+Built-in interactive commands (like `/settings`) are not included here. They are handled only in interactive
 mode and would not execute if sent via `prompt`.
 
 ### pi.registerMessageRenderer(customType, renderer)

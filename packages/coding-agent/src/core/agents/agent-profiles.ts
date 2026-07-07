@@ -27,12 +27,30 @@ export function loadAgentProfiles(options: {
 	resourceLoader?: AgentProfileResourceLoader;
 }): AgentProfileLoadResult {
 	const loaded = options.resourceLoader?.getAgentProfiles?.();
-	if (loaded) return loaded;
-	return loadAgentDefinitions({
-		cwd: options.cwd,
-		agentDir: options.agentDir,
-		projectTrusted: options.settingsManager.isProjectTrusted(),
-	});
+	const result =
+		loaded ??
+		loadAgentDefinitions({
+			cwd: options.cwd,
+			agentDir: options.agentDir,
+			projectTrusted: options.settingsManager.isProjectTrusted(),
+		});
+	const agentModels = options.settingsManager.getAgentModelOverrides();
+	const agentThinkingLevels = options.settingsManager.getAgentThinkingLevelOverrides();
+	if (Object.keys(agentModels).length === 0 && Object.keys(agentThinkingLevels).length === 0) return result;
+	return {
+		...result,
+		profiles: result.profiles.map((profile) => {
+			const model = agentModels[profile.name];
+			const thinkingLevel = agentThinkingLevels[profile.name];
+			return model === undefined && thinkingLevel === undefined
+				? profile
+				: {
+						...profile,
+						...(model === undefined ? {} : { model }),
+						...(thinkingLevel === undefined ? {} : { thinkingLevel }),
+					};
+		}),
+	};
 }
 
 export async function loadAgentProfile(

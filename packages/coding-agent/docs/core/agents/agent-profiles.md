@@ -142,6 +142,8 @@ The body content after frontmatter is appended to `systemPrompt`.
 | `appendSystemPrompt` | string | no | Additional system instructions appended after the default prompt |
 | `persistent` | boolean | no | Whether the session should persist to disk |
 
+`model` and `thinkingLevel` are profile defaults. Interactive `/settings` → Model & thinking → Roles can set `agentModels` and `agentThinkingLevels` overrides per agent role, which take precedence over profile frontmatter without editing the profile file.
+
 ### Frontmatter Aliases
 
 - `thinking-level` is an alias for `thinkingLevel`

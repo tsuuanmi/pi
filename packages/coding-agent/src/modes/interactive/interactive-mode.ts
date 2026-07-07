@@ -21,7 +21,6 @@ import {
 	type OAuthSelectPrompt,
 } from "@tsuuanmi/pi-ai";
 import type {
-	AutocompleteItem,
 	AutocompleteProvider,
 	EditorComponent,
 	Keybinding,
@@ -35,7 +34,6 @@ import {
 	CombinedAutocompleteProvider,
 	type Component,
 	Container,
-	fuzzyFilter,
 	Loader,
 	type LoaderIndicatorOptions,
 	Markdown,
@@ -76,7 +74,7 @@ import type {
 	ExtensionWidgetOptions,
 	ProjectTrustContext,
 } from "../../core/extensions/index.ts";
-import { defaultModelPerProvider, findExactModelReferenceMatch } from "../../core/model/model-resolver.ts";
+import { defaultModelPerProvider } from "../../core/model/model-resolver.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/model/provider-display-names.ts";
 import { DefaultPackageManager } from "../../core/package-manager/package-manager.ts";
 import type { SourceInfo } from "../../core/resources/source-info.ts";
@@ -129,7 +127,6 @@ import { ExtensionEditorComponent } from "./components/extension-editor.ts";
 import { ExtensionInputComponent } from "./components/extension-input.ts";
 import { ExtensionSelectorComponent } from "./components/extension-selector.ts";
 import { LoginDialogComponent } from "./components/login-dialog.ts";
-import { ModelSelectorComponent } from "./components/model-selector.ts";
 import { type AuthSelectorProvider, OAuthSelectorComponent } from "./components/oauth-selector.ts";
 import { SessionSelectorComponent } from "./components/session-selector.ts";
 import { SettingsSelectorComponent } from "./components/settings-selector.ts";
@@ -140,7 +137,6 @@ import { TreeSelectorComponent } from "./components/tree-selector.ts";
 import { TrustSelectorComponent } from "./components/trust-selector.ts";
 import { UserMessageComponent } from "./components/user-message.ts";
 import { UserMessageSelectorComponent } from "./components/user-message-selector.ts";
-import { getModelSearchText } from "./model-search.ts";
 
 /** Interface for components that can be expanded/collapsed */
 interface Expandable {
@@ -500,38 +496,6 @@ export class InteractiveMode {
 			description: command.description,
 		}));
 
-		const modelCommand = slashCommands.find((command) => command.name === "model");
-		if (modelCommand) {
-			modelCommand.getArgumentCompletions = (prefix: string): AutocompleteItem[] | null => {
-				// Get available models (scoped or from registry)
-				const models =
-					this.session.scopedModels.length > 0
-						? this.session.scopedModels.map((s) => s.model)
-						: this.session.modelRegistry.getAvailable();
-
-				if (models.length === 0) return null;
-
-				// Create items with provider/id format
-				const items = models.map((m) => ({
-					id: m.id,
-					provider: m.provider,
-					name: m.name,
-					label: `${m.provider}/${m.id}`,
-				}));
-
-				// Fuzzy filter by model ID + provider in either order.
-				const filtered = fuzzyFilter(items, prefix, getModelSearchText);
-
-				if (filtered.length === 0) return null;
-
-				return filtered.map((item) => ({
-					value: item.label,
-					label: item.id,
-					description: item.provider,
-				}));
-			};
-		}
-
 		// Convert prompt templates to SlashCommand format for autocomplete
 		const templateCommands: SlashCommand[] = this.session.promptTemplates.map((cmd) => ({
 			name: cmd.name,
@@ -639,12 +603,7 @@ export class InteractiveMode {
 					return `${sm.model.id}${thinkingStr}`;
 				})
 				.join(", ");
-			const cycleKeys = this.keybindings.getKeys("app.model.cycleForward");
-			const cycleHint =
-				cycleKeys.length > 0
-					? theme.fg("muted", ` (${formatKeyText(cycleKeys.join("/"), { capitalize: true })} to cycle)`)
-					: "";
-			console.log(theme.fg("dim", `Model scope: ${modelList}${cycleHint}`));
+			console.log(theme.fg("dim", `Model scope: ${modelList}`));
 		}
 
 		// Add header container as first child. Populate it after detectThemeIfUnset.
@@ -684,8 +643,6 @@ export class InteractiveMode {
 				hint("app.suspend", "to suspend"),
 				keyHint("tui.editor.deleteToLineEnd", "to delete to end"),
 				hint("app.thinking.cycle", "to cycle thinking level"),
-				rawKeyHint(`${keyText("app.model.cycleForward")}/${keyText("app.model.cycleBackward")}`, "to cycle models"),
-				hint("app.model.select", "to select model"),
 				hint("app.tools.expand", "to expand tools"),
 				hint("app.thinking.toggle", "to expand thinking"),
 				hint("app.editor.external", "for external editor"),
@@ -2458,12 +2415,9 @@ export class InteractiveMode {
 		this.defaultEditor.onCtrlD = () => this.handleCtrlD();
 		this.defaultEditor.onAction("app.suspend", () => this.handleCtrlZ());
 		this.defaultEditor.onAction("app.thinking.cycle", () => this.cycleThinkingLevel());
-		this.defaultEditor.onAction("app.model.cycleForward", () => this.cycleModel("forward"));
-		this.defaultEditor.onAction("app.model.cycleBackward", () => this.cycleModel("backward"));
 
 		// Global debug handler on TUI (works regardless of focus)
 		this.ui.onDebug = () => this.handleDebugCommand();
-		this.defaultEditor.onAction("app.model.select", () => this.showModelSelector());
 		this.defaultEditor.onAction("app.tools.expand", () => this.toggleToolOutputExpansion());
 		this.defaultEditor.onAction("app.thinking.toggle", () => this.toggleThinkingBlockVisibility());
 		this.defaultEditor.onAction("app.editor.external", () => this.openExternalEditor());
@@ -2492,12 +2446,6 @@ export class InteractiveMode {
 			if (text === "/settings") {
 				this.showSettingsSelector();
 				this.editor.setText("");
-				return;
-			}
-			if (text === "/model" || text.startsWith("/model ")) {
-				const searchTerm = text.startsWith("/model ") ? text.slice(7).trim() : undefined;
-				this.editor.setText("");
-				await this.handleModelCommand(searchTerm);
 				return;
 			}
 			if (text === "/import" || text.startsWith("/import ")) {
@@ -3500,26 +3448,6 @@ export class InteractiveMode {
 		}
 	}
 
-	private async cycleModel(direction: "forward" | "backward"): Promise<void> {
-		try {
-			const result = await this.session.cycleModel(direction);
-			if (result === undefined) {
-				const msg = this.session.scopedModels.length > 0 ? "Only one model in scope" : "Only one model available";
-				this.showStatus(msg);
-			} else {
-				this.footer.invalidate();
-				this.updateEditorBorderColor();
-				void this.refreshCodexUsageSummary(true);
-				const thinkingStr =
-					result.model.reasoning && result.thinkingLevel !== "off" ? ` (thinking: ${result.thinkingLevel})` : "";
-				this.showStatus(`Switched to ${result.model.name || result.model.id}${thinkingStr}`);
-				void this.maybeWarnAboutAnthropicSubscriptionAuth(result.model);
-			}
-		} catch (error) {
-			this.showError(error instanceof Error ? error.message : String(error));
-		}
-	}
-
 	private toggleToolOutputExpansion(): void {
 		this.setToolsExpanded(!this.toolOutputExpanded);
 	}
@@ -3853,6 +3781,24 @@ export class InteractiveMode {
 	}
 
 	private showSettingsSelector(): void {
+		const agentProfiles = this.session.resourceLoader
+			.getAgentProfiles()
+			.profiles.map((profile) => ({
+				name: profile.name,
+				description: profile.description,
+				model: profile.model,
+				thinkingLevel: profile.thinkingLevel,
+			}))
+			.sort((a, b) => a.name.localeCompare(b.name));
+		const mainModel = this.session.model ? `${this.session.model.provider}/${this.session.model.id}` : "";
+		const agentModelOptions = this.session.modelRegistry
+			.getAll()
+			.map((model) => ({
+				value: `${model.provider}/${model.id}`,
+				label: `${model.provider}/${model.id}`,
+				description: model.name,
+			}))
+			.sort((a, b) => a.label.localeCompare(b.label));
 		this.showSelector((done) => {
 			const selector = new SettingsSelectorComponent(
 				{
@@ -3862,6 +3808,7 @@ export class InteractiveMode {
 					followUpMode: this.session.followUpMode,
 					transport: this.settingsManager.getTransport(),
 					httpIdleTimeoutMs: this.settingsManager.getHttpIdleTimeoutMs(),
+					mainModel,
 					thinkingLevel: this.session.thinkingLevel,
 					availableThinkingLevels: this.session.getAvailableThinkingLevels(),
 					currentTheme: this.settingsManager.getTheme() || "dark",
@@ -3878,6 +3825,10 @@ export class InteractiveMode {
 					clearOnShrink: this.settingsManager.getClearOnShrink(),
 					showTerminalProgress: this.settingsManager.getShowTerminalProgress(),
 					warnings: this.settingsManager.getWarnings(),
+					agentProfiles,
+					agentModelOverrides: this.settingsManager.getAgentModelOverrides(),
+					agentThinkingLevelOverrides: this.settingsManager.getAgentThinkingLevelOverrides(),
+					agentModelOptions,
 				},
 				{
 					onAutoCompactChange: (enabled) => {
@@ -3977,6 +3928,34 @@ export class InteractiveMode {
 					onWarningsChange: (warnings) => {
 						this.settingsManager.setWarnings(warnings);
 					},
+					onMainModelChange: (modelRef) => {
+						const [provider, ...modelParts] = modelRef.split("/");
+						const modelId = modelParts.join("/");
+						const model = provider && modelId ? this.session.modelRegistry.find(provider, modelId) : undefined;
+						if (!model) {
+							this.showError(`Model not found: ${modelRef}`);
+							return;
+						}
+						void (async () => {
+							try {
+								this.settingsManager.setDefaultModelAndProvider(model.provider, model.id);
+								await this.session.setModel(model);
+								this.footer.invalidate();
+								this.updateEditorBorderColor();
+								void this.refreshCodexUsageSummary(true);
+								this.showStatus(`Model: ${model.id}`);
+								void this.maybeWarnAboutAnthropicSubscriptionAuth(model);
+							} catch (error) {
+								this.showError(error instanceof Error ? error.message : String(error));
+							}
+						})();
+					},
+					onAgentModelOverrideChange: (agentName, modelRef) => {
+						this.settingsManager.setAgentModelOverride(agentName, modelRef);
+					},
+					onAgentThinkingLevelOverrideChange: (agentName, level) => {
+						this.settingsManager.setAgentThinkingLevelOverride(agentName, level);
+					},
 					onCancel: () => {
 						done();
 						this.ui.requestRender();
@@ -3985,35 +3964,6 @@ export class InteractiveMode {
 			);
 			return { component: selector, focus: selector.getSettingsList() };
 		});
-	}
-
-	private async handleModelCommand(searchTerm?: string): Promise<void> {
-		if (!searchTerm) {
-			this.showModelSelector();
-			return;
-		}
-
-		const model = await this.findExactModelMatch(searchTerm);
-		if (model) {
-			try {
-				await this.session.setModel(model);
-				this.footer.invalidate();
-				this.updateEditorBorderColor();
-				void this.refreshCodexUsageSummary(true);
-				this.showStatus(`Model: ${model.id}`);
-				void this.maybeWarnAboutAnthropicSubscriptionAuth(model);
-			} catch (error) {
-				this.showError(error instanceof Error ? error.message : String(error));
-			}
-			return;
-		}
-
-		this.showModelSelector(searchTerm);
-	}
-
-	private async findExactModelMatch(searchTerm: string): Promise<Model<any> | undefined> {
-		const models = await this.getModelCandidates();
-		return findExactModelReferenceMatch(searchTerm, models);
 	}
 
 	private async getModelCandidates(): Promise<Model<any>[]> {
@@ -4147,38 +4097,6 @@ export class InteractiveMode {
 					this.ui.requestRender();
 				},
 			});
-			return { component: selector, focus: selector };
-		});
-	}
-
-	private showModelSelector(initialSearchInput?: string): void {
-		this.showSelector((done) => {
-			const selector = new ModelSelectorComponent(
-				this.ui,
-				this.session.model,
-				this.settingsManager,
-				this.session.modelRegistry,
-				this.session.scopedModels,
-				async (model) => {
-					try {
-						await this.session.setModel(model);
-						this.footer.invalidate();
-						this.updateEditorBorderColor();
-						void this.refreshCodexUsageSummary(true);
-						done();
-						this.showStatus(`Model: ${model.id}`);
-						void this.maybeWarnAboutAnthropicSubscriptionAuth(model);
-					} catch (error) {
-						done();
-						this.showError(error instanceof Error ? error.message : String(error));
-					}
-				},
-				() => {
-					done();
-					this.ui.requestRender();
-				},
-				initialSearchInput,
-			);
 			return { component: selector, focus: selector };
 		});
 	}
@@ -4896,21 +4814,21 @@ export class InteractiveMode {
 			const availableModels = this.session.modelRegistry.getAvailable();
 			const providerModels = availableModels.filter((model) => model.provider === providerId);
 			if (!hasDefaultModelProvider(providerId)) {
-				selectionError = `${actionLabel}, but no default model is configured for provider "${providerId}". Use /model to select a model.`;
+				selectionError = `${actionLabel}, but no default model is configured for provider "${providerId}". Use /settings → Model & thinking → Roles → Main to select a model.`;
 			} else if (providerModels.length === 0) {
-				selectionError = `${actionLabel}, but no models are available for that provider. Use /model to select a model.`;
+				selectionError = `${actionLabel}, but no models are available for that provider. Use /settings → Model & thinking → Roles → Main to select a model.`;
 			} else {
 				const defaultModelId = defaultModelPerProvider[providerId];
 				selectedModel = providerModels.find((model) => model.id === defaultModelId);
 				if (!selectedModel) {
-					selectionError = `${actionLabel}, but its default model "${defaultModelId}" is not available. Use /model to select a model.`;
+					selectionError = `${actionLabel}, but its default model "${defaultModelId}" is not available. Use /settings → Model & thinking → Roles → Main to select a model.`;
 				} else {
 					try {
 						await this.session.setModel(selectedModel);
 					} catch (error: unknown) {
 						selectedModel = undefined;
 						const errorMessage = error instanceof Error ? error.message : String(error);
-						selectionError = `${actionLabel}, but selecting its default model failed: ${errorMessage}. Use /model to select a model.`;
+						selectionError = `${actionLabel}, but selecting its default model failed: ${errorMessage}. Use /settings → Model & thinking → Roles → Main to select a model.`;
 					}
 				}
 			}
@@ -5413,12 +5331,9 @@ export class InteractiveMode {
 		const exit = this.getAppKeyDisplay("app.exit");
 		const suspend = this.getAppKeyDisplay("app.suspend");
 		const cycleThinkingLevel = this.getAppKeyDisplay("app.thinking.cycle");
-		const cycleModelForward = this.getAppKeyDisplay("app.model.cycleForward");
-		const selectModel = this.getAppKeyDisplay("app.model.select");
 		const expandTools = this.getAppKeyDisplay("app.tools.expand");
 		const toggleThinking = this.getAppKeyDisplay("app.thinking.toggle");
 		const externalEditor = this.getAppKeyDisplay("app.editor.external");
-		const cycleModelBackward = this.getAppKeyDisplay("app.model.cycleBackward");
 		const followUp = this.getAppKeyDisplay("app.message.followUp");
 		const dequeue = this.getAppKeyDisplay("app.message.dequeue");
 
@@ -5454,8 +5369,6 @@ export class InteractiveMode {
 | \`${exit}\` | Exit (when editor is empty) |
 | \`${suspend}\` | Suspend to background |
 | \`${cycleThinkingLevel}\` | Cycle thinking level |
-| \`${cycleModelForward}\` / \`${cycleModelBackward}\` | Cycle models |
-| \`${selectModel}\` | Open model selector |
 | \`${expandTools}\` | Toggle tool output expansion |
 | \`${toggleThinking}\` | Toggle thinking block visibility |
 | \`${externalEditor}\` | Edit message in external editor |

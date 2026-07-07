@@ -35,8 +35,7 @@ Type `/` in the editor to open command completion. Extensions can register custo
 |---------|-------------|
 | `/provider` | Add custom provider models |
 | `/account` | Add, open, switch, or remove stored provider accounts |
-| `/model` | Switch models |
-| `/settings` | Thinking level, theme, message delivery, transport |
+| `/settings` | Role models/thinking, theme, message delivery, transport |
 | `/resume` | Pick from previous sessions |
 | `/new` | Start a new session |
 | `/name <name>` | Set session display name |
@@ -171,7 +170,7 @@ cat README.md | pi -p "Summarize this text"
 | `--thinking <level>` | `off`, `minimal`, `low`, `medium`, `high`, `xhigh` |
 | `--list-models [search]` | List available models |
 
-Ctrl+P model cycling uses the `enabledModels` setting (see [Settings](settings.md#model-cycling)).
+Choose the main session model from `/settings` → Model & thinking → Roles → Main.
 
 ### Session Options
 

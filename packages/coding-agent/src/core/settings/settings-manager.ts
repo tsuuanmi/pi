@@ -162,6 +162,8 @@ export interface Settings {
 	defaultProvider?: string;
 	defaultModel?: string;
 	defaultThinkingLevel?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
+	agentModels?: Record<string, string>; // Per-agent profile model overrides keyed by agent name
+	agentThinkingLevels?: Record<string, "off" | "minimal" | "low" | "medium" | "high" | "xhigh">; // Per-agent thinking overrides keyed by agent name
 	transport?: TransportSetting; // default: "auto"
 	steeringMode?: "all" | "one-at-a-time";
 	followUpMode?: "all" | "one-at-a-time";
@@ -812,6 +814,51 @@ export class SettingsManager {
 	setDefaultThinkingLevel(level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh"): void {
 		this.globalSettings.defaultThinkingLevel = level;
 		this.markModified("defaultThinkingLevel");
+		this.save();
+	}
+
+	getAgentModelOverrides(): Record<string, string> {
+		return { ...(this.settings.agentModels ?? {}) };
+	}
+
+	getAgentModelOverride(agentName: string): string | undefined {
+		return this.settings.agentModels?.[agentName];
+	}
+
+	setAgentModelOverride(agentName: string, modelRef: string | undefined): void {
+		const next = { ...(this.globalSettings.agentModels ?? {}) };
+		if (modelRef === undefined) {
+			delete next[agentName];
+		} else {
+			next[agentName] = modelRef;
+		}
+		this.globalSettings.agentModels = Object.keys(next).length > 0 ? next : undefined;
+		this.markModified("agentModels");
+		this.save();
+	}
+
+	getAgentThinkingLevelOverrides(): Record<string, "off" | "minimal" | "low" | "medium" | "high" | "xhigh"> {
+		return { ...(this.settings.agentThinkingLevels ?? {}) };
+	}
+
+	getAgentThinkingLevelOverride(
+		agentName: string,
+	): "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | undefined {
+		return this.settings.agentThinkingLevels?.[agentName];
+	}
+
+	setAgentThinkingLevelOverride(
+		agentName: string,
+		level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | undefined,
+	): void {
+		const next = { ...(this.globalSettings.agentThinkingLevels ?? {}) };
+		if (level === undefined) {
+			delete next[agentName];
+		} else {
+			next[agentName] = level;
+		}
+		this.globalSettings.agentThinkingLevels = Object.keys(next).length > 0 ? next : undefined;
+		this.markModified("agentThinkingLevels");
 		this.save();
 	}
 

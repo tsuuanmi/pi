@@ -109,7 +109,7 @@ Override defaults when you need specific values:
 }
 ```
 
-The file reloads each time you open `/model`. Edit during session; no restart needed.
+The file reloads when you open `/settings` → Model & thinking → Roles. Edit during session; no restart needed.
 
 ## Supported APIs
 
@@ -162,7 +162,7 @@ For `models.json`, shell commands are resolved at request time. pi intentionally
 
 If your command is slow, expensive, rate-limited, or should keep using a previous value on transient failures, wrap it in your own script or command that implements the caching or TTL behavior you want.
 
-`/model` availability checks use configured auth presence and do not execute shell commands.
+Model availability checks use configured auth presence and do not execute shell commands.
 
 ### Custom Headers
 
@@ -199,7 +199,7 @@ If your command is slow, expensive, rate-limited, or should keep using a previou
 | `compat` | No | provider `compat` | Provider compatibility overrides. Merged with provider-level `compat` when both are set. |
 
 Current behavior:
-- `/model`, `--list-models`, and the interactive footer display entries by model `id`.
+- `/settings` → Model & thinking → Roles, `--list-models`, and the interactive footer display entries by model `id`.
 - The configured `name` is used for model matching and secondary model detail text. It does not replace the footer/status-bar model id.
 
 ### Thinking Level Map

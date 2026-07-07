@@ -30,6 +30,8 @@ Use `/trust` in interactive mode to save a project trust decision for future ses
 | `defaultProvider` | string | - | Default provider (e.g., `"anthropic"`, `"openai"`) |
 | `defaultModel` | string | - | Default model ID |
 | `defaultThinkingLevel` | string | - | `"off"`, `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"` |
+| `agentModels` | object | `{}` | Per-agent profile model overrides keyed by agent name; configurable from `/settings` → Model & thinking → Roles |
+| `agentThinkingLevels` | object | `{}` | Per-agent profile thinking-level overrides keyed by agent name; configurable from `/settings` → Model & thinking → Roles |
 | `hideThinkingBlock` | boolean | `false` | Hide thinking blocks in output |
 
 ### UI & Display
@@ -218,11 +220,11 @@ Keep `retry.provider.maxRetries` at `0` unless provider-level retries are explic
 
 When multiple sources specify a session directory, precedence is `PI_CODING_AGENT_SESSION_DIR`, then `sessionDir` in settings.json.
 
-### Model Cycling
+### Model Scope
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `enabledModels` | string[] | - | Model patterns for Ctrl+P cycling (same pattern format as `--model`) |
+| `enabledModels` | string[] | - | Model patterns that constrain startup model resolution (same pattern format as `--model`) |
 
 ```json
 {

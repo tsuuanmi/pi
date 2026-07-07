@@ -111,7 +111,7 @@ Then just talk to pi. By default, pi gives the model four tools: `read`, `write`
 
 ## Providers & Models
 
-For each built-in provider, pi maintains a list of tool-capable models, updated with every release. Authenticate via subscription (`/account add`) or API key, then select any model from that provider via `/model` (or Ctrl+L).
+For each built-in provider, pi maintains a list of tool-capable models, updated with every release. Authenticate via subscription (`/account add`) or API key, then select models from `/settings` → Model & thinking → Roles.
 
 **Subscriptions:**
 - Anthropic Claude Pro/Max
@@ -160,8 +160,7 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 |---------|-------------|
 | `/provider` | Add custom provider models |
 | `/account` | Add, open, switch, or remove stored provider accounts |
-| `/model` | Switch models |
-| `/settings` | Thinking level, theme, message delivery, transport |
+| `/settings` | Role models/thinking, theme, message delivery, transport |
 | `/resume` | Pick from previous sessions |
 | `/new` | Start a new session |
 | `/name <name>` | Set session display name |
@@ -189,8 +188,6 @@ See `/hotkeys` for the full list. Customize via `~/.pi/agent/keybindings.json`. 
 | Ctrl+C twice | Quit |
 | Escape | Cancel/abort |
 | Escape twice | Open `/tree` |
-| Ctrl+L | Open model selector |
-| Ctrl+P / Shift+Ctrl+P | Cycle models forward/backward |
 | Shift+Tab | Cycle thinking level |
 | Ctrl+O | Collapse/expand tool output |
 | Ctrl+T | Collapse/expand thinking blocks |
@@ -523,7 +520,7 @@ cat README.md | pi -p "Summarize this text"
 | `--thinking <level>` | `off`, `minimal`, `low`, `medium`, `high`, `xhigh` |
 | `--list-models [search]` | List available models |
 
-Ctrl+P model cycling uses the `enabledModels` setting (see [docs/settings.md](docs/settings.md#model-cycling)).
+Interactive role model selection is available from `/settings` → Model & thinking → Roles.
 
 ### Session Options
 

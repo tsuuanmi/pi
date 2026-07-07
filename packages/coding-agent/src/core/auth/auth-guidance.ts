@@ -16,7 +16,7 @@ export function formatNoModelsAvailableMessage(): string {
 }
 
 export function formatNoModelSelectedMessage(): string {
-	return `No model selected.\n\n${getProviderLoginHelp()}\n\nThen use /model to select a model.`;
+	return `No model selected.\n\n${getProviderLoginHelp()}\n\nThen use /settings → Model & thinking → Roles → Main to select a model.`;
 }
 
 export function formatNoApiKeyFoundMessage(provider: string): string {
