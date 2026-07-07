@@ -124,7 +124,7 @@ Per-invocation overrides (e.g. `model`, `thinkingLevel`, `tools`, `excludeTools`
 
 ## Model-visible workflow tools
 
-Pi prunes inactive workflow-owned tools from the model-visible tool list by default to reduce prompt size. The current `/skill:<name>` prompt selects that workflow's tool group for the turn; otherwise the active workflow state selects the group. When no workflow is active, workflow-owned tools are hidden while normal coding tools and custom non-workflow tools remain available. Hard filters such as explicit tool allowlists and `excludeTools` still take precedence. Disable the behavior with the `workflows.pruneInactiveTools` extension flag to restore previous workflow tool exposure.
+Pi exposes workflow-owned tools to the model-visible tool list by default. Enable the `workflows.pruneInactiveTools` extension flag to reduce prompt size by showing only the selected workflow's tool group. When pruning is enabled, the current `/skill:<name>` prompt selects that workflow's tool group for the turn; otherwise the active workflow state selects the group. When no workflow is active, workflow-owned tools are hidden while normal coding tools and custom non-workflow tools remain available. Hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
 
 ## Internals (contributors)
 

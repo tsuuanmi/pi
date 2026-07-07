@@ -33,7 +33,7 @@ async function applyWorkflowToolPruning(
 export default function workflowsExtension(pi: ExtensionAPI): void {
 	pi.registerFlag?.("workflows.pruneInactiveTools", {
 		type: "boolean",
-		default: true,
+		default: false,
 		description: "Prune inactive Pi workflow tools from model-visible tool schemas.",
 	});
 	pi.on("session_start", async (_event, ctx) => {
