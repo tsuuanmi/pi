@@ -106,12 +106,7 @@ import { formatKeyText, keyDisplayText, keyHint, keyText, rawKeyHint } from "../
 import { copyToClipboard } from "../../utils/clipboard/clipboard.ts";
 import { parseGitUrl } from "../../utils/fs/git.ts";
 import { stripJsonComments } from "../../utils/fs/json.ts";
-import {
-	getChangelogPath,
-	getNewEntries,
-	normalizeChangelogLinks,
-	parseChangelog,
-} from "../../utils/system/changelog.ts";
+import { getChangelogPath, normalizeChangelogLinks, parseChangelog } from "../../utils/system/changelog.ts";
 import { killTrackedDetachedChildren } from "../../utils/system/shell.ts";
 import { ensureTool } from "../../utils/system/tool-installer.ts";
 import { AccountSelectorComponent, type AccountSelectorOption } from "./components/account-selector.ts";
@@ -872,8 +867,6 @@ export class InteractiveMode {
 		}
 
 		const lastVersion = this.settingsManager.getLastChangelogVersion();
-		const changelogPath = getChangelogPath();
-		const entries = parseChangelog(changelogPath);
 
 		if (!lastVersion) {
 			// Fresh install - record the version, don't show changelog
@@ -881,10 +874,18 @@ export class InteractiveMode {
 			return undefined;
 		}
 
-		const newEntries = getNewEntries(entries, lastVersion);
-		if (newEntries.length > 0) {
+		// Show "What's New" once per package version change. We compare the
+		// package version (not numeric changelog entry versions) because the
+		// changelog may contain historical entries whose version numbers are not
+		// monotonic with the package version (e.g. after a rename/version reset),
+		// which would otherwise re-trigger the panel every startup.
+		if (lastVersion !== VERSION) {
 			this.settingsManager.setLastChangelogVersion(VERSION);
-			return newEntries.map((e) => normalizeChangelogLinks(e.content, e)).join("\n\n");
+			const entries = parseChangelog(getChangelogPath());
+			const latest = entries[0];
+			if (latest) {
+				return normalizeChangelogLinks(latest.content, latest);
+			}
 		}
 
 		return undefined;

@@ -3,6 +3,6 @@
 	"private": true,
 	"type": "module",
 	"pi": {
-		"extensions": ["extensions/*.ts"]
+		"extensions": ["extensions/providers.ts"]
 	}
 }

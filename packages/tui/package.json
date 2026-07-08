@@ -1,6 +1,6 @@
 {
 	"name": "@tsuuanmi/pi-tui",
-	"version": "0.79.6",
+	"version": "0.1.2",
 	"description": "Terminal User Interface library with differential rendering for efficient text-based applications",
 	"type": "module",
 	"os": [
@@ -28,7 +28,7 @@
 		"typescript",
 		"cli"
 	],
-	"author": "Mario Zechner",
+	"author": "Superman",
 	"license": "MIT",
 	"repository": {
 		"type": "git",

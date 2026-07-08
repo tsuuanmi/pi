@@ -1,10 +1,9 @@
 {
-	"name": "pi-monorepo",
+	"name": "pi",
 	"private": true,
 	"type": "module",
 	"workspaces": [
-		"packages/*",
-		"packages/coding-agent/examples/extensions/with-deps"
+		"packages/*"
 	],
 	"scripts": {
 		"clean": "npm run clean --workspaces",
@@ -48,7 +47,7 @@
 	"engines": {
 		"node": ">=22.19.0"
 	},
-	"version": "0.0.3",
+	"version": "0.1.2",
 	"overrides": {
 		"rimraf": "6.1.2",
 		"gaxios": {

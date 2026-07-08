@@ -266,8 +266,14 @@ function getBundledPackageRoot(name: BundledPackageName): string {
 	// packages (lsp, mcp, providers) remain under src/packages/.
 	if (name === "workflows") {
 		const __dirname = dirname(fileURLToPath(import.meta.url));
-		const workspaceRoot = resolve(__dirname, "..", "..", "..", "..");
-		return resolve(workspaceRoot, "workflows");
+		// Dev: the workflows package is a workspace sibling at packages/workflows
+		// (source layout with src/). Published dist bundles it flattened under
+		// .../packages/workflows (compiled .js, no src/), same as lsp/mcp/providers.
+		const devWorkspace = resolve(__dirname, "..", "..", "..", "..", "workflows");
+		if (existsSync(resolve(devWorkspace, "package.json"))) {
+			return devWorkspace;
+		}
+		return resolve(__dirname, "..", "..", "packages", "workflows");
 	}
 	return resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "packages", name);
 }
@@ -664,7 +670,7 @@ function collectAutoExtensionEntries(dir: string): string[] {
 			const ignorePath = isDir ? `${relPath}/` : relPath;
 			if (ig.ignores(ignorePath)) continue;
 
-			if (isFile && (entry.name.endsWith(".ts") || entry.name.endsWith(".js"))) {
+			if (isFile && (entry.name.endsWith(".ts") || entry.name.endsWith(".js")) && !entry.name.endsWith(".d.ts")) {
 				entries.push(fullPath);
 			} else if (isDir) {
 				const resolvedEntries = resolveExtensionEntries(fullPath);
@@ -2547,6 +2553,8 @@ export class DefaultPackageManager implements PackageManager {
 		const files: string[] = [];
 		for (const p of paths) {
 			if (!existsSync(p)) continue;
+			// Never treat type declarations or source maps as loadable resources.
+			if (p.endsWith(".d.ts") || p.endsWith(".map")) continue;
 
 			try {
 				const stats = statSync(p);

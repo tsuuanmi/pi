@@ -8,6 +8,7 @@ const packages = [
 	{ directory: "packages/ai", name: "@tsuuanmi/pi-ai" },
 	{ directory: "packages/agent", name: "@tsuuanmi/pi-agent" },
 	{ directory: "packages/tui", name: "@tsuuanmi/pi-tui" },
+	{ directory: "packages/workflows", name: "@tsuuanmi/pi-workflows" },
 	{ directory: "packages/coding-agent", name: "@tsuuanmi/pi-coding-agent" },
 ];
 
@@ -110,6 +111,9 @@ for (const pkg of packages) {
 		continue;
 	}
 
-	run("npm", ["publish", "--access", "public", "--provenance", "--ignore-scripts"], { cwd: pkg.directory });
+	const publishArgs = ["publish", "--access", "public", "--ignore-scripts"];
+	// Provenance requires GitHub Actions OIDC; skip it for local publishes.
+	if (process.env.GITHUB_ACTIONS === "true") publishArgs.push("--provenance");
+	run("npm", publishArgs, { cwd: pkg.directory });
 	console.log();
 }

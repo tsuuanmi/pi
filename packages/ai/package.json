@@ -1,6 +1,6 @@
 {
 	"name": "@tsuuanmi/pi-ai",
-	"version": "0.79.6",
+	"version": "0.1.2",
 	"description": "Unified LLM API with automatic model discovery and provider configuration",
 	"type": "module",
 	"main": "./dist/index.js",
@@ -60,7 +60,7 @@
 		"unified",
 		"api"
 	],
-	"author": "Mario Zechner",
+	"author": "Superman",
 	"license": "MIT",
 	"repository": {
 		"type": "git",

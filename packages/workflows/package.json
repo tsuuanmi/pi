@@ -1,8 +1,7 @@
 {
 	"name": "@tsuuanmi/pi-workflows",
-	"version": "0.79.6",
+	"version": "0.1.2",
 	"description": "Workflow runtime skills for Pi: deep-interview, ralplan, team, and ultragoal",
-	"private": true,
 	"type": "module",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -47,8 +46,8 @@
 		]
 	},
 	"dependencies": {
-		"@tsuuanmi/pi-agent": "0.79.6",
-		"@tsuuanmi/pi-ai": "0.79.6",
+		"@tsuuanmi/pi-agent": "^0.1.2",
+		"@tsuuanmi/pi-ai": "^0.1.2",
 		"typebox": "1.1.38"
 	},
 	"devDependencies": {
