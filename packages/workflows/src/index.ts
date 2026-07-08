@@ -17,8 +17,10 @@ export * from "./harness/deep-interview/deep-interview-state.ts";
 export * from "./harness/deep-interview/deep-interview-tools.ts";
 export * from "./harness/ralplan/ralplan-agents.ts";
 export * from "./harness/ralplan/ralplan-hud.ts";
+export * from "./harness/ralplan/ralplan-obstacles.ts";
 export * from "./harness/ralplan/ralplan-runtime.ts";
 export * from "./harness/ralplan/ralplan-tools.ts";
+export * from "./harness/ralplan/ralplan-verdicts.ts";
 export * from "./harness/ralplan/vagueness-gate.ts";
 // Harness runtime
 export * from "./harness/runtime/endpoint.ts";
@@ -40,6 +42,7 @@ export * from "./harness/runtime/vanish.ts";
 export * from "./harness/shared/active-state.ts";
 export * from "./harness/shared/audit-log.ts";
 export * from "./harness/shared/canonical-json.ts";
+export * from "./harness/shared/decision-ledger.ts";
 export * from "./harness/shared/handoff.ts";
 export * from "./harness/shared/paths.ts";
 export * from "./harness/shared/receipts.ts";
@@ -74,6 +77,7 @@ export * from "./harness/tools/yield.ts";
 export * from "./harness/ultragoal/ultragoal-artifacts.ts";
 export * from "./harness/ultragoal/ultragoal-guard.ts";
 export * from "./harness/ultragoal/ultragoal-hud.ts";
+export * from "./harness/ultragoal/ultragoal-obstacles.ts";
 export * from "./harness/ultragoal/ultragoal-quality-gate.ts";
 // ultragoal-receipt: avoid re-exporting requiredGoals (conflicts with ultragoal-runtime)
 export {

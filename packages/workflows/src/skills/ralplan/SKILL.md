@@ -46,6 +46,7 @@ Ralplan is Pi's consensus planning workflow. It produces a durable pending-appro
 9. Persist the final pending-approval plan with `stage: "final"`. The tool also writes `pending-approval.md`.
 10. Stop and ask for explicit execution approval. Do not execute the plan until the user explicitly approves it.
 11. After explicit approval or rejection, call `ralplan_approve_plan` to close the gate. Default approved handoff is `target: "ultragoal"`; use `target: "team"` only when coordinated parallel workers are needed, or `target: "stop"` to record approval without starting another workflow.
+12. `ralplan_approve_plan` enforces the latest critic verdict: it refuses to approve when the latest critic verdict is REJECT (set `overrideCriticVerdict: true` to force approval), and warns when it is ITERATE (e.g. the plan was revised but not re-reviewed by the critic). `ralplan_doctor` surfaces the same signal as a warning while a plan is pending. Do not approve over a REJECT without an explicit override decision.
 
 ## Final Plan Shape
 

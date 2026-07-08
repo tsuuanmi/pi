@@ -68,6 +68,12 @@ const ralplanApproveSchema = Type.Object({
 	approved: Type.Optional(Type.Boolean({ description: "Defaults to true. Set false to reject the pending plan." })),
 	target: Type.Optional(Type.String({ description: "ultragoal, team, or stop. Defaults to ultragoal." })),
 	note: Type.Optional(Type.String({ description: "Approval or rejection note." })),
+	overrideCriticVerdict: Type.Optional(
+		Type.Boolean({
+			description:
+				"Force approval despite a REJECT critic verdict. Records the override. Use only with explicit human intent.",
+		}),
+	),
 });
 
 type RalplanApproveInput = Static<typeof ralplanApproveSchema>;
@@ -180,15 +186,22 @@ async function executeRalplanApprove(params: RalplanApproveInput, ctx: Extension
 		approved: params.approved,
 		target: params.target,
 		note: params.note,
+		overrideCriticVerdict: params.overrideCriticVerdict,
 		sessionId: ctx.sessionManager.getSessionId(),
 	});
+	const baseText = result.approved
+		? `Approved ralplan ${result.runId} for ${result.target}`
+		: `Rejected ralplan ${result.runId}`;
+	const notes: string[] = [];
+	if (result.critic_verdict) notes.push(`critic verdict: ${result.critic_verdict}`);
+	if (result.critic_verdict_overridden) notes.push("approved despite REJECT (override)");
+	if (result.approval_warning) notes.push(result.approval_warning);
+	const text = notes.length > 0 ? `${baseText} (${notes.join("; ")})` : baseText;
 	return {
 		content: [
 			{
 				type: "text" as const,
-				text: result.approved
-					? `Approved ralplan ${result.runId} for ${result.target}`
-					: `Rejected ralplan ${result.runId}`,
+				text,
 			},
 		],
 		details: workflowReceipt({ ...result }),

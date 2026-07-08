@@ -16,6 +16,20 @@ import {
 	writeWorkflowState,
 } from "../shared/workflow-state.ts";
 import { buildRalplanHud } from "./ralplan-hud.ts";
+import {
+	assertRalplanObstacle,
+	type RalplanObstacleLedger,
+	ralplanObstacleFromVerdict,
+	readRalplanObstacleLedger,
+	unresolvedRalplanObstacles,
+	writeRalplanObstacle,
+} from "./ralplan-obstacles.ts";
+import {
+	isRalplanVerdict,
+	parseRalplanVerdict,
+	type RalplanCriticVerdictKind,
+	type RalplanVerdict,
+} from "./ralplan-verdicts.ts";
 
 export interface RalplanPlannerStateUpdate {
 	plannerSubagentId?: string;
@@ -35,6 +49,8 @@ export interface RalplanIndexRow {
 	path: string;
 	sha256: string;
 	created_at: string;
+	/** Parsed critic/architect verdict (R-1 prerequisite). Omitted for planner/revision/adr/final and when no confident verdict is found. */
+	verdict?: RalplanVerdict;
 }
 
 export interface RalplanWriteArtifactResult {
@@ -47,6 +63,8 @@ export interface RalplanWriteArtifactResult {
 	pendingApprovalPath?: string;
 	deduplicated: boolean;
 	plannerState?: RalplanPlannerStateUpdate;
+	/** Parsed critic/architect verdict, when the stage produced one (R-1 prerequisite). */
+	verdict?: RalplanVerdict;
 }
 
 export interface RalplanInvalidIndexLine {
@@ -89,6 +107,12 @@ export interface RalplanApproveResult {
 	pendingApprovalPath: string;
 	ralplanState: Record<string, unknown>;
 	targetState?: Record<string, unknown>;
+	/** Latest critic verdict at approval time, if a critic stage recorded one. */
+	critic_verdict?: RalplanCriticVerdictKind;
+	/** True when approval proceeded despite a REJECT verdict via `overrideCriticVerdict`. */
+	critic_verdict_overridden?: boolean;
+	/** Soft warning surfaced at approval (e.g. latest critic verdict is ITERATE). */
+	approval_warning?: string;
 }
 
 export interface RalplanDoctorResult {
@@ -137,6 +161,7 @@ function parseRalplanIndexLine(line: string): { row?: RalplanIndexRow; error?: s
 	if (typeof parsed.stage_n !== "number" || typeof parsed.path !== "string" || typeof parsed.sha256 !== "string") {
 		return { error: "index row is missing required stage_n/path/sha256 fields" };
 	}
+	const verdict = isRalplanVerdict(parsed.verdict) ? parsed.verdict : undefined;
 	return {
 		row: {
 			stage,
@@ -144,6 +169,7 @@ function parseRalplanIndexLine(line: string): { row?: RalplanIndexRow; error?: s
 			path: parsed.path,
 			sha256: parsed.sha256,
 			created_at: typeof parsed.created_at === "string" ? parsed.created_at : "",
+			...(verdict ? { verdict } : {}),
 		},
 	};
 }
@@ -294,6 +320,8 @@ export async function writeRalplanArtifact(
 	const body = content.endsWith("\n") ? content : `${content}\n`;
 	const contentSha = sha256(body);
 	const plannerState = plannerStateUpdate(input);
+	const verdict =
+		input.stage === "critic" || input.stage === "architect" ? parseRalplanVerdict(input.stage, body) : undefined;
 	const index = await readRalplanIndex(cwd, runId, sessionId);
 	const existing = latestForStageN(index.rows, input.stage, input.stageN);
 	if (existing) {
@@ -312,6 +340,7 @@ export async function writeRalplanArtifact(
 			pendingApprovalPath: input.stage === "final" ? ralplanPendingApprovalPath(cwd, runId, sessionId) : undefined,
 			deduplicated: true,
 			plannerState,
+			...(existing.verdict ? { verdict: existing.verdict } : {}),
 		};
 	}
 
@@ -330,6 +359,7 @@ export async function writeRalplanArtifact(
 			path: artifact.path,
 			sha256: artifact.sha256,
 			created_at: artifact.createdAt,
+			...(verdict ? { verdict } : {}),
 		},
 		{ cwd, key: ralplanIndexKey },
 	);
@@ -337,6 +367,26 @@ export async function writeRalplanArtifact(
 	if (input.stage === "final") {
 		pendingApprovalPath = ralplanPendingApprovalPath(cwd, runId, sessionId);
 		await writeTextArtifact(pendingApprovalPath, body, { cwd });
+	}
+
+	// Phase R-1 dual-write: map the parsed critic/architect verdict to a typed
+	// obstacle and append it to the per-run obstacle ledger ALONGSIDE the durable
+	// index-row verdict (already written above). FAIL-SOFT: the obstacle ledger is
+	// additive scaffolding and must never change the artifact/index write path, so a
+	// mapping/validation/IO failure is warned and swallowed. The verdict on the
+	// index row (the authoritative record) is already written. Positive/commentary
+	// verdicts map to `undefined` and append nothing. Skipped on the dedup path.
+	if (verdict) {
+		const obstacle = ralplanObstacleFromVerdict(verdict, artifact.path, artifact.createdAt);
+		if (obstacle) {
+			try {
+				assertRalplanObstacle(obstacle);
+				await writeRalplanObstacle(cwd, runId, sessionId, obstacle);
+			} catch (error) {
+				const msg = error instanceof Error ? error.message : String(error);
+				console.warn(`ralplan obstacle dual-write failed (R-1 fail-soft): ${msg}`);
+			}
+		}
 	}
 	const previousState = await readWorkflowState(cwd, "ralplan", { sessionId }).catch(() => undefined);
 	const state = await writeWorkflowState(
@@ -375,12 +425,71 @@ export async function writeRalplanArtifact(
 		pendingApprovalPath,
 		deduplicated: false,
 		plannerState,
+		...(verdict ? { verdict } : {}),
 	};
+}
+
+function latestCriticPass(
+	rows: readonly RalplanIndexRow[],
+): { verdict: RalplanCriticVerdictKind; planRef: string } | undefined {
+	let verdict: RalplanCriticVerdictKind | undefined;
+	let planRef: string | undefined;
+	let stageN = -1;
+	for (const row of rows) {
+		if (row.stage !== "critic" || !row.verdict || row.verdict.role !== "critic") continue;
+		if (row.stage_n > stageN) {
+			verdict = row.verdict.verdict;
+			planRef = row.path;
+			stageN = row.stage_n;
+		}
+	}
+	return verdict !== undefined && planRef !== undefined ? { verdict, planRef } : undefined;
+}
+
+function latestCriticVerdict(rows: readonly RalplanIndexRow[]): RalplanCriticVerdictKind | undefined {
+	return latestCriticPass(rows)?.verdict;
+}
+
+/**
+ * Phase R-2 agreement check: does the obstacle ledger reflect the latest critic
+ * verdict for the latest critic pass? Scoped to the latest pass's artifact
+ * (`scope.planRef`) so stale active obstacles from EARLIER revision passes (R-1
+ * never resolves obstacles) do not read as divergence. By construction R-1 writes
+ * exactly the right obstacle (or none for APPROVE), so disagreement means a
+ * dual-write bug or a corrupt ledger.
+ */
+function criticObstacleAgreement(
+	pass: { verdict: RalplanCriticVerdictKind; planRef: string },
+	ledger: RalplanObstacleLedger,
+): { agree: boolean; reason?: string } {
+	const obstacles = unresolvedRalplanObstacles(ledger, { scope: { planRef: pass.planRef } });
+	if (pass.verdict === "approve") {
+		if (obstacles.length > 0)
+			return {
+				agree: false,
+				reason: `latest critic verdict is APPROVE but ${obstacles.length} unresolved obstacle(s) remain for ${pass.planRef}`,
+			};
+		return { agree: true };
+	}
+	const expectedKind = pass.verdict === "reject" ? "plan_rejected" : "revision_required";
+	if (!obstacles.some((o) => o.kind === expectedKind))
+		return {
+			agree: false,
+			reason: `latest critic verdict is ${pass.verdict.toUpperCase()} but no unresolved ${expectedKind} obstacle recorded for ${pass.planRef}`,
+		};
+	return { agree: true };
 }
 
 export async function approveRalplanPlan(
 	cwd: string,
-	options: { runId?: string; target?: RalplanApprovalTarget; approved?: boolean; note?: string; sessionId: string },
+	options: {
+		runId?: string;
+		target?: RalplanApprovalTarget;
+		approved?: boolean;
+		note?: string;
+		overrideCriticVerdict?: boolean;
+		sessionId: string;
+	},
 ): Promise<RalplanApproveResult> {
 	const sessionId = options.sessionId;
 	const target = options.target ?? "ultragoal";
@@ -394,6 +503,48 @@ export async function approveRalplanPlan(
 		throw new Error("cannot approve ralplan: no pending approval plan is available");
 	}
 	await readFile(status.pending_approval_path, "utf8");
+
+	// Critic-verdict gate (R-2): refuse to approve a plan the latest critic explicitly
+	// REJECTed, unless `overrideCriticVerdict` is set. ITERATE produces a soft warning
+	// (the plan was not re-reviewed after the last revision). APPROVE and no-critic
+	// runs proceed silently (backward compat). Rejections (approved === false) bypass
+	// the gate entirely.
+	const criticPass = latestCriticPass(status.rows);
+	const criticVerdict = criticPass?.verdict;
+	let criticVerdictOverridden = false;
+	let approvalWarning: string | undefined;
+	if (approved) {
+		if (criticVerdict === "reject") {
+			if (!options.overrideCriticVerdict) {
+				throw new Error(
+					"cannot approve ralplan: the latest critic verdict is REJECT. Revise and re-run the critic, or set overrideCriticVerdict to force approval.",
+				);
+			}
+			criticVerdictOverridden = true;
+		} else if (criticVerdict === "iterate") {
+			approvalWarning =
+				"latest critic verdict is ITERATE; the plan was not re-reviewed by the critic after the last revision.";
+		}
+	}
+
+	// R-2 obstacle-ledger agreement (mirror of B-1): the R-1 dual-write should
+	// keep the obstacle ledger in sync with the latest critic verdict for the
+	// latest critic pass (scoped by planRef so stale earlier-pass obstacles do not
+	// read as divergence). Divergence = a dual-write bug or a corrupt ledger.
+	// Assert in dev/test, warn in production. Only checked when the ledger is
+	// non-empty (a missing/empty ledger is the pre-R-1 / fail-soft case, not a
+	// divergence) and a critic pass exists.
+	if (criticPass) {
+		const ledger = await readRalplanObstacleLedger(cwd, status.run_id, sessionId);
+		if (ledger.obstacles.length > 0) {
+			const agreement = criticObstacleAgreement(criticPass, ledger);
+			if (!agreement.agree) {
+				const msg = `ralplan critic/obstacle divergence for ${criticPass.planRef}: ${agreement.reason}`;
+				if (process.env.NODE_ENV !== "production") throw new Error(msg);
+				console.warn(msg);
+			}
+		}
+	}
 	const now = new Date().toISOString();
 	let ralplanState: Record<string, unknown>;
 	let targetState: Record<string, unknown> | undefined;
@@ -468,6 +619,9 @@ export async function approveRalplanPlan(
 		pendingApprovalPath: status.pending_approval_path,
 		ralplanState,
 		targetState,
+		...(criticVerdict ? { critic_verdict: criticVerdict } : {}),
+		...(criticVerdictOverridden ? { critic_verdict_overridden: true } : {}),
+		...(approvalWarning ? { approval_warning: approvalWarning } : {}),
 	};
 }
 
@@ -498,6 +652,28 @@ export async function doctorRalplan(cwd: string, sessionId: string, runId?: stri
 				await readFile(status.pending_approval_path, "utf8");
 			} catch {
 				problems.push(`pending approval artifact is missing: ${status.pending_approval_path}`);
+			}
+		}
+		const pendingCriticVerdict = latestCriticVerdict(status.rows);
+		if (pendingCriticVerdict === "reject") warnings.push("pending approval but the latest critic verdict is REJECT");
+		else if (pendingCriticVerdict === "iterate")
+			warnings.push(
+				"pending approval but the latest critic verdict is ITERATE (not re-reviewed after last revision)",
+			);
+		// R-2 obstacle-ledger agreement warning (mirror of the approve dev-assert).
+		// Doctor surfaces divergence (including an empty ledger against a blocker
+		// verdict) as a warning rather than throwing.
+		const pass = latestCriticPass(status.rows);
+		if (pass && status.run_id) {
+			const ledger = await readRalplanObstacleLedger(cwd, status.run_id, sessionId);
+			if (ledger.obstacles.length === 0) {
+				if (pass.verdict === "reject" || pass.verdict === "iterate")
+					warnings.push(
+						`latest critic verdict is ${pass.verdict.toUpperCase()} but the obstacle ledger is empty (dual-write may have failed or run predates R-1)`,
+					);
+			} else {
+				const agreement = criticObstacleAgreement(pass, ledger);
+				if (!agreement.agree) warnings.push(`critic/obstacle divergence: ${agreement.reason}`);
 			}
 		}
 	}

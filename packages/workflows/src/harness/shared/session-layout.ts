@@ -185,6 +185,11 @@ export function ralplanPendingApprovalPath(cwd: string, runId: string, sessionId
 	return join(ralplanRunDir(cwd, runId, sessionId), "pending-approval.md");
 }
 
+/** Per-run ralplan obstacle ledger (Phase R-1). Run-scoped: each run's critic/architect obstacles live beside its index. */
+export function ralplanObstacleLedgerPath(cwd: string, runId: string, sessionId: string): string {
+	return join(ralplanRunDir(cwd, runId, sessionId), "obstacles.json");
+}
+
 export function ultragoalDir(cwd: string, sessionId: string): string {
 	return join(piSessionRoot(cwd, sessionId), "ultragoal");
 }

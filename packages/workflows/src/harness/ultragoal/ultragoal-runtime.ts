@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { syncWorkflowActiveState } from "../shared/active-state.ts";
+import type { ObstacleRegression, ObstacleStatus } from "../shared/decision-ledger.ts";
 import {
 	ultragoalBriefPath,
 	ultragoalGoalsPath,
@@ -16,6 +17,12 @@ import {
 } from "../shared/state-writer.ts";
 import { readWorkflowState, writeWorkflowState } from "../shared/workflow-state.ts";
 import { buildUltragoalHud } from "./ultragoal-hud.ts";
+import {
+	assertUltragoalObstacle,
+	buildUltragoalObstacle,
+	ULTRAGOAL_OBSTACLE_KINDS,
+	writeUltragoalObstacle,
+} from "./ultragoal-obstacles.ts";
 import { validateCompletionQualityGate } from "./ultragoal-quality-gate.ts";
 import {
 	buildCompletionReceipt,
@@ -591,4 +598,75 @@ export async function readUltragoalCompact(cwd: string, sessionId: string): Prom
 			: undefined,
 		goals: status.goals.map((goal) => ({ id: goal.id, title: goal.title, status: goal.status })),
 	};
+}
+
+/**
+ * Record a typed review-blocker obstacle against the active goal (Phase B-0
+ * additive dual-write). Runs the integrity wall (`assertUltragoalObstacle`) on
+ * the obstacle BEFORE any write, so an invalid obstacle never leaves a legacy
+ * review-blocker goal behind. Then performs the unchanged legacy write
+ * (`recordUltragoalReviewBlockers`: mark the goal `review_blocked`, append the
+ * steering `review_blocker` goal, write the `review_blockers_recorded` ledger
+ * event) AND appends the validated obstacle to the per-skill obstacle ledger.
+ *
+ * The guard and checkpoint path are unchanged and still drive off the legacy
+ * model; the obstacle ledger is read only from Phase B-1 onward. Existing
+ * behavior and tests are unaffected.
+ */
+export async function recordUltragoalObstacle(
+	cwd: string,
+	input: {
+		goalId: string;
+		kind: string;
+		title: string;
+		objective: string;
+		evidence: string;
+		rationale?: string;
+		criterion?: string;
+		regression?: ObstacleRegression;
+		status?: ObstacleStatus;
+	},
+	sessionId: string,
+): Promise<UltragoalPlan> {
+	const plan = await readUltragoalPlan(cwd, sessionId);
+	if (!plan) throw new Error("No ultragoal plan found. Create one first.");
+	const goal = plan.goals.find((item) => item.id === input.goalId);
+	if (!goal) throw new Error(`unknown ultragoal goal: ${input.goalId}`);
+	if (goal.status !== "active") throw new Error("record-obstacle target must be the active goal");
+	if (activeRecordedBlocker(plan, goal.id)) throw new Error(`review blockers already recorded for ${goal.id}`);
+	if (!(input.kind in ULTRAGOAL_OBSTACLE_KINDS)) throw new Error(`unknown ultragoal obstacle kind: ${input.kind}`);
+	const title = nonEmpty(input.title, "record-obstacle title");
+	const objective = nonEmpty(input.objective, "record-obstacle objective");
+	const evidence = nonEmpty(input.evidence, "record-obstacle evidence");
+	const status: ObstacleStatus = input.status ?? "active";
+	const now = nowIso();
+
+	// Build + validate the obstacle FIRST (no writes): an invalid obstacle must
+	// not produce a legacy review-blocker goal.
+	const obstacle = buildUltragoalObstacle(
+		{
+			kind: input.kind,
+			name: ULTRAGOAL_OBSTACLE_KINDS[input.kind]?.label ?? input.kind,
+			status,
+			scope: { goalId: goal.id, ...(input.criterion ? { criterion: input.criterion } : {}) },
+			evidence,
+			rationale: input.rationale,
+			regression: input.regression,
+			originRef: goal.id,
+		},
+		now,
+	);
+	assertUltragoalObstacle(obstacle);
+
+	// Legacy dual-write (unchanged path).
+	const nextPlan = await recordUltragoalReviewBlockers(
+		cwd,
+		{ goalId: goal.id, title, objective, evidence },
+		sessionId,
+	);
+
+	// New path: append the validated obstacle to the per-skill ledger.
+	await writeUltragoalObstacle(cwd, sessionId, obstacle);
+
+	return nextPlan;
 }

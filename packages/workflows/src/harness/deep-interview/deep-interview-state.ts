@@ -1,4 +1,10 @@
 import { createHash } from "node:crypto";
+import {
+	type ObstacleInput,
+	type ObstacleValidator,
+	type ObstacleViolation,
+	validateObstacles,
+} from "../shared/decision-ledger.ts";
 
 /**
  * Default deep-interview ambiguity threshold. The interview is considered
@@ -331,39 +337,92 @@ export function mergeDeepInterviewEnvelope(
 	return merged as DeepInterviewStateEnvelope;
 }
 
+/**
+ * Deep-interview adapter for the shared integrity wall (`validateObstacles`).
+ *
+ * Maps a round's `DeepInterviewTriggerMetadata` into the normalized
+ * `ObstacleInput` shape, supplies the skill-specific "blocked dimension must
+ * not improve" check, and formats structured violations back into the exact
+ * historical message strings so behavior and diagnostics are unchanged.
+ */
+interface DeepInterviewDimensionContext {
+	priorScores?: Record<string, number>;
+	nextScores?: Record<string, number>;
+}
+
+const deepInterviewObstacleValidator: ObstacleValidator<DeepInterviewDimensionContext> = {
+	validateActive(obstacle, { priorScores, nextScores }) {
+		const violations: ObstacleViolation[] = [];
+		const dimension = obstacle.scope?.dimension;
+		if (dimension === undefined) return violations;
+		const priorDim = priorScores?.[dimension] ?? obstacle.fallbackPriorValue;
+		const nextDim = nextScores?.[dimension] ?? obstacle.fallbackNewValue;
+		if (typeof priorDim !== "number" || typeof nextDim !== "number") {
+			violations.push({ code: "missing_dimension_scores", kind: obstacle.kind, dimension });
+		} else if (nextDim > priorDim) {
+			violations.push({
+				code: "dimension_improved",
+				kind: obstacle.kind,
+				dimension,
+				priorValue: priorDim,
+				newValue: nextDim,
+			});
+		}
+		return violations;
+	},
+};
+
+function mapDeepInterviewTriggersToObstacles(
+	triggers: DeepInterviewTriggerMetadata[],
+	prior: DeepInterviewRoundRecord | undefined,
+	next: DeepInterviewRoundRecord,
+): { obstacles: ObstacleInput[]; skillCtx: DeepInterviewDimensionContext } {
+	const priorAmbiguity = prior?.ambiguity;
+	const nextAmbiguity = next.ambiguity;
+	const regression =
+		typeof priorAmbiguity === "number" && typeof nextAmbiguity === "number"
+			? { metric: "ambiguity", priorValue: priorAmbiguity, newValue: nextAmbiguity, direction: "rise" as const }
+			: undefined;
+	const obstacles: ObstacleInput[] = triggers.map((trigger) => ({
+		kind: trigger.kind,
+		status: trigger.status,
+		rationale: trigger.rationale,
+		regression,
+		scope: { dimension: trigger.dimension, component: trigger.component },
+		fallbackPriorValue: trigger.priorDimensionScore,
+		fallbackNewValue: trigger.newDimensionScore,
+	}));
+	return { obstacles, skillCtx: { priorScores: prior?.scores, nextScores: next.scores } };
+}
+
+function formatDeepInterviewViolations(violations: ObstacleViolation[]): string[] {
+	return violations.map((violation) => {
+		switch (violation.code) {
+			case "missing_rationale":
+				return `trigger ${violation.kind} is ${violation.status} but has no rationale`;
+			case "missing_regression_metrics":
+				return `active trigger ${violation.kind} is missing ambiguity metrics to prove a rise`;
+			case "no_regression":
+				return `active trigger ${violation.kind} did not raise ambiguity (${violation.priorValue} -> ${violation.newValue})`;
+			case "missing_dimension_scores":
+				return `active trigger ${violation.kind} is missing dimension "${violation.dimension}" scores to prove non-improvement`;
+			case "dimension_improved":
+				return `active trigger ${violation.kind} on dimension "${violation.dimension}" improved clarity ${violation.priorValue} -> ${violation.newValue}`;
+			default:
+				return `active trigger ${violation.kind} is invalid`;
+		}
+	});
+}
+
 export function validateDeepInterviewScoredTransition(
 	prior: DeepInterviewRoundRecord | undefined,
 	next: DeepInterviewRoundRecord,
 ): TransitionValidationResult {
-	const violations: string[] = [];
-	for (const trigger of next.triggers ?? []) {
-		if (trigger.status === "disputed" || trigger.status === "unresolved") {
-			if (!trigger.rationale || trigger.rationale.trim() === "") {
-				violations.push(`trigger ${trigger.kind} is ${trigger.status} but has no rationale`);
-			}
-			continue;
-		}
-		if (!prior) continue;
-		if (typeof prior.ambiguity !== "number" || typeof next.ambiguity !== "number") {
-			violations.push(`active trigger ${trigger.kind} is missing ambiguity metrics to prove a rise`);
-		} else if (!(next.ambiguity > prior.ambiguity)) {
-			violations.push(
-				`active trigger ${trigger.kind} did not raise ambiguity (${prior.ambiguity} -> ${next.ambiguity})`,
-			);
-		}
-		const priorDim = prior.scores?.[trigger.dimension] ?? trigger.priorDimensionScore;
-		const nextDim = next.scores?.[trigger.dimension] ?? trigger.newDimensionScore;
-		if (typeof priorDim !== "number" || typeof nextDim !== "number") {
-			violations.push(
-				`active trigger ${trigger.kind} is missing dimension "${trigger.dimension}" scores to prove non-improvement`,
-			);
-		} else if (nextDim > priorDim) {
-			violations.push(
-				`active trigger ${trigger.kind} on dimension "${trigger.dimension}" improved clarity ${priorDim} -> ${nextDim}`,
-			);
-		}
-	}
-	return { ok: violations.length === 0, violations };
+	const { obstacles, skillCtx } = mapDeepInterviewTriggersToObstacles(next.triggers ?? [], prior, next);
+	const result = validateObstacles(obstacles, deepInterviewObstacleValidator, skillCtx, {
+		priorPresent: prior !== undefined,
+	});
+	return { ok: result.ok, violations: formatDeepInterviewViolations(result.violations) };
 }
 
 function readRounds(envelope: DeepInterviewStateEnvelope): DeepInterviewRoundRecord[] {
