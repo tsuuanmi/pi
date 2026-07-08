@@ -22,6 +22,14 @@ Ask before proceeding when ambiguity affects correctness, data loss, public APIs
 
 Before implementation, read both relevant documentation and affected source code. Docs explain intent; source code is the ground truth. Read relevant docs when the task touches architecture, public APIs, CLI behavior, configuration, pipeline stages, data flow, schemas, generated outputs, or user-visible behavior. Read affected source files in full before editing them, making broad changes, investigating behavior, auditing correctness, or modifying files you have not fully inspected. Do not rely only on search snippets for broad or sensitive changes. If docs and source disagree, follow the source code and update the docs when documented behavior changes.
 
+### LSP vs textual search
+
+Prefer the `lsp` tool over `grep`/`read` for **symbol** queries when a supported language server (TypeScript/JavaScript, Python, Rust) is warm: call sites (`references`), declarations (`definition`), types and docs (`hover`), file outlines (`documentSymbols`), and per-file type errors (`diagnostics`). LSP resolves imports, re-exports, and aliases that textual search cannot.
+
+Prefer `grep`/`read`/`bash` for **textual** queries: string literals, comments, `TODO`s, config values, regex patterns, cross-file content search, non-indexed or generated files, and dynamic/reflective (string-based) usages LSP cannot see.
+
+When auditing call sites before a refactor or rename, use `lsp` `references` for the exact call graph and run `lsp` `diagnostics` on touched files for quick type feedback before the full project typecheck.
+
 ---
 
 ## 4. Standard Workflow
@@ -30,7 +38,7 @@ Before implementation, read both relevant documentation and affected source code
 
 **Plan.** Before implementation, briefly state what will change, what will stay the same, likely affected files, and verification to run. Ask for confirmation only when the change is risky, destructive, blocking-ambiguous, or broader than requested.
 
-**Implement.** Work in an isolated worktree when available (`omx -w <branch>`). Create temporary backups in `/tmp` before editing files. Make surgical changes only. Follow existing style, use existing utilities before adding new ones, avoid unrelated cleanup and speculative abstractions, and preserve intentional behavior unless the user asks to change it.
+**Implement.** Work in an isolated worktree when available (`omx -w <branch>`). Create temporary backups in `/tmp` before editing files. Make surgical changes only. Follow existing style, use existing utilities before adding new ones, avoid unrelated cleanup and speculative abstractions, and preserve intentional behavior unless the user asks to change it. Prefer small, uniquely-anchored `edit` replacements over large blocks; large multi-line edits (many tabs) or non-ASCII punctuation such as em-dashes fail more often, so split big rewrites into sequential smaller edits.
 
 **Verify.** Before finalizing: review diffs, run required language-specific checks, run only allowed tests, confirm no backup files were created inside the repo, update docs and changelogs when required, and confirm `git status` contains only intentional changes.
 
@@ -134,11 +142,27 @@ cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
+### This repository (pi monorepo)
+
+Workspace-package tests import packages (e.g. `@tsuuanmi/pi-workflows`) from the gitignored `dist/`, not `src/`. After any `src/` change, rebuild that package's `dist` (run `npm run build` in the package dir, e.g. `packages/workflows`) before running `vitest` or `tsgo`, or tests and typecheck run against stale code.
+
+Actual verification commands (the generic `npm run lint`/`npm run typecheck` do not exist here):
+
+- Typecheck: `tsgo --noEmit` (root)
+- Lint/format: `biome check --write --error-on-warnings .` (root)
+- Build a package: `npm run build` in the package dir
+- Targeted tests: `npx vitest --run <file>` in the package dir
+- Full gate (pre-publish or when asked): `npm run check` (biome + pinned-deps + ts-imports + shrinkwrap + tsgo + browser-smoke). Do not run it for routine changes; use biome + tsgo + build + targeted vitest instead.
+
 ---
 
 ## 9. Tests
 
 Do not run full test suites unless explicitly asked. Do not create new tests unless explicitly asked. If asked to create or modify a test, run only the relevant test file or case and iterate until it passes. Do not run integration, network, credential-dependent, paid-provider, destructive, or long-running tests unless explicitly requested.
+
+Before attributing a failing test to your change, determine whether it is pre-existing: use `git log`/`git blame` and `git diff` to check whether a prior commit (not your changes) caused it. Report pre-existing failures separately. Never revert an intentional prior change just to make a test green; if a prior intentional change legitimately changed behavior, update the test to match the new intended behavior and note it.
+
+For changes affecting shared behavior (extension defaults, shared harness modules, tool registration, exported APIs), run the full test suite of the affected package, not just the targeted file; targeted-only verification can miss regressions in consumers.
 
 ```bash
 # Python — targeted only
@@ -172,7 +196,7 @@ git status
 find . -name "*.bak" -print
 ```
 
-If `.bak` files are found, stop — do not remove them without confirmation. Run language-specific checks based on change type: docs lint for docs-only changes; Python lint/format/typecheck for Python source; TypeScript check command for TypeScript source; Rust format/clippy for Rust source; safe package-manager commands and lockfile review for dependency changes; generator + diff review for generated file changes.
+If `.bak` files are found, stop — do not remove them without confirmation. Run language-specific checks based on change type: docs lint for docs-only changes; Python lint/format/typecheck for Python source; TypeScript check command for TypeScript source; Rust format/clippy for Rust source; safe package-manager commands and lockfile review for dependency changes; generator + diff review for generated file changes. For quick per-file type feedback before the full project typecheck, run `lsp` `diagnostics` on touched files (TypeScript/JavaScript, Python, Rust).
 
 Before finalizing, run `git diff` and `git status` and confirm every changed line is intentional, no unrelated files changed, no backup or temp files are inside the repo, no accidental lockfile changes exist, and no unrelated formatting churn exists.
 
