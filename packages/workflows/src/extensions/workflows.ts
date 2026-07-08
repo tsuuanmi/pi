@@ -33,8 +33,9 @@ async function applyWorkflowToolPruning(
 export default function workflowsExtension(pi: ExtensionAPI): void {
 	pi.registerFlag?.("workflows.pruneInactiveTools", {
 		type: "boolean",
-		default: false,
-		description: "Prune inactive Pi workflow tools from model-visible tool schemas.",
+		default: true,
+		description:
+			"Prune inactive workflow-skill tools (deep-interview/ralplan/team/ultragoal) from model-visible tool schemas. Subagent, harness (fetch/yield), and pi_workflow_state stay available so workflows can be started and subagents can be used with no active workflow.",
 	});
 	pi.on("session_start", async (_event, ctx) => {
 		await applyWorkflowToolPruning(pi, ctx);

@@ -37,12 +37,14 @@ describe("workflow tool groups", () => {
 		expect(resolveWorkflowToolGroup({ activeWorkflowState: activeState("team") })).toBe("team");
 	});
 
-	it("selects no workflow-owned tools when no group is active", () => {
+	it("prunes only workflow-skill tools when no group is active (keeps cross-cutting tools)", () => {
 		const selected = selectWorkflowActiveTools({
-			currentActiveTools: ["read", "bash", "ralplan_status", "fetch"],
+			currentActiveTools: ["read", "bash", "ralplan_status", "pi_workflow_state", "subagent_spawn", "fetch"],
 		});
 
-		expect(selected).toEqual(["read", "bash"]);
+		// skill-specific tools are pruned; cross-cutting tools stay available
+		expect(selected).not.toContain("ralplan_status");
+		expect(selected).toEqual(["read", "bash", "pi_workflow_state", "subagent_spawn", "fetch"]);
 	});
 
 	it("preserves non-workflow tools and replaces only workflow-owned tools", () => {

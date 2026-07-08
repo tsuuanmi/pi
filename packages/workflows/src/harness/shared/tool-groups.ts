@@ -72,14 +72,28 @@ export const WORKFLOW_TOOL_GROUPS: Record<WorkflowToolGroup, readonly string[]> 
 	harness: HARNESS_TOOLS,
 };
 
-export const WORKFLOW_OWNED_TOOLS = new Set<string>([
-	...DEEP_INTERVIEW_TOOLS,
-	...RALPLAN_TOOLS,
-	...TEAM_TOOLS,
-	...ULTRAGOAL_TOOLS,
-	...SUBAGENT_TOOLS,
-	...HARNESS_TOOLS,
-]);
+/**
+ * Cross-cutting tools that stay always-available (never pruned) so workflows can
+ * be started and so subagents / harness tools can be used outside any active
+ * workflow:
+ * - `pi_workflow_state` is needed to initialize any workflow.
+ * - `SUBAGENT_TOOLS` are useful outside workflows (e.g. spawning a one-off agent).
+ * - `HARNESS_TOOLS` (`fetch`, `yield`) are general-purpose.
+ */
+const ALWAYS_AVAILABLE_TOOLS = new Set<string>(["pi_workflow_state", ...SUBAGENT_TOOLS, ...HARNESS_TOOLS]);
+
+/**
+ * Tools that belong to a specific workflow skill and are pruned when that skill
+ * is not the active workflow. Only the four skill groups (deep-interview,
+ * ralplan, team, ultragoal) are prunable; cross-cutting tools (see
+ * ALWAYS_AVAILABLE_TOOLS) stay available so workflows can be started and
+ * subagents can be used with no active workflow.
+ */
+export const WORKFLOW_OWNED_TOOLS = new Set<string>(
+	[...DEEP_INTERVIEW_TOOLS, ...RALPLAN_TOOLS, ...TEAM_TOOLS, ...ULTRAGOAL_TOOLS].filter(
+		(name) => !ALWAYS_AVAILABLE_TOOLS.has(name),
+	),
+);
 
 function workflowFromPrompt(prompt: string): WorkflowSkill | undefined {
 	const match = prompt.match(/<skill\s+name="([^"]+)"/);
