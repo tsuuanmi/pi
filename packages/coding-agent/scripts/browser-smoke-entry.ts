@@ -5,13 +5,8 @@ import {
 	convertToLlm,
 	createCustomMessage,
 	FileError,
-	formatPromptTemplateInvocation,
-	formatSkillInvocation,
-	formatSkillsForSystemPrompt,
 	getOrThrow,
-	InMemorySessionRepo,
 	ok,
-	parseCommandArgs,
 	streamProxy,
 	toError,
 	truncateHead,
@@ -19,17 +14,15 @@ import {
 
 // Keep this entry browser-safe. It is bundled by the check-browser-smoke script
 // to catch accidental Node-only runtime imports in browser-facing package exports.
-const model = getModel("anthropic", "claude-3-5-sonnet-20241022");
+const model = getModel("anthropic", "claude-haiku-4-5");
 const schema = Type.Object({ prompt: Type.String() });
 const stream = createAssistantMessageEventStream();
 
 const agent = new Agent({ initialState: { model } });
 agent.steer({ role: "user", content: [{ type: "text", text: "queued" }], timestamp: 0 });
-const repo = new InMemorySessionRepo();
 const result = getOrThrow(ok({ value: 1 }));
 const customMessage = createCustomMessage("note", "hello", true, undefined, "2026-01-01T00:00:00.000Z");
 const llmMessages = convertToLlm([customMessage]);
-const skill = { name: "browser-safe", description: "Smoke test", content: "Use browser APIs.", filePath: "/skills/browser-safe/SKILL.md" };
 
 console.log(
 	model.id,
@@ -38,7 +31,6 @@ console.log(
 	schema.type,
 	typeof stream.push,
 	agent.hasQueuedMessages(),
-	typeof repo.create,
 	result.value,
 	llmMessages.length,
 	bashExecutionToText({
@@ -50,9 +42,6 @@ console.log(
 		truncated: false,
 		timestamp: 0,
 	}),
-	formatSkillsForSystemPrompt([skill]).length,
-	formatSkillInvocation(skill).length,
-	formatPromptTemplateInvocation({ name: "example", content: "$1 $@" }, parseCommandArgs('one "two three"')),
 	truncateHead("a\nb", { maxLines: 1 }).content,
 	new FileError("not_found", "missing").code,
 	toError("boom").message,
