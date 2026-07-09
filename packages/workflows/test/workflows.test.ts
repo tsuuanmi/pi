@@ -3,9 +3,27 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
 	appendJsonlIdempotent,
+	assertExpectedNextRole,
+	assertNoGuardedSpawnOverrides,
+	buildRalplanRoleSystemPrompt,
+	buildRalplanTaskPrompt,
+	completeTeam,
+	createTeamTask,
+	expectedNextRalplanRole,
+	expectedNextTeamRole,
+	type RalplanSelectorVerdict,
 	readExistingStateForMutation,
 	readFileOrLiteral,
+	readRalplanStatus,
+	readTeamSnapshot,
 	readWorkflowState,
+	recordRalplanExplorerGateArtifact,
+	recordTeamCompletionGateArtifact,
+	recordTeamReviewGateArtifact,
+	runRalplanAgent,
+	startTeam,
+	transitionTeamTask,
+	writeRalplanArtifact,
 	writeTextArtifact,
 	writeWorkflowState,
 } from "@tsuuanmi/pi-workflows";
@@ -219,6 +237,218 @@ describe("workflow runtime", () => {
 		});
 	});
 
+	describe("expected next role", () => {
+		it("refuses off-script workflow role spawns and runtime overrides", () => {
+			expect(() =>
+				assertExpectedNextRole(
+					{ skill: "ralplan", stage: "planner", role: "planner", owner: "ralplan_run_agent", runId: "run-1" },
+					{ skill: "ralplan", stage: "planner", role: "critic", owner: "ralplan_run_agent", runId: "run-1" },
+				),
+			).toThrow(/off-script spawn refused/);
+			expect(() => assertNoGuardedSpawnOverrides({ model: "provider/model" })).toThrow(/runtime overrides/);
+		});
+	});
+
+	describe("context templates", () => {
+		it("builds deterministic ralplan role prompts and tasks", () => {
+			const input = {
+				role: "planner" as const,
+				runId: "run-1",
+				stage: "planner",
+				stageN: 1,
+				deliberate: true,
+				contextArtifacts: ["b.md", "a.md"],
+				task: "Draft the plan",
+			};
+			expect(buildRalplanRoleSystemPrompt("planner")).toBe(buildRalplanRoleSystemPrompt("planner"));
+			expect(buildRalplanTaskPrompt(input)).toBe(buildRalplanTaskPrompt(input));
+			expect(buildRalplanTaskPrompt(input)).toContain("Context artifacts:\n- b.md\n- a.md");
+		});
+	});
+
+	describe("ralplan explorer gate", () => {
+		it("blocks planner until an explorer context_map is recorded", async () => {
+			const plannerInput = {
+				role: "planner" as const,
+				stage: "planner" as const,
+				stageN: 1,
+				runId: "explorer-run",
+				task: "Plan implementation",
+				dryRun: true,
+			};
+			await expect(runRalplanAgent(cwd, plannerInput, sessionId)).rejects.toThrow(/context_map/);
+			await expect(runRalplanAgent(cwd, plannerInput, sessionId)).rejects.toThrow(/human_blocked/);
+
+			const gate = await recordRalplanExplorerGateArtifact(
+				cwd,
+				{
+					runId: "explorer-run",
+					contextMap: { context_needed: false, summary: "Trivial task; bypass context." },
+				},
+				sessionId,
+			);
+			expect(gate.status).toBe("passed");
+
+			const result = await runRalplanAgent(cwd, plannerInput, sessionId);
+			expect(result.status).toBe("planned");
+		});
+	});
+
+	describe("team review gate", () => {
+		it("refuses completed tasks without a passing review report and escalates after retry", async () => {
+			await startTeam(cwd, { task: "Implement reviewed work", teamId: "review-team" }, sessionId);
+			await createTeamTask(
+				cwd,
+				{ teamId: "review-team", id: "task-a", title: "Task A", description: "Do task A" },
+				sessionId,
+			);
+
+			const evidence = {
+				summary: "Worker completed implementation and verification evidence.",
+				recorded_by: "worker-1",
+			};
+			await expect(
+				transitionTeamTask(
+					cwd,
+					{ teamId: "review-team", taskId: "task-a", status: "completed", evidence },
+					sessionId,
+				),
+			).rejects.toThrow(/review_report/);
+			await expect(
+				transitionTeamTask(
+					cwd,
+					{ teamId: "review-team", taskId: "task-a", status: "completed", evidence },
+					sessionId,
+				),
+			).rejects.toThrow(/human_blocked/);
+		});
+
+		it("escalates to human_blocked after a second blocking review report", async () => {
+			await startTeam(cwd, { task: "Implement reviewed blocking work", teamId: "review-block-team" }, sessionId);
+			await createTeamTask(
+				cwd,
+				{ teamId: "review-block-team", id: "task-c", title: "Task C", description: "Do task C" },
+				sessionId,
+			);
+			const blocking = {
+				max_severity: "high",
+				needs_changes: true,
+				summary: "High-severity defect blocks completion.",
+			};
+			const first = await recordTeamReviewGateArtifact(
+				cwd,
+				{ teamId: "review-block-team", taskId: "task-c", reviewReport: blocking },
+				sessionId,
+			);
+			expect(first.status).toBe("blocked");
+			const second = await recordTeamReviewGateArtifact(
+				cwd,
+				{ teamId: "review-block-team", taskId: "task-c", reviewReport: blocking },
+				sessionId,
+			);
+			expect(second.status).toBe("human_blocked");
+		});
+
+		it("allows completed tasks after a non-blocking review report", async () => {
+			await startTeam(cwd, { task: "Implement reviewed passing work", teamId: "review-pass-team" }, sessionId);
+			await createTeamTask(
+				cwd,
+				{ teamId: "review-pass-team", id: "task-b", title: "Task B", description: "Do task B" },
+				sessionId,
+			);
+			const gate = await recordTeamReviewGateArtifact(
+				cwd,
+				{
+					teamId: "review-pass-team",
+					taskId: "task-b",
+					reviewReport: {
+						max_severity: "medium",
+						needs_changes: true,
+						summary: "Medium issue recorded but non-blocking in v1.",
+					},
+				},
+				sessionId,
+			);
+			expect(gate.status).toBe("passed");
+
+			const task = await transitionTeamTask(
+				cwd,
+				{
+					teamId: "review-pass-team",
+					taskId: "task-b",
+					status: "completed",
+					evidence: {
+						summary: "Worker completed implementation and verification evidence.",
+						recorded_by: "worker-1",
+					},
+				},
+				sessionId,
+			);
+			expect(task.status).toBe("completed");
+		});
+	});
+
+	describe("team completion gate", () => {
+		it("refuses complete without a prover evidence matrix and escalates after a bounded retry", async () => {
+			const team = await startTeam(
+				cwd,
+				{ task: "Implement a gated team completion flow", teamId: "gate-team" },
+				sessionId,
+			);
+			expect(team.phase).toBe("running");
+
+			await expect(completeTeam(cwd, { teamId: "gate-team" }, sessionId)).rejects.toThrow(/evidence_matrix/);
+			let state = await readWorkflowState(cwd, "team", { sessionId });
+			expect(state?.current_phase).toBe("running");
+
+			await expect(completeTeam(cwd, { teamId: "gate-team" }, sessionId)).rejects.toThrow(/human_blocked/);
+			state = await readWorkflowState(cwd, "team", { sessionId });
+			expect(state?.current_phase).toBe("running");
+		});
+
+		it("allows complete after a passing prover evidence matrix", async () => {
+			await startTeam(cwd, { task: "Implement a verified team completion flow", teamId: "passing-team" }, sessionId);
+			const gate = await recordTeamCompletionGateArtifact(
+				cwd,
+				{
+					teamId: "passing-team",
+					evidenceMatrix: {
+						ship_decision: "ship",
+						escalation: "none",
+						summary: "Verification passed for all required team work.",
+						evidence: [{ kind: "command", ref: "npm test", note: "passed" }],
+					},
+				},
+				sessionId,
+			);
+			expect(gate.status).toBe("passed");
+
+			const completed = await completeTeam(cwd, { teamId: "passing-team", summary: "verified" }, sessionId);
+			expect(completed.phase).toBe("complete");
+		});
+
+		it("escalates to human_blocked after a second blocking prover evidence matrix", async () => {
+			await startTeam(cwd, { task: "Implement a blocked team completion flow", teamId: "blocking-team" }, sessionId);
+			const blocking = {
+				ship_decision: "blocked",
+				escalation: "retry",
+				summary: "Evidence incomplete; cannot ship.",
+			};
+			const first = await recordTeamCompletionGateArtifact(
+				cwd,
+				{ teamId: "blocking-team", evidenceMatrix: blocking },
+				sessionId,
+			);
+			expect(first.status).toBe("blocked");
+			const second = await recordTeamCompletionGateArtifact(
+				cwd,
+				{ teamId: "blocking-team", evidenceMatrix: blocking },
+				sessionId,
+			);
+			expect(second.status).toBe("human_blocked");
+		});
+	});
+
 	describe("readFileOrLiteral", () => {
 		it("returns a short literal string as-is", async () => {
 			expect(await readFileOrLiteral("just some prose", cwd)).toBe("just some prose");
@@ -247,6 +477,232 @@ describe("workflow runtime", () => {
 
 		it("returns a nonexistent relative path as literal", async () => {
 			expect(await readFileOrLiteral("does/not/exist.md", cwd)).toBe("does/not/exist.md");
+		});
+	});
+
+	describe("expectedNextRalplanRole selector", () => {
+		it("returns explorer pre-planner until the explorer gate passes, undefined when human_blocked", () => {
+			expect(expectedNextRalplanRole({ explorerGate: { status: "missing" } }, "r")?.stage).toBe("pre-planner");
+			expect(expectedNextRalplanRole({ explorerGate: { status: "retry_requested" } }, "r")?.stage).toBe(
+				"pre-planner",
+			);
+			expect(expectedNextRalplanRole({ explorerGate: { status: "passed" } }, "r")?.stage).toBe("planner");
+			expect(expectedNextRalplanRole({ explorerGate: { status: "human_blocked" } }, "r")).toBeUndefined();
+			// Explorer gate blocks every role spawn, even after a latest artifact would otherwise advance the stage.
+			expect(
+				expectedNextRalplanRole({ latest: { stage: "planner" }, explorerGate: { status: "missing" } }, "r")?.stage,
+			).toBe("pre-planner");
+		});
+
+		it("returns planner when no artifact exists yet", () => {
+			const expected = expectedNextRalplanRole(undefined, "run-1");
+			expect(expected?.stage).toBe("planner");
+			expect(expected?.role).toBe("planner");
+		});
+
+		it("returns architect after a planner artifact and after revision", () => {
+			expect(expectedNextRalplanRole({ latest: { stage: "planner" } }, "r")?.stage).toBe("architect");
+			expect(expectedNextRalplanRole({ latest: { stage: "revision" } }, "r")?.stage).toBe("architect");
+		});
+
+		it("always routes an architect artifact to critic", () => {
+			const block = expectedNextRalplanRole(
+				{
+					latest: {
+						stage: "architect",
+						verdict: { role: "architect", clarity: "block", recommendation: "request_changes" },
+					},
+				},
+				"r",
+			);
+			expect(block?.stage).toBe("critic");
+			const clear = expectedNextRalplanRole(
+				{
+					latest: {
+						stage: "architect",
+						verdict: { role: "architect", clarity: "clear", recommendation: "approve" },
+					},
+				},
+				"r",
+			);
+			expect(clear?.stage).toBe("critic");
+		});
+
+		it("routes critic approve to closed, iterate/reject to revision, missing verdict to critic", () => {
+			expect(
+				expectedNextRalplanRole(
+					{ latest: { stage: "critic", verdict: { role: "critic", verdict: "approve" } } },
+					"r",
+				),
+			).toBeUndefined();
+			expect(
+				expectedNextRalplanRole(
+					{ latest: { stage: "critic", verdict: { role: "critic", verdict: "reject" } } },
+					"r",
+				)?.stage,
+			).toBe("revision");
+			expect(expectedNextRalplanRole({ latest: { stage: "critic" } }, "r")?.stage).toBe("critic");
+		});
+
+		it("returns undefined for closed phases and adr/final artifacts", () => {
+			expect(expectedNextRalplanRole({ current_phase: "pending-approval" }, "r")).toBeUndefined();
+			expect(expectedNextRalplanRole({ current_phase: "handoff" }, "r")).toBeUndefined();
+			expect(expectedNextRalplanRole({ latest: { stage: "final" } }, "r")).toBeUndefined();
+		});
+	});
+
+	describe("expectedNextTeamRole selector", () => {
+		it("picks the lexicographically smallest pending task", () => {
+			const expected = expectedNextTeamRole({
+				team_id: "t1",
+				tasks: [
+					{ id: "task-b", status: "pending" },
+					{ id: "task-a", status: "pending" },
+				],
+			});
+			expect(expected?.taskId).toBe("task-a");
+			expect(expected?.role).toBe("worker");
+		});
+
+		it("prefers an in-progress task over pending ones", () => {
+			const expected = expectedNextTeamRole({
+				team_id: "t1",
+				tasks: [
+					{ id: "task-a", status: "pending" },
+					{ id: "task-z", status: "in_progress" },
+				],
+			});
+			expect(expected?.taskId).toBe("task-z");
+		});
+
+		it("returns undefined when all tasks are completed/blocked/failed", () => {
+			expect(
+				expectedNextTeamRole({
+					team_id: "t1",
+					tasks: [
+						{ id: "task-a", status: "completed" },
+						{ id: "task-b", status: "blocked" },
+					],
+				}),
+			).toBeUndefined();
+		});
+	});
+
+	describe("ralplan expected-next enforcement (E2E)", () => {
+		it("drives the selector through a full verdict-branching flow", async () => {
+			const sessionId = "e2e-session-id";
+			await recordRalplanExplorerGateArtifact(
+				cwd,
+				{ runId: "run-e2e", contextMap: { context_needed: false, summary: "trivial" } },
+				sessionId,
+			);
+			const stateFor = async () => {
+				const state = await readWorkflowState(cwd, "ralplan", { sessionId });
+				const status = await readRalplanStatus(cwd, sessionId, "run-e2e");
+				return expectedNextRalplanRole(
+					{
+						current_phase: state?.current_phase as string | undefined,
+						latest: status.latest
+							? {
+									stage: status.latest.stage,
+									verdict: status.latest.verdict as RalplanSelectorVerdict | undefined,
+								}
+							: undefined,
+					},
+					"run-e2e",
+				);
+			};
+
+			// No artifacts yet: legal next is planner.
+			expect((await stateFor())?.stage).toBe("planner");
+			await writeRalplanArtifact(
+				cwd,
+				{ runId: "run-e2e", stage: "planner", stageN: 1, artifact: "# Plan" },
+				sessionId,
+			);
+			expect((await stateFor())?.stage).toBe("architect");
+
+			// Architect always routes to critic (architect verdicts do not branch the stage flow).
+			await writeRalplanArtifact(
+				cwd,
+				{
+					runId: "run-e2e",
+					stage: "architect",
+					stageN: 1,
+					artifact: "# Arch\nClarity: CLEAR\nRecommendation: approve",
+				},
+				sessionId,
+			);
+			expect((await stateFor())?.stage).toBe("critic");
+
+			// Critic REJECT routes to revision; revision routes back to architect.
+			await writeRalplanArtifact(
+				cwd,
+				{ runId: "run-e2e", stage: "critic", stageN: 1, artifact: "# Critic\nVerdict: REJECT" },
+				sessionId,
+			);
+			expect((await stateFor())?.stage).toBe("revision");
+			await writeRalplanArtifact(
+				cwd,
+				{ runId: "run-e2e", stage: "revision", stageN: 2, artifact: "# Revision" },
+				sessionId,
+			);
+			expect((await stateFor())?.stage).toBe("architect");
+			await writeRalplanArtifact(
+				cwd,
+				{
+					runId: "run-e2e",
+					stage: "architect",
+					stageN: 2,
+					artifact: "# Arch\nClarity: CLEAR\nRecommendation: approve",
+				},
+				sessionId,
+			);
+			expect((await stateFor())?.stage).toBe("critic");
+
+			// Critic APPROVE closes the run (no legal role spawn remains).
+			await writeRalplanArtifact(
+				cwd,
+				{ runId: "run-e2e", stage: "critic", stageN: 2, artifact: "# Critic\nVerdict: APPROVE" },
+				sessionId,
+			);
+			expect(await stateFor()).toBeUndefined();
+		});
+
+		it("refuses an off-sequence spawn via assertExpectedNextRole", () => {
+			// After a planner artifact, the legal next is architect, not critic.
+			const expected = expectedNextRalplanRole({ latest: { stage: "planner" } }, "r");
+			expect(() =>
+				assertExpectedNextRole(expected!, {
+					skill: "ralplan",
+					stage: "critic",
+					role: "critic",
+					owner: "ralplan_run_agent",
+				}),
+			).toThrow(/off-script spawn refused.*role critic != architect/);
+		});
+	});
+
+	describe("team expected-next enforcement (E2E)", () => {
+		it("selects the lexicographically smallest pending task and refuses others", async () => {
+			const sessionId = "e2e-team-session";
+			await startTeam(cwd, { task: "Team E2E", teamId: "team-e2e" }, sessionId);
+			await createTeamTask(cwd, { teamId: "team-e2e", id: "task-b", title: "B", description: "do b" }, sessionId);
+			await createTeamTask(cwd, { teamId: "team-e2e", id: "task-a", title: "A", description: "do a" }, sessionId);
+			const snapshot = await readTeamSnapshot(cwd, sessionId, "team-e2e");
+			const expected = expectedNextTeamRole(snapshot);
+			expect(expected?.taskId).toBe("task-a");
+			// Spawning for task-b (not the legal next) is refused.
+			expect(() =>
+				assertExpectedNextRole(expected!, {
+					skill: "team",
+					stage: "task-worker",
+					role: "worker",
+					owner: "team_spawn_task_agent",
+					teamId: "team-e2e",
+					taskId: "task-b",
+				}),
+			).toThrow(/off-script spawn refused.*task task-b != task-a/);
 		});
 	});
 });

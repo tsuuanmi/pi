@@ -18,6 +18,7 @@ export const DEEP_INTERVIEW_TOOLS = [
 
 export const RALPLAN_TOOLS = [
 	"pi_workflow_state",
+	"ralplan_record_explorer_gate",
 	"ralplan_run_agent",
 	"ralplan_status",
 	"ralplan_read_compact",
@@ -34,6 +35,8 @@ export const TEAM_TOOLS = [
 	"team_create_task",
 	"team_transition_task",
 	"team_send_message",
+	"team_record_review_gate",
+	"team_record_completion_gate",
 	"team_complete",
 	"team_spawn_task_agent",
 ] as const;

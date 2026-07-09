@@ -1,13 +1,25 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
+import {
+	assertExpectedNextRole,
+	assertNoGuardedSpawnOverrides,
+	expectedNextRalplanRole,
+	type RalplanSelectorVerdict,
+} from "../shared/expected-next-role.ts";
 import { workflowReceipt } from "../shared/receipts.ts";
 import { assertRalplanStage, assertSafePathComponent } from "../shared/state-schema.ts";
+import { defaultWorkflowId, readWorkflowState } from "../shared/workflow-state.ts";
 import {
 	assertAgentThinkingLevel,
 	assertRalplanApprovalTarget,
 	assertRalplanRole,
 } from "../shared/workflow-tool-utils.ts";
 import { ralplanRoleForStage, runRalplanAgent } from "./ralplan-agents.ts";
+import {
+	assertRalplanExplorerGatePassed,
+	normalizeRalplanExplorerGate,
+	recordRalplanExplorerGateArtifact,
+} from "./ralplan-gates.ts";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
@@ -28,6 +40,17 @@ const ralplanWriteArtifactSchema = Type.Object({
 });
 
 type RalplanWriteArtifactInput = Static<typeof ralplanWriteArtifactSchema>;
+
+const ralplanRecordExplorerGateSchema = Type.Object({
+	runId: Type.Optional(Type.String({ description: "Safe run id. Defaults to active run." })),
+	contextMap: Type.Object({
+		context_needed: Type.Boolean(),
+		summary: Type.Optional(Type.String()),
+		evidence: Type.Optional(Type.Array(Type.Record(Type.String(), Type.Unknown()))),
+	}),
+	recordedBy: Type.Optional(Type.String()),
+});
+type RalplanRecordExplorerGateInput = Static<typeof ralplanRecordExplorerGateSchema>;
 
 const ralplanRunAgentSchema = Type.Object({
 	role: Type.Optional(Type.String({ description: "planner, architect, or critic. Defaults from stage." })),
@@ -78,6 +101,15 @@ const ralplanApproveSchema = Type.Object({
 
 type RalplanApproveInput = Static<typeof ralplanApproveSchema>;
 
+async function executeRalplanRecordExplorerGate(params: RalplanRecordExplorerGateInput, ctx: ExtensionContext) {
+	if (params.runId) assertSafePathComponent(params.runId, "runId");
+	const result = await recordRalplanExplorerGateArtifact(ctx.cwd, params, ctx.sessionManager.getSessionId());
+	return {
+		content: [{ type: "text" as const, text: `Recorded ralplan explorer gate ${result.status}` }],
+		details: workflowReceipt({ ...result }),
+	};
+}
+
 async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: ExtensionContext, signal?: AbortSignal) {
 	assertRalplanStage(params.stage);
 	assertRalplanRole(params.role);
@@ -95,6 +127,49 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Extensi
 	}
 	if (params.runId) assertSafePathComponent(params.runId, "runId");
 	const role = params.role ?? ralplanRoleForStage(params.stage);
+	const sessionId = ctx.sessionManager.getSessionId();
+	const ralplanState = await readWorkflowState(ctx.cwd, "ralplan", { sessionId }).catch(() => undefined);
+	const selectorRunId =
+		params.runId?.trim() ||
+		(typeof ralplanState?.run_id === "string" ? ralplanState.run_id : undefined) ||
+		defaultWorkflowId("ralplan");
+	const ralplanStatus = await readRalplanStatus(ctx.cwd, sessionId, selectorRunId).catch(() => undefined);
+	const explorerGate = normalizeRalplanExplorerGate(ralplanState?.explorer_gate);
+	const expected = expectedNextRalplanRole(
+		{
+			current_phase: ralplanState?.current_phase as string | undefined,
+			latest: ralplanStatus?.latest
+				? {
+						stage: ralplanStatus.latest.stage,
+						verdict: ralplanStatus.latest.verdict as RalplanSelectorVerdict | undefined,
+					}
+				: undefined,
+			explorerGate: { status: explorerGate?.status ?? "missing" },
+		},
+		selectorRunId,
+	);
+	if (expected?.stage === "pre-planner") {
+		// Deterministic selector block: the explorer pre-planner gate has not
+		// passed. Delegate to the gate enforcer, which writes bounded-retry /
+		// human_blocked escalation state and throws a fail-closed error.
+		await assertRalplanExplorerGatePassed(ctx.cwd, selectorRunId, sessionId);
+		throw new Error(
+			"ralplan pre-planner explorer gate has not passed; record a context_map via ralplan_record_explorer_gate first",
+		);
+	}
+	if (!expected) {
+		throw new Error(
+			"no legal next ralplan role spawn: workflow is closed or awaiting approval; use ralplan_write_artifact/approve instead",
+		);
+	}
+	assertExpectedNextRole(expected, {
+		skill: "ralplan",
+		stage: params.stage,
+		role,
+		owner: "ralplan_run_agent",
+		runId: params.runId,
+	});
+	assertNoGuardedSpawnOverrides(params);
 	const result = await runRalplanAgent(
 		ctx.cwd,
 		{
@@ -218,6 +293,18 @@ async function executeRalplanDoctor(params: RalplanRunInput, ctx: ExtensionConte
 }
 
 export function registerRalplanTools(pi: ExtensionAPI): void {
+	pi.registerTool({
+		name: "ralplan_record_explorer_gate",
+		label: "Ralplan Record Explorer Gate",
+		description: "Record a validated explorer context_map before the ralplan planner runs.",
+		promptSnippet: "Record explorer context map for ralplan pre-planner gate",
+		promptGuidelines: [
+			"Use ralplan_record_explorer_gate after explorer produces a context_map and before ralplan_run_agent stage=planner.",
+		],
+		parameters: ralplanRecordExplorerGateSchema,
+		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeRalplanRecordExplorerGate(params, ctx),
+	});
+
 	pi.registerTool({
 		name: "ralplan_run_agent",
 		label: "Ralplan Role Agent",

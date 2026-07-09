@@ -2,10 +2,12 @@ import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import type { AgentMessage, SubagentManager, SubagentRunResult, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Message } from "@tsuuanmi/pi-ai";
+import { buildRalplanRoleSystemPrompt, buildRalplanTaskPrompt } from "../shared/context-templates.ts";
 import type { RalplanStage } from "../shared/paths.ts";
 import { workflowStatePath } from "../shared/session-layout.ts";
 import { writeJsonAtomic } from "../shared/state-writer.ts";
 import { activeRalplanRunId, defaultWorkflowId } from "../shared/workflow-state.ts";
+import { assertRalplanExplorerGatePassed } from "./ralplan-gates.ts";
 
 export type RalplanAgentRole = "planner" | "architect" | "critic";
 
@@ -43,51 +45,6 @@ export interface RalplanAgentRunResult {
 	messages?: Message[];
 }
 
-function rolePrompt(role: RalplanAgentRole): string {
-	const base = [
-		"Ralplan workflow contract:",
-		"- Produce planning/review artifacts only. Do not edit product files or execute implementation.",
-		"- Persist the artifact by calling ralplan_write_artifact with the provided runId, stage, stageN, and full markdown artifact.",
-		"- Return only the receipt/path plus compact status. Do not paste the full artifact after persistence.",
-	];
-	if (role === "planner") {
-		return [
-			...base,
-			"- Planner artifacts must include problem statement, principles, decision drivers, viable options, recommendation, risks, verification plan, and open questions.",
-		].join("\n");
-	}
-	if (role === "architect") {
-		return [
-			...base,
-			"- Architect reviews must provide strongest steelman objection, tradeoff tensions, integration/ownership concerns, and synthesis or requested changes.",
-			"- Compact verdict must include CLEAR, WATCH, or BLOCK; and APPROVE, COMMENT, or REQUEST CHANGES.",
-		].join("\n");
-	}
-	return [
-		...base,
-		"- Critic reviews must evaluate acceptance criteria quality, risk mitigation clarity, testability, fair alternatives, and concrete verification steps.",
-		"- Compact verdict must be APPROVE, ITERATE, or REJECT.",
-	].join("\n");
-}
-
-function buildTask(input: RalplanAgentRunInput, runId: string): string {
-	return [
-		`Ralplan role: ${input.role}`,
-		`Run id: ${runId}`,
-		`Persist stage: ${input.stage}`,
-		`Persist stageN: ${input.stageN}`,
-		`Deliberate mode: ${input.deliberate === true}`,
-		input.plannerSubagentId ? `Persisted Planner id: ${input.plannerSubagentId}` : "Persisted Planner id: none",
-		input.attemptResume ? "Planner resume requested: true" : "Planner resume requested: false",
-		input.contextArtifacts && input.contextArtifacts.length > 0
-			? `Context artifacts:\n${input.contextArtifacts.map((item) => `- ${item}`).join("\n")}`
-			: "Context artifacts: none",
-		"",
-		"Task:",
-		input.task,
-	].join("\n");
-}
-
 function subagentMessages(result: SubagentRunResult): Message[] {
 	return result.messages as Message[];
 }
@@ -121,9 +78,20 @@ export async function runRalplanAgent(
 		throw new Error(`invalid stageN: ${input.stageN}`);
 	const runId =
 		input.runId?.trim() || (await activeRalplanRunId(cwd, storageSessionId)) || defaultWorkflowId("ralplan");
+	if (input.stage === "planner") await assertRalplanExplorerGatePassed(cwd, runId, storageSessionId);
 	const agentRunId = `ralagent-${randomUUID()}`;
-	const prompt = rolePrompt(input.role);
-	const task = buildTask(input, runId);
+	const prompt = buildRalplanRoleSystemPrompt(input.role);
+	const task = buildRalplanTaskPrompt({
+		role: input.role,
+		runId,
+		stage: input.stage,
+		stageN: input.stageN,
+		deliberate: input.deliberate,
+		plannerSubagentId: input.plannerSubagentId,
+		attemptResume: input.attemptResume,
+		contextArtifacts: input.contextArtifacts,
+		task: input.task,
+	});
 	if (input.dryRun === true) {
 		return writeRunRecord(
 			cwd,

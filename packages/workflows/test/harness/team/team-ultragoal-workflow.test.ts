@@ -12,6 +12,8 @@ import {
 	readUltragoalCompact,
 	readWorkflowActiveState,
 	readWorkflowState,
+	recordTeamCompletionGateArtifact,
+	recordTeamReviewGateArtifact,
 	sendTeamMessage,
 	startNextUltragoalGoal,
 	startTeam,
@@ -142,6 +144,15 @@ describe("team workflow runtime", () => {
 				sessionId,
 			),
 		).rejects.toThrow(/completion evidence/);
+		await recordTeamReviewGateArtifact(
+			cwd,
+			{
+				teamId: "team-1",
+				taskId: "task-1",
+				reviewReport: { max_severity: "none", needs_changes: false, summary: "No review blockers." },
+			},
+			sessionId,
+		);
 		const completed = await transitionTeamTask(
 			cwd,
 			{
@@ -176,6 +187,18 @@ describe("team workflow runtime", () => {
 		expect(snapshot.task_counts.completed).toBe(1);
 		expect((await readTeamCompact(cwd, sessionId, "team-1")).tasks).toHaveLength(1);
 
+		await recordTeamCompletionGateArtifact(
+			cwd,
+			{
+				teamId: "team-1",
+				evidenceMatrix: {
+					ship_decision: "ship",
+					escalation: "none",
+					summary: "Team work verified for completion.",
+				},
+			},
+			sessionId,
+		);
 		const closed = await completeTeam(cwd, { teamId: "team-1", summary: "Integrated" }, sessionId);
 		expect(closed.phase).toBe("complete");
 		const state = await readWorkflowState(cwd, "team", { sessionId });

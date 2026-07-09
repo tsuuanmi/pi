@@ -1,6 +1,11 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { maybeRedirectVagueExecution } from "../ralplan/vagueness-gate.ts";
+import {
+	assertExpectedNextRole,
+	assertNoGuardedSpawnOverrides,
+	expectedNextTeamRole,
+} from "../shared/expected-next-role.ts";
 import { workflowReceipt } from "../shared/receipts.ts";
 import { assertSafePathComponent } from "../shared/state-schema.ts";
 import { syncWorkflowHudUi } from "../shared/workflow-state-tool.ts";
@@ -10,6 +15,8 @@ import {
 	createTeamTask,
 	readTeamCompact,
 	readTeamSnapshot,
+	recordTeamCompletionGateArtifact,
+	recordTeamReviewGateArtifact,
 	sendTeamMessage,
 	startTeam,
 	transitionTeamTask,
@@ -67,6 +74,31 @@ const teamCompleteSchema = Type.Object({
 	summary: Type.Optional(Type.String()),
 });
 type TeamCompleteInput = Static<typeof teamCompleteSchema>;
+
+const teamRecordCompletionGateSchema = Type.Object({
+	teamId: Type.Optional(Type.String()),
+	evidenceMatrix: Type.Object({
+		ship_decision: Type.String({ description: "ship, ship_with_caveats, or blocked" }),
+		escalation: Type.String({ description: "none, retry, or human_blocked" }),
+		summary: Type.Optional(Type.String()),
+		evidence: Type.Optional(Type.Array(Type.Record(Type.String(), Type.Unknown()))),
+	}),
+	recordedBy: Type.Optional(Type.String()),
+});
+type TeamRecordCompletionGateInput = Static<typeof teamRecordCompletionGateSchema>;
+
+const teamRecordReviewGateSchema = Type.Object({
+	teamId: Type.Optional(Type.String()),
+	taskId: Type.String(),
+	reviewReport: Type.Object({
+		max_severity: Type.String({ description: "none, low, medium, or high" }),
+		needs_changes: Type.Boolean(),
+		summary: Type.Optional(Type.String()),
+		evidence: Type.Optional(Type.Array(Type.Record(Type.String(), Type.Unknown()))),
+	}),
+	recordedBy: Type.Optional(Type.String()),
+});
+type TeamRecordReviewGateInput = Static<typeof teamRecordReviewGateSchema>;
 
 const teamSpawnTaskAgentSchema = Type.Object({
 	teamId: Type.Optional(Type.String({ description: "Team run id. Defaults to the active team." })),
@@ -149,6 +181,27 @@ async function executeTeamMessage(params: TeamMessageInput, ctx: ExtensionContex
 	};
 }
 
+async function executeTeamRecordCompletionGate(params: TeamRecordCompletionGateInput, ctx: ExtensionContext) {
+	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
+	const result = await recordTeamCompletionGateArtifact(ctx.cwd, params, ctx.sessionManager.getSessionId());
+	await syncWorkflowHudUi(ctx);
+	return {
+		content: [{ type: "text" as const, text: `Recorded team completion gate ${result.status}` }],
+		details: workflowReceipt({ ...result }),
+	};
+}
+
+async function executeTeamRecordReviewGate(params: TeamRecordReviewGateInput, ctx: ExtensionContext) {
+	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
+	assertSafePathComponent(params.taskId, "taskId");
+	const result = await recordTeamReviewGateArtifact(ctx.cwd, params, ctx.sessionManager.getSessionId());
+	await syncWorkflowHudUi(ctx);
+	return {
+		content: [{ type: "text" as const, text: `Recorded team review gate ${result.status}` }],
+		details: workflowReceipt({ ...result }),
+	};
+}
+
 async function executeTeamComplete(params: TeamCompleteInput, ctx: ExtensionContext) {
 	if (params.teamId) assertSafePathComponent(params.teamId, "teamId");
 	if (
@@ -180,15 +233,28 @@ async function executeTeamSpawnTaskAgent(params: TeamSpawnTaskAgentInput, ctx: E
 	const snapshot = await readTeamSnapshot(ctx.cwd, ctx.sessionManager.getSessionId(), params.teamId);
 	const task = snapshot.tasks.find((t) => t.id === params.taskId);
 	if (!task) throw new Error(`team task not found: ${params.taskId}`);
+	const expected = expectedNextTeamRole(snapshot);
+	if (!expected) {
+		throw new Error("no legal next team task to spawn: all tasks are completed or none are actionable");
+	}
+	assertExpectedNextRole(expected, {
+		skill: "team",
+		stage: "task-worker",
+		role: params.agent ?? "worker",
+		owner: "team_spawn_task_agent",
+		teamId: snapshot.team_id,
+		taskId: task.id,
+	});
+	assertNoGuardedSpawnOverrides(params);
 	const result = await requireSubagentManager(ctx).spawn({
-		agent: params.agent ?? "worker",
+		agent: "worker",
 		role: `team-worker-${task.id}`,
-		model: params.model,
-		thinkingLevel: params.thinkingLevel,
+		model: undefined,
+		thinkingLevel: undefined,
 		prompt: `Execute team task "${task.title}": ${task.description}${task.owner ? ` (owner: ${task.owner})` : ""}`,
 		systemPrompt: `You are a team worker executing task "${task.title}" (id: ${task.id}). Follow the task description precisely and report completion with evidence.`,
-		tools: params.tools,
-		excludeTools: params.excludeTools,
+		tools: undefined,
+		excludeTools: undefined,
 		persistent: true,
 		label: `team-${snapshot.team_id}-${task.id}`,
 		parentSessionId: ctx.sessionManager.getSessionId(),
@@ -260,6 +326,30 @@ export function registerTeamTools(pi: ExtensionAPI): void {
 		promptGuidelines: ["Use team_send_message to record cross-workstream coordination decisions."],
 		parameters: teamMessageSchema,
 		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeTeamMessage(params, ctx),
+	});
+
+	pi.registerTool({
+		name: "team_record_review_gate",
+		label: "Team Record Review Gate",
+		description: "Record a validated reviewer review_report before team task completion.",
+		promptSnippet: "Record reviewer report for team task gate",
+		promptGuidelines: [
+			"Use team_record_review_gate after reviewer has produced a review_report and before marking a task completed.",
+		],
+		parameters: teamRecordReviewGateSchema,
+		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeTeamRecordReviewGate(params, ctx),
+	});
+
+	pi.registerTool({
+		name: "team_record_completion_gate",
+		label: "Team Record Completion Gate",
+		description: "Record a validated prover evidence_matrix before team completion.",
+		promptSnippet: "Record prover completion evidence for team gate",
+		promptGuidelines: [
+			"Use team_record_completion_gate after the prover has produced an evidence_matrix and before team_complete.",
+		],
+		parameters: teamRecordCompletionGateSchema,
+		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeTeamRecordCompletionGate(params, ctx),
 	});
 
 	pi.registerTool({

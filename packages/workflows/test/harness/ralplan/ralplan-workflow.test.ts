@@ -11,6 +11,7 @@ import {
 	readRalplanStatus,
 	readWorkflowActiveState,
 	readWorkflowState,
+	recordRalplanExplorerGateArtifact,
 	runRalplanAgent,
 	writeRalplanArtifact,
 } from "@tsuuanmi/pi-workflows";
@@ -214,6 +215,11 @@ describe("ralplan workflow runtime", () => {
 			messages: [],
 			output: "planner receipt",
 		};
+		await recordRalplanExplorerGateArtifact(
+			cwd,
+			{ runId: "run-subagent", contextMap: { context_needed: false, summary: "No extra context required." } },
+			sessionId,
+		);
 		const result = await runRalplanAgent(
 			cwd,
 			{

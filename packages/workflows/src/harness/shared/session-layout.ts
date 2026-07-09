@@ -190,6 +190,21 @@ export function ralplanObstacleLedgerPath(cwd: string, runId: string, sessionId:
 	return join(ralplanRunDir(cwd, runId, sessionId), "obstacles.json");
 }
 
+export function ralplanGateArtifactPath(
+	cwd: string,
+	runId: string,
+	gate: "explorer",
+	attempt: number,
+	sessionId: string,
+): string {
+	return join(
+		ralplanRunDir(cwd, runId, sessionId),
+		"gates",
+		gate,
+		`attempt-${attempt.toString().padStart(2, "0")}.json`,
+	);
+}
+
 export function ultragoalDir(cwd: string, sessionId: string): string {
 	return join(piSessionRoot(cwd, sessionId), "ultragoal");
 }
@@ -228,6 +243,39 @@ export function teamTaskPath(cwd: string, teamId: string, taskId: string, sessio
 
 export function teamEventsPath(cwd: string, teamId: string, sessionId: string): string {
 	return join(teamRunDir(cwd, teamId, sessionId), "events.jsonl");
+}
+
+export function teamGateArtifactPath(
+	cwd: string,
+	teamId: string,
+	gate: "completion",
+	attempt: number,
+	sessionId: string,
+): string {
+	return join(
+		teamRunDir(cwd, teamId, sessionId),
+		"gates",
+		gate,
+		`attempt-${attempt.toString().padStart(2, "0")}.json`,
+	);
+}
+
+export function teamTaskGateArtifactPath(
+	cwd: string,
+	teamId: string,
+	taskId: string,
+	gate: "review",
+	attempt: number,
+	sessionId: string,
+): string {
+	return join(
+		teamRunDir(cwd, teamId, sessionId),
+		"tasks",
+		taskId,
+		"gates",
+		gate,
+		`attempt-${attempt.toString().padStart(2, "0")}.json`,
+	);
 }
 
 export function teamMailboxPath(cwd: string, teamId: string, recipient: string, sessionId: string): string {
