@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import { syncWorkflowActiveState } from "../shared/active-state.ts";
+import { projectCompactStateFor } from "../shared/compact-state-registry.ts";
 import {
 	type EvidenceMatrixVerdict,
 	evidenceMatrixPasses,
@@ -887,20 +888,8 @@ export async function readTeamCompact(
 	teamId?: string,
 ): Promise<Record<string, unknown>> {
 	const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
-	return {
-		team_id: snapshot.team_id,
-		phase: snapshot.phase,
-		task_counts: snapshot.task_counts,
-		completion_gate: snapshot.team_id
-			? (await readTeamConfig(cwd, snapshot.team_id, sessionId))?.completion_gate
-			: undefined,
-		workers: snapshot.workers.map((worker) => ({ id: worker.id, role: worker.role, status: worker.status })),
-		tasks: snapshot.tasks.map((task) => ({
-			id: task.id,
-			title: task.title,
-			status: task.status,
-			assignee: task.assignee,
-			blocked_by: task.blocked_by,
-		})),
-	};
+	const completionGate = snapshot.team_id
+		? (await readTeamConfig(cwd, snapshot.team_id, sessionId))?.completion_gate
+		: undefined;
+	return projectCompactStateFor<Record<string, unknown>>("team", { snapshot, completionGate });
 }

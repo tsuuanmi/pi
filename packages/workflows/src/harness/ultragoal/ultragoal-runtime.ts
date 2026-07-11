@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { syncWorkflowActiveState } from "../shared/active-state.ts";
+import { projectCompactStateFor } from "../shared/compact-state-registry.ts";
 import type { ObstacleRegression, ObstacleStatus } from "../shared/decision-ledger.ts";
 import {
 	ultragoalBriefPath,
@@ -583,21 +584,11 @@ export async function recordUltragoalBlockerClassification(
 export async function readUltragoalCompact(cwd: string, sessionId: string): Promise<Record<string, unknown>> {
 	const status = await getUltragoalStatus(cwd, sessionId);
 	const state = await readWorkflowState(cwd, "ultragoal", { sessionId }).catch(() => undefined);
-	return {
-		state_path: workflowStatePath(cwd, "ultragoal", sessionId),
-		phase: state?.current_phase,
-		status: status.status,
-		counts: status.counts,
-		current_goal: status.currentGoal
-			? {
-					id: status.currentGoal.id,
-					title: status.currentGoal.title,
-					objective: status.currentGoal.objective,
-					status: status.currentGoal.status,
-				}
-			: undefined,
-		goals: status.goals.map((goal) => ({ id: goal.id, title: goal.title, status: goal.status })),
-	};
+	return projectCompactStateFor<Record<string, unknown>>("ultragoal", {
+		status,
+		state,
+		statePath: workflowStatePath(cwd, "ultragoal", sessionId),
+	});
 }
 
 /**

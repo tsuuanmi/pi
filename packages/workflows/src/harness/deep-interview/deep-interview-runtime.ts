@@ -1,10 +1,12 @@
 import { syncWorkflowActiveState } from "../shared/active-state.ts";
+import { projectCompactStateFor } from "../shared/compact-state-registry.ts";
 import { workflowStatePath } from "../shared/session-layout.ts";
 import { readWorkflowState, replaceWorkflowState } from "../shared/workflow-state.ts";
 import { deriveDeepInterviewHud } from "./deep-interview-hud.ts";
 import {
 	answerHash,
 	type DeepInterviewAdvisoryMetadata,
+	type DeepInterviewCompactState,
 	type DeepInterviewEstablishedFact,
 	type DeepInterviewOrchestrationState,
 	type DeepInterviewPlannedQuestion,
@@ -14,7 +16,6 @@ import {
 	deriveRoundKey,
 	mergeDeepInterviewEnvelope,
 	normalizeDeepInterviewEnvelope,
-	projectCompactState,
 	questionHash,
 	validateDeepInterviewScoredTransition,
 } from "./deep-interview-state.ts";
@@ -371,7 +372,11 @@ export async function finalizeDeepInterviewSpecState(
 
 export async function readDeepInterviewStateCompact(cwd: string, sessionId: string, lastN?: number) {
 	return {
-		state: projectCompactState(await readWorkflowState(cwd, "deep-interview", { sessionId }), { lastN }),
+		state: projectCompactStateFor<DeepInterviewCompactState>(
+			"deep-interview",
+			await readWorkflowState(cwd, "deep-interview", { sessionId }),
+			{ lastN },
+		),
 		statePath: workflowStatePath(cwd, "deep-interview", sessionId),
 	};
 }
