@@ -1,4 +1,5 @@
 import type { WorkflowHudSummary } from "../shared/active-state.ts";
+import { escalationToExpertChip, progressChip } from "../shared/hud-chips.ts";
 import type { RalplanStatus } from "./ralplan-runtime.ts";
 
 /**
@@ -16,6 +17,10 @@ export function buildRalplanHud(status: RalplanStatus): WorkflowHudSummary {
 		version: 1,
 		summary: status.latest ? `persisted ${status.latest.stage} stage ${status.latest.stage_n}` : undefined,
 		chips: [
+			...(status.state?.expert_escalation === true || status.state?.current_phase === "expert-stage"
+				? [escalationToExpertChip()]
+				: []),
+			...(status.iteration ? [progressChip(status.iteration, Number(status.state?.iterate_cap ?? 5), 25)] : []),
 			...(status.pending_approval
 				? [{ label: "pending", value: "approval", priority: 5, severity: "warning" as const }]
 				: []),

@@ -1,4 +1,5 @@
 import type { WorkflowHudSummary } from "../shared/active-state.ts";
+import { progressChip } from "../shared/hud-chips.ts";
 import type { TeamSnapshot } from "./team-runtime.ts";
 
 /**
@@ -14,6 +15,7 @@ export function buildTeamHud(snapshot: TeamSnapshot): WorkflowHudSummary {
 		version: 1,
 		summary: snapshot.team_id ? `${snapshot.task_total} tasks` : "missing",
 		chips: [
+			progressChip(snapshot.task_counts.completed, snapshot.task_total, 15),
 			{
 				label: "phase",
 				value: snapshot.phase,

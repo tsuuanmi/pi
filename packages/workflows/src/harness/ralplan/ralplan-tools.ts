@@ -29,7 +29,7 @@ import {
 } from "./ralplan-runtime.ts";
 
 const ralplanWriteArtifactSchema = Type.Object({
-	stage: Type.String({ description: "planner, architect, critic, revision, adr, or final" }),
+	stage: Type.String({ description: "planner, architect, critic, revision, adr, final, or expert-stage" }),
 	stageN: Type.Number({ description: "Positive stage iteration number" }),
 	artifact: Type.String({ description: "Artifact markdown or a path to a markdown file" }),
 	runId: Type.Optional(Type.String({ description: "Safe run id. Defaults to active run or generated id." })),
@@ -53,14 +53,16 @@ const ralplanRecordExplorerGateSchema = Type.Object({
 type RalplanRecordExplorerGateInput = Static<typeof ralplanRecordExplorerGateSchema>;
 
 const ralplanRunAgentSchema = Type.Object({
-	role: Type.Optional(Type.String({ description: "planner, architect, or critic. Defaults from stage." })),
+	role: Type.Optional(
+		Type.String({ description: "planner, architect, critic, or expert-strategist. Defaults from stage." }),
+	),
 	agent: Type.Optional(Type.String({ description: "Agent profile name. Defaults to the role name." })),
 	model: Type.Optional(Type.String({ description: "Override agent profile model as provider/model." })),
 	thinkingLevel: Type.Optional(Type.String({ description: "Override agent profile thinking level." })),
 	tools: Type.Optional(Type.Array(Type.String({ description: "Override agent profile tools." }))),
 	excludeTools: Type.Optional(Type.Array(Type.String({ description: "Tool names to disable for this role agent." }))),
 	task: Type.String({ description: "Role-agent task prompt." }),
-	stage: Type.String({ description: "planner, architect, critic, or revision" }),
+	stage: Type.String({ description: "planner, architect, critic, revision, or expert-stage" }),
 	stageN: Type.Number({ description: "Positive stage iteration number" }),
 	runId: Type.Optional(Type.String({ description: "Safe run id. Defaults to active run." })),
 	contextArtifacts: Type.Optional(
@@ -118,7 +120,8 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Extensi
 		params.stage !== "planner" &&
 		params.stage !== "architect" &&
 		params.stage !== "critic" &&
-		params.stage !== "revision"
+		params.stage !== "revision" &&
+		params.stage !== "expert-stage"
 	) {
 		throw new Error(`ralplan role agents cannot produce stage: ${params.stage}`);
 	}
@@ -145,6 +148,11 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Extensi
 					}
 				: undefined,
 			explorerGate: { status: explorerGate?.status ?? "missing" },
+			iterateCount: typeof ralplanState?.iterate_count === "number" ? ralplanState.iterate_count : undefined,
+			iterateCap: typeof ralplanState?.iterate_cap === "number" ? ralplanState.iterate_cap : undefined,
+			expertEscalation: ralplanState?.expert_escalation === true,
+			expertCount: typeof ralplanState?.expert_count === "number" ? ralplanState.expert_count : undefined,
+			expertCap: typeof ralplanState?.expert_cap === "number" ? ralplanState.expert_cap : undefined,
 		},
 		selectorRunId,
 	);

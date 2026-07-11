@@ -1,5 +1,5 @@
 export type WorkflowSkill = "deep-interview" | "ralplan" | "team" | "ultragoal";
-export type RalplanStage = "planner" | "architect" | "critic" | "revision" | "adr" | "final";
+export type RalplanStage = "planner" | "architect" | "critic" | "revision" | "adr" | "final" | "expert-stage";
 
 // ---------------------------------------------------------------------------
 // Re-exports from session-layout.ts (mandatory session-scoped isolation)

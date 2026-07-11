@@ -26,8 +26,8 @@
  */
 import { createHash, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
-
 import { canonicalizeJson } from "../shared/canonical-json.ts";
+import { assembleFinalPackage, type WorkflowFinalPackage } from "../shared/receipts.ts";
 import { ultragoalLedgerPath } from "../shared/session-layout.ts";
 
 export type UltragoalGoalStatus =
@@ -98,6 +98,7 @@ export interface UltragoalCompletionVerification {
 		requiredGoalSetHashBeforeCheckpoint: string;
 	};
 	checkpointLedgerEventId: string;
+	finalPackage?: WorkflowFinalPackage;
 }
 
 /**
@@ -395,6 +396,9 @@ export function buildCompletionReceipt(input: {
 		planGeneration: generation.planGeneration,
 		basis: generation.basis,
 		checkpointLedgerEventId: input.checkpointLedgerEventId,
+		...(input.receiptKind === "final-aggregate"
+			? { finalPackage: assembleFinalPackage(input.transitionJson ?? input.goalJson) }
+			: {}),
 	};
 }
 
@@ -440,6 +444,11 @@ function findLedgerReceiptEvent(
  *     `active_missing_final_receipt` / `active_missing_receipt`.
  *  8. otherwise -> `active_verified_complete`.
  */
+function hasCompleteFinalPackage(receipt: UltragoalCompletionVerification): boolean {
+	if (!receipt.finalPackage) return false;
+	return "report" in receipt.finalPackage && "changelog" in receipt.finalPackage && "handoff" in receipt.finalPackage;
+}
+
 export function validateCompletionReceipt(input: {
 	plan: UltragoalPlan;
 	ledger: readonly UltragoalLedgerEvent[];
@@ -459,7 +468,8 @@ export function validateCompletionReceipt(input: {
 		receipt.goalId !== input.goal.id ||
 		receipt.receiptKind !== input.receiptKind ||
 		!receipt.planGeneration ||
-		!receipt.checkpointLedgerEventId
+		!receipt.checkpointLedgerEventId ||
+		(input.receiptKind === "final-aggregate" && !hasCompleteFinalPackage(receipt))
 	) {
 		return {
 			state: "active_stale_receipt",

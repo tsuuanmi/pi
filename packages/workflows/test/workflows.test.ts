@@ -481,17 +481,31 @@ describe("workflow runtime", () => {
 	});
 
 	describe("expectedNextRalplanRole selector", () => {
-		it("returns explorer pre-planner until the explorer gate passes, undefined when human_blocked", () => {
+		it("returns explorer pre-planner until the explorer gate passes, expert-stage when human_blocked", () => {
 			expect(expectedNextRalplanRole({ explorerGate: { status: "missing" } }, "r")?.stage).toBe("pre-planner");
 			expect(expectedNextRalplanRole({ explorerGate: { status: "retry_requested" } }, "r")?.stage).toBe(
 				"pre-planner",
 			);
 			expect(expectedNextRalplanRole({ explorerGate: { status: "passed" } }, "r")?.stage).toBe("planner");
-			expect(expectedNextRalplanRole({ explorerGate: { status: "human_blocked" } }, "r")).toBeUndefined();
+			expect(expectedNextRalplanRole({ explorerGate: { status: "human_blocked" } }, "r")?.stage).toBe(
+				"expert-stage",
+			);
 			// Explorer gate blocks every role spawn, even after a latest artifact would otherwise advance the stage.
 			expect(
 				expectedNextRalplanRole({ latest: { stage: "planner" }, explorerGate: { status: "missing" } }, "r")?.stage,
 			).toBe("pre-planner");
+		});
+
+		it("enforces the expert escalation loop cap", () => {
+			expect(
+				expectedNextRalplanRole({ current_phase: "expert-stage", expertCount: 2, expertCap: 3 }, "r")?.stage,
+			).toBe("expert-stage");
+			expect(
+				expectedNextRalplanRole({ current_phase: "expert-stage", expertCount: 3, expertCap: 3 }, "r"),
+			).toBeUndefined();
+			expect(
+				expectedNextRalplanRole({ explorerGate: { status: "human_blocked" }, expertCount: 3, expertCap: 3 }, "r"),
+			).toBeUndefined();
 		});
 
 		it("returns planner when no artifact exists yet", () => {

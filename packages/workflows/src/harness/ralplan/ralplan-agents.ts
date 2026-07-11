@@ -9,7 +9,7 @@ import { writeJsonAtomic } from "../shared/state-writer.ts";
 import { activeRalplanRunId, defaultWorkflowId } from "../shared/workflow-state.ts";
 import { assertRalplanExplorerGatePassed } from "./ralplan-gates.ts";
 
-export type RalplanAgentRole = "planner" | "architect" | "critic";
+export type RalplanAgentRole = "planner" | "architect" | "critic" | "expert-strategist";
 
 export interface RalplanAgentRunInput {
 	role: RalplanAgentRole;
@@ -45,8 +45,23 @@ export interface RalplanAgentRunResult {
 	messages?: Message[];
 }
 
+const EXPERT_STRATEGIST_EXCLUDED_TOOLS = [
+	"subagent_spawn",
+	"subagent_resume",
+	"subagent_await",
+	"subagent_status",
+	"subagent_steer",
+	"subagent_pause",
+	"subagent_cancel",
+] as const;
+
 function subagentMessages(result: SubagentRunResult): Message[] {
 	return result.messages as Message[];
+}
+
+function excludeToolsForRole(role: RalplanAgentRole, excludeTools: string[] | undefined): string[] | undefined {
+	if (role !== "expert-strategist") return excludeTools;
+	return Array.from(new Set([...(excludeTools ?? []), ...EXPERT_STRATEGIST_EXCLUDED_TOOLS]));
 }
 
 async function writeRunRecord(
@@ -81,6 +96,7 @@ export async function runRalplanAgent(
 	if (input.stage === "planner") await assertRalplanExplorerGatePassed(cwd, runId, storageSessionId);
 	const agentRunId = `ralagent-${randomUUID()}`;
 	const prompt = buildRalplanRoleSystemPrompt(input.role);
+	const excludeTools = excludeToolsForRole(input.role, input.excludeTools);
 	const task = buildRalplanTaskPrompt({
 		role: input.role,
 		runId,
@@ -120,7 +136,7 @@ export async function runRalplanAgent(
 			thinkingLevel: input.thinkingLevel,
 			systemPrompt: prompt,
 			tools: input.tools,
-			excludeTools: input.excludeTools,
+			excludeTools,
 			signal,
 		});
 		if (!resume.ok) throw new Error(`ralplan planner resume failed: ${resume.reason}`);
@@ -136,7 +152,7 @@ export async function runRalplanAgent(
 			systemPrompt: prompt,
 			cwd,
 			tools: input.tools,
-			excludeTools: input.excludeTools,
+			excludeTools,
 			persistent: true,
 			parentSessionId: storageSessionId,
 			storageSessionId,
@@ -166,6 +182,7 @@ export function ralplanRoleForStage(stage: RalplanStage): RalplanAgentRole {
 	if (stage === "planner" || stage === "revision") return "planner";
 	if (stage === "architect") return "architect";
 	if (stage === "critic") return "critic";
+	if (stage === "expert-stage") return "expert-strategist";
 	throw new Error(`no ralplan role agent for stage: ${stage}`);
 }
 

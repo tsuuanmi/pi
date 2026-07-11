@@ -1,4 +1,8 @@
+import { randomUUID } from "node:crypto";
+import { assertRalplanObstacle, writeRalplanObstacle } from "../ralplan/ralplan-obstacles.ts";
+import { assertUltragoalObstacle, writeUltragoalObstacle } from "../ultragoal/ultragoal-obstacles.ts";
 import { applyHandoffToActiveState } from "./active-state.ts";
+import type { ObstacleInput, ObstacleTrigger } from "./decision-ledger.ts";
 import type { WorkflowSkill } from "./paths.ts";
 import { workflowActiveStatePath, workflowStatePath } from "./session-layout.ts";
 import { assertWorkflowSkill, type WorkflowStateEnvelope } from "./state-schema.ts";
@@ -33,10 +37,22 @@ import { readWorkflowState, writeWorkflowState } from "./workflow-state.ts";
  * STATE-007.
  */
 
+export interface HandoffCarriedDecision {
+	id?: string;
+	kind?: string;
+	summary: string;
+	evidence?: string;
+	originSkill?: WorkflowSkill;
+	originRef?: string;
+}
+
 export interface HandoffSidePatch {
 	skill: WorkflowSkill;
-	/** Skill-specific envelope fields (input, run_id, spec_slug, ...). */
-	patch: Record<string, unknown>;
+	/** Skill-specific envelope fields (input, run_id, spec_slug, carried_obstacles, carried_decisions, ...). */
+	patch: Record<string, unknown> & {
+		carried_obstacles?: ObstacleInput[];
+		carried_decisions?: HandoffCarriedDecision[];
+	};
 	sessionId?: string;
 }
 
@@ -61,6 +77,63 @@ export interface HandoffWorkflowResult {
 }
 
 const HANDOFF_STEPS = ["callee-mode-state", "caller-mode-state", "active-state"] as const;
+
+function toObstacleTrigger(
+	input: ObstacleInput,
+	originSkill: WorkflowSkill,
+	originRef: string,
+	now: string,
+): ObstacleTrigger {
+	const candidate = input as Partial<ObstacleTrigger>;
+	return {
+		...input,
+		id: typeof candidate.id === "string" ? candidate.id : randomUUID(),
+		name: typeof candidate.name === "string" ? candidate.name : input.kind,
+		originSkill: typeof candidate.originSkill === "string" ? candidate.originSkill : originSkill,
+		originRef: typeof candidate.originRef === "string" ? candidate.originRef : originRef,
+		createdAt: typeof candidate.createdAt === "string" ? candidate.createdAt : now,
+	};
+}
+
+async function ingestCarriedObstacles(input: {
+	cwd: string;
+	sessionId: string;
+	calleeSkill: WorkflowSkill;
+	callerSkill: WorkflowSkill;
+	calleeState: WorkflowStateEnvelope;
+	calleePatch: HandoffSidePatch["patch"];
+	nowIso: string;
+}): Promise<void> {
+	const carried = input.calleePatch.carried_obstacles;
+	if (!Array.isArray(carried) || carried.length === 0) return;
+	const originRef =
+		typeof input.calleePatch.handoff_ref === "string"
+			? input.calleePatch.handoff_ref
+			: typeof input.calleePatch.input === "string"
+				? input.calleePatch.input
+				: `${input.callerSkill}:handoff`;
+	for (const obstacle of carried) {
+		try {
+			const trigger = toObstacleTrigger(obstacle, input.callerSkill, originRef, input.nowIso);
+			if (input.calleeSkill === "ralplan") {
+				assertRalplanObstacle(trigger);
+				const runId =
+					typeof input.calleeState.run_id === "string"
+						? input.calleeState.run_id
+						: typeof input.calleePatch.run_id === "string"
+							? input.calleePatch.run_id
+							: undefined;
+				if (runId) await writeRalplanObstacle(input.cwd, runId, input.sessionId, trigger);
+			} else if (input.calleeSkill === "ultragoal") {
+				assertUltragoalObstacle(trigger);
+				await writeUltragoalObstacle(input.cwd, input.sessionId, trigger);
+			}
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : String(error);
+			console.warn(`handoff carried obstacle ingest failed (fail-soft): ${msg}`);
+		}
+	}
+}
 
 /**
  * Execute a transaction-backed caller→callee handoff.
@@ -154,6 +227,15 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		options.command,
 		{ operation: "handoff-receive", force, mutationId, sessionId },
 	);
+	await ingestCarriedObstacles({
+		cwd,
+		sessionId,
+		calleeSkill,
+		callerSkill,
+		calleeState,
+		calleePatch: options.callee.patch,
+		nowIso: handoffAt,
+	});
 	await updateWorkflowTransactionJournal(cwd, sessionId, mutationId, HANDOFF_STEPS[0]);
 
 	// 2. Write caller mode-state (demote).

@@ -1,4 +1,5 @@
 import type { WorkflowHudSummary } from "../shared/active-state.ts";
+import { limitationsChip, progressChip, shipWithCaveatsChip } from "../shared/hud-chips.ts";
 import type { UltragoalStatus } from "./ultragoal-runtime.ts";
 
 /**
@@ -29,6 +30,11 @@ export function buildUltragoalHud(status: UltragoalStatus): WorkflowHudSummary {
 		version: 1,
 		summary: status.currentGoal ? `${status.currentGoal.id}: ${status.currentGoal.title}` : status.status,
 		chips: [
+			progressChip(status.counts.complete, status.goals.length, 15),
+			...(status.counts.review_blocked > 0 ? [shipWithCaveatsChip("review-blocked")] : []),
+			...(status.counts.blocked + status.counts.review_blocked > 0
+				? [limitationsChip(status.counts.blocked + status.counts.review_blocked)]
+				: []),
 			{
 				label: "status",
 				value: status.status,

@@ -1,5 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { syncWorkflowActiveState } from "../shared/active-state.ts";
+import { writeStageArtifact } from "../shared/artifact-writer.ts";
+import { projectCompactStateFor } from "../shared/compact-state-registry.ts";
 import { handoffWorkflow } from "../shared/handoff.ts";
 import type { RalplanStage, WorkflowSkill } from "../shared/paths.ts";
 import {
@@ -122,7 +124,11 @@ export interface RalplanDoctorResult {
 	status: RalplanStatus;
 }
 
+const RALPLAN_ITERATE_CAP_DEFAULT = 5;
+const RALPLAN_EXPERT_CAP_DEFAULT = 3;
+
 const RALPLAN_PHASE_LOCK = new Set([
+	"expert-stage",
 	"final",
 	"handoff",
 	"complete",
@@ -235,6 +241,36 @@ function nextPhase(existingPhase: unknown, stage: RalplanStage): string {
 	return stage === "final" ? "pending-approval" : stage;
 }
 
+function ralplanProgressPatch(
+	previousState: Record<string, unknown> | undefined,
+	stage: RalplanStage,
+	verdict: RalplanVerdict | undefined,
+): Record<string, unknown> {
+	const cap =
+		typeof previousState?.iterate_cap === "number" && previousState.iterate_cap > 0
+			? previousState.iterate_cap
+			: RALPLAN_ITERATE_CAP_DEFAULT;
+	const priorCount = typeof previousState?.iterate_count === "number" ? previousState.iterate_count : 0;
+	const increments = verdict?.role === "critic" && (verdict.verdict === "iterate" || verdict.verdict === "reject");
+	const nextCount = increments ? priorCount + 1 : priorCount;
+	const expertCap =
+		typeof previousState?.expert_cap === "number" && previousState.expert_cap > 0
+			? previousState.expert_cap
+			: RALPLAN_EXPERT_CAP_DEFAULT;
+	const priorExpertCount = typeof previousState?.expert_count === "number" ? previousState.expert_count : 0;
+	const expertCount = stage === "expert-stage" ? priorExpertCount + 1 : priorExpertCount;
+	if (stage === "expert-stage" && priorExpertCount >= expertCap) {
+		throw new Error(`ralplan expert loop cap reached: ${priorExpertCount}/${expertCap}`);
+	}
+	return {
+		iterate_count: nextCount,
+		iterate_cap: cap,
+		expert_count: expertCount,
+		expert_cap: expertCap,
+		...(nextCount >= cap ? { expert_escalation: true, current_phase: "expert-stage" } : {}),
+	};
+}
+
 function isSafePlannerId(value: string): boolean {
 	return /^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$/.test(value) && !value.includes("..");
 }
@@ -291,23 +327,7 @@ export async function readRalplanCompactStatus(
 	runId?: string,
 ): Promise<RalplanCompactStatus> {
 	const status = await readRalplanStatus(cwd, sessionId, runId);
-	return {
-		run_id: status.run_id,
-		phase: typeof status.state?.current_phase === "string" ? status.state.current_phase : undefined,
-		iteration: status.iteration,
-		stages: status.stages,
-		latest: status.latest
-			? {
-					stage: status.latest.stage,
-					stage_n: status.latest.stage_n,
-					path: status.latest.path,
-					created_at: status.latest.created_at,
-				}
-			: undefined,
-		pending_approval: status.pending_approval,
-		pending_approval_path: status.pending_approval_path,
-		invalid_index_line_count: status.invalid_index_lines.length,
-	};
+	return projectCompactStateFor<RalplanCompactStatus>("ralplan", status);
 }
 
 export async function writeRalplanArtifact(
@@ -322,6 +342,7 @@ export async function writeRalplanArtifact(
 	const plannerState = plannerStateUpdate(input);
 	const verdict =
 		input.stage === "critic" || input.stage === "architect" ? parseRalplanVerdict(input.stage, body) : undefined;
+	const previousState = await readWorkflowState(cwd, "ralplan", { sessionId }).catch(() => undefined);
 	const index = await readRalplanIndex(cwd, runId, sessionId);
 	const existing = latestForStageN(index.rows, input.stage, input.stageN);
 	if (existing) {
@@ -343,13 +364,11 @@ export async function writeRalplanArtifact(
 			...(existing.verdict ? { verdict: existing.verdict } : {}),
 		};
 	}
+	const progressPatch = ralplanProgressPatch(previousState, input.stage, verdict);
 
-	const artifact = await writeTextArtifact(
-		ralplanStageArtifactPath(cwd, runId, input.stageN, input.stage, sessionId),
-		body,
-		{
-			cwd,
-		},
+	const artifact = await writeStageArtifact(
+		{ path: ralplanStageArtifactPath(cwd, runId, input.stageN, input.stage, sessionId), content: body },
+		{ cwd },
 	);
 	await appendJsonlIdempotent(
 		ralplanIndexPath(cwd, runId, sessionId),
@@ -388,7 +407,6 @@ export async function writeRalplanArtifact(
 			}
 		}
 	}
-	const previousState = await readWorkflowState(cwd, "ralplan", { sessionId }).catch(() => undefined);
 	const state = await writeWorkflowState(
 		cwd,
 		"ralplan",
@@ -399,6 +417,7 @@ export async function writeRalplanArtifact(
 			latest_artifact_path: artifact.path,
 			pending_approval_path: pendingApprovalPath,
 			...plannerStatePatch(plannerState),
+			...progressPatch,
 		},
 		"pi ralplan write-artifact",
 		{ sessionId },
@@ -546,6 +565,21 @@ export async function approveRalplanPlan(
 		}
 	}
 	const now = new Date().toISOString();
+	const sourceLedger = await readRalplanObstacleLedger(cwd, status.run_id, sessionId);
+	const carriedObstacles = unresolvedRalplanObstacles(sourceLedger).map((obstacle) => ({
+		...obstacle,
+		originSkill: "ralplan",
+		originRef: status.run_id,
+	}));
+	const carriedDecisions = [
+		{
+			kind: "ralplan_approval",
+			summary: approved ? `ralplan approved for ${target}` : "ralplan rejected",
+			...(options.note ? { evidence: options.note } : {}),
+			originSkill: "ralplan" as const,
+			originRef: status.run_id,
+		},
+	];
 	let ralplanState: Record<string, unknown>;
 	let targetState: Record<string, unknown> | undefined;
 	if (approved && target !== "stop") {
@@ -574,6 +608,8 @@ export async function approveRalplanPlan(
 					input: status.pending_approval_path,
 					source_workflow: "ralplan",
 					source_run_id: status.run_id,
+					carried_obstacles: carriedObstacles,
+					carried_decisions: carriedDecisions,
 				},
 				sessionId,
 			},

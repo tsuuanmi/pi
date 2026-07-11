@@ -100,7 +100,8 @@ export async function assertRalplanExplorerGatePassed(cwd: string, runId: string
 		{
 			...(state ?? {}),
 			run_id: runId,
-			current_phase: state?.current_phase ?? "planner",
+			current_phase: status === "human_blocked" ? "expert-stage" : (state?.current_phase ?? "planner"),
+			...(status === "human_blocked" ? { expert_escalation: true } : {}),
 			explorer_gate: {
 				gate: "explorer",
 				status,

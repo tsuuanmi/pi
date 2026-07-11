@@ -88,6 +88,11 @@ export interface RalplanSelectorState {
 	latest?: RalplanSelectorLatest;
 	/** Pre-planner explorer gate status slice ("passed" | "retry_requested" | "human_blocked" | "missing"). */
 	explorerGate?: { status: string };
+	iterateCount?: number;
+	iterateCap?: number;
+	expertEscalation?: boolean;
+	expertCount?: number;
+	expertCap?: number;
 }
 
 const RALPLAN_CLOSED_PHASES = new Set([
@@ -109,8 +114,10 @@ const RALPLAN_CLOSED_PHASES = new Set([
  * Progression (driven by the explorer pre-planner gate, the latest written
  * artifact, and the critic verdict; the architect verdict does not branch the
  * stage flow, only the critic verdict does):
+ *   expert escalation state / iterate cap    -> expert-stage/expert-strategist
  *   explorer gate not passed (missing/retry) -> pre-planner/explorer (blocks all role spawns)
- *   explorer gate human_blocked              -> undefined (escalation; no legal spawn)
+ *   explorer gate human_blocked              -> expert-stage/expert-strategist
+ *   expert-stage at expert cap               -> undefined
  *   none / explorer passed                   -> planner
  *   planner                                  -> architect
  *   revision                                 -> architect (re-review)
@@ -123,12 +130,32 @@ export function expectedNextRalplanRole(
 	runId: string,
 ): ExpectedNextRole | undefined {
 	if (state?.current_phase && RALPLAN_CLOSED_PHASES.has(state.current_phase)) return undefined;
+	const iterateCap = typeof state?.iterateCap === "number" && state.iterateCap > 0 ? state.iterateCap : 5;
+	const expertCap = typeof state?.expertCap === "number" && state.expertCap > 0 ? state.expertCap : 3;
+	const expertCount = typeof state?.expertCount === "number" ? state.expertCount : 0;
+	if (
+		state?.current_phase === "expert-stage" ||
+		state?.expertEscalation === true ||
+		(typeof state?.iterateCount === "number" && state.iterateCount >= iterateCap)
+	) {
+		if (expertCount >= expertCap) return undefined;
+		return { skill: "ralplan", stage: "expert-stage", role: "expert-strategist", owner: "ralplan_run_agent", runId };
+	}
 	// Pre-planner explorer gate: block every role spawn until a passing
 	// context_map is recorded (or context_needed=false bypass). When the gate
 	// has escalated to human_blocked there is no legal spawn remaining.
 	const explorer = state?.explorerGate;
 	if (explorer) {
-		if (explorer.status === "human_blocked") return undefined;
+		if (explorer.status === "human_blocked") {
+			if (expertCount >= expertCap) return undefined;
+			return {
+				skill: "ralplan",
+				stage: "expert-stage",
+				role: "expert-strategist",
+				owner: "ralplan_run_agent",
+				runId,
+			};
+		}
 		if (explorer.status !== "passed") {
 			return { skill: "ralplan", stage: "pre-planner", role: "explorer", owner: "ralplan_run_agent", runId };
 		}

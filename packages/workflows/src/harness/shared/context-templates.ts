@@ -1,4 +1,4 @@
-export type ContextTemplateRalplanRole = "planner" | "architect" | "critic";
+export type ContextTemplateRalplanRole = "planner" | "architect" | "critic" | "expert-strategist";
 
 export interface RalplanContextTaskInput {
 	role: ContextTemplateRalplanRole;
@@ -33,10 +33,18 @@ export function buildRalplanRoleSystemPrompt(role: ContextTemplateRalplanRole): 
 			"- Compact verdict must include CLEAR, WATCH, or BLOCK; and APPROVE, COMMENT, or REQUEST CHANGES.",
 		].join("\n");
 	}
+	if (role === "critic") {
+		return [
+			...RALPLAN_BASE_CONTRACT,
+			"- Critic reviews must evaluate acceptance criteria quality, risk mitigation clarity, testability, fair alternatives, and concrete verification steps.",
+			"- Compact verdict must be APPROVE, ITERATE, or REJECT.",
+		].join("\n");
+	}
 	return [
 		...RALPLAN_BASE_CONTRACT,
-		"- Critic reviews must evaluate acceptance criteria quality, risk mitigation clarity, testability, fair alternatives, and concrete verification steps.",
-		"- Compact verdict must be APPROVE, ITERATE, or REJECT.",
+		"- Expert strategist resolves stalled planning loops with a read-only decision artifact.",
+		"- Do not spawn nested agents or edit implementation files.",
+		"- Persist an expert-stage artifact with decision, rationale, constraints, risks, and recommended next action.",
 	].join("\n");
 }
 
