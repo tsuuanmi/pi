@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { assertRalplanObstacle, writeRalplanObstacle } from "../ralplan/ralplan-obstacles.ts";
 import { assertUltragoalObstacle, writeUltragoalObstacle } from "../ultragoal/ultragoal-obstacles.ts";
 import { applyHandoffToActiveState } from "./active-state.ts";
+import { type FailSoftError, recordFailSoftError } from "./audit-log.ts";
 import type { ObstacleInput, ObstacleTrigger } from "./decision-ledger.ts";
 import type { WorkflowSkill } from "./paths.ts";
 import { workflowActiveStatePath, workflowStatePath } from "./session-layout.ts";
@@ -37,21 +38,11 @@ import { readWorkflowState, writeWorkflowState } from "./workflow-state.ts";
  * STATE-007.
  */
 
-export interface HandoffCarriedDecision {
-	id?: string;
-	kind?: string;
-	summary: string;
-	evidence?: string;
-	originSkill?: WorkflowSkill;
-	originRef?: string;
-}
-
 export interface HandoffSidePatch {
 	skill: WorkflowSkill;
-	/** Skill-specific envelope fields (input, run_id, spec_slug, carried_obstacles, carried_decisions, ...). */
+	/** Skill-specific envelope fields (input, run_id, spec_slug, carried_obstacles, ...). */
 	patch: Record<string, unknown> & {
 		carried_obstacles?: ObstacleInput[];
-		carried_decisions?: HandoffCarriedDecision[];
 	};
 	sessionId?: string;
 }
@@ -74,6 +65,7 @@ export interface HandoffWorkflowResult {
 	mutationId: string;
 	callerState: WorkflowStateEnvelope;
 	calleeState: WorkflowStateEnvelope;
+	carriedObstacleFailures: FailSoftError[];
 }
 
 const HANDOFF_STEPS = ["callee-mode-state", "caller-mode-state", "active-state"] as const;
@@ -103,15 +95,31 @@ async function ingestCarriedObstacles(input: {
 	calleeState: WorkflowStateEnvelope;
 	calleePatch: HandoffSidePatch["patch"];
 	nowIso: string;
-}): Promise<void> {
+}): Promise<FailSoftError[]> {
 	const carried = input.calleePatch.carried_obstacles;
-	if (!Array.isArray(carried) || carried.length === 0) return;
+	if (!Array.isArray(carried) || carried.length === 0) return [];
+	// No ingest handler for this callee skill: record once (not per-obstacle) and
+	// return, so a handoff carrying N obstacles to a skill with no handler (e.g.
+	// team) produces one fail-soft row instead of N.
+	if (input.calleeSkill !== "ralplan" && input.calleeSkill !== "ultragoal") {
+		const msg = `no ingest handler for callee skill ${input.calleeSkill}`;
+		console.warn(`handoff carried obstacle ingest skipped (fail-soft): ${msg}`);
+		return [
+			await recordFailSoftError(
+				input.cwd,
+				input.sessionId,
+				{ site: "handoff-no-ingest-handler", message: msg, skill: input.calleeSkill },
+				input.nowIso,
+			),
+		];
+	}
 	const originRef =
 		typeof input.calleePatch.handoff_ref === "string"
 			? input.calleePatch.handoff_ref
 			: typeof input.calleePatch.input === "string"
 				? input.calleePatch.input
 				: `${input.callerSkill}:handoff`;
+	const failures: FailSoftError[] = [];
 	for (const obstacle of carried) {
 		try {
 			const trigger = toObstacleTrigger(obstacle, input.callerSkill, originRef, input.nowIso);
@@ -131,8 +139,17 @@ async function ingestCarriedObstacles(input: {
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : String(error);
 			console.warn(`handoff carried obstacle ingest failed (fail-soft): ${msg}`);
+			failures.push(
+				await recordFailSoftError(
+					input.cwd,
+					input.sessionId,
+					{ site: "handoff-carried-obstacle", message: msg, skill: input.calleeSkill },
+					input.nowIso,
+				),
+			);
 		}
 	}
+	return failures;
 }
 
 /**
@@ -227,7 +244,7 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		options.command,
 		{ operation: "handoff-receive", force, mutationId, sessionId },
 	);
-	await ingestCarriedObstacles({
+	const carriedObstacleFailures = await ingestCarriedObstacles({
 		cwd,
 		sessionId,
 		calleeSkill,
@@ -283,5 +300,6 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		mutationId,
 		callerState,
 		calleeState,
+		carriedObstacleFailures,
 	};
 }

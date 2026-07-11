@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { syncWorkflowActiveState } from "../shared/active-state.ts";
 import { writeStageArtifact } from "../shared/artifact-writer.ts";
+import { type FailSoftError, recordFailSoftError } from "../shared/audit-log.ts";
 import { projectCompactStateFor } from "../shared/compact-state-registry.ts";
 import { handoffWorkflow } from "../shared/handoff.ts";
 import type { RalplanStage, WorkflowSkill } from "../shared/paths.ts";
@@ -67,6 +68,8 @@ export interface RalplanWriteArtifactResult {
 	plannerState?: RalplanPlannerStateUpdate;
 	/** Parsed critic/architect verdict, when the stage produced one (R-1 prerequisite). */
 	verdict?: RalplanVerdict;
+	/** Fail-soft errors collected during the R-1 obstacle dual-write (durable copies in the audit log). */
+	failSoftErrors?: FailSoftError[];
 }
 
 export interface RalplanInvalidIndexLine {
@@ -115,6 +118,8 @@ export interface RalplanApproveResult {
 	critic_verdict_overridden?: boolean;
 	/** Soft warning surfaced at approval (e.g. latest critic verdict is ITERATE). */
 	approval_warning?: string;
+	/** Fail-soft errors collected during the approval handoff ingest (durable copies in the audit log). */
+	failSoftErrors?: FailSoftError[];
 }
 
 export interface RalplanDoctorResult {
@@ -395,6 +400,7 @@ export async function writeRalplanArtifact(
 	// mapping/validation/IO failure is warned and swallowed. The verdict on the
 	// index row (the authoritative record) is already written. Positive/commentary
 	// verdicts map to `undefined` and append nothing. Skipped on the dedup path.
+	const failSoftErrors: FailSoftError[] = [];
 	if (verdict) {
 		const obstacle = ralplanObstacleFromVerdict(verdict, artifact.path, artifact.createdAt);
 		if (obstacle) {
@@ -404,6 +410,13 @@ export async function writeRalplanArtifact(
 			} catch (error) {
 				const msg = error instanceof Error ? error.message : String(error);
 				console.warn(`ralplan obstacle dual-write failed (R-1 fail-soft): ${msg}`);
+				failSoftErrors.push(
+					await recordFailSoftError(cwd, sessionId, {
+						site: "ralplan-obstacle-dual-write",
+						message: msg,
+						skill: "ralplan",
+					}),
+				);
 			}
 		}
 	}
@@ -445,6 +458,7 @@ export async function writeRalplanArtifact(
 		deduplicated: false,
 		plannerState,
 		...(verdict ? { verdict } : {}),
+		...(failSoftErrors.length ? { failSoftErrors } : {}),
 	};
 }
 
@@ -571,17 +585,9 @@ export async function approveRalplanPlan(
 		originSkill: "ralplan",
 		originRef: status.run_id,
 	}));
-	const carriedDecisions = [
-		{
-			kind: "ralplan_approval",
-			summary: approved ? `ralplan approved for ${target}` : "ralplan rejected",
-			...(options.note ? { evidence: options.note } : {}),
-			originSkill: "ralplan" as const,
-			originRef: status.run_id,
-		},
-	];
 	let ralplanState: Record<string, unknown>;
 	let targetState: Record<string, unknown> | undefined;
+	let approvalFailSoftErrors: FailSoftError[] | undefined;
 	if (approved && target !== "stop") {
 		// Handoff branch: delegate the caller demote + callee promote + active-state
 		// apply to `handoffWorkflow` (transaction journal + both-side receipts +
@@ -609,7 +615,6 @@ export async function approveRalplanPlan(
 					source_workflow: "ralplan",
 					source_run_id: status.run_id,
 					carried_obstacles: carriedObstacles,
-					carried_decisions: carriedDecisions,
 				},
 				sessionId,
 			},
@@ -618,6 +623,7 @@ export async function approveRalplanPlan(
 		});
 		ralplanState = result.callerState;
 		targetState = result.calleeState;
+		approvalFailSoftErrors = result.carriedObstacleFailures;
 	} else {
 		// No handoff target (stop / rejected): just deactivate ralplan.
 		ralplanState = await writeWorkflowState(
@@ -658,6 +664,7 @@ export async function approveRalplanPlan(
 		...(criticVerdict ? { critic_verdict: criticVerdict } : {}),
 		...(criticVerdictOverridden ? { critic_verdict_overridden: true } : {}),
 		...(approvalWarning ? { approval_warning: approvalWarning } : {}),
+		...(approvalFailSoftErrors?.length ? { failSoftErrors: approvalFailSoftErrors } : {}),
 	};
 }
 

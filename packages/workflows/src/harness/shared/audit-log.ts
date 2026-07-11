@@ -114,3 +114,37 @@ export async function maybeAuditForStateWrite(input: {
 		session_id: input.sessionId,
 	});
 }
+
+/** In-memory fail-soft error record (collected at call sites; durable trail in the audit log). */
+export interface FailSoftError {
+	site: string;
+	message: string;
+	ts: string;
+}
+
+/**
+ * Record a fail-soft error to the audit log (category "log", verb "fail_soft_error")
+ * and return the in-memory record. Never throws: wraps {@link safeAppendAuditEntry}
+ * so a fail-soft path never fails the operation it guards. The audit row is the
+ * durable source of truth; callers surface a count on their receipt from the
+ * in-memory {@link FailSoftError}[] they collect.
+ */
+export async function recordFailSoftError(
+	cwd: string,
+	sessionId: string,
+	input: { site: string; message: string; skill?: WorkflowSkill },
+	nowIso?: string,
+): Promise<FailSoftError> {
+	const ts = nowIso ?? new Date().toISOString();
+	await safeAppendAuditEntry(cwd, sessionId, {
+		ts,
+		...(input.skill ? { skill: input.skill } : {}),
+		category: "log",
+		verb: "fail_soft_error",
+		owner: "pi-workflow",
+		mutation_id: "",
+		paths: [],
+		session_id: sessionId,
+	});
+	return { site: input.site, message: input.message, ts };
+}

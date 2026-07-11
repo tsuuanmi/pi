@@ -275,10 +275,12 @@ async function executeRalplanApprove(params: RalplanApproveInput, ctx: Extension
 	const baseText = result.approved
 		? `Approved ralplan ${result.runId} for ${result.target}`
 		: `Rejected ralplan ${result.runId}`;
+	const { failSoftErrors, ...receiptRest } = result;
 	const notes: string[] = [];
 	if (result.critic_verdict) notes.push(`critic verdict: ${result.critic_verdict}`);
 	if (result.critic_verdict_overridden) notes.push("approved despite REJECT (override)");
 	if (result.approval_warning) notes.push(result.approval_warning);
+	if (failSoftErrors?.length) notes.push(`fail-soft errors: ${failSoftErrors.length}`);
 	const text = notes.length > 0 ? `${baseText} (${notes.join("; ")})` : baseText;
 	return {
 		content: [
@@ -287,7 +289,17 @@ async function executeRalplanApprove(params: RalplanApproveInput, ctx: Extension
 				text,
 			},
 		],
-		details: workflowReceipt({ ...result }),
+		details: workflowReceipt({
+			...receiptRest,
+			...(failSoftErrors?.length
+				? {
+						fail_soft_errors: {
+							count: failSoftErrors.length,
+							recent: failSoftErrors.slice(-3).map((e) => ({ site: e.site, ts: e.ts })),
+						},
+					}
+				: {}),
+		}),
 	};
 }
 

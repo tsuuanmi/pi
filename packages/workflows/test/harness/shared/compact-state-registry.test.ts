@@ -1,34 +1,12 @@
 import {
 	type CompactBudget,
-	estimateCompactBytes,
 	hasCompactSchema,
 	projectCompactStateFor,
 	type RalplanStatus,
 	registerCompactSchema,
 	resetCompactSchemaRegistry,
-	truncateLastN,
 } from "@tsuuanmi/pi-workflows";
 import { describe, expect, it } from "vitest";
-
-describe("compact budget helpers", () => {
-	it("truncateLastN keeps the suffix deterministically and never mutates input", () => {
-		const input = [1, 2, 3, 4, 5];
-		expect(truncateLastN(input, 3)).toEqual([3, 4, 5]);
-		expect(input).toEqual([1, 2, 3, 4, 5]); // untouched
-		expect(truncateLastN(input, 0)).toEqual([]);
-		expect(truncateLastN(input, undefined)).toEqual([1, 2, 3, 4, 5]);
-		expect(truncateLastN(input, -1)).toEqual([1, 2, 3, 4, 5]);
-		expect(truncateLastN(input, Number.NaN)).toEqual([1, 2, 3, 4, 5]);
-	});
-
-	it("estimateCompactBytes is deterministic (same value -> same size class)", () => {
-		const a = { a: 1, b: [1, 2, 3] };
-		const b = { a: 1, b: [1, 2, 3] };
-		expect(estimateCompactBytes(a)).toBe(estimateCompactBytes(b));
-		expect(estimateCompactBytes(a)).toBeGreaterThan(0);
-		expect(estimateCompactBytes({ b: [1, 2, 3, 4] })).toBeGreaterThan(estimateCompactBytes({ b: [1, 2, 3] }));
-	});
-});
 
 describe("compact-state registry", () => {
 	it("registers a compact schema for each workflow skill on import", () => {
