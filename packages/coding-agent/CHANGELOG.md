@@ -78,6 +78,7 @@
 - Fixed bundled extension loading for imports from `@tsuuanmi/pi-agent/node`.
 - Fixed stale extension runners from emitting handlers after session replacement or reload, preventing stale context errors on later prompts.
 - Fixed spurious "Extension … error: This extension ctx is stale …" messages when an async event handler (e.g. a workflow-skill pruning/HUD handler) resumed after an `await` that straddled session replacement/reload. The stale-ctx throw is now treated as a benign lifecycle race (the owning session is gone) and no longer surfaces as an extension error via `ExtensionRunner.emitError`.
+- Fixed subagent sessions sharing the parent session's `ResourceLoader` (and therefore its `ExtensionRuntime` and `Extension` objects), so disposing a completed subagent no longer invalidates the parent's shared extension runtime and stale-ifies the parent's captured extension API on the next `before_agent_start`. This affected every subagent-spawning workflow tool (deep-interview, ralplan, team, ultragoal) and any `subagent_spawn` call. Subagents now build an isolated `ResourceLoader` mirroring the parent's extension configuration while reusing the parent's settings manager to preserve project-trust state.
 - Fixed `/model` autocomplete and model selection searches to match provider/model queries regardless of whether the provider or model token is typed first.
 - Fixed the tree navigator to horizontally pan deep entries so the selected item remains readable ([#5830](https://github.com/tsuuanmi/pi/issues/5830)).
 

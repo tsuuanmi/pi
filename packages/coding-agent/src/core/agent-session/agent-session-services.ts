@@ -85,6 +85,15 @@ export interface AgentSessionServices {
 	modelRegistry: ModelRegistry;
 	resourceLoader: ResourceLoader;
 	diagnostics: AgentSessionRuntimeDiagnostic[];
+	/**
+	 * Options used to build the resource loader (extension factories, noSkills,
+	 * etc.). Stored so isolated sub-sessions can build their own resource loader
+	 * with the same extension configuration instead of sharing this session's
+	 * mutable extension runtime and extension objects.
+	 */
+	resourceLoaderOptions?: Omit<DefaultResourceLoaderOptions, "cwd" | "agentDir" | "settingsManager">;
+	/** CLI/session-provided extension flag overrides applied to this session. */
+	extensionFlagValues?: Map<string, boolean | string>;
 }
 
 function applyExtensionFlagValues(
@@ -180,6 +189,8 @@ export async function createAgentSessionServices(
 		modelRegistry,
 		resourceLoader,
 		diagnostics,
+		resourceLoaderOptions: options.resourceLoaderOptions,
+		extensionFlagValues: options.extensionFlagValues,
 	};
 }
 

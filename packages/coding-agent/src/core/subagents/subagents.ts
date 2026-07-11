@@ -23,7 +23,11 @@ import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import type { ExtensionUIContext } from "../../api/types.ts";
 import type { AgentSession } from "../agent-session/agent-session.ts";
-import { type AgentSessionServices, createAgentSessionFromServices } from "../agent-session/agent-session-services.ts";
+import {
+	type AgentSessionServices,
+	createAgentSessionFromServices,
+	createAgentSessionServices,
+} from "../agent-session/agent-session-services.ts";
 import { type AgentProfile, loadAgentProfile } from "../agents/agent-profiles.ts";
 import { sessionStateDir } from "../session/session-layout.ts";
 import { SessionManager } from "../session/session-manager.ts";
@@ -372,6 +376,32 @@ export class SubagentManager {
 		}
 	}
 
+	/**
+	 * Build a fresh, isolated AgentSessionServices for a subagent session.
+	 *
+	 * The subagent reuses the parent's auth, model registry, settings manager, cwd,
+	 * and extension configuration, but gets its own ResourceLoader (and therefore
+	 * its own ExtensionRuntime and Extension instances). This keeps subagent
+	 * dispose/reload from invalidating or clobbering the parent session's shared
+	 * extension runtime.
+	 *
+	 * The parent SettingsManager is reused (not recreated) so the subagent inherits
+	 * the parent's resolved project-trust state and settings; a fresh
+	 * SettingsManager would default to project-trusted and could load project-local
+	 * extensions the parent never trusted.
+	 */
+	private async createIsolatedServices(): Promise<AgentSessionServices> {
+		return createAgentSessionServices({
+			cwd: this.services.cwd,
+			agentDir: this.services.agentDir,
+			authStorage: this.services.authStorage,
+			settingsManager: this.services.settingsManager,
+			modelRegistry: this.services.modelRegistry,
+			resourceLoaderOptions: this.services.resourceLoaderOptions,
+			extensionFlagValues: this.services.extensionFlagValues,
+		});
+	}
+
 	private async executeRecord(
 		record: SubagentRecord,
 		request: ResolvedSubagentRunRequest,
@@ -382,8 +412,17 @@ export class SubagentManager {
 			: request.persistent === false
 				? SessionManager.inMemory(record.cwd)
 				: SessionManager.create(record.cwd, undefined, { id: record.id });
+		// Subagents must not share the parent session's ResourceLoader: a ResourceLoader
+		// caches a single ExtensionRuntime and one set of Extension objects, and
+		// disposing a subagent session invalidates that shared runtime, which would
+		// stale-ify the parent's captured extension API (surfacing as "This extension
+		// ctx is stale after session replacement or reload" on the parent's next
+		// before_agent_start). Build an isolated services bundle with its own resource
+		// loader (reusing the parent's settings manager to preserve project-trust
+		// state) that mirrors the parent's extension configuration.
+		const services = await this.createIsolatedServices();
 		const created = await createAgentSessionFromServices({
-			services: this.services,
+			services,
 			sessionManager,
 			model: request.modelObject,
 			thinkingLevel: request.thinkingLevel,
