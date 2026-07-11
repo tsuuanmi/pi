@@ -546,6 +546,12 @@ export class ExtensionRunner {
 	}
 
 	emitError(error: ExtensionError): void {
+		// Once this runner is stale, the owning session has been replaced/reloaded and
+		// its UI/listeners are being torn down. An async handler that resumed after an
+		// await straddling teardown throws a stale-ctx error here; that is a benign
+		// lifecycle race (the handler's side effects are moot with no session to apply
+		// them to), not an extension bug, so do not surface it.
+		if (this.staleMessage) return;
 		for (const listener of this.errorListeners) {
 			listener(error);
 		}

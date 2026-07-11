@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- **workflows**: Workflow-skill tools (deep-interview/ralplan/team/ultragoal) now stay available while their workflow is in play, instead of being pruned to a single "most-recent non-stale" group. Tool availability is now the union of any skill invoked this turn (via `/skill:`) and every skill with an active (non-cleared) workflow entry. This fixes "tool not found" errors when resuming a workflow that went idle past the 30-minute freshness window (staleness is now a HUD concern, not a tool-availability concern) and when multiple workflows are active concurrently. Inactive entries (e.g. a skill that handed off) are still excluded.
 - **ralplan**: The explorer pre-planner gate no longer writes state with `force`; it goes through the normal manifest transition/tamper gate like the released ralplan artifact path, avoiding spurious `force_overwrite` audit entries.
 - **team**: Prover `evidence_matrix` and reviewer `review_report` blocking artifacts now escalate to `human_blocked` on the second blocking attempt, matching the bounded-retry contract (previously only the missing-artifact path escalated).
 

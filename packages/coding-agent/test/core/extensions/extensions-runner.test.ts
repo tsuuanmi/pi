@@ -154,11 +154,11 @@ describe("ExtensionRunner", () => {
 			warnSpy.mockRestore();
 		});
 
-		it("allows a shortcut when the reserved set no longer contains the default key", async () => {
+		it("allows ctrl+p because the current built-in binding is not reserved", async () => {
 			const extCode = `
 				export default function(pi) {
 					pi.registerShortcut("ctrl+p", {
-						description: "Uses freed default",
+						description: "Overrides non-reserved built-in",
 						handler: async () => {},
 					});
 				}
@@ -169,10 +169,10 @@ describe("ExtensionRunner", () => {
 
 			const result = await discoverAndLoadExtensions([], tempDir, tempDir);
 			const runner = new ExtensionRunner(result.extensions, result.runtime, tempDir, sessionManager, modelRegistry);
-			const keybindings = { ...defaultKeybindings, "app.model.cycleForward": "ctrl+n" as KeyId };
-			const shortcuts = runner.getShortcuts(keybindings);
+			const shortcuts = runner.getShortcuts(defaultKeybindings);
 
 			expect(shortcuts.has("ctrl+p")).toBe(true);
+			expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("built-in shortcut for app.session.togglePath"));
 			expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining("conflicts with built-in"));
 
 			warnSpy.mockRestore();
@@ -228,11 +228,11 @@ describe("ExtensionRunner", () => {
 			warnSpy.mockRestore();
 		});
 
-		it("blocks shortcuts when reserved key is also bound to non-reserved actions", async () => {
+		it("blocks shortcuts when a key is bound to both reserved and non-reserved actions", async () => {
 			const extCode = `
 				export default function(pi) {
 					pi.registerShortcut("ctrl+p", {
-						description: "Conflicts with shared reserved default",
+						description: "Conflicts with shared reserved key",
 						handler: async () => {},
 					});
 				}
@@ -243,7 +243,8 @@ describe("ExtensionRunner", () => {
 
 			const result = await discoverAndLoadExtensions([], tempDir, tempDir);
 			const runner = new ExtensionRunner(result.extensions, result.runtime, tempDir, sessionManager, modelRegistry);
-			const shortcuts = runner.getShortcuts(defaultKeybindings);
+			const keybindings = { ...defaultKeybindings, "app.interrupt": "ctrl+p" as KeyId };
+			const shortcuts = runner.getShortcuts(keybindings);
 
 			expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("conflicts with built-in"));
 			expect(shortcuts.has("ctrl+p")).toBe(false);
@@ -558,6 +559,49 @@ describe("ExtensionRunner", () => {
 			expect(errors.length).toBe(1);
 			expect(errors[0].error).toContain("Handler error!");
 			expect(errors[0].event).toBe("context");
+		});
+
+		it("does not surface errors from handlers that resume after the runner is invalidated", async () => {
+			// Reproduces the session-replacement race: an async handler awaits (e.g. a
+			// disk read), the owning session is disposed/replaced mid-await (invalidating
+			// this runner), then the handler resumes and touches the now-stale ctx/pi.
+			// That stale-ctx throw is a benign lifecycle race (the session is gone), so it
+			// must not be surfaced as an extension error.
+			let releaseHandler: () => void = () => {};
+			const handlerGate = new Promise<void>((resolve) => {
+				releaseHandler = resolve;
+			});
+			(globalThis as Record<string, unknown>).__piReleaseGate = handlerGate;
+
+			const extCode = `
+				export default function(pi) {
+					pi.on("context", async (_event, ctx) => {
+						await (globalThis as any).__piReleaseGate;
+						void ctx.cwd; // throws stale once the runner is invalidated
+					});
+				}
+			`;
+			fs.writeFileSync(path.join(extensionsDir, "stale-resume.ts"), extCode);
+
+			const result = await discoverAndLoadExtensions([], tempDir, tempDir);
+			const runner = new ExtensionRunner(result.extensions, result.runtime, tempDir, sessionManager, modelRegistry);
+
+			const errors: Array<{ extensionPath: string; event: string; error: string }> = [];
+			runner.onError((err) => {
+				errors.push(err);
+			});
+
+			// Start dispatch; the handler suspends on the gate.
+			const emitPromise = runner.emitContext([]);
+			// Session is replaced/reloaded mid-await.
+			runner.invalidate("stale test");
+			// Now let the handler resume against the invalidated runner.
+			releaseHandler();
+			await emitPromise;
+
+			expect(errors).toEqual([]);
+
+			delete (globalThis as Record<string, unknown>).__piReleaseGate;
 		});
 	});
 

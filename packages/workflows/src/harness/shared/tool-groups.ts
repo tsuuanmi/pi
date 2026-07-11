@@ -1,7 +1,6 @@
 import type { WorkflowActiveState } from "./active-state.ts";
 import type { WorkflowSkill } from "./paths.ts";
-
-export type WorkflowToolGroup = WorkflowSkill | "subagent" | "harness";
+import { isWorkflowSkill } from "./state-schema.ts";
 
 export const DEEP_INTERVIEW_TOOLS = [
 	"pi_workflow_state",
@@ -66,13 +65,16 @@ export const SUBAGENT_TOOLS = [
 
 export const HARNESS_TOOLS = ["fetch", "yield"] as const;
 
-export const WORKFLOW_TOOL_GROUPS: Record<WorkflowToolGroup, readonly string[]> = {
+/**
+ * Tools activated for each workflow skill while it is "in play". Subagent and
+ * harness tools are cross-cutting (see `ALWAYS_AVAILABLE_TOOLS`) and are never
+ * selected/pruned, so they are intentionally absent from this map.
+ */
+export const WORKFLOW_SKILL_TOOLS: Record<WorkflowSkill, readonly string[]> = {
 	"deep-interview": DEEP_INTERVIEW_TOOLS,
 	ralplan: RALPLAN_TOOLS,
 	team: TEAM_TOOLS,
 	ultragoal: ULTRAGOAL_TOOLS,
-	subagent: SUBAGENT_TOOLS,
-	harness: HARNESS_TOOLS,
 };
 
 /**
@@ -98,37 +100,55 @@ export const WORKFLOW_OWNED_TOOLS = new Set<string>(
 	),
 );
 
-function workflowFromPrompt(prompt: string): WorkflowSkill | undefined {
+/**
+ * Skills invoked in the current user turn via `<skill name="…">` (from `/skill:`
+ * expansion). A skill invoked this turn is "in play" even before any workflow
+ * state exists, so its tools are available to start the workflow.
+ */
+function skillsFromPrompt(prompt: string): WorkflowSkill[] {
 	const match = prompt.match(/<skill\s+name="([^"]+)"/);
 	const skill = match?.[1];
-	return skill === "deep-interview" || skill === "ralplan" || skill === "team" || skill === "ultragoal"
-		? skill
-		: undefined;
+	return skill && isWorkflowSkill(skill) ? [skill] : [];
 }
 
-function mostRecentActiveWorkflow(activeState: WorkflowActiveState | undefined): WorkflowSkill | undefined {
-	const entries = activeState?.active_workflows?.filter((entry) => entry.active && !entry.stale) ?? [];
-	if (entries.length === 0) return undefined;
-	const [latest] = entries.slice().sort((a, b) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
-	return latest?.skill;
+/**
+ * Skills with an active (non-cleared) workflow entry. Staleness is a HUD
+ * concern, not an availability concern: an idle workflow keeps its tools so it
+ * can be resumed. Inactive entries (e.g. a skill that handed off) are excluded.
+ */
+function activeWorkflowSkills(activeState: WorkflowActiveState | undefined): WorkflowSkill[] {
+	const entries = activeState?.active_workflows ?? [];
+	return entries.filter((entry) => entry.active).map((entry) => entry.skill);
 }
 
-export function resolveWorkflowToolGroup(input: {
+/**
+ * Resolve the workflow skills currently "in play": the union of any skill
+ * invoked this turn and every skill with an active workflow. Tool availability
+ * follows this set (see `selectWorkflowActiveTools`): a skill's tools stay
+ * active while it is in play, so workflows can be started, continued, and
+ * resumed (even after going idle) without "tool not found" errors.
+ */
+export function resolveActiveWorkflowSkills(input: {
 	currentPromptText?: string;
 	activeWorkflowState?: WorkflowActiveState;
-}): WorkflowToolGroup | undefined {
-	const promptGroup = input.currentPromptText ? workflowFromPrompt(input.currentPromptText) : undefined;
-	if (promptGroup) return promptGroup;
-	return mostRecentActiveWorkflow(input.activeWorkflowState);
+}): WorkflowSkill[] {
+	const skills = new Set<WorkflowSkill>();
+	for (const skill of skillsFromPrompt(input.currentPromptText ?? "")) skills.add(skill);
+	for (const skill of activeWorkflowSkills(input.activeWorkflowState)) skills.add(skill);
+	return [...skills];
 }
 
 export function selectWorkflowActiveTools(input: {
 	currentActiveTools: readonly string[];
-	selectedGroup?: WorkflowToolGroup;
+	selectedSkills?: readonly WorkflowSkill[];
 	availableToolNames?: ReadonlySet<string>;
 }): string[] {
 	const availableToolNames = input.availableToolNames;
-	const selectedWorkflowTools = input.selectedGroup ? WORKFLOW_TOOL_GROUPS[input.selectedGroup] : [];
+	const skillSet = new Set(input.selectedSkills ?? []);
+	const selectedWorkflowTools = new Set<string>();
+	for (const skill of skillSet) {
+		for (const name of WORKFLOW_SKILL_TOOLS[skill]) selectedWorkflowTools.add(name);
+	}
 	const next = input.currentActiveTools.filter((name) => !WORKFLOW_OWNED_TOOLS.has(name));
 	for (const name of selectedWorkflowTools) {
 		if (!availableToolNames || availableToolNames.has(name)) {

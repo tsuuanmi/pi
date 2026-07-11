@@ -6,7 +6,7 @@ import {
 } from "../harness/deep-interview/deep-interview-tools.ts";
 import { registerRalplanTools } from "../harness/ralplan/ralplan-tools.ts";
 import { readWorkflowActiveState } from "../harness/shared/active-state.ts";
-import { resolveWorkflowToolGroup, sameToolSet, selectWorkflowActiveTools } from "../harness/shared/tool-groups.ts";
+import { resolveActiveWorkflowSkills, sameToolSet, selectWorkflowActiveTools } from "../harness/shared/tool-groups.ts";
 import { registerWorkflowStateTool, syncMcpHudUi, syncWorkflowHudUi } from "../harness/shared/workflow-state-tool.ts";
 import { registerSubagentTools } from "../harness/subagents/subagent-tools.ts";
 import { registerTeamTools } from "../harness/team/team-tools.ts";
@@ -21,10 +21,10 @@ async function applyWorkflowToolPruning(
 	if (!pi.getFlag || !pi.getAllTools || !pi.getActiveTools || !pi.setActiveTools) return false;
 	if (pi.getFlag("workflows.pruneInactiveTools") === false) return false;
 	const activeWorkflowState = await readWorkflowActiveState(ctx.cwd, { sessionId: ctx.sessionManager.getSessionId() });
-	const selectedGroup = resolveWorkflowToolGroup({ currentPromptText, activeWorkflowState });
+	const selectedSkills = resolveActiveWorkflowSkills({ currentPromptText, activeWorkflowState });
 	const availableToolNames = new Set(pi.getAllTools().map((tool) => tool.name));
 	const currentActiveTools = pi.getActiveTools();
-	const nextActiveTools = selectWorkflowActiveTools({ currentActiveTools, selectedGroup, availableToolNames });
+	const nextActiveTools = selectWorkflowActiveTools({ currentActiveTools, selectedSkills, availableToolNames });
 	if (sameToolSet(currentActiveTools, nextActiveTools)) return false;
 	pi.setActiveTools(nextActiveTools);
 	return true;

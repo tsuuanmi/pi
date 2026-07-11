@@ -77,6 +77,7 @@
 
 - Fixed bundled extension loading for imports from `@tsuuanmi/pi-agent/node`.
 - Fixed stale extension runners from emitting handlers after session replacement or reload, preventing stale context errors on later prompts.
+- Fixed spurious "Extension … error: This extension ctx is stale …" messages when an async event handler (e.g. a workflow-skill pruning/HUD handler) resumed after an `await` that straddled session replacement/reload. The stale-ctx throw is now treated as a benign lifecycle race (the owning session is gone) and no longer surfaces as an extension error via `ExtensionRunner.emitError`.
 - Fixed `/model` autocomplete and model selection searches to match provider/model queries regardless of whether the provider or model token is typed first.
 - Fixed the tree navigator to horizontally pan deep entries so the selected item remains readable ([#5830](https://github.com/tsuuanmi/pi/issues/5830)).
 
