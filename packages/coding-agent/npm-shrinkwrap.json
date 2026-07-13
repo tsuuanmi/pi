@@ -1,12 +1,12 @@
 {
 	"name": "@tsuuanmi/pi-coding-agent",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"lockfileVersion": 3,
 	"requires": true,
 	"packages": {
 		"": {
 			"name": "@tsuuanmi/pi-coding-agent",
-			"version": "0.1.2",
+			"version": "0.1.3",
 			"license": "MIT",
 			"dependencies": {
 				"@tsuuanmi/pi-agent": "^0.1.2",
