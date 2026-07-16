@@ -1,0 +1,41 @@
+{
+	"version": 1,
+	"deadFunctions": [
+		{
+			"key": "packages/coding-agent/src/core/agents/agent-profiles.ts::loadAgentProfiles",
+			"file": "packages/coding-agent/src/core/agents/agent-profiles.ts",
+			"name": "loadAgentProfiles",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/coding-agent/src/core/model/model-resolver.ts::findExactModelReferenceMatch",
+			"file": "packages/coding-agent/src/core/model/model-resolver.ts",
+			"name": "findExactModelReferenceMatch",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/coding-agent/src/core/session/session-layout.ts::assertNonEmptySessionId",
+			"file": "packages/coding-agent/src/core/session/session-layout.ts",
+			"name": "assertNonEmptySessionId",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/coding-agent/src/core/session/session-layout.ts::encodeSessionSegment",
+			"file": "packages/coding-agent/src/core/session/session-layout.ts",
+			"name": "encodeSessionSegment",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/coding-agent/src/core/session/session-layout.ts::sessionDirName",
+			"file": "packages/coding-agent/src/core/session/session-layout.ts",
+			"name": "sessionDirName",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/coding-agent/src/packages/lsp/tools/lsp-tool.ts::createLspToolDefinition",
+			"file": "packages/coding-agent/src/packages/lsp/tools/lsp-tool.ts",
+			"name": "createLspToolDefinition",
+			"kind": "exported"
+		}
+	]
+}
