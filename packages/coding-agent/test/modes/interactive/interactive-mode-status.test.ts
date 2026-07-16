@@ -7,6 +7,7 @@ import { VirtualTerminal } from "../../../../tui/test/virtual-terminal.ts";
 import type { AutocompleteProviderFactory } from "../../../src/api/types.ts";
 import type { SourceInfo } from "../../../src/core/resources/source-info.ts";
 import { ExtensionUIController } from "../../../src/modes/interactive/controllers/extension-ui-controller.ts";
+import { ResourceDisplayController } from "../../../src/modes/interactive/controllers/resource-display-controller.ts";
 import { InteractiveMode } from "../../../src/modes/interactive/interactive-mode.ts";
 import { initTheme } from "../../../src/theme/theme.ts";
 
@@ -428,6 +429,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 		useRealScopeGroups?: boolean;
 	}) {
 		const fakeThis: any = {
+			showLoadedResources: (ResourceDisplayController as any).prototype.showLoadedResources,
 			options: { verbose: options.verbose ?? false },
 			toolOutputExpanded: options.toolOutputExpanded ?? false,
 			chatContainer: new Container(),
@@ -456,43 +458,52 @@ describe("InteractiveMode.showLoadedResources", () => {
 					getThemes: () => ({ themes: [], diagnostics: [] }),
 				},
 			},
-			formatDisplayPath: (p: string) => (InteractiveMode as any).prototype.formatDisplayPath.call(fakeThis, p),
+			formatDisplayPath: (p: string) =>
+				(ResourceDisplayController as any).prototype.formatDisplayPath.call(fakeThis, p),
 			formatExtensionDisplayPath: (p: string) =>
-				(InteractiveMode as any).prototype.formatExtensionDisplayPath.call(fakeThis, p),
-			formatContextPath: (p: string) => (InteractiveMode as any).prototype.formatContextPath.call(fakeThis, p),
-			getStartupExpansionState: () => (InteractiveMode as any).prototype.getStartupExpansionState.call(fakeThis),
+				(ResourceDisplayController as any).prototype.formatExtensionDisplayPath.call(fakeThis, p),
+			formatContextPath: (p: string) =>
+				(ResourceDisplayController as any).prototype.formatContextPath.call(fakeThis, p),
+			getStartupExpansionState: () =>
+				(ResourceDisplayController as any).prototype.getStartupExpansionState.call(fakeThis),
 			buildScopeGroups: () => [],
 			formatScopeGroups: () => "resource-list",
 			isPackageSource: (sourceInfo?: SourceInfo) =>
-				(InteractiveMode as any).prototype.isPackageSource.call(fakeThis, sourceInfo),
+				(ResourceDisplayController as any).prototype.isPackageSource.call(fakeThis, sourceInfo),
 			getShortPath: (p: string, sourceInfo?: SourceInfo) =>
-				(InteractiveMode as any).prototype.getShortPath.call(fakeThis, p, sourceInfo),
+				(ResourceDisplayController as any).prototype.getShortPath.call(fakeThis, p, sourceInfo),
 			getCompactPathLabel: (p: string, sourceInfo?: SourceInfo) =>
-				(InteractiveMode as any).prototype.getCompactPathLabel.call(fakeThis, p, sourceInfo),
+				(ResourceDisplayController as any).prototype.getCompactPathLabel.call(fakeThis, p, sourceInfo),
 			getCompactPackageSourceLabel: (sourceInfo?: SourceInfo) =>
-				(InteractiveMode as any).prototype.getCompactPackageSourceLabel.call(fakeThis, sourceInfo),
+				(ResourceDisplayController as any).prototype.getCompactPackageSourceLabel.call(fakeThis, sourceInfo),
 			getCompactExtensionLabel: (p: string, sourceInfo?: SourceInfo) =>
-				(InteractiveMode as any).prototype.getCompactExtensionLabel.call(fakeThis, p, sourceInfo),
+				(ResourceDisplayController as any).prototype.getCompactExtensionLabel.call(fakeThis, p, sourceInfo),
 			getCompactDisplayPathSegments: (p: string) =>
-				(InteractiveMode as any).prototype.getCompactDisplayPathSegments.call(fakeThis, p),
+				(ResourceDisplayController as any).prototype.getCompactDisplayPathSegments.call(fakeThis, p),
 			getCompactNonPackageExtensionLabel: (
 				p: string,
 				index: number,
 				allPaths: Array<{ path: string; segments: string[] }>,
-			) => (InteractiveMode as any).prototype.getCompactNonPackageExtensionLabel.call(fakeThis, p, index, allPaths),
+			) =>
+				(ResourceDisplayController as any).prototype.getCompactNonPackageExtensionLabel.call(
+					fakeThis,
+					p,
+					index,
+					allPaths,
+				),
 			getCompactExtensionLabels: (extensions: ExtensionFixture[]) =>
-				(InteractiveMode as any).prototype.getCompactExtensionLabels.call(fakeThis, extensions),
+				(ResourceDisplayController as any).prototype.getCompactExtensionLabels.call(fakeThis, extensions),
 			formatDiagnostics: () => "diagnostics",
 			getBuiltInCommandConflictDiagnostics: () => [],
 		};
 
 		if (options.useRealScopeGroups) {
 			fakeThis.getScopeGroup = (sourceInfo?: SourceInfo) =>
-				(InteractiveMode as any).prototype.getScopeGroup.call(fakeThis, sourceInfo);
+				(ResourceDisplayController as any).prototype.getScopeGroup.call(fakeThis, sourceInfo);
 			fakeThis.buildScopeGroups = (items: Array<{ path: string; sourceInfo?: SourceInfo }>) =>
-				(InteractiveMode as any).prototype.buildScopeGroups.call(fakeThis, items);
+				(ResourceDisplayController as any).prototype.buildScopeGroups.call(fakeThis, items);
 			fakeThis.formatScopeGroups = (groups: unknown, formatOptions: unknown) =>
-				(InteractiveMode as any).prototype.formatScopeGroups.call(fakeThis, groups, formatOptions);
+				(ResourceDisplayController as any).prototype.formatScopeGroups.call(fakeThis, groups, formatOptions);
 		}
 
 		return fakeThis;
@@ -605,7 +616,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			skills: [{ filePath: "/tmp/skill/SKILL.md", name: "commit" }],
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -622,7 +633,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			skills: [{ filePath: "/tmp/skill/SKILL.md", name: "commit" }],
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -640,7 +651,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			skills: [{ filePath: "/tmp/skill/SKILL.md", name: "commit" }],
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -656,7 +667,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			extensions: [{ path: "/tmp/extensions/answer.ts" }, { path: "/tmp/extensions/btw.ts" }],
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -673,7 +684,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			useRealScopeGroups: true,
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -719,7 +730,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			useRealScopeGroups: true,
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -747,7 +758,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			useRealScopeGroups: true,
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -775,7 +786,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			useRealScopeGroups: true,
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -812,7 +823,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			useRealScopeGroups: true,
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -849,7 +860,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			useRealScopeGroups: true,
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -886,7 +897,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			useRealScopeGroups: true,
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -914,7 +925,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			useRealScopeGroups: true,
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -942,7 +953,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			useRealScopeGroups: true,
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -958,7 +969,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			useRealScopeGroups: true,
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -989,7 +1000,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			contextFiles: [{ path: path.join(home, ".pi", "agent", "AGENTS.md") }, { path: path.join(cwd, "AGENTS.md") }],
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -1009,7 +1020,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			contextFiles: [{ path: path.join(home, ".pi", "agent", "AGENTS.md") }, { path: path.join(cwd, "AGENTS.md") }],
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 		});
 
@@ -1026,7 +1037,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			skills: [{ filePath: "/tmp/skill/SKILL.md", name: "commit" }],
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			extensions: [{ path: "/tmp/ext/index.ts" }],
 			force: false,
 			showDiagnosticsWhenQuiet: true,
@@ -1042,7 +1053,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 			skillDiagnostics: [{ type: "warning", message: "duplicate skill name" }],
 		});
 
-		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+		fakeThis.showLoadedResources({
 			force: false,
 			showDiagnosticsWhenQuiet: true,
 		});
