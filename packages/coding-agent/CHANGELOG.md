@@ -21,7 +21,7 @@
 ### Added
 
 - Added reserved bundled package sources `pi:workflows`, `pi:lsp`, `pi:mcp`, and `pi:providers`, plus filterable package `commands` and `agents` resources and generic pre-session package-command dispatch for first-party `pi workflow` and `pi mcp` commands.
-- Added default-on retained-context optimization for future model replay: removable readable thinking blocks are stripped, oversized retained bash output is compressed with a head/tail marker, and inactive workflow-owned tools are pruned from model-visible tool schemas. Opt out with `retainedContext.stripThinking`, `retainedContext.compressBashOutput`, and the `workflows.pruneInactiveTools` extension flag.
+- Added default-on retained-context optimization for future model replay: removable readable thinking blocks are stripped, and oversized retained bash output is compressed with a head/tail marker. Opt out with `retainedContext.stripThinking` and `retainedContext.compressBashOutput`.
 - Added Tier 2 retained-context tool-result optimization: provider-bound replay can dedupe content-identical repeated `read` results and summarize old unprotected `read`, `bash`, and `edit` results with deterministic summary records. Opt out with `retainedContext.dedupeReadResults` and `retainedContext.summarizeStaleToolResults`; tune stale summaries with `retainedContext.toolResultMaxBytes`.
 - Added default-on redacted API usage JSONL sidecar logging per completed LLM provider invocation, with `apiUsageLogging.enabled` opt-out.
 - Added provider-style `.agent` / `.agents` discovery for trusted project and user skills, prompts, context/rule files, and system prompts.
@@ -61,7 +61,6 @@
 
 ### Changed
 
-- Workflow tools are now model-visible by default; enable `workflows.pruneInactiveTools` to hide inactive workflow tool groups.
 - Moved bundled workflow agent profiles out of coding-agent core and into the `pi:workflows` package as package `agents` resources.
 - Moved OpenAI Codex quota usage helpers from coding-agent core into `@tsuuanmi/pi-ai`; coding-agent now consumes them through the AI package.
 - Workflow runtime artifacts now require an owning session (type-level `string`, not `string | undefined`) and persist under the existing `.pi/{sessionId}/` layout, including workflow audit logs, transaction journals, subagent records, and ralplan role-agent records; session directory names remain unchanged; the global `.pi/` root is reserved for shared project config only, with no silent fallback.
@@ -77,7 +76,7 @@
 
 - Fixed bundled extension loading for imports from `@tsuuanmi/pi-agent/node`.
 - Fixed stale extension runners from emitting handlers after session replacement or reload, preventing stale context errors on later prompts.
-- Fixed spurious "Extension … error: This extension ctx is stale …" messages when an async event handler (e.g. a workflow-skill pruning/HUD handler) resumed after an `await` that straddled session replacement/reload. The stale-ctx throw is now treated as a benign lifecycle race (the owning session is gone) and no longer surfaces as an extension error via `ExtensionRunner.emitError`.
+- Fixed spurious "Extension … error: This extension ctx is stale …" messages when an async event handler (e.g. a workflow-skill HUD handler) resumed after an `await` that straddled session replacement/reload. The stale-ctx throw is now treated as a benign lifecycle race (the owning session is gone) and no longer surfaces as an extension error via `ExtensionRunner.emitError`.
 - Fixed subagent sessions sharing the parent session's `ResourceLoader` (and therefore its `ExtensionRuntime` and `Extension` objects), so disposing a completed subagent no longer invalidates the parent's shared extension runtime and stale-ifies the parent's captured extension API on the next `before_agent_start`. This affected every subagent-spawning workflow tool (deep-interview, ralplan, team, ultragoal) and any `subagent_spawn` call. Subagents now build an isolated `ResourceLoader` mirroring the parent's extension configuration while reusing the parent's settings manager to preserve project-trust state.
 - Fixed `/model` autocomplete and model selection searches to match provider/model queries regardless of whether the provider or model token is typed first.
 - Fixed the tree navigator to horizontally pan deep entries so the selected item remains readable ([#5830](https://github.com/tsuuanmi/pi/issues/5830)).
@@ -85,6 +84,7 @@
 ### Removed
 
 - Removed repo-local `.pi` prompt templates, extensions, and skills.
+- Removed the workflow tool-pruning feature bundled via the `pi:workflows` extension: the `workflows.pruneInactiveTools` flag and the dynamic `setActiveTools` pruning that hid inactive workflow-skill tools. Workflow-owned tools (`deep-interview_*`, `ralplan_*`, `team_*`, `ultragoal_*`) are now always model-visible. The unrelated `pi workflow gc --prune` session-directory GC is unaffected.
 
 ## [0.1.2] - 2026-07-08
 

@@ -124,7 +124,7 @@ Per-invocation overrides (e.g. `model`, `thinkingLevel`, `tools`, `excludeTools`
 
 ## Model-visible workflow tools
 
-Pi exposes workflow-owned tools to the model-visible tool list by default. Enable the `workflows.pruneInactiveTools` extension flag to reduce prompt size by showing only the selected workflow's tool group. When pruning is enabled, the current `/skill:<name>` prompt selects that workflow's tool group for the turn; otherwise the active workflow state selects the group. When no workflow is active, workflow-owned tools are hidden while normal coding tools and custom non-workflow tools remain available. Hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
+All workflow-owned tools (`deep-interview_*`, `ralplan_*`, `team_*`, `ultragoal_*`) are always exposed in the model-visible tool list alongside the normal coding tools and any custom non-workflow tools. There is no dynamic tool pruning: workflow-skill tools remain available regardless of whether a workflow is active, so workflows can be started, continued, and resumed without "tool not found" errors. Hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
 
 ## Internals (contributors)
 

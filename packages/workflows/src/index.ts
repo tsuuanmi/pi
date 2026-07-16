@@ -60,7 +60,6 @@ export * from "./harness/shared/session-resolution.ts";
 export * from "./harness/shared/state-schema.ts";
 export * from "./harness/shared/state-writer.ts";
 export * from "./harness/shared/tamper-detection.ts";
-export * from "./harness/shared/tool-groups.ts";
 export * from "./harness/shared/transaction-journal.ts";
 export * from "./harness/shared/workflow-id.ts";
 export * from "./harness/shared/workflow-manifest.ts";

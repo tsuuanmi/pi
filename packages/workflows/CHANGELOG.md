@@ -11,17 +11,16 @@
 
 ### Fixed
 
-- **workflows**: Workflow-skill tools (deep-interview/ralplan/team/ultragoal) now stay available while their workflow is in play, instead of being pruned to a single "most-recent non-stale" group. Tool availability is now the union of any skill invoked this turn (via `/skill:`) and every skill with an active (non-cleared) workflow entry. This fixes "tool not found" errors when resuming a workflow that went idle past the 30-minute freshness window (staleness is now a HUD concern, not a tool-availability concern) and when multiple workflows are active concurrently. Inactive entries (e.g. a skill that handed off) are still excluded.
 - **ralplan**: The explorer pre-planner gate no longer writes state with `force`; it goes through the normal manifest transition/tamper gate like the released ralplan artifact path, avoiding spurious `force_overwrite` audit entries.
 - **team**: Prover `evidence_matrix` and reviewer `review_report` blocking artifacts now escalate to `human_blocked` on the second blocking attempt, matching the bounded-retry contract (previously only the missing-artifact path escalated).
 
 ### Changed
 
 - **ralplan**: `ralplan_approve_plan` now refuses to approve a plan whose latest critic verdict is REJECT; set `overrideCriticVerdict: true` to force approval. A latest critic verdict of ITERATE produces a soft warning instead of blocking, and the approval result now carries `critic_verdict`, `critic_verdict_overridden`, and `approval_warning`. `ralplan_doctor` warns when a pending plan's latest critic verdict is REJECT or ITERATE. This enforces the documented workflow intent that a final plan should not be approved over a critic REJECT.
-- **workflows**: Tool pruning now targets only the four workflow-skill toolsets (deep-interview/ralplan/team/ultragoal). `pi_workflow_state`, subagent tools, and harness tools (`fetch`/`yield`) are always available, so workflows can be started and subagents can be used with no active workflow. The `workflows.pruneInactiveTools` flag default is restored to `true` (prune inactive skill toolsets when no workflow is active); the earlier `false` default is no longer needed because cross-cutting tools are no longer pruned.
 - **workflows**: Fail-soft handoff/obstacle ingest failures now record a durable `fail_soft_error` audit entry and surface `fail_soft_errors` on the ralplan approve receipt, instead of only logging to stderr. A new `handoff-no-ingest-handler` fail-soft site surfaces carried obstacles that have no ingest handler for the callee skill (e.g. team).
 
 ### Removed
 
 - **workflows**: Removed the write-only `carried_decisions` handoff field and `HandoffCarriedDecision` type (reverts an unreleased addition; no consumer read them).
 - **workflows**: Removed the unused `estimateCompactBytes` and `truncateLastN` compact-budget helpers (only referenced by their own tests; kept `CompactBudget`/`lastN`).
+- **workflows**: Removed the workflow tool-pruning feature: the `workflows.pruneInactiveTools` extension flag, the `applyWorkflowToolPruning` session/before-start handler logic in the workflows extension, and the `harness/shared/tool-groups.ts` pruning helpers (`selectWorkflowActiveTools`, `resolveActiveWorkflowSkills`, `sameToolSet`, `WORKFLOW_OWNED_TOOLS`, `WORKFLOW_SKILL_TOOLS`, and the per-skill tool arrays). Workflow-owned tools (`deep-interview_*`, `ralplan_*`, `team_*`, `ultragoal_*`) are now always model-visible, so workflows can be started and resumed without "tool not found" errors. The unrelated `pi workflow gc --prune` session-directory GC is unaffected.
