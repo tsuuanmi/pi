@@ -138,8 +138,17 @@ async function executeSubagentSpawn(params: SubagentSpawnInput, ctx: ExtensionCo
 		storageSessionId: ctx.sessionManager.getSessionId(),
 		signal,
 	});
+	const lines = [`Subagent ${result.record.id} ${result.record.status}`];
+	const agent = result.record.agent_profile ?? params.agent ?? "default";
+	lines.push(`agent: ${agent}`);
+	if (result.record.model ?? params.model) lines.push(`model: ${result.record.model ?? params.model}`);
+	const role = result.record.role ?? params.role;
+	if (role) lines.push(`role: ${role}`);
+	if (result.record.label ?? params.label) lines.push(`label: ${result.record.label ?? params.label}`);
+	if (params.detached) lines.push(`detached: true`);
+	lines.push(`task: ${truncateOutput(params.prompt, "receipt")}`);
 	return {
-		content: [{ type: "text" as const, text: `Subagent ${result.record.id} ${result.record.status}` }],
+		content: [{ type: "text" as const, text: lines.join("\n") }],
 		details: workflowReceipt({ record: result.record, output: result.output }),
 	};
 }
