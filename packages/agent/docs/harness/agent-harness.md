@@ -232,14 +232,7 @@ Preferred future structure:
 
 Use the `pi-ai` faux provider (`registerFauxProvider`, `fauxAssistantMessage`) for deterministic harness/provider tests. Faux response factories can inspect `StreamOptions`, invoke `options.onPayload`, and return scripted assistant messages without real provider APIs or network access.
 
-Harness coverage is configured separately from the default package test run:
-
-```bash
-npm run test:harness
-npm run coverage:harness
-```
-
-`coverage:harness` runs `test/harness/**/*.test.ts` and reports coverage for `src/harness/**/*.ts` plus the non-harness runtime files it directly exercises (`src/agent.ts` and `src/agent-loop.ts`) into `coverage/harness`. Type-only dependencies such as `src/types.ts` are not included because they have no meaningful runtime coverage.
+The harness tests run as part of the package's default test suite (`npm test`), alongside the rest of `test/**/*.test.ts`.
 
 ## Implementation todo
 

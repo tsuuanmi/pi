@@ -31,7 +31,7 @@
 			"project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
 		},
 		"packages/agent": {
-			"entry": ["src/index.ts", "src/node.ts", "vitest.harness.config.ts"],
+			"entry": ["src/index.ts", "src/node.ts"],
 			"project": ["src/**/*.ts", "test/**/*.ts", "*.config.ts"]
 		},
 		"packages/tui": {
