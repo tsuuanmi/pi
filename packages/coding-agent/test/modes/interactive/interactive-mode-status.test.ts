@@ -6,6 +6,7 @@ import { type Component, Container, type Focusable, TUI } from "../../../../tui/
 import { VirtualTerminal } from "../../../../tui/test/virtual-terminal.ts";
 import type { AutocompleteProviderFactory } from "../../../src/api/types.ts";
 import type { SourceInfo } from "../../../src/core/resources/source-info.ts";
+import { ExtensionUIController } from "../../../src/modes/interactive/controllers/extension-ui-controller.ts";
 import { InteractiveMode } from "../../../src/modes/interactive/interactive-mode.ts";
 import { initTheme } from "../../../src/theme/theme.ts";
 
@@ -122,7 +123,7 @@ describe("InteractiveMode.setToolsExpanded", () => {
 		const chatChild = { setExpanded: vi.fn() };
 		const fakeThis: any = {
 			toolOutputExpanded: false,
-			customHeader: undefined,
+			_extensionUIController: { customHeader: undefined },
 			builtInHeader: header,
 			chatContainer: { children: [chatChild] },
 			ui: { requestRender: vi.fn() },
@@ -185,7 +186,7 @@ describe("InteractiveMode.createExtensionUIContext setTheme", () => {
 	});
 });
 
-describe("InteractiveMode.showExtensionCustom", () => {
+describe("ExtensionUIController.showExtensionCustom", () => {
 	beforeAll(() => {
 		initTheme("dark");
 	});
@@ -206,6 +207,7 @@ describe("InteractiveMode.showExtensionCustom", () => {
 		};
 		const fakeThis = {
 			editor,
+			getEditor: () => editor,
 			editorContainer,
 			keybindings: {},
 			ui,
@@ -214,7 +216,7 @@ describe("InteractiveMode.showExtensionCustom", () => {
 			factory: (tui: TUI, theme: unknown, keybindings: unknown, done: (result: T) => void) => Component,
 			options?: { overlay?: boolean },
 		): Promise<T> =>
-			(InteractiveMode as any).prototype.showExtensionCustom.call(fakeThis, factory, options) as Promise<T>;
+			(ExtensionUIController as any).prototype.showExtensionCustom.call(fakeThis, factory, options) as Promise<T>;
 
 		editorContainer.addChild(editor);
 		ui.addChild(editorContainer);
