@@ -8,13 +8,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import type { AgentMessage, TruncationResult } from "@tsuuanmi/pi-agent";
 import { createCompactionSummaryMessage } from "@tsuuanmi/pi-agent";
-import {
-	type AssistantMessage,
-	fetchOpenAICodexUsageSummary,
-	getOpenAICodexUsageCacheTtlMs,
-	type Message,
-	type Model,
-} from "@tsuuanmi/pi-ai";
+import type { AssistantMessage, Message } from "@tsuuanmi/pi-ai";
 import type {
 	AutocompleteProvider,
 	EditorComponent,
@@ -134,13 +128,6 @@ function isDeadTerminalError(error: unknown): boolean {
 	return code !== undefined && DEAD_TERMINAL_ERROR_CODES.has(code);
 }
 
-const ANTHROPIC_SUBSCRIPTION_AUTH_WARNING =
-	"Anthropic subscription auth is active. Third-party harness usage draws from extra usage and is billed per token, not your Claude plan limits. Manage extra usage at https://claude.ai/settings/usage.";
-
-function isAnthropicSubscriptionAuthKey(apiKey: string | undefined): boolean {
-	return typeof apiKey === "string" && apiKey.startsWith("sk-ant-oat");
-}
-
 function quoteIfNeeded(value: string): string {
 	if (value.length > 0 && !/[^a-zA-Z0-9_\-./~:@]/.test(value)) {
 		return value;
@@ -212,9 +199,6 @@ export class InteractiveMode {
 	private lastEscapeTime = 0;
 	private changelogMarkdown: string | undefined = undefined;
 	private startupNoticesShown = false;
-	private anthropicSubscriptionWarningShown = false;
-	private codexUsageRefreshInFlight = false;
-	private codexUsageLastFetchMs = 0;
 
 	// Status line tracking (for mutating immediately-sequential status updates)
 	private lastStatusSpacer: Spacer | undefined = undefined;
@@ -277,7 +261,6 @@ export class InteractiveMode {
 	private builtInHeader: Component | undefined = undefined;
 
 	private options: InteractiveModeOptions;
-	private autoTrustOnReloadCwd: string | undefined;
 
 	// Convenience accessors
 	private get session(): AgentSession {
@@ -296,7 +279,6 @@ export class InteractiveMode {
 	constructor(runtimeHost: AgentSessionRuntime, options: InteractiveModeOptions = {}) {
 		this.runtimeHost = runtimeHost;
 		this.options = options;
-		this.autoTrustOnReloadCwd = options.autoTrustOnReloadCwd;
 		this.runtimeHost.setBeforeSessionInvalidate(() => {
 			this.resetExtensionUI();
 		});
@@ -356,14 +338,16 @@ export class InteractiveMode {
 			ui: this.ui,
 			editorContainer: this.editorContainer,
 			footer: this.footer,
+			footerDataProvider: this.footerDataProvider,
 			getSession: () => this.session,
 			getEditor: () => this.editor,
+			getSettingsManager: () => this.settingsManager,
+			agentDir: this.runtimeHost.services.agentDir,
+			autoTrustOnReloadCwd: options.autoTrustOnReloadCwd,
 			showError: (message) => this.showError(message),
+			showWarning: (message) => this.showWarning(message),
 			showStatus: (message) => this.showStatus(message),
 			showSelector: (create) => this.showSelector(create),
-			maybeWarnAboutAnthropicSubscriptionAuth: (model) => this.maybeWarnAboutAnthropicSubscriptionAuth(model),
-			refreshCodexUsageSummary: (force) => this.refreshCodexUsageSummary(force),
-			updateAvailableProviderCount: () => this.updateAvailableProviderCount(),
 			updateEditorBorderColor: () => this.updateEditorBorderColor(),
 		});
 		this._commandController = new CommandController({
@@ -662,8 +646,8 @@ export class InteractiveMode {
 		});
 
 		// Initialize available provider count for footer display
-		await this.updateAvailableProviderCount();
-		void this.refreshCodexUsageSummary(true);
+		await this._accountAuthController.updateAvailableProviderCount();
+		void this._accountAuthController.refreshCodexUsageSummary(true);
 	}
 
 	/**
@@ -716,7 +700,7 @@ export class InteractiveMode {
 			this.showWarning(modelFallbackMessage);
 		}
 
-		void this.maybeWarnAboutAnthropicSubscriptionAuth();
+		void this._accountAuthController.maybeWarnAboutAnthropicSubscriptionAuth();
 
 		// Process initial messages
 		if (initialMessage) {
@@ -954,7 +938,7 @@ export class InteractiveMode {
 		this.footer.setAutoCompactEnabled(this.session.autoCompactionEnabled);
 		this.footerDataProvider.setCwd(this.sessionManager.getCwd());
 		this.footerDataProvider.setCodexUsageSummary(null);
-		this.codexUsageLastFetchMs = 0;
+		this._accountAuthController.resetCodexUsageCache();
 		this.hideThinkingBlock = this.settingsManager.getHideThinkingBlock();
 		this.ui.setShowHardwareCursor(this.settingsManager.getShowHardwareCursor());
 		this.ui.setClearOnShrink(this.settingsManager.getClearOnShrink());
@@ -974,7 +958,7 @@ export class InteractiveMode {
 		this.applyRuntimeSettings();
 		await this.bindCurrentSessionExtensions();
 		this.subscribeToAgent();
-		await this.updateAvailableProviderCount();
+		await this._accountAuthController.updateAvailableProviderCount();
 		this.updateEditorBorderColor();
 		this.updateTerminalTitle();
 	}
@@ -1722,7 +1706,7 @@ export class InteractiveMode {
 			}
 
 			case "agent_end":
-				void this.refreshCodexUsageSummary(false);
+				void this._accountAuthController.refreshCodexUsageSummary(false);
 				if (this.settingsManager.getShowTerminalProgress()) {
 					this.ui.terminal.setProgress(false);
 				}
@@ -2874,9 +2858,9 @@ export class InteractiveMode {
 								await this.session.setModel(model);
 								this.footer.invalidate();
 								this.updateEditorBorderColor();
-								void this.refreshCodexUsageSummary(true);
+								void this._accountAuthController.refreshCodexUsageSummary(true);
 								this.showStatus(`Model: ${model.id}`);
-								void this.maybeWarnAboutAnthropicSubscriptionAuth(model);
+								void this._accountAuthController.maybeWarnAboutAnthropicSubscriptionAuth(model);
 							} catch (error) {
 								this.showError(error instanceof Error ? error.message : String(error));
 							}
@@ -2898,115 +2882,7 @@ export class InteractiveMode {
 		});
 	}
 
-	private async getModelCandidates(): Promise<Model<any>[]> {
-		if (this.session.scopedModels.length > 0) {
-			return this.session.scopedModels.map((scoped) => scoped.model);
-		}
-
-		this.session.modelRegistry.refresh();
-		try {
-			return await this.session.modelRegistry.getAvailable();
-		} catch {
-			return [];
-		}
-	}
-
 	/** Update the footer's available provider count from current model candidates */
-	private async updateAvailableProviderCount(): Promise<void> {
-		const models = await this.getModelCandidates();
-		const uniqueProviders = new Set(models.map((m) => m.provider));
-		this.footerDataProvider.setAvailableProviderCount(uniqueProviders.size);
-	}
-
-	private async refreshCodexUsageSummary(force: boolean): Promise<void> {
-		const model = this.session.model;
-		if (!model || model.provider !== "openai-codex" || !this.session.modelRegistry.isUsingOAuth(model)) {
-			this.footerDataProvider.setCodexUsageSummary(null);
-			return;
-		}
-
-		const now = Date.now();
-		if (
-			this.codexUsageRefreshInFlight ||
-			(!force && now - this.codexUsageLastFetchMs < getOpenAICodexUsageCacheTtlMs())
-		) {
-			return;
-		}
-
-		this.codexUsageRefreshInFlight = true;
-		this.codexUsageLastFetchMs = now;
-		const provider = model.provider;
-		const modelId = model.id;
-		try {
-			const summary = await fetchOpenAICodexUsageSummary(this.session.modelRegistry, model);
-			if (this.session.model?.provider === provider && this.session.model.id === modelId) {
-				this.footerDataProvider.setCodexUsageSummary(summary);
-				this.ui.requestRender();
-			}
-		} catch {
-			// Quota display is best-effort. Keep the footer usable if Codex usage is unavailable.
-		} finally {
-			this.codexUsageRefreshInFlight = false;
-		}
-	}
-
-	private async maybeWarnAboutAnthropicSubscriptionAuth(
-		model: Model<any> | undefined = this.session.model,
-	): Promise<void> {
-		if (this.settingsManager.getWarnings().anthropicExtraUsage === false) {
-			return;
-		}
-		if (this.anthropicSubscriptionWarningShown) {
-			return;
-		}
-		if (!model || model.provider !== "anthropic") {
-			return;
-		}
-
-		const storedCredential = this.session.modelRegistry.authStorage.get("anthropic");
-		if (storedCredential?.type === "oauth") {
-			this.anthropicSubscriptionWarningShown = true;
-			this.showWarning(ANTHROPIC_SUBSCRIPTION_AUTH_WARNING);
-			return;
-		}
-
-		try {
-			const apiKey = await this.session.modelRegistry.getApiKeyForProvider(model.provider);
-			if (!isAnthropicSubscriptionAuthKey(apiKey)) {
-				return;
-			}
-			this.anthropicSubscriptionWarningShown = true;
-			this.showWarning(ANTHROPIC_SUBSCRIPTION_AUTH_WARNING);
-		} catch {
-			// Ignore auth lookup failures for warning-only checks.
-		}
-	}
-
-	private maybeSaveImplicitProjectTrustAfterReload(): boolean {
-		const cwd = this.sessionManager.getCwd();
-		if (this.autoTrustOnReloadCwd !== cwd) {
-			return false;
-		}
-		if (!this.settingsManager.isProjectTrusted() || !hasTrustRequiringProjectResources(cwd)) {
-			return false;
-		}
-
-		const trustStore = new ProjectTrustStore(this.runtimeHost.services.agentDir);
-		try {
-			if (trustStore.get(cwd) !== null) {
-				this.autoTrustOnReloadCwd = undefined;
-				return false;
-			}
-			trustStore.set(cwd, true);
-			this.autoTrustOnReloadCwd = undefined;
-			return true;
-		} catch (error) {
-			this.showWarning(
-				`Could not save project trust after reload: ${error instanceof Error ? error.message : String(error)}`,
-			);
-			return false;
-		}
-	}
 
 	private showTrustSelector(): void {
 		const cwd = this.sessionManager.getCwd();
@@ -3359,7 +3235,7 @@ export class InteractiveMode {
 				force: false,
 				showDiagnosticsWhenQuiet: true,
 			});
-			const savedImplicitProjectTrust = this.maybeSaveImplicitProjectTrustAfterReload();
+			const savedImplicitProjectTrust = this._accountAuthController.maybeSaveImplicitProjectTrustAfterReload();
 			const modelsJsonError = this.session.modelRegistry.getError();
 			if (modelsJsonError) {
 				this.showError(`models.json error: ${modelsJsonError}`);

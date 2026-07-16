@@ -6,12 +6,22 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { type Api, getProviders, type Model, type OAuthProviderId, type OAuthSelectPrompt } from "@tsuuanmi/pi-ai";
+import {
+	type Api,
+	fetchOpenAICodexUsageSummary,
+	getOpenAICodexUsageCacheTtlMs,
+	getProviders,
+	type Model,
+	type OAuthProviderId,
+	type OAuthSelectPrompt,
+} from "@tsuuanmi/pi-ai";
 import type { Component, Container, EditorComponent, TUI } from "@tsuuanmi/pi-tui";
 import type { AgentSession } from "../../../core/agent-session/agent-session.ts";
 import { getAgentDir, getAuthPath } from "../../../core/config/config.ts";
 import { defaultModelPerProvider } from "../../../core/model/model-resolver.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../../core/model/provider-display-names.ts";
+import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../../../core/trust/trust-manager.ts";
+import type { FooterDataProvider } from "../../../core/usage/footer-data-provider.ts";
 import { stripJsonComments } from "../../../utils/fs/json.ts";
 import { AccountSelectorComponent, type AccountSelectorOption } from "../components/account-selector.ts";
 import { ExtensionSelectorComponent } from "../components/extension-selector.ts";
@@ -25,6 +35,13 @@ function isUnknownModel(model: Model<any> | undefined): boolean {
 
 function hasDefaultModelProvider(providerId: string): providerId is keyof typeof defaultModelPerProvider {
 	return providerId in defaultModelPerProvider;
+}
+
+const ANTHROPIC_SUBSCRIPTION_AUTH_WARNING =
+	"Anthropic subscription auth is active. Third-party harness usage draws from extra usage and is billed per token, not your Claude plan limits. Manage extra usage at https://claude.ai/settings/usage.";
+
+function isAnthropicSubscriptionAuthKey(apiKey: string | undefined): boolean {
+	return typeof apiKey === "string" && apiKey.startsWith("sk-ant-oat");
 }
 
 const BUILT_IN_MODEL_PROVIDERS = new Set<string>(getProviders());
@@ -47,15 +64,20 @@ export class AccountAuthController {
 	private readonly ui: TUI;
 	private readonly editorContainer: Container;
 	private readonly footer: StatusLineComponent;
+	private readonly footerDataProvider: FooterDataProvider;
 	private readonly getSession: () => AgentSession;
 	private readonly getEditor: () => EditorComponent;
+	private readonly getSettingsManager: () => AgentSession["settingsManager"];
+	private readonly agentDir: string;
 	private readonly showError: (errorMessage: string) => void;
+	private readonly showWarning: (message: string) => void;
 	private readonly showStatus: (message: string) => void;
 	private readonly showSelector: (create: (done: () => void) => { component: Component; focus: Component }) => void;
-	private readonly maybeWarnAboutAnthropicSubscriptionAuth: (model?: Model<any>) => Promise<void>;
-	private readonly refreshCodexUsageSummary: (force: boolean) => Promise<void>;
-	private readonly updateAvailableProviderCount: () => Promise<void>;
 	private readonly updateEditorBorderColor: () => void;
+	private anthropicSubscriptionWarningShown = false;
+	private codexUsageRefreshInFlight = false;
+	private codexUsageLastFetchMs = 0;
+	private autoTrustOnReloadCwd: string | undefined;
 
 	private get session(): AgentSession {
 		return this.getSession();
@@ -63,32 +85,45 @@ export class AccountAuthController {
 	private get editor(): EditorComponent {
 		return this.getEditor();
 	}
+	private get settingsManager(): AgentSession["settingsManager"] {
+		return this.getSettingsManager();
+	}
+	private get sessionManager() {
+		return this.session.sessionManager;
+	}
+	private get runtimeHost(): { services: { agentDir: string } } {
+		return { services: { agentDir: this.agentDir } };
+	}
 
 	constructor(opts: {
 		ui: TUI;
 		editorContainer: Container;
 		footer: StatusLineComponent;
+		footerDataProvider: FooterDataProvider;
 		getSession: () => AgentSession;
 		getEditor: () => EditorComponent;
+		getSettingsManager: () => AgentSession["settingsManager"];
+		agentDir: string;
+		autoTrustOnReloadCwd: string | undefined;
 		showError: (errorMessage: string) => void;
+		showWarning: (message: string) => void;
 		showStatus: (message: string) => void;
 		showSelector: (create: (done: () => void) => { component: Component; focus: Component }) => void;
-		maybeWarnAboutAnthropicSubscriptionAuth: (model?: Model<any>) => Promise<void>;
-		refreshCodexUsageSummary: (force: boolean) => Promise<void>;
-		updateAvailableProviderCount: () => Promise<void>;
 		updateEditorBorderColor: () => void;
 	}) {
 		this.ui = opts.ui;
 		this.editorContainer = opts.editorContainer;
 		this.footer = opts.footer;
+		this.footerDataProvider = opts.footerDataProvider;
 		this.getSession = opts.getSession;
 		this.getEditor = opts.getEditor;
+		this.getSettingsManager = opts.getSettingsManager;
+		this.agentDir = opts.agentDir;
+		this.autoTrustOnReloadCwd = opts.autoTrustOnReloadCwd;
 		this.showError = opts.showError;
+		this.showWarning = opts.showWarning;
 		this.showStatus = opts.showStatus;
 		this.showSelector = opts.showSelector;
-		this.maybeWarnAboutAnthropicSubscriptionAuth = opts.maybeWarnAboutAnthropicSubscriptionAuth;
-		this.refreshCodexUsageSummary = opts.refreshCodexUsageSummary;
-		this.updateAvailableProviderCount = opts.updateAvailableProviderCount;
 		this.updateEditorBorderColor = opts.updateEditorBorderColor;
 	}
 
@@ -762,5 +797,115 @@ export class AccountAuthController {
 				this.showError(`Failed to add account for ${providerName}: ${errorMsg}`);
 			}
 		}
+	}
+	private async getModelCandidates(): Promise<Model<any>[]> {
+		if (this.session.scopedModels.length > 0) {
+			return this.session.scopedModels.map((scoped) => scoped.model);
+		}
+
+		this.session.modelRegistry.refresh();
+		try {
+			return await this.session.modelRegistry.getAvailable();
+		} catch {
+			return [];
+		}
+	}
+
+	async updateAvailableProviderCount(): Promise<void> {
+		const models = await this.getModelCandidates();
+		const uniqueProviders = new Set(models.map((m) => m.provider));
+		this.footerDataProvider.setAvailableProviderCount(uniqueProviders.size);
+	}
+
+	async refreshCodexUsageSummary(force: boolean): Promise<void> {
+		const model = this.session.model;
+		if (!model || model.provider !== "openai-codex" || !this.session.modelRegistry.isUsingOAuth(model)) {
+			this.footerDataProvider.setCodexUsageSummary(null);
+			return;
+		}
+
+		const now = Date.now();
+		if (
+			this.codexUsageRefreshInFlight ||
+			(!force && now - this.codexUsageLastFetchMs < getOpenAICodexUsageCacheTtlMs())
+		) {
+			return;
+		}
+
+		this.codexUsageRefreshInFlight = true;
+		this.codexUsageLastFetchMs = now;
+		const provider = model.provider;
+		const modelId = model.id;
+		try {
+			const summary = await fetchOpenAICodexUsageSummary(this.session.modelRegistry, model);
+			if (this.session.model?.provider === provider && this.session.model.id === modelId) {
+				this.footerDataProvider.setCodexUsageSummary(summary);
+				this.ui.requestRender();
+			}
+		} catch {
+			// Quota display is best-effort. Keep the footer usable if Codex usage is unavailable.
+		} finally {
+			this.codexUsageRefreshInFlight = false;
+		}
+	}
+
+	async maybeWarnAboutAnthropicSubscriptionAuth(model: Model<any> | undefined = this.session.model): Promise<void> {
+		if (this.settingsManager.getWarnings().anthropicExtraUsage === false) {
+			return;
+		}
+		if (this.anthropicSubscriptionWarningShown) {
+			return;
+		}
+		if (!model || model.provider !== "anthropic") {
+			return;
+		}
+
+		const storedCredential = this.session.modelRegistry.authStorage.get("anthropic");
+		if (storedCredential?.type === "oauth") {
+			this.anthropicSubscriptionWarningShown = true;
+			this.showWarning(ANTHROPIC_SUBSCRIPTION_AUTH_WARNING);
+			return;
+		}
+
+		try {
+			const apiKey = await this.session.modelRegistry.getApiKeyForProvider(model.provider);
+			if (!isAnthropicSubscriptionAuthKey(apiKey)) {
+				return;
+			}
+			this.anthropicSubscriptionWarningShown = true;
+			this.showWarning(ANTHROPIC_SUBSCRIPTION_AUTH_WARNING);
+		} catch {
+			// Ignore auth lookup failures for warning-only checks.
+		}
+	}
+
+	maybeSaveImplicitProjectTrustAfterReload(): boolean {
+		const cwd = this.sessionManager.getCwd();
+		if (this.autoTrustOnReloadCwd !== cwd) {
+			return false;
+		}
+		if (!this.settingsManager.isProjectTrusted() || !hasTrustRequiringProjectResources(cwd)) {
+			return false;
+		}
+
+		const trustStore = new ProjectTrustStore(this.runtimeHost.services.agentDir);
+		try {
+			if (trustStore.get(cwd) !== null) {
+				this.autoTrustOnReloadCwd = undefined;
+				return false;
+			}
+			trustStore.set(cwd, true);
+			this.autoTrustOnReloadCwd = undefined;
+			return true;
+		} catch (error) {
+			this.showWarning(
+				`Could not save project trust after reload: ${error instanceof Error ? error.message : String(error)}`,
+			);
+			return false;
+		}
+	}
+
+	resetCodexUsageCache(): void {
+		this.codexUsageLastFetchMs = 0;
 	}
 }

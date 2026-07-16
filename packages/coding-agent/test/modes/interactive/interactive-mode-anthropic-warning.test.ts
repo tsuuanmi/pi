@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { InteractiveMode } from "../../../src/modes/interactive/interactive-mode.ts";
+import { AccountAuthController } from "../../../src/modes/interactive/controllers/account-auth-controller.ts";
 
 function createSettingsManager(warnings: { anthropicExtraUsage?: boolean } = {}) {
 	return {
@@ -7,7 +7,7 @@ function createSettingsManager(warnings: { anthropicExtraUsage?: boolean } = {})
 	};
 }
 
-describe("InteractiveMode.maybeWarnAboutAnthropicSubscriptionAuth", () => {
+describe("AccountAuthController.maybeWarnAboutAnthropicSubscriptionAuth", () => {
 	test("warns once when Anthropic subscription auth is detected", async () => {
 		const fakeThis: any = {
 			anthropicSubscriptionWarningShown: false,
@@ -23,10 +23,10 @@ describe("InteractiveMode.maybeWarnAboutAnthropicSubscriptionAuth", () => {
 			showWarning: vi.fn(),
 		};
 
-		await (InteractiveMode as any).prototype.maybeWarnAboutAnthropicSubscriptionAuth.call(fakeThis, {
+		await (AccountAuthController as any).prototype.maybeWarnAboutAnthropicSubscriptionAuth.call(fakeThis, {
 			provider: "anthropic",
 		});
-		await (InteractiveMode as any).prototype.maybeWarnAboutAnthropicSubscriptionAuth.call(fakeThis, {
+		await (AccountAuthController as any).prototype.maybeWarnAboutAnthropicSubscriptionAuth.call(fakeThis, {
 			provider: "anthropic",
 		});
 
@@ -49,7 +49,7 @@ describe("InteractiveMode.maybeWarnAboutAnthropicSubscriptionAuth", () => {
 			showWarning: vi.fn(),
 		};
 
-		await (InteractiveMode as any).prototype.maybeWarnAboutAnthropicSubscriptionAuth.call(fakeThis, {
+		await (AccountAuthController as any).prototype.maybeWarnAboutAnthropicSubscriptionAuth.call(fakeThis, {
 			provider: "anthropic",
 		});
 
@@ -72,7 +72,7 @@ describe("InteractiveMode.maybeWarnAboutAnthropicSubscriptionAuth", () => {
 			showWarning: vi.fn(),
 		};
 
-		await (InteractiveMode as any).prototype.maybeWarnAboutAnthropicSubscriptionAuth.call(fakeThis, {
+		await (AccountAuthController as any).prototype.maybeWarnAboutAnthropicSubscriptionAuth.call(fakeThis, {
 			provider: "openai",
 		});
 
@@ -95,7 +95,7 @@ describe("InteractiveMode.maybeWarnAboutAnthropicSubscriptionAuth", () => {
 			showWarning: vi.fn(),
 		};
 
-		await (InteractiveMode as any).prototype.maybeWarnAboutAnthropicSubscriptionAuth.call(fakeThis, {
+		await (AccountAuthController as any).prototype.maybeWarnAboutAnthropicSubscriptionAuth.call(fakeThis, {
 			provider: "anthropic",
 		});
 
