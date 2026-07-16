@@ -1,6 +1,7 @@
 {
-	"extends": "../../tsconfig.base.json",
+	"extends": "../../tsconfig.json",
 	"compilerOptions": {
+		"noEmit": false,
 		"outDir": "./dist",
 		"paths": {
 			"@tsuuanmi/pi-ai": ["../ai/dist/index.d.ts"],
