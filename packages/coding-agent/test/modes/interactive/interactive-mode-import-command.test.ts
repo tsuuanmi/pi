@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { SessionImportFileNotFoundError } from "../../../src/core/agent-session/agent-session-runtime.ts";
+import { CommandController } from "../../../src/modes/interactive/controllers/command-controller.ts";
 import { InteractiveMode } from "../../../src/modes/interactive/interactive-mode.ts";
 
 type PathCommand = "/import";
 
 type InteractiveModePrototype = {
-	getPathCommandArgument(this: unknown, text: string, command: PathCommand): string | undefined;
 	handleImportCommand(this: ImportCommandContext, text: string): Promise<void>;
 };
 
@@ -20,32 +20,37 @@ type ImportCommandContext = {
 	renderCurrentSessionState: () => void;
 	handleFatalRuntimeError: (prefix: string, error: unknown) => Promise<never>;
 	promptForMissingSessionCwd: (error: unknown) => Promise<string | undefined>;
-	getPathCommandArgument: (text: string, command: PathCommand) => string | undefined;
+	_commandController: { getPathCommandArgument: (text: string, command: PathCommand) => string | undefined };
 };
 
 const interactiveModePrototype = InteractiveMode.prototype as unknown as InteractiveModePrototype;
 
+type CommandControllerPrototype = {
+	getPathCommandArgument(this: unknown, text: string, command: PathCommand): string | undefined;
+};
+const commandControllerPrototype = CommandController.prototype as unknown as CommandControllerPrototype;
+
 describe("InteractiveMode /import parsing", () => {
 	it("strips quotes from /import path arguments", () => {
-		expect(interactiveModePrototype.getPathCommandArgument('/import "path/to/session.jsonl"', "/import")).toBe(
+		expect(commandControllerPrototype.getPathCommandArgument('/import "path/to/session.jsonl"', "/import")).toBe(
 			"path/to/session.jsonl",
 		);
 		expect(
-			interactiveModePrototype.getPathCommandArgument('/import "path with spaces/session.jsonl"', "/import"),
+			commandControllerPrototype.getPathCommandArgument('/import "path with spaces/session.jsonl"', "/import"),
 		).toBe("path with spaces/session.jsonl");
 	});
 
 	it("preserves apostrophes in unquoted /import path arguments", () => {
-		expect(interactiveModePrototype.getPathCommandArgument("/import john's/session.jsonl", "/import")).toBe(
+		expect(commandControllerPrototype.getPathCommandArgument("/import john's/session.jsonl", "/import")).toBe(
 			"john's/session.jsonl",
 		);
 	});
 
 	it("enforces command token boundaries", () => {
-		expect(interactiveModePrototype.getPathCommandArgument("/important /tmp/session.jsonl", "/import")).toBe(
+		expect(commandControllerPrototype.getPathCommandArgument("/important /tmp/session.jsonl", "/import")).toBe(
 			undefined,
 		);
-		expect(interactiveModePrototype.getPathCommandArgument("/import /tmp/session.jsonl", "/import")).toBe(
+		expect(commandControllerPrototype.getPathCommandArgument("/import /tmp/session.jsonl", "/import")).toBe(
 			"/tmp/session.jsonl",
 		);
 	});
@@ -68,7 +73,7 @@ describe("InteractiveMode /import parsing", () => {
 				throw new Error("unexpected fatal error");
 			}),
 			promptForMissingSessionCwd: vi.fn(async () => undefined),
-			getPathCommandArgument: interactiveModePrototype.getPathCommandArgument,
+			_commandController: { getPathCommandArgument: commandControllerPrototype.getPathCommandArgument },
 		};
 
 		await interactiveModePrototype.handleImportCommand.call(context, '/import "path/to/session.jsonl"');
@@ -100,7 +105,7 @@ describe("InteractiveMode /import parsing", () => {
 				throw new Error("unexpected fatal error");
 			}),
 			promptForMissingSessionCwd: vi.fn(async () => undefined),
-			getPathCommandArgument: interactiveModePrototype.getPathCommandArgument,
+			_commandController: { getPathCommandArgument: commandControllerPrototype.getPathCommandArgument },
 		};
 
 		await interactiveModePrototype.handleImportCommand.call(context, "/import john's/session.jsonl");
@@ -131,7 +136,7 @@ describe("InteractiveMode /import parsing", () => {
 			renderCurrentSessionState: vi.fn(),
 			handleFatalRuntimeError,
 			promptForMissingSessionCwd: vi.fn(async () => undefined),
-			getPathCommandArgument: interactiveModePrototype.getPathCommandArgument,
+			_commandController: { getPathCommandArgument: commandControllerPrototype.getPathCommandArgument },
 		};
 
 		await interactiveModePrototype.handleImportCommand.call(context, "/import /tmp/missing-session.jsonl");
