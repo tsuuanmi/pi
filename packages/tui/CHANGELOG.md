@@ -11,6 +11,10 @@
 
 - Exported `sliceByColumn` for ANSI-aware horizontal column slicing.
 
+### Fixed
+
+- **markdown**: A no-language fenced block (``` ```) whose content is a Markdown table now renders as a table (and surrounding bold/list markup renders) instead of showing raw `|`/`**` pipe text. Language-tagged fences (``` ```js ```, ``` ```python ```) and no-lang fences without a table still render as code blocks.
+
 ## [0.79.6] - 2026-06-16
 
 ## [0.79.5] - 2026-06-16

@@ -88,6 +88,10 @@ export class Markdown implements Component {
 	private theme: MarkdownTheme;
 	private options: MarkdownOptions;
 	private defaultStylePrefix?: string;
+	// Guard: while rendering markdown unwrapped from a no-language code fence,
+	// nested no-lang code blocks must render as code (not re-unwrap, which
+	// could recurse). See the `code` case in renderToken.
+	private renderingFencedMarkdown = false;
 
 	// Cache for rendered output
 	private cachedText?: string;
@@ -339,6 +343,38 @@ export class Markdown implements Component {
 				break;
 
 			case "code": {
+				// A no-language fenced block (```) often wraps markdown the model
+				// intended to render (e.g. a table) rather than verbatim code. If the
+				// content parses as markdown containing a table, render that markdown
+				// instead of a raw code block so the table/bold render rather than
+				// showing raw `|`/`**`. Language-tagged fences (```js, ```python),
+				// indented code blocks (lang === undefined), and no-lang fences
+				// without a table keep rendering as code blocks.
+				if (token.lang === "" && !this.renderingFencedMarkdown) {
+					let innerTokens: Token[] | undefined;
+					try {
+						const parsed = markdownParser.lexer(token.text);
+						if (parsed.some((t) => t.type === "table")) innerTokens = parsed;
+					} catch {
+						// If parsing fails, fall through to normal code-block rendering.
+					}
+					if (innerTokens) {
+						this.renderingFencedMarkdown = true;
+						try {
+							for (let i = 0; i < innerTokens.length; i++) {
+								const innerNext = innerTokens[i + 1];
+								const innerLines = this.renderToken(innerTokens[i], width, innerNext?.type, styleContext);
+								for (const line of innerLines) lines.push(line);
+							}
+							if (nextTokenType && nextTokenType !== "space") {
+								lines.push(""); // Add spacing after the rendered block
+							}
+						} finally {
+							this.renderingFencedMarkdown = false;
+						}
+						break;
+					}
+				}
 				const indent = this.theme.codeBlockIndent ?? "  ";
 				lines.push(this.theme.codeBlockBorder(`\`\`\`${token.lang || ""}`));
 				if (this.theme.highlightCode) {

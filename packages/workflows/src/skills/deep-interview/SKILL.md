@@ -241,7 +241,8 @@ Score every active component independently; the overall dimension score is the m
 
 #### Step 2d: Report progress
 
-```
+Emit the round report as rendered Markdown in your reply — do NOT wrap it in a code fence, or the table and bold markup will display as raw `|`/`**` text instead of rendering. Use this structure:
+
 Round {n} complete.
 
 | Dimension | Score | Weight | Weighted | Gap |
@@ -250,7 +251,7 @@ Round {n} complete.
 | Constraints | {s} | {w} | {s*w} | {gap or "Clear"} |
 | Success Criteria | {s} | {w} | {s*w} | {gap or "Clear"} |
 | Context (brownfield) | {s} | {w} | {s*w} | {gap or "Clear"} |
-| **Ambiguity** | | | **{prior}% -> {score}% {up|down|flat}** | {if up: trigger name} |
+| **Ambiguity** | | | **{prior}% -> {score}% {up/down/flat}** | {if up: trigger name} |
 
 **Topology:** Targeted {target} | Active: {n} | Deferred: {n} | Next rotation after: {last_targeted_component_id}
 **Ontology:** {n} entities | Stability: {ratio} | New: {n} | Changed: {n} | Stable: {n}
@@ -259,7 +260,6 @@ Round {n} complete.
 **Next target:** {target} / {weakest_dimension} — {rationale}
 
 {score <= threshold ? "Clarity threshold met! Ready to proceed." : "Focusing next question on: {weakest_dimension}"}
-```
 
 Apply `language.instruction` and the silent self-proofread to narrative status text, generated prose cells, gaps, and next-target phrasing; preserve table structure, fixed labels, scores, weights, component ids, and trigger tokens.
 
@@ -345,7 +345,8 @@ On selection, hand off via `deep_interview_write_spec` with the matching `handof
 
 ## Final Spec Shape
 
-```markdown
+The spec file body is Markdown. Generate it as rendered Markdown (the file content itself) — do NOT wrap the spec in a code fence, or the entire spec will display as raw code. Shape:
+
 # Deep Interview Spec: {title}
 
 ## Metadata
@@ -427,7 +428,6 @@ On selection, hand off via `deep_interview_write_spec` with the matching `handof
 **A:** {answer}
 **Ambiguity:** {score}% (Goal: {g}, Constraints: {c}, Criteria: {cr})
 </details>
-```
 
 ## Session-Scoped Isolation
 

@@ -13,6 +13,7 @@
 
 - **ralplan**: The explorer pre-planner gate no longer writes state with `force`; it goes through the normal manifest transition/tamper gate like the released ralplan artifact path, avoiding spurious `force_overwrite` audit entries.
 - **team**: Prover `evidence_matrix` and reviewer `review_report` blocking artifacts now escalate to `human_blocked` on the second blocking attempt, matching the bounded-retry contract (previously only the missing-artifact path escalated).
+- **deep-interview**: The per-round progress report and final spec templates are no longer wrapped in code fences, so the model emits them as rendered Markdown (tables/bold) instead of raw `|`/`**` code-block text.
 
 ### Changed
 
