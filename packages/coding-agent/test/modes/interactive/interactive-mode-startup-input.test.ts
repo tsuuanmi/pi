@@ -1,4 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import type { AgentSession } from "../../../src/core/agent-session/agent-session.ts";
+import type { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
+import type { CustomEditor } from "../../../src/modes/interactive/components/custom-editor.ts";
+import { KeyHandlerController } from "../../../src/modes/interactive/controllers/key-handler-controller.ts";
 import { InteractiveMode } from "../../../src/modes/interactive/interactive-mode.ts";
 
 type SubmitContext = {
@@ -24,7 +28,6 @@ type InputContext = {
 };
 
 type InteractiveModePrivate = {
-	setupEditorSubmitHandler(this: SubmitContext): void;
 	getUserInput(this: InputContext): Promise<string>;
 };
 
@@ -51,7 +54,48 @@ function createSubmitContext(): SubmitContext {
 describe("InteractiveMode startup input", () => {
 	it("queues a normal prompt submitted before the input callback is installed", async () => {
 		const context = createSubmitContext();
-		interactiveModePrototype.setupEditorSubmitHandler.call(context);
+		const controller = new KeyHandlerController({
+			ui: {} as never,
+			getDefaultEditor: () => context.defaultEditor as CustomEditor,
+			getSession: () => context.session as AgentSession,
+			getEditor: () => context.editor as never,
+			getSettingsManager: () => ({}) as SettingsManager,
+			getIsBashMode: () => false,
+			setIsBashMode: () => {},
+			getOnInputCallback: () => context.onInputCallback,
+			getPendingUserInputs: () => context.pendingUserInputs,
+			_commandController: {} as never,
+			_accountAuthController: {} as never,
+			_selectorController: {} as never,
+			restoreQueuedMessagesToEditor: () => 0,
+			updateEditorBorderColor: () => {},
+			handleCtrlC: () => {},
+			handleCtrlD: () => {},
+			handleCtrlZ: () => {},
+			cycleThinkingLevel: () => {},
+			toggleToolOutputExpansion: () => {},
+			toggleThinkingBlockVisibility: () => {},
+			openExternalEditor: async () => {},
+			handleFollowUp: () => {},
+			handleDequeue: () => {},
+			handleClearCommand: async () => {},
+			showTreeSelector: () => {},
+			showUserMessageSelector: () => {},
+			showSessionSelector: () => {},
+			showSettingsSelector: () => {},
+			showTrustSelector: () => {},
+			handleImportCommand: async () => {},
+			handleBashCommand: async () => {},
+			handleCompactCommand: async () => {},
+			handleReloadCommand: async () => {},
+			shutdown: async () => {},
+			isExtensionCommand: () => false,
+			queueCompactionMessage: () => {},
+			updatePendingMessagesDisplay: () => {},
+			flushPendingBashComponents: context.flushPendingBashComponents,
+			showWarning: () => {},
+		});
+		controller.setupEditorSubmitHandler();
 
 		await context.defaultEditor.onSubmit?.(" early prompt ");
 
