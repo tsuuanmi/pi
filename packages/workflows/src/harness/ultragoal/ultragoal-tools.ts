@@ -1,7 +1,7 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
-import { maybeRedirectVagueExecution } from "../ralplan/vagueness-gate.ts";
 import { workflowReceipt } from "../shared/receipts.ts";
+import { maybeRedirectVagueExecution } from "../shared/vagueness-gate.ts";
 import { syncWorkflowHudUi } from "../shared/workflow-state-tool.ts";
 import { assertAgentThinkingLevel, requireSubagentManager } from "../shared/workflow-tool-utils.ts";
 import { ultragoalGuard } from "./ultragoal-guard.ts";

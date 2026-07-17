@@ -23,7 +23,6 @@ export * from "./harness/ralplan/ralplan-obstacles.ts";
 export * from "./harness/ralplan/ralplan-runtime.ts";
 export * from "./harness/ralplan/ralplan-tools.ts";
 export * from "./harness/ralplan/ralplan-verdicts.ts";
-export * from "./harness/ralplan/vagueness-gate.ts";
 // Harness runtime
 export * from "./harness/runtime/endpoint.ts";
 export * from "./harness/runtime/gc.ts";
@@ -61,6 +60,7 @@ export * from "./harness/shared/state-schema.ts";
 export * from "./harness/shared/state-writer.ts";
 export * from "./harness/shared/tamper-detection.ts";
 export * from "./harness/shared/transaction-journal.ts";
+export * from "./harness/shared/vagueness-gate.ts";
 export * from "./harness/shared/workflow-id.ts";
 export * from "./harness/shared/workflow-manifest.ts";
 export * from "./harness/shared/workflow-state.ts";

@@ -1,5 +1,5 @@
 /**
- * Ralplan pre-execution vagueness gate.
+ * Shared pre-execution vagueness gate.
  *
  * Classifies prompt specificity for `team`/`ultragoal` dispatch. A vague
  * prompt (no concrete signals AND word count ≤ threshold) is redirected to
