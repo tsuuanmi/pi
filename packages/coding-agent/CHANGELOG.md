@@ -19,6 +19,7 @@
 - Removed the `doom-overlay`, `snake`, `space-invaders`, `plan-mode`, `sandbox`, `custom-provider-anthropic`, and `custom-provider-gitlab-duo` example extensions (and the `plan-mode-utils` test), and dropped the `custom-provider-anthropic`, `custom-provider-gitlab-duo`, and `sandbox` workspace entries from the root manifest.
 - Removed low-value interactive extras: the changelog notice, package update notification, tmux keyboard warning, automatic theme detection, terminal title updates, Ctrl-Z suspend handling, and the Anthropic subscription-auth warning. Also removed the unused `collapseChangelog`, `lastChangelogVersion`, and `warnings.anthropicExtraUsage` settings.
 - Removed low-ROI settings and UI extras: `enableAnalytics`, `trackingId`, `terminal.showTerminalProgress`, `terminal.clearOnShrink`, `editorPaddingX`, `autocompleteMaxVisible`, `doubleEscapeAction`, and `treeFilterMode`, along with the analytics first-time setup step and double-escape shortcut.
+- Removed the experimental-features gate (`PI_EXPERIMENTAL` env var, `areExperimentalFeaturesEnabled()`, `src/core/config/experimental.ts`), the experimental first-time theme-setup dialog (`first-time-setup.ts`, `shouldRunFirstTimeSetup`/`showFirstTimeSetup` in `startup-ui.ts`, and their tests), and the status-line `xp` chip. The `isOfficialDistribution`/`OFFICIAL_*` helpers in `startup-ui.ts` (used only by the setup gate) were also dropped.
 
 ### Added
 

@@ -42,24 +42,6 @@ Nested objects are deep-merged. For example, project `compaction.reserveTokens` 
 
 This is used by API key credentials and other configurable values that support environment variable interpolation.
 
-## Experimental Features
-
-Experimental features are gated behind the `PI_EXPERIMENTAL` environment variable:
-
-```typescript
-areExperimentalFeaturesEnabled(): boolean  // Returns true when PI_EXPERIMENTAL=1
-```
-
-Currently experimental features include:
-- First-time setup flow
-- Additional provider features
-
-Set `PI_EXPERIMENTAL=1` to enable experimental features:
-
-```bash
-PI_EXPERIMENTAL=1 pi
-```
-
 ## Agent Directory
 
 `getAgentDir()` returns `~/.pi/agent/` by default. This can be overridden with the `PI_CODING_AGENT_DIR` environment variable.

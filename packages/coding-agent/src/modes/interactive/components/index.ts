@@ -7,10 +7,6 @@ export { BashExecutionComponent } from "./bash-execution.ts";
 export { CustomEditor } from "./custom-editor.ts";
 export { ExtensionEditorComponent } from "./extension-editor.ts";
 export { ExtensionInputComponent } from "./extension-input.ts";
-export type {
-	FirstTimeSetupOptions,
-	FirstTimeSetupResult,
-} from "./first-time-setup.ts";
 export { LoginDialogComponent } from "./login-dialog.ts";
 export { AssistantMessageComponent } from "./messages/assistant-message.ts";
 export { BranchSummaryMessageComponent } from "./messages/branch-summary-message.ts";

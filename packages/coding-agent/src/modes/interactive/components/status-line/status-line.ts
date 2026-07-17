@@ -1,7 +1,6 @@
 import { type Component, truncateToWidth, visibleWidth } from "@tsuuanmi/pi-tui";
 import { collapsePlanningPipeline, readWorkflowActiveState, type WorkflowActiveEntry } from "@tsuuanmi/pi-workflows";
 import type { AgentSession } from "../../../../core/agent-session/agent-session.ts";
-import { areExperimentalFeaturesEnabled } from "../../../../core/config/experimental.ts";
 import type {
 	SettingsManager,
 	StatusLineSegmentId,
@@ -104,7 +103,7 @@ export class StatusLineComponent implements Component {
 			if (hud) lines.push(hud);
 		}
 
-		// 2. Rail (left group / right group + xp trailing chip).
+		// 2. Rail (left group / right group).
 		this.#refreshGitStatusInBackground();
 		const rail = this.#buildStatusLine(width, settings);
 		if (rail) lines.push(rail);
@@ -243,15 +242,12 @@ export class StatusLineComponent implements Component {
 		const sep = resolved.separator;
 		const sepRendered = theme.fg("dim", ` ${sep.left} `);
 
-		// Collect visible right segments + the experimental-features chip.
+		// Collect visible right segments.
 		const rightParts: string[] = [];
 		for (const segId of resolved.rightSegments) {
 			const rendered = renderSegment(segId, ctx);
 			if (rendered.visible && rendered.content) rightParts.push(rendered.content);
 		}
-		const xpChip = areExperimentalFeaturesEnabled()
-			? `${theme.fg("dim", "•")} ${theme.bold(theme.fg("warning", "xp"))}`
-			: null;
 
 		// Collect visible left segments (track the model part for the provider fallback).
 		const leftParts: string[] = [];
@@ -266,8 +262,7 @@ export class StatusLineComponent implements Component {
 
 		const join = (parts: string[]): string => parts.join(sepRendered);
 		let leftGroup = join(leftParts);
-		const rightCore = join(rightParts);
-		const rightGroup = xpChip ? (rightCore ? `${rightCore} ${xpChip}` : xpChip) : rightCore;
+		const rightGroup = join(rightParts);
 
 		let leftWidth = visibleWidth(leftGroup);
 		const rightWidth = visibleWidth(rightGroup);
