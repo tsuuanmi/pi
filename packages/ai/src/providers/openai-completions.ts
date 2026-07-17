@@ -482,8 +482,7 @@ function buildParams(
 		messages,
 		stream: true,
 		prompt_cache_key:
-			(model.baseUrl.includes("api.openai.com") && cacheRetention !== "none") ||
-			(cacheRetention === "long" && compat.supportsLongCacheRetention)
+			compat.supportsPromptCacheKey && cacheRetention !== "none"
 				? clampOpenAIPromptCacheKey(options?.sessionId)
 				: undefined,
 		prompt_cache_retention: cacheRetention === "long" && compat.supportsLongCacheRetention ? "24h" : undefined,
@@ -691,6 +690,19 @@ export function convertMessages(
 
 	let lastRole: string | null = null;
 
+	// Index of the last assistant turn in the (filtered) replayed messages. Prior
+	// assistant turns (i < lastAssistantIndex) have their field-name-signature
+	// reasoning dropped on replay (token saving); the current/last assistant turn
+	// keeps its reasoning. See the strip rule below.
+	let lastAssistantIndex = -1;
+	for (let li = transformedMessages.length - 1; li >= 0; li--) {
+		if (transformedMessages[li].role === "assistant") {
+			lastAssistantIndex = li;
+			break;
+		}
+	}
+	const fieldNameReasoningSignatures = new Set(["reasoning", "reasoning_content", "reasoning_text"]);
+
 	for (let i = 0; i < transformedMessages.length; i++) {
 		const msg = transformedMessages[i];
 		// Some providers don't allow user messages directly after tool results
@@ -759,7 +771,15 @@ export function convertMessages(
 
 					// Use the signature from the first thinking block if available (for llama.cpp server + gpt-oss)
 					const signature = nonEmptyThinkingBlocks[0].thinkingSignature;
-					if (signature && signature.length > 0) {
+					// Prior-turn field-name-signature reasoning (glm/llama.cpp/gpt-oss) is
+					// optional context, not a cryptographic replay token — drop it on replay
+					// to save tokens. Keep the last assistant turn's reasoning. Encrypted /
+					// redacted reasoning lives on a different path (reasoning_details from
+					// toolCall.thoughtSignature; anthropic redacted_thinking in another transport)
+					// and is never touched here.
+					const isPriorTurnFieldNameReasoning =
+						i < lastAssistantIndex && fieldNameReasoningSignatures.has(signature ?? "");
+					if (signature && signature.length > 0 && !isPriorTurnFieldNameReasoning) {
 						(assistantMsg as any)[signature] = nonEmptyThinkingBlocks.map((block) => block.thinking).join("\n");
 					}
 				}
@@ -942,6 +962,7 @@ function detectCompat(): ResolvedOpenAICompletionsCompat {
 		cacheControlFormat: undefined,
 		sendSessionAffinityHeaders: false,
 		supportsLongCacheRetention: true,
+		supportsPromptCacheKey: true,
 	};
 }
 
@@ -971,5 +992,6 @@ function getCompat(model: Model<"openai-completions">): ResolvedOpenAICompletion
 		cacheControlFormat: model.compat.cacheControlFormat ?? detected.cacheControlFormat,
 		sendSessionAffinityHeaders: model.compat.sendSessionAffinityHeaders ?? detected.sendSessionAffinityHeaders,
 		supportsLongCacheRetention: model.compat.supportsLongCacheRetention ?? detected.supportsLongCacheRetention,
+		supportsPromptCacheKey: model.compat.supportsPromptCacheKey ?? detected.supportsPromptCacheKey,
 	};
 }

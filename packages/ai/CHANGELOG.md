@@ -16,10 +16,13 @@
 
 - Added OpenAI Codex quota usage helpers for provider integrations.
 - Added GLM-5.2 model to the OpenCode Go subscription model catalog ([#5860](https://github.com/tsuuanmi/pi/issues/5860)).
+- Added the `supportsPromptCacheKey` compat flag (default `true`) to `openai-completions` providers, enabling the `prompt_cache_key` field for prompt caching on every OpenAI-compatible provider by default. Set `false` per-provider to opt out (e.g. for a provider that rejects the field).
 
 ### Changed
 
 - Generalized the OAuth device-code timeout hint to refer to VM clock drift instead of WSL.
+- `openai-completions` now emits `prompt_cache_key` for all providers when cache retention is not `none` (previously only for `api.openai.com` base URLs or long-retention compat). Use `compat.supportsPromptCacheKey: false` to opt out per-provider.
+- `openai-completions` now drops prior-turn field-name-signature reasoning (`reasoning`/`reasoning_content`/`reasoning_text`) on replay, keeping only the last assistant turn's reasoning, to reduce re-billed input tokens on reasoning providers (e.g. GLM, llama.cpp, gpt-oss). Encrypted/redacted reasoning (`reasoning_details` from `thoughtSignature`; Anthropic `redacted_thinking`) is preserved.
 
 ## [0.79.6] - 2026-06-16
 

@@ -386,6 +386,7 @@ For providers with partial OpenAI compatibility, use the `compat` field.
 | `cacheControlFormat` | Use Anthropic-style `cache_control` markers on the system prompt, last tool definition, and last user/assistant text content. Currently only `anthropic` is supported. |
 | `supportsStrictMode` | Include the `strict` field in tool definitions |
 | `supportsLongCacheRetention` | Whether the provider accepts long cache retention when cache retention is `long`: `prompt_cache_retention: "24h"` for OpenAI prompt caching, or `cache_control.ttl: "1h"` when `cacheControlFormat` is `anthropic`. Default: `true`. |
+| `supportsPromptCacheKey` | Whether to emit the `prompt_cache_key` field for OpenAI-style prompt caching. Default: `true` (emitted for every `openai-completions` provider when cache retention is not `none`). Set to `false` per-provider to opt out (e.g. for a provider that rejects the field). |
 
 Use `string-thinking` for custom providers that require a top-level string `thinking` parameter.
 

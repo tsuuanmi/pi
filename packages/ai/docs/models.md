@@ -123,6 +123,7 @@ const compat: OpenAICompletionsCompat = {
   cacheControlFormat: "anthropic",
   sendSessionAffinityHeaders: false,
   supportsLongCacheRetention: true,
+  supportsPromptCacheKey: true,
 };
 ```
 
@@ -140,6 +141,7 @@ const compat: OpenAICompletionsCompat = {
 | `supportsStrictMode` | `strict` in tool definitions |
 | `cacheControlFormat` | `"anthropic"` for Anthropic-style cache_control |
 | `sendSessionAffinityHeaders` | Session affinity headers for caching |
+| `supportsPromptCacheKey` | Emit `prompt_cache_key` for OpenAI-style prompt caching. Default: `true`; set `false` per-provider to opt out. |
 
 ### Model Thinking Level Maps
 

@@ -33,6 +33,7 @@
 - Added session-scoped workflow state/artifact paths under `.pi/_session-{id}/`, plus session resolution utilities and tests for isolated Pi workflow runs.
 - Added a ralplan pre-execution vagueness gate that redirects vague team/ultragoal dispatch prompts to planning unless explicitly forced.
 - Added a default `lsp` tool with minimal TypeScript/JavaScript, Python, and Rust Language Server Protocol support for status, diagnostics, symbols, hover, definitions, and references.
+- Added the `supportsPromptCacheKey` field to the `openai-completions` model compat schema (default `true`), so custom OpenAI-compatible providers can opt out of `prompt_cache_key` emission per-provider in `models.json` (e.g. for a provider that rejects the field).
 - Added `pi --tmux` to launch interactive startup inside a new tmux session.
 - Added stored account profiles for provider auth, with `/account add <provider> [account]`, an interactive `/account` selector, and `/account <provider> <account>` for manual switching.
 - Added `/provider add` for creating custom OpenAI/Anthropic-compatible providers from interactive mode, plus `/account remove <provider> [account]` for deleting one or all stored provider accounts.

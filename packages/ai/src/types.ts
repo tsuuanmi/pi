@@ -280,6 +280,12 @@ export interface OpenAICompletionsCompat {
 	sendSessionAffinityHeaders?: boolean;
 	/** Whether the provider supports long prompt cache retention (`prompt_cache_retention: "24h"` or Anthropic-style `cache_control.ttl: "1h"`, depending on format). Default: true. */
 	supportsLongCacheRetention?: boolean;
+	/**
+	 * Whether to emit the `prompt_cache_key` field for prompt caching. Default: true.
+	 * Set to `false` per-provider in `models.json` (via `compat`) to opt out for a
+	 * provider that rejects the field (e.g. returns 400 on unknown fields).
+	 */
+	supportsPromptCacheKey?: boolean;
 }
 
 /** Compatibility settings for OpenAI Responses APIs. */

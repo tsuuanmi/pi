@@ -698,6 +698,7 @@ interface ProviderModelConfig {
     requiresReasoningContentOnAssistantMessages?: boolean;
     thinkingFormat?: "openai" | "string-thinking";
     cacheControlFormat?: "anthropic";
+    supportsPromptCacheKey?: boolean;
 
     // anthropic-messages
     supportsLongCacheRetention?: boolean;

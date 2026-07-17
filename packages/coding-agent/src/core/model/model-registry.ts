@@ -64,6 +64,7 @@ const OpenAICompletionsCompatSchema = Type.Object({
 	cacheControlFormat: Type.Optional(Type.Literal("anthropic")),
 	supportsStrictMode: Type.Optional(Type.Boolean()),
 	supportsLongCacheRetention: Type.Optional(Type.Boolean()),
+	supportsPromptCacheKey: Type.Optional(Type.Boolean()),
 });
 
 const OpenAIResponsesCompatSchema = Type.Object({
