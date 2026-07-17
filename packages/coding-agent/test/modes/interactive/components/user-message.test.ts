@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { UserMessageComponent } from "../../../../src/modes/interactive/components/user-message.ts";
+import { UserMessageComponent } from "../../../../src/modes/interactive/components/messages/user-message.ts";
 import { initTheme } from "../../../../src/theme/theme.ts";
 
 const OSC133_ZONE_START = "\x1b]133;A\x07";

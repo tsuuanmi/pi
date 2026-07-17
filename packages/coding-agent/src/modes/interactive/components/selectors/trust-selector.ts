@@ -3,10 +3,10 @@ import {
 	getProjectTrustOptions,
 	type ProjectTrustOption,
 	type ProjectTrustStoreEntry,
-} from "../../../core/trust/trust-manager.ts";
-import { theme } from "../../../theme/theme.ts";
-import { keyHint, rawKeyHint } from "../../../ui/rendering/keybinding-hints.ts";
-import { DynamicBorder } from "./dynamic-border.ts";
+} from "../../../../core/trust/trust-manager.ts";
+import { theme } from "../../../../theme/theme.ts";
+import { keyHint, rawKeyHint } from "../../../../ui/rendering/keybinding-hints.ts";
+import { DynamicBorder } from "../widgets/dynamic-border.ts";
 
 export type TrustSelection = Pick<ProjectTrustOption, "trusted" | "updates">;
 

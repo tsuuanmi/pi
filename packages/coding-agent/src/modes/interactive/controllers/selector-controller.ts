@@ -15,14 +15,14 @@ import type { SettingsManager } from "../../../core/settings/settings-manager.ts
 import { ProjectTrustStore } from "../../../core/trust/trust-manager.ts";
 import { getAvailableThemes, setTheme, theme } from "../../../theme/theme.ts";
 import { keyText } from "../../../ui/rendering/keybinding-hints.ts";
-import { AssistantMessageComponent } from "../components/assistant-message.ts";
 import type { CustomEditor } from "../components/custom-editor.ts";
-import { SessionSelectorComponent } from "../components/session-selector.ts";
-import { SettingsSelectorComponent } from "../components/settings-selector.ts";
+import { AssistantMessageComponent } from "../components/messages/assistant-message.ts";
+import { SessionSelectorComponent } from "../components/selectors/session-selector.ts";
+import { SettingsSelectorComponent } from "../components/selectors/settings-selector.ts";
+import { TreeSelectorComponent } from "../components/selectors/tree-selector.ts";
+import { TrustSelectorComponent } from "../components/selectors/trust-selector.ts";
+import { UserMessageSelectorComponent } from "../components/selectors/user-message-selector.ts";
 import type { StatusLineComponent } from "../components/status-line/index.ts";
-import { TreeSelectorComponent } from "../components/tree-selector.ts";
-import { TrustSelectorComponent } from "../components/trust-selector.ts";
-import { UserMessageSelectorComponent } from "../components/user-message-selector.ts";
 import type { ExtensionUIController } from "./extension-ui-controller.ts";
 
 type SelectorControllerDependencies = {

@@ -3,7 +3,7 @@ import { Container, type Focusable, getKeybindings, Input, Spacer, Text, type TU
 import { theme } from "../../../theme/theme.ts";
 import { keyHint } from "../../../ui/rendering/keybinding-hints.ts";
 import { openBrowser } from "../../../utils/terminal/open-browser.ts";
-import { DynamicBorder } from "./dynamic-border.ts";
+import { DynamicBorder } from "./widgets/dynamic-border.ts";
 
 /**
  * Login dialog component - replaces editor during OAuth login flow

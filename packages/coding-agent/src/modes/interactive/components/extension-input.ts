@@ -5,8 +5,8 @@
 import { Container, type Focusable, getKeybindings, Input, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
 import { theme } from "../../../theme/theme.ts";
 import { keyHint } from "../../../ui/rendering/keybinding-hints.ts";
-import { CountdownTimer } from "./countdown-timer.ts";
-import { DynamicBorder } from "./dynamic-border.ts";
+import { CountdownTimer } from "./widgets/countdown-timer.ts";
+import { DynamicBorder } from "./widgets/dynamic-border.ts";
 
 export interface ExtensionInputOptions {
 	tui?: TUI;

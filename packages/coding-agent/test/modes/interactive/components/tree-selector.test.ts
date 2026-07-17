@@ -8,7 +8,7 @@ import type {
 	SessionTreeNode,
 } from "../../../../src/core/session/session-manager.ts";
 import { KeybindingsManager } from "../../../../src/core/settings/keybindings.ts";
-import { TreeSelectorComponent } from "../../../../src/modes/interactive/components/tree-selector.ts";
+import { TreeSelectorComponent } from "../../../../src/modes/interactive/components/selectors/tree-selector.ts";
 import { initTheme } from "../../../../src/theme/theme.ts";
 
 beforeAll(() => {

@@ -2,7 +2,7 @@ import { setKeybindings } from "@tsuuanmi/pi-tui";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SessionInfo } from "../../../src/core/session/session-manager.ts";
 import { KeybindingsManager } from "../../../src/core/settings/keybindings.ts";
-import { SessionSelectorComponent } from "../../../src/modes/interactive/components/session-selector.ts";
+import { SessionSelectorComponent } from "../../../src/modes/interactive/components/selectors/session-selector.ts";
 import { initTheme } from "../../../src/theme/theme.ts";
 
 async function flushPromises(): Promise<void> {

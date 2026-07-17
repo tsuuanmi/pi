@@ -19,7 +19,7 @@ import type { ResourceDiagnostic } from "../../../core/skills/resource-loader.ts
 import { BUILTIN_SLASH_COMMANDS } from "../../../core/skills/slash-commands.ts";
 import { type ThemeColor, theme } from "../../../theme/theme.ts";
 import { parseGitUrl } from "../../../utils/fs/git.ts";
-import { ExpandableText } from "../components/expandable-text.ts";
+import { ExpandableText } from "../components/widgets/expandable-text.ts";
 
 export class ResourceDisplayController {
 	private readonly chatContainer: Container;

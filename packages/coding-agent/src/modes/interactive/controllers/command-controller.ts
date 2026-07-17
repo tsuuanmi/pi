@@ -24,7 +24,7 @@ import { theme } from "../../../theme/theme.ts";
 import { formatKeyText } from "../../../ui/rendering/keybinding-hints.ts";
 import { copyToClipboard } from "../../../utils/clipboard/clipboard.ts";
 import { getChangelogPath, normalizeChangelogLinks, parseChangelog } from "../../../utils/system/changelog.ts";
-import { DynamicBorder } from "../components/dynamic-border.ts";
+import { DynamicBorder } from "../components/widgets/dynamic-border.ts";
 
 export class CommandController {
 	private readonly ui: TUI;

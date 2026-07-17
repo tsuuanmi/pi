@@ -5,11 +5,11 @@ import { areExperimentalFeaturesEnabled } from "../core/config/experimental.ts";
 import { KeybindingsManager } from "../core/settings/keybindings.ts";
 import type { SettingsManager } from "../core/settings/settings-manager.ts";
 import { ExtensionInputComponent } from "../modes/interactive/components/extension-input.ts";
-import { ExtensionSelectorComponent } from "../modes/interactive/components/extension-selector.ts";
 import {
 	FirstTimeSetupComponent,
 	type FirstTimeSetupResult,
 } from "../modes/interactive/components/first-time-setup.ts";
+import { ExtensionSelectorComponent } from "../modes/interactive/components/selectors/extension-selector.ts";
 import { detectTerminalBackgroundTheme, initTheme, setTheme } from "../theme/theme.ts";
 
 const OFFICIAL_PACKAGE_NAME = "@tsuuanmi/pi-coding-agent";

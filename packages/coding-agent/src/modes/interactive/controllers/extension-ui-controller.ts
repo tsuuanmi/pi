@@ -16,7 +16,7 @@ import type { FooterDataProvider, ReadonlyFooterDataProvider } from "../../../co
 import { type Theme, theme } from "../../../theme/theme.ts";
 import { ExtensionEditorComponent } from "../components/extension-editor.ts";
 import { ExtensionInputComponent } from "../components/extension-input.ts";
-import { ExtensionSelectorComponent } from "../components/extension-selector.ts";
+import { ExtensionSelectorComponent } from "../components/selectors/extension-selector.ts";
 import type { StatusLineComponent } from "../components/status-line/index.ts";
 
 /** Interface for components that can be expanded/collapsed */

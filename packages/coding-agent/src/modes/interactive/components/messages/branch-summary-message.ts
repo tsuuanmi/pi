@@ -1,18 +1,18 @@
-import type { CompactionSummaryMessage } from "@tsuuanmi/pi-agent";
+import type { BranchSummaryMessage } from "@tsuuanmi/pi-agent";
 import { Box, Markdown, type MarkdownTheme, Spacer, Text } from "@tsuuanmi/pi-tui";
-import { getMarkdownTheme, theme } from "../../../theme/theme.ts";
-import { keyText } from "../../../ui/rendering/keybinding-hints.ts";
+import { getMarkdownTheme, theme } from "../../../../theme/theme.ts";
+import { keyText } from "../../../../ui/rendering/keybinding-hints.ts";
 
 /**
- * Component that renders a compaction message with collapsed/expanded state.
+ * Component that renders a branch summary message with collapsed/expanded state.
  * Uses same background color as custom messages for visual consistency.
  */
-export class CompactionSummaryMessageComponent extends Box {
+export class BranchSummaryMessageComponent extends Box {
 	private expanded = false;
-	private message: CompactionSummaryMessage;
+	private message: BranchSummaryMessage;
 	private markdownTheme: MarkdownTheme;
 
-	constructor(message: CompactionSummaryMessage, markdownTheme: MarkdownTheme = getMarkdownTheme()) {
+	constructor(message: BranchSummaryMessage, markdownTheme: MarkdownTheme = getMarkdownTheme()) {
 		super(1, 1, (t) => theme.bg("customMessageBg", t));
 		this.message = message;
 		this.markdownTheme = markdownTheme;
@@ -32,13 +32,12 @@ export class CompactionSummaryMessageComponent extends Box {
 	private updateDisplay(): void {
 		this.clear();
 
-		const tokenStr = this.message.tokensBefore.toLocaleString();
-		const label = theme.fg("customMessageLabel", `\x1b[1m[compaction]\x1b[22m`);
+		const label = theme.fg("customMessageLabel", `\x1b[1m[branch]\x1b[22m`);
 		this.addChild(new Text(label, 0, 0));
 		this.addChild(new Spacer(1));
 
 		if (this.expanded) {
-			const header = `**Compacted from ${tokenStr} tokens**\n\n`;
+			const header = "**Branch Summary**\n\n";
 			this.addChild(
 				new Markdown(header + this.message.summary, 0, 0, this.markdownTheme, {
 					color: (text: string) => theme.fg("customMessageText", text),
@@ -47,7 +46,7 @@ export class CompactionSummaryMessageComponent extends Box {
 		} else {
 			this.addChild(
 				new Text(
-					theme.fg("customMessageText", `Compacted from ${tokenStr} tokens (`) +
+					theme.fg("customMessageText", "Branch summary (") +
 						theme.fg("dim", keyText("app.tools.expand")) +
 						theme.fg("customMessageText", " to expand)"),
 					0,

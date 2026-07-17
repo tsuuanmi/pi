@@ -11,7 +11,7 @@ import { Container, Editor, type Focusable, getKeybindings, Spacer, Text, type T
 import type { KeybindingsManager } from "../../../core/settings/keybindings.ts";
 import { getEditorTheme, theme } from "../../../theme/theme.ts";
 import { keyHint } from "../../../ui/rendering/keybinding-hints.ts";
-import { DynamicBorder } from "./dynamic-border.ts";
+import { DynamicBorder } from "./widgets/dynamic-border.ts";
 
 export class ExtensionEditorComponent extends Container implements Focusable {
 	private editor: Editor;

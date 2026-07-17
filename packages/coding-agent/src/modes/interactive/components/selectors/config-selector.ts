@@ -15,12 +15,16 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import { CONFIG_DIR_NAME } from "../../../core/config/config.ts";
-import type { PathMetadata, ResolvedPaths, ResolvedResource } from "../../../core/package-manager/package-manager.ts";
-import type { PackageSource, SettingsManager } from "../../../core/settings/settings-manager.ts";
-import { theme } from "../../../theme/theme.ts";
-import { rawKeyHint } from "../../../ui/rendering/keybinding-hints.ts";
-import { DynamicBorder } from "./dynamic-border.ts";
+import { CONFIG_DIR_NAME } from "../../../../core/config/config.ts";
+import type {
+	PathMetadata,
+	ResolvedPaths,
+	ResolvedResource,
+} from "../../../../core/package-manager/package-manager.ts";
+import type { PackageSource, SettingsManager } from "../../../../core/settings/settings-manager.ts";
+import { theme } from "../../../../theme/theme.ts";
+import { rawKeyHint } from "../../../../ui/rendering/keybinding-hints.ts";
+import { DynamicBorder } from "../widgets/dynamic-border.ts";
 
 type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands";
 

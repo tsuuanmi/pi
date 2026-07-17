@@ -17,10 +17,10 @@ import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../../core/model/provider-di
 import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../../../core/trust/trust-manager.ts";
 import type { FooterDataProvider } from "../../../core/usage/footer-data-provider.ts";
 import { stripJsonComments } from "../../../utils/fs/json.ts";
-import { AccountSelectorComponent, type AccountSelectorOption } from "../components/account-selector.ts";
-import { ExtensionSelectorComponent } from "../components/extension-selector.ts";
 import { LoginDialogComponent } from "../components/login-dialog.ts";
-import { type AuthSelectorProvider, OAuthSelectorComponent } from "../components/oauth-selector.ts";
+import { AccountSelectorComponent, type AccountSelectorOption } from "../components/selectors/account-selector.ts";
+import { ExtensionSelectorComponent } from "../components/selectors/extension-selector.ts";
+import { type AuthSelectorProvider, OAuthSelectorComponent } from "../components/selectors/oauth-selector.ts";
 import type { StatusLineComponent } from "../components/status-line/index.ts";
 
 function isUnknownModel(model: Model<any> | undefined): boolean {

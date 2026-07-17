@@ -5,7 +5,7 @@
 import { ProcessTerminal, TUI } from "@tsuuanmi/pi-tui";
 import type { ResolvedPaths } from "../core/package-manager/package-manager.ts";
 import type { SettingsManager } from "../core/settings/settings-manager.ts";
-import { ConfigSelectorComponent } from "../modes/interactive/components/config-selector.ts";
+import { ConfigSelectorComponent } from "../modes/interactive/components/selectors/config-selector.ts";
 import { initTheme, stopThemeWatcher } from "../theme/theme.ts";
 
 export interface ConfigSelectorOptions {
