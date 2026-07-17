@@ -71,7 +71,6 @@ describe("InteractiveMode startup input", () => {
 			updateEditorBorderColor: () => {},
 			handleCtrlC: () => {},
 			handleCtrlD: () => {},
-			handleCtrlZ: () => {},
 			cycleThinkingLevel: () => {},
 			toggleToolOutputExpansion: () => {},
 			toggleThinkingBlockVisibility: () => {},

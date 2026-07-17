@@ -23,7 +23,6 @@ import {
 	Container,
 	Loader,
 	type LoaderIndicatorOptions,
-	Markdown,
 	matchesKey,
 	ProcessTerminal,
 	Spacer,
@@ -39,7 +38,7 @@ import {
 	type AgentSessionRuntime,
 	SessionImportFileNotFoundError,
 } from "../../core/agent-session/agent-session-runtime.ts";
-import { APP_NAME, APP_TITLE, CONFIG_DIR_NAME, getAgentDir, VERSION } from "../../core/config/config.ts";
+import { APP_NAME, CONFIG_DIR_NAME, VERSION } from "../../core/config/config.ts";
 import { configureHttpDispatcher } from "../../core/exec/http-dispatcher.ts";
 import type {
 	AutocompleteProviderFactory,
@@ -49,7 +48,6 @@ import type {
 	ExtensionUIContext,
 	ProjectTrustContext,
 } from "../../core/extensions/index.ts";
-import { DefaultPackageManager } from "../../core/package-manager/package-manager.ts";
 import type { SourceInfo } from "../../core/resources/source-info.ts";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session/session-cwd.ts";
 import type { SessionContext, SessionManager } from "../../core/session/session-manager.ts";
@@ -58,7 +56,6 @@ import { BUILTIN_SLASH_COMMANDS } from "../../core/skills/slash-commands.ts";
 import { hasTrustRequiringProjectResources } from "../../core/trust/trust-manager.ts";
 import { FooterDataProvider } from "../../core/usage/footer-data-provider.ts";
 import {
-	detectTerminalBackgroundTheme,
 	getAvailableThemesWithPaths,
 	getEditorTheme,
 	getMarkdownTheme,
@@ -74,7 +71,6 @@ import {
 } from "../../theme/theme.ts";
 import { keyDisplayText, keyHint, keyText, rawKeyHint } from "../../ui/rendering/keybinding-hints.ts";
 import { parseGitUrl } from "../../utils/fs/git.ts";
-import { getChangelogPath, normalizeChangelogLinks, parseChangelog } from "../../utils/system/changelog.ts";
 import { killTrackedDetachedChildren } from "../../utils/system/shell.ts";
 import { ensureTool } from "../../utils/system/tool-installer.ts";
 import { AssistantMessageComponent } from "./components/assistant-message.ts";
@@ -191,8 +187,6 @@ export class InteractiveMode {
 	private hiddenThinkingLabel = this.defaultHiddenThinkingLabel;
 
 	private lastSigintTime = 0;
-	private changelogMarkdown: string | undefined = undefined;
-	private startupNoticesShown = false;
 
 	// Status line tracking (for mutating immediately-sequential status updates)
 	private lastStatusSpacer: Spacer | undefined = undefined;
@@ -428,7 +422,6 @@ export class InteractiveMode {
 			updateEditorBorderColor: () => this.updateEditorBorderColor(),
 			handleCtrlC: () => this.handleCtrlC(),
 			handleCtrlD: () => this.handleCtrlD(),
-			handleCtrlZ: () => this.handleCtrlZ(),
 			cycleThinkingLevel: () => this.cycleThinkingLevel(),
 			toggleToolOutputExpansion: () => this.toggleToolOutputExpansion(),
 			toggleThinkingBlockVisibility: () => this.toggleThinkingBlockVisibility(),
@@ -452,25 +445,6 @@ export class InteractiveMode {
 			flushPendingBashComponents: () => this.flushPendingBashComponents(),
 			showWarning: (message) => this.showWarning(message),
 		});
-	}
-
-	private async detectThemeIfUnset(): Promise<void> {
-		if (this.settingsManager.getTheme()) {
-			return;
-		}
-
-		const detection = await detectTerminalBackgroundTheme({ ui: this.ui, timeoutMs: 100 });
-		const result = setTheme(detection.theme, true);
-		if (!result.success) {
-			return;
-		}
-
-		if (detection.confidence === "high") {
-			this.settingsManager.setTheme(detection.theme);
-			await this.settingsManager.flush();
-		}
-		this.updateEditorBorderColor();
-		this.ui.requestRender();
 	}
 
 	private getAutocompleteSourceTag(sourceInfo?: SourceInfo): string | undefined {
@@ -570,43 +544,10 @@ export class InteractiveMode {
 		}
 	}
 
-	private showStartupNoticesIfNeeded(): void {
-		if (this.startupNoticesShown) {
-			return;
-		}
-		this.startupNoticesShown = true;
-
-		if (!this.changelogMarkdown) {
-			return;
-		}
-
-		if (this.chatContainer.children.length > 0) {
-			this.chatContainer.addChild(new Spacer(1));
-		}
-		this.chatContainer.addChild(new DynamicBorder());
-		if (this.settingsManager.getCollapseChangelog()) {
-			const versionMatch = this.changelogMarkdown.match(/##\s+\[?(\d+\.\d+\.\d+)\]?/);
-			const latestVersion = versionMatch ? versionMatch[1] : this.version;
-			const condensedText = `Updated to v${latestVersion}. Use ${theme.bold("/changelog")} to view full changelog.`;
-			this.chatContainer.addChild(new Text(condensedText, 1, 0));
-		} else {
-			this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "What's New")), 1, 0));
-			this.chatContainer.addChild(new Spacer(1));
-			this.chatContainer.addChild(
-				new Markdown(this.changelogMarkdown.trim(), 1, 0, this.getMarkdownThemeWithSettings()),
-			);
-			this.chatContainer.addChild(new Spacer(1));
-		}
-		this.chatContainer.addChild(new DynamicBorder());
-	}
-
 	async init(): Promise<void> {
 		if (this.isInitialized) return;
 
 		this.registerSignalHandlers();
-
-		// Load changelog (only show new entries, skip for resumed sessions)
-		this.changelogMarkdown = this.getChangelogForDisplay();
 
 		// Ensure fd and rg are available (downloads if missing, adds to PATH via getBinDir)
 		// Both are needed: fd for autocomplete, rg for grep tool and bash commands
@@ -623,7 +564,7 @@ export class InteractiveMode {
 			console.log(theme.fg("dim", `Model scope: ${modelList}`));
 		}
 
-		// Add header container as first child. Populate it after detectThemeIfUnset.
+		// Add header container as first child.
 		this.ui.addChild(this.headerContainer);
 
 		this.ui.addChild(this.chatContainer);
@@ -643,13 +584,11 @@ export class InteractiveMode {
 		this.ui.start();
 		this.isInitialized = true;
 
-		await this.detectThemeIfUnset();
-
-		// Add header with keybindings from config (unless silenced)
+		// Add header unless silenced.
 		if (this.options.verbose || !this.settingsManager.getQuietStartup()) {
 			const logo = theme.bold(theme.fg("accent", APP_NAME)) + theme.fg("dim", ` v${this.version}`);
 
-			// Build startup instructions using keybinding hint helpers
+			// Build startup instructions.
 			const hint = (keybinding: AppKeybinding, description: string) => keyHint(keybinding, description);
 
 			const expandedInstructions = [
@@ -657,7 +596,6 @@ export class InteractiveMode {
 				hint("app.clear", "to clear"),
 				rawKeyHint(`${keyText("app.clear")} twice`, "to exit"),
 				hint("app.exit", "to exit (empty)"),
-				hint("app.suspend", "to suspend"),
 				keyHint("tui.editor.deleteToLineEnd", "to delete to end"),
 				hint("app.thinking.cycle", "to cycle thinking level"),
 				hint("app.tools.expand", "to expand tools"),
@@ -729,38 +667,11 @@ export class InteractiveMode {
 	}
 
 	/**
-	 * Update terminal title with session name and cwd.
-	 */
-	private updateTerminalTitle(): void {
-		const cwdBasename = path.basename(this.sessionManager.getCwd());
-		const sessionName = this.sessionManager.getSessionName();
-		if (sessionName) {
-			this.ui.terminal.setTitle(`${APP_TITLE} - ${sessionName} - ${cwdBasename}`);
-		} else {
-			this.ui.terminal.setTitle(`${APP_TITLE} - ${cwdBasename}`);
-		}
-	}
-
-	/**
 	 * Run the interactive mode. This is the main entry point.
 	 * Initializes the UI, shows warnings, processes initial messages, and starts the interactive loop.
 	 */
 	async run(): Promise<void> {
 		await this.init();
-
-		// Start package update check asynchronously
-		this.checkForPackageUpdates().then((updates) => {
-			if (updates.length > 0) {
-				this.showPackageUpdateNotification(updates);
-			}
-		});
-
-		// Check tmux keyboard setup asynchronously
-		this.checkTmuxKeyboardSetup().then((warning) => {
-			if (warning) {
-				this.showWarning(warning);
-			}
-		});
 
 		// Show startup warnings
 		const { migratedProviders, modelFallbackMessage, initialMessage, initialMessages } = this.options;
@@ -811,106 +722,6 @@ export class InteractiveMode {
 				this.showError(errorMessage);
 			}
 		}
-	}
-
-	private async checkForPackageUpdates(): Promise<string[]> {
-		if (process.env.PI_OFFLINE) {
-			return [];
-		}
-
-		try {
-			const packageManager = new DefaultPackageManager({
-				cwd: this.sessionManager.getCwd(),
-				agentDir: getAgentDir(),
-				settingsManager: this.settingsManager,
-			});
-			const updates = await packageManager.checkForAvailableUpdates();
-			return updates.map((update) => update.displayName);
-		} catch {
-			return [];
-		}
-	}
-
-	private async checkTmuxKeyboardSetup(): Promise<string | undefined> {
-		if (!process.env.TMUX) return undefined;
-
-		const runTmuxShow = (option: string): Promise<string | undefined> => {
-			return new Promise((resolve) => {
-				const proc = spawn("tmux", ["show", "-gv", option], {
-					stdio: ["ignore", "pipe", "ignore"],
-				});
-				let stdout = "";
-				const timer = setTimeout(() => {
-					proc.kill();
-					resolve(undefined);
-				}, 2000);
-
-				proc.stdout?.on("data", (data) => {
-					stdout += data.toString();
-				});
-				proc.on("error", () => {
-					clearTimeout(timer);
-					resolve(undefined);
-				});
-				proc.on("close", (code) => {
-					clearTimeout(timer);
-					resolve(code === 0 ? stdout.trim() : undefined);
-				});
-			});
-		};
-
-		const [extendedKeys, extendedKeysFormat] = await Promise.all([
-			runTmuxShow("extended-keys"),
-			runTmuxShow("extended-keys-format"),
-		]);
-
-		// If we couldn't query tmux (timeout, sandbox, etc.), don't warn
-		if (extendedKeys === undefined) return undefined;
-
-		if (extendedKeys !== "on" && extendedKeys !== "always") {
-			return "tmux extended-keys is off. Modified Enter keys may not work. Add `set -g extended-keys on` to ~/.tmux.conf and restart tmux.";
-		}
-
-		if (extendedKeysFormat === "xterm") {
-			return "tmux extended-keys-format is xterm. Pi works best with csi-u. Add `set -g extended-keys-format csi-u` to ~/.tmux.conf and restart tmux.";
-		}
-
-		return undefined;
-	}
-
-	/**
-	 * Get changelog entries to display on startup.
-	 * Only shows new entries since last seen version, skips for resumed sessions.
-	 */
-	private getChangelogForDisplay(): string | undefined {
-		// Skip changelog for resumed/continued sessions (already have messages)
-		if (this.session.state.messages.length > 0) {
-			return undefined;
-		}
-
-		const lastVersion = this.settingsManager.getLastChangelogVersion();
-
-		if (!lastVersion) {
-			// Fresh install - record the version, don't show changelog
-			this.settingsManager.setLastChangelogVersion(VERSION);
-			return undefined;
-		}
-
-		// Show "What's New" once per package version change. We compare the
-		// package version (not numeric changelog entry versions) because the
-		// changelog may contain historical entries whose version numbers are not
-		// monotonic with the package version (e.g. after a rename/version reset),
-		// which would otherwise re-trigger the panel every startup.
-		if (lastVersion !== VERSION) {
-			this.settingsManager.setLastChangelogVersion(VERSION);
-			const entries = parseChangelog(getChangelogPath());
-			const latest = entries[0];
-			if (latest) {
-				return normalizeChangelogLinks(latest.content, latest);
-			}
-		}
-
-		return undefined;
 	}
 
 	private getMarkdownThemeWithSettings(): MarkdownTheme {
@@ -1007,7 +818,6 @@ export class InteractiveMode {
 		const extensionRunner = this.session.extensionRunner;
 		this.setupExtensionShortcuts(extensionRunner);
 		this._resourceDisplayController.showLoadedResources({ force: false, showDiagnosticsWhenQuiet: true });
-		this.showStartupNoticesIfNeeded();
 	}
 
 	private applyRuntimeSettings(): void {
@@ -1038,7 +848,6 @@ export class InteractiveMode {
 		this.subscribeToAgent();
 		await this._accountAuthController.updateAvailableProviderCount();
 		this.updateEditorBorderColor();
-		this.updateTerminalTitle();
 	}
 
 	private async handleFatalRuntimeError(prefix: string, error: unknown): Promise<never> {
@@ -1188,7 +997,6 @@ export class InteractiveMode {
 		this.setCustomEditorComponent(undefined);
 		this.setupAutocompleteProvider();
 		this.defaultEditor.onExtensionShortcut = undefined;
-		this.updateTerminalTitle();
 		this.workingMessage = undefined;
 		this.workingVisible = true;
 		this.setWorkingIndicator();
@@ -1330,7 +1138,7 @@ export class InteractiveMode {
 				if (!customEditor.onExtensionShortcut) {
 					customEditor.onExtensionShortcut = (data: string) => this.defaultEditor.onExtensionShortcut?.(data);
 				}
-				// Copy action handlers (clear, suspend, model switching, etc.)
+				// Copy default editor action handlers.
 				for (const [action, handler] of this.defaultEditor.actionHandlers) {
 					(customEditor.actionHandlers as Map<string, () => void>).set(action, handler);
 				}
@@ -1426,7 +1234,6 @@ export class InteractiveMode {
 				break;
 
 			case "session_info_changed":
-				this.updateTerminalTitle();
 				this.footer.invalidate();
 				this.ui.requestRender();
 				break;
@@ -2134,38 +1941,6 @@ export class InteractiveMode {
 		this.signalCleanupHandlers = [];
 	}
 
-	private handleCtrlZ(): void {
-		// Keep the event loop alive while suspended. Without this, stopping the TUI
-		// can leave Node with no ref'ed handles, causing the process to exit on fg
-		// before the SIGCONT handler gets a chance to restore the terminal.
-		const suspendKeepAlive = setInterval(() => {}, 2 ** 30);
-
-		// Ignore SIGINT while suspended so Ctrl+C in the terminal does not
-		// kill the backgrounded process. The handler is removed on resume.
-		const ignoreSigint = () => {};
-		process.on("SIGINT", ignoreSigint);
-
-		// Set up handler to restore TUI when resumed
-		process.once("SIGCONT", () => {
-			clearInterval(suspendKeepAlive);
-			process.removeListener("SIGINT", ignoreSigint);
-			this.ui.start();
-			this.ui.requestRender(true);
-		});
-
-		try {
-			// Stop the TUI (restore terminal to normal mode)
-			this.ui.stop();
-
-			// Send SIGTSTP to process group (pid=0 means all processes in group)
-			process.kill(0, "SIGTSTP");
-		} catch (error) {
-			clearInterval(suspendKeepAlive);
-			process.removeListener("SIGINT", ignoreSigint);
-			throw error;
-		}
-	}
-
 	private async handleFollowUp(): Promise<void> {
 		const text = (this.editor.getExpandedText?.() ?? this.editor.getText()).trim();
 		if (!text) return;
@@ -2338,24 +2113,6 @@ export class InteractiveMode {
 	showWarning(warningMessage: string): void {
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new Text(theme.fg("warning", `Warning: ${warningMessage}`), 1, 0));
-		this.ui.requestRender();
-	}
-
-	showPackageUpdateNotification(packages: string[]): void {
-		const action = theme.fg("accent", `${APP_NAME} update`);
-		const updateInstruction = theme.fg("muted", "Package updates are available. Run ") + action;
-		const packageLines = packages.map((pkg) => `- ${pkg}`).join("\n");
-
-		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(new DynamicBorder((text) => theme.fg("warning", text)));
-		this.chatContainer.addChild(
-			new Text(
-				`${theme.bold(theme.fg("warning", "Package Updates Available"))}\n${updateInstruction}\n${theme.fg("muted", "Packages:")}\n${packageLines}`,
-				1,
-				0,
-			),
-		);
-		this.chatContainer.addChild(new DynamicBorder((text) => theme.fg("warning", text)));
 		this.ui.requestRender();
 	}
 

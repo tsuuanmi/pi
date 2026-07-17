@@ -17,6 +17,7 @@
 - Removed `src/utils/system/html.ts` and HTML-entity decoding from `renderHighlightedHtml` in the syntax highlighter; highlight.js entities (`&amp;`, `&lt;`, etc.) are now passed through as-is.
 - Removed the Termux documentation page (`docs/termux.md`) and its index/link references; Termux platform support code in the TUI, tool installer, and clipboard remains.
 - Removed the `doom-overlay`, `snake`, `space-invaders`, `plan-mode`, `sandbox`, `custom-provider-anthropic`, and `custom-provider-gitlab-duo` example extensions (and the `plan-mode-utils` test), and dropped the `custom-provider-anthropic`, `custom-provider-gitlab-duo`, and `sandbox` workspace entries from the root manifest.
+- Removed low-value interactive extras: the changelog notice, package update notification, tmux keyboard warning, automatic theme detection, terminal title updates, and Ctrl-Z suspend handling. Also removed the unused `collapseChangelog` and `lastChangelogVersion` settings.
 
 ### Added
 

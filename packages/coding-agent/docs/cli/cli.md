@@ -94,7 +94,7 @@ Pi also supports several subcommands:
 | `PI_CODING_AGENT_SESSION_DIR` | Override session storage directory |
 | `PI_EXPERIMENTAL` | Enable experimental features (`1` to enable) |
 | `PI_TIMING` | Enable startup timing instrumentation (`1` to enable) |
-| `PI_OFFLINE` | Disable all startup network operations (`1` to disable) |
+| `PI_OFFLINE` | Disable package registry lookups and other network package operations (`1` to disable) |
 | `ANTHROPIC_API_KEY` | Anthropic API key |
 | `OPENAI_API_KEY` | OpenAI API key |
 

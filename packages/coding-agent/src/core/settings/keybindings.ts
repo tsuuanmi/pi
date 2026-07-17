@@ -14,7 +14,6 @@ export interface AppKeybindings {
 	"app.interrupt": true;
 	"app.clear": true;
 	"app.exit": true;
-	"app.suspend": true;
 	"app.thinking.cycle": true;
 	"app.tools.expand": true;
 	"app.thinking.toggle": true;
@@ -55,10 +54,6 @@ const KEYBINDINGS = {
 	"app.interrupt": { defaultKeys: "escape", description: "Cancel or abort" },
 	"app.clear": { defaultKeys: "ctrl+c", description: "Clear editor" },
 	"app.exit": { defaultKeys: "ctrl+d", description: "Exit when editor is empty" },
-	"app.suspend": {
-		defaultKeys: "ctrl+z",
-		description: "Suspend to background",
-	},
 	"app.thinking.cycle": {
 		defaultKeys: "shift+tab",
 		description: "Cycle thinking level",
@@ -187,7 +182,6 @@ const KEYBINDING_NAME_MIGRATIONS = {
 	interrupt: "app.interrupt",
 	clear: "app.clear",
 	exit: "app.exit",
-	suspend: "app.suspend",
 	cycleThinkingLevel: "app.thinking.cycle",
 	expandTools: "app.tools.expand",
 	toggleThinking: "app.thinking.toggle",

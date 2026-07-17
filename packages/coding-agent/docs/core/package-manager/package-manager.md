@@ -152,7 +152,7 @@ The `npmCommand` setting can override the npm binary used for installations:
 
 ## Offline Mode
 
-Set `PI_OFFLINE=1` to disable all startup network operations, including package update checks and npm registry lookups.
+Set `PI_OFFLINE=1` to disable npm registry lookups and other network package operations.
 
 ## See Also
 

@@ -69,7 +69,6 @@ export interface SettingsConfig {
 	currentTheme: string;
 	availableThemes: string[];
 	hideThinkingBlock: boolean;
-	collapseChangelog: boolean;
 	doubleEscapeAction: "fork" | "tree" | "none";
 	treeFilterMode: "default" | "no-tools" | "user-only" | "labeled-only" | "all";
 	showHardwareCursor: boolean;
@@ -97,7 +96,6 @@ export interface SettingsCallbacks {
 	onThemeChange: (theme: string) => void;
 	onThemePreview?: (theme: string) => void;
 	onHideThinkingBlockChange: (hidden: boolean) => void;
-	onCollapseChangelogChange: (collapsed: boolean) => void;
 	onDoubleEscapeActionChange: (action: "fork" | "tree" | "none") => void;
 	onTreeFilterModeChange: (mode: "default" | "no-tools" | "user-only" | "labeled-only" | "all") => void;
 	onShowHardwareCursorChange: (enabled: boolean) => void;
@@ -597,9 +595,6 @@ export class SettingsSelectorComponent extends Container {
 				case "hide-thinking":
 					callbacks.onHideThinkingBlockChange(newValue === "true");
 					break;
-				case "collapse-changelog":
-					callbacks.onCollapseChangelogChange(newValue === "true");
-					break;
 				case "quiet-startup":
 					callbacks.onQuietStartupChange(newValue === "true");
 					break;
@@ -749,13 +744,6 @@ export class SettingsSelectorComponent extends Container {
 				description: "Max visible items in autocomplete dropdown (3-20)",
 				currentValue: String(config.autocompleteMaxVisible),
 				values: ["3", "5", "7", "10", "15", "20"],
-			},
-			{
-				id: "collapse-changelog",
-				label: "Collapse changelog",
-				description: "Show condensed changelog after updates",
-				currentValue: config.collapseChangelog ? "true" : "false",
-				values: ["true", "false"],
 			},
 			{
 				id: "quiet-startup",

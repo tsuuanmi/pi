@@ -1,7 +1,3 @@
-// Extracted from InteractiveMode (Phase-2 structural split, zero behavior change).
-// Key handler setup. Moved method bodies are verbatim; controller instances and host
-// dependencies are exposed under the original names used by the moved code.
-
 import type { EditorComponent, TUI } from "@tsuuanmi/pi-tui";
 import type { AgentSession } from "../../../core/agent-session/agent-session.ts";
 import type { SettingsManager } from "../../../core/settings/settings-manager.ts";
@@ -27,7 +23,6 @@ type KeyHandlerControllerDependencies = {
 	updateEditorBorderColor: () => void;
 	handleCtrlC: () => void;
 	handleCtrlD: () => void;
-	handleCtrlZ: () => void;
 	cycleThinkingLevel: () => void;
 	toggleToolOutputExpansion: () => void;
 	toggleThinkingBlockVisibility: () => void;
@@ -69,7 +64,6 @@ export class KeyHandlerController {
 	private readonly updateEditorBorderColor: () => void;
 	private readonly handleCtrlC: () => void;
 	private readonly handleCtrlD: () => void;
-	private readonly handleCtrlZ: () => void;
 	private readonly cycleThinkingLevel: () => void;
 	private readonly toggleToolOutputExpansion: () => void;
 	private readonly toggleThinkingBlockVisibility: () => void;
@@ -111,7 +105,6 @@ export class KeyHandlerController {
 		this.updateEditorBorderColor = deps.updateEditorBorderColor;
 		this.handleCtrlC = deps.handleCtrlC;
 		this.handleCtrlD = deps.handleCtrlD;
-		this.handleCtrlZ = deps.handleCtrlZ;
 		this.cycleThinkingLevel = deps.cycleThinkingLevel;
 		this.toggleToolOutputExpansion = deps.toggleToolOutputExpansion;
 		this.toggleThinkingBlockVisibility = deps.toggleThinkingBlockVisibility;
@@ -162,8 +155,6 @@ export class KeyHandlerController {
 	}
 
 	setupKeyHandlers(): void {
-		// Set up handlers on defaultEditor - they use this.editor for text access
-		// so they work correctly regardless of which editor is active
 		this.defaultEditor.onEscape = () => {
 			if (this.session.isStreaming) {
 				this.restoreQueuedMessagesToEditor({ abort: true });
@@ -195,7 +186,6 @@ export class KeyHandlerController {
 		// Register app action handlers
 		this.defaultEditor.onAction("app.clear", () => this.handleCtrlC());
 		this.defaultEditor.onCtrlD = () => this.handleCtrlD();
-		this.defaultEditor.onAction("app.suspend", () => this.handleCtrlZ());
 		this.defaultEditor.onAction("app.thinking.cycle", () => this.cycleThinkingLevel());
 
 		// Global debug handler on TUI (works regardless of focus)
