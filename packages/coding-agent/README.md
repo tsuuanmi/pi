@@ -463,7 +463,7 @@ Pi stays minimal, but ships a small set of built-in features so common workflows
 - **`pi --tmux`** - launch interactive startup inside a new tmux session. See [docs/tmux.md](docs/tmux.md).
 - **Account profiles** - store multiple accounts per provider and switch between them with `/account add`, `/account`, `/account <provider> <account>`, `/provider add`, and `/account remove`. See [Account profiles](docs/custom-provider.md#account-profiles) in the Custom Providers docs.
 - **MCP** - load Model Context Protocol servers and expose their tools to the agent. Managed with `pi mcp list/add/remove/test`. See [docs/mcp.md](docs/mcp.md).
-- **Pi workflow + skills** - a `pi workflow` control plane plus the built-in `deep-interview`, `ralplan`, `team`, and `ultragoal` skills for planning and parallel execution. See [docs/workflow.md](docs/workflow.md).
+- **Pi workflow + skills** - a `pi workflow` control plane plus the built-in `deep-interview`, `ralplan`, `team`, and `ultragoal` skills for planning and parallel execution. See [workflows/docs/workflow.md](../workflows/docs/workflow.md).
 - **Subagents** - a Pi-native `SubagentManager` with spawn/await/resume/steer/pause/cancel tools for isolated agent workers. See [docs/subagents.md](docs/subagents.md).
 
 ---

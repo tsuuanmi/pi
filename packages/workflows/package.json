@@ -42,7 +42,7 @@
 			"src/agents/*.md"
 		],
 		"commands": [
-			"src/cli/*.ts"
+			"src/commands/workflow.ts"
 		]
 	},
 	"dependencies": {

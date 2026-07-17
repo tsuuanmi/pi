@@ -6,8 +6,8 @@
  */
 
 // Workflow commands
-export { runStateCommand } from "./cli/state-command.ts";
-export { handleWorkflowCommand, runWorkflowCommand } from "./cli/workflow-command.ts";
+export { runStateCommand } from "./commands/state-command.ts";
+export { handleWorkflowCommand, runWorkflowCommand } from "./commands/workflow.ts";
 // Extension entry point
 export { default } from "./extensions/workflows.ts";
 export * from "./harness/deep-interview/deep-interview-hud.ts";

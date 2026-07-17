@@ -1,6 +1,6 @@
 # Subagents
 
-Pi ships a Pi-native `SubagentManager` that runs isolated agent sessions as subagents of the current session. It is exposed to extensions as `ctx.subagents` and to the agent through seven `subagent_*` tools. Subagents are the execution primitive used by the [team](../../workflows/workflow.md) and [ultragoal](../../workflows/workflow.md) skills to spawn parallel workers.
+Pi ships a Pi-native `SubagentManager` that runs isolated agent sessions as subagents of the current session. It is exposed to extensions as `ctx.subagents` and to the agent through seven `subagent_*` tools. Subagents are the execution primitive used by the [team](../../../../workflows/docs/workflow.md) and [ultragoal](../../../../workflows/docs/workflow.md) skills to spawn parallel workers.
 
 ## Records and durability
 

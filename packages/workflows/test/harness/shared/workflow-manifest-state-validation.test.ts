@@ -13,7 +13,7 @@ import {
 	writeWorkflowState,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { runWorkflowCommand } from "../../../src/cli/workflow-command.ts";
+import { runWorkflowCommand } from "../../../src/commands/workflow.ts";
 
 const sessionId = "test-session-id";
 

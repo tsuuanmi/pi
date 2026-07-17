@@ -10,6 +10,16 @@ export interface PackageCommandContext {
 	extensionFactories?: ExtensionFactory[];
 }
 
+/**
+ * A command resource module exported by a package and dispatched by
+ * `dispatchPreSessionPackageCommand`. The dispatcher resolves command
+ * resources by filename (`basename(resource.path)`), dynamically imports the
+ * module, and calls `handlePackageCommand(args, context)`.
+ *
+ * Note: this `handlePackageCommand` is the package-command dispatcher contract
+ * and is unrelated to the `handlePackageCommand` in `package-manager-cli.ts`
+ * (the install/remove/update/list handler). Same name, different modules.
+ */
 export interface PackageCommandModule {
 	handlePackageCommand?: (args: string[], context: PackageCommandContext) => Promise<boolean> | boolean;
 }
@@ -23,7 +33,10 @@ export async function dispatchPreSessionPackageCommand(
 	options?: { extensionFactories?: ExtensionFactory[] },
 ): Promise<boolean> {
 	const [requested] = args;
-	if (!requested) return false;
+	// Early-bail for flag-first invocations (e.g. `pi --version`, `pi --help`,
+	// `pi -p ...`): these are not subcommands, so skip full package resolution
+	// and let `parseArgs` handle them. Zero behavior change on the success path.
+	if (!requested || requested.startsWith("-")) return false;
 
 	const cwd = process.cwd();
 	const agentDir = getAgentDir();

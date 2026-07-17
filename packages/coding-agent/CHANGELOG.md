@@ -73,6 +73,9 @@
 - Simplified shell, clipboard, tool download, signal handling, self-update, and release code paths for Linux/macOS-only support.
 - Stopped publishing coding-agent docs and examples in the npm package.
 - Updated extension docs, examples, runtime help, trust prompts, and config labels to use the configured project config directory instead of hardcoded `.pi` paths.
+- The package-command dispatcher now early-bails on flag-first invocations (`pi --version`, `pi --help`, `pi -p ...`) so they skip full package resolution before `parseArgs` handles them; no behavior change on the success path.
+- Removed the dead `src/cli/{workflow,state,mcp}-command.ts` re-export shims (the dispatcher imports package command resources directly) and repointed `test/cli/mcp-command.test.ts` to the real `packages/mcp/commands/mcp.ts`.
+- `printHelp` and `docs/cli/cli.md` now list the `pi workflow`, `pi workflow state`, and `pi mcp` subcommands. Because `pi mcp`/`pi workflow` now dispatch through the package-command dispatcher, a user-global third-party package providing a `mcp` or `workflow` command can shadow the bundled command (existing dispatcher collision precedence; stderr warning).
 
 ### Fixed
 
@@ -83,6 +86,8 @@
 - Fixed subagent sessions sharing the parent session's `ResourceLoader` (and therefore its `ExtensionRuntime` and `Extension` objects), so disposing a completed subagent no longer invalidates the parent's shared extension runtime and stale-ifies the parent's captured extension API on the next `before_agent_start`. This affected every subagent-spawning workflow tool (deep-interview, ralplan, team, ultragoal) and any `subagent_spawn` call. Subagents now build an isolated `ResourceLoader` mirroring the parent's extension configuration while reusing the parent's settings manager to preserve project-trust state.
 - Fixed `/model` autocomplete and model selection searches to match provider/model queries regardless of whether the provider or model token is typed first.
 - Fixed the tree navigator to horizontally pan deep entries so the selected item remains readable ([#5830](https://github.com/tsuuanmi/pi/issues/5830)).
+- Fixed `pi mcp` and `pi workflow` / `pi workflow state` CLI dispatch: the bundled command modules now export the `handlePackageCommand(args, ctx?)` contract the package-command dispatcher requires, so `pi mcp list` no longer throws "does not export handlePackageCommand" and `pi workflow` is reachable. Broken since the package refactor that moved the handlers into packages without conforming to the dispatcher contract.
+- Fixed broken `docs/workflow.md` links in `README.md` (now `../workflows/docs/workflow.md`) and `docs/core/subagents/subagents.md` (now `../../../../workflows/docs/workflow.md`).
 
 ### Removed
 

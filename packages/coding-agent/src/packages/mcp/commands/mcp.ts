@@ -368,3 +368,16 @@ export async function handleMcpCommand(args: string[]): Promise<boolean> {
 	process.exitCode = result.status;
 	return true;
 }
+
+/**
+ * Dispatcher contract entry point.
+ *
+ * `pi`'s package-command dispatcher (`dispatchPreSessionPackageCommand`)
+ * dynamically imports this command resource and calls `handlePackageCommand`,
+ * passing the full args (with `args[0] === "mcp"`). Delegates to
+ * `handleMcpCommand`, which performs the verb check and I/O. `ctx` is provided
+ * by the dispatcher but unused here; kept optional for contract conformance.
+ */
+export async function handlePackageCommand(args: string[], _ctx?: unknown): Promise<boolean> {
+	return handleMcpCommand(args);
+}

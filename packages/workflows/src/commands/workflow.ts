@@ -525,3 +525,17 @@ export async function handleWorkflowCommand(args: string[]): Promise<boolean> {
 	process.exitCode = result.status;
 	return true;
 }
+
+/**
+ * Dispatcher contract entry point.
+ *
+ * `pi`'s package-command dispatcher (`dispatchPreSessionPackageCommand`)
+ * dynamically imports this command resource and calls `handlePackageCommand`.
+ * It passes the full args (with `args[0] === "workflow"`), so we delegate to
+ * `handleWorkflowCommand`, which performs the verb check and I/O. `ctx` is
+ * provided by the dispatcher but unused here (handlers derive `cwd` from
+ * `process.cwd()`); kept optional for contract conformance.
+ */
+export async function handlePackageCommand(args: string[], _ctx?: unknown): Promise<boolean> {
+	return handleWorkflowCommand(args);
+}

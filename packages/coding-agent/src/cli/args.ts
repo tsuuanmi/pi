@@ -150,6 +150,8 @@ ${chalk.bold("Commands:")}
   ${APP_NAME} update [source|self|pi]   Update pi and installed extensions
   ${APP_NAME} list                      List installed extensions from settings
   ${APP_NAME} config                    Open TUI to enable/disable package resources
+  ${APP_NAME} workflow <verb>           Pi workflow control plane (try 'pi workflow --help')
+  ${APP_NAME} mcp <verb>                Manage MCP servers (list/add/remove/test)
   ${APP_NAME} <command> --help          Show help for install/remove/uninstall/update/list
 
 ${chalk.bold("Options:")}

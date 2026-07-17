@@ -3,7 +3,7 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { runWorkflowCommand } from "../../../src/cli/workflow-command.ts";
+import { runWorkflowCommand } from "../../../src/commands/workflow.ts";
 import { RuntimeOwner } from "../../../src/harness/runtime/owner.ts";
 import {
 	buildClassificationInput,

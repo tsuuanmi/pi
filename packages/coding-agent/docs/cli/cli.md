@@ -83,6 +83,8 @@ Pi also supports several subcommands:
 | `pi mcp add <name>` | Add an MCP server |
 | `pi mcp remove <name>` | Remove an MCP server |
 | `pi mcp test <name>` | Test MCP server connectivity |
+| `pi workflow <verb>` | Pi workflow control plane (state/operate/gc/...) |
+| `pi workflow state <skill>` | Read/write/clear workflow state for a skill |
 | `pi config` | Manage Pi configuration |
 | `pi update` | Update Pi to the latest version |
 
