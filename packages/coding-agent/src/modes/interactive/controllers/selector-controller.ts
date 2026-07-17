@@ -23,7 +23,6 @@ import type { StatusLineComponent } from "../components/status-line/index.ts";
 import { TreeSelectorComponent } from "../components/tree-selector.ts";
 import { TrustSelectorComponent } from "../components/trust-selector.ts";
 import { UserMessageSelectorComponent } from "../components/user-message-selector.ts";
-import type { AccountAuthController } from "./account-auth-controller.ts";
 import type { ExtensionUIController } from "./extension-ui-controller.ts";
 
 type SelectorControllerDependencies = {
@@ -44,7 +43,6 @@ type SelectorControllerDependencies = {
 	getHideThinkingBlock: () => boolean;
 	setHideThinkingBlock: (hideThinkingBlock: boolean) => void;
 	_extensionUIController: ExtensionUIController;
-	_accountAuthController: AccountAuthController;
 	showStatus: (message: string) => void;
 	showError: (errorMessage: string) => void;
 	showWarning: (warningMessage: string) => void;
@@ -80,7 +78,6 @@ export class SelectorController {
 	private readonly getHideThinkingBlock: () => boolean;
 	private readonly setHideThinkingBlock: (hideThinkingBlock: boolean) => void;
 	private readonly _extensionUIController: ExtensionUIController;
-	private readonly _accountAuthController: AccountAuthController;
 	private readonly showStatus: (message: string) => void;
 	private readonly showError: (errorMessage: string) => void;
 	private readonly showWarning: (warningMessage: string) => void;
@@ -115,7 +112,6 @@ export class SelectorController {
 		this.getHideThinkingBlock = deps.getHideThinkingBlock;
 		this.setHideThinkingBlock = deps.setHideThinkingBlock;
 		this._extensionUIController = deps._extensionUIController;
-		this._accountAuthController = deps._accountAuthController;
 		this.showStatus = deps.showStatus;
 		this.showError = deps.showError;
 		this.showWarning = deps.showWarning;
@@ -342,9 +338,9 @@ export class SelectorController {
 								await this.session.setModel(model);
 								this.footer.invalidate();
 								this.updateEditorBorderColor();
-								void this._accountAuthController.refreshCodexUsageSummary(true);
+								void this.refreshCodexUsageSummary(true);
 								this.showStatus(`Model: ${model.id}`);
-								void this._accountAuthController.maybeWarnAboutAnthropicSubscriptionAuth(model);
+								void this.maybeWarnAboutAnthropicSubscriptionAuth(model);
 							} catch (error) {
 								this.showError(error instanceof Error ? error.message : String(error));
 							}

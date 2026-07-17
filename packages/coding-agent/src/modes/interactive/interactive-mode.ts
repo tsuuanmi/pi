@@ -385,7 +385,6 @@ export class InteractiveMode {
 				this.hideThinkingBlock = hideThinkingBlock;
 			},
 			_extensionUIController: this._extensionUIController,
-			_accountAuthController: this._accountAuthController,
 			showStatus: (message) => this.showStatus(message),
 			showError: (message) => this.showError(message),
 			showWarning: (message) => this.showWarning(message),
