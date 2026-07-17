@@ -30,7 +30,7 @@ AI can build anything; the hard part is knowing what to build. Single-pass "what
 ## Boundaries
 
 - This is a planning skill. Do not edit source files, run mutation-oriented commands, commit, push, or invoke execution skills until the user explicitly approves execution. The `edit` and `write` tools are runtime-blocked while a deep-interview workflow is active in a non-finished phase (the phase-boundary mutation guard); only `.pi/**` is always blocked, and only system-temp scratch outside the project is writable. Persist the spec with `deep_interview_write_spec` or hand off to an execution skill before any product-code mutation.
-- Persist workflow artifacts only through Pi workflow tools. Do not directly edit `.pi/workflows`, `.pi/specs`, or `.pi/plans` with `write` or `edit` unless the user explicitly asks for manual recovery. The mutation guard blocks direct `.pi/**` edits regardless of phase.
+- Persist workflow artifacts only through Pi workflow tools. Do not directly edit `.pi/<session-id>/workflows`, `.pi/<session-id>/specs`, or `.pi/<session-id>/plans` with `write` or `edit` unless the user explicitly asks for manual recovery. The mutation guard blocks direct `.pi/**` edits regardless of phase.
 - Ask ONE question at a time — never batch.
 - Target the WEAKEST clarity dimension with each question; name it and say why it is the bottleneck before asking.
 - Prefer answering factual brownfield questions from repository evidence (cite the file/symbol/pattern). Ask the user only for decisions, tradeoffs, priorities, and scope. When unsure whether a question is a fact or a decision, treat it as a decision and ask.
@@ -63,7 +63,7 @@ Pi has no `ask` tool. Ask each question as a single prose message. For option-be
 - `deep_interview_read_compact` — prompt-efficient compact projection (threshold, ambiguity, topology summary, orchestration, established facts, unresolved triggers, recent rounds, advisory counters). Use when resuming or when the transcript is large.
 - `deep_interview_closure_check` — run the closure/acceptance guard against current state; returns `ok` plus blocking gaps. Run before crystallizing.
 - `deep_interview_restate_goal` — confirm the one-sentence restated goal after closure passes; `confirm: "Yes"` crystallizes, `"Adjust"`/`"Missing"` route back through scoring, capped at two loops. Enforces the restate gate and records overrides safely (never clobbers `rounds`).
-- `deep_interview_write_spec` — persist the final spec under `.pi/specs` and update state; optionally hand off to `ralplan`/`ultragoal`/`team` or `stop`.
+- `deep_interview_write_spec` — persist the final spec under `.pi/<session-id>/specs` and update state; optionally hand off to `ralplan`/`ultragoal`/`team` or `stop`.
 - `subagent_spawn` / `subagent_await` — read-only research, auto-research, auto-answer, and lateral-panel personas (see Internal Auto-Mode Protocol).
 
 ## Workflow
@@ -317,7 +317,7 @@ Once closure passes, collapse the agreed answers into ONE sentence goal covering
 #### Generate and persist the spec
 
 1. Generate the specification using the prompt-safe transcript. If the full transcript or initial context is too large, include the summary plus all concrete decisions, acceptance criteria, unresolved gaps, and ontology snapshots; never overflow the prompt with raw oversized context. Apply `language.instruction` to user-facing spec prose; keep code identifiers, file paths, commands, and JSON/config keys unchanged. Apply the silent self-proofread once to newly generated spec prose.
-2. Persist the final spec with `deep_interview_write_spec`. Prefer passing the spec markdown inline as `spec`; only if it is too large to pass inline, stage it with `write` to a system temp directory outside the project tree and pass that path — never write scratch specs into the repo or `.pi/`. The spec path resolves to `.pi/specs/deep-interview-<slug>.md`.
+2. Persist the final spec with `deep_interview_write_spec`. Prefer passing the spec markdown inline as `spec`; only if it is too large to pass inline, stage it with `write` to a system temp directory outside the project tree and pass that path — never write scratch specs into the repo or `.pi/`. The spec path resolves to `.pi/<session-id>/specs/deep-interview-<slug>.md`.
 
 ### Phase 5: Execution Bridge
 
@@ -431,8 +431,8 @@ The spec file body is Markdown. Generate it as rendered Markdown (the file conte
 
 ## Session-Scoped Isolation
 
-- Deep Interview workflow state and specs are isolated per session when `PI_SESSION_ID` or `--session` is set. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions.
-- Without a session id, all reads and writes fall back to the global `.pi/` path (backward-compatible).
+- Deep Interview workflow state and specs are isolated per session. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions.
+- A session id is required (resolved from the active session by the tools; `--session <id>` or `PI_SESSION_ID` for the CLI). There is no global `.pi/` fallback.
 
 ## Corrupt-State Recovery
 
@@ -476,7 +476,7 @@ If interrupted, run `/skill:deep-interview` again. Resume from state via `pi_wor
 - [ ] Free-text answers passed the Refine gate; dialectic rhythm guard forced a user question after 3 agent-resolved answers; any auto-answer threshold crossing explicitly confirmed.
 - [ ] `deep_interview_closure_check` passed and the one-sentence Restate gate confirmed before crystallization.
 - [ ] Interview reached ambiguity ≤ threshold OR an explicit early exit with warning.
-- [ ] Spec persisted to `.pi/specs/deep-interview-<slug>.md` via `deep_interview_write_spec`, covering every active topology component plus goal/constraints/acceptance criteria/clarity/ontology/transcript.
+- [ ] Spec persisted to `.pi/<session-id>/specs/deep-interview-<slug>.md` via `deep_interview_write_spec`, covering every active topology component plus goal/constraints/acceptance criteria/clarity/ontology/transcript.
 - [ ] Spec metadata includes the auto/lateral counters (`auto_researched_rounds`, `auto_answered_rounds`, `lateral_reviews`, `refined_rounds`, `architect_failures`, `lateral_panel_failures`).
 - [ ] Execution bridge presented; execution invoked only after explicit approval via `deep_interview_write_spec` handoff — never direct implementation.
 

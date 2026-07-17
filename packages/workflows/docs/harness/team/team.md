@@ -6,7 +6,7 @@ Runtime workflow for the team skill.
 
 ## Overview
 
-The team workflow manages the team coordination board, persisting state to `.pi/team/<team-id>/`. It tracks worker tasks, messages, and completion evidence.
+The team workflow manages the team coordination board, persisting state to `.pi/<session-id>/team/<team-id>/`. It tracks worker tasks, messages, and completion evidence.
 
 ## Module Structure
 
@@ -29,12 +29,12 @@ The team workflow uses a shared board pattern:
 
 | File | Description |
 |------|-------------|
-| `.pi/team/<teamId>/state.json` | Team coordination state |
-| `.pi/team/<teamId>/tasks/` | Task definitions and evidence |
-| `.pi/team/<teamId>/events.jsonl` | Event log |
-| `.pi/team/<teamId>/mailbox.json` | Inter-task messages |
+| `.pi/<session-id>/team/<teamId>/config.json` | Team coordination state |
+| `.pi/<session-id>/team/<teamId>/tasks/` | Task definitions and evidence |
+| `.pi/<session-id>/team/<teamId>/events.jsonl` | Event log |
+| `.pi/<session-id>/team/<teamId>/mailbox/<recipient>.jsonl` | Per-recipient messages |
 
-Note: Team state is stored under `.pi/team/` (not session-scoped) because teams may span sessions.
+Note: Team state is stored under `.pi/<session-id>/team/`, scoped to the session that started the team run.
 
 ### TeamState
 

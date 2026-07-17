@@ -35,7 +35,7 @@ The deep-interview workflow follows these phases:
 | File | Description |
 |------|-------------|
 | `.pi/<sessionId>/workflows/deep-interview/state.json` | Current interview state |
-| `.pi/<sessionId>/workflows/deep-interview/index.jsonl` | Append-only audit log |
+| `.pi/<sessionId>/specs/deep-interview-index.jsonl` | Append-only spec index |
 | `.pi/<sessionId>/specs/deep-interview-<slug>.md` | Final spec output |
 
 ### InterviewState

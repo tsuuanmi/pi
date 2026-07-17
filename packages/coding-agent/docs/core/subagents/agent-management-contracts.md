@@ -24,7 +24,7 @@ These are the intended ownership boundaries. If implementation chooses different
 | Trust policy | `packages/coding-agent/src/core/settings/settings-manager.ts` and `src/core/trust/project-trust.ts` | `src/core/skills/resource-loader.ts`, `docs/security.md` |
 | Source metadata and diagnostics | `packages/coding-agent/src/core/misc/source-info.ts` and `src/core/misc/diagnostics.ts` | resource-specific loaders |
 | Scoped live registry | a new `packages/coding-agent/src/core/agent-registry.ts` | `src/core/agent-session/agent-session.ts`, `src/core/subagents/subagents.ts`, `src/api/types.ts` |
-| Durable subagent/task/receipt state | `packages/coding-agent/src/core/subagents/subagents.ts` and future task modules | `.pi/workflows/subagents/`, workflow runtimes |
+| Durable subagent/task/receipt state | `packages/coding-agent/src/core/subagents/subagents.ts` and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |
 | Self-hosting continuity | `pi:workflows` first-party package tools and skills | `packages/workflows/src/harness/*`, `packages/workflows/src/skills/*` |
 | Direct-port adaptation | each porting change owner | this document and code review checklist |
 | Worktree/tmux orchestration | future task/worktree modules and `@tsuuanmi/pi-workflows` harness/runtime/seams.ts | docs/tmux.md, workflow docs |
@@ -142,7 +142,7 @@ Required negative cases:
 
 Future durable schemas for tasks, receipts, registry-derived ids, or subagent records must include a version field or an explicit invalidation/reset policy.
 
-Because this migration does not require backward compatibility, old `.pi/workflows/subagents` records may be ignored or invalidated if the phase documents that behavior. They must not be partially interpreted as new task/registry state without a tested migration path.
+Because this migration does not require backward compatibility, old `.pi/<session-id>/state/subagents` records may be ignored or invalidated if the phase documents that behavior. They must not be partially interpreted as new task/registry state without a tested migration path.
 
 Minimum durable-state requirements:
 

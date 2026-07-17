@@ -50,7 +50,7 @@ All session-aware path builders require a `sessionId` — there is no global fal
 | `.pi/{sessionId}/workflows/deep-interview/` | Deep interview state |
 | `.pi/{sessionId}/workflows/ralplan/` | Ralplan state |
 | `.pi/{sessionId}/workflows/ultragoal/` | Ultragoal state |
-| `.pi/team/{teamId}/` | Team coordination state (not session-scoped) |
+| `.pi/{sessionId}/team/{teamId}/` | Team coordination state |
 | `.pi/{sessionId}/specs/` | Generated specs |
 | `.pi/{sessionId}/plans/` | Generated plans |
 | `.pi/{sessionId}/activity.json` | Session activity file |

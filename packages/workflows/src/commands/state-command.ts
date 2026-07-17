@@ -36,7 +36,7 @@ function usage(): string {
 
 Skills: deep-interview, ralplan, team, ultragoal
 Session: --session <id> or PI_SESSION_ID env var scopes state to a session.
-         If omitted, commands use the legacy global .pi/ workflow state.
+         If omitted, the command errors out; there is no global fallback.
 Force: use --force to clear or overwrite terminal/corrupt state.
 `;
 }

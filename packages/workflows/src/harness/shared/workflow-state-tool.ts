@@ -123,9 +123,11 @@ export function registerWorkflowStateTool(pi: ExtensionAPI): void {
 	pi.registerTool({
 		name: "pi_workflow_state",
 		label: "Pi Workflow State",
-		description: "Read, write, or clear Pi workflow state under .pi/workflows/<skill>/state.json.",
+		description: "Read, write, or clear Pi workflow state under .pi/<session-id>/workflows/<skill>/state.json.",
 		promptSnippet: "Read/write Pi workflow state for deep-interview, ralplan, team, and ultragoal",
-		promptGuidelines: ["Use pi_workflow_state instead of direct edits when reading or updating .pi/workflows state."],
+		promptGuidelines: [
+			"Use pi_workflow_state instead of direct edits when reading or updating .pi/<session-id>/workflows state.",
+		],
 		parameters: workflowStateSchema,
 		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeWorkflowState(params, ctx),
 	});

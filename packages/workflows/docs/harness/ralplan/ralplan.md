@@ -34,7 +34,7 @@ The ralplan workflow follows these stages:
 | File | Description |
 |------|-------------|
 | `.pi/<sessionId>/workflows/ralplan/state.json` | Current planning state |
-| `.pi/<sessionId>/workflows/ralplan/index.jsonl` | Append-only audit log |
+| `.pi/<sessionId>/plans/ralplan/<run-id>/index.jsonl` | Append-only run index |
 | `.pi/<sessionId>/workflows/ralplan/agents/` | Planner/Architect/Critic role-agent records |
 | `.pi/<sessionId>/plans/ralplan/<run-id>/` | Plan artifacts and ADRs |
 

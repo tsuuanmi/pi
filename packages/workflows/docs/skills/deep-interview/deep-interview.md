@@ -24,7 +24,7 @@ The deep-interview skill conducts a structured interview to expose assumptions a
 2. Record the user's answer
 3. Score ambiguity and identify contradictions
 4. Repeat until ambiguity is below threshold
-5. Write a final spec to `.pi/specs/`
+5. Write a final spec to `.pi/<session-id>/specs/`
 
 ## See Also
 

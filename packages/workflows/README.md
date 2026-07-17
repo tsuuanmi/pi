@@ -79,7 +79,7 @@ Deep Interview turns a vague idea into a concrete spec before any mutation start
 2. **Round 0 — Topology enumeration gate**: lock 1–6 top-level components before depth-first questioning can overfit to the most-described component. Multi-component fixtures must surface every sibling (e.g. Ingestion, Normalization, Review UI, Export) even when one is detailed.
 3. **Interview loop**: ask ONE question per round, targeting the weakest component/dimension pair, rotating across active components. Score ambiguity after each answer.
 4. **Lateral review panel**: convene `researcher`, `contrarian`, `simplifier` (and `architect` when scope shape changed) as parallel read-only subagents at ambiguity-milestone transitions and before synthesizing agent-supplied answers.
-5. **Crystallize spec**: run `deep_interview_closure_check`, then `deep_interview_restate_goal` (two-loop cap on Adjust/Missing), then persist via `deep_interview_write_spec` to `.pi/specs/deep-interview-<slug>.md`.
+5. **Crystallize spec**: run `deep_interview_closure_check`, then `deep_interview_restate_goal` (two-loop cap on Adjust/Missing), then persist via `deep_interview_write_spec` to `.pi/<session-id>/specs/deep-interview-<slug>.md`.
 6. **Execution bridge**: present options (ralplan / ultragoal / team / refine / stop) and hand off only after explicit selection.
 
 **Ambiguity is bidirectional and non-monotonic.** A later answer can raise ambiguity (contradiction, internal inconsistency, low-quality/evasive, or scope expansion). Triggers lower the affected dimension score; the weighted formula raises ambiguity — there is no separate penalty term. Raises are silent and surface via the per-round report and next-question targeting.
@@ -123,7 +123,7 @@ After explicit approval or rejection, call `ralplan_approve_plan`. Default appro
 
 **Tools:** `pi_workflow_state`, `ralplan_status`, `ralplan_read_compact`, `ralplan_doctor`, `ralplan_run_agent`, `ralplan_write_artifact`, `ralplan_record_explorer_gate`, `ralplan_approve_plan`.
 
-**Boundaries:** planning only. Persist artifacts with `ralplan_write_artifact`; do not directly edit `.pi/plans` or `.pi/workflows` unless recovering with explicit user approval. Planner/Architect/Critic passes must use `ralplan_run_agent` and be sequential: planner first, architect second, critic third. Role agents persist durable output and return receipt-only summaries (run id, stage, stage_n, path).
+**Boundaries:** planning only. Persist artifacts with `ralplan_write_artifact`; do not directly edit `.pi/<session-id>/plans` or `.pi/<session-id>/workflows` unless recovering with explicit user approval. Planner/Architect/Critic passes must use `ralplan_run_agent` and be sequential: planner first, architect second, critic third. Role agents persist durable output and return receipt-only summaries (run id, stage, stage_n, path).
 
 ### team
 
@@ -181,7 +181,7 @@ Ultragoal executes an approved concrete goal end-to-end with verification.
 | Consent | (separate) | User explicitly approves before any execution skill runs |
 | Execution | team / ultragoal | Approved plan only; vagueness gate redirects underspecified prompts to ralplan |
 
-deep-interview persists its spec to `.pi/specs/deep-interview-<slug>.md`; ralplan persists plans under `.pi/plans/ralplan/<run-id>/`. Both stop for explicit approval rather than mutating product code.
+deep-interview persists its spec to `.pi/<session-id>/specs/deep-interview-<slug>.md`; ralplan persists plans under `.pi/<session-id>/plans/ralplan/<run-id>/`. Both stop for explicit approval rather than mutating product code.
 
 ## `pi workflow` Control Plane
 
@@ -271,14 +271,14 @@ All session-aware path builders require a `sessionId` — there is no global fal
 | `.pi/{sessionId}/specs/` | Generated specs (deep-interview) |
 | `.pi/{sessionId}/plans/` | Generated plans (ralplan) |
 | `.pi/{sessionId}/activity.json` | Session activity file |
-| `.pi/team/{teamId}/` | Team coordination state (not session-scoped) |
+| `.pi/{sessionId}/team/{teamId}/` | Team coordination state |
 | `.pi/audit.jsonl` | Global audit log (append-only JSONL) |
 
-Team coordination state lives under `.pi/team/{teamId}/`, outside the session scope, because a team run may outlive a single session.
+Team coordination state lives under `.pi/{sessionId}/team/{teamId}/`, scoped to the session that started the team run.
 
 ### Session-Scoped Isolation
 
-Workflow state and artifacts are isolated per session when `PI_SESSION_ID` or `--session` is set. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions. Without a session id, all reads and writes fall back to the global `.pi/` path (backward-compatible).
+Workflow state and artifacts are isolated per session. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions. A session id is required: the workflow tools resolve it from the active session, and the `pi workflow` CLI requires `--session <id>` or `PI_SESSION_ID`. There is no global `.pi/` fallback; without a session id the CLI errors out.
 
 ### Corrupt-State Recovery
 

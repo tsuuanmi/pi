@@ -2,7 +2,7 @@
  * Ultragoal typed-obstacle ledger (Phase B-0, additive dual-write).
  *
  * Ships the ultragoal obstacle kinds, the ultragoal skill validator, and a
- * per-skill session-scoped obstacle ledger (`.pi/workflows/ultragoal/obstacles.json`)
+ * per-skill session-scoped obstacle ledger (`.pi/<session-id>/ultragoal/obstacles.json`)
  * ALONGSIDE — not replacing — the existing review-blocker model (the steering
  * `review_blocker` goal + the `review_blockers_recorded` ledger event). Nothing
  * here is read by the guard or checkpoint path yet (that is Phase B-1/B-2), so

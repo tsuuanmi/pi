@@ -329,7 +329,7 @@ export function registerRalplanTools(pi: ExtensionAPI): void {
 		name: "ralplan_run_agent",
 		label: "Ralplan Role Agent",
 		description:
-			"Run an isolated Pi role agent for ralplan Planner, Architect, or Critic and record the invocation under .pi/workflows/ralplan/agents.",
+			"Run an isolated Pi role agent for ralplan Planner, Architect, or Critic and record the invocation under .pi/<session-id>/workflows/ralplan/agents.",
 		promptSnippet: "Run ralplan Planner/Architect/Critic role agents",
 		promptGuidelines: [
 			"Use ralplan_run_agent for Planner, Architect, Critic, and Planner revision passes instead of pretending one model persona reviewed itself inline.",
@@ -384,9 +384,12 @@ export function registerRalplanTools(pi: ExtensionAPI): void {
 	pi.registerTool({
 		name: "ralplan_write_artifact",
 		label: "Ralplan Artifact",
-		description: "Persist ralplan stage artifacts under .pi/plans/ralplan/<run-id>/ and update workflow state.",
-		promptSnippet: "Persist ralplan planner/architect/critic/final artifacts under .pi/plans",
-		promptGuidelines: ["Use ralplan_write_artifact for ralplan planning artifacts; do not write .pi/plans directly."],
+		description:
+			"Persist ralplan stage artifacts under .pi/<session-id>/plans/ralplan/<run-id>/ and update workflow state.",
+		promptSnippet: "Persist ralplan planner/architect/critic/final artifacts under .pi/<session-id>/plans",
+		promptGuidelines: [
+			"Use ralplan_write_artifact for ralplan planning artifacts; do not write .pi/<session-id>/plans directly.",
+		],
 		parameters: ralplanWriteArtifactSchema,
 		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeRalplanWriteArtifact(params, ctx),
 	});

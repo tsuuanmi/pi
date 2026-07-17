@@ -11,7 +11,7 @@ Ralplan is Pi's consensus planning workflow. It produces a durable pending-appro
 ## Boundaries
 
 - Planning only. Do not mutate product files, commit, push, or invoke execution until the user explicitly approves execution.
-- Persist planning artifacts with `ralplan_write_artifact`; do not directly edit `.pi/plans` or `.pi/workflows` unless recovering with explicit user approval.
+- Persist planning artifacts with `ralplan_write_artifact`; do not directly edit `.pi/<session-id>/plans` or `.pi/<session-id>/workflows` unless recovering with explicit user approval.
 - Planner, Architect, and Critic passes must use `ralplan_run_agent`; do not simulate all roles inline in the parent conversation.
 - Architect and critic passes must be sequential: planner first, architect second, critic third.
 
@@ -73,8 +73,8 @@ Include:
 
 ## Session-Scoped Isolation
 
-- Ralplan workflow state and plan artifacts are isolated per session when `PI_SESSION_ID` or `--session` is set. A fresh session starts with no prior plan state by construction.
-- Without a session id, all reads and writes fall back to the global `.pi/` path.
+- Ralplan workflow state and plan artifacts are isolated per session. A fresh session starts with no prior plan state by construction.
+- A session id is required (resolved from the active session by the tools; `--session <id>` or `PI_SESSION_ID` for the CLI). There is no global `.pi/` fallback.
 
 ## Corrupt-State Recovery
 

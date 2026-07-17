@@ -24,7 +24,7 @@ import {
 } from "./deep-interview-state.ts";
 
 const deepInterviewWriteSpecSchema = Type.Object({
-	slug: Type.Optional(Type.String({ description: "Safe slug for .pi/specs/deep-interview-<slug>.md" })),
+	slug: Type.Optional(Type.String({ description: "Safe slug for .pi/<session-id>/specs/deep-interview-<slug>.md" })),
 	spec: Type.String({ description: "Final spec markdown or a path to a markdown file" }),
 	handoff: Type.Optional(Type.String({ description: "Optional next workflow: ralplan, ultragoal, team, or stop" })),
 });
@@ -416,10 +416,10 @@ export function registerDeepInterviewTools(pi: ExtensionAPI): void {
 	pi.registerTool({
 		name: "deep_interview_write_spec",
 		label: "Deep Interview Spec",
-		description: "Persist a final deep-interview spec under .pi/specs and update workflow state.",
-		promptSnippet: "Persist final deep-interview specs under .pi/specs",
+		description: "Persist a final deep-interview spec under .pi/<session-id>/specs and update workflow state.",
+		promptSnippet: "Persist final deep-interview specs under .pi/<session-id>/specs",
 		promptGuidelines: [
-			"Use deep_interview_write_spec to persist final deep-interview specs; do not write .pi/specs directly.",
+			"Use deep_interview_write_spec to persist final deep-interview specs; do not write .pi/<session-id>/specs directly.",
 		],
 		parameters: deepInterviewWriteSpecSchema,
 		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeDeepInterviewWriteSpec(params, ctx),

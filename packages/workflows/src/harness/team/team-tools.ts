@@ -271,7 +271,7 @@ export function registerTeamTools(pi: ExtensionAPI): void {
 	pi.registerTool({
 		name: "team_start",
 		label: "Team Start",
-		description: "Create Pi-native team coordination state under .pi/team/<team-id>.",
+		description: "Create Pi-native team coordination state under .pi/<session-id>/team/<team-id>.",
 		promptSnippet: "Start a runtime-owned team coordination board",
 		promptGuidelines: ["Use team_start only after execution is approved and parallel workstreams are useful."],
 		parameters: teamStartSchema,
