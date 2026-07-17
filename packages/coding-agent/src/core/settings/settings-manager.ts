@@ -40,10 +40,6 @@ export interface MarkdownSettings {
 	codeBlockIndent?: string; // default: "  "
 }
 
-export interface WarningSettings {
-	anthropicExtraUsage?: boolean; // default: true
-}
-
 export interface ApiUsageLoggingSettings {
 	enabled?: boolean; // default: true
 }
@@ -193,7 +189,6 @@ export interface Settings {
 	autocompleteMaxVisible?: number; // Max visible items in autocomplete dropdown (default: 5)
 	showHardwareCursor?: boolean; // Show terminal cursor while still positioning it for IME
 	markdown?: MarkdownSettings;
-	warnings?: WarningSettings;
 	apiUsageLogging?: ApiUsageLoggingSettings;
 	retainedContext?: RetainedContextSettings;
 	sessionDir?: string; // Custom session storage directory
@@ -1212,10 +1207,6 @@ export class SettingsManager {
 		return this.settings.markdown?.codeBlockIndent ?? "  ";
 	}
 
-	getWarnings(): WarningSettings {
-		return { ...(this.settings.warnings ?? {}) };
-	}
-
 	getApiUsageLoggingEnabled(): boolean {
 		return this.settings.apiUsageLogging?.enabled ?? true;
 	}
@@ -1244,12 +1235,6 @@ export class SettingsManager {
 					? Math.floor(toolResultMaxBytes)
 					: 96_000,
 		};
-	}
-
-	setWarnings(warnings: WarningSettings): void {
-		this.globalSettings.warnings = { ...warnings };
-		this.markModified("warnings");
-		this.save();
 	}
 
 	/**

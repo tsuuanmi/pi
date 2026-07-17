@@ -1,9 +1,3 @@
-// Extracted from InteractiveMode (Phase-1 structural split, zero behavior change).
-// Account / provider auth command surface. Moved methods are verbatim; injected host
-// dependencies are exposed as fields/getters with their original `this.*` names so the
-// moved bodies need no internal remaps. `session` and `editor` are live getters because the
-// host rebinds the session and swaps the editor at runtime.
-
 import * as fs from "node:fs";
 import * as path from "node:path";
 import {
@@ -37,13 +31,6 @@ function hasDefaultModelProvider(providerId: string): providerId is keyof typeof
 	return providerId in defaultModelPerProvider;
 }
 
-const ANTHROPIC_SUBSCRIPTION_AUTH_WARNING =
-	"Anthropic subscription auth is active. Third-party harness usage draws from extra usage and is billed per token, not your Claude plan limits. Manage extra usage at https://claude.ai/settings/usage.";
-
-function isAnthropicSubscriptionAuthKey(apiKey: string | undefined): boolean {
-	return typeof apiKey === "string" && apiKey.startsWith("sk-ant-oat");
-}
-
 const BUILT_IN_MODEL_PROVIDERS = new Set<string>(getProviders());
 
 export function isApiKeyAccountProvider(
@@ -74,7 +61,6 @@ export class AccountAuthController {
 	private readonly showStatus: (message: string) => void;
 	private readonly showSelector: (create: (done: () => void) => { component: Component; focus: Component }) => void;
 	private readonly updateEditorBorderColor: () => void;
-	private anthropicSubscriptionWarningShown = false;
 	private codexUsageRefreshInFlight = false;
 	private codexUsageLastFetchMs = 0;
 	private autoTrustOnReloadCwd: string | undefined;
@@ -615,13 +601,10 @@ export class AccountAuthController {
 		void this.refreshCodexUsageSummary(true);
 		if (selectedModel) {
 			this.showStatus(`${actionLabel}. Selected ${selectedModel.id}. Credentials saved to ${getAuthPath()}`);
-			void this.maybeWarnAboutAnthropicSubscriptionAuth(selectedModel);
 		} else {
 			this.showStatus(`${actionLabel}. Credentials saved to ${getAuthPath()}`);
 			if (selectionError) {
 				this.showError(selectionError);
-			} else {
-				void this.maybeWarnAboutAnthropicSubscriptionAuth();
 			}
 		}
 	}
@@ -846,36 +829,6 @@ export class AccountAuthController {
 			// Quota display is best-effort. Keep the footer usable if Codex usage is unavailable.
 		} finally {
 			this.codexUsageRefreshInFlight = false;
-		}
-	}
-
-	async maybeWarnAboutAnthropicSubscriptionAuth(model: Model<any> | undefined = this.session.model): Promise<void> {
-		if (this.settingsManager.getWarnings().anthropicExtraUsage === false) {
-			return;
-		}
-		if (this.anthropicSubscriptionWarningShown) {
-			return;
-		}
-		if (!model || model.provider !== "anthropic") {
-			return;
-		}
-
-		const storedCredential = this.session.modelRegistry.authStorage.get("anthropic");
-		if (storedCredential?.type === "oauth") {
-			this.anthropicSubscriptionWarningShown = true;
-			this.showWarning(ANTHROPIC_SUBSCRIPTION_AUTH_WARNING);
-			return;
-		}
-
-		try {
-			const apiKey = await this.session.modelRegistry.getApiKeyForProvider(model.provider);
-			if (!isAnthropicSubscriptionAuthKey(apiKey)) {
-				return;
-			}
-			this.anthropicSubscriptionWarningShown = true;
-			this.showWarning(ANTHROPIC_SUBSCRIPTION_AUTH_WARNING);
-		} catch {
-			// Ignore auth lookup failures for warning-only checks.
 		}
 	}
 

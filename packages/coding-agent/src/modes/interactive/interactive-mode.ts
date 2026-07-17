@@ -398,8 +398,6 @@ export class InteractiveMode {
 			updateEditorBorderColor: () => this.updateEditorBorderColor(),
 			setupAutocompleteProvider: () => this.setupAutocompleteProvider(),
 			refreshCodexUsageSummary: (force = false) => this._accountAuthController.refreshCodexUsageSummary(force),
-			maybeWarnAboutAnthropicSubscriptionAuth: (model) =>
-				this._accountAuthController.maybeWarnAboutAnthropicSubscriptionAuth(model),
 			shutdown: () => this.shutdown(),
 		});
 		this._keyHandlerController = new KeyHandlerController({
@@ -687,8 +685,6 @@ export class InteractiveMode {
 		if (modelFallbackMessage) {
 			this.showWarning(modelFallbackMessage);
 		}
-
-		void this._accountAuthController.maybeWarnAboutAnthropicSubscriptionAuth();
 
 		// Process initial messages
 		if (initialMessage) {

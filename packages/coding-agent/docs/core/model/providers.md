@@ -26,10 +26,6 @@ To store multiple accounts for one provider, pass an account name:
 - Requires ChatGPT Plus or Pro subscription
 - Officially endorsed by OpenAI: [Codex for OSS](https://developers.openai.com/community/codex-for-oss)
 
-### Claude Pro/Max
-
-Anthropic subscription auth is active for Claude Pro/Max accounts. Third-party harness usage draws from [extra usage](https://claude.ai/settings/usage) and is billed per token, not against Claude plan limits.
-
 ## API Keys
 
 Use `/account add` in interactive mode and select a provider to store an API key in `auth.json`, `/account add <provider> <account>` to store a named account, or set credentials via environment variable:

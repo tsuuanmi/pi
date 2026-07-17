@@ -56,7 +56,6 @@ type SelectorControllerDependencies = {
 	updateEditorBorderColor: () => void;
 	setupAutocompleteProvider: () => void;
 	refreshCodexUsageSummary: (force?: boolean) => Promise<void>;
-	maybeWarnAboutAnthropicSubscriptionAuth: (model?: AgentSession["model"]) => Promise<void>;
 	shutdown: () => Promise<void>;
 };
 
@@ -91,7 +90,6 @@ export class SelectorController {
 	private readonly updateEditorBorderColor: () => void;
 	private readonly setupAutocompleteProvider: () => void;
 	private readonly refreshCodexUsageSummary: (force?: boolean) => Promise<void>;
-	private readonly maybeWarnAboutAnthropicSubscriptionAuth: (model?: AgentSession["model"]) => Promise<void>;
 	private readonly shutdown: () => Promise<void>;
 
 	constructor(deps: SelectorControllerDependencies) {
@@ -125,7 +123,6 @@ export class SelectorController {
 		this.updateEditorBorderColor = deps.updateEditorBorderColor;
 		this.setupAutocompleteProvider = deps.setupAutocompleteProvider;
 		this.refreshCodexUsageSummary = deps.refreshCodexUsageSummary;
-		this.maybeWarnAboutAnthropicSubscriptionAuth = deps.maybeWarnAboutAnthropicSubscriptionAuth;
 		this.shutdown = deps.shutdown;
 	}
 
@@ -223,7 +220,6 @@ export class SelectorController {
 					quietStartup: this.settingsManager.getQuietStartup(),
 					clearOnShrink: this.settingsManager.getClearOnShrink(),
 					showTerminalProgress: this.settingsManager.getShowTerminalProgress(),
-					warnings: this.settingsManager.getWarnings(),
 					agentProfiles,
 					agentModelOverrides: this.settingsManager.getAgentModelOverrides(),
 					agentThinkingLevelOverrides: this.settingsManager.getAgentThinkingLevelOverrides(),
@@ -321,9 +317,6 @@ export class SelectorController {
 					onShowTerminalProgressChange: (enabled) => {
 						this.settingsManager.setShowTerminalProgress(enabled);
 					},
-					onWarningsChange: (warnings) => {
-						this.settingsManager.setWarnings(warnings);
-					},
 					onMainModelChange: (modelRef) => {
 						const [provider, ...modelParts] = modelRef.split("/");
 						const modelId = modelParts.join("/");
@@ -340,7 +333,6 @@ export class SelectorController {
 								this.updateEditorBorderColor();
 								void this.refreshCodexUsageSummary(true);
 								this.showStatus(`Model: ${model.id}`);
-								void this.maybeWarnAboutAnthropicSubscriptionAuth(model);
 							} catch (error) {
 								this.showError(error instanceof Error ? error.message : String(error));
 							}
