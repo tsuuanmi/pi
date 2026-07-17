@@ -1,4 +1,4 @@
-import { Editor, type EditorOptions, type EditorTheme, type TUI } from "@tsuuanmi/pi-tui";
+import { Editor, type EditorTheme, type TUI } from "@tsuuanmi/pi-tui";
 import type { AppKeybinding, KeybindingsManager } from "../../../core/settings/keybindings.ts";
 
 /**
@@ -14,8 +14,8 @@ export class CustomEditor extends Editor {
 	/** Handler for extension-registered shortcuts. Returns true if handled. */
 	public onExtensionShortcut?: (data: string) => boolean;
 
-	constructor(tui: TUI, theme: EditorTheme, keybindings: KeybindingsManager, options?: EditorOptions) {
-		super(tui, theme, options);
+	constructor(tui: TUI, theme: EditorTheme, keybindings: KeybindingsManager) {
+		super(tui, theme);
 		this.keybindings = keybindings;
 	}
 

@@ -1,6 +1,5 @@
 import type { EditorComponent, TUI } from "@tsuuanmi/pi-tui";
 import type { AgentSession } from "../../../core/agent-session/agent-session.ts";
-import type { SettingsManager } from "../../../core/settings/settings-manager.ts";
 import type { CustomEditor } from "../components/custom-editor.ts";
 import type { AccountAuthController } from "./account-auth-controller.ts";
 import type { CommandController } from "./command-controller.ts";
@@ -11,7 +10,6 @@ type KeyHandlerControllerDependencies = {
 	getDefaultEditor: () => CustomEditor;
 	getSession: () => AgentSession;
 	getEditor: () => EditorComponent;
-	getSettingsManager: () => SettingsManager;
 	getIsBashMode: () => boolean;
 	setIsBashMode: (isBashMode: boolean) => void;
 	getOnInputCallback: () => ((text: string) => void) | undefined;
@@ -52,7 +50,6 @@ export class KeyHandlerController {
 	private readonly getDefaultEditor: () => CustomEditor;
 	private readonly getSession: () => AgentSession;
 	private readonly getEditor: () => EditorComponent;
-	private readonly getSettingsManager: () => SettingsManager;
 	private readonly getIsBashMode: () => boolean;
 	private readonly setIsBashMode: (isBashMode: boolean) => void;
 	private readonly getOnInputCallback: () => ((text: string) => void) | undefined;
@@ -86,14 +83,12 @@ export class KeyHandlerController {
 	private readonly updatePendingMessagesDisplay: () => void;
 	private readonly flushPendingBashComponents: () => void;
 	private readonly showWarning: (warningMessage: string) => void;
-	private lastEscapeTime = 0;
 
 	constructor(deps: KeyHandlerControllerDependencies) {
 		this.ui = deps.ui;
 		this.getDefaultEditor = deps.getDefaultEditor;
 		this.getSession = deps.getSession;
 		this.getEditor = deps.getEditor;
-		this.getSettingsManager = deps.getSettingsManager;
 		this.getIsBashMode = deps.getIsBashMode;
 		this.setIsBashMode = deps.setIsBashMode;
 		this.getOnInputCallback = deps.getOnInputCallback;
@@ -138,9 +133,6 @@ export class KeyHandlerController {
 	private get editor(): EditorComponent {
 		return this.getEditor();
 	}
-	private get settingsManager(): SettingsManager {
-		return this.getSettingsManager();
-	}
 	private get isBashMode(): boolean {
 		return this.getIsBashMode();
 	}
@@ -164,22 +156,6 @@ export class KeyHandlerController {
 				this.editor.setText("");
 				this.isBashMode = false;
 				this.updateEditorBorderColor();
-			} else if (!this.editor.getText().trim()) {
-				// Double-escape with empty editor triggers /tree, /fork, or nothing based on setting
-				const action = this.settingsManager.getDoubleEscapeAction();
-				if (action !== "none") {
-					const now = Date.now();
-					if (now - this.lastEscapeTime < 500) {
-						if (action === "tree") {
-							this.showTreeSelector();
-						} else {
-							this.showUserMessageSelector();
-						}
-						this.lastEscapeTime = 0;
-					} else {
-						this.lastEscapeTime = now;
-					}
-				}
 			}
 		};
 

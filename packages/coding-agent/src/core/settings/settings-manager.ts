@@ -1,6 +1,5 @@
 import { normalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Transport } from "@tsuuanmi/pi-ai";
-import { randomUUID } from "crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
@@ -29,11 +28,6 @@ export interface RetrySettings {
 	maxRetries?: number; // default: 3
 	baseDelayMs?: number; // default: 2000 (exponential backoff: 2s, 4s, 8s)
 	provider?: ProviderRetrySettings;
-}
-
-export interface TerminalSettings {
-	clearOnShrink?: boolean; // default: false (clear empty rows when content shrinks)
-	showTerminalProgress?: boolean; // default: false (OSC 9;4 terminal progress indicators)
 }
 
 export interface MarkdownSettings {
@@ -172,8 +166,6 @@ export interface Settings {
 	defaultProjectTrust?: DefaultProjectTrust; // default: "ask"; global setting only
 	shellCommandPrefix?: string; // Prefix prepended to every bash command (e.g., "shopt -s expand_aliases" for alias support)
 	npmCommand?: string[]; // Command used for npm package lookup/install operations, argv-style (e.g., ["mise", "exec", "node@20", "--", "npm"])
-	enableAnalytics?: boolean; // default: false - opt-in analytics data sharing
-	trackingId?: string; // analytics tracking identifier, generated when analytics is enabled
 	packages?: PackageSource[]; // Array of package sources (npm/git/local or reserved pi: bundles; string or object with filtering)
 	extensions?: string[]; // Array of local extension file paths or directories
 	skills?: string[]; // Array of local skill file paths or directories
@@ -181,12 +173,7 @@ export interface Settings {
 	themes?: string[]; // Array of local theme file paths or directories
 	commands?: string[]; // Array of local package command file paths or directories
 	enableSkillCommands?: boolean; // default: true - register skills as /skill:name commands
-	terminal?: TerminalSettings;
 	enabledModels?: string[]; // Model patterns for cycling
-	doubleEscapeAction?: "fork" | "tree" | "none"; // Action for double-escape with empty editor (default: "tree")
-	treeFilterMode?: "default" | "no-tools" | "user-only" | "labeled-only" | "all"; // Default filter when opening /tree
-	editorPaddingX?: number; // Horizontal padding for input editor (default: 0)
-	autocompleteMaxVisible?: number; // Max visible items in autocomplete dropdown (default: 5)
 	showHardwareCursor?: boolean; // Show terminal cursor while still positioning it for IME
 	markdown?: MarkdownSettings;
 	apiUsageLogging?: ApiUsageLoggingSettings;
@@ -1002,25 +989,6 @@ export class SettingsManager {
 		this.save();
 	}
 
-	getEnableAnalytics(): boolean {
-		return this.settings.enableAnalytics ?? false;
-	}
-
-	getTrackingId(): string | undefined {
-		return this.settings.trackingId;
-	}
-
-	/** Set the analytics opt-in preference; generates a tracking identifier on first opt-in */
-	setEnableAnalytics(enabled: boolean): void {
-		this.globalSettings.enableAnalytics = enabled;
-		this.markModified("enableAnalytics");
-		if (enabled && !this.globalSettings.trackingId) {
-			this.globalSettings.trackingId = randomUUID();
-			this.markModified("trackingId");
-		}
-		this.save();
-	}
-
 	getPackages(): PackageSource[] {
 		return [...(this.settings.packages ?? [])];
 	}
@@ -1111,36 +1079,6 @@ export class SettingsManager {
 		this.save();
 	}
 
-	getClearOnShrink(): boolean {
-		// Settings takes precedence, then env var, then default false
-		if (this.settings.terminal?.clearOnShrink !== undefined) {
-			return this.settings.terminal.clearOnShrink;
-		}
-		return process.env.PI_CLEAR_ON_SHRINK === "1";
-	}
-
-	setClearOnShrink(enabled: boolean): void {
-		if (!this.globalSettings.terminal) {
-			this.globalSettings.terminal = {};
-		}
-		this.globalSettings.terminal.clearOnShrink = enabled;
-		this.markModified("terminal", "clearOnShrink");
-		this.save();
-	}
-
-	getShowTerminalProgress(): boolean {
-		return this.settings.terminal?.showTerminalProgress ?? false;
-	}
-
-	setShowTerminalProgress(enabled: boolean): void {
-		if (!this.globalSettings.terminal) {
-			this.globalSettings.terminal = {};
-		}
-		this.globalSettings.terminal.showTerminalProgress = enabled;
-		this.markModified("terminal", "showTerminalProgress");
-		this.save();
-	}
-
 	getEnabledModels(): string[] | undefined {
 		return this.settings.enabledModels;
 	}
@@ -1151,28 +1089,6 @@ export class SettingsManager {
 		this.save();
 	}
 
-	getDoubleEscapeAction(): "fork" | "tree" | "none" {
-		return this.settings.doubleEscapeAction ?? "tree";
-	}
-
-	setDoubleEscapeAction(action: "fork" | "tree" | "none"): void {
-		this.globalSettings.doubleEscapeAction = action;
-		this.markModified("doubleEscapeAction");
-		this.save();
-	}
-
-	getTreeFilterMode(): "default" | "no-tools" | "user-only" | "labeled-only" | "all" {
-		const mode = this.settings.treeFilterMode;
-		const valid = ["default", "no-tools", "user-only", "labeled-only", "all"];
-		return mode && valid.includes(mode) ? mode : "default";
-	}
-
-	setTreeFilterMode(mode: "default" | "no-tools" | "user-only" | "labeled-only" | "all"): void {
-		this.globalSettings.treeFilterMode = mode;
-		this.markModified("treeFilterMode");
-		this.save();
-	}
-
 	getShowHardwareCursor(): boolean {
 		return this.settings.showHardwareCursor ?? process.env.PI_HARDWARE_CURSOR === "1";
 	}
@@ -1180,26 +1096,6 @@ export class SettingsManager {
 	setShowHardwareCursor(enabled: boolean): void {
 		this.globalSettings.showHardwareCursor = enabled;
 		this.markModified("showHardwareCursor");
-		this.save();
-	}
-
-	getEditorPaddingX(): number {
-		return this.settings.editorPaddingX ?? 0;
-	}
-
-	setEditorPaddingX(padding: number): void {
-		this.globalSettings.editorPaddingX = Math.max(0, Math.min(3, Math.floor(padding)));
-		this.markModified("editorPaddingX");
-		this.save();
-	}
-
-	getAutocompleteMaxVisible(): number {
-		return this.settings.autocompleteMaxVisible ?? 5;
-	}
-
-	setAutocompleteMaxVisible(maxVisible: number): void {
-		this.globalSettings.autocompleteMaxVisible = Math.max(3, Math.min(20, Math.floor(maxVisible)));
-		this.markModified("autocompleteMaxVisible");
 		this.save();
 	}
 

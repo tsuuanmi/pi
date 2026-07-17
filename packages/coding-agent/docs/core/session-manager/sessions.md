@@ -90,7 +90,7 @@ Example shape:
 | Escape/Ctrl+C | Cancel |
 | Ctrl+O | Cycle filter mode |
 
-Filter modes are: default, no-tools, user-only, labeled-only, and all. Configure the default with `treeFilterMode` in [Settings](../settings/settings.md).
+Filter modes are: default, no-tools, user-only, labeled-only, and all.
 
 ### Selection Behavior
 

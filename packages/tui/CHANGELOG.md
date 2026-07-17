@@ -6,6 +6,7 @@
 
 - Removed Windows-specific terminal input helper packaging and Windows Terminal key heuristics.
 - Removed the Emacs-style kill ring from the editor and input components, including `KillRing`, the `yank`/`yankPop`/`insertYankedText`/`deleteYankedText` methods, and the `tui.editor.yank` / `tui.editor.yankPop` keybindings. Basic cut/paste and undo coalescing remain; deleted text is no longer accumulated into a yankable ring.
+- Removed editor padding configuration, autocomplete visible-item configuration, clear-on-shrink configuration, and OSC 9;4 terminal progress APIs.
 
 ### Added
 

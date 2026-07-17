@@ -204,8 +204,6 @@ class VimEditor implements EditorComponent {
 
   // Appearance (optional)
   borderColor?: (str: string) => string;
-  setPaddingX?(padding: number): void;
-  setAutocompleteMaxVisible?(maxVisible: number): void;
 
   // Required by Component
   render(width: number): string[] { /* ... */ }

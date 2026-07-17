@@ -69,15 +69,9 @@ export interface SettingsConfig {
 	currentTheme: string;
 	availableThemes: string[];
 	hideThinkingBlock: boolean;
-	doubleEscapeAction: "fork" | "tree" | "none";
-	treeFilterMode: "default" | "no-tools" | "user-only" | "labeled-only" | "all";
 	showHardwareCursor: boolean;
-	editorPaddingX: number;
-	autocompleteMaxVisible: number;
 	quietStartup: boolean;
 	defaultProjectTrust: DefaultProjectTrust;
-	clearOnShrink: boolean;
-	showTerminalProgress: boolean;
 	agentProfiles: AgentSettingsProfile[];
 	agentModelOverrides: Record<string, string>;
 	agentThinkingLevelOverrides: Record<string, ThinkingLevel>;
@@ -95,15 +89,9 @@ export interface SettingsCallbacks {
 	onThemeChange: (theme: string) => void;
 	onThemePreview?: (theme: string) => void;
 	onHideThinkingBlockChange: (hidden: boolean) => void;
-	onDoubleEscapeActionChange: (action: "fork" | "tree" | "none") => void;
-	onTreeFilterModeChange: (mode: "default" | "no-tools" | "user-only" | "labeled-only" | "all") => void;
 	onShowHardwareCursorChange: (enabled: boolean) => void;
-	onEditorPaddingXChange: (padding: number) => void;
-	onAutocompleteMaxVisibleChange: (maxVisible: number) => void;
 	onQuietStartupChange: (enabled: boolean) => void;
 	onDefaultProjectTrustChange: (defaultProjectTrust: DefaultProjectTrust) => void;
-	onClearOnShrinkChange: (enabled: boolean) => void;
-	onShowTerminalProgressChange: (enabled: boolean) => void;
 	onMainModelChange: (modelRef: string) => void;
 	onAgentModelOverrideChange: (agentName: string, modelRef: string | undefined) => void;
 	onAgentThinkingLevelOverrideChange: (agentName: string, level: ThinkingLevel | undefined) => void;
@@ -557,28 +545,8 @@ export class SettingsSelectorComponent extends Container {
 					}
 					break;
 				}
-				case "double-escape-action":
-					callbacks.onDoubleEscapeActionChange(newValue as "fork" | "tree" | "none");
-					break;
-				case "tree-filter-mode":
-					callbacks.onTreeFilterModeChange(
-						newValue as "default" | "no-tools" | "user-only" | "labeled-only" | "all",
-					);
-					break;
 				case "show-hardware-cursor":
 					callbacks.onShowHardwareCursorChange(newValue === "true");
-					break;
-				case "editor-padding":
-					callbacks.onEditorPaddingXChange(parseInt(newValue, 10));
-					break;
-				case "autocomplete-max-visible":
-					callbacks.onAutocompleteMaxVisibleChange(parseInt(newValue, 10));
-					break;
-				case "clear-on-shrink":
-					callbacks.onClearOnShrinkChange(newValue === "true");
-					break;
-				case "terminal-progress":
-					callbacks.onShowTerminalProgressChange(newValue === "true");
 					break;
 			}
 		};
@@ -684,38 +652,10 @@ export class SettingsSelectorComponent extends Container {
 				values: ["true", "false"],
 			},
 			{
-				id: "editor-padding",
-				label: "Editor padding",
-				description: "Horizontal padding for input editor (0-3)",
-				currentValue: String(config.editorPaddingX),
-				values: ["0", "1", "2", "3"],
-			},
-			{
-				id: "autocomplete-max-visible",
-				label: "Autocomplete max items",
-				description: "Max visible items in autocomplete dropdown (3-20)",
-				currentValue: String(config.autocompleteMaxVisible),
-				values: ["3", "5", "7", "10", "15", "20"],
-			},
-			{
 				id: "quiet-startup",
 				label: "Quiet startup",
 				description: "Disable verbose printing at startup",
 				currentValue: config.quietStartup ? "true" : "false",
-				values: ["true", "false"],
-			},
-			{
-				id: "clear-on-shrink",
-				label: "Clear on shrink",
-				description: "Clear empty rows when content shrinks (may cause flicker)",
-				currentValue: config.clearOnShrink ? "true" : "false",
-				values: ["true", "false"],
-			},
-			{
-				id: "terminal-progress",
-				label: "Terminal progress",
-				description: "Show OSC 9;4 progress indicators in the terminal tab bar",
-				currentValue: config.showTerminalProgress ? "true" : "false",
 				values: ["true", "false"],
 			},
 		];
@@ -727,20 +667,6 @@ export class SettingsSelectorComponent extends Container {
 				description: "Fallback behavior when no extension or saved trust decision decides project trust",
 				currentValue: DEFAULT_PROJECT_TRUST_LABELS[config.defaultProjectTrust],
 				values: Object.values(DEFAULT_PROJECT_TRUST_LABELS),
-			},
-			{
-				id: "double-escape-action",
-				label: "Double-escape action",
-				description: "Action when pressing Escape twice with empty editor",
-				currentValue: config.doubleEscapeAction,
-				values: ["tree", "fork", "none"],
-			},
-			{
-				id: "tree-filter-mode",
-				label: "Tree filter mode",
-				description: "Default filter when opening /tree",
-				currentValue: config.treeFilterMode,
-				values: ["default", "no-tools", "user-only", "labeled-only", "all"],
 			},
 		];
 

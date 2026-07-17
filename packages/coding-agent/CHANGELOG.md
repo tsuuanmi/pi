@@ -11,13 +11,14 @@
 - Removed the `/login` and `/logout` interactive slash commands; use `/account add` and `/account remove` instead.
 - Ultragoal `complete` checkpoints now hard-break to the full quality-gate object (`architectReview`, `executorQa`, and `iteration`) instead of the older top-level `{executorQa, contractCoverage}` shape; free-form `{status}`, legacy `codeReview`, top-level `contractCoverage`, and unsupported keys are rejected. Completion receipts now use the new schema-2 full-gate hash basis (including transition snapshot hashing for review-blocker supersession), and old receipts fail closed as stale/missing rather than being migrated or grandfathered.
 - Added a `ultragoal_guard` tool that returns a completion-receipt diagnostic (`inactive`, `unrelated_goal`, `active_verified_complete`, `active_missing_receipt`, `active_stale_receipt`, `active_missing_final_receipt`, `active_dirty_quality_gate`, `active_review_blocked_unrecorded`, `active_review_blocked_recorded`, `unreadable_fail_closed`).
-- Removed install/update telemetry: the `enableInstallTelemetry` setting (and `SettingsManager.getEnableInstallTelemetry`/`setEnableInstallTelemetry`), the `PI_TELEMETRY` env var, the settings UI toggle, and the anonymous `pi.dev/api/report-install` ping. The `enableAnalytics` setting is unaffected.
+- Removed install/update telemetry: the `enableInstallTelemetry` setting (and `SettingsManager.getEnableInstallTelemetry`/`setEnableInstallTelemetry`), the `PI_TELEMETRY` env var, the settings UI toggle, and the anonymous `pi.dev/api/report-install` ping.
 - Removed the Pi version-update check: the startup "new version available" notice, the `PI_SKIP_VERSION_CHECK` env var, `src/utils/system/version-check.ts` (and its test), and the `pi pkg self-update` pre-check that compared against `pi.dev/api/latest-version`. `pi pkg self-update` now always proceeds unless it fails to install; package (extension) update notifications are unaffected.
 - Removed the `github` and `report_finding` workflow harness tools (and the `github` tool test) from `extensions/workflow-tools.ts`. Agents can still run `gh` via the `bash` tool; subagents return results via `yield`.
 - Removed `src/utils/system/html.ts` and HTML-entity decoding from `renderHighlightedHtml` in the syntax highlighter; highlight.js entities (`&amp;`, `&lt;`, etc.) are now passed through as-is.
 - Removed the Termux documentation page (`docs/termux.md`) and its index/link references; Termux platform support code in the TUI, tool installer, and clipboard remains.
 - Removed the `doom-overlay`, `snake`, `space-invaders`, `plan-mode`, `sandbox`, `custom-provider-anthropic`, and `custom-provider-gitlab-duo` example extensions (and the `plan-mode-utils` test), and dropped the `custom-provider-anthropic`, `custom-provider-gitlab-duo`, and `sandbox` workspace entries from the root manifest.
 - Removed low-value interactive extras: the changelog notice, package update notification, tmux keyboard warning, automatic theme detection, terminal title updates, Ctrl-Z suspend handling, and the Anthropic subscription-auth warning. Also removed the unused `collapseChangelog`, `lastChangelogVersion`, and `warnings.anthropicExtraUsage` settings.
+- Removed low-ROI settings and UI extras: `enableAnalytics`, `trackingId`, `terminal.showTerminalProgress`, `terminal.clearOnShrink`, `editorPaddingX`, `autocompleteMaxVisible`, `doubleEscapeAction`, and `treeFilterMode`, along with the analytics first-time setup step and double-escape shortcut.
 
 ### Added
 
@@ -75,6 +76,7 @@
 
 ### Fixed
 
+- Reduced status-line flicker by refreshing git dirty counts every 30 seconds and skipping unchanged git-status re-renders.
 - Fixed bundled extension loading for imports from `@tsuuanmi/pi-agent/node`.
 - Fixed stale extension runners from emitting handlers after session replacement or reload, preventing stale context errors on later prompts.
 - Fixed spurious "Extension … error: This extension ctx is stale …" messages when an async event handler (e.g. a workflow-skill HUD handler) resumed after an `await` that straddled session replacement/reload. The stale-ctx throw is now treated as a benign lifecycle race (the owning session is gone) and no longer surfaces as an extension error via `ExtensionRunner.emitError`.

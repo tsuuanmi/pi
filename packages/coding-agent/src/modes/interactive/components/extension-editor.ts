@@ -7,16 +7,7 @@ import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import {
-	Container,
-	Editor,
-	type EditorOptions,
-	type Focusable,
-	getKeybindings,
-	Spacer,
-	Text,
-	type TUI,
-} from "@tsuuanmi/pi-tui";
+import { Container, Editor, type Focusable, getKeybindings, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
 import type { KeybindingsManager } from "../../../core/settings/keybindings.ts";
 import { getEditorTheme, theme } from "../../../theme/theme.ts";
 import { keyHint } from "../../../ui/rendering/keybinding-hints.ts";
@@ -45,7 +36,6 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 		prefill: string | undefined,
 		onSubmit: (value: string) => void,
 		onCancel: () => void,
-		options?: EditorOptions,
 	) {
 		super();
 
@@ -63,7 +53,7 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 		this.addChild(new Spacer(1));
 
 		// Create editor
-		this.editor = new Editor(tui, getEditorTheme(), options);
+		this.editor = new Editor(tui, getEditorTheme());
 		if (prefill) {
 			this.editor.setText(prefill);
 		}

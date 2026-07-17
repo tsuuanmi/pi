@@ -80,18 +80,12 @@ interface EditorTheme {
   selectList: SelectListTheme;
 }
 
-interface EditorOptions {
-  paddingX?: number; // Horizontal padding (default: 0)
-}
-
-const editor = new Editor(tui, theme, options?);
+const editor = new Editor(tui, theme);
 editor.onSubmit = (text) => console.log("Submitted:", text);
 editor.onChange = (text) => console.log("Changed:", text);
 editor.disableSubmit = true; // Disable submit temporarily
 editor.setAutocompleteProvider(provider);
 editor.borderColor = (s) => chalk.blue(s);
-editor.setPaddingX(1);
-editor.getPaddingX();
 ```
 
 **Features:**

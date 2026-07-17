@@ -222,11 +222,6 @@ export interface EditorTheme {
 	selectList: SelectListTheme;
 }
 
-export interface EditorOptions {
-	paddingX?: number;
-	autocompleteMaxVisible?: number;
-}
-
 const SLASH_COMMAND_SELECT_LIST_LAYOUT: SelectListLayoutOptions = {
 	minPrimaryColumnWidth: 12,
 	maxPrimaryColumnWidth: 32,
@@ -260,7 +255,6 @@ export class Editor implements Component, Focusable {
 
 	protected tui: TUI;
 	private theme: EditorTheme;
-	private paddingX: number = 0;
 
 	// Store last render width for cursor navigation
 	private lastWidth: number = 80;
@@ -279,7 +273,7 @@ export class Editor implements Component, Focusable {
 	private autocompleteList?: SelectList;
 	private autocompleteState: "regular" | "force" | null = null;
 	private autocompletePrefix: string = "";
-	private autocompleteMaxVisible: number = 5;
+	private readonly autocompleteVisibleItemLimit = 5;
 	private autocompleteAbort?: AbortController;
 	private autocompleteDebounceTimer?: ReturnType<typeof setTimeout>;
 	private autocompleteRequestTask: Promise<void> = Promise.resolve();
@@ -322,14 +316,10 @@ export class Editor implements Component, Focusable {
 	public onChange?: (text: string) => void;
 	public disableSubmit: boolean = false;
 
-	constructor(tui: TUI, theme: EditorTheme, options: EditorOptions = {}) {
+	constructor(tui: TUI, theme: EditorTheme) {
 		this.tui = tui;
 		this.theme = theme;
 		this.borderColor = theme.borderColor;
-		const paddingX = options.paddingX ?? 0;
-		this.paddingX = Number.isFinite(paddingX) ? Math.max(0, Math.floor(paddingX)) : 0;
-		const maxVisible = options.autocompleteMaxVisible ?? 5;
-		this.autocompleteMaxVisible = Number.isFinite(maxVisible) ? Math.max(3, Math.min(20, Math.floor(maxVisible))) : 5;
 	}
 
 	/** Set of currently valid paste IDs, for marker-aware segmentation. */
@@ -340,30 +330,6 @@ export class Editor implements Component, Focusable {
 	/** Segment text with paste-marker awareness, only merging markers with valid IDs. */
 	private segment(text: string, mode: "word" | "grapheme"): Iterable<Intl.SegmentData> {
 		return segmentWithMarkers(text, mode === "word" ? wordSegmenter : graphemeSegmenter, this.validPasteIds());
-	}
-
-	getPaddingX(): number {
-		return this.paddingX;
-	}
-
-	setPaddingX(padding: number): void {
-		const newPadding = Number.isFinite(padding) ? Math.max(0, Math.floor(padding)) : 0;
-		if (this.paddingX !== newPadding) {
-			this.paddingX = newPadding;
-			this.tui.requestRender();
-		}
-	}
-
-	getAutocompleteMaxVisible(): number {
-		return this.autocompleteMaxVisible;
-	}
-
-	setAutocompleteMaxVisible(maxVisible: number): void {
-		const newMaxVisible = Number.isFinite(maxVisible) ? Math.max(3, Math.min(20, Math.floor(maxVisible))) : 5;
-		if (this.autocompleteMaxVisible !== newMaxVisible) {
-			this.autocompleteMaxVisible = newMaxVisible;
-			this.tui.requestRender();
-		}
 	}
 
 	setAutocompleteProvider(provider: AutocompleteProvider): void {
@@ -460,13 +426,8 @@ export class Editor implements Component, Focusable {
 	}
 
 	render(width: number): string[] {
-		const maxPadding = Math.max(0, Math.floor((width - 1) / 2));
-		const paddingX = Math.min(this.paddingX, maxPadding);
-		const contentWidth = Math.max(1, width - paddingX * 2);
-
-		// Layout width: with padding the cursor can overflow into it,
-		// without padding we reserve 1 column for the cursor.
-		const layoutWidth = Math.max(1, contentWidth - (paddingX ? 0 : 1));
+		const contentWidth = Math.max(1, width);
+		const layoutWidth = Math.max(1, contentWidth - 1);
 
 		// Store for cursor navigation (must match wrapping width)
 		this.lastWidth = layoutWidth;
@@ -499,8 +460,6 @@ export class Editor implements Component, Focusable {
 		const visibleLines = layoutLines.slice(this.scrollOffset, this.scrollOffset + maxVisibleLines);
 
 		const result: string[] = [];
-		const leftPadding = " ".repeat(paddingX);
-		const rightPadding = leftPadding;
 
 		// Render top border (with scroll indicator if scrolled down)
 		if (this.scrollOffset > 0) {
@@ -524,7 +483,6 @@ export class Editor implements Component, Focusable {
 		for (const layoutLine of visibleLines) {
 			let displayText = layoutLine.text;
 			let lineVisibleWidth = visibleWidth(layoutLine.text);
-			let cursorInPadding = false;
 
 			// Add cursor if this line has it
 			if (layoutLine.hasCursor && layoutLine.cursorPos !== undefined) {
@@ -548,19 +506,14 @@ export class Editor implements Component, Focusable {
 					const cursor = "\x1b[7m \x1b[0m";
 					displayText = before + marker + cursor;
 					lineVisibleWidth = lineVisibleWidth + 1;
-					// If cursor overflows content width into the padding, flag it
-					if (lineVisibleWidth > contentWidth && paddingX > 0) {
-						cursorInPadding = true;
-					}
 				}
 			}
 
 			// Calculate padding based on actual visible width
 			const padding = " ".repeat(Math.max(0, contentWidth - lineVisibleWidth));
-			const lineRightPadding = cursorInPadding ? rightPadding.slice(1) : rightPadding;
 
 			// Render the line (no side borders, just horizontal lines above and below)
-			result.push(`${leftPadding}${displayText}${padding}${lineRightPadding}`);
+			result.push(`${displayText}${padding}`);
 		}
 
 		// Render bottom border (with scroll indicator if more content below)
@@ -579,7 +532,7 @@ export class Editor implements Component, Focusable {
 			for (const line of autocompleteResult) {
 				const lineWidth = visibleWidth(line);
 				const linePadding = " ".repeat(Math.max(0, contentWidth - lineWidth));
-				result.push(`${leftPadding}${line}${linePadding}${rightPadding}`);
+				result.push(`${line}${linePadding}`);
 			}
 		}
 
@@ -1935,7 +1888,7 @@ export class Editor implements Component, Focusable {
 		items: Array<{ value: string; label: string; description?: string }>,
 	): SelectList {
 		const layout = prefix.startsWith("/") ? SLASH_COMMAND_SELECT_LIST_LAYOUT : undefined;
-		return new SelectList(items, this.autocompleteMaxVisible, this.theme.selectList, layout);
+		return new SelectList(items, this.autocompleteVisibleItemLimit, this.theme.selectList, layout);
 	}
 
 	private tryTriggerAutocomplete(explicitTab: boolean = false): void {

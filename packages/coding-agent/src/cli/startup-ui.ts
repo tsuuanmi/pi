@@ -33,9 +33,7 @@ function isOfficialDistribution({ packageName, appName, configDirName }: Distrib
 function createStartupTui(settingsManager: SettingsManager): TUI {
 	initTheme(settingsManager.getTheme());
 	setKeybindings(KeybindingsManager.create());
-	const ui = new TUI(new ProcessTerminal(), settingsManager.getShowHardwareCursor());
-	ui.setClearOnShrink(settingsManager.getClearOnShrink());
-	return ui;
+	return new TUI(new ProcessTerminal(), settingsManager.getShowHardwareCursor());
 }
 
 async function clearStartupTui(ui: TUI): Promise<void> {
@@ -115,7 +113,6 @@ export async function showFirstTimeSetup(settingsManager: SettingsManager): Prom
 			settled = true;
 			if (result) {
 				settingsManager.setTheme(result.theme);
-				settingsManager.setEnableAnalytics(result.shareAnalytics);
 				await settingsManager.flush();
 			}
 			await clearStartupTui(ui);

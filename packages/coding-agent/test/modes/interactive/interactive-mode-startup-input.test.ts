@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AgentSession } from "../../../src/core/agent-session/agent-session.ts";
-import type { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
 import type { CustomEditor } from "../../../src/modes/interactive/components/custom-editor.ts";
 import { KeyHandlerController } from "../../../src/modes/interactive/controllers/key-handler-controller.ts";
 import { InteractiveMode } from "../../../src/modes/interactive/interactive-mode.ts";
@@ -59,7 +58,6 @@ describe("InteractiveMode startup input", () => {
 			getDefaultEditor: () => context.defaultEditor as CustomEditor,
 			getSession: () => context.session as AgentSession,
 			getEditor: () => context.editor as never,
-			getSettingsManager: () => ({}) as SettingsManager,
 			getIsBashMode: () => false,
 			setIsBashMode: () => {},
 			getOnInputCallback: () => context.onInputCallback,

@@ -26,8 +26,6 @@ interface EditorComponent extends Component {
 
   // Appearance (optional)
   borderColor?: (str: string) => string;
-  setPaddingX?(padding: number): void;
-  setAutocompleteMaxVisible?(maxVisible: number): void;
 }
 ```
 

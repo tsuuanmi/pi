@@ -19,8 +19,16 @@ import type { SegmentContext } from "./types.ts";
 
 /** Minimum gap (columns) between the left and right rail groups. */
 const MIN_PADDING = 2;
-/** Background-refresh debounce for both the git porcelain cache and the HUD. */
-const REFRESH_DEBOUNCE_MS = 1000;
+/** Background-refresh interval for the git porcelain cache. */
+const GIT_STATUS_REFRESH_MS = 30_000;
+/** Background-refresh interval for the workflow HUD cache. */
+const SKILL_HUD_REFRESH_MS = 1000;
+
+function areGitStatusSummariesEqual(a: GitStatusSummary | null, b: GitStatusSummary | null): boolean {
+	return (
+		a === b || Boolean(a && b && a.staged === b.staged && a.unstaged === b.unstaged && a.untracked === b.untracked)
+	);
+}
 
 /**
  * Status line component: renders the skill HUD line (when workflows are
@@ -30,8 +38,8 @@ const REFRESH_DEBOUNCE_MS = 1000;
  * Reuses `FooterDataProvider` for the git branch (`.git/HEAD` watch), extension
  * statuses, available provider count, and Codex quota summary — it does NOT
  * re-implement the git watcher. The only background refresh it owns is the
- * `git status --porcelain` counts cache (1s debounce, generation-guarded) and
- * the workflow active-state HUD cache (1s debounce, error-resilient).
+ * `git status --porcelain` counts cache (30s refresh, generation-guarded) and
+ * the workflow active-state HUD cache (1s refresh, error-resilient).
  */
 export class StatusLineComponent implements Component {
 	#session: AgentSession;
@@ -40,7 +48,7 @@ export class StatusLineComponent implements Component {
 	#requestRender: (() => void) | null;
 	#autoCompactEnabled = true;
 
-	// Git porcelain counts cache (1s debounce). `null` until the first fetch.
+	// Git porcelain counts cache (30s refresh). `null` until the first fetch.
 	#cachedGitStatus: GitStatusSummary | null = null;
 	#gitStatusLastFetch = 0;
 	#gitStatusInFlight = false;
@@ -48,7 +56,7 @@ export class StatusLineComponent implements Component {
 	// overwrite the newer cache state.
 	#gitGeneration = 0;
 
-	// Workflow HUD cache (1s debounce). `[]` until the first successful read.
+	// Workflow HUD cache (1s refresh). `[]` until the first successful read.
 	#skillHudEntries: WorkflowActiveEntry[] = [];
 	#skillHudLastFetch = 0;
 	#skillHudInFlight = false;
@@ -114,11 +122,11 @@ export class StatusLineComponent implements Component {
 
 	/**
 	 * Kick a background `git status --porcelain` fetch if the cache is stale
-	 * (1s debounce) and none is in flight. `runGitStatusPorcelain` is
+	 * (30s refresh) and none is in flight. `runGitStatusPorcelain` is
 	 * error-resilient, so this cannot throw on the render path.
 	 */
 	#refreshGitStatusInBackground(): void {
-		if (this.#gitStatusInFlight || Date.now() - this.#gitStatusLastFetch < REFRESH_DEBOUNCE_MS) {
+		if (this.#gitStatusInFlight || Date.now() - this.#gitStatusLastFetch < GIT_STATUS_REFRESH_MS) {
 			return;
 		}
 		this.#gitStatusInFlight = true;
@@ -136,10 +144,11 @@ export class StatusLineComponent implements Component {
 					this.#requestRender?.();
 					return;
 				}
+				const shouldRender = !areGitStatusSummariesEqual(this.#cachedGitStatus, result);
 				this.#cachedGitStatus = result;
 				this.#gitStatusLastFetch = Date.now();
 				this.#gitStatusInFlight = false;
-				this.#requestRender?.();
+				if (shouldRender) this.#requestRender?.();
 			} catch {
 				// runGitStatusPorcelain never rejects, but guard defensively.
 				this.#gitStatusInFlight = false;
@@ -149,12 +158,12 @@ export class StatusLineComponent implements Component {
 
 	/**
 	 * Kick a background workflow active-state read if the HUD cache is stale
-	 * (1s debounce) and none is in flight. The read + pipeline collapse are
+	 * (1s refresh) and none is in flight. The read + pipeline collapse are
 	 * wrapped so workflow-state failures never throw on the render path; on
 	 * failure `#skillHudEntries` is left unchanged.
 	 */
 	#refreshSkillHudInBackground(): void {
-		if (this.#skillHudInFlight || Date.now() - this.#skillHudLastFetch < REFRESH_DEBOUNCE_MS) {
+		if (this.#skillHudInFlight || Date.now() - this.#skillHudLastFetch < SKILL_HUD_REFRESH_MS) {
 			return;
 		}
 		this.#skillHudInFlight = true;

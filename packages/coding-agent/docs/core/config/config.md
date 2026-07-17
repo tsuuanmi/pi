@@ -51,7 +51,7 @@ areExperimentalFeaturesEnabled(): boolean  // Returns true when PI_EXPERIMENTAL=
 ```
 
 Currently experimental features include:
-- First-time setup flow with analytics opt-in
+- First-time setup flow
 - Additional provider features
 
 Set `PI_EXPERIMENTAL=1` to enable experimental features:

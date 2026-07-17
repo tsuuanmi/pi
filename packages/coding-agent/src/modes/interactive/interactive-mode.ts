@@ -277,19 +277,13 @@ export class InteractiveMode {
 		});
 		this.version = VERSION;
 		this.ui = new TUI(new ProcessTerminal(), this.settingsManager.getShowHardwareCursor());
-		this.ui.setClearOnShrink(this.settingsManager.getClearOnShrink());
 		this.headerContainer = new Container();
 		this.chatContainer = new Container();
 		this.pendingMessagesContainer = new Container();
 		this.statusContainer = new Container();
 		this.keybindings = KeybindingsManager.create();
 		setKeybindings(this.keybindings);
-		const editorPaddingX = this.settingsManager.getEditorPaddingX();
-		const autocompleteMaxVisible = this.settingsManager.getAutocompleteMaxVisible();
-		this.defaultEditor = new CustomEditor(this.ui, getEditorTheme(), this.keybindings, {
-			paddingX: editorPaddingX,
-			autocompleteMaxVisible,
-		});
+		this.defaultEditor = new CustomEditor(this.ui, getEditorTheme(), this.keybindings);
 		this.editor = this.defaultEditor;
 		this.editorContainer = new Container();
 		this.editorContainer.addChild(this.editor as Component);
@@ -405,7 +399,6 @@ export class InteractiveMode {
 			getDefaultEditor: () => this.defaultEditor,
 			getSession: () => this.session,
 			getEditor: () => this.editor,
-			getSettingsManager: () => this.settingsManager,
 			getIsBashMode: () => this.isBashMode,
 			setIsBashMode: (isBashMode) => {
 				this.isBashMode = isBashMode;
@@ -824,15 +817,6 @@ export class InteractiveMode {
 		this._accountAuthController.resetCodexUsageCache();
 		this.hideThinkingBlock = this.settingsManager.getHideThinkingBlock();
 		this.ui.setShowHardwareCursor(this.settingsManager.getShowHardwareCursor());
-		this.ui.setClearOnShrink(this.settingsManager.getClearOnShrink());
-		const editorPaddingX = this.settingsManager.getEditorPaddingX();
-		const autocompleteMaxVisible = this.settingsManager.getAutocompleteMaxVisible();
-		this.defaultEditor.setPaddingX(editorPaddingX);
-		this.defaultEditor.setAutocompleteMaxVisible(autocompleteMaxVisible);
-		if (this.editor !== this.defaultEditor) {
-			this.editor.setPaddingX?.(editorPaddingX);
-			this.editor.setAutocompleteMaxVisible?.(autocompleteMaxVisible);
-		}
 	}
 
 	private async rebindCurrentSession(): Promise<void> {
@@ -1111,10 +1095,6 @@ export class InteractiveMode {
 			if (newEditor.borderColor !== undefined) {
 				newEditor.borderColor = this.defaultEditor.borderColor;
 			}
-			if (newEditor.setPaddingX !== undefined) {
-				newEditor.setPaddingX(this.defaultEditor.getPaddingX());
-			}
-
 			// Set autocomplete if supported
 			if (newEditor.setAutocompleteProvider && this.autocompleteProvider) {
 				newEditor.setAutocompleteProvider(this.autocompleteProvider);
@@ -1188,9 +1168,6 @@ export class InteractiveMode {
 		switch (event.type) {
 			case "agent_start":
 				this.pendingTools.clear();
-				if (this.settingsManager.getShowTerminalProgress()) {
-					this.ui.terminal.setProgress(true);
-				}
 				// Restore main escape handler if retry handler is still active
 				// (retry success event fires later, but we need main handler now)
 				if (this.retryEscapeHandler) {
@@ -1373,9 +1350,6 @@ export class InteractiveMode {
 
 			case "agent_end":
 				void this._accountAuthController.refreshCodexUsageSummary(false);
-				if (this.settingsManager.getShowTerminalProgress()) {
-					this.ui.terminal.setProgress(false);
-				}
 				if (this.loadingAnimation) {
 					this.loadingAnimation.stop();
 					this.loadingAnimation = undefined;
@@ -1394,9 +1368,6 @@ export class InteractiveMode {
 				break;
 
 			case "compaction_start": {
-				if (this.settingsManager.getShowTerminalProgress()) {
-					this.ui.terminal.setProgress(true);
-				}
 				// Keep editor active; submissions are queued during compaction.
 				this.autoCompactionEscapeHandler = this.defaultEditor.onEscape;
 				this.defaultEditor.onEscape = () => {
@@ -1420,9 +1391,6 @@ export class InteractiveMode {
 			}
 
 			case "compaction_end": {
-				if (this.settingsManager.getShowTerminalProgress()) {
-					this.ui.terminal.setProgress(false);
-				}
 				if (this.autoCompactionEscapeHandler) {
 					this.defaultEditor.onEscape = this.autoCompactionEscapeHandler;
 					this.autoCompactionEscapeHandler = undefined;
@@ -2346,16 +2314,7 @@ export class InteractiveMode {
 			if (!themeResult.success) {
 				this.showError(`Failed to load theme "${themeName}": ${themeResult.error}\nFell back to dark theme.`);
 			}
-			const editorPaddingX = this.settingsManager.getEditorPaddingX();
-			const autocompleteMaxVisible = this.settingsManager.getAutocompleteMaxVisible();
-			this.defaultEditor.setPaddingX(editorPaddingX);
-			this.defaultEditor.setAutocompleteMaxVisible(autocompleteMaxVisible);
-			if (this.editor !== this.defaultEditor) {
-				this.editor.setPaddingX?.(editorPaddingX);
-				this.editor.setAutocompleteMaxVisible?.(autocompleteMaxVisible);
-			}
 			this.ui.setShowHardwareCursor(this.settingsManager.getShowHardwareCursor());
-			this.ui.setClearOnShrink(this.settingsManager.getClearOnShrink());
 			this.setupAutocompleteProvider();
 			const runner = this.session.extensionRunner;
 			this.setupExtensionShortcuts(runner);
@@ -2578,9 +2537,6 @@ export class InteractiveMode {
 	}
 
 	stop(): void {
-		if (this.settingsManager.getShowTerminalProgress()) {
-			this.ui.terminal.setProgress(false);
-		}
 		if (this.loadingAnimation) {
 			this.loadingAnimation.stop();
 			this.loadingAnimation = undefined;
