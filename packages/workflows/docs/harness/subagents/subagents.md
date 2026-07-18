@@ -1,30 +1,35 @@
 # Subagent Workflow Control Plane
 
-Workflow subagents use one canonical route: `pi workflow ...` commands. The old model-visible workflow subagent tools are not registered.
+Workflow subagents use one canonical route: **model-visible spawn tools** that call the main session's `SubagentManager` directly in-process. The old `pi workflow ...` spawn commands are removed. pi-agent owns the agent/subagent process; pi-workflows registers the spawn tools and owns turn order, guarded role checks, and result→artifact handoff.
 
-**Source:** `src/harness/runtime/owner.ts`, `src/commands/workflow.ts`
+**Source:** `src/harness/subagents/subagent-tools.ts`, `src/harness/ralplan/ralplan-tools.ts`, `src/harness/team/team-tools.ts`, `src/harness/ultragoal/ultragoal-tools.ts`, `src/extensions/workflows.ts`
 
-## Canonical Commands
+## Canonical spawn tools
 
-- `pi workflow subagents <spawn|status|await|steer|pause|resume|cancel>` — generic subagent control-plane operations routed through the detached `RuntimeOwner` to the registered Pi `SubagentManager`.
-- `pi workflow team spawn-task-agent` — state-guarded team worker spawn. The command computes the legal next team role from team state and refuses off-script task ids or runtime model/tool overrides.
-- `pi workflow ultragoal spawn-goal-agent` — state-guarded ultragoal worker spawn. The command computes the legal next goal role from ultragoal state and refuses off-script goal ids or runtime model/tool overrides.
-- `pi workflow ralplan run-agent` — state-guarded ralplan role-agent runner.
+- `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel` — generic subagent control, calling the main session's `SubagentManager` directly.
+- `ralplan_run_agent` — spawns a ralplan role agent (planner/architect/critic) as an ordinary subagent, writes the result as an artifact, and drives the next turn. Guarded: the workflow computes the legal next role and refuses off-script spawns or runtime model/tool overrides.
+- `team_spawn_task_agent` — spawns a team worker as an ordinary subagent. Guarded: computes the legal next team task, refuses off-script task ids or overrides.
+- `ultragoal_spawn_goal_agent` — spawns an ultragoal worker as an ordinary subagent. Guarded: computes the legal next goal, refuses off-script goal ids or overrides.
 
 Subagent records persist under `.pi/<session-id>/state/subagents/` using the agent-layer record format.
 
+## Why tools, not commands
+
+A `pi workflow` CLI command is a short-lived separate process; it has no `SubagentManager` and cannot run an agent. Only the main interactive `AgentSession` holds a `SubagentManager` (the only place that can spawn and run a child agent to completion). So spawning must happen in-process in the main session, via a model-visible tool — exactly how any normal subagent is spawned. There is no socket hop and no isolated workflow runtime for spawning. The role agents are ordinary subagents; the workflow's special part is the turn order, the guarded role check, and writing the result as an artifact for the next agent.
+
 ## Guardrails
 
-- Workflow-owned spawn commands are deterministic and fail closed on role mismatches.
-- Runtime `model`, `thinkingLevel`, `tools`, and `excludeTools` overrides are rejected on guarded workflow-owned spawn paths.
-- Generic `pi workflow subagents spawn` remains available for non-workflow-owned subagent operations.
+- Spawn tools are deterministic and fail closed on role mismatches (`assertExpectedNextRole`).
+- Runtime `model`, `thinkingLevel`, `tools`, and `excludeTools` overrides are rejected on the guarded workflow spawn paths (`assertNoGuardedSpawnOverrides`).
+- A `sessionId` is required on every `pi workflow ...` skill verb (deep-interview, ralplan, team, ultragoal) and on `pi workflow start`; no verb mints a session id. Spawn tools read the session id from `ctx.sessionManager.getSessionId()`, so it cannot be forgotten or mismatched.
 
-## Current-Session Owner-Backed Spawning
+## What stays as `pi workflow` commands
 
-- Subagent spawning is owner-backed: it requires a live runtime owner, and that owner must belong to the current workflow/interactive session. A live owner for a different session does not satisfy the spawn requirement.
-- The current interactive Pi session is the owner context. Subagents are children managed by that session's runtime owner, not by a separate independent owner session. This keeps HUD updates, pause/cancel/status/await, and artifacts coherent under one session id.
-- One-shot `pi workflow ...` CLI invocations do not construct a `SubagentManager` and have no live owner, so guarded spawn and `pi workflow ralplan run-agent` fail closed with `owner-not-live` (or `ralplan role agents require Pi-native subagents`) when run from outside a live session. This is expected behavior, not a bug.
-- To run guarded spawns or role-agent passes, open/attach to the workflow session inside an interactive Pi runtime so the current-session owner is live.
+Non-spawn verbs remain commands (pure state file reads/writes, no agent process): `ralplan status/doctor/write-artifact/approve-plan/record-explorer-gate/read-compact`, `team start/snapshot/create-task/transition-task/send-message/record-review-gate/record-completion-gate/complete/read-compact`, `ultragoal create-plan/status/start-next/checkpoint/record-review-blockers/classify-blocker/guard/read-compact`, `deep-interview plan-question/record-answer/...`, plus the control plane (`start/observe/classify/recover/validate/finalize/operate/gc/events/retire`). The detached `RuntimeOwner` is lifecycle-only (no `SubagentManager`).
+
+## Removed command verbs
+
+`pi workflow subagents <spawn|status|await|steer|pause|resume|cancel>`, `pi workflow ralplan run-agent`, `pi workflow team spawn-task-agent`, and `pi workflow ultragoal spawn-goal-agent` are removed. Calling them errors with a message pointing to the corresponding model-visible tool.
 
 ## See Also
 

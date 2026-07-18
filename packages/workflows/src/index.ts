@@ -27,7 +27,6 @@ export * from "./harness/ralplan/ralplan-hud.ts";
 export * from "./harness/ralplan/ralplan-obstacles.ts";
 export * from "./harness/ralplan/ralplan-runtime.ts";
 export * from "./harness/ralplan/ralplan-verdicts.ts";
-// Harness runtime
 export * from "./harness/runtime/endpoint.ts";
 export * from "./harness/runtime/gc.ts";
 export * from "./harness/runtime/lease.ts";
@@ -80,6 +79,7 @@ export {
 	type DeepInterviewHandoff,
 	requireSubagentManager,
 } from "./harness/shared/workflow-tool-utils.ts";
+// Harness runtime
 export * from "./harness/team/team-compact.ts";
 export * from "./harness/team/team-hud.ts";
 export * from "./harness/team/team-runtime.ts";

@@ -12,7 +12,7 @@ Team coordinates multiple implementation workstreams. Use it only after the user
 
 - When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source) — do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution.
 - Keep all Team state, task records, messages, and gate artifacts under one session id for one logical team run. Do not scatter one run across multiple `.pi/<session-id>` buckets.
-- `pi workflow team spawn-task-agent` is a guarded spawn that requires a live runtime owner for the current session; it fails closed without one. The current interactive session is the owner context — subagents are children of that session's runtime owner, not a separate independent owner.
+- `team_spawn_task_agent` is a guarded spawn tool that spawns a team worker as an ordinary subagent of the main session. The workflow computes the legal next team task and refuses off-script task ids or runtime model/tool overrides. The spawn happens in-process in the main session; there is no `pi workflow` command for it.
 
 ## Boundaries
 
@@ -36,7 +36,7 @@ Team coordinates multiple implementation workstreams. Use it only after the user
 6. Persist each workstream with `pi workflow team create-task`.
 7. Use `pi workflow team transition-task` for task starts, blocking, failure, and completion. Completed tasks require completion evidence.
 8. Use `pi workflow team send-message` to record cross-workstream coordination decisions.
-9. Spawn workers only through the guarded `pi workflow team spawn-task-agent` route when subagents are needed; otherwise coordinate implementation in the main session.
+9. Spawn workers only through the guarded `team_spawn_task_agent` route when subagents are needed; otherwise coordinate implementation in the main session.
 10. Merge results carefully, resolve conflicts, and run requested checks.
 11. Close the run with `pi workflow team complete` after integration/verification, then summarize completed work, changed files, verification, and remaining risks.
 

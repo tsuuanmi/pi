@@ -13,8 +13,6 @@ import type {
 	DeepInterviewAdvisoryMetadata,
 	DeepInterviewRoundRecord,
 } from "../harness/deep-interview/deep-interview-state.ts";
-import type { RalplanAgentRole } from "../harness/ralplan/ralplan-agents.ts";
-import { runRalplanAgent } from "../harness/ralplan/ralplan-agents.ts";
 import { recordRalplanExplorerGateArtifact } from "../harness/ralplan/ralplan-gates.ts";
 import type { RalplanApprovalTarget } from "../harness/ralplan/ralplan-runtime.ts";
 import {
@@ -24,15 +22,9 @@ import {
 	readRalplanStatus,
 	writeRalplanArtifact,
 } from "../harness/ralplan/ralplan-runtime.ts";
-import {
-	assertExpectedNextRole,
-	assertNoGuardedSpawnOverrides,
-	type ExpectedNextRole,
-} from "../harness/shared/expected-next-role.ts";
 import { handoffWorkflow } from "../harness/shared/handoff.ts";
 import type { RalplanStage } from "../harness/shared/paths.ts";
 import { deepInterviewIndexPath, deepInterviewSpecPath } from "../harness/shared/session-layout.ts";
-import { expectedNextRoleForSkill } from "../harness/shared/skill-registry.ts";
 import { assertSafePathComponent } from "../harness/shared/state-schema.ts";
 import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "../harness/shared/state-writer.ts";
 import { defaultWorkflowId } from "../harness/shared/workflow-id.ts";
@@ -83,7 +75,6 @@ import { buildResponse, submitUnavailableReason } from "../harness/runtime/state
 import {
 	canonicalWorkspacePath,
 	defaultRepoName,
-	generateSessionId,
 	readEvents,
 	readRuntimeReceipts,
 	readSessionState,
@@ -313,7 +304,7 @@ async function start(input: Record<string, unknown>, json: boolean): Promise<Wor
 	assertDetachedInteractiveAllowed(input, input.detach === true);
 	const workspace = canonicalWorkspacePath(inputString(input, "workspace") ?? process.cwd());
 	const root = resolveHarnessRoot({ root: inputString(input, "root"), cwd: workspace });
-	const sessionId = inputString(input, "sessionId") ?? generateSessionId();
+	const sessionId = sessionIdFromInput(input);
 	const now = new Date().toISOString();
 	const handle = buildHandle(input, root, sessionId, now);
 	const state: SessionState = {
@@ -567,52 +558,6 @@ async function events(input: Record<string, unknown>, json: boolean): Promise<Wo
 	return { status: 0, stdout: output(buildResponse(state, false, { events: rows }), json), stderr: "" };
 }
 
-async function routeGuardedSubagentSpawn(
-	root: string,
-	state: SessionState,
-	expected: ExpectedNextRole | undefined,
-	actual: Parameters<typeof assertExpectedNextRole>[1],
-	input: Record<string, unknown>,
-	json: boolean,
-): Promise<WorkflowCommandResult> {
-	if (!expected) throw new Error("off-script spawn refused: no expected next role");
-	assertExpectedNextRole(expected, actual);
-	const ownerResponse = await routeToOwner(root, state, "subagents.spawn", { ...input, action: "spawn" }).catch(
-		() => undefined,
-	);
-	if (ownerResponse)
-		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
-	const reason = "owner-not-live";
-	return {
-		status: 1,
-		stdout: output(buildResponse(state, false, { accepted: false, action: "spawn", reason }, false, reason), json),
-		stderr: "",
-	};
-}
-
-async function subagents(
-	action: string | undefined,
-	input: Record<string, unknown>,
-	json: boolean,
-): Promise<WorkflowCommandResult> {
-	const allowed = new Set(["spawn", "status", "await", "steer", "pause", "resume", "cancel"]);
-	if (!action || !allowed.has(action))
-		throw new Error("pi workflow subagents requires <spawn|status|await|steer|pause|resume|cancel>");
-	assertDetachedInteractiveAllowed(input, action === "spawn" && input.detach !== false);
-	const { root, state } = await loadState(input);
-	const ownerResponse = await routeToOwner(root, state, `subagents.${action}`, { ...input, action }).catch(
-		() => undefined,
-	);
-	if (ownerResponse)
-		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
-	const reason = "owner-not-live";
-	return {
-		status: 1,
-		stdout: output(buildResponse(state, false, { accepted: false, action, reason }, false, reason), json),
-		stderr: "",
-	};
-}
-
 async function retire(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
 	const ownerResponse = await routeToOwner(root, state, "retire", input).catch(() => undefined);
@@ -665,7 +610,7 @@ async function deepInterviewVerb(
 	json: boolean,
 	cwd: string,
 ): Promise<WorkflowCommandResult> {
-	const sessionId = inputString(input, "sessionId") ?? generateSessionId();
+	const sessionId = sessionIdFromInput(input);
 	const valid = new Set([
 		"plan-question",
 		"record-answer",
@@ -811,7 +756,7 @@ async function ralplanVerb(
 	json: boolean,
 	cwd: string,
 ): Promise<WorkflowCommandResult> {
-	const sessionId = inputString(input, "sessionId") ?? generateSessionId();
+	const sessionId = sessionIdFromInput(input);
 	const valid = new Set([
 		"record-explorer-gate",
 		"run-agent",
@@ -837,24 +782,9 @@ async function ralplanVerb(
 			break;
 		}
 		case "run-agent": {
-			body = await runRalplanAgent(
-				cwd,
-				{
-					runId: inputString(input, "runId"),
-					stage: requiredString(input, "stage") as RalplanStage,
-					stageN: requiredNumber(input, "stageN"),
-					role: inputString(input, "role") as RalplanAgentRole,
-					task: requiredString(input, "task"),
-					contextArtifacts: (input.contextArtifacts as string[]) ?? [],
-					deliberate: input.deliberate === true,
-					dryRun: input.dryRun === true,
-					plannerSubagentId: inputString(input, "plannerSubagentId"),
-					attemptResume: input.attemptResume === true,
-					excludeTools: (input.excludeTools as string[]) ?? undefined,
-				},
-				sessionId,
+			throw new Error(
+				"pi workflow ralplan run-agent is removed; use the ralplan_run_agent model-visible tool to spawn a ralplan role agent",
 			);
-			break;
 		}
 		case "write-artifact": {
 			body = await writeRalplanArtifact(
@@ -904,7 +834,7 @@ async function teamVerb(
 	json: boolean,
 	cwd: string,
 ): Promise<WorkflowCommandResult> {
-	const sessionId = inputString(input, "sessionId") ?? generateSessionId();
+	const sessionId = sessionIdFromInput(input);
 	const valid = new Set([
 		"start",
 		"snapshot",
@@ -1021,28 +951,8 @@ async function teamVerb(
 			break;
 		}
 		case "spawn-task-agent": {
-			assertNoGuardedSpawnOverrides(input);
-			const { root, state } = await loadState({ ...input, workspace: cwd });
-			const taskId = requiredString(input, "taskId");
-			const teamId = inputString(input, "teamId");
-			const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
-			const expected = expectedNextRoleForSkill({ skill: "team", state: snapshot });
-			return routeGuardedSubagentSpawn(
-				root,
-				state,
-				expected,
-				{ skill: "team", stage: "task-worker", role: "worker", owner: "team_spawn_task_agent", teamId, taskId },
-				{
-					role: inputString(input, "role") ?? "worker",
-					label: `team worker ${teamId ?? "default"}/${taskId}`,
-					prompt: requiredString(input, "prompt"),
-					cwd,
-					persistent: true,
-					parentSessionId: sessionId,
-					teamId,
-					taskId,
-				},
-				json,
+			throw new Error(
+				"pi workflow team spawn-task-agent is removed; use the team_spawn_task_agent model-visible tool to spawn a team worker",
 			);
 		}
 	}
@@ -1055,7 +965,7 @@ async function ultragoalVerb(
 	json: boolean,
 	cwd: string,
 ): Promise<WorkflowCommandResult> {
-	const sessionId = inputString(input, "sessionId") ?? generateSessionId();
+	const sessionId = sessionIdFromInput(input);
 	const valid = new Set([
 		"create-plan",
 		"status",
@@ -1139,32 +1049,8 @@ async function ultragoalVerb(
 			break;
 		}
 		case "spawn-goal-agent": {
-			assertNoGuardedSpawnOverrides(input);
-			const { root, state } = await loadState({ ...input, workspace: cwd });
-			const goalId = requiredString(input, "goalId");
-			const status = await getUltragoalStatus(cwd, sessionId);
-			const expected = expectedNextRoleForSkill({ skill: "ultragoal", state: status });
-			return routeGuardedSubagentSpawn(
-				root,
-				state,
-				expected,
-				{
-					skill: "ultragoal",
-					stage: "goal-worker",
-					role: "worker",
-					owner: "ultragoal_spawn_goal_agent",
-					taskId: goalId,
-				},
-				{
-					role: inputString(input, "role") ?? "worker",
-					label: `ultragoal worker ${goalId}`,
-					prompt: requiredString(input, "prompt"),
-					cwd,
-					persistent: true,
-					parentSessionId: sessionId,
-					goalId,
-				},
-				json,
+			throw new Error(
+				"pi workflow ultragoal spawn-goal-agent is removed; use the ultragoal_spawn_goal_agent model-visible tool to spawn an ultragoal worker",
 			);
 		}
 	}
@@ -1187,8 +1073,13 @@ async function dispatch(parsed: ParsedWorkflowCommand, cwd: string): Promise<Wor
 	if (parsed.verb === "finalize") return finalize(input, parsed.json);
 	if (parsed.verb === "operate") return operateCmd(input, parsed.json);
 	if (parsed.verb === "subagent")
-		throw new Error("unsupported singular workflow subagent form; use the plural subagents command");
-	if (parsed.verb === "subagents") return subagents(parsed.subverb, input, parsed.json);
+		throw new Error(
+			"unsupported singular workflow subagent form; subagent spawning is a model-visible tool, not a pi workflow command",
+		);
+	if (parsed.verb === "subagents")
+		throw new Error(
+			"pi workflow subagents is removed; use the subagent_spawn / subagent_status / subagent_await / subagent_steer / subagent_pause / subagent_resume / subagent_cancel model-visible tools instead",
+		);
 	if (parsed.verb === "gc") return gc({ prune: parsed.prune, dryRun: parsed.dryRun, json: parsed.json, input, cwd });
 	if (parsed.verb === "events") return events(input, parsed.json);
 	if (parsed.verb === "retire") return retire(input, parsed.json);

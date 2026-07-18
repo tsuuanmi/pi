@@ -22,6 +22,7 @@ export interface SessionPaths {
 	receipts: string;
 	receiptsDir: string;
 	piSessionDir: string;
+	/** Owner control socket: lifecycle verbs (observe/classify/recover/validate/finalize/operate/submit/retire). */
 	controlSock: string;
 }
 

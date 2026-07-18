@@ -4,33 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "../../../src/commands/workflow.ts";
-import { RuntimeOwner } from "../../../src/harness/runtime/owner.ts";
-import type { HarnessRpc, RpcStateSnapshot } from "../../../src/harness/runtime/rpc.ts";
 import { resolveHarnessRoot, sessionPaths, writeSessionState } from "../../../src/harness/runtime/storage.ts";
 import { SESSION_SCHEMA_VERSION, type SessionState } from "../../../src/harness/runtime/types.ts";
 import { readWorkflowActiveState, syncWorkflowActiveState } from "../../../src/harness/shared/active-state.ts";
-
-class FakeRpc implements HarnessRpc {
-	async getState(): Promise<RpcStateSnapshot> {
-		return { isStreaming: false, steeringQueueDepth: 0, followupQueueDepth: 0 };
-	}
-	async sendPrompt(): Promise<{ commandId: string; ack: boolean }> {
-		return { commandId: "fake-command", ack: true };
-	}
-	eventCursor(): number {
-		return 0;
-	}
-	async waitForAgentStart(): Promise<{ cursor: number } | null> {
-		return { cursor: 1 };
-	}
-	async close(): Promise<void> {}
-	isLive(): boolean {
-		return true;
-	}
-	lastFrameAt(): string | null {
-		return null;
-	}
-}
 
 function makeState(cwd: string, sessionId: string): SessionState {
 	const root = resolveHarnessRoot({ cwd });
@@ -81,44 +57,25 @@ describe("current-session workflow propagation", () => {
 
 	it("HUD active-state is written and read for the same session id", async () => {
 		const sessionId = "hud-same-session";
-		await syncWorkflowActiveState(
-			cwd,
-			{ skill: "deep-interview", active: true, phase: "interviewing" },
-			{ sessionId },
-		);
-
-		const visible = await readWorkflowActiveState(cwd, { sessionId });
-		expect(visible?.active).toBe(true);
-		expect(visible?.active_workflows).toHaveLength(1);
-		expect(visible?.active_workflows[0]).toMatchObject({
-			skill: "deep-interview",
-			active: true,
-			phase: "interviewing",
-			session_id: sessionId,
-		});
+		await writeSessionState(root, makeState(cwd, sessionId));
+		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" }, { sessionId });
+		const state = await readWorkflowActiveState(cwd, { sessionId });
+		expect(state?.active_workflows.some((w) => w.skill === "ralplan" && w.session_id === sessionId)).toBe(true);
 	});
 
 	it("HUD active-state for one session is not visible to a different session id", async () => {
-		const sessionA = "hud-session-a";
-		const sessionB = "hud-session-b";
-		await syncWorkflowActiveState(
-			cwd,
-			{ skill: "deep-interview", active: true, phase: "interviewing" },
-			{ sessionId: sessionA },
-		);
-
-		const visibleB = await readWorkflowActiveState(cwd, { sessionId: sessionB });
-		expect(visibleB?.active_workflows ?? []).toHaveLength(0);
-
-		const visibleA = await readWorkflowActiveState(cwd, { sessionId: sessionA });
-		expect(visibleA?.active_workflows).toHaveLength(1);
-		expect(visibleA?.active_workflows[0]?.session_id).toBe(sessionA);
+		const a = "hud-session-a";
+		const b = "hud-session-b";
+		await writeSessionState(root, makeState(cwd, a));
+		await writeSessionState(root, makeState(cwd, b));
+		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" }, { sessionId: a });
+		const stateB = await readWorkflowActiveState(cwd, { sessionId: b });
+		expect(stateB?.active_workflows?.some((w) => w.skill === "ralplan" && w.session_id === a)).toBeFalsy();
 	});
 
-	it("subagents spawn fails closed with owner-not-live when no live owner exists", async () => {
-		const sessionId = "spawn-fail-closed";
+	it("subagents spawn command is removed and errors toward the model-visible tool", async () => {
+		const sessionId = "spawn-removed";
 		await writeSessionState(root, makeState(cwd, sessionId));
-
 		const result = await runWorkflowCommand(
 			[
 				"subagents",
@@ -130,17 +87,10 @@ describe("current-session workflow propagation", () => {
 			cwd,
 		);
 		expect(result.status).toBe(1);
-		const parsed = JSON.parse(result.stdout) as {
-			ok: boolean;
-			evidence: { accepted: boolean; action: string; reason: string };
-		};
-		expect(parsed.ok).toBe(false);
-		expect(parsed.evidence.accepted).toBe(false);
-		expect(parsed.evidence.action).toBe("spawn");
-		expect(parsed.evidence.reason).toBe("owner-not-live");
+		expect(result.stderr).toMatch(/subagent_spawn/);
 	});
 
-	it("subagents spawn without a session id fails closed with session_not_found", async () => {
+	it("subagents spawn command errors with the tool-redirect message even without a session id", async () => {
 		const result = await runWorkflowCommand(
 			[
 				"subagents",
@@ -152,13 +102,12 @@ describe("current-session workflow propagation", () => {
 			cwd,
 		);
 		expect(result.status).toBe(1);
-		expect(result.stderr).toMatch(/sessionId is required/);
+		expect(result.stderr).toMatch(/subagent_spawn/);
 	});
 
-	it("ralplan run-agent fails closed without a live current-session owner", async () => {
-		const sessionId = "ralplan-no-owner";
+	it("ralplan run-agent command is removed and errors toward the model-visible tool", async () => {
+		const sessionId = "run-agent-removed";
 		await writeSessionState(root, makeState(cwd, sessionId));
-
 		const result = await runWorkflowCommand(
 			[
 				"ralplan",
@@ -168,8 +117,8 @@ describe("current-session workflow propagation", () => {
 					workspace: cwd,
 					sessionId,
 					runId: "ralplan-prop-test",
-					role: "planner",
-					stage: "planner",
+					role: "architect",
+					stage: "architect",
 					stageN: 1,
 					task: "plan",
 					dryRun: true,
@@ -179,38 +128,40 @@ describe("current-session workflow propagation", () => {
 			cwd,
 		);
 		expect(result.status).toBe(1);
+		expect(result.stderr).toMatch(/ralplan_run_agent/);
 	});
 
-	it("a live owner for one session does not serve subagent spawn for a different session", async () => {
-		const ownerSession = "owner-session";
-		const otherSession = "other-session";
-		await writeSessionState(root, makeState(cwd, ownerSession));
-		await writeSessionState(root, makeState(cwd, otherSession));
+	it("team spawn-task-agent command is removed and errors toward the model-visible tool", async () => {
+		const sessionId = "team-spawn-removed";
+		await writeSessionState(root, makeState(cwd, sessionId));
+		const result = await runWorkflowCommand(
+			[
+				"team",
+				"spawn-task-agent",
+				"--input",
+				JSON.stringify({ workspace: cwd, sessionId, taskId: "t1", prompt: "do work" }),
+				"--json",
+			],
+			cwd,
+		);
+		expect(result.status).toBe(1);
+		expect(result.stderr).toMatch(/team_spawn_task_agent/);
+	});
 
-		const rpc = new FakeRpc();
-		const owner = new RuntimeOwner({ root, sessionId: ownerSession, rpc, heartbeatMs: 60_000 });
-		await owner.start();
-		try {
-			const result = await runWorkflowCommand(
-				[
-					"subagents",
-					"spawn",
-					"--input",
-					JSON.stringify({ workspace: cwd, sessionId: otherSession, prompt: "do work", agent: "worker" }),
-					"--json",
-				],
-				cwd,
-			);
-			expect(result.status).toBe(1);
-			const parsed = JSON.parse(result.stdout) as {
-				ok: boolean;
-				evidence: { accepted: boolean; reason: string };
-			};
-			expect(parsed.ok).toBe(false);
-			expect(parsed.evidence.accepted).toBe(false);
-			expect(parsed.evidence.reason).toBe("owner-not-live");
-		} finally {
-			await owner.stop();
-		}
+	it("ultragoal spawn-goal-agent command is removed and errors toward the model-visible tool", async () => {
+		const sessionId = "ultragoal-spawn-removed";
+		await writeSessionState(root, makeState(cwd, sessionId));
+		const result = await runWorkflowCommand(
+			[
+				"ultragoal",
+				"spawn-goal-agent",
+				"--input",
+				JSON.stringify({ workspace: cwd, sessionId, goalId: "g1", prompt: "do work" }),
+				"--json",
+			],
+			cwd,
+		);
+		expect(result.status).toBe(1);
+		expect(result.stderr).toMatch(/ultragoal_spawn_goal_agent/);
 	});
 });

@@ -64,7 +64,7 @@ Pi has no `ask` tool. Ask each question as a single prose message. For option-be
 - `pi workflow deep-interview closure-check` — run the closure/acceptance guard against current state; returns `ok` plus blocking gaps. Run before crystallizing.
 - `pi workflow deep-interview restate-goal` — confirm the one-sentence restated goal after closure passes; `confirm: "Yes"` crystallizes, `"Adjust"`/`"Missing"` route back through scoring, capped at two loops. Enforces the restate gate and records overrides safely (never clobbers `rounds`).
 - `pi workflow deep-interview write-spec` — persist the final spec under `.pi/<session-id>/specs` and update state; optionally hand off to `ralplan`/`ultragoal`/`team` or `stop`.
-- `pi workflow subagents spawn` / `pi workflow subagents await` — read-only research, auto-research, auto-answer, and lateral-panel personas (see Internal Auto-Mode Protocol).
+- the `subagent_spawn` tool / `subagent_await` — read-only research, auto-research, auto-answer, and lateral-panel personas (see Internal Auto-Mode Protocol).
 
 ## Workflow
 
@@ -184,7 +184,7 @@ If any prompt input is too large, summarize it first; never ask, score, or hand 
 
 #### Step 2a′: Auto-Research Greenfield Questions (optional)
 
-When the next question is for a greenfield interview and is research-oriented, spawn a read-only `architect` subagent (`pi workflow subagents spawn`, agent `architect`) with only the tagged question, locked topology summary, prompt-safe initial idea, trimmed prior decisions/gaps, and relevant constraints. It must return 2–3 ranked candidates with rationale, confidence, and fallback notes. Validate the shape; if valid, fold the candidates as concise options/context for the single user-facing question and append the round number to `auto_researched_rounds`. On failure/invalid response, fall back silently to the normal generated question and increment `architect_failures`. Auto-research must never alter the one-question-per-round rule and never mutate code or `.pi/**`.
+When the next question is for a greenfield interview and is research-oriented, spawn a read-only `architect` subagent (the `subagent_spawn` tool, agent `architect`) with only the tagged question, locked topology summary, prompt-safe initial idea, trimmed prior decisions/gaps, and relevant constraints. It must return 2–3 ranked candidates with rationale, confidence, and fallback notes. Validate the shape; if valid, fold the candidates as concise options/context for the single user-facing question and append the round number to `auto_researched_rounds`. On failure/invalid response, fall back silently to the normal generated question and increment `architect_failures`. Auto-research must never alter the one-question-per-round rule and never mutate code or `.pi/**`.
 
 #### Step 2b: Ask the question
 
@@ -288,7 +288,7 @@ Convene a short multi-persona panel at **ambiguity-milestone transitions** inste
 
 A transition occurs whenever the band changes vs the prior scored round — in either direction (bidirectional scoring can move the band back up). On a transition, and also before synthesizing any agent-supplied answer (auto-research candidates, an auto-answer, or a code/brownfield auto-confirm that carries real interpretation), convene the panel before generating or asking the next question.
 
-**Personas (parallel, independent context):** dispatch `researcher`, `contrarian`, and `simplifier` as parallel read-only subagents (`pi workflow subagents spawn`), each with its own copy of the prompt-safe context so no persona anchors on another's framing. Add `architect` when the round changed system shape — scope expansion, a new component/integration (trigger D), or any change to ownership/architecture. Each persona is read-only: no edits, no `.pi/**` mutation, no execution.
+**Personas (parallel, independent context):** dispatch `researcher`, `contrarian`, and `simplifier` as parallel read-only subagents (the `subagent_spawn` tool), each with its own copy of the prompt-safe context so no persona anchors on another's framing. Add `architect` when the round changed system shape — scope expansion, a new component/integration (trigger D), or any change to ownership/architecture. Each persona is read-only: no edits, no `.pi/**` mutation, no execution.
 
 **Folding findings:** validate each persona response, then fold only concrete, user-safe findings into the next single user-facing question — as 2–3 ranked options or one recommended draft. The panel never adds a second question, never mutates requirements on its own, and never marks the interview complete. The one-question-per-round rule stays intact.
 
@@ -337,7 +337,7 @@ On selection, hand off via `pi workflow deep-interview write-spec` with the matc
 
 ## Internal Auto-Mode Protocol
 
-- Auto-research (Step 2a′), auto-answer (Step 2b′), and the lateral-review panel (Phase 3) are internal, on-demand protocols using `pi workflow subagents spawn`. They are never user-facing entrypoints, never slash-command/discoverable, and never mutate code or `.pi/**`.
+- Auto-research (Step 2a′), auto-answer (Step 2b′), and the lateral-review panel (Phase 3) are internal, on-demand protocols using the `subagent_spawn` tool. They are never user-facing entrypoints, never slash-command/discoverable, and never mutate code or `.pi/**`.
 - Spawn only for the specific hook that needs them, with read-only context kept prompt-budgeted; summarize active interview context before spawning if the payload is large.
 - Validate every subagent response before using it: required sections present, candidates/answer match the requested shape, rationale cites available context, confidence explicit, insufficient-context fallbacks honored.
 - On spawn/validation failure, continue the normal manual interview path silently and increment `architect_failures` (auto-modes) or `lateral_panel_failures` (panel); do not expose tool noise unless it changes the next user-facing question.

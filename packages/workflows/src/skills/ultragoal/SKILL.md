@@ -12,7 +12,7 @@ Ultragoal executes an approved concrete goal end-to-end with verification.
 
 - When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source) — do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution.
 - Keep all Ultragoal state, goal ledger, checkpoint receipts, and blocker records under one session id for one logical goal run. Do not scatter one run across multiple `.pi/<session-id>` buckets.
-- `pi workflow ultragoal spawn-goal-agent` is a guarded spawn that requires a live runtime owner for the current session; it fails closed without one. The current interactive session is the owner context — subagents are children of that session's runtime owner, not a separate independent owner.
+- `ultragoal_spawn_goal_agent` is a guarded spawn tool that spawns an ultragoal worker as an ordinary subagent of the main session. The workflow computes the legal next goal and refuses off-script goal ids or runtime model/tool overrides. The spawn happens in-process in the main session; there is no `pi workflow` command for it.
 
 ## Boundaries
 

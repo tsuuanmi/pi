@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { getSubagentManagerFactory, type SubagentManager } from "@tsuuanmi/pi-agent";
 import { ControlServer, type EndpointRequest } from "./endpoint.ts";
 import {
 	acquireLease,
@@ -55,7 +54,6 @@ export class RuntimeOwner {
 	#root: string;
 	#sessionId: string;
 	#rpc: HarnessRpc;
-	#subagentManager: SubagentManager | undefined;
 	#ttlMs: number;
 	#heartbeatMs: number;
 	#acceptanceTimeoutMs: number;
@@ -102,24 +100,7 @@ export class RuntimeOwner {
 			void heartbeat(this.#root, this.#sessionId, this.ownerId, this.#ttlMs).catch(() => this.stop());
 		}, this.#heartbeatMs);
 		this.#heartbeatTimer.unref?.();
-		await this.#initSubagentManager();
 		return { ownerId: this.ownerId, socketPath: paths.controlSock, leaseEpoch: this.#leaseEpoch };
-	}
-
-	async #initSubagentManager(): Promise<void> {
-		const factory = getSubagentManagerFactory();
-		if (!factory) {
-			await this.#emit("subagent_backend_unavailable", { reason: "no factory registered" }).catch(() => undefined);
-			return;
-		}
-		try {
-			const state = await this.#loadState();
-			const result = factory({ cwd: state.handle.workspace });
-			this.#subagentManager = result instanceof Promise ? await result : result;
-		} catch (error) {
-			await this.#emit("subagent_backend_unavailable", { reason: String(error) }).catch(() => undefined);
-			this.#subagentManager = undefined;
-		}
 	}
 
 	async #loadState(): Promise<SessionState> {
@@ -203,51 +184,7 @@ export class RuntimeOwner {
 		if (req.verb === "operate") return this.#operate(req.input);
 		if (req.verb === "submit") return this.#submit(req.input);
 		if (req.verb === "retire") return this.#retire();
-		if (req.verb.startsWith("subagents.")) {
-			const action = req.verb.slice("subagents.".length);
-			return this.#handleSubagents(action, (req.input ?? {}) as Record<string, unknown>);
-		}
 		return { ok: false, error: `owner_unsupported_verb:${req.verb}` };
-	}
-
-	async #handleSubagents(action: string, input: Record<string, unknown>): Promise<unknown> {
-		const manager = this.#subagentManager;
-		if (!manager) return { ok: false, error: "no subagent manager: factory not registered or unavailable" };
-		// Force storageSessionId to the owner session so records co-locate and clients can't choose a session.
-		const storageSessionId = this.#sessionId;
-		const id = typeof input.id === "string" ? input.id : undefined;
-		switch (action) {
-			case "spawn":
-				return manager.spawn({ ...(input as Record<string, unknown>), storageSessionId } as never);
-			case "await":
-				return manager.waitFor(String(input.id), (input.options ?? {}) as never);
-			case "steer":
-				return manager.steer(
-					String(input.id),
-					String(input.message),
-					(input.delivery === "followUp" ? "followUp" : "steer") as "steer" | "followUp",
-					storageSessionId,
-				);
-			case "pause":
-				return manager.pause(String(input.id), storageSessionId);
-			case "resume":
-				return manager.resume(String(input.id), String(input.message), {
-					...(input.options ?? {}),
-					storageSessionId,
-				} as never);
-			case "cancel":
-				return manager.cancel(String(input.id), storageSessionId);
-			case "read":
-				return id ? manager.read(id, storageSessionId) : undefined;
-			case "list":
-				return manager.list(storageSessionId);
-			case "status":
-				return id
-					? { ok: true, record: await manager.read(id, storageSessionId) }
-					: { ok: true, records: await manager.list(storageSessionId) };
-			default:
-				return { ok: false, error: `owner_unsupported_subagent_verb:${action}` };
-		}
 	}
 
 	async #classify(input: Record<string, unknown>): Promise<PrimitiveResponse> {
@@ -385,7 +322,6 @@ export class RuntimeOwner {
 		if (this.#heartbeatTimer) clearInterval(this.#heartbeatTimer);
 		await this.#server.close().catch(() => undefined);
 		await this.#rpc.close().catch(() => undefined);
-		await this.#subagentManager?.dispose().catch(() => undefined);
 		await releaseLease(this.#root, this.#sessionId, this.ownerId).catch(() => undefined);
 	}
 }

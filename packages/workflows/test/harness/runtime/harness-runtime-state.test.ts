@@ -2,11 +2,7 @@ import { execFileSync } from "node:child_process";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-	clearSubagentManagerFactoryForTests,
-	registerSubagentManagerFactory,
-	type SubagentManager,
-} from "@tsuuanmi/pi-agent";
+import { clearSubagentManagerFactoryForTests } from "@tsuuanmi/pi-agent";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "../../../src/commands/workflow.ts";
 import { RuntimeOwner } from "../../../src/harness/runtime/owner.ts";
@@ -291,78 +287,18 @@ describe("harness control-plane phase 1", () => {
 		expect(classifyRecovery(validation).classification).not.toBe("validation-repair");
 	});
 
-	it("routes pi workflow subagents spawn through the owner to the SubagentManager and forces storageSessionId", async () => {
-		const calls: { method: string; storageSessionId?: string }[] = [];
-		const manager = {
-			spawn: async (req: Record<string, unknown>) => {
-				calls.push({ method: "spawn", storageSessionId: req.storageSessionId as string | undefined });
-				return { ok: true, record: { id: "sub-owner-test", status: "running" } } as never;
-			},
-			resume: async () => ({ ok: true }) as never,
-			steer: async () => ({ ok: true }) as never,
-			pause: async () => ({ ok: true }) as never,
-			cancel: async (id: string) => ({ id, status: "cancelled" }) as never,
-			read: async () => ({ id: "sub-owner-test", status: "running" }) as never,
-			list: async () => {
-				calls.push({ method: "list" });
-				return [{ id: "sub-owner-test", status: "running" }] as never;
-			},
-			waitFor: async () => ({ ok: true, record: { id: "sub-owner-test", status: "completed" } }) as never,
-			dispose: async () => {
-				calls.push({ method: "dispose" });
-			},
-		} as unknown as SubagentManager;
-		registerSubagentManagerFactory(() => manager);
-		const rpc = new FakeRpc();
-		const owner = new RuntimeOwner({ root, sessionId, rpc, heartbeatMs: 60_000 });
-		await owner.start();
-		try {
-			const result = await runWorkflowCommand(
-				[
-					"subagents",
-					"spawn",
-					"--input",
-					JSON.stringify({ workspace: cwd, sessionId, prompt: "do work", agent: "worker" }),
-					"--json",
-				],
-				cwd,
-			);
-			expect(result.status).toBe(0);
-			expect(calls.some((c) => c.method === "spawn")).toBe(true);
-			expect(calls.find((c) => c.method === "spawn")?.storageSessionId).toBe(sessionId);
-
-			const status = await runWorkflowCommand(
-				["subagents", "status", "--input", JSON.stringify({ workspace: cwd, sessionId }), "--json"],
-				cwd,
-			);
-			expect(status.status).toBe(0);
-			expect(JSON.parse(status.stdout)).toMatchObject({ ok: true, records: [{ id: "sub-owner-test" }] });
-			expect(calls.some((c) => c.method === "list")).toBe(true);
-		} finally {
-			await owner.stop();
-		}
-		expect(calls.some((c) => c.method === "dispose")).toBe(true);
-	});
-
-	it("subagents verbs fail closed when no SubagentManagerFactory is registered", async () => {
-		const rpc = new FakeRpc();
-		const owner = new RuntimeOwner({ root, sessionId, rpc, heartbeatMs: 60_000 });
-		await owner.start();
-		try {
-			const result = await runWorkflowCommand(
-				[
-					"subagents",
-					"spawn",
-					"--input",
-					JSON.stringify({ workspace: cwd, sessionId, prompt: "do work", agent: "worker" }),
-					"--json",
-				],
-				cwd,
-			);
-			expect(result.status).toBe(1);
-			expect(result.stdout).toMatch(/no subagent manager/);
-		} finally {
-			await owner.stop();
-		}
+	it("subagents spawn command is removed and errors toward the model-visible tool", async () => {
+		const result = await runWorkflowCommand(
+			[
+				"subagents",
+				"spawn",
+				"--input",
+				JSON.stringify({ workspace: cwd, sessionId, prompt: "do work", agent: "worker" }),
+				"--json",
+			],
+			cwd,
+		);
+		expect(result.status).toBe(1);
+		expect(result.stderr).toMatch(/subagent_spawn/);
 	});
 });

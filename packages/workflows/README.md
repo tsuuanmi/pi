@@ -248,7 +248,7 @@ Profiles are authored as markdown files with YAML frontmatter. Pi discovers them
 
 ## Model-Visible Tools
 
-All workflow-owned tools (`deep-interview_*`, `ralplan_*`, `team_*`, `ultragoal_*`) are always exposed in the model-visible tool list alongside normal coding tools. There is no dynamic tool pruning: workflow-skill tools remain available regardless of whether a workflow is active, so workflows can be started, continued, and resumed without "tool not found" errors. Hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
+Workflow-owned **spawn** tools are model-visible and registered by the workflow extension: `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `ultragoal_spawn_goal_agent`. They call the main session's `SubagentManager` directly in-process — the only place a subagent can be spawned and run to completion. The role agents are ordinary subagents; the workflow's special part is turn order, guarded role checks, and result→artifact handoff. Non-spawn workflow ops remain `pi workflow ...` commands. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
 
 ## Harness Runtime
 
@@ -278,7 +278,7 @@ Team coordination state lives under `.pi/{sessionId}/team/{teamId}/`, scoped to 
 
 ### Session-Scoped Isolation
 
-Workflow state and artifacts are isolated per session. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions. A session id is required: the workflow tools resolve it from the active session, and the `pi workflow` CLI requires `--session <id>` or `PI_SESSION_ID`. There is no global `.pi/` fallback; without a session id the CLI errors out.
+Workflow state and artifacts are isolated per session. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions. A session id is required on every `pi workflow ...` verb (including `start`); no verb mints a session id, and all fail closed with `sessionId is required` when it is missing. The `pi workflow` CLI requires `--session <id>` or `PI_SESSION_ID` for the `state` command. There is no global `.pi/` fallback; without a session id the CLI errors out. Spawn tools read the session id from `ctx.sessionManager.getSessionId()`, so spawns always co-locate under the current session. The detached `RuntimeOwner` is lifecycle-only (no `SubagentManager`).
 
 ### Corrupt-State Recovery
 
