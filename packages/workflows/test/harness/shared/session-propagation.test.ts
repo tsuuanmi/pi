@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "../../../src/commands/workflow.ts";
 import { resolveHarnessRoot, sessionPaths, writeSessionState } from "../../../src/harness/runtime/storage.ts";
 import { SESSION_SCHEMA_VERSION, type SessionState } from "../../../src/harness/runtime/types.ts";
-import { readWorkflowActiveState, syncWorkflowActiveState } from "../../../src/harness/shared/active-state.ts";
+import { readWorkflowActiveState, syncWorkflowActiveState } from "../../../src/harness/shared/state/active-state.ts";
 
 function makeState(cwd: string, sessionId: string): SessionState {
 	const root = resolveHarnessRoot({ cwd });

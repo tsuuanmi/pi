@@ -1,5 +1,5 @@
-import type { WorkflowSkill } from "./paths.ts";
-import { expectedNextRoleForSkill } from "./skill-registry.ts";
+import { expectedNextRoleForSkill } from "../registry/skill-registry.ts";
+import type { WorkflowSkill } from "../session/paths.ts";
 
 export interface ExpectedNextRole {
 	skill: WorkflowSkill;

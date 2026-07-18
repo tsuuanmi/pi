@@ -1,5 +1,5 @@
-import type { WorkflowSkill } from "./paths.ts";
-import { workflowActiveStatePath } from "./session-layout.ts";
+import type { WorkflowSkill } from "../session/paths.ts";
+import { workflowActiveStatePath } from "../session/session-layout.ts";
 import { isEntryStale, readExistingStateForMutation, writeJsonAtomic } from "./state-writer.ts";
 
 export type WorkflowHudSeverity = "info" | "warning" | "blocked" | "error" | "success";

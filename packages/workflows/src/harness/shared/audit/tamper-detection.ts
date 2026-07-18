@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
+import type { WorkflowSkill } from "../session/paths.ts";
+import { workflowEnvelopeContentSha256 } from "../state/state-writer.ts";
 import { safeAppendAuditEntry } from "./audit-log.ts";
-import type { WorkflowSkill } from "./paths.ts";
-import { workflowEnvelopeContentSha256 } from "./state-writer.ts";
 
 /**
  * Workflow mode-state tamper detection.

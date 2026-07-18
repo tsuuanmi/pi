@@ -1,5 +1,5 @@
-import type { ExpectedNextRole, TeamSelectorSnapshot } from "../shared/expected-next-role.ts";
-import { registerSkillTransitionTable, type SkillTransitionContext } from "../shared/skill-registry.ts";
+import type { ExpectedNextRole, TeamSelectorSnapshot } from "../shared/orchestration/expected-next-role.ts";
+import { registerSkillTransitionTable, type SkillTransitionContext } from "../shared/registry/skill-registry.ts";
 import { readTeamCompact, readTeamSnapshot, type TeamSnapshot } from "./team-runtime.ts";
 
 function selectNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): ExpectedNextRole | undefined {

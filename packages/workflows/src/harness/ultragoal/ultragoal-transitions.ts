@@ -1,5 +1,5 @@
-import type { ExpectedNextRole } from "../shared/expected-next-role.ts";
-import { registerSkillTransitionTable, type SkillTransitionContext } from "../shared/skill-registry.ts";
+import type { ExpectedNextRole } from "../shared/orchestration/expected-next-role.ts";
+import { registerSkillTransitionTable, type SkillTransitionContext } from "../shared/registry/skill-registry.ts";
 import { chooseReceiptKind, readUltragoalLedger, validateCompletionReceipt } from "./ultragoal-receipt.ts";
 import { getUltragoalStatus, readUltragoalPlan } from "./ultragoal-runtime.ts";
 

@@ -47,7 +47,7 @@ export function decodeSessionSegment(segment: string): string {
 // ---------------------------------------------------------------------------
 
 /** Re-export the canonical assertSafePathComponent from state-schema.ts. */
-export { assertSafePathComponent } from "./state-schema.ts";
+export { assertSafePathComponent } from "../state/state-schema.ts";
 
 /**
  * Assert that a session id is non-empty and usable.

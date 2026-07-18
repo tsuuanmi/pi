@@ -2,7 +2,7 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import { readWorkflowActiveState } from "../shared/active-state.ts";
+import { readWorkflowActiveState } from "../shared/state/active-state.ts";
 
 /**
  * Deep-interview phase-boundary mutation guard.

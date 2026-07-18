@@ -1,7 +1,15 @@
 import { randomUUID } from "node:crypto";
-import { auditVerbForOperation, maybeAuditForStateWrite, safeAppendAuditEntry } from "./audit-log.ts";
-import type { WorkflowSkill } from "./paths.ts";
-import { workflowStatePath } from "./session-layout.ts";
+import { auditVerbForOperation, maybeAuditForStateWrite, safeAppendAuditEntry } from "../audit/audit-log.ts";
+import { auditOutOfBandAndThrowIfUnforced } from "../audit/tamper-detection.ts";
+import {
+	clearWorkflowPhase,
+	initialWorkflowPhase,
+	isKnownWorkflowPhase,
+	isValidWorkflowTransition,
+	type WorkflowStateOperation,
+} from "../registry/workflow-manifest.ts";
+import type { WorkflowSkill } from "../session/paths.ts";
+import { workflowStatePath } from "../session/session-layout.ts";
 import { coerceWorkflowState, type WorkflowStateEnvelope } from "./state-schema.ts";
 import {
 	createWorkflowReceipt,
@@ -11,14 +19,6 @@ import {
 	stampWorkflowEnvelopeChecksum,
 	writeJsonAtomic,
 } from "./state-writer.ts";
-import { auditOutOfBandAndThrowIfUnforced } from "./tamper-detection.ts";
-import {
-	clearWorkflowPhase,
-	initialWorkflowPhase,
-	isKnownWorkflowPhase,
-	isValidWorkflowTransition,
-	type WorkflowStateOperation,
-} from "./workflow-manifest.ts";
 
 export { defaultWorkflowId } from "./workflow-id.ts";
 

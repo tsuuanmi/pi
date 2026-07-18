@@ -1,4 +1,4 @@
-import { registerSkillTransitionTable } from "../shared/skill-registry.ts";
+import { registerSkillTransitionTable } from "../shared/registry/skill-registry.ts";
 import { runClosureCheckForSession } from "./deep-interview-runtime.ts";
 
 function hasPendingQuestion(state: unknown): boolean {

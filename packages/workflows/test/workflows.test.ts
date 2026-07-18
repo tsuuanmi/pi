@@ -52,7 +52,7 @@ import {
 	isBlockingQuestionPhaseForSkill,
 	skillGateValidators,
 	skillTerminalDetectors,
-} from "../src/harness/shared/skill-registry.ts";
+} from "../src/harness/shared/registry/skill-registry.ts";
 
 const sessionId = "test-session-id";
 const execFileAsync = promisify(execFile);

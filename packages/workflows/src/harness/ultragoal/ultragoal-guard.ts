@@ -18,8 +18,8 @@
  * unreadable plan/ledger while an objective is active.
  */
 
-import type { ObstacleTrigger } from "../shared/decision-ledger.ts";
-import { ultragoalGoalsPath, ultragoalLedgerPath } from "../shared/session-layout.ts";
+import type { ObstacleTrigger } from "../shared/audit/decision-ledger.ts";
+import { ultragoalGoalsPath, ultragoalLedgerPath } from "../shared/session/session-layout.ts";
 import {
 	readUltragoalObstacleLedger,
 	type UltragoalObstacleLedger,

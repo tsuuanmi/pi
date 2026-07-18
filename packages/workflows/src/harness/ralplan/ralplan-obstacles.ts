@@ -9,7 +9,7 @@
  * is read by the approval/doctor path yet (that is R-2 onward), so existing
  * behavior and tests are unaffected.
  *
- * The integrity wall (`validateObstacles`, from `shared/decision-ledger.ts`)
+ * The integrity wall (`validateObstacles`, from `shared/audit/decision-ledger.ts`)
  * gates every insert. All ralplan kinds are qualitative (`needsRegression:
  * false`), so the wall skips the regression-metrics requirement and runs only
  * the ralplan skill validator: the kind must be known, and ref-citing kinds
@@ -19,7 +19,7 @@
  * intentionally NOT enforced here, mirroring the B-0 subset-validator approach.
  *
  * Acyclic module graph: this is a LEAF module. It imports only
- * `shared/decision-ledger.ts`, `shared/session-layout.ts`, `shared/state-writer.ts`,
+ * `shared/audit/decision-ledger.ts`, `shared/session/session-layout.ts`, `shared/state/state-writer.ts`,
  * its sibling `ralplan-verdicts.ts` (a pure leaf), and node built-ins. It MUST
  * NOT import `ralplan-runtime.ts` (runtime imports this module, not the reverse).
  */
@@ -34,9 +34,9 @@ import {
 	type ObstacleValidator,
 	type ObstacleViolation,
 	validateObstacles,
-} from "../shared/decision-ledger.ts";
-import { ralplanObstacleLedgerPath } from "../shared/session-layout.ts";
-import { writeJsonAtomic } from "../shared/state-writer.ts";
+} from "../shared/audit/decision-ledger.ts";
+import { ralplanObstacleLedgerPath } from "../shared/session/session-layout.ts";
+import { writeJsonAtomic } from "../shared/state/state-writer.ts";
 import type {
 	RalplanArchitectVerdict,
 	RalplanCriticVerdict,

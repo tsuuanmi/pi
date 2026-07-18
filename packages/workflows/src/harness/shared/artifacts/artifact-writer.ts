@@ -1,4 +1,4 @@
-import { type WorkflowWriteOptions, type WriteArtifactResult, writeTextArtifact } from "./state-writer.ts";
+import { type WorkflowWriteOptions, type WriteArtifactResult, writeTextArtifact } from "../state/state-writer.ts";
 
 export interface StageArtifactInput {
 	path: string;

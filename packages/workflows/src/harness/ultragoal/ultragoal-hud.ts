@@ -1,5 +1,5 @@
-import type { WorkflowHudSummary } from "../shared/active-state.ts";
-import { limitationsChip, progressChip, shipWithCaveatsChip } from "../shared/hud-chips.ts";
+import { limitationsChip, progressChip, shipWithCaveatsChip } from "../shared/hud/hud-chips.ts";
+import type { WorkflowHudSummary } from "../shared/state/active-state.ts";
 import type { UltragoalStatus } from "./ultragoal-runtime.ts";
 
 /**

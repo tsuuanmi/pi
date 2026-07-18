@@ -1,4 +1,4 @@
-import type { WorkflowSkill } from "./paths.ts";
+import type { WorkflowSkill } from "../session/paths.ts";
 
 export type WorkflowStateOperation =
 	| "initialize"

@@ -1,9 +1,9 @@
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import type { WorkflowSkill } from "../shared/paths.ts";
-import { evaluateSkillGateValidators, evaluateSkillTerminalDetectors } from "../shared/skill-registry.ts";
-import { readWorkflowState } from "../shared/workflow-state.ts";
+import { evaluateSkillGateValidators, evaluateSkillTerminalDetectors } from "../shared/registry/skill-registry.ts";
+import type { WorkflowSkill } from "../shared/session/paths.ts";
+import { readWorkflowState } from "../shared/state/workflow-state.ts";
 import { mutateRuntimeSession } from "./mutation.ts";
 import { preserveDirtyWorktree } from "./preservation.ts";
 import type { HarnessRpc } from "./rpc.ts";

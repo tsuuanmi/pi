@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto";
-import { syncWorkflowActiveState } from "../shared/active-state.ts";
-import { projectCompactStateFor } from "../shared/compact-state-registry.ts";
-import type { ObstacleRegression, ObstacleStatus } from "../shared/decision-ledger.ts";
+import type { ObstacleRegression, ObstacleStatus } from "../shared/audit/decision-ledger.ts";
+import { projectCompactStateFor } from "../shared/compaction/compact-state-registry.ts";
 import {
 	ultragoalBriefPath,
 	ultragoalGoalsPath,
 	ultragoalLedgerPath,
 	workflowStatePath,
-} from "../shared/session-layout.ts";
+} from "../shared/session/session-layout.ts";
+import { syncWorkflowActiveState } from "../shared/state/active-state.ts";
 import {
 	appendJsonl,
 	readExistingStateForMutation,
@@ -15,8 +15,8 @@ import {
 	sha256,
 	writeJsonAtomic,
 	writeTextArtifact,
-} from "../shared/state-writer.ts";
-import { readWorkflowState, writeWorkflowState } from "../shared/workflow-state.ts";
+} from "../shared/state/state-writer.ts";
+import { readWorkflowState, writeWorkflowState } from "../shared/state/workflow-state.ts";
 import { buildUltragoalHud } from "./ultragoal-hud.ts";
 import {
 	assertUltragoalObstacle,

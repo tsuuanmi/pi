@@ -8,7 +8,7 @@
  *
  * Ports Gajae's structural-validation behavior with Pi-native field names and
  * Node-only I/O. Acyclic module graph: this module is a leaf. It imports only
- * `node:fs/promises`, `node:zlib`, and `shared/canonical-json.ts`. It MUST NOT
+ * `node:fs/promises` and `node:zlib`. It MUST NOT
  * import `ultragoal-runtime.ts`, `ultragoal-quality-gate.ts`, or
  * `ultragoal-receipt.ts`.
  *

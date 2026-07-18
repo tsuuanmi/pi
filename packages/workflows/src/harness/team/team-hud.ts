@@ -1,5 +1,5 @@
-import type { WorkflowHudSummary } from "../shared/active-state.ts";
-import { progressChip } from "../shared/hud-chips.ts";
+import { progressChip } from "../shared/hud/hud-chips.ts";
+import type { WorkflowHudSummary } from "../shared/state/active-state.ts";
 import type { TeamSnapshot } from "./team-runtime.ts";
 
 /**

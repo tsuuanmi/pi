@@ -1,7 +1,7 @@
 import { type FileHandle, mkdir, open, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { WorkflowSkill } from "./paths.ts";
-import { transactionJournalPath } from "./paths.ts";
+import type { WorkflowSkill } from "../session/paths.ts";
+import { transactionJournalPath } from "../session/paths.ts";
 
 /**
  * Per-mutation transaction journal for crash-recoverable workflow handoffs.

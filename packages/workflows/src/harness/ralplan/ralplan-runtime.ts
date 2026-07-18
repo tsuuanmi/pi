@@ -1,23 +1,23 @@
 import { readFile } from "node:fs/promises";
-import { syncWorkflowActiveState } from "../shared/active-state.ts";
-import { writeStageArtifact } from "../shared/artifact-writer.ts";
-import { type FailSoftError, recordFailSoftError } from "../shared/audit-log.ts";
-import { projectCompactStateFor } from "../shared/compact-state-registry.ts";
-import { handoffWorkflow } from "../shared/handoff.ts";
-import type { RalplanStage, WorkflowSkill } from "../shared/paths.ts";
+import { writeStageArtifact } from "../shared/artifacts/artifact-writer.ts";
+import { type FailSoftError, recordFailSoftError } from "../shared/audit/audit-log.ts";
+import { projectCompactStateFor } from "../shared/compaction/compact-state-registry.ts";
+import { handoffWorkflow } from "../shared/orchestration/handoff.ts";
+import type { RalplanStage, WorkflowSkill } from "../shared/session/paths.ts";
 import {
 	ralplanIndexPath,
 	ralplanPendingApprovalPath,
 	ralplanStageArtifactPath,
 	workflowStatePath,
-} from "../shared/session-layout.ts";
-import { appendJsonlIdempotent, readFileOrLiteral, sha256, writeTextArtifact } from "../shared/state-writer.ts";
+} from "../shared/session/session-layout.ts";
+import { syncWorkflowActiveState } from "../shared/state/active-state.ts";
+import { appendJsonlIdempotent, readFileOrLiteral, sha256, writeTextArtifact } from "../shared/state/state-writer.ts";
 import {
 	activeRalplanRunId,
 	defaultWorkflowId,
 	readWorkflowState,
 	writeWorkflowState,
-} from "../shared/workflow-state.ts";
+} from "../shared/state/workflow-state.ts";
 import { buildRalplanHud } from "./ralplan-hud.ts";
 import {
 	assertRalplanObstacle,

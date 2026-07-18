@@ -42,33 +42,21 @@ export * from "./harness/runtime/state.ts";
 export * from "./harness/runtime/storage.ts";
 export * from "./harness/runtime/types.ts";
 export * from "./harness/runtime/vanish.ts";
-// Runtime modules — re-export everything for external consumers
-export * from "./harness/shared/active-state.ts";
-export * from "./harness/shared/artifact-writer.ts";
-export * from "./harness/shared/audit-log.ts";
-export * from "./harness/shared/canonical-json.ts";
-export * from "./harness/shared/compact-budget.ts";
-export * from "./harness/shared/compact-state-registry.ts";
-export * from "./harness/shared/context-templates.ts";
-export * from "./harness/shared/decision-ledger.ts";
-export * from "./harness/shared/expected-next-role.ts";
-export * from "./harness/shared/gate-verdicts.ts";
-export * from "./harness/shared/handoff.ts";
-export * from "./harness/shared/hud-chips.ts";
-export * from "./harness/shared/paths.ts";
-export * from "./harness/shared/receipts.ts";
-export * from "./harness/shared/session-layout.ts";
-export * from "./harness/shared/session-resolution.ts";
-export * from "./harness/shared/skill-registry.ts";
-export * from "./harness/shared/state-schema.ts";
-export * from "./harness/shared/state-writer.ts";
-export * from "./harness/shared/tamper-detection.ts";
-export * from "./harness/shared/transaction-journal.ts";
-export * from "./harness/shared/vagueness-gate.ts";
-export * from "./harness/shared/workflow-hud.ts";
-export * from "./harness/shared/workflow-id.ts";
-export * from "./harness/shared/workflow-manifest.ts";
-export * from "./harness/shared/workflow-state.ts";
+export * from "./harness/shared/artifacts/artifact-writer.ts";
+export * from "./harness/shared/artifacts/receipts.ts";
+export * from "./harness/shared/audit/audit-log.ts";
+export * from "./harness/shared/audit/decision-ledger.ts";
+export * from "./harness/shared/audit/tamper-detection.ts";
+export * from "./harness/shared/audit/transaction-journal.ts";
+export * from "./harness/shared/compaction/compact-budget.ts";
+export * from "./harness/shared/compaction/compact-state-registry.ts";
+export * from "./harness/shared/hud/hud-chips.ts";
+export * from "./harness/shared/hud/workflow-hud.ts";
+export * from "./harness/shared/orchestration/context-templates.ts";
+export * from "./harness/shared/orchestration/expected-next-role.ts";
+export * from "./harness/shared/orchestration/gate-verdicts.ts";
+export * from "./harness/shared/orchestration/handoff.ts";
+export * from "./harness/shared/orchestration/vagueness-gate.ts";
 // workflow-tool-utils: avoid re-exporting RalplanApprovalTarget (conflicts with ralplan-runtime)
 export {
 	type AgentThinkingLevel,
@@ -78,7 +66,18 @@ export {
 	assertRalplanRole,
 	type DeepInterviewHandoff,
 	requireSubagentManager,
-} from "./harness/shared/workflow-tool-utils.ts";
+} from "./harness/shared/orchestration/workflow-tool-utils.ts";
+export * from "./harness/shared/registry/skill-registry.ts";
+export * from "./harness/shared/registry/workflow-manifest.ts";
+export * from "./harness/shared/session/paths.ts";
+export * from "./harness/shared/session/session-layout.ts";
+export * from "./harness/shared/session/session-resolution.ts";
+// Runtime modules — re-export everything for external consumers
+export * from "./harness/shared/state/active-state.ts";
+export * from "./harness/shared/state/state-schema.ts";
+export * from "./harness/shared/state/state-writer.ts";
+export * from "./harness/shared/state/workflow-id.ts";
+export * from "./harness/shared/state/workflow-state.ts";
 // Harness runtime
 export * from "./harness/team/team-compact.ts";
 export * from "./harness/team/team-hud.ts";

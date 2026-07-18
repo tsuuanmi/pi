@@ -10,6 +10,8 @@ export type RalplanStage = "planner" | "architect" | "critic" | "revision" | "ad
 // adopt) must use `piGlobalRoot` explicitly.
 // ---------------------------------------------------------------------------
 
+// Re-export canonical assertion functions from state-schema.ts.
+export { assertRalplanStage, assertSafePathComponent, assertWorkflowSkill } from "../state/state-schema.ts";
 export {
 	assertNonEmptySessionId,
 	auditLogPath,
@@ -45,6 +47,3 @@ export {
 	workflowActiveStatePath,
 	workflowStatePath,
 } from "./session-layout.ts";
-
-// Re-export canonical assertion functions from state-schema.ts.
-export { assertRalplanStage, assertSafePathComponent, assertWorkflowSkill } from "./state-schema.ts";

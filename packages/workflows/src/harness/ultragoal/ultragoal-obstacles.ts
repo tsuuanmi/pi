@@ -8,7 +8,7 @@
  * here is read by the guard or checkpoint path yet (that is Phase B-1/B-2), so
  * existing behavior and tests are unaffected.
  *
- * The integrity wall (`validateObstacles`, from `shared/decision-ledger.ts`) gates
+ * The integrity wall (`validateObstacles`, from `shared/audit/decision-ledger.ts`) gates
  * every obstacle insert: an active `review_failure`/`scope_drift`/`contract_contradiction`
  * kind must prove a regression, and the ultragoal validator adds structural checks
  * (criterion-naming kinds must name a criterion; `human_blocked` must not carry a
@@ -16,7 +16,7 @@
  * that runs this wall before touching the legacy path.
  *
  * Acyclic module graph: this is a LEAF module. It imports only
- * `shared/decision-ledger.ts`, `shared/session-layout.ts`, `shared/state-writer.ts`,
+ * `shared/audit/decision-ledger.ts`, `shared/session/session-layout.ts`, `shared/state/state-writer.ts`,
  * and node built-ins. It MUST NOT import `ultragoal-runtime.ts` (runtime imports
  * this module, not the reverse) — mirrors the `ultragoal-receipt.ts` contract.
  */
@@ -32,9 +32,9 @@ import {
 	type ObstacleValidator,
 	type ObstacleViolation,
 	validateObstacles,
-} from "../shared/decision-ledger.ts";
-import { ultragoalDir } from "../shared/session-layout.ts";
-import { writeJsonAtomic } from "../shared/state-writer.ts";
+} from "../shared/audit/decision-ledger.ts";
+import { ultragoalDir } from "../shared/session/session-layout.ts";
+import { writeJsonAtomic } from "../shared/state/state-writer.ts";
 
 /**
  * Ultragoal obstacle kinds (from the decision-ledger design, Part 2). Qualitative

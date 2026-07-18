@@ -1,20 +1,20 @@
 import { randomUUID } from "node:crypto";
-import { assertRalplanObstacle, writeRalplanObstacle } from "../ralplan/ralplan-obstacles.ts";
-import { assertUltragoalObstacle, writeUltragoalObstacle } from "../ultragoal/ultragoal-obstacles.ts";
-import { applyHandoffToActiveState } from "./active-state.ts";
-import { type FailSoftError, recordFailSoftError } from "./audit-log.ts";
-import type { ObstacleInput, ObstacleTrigger } from "./decision-ledger.ts";
-import type { WorkflowSkill } from "./paths.ts";
-import { workflowActiveStatePath, workflowStatePath } from "./session-layout.ts";
-import { assertWorkflowSkill, type WorkflowStateEnvelope } from "./state-schema.ts";
+import { assertRalplanObstacle, writeRalplanObstacle } from "../../ralplan/ralplan-obstacles.ts";
+import { assertUltragoalObstacle, writeUltragoalObstacle } from "../../ultragoal/ultragoal-obstacles.ts";
+import { type FailSoftError, recordFailSoftError } from "../audit/audit-log.ts";
+import type { ObstacleInput, ObstacleTrigger } from "../audit/decision-ledger.ts";
 import {
 	beginWorkflowTransactionJournal,
 	completeWorkflowTransactionJournal,
 	updateWorkflowTransactionJournal,
 	type WorkflowTransactionSide,
-} from "./transaction-journal.ts";
-import { initialWorkflowPhase } from "./workflow-manifest.ts";
-import { readWorkflowState, writeWorkflowState } from "./workflow-state.ts";
+} from "../audit/transaction-journal.ts";
+import { initialWorkflowPhase } from "../registry/workflow-manifest.ts";
+import type { WorkflowSkill } from "../session/paths.ts";
+import { workflowActiveStatePath, workflowStatePath } from "../session/session-layout.ts";
+import { applyHandoffToActiveState } from "../state/active-state.ts";
+import { assertWorkflowSkill, type WorkflowStateEnvelope } from "../state/state-schema.ts";
+import { readWorkflowState, writeWorkflowState } from "../state/workflow-state.ts";
 
 /**
  * Generic, transaction-backed workflow handoff.

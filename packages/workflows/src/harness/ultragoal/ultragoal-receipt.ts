@@ -11,7 +11,7 @@
  * - This module MUST NOT import `ultragoal-runtime.ts` or `ultragoal-guard.ts`.
  *   Runtime imports this module (`runtime -> receipt`); guard imports this module
  *   plus runtime (`guard -> receipt + runtime`). Receipt only depends on
- *   `shared/canonical-json.ts`, `shared/paths.ts`, and `node:crypto` / `node:fs/promises`.
+ *   `shared/state/state-writer.ts`, `shared/session/paths.ts`, and `node:crypto` / `node:fs/promises`.
  * - No `Bun.*` APIs (portability: Node-only).
  *
  * Field-name mapping from Gajae (locked, do not re-litigate):
@@ -26,9 +26,9 @@
  */
 import { createHash, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { canonicalizeJson } from "../shared/canonical-json.ts";
-import { assembleFinalPackage, type WorkflowFinalPackage } from "../shared/receipts.ts";
-import { ultragoalLedgerPath } from "../shared/session-layout.ts";
+import { assembleFinalPackage, type WorkflowFinalPackage } from "../shared/artifacts/receipts.ts";
+import { ultragoalLedgerPath } from "../shared/session/session-layout.ts";
+import { canonicalizeJson } from "../shared/state/state-writer.ts";
 
 export type UltragoalGoalStatus =
 	| "pending"

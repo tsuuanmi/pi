@@ -22,14 +22,14 @@ import {
 	readRalplanStatus,
 	writeRalplanArtifact,
 } from "../harness/ralplan/ralplan-runtime.ts";
-import { handoffWorkflow } from "../harness/shared/handoff.ts";
-import type { RalplanStage } from "../harness/shared/paths.ts";
-import { deepInterviewIndexPath, deepInterviewSpecPath } from "../harness/shared/session-layout.ts";
-import { assertSafePathComponent } from "../harness/shared/state-schema.ts";
-import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "../harness/shared/state-writer.ts";
-import { defaultWorkflowId } from "../harness/shared/workflow-id.ts";
-import { activeRalplanRunId } from "../harness/shared/workflow-state.ts";
-import { assertDeepInterviewHandoff } from "../harness/shared/workflow-tool-utils.ts";
+import { handoffWorkflow } from "../harness/shared/orchestration/handoff.ts";
+import { assertDeepInterviewHandoff } from "../harness/shared/orchestration/workflow-tool-utils.ts";
+import type { RalplanStage } from "../harness/shared/session/paths.ts";
+import { deepInterviewIndexPath, deepInterviewSpecPath } from "../harness/shared/session/session-layout.ts";
+import { assertSafePathComponent } from "../harness/shared/state/state-schema.ts";
+import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "../harness/shared/state/state-writer.ts";
+import { defaultWorkflowId } from "../harness/shared/state/workflow-id.ts";
+import { activeRalplanRunId } from "../harness/shared/state/workflow-state.ts";
 import {
 	completeTeam,
 	createTeamTask,
@@ -89,8 +89,8 @@ import {
 	type SessionHandle,
 	type SessionState,
 } from "../harness/runtime/types.ts";
-import type { WorkflowSkill } from "../harness/shared/paths.ts";
-import { isBlockingQuestionPhaseForSkill } from "../harness/shared/skill-registry.ts";
+import { isBlockingQuestionPhaseForSkill } from "../harness/shared/registry/skill-registry.ts";
+import type { WorkflowSkill } from "../harness/shared/session/paths.ts";
 import { runStateCommand } from "./state-command.ts";
 
 interface WorkflowCommandResult {

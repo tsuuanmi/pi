@@ -2,9 +2,27 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import { canonicalizeJson } from "./canonical-json.ts";
 
-export { canonicalizeJson };
+/**
+ * Canonical JSON serialization for deterministic hashing.
+ *
+ * Strips `undefined` values, sorts object keys lexicographically, and
+ * recurses into arrays/objects so the serialized form does not depend on
+ * insertion order. This is the single canonicalizer used by workflow receipt
+ * hashing (`hashStructuredValue`) and the workflow envelope checksum. No
+ * second stable-serializer should be introduced.
+ */
+export function canonicalizeJson(value: unknown): unknown {
+	if (Array.isArray(value)) return value.map((item) => canonicalizeJson(item));
+	if (typeof value !== "object" || value === null) return value;
+	const record = value as Record<string, unknown>;
+	const out: Record<string, unknown> = {};
+	for (const key of Object.keys(record).sort()) {
+		const item = record[key];
+		if (item !== undefined) out[key] = canonicalizeJson(item);
+	}
+	return out;
+}
 
 export interface WriteArtifactResult {
 	path: string;

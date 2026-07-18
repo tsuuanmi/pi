@@ -4,7 +4,7 @@ import {
 	type ObstacleValidator,
 	type ObstacleViolation,
 	validateObstacles,
-} from "../shared/decision-ledger.ts";
+} from "../shared/audit/decision-ledger.ts";
 
 /**
  * Default deep-interview ambiguity threshold. The interview is considered

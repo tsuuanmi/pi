@@ -1,4 +1,4 @@
-import type { WorkflowHudChip, WorkflowHudSummary } from "../shared/active-state.ts";
+import type { WorkflowHudChip, WorkflowHudSummary } from "../shared/state/active-state.ts";
 import { DEFAULT_DEEP_INTERVIEW_THRESHOLD } from "./deep-interview-state.ts";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

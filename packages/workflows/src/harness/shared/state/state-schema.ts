@@ -1,5 +1,5 @@
-import type { RalplanStage, WorkflowSkill } from "./paths.ts";
-import { initialWorkflowPhase, PI_WORKFLOW_SKILLS } from "./workflow-manifest.ts";
+import { initialWorkflowPhase, PI_WORKFLOW_SKILLS } from "../registry/workflow-manifest.ts";
+import type { RalplanStage, WorkflowSkill } from "../session/paths.ts";
 
 const WORKFLOW_STATE_VERSION = 1;
 

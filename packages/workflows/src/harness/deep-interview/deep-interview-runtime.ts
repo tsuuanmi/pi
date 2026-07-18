@@ -1,7 +1,7 @@
-import { syncWorkflowActiveState } from "../shared/active-state.ts";
-import { projectCompactStateFor } from "../shared/compact-state-registry.ts";
-import { workflowStatePath } from "../shared/session-layout.ts";
-import { readWorkflowState, replaceWorkflowState } from "../shared/workflow-state.ts";
+import { projectCompactStateFor } from "../shared/compaction/compact-state-registry.ts";
+import { workflowStatePath } from "../shared/session/session-layout.ts";
+import { syncWorkflowActiveState } from "../shared/state/active-state.ts";
+import { readWorkflowState, replaceWorkflowState } from "../shared/state/workflow-state.ts";
 import { deriveDeepInterviewHud } from "./deep-interview-hud.ts";
 import {
 	answerHash,

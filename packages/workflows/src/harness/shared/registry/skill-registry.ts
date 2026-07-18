@@ -1,6 +1,6 @@
-import type { RuntimeReceipt } from "../runtime/types.ts";
-import type { ExpectedNextRole } from "./expected-next-role.ts";
-import type { WorkflowSkill } from "./paths.ts";
+import type { RuntimeReceipt } from "../../runtime/types.ts";
+import type { ExpectedNextRole } from "../orchestration/expected-next-role.ts";
+import type { WorkflowSkill } from "../session/paths.ts";
 
 export type TerminalDetectorKind = "receipt" | "filesystem" | "state";
 

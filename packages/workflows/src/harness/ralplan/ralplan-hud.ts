@@ -1,5 +1,5 @@
-import type { WorkflowHudSummary } from "../shared/active-state.ts";
-import { escalationToExpertChip, progressChip } from "../shared/hud-chips.ts";
+import { escalationToExpertChip, progressChip } from "../shared/hud/hud-chips.ts";
+import type { WorkflowHudSummary } from "../shared/state/active-state.ts";
 import type { RalplanStatus } from "./ralplan-runtime.ts";
 
 /**

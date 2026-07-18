@@ -3,7 +3,7 @@ import { getDeepInterviewMutationDecision } from "../harness/deep-interview/deep
 import "../harness/deep-interview/deep-interview-transitions.ts";
 import { registerRalplanTools } from "../harness/ralplan/ralplan-tools.ts";
 import "../harness/ralplan/ralplan-transitions.ts";
-import { syncMcpHudUi, syncWorkflowHudUi } from "../harness/shared/workflow-hud.ts";
+import { syncMcpHudUi, syncWorkflowHudUi } from "../harness/shared/hud/workflow-hud.ts";
 import { registerSubagentTools } from "../harness/subagents/subagent-tools.ts";
 import { registerTeamTools } from "../harness/team/team-tools.ts";
 import "../harness/team/team-transitions.ts";

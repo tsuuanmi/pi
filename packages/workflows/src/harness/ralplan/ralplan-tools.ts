@@ -1,23 +1,21 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
+import { workflowReceipt } from "../shared/artifacts/receipts.ts";
 import {
 	assertExpectedNextRole,
 	assertNoGuardedSpawnOverrides,
 	expectedNextRalplanRole,
 	type RalplanSelectorVerdict,
-} from "../shared/expected-next-role.ts";
-import { workflowReceipt } from "../shared/receipts.ts";
-import { assertRalplanStage, assertSafePathComponent } from "../shared/state-schema.ts";
-import { defaultWorkflowId, readWorkflowState } from "../shared/workflow-state.ts";
-import { assertAgentThinkingLevel, assertRalplanRole } from "../shared/workflow-tool-utils.ts";
+} from "../shared/orchestration/expected-next-role.ts";
+import { assertAgentThinkingLevel, assertRalplanRole } from "../shared/orchestration/workflow-tool-utils.ts";
+import { assertRalplanStage, assertSafePathComponent } from "../shared/state/state-schema.ts";
+import { defaultWorkflowId, readWorkflowState } from "../shared/state/workflow-state.ts";
 import { ralplanRoleForStage, runRalplanAgent } from "./ralplan-agents.ts";
 import { assertRalplanExplorerGatePassed, normalizeRalplanExplorerGate } from "./ralplan-gates.ts";
 import { readRalplanStatus } from "./ralplan-runtime.ts";
 
 const ralplanRunAgentSchema = Type.Object({
-	role: Type.Optional(
-		Type.String({ description: "planner, architect, critic, or expert. Defaults from stage." }),
-	),
+	role: Type.Optional(Type.String({ description: "planner, architect, critic, or expert. Defaults from stage." })),
 	agent: Type.Optional(Type.String({ description: "Agent profile name. Defaults to the role name." })),
 	model: Type.Optional(Type.String({ description: "Override agent profile model as provider/model." })),
 	thinkingLevel: Type.Optional(Type.String({ description: "Override agent profile thinking level." })),

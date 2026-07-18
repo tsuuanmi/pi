@@ -1,7 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import { syncWorkflowActiveState } from "../shared/active-state.ts";
-import { projectCompactStateFor } from "../shared/compact-state-registry.ts";
+import { projectCompactStateFor } from "../shared/compaction/compact-state-registry.ts";
 import {
 	type EvidenceMatrixVerdict,
 	evidenceMatrixPasses,
@@ -10,7 +9,7 @@ import {
 	reviewReportBlocks,
 	validateEvidenceMatrixVerdict,
 	validateReviewReportVerdict,
-} from "../shared/gate-verdicts.ts";
+} from "../shared/orchestration/gate-verdicts.ts";
 import {
 	teamConfigPath,
 	teamDir,
@@ -20,15 +19,16 @@ import {
 	teamTaskGateArtifactPath,
 	teamTaskPath,
 	workflowStatePath,
-} from "../shared/session-layout.ts";
+} from "../shared/session/session-layout.ts";
+import { syncWorkflowActiveState } from "../shared/state/active-state.ts";
 import {
 	appendJsonl,
 	readExistingStateForMutation,
 	readFileOrLiteral,
 	sha256,
 	writeJsonAtomic,
-} from "../shared/state-writer.ts";
-import { defaultWorkflowId, readWorkflowState, writeWorkflowState } from "../shared/workflow-state.ts";
+} from "../shared/state/state-writer.ts";
+import { defaultWorkflowId, readWorkflowState, writeWorkflowState } from "../shared/state/workflow-state.ts";
 import { buildTeamHud } from "./team-hud.ts";
 
 export type TeamPhase = "starting" | "running" | "awaiting_integration" | "complete" | "failed" | "cancelled";
