@@ -1,27 +1,26 @@
-# Team Workflow
+# Team Harness
 
-Runtime workflow for the team skill.
+Runtime workflow for the `team` skill.
 
 **Source:** `src/harness/team/`
 
 ## Overview
 
-The team workflow manages the team coordination board, persisting state to `.pi/<session-id>/team/<team-id>/`. It tracks tasks, worker messages, review gates, and completion evidence.
+Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It tracks tasks, worker messages, review gates, completion evidence, and guarded worker spawns.
 
 ## Module Structure
 
 | Module | Description |
 |--------|-------------|
-| `team-runtime.ts` | State I/O, task transitions, review/completion gate recording, compact projection |
-| `team-transitions.ts` | Skill transition table, expected-next worker selection, fail-closed gate validators |
-| `team-hud.ts` | HUD rendering for team status |
-| `team-compact.ts` | Prompt-efficient compact state projection |
+| `team-compact.ts` | Prompt-efficient compact state projection. |
+| `team-hud.ts` | HUD chip rendering for team status. |
+| `team-runtime.ts` | State I/O, task transitions, messages, gates, completion, and snapshot/read-compact operations. |
+| `team-tools.ts` | Registers `team_spawn_task_agent`. |
+| `team-transitions.ts` | Skill transition table, expected-next worker selection, fail-closed gate validators. |
 
 ## Canonical Route
 
-Use the `pi workflow team <action>` control plane. The removed `team_*` model-visible tools are not registered.
-
-Supported actions include:
+Use `pi workflow team <action>` for non-spawn operations:
 
 - `start`
 - `snapshot`
@@ -32,18 +31,17 @@ Supported actions include:
 - `record-review-gate`
 - `record-completion-gate`
 - `complete`
-- `spawn-task-agent`
 
-`spawn-task-agent` is state guarded: it computes the legal next task from team state and refuses off-sequence spawns or runtime model/tool overrides.
+Use `team_spawn_task_agent` for worker execution. It is state guarded: the harness computes the legal next task from team state and refuses off-sequence spawns or runtime model/tool overrides.
 
 ## State Files
 
 | File | Description |
 |------|-------------|
-| `.pi/<session-id>/team/<teamId>/config.json` | Team coordination state |
-| `.pi/<session-id>/team/<teamId>/tasks/` | Task definitions and evidence |
-| `.pi/<session-id>/team/<teamId>/events.jsonl` | Event log |
-| `.pi/<session-id>/team/<teamId>/mailbox/<recipient>.jsonl` | Per-recipient messages |
+| `.pi/<session-id>/team/<teamId>/config.json` | Team coordination state. |
+| `.pi/<session-id>/team/<teamId>/tasks/` | Task definitions and evidence. |
+| `.pi/<session-id>/team/<teamId>/events.jsonl` | Event log. |
+| `.pi/<session-id>/team/<teamId>/mailbox/<recipient>.jsonl` | Per-recipient messages. |
 
 ## Gates
 
@@ -53,5 +51,6 @@ Supported actions include:
 
 ## See Also
 
-- [Subagents](../subagents/subagents.md) - Workflow subagent control plane
-- [Shared Utilities](../shared/shared.md) - Common workflow utilities
+- [Team skill](../../skills/team/team.md)
+- [Subagents](../subagents/subagents.md)
+- [Shared utilities](../shared/shared.md)

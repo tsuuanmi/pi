@@ -1,30 +1,31 @@
-# Ultragoal Workflow
+# Ultragoal Harness
 
-Runtime workflow for the ultragoal skill.
+Runtime workflow for the `ultragoal` skill.
 
 **Source:** `src/harness/ultragoal/`
 
 ## Overview
 
-The ultragoal workflow manages goal-tracked execution under the current session root. Each goal must produce durable checkpoint evidence and pass completion receipt validation before the workflow can close.
+Ultragoal manages goal-tracked execution under the current session root. Each goal must produce durable checkpoint evidence and pass completion receipt validation before the workflow can close.
 
 ## Module Structure
 
 | Module | Description |
 |--------|-------------|
-| `ultragoal-runtime.ts` | Plan/state I/O and goal transitions |
-| `ultragoal-transitions.ts` | Skill transition table, expected-next goal selection, fail-closed validators |
-| `ultragoal-quality-gate.ts` | Quality gate schema validation |
-| `ultragoal-artifacts.ts` | Artifact tracking and validation |
-| `ultragoal-guard.ts` | Completion/blocker guard logic |
-| `ultragoal-receipt.ts` | Receipt and ledger validation |
-| `ultragoal-hud.ts` | HUD rendering for goal progress |
+| `ultragoal-artifacts.ts` | Artifact tracking and validation. |
+| `ultragoal-compact.ts` | Prompt-efficient compact goal projection. |
+| `ultragoal-guard.ts` | Completion/blocker guard logic. |
+| `ultragoal-hud.ts` | HUD chip rendering for goal progress. |
+| `ultragoal-obstacles.ts` | Obstacle/blocker ledger helpers. |
+| `ultragoal-quality-gate.ts` | Quality gate schema validation. |
+| `ultragoal-receipt.ts` | Receipt and ledger validation. |
+| `ultragoal-runtime.ts` | Plan/state I/O and goal transitions. |
+| `ultragoal-tools.ts` | Registers `ultragoal_spawn_goal_agent`. |
+| `ultragoal-transitions.ts` | Skill transition table, expected-next goal selection, fail-closed validators. |
 
 ## Canonical Route
 
-Use the `pi workflow ultragoal <action>` control plane. The removed `ultragoal_*` model-visible tools are not registered.
-
-Supported actions include:
+Use `pi workflow ultragoal <action>` for non-spawn operations:
 
 - `create-plan`
 - `status`
@@ -34,17 +35,16 @@ Supported actions include:
 - `record-review-blockers`
 - `classify-blocker`
 - `guard`
-- `spawn-goal-agent`
 
-`spawn-goal-agent` is state guarded: it computes the legal next goal from ultragoal state and refuses off-sequence spawns or runtime model/tool overrides.
+Use `ultragoal_spawn_goal_agent` for worker execution. It is state guarded: the harness computes the legal next goal from ultragoal state and refuses off-sequence spawns or runtime model/tool overrides.
 
 ## State Files
 
 | File | Description |
 |------|-------------|
-| `.pi/<sessionId>/workflows/ultragoal/state.json` | Active workflow envelope |
-| `.pi/<sessionId>/ultragoal/goals.json` | Goal plan |
-| `.pi/<sessionId>/ultragoal/ledger.jsonl` | Goal receipt ledger |
+| `.pi/<sessionId>/workflows/ultragoal/state.json` | Active workflow envelope. |
+| `.pi/<sessionId>/ultragoal/goals.json` | Goal plan. |
+| `.pi/<sessionId>/ultragoal/ledger.jsonl` | Goal receipt ledger. |
 
 ## Gates
 
@@ -54,5 +54,6 @@ Supported actions include:
 
 ## See Also
 
-- [Subagents](../subagents/subagents.md) - Workflow subagent control plane
-- [Shared Utilities](../shared/shared.md) - Common workflow utilities
+- [Ultragoal skill](../../skills/ultragoal/ultragoal.md)
+- [Subagents](../subagents/subagents.md)
+- [Shared utilities](../shared/shared.md)

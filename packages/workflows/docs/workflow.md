@@ -67,7 +67,7 @@ The JSON report shape (committed contract) is:
 
 ## Reusable agent profiles
 
-Workflows dispatch isolated role agents using reusable agent profiles. The bundled `pi:workflows` package provides four default profiles:
+Workflows dispatch isolated role agents using reusable agent profiles. The bundled `pi:workflows` package provides default profiles under `src/agents/`:
 
 | Profile | Role | Default thinking | Default tools |
 |---------|------|------------------|---------------|
@@ -75,8 +75,12 @@ Workflows dispatch isolated role agents using reusable agent profiles. The bundl
 | `architect` | Feasibility, architecture, and integration review. | `high` | `read`, `grep`, `find`, `bash` |
 | `critic` | Risks, tests, edge cases, and failure modes. | `high` | `read`, `grep`, `find`, `bash` |
 | `worker` | Execute an assigned task or goal. | `medium` | `read`, `bash`, `write`, `edit` |
+| `explorer` | Read-only ralplan context mapping before planning. | `low` | `read`, `bash` |
+| `expert` | Ralplan escalation after iterate-cap or explorer-gate human blocker. | package default | package/default tools |
+| `prover` | Verify team completion evidence and produce `evidence_matrix`. | `low` | `read`, `bash` |
+| `reviewer` | Review team task completion and produce `review_report`. | `medium` | `read`, `bash` |
 
-All bundled workflow profiles default to `persistent: true` so their session context can be resumed.
+Bundled profiles set `persistent: true` in frontmatter when they need resumable context; profiles without that field use the agent-layer default.
 
 ### Standard `.agent` / `.agents` resources
 
@@ -120,7 +124,7 @@ Phase 1A recognizes but does not implement some Gajae-style fields. `forkContext
 
 Legacy JSON profile files such as `<agentDir>/agents/<name>.json` and `.pi/agents/<name>.json` are no longer loaded. Use markdown profiles under `.agent/agents` or `.agents/agents` instead.
 
-Per-invocation overrides such as `model`, `thinkingLevel`, `tools`, and `excludeTools` are only accepted on the generic `pi workflow subagents <verb>` control-plane commands. State-guarded role spawns such as `team spawn-task-agent` and `ultragoal spawn-goal-agent` refuse runtime overrides so the harness can enforce the computed next role deterministically.
+Per-invocation overrides such as `model`, `thinkingLevel`, `tools`, and `excludeTools` are accepted by the model-visible spawn tools when their schemas expose them. State-guarded role spawns such as `team_spawn_task_agent` and `ultragoal_spawn_goal_agent` refuse runtime overrides so the harness can enforce the computed next role deterministically.
 
 ## Model-visible workflow tools
 
@@ -148,4 +152,4 @@ A few internals are noted here so contributors can extend the control plane with
 
 - **Deferred-seam registry** (`harness/runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. The registry is wired live into `recoverPrimitive`'s `fallback-harness-exec` branch. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
 - **`validateReceiptFamilyConsistency`** (`harness/runtime/receipt-rules.ts`): a write-path guard inside `mutateRuntimeSession` that rejects receipts whose post-state lifecycle contradicts their family target (e.g. a `finalize` receipt that is `accepted` but does not land on `completed`, or a passing `validate` receipt that does not land on `validating`). It throws before any write so a contradiction leaves zero orphan events/receipts/state. Conservative and pluggable: blocked variants pass, pre-Phase-3 receipts are grandfathered (write-path only), and future receipt families register rules in `receiptFamilyConsistencyRules` without touching the mutation path.
-- **`syncWorkflowHudUi`** (`extensions/workflows.ts`): keeps the interactive HUD in sync after team/ultragoal state mutations made through the `pi workflow` control plane.
+- **`syncWorkflowHudUi`** (`harness/shared/hud/workflow-hud.ts`): an intentional lifecycle hook no-op for workflow mirroring; the status line reads session-scoped active state directly. `syncMcpHudUi` in the same module mirrors MCP server status into status/widget slots.

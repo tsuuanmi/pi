@@ -1,23 +1,24 @@
 # Harness Tool Surface
 
-The workflow package no longer registers workflow-owned model-visible harness tools.
+Workflow-owned spawn tools are registered by the workflow extension; non-spawn operations are `pi workflow ...` commands.
 
-**Source:** `src/commands/workflow.ts`, `src/harness/runtime/owner.ts`
+**Source:** `src/extensions/workflows.ts`, `src/harness/subagents/subagent-tools.ts`, `src/harness/ralplan/ralplan-tools.ts`, `src/harness/team/team-tools.ts`, `src/harness/ultragoal/ultragoal-tools.ts`
 
-## Canonical Route
+## Model-Visible Tools
 
-Agents drive workflow state, artifacts, gates, receipts, and subagents through `pi workflow ...` control-plane commands. Deleted legacy tool modules under `src/harness/tools/` are intentionally not part of the public/model-visible surface.
+The current model-visible workflow tools are:
 
-## Subagents
+- Generic subagent lifecycle: `subagent_spawn`, `subagent_status`, `subagent_await`, `subagent_steer`, `subagent_pause`, `subagent_resume`, `subagent_cancel`.
+- Guarded workflow spawns: `ralplan_run_agent`, `team_spawn_task_agent`, `ultragoal_spawn_goal_agent`.
 
-Subagent lifecycle operations are routed through:
+These tools call the main session's `SubagentManager` directly. They are not hosted by the detached runtime owner.
 
-- `pi workflow subagents <spawn|status|await|steer|pause|resume|cancel>` for generic subagent control-plane operations.
-- State-guarded workflow commands such as `pi workflow ralplan run-agent`, `pi workflow team spawn-task-agent`, and `pi workflow ultragoal spawn-goal-agent` for workflow-owned role spawns.
+## Command Surface
 
-Structured subagent completion is handled by the Pi agent-layer `SubagentManager`; workflow code routes to it through the registered owner/factory seam rather than registering separate workflow tools.
+Agents drive state, artifacts, gates, receipts, compaction, status, approval, and runtime owner lifecycle through `pi workflow ...` commands. The package has no `src/harness/tools/` directory in the current source tree.
 
 ## See Also
 
-- [Subagents](../subagents/subagents.md) - Workflow subagent control plane
-- [Shared Utilities](../shared/shared.md) - Shared workflow runtime utilities
+- [Subagents](../subagents/subagents.md)
+- [Commands](../../commands/workflow.md)
+- [Shared utilities](../shared/shared.md)

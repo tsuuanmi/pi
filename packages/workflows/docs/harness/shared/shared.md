@@ -1,57 +1,30 @@
 # Shared Workflow Utilities
 
-Common utilities shared across workflow implementations.
+Cross-skill utilities used by Deep Interview, Ralplan, Team, Ultragoal, the workflow command layer, and the workflow extension.
 
 **Source:** `src/harness/shared/`
 
-## Overview
-
-The shared module provides session layout, state I/O, audit logging, tamper detection, handoff helpers, expected-next role guards, compact-state projection, and skill transition registration used by deep-interview, ralplan, team, and ultragoal.
-
 ## Module Structure
 
-| Module | Description |
-|--------|-------------|
-| `paths.ts` | Re-exports from `session-layout.ts` plus type aliases (`WorkflowSkill`, `RalplanStage`) |
-| `session-layout.ts` | Session-scoped path builders; every workflow path requires a `sessionId` |
-| `session-resolution.ts` | Session ID resolution and directory naming |
-| `state-schema.ts` | Type assertions and validators for workflow state |
-| `state-writer.ts` | Atomic state file writes with temp-file + rename |
-| `active-state.ts` | Active workflow tracking |
-| `audit-log.ts` | Append-only audit logging for workflow mutations |
-| `receipts.ts` | Receipt tracking for mutation verification |
-| `tamper-detection.ts` | Tamper detection for state files |
-| `canonical-json.ts` | Deterministic JSON serialization for state hashing |
-| `transaction-journal.ts` | Transaction journal for state mutations |
-| `workflow-id.ts` | Workflow ID generation and parsing |
-| `workflow-manifest.ts` | Workflow manifest and CLI verb metadata |
-| `skill-registry.ts` | Per-skill transition tables, terminal detectors, gate validators, and next-role selectors |
-| `expected-next-role.ts` | Guard helpers that reject off-sequence workflow-owned spawns and runtime overrides |
-| `compact-state-registry.ts` | Shared compact-state projection registry |
-| `workflow-tool-utils.ts` | Legacy-named helper module retained for shared command/runtime validation utilities |
-| `handoff.ts` | Inter-skill handoff utilities |
+| Directory | Modules | Description |
+|-----------|---------|-------------|
+| `artifacts/` | `artifact-writer.ts`, `receipts.ts` | Durable artifact writing and receipt helpers. |
+| `audit/` | `audit-log.ts`, `decision-ledger.ts`, `tamper-detection.ts`, `transaction-journal.ts` | Append-only audit records, decision ledgers, tamper evidence, and mutation journals. |
+| `compaction/` | `compact-budget.ts`, `compact-state-registry.ts` | Prompt-budgeted compact state projections. |
+| `hud/` | `hud-chips.ts`, `workflow-hud.ts` | HUD chip formatting, workflow HUD lifecycle hook, and MCP HUD mirroring. |
+| `orchestration/` | `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `handoff.ts`, `vagueness-gate.ts`, `workflow-tool-utils.ts` | Cross-workflow prompts, expected-next guards, gate verdicts, handoff types, vagueness gating, and command/tool helpers. |
+| `registry/` | `skill-registry.ts`, `workflow-manifest.ts` | Built-in skill registry and workflow manifest metadata. |
+| `session/` | `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Session-scoped path builders and session id resolution. |
+| `state/` | `active-state.ts`, `state-schema.ts`, `state-writer.ts`, `workflow-id.ts`, `workflow-state.ts` | Active workflow state, state validation/writes, workflow ids, and base state models. |
 
-## Canonical Route
+## Important Contracts
 
-Workflow state is mutated through `pi workflow ...` control-plane commands. Removed model-visible workflow tools such as `deep_interview_*`, `ralplan_*`, `team_*`, `ultragoal_*`, and `pi_workflow_state` are not registered.
-
-## Session Layout
-
-All session-aware path builders require a `sessionId`; there is no global fallback.
-
-| Path | Description |
-|------|-------------|
-| `.pi/{sessionId}/state/` | Session state directory |
-| `.pi/{sessionId}/workflows/{skill}/` | Workflow-specific state |
-| `.pi/{sessionId}/team/{teamId}/` | Team coordination state |
-| `.pi/{sessionId}/specs/` | Generated specs |
-| `.pi/{sessionId}/plans/` | Generated plans |
-| `.pi/{sessionId}/activity.json` | Session activity file |
+- Session-scoped helpers require an explicit `sessionId`; workflow state must not fall back to a global bucket.
+- Workflow writes use atomic state/artifact helpers and append receipts or audit entries where applicable.
+- Guarded spawn paths use expected-next helpers so role/task/goal execution cannot skip ahead.
+- `syncWorkflowHudUi` intentionally does not mirror workflow state into extension status slots; the interactive status line reads `.pi/<session-id>/workflows/active-state.json` directly.
 
 ## See Also
 
-- [Deep Interview](../deep-interview/deep-interview.md) - Interview workflow
-- [Ralplan](../ralplan/ralplan.md) - Planning workflow
-- [Team](../team/team.md) - Team coordination workflow
-- [Ultragoal](../ultragoal/ultragoal.md) - Goal-tracking workflow
-- [Subagents](../subagents/subagents.md) - Subagent control plane
+- [Workflow control plane](../../workflow.md)
+- [Harness runtime](../runtime/harness-runtime.md)

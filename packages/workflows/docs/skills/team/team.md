@@ -2,9 +2,7 @@
 
 Coordinate parallel implementation workers after an approved plan exists.
 
-## Overview
-
-The team skill creates a coordination board with multiple workers, each assigned independent tasks from an approved plan. Workers run as subagent sessions.
+**Source:** `src/skills/team/SKILL.md`
 
 ## Usage
 
@@ -12,25 +10,35 @@ The team skill creates a coordination board with multiple workers, each assigned
 /skill:team <approved plan or task>
 ```
 
+## Runtime Route
+
+- Read/write envelope state through `pi workflow state team ...` with the current `sessionId`.
+- Manage the team board through `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>`.
+- Spawn workers through the guarded model-visible `team_spawn_task_agent` tool.
+- Use `reviewer` and `prover` profiles for fail-closed review and completion evidence gates when needed.
+
 ## Workflow
 
-1. Parse the approved plan into independent tasks
-2. Create a team coordination board
-3. Spawn workers for each task
-4. Track progress and handle dependencies
-5. Integrate results when all tasks complete
+1. Confirm execution is explicitly approved.
+2. Start or resume a team run.
+3. Split the approved plan into independent, non-overlapping tasks.
+4. Persist tasks with objectives, constraints, ownership, expected output, and verification.
+5. Spawn or coordinate workers.
+6. Record progress, messages, review gates, and completion evidence.
+7. Integrate results and close only after required gates pass.
 
 ## Task States
 
 | State | Description |
 |-------|-------------|
-| `pending` | Task created, not started |
-| `active` | Worker is running |
-| `blocked` | Waiting on dependencies |
-| `completed` | Task finished successfully |
-| `failed` | Task failed |
+| `pending` | Task created, not started. |
+| `active` | Worker is running. |
+| `blocked` | Waiting on dependency or human decision. |
+| `completed` | Task finished and passed required gates. |
+| `failed` | Task failed. |
 
 ## See Also
 
-- [Workflow](../workflow.md) - Pi workflow control plane
-- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/subagents/subagents.md) - Subagent execution
+- [Workflow control plane](../../workflow.md)
+- [Team harness](../../harness/team/team.md)
+- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/subagents/subagents.md)
