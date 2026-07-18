@@ -32,6 +32,20 @@ describe("BashExecutionComponent width handling (#2569)", () => {
 		initTheme(undefined, false);
 	});
 
+	it("collapses long command headers until expanded", () => {
+		const { stub } = createTuiStub(120);
+		const command = Array.from({ length: 80 }, (_, i) => `word-${i}`).join(" ");
+		const component = new BashExecutionComponent(command, stub);
+
+		const collapsed = component.render(80).join("\n");
+		expect(collapsed).toContain("...");
+		expect(collapsed).not.toContain("word-79");
+
+		component.setExpanded(true);
+		const expanded = component.render(80).join("\n");
+		expect(expanded).toContain("word-79");
+	});
+
 	it("collapsed preview lines respect render-time width, not construction-time width", () => {
 		const wideWidth = 200;
 		const narrowWidth = 80;

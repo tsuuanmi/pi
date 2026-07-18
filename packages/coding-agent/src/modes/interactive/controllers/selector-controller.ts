@@ -271,8 +271,7 @@ export class SelectorController {
 								child.setHideThinkingBlock(hidden);
 							}
 						}
-						this.chatContainer.clear();
-						this.rebuildChatFromMessages();
+						this.ui.requestRender();
 					},
 					onQuietStartupChange: (enabled) => {
 						this.settingsManager.setQuietStartup(enabled);

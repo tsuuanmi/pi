@@ -3,7 +3,7 @@
  */
 
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, type TruncationResult, truncateTail } from "@tsuuanmi/pi-agent";
-import { Container, Loader, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
+import { type Component, Container, Loader, Spacer, Text, type TUI, truncateToWidth } from "@tsuuanmi/pi-tui";
 import { theme } from "../../../theme/theme.ts";
 import { keyHint, keyText } from "../../../ui/rendering/keybinding-hints.ts";
 import { truncateToVisualLines } from "../../../ui/rendering/visual-truncate.ts";
@@ -12,6 +12,34 @@ import { DynamicBorder } from "./widgets/dynamic-border.ts";
 
 // Preview line limit when not expanded (matches tool execution behavior)
 const PREVIEW_LINES = 20;
+
+class BashCommandHeaderComponent implements Component {
+	private command: string;
+	private colorKey: "bashMode" | "dim";
+	private expanded: boolean;
+
+	constructor(command: string, colorKey: "bashMode" | "dim", expanded: boolean) {
+		this.command = command;
+		this.colorKey = colorKey;
+		this.expanded = expanded;
+	}
+
+	update(command: string, colorKey: "bashMode" | "dim", expanded: boolean): void {
+		this.command = command;
+		this.colorKey = colorKey;
+		this.expanded = expanded;
+	}
+
+	invalidate(): void {}
+
+	render(width: number): string[] {
+		const contentWidth = Math.max(1, width - 2);
+		const command = this.expanded
+			? this.command
+			: truncateToWidth(this.command.replace(/\r?\n/g, "\\n"), Math.max(1, contentWidth - 2));
+		return new Text(theme.fg(this.colorKey, theme.bold(`$ ${command}`)), 1, 0).render(width);
+	}
+}
 
 export class BashExecutionComponent extends Container {
 	private command: string;
@@ -23,14 +51,16 @@ export class BashExecutionComponent extends Container {
 	private fullOutputPath?: string;
 	private expanded = false;
 	private contentContainer: Container;
+	private readonly colorKey: "bashMode" | "dim";
+	private commandHeader: BashCommandHeaderComponent;
 
 	constructor(command: string, ui: TUI, excludeFromContext = false) {
 		super();
 		this.command = command;
 
 		// Use dim border for excluded-from-context commands (!! prefix)
-		const colorKey = excludeFromContext ? "dim" : "bashMode";
-		const borderColor = (str: string) => theme.fg(colorKey, str);
+		this.colorKey = excludeFromContext ? "dim" : "bashMode";
+		const borderColor = (str: string) => theme.fg(this.colorKey, str);
 
 		// Add spacer
 		this.addChild(new Spacer(1));
@@ -43,13 +73,13 @@ export class BashExecutionComponent extends Container {
 		this.addChild(this.contentContainer);
 
 		// Command header
-		const header = new Text(theme.fg(colorKey, theme.bold(`$ ${command}`)), 1, 0);
-		this.contentContainer.addChild(header);
+		this.commandHeader = new BashCommandHeaderComponent(command, this.colorKey, this.expanded);
+		this.contentContainer.addChild(this.commandHeader);
 
 		// Loader
 		this.loader = new Loader(
 			ui,
-			(spinner) => theme.fg(colorKey, spinner),
+			(spinner) => theme.fg(this.colorKey, spinner),
 			(text) => theme.fg("muted", text),
 			`Running... (${keyText("tui.select.cancel")} to cancel)`, // Plain text for loader
 		);
@@ -130,8 +160,8 @@ export class BashExecutionComponent extends Container {
 		this.contentContainer.clear();
 
 		// Command header
-		const header = new Text(theme.fg("bashMode", theme.bold(`$ ${this.command}`)), 1, 0);
-		this.contentContainer.addChild(header);
+		this.commandHeader.update(this.command, this.colorKey, this.expanded);
+		this.contentContainer.addChild(this.commandHeader);
 
 		// Output
 		if (availableLines.length > 0) {

@@ -154,6 +154,27 @@ describe("ToolExecutionComponent parity", () => {
 		await promise;
 	});
 
+	test("collapses long bash commands until expanded", () => {
+		const longCommand = `echo ${Array.from({ length: 80 }, (_, i) => `word-${i}`).join(" ")}`;
+		const component = new ToolExecutionComponent(
+			"bash",
+			"tool-bash-long-command",
+			{ command: longCommand },
+			{},
+			createBashToolDefinition(process.cwd()),
+			createFakeTui(),
+			process.cwd(),
+		);
+
+		const collapsedLines = stripAnsi(component.render(80).join("\n"));
+		expect(collapsedLines).toContain("...");
+		expect(collapsedLines).not.toContain("word-79");
+
+		component.setExpanded(true);
+		const expandedLines = stripAnsi(component.render(80).join("\n"));
+		expect(expandedLines).toContain("word-79");
+	});
+
 	test("bash renderer does not duplicate final full output truncation details", async () => {
 		const operations: BashOperations = {
 			exec: async (_command, _cwd, { onData }) => {

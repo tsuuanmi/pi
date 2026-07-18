@@ -1973,31 +1973,33 @@ export class InteractiveMode {
 	private setToolsExpanded(expanded: boolean): void {
 		this.toolOutputExpanded = expanded;
 		const activeHeader = this._extensionUIController.customHeader ?? this.builtInHeader;
-		if (isExpandable(activeHeader)) {
-			activeHeader.setExpanded(expanded);
+		this.setExpandableTreeExpanded(activeHeader, expanded);
+		this.setExpandableTreeExpanded(this.chatContainer, expanded);
+		this.setExpandableTreeExpanded(this.pendingMessagesContainer, expanded);
+		this.ui.requestRender();
+	}
+
+	private setExpandableTreeExpanded(component: unknown, expanded: boolean): void {
+		if (isExpandable(component)) {
+			component.setExpanded(expanded);
 		}
-		for (const child of this.chatContainer.children) {
-			if (isExpandable(child)) {
-				child.setExpanded(expanded);
+		if (component instanceof Container) {
+			for (const child of component.children) {
+				this.setExpandableTreeExpanded(child, expanded);
 			}
 		}
-		this.ui.requestRender();
 	}
 
 	private toggleThinkingBlockVisibility(): void {
 		this.hideThinkingBlock = !this.hideThinkingBlock;
 		this.settingsManager.setHideThinkingBlock(this.hideThinkingBlock);
 
-		// Rebuild chat from session messages
-		this.chatContainer.clear();
-		this.rebuildChatFromMessages();
-
-		// If streaming, re-add the streaming component with updated visibility and re-render
-		if (this.streamingComponent && this.streamingMessage) {
-			this.streamingComponent.setHideThinkingBlock(this.hideThinkingBlock);
-			this.streamingComponent.updateContent(this.streamingMessage);
-			this.chatContainer.addChild(this.streamingComponent);
+		for (const child of this.chatContainer.children) {
+			if (child instanceof AssistantMessageComponent) {
+				child.setHideThinkingBlock(this.hideThinkingBlock);
+			}
 		}
+		this.ui.requestRender();
 
 		this.showStatus(`Thinking blocks: ${this.hideThinkingBlock ? "hidden" : "visible"}`);
 	}

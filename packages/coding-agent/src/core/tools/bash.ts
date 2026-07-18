@@ -3,7 +3,7 @@ import { access as fsAccess } from "node:fs/promises";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "@tsuuanmi/pi-agent";
 import { waitForChildProcess } from "@tsuuanmi/pi-agent/node";
-import { Container, Text, truncateToWidth } from "@tsuuanmi/pi-tui";
+import { type Component, Container, Text, truncateToWidth } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "../../api/types.ts";
@@ -175,12 +175,36 @@ function formatDuration(ms: number): string {
 	return `${(ms / 1000).toFixed(1)}s`;
 }
 
-function formatBashCall(args: { command?: string; timeout?: number } | undefined): string {
+function formatBashCall(args: { command?: string; timeout?: number } | undefined, width?: number): string {
 	const command = str(args?.command);
 	const timeout = args?.timeout as number | undefined;
 	const timeoutSuffix = timeout ? theme.fg("muted", ` (timeout ${timeout}s)`) : "";
 	const commandDisplay = command === null ? invalidArgText(theme) : command ? command : theme.fg("toolOutput", "...");
-	return theme.fg("toolTitle", theme.bold(`$ ${commandDisplay}`)) + timeoutSuffix;
+	const line = theme.fg("toolTitle", theme.bold(`$ ${commandDisplay}`)) + timeoutSuffix;
+	return width === undefined ? line : truncateToWidth(line.replace(/\r?\n/g, "\\n"), width);
+}
+
+class BashCallRenderComponent implements Component {
+	private args: { command?: string; timeout?: number } | undefined;
+	private expanded: boolean;
+
+	constructor(args: { command?: string; timeout?: number } | undefined, expanded: boolean) {
+		this.args = args;
+		this.expanded = expanded;
+	}
+
+	update(args: { command?: string; timeout?: number } | undefined, expanded: boolean): void {
+		this.args = args;
+		this.expanded = expanded;
+	}
+
+	invalidate(): void {}
+
+	render(width: number): string[] {
+		const contentWidth = Math.max(1, width - 2);
+		const line = formatBashCall(this.args, this.expanded ? undefined : contentWidth);
+		return new Text(line, 1, 0).render(width);
+	}
 }
 
 function rebuildBashResultRenderComponent(
@@ -409,9 +433,11 @@ export function createBashToolDefinition(
 				state.startedAt = Date.now();
 				state.endedAt = undefined;
 			}
-			const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
-			text.setText(formatBashCall(args));
-			return text;
+			const component =
+				(context.lastComponent as BashCallRenderComponent | undefined) ??
+				new BashCallRenderComponent(args, context.expanded);
+			component.update(args, context.expanded);
+			return component;
 		},
 		renderResult(result, options, _theme, context) {
 			const state = context.state;
