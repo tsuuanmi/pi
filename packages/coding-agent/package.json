@@ -1,6 +1,6 @@
 {
 	"name": "@tsuuanmi/pi-coding-agent",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "Coding agent CLI with read, bash, edit, write tools and session management",
 	"type": "module",
 	"os": [
@@ -37,10 +37,10 @@
 		"prepublishOnly": "npm run clean && npm run build && npm run shrinkwrap"
 	},
 	"dependencies": {
-		"@tsuuanmi/pi-agent": "^0.1.3",
-		"@tsuuanmi/pi-ai": "^0.1.3",
-		"@tsuuanmi/pi-tui": "^0.1.3",
-		"@tsuuanmi/pi-workflows": "^0.1.3",
+		"@tsuuanmi/pi-agent": "^0.1.4",
+		"@tsuuanmi/pi-ai": "^0.1.4",
+		"@tsuuanmi/pi-tui": "^0.1.4",
+		"@tsuuanmi/pi-workflows": "^0.1.4",
 		"chalk": "5.6.2",
 		"diff": "8.0.4",
 		"glob": "13.0.6",
