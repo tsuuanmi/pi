@@ -4,7 +4,7 @@ Command-line interface for Pi.
 
 ## Overview
 
-Pi's CLI (`pi`) parses arguments and launches the appropriate mode (interactive, print, JSON, or RPC). Argument parsing is handled by `parseArgs()` in `src/cli/args.ts`.
+Pi's CLI (`pi`) parses arguments and launches the appropriate mode (interactive text, single-shot text/JSON, or RPC). Argument parsing is handled by `parseArgs()` in `src/cli/args.ts`.
 
 ## Commands
 
@@ -12,17 +12,17 @@ Pi's CLI (`pi`) parses arguments and launches the appropriate mode (interactive,
 pi                              # Start interactive mode
 pi "prompt"                     # Start with an initial prompt
 pi -p "prompt"                  # Print mode: run prompt and exit
-pi --mode json                  # Start JSON event stream mode
+pi --mode json "prompt"         # Run a single-shot JSON event stream
 pi --mode rpc                   # Start RPC mode over stdin/stdout
-pi --model <model>              # Override the default model
-pi --provider <provider>         # Override the default provider
+pi --model <pattern>            # Override the default model; supports provider/id and :<thinking>
+pi --provider <provider>        # Override the default provider
 pi --thinking <level>           # Set thinking level: off|minimal|low|medium|high|xhigh
-pi --continue / -c              # Continue last session
-pi --resume / -r                # Resume most recent session
+pi --continue / -c              # Continue previous session
+pi --resume / -r                # Select a session to resume
 pi --name <name> / -n           # Name for the session
-pi --session <id>               # Resume specific session by ID
-pi --tmux                       # Launch in tmux
-pi --list-models [pattern]      # List available models, optionally filtered by pattern
+pi --session <path|id>          # Resume specific session file or partial session ID
+pi --tmux                       # Launch interactive startup inside a new tmux session
+pi --list-models [search]       # List available models, optionally filtered by fuzzy search
 pi --verbose                    # Verbose logging
 pi --version / -v               # Print version
 pi --help / -h                  # Print help
@@ -39,17 +39,17 @@ echo "Explain this code" | pi -p
 
 ### Session Management
 
-- `--continue` / `-c` — Continue the most recent session in the current directory
-- `--resume` / `-r` — Resume the most recent session (same as continue)
-- `--name <name>` — Give the session a name for later identification
-- `--session <id>` — Resume a specific session by ID
+- `--continue` / `-c` — Continue the previous session
+- `--resume` / `-r` — Open the session picker and select a session to resume
+- `--name <name>` — Give the session a display name
+- `--session <path|id>` — Resume a specific session file or partial session ID
 
 ### Model Selection
 
 - `--provider <provider>` — Override the default provider (e.g., `anthropic`, `openai`)
-- `--model <model>` — Override the default model (e.g., `claude-sonnet-4-20250514`, `gpt-4o`)
+- `--model <pattern>` — Override the default model (e.g., `claude-sonnet-4-20250514`, `openai/gpt-4o`, `sonnet:high`)
 - `--thinking <level>` — Set thinking level: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`
-- `--list-models [pattern]` — List available models, optionally filtering by glob pattern (e.g., `claude-*`)
+- `--list-models [search]` — List available models, optionally filtering by fuzzy search
 
 ### Run Modes
 
@@ -57,7 +57,7 @@ echo "Explain this code" | pi -p
 |------|------|-------------|
 | Interactive | (default) | Full TUI with streaming output, slash commands, and tree navigation |
 | Print | `-p` | Non-interactive: process a single prompt and exit |
-| JSON | `--mode json` | Non-interactive: structured JSON event stream to stdout |
+| JSON | `--mode json` | Single-shot: structured JSON event stream to stdout |
 | RPC | `--mode rpc` | Programmatic: bidirectional JSON-RPC over stdio |
 | tmux | `--tmux` | Launch in a tmux session for detachment |
 
@@ -79,14 +79,15 @@ Pi also supports several subcommands:
 
 | Command | Description |
 |---------|-------------|
-| `pi mcp list` | List configured MCP servers |
-| `pi mcp add <name>` | Add an MCP server |
-| `pi mcp remove <name>` | Remove an MCP server |
-| `pi mcp test <name>` | Test MCP server connectivity |
-| `pi workflow <verb>` | Pi workflow control plane (state/operate/gc/...) |
-| `pi workflow state <skill>` | Read/write/clear workflow state for a skill |
-| `pi config` | Manage Pi configuration |
-| `pi update` | Update Pi to the latest version |
+| `pi install <source> [-l]` | Install a package source and add it to settings |
+| `pi remove <source> [-l]` | Remove a package source from settings |
+| `pi uninstall <source> [-l]` | Alias for `remove` |
+| `pi update [source|self|pi]` | Update pi and installed packages |
+| `pi list` | List installed packages from settings |
+| `pi config` | Open the package resource configuration TUI |
+| `pi workflow <verb>` | Pi workflow control plane (try `pi workflow --help`) |
+| `pi mcp <verb>` | Manage MCP servers (`list`, `add`, `remove`, `test`) |
+| `pi <command> --help` | Show package-command help |
 
 ## Environment Variables
 
@@ -95,8 +96,10 @@ Pi also supports several subcommands:
 | `PI_CODING_AGENT_DIR` | Override default agent directory (`~/.pi/agent`) |
 | `PI_CODING_AGENT_SESSION_DIR` | Override session storage directory |
 | `PI_TIMING` | Enable startup timing instrumentation (`1` to enable) |
-| `PI_OFFLINE` | Disable package registry lookups and other network package operations (`1` to disable) |
+| `PI_PACKAGE_DIR` | Override package directory (for Nix/Guix store paths) |
+| `PI_OFFLINE` | Disable package registry lookups and other network package operations (`1`, `true`, or `yes`) |
 | `ANTHROPIC_API_KEY` | Anthropic API key |
+| `ANTHROPIC_OAUTH_TOKEN` | Anthropic OAuth token (alternative to API key) |
 | `OPENAI_API_KEY` | OpenAI API key |
 
 ## See Also

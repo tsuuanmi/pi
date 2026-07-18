@@ -43,6 +43,36 @@ Use `/trust` in interactive mode to save a project trust decision for future ses
 | `defaultProjectTrust` | string | `"ask"` | Fallback project trust behavior: `"ask"`, `"always"`, or `"never"`. Global setting only |
 | `showHardwareCursor` | boolean | `false` | Show the terminal cursor while TUI positions it for IME support |
 
+#### Status Line
+
+`statusLine` customizes the interactive status line. The default preset uses `model`, `mode`, `git`, and `path` on the left, and `session_name`, `subagents`, `token_in`, `token_out`, `context_pct`, and `context_total` on the right.
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `statusLine.preset` | string | `"default"` | Built-in preset: `"default"` or `"custom"` |
+| `statusLine.leftSegments` | string[] | preset value | Left-side segment IDs |
+| `statusLine.rightSegments` | string[] | preset value | Right-side segment IDs |
+| `statusLine.separator` | string | `"slash"` | Separator style: `"slash"`, `"pipe"`, `"dot"`, or `"space"` |
+| `statusLine.segmentOptions` | object | preset value | Per-segment options for `model`, `path`, and `git` |
+
+Segment IDs are `model`, `mode`, `git`, `path`, `context_pct`, `context_total`, `token_in`, `token_out`, `session_name`, and `subagents`. `thinking` is not a separate segment; use `segmentOptions.model.showThinkingLevel`.
+
+```json
+{
+  "statusLine": {
+    "preset": "custom",
+    "leftSegments": ["model", "git", "path"],
+    "rightSegments": ["session_name", "context_pct"],
+    "separator": "pipe",
+    "segmentOptions": {
+      "model": { "showThinkingLevel": true, "showProviderPrefix": true },
+      "path": { "abbreviate": true, "maxLength": 40, "stripWorkPrefix": false },
+      "git": { "showBranch": true, "showStaged": true, "showUnstaged": true, "showUntracked": true }
+    }
+  }
+}
+```
+
 ### Network
 
 | Setting | Type | Default | Description |
@@ -209,7 +239,7 @@ When multiple sources specify a session directory, precedence is `PI_CODING_AGEN
 
 ### Resources
 
-These settings define where to load extensions, skills, prompts, and themes from.
+These settings define where to load extensions, skills, prompts, themes, and package commands from.
 
 Paths in `~/.pi/agent/settings.json` resolve relative to `~/.pi/agent`. Paths in `.pi/settings.json` resolve relative to `.pi`. Absolute paths and `~` are supported.
 
@@ -220,6 +250,7 @@ Paths in `~/.pi/agent/settings.json` resolve relative to `~/.pi/agent`. Paths in
 | `skills` | string[] | `[]` | Local skill file paths or directories |
 | `prompts` | string[] | `[]` | Local prompt template paths or directories |
 | `themes` | string[] | `[]` | Local theme file paths or directories |
+| `commands` | string[] | `[]` | Local package command file paths or directories |
 | `enableSkillCommands` | boolean | `true` | Register skills as `/skill:name` commands |
 
 Arrays support glob patterns and exclusions. Use `!pattern` to exclude. Use `+path` to force-include an exact path and `-path` to force-exclude an exact path.
@@ -242,7 +273,8 @@ Object form filters which resources to load:
     {
       "source": "pi-skills",
       "skills": ["brave-search", "transcribe"],
-      "extensions": []
+      "extensions": [],
+      "commands": []
     }
   ]
 }

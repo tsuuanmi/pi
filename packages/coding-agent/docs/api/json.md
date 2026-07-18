@@ -51,11 +51,11 @@ Base messages from [`packages/ai/src/types.ts`](https://github.com/tsuuanmi/pi/b
 - `AssistantMessage` (line 140)
 - `ToolResultMessage` (line 152)
 
-Extended messages from [`packages/coding-agent/src/core/misc/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/misc/messages.ts#L29):
-- `BashExecutionMessage` (line 29)
-- `CustomMessage` (line 46)
-- `BranchSummaryMessage` (line 55)
-- `CompactionSummaryMessage` (line 62)
+Extended messages from [`packages/agent/src/harness/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/harness/messages.ts):
+- `BashExecutionMessage`
+- `CustomMessage`
+- `BranchSummaryMessage`
+- `CompactionSummaryMessage`
 
 ## Output Format
 

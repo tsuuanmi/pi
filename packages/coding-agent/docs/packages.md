@@ -158,9 +158,11 @@ If no `pi` manifest is present, pi auto-discovers resources from these directori
 - `commands/` loads `.ts`, `.js`, `.mjs`, and `.cjs` files as pre-session package commands
 - `agents/` loads `.md` files as reusable agent profiles
 
+Package command files dispatch `pi <command>` before session startup. The command name is the file basename without extension, and the module must export `handlePackageCommand(args, context)` returning `true` when it handled the command.
+
 ## Dependencies
 
-Third party runtime dependencies belong in `dependencies` in `package.json`. Dependencies that do not register extensions, skills, prompt templates, themes, or agent profiles also belong in `dependencies`. When pi installs a package from npm or git, it runs `npm install`, so those dependencies are installed automatically.
+Third party runtime dependencies belong in `dependencies` in `package.json`. Dependencies that do not register extensions, skills, prompt templates, themes, package commands, or agent profiles also belong in `dependencies`. When pi installs a package from npm or git, it runs `npm install`, so those dependencies are installed automatically.
 
 Pi bundles core packages for extensions and skills. If you import any of these, list them in `peerDependencies` with a `"*"` range and do not bundle them: `tsuuanmi` (imported as `@tsuuanmi/pi-ai`), `@tsuuanmi/pi-agent`, `@tsuuanmi/pi-coding-agent`, `@tsuuanmi/pi-tui`, `typebox`.
 

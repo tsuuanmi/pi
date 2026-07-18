@@ -1,10 +1,10 @@
 # Package Manager
 
-Pi package management for discovering, installing, and resolving extensions, skills, prompts, and themes from npm and git sources.
+Pi package management for discovering, installing, and resolving extensions, skills, prompts, themes, package commands, and agent profiles from npm and git sources.
 
 ## Overview
 
-Pi packages bundle distributable content (extensions, skills, prompts, themes, agents) that can be installed from npm or git repositories. The package manager handles resolution, installation, updates, and resource discovery.
+Pi packages bundle distributable content (extensions, skills, prompts, themes, commands, and agents) that can be installed from npm or git repositories. The package manager handles resolution, installation, updates, and resource discovery.
 
 ## Package Format
 
@@ -18,12 +18,13 @@ A pi package is a standard npm package with a `pi` field in `package.json`:
     "skills": ["./skills/"],
     "prompts": ["./prompts/"],
     "themes": ["./themes/"],
+    "commands": ["./commands/"],
     "agents": ["./agents/"]
   }
 }
 ```
 
-The `pi` field defines which resources the package provides. Each entry can be a single file or a directory glob pattern.
+The `pi` field defines which resources the package provides. Each entry can be a single file, a directory, or a glob pattern. Package commands are loaded before session startup and can dispatch custom `pi <command>` subcommands.
 
 ## Package Sources
 
@@ -49,6 +50,7 @@ Packages can be filtered to load only specific resource types:
       "extensions": [],
       "prompts": [],
       "themes": [],
+      "commands": [],
       "agents": []
     }
   ]

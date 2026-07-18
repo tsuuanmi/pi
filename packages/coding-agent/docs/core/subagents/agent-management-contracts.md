@@ -22,7 +22,7 @@ These are the intended ownership boundaries. If implementation chooses different
 | Resource/discovery ownership and provider precedence | `packages/coding-agent/src/core/skills/resource-loader.ts` or a new `src/core/resource-providers.ts` | `src/core/agents/agent-profiles.ts`, `src/core/skills/skills.ts`, `src/core/skills/prompt-templates.ts`, `src/core/package-manager/package-manager.ts` |
 | Agent definition parsing | `packages/coding-agent/src/core/agents/agent-profiles.ts` or a new `src/core/agents/agent-definitions.ts` | bundled role-agent prompt assets if added |
 | Trust policy | `packages/coding-agent/src/core/settings/settings-manager.ts` and `src/core/trust/project-trust.ts` | `src/core/skills/resource-loader.ts`, `docs/security.md` |
-| Source metadata and diagnostics | `packages/coding-agent/src/core/misc/source-info.ts` and `src/core/misc/diagnostics.ts` | resource-specific loaders |
+| Source metadata and diagnostics | `packages/coding-agent/src/core/resources/source-info.ts` and `src/core/resources/diagnostics.ts` | resource-specific loaders |
 | Scoped live registry | a new `packages/coding-agent/src/core/agent-registry.ts` | `src/core/agent-session/agent-session.ts`, `src/core/subagents/subagents.ts`, `src/api/types.ts` |
 | Durable subagent/task/receipt state | `packages/coding-agent/src/core/subagents/subagents.ts` and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |
 | Self-hosting continuity | `pi:workflows` first-party package tools and skills | `packages/workflows/src/harness/*`, `packages/workflows/src/skills/*` |

@@ -1,6 +1,6 @@
 # Resources
 
-Resource loading, diagnostic reporting, and source tracking for extensions, skills, prompts, themes, and agents.
+Resource loading, diagnostic reporting, and source tracking for extensions, skills, prompts, themes, package commands, and agents.
 
 ## Overview
 
@@ -54,11 +54,14 @@ Resources are categorized by type, each with its own loading and validation logi
 
 | Type | Directory | Description |
 |------|-----------|-------------|
-| `extension` | `extensions/` | TypeScript extension files |
-| `skill` | `skills/` | Markdown skill files |
-| `prompt` | `prompts/` | Markdown prompt templates |
-| `theme` | `themes/` | TypeScript theme files |
-| `agent` | `profiles/` or `agents/` | Markdown agent profile files |
+| `extensions` | `extensions/` | TypeScript/JavaScript extension files |
+| `skills` | `skills/` | Markdown skill files |
+| `prompts` | `prompts/` | Markdown prompt templates |
+| `themes` | `themes/` | JSON theme files |
+| `commands` | `commands/` | TypeScript/JavaScript pre-session package commands |
+| `agents` | `agents/` | Markdown agent profile files |
+
+Diagnostics currently report collisions for loaded extension, skill, prompt, theme, and agent names. Package command files are discovered as resources but run before session startup rather than participating in name-collision diagnostics.
 
 ## Diagnostics
 
