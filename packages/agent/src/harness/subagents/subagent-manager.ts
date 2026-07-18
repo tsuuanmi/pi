@@ -30,4 +30,6 @@ export interface SubagentManager {
 	read(id: string, sessionId: string): Promise<SubagentRecord | undefined>;
 	list(sessionId: string): Promise<SubagentRecord[]>;
 	waitFor(id: string, options: SubagentAwaitOptions): Promise<SubagentAwaitResult>;
+	/** Tear down the manager: cancel all live subagents, dispose per-spawn sessions, clear the live map. Called by RuntimeOwner.stop(). */
+	dispose(): Promise<void>;
 }

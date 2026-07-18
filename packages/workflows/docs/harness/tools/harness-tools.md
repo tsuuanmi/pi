@@ -1,73 +1,23 @@
-# Harness Tools
+# Harness Tool Surface
 
-Tool implementations exposed to the agent during workflow execution.
+The workflow package no longer registers workflow-owned model-visible harness tools.
 
-**Source:** `src/harness/tools/`
+**Source:** `src/commands/workflow.ts`, `src/harness/runtime/owner.ts`
 
-## Overview
+## Canonical Route
 
-The harness-tools module provides specialized tools available to subagent sessions during workflow execution. These tools are registered via `registerHarnessTools(pi)` and complement the built-in tools.
+Agents drive workflow state, artifacts, gates, receipts, and subagents through `pi workflow ...` control-plane commands. Deleted legacy tool modules under `src/harness/tools/` are intentionally not part of the public/model-visible surface.
 
-## Tools
+## Subagents
 
-### yield
+Subagent lifecycle operations are routed through:
 
-Structured completion tool for subagent sessions. When a subagent calls `yield`, it signals completion with structured output:
+- `pi workflow subagents <spawn|status|await|steer|pause|resume|cancel>` for generic subagent control-plane operations.
+- State-guarded workflow commands such as `pi workflow ralplan run-agent`, `pi workflow team spawn-task-agent`, and `pi workflow ultragoal spawn-goal-agent` for workflow-owned role spawns.
 
-```typescript
-interface YieldDetails {
-  data: unknown;
-  status: "success" | "aborted";
-  error?: string;
-}
-```
-
-The parent `SubagentManager` detects yield calls in the subagent's tool results via `extractYieldFromMessages()`, which walks messages in reverse to find the most recent yield tool result.
-
-#### Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `data` | unknown | yes | Structured output data |
-| `status` | enum | yes | `"success"` or `"aborted"` |
-| `error` | string | no | Error message if status is `"aborted"` |
-
-#### Yield Detection
-
-```typescript
-function extractYieldFromMessages(
-  messages: readonly AgentMessage[]
-): YieldDetails | undefined;
-```
-
-Walks messages in reverse to find the most recent yield tool result. Used by `SubagentManager` to detect structured completion.
-
-### fetch
-
-HTTP fetch tool for making web requests during workflow execution. Provides a simplified HTTP client for subagents that need to access external resources.
-
-#### Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `url` | string | yes | URL to fetch |
-| `method` | string | no | HTTP method (default: `"GET"`) |
-| `headers` | object | no | HTTP headers |
-| `body` | string | no | Request body |
-
-## Registration
-
-```typescript
-import { registerHarnessTools } from "@tsuuanmi/pi-coding-agent/workflows";
-
-pi.on("session_start", (_event, ctx) => {
-  registerHarnessTools(pi);
-});
-```
-
-Both `yield` and `fetch` are registered as tool definitions that can be overridden per workflow phase.
+Structured subagent completion is handled by the Pi agent-layer `SubagentManager`; workflow code routes to it through the registered owner/factory seam rather than registering separate workflow tools.
 
 ## See Also
 
-- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/subagents/subagents.md) - SubagentManager and subagent lifecycle
-- [Tools](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/tools/tools.md) - Built-in tool system
+- [Subagents](../subagents/subagents.md) - Workflow subagent control plane
+- [Shared Utilities](../shared/shared.md) - Shared workflow runtime utilities

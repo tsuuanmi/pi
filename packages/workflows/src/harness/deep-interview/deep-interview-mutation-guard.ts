@@ -35,9 +35,9 @@ import { readWorkflowActiveState } from "../shared/active-state.ts";
  */
 
 export const DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE =
-	"Deep-interview phase boundary: continue gathering context/questions/risks and emit a spec or hand off before code edits. Mutation tools are blocked while deep-interview is active; finalize the spec with `deep_interview_write_spec` or hand off to an execution skill before mutating product code.";
+	"Deep-interview phase boundary: continue gathering context/questions/risks and emit a spec or hand off before code edits. Mutation tools are blocked while deep-interview is active; finalize the spec with `pi workflow deep-interview write-spec` or hand off to an execution skill before mutating product code.";
 export const WORKFLOW_STATE_MUTATION_BLOCK_MESSAGE =
-	"`.pi` workflow state and artifacts are runtime-owned. Agent mutation tools cannot edit `.pi/**`; use the sanctioned `pi` workflow tools (e.g. `deep_interview_write_spec`) instead.";
+	"`.pi` workflow state and artifacts are runtime-owned. Agent mutation tools cannot edit `.pi/**`; use the sanctioned `pi` workflow tools (e.g. `pi workflow deep-interview write-spec`) instead.";
 
 const BLOCKED_TOOL_NAMES = new Set(["edit", "write"]);
 

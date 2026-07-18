@@ -1,6 +1,13 @@
+import { execFile } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+import "../src/harness/deep-interview/deep-interview-transitions.ts";
+import "../src/harness/ralplan/ralplan-transitions.ts";
+import "../src/harness/team/team-transitions.ts";
+import "../src/harness/ultragoal/ultragoal-transitions.ts";
 import {
 	appendJsonlIdempotent,
 	assertExpectedNextRole,
@@ -16,12 +23,14 @@ import {
 	readFileOrLiteral,
 	readRalplanStatus,
 	readTeamSnapshot,
+	readWorkflowActiveState,
 	readWorkflowState,
 	recordRalplanExplorerGateArtifact,
 	recordTeamCompletionGateArtifact,
 	recordTeamReviewGateArtifact,
 	runRalplanAgent,
 	startTeam,
+	syncWorkflowActiveState,
 	transitionTeamTask,
 	writeRalplanArtifact,
 	writeTextArtifact,
@@ -39,8 +48,36 @@ import {
 	writeSessionState,
 } from "../src/harness/runtime/storage.ts";
 import { SESSION_SCHEMA_VERSION, type SessionState } from "../src/harness/runtime/types.ts";
+import {
+	isBlockingQuestionPhaseForSkill,
+	skillGateValidators,
+	skillTerminalDetectors,
+} from "../src/harness/shared/skill-registry.ts";
 
 const sessionId = "test-session-id";
+const execFileAsync = promisify(execFile);
+const builtPiCliPath = fileURLToPath(new URL("../../coding-agent/dist/cli.js", import.meta.url));
+
+async function runBuiltPiWorkflow(
+	args: string[],
+	cwd: string,
+): Promise<{ status: number; stdout: string; stderr: string }> {
+	try {
+		const result = await execFileAsync(process.execPath, [builtPiCliPath, "workflow", ...args], {
+			cwd,
+			env: { ...process.env, PI_OFFLINE: "1" },
+			maxBuffer: 1024 * 1024,
+		});
+		return { status: 0, stdout: result.stdout, stderr: result.stderr };
+	} catch (error) {
+		const failed = error as { code?: unknown; stdout?: unknown; stderr?: unknown };
+		return {
+			status: typeof failed.code === "number" ? failed.code : 1,
+			stdout: typeof failed.stdout === "string" ? failed.stdout : "",
+			stderr: typeof failed.stderr === "string" ? failed.stderr : String(error),
+		};
+	}
+}
 
 describe("workflow runtime", () => {
 	let cwd: string;
@@ -89,6 +126,27 @@ describe("workflow runtime", () => {
 		await expect(writeTextArtifact(join(cwd, "outside.md"), "nope", { cwd })).rejects.toThrow(/\.pi/);
 	});
 
+	it("dispatches workflow commands through the built coding-agent CLI", async () => {
+		const result = await runBuiltPiWorkflow(
+			[
+				"deep-interview",
+				"read-compact",
+				"--input",
+				JSON.stringify({ workspace: cwd, sessionId: "cli-pipeline" }),
+				"--json",
+			],
+			cwd,
+		);
+		expect(result.status).toBe(0);
+		const json = JSON.parse(result.stdout) as {
+			ok?: boolean;
+			body?: { statePath?: string; state?: { threshold?: number } };
+		};
+		expect(json.ok).toBe(true);
+		expect(json.body?.state?.threshold).toBe(0.05);
+		expect(json.body?.statePath).toContain(".pi/cli-pipeline/workflows/deep-interview/state.json");
+	});
+
 	it("supports pi workflow state as the centralized state command", async () => {
 		const written = await runWorkflowCommand(
 			[
@@ -107,6 +165,59 @@ describe("workflow runtime", () => {
 		const writtenJson = JSON.parse(written.stdout) as { state: { current_phase?: string; run_id?: string } };
 		expect(writtenJson.state.current_phase).toBe("planner");
 		expect(writtenJson.state.run_id).toBe("run-2");
+	});
+
+	it("escalates pending-question active HUD entries to blocked", async () => {
+		await syncWorkflowActiveState(
+			cwd,
+			{
+				skill: "deep-interview",
+				active: true,
+				phase: "waiting_for_answer",
+				has_pending_question: true,
+				hud: { version: 1, severity: "info", summary: "question waiting" },
+			},
+			{ sessionId },
+		);
+		const active = await readWorkflowActiveState(cwd, { sessionId });
+		expect(active?.active_workflows[0]).toMatchObject({
+			skill: "deep-interview",
+			has_pending_question: true,
+			hud: { severity: "blocked" },
+		});
+	});
+
+	it("refuses detached interactive starts in blocking question phases", async () => {
+		const refused = await runWorkflowCommand([
+			"start",
+			"--input",
+			JSON.stringify({
+				workspace: cwd,
+				sessionId: "h-blocking-question",
+				detach: true,
+				skill: "deep-interview",
+				phase: "waiting_for_answer",
+			}),
+			"--json",
+		]);
+		expect(refused.status).toBe(1);
+		expect(refused.stderr).toMatch(/detached workflow refused/);
+	});
+
+	it("exposes transition metadata for fail-closed harness checks", () => {
+		expect(isBlockingQuestionPhaseForSkill("deep-interview", "waiting_for_answer")).toBe(true);
+		expect(skillTerminalDetectors("deep-interview")).toContainEqual(
+			expect.objectContaining({ id: "deep-interview-spec-artifact-present", kind: "filesystem" }),
+		);
+		expect(skillTerminalDetectors("ralplan")).toContainEqual(
+			expect.objectContaining({ id: "ralplan-final-artifact-receipt", kind: "receipt" }),
+		);
+		expect(skillTerminalDetectors("team")).toContainEqual(
+			expect.objectContaining({ id: "team-completion-state-or-gate", kind: "state" }),
+		);
+		expect(skillGateValidators("ultragoal")).toContainEqual(
+			expect.objectContaining({ id: "ultragoal-guard-and-blocker-classification" }),
+		);
 	});
 
 	it("supports pi workflow state handoff and active snapshot updates", async () => {

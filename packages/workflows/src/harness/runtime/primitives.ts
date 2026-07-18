@@ -1,6 +1,9 @@
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
+import type { WorkflowSkill } from "../shared/paths.ts";
+import { evaluateSkillGateValidators, evaluateSkillTerminalDetectors } from "../shared/skill-registry.ts";
+import { readWorkflowState } from "../shared/workflow-state.ts";
 import { mutateRuntimeSession } from "./mutation.ts";
 import { preserveDirtyWorktree } from "./preservation.ts";
 import type { HarnessRpc } from "./rpc.ts";
@@ -778,6 +781,12 @@ async function runValidationCheck(check: ValidationCheckInput, cwd: string): Pro
 	});
 }
 
+function inputWorkflowSkill(input: Record<string, unknown>): WorkflowSkill | undefined {
+	const value = inputString(input, "skill");
+	if (value === "deep-interview" || value === "ralplan" || value === "team" || value === "ultragoal") return value;
+	return undefined;
+}
+
 function parseChecks(input: Record<string, unknown>): ValidationCheckInput[] {
 	const checks = input.checks;
 	if (!Array.isArray(checks)) return [];
@@ -894,6 +903,37 @@ export async function finalizePrimitive(opts: {
 	const selected = findValidationReceipt(opts.receipts, opts.state, opts.input);
 	const currentMarker = buildWorkspaceMarker(opts.state.handle.workspace, opts.state.handle.base);
 	const blockers: string[] = [];
+	const skill = inputWorkflowSkill(opts.input);
+	let terminalMatched: string[] = [];
+	if (skill) {
+		const workspace = opts.state.handle.workspace;
+		if (!workspace) {
+			blockers.push("gate-read-error:missing-workspace");
+		} else {
+			const terminal = evaluateSkillTerminalDetectors({
+				skill,
+				state: undefined,
+				sessionId: opts.state.sessionId,
+				cwd: workspace,
+				input: opts.input,
+				receipts: opts.receipts,
+			});
+			terminalMatched = terminal.matched;
+			if (!terminal.ok) blockers.push(...terminal.blockers);
+			const skillState = await readWorkflowState(workspace, skill, { sessionId: opts.state.sessionId }).catch(
+				() => undefined,
+			);
+			const gates = await evaluateSkillGateValidators({
+				skill,
+				state: skillState,
+				sessionId: opts.state.sessionId,
+				cwd: workspace,
+				input: opts.input,
+				receipts: opts.receipts,
+			});
+			if (!gates.ok) blockers.push(...gates.blockers);
+		}
+	}
 	if (!selected) blockers.push("validation-receipt-missing-or-ambiguous");
 	if (selected && !selected.valid) blockers.push("validation-receipt-invalid");
 	if (selected?.evidence && !selected.evidence.overallPassed) blockers.push("validation-not-passing");
@@ -910,7 +950,7 @@ export async function finalizePrimitive(opts: {
 			nextState: next,
 			ownerLive: opts.ownerLive,
 			events: [{ kind: "finalize_blocked", severity: "critical", evidence: { blockers } }],
-			evidence: { blockers, validation: selected, currentMarker },
+			evidence: { blockers, validation: selected, currentMarker, skill, terminalMatched },
 		});
 		return buildResponse(mutation.state, opts.ownerLive, { blockers, receipt: mutation.receipt }, false);
 	}
@@ -932,9 +972,16 @@ export async function finalizePrimitive(opts: {
 			validationReceiptId: selected?.receiptId,
 			validationReceiptSha256: selected?.contentSha256,
 			currentMarker,
+			skill,
+			terminalMatched,
 		},
 	});
-	return buildResponse(mutation.state, opts.ownerLive, { completed: true, receipt: mutation.receipt });
+	return buildResponse(mutation.state, opts.ownerLive, {
+		completed: true,
+		receipt: mutation.receipt,
+		skill,
+		terminalMatched,
+	});
 }
 
 export async function loadStateOrThrow(root: string, sessionId: string): Promise<SessionState> {

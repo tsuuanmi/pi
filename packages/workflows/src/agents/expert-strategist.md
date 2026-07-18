@@ -10,4 +10,4 @@ Artifact requirements:
 - Identify the smallest decision that unblocks planning.
 - Record rationale, constraints, risks, and rejected alternatives.
 - Recommend one next action: revise, approve-with-caveats, or stop for human input.
-- Persist the artifact through ralplan_write_artifact using stage=expert-stage and the provided stageN.
+- Persist the artifact through `pi workflow ralplan write-artifact` using stage=expert-stage and the provided stageN.

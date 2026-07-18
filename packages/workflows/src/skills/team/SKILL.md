@@ -18,8 +18,8 @@ Team coordinates multiple implementation workstreams. Use it only after the user
 ## Workflow
 
 1. Read the approved plan or task.
-2. Read active state with `pi_workflow_state` for `skill: "team"`. If no state exists, initialize it with `pi_workflow_state` `action: write`: `active: true`, `phase: "approved-execution"`, `data.input` set to the plan path or task.
-3. Start or resume runtime coordination with `team_start`, then use `team_snapshot` or `team_read_compact` to inspect current state.
+2. Read active state with `pi workflow state team read`. If no state exists, initialize it with `pi workflow state team write`: `active: true`, `phase: "approved-execution"`, `data.input` set to the plan path or task.
+3. Start or resume runtime coordination with `pi workflow team start`, then use `pi workflow team snapshot` or `pi workflow team read-compact` to inspect current state.
 4. Split work into independent workstreams with clear ownership, files, and verification.
 5. For each worker, define:
    - objective
@@ -27,12 +27,12 @@ Team coordinates multiple implementation workstreams. Use it only after the user
    - constraints
    - expected output
    - verification commands
-6. Persist each workstream with `team_create_task`.
-7. Use `team_transition_task` for task starts, blocking, failure, and completion. Completed tasks require completion evidence.
-8. Use `team_send_message` to record cross-workstream coordination decisions.
-9. Coordinate implementation in the main session unless an installed extension provides real subagent/process orchestration.
+6. Persist each workstream with `pi workflow team create-task`.
+7. Use `pi workflow team transition-task` for task starts, blocking, failure, and completion. Completed tasks require completion evidence.
+8. Use `pi workflow team send-message` to record cross-workstream coordination decisions.
+9. Spawn workers only through the guarded `pi workflow team spawn-task-agent` route when subagents are needed; otherwise coordinate implementation in the main session.
 10. Merge results carefully, resolve conflicts, and run requested checks.
-11. Close the run with `team_complete` after integration/verification, then summarize completed work, changed files, verification, and remaining risks.
+11. Close the run with `pi workflow team complete` after integration/verification, then summarize completed work, changed files, verification, and remaining risks.
 
 ## Gate
 

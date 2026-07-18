@@ -673,4 +673,12 @@ export class SubagentManager {
 		if (isTerminalStatus(record.status)) return record;
 		return this.writeTerminal(record, "cancelled", sessionId);
 	}
+
+	/** Tear down the manager: abort all live subagents and clear the live map. Called by RuntimeOwner.stop(). */
+	async dispose(): Promise<void> {
+		for (const live of this.live.values()) {
+			live.controller.abort();
+		}
+		this.live.clear();
+	}
 }

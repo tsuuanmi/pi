@@ -1,58 +1,26 @@
-# Subagent Workflow Tools
+# Subagent Workflow Control Plane
 
-Workflow-specific tool definitions for spawning and managing subagent sessions within team and ultragoal workflows.
+Workflow subagents use one canonical route: `pi workflow ...` commands. The old model-visible workflow subagent tools are not registered.
 
-**Source:** `src/harness/subagents/`
+**Source:** `src/harness/runtime/owner.ts`, `src/commands/workflow.ts`
 
-## Overview
+## Canonical Commands
 
-The `subagent-tools.ts` module provides the `team_spawn_task_agent` and `ultragoal_spawn_goal_agent` tool definitions used by the team and ultragoal workflows to spawn subagent workers.
+- `pi workflow subagents <spawn|status|await|steer|pause|resume|cancel>` — generic subagent control-plane operations routed through the detached `RuntimeOwner` to the registered Pi `SubagentManager`.
+- `pi workflow team spawn-task-agent` — state-guarded team worker spawn. The command computes the legal next team role from team state and refuses off-script task ids or runtime model/tool overrides.
+- `pi workflow ultragoal spawn-goal-agent` — state-guarded ultragoal worker spawn. The command computes the legal next goal role from ultragoal state and refuses off-script goal ids or runtime model/tool overrides.
+- `pi workflow ralplan run-agent` — state-guarded ralplan role-agent runner.
 
-These tools reuse the parent session's `SubagentManager` so that spawned workers appear in `state/subagents/index.jsonl` and can be inspected with `subagent_status`/`subagent_await`.
+Subagent records persist under `.pi/<session-id>/state/subagents/` using the agent-layer record format.
 
-## Tools
+## Guardrails
 
-### team_spawn_task_agent
-
-Spawns a subagent to execute a team task.
-
-```jsonc
-{
-  "teamId": "team-abc",
-  "taskId": "task-1",
-  "agent": "worker",              // optional: defaults to "worker"
-  "model": "anthropic/claude-...", // optional: model override
-  "thinkingLevel": "medium",      // optional: thinking level override
-  "tools": ["read", "bash"],      // optional: allowed tool names
-  "excludeTools": ["subagent_spawn"] // optional: tool names to exclude
-}
-```
-
-After spawning, `syncWorkflowHudUi` is called to update the interactive HUD.
-
-### ultragoal_spawn_goal_agent
-
-Spawns a subagent to execute an ultragoal goal.
-
-```jsonc
-{
-  "goalId": "goal-1",
-  "agent": "worker",              // optional: defaults to "worker"
-  "model": "anthropic/claude-...", // optional: model override
-  "thinkingLevel": "medium",      // optional: thinking level override
-  "tools": ["read", "bash"],      // optional: allowed tool names
-  "excludeTools": ["subagent_spawn"] // optional: tool names to exclude
-}
-```
-
-After spawning, `syncWorkflowHudUi` is called to update the interactive HUD.
-
-## Nesting Guard
-
-Both tools filter out `subagent_spawn` and other subagent tools from the spawned subagent's tool set, enforcing the nesting guard described in the [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/subagents/subagents.md) documentation.
+- Workflow-owned spawn commands are deterministic and fail closed on role mismatches.
+- Runtime `model`, `thinkingLevel`, `tools`, and `excludeTools` overrides are rejected on guarded workflow-owned spawn paths.
+- Generic `pi workflow subagents spawn` remains available for non-workflow-owned subagent operations.
 
 ## See Also
 
-- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/subagents/subagents.md) - Pi-native SubagentManager and seven subagent tools
+- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/subagents/subagents.md) - Pi-native SubagentManager
 - [Team](../team/team.md) - Team workflow
 - [Ultragoal](../ultragoal/ultragoal.md) - Ultragoal workflow

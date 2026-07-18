@@ -739,6 +739,105 @@ function validateIteration(gate: Row): IterationEvidence {
 	return iteration as unknown as IterationEvidence;
 }
 
+function hasNonEmptyStringField(row: Row, key: string): boolean {
+	return typeof row[key] === "string" && row[key].trim().length > 0;
+}
+
+function hasNonEmptyStringArrayField(row: Row, key: string): boolean {
+	return nonEmptyStringArray(row[key]) !== null;
+}
+
+function hasEmptyArrayField(row: Row, key: string): boolean {
+	return Array.isArray(row[key]) && row[key].length === 0;
+}
+
+function firstRow(value: unknown): Row | undefined {
+	if (!Array.isArray(value) || value.length === 0) return undefined;
+	return isPlainObject(value[0]) ? value[0] : undefined;
+}
+
+function collectCompletionQualityGateShapeProblems(gate: Row): string[] {
+	const problems: string[] = [];
+	const architect = isPlainObject(gate.architectReview) ? gate.architectReview : undefined;
+	if (!architect) problems.push("architectReview");
+	else {
+		for (const key of ["architectureStatus", "productStatus", "codeStatus", "recommendation", "evidence"]) {
+			if (!hasNonEmptyStringField(architect, key)) problems.push(`architectReview.${key}`);
+		}
+		if (!hasNonEmptyStringArrayField(architect, "commands")) problems.push("architectReview.commands");
+		if (!hasEmptyArrayField(architect, "blockers")) problems.push("architectReview.blockers(empty array)");
+	}
+
+	const executor = isPlainObject(gate.executorQa) ? gate.executorQa : undefined;
+	if (!executor) problems.push("executorQa");
+	else {
+		for (const key of ["status", "e2eStatus", "redTeamStatus", "evidence"]) {
+			if (!hasNonEmptyStringField(executor, key)) problems.push(`executorQa.${key}`);
+		}
+		for (const key of ["e2eCommands", "redTeamCommands"]) {
+			if (!hasNonEmptyStringArrayField(executor, key)) problems.push(`executorQa.${key}`);
+		}
+		if (!hasEmptyArrayField(executor, "blockers")) problems.push("executorQa.blockers(empty array)");
+		const artifact = firstRow(executor.artifactRefs);
+		if (!artifact) problems.push("executorQa.artifactRefs[0]");
+		else {
+			for (const key of ["id", "kind", "description"]) {
+				if (!hasNonEmptyStringField(artifact, key)) problems.push(`executorQa.artifactRefs[0].${key}`);
+			}
+		}
+		const surface = firstRow(executor.surfaceEvidence);
+		if (!surface) problems.push("executorQa.surfaceEvidence[0]");
+		else {
+			for (const key of ["id", "surface", "contractRef", "invocation"]) {
+				if (!hasNonEmptyStringField(surface, key)) problems.push(`executorQa.surfaceEvidence[0].${key}`);
+			}
+			if (!hasNonEmptyStringField(surface, "verdict") && !hasNonEmptyStringField(surface, "result")) {
+				problems.push("executorQa.surfaceEvidence[0].verdict-or-result");
+			}
+			if (!hasNonEmptyStringArrayField(surface, "artifactRefs"))
+				problems.push("executorQa.surfaceEvidence[0].artifactRefs");
+		}
+		const adversarial = firstRow(executor.adversarialCases);
+		if (!adversarial) problems.push("executorQa.adversarialCases[0]");
+		else {
+			for (const key of ["id", "contractRef", "scenario", "expectedBehavior"]) {
+				if (!hasNonEmptyStringField(adversarial, key)) problems.push(`executorQa.adversarialCases[0].${key}`);
+			}
+			if (!hasNonEmptyStringField(adversarial, "verdict") && !hasNonEmptyStringField(adversarial, "result")) {
+				problems.push("executorQa.adversarialCases[0].verdict-or-result");
+			}
+			if (!hasNonEmptyStringArrayField(adversarial, "artifactRefs"))
+				problems.push("executorQa.adversarialCases[0].artifactRefs");
+		}
+		const coverage = firstRow(executor.contractCoverage);
+		if (!coverage) problems.push("executorQa.contractCoverage[0]");
+		else {
+			for (const key of ["id", "contractRef", "obligation", "status"]) {
+				if (!hasNonEmptyStringField(coverage, key)) problems.push(`executorQa.contractCoverage[0].${key}`);
+			}
+			if (
+				!hasNonEmptyStringArrayField(coverage, "surfaceEvidenceRefs") &&
+				!hasNonEmptyStringArrayField(coverage, "adversarialCaseRefs") &&
+				!hasNonEmptyStringArrayField(coverage, "artifactRefs")
+			) {
+				problems.push("executorQa.contractCoverage[0].surfaceEvidenceRefs-or-adversarialCaseRefs-or-artifactRefs");
+			}
+		}
+	}
+
+	const iteration = isPlainObject(gate.iteration) ? gate.iteration : undefined;
+	if (!iteration) problems.push("iteration");
+	else {
+		for (const key of ["status", "evidence"]) {
+			if (!hasNonEmptyStringField(iteration, key)) problems.push(`iteration.${key}`);
+		}
+		if (iteration.fullRerun !== true) problems.push("iteration.fullRerun(true)");
+		if (!hasNonEmptyStringArrayField(iteration, "rerunCommands")) problems.push("iteration.rerunCommands");
+		if (!hasEmptyArrayField(iteration, "blockers")) problems.push("iteration.blockers(empty array)");
+	}
+	return problems;
+}
+
 export async function validateCompletionQualityGate(cwd: string, qualityGate: unknown): Promise<TypedQualityGate> {
 	if (!isPlainObject(qualityGate)) throw new Error("qualityGate must be an object for complete checkpoints");
 	if (isPlainObject(qualityGate.codeReview)) {
@@ -751,6 +850,10 @@ export async function validateCompletionQualityGate(cwd: string, qualityGate: un
 	const unsupportedKeys = Object.keys(qualityGate).filter((key) => !allowedKeys.has(key));
 	if (unsupportedKeys.length > 0)
 		throw new Error(`qualityGate contains unsupported keys: ${unsupportedKeys.join(", ")}`);
+	const shapeProblems = collectCompletionQualityGateShapeProblems(qualityGate);
+	if (shapeProblems.length > 0) {
+		throw new Error(`qualityGate is missing required complete-checkpoint fields: ${shapeProblems.join(", ")}`);
+	}
 	const architectReview = validateArchitectReview(qualityGate);
 	const executorQa = await validateExecutorQa(cwd, qualityGate);
 	const iteration = validateIteration(qualityGate);

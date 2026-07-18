@@ -15,7 +15,7 @@ export interface RalplanContextTaskInput {
 const RALPLAN_BASE_CONTRACT = [
 	"Ralplan workflow contract:",
 	"- Produce planning/review artifacts only. Do not edit product files or execute implementation.",
-	"- Persist the artifact by calling ralplan_write_artifact with the provided runId, stage, stageN, and full markdown artifact.",
+	"- Persist the artifact by running `pi workflow ralplan write-artifact` with the provided runId, stage, stageN, and full markdown artifact as the command input.",
 	"- Return only the receipt/path plus compact status. Do not paste the full artifact after persistence.",
 ] as const;
 

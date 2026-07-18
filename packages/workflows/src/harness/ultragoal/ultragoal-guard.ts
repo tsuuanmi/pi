@@ -2,7 +2,7 @@
  * Ultragoal guard diagnostics (UG-008).
  *
  * Passive 9-state diagnostic surface plus the entrypoint used by the
- * `ultragoal_guard` tool. The guard reads the plan + ledger, classifies the
+ * `pi workflow ultragoal guard` control-plane action. The guard reads the plan + ledger, classifies the
  * current objective, and delegates receipt validation to the pure
  * `validateCompletionReceipt` in `ultragoal-receipt.ts`.
  *
@@ -255,7 +255,7 @@ export async function readUltragoalVerificationState(
 	return { state: receipt.state, message: receipt.message, goalId: receipt.goalId };
 }
 
-/** Entrypoint for the `ultragoal_guard` tool. */
+/** Entrypoint for the `pi workflow ultragoal guard` control-plane action. */
 export async function ultragoalGuard(
 	cwd: string,
 	sessionId: string,

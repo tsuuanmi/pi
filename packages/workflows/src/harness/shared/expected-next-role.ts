@@ -1,5 +1,8 @@
+import type { WorkflowSkill } from "./paths.ts";
+import { expectedNextRoleForSkill } from "./skill-registry.ts";
+
 export interface ExpectedNextRole {
-	skill: "ralplan" | "team";
+	skill: WorkflowSkill;
 	stage: string;
 	role: string;
 	owner: string;
@@ -57,12 +60,13 @@ export function assertExpectedNextRole(
 }
 
 // ---------------------------------------------------------------------------
-// Deterministic state-driven selectors (Slice 2)
+// Deterministic table-driven selectors
 //
-// Pure functions: callers read workflow state and pass it in. The selector
-// returns exactly one legal ExpectedNextRole, or undefined when no legal spawn
-// remains (workflow closed / awaiting approval / no actionable task). These
-// never perform I/O so they can be unit-tested in isolation.
+// These exported functions are compatibility facades for existing tests and
+// runtime helpers. The phase logic itself is registered by per-skill transition
+// sidecars (for example, harness/ralplan/ralplan-transitions.ts). This keeps the
+// guarded spawn contract in one shared module while avoiding a second, hardcoded
+// transition engine here.
 // ---------------------------------------------------------------------------
 
 /** Ralplan verdict slice accepted by the selector (architect or critic). */
@@ -95,97 +99,11 @@ export interface RalplanSelectorState {
 	expertCap?: number;
 }
 
-const RALPLAN_CLOSED_PHASES = new Set([
-	"pending-approval",
-	"approved",
-	"handoff",
-	"complete",
-	"completed",
-	"failed",
-	"cancelled",
-	"canceled",
-	"inactive",
-]);
-
-/**
- * Compute the one legal next ralplan role spawn from state. Returns undefined
- * when the workflow is closed/awaiting approval (no legal role spawn remains).
- *
- * Progression (driven by the explorer pre-planner gate, the latest written
- * artifact, and the critic verdict; the architect verdict does not branch the
- * stage flow, only the critic verdict does):
- *   expert escalation state / iterate cap    -> expert-stage/expert-strategist
- *   explorer gate not passed (missing/retry) -> pre-planner/explorer (blocks all role spawns)
- *   explorer gate human_blocked              -> expert-stage/expert-strategist
- *   expert-stage at expert cap               -> undefined
- *   none / explorer passed                   -> planner
- *   planner                                  -> architect
- *   revision                                 -> architect (re-review)
- *   architect                                -> critic (always; manifest has no architect->revision)
- *   critic                                    -> revision (iterate/reject), undefined (approve), else critic
- *   adr / final                               -> undefined
- */
 export function expectedNextRalplanRole(
 	state: RalplanSelectorState | undefined,
 	runId: string,
 ): ExpectedNextRole | undefined {
-	if (state?.current_phase && RALPLAN_CLOSED_PHASES.has(state.current_phase)) return undefined;
-	const iterateCap = typeof state?.iterateCap === "number" && state.iterateCap > 0 ? state.iterateCap : 5;
-	const expertCap = typeof state?.expertCap === "number" && state.expertCap > 0 ? state.expertCap : 3;
-	const expertCount = typeof state?.expertCount === "number" ? state.expertCount : 0;
-	if (
-		state?.current_phase === "expert-stage" ||
-		state?.expertEscalation === true ||
-		(typeof state?.iterateCount === "number" && state.iterateCount >= iterateCap)
-	) {
-		if (expertCount >= expertCap) return undefined;
-		return { skill: "ralplan", stage: "expert-stage", role: "expert-strategist", owner: "ralplan_run_agent", runId };
-	}
-	// Pre-planner explorer gate: block every role spawn until a passing
-	// context_map is recorded (or context_needed=false bypass). When the gate
-	// has escalated to human_blocked there is no legal spawn remaining.
-	const explorer = state?.explorerGate;
-	if (explorer) {
-		if (explorer.status === "human_blocked") {
-			if (expertCount >= expertCap) return undefined;
-			return {
-				skill: "ralplan",
-				stage: "expert-stage",
-				role: "expert-strategist",
-				owner: "ralplan_run_agent",
-				runId,
-			};
-		}
-		if (explorer.status !== "passed") {
-			return { skill: "ralplan", stage: "pre-planner", role: "explorer", owner: "ralplan_run_agent", runId };
-		}
-	}
-	const latest = state?.latest;
-	if (!latest) {
-		return { skill: "ralplan", stage: "planner", role: "planner", owner: "ralplan_run_agent", runId };
-	}
-	switch (latest.stage) {
-		case "planner":
-		case "revision":
-			return { skill: "ralplan", stage: "architect", role: "architect", owner: "ralplan_run_agent", runId };
-		case "architect":
-			return { skill: "ralplan", stage: "critic", role: "critic", owner: "ralplan_run_agent", runId };
-		case "critic": {
-			const v = latest.verdict;
-			if (v?.role === "critic") {
-				if (v.verdict === "approve") return undefined;
-				if (v.verdict === "iterate" || v.verdict === "reject") {
-					return { skill: "ralplan", stage: "revision", role: "planner", owner: "ralplan_run_agent", runId };
-				}
-			}
-			return { skill: "ralplan", stage: "critic", role: "critic", owner: "ralplan_run_agent", runId };
-		}
-		case "adr":
-		case "final":
-			return undefined;
-		default:
-			return undefined;
-	}
+	return expectedNextRoleForSkill({ skill: "ralplan", state, runId });
 }
 
 /** Team task slice accepted by the selector. */
@@ -200,27 +118,8 @@ export interface TeamSelectorSnapshot {
 	tasks: TeamSelectorTask[];
 }
 
-/**
- * Compute the one legal next team worker spawn. v1 enforces exactly one legal
- * task: prefer the lexicographically smallest in-progress task, else the
- * smallest pending task. Returns undefined when no actionable task remains.
- */
 export function expectedNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): ExpectedNextRole | undefined {
-	if (!snapshot) return undefined;
-	if (!snapshot.team_id) return undefined;
-	const inProgress = snapshot.tasks.filter((t) => t.status === "in_progress");
-	const pool = inProgress.length > 0 ? inProgress : snapshot.tasks.filter((t) => t.status === "pending");
-	if (pool.length === 0) return undefined;
-	const next = pool.slice().sort((a, b) => a.id.localeCompare(b.id))[0];
-	if (!next) return undefined;
-	return {
-		skill: "team",
-		stage: "task-worker",
-		role: "worker",
-		owner: "team_spawn_task_agent",
-		teamId: snapshot.team_id,
-		taskId: next.id,
-	};
+	return expectedNextRoleForSkill({ skill: "team", state: snapshot });
 }
 
 export function assertNoGuardedSpawnOverrides(input: {

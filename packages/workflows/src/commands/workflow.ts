@@ -1,4 +1,69 @@
 import { execFileSync, spawn } from "node:child_process";
+import "../harness/deep-interview/deep-interview-transitions.ts";
+import {
+	appendOrMergeDeepInterviewRound,
+	enrichDeepInterviewRoundScoring,
+	finalizeDeepInterviewSpecState,
+	planDeepInterviewQuestion,
+	readDeepInterviewStateCompact,
+	restateGoalGate,
+	runClosureCheckForSession,
+} from "../harness/deep-interview/deep-interview-runtime.ts";
+import type {
+	DeepInterviewAdvisoryMetadata,
+	DeepInterviewRoundRecord,
+} from "../harness/deep-interview/deep-interview-state.ts";
+import type { RalplanAgentRole } from "../harness/ralplan/ralplan-agents.ts";
+import { runRalplanAgent } from "../harness/ralplan/ralplan-agents.ts";
+import { recordRalplanExplorerGateArtifact } from "../harness/ralplan/ralplan-gates.ts";
+import type { RalplanApprovalTarget } from "../harness/ralplan/ralplan-runtime.ts";
+import {
+	approveRalplanPlan,
+	doctorRalplan,
+	readRalplanCompactStatus,
+	readRalplanStatus,
+	writeRalplanArtifact,
+} from "../harness/ralplan/ralplan-runtime.ts";
+import {
+	assertExpectedNextRole,
+	assertNoGuardedSpawnOverrides,
+	type ExpectedNextRole,
+} from "../harness/shared/expected-next-role.ts";
+import { handoffWorkflow } from "../harness/shared/handoff.ts";
+import type { RalplanStage } from "../harness/shared/paths.ts";
+import { deepInterviewIndexPath, deepInterviewSpecPath } from "../harness/shared/session-layout.ts";
+import { expectedNextRoleForSkill } from "../harness/shared/skill-registry.ts";
+import { assertSafePathComponent } from "../harness/shared/state-schema.ts";
+import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "../harness/shared/state-writer.ts";
+import { defaultWorkflowId } from "../harness/shared/workflow-id.ts";
+import { activeRalplanRunId } from "../harness/shared/workflow-state.ts";
+import { assertDeepInterviewHandoff } from "../harness/shared/workflow-tool-utils.ts";
+import {
+	completeTeam,
+	createTeamTask,
+	readTeamCompact,
+	readTeamSnapshot,
+	recordTeamCompletionGateArtifact,
+	recordTeamReviewGateArtifact,
+	sendTeamMessage,
+	startTeam,
+	transitionTeamTask,
+} from "../harness/team/team-runtime.ts";
+import { ultragoalGuard } from "../harness/ultragoal/ultragoal-guard.ts";
+import type { UltragoalGoalMode } from "../harness/ultragoal/ultragoal-receipt.ts";
+import type { UltragoalBlockerClassification } from "../harness/ultragoal/ultragoal-runtime.ts";
+import {
+	checkpointUltragoalGoal,
+	createUltragoalPlan,
+	getUltragoalStatus,
+	readUltragoalCompact,
+	recordUltragoalBlockerClassification,
+	recordUltragoalReviewBlockers,
+	startNextUltragoalGoal,
+} from "../harness/ultragoal/ultragoal-runtime.ts";
+import "../harness/ralplan/ralplan-transitions.ts";
+import "../harness/team/team-transitions.ts";
+import "../harness/ultragoal/ultragoal-transitions.ts";
 import { callEndpoint } from "../harness/runtime/endpoint.ts";
 import type { GcContext } from "../harness/runtime/gc.ts";
 import { collectGcReport, computeGcExitCode, gcPidProbe, HarnessLeasesGcStoreAdapter } from "../harness/runtime/gc.ts";
@@ -33,6 +98,8 @@ import {
 	type SessionHandle,
 	type SessionState,
 } from "../harness/runtime/types.ts";
+import type { WorkflowSkill } from "../harness/shared/paths.ts";
+import { isBlockingQuestionPhaseForSkill } from "../harness/shared/skill-registry.ts";
 import { runStateCommand } from "./state-command.ts";
 
 interface WorkflowCommandResult {
@@ -41,8 +108,11 @@ interface WorkflowCommandResult {
 	stderr: string;
 }
 
+const SKILL_VERBS = new Set(["deep-interview", "ralplan", "team", "ultragoal"]);
+
 interface ParsedWorkflowCommand {
 	verb: string;
+	subverb?: string;
 	input?: string;
 	json: boolean;
 	help: boolean;
@@ -61,9 +131,11 @@ function usage(): string {
   pi workflow validate --input '{"sessionId":"h-...","checks":[{"name":"check","command":"npm run check"}]}' --json
   pi workflow finalize --input '{"sessionId":"h-..."}' --json
   pi workflow operate --input '{"sessionId":"h-...","goal":"...","maxIterations":10}' --json
+  pi workflow subagents <spawn|status|await|steer|pause|resume|cancel> --input '{"sessionId":"h-..."}' --json
   pi workflow gc [--prune] [--dry-run] --json
   pi workflow events --input '{"sessionId":"h-..."}' --json
   pi workflow retire --input '{"sessionId":"h-..."}' --json
+  pi workflow <deep-interview|ralplan|team|ultragoal> <action> --input '{...}' --json
 
 State root: PI_HARNESS_STATE_ROOT or <workspace>/.pi/state/harness
 `;
@@ -102,6 +174,14 @@ function parseWorkflowArgs(args: string[]): ParsedWorkflowCommand {
 			verbSet = true;
 			continue;
 		}
+		if (parsed.verb === "subagents" && parsed.subverb === undefined) {
+			parsed.subverb = arg;
+			continue;
+		}
+		if (SKILL_VERBS.has(parsed.verb) && parsed.subverb === undefined) {
+			parsed.subverb = arg;
+			continue;
+		}
 		throw new Error(`unknown workflow argument: ${arg}`);
 	}
 	return parsed;
@@ -129,6 +209,52 @@ function gitOutput(workspace: string, args: string[]): string | null {
 function inputString(input: Record<string, unknown>, key: string): string | undefined {
 	const value = input[key];
 	return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function requiredString(input: Record<string, unknown>, key: string): string {
+	const value = inputString(input, key);
+	if (value === undefined) throw new Error(`${key} is required`);
+	return value;
+}
+
+function optionalNumber(input: Record<string, unknown>, key: string): number | undefined {
+	const value = input[key];
+	return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function requiredNumber(input: Record<string, unknown>, key: string): number {
+	const value = optionalNumber(input, key);
+	if (value === undefined) throw new Error(`${key} must be a finite number`);
+	return value;
+}
+
+function optionalStringArray(input: Record<string, unknown>, key: string): string[] | undefined {
+	const value = input[key];
+	if (!Array.isArray(value)) return undefined;
+	return value.filter((item): item is string => typeof item === "string");
+}
+
+function requiredObject(input: Record<string, unknown>, key: string): Record<string, unknown> {
+	const value = input[key];
+	if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${key} must be an object`);
+	return value as Record<string, unknown>;
+}
+
+function inputWorkflowSkill(input: Record<string, unknown>): WorkflowSkill | undefined {
+	const skill = inputString(input, "skill");
+	if (skill === "deep-interview" || skill === "ralplan" || skill === "team" || skill === "ultragoal") return skill;
+	return undefined;
+}
+
+function assertDetachedInteractiveAllowed(input: Record<string, unknown>, detachRequested: boolean): void {
+	if (!detachRequested) return;
+	const skill = inputWorkflowSkill(input);
+	if (!skill) return;
+	const phase = inputString(input, "phase") ?? inputString(input, "current_phase") ?? inputString(input, "status");
+	if (!isBlockingQuestionPhaseForSkill(skill, phase)) return;
+	throw new Error(
+		`detached workflow refused: skill ${skill} is interactive and phase ${phase} requires a blocking user question; run attached or clear the blocking phase`,
+	);
 }
 
 function sessionIdFromInput(input: Record<string, unknown>): string {
@@ -184,6 +310,7 @@ function spawnDetachedOwner(input: Record<string, unknown>): number | null {
 }
 
 async function start(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
+	assertDetachedInteractiveAllowed(input, input.detach === true);
 	const workspace = canonicalWorkspacePath(inputString(input, "workspace") ?? process.cwd());
 	const root = resolveHarnessRoot({ root: inputString(input, "root"), cwd: workspace });
 	const sessionId = inputString(input, "sessionId") ?? generateSessionId();
@@ -440,6 +567,52 @@ async function events(input: Record<string, unknown>, json: boolean): Promise<Wo
 	return { status: 0, stdout: output(buildResponse(state, false, { events: rows }), json), stderr: "" };
 }
 
+async function routeGuardedSubagentSpawn(
+	root: string,
+	state: SessionState,
+	expected: ExpectedNextRole | undefined,
+	actual: Parameters<typeof assertExpectedNextRole>[1],
+	input: Record<string, unknown>,
+	json: boolean,
+): Promise<WorkflowCommandResult> {
+	if (!expected) throw new Error("off-script spawn refused: no expected next role");
+	assertExpectedNextRole(expected, actual);
+	const ownerResponse = await routeToOwner(root, state, "subagents.spawn", { ...input, action: "spawn" }).catch(
+		() => undefined,
+	);
+	if (ownerResponse)
+		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
+	const reason = "owner-not-live";
+	return {
+		status: 1,
+		stdout: output(buildResponse(state, false, { accepted: false, action: "spawn", reason }, false, reason), json),
+		stderr: "",
+	};
+}
+
+async function subagents(
+	action: string | undefined,
+	input: Record<string, unknown>,
+	json: boolean,
+): Promise<WorkflowCommandResult> {
+	const allowed = new Set(["spawn", "status", "await", "steer", "pause", "resume", "cancel"]);
+	if (!action || !allowed.has(action))
+		throw new Error("pi workflow subagents requires <spawn|status|await|steer|pause|resume|cancel>");
+	assertDetachedInteractiveAllowed(input, action === "spawn" && input.detach !== false);
+	const { root, state } = await loadState(input);
+	const ownerResponse = await routeToOwner(root, state, `subagents.${action}`, { ...input, action }).catch(
+		() => undefined,
+	);
+	if (ownerResponse)
+		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
+	const reason = "owner-not-live";
+	return {
+		status: 1,
+		stdout: output(buildResponse(state, false, { accepted: false, action, reason }, false, reason), json),
+		stderr: "",
+	};
+}
+
 async function retire(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
 	const ownerResponse = await routeToOwner(root, state, "retire", input).catch(() => undefined);
@@ -486,6 +659,518 @@ async function gc(args: {
 	return { status: computeGcExitCode(report), stdout: output(report, args.json), stderr: "" };
 }
 
+async function deepInterviewVerb(
+	action: string | undefined,
+	input: Record<string, unknown>,
+	json: boolean,
+	cwd: string,
+): Promise<WorkflowCommandResult> {
+	const sessionId = inputString(input, "sessionId") ?? generateSessionId();
+	const valid = new Set([
+		"plan-question",
+		"record-answer",
+		"record-scoring",
+		"read-compact",
+		"closure-check",
+		"restate-goal",
+		"write-spec",
+	]);
+	if (!action || !valid.has(action))
+		throw new Error(`unsupported pi workflow deep-interview verb: ${action ?? "(none)"}`);
+	let body: unknown;
+	switch (action) {
+		case "plan-question": {
+			body = await planDeepInterviewQuestion(
+				cwd,
+				{
+					round: requiredNumber(input, "round"),
+					questionId: inputString(input, "questionId"),
+					questionText: requiredString(input, "questionText"),
+					component: inputString(input, "component"),
+					dimension: inputString(input, "dimension"),
+					ambiguity: optionalNumber(input, "ambiguity"),
+					rationale: inputString(input, "rationale"),
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "record-answer": {
+			body = await appendOrMergeDeepInterviewRound(
+				cwd,
+				{
+					interviewId: inputString(input, "interviewId"),
+					round: optionalNumber(input, "round"),
+					round_id: inputString(input, "round_id"),
+					questionId: inputString(input, "questionId"),
+					questionText: inputString(input, "questionText"),
+					component: inputString(input, "component"),
+					dimension: inputString(input, "dimension"),
+					ambiguity: optionalNumber(input, "ambiguity"),
+					selectedOptions: optionalStringArray(input, "selectedOptions"),
+					customInput: inputString(input, "customInput"),
+					topology: input.topology,
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "record-scoring": {
+			body = await enrichDeepInterviewRoundScoring(
+				cwd,
+				{
+					interviewId: inputString(input, "interviewId"),
+					round: requiredNumber(input, "round"),
+					round_id: inputString(input, "round_id"),
+					questionId: inputString(input, "questionId"),
+					scores: requiredObject(input, "scores") as Record<string, number>,
+					ambiguity: requiredNumber(input, "ambiguity"),
+					triggers: (input.triggers as DeepInterviewRoundRecord["triggers"]) ?? [],
+					metadata: input.metadata as DeepInterviewAdvisoryMetadata | undefined,
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "read-compact": {
+			body = await readDeepInterviewStateCompact(cwd, sessionId, optionalNumber(input, "lastN"));
+			break;
+		}
+		case "closure-check": {
+			body = await runClosureCheckForSession(cwd, sessionId);
+			break;
+		}
+		case "restate-goal": {
+			body = await restateGoalGate(
+				cwd,
+				{
+					restatedGoal: requiredString(input, "restatedGoal"),
+					confirm: requiredString(input, "confirm") as "Yes" | "Adjust" | "Missing",
+					adjustment: inputString(input, "adjustment"),
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "write-spec": {
+			const slug = inputString(input, "slug")?.trim() || defaultWorkflowId("spec");
+			assertSafePathComponent(slug, "slug");
+			const handoff = inputString(input, "handoff");
+			if (handoff) assertDeepInterviewHandoff(handoff);
+			const content = await readFileOrLiteral(requiredString(input, "spec"), cwd);
+			const specPath = deepInterviewSpecPath(cwd, slug, sessionId);
+			const result = await writeTextArtifact(specPath, content, { cwd });
+			await appendJsonl(
+				deepInterviewIndexPath(cwd, sessionId),
+				{
+					slug,
+					path: result.path,
+					sha256: result.sha256,
+					created_at: result.createdAt,
+				},
+				{ cwd },
+			);
+			const handoffTarget = handoff as "ralplan" | "ultragoal" | "team" | undefined;
+			if (handoffTarget === "ralplan" || handoffTarget === "team" || handoffTarget === "ultragoal") {
+				await finalizeDeepInterviewSpecState(
+					cwd,
+					{ slug, path: result.path, sha256: result.sha256, handoff: handoffTarget },
+					sessionId,
+				);
+				const calleePatch =
+					handoffTarget === "ralplan"
+						? {
+								run_id: (await activeRalplanRunId(cwd, sessionId)) ?? defaultWorkflowId("ralplan"),
+								input: result.path,
+							}
+						: { input: result.path };
+				await handoffWorkflow({
+					cwd,
+					caller: { skill: "deep-interview", patch: {} },
+					callee: { skill: handoffTarget, patch: calleePatch },
+					command: "pi deep-interview write-spec",
+					sessionId,
+				});
+			} else {
+				await finalizeDeepInterviewSpecState(
+					cwd,
+					{ slug, path: result.path, sha256: result.sha256, handoff: handoff ?? "stop" },
+					sessionId,
+				);
+			}
+			body = { slug, path: result.path, sha256: result.sha256, handoff: handoffTarget };
+			break;
+		}
+	}
+	return { status: 0, stdout: output({ ok: true, body }, json), stderr: "" };
+}
+
+async function ralplanVerb(
+	action: string | undefined,
+	input: Record<string, unknown>,
+	json: boolean,
+	cwd: string,
+): Promise<WorkflowCommandResult> {
+	const sessionId = inputString(input, "sessionId") ?? generateSessionId();
+	const valid = new Set([
+		"record-explorer-gate",
+		"run-agent",
+		"write-artifact",
+		"status",
+		"read-compact",
+		"doctor",
+		"approve-plan",
+	]);
+	if (!action || !valid.has(action)) throw new Error(`unsupported pi workflow ralplan verb: ${action ?? "(none)"}`);
+	let body: unknown;
+	switch (action) {
+		case "record-explorer-gate": {
+			body = await recordRalplanExplorerGateArtifact(
+				cwd,
+				{
+					runId: inputString(input, "runId"),
+					contextMap: requiredObject(input, "contextMap"),
+					recordedBy: inputString(input, "recordedBy"),
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "run-agent": {
+			body = await runRalplanAgent(
+				cwd,
+				{
+					runId: inputString(input, "runId"),
+					stage: requiredString(input, "stage") as RalplanStage,
+					stageN: requiredNumber(input, "stageN"),
+					role: inputString(input, "role") as RalplanAgentRole,
+					task: requiredString(input, "task"),
+					contextArtifacts: (input.contextArtifacts as string[]) ?? [],
+					deliberate: input.deliberate === true,
+					dryRun: input.dryRun === true,
+					plannerSubagentId: inputString(input, "plannerSubagentId"),
+					attemptResume: input.attemptResume === true,
+					excludeTools: (input.excludeTools as string[]) ?? undefined,
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "write-artifact": {
+			body = await writeRalplanArtifact(
+				cwd,
+				{
+					runId: inputString(input, "runId"),
+					stage: requiredString(input, "stage") as RalplanStage,
+					stageN: requiredNumber(input, "stageN"),
+					artifact: requiredString(input, "artifact"),
+					plannerSubagentId: inputString(input, "plannerSubagentId"),
+					plannerResumable: input.plannerResumable === true,
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "status": {
+			body = await readRalplanStatus(cwd, sessionId, inputString(input, "runId"));
+			break;
+		}
+		case "read-compact": {
+			body = await readRalplanCompactStatus(cwd, sessionId, inputString(input, "runId"));
+			break;
+		}
+		case "doctor": {
+			body = await doctorRalplan(cwd, sessionId, inputString(input, "runId"));
+			break;
+		}
+		case "approve-plan": {
+			body = await approveRalplanPlan(cwd, {
+				runId: inputString(input, "runId"),
+				target: inputString(input, "target") as RalplanApprovalTarget | undefined,
+				approved: input.approved !== false,
+				note: inputString(input, "note"),
+				overrideCriticVerdict: input.overrideCriticVerdict === true,
+				sessionId,
+			});
+			break;
+		}
+	}
+	return { status: 0, stdout: output({ ok: true, body }, json), stderr: "" };
+}
+
+async function teamVerb(
+	action: string | undefined,
+	input: Record<string, unknown>,
+	json: boolean,
+	cwd: string,
+): Promise<WorkflowCommandResult> {
+	const sessionId = inputString(input, "sessionId") ?? generateSessionId();
+	const valid = new Set([
+		"start",
+		"snapshot",
+		"read-compact",
+		"create-task",
+		"transition-task",
+		"send-message",
+		"record-review-gate",
+		"record-completion-gate",
+		"complete",
+		"spawn-task-agent",
+	]);
+	if (!action || !valid.has(action)) throw new Error(`unsupported pi workflow team verb: ${action ?? "(none)"}`);
+	let body: unknown;
+	switch (action) {
+		case "start": {
+			body = await startTeam(
+				cwd,
+				{
+					task: requiredString(input, "task"),
+					teamId: inputString(input, "teamId"),
+					workers: (input.workers as { id?: string; name?: string; role?: string }[]) ?? undefined,
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "snapshot": {
+			body = await readTeamSnapshot(cwd, sessionId, inputString(input, "teamId"));
+			break;
+		}
+		case "read-compact": {
+			body = await readTeamCompact(cwd, sessionId, inputString(input, "teamId"));
+			break;
+		}
+		case "create-task": {
+			body = await createTeamTask(
+				cwd,
+				{
+					teamId: inputString(input, "teamId"),
+					id: inputString(input, "id"),
+					title: requiredString(input, "title"),
+					description: requiredString(input, "description"),
+					owner: inputString(input, "owner"),
+					dependsOn: (input.dependsOn as string[]) ?? undefined,
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "transition-task": {
+			body = await transitionTeamTask(
+				cwd,
+				{
+					teamId: inputString(input, "teamId"),
+					taskId: requiredString(input, "taskId"),
+					status: requiredString(input, "status"),
+					workerId: inputString(input, "workerId"),
+					evidence: input.evidence as Record<string, unknown> as never,
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "send-message": {
+			body = await sendTeamMessage(
+				cwd,
+				{
+					teamId: inputString(input, "teamId"),
+					from: requiredString(input, "from"),
+					to: requiredString(input, "to"),
+					body: requiredString(input, "body"),
+					idempotencyKey: inputString(input, "idempotencyKey"),
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "record-review-gate": {
+			body = await recordTeamReviewGateArtifact(
+				cwd,
+				{
+					teamId: inputString(input, "teamId"),
+					taskId: requiredString(input, "taskId"),
+					reviewReport: requiredObject(input, "reviewReport"),
+					recordedBy: inputString(input, "recordedBy"),
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "record-completion-gate": {
+			body = await recordTeamCompletionGateArtifact(
+				cwd,
+				{
+					teamId: inputString(input, "teamId"),
+					evidenceMatrix: requiredObject(input, "evidenceMatrix"),
+					recordedBy: inputString(input, "recordedBy"),
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "complete": {
+			body = await completeTeam(
+				cwd,
+				{
+					teamId: inputString(input, "teamId"),
+					phase: inputString(input, "phase") as "complete" | "failed" | "cancelled" | undefined,
+					summary: inputString(input, "summary"),
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "spawn-task-agent": {
+			assertNoGuardedSpawnOverrides(input);
+			const { root, state } = await loadState({ ...input, workspace: cwd });
+			const taskId = requiredString(input, "taskId");
+			const teamId = inputString(input, "teamId");
+			const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
+			const expected = expectedNextRoleForSkill({ skill: "team", state: snapshot });
+			return routeGuardedSubagentSpawn(
+				root,
+				state,
+				expected,
+				{ skill: "team", stage: "task-worker", role: "worker", owner: "team_spawn_task_agent", teamId, taskId },
+				{
+					role: inputString(input, "role") ?? "worker",
+					label: `team worker ${teamId ?? "default"}/${taskId}`,
+					prompt: requiredString(input, "prompt"),
+					cwd,
+					persistent: true,
+					parentSessionId: sessionId,
+					teamId,
+					taskId,
+				},
+				json,
+			);
+		}
+	}
+	return { status: 0, stdout: output({ ok: true, body }, json), stderr: "" };
+}
+
+async function ultragoalVerb(
+	action: string | undefined,
+	input: Record<string, unknown>,
+	json: boolean,
+	cwd: string,
+): Promise<WorkflowCommandResult> {
+	const sessionId = inputString(input, "sessionId") ?? generateSessionId();
+	const valid = new Set([
+		"create-plan",
+		"status",
+		"read-compact",
+		"start-next",
+		"checkpoint",
+		"record-review-blockers",
+		"classify-blocker",
+		"guard",
+		"spawn-goal-agent",
+	]);
+	if (!action || !valid.has(action)) throw new Error(`unsupported pi workflow ultragoal verb: ${action ?? "(none)"}`);
+	let body: unknown;
+	switch (action) {
+		case "create-plan": {
+			body = await createUltragoalPlan(
+				cwd,
+				{
+					brief: requiredString(input, "brief"),
+					goalMode: inputString(input, "goalMode") as UltragoalGoalMode | undefined,
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "status": {
+			body = await getUltragoalStatus(cwd, sessionId);
+			break;
+		}
+		case "read-compact": {
+			body = await readUltragoalCompact(cwd, sessionId);
+			break;
+		}
+		case "start-next": {
+			body = await startNextUltragoalGoal(cwd, input.retryFailed === true, sessionId);
+			break;
+		}
+		case "checkpoint": {
+			body = await checkpointUltragoalGoal(
+				cwd,
+				{
+					goalId: requiredString(input, "goalId"),
+					status: requiredString(input, "status"),
+					evidence: inputString(input, "evidence"),
+					qualityGate: (input.qualityGate as Record<string, unknown>) ?? undefined,
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "record-review-blockers": {
+			body = await recordUltragoalReviewBlockers(
+				cwd,
+				{
+					goalId: requiredString(input, "goalId"),
+					title: requiredString(input, "title"),
+					objective: requiredString(input, "objective"),
+					evidence: requiredString(input, "evidence"),
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "classify-blocker": {
+			body = await recordUltragoalBlockerClassification(
+				cwd,
+				{
+					goalId: inputString(input, "goalId"),
+					classification: requiredString(input, "classification") as UltragoalBlockerClassification,
+					evidence: requiredString(input, "evidence"),
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "guard": {
+			body = await ultragoalGuard(cwd, sessionId, {
+				goalId: inputString(input, "goalId"),
+				currentObjective: inputString(input, "currentObjective"),
+			});
+			break;
+		}
+		case "spawn-goal-agent": {
+			assertNoGuardedSpawnOverrides(input);
+			const { root, state } = await loadState({ ...input, workspace: cwd });
+			const goalId = requiredString(input, "goalId");
+			const status = await getUltragoalStatus(cwd, sessionId);
+			const expected = expectedNextRoleForSkill({ skill: "ultragoal", state: status });
+			return routeGuardedSubagentSpawn(
+				root,
+				state,
+				expected,
+				{
+					skill: "ultragoal",
+					stage: "goal-worker",
+					role: "worker",
+					owner: "ultragoal_spawn_goal_agent",
+					taskId: goalId,
+				},
+				{
+					role: inputString(input, "role") ?? "worker",
+					label: `ultragoal worker ${goalId}`,
+					prompt: requiredString(input, "prompt"),
+					cwd,
+					persistent: true,
+					parentSessionId: sessionId,
+					goalId,
+				},
+				json,
+			);
+		}
+	}
+	return { status: 0, stdout: output({ ok: true, body }, json), stderr: "" };
+}
+
 async function dispatch(parsed: ParsedWorkflowCommand, cwd: string): Promise<WorkflowCommandResult> {
 	if (parsed.help) return { status: 0, stdout: usage(), stderr: "" };
 	if (parsed.verb !== "gc" && (parsed.prune || parsed.dryRun)) {
@@ -501,9 +1186,16 @@ async function dispatch(parsed: ParsedWorkflowCommand, cwd: string): Promise<Wor
 	if (parsed.verb === "validate") return validate(input, parsed.json);
 	if (parsed.verb === "finalize") return finalize(input, parsed.json);
 	if (parsed.verb === "operate") return operateCmd(input, parsed.json);
+	if (parsed.verb === "subagent")
+		throw new Error("unsupported singular workflow subagent form; use the plural subagents command");
+	if (parsed.verb === "subagents") return subagents(parsed.subverb, input, parsed.json);
 	if (parsed.verb === "gc") return gc({ prune: parsed.prune, dryRun: parsed.dryRun, json: parsed.json, input, cwd });
 	if (parsed.verb === "events") return events(input, parsed.json);
 	if (parsed.verb === "retire") return retire(input, parsed.json);
+	if (parsed.verb === "deep-interview") return deepInterviewVerb(parsed.subverb, input, parsed.json, cwd);
+	if (parsed.verb === "ralplan") return ralplanVerb(parsed.subverb, input, parsed.json, cwd);
+	if (parsed.verb === "team") return teamVerb(parsed.subverb, input, parsed.json, cwd);
+	if (parsed.verb === "ultragoal") return ultragoalVerb(parsed.subverb, input, parsed.json, cwd);
 	throw new Error(`unsupported pi workflow verb: ${parsed.verb}`);
 }
 

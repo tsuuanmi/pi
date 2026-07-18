@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Added
+
+- **subagents**: Added a `SubagentManagerFactory` registry (`registerSubagentManagerFactory`/`getSubagentManagerFactory`/`clearSubagentManagerFactoryForTests`) + `SubagentManagerFactoryContext` type as the registration seam that lets `pi-workflows` obtain a `SubagentManager` without depending on `pi-coding-agent`. Added `dispose(): Promise<void>` to the `SubagentManager` interface for owner-lifecycle teardown.
+
 ### Breaking Changes
 
 - Removed unused coding-agent harness APIs from the public package surface, including `AgentHarness`, harness compaction/session/skills/prompt-template/system-prompt exports, harness repository helpers, `uuidv7`, and harness-specific error types. Use `@tsuuanmi/pi-coding-agent` for coding-agent application features.

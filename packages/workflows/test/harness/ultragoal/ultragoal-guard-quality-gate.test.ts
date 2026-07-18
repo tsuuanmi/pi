@@ -116,6 +116,20 @@ test("quality gate rejects unsupported top-level keys", async () => {
 	});
 });
 
+test("quality gate reports missing nested complete-checkpoint fields together", async () => {
+	await withDir(async (cwd) => {
+		await expect(
+			validateCompletionQualityGate(cwd, {
+				architectReview: { architectureStatus: "CLEAR" },
+				executorQa: { status: PASSED, artifactRefs: [{}], surfaceEvidence: [{}] },
+				iteration: { status: PASSED },
+			}),
+		).rejects.toThrow(
+			/architectReview\.productStatus.*executorQa\.surfaceEvidence\[0\]\.contractRef.*executorQa\.adversarialCases\[0\].*iteration\.rerunCommands/s,
+		);
+	});
+});
+
 test("quality gate accepts the full architectReview/executorQa/iteration shape", async () => {
 	await withDir(async (cwd) => {
 		await validateCompletionQualityGate(cwd, fullQualityGate());
@@ -141,7 +155,7 @@ test("quality gate rejects failed statuses, non-empty blockers, and GJC CLI repl
 				...fullQualityGate(),
 				iteration: { ...(fullQualityGate().iteration as Record<string, unknown>), fullRerun: false },
 			}),
-		).rejects.toThrow(/fullRerun true/);
+		).rejects.toThrow(/iteration\.fullRerun/);
 
 		const gate = fullQualityGate();
 		const executorQa = gate.executorQa as Record<string, unknown>;
@@ -507,15 +521,15 @@ test("plain briefs remain one goal and column-zero @goal delimiters split goals"
 });
 
 test("no deferred Tier 2 tool names are registered or advertised in Ultragoal docs", async () => {
-	const toolsSource = await readFile(
-		join(import.meta.dirname, "..", "..", "..", "src", "harness", "ultragoal", "ultragoal-tools.ts"),
+	const transitionsSource = await readFile(
+		join(import.meta.dirname, "..", "..", "..", "src", "harness", "ultragoal", "ultragoal-transitions.ts"),
 		"utf8",
 	);
 	const skillDoc = await readFile(
 		join(import.meta.dirname, "..", "..", "..", "src", "skills", "ultragoal", "SKILL.md"),
 		"utf8",
 	);
-	for (const source of [toolsSource, skillDoc]) {
+	for (const source of [transitionsSource, skillDoc]) {
 		assert.ok(!source.includes('name: "ultragoal_review"'));
 		assert.ok(!source.includes('name: "ultragoal_steer"'));
 		assert.ok(!source.includes("ultragoal_review"));

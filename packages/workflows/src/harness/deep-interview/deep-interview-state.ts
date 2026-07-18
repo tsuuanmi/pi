@@ -102,10 +102,10 @@ export interface DeepInterviewStateEnvelope {
 }
 
 /**
- * Scoring-time state patch carried by `deep_interview_record_scoring`. This is the
+ * Scoring-time state patch carried by `pi workflow deep-interview record-scoring`. This is the
  * ONLY safe channel for mid-interview `state` updates: it is merged into `state`
  * through `mergeDeepInterviewEnvelope` (never clobbering `rounds`), unlike a raw
- * `pi_workflow_state write` which shallow-merges `state` and would drop `rounds`.
+ * `pi workflow state write` which shallow-merges `state` and would drop `rounds`.
  *
  * Two groups:
  *  - Advisory counters drive the dialectic rhythm guard (`auto_answer_streak`),

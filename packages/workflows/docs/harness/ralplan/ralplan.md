@@ -1,88 +1,53 @@
 # Ralplan Workflow
 
-Runtime workflow for the ralplan (role-augmented loop planner) skill.
+Runtime workflow for the ralplan skill.
 
 **Source:** `src/harness/ralplan/`
 
 ## Overview
 
-The ralplan workflow manages the planning state machine, persisting progress under the current session root at `.pi/<session-id>/workflows/ralplan/`. It coordinates Planner, Architect, and Critic role agents through iterative review passes.
+Ralplan coordinates durable planning passes and produces a pending-approval implementation plan before execution. Planner, Architect, Critic, Explorer, and Expert roles are dispatched through the workflow control plane, not model-visible workflow tools.
 
 ## Module Structure
 
 | Module | Description |
 |--------|-------------|
-| `ralplan-state.ts` | State types, transitions, and persistence |
-| `ralplan-runtime.ts` | Main runtime loop and role coordination |
-| `ralplan-tools.ts` | Tool definitions for planning phases |
+| `ralplan-runtime.ts` | Run status, artifact index, doctor, approval, and role-agent orchestration |
+| `ralplan-agents.ts` | Role-agent prompt/profile plumbing |
+| `ralplan-transitions.ts` | Skill transition table and expected-next role selection |
+| `ralplan-context-gate.ts` | Explorer context-map gate validation |
+| `ralplan-obstacles.ts` | Obstacle ledger and critic agreement helpers |
 
-## State Machine
+## Canonical Route
 
-The ralplan workflow follows these stages:
+Use the `pi workflow ralplan <action>` control plane. The removed `ralplan_*` model-visible tools are not registered.
 
-| Stage | Role | Description |
-|-------|------|-------------|
-| `planner` | Planner | Produces the initial plan |
-| `architect` | Architect | Reviews for structural issues |
-| `critic` | Critic | Identifies gaps, risks, and trade-offs |
-| `revision` | Planner | Revises the plan based on feedback |
-| `adr` | Planner | Records Architecture Decision Records |
-| `final` | — | Plan is complete and approved |
+Supported actions include:
 
-### State Files
+- `record-explorer-gate`
+- `run-agent`
+- `write-artifact`
+- `status`
+- `read-compact`
+- `doctor`
+- `approve-plan`
+
+`run-agent` is state guarded: it computes the legal next role/stage from ralplan artifacts and refuses off-sequence spawns.
+
+## State Files
 
 | File | Description |
 |------|-------------|
-| `.pi/<sessionId>/workflows/ralplan/state.json` | Current planning state |
+| `.pi/<sessionId>/workflows/ralplan/state.json` | Active workflow envelope |
 | `.pi/<sessionId>/plans/ralplan/<run-id>/index.jsonl` | Append-only run index |
-| `.pi/<sessionId>/workflows/ralplan/agents/` | Planner/Architect/Critic role-agent records |
-| `.pi/<sessionId>/plans/ralplan/<run-id>/` | Plan artifacts and ADRs |
-
-### RalplanState
-
-```typescript
-interface RalplanState {
-  phase: RalplanStage;
-  plan?: string;
-  feedback?: string[];
-  adrs?: string[];
-  startedAt: string;
-  updatedAt: string;
-}
-
-type RalplanStage = "planner" | "architect" | "critic" | "revision" | "adr" | "final";
-```
-
-## Tools
-
-The ralplan workflow exposes tools for each stage:
-
-- `ralplan_start` — Begin a new planning cycle
-- `ralplan_submit_plan` — Submit a plan for review
-- `ralplan_submit_feedback` — Submit feedback from Architect or Critic
-- `ralplan_submit_revision` — Submit a revised plan
-- `ralplan_submit_adr` — Submit an Architecture Decision Record
-- `ralplan_approve` — Mark the plan as final
-- `ralplan_reject` — Reject and restart planning
-
-## Stage Artifacts
-
-Each stage may produce artifacts saved to the plan directory:
-
-- `plan.md` — The main plan document
-- `feedback.md` — Architect or Critic feedback
-- `adr/<id>.md` — Architecture Decision Records
+| `.pi/<sessionId>/workflows/ralplan/agents/` | Role-agent records |
+| `.pi/<sessionId>/plans/ralplan/<run-id>/` | Plan artifacts and pending approval files |
 
 ## Pending Approval
 
-Plans that reach the `final` stage require explicit approval before they are considered complete:
-
-```typescript
-// File path for pending approval
-ralplanPendingApprovalPath(sessionId: string): string
-```
+Final plans remain pending until `pi workflow ralplan approve-plan` records an explicit approval, rejection, or handoff decision. Approval refuses a latest Critic `REJECT` unless an explicit override is supplied.
 
 ## See Also
 
-- [Ralplan Skill](../../skills/ralplan/ralplan.md) - Skill definition and SKILL.md
 - [Shared Utilities](../shared/shared.md) - Common workflow utilities
+- [Subagents](../subagents/subagents.md) - Workflow subagent control plane

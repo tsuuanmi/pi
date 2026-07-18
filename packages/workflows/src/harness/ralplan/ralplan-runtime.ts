@@ -530,7 +530,7 @@ export async function approveRalplanPlan(
 	const status = await readRalplanStatus(cwd, sessionId, options.runId);
 	if (!status.run_id)
 		throw new Error(
-			"cannot approve ralplan without a run_id: no artifacts have been persisted yet. Run the planner stage (ralplan_run_agent / ralplan_write_artifact) first, then run ralplan_doctor if the run still looks inconsistent.",
+			"cannot approve ralplan without a run_id: no artifacts have been persisted yet. Run the planner stage (`pi workflow ralplan run-agent` / `pi workflow ralplan write-artifact`) first, then run `pi workflow ralplan doctor` if the run still looks inconsistent.",
 		);
 	if (!status.pending_approval || !status.pending_approval_path) {
 		throw new Error("cannot approve ralplan: no pending approval plan is available");

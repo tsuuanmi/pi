@@ -1,3 +1,9 @@
+import { execFile } from "node:child_process";
+import { mkdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import {
 	type AssistantMessage,
 	type FauxProviderRegistration,
@@ -15,6 +21,8 @@ import { Agent, type AgentEvent } from "../src/index.ts";
 import { calculateTool } from "./helpers/calculate.ts";
 
 const registrations: FauxProviderRegistration[] = [];
+const execFileAsync = promisify(execFile);
+const builtPiCliPath = fileURLToPath(new URL("../../coding-agent/dist/cli.js", import.meta.url));
 
 function createFauxRegistration(options: Parameters<typeof registerFauxProvider>[0] = {}): FauxProviderRegistration {
 	const registration = registerFauxProvider(options);
@@ -27,6 +35,107 @@ function getTextContent(message: AssistantMessage | ToolResultMessage): string {
 		.filter((block) => block.type === "text")
 		.map((block) => (block as { text: string }).text)
 		.join("\n");
+}
+
+async function runBuiltPiWorkflow(
+	args: string[],
+	cwd: string,
+): Promise<{ status: number; stdout: string; stderr: string }> {
+	try {
+		const result = await execFileAsync(process.execPath, [builtPiCliPath, "workflow", ...args], {
+			cwd,
+			env: { ...process.env, PI_OFFLINE: "1" },
+			maxBuffer: 1024 * 1024,
+		});
+		return { status: 0, stdout: result.stdout, stderr: result.stderr };
+	} catch (error) {
+		const failed = error as { code?: unknown; stdout?: unknown; stderr?: unknown };
+		return {
+			status: typeof failed.code === "number" ? failed.code : 1,
+			stdout: typeof failed.stdout === "string" ? failed.stdout : "",
+			stderr: typeof failed.stderr === "string" ? failed.stderr : String(error),
+		};
+	}
+}
+
+async function runBuiltPiWorkflowJson<T = { ok?: boolean; body?: unknown }>(args: string[], cwd: string): Promise<T> {
+	const result = await runBuiltPiWorkflow([...args, "--json"], cwd);
+	expect(result.status, result.stderr || result.stdout).toBe(0);
+	return JSON.parse(result.stdout) as T;
+}
+
+function cliQualityGate(): Record<string, unknown> {
+	return {
+		architectReview: {
+			architectureStatus: "CLEAR",
+			productStatus: "CLEAR",
+			codeStatus: "CLEAR",
+			recommendation: "APPROVE",
+			commands: ["architect review"],
+			evidence: "Architecture, product, and code review found no blockers.",
+			blockers: [],
+		},
+		executorQa: {
+			status: "passed",
+			e2eStatus: "passed",
+			redTeamStatus: "passed",
+			evidence: "Executor QA covered contracts and adversarial behavior with durable receipts.",
+			e2eCommands: ["npm run check"],
+			redTeamCommands: ["node -e console.log"],
+			artifactRefs: [
+				{
+					id: "a1",
+					kind: "api-package-test-report",
+					description: "Ran focused checks",
+					verifiedReceipt: { verifiedAt: "2026-06-21T00:00:00.000Z", summary: "checks passed" },
+				},
+				{
+					id: "r1",
+					kind: "failure-mode-test-report",
+					description: "Ran focused failure-mode checks",
+					verifiedReceipt: { verifiedAt: "2026-06-21T00:00:00.000Z", summary: "red-team checks passed" },
+				},
+			],
+			surfaceEvidence: [
+				{
+					id: "s1",
+					surface: "api/package",
+					contractRef: "plan#a",
+					invocation: "npm run check",
+					result: "passed",
+					artifactRefs: ["a1"],
+				},
+			],
+			adversarialCases: [
+				{
+					id: "case-invalid",
+					contractRef: "plan#a",
+					scenario: "invalid input",
+					expectedBehavior: "reject cleanly",
+					result: "passed",
+					artifactRefs: ["r1"],
+				},
+			],
+			contractCoverage: [
+				{
+					id: "c1",
+					contractRef: "plan#a",
+					obligation: "focused checks pass",
+					status: "passed",
+					surfaceEvidenceRefs: ["s1"],
+					adversarialCaseRefs: ["case-invalid"],
+				},
+			],
+			blockers: [],
+		},
+		iteration: {
+			status: "passed",
+			fullRerun: true,
+			rerunCommands: ["npm run check"],
+			evidence: "Final verification reran successfully after the implementation.",
+			blockers: [],
+		},
+	};
 }
 
 afterEach(() => {
@@ -175,6 +284,145 @@ async function multiTurnConversation(model: Model<string>) {
 	if (lastMessage.role !== "assistant") throw new Error("Expected assistant message");
 	expect(getTextContent(lastMessage).toLowerCase()).toContain("alice");
 }
+
+describe("Built Pi CLI workflow pipeline", () => {
+	it("runs deep-interview to ralplan to ultragoal through coding-agent dist", async () => {
+		const cwd = join(tmpdir(), `pi-agent-workflow-cli-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+		const sessionId = "agent-e2e-cli";
+		await mkdir(cwd, { recursive: true });
+		try {
+			const initial = await runBuiltPiWorkflowJson<{
+				ok?: boolean;
+				body?: { statePath?: string; state?: { threshold?: number } };
+			}>(["deep-interview", "read-compact", "--input", JSON.stringify({ workspace: cwd, sessionId })], cwd);
+			expect(initial.ok).toBe(true);
+			expect(initial.body?.state?.threshold).toBe(0.05);
+			expect(initial.body?.statePath).toContain(".pi/agent-e2e-cli/workflows/deep-interview/state.json");
+
+			const spec = await runBuiltPiWorkflowJson<{ ok?: boolean; body?: { path?: string; handoff?: string } }>(
+				[
+					"deep-interview",
+					"write-spec",
+					"--input",
+					JSON.stringify({
+						workspace: cwd,
+						sessionId,
+						slug: "pipeline-spec",
+						spec: "# Deep Interview Spec\n\nApproved CLI pipeline smoke spec.\n",
+						handoff: "ralplan",
+					}),
+				],
+				cwd,
+			);
+			expect(spec.ok).toBe(true);
+			expect(spec.body?.handoff).toBe("ralplan");
+			expect(spec.body?.path).toContain(".pi/agent-e2e-cli/specs/deep-interview-pipeline-spec.md");
+
+			const ralplan = await runBuiltPiWorkflowJson<{
+				ok?: boolean;
+				body?: { pendingApprovalPath?: string; stage?: string };
+			}>(
+				[
+					"ralplan",
+					"write-artifact",
+					"--input",
+					JSON.stringify({
+						workspace: cwd,
+						sessionId,
+						runId: "pipeline-run",
+						stage: "final",
+						stageN: 1,
+						artifact:
+							"# Ralplan Final Plan\n\n@goal Verify command pipeline\nRun the bundled CLI workflow pipeline.\n",
+					}),
+				],
+				cwd,
+			);
+			expect(ralplan.ok).toBe(true);
+			expect(ralplan.body?.pendingApprovalPath).toContain(".pi/agent-e2e-cli/plans/ralplan/pipeline-run");
+
+			const approved = await runBuiltPiWorkflowJson<{
+				ok?: boolean;
+				body?: { ralplanState?: { current_phase?: string }; targetState?: { skill?: string; input?: string } };
+			}>(
+				[
+					"ralplan",
+					"approve-plan",
+					"--input",
+					JSON.stringify({
+						workspace: cwd,
+						sessionId,
+						runId: "pipeline-run",
+						target: "ultragoal",
+						note: "approved by CLI e2e",
+					}),
+				],
+				cwd,
+			);
+			expect(approved.ok).toBe(true);
+			expect(approved.body?.ralplanState?.current_phase).toBe("handoff");
+			expect(approved.body?.targetState?.skill).toBe("ultragoal");
+			expect(approved.body?.targetState?.input).toBe(ralplan.body?.pendingApprovalPath);
+
+			const plan = await runBuiltPiWorkflowJson<{ ok?: boolean; body?: { goals?: Array<{ id?: string }> } }>(
+				[
+					"ultragoal",
+					"create-plan",
+					"--input",
+					JSON.stringify({
+						workspace: cwd,
+						sessionId,
+						brief: "@goal Verify command pipeline\nRun the bundled CLI workflow pipeline and confirm status propagation.",
+					}),
+				],
+				cwd,
+			);
+			expect(plan.ok).toBe(true);
+			expect(plan.body?.goals?.[0]?.id).toBe("G001");
+
+			const started = await runBuiltPiWorkflowJson<{
+				ok?: boolean;
+				body?: { goal?: { id?: string; status?: string } };
+			}>(["ultragoal", "start-next", "--input", JSON.stringify({ workspace: cwd, sessionId })], cwd);
+			expect(started.ok).toBe(true);
+			expect(started.body?.goal).toMatchObject({ id: "G001", status: "active" });
+
+			const checkpoint = await runBuiltPiWorkflowJson<{
+				ok?: boolean;
+				body?: { status?: string; completionVerification?: { checkpointLedgerEventId?: string } };
+			}>(
+				[
+					"ultragoal",
+					"checkpoint",
+					"--input",
+					JSON.stringify({
+						workspace: cwd,
+						sessionId,
+						goalId: "G001",
+						status: "complete",
+						evidence:
+							"Ran the bundled CLI workflow pipeline across deep-interview, ralplan, and ultragoal successfully.",
+						qualityGate: cliQualityGate(),
+					}),
+				],
+				cwd,
+			);
+			expect(checkpoint.ok).toBe(true);
+			expect(checkpoint.body?.status).toBe("complete");
+			expect(checkpoint.body?.completionVerification?.checkpointLedgerEventId).toBeDefined();
+
+			const status = await runBuiltPiWorkflowJson<{
+				ok?: boolean;
+				body?: { status?: string; counts?: { complete?: number } };
+			}>(["ultragoal", "status", "--input", JSON.stringify({ workspace: cwd, sessionId })], cwd);
+			expect(status.ok).toBe(true);
+			expect(status.body?.status).toBe("complete");
+			expect(status.body?.counts?.complete).toBe(1);
+		} finally {
+			await rm(cwd, { recursive: true, force: true });
+		}
+	});
+});
 
 describe("Agent integration with faux provider", () => {
 	it("handles a basic text prompt", async () => {

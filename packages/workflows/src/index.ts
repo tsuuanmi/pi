@@ -5,6 +5,12 @@
  * (including @tsuuanmi/pi-coding-agent) and test suites import.
  */
 
+// Register built-in skill transition tables for selector/gate helpers exported below.
+import "./harness/deep-interview/deep-interview-transitions.ts";
+import "./harness/ralplan/ralplan-transitions.ts";
+import "./harness/team/team-transitions.ts";
+import "./harness/ultragoal/ultragoal-transitions.ts";
+
 // Workflow commands
 export { runStateCommand } from "./commands/state-command.ts";
 export { handleWorkflowCommand, runWorkflowCommand } from "./commands/workflow.ts";
@@ -14,14 +20,12 @@ export * from "./harness/deep-interview/deep-interview-hud.ts";
 export * from "./harness/deep-interview/deep-interview-mutation-guard.ts";
 export * from "./harness/deep-interview/deep-interview-runtime.ts";
 export * from "./harness/deep-interview/deep-interview-state.ts";
-export * from "./harness/deep-interview/deep-interview-tools.ts";
 export * from "./harness/ralplan/ralplan-agents.ts";
 export * from "./harness/ralplan/ralplan-compact.ts";
 export * from "./harness/ralplan/ralplan-gates.ts";
 export * from "./harness/ralplan/ralplan-hud.ts";
 export * from "./harness/ralplan/ralplan-obstacles.ts";
 export * from "./harness/ralplan/ralplan-runtime.ts";
-export * from "./harness/ralplan/ralplan-tools.ts";
 export * from "./harness/ralplan/ralplan-verdicts.ts";
 // Harness runtime
 export * from "./harness/runtime/endpoint.ts";
@@ -56,15 +60,16 @@ export * from "./harness/shared/paths.ts";
 export * from "./harness/shared/receipts.ts";
 export * from "./harness/shared/session-layout.ts";
 export * from "./harness/shared/session-resolution.ts";
+export * from "./harness/shared/skill-registry.ts";
 export * from "./harness/shared/state-schema.ts";
 export * from "./harness/shared/state-writer.ts";
 export * from "./harness/shared/tamper-detection.ts";
 export * from "./harness/shared/transaction-journal.ts";
 export * from "./harness/shared/vagueness-gate.ts";
+export * from "./harness/shared/workflow-hud.ts";
 export * from "./harness/shared/workflow-id.ts";
 export * from "./harness/shared/workflow-manifest.ts";
 export * from "./harness/shared/workflow-state.ts";
-export * from "./harness/shared/workflow-state-tool.ts";
 // workflow-tool-utils: avoid re-exporting RalplanApprovalTarget (conflicts with ralplan-runtime)
 export {
 	type AgentThinkingLevel,
@@ -75,14 +80,9 @@ export {
 	type DeepInterviewHandoff,
 	requireSubagentManager,
 } from "./harness/shared/workflow-tool-utils.ts";
-export * from "./harness/subagents/subagent-tools.ts";
 export * from "./harness/team/team-compact.ts";
 export * from "./harness/team/team-hud.ts";
 export * from "./harness/team/team-runtime.ts";
-export * from "./harness/team/team-tools.ts";
-export * from "./harness/tools/fetch.ts";
-export * from "./harness/tools/harness-tools.ts";
-export * from "./harness/tools/yield.ts";
 export * from "./harness/ultragoal/ultragoal-artifacts.ts";
 export * from "./harness/ultragoal/ultragoal-compact.ts";
 export * from "./harness/ultragoal/ultragoal-guard.ts";
@@ -114,4 +114,3 @@ export {
 	validateCompletionReceipt,
 } from "./harness/ultragoal/ultragoal-receipt.ts";
 export * from "./harness/ultragoal/ultragoal-runtime.ts";
-export * from "./harness/ultragoal/ultragoal-tools.ts";

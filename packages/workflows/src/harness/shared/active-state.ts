@@ -35,6 +35,8 @@ export interface WorkflowActiveEntry {
 	handoff_to?: string;
 	/** Timestamp of the handoff transition. */
 	handoff_at?: string;
+	/** True when the skill has a blocking pending user question. */
+	has_pending_question?: boolean;
 	/** True when the entry's updated_at is outside the freshness window. */
 	stale?: boolean;
 }
@@ -124,6 +126,7 @@ function normalizeEntry(value: unknown): WorkflowActiveEntry | undefined {
 		...(sanitizeText(value.handoff_from, 80) ? { handoff_from: sanitizeText(value.handoff_from, 80) } : {}),
 		...(sanitizeText(value.handoff_to, 80) ? { handoff_to: sanitizeText(value.handoff_to, 80) } : {}),
 		...(sanitizeText(value.handoff_at, 40) ? { handoff_at: sanitizeText(value.handoff_at, 40) } : {}),
+		...(value.has_pending_question === true ? { has_pending_question: true } : {}),
 		...(value.stale === true ? { stale: true } : {}),
 	};
 }
@@ -262,6 +265,7 @@ export async function syncWorkflowActiveState(
 		...(sanitizeText(entry.handoff_from, 80) ? { handoff_from: sanitizeText(entry.handoff_from, 80) } : {}),
 		...(sanitizeText(entry.handoff_to, 80) ? { handoff_to: sanitizeText(entry.handoff_to, 80) } : {}),
 		...(sanitizeText(entry.handoff_at, 40) ? { handoff_at: sanitizeText(entry.handoff_at, 40) } : {}),
+		...(entry.has_pending_question === true ? { has_pending_question: true } : {}),
 	};
 
 	const filePath = workflowActiveStatePath(cwd, sessionId);
@@ -304,16 +308,24 @@ function buildActiveState(entries: WorkflowActiveEntry[]): WorkflowActiveState {
 	const activeWorkflows = entries
 		.filter((entry) => entry.active)
 		.map((entry) => {
-			const stale = isEntryStale(entry.updated_at, nowMs);
-			if (!stale) return entry;
-			const hud = entry.hud;
+			const pendingHud = entry.has_pending_question
+				? {
+						...entry,
+						hud: entry.hud
+							? { ...entry.hud, severity: "blocked" as WorkflowHudSeverity }
+							: ({ version: 1, severity: "blocked" as WorkflowHudSeverity } as WorkflowHudSummary),
+					}
+				: entry;
+			const stale = isEntryStale(pendingHud.updated_at, nowMs);
+			if (!stale) return pendingHud;
+			const hud = pendingHud.hud;
 			if (hud && (hud.severity === "error" || hud.severity === "blocked")) {
-				return { ...entry, stale: true };
+				return { ...pendingHud, stale: true };
 			}
 			const patchedHud = hud
 				? { ...hud, severity: "warning" as WorkflowHudSeverity }
 				: ({ version: 1, severity: "warning" as WorkflowHudSeverity } as WorkflowHudSummary);
-			return { ...entry, stale: true, hud: patchedHud };
+			return { ...pendingHud, stale: true, hud: patchedHud };
 		})
 		.sort((a, b) => a.skill.localeCompare(b.skill));
 

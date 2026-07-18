@@ -1,67 +1,83 @@
 import { readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-coding-agent";
+import type { ExtensionAPI } from "@tsuuanmi/pi-coding-agent";
 import workflowsExtension, {
 	appendOrMergeDeepInterviewRound,
+	assertDeepInterviewHandoff,
+	deepInterviewSpecPath,
 	enrichDeepInterviewRoundScoring,
 	finalizeDeepInterviewSpecState,
 	formatWorkflowHudLine,
+	handoffWorkflow,
 	normalizeDeepInterviewEnvelope,
 	planDeepInterviewQuestion,
 	readDeepInterviewStateCompact,
 	readWorkflowActiveState,
 	readWorkflowState,
+	writeTextArtifact,
 	writeWorkflowState,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const TEST_SESSION = "test-session-id";
 
-interface CapturedTool {
-	name: string;
-	execute(
-		toolCallId: string,
-		params: unknown,
-		signal: AbortSignal | undefined,
-		onUpdate: unknown,
-		ctx: ExtensionContext,
-	): Promise<unknown>;
-}
-
-function createWorkflowToolHarness(cwd: string): {
-	tool(name: string): CapturedTool;
-	ctx: ExtensionContext;
-	messages: string[];
-} {
-	const tools = new Map<string, CapturedTool>();
-	const messages: string[] = [];
+function collectRegisteredToolNames(): string[] {
+	const tools: string[] = [];
 	const api = {
-		registerTool(tool: CapturedTool): void {
-			tools.set(tool.name, tool);
+		registerTool(tool: { name: string }): void {
+			tools.push(tool.name);
 		},
 		registerCommand(): void {},
 		on(): void {},
-		sendUserMessage(content: string): void {
-			messages.push(content);
-		},
+		sendUserMessage(): void {},
 	} as unknown as ExtensionAPI;
 	workflowsExtension(api);
-	const ctx = {
+	return tools;
+}
+
+async function writeDeepInterviewSpecAndHandoff(
+	cwd: string,
+	input: { slug: string; spec: string; handoff?: "ralplan" | "ultragoal" | "team" | "stop" },
+): Promise<string> {
+	const specPath = deepInterviewSpecPath(cwd, input.slug, TEST_SESSION);
+	const existing = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
+	if (!existing?.active) {
+		await writeWorkflowState(
+			cwd,
+			"deep-interview",
+			{ active: true, current_phase: "interviewing", state: { rounds: [], established_facts: [] } },
+			"pi test",
+			{ sessionId: TEST_SESSION },
+		);
+	}
+	const artifact = await writeTextArtifact(specPath, `${input.spec}\n`, { cwd });
+	if (input.handoff && input.handoff !== "stop") {
+		await handoffWorkflow({
+			cwd,
+			sessionId: TEST_SESSION,
+			command: "pi workflow finalize deep-interview",
+			caller: {
+				skill: "deep-interview",
+				patch: { active: false, current_phase: "handoff", spec_path: artifact.path, spec_sha256: artifact.sha256 },
+			},
+			callee: {
+				skill: input.handoff,
+				patch: {
+					active: true,
+					current_phase: input.handoff === "ralplan" ? "planner" : "approved-execution",
+					input: artifact.path,
+				},
+			},
+		});
+		return artifact.path;
+	}
+	await finalizeDeepInterviewSpecState(
 		cwd,
-		mode: "json",
-		hasUI: false,
-		sessionManager: { getSessionId: () => TEST_SESSION },
-	} as unknown as ExtensionContext;
-	return {
-		tool(name: string): CapturedTool {
-			const found = tools.get(name);
-			if (!found) throw new Error(`tool not registered: ${name}`);
-			return found;
-		},
-		ctx,
-		messages,
-	};
+		{ slug: input.slug, path: artifact.path, sha256: artifact.sha256, handoff: input.handoff },
+		TEST_SESSION,
+	);
+	return artifact.path;
 }
 
 describe("deep-interview workflow runtime", () => {
@@ -189,17 +205,13 @@ describe("deep-interview workflow runtime", () => {
 		expect(scoredOrchestration?.last_scored_question_id).toBe("q1");
 	});
 
-	it("deep_interview_plan_question tool persists waiting state", async () => {
-		const harness = createWorkflowToolHarness(cwd);
-		await harness
-			.tool("deep_interview_plan_question")
-			.execute(
-				"tool-1",
-				{ round: 2, questionId: "q2", questionText: "Which constraint is fixed?", dimension: "constraints" },
-				undefined,
-				undefined,
-				harness.ctx,
-			);
+	it("extension registers no deep-interview tools while runtime planning persists waiting state", async () => {
+		expect(collectRegisteredToolNames()).not.toContain("deep_interview_plan_question");
+		await planDeepInterviewQuestion(
+			cwd,
+			{ round: 2, questionId: "q2", questionText: "Which constraint is fixed?", dimension: "constraints" },
+			TEST_SESSION,
+		);
 
 		const state = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
 		const orchestration = (
@@ -304,7 +316,7 @@ describe("deep-interview workflow runtime", () => {
 		).toBe(false);
 	});
 
-	it("deep_interview_write_spec writes spec and seeds ralplan handoff", async () => {
+	it("runtime spec finalization writes spec and seeds ralplan handoff", async () => {
 		await appendOrMergeDeepInterviewRound(
 			cwd,
 			{
@@ -315,16 +327,11 @@ describe("deep-interview workflow runtime", () => {
 			},
 			TEST_SESSION,
 		);
-		const harness = createWorkflowToolHarness(cwd);
-		await harness
-			.tool("deep_interview_write_spec")
-			.execute(
-				"tool-1",
-				{ slug: "handoff", spec: "# Final spec", handoff: "ralplan" },
-				undefined,
-				undefined,
-				harness.ctx,
-			);
+		const writtenSpecPath = await writeDeepInterviewSpecAndHandoff(cwd, {
+			slug: "handoff",
+			spec: "# Final spec",
+			handoff: "ralplan",
+		});
 
 		const deepState = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
 		const specPath = deepState?.spec_path;
@@ -332,6 +339,7 @@ describe("deep-interview workflow runtime", () => {
 		expect(deepState?.current_phase).toBe("handoff");
 		expect(deepState?.rounds).toBeUndefined();
 		expect((deepState?.state as { rounds?: unknown[] }).rounds ?? []).toHaveLength(1);
+		expect(specPath).toBe(writtenSpecPath);
 		expect(await readFile(specPath as string, "utf8")).toBe("# Final spec\n");
 
 		const ralplanState = await readWorkflowState(cwd, "ralplan", { sessionId: TEST_SESSION });
@@ -343,26 +351,12 @@ describe("deep-interview workflow runtime", () => {
 		expect(active?.active_workflows.some((entry) => entry.skill === "ralplan")).toBe(true);
 	});
 
-	it("deep_interview_write_spec rejects unknown handoff targets", async () => {
-		const harness = createWorkflowToolHarness(cwd);
-		await expect(
-			harness
-				.tool("deep_interview_write_spec")
-				.execute(
-					"tool-1",
-					{ slug: "bad", spec: "# Final spec", handoff: "unknown" },
-					undefined,
-					undefined,
-					harness.ctx,
-				),
-		).rejects.toThrow(/unknown handoff/);
+	it("deep-interview handoff validation rejects unknown handoff targets", () => {
+		expect(() => assertDeepInterviewHandoff("unknown")).toThrow(/unknown handoff/);
 	});
 
-	it("deep_interview_write_spec seeds direct execution handoffs", async () => {
-		const harness = createWorkflowToolHarness(cwd);
-		await harness
-			.tool("deep_interview_write_spec")
-			.execute("tool-1", { slug: "team", spec: "# Team spec", handoff: "team" }, undefined, undefined, harness.ctx);
+	it("runtime spec finalization seeds direct execution handoffs", async () => {
+		await writeDeepInterviewSpecAndHandoff(cwd, { slug: "team", spec: "# Team spec", handoff: "team" });
 
 		const deepState = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
 		const teamState = await readWorkflowState(cwd, "team", { sessionId: TEST_SESSION });

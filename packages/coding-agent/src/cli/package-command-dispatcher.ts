@@ -4,6 +4,12 @@ import { getAgentDir } from "../core/config/config.ts";
 import { DefaultPackageManager, type ResolvedResource } from "../core/package-manager/package-manager.ts";
 import { SettingsManager } from "../core/settings/settings-manager.ts";
 
+// Register the agent-layer SubagentManagerFactory at module load so the detached
+// RuntimeOwner (which loads pi-coding-agent via the pi entry) can look it up and
+// route pi workflow subagents verbs to a real SubagentManager. Side-effect import
+// only; pi-workflows never imports this.
+import "../core/subagents/subagent-manager-factory-registration.ts";
+
 export interface PackageCommandContext {
 	cwd: string;
 	agentDir: string;

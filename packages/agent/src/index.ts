@@ -10,6 +10,7 @@ export * from "./harness/env/types.ts";
 export * from "./harness/messages.ts";
 // Subagent types and utilities
 export * from "./harness/subagents/subagent-manager.ts";
+export * from "./harness/subagents/subagent-manager-factory.ts";
 export * from "./harness/subagents/subagent-progress.ts";
 export * from "./harness/subagents/subagent-types.ts";
 export * from "./harness/subagents/yield-result.ts";

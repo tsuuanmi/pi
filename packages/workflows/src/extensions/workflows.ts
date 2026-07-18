@@ -1,15 +1,10 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi-agent";
 import { getDeepInterviewMutationDecision } from "../harness/deep-interview/deep-interview-mutation-guard.ts";
-import {
-	buildDeepInterviewContinuationPrompt,
-	registerDeepInterviewTools,
-} from "../harness/deep-interview/deep-interview-tools.ts";
-import { registerRalplanTools } from "../harness/ralplan/ralplan-tools.ts";
-import { registerWorkflowStateTool, syncMcpHudUi, syncWorkflowHudUi } from "../harness/shared/workflow-state-tool.ts";
-import { registerSubagentTools } from "../harness/subagents/subagent-tools.ts";
-import { registerTeamTools } from "../harness/team/team-tools.ts";
-import { registerHarnessTools } from "../harness/tools/harness-tools.ts";
-import { registerUltragoalTools } from "../harness/ultragoal/ultragoal-tools.ts";
+import "../harness/deep-interview/deep-interview-transitions.ts";
+import "../harness/ralplan/ralplan-transitions.ts";
+import { syncMcpHudUi, syncWorkflowHudUi } from "../harness/shared/workflow-hud.ts";
+import "../harness/team/team-transitions.ts";
+import "../harness/ultragoal/ultragoal-transitions.ts";
 
 export default function workflowsExtension(pi: ExtensionAPI): void {
 	pi.on("session_start", async (_event, ctx) => {
@@ -22,12 +17,10 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 	pi.on("tool_execution_end", async (_event, ctx) => {
 		await syncWorkflowHudUi(ctx);
 	});
-	pi.on("before_agent_start", async (event, ctx) => {
+	pi.on("before_agent_start", async (_event, ctx) => {
 		if (ctx.skipWorkflowContinuation) return undefined;
 		await syncWorkflowHudUi(ctx);
-		const continuationPrompt = await buildDeepInterviewContinuationPrompt(ctx.cwd, ctx.sessionManager.getSessionId());
-		if (!continuationPrompt) return undefined;
-		return { systemPrompt: `${event.systemPrompt}\n\n${continuationPrompt}` };
+		return undefined;
 	});
 
 	pi.on("tool_call", async (event, ctx) => {
@@ -41,12 +34,4 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 		if (!decision.blocked) return undefined;
 		return { block: true, reason: decision.message };
 	});
-
-	registerWorkflowStateTool(pi);
-	registerDeepInterviewTools(pi);
-	registerSubagentTools(pi);
-	registerRalplanTools(pi);
-	registerTeamTools(pi);
-	registerUltragoalTools(pi);
-	registerHarnessTools(pi);
 }

@@ -71,9 +71,9 @@ Workflows dispatch isolated role agents using reusable agent profiles. The bundl
 
 | Profile | Role | Default thinking | Default tools |
 |---------|------|------------------|---------------|
-| `planner` | Turn requirements into executable plans. | `high` | `read`, `grep`, `find`, `bash`, `ralplan_write_artifact` |
-| `architect` | Feasibility, architecture, and integration review. | `high` | `read`, `grep`, `find`, `bash`, `ralplan_write_artifact` |
-| `critic` | Risks, tests, edge cases, and failure modes. | `high` | `read`, `grep`, `find`, `bash`, `ralplan_write_artifact` |
+| `planner` | Turn requirements into executable plans. | `high` | `read`, `grep`, `find`, `bash` |
+| `architect` | Feasibility, architecture, and integration review. | `high` | `read`, `grep`, `find`, `bash` |
+| `critic` | Risks, tests, edge cases, and failure modes. | `high` | `read`, `grep`, `find`, `bash` |
 | `worker` | Execute an assigned task or goal. | `medium` | `read`, `bash`, `write`, `edit` |
 
 All bundled workflow profiles default to `persistent: true` so their session context can be resumed.
@@ -105,7 +105,7 @@ name: planner
 description: My planner
 model: anthropic/claude-sonnet-4-20250514
 thinkingLevel: high
-tools: read, grep, find, bash, ralplan_write_artifact
+tools: read, grep, find, bash
 excludeTools: []
 persistent: true
 ---
@@ -120,11 +120,11 @@ Phase 1A recognizes but does not implement some Gajae-style fields. `forkContext
 
 Legacy JSON profile files such as `<agentDir>/agents/<name>.json` and `.pi/agents/<name>.json` are no longer loaded. Use markdown profiles under `.agent/agents` or `.agents/agents` instead.
 
-Per-invocation overrides (e.g. `model`, `thinkingLevel`, `tools`, `excludeTools` on `ralplan_run_agent`, `team_spawn_task_agent`, `ultragoal_spawn_goal_agent`, and the `subagent_*` tools) take precedence over the loaded profile.
+Per-invocation overrides such as `model`, `thinkingLevel`, `tools`, and `excludeTools` are only accepted on the generic `pi workflow subagents <verb>` control-plane commands. State-guarded role spawns such as `team spawn-task-agent` and `ultragoal spawn-goal-agent` refuse runtime overrides so the harness can enforce the computed next role deterministically.
 
 ## Model-visible workflow tools
 
-All workflow-owned tools (`deep-interview_*`, `ralplan_*`, `team_*`, `ultragoal_*`) are always exposed in the model-visible tool list alongside the normal coding tools and any custom non-workflow tools. There is no dynamic tool pruning: workflow-skill tools remain available regardless of whether a workflow is active, so workflows can be started, continued, and resumed without "tool not found" errors. Hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
+Workflow-owned model-visible tools are no longer registered. Agents drive workflows through the deterministic `pi workflow` control plane; the harness owns state transitions, artifact gates, receipts, and subagent orchestration. Use `pi workflow subagents <spawn|status|await|steer|pause|resume|cancel>` for generic subagent operations, or the state-guarded `pi workflow team spawn-task-agent` / `pi workflow ultragoal spawn-goal-agent` commands for workflow role spawns.
 
 ## Internals (contributors)
 
@@ -132,4 +132,4 @@ A few internals are noted here so contributors can extend the control plane with
 
 - **Deferred-seam registry** (`harness/runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. The registry is wired live into `recoverPrimitive`'s `fallback-harness-exec` branch. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
 - **`validateReceiptFamilyConsistency`** (`harness/runtime/receipt-rules.ts`): a write-path guard inside `mutateRuntimeSession` that rejects receipts whose post-state lifecycle contradicts their family target (e.g. a `finalize` receipt that is `accepted` but does not land on `completed`, or a passing `validate` receipt that does not land on `validating`). It throws before any write so a contradiction leaves zero orphan events/receipts/state. Conservative and pluggable: blocked variants pass, pre-Phase-3 receipts are grandfathered (write-path only), and future receipt families register rules in `receiptFamilyConsistencyRules` without touching the mutation path.
-- **`syncWorkflowHudUi`** (`extensions/workflows.ts`): keeps the interactive HUD in sync after team/ultragoal state mutations. Team and ultragoal state-mutating tools call it after a write.
+- **`syncWorkflowHudUi`** (`extensions/workflows.ts`): keeps the interactive HUD in sync after team/ultragoal state mutations made through the `pi workflow` control plane.

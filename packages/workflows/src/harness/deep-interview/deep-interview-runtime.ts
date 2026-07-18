@@ -370,6 +370,11 @@ export async function finalizeDeepInterviewSpecState(
 	return { statePath: workflowStatePath(cwd, "deep-interview", sessionId) };
 }
 
+export async function runClosureCheckForSession(cwd: string, sessionId: string): Promise<ClosureResult> {
+	const envelope = await readDeepInterviewEnvelope(cwd, sessionId);
+	return runClosureAcceptanceGuard(envelope);
+}
+
 export async function readDeepInterviewStateCompact(cwd: string, sessionId: string, lastN?: number) {
 	return {
 		state: projectCompactStateFor<DeepInterviewCompactState>(
