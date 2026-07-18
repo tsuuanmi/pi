@@ -1,13 +1,5 @@
 # System Prompt
 
-Formatting skills for inclusion in system prompts.
+System-prompt skill formatting is no longer implemented or exported from `packages/agent/src`.
 
-## `formatSkillsForSystemPrompt()`
-
-```typescript
-function formatSkillsForSystemPrompt(skills: Skill[]): string
-```
-
-Formats an array of skills into a system prompt section. Each skill is listed with its name, description, and instructions.
-
-Used by `AgentHarness` to inject available skills into the model's system prompt.
+The current package supports system prompts through `AgentState.systemPrompt`, `AgentOptions.initialState.systemPrompt`, and the `before_agent_start` extension event documented in [Extension Contract](extension-contract.md). Higher-layer hosts own skill-specific prompt assembly.

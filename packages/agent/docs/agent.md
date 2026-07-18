@@ -24,7 +24,7 @@ const agent = new Agent({
 |--------|------|---------|-------------|
 | `initialState` | `Partial<AgentState>` | Empty | Initial system prompt, model, tools, messages |
 | `convertToLlm` | `(messages) => Message[]` | Filters to user/assistant/toolResult | Convert AgentMessage[] to LLM-compatible Message[] |
-| `transformContext` | `(messages, signal?) => AgentMessage[]` | — | Transform context before convertToLlm |
+| `transformContext` | `(messages, signal?) => Promise<AgentMessage[]>` | — | Transform context before convertToLlm |
 | `streamFn` | `StreamFn` | `streamSimple` | Stream function for LLM calls |
 | `getApiKey` | `(provider) => string` | — | Dynamic API key resolution |
 | `onPayload` | `SimpleStreamOptions["onPayload"]` | — | Payload transform hook |

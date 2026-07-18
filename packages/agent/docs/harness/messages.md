@@ -1,112 +1,74 @@
 # Harness Messages
 
-Message construction and conversion utilities for the agent harness.
+`src/harness/messages.ts` defines harness-only message roles and conversion helpers used before sending context to the LLM.
 
-## Constants
-
-```typescript
-const COMPACTION_SUMMARY_PREFIX: string
-const COMPACTION_SUMMARY_SUFFIX: string
-const BRANCH_SUMMARY_PREFIX: string
-const BRANCH_SUMMARY_SUFFIX: string
-```
-
-Prefix and suffix markers for compaction and branch summaries in message content.
-
-## Message Types
+## Message roles
 
 ### `BashExecutionMessage`
 
 ```typescript
 interface BashExecutionMessage {
+  role: "bashExecution";
   command: string;
   output: string;
-  exitCode: number;
-  workingDirectory?: string;
+  exitCode: number | undefined;
+  cancelled: boolean;
+  truncated: boolean;
+  fullOutputPath?: string;
+  timestamp: number;
+  excludeFromContext?: boolean;
 }
 ```
 
-### `CustomMessage`
+Converted to a user text message with the command, output, cancellation/exit-code notes, and the full-output path when truncated. If `excludeFromContext` is true, the message is omitted from LLM context.
+
+### `CustomMessage<T = unknown>`
 
 ```typescript
 interface CustomMessage<T = unknown> {
   role: "custom";
   customType: string;
   content: string | TextContent[];
-  display?: string;
+  display: boolean;
   details?: T;
-  timestamp: string;
+  timestamp: number;
 }
 ```
+
+Converted to a user message. String content becomes one text block; `TextContent[]` is passed through.
 
 ### `BranchSummaryMessage`
 
 ```typescript
 interface BranchSummaryMessage {
-  role: "assistant";
-  content: TextContent[];
+  role: "branchSummary";
+  summary: string;
   fromId: string;
-  timestamp: string;
+  timestamp: number;
 }
 ```
+
+Converted to a user message wrapped with the branch-summary prefix/suffix constants.
 
 ### `CompactionSummaryMessage`
 
 ```typescript
 interface CompactionSummaryMessage {
-  role: "assistant";
-  content: TextContent[];
+  role: "compactionSummary";
+  summary: string;
   tokensBefore: number;
-  timestamp: string;
+  timestamp: number;
 }
 ```
 
-## Message Construction
+Converted to a user message wrapped with the compaction-summary prefix/suffix constants.
 
-### `createBranchSummaryMessage()`
+## Helpers
 
-```typescript
-function createBranchSummaryMessage(
-  summary: string,
-  fromId: string,
-  timestamp: string,
-): BranchSummaryMessage
-```
+- `bashExecutionToText(msg)` formats a bash execution message for context.
+- `createBranchSummaryMessage(summary, fromId, timestamp)` creates a branch summary message from an ISO timestamp.
+- `createCompactionSummaryMessage(summary, tokensBefore, timestamp)` creates a compaction summary message from an ISO timestamp.
+- `createCustomMessage(customType, content, display, details, timestamp)` creates a custom message from an ISO timestamp.
+- `convertToLlm(messages)` converts `AgentMessage[]` to `@tsuuanmi/pi-ai` `Message[]` by handling the roles above, passing through `user`, `assistant`, and `toolResult`, and dropping unknown/omitted messages.
 
-### `createCompactionSummaryMessage()`
-
-```typescript
-function createCompactionSummaryMessage(
-  summary: string,
-  tokensBefore: number,
-  timestamp: string,
-): CompactionSummaryMessage
-```
-
-### `createCustomMessage()`
-
-```typescript
-function createCustomMessage(
-  customType: string,
-  content: string | TextContent[],
-  display?: string,
-  details?: unknown,
-  timestamp?: string,
-): CustomMessage
-```
-
-### `bashExecutionToText()`
-
-```typescript
-function bashExecutionToText(msg: BashExecutionMessage): string
-```
-
-Converts a bash execution message to displayable text.
-
-## `convertToLlm()`
-
-```typescript
-function convertToLlm(messages: AgentMessage[]): Message[]
-```
-
-Converts `AgentMessage[]` to `Message[]` suitable for LLM providers. Filters and transforms custom message types, compaction summaries, and branch summaries into provider-compatible formats.
+The module augments `CustomAgentMessages` in `src/types.ts` so these roles are part of the package `AgentMessage` union.

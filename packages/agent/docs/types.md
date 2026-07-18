@@ -110,7 +110,7 @@ Configuration for the low-level agent loop. Extends `SimpleStreamOptions` with:
 |-------|------|-------------|
 | `model` | `Model<any>` | Model for LLM calls |
 | `convertToLlm` | `(messages) => Message[]` | Convert AgentMessage[] to LLM Message[] |
-| `transformContext` | `(messages, signal?) => AgentMessage[]` | Transform context before convertToLlm |
+| `transformContext` | `(messages, signal?) => Promise<AgentMessage[]>` | Transform context before convertToLlm |
 | `getApiKey` | `(provider) => string` | Dynamic API key resolution |
 | `providerRequestObserver` | `ProviderRequestObserver` | Observer for LLM request lifecycle |
 | `shouldStopAfterTurn` | `(context) => boolean` | Early termination check |

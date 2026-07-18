@@ -1,107 +1,55 @@
-# Harness Utilities
+# Shell Output Capture
 
-Shell output capture and text truncation utilities used by the agent harness.
+`src/harness/utils/shell-output.ts` executes shell commands through an `ExecutionEnv` while capturing combined stdout/stderr for display and context.
 
-## Shell Output
-
-### `executeShellWithCapture()`
-
-```typescript
-async function executeShellWithCapture(
-  command: string,
-  options?: ShellCaptureOptions,
-): Promise<ShellCaptureResult>
-```
-
-Executes a shell command and captures both stdout and stderr.
-
-### `ShellCaptureOptions`
+## `ShellCaptureOptions`
 
 ```typescript
 interface ShellCaptureOptions extends Omit<ExecutionEnvExecOptions, "onStdout" | "onStderr"> {
-  maxOutputBytes?: number;
+  onChunk?: (chunk: string) => void;
 }
 ```
 
-### `ShellCaptureResult`
+The options from `ExecutionEnvExecOptions` (`cwd`, `env`, `timeout`, `abortSignal`) are forwarded to `env.exec()`. `onChunk` receives sanitized combined output chunks.
+
+## `ShellCaptureResult`
 
 ```typescript
 interface ShellCaptureResult {
-  stdout: string;
-  stderr: string;
-  exitCode: number;
-}
-```
-
-### `sanitizeBinaryOutput()`
-
-```typescript
-function sanitizeBinaryOutput(str: string): string
-```
-
-Replaces non-printable characters in shell output with replacement markers.
-
-## Text Truncation
-
-### `truncateHead()`
-
-```typescript
-function truncateHead(content: string, options?: TruncationOptions): TruncationResult
-```
-
-Truncates content from the beginning, keeping the tail. Useful for showing the most recent output.
-
-### `truncateTail()`
-
-```typescript
-function truncateTail(content: string, options?: TruncationOptions): TruncationResult
-```
-
-Truncates content from the end, keeping the head. Useful for showing the start of long outputs.
-
-### `truncateLine()`
-
-```typescript
-function truncateLine(line: string, maxLength: number): string
-```
-
-Truncates a single line to a maximum length.
-
-### `TruncationOptions`
-
-```typescript
-interface TruncationOptions {
-  maxLines?: number;    // Default: 2000
-  maxBytes?: number;     // Default: 50KB
-  lineMaxLength?: number;
-}
-```
-
-### `TruncationResult`
-
-```typescript
-interface TruncationResult {
-  content: string;
+  output: string;
+  exitCode: number | undefined;
+  cancelled: boolean;
   truncated: boolean;
-  originalLines: number;
-  originalBytes: number;
-  resultLines: number;
-  resultBytes: number;
+  fullOutputPath?: string;
 }
 ```
 
-### Constants
+- `output` is the retained display output.
+- `exitCode` is undefined when cancelled.
+- `cancelled` is true when execution is aborted.
+- `truncated` follows the default truncation limits from `truncateTail()`.
+- `fullOutputPath` points to a temporary log file when full output exceeded the display limit and was persisted.
+
+## Helpers
 
 ```typescript
-const DEFAULT_MAX_LINES = 2000;
-const DEFAULT_MAX_BYTES = 50 * 1024; // 50KB
-const GREP_MAX_LINE_LENGTH = 500;
+sanitizeBinaryOutput(str: string): string;
+
+executeShellWithCapture(
+  env: ExecutionEnv,
+  command: string,
+  options?: ShellCaptureOptions,
+): Promise<Result<ShellCaptureResult, ExecutionError>>;
 ```
 
-### `formatSize()`
+`sanitizeBinaryOutput()` removes most control characters while preserving tab, line feed, and carriage return.
 
-```typescript
-function formatSize(bytes: number): string
-```
+`executeShellWithCapture()`:
 
-Formats a byte count as a human-readable string (e.g., "1.2KB", "3.4MB").
+- Captures stdout and stderr as a single output stream.
+- Sanitizes binary/control output and normalizes carriage returns.
+- Keeps at most twice the default display byte limit in memory while the process runs.
+- Writes full output to an `env.createTempFile({ prefix: "bash-", suffix: ".log" })` file after the default byte limit is exceeded.
+- Uses `truncateTail()` for returned display output so command endings and errors are preserved.
+- Converts aborts into a successful `ShellCaptureResult` with `cancelled: true`.
+- Returns `ExecutionError` for spawn, timeout, callback, filesystem-capture, and unknown failures.

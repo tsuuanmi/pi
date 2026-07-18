@@ -5,8 +5,7 @@
 ## Usage
 
 ```typescript
-import { Agent } from "@tsuuanmi/pi-agent";
-import { streamProxy } from "@tsuuanmi/pi-agent/proxy";
+import { Agent, streamProxy } from "@tsuuanmi/pi-agent";
 
 const agent = new Agent({
   streamFn: (model, context, options) =>

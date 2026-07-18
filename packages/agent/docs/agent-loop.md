@@ -75,7 +75,8 @@ Individual tools can override this with `tool.executionMode = "sequential"`.
 When an `AbortSignal` is provided:
 - Tool execution checks the signal before and during execution
 - Aborted tool calls return an error tool result with message "Operation aborted"
-- The loop emits `agent_end` with `stopReason: "aborted"`
+- Provider aborts are encoded as assistant messages with `stopReason: "aborted"`
+- The loop still emits `agent_end` with the accumulated new messages
 
 ### Error Handling
 

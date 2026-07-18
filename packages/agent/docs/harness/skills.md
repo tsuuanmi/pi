@@ -1,37 +1,5 @@
 # Skills
 
-Agent skill loading and invocation utilities.
+Skill loading and invocation formatting are no longer implemented or exported from `packages/agent/src`.
 
-## `loadSkills()`
-
-```typescript
-async function loadSkills(options: {
-  cwd: string;
-  agentDir: string;
-}): Promise<SkillLoadResult>
-```
-
-Loads skills from `agentDir/skills/` and project `.pi/skills/` directories.
-
-## `Skill` Interface
-
-```typescript
-interface Skill {
-  name: string;
-  description?: string;
-  instructions?: string;
-  source: string;
-  sourcePath?: string;
-}
-```
-
-## `formatSkillInvocation()`
-
-```typescript
-function formatSkillInvocation(
-  skill: Skill,
-  additionalInstructions?: string,
-): string
-```
-
-Formats a skill's instructions for inclusion in a system prompt.
+`@tsuuanmi/pi-agent` exposes the lower-layer contracts that skill/workflow hosts can build on, including [extension contracts](extension-contract.md), [subagent contracts](subagents.md), [message conversion helpers](messages.md), and the core [`Agent`](../agent.md) APIs.
