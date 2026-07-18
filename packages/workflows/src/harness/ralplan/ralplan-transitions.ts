@@ -26,7 +26,7 @@ function selectNextRalplanRole(state: RalplanSelectorState | undefined, runId: s
 		(typeof state?.iterateCount === "number" && state.iterateCount >= iterateCap)
 	) {
 		if (expertCount >= expertCap) return undefined;
-		return { skill: "ralplan", stage: "expert-stage", role: "expert-strategist", owner: "ralplan_run_agent", runId };
+		return { skill: "ralplan", stage: "expert-stage", role: "expert", owner: "ralplan_run_agent", runId };
 	}
 
 	const explorer = state?.explorerGate;
@@ -36,7 +36,7 @@ function selectNextRalplanRole(state: RalplanSelectorState | undefined, runId: s
 			return {
 				skill: "ralplan",
 				stage: "expert-stage",
-				role: "expert-strategist",
+				role: "expert",
 				owner: "ralplan_run_agent",
 				runId,
 			};

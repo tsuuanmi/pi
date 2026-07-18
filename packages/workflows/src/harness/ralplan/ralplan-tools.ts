@@ -16,7 +16,7 @@ import { readRalplanStatus } from "./ralplan-runtime.ts";
 
 const ralplanRunAgentSchema = Type.Object({
 	role: Type.Optional(
-		Type.String({ description: "planner, architect, critic, or expert-strategist. Defaults from stage." }),
+		Type.String({ description: "planner, architect, critic, or expert. Defaults from stage." }),
 	),
 	agent: Type.Optional(Type.String({ description: "Agent profile name. Defaults to the role name." })),
 	model: Type.Optional(Type.String({ description: "Override agent profile model as provider/model." })),

@@ -1,4 +1,4 @@
-export type ContextTemplateRalplanRole = "planner" | "architect" | "critic" | "expert-strategist";
+export type ContextTemplateRalplanRole = "planner" | "architect" | "critic" | "expert";
 
 export interface RalplanContextTaskInput {
 	role: ContextTemplateRalplanRole;

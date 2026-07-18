@@ -9,7 +9,7 @@ import { writeJsonAtomic } from "../shared/state-writer.ts";
 import { activeRalplanRunId, defaultWorkflowId } from "../shared/workflow-state.ts";
 import { assertRalplanExplorerGatePassed } from "./ralplan-gates.ts";
 
-export type RalplanAgentRole = "planner" | "architect" | "critic" | "expert-strategist";
+export type RalplanAgentRole = "planner" | "architect" | "critic" | "expert";
 
 export interface RalplanAgentRunInput {
 	role: RalplanAgentRole;
@@ -60,7 +60,7 @@ function subagentMessages(result: SubagentRunResult): Message[] {
 }
 
 function excludeToolsForRole(role: RalplanAgentRole, excludeTools: string[] | undefined): string[] | undefined {
-	if (role !== "expert-strategist") return excludeTools;
+	if (role !== "expert") return excludeTools;
 	return Array.from(new Set([...(excludeTools ?? []), ...EXPERT_STRATEGIST_EXCLUDED_TOOLS]));
 }
 
@@ -182,7 +182,7 @@ export function ralplanRoleForStage(stage: RalplanStage): RalplanAgentRole {
 	if (stage === "planner" || stage === "revision") return "planner";
 	if (stage === "architect") return "architect";
 	if (stage === "critic") return "critic";
-	if (stage === "expert-stage") return "expert-strategist";
+	if (stage === "expert-stage") return "expert";
 	throw new Error(`no ralplan role agent for stage: ${stage}`);
 }
 

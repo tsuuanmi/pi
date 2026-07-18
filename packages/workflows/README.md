@@ -238,7 +238,7 @@ Workflows dispatch isolated role agents using reusable agent profiles. This pack
 | `critic` | Risks, tests, edge cases, and failure modes. | `high` | `read`, `grep`, `find`, `bash`, `ralplan_write_artifact` |
 | `worker` | Execute an assigned task or goal. | `medium` | `read`, `bash`, `write`, `edit` |
 | `explorer` | Pre-planner context mapping for ralplan. | `high` | `read`, `grep`, `find`, `bash` |
-| `expert-strategist` | Expert-stage escalation after iterate-cap or explorer-gate `human_blocked`. | `high` | `read`, `grep`, `find`, `bash`, `ralplan_write_artifact` |
+| `expert` | Expert-stage escalation after iterate-cap or explorer-gate `human_blocked`. | `high` | `read`, `grep`, `find`, `bash`, `ralplan_write_artifact` |
 | `prover` | Produce the team completion `evidence_matrix`. | `medium` | `read`, `bash`, `write`, `edit` |
 | `reviewer` | Produce the team task `review_report`. | `medium` | `read`, `bash` |
 

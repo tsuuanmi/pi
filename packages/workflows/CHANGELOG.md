@@ -11,7 +11,7 @@
 - **workflows**: Added scoped expected-next role helpers for guarded workflow spawns, rejecting off-script role mismatches and runtime model/tool overrides in workflow-owned spawn paths.
 - **workflows**: Added state-driven `expectedNextRalplanRole`/`expectedNextTeamRole` selectors that compute the one legal next spawn from workflow state (ralplan artifact index + critic verdict branching; team lexicographic task selection). `pi workflow ralplan run-agent`, `pi workflow team spawn-task-agent`, and `pi workflow ultragoal spawn-goal-agent` now refuse spawns that do not match the state-computed legal next role. The ralplan selector also models the explorer pre-planner gate, returning `{ stage: "pre-planner", role: "explorer" }` until a passing `context_map` is recorded, so planner spawns are deterministically refused at the selector seam rather than only inside the role-agent runner.
 - **workflows**: Added carried handoff contract fields for obstacles, deterministic final-package receipt assembly, shared HUD chip helpers, and a shared stage artifact writer.
-- **ralplan**: Added expert-stage escalation with an `expert-strategist` role after iterate-cap or explorer-gate `human_blocked` escalation.
+- **ralplan**: Added expert-stage escalation with an `expert` role after iterate-cap or explorer-gate `human_blocked` escalation.
 
 ### Fixed
 
