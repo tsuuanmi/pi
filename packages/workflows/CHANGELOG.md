@@ -26,6 +26,7 @@
 
 ### Changed
 
+- **deep-interview**: Option-bearing questions now explain each option in simple terms and include a recommended best option with a reason.
 - **workflows**: A `sessionId` is now required on every `pi workflow ...` verb (deep-interview, ralplan, team, ultragoal, and `start`); the `generateSessionId()` fallback was removed entirely. No verb mints a session id; all fail closed with `sessionId is required` when it is missing.
 - **workflows**: Spawn verbs are now model-visible tools, not `pi workflow` commands. `pi workflow subagents <spawn|status|await|steer|pause|resume|cancel>`, `pi workflow ralplan run-agent`, `pi workflow team spawn-task-agent`, and `pi workflow ultragoal spawn-goal-agent` are removed; calling them errors with a message pointing to the corresponding tool (`subagent_spawn`, `ralplan_run_agent`, `team_spawn_task_agent`, `ultragoal_spawn_goal_agent`). The tools spawn role agents as ordinary subagents of the main session via its `SubagentManager`, with the workflow computing the legal next role and refusing off-script spawns/overrides. Read-only and recovery verbs still work without a live owner.
 - **workflows**: The detached `RuntimeOwner` is lifecycle-only. It no longer constructs or holds a `SubagentManager` and no longer handles any spawn verb — spawns are model-visible tools on the main session. The owner keeps `observe`/`classify`/`recover`/`validate`/`finalize`/`operate`/`submit`/`retire`, leases, GC, and events.

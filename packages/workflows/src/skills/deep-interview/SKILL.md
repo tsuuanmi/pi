@@ -32,6 +32,7 @@ AI can build anything; the hard part is knowing what to build. Single-pass "what
 - This is a planning skill. Do not edit source files, run mutation-oriented commands, commit, push, or invoke execution skills until the user explicitly approves execution. The `edit` and `write` tools are runtime-blocked while a deep-interview workflow is active in a non-finished phase (the phase-boundary mutation guard); only `.pi/**` is always blocked, and only system-temp scratch outside the project is writable. Persist the spec with `pi workflow deep-interview write-spec` or hand off to an execution skill before any product-code mutation.
 - Persist workflow artifacts only through Pi workflow tools. Do not directly edit `.pi/<session-id>/workflows`, `.pi/<session-id>/specs`, or `.pi/<session-id>/plans` with `write` or `edit` unless the user explicitly asks for manual recovery. The mutation guard blocks direct `.pi/**` edits regardless of phase.
 - Ask ONE question at a time — never batch.
+- For every user-facing question, explain each numbered or named option in simple terms so the tradeoff is clear, and always identify the recommended best option with a brief reason. Preserve free text as an available path.
 - Target the WEAKEST clarity dimension with each question; name it and say why it is the bottleneck before asking.
 - Prefer answering factual brownfield questions from repository evidence (cite the file/symbol/pattern). Ask the user only for decisions, tradeoffs, priorities, and scope. When unsure whether a question is a fact or a decision, treat it as a decision and ask.
 - Score ambiguity after every answer and display it transparently.
@@ -54,7 +55,7 @@ AI can build anything; the hard part is knowing what to build. Single-pass "what
 
 ## Tools
 
-Pi has no `ask` tool. Ask each question as a single prose message. For option-bearing questions, present a short numbered option list in the same message, plus "free text". After the user responds, record the round with `pi workflow deep-interview record-answer` — `selectedOptions` for option picks, `customInput` for free text.
+Pi has no `ask` tool. Ask each question as a single prose message. For option-bearing questions, present a short numbered option list in the same message, plus "free text". Explain every option in simple terms (what it means, when it fits, and the main tradeoff), then mark **Recommended:** with the best option and a concise reason. After the user responds, record the round with `pi workflow deep-interview record-answer` — `selectedOptions` for option picks, `customInput` for free text.
 
 - `pi workflow state` — read/write/clear deep-interview state (`skill: "deep-interview"`). Use `action: "write"` for initialization and envelope-level fields (`active`, `phase`, `restated_goal`, `closure_overrides`). Avoid `pi workflow state write` for mid-interview `state` patches: it shallow-merges `state` and can clobber `rounds`. Use the deep-interview runtime tools below for state-level updates — they merge safely.
 - `pi workflow deep-interview plan-question` — plan the next targeted question and mark the workflow `waiting_for_answer`.
@@ -137,7 +138,13 @@ Run exactly once after init and before any ambiguity scoring. Lock the **shape**
    >
    > Is that topology right? Should any component be added, removed, merged, split, or explicitly deferred?
    >
-   > Options: **Looks right** / **Add, remove, or merge components** / **Defer one or more components** / free text
+   > Options:
+   > 1. **Looks right** — the component list matches the intended scope; fastest path if nothing important is missing.
+   > 2. **Add, remove, or merge components** — the list is close, but the shape needs correction before scoring.
+   > 3. **Defer one or more components** — some parts are real but should be explicitly postponed.
+   > 4. **Free text** — describe the exact topology change in your own words.
+   >
+   > **Recommended:** choose **Looks right** if the list captures all independent outcomes, because it lets us start clarifying details without reshaping the scope later.
 3. Record the Round 0 answer with `pi workflow deep-interview record-answer` and lock topology by passing the confirmed `topology` object:
    ```json
    {
@@ -194,7 +201,13 @@ Plan it with `pi workflow deep-interview plan-question` first, then ask exactly 
 >
 > {question}
 >
-> Options: {contextually relevant choices} / free text
+> Options:
+> 1. **{choice}** — explain in simple terms what this means, when it fits, and its main tradeoff.
+> 2. **{choice}** — explain in simple terms what this means, when it fits, and its main tradeoff.
+> 3. **{choice}** — explain in simple terms what this means, when it fits, and its main tradeoff.
+> 4. **Free text** — use this when none of the options fits cleanly or you want to combine/adjust them.
+>
+> **Recommended:** **{best choice}** — {brief reason this best resolves the current bottleneck given the known facts}.
 
 Apply `language.instruction` and then the silent self-proofread to new prose only; preserve the Round/Component/Targeting/Ambiguity line structure, fixed labels, numeric scores, and component ids.
 
@@ -210,7 +223,7 @@ When the user's answer is free-text carrying reasoning, constraints, or scope de
 
 1. Structure the raw answer into a compact interpretation with the canonical sections (omit empty ones): **Decision**, **Reasoning**, **Constraints (user-stated)**, **Out of scope (user-stated)**, **Codebase context (verified)**.
 2. Confirm with exactly one question that nothing is lost or misrepresented. Offer **Send as-is**, **Add a constraint**, **Mark something out of scope**, **Add context**, **Rewrite**, plus free text.
-3. If the user picks anything other than "Send as-is", collect the exact missing text with one follow-up question (never infer it from the option label), fold it in, and re-confirm. Do not advance to scoring while the user is still saying something is missing.
+3. If the user picks anything other than "Send as-is", collect the exact missing text with one follow-up question (never infer it from the option label). Explain each follow-up option in simple terms and recommend the best option with a brief reason, then fold the user's answer in and re-confirm. Do not advance to scoring while the user is still saying something is missing.
 4. Feed the confirmed structured interpretation — not the raw free text — into scoring and established-facts maintenance, and record it with `pi workflow deep-interview record-answer`.
 
 Skip the refine gate for short answers with no attached reasoning (e.g. "Yes"/"No"/a single proper noun), for pre-built option picks where the structure is already explicit, for auto-confirmed code/brownfield facts, and for architect auto-answers (already structured by Step 2b′). A refined answer counts as direct user judgment: append the round to `refined_rounds` and reset `auto_answer_streak` to 0.
@@ -325,11 +338,13 @@ After the spec is written, mark it `pending approval` and present execution opti
 
 > Your spec is ready (ambiguity: {score}%). How would you like to proceed?
 >
-> 1. **Refine with ralplan consensus (recommended)** — Planner/Architect/Critic consensus, then stop for explicit execution approval. Prefer this unless the spec is already implementation-ready and trivially simple.
-> 2. **Execute with ultragoal** — only when the spec is concrete, low-risk, and trivially small.
-> 3. **Coordinate with team** — only when implementation-ready, simple, AND parallel workers are genuinely useful.
-> 4. **Refine further** — return to Phase 2.
-> 5. **Stop**
+> 1. **Refine with ralplan consensus (recommended)** — Planner/Architect/Critic consensus, then stop for explicit execution approval. Best when implementation still benefits from feasibility review.
+> 2. **Execute with ultragoal** — proceed directly with goal-tracked execution. Best only when the spec is concrete, low-risk, and trivially small.
+> 3. **Coordinate with team** — split execution across workers. Best only when implementation-ready, simple, and parallel workers are genuinely useful.
+> 4. **Refine further** — return to Phase 2. Best when something still feels missing or uncertain.
+> 5. **Stop** — save the spec and do not continue. Best when you want to pause or use the spec elsewhere.
+>
+> **Recommended:** **Refine with ralplan consensus** — it adds an independent feasibility check before any execution approval.
 
 On selection, hand off via `pi workflow deep-interview write-spec` with the matching `handoff` (`ralplan`/`ultragoal`/`team`), or `stop`. If oversized initial context was summarized, pass the spec and prompt-safe summary forward, not the raw oversized source. Implementation handoff defaults to ralplan; reserve team for when parallel workers are genuinely useful. The deep-interview agent is a requirements agent, not an execution agent — never implement directly.
 
@@ -474,6 +489,7 @@ If interrupted, run `/skill:deep-interview` again. Resume from state via `pi wor
 
 - [ ] Phase 0 ran first: threshold marker `Deep Interview threshold: 5% (source: default)` emitted; state and spec metadata record `threshold` and `threshold_source`.
 - [ ] `language.instruction` preserved across announcements, questions, options, progress reports, and spec prose when present; silent self-proofread applied to new prose only.
+- [ ] Every user-facing question explains each option in simple terms and includes a recommended best option with a reason, while preserving free text.
 - [ ] Oversized initial context/history summarized before scoring, question generation, spec generation, or handoff.
 - [ ] Round 0 topology gate completed before scoring; `topology.confirmed_at` persisted via `pi workflow deep-interview record-answer` `topology`.
 - [ ] Ambiguity scored and displayed every round, naming the weakest component/dimension target (rotating across active components when N > 1).
