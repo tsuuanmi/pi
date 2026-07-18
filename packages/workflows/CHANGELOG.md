@@ -15,6 +15,10 @@
 
 ### Fixed
 
+- **commands**: `pi workflow` verbs now support `--input-file`, reject ambiguous `--input`/`--input-file` combinations, and keep manifest-declared skill verbs aligned with the dispatcher.
+- **deep-interview**: Lateral-review personas are documented as subagent role labels using the default profile, avoiding missing bundled profile lookups.
+- **workflows**: Package builds now clear generated skill/agent asset directories before copying source assets, preventing stale `dist/agents` profiles from persisting.
+
 - **workflows**: Skill instructions and docs now require current-session id propagation for every `pi workflow ...` command, document HUD visibility for command-created sessions (attach/switch model), and document model-visible-tool subagent spawning. Added `test/harness/shared/session-propagation.test.ts` covering same-session HUD active-state read, cross-session HUD isolation, and that each removed spawn command errors toward its replacement model-visible tool.
 - **subagents**: `pi workflow subagents status` now maps to the owner-backed subagent status route instead of returning `owner_unsupported_subagent_verb:status`.
 - **workflows**: Public expected-role selector helpers now register built-in transition tables through the package entrypoint, so consumers do not need side-effect imports before calling them.

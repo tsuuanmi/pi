@@ -1,4 +1,6 @@
 import { execFileSync, spawn } from "node:child_process";
+import { readFile } from "node:fs/promises";
+import { isAbsolute, resolve } from "node:path";
 import "../harness/deep-interview/deep-interview-transitions.ts";
 import {
 	appendOrMergeDeepInterviewRound,
@@ -105,6 +107,7 @@ interface ParsedWorkflowCommand {
 	verb: string;
 	subverb?: string;
 	input?: string;
+	inputFile?: string;
 	json: boolean;
 	help: boolean;
 	prune: boolean;
@@ -127,6 +130,7 @@ function usage(): string {
   pi workflow events --input '{"sessionId":"h-..."}' --json
   pi workflow retire --input '{"sessionId":"h-..."}' --json
   pi workflow <deep-interview|ralplan|team|ultragoal> <action> --input '{...}' --json
+  pi workflow <deep-interview|ralplan|team|ultragoal> <action> --input-file ./payload.json --json
 
 State root: PI_HARNESS_STATE_ROOT or <workspace>/.pi/state/harness
 `;
@@ -156,7 +160,15 @@ function parseWorkflowArgs(args: string[]): ParsedWorkflowCommand {
 		if (arg === "--input") {
 			const value = args[++i];
 			if (value === undefined) throw new Error("--input requires a value");
+			if (parsed.inputFile !== undefined) throw new Error("--input and --input-file cannot be used together");
 			parsed.input = value;
+			continue;
+		}
+		if (arg === "--input-file") {
+			const value = args[++i];
+			if (value === undefined) throw new Error("--input-file requires a value");
+			if (parsed.input !== undefined) throw new Error("--input and --input-file cannot be used together");
+			parsed.inputFile = value;
 			continue;
 		}
 		if (arg.startsWith("-")) throw new Error(`unknown workflow option: ${arg}`);
@@ -183,6 +195,13 @@ function parseInput(raw: string | undefined): Record<string, unknown> {
 	const parsed = JSON.parse(raw) as unknown;
 	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("input must be a JSON object");
 	return parsed as Record<string, unknown>;
+}
+
+async function parseWorkflowInput(parsed: ParsedWorkflowCommand, cwd: string): Promise<Record<string, unknown>> {
+	if (parsed.inputFile === undefined) return parseInput(parsed.input);
+	const filePath = isAbsolute(parsed.inputFile) ? parsed.inputFile : resolve(cwd, parsed.inputFile);
+	const raw = await readFile(filePath, "utf8");
+	return parseInput(raw);
 }
 
 function gitOutput(workspace: string, args: string[]): string | null {
@@ -1062,7 +1081,7 @@ async function dispatch(parsed: ParsedWorkflowCommand, cwd: string): Promise<Wor
 	if (parsed.verb !== "gc" && (parsed.prune || parsed.dryRun)) {
 		throw new Error(`--prune/--dry-run are only supported for pi workflow gc, not ${parsed.verb}`);
 	}
-	const input = parseInput(parsed.input);
+	const input = await parseWorkflowInput(parsed, cwd);
 	if (parsed.verb === "start") return start(input, parsed.json);
 	if (parsed.verb === "owner") return runOwner(input);
 	if (parsed.verb === "submit") return submit(input, parsed.json);

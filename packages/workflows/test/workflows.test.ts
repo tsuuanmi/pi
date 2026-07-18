@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,6 +18,7 @@ import {
 	createTeamTask,
 	expectedNextRalplanRole,
 	expectedNextTeamRole,
+	PI_WORKFLOW_MANIFEST,
 	type RalplanSelectorVerdict,
 	readExistingStateForMutation,
 	readFileOrLiteral,
@@ -38,6 +39,7 @@ import {
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "../src/commands/workflow.ts";
+import workflowsExtension from "../src/extensions/workflows.ts";
 import { buildResponse } from "../src/harness/runtime/state.ts";
 import {
 	generateSessionId,
@@ -145,6 +147,146 @@ describe("workflow runtime", () => {
 		expect(json.ok).toBe(true);
 		expect(json.body?.state?.threshold).toBe(0.05);
 		expect(json.body?.statePath).toContain(".pi/cli-pipeline/workflows/deep-interview/state.json");
+	});
+
+	it("rejects removed workflow spawn command shims with model-visible tool guidance", async () => {
+		const ralplan = await runWorkflowCommand([
+			"ralplan",
+			"run-agent",
+			"--input",
+			JSON.stringify({ sessionId, runId: "run-removed" }),
+			"--json",
+		]);
+		expect(ralplan.status).toBe(1);
+		expect(ralplan.stderr).toMatch(/ralplan_run_agent model-visible tool/);
+
+		const team = await runWorkflowCommand([
+			"team",
+			"spawn-task-agent",
+			"--input",
+			JSON.stringify({ sessionId, teamId: "team-removed", taskId: "task-1" }),
+			"--json",
+		]);
+		expect(team.status).toBe(1);
+		expect(team.stderr).toMatch(/team_spawn_task_agent model-visible tool/);
+
+		const ultragoal = await runWorkflowCommand([
+			"ultragoal",
+			"spawn-goal-agent",
+			"--input",
+			JSON.stringify({ sessionId, goalId: "goal-1" }),
+			"--json",
+		]);
+		expect(ultragoal.status).toBe(1);
+		expect(ultragoal.stderr).toMatch(/ultragoal_spawn_goal_agent model-visible tool/);
+	});
+
+	it("requires explicit session ids for workflow skill commands", async () => {
+		const result = await runWorkflowCommand(["deep-interview", "read-compact", "--input", "{}", "--json"], cwd);
+		expect(result.status).toBe(1);
+		expect(result.stderr).toMatch(/sessionId is required/);
+	});
+
+	it("limits workflow gc flags to the gc verb", async () => {
+		const result = await runWorkflowCommand([
+			"deep-interview",
+			"read-compact",
+			"--input",
+			JSON.stringify({ sessionId }),
+			"--prune",
+			"--json",
+		]);
+		expect(result.status).toBe(1);
+		expect(result.stderr).toMatch(/--prune\/--dry-run are only supported for pi workflow gc/);
+	});
+
+	it("supports file-backed input for workflow verbs", async () => {
+		const inputPath = join(cwd, "payload.json");
+		await writeFile(inputPath, JSON.stringify({ sessionId, lastN: 1 }), "utf8");
+
+		const relative = await runWorkflowCommand(
+			["deep-interview", "read-compact", "--input-file", "payload.json", "--json"],
+			cwd,
+		);
+		expect(relative.status).toBe(0);
+		expect(JSON.parse(relative.stdout)).toMatchObject({ ok: true });
+
+		const absolute = await runWorkflowCommand(
+			["deep-interview", "read-compact", "--input-file", inputPath, "--json"],
+			cwd,
+		);
+		expect(absolute.status).toBe(0);
+		expect(JSON.parse(absolute.stdout)).toMatchObject({ ok: true });
+	});
+
+	it("rejects invalid workflow --input-file usage", async () => {
+		const scalarPath = join(cwd, "scalar.json");
+		await writeFile(scalarPath, "[]", "utf8");
+
+		const missingOperand = await runWorkflowCommand(["deep-interview", "read-compact", "--input-file"], cwd);
+		expect(missingOperand.status).toBe(1);
+		expect(missingOperand.stderr).toMatch(/--input-file requires a value/);
+
+		const missingFile = await runWorkflowCommand(
+			["deep-interview", "read-compact", "--input-file", "missing.json"],
+			cwd,
+		);
+		expect(missingFile.status).toBe(1);
+		expect(missingFile.stderr).toMatch(/ENOENT/);
+
+		const nonObject = await runWorkflowCommand(["deep-interview", "read-compact", "--input-file", scalarPath], cwd);
+		expect(nonObject.status).toBe(1);
+		expect(nonObject.stderr).toMatch(/input must be a JSON object/);
+
+		const combined = await runWorkflowCommand(
+			["deep-interview", "read-compact", "--input", JSON.stringify({ sessionId }), "--input-file", scalarPath],
+			cwd,
+		);
+		expect(combined.status).toBe(1);
+		expect(combined.stderr).toMatch(/--input and --input-file cannot be used together/);
+	});
+
+	it("keeps workflow manifest verbs recognized by the dispatcher", async () => {
+		for (const [skill, manifest] of Object.entries(PI_WORKFLOW_MANIFEST)) {
+			for (const verb of manifest.verbs) {
+				const result = await runWorkflowCommand(
+					[skill, verb.name, "--input", JSON.stringify({ sessionId }), "--json"],
+					cwd,
+				);
+				expect(result.stderr).not.toContain(`unsupported pi workflow ${skill} verb`);
+			}
+		}
+	});
+
+	it("registers model-visible workflow spawn tools through the extension", () => {
+		const registeredTools: string[] = [];
+		workflowsExtension({
+			registerTool(tool: { name: string }) {
+				registeredTools.push(tool.name);
+			},
+			on() {},
+		} as never);
+
+		expect(registeredTools).toEqual(
+			expect.arrayContaining([
+				"subagent_spawn",
+				"ralplan_run_agent",
+				"team_spawn_task_agent",
+				"ultragoal_spawn_goal_agent",
+			]),
+		);
+	});
+
+	it("keeps built agent assets synchronized with source agent assets", async () => {
+		const packageRoot = fileURLToPath(new URL("..", import.meta.url));
+		const sourceAgents = (await readdir(join(packageRoot, "src", "agents")))
+			.filter((name) => name.endsWith(".md"))
+			.sort();
+		const distAgents = (await readdir(join(packageRoot, "dist", "agents")))
+			.filter((name) => name.endsWith(".md"))
+			.sort();
+
+		expect(distAgents).toEqual(sourceAgents);
 	});
 
 	it("supports pi workflow state as the centralized state command", async () => {

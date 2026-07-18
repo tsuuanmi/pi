@@ -28,7 +28,7 @@
 	"scripts": {
 		"clean": "shx rm -rf dist",
 		"build": "tsgo -p tsconfig.build.json && npm run copy-assets",
-		"copy-assets": "shx mkdir -p dist/skills/deep-interview dist/skills/ralplan dist/skills/team dist/skills/ultragoal dist/agents && shx cp src/skills/deep-interview/SKILL.md dist/skills/deep-interview/ && shx cp src/skills/ralplan/SKILL.md dist/skills/ralplan/ && shx cp src/skills/team/SKILL.md dist/skills/team/ && shx cp src/skills/ultragoal/SKILL.md dist/skills/ultragoal/ && shx cp src/agents/*.md dist/agents/",
+		"copy-assets": "shx rm -rf dist/skills dist/agents && shx mkdir -p dist/skills/deep-interview dist/skills/ralplan dist/skills/team dist/skills/ultragoal dist/agents && shx cp src/skills/deep-interview/SKILL.md dist/skills/deep-interview/ && shx cp src/skills/ralplan/SKILL.md dist/skills/ralplan/ && shx cp src/skills/team/SKILL.md dist/skills/team/ && shx cp src/skills/ultragoal/SKILL.md dist/skills/ultragoal/ && shx cp src/agents/*.md dist/agents/",
 		"test": "vitest --run"
 	},
 	"pi": {
