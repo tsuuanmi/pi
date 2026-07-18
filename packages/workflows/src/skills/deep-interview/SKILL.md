@@ -429,6 +429,12 @@ The spec file body is Markdown. Generate it as rendered Markdown (the file conte
 **Ambiguity:** {score}% (Goal: {g}, Constraints: {c}, Criteria: {cr})
 </details>
 
+## Current-Session Command Propagation
+
+- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source) — do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution.
+- Keep all Deep Interview state, active-state, specs, and handoff artifacts under one session id for one logical interview. Do not scatter one interview across multiple `.pi/<session-id>` buckets.
+- Missing current-session propagation is release-blocking: commands that fall back to a different session id will write state the interactive HUD cannot see.
+
 ## Session-Scoped Isolation
 
 - Deep Interview workflow state and specs are isolated per session. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions.

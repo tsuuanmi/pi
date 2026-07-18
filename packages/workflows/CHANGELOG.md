@@ -15,6 +15,7 @@
 
 ### Fixed
 
+- **workflows**: Skill instructions and docs now require current-session id propagation for every `pi workflow ...` command, document HUD visibility for command-created sessions (attach/switch model), and document current-session owner-backed subagent spawning. Added `test/harness/shared/session-propagation.test.ts` covering same-session HUD active-state read, cross-session HUD isolation, owner-not-live spawn fail-closed, missing-session-id fail-closed, ralplan run-agent fail-closed without a live owner, and cross-session owner isolation.
 - **subagents**: `pi workflow subagents status` now maps to the owner-backed subagent status route instead of returning `owner_unsupported_subagent_verb:status`.
 - **workflows**: Public expected-role selector helpers now register built-in transition tables through the package entrypoint, so consumers do not need side-effect imports before calling them.
 - **ultragoal**: Completion quality-gate validation now reports missing nested fields together, and the skill docs include the full accepted `architectReview`/`executorQa`/`iteration` schema.

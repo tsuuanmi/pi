@@ -8,6 +8,12 @@ argument-hint: "<approved plan or concrete task>"
 
 Ultragoal executes an approved concrete goal end-to-end with verification.
 
+## Current-Session Command Propagation
+
+- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source) — do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution.
+- Keep all Ultragoal state, goal ledger, checkpoint receipts, and blocker records under one session id for one logical goal run. Do not scatter one run across multiple `.pi/<session-id>` buckets.
+- `pi workflow ultragoal spawn-goal-agent` is a guarded spawn that requires a live runtime owner for the current session; it fails closed without one. The current interactive session is the owner context — subagents are children of that session's runtime owner, not a separate independent owner.
+
 ## Boundaries
 
 - If the request is vague, run `/skill:deep-interview` or `/skill:ralplan` first.

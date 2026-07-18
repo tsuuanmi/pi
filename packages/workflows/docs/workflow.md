@@ -126,6 +126,20 @@ Per-invocation overrides such as `model`, `thinkingLevel`, `tools`, and `exclude
 
 Workflow-owned model-visible tools are no longer registered. Agents drive workflows through the deterministic `pi workflow` control plane; the harness owns state transitions, artifact gates, receipts, and subagent orchestration. Use `pi workflow subagents <spawn|status|await|steer|pause|resume|cancel>` for generic subagent operations, or the state-guarded `pi workflow team spawn-task-agent` / `pi workflow ultragoal spawn-goal-agent` commands for workflow role spawns.
 
+## Current-session command propagation
+
+When a skill runs inside an interactive Pi session, it must pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source); do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution. One logical workflow (one interview, one plan, one team run, one goal run) must keep all state, active-state, specs, plans, and handoff artifacts under one session id. Do not scatter one logical workflow across multiple `.pi/<session-id>` buckets. Missing current-session propagation is release-blocking: commands that fall back to a different session id will write state the interactive HUD cannot see.
+
+## HUD visibility for command-created sessions
+
+The interactive status line reads session-scoped workflow active state (`.pi/<session-id>/workflows/active-state.json`) on a 1s refresh and renders the HUD for the current interactive session only. `syncWorkflowHudUi` is an intentional no-op for HUD mirroring; the status line is the single source of truth.
+
+Behavior:
+- Only the active/attached interactive session shows its own workflow in the HUD.
+- A `pi workflow ...` command run from a shell with a different session id updates that command's session state, not the visible interactive HUD.
+- Command-created sessions become visible in the HUD only after attaching/switching to that session in an interactive Pi runtime.
+- This session-scoped behavior is intentional: it prevents one session's workflow state from unexpectedly changing another session's HUD.
+
 ## Internals (contributors)
 
 A few internals are noted here so contributors can extend the control plane without grepping for seams:

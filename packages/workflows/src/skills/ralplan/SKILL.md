@@ -71,6 +71,12 @@ Include:
 
 - Planner, Architect, and Critic role agents must persist durable output with `pi workflow ralplan write-artifact` and return receipt-only summaries (run id, stage, stage_n, path). Do not inline the full artifact text in the parent conversation.
 
+## Current-Session Command Propagation
+
+- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source) — do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution.
+- Keep all Ralplan state, plan artifacts, and pending-approval records under one session id for one logical planning run. Do not scatter one run across multiple `.pi/<session-id>` buckets.
+- Role-agent passes (`run-agent`) require a live runtime owner for the current session; a one-shot CLI command without a live owner will fail closed. Run consensus inside an interactive/runtime-owner session.
+
 ## Session-Scoped Isolation
 
 - Ralplan workflow state and plan artifacts are isolated per session. A fresh session starts with no prior plan state by construction.
