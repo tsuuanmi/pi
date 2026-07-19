@@ -172,13 +172,11 @@ describe("StatusLineComponent HUD cache", () => {
 			() => {},
 			entriesBySession,
 		);
-		const lines = await waitForRender(footer, 120, (rendered) =>
-			stripAnsi(rendered.join("\n")).includes("current:visible"),
-		);
+		const lines = await waitForRender(footer, 120, (rendered) => stripAnsi(rendered.join("\n")).includes("current"));
 		const text = stripAnsi(lines.join("\n"));
 
-		assert.match(text, new RegExp(escapeRegExp("current:visible")));
-		assert.doesNotMatch(text, new RegExp(escapeRegExp("foreign:hidden")));
+		assert.match(text, new RegExp(escapeRegExp("current")));
+		assert.doesNotMatch(text, new RegExp(escapeRegExp("foreign")));
 		assert.doesNotMatch(text, new RegExp(escapeRegExp("hidden")));
 	});
 
@@ -199,12 +197,11 @@ describe("StatusLineComponent HUD cache", () => {
 		]);
 
 		const footer = makeComponent(createSession({ sessionName: "", cwd }), 1, {}, () => {}, entriesBySession);
-		const lines = await waitForRender(footer, 120, (rendered) =>
-			stripAnsi(rendered.join("\n")).includes("runner:execute"),
-		);
+		const lines = await waitForRender(footer, 120, (rendered) => stripAnsi(rendered.join("\n")).includes("runner"));
 		const [hudLine, railLine] = lines.map((line) => stripAnsi(line));
 
-		assert.match(hudLine, new RegExp(escapeRegExp("runner:execute")));
+		assert.match(hudLine, new RegExp(escapeRegExp("runner")));
+		assert.doesNotMatch(hudLine, new RegExp(escapeRegExp("runner:execute")));
 		assert.match(railLine, new RegExp(escapeRegExp("execute")));
 	});
 });

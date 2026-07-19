@@ -17,6 +17,10 @@
 - Exported reusable rendering utilities migrated from Pi: ANSI stripping, keybinding text formatting, visual-line truncation, and optional-theme diff rendering.
 - Exported `sliceByColumn` for ANSI-aware horizontal column slicing.
 
+### Changed
+
+- Improved HUD rendering by removing the literal `◆ hud` prefix, avoiding special phase display coupling, and styling entry/chip values for clearer scanning.
+
 ### Fixed
 
 - **markdown**: A no-language fenced block (``` ```) whose content is a Markdown table now renders as a table (and surrounding bold/list markup renders) instead of showing raw `|`/`**` pipe text. Language-tagged fences (``` ```js ```, ``` ```python ```) and no-lang fences without a table still render as code blocks.
