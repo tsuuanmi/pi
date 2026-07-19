@@ -2,6 +2,7 @@
 
 ### Added
 
+- **ralplan**: Added a deterministic orchestration snapshot, pure expected-action selector, and journaled artifact completion transaction with provenance sidecars, idempotent same-hash handling, and doctor-visible journal health.
 - **deep-interview**: Added first-class model-visible tools for planning questions, recording answers/scoring, reading compact state, closure checks, restating goals, and writing specs with current-session propagation.
 - **subagents**: Workflow subagent spawning is now done via model-visible tools that call the main session's `SubagentManager` directly in-process (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `team_spawn_review_agent`, `team_spawn_prover_agent`, `ultragoal_spawn_goal_agent`). pi-agent owns the agent/subagent process; pi-workflows registers the tools and owns turn order, guarded role checks, and result→artifact handoff. Subagent records persist to `.pi/<session>/state/subagents/` (reusing the agent-layer format). `pi-workflows` contains no spawning logic of its own — it delegates each spawn to the session's manager. No circular dependency.
 - **agent**: Added `SubagentManagerFactory` registry (`registerSubagentManagerFactory`/`getSubagentManagerFactory`/`clearSubagentManagerFactoryForTests`) + `SubagentManagerFactoryContext` type, and `dispose(): Promise<void>` on the `SubagentManager` interface.

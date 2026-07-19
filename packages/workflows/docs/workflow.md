@@ -148,6 +148,14 @@ Behavior:
 
 ## Internals (contributors)
 
+### Ralplan deterministic completion boundary
+
+Ralplan role completion is accepted through a local deterministic harness slice. `buildRalplanOrchestrationSnapshot` reads the workflow state, ralplan index, explorer gate, artifact hashes, completion provenance sidecars, transaction journals, approval state, and obstacle ledger without repairing them, then emits a versioned fingerprint over canonically ordered data. `selectExpectedRalplanAction` is pure over that snapshot and returns one next spawn/closed/blocked/no-action result.
+
+`writeRalplanArtifact` now writes completion-visible artifacts through a journaled transaction: intent journal, stage artifact, index row, optional `pending-approval.md`, obstacle ledger update for blocking verdicts, workflow state receipt, completion provenance sidecar (`<artifact>.completion.json`), active HUD, and committed journal marker. Rejected or stale attempts fail before product-visible writes where possible; failed post-validation attempts leave rollback evidence in the journal, and cleanup is limited to paths that can be removed without making an already-visible index row point at a missing artifact. Duplicate writes are successful only for the same run/stage/stageN/role/path/hash identity; mismatched hashes or invalid index lines fail closed.
+
+The v1 repair allowlist is intentionally narrow: same-hash duplicate handling and missing completion-provenance sidecar backfill. Artifact markdown, verdicts, stage/run/phase/approval/gate semantics, mismatched hashes, influential invalid JSONL, ambiguous gates, closed state, and mixed repairable/non-repairable issues are not repaired by this slice. Full replay tooling and shared orchestration engines for team, ultragoal, and deep-interview are deferred.
+
 A few internals are noted here so contributors can extend the control plane without grepping for seams:
 
 - **Deferred-seam registry** (`harness/runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. The registry is wired live into `recoverPrimitive`'s `fallback-harness-exec` branch. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
