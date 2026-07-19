@@ -1,9 +1,9 @@
 import { homedir } from "os";
 import { join, resolve } from "path";
 import { describe, expect, it } from "vitest";
-import type { ResourceDiagnostic } from "#coding-agent/core/resources/diagnostics";
-import { createSyntheticSourceInfo } from "#coding-agent/core/resources/source-info";
-import { formatSkillsForPrompt, loadSkills, loadSkillsFromDir, type Skill } from "#coding-agent/core/skills/skills";
+import type { ResourceDiagnostic } from "#coding-agent/resources/diagnostics";
+import { createSyntheticSourceInfo } from "#coding-agent/resources/source-info";
+import { formatSkillsForPrompt, loadSkills, loadSkillsFromDir, type Skill } from "#coding-agent/skills/skills";
 
 const fixturesDir = resolve(__dirname, "../../fixtures/skills");
 const collisionFixturesDir = resolve(__dirname, "../../fixtures/skills-collision");

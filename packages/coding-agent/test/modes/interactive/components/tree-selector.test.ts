@@ -1,14 +1,14 @@
 import { stripVTControlCharacters } from "node:util";
 import { setKeybindings, visibleWidth } from "@tsuuanmi/pi-tui";
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
+import { TreeSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/tree-selector";
 import type {
 	ModelChangeEntry,
 	SessionEntry,
 	SessionMessageEntry,
 	SessionTreeNode,
-} from "#coding-agent/core/session/session-manager";
-import { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
-import { TreeSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/tree-selector";
+} from "#coding-agent/session/session-manager";
+import { KeybindingsManager } from "#coding-agent/settings/keybindings";
 import { initTheme } from "#coding-agent/theme/theme";
 
 beforeAll(() => {

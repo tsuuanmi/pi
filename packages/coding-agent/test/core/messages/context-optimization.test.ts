@@ -1,7 +1,7 @@
 import type { AgentMessage, BashExecutionMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import { describe, expect, it } from "vitest";
-import { compressBashReplayOutput, optimizeRetainedContext } from "#coding-agent/core/messages/context-optimization";
+import { compressBashReplayOutput, optimizeRetainedContext } from "#coding-agent/messages/context-optimization";
 
 const usage: AssistantMessage["usage"] = {
 	input: 0,

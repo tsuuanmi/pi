@@ -2,9 +2,9 @@ import { mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ENV_AGENT_DIR, PACKAGE_NAME } from "#coding-agent/core/config/config";
-import { handlePackageCommand } from "#coding-agent/core/package-manager/package-manager-cli";
+import { ENV_AGENT_DIR, PACKAGE_NAME } from "#coding-agent/config/config";
 import { main } from "#coding-agent/main";
+import { handlePackageCommand } from "#coding-agent/package-manager/package-manager-cli";
 
 describe("package commands", () => {
 	let tempDir: string;

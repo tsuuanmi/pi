@@ -10,11 +10,10 @@ import {
 	type OpenAICodexUsageSummary,
 } from "@tsuuanmi/pi-ai";
 import type { Component, Container, EditorComponent, TUI } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
-import { getAgentDir, getAuthPath } from "#coding-agent/core/config/config";
-import { defaultModelPerProvider } from "#coding-agent/core/model/model-resolver";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/core/model/provider-display-names";
-import type { FooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+import type { AgentSession } from "#coding-agent/agent-session/agent-session";
+import { getAgentDir, getAuthPath } from "#coding-agent/config/config";
+import { defaultModelPerProvider } from "#coding-agent/model/model-resolver";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/model/provider-display-names";
 import { LoginDialogComponent } from "#coding-agent/modes/interactive/components/login-dialog";
 import {
 	AccountSelectorComponent,
@@ -26,6 +25,7 @@ import {
 	OAuthSelectorComponent,
 } from "#coding-agent/modes/interactive/components/selectors/oauth-selector";
 import type { StatusLineComponent } from "#coding-agent/modes/interactive/components/status-line/index";
+import type { FooterDataProvider } from "#coding-agent/modes/interactive/footer-data-provider";
 import { stripJsonComments } from "#coding-agent/utils/fs/json";
 
 function isUnknownModel(model: Model<any> | undefined): boolean {

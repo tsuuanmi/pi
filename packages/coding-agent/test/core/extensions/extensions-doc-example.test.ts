@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { ExtensionAPI, SessionBeforeCompactEvent, SessionCompactEvent } from "#coding-agent/core/extensions/index";
+import type { ExtensionAPI, SessionBeforeCompactEvent, SessionCompactEvent } from "#coding-agent/extensions/index";
 
 describe("Documentation example", () => {
 	it("custom compaction example should type-check correctly", () => {

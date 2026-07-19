@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { APP_NAME } from "#coding-agent/core/config/config";
+import { APP_NAME } from "#coding-agent/config/config";
 
 process.title = APP_NAME;
 process.emitWarning = (() => {}) as typeof process.emitWarning;

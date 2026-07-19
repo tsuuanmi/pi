@@ -15,12 +15,12 @@ import {
 } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AgentSession } from "#coding-agent/core/agent-session/agent-session";
-import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
-import { ModelRegistry } from "#coding-agent/core/model/model-registry";
-import { SessionManager } from "#coding-agent/core/session/session-manager";
-import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
-import type { BuildSystemPromptOptions } from "#coding-agent/core/skills/system-prompt";
+import { AgentSession } from "#coding-agent/agent-session/agent-session";
+import { AuthStorage } from "#coding-agent/auth/auth-storage";
+import { ModelRegistry } from "#coding-agent/model/model-registry";
+import { SessionManager } from "#coding-agent/session/session-manager";
+import { SettingsManager } from "#coding-agent/settings/settings-manager";
+import type { BuildSystemPromptOptions } from "#coding-agent/skills/system-prompt";
 import { createTestExtensionsResult, createTestResourceLoader } from "#coding-agent-test/test-utils";
 
 // Mock stream that mimics AssistantMessageEventStream

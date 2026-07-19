@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type FileEntry, migrateSessionEntries } from "#coding-agent/core/session/session-manager";
+import { type FileEntry, migrateSessionEntries } from "#coding-agent/session/session-manager";
 
 describe("migrateSessionEntries", () => {
 	it("should add id/parentId to v1 entries", () => {

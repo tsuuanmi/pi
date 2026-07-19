@@ -5,8 +5,8 @@
 import chalk from "chalk";
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
-import { CONFIG_DIR_NAME, getAgentDir, getBinDir } from "#coding-agent/core/config/config";
-import { migrateKeybindingsConfig } from "#coding-agent/core/settings/keybindings";
+import { CONFIG_DIR_NAME, getAgentDir, getBinDir } from "#coding-agent/config/config";
+import { migrateKeybindingsConfig } from "#coding-agent/settings/keybindings";
 
 const MIGRATION_GUIDE_URL =
 	"https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/CHANGELOG.md#extensions-migration";

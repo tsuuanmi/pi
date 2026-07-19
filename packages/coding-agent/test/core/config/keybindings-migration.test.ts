@@ -2,9 +2,9 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { ENV_AGENT_DIR } from "#coding-agent/core/config/config";
-import { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import { ENV_AGENT_DIR } from "#coding-agent/config/config";
 import { runMigrations } from "#coding-agent/migrations";
+import { KeybindingsManager } from "#coding-agent/settings/keybindings";
 
 describe("keybindings migration", () => {
 	const tempDirs: string[] = [];

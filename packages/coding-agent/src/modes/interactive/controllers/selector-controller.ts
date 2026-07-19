@@ -4,14 +4,10 @@
 
 import type { Component, EditorComponent } from "@tsuuanmi/pi-tui";
 import { type Container, Loader, Spacer, type TUI } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
-import type { AgentSessionRuntime } from "#coding-agent/core/agent-session/agent-session-runtime";
-import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "#coding-agent/core/exec/http-dispatcher";
-import type { ExtensionCommandContext } from "#coding-agent/core/extensions/index";
-import { MissingSessionCwdError } from "#coding-agent/core/session/session-cwd";
-import { SessionManager } from "#coding-agent/core/session/session-manager";
-import type { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
-import type { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import type { AgentSession } from "#coding-agent/agent-session/agent-session";
+import type { AgentSessionRuntime } from "#coding-agent/agent-session/agent-session-runtime";
+import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "#coding-agent/exec/http-dispatcher";
+import type { ExtensionCommandContext } from "#coding-agent/extensions/index";
 import type { CustomEditor } from "#coding-agent/modes/interactive/components/custom-editor";
 import { AssistantMessageComponent } from "#coding-agent/modes/interactive/components/messages/assistant-message";
 import { SessionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/session-selector";
@@ -20,6 +16,10 @@ import { TreeSelectorComponent } from "#coding-agent/modes/interactive/component
 import { UserMessageSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/user-message-selector";
 import type { StatusLineComponent } from "#coding-agent/modes/interactive/components/status-line/index";
 import type { ExtensionUIController } from "#coding-agent/modes/interactive/controllers/extension-ui-controller";
+import { MissingSessionCwdError } from "#coding-agent/session/session-cwd";
+import { SessionManager } from "#coding-agent/session/session-manager";
+import type { KeybindingsManager } from "#coding-agent/settings/keybindings";
+import type { SettingsManager } from "#coding-agent/settings/settings-manager";
 import { getAvailableThemes, setTheme, theme } from "#coding-agent/theme/theme";
 import { keyText } from "#coding-agent/ui/rendering/keybinding-hints";
 

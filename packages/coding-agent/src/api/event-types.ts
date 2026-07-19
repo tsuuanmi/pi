@@ -1,11 +1,11 @@
 import type { AgentMessage, CustomMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { AssistantMessageEvent, Model, TextContent, ToolResultMessage } from "@tsuuanmi/pi-ai";
-import type { CompactionPreparation, CompactionResult } from "#coding-agent/core/compaction/index";
-import type { BashResult } from "#coding-agent/core/exec/bash-executor";
-import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "#coding-agent/core/session/session-manager";
-import type { BuildSystemPromptOptions } from "#coding-agent/core/skills/system-prompt";
-import type { BashOperations } from "#coding-agent/core/tools/bash";
-import type { EditToolDetails } from "#coding-agent/core/tools/edit";
+import type { CompactionPreparation, CompactionResult } from "#coding-agent/compaction/index";
+import type { BashResult } from "#coding-agent/exec/bash-executor";
+import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "#coding-agent/session/session-manager";
+import type { BuildSystemPromptOptions } from "#coding-agent/skills/system-prompt";
+import type { BashOperations } from "#coding-agent/tools/bash";
+import type { EditToolDetails } from "#coding-agent/tools/edit";
 import type {
 	BashToolDetails,
 	BashToolInput,
@@ -19,7 +19,7 @@ import type {
 	ReadToolDetails,
 	ReadToolInput,
 	WriteToolInput,
-} from "#coding-agent/core/tools/index";
+} from "#coding-agent/tools/index";
 
 // ============================================================================
 // Startup/Resource Events

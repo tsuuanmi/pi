@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { describe, expect, it } from "vitest";
-import { type CustomEntry, SessionManager } from "#coding-agent/core/session/session-manager";
+import { type CustomEntry, SessionManager } from "#coding-agent/session/session-manager";
 import { assistantMsg, userMsg } from "#coding-agent-test/test-utils";
 
 describe("SessionManager append and tree traversal", () => {

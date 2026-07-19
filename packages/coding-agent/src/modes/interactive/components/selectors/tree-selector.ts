@@ -12,8 +12,8 @@ import {
 	visibleWidth,
 	wrapTextWithAnsi,
 } from "@tsuuanmi/pi-tui";
-import type { SessionTreeNode } from "#coding-agent/core/session/session-manager";
 import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import type { SessionTreeNode } from "#coding-agent/session/session-manager";
 import { theme } from "#coding-agent/theme/theme";
 import { formatKeyText, keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 

@@ -3,8 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createAgentSession } from "#coding-agent/core/sdk/sdk";
-import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { createAgentSession } from "#coding-agent/sdk/sdk";
+import { SessionManager } from "#coding-agent/session/session-manager";
 
 describe("createAgentSession session manager defaults", () => {
 	let tempDir: string;

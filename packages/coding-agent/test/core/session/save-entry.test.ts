@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type CustomEntry, SessionManager } from "#coding-agent/core/session/session-manager";
+import { type CustomEntry, SessionManager } from "#coding-agent/session/session-manager";
 
 describe("SessionManager.saveCustomEntry", () => {
 	it("saves custom entries and includes them in tree traversal", () => {

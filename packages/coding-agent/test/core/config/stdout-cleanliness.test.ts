@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { ENV_AGENT_DIR } from "#coding-agent/core/config/config";
+import { ENV_AGENT_DIR } from "#coding-agent/config/config";
 
 const cliPath = resolve(__dirname, "../../../src/cli.ts");
 

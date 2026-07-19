@@ -14,8 +14,6 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import type { SessionInfo, SessionListProgress } from "#coding-agent/core/session/session-manager";
-import { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
 import {
 	filterAndSortSessions,
 	hasSessionName,
@@ -23,6 +21,8 @@ import {
 	type SortMode,
 } from "#coding-agent/modes/interactive/components/selectors/session-selector-search";
 import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import type { SessionInfo, SessionListProgress } from "#coding-agent/session/session-manager";
+import { KeybindingsManager } from "#coding-agent/settings/keybindings";
 import { theme } from "#coding-agent/theme/theme";
 import { keyHint, keyText } from "#coding-agent/ui/rendering/keybinding-hints";
 

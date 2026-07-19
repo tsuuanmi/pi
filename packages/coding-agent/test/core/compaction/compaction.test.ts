@@ -14,7 +14,7 @@ import {
 	getLastAssistantUsage,
 	prepareCompaction,
 	shouldCompact,
-} from "#coding-agent/core/compaction/index";
+} from "#coding-agent/compaction/index";
 import {
 	buildSessionContext,
 	type CompactionEntry,
@@ -24,7 +24,7 @@ import {
 	type SessionEntry,
 	type SessionMessageEntry,
 	type ThinkingLevelChangeEntry,
-} from "#coding-agent/core/session/session-manager";
+} from "#coding-agent/session/session-manager";
 
 // ============================================================================
 // Test fixtures

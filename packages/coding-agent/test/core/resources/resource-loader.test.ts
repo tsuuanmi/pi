@@ -3,14 +3,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
-import { ExtensionRunner } from "#coding-agent/core/extensions/runner";
-import { ModelRegistry } from "#coding-agent/core/model/model-registry";
-import { createSyntheticSourceInfo } from "#coding-agent/core/resources/source-info";
-import { SessionManager } from "#coding-agent/core/session/session-manager";
-import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
-import { DefaultResourceLoader } from "#coding-agent/core/skills/resource-loader";
-import type { Skill } from "#coding-agent/core/skills/skills";
+import { AuthStorage } from "#coding-agent/auth/auth-storage";
+import { ExtensionRunner } from "#coding-agent/extensions/runner";
+import { ModelRegistry } from "#coding-agent/model/model-registry";
+import { createSyntheticSourceInfo } from "#coding-agent/resources/source-info";
+import { SessionManager } from "#coding-agent/session/session-manager";
+import { SettingsManager } from "#coding-agent/settings/settings-manager";
+import { DefaultResourceLoader } from "#coding-agent/skills/resource-loader";
+import type { Skill } from "#coding-agent/skills/skills";
 
 const BUILT_IN_WORKFLOW_COMMANDS = new Set(["deep-interview", "ralplan", "team", "ultragoal"]);
 const BUILT_IN_SUBAGENT_TOOLS = new Set([

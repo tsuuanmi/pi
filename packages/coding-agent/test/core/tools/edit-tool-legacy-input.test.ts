@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { ExtensionContext } from "#coding-agent/api/types";
-import { createEditToolDefinition } from "#coding-agent/core/tools/edit";
+import { createEditToolDefinition } from "#coding-agent/tools/edit";
 
 const tempDirs: string[] = [];
 

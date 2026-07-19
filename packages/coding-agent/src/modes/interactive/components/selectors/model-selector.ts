@@ -9,10 +9,10 @@ import {
 	Text,
 	type TUI,
 } from "@tsuuanmi/pi-tui";
-import type { ModelRegistry } from "#coding-agent/core/model/model-registry";
-import type { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import type { ModelRegistry } from "#coding-agent/model/model-registry";
 import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
 import { getModelSearchText } from "#coding-agent/modes/interactive/model-search";
+import type { SettingsManager } from "#coding-agent/settings/settings-manager";
 import { theme } from "#coding-agent/theme/theme";
 import { keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 

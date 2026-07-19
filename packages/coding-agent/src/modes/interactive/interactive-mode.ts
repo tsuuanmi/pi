@@ -33,30 +33,20 @@ import {
 } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import { spawn } from "child_process";
-import {
-	type AgentSession,
-	type AgentSessionEvent,
-	parseSkillBlock,
-} from "#coding-agent/core/agent-session/agent-session";
+import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#coding-agent/agent-session/agent-session";
 import {
 	type AgentSessionRuntime,
 	SessionImportFileNotFoundError,
-} from "#coding-agent/core/agent-session/agent-session-runtime";
-import { APP_NAME, VERSION } from "#coding-agent/core/config/config";
-import { configureHttpDispatcher } from "#coding-agent/core/exec/http-dispatcher";
+} from "#coding-agent/agent-session/agent-session-runtime";
+import { APP_NAME, VERSION } from "#coding-agent/config/config";
+import { configureHttpDispatcher } from "#coding-agent/exec/http-dispatcher";
 import type {
 	AutocompleteProviderFactory,
 	EditorFactory,
 	ExtensionContext,
 	ExtensionRunner,
 	ExtensionUIContext,
-} from "#coding-agent/core/extensions/index";
-import type { SourceInfo } from "#coding-agent/core/resources/source-info";
-import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#coding-agent/core/session/session-cwd";
-import type { SessionContext, SessionManager } from "#coding-agent/core/session/session-manager";
-import { type AppKeybinding, KeybindingsManager } from "#coding-agent/core/settings/keybindings";
-import { BUILTIN_SLASH_COMMANDS } from "#coding-agent/core/skills/slash-commands";
-import { FooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+} from "#coding-agent/extensions/index";
 import { BashExecutionComponent } from "#coding-agent/modes/interactive/components/bash-execution";
 import { CustomEditor } from "#coding-agent/modes/interactive/components/custom-editor";
 import { AssistantMessageComponent } from "#coding-agent/modes/interactive/components/messages/assistant-message";
@@ -76,6 +66,12 @@ import { ExtensionUIController } from "#coding-agent/modes/interactive/controlle
 import { KeyHandlerController } from "#coding-agent/modes/interactive/controllers/key-handler-controller";
 import { ResourceDisplayController } from "#coding-agent/modes/interactive/controllers/resource-display-controller";
 import { SelectorController } from "#coding-agent/modes/interactive/controllers/selector-controller";
+import { FooterDataProvider } from "#coding-agent/modes/interactive/footer-data-provider";
+import type { SourceInfo } from "#coding-agent/resources/source-info";
+import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#coding-agent/session/session-cwd";
+import type { SessionContext, SessionManager } from "#coding-agent/session/session-manager";
+import { type AppKeybinding, KeybindingsManager } from "#coding-agent/settings/keybindings";
+import { BUILTIN_SLASH_COMMANDS } from "#coding-agent/skills/slash-commands";
 import {
 	getAvailableThemesWithPaths,
 	getEditorTheme,

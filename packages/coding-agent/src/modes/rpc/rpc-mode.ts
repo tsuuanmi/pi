@@ -12,13 +12,13 @@
  */
 
 import * as crypto from "node:crypto";
-import type { AgentSessionRuntime } from "#coding-agent/core/agent-session/agent-session-runtime";
+import type { AgentSessionRuntime } from "#coding-agent/agent-session/agent-session-runtime";
 import type {
 	ExtensionUIContext,
 	ExtensionUIDialogOptions,
 	ExtensionWidgetOptions,
 	WorkingIndicatorOptions,
-} from "#coding-agent/core/extensions/index";
+} from "#coding-agent/extensions/index";
 import {
 	flushRawStdout,
 	takeOverStdout,

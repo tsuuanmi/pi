@@ -13,7 +13,7 @@ import {
 	Spacer,
 	Text,
 } from "@tsuuanmi/pi-tui";
-import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "#coding-agent/core/exec/http-dispatcher";
+import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "#coding-agent/exec/http-dispatcher";
 import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
 import { getSelectListTheme, getSettingsListTheme, theme } from "#coding-agent/theme/theme";
 import { keyDisplayText, keyHint } from "#coding-agent/ui/rendering/keybinding-hints";

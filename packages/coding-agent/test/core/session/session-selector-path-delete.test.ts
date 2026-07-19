@@ -3,9 +3,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setKeybindings } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { SessionInfo } from "#coding-agent/core/session/session-manager";
-import { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
 import { SessionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/session-selector";
+import type { SessionInfo } from "#coding-agent/session/session-manager";
+import { KeybindingsManager } from "#coding-agent/settings/keybindings";
 import { initTheme } from "#coding-agent/theme/theme";
 
 type Deferred<T> = {

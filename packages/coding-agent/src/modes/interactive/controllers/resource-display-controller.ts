@@ -12,12 +12,12 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { getCwdRelativePath } from "@tsuuanmi/pi-agent/node";
 import { type Container, Spacer, Text } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
-import type { ExtensionRunner } from "#coding-agent/core/extensions/index";
-import type { SourceInfo } from "#coding-agent/core/resources/source-info";
-import type { ResourceDiagnostic } from "#coding-agent/core/skills/resource-loader";
-import { BUILTIN_SLASH_COMMANDS } from "#coding-agent/core/skills/slash-commands";
+import type { AgentSession } from "#coding-agent/agent-session/agent-session";
+import type { ExtensionRunner } from "#coding-agent/extensions/index";
 import { ExpandableText } from "#coding-agent/modes/interactive/components/widgets/expandable-text";
+import type { SourceInfo } from "#coding-agent/resources/source-info";
+import type { ResourceDiagnostic } from "#coding-agent/skills/resource-loader";
+import { BUILTIN_SLASH_COMMANDS } from "#coding-agent/skills/slash-commands";
 import { type ThemeColor, theme } from "#coding-agent/theme/theme";
 import { parseGitUrl } from "#coding-agent/utils/fs/git";
 

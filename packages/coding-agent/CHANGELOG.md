@@ -19,7 +19,7 @@
 - Removed the `doom-overlay`, `snake`, `space-invaders`, `plan-mode`, `sandbox`, `custom-provider-anthropic`, and `custom-provider-gitlab-duo` example extensions (and the `plan-mode-utils` test), and dropped the `custom-provider-anthropic`, `custom-provider-gitlab-duo`, and `sandbox` workspace entries from the root manifest.
 - Removed low-value interactive extras: the changelog notice, package update notification, tmux keyboard warning, automatic theme detection, terminal title updates, Ctrl-Z suspend handling, and the Anthropic subscription-auth warning. Also removed the unused `collapseChangelog`, `lastChangelogVersion`, and `warnings.anthropicExtraUsage` settings.
 - Removed low-ROI settings and UI extras: `enableAnalytics`, `trackingId`, `terminal.showTerminalProgress`, `terminal.clearOnShrink`, `editorPaddingX`, `autocompleteMaxVisible`, `doubleEscapeAction`, and `treeFilterMode`, along with the analytics first-time setup step and double-escape shortcut.
-- Removed the experimental-features gate (`PI_EXPERIMENTAL` env var, `areExperimentalFeaturesEnabled()`, `src/core/config/experimental.ts`), the experimental first-time theme-setup dialog (`first-time-setup.ts`, `shouldRunFirstTimeSetup`/`showFirstTimeSetup` in `startup-ui.ts`, and their tests), and the status-line `xp` chip. The `isOfficialDistribution`/`OFFICIAL_*` helpers in `startup-ui.ts` (used only by the setup gate) were also dropped.
+- Removed the experimental-features gate (`PI_EXPERIMENTAL` env var, `areExperimentalFeaturesEnabled()`, `src/config/experimental.ts`), the experimental first-time theme-setup dialog (`first-time-setup.ts`, `shouldRunFirstTimeSetup`/`showFirstTimeSetup` in `startup-ui.ts`, and their tests), and the status-line `xp` chip. The `isOfficialDistribution`/`OFFICIAL_*` helpers in `startup-ui.ts` (used only by the setup gate) were also dropped.
 - Removed project trust entirely, including the trust prompt, `/trust`, `trust.json` store, `project_trust` extension event, trust-gated project resource loading, and related public APIs.
 
 ### Added
@@ -68,6 +68,7 @@
 ### Changed
 
 - Interactive model thinking blocks now render as one-line previews by default; `Ctrl+O` expands or truncates both tool output and thinking details.
+- Moved coding-agent source modules out of `src/core/` into direct `src/` feature directories and updated the public config subpath to `@tsuuanmi/pi-coding-agent/config/config`.
 - Moved OpenAI Codex quota display out of the HUD/status line and into an improved `/account` selector with clearer columns and in-place best-effort quota updates for each stored Codex account.
 - Moved bundled workflow agent profiles out of coding-agent core and into the `pi:workflows` package as package `agents` resources.
 - Moved OpenAI Codex quota usage helpers from coding-agent core into `@tsuuanmi/pi-ai`; coding-agent now consumes them through the AI package.

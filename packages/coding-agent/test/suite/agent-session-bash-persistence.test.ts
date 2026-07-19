@@ -3,7 +3,7 @@ import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { fauxAssistantMessage, fauxToolCall } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
-import type { BashOperations } from "#coding-agent/core/tools/bash";
+import type { BashOperations } from "#coding-agent/tools/bash";
 import { createHarness, type Harness } from "#coding-agent-test/suite/harness";
 
 function getEntryTypes(harness: Harness): string[] {

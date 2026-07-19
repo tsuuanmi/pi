@@ -1,14 +1,14 @@
-import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import type { AgentSession } from "#coding-agent/agent-session/agent-session";
 import type {
 	StatusLinePreset,
 	StatusLineSegmentId,
 	StatusLineSegmentOptions,
 	StatusLineSeparatorStyle,
 	StatusLineSettings,
-} from "#coding-agent/core/settings/settings-manager";
+} from "#coding-agent/settings/settings-manager";
 
-// Re-export the structural settings types (defined in core to avoid a
-// core -> modes cycle). Consumers import status-line types from here.
+// Re-export the structural settings types (defined outside modes to avoid a
+// settings -> modes cycle). Consumers import status-line types from here.
 export type {
 	StatusLinePreset,
 	StatusLineSegmentId,

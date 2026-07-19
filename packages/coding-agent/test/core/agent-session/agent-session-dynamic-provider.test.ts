@@ -3,12 +3,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
-import type { ExtensionFactory } from "#coding-agent/core/sdk/sdk";
-import { createAgentSession } from "#coding-agent/core/sdk/sdk";
-import { SessionManager } from "#coding-agent/core/session/session-manager";
-import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
-import { DefaultResourceLoader } from "#coding-agent/core/skills/resource-loader";
+import { AuthStorage } from "#coding-agent/auth/auth-storage";
+import type { ExtensionFactory } from "#coding-agent/sdk/sdk";
+import { createAgentSession } from "#coding-agent/sdk/sdk";
+import { SessionManager } from "#coding-agent/session/session-manager";
+import { SettingsManager } from "#coding-agent/settings/settings-manager";
+import { DefaultResourceLoader } from "#coding-agent/skills/resource-loader";
 
 describe("AgentSession dynamic provider registration", () => {
 	let tempDir: string;

@@ -1,13 +1,6 @@
 import { type Component, truncateToWidth, visibleWidth } from "@tsuuanmi/pi-tui";
 import { collapsePlanningPipeline, readWorkflowActiveState, type WorkflowActiveEntry } from "@tsuuanmi/pi-workflows";
-import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
-import type {
-	SettingsManager,
-	StatusLineSegmentId,
-	StatusLineSegmentOptions,
-	StatusLineSettings,
-} from "#coding-agent/core/settings/settings-manager";
-import type { ReadonlyFooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+import type { AgentSession } from "#coding-agent/agent-session/agent-session";
 import { renderSkillHudBar } from "#coding-agent/modes/interactive/components/skill-hud/render";
 import {
 	type GitStatusSummary,
@@ -21,6 +14,13 @@ import {
 } from "#coding-agent/modes/interactive/components/status-line/segments";
 import { getSeparator } from "#coding-agent/modes/interactive/components/status-line/separators";
 import type { SegmentContext } from "#coding-agent/modes/interactive/components/status-line/types";
+import type { ReadonlyFooterDataProvider } from "#coding-agent/modes/interactive/footer-data-provider";
+import type {
+	SettingsManager,
+	StatusLineSegmentId,
+	StatusLineSegmentOptions,
+	StatusLineSettings,
+} from "#coding-agent/settings/settings-manager";
 import { theme } from "#coding-agent/theme/theme";
 
 /** Minimum gap (columns) between the left and right rail groups. */

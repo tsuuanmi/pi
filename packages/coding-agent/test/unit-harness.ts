@@ -26,13 +26,13 @@ import type {
 	Usage,
 } from "@tsuuanmi/pi-ai";
 import { createAssistantMessageEventStream } from "@tsuuanmi/pi-ai";
-import { AgentSession, type AgentSessionEvent } from "#coding-agent/core/agent-session/agent-session";
-import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
-import { ModelRegistry } from "#coding-agent/core/model/model-registry";
-import { SessionManager } from "#coding-agent/core/session/session-manager";
-import type { Settings } from "#coding-agent/core/settings/settings-manager";
-import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { AgentSession, type AgentSessionEvent } from "#coding-agent/agent-session/agent-session";
+import { AuthStorage } from "#coding-agent/auth/auth-storage";
 import type { ExtensionFactory, ResourceLoader } from "#coding-agent/index";
+import { ModelRegistry } from "#coding-agent/model/model-registry";
+import { SessionManager } from "#coding-agent/session/session-manager";
+import type { Settings } from "#coding-agent/settings/settings-manager";
+import { SettingsManager } from "#coding-agent/settings/settings-manager";
 import {
 	type CreateTestExtensionsResultInput,
 	createTestExtensionsResult,

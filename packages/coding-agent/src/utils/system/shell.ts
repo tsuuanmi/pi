@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { delimiter } from "node:path";
 import { spawnSync } from "child_process";
-import { getBinDir } from "#coding-agent/core/config/config";
+import { getBinDir } from "#coding-agent/config/config";
 
 export interface ShellConfig {
 	shell: string;

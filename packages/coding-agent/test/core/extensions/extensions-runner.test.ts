@@ -12,12 +12,12 @@ import type {
 	ExtensionUIContext,
 	ProviderConfig,
 } from "#coding-agent/api/types";
-import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
-import { createExtensionRuntime, discoverAndLoadExtensions } from "#coding-agent/core/extensions/loader";
-import { ExtensionRunner } from "#coding-agent/core/extensions/runner";
-import { ModelRegistry } from "#coding-agent/core/model/model-registry";
-import { SessionManager } from "#coding-agent/core/session/session-manager";
-import { KeybindingsManager, type KeyId } from "#coding-agent/core/settings/keybindings";
+import { AuthStorage } from "#coding-agent/auth/auth-storage";
+import { createExtensionRuntime, discoverAndLoadExtensions } from "#coding-agent/extensions/loader";
+import { ExtensionRunner } from "#coding-agent/extensions/runner";
+import { ModelRegistry } from "#coding-agent/model/model-registry";
+import { SessionManager } from "#coding-agent/session/session-manager";
+import { KeybindingsManager, type KeyId } from "#coding-agent/settings/keybindings";
 
 describe("ExtensionRunner", () => {
 	let tempDir: string;

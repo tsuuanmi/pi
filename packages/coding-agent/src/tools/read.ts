@@ -1,0 +1,317 @@
+import { basename, dirname, isAbsolute, relative, resolve as resolvePath, sep } from "node:path";
+import type { AgentTool } from "@tsuuanmi/pi-agent";
+import { formatPathRelativeToCwdOrAbsolute } from "@tsuuanmi/pi-agent/node";
+import type { TextContent } from "@tsuuanmi/pi-ai";
+import { Text } from "@tsuuanmi/pi-tui";
+import { constants } from "fs";
+import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
+import { type Static, Type } from "typebox";
+import type { ToolDefinition, ToolRenderResultOptions } from "#coding-agent/api/types";
+import { getReadmePath } from "#coding-agent/config/config";
+import { getLanguageFromPath, highlightCode, type Theme } from "#coding-agent/theme/theme";
+import { resolveReadPathAsync, resolveToCwd } from "#coding-agent/tools/path-utils";
+import { getTextOutput, renderToolPath, replaceTabs, str } from "#coding-agent/tools/render-utils";
+import { wrapToolDefinition } from "#coding-agent/tools/tool-definition-wrapper";
+import {
+	DEFAULT_MAX_BYTES,
+	DEFAULT_MAX_LINES,
+	formatSize,
+	type TruncationResult,
+	truncateHead,
+} from "#coding-agent/tools/truncate";
+import { keyHint, keyText } from "#coding-agent/ui/rendering/keybinding-hints";
+
+const readSchema = Type.Object({
+	path: Type.String({ description: "Path to the file to read (relative or absolute)" }),
+	offset: Type.Optional(Type.Number({ description: "Line number to start reading from (1-indexed)" })),
+	limit: Type.Optional(Type.Number({ description: "Maximum number of lines to read" })),
+});
+
+export type ReadToolInput = Static<typeof readSchema>;
+
+export interface ReadToolDetails {
+	truncation?: TruncationResult;
+}
+
+interface CompactReadClassification {
+	kind: "docs" | "resource" | "skill";
+	label: string;
+}
+
+const COMPACT_RESOURCE_FILE_NAMES = new Set(["AGENTS.md", "AGENTS.MD", "CLAUDE.md", "CLAUDE.MD"]);
+
+/**
+ * Pluggable operations for the read tool.
+ * Override these to delegate file reading to remote systems (for example SSH).
+ */
+export interface ReadOperations {
+	/** Read file contents as a Buffer */
+	readFile: (absolutePath: string) => Promise<Buffer>;
+	/** Check if file is readable (throw if not) */
+	access: (absolutePath: string) => Promise<void>;
+}
+
+const defaultReadOperations: ReadOperations = {
+	readFile: (path) => fsReadFile(path),
+	access: (path) => fsAccess(path, constants.R_OK),
+};
+
+export interface ReadToolOptions {
+	/** Custom operations for file reading. Default: local filesystem */
+	operations?: ReadOperations;
+}
+
+type ReadRenderArgs = { path?: string; file_path?: string; offset?: number; limit?: number };
+
+function formatReadLineRange(args: ReadRenderArgs | undefined, theme: Theme): string {
+	if (args?.offset === undefined && args?.limit === undefined) return "";
+	const startLine = args.offset ?? 1;
+	const endLine = args.limit !== undefined ? startLine + args.limit - 1 : "";
+	return theme.fg("warning", `:${startLine}${endLine ? `-${endLine}` : ""}`);
+}
+
+function formatReadCall(args: ReadRenderArgs | undefined, theme: Theme, cwd: string): string {
+	const pathDisplay = renderToolPath(str(args?.file_path ?? args?.path), theme, cwd);
+	return `${theme.fg("toolTitle", theme.bold("read"))} ${pathDisplay}${formatReadLineRange(args, theme)}`;
+}
+
+function trimTrailingEmptyLines(lines: string[]): string[] {
+	let end = lines.length;
+	while (end > 0 && lines[end - 1] === "") {
+		end--;
+	}
+	return lines.slice(0, end);
+}
+
+function toPosixPath(filePath: string): string {
+	return filePath.split(sep).join("/");
+}
+
+function getPiDocsClassification(absolutePath: string): CompactReadClassification | undefined {
+	const packageRoot = dirname(getReadmePath());
+	const relativePath = relative(resolvePath(packageRoot), resolvePath(absolutePath));
+	if (
+		relativePath === "" ||
+		relativePath === ".." ||
+		relativePath.startsWith(`..${sep}`) ||
+		isAbsolute(relativePath)
+	) {
+		return undefined;
+	}
+
+	const label = toPosixPath(relativePath);
+	if (label === "README.md" || label.startsWith("docs/")) {
+		return { kind: "docs", label };
+	}
+	return undefined;
+}
+
+function getCompactReadClassification(
+	args: ReadRenderArgs | undefined,
+	cwd: string,
+): CompactReadClassification | undefined {
+	const rawPath = str(args?.file_path ?? args?.path);
+	if (!rawPath) return undefined;
+
+	const absolutePath = resolveToCwd(rawPath, cwd);
+	const fileName = basename(absolutePath);
+	if (fileName === "SKILL.md") {
+		return { kind: "skill", label: basename(dirname(absolutePath)) || fileName };
+	}
+
+	const docsClassification = getPiDocsClassification(absolutePath);
+	if (docsClassification) return docsClassification;
+
+	if (COMPACT_RESOURCE_FILE_NAMES.has(fileName)) {
+		return { kind: "resource", label: formatPathRelativeToCwdOrAbsolute(absolutePath, cwd) };
+	}
+
+	return undefined;
+}
+
+function formatCompactReadCall(
+	classification: CompactReadClassification,
+	args: ReadRenderArgs | undefined,
+	theme: Theme,
+): string {
+	const expandHint = theme.fg("dim", ` (${keyText("app.tools.expand")} to expand)`);
+	if (classification.kind === "skill") {
+		return (
+			theme.fg("customMessageLabel", `\x1b[1m[skill]\x1b[22m `) +
+			theme.fg("customMessageText", classification.label) +
+			formatReadLineRange(args, theme) +
+			expandHint
+		);
+	}
+
+	return (
+		theme.fg("toolTitle", theme.bold(`read ${classification.kind}`)) +
+		" " +
+		theme.fg("accent", classification.label) +
+		formatReadLineRange(args, theme) +
+		expandHint
+	);
+}
+
+function formatReadResult(
+	args: ReadRenderArgs | undefined,
+	result: { content: TextContent[]; details?: ReadToolDetails },
+	options: ToolRenderResultOptions,
+	theme: Theme,
+	_cwd: string,
+	isError: boolean,
+): string {
+	if (!options.expanded && !isError) {
+		return "";
+	}
+
+	const rawPath = str(args?.file_path ?? args?.path);
+	const output = getTextOutput(result);
+	const lang = rawPath ? getLanguageFromPath(rawPath) : undefined;
+	const renderedLines = lang ? highlightCode(replaceTabs(output), lang) : output.split("\n");
+	const lines = trimTrailingEmptyLines(renderedLines);
+	const maxLines = options.expanded ? lines.length : 10;
+	const displayLines = lines.slice(0, maxLines);
+	const remaining = lines.length - maxLines;
+	let text = `\n${displayLines.map((line) => (lang ? replaceTabs(line) : theme.fg("toolOutput", replaceTabs(line)))).join("\n")}`;
+	if (remaining > 0) {
+		text += `${theme.fg("muted", `\n... (${remaining} more lines,`)} ${keyHint("app.tools.expand", "to expand")}${theme.fg("muted", ")")}`;
+	}
+
+	const truncation = result.details?.truncation;
+	if (truncation?.truncated) {
+		if (truncation.firstLineExceedsLimit) {
+			text += `\n${theme.fg("warning", `[First line exceeds ${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} limit]`)}`;
+		} else if (truncation.truncatedBy === "lines") {
+			text += `\n${theme.fg("warning", `[Truncated: showing ${truncation.outputLines} of ${truncation.totalLines} lines (${truncation.maxLines ?? DEFAULT_MAX_LINES} line limit)]`)}`;
+		} else {
+			text += `\n${theme.fg("warning", `[Truncated: ${truncation.outputLines} lines shown (${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} limit)]`)}`;
+		}
+	}
+	return text;
+}
+
+export function createReadToolDefinition(
+	cwd: string,
+	options?: ReadToolOptions,
+): ToolDefinition<typeof readSchema, ReadToolDetails | undefined> {
+	const ops = options?.operations ?? defaultReadOperations;
+	return {
+		name: "read",
+		label: "read",
+		description: `Read the contents of a file. For text files, output is truncated to ${DEFAULT_MAX_LINES} lines or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). Use offset/limit for large files. When you need the full file, continue with offset until complete.`,
+		promptSnippet: "Read file contents",
+		promptGuidelines: ["Use read to examine files instead of cat or sed."],
+		parameters: readSchema,
+		async execute(
+			_toolCallId,
+			{ path, offset, limit }: { path: string; offset?: number; limit?: number },
+			signal?: AbortSignal,
+			_onUpdate?,
+			_ctx?,
+		) {
+			return new Promise<{ content: TextContent[]; details: ReadToolDetails | undefined }>((resolve, reject) => {
+				if (signal?.aborted) {
+					reject(new Error("Operation aborted"));
+					return;
+				}
+				let aborted = false;
+				const onAbort = () => {
+					aborted = true;
+					reject(new Error("Operation aborted"));
+				};
+				signal?.addEventListener("abort", onAbort, { once: true });
+
+				(async () => {
+					try {
+						const absolutePath = await resolveReadPathAsync(path, cwd);
+						if (aborted) return;
+						// Check if file exists and is readable.
+						await ops.access(absolutePath);
+						if (aborted) return;
+						let content: TextContent[];
+						let details: ReadToolDetails | undefined;
+						{
+							const buffer = await ops.readFile(absolutePath);
+							const textContent = buffer.toString("utf-8");
+							const allLines = textContent.split("\n");
+							const totalFileLines = allLines.length;
+							// Apply offset if specified. Convert from 1-indexed input to 0-indexed array access.
+							const startLine = offset ? Math.max(0, offset - 1) : 0;
+							const startLineDisplay = startLine + 1;
+							// Check if offset is out of bounds.
+							if (startLine >= allLines.length) {
+								throw new Error(`Offset ${offset} is beyond end of file (${allLines.length} lines total)`);
+							}
+							let selectedContent: string;
+							let userLimitedLines: number | undefined;
+							// If limit is specified by the user, honor it first. Otherwise truncateHead decides.
+							if (limit !== undefined) {
+								const endLine = Math.min(startLine + limit, allLines.length);
+								selectedContent = allLines.slice(startLine, endLine).join("\n");
+								userLimitedLines = endLine - startLine;
+							} else {
+								selectedContent = allLines.slice(startLine).join("\n");
+							}
+							// Apply truncation, respecting both line and byte limits.
+							const truncation = truncateHead(selectedContent);
+							let outputText: string;
+							if (truncation.firstLineExceedsLimit) {
+								// First line alone exceeds the byte limit. Point the model at a bash fallback.
+								const firstLineSize = formatSize(Buffer.byteLength(allLines[startLine], "utf-8"));
+								outputText = `[Line ${startLineDisplay} is ${firstLineSize}, exceeds ${formatSize(DEFAULT_MAX_BYTES)} limit. Use bash: sed -n '${startLineDisplay}p' ${path} | head -c ${DEFAULT_MAX_BYTES}]`;
+								details = { truncation };
+							} else if (truncation.truncated) {
+								// Truncation occurred. Build an actionable continuation notice.
+								const endLineDisplay = startLineDisplay + truncation.outputLines - 1;
+								const nextOffset = endLineDisplay + 1;
+								outputText = truncation.content;
+								if (truncation.truncatedBy === "lines") {
+									outputText += `\n\n[Showing lines ${startLineDisplay}-${endLineDisplay} of ${totalFileLines}. Use offset=${nextOffset} to continue.]`;
+								} else {
+									outputText += `\n\n[Showing lines ${startLineDisplay}-${endLineDisplay} of ${totalFileLines} (${formatSize(DEFAULT_MAX_BYTES)} limit). Use offset=${nextOffset} to continue.]`;
+								}
+								details = { truncation };
+							} else if (userLimitedLines !== undefined && startLine + userLimitedLines < allLines.length) {
+								// User-specified limit stopped early, but the file still has more content.
+								const remaining = allLines.length - (startLine + userLimitedLines);
+								const nextOffset = startLine + userLimitedLines + 1;
+								outputText = `${truncation.content}\n\n[${remaining} more lines in file. Use offset=${nextOffset} to continue.]`;
+							} else {
+								// No truncation and no remaining user-limited content.
+								outputText = truncation.content;
+							}
+							content = [{ type: "text", text: outputText }];
+						}
+
+						if (aborted) return;
+						signal?.removeEventListener("abort", onAbort);
+						resolve({ content, details });
+					} catch (error: any) {
+						signal?.removeEventListener("abort", onAbort);
+						if (!aborted) reject(error);
+					}
+				})();
+			});
+		},
+		renderCall(args, theme, context) {
+			const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
+			const classification = !context.expanded ? getCompactReadClassification(args, context.cwd) : undefined;
+			text.setText(
+				classification
+					? formatCompactReadCall(classification, args, theme)
+					: formatReadCall(args, theme, context.cwd),
+			);
+			return text;
+		},
+		renderResult(result, options, theme, context) {
+			const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
+			text.setText(formatReadResult(context.args, result, options, theme, context.cwd, context.isError));
+			return text;
+		},
+	};
+}
+
+export function createReadTool(cwd: string, options?: ReadToolOptions): AgentTool<typeof readSchema> {
+	return wrapToolDefinition(createReadToolDefinition(cwd, options));
+}

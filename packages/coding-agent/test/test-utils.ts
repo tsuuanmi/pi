@@ -7,16 +7,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { getModel } from "@tsuuanmi/pi-ai";
-import { AgentSession } from "#coding-agent/core/agent-session/agent-session";
-import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
-import { createEventBus } from "#coding-agent/core/events/event-bus";
-import type { Extension, ExtensionFactory, LoadExtensionsResult } from "#coding-agent/core/extensions/index";
-import { createExtensionRuntime, loadExtensionFromFactory } from "#coding-agent/core/extensions/loader";
-import { ModelRegistry } from "#coding-agent/core/model/model-registry";
-import { SessionManager } from "#coding-agent/core/session/session-manager";
-import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
-import type { ResourceLoader } from "#coding-agent/core/skills/resource-loader";
+import { AgentSession } from "#coding-agent/agent-session/agent-session";
+import { AuthStorage } from "#coding-agent/auth/auth-storage";
+import { createEventBus } from "#coding-agent/events/event-bus";
+import type { Extension, ExtensionFactory, LoadExtensionsResult } from "#coding-agent/extensions/index";
+import { createExtensionRuntime, loadExtensionFromFactory } from "#coding-agent/extensions/loader";
 import { createCodingTools } from "#coding-agent/index";
+import { ModelRegistry } from "#coding-agent/model/model-registry";
+import { SessionManager } from "#coding-agent/session/session-manager";
+import { SettingsManager } from "#coding-agent/settings/settings-manager";
+import type { ResourceLoader } from "#coding-agent/skills/resource-loader";
 
 /**
  * API key for authenticated tests. Tests using this should be wrapped in

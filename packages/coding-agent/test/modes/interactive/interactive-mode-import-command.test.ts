@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SessionImportFileNotFoundError } from "#coding-agent/core/agent-session/agent-session-runtime";
+import { SessionImportFileNotFoundError } from "#coding-agent/agent-session/agent-session-runtime";
 import { CommandController } from "#coding-agent/modes/interactive/controllers/command-controller";
 import { InteractiveMode } from "#coding-agent/modes/interactive/interactive-mode";
 

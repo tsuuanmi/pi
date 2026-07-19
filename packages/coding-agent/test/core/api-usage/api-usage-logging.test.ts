@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { apiUsageLogPath } from "#coding-agent/core/api-usage/path";
+import { apiUsageLogPath } from "#coding-agent/api-usage/path";
 import { createHarness } from "#coding-agent-test/unit-harness";
 
 async function waitForFile(path: string): Promise<string> {

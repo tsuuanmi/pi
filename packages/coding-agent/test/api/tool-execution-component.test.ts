@@ -3,12 +3,12 @@ import { Text, type TUI } from "@tsuuanmi/pi-tui";
 import { Type } from "typebox";
 import { beforeAll, describe, expect, test } from "vitest";
 import type { ToolDefinition } from "#coding-agent/api/types";
-import { getReadmePath } from "#coding-agent/core/config/config";
-import { type BashOperations, createBashToolDefinition } from "#coding-agent/core/tools/bash";
-import { createReadTool, createReadToolDefinition } from "#coding-agent/core/tools/read";
-import { createWriteToolDefinition } from "#coding-agent/core/tools/write";
+import { getReadmePath } from "#coding-agent/config/config";
 import { ToolExecutionComponent } from "#coding-agent/modes/interactive/components/tool-execution";
 import { initTheme } from "#coding-agent/theme/theme";
+import { type BashOperations, createBashToolDefinition } from "#coding-agent/tools/bash";
+import { createReadTool, createReadToolDefinition } from "#coding-agent/tools/read";
+import { createWriteToolDefinition } from "#coding-agent/tools/write";
 import { stripAnsi } from "#coding-agent/utils/terminal/ansi";
 
 function createBaseToolDefinition(name = "custom_tool"): ToolDefinition {

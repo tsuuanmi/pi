@@ -4,10 +4,10 @@ import { join } from "node:path";
 import { visibleWidth } from "@tsuuanmi/pi-tui";
 import { syncWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
-import type { SettingsManager, StatusLineSettings } from "#coding-agent/core/settings/settings-manager";
-import type { ReadonlyFooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+import type { AgentSession } from "#coding-agent/agent-session/agent-session";
 import { StatusLineComponent } from "#coding-agent/modes/interactive/components/status-line/index";
+import type { ReadonlyFooterDataProvider } from "#coding-agent/modes/interactive/footer-data-provider";
+import type { SettingsManager, StatusLineSettings } from "#coding-agent/settings/settings-manager";
 import { initTheme } from "#coding-agent/theme/theme";
 import { stripAnsi } from "#coding-agent/utils/terminal/ansi";
 

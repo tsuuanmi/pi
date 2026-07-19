@@ -1,5 +1,5 @@
 import { Container, type Focusable, fuzzyFilter, getKeybindings, Input, Spacer, TruncatedText } from "@tsuuanmi/pi-tui";
-import type { AuthStatus, AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import type { AuthStatus, AuthStorage } from "#coding-agent/auth/auth-storage";
 import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
 import { theme } from "#coding-agent/theme/theme";
 

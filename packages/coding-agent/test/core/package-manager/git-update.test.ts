@@ -11,8 +11,8 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DefaultPackageManager } from "#coding-agent/core/package-manager/package-manager";
-import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { DefaultPackageManager } from "#coding-agent/package-manager/package-manager";
+import { SettingsManager } from "#coding-agent/settings/settings-manager";
 
 // Helper to run git commands in a directory
 function git(args: string[], cwd: string): string {

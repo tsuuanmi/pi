@@ -7,7 +7,7 @@
  */
 
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
-import type { AgentSessionRuntime } from "#coding-agent/core/agent-session/agent-session-runtime";
+import type { AgentSessionRuntime } from "#coding-agent/agent-session/agent-session-runtime";
 import { flushRawStdout, writeRawStdout } from "#coding-agent/modes/output-guard";
 import { killTrackedDetachedChildren } from "#coding-agent/utils/system/shell";
 

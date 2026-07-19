@@ -10,13 +10,16 @@
 
 import type { Component, EditorComponent, OverlayHandle, OverlayOptions } from "@tsuuanmi/pi-tui";
 import { Container, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
-import type { ExtensionUIDialogOptions, ExtensionWidgetOptions } from "#coding-agent/core/extensions/index";
-import type { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
-import type { FooterDataProvider, ReadonlyFooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+import type { ExtensionUIDialogOptions, ExtensionWidgetOptions } from "#coding-agent/extensions/index";
 import { ExtensionEditorComponent } from "#coding-agent/modes/interactive/components/extension-editor";
 import { ExtensionInputComponent } from "#coding-agent/modes/interactive/components/extension-input";
 import { ExtensionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/extension-selector";
 import type { StatusLineComponent } from "#coding-agent/modes/interactive/components/status-line/index";
+import type {
+	FooterDataProvider,
+	ReadonlyFooterDataProvider,
+} from "#coding-agent/modes/interactive/footer-data-provider";
+import type { KeybindingsManager } from "#coding-agent/settings/keybindings";
 import { type Theme, theme } from "#coding-agent/theme/theme";
 
 /** Interface for components that can be expanded/collapsed */

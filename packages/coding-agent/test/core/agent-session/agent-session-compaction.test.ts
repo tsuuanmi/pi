@@ -13,12 +13,12 @@ import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AgentSession, type AgentSessionEvent } from "#coding-agent/core/agent-session/agent-session";
-import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
-import { ModelRegistry } from "#coding-agent/core/model/model-registry";
-import { SessionManager } from "#coding-agent/core/session/session-manager";
-import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { AgentSession, type AgentSessionEvent } from "#coding-agent/agent-session/agent-session";
+import { AuthStorage } from "#coding-agent/auth/auth-storage";
 import { createCodingTools } from "#coding-agent/index";
+import { ModelRegistry } from "#coding-agent/model/model-registry";
+import { SessionManager } from "#coding-agent/session/session-manager";
+import { SettingsManager } from "#coding-agent/settings/settings-manager";
 import { API_KEY, createTestResourceLoader } from "#coding-agent-test/test-utils";
 
 describe.skipIf(!API_KEY)("AgentSession compaction e2e", () => {

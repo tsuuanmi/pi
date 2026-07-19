@@ -17,10 +17,10 @@ import {
 	type TUI,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
-import { getDebugLogPath } from "#coding-agent/core/config/config";
-import type { AppKeybinding, KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import type { AgentSession } from "#coding-agent/agent-session/agent-session";
+import { getDebugLogPath } from "#coding-agent/config/config";
 import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import type { AppKeybinding, KeybindingsManager } from "#coding-agent/settings/keybindings";
 import { theme } from "#coding-agent/theme/theme";
 import { formatKeyText } from "#coding-agent/ui/rendering/keybinding-hints";
 import { copyToClipboard } from "#coding-agent/utils/clipboard/clipboard";

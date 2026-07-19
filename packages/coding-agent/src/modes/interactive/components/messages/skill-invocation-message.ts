@@ -1,5 +1,5 @@
 import { Box, Markdown, type MarkdownTheme, Text } from "@tsuuanmi/pi-tui";
-import type { ParsedSkillBlock } from "#coding-agent/core/agent-session/agent-session";
+import type { ParsedSkillBlock } from "#coding-agent/agent-session/agent-session";
 import { getMarkdownTheme, theme } from "#coding-agent/theme/theme";
 import { keyText } from "#coding-agent/ui/rendering/keybinding-hints";
 

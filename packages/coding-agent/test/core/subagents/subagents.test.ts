@@ -4,11 +4,11 @@ import { dirname, join } from "node:path";
 import { fauxAssistantMessage, fauxToolCall, registerFauxProvider } from "@tsuuanmi/pi-ai";
 import { sessionStateDir } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
-import { ModelRegistry } from "#coding-agent/core/model/model-registry";
-import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
-import { DefaultResourceLoader } from "#coding-agent/core/skills/resource-loader";
-import { SubagentManager, type SubagentRecord } from "#coding-agent/core/subagents/subagents";
+import { AuthStorage } from "#coding-agent/auth/auth-storage";
+import { ModelRegistry } from "#coding-agent/model/model-registry";
+import { SettingsManager } from "#coding-agent/settings/settings-manager";
+import { DefaultResourceLoader } from "#coding-agent/skills/resource-loader";
+import { SubagentManager, type SubagentRecord } from "#coding-agent/subagents/subagents";
 
 const TEST_SESSION = "test-session";
 

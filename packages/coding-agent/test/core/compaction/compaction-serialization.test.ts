@@ -1,6 +1,6 @@
 import type { Message } from "@tsuuanmi/pi-ai";
 import { describe, expect, it } from "vitest";
-import { serializeConversation } from "#coding-agent/core/compaction/message-utils";
+import { serializeConversation } from "#coding-agent/compaction/message-utils";
 
 describe("serializeConversation", () => {
 	it("should truncate long tool results", () => {

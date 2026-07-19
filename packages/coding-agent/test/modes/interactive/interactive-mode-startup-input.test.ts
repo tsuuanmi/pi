@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import type { AgentSession } from "#coding-agent/agent-session/agent-session";
 import type { CustomEditor } from "#coding-agent/modes/interactive/components/custom-editor";
 import { KeyHandlerController } from "#coding-agent/modes/interactive/controllers/key-handler-controller";
 import { InteractiveMode } from "#coding-agent/modes/interactive/interactive-mode";

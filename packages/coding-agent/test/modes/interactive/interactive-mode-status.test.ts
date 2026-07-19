@@ -11,10 +11,10 @@ import {
 import { VirtualTerminal } from "@tsuuanmi/pi-tui/test/terminal/runtime/virtual-terminal";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import type { AutocompleteProviderFactory } from "#coding-agent/api/types";
-import type { SourceInfo } from "#coding-agent/core/resources/source-info";
 import { ExtensionUIController } from "#coding-agent/modes/interactive/controllers/extension-ui-controller";
 import { ResourceDisplayController } from "#coding-agent/modes/interactive/controllers/resource-display-controller";
 import { InteractiveMode } from "#coding-agent/modes/interactive/interactive-mode";
+import type { SourceInfo } from "#coding-agent/resources/source-info";
 import { initTheme } from "#coding-agent/theme/theme";
 
 function renderLastLine(container: Container, width = 120): string {

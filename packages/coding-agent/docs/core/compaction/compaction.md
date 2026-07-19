@@ -3,10 +3,10 @@
 LLMs have limited context windows. When conversations grow too long, pi uses compaction to summarize older content while preserving recent work. This page covers both auto-compaction and branch summarization.
 
 **Source files** ([pi-mono](https://github.com/tsuuanmi/pi)):
-- [`packages/coding-agent/src/core/compaction/session-compaction.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/compaction/session-compaction.ts) - Auto-compaction logic
-- [`packages/coding-agent/src/core/compaction/branch-summarization.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/compaction/branch-summarization.ts) - Branch summarization
-- [`packages/coding-agent/src/core/compaction/message-utils.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/compaction/message-utils.ts) - Shared utilities (file tracking, serialization)
-- [`packages/coding-agent/src/core/session/session-manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/session/session-manager.ts) - Entry types (`CompactionEntry`, `BranchSummaryEntry`)
+- [`packages/coding-agent/src/compaction/session-compaction.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/compaction/session-compaction.ts) - Auto-compaction logic
+- [`packages/coding-agent/src/compaction/branch-summarization.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/compaction/branch-summarization.ts) - Branch summarization
+- [`packages/coding-agent/src/compaction/message-utils.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/compaction/message-utils.ts) - Shared utilities (file tracking, serialization)
+- [`packages/coding-agent/src/session/session-manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/session/session-manager.ts) - Entry types (`CompactionEntry`, `BranchSummaryEntry`)
 - [`packages/coding-agent/src/api/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/api/types.ts) - Extension event types
 
 For TypeScript definitions in your project, inspect `node_modules/@tsuuanmi/pi-coding-agent/dist/`.
@@ -118,7 +118,7 @@ Never cut at tool results (they must stay with their tool call).
 
 ### CompactionEntry Structure
 
-Defined in [`session-manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/session/session-manager.ts):
+Defined in [`session-manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/session/session-manager.ts):
 
 ```typescript
 interface CompactionEntry<T = unknown> {
@@ -142,7 +142,7 @@ interface CompactionDetails {
 
 Extensions can store any JSON-serializable data in `details`. The default compaction tracks file operations, but custom extension implementations can use their own structure.
 
-See [`prepareCompaction()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/compaction/session-compaction.ts) and [`compact()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/compaction/session-compaction.ts) for the implementation.
+See [`prepareCompaction()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/compaction/session-compaction.ts) and [`compact()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/compaction/session-compaction.ts) for the implementation.
 
 ## Branch Summarization
 
@@ -185,7 +185,7 @@ This means file tracking accumulates across multiple compactions or nested branc
 
 ### BranchSummaryEntry Structure
 
-Defined in [`session-manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/session/session-manager.ts):
+Defined in [`session-manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/session/session-manager.ts):
 
 ```typescript
 interface BranchSummaryEntry<T = unknown> {
@@ -208,7 +208,7 @@ interface BranchSummaryDetails {
 
 Same as compaction, extensions can store custom data in `details`.
 
-See [`collectEntriesForBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/compaction/branch-summarization.ts), [`prepareBranchEntries()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/compaction/branch-summarization.ts), and [`generateBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/compaction/branch-summarization.ts) for the implementation.
+See [`collectEntriesForBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/compaction/branch-summarization.ts), [`prepareBranchEntries()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/compaction/branch-summarization.ts), and [`generateBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/compaction/branch-summarization.ts) for the implementation.
 
 ## Summary Format
 
@@ -252,7 +252,7 @@ path/to/changed.ts
 
 ### Message Serialization
 
-Before summarization, messages are serialized to text via [`serializeConversation()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/compaction/message-utils.ts):
+Before summarization, messages are serialized to text via [`serializeConversation()`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/compaction/message-utils.ts):
 
 ```
 [User]: What they said

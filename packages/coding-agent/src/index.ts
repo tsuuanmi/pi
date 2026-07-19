@@ -2,7 +2,6 @@
 
 export { convertToLlm, extractYieldFromMessages, renderSubagentProgress, type YieldDetails } from "@tsuuanmi/pi-agent";
 export { resolvePath, withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-export { type Args, parseArgs } from "#coding-agent/cli/args";
 export {
 	AgentSession,
 	type AgentSessionConfig,
@@ -13,7 +12,7 @@ export {
 	type PromptOptions,
 	parseSkillBlock,
 	type SessionStats,
-} from "#coding-agent/core/agent-session/agent-session";
+} from "#coding-agent/agent-session/agent-session";
 // Auth and model registry
 export {
 	type ApiKeyCredential,
@@ -24,7 +23,8 @@ export {
 	FileAuthStorageBackend,
 	InMemoryAuthStorageBackend,
 	type OAuthCredential,
-} from "#coding-agent/core/auth/auth-storage";
+} from "#coding-agent/auth/auth-storage";
+export { type Args, parseArgs } from "#coding-agent/cli/args";
 // Compaction
 export {
 	type BranchPreparation,
@@ -47,7 +47,7 @@ export {
 	prepareBranchEntries,
 	serializeConversation,
 	shouldCompact,
-} from "#coding-agent/core/compaction/index";
+} from "#coding-agent/compaction/index";
 // Config paths
 export {
 	CONFIG_DIR_NAME,
@@ -56,8 +56,8 @@ export {
 	getPackageDir,
 	getReadmePath,
 	VERSION,
-} from "#coding-agent/core/config/config";
-export { createEventBus, type EventBus, type EventBusController } from "#coding-agent/core/events/event-bus";
+} from "#coding-agent/config/config";
+export { createEventBus, type EventBus, type EventBusController } from "#coding-agent/events/event-bus";
 // Extension system
 export type {
 	AgentEndEvent,
@@ -138,7 +138,7 @@ export type {
 	WidgetPlacement,
 	WorkingIndicatorOptions,
 	WriteToolCallEvent,
-} from "#coding-agent/core/extensions/index";
+} from "#coding-agent/extensions/index";
 export {
 	createExtensionRuntime,
 	defineTool,
@@ -154,153 +154,10 @@ export {
 	isWriteToolResult,
 	wrapRegisteredTool,
 	wrapRegisteredTools,
-} from "#coding-agent/core/extensions/index";
-export { ModelRegistry } from "#coding-agent/core/model/model-registry";
-export type {
-	PackageManager,
-	PathMetadata,
-	ProgressCallback,
-	ProgressEvent,
-	ResolvedPaths,
-	ResolvedResource,
-} from "#coding-agent/core/package-manager/package-manager";
-export { DefaultPackageManager } from "#coding-agent/core/package-manager/package-manager";
-export { createSyntheticSourceInfo } from "#coding-agent/core/resources/source-info";
-// SDK for programmatic usage
-export {
-	AgentSessionRuntime,
-	type AgentSessionRuntimeDiagnostic,
-	type AgentSessionServices,
-	type CreateAgentSessionFromServicesOptions,
-	type CreateAgentSessionOptions,
-	type CreateAgentSessionResult,
-	type CreateAgentSessionRuntimeFactory,
-	type CreateAgentSessionRuntimeResult,
-	type CreateAgentSessionServicesOptions,
-	// Factory
-	createAgentSession,
-	createAgentSessionFromServices,
-	createAgentSessionRuntime,
-	createAgentSessionServices,
-	createBashTool,
-	// Tool factories (for custom cwd)
-	createCodingTools,
-	createEditTool,
-	createFindTool,
-	createGrepTool,
-	createLsTool,
-	createReadOnlyTools,
-	createReadTool,
-	createWriteTool,
-	type PromptTemplate,
-} from "#coding-agent/core/sdk/sdk";
-export {
-	type BranchSummaryEntry,
-	buildSessionContext,
-	type CompactionEntry,
-	CURRENT_SESSION_VERSION,
-	type CustomEntry,
-	type CustomMessageEntry,
-	type FileEntry,
-	getLatestCompactionEntry,
-	type ModelChangeEntry,
-	migrateSessionEntries,
-	type NewSessionOptions,
-	parseSessionEntries,
-	type SessionContext,
-	type SessionEntry,
-	type SessionEntryBase,
-	type SessionHeader,
-	type SessionInfo,
-	type SessionInfoEntry,
-	SessionManager,
-	type SessionMessageEntry,
-	type ThinkingLevelChangeEntry,
-} from "#coding-agent/core/session/session-manager";
-export {
-	type CompactionSettings,
-	type PackageSource,
-	type RetrySettings,
-	SettingsManager,
-	type SettingsManagerCreateOptions,
-} from "#coding-agent/core/settings/settings-manager";
-export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#coding-agent/core/skills/resource-loader";
-export { DefaultResourceLoader, loadProjectContextFiles } from "#coding-agent/core/skills/resource-loader";
-// Skills
-export {
-	formatSkillsForPrompt,
-	type LoadSkillsFromDirOptions,
-	type LoadSkillsResult,
-	loadSkills,
-	loadSkillsFromDir,
-	type Skill,
-	type SkillFrontmatter,
-} from "#coding-agent/core/skills/skills";
-export {
-	type SubagentAwaitOptions,
-	type SubagentAwaitResult,
-	type SubagentDelivery,
-	SubagentManager,
-	type SubagentRecord,
-	type SubagentResumeFailureReason,
-	type SubagentResumeResult,
-	type SubagentRunRequest,
-	type SubagentRunResult,
-	type SubagentStatus,
-} from "#coding-agent/core/subagents/subagents";
-// Tools
-export {
-	type BashOperations,
-	type BashSpawnContext,
-	type BashSpawnHook,
-	type BashToolDetails,
-	type BashToolInput,
-	type BashToolOptions,
-	createBashToolDefinition,
-	createEditToolDefinition,
-	createFindToolDefinition,
-	createGrepToolDefinition,
-	createLocalBashOperations,
-	createLsToolDefinition,
-	createReadToolDefinition,
-	createWriteToolDefinition,
-	DEFAULT_MAX_BYTES,
-	DEFAULT_MAX_LINES,
-	type EditOperations,
-	type EditToolDetails,
-	type EditToolInput,
-	type EditToolOptions,
-	type FindOperations,
-	type FindToolDetails,
-	type FindToolInput,
-	type FindToolOptions,
-	formatSize,
-	type GrepOperations,
-	type GrepToolDetails,
-	type GrepToolInput,
-	type GrepToolOptions,
-	type LsOperations,
-	type LsToolDetails,
-	type LsToolInput,
-	type LsToolOptions,
-	type ReadOperations,
-	type ReadToolDetails,
-	type ReadToolInput,
-	type ReadToolOptions,
-	type ToolsOptions,
-	type TruncationOptions,
-	type TruncationResult,
-	truncateHead,
-	truncateLine,
-	truncateTail,
-	type WriteOperations,
-	type WriteToolInput,
-	type WriteToolOptions,
-} from "#coding-agent/core/tools/index";
-// Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
-export type { ReadonlyFooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+} from "#coding-agent/extensions/index";
 // Main entry point
 export { type MainOptions, main } from "#coding-agent/main";
+export { ModelRegistry } from "#coding-agent/model/model-registry";
 // Run modes for programmatic SDK usage
 export {
 	InteractiveMode,
@@ -355,8 +212,102 @@ export {
 	UserMessageSelectorComponent,
 	type VisualTruncateResult,
 } from "#coding-agent/modes/interactive/components/index";
+// Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
+export type { ReadonlyFooterDataProvider } from "#coding-agent/modes/interactive/footer-data-provider";
 // JSONL utilities
 export { serializeJsonLine } from "#coding-agent/modes/rpc/jsonl";
+export type {
+	PackageManager,
+	PathMetadata,
+	ProgressCallback,
+	ProgressEvent,
+	ResolvedPaths,
+	ResolvedResource,
+} from "#coding-agent/package-manager/package-manager";
+export { DefaultPackageManager } from "#coding-agent/package-manager/package-manager";
+export { createSyntheticSourceInfo } from "#coding-agent/resources/source-info";
+// SDK for programmatic usage
+export {
+	AgentSessionRuntime,
+	type AgentSessionRuntimeDiagnostic,
+	type AgentSessionServices,
+	type CreateAgentSessionFromServicesOptions,
+	type CreateAgentSessionOptions,
+	type CreateAgentSessionResult,
+	type CreateAgentSessionRuntimeFactory,
+	type CreateAgentSessionRuntimeResult,
+	type CreateAgentSessionServicesOptions,
+	// Factory
+	createAgentSession,
+	createAgentSessionFromServices,
+	createAgentSessionRuntime,
+	createAgentSessionServices,
+	createBashTool,
+	// Tool factories (for custom cwd)
+	createCodingTools,
+	createEditTool,
+	createFindTool,
+	createGrepTool,
+	createLsTool,
+	createReadOnlyTools,
+	createReadTool,
+	createWriteTool,
+	type PromptTemplate,
+} from "#coding-agent/sdk/sdk";
+export {
+	type BranchSummaryEntry,
+	buildSessionContext,
+	type CompactionEntry,
+	CURRENT_SESSION_VERSION,
+	type CustomEntry,
+	type CustomMessageEntry,
+	type FileEntry,
+	getLatestCompactionEntry,
+	type ModelChangeEntry,
+	migrateSessionEntries,
+	type NewSessionOptions,
+	parseSessionEntries,
+	type SessionContext,
+	type SessionEntry,
+	type SessionEntryBase,
+	type SessionHeader,
+	type SessionInfo,
+	type SessionInfoEntry,
+	SessionManager,
+	type SessionMessageEntry,
+	type ThinkingLevelChangeEntry,
+} from "#coding-agent/session/session-manager";
+export {
+	type CompactionSettings,
+	type PackageSource,
+	type RetrySettings,
+	SettingsManager,
+	type SettingsManagerCreateOptions,
+} from "#coding-agent/settings/settings-manager";
+export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#coding-agent/skills/resource-loader";
+export { DefaultResourceLoader, loadProjectContextFiles } from "#coding-agent/skills/resource-loader";
+// Skills
+export {
+	formatSkillsForPrompt,
+	type LoadSkillsFromDirOptions,
+	type LoadSkillsResult,
+	loadSkills,
+	loadSkillsFromDir,
+	type Skill,
+	type SkillFrontmatter,
+} from "#coding-agent/skills/skills";
+export {
+	type SubagentAwaitOptions,
+	type SubagentAwaitResult,
+	type SubagentDelivery,
+	SubagentManager,
+	type SubagentRecord,
+	type SubagentResumeFailureReason,
+	type SubagentResumeResult,
+	type SubagentRunRequest,
+	type SubagentRunResult,
+	type SubagentStatus,
+} from "#coding-agent/subagents/subagents";
 // Theme utilities for custom tools and extensions
 export {
 	getLanguageFromPath,
@@ -368,6 +319,55 @@ export {
 	Theme,
 	type ThemeColor,
 } from "#coding-agent/theme/theme";
+// Tools
+export {
+	type BashOperations,
+	type BashSpawnContext,
+	type BashSpawnHook,
+	type BashToolDetails,
+	type BashToolInput,
+	type BashToolOptions,
+	createBashToolDefinition,
+	createEditToolDefinition,
+	createFindToolDefinition,
+	createGrepToolDefinition,
+	createLocalBashOperations,
+	createLsToolDefinition,
+	createReadToolDefinition,
+	createWriteToolDefinition,
+	DEFAULT_MAX_BYTES,
+	DEFAULT_MAX_LINES,
+	type EditOperations,
+	type EditToolDetails,
+	type EditToolInput,
+	type EditToolOptions,
+	type FindOperations,
+	type FindToolDetails,
+	type FindToolInput,
+	type FindToolOptions,
+	formatSize,
+	type GrepOperations,
+	type GrepToolDetails,
+	type GrepToolInput,
+	type GrepToolOptions,
+	type LsOperations,
+	type LsToolDetails,
+	type LsToolInput,
+	type LsToolOptions,
+	type ReadOperations,
+	type ReadToolDetails,
+	type ReadToolInput,
+	type ReadToolOptions,
+	type ToolsOptions,
+	type TruncationOptions,
+	type TruncationResult,
+	truncateHead,
+	truncateLine,
+	truncateTail,
+	type WriteOperations,
+	type WriteToolInput,
+	type WriteToolOptions,
+} from "#coding-agent/tools/index";
 // Clipboard utilities
 export { copyToClipboard } from "#coding-agent/utils/clipboard/clipboard";
 export { parseFrontmatter, stripFrontmatter } from "#coding-agent/utils/fs/frontmatter";

@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { registerOAuthProvider } from "@tsuuanmi/pi-ai/oauth";
 import lockfile from "proper-lockfile";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
-import { clearConfigValueCache } from "#coding-agent/core/config/resolve-config-value";
+import { AuthStorage } from "#coding-agent/auth/auth-storage";
+import { clearConfigValueCache } from "#coding-agent/config/resolve-config-value";
 
 describe("AuthStorage", () => {
 	let tempDir: string;

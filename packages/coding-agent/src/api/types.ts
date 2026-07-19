@@ -9,10 +9,10 @@ export type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from
 export * from "#coding-agent/api/context-types";
 export * from "#coding-agent/api/event-types";
 export * from "#coding-agent/api/extension-types";
+export * from "#coding-agent/api/mcp-types";
 export * from "#coding-agent/api/provider-types";
 export * from "#coding-agent/api/tool-types";
 export * from "#coding-agent/api/ui-types";
-export type { ExecOptions, ExecResult } from "#coding-agent/core/exec/exec";
-export type { AppKeybinding, KeybindingsManager } from "#coding-agent/core/settings/keybindings";
-export type { BuildSystemPromptOptions } from "#coding-agent/core/skills/system-prompt";
-export type { MCPServerInfo } from "#coding-agent/packages/mcp/runtime/types";
+export type { ExecOptions, ExecResult } from "#coding-agent/exec/exec";
+export type { AppKeybinding, KeybindingsManager } from "#coding-agent/settings/keybindings";
+export type { BuildSystemPromptOptions } from "#coding-agent/skills/system-prompt";

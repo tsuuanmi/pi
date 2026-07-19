@@ -3,9 +3,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync }
 import { tmpdir } from "os";
 import { join } from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { executeBashWithOperations } from "#coding-agent/core/exec/bash-executor";
-import { type BashOperations, createBashTool, createLocalBashOperations } from "#coding-agent/core/tools/bash";
-import { computeEditsDiff } from "#coding-agent/core/tools/edit-diff";
+import { executeBashWithOperations } from "#coding-agent/exec/bash-executor";
 import {
 	createEditTool,
 	createFindTool,
@@ -14,6 +12,8 @@ import {
 	createReadTool,
 	createWriteTool,
 } from "#coding-agent/index";
+import { type BashOperations, createBashTool, createLocalBashOperations } from "#coding-agent/tools/bash";
+import { computeEditsDiff } from "#coding-agent/tools/edit-diff";
 import * as shellModule from "#coding-agent/utils/system/shell";
 
 const readTool = createReadTool(process.cwd());

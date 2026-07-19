@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DEFAULT_HTTP_IDLE_TIMEOUT_MS } from "#coding-agent/core/exec/http-dispatcher";
-import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { DEFAULT_HTTP_IDLE_TIMEOUT_MS } from "#coding-agent/exec/http-dispatcher";
+import { SettingsManager } from "#coding-agent/settings/settings-manager";
 
 describe("SettingsManager", () => {
 	const testDir = join(process.cwd(), "test-settings-tmp");

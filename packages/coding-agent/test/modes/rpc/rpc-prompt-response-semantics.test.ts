@@ -4,13 +4,13 @@ import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { type AssistantMessage, type AssistantMessageEvent, EventStream, getModel, type Model } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AgentSession } from "#coding-agent/core/agent-session/agent-session";
-import type { AgentSessionRuntime } from "#coding-agent/core/agent-session/agent-session-runtime";
-import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
-import { ModelRegistry } from "#coding-agent/core/model/model-registry";
-import { SessionManager } from "#coding-agent/core/session/session-manager";
-import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { AgentSession } from "#coding-agent/agent-session/agent-session";
+import type { AgentSessionRuntime } from "#coding-agent/agent-session/agent-session-runtime";
+import { AuthStorage } from "#coding-agent/auth/auth-storage";
+import { ModelRegistry } from "#coding-agent/model/model-registry";
 import { runRpcMode } from "#coding-agent/modes/rpc/rpc-mode";
+import { SessionManager } from "#coding-agent/session/session-manager";
+import { SettingsManager } from "#coding-agent/settings/settings-manager";
 import { createTestResourceLoader } from "#coding-agent-test/test-utils";
 
 const rpcIo = vi.hoisted(() => ({

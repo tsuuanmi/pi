@@ -1,8 +1,8 @@
 import { setKeybindings } from "@tsuuanmi/pi-tui";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { SessionInfo } from "#coding-agent/core/session/session-manager";
-import { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
 import { SessionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/session-selector";
+import type { SessionInfo } from "#coding-agent/session/session-manager";
+import { KeybindingsManager } from "#coding-agent/settings/keybindings";
 import { initTheme } from "#coding-agent/theme/theme";
 
 async function flushPromises(): Promise<void> {
