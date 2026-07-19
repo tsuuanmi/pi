@@ -58,7 +58,7 @@ import {
 
 const sessionId = "test-session-id";
 const execFileAsync = promisify(execFile);
-const builtPiCliPath = fileURLToPath(new URL("../../coding-agent/dist/cli.js", import.meta.url));
+const builtPiCliPath = fileURLToPath(new URL("../../pi/dist/cli.js", import.meta.url));
 
 async function runBuiltPiWorkflow(
 	args: string[],
@@ -128,7 +128,7 @@ describe("workflow runtime", () => {
 		await expect(writeTextArtifact(join(cwd, "outside.md"), "nope", { cwd })).rejects.toThrow(/\.pi/);
 	});
 
-	it("dispatches workflow commands through the built coding-agent CLI", async () => {
+	it("dispatches workflow commands through the built pi CLI", async () => {
 		const result = await runBuiltPiWorkflow(
 			[
 				"deep-interview",

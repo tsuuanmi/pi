@@ -10,7 +10,7 @@ npm install @tsuuanmi/pi-agent
 
 ## Package Scope
 
-`@tsuuanmi/pi-agent` provides the core stateful agent loop, message conversion helpers, shared subagent contracts, truncation utilities, and environment abstractions. Coding-agent application features such as session persistence, compaction, skills, prompt templates, and system-prompt assembly live in `@tsuuanmi/pi-coding-agent`.
+`@tsuuanmi/pi-agent` provides the core stateful agent loop, message conversion helpers, shared subagent contracts, truncation utilities, and environment abstractions. Coding-agent application features such as session persistence, compaction, skills, prompt templates, and system-prompt assembly live in `@tsuuanmi/pi`.
 
 ## Quick Start
 

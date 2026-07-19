@@ -1,6 +1,6 @@
 # Pi Workflow
 
-Pi ships workflow support as the package-shaped first-party `pi:workflows` bundle. It provides the `pi workflow` control plane and four bundled [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/skills/skills.md) for requirements gathering, planning, parallel execution, and goal-tracked execution. The control plane lives under `<workspace>/.pi/state/harness` (override with `PI_HARNESS_STATE_ROOT`) and workflow runtime artifacts persist under the current session root, e.g. `.pi/<session-id>/workflows/<skill>/` and `.pi/<session-id>/state/`.
+Pi ships workflow support as the package-shaped first-party `pi:workflows` bundle. It provides the `pi workflow` control plane and four bundled [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/skills/skills.md) for requirements gathering, planning, parallel execution, and goal-tracked execution. The control plane lives under `<workspace>/.pi/state/harness` (override with `PI_HARNESS_STATE_ROOT`) and workflow runtime artifacts persist under the current session root, e.g. `.pi/<session-id>/workflows/<skill>/` and `.pi/<session-id>/state/`.
 
 ## Built-in skills
 
@@ -11,7 +11,7 @@ Pi ships workflow support as the package-shaped first-party `pi:workflows` bundl
 | `team` | Coordinate parallel implementation workers after an approved plan exists. | When parallel workstreams are useful and execution has been explicitly approved. |
 | `ultragoal` | Goal-tracked autonomous execution for an approved, concrete plan. | Implementation after explicit approval, with verification and concise progress tracking. |
 
-Invoke a skill with `/skill:<name>` (e.g. `/skill:ralplan`). See [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/skills/skills.md) for the skill format and installation paths.
+Invoke a skill with `/skill:<name>` (e.g. `/skill:ralplan`). See [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/skills/skills.md) for the skill format and installation paths.
 
 ## `pi workflow` control plane
 

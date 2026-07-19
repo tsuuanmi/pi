@@ -35,4 +35,4 @@ Most verbs route to a live runtime owner when one is running for the target sess
 ## See Also
 
 - [Workflow control plane](../../workflow.md)
-- [Security](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/trust/security.md) - Sandbox boundaries
+- [Security](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/trust/security.md) - Sandbox boundaries

@@ -1,9 +1,9 @@
 /**
  * Minimal subagent manager contract.
  *
- * @tsuuanmi/pi-coding-agent's `SubagentManager` class satisfies this interface
+ * @tsuuanmi/pi's `SubagentManager` class satisfies this interface
  * structurally; @tsuuanmi/pi-workflows programs against this lower-layer
- * contract so it does not depend on the coding-agent package.
+ * contract so it does not depend on the pi package.
  */
 import type {
 	SubagentAwaitOptions,

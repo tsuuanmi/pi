@@ -2,14 +2,14 @@
  * Subagent manager factory registry.
  *
  * The registration seam that lets `pi-workflows` obtain a `SubagentManager`
- * without depending on `pi-coding-agent`. `pi-coding-agent` registers a factory
+ * without depending on `pi`. `pi` registers a factory
  * at module load (which runs in the detached owner process because it loads via
  * the `pi` entry). `pi-workflows`' `RuntimeOwner` looks up the factory at startup
  * and routes `subagents.*` RPC verbs to the built manager.
  *
  * Design principle: workflows = skills + state (only looks up and routes);
  * subagent management is a reusable agent-layer capability. The factory impl
- * (building `AgentSessionServices` + `SubagentManager`) stays in `pi-coding-agent`;
+ * (building `AgentSessionServices` + `SubagentManager`) stays in `pi`;
  * only the contract lives here in `pi-agent`.
  */
 import type { SubagentManager } from "#agent/harness/subagents/subagent-manager";
@@ -39,7 +39,7 @@ export type SubagentManagerFactory = (
 
 let factory: SubagentManagerFactory | undefined;
 
-/** Register the agent-layer subagent manager factory (called by `pi-coding-agent` at module load). */
+/** Register the agent-layer subagent manager factory (called by `pi` at module load). */
 export function registerSubagentManagerFactory(fn: SubagentManagerFactory): void {
 	factory = fn;
 }

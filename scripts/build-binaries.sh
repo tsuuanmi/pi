@@ -4,17 +4,16 @@
 # Mirrors .github/workflows/build-binaries.yml
 #
 # Usage:
-#   ./scripts/build-binaries.sh [--skip-install] [--skip-deps] [--skip-build] [--platform <platform>] [--out <dir>]
+#   ./scripts/build-binaries.sh [--skip-install] [--skip-build] [--platform <platform>] [--out <dir>]
 #
 # Options:
 #   --skip-install      Skip npm ci
-#   --skip-deps         Skip installing cross-platform dependencies
 #   --skip-build        Skip npm run build
 #   --platform <name>   Build only for specified platform (darwin-arm64, darwin-x64, linux-x64, linux-arm64)
-#   --out <dir>         Output directory (default: packages/coding-agent/binaries)
+#   --out <dir>         Output directory (default: packages/pi/binaries)
 #
 # Output:
-#   packages/coding-agent/binaries/
+#   packages/pi/binaries/
 #     pi-darwin-arm64.tar.gz
 #     pi-darwin-x64.tar.gz
 #     pi-linux-x64.tar.gz
@@ -25,7 +24,6 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SKIP_INSTALL=false
-SKIP_DEPS=false
 SKIP_BUILD=false
 PLATFORM=""
 OUTPUT_DIR=""
@@ -34,10 +32,6 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --skip-install)
             SKIP_INSTALL=true
-            shift
-            ;;
-        --skip-deps)
-            SKIP_DEPS=true
             shift
             ;;
         --skip-build)
@@ -73,7 +67,7 @@ if [[ -n "$PLATFORM" ]]; then
 fi
 
 if [[ -z "$OUTPUT_DIR" ]]; then
-    OUTPUT_DIR="packages/coding-agent/binaries"
+    OUTPUT_DIR="packages/pi/binaries"
 fi
 if [[ "$OUTPUT_DIR" != /* ]]; then
     OUTPUT_DIR="$(pwd)/$OUTPUT_DIR"
@@ -86,21 +80,6 @@ else
     echo "==> Skipping npm ci (--skip-install)"
 fi
 
-if [[ "$SKIP_DEPS" == "false" ]]; then
-    echo "==> Installing native bindings for supported binary targets..."
-    CLIPBOARD_VERSION=$(node -p "require('./packages/coding-agent/package.json').optionalDependencies['@mariozechner/clipboard']")
-    # npm ci only installs optional deps for the current platform. Install the
-    # native bindings needed by Bun cross-compilation for supported targets.
-    npm install --include=optional --no-save --package-lock=false --force --ignore-scripts \
-        @mariozechner/clipboard@"$CLIPBOARD_VERSION" \
-        @mariozechner/clipboard-darwin-arm64@"$CLIPBOARD_VERSION" \
-        @mariozechner/clipboard-darwin-x64@"$CLIPBOARD_VERSION" \
-        @mariozechner/clipboard-linux-x64-gnu@"$CLIPBOARD_VERSION" \
-        @mariozechner/clipboard-linux-arm64-gnu@"$CLIPBOARD_VERSION"
-else
-    echo "==> Skipping native bindings (--skip-deps)"
-fi
-
 if [[ "$SKIP_BUILD" == "false" ]]; then
     echo "==> Building all packages..."
     npm run build
@@ -109,7 +88,7 @@ else
 fi
 
 echo "==> Building binaries..."
-cd packages/coding-agent
+cd packages/pi
 
 # Clean previous builds
 rm -rf "$OUTPUT_DIR"
@@ -143,24 +122,6 @@ for platform in "${PLATFORMS[@]}"; do
     cp dist/modes/interactive/assets/* "$OUTPUT_DIR/$platform/assets/"
     cp -r docs "$OUTPUT_DIR/$platform/"
     cp -r examples "$OUTPUT_DIR/$platform/"
-
-    case "$platform" in
-        darwin-arm64)
-            clipboard_native_package="clipboard-darwin-arm64"
-            ;;
-        darwin-x64)
-            clipboard_native_package="clipboard-darwin-x64"
-            ;;
-        linux-x64)
-            clipboard_native_package="clipboard-linux-x64-gnu"
-            ;;
-        linux-arm64)
-            clipboard_native_package="clipboard-linux-arm64-gnu"
-            ;;
-    esac
-    mkdir -p "$OUTPUT_DIR/$platform/node_modules/@mariozechner"
-    cp -r ../../node_modules/@mariozechner/clipboard "$OUTPUT_DIR/$platform/node_modules/@mariozechner/"
-    cp -r ../../node_modules/@mariozechner/$clipboard_native_package "$OUTPUT_DIR/$platform/node_modules/@mariozechner/"
 
     # Copy terminal input native helpers next to compiled binaries.
     if [[ "$platform" == darwin-* ]]; then

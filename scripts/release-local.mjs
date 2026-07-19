@@ -9,7 +9,7 @@ const packages = [
 	{ directory: "packages/ai", name: "@tsuuanmi/pi-ai" },
 	{ directory: "packages/tui", name: "@tsuuanmi/pi-tui" },
 	{ directory: "packages/agent", name: "@tsuuanmi/pi-agent" },
-	{ directory: "packages/coding-agent", name: "@tsuuanmi/pi-coding-agent" },
+	{ directory: "packages/pi", name: "@tsuuanmi/pi" },
 ];
 
 function printUsage() {
@@ -137,7 +137,6 @@ function buildBunBinaryRelease(targetDirectory, archiveDirectory) {
 	const binaryBuildDirectory = join(archiveDirectory, "binary-build");
 	run("./scripts/build-binaries.sh", [
 		"--skip-install",
-		"--skip-deps",
 		"--skip-build",
 		"--platform",
 		platform,

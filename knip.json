@@ -38,7 +38,7 @@
 			"entry": ["src/index.ts"],
 			"project": ["src/**/*.ts", "test/**/*.ts"]
 		},
-		"packages/coding-agent": {
+		"packages/pi": {
 			"entry": [
 				"src/cli.ts",
 				"src/bun/cli.ts",

@@ -1,6 +1,6 @@
 # @tsuuanmi/pi-workflows
 
-Workflow runtime skills for Pi: `deep-interview`, `ralplan`, `team`, and `ultragoal`. This package provides the `pi workflow` control plane, the four bundled [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/skills/skills.md), reusable role agent profiles, and the harness runtime that backs them.
+Workflow runtime skills for Pi: `deep-interview`, `ralplan`, `team`, and `ultragoal`. This package provides the `pi workflow` control plane, the four bundled [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/skills/skills.md), reusable role agent profiles, and the harness runtime that backs them.
 
 The four skills form a gated pipeline:
 
@@ -35,7 +35,7 @@ Each stage can be skipped, but skipping reduces quality assurance. Workflows are
 
 ## Installation
 
-This package is bundled with Pi and normally consumed transitively via `@tsuuanmi/pi-coding-agent`. To depend on it directly:
+This package is bundled with Pi and normally consumed transitively via `@tsuuanmi/pi`. To depend on it directly:
 
 ```bash
 npm install @tsuuanmi/pi-workflows
@@ -43,7 +43,7 @@ npm install @tsuuanmi/pi-workflows
 
 ## Package Scope
 
-`@tsuuanmi/pi-workflows` ships the workflow runtime: the `pi workflow` CLI, the harness control plane (sessions, leases, RPC, GC), the four workflow skills and their model-visible tools, and the reusable role agent profiles. Application-level wiring (session persistence, compaction, system-prompt assembly) lives in `@tsuuanmi/pi-coding-agent`, which depends on this package.
+`@tsuuanmi/pi-workflows` ships the workflow runtime: the `pi workflow` CLI, the harness control plane (sessions, leases, RPC, GC), the four workflow skills and their model-visible tools, and the reusable role agent profiles. Application-level wiring (session persistence, compaction, system-prompt assembly) lives in `@tsuuanmi/pi`, which depends on this package.
 
 State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`. Runtime artifacts persist under the current session root, e.g. `.pi/<session-id>/workflows/<skill>/` and `.pi/<session-id>/state/`.
 
@@ -320,7 +320,7 @@ import {
 } from "@tsuuanmi/pi-workflows";
 ```
 
-The default export is the workflows extension that the coding agent loads. Subpath exports:
+The default export is the workflows extension that the AI agent loads. Subpath exports:
 
 - `@tsuuanmi/pi-workflows/commands/workflow` — the `pi workflow` command, including `pi workflow state`.
 - `@tsuuanmi/pi-workflows/commands/state-command` — compatibility alias for `commands/workflow`.
@@ -356,8 +356,8 @@ Workspace tests import packages from the gitignored `dist/`, so rebuild this pac
 - [docs/skills/](docs/skills/) — per-skill design docs.
 - [docs/harness/](docs/harness/) — harness runtime, shared modules, subagent, and tool docs.
 - [CHANGELOG.md](CHANGELOG.md) — changes.
-- [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/skills/skills.md) — Pi skill format and installation paths.
-- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/coding-agent/docs/core/subagents/subagents.md) — Pi-native SubagentManager and subagent tools.
+- [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/skills/skills.md) — Pi skill format and installation paths.
+- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/subagents/subagents.md) — Pi-native SubagentManager and subagent tools.
 
 ## License
 

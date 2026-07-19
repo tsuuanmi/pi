@@ -2,7 +2,7 @@
  * Public API for @tsuuanmi/pi-workflows.
  *
  * This barrel export exposes the symbols that external packages
- * (including @tsuuanmi/pi-coding-agent) and test suites import.
+ * (including @tsuuanmi/pi) and test suites import.
  */
 
 // Register built-in skill transition tables for selector/gate helpers exported below.

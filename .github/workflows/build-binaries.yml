@@ -57,7 +57,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd packages/coding-agent/binaries
+          cd packages/pi/binaries
 
           release_assets=(
             pi-darwin-arm64.tar.gz

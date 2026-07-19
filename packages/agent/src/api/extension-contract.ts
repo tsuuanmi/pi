@@ -4,7 +4,7 @@
  *
  * This lives in @tsuuanmi/pi-agent (the lower layer) so that packages such
  * as @tsuuanmi/pi-workflows can depend only on agent-core and not on
- * @tsuuanmi/pi-coding-agent. @tsuuanmi/pi-coding-agent's full
+ * @tsuuanmi/pi. @tsuuanmi/pi's full
  * `ExtensionAPI`/`ExtensionContext`/`ToolDefinition`/`SubagentManager` types
  * structurally satisfy these contracts (superset of members, method-shorthand
  * bivariance), so the host can pass its real objects where these minimal
@@ -20,7 +20,7 @@ import type { SubagentManager } from "#agent/harness/subagents/subagent-manager"
 // ============================================================================
 
 /**
- * Minimal tool definition. The coding-agent host adds optional render hooks
+ * Minimal tool definition. The pi host adds optional render hooks
  * (`renderCall`/`renderResult`) and a render context on top of this; those are
  * omitted here so the contract does not pull in TUI/Theme types.
  */
@@ -79,7 +79,7 @@ export interface MCPServerInfo {
 
 /**
  * Context passed to extension event handlers and tool executors. The
- * coding-agent host provides a superset of these members.
+ * pi host provides a superset of these members.
  */
 export interface ExtensionContext {
 	ui: ExtensionUIContext;
@@ -141,7 +141,7 @@ interface ToolCallEventResult {
 // ============================================================================
 
 /**
- * Minimal host extension API used by workflow extensions. The coding-agent
+ * Minimal host extension API used by workflow extensions. The pi
  * host exposes a superset of these members.
  */
 export interface ExtensionAPI {

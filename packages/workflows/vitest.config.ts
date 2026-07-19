@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-const codingAgentSrcIndex = fileURLToPath(new URL("../coding-agent/src/index.ts", import.meta.url));
+const piSrcIndex = fileURLToPath(new URL("../pi/src/index.ts", import.meta.url));
 
 export default defineConfig({
 	test: {
@@ -11,7 +11,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: /^@tsuuanmi\/pi-coding-agent$/, replacement: codingAgentSrcIndex },
+			{ find: /^@tsuuanmi\/pi$/, replacement: piSrcIndex },
 		],
 	},
 });

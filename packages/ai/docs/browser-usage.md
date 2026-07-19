@@ -71,7 +71,7 @@ Values in `env` take precedence over `process.env` for API key discovery and pro
 
 When running inside a Bun compiled binary on Linux, `process.env` may be empty inside sandboxed environments. The library automatically falls back to reading `/proc/self/environ` in this case. This fallback is implemented in `getProviderEnvValue()` and is transparent to callers.
 
-If you use `@tsuuanmi/pi-ai` directly (not through the coding agent), this fallback ensures provider environment variables are still resolved correctly inside Bun sandboxes.
+If you use `@tsuuanmi/pi-ai` directly (not through the AI agent), this fallback ensures provider environment variables are still resolved correctly inside Bun sandboxes.
 
 ## Checking Environment Variables
 

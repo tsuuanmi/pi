@@ -78,9 +78,9 @@ Follow the existing provider-specific test pattern (e.g., `anthropic-sse-parsing
 
 For scripted deterministic flows, use `registerFauxProvider()` instead of hitting a live API.
 
-## 6. Coding Agent Integration (`../coding-agent/`)
+## 6. Pi Integration (`../pi/`)
 
-Update `packages/coding-agent/src/model/model-resolver.ts`:
+Update `packages/pi/src/model/model-resolver.ts`:
 
 - Add a default model ID for the provider in `defaultModelPerProvider`
 

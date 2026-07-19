@@ -1,4 +1,4 @@
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi";
 import workflowsExtension from "@tsuuanmi/pi-workflows";
 import { describe, expect, it } from "vitest";
 

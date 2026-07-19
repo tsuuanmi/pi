@@ -22,7 +22,7 @@ import { calculateTool } from "#agent-test/helpers/calculate";
 
 const registrations: FauxProviderRegistration[] = [];
 const execFileAsync = promisify(execFile);
-const builtPiCliPath = fileURLToPath(new URL("../../coding-agent/dist/cli.js", import.meta.url));
+const builtPiCliPath = fileURLToPath(new URL("../../pi/dist/cli.js", import.meta.url));
 
 function createFauxRegistration(options: Parameters<typeof registerFauxProvider>[0] = {}): FauxProviderRegistration {
 	const registration = registerFauxProvider(options);
@@ -286,7 +286,7 @@ async function multiTurnConversation(model: Model<string>) {
 }
 
 describe("Built Pi CLI workflow pipeline", () => {
-	it("runs deep-interview to ralplan to ultragoal through coding-agent dist", async () => {
+	it("runs deep-interview to ralplan to ultragoal through pi dist", async () => {
 		const cwd = join(tmpdir(), `pi-agent-workflow-cli-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		const sessionId = "agent-e2e-cli";
 		await mkdir(cwd, { recursive: true });

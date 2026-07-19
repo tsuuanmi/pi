@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://pi.dev">pi.dev</a> domain graciously donated by
   <br /><br />
-  <a href="https://exe.dev"><img src="packages/coding-agent/docs/images/exy.png" alt="Exy mascot" width="48" /><br />exe.dev</a>
+  <a href="https://exe.dev"><img src="packages/pi/docs/images/exy.png" alt="Exy mascot" width="48" /><br />exe.dev</a>
 </p>
 
 > New issues and PRs from new contributors are auto-closed by default. Maintainers review auto-closed issues daily. See [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -18,9 +18,9 @@
 
 # Pi Agent Harness Mono Repo
 
-This is the home of the pi agent harness project including our self extensible coding agent.
+This is the home of the pi agent harness project including our self extensible AI agent.
 
-* **[@tsuuanmi/pi-coding-agent](packages/coding-agent)**: Interactive coding agent CLI
+* **[@tsuuanmi/pi](packages/pi)**: Interactive Pi CLI
 * **[@tsuuanmi/pi-agent](packages/agent)**: Agent runtime with tool calling and state management
 * **[@tsuuanmi/pi-ai](packages/ai)**: Unified multi-provider LLM API (OpenAI, Anthropic, Google, …)
 
@@ -29,11 +29,11 @@ To learn more about pi:
 * [Visit pi.dev](https://pi.dev), the project website with demos
 * [Read the documentation](https://pi.dev/docs/latest), but you can also ask the agent to explain itself
 
-## Share your OSS coding agent sessions
+## Share your OSS Pi sessions
 
-If you use pi or other coding agents for open source work, please share your sessions.
+If you use pi or other AI agents for open source work, please share your sessions.
 
-Public OSS session data helps improve coding agents with real-world tasks, tool use, failures, and fixes instead of toy benchmarks.
+Public OSS session data helps improve AI agents with real-world tasks, tool use, failures, and fixes instead of toy benchmarks.
 
 For the full explanation, see [this post on X](https://x.com/badlogicgames/status/2037811643774652911).
 
@@ -51,7 +51,7 @@ I regularly publish my own `pi-mono` work sessions here:
 |---------|-------------|
 | **[@tsuuanmi/pi-ai](packages/ai)** | Unified multi-provider LLM API (OpenAI, Anthropic, Google, etc.) |
 | **[@tsuuanmi/pi-agent](packages/agent)** | Agent runtime with tool calling and state management |
-| **[@tsuuanmi/pi-coding-agent](packages/coding-agent)** | Interactive coding agent CLI |
+| **[@tsuuanmi/pi](packages/pi)** | Interactive Pi CLI |
 | **[@tsuuanmi/pi-tui](packages/tui)** | Terminal UI library with differential rendering |
 
 For Slack/chat automation and workflows see [tsuuanmi/pi](https://github.com/tsuuanmi/pi).
@@ -60,7 +60,7 @@ For Slack/chat automation and workflows see [tsuuanmi/pi](https://github.com/tsu
 
 Pi does not include a built-in permission system for restricting filesystem, process, network, or credential access. By default, it runs with the permissions of the user and process that launched it.
 
-If you need stronger boundaries, containerize or sandbox Pi. See [packages/coding-agent/docs/containerization.md](packages/coding-agent/docs/containerization.md) for two patterns:
+If you need stronger boundaries, containerize or sandbox Pi. See [packages/pi/docs/containerization.md](packages/pi/docs/containerization.md) for two patterns:
 
 - **Plain Docker**: run the whole `pi` process in a local container for simple isolation.
 - **OpenShell**: run the whole `pi` process in a policy-controlled sandbox.
@@ -84,8 +84,8 @@ We treat npm dependency changes as reviewed code changes.
 - Direct external dependencies are pinned to exact versions. Internal workspace packages remain version-ranged.
 - `.npmrc` sets `save-exact=true` and `min-release-age=2` to avoid same-day dependency releases during npm resolution.
 - `package-lock.json` is the dependency ground truth. Pre-commit blocks accidental lockfile commits unless `PI_ALLOW_LOCKFILE_CHANGE=1` is set.
-- `npm run check` verifies pinned direct deps, native TypeScript import compatibility, and the generated coding-agent shrinkwrap.
-- The published CLI package includes `packages/coding-agent/npm-shrinkwrap.json`, generated from the root lockfile, to pin transitive deps for npm users.
+- `npm run check` verifies pinned direct deps, native TypeScript import compatibility, and the generated pi shrinkwrap.
+- The published CLI package includes `packages/pi/npm-shrinkwrap.json`, generated from the root lockfile, to pin transitive deps for npm users.
 - Release smoke tests use `npm run release:local` to build, pack, and create isolated npm and Bun installs outside the repo before tagging a release.
 - Local release installs, documented npm installs, and `pi update --self` use `--ignore-scripts` where supported.
 - CI installs with `npm ci --ignore-scripts`, and a scheduled GitHub workflow runs `npm audit --omit=dev` plus `npm audit signatures --omit=dev`.

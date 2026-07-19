@@ -1,6 +1,6 @@
 # Extension Contract
 
-`src/api/extension-contract.ts` defines the minimal host surface that workflow and extension packages can depend on without importing the full coding-agent host.
+`src/api/extension-contract.ts` defines the minimal host surface that workflow and extension packages can depend on without importing the full pi host.
 
 ## Tool contract
 
@@ -19,7 +19,7 @@ interface ToolDefinition<TParams extends TSchema = TSchema, TDetails = unknown, 
 }
 ```
 
-The coding-agent host adds rendering-specific fields on top of this lower-layer contract.
+The pi host adds rendering-specific fields on top of this lower-layer contract.
 
 `ToolInfo` is the metadata shape returned by `ExtensionAPI.getAllTools()` and includes `name`, `description`, `parameters`, optional `promptGuidelines`, and `sourceInfo`.
 

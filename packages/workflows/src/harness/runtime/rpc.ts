@@ -110,7 +110,7 @@ export class PiRpc implements HarnessRpc {
 		if (!bin) throw new Error("empty Pi RPC command");
 		this.#proc = spawn(bin, baseArgs, {
 			cwd: opts.cwd,
-			env: { ...process.env, ...(opts.env ?? {}), PI_CODING_AGENT_SESSION_DIR: opts.sessionDir },
+			env: { ...process.env, ...(opts.env ?? {}), PI_SESSION_DIR: opts.sessionDir },
 			stdio: ["pipe", "pipe", "pipe"],
 		}) as ChildProcessWithoutNullStreams;
 		this.#proc.stdout.setEncoding("utf8");

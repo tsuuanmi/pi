@@ -1,7 +1,7 @@
 import { readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ExtensionAPI } from "@tsuuanmi/pi-coding-agent";
+import type { ExtensionAPI } from "@tsuuanmi/pi";
 import workflowsExtension, {
 	appendOrMergeDeepInterviewRound,
 	assertDeepInterviewHandoff,

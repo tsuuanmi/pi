@@ -1,0 +1,84 @@
+# JSON Event Stream Mode
+
+```bash
+pi --mode json "Your prompt"
+```
+
+Outputs all session events as JSON lines to stdout. Useful for integrating pi into other tools or custom UIs.
+
+API usage logging, when enabled, is written only to the sidecar file at `<cwd>/.pi/{encodedSessionId}/api-usage.jsonl`; it is never emitted on stdout.
+
+## Event Types
+
+Events are defined in [`AgentSessionEvent`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/agent-session/agent-session.ts#L102):
+
+```typescript
+type AgentSessionEvent =
+  | AgentEvent
+  | { type: "queue_update"; steering: readonly string[]; followUp: readonly string[] }
+  | { type: "compaction_start"; reason: "manual" | "threshold" | "overflow" }
+  | { type: "compaction_end"; reason: "manual" | "threshold" | "overflow"; result: CompactionResult | undefined; aborted: boolean; willRetry: boolean; errorMessage?: string }
+  | { type: "auto_retry_start"; attempt: number; maxAttempts: number; delayMs: number; errorMessage: string }
+  | { type: "auto_retry_end"; success: boolean; attempt: number; finalError?: string };
+```
+
+`queue_update` emits the full pending steering and follow-up queues whenever they change. `compaction_start` and `compaction_end` cover both manual and automatic compaction.
+
+Base events from [`AgentEvent`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/types.ts#L179):
+
+```typescript
+type AgentEvent =
+  // Agent lifecycle
+  | { type: "agent_start" }
+  | { type: "agent_end"; messages: AgentMessage[] }
+  // Turn lifecycle
+  | { type: "turn_start" }
+  | { type: "turn_end"; message: AgentMessage; toolResults: ToolResultMessage[] }
+  // Message lifecycle
+  | { type: "message_start"; message: AgentMessage }
+  | { type: "message_update"; message: AgentMessage; assistantMessageEvent: AssistantMessageEvent }
+  | { type: "message_end"; message: AgentMessage }
+  // Tool execution
+  | { type: "tool_execution_start"; toolCallId: string; toolName: string; args: any }
+  | { type: "tool_execution_update"; toolCallId: string; toolName: string; args: any; partialResult: any }
+  | { type: "tool_execution_end"; toolCallId: string; toolName: string; result: any; isError: boolean };
+```
+
+## Message Types
+
+Base messages from [`packages/ai/src/core/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/core/types.ts):
+- `UserMessage` (line 134)
+- `AssistantMessage` (line 140)
+- `ToolResultMessage` (line 152)
+
+Extended messages from [`packages/agent/src/harness/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/harness/messages.ts):
+- `BashExecutionMessage`
+- `CustomMessage`
+- `BranchSummaryMessage`
+- `CompactionSummaryMessage`
+
+## Output Format
+
+Each line is a JSON object. The first line is the session header:
+
+```json
+{"type":"session","version":3,"id":"20260627-143522","timestamp":"...","cwd":"/path"}
+```
+
+Followed by events as they occur:
+
+```json
+{"type":"agent_start"}
+{"type":"turn_start"}
+{"type":"message_start","message":{"role":"assistant","content":[],...}}
+{"type":"message_update","message":{...},"assistantMessageEvent":{"type":"text_delta","delta":"Hello",...}}
+{"type":"message_end","message":{...}}
+{"type":"turn_end","message":{...},"toolResults":[]}
+{"type":"agent_end","messages":[...]}
+```
+
+## Example
+
+```bash
+pi --mode json "List files" 2>/dev/null | jq -c 'select(.type == "message_end")'
+```

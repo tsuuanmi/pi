@@ -32,7 +32,7 @@ syntax.jsonl
 out.jsonl
 pi-*.html
 out.html
-packages/coding-agent/binaries/
+packages/pi/binaries/
 todo.md
 plans/
 .pi/

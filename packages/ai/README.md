@@ -1097,7 +1097,7 @@ Add tests under `packages/ai/test/` covering the new provider — streaming and 
 
 For providers with non-standard auth, add credential-detection helpers alongside `auth/env-api-keys.ts` (and a matching `env-api-keys.test.ts` case).
 
-#### 6. Coding Agent Integration (`../coding-agent/`)
+#### 6. Pi Integration (`../pi/`)
 
 Update `src/model/model-resolver.ts`:
 

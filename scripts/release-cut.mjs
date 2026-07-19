@@ -167,7 +167,7 @@ console.log();
 // 4. Regenerate release artifacts
 console.log("Regenerating release artifacts...");
 run("npm --prefix packages/ai run generate-models");
-run("npm run shrinkwrap:coding-agent");
+run("npm run shrinkwrap:pi");
 console.log();
 
 // 5. Run checks
