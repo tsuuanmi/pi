@@ -5,9 +5,9 @@
  * @tsuuanmi/pi-coding-agent so the subagent contract lives in the lower layer.
  */
 
+import type { AgentMessage, ThinkingLevel } from "#agent/agent/types";
 import type { SubagentProgress } from "#agent/harness/subagents/subagent-progress";
 import type { YieldDetails } from "#agent/harness/subagents/yield-result";
-import type { AgentMessage, ThinkingLevel } from "#agent/types";
 
 export type SubagentStatus = "queued" | "running" | "paused" | "completed" | "failed" | "cancelled";
 export type SubagentResumeFailureReason = "context_unavailable" | "not_found" | "no_runner" | "resume_failed";

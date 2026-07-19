@@ -20,7 +20,7 @@ import type {
 	AgentToolCall,
 	AgentToolResult,
 	StreamFn,
-} from "#agent/types";
+} from "#agent/agent/types";
 
 let providerRequestSequence = 0;
 

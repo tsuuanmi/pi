@@ -1,5 +1,5 @@
 import { type Message, type Model, type SimpleStreamOptions, streamSimple, type Transport } from "@tsuuanmi/pi-ai";
-import { runAgentLoop, runAgentLoopContinue } from "#agent/agent-loop";
+import { runAgentLoop, runAgentLoopContinue } from "#agent/agent/agent-loop";
 import type {
 	AfterToolCallContext,
 	AfterToolCallResult,
@@ -16,9 +16,9 @@ import type {
 	QueueMode,
 	StreamFn,
 	ToolExecutionMode,
-} from "#agent/types";
+} from "#agent/agent/types";
 
-export type { QueueMode } from "#agent/types";
+export type { QueueMode } from "#agent/agent/types";
 
 function defaultConvertToLlm(messages: AgentMessage[]): Message[] {
 	return messages.filter(

@@ -1,5 +1,5 @@
 import type { Message, TextContent } from "@tsuuanmi/pi-ai";
-import type { AgentMessage } from "#agent/types";
+import type { AgentMessage } from "#agent/agent/types";
 
 export const COMPACTION_SUMMARY_PREFIX = `The conversation history before this point was compacted into the following summary:
 
@@ -51,7 +51,7 @@ export interface CompactionSummaryMessage {
 	timestamp: number;
 }
 
-declare module "../types.ts" {
+declare module "../agent/types.ts" {
 	interface CustomAgentMessages {
 		bashExecution: BashExecutionMessage;
 		custom: CustomMessage;

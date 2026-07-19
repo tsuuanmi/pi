@@ -1,7 +1,7 @@
 import { type AssistantMessage, type AssistantMessageEvent, EventStream, type Model } from "@tsuuanmi/pi-ai";
 import { describe, expect, it } from "vitest";
-import { agentLoop } from "#agent/agent-loop";
-import type { AgentContext, AgentLoopConfig, AgentMessage, ProviderRequestObserver } from "#agent/types";
+import { agentLoop } from "#agent/agent/agent-loop";
+import type { AgentContext, AgentLoopConfig, AgentMessage, ProviderRequestObserver } from "#agent/agent/types";
 
 class MockAssistantStream extends EventStream<AssistantMessageEvent, AssistantMessage> {
 	constructor(message: AssistantMessage) {
