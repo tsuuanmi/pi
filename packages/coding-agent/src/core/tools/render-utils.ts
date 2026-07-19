@@ -3,9 +3,9 @@ import { pathToFileURL } from "node:url";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import { getCapabilities, hyperlink } from "@tsuuanmi/pi-tui";
-import type { Theme } from "../../theme/theme.ts";
-import { sanitizeBinaryOutput } from "../../utils/system/shell.ts";
-import { stripAnsi } from "../../utils/terminal/ansi.ts";
+import type { Theme } from "#coding-agent/theme/theme";
+import { sanitizeBinaryOutput } from "#coding-agent/utils/system/shell";
+import { stripAnsi } from "#coding-agent/utils/terminal/ansi";
 
 export function shortenPath(path: unknown): string {
 	if (typeof path !== "string") return "";

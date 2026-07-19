@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import * as path from "node:path";
-import type { Args } from "./args.ts";
+import type { Args } from "#coding-agent/cli/args";
 
 const PI_DEFAULT_TMUX_SESSION = "pi";
 const PI_TMUX_SESSION_PREFIX = `${PI_DEFAULT_TMUX_SESSION}_`;

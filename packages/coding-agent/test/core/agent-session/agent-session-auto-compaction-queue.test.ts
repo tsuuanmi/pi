@@ -4,14 +4,14 @@ import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { type AssistantMessage, getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AgentSession } from "../../../src/core/agent-session/agent-session.ts";
-import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
-import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
-import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
-import { createTestResourceLoader } from "../../test-utils.ts";
+import { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { createTestResourceLoader } from "#coding-agent-test/test-utils";
 
-vi.mock("../../../src/core/compaction/index.js", () => ({
+vi.mock("#coding-agent/core/compaction/index", () => ({
 	calculateContextTokens: (usage: {
 		input: number;
 		output: number;

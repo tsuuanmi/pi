@@ -7,15 +7,15 @@ import { createServer, type Server, type ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { MCPClient } from "../../../src/packages/mcp/runtime/client.ts";
+import { MCPClient } from "#coding-agent/packages/mcp/runtime/client";
 import {
 	isServerNameAmbiguous,
 	loadMCPConfigFile,
 	loadMCPConfigs,
 	sanitizeServerName,
 	validateMCPConfig,
-} from "../../../src/packages/mcp/runtime/loader.ts";
-import { MCPManager } from "../../../src/packages/mcp/runtime/manager.ts";
+} from "#coding-agent/packages/mcp/runtime/loader";
+import { MCPManager } from "#coding-agent/packages/mcp/runtime/manager";
 import {
 	createMcpToolDefinitions,
 	isMcpToolName,
@@ -24,9 +24,9 @@ import {
 	mcpToolName,
 	parseMcpToolName,
 	truncateMcpResult,
-} from "../../../src/packages/mcp/runtime/tool-bridge.ts";
-import { HttpTransport, parseSseEvents } from "../../../src/packages/mcp/runtime/transports/http.ts";
-import { StdioTransport } from "../../../src/packages/mcp/runtime/transports/stdio.ts";
+} from "#coding-agent/packages/mcp/runtime/tool-bridge";
+import { HttpTransport, parseSseEvents } from "#coding-agent/packages/mcp/runtime/transports/http";
+import { StdioTransport } from "#coding-agent/packages/mcp/runtime/transports/stdio";
 import {
 	type JsonRpcNotification,
 	type JsonRpcRequest,
@@ -34,7 +34,7 @@ import {
 	MCP_MAX_RESULT_BYTES,
 	type MCPToolCallResult,
 	type MCPTransport,
-} from "../../../src/packages/mcp/runtime/types.ts";
+} from "#coding-agent/packages/mcp/runtime/types";
 
 // ============================================================================
 // Server Name Sanitization

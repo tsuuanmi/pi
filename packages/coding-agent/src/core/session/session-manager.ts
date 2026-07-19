@@ -25,7 +25,7 @@ import { readdir, stat } from "fs/promises";
 import { join, resolve } from "path";
 import { createInterface } from "readline";
 import { StringDecoder } from "string_decoder";
-import { getAgentDir as getDefaultAgentDir, getSessionsDir } from "../config/config.ts";
+import { getAgentDir as getDefaultAgentDir, getSessionsDir } from "#coding-agent/core/config/config";
 
 export const CURRENT_SESSION_VERSION = 3;
 

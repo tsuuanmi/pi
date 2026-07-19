@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "../../../api/types.ts";
+import type { ExtensionAPI } from "@tsuuanmi/pi-coding-agent/api/types";
 
 export default function providersExtension(_pi: ExtensionAPI): void {
 	// Provider-specific coding-agent integrations live here.

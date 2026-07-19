@@ -4,26 +4,26 @@
 
 import type { Component, EditorComponent } from "@tsuuanmi/pi-tui";
 import { type Container, Loader, Spacer, type TUI } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "../../../core/agent-session/agent-session.ts";
-import type { AgentSessionRuntime } from "../../../core/agent-session/agent-session-runtime.ts";
-import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "../../../core/exec/http-dispatcher.ts";
-import type { ExtensionCommandContext, ProjectTrustContext } from "../../../core/extensions/index.ts";
-import { MissingSessionCwdError } from "../../../core/session/session-cwd.ts";
-import { SessionManager } from "../../../core/session/session-manager.ts";
-import type { KeybindingsManager } from "../../../core/settings/keybindings.ts";
-import type { SettingsManager } from "../../../core/settings/settings-manager.ts";
-import { ProjectTrustStore } from "../../../core/trust/trust-manager.ts";
-import { getAvailableThemes, setTheme, theme } from "../../../theme/theme.ts";
-import { keyText } from "../../../ui/rendering/keybinding-hints.ts";
-import type { CustomEditor } from "../components/custom-editor.ts";
-import { AssistantMessageComponent } from "../components/messages/assistant-message.ts";
-import { SessionSelectorComponent } from "../components/selectors/session-selector.ts";
-import { SettingsSelectorComponent } from "../components/selectors/settings-selector.ts";
-import { TreeSelectorComponent } from "../components/selectors/tree-selector.ts";
-import { TrustSelectorComponent } from "../components/selectors/trust-selector.ts";
-import { UserMessageSelectorComponent } from "../components/selectors/user-message-selector.ts";
-import type { StatusLineComponent } from "../components/status-line/index.ts";
-import type { ExtensionUIController } from "./extension-ui-controller.ts";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import type { AgentSessionRuntime } from "#coding-agent/core/agent-session/agent-session-runtime";
+import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "#coding-agent/core/exec/http-dispatcher";
+import type { ExtensionCommandContext, ProjectTrustContext } from "#coding-agent/core/extensions/index";
+import { MissingSessionCwdError } from "#coding-agent/core/session/session-cwd";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import type { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import type { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { ProjectTrustStore } from "#coding-agent/core/trust/trust-manager";
+import type { CustomEditor } from "#coding-agent/modes/interactive/components/custom-editor";
+import { AssistantMessageComponent } from "#coding-agent/modes/interactive/components/messages/assistant-message";
+import { SessionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/session-selector";
+import { SettingsSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/settings-selector";
+import { TreeSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/tree-selector";
+import { TrustSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/trust-selector";
+import { UserMessageSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/user-message-selector";
+import type { StatusLineComponent } from "#coding-agent/modes/interactive/components/status-line/index";
+import type { ExtensionUIController } from "#coding-agent/modes/interactive/controllers/extension-ui-controller";
+import { getAvailableThemes, setTheme, theme } from "#coding-agent/theme/theme";
+import { keyText } from "#coding-agent/ui/rendering/keybinding-hints";
 
 type SelectorControllerDependencies = {
 	ui: TUI;

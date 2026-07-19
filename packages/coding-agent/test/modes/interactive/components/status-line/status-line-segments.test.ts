@@ -1,16 +1,16 @@
 import { visibleWidth } from "@tsuuanmi/pi-tui";
 import { beforeAll, describe, expect, it } from "vitest";
-import type { AgentSession } from "../../../../../src/core/agent-session/agent-session.ts";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
 import {
 	computeUsageStats,
 	formatCwdForFooter,
 	formatTokens,
 	renderSegment,
 	sanitizeStatusText,
-} from "../../../../../src/modes/interactive/components/status-line/segments.ts";
-import type { SegmentContext } from "../../../../../src/modes/interactive/components/status-line/types.ts";
-import { initTheme } from "../../../../../src/theme/theme.ts";
-import { stripAnsi } from "../../../../../src/utils/terminal/ansi.ts";
+} from "#coding-agent/modes/interactive/components/status-line/segments";
+import type { SegmentContext } from "#coding-agent/modes/interactive/components/status-line/types";
+import { initTheme } from "#coding-agent/theme/theme";
+import { stripAnsi } from "#coding-agent/utils/terminal/ansi";
 
 beforeAll(() => {
 	initTheme("dark");

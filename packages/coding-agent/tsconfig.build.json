@@ -4,6 +4,9 @@
 		"noEmit": false,
 		"outDir": "./dist",
 		"paths": {
+			"#coding-agent/*": ["./src/*"],
+			"@tsuuanmi/pi-coding-agent/api/types": ["./src/api/types.ts"],
+			"@tsuuanmi/pi-coding-agent/core/config/config": ["./src/core/config/config.ts"],
 			"@tsuuanmi/pi-agent": ["../agent/dist/index.d.ts"],
 			"@tsuuanmi/pi-agent/*": ["../agent/dist/*.d.ts"],
 			"@tsuuanmi/pi-ai": ["../ai/dist/index.d.ts"],

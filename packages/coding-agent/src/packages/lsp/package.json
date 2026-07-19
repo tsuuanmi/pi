@@ -2,6 +2,12 @@
 	"name": "@tsuuanmi/pi-bundled-lsp",
 	"private": true,
 	"type": "module",
+	"imports": {
+		"#lsp/*": {
+			"types": "./*.ts",
+			"import": "./*.ts"
+		}
+	},
 	"pi": {
 		"extensions": ["extensions/lsp.ts"]
 	}

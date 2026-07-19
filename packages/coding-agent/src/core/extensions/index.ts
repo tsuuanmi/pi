@@ -145,7 +145,7 @@ export type {
 	WorkingIndicatorOptions,
 	WriteToolCallEvent,
 	WriteToolResultEvent,
-} from "../../api/types.ts";
+} from "#coding-agent/api/types";
 // Type guards
 export {
 	defineTool,
@@ -157,13 +157,11 @@ export {
 	isReadToolResult,
 	isToolCallEventType,
 	isWriteToolResult,
-} from "../../api/types.ts";
-export type { SourceInfo } from "../resources/source-info.ts";
-export type { SlashCommandInfo, SlashCommandSource } from "../skills/slash-commands.ts";
+} from "#coding-agent/api/types";
 export {
 	createExtensionRuntime,
 	discoverAndLoadExtensions,
-} from "./loader.ts";
+} from "#coding-agent/core/extensions/loader";
 export type {
 	ExtensionErrorListener,
 	ForkHandler,
@@ -171,6 +169,8 @@ export type {
 	NewSessionHandler,
 	ShutdownHandler,
 	SwitchSessionHandler,
-} from "./runner.ts";
-export { ExtensionRunner } from "./runner.ts";
-export { wrapRegisteredTool, wrapRegisteredTools } from "./wrapper.ts";
+} from "#coding-agent/core/extensions/runner";
+export { ExtensionRunner } from "#coding-agent/core/extensions/runner";
+export { wrapRegisteredTool, wrapRegisteredTools } from "#coding-agent/core/extensions/wrapper";
+export type { SourceInfo } from "#coding-agent/core/resources/source-info";
+export type { SlashCommandInfo, SlashCommandSource } from "#coding-agent/core/skills/slash-commands";

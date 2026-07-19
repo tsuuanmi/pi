@@ -2,7 +2,7 @@
 
 export { convertToLlm, extractYieldFromMessages, renderSubagentProgress, type YieldDetails } from "@tsuuanmi/pi-agent";
 export { resolvePath, withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-export { type Args, parseArgs } from "./cli/args.ts";
+export { type Args, parseArgs } from "#coding-agent/cli/args";
 export {
 	AgentSession,
 	type AgentSessionConfig,
@@ -13,7 +13,7 @@ export {
 	type PromptOptions,
 	parseSkillBlock,
 	type SessionStats,
-} from "./core/agent-session/agent-session.ts";
+} from "#coding-agent/core/agent-session/agent-session";
 // Auth and model registry
 export {
 	type ApiKeyCredential,
@@ -24,7 +24,7 @@ export {
 	FileAuthStorageBackend,
 	InMemoryAuthStorageBackend,
 	type OAuthCredential,
-} from "./core/auth/auth-storage.ts";
+} from "#coding-agent/core/auth/auth-storage";
 // Compaction
 export {
 	type BranchPreparation,
@@ -47,7 +47,7 @@ export {
 	prepareBranchEntries,
 	serializeConversation,
 	shouldCompact,
-} from "./core/compaction/index.ts";
+} from "#coding-agent/core/compaction/index";
 // Config paths
 export {
 	CONFIG_DIR_NAME,
@@ -56,8 +56,8 @@ export {
 	getPackageDir,
 	getReadmePath,
 	VERSION,
-} from "./core/config/config.ts";
-export { createEventBus, type EventBus, type EventBusController } from "./core/events/event-bus.ts";
+} from "#coding-agent/core/config/config";
+export { createEventBus, type EventBus, type EventBusController } from "#coding-agent/core/events/event-bus";
 // Extension system
 export type {
 	AgentEndEvent,
@@ -143,7 +143,7 @@ export type {
 	WidgetPlacement,
 	WorkingIndicatorOptions,
 	WriteToolCallEvent,
-} from "./core/extensions/index.ts";
+} from "#coding-agent/core/extensions/index";
 export {
 	createExtensionRuntime,
 	defineTool,
@@ -159,8 +159,8 @@ export {
 	isWriteToolResult,
 	wrapRegisteredTool,
 	wrapRegisteredTools,
-} from "./core/extensions/index.ts";
-export { ModelRegistry } from "./core/model/model-registry.ts";
+} from "#coding-agent/core/extensions/index";
+export { ModelRegistry } from "#coding-agent/core/model/model-registry";
 export type {
 	PackageManager,
 	PathMetadata,
@@ -168,9 +168,9 @@ export type {
 	ProgressEvent,
 	ResolvedPaths,
 	ResolvedResource,
-} from "./core/package-manager/package-manager.ts";
-export { DefaultPackageManager } from "./core/package-manager/package-manager.ts";
-export { createSyntheticSourceInfo } from "./core/resources/source-info.ts";
+} from "#coding-agent/core/package-manager/package-manager";
+export { DefaultPackageManager } from "#coding-agent/core/package-manager/package-manager";
+export { createSyntheticSourceInfo } from "#coding-agent/core/resources/source-info";
 // SDK for programmatic usage
 export {
 	AgentSessionRuntime,
@@ -198,7 +198,7 @@ export {
 	createReadTool,
 	createWriteTool,
 	type PromptTemplate,
-} from "./core/sdk/sdk.ts";
+} from "#coding-agent/core/sdk/sdk";
 export {
 	type BranchSummaryEntry,
 	buildSessionContext,
@@ -221,7 +221,7 @@ export {
 	SessionManager,
 	type SessionMessageEntry,
 	type ThinkingLevelChangeEntry,
-} from "./core/session/session-manager.ts";
+} from "#coding-agent/core/session/session-manager";
 export {
 	type CompactionSettings,
 	type DefaultProjectTrust,
@@ -229,9 +229,9 @@ export {
 	type RetrySettings,
 	SettingsManager,
 	type SettingsManagerCreateOptions,
-} from "./core/settings/settings-manager.ts";
-export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "./core/skills/resource-loader.ts";
-export { DefaultResourceLoader, loadProjectContextFiles } from "./core/skills/resource-loader.ts";
+} from "#coding-agent/core/settings/settings-manager";
+export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#coding-agent/core/skills/resource-loader";
+export { DefaultResourceLoader, loadProjectContextFiles } from "#coding-agent/core/skills/resource-loader";
 // Skills
 export {
 	formatSkillsForPrompt,
@@ -241,7 +241,7 @@ export {
 	loadSkillsFromDir,
 	type Skill,
 	type SkillFrontmatter,
-} from "./core/skills/skills.ts";
+} from "#coding-agent/core/skills/skills";
 export {
 	type SubagentAwaitOptions,
 	type SubagentAwaitResult,
@@ -253,7 +253,7 @@ export {
 	type SubagentRunRequest,
 	type SubagentRunResult,
 	type SubagentStatus,
-} from "./core/subagents/subagents.ts";
+} from "#coding-agent/core/subagents/subagents";
 // Tools
 export {
 	type BashOperations,
@@ -302,18 +302,18 @@ export {
 	type WriteOperations,
 	type WriteToolInput,
 	type WriteToolOptions,
-} from "./core/tools/index.ts";
+} from "#coding-agent/core/tools/index";
 export {
 	hasTrustRequiringProjectResources,
 	type ProjectTrustDecision,
 	ProjectTrustStore,
 	type ProjectTrustStoreEntry,
 	type ProjectTrustUpdate,
-} from "./core/trust/trust-manager.ts";
+} from "#coding-agent/core/trust/trust-manager";
 // Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
-export type { ReadonlyFooterDataProvider } from "./core/usage/footer-data-provider.ts";
+export type { ReadonlyFooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
 // Main entry point
-export { type MainOptions, main } from "./main.ts";
+export { type MainOptions, main } from "#coding-agent/main";
 // Run modes for programmatic SDK usage
 export {
 	InteractiveMode,
@@ -330,7 +330,7 @@ export {
 	type RpcSessionState,
 	runPrintMode,
 	runRpcMode,
-} from "./modes/index.ts";
+} from "#coding-agent/modes/index";
 // UI components for extensions
 export {
 	AssistantMessageComponent,
@@ -367,9 +367,9 @@ export {
 	UserMessageComponent,
 	UserMessageSelectorComponent,
 	type VisualTruncateResult,
-} from "./modes/interactive/components/index.ts";
+} from "#coding-agent/modes/interactive/components/index";
 // JSONL utilities
-export { serializeJsonLine } from "./modes/rpc/jsonl.ts";
+export { serializeJsonLine } from "#coding-agent/modes/rpc/jsonl";
 // Theme utilities for custom tools and extensions
 export {
 	getLanguageFromPath,
@@ -380,9 +380,9 @@ export {
 	initTheme,
 	Theme,
 	type ThemeColor,
-} from "./theme/theme.ts";
+} from "#coding-agent/theme/theme";
 // Clipboard utilities
-export { copyToClipboard } from "./utils/clipboard/clipboard.ts";
-export { parseFrontmatter, stripFrontmatter } from "./utils/fs/frontmatter.ts";
+export { copyToClipboard } from "#coding-agent/utils/clipboard/clipboard";
+export { parseFrontmatter, stripFrontmatter } from "#coding-agent/utils/fs/frontmatter";
 // Shell utilities
-export { getShellConfig } from "./utils/system/shell.ts";
+export { getShellConfig } from "#coding-agent/utils/system/shell";

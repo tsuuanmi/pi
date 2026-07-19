@@ -2,9 +2,9 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { APP_NAME } from "../../../src/core/config/config.ts";
-import type { SessionManager } from "../../../src/core/session/session-manager.ts";
-import { formatResumeCommand } from "../../../src/modes/interactive/interactive-mode.ts";
+import { APP_NAME } from "#coding-agent/core/config/config";
+import type { SessionManager } from "#coding-agent/core/session/session-manager";
+import { formatResumeCommand } from "#coding-agent/modes/interactive/interactive-mode";
 
 const tempDirs: string[] = [];
 const originalStdoutIsTTY = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");

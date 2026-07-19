@@ -13,11 +13,11 @@ import {
 	Spacer,
 	Text,
 } from "@tsuuanmi/pi-tui";
-import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "../../../../core/exec/http-dispatcher.ts";
-import type { DefaultProjectTrust } from "../../../../core/settings/settings-manager.ts";
-import { getSelectListTheme, getSettingsListTheme, theme } from "../../../../theme/theme.ts";
-import { keyDisplayText, keyHint } from "../../../../ui/rendering/keybinding-hints.ts";
-import { DynamicBorder } from "../widgets/dynamic-border.ts";
+import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "#coding-agent/core/exec/http-dispatcher";
+import type { DefaultProjectTrust } from "#coding-agent/core/settings/settings-manager";
+import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import { getSelectListTheme, getSettingsListTheme, theme } from "#coding-agent/theme/theme";
+import { keyDisplayText, keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 
 const SETTINGS_SUBMENU_SELECT_LIST_LAYOUT: SelectListLayoutOptions = {
 	minPrimaryColumnWidth: 12,

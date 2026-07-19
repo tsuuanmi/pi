@@ -3,10 +3,10 @@
  */
 
 import { ProcessTerminal, TUI } from "@tsuuanmi/pi-tui";
-import type { ResolvedPaths } from "../core/package-manager/package-manager.ts";
-import type { SettingsManager } from "../core/settings/settings-manager.ts";
-import { ConfigSelectorComponent } from "../modes/interactive/components/selectors/config-selector.ts";
-import { initTheme, stopThemeWatcher } from "../theme/theme.ts";
+import type { ResolvedPaths } from "#coding-agent/core/package-manager/package-manager";
+import type { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { ConfigSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/config-selector";
+import { initTheme, stopThemeWatcher } from "#coding-agent/theme/theme";
 
 export interface ConfigSelectorOptions {
 	resolvedPaths: ResolvedPaths;

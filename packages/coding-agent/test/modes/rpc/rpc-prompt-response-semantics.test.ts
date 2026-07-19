@@ -4,21 +4,21 @@ import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { type AssistantMessage, type AssistantMessageEvent, EventStream, getModel, type Model } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AgentSession } from "../../../src/core/agent-session/agent-session.ts";
-import type { AgentSessionRuntime } from "../../../src/core/agent-session/agent-session-runtime.ts";
-import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
-import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
-import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
-import { runRpcMode } from "../../../src/modes/rpc/rpc-mode.ts";
-import { createTestResourceLoader } from "../../test-utils.ts";
+import { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import type { AgentSessionRuntime } from "#coding-agent/core/agent-session/agent-session-runtime";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { runRpcMode } from "#coding-agent/modes/rpc/rpc-mode";
+import { createTestResourceLoader } from "#coding-agent-test/test-utils";
 
 const rpcIo = vi.hoisted(() => ({
 	outputLines: [] as string[],
 	lineHandler: undefined as ((line: string) => void) | undefined,
 }));
 
-vi.mock("../../../src/modes/output-guard.js", () => ({
+vi.mock("#coding-agent/modes/output-guard", () => ({
 	flushRawStdout: vi.fn(async () => {}),
 	takeOverStdout: vi.fn(),
 	waitForRawStdoutBackpressure: vi.fn(async () => {}),
@@ -27,9 +27,9 @@ vi.mock("../../../src/modes/output-guard.js", () => ({
 	},
 }));
 
-vi.mock("../../../src/theme/theme.js", () => ({ theme: {} }));
+vi.mock("#coding-agent/theme/theme", () => ({ theme: {} }));
 
-vi.mock("../../../src/modes/rpc/jsonl.js", () => ({
+vi.mock("#coding-agent/modes/rpc/jsonl", () => ({
 	attachJsonlLineReader: vi.fn((_stream: NodeJS.ReadableStream, onLine: (line: string) => void) => {
 		rpcIo.lineHandler = onLine;
 		return () => {};

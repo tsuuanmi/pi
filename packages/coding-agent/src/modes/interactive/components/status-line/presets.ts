@@ -1,4 +1,4 @@
-import type { PresetDef, StatusLinePreset } from "./types.ts";
+import type { PresetDef, StatusLinePreset } from "#coding-agent/modes/interactive/components/status-line/types";
 
 /**
  * Built-in status line presets. Only the 10 Pi segment ids are used

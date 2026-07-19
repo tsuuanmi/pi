@@ -1,7 +1,15 @@
 import { isAbsolute, relative, resolve, sep } from "node:path";
-import { type ThemeColor, theme } from "../../../../theme/theme.ts";
-import { getContextUsageLevel, getContextUsageThemeColor } from "./context-thresholds.ts";
-import type { RenderedSegment, SegmentContext, StatusLineSegment, StatusLineSegmentId } from "./types.ts";
+import {
+	getContextUsageLevel,
+	getContextUsageThemeColor,
+} from "#coding-agent/modes/interactive/components/status-line/context-thresholds";
+import type {
+	RenderedSegment,
+	SegmentContext,
+	StatusLineSegment,
+	StatusLineSegmentId,
+} from "#coding-agent/modes/interactive/components/status-line/types";
+import { type ThemeColor, theme } from "#coding-agent/theme/theme";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Shared helpers (relocated from footer.ts)

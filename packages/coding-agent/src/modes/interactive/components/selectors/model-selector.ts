@@ -9,12 +9,12 @@ import {
 	Text,
 	type TUI,
 } from "@tsuuanmi/pi-tui";
-import type { ModelRegistry } from "../../../../core/model/model-registry.ts";
-import type { SettingsManager } from "../../../../core/settings/settings-manager.ts";
-import { theme } from "../../../../theme/theme.ts";
-import { keyHint } from "../../../../ui/rendering/keybinding-hints.ts";
-import { getModelSearchText } from "../../model-search.ts";
-import { DynamicBorder } from "../widgets/dynamic-border.ts";
+import type { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import type { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import { getModelSearchText } from "#coding-agent/modes/interactive/model-search";
+import { theme } from "#coding-agent/theme/theme";
+import { keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 
 interface ModelItem {
 	provider: string;

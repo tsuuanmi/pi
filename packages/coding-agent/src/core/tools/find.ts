@@ -4,14 +4,14 @@ import { Text } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import path from "path";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "../../api/types.ts";
-import type { Theme } from "../../theme/theme.ts";
-import { keyHint } from "../../ui/rendering/keybinding-hints.ts";
-import { ensureTool } from "../../utils/system/tool-installer.ts";
-import { pathExists, resolveToCwd } from "./path-utils.ts";
-import { getTextOutput, invalidArgText, shortenPath, str } from "./render-utils.ts";
-import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
-import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "./truncate.ts";
+import type { ToolDefinition, ToolRenderResultOptions } from "#coding-agent/api/types";
+import { pathExists, resolveToCwd } from "#coding-agent/core/tools/path-utils";
+import { getTextOutput, invalidArgText, shortenPath, str } from "#coding-agent/core/tools/render-utils";
+import { wrapToolDefinition } from "#coding-agent/core/tools/tool-definition-wrapper";
+import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "#coding-agent/core/tools/truncate";
+import type { Theme } from "#coding-agent/theme/theme";
+import { keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
+import { ensureTool } from "#coding-agent/utils/system/tool-installer";
 
 function toPosixPath(value: string): string {
 	return value.split(path.sep).join("/");

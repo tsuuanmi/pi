@@ -2,8 +2,8 @@ import type { AgentTool, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { fauxAssistantMessage, fauxToolCall, type Model } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
-import type { BuildSystemPromptOptions, ExtensionAPI } from "../../src/index.ts";
-import { createHarness, getAssistantTexts, type Harness } from "./harness.ts";
+import type { BuildSystemPromptOptions, ExtensionAPI } from "#coding-agent/index";
+import { createHarness, getAssistantTexts, type Harness } from "#coding-agent-test/suite/harness";
 
 describe("AgentSession model and extension characterization", () => {
 	const harnesses: Harness[] = [];

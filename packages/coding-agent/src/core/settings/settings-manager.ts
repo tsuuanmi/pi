@@ -3,8 +3,8 @@ import type { Transport } from "@tsuuanmi/pi-ai";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
-import { CONFIG_DIR_NAME, getAgentDir } from "../config/config.ts";
-import { DEFAULT_HTTP_IDLE_TIMEOUT_MS, parseHttpIdleTimeoutMs } from "../exec/http-dispatcher.ts";
+import { CONFIG_DIR_NAME, getAgentDir } from "#coding-agent/core/config/config";
+import { DEFAULT_HTTP_IDLE_TIMEOUT_MS, parseHttpIdleTimeoutMs } from "#coding-agent/core/exec/http-dispatcher";
 
 export interface CompactionSettings {
 	enabled?: boolean; // default: true

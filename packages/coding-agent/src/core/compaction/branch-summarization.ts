@@ -14,7 +14,6 @@ import {
 } from "@tsuuanmi/pi-agent";
 import type { Model, SimpleStreamOptions } from "@tsuuanmi/pi-ai";
 import { completeSimple } from "@tsuuanmi/pi-ai";
-import type { ReadonlySessionManager, SessionEntry } from "../session/session-manager.ts";
 import {
 	computeFileLists,
 	createFileOps,
@@ -23,8 +22,9 @@ import {
 	formatFileOperations,
 	SUMMARIZATION_SYSTEM_PROMPT,
 	serializeConversation,
-} from "./message-utils.ts";
-import { estimateTokens } from "./session-compaction.ts";
+} from "#coding-agent/core/compaction/message-utils";
+import { estimateTokens } from "#coding-agent/core/compaction/session-compaction";
+import type { ReadonlySessionManager, SessionEntry } from "#coding-agent/core/session/session-manager";
 
 // ============================================================================
 // Types
@@ -44,7 +44,7 @@ export interface BranchSummaryDetails {
 	modifiedFiles: string[];
 }
 
-export type { FileOperations } from "./message-utils.ts";
+export type { FileOperations } from "#coding-agent/core/compaction/message-utils";
 
 export interface BranchPreparation {
 	/** Messages extracted for summarization, in chronological order */

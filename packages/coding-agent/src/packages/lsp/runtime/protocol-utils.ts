@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { DEFAULT_LSP_SERVERS } from "./defaults.ts";
+import { DEFAULT_LSP_SERVERS } from "#lsp/runtime/defaults";
 import type {
 	DocumentSymbol,
 	Location,
@@ -11,7 +11,7 @@ import type {
 	Range,
 	ServerConfig,
 	SymbolInformation,
-} from "./types.ts";
+} from "#lsp/runtime/types";
 
 const EXTENSION_LANGUAGE_IDS: Record<string, string> = {
 	".ts": "typescript",

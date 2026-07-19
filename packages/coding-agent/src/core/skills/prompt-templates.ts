@@ -1,10 +1,10 @@
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { basename, dirname, join, resolve, sep } from "path";
-import { parseFrontmatter } from "../../utils/fs/frontmatter.ts";
-import { CONFIG_DIR_NAME } from "../config/config.ts";
-import type { ResourceDiagnostic } from "../resources/diagnostics.ts";
-import { createSyntheticSourceInfo, type SourceInfo } from "../resources/source-info.ts";
+import { CONFIG_DIR_NAME } from "#coding-agent/core/config/config";
+import type { ResourceDiagnostic } from "#coding-agent/core/resources/diagnostics";
+import { createSyntheticSourceInfo, type SourceInfo } from "#coding-agent/core/resources/source-info";
+import { parseFrontmatter } from "#coding-agent/utils/fs/frontmatter";
 
 /**
  * Represents a prompt template loaded from a markdown file

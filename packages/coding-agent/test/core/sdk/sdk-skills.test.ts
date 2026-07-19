@@ -2,11 +2,11 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createExtensionRuntime } from "../../../src/core/extensions/loader.ts";
-import { createSyntheticSourceInfo } from "../../../src/core/resources/source-info.ts";
-import { createAgentSession } from "../../../src/core/sdk/sdk.ts";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
-import type { ResourceLoader } from "../../../src/core/skills/resource-loader.ts";
+import { createExtensionRuntime } from "#coding-agent/core/extensions/loader";
+import { createSyntheticSourceInfo } from "#coding-agent/core/resources/source-info";
+import { createAgentSession } from "#coding-agent/core/sdk/sdk";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import type { ResourceLoader } from "#coding-agent/core/skills/resource-loader";
 
 describe("createAgentSession skills option", () => {
 	let tempDir: string;

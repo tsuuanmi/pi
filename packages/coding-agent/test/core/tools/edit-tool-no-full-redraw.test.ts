@@ -3,10 +3,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Container, type Terminal, Text, TUI } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { createEditToolDefinition } from "../../../src/core/tools/edit.ts";
-import { computeEditsDiff, type Edit } from "../../../src/core/tools/edit-diff.ts";
-import { ToolExecutionComponent } from "../../../src/modes/interactive/components/tool-execution.ts";
-import { initTheme } from "../../../src/theme/theme.ts";
+import { createEditToolDefinition } from "#coding-agent/core/tools/edit";
+import { computeEditsDiff, type Edit } from "#coding-agent/core/tools/edit-diff";
+import { ToolExecutionComponent } from "#coding-agent/modes/interactive/components/tool-execution";
+import { initTheme } from "#coding-agent/theme/theme";
 
 class FakeTerminal implements Terminal {
 	columns = 80;

@@ -6,7 +6,7 @@ import type {
 	JsonRpcRequest,
 	JsonRpcResponse,
 	ServerConfig,
-} from "./types.ts";
+} from "#lsp/runtime/types";
 
 const DEFAULT_TIMEOUT_MS = 20_000;
 const DIAGNOSTIC_WAIT_MS = 1_000;

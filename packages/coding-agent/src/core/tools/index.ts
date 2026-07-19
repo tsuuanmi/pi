@@ -18,7 +18,7 @@ export {
 	createBashTool,
 	createBashToolDefinition,
 	createLocalBashOperations,
-} from "./bash.ts";
+} from "#coding-agent/core/tools/bash";
 export {
 	createEditTool,
 	createEditToolDefinition,
@@ -26,7 +26,7 @@ export {
 	type EditToolDetails,
 	type EditToolInput,
 	type EditToolOptions,
-} from "./edit.ts";
+} from "#coding-agent/core/tools/edit";
 export {
 	createFindTool,
 	createFindToolDefinition,
@@ -34,7 +34,7 @@ export {
 	type FindToolDetails,
 	type FindToolInput,
 	type FindToolOptions,
-} from "./find.ts";
+} from "#coding-agent/core/tools/find";
 export {
 	createGrepTool,
 	createGrepToolDefinition,
@@ -42,7 +42,7 @@ export {
 	type GrepToolDetails,
 	type GrepToolInput,
 	type GrepToolOptions,
-} from "./grep.ts";
+} from "#coding-agent/core/tools/grep";
 export {
 	createLsTool,
 	createLsToolDefinition,
@@ -50,7 +50,7 @@ export {
 	type LsToolDetails,
 	type LsToolInput,
 	type LsToolOptions,
-} from "./ls.ts";
+} from "#coding-agent/core/tools/ls";
 export {
 	createReadTool,
 	createReadToolDefinition,
@@ -58,24 +58,24 @@ export {
 	type ReadToolDetails,
 	type ReadToolInput,
 	type ReadToolOptions,
-} from "./read.ts";
+} from "#coding-agent/core/tools/read";
 export {
 	createWriteTool,
 	createWriteToolDefinition,
 	type WriteOperations,
 	type WriteToolInput,
 	type WriteToolOptions,
-} from "./write.ts";
+} from "#coding-agent/core/tools/write";
 
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import type { ToolDefinition } from "../../api/types.ts";
-import { type BashToolOptions, createBashTool, createBashToolDefinition } from "./bash.ts";
-import { createEditTool, createEditToolDefinition, type EditToolOptions } from "./edit.ts";
-import { createFindTool, createFindToolDefinition, type FindToolOptions } from "./find.ts";
-import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "./grep.ts";
-import { createLsTool, createLsToolDefinition, type LsToolOptions } from "./ls.ts";
-import { createReadTool, createReadToolDefinition, type ReadToolOptions } from "./read.ts";
-import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } from "./write.ts";
+import type { ToolDefinition } from "#coding-agent/api/types";
+import { type BashToolOptions, createBashTool, createBashToolDefinition } from "#coding-agent/core/tools/bash";
+import { createEditTool, createEditToolDefinition, type EditToolOptions } from "#coding-agent/core/tools/edit";
+import { createFindTool, createFindToolDefinition, type FindToolOptions } from "#coding-agent/core/tools/find";
+import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "#coding-agent/core/tools/grep";
+import { createLsTool, createLsToolDefinition, type LsToolOptions } from "#coding-agent/core/tools/ls";
+import { createReadTool, createReadToolDefinition, type ReadToolOptions } from "#coding-agent/core/tools/read";
+import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } from "#coding-agent/core/tools/write";
 
 export type Tool = AgentTool<any>;
 export type ToolDef = ToolDefinition<any, any>;

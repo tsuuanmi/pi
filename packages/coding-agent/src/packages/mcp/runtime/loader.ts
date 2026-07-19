@@ -12,8 +12,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { CONFIG_DIR_NAME } from "../../../core/config/config.ts";
-import type { MCPConfigFile, MCPServerConfig } from "./types.ts";
+import { CONFIG_DIR_NAME } from "@tsuuanmi/pi-coding-agent/core/config/config";
+import type { MCPConfigFile, MCPServerConfig } from "#mcp/runtime/types";
 
 export interface MCPLoadResult {
 	servers: Map<string, MCPServerConfig>;

@@ -1,8 +1,8 @@
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { clampThinkingLevel, getSupportedThinkingLevels, type Model, modelsAreEqual } from "@tsuuanmi/pi-ai";
-import { DEFAULT_THINKING_LEVEL } from "../config/defaults.ts";
-import type { ModelCycleResult } from "./agent-session.ts";
-import type { AgentSessionContext } from "./agent-session-context.ts";
+import type { ModelCycleResult } from "#coding-agent/core/agent-session/agent-session";
+import type { AgentSessionContext } from "#coding-agent/core/agent-session/agent-session-context";
+import { DEFAULT_THINKING_LEVEL } from "#coding-agent/core/config/defaults";
 
 /**
  * Phase-1 ModelControl subsystem (stateless module functions on

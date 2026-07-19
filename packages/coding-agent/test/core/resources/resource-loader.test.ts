@@ -3,14 +3,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
-import { ExtensionRunner } from "../../../src/core/extensions/runner.ts";
-import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
-import { createSyntheticSourceInfo } from "../../../src/core/resources/source-info.ts";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
-import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
-import { DefaultResourceLoader } from "../../../src/core/skills/resource-loader.ts";
-import type { Skill } from "../../../src/core/skills/skills.ts";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { ExtensionRunner } from "#coding-agent/core/extensions/runner";
+import { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { createSyntheticSourceInfo } from "#coding-agent/core/resources/source-info";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { DefaultResourceLoader } from "#coding-agent/core/skills/resource-loader";
+import type { Skill } from "#coding-agent/core/skills/skills";
 
 const BUILT_IN_WORKFLOW_COMMANDS = new Set(["deep-interview", "ralplan", "team", "ultragoal"]);
 const BUILT_IN_SUBAGENT_TOOLS = new Set([

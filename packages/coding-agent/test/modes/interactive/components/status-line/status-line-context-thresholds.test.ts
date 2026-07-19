@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	getContextUsageLevel,
 	getContextUsageThemeColor,
-} from "../../../../../src/modes/interactive/components/status-line/context-thresholds.ts";
+} from "#coding-agent/modes/interactive/components/status-line/context-thresholds";
 
 // Thresholds (context-thresholds.ts): warning 50% / 150k, purple 70% / 270k,
 // error 90% / 500k. A level trips at min(percentThreshold, tokenPercentThreshold)

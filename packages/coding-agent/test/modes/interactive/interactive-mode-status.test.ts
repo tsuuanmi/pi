@@ -1,15 +1,21 @@
 import { homedir } from "node:os";
 import * as path from "node:path";
-import { type AutocompleteProvider, CombinedAutocompleteProvider } from "@tsuuanmi/pi-tui";
+import {
+	type AutocompleteProvider,
+	CombinedAutocompleteProvider,
+	type Component,
+	Container,
+	type Focusable,
+	TUI,
+} from "@tsuuanmi/pi-tui";
+import { VirtualTerminal } from "@tsuuanmi/pi-tui/test/virtual-terminal";
 import { beforeAll, describe, expect, test, vi } from "vitest";
-import { type Component, Container, type Focusable, TUI } from "../../../../tui/src/tui.ts";
-import { VirtualTerminal } from "../../../../tui/test/virtual-terminal.ts";
-import type { AutocompleteProviderFactory } from "../../../src/api/types.ts";
-import type { SourceInfo } from "../../../src/core/resources/source-info.ts";
-import { ExtensionUIController } from "../../../src/modes/interactive/controllers/extension-ui-controller.ts";
-import { ResourceDisplayController } from "../../../src/modes/interactive/controllers/resource-display-controller.ts";
-import { InteractiveMode } from "../../../src/modes/interactive/interactive-mode.ts";
-import { initTheme } from "../../../src/theme/theme.ts";
+import type { AutocompleteProviderFactory } from "#coding-agent/api/types";
+import type { SourceInfo } from "#coding-agent/core/resources/source-info";
+import { ExtensionUIController } from "#coding-agent/modes/interactive/controllers/extension-ui-controller";
+import { ResourceDisplayController } from "#coding-agent/modes/interactive/controllers/resource-display-controller";
+import { InteractiveMode } from "#coding-agent/modes/interactive/interactive-mode";
+import { initTheme } from "#coding-agent/theme/theme";
 
 function renderLastLine(container: Container, width = 120): string {
 	const last = container.children[container.children.length - 1];

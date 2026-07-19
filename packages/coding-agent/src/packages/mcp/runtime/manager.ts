@@ -5,12 +5,12 @@
  * Handles tool registration/deregistration with the agent session's tool registry.
  */
 
-import type { ToolDefinition as PiToolDefinition } from "../../../api/types.ts";
-import { MCPClient } from "./client.ts";
-import { loadMCPConfigs, sanitizeServerName } from "./loader.ts";
-import { createMcpToolDefinitions } from "./tool-bridge.ts";
-import { HttpTransport } from "./transports/http.ts";
-import { StdioTransport } from "./transports/stdio.ts";
+import type { ToolDefinition as PiToolDefinition } from "@tsuuanmi/pi-coding-agent/api/types";
+import { MCPClient } from "#mcp/runtime/client";
+import { loadMCPConfigs, sanitizeServerName } from "#mcp/runtime/loader";
+import { createMcpToolDefinitions } from "#mcp/runtime/tool-bridge";
+import { HttpTransport } from "#mcp/runtime/transports/http";
+import { StdioTransport } from "#mcp/runtime/transports/stdio";
 import {
 	MCP_DEFAULT_RECONNECT_TIMEOUT_SEC,
 	MCP_DEFAULT_STARTUP_TIMEOUT_SEC,
@@ -18,7 +18,7 @@ import {
 	type MCPServerConfig,
 	type MCPServerInfo,
 	type MCPServerStatus,
-} from "./types.ts";
+} from "#mcp/runtime/types";
 
 export interface MCPManagerOptions {
 	/** Working directory for the project. */

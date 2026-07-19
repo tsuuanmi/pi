@@ -37,6 +37,15 @@ function rewriteEntry(entry) {
 	return p;
 }
 
+function rewriteImports(value) {
+	if (typeof value === "string") return rewriteEntry(value);
+	if (Array.isArray(value)) return value.map(rewriteImports);
+	if (value && typeof value === "object") {
+		return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, rewriteImports(entry)]));
+	}
+	return value;
+}
+
 for (const name of targets) {
 	const cfg = PACKAGES[name];
 	if (!cfg) {
@@ -50,6 +59,9 @@ for (const name of targets) {
 				Array.isArray(value) ? value.map(rewriteEntry) : value,
 			]),
 		);
+	}
+	if (pkg.imports && typeof pkg.imports === "object") {
+		pkg.imports = rewriteImports(pkg.imports);
 	}
 	writeFileSync(resolve(cfg.dest), `${JSON.stringify(pkg, null, "\t")}\n`);
 	console.log(`Wrote bundled ${name} package.json with dist manifest`);

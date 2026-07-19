@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
 
 const TIMESTAMP_SESSION_ID_RE = /^\d{8}-\d{6}$/;
 

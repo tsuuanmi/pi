@@ -6,9 +6,9 @@ import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { type Api, type KnownProvider, type Model, modelsAreEqual } from "@tsuuanmi/pi-ai";
 import chalk from "chalk";
 import { minimatch } from "minimatch";
-import { isValidThinkingLevel } from "../../cli/args.ts";
-import { DEFAULT_THINKING_LEVEL } from "../config/defaults.ts";
-import type { ModelRegistry } from "./model-registry.ts";
+import { isValidThinkingLevel } from "#coding-agent/cli/args";
+import { DEFAULT_THINKING_LEVEL } from "#coding-agent/core/config/defaults";
+import type { ModelRegistry } from "#coding-agent/core/model/model-registry";
 
 /** Default model IDs for each known provider */
 export const defaultModelPerProvider: Record<KnownProvider, string> = {

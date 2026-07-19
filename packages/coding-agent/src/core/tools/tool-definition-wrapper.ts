@@ -1,5 +1,5 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import type { ExtensionContext, ToolDefinition } from "../../api/types.ts";
+import type { ExtensionContext, ToolDefinition } from "#coding-agent/api/types";
 
 /** Wrap a ToolDefinition into an AgentTool for the core runtime. */
 export function wrapToolDefinition<TDetails = unknown>(

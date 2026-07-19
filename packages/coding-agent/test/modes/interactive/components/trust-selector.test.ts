@@ -1,9 +1,9 @@
 import { setKeybindings } from "@tsuuanmi/pi-tui";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { KeybindingsManager } from "../../../../src/core/settings/keybindings.ts";
-import { TrustSelectorComponent } from "../../../../src/modes/interactive/components/selectors/trust-selector.ts";
-import { initTheme } from "../../../../src/theme/theme.ts";
-import { stripAnsi } from "../../../../src/utils/terminal/ansi.ts";
+import { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import { TrustSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/trust-selector";
+import { initTheme } from "#coding-agent/theme/theme";
+import { stripAnsi } from "#coding-agent/utils/terminal/ansi";
 
 describe("TrustSelectorComponent", () => {
 	beforeAll(() => {

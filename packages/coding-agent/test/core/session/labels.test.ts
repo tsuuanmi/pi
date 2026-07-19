@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type LabelEntry, SessionManager } from "../../../src/core/session/session-manager.ts";
+import { type LabelEntry, SessionManager } from "#coding-agent/core/session/session-manager";
 
 describe("SessionManager labels", () => {
 	it("sets and gets labels", () => {

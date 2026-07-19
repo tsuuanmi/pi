@@ -5,8 +5,8 @@ import type { AnthropicMessagesCompat, Api, Context, Model, OpenAICompletionsCom
 import { getApiProvider } from "@tsuuanmi/pi-ai";
 import { getOAuthProvider } from "@tsuuanmi/pi-ai/oauth";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
-import { clearApiKeyCache, ModelRegistry, type ProviderConfigInput } from "../../../src/core/model/model-registry.ts";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { clearApiKeyCache, ModelRegistry, type ProviderConfigInput } from "#coding-agent/core/model/model-registry";
 
 describe("ModelRegistry", () => {
 	let tempDir: string;

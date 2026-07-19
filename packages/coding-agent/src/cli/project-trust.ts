@@ -1,8 +1,8 @@
 import chalk from "chalk";
-import type { ProjectTrustContext } from "../api/types.ts";
-import type { SettingsManager } from "../core/settings/settings-manager.ts";
-import type { AppMode } from "../core/trust/project-trust.ts";
-import { showStartupInput, showStartupSelector } from "./startup-ui.ts";
+import type { ProjectTrustContext } from "#coding-agent/api/types";
+import { showStartupInput, showStartupSelector } from "#coding-agent/cli/startup-ui";
+import type { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import type { AppMode } from "#coding-agent/core/trust/project-trust";
 
 export function createProjectTrustContext(options: {
 	cwd: string;

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
 	parseStatusPorcelain,
 	runGitStatusPorcelain,
-} from "../../../../../src/modes/interactive/components/status-line/git-utils.ts";
+} from "#coding-agent/modes/interactive/components/status-line/git-utils";
 
 describe("parseStatusPorcelain", () => {
 	it("returns zero counts for empty input", () => {

@@ -2,6 +2,12 @@
 	"name": "@tsuuanmi/pi-bundled-mcp",
 	"private": true,
 	"type": "module",
+	"imports": {
+		"#mcp/*": {
+			"types": "./*.ts",
+			"import": "./*.ts"
+		}
+	},
 	"pi": {
 		"extensions": ["extensions/mcp.ts"],
 		"commands": ["commands/mcp.ts"]

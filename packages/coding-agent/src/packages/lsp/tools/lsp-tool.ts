@@ -4,11 +4,11 @@ import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
+import type { ExtensionContext, ToolDefinition } from "@tsuuanmi/pi-coding-agent/api/types";
 import { Text } from "@tsuuanmi/pi-tui";
 import { type Static, Type } from "typebox";
-import type { ExtensionContext, ToolDefinition } from "../../../api/types.ts";
-import { LspSession } from "../runtime/client.ts";
-import { DEFAULT_LSP_SERVERS } from "../runtime/defaults.ts";
+import { LspSession } from "#lsp/runtime/client";
+import { DEFAULT_LSP_SERVERS } from "#lsp/runtime/defaults";
 import {
 	commandExists,
 	detectLanguageId,
@@ -19,7 +19,7 @@ import {
 	findServerForFile,
 	formatLocation,
 	formatSymbol,
-} from "../runtime/protocol-utils.ts";
+} from "#lsp/runtime/protocol-utils";
 import type {
 	Diagnostic,
 	DocumentSymbol,
@@ -28,7 +28,7 @@ import type {
 	LocationLink,
 	ServerConfig,
 	SymbolInformation,
-} from "../runtime/types.ts";
+} from "#lsp/runtime/types";
 
 function str(value: unknown): string | null {
 	if (typeof value === "string") return value;

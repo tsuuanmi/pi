@@ -1,7 +1,7 @@
 import { execSync, spawn } from "child_process";
 import { platform } from "os";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { copyToClipboard } from "../../../src/utils/clipboard/clipboard.ts";
+import { copyToClipboard } from "#coding-agent/utils/clipboard/clipboard";
 
 const mocks = vi.hoisted(() => {
 	return {
@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => {
 	};
 });
 
-vi.mock("../../../src/utils/clipboard/clipboard-native.js", () => {
+vi.mock("#coding-agent/utils/clipboard/clipboard-native", () => {
 	return {
 		clipboard: mocks.clipboard,
 	};

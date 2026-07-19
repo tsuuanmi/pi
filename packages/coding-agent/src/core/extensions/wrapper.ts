@@ -6,9 +6,9 @@
  */
 
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import type { RegisteredTool } from "../../api/types.ts";
-import { wrapToolDefinition, wrapToolDefinitions } from "../tools/tool-definition-wrapper.ts";
-import type { ExtensionRunner } from "./runner.ts";
+import type { RegisteredTool } from "#coding-agent/api/types";
+import type { ExtensionRunner } from "#coding-agent/core/extensions/runner";
+import { wrapToolDefinition, wrapToolDefinitions } from "#coding-agent/core/tools/tool-definition-wrapper";
 
 /**
  * Wrap a RegisteredTool into an AgentTool.

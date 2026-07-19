@@ -1,12 +1,12 @@
 import { setKeybindings } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../../src/core/model/provider-display-names.ts";
-import { KeybindingsManager } from "../../../src/core/settings/keybindings.ts";
-import { OAuthSelectorComponent } from "../../../src/modes/interactive/components/selectors/oauth-selector.ts";
-import { isApiKeyAccountProvider } from "../../../src/modes/interactive/interactive-mode.ts";
-import { initTheme } from "../../../src/theme/theme.ts";
-import { stripAnsi } from "../../../src/utils/terminal/ansi.ts";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/core/model/provider-display-names";
+import { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import { OAuthSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/oauth-selector";
+import { isApiKeyAccountProvider } from "#coding-agent/modes/interactive/interactive-mode";
+import { initTheme } from "#coding-agent/theme/theme";
+import { stripAnsi } from "#coding-agent/utils/terminal/ansi";
 
 const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
 

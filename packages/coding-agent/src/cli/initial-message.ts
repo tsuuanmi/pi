@@ -1,4 +1,4 @@
-import type { Args } from "./args.ts";
+import type { Args } from "#coding-agent/cli/args";
 export interface InitialMessageInput {
 	parsed: Args;
 	fileText?: string;

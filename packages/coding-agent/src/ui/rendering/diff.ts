@@ -1,5 +1,5 @@
 import * as Diff from "diff";
-import { theme } from "../../theme/theme.ts";
+import { theme } from "#coding-agent/theme/theme";
 
 /**
  * Parse diff line to extract prefix, line number, and content.

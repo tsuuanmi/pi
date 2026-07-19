@@ -5,7 +5,7 @@ import {
 	type Model,
 } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createHarness, type Harness } from "./harness.ts";
+import { createHarness, type Harness } from "#coding-agent-test/suite/harness";
 
 type SessionWithCompactionInternals = {
 	_checkCompaction: (assistantMessage: AssistantMessage, skipAbortedCheck?: boolean) => Promise<boolean>;

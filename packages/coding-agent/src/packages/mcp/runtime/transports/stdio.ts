@@ -16,7 +16,7 @@ import type {
 	MCPServerStatus,
 	MCPTransport,
 	MCPTransportEvent,
-} from "../types.ts";
+} from "#mcp/runtime/types";
 
 export interface StdioTransportOptions {
 	command: string;

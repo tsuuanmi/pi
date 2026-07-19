@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { SessionImportFileNotFoundError } from "../../../src/core/agent-session/agent-session-runtime.ts";
-import { CommandController } from "../../../src/modes/interactive/controllers/command-controller.ts";
-import { InteractiveMode } from "../../../src/modes/interactive/interactive-mode.ts";
+import { SessionImportFileNotFoundError } from "#coding-agent/core/agent-session/agent-session-runtime";
+import { CommandController } from "#coding-agent/modes/interactive/controllers/command-controller";
+import { InteractiveMode } from "#coding-agent/modes/interactive/interactive-mode";
 
 type PathCommand = "/import";
 

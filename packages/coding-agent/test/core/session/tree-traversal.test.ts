@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, readFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { describe, expect, it } from "vitest";
-import { type CustomEntry, SessionManager } from "../../../src/core/session/session-manager.ts";
-import { assistantMsg, userMsg } from "../../test-utils.ts";
+import { type CustomEntry, SessionManager } from "#coding-agent/core/session/session-manager";
+import { assistantMsg, userMsg } from "#coding-agent-test/test-utils";
 
 describe("SessionManager append and tree traversal", () => {
 	describe("append operations", () => {

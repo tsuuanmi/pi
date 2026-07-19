@@ -8,8 +8,8 @@ import {
 	DefaultPackageManager,
 	type ProgressEvent,
 	type ResolvedResource,
-} from "../../../src/core/package-manager/package-manager.ts";
-import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
+} from "#coding-agent/core/package-manager/package-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
 
 function normalizeForMatch(value: string): string {
 	return value.replace(/\\/g, "/");

@@ -27,11 +27,11 @@ export interface MCPToolDetails {
 	truncated: boolean;
 }
 
+import type { ToolDefinition } from "@tsuuanmi/pi-coding-agent/api/types";
 import { type TSchema, Type } from "typebox";
-import type { ToolDefinition } from "../../../api/types.ts";
-import type { MCPClient } from "./client.ts";
-import { sanitizeServerName } from "./loader.ts";
-import { MCP_MAX_RESULT_BYTES, type MCPToolCallResult, type MCPToolDefinition } from "./types.ts";
+import type { MCPClient } from "#mcp/runtime/client";
+import { sanitizeServerName } from "#mcp/runtime/loader";
+import { MCP_MAX_RESULT_BYTES, type MCPToolCallResult, type MCPToolDefinition } from "#mcp/runtime/types";
 
 /** The prefix for MCP tool names in Pi: mcp__<server>__<tool> */
 const MCP_TOOL_PREFIX = "mcp__";

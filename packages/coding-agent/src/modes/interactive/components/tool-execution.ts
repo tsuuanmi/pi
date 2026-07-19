@@ -1,8 +1,8 @@
 import { Box, type Component, Container, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
-import type { ToolDefinition, ToolRenderContext } from "../../../api/types.ts";
-import { createAllToolDefinitions, type ToolName } from "../../../core/tools/index.ts";
-import { getTextOutput as getRenderedTextOutput } from "../../../core/tools/render-utils.ts";
-import { theme } from "../../../theme/theme.ts";
+import type { ToolDefinition, ToolRenderContext } from "#coding-agent/api/types";
+import { createAllToolDefinitions, type ToolName } from "#coding-agent/core/tools/index";
+import { getTextOutput as getRenderedTextOutput } from "#coding-agent/core/tools/render-utils";
+import { theme } from "#coding-agent/theme/theme";
 
 export interface ToolExecutionOptions {}
 

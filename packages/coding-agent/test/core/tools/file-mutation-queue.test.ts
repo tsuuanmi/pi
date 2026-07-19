@@ -3,8 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { afterEach, describe, expect, it } from "vitest";
-import { createEditTool } from "../../../src/core/tools/edit.ts";
-import { createWriteTool } from "../../../src/core/tools/write.ts";
+import { createEditTool } from "#coding-agent/core/tools/edit";
+import { createWriteTool } from "#coding-agent/core/tools/write";
 
 function delay(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));

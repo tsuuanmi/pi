@@ -10,8 +10,8 @@
  * is the agent-layer impl; `pi-workflows` never imports it.
  */
 import { registerSubagentManagerFactory, type SubagentManagerFactoryContext } from "@tsuuanmi/pi-agent";
-import { createAgentSessionServices } from "../agent-session/agent-session-services.ts";
-import { SubagentManager } from "./subagents.ts";
+import { createAgentSessionServices } from "#coding-agent/core/agent-session/agent-session-services";
+import { SubagentManager } from "#coding-agent/core/subagents/subagents";
 
 function toExtensionFlagValues(
 	value: SubagentManagerFactoryContext["extensionFlagValues"],

@@ -10,18 +10,24 @@ import {
 	type OpenAICodexUsageSummary,
 } from "@tsuuanmi/pi-ai";
 import type { Component, Container, EditorComponent, TUI } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "../../../core/agent-session/agent-session.ts";
-import { getAgentDir, getAuthPath } from "../../../core/config/config.ts";
-import { defaultModelPerProvider } from "../../../core/model/model-resolver.ts";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../../core/model/provider-display-names.ts";
-import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../../../core/trust/trust-manager.ts";
-import type { FooterDataProvider } from "../../../core/usage/footer-data-provider.ts";
-import { stripJsonComments } from "../../../utils/fs/json.ts";
-import { LoginDialogComponent } from "../components/login-dialog.ts";
-import { AccountSelectorComponent, type AccountSelectorOption } from "../components/selectors/account-selector.ts";
-import { ExtensionSelectorComponent } from "../components/selectors/extension-selector.ts";
-import { type AuthSelectorProvider, OAuthSelectorComponent } from "../components/selectors/oauth-selector.ts";
-import type { StatusLineComponent } from "../components/status-line/index.ts";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import { getAgentDir, getAuthPath } from "#coding-agent/core/config/config";
+import { defaultModelPerProvider } from "#coding-agent/core/model/model-resolver";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/core/model/provider-display-names";
+import { hasTrustRequiringProjectResources, ProjectTrustStore } from "#coding-agent/core/trust/trust-manager";
+import type { FooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+import { LoginDialogComponent } from "#coding-agent/modes/interactive/components/login-dialog";
+import {
+	AccountSelectorComponent,
+	type AccountSelectorOption,
+} from "#coding-agent/modes/interactive/components/selectors/account-selector";
+import { ExtensionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/extension-selector";
+import {
+	type AuthSelectorProvider,
+	OAuthSelectorComponent,
+} from "#coding-agent/modes/interactive/components/selectors/oauth-selector";
+import type { StatusLineComponent } from "#coding-agent/modes/interactive/components/status-line/index";
+import { stripJsonComments } from "#coding-agent/utils/fs/json";
 
 function isUnknownModel(model: Model<any> | undefined): boolean {
 	return !!model && model.provider === "unknown" && model.id === "unknown" && model.api === "unknown";

@@ -21,16 +21,16 @@ import {
 } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
-import type { ExtensionUIContext } from "../../api/types.ts";
-import type { AgentSession } from "../agent-session/agent-session.ts";
+import type { ExtensionUIContext } from "#coding-agent/api/types";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
 import {
 	type AgentSessionServices,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
-} from "../agent-session/agent-session-services.ts";
-import { type AgentProfile, loadAgentProfile } from "../agents/agent-profiles.ts";
-import { sessionStateDir } from "../session/session-layout.ts";
-import { SessionManager } from "../session/session-manager.ts";
+} from "#coding-agent/core/agent-session/agent-session-services";
+import { type AgentProfile, loadAgentProfile } from "#coding-agent/core/agents/agent-profiles";
+import { sessionStateDir } from "#coding-agent/core/session/session-layout";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
 
 export type {
 	SubagentAwaitOptions,

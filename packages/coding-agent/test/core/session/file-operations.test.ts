@@ -3,11 +3,7 @@ import { appendFileSync, closeSync, mkdirSync, openSync, readFileSync, rmSync, w
 import { tmpdir } from "os";
 import { join } from "path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-	findMostRecentSession,
-	loadEntriesFromFile,
-	SessionManager,
-} from "../../../src/core/session/session-manager.ts";
+import { findMostRecentSession, loadEntriesFromFile, SessionManager } from "#coding-agent/core/session/session-manager";
 
 describe("loadEntriesFromFile", () => {
 	let tempDir: string;

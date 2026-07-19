@@ -3,9 +3,9 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { canonicalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
-import { parseFrontmatter } from "../../utils/fs/frontmatter.ts";
-import type { ResourceDiagnostic } from "../resources/diagnostics.ts";
-import type { AgentProfile } from "./agent-profiles.ts";
+import type { AgentProfile } from "#coding-agent/core/agents/agent-profiles";
+import type { ResourceDiagnostic } from "#coding-agent/core/resources/diagnostics";
+import { parseFrontmatter } from "#coding-agent/utils/fs/frontmatter";
 
 export type AgentSourceLevel = "bundled" | "user" | "project" | "package" | "temporary";
 export type AgentProfileFormat = "markdown" | "bundled";

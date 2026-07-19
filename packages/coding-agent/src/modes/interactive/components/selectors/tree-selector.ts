@@ -12,10 +12,10 @@ import {
 	visibleWidth,
 	wrapTextWithAnsi,
 } from "@tsuuanmi/pi-tui";
-import type { SessionTreeNode } from "../../../../core/session/session-manager.ts";
-import { theme } from "../../../../theme/theme.ts";
-import { formatKeyText, keyHint } from "../../../../ui/rendering/keybinding-hints.ts";
-import { DynamicBorder } from "../widgets/dynamic-border.ts";
+import type { SessionTreeNode } from "#coding-agent/core/session/session-manager";
+import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import { theme } from "#coding-agent/theme/theme";
+import { formatKeyText, keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 
 /** Gutter info: position (displayIndent where connector was) and whether to show │ */
 interface GutterInfo {

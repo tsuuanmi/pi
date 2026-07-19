@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { piSessionRoot } from "../session/session-layout.ts";
+import { piSessionRoot } from "#coding-agent/core/session/session-layout";
 
 export function apiUsageLogPath(cwd: string, sessionId: string): string | undefined {
 	const trimmed = sessionId.trim();

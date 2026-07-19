@@ -33,13 +33,17 @@ import {
 } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import { spawn } from "child_process";
-import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "../../core/agent-session/agent-session.ts";
+import {
+	type AgentSession,
+	type AgentSessionEvent,
+	parseSkillBlock,
+} from "#coding-agent/core/agent-session/agent-session";
 import {
 	type AgentSessionRuntime,
 	SessionImportFileNotFoundError,
-} from "../../core/agent-session/agent-session-runtime.ts";
-import { APP_NAME, CONFIG_DIR_NAME, VERSION } from "../../core/config/config.ts";
-import { configureHttpDispatcher } from "../../core/exec/http-dispatcher.ts";
+} from "#coding-agent/core/agent-session/agent-session-runtime";
+import { APP_NAME, CONFIG_DIR_NAME, VERSION } from "#coding-agent/core/config/config";
+import { configureHttpDispatcher } from "#coding-agent/core/exec/http-dispatcher";
 import type {
 	AutocompleteProviderFactory,
 	EditorFactory,
@@ -47,14 +51,33 @@ import type {
 	ExtensionRunner,
 	ExtensionUIContext,
 	ProjectTrustContext,
-} from "../../core/extensions/index.ts";
-import type { SourceInfo } from "../../core/resources/source-info.ts";
-import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session/session-cwd.ts";
-import type { SessionContext, SessionManager } from "../../core/session/session-manager.ts";
-import { type AppKeybinding, KeybindingsManager } from "../../core/settings/keybindings.ts";
-import { BUILTIN_SLASH_COMMANDS } from "../../core/skills/slash-commands.ts";
-import { hasTrustRequiringProjectResources } from "../../core/trust/trust-manager.ts";
-import { FooterDataProvider } from "../../core/usage/footer-data-provider.ts";
+} from "#coding-agent/core/extensions/index";
+import type { SourceInfo } from "#coding-agent/core/resources/source-info";
+import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#coding-agent/core/session/session-cwd";
+import type { SessionContext, SessionManager } from "#coding-agent/core/session/session-manager";
+import { type AppKeybinding, KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import { BUILTIN_SLASH_COMMANDS } from "#coding-agent/core/skills/slash-commands";
+import { hasTrustRequiringProjectResources } from "#coding-agent/core/trust/trust-manager";
+import { FooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+import { BashExecutionComponent } from "#coding-agent/modes/interactive/components/bash-execution";
+import { CustomEditor } from "#coding-agent/modes/interactive/components/custom-editor";
+import { AssistantMessageComponent } from "#coding-agent/modes/interactive/components/messages/assistant-message";
+import { BranchSummaryMessageComponent } from "#coding-agent/modes/interactive/components/messages/branch-summary-message";
+import { CompactionSummaryMessageComponent } from "#coding-agent/modes/interactive/components/messages/compaction-summary-message";
+import { CustomMessageComponent } from "#coding-agent/modes/interactive/components/messages/custom-message";
+import { SkillInvocationMessageComponent } from "#coding-agent/modes/interactive/components/messages/skill-invocation-message";
+import { UserMessageComponent } from "#coding-agent/modes/interactive/components/messages/user-message";
+import { StatusLineComponent } from "#coding-agent/modes/interactive/components/status-line/index";
+import { ToolExecutionComponent } from "#coding-agent/modes/interactive/components/tool-execution";
+import { CountdownTimer } from "#coding-agent/modes/interactive/components/widgets/countdown-timer";
+import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import { ExpandableText } from "#coding-agent/modes/interactive/components/widgets/expandable-text";
+import { AccountAuthController } from "#coding-agent/modes/interactive/controllers/account-auth-controller";
+import { CommandController } from "#coding-agent/modes/interactive/controllers/command-controller";
+import { ExtensionUIController } from "#coding-agent/modes/interactive/controllers/extension-ui-controller";
+import { KeyHandlerController } from "#coding-agent/modes/interactive/controllers/key-handler-controller";
+import { ResourceDisplayController } from "#coding-agent/modes/interactive/controllers/resource-display-controller";
+import { SelectorController } from "#coding-agent/modes/interactive/controllers/selector-controller";
 import {
 	getAvailableThemesWithPaths,
 	getEditorTheme,
@@ -68,32 +91,13 @@ import {
 	stopThemeWatcher,
 	Theme,
 	theme,
-} from "../../theme/theme.ts";
-import { keyDisplayText, keyHint, keyText, rawKeyHint } from "../../ui/rendering/keybinding-hints.ts";
-import { parseGitUrl } from "../../utils/fs/git.ts";
-import { killTrackedDetachedChildren } from "../../utils/system/shell.ts";
-import { ensureTool } from "../../utils/system/tool-installer.ts";
-import { BashExecutionComponent } from "./components/bash-execution.ts";
-import { CustomEditor } from "./components/custom-editor.ts";
-import { AssistantMessageComponent } from "./components/messages/assistant-message.ts";
-import { BranchSummaryMessageComponent } from "./components/messages/branch-summary-message.ts";
-import { CompactionSummaryMessageComponent } from "./components/messages/compaction-summary-message.ts";
-import { CustomMessageComponent } from "./components/messages/custom-message.ts";
-import { SkillInvocationMessageComponent } from "./components/messages/skill-invocation-message.ts";
-import { UserMessageComponent } from "./components/messages/user-message.ts";
-import { StatusLineComponent } from "./components/status-line/index.ts";
-import { ToolExecutionComponent } from "./components/tool-execution.ts";
-import { CountdownTimer } from "./components/widgets/countdown-timer.ts";
-import { DynamicBorder } from "./components/widgets/dynamic-border.ts";
-import { ExpandableText } from "./components/widgets/expandable-text.ts";
-import { AccountAuthController } from "./controllers/account-auth-controller.ts";
-import { CommandController } from "./controllers/command-controller.ts";
-import { ExtensionUIController } from "./controllers/extension-ui-controller.ts";
-import { KeyHandlerController } from "./controllers/key-handler-controller.ts";
-import { ResourceDisplayController } from "./controllers/resource-display-controller.ts";
-import { SelectorController } from "./controllers/selector-controller.ts";
+} from "#coding-agent/theme/theme";
+import { keyDisplayText, keyHint, keyText, rawKeyHint } from "#coding-agent/ui/rendering/keybinding-hints";
+import { parseGitUrl } from "#coding-agent/utils/fs/git";
+import { killTrackedDetachedChildren } from "#coding-agent/utils/system/shell";
+import { ensureTool } from "#coding-agent/utils/system/tool-installer";
 
-export { isApiKeyAccountProvider } from "./controllers/account-auth-controller.ts";
+export { isApiKeyAccountProvider } from "#coding-agent/modes/interactive/controllers/account-auth-controller";
 
 /** Interface for components that can be expanded/collapsed */
 interface Expandable {

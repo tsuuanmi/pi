@@ -2,8 +2,8 @@
  * System prompt construction and project context loading
  */
 
-import { getDocsPath, getReadmePath } from "../config/config.ts";
-import { formatSkillsForPrompt, type Skill } from "./skills.ts";
+import { getDocsPath, getReadmePath } from "#coding-agent/core/config/config";
+import { formatSkillsForPrompt, type Skill } from "#coding-agent/core/skills/skills";
 
 export interface BuildSystemPromptOptions {
 	/** Custom system prompt (replaces default). */

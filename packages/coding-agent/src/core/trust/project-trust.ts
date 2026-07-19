@@ -1,13 +1,13 @@
-import type { LoadExtensionsResult, ProjectTrustContext } from "../../api/types.ts";
-import { CONFIG_DIR_NAME } from "../config/config.ts";
-import { emitProjectTrustEvent } from "../extensions/runner.ts";
-import type { DefaultProjectTrust } from "../settings/settings-manager.ts";
+import type { LoadExtensionsResult, ProjectTrustContext } from "#coding-agent/api/types";
+import { CONFIG_DIR_NAME } from "#coding-agent/core/config/config";
+import { emitProjectTrustEvent } from "#coding-agent/core/extensions/runner";
+import type { DefaultProjectTrust } from "#coding-agent/core/settings/settings-manager";
 import {
 	getProjectTrustOptions,
 	hasTrustRequiringProjectResources,
 	type ProjectTrustOption,
 	type ProjectTrustStore,
-} from "./trust-manager.ts";
+} from "#coding-agent/core/trust/trust-manager";
 
 export type AppMode = "interactive" | "print" | "json" | "rpc";
 

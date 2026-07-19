@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { getDocsPath } from "../config/config.ts";
+import { getDocsPath } from "#coding-agent/core/config/config";
 
 const UNKNOWN_PROVIDER = "unknown";
 

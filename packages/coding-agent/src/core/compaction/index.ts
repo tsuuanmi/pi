@@ -2,6 +2,6 @@
  * Compaction and summarization utilities.
  */
 
-export * from "./branch-summarization.ts";
-export * from "./message-utils.ts";
-export * from "./session-compaction.ts";
+export * from "#coding-agent/core/compaction/branch-summarization";
+export * from "#coding-agent/core/compaction/message-utils";
+export * from "#coding-agent/core/compaction/session-compaction";

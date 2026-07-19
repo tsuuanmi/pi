@@ -1,4 +1,4 @@
-import type { ServerConfig } from "./types.ts";
+import type { ServerConfig } from "#lsp/runtime/types";
 
 export const DEFAULT_LSP_SERVERS: Record<string, ServerConfig> = {
 	"typescript-language-server": {

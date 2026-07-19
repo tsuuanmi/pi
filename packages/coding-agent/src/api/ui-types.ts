@@ -7,9 +7,9 @@ import type {
 	OverlayOptions,
 	TUI,
 } from "@tsuuanmi/pi-tui";
-import type { KeybindingsManager } from "../core/settings/keybindings.ts";
-import type { ReadonlyFooterDataProvider } from "../core/usage/footer-data-provider.ts";
-import type { Theme } from "../theme/theme.ts";
+import type { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import type { ReadonlyFooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+import type { Theme } from "#coding-agent/theme/theme";
 
 // ============================================================================
 // UI Context

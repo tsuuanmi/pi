@@ -28,10 +28,24 @@ import type {
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi-ai";
 import { cleanupSessionResources, isContextOverflow, resetApiProviders, streamSimple } from "@tsuuanmi/pi-ai";
-import { sleep } from "../../utils/system/sleep.ts";
-import { ApiUsageLogger } from "../api-usage/api-usage-logger.ts";
-import { apiUsageLogPath } from "../api-usage/path.ts";
-import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "../auth/auth-guidance.ts";
+import type { AgentSessionContext } from "#coding-agent/core/agent-session/agent-session-context";
+import {
+	cycleModel as modelControlCycleModel,
+	cycleThinkingLevel as modelControlCycleThinkingLevel,
+	getAvailableThinkingLevels as modelControlGetAvailableThinkingLevels,
+	setModel as modelControlSetModel,
+	setThinkingLevel as modelControlSetThinkingLevel,
+	supportsThinking as modelControlSupportsThinking,
+} from "#coding-agent/core/agent-session/model-control";
+import { expandSkillCommand } from "#coding-agent/core/agent-session/skill-expansion";
+import { computeContextUsage, computeSessionStats } from "#coding-agent/core/agent-session/stats-export";
+import {
+	getUserMessagesForForking as treeNavGetUserMessagesForForking,
+	navigateTree as treeNavNavigateTree,
+} from "#coding-agent/core/agent-session/tree-navigation";
+import { ApiUsageLogger } from "#coding-agent/core/api-usage/api-usage-logger";
+import { apiUsageLogPath } from "#coding-agent/core/api-usage/path";
+import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#coding-agent/core/auth/auth-guidance";
 import {
 	type CompactionResult,
 	calculateContextTokens,
@@ -39,8 +53,8 @@ import {
 	estimateContextTokens,
 	prepareCompaction,
 	shouldCompact,
-} from "../compaction/index.ts";
-import { type BashResult, executeBashWithOperations } from "../exec/bash-executor.ts";
+} from "#coding-agent/core/compaction/index";
+import { type BashResult, executeBashWithOperations } from "#coding-agent/core/exec/bash-executor";
 import {
 	type ContextUsage,
 	type ExtensionCommandContextActions,
@@ -64,36 +78,26 @@ import {
 	type TurnEndEvent,
 	type TurnStartEvent,
 	wrapRegisteredTools,
-} from "../extensions/index.ts";
-import { emitSessionShutdownEvent } from "../extensions/runner.ts";
-import type { ModelRegistry } from "../model/model-registry.ts";
-import { createSyntheticSourceInfo, type SourceInfo } from "../resources/source-info.ts";
-import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "../session/session-manager.ts";
-import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "../session/session-manager.ts";
-import type { SettingsManager } from "../settings/settings-manager.ts";
-import { expandPromptTemplate, type PromptTemplate } from "../skills/prompt-templates.ts";
-import type { ResourceExtensionPaths, ResourceLoader } from "../skills/resource-loader.ts";
-import type { SlashCommandInfo } from "../skills/slash-commands.ts";
-import { type BuildSystemPromptOptions, buildSystemPrompt } from "../skills/system-prompt.ts";
-import type { SubagentManager } from "../subagents/subagents.ts";
-import { type BashOperations, createLocalBashOperations } from "../tools/bash.ts";
-import { createAllToolDefinitions } from "../tools/index.ts";
-import { createToolDefinitionFromAgentTool } from "../tools/tool-definition-wrapper.ts";
-import type { AgentSessionContext } from "./agent-session-context.ts";
+} from "#coding-agent/core/extensions/index";
+import { emitSessionShutdownEvent } from "#coding-agent/core/extensions/runner";
+import type { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { createSyntheticSourceInfo, type SourceInfo } from "#coding-agent/core/resources/source-info";
+import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "#coding-agent/core/session/session-manager";
 import {
-	cycleModel as modelControlCycleModel,
-	cycleThinkingLevel as modelControlCycleThinkingLevel,
-	getAvailableThinkingLevels as modelControlGetAvailableThinkingLevels,
-	setModel as modelControlSetModel,
-	setThinkingLevel as modelControlSetThinkingLevel,
-	supportsThinking as modelControlSupportsThinking,
-} from "./model-control.ts";
-import { expandSkillCommand } from "./skill-expansion.ts";
-import { computeContextUsage, computeSessionStats } from "./stats-export.ts";
-import {
-	getUserMessagesForForking as treeNavGetUserMessagesForForking,
-	navigateTree as treeNavNavigateTree,
-} from "./tree-navigation.ts";
+	CURRENT_SESSION_VERSION,
+	getLatestCompactionEntry,
+	type SessionHeader,
+} from "#coding-agent/core/session/session-manager";
+import type { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { expandPromptTemplate, type PromptTemplate } from "#coding-agent/core/skills/prompt-templates";
+import type { ResourceExtensionPaths, ResourceLoader } from "#coding-agent/core/skills/resource-loader";
+import type { SlashCommandInfo } from "#coding-agent/core/skills/slash-commands";
+import { type BuildSystemPromptOptions, buildSystemPrompt } from "#coding-agent/core/skills/system-prompt";
+import type { SubagentManager } from "#coding-agent/core/subagents/subagents";
+import { type BashOperations, createLocalBashOperations } from "#coding-agent/core/tools/bash";
+import { createAllToolDefinitions } from "#coding-agent/core/tools/index";
+import { createToolDefinitionFromAgentTool } from "#coding-agent/core/tools/tool-definition-wrapper";
+import { sleep } from "#coding-agent/utils/system/sleep";
 
 // ============================================================================
 // Skill Block Parsing

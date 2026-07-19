@@ -2,20 +2,24 @@ import { join } from "node:path";
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Model } from "@tsuuanmi/pi-ai";
-import { AuthStorage } from "../auth/auth-storage.ts";
-import { getAgentDir } from "../config/config.ts";
-import type { SessionStartEvent, ToolDefinition } from "../extensions/index.ts";
-import { ModelRegistry } from "../model/model-registry.ts";
-import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "../sdk/sdk.ts";
-import type { SessionManager } from "../session/session-manager.ts";
-import { SettingsManager } from "../settings/settings-manager.ts";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { getAgentDir } from "#coding-agent/core/config/config";
+import type { SessionStartEvent, ToolDefinition } from "#coding-agent/core/extensions/index";
+import { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import {
+	type CreateAgentSessionOptions,
+	type CreateAgentSessionResult,
+	createAgentSession,
+} from "#coding-agent/core/sdk/sdk";
+import type { SessionManager } from "#coding-agent/core/session/session-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
 import {
 	DefaultResourceLoader,
 	type DefaultResourceLoaderOptions,
 	type ResourceLoader,
 	type ResourceLoaderReloadOptions,
-} from "../skills/resource-loader.ts";
-import { SubagentManager } from "../subagents/subagents.ts";
+} from "#coding-agent/core/skills/resource-loader";
+import { SubagentManager } from "#coding-agent/core/subagents/subagents";
 
 /**
  * Non-fatal issues collected while creating services or sessions.

@@ -12,17 +12,17 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { AgentSession } from "../../../src/core/agent-session/agent-session.ts";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
 import {
 	type AgentSessionRuntime,
 	type CreateAgentSessionRuntimeFactory,
 	createAgentSessionFromServices,
 	createAgentSessionRuntime,
 	createAgentSessionServices,
-} from "../../../src/core/agent-session/agent-session-runtime.ts";
-import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
-import { API_KEY } from "../../test-utils.ts";
+} from "#coding-agent/core/agent-session/agent-session-runtime";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { API_KEY } from "#coding-agent-test/test-utils";
 
 describe.skipIf(!API_KEY)("AgentSession forking", () => {
 	let session: AgentSession;

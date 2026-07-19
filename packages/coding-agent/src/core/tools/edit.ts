@@ -4,9 +4,7 @@ import { Box, Container, Spacer, Text } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition } from "../../api/types.ts";
-import type { Theme } from "../../theme/theme.ts";
-import { renderDiff } from "../../ui/rendering/diff.ts";
+import type { ToolDefinition } from "#coding-agent/api/types";
 import {
 	applyEditsToNormalizedContent,
 	computeEditsDiff,
@@ -19,10 +17,12 @@ import {
 	normalizeToLF,
 	restoreLineEndings,
 	stripBom,
-} from "./edit-diff.ts";
-import { resolveToCwd } from "./path-utils.ts";
-import { renderToolPath, str } from "./render-utils.ts";
-import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
+} from "#coding-agent/core/tools/edit-diff";
+import { resolveToCwd } from "#coding-agent/core/tools/path-utils";
+import { renderToolPath, str } from "#coding-agent/core/tools/render-utils";
+import { wrapToolDefinition } from "#coding-agent/core/tools/tool-definition-wrapper";
+import type { Theme } from "#coding-agent/theme/theme";
+import { renderDiff } from "#coding-agent/ui/rendering/diff";
 
 type EditPreview = EditDiffResult | EditDiffError;
 

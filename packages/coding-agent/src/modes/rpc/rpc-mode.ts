@@ -12,22 +12,20 @@
  */
 
 import * as crypto from "node:crypto";
-import type { AgentSessionRuntime } from "../../core/agent-session/agent-session-runtime.ts";
+import type { AgentSessionRuntime } from "#coding-agent/core/agent-session/agent-session-runtime";
 import type {
 	ExtensionUIContext,
 	ExtensionUIDialogOptions,
 	ExtensionWidgetOptions,
 	WorkingIndicatorOptions,
-} from "../../core/extensions/index.ts";
+} from "#coding-agent/core/extensions/index";
 import {
 	flushRawStdout,
 	takeOverStdout,
 	waitForRawStdoutBackpressure,
 	writeRawStdout,
-} from "../../modes/output-guard.ts";
-import { type Theme, theme } from "../../theme/theme.ts";
-import { killTrackedDetachedChildren } from "../../utils/system/shell.ts";
-import { attachJsonlLineReader, serializeJsonLine } from "./jsonl.ts";
+} from "#coding-agent/modes/output-guard";
+import { attachJsonlLineReader, serializeJsonLine } from "#coding-agent/modes/rpc/jsonl";
 import type {
 	RpcCommand,
 	RpcExtensionUIRequest,
@@ -35,7 +33,9 @@ import type {
 	RpcResponse,
 	RpcSessionState,
 	RpcSlashCommand,
-} from "./rpc-types.ts";
+} from "#coding-agent/modes/rpc/rpc-types";
+import { type Theme, theme } from "#coding-agent/theme/theme";
+import { killTrackedDetachedChildren } from "#coding-agent/utils/system/shell";
 
 // Re-export types for consumers
 export type {
@@ -44,7 +44,7 @@ export type {
 	RpcExtensionUIResponse,
 	RpcResponse,
 	RpcSessionState,
-} from "./rpc-types.ts";
+} from "#coding-agent/modes/rpc/rpc-types";
 
 /**
  * Run in RPC mode.

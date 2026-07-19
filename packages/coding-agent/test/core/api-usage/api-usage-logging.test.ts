@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { apiUsageLogPath } from "../../../src/core/api-usage/path.ts";
-import { createHarness } from "../../unit-harness.ts";
+import { apiUsageLogPath } from "#coding-agent/core/api-usage/path";
+import { createHarness } from "#coding-agent-test/unit-harness";
 
 async function waitForFile(path: string): Promise<string> {
 	for (let i = 0; i < 50; i++) {

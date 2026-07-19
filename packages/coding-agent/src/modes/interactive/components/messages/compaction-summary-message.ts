@@ -1,7 +1,7 @@
 import type { CompactionSummaryMessage } from "@tsuuanmi/pi-agent";
 import { Box, Markdown, type MarkdownTheme, Spacer, Text } from "@tsuuanmi/pi-tui";
-import { getMarkdownTheme, theme } from "../../../../theme/theme.ts";
-import { keyText } from "../../../../ui/rendering/keybinding-hints.ts";
+import { getMarkdownTheme, theme } from "#coding-agent/theme/theme";
+import { keyText } from "#coding-agent/ui/rendering/keybinding-hints";
 
 /**
  * Component that renders a compaction message with collapsed/expanded state.

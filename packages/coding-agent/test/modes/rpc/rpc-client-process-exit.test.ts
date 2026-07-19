@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
-import { RpcClient } from "../../../src/modes/rpc/rpc-client.ts";
+import { RpcClient } from "#coding-agent/modes/rpc/rpc-client";
 
 const tempDirs: string[] = [];
 

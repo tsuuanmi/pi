@@ -1,9 +1,9 @@
 import { spawnProcess } from "@tsuuanmi/pi-agent/node";
 import { Markdown, type MarkdownTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
-import type { ExtensionFactory } from "../../api/types.ts";
-import { selectConfig } from "../../cli/config-selector.ts";
-import { createProjectTrustContext } from "../../cli/project-trust.ts";
+import type { ExtensionFactory } from "#coding-agent/api/types";
+import { selectConfig } from "#coding-agent/cli/config-selector";
+import { createProjectTrustContext } from "#coding-agent/cli/project-trust";
 import {
 	APP_NAME,
 	CONFIG_DIR_NAME,
@@ -12,12 +12,12 @@ import {
 	getSelfUpdateUnavailableInstruction,
 	PACKAGE_NAME,
 	type SelfUpdateCommand,
-} from "../config/config.ts";
-import { SettingsManager } from "../settings/settings-manager.ts";
-import { DefaultResourceLoader } from "../skills/resource-loader.ts";
-import { type AppMode, resolveProjectTrusted } from "../trust/project-trust.ts";
-import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../trust/trust-manager.ts";
-import { DefaultPackageManager } from "./package-manager.ts";
+} from "#coding-agent/core/config/config";
+import { DefaultPackageManager } from "#coding-agent/core/package-manager/package-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { DefaultResourceLoader } from "#coding-agent/core/skills/resource-loader";
+import { type AppMode, resolveProjectTrusted } from "#coding-agent/core/trust/project-trust";
+import { hasTrustRequiringProjectResources, ProjectTrustStore } from "#coding-agent/core/trust/trust-manager";
 
 export type PackageCommand = "install" | "remove" | "update" | "list";
 

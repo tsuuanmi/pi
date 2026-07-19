@@ -8,21 +8,21 @@ import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AgentSession } from "../../../src/core/agent-session/agent-session.ts";
-import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
+import { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
 import {
 	createExtensionRuntime,
 	type Extension,
 	type SessionBeforeCompactEvent,
 	type SessionCompactEvent,
 	type SessionEvent,
-} from "../../../src/core/extensions/index.ts";
-import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
-import { createSyntheticSourceInfo } from "../../../src/core/resources/source-info.ts";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
-import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
-import { createCodingTools } from "../../../src/index.ts";
-import { createTestResourceLoader } from "../../test-utils.ts";
+} from "#coding-agent/core/extensions/index";
+import { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { createSyntheticSourceInfo } from "#coding-agent/core/resources/source-info";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { createCodingTools } from "#coding-agent/index";
+import { createTestResourceLoader } from "#coding-agent-test/test-utils";
 
 const API_KEY = process.env.ANTHROPIC_OAUTH_TOKEN || process.env.ANTHROPIC_API_KEY;
 

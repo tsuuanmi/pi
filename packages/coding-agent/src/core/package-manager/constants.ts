@@ -1,5 +1,5 @@
-import type { PackageSource } from "../settings/settings-manager.ts";
-import type { BundledPackageName, ResourceType, TopLevelResourceType } from "./types.ts";
+import type { BundledPackageName, ResourceType, TopLevelResourceType } from "#coding-agent/core/package-manager/types";
+import type { PackageSource } from "#coding-agent/core/settings/settings-manager";
 
 export const NETWORK_TIMEOUT_MS = 10000;
 export const UPDATE_CHECK_CONCURRENCY = 4;

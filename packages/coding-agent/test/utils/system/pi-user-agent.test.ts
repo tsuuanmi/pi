@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPiUserAgent } from "../../../src/utils/system/pi-user-agent.ts";
+import { getPiUserAgent } from "#coding-agent/utils/system/pi-user-agent";
 
 describe("getPiUserAgent", () => {
 	it("formats the user agent expected by pi.dev", () => {

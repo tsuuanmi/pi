@@ -1,18 +1,21 @@
 import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import type {
+	AgentSessionRuntimeDiagnostic,
+	AgentSessionServices,
+} from "#coding-agent/core/agent-session/agent-session-services";
 import type {
 	ProjectTrustContext,
 	ReplacedSessionContext,
 	SessionShutdownEvent,
 	SessionStartEvent,
-} from "../extensions/index.ts";
-import { emitSessionShutdownEvent } from "../extensions/runner.ts";
-import type { CreateAgentSessionResult } from "../sdk/sdk.ts";
-import { assertSessionCwdExists } from "../session/session-cwd.ts";
-import { SessionManager } from "../session/session-manager.ts";
-import type { AgentSession } from "./agent-session.ts";
-import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "./agent-session-services.ts";
+} from "#coding-agent/core/extensions/index";
+import { emitSessionShutdownEvent } from "#coding-agent/core/extensions/runner";
+import type { CreateAgentSessionResult } from "#coding-agent/core/sdk/sdk";
+import { assertSessionCwdExists } from "#coding-agent/core/session/session-cwd";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
 
 /**
  * Result returned by runtime creation.
@@ -430,4 +433,4 @@ export {
 	type CreateAgentSessionServicesOptions,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
-} from "./agent-session-services.ts";
+} from "#coding-agent/core/agent-session/agent-session-services";

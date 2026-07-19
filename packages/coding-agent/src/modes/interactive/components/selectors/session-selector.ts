@@ -14,12 +14,17 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import type { SessionInfo, SessionListProgress } from "../../../../core/session/session-manager.ts";
-import { KeybindingsManager } from "../../../../core/settings/keybindings.ts";
-import { theme } from "../../../../theme/theme.ts";
-import { keyHint, keyText } from "../../../../ui/rendering/keybinding-hints.ts";
-import { DynamicBorder } from "../widgets/dynamic-border.ts";
-import { filterAndSortSessions, hasSessionName, type NameFilter, type SortMode } from "./session-selector-search.ts";
+import type { SessionInfo, SessionListProgress } from "#coding-agent/core/session/session-manager";
+import { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import {
+	filterAndSortSessions,
+	hasSessionName,
+	type NameFilter,
+	type SortMode,
+} from "#coding-agent/modes/interactive/components/selectors/session-selector-search";
+import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import { theme } from "#coding-agent/theme/theme";
+import { keyHint, keyText } from "#coding-agent/ui/rendering/keybinding-hints";
 
 type SessionScope = "current" | "all";
 

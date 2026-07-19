@@ -5,7 +5,7 @@ import {
 	findInitialModel,
 	parseModelPattern,
 	resolveCliModel,
-} from "../../../src/core/model/model-resolver.ts";
+} from "#coding-agent/core/model/model-resolver";
 
 // Mock models for testing
 const mockModels: Model<"anthropic-messages">[] = [

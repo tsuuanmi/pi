@@ -1,7 +1,7 @@
-import { collectEntriesForBranchSummary, generateBranchSummary } from "../compaction/index.ts";
-import type { SessionBeforeTreeResult, TreePreparation } from "../extensions/index.ts";
-import type { BranchSummaryEntry } from "../session/session-manager.ts";
-import type { AgentSessionContext } from "./agent-session-context.ts";
+import type { AgentSessionContext } from "#coding-agent/core/agent-session/agent-session-context";
+import { collectEntriesForBranchSummary, generateBranchSummary } from "#coding-agent/core/compaction/index";
+import type { SessionBeforeTreeResult, TreePreparation } from "#coding-agent/core/extensions/index";
+import type { BranchSummaryEntry } from "#coding-agent/core/session/session-manager";
 
 /**
  * Phase-1 TreeNavigation subsystem (stateless module functions on

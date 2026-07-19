@@ -32,15 +32,15 @@ import type {
 	ProviderConfig,
 	RegisteredCommand,
 	ToolDefinition,
-} from "../../api/types.ts";
+} from "#coding-agent/api/types";
+import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "#coding-agent/core/config/config";
+import { createEventBus, type EventBus } from "#coding-agent/core/events/event-bus";
+import type { ExecOptions } from "#coding-agent/core/exec/exec";
+import { execCommand } from "#coding-agent/core/exec/exec";
+import { createSyntheticSourceInfo } from "#coding-agent/core/resources/source-info";
 // NOTE: This import works because loader.ts exports are NOT re-exported from index.ts,
 // avoiding a circular dependency. Extensions can import from @tsuuanmi/pi-coding-agent.
-import * as _bundledPiCodingAgent from "../../index.ts";
-import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "../config/config.ts";
-import { createEventBus, type EventBus } from "../events/event-bus.ts";
-import type { ExecOptions } from "../exec/exec.ts";
-import { execCommand } from "../exec/exec.ts";
-import { createSyntheticSourceInfo } from "../resources/source-info.ts";
+import * as _bundledPiCodingAgent from "#coding-agent/index";
 
 /** Modules available to extensions via virtualModules (for compiled Bun binary) */
 const VIRTUAL_MODULES: Record<string, unknown> = {
@@ -213,7 +213,7 @@ function createExtensionAPI(
 			}
 		},
 
-		registerMcpServerInfoProvider(provider: () => import("../../api/types.ts").MCPServerInfo[]): () => void {
+		registerMcpServerInfoProvider(provider: () => import("#coding-agent/api/types").MCPServerInfo[]): () => void {
 			runtime.assertActive();
 			runtime.mcpServerInfoProviders.add(provider);
 			return () => runtime.mcpServerInfoProviders.delete(provider);
@@ -237,7 +237,7 @@ function createExtensionAPI(
 			shortcut: KeyId,
 			options: {
 				description?: string;
-				handler: (ctx: import("../../api/types.ts").ExtensionContext) => Promise<void> | void;
+				handler: (ctx: import("#coding-agent/api/types").ExtensionContext) => Promise<void> | void;
 			},
 		): void {
 			runtime.assertActive();

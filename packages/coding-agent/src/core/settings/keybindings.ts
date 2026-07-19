@@ -8,7 +8,7 @@ import {
 } from "@tsuuanmi/pi-tui";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
-import { getAgentDir } from "../config/config.ts";
+import { getAgentDir } from "#coding-agent/core/config/config";
 
 export interface AppKeybindings {
 	"app.interrupt": true;

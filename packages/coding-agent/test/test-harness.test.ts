@@ -7,7 +7,7 @@ import type { AgentTool } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
-import { createHarness, createHarnessWithExtensions, type Harness } from "./unit-harness.ts";
+import { createHarness, createHarnessWithExtensions, type Harness } from "#coding-agent-test/unit-harness";
 
 describe("test harness", () => {
 	let harness: Harness;

@@ -8,10 +8,10 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { Container, Editor, type Focusable, getKeybindings, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
-import type { KeybindingsManager } from "../../../core/settings/keybindings.ts";
-import { getEditorTheme, theme } from "../../../theme/theme.ts";
-import { keyHint } from "../../../ui/rendering/keybinding-hints.ts";
-import { DynamicBorder } from "./widgets/dynamic-border.ts";
+import type { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import { getEditorTheme, theme } from "#coding-agent/theme/theme";
+import { keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 
 export class ExtensionEditorComponent extends Container implements Focusable {
 	private editor: Editor;

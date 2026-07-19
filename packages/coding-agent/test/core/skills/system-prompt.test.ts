@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { buildSystemPrompt } from "../../../src/core/skills/system-prompt.ts";
+import { buildSystemPrompt } from "#coding-agent/core/skills/system-prompt";
 
 describe("buildSystemPrompt", () => {
 	describe("empty tools", () => {

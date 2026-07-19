@@ -18,8 +18,8 @@ import { getOAuthProvider, getOAuthProviders } from "@tsuuanmi/pi-ai/oauth";
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
-import { getAgentDir } from "../config/config.ts";
-import { resolveConfigValue } from "../config/resolve-config-value.ts";
+import { getAgentDir } from "#coding-agent/core/config/config";
+import { resolveConfigValue } from "#coding-agent/core/config/resolve-config-value";
 
 export type ApiKeyCredential = {
 	type: "api_key";

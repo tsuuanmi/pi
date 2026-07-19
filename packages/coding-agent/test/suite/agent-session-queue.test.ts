@@ -3,7 +3,13 @@ import { fauxAssistantMessage, fauxToolCall } from "@tsuuanmi/pi-ai";
 import type { ExtensionAPI } from "@tsuuanmi/pi-coding-agent";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
-import { createHarness, getAssistantTexts, getMessageText, getUserTexts, type Harness } from "./harness.ts";
+import {
+	createHarness,
+	getAssistantTexts,
+	getMessageText,
+	getUserTexts,
+	type Harness,
+} from "#coding-agent-test/suite/harness";
 
 async function createWaitingHarness(
 	options: {

@@ -12,14 +12,14 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { getCwdRelativePath } from "@tsuuanmi/pi-agent/node";
 import { type Container, Spacer, Text } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "../../../core/agent-session/agent-session.ts";
-import type { ExtensionRunner } from "../../../core/extensions/index.ts";
-import type { SourceInfo } from "../../../core/resources/source-info.ts";
-import type { ResourceDiagnostic } from "../../../core/skills/resource-loader.ts";
-import { BUILTIN_SLASH_COMMANDS } from "../../../core/skills/slash-commands.ts";
-import { type ThemeColor, theme } from "../../../theme/theme.ts";
-import { parseGitUrl } from "../../../utils/fs/git.ts";
-import { ExpandableText } from "../components/widgets/expandable-text.ts";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import type { ExtensionRunner } from "#coding-agent/core/extensions/index";
+import type { SourceInfo } from "#coding-agent/core/resources/source-info";
+import type { ResourceDiagnostic } from "#coding-agent/core/skills/resource-loader";
+import { BUILTIN_SLASH_COMMANDS } from "#coding-agent/core/skills/slash-commands";
+import { ExpandableText } from "#coding-agent/modes/interactive/components/widgets/expandable-text";
+import { type ThemeColor, theme } from "#coding-agent/theme/theme";
+import { parseGitUrl } from "#coding-agent/utils/fs/git";
 
 export class ResourceDisplayController {
 	private readonly chatContainer: Container;

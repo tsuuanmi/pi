@@ -2,14 +2,14 @@ import { join, resolve } from "node:path";
 import { Text, type TUI } from "@tsuuanmi/pi-tui";
 import { Type } from "typebox";
 import { beforeAll, describe, expect, test } from "vitest";
-import type { ToolDefinition } from "../../src/api/types.ts";
-import { getReadmePath } from "../../src/core/config/config.ts";
-import { type BashOperations, createBashToolDefinition } from "../../src/core/tools/bash.ts";
-import { createReadTool, createReadToolDefinition } from "../../src/core/tools/read.ts";
-import { createWriteToolDefinition } from "../../src/core/tools/write.ts";
-import { ToolExecutionComponent } from "../../src/modes/interactive/components/tool-execution.ts";
-import { initTheme } from "../../src/theme/theme.ts";
-import { stripAnsi } from "../../src/utils/terminal/ansi.ts";
+import type { ToolDefinition } from "#coding-agent/api/types";
+import { getReadmePath } from "#coding-agent/core/config/config";
+import { type BashOperations, createBashToolDefinition } from "#coding-agent/core/tools/bash";
+import { createReadTool, createReadToolDefinition } from "#coding-agent/core/tools/read";
+import { createWriteToolDefinition } from "#coding-agent/core/tools/write";
+import { ToolExecutionComponent } from "#coding-agent/modes/interactive/components/tool-execution";
+import { initTheme } from "#coding-agent/theme/theme";
+import { stripAnsi } from "#coding-agent/utils/terminal/ansi";
 
 function createBaseToolDefinition(name = "custom_tool"): ToolDefinition {
 	return {

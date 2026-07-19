@@ -23,7 +23,7 @@ import type {
 	MCPServerStatus,
 	MCPTransport,
 	MCPTransportEvent,
-} from "../types.ts";
+} from "#mcp/runtime/types";
 
 export interface HttpTransportOptions {
 	/** Server URL (HTTP or HTTPS). */

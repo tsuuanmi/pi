@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stripAnsi } from "../../../src/utils/terminal/ansi.ts";
+import { stripAnsi } from "#coding-agent/utils/terminal/ansi";
 
 function referenceAnsiRegex(): RegExp {
 	const ST = "(?:\\u0007|\\u001B\\u005C|\\u009C)";

@@ -19,6 +19,24 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
+		},
+		"./api/types": {
+			"types": "./dist/api/types.d.ts",
+			"import": "./dist/api/types.js"
+		},
+		"./core/config/config": {
+			"types": "./dist/core/config/config.d.ts",
+			"import": "./dist/core/config/config.js"
+		}
+	},
+	"imports": {
+		"#coding-agent/*": {
+			"types": "./dist/*.d.ts",
+			"import": "./dist/*.js"
+		},
+		"#coding-agent-test/*": {
+			"types": "./test/*.ts",
+			"import": "./test/*.ts"
 		}
 	},
 	"files": [

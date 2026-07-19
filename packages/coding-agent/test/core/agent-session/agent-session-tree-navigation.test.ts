@@ -10,7 +10,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { API_KEY, createTestSession, type TestSessionContext } from "../../test-utils.ts";
+import { API_KEY, createTestSession, type TestSessionContext } from "#coding-agent-test/test-utils";
 
 describe.skipIf(!API_KEY)("AgentSession tree navigation e2e", () => {
 	let ctx: TestSessionContext;

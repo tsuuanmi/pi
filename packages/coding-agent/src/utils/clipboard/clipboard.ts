@@ -1,6 +1,6 @@
 import { execSync, spawn } from "child_process";
 import { platform } from "os";
-import { clipboard } from "./clipboard-native.ts";
+import { clipboard } from "#coding-agent/utils/clipboard/clipboard-native";
 
 function isWaylandSession(env: NodeJS.ProcessEnv = process.env): boolean {
 	return Boolean(env.WAYLAND_DISPLAY) || env.XDG_SESSION_TYPE === "wayland";

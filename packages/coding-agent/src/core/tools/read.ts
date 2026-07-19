@@ -6,14 +6,20 @@ import { Text } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "../../api/types.ts";
-import { getLanguageFromPath, highlightCode, type Theme } from "../../theme/theme.ts";
-import { keyHint, keyText } from "../../ui/rendering/keybinding-hints.ts";
-import { getReadmePath } from "../config/config.ts";
-import { resolveReadPathAsync, resolveToCwd } from "./path-utils.ts";
-import { getTextOutput, renderToolPath, replaceTabs, str } from "./render-utils.ts";
-import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
-import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult, truncateHead } from "./truncate.ts";
+import type { ToolDefinition, ToolRenderResultOptions } from "#coding-agent/api/types";
+import { getReadmePath } from "#coding-agent/core/config/config";
+import { resolveReadPathAsync, resolveToCwd } from "#coding-agent/core/tools/path-utils";
+import { getTextOutput, renderToolPath, replaceTabs, str } from "#coding-agent/core/tools/render-utils";
+import { wrapToolDefinition } from "#coding-agent/core/tools/tool-definition-wrapper";
+import {
+	DEFAULT_MAX_BYTES,
+	DEFAULT_MAX_LINES,
+	formatSize,
+	type TruncationResult,
+	truncateHead,
+} from "#coding-agent/core/tools/truncate";
+import { getLanguageFromPath, highlightCode, type Theme } from "#coding-agent/theme/theme";
+import { keyHint, keyText } from "#coding-agent/ui/rendering/keybinding-hints";
 
 const readSchema = Type.Object({
 	path: Type.String({ description: "Path to the file to read (relative or absolute)" }),

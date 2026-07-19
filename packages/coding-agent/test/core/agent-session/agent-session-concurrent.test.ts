@@ -15,13 +15,13 @@ import {
 } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AgentSession } from "../../../src/core/agent-session/agent-session.ts";
-import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
-import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
-import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
-import type { BuildSystemPromptOptions } from "../../../src/core/skills/system-prompt.ts";
-import { createTestExtensionsResult, createTestResourceLoader } from "../../test-utils.ts";
+import { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import type { BuildSystemPromptOptions } from "#coding-agent/core/skills/system-prompt";
+import { createTestExtensionsResult, createTestResourceLoader } from "#coding-agent-test/test-utils";
 
 // Mock stream that mimics AssistantMessageEventStream
 class MockAssistantStream extends EventStream<AssistantMessageEvent, AssistantMessage> {

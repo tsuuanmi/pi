@@ -1,14 +1,14 @@
 import { basename, extname } from "node:path";
-import type { ExtensionFactory } from "../api/types.ts";
-import { getAgentDir } from "../core/config/config.ts";
-import { DefaultPackageManager, type ResolvedResource } from "../core/package-manager/package-manager.ts";
-import { SettingsManager } from "../core/settings/settings-manager.ts";
+import type { ExtensionFactory } from "#coding-agent/api/types";
+import { getAgentDir } from "#coding-agent/core/config/config";
+import { DefaultPackageManager, type ResolvedResource } from "#coding-agent/core/package-manager/package-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
 
 // Register the agent-layer SubagentManagerFactory at module load so the detached
 // RuntimeOwner (which loads pi-coding-agent via the pi entry) can look it up and
 // route pi workflow subagents verbs to a real SubagentManager. Side-effect import
 // only; pi-workflows never imports this.
-import "../core/subagents/subagent-manager-factory-registration.ts";
+import "#coding-agent/core/subagents/subagent-manager-factory-registration";
 
 export interface PackageCommandContext {
 	cwd: string;

@@ -1,5 +1,5 @@
-import type { ExtensionAPI } from "../../../api/types.ts";
-import { createLspToolDefinition } from "../tools/lsp-tool.ts";
+import type { ExtensionAPI } from "@tsuuanmi/pi-coding-agent/api/types";
+import { createLspToolDefinition } from "#lsp/tools/lsp-tool";
 
 export default function lspExtension(pi: ExtensionAPI): void {
 	pi.registerTool(createLspToolDefinition(process.cwd()));

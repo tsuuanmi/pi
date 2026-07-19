@@ -6,20 +6,20 @@ import { waitForChildProcess } from "@tsuuanmi/pi-agent/node";
 import { type Component, Container, Text, truncateToWidth } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "../../api/types.ts";
-import { theme } from "../../theme/theme.ts";
-import { keyHint } from "../../ui/rendering/keybinding-hints.ts";
-import { truncateToVisualLines } from "../../ui/rendering/visual-truncate.ts";
+import type { ToolDefinition, ToolRenderResultOptions } from "#coding-agent/api/types";
+import { OutputAccumulator } from "#coding-agent/core/tools/output-accumulator";
+import { getTextOutput, invalidArgText, str } from "#coding-agent/core/tools/render-utils";
+import { wrapToolDefinition } from "#coding-agent/core/tools/tool-definition-wrapper";
+import { theme } from "#coding-agent/theme/theme";
+import { keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
+import { truncateToVisualLines } from "#coding-agent/ui/rendering/visual-truncate";
 import {
 	getShellConfig,
 	getShellEnv,
 	killProcessTree,
 	trackDetachedChildPid,
 	untrackDetachedChildPid,
-} from "../../utils/system/shell.ts";
-import { OutputAccumulator } from "./output-accumulator.ts";
-import { getTextOutput, invalidArgText, str } from "./render-utils.ts";
-import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
+} from "#coding-agent/utils/system/shell";
 
 const bashSchema = Type.Object({
 	command: Type.String({ description: "Bash command to execute" }),

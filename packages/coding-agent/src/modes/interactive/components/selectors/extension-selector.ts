@@ -4,10 +4,10 @@
  */
 
 import { Container, getKeybindings, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
-import { theme } from "../../../../theme/theme.ts";
-import { keyHint, rawKeyHint } from "../../../../ui/rendering/keybinding-hints.ts";
-import { CountdownTimer } from "../widgets/countdown-timer.ts";
-import { DynamicBorder } from "../widgets/dynamic-border.ts";
+import { CountdownTimer } from "#coding-agent/modes/interactive/components/widgets/countdown-timer";
+import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import { theme } from "#coding-agent/theme/theme";
+import { keyHint, rawKeyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 
 export interface ExtensionSelectorOptions {
 	tui?: TUI;

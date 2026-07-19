@@ -7,9 +7,9 @@
  */
 
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
-import type { AgentSessionRuntime } from "../core/agent-session/agent-session-runtime.ts";
-import { flushRawStdout, writeRawStdout } from "../modes/output-guard.ts";
-import { killTrackedDetachedChildren } from "../utils/system/shell.ts";
+import type { AgentSessionRuntime } from "#coding-agent/core/agent-session/agent-session-runtime";
+import { flushRawStdout, writeRawStdout } from "#coding-agent/modes/output-guard";
+import { killTrackedDetachedChildren } from "#coding-agent/utils/system/shell";
 
 /**
  * Options for print mode.

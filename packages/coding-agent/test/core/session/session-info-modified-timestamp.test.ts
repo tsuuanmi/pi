@@ -3,9 +3,9 @@ import { stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { SessionHeader } from "../../../src/core/session/session-manager.ts";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
-import { initTheme } from "../../../src/theme/theme.ts";
+import type { SessionHeader } from "#coding-agent/core/session/session-manager";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { initTheme } from "#coding-agent/theme/theme";
 
 function createSessionFile(path: string): void {
 	const header: SessionHeader = {

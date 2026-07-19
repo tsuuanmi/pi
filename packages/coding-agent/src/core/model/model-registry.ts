@@ -25,9 +25,8 @@ import { join } from "path";
 import { type Static, Type } from "typebox";
 import { Compile } from "typebox/compile";
 import type { TLocalizedValidationError } from "typebox/error";
-import { stripJsonComments } from "../../utils/fs/json.ts";
-import type { AuthStatus, AuthStorage } from "../auth/auth-storage.ts";
-import { getAgentDir } from "../config/config.ts";
+import type { AuthStatus, AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { getAgentDir } from "#coding-agent/core/config/config";
 import {
 	clearConfigValueCache,
 	getConfigValueEnvVarNames,
@@ -36,8 +35,9 @@ import {
 	resolveConfigValueOrThrow,
 	resolveConfigValueUncached,
 	resolveHeadersOrThrow,
-} from "../config/resolve-config-value.ts";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "./provider-display-names.ts";
+} from "#coding-agent/core/config/resolve-config-value";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/core/model/provider-display-names";
+import { stripJsonComments } from "#coding-agent/utils/fs/json";
 
 // Schema for thinking level support and provider-specific values
 const ThinkingLevelMapValueSchema = Type.Union([Type.String(), Type.Null()]);

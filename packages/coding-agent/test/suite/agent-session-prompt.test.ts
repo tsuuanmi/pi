@@ -5,11 +5,11 @@ import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { fauxAssistantMessage, fauxToolCall, type Model } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
-import type { InputEvent } from "../../src/core/extensions/index.ts";
-import { createSyntheticSourceInfo } from "../../src/core/resources/source-info.ts";
-import type { PromptTemplate } from "../../src/core/skills/prompt-templates.ts";
-import { createTestResourceLoader } from "../test-utils.ts";
-import { createHarness, getMessageText, type Harness } from "./harness.ts";
+import type { InputEvent } from "#coding-agent/core/extensions/index";
+import { createSyntheticSourceInfo } from "#coding-agent/core/resources/source-info";
+import type { PromptTemplate } from "#coding-agent/core/skills/prompt-templates";
+import { createHarness, getMessageText, type Harness } from "#coding-agent-test/suite/harness";
+import { createTestResourceLoader } from "#coding-agent-test/test-utils";
 
 describe("AgentSession prompt characterization", () => {
 	const harnesses: Harness[] = [];

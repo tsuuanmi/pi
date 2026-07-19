@@ -9,48 +9,48 @@ import { createInterface } from "node:readline";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { modelsAreEqual } from "@tsuuanmi/pi-ai";
 import chalk from "chalk";
-import type { ExtensionFactory } from "./api/types.ts";
-import { type Args, type Mode, parseArgs, printHelp } from "./cli/args.ts";
-import { processFileArguments } from "./cli/file-processor.ts";
-import { buildInitialMessage } from "./cli/initial-message.ts";
-import { launchDefaultTmuxIfNeeded } from "./cli/launch-tmux.ts";
-import { listModels } from "./cli/list-models.ts";
-import { dispatchPreSessionPackageCommand } from "./cli/package-command-dispatcher.ts";
-import { createProjectTrustContext } from "./cli/project-trust.ts";
-import { selectSession } from "./cli/session-picker.ts";
-import { showStartupSelector } from "./cli/startup-ui.ts";
+import type { ExtensionFactory } from "#coding-agent/api/types";
+import { type Args, type Mode, parseArgs, printHelp } from "#coding-agent/cli/args";
+import { processFileArguments } from "#coding-agent/cli/file-processor";
+import { buildInitialMessage } from "#coding-agent/cli/initial-message";
+import { launchDefaultTmuxIfNeeded } from "#coding-agent/cli/launch-tmux";
+import { listModels } from "#coding-agent/cli/list-models";
+import { dispatchPreSessionPackageCommand } from "#coding-agent/cli/package-command-dispatcher";
+import { createProjectTrustContext } from "#coding-agent/cli/project-trust";
+import { selectSession } from "#coding-agent/cli/session-picker";
+import { showStartupSelector } from "#coding-agent/cli/startup-ui";
 import {
 	type CreateAgentSessionRuntimeFactory,
 	createAgentSessionRuntime,
-} from "./core/agent-session/agent-session-runtime.ts";
+} from "#coding-agent/core/agent-session/agent-session-runtime";
 import {
 	type AgentSessionRuntimeDiagnostic,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
-} from "./core/agent-session/agent-session-services.ts";
-import { formatNoModelsAvailableMessage } from "./core/auth/auth-guidance.ts";
-import { AuthStorage } from "./core/auth/auth-storage.ts";
-import { ENV_SESSION_DIR, expandTildePath, getAgentDir, VERSION } from "./core/config/config.ts";
-import { applyHttpProxySettings, configureHttpDispatcher } from "./core/exec/http-dispatcher.ts";
-import type { ModelRegistry } from "./core/model/model-registry.ts";
-import { resolveCliModel, resolveModelScope, type ScopedModel } from "./core/model/model-resolver.ts";
-import { handleConfigCommand, handlePackageCommand } from "./core/package-manager/package-manager-cli.ts";
-import type { CreateAgentSessionOptions } from "./core/sdk/sdk.ts";
+} from "#coding-agent/core/agent-session/agent-session-services";
+import { formatNoModelsAvailableMessage } from "#coding-agent/core/auth/auth-guidance";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { ENV_SESSION_DIR, expandTildePath, getAgentDir, VERSION } from "#coding-agent/core/config/config";
+import { applyHttpProxySettings, configureHttpDispatcher } from "#coding-agent/core/exec/http-dispatcher";
+import type { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { resolveCliModel, resolveModelScope, type ScopedModel } from "#coding-agent/core/model/model-resolver";
+import { handleConfigCommand, handlePackageCommand } from "#coding-agent/core/package-manager/package-manager-cli";
+import type { CreateAgentSessionOptions } from "#coding-agent/core/sdk/sdk";
 import {
 	formatMissingSessionCwdPrompt,
 	getMissingSessionCwdIssue,
 	MissingSessionCwdError,
 	type SessionCwdIssue,
-} from "./core/session/session-cwd.ts";
-import { SessionManager } from "./core/session/session-manager.ts";
-import { SettingsManager } from "./core/settings/settings-manager.ts";
-import { printTimings, resetTimings, time } from "./core/telemetry/timings.ts";
-import { type AppMode, resolveProjectTrusted } from "./core/trust/project-trust.ts";
-import { hasTrustRequiringProjectResources, ProjectTrustStore } from "./core/trust/trust-manager.ts";
-import { runMigrations, showDeprecationWarnings } from "./migrations.ts";
-import { InteractiveMode, runPrintMode, runRpcMode } from "./modes/index.ts";
-import { restoreStdout, takeOverStdout } from "./modes/output-guard.ts";
-import { initTheme, stopThemeWatcher } from "./theme/theme.ts";
+} from "#coding-agent/core/session/session-cwd";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { printTimings, resetTimings, time } from "#coding-agent/core/telemetry/timings";
+import { type AppMode, resolveProjectTrusted } from "#coding-agent/core/trust/project-trust";
+import { hasTrustRequiringProjectResources, ProjectTrustStore } from "#coding-agent/core/trust/trust-manager";
+import { runMigrations, showDeprecationWarnings } from "#coding-agent/migrations";
+import { InteractiveMode, runPrintMode, runRpcMode } from "#coding-agent/modes/index";
+import { restoreStdout, takeOverStdout } from "#coding-agent/modes/output-guard";
+import { initTheme, stopThemeWatcher } from "#coding-agent/theme/theme";
 
 /**
  * Read all content from piped stdin.

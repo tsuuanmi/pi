@@ -14,7 +14,6 @@ import {
 } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Context, Model, SimpleStreamOptions, Usage } from "@tsuuanmi/pi-ai";
 import { completeSimple } from "@tsuuanmi/pi-ai";
-import { buildSessionContext, type CompactionEntry, type SessionEntry } from "../session/session-manager.ts";
 import {
 	computeFileLists,
 	createFileOps,
@@ -23,7 +22,12 @@ import {
 	formatFileOperations,
 	SUMMARIZATION_SYSTEM_PROMPT,
 	serializeConversation,
-} from "./message-utils.ts";
+} from "#coding-agent/core/compaction/message-utils";
+import {
+	buildSessionContext,
+	type CompactionEntry,
+	type SessionEntry,
+} from "#coding-agent/core/session/session-manager";
 
 // ============================================================================
 // File Operation Tracking

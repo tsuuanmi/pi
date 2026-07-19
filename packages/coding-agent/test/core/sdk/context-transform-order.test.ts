@@ -10,12 +10,12 @@ import {
 	type Model,
 } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
-import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
-import { createAgentSession } from "../../../src/core/sdk/sdk.ts";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
-import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
-import { DefaultResourceLoader } from "../../../src/core/skills/resource-loader.ts";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { createAgentSession } from "#coding-agent/core/sdk/sdk";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { DefaultResourceLoader } from "#coding-agent/core/skills/resource-loader";
 
 function createModel(): Model<Api> {
 	return {

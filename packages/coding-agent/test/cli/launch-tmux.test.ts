@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { parseArgs } from "../../src/cli/args.ts";
+import { parseArgs } from "#coding-agent/cli/args";
 import {
 	buildDefaultTmuxLaunchPlan,
 	buildPiTmuxWindowTitle,
 	launchDefaultTmuxIfNeeded,
 	type TmuxSpawnOptions,
 	type TmuxSpawnResult,
-} from "../../src/cli/launch-tmux.ts";
+} from "#coding-agent/cli/launch-tmux";
 
 describe("tmux launch", () => {
 	test("builds a detached tmux launch plan for interactive --tmux", () => {

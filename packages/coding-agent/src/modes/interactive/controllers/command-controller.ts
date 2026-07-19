@@ -17,14 +17,14 @@ import {
 	type TUI,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "../../../core/agent-session/agent-session.ts";
-import { getDebugLogPath } from "../../../core/config/config.ts";
-import type { AppKeybinding, KeybindingsManager } from "../../../core/settings/keybindings.ts";
-import { theme } from "../../../theme/theme.ts";
-import { formatKeyText } from "../../../ui/rendering/keybinding-hints.ts";
-import { copyToClipboard } from "../../../utils/clipboard/clipboard.ts";
-import { getChangelogPath, normalizeChangelogLinks, parseChangelog } from "../../../utils/system/changelog.ts";
-import { DynamicBorder } from "../components/widgets/dynamic-border.ts";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import { getDebugLogPath } from "#coding-agent/core/config/config";
+import type { AppKeybinding, KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import { theme } from "#coding-agent/theme/theme";
+import { formatKeyText } from "#coding-agent/ui/rendering/keybinding-hints";
+import { copyToClipboard } from "#coding-agent/utils/clipboard/clipboard";
+import { getChangelogPath, normalizeChangelogLinks, parseChangelog } from "#coding-agent/utils/system/changelog";
 
 export class CommandController {
 	private readonly ui: TUI;

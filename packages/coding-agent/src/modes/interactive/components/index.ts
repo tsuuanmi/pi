@@ -1,35 +1,41 @@
 // UI Components for extensions
 
-export { type RenderDiffOptions, renderDiff } from "../../../ui/rendering/diff.ts";
-export { keyHint, keyText, rawKeyHint } from "../../../ui/rendering/keybinding-hints.ts";
-export { truncateToVisualLines, type VisualTruncateResult } from "../../../ui/rendering/visual-truncate.ts";
-export { BashExecutionComponent } from "./bash-execution.ts";
-export { CustomEditor } from "./custom-editor.ts";
-export { ExtensionEditorComponent } from "./extension-editor.ts";
-export { ExtensionInputComponent } from "./extension-input.ts";
-export { LoginDialogComponent } from "./login-dialog.ts";
-export { AssistantMessageComponent } from "./messages/assistant-message.ts";
-export { BranchSummaryMessageComponent } from "./messages/branch-summary-message.ts";
-export { CompactionSummaryMessageComponent } from "./messages/compaction-summary-message.ts";
-export { CustomMessageComponent } from "./messages/custom-message.ts";
-export { SkillInvocationMessageComponent } from "./messages/skill-invocation-message.ts";
-export { UserMessageComponent } from "./messages/user-message.ts";
-export type { AccountSelectorOption } from "./selectors/account-selector.ts";
-export { ExtensionSelectorComponent } from "./selectors/extension-selector.ts";
-export { ModelSelectorComponent } from "./selectors/model-selector.ts";
-export { OAuthSelectorComponent } from "./selectors/oauth-selector.ts";
-export { SessionSelectorComponent } from "./selectors/session-selector.ts";
+export { BashExecutionComponent } from "#coding-agent/modes/interactive/components/bash-execution";
+export { CustomEditor } from "#coding-agent/modes/interactive/components/custom-editor";
+export { ExtensionEditorComponent } from "#coding-agent/modes/interactive/components/extension-editor";
+export { ExtensionInputComponent } from "#coding-agent/modes/interactive/components/extension-input";
+export { LoginDialogComponent } from "#coding-agent/modes/interactive/components/login-dialog";
+export { AssistantMessageComponent } from "#coding-agent/modes/interactive/components/messages/assistant-message";
+export { BranchSummaryMessageComponent } from "#coding-agent/modes/interactive/components/messages/branch-summary-message";
+export { CompactionSummaryMessageComponent } from "#coding-agent/modes/interactive/components/messages/compaction-summary-message";
+export { CustomMessageComponent } from "#coding-agent/modes/interactive/components/messages/custom-message";
+export { SkillInvocationMessageComponent } from "#coding-agent/modes/interactive/components/messages/skill-invocation-message";
+export { UserMessageComponent } from "#coding-agent/modes/interactive/components/messages/user-message";
+export type { AccountSelectorOption } from "#coding-agent/modes/interactive/components/selectors/account-selector";
+export { ExtensionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/extension-selector";
+export { ModelSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/model-selector";
+export { OAuthSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/oauth-selector";
+export { SessionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/session-selector";
 export {
 	type SettingsCallbacks,
 	type SettingsConfig,
 	SettingsSelectorComponent,
-} from "./selectors/settings-selector.ts";
-export { ThemeSelectorComponent } from "./selectors/theme-selector.ts";
-export { ThinkingSelectorComponent } from "./selectors/thinking-selector.ts";
-export { TreeSelectorComponent } from "./selectors/tree-selector.ts";
-export { UserMessageSelectorComponent } from "./selectors/user-message-selector.ts";
+} from "#coding-agent/modes/interactive/components/selectors/settings-selector";
+export { ThemeSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/theme-selector";
+export { ThinkingSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/thinking-selector";
+export { TreeSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/tree-selector";
+export { UserMessageSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/user-message-selector";
 /** @deprecated Use `StatusLineComponent`. Constructor signature changed to `(session, footerData, settingsManager, requestRender)`. */
-export { StatusLineComponent, StatusLineComponent as FooterComponent } from "./status-line/index.ts";
-export { ToolExecutionComponent, type ToolExecutionOptions } from "./tool-execution.ts";
-export { BorderedLoader } from "./widgets/bordered-loader.ts";
-export { DynamicBorder } from "./widgets/dynamic-border.ts";
+export {
+	StatusLineComponent,
+	StatusLineComponent as FooterComponent,
+} from "#coding-agent/modes/interactive/components/status-line/index";
+export {
+	ToolExecutionComponent,
+	type ToolExecutionOptions,
+} from "#coding-agent/modes/interactive/components/tool-execution";
+export { BorderedLoader } from "#coding-agent/modes/interactive/components/widgets/bordered-loader";
+export { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+export { type RenderDiffOptions, renderDiff } from "#coding-agent/ui/rendering/diff";
+export { keyHint, keyText, rawKeyHint } from "#coding-agent/ui/rendering/keybinding-hints";
+export { truncateToVisualLines, type VisualTruncateResult } from "#coding-agent/ui/rendering/visual-truncate";

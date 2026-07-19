@@ -1,20 +1,27 @@
 import { type Component, truncateToWidth, visibleWidth } from "@tsuuanmi/pi-tui";
 import { collapsePlanningPipeline, readWorkflowActiveState, type WorkflowActiveEntry } from "@tsuuanmi/pi-workflows";
-import type { AgentSession } from "../../../../core/agent-session/agent-session.ts";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
 import type {
 	SettingsManager,
 	StatusLineSegmentId,
 	StatusLineSegmentOptions,
 	StatusLineSettings,
-} from "../../../../core/settings/settings-manager.ts";
-import type { ReadonlyFooterDataProvider } from "../../../../core/usage/footer-data-provider.ts";
-import { theme } from "../../../../theme/theme.ts";
-import { renderSkillHudBar } from "../skill-hud/render.ts";
-import { type GitStatusSummary, runGitStatusPorcelain } from "./git-utils.ts";
-import { getPreset } from "./presets.ts";
-import { computeUsageStats, renderSegment, sanitizeStatusText } from "./segments.ts";
-import { getSeparator } from "./separators.ts";
-import type { SegmentContext } from "./types.ts";
+} from "#coding-agent/core/settings/settings-manager";
+import type { ReadonlyFooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+import { renderSkillHudBar } from "#coding-agent/modes/interactive/components/skill-hud/render";
+import {
+	type GitStatusSummary,
+	runGitStatusPorcelain,
+} from "#coding-agent/modes/interactive/components/status-line/git-utils";
+import { getPreset } from "#coding-agent/modes/interactive/components/status-line/presets";
+import {
+	computeUsageStats,
+	renderSegment,
+	sanitizeStatusText,
+} from "#coding-agent/modes/interactive/components/status-line/segments";
+import { getSeparator } from "#coding-agent/modes/interactive/components/status-line/separators";
+import type { SegmentContext } from "#coding-agent/modes/interactive/components/status-line/types";
+import { theme } from "#coding-agent/theme/theme";
 
 /** Minimum gap (columns) between the left and right rail groups. */
 const MIN_PADDING = 2;

@@ -4,10 +4,10 @@ import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createAgentSession } from "../../../src/core/sdk/sdk.ts";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
-import { SettingsManager } from "../../../src/core/settings/settings-manager.ts";
-import { DefaultResourceLoader } from "../../../src/core/skills/resource-loader.ts";
+import { createAgentSession } from "#coding-agent/core/sdk/sdk";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { DefaultResourceLoader } from "#coding-agent/core/skills/resource-loader";
 
 describe("AgentSession dynamic tool registration", () => {
 	let tempDir: string;

@@ -168,4 +168,4 @@ export function parseChangelog(changelogPath: string): ChangelogEntry[] {
 }
 
 // Re-export getChangelogPath from paths.ts for convenience
-export { getChangelogPath } from "../../core/config/config.ts";
+export { getChangelogPath } from "#coding-agent/core/config/config";

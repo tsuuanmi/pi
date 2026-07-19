@@ -1,7 +1,7 @@
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { SessionShutdownEvent } from "../../src/index.ts";
-import { runPrintMode } from "../../src/modes/print-mode.ts";
+import type { SessionShutdownEvent } from "#coding-agent/index";
+import { runPrintMode } from "#coding-agent/modes/print-mode";
 
 type EmitEvent = SessionShutdownEvent;
 

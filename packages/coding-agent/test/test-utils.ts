@@ -7,16 +7,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { getModel } from "@tsuuanmi/pi-ai";
-import { AgentSession } from "../src/core/agent-session/agent-session.ts";
-import { AuthStorage } from "../src/core/auth/auth-storage.ts";
-import { createEventBus } from "../src/core/events/event-bus.ts";
-import type { Extension, ExtensionFactory, LoadExtensionsResult } from "../src/core/extensions/index.ts";
-import { createExtensionRuntime, loadExtensionFromFactory } from "../src/core/extensions/loader.ts";
-import { ModelRegistry } from "../src/core/model/model-registry.ts";
-import { SessionManager } from "../src/core/session/session-manager.ts";
-import { SettingsManager } from "../src/core/settings/settings-manager.ts";
-import type { ResourceLoader } from "../src/core/skills/resource-loader.ts";
-import { createCodingTools } from "../src/index.ts";
+import { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { createEventBus } from "#coding-agent/core/events/event-bus";
+import type { Extension, ExtensionFactory, LoadExtensionsResult } from "#coding-agent/core/extensions/index";
+import { createExtensionRuntime, loadExtensionFromFactory } from "#coding-agent/core/extensions/loader";
+import { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import type { ResourceLoader } from "#coding-agent/core/skills/resource-loader";
+import { createCodingTools } from "#coding-agent/index";
 
 /**
  * API key for authenticated tests. Tests using this should be wrapped in

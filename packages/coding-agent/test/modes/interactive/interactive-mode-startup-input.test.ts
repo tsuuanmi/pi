@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import type { AgentSession } from "../../../src/core/agent-session/agent-session.ts";
-import type { CustomEditor } from "../../../src/modes/interactive/components/custom-editor.ts";
-import { KeyHandlerController } from "../../../src/modes/interactive/controllers/key-handler-controller.ts";
-import { InteractiveMode } from "../../../src/modes/interactive/interactive-mode.ts";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import type { CustomEditor } from "#coding-agent/modes/interactive/components/custom-editor";
+import { KeyHandlerController } from "#coding-agent/modes/interactive/controllers/key-handler-controller";
+import { InteractiveMode } from "#coding-agent/modes/interactive/interactive-mode";
 
 type SubmitContext = {
 	defaultEditor: { onSubmit?: (text: string) => void };

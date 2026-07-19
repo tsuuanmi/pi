@@ -1,7 +1,7 @@
 import { basename, dirname, relative } from "node:path";
 import { minimatch } from "minimatch";
-import { toPosixPath } from "./env.ts";
-import type { PathMetadata } from "./types.ts";
+import { toPosixPath } from "#coding-agent/core/package-manager/env";
+import type { PathMetadata } from "#coding-agent/core/package-manager/types";
 
 export function isPattern(s: string): boolean {
 	return s.startsWith("!") || s.startsWith("+") || s.startsWith("-") || s.includes("*") || s.includes("?");

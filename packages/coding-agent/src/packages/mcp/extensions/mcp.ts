@@ -1,5 +1,5 @@
-import type { ExtensionAPI } from "../../../api/types.ts";
-import { MCPManager } from "../runtime/manager.ts";
+import type { ExtensionAPI } from "@tsuuanmi/pi-coding-agent/api/types";
+import { MCPManager } from "#mcp/runtime/manager";
 
 export default function mcpExtension(pi: ExtensionAPI): void {
 	let manager: MCPManager | undefined;

@@ -1,4 +1,4 @@
-import type { RedactionMetadata } from "./types.ts";
+import type { RedactionMetadata } from "#coding-agent/core/api-usage/types";
 
 const SENSITIVE_KEY =
 	/(^|[-_])(authorization|cookie|set-cookie|api[-_]?key|access[-_]?token|refresh[-_]?token|id[-_]?token|secret|password|passwd|credential|signature|x-api-key|api_key)([-_]|$)/i;

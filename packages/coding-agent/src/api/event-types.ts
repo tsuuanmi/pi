@@ -1,11 +1,13 @@
 import type { AgentMessage, CustomMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { AssistantMessageEvent, Model, TextContent, ToolResultMessage } from "@tsuuanmi/pi-ai";
-import type { CompactionPreparation, CompactionResult } from "../core/compaction/index.ts";
-import type { BashResult } from "../core/exec/bash-executor.ts";
-import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "../core/session/session-manager.ts";
-import type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";
-import type { BashOperations } from "../core/tools/bash.ts";
-import type { EditToolDetails } from "../core/tools/edit.ts";
+import type { ExtensionMode } from "#coding-agent/api/context-types";
+import type { ExtensionUIContext } from "#coding-agent/api/ui-types";
+import type { CompactionPreparation, CompactionResult } from "#coding-agent/core/compaction/index";
+import type { BashResult } from "#coding-agent/core/exec/bash-executor";
+import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "#coding-agent/core/session/session-manager";
+import type { BuildSystemPromptOptions } from "#coding-agent/core/skills/system-prompt";
+import type { BashOperations } from "#coding-agent/core/tools/bash";
+import type { EditToolDetails } from "#coding-agent/core/tools/edit";
 import type {
 	BashToolDetails,
 	BashToolInput,
@@ -19,9 +21,7 @@ import type {
 	ReadToolDetails,
 	ReadToolInput,
 	WriteToolInput,
-} from "../core/tools/index.ts";
-import type { ExtensionMode } from "./context-types.ts";
-import type { ExtensionUIContext } from "./ui-types.ts";
+} from "#coding-agent/core/tools/index";
 
 // ============================================================================
 // Startup/Resource Events

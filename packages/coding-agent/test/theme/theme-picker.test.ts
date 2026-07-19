@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getAvailableThemes, getAvailableThemesWithPaths, setRegisteredThemes } from "../../src/theme/theme.ts";
+import { getAvailableThemes, getAvailableThemesWithPaths, setRegisteredThemes } from "#coding-agent/theme/theme";
 
 type ThemeFile = {
 	name: string;

@@ -5,7 +5,7 @@ import {
 	detectTerminalBackgroundTheme,
 	getThemeByName,
 	getThemeForRgbColor,
-} from "../../src/theme/theme.ts";
+} from "#coding-agent/theme/theme";
 
 afterEach(() => {
 	resetCapabilitiesCache();

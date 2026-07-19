@@ -1,9 +1,9 @@
 import { ProcessTerminal, setKeybindings, TUI } from "@tsuuanmi/pi-tui";
-import { KeybindingsManager } from "../core/settings/keybindings.ts";
-import type { SettingsManager } from "../core/settings/settings-manager.ts";
-import { ExtensionInputComponent } from "../modes/interactive/components/extension-input.ts";
-import { ExtensionSelectorComponent } from "../modes/interactive/components/selectors/extension-selector.ts";
-import { initTheme } from "../theme/theme.ts";
+import { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import type { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { ExtensionInputComponent } from "#coding-agent/modes/interactive/components/extension-input";
+import { ExtensionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/extension-selector";
+import { initTheme } from "#coding-agent/theme/theme";
 
 function createStartupTui(settingsManager: SettingsManager): TUI {
 	initTheme(settingsManager.getTheme());

@@ -4,8 +4,8 @@
  */
 import { visibleWidth } from "@tsuuanmi/pi-tui";
 import { beforeAll, describe, expect, it } from "vitest";
-import { BashExecutionComponent } from "../../../../src/modes/interactive/components/bash-execution.ts";
-import { initTheme } from "../../../../src/theme/theme.ts";
+import { BashExecutionComponent } from "#coding-agent/modes/interactive/components/bash-execution";
+import { initTheme } from "#coding-agent/theme/theme";
 
 /** Minimal TUI stub that only exposes terminal.columns */
 function createTuiStub(columns: number): { columns: number; stub: any } {

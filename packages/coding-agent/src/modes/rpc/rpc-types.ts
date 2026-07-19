@@ -7,10 +7,10 @@
 
 import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
-import type { SessionStats } from "../../core/agent-session/agent-session.ts";
-import type { CompactionResult } from "../../core/compaction/index.ts";
-import type { BashResult } from "../../core/exec/bash-executor.ts";
-import type { SourceInfo } from "../../core/resources/source-info.ts";
+import type { SessionStats } from "#coding-agent/core/agent-session/agent-session";
+import type { CompactionResult } from "#coding-agent/core/compaction/index";
+import type { BashResult } from "#coding-agent/core/exec/bash-executor";
+import type { SourceInfo } from "#coding-agent/core/resources/source-info";
 
 // ============================================================================
 // RPC Commands (stdin)

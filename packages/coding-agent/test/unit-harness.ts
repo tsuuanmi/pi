@@ -26,18 +26,18 @@ import type {
 	Usage,
 } from "@tsuuanmi/pi-ai";
 import { createAssistantMessageEventStream } from "@tsuuanmi/pi-ai";
-import { AgentSession, type AgentSessionEvent } from "../src/core/agent-session/agent-session.ts";
-import { AuthStorage } from "../src/core/auth/auth-storage.ts";
-import { ModelRegistry } from "../src/core/model/model-registry.ts";
-import { SessionManager } from "../src/core/session/session-manager.ts";
-import type { Settings } from "../src/core/settings/settings-manager.ts";
-import { SettingsManager } from "../src/core/settings/settings-manager.ts";
-import type { ExtensionFactory, ResourceLoader } from "../src/index.ts";
+import { AgentSession, type AgentSessionEvent } from "#coding-agent/core/agent-session/agent-session";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
+import type { Settings } from "#coding-agent/core/settings/settings-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import type { ExtensionFactory, ResourceLoader } from "#coding-agent/index";
 import {
 	type CreateTestExtensionsResultInput,
 	createTestExtensionsResult,
 	createTestResourceLoader,
-} from "./test-utils.ts";
+} from "#coding-agent-test/test-utils";
 
 // ============================================================================
 // Faux model

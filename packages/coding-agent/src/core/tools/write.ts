@@ -4,12 +4,12 @@ import { Container, Text } from "@tsuuanmi/pi-tui";
 import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname } from "path";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "../../api/types.ts";
-import { getLanguageFromPath, highlightCode, type Theme } from "../../theme/theme.ts";
-import { keyHint } from "../../ui/rendering/keybinding-hints.ts";
-import { resolveToCwd } from "./path-utils.ts";
-import { normalizeDisplayText, renderToolPath, replaceTabs, str } from "./render-utils.ts";
-import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
+import type { ToolDefinition, ToolRenderResultOptions } from "#coding-agent/api/types";
+import { resolveToCwd } from "#coding-agent/core/tools/path-utils";
+import { normalizeDisplayText, renderToolPath, replaceTabs, str } from "#coding-agent/core/tools/render-utils";
+import { wrapToolDefinition } from "#coding-agent/core/tools/tool-definition-wrapper";
+import { getLanguageFromPath, highlightCode, type Theme } from "#coding-agent/theme/theme";
+import { keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 
 const writeSchema = Type.Object({
 	path: Type.String({ description: "Path to the file to write (relative or absolute)" }),

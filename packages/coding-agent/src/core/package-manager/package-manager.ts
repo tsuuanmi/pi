@@ -13,10 +13,10 @@ import {
 } from "@tsuuanmi/pi-agent/node";
 import { globSync } from "glob";
 import { maxSatisfying, rcompare, satisfies } from "semver";
-import { isStdoutTakenOver } from "../../modes/output-guard.ts";
-import { type GitSource, parseGitUrl } from "../../utils/fs/git.ts";
-import { CONFIG_DIR_NAME } from "../config/config.ts";
-import type { PackageSource, SettingsManager } from "../settings/settings-manager.ts";
+import { CONFIG_DIR_NAME } from "#coding-agent/core/config/config";
+import type { PackageSource, SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import { isStdoutTakenOver } from "#coding-agent/modes/output-guard";
+import { type GitSource, parseGitUrl } from "#coding-agent/utils/fs/git";
 import type {
 	ConfiguredPackage,
 	ConfiguredUpdateSource,
@@ -55,6 +55,14 @@ export type {
 } from "./types.ts";
 
 import {
+	getBundledPackageRoot,
+	getEnv,
+	getExtensionTempFolder,
+	getHomeDir,
+	isOfflineModeEnabled,
+} from "#coding-agent/core/package-manager/env";
+import { getNpmVersionRange, isExactNpmVersion } from "#coding-agent/core/package-manager/npm-version";
+import {
 	AGENTS_STANDARD_DIR_NAMES,
 	BUNDLED_DEFAULT_PACKAGES,
 	BUNDLED_PACKAGE_SOURCES,
@@ -72,8 +80,6 @@ import {
 	collectAutoThemeEntries,
 	collectResourceFiles,
 } from "./discovery.ts";
-import { getBundledPackageRoot, getEnv, getExtensionTempFolder, getHomeDir, isOfflineModeEnabled } from "./env.ts";
-import { getNpmVersionRange, isExactNpmVersion } from "./npm-version.ts";
 import {
 	applyPatterns,
 	hasGlobPattern,

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { parseArgs } from "../../src/cli/args.ts";
+import { parseArgs } from "#coding-agent/cli/args";
 
 describe("parseArgs", () => {
 	describe("--version flag", () => {

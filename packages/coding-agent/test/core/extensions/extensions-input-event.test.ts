@@ -2,11 +2,11 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "../../../src/core/auth/auth-storage.ts";
-import { discoverAndLoadExtensions } from "../../../src/core/extensions/loader.ts";
-import { ExtensionRunner } from "../../../src/core/extensions/runner.ts";
-import { ModelRegistry } from "../../../src/core/model/model-registry.ts";
-import { SessionManager } from "../../../src/core/session/session-manager.ts";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { discoverAndLoadExtensions } from "#coding-agent/core/extensions/loader";
+import { ExtensionRunner } from "#coding-agent/core/extensions/runner";
+import { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { SessionManager } from "#coding-agent/core/session/session-manager";
 
 describe("Input Event", () => {
 	let tempDir: string;

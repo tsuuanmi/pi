@@ -1,11 +1,11 @@
 import type { AgentState, StreamFn, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
-import type { ExtensionRunner } from "../extensions/index.ts";
-import type { ModelRegistry } from "../model/model-registry.ts";
-import type { SessionManager } from "../session/session-manager.ts";
-import type { SettingsManager } from "../settings/settings-manager.ts";
-import type { ResourceLoader } from "../skills/resource-loader.ts";
-import type { AgentSessionEvent } from "./agent-session.ts";
+import type { AgentSessionEvent } from "#coding-agent/core/agent-session/agent-session";
+import type { ExtensionRunner } from "#coding-agent/core/extensions/index";
+import type { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import type { SessionManager } from "#coding-agent/core/session/session-manager";
+import type { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import type { ResourceLoader } from "#coding-agent/core/skills/resource-loader";
 
 /**
  * Type-only seam for the Phase-1 `AgentSession` subsystem extraction.

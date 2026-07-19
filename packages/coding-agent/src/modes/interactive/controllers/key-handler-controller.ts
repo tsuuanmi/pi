@@ -1,9 +1,9 @@
 import type { EditorComponent, TUI } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "../../../core/agent-session/agent-session.ts";
-import type { CustomEditor } from "../components/custom-editor.ts";
-import type { AccountAuthController } from "./account-auth-controller.ts";
-import type { CommandController } from "./command-controller.ts";
-import type { SelectorController } from "./selector-controller.ts";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import type { CustomEditor } from "#coding-agent/modes/interactive/components/custom-editor";
+import type { AccountAuthController } from "#coding-agent/modes/interactive/controllers/account-auth-controller";
+import type { CommandController } from "#coding-agent/modes/interactive/controllers/command-controller";
+import type { SelectorController } from "#coding-agent/modes/interactive/controllers/selector-controller";
 
 type KeyHandlerControllerDependencies = {
 	ui: TUI;

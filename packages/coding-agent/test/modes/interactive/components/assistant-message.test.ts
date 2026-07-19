@@ -1,7 +1,7 @@
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import { describe, expect, test } from "vitest";
-import { AssistantMessageComponent } from "../../../../src/modes/interactive/components/messages/assistant-message.ts";
-import { initTheme } from "../../../../src/theme/theme.ts";
+import { AssistantMessageComponent } from "#coding-agent/modes/interactive/components/messages/assistant-message";
+import { initTheme } from "#coding-agent/theme/theme";
 
 const OSC133_ZONE_START = "\x1b]133;A\x07";
 const OSC133_ZONE_END = "\x1b]133;B\x07";

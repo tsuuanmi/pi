@@ -4,8 +4,8 @@
 
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import chalk from "chalk";
-import type { ExtensionFlag } from "../api/types.ts";
-import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, ENV_SESSION_DIR } from "../core/config/config.ts";
+import type { ExtensionFlag } from "#coding-agent/api/types";
+import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, ENV_SESSION_DIR } from "#coding-agent/core/config/config";
 
 export type Mode = "text" | "json" | "rpc";
 

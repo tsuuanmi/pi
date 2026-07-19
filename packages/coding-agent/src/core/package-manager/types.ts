@@ -1,5 +1,5 @@
-import type { GitSource } from "../../utils/fs/git.ts";
-import type { SettingsManager } from "../settings/settings-manager.ts";
+import type { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import type { GitSource } from "#coding-agent/utils/fs/git";
 
 export interface PathMetadata {
 	source: string;

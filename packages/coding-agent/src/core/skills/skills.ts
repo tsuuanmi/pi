@@ -2,10 +2,10 @@ import { canonicalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import ignore from "ignore";
 import { basename, dirname, join, relative, resolve, sep } from "path";
-import { parseFrontmatter } from "../../utils/fs/frontmatter.ts";
-import { CONFIG_DIR_NAME, getAgentDir } from "../config/config.ts";
-import type { ResourceDiagnostic } from "../resources/diagnostics.ts";
-import { createSyntheticSourceInfo, type SourceInfo } from "../resources/source-info.ts";
+import { CONFIG_DIR_NAME, getAgentDir } from "#coding-agent/core/config/config";
+import type { ResourceDiagnostic } from "#coding-agent/core/resources/diagnostics";
+import { createSyntheticSourceInfo, type SourceInfo } from "#coding-agent/core/resources/source-info";
+import { parseFrontmatter } from "#coding-agent/utils/fs/frontmatter";
 
 /** Max name length per spec */
 const MAX_NAME_LENGTH = 64;

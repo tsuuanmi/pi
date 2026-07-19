@@ -2,10 +2,10 @@ import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSyn
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ENV_AGENT_DIR, PACKAGE_NAME } from "../../src/core/config/config.ts";
-import { handlePackageCommand } from "../../src/core/package-manager/package-manager-cli.ts";
-import { ProjectTrustStore } from "../../src/core/trust/trust-manager.ts";
-import { main } from "../../src/main.ts";
+import { ENV_AGENT_DIR, PACKAGE_NAME } from "#coding-agent/core/config/config";
+import { handlePackageCommand } from "#coding-agent/core/package-manager/package-manager-cli";
+import { ProjectTrustStore } from "#coding-agent/core/trust/trust-manager";
+import { main } from "#coding-agent/main";
 
 describe("package commands", () => {
 	let tempDir: string;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPreset, STATUS_LINE_PRESETS } from "../../../../../src/modes/interactive/components/status-line/presets.ts";
+import { getPreset, STATUS_LINE_PRESETS } from "#coding-agent/modes/interactive/components/status-line/presets";
 
 describe("STATUS_LINE_PRESETS.default", () => {
 	it("uses the 10 Pi segment ids with the agreed left/right split", () => {

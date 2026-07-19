@@ -10,14 +10,14 @@
 
 import type { Component, EditorComponent, OverlayHandle, OverlayOptions } from "@tsuuanmi/pi-tui";
 import { Container, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
-import type { ExtensionUIDialogOptions, ExtensionWidgetOptions } from "../../../core/extensions/index.ts";
-import type { KeybindingsManager } from "../../../core/settings/keybindings.ts";
-import type { FooterDataProvider, ReadonlyFooterDataProvider } from "../../../core/usage/footer-data-provider.ts";
-import { type Theme, theme } from "../../../theme/theme.ts";
-import { ExtensionEditorComponent } from "../components/extension-editor.ts";
-import { ExtensionInputComponent } from "../components/extension-input.ts";
-import { ExtensionSelectorComponent } from "../components/selectors/extension-selector.ts";
-import type { StatusLineComponent } from "../components/status-line/index.ts";
+import type { ExtensionUIDialogOptions, ExtensionWidgetOptions } from "#coding-agent/core/extensions/index";
+import type { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import type { FooterDataProvider, ReadonlyFooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+import { ExtensionEditorComponent } from "#coding-agent/modes/interactive/components/extension-editor";
+import { ExtensionInputComponent } from "#coding-agent/modes/interactive/components/extension-input";
+import { ExtensionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/extension-selector";
+import type { StatusLineComponent } from "#coding-agent/modes/interactive/components/status-line/index";
+import { type Theme, theme } from "#coding-agent/theme/theme";
 
 /** Interface for components that can be expanded/collapsed */
 interface Expandable {

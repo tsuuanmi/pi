@@ -1,9 +1,9 @@
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
-import { calculateContextTokens, estimateContextTokens } from "../compaction/index.ts";
-import type { ContextUsage } from "../extensions/index.ts";
-import { getLatestCompactionEntry } from "../session/session-manager.ts";
-import type { SessionStats } from "./agent-session.ts";
-import type { AgentSessionContext } from "./agent-session-context.ts";
+import type { SessionStats } from "#coding-agent/core/agent-session/agent-session";
+import type { AgentSessionContext } from "#coding-agent/core/agent-session/agent-session-context";
+import { calculateContextTokens, estimateContextTokens } from "#coding-agent/core/compaction/index";
+import type { ContextUsage } from "#coding-agent/core/extensions/index";
+import { getLatestCompactionEntry } from "#coding-agent/core/session/session-manager";
 
 /**
  * Phase-1 StatsExport subsystem (stateless module functions on

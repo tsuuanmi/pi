@@ -2,28 +2,32 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
 import chalk from "chalk";
-import { loadThemeFromPath, type Theme } from "../../theme/theme.ts";
 import {
 	type AgentProfileLoadResult,
 	type LoadedAgentProfile,
 	loadAgentDefinitions,
-} from "../agents/agent-definitions.ts";
-import { CONFIG_DIR_NAME } from "../config/config.ts";
-import type { ResourceDiagnostic } from "../resources/diagnostics.ts";
+} from "#coding-agent/core/agents/agent-definitions";
+import { CONFIG_DIR_NAME } from "#coding-agent/core/config/config";
+import type { ResourceDiagnostic } from "#coding-agent/core/resources/diagnostics";
+import { loadThemeFromPath, type Theme } from "#coding-agent/theme/theme";
 
-export type { ResourceCollision, ResourceDiagnostic } from "../resources/diagnostics.ts";
+export type { ResourceCollision, ResourceDiagnostic } from "#coding-agent/core/resources/diagnostics";
 
 import { canonicalizePath, isLocalPath, resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "../../api/types.ts";
-import { createEventBus, type EventBus } from "../events/event-bus.ts";
-import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "../extensions/loader.ts";
-import { DefaultPackageManager, type PathMetadata, type ResolvedResource } from "../package-manager/package-manager.ts";
-import { createSourceInfo, type SourceInfo } from "../resources/source-info.ts";
-import { SettingsManager } from "../settings/settings-manager.ts";
-import type { PromptTemplate } from "./prompt-templates.ts";
-import { loadPromptTemplatesWithDiagnostics } from "./prompt-templates.ts";
-import type { Skill } from "./skills.ts";
-import { loadSkills } from "./skills.ts";
+import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#coding-agent/api/types";
+import { createEventBus, type EventBus } from "#coding-agent/core/events/event-bus";
+import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "#coding-agent/core/extensions/loader";
+import {
+	DefaultPackageManager,
+	type PathMetadata,
+	type ResolvedResource,
+} from "#coding-agent/core/package-manager/package-manager";
+import { createSourceInfo, type SourceInfo } from "#coding-agent/core/resources/source-info";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import type { PromptTemplate } from "#coding-agent/core/skills/prompt-templates";
+import { loadPromptTemplatesWithDiagnostics } from "#coding-agent/core/skills/prompt-templates";
+import type { Skill } from "#coding-agent/core/skills/skills";
+import { loadSkills } from "#coding-agent/core/skills/skills";
 
 export interface ResourceExtensionPaths {
 	skillPaths?: Array<{ path: string; metadata: PathMetadata }>;

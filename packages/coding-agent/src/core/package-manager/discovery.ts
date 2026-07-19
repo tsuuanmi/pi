@@ -1,9 +1,13 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import ignore from "ignore";
-import { AGENTS_STANDARD_DIR_NAMES, FILE_PATTERNS, IGNORE_FILE_NAMES } from "./constants.ts";
-import { getHomeDir, toPosixPath } from "./env.ts";
-import type { PiManifest, ResourceType, SkillDiscoveryMode } from "./types.ts";
+import {
+	AGENTS_STANDARD_DIR_NAMES,
+	FILE_PATTERNS,
+	IGNORE_FILE_NAMES,
+} from "#coding-agent/core/package-manager/constants";
+import { getHomeDir, toPosixPath } from "#coding-agent/core/package-manager/env";
+import type { PiManifest, ResourceType, SkillDiscoveryMode } from "#coding-agent/core/package-manager/types";
 
 export type IgnoreMatcher = ReturnType<typeof ignore>;
 

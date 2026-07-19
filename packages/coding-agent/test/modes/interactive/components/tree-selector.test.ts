@@ -6,10 +6,10 @@ import type {
 	SessionEntry,
 	SessionMessageEntry,
 	SessionTreeNode,
-} from "../../../../src/core/session/session-manager.ts";
-import { KeybindingsManager } from "../../../../src/core/settings/keybindings.ts";
-import { TreeSelectorComponent } from "../../../../src/modes/interactive/components/selectors/tree-selector.ts";
-import { initTheme } from "../../../../src/theme/theme.ts";
+} from "#coding-agent/core/session/session-manager";
+import { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+import { TreeSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/tree-selector";
+import { initTheme } from "#coding-agent/theme/theme";
 
 beforeAll(() => {
 	initTheme("dark");

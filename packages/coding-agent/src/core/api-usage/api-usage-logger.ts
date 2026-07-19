@@ -7,9 +7,9 @@ import type {
 	ProviderRequestObserverResponse,
 	ProviderRequestObserverStart,
 } from "@tsuuanmi/pi-agent";
-import { redactValue, safeHeaders } from "./redaction.ts";
-import { type SafeSerializeMetadata, safeSerialize, toJsonLine } from "./safe-serialize.ts";
-import type { ApiUsagePendingRequest, ApiUsageRecordV1, RedactionMetadata } from "./types.ts";
+import { redactValue, safeHeaders } from "#coding-agent/core/api-usage/redaction";
+import { type SafeSerializeMetadata, safeSerialize, toJsonLine } from "#coding-agent/core/api-usage/safe-serialize";
+import type { ApiUsagePendingRequest, ApiUsageRecordV1, RedactionMetadata } from "#coding-agent/core/api-usage/types";
 
 export interface ApiUsageLoggerOptions {
 	cwd: string;

@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { canonicalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import lockfile from "proper-lockfile";
-import { CONFIG_DIR_NAME } from "../config/config.ts";
+import { CONFIG_DIR_NAME } from "#coding-agent/core/config/config";
 
 export type ProjectTrustDecision = boolean | null;
 

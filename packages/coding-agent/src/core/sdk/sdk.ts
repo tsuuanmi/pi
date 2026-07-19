@@ -2,22 +2,27 @@ import { join } from "node:path";
 import { Agent, convertToLlm, type ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { clampThinkingLevel, type Model, streamSimple } from "@tsuuanmi/pi-ai";
-import { AgentSession } from "../agent-session/agent-session.ts";
-import { formatNoModelsAvailableMessage } from "../auth/auth-guidance.ts";
-import { AuthStorage } from "../auth/auth-storage.ts";
-import { getAgentDir } from "../config/config.ts";
-import { DEFAULT_THINKING_LEVEL } from "../config/defaults.ts";
-import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "../extensions/index.ts";
-import { optimizeRetainedContext } from "../messages/context-optimization.ts";
-import { ModelRegistry } from "../model/model-registry.ts";
-import { findInitialModel } from "../model/model-resolver.ts";
-import { mergeHeaderSources } from "../model/provider-attribution.ts";
-import { getDefaultSessionDir, SessionManager } from "../session/session-manager.ts";
-import { SettingsManager } from "../settings/settings-manager.ts";
-import type { ResourceLoader } from "../skills/resource-loader.ts";
-import { DefaultResourceLoader } from "../skills/resource-loader.ts";
-import type { SubagentManager } from "../subagents/subagents.ts";
-import { time } from "../telemetry/timings.ts";
+import { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import { formatNoModelsAvailableMessage } from "#coding-agent/core/auth/auth-guidance";
+import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
+import { getAgentDir } from "#coding-agent/core/config/config";
+import { DEFAULT_THINKING_LEVEL } from "#coding-agent/core/config/defaults";
+import type {
+	ExtensionRunner,
+	LoadExtensionsResult,
+	SessionStartEvent,
+	ToolDefinition,
+} from "#coding-agent/core/extensions/index";
+import { optimizeRetainedContext } from "#coding-agent/core/messages/context-optimization";
+import { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import { findInitialModel } from "#coding-agent/core/model/model-resolver";
+import { mergeHeaderSources } from "#coding-agent/core/model/provider-attribution";
+import { getDefaultSessionDir, SessionManager } from "#coding-agent/core/session/session-manager";
+import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
+import type { ResourceLoader } from "#coding-agent/core/skills/resource-loader";
+import { DefaultResourceLoader } from "#coding-agent/core/skills/resource-loader";
+import type { SubagentManager } from "#coding-agent/core/subagents/subagents";
+import { time } from "#coding-agent/core/telemetry/timings";
 import {
 	createBashTool,
 	createCodingTools,
@@ -29,7 +34,7 @@ import {
 	createReadTool,
 	createWriteTool,
 	type ToolName,
-} from "../tools/index.ts";
+} from "#coding-agent/core/tools/index";
 
 export interface CreateAgentSessionOptions {
 	/** Working directory for project-local discovery. Default: process.cwd() */
@@ -100,7 +105,7 @@ export interface CreateAgentSessionResult {
 
 // Re-exports
 
-export * from "../agent-session/agent-session-runtime.ts";
+export * from "#coding-agent/core/agent-session/agent-session-runtime";
 export type {
 	ExtensionAPI,
 	ExtensionCommandContext,
@@ -109,10 +114,10 @@ export type {
 	SlashCommandInfo,
 	SlashCommandSource,
 	ToolDefinition,
-} from "../extensions/index.ts";
-export type { PromptTemplate } from "../skills/prompt-templates.ts";
-export type { Skill } from "../skills/skills.ts";
-export type { Tool } from "../tools/index.ts";
+} from "#coding-agent/core/extensions/index";
+export type { PromptTemplate } from "#coding-agent/core/skills/prompt-templates";
+export type { Skill } from "#coding-agent/core/skills/skills";
+export type { Tool } from "#coding-agent/core/tools/index";
 
 export {
 	// Tool factories (for custom cwd)

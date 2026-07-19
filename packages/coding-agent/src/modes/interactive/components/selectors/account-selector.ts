@@ -9,9 +9,9 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import { theme } from "../../../../theme/theme.ts";
-import { keyHint, rawKeyHint } from "../../../../ui/rendering/keybinding-hints.ts";
-import { DynamicBorder } from "../widgets/dynamic-border.ts";
+import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
+import { theme } from "#coding-agent/theme/theme";
+import { keyHint, rawKeyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 
 const SELECTOR_GUTTER_WIDTH = 2;
 const MIN_PROVIDER_WIDTH = 36;

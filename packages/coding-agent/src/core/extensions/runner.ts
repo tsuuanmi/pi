@@ -54,14 +54,14 @@ import type {
 	ToolResultEventResult,
 	UserBashEvent,
 	UserBashEventResult,
-} from "../../api/types.ts";
-import { type Theme, theme } from "../../theme/theme.ts";
-import type { ModelRegistry } from "../model/model-registry.ts";
-import type { ResourceDiagnostic } from "../resources/diagnostics.ts";
-import type { SessionManager } from "../session/session-manager.ts";
-import type { KeybindingsConfig } from "../settings/keybindings.ts";
-import type { BuildSystemPromptOptions } from "../skills/system-prompt.ts";
-import type { SubagentManager } from "../subagents/subagents.ts";
+} from "#coding-agent/api/types";
+import type { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import type { ResourceDiagnostic } from "#coding-agent/core/resources/diagnostics";
+import type { SessionManager } from "#coding-agent/core/session/session-manager";
+import type { KeybindingsConfig } from "#coding-agent/core/settings/keybindings";
+import type { BuildSystemPromptOptions } from "#coding-agent/core/skills/system-prompt";
+import type { SubagentManager } from "#coding-agent/core/subagents/subagents";
+import { type Theme, theme } from "#coding-agent/theme/theme";
 
 // Extension shortcuts compete with canonical keybinding ids from keybindings.json.
 // Only editor-global shortcuts are reserved here. Picker-specific bindings are not.

@@ -2,6 +2,12 @@
 	"name": "@tsuuanmi/pi-bundled-providers",
 	"private": true,
 	"type": "module",
+	"imports": {
+		"#providers/*": {
+			"types": "./*.ts",
+			"import": "./*.ts"
+		}
+	},
 	"pi": {
 		"extensions": ["extensions/providers.ts"]
 	}

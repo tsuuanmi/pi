@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseGitUrl } from "../../../src/utils/fs/git.ts";
+import { parseGitUrl } from "#coding-agent/utils/fs/git";
 
 describe("Git URL Parsing", () => {
 	describe("protocol URLs (accepted without git: prefix)", () => {

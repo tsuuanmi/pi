@@ -13,13 +13,13 @@ import { Text } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import path from "path";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "../../api/types.ts";
-import type { Theme } from "../../theme/theme.ts";
-import { keyHint } from "../../ui/rendering/keybinding-hints.ts";
-import { ensureTool } from "../../utils/system/tool-installer.ts";
-import { resolveToCwd } from "./path-utils.ts";
-import { getTextOutput, invalidArgText, shortenPath, str } from "./render-utils.ts";
-import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
+import type { ToolDefinition, ToolRenderResultOptions } from "#coding-agent/api/types";
+import { resolveToCwd } from "#coding-agent/core/tools/path-utils";
+import { getTextOutput, invalidArgText, shortenPath, str } from "#coding-agent/core/tools/render-utils";
+import { wrapToolDefinition } from "#coding-agent/core/tools/tool-definition-wrapper";
+import type { Theme } from "#coding-agent/theme/theme";
+import { keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
+import { ensureTool } from "#coding-agent/utils/system/tool-installer";
 
 const grepSchema = Type.Object({
 	pattern: Type.String({ description: "Search pattern (regex or literal string)" }),

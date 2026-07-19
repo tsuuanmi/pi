@@ -2,21 +2,13 @@ import type { CustomMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Model, TextContent } from "@tsuuanmi/pi-ai";
 import type { AutocompleteItem, Component, KeyId } from "@tsuuanmi/pi-tui";
 import type { TSchema } from "typebox";
-import type { EventBus } from "../core/events/event-bus.ts";
-import type { ExecOptions, ExecResult } from "../core/exec/exec.ts";
-import type { SourceInfo } from "../core/resources/source-info.ts";
-import type { SessionManager } from "../core/session/session-manager.ts";
-import type { SlashCommandInfo } from "../core/skills/slash-commands.ts";
-import type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";
-import type { MCPServerInfo } from "../packages/mcp/runtime/types.ts";
-import type { Theme } from "../theme/theme.ts";
 import type {
 	CompactOptions,
 	ContextUsage,
 	ExtensionCommandContext,
 	ExtensionContext,
 	ReplacedSessionContext,
-} from "./context-types.ts";
+} from "#coding-agent/api/context-types";
 import type {
 	AfterProviderResponseEvent,
 	AgentEndEvent,
@@ -61,9 +53,17 @@ import type {
 	TurnStartEvent,
 	UserBashEvent,
 	UserBashEventResult,
-} from "./event-types.ts";
-import type { ProviderConfig } from "./provider-types.ts";
-import type { ToolDefinition } from "./tool-types.ts";
+} from "#coding-agent/api/event-types";
+import type { ProviderConfig } from "#coding-agent/api/provider-types";
+import type { ToolDefinition } from "#coding-agent/api/tool-types";
+import type { EventBus } from "#coding-agent/core/events/event-bus";
+import type { ExecOptions, ExecResult } from "#coding-agent/core/exec/exec";
+import type { SourceInfo } from "#coding-agent/core/resources/source-info";
+import type { SessionManager } from "#coding-agent/core/session/session-manager";
+import type { SlashCommandInfo } from "#coding-agent/core/skills/slash-commands";
+import type { BuildSystemPromptOptions } from "#coding-agent/core/skills/system-prompt";
+import type { MCPServerInfo } from "#coding-agent/packages/mcp/runtime/types";
+import type { Theme } from "#coding-agent/theme/theme";
 
 // ============================================================================
 // Message Rendering

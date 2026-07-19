@@ -1,4 +1,7 @@
-import type { SeparatorDef, StatusLineSeparatorStyle } from "./types.ts";
+import type {
+	SeparatorDef,
+	StatusLineSeparatorStyle,
+} from "#coding-agent/modes/interactive/components/status-line/types";
 
 /**
  * Resolve a separator style to its glyph definition.

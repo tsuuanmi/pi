@@ -4,12 +4,12 @@ import { join } from "node:path";
 import { visibleWidth } from "@tsuuanmi/pi-tui";
 import { syncWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import type { AgentSession } from "../../../../../src/core/agent-session/agent-session.ts";
-import type { SettingsManager, StatusLineSettings } from "../../../../../src/core/settings/settings-manager.ts";
-import type { ReadonlyFooterDataProvider } from "../../../../../src/core/usage/footer-data-provider.ts";
-import { StatusLineComponent } from "../../../../../src/modes/interactive/components/status-line/index.ts";
-import { initTheme } from "../../../../../src/theme/theme.ts";
-import { stripAnsi } from "../../../../../src/utils/terminal/ansi.ts";
+import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
+import type { SettingsManager, StatusLineSettings } from "#coding-agent/core/settings/settings-manager";
+import type { ReadonlyFooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
+import { StatusLineComponent } from "#coding-agent/modes/interactive/components/status-line/index";
+import { initTheme } from "#coding-agent/theme/theme";
+import { stripAnsi } from "#coding-agent/utils/terminal/ansi";
 
 beforeAll(() => {
 	initTheme("dark");

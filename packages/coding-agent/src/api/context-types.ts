@@ -1,12 +1,12 @@
 import type { CustomMessage } from "@tsuuanmi/pi-agent";
 import type { Model, TextContent } from "@tsuuanmi/pi-ai";
-import type { CompactionResult } from "../core/compaction/index.ts";
-import type { ModelRegistry } from "../core/model/model-registry.ts";
-import type { ReadonlySessionManager, SessionManager } from "../core/session/session-manager.ts";
-import type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";
-import type { SubagentManager } from "../core/subagents/subagents.ts";
-import type { MCPServerInfo } from "../packages/mcp/runtime/types.ts";
-import type { ExtensionUIContext } from "./ui-types.ts";
+import type { ExtensionUIContext } from "#coding-agent/api/ui-types";
+import type { CompactionResult } from "#coding-agent/core/compaction/index";
+import type { ModelRegistry } from "#coding-agent/core/model/model-registry";
+import type { ReadonlySessionManager, SessionManager } from "#coding-agent/core/session/session-manager";
+import type { BuildSystemPromptOptions } from "#coding-agent/core/skills/system-prompt";
+import type { SubagentManager } from "#coding-agent/core/subagents/subagents";
+import type { MCPServerInfo } from "#coding-agent/packages/mcp/runtime/types";
 
 // ============================================================================
 // Extension Context

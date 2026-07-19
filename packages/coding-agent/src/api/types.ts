@@ -6,13 +6,13 @@
  */
 
 export type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "@tsuuanmi/pi-agent";
-export type { ExecOptions, ExecResult } from "../core/exec/exec.ts";
-export type { AppKeybinding, KeybindingsManager } from "../core/settings/keybindings.ts";
-export type { BuildSystemPromptOptions } from "../core/skills/system-prompt.ts";
-export type { MCPServerInfo } from "../packages/mcp/runtime/types.ts";
-export * from "./context-types.ts";
-export * from "./event-types.ts";
-export * from "./extension-types.ts";
-export * from "./provider-types.ts";
-export * from "./tool-types.ts";
-export * from "./ui-types.ts";
+export * from "#coding-agent/api/context-types";
+export * from "#coding-agent/api/event-types";
+export * from "#coding-agent/api/extension-types";
+export * from "#coding-agent/api/provider-types";
+export * from "#coding-agent/api/tool-types";
+export * from "#coding-agent/api/ui-types";
+export type { ExecOptions, ExecResult } from "#coding-agent/core/exec/exec";
+export type { AppKeybinding, KeybindingsManager } from "#coding-agent/core/settings/keybindings";
+export type { BuildSystemPromptOptions } from "#coding-agent/core/skills/system-prompt";
+export type { MCPServerInfo } from "#coding-agent/packages/mcp/runtime/types";
