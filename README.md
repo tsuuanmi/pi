@@ -82,8 +82,7 @@ npm run check        # Lint, format, and type check
 We treat npm dependency changes as reviewed code changes.
 
 - Direct external dependencies are pinned to exact versions. Internal workspace packages remain version-ranged.
-- `.npmrc` sets `save-exact=true` and `min-release-age=2` to avoid same-day dependency releases during npm resolution.
-- `package-lock.json` is the dependency ground truth. Pre-commit blocks accidental lockfile commits unless `PI_ALLOW_LOCKFILE_CHANGE=1` is set.
+- `package-lock.json` is the dependency ground truth and dependency changes should be reviewed explicitly.
 - `npm run check` verifies pinned direct deps, native TypeScript import compatibility, and the generated pi shrinkwrap.
 - The published CLI package includes `packages/pi/npm-shrinkwrap.json`, generated from the root lockfile, to pin transitive deps for npm users.
 - Release smoke tests use `npm run release:local` to build, pack, and create isolated npm and Bun installs outside the repo before tagging a release.

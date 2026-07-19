@@ -3,7 +3,6 @@
 	"workspaces": {
 		".": {
 			"entry": [
-				"scripts/guard-lockfile.mjs",
 				"scripts/check-pinned-deps.mjs",
 				"scripts/check-imports.mjs",
 				"scripts/release-local.mjs",
