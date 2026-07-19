@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { assertRalplanObstacle, writeRalplanObstacle } from "#workflows/harness/ralplan/ralplan-obstacles";
 import { type FailSoftError, recordFailSoftError } from "#workflows/harness/shared/audit/audit-log";
 import type { ObstacleInput, ObstacleTrigger } from "#workflows/harness/shared/audit/decision-ledger";
 import {
@@ -14,7 +13,8 @@ import { workflowActiveStatePath, workflowStatePath } from "#workflows/harness/s
 import { applyHandoffToActiveState } from "#workflows/harness/shared/state/active-state";
 import { assertWorkflowSkill, type WorkflowStateEnvelope } from "#workflows/harness/shared/state/state-schema";
 import { readWorkflowState, writeWorkflowState } from "#workflows/harness/shared/state/workflow-state";
-import { assertUltragoalObstacle, writeUltragoalObstacle } from "#workflows/harness/ultragoal/ultragoal-obstacles";
+import { assertRalplanObstacle, writeRalplanObstacle } from "#workflows/skills/ralplan/ralplan-obstacles";
+import { assertUltragoalObstacle, writeUltragoalObstacle } from "#workflows/skills/ultragoal/ultragoal-obstacles";
 
 /**
  * Generic, transaction-backed workflow handoff.

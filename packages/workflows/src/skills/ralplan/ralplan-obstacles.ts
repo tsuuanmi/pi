@@ -25,12 +25,6 @@
  */
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import type {
-	RalplanArchitectVerdict,
-	RalplanCriticVerdict,
-	RalplanCriticVerdictKind,
-	RalplanVerdict,
-} from "#workflows/harness/ralplan/ralplan-verdicts";
 import {
 	type ObstacleInput,
 	type ObstacleKindRegistry,
@@ -42,6 +36,12 @@ import {
 } from "#workflows/harness/shared/audit/decision-ledger";
 import { ralplanObstacleLedgerPath } from "#workflows/harness/shared/session/session-layout";
 import { writeJsonAtomic } from "#workflows/harness/shared/state/state-writer";
+import type {
+	RalplanArchitectVerdict,
+	RalplanCriticVerdict,
+	RalplanCriticVerdictKind,
+	RalplanVerdict,
+} from "#workflows/skills/ralplan/ralplan-verdicts";
 
 /**
  * Ralplan obstacle kinds (from the decision-ledger design, Part 3). All are

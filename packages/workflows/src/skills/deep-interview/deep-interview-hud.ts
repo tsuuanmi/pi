@@ -1,5 +1,5 @@
 import type { HudChip, HudSummary } from "@tsuuanmi/pi-tui";
-import { DEFAULT_DEEP_INTERVIEW_THRESHOLD } from "#workflows/harness/deep-interview/deep-interview-state";
+import { DEFAULT_DEEP_INTERVIEW_THRESHOLD } from "#workflows/skills/deep-interview/deep-interview-state";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);

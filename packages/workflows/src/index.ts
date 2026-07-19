@@ -6,28 +6,15 @@
  */
 
 // Register built-in skill transition tables for selector/gate helpers exported below.
-import "#workflows/harness/deep-interview/deep-interview-transitions";
-import "#workflows/harness/ralplan/ralplan-transitions";
-import "#workflows/harness/team/team-transitions";
-import "#workflows/harness/ultragoal/ultragoal-transitions";
+import "#workflows/skills/deep-interview/deep-interview-transitions";
+import "#workflows/skills/ralplan/ralplan-transitions";
+import "#workflows/skills/team/team-transitions";
+import "#workflows/skills/ultragoal/ultragoal-transitions";
 
 // Workflow commands
 export { handleWorkflowCommand, runStateCommand, runWorkflowCommand } from "#workflows/commands/workflow";
 // Extension entry point
 export { default } from "#workflows/extensions/workflows";
-export * from "#workflows/harness/deep-interview/deep-interview-mutation-guard";
-export * from "#workflows/harness/deep-interview/deep-interview-runtime";
-export * from "#workflows/harness/deep-interview/deep-interview-state";
-export * from "#workflows/harness/deep-interview/deep-interview-tools";
-export * from "#workflows/harness/ralplan/ralplan-agents";
-export * from "#workflows/harness/ralplan/ralplan-compact";
-export * from "#workflows/harness/ralplan/ralplan-completion-transaction";
-export * from "#workflows/harness/ralplan/ralplan-expected-action";
-export * from "#workflows/harness/ralplan/ralplan-gates";
-export * from "#workflows/harness/ralplan/ralplan-obstacles";
-export * from "#workflows/harness/ralplan/ralplan-orchestration-snapshot";
-export * from "#workflows/harness/ralplan/ralplan-runtime";
-export * from "#workflows/harness/ralplan/ralplan-verdicts";
 export * from "#workflows/harness/runtime/endpoint";
 export * from "#workflows/harness/runtime/gc";
 export * from "#workflows/harness/runtime/lease";
@@ -74,14 +61,27 @@ export * from "#workflows/harness/shared/state/active-state";
 export * from "#workflows/harness/shared/state/state-schema";
 export * from "#workflows/harness/shared/state/state-writer";
 export * from "#workflows/harness/shared/state/workflow-state";
+export * from "#workflows/skills/deep-interview/deep-interview-mutation-guard";
+export * from "#workflows/skills/deep-interview/deep-interview-runtime";
+export * from "#workflows/skills/deep-interview/deep-interview-state";
+export * from "#workflows/skills/deep-interview/deep-interview-tools";
+export * from "#workflows/skills/ralplan/ralplan-agents";
+export * from "#workflows/skills/ralplan/ralplan-compact";
+export * from "#workflows/skills/ralplan/ralplan-completion-transaction";
+export * from "#workflows/skills/ralplan/ralplan-expected-action";
+export * from "#workflows/skills/ralplan/ralplan-gates";
+export * from "#workflows/skills/ralplan/ralplan-obstacles";
+export * from "#workflows/skills/ralplan/ralplan-orchestration-snapshot";
+export * from "#workflows/skills/ralplan/ralplan-runtime";
+export * from "#workflows/skills/ralplan/ralplan-verdicts";
 // Harness runtime
-export * from "#workflows/harness/team/team-compact";
-export * from "#workflows/harness/team/team-runtime";
-export * from "#workflows/harness/ultragoal/ultragoal-artifacts";
-export * from "#workflows/harness/ultragoal/ultragoal-compact";
-export * from "#workflows/harness/ultragoal/ultragoal-guard";
-export * from "#workflows/harness/ultragoal/ultragoal-obstacles";
-export * from "#workflows/harness/ultragoal/ultragoal-quality-gate";
+export * from "#workflows/skills/team/team-compact";
+export * from "#workflows/skills/team/team-runtime";
+export * from "#workflows/skills/ultragoal/ultragoal-artifacts";
+export * from "#workflows/skills/ultragoal/ultragoal-compact";
+export * from "#workflows/skills/ultragoal/ultragoal-guard";
+export * from "#workflows/skills/ultragoal/ultragoal-obstacles";
+export * from "#workflows/skills/ultragoal/ultragoal-quality-gate";
 // ultragoal-receipt: avoid re-exporting requiredGoals (conflicts with ultragoal-runtime)
 export {
 	buildCompletionReceipt,
@@ -105,5 +105,5 @@ export {
 	type UltragoalReceiptDiagnosticState,
 	type UltragoalReceiptKind,
 	validateCompletionReceipt,
-} from "#workflows/harness/ultragoal/ultragoal-receipt";
-export * from "#workflows/harness/ultragoal/ultragoal-runtime";
+} from "#workflows/skills/ultragoal/ultragoal-receipt";
+export * from "#workflows/skills/ultragoal/ultragoal-runtime";

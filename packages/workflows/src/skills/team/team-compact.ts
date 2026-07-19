@@ -1,4 +1,4 @@
-import type { TeamConfig, TeamSnapshot } from "#workflows/harness/team/team-runtime";
+import type { TeamConfig, TeamSnapshot } from "#workflows/skills/team/team-runtime";
 
 /**
  * Input for {@link projectTeamCompact}: the I/O-read team snapshot and the

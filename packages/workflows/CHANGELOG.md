@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Breaking Changes
+
+- **workflows**: Moved skill-owned TypeScript from `src/harness/<skill>/` to `src/skills/<skill>/` and updated public barrel exports to the new `skills/<skill>` paths; no `harness/<skill>` compatibility wrappers are provided.
+
 ### Added
 
 - **ralplan**: Added a deterministic orchestration snapshot, pure expected-action selector, and journaled artifact completion transaction with provenance sidecars, idempotent same-hash handling, and doctor-visible journal health.

@@ -7,8 +7,8 @@ import {
 	chooseReceiptKind,
 	readUltragoalLedger,
 	validateCompletionReceipt,
-} from "#workflows/harness/ultragoal/ultragoal-receipt";
-import { getUltragoalStatus, readUltragoalPlan } from "#workflows/harness/ultragoal/ultragoal-runtime";
+} from "#workflows/skills/ultragoal/ultragoal-receipt";
+import { getUltragoalStatus, readUltragoalPlan } from "#workflows/skills/ultragoal/ultragoal-runtime";
 
 interface UltragoalSelectorGoal {
 	id: string;

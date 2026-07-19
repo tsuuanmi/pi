@@ -6,7 +6,7 @@ import {
 	registerSkillTransitionTable,
 	type SkillTransitionContext,
 } from "#workflows/harness/shared/registry/skill-registry";
-import { readTeamCompact, readTeamSnapshot, type TeamSnapshot } from "#workflows/harness/team/team-runtime";
+import { readTeamCompact, readTeamSnapshot, type TeamSnapshot } from "#workflows/skills/team/team-runtime";
 
 function selectNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): ExpectedNextRole | undefined {
 	if (!snapshot?.team_id) return undefined;

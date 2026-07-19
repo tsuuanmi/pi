@@ -1,5 +1,5 @@
 import { type HudSummary, hudChip, progressChip } from "@tsuuanmi/pi-tui";
-import type { RalplanStatus } from "#workflows/harness/ralplan/ralplan-runtime";
+import type { RalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";
 
 /**
  * Build the HUD summary for an active ralplan run.

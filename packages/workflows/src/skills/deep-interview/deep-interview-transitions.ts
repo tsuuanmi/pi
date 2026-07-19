@@ -1,5 +1,5 @@
-import { runClosureCheckForSession } from "#workflows/harness/deep-interview/deep-interview-runtime";
 import { registerSkillTransitionTable } from "#workflows/harness/shared/registry/skill-registry";
+import { runClosureCheckForSession } from "#workflows/skills/deep-interview/deep-interview-runtime";
 
 function hasPendingQuestion(state: unknown): boolean {
 	if (!state || typeof state !== "object" || Array.isArray(state)) return false;

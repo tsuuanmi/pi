@@ -1,5 +1,5 @@
-import type { RalplanOrchestrationSnapshot } from "#workflows/harness/ralplan/ralplan-orchestration-snapshot";
 import type { ExpectedNextRole } from "#workflows/harness/shared/orchestration/expected-next-role";
+import type { RalplanOrchestrationSnapshot } from "#workflows/skills/ralplan/ralplan-orchestration-snapshot";
 
 export type RalplanExpectedAction =
 	| { kind: "spawn"; expected: ExpectedNextRole; reason: string }

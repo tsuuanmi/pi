@@ -33,7 +33,7 @@ import {
 	readWorkflowState,
 	writeWorkflowState,
 } from "#workflows/harness/shared/state/workflow-state";
-import { buildTeamHud } from "#workflows/harness/team/team-hud";
+import { buildTeamHud } from "#workflows/skills/team/team-hud";
 
 export type TeamPhase = "starting" | "running" | "awaiting_integration" | "complete" | "failed" | "cancelled";
 export type TeamTaskStatus = "pending" | "blocked" | "in_progress" | "completed" | "failed";

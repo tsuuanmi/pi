@@ -1,8 +1,5 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
-import { ralplanRoleForStage, runRalplanAgent } from "#workflows/harness/ralplan/ralplan-agents";
-import { normalizeRalplanExplorerGate } from "#workflows/harness/ralplan/ralplan-gates";
-import { readRalplanStatus } from "#workflows/harness/ralplan/ralplan-runtime";
 import { workflowReceipt } from "#workflows/harness/shared/artifacts/artifacts";
 import {
 	assertExpectedNextRole,
@@ -16,6 +13,9 @@ import {
 } from "#workflows/harness/shared/orchestration/workflow-tool-utils";
 import { assertRalplanStage, assertSafePathComponent } from "#workflows/harness/shared/state/state-schema";
 import { defaultWorkflowId, readWorkflowState } from "#workflows/harness/shared/state/workflow-state";
+import { ralplanRoleForStage, runRalplanAgent } from "#workflows/skills/ralplan/ralplan-agents";
+import { normalizeRalplanExplorerGate } from "#workflows/skills/ralplan/ralplan-gates";
+import { readRalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";
 
 const ralplanRunAgentSchema = Type.Object({
 	role: Type.Optional(

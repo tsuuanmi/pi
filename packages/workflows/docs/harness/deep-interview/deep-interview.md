@@ -2,7 +2,7 @@
 
 Runtime workflow for the `deep-interview` skill.
 
-**Source:** `src/harness/deep-interview/`
+**Source:** `src/skills/deep-interview/`
 
 ## Overview
 

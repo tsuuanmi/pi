@@ -24,7 +24,7 @@ import {
 	readUltragoalObstacleLedger,
 	type UltragoalObstacleLedger,
 	unresolvedUltragoalObstacles,
-} from "#workflows/harness/ultragoal/ultragoal-obstacles";
+} from "#workflows/skills/ultragoal/ultragoal-obstacles";
 import {
 	readUltragoalLedger,
 	requiredGoals,
@@ -34,8 +34,8 @@ import {
 	type UltragoalPlan,
 	type UltragoalReceiptKind,
 	validateCompletionReceipt,
-} from "#workflows/harness/ultragoal/ultragoal-receipt";
-import { readUltragoalPlan } from "#workflows/harness/ultragoal/ultragoal-runtime";
+} from "#workflows/skills/ultragoal/ultragoal-receipt";
+import { readUltragoalPlan } from "#workflows/skills/ultragoal/ultragoal-runtime";
 
 export type UltragoalGuardState =
 	| "inactive"

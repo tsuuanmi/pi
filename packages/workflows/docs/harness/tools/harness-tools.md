@@ -2,7 +2,7 @@
 
 Workflow-owned spawn tools are registered by the workflow extension; non-spawn operations are `pi workflow ...` commands.
 
-**Source:** `src/extensions/workflows.ts`, `src/harness/subagents/subagent-tools.ts`, `src/harness/ralplan/ralplan-tools.ts`, `src/harness/team/team-tools.ts`, `src/harness/ultragoal/ultragoal-tools.ts`
+**Source:** `src/extensions/workflows.ts`, `src/harness/subagents/subagent-tools.ts`, `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, `src/skills/ultragoal/ultragoal-tools.ts`
 
 ## Model-Visible Tools
 

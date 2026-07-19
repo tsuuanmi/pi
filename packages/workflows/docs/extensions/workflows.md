@@ -7,7 +7,7 @@ The package extension entry point lives at `src/extensions/workflows.ts` and is 
 On load, the extension:
 
 - Registers generic subagent lifecycle tools from `src/harness/subagents/subagent-tools.ts`.
-- Registers guarded workflow spawn tools from `src/harness/ralplan/ralplan-tools.ts`, `src/harness/team/team-tools.ts`, and `src/harness/ultragoal/ultragoal-tools.ts`.
+- Registers guarded workflow spawn tools from `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, and `src/skills/ultragoal/ultragoal-tools.ts`.
 - Imports skill transition tables for Deep Interview, Ralplan, Team, and Ultragoal.
 - Hooks session/turn/tool lifecycle events to refresh workflow/MCP UI state.
 - Blocks unsafe `edit`/`write` calls when the Deep Interview mutation guard says an unfinished interview is active.

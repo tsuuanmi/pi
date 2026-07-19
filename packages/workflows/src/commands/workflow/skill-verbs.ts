@@ -1,7 +1,7 @@
-import "#workflows/harness/deep-interview/deep-interview-transitions";
-import "#workflows/harness/ralplan/ralplan-transitions";
-import "#workflows/harness/team/team-transitions";
-import "#workflows/harness/ultragoal/ultragoal-transitions";
+import "#workflows/skills/deep-interview/deep-interview-transitions";
+import "#workflows/skills/ralplan/ralplan-transitions";
+import "#workflows/skills/team/team-transitions";
+import "#workflows/skills/ultragoal/ultragoal-transitions";
 import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
 import {
 	inputString,
@@ -14,6 +14,13 @@ import {
 	sessionIdFromInput,
 	workflowVerbSet,
 } from "#workflows/commands/workflow/utils";
+import { handoffWorkflow } from "#workflows/harness/shared/orchestration/handoff";
+import { assertDeepInterviewHandoff } from "#workflows/harness/shared/orchestration/workflow-tool-utils";
+import type { RalplanStage } from "#workflows/harness/shared/session/paths";
+import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/harness/shared/session/session-layout";
+import { assertSafePathComponent } from "#workflows/harness/shared/state/state-schema";
+import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/harness/shared/state/state-writer";
+import { activeRalplanRunId, defaultWorkflowId } from "#workflows/harness/shared/state/workflow-state";
 import {
 	appendOrMergeDeepInterviewRound,
 	assertDeepInterviewSpecReady,
@@ -23,27 +30,20 @@ import {
 	readDeepInterviewStateCompact,
 	restateGoalGate,
 	runClosureCheckForSession,
-} from "#workflows/harness/deep-interview/deep-interview-runtime";
+} from "#workflows/skills/deep-interview/deep-interview-runtime";
 import type {
 	DeepInterviewAdvisoryMetadata,
 	DeepInterviewRoundRecord,
-} from "#workflows/harness/deep-interview/deep-interview-state";
-import { recordRalplanExplorerGateArtifact } from "#workflows/harness/ralplan/ralplan-gates";
-import type { RalplanApprovalTarget } from "#workflows/harness/ralplan/ralplan-runtime";
+} from "#workflows/skills/deep-interview/deep-interview-state";
+import { recordRalplanExplorerGateArtifact } from "#workflows/skills/ralplan/ralplan-gates";
+import type { RalplanApprovalTarget } from "#workflows/skills/ralplan/ralplan-runtime";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
 	readRalplanCompactStatus,
 	readRalplanStatus,
 	writeRalplanArtifact,
-} from "#workflows/harness/ralplan/ralplan-runtime";
-import { handoffWorkflow } from "#workflows/harness/shared/orchestration/handoff";
-import { assertDeepInterviewHandoff } from "#workflows/harness/shared/orchestration/workflow-tool-utils";
-import type { RalplanStage } from "#workflows/harness/shared/session/paths";
-import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/harness/shared/session/session-layout";
-import { assertSafePathComponent } from "#workflows/harness/shared/state/state-schema";
-import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/harness/shared/state/state-writer";
-import { activeRalplanRunId, defaultWorkflowId } from "#workflows/harness/shared/state/workflow-state";
+} from "#workflows/skills/ralplan/ralplan-runtime";
 import {
 	completeTeam,
 	createTeamTask,
@@ -54,10 +54,10 @@ import {
 	sendTeamMessage,
 	startTeam,
 	transitionTeamTask,
-} from "#workflows/harness/team/team-runtime";
-import { ultragoalGuard } from "#workflows/harness/ultragoal/ultragoal-guard";
-import type { UltragoalGoalMode } from "#workflows/harness/ultragoal/ultragoal-receipt";
-import type { UltragoalBlockerClassification } from "#workflows/harness/ultragoal/ultragoal-runtime";
+} from "#workflows/skills/team/team-runtime";
+import { ultragoalGuard } from "#workflows/skills/ultragoal/ultragoal-guard";
+import type { UltragoalGoalMode } from "#workflows/skills/ultragoal/ultragoal-receipt";
+import type { UltragoalBlockerClassification } from "#workflows/skills/ultragoal/ultragoal-runtime";
 import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
@@ -66,7 +66,7 @@ import {
 	recordUltragoalBlockerClassification,
 	recordUltragoalReviewBlockers,
 	startNextUltragoalGoal,
-} from "#workflows/harness/ultragoal/ultragoal-runtime";
+} from "#workflows/skills/ultragoal/ultragoal-runtime";
 
 export async function deepInterviewVerb(
 	action: string | undefined,

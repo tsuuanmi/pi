@@ -10,7 +10,7 @@ import {
 	assertAgentThinkingLevel,
 	requireSubagentManager,
 } from "#workflows/harness/shared/orchestration/workflow-tool-utils";
-import { readTeamSnapshot } from "#workflows/harness/team/team-runtime";
+import { readTeamSnapshot } from "#workflows/skills/team/team-runtime";
 
 const teamSpawnTaskAgentSchema = Type.Object({
 	teamId: Type.Optional(Type.String({ description: "Team run id. Defaults to the active team." })),

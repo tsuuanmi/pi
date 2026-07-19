@@ -37,16 +37,16 @@ systemPrompt: |
     "context_needed": true,
     "summary": "Planner should account for the team completion seam and existing ultragoal gate.",
     "relevant_files": [
-      { "path": "packages/workflows/src/harness/team/team-runtime.ts", "note": "Team completion and task transition logic." }
+      { "path": "packages/workflows/src/skills/team/team-runtime.ts", "note": "Team completion and task transition logic." }
     ],
     "important_symbols": [
-      { "name": "completeTeam", "path": "packages/workflows/src/harness/team/team-runtime.ts", "note": "Completion gate seam." }
+      { "name": "completeTeam", "path": "packages/workflows/src/skills/team/team-runtime.ts", "note": "Completion gate seam." }
     ],
     "existing_patterns": ["Workflow state writes use session-scoped helpers."],
     "risks": ["Do not double-gate ultragoal completion."],
     "open_questions": [],
     "evidence": [
-      { "kind": "file", "ref": "packages/workflows/src/harness/team/team-runtime.ts", "note": "Inspected completion path." }
+      { "kind": "file", "ref": "packages/workflows/src/skills/team/team-runtime.ts", "note": "Inspected completion path." }
     ]
   }
   ```

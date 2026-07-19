@@ -1,4 +1,8 @@
-import { deriveDeepInterviewHud } from "#workflows/harness/deep-interview/deep-interview-hud";
+import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compaction";
+import { workflowStatePath } from "#workflows/harness/shared/session/session-layout";
+import { syncWorkflowActiveState } from "#workflows/harness/shared/state/active-state";
+import { readWorkflowState, replaceWorkflowState } from "#workflows/harness/shared/state/workflow-state";
+import { deriveDeepInterviewHud } from "#workflows/skills/deep-interview/deep-interview-hud";
 import {
 	answerHash,
 	DEFAULT_DEEP_INTERVIEW_THRESHOLD,
@@ -15,11 +19,7 @@ import {
 	normalizeDeepInterviewEnvelope,
 	questionHash,
 	validateDeepInterviewScoredTransition,
-} from "#workflows/harness/deep-interview/deep-interview-state";
-import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compaction";
-import { workflowStatePath } from "#workflows/harness/shared/session/session-layout";
-import { syncWorkflowActiveState } from "#workflows/harness/shared/state/active-state";
-import { readWorkflowState, replaceWorkflowState } from "#workflows/harness/shared/state/workflow-state";
+} from "#workflows/skills/deep-interview/deep-interview-state";
 
 export interface DeepInterviewAnswerInput {
 	interviewId?: string;

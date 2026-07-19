@@ -2,7 +2,7 @@
 
 Runtime workflow for the `ralplan` skill.
 
-**Source:** `src/harness/ralplan/`
+**Source:** `src/skills/ralplan/`
 
 ## Overview
 

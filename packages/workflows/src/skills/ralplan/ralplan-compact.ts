@@ -1,4 +1,4 @@
-import type { RalplanCompactStatus, RalplanStatus } from "#workflows/harness/ralplan/ralplan-runtime";
+import type { RalplanCompactStatus, RalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";
 
 /**
  * Pure projection from a full {@link RalplanStatus} to the prompt-efficient

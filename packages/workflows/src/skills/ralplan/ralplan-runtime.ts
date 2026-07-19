@@ -1,31 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import { ralplanRoleForStage } from "#workflows/harness/ralplan/ralplan-agents";
-import {
-	beginRalplanCompletionJournal,
-	commitRalplanCompletionJournal,
-	markRalplanCompletionStep,
-	ralplanCompletionMutationId,
-	ralplanCompletionProvenancePath,
-	recordRalplanRollback,
-	withRalplanCompletionLock,
-	writeRalplanCompletionProvenance,
-} from "#workflows/harness/ralplan/ralplan-completion-transaction";
-import { buildRalplanHud } from "#workflows/harness/ralplan/ralplan-hud";
-import {
-	assertRalplanObstacle,
-	type RalplanObstacleLedger,
-	ralplanObstacleFromVerdict,
-	readRalplanObstacleLedger,
-	unresolvedRalplanObstacles,
-	writeRalplanObstacle,
-} from "#workflows/harness/ralplan/ralplan-obstacles";
-import {
-	isRalplanVerdict,
-	parseRalplanVerdict,
-	type RalplanCriticVerdictKind,
-	type RalplanVerdict,
-} from "#workflows/harness/ralplan/ralplan-verdicts";
 import { writeStageArtifact } from "#workflows/harness/shared/artifacts/artifacts";
 import { type FailSoftError, recordFailSoftError } from "#workflows/harness/shared/audit/audit-log";
 import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compaction";
@@ -52,6 +26,32 @@ import {
 	readWorkflowState,
 	writeWorkflowState,
 } from "#workflows/harness/shared/state/workflow-state";
+import { ralplanRoleForStage } from "#workflows/skills/ralplan/ralplan-agents";
+import {
+	beginRalplanCompletionJournal,
+	commitRalplanCompletionJournal,
+	markRalplanCompletionStep,
+	ralplanCompletionMutationId,
+	ralplanCompletionProvenancePath,
+	recordRalplanRollback,
+	withRalplanCompletionLock,
+	writeRalplanCompletionProvenance,
+} from "#workflows/skills/ralplan/ralplan-completion-transaction";
+import { buildRalplanHud } from "#workflows/skills/ralplan/ralplan-hud";
+import {
+	assertRalplanObstacle,
+	type RalplanObstacleLedger,
+	ralplanObstacleFromVerdict,
+	readRalplanObstacleLedger,
+	unresolvedRalplanObstacles,
+	writeRalplanObstacle,
+} from "#workflows/skills/ralplan/ralplan-obstacles";
+import {
+	isRalplanVerdict,
+	parseRalplanVerdict,
+	type RalplanCriticVerdictKind,
+	type RalplanVerdict,
+} from "#workflows/skills/ralplan/ralplan-verdicts";
 
 export interface RalplanPlannerStateUpdate {
 	plannerSubagentId?: string;

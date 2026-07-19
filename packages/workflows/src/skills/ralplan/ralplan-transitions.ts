@@ -1,10 +1,10 @@
-import { assertRalplanExplorerGatePassed } from "#workflows/harness/ralplan/ralplan-gates";
-import { readRalplanStatus } from "#workflows/harness/ralplan/ralplan-runtime";
 import type {
 	ExpectedNextRole,
 	RalplanSelectorState,
 } from "#workflows/harness/shared/orchestration/expected-next-role";
 import { registerSkillTransitionTable } from "#workflows/harness/shared/registry/skill-registry";
+import { assertRalplanExplorerGatePassed } from "#workflows/skills/ralplan/ralplan-gates";
+import { readRalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";
 
 const RALPLAN_CLOSED_PHASES = new Set([
 	"pending-approval",

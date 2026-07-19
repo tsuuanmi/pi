@@ -57,14 +57,14 @@ systemPrompt: |
       }
     ],
     "files_reviewed": [
-      { "path": "packages/workflows/src/harness/team/team-runtime.ts", "note": "Reviewed task transition gate." }
+      { "path": "packages/workflows/src/skills/team/team-runtime.ts", "note": "Reviewed task transition gate." }
     ],
     "tests_reviewed": [
       { "command": "npx vitest --run test/workflows.test.ts", "status": "passed" }
     ],
     "non_blocking_notes": ["Medium finding is tracked but non-blocking in v1."],
     "evidence": [
-      { "kind": "file", "ref": "packages/workflows/src/harness/team/team-runtime.ts", "note": "reviewed" }
+      { "kind": "file", "ref": "packages/workflows/src/skills/team/team-runtime.ts", "note": "reviewed" }
     ]
   }
   ```

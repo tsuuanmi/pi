@@ -1,5 +1,5 @@
 import { type HudSummary, hudChip, progressChip } from "@tsuuanmi/pi-tui";
-import type { UltragoalStatus } from "#workflows/harness/ultragoal/ultragoal-runtime";
+import type { UltragoalStatus } from "#workflows/skills/ultragoal/ultragoal-runtime";
 
 /**
  * Remaining (non-terminal) goal count: pending + active + failed + blocked +

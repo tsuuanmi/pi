@@ -17,14 +17,14 @@ import {
 	writeTextArtifact,
 } from "#workflows/harness/shared/state/state-writer";
 import { readWorkflowState, writeWorkflowState } from "#workflows/harness/shared/state/workflow-state";
-import { buildUltragoalHud } from "#workflows/harness/ultragoal/ultragoal-hud";
+import { buildUltragoalHud } from "#workflows/skills/ultragoal/ultragoal-hud";
 import {
 	assertUltragoalObstacle,
 	buildUltragoalObstacle,
 	ULTRAGOAL_OBSTACLE_KINDS,
 	writeUltragoalObstacle,
-} from "#workflows/harness/ultragoal/ultragoal-obstacles";
-import { validateCompletionQualityGate } from "#workflows/harness/ultragoal/ultragoal-quality-gate";
+} from "#workflows/skills/ultragoal/ultragoal-obstacles";
+import { validateCompletionQualityGate } from "#workflows/skills/ultragoal/ultragoal-quality-gate";
 import {
 	buildCompletionReceipt,
 	chooseReceiptKind,
@@ -38,7 +38,7 @@ import {
 	type UltragoalPlan,
 	type UltragoalReceiptKind,
 	validateCompletionReceipt,
-} from "#workflows/harness/ultragoal/ultragoal-receipt";
+} from "#workflows/skills/ultragoal/ultragoal-receipt";
 
 export type {
 	UltragoalCompletionVerification,

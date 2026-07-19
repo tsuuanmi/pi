@@ -4,10 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import "#workflows/harness/deep-interview/deep-interview-transitions";
-import "#workflows/harness/ralplan/ralplan-transitions";
-import "#workflows/harness/team/team-transitions";
-import "#workflows/harness/ultragoal/ultragoal-transitions";
+import "#workflows/skills/deep-interview/deep-interview-transitions";
+import "#workflows/skills/ralplan/ralplan-transitions";
+import "#workflows/skills/team/team-transitions";
+import "#workflows/skills/ultragoal/ultragoal-transitions";
 import {
 	appendJsonlIdempotent,
 	assertExpectedNextRole,

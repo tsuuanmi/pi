@@ -2,7 +2,7 @@
 
 Runtime workflow for the `ultragoal` skill.
 
-**Source:** `src/harness/ultragoal/`
+**Source:** `src/skills/ultragoal/`
 
 ## Overview
 

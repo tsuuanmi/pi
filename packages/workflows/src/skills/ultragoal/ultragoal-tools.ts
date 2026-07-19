@@ -10,7 +10,7 @@ import {
 	requireSubagentManager,
 } from "#workflows/harness/shared/orchestration/workflow-tool-utils";
 import { expectedNextRoleForSkill } from "#workflows/harness/shared/registry/skill-registry";
-import { getUltragoalStatus } from "#workflows/harness/ultragoal/ultragoal-runtime";
+import { getUltragoalStatus } from "#workflows/skills/ultragoal/ultragoal-runtime";
 
 const ultragoalSpawnGoalAgentSchema = Type.Object({
 	goalId: Type.String({ description: "Goal id to assign to the subagent." }),

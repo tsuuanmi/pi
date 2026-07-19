@@ -1,13 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { RalplanExplorerGate } from "#workflows/harness/ralplan/ralplan-gates";
-import { readRalplanObstacleLedger, unresolvedRalplanObstacles } from "#workflows/harness/ralplan/ralplan-obstacles";
-import type {
-	RalplanIndexRow,
-	RalplanInvalidIndexLine,
-	RalplanStatus,
-} from "#workflows/harness/ralplan/ralplan-runtime";
-import { readRalplanStatus } from "#workflows/harness/ralplan/ralplan-runtime";
 import type { WorkflowTransactionJournal } from "#workflows/harness/shared/audit/transaction-journal";
 import {
 	transactionJournalPath,
@@ -15,6 +7,14 @@ import {
 	workflowStatePath,
 } from "#workflows/harness/shared/session/session-layout";
 import { canonicalizeJson, sha256, workflowReceiptStatus } from "#workflows/harness/shared/state/state-writer";
+import type { RalplanExplorerGate } from "#workflows/skills/ralplan/ralplan-gates";
+import { readRalplanObstacleLedger, unresolvedRalplanObstacles } from "#workflows/skills/ralplan/ralplan-obstacles";
+import type {
+	RalplanIndexRow,
+	RalplanInvalidIndexLine,
+	RalplanStatus,
+} from "#workflows/skills/ralplan/ralplan-runtime";
+import { readRalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";
 
 export const RALPLAN_ORCHESTRATION_SNAPSHOT_VERSION = 1;
 

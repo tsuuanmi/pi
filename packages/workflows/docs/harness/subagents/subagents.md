@@ -2,7 +2,7 @@
 
 Generic and workflow-owned subagent spawning lives in the workflow extension and the skill harnesses.
 
-**Source:** `src/harness/subagents/subagent-tools.ts`, `src/harness/ralplan/ralplan-tools.ts`, `src/harness/team/team-tools.ts`, `src/harness/ultragoal/ultragoal-tools.ts`, `src/extensions/workflows.ts`
+**Source:** `src/harness/subagents/subagent-tools.ts`, `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, `src/skills/ultragoal/ultragoal-tools.ts`, `src/extensions/workflows.ts`
 
 ## Model-Visible Tools
 

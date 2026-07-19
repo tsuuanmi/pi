@@ -254,13 +254,13 @@ Workflow-owned tools are model-visible and registered by the workflow extension.
 
 ## Harness Runtime
 
-The harness runtime backs the `pi workflow` CLI and the four skills. It lives under `src/harness/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `shared/` (cross-skill artifacts, audit, compaction, orchestration, registry, session, and state utilities), `subagents/` (generic subagent tools), and one directory per skill (`deep-interview/`, `ralplan/`, `team/`, `ultragoal/`). Per-skill HUD builders live with their owning skill harnesses.
+The harness runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives under `src/harness/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `shared/` (cross-skill artifacts, audit, compaction, orchestration, registry, session, and state utilities), and `subagents/` (generic subagent tools). Skill-owned TypeScript and `SKILL.md` assets live together under `src/skills/<skill>/`.
 
 Key seams for contributors:
 
 - **Deferred-seam registry** (`harness/runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
 - **`validateReceiptFamilyConsistency`** (`harness/runtime/receipt-rules.ts`): a write-path guard inside `mutateRuntimeSession` that rejects receipts whose post-state lifecycle contradicts their family target. It throws before any write so a contradiction leaves zero orphan events/receipts/state. Conservative and pluggable; future receipt families register rules in `receiptFamilyConsistencyRules`.
-- **HUD rendering**: per-skill HUD builders live in the owning harness folders (`deep-interview-hud.ts`, `ralplan-hud.ts`, `team-hud.ts`, `ultragoal-hud.ts`). Workflow HUD synchronization is registered by the extension through `@tsuuanmi/pi-tui`; workflow mirroring remains session-scoped because the status line reads active state directly.
+- **HUD rendering**: per-skill HUD builders live in the owning skill folders (`deep-interview-hud.ts`, `ralplan-hud.ts`, `team-hud.ts`, `ultragoal-hud.ts`). Workflow HUD synchronization is registered by the extension through `@tsuuanmi/pi-tui`; workflow mirroring remains session-scoped because the status line reads active state directly.
 
 ### Session Layout
 

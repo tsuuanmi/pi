@@ -1,5 +1,12 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
+import { workflowReceipt } from "#workflows/harness/shared/artifacts/artifacts";
+import { handoffWorkflow } from "#workflows/harness/shared/orchestration/handoff";
+import { assertDeepInterviewHandoff } from "#workflows/harness/shared/orchestration/workflow-tool-utils";
+import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/harness/shared/session/session-layout";
+import { assertSafePathComponent } from "#workflows/harness/shared/state/state-schema";
+import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/harness/shared/state/state-writer";
+import { activeRalplanRunId, defaultWorkflowId } from "#workflows/harness/shared/state/workflow-state";
 import {
 	appendOrMergeDeepInterviewRound,
 	assertDeepInterviewSpecReady,
@@ -9,18 +16,11 @@ import {
 	readDeepInterviewStateCompact,
 	restateGoalGate,
 	runClosureCheckForSession,
-} from "#workflows/harness/deep-interview/deep-interview-runtime";
+} from "#workflows/skills/deep-interview/deep-interview-runtime";
 import type {
 	DeepInterviewAdvisoryMetadata,
 	DeepInterviewRoundRecord,
-} from "#workflows/harness/deep-interview/deep-interview-state";
-import { workflowReceipt } from "#workflows/harness/shared/artifacts/artifacts";
-import { handoffWorkflow } from "#workflows/harness/shared/orchestration/handoff";
-import { assertDeepInterviewHandoff } from "#workflows/harness/shared/orchestration/workflow-tool-utils";
-import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/harness/shared/session/session-layout";
-import { assertSafePathComponent } from "#workflows/harness/shared/state/state-schema";
-import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/harness/shared/state/state-writer";
-import { activeRalplanRunId, defaultWorkflowId } from "#workflows/harness/shared/state/workflow-state";
+} from "#workflows/skills/deep-interview/deep-interview-state";
 
 const planQuestionSchema = Type.Object({
 	interviewId: Type.Optional(Type.String()),

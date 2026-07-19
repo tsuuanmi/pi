@@ -52,7 +52,7 @@ systemPrompt: |
       { "command": "npm run build", "status": "passed", "note": "Package build succeeded." }
     ],
     "files_checked": [
-      { "path": "packages/workflows/src/harness/team/team-runtime.ts", "note": "Verified completion gate behavior." }
+      { "path": "packages/workflows/src/skills/team/team-runtime.ts", "note": "Verified completion gate behavior." }
     ],
     "claims_verified": [
       { "claim": "Team completion is gated by evidence_matrix", "evidence": "Targeted test covers missing and passing evidence." }

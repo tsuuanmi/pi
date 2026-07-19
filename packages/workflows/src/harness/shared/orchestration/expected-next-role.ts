@@ -64,7 +64,7 @@ export function assertExpectedNextRole(
 //
 // These exported functions are compatibility facades for existing tests and
 // runtime helpers. The phase logic itself is registered by per-skill transition
-// sidecars (for example, harness/ralplan/ralplan-transitions.ts). This keeps the
+// sidecars (for example, skills/ralplan/ralplan-transitions.ts). This keeps the
 // guarded spawn contract in one shared module while avoiding a second, hardcoded
 // transition engine here.
 // ---------------------------------------------------------------------------

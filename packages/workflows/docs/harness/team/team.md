@@ -2,7 +2,7 @@
 
 Runtime workflow for the `team` skill.
 
-**Source:** `src/harness/team/`
+**Source:** `src/skills/team/`
 
 ## Overview
 
