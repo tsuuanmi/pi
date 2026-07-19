@@ -23,7 +23,7 @@ import {
 	surfaceFamily,
 	type VerifiedReceipt,
 	validateStructuralArtifact,
-} from "#src/harness/ultragoal/ultragoal-artifacts";
+} from "#workflows/harness/ultragoal/ultragoal-artifacts";
 
 export type { VerifiedReceipt };
 

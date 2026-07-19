@@ -8,8 +8,8 @@ import {
 	registerFauxProvider,
 	stream,
 	Type,
-} from "../../src/index.ts";
-import type { AssistantMessageEvent, Context } from "../../src/types.ts";
+} from "#ai/index";
+import type { AssistantMessageEvent, Context } from "#ai/types";
 
 async function collectEvents(streamResult: ReturnType<typeof stream>): Promise<AssistantMessageEvent[]> {
 	const events: AssistantMessageEvent[] = [];

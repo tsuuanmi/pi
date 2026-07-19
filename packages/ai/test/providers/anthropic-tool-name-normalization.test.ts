@@ -1,9 +1,9 @@
 import { Type } from "typebox";
 import { describe, expect, it } from "vitest";
-import { getModel } from "../../src/models.ts";
-import { stream } from "../../src/stream.ts";
-import type { Context, Tool } from "../../src/types.ts";
-import { resolveApiKey } from "../utils/oauth/oauth.ts";
+import { getModel } from "#ai/models";
+import { stream } from "#ai/stream";
+import type { Context, Tool } from "#ai/types";
+import { resolveApiKey } from "#ai-test/utils/oauth/oauth";
 
 const oauthToken = await resolveApiKey("anthropic");
 

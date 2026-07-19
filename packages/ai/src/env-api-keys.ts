@@ -1,5 +1,5 @@
-import type { KnownProvider, ProviderEnv } from "./types.ts";
-import { getProviderEnvValue } from "./utils/provider-env.ts";
+import type { KnownProvider, ProviderEnv } from "#ai/types";
+import { getProviderEnvValue } from "#ai/utils/provider-env";
 
 function getApiKeyEnvVars(provider: string): readonly string[] | undefined {
 	// ANTHROPIC_OAUTH_TOKEN takes precedence over ANTHROPIC_API_KEY

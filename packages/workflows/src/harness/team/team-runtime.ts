@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import { projectCompactStateFor } from "#src/harness/shared/compaction/compact-state-registry";
+import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compact-state-registry";
 import {
 	type EvidenceMatrixVerdict,
 	evidenceMatrixPasses,
@@ -9,7 +9,7 @@ import {
 	reviewReportBlocks,
 	validateEvidenceMatrixVerdict,
 	validateReviewReportVerdict,
-} from "#src/harness/shared/orchestration/gate-verdicts";
+} from "#workflows/harness/shared/orchestration/gate-verdicts";
 import {
 	teamConfigPath,
 	teamDir,
@@ -19,17 +19,21 @@ import {
 	teamTaskGateArtifactPath,
 	teamTaskPath,
 	workflowStatePath,
-} from "#src/harness/shared/session/session-layout";
-import { syncWorkflowActiveState } from "#src/harness/shared/state/active-state";
+} from "#workflows/harness/shared/session/session-layout";
+import { syncWorkflowActiveState } from "#workflows/harness/shared/state/active-state";
 import {
 	appendJsonl,
 	readExistingStateForMutation,
 	readFileOrLiteral,
 	sha256,
 	writeJsonAtomic,
-} from "#src/harness/shared/state/state-writer";
-import { defaultWorkflowId, readWorkflowState, writeWorkflowState } from "#src/harness/shared/state/workflow-state";
-import { buildTeamHud } from "#src/harness/team/team-hud";
+} from "#workflows/harness/shared/state/state-writer";
+import {
+	defaultWorkflowId,
+	readWorkflowState,
+	writeWorkflowState,
+} from "#workflows/harness/shared/state/workflow-state";
+import { buildTeamHud } from "#workflows/harness/team/team-hud";
 
 export type TeamPhase = "starting" | "running" | "awaiting_integration" | "complete" | "failed" | "cancelled";
 export type TeamTaskStatus = "pending" | "blocked" | "in_progress" | "completed" | "failed";

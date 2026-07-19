@@ -1,20 +1,20 @@
 import { randomUUID } from "node:crypto";
-import { assertRalplanObstacle, writeRalplanObstacle } from "#src/harness/ralplan/ralplan-obstacles";
-import { type FailSoftError, recordFailSoftError } from "#src/harness/shared/audit/audit-log";
-import type { ObstacleInput, ObstacleTrigger } from "#src/harness/shared/audit/decision-ledger";
+import { assertRalplanObstacle, writeRalplanObstacle } from "#workflows/harness/ralplan/ralplan-obstacles";
+import { type FailSoftError, recordFailSoftError } from "#workflows/harness/shared/audit/audit-log";
+import type { ObstacleInput, ObstacleTrigger } from "#workflows/harness/shared/audit/decision-ledger";
 import {
 	beginWorkflowTransactionJournal,
 	completeWorkflowTransactionJournal,
 	updateWorkflowTransactionJournal,
 	type WorkflowTransactionSide,
-} from "#src/harness/shared/audit/transaction-journal";
-import { initialWorkflowPhase } from "#src/harness/shared/registry/workflow-manifest";
-import type { WorkflowSkill } from "#src/harness/shared/session/paths";
-import { workflowActiveStatePath, workflowStatePath } from "#src/harness/shared/session/session-layout";
-import { applyHandoffToActiveState } from "#src/harness/shared/state/active-state";
-import { assertWorkflowSkill, type WorkflowStateEnvelope } from "#src/harness/shared/state/state-schema";
-import { readWorkflowState, writeWorkflowState } from "#src/harness/shared/state/workflow-state";
-import { assertUltragoalObstacle, writeUltragoalObstacle } from "#src/harness/ultragoal/ultragoal-obstacles";
+} from "#workflows/harness/shared/audit/transaction-journal";
+import { initialWorkflowPhase } from "#workflows/harness/shared/registry/workflow-manifest";
+import type { WorkflowSkill } from "#workflows/harness/shared/session/paths";
+import { workflowActiveStatePath, workflowStatePath } from "#workflows/harness/shared/session/session-layout";
+import { applyHandoffToActiveState } from "#workflows/harness/shared/state/active-state";
+import { assertWorkflowSkill, type WorkflowStateEnvelope } from "#workflows/harness/shared/state/state-schema";
+import { readWorkflowState, writeWorkflowState } from "#workflows/harness/shared/state/workflow-state";
+import { assertUltragoalObstacle, writeUltragoalObstacle } from "#workflows/harness/ultragoal/ultragoal-obstacles";
 
 /**
  * Generic, transaction-backed workflow handoff.

@@ -1,6 +1,10 @@
-import type { WorkflowSkill } from "#src/harness/shared/session/paths";
-import { workflowActiveStatePath } from "#src/harness/shared/session/session-layout";
-import { isEntryStale, readExistingStateForMutation, writeJsonAtomic } from "#src/harness/shared/state/state-writer";
+import type { WorkflowSkill } from "#workflows/harness/shared/session/paths";
+import { workflowActiveStatePath } from "#workflows/harness/shared/session/session-layout";
+import {
+	isEntryStale,
+	readExistingStateForMutation,
+	writeJsonAtomic,
+} from "#workflows/harness/shared/state/state-writer";
 
 export type WorkflowHudSeverity = "info" | "warning" | "blocked" | "error" | "success";
 

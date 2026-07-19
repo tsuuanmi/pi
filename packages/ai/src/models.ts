@@ -1,5 +1,5 @@
-import { MODELS } from "./models.generated.ts";
-import type { Api, KnownProvider, Model, ModelThinkingLevel, Usage } from "./types.ts";
+import { MODELS } from "#ai/models.generated";
+import type { Api, KnownProvider, Model, ModelThinkingLevel, Usage } from "#ai/types";
 
 const modelRegistry: Map<string, Map<string, Model<Api>>> = new Map();
 

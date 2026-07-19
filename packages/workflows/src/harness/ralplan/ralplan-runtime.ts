@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { buildRalplanHud } from "#src/harness/ralplan/ralplan-hud";
+import { buildRalplanHud } from "#workflows/harness/ralplan/ralplan-hud";
 import {
 	assertRalplanObstacle,
 	type RalplanObstacleLedger,
@@ -7,37 +7,37 @@ import {
 	readRalplanObstacleLedger,
 	unresolvedRalplanObstacles,
 	writeRalplanObstacle,
-} from "#src/harness/ralplan/ralplan-obstacles";
+} from "#workflows/harness/ralplan/ralplan-obstacles";
 import {
 	isRalplanVerdict,
 	parseRalplanVerdict,
 	type RalplanCriticVerdictKind,
 	type RalplanVerdict,
-} from "#src/harness/ralplan/ralplan-verdicts";
-import { writeStageArtifact } from "#src/harness/shared/artifacts/artifact-writer";
-import { type FailSoftError, recordFailSoftError } from "#src/harness/shared/audit/audit-log";
-import { projectCompactStateFor } from "#src/harness/shared/compaction/compact-state-registry";
-import { handoffWorkflow } from "#src/harness/shared/orchestration/handoff";
-import type { RalplanStage, WorkflowSkill } from "#src/harness/shared/session/paths";
+} from "#workflows/harness/ralplan/ralplan-verdicts";
+import { writeStageArtifact } from "#workflows/harness/shared/artifacts/artifact-writer";
+import { type FailSoftError, recordFailSoftError } from "#workflows/harness/shared/audit/audit-log";
+import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compact-state-registry";
+import { handoffWorkflow } from "#workflows/harness/shared/orchestration/handoff";
+import type { RalplanStage, WorkflowSkill } from "#workflows/harness/shared/session/paths";
 import {
 	ralplanIndexPath,
 	ralplanPendingApprovalPath,
 	ralplanStageArtifactPath,
 	workflowStatePath,
-} from "#src/harness/shared/session/session-layout";
-import { syncWorkflowActiveState } from "#src/harness/shared/state/active-state";
+} from "#workflows/harness/shared/session/session-layout";
+import { syncWorkflowActiveState } from "#workflows/harness/shared/state/active-state";
 import {
 	appendJsonlIdempotent,
 	readFileOrLiteral,
 	sha256,
 	writeTextArtifact,
-} from "#src/harness/shared/state/state-writer";
+} from "#workflows/harness/shared/state/state-writer";
 import {
 	activeRalplanRunId,
 	defaultWorkflowId,
 	readWorkflowState,
 	writeWorkflowState,
-} from "#src/harness/shared/state/workflow-state";
+} from "#workflows/harness/shared/state/workflow-state";
 
 export interface RalplanPlannerStateUpdate {
 	plannerSubagentId?: string;

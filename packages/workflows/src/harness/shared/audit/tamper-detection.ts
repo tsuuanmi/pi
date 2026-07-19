@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
-import { safeAppendAuditEntry } from "#src/harness/shared/audit/audit-log";
-import type { WorkflowSkill } from "#src/harness/shared/session/paths";
-import { workflowEnvelopeContentSha256 } from "#src/harness/shared/state/state-writer";
+import { safeAppendAuditEntry } from "#workflows/harness/shared/audit/audit-log";
+import type { WorkflowSkill } from "#workflows/harness/shared/session/paths";
+import { workflowEnvelopeContentSha256 } from "#workflows/harness/shared/state/state-writer";
 
 /**
  * Workflow mode-state tamper detection.

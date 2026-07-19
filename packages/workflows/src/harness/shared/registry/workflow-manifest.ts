@@ -1,4 +1,4 @@
-import type { WorkflowSkill } from "#src/harness/shared/session/paths";
+import type { WorkflowSkill } from "#workflows/harness/shared/session/paths";
 
 export type WorkflowStateOperation =
 	| "initialize"

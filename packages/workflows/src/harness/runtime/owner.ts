@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { ControlServer, type EndpointRequest } from "#src/harness/runtime/endpoint";
+import { ControlServer, type EndpointRequest } from "#workflows/harness/runtime/endpoint";
 import {
 	acquireLease,
 	canWriteEvents,
@@ -8,17 +8,22 @@ import {
 	readLease,
 	releaseLease,
 	type SessionLease,
-} from "#src/harness/runtime/lease";
+} from "#workflows/harness/runtime/lease";
 import {
 	buildClassificationInput,
 	classifyPrimitive,
 	finalizePrimitive,
 	recoverPrimitive,
 	validatePrimitive,
-} from "#src/harness/runtime/primitives";
-import { type HarnessRpc, singleFlightAccept } from "#src/harness/runtime/rpc";
-import { operate } from "#src/harness/runtime/runner";
-import { buildResponse, buildStateView, nextAllowedActions, submitUnavailableReason } from "#src/harness/runtime/state";
+} from "#workflows/harness/runtime/primitives";
+import { type HarnessRpc, singleFlightAccept } from "#workflows/harness/runtime/rpc";
+import { operate } from "#workflows/harness/runtime/runner";
+import {
+	buildResponse,
+	buildStateView,
+	nextAllowedActions,
+	submitUnavailableReason,
+} from "#workflows/harness/runtime/state";
 import {
 	appendEvent,
 	readEvents,
@@ -26,8 +31,8 @@ import {
 	readSessionState,
 	sessionPaths,
 	writeSessionState,
-} from "#src/harness/runtime/storage";
-import type { Observation, PrimitiveResponse, SessionState } from "#src/harness/runtime/types";
+} from "#workflows/harness/runtime/storage";
+import type { Observation, PrimitiveResponse, SessionState } from "#workflows/harness/runtime/types";
 
 const DEFAULT_TTL_MS = 30_000;
 const DEFAULT_HEARTBEAT_MS = 10_000;

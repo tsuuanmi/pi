@@ -1,7 +1,7 @@
-import "./providers/register-builtins.ts";
+import "#ai/providers/register-builtins";
 
-import { getApiProvider } from "./api-registry.ts";
-import { getEnvApiKey } from "./env-api-keys.ts";
+import { getApiProvider } from "#ai/api-registry";
+import { getEnvApiKey } from "#ai/env-api-keys";
 import type {
 	Api,
 	AssistantMessage,
@@ -11,9 +11,9 @@ import type {
 	ProviderStreamOptions,
 	SimpleStreamOptions,
 	StreamOptions,
-} from "./types.ts";
+} from "#ai/types";
 
-export { getEnvApiKey } from "./env-api-keys.ts";
+export { getEnvApiKey } from "#ai/env-api-keys";
 
 function hasExplicitApiKey(apiKey: string | undefined): apiKey is string {
 	return typeof apiKey === "string" && apiKey.trim().length > 0;

@@ -1,18 +1,21 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
-import { ralplanRoleForStage, runRalplanAgent } from "#src/harness/ralplan/ralplan-agents";
-import { normalizeRalplanExplorerGate } from "#src/harness/ralplan/ralplan-gates";
-import { readRalplanStatus } from "#src/harness/ralplan/ralplan-runtime";
-import { workflowReceipt } from "#src/harness/shared/artifacts/receipts";
+import { ralplanRoleForStage, runRalplanAgent } from "#workflows/harness/ralplan/ralplan-agents";
+import { normalizeRalplanExplorerGate } from "#workflows/harness/ralplan/ralplan-gates";
+import { readRalplanStatus } from "#workflows/harness/ralplan/ralplan-runtime";
+import { workflowReceipt } from "#workflows/harness/shared/artifacts/receipts";
 import {
 	assertExpectedNextRole,
 	assertNoGuardedSpawnOverrides,
 	expectedNextRalplanRole,
 	type RalplanSelectorVerdict,
-} from "#src/harness/shared/orchestration/expected-next-role";
-import { assertAgentThinkingLevel, assertRalplanRole } from "#src/harness/shared/orchestration/workflow-tool-utils";
-import { assertRalplanStage, assertSafePathComponent } from "#src/harness/shared/state/state-schema";
-import { defaultWorkflowId, readWorkflowState } from "#src/harness/shared/state/workflow-state";
+} from "#workflows/harness/shared/orchestration/expected-next-role";
+import {
+	assertAgentThinkingLevel,
+	assertRalplanRole,
+} from "#workflows/harness/shared/orchestration/workflow-tool-utils";
+import { assertRalplanStage, assertSafePathComponent } from "#workflows/harness/shared/state/state-schema";
+import { defaultWorkflowId, readWorkflowState } from "#workflows/harness/shared/state/workflow-state";
 
 const ralplanRunAgentSchema = Type.Object({
 	role: Type.Optional(

@@ -4,7 +4,7 @@ import type {
 	PrimitiveResponse,
 	SessionState,
 	SessionStateView,
-} from "#src/harness/runtime/types";
+} from "#workflows/harness/runtime/types";
 
 const TERMINAL_LIFECYCLES: ReadonlySet<HarnessLifecycle> = new Set(["completed", "retired"]);
 const SUBMIT_READY_LIFECYCLES: ReadonlySet<HarnessLifecycle> = new Set(["started", "observing"]);

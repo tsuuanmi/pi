@@ -18,13 +18,13 @@
  * unreadable plan/ledger while an objective is active.
  */
 
-import type { ObstacleTrigger } from "#src/harness/shared/audit/decision-ledger";
-import { ultragoalGoalsPath, ultragoalLedgerPath } from "#src/harness/shared/session/session-layout";
+import type { ObstacleTrigger } from "#workflows/harness/shared/audit/decision-ledger";
+import { ultragoalGoalsPath, ultragoalLedgerPath } from "#workflows/harness/shared/session/session-layout";
 import {
 	readUltragoalObstacleLedger,
 	type UltragoalObstacleLedger,
 	unresolvedUltragoalObstacles,
-} from "#src/harness/ultragoal/ultragoal-obstacles";
+} from "#workflows/harness/ultragoal/ultragoal-obstacles";
 import {
 	readUltragoalLedger,
 	requiredGoals,
@@ -34,8 +34,8 @@ import {
 	type UltragoalPlan,
 	type UltragoalReceiptKind,
 	validateCompletionReceipt,
-} from "#src/harness/ultragoal/ultragoal-receipt";
-import { readUltragoalPlan } from "#src/harness/ultragoal/ultragoal-runtime";
+} from "#workflows/harness/ultragoal/ultragoal-receipt";
+import { readUltragoalPlan } from "#workflows/harness/ultragoal/ultragoal-runtime";
 
 export type UltragoalGuardState =
 	| "inactive"

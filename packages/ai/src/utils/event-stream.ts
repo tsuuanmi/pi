@@ -1,4 +1,4 @@
-import type { AssistantMessage, AssistantMessageEvent } from "../types.ts";
+import type { AssistantMessage, AssistantMessageEvent } from "#ai/types";
 
 // Generic event stream class for async iteration
 export class EventStream<T, R = T> implements AsyncIterable<T> {

@@ -3,18 +3,18 @@ import {
 	auditVerbForOperation,
 	maybeAuditForStateWrite,
 	safeAppendAuditEntry,
-} from "#src/harness/shared/audit/audit-log";
-import { auditOutOfBandAndThrowIfUnforced } from "#src/harness/shared/audit/tamper-detection";
+} from "#workflows/harness/shared/audit/audit-log";
+import { auditOutOfBandAndThrowIfUnforced } from "#workflows/harness/shared/audit/tamper-detection";
 import {
 	clearWorkflowPhase,
 	initialWorkflowPhase,
 	isKnownWorkflowPhase,
 	isValidWorkflowTransition,
 	type WorkflowStateOperation,
-} from "#src/harness/shared/registry/workflow-manifest";
-import type { WorkflowSkill } from "#src/harness/shared/session/paths";
-import { workflowStatePath } from "#src/harness/shared/session/session-layout";
-import { coerceWorkflowState, type WorkflowStateEnvelope } from "#src/harness/shared/state/state-schema";
+} from "#workflows/harness/shared/registry/workflow-manifest";
+import type { WorkflowSkill } from "#workflows/harness/shared/session/paths";
+import { workflowStatePath } from "#workflows/harness/shared/session/session-layout";
+import { coerceWorkflowState, type WorkflowStateEnvelope } from "#workflows/harness/shared/state/state-schema";
 import {
 	createWorkflowReceipt,
 	nowIso,
@@ -22,9 +22,9 @@ import {
 	type StrictMutationReadResult,
 	stampWorkflowEnvelopeChecksum,
 	writeJsonAtomic,
-} from "#src/harness/shared/state/state-writer";
+} from "#workflows/harness/shared/state/state-writer";
 
-export { defaultWorkflowId } from "#src/harness/shared/state/workflow-id";
+export { defaultWorkflowId } from "#workflows/harness/shared/state/workflow-id";
 
 export interface WorkflowStateWriteOptions {
 	operation?: WorkflowStateOperation;

@@ -7,8 +7,8 @@ import {
 	resetOpenAICodexWebSocketDebugStats,
 	streamOpenAICodexResponses,
 	streamSimpleOpenAICodexResponses,
-} from "../../src/providers/openai-codex-responses.ts";
-import type { Context, Model } from "../../src/types.ts";
+} from "#ai/providers/openai-codex-responses";
+import type { Context, Model } from "#ai/types";
 
 const originalAgentDir = process.env.PI_CODING_AGENT_DIR;
 

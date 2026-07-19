@@ -28,6 +28,8 @@
 			"@tsuuanmi/pi-ai/oauth": ["./packages/ai/src/oauth.ts"],
 			"@tsuuanmi/pi-ai/*": ["./packages/ai/src/*.ts", "./packages/ai/src/providers/*.ts"],
 			"@tsuuanmi/pi-ai/dist/*": ["./packages/ai/src/*"],
+			"#ai/*": ["./packages/ai/src/*"],
+			"#ai-test/*": ["./packages/ai/test/*"],
 			"@tsuuanmi/pi-agent": ["./packages/agent/src/index.ts"],
 			"@tsuuanmi/pi-agent/*": ["./packages/agent/src/*"],
 			"@tsuuanmi/pi-coding-agent": ["./packages/coding-agent/src/index.ts"],
@@ -38,7 +40,7 @@
 			"@tsuuanmi/pi-tui/*": ["./packages/tui/src/*"],
 			"@tsuuanmi/pi-agent-old": ["./packages/agent-old/src/index.ts"],
 			"@tsuuanmi/pi-agent-old/*": ["./packages/agent-old/src/*"],
-			"#src/*": ["./packages/workflows/src/*"]
+			"#workflows/*": ["./packages/workflows/src/*"]
 		}
 	},
 	"include": ["packages/*/src/**/*", "packages/*/test/**/*"],

@@ -16,7 +16,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { GitDelta } from "#src/harness/runtime/types";
+import type { GitDelta } from "#workflows/harness/runtime/types";
 
 export interface UntrackedEntry {
 	path: string;

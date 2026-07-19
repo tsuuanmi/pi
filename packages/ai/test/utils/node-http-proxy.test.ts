@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { resolveHttpProxyUrlForTarget, UNSUPPORTED_PROXY_PROTOCOL_MESSAGE } from "../../src/utils/node-http-proxy.ts";
+import { resolveHttpProxyUrlForTarget, UNSUPPORTED_PROXY_PROTOCOL_MESSAGE } from "#ai/utils/node-http-proxy";
 
 const PROXY_ENV_KEYS = [
 	"HTTP_PROXY",

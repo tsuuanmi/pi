@@ -21,7 +21,7 @@
 		"./package.json": "./package.json"
 	},
 	"imports": {
-		"#src/*": {
+		"#workflows/*": {
 			"types": "./dist/*.d.ts",
 			"import": "./dist/*.js"
 		}

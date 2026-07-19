@@ -6,10 +6,10 @@
  */
 
 import type { Server } from "node:http";
-import { getProviderEnvValue } from "../provider-env.ts";
-import { oauthErrorHtml, oauthSuccessHtml } from "./oauth-page.ts";
-import { generatePKCE } from "./pkce.ts";
-import type { OAuthCredentials, OAuthLoginCallbacks, OAuthPrompt, OAuthProviderInterface } from "./types.ts";
+import { oauthErrorHtml, oauthSuccessHtml } from "#ai/utils/oauth/oauth-page";
+import { generatePKCE } from "#ai/utils/oauth/pkce";
+import type { OAuthCredentials, OAuthLoginCallbacks, OAuthPrompt, OAuthProviderInterface } from "#ai/utils/oauth/types";
+import { getProviderEnvValue } from "#ai/utils/provider-env";
 
 type CallbackServerInfo = {
 	server: Server;

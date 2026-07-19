@@ -35,6 +35,16 @@
 			"import": "./dist/oauth.js"
 		}
 	},
+	"imports": {
+		"#ai/*": {
+			"types": "./dist/*.d.ts",
+			"import": "./dist/*.js"
+		},
+		"#ai-test/*": {
+			"types": "./test/*.ts",
+			"import": "./test/*.ts"
+		}
+	},
 	"files": [
 		"dist",
 		"README.md"

@@ -1,5 +1,5 @@
-import { DEFAULT_DEEP_INTERVIEW_THRESHOLD } from "#src/harness/deep-interview/deep-interview-state";
-import type { WorkflowHudChip, WorkflowHudSummary } from "#src/harness/shared/state/active-state";
+import { DEFAULT_DEEP_INTERVIEW_THRESHOLD } from "#workflows/harness/deep-interview/deep-interview-state";
+import type { WorkflowHudChip, WorkflowHudSummary } from "#workflows/harness/shared/state/active-state";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);

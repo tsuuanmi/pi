@@ -20,8 +20,15 @@ if (typeof process !== "undefined" && (process.versions?.node || process.version
 	});
 }
 
-import { clampThinkingLevel } from "../models.ts";
-import { registerSessionResourceCleanup } from "../session-resources.ts";
+import { clampThinkingLevel } from "#ai/models";
+import { clampOpenAIPromptCacheKey } from "#ai/providers/openai-prompt-cache";
+import {
+	convertResponsesMessages,
+	convertResponsesTools,
+	processResponsesStream,
+} from "#ai/providers/openai-responses-shared";
+import { buildBaseOptions } from "#ai/providers/simple-options";
+import { registerSessionResourceCleanup } from "#ai/session-resources";
 import type {
 	Api,
 	AssistantMessage,
@@ -32,19 +39,16 @@ import type {
 	StreamFunction,
 	StreamOptions,
 	Usage,
-} from "../types.ts";
-import { combineAbortSignals } from "../utils/abort-signals.ts";
+} from "#ai/types";
+import { combineAbortSignals } from "#ai/utils/abort-signals";
 import {
 	appendAssistantMessageDiagnostic,
 	createAssistantMessageDiagnostic,
 	formatThrownValue,
-} from "../utils/diagnostics.ts";
-import { AssistantMessageEventStream } from "../utils/event-stream.ts";
-import { headersToRecord } from "../utils/headers.ts";
-import { resolveHttpProxyUrlForTarget } from "../utils/node-http-proxy.ts";
-import { clampOpenAIPromptCacheKey } from "./openai-prompt-cache.ts";
-import { convertResponsesMessages, convertResponsesTools, processResponsesStream } from "./openai-responses-shared.ts";
-import { buildBaseOptions } from "./simple-options.ts";
+} from "#ai/utils/diagnostics";
+import { AssistantMessageEventStream } from "#ai/utils/event-stream";
+import { headersToRecord } from "#ai/utils/headers";
+import { resolveHttpProxyUrlForTarget } from "#ai/utils/node-http-proxy";
 
 // ============================================================================
 // Configuration

@@ -1,4 +1,4 @@
-import type { WorkflowHudChip, WorkflowHudSeverity } from "#src/harness/shared/state/active-state";
+import type { WorkflowHudChip, WorkflowHudSeverity } from "#workflows/harness/shared/state/active-state";
 
 export function hudChip(
 	label: string,

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { getModel } from "../../src/models.ts";
-import { streamOpenAICompletions } from "../../src/providers/openai-completions.ts";
-import type { Model } from "../../src/types.ts";
+import { getModel } from "#ai/models";
+import { streamOpenAICompletions } from "#ai/providers/openai-completions";
+import type { Model } from "#ai/types";
 
 vi.mock("openai", () => {
 	class FakeOpenAI {

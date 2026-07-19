@@ -1,15 +1,15 @@
 export type { Static, TSchema } from "typebox";
 export { Type } from "typebox";
 
-export * from "./api-registry.ts";
-export * from "./env-api-keys.ts";
-export * from "./models.ts";
-export type { AnthropicEffort, AnthropicOptions, AnthropicThinkingDisplay } from "./providers/anthropic.ts";
-export * from "./providers/faux.ts";
+export * from "#ai/api-registry";
+export * from "#ai/env-api-keys";
+export * from "#ai/models";
+export type { AnthropicEffort, AnthropicOptions, AnthropicThinkingDisplay } from "#ai/providers/anthropic";
+export * from "#ai/providers/faux";
 export type {
 	OpenAICodexResponsesOptions,
 	OpenAICodexWebSocketDebugStats,
-} from "./providers/openai-codex-responses.ts";
+} from "#ai/providers/openai-codex-responses";
 export {
 	fetchOpenAICodexUsageSummary,
 	getOpenAICodexUsageCacheTtlMs,
@@ -17,16 +17,16 @@ export {
 	type OpenAICodexUsageAuthProvider,
 	type OpenAICodexUsageStatus,
 	type OpenAICodexUsageSummary,
-} from "./providers/openai-codex-usage.ts";
-export type { OpenAICompletionsOptions } from "./providers/openai-completions.ts";
-export type { OpenAIResponsesOptions } from "./providers/openai-responses.ts";
-export * from "./providers/register-builtins.ts";
-export * from "./session-resources.ts";
-export * from "./stream.ts";
-export * from "./types.ts";
-export * from "./utils/diagnostics.ts";
-export * from "./utils/event-stream.ts";
-export * from "./utils/json-parse.ts";
+} from "#ai/providers/openai-codex-usage";
+export type { OpenAICompletionsOptions } from "#ai/providers/openai-completions";
+export type { OpenAIResponsesOptions } from "#ai/providers/openai-responses";
+export * from "#ai/providers/register-builtins";
+export * from "#ai/session-resources";
+export * from "#ai/stream";
+export * from "#ai/types";
+export * from "#ai/utils/diagnostics";
+export * from "#ai/utils/event-stream";
+export * from "#ai/utils/json-parse";
 export type {
 	OAuthAuthInfo,
 	OAuthCredentials,
@@ -39,7 +39,7 @@ export type {
 	OAuthProviderInterface,
 	OAuthSelectOption,
 	OAuthSelectPrompt,
-} from "./utils/oauth/types.ts";
-export * from "./utils/overflow.ts";
-export * from "./utils/typebox-helpers.ts";
-export * from "./utils/validation.ts";
+} from "#ai/utils/oauth/types";
+export * from "#ai/utils/overflow";
+export * from "#ai/utils/typebox-helpers";
+export * from "#ai/utils/validation";

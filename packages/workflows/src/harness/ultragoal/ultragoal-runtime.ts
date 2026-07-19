@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto";
-import type { ObstacleRegression, ObstacleStatus } from "#src/harness/shared/audit/decision-ledger";
-import { projectCompactStateFor } from "#src/harness/shared/compaction/compact-state-registry";
+import type { ObstacleRegression, ObstacleStatus } from "#workflows/harness/shared/audit/decision-ledger";
+import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compact-state-registry";
 import {
 	ultragoalBriefPath,
 	ultragoalGoalsPath,
 	ultragoalLedgerPath,
 	workflowStatePath,
-} from "#src/harness/shared/session/session-layout";
-import { syncWorkflowActiveState } from "#src/harness/shared/state/active-state";
+} from "#workflows/harness/shared/session/session-layout";
+import { syncWorkflowActiveState } from "#workflows/harness/shared/state/active-state";
 import {
 	appendJsonl,
 	readExistingStateForMutation,
@@ -15,16 +15,16 @@ import {
 	sha256,
 	writeJsonAtomic,
 	writeTextArtifact,
-} from "#src/harness/shared/state/state-writer";
-import { readWorkflowState, writeWorkflowState } from "#src/harness/shared/state/workflow-state";
-import { buildUltragoalHud } from "#src/harness/ultragoal/ultragoal-hud";
+} from "#workflows/harness/shared/state/state-writer";
+import { readWorkflowState, writeWorkflowState } from "#workflows/harness/shared/state/workflow-state";
+import { buildUltragoalHud } from "#workflows/harness/ultragoal/ultragoal-hud";
 import {
 	assertUltragoalObstacle,
 	buildUltragoalObstacle,
 	ULTRAGOAL_OBSTACLE_KINDS,
 	writeUltragoalObstacle,
-} from "#src/harness/ultragoal/ultragoal-obstacles";
-import { validateCompletionQualityGate } from "#src/harness/ultragoal/ultragoal-quality-gate";
+} from "#workflows/harness/ultragoal/ultragoal-obstacles";
+import { validateCompletionQualityGate } from "#workflows/harness/ultragoal/ultragoal-quality-gate";
 import {
 	buildCompletionReceipt,
 	chooseReceiptKind,
@@ -38,7 +38,7 @@ import {
 	type UltragoalPlan,
 	type UltragoalReceiptKind,
 	validateCompletionReceipt,
-} from "#src/harness/ultragoal/ultragoal-receipt";
+} from "#workflows/harness/ultragoal/ultragoal-receipt";
 
 export type {
 	UltragoalCompletionVerification,

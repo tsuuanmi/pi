@@ -30,7 +30,7 @@ import type {
 	RalplanCriticVerdict,
 	RalplanCriticVerdictKind,
 	RalplanVerdict,
-} from "#src/harness/ralplan/ralplan-verdicts";
+} from "#workflows/harness/ralplan/ralplan-verdicts";
 import {
 	type ObstacleInput,
 	type ObstacleKindRegistry,
@@ -39,9 +39,9 @@ import {
 	type ObstacleValidator,
 	type ObstacleViolation,
 	validateObstacles,
-} from "#src/harness/shared/audit/decision-ledger";
-import { ralplanObstacleLedgerPath } from "#src/harness/shared/session/session-layout";
-import { writeJsonAtomic } from "#src/harness/shared/state/state-writer";
+} from "#workflows/harness/shared/audit/decision-ledger";
+import { ralplanObstacleLedgerPath } from "#workflows/harness/shared/session/session-layout";
+import { writeJsonAtomic } from "#workflows/harness/shared/state/state-writer";
 
 /**
  * Ralplan obstacle kinds (from the decision-ledger design, Part 3). All are

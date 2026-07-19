@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { findEnvKeys, getEnvApiKey } from "../../src/env-api-keys.ts";
+import { findEnvKeys, getEnvApiKey } from "#ai/env-api-keys";
 
 const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
 

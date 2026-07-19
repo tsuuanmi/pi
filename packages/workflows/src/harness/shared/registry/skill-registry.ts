@@ -1,6 +1,6 @@
-import type { RuntimeReceipt } from "#src/harness/runtime/types";
-import type { ExpectedNextRole } from "#src/harness/shared/orchestration/expected-next-role";
-import type { WorkflowSkill } from "#src/harness/shared/session/paths";
+import type { RuntimeReceipt } from "#workflows/harness/runtime/types";
+import type { ExpectedNextRole } from "#workflows/harness/shared/orchestration/expected-next-role";
+import type { WorkflowSkill } from "#workflows/harness/shared/session/paths";
 
 export type TerminalDetectorKind = "receipt" | "filesystem" | "state";
 

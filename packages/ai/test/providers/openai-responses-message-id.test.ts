@@ -1,8 +1,8 @@
 import type { ResponseOutputMessage } from "openai/resources/responses/responses.js";
 import { describe, expect, it } from "vitest";
-import { getModel } from "../../src/models.ts";
-import { convertResponsesMessages } from "../../src/providers/openai-responses-shared.ts";
-import type { AssistantMessage, Context, Usage } from "../../src/types.ts";
+import { getModel } from "#ai/models";
+import { convertResponsesMessages } from "#ai/providers/openai-responses-shared";
+import type { AssistantMessage, Context, Usage } from "#ai/types";
 
 const usage: Usage = {
 	input: 0,

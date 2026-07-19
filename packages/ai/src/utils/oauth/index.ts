@@ -7,8 +7,8 @@
  */
 
 // Anthropic
-export { anthropicOAuthProvider, loginAnthropic, refreshAnthropicToken } from "./anthropic.ts";
-export * from "./device-code.ts";
+export { anthropicOAuthProvider, loginAnthropic, refreshAnthropicToken } from "#ai/utils/oauth/anthropic";
+export * from "#ai/utils/oauth/device-code";
 // OpenAI Codex (ChatGPT OAuth)
 export {
 	loginOpenAICodex,
@@ -17,17 +17,22 @@ export {
 	OPENAI_CODEX_DEVICE_CODE_LOGIN_METHOD,
 	openaiCodexOAuthProvider,
 	refreshOpenAICodexToken,
-} from "./openai-codex.ts";
+} from "#ai/utils/oauth/openai-codex";
 
-export * from "./types.ts";
+export * from "#ai/utils/oauth/types";
 
 // ============================================================================
 // Provider Registry
 // ============================================================================
 
-import { anthropicOAuthProvider } from "./anthropic.ts";
-import { openaiCodexOAuthProvider } from "./openai-codex.ts";
-import type { OAuthCredentials, OAuthProviderId, OAuthProviderInfo, OAuthProviderInterface } from "./types.ts";
+import { anthropicOAuthProvider } from "#ai/utils/oauth/anthropic";
+import { openaiCodexOAuthProvider } from "#ai/utils/oauth/openai-codex";
+import type {
+	OAuthCredentials,
+	OAuthProviderId,
+	OAuthProviderInfo,
+	OAuthProviderInterface,
+} from "#ai/utils/oauth/types";
 
 const BUILT_IN_OAUTH_PROVIDERS: OAuthProviderInterface[] = [anthropicOAuthProvider, openaiCodexOAuthProvider];
 

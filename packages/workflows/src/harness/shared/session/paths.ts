@@ -52,10 +52,10 @@ export {
 	ultragoalLedgerPath,
 	workflowActiveStatePath,
 	workflowStatePath,
-} from "#src/harness/shared/session/session-layout";
+} from "#workflows/harness/shared/session/session-layout";
 // Re-export canonical assertion functions from state-schema.ts.
 export {
 	assertRalplanStage,
 	assertSafePathComponent,
 	assertWorkflowSkill,
-} from "#src/harness/shared/state/state-schema";
+} from "#workflows/harness/shared/state/state-schema";

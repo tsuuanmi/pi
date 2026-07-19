@@ -10,7 +10,7 @@
  */
 
 import { join } from "node:path";
-import type { RalplanStage, WorkflowSkill } from "#src/harness/shared/session/paths";
+import type { RalplanStage, WorkflowSkill } from "#workflows/harness/shared/session/paths";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -47,7 +47,7 @@ export function decodeSessionSegment(segment: string): string {
 // ---------------------------------------------------------------------------
 
 /** Re-export the canonical assertSafePathComponent from state-schema.ts. */
-export { assertSafePathComponent } from "#src/harness/shared/state/state-schema";
+export { assertSafePathComponent } from "#workflows/harness/shared/state/state-schema";
 
 /**
  * Assert that a session id is non-empty and usable.

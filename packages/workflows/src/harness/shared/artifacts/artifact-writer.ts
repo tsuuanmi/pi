@@ -2,7 +2,7 @@ import {
 	type WorkflowWriteOptions,
 	type WriteArtifactResult,
 	writeTextArtifact,
-} from "#src/harness/shared/state/state-writer";
+} from "#workflows/harness/shared/state/state-writer";
 
 export interface StageArtifactInput {
 	path: string;

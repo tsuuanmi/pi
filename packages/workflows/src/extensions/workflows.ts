@@ -1,14 +1,14 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi-agent";
-import { getDeepInterviewMutationDecision } from "#src/harness/deep-interview/deep-interview-mutation-guard";
-import "#src/harness/deep-interview/deep-interview-transitions";
-import { registerRalplanTools } from "#src/harness/ralplan/ralplan-tools";
-import "#src/harness/ralplan/ralplan-transitions";
-import { syncMcpHudUi, syncWorkflowHudUi } from "#src/harness/shared/hud/workflow-hud";
-import { registerSubagentTools } from "#src/harness/subagents/subagent-tools";
-import { registerTeamTools } from "#src/harness/team/team-tools";
-import "#src/harness/team/team-transitions";
-import { registerUltragoalTools } from "#src/harness/ultragoal/ultragoal-tools";
-import "#src/harness/ultragoal/ultragoal-transitions";
+import { getDeepInterviewMutationDecision } from "#workflows/harness/deep-interview/deep-interview-mutation-guard";
+import "#workflows/harness/deep-interview/deep-interview-transitions";
+import { registerRalplanTools } from "#workflows/harness/ralplan/ralplan-tools";
+import "#workflows/harness/ralplan/ralplan-transitions";
+import { syncMcpHudUi, syncWorkflowHudUi } from "#workflows/harness/shared/hud/workflow-hud";
+import { registerSubagentTools } from "#workflows/harness/subagents/subagent-tools";
+import { registerTeamTools } from "#workflows/harness/team/team-tools";
+import "#workflows/harness/team/team-transitions";
+import { registerUltragoalTools } from "#workflows/harness/ultragoal/ultragoal-tools";
+import "#workflows/harness/ultragoal/ultragoal-transitions";
 
 export default function workflowsExtension(pi: ExtensionAPI): void {
 	registerSubagentTools(pi);

@@ -4,10 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import "#src/harness/deep-interview/deep-interview-transitions";
-import "#src/harness/ralplan/ralplan-transitions";
-import "#src/harness/team/team-transitions";
-import "#src/harness/ultragoal/ultragoal-transitions";
+import "#workflows/harness/deep-interview/deep-interview-transitions";
+import "#workflows/harness/ralplan/ralplan-transitions";
+import "#workflows/harness/team/team-transitions";
+import "#workflows/harness/ultragoal/ultragoal-transitions";
 import {
 	appendJsonlIdempotent,
 	assertExpectedNextRole,
@@ -38,9 +38,9 @@ import {
 	writeWorkflowState,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { runWorkflowCommand } from "#src/commands/workflow";
-import workflowsExtension from "#src/extensions/workflows";
-import { buildResponse } from "#src/harness/runtime/state";
+import { runWorkflowCommand } from "#workflows/commands/workflow";
+import workflowsExtension from "#workflows/extensions/workflows";
+import { buildResponse } from "#workflows/harness/runtime/state";
 import {
 	generateSessionId,
 	readRuntimeReceipts,
@@ -48,13 +48,13 @@ import {
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "#src/harness/runtime/storage";
-import { SESSION_SCHEMA_VERSION, type SessionState } from "#src/harness/runtime/types";
+} from "#workflows/harness/runtime/storage";
+import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/harness/runtime/types";
 import {
 	isBlockingQuestionPhaseForSkill,
 	skillGateValidators,
 	skillTerminalDetectors,
-} from "#src/harness/shared/registry/skill-registry";
+} from "#workflows/harness/shared/registry/skill-registry";
 
 const sessionId = "test-session-id";
 const execFileAsync = promisify(execFile);

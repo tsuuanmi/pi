@@ -26,9 +26,9 @@
  */
 import { createHash, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { assembleFinalPackage, type WorkflowFinalPackage } from "#src/harness/shared/artifacts/receipts";
-import { ultragoalLedgerPath } from "#src/harness/shared/session/session-layout";
-import { canonicalizeJson } from "#src/harness/shared/state/state-writer";
+import { assembleFinalPackage, type WorkflowFinalPackage } from "#workflows/harness/shared/artifacts/receipts";
+import { ultragoalLedgerPath } from "#workflows/harness/shared/session/session-layout";
+import { canonicalizeJson } from "#workflows/harness/shared/state/state-writer";
 
 export type UltragoalGoalStatus =
 	| "pending"

@@ -1,6 +1,6 @@
-import type { RalplanStatus } from "#src/harness/ralplan/ralplan-runtime";
-import { escalationToExpertChip, progressChip } from "#src/harness/shared/hud/hud-chips";
-import type { WorkflowHudSummary } from "#src/harness/shared/state/active-state";
+import type { RalplanStatus } from "#workflows/harness/ralplan/ralplan-runtime";
+import { escalationToExpertChip, progressChip } from "#workflows/harness/shared/hud/hud-chips";
+import type { WorkflowHudSummary } from "#workflows/harness/shared/state/active-state";
 
 /**
  * Build the workflow HUD summary for an active ralplan run.

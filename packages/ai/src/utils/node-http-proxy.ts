@@ -1,5 +1,5 @@
-import type { ProviderEnv } from "../types.ts";
-import { getProviderEnvValue } from "./provider-env.ts";
+import type { ProviderEnv } from "#ai/types";
+import { getProviderEnvValue } from "#ai/utils/provider-env";
 
 const DEFAULT_PROXY_PORTS: Record<string, number> = {
 	ftp: 21,

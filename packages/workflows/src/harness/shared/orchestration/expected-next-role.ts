@@ -1,5 +1,5 @@
-import { expectedNextRoleForSkill } from "#src/harness/shared/registry/skill-registry";
-import type { WorkflowSkill } from "#src/harness/shared/session/paths";
+import { expectedNextRoleForSkill } from "#workflows/harness/shared/registry/skill-registry";
+import type { WorkflowSkill } from "#workflows/harness/shared/session/paths";
 
 export interface ExpectedNextRole {
 	skill: WorkflowSkill;

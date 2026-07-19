@@ -9,7 +9,8 @@ import type {
 	ResponseReasoningItem,
 	ResponseStreamEvent,
 } from "openai/resources/responses/responses.js";
-import { calculateCost } from "../models.ts";
+import { calculateCost } from "#ai/models";
+import { transformMessages } from "#ai/providers/transform-messages";
 import type {
 	Api,
 	AssistantMessage,
@@ -22,12 +23,11 @@ import type {
 	Tool,
 	ToolCall,
 	Usage,
-} from "../types.ts";
-import type { AssistantMessageEventStream } from "../utils/event-stream.ts";
-import { shortHash } from "../utils/hash.ts";
-import { parseStreamingJson } from "../utils/json-parse.ts";
-import { sanitizeSurrogates } from "../utils/sanitize-unicode.ts";
-import { transformMessages } from "./transform-messages.ts";
+} from "#ai/types";
+import type { AssistantMessageEventStream } from "#ai/utils/event-stream";
+import { shortHash } from "#ai/utils/hash";
+import { parseStreamingJson } from "#ai/utils/json-parse";
+import { sanitizeSurrogates } from "#ai/utils/sanitize-unicode";
 
 // =============================================================================
 // Utilities

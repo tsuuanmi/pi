@@ -17,17 +17,17 @@ if (typeof process !== "undefined" && (process.versions?.node || process.version
 	});
 }
 
-import { getProviderEnvValue } from "../provider-env.ts";
-import { pollOAuthDeviceCodeFlow } from "./device-code.ts";
-import { oauthErrorHtml, oauthSuccessHtml } from "./oauth-page.ts";
-import { generatePKCE } from "./pkce.ts";
+import { pollOAuthDeviceCodeFlow } from "#ai/utils/oauth/device-code";
+import { oauthErrorHtml, oauthSuccessHtml } from "#ai/utils/oauth/oauth-page";
+import { generatePKCE } from "#ai/utils/oauth/pkce";
 import type {
 	OAuthCredentials,
 	OAuthDeviceCodeInfo,
 	OAuthLoginCallbacks,
 	OAuthPrompt,
 	OAuthProviderInterface,
-} from "./types.ts";
+} from "#ai/utils/oauth/types";
+import { getProviderEnvValue } from "#ai/utils/provider-env";
 
 const CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann";
 const AUTH_BASE_URL = "https://auth.openai.com";

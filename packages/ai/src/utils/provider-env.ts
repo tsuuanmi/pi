@@ -1,4 +1,4 @@
-import type { ProviderEnv } from "../types.ts";
+import type { ProviderEnv } from "#ai/types";
 
 let procEnvCache: Map<string, string> | null = null;
 

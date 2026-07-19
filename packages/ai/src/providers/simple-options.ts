@@ -1,4 +1,4 @@
-import type { Api, Model, SimpleStreamOptions, StreamOptions } from "../types.ts";
+import type { Api, Model, SimpleStreamOptions, StreamOptions } from "#ai/types";
 
 export function buildBaseOptions(_model: Model<Api>, options?: SimpleStreamOptions, apiKey?: string): StreamOptions {
 	return {

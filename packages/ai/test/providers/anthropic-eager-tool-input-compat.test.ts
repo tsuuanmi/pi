@@ -2,8 +2,8 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import type { AddressInfo } from "node:net";
 import { Type } from "typebox";
 import { describe, expect, it } from "vitest";
-import { streamAnthropic } from "../../src/providers/anthropic.ts";
-import type { Context, Model, Tool } from "../../src/types.ts";
+import { streamAnthropic } from "#ai/providers/anthropic";
+import type { Context, Model, Tool } from "#ai/types";
 
 interface CapturedRequest {
 	headers: IncomingMessage["headers"];

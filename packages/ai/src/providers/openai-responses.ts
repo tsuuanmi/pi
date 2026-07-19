@@ -1,6 +1,13 @@
 import OpenAI from "openai";
 import type { ResponseCreateParamsStreaming } from "openai/resources/responses/responses.js";
-import { clampThinkingLevel } from "../models.ts";
+import { clampThinkingLevel } from "#ai/models";
+import { clampOpenAIPromptCacheKey } from "#ai/providers/openai-prompt-cache";
+import {
+	convertResponsesMessages,
+	convertResponsesTools,
+	processResponsesStream,
+} from "#ai/providers/openai-responses-shared";
+import { buildBaseOptions } from "#ai/providers/simple-options";
 import type {
 	Api,
 	AssistantMessage,
@@ -13,13 +20,10 @@ import type {
 	StreamFunction,
 	StreamOptions,
 	Usage,
-} from "../types.ts";
-import { AssistantMessageEventStream } from "../utils/event-stream.ts";
-import { headersToRecord } from "../utils/headers.ts";
-import { getProviderEnvValue } from "../utils/provider-env.ts";
-import { clampOpenAIPromptCacheKey } from "./openai-prompt-cache.ts";
-import { convertResponsesMessages, convertResponsesTools, processResponsesStream } from "./openai-responses-shared.ts";
-import { buildBaseOptions } from "./simple-options.ts";
+} from "#ai/types";
+import { AssistantMessageEventStream } from "#ai/utils/event-stream";
+import { headersToRecord } from "#ai/utils/headers";
+import { getProviderEnvValue } from "#ai/utils/provider-env";
 
 const OPENAI_TOOL_CALL_PROVIDERS = new Set(["openai", "openai-codex"]);
 

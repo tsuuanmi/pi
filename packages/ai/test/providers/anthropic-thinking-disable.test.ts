@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { getModel } from "../../src/models.ts";
-import { streamSimple } from "../../src/stream.ts";
-import type { Context, Model, SimpleStreamOptions } from "../../src/types.ts";
+import { getModel } from "#ai/models";
+import { streamSimple } from "#ai/stream";
+import type { Context, Model, SimpleStreamOptions } from "#ai/types";
 
 interface AnthropicThinkingPayload {
 	thinking?: { type: string; budget_tokens?: number; display?: string };

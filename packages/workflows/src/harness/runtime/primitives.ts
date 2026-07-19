@@ -1,13 +1,13 @@
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mutateRuntimeSession } from "#src/harness/runtime/mutation";
-import { preserveDirtyWorktree } from "#src/harness/runtime/preservation";
-import type { HarnessRpc } from "#src/harness/runtime/rpc";
-import { singleFlightAccept } from "#src/harness/runtime/rpc";
-import { seamUnsupported } from "#src/harness/runtime/seams";
-import { buildResponse } from "#src/harness/runtime/state";
-import { readRuntimeReceipts, readSessionState } from "#src/harness/runtime/storage";
+import { mutateRuntimeSession } from "#workflows/harness/runtime/mutation";
+import { preserveDirtyWorktree } from "#workflows/harness/runtime/preservation";
+import type { HarnessRpc } from "#workflows/harness/runtime/rpc";
+import { singleFlightAccept } from "#workflows/harness/runtime/rpc";
+import { seamUnsupported } from "#workflows/harness/runtime/seams";
+import { buildResponse } from "#workflows/harness/runtime/state";
+import { readRuntimeReceipts, readSessionState } from "#workflows/harness/runtime/storage";
 import type {
 	GitDelta,
 	HarnessLifecycle,
@@ -15,19 +15,19 @@ import type {
 	RuntimeReceipt,
 	RuntimeWriter,
 	SessionState,
-} from "#src/harness/runtime/types";
+} from "#workflows/harness/runtime/types";
 import {
 	buildVanishEvidence,
 	requiresVanishBeforeAction,
 	type VanishClassification,
 	validateVanish,
-} from "#src/harness/runtime/vanish";
+} from "#workflows/harness/runtime/vanish";
 import {
 	evaluateSkillGateValidators,
 	evaluateSkillTerminalDetectors,
-} from "#src/harness/shared/registry/skill-registry";
-import type { WorkflowSkill } from "#src/harness/shared/session/paths";
-import { readWorkflowState } from "#src/harness/shared/state/workflow-state";
+} from "#workflows/harness/shared/registry/skill-registry";
+import type { WorkflowSkill } from "#workflows/harness/shared/session/paths";
+import { readWorkflowState } from "#workflows/harness/shared/state/workflow-state";
 
 export type WorkspaceMarkerStatus = "available" | "not-git" | "git-unavailable" | "unknown" | "deleted";
 export type WorkspaceRisk = "normal" | "dirty" | "deleted" | "unknown" | "not-git";
