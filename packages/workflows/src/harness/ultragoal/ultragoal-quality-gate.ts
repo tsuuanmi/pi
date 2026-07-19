@@ -469,13 +469,13 @@ function validateSurfaceArtifactCompatibility(
 		return normalizeKind(row);
 	});
 	if (family === "web") {
-		const hasBrowser = kinds.some((kind) =>
-			["browser", "playwright", "pandawright", "automation"].some((w) => kind.includes(w)),
+		const hasAutomation = kinds.some((kind) =>
+			["automation", "app-automation", "ui-automation"].some((w) => kind.includes(w)),
 		);
 		const hasVisual = kinds.some((kind) => ["screenshot", "image", "visual"].some((w) => kind.includes(w)));
-		if (!hasBrowser || !hasVisual) {
+		if (!hasAutomation || !hasVisual) {
 			throw new Error(
-				`qualityGate ${fieldName} for GUI/web surfaces must reference browser automation plus screenshot or image-verdict artifacts`,
+				`qualityGate ${fieldName} for GUI/web surfaces must reference app automation plus screenshot or image-verdict artifacts`,
 			);
 		}
 		return;

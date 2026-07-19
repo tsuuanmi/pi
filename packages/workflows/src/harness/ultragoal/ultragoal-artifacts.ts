@@ -421,7 +421,7 @@ export function structuralArtifactKind(row: Record<string, unknown>): "screensho
 	const kind = raw.toLowerCase().replaceAll("_", "-");
 	const matches = (words: string[]): boolean => words.some((word) => kind.includes(word));
 	if (matches(["screenshot", "image", "visual"])) return "screenshot";
-	if (matches(["browser", "playwright", "pandawright", "automation", "app-automation"])) return "automation";
+	if (matches(["automation", "app-automation", "ui-automation"])) return "automation";
 	if (matches(["pty", "tui", "terminal-capture"])) return "pty";
 	return null;
 }
@@ -454,7 +454,7 @@ export function surfaceFamily(value: string): SurfaceFamily {
 		)
 	)
 		return "native";
-	if (["gui", "web", "browser", "ui", "visual"].some((word) => normalized.includes(word))) return "web";
+	if (["gui", "web", "ui", "visual"].some((word) => normalized.includes(word))) return "web";
 	if (["cli", "terminal", "command"].some((word) => normalized.includes(word))) return "cli";
 	return "unknown";
 }

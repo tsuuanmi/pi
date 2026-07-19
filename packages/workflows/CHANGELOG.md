@@ -17,6 +17,7 @@
 
 ### Fixed
 
+- **ultragoal**: Quality-gate surface validation now uses generic app-automation terminology instead of tool-specific proof wording.
 - **deep-interview**: Runtime guards now block common mutating `bash` commands during active interviews, require closure/restatement before `write-spec`, and use stricter per-component closure coverage.
 - **commands**: `pi workflow` verbs now support `--input-file`, reject ambiguous `--input`/`--input-file` combinations, and keep manifest-declared skill verbs aligned with the dispatcher.
 - **deep-interview**: Lateral-review personas are documented as subagent role labels using the default profile, avoiding missing bundled profile lookups.
