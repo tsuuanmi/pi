@@ -8,6 +8,7 @@ import {
 	type Api,
 	type AssistantMessageEventStream,
 	type Context,
+	formatTypeBoxValidationPath,
 	getModels,
 	getProviders,
 	type KnownProvider,
@@ -24,7 +25,6 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { type Static, Type } from "typebox";
 import { Compile } from "typebox/compile";
-import type { TLocalizedValidationError } from "typebox/error";
 import type { AuthStatus, AuthStorage } from "#pi/auth/auth-storage";
 import { getAgentDir } from "#pi/config/config";
 import {
@@ -150,19 +150,6 @@ const ModelsConfigSchema = Type.Object({
 const validateModelsConfig = Compile(ModelsConfigSchema);
 
 type ModelsConfig = Static<typeof ModelsConfigSchema>;
-
-function formatValidationPath(error: TLocalizedValidationError): string {
-	if (error.keyword === "required") {
-		const requiredProperties = (error.params as { requiredProperties?: string[] }).requiredProperties;
-		const requiredProperty = requiredProperties?.[0];
-		if (requiredProperty) {
-			const basePath = error.instancePath.replace(/^\//, "").replace(/\//g, ".");
-			return basePath ? `${basePath}.${requiredProperty}` : requiredProperty;
-		}
-	}
-	const path = error.instancePath.replace(/^\//, "").replace(/\//g, ".");
-	return path || "root";
-}
 
 /** Provider override config (baseUrl, compat) without request auth/headers */
 interface ProviderOverride {
@@ -391,7 +378,7 @@ export class ModelRegistry {
 				const errors =
 					validateModelsConfig
 						.Errors(parsed)
-						.map((error) => `  - ${formatValidationPath(error)}: ${error.message}`)
+						.map((error) => `  - ${formatTypeBoxValidationPath(error)}: ${error.message}`)
 						.join("\n") || "Unknown schema error";
 				return emptyCustomModelsResult(`Invalid models.json schema:\n${errors}\n\nFile: ${modelsJsonPath}`);
 			}

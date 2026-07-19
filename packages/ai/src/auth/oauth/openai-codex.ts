@@ -17,6 +17,7 @@ if (typeof process !== "undefined" && (process.versions?.node || process.version
 	});
 }
 
+import { parseOAuthAuthorizationInput } from "#ai/auth/oauth/authorization-input";
 import { pollOAuthDeviceCodeFlow } from "#ai/auth/oauth/device-code";
 import { oauthErrorHtml, oauthSuccessHtml } from "#ai/auth/oauth/oauth-page";
 import { generatePKCE } from "#ai/auth/oauth/pkce";
@@ -74,36 +75,6 @@ function createState(): string {
 		throw new Error("OpenAI Codex OAuth is only available in Node.js environments");
 	}
 	return _randomBytes(16).toString("hex");
-}
-
-function parseAuthorizationInput(input: string): { code?: string; state?: string } {
-	const value = input.trim();
-	if (!value) return {};
-
-	try {
-		const url = new URL(value);
-		return {
-			code: url.searchParams.get("code") ?? undefined,
-			state: url.searchParams.get("state") ?? undefined,
-		};
-	} catch {
-		// not a URL
-	}
-
-	if (value.includes("#")) {
-		const [code, state] = value.split("#", 2);
-		return { code, state };
-	}
-
-	if (value.includes("code=")) {
-		const params = new URLSearchParams(value);
-		return {
-			code: params.get("code") ?? undefined,
-			state: params.get("state") ?? undefined,
-		};
-	}
-
-	return { code: value };
 }
 
 function decodeJwt(token: string): JwtPayload | null {
@@ -503,7 +474,7 @@ export async function loginOpenAICodex(options: {
 				code = result.code;
 			} else if (manualCode) {
 				// Manual input won (or callback timed out and user had entered code)
-				const parsed = parseAuthorizationInput(manualCode);
+				const parsed = parseOAuthAuthorizationInput(manualCode);
 				if (parsed.state && parsed.state !== state) {
 					throw new Error("State mismatch");
 				}
@@ -517,7 +488,7 @@ export async function loginOpenAICodex(options: {
 					throw manualError;
 				}
 				if (manualCode) {
-					const parsed = parseAuthorizationInput(manualCode);
+					const parsed = parseOAuthAuthorizationInput(manualCode);
 					if (parsed.state && parsed.state !== state) {
 						throw new Error("State mismatch");
 					}
@@ -537,7 +508,7 @@ export async function loginOpenAICodex(options: {
 			const input = await options.onPrompt({
 				message: "Paste the authorization code (or full redirect URL):",
 			});
-			const parsed = parseAuthorizationInput(input);
+			const parsed = parseOAuthAuthorizationInput(input);
 			if (parsed.state && parsed.state !== state) {
 				throw new Error("State mismatch");
 			}

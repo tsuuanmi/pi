@@ -89,6 +89,23 @@ describe("ModelRegistry", () => {
 		messages: [],
 	};
 
+	describe("models.json schema validation", () => {
+		test("formats required nested schema paths via shared TypeBox formatter", () => {
+			writeRawModelsJson({
+				"custom-provider": {
+					apiKey: "test-key",
+					api: "anthropic-messages",
+					models: [{ name: "Missing ID" }],
+				},
+			});
+
+			const registry = ModelRegistry.create(authStorage, modelsJsonPath);
+
+			expect(registry.getError()).toContain("Invalid models.json schema:");
+			expect(registry.getError()).toContain("providers.custom-provider.models.0.id");
+		});
+	});
+
 	describe("baseUrl override (no custom models)", () => {
 		test("overriding baseUrl keeps all built-in models", () => {
 			writeRawModelsJson({

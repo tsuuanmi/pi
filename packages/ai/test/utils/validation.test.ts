@@ -1,7 +1,8 @@
 import { Type } from "typebox";
+import { Compile } from "typebox/compile";
 import { describe, expect, it } from "vitest";
 import type { Tool, ToolCall } from "#ai/core/types";
-import { validateToolArguments } from "#ai/schema/validation";
+import { formatTypeBoxValidationPath, validateToolArguments } from "#ai/schema/validation";
 
 function createToolCallWithPlainSchema(
 	schema: Tool["parameters"],
@@ -112,5 +113,31 @@ describe("validateToolArguments", () => {
 			const { tool, toolCall } = createToolCallWithPlainSchema(testCase.schema, testCase.input);
 			expect(() => validateToolArguments(tool, toolCall)).toThrow("Validation failed");
 		}
+	});
+});
+
+describe("formatTypeBoxValidationPath", () => {
+	it("formats required root and nested paths", () => {
+		const rootSchema = Type.Object({ name: Type.String() });
+		const nestedSchema = Type.Object({ nested: Type.Object({ name: Type.String() }) });
+		const rootErrors = [...Compile(rootSchema).Errors({})];
+		const nestedErrors = [...Compile(nestedSchema).Errors({ nested: {} })];
+
+		expect(rootErrors.map(formatTypeBoxValidationPath)).toContain("name");
+		expect(nestedErrors.map(formatTypeBoxValidationPath)).toContain("nested.name");
+	});
+
+	it("formats slash paths with numeric array segments as dotted paths", () => {
+		const schema = Type.Object({ items: Type.Array(Type.Object({ count: Type.Number() })) });
+		const errors = [...Compile(schema).Errors({ items: [{ count: "bad" }] })];
+
+		expect(errors.map(formatTypeBoxValidationPath)).toContain("items.0.count");
+	});
+
+	it("formats empty non-required paths as root", () => {
+		const schema = Type.Object({ count: Type.Number() });
+		const errors = [...Compile(schema).Errors("invalid")];
+
+		expect(errors.map(formatTypeBoxValidationPath)).toContain("root");
 	});
 });

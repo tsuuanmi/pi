@@ -14,6 +14,7 @@
 
 ### Added
 
+- Added a public TypeBox validation-path formatter for provider integrations.
 - Added OpenAI Codex quota usage helpers for provider integrations.
 - Added GLM-5.2 model to the OpenCode Go subscription model catalog ([#5860](https://github.com/tsuuanmi/pi/issues/5860)).
 - Added the `supportsPromptCacheKey` compat flag (default `true`) to `openai-completions` providers, enabling the `prompt_cache_key` field for prompt caching on every OpenAI-compatible provider by default. Set `false` per-provider to opt out (e.g. for a provider that rejects the field).

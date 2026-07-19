@@ -30,7 +30,6 @@ import type {
 	SimpleStreamOptions,
 	StreamFunction,
 	StreamOptions,
-	Usage,
 } from "#ai/core/types";
 import {
 	appendAssistantMessageDiagnostic,
@@ -38,6 +37,7 @@ import {
 	formatThrownValue,
 } from "#ai/diagnostics/assistant-message";
 import { clampThinkingLevel } from "#ai/models/index";
+import { applyOpenAIServiceTierPricing } from "#ai/providers/openai/pricing";
 import { clampOpenAIPromptCacheKey } from "#ai/providers/openai/prompt-cache";
 import {
 	convertResponsesMessages,
@@ -486,35 +486,6 @@ function buildRequestBody(
 	return body;
 }
 
-function getServiceTierCostMultiplier(
-	model: Pick<Model<"openai-codex-responses">, "id">,
-	serviceTier: ResponseCreateParamsStreaming["service_tier"] | undefined,
-): number {
-	switch (serviceTier) {
-		case "flex":
-			return 0.5;
-		case "priority":
-			return model.id === "gpt-5.5" ? 2.5 : 2;
-		default:
-			return 1;
-	}
-}
-
-function applyServiceTierPricing(
-	usage: Usage,
-	serviceTier: ResponseCreateParamsStreaming["service_tier"] | undefined,
-	model: Pick<Model<"openai-codex-responses">, "id">,
-) {
-	const multiplier = getServiceTierCostMultiplier(model, serviceTier);
-	if (multiplier === 1) return;
-
-	usage.cost.input *= multiplier;
-	usage.cost.output *= multiplier;
-	usage.cost.cacheRead *= multiplier;
-	usage.cost.cacheWrite *= multiplier;
-	usage.cost.total = usage.cost.input + usage.cost.output + usage.cost.cacheRead + usage.cost.cacheWrite;
-}
-
 function resolveCodexServiceTier(
 	responseServiceTier: ResponseCreateParamsStreaming["service_tier"] | undefined,
 	requestServiceTier: ResponseCreateParamsStreaming["service_tier"] | undefined,
@@ -554,7 +525,7 @@ async function processStream(
 	await processResponsesStream(mapCodexEvents(parseSSE(response, options?.signal)), output, stream, model, {
 		serviceTier: options?.serviceTier,
 		resolveServiceTier: resolveCodexServiceTier,
-		applyServiceTierPricing: (usage, serviceTier) => applyServiceTierPricing(usage, serviceTier, model),
+		applyServiceTierPricing: (usage, serviceTier) => applyOpenAIServiceTierPricing(usage, serviceTier, model),
 	});
 }
 
@@ -1361,7 +1332,7 @@ async function processWebSocketStream(
 			{
 				serviceTier: options?.serviceTier,
 				resolveServiceTier: resolveCodexServiceTier,
-				applyServiceTierPricing: (usage, serviceTier) => applyServiceTierPricing(usage, serviceTier, model),
+				applyServiceTierPricing: (usage, serviceTier) => applyOpenAIServiceTierPricing(usage, serviceTier, model),
 			},
 		);
 		if (options?.signal?.aborted) {

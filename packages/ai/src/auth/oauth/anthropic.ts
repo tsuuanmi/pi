@@ -6,6 +6,7 @@
  */
 
 import type { Server } from "node:http";
+import { parseOAuthAuthorizationInput } from "#ai/auth/oauth/authorization-input";
 import { oauthErrorHtml, oauthSuccessHtml } from "#ai/auth/oauth/oauth-page";
 import { generatePKCE } from "#ai/auth/oauth/pkce";
 import type { OAuthCredentials, OAuthLoginCallbacks, OAuthPrompt, OAuthProviderInterface } from "#ai/auth/oauth/types";
@@ -47,36 +48,6 @@ async function getNodeApis(): Promise<NodeApis> {
 	}
 	nodeApis = await nodeApisPromise;
 	return nodeApis;
-}
-
-function parseAuthorizationInput(input: string): { code?: string; state?: string } {
-	const value = input.trim();
-	if (!value) return {};
-
-	try {
-		const url = new URL(value);
-		return {
-			code: url.searchParams.get("code") ?? undefined,
-			state: url.searchParams.get("state") ?? undefined,
-		};
-	} catch {
-		// not a URL
-	}
-
-	if (value.includes("#")) {
-		const [code, state] = value.split("#", 2);
-		return { code, state };
-	}
-
-	if (value.includes("code=")) {
-		const params = new URLSearchParams(value);
-		return {
-			code: params.get("code") ?? undefined,
-			state: params.get("state") ?? undefined,
-		};
-	}
-
-	return { code: value };
 }
 
 function formatErrorDetails(error: unknown): string {
@@ -284,7 +255,7 @@ export async function loginAnthropic(options: {
 				state = result.state;
 				redirectUriForExchange = REDIRECT_URI;
 			} else if (manualInput) {
-				const parsed = parseAuthorizationInput(manualInput);
+				const parsed = parseOAuthAuthorizationInput(manualInput);
 				if (parsed.state && parsed.state !== verifier) {
 					throw new Error("OAuth state mismatch");
 				}
@@ -298,7 +269,7 @@ export async function loginAnthropic(options: {
 					throw manualError;
 				}
 				if (manualInput) {
-					const parsed = parseAuthorizationInput(manualInput);
+					const parsed = parseOAuthAuthorizationInput(manualInput);
 					if (parsed.state && parsed.state !== verifier) {
 						throw new Error("OAuth state mismatch");
 					}
@@ -320,7 +291,7 @@ export async function loginAnthropic(options: {
 				message: "Paste the authorization code or full redirect URL:",
 				placeholder: REDIRECT_URI,
 			});
-			const parsed = parseAuthorizationInput(input);
+			const parsed = parseOAuthAuthorizationInput(input);
 			if (parsed.state && parsed.state !== verifier) {
 				throw new Error("OAuth state mismatch");
 			}

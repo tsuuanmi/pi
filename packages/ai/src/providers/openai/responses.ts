@@ -12,9 +12,9 @@ import type {
 	SimpleStreamOptions,
 	StreamFunction,
 	StreamOptions,
-	Usage,
 } from "#ai/core/types";
 import { clampThinkingLevel } from "#ai/models/index";
+import { applyOpenAIServiceTierPricing } from "#ai/providers/openai/pricing";
 import { clampOpenAIPromptCacheKey } from "#ai/providers/openai/prompt-cache";
 import {
 	convertResponsesMessages,
@@ -134,7 +134,7 @@ export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIRes
 
 			await processResponsesStream(openaiStream, output, stream, model, {
 				serviceTier: options?.serviceTier,
-				applyServiceTierPricing: (usage, serviceTier) => applyServiceTierPricing(usage, serviceTier, model),
+				applyServiceTierPricing: (usage, serviceTier) => applyOpenAIServiceTierPricing(usage, serviceTier, model),
 			});
 
 			if (options?.signal?.aborted) {
@@ -261,33 +261,4 @@ function buildParams(model: Model<"openai-responses">, context: Context, options
 	}
 
 	return params;
-}
-
-function getServiceTierCostMultiplier(
-	model: Pick<Model<"openai-responses">, "id">,
-	serviceTier: ResponseCreateParamsStreaming["service_tier"] | undefined,
-): number {
-	switch (serviceTier) {
-		case "flex":
-			return 0.5;
-		case "priority":
-			return model.id === "gpt-5.5" ? 2.5 : 2;
-		default:
-			return 1;
-	}
-}
-
-function applyServiceTierPricing(
-	usage: Usage,
-	serviceTier: ResponseCreateParamsStreaming["service_tier"] | undefined,
-	model: Pick<Model<"openai-responses">, "id">,
-) {
-	const multiplier = getServiceTierCostMultiplier(model, serviceTier);
-	if (multiplier === 1) return;
-
-	usage.cost.input *= multiplier;
-	usage.cost.output *= multiplier;
-	usage.cost.cacheRead *= multiplier;
-	usage.cost.cacheWrite *= multiplier;
-	usage.cost.total = usage.cost.input + usage.cost.output + usage.cost.cacheRead + usage.cost.cacheWrite;
 }

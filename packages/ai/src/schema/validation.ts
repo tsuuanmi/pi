@@ -254,7 +254,7 @@ function getValidator(schema: Tool["parameters"]): ReturnType<typeof Compile> {
 	return validator;
 }
 
-function formatValidationPath(error: TLocalizedValidationError): string {
+export function formatTypeBoxValidationPath(error: TLocalizedValidationError): string {
 	if (error.keyword === "required") {
 		const requiredProperties = (error.params as { requiredProperties?: string[] }).requiredProperties;
 		const requiredProperty = requiredProperties?.[0];
@@ -315,7 +315,7 @@ export function validateToolArguments(tool: Tool, toolCall: ToolCall): any {
 	const errors =
 		validator
 			.Errors(args)
-			.map((error) => `  - ${formatValidationPath(error)}: ${error.message}`)
+			.map((error) => `  - ${formatTypeBoxValidationPath(error)}: ${error.message}`)
 			.join("\n") || "Unknown validation error";
 
 	const errorMessage = `Validation failed for tool "${toolCall.name}":\n${errors}\n\nReceived arguments:\n${JSON.stringify(toolCall.arguments, null, 2)}`;
