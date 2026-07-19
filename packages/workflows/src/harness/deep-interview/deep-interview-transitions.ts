@@ -1,5 +1,5 @@
-import { registerSkillTransitionTable } from "../shared/registry/skill-registry.ts";
-import { runClosureCheckForSession } from "./deep-interview-runtime.ts";
+import { runClosureCheckForSession } from "#src/harness/deep-interview/deep-interview-runtime";
+import { registerSkillTransitionTable } from "#src/harness/shared/registry/skill-registry";
 
 function hasPendingQuestion(state: unknown): boolean {
 	if (!state || typeof state !== "object" || Array.isArray(state)) return false;

@@ -1,4 +1,4 @@
-import type { RalplanCompactStatus, RalplanStatus } from "./ralplan-runtime.ts";
+import type { RalplanCompactStatus, RalplanStatus } from "#src/harness/ralplan/ralplan-runtime";
 
 /**
  * Pure projection from a full {@link RalplanStatus} to the prompt-efficient

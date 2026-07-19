@@ -1,4 +1,4 @@
-import type { TeamConfig, TeamSnapshot } from "./team-runtime.ts";
+import type { TeamConfig, TeamSnapshot } from "#src/harness/team/team-runtime";
 
 /**
  * Input for {@link projectTeamCompact}: the I/O-read team snapshot and the

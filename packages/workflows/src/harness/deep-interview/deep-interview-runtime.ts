@@ -1,8 +1,4 @@
-import { projectCompactStateFor } from "../shared/compaction/compact-state-registry.ts";
-import { workflowStatePath } from "../shared/session/session-layout.ts";
-import { syncWorkflowActiveState } from "../shared/state/active-state.ts";
-import { readWorkflowState, replaceWorkflowState } from "../shared/state/workflow-state.ts";
-import { deriveDeepInterviewHud } from "./deep-interview-hud.ts";
+import { deriveDeepInterviewHud } from "#src/harness/deep-interview/deep-interview-hud";
 import {
 	answerHash,
 	type DeepInterviewAdvisoryMetadata,
@@ -18,7 +14,11 @@ import {
 	normalizeDeepInterviewEnvelope,
 	questionHash,
 	validateDeepInterviewScoredTransition,
-} from "./deep-interview-state.ts";
+} from "#src/harness/deep-interview/deep-interview-state";
+import { projectCompactStateFor } from "#src/harness/shared/compaction/compact-state-registry";
+import { workflowStatePath } from "#src/harness/shared/session/session-layout";
+import { syncWorkflowActiveState } from "#src/harness/shared/state/active-state";
+import { readWorkflowState, replaceWorkflowState } from "#src/harness/shared/state/workflow-state";
 
 export interface DeepInterviewAnswerInput {
 	interviewId?: string;

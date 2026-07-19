@@ -9,7 +9,7 @@
  * decision, so requesting a permanently-blocked seam surfaces a named failure rather than a silent
  * no-op. Future extensions add entries here (or via {@link DeferredSeamRegistry.register}); the
  * orchestrator does not change. */
-import type { Harness } from "./types.ts";
+import type { Harness } from "#src/harness/runtime/types";
 
 /** Lifecycle status of a designed-not-built seam. */
 export type DeferredSeamStatus = "deferred" | "permanentlyBlocked" | "not-built";

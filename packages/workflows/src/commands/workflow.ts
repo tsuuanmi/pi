@@ -1,7 +1,7 @@
 import { execFileSync, spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
-import "../harness/deep-interview/deep-interview-transitions.ts";
+import "#src/harness/deep-interview/deep-interview-transitions";
 import {
 	appendOrMergeDeepInterviewRound,
 	enrichDeepInterviewRoundScoring,
@@ -10,28 +10,28 @@ import {
 	readDeepInterviewStateCompact,
 	restateGoalGate,
 	runClosureCheckForSession,
-} from "../harness/deep-interview/deep-interview-runtime.ts";
+} from "#src/harness/deep-interview/deep-interview-runtime";
 import type {
 	DeepInterviewAdvisoryMetadata,
 	DeepInterviewRoundRecord,
-} from "../harness/deep-interview/deep-interview-state.ts";
-import { recordRalplanExplorerGateArtifact } from "../harness/ralplan/ralplan-gates.ts";
-import type { RalplanApprovalTarget } from "../harness/ralplan/ralplan-runtime.ts";
+} from "#src/harness/deep-interview/deep-interview-state";
+import { recordRalplanExplorerGateArtifact } from "#src/harness/ralplan/ralplan-gates";
+import type { RalplanApprovalTarget } from "#src/harness/ralplan/ralplan-runtime";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
 	readRalplanCompactStatus,
 	readRalplanStatus,
 	writeRalplanArtifact,
-} from "../harness/ralplan/ralplan-runtime.ts";
-import { handoffWorkflow } from "../harness/shared/orchestration/handoff.ts";
-import { assertDeepInterviewHandoff } from "../harness/shared/orchestration/workflow-tool-utils.ts";
-import type { RalplanStage } from "../harness/shared/session/paths.ts";
-import { deepInterviewIndexPath, deepInterviewSpecPath } from "../harness/shared/session/session-layout.ts";
-import { assertSafePathComponent } from "../harness/shared/state/state-schema.ts";
-import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "../harness/shared/state/state-writer.ts";
-import { defaultWorkflowId } from "../harness/shared/state/workflow-id.ts";
-import { activeRalplanRunId } from "../harness/shared/state/workflow-state.ts";
+} from "#src/harness/ralplan/ralplan-runtime";
+import { handoffWorkflow } from "#src/harness/shared/orchestration/handoff";
+import { assertDeepInterviewHandoff } from "#src/harness/shared/orchestration/workflow-tool-utils";
+import type { RalplanStage } from "#src/harness/shared/session/paths";
+import { deepInterviewIndexPath, deepInterviewSpecPath } from "#src/harness/shared/session/session-layout";
+import { assertSafePathComponent } from "#src/harness/shared/state/state-schema";
+import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#src/harness/shared/state/state-writer";
+import { defaultWorkflowId } from "#src/harness/shared/state/workflow-id";
+import { activeRalplanRunId } from "#src/harness/shared/state/workflow-state";
 import {
 	completeTeam,
 	createTeamTask,
@@ -42,10 +42,10 @@ import {
 	sendTeamMessage,
 	startTeam,
 	transitionTeamTask,
-} from "../harness/team/team-runtime.ts";
-import { ultragoalGuard } from "../harness/ultragoal/ultragoal-guard.ts";
-import type { UltragoalGoalMode } from "../harness/ultragoal/ultragoal-receipt.ts";
-import type { UltragoalBlockerClassification } from "../harness/ultragoal/ultragoal-runtime.ts";
+} from "#src/harness/team/team-runtime";
+import { ultragoalGuard } from "#src/harness/ultragoal/ultragoal-guard";
+import type { UltragoalGoalMode } from "#src/harness/ultragoal/ultragoal-receipt";
+import type { UltragoalBlockerClassification } from "#src/harness/ultragoal/ultragoal-runtime";
 import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
@@ -54,15 +54,16 @@ import {
 	recordUltragoalBlockerClassification,
 	recordUltragoalReviewBlockers,
 	startNextUltragoalGoal,
-} from "../harness/ultragoal/ultragoal-runtime.ts";
-import "../harness/ralplan/ralplan-transitions.ts";
-import "../harness/team/team-transitions.ts";
-import "../harness/ultragoal/ultragoal-transitions.ts";
-import { callEndpoint } from "../harness/runtime/endpoint.ts";
-import type { GcContext } from "../harness/runtime/gc.ts";
-import { collectGcReport, computeGcExitCode, gcPidProbe, HarnessLeasesGcStoreAdapter } from "../harness/runtime/gc.ts";
-import { mutateRuntimeSession } from "../harness/runtime/mutation.ts";
-import { RuntimeOwner, resolveOwner } from "../harness/runtime/owner.ts";
+} from "#src/harness/ultragoal/ultragoal-runtime";
+import "#src/harness/ralplan/ralplan-transitions";
+import "#src/harness/team/team-transitions";
+import "#src/harness/ultragoal/ultragoal-transitions";
+import { runStateCommand } from "#src/commands/state-command";
+import { callEndpoint } from "#src/harness/runtime/endpoint";
+import type { GcContext } from "#src/harness/runtime/gc";
+import { collectGcReport, computeGcExitCode, gcPidProbe, HarnessLeasesGcStoreAdapter } from "#src/harness/runtime/gc";
+import { mutateRuntimeSession } from "#src/harness/runtime/mutation";
+import { RuntimeOwner, resolveOwner } from "#src/harness/runtime/owner";
 import {
 	buildClassificationInput,
 	buildWorkspaceMarker,
@@ -70,10 +71,10 @@ import {
 	finalizePrimitive,
 	recoverPrimitive,
 	validatePrimitive,
-} from "../harness/runtime/primitives.ts";
-import { type HarnessRpc, PiRpc } from "../harness/runtime/rpc.ts";
-import { operate } from "../harness/runtime/runner.ts";
-import { buildResponse, submitUnavailableReason } from "../harness/runtime/state.ts";
+} from "#src/harness/runtime/primitives";
+import { type HarnessRpc, PiRpc } from "#src/harness/runtime/rpc";
+import { operate } from "#src/harness/runtime/runner";
+import { buildResponse, submitUnavailableReason } from "#src/harness/runtime/state";
 import {
 	canonicalWorkspacePath,
 	defaultRepoName,
@@ -84,16 +85,15 @@ import {
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "../harness/runtime/storage.ts";
+} from "#src/harness/runtime/storage";
 import {
 	type Observation,
 	SESSION_SCHEMA_VERSION,
 	type SessionHandle,
 	type SessionState,
-} from "../harness/runtime/types.ts";
-import { isBlockingQuestionPhaseForSkill } from "../harness/shared/registry/skill-registry.ts";
-import type { WorkflowSkill } from "../harness/shared/session/paths.ts";
-import { runStateCommand } from "./state-command.ts";
+} from "#src/harness/runtime/types";
+import { isBlockingQuestionPhaseForSkill } from "#src/harness/shared/registry/skill-registry";
+import type { WorkflowSkill } from "#src/harness/shared/session/paths";
 
 interface WorkflowCommandResult {
 	status: number;

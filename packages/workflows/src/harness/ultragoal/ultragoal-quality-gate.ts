@@ -23,7 +23,7 @@ import {
 	surfaceFamily,
 	type VerifiedReceipt,
 	validateStructuralArtifact,
-} from "./ultragoal-artifacts.ts";
+} from "#src/harness/ultragoal/ultragoal-artifacts";
 
 export type { VerifiedReceipt };
 

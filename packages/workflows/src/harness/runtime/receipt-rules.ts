@@ -13,7 +13,7 @@
  * their own rules without touching `mutateRuntimeSession`. The default set is conservative — only
  * `finalize(accepted)` and `validate(overallPassed)` are gated; blocked variants are OUT of target
  * (predicate-gated) so Phase 1/2 behavior is not falsely rejected. */
-import type { HarnessLifecycle, HarnessVerb, RuntimeReceipt } from "./types.ts";
+import type { HarnessLifecycle, HarnessVerb, RuntimeReceipt } from "#src/harness/runtime/types";
 
 /** The post-state lifecycle a receipt of a given verb MUST land on when its acceptance predicate
  * matches. Only `finalize` and `validate` are gated here; ungated verbs always pass. */

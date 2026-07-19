@@ -21,11 +21,11 @@ import {
 	type RecoveryDecision,
 	type RecoveryDecisionKind,
 	recoverPrimitive,
-} from "./primitives.ts";
-import { type HarnessRpc, singleFlightAccept } from "./rpc.ts";
-import { isTerminal } from "./state.ts";
-import { readRuntimeReceipts } from "./storage.ts";
-import type { HarnessLifecycle, PrimitiveResponse, RuntimeWriter, SessionState } from "./types.ts";
+} from "#src/harness/runtime/primitives";
+import { type HarnessRpc, singleFlightAccept } from "#src/harness/runtime/rpc";
+import { isTerminal } from "#src/harness/runtime/state";
+import { readRuntimeReceipts } from "#src/harness/runtime/storage";
+import type { HarnessLifecycle, PrimitiveResponse, RuntimeWriter, SessionState } from "#src/harness/runtime/types";
 
 export interface OperateOptions {
 	root: string;

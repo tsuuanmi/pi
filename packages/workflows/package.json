@@ -20,6 +20,12 @@
 		},
 		"./package.json": "./package.json"
 	},
+	"imports": {
+		"#src/*": {
+			"types": "./dist/*.d.ts",
+			"import": "./dist/*.js"
+		}
+	},
 	"files": [
 		"dist",
 		"skills",

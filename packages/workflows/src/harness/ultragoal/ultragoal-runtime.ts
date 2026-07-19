@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto";
-import type { ObstacleRegression, ObstacleStatus } from "../shared/audit/decision-ledger.ts";
-import { projectCompactStateFor } from "../shared/compaction/compact-state-registry.ts";
+import type { ObstacleRegression, ObstacleStatus } from "#src/harness/shared/audit/decision-ledger";
+import { projectCompactStateFor } from "#src/harness/shared/compaction/compact-state-registry";
 import {
 	ultragoalBriefPath,
 	ultragoalGoalsPath,
 	ultragoalLedgerPath,
 	workflowStatePath,
-} from "../shared/session/session-layout.ts";
-import { syncWorkflowActiveState } from "../shared/state/active-state.ts";
+} from "#src/harness/shared/session/session-layout";
+import { syncWorkflowActiveState } from "#src/harness/shared/state/active-state";
 import {
 	appendJsonl,
 	readExistingStateForMutation,
@@ -15,16 +15,16 @@ import {
 	sha256,
 	writeJsonAtomic,
 	writeTextArtifact,
-} from "../shared/state/state-writer.ts";
-import { readWorkflowState, writeWorkflowState } from "../shared/state/workflow-state.ts";
-import { buildUltragoalHud } from "./ultragoal-hud.ts";
+} from "#src/harness/shared/state/state-writer";
+import { readWorkflowState, writeWorkflowState } from "#src/harness/shared/state/workflow-state";
+import { buildUltragoalHud } from "#src/harness/ultragoal/ultragoal-hud";
 import {
 	assertUltragoalObstacle,
 	buildUltragoalObstacle,
 	ULTRAGOAL_OBSTACLE_KINDS,
 	writeUltragoalObstacle,
-} from "./ultragoal-obstacles.ts";
-import { validateCompletionQualityGate } from "./ultragoal-quality-gate.ts";
+} from "#src/harness/ultragoal/ultragoal-obstacles";
+import { validateCompletionQualityGate } from "#src/harness/ultragoal/ultragoal-quality-gate";
 import {
 	buildCompletionReceipt,
 	chooseReceiptKind,
@@ -38,7 +38,7 @@ import {
 	type UltragoalPlan,
 	type UltragoalReceiptKind,
 	validateCompletionReceipt,
-} from "./ultragoal-receipt.ts";
+} from "#src/harness/ultragoal/ultragoal-receipt";
 
 export type {
 	UltragoalCompletionVerification,

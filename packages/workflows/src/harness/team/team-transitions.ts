@@ -1,6 +1,6 @@
-import type { ExpectedNextRole, TeamSelectorSnapshot } from "../shared/orchestration/expected-next-role.ts";
-import { registerSkillTransitionTable, type SkillTransitionContext } from "../shared/registry/skill-registry.ts";
-import { readTeamCompact, readTeamSnapshot, type TeamSnapshot } from "./team-runtime.ts";
+import type { ExpectedNextRole, TeamSelectorSnapshot } from "#src/harness/shared/orchestration/expected-next-role";
+import { registerSkillTransitionTable, type SkillTransitionContext } from "#src/harness/shared/registry/skill-registry";
+import { readTeamCompact, readTeamSnapshot, type TeamSnapshot } from "#src/harness/team/team-runtime";
 
 function selectNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): ExpectedNextRole | undefined {
 	if (!snapshot?.team_id) return undefined;

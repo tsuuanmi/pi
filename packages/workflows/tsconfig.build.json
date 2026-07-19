@@ -5,6 +5,7 @@
 		"outDir": "./dist",
 		"rootDir": "./src",
 		"paths": {
+			"#src/*": ["./src/*"],
 			"@tsuuanmi/pi-coding-agent": ["../coding-agent/dist/index.d.ts"],
 			"@tsuuanmi/pi-agent": ["../agent/dist/index.d.ts"],
 			"@tsuuanmi/pi-agent/*": ["../agent/dist/*.d.ts"],

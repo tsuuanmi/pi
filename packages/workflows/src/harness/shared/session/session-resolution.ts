@@ -13,7 +13,7 @@
 
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { piSessionRoot, sessionActivityPath, sessionIdFromDirName } from "./session-layout.ts";
+import { piSessionRoot, sessionActivityPath, sessionIdFromDirName } from "#src/harness/shared/session/session-layout";
 
 // ---------------------------------------------------------------------------
 // Error types

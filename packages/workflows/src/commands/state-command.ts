@@ -1,10 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
-import type { WorkflowSkill } from "../harness/shared/session/paths.ts";
-import { workflowActiveStatePath, workflowStatePath } from "../harness/shared/session/session-layout.ts";
-import { readWorkflowActiveState, syncWorkflowActiveState } from "../harness/shared/state/active-state.ts";
-import { assertWorkflowSkill, isWorkflowSkill } from "../harness/shared/state/state-schema.ts";
-import { clearWorkflowState, readWorkflowState, writeWorkflowState } from "../harness/shared/state/workflow-state.ts";
+import type { WorkflowSkill } from "#src/harness/shared/session/paths";
+import { workflowActiveStatePath, workflowStatePath } from "#src/harness/shared/session/session-layout";
+import { readWorkflowActiveState, syncWorkflowActiveState } from "#src/harness/shared/state/active-state";
+import { assertWorkflowSkill, isWorkflowSkill } from "#src/harness/shared/state/state-schema";
+import { clearWorkflowState, readWorkflowState, writeWorkflowState } from "#src/harness/shared/state/workflow-state";
 
 interface StateCommandResult {
 	status: number;

@@ -1,16 +1,20 @@
 import { randomUUID } from "node:crypto";
-import { auditVerbForOperation, maybeAuditForStateWrite, safeAppendAuditEntry } from "../audit/audit-log.ts";
-import { auditOutOfBandAndThrowIfUnforced } from "../audit/tamper-detection.ts";
+import {
+	auditVerbForOperation,
+	maybeAuditForStateWrite,
+	safeAppendAuditEntry,
+} from "#src/harness/shared/audit/audit-log";
+import { auditOutOfBandAndThrowIfUnforced } from "#src/harness/shared/audit/tamper-detection";
 import {
 	clearWorkflowPhase,
 	initialWorkflowPhase,
 	isKnownWorkflowPhase,
 	isValidWorkflowTransition,
 	type WorkflowStateOperation,
-} from "../registry/workflow-manifest.ts";
-import type { WorkflowSkill } from "../session/paths.ts";
-import { workflowStatePath } from "../session/session-layout.ts";
-import { coerceWorkflowState, type WorkflowStateEnvelope } from "./state-schema.ts";
+} from "#src/harness/shared/registry/workflow-manifest";
+import type { WorkflowSkill } from "#src/harness/shared/session/paths";
+import { workflowStatePath } from "#src/harness/shared/session/session-layout";
+import { coerceWorkflowState, type WorkflowStateEnvelope } from "#src/harness/shared/state/state-schema";
 import {
 	createWorkflowReceipt,
 	nowIso,
@@ -18,9 +22,9 @@ import {
 	type StrictMutationReadResult,
 	stampWorkflowEnvelopeChecksum,
 	writeJsonAtomic,
-} from "./state-writer.ts";
+} from "#src/harness/shared/state/state-writer";
 
-export { defaultWorkflowId } from "./workflow-id.ts";
+export { defaultWorkflowId } from "#src/harness/shared/state/workflow-id";
 
 export interface WorkflowStateWriteOptions {
 	operation?: WorkflowStateOperation;

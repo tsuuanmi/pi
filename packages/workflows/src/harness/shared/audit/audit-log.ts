@@ -1,7 +1,7 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { WorkflowSkill } from "../session/paths.ts";
-import { auditLogPath } from "../session/paths.ts";
+import type { WorkflowSkill } from "#src/harness/shared/session/paths";
+import { auditLogPath } from "#src/harness/shared/session/paths";
 
 /**
  * State-integrity audit log.

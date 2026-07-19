@@ -4,7 +4,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { runWorkflowCommand } from "../../../src/commands/workflow.ts";
+import { runWorkflowCommand } from "#src/commands/workflow";
 import {
 	collectGcReport,
 	computeGcExitCode,
@@ -15,37 +15,37 @@ import {
 	gcPidProbe,
 	gcProbeToLeasePidStatus,
 	HarnessLeasesGcStoreAdapter,
-} from "../../../src/harness/runtime/gc.ts";
-import { classifyLeaseStatus, readLease, type SessionLease } from "../../../src/harness/runtime/lease.ts";
-import { mutateRuntimeSession } from "../../../src/harness/runtime/mutation.ts";
-import { type RecoveryDecision, recoverPrimitive } from "../../../src/harness/runtime/primitives.ts";
+} from "#src/harness/runtime/gc";
+import { classifyLeaseStatus, readLease, type SessionLease } from "#src/harness/runtime/lease";
+import { mutateRuntimeSession } from "#src/harness/runtime/mutation";
+import { type RecoveryDecision, recoverPrimitive } from "#src/harness/runtime/primitives";
 import {
 	RECEIPT_FAMILY_LIFECYCLE_TARGETS,
 	ReceiptConsistencyError,
 	type ReceiptFamilyConsistencyRule,
 	receiptFamilyConsistencyRules,
 	validateReceiptFamilyConsistency,
-} from "../../../src/harness/runtime/receipt-rules.ts";
+} from "#src/harness/runtime/receipt-rules";
 import {
 	DEFERRED_SEAMS,
 	DeferredSeamRegistry,
 	deferredSeamRegistry,
 	isHarnessSupported,
 	seamUnsupported,
-} from "../../../src/harness/runtime/seams.ts";
+} from "#src/harness/runtime/seams";
 import {
 	readRuntimeReceipts,
 	readSessionState,
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "../../../src/harness/runtime/storage.ts";
+} from "#src/harness/runtime/storage";
 import {
 	type HarnessLifecycle,
 	type RuntimeReceipt,
 	SESSION_SCHEMA_VERSION,
 	type SessionState,
-} from "../../../src/harness/runtime/types.ts";
+} from "#src/harness/runtime/types";
 
 const WRITER = { ownerId: "test", leaseEpoch: 0 };
 

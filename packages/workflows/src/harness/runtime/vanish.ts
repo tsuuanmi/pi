@@ -9,8 +9,8 @@
  * Vanish is internal-only: written by `recoverPrimitive` / the `operate` loop before destructive
  * actions, never exposed as a standalone CLI verb.
  */
-import type { PreserveResult, UntrackedEntry } from "./preservation.ts";
-import type { GitDelta } from "./types.ts";
+import type { PreserveResult, UntrackedEntry } from "#src/harness/runtime/preservation";
+import type { GitDelta } from "#src/harness/runtime/types";
 
 /** Classifications that require a vanish receipt before any destructive action. */
 export type VanishClassification = "restart-clean" | "restart-preserve-delta" | "fallback-harness-exec";

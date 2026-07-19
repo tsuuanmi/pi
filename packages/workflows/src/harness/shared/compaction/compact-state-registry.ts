@@ -14,12 +14,12 @@
  * runtime readers import this dispatcher; the pure projections do not.
  */
 
-import { projectCompactState } from "../../deep-interview/deep-interview-state.ts";
-import { projectRalplanCompact } from "../../ralplan/ralplan-compact.ts";
-import type { RalplanStatus } from "../../ralplan/ralplan-runtime.ts";
-import { projectTeamCompact, type TeamCompactInput } from "../../team/team-compact.ts";
-import { projectUltragoalCompact, type UltragoalCompactInput } from "../../ultragoal/ultragoal-compact.ts";
-import type { CompactBudget } from "./compact-budget.ts";
+import { projectCompactState } from "#src/harness/deep-interview/deep-interview-state";
+import { projectRalplanCompact } from "#src/harness/ralplan/ralplan-compact";
+import type { RalplanStatus } from "#src/harness/ralplan/ralplan-runtime";
+import type { CompactBudget } from "#src/harness/shared/compaction/compact-budget";
+import { projectTeamCompact, type TeamCompactInput } from "#src/harness/team/team-compact";
+import { projectUltragoalCompact, type UltragoalCompactInput } from "#src/harness/ultragoal/ultragoal-compact";
 
 export type CompactSkill = "deep-interview" | "ralplan" | "ultragoal" | "team";
 

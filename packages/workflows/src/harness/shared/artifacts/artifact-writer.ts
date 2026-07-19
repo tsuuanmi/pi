@@ -1,4 +1,8 @@
-import { type WorkflowWriteOptions, type WriteArtifactResult, writeTextArtifact } from "../state/state-writer.ts";
+import {
+	type WorkflowWriteOptions,
+	type WriteArtifactResult,
+	writeTextArtifact,
+} from "#src/harness/shared/state/state-writer";
 
 export interface StageArtifactInput {
 	path: string;

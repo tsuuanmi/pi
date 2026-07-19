@@ -1,12 +1,12 @@
-import { validateContextMapVerdict } from "../shared/orchestration/gate-verdicts.ts";
-import { ralplanGateArtifactPath, workflowStatePath } from "../shared/session/session-layout.ts";
-import { writeJsonAtomic } from "../shared/state/state-writer.ts";
+import { validateContextMapVerdict } from "#src/harness/shared/orchestration/gate-verdicts";
+import { ralplanGateArtifactPath, workflowStatePath } from "#src/harness/shared/session/session-layout";
+import { writeJsonAtomic } from "#src/harness/shared/state/state-writer";
 import {
 	activeRalplanRunId,
 	defaultWorkflowId,
 	readWorkflowState,
 	writeWorkflowState,
-} from "../shared/state/workflow-state.ts";
+} from "#src/harness/shared/state/workflow-state";
 
 export interface RalplanExplorerGate {
 	gate: "explorer";

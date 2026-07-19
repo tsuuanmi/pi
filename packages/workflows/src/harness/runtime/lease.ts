@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import { removeSession, sessionPaths } from "./storage.ts";
+import { removeSession, sessionPaths } from "#src/harness/runtime/storage";
 
 export interface SessionLease {
 	ownerId: string;

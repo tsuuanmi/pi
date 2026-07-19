@@ -3,8 +3,8 @@ import { appendFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { runWorkflowCommand } from "../../../src/commands/workflow.ts";
-import { preserveDirtyWorktree } from "../../../src/harness/runtime/preservation.ts";
+import { runWorkflowCommand } from "#src/commands/workflow";
+import { preserveDirtyWorktree } from "#src/harness/runtime/preservation";
 import {
 	buildClassificationInput,
 	buildWorkspaceMarker,
@@ -14,22 +14,18 @@ import {
 	isRuntimeReceiptValid,
 	type RecoveryDecision,
 	recoverPrimitive,
-} from "../../../src/harness/runtime/primitives.ts";
-import type { HarnessRpc, RpcStateSnapshot } from "../../../src/harness/runtime/rpc.ts";
-import { operate } from "../../../src/harness/runtime/runner.ts";
+} from "#src/harness/runtime/primitives";
+import type { HarnessRpc, RpcStateSnapshot } from "#src/harness/runtime/rpc";
+import { operate } from "#src/harness/runtime/runner";
 import {
 	readRuntimeReceipts,
 	readSessionState,
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "../../../src/harness/runtime/storage.ts";
-import { SESSION_SCHEMA_VERSION, type SessionState } from "../../../src/harness/runtime/types.ts";
-import {
-	buildVanishEvidence,
-	requiresVanishBeforeAction,
-	validateVanish,
-} from "../../../src/harness/runtime/vanish.ts";
+} from "#src/harness/runtime/storage";
+import { SESSION_SCHEMA_VERSION, type SessionState } from "#src/harness/runtime/types";
+import { buildVanishEvidence, requiresVanishBeforeAction, validateVanish } from "#src/harness/runtime/vanish";
 
 const WRITER = { ownerId: "test", leaseEpoch: 0 };
 

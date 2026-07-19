@@ -4,22 +4,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { clearSubagentManagerFactoryForTests } from "@tsuuanmi/pi-agent";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { runWorkflowCommand } from "../../../src/commands/workflow.ts";
-import { RuntimeOwner } from "../../../src/harness/runtime/owner.ts";
-import {
-	buildClassificationInput,
-	classifyRecovery,
-	isRuntimeReceiptValid,
-} from "../../../src/harness/runtime/primitives.ts";
-import type { HarnessRpc, RpcStateSnapshot } from "../../../src/harness/runtime/rpc.ts";
+import { runWorkflowCommand } from "#src/commands/workflow";
+import { RuntimeOwner } from "#src/harness/runtime/owner";
+import { buildClassificationInput, classifyRecovery, isRuntimeReceiptValid } from "#src/harness/runtime/primitives";
+import type { HarnessRpc, RpcStateSnapshot } from "#src/harness/runtime/rpc";
 import {
 	readRuntimeReceipts,
 	readSessionState,
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "../../../src/harness/runtime/storage.ts";
-import { SESSION_SCHEMA_VERSION, type SessionState } from "../../../src/harness/runtime/types.ts";
+} from "#src/harness/runtime/storage";
+import { SESSION_SCHEMA_VERSION, type SessionState } from "#src/harness/runtime/types";
 
 class FakeRpc implements HarnessRpc {
 	started = false;

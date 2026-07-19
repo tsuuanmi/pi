@@ -37,7 +37,8 @@
 			"@tsuuanmi/pi-tui": ["./packages/tui/src/index.ts"],
 			"@tsuuanmi/pi-tui/*": ["./packages/tui/src/*"],
 			"@tsuuanmi/pi-agent-old": ["./packages/agent-old/src/index.ts"],
-			"@tsuuanmi/pi-agent-old/*": ["./packages/agent-old/src/*"]
+			"@tsuuanmi/pi-agent-old/*": ["./packages/agent-old/src/*"],
+			"#src/*": ["./packages/workflows/src/*"]
 		}
 	},
 	"include": ["packages/*/src/**/*", "packages/*/test/**/*"],

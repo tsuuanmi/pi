@@ -1,16 +1,13 @@
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { evaluateSkillGateValidators, evaluateSkillTerminalDetectors } from "../shared/registry/skill-registry.ts";
-import type { WorkflowSkill } from "../shared/session/paths.ts";
-import { readWorkflowState } from "../shared/state/workflow-state.ts";
-import { mutateRuntimeSession } from "./mutation.ts";
-import { preserveDirtyWorktree } from "./preservation.ts";
-import type { HarnessRpc } from "./rpc.ts";
-import { singleFlightAccept } from "./rpc.ts";
-import { seamUnsupported } from "./seams.ts";
-import { buildResponse } from "./state.ts";
-import { readRuntimeReceipts, readSessionState } from "./storage.ts";
+import { mutateRuntimeSession } from "#src/harness/runtime/mutation";
+import { preserveDirtyWorktree } from "#src/harness/runtime/preservation";
+import type { HarnessRpc } from "#src/harness/runtime/rpc";
+import { singleFlightAccept } from "#src/harness/runtime/rpc";
+import { seamUnsupported } from "#src/harness/runtime/seams";
+import { buildResponse } from "#src/harness/runtime/state";
+import { readRuntimeReceipts, readSessionState } from "#src/harness/runtime/storage";
 import type {
 	GitDelta,
 	HarnessLifecycle,
@@ -18,13 +15,19 @@ import type {
 	RuntimeReceipt,
 	RuntimeWriter,
 	SessionState,
-} from "./types.ts";
+} from "#src/harness/runtime/types";
 import {
 	buildVanishEvidence,
 	requiresVanishBeforeAction,
 	type VanishClassification,
 	validateVanish,
-} from "./vanish.ts";
+} from "#src/harness/runtime/vanish";
+import {
+	evaluateSkillGateValidators,
+	evaluateSkillTerminalDetectors,
+} from "#src/harness/shared/registry/skill-registry";
+import type { WorkflowSkill } from "#src/harness/shared/session/paths";
+import { readWorkflowState } from "#src/harness/shared/state/workflow-state";
 
 export type WorkspaceMarkerStatus = "available" | "not-git" | "git-unavailable" | "unknown" | "deleted";
 export type WorkspaceRisk = "normal" | "dirty" | "deleted" | "unknown" | "not-git";

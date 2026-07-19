@@ -18,8 +18,6 @@ export type RalplanStage =
 // adopt) must use `piGlobalRoot` explicitly.
 // ---------------------------------------------------------------------------
 
-// Re-export canonical assertion functions from state-schema.ts.
-export { assertRalplanStage, assertSafePathComponent, assertWorkflowSkill } from "../state/state-schema.ts";
 export {
 	assertNonEmptySessionId,
 	auditLogPath,
@@ -54,4 +52,10 @@ export {
 	ultragoalLedgerPath,
 	workflowActiveStatePath,
 	workflowStatePath,
-} from "./session-layout.ts";
+} from "#src/harness/shared/session/session-layout";
+// Re-export canonical assertion functions from state-schema.ts.
+export {
+	assertRalplanStage,
+	assertSafePathComponent,
+	assertWorkflowSkill,
+} from "#src/harness/shared/state/state-schema";

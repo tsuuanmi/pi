@@ -1,7 +1,7 @@
-import { assertRalplanExplorerGatePassed } from "../ralplan/ralplan-gates.ts";
-import { readRalplanStatus } from "../ralplan/ralplan-runtime.ts";
-import type { ExpectedNextRole, RalplanSelectorState } from "../shared/orchestration/expected-next-role.ts";
-import { registerSkillTransitionTable } from "../shared/registry/skill-registry.ts";
+import { assertRalplanExplorerGatePassed } from "#src/harness/ralplan/ralplan-gates";
+import { readRalplanStatus } from "#src/harness/ralplan/ralplan-runtime";
+import type { ExpectedNextRole, RalplanSelectorState } from "#src/harness/shared/orchestration/expected-next-role";
+import { registerSkillTransitionTable } from "#src/harness/shared/registry/skill-registry";
 
 const RALPLAN_CLOSED_PHASES = new Set([
 	"pending-approval",

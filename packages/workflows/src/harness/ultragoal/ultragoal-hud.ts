@@ -1,6 +1,6 @@
-import { limitationsChip, progressChip, shipWithCaveatsChip } from "../shared/hud/hud-chips.ts";
-import type { WorkflowHudSummary } from "../shared/state/active-state.ts";
-import type { UltragoalStatus } from "./ultragoal-runtime.ts";
+import { limitationsChip, progressChip, shipWithCaveatsChip } from "#src/harness/shared/hud/hud-chips";
+import type { WorkflowHudSummary } from "#src/harness/shared/state/active-state";
+import type { UltragoalStatus } from "#src/harness/ultragoal/ultragoal-runtime";
 
 /**
  * Remaining (non-terminal) goal count: pending + active + failed + blocked +

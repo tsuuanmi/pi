@@ -32,8 +32,8 @@ import {
 	type PidStatus,
 	reapDeadOwnerSessions,
 	type SessionLease,
-} from "./lease.ts";
-import { sessionPaths } from "./storage.ts";
+} from "#src/harness/runtime/lease";
+import { sessionPaths } from "#src/harness/runtime/storage";
 
 /** Fail-closed probe status. `unknown` folds ambiguous/invalid pids (NaN/undefined/EINVAL, unknown
  * errors) into a KEEP outcome so they are never reaped. */

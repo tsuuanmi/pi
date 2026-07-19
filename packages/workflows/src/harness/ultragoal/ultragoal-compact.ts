@@ -1,4 +1,4 @@
-import type { UltragoalStatus } from "./ultragoal-runtime.ts";
+import type { UltragoalStatus } from "#src/harness/ultragoal/ultragoal-runtime";
 
 /**
  * Input for {@link projectUltragoalCompact}: the I/O-read ultragoal status, the

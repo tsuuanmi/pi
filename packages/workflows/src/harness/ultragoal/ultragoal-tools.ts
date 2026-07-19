@@ -1,10 +1,16 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
-import { workflowReceipt } from "../shared/artifacts/receipts.ts";
-import { assertExpectedNextRole, assertNoGuardedSpawnOverrides } from "../shared/orchestration/expected-next-role.ts";
-import { assertAgentThinkingLevel, requireSubagentManager } from "../shared/orchestration/workflow-tool-utils.ts";
-import { expectedNextRoleForSkill } from "../shared/registry/skill-registry.ts";
-import { getUltragoalStatus } from "./ultragoal-runtime.ts";
+import { workflowReceipt } from "#src/harness/shared/artifacts/receipts";
+import {
+	assertExpectedNextRole,
+	assertNoGuardedSpawnOverrides,
+} from "#src/harness/shared/orchestration/expected-next-role";
+import {
+	assertAgentThinkingLevel,
+	requireSubagentManager,
+} from "#src/harness/shared/orchestration/workflow-tool-utils";
+import { expectedNextRoleForSkill } from "#src/harness/shared/registry/skill-registry";
+import { getUltragoalStatus } from "#src/harness/ultragoal/ultragoal-runtime";
 
 const ultragoalSpawnGoalAgentSchema = Type.Object({
 	goalId: Type.String({ description: "Goal id to assign to the subagent." }),

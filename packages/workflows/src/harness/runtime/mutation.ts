@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import { ReceiptConsistencyError, validateReceiptFamilyConsistency } from "./receipt-rules.ts";
-import { assertTransition, buildStateView, nextAllowedActions } from "./state.ts";
+import { ReceiptConsistencyError, validateReceiptFamilyConsistency } from "#src/harness/runtime/receipt-rules";
+import { assertTransition, buildStateView, nextAllowedActions } from "#src/harness/runtime/state";
 import {
 	appendRuntimeEvent,
 	appendRuntimeReceipt,
@@ -9,7 +9,7 @@ import {
 	readSessionState,
 	sessionPaths,
 	writeSessionState,
-} from "./storage.ts";
+} from "#src/harness/runtime/storage";
 import type {
 	HarnessVerb,
 	RuntimeReceipt,
@@ -17,7 +17,7 @@ import type {
 	RuntimeWriter,
 	SessionState,
 	WorkflowRuntimeEvent,
-} from "./types.ts";
+} from "#src/harness/runtime/types";
 
 interface RuntimeMutationEventInput {
 	kind: string;

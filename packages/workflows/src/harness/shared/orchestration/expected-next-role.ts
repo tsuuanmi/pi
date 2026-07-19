@@ -1,5 +1,5 @@
-import { expectedNextRoleForSkill } from "../registry/skill-registry.ts";
-import type { WorkflowSkill } from "../session/paths.ts";
+import { expectedNextRoleForSkill } from "#src/harness/shared/registry/skill-registry";
+import type { WorkflowSkill } from "#src/harness/shared/session/paths";
 
 export interface ExpectedNextRole {
 	skill: WorkflowSkill;

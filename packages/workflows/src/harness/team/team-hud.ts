@@ -1,6 +1,6 @@
-import { progressChip } from "../shared/hud/hud-chips.ts";
-import type { WorkflowHudSummary } from "../shared/state/active-state.ts";
-import type { TeamSnapshot } from "./team-runtime.ts";
+import { progressChip } from "#src/harness/shared/hud/hud-chips";
+import type { WorkflowHudSummary } from "#src/harness/shared/state/active-state";
+import type { TeamSnapshot } from "#src/harness/team/team-runtime";
 
 /**
  * Build the workflow HUD summary for an active team run.

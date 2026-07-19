@@ -3,10 +3,10 @@ import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { runWorkflowCommand } from "../../../src/commands/workflow.ts";
-import { resolveHarnessRoot, sessionPaths, writeSessionState } from "../../../src/harness/runtime/storage.ts";
-import { SESSION_SCHEMA_VERSION, type SessionState } from "../../../src/harness/runtime/types.ts";
-import { readWorkflowActiveState, syncWorkflowActiveState } from "../../../src/harness/shared/state/active-state.ts";
+import { runWorkflowCommand } from "#src/commands/workflow";
+import { resolveHarnessRoot, sessionPaths, writeSessionState } from "#src/harness/runtime/storage";
+import { SESSION_SCHEMA_VERSION, type SessionState } from "#src/harness/runtime/types";
+import { readWorkflowActiveState, syncWorkflowActiveState } from "#src/harness/shared/state/active-state";
 
 function makeState(cwd: string, sessionId: string): SessionState {
 	const root = resolveHarnessRoot({ cwd });

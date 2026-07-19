@@ -1,7 +1,11 @@
-import type { ExpectedNextRole } from "../shared/orchestration/expected-next-role.ts";
-import { registerSkillTransitionTable, type SkillTransitionContext } from "../shared/registry/skill-registry.ts";
-import { chooseReceiptKind, readUltragoalLedger, validateCompletionReceipt } from "./ultragoal-receipt.ts";
-import { getUltragoalStatus, readUltragoalPlan } from "./ultragoal-runtime.ts";
+import type { ExpectedNextRole } from "#src/harness/shared/orchestration/expected-next-role";
+import { registerSkillTransitionTable, type SkillTransitionContext } from "#src/harness/shared/registry/skill-registry";
+import {
+	chooseReceiptKind,
+	readUltragoalLedger,
+	validateCompletionReceipt,
+} from "#src/harness/ultragoal/ultragoal-receipt";
+import { getUltragoalStatus, readUltragoalPlan } from "#src/harness/ultragoal/ultragoal-runtime";
 
 interface UltragoalSelectorGoal {
 	id: string;

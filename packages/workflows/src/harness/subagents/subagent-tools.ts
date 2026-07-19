@@ -1,8 +1,11 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { renderSubagentProgress } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
-import { workflowReceipt } from "../shared/artifacts/receipts.ts";
-import { assertAgentThinkingLevel, requireSubagentManager } from "../shared/orchestration/workflow-tool-utils.ts";
+import { workflowReceipt } from "#src/harness/shared/artifacts/receipts";
+import {
+	assertAgentThinkingLevel,
+	requireSubagentManager,
+} from "#src/harness/shared/orchestration/workflow-tool-utils";
 
 const subagentSpawnSchema = Type.Object({
 	agent: Type.Optional(
