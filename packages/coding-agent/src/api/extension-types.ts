@@ -9,55 +9,13 @@ import type {
 	ExtensionContext,
 	ReplacedSessionContext,
 } from "#coding-agent/api/context-types";
-import type {
-	AfterProviderResponseEvent,
-	AgentEndEvent,
-	AgentStartEvent,
-	BeforeAgentStartEvent,
-	BeforeAgentStartEventResult,
-	BeforeProviderRequestEvent,
-	BeforeProviderRequestEventResult,
-	ContextEvent,
-	ContextEventResult,
-	InputEvent,
-	InputEventResult,
-	MessageEndEvent,
-	MessageEndEventResult,
-	MessageStartEvent,
-	MessageUpdateEvent,
-	ModelSelectEvent,
-	ResourcesDiscoverEvent,
-	ResourcesDiscoverResult,
-	SessionBeforeCompactEvent,
-	SessionBeforeCompactResult,
-	SessionBeforeForkEvent,
-	SessionBeforeForkResult,
-	SessionBeforeSwitchEvent,
-	SessionBeforeSwitchResult,
-	SessionBeforeTreeEvent,
-	SessionBeforeTreeResult,
-	SessionCompactEvent,
-	SessionShutdownEvent,
-	SessionStartEvent,
-	SessionTreeEvent,
-	ThinkingLevelSelectEvent,
-	ToolCallEvent,
-	ToolCallEventResult,
-	ToolExecutionEndEvent,
-	ToolExecutionStartEvent,
-	ToolExecutionUpdateEvent,
-	ToolResultEvent,
-	ToolResultEventResult,
-	TurnEndEvent,
-	TurnStartEvent,
-	UserBashEvent,
-	UserBashEventResult,
-} from "#coding-agent/api/event-types";
 import type { MCPServerInfo } from "#coding-agent/api/mcp-types";
 import type { ProviderConfig } from "#coding-agent/api/provider-types";
 import type { ToolDefinition } from "#coding-agent/api/tool-types";
 import type { ExecOptions, ExecResult } from "#coding-agent/exec/exec";
 import type { EventBus } from "#coding-agent/extensions/event-bus";
+import type { ExtensionHookAPI } from "#coding-agent/hooks/extension-api-hooks";
+import type { HookHandlerFn } from "#coding-agent/hooks/registration";
 import type { SourceInfo } from "#coding-agent/package-manager/source-info";
 import type { SessionManager } from "#coding-agent/session/session-manager";
 import type { SlashCommandInfo } from "#coding-agent/skills/slash-commands";
@@ -98,57 +56,10 @@ export interface ResolvedCommand extends RegisteredCommand {
 // Extension API
 // ============================================================================
 
-/** Handler function type for events */
-// biome-ignore lint/suspicious/noConfusingVoidType: void allows bare return statements
-export type ExtensionHandler<E, R = undefined> = (event: E, ctx: ExtensionContext) => Promise<R | void> | R | void;
-
 /**
  * ExtensionAPI passed to extension factory functions.
  */
-export interface ExtensionAPI {
-	// =========================================================================
-	// Event Subscription
-	// =========================================================================
-
-	on(event: "resources_discover", handler: ExtensionHandler<ResourcesDiscoverEvent, ResourcesDiscoverResult>): void;
-	on(event: "session_start", handler: ExtensionHandler<SessionStartEvent>): void;
-	on(
-		event: "session_before_switch",
-		handler: ExtensionHandler<SessionBeforeSwitchEvent, SessionBeforeSwitchResult>,
-	): void;
-	on(event: "session_before_fork", handler: ExtensionHandler<SessionBeforeForkEvent, SessionBeforeForkResult>): void;
-	on(
-		event: "session_before_compact",
-		handler: ExtensionHandler<SessionBeforeCompactEvent, SessionBeforeCompactResult>,
-	): void;
-	on(event: "session_compact", handler: ExtensionHandler<SessionCompactEvent>): void;
-	on(event: "session_shutdown", handler: ExtensionHandler<SessionShutdownEvent>): void;
-	on(event: "session_before_tree", handler: ExtensionHandler<SessionBeforeTreeEvent, SessionBeforeTreeResult>): void;
-	on(event: "session_tree", handler: ExtensionHandler<SessionTreeEvent>): void;
-	on(event: "context", handler: ExtensionHandler<ContextEvent, ContextEventResult>): void;
-	on(
-		event: "before_provider_request",
-		handler: ExtensionHandler<BeforeProviderRequestEvent, BeforeProviderRequestEventResult>,
-	): void;
-	on(event: "after_provider_response", handler: ExtensionHandler<AfterProviderResponseEvent>): void;
-	on(event: "before_agent_start", handler: ExtensionHandler<BeforeAgentStartEvent, BeforeAgentStartEventResult>): void;
-	on(event: "agent_start", handler: ExtensionHandler<AgentStartEvent>): void;
-	on(event: "agent_end", handler: ExtensionHandler<AgentEndEvent>): void;
-	on(event: "turn_start", handler: ExtensionHandler<TurnStartEvent>): void;
-	on(event: "turn_end", handler: ExtensionHandler<TurnEndEvent>): void;
-	on(event: "message_start", handler: ExtensionHandler<MessageStartEvent>): void;
-	on(event: "message_update", handler: ExtensionHandler<MessageUpdateEvent>): void;
-	on(event: "message_end", handler: ExtensionHandler<MessageEndEvent, MessageEndEventResult>): void;
-	on(event: "tool_execution_start", handler: ExtensionHandler<ToolExecutionStartEvent>): void;
-	on(event: "tool_execution_update", handler: ExtensionHandler<ToolExecutionUpdateEvent>): void;
-	on(event: "tool_execution_end", handler: ExtensionHandler<ToolExecutionEndEvent>): void;
-	on(event: "model_select", handler: ExtensionHandler<ModelSelectEvent>): void;
-	on(event: "thinking_level_select", handler: ExtensionHandler<ThinkingLevelSelectEvent>): void;
-	on(event: "tool_call", handler: ExtensionHandler<ToolCallEvent, ToolCallEventResult>): void;
-	on(event: "tool_result", handler: ExtensionHandler<ToolResultEvent, ToolResultEventResult>): void;
-	on(event: "user_bash", handler: ExtensionHandler<UserBashEvent, UserBashEventResult>): void;
-	on(event: "input", handler: ExtensionHandler<InputEvent, InputEventResult>): void;
-
+export interface ExtensionAPI extends ExtensionHookAPI {
 	// =========================================================================
 	// Tool Registration
 	// =========================================================================
@@ -367,8 +278,6 @@ export interface ExtensionShortcut {
 	extensionPath: string;
 }
 
-type HandlerFn = (...args: unknown[]) => Promise<unknown>;
-
 export type SendMessageHandler = <T = unknown>(
 	message: Pick<CustomMessage<T>, "customType" | "content" | "display" | "details">,
 	options?: { triggerTurn?: boolean; deliverAs?: "steer" | "followUp" | "nextTurn" },
@@ -507,7 +416,7 @@ export interface Extension {
 	path: string;
 	resolvedPath: string;
 	sourceInfo: SourceInfo;
-	handlers: Map<string, HandlerFn[]>;
+	handlers: Map<string, HookHandlerFn[]>;
 	tools: Map<string, RegisteredTool>;
 	messageRenderers: Map<string, MessageRenderer>;
 	commands: Map<string, RegisteredCommand>;

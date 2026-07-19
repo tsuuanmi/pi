@@ -78,6 +78,7 @@ import {
 	wrapRegisteredTools,
 } from "#coding-agent/extensions/index";
 import { emitSessionShutdownEvent } from "#coding-agent/extensions/runner";
+import { installAgentToolHooks } from "#coding-agent/hooks/tool-hooks";
 import type { ModelRegistry } from "#coding-agent/model/model-registry";
 import { createSyntheticSourceInfo, type SourceInfo } from "#coding-agent/package-manager/source-info";
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "#coding-agent/session/session-manager";
@@ -357,7 +358,6 @@ export class AgentSession {
 		// Always subscribe to agent events for internal handling
 		// (session persistence, extensions, auto-compaction, retry logic)
 		this._unsubscribeAgent = this.agent.subscribe(this._handleAgentEvent);
-		this._installAgentToolHooks();
 
 		this._buildRuntime({
 			activeToolNames: this._initialActiveToolNames,
@@ -430,62 +430,9 @@ export class AgentSession {
 		return result.ok ? { apiKey: result.apiKey, headers: result.headers, env: result.env } : {};
 	}
 
-	/**
-	 * Install tool hooks once on the Agent instance.
-	 *
-	 * The callbacks read `this._extensionRunner` at execution time, so extension reload swaps in the
-	 * new runner without reinstalling hooks. Extension-specific tool wrappers are still used to adapt
-	 * registered tool execution to the extension context. Tool call and tool result interception now
-	 * happens here instead of in wrappers.
-	 */
+	/** Install tool hooks once on the Agent instance. */
 	private _installAgentToolHooks(): void {
-		this.agent.beforeToolCall = async ({ toolCall, args }) => {
-			const runner = this._extensionRunner;
-			if (!runner.hasHandlers("tool_call")) {
-				return undefined;
-			}
-
-			try {
-				return await runner.emitToolCall({
-					type: "tool_call",
-					toolName: toolCall.name,
-					toolCallId: toolCall.id,
-					input: args as Record<string, unknown>,
-				});
-			} catch (err) {
-				if (err instanceof Error) {
-					throw err;
-				}
-				throw new Error(`Extension failed, blocking execution: ${String(err)}`);
-			}
-		};
-
-		this.agent.afterToolCall = async ({ toolCall, args, result, isError }) => {
-			const runner = this._extensionRunner;
-			if (!runner.hasHandlers("tool_result")) {
-				return undefined;
-			}
-
-			const hookResult = await runner.emitToolResult({
-				type: "tool_result",
-				toolName: toolCall.name,
-				toolCallId: toolCall.id,
-				input: args as Record<string, unknown>,
-				content: result.content,
-				details: result.details,
-				isError,
-			});
-
-			if (!hookResult) {
-				return undefined;
-			}
-
-			return {
-				content: hookResult.content,
-				details: hookResult.details,
-				isError: hookResult.isError ?? isError,
-			};
-		};
+		installAgentToolHooks(this.agent, this._extensionRunner);
 	}
 
 	// =========================================================================
@@ -2286,6 +2233,7 @@ export class AgentSession {
 		if (this._extensionRunnerRef) {
 			this._extensionRunnerRef.current = this._extensionRunner;
 		}
+		this._installAgentToolHooks();
 		this._bindExtensionCore(this._extensionRunner);
 		this._applyExtensionBindings(this._extensionRunner);
 

@@ -37,6 +37,7 @@ import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "#coding-agent/config/
 import type { ExecOptions } from "#coding-agent/exec/exec";
 import { execCommand } from "#coding-agent/exec/exec";
 import { createEventBus, type EventBus } from "#coding-agent/extensions/event-bus";
+import { type HookHandlerFn, registerExtensionHook } from "#coding-agent/hooks/registration";
 // NOTE: This import works because loader.ts exports are NOT re-exported from index.ts,
 // avoiding a circular dependency. Extensions can import from @tsuuanmi/pi-coding-agent.
 import * as _bundledPiCodingAgent from "#coding-agent/index";
@@ -126,8 +127,6 @@ function getAliases(): Record<string, string> {
 	return _aliases;
 }
 
-type HandlerFn = (...args: unknown[]) => Promise<unknown>;
-
 /**
  * Create a runtime with throwing stubs for action methods.
  * Runner.bindCore() replaces these with real implementations.
@@ -194,11 +193,8 @@ function createExtensionAPI(
 ): ExtensionAPI {
 	const api = {
 		// Registration methods - write to extension
-		on(event: string, handler: HandlerFn): void {
-			runtime.assertActive();
-			const list = extension.handlers.get(event) ?? [];
-			list.push(handler);
-			extension.handlers.set(event, list);
+		on(event: string, handler: HookHandlerFn): void {
+			registerExtensionHook(extension, runtime, event, handler);
 		},
 
 		registerTool(tool: ToolDefinition): void {
