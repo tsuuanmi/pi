@@ -2,6 +2,7 @@
 
 ### Added
 
+- **deep-interview**: Added first-class model-visible tools for planning questions, recording answers/scoring, reading compact state, closure checks, restating goals, and writing specs with current-session propagation.
 - **subagents**: Workflow subagent spawning is now done via model-visible tools that call the main session's `SubagentManager` directly in-process (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `team_spawn_review_agent`, `team_spawn_prover_agent`, `ultragoal_spawn_goal_agent`). pi-agent owns the agent/subagent process; pi-workflows registers the tools and owns turn order, guarded role checks, and result→artifact handoff. Subagent records persist to `.pi/<session>/state/subagents/` (reusing the agent-layer format). `pi-workflows` contains no spawning logic of its own — it delegates each spawn to the session's manager. No circular dependency.
 - **agent**: Added `SubagentManagerFactory` registry (`registerSubagentManagerFactory`/`getSubagentManagerFactory`/`clearSubagentManagerFactoryForTests`) + `SubagentManagerFactoryContext` type, and `dispose(): Promise<void>` on the `SubagentManager` interface.
 - **workflows**: `pi workflow <skill> <action>` CLI verbs now drive the retained skill runtime directly, replacing the removed in-process tool surface: `pi workflow deep-interview <plan-question|record-answer|record-scoring|read-compact|closure-check|restate-goal|write-spec>`, `pi workflow ralplan <record-explorer-gate|run-agent|write-artifact|status|read-compact|doctor|approve-plan>`, `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete|spawn-task-agent>`, `pi workflow ultragoal <create-plan|status|read-compact|start-next|checkpoint|record-review-blockers|classify-blocker|guard|spawn-goal-agent>`.
@@ -16,6 +17,7 @@
 
 ### Fixed
 
+- **deep-interview**: Runtime guards now block common mutating `bash` commands during active interviews, require closure/restatement before `write-spec`, and use stricter per-component closure coverage.
 - **commands**: `pi workflow` verbs now support `--input-file`, reject ambiguous `--input`/`--input-file` combinations, and keep manifest-declared skill verbs aligned with the dispatcher.
 - **deep-interview**: Lateral-review personas are documented as subagent role labels using the default profile, avoiding missing bundled profile lookups.
 - **workflows**: Package builds now clear generated skill/agent asset directories before copying source assets, preventing stale `dist/agents` profiles from persisting.

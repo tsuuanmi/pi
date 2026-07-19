@@ -4,6 +4,7 @@ import { isAbsolute, resolve } from "node:path";
 import "#workflows/harness/deep-interview/deep-interview-transitions";
 import {
 	appendOrMergeDeepInterviewRound,
+	assertDeepInterviewSpecReady,
 	enrichDeepInterviewRoundScoring,
 	finalizeDeepInterviewSpecState,
 	planDeepInterviewQuestion,
@@ -26,6 +27,7 @@ import {
 } from "#workflows/harness/ralplan/ralplan-runtime";
 import { handoffWorkflow } from "#workflows/harness/shared/orchestration/handoff";
 import { assertDeepInterviewHandoff } from "#workflows/harness/shared/orchestration/workflow-tool-utils";
+import { getWorkflowManifest } from "#workflows/harness/shared/registry/workflow-manifest";
 import type { RalplanStage } from "#workflows/harness/shared/session/paths";
 import {
 	deepInterviewIndexPath,
@@ -571,6 +573,10 @@ function optionalStringArray(input: Record<string, unknown>, key: string): strin
 	return value.filter((item): item is string => typeof item === "string");
 }
 
+function workflowVerbSet(skill: "deep-interview" | "ralplan" | "team" | "ultragoal"): Set<string> {
+	return new Set(getWorkflowManifest(skill).verbs.map((verb) => verb.name));
+}
+
 function requiredObject(input: Record<string, unknown>, key: string): Record<string, unknown> {
 	const value = input[key];
 	if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${key} must be an object`);
@@ -957,15 +963,7 @@ async function deepInterviewVerb(
 	cwd: string,
 ): Promise<WorkflowCommandResult> {
 	const sessionId = sessionIdFromInput(input);
-	const valid = new Set([
-		"plan-question",
-		"record-answer",
-		"record-scoring",
-		"read-compact",
-		"closure-check",
-		"restate-goal",
-		"write-spec",
-	]);
+	const valid = workflowVerbSet("deep-interview");
 	if (!action || !valid.has(action))
 		throw new Error(`unsupported pi workflow deep-interview verb: ${action ?? "(none)"}`);
 	let body: unknown;
@@ -1044,6 +1042,7 @@ async function deepInterviewVerb(
 			break;
 		}
 		case "write-spec": {
+			await assertDeepInterviewSpecReady(cwd, sessionId, { allowEarlyExit: input.allowEarlyExit === true });
 			const slug = inputString(input, "slug")?.trim() || defaultWorkflowId("spec");
 			assertSafePathComponent(slug, "slug");
 			const handoff = inputString(input, "handoff");
@@ -1103,15 +1102,7 @@ async function ralplanVerb(
 	cwd: string,
 ): Promise<WorkflowCommandResult> {
 	const sessionId = sessionIdFromInput(input);
-	const valid = new Set([
-		"record-explorer-gate",
-		"run-agent",
-		"write-artifact",
-		"status",
-		"read-compact",
-		"doctor",
-		"approve-plan",
-	]);
+	const valid = workflowVerbSet("ralplan");
 	if (!action || !valid.has(action)) throw new Error(`unsupported pi workflow ralplan verb: ${action ?? "(none)"}`);
 	let body: unknown;
 	switch (action) {
@@ -1181,18 +1172,7 @@ async function teamVerb(
 	cwd: string,
 ): Promise<WorkflowCommandResult> {
 	const sessionId = sessionIdFromInput(input);
-	const valid = new Set([
-		"start",
-		"snapshot",
-		"read-compact",
-		"create-task",
-		"transition-task",
-		"send-message",
-		"record-review-gate",
-		"record-completion-gate",
-		"complete",
-		"spawn-task-agent",
-	]);
+	const valid = workflowVerbSet("team");
 	if (!action || !valid.has(action)) throw new Error(`unsupported pi workflow team verb: ${action ?? "(none)"}`);
 	let body: unknown;
 	switch (action) {
@@ -1312,17 +1292,7 @@ async function ultragoalVerb(
 	cwd: string,
 ): Promise<WorkflowCommandResult> {
 	const sessionId = sessionIdFromInput(input);
-	const valid = new Set([
-		"create-plan",
-		"status",
-		"read-compact",
-		"start-next",
-		"checkpoint",
-		"record-review-blockers",
-		"classify-blocker",
-		"guard",
-		"spawn-goal-agent",
-	]);
+	const valid = workflowVerbSet("ultragoal");
 	if (!action || !valid.has(action)) throw new Error(`unsupported pi workflow ultragoal verb: ${action ?? "(none)"}`);
 	let body: unknown;
 	switch (action) {

@@ -19,6 +19,7 @@ export * from "#workflows/harness/deep-interview/deep-interview-hud";
 export * from "#workflows/harness/deep-interview/deep-interview-mutation-guard";
 export * from "#workflows/harness/deep-interview/deep-interview-runtime";
 export * from "#workflows/harness/deep-interview/deep-interview-state";
+export * from "#workflows/harness/deep-interview/deep-interview-tools";
 export * from "#workflows/harness/ralplan/ralplan-agents";
 export * from "#workflows/harness/ralplan/ralplan-compact";
 export * from "#workflows/harness/ralplan/ralplan-gates";

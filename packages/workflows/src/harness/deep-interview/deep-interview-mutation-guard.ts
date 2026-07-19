@@ -10,19 +10,20 @@ import { readWorkflowActiveState } from "#workflows/harness/shared/state/active-
  * Ports the runtime-owned enforcement from gajae-code's
  * `skill-state/deep-interview-mutation-guard.ts`, adapted to Pi's layout
  * (`.pi/` session-scoped state, `readWorkflowActiveState`, the `tool_call`
- * extension hook) and Pi's tool set (`edit` + `write`; Pi has no `ast_edit`,
- * `apply_patch`, or `vim` edit modes).
+ * extension hook) and Pi's tool set (`edit`, `write`, and shell `bash`; Pi has
+ * no `ast_edit`, `apply_patch`, or `vim` edit modes).
  *
  * Two independent rules:
  *
- * 1. **Always-on runtime-state protection.** Agent `edit`/`write` tools must
- *    never mutate `.pi/**` (workflow state, specs, plans, audit). Workflow
+ * 1. **Always-on runtime-state protection.** Agent mutation tools must never
+ *    mutate `.pi/**` (workflow state, specs, plans, audit). Workflow
  *    artifacts are persisted only through the sanctioned Pi workflow tools.
  *    This rule fires regardless of whether a planning skill is active.
  *
  * 2. **Pre-approval phase boundary.** While a `deep-interview` workflow is
  *    active in a non-finished phase, `edit`/`write` are blocked for every
- *    target inside the project tree. The only escape is a *neutral* scratch
+ *    target inside the project tree and mutating shell commands are blocked.
+ *    The only escape is a *neutral* scratch
  *    path that resolves outside the project cwd and inside a system temp
  *    directory, so an agent can still stage an artifact in `/tmp` and feed its
  *    path to the sanctioned writer. Deep-interview is a requirements skill;
@@ -39,7 +40,7 @@ export const DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE =
 export const WORKFLOW_STATE_MUTATION_BLOCK_MESSAGE =
 	"`.pi` workflow state and artifacts are runtime-owned. Agent mutation tools cannot edit `.pi/**`; use the sanctioned `pi` workflow tools (e.g. `pi workflow deep-interview write-spec`) instead.";
 
-const BLOCKED_TOOL_NAMES = new Set(["edit", "write"]);
+const BLOCKED_TOOL_NAMES = new Set(["edit", "write", "bash"]);
 
 /**
  * Phases that genuinely finish a workflow skill. `handoff` is intentionally
@@ -111,9 +112,21 @@ function extractWriteTargets(input: Record<string, unknown>): ExtractedTargets {
 	return targets;
 }
 
+function extractBashTargets(input: Record<string, unknown>): ExtractedTargets {
+	const command = typeof input.command === "string" ? input.command : "";
+	const targets: ExtractedTargets = { paths: [], unknown: command.trim() === "" };
+	const pathLike = /(?:^|[\s;&|()])(?:(?:@?\.\.?\/|@?\/|~\/|\.pi(?:\/|\b))[^\s;&|()<>"']*)/g;
+	for (const match of command.matchAll(pathLike)) {
+		const candidate = match[0].trim().replace(/^@/, "");
+		if (candidate) targets.paths.push(candidate);
+	}
+	return targets;
+}
+
 function extractTargets(toolName: string, input: Record<string, unknown>): ExtractedTargets {
 	if (toolName === "edit") return extractEditTargets(input);
 	if (toolName === "write") return extractWriteTargets(input);
+	if (toolName === "bash") return extractBashTargets(input);
 	return { paths: [], unknown: true };
 }
 
@@ -244,6 +257,14 @@ async function planningBlockedTargets(cwd: string, targets: ExtractedTargets): P
 	return blocked;
 }
 
+const SHELL_MUTATION_PATTERN =
+	/(?:^|[\s;&|()])(?:rm|rmdir|mv|cp|mkdir|touch|ln|chmod|chown|truncate|tee|install|patch|git\s+(?:apply|checkout|clean|mv|rm|reset|restore|stash)|npm\s+(?:install|ci|update|run\s+(?:build|format|lint|check|test))|pnpm\s+(?:install|update)|yarn\s+(?:install|add|remove)|cargo\s+(?:add|update|fmt|fix)|uv\s+(?:add|sync|pip)|python\S*\s+-c|node\s+-e|perl\s+-pi|sed\s+-i)\b|(?:^|[^<])>{1,2}(?!>)/;
+
+function isMutatingBashCommand(input: Record<string, unknown>): boolean {
+	const command = typeof input.command === "string" ? input.command : "";
+	return SHELL_MUTATION_PATTERN.test(command);
+}
+
 /**
  * Resolve the mutation decision for one `edit`/`write` invocation.
  *
@@ -254,8 +275,23 @@ async function planningBlockedTargets(cwd: string, targets: ExtractedTargets): P
 export async function getDeepInterviewMutationDecision(input: MutationGuardInput): Promise<MutationGuardDecision> {
 	if (!BLOCKED_TOOL_NAMES.has(input.toolName)) return { blocked: false, targets: [] };
 	const targets = extractTargets(input.toolName, input.input);
+	const mutatingBash = input.toolName === "bash" && isMutatingBashCommand(input.input);
 
-	if (input.enforceWorkflowState !== false && hasPiStateTarget(input.cwd, targets)) {
+	if (input.enforceWorkflowState !== false && hasPiStateTarget(input.cwd, targets) && input.toolName !== "bash") {
+		return {
+			blocked: true,
+			message: WORKFLOW_STATE_MUTATION_BLOCK_MESSAGE,
+			targets: targets.paths,
+			reason: "pi-state-target",
+		};
+	}
+
+	if (
+		input.enforceWorkflowState !== false &&
+		input.toolName === "bash" &&
+		mutatingBash &&
+		hasPiStateTarget(input.cwd, targets)
+	) {
 		return {
 			blocked: true,
 			message: WORKFLOW_STATE_MUTATION_BLOCK_MESSAGE,
@@ -269,6 +305,15 @@ export async function getDeepInterviewMutationDecision(input: MutationGuardInput
 	if (input.forceOverride) return { blocked: false, targets: targets.paths };
 
 	const message = DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE;
+	if (input.toolName === "bash") {
+		if (!mutatingBash) return { blocked: false, targets: targets.paths };
+		if (targets.paths.length === 0)
+			return { blocked: true, message, targets: targets.paths, reason: "shell-mutation" };
+		const blockedTargets = await planningBlockedTargets(input.cwd, targets);
+		if (blockedTargets.length === 0) return { blocked: false, targets: targets.paths };
+		return { blocked: true, message, targets: targets.paths, reason: "phase-boundary" };
+	}
+
 	if (targets.unknown) {
 		return { blocked: true, message, targets: targets.paths, reason: "unknown-target" };
 	}

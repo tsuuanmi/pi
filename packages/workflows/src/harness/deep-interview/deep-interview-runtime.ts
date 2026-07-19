@@ -1,6 +1,7 @@
 import { deriveDeepInterviewHud } from "#workflows/harness/deep-interview/deep-interview-hud";
 import {
 	answerHash,
+	DEFAULT_DEEP_INTERVIEW_THRESHOLD,
 	type DeepInterviewAdvisoryMetadata,
 	type DeepInterviewCompactState,
 	type DeepInterviewEstablishedFact,
@@ -332,6 +333,37 @@ export async function enrichDeepInterviewRoundScoring(
 	return { record, statePath: workflowStatePath(cwd, "deep-interview", sessionId) };
 }
 
+export async function assertDeepInterviewSpecReady(
+	cwd: string,
+	sessionId: string,
+	options: { allowEarlyExit?: boolean } = {},
+): Promise<void> {
+	const envelope = await readDeepInterviewEnvelope(cwd, sessionId);
+	const closure = runClosureAcceptanceGuard(envelope);
+	if (!closure.ok) throw new Error(`deep-interview closure check failed: ${closure.gaps.join("; ")}`);
+	if (typeof envelope.restated_goal !== "string" || envelope.restated_goal.trim() === "") {
+		throw new Error("deep-interview restated goal is required before write-spec");
+	}
+	if (!options.allowEarlyExit) {
+		const inner = (envelope.state ?? {}) as Record<string, unknown>;
+		const rounds: DeepInterviewRoundRecord[] = Array.isArray(inner.rounds)
+			? (inner.rounds as DeepInterviewRoundRecord[])
+			: [];
+		const latestScored = rounds.filter((round) => round.lifecycle === "scored").at(-1);
+		const ambiguity =
+			typeof latestScored?.ambiguity === "number"
+				? latestScored.ambiguity
+				: (inner.current_ambiguity as number | undefined);
+		const threshold =
+			typeof envelope.threshold === "number"
+				? envelope.threshold
+				: ((inner.threshold as number | undefined) ?? DEFAULT_DEEP_INTERVIEW_THRESHOLD);
+		if (typeof ambiguity !== "number" || !Number.isFinite(ambiguity) || ambiguity > threshold) {
+			throw new Error(`deep-interview ambiguity ${ambiguity ?? "unknown"} is above threshold ${threshold}`);
+		}
+	}
+}
+
 export async function finalizeDeepInterviewSpecState(
 	cwd: string,
 	input: { slug: string; path: string; sha256: string; handoff?: string },
@@ -401,8 +433,9 @@ export interface ClosureResult {
  * For each active (non-deferred) topology component, check the dimensions
  * {goal, constraints, criteria} (+ context when brownfield). A dimension is
  * covered if either (i) a matching established_facts entry exists, or (ii) a
- * scored round has a finite scores[dimension] >= 0.0. An unresolved or disputed
- * trigger on a material path blocks closure regardless of coverage.
+ * scored round has a finite scores[dimension] at or above the coverage floor.
+ * An unresolved or disputed trigger on a material path blocks closure regardless
+ * of coverage.
  */
 export function runClosureAcceptanceGuard(envelope: DeepInterviewStateEnvelope): ClosureResult {
 	const inner = (envelope.state ?? {}) as Record<string, unknown>;
@@ -433,9 +466,10 @@ export function runClosureAcceptanceGuard(envelope: DeepInterviewStateEnvelope):
 		);
 	}
 
+	const coverageFloor = 0.75;
 	// Get active (non-deferred) components
 	const topology = inner.topology as
-		| { components?: Array<{ status?: string; name?: string; dimensions?: string[] }> }
+		| { components?: Array<{ id?: string; status?: string; name?: string; dimensions?: string[] }> }
 		| undefined;
 	// Brownfield is determined by the init-state `type` field (the authoritative
 	// signal). `codebase_context` is a fallback for legacy state lacking `type`.
@@ -453,28 +487,27 @@ export function runClosureAcceptanceGuard(envelope: DeepInterviewStateEnvelope):
 	}
 
 	for (const component of activeComponents) {
-		const componentName = component.name ?? "unknown";
+		const componentName = component.name ?? component.id ?? "unknown";
+		const componentKeys = new Set([component.id, component.name].filter((value): value is string => Boolean(value)));
+		const matchesComponent = (value: string | undefined): boolean => value === undefined || componentKeys.has(value);
 		for (const dimension of dimensions) {
 			// Check (i): matching established_facts entry
 			const hasFact = established.some(
-				(f) =>
-					!f.disputed &&
-					(f.component === componentName || !f.component) &&
-					(f.dimension === dimension || !f.dimension),
+				(f) => !f.disputed && matchesComponent(f.component) && (f.dimension === dimension || !f.dimension),
 			);
 
-			// Check (ii): scored round with finite score for this dimension
+			// Check (ii): scored round with finite score for this dimension at a useful coverage floor
 			const hasScoredRound = scoredRounds.some(
 				(r) =>
 					r.scores &&
 					typeof r.scores[dimension] === "number" &&
 					Number.isFinite(r.scores[dimension] as number) &&
-					(r.scores[dimension] as number) >= 0 &&
-					(r.component === componentName || !r.component),
+					(r.scores[dimension] as number) >= coverageFloor &&
+					matchesComponent(r.component),
 			);
 
 			if (!hasFact && !hasScoredRound) {
-				gaps.push(`${componentName}/${dimension}: no established fact or scored round`);
+				gaps.push(`${componentName}/${dimension}: no established fact or scored round >= ${coverageFloor}`);
 			}
 		}
 	}

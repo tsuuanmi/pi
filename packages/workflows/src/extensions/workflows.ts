@@ -1,5 +1,6 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi-agent";
 import { getDeepInterviewMutationDecision } from "#workflows/harness/deep-interview/deep-interview-mutation-guard";
+import { registerDeepInterviewTools } from "#workflows/harness/deep-interview/deep-interview-tools";
 import "#workflows/harness/deep-interview/deep-interview-transitions";
 import { registerRalplanTools } from "#workflows/harness/ralplan/ralplan-tools";
 import "#workflows/harness/ralplan/ralplan-transitions";
@@ -12,6 +13,7 @@ import "#workflows/harness/ultragoal/ultragoal-transitions";
 
 export default function workflowsExtension(pi: ExtensionAPI): void {
 	registerSubagentTools(pi);
+	registerDeepInterviewTools(pi);
 	registerRalplanTools(pi);
 	registerTeamTools(pi);
 	registerUltragoalTools(pi);
@@ -32,7 +34,7 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 	});
 
 	pi.on("tool_call", async (event, ctx) => {
-		if (event.toolName !== "edit" && event.toolName !== "write") return undefined;
+		if (event.toolName !== "edit" && event.toolName !== "write" && event.toolName !== "bash") return undefined;
 		const decision = await getDeepInterviewMutationDecision({
 			cwd: ctx.cwd,
 			sessionId: ctx.sessionManager.getSessionId(),

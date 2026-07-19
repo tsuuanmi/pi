@@ -5,16 +5,20 @@ import type { ExtensionAPI } from "@tsuuanmi/pi-coding-agent";
 import workflowsExtension, {
 	appendOrMergeDeepInterviewRound,
 	assertDeepInterviewHandoff,
+	assertDeepInterviewSpecReady,
 	deepInterviewSpecPath,
 	enrichDeepInterviewRoundScoring,
 	finalizeDeepInterviewSpecState,
 	formatWorkflowHudLine,
+	getDeepInterviewMutationDecision,
 	handoffWorkflow,
 	normalizeDeepInterviewEnvelope,
 	planDeepInterviewQuestion,
 	readDeepInterviewStateCompact,
 	readWorkflowActiveState,
 	readWorkflowState,
+	runClosureAcceptanceGuard,
+	syncWorkflowActiveState,
 	writeTextArtifact,
 	writeWorkflowState,
 } from "@tsuuanmi/pi-workflows";
@@ -205,8 +209,10 @@ describe("deep-interview workflow runtime", () => {
 		expect(scoredOrchestration?.last_scored_question_id).toBe("q1");
 	});
 
-	it("extension registers no deep-interview tools while runtime planning persists waiting state", async () => {
-		expect(collectRegisteredToolNames()).not.toContain("deep_interview_plan_question");
+	it("extension registers deep-interview tools while runtime planning persists waiting state", async () => {
+		expect(collectRegisteredToolNames()).toEqual(
+			expect.arrayContaining(["deep_interview_plan_question", "deep_interview_write_spec"]),
+		);
 		await planDeepInterviewQuestion(
 			cwd,
 			{ round: 2, questionId: "q2", questionText: "Which constraint is fixed?", dimension: "constraints" },
@@ -353,6 +359,100 @@ describe("deep-interview workflow runtime", () => {
 
 	it("deep-interview handoff validation rejects unknown handoff targets", () => {
 		expect(() => assertDeepInterviewHandoff("unknown")).toThrow(/unknown handoff/);
+	});
+
+	it("spec readiness requires closure, restatement, and below-threshold ambiguity", async () => {
+		await writeWorkflowState(
+			cwd,
+			"deep-interview",
+			{
+				active: true,
+				current_phase: "interviewing",
+				threshold: 0.05,
+				restated_goal: "Ship a safe workflow runtime.",
+				state: {
+					type: "greenfield",
+					topology: { components: [{ id: "core", name: "Core", status: "active" }] },
+					rounds: [
+						{
+							round_key: "r1",
+							round: 1,
+							question_hash: "q",
+							answer_hash: "a",
+							lifecycle: "scored",
+							answered_at: "now",
+							component: "core",
+							scores: { goal: 0.98, constraints: 0.98, criteria: 0.98 },
+							ambiguity: 0.02,
+						},
+					],
+					established_facts: [],
+				},
+			},
+			"pi test",
+			{ sessionId: TEST_SESSION },
+		);
+
+		await expect(assertDeepInterviewSpecReady(cwd, TEST_SESSION)).resolves.toBeUndefined();
+	});
+
+	it("closure rejects below-floor scored coverage", () => {
+		const closure = normalizeDeepInterviewEnvelope({
+			restated_goal: "Ship a safe workflow runtime.",
+			threshold: 0.05,
+			state: {
+				type: "greenfield",
+				topology: { components: [{ id: "core", name: "Core", status: "active" }] },
+				rounds: [
+					{
+						round_key: "r1",
+						round: 1,
+						question_hash: "q",
+						answer_hash: "a",
+						lifecycle: "scored",
+						answered_at: "now",
+						component: "core",
+						scores: { goal: 0.7, constraints: 0.8, criteria: 0.8 },
+						ambiguity: 0.1,
+					},
+				],
+				established_facts: [],
+			},
+		});
+
+		expect(runClosureAcceptanceGuard(closure).ok).toBe(false);
+		expect(runClosureAcceptanceGuard(closure).gaps[0]).toContain(">= 0.75");
+	});
+
+	it("blocks mutating bash commands during active deep-interview", async () => {
+		await writeWorkflowState(
+			cwd,
+			"deep-interview",
+			{ active: true, current_phase: "interviewing", state: { rounds: [], established_facts: [] } },
+			"pi test",
+			{ sessionId: TEST_SESSION },
+		);
+		await syncWorkflowActiveState(
+			cwd,
+			{ skill: "deep-interview", active: true, phase: "interviewing" },
+			{ sessionId: TEST_SESSION },
+		);
+
+		const readOnly = await getDeepInterviewMutationDecision({
+			cwd,
+			sessionId: TEST_SESSION,
+			toolName: "bash",
+			input: { command: "rg -n TODO packages/workflows/src" },
+		});
+		const mutating = await getDeepInterviewMutationDecision({
+			cwd,
+			sessionId: TEST_SESSION,
+			toolName: "bash",
+			input: { command: "echo changed > packages/workflows/src/file.ts" },
+		});
+
+		expect(readOnly.blocked).toBe(false);
+		expect(mutating.blocked).toBe(true);
 	});
 
 	it("runtime spec finalization seeds direct execution handoffs", async () => {
