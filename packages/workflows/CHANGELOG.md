@@ -34,6 +34,7 @@
 
 ### Changed
 
+- **workflows**: Moved workflow HUD rendering/building and extension UI registration helpers to `@tsuuanmi/pi-tui`; `pi-workflows` now only registers TUI HUD sync with workflow state.
 - **commands**: Merged the standalone `state-command` implementation into `commands/workflow`; the `commands/state-command` subpath remains as a compatibility alias to the workflow command module.
 - **deep-interview**: Option-bearing questions now explain each option in simple terms and include a recommended best option with a reason.
 - **workflows**: A `sessionId` is now required on every `pi workflow ...` verb (deep-interview, ralplan, team, ultragoal, and `start`); the `generateSessionId()` fallback was removed entirely. No verb mints a session id; all fail closed with `sessionId is required` when it is missing.

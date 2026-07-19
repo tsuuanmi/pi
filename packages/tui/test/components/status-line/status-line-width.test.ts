@@ -7,9 +7,9 @@ import {
 	initTheme,
 	StatusLineComponent,
 	type StatusLineDataProvider,
+	type StatusLineHudEntry,
 	type StatusLineSessionLike,
 	type StatusLineSettings,
-	type StatusLineWorkflowEntry,
 	stripAnsi,
 	visibleWidth,
 } from "#tui/index";
@@ -79,7 +79,7 @@ function createSettings(settings: StatusLineSettings = {}): { getStatusLine(): S
 	return { getStatusLine: () => settings };
 }
 
-function makeWorkflowReader(entriesBySession: Map<string, StatusLineWorkflowEntry[]> = new Map()) {
+function makeHudReader(entriesBySession: Map<string, StatusLineHudEntry[]> = new Map()) {
 	return async ({ sessionId }: { cwd: string; sessionId: string }) => entriesBySession.get(sessionId) ?? [];
 }
 
@@ -88,10 +88,10 @@ function makeComponent(
 	providerCount = 1,
 	settings: StatusLineSettings = {},
 	requestRender = () => {},
-	entriesBySession: Map<string, StatusLineWorkflowEntry[]> = new Map(),
+	entriesBySession: Map<string, StatusLineHudEntry[]> = new Map(),
 ): StatusLineComponent {
 	return new StatusLineComponent(session, createFooterData(providerCount), createSettings(settings), requestRender, {
-		readWorkflowEntries: makeWorkflowReader(entriesBySession),
+		readHudEntries: makeHudReader(entriesBySession),
 	});
 }
 
@@ -157,12 +157,12 @@ describe("StatusLineComponent provider-prefix width fallback", () => {
 	});
 });
 
-describe("StatusLineComponent workflow HUD cache", () => {
-	it("reads active workflows scoped to the current session", async () => {
+describe("StatusLineComponent HUD cache", () => {
+	it("reads active HUD entries from the current reader scope", async () => {
 		const cwd = await makeTempCwd();
-		const workflows = new Map<string, StatusLineWorkflowEntry[]>([
-			["foreign-session", [{ skill: "ralplan", active: true, phase: "foreign" }]],
-			["my-session", [{ skill: "team", active: true, phase: "mine" }]],
+		const entriesBySession = new Map<string, StatusLineHudEntry[]>([
+			["foreign-session", [{ id: "foreign", active: true, phase: "hidden" }]],
+			["my-session", [{ id: "current", active: true, phase: "visible" }]],
 		]);
 
 		const footer = makeComponent(
@@ -170,32 +170,26 @@ describe("StatusLineComponent workflow HUD cache", () => {
 			1,
 			{},
 			() => {},
-			workflows,
+			entriesBySession,
 		);
 		const lines = await waitForRender(footer, 120, (rendered) =>
-			stripAnsi(rendered.join("\n")).includes("team:mine"),
+			stripAnsi(rendered.join("\n")).includes("current:visible"),
 		);
 		const text = stripAnsi(lines.join("\n"));
 
-		assert.match(text, new RegExp(escapeRegExp("team:mine")));
-		assert.doesNotMatch(text, new RegExp(escapeRegExp("ralplan:foreign")));
-		assert.doesNotMatch(text, new RegExp(escapeRegExp("foreign")));
+		assert.match(text, new RegExp(escapeRegExp("current:visible")));
+		assert.doesNotMatch(text, new RegExp(escapeRegExp("foreign:hidden")));
+		assert.doesNotMatch(text, new RegExp(escapeRegExp("hidden")));
 	});
 
-	it("collapses the cached planning pipeline before deriving the mode segment", async () => {
+	it("derives the mode segment from the first cached active HUD entry", async () => {
 		const cwd = await makeTempCwd();
-		const workflows = new Map<string, StatusLineWorkflowEntry[]>([
+		const entriesBySession = new Map<string, StatusLineHudEntry[]>([
 			[
 				"status-line-test-session",
 				[
 					{
-						skill: "deep-interview",
-						active: true,
-						phase: "interview",
-						updated_at: "2026-06-21T00:00:00.000Z",
-					},
-					{
-						skill: "ultragoal",
+						id: "runner",
 						active: true,
 						phase: "execute",
 						updated_at: "2026-06-21T00:00:01.000Z",
@@ -204,15 +198,13 @@ describe("StatusLineComponent workflow HUD cache", () => {
 			],
 		]);
 
-		const footer = makeComponent(createSession({ sessionName: "", cwd }), 1, {}, () => {}, workflows);
+		const footer = makeComponent(createSession({ sessionName: "", cwd }), 1, {}, () => {}, entriesBySession);
 		const lines = await waitForRender(footer, 120, (rendered) =>
-			stripAnsi(rendered.join("\n")).includes("ultragoal:execute"),
+			stripAnsi(rendered.join("\n")).includes("runner:execute"),
 		);
 		const [hudLine, railLine] = lines.map((line) => stripAnsi(line));
 
-		assert.match(hudLine, new RegExp(escapeRegExp("ultragoal:execute")));
-		assert.doesNotMatch(hudLine, new RegExp(escapeRegExp("deep-interview:interview")));
+		assert.match(hudLine, new RegExp(escapeRegExp("runner:execute")));
 		assert.match(railLine, new RegExp(escapeRegExp("execute")));
-		assert.doesNotMatch(railLine, new RegExp(escapeRegExp("interview")));
 	});
 });

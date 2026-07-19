@@ -10,7 +10,24 @@ export { Text } from "#tui/components/display/text";
 export { TruncatedText } from "#tui/components/display/truncated-text";
 export { CancellableLoader } from "#tui/components/feedback/cancellable-loader";
 export { Loader, type LoaderIndicatorOptions } from "#tui/components/feedback/loader";
-export { collapsePlanningPipeline, renderHudBar } from "#tui/components/hud/render";
+export { refreshHudUi } from "#tui/components/hud/extension-ui";
+export type {
+	ActiveHudEntry,
+	HudChip,
+	HudLineEntry,
+	HudSeverity,
+	HudSummary,
+} from "#tui/components/hud/model";
+export {
+	applyHudStatusFlags,
+	formatHudLine,
+	hudChip,
+	normalizeHudChip,
+	normalizeHudSeverity,
+	normalizeHudSummary,
+	progressChip,
+} from "#tui/components/hud/model";
+export { renderHudBar } from "#tui/components/hud/render";
 export { Editor, type EditorTheme } from "#tui/components/inputs/editor";
 export { Input } from "#tui/components/inputs/input";
 // Components
@@ -56,6 +73,11 @@ export type {
 	SeparatorDef,
 	StatusLineComponentOptions,
 	StatusLineDataProvider,
+	StatusLineHudChip,
+	StatusLineHudEntry,
+	StatusLineHudEntryReader,
+	StatusLineHudEntryReaderOptions,
+	StatusLineHudSeverity,
 	StatusLinePreset,
 	StatusLineSegment,
 	StatusLineSegmentId,
@@ -63,11 +85,6 @@ export type {
 	StatusLineSeparatorStyle,
 	StatusLineSessionLike,
 	StatusLineSettings,
-	StatusLineWorkflowEntry,
-	StatusLineWorkflowHudChip,
-	StatusLineWorkflowHudSeverity,
-	StatusLineWorkflowStateReader,
-	StatusLineWorkflowStateReaderOptions,
 } from "#tui/components/status-line/types";
 export {
 	type Component,

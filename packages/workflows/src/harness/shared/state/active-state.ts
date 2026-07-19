@@ -1,3 +1,4 @@
+import { applyHudStatusFlags, type HudSummary, normalizeHudSummary } from "@tsuuanmi/pi-tui";
 import type { WorkflowSkill } from "#workflows/harness/shared/session/paths";
 import { workflowActiveStatePath } from "#workflows/harness/shared/session/session-layout";
 import {
@@ -6,24 +7,6 @@ import {
 	writeJsonAtomic,
 } from "#workflows/harness/shared/state/state-writer";
 
-export type WorkflowHudSeverity = "info" | "warning" | "blocked" | "error" | "success";
-
-export interface WorkflowHudChip {
-	label: string;
-	value?: string;
-	priority?: number;
-	severity?: WorkflowHudSeverity;
-}
-
-export interface WorkflowHudSummary {
-	version: 1;
-	summary?: string;
-	chips?: WorkflowHudChip[];
-	details?: WorkflowHudChip[];
-	severity?: WorkflowHudSeverity;
-	updated_at?: string;
-}
-
 export interface WorkflowActiveEntry {
 	skill: WorkflowSkill;
 	active: boolean;
@@ -31,7 +14,7 @@ export interface WorkflowActiveEntry {
 	updated_at: string;
 	/** Session id that owns this entry. Empty/undefined = global fallback. */
 	session_id?: string;
-	hud?: WorkflowHudSummary;
+	hud?: HudSummary;
 	state_path?: string;
 	/** Skill that handed off TO this entry (caller of the handoff). */
 	handoff_from?: string;
@@ -71,49 +54,6 @@ function sanitizeText(value: unknown, limit: number): string | undefined {
 	return clean.length > limit ? clean.slice(0, limit) : clean;
 }
 
-function normalizeSeverity(value: unknown): WorkflowHudSeverity | undefined {
-	return value === "info" || value === "warning" || value === "blocked" || value === "error" || value === "success"
-		? value
-		: undefined;
-}
-
-function normalizeHudChip(value: unknown): WorkflowHudChip | undefined {
-	if (!isPlainObject(value)) return undefined;
-	const label = sanitizeText(value.label, 32);
-	if (!label) return undefined;
-	const priority = typeof value.priority === "number" && Number.isFinite(value.priority) ? value.priority : undefined;
-	return {
-		label,
-		...(sanitizeText(value.value, 80) ? { value: sanitizeText(value.value, 80) } : {}),
-		...(priority !== undefined ? { priority } : {}),
-		...(normalizeSeverity(value.severity) ? { severity: normalizeSeverity(value.severity) } : {}),
-	};
-}
-
-function normalizeWorkflowHudSummary(value: unknown): WorkflowHudSummary | undefined {
-	if (!isPlainObject(value) || value.version !== 1) return undefined;
-	const chips = Array.isArray(value.chips)
-		? value.chips
-				.map(normalizeHudChip)
-				.filter((chip): chip is WorkflowHudChip => chip !== undefined)
-				.slice(0, 6)
-		: undefined;
-	const details = Array.isArray(value.details)
-		? value.details
-				.map(normalizeHudChip)
-				.filter((chip): chip is WorkflowHudChip => chip !== undefined)
-				.slice(0, 12)
-		: undefined;
-	return {
-		version: 1,
-		...(sanitizeText(value.summary, 120) ? { summary: sanitizeText(value.summary, 120) } : {}),
-		...(chips && chips.length > 0 ? { chips } : {}),
-		...(details && details.length > 0 ? { details } : {}),
-		...(normalizeSeverity(value.severity) ? { severity: normalizeSeverity(value.severity) } : {}),
-		...(sanitizeText(value.updated_at, 40) ? { updated_at: sanitizeText(value.updated_at, 40) } : {}),
-	};
-}
-
 function normalizeEntry(value: unknown): WorkflowActiveEntry | undefined {
 	if (!isPlainObject(value)) return undefined;
 	const skill = value.skill;
@@ -125,7 +65,7 @@ function normalizeEntry(value: unknown): WorkflowActiveEntry | undefined {
 		...(sanitizeText(value.phase, 80) ? { phase: sanitizeText(value.phase, 80) } : {}),
 		updated_at: updatedAt,
 		...(sanitizeText(value.session_id, 80) ? { session_id: sanitizeText(value.session_id, 80) } : {}),
-		...(normalizeWorkflowHudSummary(value.hud) ? { hud: normalizeWorkflowHudSummary(value.hud) } : {}),
+		...(normalizeHudSummary(value.hud) ? { hud: normalizeHudSummary(value.hud) } : {}),
 		...(sanitizeText(value.state_path, 240) ? { state_path: sanitizeText(value.state_path, 240) } : {}),
 		...(sanitizeText(value.handoff_from, 80) ? { handoff_from: sanitizeText(value.handoff_from, 80) } : {}),
 		...(sanitizeText(value.handoff_to, 80) ? { handoff_to: sanitizeText(value.handoff_to, 80) } : {}),
@@ -142,6 +82,30 @@ function normalizeEntry(value: unknown): WorkflowActiveEntry | undefined {
  */
 function entryKey(entry: WorkflowActiveEntry): string {
 	return `${entry.skill}::${entry.session_id ?? ""}`;
+}
+
+/** Skills in the planning pipeline (DI -> ralplan -> ultragoal). */
+const PLANNING_PIPELINE_SKILLS = new Set<string>(["deep-interview", "ralplan", "ultragoal"]);
+
+function pipelineEntryRecency(entry: WorkflowActiveEntry): number {
+	const timestamp = entry.updated_at ? Date.parse(entry.updated_at) : Number.NaN;
+	return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY;
+}
+
+function collapsePlanningPipeline(entries: readonly WorkflowActiveEntry[]): WorkflowActiveEntry[] {
+	const pipeline = entries.filter((entry) => PLANNING_PIPELINE_SKILLS.has(entry.skill));
+	if (pipeline.length <= 1) return [...entries];
+	let current = pipeline[0];
+	let currentRecency = pipelineEntryRecency(current);
+	for (const entry of pipeline) {
+		const recency = pipelineEntryRecency(entry);
+		const better = Number.isFinite(recency) && (!Number.isFinite(currentRecency) || recency > currentRecency);
+		if (better) {
+			current = entry;
+			currentRecency = recency;
+		}
+	}
+	return entries.filter((entry) => !PLANNING_PIPELINE_SKILLS.has(entry.skill) || entry === current);
 }
 
 /**
@@ -265,7 +229,7 @@ export async function syncWorkflowActiveState(
 		...entry,
 		updated_at: now,
 		...(sessionId ? { session_id: sessionId } : {}),
-		...(entry.hud ? { hud: normalizeWorkflowHudSummary(entry.hud) } : {}),
+		...(entry.hud ? { hud: normalizeHudSummary(entry.hud) } : {}),
 		...(sanitizeText(entry.handoff_from, 80) ? { handoff_from: sanitizeText(entry.handoff_from, 80) } : {}),
 		...(sanitizeText(entry.handoff_to, 80) ? { handoff_to: sanitizeText(entry.handoff_to, 80) } : {}),
 		...(sanitizeText(entry.handoff_at, 40) ? { handoff_at: sanitizeText(entry.handoff_at, 40) } : {}),
@@ -300,38 +264,26 @@ export async function syncWorkflowActiveState(
 	};
 }
 
-/** Skills in the planning pipeline (DI → ralplan → ultragoal). */
-const PLANNING_PIPELINE_SKILLS = new Set<string>(["deep-interview", "ralplan", "ultragoal"]);
-
 /**
- * Build the active-state response from deduped entries, applying staleness
- * checks and HUD severity escalation.
+ * Build the active-state response from deduped entries, applying workflow
+ * visibility rules before delegating generic HUD staleness decoration to TUI.
  */
 function buildActiveState(entries: WorkflowActiveEntry[]): WorkflowActiveState {
 	const nowMs = Date.now();
-	const activeWorkflows = entries
+	const visibleEntries = entries
 		.filter((entry) => entry.active)
 		.map((entry) => {
-			const pendingHud = entry.has_pending_question
+			const pendingEntry = entry.has_pending_question
 				? {
 						...entry,
 						hud: entry.hud
-							? { ...entry.hud, severity: "blocked" as WorkflowHudSeverity }
-							: ({ version: 1, severity: "blocked" as WorkflowHudSeverity } as WorkflowHudSummary),
+							? { ...entry.hud, severity: "blocked" as const }
+							: ({ version: 1, severity: "blocked" as const } satisfies HudSummary),
 					}
 				: entry;
-			const stale = isEntryStale(pendingHud.updated_at, nowMs);
-			if (!stale) return pendingHud;
-			const hud = pendingHud.hud;
-			if (hud && (hud.severity === "error" || hud.severity === "blocked")) {
-				return { ...pendingHud, stale: true };
-			}
-			const patchedHud = hud
-				? { ...hud, severity: "warning" as WorkflowHudSeverity }
-				: ({ version: 1, severity: "warning" as WorkflowHudSeverity } as WorkflowHudSummary);
-			return { ...pendingHud, stale: true, hud: patchedHud };
-		})
-		.sort((a, b) => a.skill.localeCompare(b.skill));
+			return applyHudStatusFlags(pendingEntry, { stale: isEntryStale(entry.updated_at, nowMs) });
+		});
+	const activeWorkflows = collapsePlanningPipeline(visibleEntries).sort((a, b) => a.skill.localeCompare(b.skill));
 
 	const updatedAt = entries[0]?.updated_at ?? new Date(0).toISOString();
 
@@ -343,45 +295,12 @@ function buildActiveState(entries: WorkflowActiveEntry[]): WorkflowActiveState {
 	};
 }
 
-/**
- * Collapse the planning pipeline to a single entry — the most recently updated
- * stage — so the HUD doesn't show stale upstream skills after a downstream
- * skill has taken over. Non-pipeline skills are unaffected.
- *
- * (Aligned with gajae-code's `collapsePlanningPipeline`.)
- */
-export function collapsePlanningPipeline(entries: readonly WorkflowActiveEntry[]): WorkflowActiveEntry[] {
-	const pipeline = entries.filter((entry) => PLANNING_PIPELINE_SKILLS.has(entry.skill));
-	if (pipeline.length <= 1) return [...entries];
-	let current = pipeline[0];
-	let currentRecency = entryRecency(current);
-	for (const entry of pipeline) {
-		const recency = entryRecency(entry);
-		const better = Number.isFinite(recency) && (!Number.isFinite(currentRecency) || recency > currentRecency);
-		if (better) {
-			current = entry;
-			currentRecency = recency;
-		}
-	}
-	return entries.filter((entry) => !PLANNING_PIPELINE_SKILLS.has(entry.skill) || entry === current);
-}
-
-export function formatWorkflowHudLine(entry: WorkflowActiveEntry): string {
-	const prefix = entry.stale ? "[stale] " : "";
-	const chips = entry.hud?.chips
-		?.slice()
-		.sort((a, b) => (a.priority ?? 100) - (b.priority ?? 100))
-		.map((chip) => `${chip.label}${chip.value ? `=${chip.value}` : ""}`)
-		.join(" ");
-	return [`${prefix}${entry.skill}`, entry.phase, chips].filter(Boolean).join(" | ");
-}
-
 /** Entry passed to `applyHandoffToActiveState` for the caller (demoted) side. */
 export interface HandoffSide {
 	skill: WorkflowSkill;
 	phase?: string;
 	state_path?: string;
-	hud?: WorkflowHudSummary;
+	hud?: HudSummary;
 }
 
 /** Options for `applyHandoffToActiveState`. sessionId is required. */
@@ -421,7 +340,7 @@ export async function applyHandoffToActiveState(options: ApplyHandoffOptions): P
 		...tag,
 		handoff_to: options.callee.skill,
 		handoff_at: now,
-		...(options.caller.hud ? { hud: normalizeWorkflowHudSummary(options.caller.hud) } : {}),
+		...(options.caller.hud ? { hud: normalizeHudSummary(options.caller.hud) } : {}),
 	};
 	const calleeEntry: WorkflowActiveEntry = {
 		...options.callee,
@@ -430,7 +349,7 @@ export async function applyHandoffToActiveState(options: ApplyHandoffOptions): P
 		...tag,
 		handoff_from: options.caller.skill,
 		handoff_at: now,
-		...(options.callee.hud ? { hud: normalizeWorkflowHudSummary(options.callee.hud) } : {}),
+		...(options.callee.hud ? { hud: normalizeHudSummary(options.callee.hud) } : {}),
 	};
 
 	const filePath = workflowActiveStatePath(options.cwd, sessionId);

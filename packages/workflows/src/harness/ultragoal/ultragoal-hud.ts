@@ -1,5 +1,4 @@
-import { limitationsChip, progressChip, shipWithCaveatsChip } from "#workflows/harness/shared/hud/hud";
-import type { WorkflowHudSummary } from "#workflows/harness/shared/state/active-state";
+import { type HudSummary, hudChip, progressChip } from "@tsuuanmi/pi-tui";
 import type { UltragoalStatus } from "#workflows/harness/ultragoal/ultragoal-runtime";
 
 /**
@@ -18,22 +17,22 @@ export function remainingGoalCount(status: UltragoalStatus): number {
 }
 
 /**
- * Build the workflow HUD summary for an active ultragoal run.
+ * Build the HUD summary for an active ultragoal run.
  *
  * Extracted mechanically from `ultragoal-runtime.ts` (behavior-preserving): the
  * `UltragoalStatus` type is imported type-only, so there is no runtime import
  * cycle. `new Date().toISOString()` is inlined (matching the original
  * `nowIso()`).
  */
-export function buildUltragoalHud(status: UltragoalStatus): WorkflowHudSummary {
+export function buildUltragoalHud(status: UltragoalStatus): HudSummary {
 	return {
 		version: 1,
 		summary: status.currentGoal ? `${status.currentGoal.id}: ${status.currentGoal.title}` : status.status,
 		chips: [
 			progressChip(status.counts.complete, status.goals.length, 15),
-			...(status.counts.review_blocked > 0 ? [shipWithCaveatsChip("review-blocked")] : []),
+			...(status.counts.review_blocked > 0 ? [hudChip("ship", "caveats:review-blocked", 45, "warning")] : []),
 			...(status.counts.blocked + status.counts.review_blocked > 0
-				? [limitationsChip(status.counts.blocked + status.counts.review_blocked)]
+				? [hudChip("limitations", status.counts.blocked + status.counts.review_blocked, 50, "info")]
 				: []),
 			{
 				label: "status",

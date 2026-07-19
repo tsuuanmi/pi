@@ -1,16 +1,16 @@
-import { progressChip } from "#workflows/harness/shared/hud/hud";
-import type { WorkflowHudSummary } from "#workflows/harness/shared/state/active-state";
+import type { HudSummary } from "@tsuuanmi/pi-tui";
+import { progressChip } from "@tsuuanmi/pi-tui";
 import type { TeamSnapshot } from "#workflows/harness/team/team-runtime";
 
 /**
- * Build the workflow HUD summary for an active team run.
+ * Build the HUD summary for an active team run.
  *
  * Extracted mechanically from `team-runtime.ts` (behavior-preserving): the
  * `TeamSnapshot` type is imported type-only, so there is no runtime import
  * cycle. `new Date().toISOString()` is inlined (matching the original
  * `nowIso()`).
  */
-export function buildTeamHud(snapshot: TeamSnapshot): WorkflowHudSummary {
+export function buildTeamHud(snapshot: TeamSnapshot): HudSummary {
 	return {
 		version: 1,
 		summary: snapshot.team_id ? `${snapshot.task_total} tasks` : "missing",

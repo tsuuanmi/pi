@@ -15,7 +15,6 @@ import "#workflows/harness/ultragoal/ultragoal-transitions";
 export { handleWorkflowCommand, runStateCommand, runWorkflowCommand } from "#workflows/commands/workflow";
 // Extension entry point
 export { default } from "#workflows/extensions/workflows";
-export * from "#workflows/harness/deep-interview/deep-interview-hud";
 export * from "#workflows/harness/deep-interview/deep-interview-mutation-guard";
 export * from "#workflows/harness/deep-interview/deep-interview-runtime";
 export * from "#workflows/harness/deep-interview/deep-interview-state";
@@ -23,7 +22,6 @@ export * from "#workflows/harness/deep-interview/deep-interview-tools";
 export * from "#workflows/harness/ralplan/ralplan-agents";
 export * from "#workflows/harness/ralplan/ralplan-compact";
 export * from "#workflows/harness/ralplan/ralplan-gates";
-export * from "#workflows/harness/ralplan/ralplan-hud";
 export * from "#workflows/harness/ralplan/ralplan-obstacles";
 export * from "#workflows/harness/ralplan/ralplan-runtime";
 export * from "#workflows/harness/ralplan/ralplan-verdicts";
@@ -50,8 +48,6 @@ export * from "#workflows/harness/shared/audit/tamper-detection";
 export * from "#workflows/harness/shared/audit/transaction-journal";
 export * from "#workflows/harness/shared/compaction/compaction";
 export * from "#workflows/harness/shared/compaction/compaction";
-export * from "#workflows/harness/shared/hud/hud";
-export * from "#workflows/harness/shared/hud/hud";
 export * from "#workflows/harness/shared/orchestration/context-templates";
 export * from "#workflows/harness/shared/orchestration/expected-next-role";
 export * from "#workflows/harness/shared/orchestration/gate-verdicts";
@@ -79,12 +75,10 @@ export * from "#workflows/harness/shared/state/state-writer";
 export * from "#workflows/harness/shared/state/workflow-state";
 // Harness runtime
 export * from "#workflows/harness/team/team-compact";
-export * from "#workflows/harness/team/team-hud";
 export * from "#workflows/harness/team/team-runtime";
 export * from "#workflows/harness/ultragoal/ultragoal-artifacts";
 export * from "#workflows/harness/ultragoal/ultragoal-compact";
 export * from "#workflows/harness/ultragoal/ultragoal-guard";
-export * from "#workflows/harness/ultragoal/ultragoal-hud";
 export * from "#workflows/harness/ultragoal/ultragoal-obstacles";
 export * from "#workflows/harness/ultragoal/ultragoal-quality-gate";
 // ultragoal-receipt: avoid re-exporting requiredGoals (conflicts with ultragoal-runtime)

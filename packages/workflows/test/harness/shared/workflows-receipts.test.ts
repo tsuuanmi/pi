@@ -2,14 +2,11 @@ import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-	collapsePlanningPipeline,
 	createWorkflowReceipt,
 	isEntryStale,
 	readWorkflowActiveState,
 	syncWorkflowActiveState,
 	WORKFLOW_RECEIPT_FRESH_MS,
-	type WorkflowActiveEntry,
-	type WorkflowSkill,
 	workflowReceiptStatus,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -153,58 +150,5 @@ describe("active-state staleness detection", () => {
 		const state = await readWorkflowActiveState(cwd, { sessionId });
 		const ralplan = state?.active_workflows.find((e) => e.skill === "ralplan");
 		expect(ralplan?.hud?.severity).toBe("error");
-	});
-});
-
-describe("collapsePlanningPipeline", () => {
-	function entry(skill: WorkflowSkill, updatedAt: string): WorkflowActiveEntry {
-		return { skill, active: true, updated_at: updatedAt };
-	}
-
-	it("returns entries unchanged when only one pipeline skill is active", () => {
-		const entries = [entry("deep-interview", "2026-06-20T01:00:00.000Z"), entry("team", "2026-06-20T02:00:00.000Z")];
-		const collapsed = collapsePlanningPipeline(entries);
-		expect(collapsed).toHaveLength(2);
-	});
-
-	it("collapses to the most recent pipeline stage", () => {
-		const entries = [
-			entry("deep-interview", "2026-06-20T01:00:00.000Z"),
-			entry("ralplan", "2026-06-20T02:00:00.000Z"),
-			entry("ultragoal", "2026-06-20T03:00:00.000Z"),
-		];
-		const collapsed = collapsePlanningPipeline(entries);
-		expect(collapsed).toHaveLength(1);
-		expect(collapsed[0]?.skill).toBe("ultragoal");
-	});
-
-	it("preserves non-pipeline skills alongside the collapsed pipeline", () => {
-		const entries = [
-			entry("deep-interview", "2026-06-20T01:00:00.000Z"),
-			entry("ralplan", "2026-06-20T02:00:00.000Z"),
-			entry("team", "2026-06-20T02:30:00.000Z"),
-		];
-		const collapsed = collapsePlanningPipeline(entries);
-		expect(collapsed).toHaveLength(2);
-		const skills = collapsed.map((e) => e.skill).sort();
-		expect(skills).toEqual(["ralplan", "team"]);
-	});
-
-	it("returns entries unchanged when no pipeline skills are active", () => {
-		const entries = [entry("team", "2026-06-20T01:00:00.000Z")];
-		const collapsed = collapsePlanningPipeline(entries);
-		expect(collapsed).toHaveLength(1);
-		expect(collapsed[0]?.skill).toBe("team");
-	});
-
-	it("handles missing/unparseable timestamps deterministically", () => {
-		const entries = [entry("deep-interview", "not-a-date"), entry("ultragoal", "2026-06-20T03:00:00.000Z")];
-		const collapsed = collapsePlanningPipeline(entries);
-		expect(collapsed).toHaveLength(1);
-		expect(collapsed[0]?.skill).toBe("ultragoal");
-	});
-
-	it("returns empty array for empty input", () => {
-		expect(collapsePlanningPipeline([])).toEqual([]);
 	});
 });

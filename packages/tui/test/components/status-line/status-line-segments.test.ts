@@ -139,13 +139,13 @@ describe("model segment", () => {
 });
 
 describe("mode segment", () => {
-	it("is hidden when no workflow phase is active", () => {
-		const ctx = makeCtx({ workflowPhase: undefined });
+	it("is hidden when no HUD phase is active", () => {
+		const ctx = makeCtx({ hudPhase: undefined });
 		assert.deepEqual(renderSegment("mode", ctx), { content: "", visible: false });
 	});
 
-	it("renders the active workflow phase", () => {
-		const ctx = makeCtx({ workflowPhase: "planner" });
+	it("renders the active HUD phase", () => {
+		const ctx = makeCtx({ hudPhase: "planner" });
 		assert.equal(stripAnsi(renderSegment("mode", ctx).content), "planner");
 	});
 });

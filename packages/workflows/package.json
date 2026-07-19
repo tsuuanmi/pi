@@ -58,6 +58,7 @@
 	"dependencies": {
 		"@tsuuanmi/pi-agent": "^0.1.4",
 		"@tsuuanmi/pi-ai": "^0.1.4",
+		"@tsuuanmi/pi-tui": "^0.1.4",
 		"typebox": "1.1.38"
 	},
 	"devDependencies": {

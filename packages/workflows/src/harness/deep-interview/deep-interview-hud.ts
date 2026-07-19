@@ -1,5 +1,5 @@
+import type { HudChip, HudSummary } from "@tsuuanmi/pi-tui";
 import { DEFAULT_DEEP_INTERVIEW_THRESHOLD } from "#workflows/harness/deep-interview/deep-interview-state";
-import type { WorkflowHudChip, WorkflowHudSummary } from "#workflows/harness/shared/state/active-state";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -10,12 +10,12 @@ function percent(value: number | undefined): string | undefined {
 	return `${Math.round(value * 100)}%`;
 }
 
-function chip(label: string, value: string | undefined, priority: number): WorkflowHudChip | undefined {
+function chip(label: string, value: string | undefined, priority: number): HudChip | undefined {
 	return value ? { label, value, priority } : undefined;
 }
 
-function compact(chips: Array<WorkflowHudChip | undefined>): WorkflowHudChip[] {
-	return chips.filter((item): item is WorkflowHudChip => item !== undefined);
+function compact(chips: Array<HudChip | undefined>): HudChip[] {
+	return chips.filter((item): item is HudChip => item !== undefined);
 }
 
 function latestScoredAmbiguity(rounds: unknown): number | undefined {
@@ -52,7 +52,7 @@ function weakestDimensionFromTopology(
 export function deriveDeepInterviewHud(
 	payload: Record<string, unknown>,
 	options: { phase?: string; specStatus?: string; updatedAt?: string } = {},
-): WorkflowHudSummary {
+): HudSummary {
 	const state = isPlainObject(payload.state) ? payload.state : {};
 	const pickNumber = (key: string): number | undefined => {
 		const value = state[key] ?? payload[key];

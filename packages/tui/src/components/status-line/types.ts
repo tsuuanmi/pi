@@ -1,3 +1,5 @@
+import type { ActiveHudEntry, HudChip, HudSeverity, HudSummary } from "#tui/components/hud/model";
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Settings Types
 // ═══════════════════════════════════════════════════════════════════════════
@@ -64,7 +66,7 @@ export interface StatusLineSettings {
 	separator?: StatusLineSeparatorStyle;
 	/** Per-segment options. */
 	segmentOptions?: StatusLineSegmentOptions;
-	/** Render the HUD line above the status rail when workflows are active (default: true). */
+	/** Render the HUD line above the status rail when HUD entries are active (default: true). */
 	showHud?: boolean;
 }
 
@@ -112,38 +114,22 @@ export interface StatusLineDataProvider {
 	getAvailableProviderCount(): number;
 }
 
-export interface StatusLineWorkflowEntry {
-	skill: string;
-	active: boolean;
-	phase?: string;
-	updated_at?: string;
-	hud?: {
-		summary?: string;
-		chips?: StatusLineWorkflowHudChip[];
-	};
-	stale?: boolean;
-}
+export type StatusLineHudEntry = ActiveHudEntry;
+export type StatusLineHudChip = HudChip;
+export type StatusLineHudSeverity = HudSeverity;
+export type StatusLineHudSummary = HudSummary;
 
-export type StatusLineWorkflowHudSeverity = "info" | "warning" | "blocked" | "error" | "success";
-
-export interface StatusLineWorkflowHudChip {
-	label: string;
-	value?: string;
-	priority?: number;
-	severity?: StatusLineWorkflowHudSeverity;
-}
-
-export interface StatusLineWorkflowStateReaderOptions {
+export interface StatusLineHudEntryReaderOptions {
 	cwd: string;
 	sessionId: string;
 }
 
-export type StatusLineWorkflowStateReader = (
-	options: StatusLineWorkflowStateReaderOptions,
-) => Promise<readonly StatusLineWorkflowEntry[] | undefined>;
+export type StatusLineHudEntryReader = (
+	options: StatusLineHudEntryReaderOptions,
+) => Promise<readonly ActiveHudEntry[] | undefined>;
 
 export interface StatusLineComponentOptions {
-	readWorkflowEntries?: StatusLineWorkflowStateReader;
+	readHudEntries?: StatusLineHudEntryReader;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -180,8 +166,8 @@ export interface SegmentContext {
 		branch: string | null;
 		status: { staged: number; unstaged: number; untracked: number } | null;
 	};
-	/** Active workflow phase (e.g. "planner"), undefined when no workflow active. */
-	workflowPhase?: string;
+	/** Active HUD phase, undefined when no HUD entry is active. */
+	hudPhase?: string;
 }
 
 export interface RenderedSegment {

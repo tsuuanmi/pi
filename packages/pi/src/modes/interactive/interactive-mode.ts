@@ -289,9 +289,9 @@ export class InteractiveMode {
 			this.settingsManager,
 			() => this.ui.requestRender(),
 			{
-				readWorkflowEntries: async ({ cwd, sessionId }) => {
+				readHudEntries: async ({ cwd, sessionId }) => {
 					const state = await readWorkflowActiveState(cwd, { sessionId });
-					return state?.active_workflows;
+					return state?.active_workflows.map(({ skill, ...entry }) => ({ id: skill, ...entry }));
 				},
 			},
 		);

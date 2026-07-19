@@ -121,7 +121,7 @@ const modelSegment: StatusLineSegment = {
 const modeSegment: StatusLineSegment = {
 	id: "mode",
 	render(ctx) {
-		const phase = ctx.workflowPhase;
+		const phase = ctx.hudPhase;
 		if (!phase) return { content: "", visible: false };
 		return { content: theme.fg("accent", phase), visible: true };
 	},

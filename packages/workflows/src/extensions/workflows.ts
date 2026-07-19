@@ -1,10 +1,10 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi-agent";
+import { refreshHudUi } from "@tsuuanmi/pi-tui";
 import { getDeepInterviewMutationDecision } from "#workflows/harness/deep-interview/deep-interview-mutation-guard";
 import { registerDeepInterviewTools } from "#workflows/harness/deep-interview/deep-interview-tools";
 import "#workflows/harness/deep-interview/deep-interview-transitions";
 import { registerRalplanTools } from "#workflows/harness/ralplan/ralplan-tools";
 import "#workflows/harness/ralplan/ralplan-transitions";
-import { syncMcpHudUi, syncWorkflowHudUi } from "#workflows/harness/shared/hud/hud";
 import { registerSubagentTools } from "#workflows/harness/subagents/subagent-tools";
 import { registerTeamTools } from "#workflows/harness/team/team-tools";
 import "#workflows/harness/team/team-transitions";
@@ -18,18 +18,17 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 	registerTeamTools(pi);
 	registerUltragoalTools(pi);
 	pi.on("session_start", async (_event, ctx) => {
-		await syncWorkflowHudUi(ctx);
-		syncMcpHudUi(ctx);
+		await refreshHudUi(ctx);
 	});
 	pi.on("turn_end", async (_event, ctx) => {
-		await syncWorkflowHudUi(ctx);
+		await refreshHudUi(ctx);
 	});
 	pi.on("tool_execution_end", async (_event, ctx) => {
-		await syncWorkflowHudUi(ctx);
+		await refreshHudUi(ctx);
 	});
 	pi.on("before_agent_start", async (_event, ctx) => {
 		if (ctx.skipWorkflowContinuation) return undefined;
-		await syncWorkflowHudUi(ctx);
+		await refreshHudUi(ctx);
 		return undefined;
 	});
 

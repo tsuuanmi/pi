@@ -9,7 +9,6 @@ import workflowsExtension, {
 	deepInterviewSpecPath,
 	enrichDeepInterviewRoundScoring,
 	finalizeDeepInterviewSpecState,
-	formatWorkflowHudLine,
 	getDeepInterviewMutationDecision,
 	handoffWorkflow,
 	normalizeDeepInterviewEnvelope,
@@ -162,7 +161,7 @@ describe("deep-interview workflow runtime", () => {
 		const active = await readWorkflowActiveState(cwd, { sessionId: TEST_SESSION });
 		const deepInterview = active?.active_workflows.find((entry) => entry.skill === "deep-interview");
 		expect(deepInterview?.phase).toBe("interviewing");
-		expect(deepInterview ? formatWorkflowHudLine(deepInterview) : "").toContain("deep-interview");
+		expect(deepInterview?.skill).toBe("deep-interview");
 	});
 
 	it("plans a question and records the next answer against pending orchestration", async () => {

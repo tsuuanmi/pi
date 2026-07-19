@@ -1,15 +1,14 @@
+import { type HudSummary, hudChip, progressChip } from "@tsuuanmi/pi-tui";
 import type { RalplanStatus } from "#workflows/harness/ralplan/ralplan-runtime";
-import { escalationToExpertChip, progressChip } from "#workflows/harness/shared/hud/hud";
-import type { WorkflowHudSummary } from "#workflows/harness/shared/state/active-state";
 
 /**
- * Build the workflow HUD summary for an active ralplan run.
+ * Build the HUD summary for an active ralplan run.
  *
  * Extracted mechanically from `ralplan-runtime.ts` (behavior-preserving): the
  * `RalplanStatus` type is imported type-only, so there is no runtime import
  * cycle. `new Date().toISOString()` is inlined (matching the original).
  */
-export function buildRalplanHud(status: RalplanStatus): WorkflowHudSummary {
+export function buildRalplanHud(status: RalplanStatus): HudSummary {
 	const stage =
 		status.latest?.stage ??
 		(typeof status.state?.current_phase === "string" ? status.state.current_phase : undefined);
@@ -18,7 +17,7 @@ export function buildRalplanHud(status: RalplanStatus): WorkflowHudSummary {
 		summary: status.latest ? `persisted ${status.latest.stage} stage ${status.latest.stage_n}` : undefined,
 		chips: [
 			...(status.state?.expert_escalation === true || status.state?.current_phase === "expert-stage"
-				? [escalationToExpertChip()]
+				? [hudChip("escalation", "expert", 15, "warning")]
 				: []),
 			...(status.iteration ? [progressChip(status.iteration, Number(status.state?.iterate_cap ?? 5), 25)] : []),
 			...(status.pending_approval
