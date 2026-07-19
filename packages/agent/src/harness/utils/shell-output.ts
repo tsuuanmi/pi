@@ -6,8 +6,8 @@ import {
 	ok,
 	type Result,
 	toError,
-} from "../env/types.ts";
-import { DEFAULT_MAX_BYTES, truncateTail } from "./truncate.ts";
+} from "#agent/harness/env/types";
+import { DEFAULT_MAX_BYTES, truncateTail } from "#agent/harness/utils/truncate";
 
 export interface ShellCaptureOptions extends Omit<ExecutionEnvExecOptions, "onStdout" | "onStderr"> {
 	onChunk?: (chunk: string) => void;

@@ -1,8 +1,8 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { TUI } from "../src/tui.ts";
-import { extractSegments, sliceByColumn, visibleWidth } from "../src/utils.ts";
-import { VirtualTerminal } from "./virtual-terminal.ts";
+import { TUI } from "#tui/tui";
+import { extractSegments, sliceByColumn, visibleWidth } from "#tui/utils";
+import { VirtualTerminal } from "#tui-test/virtual-terminal";
 
 type TuiComposite = {
 	compositeLineAt(

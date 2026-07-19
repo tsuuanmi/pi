@@ -39,6 +39,16 @@
 		"node": ">=22.19.0"
 	},
 	"types": "./dist/index.d.ts",
+	"imports": {
+		"#tui/*": {
+			"types": "./dist/*.d.ts",
+			"import": "./dist/*.js"
+		},
+		"#tui-test/*": {
+			"types": "./test/*.ts",
+			"import": "./test/*.ts"
+		}
+	},
 	"dependencies": {
 		"get-east-asian-width": "1.6.0",
 		"marked": "18.0.5"

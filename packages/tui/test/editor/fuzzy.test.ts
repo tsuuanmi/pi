@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { fuzzyFilter, fuzzyMatch } from "../../src/editor/fuzzy.ts";
+import { fuzzyFilter, fuzzyMatch } from "#tui/editor/fuzzy";
 
 describe("fuzzyMatch", () => {
 	it("empty query matches everything with score 0", () => {

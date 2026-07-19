@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { SelectList } from "../../src/components/select-list.ts";
-import { visibleWidth } from "../../src/utils.ts";
+import { SelectList } from "#tui/components/select-list";
+import { visibleWidth } from "#tui/utils";
 
 const testTheme = {
 	selectedPrefix: (text: string) => text,

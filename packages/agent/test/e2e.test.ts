@@ -17,8 +17,8 @@ import {
 	type UserMessage,
 } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it } from "vitest";
-import { Agent, type AgentEvent } from "../src/index.ts";
-import { calculateTool } from "./helpers/calculate.ts";
+import { Agent, type AgentEvent } from "#agent/index";
+import { calculateTool } from "#agent-test/helpers/calculate";
 
 const registrations: FauxProviderRegistration[] = [];
 const execFileAsync = promisify(execFile);

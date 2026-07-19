@@ -12,8 +12,8 @@
  */
 
 import type { Static, TSchema } from "typebox";
-import type { SubagentManager } from "../harness/subagents/subagent-manager.ts";
-import type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "../types.ts";
+import type { SubagentManager } from "#agent/harness/subagents/subagent-manager";
+import type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "#agent/types";
 
 // ============================================================================
 // Tool contract

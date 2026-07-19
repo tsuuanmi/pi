@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { type Component, TUI } from "../src/tui.ts";
-import { VirtualTerminal } from "./virtual-terminal.ts";
+import { type Component, TUI } from "#tui/tui";
+import { VirtualTerminal } from "#tui-test/virtual-terminal";
 
 class Lines implements Component {
 	private lines: string[];

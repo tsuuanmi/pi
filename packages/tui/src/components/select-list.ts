@@ -1,6 +1,6 @@
-import { getKeybindings } from "../input/keybindings.ts";
-import type { Component } from "../tui.ts";
-import { truncateToWidth, visibleWidth } from "../utils.ts";
+import { getKeybindings } from "#tui/input/keybindings";
+import type { Component } from "#tui/tui";
+import { truncateToWidth, visibleWidth } from "#tui/utils";
 
 const DEFAULT_PRIMARY_COLUMN_WIDTH = 32;
 const PRIMARY_COLUMN_GAP = 2;

@@ -1,8 +1,8 @@
-import { fuzzyFilter } from "../editor/fuzzy.ts";
-import { getKeybindings } from "../input/keybindings.ts";
-import type { Component } from "../tui.ts";
-import { truncateToWidth, visibleWidth, wrapTextWithAnsi } from "../utils.ts";
-import { Input } from "./input.ts";
+import { Input } from "#tui/components/input";
+import { fuzzyFilter } from "#tui/editor/fuzzy";
+import { getKeybindings } from "#tui/input/keybindings";
+import type { Component } from "#tui/tui";
+import { truncateToWidth, visibleWidth, wrapTextWithAnsi } from "#tui/utils";
 
 export interface SettingItem {
 	/** Unique identifier for this setting */

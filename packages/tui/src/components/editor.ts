@@ -1,9 +1,10 @@
-import type { AutocompleteProvider, AutocompleteSuggestions } from "../editor/autocomplete.ts";
-import { UndoStack } from "../editor/undo-stack.ts";
-import { findWordBackward, findWordForward } from "../editor/word-navigation.ts";
-import { getKeybindings } from "../input/keybindings.ts";
-import { decodePrintableKey, matchesKey } from "../input/keys.ts";
-import { type Component, CURSOR_MARKER, type Focusable, type TUI } from "../tui.ts";
+import { SelectList, type SelectListLayoutOptions, type SelectListTheme } from "#tui/components/select-list";
+import type { AutocompleteProvider, AutocompleteSuggestions } from "#tui/editor/autocomplete";
+import { UndoStack } from "#tui/editor/undo-stack";
+import { findWordBackward, findWordForward } from "#tui/editor/word-navigation";
+import { getKeybindings } from "#tui/input/keybindings";
+import { decodePrintableKey, matchesKey } from "#tui/input/keys";
+import { type Component, CURSOR_MARKER, type Focusable, type TUI } from "#tui/tui";
 import {
 	cjkBreakRegex,
 	getGraphemeSegmenter,
@@ -11,8 +12,7 @@ import {
 	isWhitespaceChar,
 	truncateToWidth,
 	visibleWidth,
-} from "../utils.ts";
-import { SelectList, type SelectListLayoutOptions, type SelectListTheme } from "./select-list.ts";
+} from "#tui/utils";
 
 const graphemeSegmenter = getGraphemeSegmenter();
 const wordSegmenter = getWordSegmenter();

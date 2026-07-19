@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, it, test } from "node:test";
-import { CombinedAutocompleteProvider } from "../../src/editor/autocomplete.ts";
+import { CombinedAutocompleteProvider } from "#tui/editor/autocomplete";
 
 const resolveFdPath = (): string | null => {
 	const result = spawnSync("which", ["fd"], { encoding: "utf-8" });

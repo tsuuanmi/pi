@@ -1,12 +1,12 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { stripVTControlCharacters } from "node:util";
-import { Editor, wordWrapLine } from "../../src/components/editor.ts";
-import { type AutocompleteProvider, CombinedAutocompleteProvider } from "../../src/editor/autocomplete.ts";
-import { TUI } from "../../src/tui.ts";
-import { visibleWidth } from "../../src/utils.ts";
-import { defaultEditorTheme } from "../test-themes.ts";
-import { VirtualTerminal } from "../virtual-terminal.ts";
+import { Editor, wordWrapLine } from "#tui/components/editor";
+import { type AutocompleteProvider, CombinedAutocompleteProvider } from "#tui/editor/autocomplete";
+import { TUI } from "#tui/tui";
+import { visibleWidth } from "#tui/utils";
+import { defaultEditorTheme } from "#tui-test/test-themes";
+import { VirtualTerminal } from "#tui-test/virtual-terminal";
 
 /** Create a TUI with a virtual terminal for testing */
 function createTestTUI(cols = 80, rows = 24): TUI {

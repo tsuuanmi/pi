@@ -1,23 +1,23 @@
 // Core TUI interfaces and classes
 
 // Components
-export { Box } from "./components/box.ts";
-export { CancellableLoader } from "./components/cancellable-loader.ts";
-export { Editor, type EditorTheme } from "./components/editor.ts";
-export { Input } from "./components/input.ts";
-export { Loader, type LoaderIndicatorOptions } from "./components/loader.ts";
-export { type DefaultTextStyle, Markdown, type MarkdownOptions, type MarkdownTheme } from "./components/markdown.ts";
+export { Box } from "#tui/components/box";
+export { CancellableLoader } from "#tui/components/cancellable-loader";
+export { Editor, type EditorTheme } from "#tui/components/editor";
+export { Input } from "#tui/components/input";
+export { Loader, type LoaderIndicatorOptions } from "#tui/components/loader";
+export { type DefaultTextStyle, Markdown, type MarkdownOptions, type MarkdownTheme } from "#tui/components/markdown";
 export {
 	type SelectItem,
 	SelectList,
 	type SelectListLayoutOptions,
 	type SelectListTheme,
 	type SelectListTruncatePrimaryContext,
-} from "./components/select-list.ts";
-export { type SettingItem, SettingsList, type SettingsListTheme } from "./components/settings-list.ts";
-export { Spacer } from "./components/spacer.ts";
-export { Text } from "./components/text.ts";
-export { TruncatedText } from "./components/truncated-text.ts";
+} from "#tui/components/select-list";
+export { type SettingItem, SettingsList, type SettingsListTheme } from "#tui/components/settings-list";
+export { Spacer } from "#tui/components/spacer";
+export { Text } from "#tui/components/text";
+export { TruncatedText } from "#tui/components/truncated-text";
 // Autocomplete support
 export {
 	type AutocompleteItem,
@@ -25,11 +25,11 @@ export {
 	type AutocompleteSuggestions,
 	CombinedAutocompleteProvider,
 	type SlashCommand,
-} from "./editor/autocomplete.ts";
+} from "#tui/editor/autocomplete";
 // Editor component interface (for custom editors)
-export type { EditorComponent } from "./editor/editor-component.ts";
+export type { EditorComponent } from "#tui/editor/editor-component";
 // Fuzzy matching
-export { type FuzzyMatch, fuzzyFilter, fuzzyMatch } from "./editor/fuzzy.ts";
+export { type FuzzyMatch, fuzzyFilter, fuzzyMatch } from "#tui/editor/fuzzy";
 // Keybindings
 export {
 	getKeybindings,
@@ -42,7 +42,7 @@ export {
 	KeybindingsManager,
 	setKeybindings,
 	TUI_KEYBINDINGS,
-} from "./input/keybindings.ts";
+} from "#tui/input/keybindings";
 // Keyboard input handling
 export {
 	decodeKittyPrintable,
@@ -55,9 +55,9 @@ export {
 	matchesKey,
 	parseKey,
 	setKittyProtocolActive,
-} from "./input/keys.ts";
+} from "#tui/input/keys";
 // Input buffering for batch splitting
-export { StdinBuffer, type StdinBufferEventMap, type StdinBufferOptions } from "./input/stdin-buffer.ts";
+export { StdinBuffer, type StdinBufferEventMap, type StdinBufferOptions } from "#tui/input/stdin-buffer";
 // Capabilities
 export {
 	detectCapabilities,
@@ -66,11 +66,11 @@ export {
 	resetCapabilitiesCache,
 	setCapabilities,
 	type TerminalCapabilities,
-} from "./terminal/capabilities.ts";
+} from "#tui/terminal/capabilities";
 // Terminal interface and implementations
-export { ProcessTerminal, type Terminal } from "./terminal/terminal.ts";
+export { ProcessTerminal, type Terminal } from "#tui/terminal/terminal";
 // Terminal colors
-export { parseOsc11BackgroundColor, type RgbColor } from "./terminal/terminal-colors.ts";
+export { parseOsc11BackgroundColor, type RgbColor } from "#tui/terminal/terminal-colors";
 export {
 	type Component,
 	Container,
@@ -84,6 +84,6 @@ export {
 	type OverlayUnfocusOptions,
 	type SizeValue,
 	TUI,
-} from "./tui.ts";
+} from "#tui/tui";
 // Utilities
-export { sliceByColumn, truncateToWidth, visibleWidth, wrapTextWithAnsi } from "./utils.ts";
+export { sliceByColumn, truncateToWidth, visibleWidth, wrapTextWithAnsi } from "#tui/utils";

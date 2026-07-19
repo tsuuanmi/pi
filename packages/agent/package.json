@@ -16,6 +16,16 @@
 		},
 		"./package.json": "./package.json"
 	},
+	"imports": {
+		"#agent/*": {
+			"types": "./dist/*.d.ts",
+			"import": "./dist/*.js"
+		},
+		"#agent-test/*": {
+			"types": "./test/*.ts",
+			"import": "./test/*.ts"
+		}
+	},
 	"files": [
 		"dist",
 		"README.md"

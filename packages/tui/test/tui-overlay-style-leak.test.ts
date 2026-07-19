@@ -1,8 +1,8 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import type { Terminal as XtermTerminalType } from "@xterm/headless";
-import { type Component, TUI } from "../src/tui.ts";
-import { VirtualTerminal } from "./virtual-terminal.ts";
+import { type Component, TUI } from "#tui/tui";
+import { VirtualTerminal } from "#tui-test/virtual-terminal";
 
 class StaticLines implements Component {
 	private readonly lines: string[];

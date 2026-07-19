@@ -1,5 +1,5 @@
-import type { TUI } from "../tui.ts";
-import { Text } from "./text.ts";
+import { Text } from "#tui/components/text";
+import type { TUI } from "#tui/tui";
 
 export interface LoaderIndicatorOptions {
 	/** Animation frames. Use an empty array to hide the indicator. */

@@ -1,7 +1,7 @@
 import { Marked, type Token, Tokenizer, type Tokens } from "marked";
-import { getCapabilities, hyperlink } from "../terminal/capabilities.ts";
-import type { Component } from "../tui.ts";
-import { applyBackgroundToLine, visibleWidth, wrapTextWithAnsi } from "../utils.ts";
+import { getCapabilities, hyperlink } from "#tui/terminal/capabilities";
+import type { Component } from "#tui/tui";
+import { applyBackgroundToLine, visibleWidth, wrapTextWithAnsi } from "#tui/utils";
 
 const STRICT_STRIKETHROUGH_REGEX = /^(~~)(?=[^\s~])((?:\\.|[^\\])*?(?:\\.|[^\s~\\]))\1(?=[^~]|$)/;
 

@@ -12,7 +12,7 @@
  * (building `AgentSessionServices` + `SubagentManager`) stays in `pi-coding-agent`;
  * only the contract lives here in `pi-agent`.
  */
-import type { SubagentManager } from "./subagent-manager.ts";
+import type { SubagentManager } from "#agent/harness/subagents/subagent-manager";
 
 export interface SubagentManagerFactoryContext {
 	/** Workspace root the owner runs in; the factory derives agent dir/config from it. */

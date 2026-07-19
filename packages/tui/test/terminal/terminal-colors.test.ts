@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { type Component, parseOsc11BackgroundColor, type Terminal, TUI } from "../../src/index.ts";
+import { type Component, parseOsc11BackgroundColor, type Terminal, TUI } from "#tui/index";
 
 class TestTerminal implements Terminal {
 	private inputHandler?: (data: string) => void;

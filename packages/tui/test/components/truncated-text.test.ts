@@ -1,8 +1,8 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { Chalk } from "chalk";
-import { TruncatedText } from "../../src/components/truncated-text.ts";
-import { visibleWidth } from "../../src/utils.ts";
+import { TruncatedText } from "#tui/components/truncated-text";
+import { visibleWidth } from "#tui/utils";
 
 // Force full color in CI so ANSI assertions are deterministic
 const chalk = new Chalk({ level: 3 });

@@ -4,6 +4,7 @@
 		"noEmit": false,
 		"outDir": "./dist",
 		"paths": {
+			"#agent/*": ["./src/*"],
 			"@tsuuanmi/pi-ai": ["../ai/dist/index.d.ts"],
 			"@tsuuanmi/pi-ai/*": ["../ai/dist/*.d.ts", "../ai/dist/providers/*.d.ts"]
 		},

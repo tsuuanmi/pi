@@ -11,7 +11,7 @@ import {
 	matchesKey,
 	parseKey,
 	setKittyProtocolActive,
-} from "../../src/input/keys.ts";
+} from "#tui/input/keys";
 
 describe("matchesKey", () => {
 	describe("Kitty protocol with alternate keys (non-Latin layouts)", () => {

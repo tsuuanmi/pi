@@ -1,5 +1,5 @@
-import type { Component } from "../tui.ts";
-import { applyBackgroundToLine, visibleWidth } from "../utils.ts";
+import type { Component } from "#tui/tui";
+import { applyBackgroundToLine, visibleWidth } from "#tui/utils";
 
 type RenderCache = {
 	childLines: string[];

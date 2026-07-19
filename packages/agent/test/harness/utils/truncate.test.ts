@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { truncateHead, truncateTail } from "../../../src/harness/utils/truncate.ts";
+import { truncateHead, truncateTail } from "#agent/harness/utils/truncate";
 
 const encoder = new TextEncoder();
 

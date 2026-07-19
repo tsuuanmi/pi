@@ -1,7 +1,7 @@
 import { type AssistantMessage, type AssistantMessageEvent, EventStream, getModel } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { describe, expect, it } from "vitest";
-import { Agent, type AgentEvent, type AgentTool, type AgentToolUpdateCallback } from "../src/index.ts";
+import { Agent, type AgentEvent, type AgentTool, type AgentToolUpdateCallback } from "#agent/index";
 
 // Mock stream that mimics AssistantMessageEventStream
 class MockAssistantStream extends EventStream<AssistantMessageEvent, AssistantMessage> {

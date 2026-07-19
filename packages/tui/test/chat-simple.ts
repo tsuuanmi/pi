@@ -3,14 +3,14 @@
  */
 
 import chalk from "chalk";
-import { Editor } from "../src/components/editor.ts";
-import { Loader } from "../src/components/loader.ts";
-import { Markdown } from "../src/components/markdown.ts";
-import { Text } from "../src/components/text.ts";
-import { CombinedAutocompleteProvider } from "../src/editor/autocomplete.ts";
-import { ProcessTerminal } from "../src/terminal/terminal.ts";
-import { TUI } from "../src/tui.ts";
-import { defaultEditorTheme, defaultMarkdownTheme } from "./test-themes.ts";
+import { Editor } from "#tui/components/editor";
+import { Loader } from "#tui/components/loader";
+import { Markdown } from "#tui/components/markdown";
+import { Text } from "#tui/components/text";
+import { CombinedAutocompleteProvider } from "#tui/editor/autocomplete";
+import { ProcessTerminal } from "#tui/terminal/terminal";
+import { TUI } from "#tui/tui";
+import { defaultEditorTheme, defaultMarkdownTheme } from "#tui-test/test-themes";
 
 // Create terminal
 const terminal = new ProcessTerminal();

@@ -1,5 +1,5 @@
 import type { Message, TextContent } from "@tsuuanmi/pi-ai";
-import type { AgentMessage } from "../types.ts";
+import type { AgentMessage } from "#agent/types";
 
 export const COMPACTION_SUMMARY_PREFIX = `The conversation history before this point was compacted into the following summary:
 

@@ -1,8 +1,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { setKittyProtocolActive } from "../input/keys.ts";
-import { isNativeModifierPressed } from "../input/native-modifiers.ts";
-import { StdinBuffer } from "../input/stdin-buffer.ts";
+import { setKittyProtocolActive } from "#tui/input/keys";
+import { isNativeModifierPressed } from "#tui/input/native-modifiers";
+import { StdinBuffer } from "#tui/input/stdin-buffer";
 
 const APPLE_TERMINAL_SHIFT_ENTER_SEQUENCE = "\x1b[13;2u";
 const DESIRED_KITTY_KEYBOARD_PROTOCOL_FLAGS = 7;

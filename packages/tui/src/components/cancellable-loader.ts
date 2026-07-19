@@ -1,5 +1,5 @@
-import { getKeybindings } from "../input/keybindings.ts";
-import { Loader } from "./loader.ts";
+import { Loader } from "#tui/components/loader";
+import { getKeybindings } from "#tui/input/keybindings";
 
 /**
  * Loader that can be cancelled with Escape.

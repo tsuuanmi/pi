@@ -2,11 +2,11 @@ import assert from "node:assert";
 import { afterEach, describe, it } from "node:test";
 import type { Terminal as XtermTerminalType } from "@xterm/headless";
 import { Chalk } from "chalk";
-import { Markdown } from "../../src/components/markdown.ts";
-import { resetCapabilitiesCache, setCapabilities } from "../../src/terminal/capabilities.ts";
-import { type Component, TUI } from "../../src/tui.ts";
-import { defaultMarkdownTheme } from "../test-themes.ts";
-import { VirtualTerminal } from "../virtual-terminal.ts";
+import { Markdown } from "#tui/components/markdown";
+import { resetCapabilitiesCache, setCapabilities } from "#tui/terminal/capabilities";
+import { type Component, TUI } from "#tui/tui";
+import { defaultMarkdownTheme } from "#tui-test/test-themes";
+import { VirtualTerminal } from "#tui-test/virtual-terminal";
 
 // Force full color in CI so ANSI assertions are deterministic
 const chalk = new Chalk({ level: 3 });

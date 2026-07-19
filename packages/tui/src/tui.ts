@@ -6,14 +6,14 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { performance } from "node:perf_hooks";
-import { isKeyRelease, matchesKey } from "./input/keys.ts";
-import type { Terminal } from "./terminal/terminal.ts";
+import { isKeyRelease, matchesKey } from "#tui/input/keys";
+import type { Terminal } from "#tui/terminal/terminal";
 import {
 	isOsc11BackgroundColorResponse,
 	parseOsc11BackgroundColor,
 	type RgbColor,
-} from "./terminal/terminal-colors.ts";
-import { extractSegments, normalizeTerminalOutput, sliceByColumn, sliceWithWidth, visibleWidth } from "./utils.ts";
+} from "#tui/terminal/terminal-colors";
+import { extractSegments, normalizeTerminalOutput, sliceByColumn, sliceWithWidth, visibleWidth } from "#tui/utils";
 
 /**
  * Component interface - all components must implement this

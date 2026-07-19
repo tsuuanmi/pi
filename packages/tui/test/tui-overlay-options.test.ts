@@ -1,8 +1,8 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import type { Component } from "../src/tui.ts";
-import { TUI } from "../src/tui.ts";
-import { VirtualTerminal } from "./virtual-terminal.ts";
+import type { Component } from "#tui/tui";
+import { TUI } from "#tui/tui";
+import { VirtualTerminal } from "#tui-test/virtual-terminal";
 
 class StaticOverlay implements Component {
 	private lines: string[];

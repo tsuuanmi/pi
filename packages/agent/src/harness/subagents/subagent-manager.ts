@@ -12,7 +12,7 @@ import type {
 	SubagentResumeResult,
 	SubagentRunRequest,
 	SubagentRunResult,
-} from "./subagent-types.ts";
+} from "#agent/harness/subagents/subagent-types";
 
 export interface SubagentManager {
 	spawn(request: SubagentRunRequest): Promise<SubagentRunResult>;

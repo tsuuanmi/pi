@@ -1,4 +1,4 @@
-import type { AgentMessage } from "../../types.ts";
+import type { AgentMessage } from "#agent/types";
 
 export interface YieldDetails {
 	data: unknown;
