@@ -1,6 +1,5 @@
 import { type Component, truncateToWidth, visibleWidth } from "@tsuuanmi/pi-tui";
 import { collapsePlanningPipeline, readWorkflowActiveState, type WorkflowActiveEntry } from "@tsuuanmi/pi-workflows";
-import type { AgentSession } from "#pi/agent-session/agent-session";
 import { renderSkillHudBar } from "#pi/modes/interactive/components/skill-hud/render";
 import { type GitStatusSummary, runGitStatusPorcelain } from "#pi/modes/interactive/components/status-line/git-utils";
 import { getPreset } from "#pi/modes/interactive/components/status-line/presets";
@@ -12,6 +11,7 @@ import {
 import { getSeparator } from "#pi/modes/interactive/components/status-line/separators";
 import type { SegmentContext } from "#pi/modes/interactive/components/status-line/types";
 import type { ReadonlyFooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
+import type { AgentSession } from "#pi/session/agent-session";
 import type {
 	SettingsManager,
 	StatusLineSegmentId,

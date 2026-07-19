@@ -12,15 +12,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { AgentSession } from "#pi/agent-session/agent-session";
+import { AuthStorage } from "#pi/auth/auth-storage";
+import type { AgentSession } from "#pi/session/agent-session";
 import {
 	type AgentSessionRuntime,
 	type CreateAgentSessionRuntimeFactory,
 	createAgentSessionFromServices,
 	createAgentSessionRuntime,
 	createAgentSessionServices,
-} from "#pi/agent-session/agent-session-runtime";
-import { AuthStorage } from "#pi/auth/auth-storage";
+} from "#pi/session/agent-session-runtime";
 import { SessionManager } from "#pi/session/session-manager";
 import { API_KEY } from "#pi-test/test-utils";
 

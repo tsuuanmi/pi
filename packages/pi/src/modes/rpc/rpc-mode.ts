@@ -12,7 +12,6 @@
  */
 
 import * as crypto from "node:crypto";
-import type { AgentSessionRuntime } from "#pi/agent-session/agent-session-runtime";
 import type {
 	ExtensionUIContext,
 	ExtensionUIDialogOptions,
@@ -29,6 +28,7 @@ import type {
 	RpcSessionState,
 	RpcSlashCommand,
 } from "#pi/modes/rpc/rpc-types";
+import type { AgentSessionRuntime } from "#pi/session/agent-session-runtime";
 import { type Theme, theme } from "#pi/theme/theme";
 import { killTrackedDetachedChildren } from "#pi/utils/system/shell";
 

@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import type { AgentSessionContext } from "#pi/agent-session/agent-session-context";
+import type { AgentSessionContext } from "#pi/session/agent-session-context";
 import { stripFrontmatter } from "#pi/utils/fs/index";
 
 /**

@@ -2,17 +2,6 @@
 
 export { convertToLlm, extractYieldFromMessages, renderSubagentProgress, type YieldDetails } from "@tsuuanmi/pi-agent";
 export { resolvePath, withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-export {
-	AgentSession,
-	type AgentSessionConfig,
-	type AgentSessionEvent,
-	type AgentSessionEventListener,
-	type ModelCycleResult,
-	type ParsedSkillBlock,
-	type PromptOptions,
-	parseSkillBlock,
-	type SessionStats,
-} from "#pi/agent-session/agent-session";
 // Auth and model registry
 export {
 	type ApiKeyCredential,
@@ -254,6 +243,17 @@ export {
 	createWriteTool,
 	type PromptTemplate,
 } from "#pi/sdk/sdk";
+export {
+	AgentSession,
+	type AgentSessionConfig,
+	type AgentSessionEvent,
+	type AgentSessionEventListener,
+	type ModelCycleResult,
+	type ParsedSkillBlock,
+	type PromptOptions,
+	parseSkillBlock,
+	type SessionStats,
+} from "#pi/session/agent-session";
 export {
 	type BranchSummaryEntry,
 	buildSessionContext,

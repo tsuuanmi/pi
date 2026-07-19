@@ -3,12 +3,6 @@ import { tmpdir } from "node:os";
 import { join, parse } from "node:path";
 import { fauxAssistantMessage, registerFauxProvider } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-	type CreateAgentSessionRuntimeFactory,
-	createAgentSessionFromServices,
-	createAgentSessionRuntime,
-	createAgentSessionServices,
-} from "#pi/agent-session/agent-session-runtime";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import type {
 	ExtensionAPI,
@@ -18,6 +12,12 @@ import type {
 	SessionShutdownEvent,
 	SessionStartEvent,
 } from "#pi/index";
+import {
+	type CreateAgentSessionRuntimeFactory,
+	createAgentSessionFromServices,
+	createAgentSessionRuntime,
+	createAgentSessionServices,
+} from "#pi/session/agent-session-runtime";
 import { SessionManager } from "#pi/session/session-manager";
 
 type RecordedSessionEvent =

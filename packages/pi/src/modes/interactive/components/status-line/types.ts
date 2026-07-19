@@ -1,4 +1,4 @@
-import type { AgentSession } from "#pi/agent-session/agent-session";
+import type { AgentSession } from "#pi/session/agent-session";
 import type {
 	StatusLinePreset,
 	StatusLineSegmentId,

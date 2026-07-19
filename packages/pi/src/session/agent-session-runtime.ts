@@ -1,11 +1,11 @@
 import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { AgentSession } from "#pi/agent-session/agent-session";
-import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "#pi/agent-session/agent-session-services";
 import type { ReplacedSessionContext, SessionShutdownEvent, SessionStartEvent } from "#pi/extensions/index";
 import { emitSessionShutdownEvent } from "#pi/extensions/runner";
 import type { CreateAgentSessionResult } from "#pi/sdk/sdk";
+import type { AgentSession } from "#pi/session/agent-session";
+import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "#pi/session/agent-session-services";
 import { assertSessionCwdExists } from "#pi/session/session-cwd";
 import { SessionManager } from "#pi/session/session-manager";
 
@@ -422,4 +422,4 @@ export {
 	type CreateAgentSessionServicesOptions,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
-} from "#pi/agent-session/agent-session-services";
+} from "#pi/session/agent-session-services";

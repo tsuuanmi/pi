@@ -28,21 +28,6 @@ import type {
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi-ai";
 import { cleanupSessionResources, isContextOverflow, resetApiProviders, streamSimple } from "@tsuuanmi/pi-ai";
-import type { AgentSessionContext } from "#pi/agent-session/agent-session-context";
-import {
-	cycleModel as modelControlCycleModel,
-	cycleThinkingLevel as modelControlCycleThinkingLevel,
-	getAvailableThinkingLevels as modelControlGetAvailableThinkingLevels,
-	setModel as modelControlSetModel,
-	setThinkingLevel as modelControlSetThinkingLevel,
-	supportsThinking as modelControlSupportsThinking,
-} from "#pi/agent-session/model-control";
-import { expandSkillCommand } from "#pi/agent-session/skill-expansion";
-import { computeContextUsage, computeSessionStats } from "#pi/agent-session/stats-export";
-import {
-	getUserMessagesForForking as treeNavGetUserMessagesForForking,
-	navigateTree as treeNavNavigateTree,
-} from "#pi/agent-session/tree-navigation";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/auth-guidance";
 import {
 	type CompactionResult,
@@ -81,8 +66,23 @@ import { emitSessionShutdownEvent } from "#pi/extensions/runner";
 import { installAgentToolHooks } from "#pi/hooks/tool-hooks";
 import type { ModelRegistry } from "#pi/model/model-registry";
 import { createSyntheticSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
+import type { AgentSessionContext } from "#pi/session/agent-session-context";
+import {
+	cycleModel as modelControlCycleModel,
+	cycleThinkingLevel as modelControlCycleThinkingLevel,
+	getAvailableThinkingLevels as modelControlGetAvailableThinkingLevels,
+	setModel as modelControlSetModel,
+	setThinkingLevel as modelControlSetThinkingLevel,
+	supportsThinking as modelControlSupportsThinking,
+} from "#pi/session/model-control";
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "#pi/session/session-manager";
 import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "#pi/session/session-manager";
+import { expandSkillCommand } from "#pi/session/skill-expansion";
+import { computeContextUsage, computeSessionStats } from "#pi/session/stats-export";
+import {
+	getUserMessagesForForking as treeNavGetUserMessagesForForking,
+	navigateTree as treeNavNavigateTree,
+} from "#pi/session/tree-navigation";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 import { expandPromptTemplate, type PromptTemplate } from "#pi/skills/prompt-templates";
 import type { ResourceExtensionPaths, ResourceLoader } from "#pi/skills/resource-loader";

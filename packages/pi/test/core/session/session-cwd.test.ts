@@ -2,10 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-	type CreateAgentSessionRuntimeFactory,
-	createAgentSessionRuntime,
-} from "#pi/agent-session/agent-session-runtime";
+import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/session/agent-session-runtime";
 import { getMissingSessionCwdIssue, MissingSessionCwdError } from "#pi/session/session-cwd";
 import { SessionManager } from "#pi/session/session-manager";
 

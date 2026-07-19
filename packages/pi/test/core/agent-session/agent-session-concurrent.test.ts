@@ -15,9 +15,9 @@ import {
 } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AgentSession } from "#pi/agent-session/agent-session";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/model/model-registry";
+import { AgentSession } from "#pi/session/agent-session";
 import { SessionManager } from "#pi/session/session-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";

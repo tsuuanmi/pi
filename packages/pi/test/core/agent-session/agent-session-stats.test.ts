@@ -1,9 +1,9 @@
 import { Agent } from "@tsuuanmi/pi-agent";
 import { type AssistantMessage, getModel, type Usage } from "@tsuuanmi/pi-ai";
 import { describe, expect, it } from "vitest";
-import { AgentSession } from "#pi/agent-session/agent-session";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/model/model-registry";
+import { AgentSession } from "#pi/session/agent-session";
 import { SessionManager } from "#pi/session/session-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { createTestResourceLoader } from "#pi-test/test-utils";

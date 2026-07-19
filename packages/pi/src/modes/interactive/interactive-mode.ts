@@ -33,8 +33,6 @@ import {
 } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import { spawn } from "child_process";
-import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#pi/agent-session/agent-session";
-import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/agent-session/agent-session-runtime";
 import { APP_NAME, VERSION } from "#pi/config/config";
 import { configureHttpDispatcher } from "#pi/exec/http-dispatcher";
 import type {
@@ -65,6 +63,8 @@ import { ResourceDisplayController } from "#pi/modes/interactive/controllers/res
 import { SelectorController } from "#pi/modes/interactive/controllers/selector-controller";
 import { FooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
 import type { SourceInfo } from "#pi/package-manager/source-info";
+import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#pi/session/agent-session";
+import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/session/agent-session-runtime";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#pi/session/session-cwd";
 import type { SessionContext, SessionManager } from "#pi/session/session-manager";
 import { type AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";

@@ -1,6 +1,6 @@
-import type { AgentSessionContext } from "#pi/agent-session/agent-session-context";
 import { collectEntriesForBranchSummary, generateBranchSummary } from "#pi/compaction/index";
 import type { SessionBeforeTreeResult, TreePreparation } from "#pi/extensions/index";
+import type { AgentSessionContext } from "#pi/session/agent-session-context";
 import type { BranchSummaryEntry } from "#pi/session/session-manager";
 
 /**

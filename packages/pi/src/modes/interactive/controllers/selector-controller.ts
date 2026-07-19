@@ -4,8 +4,6 @@
 
 import type { Component, EditorComponent } from "@tsuuanmi/pi-tui";
 import { type Container, Loader, Spacer, type TUI } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "#pi/agent-session/agent-session";
-import type { AgentSessionRuntime } from "#pi/agent-session/agent-session-runtime";
 import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "#pi/exec/http-dispatcher";
 import type { ExtensionCommandContext } from "#pi/extensions/index";
 import type { CustomEditor } from "#pi/modes/interactive/components/custom-editor";
@@ -16,6 +14,8 @@ import { TreeSelectorComponent } from "#pi/modes/interactive/components/selector
 import { UserMessageSelectorComponent } from "#pi/modes/interactive/components/selectors/user-message-selector";
 import type { StatusLineComponent } from "#pi/modes/interactive/components/status-line/index";
 import type { ExtensionUIController } from "#pi/modes/interactive/controllers/extension-ui-controller";
+import type { AgentSession } from "#pi/session/agent-session";
+import type { AgentSessionRuntime } from "#pi/session/agent-session-runtime";
 import { MissingSessionCwdError } from "#pi/session/session-cwd";
 import { SessionManager } from "#pi/session/session-manager";
 import type { KeybindingsManager } from "#pi/settings/keybindings";

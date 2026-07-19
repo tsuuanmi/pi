@@ -21,14 +21,14 @@ import {
 } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
-import type { AgentSession } from "#pi/agent-session/agent-session";
+import { type AgentProfile, loadAgentProfile } from "#pi/agents/agent-profiles";
+import type { ExtensionUIContext } from "#pi/api/types";
+import type { AgentSession } from "#pi/session/agent-session";
 import {
 	type AgentSessionServices,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
-} from "#pi/agent-session/agent-session-services";
-import { type AgentProfile, loadAgentProfile } from "#pi/agents/agent-profiles";
-import type { ExtensionUIContext } from "#pi/api/types";
+} from "#pi/session/agent-session-services";
 import { sessionStateDir } from "#pi/session/session-layout";
 import { SessionManager } from "#pi/session/session-manager";
 

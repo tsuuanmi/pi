@@ -2,7 +2,6 @@ import { join } from "node:path";
 import { Agent, convertToLlm, type ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { clampThinkingLevel, type Model, streamSimple } from "@tsuuanmi/pi-ai";
-import { AgentSession } from "#pi/agent-session/agent-session";
 import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { getAgentDir } from "#pi/config/config";
@@ -12,6 +11,7 @@ import { ModelRegistry } from "#pi/model/model-registry";
 import { findInitialModel } from "#pi/model/model-resolver";
 import { mergeHeaderSources } from "#pi/model/provider-utils";
 import { optimizeRetainedContext } from "#pi/sdk/context-optimization";
+import { AgentSession } from "#pi/session/agent-session";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/session-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import type { ResourceLoader } from "#pi/skills/resource-loader";
@@ -100,7 +100,6 @@ export interface CreateAgentSessionResult {
 
 // Re-exports
 
-export * from "#pi/agent-session/agent-session-runtime";
 export type {
 	ExtensionAPI,
 	ExtensionCommandContext,
@@ -110,6 +109,7 @@ export type {
 	SlashCommandSource,
 	ToolDefinition,
 } from "#pi/extensions/index";
+export * from "#pi/session/agent-session-runtime";
 export type { PromptTemplate } from "#pi/skills/prompt-templates";
 export type { Skill } from "#pi/skills/skills";
 export type { Tool } from "#pi/tools/index";

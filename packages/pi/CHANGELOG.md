@@ -30,6 +30,7 @@
 ### Changed
 
 - Flattened tiny pi source folders into neighboring domains: Bun entrypoint helpers under `cli`, event bus under `extensions`, API usage logging under `telemetry`, message optimization under `sdk`, provider helpers under `model`, and resource metadata under `package-manager`.
+- Merged agent-session source modules into the existing `session` domain.
 
 ### Added
 

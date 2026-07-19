@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import type { AgentSession } from "#pi/agent-session/agent-session";
 import type { CustomEditor } from "#pi/modes/interactive/components/custom-editor";
 import { KeyHandlerController } from "#pi/modes/interactive/controllers/key-handler-controller";
 import { InteractiveMode } from "#pi/modes/interactive/interactive-mode";
+import type { AgentSession } from "#pi/session/agent-session";
 
 type SubmitContext = {
 	defaultEditor: { onSubmit?: (text: string) => void };

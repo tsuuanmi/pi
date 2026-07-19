@@ -8,7 +8,6 @@ import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AgentSession } from "#pi/agent-session/agent-session";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import {
 	createExtensionRuntime,
@@ -20,6 +19,7 @@ import {
 import { createCodingTools } from "#pi/index";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
+import { AgentSession } from "#pi/session/agent-session";
 import { SessionManager } from "#pi/session/session-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { createTestResourceLoader } from "#pi-test/test-utils";
