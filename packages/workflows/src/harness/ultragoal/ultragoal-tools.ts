@@ -1,6 +1,6 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
-import { workflowReceipt } from "#workflows/harness/shared/artifacts/receipts";
+import { workflowReceipt } from "#workflows/harness/shared/artifacts/artifacts";
 import {
 	assertExpectedNextRole,
 	assertNoGuardedSpawnOverrides,

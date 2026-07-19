@@ -1,4 +1,4 @@
-import { progressChip } from "#workflows/harness/shared/hud/hud-chips";
+import { progressChip } from "#workflows/harness/shared/hud/hud";
 import type { WorkflowHudSummary } from "#workflows/harness/shared/state/active-state";
 import type { TeamSnapshot } from "#workflows/harness/team/team-runtime";
 

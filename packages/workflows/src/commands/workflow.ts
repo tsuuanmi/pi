@@ -39,10 +39,10 @@ import {
 	isWorkflowSkill,
 } from "#workflows/harness/shared/state/state-schema";
 import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/harness/shared/state/state-writer";
-import { defaultWorkflowId } from "#workflows/harness/shared/state/workflow-id";
 import {
 	activeRalplanRunId,
 	clearWorkflowState,
+	defaultWorkflowId,
 	readWorkflowState,
 	writeWorkflowState,
 } from "#workflows/harness/shared/state/workflow-state";

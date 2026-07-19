@@ -14,9 +14,9 @@ import {
 	type RalplanCriticVerdictKind,
 	type RalplanVerdict,
 } from "#workflows/harness/ralplan/ralplan-verdicts";
-import { writeStageArtifact } from "#workflows/harness/shared/artifacts/artifact-writer";
+import { writeStageArtifact } from "#workflows/harness/shared/artifacts/artifacts";
 import { type FailSoftError, recordFailSoftError } from "#workflows/harness/shared/audit/audit-log";
-import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compact-state-registry";
+import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compaction";
 import { handoffWorkflow } from "#workflows/harness/shared/orchestration/handoff";
 import type { RalplanStage, WorkflowSkill } from "#workflows/harness/shared/session/paths";
 import {

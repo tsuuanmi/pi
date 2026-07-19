@@ -1,5 +1,9 @@
 /**
- * Shared, pluggable compact-state registry.
+ * Shared, pluggable compact-state registry and deterministic budget helpers.
+ *
+ * Compact-state projections must be pure and deterministic: the same input
+ * state always projects to the same compact state. The budget is a single axis
+ * today (`lastN`), applied by projections that have a truncatable slice.
  *
  * Each workflow skill registers its own pure compact-projection schema here.
  * `projectCompactStateFor(skill, input, budget?)` dispatches to the registered
@@ -17,9 +21,14 @@
 import { projectCompactState } from "#workflows/harness/deep-interview/deep-interview-state";
 import { projectRalplanCompact } from "#workflows/harness/ralplan/ralplan-compact";
 import type { RalplanStatus } from "#workflows/harness/ralplan/ralplan-runtime";
-import type { CompactBudget } from "#workflows/harness/shared/compaction/compact-budget";
 import { projectTeamCompact, type TeamCompactInput } from "#workflows/harness/team/team-compact";
 import { projectUltragoalCompact, type UltragoalCompactInput } from "#workflows/harness/ultragoal/ultragoal-compact";
+
+/** Budget options a compact schema may apply during projection. */
+export interface CompactBudget {
+	/** Keep at most the last N items of a truncatable slice (e.g. recent rounds). */
+	lastN?: number;
+}
 
 export type CompactSkill = "deep-interview" | "ralplan" | "ultragoal" | "team";
 

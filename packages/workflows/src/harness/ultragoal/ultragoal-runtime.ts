@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { ObstacleRegression, ObstacleStatus } from "#workflows/harness/shared/audit/decision-ledger";
-import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compact-state-registry";
+import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compaction";
 import {
 	ultragoalBriefPath,
 	ultragoalGoalsPath,

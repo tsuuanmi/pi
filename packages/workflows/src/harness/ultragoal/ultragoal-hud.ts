@@ -1,4 +1,4 @@
-import { limitationsChip, progressChip, shipWithCaveatsChip } from "#workflows/harness/shared/hud/hud-chips";
+import { limitationsChip, progressChip, shipWithCaveatsChip } from "#workflows/harness/shared/hud/hud";
 import type { WorkflowHudSummary } from "#workflows/harness/shared/state/active-state";
 import type { UltragoalStatus } from "#workflows/harness/ultragoal/ultragoal-runtime";
 

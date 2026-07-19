@@ -15,7 +15,7 @@ import {
 	questionHash,
 	validateDeepInterviewScoredTransition,
 } from "#workflows/harness/deep-interview/deep-interview-state";
-import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compact-state-registry";
+import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compaction";
 import { workflowStatePath } from "#workflows/harness/shared/session/session-layout";
 import { syncWorkflowActiveState } from "#workflows/harness/shared/state/active-state";
 import { readWorkflowState, replaceWorkflowState } from "#workflows/harness/shared/state/workflow-state";

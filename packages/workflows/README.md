@@ -260,7 +260,7 @@ Key seams for contributors:
 
 - **Deferred-seam registry** (`harness/runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
 - **`validateReceiptFamilyConsistency`** (`harness/runtime/receipt-rules.ts`): a write-path guard inside `mutateRuntimeSession` that rejects receipts whose post-state lifecycle contradicts their family target. It throws before any write so a contradiction leaves zero orphan events/receipts/state. Conservative and pluggable; future receipt families register rules in `receiptFamilyConsistencyRules`.
-- **`syncWorkflowHudUi`** (`harness/shared/hud/workflow-hud.ts`): intentionally no-ops for workflow mirroring because the status line reads session-scoped active state directly; the same module also exposes `syncMcpHudUi` for MCP status/widget updates.
+- **`syncWorkflowHudUi`** (`harness/shared/hud/hud.ts`): intentionally no-ops for workflow mirroring because the status line reads session-scoped active state directly; the same module also exposes `syncMcpHudUi` for MCP status/widget updates.
 
 ### Session Layout
 
@@ -292,14 +292,14 @@ If a skill's state becomes corrupt or stuck in a terminal phase, use `pi workflo
 
 | Directory | Modules | Description |
 |-----------|---------|-------------|
-| `artifacts/` | `artifact-writer.ts`, `receipts.ts` | Durable artifact writes and receipt helpers. |
+| `artifacts/` | `artifacts.ts` | Durable artifact writes and receipt helpers. |
 | `audit/` | `audit-log.ts`, `decision-ledger.ts`, `tamper-detection.ts`, `transaction-journal.ts` | Append-only audit, decision, tamper, and transaction records. |
-| `compaction/` | `compact-budget.ts`, `compact-state-registry.ts` | Prompt-budgeted compact workflow projections. |
-| `hud/` | `hud-chips.ts`, `workflow-hud.ts` | HUD chip formatting and extension HUD sync hooks. |
+| `compaction/` | `compaction.ts` | Prompt-budgeted compact workflow projections. |
+| `hud/` | `hud.ts` | HUD chip formatting and extension HUD sync hooks. |
 | `orchestration/` | `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `handoff.ts`, `vagueness-gate.ts`, `workflow-tool-utils.ts` | Cross-workflow prompts, handoffs, gates, expected-next checks, and tool helpers. |
 | `registry/` | `skill-registry.ts`, `workflow-manifest.ts` | Built-in skill registry and manifest metadata. |
 | `session/` | `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Session-scoped path builders and session-id resolution. |
-| `state/` | `active-state.ts`, `state-schema.ts`, `state-writer.ts`, `workflow-id.ts`, `workflow-state.ts` | Active-state, state validation/writes, workflow ids, and base state types. |
+| `state/` | `active-state.ts`, `state-schema.ts`, `state-writer.ts`, `workflow-state.ts` | Active-state, state validation/writes, workflow ids, and base state types. |
 
 Workflow types:
 

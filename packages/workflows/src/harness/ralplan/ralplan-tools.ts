@@ -3,7 +3,7 @@ import { type Static, Type } from "typebox";
 import { ralplanRoleForStage, runRalplanAgent } from "#workflows/harness/ralplan/ralplan-agents";
 import { normalizeRalplanExplorerGate } from "#workflows/harness/ralplan/ralplan-gates";
 import { readRalplanStatus } from "#workflows/harness/ralplan/ralplan-runtime";
-import { workflowReceipt } from "#workflows/harness/shared/artifacts/receipts";
+import { workflowReceipt } from "#workflows/harness/shared/artifacts/artifacts";
 import {
 	assertExpectedNextRole,
 	assertNoGuardedSpawnOverrides,

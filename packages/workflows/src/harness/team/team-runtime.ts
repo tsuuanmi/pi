@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compact-state-registry";
+import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compaction";
 import {
 	type EvidenceMatrixVerdict,
 	evidenceMatrixPasses,

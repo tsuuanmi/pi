@@ -3,7 +3,7 @@ import { getDeepInterviewMutationDecision } from "#workflows/harness/deep-interv
 import "#workflows/harness/deep-interview/deep-interview-transitions";
 import { registerRalplanTools } from "#workflows/harness/ralplan/ralplan-tools";
 import "#workflows/harness/ralplan/ralplan-transitions";
-import { syncMcpHudUi, syncWorkflowHudUi } from "#workflows/harness/shared/hud/workflow-hud";
+import { syncMcpHudUi, syncWorkflowHudUi } from "#workflows/harness/shared/hud/hud";
 import { registerSubagentTools } from "#workflows/harness/subagents/subagent-tools";
 import { registerTeamTools } from "#workflows/harness/team/team-tools";
 import "#workflows/harness/team/team-transitions";

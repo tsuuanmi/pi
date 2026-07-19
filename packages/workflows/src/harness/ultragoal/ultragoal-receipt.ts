@@ -26,7 +26,7 @@
  */
 import { createHash, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { assembleFinalPackage, type WorkflowFinalPackage } from "#workflows/harness/shared/artifacts/receipts";
+import { assembleFinalPackage, type WorkflowFinalPackage } from "#workflows/harness/shared/artifacts/artifacts";
 import { ultragoalLedgerPath } from "#workflows/harness/shared/session/session-layout";
 import { canonicalizeJson } from "#workflows/harness/shared/state/state-writer";
 
