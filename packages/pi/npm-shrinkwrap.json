@@ -16,7 +16,6 @@
 				"chalk": "5.6.2",
 				"diff": "8.0.4",
 				"glob": "13.0.6",
-				"highlight.js": "10.7.3",
 				"hosted-git-info": "9.0.3",
 				"ignore": "7.0.5",
 				"jiti": "2.7.0",
@@ -103,8 +102,12 @@
 			"resolved": "https://registry.npmjs.org/@tsuuanmi/pi-tui/-/pi-tui-0.1.4.tgz",
 			"license": "MIT",
 			"dependencies": {
+				"chalk": "5.6.2",
+				"diff": "8.0.4",
 				"get-east-asian-width": "1.6.0",
-				"marked": "18.0.5"
+				"marked": "18.0.5",
+				"typebox": "1.1.38",
+				"highlight.js": "10.7.3"
 			},
 			"engines": {
 				"node": ">=22.19.0"
@@ -121,6 +124,7 @@
 			"dependencies": {
 				"@tsuuanmi/pi-agent": "^0.1.4",
 				"@tsuuanmi/pi-ai": "^0.1.4",
+				"@tsuuanmi/pi-tui": "^0.1.4",
 				"typebox": "1.1.38"
 			},
 			"engines": {
