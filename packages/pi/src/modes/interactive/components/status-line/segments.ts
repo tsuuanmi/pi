@@ -1,4 +1,5 @@
 import { isAbsolute, relative, resolve, sep } from "node:path";
+import { type ThemeColor, theme } from "@tsuuanmi/pi-tui";
 import {
 	getContextUsageLevel,
 	getContextUsageThemeColor,
@@ -9,7 +10,6 @@ import type {
 	StatusLineSegment,
 	StatusLineSegmentId,
 } from "#pi/modes/interactive/components/status-line/types";
-import { type ThemeColor, theme } from "#pi/theme/theme";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Shared helpers (relocated from footer.ts)

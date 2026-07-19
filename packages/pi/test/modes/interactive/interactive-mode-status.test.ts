@@ -6,6 +6,7 @@ import {
 	type Component,
 	Container,
 	type Focusable,
+	initTheme,
 	TUI,
 } from "@tsuuanmi/pi-tui";
 import { VirtualTerminal } from "@tsuuanmi/pi-tui/test/terminal/runtime/virtual-terminal";
@@ -15,7 +16,6 @@ import { ExtensionUIController } from "#pi/modes/interactive/controllers/extensi
 import { ResourceDisplayController } from "#pi/modes/interactive/controllers/resource-display-controller";
 import { InteractiveMode } from "#pi/modes/interactive/interactive-mode";
 import type { SourceInfo } from "#pi/package-manager/source-info";
-import { initTheme } from "#pi/theme/theme";
 
 function renderLastLine(container: Container, width = 120): string {
 	const last = container.children[container.children.length - 1];

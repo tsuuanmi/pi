@@ -1,9 +1,8 @@
 /**
  * Shared utility for truncating text to visual lines (accounting for line wrapping).
- * Used by both tool-execution.ts and bash-execution.ts for consistent behavior.
  */
 
-import { Text } from "@tsuuanmi/pi-tui";
+import { Text } from "#tui/components/display/text";
 
 export interface VisualTruncateResult {
 	/** The visual lines to display */

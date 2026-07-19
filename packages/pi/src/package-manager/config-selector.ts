@@ -2,11 +2,10 @@
  * TUI config selector for `pi config` command
  */
 
-import { ProcessTerminal, TUI } from "@tsuuanmi/pi-tui";
+import { initTheme, ProcessTerminal, stopThemeWatcher, TUI } from "@tsuuanmi/pi-tui";
 import { ConfigSelectorComponent } from "#pi/package-manager/config-selector-component";
 import type { ResolvedPaths } from "#pi/package-manager/package-manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
-import { initTheme, stopThemeWatcher } from "#pi/theme/theme";
 
 export interface ConfigSelectorOptions {
 	resolvedPaths: ResolvedPaths;

@@ -7,11 +7,20 @@ import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { Container, Editor, type Focusable, getKeybindings, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
+import {
+	Container,
+	Editor,
+	type Focusable,
+	getEditorTheme,
+	getKeybindings,
+	keyHint,
+	Spacer,
+	Text,
+	type TUI,
+	theme,
+} from "@tsuuanmi/pi-tui";
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
-import { getEditorTheme, theme } from "#pi/theme/theme";
-import { keyHint } from "#pi/ui/rendering/keybinding-hints";
 
 export class ExtensionEditorComponent extends Container implements Focusable {
 	private editor: Editor;

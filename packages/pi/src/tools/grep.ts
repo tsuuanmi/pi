@@ -9,15 +9,14 @@ import {
 	truncateHead,
 	truncateLine,
 } from "@tsuuanmi/pi-agent";
-import { Text } from "@tsuuanmi/pi-tui";
+import type { Theme } from "@tsuuanmi/pi-tui";
+import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import path from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
-import type { Theme } from "#pi/theme/theme";
 import { resolveToCwd } from "#pi/tools/path-utils";
 import { getTextOutput, invalidArgText, shortenPath, str, wrapToolDefinition } from "#pi/tools/utils";
-import { keyHint } from "#pi/ui/rendering/keybinding-hints";
 import { ensureTool } from "#pi/utils/system/tool-installer";
 
 const grepSchema = Type.Object({

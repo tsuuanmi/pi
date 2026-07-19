@@ -9,7 +9,7 @@
  */
 
 import type { Component, EditorComponent, OverlayHandle, OverlayOptions } from "@tsuuanmi/pi-tui";
-import { Container, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
+import { Container, Spacer, Text, type Theme, type TUI, theme } from "@tsuuanmi/pi-tui";
 import type { ExtensionUIDialogOptions, ExtensionWidgetOptions } from "#pi/extensions/index";
 import { ExtensionEditorComponent } from "#pi/modes/interactive/components/extension-editor";
 import { ExtensionInputComponent } from "#pi/modes/interactive/components/extension-input";
@@ -17,7 +17,6 @@ import { ExtensionSelectorComponent } from "#pi/modes/interactive/components/sel
 import type { StatusLineComponent } from "#pi/modes/interactive/components/status-line/index";
 import type { FooterDataProvider, ReadonlyFooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
-import { type Theme, theme } from "#pi/theme/theme";
 
 /** Interface for components that can be expanded/collapsed */
 interface Expandable {

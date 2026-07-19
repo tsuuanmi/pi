@@ -1,6 +1,12 @@
-import { Container, type SelectItem, SelectList, type SelectListLayoutOptions } from "@tsuuanmi/pi-tui";
+import {
+	Container,
+	getAvailableThemes,
+	getSelectListTheme,
+	type SelectItem,
+	SelectList,
+	type SelectListLayoutOptions,
+} from "@tsuuanmi/pi-tui";
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
-import { getAvailableThemes, getSelectListTheme } from "#pi/theme/theme";
 
 const THEME_SELECT_LIST_LAYOUT: SelectListLayoutOptions = {
 	minPrimaryColumnWidth: 12,

@@ -2,10 +2,10 @@ import { writeFileSync } from "node:fs";
 import { stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { initTheme } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { SessionHeader } from "#pi/session/session-manager";
 import { SessionManager } from "#pi/session/session-manager";
-import { initTheme } from "#pi/theme/theme";
 
 function createSessionFile(path: string): void {
 	const header: SessionHeader = {

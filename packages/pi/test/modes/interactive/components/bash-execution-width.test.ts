@@ -2,10 +2,9 @@
  * Test that BashExecutionComponent's collapsed output respects the render-time width,
  * not a stale captured width. Regression test for #2569.
  */
-import { visibleWidth } from "@tsuuanmi/pi-tui";
+import { initTheme, visibleWidth } from "@tsuuanmi/pi-tui";
 import { beforeAll, describe, expect, it } from "vitest";
 import { BashExecutionComponent } from "#pi/modes/interactive/components/bash-execution";
-import { initTheme } from "#pi/theme/theme";
 
 /** Minimal TUI stub that only exposes terminal.columns */
 function createTuiStub(columns: number): { columns: number; stub: any } {

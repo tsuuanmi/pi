@@ -11,14 +11,13 @@
 import * as os from "node:os";
 import * as path from "node:path";
 import { getCwdRelativePath } from "@tsuuanmi/pi-agent/node";
-import { type Container, Spacer, Text } from "@tsuuanmi/pi-tui";
+import { type Container, Spacer, Text, type ThemeColor, theme } from "@tsuuanmi/pi-tui";
 import type { ExtensionRunner } from "#pi/extensions/index";
 import { ExpandableText } from "#pi/modes/interactive/components/widgets/expandable-text";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import type { AgentSession } from "#pi/session/agent-session";
 import type { ResourceDiagnostic } from "#pi/skills/resource-loader";
 import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
-import { type ThemeColor, theme } from "#pi/theme/theme";
 import { parseGitUrl } from "#pi/utils/fs/git";
 
 export class ResourceDisplayController {

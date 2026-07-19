@@ -3,11 +3,10 @@ import { pathToFileURL } from "node:url";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { TextContent } from "@tsuuanmi/pi-ai";
-import { getCapabilities, hyperlink } from "@tsuuanmi/pi-tui";
+import type { Theme } from "@tsuuanmi/pi-tui";
+import { getCapabilities, hyperlink, stripAnsi } from "@tsuuanmi/pi-tui";
 import type { ExtensionContext, ToolDefinition } from "#pi/api/types";
-import type { Theme } from "#pi/theme/theme";
 import { sanitizeBinaryOutput } from "#pi/utils/system/shell";
-import { stripAnsi } from "#pi/utils/terminal/ansi";
 
 export function shortenPath(path: unknown): string {
 	if (typeof path !== "string") return "";

@@ -2,6 +2,17 @@
 
 export { convertToLlm, extractYieldFromMessages, renderSubagentProgress, type YieldDetails } from "@tsuuanmi/pi-agent";
 export { resolvePath, withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
+// Theme utilities for custom tools and extensions
+export {
+	getLanguageFromPath,
+	getMarkdownTheme,
+	getSelectListTheme,
+	getSettingsListTheme,
+	highlightCode,
+	initTheme,
+	Theme,
+	type ThemeColor,
+} from "@tsuuanmi/pi-tui";
 // Auth and model registry
 export {
 	type ApiKeyCredential,
@@ -308,17 +319,6 @@ export {
 	type SubagentRunResult,
 	type SubagentStatus,
 } from "#pi/subagents/subagents";
-// Theme utilities for custom tools and extensions
-export {
-	getLanguageFromPath,
-	getMarkdownTheme,
-	getSelectListTheme,
-	getSettingsListTheme,
-	highlightCode,
-	initTheme,
-	Theme,
-	type ThemeColor,
-} from "#pi/theme/theme";
 // Tools
 export {
 	type BashOperations,

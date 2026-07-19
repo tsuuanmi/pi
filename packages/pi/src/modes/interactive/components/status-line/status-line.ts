@@ -1,4 +1,4 @@
-import { type Component, truncateToWidth, visibleWidth } from "@tsuuanmi/pi-tui";
+import { type Component, theme, truncateToWidth, visibleWidth } from "@tsuuanmi/pi-tui";
 import { collapsePlanningPipeline, readWorkflowActiveState, type WorkflowActiveEntry } from "@tsuuanmi/pi-workflows";
 import { renderSkillHudBar } from "#pi/modes/interactive/components/skill-hud/render";
 import { type GitStatusSummary, runGitStatusPorcelain } from "#pi/modes/interactive/components/status-line/git-utils";
@@ -18,7 +18,6 @@ import type {
 	StatusLineSegmentOptions,
 	StatusLineSettings,
 } from "#pi/settings/settings-manager";
-import { theme } from "#pi/theme/theme";
 
 /** Minimum gap (columns) between the left and right rail groups. */
 const MIN_PADDING = 2;

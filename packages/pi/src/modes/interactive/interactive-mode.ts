@@ -21,15 +21,31 @@ import {
 	CombinedAutocompleteProvider,
 	type Component,
 	Container,
+	getAvailableThemesWithPaths,
+	getEditorTheme,
+	getMarkdownTheme,
+	getThemeByName,
+	initTheme,
+	keyDisplayText,
+	keyHint,
+	keyText,
 	Loader,
 	type LoaderIndicatorOptions,
 	matchesKey,
+	onThemeChange,
 	ProcessTerminal,
+	rawKeyHint,
 	Spacer,
 	setKeybindings,
+	setRegisteredThemes,
+	setTheme,
+	setThemeInstance,
+	stopThemeWatcher,
 	Text,
+	Theme,
 	TruncatedText,
 	TUI,
+	theme,
 } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import { spawn } from "child_process";
@@ -69,21 +85,6 @@ import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#pi/sessi
 import type { SessionContext, SessionManager } from "#pi/session/session-manager";
 import { type AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
-import {
-	getAvailableThemesWithPaths,
-	getEditorTheme,
-	getMarkdownTheme,
-	getThemeByName,
-	initTheme,
-	onThemeChange,
-	setRegisteredThemes,
-	setTheme,
-	setThemeInstance,
-	stopThemeWatcher,
-	Theme,
-	theme,
-} from "#pi/theme/theme";
-import { keyDisplayText, keyHint, keyText, rawKeyHint } from "#pi/ui/rendering/keybinding-hints";
 import { parseGitUrl } from "#pi/utils/fs/git";
 import { killTrackedDetachedChildren } from "#pi/utils/system/shell";
 import { ensureTool } from "#pi/utils/system/tool-installer";

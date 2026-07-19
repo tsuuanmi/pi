@@ -1,11 +1,11 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import { Box, Container, Spacer, Text } from "@tsuuanmi/pi-tui";
+import type { Theme } from "@tsuuanmi/pi-tui";
+import { Box, Container, renderDiff, Spacer, Text } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition } from "#pi/api/types";
-import type { Theme } from "#pi/theme/theme";
 import {
 	applyEditsToNormalizedContent,
 	computeEditsDiff,
@@ -21,7 +21,6 @@ import {
 } from "#pi/tools/edit-diff";
 import { resolveToCwd } from "#pi/tools/path-utils";
 import { renderToolPath, str, wrapToolDefinition } from "#pi/tools/utils";
-import { renderDiff } from "#pi/ui/rendering/diff";
 
 type EditPreview = EditDiffResult | EditDiffError;
 

@@ -1,9 +1,8 @@
 import type { CustomMessage } from "@tsuuanmi/pi-agent";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import type { Component } from "@tsuuanmi/pi-tui";
-import { Box, Container, Markdown, type MarkdownTheme, Spacer, Text } from "@tsuuanmi/pi-tui";
+import { Box, Container, getMarkdownTheme, Markdown, type MarkdownTheme, Spacer, Text, theme } from "@tsuuanmi/pi-tui";
 import type { MessageRenderer } from "#pi/api/types";
-import { getMarkdownTheme, theme } from "#pi/theme/theme";
 
 /**
  * Component that renders a custom message entry from extensions.

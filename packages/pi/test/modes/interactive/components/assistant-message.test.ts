@@ -1,7 +1,7 @@
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
+import { initTheme } from "@tsuuanmi/pi-tui";
 import { describe, expect, test } from "vitest";
 import { AssistantMessageComponent } from "#pi/modes/interactive/components/messages/assistant-message";
-import { initTheme } from "#pi/theme/theme";
 
 const OSC133_ZONE_START = "\x1b]133;A\x07";
 const OSC133_ZONE_END = "\x1b]133;B\x07";

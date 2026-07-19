@@ -3,11 +3,9 @@
  * Displays a list of string options with keyboard navigation.
  */
 
-import { Container, getKeybindings, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
+import { Container, getKeybindings, keyHint, rawKeyHint, Spacer, Text, type TUI, theme } from "@tsuuanmi/pi-tui";
 import { CountdownTimer } from "#pi/modes/interactive/components/widgets/countdown-timer";
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
-import { theme } from "#pi/theme/theme";
-import { keyHint, rawKeyHint } from "#pi/ui/rendering/keybinding-hints";
 
 export interface ExtensionSelectorOptions {
 	tui?: TUI;

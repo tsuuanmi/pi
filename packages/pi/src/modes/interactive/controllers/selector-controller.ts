@@ -3,7 +3,16 @@
 // exposed as same-named fields/getters/delegates so the bodies need no internal remaps.
 
 import type { Component, EditorComponent } from "@tsuuanmi/pi-tui";
-import { type Container, Loader, Spacer, type TUI } from "@tsuuanmi/pi-tui";
+import {
+	type Container,
+	getAvailableThemes,
+	keyText,
+	Loader,
+	Spacer,
+	setTheme,
+	type TUI,
+	theme,
+} from "@tsuuanmi/pi-tui";
 import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "#pi/exec/http-dispatcher";
 import type { ExtensionCommandContext } from "#pi/extensions/index";
 import type { CustomEditor } from "#pi/modes/interactive/components/custom-editor";
@@ -20,8 +29,6 @@ import { MissingSessionCwdError } from "#pi/session/session-cwd";
 import { SessionManager } from "#pi/session/session-manager";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
 import type { SettingsManager } from "#pi/settings/settings-manager";
-import { getAvailableThemes, setTheme, theme } from "#pi/theme/theme";
-import { keyText } from "#pi/ui/rendering/keybinding-hints";
 
 type SelectorControllerDependencies = {
 	ui: TUI;

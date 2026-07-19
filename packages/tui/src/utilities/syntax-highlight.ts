@@ -1,4 +1,4 @@
-import hljs from "highlight.js/lib/index.js";
+import hljs from "highlight.js";
 
 export type HighlightFormatter = (text: string) => string;
 export type HighlightTheme = Partial<Record<string, HighlightFormatter>>;

@@ -1,5 +1,4 @@
-import { Box, Container, Markdown, type MarkdownTheme } from "@tsuuanmi/pi-tui";
-import { getMarkdownTheme, theme } from "#pi/theme/theme";
+import { Box, Container, getMarkdownTheme, Markdown, type MarkdownTheme, theme } from "@tsuuanmi/pi-tui";
 
 const OSC133_ZONE_START = "\x1b]133;A\x07";
 const OSC133_ZONE_END = "\x1b]133;B\x07";

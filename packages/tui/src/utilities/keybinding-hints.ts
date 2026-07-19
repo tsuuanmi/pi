@@ -1,9 +1,10 @@
 /**
- * Utilities for formatting keybinding hints in the UI.
+ * Utilities for formatting keybinding hints in terminal UI.
  */
 
-import { getKeybindings, type Keybinding, type KeyId } from "@tsuuanmi/pi-tui";
-import { theme } from "#pi/theme/theme";
+import { getKeybindings, type Keybinding } from "#tui/input/keyboard/keybindings";
+import type { KeyId } from "#tui/input/keyboard/keys";
+import { theme } from "#tui/theme/theme";
 
 export interface KeyTextFormatOptions {
 	capitalize?: boolean;

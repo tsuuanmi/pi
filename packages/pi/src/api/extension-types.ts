@@ -1,6 +1,6 @@
 import type { CustomMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Model, TextContent } from "@tsuuanmi/pi-ai";
-import type { AutocompleteItem, Component, KeyId } from "@tsuuanmi/pi-tui";
+import type { AutocompleteItem, Component, KeyId, Theme } from "@tsuuanmi/pi-tui";
 import type { TSchema } from "typebox";
 import type {
 	CompactOptions,
@@ -20,7 +20,6 @@ import type { SourceInfo } from "#pi/package-manager/source-info";
 import type { SessionManager } from "#pi/session/session-manager";
 import type { SlashCommandInfo } from "#pi/skills/slash-commands";
 import type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";
-import type { Theme } from "#pi/theme/theme";
 
 // ============================================================================
 // Message Rendering

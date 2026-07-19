@@ -9,16 +9,14 @@ import {
 } from "@tsuuanmi/pi-agent";
 import { formatPathRelativeToCwdOrAbsolute } from "@tsuuanmi/pi-agent/node";
 import type { TextContent } from "@tsuuanmi/pi-ai";
-import { Text } from "@tsuuanmi/pi-tui";
+import { getLanguageFromPath, highlightCode, keyHint, keyText, Text, type Theme } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
 import { getReadmePath } from "#pi/config/config";
-import { getLanguageFromPath, highlightCode, type Theme } from "#pi/theme/theme";
 import { resolveReadPathAsync, resolveToCwd } from "#pi/tools/path-utils";
 import { getTextOutput, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#pi/tools/utils";
-import { keyHint, keyText } from "#pi/ui/rendering/keybinding-hints";
 
 const readSchema = Type.Object({
 	path: Type.String({ description: "Path to the file to read (relative or absolute)" }),

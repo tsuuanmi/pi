@@ -1,11 +1,13 @@
-import { type RgbColor, resetCapabilitiesCache, setCapabilities } from "@tsuuanmi/pi-tui";
-import { afterEach, describe, expect, it } from "vitest";
 import {
 	detectTerminalBackgroundFromEnv,
 	detectTerminalBackgroundTheme,
 	getThemeByName,
 	getThemeForRgbColor,
-} from "#pi/theme/theme";
+	type RgbColor,
+	resetCapabilitiesCache,
+	setCapabilities,
+} from "@tsuuanmi/pi-tui";
+import { afterEach, describe, expect, it } from "vitest";
 
 afterEach(() => {
 	resetCapabilitiesCache();

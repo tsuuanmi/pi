@@ -1,5 +1,21 @@
 import * as Diff from "diff";
-import { theme } from "#pi/theme/theme";
+import { theme as globalTheme } from "#tui/theme/theme";
+
+export interface DiffRenderTheme {
+	context(text: string): string;
+	removed(text: string): string;
+	added(text: string): string;
+	inverse(text: string): string;
+}
+
+function getDefaultDiffRenderTheme(): DiffRenderTheme {
+	return {
+		context: (text) => globalTheme.fg("toolDiffContext", text),
+		removed: (text) => globalTheme.fg("toolDiffRemoved", text),
+		added: (text) => globalTheme.fg("toolDiffAdded", text),
+		inverse: (text) => globalTheme.inverse(text),
+	};
+}
 
 /**
  * Parse diff line to extract prefix, line number, and content.
@@ -23,7 +39,11 @@ function replaceTabs(text: string): string {
  * Uses diffWords which groups whitespace with adjacent words for cleaner highlighting.
  * Strips leading whitespace from inverse to avoid highlighting indentation.
  */
-function renderIntraLineDiff(oldContent: string, newContent: string): { removedLine: string; addedLine: string } {
+function renderIntraLineDiff(
+	oldContent: string,
+	newContent: string,
+	theme: DiffRenderTheme,
+): { removedLine: string; addedLine: string } {
 	const wordDiff = Diff.diffWords(oldContent, newContent);
 
 	let removedLine = "";
@@ -68,15 +88,18 @@ function renderIntraLineDiff(oldContent: string, newContent: string): { removedL
 export interface RenderDiffOptions {
 	/** File path (unused, kept for API compatibility) */
 	filePath?: string;
+	/** Theme callbacks for coloring diff output. Defaults to plain text. */
+	theme?: DiffRenderTheme;
 }
 
 /**
- * Render a diff string with colored lines and intra-line change highlighting.
- * - Context lines: dim/gray
- * - Removed lines: red, with inverse on changed tokens
- * - Added lines: green, with inverse on changed tokens
+ * Render a diff string with optional colored lines and intra-line change highlighting.
+ * - Context lines: dim/gray when a theme is provided
+ * - Removed lines: red when a theme is provided, with inverse on changed tokens
+ * - Added lines: green when a theme is provided, with inverse on changed tokens
  */
-export function renderDiff(diffText: string, _options: RenderDiffOptions = {}): string {
+export function renderDiff(diffText: string, options: RenderDiffOptions = {}): string {
+	const theme = options.theme ?? getDefaultDiffRenderTheme();
 	const lines = diffText.split("\n");
 	const result: string[] = [];
 
@@ -86,7 +109,7 @@ export function renderDiff(diffText: string, _options: RenderDiffOptions = {}): 
 		const parsed = parseDiffLine(line);
 
 		if (!parsed) {
-			result.push(theme.fg("toolDiffContext", line));
+			result.push(theme.context(line));
 			i++;
 			continue;
 		}
@@ -119,26 +142,27 @@ export function renderDiff(diffText: string, _options: RenderDiffOptions = {}): 
 				const { removedLine, addedLine } = renderIntraLineDiff(
 					replaceTabs(removed.content),
 					replaceTabs(added.content),
+					theme,
 				);
 
-				result.push(theme.fg("toolDiffRemoved", `-${removed.lineNum} ${removedLine}`));
-				result.push(theme.fg("toolDiffAdded", `+${added.lineNum} ${addedLine}`));
+				result.push(theme.removed(`-${removed.lineNum} ${removedLine}`));
+				result.push(theme.added(`+${added.lineNum} ${addedLine}`));
 			} else {
 				// Show all removed lines first, then all added lines
 				for (const removed of removedLines) {
-					result.push(theme.fg("toolDiffRemoved", `-${removed.lineNum} ${replaceTabs(removed.content)}`));
+					result.push(theme.removed(`-${removed.lineNum} ${replaceTabs(removed.content)}`));
 				}
 				for (const added of addedLines) {
-					result.push(theme.fg("toolDiffAdded", `+${added.lineNum} ${replaceTabs(added.content)}`));
+					result.push(theme.added(`+${added.lineNum} ${replaceTabs(added.content)}`));
 				}
 			}
 		} else if (parsed.prefix === "+") {
 			// Standalone added line
-			result.push(theme.fg("toolDiffAdded", `+${parsed.lineNum} ${replaceTabs(parsed.content)}`));
+			result.push(theme.added(`+${parsed.lineNum} ${replaceTabs(parsed.content)}`));
 			i++;
 		} else {
 			// Context line
-			result.push(theme.fg("toolDiffContext", ` ${parsed.lineNum} ${replaceTabs(parsed.content)}`));
+			result.push(theme.context(` ${parsed.lineNum} ${replaceTabs(parsed.content)}`));
 			i++;
 		}
 	}

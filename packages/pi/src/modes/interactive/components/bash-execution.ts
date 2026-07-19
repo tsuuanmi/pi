@@ -3,12 +3,21 @@
  */
 
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, type TruncationResult, truncateTail } from "@tsuuanmi/pi-agent";
-import { type Component, Container, Loader, Spacer, Text, type TUI, truncateToWidth } from "@tsuuanmi/pi-tui";
+import {
+	type Component,
+	Container,
+	keyHint,
+	keyText,
+	Loader,
+	Spacer,
+	stripAnsi,
+	Text,
+	type TUI,
+	theme,
+	truncateToVisualLines,
+	truncateToWidth,
+} from "@tsuuanmi/pi-tui";
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
-import { theme } from "#pi/theme/theme";
-import { keyHint, keyText } from "#pi/ui/rendering/keybinding-hints";
-import { truncateToVisualLines } from "#pi/ui/rendering/visual-truncate";
-import { stripAnsi } from "#pi/utils/terminal/ansi";
 
 // Preview line limit when not expanded (matches tool execution behavior)
 const PREVIEW_LINES = 20;

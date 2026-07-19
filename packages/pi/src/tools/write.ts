@@ -1,14 +1,12 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import { Container, Text } from "@tsuuanmi/pi-tui";
+import { Container, getLanguageFromPath, highlightCode, keyHint, Text, type Theme } from "@tsuuanmi/pi-tui";
 import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname } from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
-import { getLanguageFromPath, highlightCode, type Theme } from "#pi/theme/theme";
 import { resolveToCwd } from "#pi/tools/path-utils";
 import { normalizeDisplayText, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#pi/tools/utils";
-import { keyHint } from "#pi/ui/rendering/keybinding-hints";
 
 const writeSchema = Type.Object({
 	path: Type.String({ description: "Path to the file to write (relative or absolute)" }),

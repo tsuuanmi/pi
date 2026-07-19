@@ -1,5 +1,14 @@
 // UI Components for extensions
 
+export {
+	keyHint,
+	keyText,
+	type RenderDiffOptions,
+	rawKeyHint,
+	renderDiff,
+	truncateToVisualLines,
+	type VisualTruncateResult,
+} from "@tsuuanmi/pi-tui";
 export { BashExecutionComponent } from "#pi/modes/interactive/components/bash-execution";
 export { CustomEditor } from "#pi/modes/interactive/components/custom-editor";
 export { ExtensionEditorComponent } from "#pi/modes/interactive/components/extension-editor";
@@ -36,6 +45,3 @@ export {
 } from "#pi/modes/interactive/components/tool-execution";
 export { BorderedLoader } from "#pi/modes/interactive/components/widgets/bordered-loader";
 export { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
-export { type RenderDiffOptions, renderDiff } from "#pi/ui/rendering/diff";
-export { keyHint, keyText, rawKeyHint } from "#pi/ui/rendering/keybinding-hints";
-export { truncateToVisualLines, type VisualTruncateResult } from "#pi/ui/rendering/visual-truncate";

@@ -5,6 +5,7 @@
 import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import type { KeyId } from "@tsuuanmi/pi-tui";
+import { type Theme, theme } from "@tsuuanmi/pi-tui";
 import type {
 	CompactOptions,
 	ContextUsage,
@@ -62,7 +63,6 @@ import type { SessionManager } from "#pi/session/session-manager";
 import type { KeybindingsConfig } from "#pi/settings/keybindings";
 import type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";
 import type { SubagentManager } from "#pi/subagents/subagents";
-import { type Theme, theme } from "#pi/theme/theme";
 
 // Extension shortcuts compete with canonical keybinding ids from keybindings.json.
 // Only editor-global shortcuts are reserved here. Picker-specific bindings are not.

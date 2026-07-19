@@ -5,11 +5,11 @@ import type {
 	EditorTheme,
 	OverlayHandle,
 	OverlayOptions,
+	Theme,
 	TUI,
 } from "@tsuuanmi/pi-tui";
 import type { ReadonlyFooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
-import type { Theme } from "#pi/theme/theme";
 
 // ============================================================================
 // UI Context

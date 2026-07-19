@@ -1,20 +1,52 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import {
-	type EditorTheme,
-	getCapabilities,
-	type MarkdownTheme,
-	type RgbColor,
-	type SelectListTheme,
-	type SettingsListTheme,
-} from "@tsuuanmi/pi-tui";
+import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 import { type Static, Type } from "typebox";
 import { Compile } from "typebox/compile";
-import { getCustomThemesDir, getThemesDir } from "#pi/config/config";
-import type { SourceInfo } from "#pi/package-manager/source-info";
-import { closeWatcher, watchWithErrorHandler } from "#pi/utils/fs/index";
-import { highlight, supportsLanguage } from "#pi/utils/terminal/syntax-highlight";
+import type { MarkdownTheme } from "#tui/components/display/markdown";
+import type { EditorTheme } from "#tui/components/inputs/editor";
+import type { SelectListTheme } from "#tui/components/selection/select-list";
+import type { SettingsListTheme } from "#tui/components/selection/settings-list";
+import { getCapabilities } from "#tui/terminal/features/capabilities";
+import type { RgbColor } from "#tui/terminal/features/terminal-colors";
+import { highlight, supportsLanguage } from "#tui/utilities/syntax-highlight";
+
+export interface ThemeSourceInfo {
+	path: string;
+	source: string;
+	scope: "user" | "project" | "temporary";
+	origin: "package" | "top-level";
+	baseDir?: string;
+}
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function getThemesDir(): string {
+	return path.join(__dirname);
+}
+
+function getCustomThemesDir(): string | undefined {
+	return undefined;
+}
+
+function watchThemeDir(
+	dir: string,
+	listener: (eventType: fs.WatchEventType, filename: string | null) => void,
+	onError: (error: unknown) => void,
+): fs.FSWatcher | undefined {
+	try {
+		return fs.watch(dir, listener);
+	} catch (error) {
+		onError(error);
+		return undefined;
+	}
+}
+
+function closeThemeWatcher(watcher: fs.FSWatcher | undefined): void {
+	watcher?.close();
+}
 
 // ============================================================================
 // Types & Schema
@@ -316,7 +348,7 @@ function resolveThemeColors<T extends Record<string, ColorValue>>(
 export class Theme {
 	readonly name?: string;
 	readonly sourcePath?: string;
-	sourceInfo?: SourceInfo;
+	sourceInfo?: ThemeSourceInfo;
 	private fgColors: Map<ThemeColor, string>;
 	private bgColors: Map<ThemeBg, string>;
 	private mode: ColorMode;
@@ -325,7 +357,7 @@ export class Theme {
 		fgColors: Record<ThemeColor, string | number>,
 		bgColors: Record<ThemeBg, string | number>,
 		mode: ColorMode,
-		options: { name?: string; sourcePath?: string; sourceInfo?: SourceInfo } = {},
+		options: { name?: string; sourcePath?: string; sourceInfo?: ThemeSourceInfo } = {},
 	) {
 		this.name = options.name;
 		this.sourcePath = options.sourcePath;
@@ -474,7 +506,7 @@ export function getAvailableThemesWithPaths(): ThemeInfo[] {
 function getCustomThemeInfos(): ThemeInfo[] {
 	const customThemesDir = getCustomThemesDir();
 	const result: ThemeInfo[] = [];
-	if (!fs.existsSync(customThemesDir)) {
+	if (!customThemesDir || !fs.existsSync(customThemesDir)) {
 		return result;
 	}
 
@@ -559,6 +591,9 @@ function loadThemeJson(name: string): ThemeJson {
 		throw new Error(`Theme "${name}" does not have a source path for export`);
 	}
 	const customThemesDir = getCustomThemesDir();
+	if (!customThemesDir) {
+		throw new Error(`Theme not found: ${name}`);
+	}
 	const themePath = path.join(customThemesDir, `${name}.json`);
 	if (!fs.existsSync(themePath)) {
 		throw new Error(`Theme not found: ${name}`);
@@ -809,6 +844,9 @@ function startThemeWatcher(): void {
 	}
 
 	const customThemesDir = getCustomThemesDir();
+	if (!customThemesDir) {
+		return;
+	}
 	const watchedThemeName = currentThemeName;
 	const watchedFileName = `${watchedThemeName}.json`;
 	const themeFile = path.join(customThemesDir, watchedFileName);
@@ -851,7 +889,7 @@ function startThemeWatcher(): void {
 	};
 
 	themeWatcher =
-		watchWithErrorHandler(
+		watchThemeDir(
 			customThemesDir,
 			(_eventType, filename) => {
 				if (currentThemeName !== watchedThemeName) {
@@ -867,7 +905,7 @@ function startThemeWatcher(): void {
 				scheduleReload();
 			},
 			() => {
-				closeWatcher(themeWatcher);
+				closeThemeWatcher(themeWatcher);
 				themeWatcher = undefined;
 			},
 		) ?? undefined;
@@ -878,7 +916,7 @@ export function stopThemeWatcher(): void {
 		clearTimeout(themeReloadTimer);
 		themeReloadTimer = undefined;
 	}
-	closeWatcher(themeWatcher);
+	closeThemeWatcher(themeWatcher);
 	themeWatcher = undefined;
 }
 

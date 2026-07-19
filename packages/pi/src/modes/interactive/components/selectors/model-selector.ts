@@ -5,16 +5,16 @@ import {
 	fuzzyFilter,
 	getKeybindings,
 	Input,
+	keyHint,
 	Spacer,
 	Text,
 	type TUI,
+	theme,
 } from "@tsuuanmi/pi-tui";
 import type { ModelRegistry } from "#pi/model/model-registry";
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import { getModelSearchText } from "#pi/modes/interactive/model-search";
 import type { SettingsManager } from "#pi/settings/settings-manager";
-import { theme } from "#pi/theme/theme";
-import { keyHint } from "#pi/ui/rendering/keybinding-hints";
 
 interface ModelItem {
 	provider: string;

@@ -1,12 +1,10 @@
-import { setKeybindings } from "@tsuuanmi/pi-tui";
+import { initTheme, setKeybindings, stripAnsi } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#pi/model/provider-utils";
 import { OAuthSelectorComponent } from "#pi/modes/interactive/components/selectors/oauth-selector";
 import { isApiKeyAccountProvider } from "#pi/modes/interactive/interactive-mode";
 import { KeybindingsManager } from "#pi/settings/keybindings";
-import { initTheme } from "#pi/theme/theme";
-import { stripAnsi } from "#pi/utils/terminal/ansi";
 
 const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
 

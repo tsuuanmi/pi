@@ -9,20 +9,20 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import {
 	type Container,
+	formatKeyText,
 	type Keybinding,
 	Markdown,
 	type MarkdownTheme,
 	Spacer,
 	Text,
 	type TUI,
+	theme,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
 import { getDebugLogPath } from "#pi/config/config";
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import type { AgentSession } from "#pi/session/agent-session";
 import type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
-import { theme } from "#pi/theme/theme";
-import { formatKeyText } from "#pi/ui/rendering/keybinding-hints";
 import { copyToClipboard } from "#pi/utils/clipboard/clipboard";
 import { getChangelogPath, normalizeChangelogLinks, parseChangelog } from "#pi/utils/system/changelog";
 

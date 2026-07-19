@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- Moved Pi's theme engine, bundled theme JSON/schema, and reusable rendering utilities out of Pi's removed `src/theme/*` and `src/ui/rendering/*` paths and into `@tsuuanmi/pi-tui`; import theme APIs, ANSI stripping, keybinding text formatting, visual-line truncation, and diff rendering from the TUI package.
 - Renamed the published CLI package and workspace to the fresh Pi package identity; update imports and install commands to `@tsuuanmi/pi`.
 - Removed legacy Pi compatibility aliases from the extension loader, test resolver, and shared theme global key.
 - Removed the native clipboard dependency and binary packaging path; clipboard writes now use platform tools and OSC 52 fallback.

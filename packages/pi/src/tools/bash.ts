@@ -3,15 +3,20 @@ import { access as fsAccess } from "node:fs/promises";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "@tsuuanmi/pi-agent";
 import { waitForChildProcess } from "@tsuuanmi/pi-agent/node";
-import { type Component, Container, Text, truncateToWidth } from "@tsuuanmi/pi-tui";
+import {
+	type Component,
+	Container,
+	keyHint,
+	Text,
+	theme,
+	truncateToVisualLines,
+	truncateToWidth,
+} from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
-import { theme } from "#pi/theme/theme";
 import { OutputAccumulator } from "#pi/tools/output-accumulator";
 import { getTextOutput, invalidArgText, str, wrapToolDefinition } from "#pi/tools/utils";
-import { keyHint } from "#pi/ui/rendering/keybinding-hints";
-import { truncateToVisualLines } from "#pi/ui/rendering/visual-truncate";
 import {
 	getShellConfig,
 	getShellEnv,

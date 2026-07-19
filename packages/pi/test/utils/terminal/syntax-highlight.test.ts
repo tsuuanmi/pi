@@ -1,7 +1,13 @@
-import { resetCapabilitiesCache, setCapabilities } from "@tsuuanmi/pi-tui";
+import {
+	highlight,
+	highlightCode,
+	initTheme,
+	renderHighlightedHtml,
+	resetCapabilitiesCache,
+	setCapabilities,
+	supportsLanguage,
+} from "@tsuuanmi/pi-tui";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { highlightCode, initTheme } from "#pi/theme/theme";
-import { highlight, renderHighlightedHtml, supportsLanguage } from "#pi/utils/terminal/syntax-highlight";
 
 describe("syntax highlight renderer", () => {
 	it("renders highlighted spans with the provided theme", () => {

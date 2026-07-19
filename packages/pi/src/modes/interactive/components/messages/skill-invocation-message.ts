@@ -1,7 +1,5 @@
-import { Box, Markdown, type MarkdownTheme, Text } from "@tsuuanmi/pi-tui";
+import { Box, getMarkdownTheme, keyText, Markdown, type MarkdownTheme, Text, theme } from "@tsuuanmi/pi-tui";
 import type { ParsedSkillBlock } from "#pi/session/agent-session";
-import { getMarkdownTheme, theme } from "#pi/theme/theme";
-import { keyText } from "#pi/ui/rendering/keybinding-hints";
 
 /**
  * Component that renders a skill invocation message with collapsed/expanded state.

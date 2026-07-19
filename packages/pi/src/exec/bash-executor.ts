@@ -11,9 +11,9 @@ import { createWriteStream, type WriteStream } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DEFAULT_MAX_BYTES, truncateTail } from "@tsuuanmi/pi-agent";
+import { stripAnsi } from "@tsuuanmi/pi-tui";
 import type { BashOperations } from "#pi/tools/bash";
 import { sanitizeBinaryOutput } from "#pi/utils/system/shell";
-import { stripAnsi } from "#pi/utils/terminal/ansi";
 
 // ============================================================================
 // Types

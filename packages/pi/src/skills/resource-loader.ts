@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
+import { loadThemeFromPath, type Theme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import {
 	type AgentProfileLoadResult,
@@ -9,7 +10,6 @@ import {
 } from "#pi/agents/agent-definitions";
 import { CONFIG_DIR_NAME } from "#pi/config/config";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
-import { loadThemeFromPath, type Theme } from "#pi/theme/theme";
 
 export type { ResourceCollision, ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 

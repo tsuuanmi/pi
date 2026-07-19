@@ -1,8 +1,8 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { getAvailableThemes, getAvailableThemesWithPaths, setRegisteredThemes } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getAvailableThemes, getAvailableThemesWithPaths, setRegisteredThemes } from "#pi/theme/theme";
 
 type ThemeFile = {
 	name: string;
@@ -29,7 +29,7 @@ describe("theme picker", () => {
 
 	it("uses custom theme content names instead of file names", () => {
 		const darkTheme = JSON.parse(
-			readFileSync(new URL("../../src/theme/dark.json", import.meta.url), "utf-8"),
+			readFileSync(new URL("../../../tui/src/theme/dark.json", import.meta.url), "utf-8"),
 		) as ThemeFile;
 		const customTheme: ThemeFile = {
 			...darkTheme,

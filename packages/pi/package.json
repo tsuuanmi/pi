@@ -48,8 +48,8 @@
 		"clean": "shx rm -rf dist",
 		"build": "tsgo -p tsconfig.build.json && shx chmod +x dist/cli.js && npm run copy-assets",
 		"build:binary": "npm --prefix ../tui run build && npm --prefix ../ai run build && npm --prefix ../agent run build && npm run build && bun build --compile ./dist/cli/bun/cli.js --outfile dist/pi && npm run copy-binary-assets",
-		"copy-assets": "shx mkdir -p dist/theme && shx cp src/theme/*.json dist/theme/ && shx mkdir -p dist/packages/lsp dist/packages/mcp && shx mkdir -p dist/packages/workflows && shx cp -r ../workflows/dist/* dist/packages/workflows/ && node scripts/write-bundled-package-manifests.mjs && shx mkdir -p dist/packages/workflows/skills/deep-interview dist/packages/workflows/skills/ralplan dist/packages/workflows/skills/team dist/packages/workflows/skills/ultragoal && shx cp ../workflows/src/skills/deep-interview/SKILL.md dist/packages/workflows/skills/deep-interview/ && shx cp ../workflows/src/skills/ralplan/SKILL.md dist/packages/workflows/skills/ralplan/ && shx cp ../workflows/src/skills/team/SKILL.md dist/packages/workflows/skills/team/ && shx cp ../workflows/src/skills/ultragoal/SKILL.md dist/packages/workflows/skills/ultragoal/ && shx mkdir -p dist/packages/workflows/agents && shx cp ../workflows/src/agents/*.md dist/packages/workflows/agents/",
-		"copy-binary-assets": "shx cp package.json dist/ && shx cp README.md dist/ && shx cp CHANGELOG.md dist/ && shx mkdir -p dist/theme && shx cp src/theme/*.json dist/theme/ && shx mkdir -p dist/packages/lsp dist/packages/mcp && shx cp -r src/packages/lsp/* dist/packages/lsp/ && shx cp -r src/packages/mcp/* dist/packages/mcp/ && shx mkdir -p dist/packages/workflows && shx cp -r ../workflows/dist/* dist/packages/workflows/ && node scripts/write-bundled-package-manifests.mjs workflows && shx cp -r docs dist/",
+		"copy-assets": "shx mkdir -p dist/packages/lsp dist/packages/mcp && shx mkdir -p dist/packages/workflows && shx cp -r ../workflows/dist/* dist/packages/workflows/ && node scripts/write-bundled-package-manifests.mjs && shx mkdir -p dist/packages/workflows/skills/deep-interview dist/packages/workflows/skills/ralplan dist/packages/workflows/skills/team dist/packages/workflows/skills/ultragoal && shx cp ../workflows/src/skills/deep-interview/SKILL.md dist/packages/workflows/skills/deep-interview/ && shx cp ../workflows/src/skills/ralplan/SKILL.md dist/packages/workflows/skills/ralplan/ && shx cp ../workflows/src/skills/team/SKILL.md dist/packages/workflows/skills/team/ && shx cp ../workflows/src/skills/ultragoal/SKILL.md dist/packages/workflows/skills/ultragoal/ && shx mkdir -p dist/packages/workflows/agents && shx cp ../workflows/src/agents/*.md dist/packages/workflows/agents/",
+		"copy-binary-assets": "shx cp package.json dist/ && shx cp README.md dist/ && shx cp CHANGELOG.md dist/ && shx mkdir -p dist/theme && shx cp ../tui/src/theme/*.json dist/theme/ && shx mkdir -p dist/packages/lsp dist/packages/mcp && shx cp -r src/packages/lsp/* dist/packages/lsp/ && shx cp -r src/packages/mcp/* dist/packages/mcp/ && shx mkdir -p dist/packages/workflows && shx cp -r ../workflows/dist/* dist/packages/workflows/ && node scripts/write-bundled-package-manifests.mjs workflows && shx cp -r docs dist/",
 		"test": "vitest --run",
 		"shrinkwrap": "node scripts/generate-shrinkwrap.mjs",
 		"prepublishOnly": "npm run clean && npm run build && npm run shrinkwrap"
@@ -62,7 +62,6 @@
 		"chalk": "5.6.2",
 		"diff": "8.0.4",
 		"glob": "13.0.6",
-		"highlight.js": "10.7.3",
 		"hosted-git-info": "9.0.3",
 		"ignore": "7.0.5",
 		"jiti": "2.7.0",

@@ -1,6 +1,5 @@
-import { Box, type Component, Container, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
+import { Box, type Component, Container, Spacer, Text, type TUI, theme } from "@tsuuanmi/pi-tui";
 import type { ToolDefinition, ToolRenderContext } from "#pi/api/types";
-import { theme } from "#pi/theme/theme";
 import { createAllToolDefinitions, type ToolName } from "#pi/tools/index";
 import { getTextOutput as getRenderedTextOutput } from "#pi/tools/utils";
 

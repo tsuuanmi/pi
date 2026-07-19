@@ -1,15 +1,13 @@
 import { join, resolve } from "node:path";
-import { Text, type TUI } from "@tsuuanmi/pi-tui";
+import { initTheme, stripAnsi, Text, type TUI } from "@tsuuanmi/pi-tui";
 import { Type } from "typebox";
 import { beforeAll, describe, expect, test } from "vitest";
 import type { ToolDefinition } from "#pi/api/types";
 import { getReadmePath } from "#pi/config/config";
 import { ToolExecutionComponent } from "#pi/modes/interactive/components/tool-execution";
-import { initTheme } from "#pi/theme/theme";
 import { type BashOperations, createBashToolDefinition } from "#pi/tools/bash";
 import { createReadTool, createReadToolDefinition } from "#pi/tools/read";
 import { createWriteToolDefinition } from "#pi/tools/write";
-import { stripAnsi } from "#pi/utils/terminal/ansi";
 
 function createBaseToolDefinition(name = "custom_tool"): ToolDefinition {
 	return {

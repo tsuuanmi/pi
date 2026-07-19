@@ -1,4 +1,4 @@
-import { visibleWidth } from "@tsuuanmi/pi-tui";
+import { initTheme, stripAnsi, visibleWidth } from "@tsuuanmi/pi-tui";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
 	computeUsageStats,
@@ -9,8 +9,6 @@ import {
 } from "#pi/modes/interactive/components/status-line/segments";
 import type { SegmentContext } from "#pi/modes/interactive/components/status-line/types";
 import type { AgentSession } from "#pi/session/agent-session";
-import { initTheme } from "#pi/theme/theme";
-import { stripAnsi } from "#pi/utils/terminal/ansi";
 
 beforeAll(() => {
 	initTheme("dark");

@@ -11,6 +11,7 @@ Minimal terminal UI framework with differential rendering and synchronized outpu
 - **Theme Support**: Components accept theme interfaces for customizable styling
 - **Built-in Components**: Text, TruncatedText, Input, Editor, Markdown, Loader, SelectList, SettingsList, Spacer, Image, Box, Container
 - **Autocomplete Support**: File paths and slash commands
+- **Reusable Rendering Utilities**: ANSI stripping, keybinding text formatting, visual-line truncation, and themable diff rendering
 
 ## Quick Start
 

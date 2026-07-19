@@ -4,14 +4,15 @@ import {
 	fuzzyFilter,
 	getKeybindings,
 	Input,
+	keyHint,
+	rawKeyHint,
 	Spacer,
 	TruncatedText,
+	theme,
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
-import { theme } from "#pi/theme/theme";
-import { keyHint, rawKeyHint } from "#pi/ui/rendering/keybinding-hints";
 
 const SELECTOR_GUTTER_WIDTH = 2;
 const MIN_PROVIDER_WIDTH = 36;

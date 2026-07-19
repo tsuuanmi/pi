@@ -8,6 +8,7 @@
 import { createInterface } from "node:readline";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { modelsAreEqual } from "@tsuuanmi/pi-ai";
+import { initTheme, stopThemeWatcher } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import type { ExtensionFactory } from "#pi/api/types";
 import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
@@ -44,7 +45,6 @@ import {
 import { SessionManager } from "#pi/session/session-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { printTimings, resetTimings, time } from "#pi/telemetry/timings";
-import { initTheme, stopThemeWatcher } from "#pi/theme/theme";
 
 /**
  * Read all content from piped stdin.

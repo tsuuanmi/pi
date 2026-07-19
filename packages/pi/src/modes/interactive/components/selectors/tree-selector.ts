@@ -2,20 +2,21 @@ import {
 	type Component,
 	Container,
 	type Focusable,
+	formatKeyText,
 	getKeybindings,
 	Input,
 	type Keybinding,
+	keyHint,
 	Spacer,
 	sliceByColumn,
 	Text,
+	theme,
 	truncateToWidth,
 	visibleWidth,
 	wrapTextWithAnsi,
 } from "@tsuuanmi/pi-tui";
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import type { SessionTreeNode } from "#pi/session/session-manager";
-import { theme } from "#pi/theme/theme";
-import { formatKeyText, keyHint } from "#pi/ui/rendering/keybinding-hints";
 
 /** Gutter info: position (displayIndent where connector was) and whether to show │ */
 interface GutterInfo {

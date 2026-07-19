@@ -1,6 +1,6 @@
+import { initTheme } from "@tsuuanmi/pi-tui";
 import { describe, expect, test } from "vitest";
 import { UserMessageComponent } from "#pi/modes/interactive/components/messages/user-message";
-import { initTheme } from "#pi/theme/theme";
 
 const OSC133_ZONE_START = "\x1b]133;A\x07";
 const OSC133_ZONE_END = "\x1b]133;B\x07";

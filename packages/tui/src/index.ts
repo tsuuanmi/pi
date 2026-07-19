@@ -90,5 +90,24 @@ export {
 export { parseOsc11BackgroundColor, type RgbColor } from "#tui/terminal/features/terminal-colors";
 // Terminal interface and implementations
 export { ProcessTerminal, type Terminal } from "#tui/terminal/runtime/terminal";
+export * from "#tui/theme/theme";
 // Utilities
+export { stripAnsi } from "#tui/utilities/ansi";
+export { type DiffRenderTheme, type RenderDiffOptions, renderDiff } from "#tui/utilities/diff";
+export {
+	formatKeyText,
+	type KeyTextFormatOptions,
+	keyDisplayText,
+	keyHint,
+	keyText,
+	rawKeyHint,
+} from "#tui/utilities/keybinding-hints";
+export {
+	type HighlightOptions,
+	type HighlightTheme,
+	highlight,
+	renderHighlightedHtml,
+	supportsLanguage,
+} from "#tui/utilities/syntax-highlight";
 export { sliceByColumn, truncateToWidth, visibleWidth, wrapTextWithAnsi } from "#tui/utilities/text";
+export { truncateToVisualLines, type VisualTruncateResult } from "#tui/utilities/visual-truncate";

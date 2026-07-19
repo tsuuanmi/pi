@@ -16,13 +16,11 @@ Themes are JSON files that define colors for the TUI.
 
 ## Locations
 
-Pi loads themes from:
+Pi loads bundled themes from `@tsuuanmi/pi-tui`:
 
 - Built-in: `dark`, `light`
-- Global: `~/.pi/agent/themes/*.json`
-- Project: `.pi/themes/*.json`
-- Packages: `themes/` directories or `pi.themes` entries in `package.json`
-- Settings: `themes` array with files or directories
+
+Custom theme directory loading is not enabled.
 
 ## Selecting a Theme
 
@@ -30,7 +28,7 @@ Select a theme via `/settings` or in `settings.json`:
 
 ```json
 {
-  "theme": "my-theme"
+  "theme": "dark"
 }
 ```
 
@@ -38,18 +36,11 @@ On first run, pi detects your terminal background and defaults to `dark` or `lig
 
 ## Creating a Custom Theme
 
-1. Create a theme file:
-
-```bash
-mkdir -p ~/.pi/agent/themes
-vim ~/.pi/agent/themes/my-theme.json
-```
-
-2. Define the theme with all required colors (see [Color Tokens](#color-tokens)):
+Theme JSON files live with the TUI package. To add a bundled theme, define a theme with all required colors (see [Color Tokens](#color-tokens)):
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/tsuuanmi/pi/main/packages/pi/src/theme/theme-schema.json",
+  "$schema": "https://raw.githubusercontent.com/tsuuanmi/pi/main/packages/tui/src/theme/theme-schema.json",
   "name": "my-theme",
   "vars": {
     "primary": "#00aaff",
@@ -119,7 +110,7 @@ vim ~/.pi/agent/themes/my-theme.json
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/tsuuanmi/pi/main/packages/pi/src/theme/theme-schema.json",
+  "$schema": "https://raw.githubusercontent.com/tsuuanmi/pi/main/packages/tui/src/theme/theme-schema.json",
   "name": "my-theme",
   "vars": {
     "blue": "#0066cc",
@@ -274,5 +265,5 @@ echo $COLORTERM  # Should output "truecolor" or "24bit"
 ## Examples
 
 See the built-in themes:
-- [dark.json](../../src/theme/dark.json)
-- [light.json](../../src/theme/light.json)
+- [dark.json](../../../tui/src/theme/dark.json)
+- [light.json](../../../tui/src/theme/light.json)

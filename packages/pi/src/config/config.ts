@@ -365,21 +365,6 @@ export function getPackageDir(): string {
 	return __dirname;
 }
 
-/**
- * Get path to built-in themes directory (shipped with package)
- * - For Bun binary: theme/ next to executable
- * - For Node.js (dist/): dist/theme/
- * - For tsx (src/): src/theme/
- */
-export function getThemesDir(): string {
-	if (isBunBinary) {
-		return join(getPackageDir(), "theme");
-	}
-	const packageDir = getPackageDir();
-	const srcOrDist = existsSync(join(packageDir, "src")) ? "src" : "dist";
-	return join(packageDir, srcOrDist, "theme");
-}
-
 /** Get path to package.json */
 function getPackageJsonPath(): string {
 	return join(getPackageDir(), "package.json");
@@ -447,11 +432,6 @@ export function getAgentDir(): string {
 		return expandTildePath(envDir);
 	}
 	return join(homedir(), CONFIG_DIR_NAME, "agent");
-}
-
-/** Get path to user's custom themes directory */
-export function getCustomThemesDir(): string {
-	return join(getAgentDir(), "themes");
 }
 
 /** Get path to auth.json */

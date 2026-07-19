@@ -11,7 +11,9 @@ import {
 	getKeybindings,
 	Input,
 	matchesKey,
+	rawKeyHint,
 	Spacer,
+	theme,
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
@@ -19,8 +21,6 @@ import { CONFIG_DIR_NAME } from "#pi/config/config";
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import type { PathMetadata, ResolvedPaths, ResolvedResource } from "#pi/package-manager/package-manager";
 import type { PackageSource, SettingsManager } from "#pi/settings/settings-manager";
-import { theme } from "#pi/theme/theme";
-import { rawKeyHint } from "#pi/ui/rendering/keybinding-hints";
 
 type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands";
 

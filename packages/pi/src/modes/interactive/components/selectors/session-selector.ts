@@ -9,8 +9,11 @@ import {
 	type Focusable,
 	getKeybindings,
 	Input,
+	keyHint,
+	keyText,
 	Spacer,
 	Text,
+	theme,
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
@@ -23,8 +26,6 @@ import {
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import type { SessionInfo, SessionListProgress } from "#pi/session/session-manager";
 import { KeybindingsManager } from "#pi/settings/keybindings";
-import { theme } from "#pi/theme/theme";
-import { keyHint, keyText } from "#pi/ui/rendering/keybinding-hints";
 
 type SessionScope = "current" | "all";
 

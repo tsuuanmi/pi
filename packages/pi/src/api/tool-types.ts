@@ -1,8 +1,7 @@
 import type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "@tsuuanmi/pi-agent";
-import type { Component } from "@tsuuanmi/pi-tui";
+import type { Component, Theme } from "@tsuuanmi/pi-tui";
 import type { Static, TSchema } from "typebox";
 import type { ExtensionContext } from "#pi/api/context-types";
-import type { Theme } from "#pi/theme/theme";
 
 // ============================================================================
 // Tool Types

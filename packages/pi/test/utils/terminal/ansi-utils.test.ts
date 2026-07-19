@@ -1,5 +1,5 @@
+import { stripAnsi } from "@tsuuanmi/pi-tui";
 import { describe, expect, it } from "vitest";
-import { stripAnsi } from "#pi/utils/terminal/ansi";
 
 function referenceAnsiRegex(): RegExp {
 	const ST = "(?:\\u0007|\\u001B\\u005C|\\u009C)";

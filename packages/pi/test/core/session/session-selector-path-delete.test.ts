@@ -1,12 +1,11 @@
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { setKeybindings } from "@tsuuanmi/pi-tui";
+import { initTheme, setKeybindings } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { SessionSelectorComponent } from "#pi/modes/interactive/components/selectors/session-selector";
 import type { SessionInfo } from "#pi/session/session-manager";
 import { KeybindingsManager } from "#pi/settings/keybindings";
-import { initTheme } from "#pi/theme/theme";
 
 type Deferred<T> = {
 	promise: Promise<T>;
