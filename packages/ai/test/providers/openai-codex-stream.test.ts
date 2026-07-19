@@ -2,13 +2,13 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { Context, Model } from "#ai/core/types";
 import {
 	getOpenAICodexWebSocketDebugStats,
 	resetOpenAICodexWebSocketDebugStats,
 	streamOpenAICodexResponses,
 	streamSimpleOpenAICodexResponses,
-} from "#ai/providers/openai-codex-responses";
-import type { Context, Model } from "#ai/types";
+} from "#ai/providers/openai/codex-responses";
 
 const originalAgentDir = process.env.PI_CODING_AGENT_DIR;
 

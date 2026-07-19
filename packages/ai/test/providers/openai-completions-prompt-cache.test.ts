@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getModel } from "#ai/models";
-import { streamOpenAICompletions } from "#ai/providers/openai-completions";
-import type { AssistantMessage, Message, Model } from "#ai/types";
+import type { AssistantMessage, Message, Model } from "#ai/core/types";
+import { getModel } from "#ai/models/index";
+import { streamOpenAICompletions } from "#ai/providers/openai/completions";
 
 interface FakeOpenAIClientOptions {
 	apiKey: string;

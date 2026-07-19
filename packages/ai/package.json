@@ -11,28 +11,28 @@
 			"import": "./dist/index.js"
 		},
 		"./anthropic": {
-			"types": "./dist/providers/anthropic.d.ts",
-			"import": "./dist/providers/anthropic.js"
+			"types": "./dist/providers/anthropic/index.d.ts",
+			"import": "./dist/providers/anthropic/index.js"
 		},
 		"./openai-codex-responses": {
-			"types": "./dist/providers/openai-codex-responses.d.ts",
-			"import": "./dist/providers/openai-codex-responses.js"
+			"types": "./dist/providers/openai/codex-responses.d.ts",
+			"import": "./dist/providers/openai/codex-responses.js"
 		},
 		"./openai-codex-usage": {
-			"types": "./dist/providers/openai-codex-usage.d.ts",
-			"import": "./dist/providers/openai-codex-usage.js"
+			"types": "./dist/providers/openai/codex-usage.d.ts",
+			"import": "./dist/providers/openai/codex-usage.js"
 		},
 		"./openai-completions": {
-			"types": "./dist/providers/openai-completions.d.ts",
-			"import": "./dist/providers/openai-completions.js"
+			"types": "./dist/providers/openai/completions.d.ts",
+			"import": "./dist/providers/openai/completions.js"
 		},
 		"./openai-responses": {
-			"types": "./dist/providers/openai-responses.d.ts",
-			"import": "./dist/providers/openai-responses.js"
+			"types": "./dist/providers/openai/responses.d.ts",
+			"import": "./dist/providers/openai/responses.js"
 		},
 		"./oauth": {
-			"types": "./dist/oauth.d.ts",
-			"import": "./dist/oauth.js"
+			"types": "./dist/auth/oauth.d.ts",
+			"import": "./dist/auth/oauth.js"
 		}
 	},
 	"imports": {

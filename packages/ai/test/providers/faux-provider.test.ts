@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import type { AssistantMessageEvent, Context } from "#ai/core/types";
 import {
 	complete,
 	fauxAssistantMessage,
@@ -9,7 +10,6 @@ import {
 	stream,
 	Type,
 } from "#ai/index";
-import type { AssistantMessageEvent, Context } from "#ai/types";
 
 async function collectEvents(streamResult: ReturnType<typeof stream>): Promise<AssistantMessageEvent[]> {
 	const events: AssistantMessageEvent[] = [];

@@ -10,7 +10,7 @@ API usage logging, when enabled, is written only to the sidecar file at `<cwd>/.
 
 ## Event Types
 
-Events are defined in [`AgentSessionEvent`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/agent-session/agent-session.ts#L102):
+Events are defined in [`AgentSessionEvent`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/agent-session/agent-session.ts#L102):
 
 ```typescript
 type AgentSessionEvent =
@@ -46,7 +46,7 @@ type AgentEvent =
 
 ## Message Types
 
-Base messages from [`packages/ai/src/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/types.ts#L134):
+Base messages from [`packages/ai/src/core/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/core/types.ts):
 - `UserMessage` (line 134)
 - `AssistantMessage` (line 140)
 - `ToolResultMessage` (line 152)

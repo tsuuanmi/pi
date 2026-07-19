@@ -1,8 +1,4 @@
-import { clearApiProviders, registerApiProvider } from "#ai/api-registry";
-import type { AnthropicOptions } from "#ai/providers/anthropic";
-import type { OpenAICodexResponsesOptions } from "#ai/providers/openai-codex-responses";
-import type { OpenAICompletionsOptions } from "#ai/providers/openai-completions";
-import type { OpenAIResponsesOptions } from "#ai/providers/openai-responses";
+import { clearApiProviders, registerApiProvider } from "#ai/core/api-registry";
 import type {
 	Api,
 	AssistantMessage,
@@ -12,8 +8,12 @@ import type {
 	SimpleStreamOptions,
 	StreamFunction,
 	StreamOptions,
-} from "#ai/types";
-import { AssistantMessageEventStream } from "#ai/utils/event-stream";
+} from "#ai/core/types";
+import type { AnthropicOptions } from "#ai/providers/anthropic/index";
+import type { OpenAICodexResponsesOptions } from "#ai/providers/openai/codex-responses";
+import type { OpenAICompletionsOptions } from "#ai/providers/openai/completions";
+import type { OpenAIResponsesOptions } from "#ai/providers/openai/responses";
+import { AssistantMessageEventStream } from "#ai/transport/event-stream";
 
 interface LazyProviderModule<
 	TApi extends Api,
@@ -138,7 +138,7 @@ function createLazySimpleStream<
 function loadAnthropicProviderModule(): Promise<
 	LazyProviderModule<"anthropic-messages", AnthropicOptions, SimpleStreamOptions>
 > {
-	anthropicProviderModulePromise ||= import("#ai/providers/anthropic").then((module) => {
+	anthropicProviderModulePromise ||= import("#ai/providers/anthropic/index").then((module) => {
 		const provider = module as AnthropicProviderModule;
 		return {
 			stream: provider.streamAnthropic,
@@ -151,7 +151,7 @@ function loadAnthropicProviderModule(): Promise<
 function loadOpenAICodexResponsesProviderModule(): Promise<
 	LazyProviderModule<"openai-codex-responses", OpenAICodexResponsesOptions, SimpleStreamOptions>
 > {
-	openAICodexResponsesProviderModulePromise ||= import("#ai/providers/openai-codex-responses").then((module) => {
+	openAICodexResponsesProviderModulePromise ||= import("#ai/providers/openai/codex-responses").then((module) => {
 		const provider = module as OpenAICodexResponsesProviderModule;
 		return {
 			stream: provider.streamOpenAICodexResponses,
@@ -164,7 +164,7 @@ function loadOpenAICodexResponsesProviderModule(): Promise<
 function loadOpenAICompletionsProviderModule(): Promise<
 	LazyProviderModule<"openai-completions", OpenAICompletionsOptions, SimpleStreamOptions>
 > {
-	openAICompletionsProviderModulePromise ||= import("#ai/providers/openai-completions").then((module) => {
+	openAICompletionsProviderModulePromise ||= import("#ai/providers/openai/completions").then((module) => {
 		const provider = module as OpenAICompletionsProviderModule;
 		return {
 			stream: provider.streamOpenAICompletions,
@@ -177,7 +177,7 @@ function loadOpenAICompletionsProviderModule(): Promise<
 function loadOpenAIResponsesProviderModule(): Promise<
 	LazyProviderModule<"openai-responses", OpenAIResponsesOptions, SimpleStreamOptions>
 > {
-	openAIResponsesProviderModulePromise ||= import("#ai/providers/openai-responses").then((module) => {
+	openAIResponsesProviderModulePromise ||= import("#ai/providers/openai/responses").then((module) => {
 		const provider = module as OpenAIResponsesProviderModule;
 		return {
 			stream: provider.streamOpenAIResponses,

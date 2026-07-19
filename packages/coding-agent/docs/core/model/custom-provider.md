@@ -355,9 +355,9 @@ interface OAuthCredentials {
 For providers with non-standard APIs, implement `streamSimple`. Study the existing provider implementations before writing your own:
 
 **Reference implementations:**
-- [anthropic.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/providers/anthropic.ts) - Anthropic Messages API
-- [openai-completions.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/providers/openai-completions.ts) - OpenAI Chat Completions
-- [openai-responses.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/providers/openai-responses.ts) - OpenAI Responses API
+- [providers/anthropic/index.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/providers/anthropic/index.ts) - Anthropic Messages API
+- [providers/openai/completions.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/providers/openai/completions.ts) - OpenAI Chat Completions
+- [providers/openai/responses.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/providers/openai/responses.ts) - OpenAI Responses API
 
 ### Stream Pattern
 

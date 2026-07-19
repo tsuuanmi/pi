@@ -1,8 +1,8 @@
 import { Type } from "typebox";
 import { describe, expect, it } from "vitest";
-import { getModel } from "#ai/models";
-import { complete, getEnvApiKey } from "#ai/stream";
-import type { AssistantMessage, Context, Message, Tool, ToolCall } from "#ai/types";
+import { complete, getEnvApiKey } from "#ai/core/stream";
+import type { AssistantMessage, Context, Message, Tool, ToolCall } from "#ai/core/types";
+import { getModel } from "#ai/models/index";
 
 const testToolSchema = Type.Object({
 	value: Type.Number({ description: "A number to double" }),

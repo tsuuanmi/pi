@@ -2,15 +2,15 @@
 
 Adding a new LLM provider requires changes across multiple files. This checklist covers all steps.
 
-## 1. Core Types (`src/types.ts`)
+## 1. Core Types (`src/core/types.ts`)
 
 - Add the API identifier to `KnownApi` (e.g., `"bedrock-converse"`)
 - Create an options interface extending `StreamOptions` (e.g., `BedrockOptions`)
 - Add the provider name to `KnownProvider` (e.g., `"amazon-bedrock"`)
 
-## 2. Provider Implementation (`src/providers/`)
+## 2. Provider Implementation (`src/providers/<provider>/`)
 
-Create a new provider file (e.g., `bedrock.ts`) that exports:
+Create a provider-specific folder and entry file (e.g., `src/providers/bedrock/index.ts`) that exports:
 
 - `stream<Provider>()` function returning `AssistantMessageEventStream`
 - `streamSimple<Provider>()` for `SimpleStreamOptions` mapping
@@ -32,9 +32,9 @@ The stream function must:
 
 - Add a lazy loader wrapper for the new provider module
 - Register the API with `registerApiProvider()` in `registerBuiltInApiProviders()`
-- Add a package subpath export in `package.json` for the provider module (`./dist/providers/<provider>.js`)
+- Add a package subpath export in `package.json` for the provider module (`./dist/providers/<provider>/index.js`)
 - Add `export type` re-exports in `src/index.ts` for any provider-specific types that should be importable from `@tsuuanmi/pi-ai`
-- Add credential detection in `src/env-api-keys.ts` for the new provider
+- Add credential detection in `src/auth/env-api-keys.ts` for the new provider
 - Ensure `streamSimple` handles auth lookup via `getEnvApiKey()` or provider-specific auth
 
 Example lazy loader:
@@ -45,7 +45,7 @@ let bedrockProviderModulePromise:
   | undefined;
 
 function loadBedrockProviderModule(): Promise<...> {
-  bedrockProviderModulePromise ||= import("./bedrock.ts").then((module) => {
+  bedrockProviderModulePromise ||= import("#ai/providers/bedrock/index").then((module) => {
     const provider = module as BedrockProviderModule;
     return { stream: provider.streamBedrock, streamSimple: provider.streamSimpleBedrock };
   });
@@ -80,7 +80,7 @@ For scripted deterministic flows, use `registerFauxProvider()` instead of hittin
 
 ## 6. Coding Agent Integration (`../coding-agent/`)
 
-Update `src/core/model-resolver.ts`:
+Update `packages/coding-agent/src/model/model-resolver.ts`:
 
 - Add a default model ID for the provider in `defaultModelPerProvider`
 

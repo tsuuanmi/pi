@@ -29,9 +29,9 @@ Existing sessions are automatically migrated to the current version (v3) when lo
 ## Source Files
 
 Source on GitHub ([pi-mono](https://github.com/tsuuanmi/pi)):
-- [`packages/coding-agent/src/core/session/session-manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/core/session/session-manager.ts) - Session entry types and SessionManager
+- [`packages/coding-agent/src/session/session-manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/coding-agent/src/session/session-manager.ts) - Session entry types and SessionManager
 - [`packages/agent/src/harness/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/harness/messages.ts) - Extended message types (BashExecutionMessage, CustomMessage, etc.)
-- [`packages/ai/src/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/types.ts) - Base message types (UserMessage, AssistantMessage, ToolResultMessage)
+- [`packages/ai/src/core/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/core/types.ts) - Base message types (UserMessage, AssistantMessage, ToolResultMessage)
 - [`packages/agent/src/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/types.ts) - AgentMessage union type
 
 For TypeScript definitions in your project, inspect `node_modules/@tsuuanmi/pi-coding-agent/dist/` and `node_modules/@tsuuanmi/pi-ai/dist/`.

@@ -1059,15 +1059,15 @@ const response = await complete(model, {
 
 Adding a new LLM provider requires changes across multiple files. This checklist covers all necessary steps:
 
-#### 1. Core Types (`src/types.ts`)
+#### 1. Core Types (`src/core/types.ts`)
 
 - Add the API identifier to `KnownApi` (for example `"bedrock-converse-stream"`)
 - Create an options interface extending `StreamOptions` (for example `BedrockOptions`)
 - Add the provider name to `KnownProvider` (for example `"amazon-bedrock"`)
 
-#### 2. Provider Implementation (`src/providers/`)
+#### 2. Provider Implementation (`src/providers/<provider>/`)
 
-Create a new provider file (for example `amazon-bedrock.ts`) that exports:
+Create a provider-specific folder and entry file (for example `src/providers/amazon-bedrock/index.ts`) that exports:
 
 - `stream<Provider>()` function returning `AssistantMessageEventStream`
 - `streamSimple<Provider>()` for `SimpleStreamOptions` mapping
@@ -1079,10 +1079,10 @@ Create a new provider file (for example `amazon-bedrock.ts`) that exports:
 #### 3. API Registry Integration (`src/providers/register-builtins.ts`)
 
 - Register the API with `registerApiProvider()`
-- Add a package subpath export in `package.json` for the provider module (`./dist/providers/<provider>.js`)
+- Add a package subpath export in `package.json` for the provider module (`./dist/providers/<provider>/index.js`)
 - Add lazy loader wrappers in `src/providers/register-builtins.ts`, do not statically import provider implementation modules there
 - Add any root-level `export type` re-exports in `src/index.ts` that should remain available from `@tsuuanmi/pi-ai`
-- Add credential detection in `env-api-keys.ts` for the new provider
+- Add credential detection in `auth/env-api-keys.ts` for the new provider
 - Ensure `streamSimple` handles auth lookup via `getEnvApiKey()` or provider-specific auth
 
 #### 4. Model Generation (`scripts/generate-models.ts`)
@@ -1095,11 +1095,11 @@ Create a new provider file (for example `amazon-bedrock.ts`) that exports:
 
 Add tests under `packages/ai/test/` covering the new provider — streaming and tool use, token usage reporting, request abort, and context replay. The existing suites are provider-specific (for example `anthropic-sse-parsing.test.ts`, `openai-codex-stream.test.ts`, `openai-responses-message-id.test.ts`); follow that pattern. For scripted, deterministic flows, use the `registerFauxProvider()` helper (see "Faux provider for tests" above) instead of hitting a live API.
 
-For providers with non-standard auth, add credential-detection helpers alongside `env-api-keys.ts` (and a matching `env-api-keys.test.ts` case).
+For providers with non-standard auth, add credential-detection helpers alongside `auth/env-api-keys.ts` (and a matching `env-api-keys.test.ts` case).
 
 #### 6. Coding Agent Integration (`../coding-agent/`)
 
-Update `src/core/model-resolver.ts`:
+Update `src/model/model-resolver.ts`:
 
 - Add a default model ID for the provider in `defaultModelPerProvider`
 

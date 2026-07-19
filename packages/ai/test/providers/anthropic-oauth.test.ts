@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loginAnthropic, refreshAnthropicToken } from "#ai/utils/oauth/anthropic";
+import { loginAnthropic, refreshAnthropicToken } from "#ai/auth/oauth/anthropic";
 
 function jsonResponse(body: unknown, status: number = 200): Response {
 	return new Response(JSON.stringify(body), {

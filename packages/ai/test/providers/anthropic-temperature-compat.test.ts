@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { getModel } from "#ai/models";
-import { streamSimple } from "#ai/stream";
-import type { Context, Model, SimpleStreamOptions } from "#ai/types";
+import { streamSimple } from "#ai/core/stream";
+import type { Context, Model, SimpleStreamOptions } from "#ai/core/types";
+import { getModel } from "#ai/models/index";
 
 interface AnthropicTemperaturePayload {
 	temperature?: number;

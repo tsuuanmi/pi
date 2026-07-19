@@ -1,7 +1,7 @@
 import { Type } from "typebox";
 import { describe, expect, it } from "vitest";
-import type { Tool, ToolCall } from "#ai/types";
-import { validateToolArguments } from "#ai/utils/validation";
+import type { Tool, ToolCall } from "#ai/core/types";
+import { validateToolArguments } from "#ai/schema/validation";
 
 function createToolCallWithPlainSchema(
 	schema: Tool["parameters"],
