@@ -15,7 +15,8 @@ Coordinate parallel implementation workers after an approved plan exists.
 - Read/write envelope state through `pi workflow state team ...` with the current `sessionId`.
 - Manage the team board through `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>`.
 - Spawn workers through the guarded model-visible `team_spawn_task_agent` tool.
-- Use `reviewer` and `prover` profiles for fail-closed review and completion evidence gates when needed.
+- Spawn task reviewers through `team_spawn_review_agent`; reviewers persist `review_report` with `pi workflow team record-review-gate`.
+- Spawn completion provers through `team_spawn_prover_agent`; provers persist `evidence_matrix` with `pi workflow team record-completion-gate`.
 
 ## Workflow
 
@@ -32,7 +33,7 @@ Coordinate parallel implementation workers after an approved plan exists.
 | State | Description |
 |-------|-------------|
 | `pending` | Task created, not started. |
-| `active` | Worker is running. |
+| `in_progress` | Worker is running. |
 | `blocked` | Waiting on dependency or human decision. |
 | `completed` | Task finished and passed required gates. |
 | `failed` | Task failed. |

@@ -13,7 +13,16 @@ export interface WorkflowStateEnvelope {
 }
 
 const WORKFLOW_SKILLS = new Set<string>(PI_WORKFLOW_SKILLS);
-const RALPLAN_STAGES = new Set<string>(["planner", "architect", "critic", "revision", "adr", "final", "expert-stage"]);
+const RALPLAN_STAGES = new Set<string>([
+	"pre-planner",
+	"planner",
+	"architect",
+	"critic",
+	"revision",
+	"adr",
+	"final",
+	"expert-stage",
+]);
 
 export function isWorkflowSkill(value: string): value is WorkflowSkill {
 	return WORKFLOW_SKILLS.has(value);

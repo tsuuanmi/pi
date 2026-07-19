@@ -4,19 +4,47 @@ import { readTeamCompact, readTeamSnapshot, type TeamSnapshot } from "./team-run
 
 function selectNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): ExpectedNextRole | undefined {
 	if (!snapshot?.team_id) return undefined;
-	const inProgress = snapshot.tasks.filter((task) => task.status === "in_progress");
-	const pool = inProgress.length > 0 ? inProgress : snapshot.tasks.filter((task) => task.status === "pending");
-	if (pool.length === 0) return undefined;
-	const next = pool.slice().sort((a, b) => a.id.localeCompare(b.id))[0];
-	if (!next) return undefined;
-	return {
-		skill: "team",
-		stage: "task-worker",
-		role: "worker",
-		owner: "team_spawn_task_agent",
-		teamId: snapshot.team_id,
-		taskId: next.id,
-	};
+	const inReview = snapshot.tasks
+		.filter((task) => task.status === "in_progress" && task.review_gate?.status !== "passed")
+		.sort((a, b) => a.id.localeCompare(b.id))[0];
+	if (inReview) {
+		return {
+			skill: "team",
+			stage: "task-review",
+			role: "reviewer",
+			owner: "team_spawn_review_agent",
+			teamId: snapshot.team_id,
+			taskId: inReview.id,
+		};
+	}
+	const pending = snapshot.tasks
+		.filter((task) => task.status === "pending")
+		.sort((a, b) => a.id.localeCompare(b.id))[0];
+	if (pending) {
+		return {
+			skill: "team",
+			stage: "task-worker",
+			role: "worker",
+			owner: "team_spawn_task_agent",
+			teamId: snapshot.team_id,
+			taskId: pending.id,
+		};
+	}
+	const allTasksCompleted = snapshot.tasks.length > 0 && snapshot.tasks.every((task) => task.status === "completed");
+	if (
+		allTasksCompleted &&
+		snapshot.completion_gate?.passed !== true &&
+		snapshot.completion_gate?.status !== "passed"
+	) {
+		return {
+			skill: "team",
+			stage: "team-proof",
+			role: "prover",
+			owner: "team_spawn_prover_agent",
+			teamId: snapshot.team_id,
+		};
+	}
+	return undefined;
 }
 
 function missingCompletedTaskReviewBlockers(snapshot: TeamSnapshot): string[] {

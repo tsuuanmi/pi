@@ -6,7 +6,7 @@ Runtime workflow for the `team` skill.
 
 ## Overview
 
-Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It tracks tasks, worker messages, review gates, completion evidence, and guarded worker spawns.
+Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It tracks tasks, worker messages, review gates, completion evidence, and guarded worker/reviewer/prover spawns.
 
 ## Module Structure
 
@@ -15,7 +15,7 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 | `team-compact.ts` | Prompt-efficient compact state projection. |
 | `team-hud.ts` | HUD chip rendering for team status. |
 | `team-runtime.ts` | State I/O, task transitions, messages, gates, completion, and snapshot/read-compact operations. |
-| `team-tools.ts` | Registers `team_spawn_task_agent`. |
+| `team-tools.ts` | Registers `team_spawn_task_agent`, `team_spawn_review_agent`, and `team_spawn_prover_agent`. |
 | `team-transitions.ts` | Skill transition table, expected-next worker selection, fail-closed gate validators. |
 
 ## Canonical Route
@@ -32,7 +32,7 @@ Use `pi workflow team <action>` for non-spawn operations:
 - `record-completion-gate`
 - `complete`
 
-Use `team_spawn_task_agent` for worker execution. It is state guarded: the harness computes the legal next task from team state and refuses off-sequence spawns or runtime model/tool overrides.
+Use `team_spawn_task_agent` for worker execution, `team_spawn_review_agent` for task review gates, and `team_spawn_prover_agent` for the completion evidence gate. These tools are state guarded: the harness computes the legal next team role from team state and refuses off-sequence spawns or runtime model/tool overrides.
 
 ## State Files
 

@@ -30,6 +30,8 @@ function selectNextRalplanRole(state: RalplanSelectorState | undefined, runId: s
 	}
 
 	const explorer = state?.explorerGate;
+	if (!explorer)
+		return { skill: "ralplan", stage: "pre-planner", role: "explorer", owner: "ralplan_run_agent", runId };
 	if (explorer) {
 		if (explorer.status === "human_blocked") {
 			if (expertCount >= expertCap) return undefined;

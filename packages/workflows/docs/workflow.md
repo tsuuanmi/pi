@@ -124,11 +124,11 @@ Phase 1A recognizes but does not implement some Gajae-style fields. `forkContext
 
 Legacy JSON profile files such as `<agentDir>/agents/<name>.json` and `.pi/agents/<name>.json` are no longer loaded. Use markdown profiles under `.agent/agents` or `.agents/agents` instead.
 
-Per-invocation overrides such as `model`, `thinkingLevel`, `tools`, and `excludeTools` are accepted by the model-visible spawn tools when their schemas expose them. State-guarded role spawns such as `team_spawn_task_agent` and `ultragoal_spawn_goal_agent` refuse runtime overrides so the harness can enforce the computed next role deterministically.
+Per-invocation overrides such as `model`, `thinkingLevel`, `tools`, and `excludeTools` are accepted by the model-visible spawn tools when their schemas expose them. State-guarded team and ultragoal spawns refuse runtime overrides so the harness can enforce the computed next role deterministically.
 
 ## Model-visible workflow tools
 
-Spawn verbs are model-visible tools; non-spawn verbs are `pi workflow` commands. Workflow-owned spawn tools (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `ultragoal_spawn_goal_agent`) are registered by the workflow extension and call the main session's `SubagentManager` directly in-process — the only place a subagent can be spawned and run to completion. The role agents are ordinary subagents; the workflow's special part is the turn order, the guarded role check, and the result→artifact handoff. Non-spawn workflow ops (state, artifacts, gates, status, approve-plan, etc.) remain `pi workflow ...` commands.
+Spawn verbs are model-visible tools; non-spawn verbs are `pi workflow` commands. Workflow-owned spawn tools (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `team_spawn_review_agent`, `team_spawn_prover_agent`, `ultragoal_spawn_goal_agent`) are registered by the workflow extension and call the main session's `SubagentManager` directly in-process — the only place a subagent can be spawned and run to completion. The role agents are ordinary subagents; the workflow's special part is the turn order, the guarded role check, and the result→artifact handoff. Non-spawn workflow ops (state, artifacts, gates, status, approve-plan, etc.) remain `pi workflow ...` commands.
 
 ## Current-session command propagation
 

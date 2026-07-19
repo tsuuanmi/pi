@@ -127,6 +127,7 @@ export interface TeamSnapshot {
 	task_counts: Record<TeamTaskStatus, number>;
 	workers: TeamWorker[];
 	tasks: TeamTask[];
+	completion_gate?: TeamCompletionGate;
 	updated_at: string;
 }
 
@@ -513,6 +514,7 @@ export async function readTeamSnapshot(cwd: string, sessionId: string, teamId?: 
 		task_counts: counts,
 		workers: config.workers,
 		tasks,
+		completion_gate: config.completion_gate,
 		updated_at: config.updated_at,
 	};
 }

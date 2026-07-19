@@ -13,13 +13,13 @@ Consensus planning workflow that turns a task or Deep Interview spec into a pend
 ## Runtime Route
 
 - Read/write envelope state through `pi workflow state ralplan ...` with the current `sessionId`.
-- Run role agents through the guarded model-visible `ralplan_run_agent` tool.
-- Persist role artifacts through `pi workflow ralplan write-artifact` when a role agent returns an artifact receipt.
+- Run explorer, planner, architect, critic, revision, and expert-stage agents through the guarded model-visible `ralplan_run_agent` tool.
+- Persist explorer context through `pi workflow ralplan record-explorer-gate` and role artifacts through `pi workflow ralplan write-artifact`.
 - Inspect and approve through `pi workflow ralplan <status|read-compact|doctor|approve-plan>`.
 
 ## Workflow
 
-1. Optionally run Explorer context mapping before planning.
+1. Run Explorer context mapping before planning when the pre-planner gate is missing or retrying.
 2. Planner produces an implementation plan candidate.
 3. Architect reviews feasibility, ownership, and integration risks.
 4. Critic returns `APPROVE`, `ITERATE`, or `REJECT`.

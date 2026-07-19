@@ -11,18 +11,20 @@ import { assertAgentThinkingLevel, assertRalplanRole } from "../shared/orchestra
 import { assertRalplanStage, assertSafePathComponent } from "../shared/state/state-schema.ts";
 import { defaultWorkflowId, readWorkflowState } from "../shared/state/workflow-state.ts";
 import { ralplanRoleForStage, runRalplanAgent } from "./ralplan-agents.ts";
-import { assertRalplanExplorerGatePassed, normalizeRalplanExplorerGate } from "./ralplan-gates.ts";
+import { normalizeRalplanExplorerGate } from "./ralplan-gates.ts";
 import { readRalplanStatus } from "./ralplan-runtime.ts";
 
 const ralplanRunAgentSchema = Type.Object({
-	role: Type.Optional(Type.String({ description: "planner, architect, critic, or expert. Defaults from stage." })),
+	role: Type.Optional(
+		Type.String({ description: "explorer, planner, architect, critic, or expert. Defaults from stage." }),
+	),
 	agent: Type.Optional(Type.String({ description: "Agent profile name. Defaults to the role name." })),
 	model: Type.Optional(Type.String({ description: "Override agent profile model as provider/model." })),
 	thinkingLevel: Type.Optional(Type.String({ description: "Override agent profile thinking level." })),
 	tools: Type.Optional(Type.Array(Type.String({ description: "Override agent profile tools." }))),
 	excludeTools: Type.Optional(Type.Array(Type.String({ description: "Tool names to disable for this role agent." }))),
 	task: Type.String({ description: "Role-agent task prompt." }),
-	stage: Type.String({ description: "planner, architect, critic, revision, or expert-stage" }),
+	stage: Type.String({ description: "pre-planner, planner, architect, critic, revision, or expert-stage" }),
 	stageN: Type.Number({ description: "Positive stage iteration number" }),
 	runId: Type.Optional(Type.String({ description: "Safe run id. Defaults to active run." })),
 	contextArtifacts: Type.Optional(
@@ -47,6 +49,7 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Extensi
 	assertRalplanRole(params.role);
 	assertAgentThinkingLevel(params.thinkingLevel);
 	if (
+		params.stage !== "pre-planner" &&
 		params.stage !== "planner" &&
 		params.stage !== "architect" &&
 		params.stage !== "critic" &&
@@ -86,15 +89,6 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Extensi
 		},
 		selectorRunId,
 	);
-	if (expected?.stage === "pre-planner") {
-		// Deterministic selector block: the explorer pre-planner gate has not
-		// passed. Delegate to the gate enforcer, which writes bounded-retry /
-		// human_blocked escalation state and throws a fail-closed error.
-		await assertRalplanExplorerGatePassed(ctx.cwd, selectorRunId, sessionId);
-		throw new Error(
-			"ralplan pre-planner explorer gate has not passed; record a context_map via `pi workflow ralplan record-explorer-gate` first",
-		);
-	}
 	if (!expected) {
 		throw new Error(
 			"no legal next ralplan role spawn: workflow is closed or awaiting approval; use `pi workflow ralplan write-artifact`/`approve-plan` instead",

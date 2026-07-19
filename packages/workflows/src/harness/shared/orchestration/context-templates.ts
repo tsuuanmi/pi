@@ -1,4 +1,4 @@
-export type ContextTemplateRalplanRole = "planner" | "architect" | "critic" | "expert";
+export type ContextTemplateRalplanRole = "explorer" | "planner" | "architect" | "critic" | "expert";
 
 export interface RalplanContextTaskInput {
 	role: ContextTemplateRalplanRole;
@@ -20,6 +20,16 @@ const RALPLAN_BASE_CONTRACT = [
 ] as const;
 
 export function buildRalplanRoleSystemPrompt(role: ContextTemplateRalplanRole): string {
+	if (role === "explorer") {
+		return [
+			"Ralplan explorer workflow contract:",
+			"- Read only. Do not edit product files or execute implementation.",
+			"- Produce a structured context_map for the planner before planning starts.",
+			"- Record the context_map by running `pi workflow ralplan record-explorer-gate` with the provided runId and full JSON context_map.",
+			"- Return only the receipt/path plus compact status. Do not paste the full artifact after persistence.",
+			"- Include context_needed, summary, relevant_files, important_symbols, existing_patterns, risks, open_questions, and evidence when applicable.",
+		].join("\n");
+	}
 	if (role === "planner") {
 		return [
 			...RALPLAN_BASE_CONTRACT,

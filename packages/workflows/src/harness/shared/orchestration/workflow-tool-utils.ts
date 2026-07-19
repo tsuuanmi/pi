@@ -20,9 +20,11 @@ export function assertRalplanApprovalTarget(
 
 export function assertRalplanRole(
 	value: string | undefined,
-): asserts value is "planner" | "architect" | "critic" | undefined {
+): asserts value is "explorer" | "planner" | "architect" | "critic" | "expert" | undefined {
 	if (value === undefined) return;
-	if (!["planner", "architect", "critic"].includes(value)) throw new Error(`unknown ralplan agent role: ${value}`);
+	if (!["explorer", "planner", "architect", "critic", "expert"].includes(value)) {
+		throw new Error(`unknown ralplan agent role: ${value}`);
+	}
 }
 
 export function assertAgentThinkingLevel(value: string | undefined): asserts value is AgentThinkingLevel | undefined {

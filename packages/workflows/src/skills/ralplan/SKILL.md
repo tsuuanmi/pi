@@ -12,15 +12,16 @@ Ralplan is Pi's consensus planning workflow. It produces a durable pending-appro
 
 - Planning only. Do not mutate product files, commit, push, or invoke execution until the user explicitly approves execution.
 - Persist planning artifacts with `pi workflow ralplan write-artifact`; do not directly edit `.pi/<session-id>/plans` or `.pi/<session-id>/workflows` unless recovering with explicit user approval.
-- Planner, Architect, and Critic passes must use the `ralplan_run_agent` tool; do not simulate all roles inline in the parent conversation.
-- Architect and critic passes must be sequential: planner first, architect second, critic third.
+- Explorer, Planner, Architect, Critic, and Expert passes must use the `ralplan_run_agent` tool; do not simulate workflow roles inline in the parent conversation.
+- Role passes must be sequential: explorer pre-planner gate first when required, then planner, architect, critic, revisions, and expert-stage escalation only when selected by workflow state.
 
 ## Workflow
 
 1. Read active state with `pi workflow state` for `skill: "ralplan"`. If no state exists, initialize it with `pi workflow state` `action: write`: `active: true`, `phase: "planner"`, `data.input` set to the task or spec path. A run ID will be assigned automatically on the first artifact write.
 2. Read run status with `pi workflow ralplan status`. If resuming an existing run or state appears inconsistent, run `pi workflow ralplan doctor` before writing new artifacts.
-3. If the input is a file path, read it. If it is a task, inspect enough context to plan safely.
-4. Run the Planner with the `ralplan_run_agent` tool using `role: "planner"`, `stage: "planner"`, and `stageN: 1`. The role agent must create and persist a planner artifact containing:
+3. If the explorer pre-planner gate is missing or retrying, run `ralplan_run_agent` with `role: "explorer"`, `stage: "pre-planner"`, and `stageN: 1`; the explorer must persist `context_map` with `pi workflow ralplan record-explorer-gate`.
+4. If the input is a file path, read it. If it is a task, inspect enough context to plan safely.
+5. Run the Planner with the `ralplan_run_agent` tool using `role: "planner"`, `stage: "planner"`, and `stageN: 1`. The role agent must create and persist a planner artifact containing:
    - concise problem statement
    - principles and decision drivers
    - at least two viable options, or a clear rationale for why only one remains
@@ -28,25 +29,26 @@ Ralplan is Pi's consensus planning workflow. It produces a durable pending-appro
    - risks
    - verification plan
    - open questions
-5. Confirm the Planner returned a receipt/path from `pi workflow ralplan write-artifact`. This writer is duplicate-safe and rejects conflicting rewrites of the same stage/stageN.
-6. Run the Architect with the `ralplan_run_agent` tool using `role: "architect"`, `stage: "architect"`, and the planner artifact path in `contextArtifacts`. It must review for:
+6. Confirm the Planner returned a receipt/path from `pi workflow ralplan write-artifact`. This writer is duplicate-safe and rejects conflicting rewrites of the same stage/stageN.
+7. Run the Architect with the `ralplan_run_agent` tool using `role: "architect"`, `stage: "architect"`, and the planner artifact path in `contextArtifacts`. It must review for:
    - strongest architectural objection
    - integration and ownership concerns
    - tradeoff tensions
    - synthesis or requested changes
    The Architect must persist with `stage: "architect"` and return receipt-only verdict fields.
-7. Run the Critic with the `ralplan_run_agent` tool using `role: "critic"`, `stage: "critic"`, and planner/architect artifact paths in `contextArtifacts`. It must evaluate:
+8. Run the Critic with the `ralplan_run_agent` tool using `role: "critic"`, `stage: "critic"`, and planner/architect artifact paths in `contextArtifacts`. It must evaluate:
    - acceptance criteria quality
    - risk mitigation
    - testability
    - missing edge cases
    - verdict: `APPROVE`, `ITERATE`, or `REJECT`
    The Critic must persist with `stage: "critic"` and return receipt-only verdict fields.
-8. If the critic requests iteration, run a Planner revision with the `ralplan_run_agent` tool using `role: "planner"`, `stage: "revision"`, and consolidated Architect/Critic feedback. Then repeat Architect/Critic review. Cap at five iterations.
-9. Persist the final pending-approval plan with `stage: "final"`. The tool also writes `pending-approval.md`.
-10. Stop and ask for explicit execution approval. Do not execute the plan until the user explicitly approves it.
-11. After explicit approval or rejection, call `pi workflow ralplan approve-plan` to close the gate. Default approved handoff is `target: "ultragoal"`; use `target: "team"` only when coordinated parallel workers are needed, or `target: "stop"` to record approval without starting another workflow.
-12. `pi workflow ralplan approve-plan` enforces the latest critic verdict: it refuses to approve when the latest critic verdict is REJECT (set `overrideCriticVerdict: true` to force approval), and warns when it is ITERATE (e.g. the plan was revised but not re-reviewed by the critic). `pi workflow ralplan doctor` surfaces the same signal as a warning while a plan is pending. Do not approve over a REJECT without an explicit override decision.
+9. If the critic requests iteration, run a Planner revision with the `ralplan_run_agent` tool using `role: "planner"`, `stage: "revision"`, and consolidated Architect/Critic feedback. Then repeat Architect/Critic review. Cap at five iterations.
+10. If workflow state selects `expert-stage`, run `ralplan_run_agent` with `role: "expert"`, `stage: "expert-stage"`, and the relevant artifacts; use the expert decision to revise, approve with caveats, or stop for human input.
+11. Persist the final pending-approval plan with `stage: "final"`. The tool also writes `pending-approval.md`.
+12. Stop and ask for explicit execution approval. Do not execute the plan until the user explicitly approves it.
+13. After explicit approval or rejection, call `pi workflow ralplan approve-plan` to close the gate. Default approved handoff is `target: "ultragoal"`; use `target: "team"` only when coordinated parallel workers are needed, or `target: "stop"` to record approval without starting another workflow.
+14. `pi workflow ralplan approve-plan` enforces the latest critic verdict: it refuses to approve when the latest critic verdict is REJECT (set `overrideCriticVerdict: true` to force approval), and warns when it is ITERATE (e.g. the plan was revised but not re-reviewed by the critic). `pi workflow ralplan doctor` surfaces the same signal as a warning while a plan is pending. Do not approve over a REJECT without an explicit override decision.
 
 ## Final Plan Shape
 

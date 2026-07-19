@@ -19,6 +19,8 @@ The extension registers these model-visible tools:
 | `subagent_cancel` | Cancel a live or durable subagent record. |
 | `ralplan_run_agent` | Run the next legal Ralplan role agent and persist role artifacts. |
 | `team_spawn_task_agent` | Spawn the next legal Team task worker. |
+| `team_spawn_review_agent` | Spawn the next legal Team task reviewer. |
+| `team_spawn_prover_agent` | Spawn the next legal Team completion prover. |
 | `ultragoal_spawn_goal_agent` | Spawn the next legal Ultragoal goal worker. |
 
 All tools call the main session's `SubagentManager` in-process. The detached workflow owner is lifecycle-only and does not host spawns.
@@ -26,7 +28,7 @@ All tools call the main session's `SubagentManager` in-process. The detached wor
 ## Guarded Workflow Spawns
 
 - Ralplan computes the legal next role/stage from its run artifacts before `ralplan_run_agent` proceeds.
-- Team computes the expected task before `team_spawn_task_agent` proceeds and rejects runtime model/tool overrides.
+- Team computes the expected worker/reviewer/prover role before a team spawn tool proceeds and rejects runtime model/tool overrides.
 - Ultragoal computes the expected goal before `ultragoal_spawn_goal_agent` proceeds and rejects runtime model/tool overrides.
 
 ## Command Layer Boundary

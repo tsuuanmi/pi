@@ -110,12 +110,15 @@ export function expectedNextRalplanRole(
 export interface TeamSelectorTask {
 	id: string;
 	status: string;
+	review_gate?: { status?: string };
 }
 
 /** Team snapshot slice accepted by the selector. */
 export interface TeamSelectorSnapshot {
 	team_id?: string;
+	phase?: string;
 	tasks: TeamSelectorTask[];
+	completion_gate?: { passed?: boolean; status?: string };
 }
 
 export function expectedNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): ExpectedNextRole | undefined {

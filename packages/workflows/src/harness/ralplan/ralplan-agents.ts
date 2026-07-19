@@ -9,7 +9,7 @@ import { writeJsonAtomic } from "../shared/state/state-writer.ts";
 import { activeRalplanRunId, defaultWorkflowId } from "../shared/state/workflow-state.ts";
 import { assertRalplanExplorerGatePassed } from "./ralplan-gates.ts";
 
-export type RalplanAgentRole = "planner" | "architect" | "critic" | "expert";
+export type RalplanAgentRole = "explorer" | "planner" | "architect" | "critic" | "expert";
 
 export interface RalplanAgentRunInput {
 	role: RalplanAgentRole;
@@ -179,6 +179,7 @@ export async function runRalplanAgent(
 }
 
 export function ralplanRoleForStage(stage: RalplanStage): RalplanAgentRole {
+	if (stage === "pre-planner") return "explorer";
 	if (stage === "planner" || stage === "revision") return "planner";
 	if (stage === "architect") return "architect";
 	if (stage === "critic") return "critic";

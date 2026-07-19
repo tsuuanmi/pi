@@ -272,6 +272,8 @@ describe("workflow runtime", () => {
 				"subagent_spawn",
 				"ralplan_run_agent",
 				"team_spawn_task_agent",
+				"team_spawn_review_agent",
+				"team_spawn_prover_agent",
 				"ultragoal_spawn_goal_agent",
 			]),
 		);
@@ -761,20 +763,25 @@ describe("workflow runtime", () => {
 			).toBeUndefined();
 		});
 
-		it("returns planner when no artifact exists yet", () => {
+		it("returns explorer when no artifact or explorer gate exists yet", () => {
 			const expected = expectedNextRalplanRole(undefined, "run-1");
-			expect(expected?.stage).toBe("planner");
-			expect(expected?.role).toBe("planner");
+			expect(expected?.stage).toBe("pre-planner");
+			expect(expected?.role).toBe("explorer");
 		});
 
 		it("returns architect after a planner artifact and after revision", () => {
-			expect(expectedNextRalplanRole({ latest: { stage: "planner" } }, "r")?.stage).toBe("architect");
-			expect(expectedNextRalplanRole({ latest: { stage: "revision" } }, "r")?.stage).toBe("architect");
+			expect(
+				expectedNextRalplanRole({ explorerGate: { status: "passed" }, latest: { stage: "planner" } }, "r")?.stage,
+			).toBe("architect");
+			expect(
+				expectedNextRalplanRole({ explorerGate: { status: "passed" }, latest: { stage: "revision" } }, "r")?.stage,
+			).toBe("architect");
 		});
 
 		it("always routes an architect artifact to critic", () => {
 			const block = expectedNextRalplanRole(
 				{
+					explorerGate: { status: "passed" },
 					latest: {
 						stage: "architect",
 						verdict: { role: "architect", clarity: "block", recommendation: "request_changes" },
@@ -785,6 +792,7 @@ describe("workflow runtime", () => {
 			expect(block?.stage).toBe("critic");
 			const clear = expectedNextRalplanRole(
 				{
+					explorerGate: { status: "passed" },
 					latest: {
 						stage: "architect",
 						verdict: { role: "architect", clarity: "clear", recommendation: "approve" },
@@ -798,23 +806,33 @@ describe("workflow runtime", () => {
 		it("routes critic approve to closed, iterate/reject to revision, missing verdict to critic", () => {
 			expect(
 				expectedNextRalplanRole(
-					{ latest: { stage: "critic", verdict: { role: "critic", verdict: "approve" } } },
+					{
+						explorerGate: { status: "passed" },
+						latest: { stage: "critic", verdict: { role: "critic", verdict: "approve" } },
+					},
 					"r",
 				),
 			).toBeUndefined();
 			expect(
 				expectedNextRalplanRole(
-					{ latest: { stage: "critic", verdict: { role: "critic", verdict: "reject" } } },
+					{
+						explorerGate: { status: "passed" },
+						latest: { stage: "critic", verdict: { role: "critic", verdict: "reject" } },
+					},
 					"r",
 				)?.stage,
 			).toBe("revision");
-			expect(expectedNextRalplanRole({ latest: { stage: "critic" } }, "r")?.stage).toBe("critic");
+			expect(
+				expectedNextRalplanRole({ explorerGate: { status: "passed" }, latest: { stage: "critic" } }, "r")?.stage,
+			).toBe("critic");
 		});
 
 		it("returns undefined for closed phases and adr/final artifacts", () => {
 			expect(expectedNextRalplanRole({ current_phase: "pending-approval" }, "r")).toBeUndefined();
 			expect(expectedNextRalplanRole({ current_phase: "handoff" }, "r")).toBeUndefined();
-			expect(expectedNextRalplanRole({ latest: { stage: "final" } }, "r")).toBeUndefined();
+			expect(
+				expectedNextRalplanRole({ explorerGate: { status: "passed" }, latest: { stage: "final" } }, "r"),
+			).toBeUndefined();
 		});
 	});
 
@@ -831,7 +849,7 @@ describe("workflow runtime", () => {
 			expect(expected?.role).toBe("worker");
 		});
 
-		it("prefers an in-progress task over pending ones", () => {
+		it("routes an in-progress task without a passing review gate to reviewer", () => {
 			const expected = expectedNextTeamRole({
 				team_id: "t1",
 				tasks: [
@@ -840,9 +858,36 @@ describe("workflow runtime", () => {
 				],
 			});
 			expect(expected?.taskId).toBe("task-z");
+			expect(expected?.role).toBe("reviewer");
+			expect(expected?.stage).toBe("task-review");
 		});
 
-		it("returns undefined when all tasks are completed/blocked/failed", () => {
+		it("routes all completed tasks without a completion gate to prover", () => {
+			const expected = expectedNextTeamRole({
+				team_id: "t1",
+				tasks: [
+					{ id: "task-a", status: "completed" },
+					{ id: "task-b", status: "completed" },
+				],
+			});
+			expect(expected?.role).toBe("prover");
+			expect(expected?.stage).toBe("team-proof");
+		});
+
+		it("returns undefined when all tasks are completed and completion gate passed", () => {
+			expect(
+				expectedNextTeamRole({
+					team_id: "t1",
+					completion_gate: { status: "passed" },
+					tasks: [
+						{ id: "task-a", status: "completed" },
+						{ id: "task-b", status: "completed" },
+					],
+				}),
+			).toBeUndefined();
+		});
+
+		it("returns undefined when tasks are completed/blocked/failed and no gate can advance", () => {
 			expect(
 				expectedNextTeamRole({
 					team_id: "t1",
@@ -869,6 +914,7 @@ describe("workflow runtime", () => {
 				return expectedNextRalplanRole(
 					{
 						current_phase: state?.current_phase as string | undefined,
+						explorerGate: { status: "passed" },
 						latest: status.latest
 							? {
 									stage: status.latest.stage,
@@ -938,7 +984,10 @@ describe("workflow runtime", () => {
 
 		it("refuses an off-sequence spawn via assertExpectedNextRole", () => {
 			// After a planner artifact, the legal next is architect, not critic.
-			const expected = expectedNextRalplanRole({ latest: { stage: "planner" } }, "r");
+			const expected = expectedNextRalplanRole(
+				{ explorerGate: { status: "passed" }, latest: { stage: "planner" } },
+				"r",
+			);
 			expect(() =>
 				assertExpectedNextRole(expected!, {
 					skill: "ralplan",

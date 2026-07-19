@@ -106,14 +106,16 @@ Score every active component independently; the overall dimension score is the m
 | `--interactive` | Require user approval at each stage |
 | `--deliberate` | Enable deeper deliberation passes |
 
-Ralplan produces a durable pending-approval plan through three role agents run as separate `ralplan_run_agent` invocations (not simulated inline):
+Ralplan produces a durable pending-approval plan through guarded role agents run as separate `ralplan_run_agent` invocations (not simulated inline):
 
-1. **Planner** (`stage: "planner"`) — problem statement, principles, ≥2 viable options (or rationale for one), recommended approach, risks, verification plan, open questions.
-2. **Architect** (`stage: "architect"`) — strongest architectural objection, integration/ownership concerns, tradeoff tensions, synthesis.
-3. **Critic** (`stage: "critic"`) — acceptance criteria quality, risk mitigation, testability, missing edge cases, verdict: `APPROVE` / `ITERATE` / `REJECT`.
-4. **Revision** (`stage: "revision"`) — if the critic requests iteration, the Planner revises with consolidated feedback; Architect/Critic re-review. Cap at five iterations.
-5. **Final** (`stage: "final"`) — persist the pending-approval plan; `pending-approval.md` is also written.
-6. Stop and ask for explicit execution approval.
+1. **Explorer** (`stage: "pre-planner"`) — context map for the pre-planner gate when the gate is missing or retrying.
+2. **Planner** (`stage: "planner"`) — problem statement, principles, ≥2 viable options (or rationale for one), recommended approach, risks, verification plan, open questions.
+3. **Architect** (`stage: "architect"`) — strongest architectural objection, integration/ownership concerns, tradeoff tensions, synthesis.
+4. **Critic** (`stage: "critic"`) — acceptance criteria quality, risk mitigation, testability, missing edge cases, verdict: `APPROVE` / `ITERATE` / `REJECT`.
+5. **Revision** (`stage: "revision"`) — if the critic requests iteration, the Planner revises with consolidated feedback; Architect/Critic re-review. Cap at five iterations.
+6. **Expert** (`stage: "expert-stage"`) — escalation decision after iterate-cap or human-blocked explorer gate.
+7. **Final** (`stage: "final"`) — persist the pending-approval plan; `pending-approval.md` is also written.
+8. Stop and ask for explicit execution approval.
 
 After explicit approval or rejection, call `pi workflow ralplan approve-plan`. Default approved handoff is `target: "ultragoal"`; use `target: "team"` when coordinated parallel workers are needed, or `target: "stop"` to record approval without starting another workflow.
 
@@ -123,7 +125,7 @@ After explicit approval or rejection, call `pi workflow ralplan approve-plan`. D
 
 **Control plane:** use `pi workflow state ralplan ...` for envelope state; `pi workflow ralplan <record-explorer-gate|write-artifact|status|read-compact|doctor|approve-plan>` for non-spawn runtime operations; and `ralplan_run_agent` for guarded role-agent execution.
 
-**Boundaries:** planning only. Persist artifacts with `pi workflow ralplan write-artifact`; do not directly edit `.pi/<session-id>/plans` or `.pi/<session-id>/workflows` unless recovering with explicit user approval. Planner/Architect/Critic passes must use `ralplan_run_agent` and be sequential: planner first, architect second, critic third. Role agents persist durable output and return receipt-only summaries (run id, stage, stage_n, path).
+**Boundaries:** planning only. Persist artifacts with `pi workflow ralplan write-artifact`; do not directly edit `.pi/<session-id>/plans` or `.pi/<session-id>/workflows` unless recovering with explicit user approval. Explorer/Planner/Architect/Critic/Expert passes must use `ralplan_run_agent` and follow workflow-selected order. Role agents persist durable output and return receipt-only summaries (run id, stage, stage_n, path).
 
 ### team
 
@@ -142,11 +144,11 @@ Team coordinates multiple implementation workstreams as subagent sessions. Use i
 7. Merge results, resolve conflicts, run requested checks.
 8. Close the run with `pi workflow team complete`.
 
-**Task states:** `pending` → `active` → `completed` (or `blocked` / `failed`).
+**Task states:** `pending` → `in_progress` → `completed` (or `blocked` / `failed`).
 
 **Gates:** completed tasks require a reviewer `review_report` (`pi workflow team record-review-gate`) and completion requires a prover `evidence_matrix` (`pi workflow team record-completion-gate`). Both are fail-closed validated; blocking artifacts escalate to `human_blocked` on the second blocking attempt (bounded retry).
 
-**Control plane:** use `pi workflow state team ...` for envelope state; `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>` for non-spawn runtime operations; and `team_spawn_task_agent` for guarded worker execution.
+**Control plane:** use `pi workflow state team ...` for envelope state; `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>` for non-spawn runtime operations; and `team_spawn_task_agent`, `team_spawn_review_agent`, and `team_spawn_prover_agent` for guarded worker/reviewer/prover execution.
 
 **Boundaries:** if the request is vague or lacks acceptance criteria, route to `/skill:ralplan` first. If a single autonomous worker is enough, prefer `/skill:ultragoal`. Keep workers scoped to non-overlapping files/components when possible.
 
@@ -242,13 +244,13 @@ Workflows dispatch isolated role agents using reusable agent profiles. This pack
 | `prover` | Produce the team completion `evidence_matrix`. | `low` | `read`, `bash` |
 | `reviewer` | Produce the team task `review_report`. | `medium` | `read`, `bash` |
 
-Bundled profiles with frontmatter set `persistent: true` when they need resumable context. Generic `subagent_*` tools accept per-invocation profile overrides. Guarded workflow spawns compute the legal role/task/goal first; `team_spawn_task_agent` and `ultragoal_spawn_goal_agent` reject runtime model/tool overrides, while `ralplan_run_agent` exposes role-agent overrides for planner/architect/critic-style passes.
+Bundled profiles with frontmatter set `persistent: true` when they need resumable context. Generic `subagent_*` tools accept per-invocation profile overrides. Guarded workflow spawns compute the legal role/task/goal first; team and ultragoal spawn tools reject runtime model/tool overrides, while `ralplan_run_agent` exposes role-agent overrides for explorer/planner/architect/critic/expert passes.
 
 Profiles are authored as markdown files with YAML frontmatter. Pi discovers them from user `~/.agent`/`~/.agents`, enabled package `agents/*.md` resources (including these), and trusted project `.agent`/`.agents` directories. Project ancestor profiles closest to the current directory win. See [docs/workflow.md](docs/workflow.md) for the full discovery rules, frontmatter fields, and the standard `.agent`/`.agents` resource layout.
 
 ## Model-Visible Tools
 
-Workflow-owned **spawn** tools are model-visible and registered by the workflow extension: `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `ultragoal_spawn_goal_agent`. They call the main session's `SubagentManager` directly in-process — the only place a subagent can be spawned and run to completion. The role agents are ordinary subagents; the workflow's special part is turn order, guarded role checks, and result→artifact handoff. Non-spawn workflow ops remain `pi workflow ...` commands. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
+Workflow-owned **spawn** tools are model-visible and registered by the workflow extension: `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `team_spawn_review_agent`, `team_spawn_prover_agent`, `ultragoal_spawn_goal_agent`. They call the main session's `SubagentManager` directly in-process — the only place a subagent can be spawned and run to completion. The role agents are ordinary subagents; the workflow's special part is turn order, guarded role checks, and result→artifact handoff. Non-spawn workflow ops remain `pi workflow ...` commands. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
 
 ## Harness Runtime
 
