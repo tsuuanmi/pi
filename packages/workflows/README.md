@@ -227,7 +227,7 @@ JSON report shape (committed contract):
 }
 ```
 
-State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`. See [docs/workflow.md](docs/workflow.md) for the full control-plane reference, including the deferred-seam registry, `validateReceiptFamilyConsistency`, and `syncWorkflowHudUi` internals.
+State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`. See [docs/workflow.md](docs/workflow.md) for the full control-plane reference, including the deferred-seam registry, `validateReceiptFamilyConsistency`, and HUD internals.
 
 ## Reusable Agent Profiles
 
@@ -254,13 +254,13 @@ Workflow-owned tools are model-visible and registered by the workflow extension.
 
 ## Harness Runtime
 
-The harness runtime backs the `pi workflow` CLI and the four skills. It lives under `src/harness/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `shared/` (cross-skill artifacts, audit, compaction, HUD, orchestration, registry, session, and state utilities), `subagents/` (generic subagent tools), and one directory per skill (`deep-interview/`, `ralplan/`, `team/`, `ultragoal/`).
+The harness runtime backs the `pi workflow` CLI and the four skills. It lives under `src/harness/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `shared/` (cross-skill artifacts, audit, compaction, orchestration, registry, session, and state utilities), `subagents/` (generic subagent tools), and one directory per skill (`deep-interview/`, `ralplan/`, `team/`, `ultragoal/`). Per-skill HUD builders live with their owning skill harnesses.
 
 Key seams for contributors:
 
 - **Deferred-seam registry** (`harness/runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
 - **`validateReceiptFamilyConsistency`** (`harness/runtime/receipt-rules.ts`): a write-path guard inside `mutateRuntimeSession` that rejects receipts whose post-state lifecycle contradicts their family target. It throws before any write so a contradiction leaves zero orphan events/receipts/state. Conservative and pluggable; future receipt families register rules in `receiptFamilyConsistencyRules`.
-- **`syncWorkflowHudUi`** (`harness/shared/hud/hud.ts`): intentionally no-ops for workflow mirroring because the status line reads session-scoped active state directly; the same module also exposes `syncMcpHudUi` for MCP status/widget updates.
+- **HUD rendering**: per-skill HUD builders live in the owning harness folders (`deep-interview-hud.ts`, `ralplan-hud.ts`, `team-hud.ts`, `ultragoal-hud.ts`). Workflow HUD synchronization is registered by the extension through `@tsuuanmi/pi-tui`; workflow mirroring remains session-scoped because the status line reads active state directly.
 
 ### Session Layout
 
@@ -295,7 +295,7 @@ If a skill's state becomes corrupt or stuck in a terminal phase, use `pi workflo
 | `artifacts/` | `artifacts.ts` | Durable artifact writes and receipt helpers. |
 | `audit/` | `audit-log.ts`, `decision-ledger.ts`, `tamper-detection.ts`, `transaction-journal.ts` | Append-only audit, decision, tamper, and transaction records. |
 | `compaction/` | `compaction.ts` | Prompt-budgeted compact workflow projections. |
-| `hud/` | `hud.ts` | HUD chip formatting and extension HUD sync hooks. |
+| Skill HUD modules | `deep-interview-hud.ts`, `ralplan-hud.ts`, `team-hud.ts`, `ultragoal-hud.ts` | HUD chip formatting for each workflow skill, colocated with the owning skill harness. |
 | `orchestration/` | `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `handoff.ts`, `vagueness-gate.ts`, `workflow-tool-utils.ts` | Cross-workflow prompts, handoffs, gates, expected-next checks, and tool helpers. |
 | `registry/` | `skill-registry.ts`, `workflow-manifest.ts` | Built-in skill registry and manifest metadata. |
 | `session/` | `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Session-scoped path builders and session-id resolution. |

@@ -138,7 +138,7 @@ Spawn tools read the session id from `ctx.sessionManager.getSessionId()`, so the
 
 ## HUD visibility for command-created sessions
 
-The interactive status line reads session-scoped workflow active state (`.pi/<session-id>/workflows/active-state.json`) on a 1s refresh and renders the HUD for the current interactive session only. `syncWorkflowHudUi` is an intentional no-op for HUD mirroring; the status line is the single source of truth.
+The interactive status line reads session-scoped workflow active state (`.pi/<session-id>/workflows/active-state.json`) on a 1s refresh and renders the HUD for the current interactive session only. Workflow HUD synchronization is registered by the extension through `@tsuuanmi/pi-tui`; the status line is the single source of truth.
 
 Behavior:
 - Only the active/attached interactive session shows its own workflow in the HUD.
@@ -160,4 +160,4 @@ A few internals are noted here so contributors can extend the control plane with
 
 - **Deferred-seam registry** (`harness/runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. The registry is wired live into `recoverPrimitive`'s `fallback-harness-exec` branch. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
 - **`validateReceiptFamilyConsistency`** (`harness/runtime/receipt-rules.ts`): a write-path guard inside `mutateRuntimeSession` that rejects receipts whose post-state lifecycle contradicts their family target (e.g. a `finalize` receipt that is `accepted` but does not land on `completed`, or a passing `validate` receipt that does not land on `validating`). It throws before any write so a contradiction leaves zero orphan events/receipts/state. Conservative and pluggable: blocked variants pass, pre-Phase-3 receipts are grandfathered (write-path only), and future receipt families register rules in `receiptFamilyConsistencyRules` without touching the mutation path.
-- **`syncWorkflowHudUi`** (`harness/shared/hud/hud.ts`): an intentional lifecycle hook no-op for workflow mirroring; the status line reads session-scoped active state directly. `syncMcpHudUi` in the same module mirrors MCP server status into status/widget slots.
+- **Workflow HUD builders**: per-skill HUD modules (`deep-interview-hud.ts`, `ralplan-hud.ts`, `team-hud.ts`, `ultragoal-hud.ts`) build active-state summaries in the owning harness folder. Extension-side HUD refresh is provided through `@tsuuanmi/pi-tui`.

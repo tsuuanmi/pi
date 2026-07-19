@@ -18,7 +18,7 @@ Registered tools are documented in [harness/subagents/subagents.md](../harness/s
 
 ## HUD Hooks
 
-`syncWorkflowHudUi` is intentionally a lifecycle no-op for workflow mirroring: the interactive status line reads session-scoped active state directly. `syncMcpHudUi` mirrors MCP connection status into status/widget slots.
+The extension hooks lifecycle events to refresh workflow/MCP UI state through `@tsuuanmi/pi-tui`. Workflow rendering remains session-scoped: the interactive status line reads session-scoped active state directly.
 
 ## See Also
 

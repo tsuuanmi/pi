@@ -35,6 +35,7 @@
 
 ### Changed
 
+- **commands**: Split the oversized `src/commands/workflow.ts` implementation into focused `src/commands/workflow/` modules while keeping the public `commands/workflow` export and dispatcher wrapper stable.
 - **workflows**: Moved workflow HUD rendering/building and extension UI registration helpers to `@tsuuanmi/pi-tui`; `pi-workflows` now only registers TUI HUD sync with workflow state.
 - **commands**: Merged the standalone `state-command` implementation into `commands/workflow`; the `commands/state-command` subpath remains as a compatibility alias to the workflow command module.
 - **deep-interview**: Option-bearing questions now explain each option in simple terms and include a recommended best option with a reason.
