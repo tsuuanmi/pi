@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseFrontmatter, stripFrontmatter } from "#coding-agent/utils/fs/frontmatter";
+import { parseFrontmatter, stripFrontmatter } from "#coding-agent/utils/fs/index";
 
 describe("parseFrontmatter", () => {
 	it("parses keys, strips quotes, and returns body", () => {

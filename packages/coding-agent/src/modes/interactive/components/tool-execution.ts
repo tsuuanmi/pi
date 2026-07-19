@@ -2,7 +2,7 @@ import { Box, type Component, Container, Spacer, Text, type TUI } from "@tsuuanm
 import type { ToolDefinition, ToolRenderContext } from "#coding-agent/api/types";
 import { theme } from "#coding-agent/theme/theme";
 import { createAllToolDefinitions, type ToolName } from "#coding-agent/tools/index";
-import { getTextOutput as getRenderedTextOutput } from "#coding-agent/tools/render-utils";
+import { getTextOutput as getRenderedTextOutput } from "#coding-agent/tools/utils";
 
 export interface ToolExecutionOptions {}
 

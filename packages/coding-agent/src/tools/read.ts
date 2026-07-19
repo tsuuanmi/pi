@@ -1,5 +1,12 @@
 import { basename, dirname, isAbsolute, relative, resolve as resolvePath, sep } from "node:path";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
+import {
+	DEFAULT_MAX_BYTES,
+	DEFAULT_MAX_LINES,
+	formatSize,
+	type TruncationResult,
+	truncateHead,
+} from "@tsuuanmi/pi-agent";
 import { formatPathRelativeToCwdOrAbsolute } from "@tsuuanmi/pi-agent/node";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import { Text } from "@tsuuanmi/pi-tui";
@@ -10,15 +17,7 @@ import type { ToolDefinition, ToolRenderResultOptions } from "#coding-agent/api/
 import { getReadmePath } from "#coding-agent/config/config";
 import { getLanguageFromPath, highlightCode, type Theme } from "#coding-agent/theme/theme";
 import { resolveReadPathAsync, resolveToCwd } from "#coding-agent/tools/path-utils";
-import { getTextOutput, renderToolPath, replaceTabs, str } from "#coding-agent/tools/render-utils";
-import { wrapToolDefinition } from "#coding-agent/tools/tool-definition-wrapper";
-import {
-	DEFAULT_MAX_BYTES,
-	DEFAULT_MAX_LINES,
-	formatSize,
-	type TruncationResult,
-	truncateHead,
-} from "#coding-agent/tools/truncate";
+import { getTextOutput, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#coding-agent/tools/utils";
 import { keyHint, keyText } from "#coding-agent/ui/rendering/keybinding-hints";
 
 const readSchema = Type.Object({

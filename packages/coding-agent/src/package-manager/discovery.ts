@@ -1,13 +1,18 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import ignore from "ignore";
-import { AGENTS_STANDARD_DIR_NAMES, FILE_PATTERNS, IGNORE_FILE_NAMES } from "#coding-agent/package-manager/constants";
-import { getHomeDir, toPosixPath } from "#coding-agent/package-manager/env";
 import type { PiManifest, ResourceType, SkillDiscoveryMode } from "#coding-agent/package-manager/types";
+import {
+	AGENTS_STANDARD_DIR_NAMES,
+	FILE_PATTERNS,
+	getHomeDir,
+	IGNORE_FILE_NAMES,
+	toPosixPath,
+} from "#coding-agent/package-manager/utils";
 
 export type IgnoreMatcher = ReturnType<typeof ignore>;
 
-export function prefixIgnorePattern(line: string, prefix: string): string | null {
+function prefixIgnorePattern(line: string, prefix: string): string | null {
 	const trimmed = line.trim();
 	if (!trimmed) return null;
 	if (trimmed.startsWith("#") && !trimmed.startsWith("\\#")) return null;
@@ -30,7 +35,7 @@ export function prefixIgnorePattern(line: string, prefix: string): string | null
 	return negated ? `!${prefixed}` : prefixed;
 }
 
-export function addIgnoreRules(ig: IgnoreMatcher, dir: string, rootDir: string): void {
+function addIgnoreRules(ig: IgnoreMatcher, dir: string, rootDir: string): void {
 	const relativeDir = relative(rootDir, dir);
 	const prefix = relativeDir ? `${toPosixPath(relativeDir)}/` : "";
 
@@ -50,7 +55,7 @@ export function addIgnoreRules(ig: IgnoreMatcher, dir: string, rootDir: string):
 	}
 }
 
-export function collectFiles(
+function collectFiles(
 	dir: string,
 	filePattern: RegExp,
 	skipNodeModules = true,
@@ -101,7 +106,7 @@ export function collectFiles(
 	return files;
 }
 
-export function collectSkillEntries(
+function collectSkillEntries(
 	dir: string,
 	mode: SkillDiscoveryMode,
 	ignoreMatcher?: IgnoreMatcher,
@@ -179,7 +184,7 @@ export function collectAutoSkillEntries(dir: string, mode: SkillDiscoveryMode): 
 	return collectSkillEntries(dir, mode);
 }
 
-export function findGitRepoRoot(startDir: string): string | null {
+function findGitRepoRoot(startDir: string): string | null {
 	let dir = resolve(startDir);
 	while (true) {
 		if (existsSync(join(dir, ".git"))) {
@@ -293,7 +298,7 @@ export function collectAutoThemeEntries(dir: string): string[] {
 	return entries;
 }
 
-export function readPiManifestFile(packageJsonPath: string): PiManifest | null {
+function readPiManifestFile(packageJsonPath: string): PiManifest | null {
 	try {
 		const content = readFileSync(packageJsonPath, "utf-8");
 		const pkg = JSON.parse(content) as { pi?: PiManifest };
@@ -303,7 +308,7 @@ export function readPiManifestFile(packageJsonPath: string): PiManifest | null {
 	}
 }
 
-export function resolveExtensionEntries(dir: string): string[] | null {
+function resolveExtensionEntries(dir: string): string[] | null {
 	const packageJsonPath = join(dir, "package.json");
 	if (existsSync(packageJsonPath)) {
 		const manifest = readPiManifestFile(packageJsonPath);

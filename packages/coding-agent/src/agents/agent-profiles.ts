@@ -24,7 +24,7 @@ interface AgentProfileResourceLoader {
 	getAgentProfiles?: () => AgentProfileLoadResult;
 }
 
-export function loadAgentProfiles(options: {
+function loadAgentProfiles(options: {
 	cwd: string;
 	agentDir: string;
 	settingsManager: SettingsManager;

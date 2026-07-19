@@ -36,8 +36,8 @@ import {
 	resolveConfigValueUncached,
 	resolveHeadersOrThrow,
 } from "#coding-agent/config/resolve-config-value";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/model/provider-display-names";
-import { stripJsonComments } from "#coding-agent/utils/fs/json";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/providers/utils";
+import { stripJsonComments } from "#coding-agent/utils/fs/index";
 
 // Schema for thinking level support and provider-specific values
 const ThinkingLevelMapValueSchema = Type.Union([Type.String(), Type.Null()]);

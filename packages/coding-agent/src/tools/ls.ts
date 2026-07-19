@@ -7,8 +7,7 @@ import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#coding-agent/api/types";
 import type { Theme } from "#coding-agent/theme/theme";
 import { pathExists, resolveToCwd } from "#coding-agent/tools/path-utils";
-import { getTextOutput, renderToolPath, str } from "#coding-agent/tools/render-utils";
-import { wrapToolDefinition } from "#coding-agent/tools/tool-definition-wrapper";
+import { getTextOutput, renderToolPath, str, wrapToolDefinition } from "#coding-agent/tools/utils";
 import { keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 
 const lsSchema = Type.Object({

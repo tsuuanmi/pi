@@ -4,7 +4,7 @@ import { basename, dirname, join, resolve, sep } from "path";
 import { CONFIG_DIR_NAME } from "#coding-agent/config/config";
 import type { ResourceDiagnostic } from "#coding-agent/resources/diagnostics";
 import { createSyntheticSourceInfo, type SourceInfo } from "#coding-agent/resources/source-info";
-import { parseFrontmatter } from "#coding-agent/utils/fs/frontmatter";
+import { parseFrontmatter } from "#coding-agent/utils/fs/index";
 
 /**
  * Represents a prompt template loaded from a markdown file

@@ -2,7 +2,38 @@ import { chmodSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { BundledPackageName } from "#coding-agent/package-manager/types";
+import { valid, validRange } from "semver";
+import type { BundledPackageName, ResourceType, TopLevelResourceType } from "#coding-agent/package-manager/types";
+import type { PackageSource } from "#coding-agent/settings/settings-manager";
+
+export const NETWORK_TIMEOUT_MS = 10000;
+export const UPDATE_CHECK_CONCURRENCY = 4;
+export const GIT_UPDATE_CONCURRENCY = 4;
+
+export const RESOURCE_TYPES: ResourceType[] = ["extensions", "skills", "prompts", "themes", "commands", "agents"];
+export const TOP_LEVEL_RESOURCE_TYPES: TopLevelResourceType[] = ["extensions", "skills", "prompts", "themes"];
+
+export const BUNDLED_PACKAGE_SOURCES: Record<string, BundledPackageName> = {
+	"pi:workflows": "workflows",
+	"pi:lsp": "lsp",
+	"pi:mcp": "mcp",
+	"pi:providers": "providers",
+};
+
+export const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows", "pi:lsp", "pi:mcp", "pi:providers"];
+
+export const FILE_PATTERNS: Record<ResourceType, RegExp> = {
+	extensions: /\.(ts|js)$/,
+	skills: /\.md$/,
+	prompts: /\.md$/,
+	themes: /\.json$/,
+	commands: /\.(ts|js|mjs|cjs)$/,
+	agents: /\.md$/,
+};
+
+export const IGNORE_FILE_NAMES = [".gitignore", ".ignore", ".fdignore"];
+
+export const AGENTS_STANDARD_DIR_NAMES = [".agent", ".agents"] as const;
 
 export function getEnv(): NodeJS.ProcessEnv {
 	if (process.platform !== "linux" || Object.keys(process.env).length > 0) {
@@ -60,4 +91,12 @@ export function getBundledPackageRoot(name: BundledPackageName): string {
 		return resolve(__dirname, "..", "packages", "workflows");
 	}
 	return resolve(dirname(fileURLToPath(import.meta.url)), "..", "packages", name);
+}
+
+export function isExactNpmVersion(version: string | undefined): boolean {
+	return valid(version ?? "") !== null;
+}
+
+export function getNpmVersionRange(version: string | undefined): string | undefined {
+	return version ? (validRange(version) ?? undefined) : undefined;
 }

@@ -16,7 +16,7 @@ import type {
 import { optimizeRetainedContext } from "#coding-agent/messages/context-optimization";
 import { ModelRegistry } from "#coding-agent/model/model-registry";
 import { findInitialModel } from "#coding-agent/model/model-resolver";
-import { mergeHeaderSources } from "#coding-agent/model/provider-attribution";
+import { mergeHeaderSources } from "#coding-agent/providers/utils";
 import { getDefaultSessionDir, SessionManager } from "#coding-agent/session/session-manager";
 import { SettingsManager } from "#coding-agent/settings/settings-manager";
 import type { ResourceLoader } from "#coding-agent/skills/resource-loader";

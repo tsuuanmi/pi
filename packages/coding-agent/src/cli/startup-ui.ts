@@ -1,5 +1,4 @@
 import { ProcessTerminal, setKeybindings, TUI } from "@tsuuanmi/pi-tui";
-import { ExtensionInputComponent } from "#coding-agent/modes/interactive/components/extension-input";
 import { ExtensionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/extension-selector";
 import { KeybindingsManager } from "#coding-agent/settings/keybindings";
 import type { SettingsManager } from "#coding-agent/settings/settings-manager";
@@ -45,41 +44,6 @@ export async function showStartupSelector<T>(
 		);
 		ui.addChild(selector);
 		ui.setFocus(selector);
-		ui.start();
-	});
-}
-
-export async function showStartupInput(
-	settingsManager: SettingsManager,
-	title: string,
-	placeholder?: string,
-): Promise<string | undefined> {
-	return new Promise((resolve) => {
-		const ui = createStartupTui(settingsManager);
-
-		let settled = false;
-		const finish = async (result: string | undefined) => {
-			if (settled) {
-				return;
-			}
-			settled = true;
-			input.dispose();
-			await clearStartupTui(ui);
-			ui.stop();
-			resolve(result);
-		};
-
-		const input = new ExtensionInputComponent(
-			title,
-			placeholder,
-			(value) => void finish(value),
-			() => void finish(undefined),
-			{
-				tui: ui,
-			},
-		);
-		ui.addChild(input);
-		ui.setFocus(input);
 		ui.start();
 	});
 }

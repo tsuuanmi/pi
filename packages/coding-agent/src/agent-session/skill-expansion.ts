@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import type { AgentSessionContext } from "#coding-agent/agent-session/agent-session-context";
-import { stripFrontmatter } from "#coding-agent/utils/fs/frontmatter";
+import { stripFrontmatter } from "#coding-agent/utils/fs/index";
 
 /**
  * Phase-1 SkillExpansion subsystem (stateless module function on

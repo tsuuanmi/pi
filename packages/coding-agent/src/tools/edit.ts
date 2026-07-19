@@ -20,8 +20,7 @@ import {
 	stripBom,
 } from "#coding-agent/tools/edit-diff";
 import { resolveToCwd } from "#coding-agent/tools/path-utils";
-import { renderToolPath, str } from "#coding-agent/tools/render-utils";
-import { wrapToolDefinition } from "#coding-agent/tools/tool-definition-wrapper";
+import { renderToolPath, str, wrapToolDefinition } from "#coding-agent/tools/utils";
 import { renderDiff } from "#coding-agent/ui/rendering/diff";
 
 type EditPreview = EditDiffResult | EditDiffError;

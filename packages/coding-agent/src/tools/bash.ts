@@ -9,8 +9,7 @@ import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#coding-agent/api/types";
 import { theme } from "#coding-agent/theme/theme";
 import { OutputAccumulator } from "#coding-agent/tools/output-accumulator";
-import { getTextOutput, invalidArgText, str } from "#coding-agent/tools/render-utils";
-import { wrapToolDefinition } from "#coding-agent/tools/tool-definition-wrapper";
+import { getTextOutput, invalidArgText, str, wrapToolDefinition } from "#coding-agent/tools/utils";
 import { keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 import { truncateToVisualLines } from "#coding-agent/ui/rendering/visual-truncate";
 import {

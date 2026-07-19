@@ -2,102 +2,6 @@
 	"version": 1,
 	"deadFunctions": [
 		{
-			"key": "packages/coding-agent/src/agents/agent-profiles.ts::loadAgentProfiles",
-			"file": "packages/coding-agent/src/agents/agent-profiles.ts",
-			"name": "loadAgentProfiles",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/cli/startup-ui.ts::showStartupInput",
-			"file": "packages/coding-agent/src/cli/startup-ui.ts",
-			"name": "showStartupInput",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/config/config.ts::getSettingsPath",
-			"file": "packages/coding-agent/src/config/config.ts",
-			"name": "getSettingsPath",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/model/model-resolver.ts::findExactModelReferenceMatch",
-			"file": "packages/coding-agent/src/model/model-resolver.ts",
-			"name": "findExactModelReferenceMatch",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/discovery.ts::addIgnoreRules",
-			"file": "packages/coding-agent/src/package-manager/discovery.ts",
-			"name": "addIgnoreRules",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/discovery.ts::collectFiles",
-			"file": "packages/coding-agent/src/package-manager/discovery.ts",
-			"name": "collectFiles",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/discovery.ts::collectSkillEntries",
-			"file": "packages/coding-agent/src/package-manager/discovery.ts",
-			"name": "collectSkillEntries",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/discovery.ts::findGitRepoRoot",
-			"file": "packages/coding-agent/src/package-manager/discovery.ts",
-			"name": "findGitRepoRoot",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/discovery.ts::prefixIgnorePattern",
-			"file": "packages/coding-agent/src/package-manager/discovery.ts",
-			"name": "prefixIgnorePattern",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/discovery.ts::readPiManifestFile",
-			"file": "packages/coding-agent/src/package-manager/discovery.ts",
-			"name": "readPiManifestFile",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/discovery.ts::resolveExtensionEntries",
-			"file": "packages/coding-agent/src/package-manager/discovery.ts",
-			"name": "resolveExtensionEntries",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/patterns.ts::getOverridePatterns",
-			"file": "packages/coding-agent/src/package-manager/patterns.ts",
-			"name": "getOverridePatterns",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/patterns.ts::isPattern",
-			"file": "packages/coding-agent/src/package-manager/patterns.ts",
-			"name": "isPattern",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/patterns.ts::matchesAnyExactPattern",
-			"file": "packages/coding-agent/src/package-manager/patterns.ts",
-			"name": "matchesAnyExactPattern",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/patterns.ts::matchesAnyPattern",
-			"file": "packages/coding-agent/src/package-manager/patterns.ts",
-			"name": "matchesAnyPattern",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/package-manager/patterns.ts::normalizeExactPattern",
-			"file": "packages/coding-agent/src/package-manager/patterns.ts",
-			"name": "normalizeExactPattern",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/coding-agent/src/packages/lsp/tools/lsp-tool.ts::createLspToolDefinition",
 			"file": "packages/coding-agent/src/packages/lsp/tools/lsp-tool.ts",
 			"name": "createLspToolDefinition",
@@ -107,24 +11,6 @@
 			"key": "packages/coding-agent/src/packages/mcp/commands/mcp.ts::handlePackageCommand",
 			"file": "packages/coding-agent/src/packages/mcp/commands/mcp.ts",
 			"name": "handlePackageCommand",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/session/session-layout.ts::assertNonEmptySessionId",
-			"file": "packages/coding-agent/src/session/session-layout.ts",
-			"name": "assertNonEmptySessionId",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/session/session-layout.ts::encodeSessionSegment",
-			"file": "packages/coding-agent/src/session/session-layout.ts",
-			"name": "encodeSessionSegment",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/coding-agent/src/session/session-layout.ts::sessionDirName",
-			"file": "packages/coding-agent/src/session/session-layout.ts",
-			"name": "sessionDirName",
 			"kind": "exported"
 		},
 		{

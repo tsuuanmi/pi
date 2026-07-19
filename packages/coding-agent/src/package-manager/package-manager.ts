@@ -55,23 +55,22 @@ export type {
 } from "./types.ts";
 
 import {
-	getBundledPackageRoot,
-	getEnv,
-	getExtensionTempFolder,
-	getHomeDir,
-	isOfflineModeEnabled,
-} from "#coding-agent/package-manager/env";
-import { getNpmVersionRange, isExactNpmVersion } from "#coding-agent/package-manager/npm-version";
-import {
 	AGENTS_STANDARD_DIR_NAMES,
 	BUNDLED_DEFAULT_PACKAGES,
 	BUNDLED_PACKAGE_SOURCES,
 	GIT_UPDATE_CONCURRENCY,
+	getBundledPackageRoot,
+	getEnv,
+	getExtensionTempFolder,
+	getHomeDir,
+	getNpmVersionRange,
+	isExactNpmVersion,
+	isOfflineModeEnabled,
 	NETWORK_TIMEOUT_MS,
 	RESOURCE_TYPES,
 	TOP_LEVEL_RESOURCE_TYPES,
 	UPDATE_CHECK_CONCURRENCY,
-} from "./constants.ts";
+} from "#coding-agent/package-manager/utils";
 import {
 	collectAncestorAgentsResourceDirs,
 	collectAutoExtensionEntries,

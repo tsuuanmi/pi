@@ -7,8 +7,7 @@ import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#coding-agent/api/types";
 import { getLanguageFromPath, highlightCode, type Theme } from "#coding-agent/theme/theme";
 import { resolveToCwd } from "#coding-agent/tools/path-utils";
-import { normalizeDisplayText, renderToolPath, replaceTabs, str } from "#coding-agent/tools/render-utils";
-import { wrapToolDefinition } from "#coding-agent/tools/tool-definition-wrapper";
+import { normalizeDisplayText, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#coding-agent/tools/utils";
 import { keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
 
 const writeSchema = Type.Object({

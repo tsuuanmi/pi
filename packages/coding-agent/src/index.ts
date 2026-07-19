@@ -370,6 +370,6 @@ export {
 } from "#coding-agent/tools/index";
 // Clipboard utilities
 export { copyToClipboard } from "#coding-agent/utils/clipboard/clipboard";
-export { parseFrontmatter, stripFrontmatter } from "#coding-agent/utils/fs/frontmatter";
+export { parseFrontmatter, stripFrontmatter } from "#coding-agent/utils/fs/index";
 // Shell utilities
 export { getShellConfig } from "#coding-agent/utils/system/shell";

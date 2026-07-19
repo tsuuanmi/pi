@@ -1,9 +1,9 @@
 import { basename, dirname, relative } from "node:path";
 import { minimatch } from "minimatch";
-import { toPosixPath } from "#coding-agent/package-manager/env";
 import type { PathMetadata } from "#coding-agent/package-manager/types";
+import { toPosixPath } from "#coding-agent/package-manager/utils";
 
-export function isPattern(s: string): boolean {
+function isPattern(s: string): boolean {
 	return s.startsWith("!") || s.startsWith("+") || s.startsWith("-") || s.includes("*") || s.includes("?");
 }
 
@@ -28,7 +28,7 @@ export function splitPatterns(entries: string[]): { plain: string[]; patterns: s
 	return { plain, patterns };
 }
 
-export function matchesAnyPattern(filePath: string, patterns: string[], baseDir: string): boolean {
+function matchesAnyPattern(filePath: string, patterns: string[], baseDir: string): boolean {
 	const rel = toPosixPath(relative(baseDir, filePath));
 	const name = basename(filePath);
 	const filePathPosix = toPosixPath(filePath);
@@ -56,12 +56,12 @@ export function matchesAnyPattern(filePath: string, patterns: string[], baseDir:
 	});
 }
 
-export function normalizeExactPattern(pattern: string): string {
+function normalizeExactPattern(pattern: string): string {
 	const normalized = pattern.startsWith("./") || pattern.startsWith(".\\") ? pattern.slice(2) : pattern;
 	return toPosixPath(normalized);
 }
 
-export function matchesAnyExactPattern(filePath: string, patterns: string[], baseDir: string): boolean {
+function matchesAnyExactPattern(filePath: string, patterns: string[], baseDir: string): boolean {
 	if (patterns.length === 0) return false;
 	const rel = toPosixPath(relative(baseDir, filePath));
 	const name = basename(filePath);
@@ -81,7 +81,7 @@ export function matchesAnyExactPattern(filePath: string, patterns: string[], bas
 	});
 }
 
-export function getOverridePatterns(entries: string[]): string[] {
+function getOverridePatterns(entries: string[]): string[] {
 	return entries.filter((pattern) => pattern.startsWith("!") || pattern.startsWith("+") || pattern.startsWith("-"));
 }
 

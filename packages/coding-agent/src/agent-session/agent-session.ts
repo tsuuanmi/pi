@@ -44,7 +44,7 @@ import {
 	navigateTree as treeNavNavigateTree,
 } from "#coding-agent/agent-session/tree-navigation";
 import { ApiUsageLogger } from "#coding-agent/api-usage/api-usage-logger";
-import { apiUsageLogPath } from "#coding-agent/api-usage/path";
+import { apiUsageLogPath } from "#coding-agent/api-usage/utils";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#coding-agent/auth/auth-guidance";
 import {
 	type CompactionResult,
@@ -96,8 +96,8 @@ import { type BuildSystemPromptOptions, buildSystemPrompt } from "#coding-agent/
 import type { SubagentManager } from "#coding-agent/subagents/subagents";
 import { type BashOperations, createLocalBashOperations } from "#coding-agent/tools/bash";
 import { createAllToolDefinitions } from "#coding-agent/tools/index";
-import { createToolDefinitionFromAgentTool } from "#coding-agent/tools/tool-definition-wrapper";
-import { sleep } from "#coding-agent/utils/system/sleep";
+import { createToolDefinitionFromAgentTool } from "#coding-agent/tools/utils";
+import { sleep } from "#coding-agent/utils/system/runtime";
 
 // ============================================================================
 // Skill Block Parsing

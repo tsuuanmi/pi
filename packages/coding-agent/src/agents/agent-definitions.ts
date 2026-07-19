@@ -5,7 +5,7 @@ import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { canonicalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AgentProfile } from "#coding-agent/agents/agent-profiles";
 import type { ResourceDiagnostic } from "#coding-agent/resources/diagnostics";
-import { parseFrontmatter } from "#coding-agent/utils/fs/frontmatter";
+import { parseFrontmatter } from "#coding-agent/utils/fs/index";
 
 export type AgentSourceLevel = "bundled" | "user" | "project" | "package" | "temporary";
 export type AgentProfileFormat = "markdown" | "bundled";

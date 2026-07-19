@@ -8,7 +8,7 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import type { RegisteredTool } from "#coding-agent/api/types";
 import type { ExtensionRunner } from "#coding-agent/extensions/runner";
-import { wrapToolDefinition, wrapToolDefinitions } from "#coding-agent/tools/tool-definition-wrapper";
+import { wrapToolDefinition, wrapToolDefinitions } from "#coding-agent/tools/utils";
 
 /**
  * Wrap a RegisteredTool into an AgentTool.

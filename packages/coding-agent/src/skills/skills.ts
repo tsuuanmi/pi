@@ -5,7 +5,7 @@ import { basename, dirname, join, relative, resolve, sep } from "path";
 import { CONFIG_DIR_NAME, getAgentDir } from "#coding-agent/config/config";
 import type { ResourceDiagnostic } from "#coding-agent/resources/diagnostics";
 import { createSyntheticSourceInfo, type SourceInfo } from "#coding-agent/resources/source-info";
-import { parseFrontmatter } from "#coding-agent/utils/fs/frontmatter";
+import { parseFrontmatter } from "#coding-agent/utils/fs/index";
 
 /** Max name length per spec */
 const MAX_NAME_LENGTH = 64;

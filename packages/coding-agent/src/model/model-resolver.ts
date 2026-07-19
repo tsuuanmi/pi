@@ -41,10 +41,7 @@ function isAlias(id: string): boolean {
  * Supports either a bare model id or a canonical provider/modelId reference.
  * When matching by bare id, ambiguous matches across providers are rejected.
  */
-export function findExactModelReferenceMatch(
-	modelReference: string,
-	availableModels: Model<Api>[],
-): Model<Api> | undefined {
+function findExactModelReferenceMatch(modelReference: string, availableModels: Model<Api>[]): Model<Api> | undefined {
 	const trimmedReference = modelReference.trim();
 	if (!trimmedReference) {
 		return undefined;
