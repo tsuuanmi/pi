@@ -454,7 +454,6 @@ function usage(): string {
   pi workflow validate --input '{"sessionId":"h-...","checks":[{"name":"check","command":"npm run check"}]}' --json
   pi workflow finalize --input '{"sessionId":"h-..."}' --json
   pi workflow operate --input '{"sessionId":"h-...","goal":"...","maxIterations":10}' --json
-  pi workflow subagents <spawn|status|await|steer|pause|resume|cancel> --input '{"sessionId":"h-..."}' --json
   pi workflow gc [--prune] [--dry-run] --json
   pi workflow events --input '{"sessionId":"h-..."}' --json
   pi workflow retire --input '{"sessionId":"h-..."}' --json
@@ -504,10 +503,6 @@ function parseWorkflowArgs(args: string[]): ParsedWorkflowCommand {
 		if (!verbSet) {
 			parsed.verb = arg;
 			verbSet = true;
-			continue;
-		}
-		if (parsed.verb === "subagents" && parsed.subverb === undefined) {
-			parsed.subverb = arg;
 			continue;
 		}
 		if (SKILL_VERBS.has(parsed.verb) && parsed.subverb === undefined) {
@@ -1118,11 +1113,6 @@ async function ralplanVerb(
 			);
 			break;
 		}
-		case "run-agent": {
-			throw new Error(
-				"pi workflow ralplan run-agent is removed; use the ralplan_run_agent model-visible tool to spawn a ralplan role agent",
-			);
-		}
 		case "write-artifact": {
 			body = await writeRalplanArtifact(
 				cwd,
@@ -1276,11 +1266,6 @@ async function teamVerb(
 			);
 			break;
 		}
-		case "spawn-task-agent": {
-			throw new Error(
-				"pi workflow team spawn-task-agent is removed; use the team_spawn_task_agent model-visible tool to spawn a team worker",
-			);
-		}
 	}
 	return { status: 0, stdout: output({ ok: true, body }, json), stderr: "" };
 }
@@ -1364,11 +1349,6 @@ async function ultragoalVerb(
 			});
 			break;
 		}
-		case "spawn-goal-agent": {
-			throw new Error(
-				"pi workflow ultragoal spawn-goal-agent is removed; use the ultragoal_spawn_goal_agent model-visible tool to spawn an ultragoal worker",
-			);
-		}
 	}
 	return { status: 0, stdout: output({ ok: true, body }, json), stderr: "" };
 }
@@ -1388,14 +1368,6 @@ async function dispatch(parsed: ParsedWorkflowCommand, cwd: string): Promise<Wor
 	if (parsed.verb === "validate") return validate(input, parsed.json);
 	if (parsed.verb === "finalize") return finalize(input, parsed.json);
 	if (parsed.verb === "operate") return operateCmd(input, parsed.json);
-	if (parsed.verb === "subagent")
-		throw new Error(
-			"unsupported singular workflow subagent form; subagent spawning is a model-visible tool, not a pi workflow command",
-		);
-	if (parsed.verb === "subagents")
-		throw new Error(
-			"pi workflow subagents is removed; use the subagent_spawn / subagent_status / subagent_await / subagent_steer / subagent_pause / subagent_resume / subagent_cancel model-visible tools instead",
-		);
 	if (parsed.verb === "gc") return gc({ prune: parsed.prune, dryRun: parsed.dryRun, json: parsed.json, input, cwd });
 	if (parsed.verb === "events") return events(input, parsed.json);
 	if (parsed.verb === "retire") return retire(input, parsed.json);

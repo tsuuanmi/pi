@@ -189,7 +189,6 @@ export const PI_WORKFLOW_MANIFEST = {
 		],
 		verbs: [
 			{ name: "record-explorer-gate" },
-			{ name: "run-agent" },
 			{ name: "write-artifact" },
 			{ name: "status" },
 			{ name: "read-compact" },
@@ -255,7 +254,6 @@ export const PI_WORKFLOW_MANIFEST = {
 			{ name: "record-review-blockers" },
 			{ name: "classify-blocker" },
 			{ name: "guard" },
-			{ name: "spawn-goal-agent" },
 		],
 		typedArgs: [
 			{ name: "brief", type: "string" },
@@ -323,7 +321,6 @@ export const PI_WORKFLOW_MANIFEST = {
 			{ name: "record-review-gate" },
 			{ name: "record-completion-gate" },
 			{ name: "complete" },
-			{ name: "spawn-task-agent" },
 		],
 		typedArgs: [
 			{ name: "task", type: "string" },

@@ -3,7 +3,6 @@ import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { runWorkflowCommand } from "#workflows/commands/workflow";
 import { resolveHarnessRoot, sessionPaths, writeSessionState } from "#workflows/harness/runtime/storage";
 import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/harness/runtime/types";
 import { readWorkflowActiveState, syncWorkflowActiveState } from "#workflows/harness/shared/state/active-state";
@@ -71,97 +70,5 @@ describe("current-session workflow propagation", () => {
 		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" }, { sessionId: a });
 		const stateB = await readWorkflowActiveState(cwd, { sessionId: b });
 		expect(stateB?.active_workflows?.some((w) => w.skill === "ralplan" && w.session_id === a)).toBeFalsy();
-	});
-
-	it("subagents spawn command is removed and errors toward the model-visible tool", async () => {
-		const sessionId = "spawn-removed";
-		await writeSessionState(root, makeState(cwd, sessionId));
-		const result = await runWorkflowCommand(
-			[
-				"subagents",
-				"spawn",
-				"--input",
-				JSON.stringify({ workspace: cwd, sessionId, prompt: "do work", agent: "worker" }),
-				"--json",
-			],
-			cwd,
-		);
-		expect(result.status).toBe(1);
-		expect(result.stderr).toMatch(/subagent_spawn/);
-	});
-
-	it("subagents spawn command errors with the tool-redirect message even without a session id", async () => {
-		const result = await runWorkflowCommand(
-			[
-				"subagents",
-				"spawn",
-				"--input",
-				JSON.stringify({ workspace: cwd, prompt: "do work", agent: "worker" }),
-				"--json",
-			],
-			cwd,
-		);
-		expect(result.status).toBe(1);
-		expect(result.stderr).toMatch(/subagent_spawn/);
-	});
-
-	it("ralplan run-agent command is removed and errors toward the model-visible tool", async () => {
-		const sessionId = "run-agent-removed";
-		await writeSessionState(root, makeState(cwd, sessionId));
-		const result = await runWorkflowCommand(
-			[
-				"ralplan",
-				"run-agent",
-				"--input",
-				JSON.stringify({
-					workspace: cwd,
-					sessionId,
-					runId: "ralplan-prop-test",
-					role: "architect",
-					stage: "architect",
-					stageN: 1,
-					task: "plan",
-					dryRun: true,
-				}),
-				"--json",
-			],
-			cwd,
-		);
-		expect(result.status).toBe(1);
-		expect(result.stderr).toMatch(/ralplan_run_agent/);
-	});
-
-	it("team spawn-task-agent command is removed and errors toward the model-visible tool", async () => {
-		const sessionId = "team-spawn-removed";
-		await writeSessionState(root, makeState(cwd, sessionId));
-		const result = await runWorkflowCommand(
-			[
-				"team",
-				"spawn-task-agent",
-				"--input",
-				JSON.stringify({ workspace: cwd, sessionId, taskId: "t1", prompt: "do work" }),
-				"--json",
-			],
-			cwd,
-		);
-		expect(result.status).toBe(1);
-		expect(result.stderr).toMatch(/team_spawn_task_agent/);
-	});
-
-	it("ultragoal spawn-goal-agent command is removed and errors toward the model-visible tool", async () => {
-		const sessionId = "ultragoal-spawn-removed";
-		await writeSessionState(root, makeState(cwd, sessionId));
-		const result = await runWorkflowCommand(
-			[
-				"ultragoal",
-				"spawn-goal-agent",
-				"--input",
-				JSON.stringify({ workspace: cwd, sessionId, goalId: "g1", prompt: "do work" }),
-				"--json",
-			],
-			cwd,
-		);
-		expect(result.status).toBe(1);
-		expect(result.stderr).toMatch(/ultragoal_spawn_goal_agent/);
 	});
 });

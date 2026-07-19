@@ -149,38 +149,6 @@ describe("workflow runtime", () => {
 		expect(json.body?.statePath).toContain(".pi/cli-pipeline/workflows/deep-interview/state.json");
 	});
 
-	it("rejects removed workflow spawn command shims with model-visible tool guidance", async () => {
-		const ralplan = await runWorkflowCommand([
-			"ralplan",
-			"run-agent",
-			"--input",
-			JSON.stringify({ sessionId, runId: "run-removed" }),
-			"--json",
-		]);
-		expect(ralplan.status).toBe(1);
-		expect(ralplan.stderr).toMatch(/ralplan_run_agent model-visible tool/);
-
-		const team = await runWorkflowCommand([
-			"team",
-			"spawn-task-agent",
-			"--input",
-			JSON.stringify({ sessionId, teamId: "team-removed", taskId: "task-1" }),
-			"--json",
-		]);
-		expect(team.status).toBe(1);
-		expect(team.stderr).toMatch(/team_spawn_task_agent model-visible tool/);
-
-		const ultragoal = await runWorkflowCommand([
-			"ultragoal",
-			"spawn-goal-agent",
-			"--input",
-			JSON.stringify({ sessionId, goalId: "goal-1" }),
-			"--json",
-		]);
-		expect(ultragoal.status).toBe(1);
-		expect(ultragoal.stderr).toMatch(/ultragoal_spawn_goal_agent model-visible tool/);
-	});
-
 	it("requires explicit session ids for workflow skill commands", async () => {
 		const result = await runWorkflowCommand(["deep-interview", "read-compact", "--input", "{}", "--json"], cwd);
 		expect(result.status).toBe(1);

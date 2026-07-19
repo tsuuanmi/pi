@@ -286,19 +286,4 @@ describe("harness control-plane phase 1", () => {
 		expect(classifyRecovery(validation).classification).toBe("continue");
 		expect(classifyRecovery(validation).classification).not.toBe("validation-repair");
 	});
-
-	it("subagents spawn command is removed and errors toward the model-visible tool", async () => {
-		const result = await runWorkflowCommand(
-			[
-				"subagents",
-				"spawn",
-				"--input",
-				JSON.stringify({ workspace: cwd, sessionId, prompt: "do work", agent: "worker" }),
-				"--json",
-			],
-			cwd,
-		);
-		expect(result.status).toBe(1);
-		expect(result.stderr).toMatch(/subagent_spawn/);
-	});
 });
