@@ -16,12 +16,11 @@
  *     function that is actually used; it may under-report in shadowing cases.
  *
  * The current set of dead functions is snapshotted in
- * dead-functions-baseline.json. The test fails only on NEW dead functions
+ * tests/dead-functions-baseline.json. The test fails only on NEW dead functions
  * (regressions), so the existing baseline does not have to be cleaned up first.
  * When you fix a dead function, the baseline entry becomes stale; update it with:
  *
- *   cd packages/pi
- *   UPDATE_DEADFUNCTIONS_BASELINE=1 npx vitest --run test/dead-functions.test.ts
+ *   UPDATE_DEADFUNCTIONS_BASELINE=1 npx vitest --run tests/dead-functions.test.ts
  *
  * (mirrors the vitest -u snapshot workflow).
  */
@@ -33,7 +32,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { expect, test } from "vitest";
 
-const repoRootAbs = fileURLToPath(new URL(join("..", "..", "..", "/"), import.meta.url));
+const repoRootAbs = fileURLToPath(new URL("../", import.meta.url));
 const baselinePath = fileURLToPath(new URL("./dead-functions-baseline.json", import.meta.url));
 
 interface DeadFunction {
@@ -287,14 +286,14 @@ test("no new dead functions across packages (baseline guard)", { timeout: 120_00
 		console.warn(
 			`[dead-functions] ${removed.length} baseline entr${removed.length === 1 ? "y is" : "ies are"} no longer dead (fixed). Update the baseline:\n` +
 				removed.map((f) => `  - ${f.key}`).join("\n") +
-				"\n  Run: UPDATE_DEADFUNCTIONS_BASELINE=1 npx vitest --run test/dead-functions.test.ts",
+				"\n  Run: UPDATE_DEADFUNCTIONS_BASELINE=1 npx vitest --run tests/dead-functions.test.ts",
 		);
 	}
 
 	expect(
 		newDead,
 		`New dead functions detected (${newDead.length}). Delete them, or accept them into the baseline with:\n` +
-			`  UPDATE_DEADFUNCTIONS_BASELINE=1 npx vitest --run test/dead-functions.test.ts\n\n` +
+			`  UPDATE_DEADFUNCTIONS_BASELINE=1 npx vitest --run tests/dead-functions.test.ts\n\n` +
 			(newDead.length ? `New dead functions:\n${newDead.map(formatEntry).join("\n")}` : ""),
 	).toHaveLength(0);
 });

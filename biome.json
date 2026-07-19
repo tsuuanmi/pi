@@ -27,6 +27,7 @@
 		"includes": [
 			"packages/*/src/**/*.ts",
 			"packages/*/test/**/*.ts",
+			"tests/**/*.ts",
 			"packages/pi/examples/**/*.ts",
 			"!**/node_modules/**/*",
 			"!**/test-sessions.ts",

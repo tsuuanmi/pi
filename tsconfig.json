@@ -56,6 +56,6 @@
 			"#workflows/*": ["./packages/workflows/src/*"]
 		}
 	},
-	"include": ["packages/*/src/**/*", "packages/*/test/**/*"],
+	"include": ["packages/*/src/**/*", "packages/*/test/**/*", "tests/**/*"],
 	"exclude": ["**/dist/**"]
 }
