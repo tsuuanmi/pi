@@ -5,21 +5,17 @@ import { join } from "node:path";
 import { clearSubagentManagerFactoryForTests } from "@tsuuanmi/pi-agent";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
-import { RuntimeOwner } from "#workflows/harness/runtime/owner";
-import {
-	buildClassificationInput,
-	classifyRecovery,
-	isRuntimeReceiptValid,
-} from "#workflows/harness/runtime/primitives";
-import type { HarnessRpc, RpcStateSnapshot } from "#workflows/harness/runtime/rpc";
+import { RuntimeOwner } from "#workflows/runtime/owner";
+import { buildClassificationInput, classifyRecovery, isRuntimeReceiptValid } from "#workflows/runtime/primitives";
+import type { HarnessRpc, RpcStateSnapshot } from "#workflows/runtime/rpc";
 import {
 	readRuntimeReceipts,
 	readSessionState,
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "#workflows/harness/runtime/storage";
-import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/harness/runtime/types";
+} from "#workflows/runtime/storage";
+import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/runtime/types";
 
 class FakeRpc implements HarnessRpc {
 	started = false;

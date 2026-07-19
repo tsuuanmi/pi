@@ -14,13 +14,10 @@ import {
 	sessionIdFromInput,
 	workflowVerbSet,
 } from "#workflows/commands/workflow/utils";
-import { handoffWorkflow } from "#workflows/harness/shared/orchestration/handoff";
-import { assertDeepInterviewHandoff } from "#workflows/harness/shared/orchestration/workflow-tool-utils";
-import type { RalplanStage } from "#workflows/harness/shared/session/paths";
-import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/harness/shared/session/session-layout";
-import { assertSafePathComponent } from "#workflows/harness/shared/state/state-schema";
-import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/harness/shared/state/state-writer";
-import { activeRalplanRunId, defaultWorkflowId } from "#workflows/harness/shared/state/workflow-state";
+import { handoffWorkflow } from "#workflows/orchestration/handoff";
+import { assertDeepInterviewHandoff } from "#workflows/orchestration/workflow-tool-utils";
+import type { RalplanStage } from "#workflows/session/paths";
+import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";
 import {
 	appendOrMergeDeepInterviewRound,
 	assertDeepInterviewSpecReady,
@@ -67,6 +64,9 @@ import {
 	recordUltragoalReviewBlockers,
 	startNextUltragoalGoal,
 } from "#workflows/skills/ultragoal/ultragoal-runtime";
+import { assertSafePathComponent } from "#workflows/state/state-schema";
+import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/state/state-writer";
+import { activeRalplanRunId, defaultWorkflowId } from "#workflows/state/workflow-state";
 
 export async function deepInterviewVerb(
 	action: string | undefined,

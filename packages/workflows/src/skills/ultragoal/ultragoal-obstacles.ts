@@ -32,9 +32,9 @@ import {
 	type ObstacleValidator,
 	type ObstacleViolation,
 	validateObstacles,
-} from "#workflows/harness/shared/audit/decision-ledger";
-import { ultragoalDir } from "#workflows/harness/shared/session/session-layout";
-import { writeJsonAtomic } from "#workflows/harness/shared/state/state-writer";
+} from "#workflows/audit/decision-ledger";
+import { ultragoalDir } from "#workflows/session/session-layout";
+import { writeJsonAtomic } from "#workflows/state/state-writer";
 
 /**
  * Ultragoal obstacle kinds (from the decision-ledger design, Part 2). Qualitative

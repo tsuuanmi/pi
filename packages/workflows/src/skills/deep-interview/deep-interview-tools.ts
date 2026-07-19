@@ -1,12 +1,9 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
-import { workflowReceipt } from "#workflows/harness/shared/artifacts/artifacts";
-import { handoffWorkflow } from "#workflows/harness/shared/orchestration/handoff";
-import { assertDeepInterviewHandoff } from "#workflows/harness/shared/orchestration/workflow-tool-utils";
-import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/harness/shared/session/session-layout";
-import { assertSafePathComponent } from "#workflows/harness/shared/state/state-schema";
-import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/harness/shared/state/state-writer";
-import { activeRalplanRunId, defaultWorkflowId } from "#workflows/harness/shared/state/workflow-state";
+import { workflowReceipt } from "#workflows/artifacts/artifacts";
+import { handoffWorkflow } from "#workflows/orchestration/handoff";
+import { assertDeepInterviewHandoff } from "#workflows/orchestration/workflow-tool-utils";
+import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";
 import {
 	appendOrMergeDeepInterviewRound,
 	assertDeepInterviewSpecReady,
@@ -21,6 +18,9 @@ import type {
 	DeepInterviewAdvisoryMetadata,
 	DeepInterviewRoundRecord,
 } from "#workflows/skills/deep-interview/deep-interview-state";
+import { assertSafePathComponent } from "#workflows/state/state-schema";
+import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/state/state-writer";
+import { activeRalplanRunId, defaultWorkflowId } from "#workflows/state/workflow-state";
 
 const planQuestionSchema = Type.Object({
 	interviewId: Type.Optional(Type.String()),

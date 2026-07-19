@@ -55,4 +55,4 @@ Removed compatibility verbs (`ralplan run-agent`, `team spawn-task-agent`, `ultr
 ## See Also
 
 - [Workflow control plane](../workflow.md)
-- [Harness runtime](../harness/runtime/harness-runtime.md)
+- [Harness runtime](../runtime/harness-runtime.md)

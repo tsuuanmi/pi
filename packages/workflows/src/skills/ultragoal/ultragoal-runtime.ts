@@ -1,22 +1,12 @@
 import { randomUUID } from "node:crypto";
-import type { ObstacleRegression, ObstacleStatus } from "#workflows/harness/shared/audit/decision-ledger";
-import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compaction";
+import type { ObstacleRegression, ObstacleStatus } from "#workflows/audit/decision-ledger";
+import { projectCompactStateFor } from "#workflows/compaction/compaction";
 import {
 	ultragoalBriefPath,
 	ultragoalGoalsPath,
 	ultragoalLedgerPath,
 	workflowStatePath,
-} from "#workflows/harness/shared/session/session-layout";
-import { syncWorkflowActiveState } from "#workflows/harness/shared/state/active-state";
-import {
-	appendJsonl,
-	readExistingStateForMutation,
-	readFileOrLiteral,
-	sha256,
-	writeJsonAtomic,
-	writeTextArtifact,
-} from "#workflows/harness/shared/state/state-writer";
-import { readWorkflowState, writeWorkflowState } from "#workflows/harness/shared/state/workflow-state";
+} from "#workflows/session/session-layout";
 import { buildUltragoalHud } from "#workflows/skills/ultragoal/ultragoal-hud";
 import {
 	assertUltragoalObstacle,
@@ -39,6 +29,16 @@ import {
 	type UltragoalReceiptKind,
 	validateCompletionReceipt,
 } from "#workflows/skills/ultragoal/ultragoal-receipt";
+import { syncWorkflowActiveState } from "#workflows/state/active-state";
+import {
+	appendJsonl,
+	readExistingStateForMutation,
+	readFileOrLiteral,
+	sha256,
+	writeJsonAtomic,
+	writeTextArtifact,
+} from "#workflows/state/state-writer";
+import { readWorkflowState, writeWorkflowState } from "#workflows/state/workflow-state";
 
 export type {
 	UltragoalCompletionVerification,

@@ -6,7 +6,7 @@ The package extension entry point lives at `src/extensions/workflows.ts` and is 
 
 On load, the extension:
 
-- Registers generic subagent lifecycle tools from `src/harness/subagents/subagent-tools.ts`.
+- Registers generic subagent lifecycle tools from `src/subagents/subagent-tools.ts`.
 - Registers guarded workflow spawn tools from `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, and `src/skills/ultragoal/ultragoal-tools.ts`.
 - Imports skill transition tables for Deep Interview, Ralplan, Team, and Ultragoal.
 - Hooks session/turn/tool lifecycle events to refresh workflow/MCP UI state.
@@ -14,7 +14,7 @@ On load, the extension:
 
 ## Model-Visible Tools
 
-Registered tools are documented in [harness/subagents/subagents.md](../harness/subagents/subagents.md) and [harness/tools/harness-tools.md](../harness/tools/harness-tools.md).
+Registered tools are documented in [subagents/subagents.md](../subagents/subagents.md) and [harness/tools/harness-tools.md](../harness/tools/harness-tools.md).
 
 ## HUD Hooks
 

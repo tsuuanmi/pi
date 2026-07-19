@@ -18,8 +18,8 @@
  * unreadable plan/ledger while an objective is active.
  */
 
-import type { ObstacleTrigger } from "#workflows/harness/shared/audit/decision-ledger";
-import { ultragoalGoalsPath, ultragoalLedgerPath } from "#workflows/harness/shared/session/session-layout";
+import type { ObstacleTrigger } from "#workflows/audit/decision-ledger";
+import { ultragoalGoalsPath, ultragoalLedgerPath } from "#workflows/session/session-layout";
 import {
 	readUltragoalObstacleLedger,
 	type UltragoalObstacleLedger,

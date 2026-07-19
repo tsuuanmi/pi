@@ -2,7 +2,7 @@
 
 Workflow-owned spawn tools are registered by the workflow extension; non-spawn operations are `pi workflow ...` commands.
 
-**Source:** `src/extensions/workflows.ts`, `src/harness/subagents/subagent-tools.ts`, `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, `src/skills/ultragoal/ultragoal-tools.ts`
+**Source:** `src/extensions/workflows.ts`, `src/subagents/subagent-tools.ts`, `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, `src/skills/ultragoal/ultragoal-tools.ts`
 
 ## Model-Visible Tools
 
@@ -15,7 +15,7 @@ These tools call the main session's `SubagentManager` directly. They are not hos
 
 ## Command Surface
 
-Agents drive state, artifacts, gates, receipts, compaction, status, approval, and runtime owner lifecycle through `pi workflow ...` commands. The package has no `src/harness/tools/` directory in the current source tree.
+Agents drive state, artifacts, gates, receipts, compaction, status, approval, and runtime owner lifecycle through `pi workflow ...` commands. The package has no generic workflow tools directory in the current source tree; tool implementations are either skill-owned under `src/skills/<skill>/` or generic subagent tools under `src/subagents/`.
 
 ## See Also
 

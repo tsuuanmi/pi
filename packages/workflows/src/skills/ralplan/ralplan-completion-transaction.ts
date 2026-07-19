@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import { transactionJournalPath } from "#workflows/harness/shared/session/session-layout";
-import { nowIso, writeJsonAtomic } from "#workflows/harness/shared/state/state-writer";
+import { transactionJournalPath } from "#workflows/session/session-layout";
+import { nowIso, writeJsonAtomic } from "#workflows/state/state-writer";
 
 export const RALPLAN_COMPLETION_TRANSACTION_VERSION = 1;
 

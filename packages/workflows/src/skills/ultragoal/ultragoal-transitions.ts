@@ -1,8 +1,5 @@
-import type { ExpectedNextRole } from "#workflows/harness/shared/orchestration/expected-next-role";
-import {
-	registerSkillTransitionTable,
-	type SkillTransitionContext,
-} from "#workflows/harness/shared/registry/skill-registry";
+import type { ExpectedNextRole } from "#workflows/orchestration/expected-next-role";
+import { registerSkillTransitionTable, type SkillTransitionContext } from "#workflows/registry/skill-registry";
 import {
 	chooseReceiptKind,
 	readUltragoalLedger,

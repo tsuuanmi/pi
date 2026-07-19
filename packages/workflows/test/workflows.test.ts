@@ -40,7 +40,12 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
 import workflowsExtension from "#workflows/extensions/workflows";
-import { buildResponse } from "#workflows/harness/runtime/state";
+import {
+	isBlockingQuestionPhaseForSkill,
+	skillGateValidators,
+	skillTerminalDetectors,
+} from "#workflows/registry/skill-registry";
+import { buildResponse } from "#workflows/runtime/state";
 import {
 	generateSessionId,
 	readRuntimeReceipts,
@@ -48,13 +53,8 @@ import {
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "#workflows/harness/runtime/storage";
-import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/harness/runtime/types";
-import {
-	isBlockingQuestionPhaseForSkill,
-	skillGateValidators,
-	skillTerminalDetectors,
-} from "#workflows/harness/shared/registry/skill-registry";
+} from "#workflows/runtime/storage";
+import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/runtime/types";
 
 const sessionId = "test-session-id";
 const execFileAsync = promisify(execFile);

@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
-import { isBlockingQuestionPhaseForSkill } from "#workflows/harness/shared/registry/skill-registry";
-import { getWorkflowManifest } from "#workflows/harness/shared/registry/workflow-manifest";
-import type { WorkflowSkill } from "#workflows/harness/shared/session/paths";
+import { isBlockingQuestionPhaseForSkill } from "#workflows/registry/skill-registry";
+import { getWorkflowManifest } from "#workflows/registry/workflow-manifest";
+import type { WorkflowSkill } from "#workflows/session/paths";
 
 export function gitOutput(workspace: string, args: string[]): string | null {
 	try {

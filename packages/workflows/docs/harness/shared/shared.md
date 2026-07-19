@@ -2,7 +2,7 @@
 
 Cross-skill utilities used by Deep Interview, Ralplan, Team, Ultragoal, the workflow command layer, and the workflow extension.
 
-**Source:** `src/harness/shared/`
+**Source:** top-level `src/artifacts/`, `src/audit/`, `src/compaction/`, `src/orchestration/`, `src/registry/`, `src/session/`, and `src/state/`
 
 ## Module Structure
 
@@ -21,9 +21,9 @@ Cross-skill utilities used by Deep Interview, Ralplan, Team, Ultragoal, the work
 - Session-scoped helpers require an explicit `sessionId`; workflow state must not fall back to a global bucket.
 - Workflow writes use atomic state/artifact helpers and append receipts or audit entries where applicable.
 - Guarded spawn paths use expected-next helpers so role/task/goal execution cannot skip ahead.
-- Workflow HUD builders are colocated with their owning skill harnesses; the interactive status line reads `.pi/<session-id>/workflows/active-state.json` directly.
+- Workflow HUD builders are colocated with their owning skill folders; the interactive status line reads `.pi/<session-id>/workflows/active-state.json` directly.
 
 ## See Also
 
 - [Workflow control plane](../../workflow.md)
-- [Harness runtime](../runtime/harness-runtime.md)
+- [Workflow runtime](../runtime/harness-runtime.md)

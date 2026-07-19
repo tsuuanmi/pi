@@ -1,7 +1,5 @@
-import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compaction";
-import { workflowStatePath } from "#workflows/harness/shared/session/session-layout";
-import { syncWorkflowActiveState } from "#workflows/harness/shared/state/active-state";
-import { readWorkflowState, replaceWorkflowState } from "#workflows/harness/shared/state/workflow-state";
+import { projectCompactStateFor } from "#workflows/compaction/compaction";
+import { workflowStatePath } from "#workflows/session/session-layout";
 import { deriveDeepInterviewHud } from "#workflows/skills/deep-interview/deep-interview-hud";
 import {
 	answerHash,
@@ -20,6 +18,8 @@ import {
 	questionHash,
 	validateDeepInterviewScoredTransition,
 } from "#workflows/skills/deep-interview/deep-interview-state";
+import { syncWorkflowActiveState } from "#workflows/state/active-state";
+import { readWorkflowState, replaceWorkflowState } from "#workflows/state/workflow-state";
 
 export interface DeepInterviewAnswerInput {
 	interviewId?: string;

@@ -4,7 +4,7 @@ import {
 	type ObstacleValidator,
 	type ObstacleViolation,
 	validateObstacles,
-} from "#workflows/harness/shared/audit/decision-ledger";
+} from "#workflows/audit/decision-ledger";
 
 /**
  * Default deep-interview ambiguity threshold. The interview is considered

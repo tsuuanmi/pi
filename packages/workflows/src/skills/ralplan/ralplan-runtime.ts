@@ -1,31 +1,17 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import { writeStageArtifact } from "#workflows/harness/shared/artifacts/artifacts";
-import { type FailSoftError, recordFailSoftError } from "#workflows/harness/shared/audit/audit-log";
-import { projectCompactStateFor } from "#workflows/harness/shared/compaction/compaction";
-import { handoffWorkflow } from "#workflows/harness/shared/orchestration/handoff";
-import type { RalplanStage, WorkflowSkill } from "#workflows/harness/shared/session/paths";
+import { writeStageArtifact } from "#workflows/artifacts/artifacts";
+import { type FailSoftError, recordFailSoftError } from "#workflows/audit/audit-log";
+import { projectCompactStateFor } from "#workflows/compaction/compaction";
+import { handoffWorkflow } from "#workflows/orchestration/handoff";
+import type { RalplanStage, WorkflowSkill } from "#workflows/session/paths";
 import {
 	ralplanIndexPath,
 	ralplanPendingApprovalPath,
 	ralplanStageArtifactPath,
 	transactionJournalPath,
 	workflowStatePath,
-} from "#workflows/harness/shared/session/session-layout";
-import { syncWorkflowActiveState } from "#workflows/harness/shared/state/active-state";
-import {
-	appendJsonlIdempotent,
-	canonicalizeJson,
-	readFileOrLiteral,
-	sha256,
-	writeTextArtifact,
-} from "#workflows/harness/shared/state/state-writer";
-import {
-	activeRalplanRunId,
-	defaultWorkflowId,
-	readWorkflowState,
-	writeWorkflowState,
-} from "#workflows/harness/shared/state/workflow-state";
+} from "#workflows/session/session-layout";
 import { ralplanRoleForStage } from "#workflows/skills/ralplan/ralplan-agents";
 import {
 	beginRalplanCompletionJournal,
@@ -52,6 +38,20 @@ import {
 	type RalplanCriticVerdictKind,
 	type RalplanVerdict,
 } from "#workflows/skills/ralplan/ralplan-verdicts";
+import { syncWorkflowActiveState } from "#workflows/state/active-state";
+import {
+	appendJsonlIdempotent,
+	canonicalizeJson,
+	readFileOrLiteral,
+	sha256,
+	writeTextArtifact,
+} from "#workflows/state/state-writer";
+import {
+	activeRalplanRunId,
+	defaultWorkflowId,
+	readWorkflowState,
+	writeWorkflowState,
+} from "#workflows/state/workflow-state";
 
 export interface RalplanPlannerStateUpdate {
 	plannerSubagentId?: string;

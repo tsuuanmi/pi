@@ -1,4 +1,4 @@
-import { registerSkillTransitionTable } from "#workflows/harness/shared/registry/skill-registry";
+import { registerSkillTransitionTable } from "#workflows/registry/skill-registry";
 import { runClosureCheckForSession } from "#workflows/skills/deep-interview/deep-interview-runtime";
 
 function hasPendingQuestion(state: unknown): boolean {

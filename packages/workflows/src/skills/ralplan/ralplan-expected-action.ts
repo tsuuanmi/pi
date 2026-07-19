@@ -1,4 +1,4 @@
-import type { ExpectedNextRole } from "#workflows/harness/shared/orchestration/expected-next-role";
+import type { ExpectedNextRole } from "#workflows/orchestration/expected-next-role";
 import type { RalplanOrchestrationSnapshot } from "#workflows/skills/ralplan/ralplan-orchestration-snapshot";
 
 export type RalplanExpectedAction =

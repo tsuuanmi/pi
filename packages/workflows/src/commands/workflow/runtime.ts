@@ -7,16 +7,11 @@ import {
 	output,
 	sessionIdFromInput,
 } from "#workflows/commands/workflow/utils";
-import { callEndpoint } from "#workflows/harness/runtime/endpoint";
-import type { GcContext } from "#workflows/harness/runtime/gc";
-import {
-	collectGcReport,
-	computeGcExitCode,
-	gcPidProbe,
-	HarnessLeasesGcStoreAdapter,
-} from "#workflows/harness/runtime/gc";
-import { mutateRuntimeSession } from "#workflows/harness/runtime/mutation";
-import { RuntimeOwner, resolveOwner } from "#workflows/harness/runtime/owner";
+import { callEndpoint } from "#workflows/runtime/endpoint";
+import type { GcContext } from "#workflows/runtime/gc";
+import { collectGcReport, computeGcExitCode, gcPidProbe, HarnessLeasesGcStoreAdapter } from "#workflows/runtime/gc";
+import { mutateRuntimeSession } from "#workflows/runtime/mutation";
+import { RuntimeOwner, resolveOwner } from "#workflows/runtime/owner";
 import {
 	buildClassificationInput,
 	buildWorkspaceMarker,
@@ -24,10 +19,10 @@ import {
 	finalizePrimitive,
 	recoverPrimitive,
 	validatePrimitive,
-} from "#workflows/harness/runtime/primitives";
-import { type HarnessRpc, PiRpc } from "#workflows/harness/runtime/rpc";
-import { operate } from "#workflows/harness/runtime/runner";
-import { buildResponse, submitUnavailableReason } from "#workflows/harness/runtime/state";
+} from "#workflows/runtime/primitives";
+import { type HarnessRpc, PiRpc } from "#workflows/runtime/rpc";
+import { operate } from "#workflows/runtime/runner";
+import { buildResponse, submitUnavailableReason } from "#workflows/runtime/state";
 import {
 	canonicalWorkspacePath,
 	defaultRepoName,
@@ -38,13 +33,13 @@ import {
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "#workflows/harness/runtime/storage";
+} from "#workflows/runtime/storage";
 import {
 	type Observation,
 	SESSION_SCHEMA_VERSION,
 	type SessionHandle,
 	type SessionState,
-} from "#workflows/harness/runtime/types";
+} from "#workflows/runtime/types";
 
 function buildHandle(input: Record<string, unknown>, root: string, sessionId: string, now: string): SessionHandle {
 	const workspace = canonicalWorkspacePath(inputString(input, "workspace") ?? process.cwd());

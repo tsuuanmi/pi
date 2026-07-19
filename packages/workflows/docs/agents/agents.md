@@ -31,5 +31,5 @@ Bundled profiles are wired into guarded workflow spawn paths:
 
 ## See Also
 
-- [Subagents](../harness/subagents/subagents.md)
+- [Subagents](../subagents/subagents.md)
 - [Workflow control plane](../workflow.md)

@@ -5,8 +5,8 @@ import { registerDeepInterviewTools } from "#workflows/skills/deep-interview/dee
 import "#workflows/skills/deep-interview/deep-interview-transitions";
 import { registerRalplanTools } from "#workflows/skills/ralplan/ralplan-tools";
 import "#workflows/skills/ralplan/ralplan-transitions";
-import { registerSubagentTools } from "#workflows/harness/subagents/subagent-tools";
 import { registerTeamTools } from "#workflows/skills/team/team-tools";
+import { registerSubagentTools } from "#workflows/subagents/subagent-tools";
 import "#workflows/skills/team/team-transitions";
 import { registerUltragoalTools } from "#workflows/skills/ultragoal/ultragoal-tools";
 import "#workflows/skills/ultragoal/ultragoal-transitions";

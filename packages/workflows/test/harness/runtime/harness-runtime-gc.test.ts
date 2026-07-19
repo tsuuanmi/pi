@@ -15,37 +15,37 @@ import {
 	gcPidProbe,
 	gcProbeToLeasePidStatus,
 	HarnessLeasesGcStoreAdapter,
-} from "#workflows/harness/runtime/gc";
-import { classifyLeaseStatus, readLease, type SessionLease } from "#workflows/harness/runtime/lease";
-import { mutateRuntimeSession } from "#workflows/harness/runtime/mutation";
-import { type RecoveryDecision, recoverPrimitive } from "#workflows/harness/runtime/primitives";
+} from "#workflows/runtime/gc";
+import { classifyLeaseStatus, readLease, type SessionLease } from "#workflows/runtime/lease";
+import { mutateRuntimeSession } from "#workflows/runtime/mutation";
+import { type RecoveryDecision, recoverPrimitive } from "#workflows/runtime/primitives";
 import {
 	RECEIPT_FAMILY_LIFECYCLE_TARGETS,
 	ReceiptConsistencyError,
 	type ReceiptFamilyConsistencyRule,
 	receiptFamilyConsistencyRules,
 	validateReceiptFamilyConsistency,
-} from "#workflows/harness/runtime/receipt-rules";
+} from "#workflows/runtime/receipt-rules";
 import {
 	DEFERRED_SEAMS,
 	DeferredSeamRegistry,
 	deferredSeamRegistry,
 	isHarnessSupported,
 	seamUnsupported,
-} from "#workflows/harness/runtime/seams";
+} from "#workflows/runtime/seams";
 import {
 	readRuntimeReceipts,
 	readSessionState,
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "#workflows/harness/runtime/storage";
+} from "#workflows/runtime/storage";
 import {
 	type HarnessLifecycle,
 	type RuntimeReceipt,
 	SESSION_SCHEMA_VERSION,
 	type SessionState,
-} from "#workflows/harness/runtime/types";
+} from "#workflows/runtime/types";
 
 const WRITER = { ownerId: "test", leaseEpoch: 0 };
 

@@ -11,36 +11,21 @@ import "#workflows/skills/ralplan/ralplan-transitions";
 import "#workflows/skills/team/team-transitions";
 import "#workflows/skills/ultragoal/ultragoal-transitions";
 
+export * from "#workflows/artifacts/artifacts";
+export * from "#workflows/audit/audit-log";
+export * from "#workflows/audit/decision-ledger";
+export * from "#workflows/audit/tamper-detection";
+export * from "#workflows/audit/transaction-journal";
 // Workflow commands
 export { handleWorkflowCommand, runStateCommand, runWorkflowCommand } from "#workflows/commands/workflow";
+export * from "#workflows/compaction/compaction";
 // Extension entry point
 export { default } from "#workflows/extensions/workflows";
-export * from "#workflows/harness/runtime/endpoint";
-export * from "#workflows/harness/runtime/gc";
-export * from "#workflows/harness/runtime/lease";
-export * from "#workflows/harness/runtime/mutation";
-export * from "#workflows/harness/runtime/owner";
-export * from "#workflows/harness/runtime/preservation";
-export * from "#workflows/harness/runtime/primitives";
-export * from "#workflows/harness/runtime/receipt-rules";
-export * from "#workflows/harness/runtime/rpc";
-export * from "#workflows/harness/runtime/runner";
-export * from "#workflows/harness/runtime/seams";
-export * from "#workflows/harness/runtime/state";
-export * from "#workflows/harness/runtime/storage";
-export * from "#workflows/harness/runtime/types";
-export * from "#workflows/harness/runtime/vanish";
-export * from "#workflows/harness/shared/artifacts/artifacts";
-export * from "#workflows/harness/shared/audit/audit-log";
-export * from "#workflows/harness/shared/audit/decision-ledger";
-export * from "#workflows/harness/shared/audit/tamper-detection";
-export * from "#workflows/harness/shared/audit/transaction-journal";
-export * from "#workflows/harness/shared/compaction/compaction";
-export * from "#workflows/harness/shared/orchestration/context-templates";
-export * from "#workflows/harness/shared/orchestration/expected-next-role";
-export * from "#workflows/harness/shared/orchestration/gate-verdicts";
-export * from "#workflows/harness/shared/orchestration/handoff";
-export * from "#workflows/harness/shared/orchestration/vagueness-gate";
+export * from "#workflows/orchestration/context-templates";
+export * from "#workflows/orchestration/expected-next-role";
+export * from "#workflows/orchestration/gate-verdicts";
+export * from "#workflows/orchestration/handoff";
+export * from "#workflows/orchestration/vagueness-gate";
 // workflow-tool-utils: avoid re-exporting RalplanApprovalTarget (conflicts with ralplan-runtime)
 export {
 	type AgentThinkingLevel,
@@ -50,17 +35,27 @@ export {
 	assertRalplanRole,
 	type DeepInterviewHandoff,
 	requireSubagentManager,
-} from "#workflows/harness/shared/orchestration/workflow-tool-utils";
-export * from "#workflows/harness/shared/registry/skill-registry";
-export * from "#workflows/harness/shared/registry/workflow-manifest";
-export * from "#workflows/harness/shared/session/paths";
-export * from "#workflows/harness/shared/session/session-layout";
-export * from "#workflows/harness/shared/session/session-resolution";
-// Runtime modules — re-export everything for external consumers
-export * from "#workflows/harness/shared/state/active-state";
-export * from "#workflows/harness/shared/state/state-schema";
-export * from "#workflows/harness/shared/state/state-writer";
-export * from "#workflows/harness/shared/state/workflow-state";
+} from "#workflows/orchestration/workflow-tool-utils";
+export * from "#workflows/registry/skill-registry";
+export * from "#workflows/registry/workflow-manifest";
+export * from "#workflows/runtime/endpoint";
+export * from "#workflows/runtime/gc";
+export * from "#workflows/runtime/lease";
+export * from "#workflows/runtime/mutation";
+export * from "#workflows/runtime/owner";
+export * from "#workflows/runtime/preservation";
+export * from "#workflows/runtime/primitives";
+export * from "#workflows/runtime/receipt-rules";
+export * from "#workflows/runtime/rpc";
+export * from "#workflows/runtime/runner";
+export * from "#workflows/runtime/seams";
+export * from "#workflows/runtime/state";
+export * from "#workflows/runtime/storage";
+export * from "#workflows/runtime/types";
+export * from "#workflows/runtime/vanish";
+export * from "#workflows/session/paths";
+export * from "#workflows/session/session-layout";
+export * from "#workflows/session/session-resolution";
 export * from "#workflows/skills/deep-interview/deep-interview-mutation-guard";
 export * from "#workflows/skills/deep-interview/deep-interview-runtime";
 export * from "#workflows/skills/deep-interview/deep-interview-state";
@@ -107,3 +102,8 @@ export {
 	validateCompletionReceipt,
 } from "#workflows/skills/ultragoal/ultragoal-receipt";
 export * from "#workflows/skills/ultragoal/ultragoal-runtime";
+// Runtime modules — re-export everything for external consumers
+export * from "#workflows/state/active-state";
+export * from "#workflows/state/state-schema";
+export * from "#workflows/state/state-writer";
+export * from "#workflows/state/workflow-state";

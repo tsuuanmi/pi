@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **workflows**: Moved the remaining shared/runtime workflow infrastructure out of `src/harness/` into top-level `src/runtime`, `src/subagents`, `src/artifacts`, `src/audit`, `src/compaction`, `src/orchestration`, `src/registry`, `src/session`, and `src/state` paths; no `harness/*` compatibility wrappers are provided.
 - **workflows**: Moved skill-owned TypeScript from `src/harness/<skill>/` to `src/skills/<skill>/` and updated public barrel exports to the new `skills/<skill>` paths; no `harness/<skill>` compatibility wrappers are provided.
 
 ### Added

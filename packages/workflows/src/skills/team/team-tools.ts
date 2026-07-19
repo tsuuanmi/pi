@@ -1,15 +1,12 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
-import { workflowReceipt } from "#workflows/harness/shared/artifacts/artifacts";
+import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import {
 	assertExpectedNextRole,
 	assertNoGuardedSpawnOverrides,
 	expectedNextTeamRole,
-} from "#workflows/harness/shared/orchestration/expected-next-role";
-import {
-	assertAgentThinkingLevel,
-	requireSubagentManager,
-} from "#workflows/harness/shared/orchestration/workflow-tool-utils";
+} from "#workflows/orchestration/expected-next-role";
+import { assertAgentThinkingLevel, requireSubagentManager } from "#workflows/orchestration/workflow-tool-utils";
 import { readTeamSnapshot } from "#workflows/skills/team/team-runtime";
 
 const teamSpawnTaskAgentSchema = Type.Object({

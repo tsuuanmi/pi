@@ -33,15 +33,15 @@ import {
 	type ObstacleValidator,
 	type ObstacleViolation,
 	validateObstacles,
-} from "#workflows/harness/shared/audit/decision-ledger";
-import { ralplanObstacleLedgerPath } from "#workflows/harness/shared/session/session-layout";
-import { writeJsonAtomic } from "#workflows/harness/shared/state/state-writer";
+} from "#workflows/audit/decision-ledger";
+import { ralplanObstacleLedgerPath } from "#workflows/session/session-layout";
 import type {
 	RalplanArchitectVerdict,
 	RalplanCriticVerdict,
 	RalplanCriticVerdictKind,
 	RalplanVerdict,
 } from "#workflows/skills/ralplan/ralplan-verdicts";
+import { writeJsonAtomic } from "#workflows/state/state-writer";
 
 /**
  * Ralplan obstacle kinds (from the decision-ledger design, Part 3). All are

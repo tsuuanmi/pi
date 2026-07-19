@@ -1,15 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
-import type { WorkflowSkill } from "#workflows/harness/shared/session/paths";
-import { workflowActiveStatePath, workflowStatePath } from "#workflows/harness/shared/session/session-layout";
-import { readWorkflowActiveState, syncWorkflowActiveState } from "#workflows/harness/shared/state/active-state";
-import { assertWorkflowSkill, isWorkflowSkill } from "#workflows/harness/shared/state/state-schema";
-import {
-	clearWorkflowState,
-	readWorkflowState,
-	writeWorkflowState,
-} from "#workflows/harness/shared/state/workflow-state";
+import type { WorkflowSkill } from "#workflows/session/paths";
+import { workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
+import { readWorkflowActiveState, syncWorkflowActiveState } from "#workflows/state/active-state";
+import { assertWorkflowSkill, isWorkflowSkill } from "#workflows/state/state-schema";
+import { clearWorkflowState, readWorkflowState, writeWorkflowState } from "#workflows/state/workflow-state";
 
 interface ParsedStateCommand {
 	action: string;

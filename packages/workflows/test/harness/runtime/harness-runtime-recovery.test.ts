@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
-import { preserveDirtyWorktree } from "#workflows/harness/runtime/preservation";
+import { preserveDirtyWorktree } from "#workflows/runtime/preservation";
 import {
 	buildClassificationInput,
 	buildWorkspaceMarker,
@@ -14,18 +14,18 @@ import {
 	isRuntimeReceiptValid,
 	type RecoveryDecision,
 	recoverPrimitive,
-} from "#workflows/harness/runtime/primitives";
-import type { HarnessRpc, RpcStateSnapshot } from "#workflows/harness/runtime/rpc";
-import { operate } from "#workflows/harness/runtime/runner";
+} from "#workflows/runtime/primitives";
+import type { HarnessRpc, RpcStateSnapshot } from "#workflows/runtime/rpc";
+import { operate } from "#workflows/runtime/runner";
 import {
 	readRuntimeReceipts,
 	readSessionState,
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
-} from "#workflows/harness/runtime/storage";
-import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/harness/runtime/types";
-import { buildVanishEvidence, requiresVanishBeforeAction, validateVanish } from "#workflows/harness/runtime/vanish";
+} from "#workflows/runtime/storage";
+import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/runtime/types";
+import { buildVanishEvidence, requiresVanishBeforeAction, validateVanish } from "#workflows/runtime/vanish";
 
 const WRITER = { ownerId: "test", leaseEpoch: 0 };
 

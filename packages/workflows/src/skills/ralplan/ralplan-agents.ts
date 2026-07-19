@@ -2,15 +2,12 @@ import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import type { AgentMessage, SubagentManager, SubagentRunResult, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Message } from "@tsuuanmi/pi-ai";
-import {
-	buildRalplanRoleSystemPrompt,
-	buildRalplanTaskPrompt,
-} from "#workflows/harness/shared/orchestration/context-templates";
-import type { RalplanStage } from "#workflows/harness/shared/session/paths";
-import { workflowStatePath } from "#workflows/harness/shared/session/session-layout";
-import { writeJsonAtomic } from "#workflows/harness/shared/state/state-writer";
-import { activeRalplanRunId, defaultWorkflowId } from "#workflows/harness/shared/state/workflow-state";
+import { buildRalplanRoleSystemPrompt, buildRalplanTaskPrompt } from "#workflows/orchestration/context-templates";
+import type { RalplanStage } from "#workflows/session/paths";
+import { workflowStatePath } from "#workflows/session/session-layout";
 import { assertRalplanExplorerGatePassed } from "#workflows/skills/ralplan/ralplan-gates";
+import { writeJsonAtomic } from "#workflows/state/state-writer";
+import { activeRalplanRunId, defaultWorkflowId } from "#workflows/state/workflow-state";
 
 export type RalplanAgentRole = "explorer" | "planner" | "architect" | "critic" | "expert";
 

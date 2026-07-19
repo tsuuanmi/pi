@@ -2,7 +2,7 @@
 
 Session owner and primitive runtime for `pi workflow` commands.
 
-**Source:** `src/harness/runtime/`
+**Source:** `src/runtime/`
 
 ## Overview
 
