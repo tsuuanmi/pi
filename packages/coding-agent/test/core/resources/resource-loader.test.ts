@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#coding-agent/auth/auth-storage";
 import { ExtensionRunner } from "#coding-agent/extensions/runner";
 import { ModelRegistry } from "#coding-agent/model/model-registry";
-import { createSyntheticSourceInfo } from "#coding-agent/resources/source-info";
+import { createSyntheticSourceInfo } from "#coding-agent/package-manager/source-info";
 import { SessionManager } from "#coding-agent/session/session-manager";
 import { SettingsManager } from "#coding-agent/settings/settings-manager";
 import { DefaultResourceLoader } from "#coding-agent/skills/resource-loader";
@@ -39,9 +39,7 @@ function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions
 			!extension.path.endsWith("/src/packages/lsp/extensions/lsp.ts") &&
 			!extension.path.endsWith("/dist/packages/lsp/extensions/lsp.js") &&
 			!extension.path.endsWith("/src/packages/mcp/extensions/mcp.ts") &&
-			!extension.path.endsWith("/dist/packages/mcp/extensions/mcp.js") &&
-			!extension.path.endsWith("/src/packages/providers/extensions/providers.ts") &&
-			!extension.path.endsWith("/dist/packages/providers/extensions/providers.js"),
+			!extension.path.endsWith("/dist/packages/mcp/extensions/mcp.js"),
 	);
 }
 

@@ -14,7 +14,7 @@
  * package.json matches the actual bundled layout. Dev keeps using the source
  * manifests directly, so no runtime fallback is needed. Run from the
  * pi-coding-agent package dir. Pass package names to rewrite a subset
- * (default: all of lsp, mcp, providers, workflows).
+ * (default: all of lsp, mcp, workflows).
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -22,7 +22,6 @@ import { resolve } from "node:path";
 const PACKAGES = {
 	lsp: { src: "src/packages/lsp/package.json", dest: "dist/packages/lsp/package.json" },
 	mcp: { src: "src/packages/mcp/package.json", dest: "dist/packages/mcp/package.json" },
-	providers: { src: "src/packages/providers/package.json", dest: "dist/packages/providers/package.json" },
 	workflows: { src: "../workflows/package.json", dest: "dist/packages/workflows/package.json" },
 };
 
@@ -31,6 +30,9 @@ const targets = names.length > 0 ? names : Object.keys(PACKAGES);
 
 function rewriteEntry(entry) {
 	let p = typeof entry === "string" && entry.startsWith("src/") ? entry.slice(4) : entry;
+	if (typeof p === "string" && p.startsWith("./dist/")) {
+		p = `./${p.slice(7)}`;
+	}
 	if (typeof p === "string" && p.endsWith(".ts")) {
 		p = `${p.slice(0, -3)}.js`;
 	}

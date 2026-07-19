@@ -36,7 +36,7 @@ import {
 	resolveConfigValueUncached,
 	resolveHeadersOrThrow,
 } from "#coding-agent/config/resolve-config-value";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/providers/utils";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/model/provider-utils";
 import { stripJsonComments } from "#coding-agent/utils/fs/index";
 
 // Schema for thinking level support and provider-specific values

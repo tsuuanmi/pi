@@ -13,6 +13,7 @@ import type { Component, Container, EditorComponent, TUI } from "@tsuuanmi/pi-tu
 import type { AgentSession } from "#coding-agent/agent-session/agent-session";
 import { getAgentDir, getAuthPath } from "#coding-agent/config/config";
 import { defaultModelPerProvider } from "#coding-agent/model/model-resolver";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/model/provider-utils";
 import { LoginDialogComponent } from "#coding-agent/modes/interactive/components/login-dialog";
 import {
 	AccountSelectorComponent,
@@ -25,7 +26,6 @@ import {
 } from "#coding-agent/modes/interactive/components/selectors/oauth-selector";
 import type { StatusLineComponent } from "#coding-agent/modes/interactive/components/status-line/index";
 import type { FooterDataProvider } from "#coding-agent/modes/interactive/footer-data-provider";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/providers/utils";
 import { stripJsonComments } from "#coding-agent/utils/fs/index";
 
 function isUnknownModel(model: Model<any> | undefined): boolean {

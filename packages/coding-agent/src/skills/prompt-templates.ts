@@ -2,8 +2,8 @@ import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { basename, dirname, join, resolve, sep } from "path";
 import { CONFIG_DIR_NAME } from "#coding-agent/config/config";
-import type { ResourceDiagnostic } from "#coding-agent/resources/diagnostics";
-import { createSyntheticSourceInfo, type SourceInfo } from "#coding-agent/resources/source-info";
+import type { ResourceDiagnostic } from "#coding-agent/package-manager/resource-diagnostics";
+import { createSyntheticSourceInfo, type SourceInfo } from "#coding-agent/package-manager/source-info";
 import { parseFrontmatter } from "#coding-agent/utils/fs/index";
 
 /**

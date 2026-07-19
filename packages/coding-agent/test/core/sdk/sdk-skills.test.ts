@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createExtensionRuntime } from "#coding-agent/extensions/loader";
-import { createSyntheticSourceInfo } from "#coding-agent/resources/source-info";
+import { createSyntheticSourceInfo } from "#coding-agent/package-manager/source-info";
 import { createAgentSession } from "#coding-agent/sdk/sdk";
 import { SessionManager } from "#coding-agent/session/session-manager";
 import type { ResourceLoader } from "#coding-agent/skills/resource-loader";

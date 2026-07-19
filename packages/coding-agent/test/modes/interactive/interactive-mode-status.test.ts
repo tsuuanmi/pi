@@ -14,7 +14,7 @@ import type { AutocompleteProviderFactory } from "#coding-agent/api/types";
 import { ExtensionUIController } from "#coding-agent/modes/interactive/controllers/extension-ui-controller";
 import { ResourceDisplayController } from "#coding-agent/modes/interactive/controllers/resource-display-controller";
 import { InteractiveMode } from "#coding-agent/modes/interactive/interactive-mode";
-import type { SourceInfo } from "#coding-agent/resources/source-info";
+import type { SourceInfo } from "#coding-agent/package-manager/source-info";
 import { initTheme } from "#coding-agent/theme/theme";
 
 function renderLastLine(container: Container, width = 120): string {

@@ -10,7 +10,7 @@ import type { Model } from "@tsuuanmi/pi-ai";
 import type { SessionStats } from "#coding-agent/agent-session/agent-session";
 import type { CompactionResult } from "#coding-agent/compaction/index";
 import type { BashResult } from "#coding-agent/exec/bash-executor";
-import type { SourceInfo } from "#coding-agent/resources/source-info";
+import type { SourceInfo } from "#coding-agent/package-manager/source-info";
 
 // ============================================================================
 // RPC Commands (stdin)

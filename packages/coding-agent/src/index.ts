@@ -57,7 +57,7 @@ export {
 	getReadmePath,
 	VERSION,
 } from "#coding-agent/config/config";
-export { createEventBus, type EventBus, type EventBusController } from "#coding-agent/events/event-bus";
+export { createEventBus, type EventBus, type EventBusController } from "#coding-agent/extensions/event-bus";
 // Extension system
 export type {
 	AgentEndEvent,
@@ -225,7 +225,7 @@ export type {
 	ResolvedResource,
 } from "#coding-agent/package-manager/package-manager";
 export { DefaultPackageManager } from "#coding-agent/package-manager/package-manager";
-export { createSyntheticSourceInfo } from "#coding-agent/resources/source-info";
+export { createSyntheticSourceInfo } from "#coding-agent/package-manager/source-info";
 // SDK for programmatic usage
 export {
 	AgentSessionRuntime,

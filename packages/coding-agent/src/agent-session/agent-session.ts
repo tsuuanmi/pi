@@ -43,8 +43,6 @@ import {
 	getUserMessagesForForking as treeNavGetUserMessagesForForking,
 	navigateTree as treeNavNavigateTree,
 } from "#coding-agent/agent-session/tree-navigation";
-import { ApiUsageLogger } from "#coding-agent/api-usage/api-usage-logger";
-import { apiUsageLogPath } from "#coding-agent/api-usage/utils";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#coding-agent/auth/auth-guidance";
 import {
 	type CompactionResult,
@@ -81,7 +79,7 @@ import {
 } from "#coding-agent/extensions/index";
 import { emitSessionShutdownEvent } from "#coding-agent/extensions/runner";
 import type { ModelRegistry } from "#coding-agent/model/model-registry";
-import { createSyntheticSourceInfo, type SourceInfo } from "#coding-agent/resources/source-info";
+import { createSyntheticSourceInfo, type SourceInfo } from "#coding-agent/package-manager/source-info";
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "#coding-agent/session/session-manager";
 import {
 	CURRENT_SESSION_VERSION,
@@ -94,6 +92,8 @@ import type { ResourceExtensionPaths, ResourceLoader } from "#coding-agent/skill
 import type { SlashCommandInfo } from "#coding-agent/skills/slash-commands";
 import { type BuildSystemPromptOptions, buildSystemPrompt } from "#coding-agent/skills/system-prompt";
 import type { SubagentManager } from "#coding-agent/subagents/subagents";
+import { ApiUsageLogger } from "#coding-agent/telemetry/api-usage-logger";
+import { apiUsageLogPath } from "#coding-agent/telemetry/api-usage-utils";
 import { type BashOperations, createLocalBashOperations } from "#coding-agent/tools/bash";
 import { createAllToolDefinitions } from "#coding-agent/tools/index";
 import { createToolDefinitionFromAgentTool } from "#coding-agent/tools/utils";

@@ -12,7 +12,7 @@ import chalk from "chalk";
 import { type Static, Type } from "typebox";
 import { Compile } from "typebox/compile";
 import { getCustomThemesDir, getThemesDir } from "#coding-agent/config/config";
-import type { SourceInfo } from "#coding-agent/resources/source-info";
+import type { SourceInfo } from "#coding-agent/package-manager/source-info";
 import { closeWatcher, watchWithErrorHandler } from "#coding-agent/utils/fs/index";
 import { highlight, supportsLanguage } from "#coding-agent/utils/terminal/syntax-highlight";
 

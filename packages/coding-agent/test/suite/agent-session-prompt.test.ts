@@ -6,7 +6,7 @@ import { fauxAssistantMessage, fauxToolCall, type Model } from "@tsuuanmi/pi-ai"
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import type { InputEvent } from "#coding-agent/extensions/index";
-import { createSyntheticSourceInfo } from "#coding-agent/resources/source-info";
+import { createSyntheticSourceInfo } from "#coding-agent/package-manager/source-info";
 import type { PromptTemplate } from "#coding-agent/skills/prompt-templates";
 import { createHarness, getMessageText, type Harness } from "#coding-agent-test/suite/harness";
 import { createTestResourceLoader } from "#coding-agent-test/test-utils";

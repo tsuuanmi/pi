@@ -167,5 +167,5 @@ export type {
 } from "#coding-agent/extensions/runner";
 export { ExtensionRunner } from "#coding-agent/extensions/runner";
 export { wrapRegisteredTool, wrapRegisteredTools } from "#coding-agent/extensions/wrapper";
-export type { SourceInfo } from "#coding-agent/resources/source-info";
+export type { SourceInfo } from "#coding-agent/package-manager/source-info";
 export type { SlashCommandInfo, SlashCommandSource } from "#coding-agent/skills/slash-commands";

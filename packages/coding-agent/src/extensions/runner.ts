@@ -52,7 +52,7 @@ import type {
 	UserBashEventResult,
 } from "#coding-agent/api/types";
 import type { ModelRegistry } from "#coding-agent/model/model-registry";
-import type { ResourceDiagnostic } from "#coding-agent/resources/diagnostics";
+import type { ResourceDiagnostic } from "#coding-agent/package-manager/resource-diagnostics";
 import type { SessionManager } from "#coding-agent/session/session-manager";
 import type { KeybindingsConfig } from "#coding-agent/settings/keybindings";
 import type { BuildSystemPromptOptions } from "#coding-agent/skills/system-prompt";

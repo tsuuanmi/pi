@@ -9,7 +9,7 @@ import { Agent } from "@tsuuanmi/pi-agent";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { AgentSession } from "#coding-agent/agent-session/agent-session";
 import { AuthStorage } from "#coding-agent/auth/auth-storage";
-import { createEventBus } from "#coding-agent/events/event-bus";
+import { createEventBus } from "#coding-agent/extensions/event-bus";
 import type { Extension, ExtensionFactory, LoadExtensionsResult } from "#coding-agent/extensions/index";
 import { createExtensionRuntime, loadExtensionFromFactory } from "#coding-agent/extensions/loader";
 import { createCodingTools } from "#coding-agent/index";

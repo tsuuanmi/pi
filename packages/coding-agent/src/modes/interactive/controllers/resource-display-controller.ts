@@ -15,7 +15,7 @@ import { type Container, Spacer, Text } from "@tsuuanmi/pi-tui";
 import type { AgentSession } from "#coding-agent/agent-session/agent-session";
 import type { ExtensionRunner } from "#coding-agent/extensions/index";
 import { ExpandableText } from "#coding-agent/modes/interactive/components/widgets/expandable-text";
-import type { SourceInfo } from "#coding-agent/resources/source-info";
+import type { SourceInfo } from "#coding-agent/package-manager/source-info";
 import type { ResourceDiagnostic } from "#coding-agent/skills/resource-loader";
 import { BUILTIN_SLASH_COMMANDS } from "#coding-agent/skills/slash-commands";
 import { type ThemeColor, theme } from "#coding-agent/theme/theme";

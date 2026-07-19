@@ -1,9 +1,9 @@
 import { setKeybindings } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#coding-agent/auth/auth-storage";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/model/provider-utils";
 import { OAuthSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/oauth-selector";
 import { isApiKeyAccountProvider } from "#coding-agent/modes/interactive/interactive-mode";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/providers/utils";
 import { KeybindingsManager } from "#coding-agent/settings/keybindings";
 import { initTheme } from "#coding-agent/theme/theme";
 import { stripAnsi } from "#coding-agent/utils/terminal/ansi";

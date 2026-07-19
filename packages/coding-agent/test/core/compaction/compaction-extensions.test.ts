@@ -19,7 +19,7 @@ import {
 } from "#coding-agent/extensions/index";
 import { createCodingTools } from "#coding-agent/index";
 import { ModelRegistry } from "#coding-agent/model/model-registry";
-import { createSyntheticSourceInfo } from "#coding-agent/resources/source-info";
+import { createSyntheticSourceInfo } from "#coding-agent/package-manager/source-info";
 import { SessionManager } from "#coding-agent/session/session-manager";
 import { SettingsManager } from "#coding-agent/settings/settings-manager";
 import { createTestResourceLoader } from "#coding-agent-test/test-utils";

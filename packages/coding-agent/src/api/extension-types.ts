@@ -56,9 +56,9 @@ import type {
 import type { MCPServerInfo } from "#coding-agent/api/mcp-types";
 import type { ProviderConfig } from "#coding-agent/api/provider-types";
 import type { ToolDefinition } from "#coding-agent/api/tool-types";
-import type { EventBus } from "#coding-agent/events/event-bus";
 import type { ExecOptions, ExecResult } from "#coding-agent/exec/exec";
-import type { SourceInfo } from "#coding-agent/resources/source-info";
+import type { EventBus } from "#coding-agent/extensions/event-bus";
+import type { SourceInfo } from "#coding-agent/package-manager/source-info";
 import type { SessionManager } from "#coding-agent/session/session-manager";
 import type { SlashCommandInfo } from "#coding-agent/skills/slash-commands";
 import type { BuildSystemPromptOptions } from "#coding-agent/skills/system-prompt";

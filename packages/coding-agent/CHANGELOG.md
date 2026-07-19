@@ -21,11 +21,16 @@
 - Removed low-ROI settings and UI extras: `enableAnalytics`, `trackingId`, `terminal.showTerminalProgress`, `terminal.clearOnShrink`, `editorPaddingX`, `autocompleteMaxVisible`, `doubleEscapeAction`, and `treeFilterMode`, along with the analytics first-time setup step and double-escape shortcut.
 - Removed the experimental-features gate (`PI_EXPERIMENTAL` env var, `areExperimentalFeaturesEnabled()`, `src/config/experimental.ts`), the experimental first-time theme-setup dialog (`first-time-setup.ts`, `shouldRunFirstTimeSetup`/`showFirstTimeSetup` in `startup-ui.ts`, and their tests), and the status-line `xp` chip. The `isOfficialDistribution`/`OFFICIAL_*` helpers in `startup-ui.ts` (used only by the setup gate) were also dropped.
 - Removed project trust entirely, including the trust prompt, `/trust`, `trust.json` store, `project_trust` extension event, trust-gated project resource loading, and related public APIs.
+- Removed the no-op bundled `pi:providers` package source.
+
+### Changed
+
+- Flattened tiny coding-agent source folders into neighboring domains: Bun entrypoint helpers under `cli`, event bus under `extensions`, API usage logging under `telemetry`, message optimization under `sdk`, provider helpers under `model`, and resource metadata under `package-manager`.
 
 ### Added
 
 - Spawn verbs for workflow skills (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `ultragoal_spawn_goal_agent`) are model-visible tools registered by the `@tsuuanmi/pi-workflows` extension. They call this session's `SubagentManager` directly in-process to spawn role agents as ordinary subagents; no `pi workflow` command or socket is involved in spawning. pi-agent owns the agent/subagent process; pi-workflows owns turn order, guarded role checks, and result→artifact handoff.
-- Added reserved bundled package sources `pi:workflows`, `pi:lsp`, `pi:mcp`, and `pi:providers`, plus filterable package `commands` and `agents` resources and generic pre-session package-command dispatch for first-party `pi workflow` and `pi mcp` commands.
+- Added reserved bundled package sources `pi:workflows`, `pi:lsp`, and `pi:mcp`, plus filterable package `commands` and `agents` resources and generic pre-session package-command dispatch for first-party `pi workflow` and `pi mcp` commands.
 - Added default-on retained-context optimization for future model replay: removable readable thinking blocks are stripped, and oversized retained bash output is compressed with a head/tail marker. Opt out with `retainedContext.stripThinking` and `retainedContext.compressBashOutput`.
 - Added Tier 2 retained-context tool-result optimization: provider-bound replay can dedupe content-identical repeated `read` results and summarize old unprotected `read`, `bash`, and `edit` results with deterministic summary records. Opt out with `retainedContext.dedupeReadResults` and `retainedContext.summarizeStaleToolResults`; tune stale summaries with `retainedContext.toolResultMaxBytes`.
 - Added default-on redacted API usage JSONL sidecar logging per completed LLM provider invocation, with `apiUsageLogging.enabled` opt-out.

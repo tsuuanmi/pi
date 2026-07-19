@@ -8,21 +8,21 @@ import {
 	loadAgentDefinitions,
 } from "#coding-agent/agents/agent-definitions";
 import { CONFIG_DIR_NAME } from "#coding-agent/config/config";
-import type { ResourceDiagnostic } from "#coding-agent/resources/diagnostics";
+import type { ResourceDiagnostic } from "#coding-agent/package-manager/resource-diagnostics";
 import { loadThemeFromPath, type Theme } from "#coding-agent/theme/theme";
 
-export type { ResourceCollision, ResourceDiagnostic } from "#coding-agent/resources/diagnostics";
+export type { ResourceCollision, ResourceDiagnostic } from "#coding-agent/package-manager/resource-diagnostics";
 
 import { canonicalizePath, isLocalPath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#coding-agent/api/types";
-import { createEventBus, type EventBus } from "#coding-agent/events/event-bus";
+import { createEventBus, type EventBus } from "#coding-agent/extensions/event-bus";
 import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "#coding-agent/extensions/loader";
 import {
 	DefaultPackageManager,
 	type PathMetadata,
 	type ResolvedResource,
 } from "#coding-agent/package-manager/package-manager";
-import { createSourceInfo, type SourceInfo } from "#coding-agent/resources/source-info";
+import { createSourceInfo, type SourceInfo } from "#coding-agent/package-manager/source-info";
 import { SettingsManager } from "#coding-agent/settings/settings-manager";
 import type { PromptTemplate } from "#coding-agent/skills/prompt-templates";
 import { loadPromptTemplatesWithDiagnostics } from "#coding-agent/skills/prompt-templates";

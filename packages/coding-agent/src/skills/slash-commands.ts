@@ -1,5 +1,5 @@
 import { APP_NAME } from "#coding-agent/config/config";
-import type { SourceInfo } from "#coding-agent/resources/source-info";
+import type { SourceInfo } from "#coding-agent/package-manager/source-info";
 
 export type SlashCommandSource = "extension" | "prompt" | "skill";
 

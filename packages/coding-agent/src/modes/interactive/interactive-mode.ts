@@ -67,7 +67,7 @@ import { KeyHandlerController } from "#coding-agent/modes/interactive/controller
 import { ResourceDisplayController } from "#coding-agent/modes/interactive/controllers/resource-display-controller";
 import { SelectorController } from "#coding-agent/modes/interactive/controllers/selector-controller";
 import { FooterDataProvider } from "#coding-agent/modes/interactive/footer-data-provider";
-import type { SourceInfo } from "#coding-agent/resources/source-info";
+import type { SourceInfo } from "#coding-agent/package-manager/source-info";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#coding-agent/session/session-cwd";
 import type { SessionContext, SessionManager } from "#coding-agent/session/session-manager";
 import { type AppKeybinding, KeybindingsManager } from "#coding-agent/settings/keybindings";

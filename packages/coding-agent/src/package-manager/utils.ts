@@ -17,10 +17,9 @@ export const BUNDLED_PACKAGE_SOURCES: Record<string, BundledPackageName> = {
 	"pi:workflows": "workflows",
 	"pi:lsp": "lsp",
 	"pi:mcp": "mcp",
-	"pi:providers": "providers",
 };
 
-export const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows", "pi:lsp", "pi:mcp", "pi:providers"];
+export const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows", "pi:lsp", "pi:mcp"];
 
 export const FILE_PATTERNS: Record<ResourceType, RegExp> = {
 	extensions: /\.(ts|js)$/,
@@ -77,18 +76,21 @@ export function getExtensionTempFolder(agentDir: string): string {
 
 export function getBundledPackageRoot(name: BundledPackageName): string {
 	// "workflows" is now a standalone workspace package at packages/workflows/src/,
-	// not an embedded package under src/packages/. Other bundled
-	// packages (lsp, mcp, providers) remain under src/packages/.
+	// not an embedded package under src/packages/. Other bundled packages
+	// (lsp, mcp) remain under src/packages/.
 	if (name === "workflows") {
 		const __dirname = dirname(fileURLToPath(import.meta.url));
+		const bundledDist = resolve(__dirname, "..", "packages", "workflows");
+		if (existsSync(resolve(bundledDist, "package.json"))) {
+			return bundledDist;
+		}
 		// Dev: the workflows package is a workspace sibling at packages/workflows
-		// (source layout with src/). Published dist bundles it flattened under
-		// .../packages/workflows (compiled .js, no src/), same as lsp/mcp/providers.
+		// (source layout with src/) before coding-agent dist has been built.
 		const devWorkspace = resolve(__dirname, "..", "..", "..", "workflows");
 		if (existsSync(resolve(devWorkspace, "package.json"))) {
 			return devWorkspace;
 		}
-		return resolve(__dirname, "..", "packages", "workflows");
+		return bundledDist;
 	}
 	return resolve(dirname(fileURLToPath(import.meta.url)), "..", "packages", name);
 }

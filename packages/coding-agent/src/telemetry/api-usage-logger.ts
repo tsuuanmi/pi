@@ -16,7 +16,7 @@ import {
 	safeHeaders,
 	safeSerialize,
 	toJsonLine,
-} from "#coding-agent/api-usage/utils";
+} from "#coding-agent/telemetry/api-usage-utils";
 
 export interface ApiUsageLoggerOptions {
 	cwd: string;

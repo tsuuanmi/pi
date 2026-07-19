@@ -141,6 +141,6 @@ export interface PackageFilter {
 export type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands" | "agents";
 export type TopLevelResourceType = "extensions" | "skills" | "prompts" | "themes";
 
-export type BundledPackageName = "workflows" | "lsp" | "mcp" | "providers";
+export type BundledPackageName = "workflows" | "lsp" | "mcp";
 
 export type SkillDiscoveryMode = "pi" | "agents";

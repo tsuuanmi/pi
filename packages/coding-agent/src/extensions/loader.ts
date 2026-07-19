@@ -34,13 +34,13 @@ import type {
 	ToolDefinition,
 } from "#coding-agent/api/types";
 import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "#coding-agent/config/config";
-import { createEventBus, type EventBus } from "#coding-agent/events/event-bus";
 import type { ExecOptions } from "#coding-agent/exec/exec";
 import { execCommand } from "#coding-agent/exec/exec";
+import { createEventBus, type EventBus } from "#coding-agent/extensions/event-bus";
 // NOTE: This import works because loader.ts exports are NOT re-exported from index.ts,
 // avoiding a circular dependency. Extensions can import from @tsuuanmi/pi-coding-agent.
 import * as _bundledPiCodingAgent from "#coding-agent/index";
-import { createSyntheticSourceInfo } from "#coding-agent/resources/source-info";
+import { createSyntheticSourceInfo } from "#coding-agent/package-manager/source-info";
 
 /** Modules available to extensions via virtualModules (for compiled Bun binary) */
 const VIRTUAL_MODULES: Record<string, unknown> = {
@@ -87,7 +87,7 @@ function getAliases(): Record<string, string> {
 		if (fs.existsSync(workspacePath)) {
 			return workspacePath;
 		}
-		return fileURLToPath(import.meta.resolve(specifier));
+		return require.resolve(specifier);
 	};
 
 	const piCodingAgentEntry = packageIndex;
@@ -95,8 +95,11 @@ function getAliases(): Record<string, string> {
 	const piAgentNodeEntry = resolveWorkspaceOrImport("agent/dist/node.js", "@tsuuanmi/pi-agent/node");
 	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@tsuuanmi/pi-tui");
 	const piAiEntry = resolveWorkspaceOrImport("ai/dist/index.js", "@tsuuanmi/pi-ai");
-	const piAiOauthEntry = resolveWorkspaceOrImport("ai/dist/oauth.js", "@tsuuanmi/pi-ai/oauth");
+	const piAiOauthEntry = resolveWorkspaceOrImport("ai/dist/auth/oauth.js", "@tsuuanmi/pi-ai/oauth");
 	const piWorkflowsEntry = resolveWorkspaceOrImport("workflows/dist/index.js", "@tsuuanmi/pi-workflows");
+	const piWorkflowsInternal = fs.existsSync(path.join(packagesRoot, "workflows/src"))
+		? path.join(packagesRoot, "workflows/src/*")
+		: path.join(packagesRoot, "workflows/dist/*");
 
 	_aliases = {
 		"@tsuuanmi/pi-coding-agent": piCodingAgentEntry,
@@ -111,6 +114,7 @@ function getAliases(): Record<string, string> {
 		"@mariozechner/pi-tui": piTuiEntry,
 		"@mariozechner/pi-ai": piAiEntry,
 		"@mariozechner/pi-ai/oauth": piAiOauthEntry,
+		"#workflows/*": piWorkflowsInternal,
 		typebox: typeboxEntry,
 		"typebox/compile": typeboxCompileEntry,
 		"typebox/value": typeboxValueEntry,

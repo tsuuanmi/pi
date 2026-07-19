@@ -22,7 +22,7 @@ These are the intended ownership boundaries. If implementation chooses different
 | Resource/discovery ownership and provider precedence | `packages/coding-agent/src/skills/resource-loader.ts` or a new `src/resource-providers.ts` | `src/agents/agent-profiles.ts`, `src/skills/skills.ts`, `src/skills/prompt-templates.ts`, `src/package-manager/package-manager.ts` |
 | Agent definition parsing | `packages/coding-agent/src/agents/agent-profiles.ts` or a new `src/agents/agent-definitions.ts` | bundled role-agent prompt assets if added |
 | Project resource loading | `packages/coding-agent/src/settings/settings-manager.ts` and `src/skills/resource-loader.ts` | `docs/security.md` |
-| Source metadata and diagnostics | `packages/coding-agent/src/resources/source-info.ts` and `src/resources/diagnostics.ts` | resource-specific loaders |
+| Source metadata and diagnostics | `packages/coding-agent/src/package-manager/source-info.ts` and `src/package-manager/resource-diagnostics.ts` | resource-specific loaders |
 | Scoped live registry | a new `packages/coding-agent/src/agent-registry.ts` | `src/agent-session/agent-session.ts`, `src/subagents/subagents.ts`, `src/api/types.ts` |
 | Durable subagent/task/receipt state | `packages/coding-agent/src/subagents/subagents.ts` and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |
 | Self-hosting continuity | `pi:workflows` first-party package tools and skills | `packages/workflows/src/harness/*`, `packages/workflows/src/skills/*` |
