@@ -66,6 +66,7 @@
 
 ### Changed
 
+- Moved OpenAI Codex quota display out of the HUD/status line and into an improved `/account` selector with clearer columns and in-place best-effort quota updates for each stored Codex account.
 - Moved bundled workflow agent profiles out of coding-agent core and into the `pi:workflows` package as package `agents` resources.
 - Moved OpenAI Codex quota usage helpers from coding-agent core into `@tsuuanmi/pi-ai`; coding-agent now consumes them through the AI package.
 - Workflow runtime artifacts now require an owning session (type-level `string`, not `string | undefined`) and persist under the existing `.pi/{sessionId}/` layout, including workflow audit logs, transaction journals, subagent records, and ralplan role-agent records; session directory names remain unchanged; the global `.pi/` root is reserved for shared project config only, with no silent fallback.

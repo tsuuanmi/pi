@@ -14,7 +14,7 @@ import {
 	type OAuthLoginCallbacks,
 	type OAuthProviderId,
 } from "@tsuuanmi/pi-ai";
-import { getOAuthApiKey, getOAuthProvider, getOAuthProviders } from "@tsuuanmi/pi-ai/oauth";
+import { getOAuthProvider, getOAuthProviders } from "@tsuuanmi/pi-ai/oauth";
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
@@ -291,9 +291,16 @@ export class AuthStorage {
 	}
 
 	private getActiveCredential(entry: AuthStorageEntry | undefined): AuthCredential | undefined {
-		if (isAuthCredential(entry)) return entry;
-		const activeAccount = this.getActiveAccountName(entry);
-		return activeAccount ? entry?.accounts[activeAccount] : undefined;
+		return this.getAccountCredential(entry, this.getActiveAccountName(entry));
+	}
+
+	private getAccountCredential(
+		entry: AuthStorageEntry | undefined,
+		accountName: string | undefined,
+	): AuthCredential | undefined {
+		if (isAuthCredential(entry)) return accountName === undefined || accountName === "default" ? entry : undefined;
+		const resolvedAccount = accountName ?? this.getActiveAccountName(entry);
+		return resolvedAccount ? entry?.accounts[resolvedAccount] : undefined;
 	}
 
 	private setCredentialInEntry(
@@ -321,12 +328,16 @@ export class AuthStorage {
 		return { active: accountName, accounts };
 	}
 
-	private replaceActiveCredential(entry: AuthStorageEntry | undefined, credential: AuthCredential): AuthStorageEntry {
+	private replaceCredentialInEntry(
+		entry: AuthStorageEntry | undefined,
+		credential: AuthCredential,
+		accountName?: string,
+	): AuthStorageEntry {
 		if (!isAuthAccountCollection(entry)) return credential;
-		const activeAccount = this.getActiveAccountName(entry) ?? "default";
+		const targetAccount = accountName ?? this.getActiveAccountName(entry) ?? "default";
 		return {
-			active: activeAccount,
-			accounts: { ...entry.accounts, [activeAccount]: credential },
+			active: accountName ? entry.active : targetAccount,
+			accounts: { ...entry.accounts, [targetAccount]: credential },
 		};
 	}
 
@@ -374,6 +385,13 @@ export class AuthStorage {
 	 */
 	get(provider: string): AuthCredential | undefined {
 		return this.getActiveCredential(this.data[provider]);
+	}
+
+	/**
+	 * Get credential for a specific stored account.
+	 */
+	getAccount(provider: string, accountName: string): AuthCredential | undefined {
+		return this.getAccountCredential(this.data[provider], accountName);
 	}
 
 	/**
@@ -559,6 +577,7 @@ export class AuthStorage {
 	 */
 	private async refreshOAuthTokenWithLock(
 		providerId: OAuthProviderId,
+		accountName?: string,
 	): Promise<{ apiKey: string; newCredentials: OAuthCredentials } | null> {
 		const provider = getOAuthProvider(providerId);
 		if (!provider) {
@@ -570,7 +589,7 @@ export class AuthStorage {
 			this.data = currentData;
 			this.loadError = null;
 
-			const cred = this.getActiveCredential(currentData[providerId]);
+			const cred = this.getAccountCredential(currentData[providerId], accountName);
 			if (cred?.type !== "oauth") {
 				return { result: null };
 			}
@@ -579,25 +598,19 @@ export class AuthStorage {
 				return { result: { apiKey: provider.getApiKey(cred), newCredentials: cred } };
 			}
 
-			const oauthCreds: Record<string, OAuthCredentials> = {};
-			for (const [key, value] of Object.entries(currentData)) {
-				const credential = this.getActiveCredential(value);
-				if (credential?.type === "oauth") {
-					oauthCreds[key] = credential;
-				}
-			}
-
-			const refreshed = await getOAuthApiKey(providerId, oauthCreds);
-			if (!refreshed) {
-				return { result: null };
-			}
+			const newCredentials = await provider.refreshToken(cred);
+			const refreshed = { apiKey: provider.getApiKey(newCredentials), newCredentials };
 
 			const merged: AuthStorageData = {
 				...currentData,
-				[providerId]: this.replaceActiveCredential(currentData[providerId], {
-					type: "oauth",
-					...refreshed.newCredentials,
-				}),
+				[providerId]: this.replaceCredentialInEntry(
+					currentData[providerId],
+					{
+						type: "oauth",
+						...refreshed.newCredentials,
+					},
+					accountName,
+				),
 			};
 			this.data = merged;
 			this.loadError = null;
@@ -616,14 +629,17 @@ export class AuthStorage {
 	 * 4. Environment variable
 	 * 5. Fallback resolver (models.json custom providers)
 	 */
-	async getApiKey(providerId: string, options?: { includeFallback?: boolean }): Promise<string | undefined> {
+	async getApiKey(
+		providerId: string,
+		options?: { includeFallback?: boolean; accountName?: string },
+	): Promise<string | undefined> {
 		// Runtime override takes highest priority
 		const runtimeKey = this.runtimeOverrides.get(providerId);
 		if (runtimeKey) {
 			return runtimeKey;
 		}
 
-		const cred = this.get(providerId);
+		const cred = options?.accountName ? this.getAccount(providerId, options.accountName) : this.get(providerId);
 
 		if (cred?.type === "api_key") {
 			return resolveConfigValue(cred.key, cred.env);
@@ -642,7 +658,7 @@ export class AuthStorage {
 			if (needsRefresh) {
 				// Use locked refresh to prevent race conditions
 				try {
-					const result = await this.refreshOAuthTokenWithLock(providerId);
+					const result = await this.refreshOAuthTokenWithLock(providerId, options?.accountName);
 					if (result) {
 						return result.apiKey;
 					}
@@ -650,7 +666,9 @@ export class AuthStorage {
 					this.recordError(error);
 					// Refresh failed - re-read file to check if another instance succeeded
 					this.reload();
-					const updatedCred = this.get(providerId);
+					const updatedCred = options?.accountName
+						? this.getAccount(providerId, options.accountName)
+						: this.get(providerId);
 
 					if (updatedCred?.type === "oauth" && Date.now() < updatedCred.expires) {
 						// Another instance refreshed successfully, use those credentials

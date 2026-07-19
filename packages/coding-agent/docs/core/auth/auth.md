@@ -43,7 +43,7 @@ pi auth status   # Check authentication status
 pi auth logout   # Clear tokens
 ```
 
-OAuth credentials are stored with refresh tokens and expiry times. Pi automatically refreshes expired tokens using file locking to prevent race conditions.
+OAuth credentials are stored with refresh tokens and expiry times. Pi automatically refreshes expired tokens using file locking to prevent race conditions. The `/account` selector shows best-effort OpenAI Codex quota for each stored Codex account.
 
 ## AuthStorage
 
@@ -84,7 +84,7 @@ type AuthAccountCollection = {
 
 ### Key Resolution Priority
 
-`getApiKey(providerId)` resolves API keys in order:
+`getApiKey(providerId)` resolves API keys in order. Pass `accountName` to resolve a specific stored account instead of the active account.
 
 1. **Runtime override** — Set via `setRuntimeApiKey()`, not persisted to disk
 2. **API key from auth.json** — Resolved with `resolveConfigValue()` for interpolation

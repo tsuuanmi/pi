@@ -3,11 +3,11 @@ import * as path from "node:path";
 import {
 	type Api,
 	fetchOpenAICodexUsageSummary,
-	getOpenAICodexUsageCacheTtlMs,
 	getProviders,
 	type Model,
 	type OAuthProviderId,
 	type OAuthSelectPrompt,
+	type OpenAICodexUsageSummary,
 } from "@tsuuanmi/pi-ai";
 import type { Component, Container, EditorComponent, TUI } from "@tsuuanmi/pi-tui";
 import type { AgentSession } from "../../../core/agent-session/agent-session.ts";
@@ -61,8 +61,6 @@ export class AccountAuthController {
 	private readonly showStatus: (message: string) => void;
 	private readonly showSelector: (create: (done: () => void) => { component: Component; focus: Component }) => void;
 	private readonly updateEditorBorderColor: () => void;
-	private codexUsageRefreshInFlight = false;
-	private codexUsageLastFetchMs = 0;
 	private autoTrustOnReloadCwd: string | undefined;
 
 	private get session(): AgentSession {
@@ -278,22 +276,80 @@ export class AccountAuthController {
 	private buildAccountOptions(providerFilter?: string): AccountSelectorOption[] {
 		const authStorage = this.session.modelRegistry.authStorage;
 		const providers = authStorage.list().filter((provider) => !providerFilter || provider === providerFilter);
-		return providers
-			.flatMap((providerId) => {
+		return this.sortAccountOptions(
+			providers.flatMap((providerId) => {
 				const activeAccount = authStorage.getActiveAccount(providerId);
 				return authStorage.getAccountNames(providerId).map((accountName) => ({
 					providerId,
 					providerName: this.session.modelRegistry.getProviderDisplayName(providerId),
 					accountName,
 					active: accountName === activeAccount,
+					quotaText: providerId === "openai-codex" ? "loading" : undefined,
 				}));
-			})
-			.sort((a, b) => {
-				const providerCompare = a.providerName.localeCompare(b.providerName);
-				if (providerCompare !== 0) return providerCompare;
-				if (a.active !== b.active) return a.active ? -1 : 1;
-				return a.accountName.localeCompare(b.accountName);
-			});
+			}),
+		);
+	}
+
+	private sortAccountOptions(options: AccountSelectorOption[]): AccountSelectorOption[] {
+		return options.sort((a, b) => {
+			if (a.active !== b.active) return a.active ? -1 : 1;
+			const providerCompare = a.providerName.localeCompare(b.providerName);
+			if (providerCompare !== 0) return providerCompare;
+			const providerIdCompare = a.providerId.localeCompare(b.providerId);
+			if (providerIdCompare !== 0) return providerIdCompare;
+			return a.accountName.localeCompare(b.accountName);
+		});
+	}
+
+	private getOpenAICodexQuotaModel(): Model<Api> | undefined {
+		return this.session.modelRegistry.getAll().find((model) => model.provider === "openai-codex");
+	}
+
+	private async attachAccountQuota(options: AccountSelectorOption[]): Promise<AccountSelectorOption[]> {
+		const codexOptions = options.filter((option) => option.providerId === "openai-codex");
+		if (codexOptions.length === 0) return options;
+
+		const model = this.getOpenAICodexQuotaModel();
+		if (!model) {
+			for (const option of codexOptions) option.quotaText = "unavailable";
+			return options;
+		}
+
+		await Promise.all(
+			codexOptions.map(async (option) => {
+				const summary = await this.fetchAccountCodexQuota(model, option.accountName);
+				if (!summary) {
+					option.quotaText = "unavailable";
+					return;
+				}
+				option.quotaText = summary.text;
+				option.quotaStatus = summary.status === "unknown" ? undefined : summary.status;
+			}),
+		);
+		return this.sortAccountOptions(options);
+	}
+
+	private async fetchAccountCodexQuota(
+		model: Model<Api>,
+		accountName: string,
+	): Promise<OpenAICodexUsageSummary | null> {
+		try {
+			return await fetchOpenAICodexUsageSummary(
+				{
+					isUsingOAuth: () => true,
+					getApiKeyAndHeaders: async () => {
+						const apiKey = await this.session.modelRegistry.authStorage.getApiKey("openai-codex", {
+							includeFallback: false,
+							accountName,
+						});
+						return apiKey ? { ok: true, apiKey } : { ok: false, error: "No OAuth token for account" };
+					},
+				},
+				model,
+			);
+		} catch {
+			return null;
+		}
 	}
 
 	private switchProviderAccount(providerId: string, accountName: string): void {
@@ -363,6 +419,10 @@ export class AccountAuthController {
 					this.ui.requestRender();
 				},
 			);
+			void this.attachAccountQuota(options).then((updatedOptions) => {
+				selector.updateOptions(updatedOptions);
+				this.ui.requestRender();
+			});
 			return { component: selector, focus: selector };
 		});
 	}
@@ -800,36 +860,8 @@ export class AccountAuthController {
 		this.footerDataProvider.setAvailableProviderCount(uniqueProviders.size);
 	}
 
-	async refreshCodexUsageSummary(force: boolean): Promise<void> {
-		const model = this.session.model;
-		if (!model || model.provider !== "openai-codex" || !this.session.modelRegistry.isUsingOAuth(model)) {
-			this.footerDataProvider.setCodexUsageSummary(null);
-			return;
-		}
-
-		const now = Date.now();
-		if (
-			this.codexUsageRefreshInFlight ||
-			(!force && now - this.codexUsageLastFetchMs < getOpenAICodexUsageCacheTtlMs())
-		) {
-			return;
-		}
-
-		this.codexUsageRefreshInFlight = true;
-		this.codexUsageLastFetchMs = now;
-		const provider = model.provider;
-		const modelId = model.id;
-		try {
-			const summary = await fetchOpenAICodexUsageSummary(this.session.modelRegistry, model);
-			if (this.session.model?.provider === provider && this.session.model.id === modelId) {
-				this.footerDataProvider.setCodexUsageSummary(summary);
-				this.ui.requestRender();
-			}
-		} catch {
-			// Quota display is best-effort. Keep the footer usable if Codex usage is unavailable.
-		} finally {
-			this.codexUsageRefreshInFlight = false;
-		}
+	async refreshCodexUsageSummary(_force: boolean): Promise<void> {
+		this.footerDataProvider.setCodexUsageSummary(null);
 	}
 
 	maybeSaveImplicitProjectTrustAfterReload(): boolean {
@@ -858,7 +890,5 @@ export class AccountAuthController {
 		}
 	}
 
-	resetCodexUsageCache(): void {
-		this.codexUsageLastFetchMs = 0;
-	}
+	resetCodexUsageCache(): void {}
 }

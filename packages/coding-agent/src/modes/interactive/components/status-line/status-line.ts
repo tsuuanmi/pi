@@ -35,8 +35,8 @@ function areGitStatusSummariesEqual(a: GitStatusSummary | null, b: GitStatusSumm
  * line. Replaces `FooterComponent`.
  *
  * Reuses `FooterDataProvider` for the git branch (`.git/HEAD` watch), extension
- * statuses, available provider count, and Codex quota summary — it does NOT
- * re-implement the git watcher. The only background refresh it owns is the
+ * statuses, and available provider count — it does NOT re-implement the git watcher.
+ * The only background refresh it owns is the
  * `git status --porcelain` counts cache (30s refresh, generation-guarded) and
  * the workflow active-state HUD cache (1s refresh, error-resilient).
  */
@@ -108,7 +108,7 @@ export class StatusLineComponent implements Component {
 		const rail = this.#buildStatusLine(width, settings);
 		if (rail) lines.push(rail);
 
-		// 3. Hook status line (non-workflow extension statuses + Codex quota).
+		// 3. Hook status line (non-workflow extension statuses).
 		const hook = this.#buildHookLine(width);
 		if (hook) lines.push(hook);
 
@@ -328,20 +328,6 @@ export class StatusLineComponent implements Component {
 				.map(([, text]) => sanitizeStatusText(text))
 				.join(" ");
 			if (text) parts.push(`Status: ${text}`);
-		}
-
-		// Codex quota only applies to the OpenAI Codex provider.
-		if (this.#session.state.model?.provider === "openai-codex") {
-			const codex = this.#footerData.getCodexUsageSummary();
-			if (codex) {
-				const quotaText =
-					codex.status === "exhausted"
-						? theme.fg("error", codex.text)
-						: codex.status === "warning"
-							? theme.fg("warning", codex.text)
-							: codex.text;
-				parts.push(`Quota: ${quotaText}`);
-			}
 		}
 
 		if (parts.length === 0) return "";

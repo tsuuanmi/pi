@@ -34,7 +34,7 @@ Type `/` in the editor to open command completion. Extensions can register custo
 | Command | Description |
 |---------|-------------|
 | `/provider` | Add custom provider models |
-| `/account` | Add, open, switch, or remove stored provider accounts |
+| `/account` | Add, open, switch, remove, and view quota for stored provider accounts |
 | `/settings` | Role models/thinking, theme, message delivery, transport |
 | `/resume` | Pick from previous sessions |
 | `/new` | Start a new session |
