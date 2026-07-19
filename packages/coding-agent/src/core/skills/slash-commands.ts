@@ -25,7 +25,6 @@ export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [
 	{ name: "hotkeys", description: "Show all keyboard shortcuts" },
 	{ name: "fork", description: "Create a new fork from a previous user message" },
 	{ name: "tree", description: "Navigate session tree (switch branches)" },
-	{ name: "trust", description: "Save project trust decision for future sessions" },
 	{ name: "provider", description: "Add custom provider models" },
 	{ name: "account", description: "Add, list, switch, or remove provider accounts" },
 	{ name: "new", description: "Start a new session" },

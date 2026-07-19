@@ -251,52 +251,6 @@ Project skill`,
 			expect(loadedExtensions[0].path).toBe(join(cwd, ".pi", "extensions", "shared.ts"));
 		});
 
-		it("should load user extensions before trust and reuse them after trust resolves", async () => {
-			const userExtDir = join(agentDir, "extensions");
-			const projectExtDir = join(cwd, ".pi", "extensions");
-			mkdirSync(userExtDir, { recursive: true });
-			mkdirSync(projectExtDir, { recursive: true });
-			const loadCountKey = `__piTrustPreloadCount_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-			const globalState = globalThis as typeof globalThis & Record<string, number | undefined>;
-
-			writeFileSync(
-				join(userExtDir, "user.ts"),
-				`globalThis[${JSON.stringify(loadCountKey)}] = (globalThis[${JSON.stringify(loadCountKey)}] ?? 0) + 1;
-export default function(pi) {
-	pi.on("project_trust", () => ({ trusted: "yes" }));
-	pi.registerCommand("user-trust", {
-		description: "user trust",
-		handler: async () => {},
-	});
-}`,
-			);
-			writeFileSync(
-				join(projectExtDir, "project.ts"),
-				`export default function(pi) {
-	pi.registerCommand("project-trusted", {
-		description: "project trusted",
-		handler: async () => {},
-	});
-}`,
-			);
-
-			const loader = new DefaultResourceLoader({ cwd, agentDir });
-			await loader.reload({
-				resolveProjectTrust: async ({ extensionsResult }) => {
-					expect(
-						withoutBuiltInWorkflowExtensions(extensionsResult.extensions).map((extension) => extension.path),
-					).toEqual([join(userExtDir, "user.ts")]);
-					return true;
-				},
-			});
-
-			const extensionsResult = loader.getExtensions();
-			expect(
-				withoutBuiltInWorkflowExtensions(extensionsResult.extensions).map((extension) => extension.path),
-			).toEqual([join(cwd, ".pi", "extensions", "project.ts"), join(userExtDir, "user.ts")]);
-			expect(globalState[loadCountKey]).toBe(1);
-		});
-
 		it("should keep both extensions loaded when command names collide", async () => {
 			const userExtDir = join(agentDir, "extensions");
 			const projectExtDir = join(cwd, ".pi", "extensions");
@@ -441,7 +395,7 @@ Content`,
 			expect(loader.getSystemPrompt()).toBe("You are a helpful assistant.");
 		});
 
-		it("should skip project resources that require trust when project is not trusted", async () => {
+		it("should load project resources", async () => {
 			const piDir = join(cwd, ".pi");
 			const extensionsDir = join(piDir, "extensions");
 			const skillDir = join(piDir, "skills", "project-skill");
@@ -455,7 +409,7 @@ Content`,
 			writeFileSync(join(agentDir, "SYSTEM.md"), "Global system prompt.");
 			writeFileSync(join(agentDir, "AGENTS.md"), "Global instructions");
 			writeFileSync(join(cwd, "AGENTS.md"), "Project instructions");
-			writeFileSync(join(extensionsDir, "project.ts"), `throw new Error("should not load");`);
+			writeFileSync(join(extensionsDir, "project.ts"), `export default function() {}`);
 			writeFileSync(
 				join(skillDir, "SKILL.md"),
 				`---
@@ -470,21 +424,21 @@ Project skill content`,
 			};
 			themeData.name = "project-theme";
 			writeFileSync(join(themesDir, "project.json"), JSON.stringify(themeData, null, 2));
-			const settingsManager = SettingsManager.create(cwd, agentDir, { projectTrusted: false });
+			const settingsManager = SettingsManager.create(cwd, agentDir);
 
 			const loader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
 			await loader.reload();
 
-			expect(loader.getSystemPrompt()).toBe("Global system prompt.");
+			expect(loader.getSystemPrompt()).toBe("Project system prompt.");
 			expect(loader.getAgentsFiles().agentsFiles.some((file) => file.path === join(agentDir, "AGENTS.md"))).toBe(
 				true,
 			);
 			expect(loader.getAgentsFiles().agentsFiles.some((file) => file.path === join(cwd, "AGENTS.md"))).toBe(true);
-			expect(withoutBuiltInWorkflowExtensions(loader.getExtensions().extensions)).toHaveLength(0);
+			expect(withoutBuiltInWorkflowExtensions(loader.getExtensions().extensions)).toHaveLength(1);
 			expect(loader.getExtensions().errors).toEqual([]);
-			expect(loader.getSkills().skills.some((skill) => skill.name === "project-skill")).toBe(false);
-			expect(loader.getPrompts().prompts.some((prompt) => prompt.name === "project")).toBe(false);
-			expect(loader.getThemes().themes.some((theme) => theme.name === "project-theme")).toBe(false);
+			expect(loader.getSkills().skills.some((skill) => skill.name === "project-skill")).toBe(true);
+			expect(loader.getPrompts().prompts.some((prompt) => prompt.name === "project")).toBe(true);
+			expect(loader.getThemes().themes.some((theme) => theme.name === "project-theme")).toBe(true);
 		});
 
 		it("should discover markdown agent profiles and surface diagnostics", async () => {
@@ -597,7 +551,7 @@ Broken prompt`,
 			expect(diagnostics.some((diagnostic) => diagnostic.path === invalidPromptPath)).toBe(true);
 		});
 
-		it("should skip untrusted project standard .agent resources while keeping user standard resources", async () => {
+		it("should load project standard .agent resources with user standard resources", async () => {
 			const originalHome = process.env.HOME;
 			process.env.HOME = tempDir;
 			try {
@@ -629,16 +583,16 @@ User skill`,
 				writeFileSync(join(userPromptDir, "user.md"), "User standard prompt");
 				writeFileSync(join(cwd, ".agent", "SYSTEM.md"), "Project standard system");
 				writeFileSync(join(tempDir, ".agent", "SYSTEM.md"), "User standard system");
-				const settingsManager = SettingsManager.create(cwd, agentDir, { projectTrusted: false });
+				const settingsManager = SettingsManager.create(cwd, agentDir);
 
 				const loader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
 				await loader.reload();
 
-				expect(loader.getSkills().skills.some((skill) => skill.name === "project-skill")).toBe(false);
+				expect(loader.getSkills().skills.some((skill) => skill.name === "project-skill")).toBe(true);
 				expect(loader.getSkills().skills.some((skill) => skill.name === "user-skill")).toBe(true);
-				expect(loader.getPrompts().prompts.some((prompt) => prompt.name === "project")).toBe(false);
+				expect(loader.getPrompts().prompts.some((prompt) => prompt.name === "project")).toBe(true);
 				expect(loader.getPrompts().prompts.some((prompt) => prompt.name === "user")).toBe(true);
-				expect(loader.getSystemPrompt()).toBe("User standard system");
+				expect(loader.getSystemPrompt()).toBe("Project standard system");
 			} finally {
 				if (originalHome === undefined) delete process.env.HOME;
 				else process.env.HOME = originalHome;
@@ -674,7 +628,7 @@ User skill`,
 			}
 		});
 
-		it("should skip project markdown agent profiles when project is not trusted", async () => {
+		it("should load project markdown agent profiles", async () => {
 			const originalHome = process.env.HOME;
 			process.env.HOME = tempDir;
 			try {
@@ -688,14 +642,14 @@ description: project planner
 ---
 Project planner body`,
 				);
-				const settingsManager = SettingsManager.create(cwd, agentDir, { projectTrusted: false });
+				const settingsManager = SettingsManager.create(cwd, agentDir);
 
 				const loader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
 				await loader.reload();
 
-				expect(
-					loader.getAgentProfiles().profiles.find((profile) => profile.name === "planner")?.description,
-				).not.toBe("project planner");
+				expect(loader.getAgentProfiles().profiles.find((profile) => profile.name === "planner")?.description).toBe(
+					"project planner",
+				);
 			} finally {
 				if (originalHome === undefined) delete process.env.HOME;
 				else process.env.HOME = originalHome;

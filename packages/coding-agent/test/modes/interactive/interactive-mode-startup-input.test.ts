@@ -80,7 +80,6 @@ describe("InteractiveMode startup input", () => {
 			showUserMessageSelector: () => {},
 			showSessionSelector: () => {},
 			showSettingsSelector: () => {},
-			showTrustSelector: () => {},
 			handleImportCommand: async () => {},
 			handleBashCommand: async () => {},
 			handleCompactCommand: async () => {},

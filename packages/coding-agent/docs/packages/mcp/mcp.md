@@ -36,7 +36,7 @@ Pi reads MCP server config from:
 - Project config: `.mcp.json`
 - Global config: `~/.pi/mcp.json`
 
-Project config is loaded only for trusted projects. If the same server name exists in both files, the project config wins.
+Project config is loaded from the project root. If the same server name exists in both files, the project config wins.
 
 ### Config Format
 
@@ -103,7 +103,6 @@ pi mcp test <name> --timeout 10      # Test server connectivity
 ```typescript
 interface MCPManagerOptions {
   cwd: string;
-  isProjectTrusted: boolean;
 }
 
 const manager = new MCPManager(options);
@@ -176,7 +175,7 @@ The MCP extension (`extensions/mcp.ts`) manages server lifecycle and tool regist
 
 ```typescript
 pi.on("session_start", async (_event, ctx) => {
-  manager = new MCPManager({ cwd: process.cwd(), isProjectTrusted: ctx.isProjectTrusted() });
+  manager = new MCPManager({ cwd: process.cwd() });
   manager.onToolsChanged((added, removed) => {
     // Register/unregister tools with Pi
   });
@@ -199,7 +198,7 @@ Phase 1 MCP support focuses on:
 - stdio transport
 - HTTP/SSE transport
 - tool discovery and calls
-- project trust gate for `.mcp.json`
+- `.mcp.json` project config
 - CLI management and connectivity testing
 
 Not included yet:

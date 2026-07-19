@@ -106,11 +106,6 @@ export type {
 	LsToolCallEvent,
 	MessageRenderer,
 	MessageRenderOptions,
-	ProjectTrustContext,
-	ProjectTrustEvent,
-	ProjectTrustEventDecision,
-	ProjectTrustEventResult,
-	ProjectTrustHandler,
 	ProviderConfig,
 	ProviderModelConfig,
 	ReadToolCallEvent,
@@ -224,7 +219,6 @@ export {
 } from "#coding-agent/core/session/session-manager";
 export {
 	type CompactionSettings,
-	type DefaultProjectTrust,
 	type PackageSource,
 	type RetrySettings,
 	SettingsManager,
@@ -303,13 +297,6 @@ export {
 	type WriteToolInput,
 	type WriteToolOptions,
 } from "#coding-agent/core/tools/index";
-export {
-	hasTrustRequiringProjectResources,
-	type ProjectTrustDecision,
-	ProjectTrustStore,
-	type ProjectTrustStoreEntry,
-	type ProjectTrustUpdate,
-} from "#coding-agent/core/trust/trust-manager";
 // Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
 export type { ReadonlyFooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
 // Main entry point

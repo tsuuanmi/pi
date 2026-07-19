@@ -36,7 +36,6 @@ export function loadAgentProfiles(options: {
 		loadAgentDefinitions({
 			cwd: options.cwd,
 			agentDir: options.agentDir,
-			projectTrusted: options.settingsManager.isProjectTrusted(),
 		});
 	const agentModels = options.settingsManager.getAgentModelOverrides();
 	const agentThinkingLevels = options.settingsManager.getAgentThinkingLevelOverrides();

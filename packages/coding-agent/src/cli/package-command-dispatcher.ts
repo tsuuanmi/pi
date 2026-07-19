@@ -46,7 +46,7 @@ export async function dispatchPreSessionPackageCommand(
 
 	const cwd = process.cwd();
 	const agentDir = getAgentDir();
-	const settingsManager = SettingsManager.create(cwd, agentDir, { projectTrusted: false });
+	const settingsManager = SettingsManager.create(cwd, agentDir);
 	const packageManager = new DefaultPackageManager({ cwd, agentDir, settingsManager });
 	const resolved = await packageManager.resolve(async () => "skip");
 	const candidates = resolved.commands.filter((resource) => resource.enabled && commandName(resource) === requested);

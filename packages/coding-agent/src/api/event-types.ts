@@ -1,7 +1,5 @@
 import type { AgentMessage, CustomMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { AssistantMessageEvent, Model, TextContent, ToolResultMessage } from "@tsuuanmi/pi-ai";
-import type { ExtensionMode } from "#coding-agent/api/context-types";
-import type { ExtensionUIContext } from "#coding-agent/api/ui-types";
 import type { CompactionPreparation, CompactionResult } from "#coding-agent/core/compaction/index";
 import type { BashResult } from "#coding-agent/core/exec/bash-executor";
 import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "#coding-agent/core/session/session-manager";
@@ -26,30 +24,6 @@ import type {
 // ============================================================================
 // Startup/Resource Events
 // ============================================================================
-
-export interface ProjectTrustEvent {
-	type: "project_trust";
-	cwd: string;
-}
-
-export type ProjectTrustEventDecision = "yes" | "no" | "undecided";
-
-export interface ProjectTrustEventResult {
-	trusted: ProjectTrustEventDecision;
-	remember?: boolean;
-}
-
-export interface ProjectTrustContext {
-	cwd: string;
-	mode: ExtensionMode;
-	hasUI: boolean;
-	ui: Pick<ExtensionUIContext, "select" | "confirm" | "input" | "notify">;
-}
-
-export type ProjectTrustHandler = (
-	event: ProjectTrustEvent,
-	ctx: ProjectTrustContext,
-) => Promise<ProjectTrustEventResult> | ProjectTrustEventResult;
 
 /** Fired after session_start to allow extensions to provide additional resource paths. */
 export interface ResourcesDiscoverEvent {
@@ -503,7 +477,6 @@ export function isToolCallEventType(toolName: string, event: ToolCallEvent): boo
 
 /** Union of all event types */
 export type ExtensionEvent =
-	| ProjectTrustEvent
 	| ResourcesDiscoverEvent
 	| SessionEvent
 	| ContextEvent

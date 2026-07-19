@@ -7,18 +7,16 @@ import { type Container, Loader, Spacer, type TUI } from "@tsuuanmi/pi-tui";
 import type { AgentSession } from "#coding-agent/core/agent-session/agent-session";
 import type { AgentSessionRuntime } from "#coding-agent/core/agent-session/agent-session-runtime";
 import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "#coding-agent/core/exec/http-dispatcher";
-import type { ExtensionCommandContext, ProjectTrustContext } from "#coding-agent/core/extensions/index";
+import type { ExtensionCommandContext } from "#coding-agent/core/extensions/index";
 import { MissingSessionCwdError } from "#coding-agent/core/session/session-cwd";
 import { SessionManager } from "#coding-agent/core/session/session-manager";
 import type { KeybindingsManager } from "#coding-agent/core/settings/keybindings";
 import type { SettingsManager } from "#coding-agent/core/settings/settings-manager";
-import { ProjectTrustStore } from "#coding-agent/core/trust/trust-manager";
 import type { CustomEditor } from "#coding-agent/modes/interactive/components/custom-editor";
 import { AssistantMessageComponent } from "#coding-agent/modes/interactive/components/messages/assistant-message";
 import { SessionSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/session-selector";
 import { SettingsSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/settings-selector";
 import { TreeSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/tree-selector";
-import { TrustSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/trust-selector";
 import { UserMessageSelectorComponent } from "#coding-agent/modes/interactive/components/selectors/user-message-selector";
 import type { StatusLineComponent } from "#coding-agent/modes/interactive/components/status-line/index";
 import type { ExtensionUIController } from "#coding-agent/modes/interactive/controllers/extension-ui-controller";
@@ -50,7 +48,6 @@ type SelectorControllerDependencies = {
 	renderInitialMessages: () => void;
 	flushCompactionQueue: (options?: { willRetry?: boolean }) => Promise<void>;
 	handleFatalRuntimeError: (prefix: string, error: unknown) => Promise<never>;
-	createProjectTrustContext: (cwd: string) => ProjectTrustContext;
 	promptForMissingSessionCwd: (error: MissingSessionCwdError) => Promise<string | undefined>;
 	rebuildChatFromMessages: () => void;
 	updateEditorBorderColor: () => void;
@@ -84,7 +81,6 @@ export class SelectorController {
 	private readonly renderInitialMessages: () => void;
 	private readonly flushCompactionQueue: (options?: { willRetry?: boolean }) => Promise<void>;
 	private readonly handleFatalRuntimeError: (prefix: string, error: unknown) => Promise<never>;
-	private readonly createProjectTrustContext: (cwd: string) => ProjectTrustContext;
 	private readonly promptForMissingSessionCwd: (error: MissingSessionCwdError) => Promise<string | undefined>;
 	private readonly rebuildChatFromMessages: () => void;
 	private readonly updateEditorBorderColor: () => void;
@@ -117,7 +113,6 @@ export class SelectorController {
 		this.renderInitialMessages = deps.renderInitialMessages;
 		this.flushCompactionQueue = deps.flushCompactionQueue;
 		this.handleFatalRuntimeError = deps.handleFatalRuntimeError;
-		this.createProjectTrustContext = deps.createProjectTrustContext;
 		this.promptForMissingSessionCwd = deps.promptForMissingSessionCwd;
 		this.rebuildChatFromMessages = deps.rebuildChatFromMessages;
 		this.updateEditorBorderColor = deps.updateEditorBorderColor;
@@ -212,7 +207,6 @@ export class SelectorController {
 					availableThemes: getAvailableThemes(),
 					hideThinkingBlock: this.hideThinkingBlock,
 					showHardwareCursor: this.settingsManager.getShowHardwareCursor(),
-					defaultProjectTrust: this.settingsManager.getDefaultProjectTrust(),
 					quietStartup: this.settingsManager.getQuietStartup(),
 					agentProfiles,
 					agentModelOverrides: this.settingsManager.getAgentModelOverrides(),
@@ -276,9 +270,6 @@ export class SelectorController {
 					onQuietStartupChange: (enabled) => {
 						this.settingsManager.setQuietStartup(enabled);
 					},
-					onDefaultProjectTrustChange: (defaultProjectTrust) => {
-						this.settingsManager.setDefaultProjectTrust(defaultProjectTrust);
-					},
 					onShowHardwareCursorChange: (enabled) => {
 						this.settingsManager.setShowHardwareCursor(enabled);
 						this.ui.setShowHardwareCursor(enabled);
@@ -321,31 +312,6 @@ export class SelectorController {
 	}
 
 	/** Update the footer's available provider count from current model candidates */
-
-	showTrustSelector(): void {
-		const cwd = this.sessionManager.getCwd();
-		const trustStore = new ProjectTrustStore(this.runtimeHost.services.agentDir);
-		const savedDecision = trustStore.getEntry(cwd);
-		this.showSelector((done) => {
-			const selector = new TrustSelectorComponent({
-				cwd,
-				savedDecision,
-				projectTrusted: this.settingsManager.isProjectTrusted(),
-				onSelect: (selection) => {
-					trustStore.setMany(selection.updates);
-					done();
-					this.showStatus(
-						`Saved trust decision: ${selection.trusted ? "trusted" : "untrusted"}. Restart pi for this to take effect.`,
-					);
-				},
-				onCancel: () => {
-					done();
-					this.ui.requestRender();
-				},
-			});
-			return { component: selector, focus: selector };
-		});
-	}
 
 	showUserMessageSelector(): void {
 		const userMessages = this.session.getUserMessagesForForking();
@@ -566,7 +532,6 @@ export class SelectorController {
 		try {
 			const result = await this.runtimeHost.switchSession(sessionPath, {
 				withSession: options?.withSession,
-				projectTrustContextFactory: (cwd) => this.createProjectTrustContext(cwd),
 			});
 			if (result.cancelled) {
 				return result;
@@ -584,7 +549,6 @@ export class SelectorController {
 				const result = await this.runtimeHost.switchSession(sessionPath, {
 					cwdOverride: selectedCwd,
 					withSession: options?.withSession,
-					projectTrustContextFactory: (cwd) => this.createProjectTrustContext(cwd),
 				});
 				if (result.cancelled) {
 					return result;

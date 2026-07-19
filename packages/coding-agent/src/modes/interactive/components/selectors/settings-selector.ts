@@ -14,7 +14,6 @@ import {
 	Text,
 } from "@tsuuanmi/pi-tui";
 import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "#coding-agent/core/exec/http-dispatcher";
-import type { DefaultProjectTrust } from "#coding-agent/core/settings/settings-manager";
 import { DynamicBorder } from "#coding-agent/modes/interactive/components/widgets/dynamic-border";
 import { getSelectListTheme, getSettingsListTheme, theme } from "#coding-agent/theme/theme";
 import { keyDisplayText, keyHint } from "#coding-agent/ui/rendering/keybinding-hints";
@@ -32,16 +31,6 @@ const THINKING_DESCRIPTIONS: Record<ThinkingLevel, string> = {
 	high: "Deep reasoning (~16k tokens)",
 	xhigh: "Maximum reasoning (~32k tokens)",
 };
-
-const DEFAULT_PROJECT_TRUST_LABELS: Record<DefaultProjectTrust, string> = {
-	ask: "Ask",
-	always: "Always trust",
-	never: "Never trust",
-};
-
-const DEFAULT_PROJECT_TRUST_BY_LABEL = new Map(
-	Object.entries(DEFAULT_PROJECT_TRUST_LABELS).map(([value, label]) => [label, value as DefaultProjectTrust]),
-);
 
 export interface AgentSettingsProfile {
 	name: string;
@@ -71,7 +60,6 @@ export interface SettingsConfig {
 	hideThinkingBlock: boolean;
 	showHardwareCursor: boolean;
 	quietStartup: boolean;
-	defaultProjectTrust: DefaultProjectTrust;
 	agentProfiles: AgentSettingsProfile[];
 	agentModelOverrides: Record<string, string>;
 	agentThinkingLevelOverrides: Record<string, ThinkingLevel>;
@@ -91,7 +79,6 @@ export interface SettingsCallbacks {
 	onHideThinkingBlockChange: (hidden: boolean) => void;
 	onShowHardwareCursorChange: (enabled: boolean) => void;
 	onQuietStartupChange: (enabled: boolean) => void;
-	onDefaultProjectTrustChange: (defaultProjectTrust: DefaultProjectTrust) => void;
 	onMainModelChange: (modelRef: string) => void;
 	onAgentModelOverrideChange: (agentName: string, modelRef: string | undefined) => void;
 	onAgentThinkingLevelOverrideChange: (agentName: string, level: ThinkingLevel | undefined) => void;
@@ -538,13 +525,6 @@ export class SettingsSelectorComponent extends Container {
 				case "quiet-startup":
 					callbacks.onQuietStartupChange(newValue === "true");
 					break;
-				case "default-project-trust": {
-					const defaultProjectTrust = DEFAULT_PROJECT_TRUST_BY_LABEL.get(newValue);
-					if (defaultProjectTrust) {
-						callbacks.onDefaultProjectTrustChange(defaultProjectTrust);
-					}
-					break;
-				}
 				case "show-hardware-cursor":
 					callbacks.onShowHardwareCursorChange(newValue === "true");
 					break;
@@ -660,16 +640,6 @@ export class SettingsSelectorComponent extends Container {
 			},
 		];
 
-		const projectSettings: SettingItem[] = [
-			{
-				id: "default-project-trust",
-				label: "Default project trust",
-				description: "Fallback behavior when no extension or saved trust decision decides project trust",
-				currentValue: DEFAULT_PROJECT_TRUST_LABELS[config.defaultProjectTrust],
-				values: Object.values(DEFAULT_PROJECT_TRUST_LABELS),
-			},
-		];
-
 		const networkSettings: SettingItem[] = [
 			{
 				id: "transport",
@@ -711,13 +681,6 @@ export class SettingsSelectorComponent extends Container {
 				currentValue: "open",
 				submenu: (_currentValue, done) =>
 					new SettingsCategorySubmenu(appearanceSettings, handleSettingChange, done),
-			},
-			{
-				id: "project-navigation",
-				label: "Project & navigation",
-				description: "Trust, tree, double-escape, and warning settings",
-				currentValue: "open",
-				submenu: (_currentValue, done) => new SettingsCategorySubmenu(projectSettings, handleSettingChange, done),
 			},
 			{
 				id: "network",

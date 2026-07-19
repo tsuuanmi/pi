@@ -23,8 +23,6 @@ import {
 export interface MCPManagerOptions {
 	/** Working directory for the project. */
 	cwd: string;
-	/** Whether project trust has been granted. */
-	isProjectTrusted: boolean;
 	/** Path to global mcp.json (default: ~/.pi/mcp.json). */
 	globalMcpJsonPath?: string;
 }
@@ -91,7 +89,6 @@ export class MCPManager {
 	/**
 	 * Initialize the MCP manager by loading configs and starting servers.
 	 *
-	 * This should be called after project trust has been resolved.
 	 * In-flight tool calls are not tracked — callers should ensure
 	 * no MCP tool calls are in progress when calling initialize().
 	 */
@@ -105,7 +102,6 @@ export class MCPManager {
 
 		const result = loadMCPConfigs({
 			cwd: this._options.cwd,
-			isProjectTrusted: this._options.isProjectTrusted,
 			globalMcpJsonPath: this._options.globalMcpJsonPath,
 		});
 

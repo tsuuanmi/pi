@@ -16,7 +16,6 @@ import { buildInitialMessage } from "#coding-agent/cli/initial-message";
 import { launchDefaultTmuxIfNeeded } from "#coding-agent/cli/launch-tmux";
 import { listModels } from "#coding-agent/cli/list-models";
 import { dispatchPreSessionPackageCommand } from "#coding-agent/cli/package-command-dispatcher";
-import { createProjectTrustContext } from "#coding-agent/cli/project-trust";
 import { selectSession } from "#coding-agent/cli/session-picker";
 import { showStartupSelector } from "#coding-agent/cli/startup-ui";
 import {
@@ -45,8 +44,6 @@ import {
 import { SessionManager } from "#coding-agent/core/session/session-manager";
 import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
 import { printTimings, resetTimings, time } from "#coding-agent/core/telemetry/timings";
-import { type AppMode, resolveProjectTrusted } from "#coding-agent/core/trust/project-trust";
-import { hasTrustRequiringProjectResources, ProjectTrustStore } from "#coding-agent/core/trust/trust-manager";
 import { runMigrations, showDeprecationWarnings } from "#coding-agent/migrations";
 import { InteractiveMode, runPrintMode, runRpcMode } from "#coding-agent/modes/index";
 import { restoreStdout, takeOverStdout } from "#coding-agent/modes/output-guard";
@@ -97,6 +94,8 @@ function isTruthyEnvFlag(value: string | undefined): boolean {
 	if (!value) return false;
 	return value === "1" || value.toLowerCase() === "true" || value.toLowerCase() === "yes";
 }
+
+type AppMode = "interactive" | "print" | "json" | "rpc";
 
 function resolveAppMode(parsed: Args, stdinIsTTY: boolean, stdoutIsTTY: boolean): AppMode {
 	if (parsed.mode === "rpc") {
@@ -363,7 +362,7 @@ export async function main(args: string[], options?: MainOptions) {
 
 	const cwd = process.cwd();
 	const agentDir = getAgentDir();
-	const bootstrapSettingsManager = SettingsManager.create(cwd, agentDir, { projectTrusted: false });
+	const bootstrapSettingsManager = SettingsManager.create(cwd, agentDir);
 	applyHttpProxySettings(bootstrapSettingsManager.getGlobalSettings().httpProxy);
 	configureHttpDispatcher();
 
@@ -454,65 +453,26 @@ export async function main(args: string[], options?: MainOptions) {
 	}
 	time("createSessionManager");
 
-	const trustStore = new ProjectTrustStore(agentDir);
-	const sessionCwd = sessionManager.getCwd();
-	const autoTrustOnReloadCwd = !hasTrustRequiringProjectResources(sessionCwd) ? sessionCwd : undefined;
-	const trustPromptMode: AppMode = parsed.help || parsed.listModels !== undefined ? "print" : appMode;
-	const projectTrustByCwd = new Map<string, boolean>();
-
 	const authStorage = AuthStorage.create();
 	const createRuntime: CreateAgentSessionRuntimeFactory = async ({
 		cwd,
 		agentDir,
 		sessionManager,
 		sessionStartEvent,
-		projectTrustContext,
 	}) => {
-		const isInitialRuntime = sessionStartEvent === undefined;
-		const projectTrustDiagnostics: AgentSessionRuntimeDiagnostic[] = [];
-		const cachedProjectTrust = projectTrustByCwd.get(cwd);
-		const hasTrustRequiringResources = hasTrustRequiringProjectResources(cwd);
-		const shouldResolveProjectTrust = cachedProjectTrust === undefined && hasTrustRequiringResources;
-		const projectTrusted = shouldResolveProjectTrust
-			? false
-			: (cachedProjectTrust ?? (!hasTrustRequiringResources || trustStore.get(cwd) === true));
-		const runtimeSettingsManager = SettingsManager.create(cwd, agentDir, { projectTrusted });
+		const runtimeSettingsManager = SettingsManager.create(cwd, agentDir);
 		const services = await createAgentSessionServices({
 			cwd,
 			agentDir,
 			authStorage,
 			settingsManager: runtimeSettingsManager,
 			extensionFlagValues: parsed.unknownFlags,
-			resourceLoaderReloadOptions: shouldResolveProjectTrust
-				? {
-						resolveProjectTrust: async ({ extensionsResult }) => {
-							const trusted = await resolveProjectTrusted({
-								cwd,
-								trustStore,
-								defaultProjectTrust: startupSettingsManager.getDefaultProjectTrust(),
-								extensionsResult,
-								projectTrustContext:
-									projectTrustContext ??
-									createProjectTrustContext({
-										cwd,
-										mode: isInitialRuntime ? trustPromptMode : appMode,
-										settingsManager: startupSettingsManager,
-										hasUI: isInitialRuntime && trustPromptMode === "interactive",
-									}),
-								onExtensionError: (message) => projectTrustDiagnostics.push({ type: "warning", message }),
-							});
-							projectTrustByCwd.set(cwd, trusted);
-							return trusted;
-						},
-					}
-				: undefined,
 			resourceLoaderOptions: {
 				extensionFactories: options?.extensionFactories,
 			},
 		});
 		const { settingsManager, modelRegistry, resourceLoader } = services;
 		const diagnostics: AgentSessionRuntimeDiagnostic[] = [
-			...projectTrustDiagnostics,
 			...services.diagnostics,
 			...collectSettingsDiagnostics(settingsManager, "runtime creation"),
 			...resourceLoader.getExtensions().errors.map(({ path, error }) => ({
@@ -628,7 +588,6 @@ export async function main(args: string[], options?: MainOptions) {
 		const interactiveMode = new InteractiveMode(runtime, {
 			migratedProviders,
 			modelFallbackMessage,
-			autoTrustOnReloadCwd,
 			initialMessage,
 			initialMessages: parsed.messages,
 			verbose: parsed.verbose,

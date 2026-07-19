@@ -52,8 +52,6 @@ export interface ExtensionContext {
 	skipWorkflowContinuation: boolean;
 	/** Whether the agent is idle (not streaming) */
 	isIdle(): boolean;
-	/** Whether project-local trust is active for this context. */
-	isProjectTrusted(): boolean;
 	/** The current abort signal, or undefined when the agent is not streaming. */
 	signal: AbortSignal | undefined;
 	/** Abort the current agent operation */

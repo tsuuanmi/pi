@@ -3,7 +3,6 @@ import { Markdown, type MarkdownTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import type { ExtensionFactory } from "#coding-agent/api/types";
 import { selectConfig } from "#coding-agent/cli/config-selector";
-import { createProjectTrustContext } from "#coding-agent/cli/project-trust";
 import {
 	APP_NAME,
 	CONFIG_DIR_NAME,
@@ -15,29 +14,26 @@ import {
 } from "#coding-agent/core/config/config";
 import { DefaultPackageManager } from "#coding-agent/core/package-manager/package-manager";
 import { SettingsManager } from "#coding-agent/core/settings/settings-manager";
-import { DefaultResourceLoader } from "#coding-agent/core/skills/resource-loader";
-import { type AppMode, resolveProjectTrusted } from "#coding-agent/core/trust/project-trust";
-import { hasTrustRequiringProjectResources, ProjectTrustStore } from "#coding-agent/core/trust/trust-manager";
 
 export type PackageCommand = "install" | "remove" | "update" | "list";
 
 type UpdateTarget = { type: "all" } | { type: "self" } | { type: "extensions"; source?: string };
 
 const SELF_UPDATE_NOTE_MARKDOWN_THEME: MarkdownTheme = {
-	heading: (text) => chalk.bold(chalk.yellow(text)),
-	link: (text) => chalk.cyan(text),
-	linkUrl: (text) => chalk.dim(text),
-	code: (text) => chalk.yellow(text),
-	codeBlock: (text) => chalk.dim(text),
-	codeBlockBorder: (text) => chalk.dim(text),
-	quote: (text) => chalk.dim(text),
-	quoteBorder: (text) => chalk.dim(text),
-	hr: (text) => chalk.dim(text),
-	listBullet: (text) => chalk.yellow(text),
-	bold: (text) => chalk.bold(text),
-	italic: (text) => chalk.italic(text),
-	strikethrough: (text) => chalk.strikethrough(text),
-	underline: (text) => chalk.underline(text),
+	heading: (text: string) => chalk.bold(chalk.yellow(text)),
+	link: (text: string) => chalk.cyan(text),
+	linkUrl: (text: string) => chalk.dim(text),
+	code: (text: string) => chalk.yellow(text),
+	codeBlock: (text: string) => chalk.dim(text),
+	codeBlockBorder: (text: string) => chalk.dim(text),
+	quote: (text: string) => chalk.dim(text),
+	quoteBorder: (text: string) => chalk.dim(text),
+	hr: (text: string) => chalk.dim(text),
+	listBullet: (text: string) => chalk.yellow(text),
+	bold: (text: string) => chalk.bold(text),
+	italic: (text: string) => chalk.italic(text),
+	strikethrough: (text: string) => chalk.strikethrough(text),
+	underline: (text: string) => chalk.underline(text),
 };
 
 interface PackageCommandOptions {
@@ -338,64 +334,8 @@ export interface PackageCommandRuntimeOptions {
 	extensionFactories?: ExtensionFactory[];
 }
 
-interface CommandSettingsResult {
-	settingsManager: SettingsManager;
-	projectTrustWarnings: string[];
-}
-
-function getCommandAppMode(): AppMode {
-	return process.stdin.isTTY && process.stdout.isTTY ? "interactive" : "print";
-}
-
-function reportProjectTrustWarnings(warnings: readonly string[]): void {
-	for (const warning of warnings) {
-		console.error(chalk.yellow(`Warning: ${warning}`));
-	}
-}
-
-async function createCommandSettingsManager(options: {
-	cwd: string;
-	agentDir: string;
-	useSavedProjectTrustOnly?: boolean;
-	extensionFactories?: ExtensionFactory[];
-}): Promise<CommandSettingsResult> {
-	const settingsManager = SettingsManager.create(options.cwd, options.agentDir, { projectTrusted: false });
-	const projectTrustWarnings: string[] = [];
-	const trustStore = new ProjectTrustStore(options.agentDir);
-	if (options.useSavedProjectTrustOnly) {
-		const savedProjectTrusted = trustStore.get(options.cwd) === true;
-		settingsManager.setProjectTrusted(savedProjectTrusted);
-		return { settingsManager, projectTrustWarnings };
-	}
-
-	const appMode = getCommandAppMode();
-	const extensionsResult = hasTrustRequiringProjectResources(options.cwd)
-		? await new DefaultResourceLoader({
-				cwd: options.cwd,
-				agentDir: options.agentDir,
-				settingsManager,
-				extensionFactories: options.extensionFactories,
-			}).loadProjectTrustExtensions()
-		: undefined;
-	for (const error of extensionsResult?.errors ?? []) {
-		projectTrustWarnings.push(`Failed to load extension "${error.path}": ${error.error}`);
-	}
-
-	const projectTrusted = await resolveProjectTrusted({
-		cwd: options.cwd,
-		trustStore,
-		defaultProjectTrust: settingsManager.getDefaultProjectTrust(),
-		extensionsResult,
-		projectTrustContext: createProjectTrustContext({
-			cwd: options.cwd,
-			mode: appMode,
-			settingsManager,
-			hasUI: appMode === "interactive",
-		}),
-		onExtensionError: (message) => projectTrustWarnings.push(message),
-	});
-	settingsManager.setProjectTrusted(projectTrusted);
-	return { settingsManager, projectTrustWarnings };
+function createCommandSettingsManager(options: { cwd: string; agentDir: string }): SettingsManager {
+	return SettingsManager.create(options.cwd, options.agentDir);
 }
 
 export async function handleConfigCommand(
@@ -408,12 +348,8 @@ export async function handleConfigCommand(
 
 	const cwd = process.cwd();
 	const agentDir = getAgentDir();
-	const { settingsManager, projectTrustWarnings } = await createCommandSettingsManager({
-		cwd,
-		agentDir,
-		extensionFactories: runtimeOptions.extensionFactories,
-	});
-	reportProjectTrustWarnings(projectTrustWarnings);
+	void runtimeOptions;
+	const settingsManager = createCommandSettingsManager({ cwd, agentDir });
 	reportSettingsErrors(settingsManager, "config command");
 	const packageManager = new DefaultPackageManager({ cwd, agentDir, settingsManager });
 	const resolvedPaths = await packageManager.resolve();
@@ -480,21 +416,8 @@ export async function handlePackageCommand(
 
 	const cwd = process.cwd();
 	const agentDir = getAgentDir();
-	const writesProjectPackageConfig = (options.command === "install" || options.command === "remove") && options.local;
-	const { settingsManager, projectTrustWarnings } = await createCommandSettingsManager({
-		cwd,
-		agentDir,
-		useSavedProjectTrustOnly: options.command === "update",
-		extensionFactories: runtimeOptions.extensionFactories,
-	});
-	reportProjectTrustWarnings(projectTrustWarnings);
-	if (!settingsManager.isProjectTrusted() && writesProjectPackageConfig) {
-		console.error(
-			chalk.red("Project is not trusted. Trust the project in config before modifying local package config."),
-		);
-		process.exitCode = 1;
-		return true;
-	}
+	void runtimeOptions;
+	const settingsManager = createCommandSettingsManager({ cwd, agentDir });
 	reportSettingsErrors(settingsManager, "package command");
 	const selfUpdateNpmCommand = settingsManager.getGlobalSettings().npmCommand;
 

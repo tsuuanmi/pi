@@ -14,7 +14,6 @@ import type { AgentSession } from "#coding-agent/core/agent-session/agent-sessio
 import { getAgentDir, getAuthPath } from "#coding-agent/core/config/config";
 import { defaultModelPerProvider } from "#coding-agent/core/model/model-resolver";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#coding-agent/core/model/provider-display-names";
-import { hasTrustRequiringProjectResources, ProjectTrustStore } from "#coding-agent/core/trust/trust-manager";
 import type { FooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
 import { LoginDialogComponent } from "#coding-agent/modes/interactive/components/login-dialog";
 import {
@@ -60,29 +59,17 @@ export class AccountAuthController {
 	private readonly footerDataProvider: FooterDataProvider;
 	private readonly getSession: () => AgentSession;
 	private readonly getEditor: () => EditorComponent;
-	private readonly getSettingsManager: () => AgentSession["settingsManager"];
 	private readonly agentDir: string;
 	private readonly showError: (errorMessage: string) => void;
-	private readonly showWarning: (message: string) => void;
 	private readonly showStatus: (message: string) => void;
 	private readonly showSelector: (create: (done: () => void) => { component: Component; focus: Component }) => void;
 	private readonly updateEditorBorderColor: () => void;
-	private autoTrustOnReloadCwd: string | undefined;
 
 	private get session(): AgentSession {
 		return this.getSession();
 	}
 	private get editor(): EditorComponent {
 		return this.getEditor();
-	}
-	private get settingsManager(): AgentSession["settingsManager"] {
-		return this.getSettingsManager();
-	}
-	private get sessionManager() {
-		return this.session.sessionManager;
-	}
-	private get runtimeHost(): { services: { agentDir: string } } {
-		return { services: { agentDir: this.agentDir } };
 	}
 
 	constructor(opts: {
@@ -94,9 +81,7 @@ export class AccountAuthController {
 		getEditor: () => EditorComponent;
 		getSettingsManager: () => AgentSession["settingsManager"];
 		agentDir: string;
-		autoTrustOnReloadCwd: string | undefined;
 		showError: (errorMessage: string) => void;
-		showWarning: (message: string) => void;
 		showStatus: (message: string) => void;
 		showSelector: (create: (done: () => void) => { component: Component; focus: Component }) => void;
 		updateEditorBorderColor: () => void;
@@ -107,11 +92,9 @@ export class AccountAuthController {
 		this.footerDataProvider = opts.footerDataProvider;
 		this.getSession = opts.getSession;
 		this.getEditor = opts.getEditor;
-		this.getSettingsManager = opts.getSettingsManager;
+		void opts.getSettingsManager;
 		this.agentDir = opts.agentDir;
-		this.autoTrustOnReloadCwd = opts.autoTrustOnReloadCwd;
 		this.showError = opts.showError;
-		this.showWarning = opts.showWarning;
 		this.showStatus = opts.showStatus;
 		this.showSelector = opts.showSelector;
 		this.updateEditorBorderColor = opts.updateEditorBorderColor;
@@ -868,32 +851,6 @@ export class AccountAuthController {
 
 	async refreshCodexUsageSummary(_force: boolean): Promise<void> {
 		this.footerDataProvider.setCodexUsageSummary(null);
-	}
-
-	maybeSaveImplicitProjectTrustAfterReload(): boolean {
-		const cwd = this.sessionManager.getCwd();
-		if (this.autoTrustOnReloadCwd !== cwd) {
-			return false;
-		}
-		if (!this.settingsManager.isProjectTrusted() || !hasTrustRequiringProjectResources(cwd)) {
-			return false;
-		}
-
-		const trustStore = new ProjectTrustStore(this.runtimeHost.services.agentDir);
-		try {
-			if (trustStore.get(cwd) !== null) {
-				this.autoTrustOnReloadCwd = undefined;
-				return false;
-			}
-			trustStore.set(cwd, true);
-			this.autoTrustOnReloadCwd = undefined;
-			return true;
-		} catch (error) {
-			this.showWarning(
-				`Could not save project trust after reload: ${error instanceof Error ? error.message : String(error)}`,
-			);
-			return false;
-		}
 	}
 
 	resetCodexUsageCache(): void {}

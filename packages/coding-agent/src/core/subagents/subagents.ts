@@ -386,9 +386,7 @@ export class SubagentManager {
 	 * extension runtime.
 	 *
 	 * The parent SettingsManager is reused (not recreated) so the subagent inherits
-	 * the parent's resolved project-trust state and settings; a fresh
-	 * SettingsManager would default to project-trusted and could load project-local
-	 * extensions the parent never trusted.
+	 * the parent's resolved settings.
 	 */
 	private async createIsolatedServices(): Promise<AgentSessionServices> {
 		return createAgentSessionServices({
@@ -418,8 +416,8 @@ export class SubagentManager {
 		// stale-ify the parent's captured extension API (surfacing as "This extension
 		// ctx is stale after session replacement or reload" on the parent's next
 		// before_agent_start). Build an isolated services bundle with its own resource
-		// loader (reusing the parent's settings manager to preserve project-trust
-		// state) that mirrors the parent's extension configuration.
+		// loader (reusing the parent's settings manager to preserve active overrides)
+		// that mirrors the parent's extension configuration.
 		const services = await this.createIsolatedServices();
 		const created = await createAgentSessionFromServices({
 			services,

@@ -48,7 +48,6 @@ describe("agent definitions", () => {
 		const result = loadAgentDefinitions({
 			cwd,
 			agentDir,
-			projectTrusted: false,
 			packageAgentPaths: [join(packageAgents, "planner.md"), join(packageAgents, "worker.md")],
 		});
 		const names = result.profiles.map((profile) => profile.name);
@@ -59,7 +58,7 @@ describe("agent definitions", () => {
 		expect(result.profiles.find((profile) => profile.name === "foo")?.systemPrompt).toBe("foo body");
 	});
 
-	it("loads trusted project markdown before user and package agents", () => {
+	it("loads project markdown before user and package agents", () => {
 		const projectRoot = join(home, "project");
 		mkdirSync(join(projectRoot, ".git"), { recursive: true });
 		const projectAgents = join(projectRoot, ".agent", "agents");
@@ -71,7 +70,7 @@ describe("agent definitions", () => {
 		const packageAgent = join(tempDir, "package-worker.md");
 		writeFileSync(packageAgent, agentMd("worker", "package worker", "package worker body"));
 
-		const result = loadAgentDefinitions({ cwd, agentDir, projectTrusted: true, packageAgentPaths: [packageAgent] });
+		const result = loadAgentDefinitions({ cwd, agentDir, packageAgentPaths: [packageAgent] });
 		const worker = result.profiles.find((profile) => profile.name === "worker");
 
 		expect(worker?.description).toBe("project worker");
@@ -82,7 +81,7 @@ describe("agent definitions", () => {
 		).toBe(true);
 	});
 
-	it("does not load project markdown when project is untrusted or double-count home as project", () => {
+	it("does not double-count home as project", () => {
 		const homeProjectAgents = join(home, ".agent", "agents");
 		const nestedProjectAgents = join(cwd, ".agent", "agents");
 		mkdirSync(homeProjectAgents, { recursive: true });
@@ -90,11 +89,11 @@ describe("agent definitions", () => {
 		writeFileSync(join(homeProjectAgents, "home-agent.md"), agentMd("home-agent"));
 		writeFileSync(join(nestedProjectAgents, "project-agent.md"), agentMd("project-agent"));
 
-		const result = loadAgentDefinitions({ cwd, agentDir, projectTrusted: false });
+		const result = loadAgentDefinitions({ cwd, agentDir });
 		const names = result.profiles.map((profile) => profile.name);
 
 		expect(names).toContain("home-agent");
-		expect(names).not.toContain("project-agent");
+		expect(names).toContain("project-agent");
 	});
 
 	it("reports invalid and safety-reserved fields without shadowing later valid profiles", () => {
@@ -113,7 +112,7 @@ unsafe`,
 		);
 		writeFileSync(join(userAgents, "foo.md"), agentMd("foo", "user foo", "safe"));
 
-		const result = loadAgentDefinitions({ cwd, agentDir, projectTrusted: true });
+		const result = loadAgentDefinitions({ cwd, agentDir });
 		const foo = result.profiles.find((profile) => profile.name === "foo");
 
 		expect(foo?.description).toBe("user foo");
@@ -132,7 +131,7 @@ unsafe`,
 		mkdirSync(projectJsonDir, { recursive: true });
 		writeFileSync(join(projectJsonDir, "project-json.json"), JSON.stringify({ description: "json" }));
 
-		const result = loadAgentDefinitions({ cwd, agentDir, projectTrusted: true });
+		const result = loadAgentDefinitions({ cwd, agentDir });
 
 		expect(result.profiles.some((profile) => profile.name === "json-agent")).toBe(false);
 		expect(result.profiles.some((profile) => profile.name === "project-json")).toBe(false);

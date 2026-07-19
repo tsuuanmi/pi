@@ -13,12 +13,8 @@ import type {
 	ProviderConfig,
 } from "#coding-agent/api/types";
 import { AuthStorage } from "#coding-agent/core/auth/auth-storage";
-import {
-	createExtensionRuntime,
-	discoverAndLoadExtensions,
-	loadExtensions,
-} from "#coding-agent/core/extensions/loader";
-import { ExtensionRunner, emitProjectTrustEvent } from "#coding-agent/core/extensions/runner";
+import { createExtensionRuntime, discoverAndLoadExtensions } from "#coding-agent/core/extensions/loader";
+import { ExtensionRunner } from "#coding-agent/core/extensions/runner";
 import { ModelRegistry } from "#coding-agent/core/model/model-registry";
 import { SessionManager } from "#coding-agent/core/session/session-manager";
 import { KeybindingsManager, type KeyId } from "#coding-agent/core/settings/keybindings";
@@ -80,7 +76,6 @@ describe("ExtensionRunner", () => {
 	const extensionContextActions: ExtensionContextActions = {
 		getModel: () => undefined,
 		isIdle: () => true,
-		isProjectTrusted: () => true,
 		getSignal: () => undefined,
 		abort: () => {},
 		hasPendingMessages: () => false,
@@ -90,45 +85,6 @@ describe("ExtensionRunner", () => {
 		compact: () => {},
 		getSystemPrompt: () => "",
 	};
-
-	describe("project_trust", () => {
-		it("continues past undecided handlers and returns the first yes/no decision", async () => {
-			const undecidedPath = path.join(extensionsDir, "undecided.ts");
-			const decidedPath = path.join(extensionsDir, "decided.ts");
-			fs.writeFileSync(
-				undecidedPath,
-				`export default function(pi) {
-	pi.on("project_trust", () => ({ trusted: "undecided", remember: true }));
-}`,
-			);
-			fs.writeFileSync(
-				decidedPath,
-				`export default function(pi) {
-	pi.on("project_trust", () => ({ trusted: "no", remember: true }));
-}`,
-			);
-
-			const extensionsResult = await loadExtensions([undecidedPath, decidedPath], tempDir);
-			const result = await emitProjectTrustEvent(
-				extensionsResult,
-				{ type: "project_trust", cwd: tempDir },
-				{
-					cwd: tempDir,
-					mode: "tui",
-					hasUI: false,
-					ui: {
-						select: async () => undefined,
-						confirm: async () => false,
-						input: async () => undefined,
-						notify: () => {},
-					},
-				},
-			);
-
-			expect(result.result).toEqual({ trusted: "no", remember: true });
-			expect(result.errors).toEqual([]);
-		});
-	});
 
 	describe("shortcut conflicts", () => {
 		it("warns when extension shortcut conflicts with built-in", async () => {
@@ -497,18 +453,6 @@ describe("ExtensionRunner", () => {
 			const ctx = runner.createContext();
 			expect(ctx.mode).toBe("print");
 			expect(ctx.hasUI).toBe(false);
-		});
-
-		it("exposes project trust state on ExtensionContext", async () => {
-			const result = await discoverAndLoadExtensions([], tempDir, tempDir);
-			const runner = new ExtensionRunner(result.extensions, result.runtime, tempDir, sessionManager, modelRegistry);
-			runner.bindCore(extensionActions, {
-				...extensionContextActions,
-				isProjectTrusted: () => false,
-			});
-
-			const ctx = runner.createContext();
-			expect(ctx.isProjectTrusted()).toBe(false);
 		});
 
 		it("exposes rpc mode with hasUI true when an RPC UI context is provided", async () => {

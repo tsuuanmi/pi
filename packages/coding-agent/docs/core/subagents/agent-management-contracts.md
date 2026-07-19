@@ -21,7 +21,7 @@ These are the intended ownership boundaries. If implementation chooses different
 | --- | --- | --- |
 | Resource/discovery ownership and provider precedence | `packages/coding-agent/src/core/skills/resource-loader.ts` or a new `src/core/resource-providers.ts` | `src/core/agents/agent-profiles.ts`, `src/core/skills/skills.ts`, `src/core/skills/prompt-templates.ts`, `src/core/package-manager/package-manager.ts` |
 | Agent definition parsing | `packages/coding-agent/src/core/agents/agent-profiles.ts` or a new `src/core/agents/agent-definitions.ts` | bundled role-agent prompt assets if added |
-| Trust policy | `packages/coding-agent/src/core/settings/settings-manager.ts` and `src/core/trust/project-trust.ts` | `src/core/skills/resource-loader.ts`, `docs/security.md` |
+| Project resource loading | `packages/coding-agent/src/core/settings/settings-manager.ts` and `src/core/skills/resource-loader.ts` | `docs/security.md` |
 | Source metadata and diagnostics | `packages/coding-agent/src/core/resources/source-info.ts` and `src/core/resources/diagnostics.ts` | resource-specific loaders |
 | Scoped live registry | a new `packages/coding-agent/src/core/agent-registry.ts` | `src/core/agent-session/agent-session.ts`, `src/core/subagents/subagents.ts`, `src/api/types.ts` |
 | Durable subagent/task/receipt state | `packages/coding-agent/src/core/subagents/subagents.ts` and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |
@@ -51,8 +51,8 @@ Existing `SourceInfo` and `ResourceDiagnostic` types may be extended, replaced, 
 
 Default precedence for duplicate resource keys is:
 
-1. trusted project resource nearest to `cwd`;
-2. trusted project resource in higher ancestors, nearest first;
+1. project resource nearest to `cwd`;
+2. project resource in higher ancestors, nearest first;
 3. user/global resource;
 4. package resource, ordered by package resolution priority;
 5. bundled/native resource.
@@ -69,18 +69,9 @@ Shadowed resources must be diagnosable. Invalid resources must not silently crea
 - Unreadable files report a warning or error diagnostic and skip the resource.
 - Non-matching files are ignored, not diagnosed, unless the provider explicitly treats them as malformed resources.
 
-## `.agent` / `.agents` trust policy
+## `.agent` / `.agents` loading policy
 
-Project `.agent` and `.agents` resources are project-local resources. They must use the same project trust gate as `.pi` resources unless a later ADR explicitly changes this.
-
-Default policy:
-
-- user/global `.agent` / `.agents` resources may load without project trust;
-- project `.agent` / `.agents` resources load only when the project is trusted;
-- ancestor walking must stop at the repository root when known, otherwise at filesystem root;
-- the home directory must not be counted as both a user-level and project-level `.agent` / `.agents` root.
-
-Negative case: when project trust is denied or unresolved in a mode that does not prompt, project `.agent` / `.agents` resources must not load.
+Project `.agent` and `.agents` resources load from project ancestors. User/global resources load from user-level `.agent` and `.agents` directories.
 
 ## Agent definition contract
 

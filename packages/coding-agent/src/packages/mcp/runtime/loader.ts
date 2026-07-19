@@ -2,8 +2,8 @@
  * MCP configuration loader.
  *
  * Discovers MCP server configurations from:
- * - Project-scoped: `.mcp.json` in the project root (gated by project trust)
- * - Global: `~/.pi/mcp.json` (always loaded)
+ * - Project-scoped: `.mcp.json` in the project root
+ * - Global: `~/.pi/mcp.json`
  *
  * Project config takes precedence over global config when the same server name
  * appears in both. A warning is logged for such overlaps.
@@ -24,18 +24,13 @@ export interface MCPLoadResult {
 /**
  * Load MCP server configurations from project and global config files.
  *
- * Project-scoped configs (`.mcp.json` in project root) are only loaded
- * when project trust is granted. Global configs (`~/.pi/mcp.json`) are
- * always loaded.
+ * Project-scoped configs (`.mcp.json` in project root) and global configs
+ * (`~/.pi/mcp.json`) are loaded.
  *
  * When the same server name appears in both configs, the project config
  * takes precedence and a warning is logged.
  */
-export function loadMCPConfigs(options: {
-	cwd: string;
-	isProjectTrusted: boolean;
-	globalMcpJsonPath?: string;
-}): MCPLoadResult {
+export function loadMCPConfigs(options: { cwd: string; globalMcpJsonPath?: string }): MCPLoadResult {
 	const servers = new Map<string, MCPServerConfig>();
 	const warnings: string[] = [];
 	const errors: string[] = [];
@@ -52,25 +47,22 @@ export function loadMCPConfigs(options: {
 	warnings.push(...globalResult.warnings);
 	errors.push(...globalResult.errors);
 
-	// Load project config (gated by trust)
-	if (options.isProjectTrusted) {
-		const projectPath = join(options.cwd, ".mcp.json");
-		const projectResult = loadMCPConfigFile(projectPath);
-		if (projectResult.config) {
-			for (const [name, config] of Object.entries(projectResult.config.mcpServers)) {
-				if (config.disabled) continue;
-				if (servers.has(name)) {
-					warnings.push(
-						`MCP server "${name}" defined in both global and project config. ` +
-							`Project config takes precedence.`,
-					);
-				}
-				servers.set(name, config);
+	// Load project config
+	const projectPath = join(options.cwd, ".mcp.json");
+	const projectResult = loadMCPConfigFile(projectPath);
+	if (projectResult.config) {
+		for (const [name, config] of Object.entries(projectResult.config.mcpServers)) {
+			if (config.disabled) continue;
+			if (servers.has(name)) {
+				warnings.push(
+					`MCP server "${name}" defined in both global and project config. Project config takes precedence.`,
+				);
 			}
+			servers.set(name, config);
 		}
-		warnings.push(...projectResult.warnings);
-		errors.push(...projectResult.errors);
 	}
+	warnings.push(...projectResult.warnings);
+	errors.push(...projectResult.errors);
 
 	return { servers, warnings, errors };
 }

@@ -35,9 +35,7 @@ export interface ResourceExtensionPaths {
 	themePaths?: Array<{ path: string; metadata: PathMetadata }>;
 }
 
-export interface ResourceLoaderReloadOptions {
-	resolveProjectTrust?: (input: { extensionsResult: LoadExtensionsResult }) => Promise<boolean>;
-}
+export interface ResourceLoaderReloadOptions {}
 
 export interface ResourceLoader {
 	getExtensions(): LoadExtensionsResult;
@@ -135,11 +133,9 @@ function standardAgentDirsForBase(baseDir: string): string[] {
 export function loadProjectContextFiles(options: {
 	cwd: string;
 	agentDir: string;
-	projectTrusted?: boolean;
 }): Array<{ path: string; content: string }> {
 	const resolvedCwd = resolvePath(options.cwd);
 	const resolvedAgentDir = resolvePath(options.agentDir);
-	const projectTrusted = options.projectTrusted ?? true;
 	const homeDir = resolvePath(getHomeDir());
 
 	const contextFiles: Array<{ path: string; content: string }> = [];
@@ -168,7 +164,7 @@ export function loadProjectContextFiles(options: {
 		const discovered: Array<{ path: string; content: string }> = [];
 		const contextFile = loadContextFileFromDir(currentDir);
 		if (contextFile) discovered.push(contextFile);
-		if (projectTrusted && currentDir !== homeDir) {
+		if (currentDir !== homeDir) {
 			for (const dir of standardAgentDirsForBase(currentDir)) {
 				const standardContext = loadTextFile(join(dir, "AGENTS.md"));
 				if (standardContext) discovered.push(standardContext);
@@ -413,23 +409,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 		}
 	}
 
-	async loadProjectTrustExtensions(): Promise<LoadExtensionsResult> {
-		// Force untrusted project settings for the bootstrap pass. This keeps project-local
-		// extensions/packages out while still loading user/global and temporary CLI extensions.
-		this.settingsManager.setProjectTrusted(false);
-		await this.settingsManager.reload();
-		return this.loadCurrentExtensionSet({ includeInlineFactories: true });
-	}
-
-	async reload(options?: ResourceLoaderReloadOptions): Promise<void> {
-		let preTrustExtensions: LoadExtensionsResult | undefined;
-		if (options?.resolveProjectTrust) {
-			preTrustExtensions = await this.loadProjectTrustExtensions();
-			const projectTrusted = await options.resolveProjectTrust({ extensionsResult: preTrustExtensions });
-			this.settingsManager.setProjectTrusted(projectTrusted);
-		}
-
-		// reload() preserves SettingsManager.projectTrusted and reloads settings for that trust state.
+	async reload(_options?: ResourceLoaderReloadOptions): Promise<void> {
 		await this.settingsManager.reload();
 		const resolvedPaths = await this.packageManager.resolve();
 		const cliExtensionPaths = await this.packageManager.resolveExtensionSources(this.additionalExtensionPaths, {
@@ -482,7 +462,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 			? cliEnabledExtensions
 			: this.mergePaths(cliEnabledExtensions, enabledExtensions);
 
-		const extensionsResult = await this.loadFinalExtensionSet(extensionPaths, preTrustExtensions);
+		const extensionsResult = await this.loadFinalExtensionSet(extensionPaths, undefined);
 		for (const p of this.additionalExtensionPaths) {
 			if (isLocalPath(p)) {
 				const resolved = this.resolveResourcePath(p);
@@ -544,7 +524,6 @@ export class DefaultResourceLoader implements ResourceLoader {
 		const agentProfiles = loadAgentDefinitions({
 			cwd: this.cwd,
 			agentDir: this.agentDir,
-			projectTrusted: this.settingsManager.isProjectTrusted(),
 			packageAgentPaths: enabledAgentProfiles,
 		});
 		const resolvedAgentProfiles = this.agentProfilesOverride
@@ -559,7 +538,6 @@ export class DefaultResourceLoader implements ResourceLoader {
 				: loadProjectContextFiles({
 						cwd: this.cwd,
 						agentDir: this.agentDir,
-						projectTrusted: this.settingsManager.isProjectTrusted(),
 					}),
 		};
 		const resolvedAgentsFiles = this.agentsFilesOverride ? this.agentsFilesOverride(agentsFiles) : agentsFiles;
@@ -580,27 +558,6 @@ export class DefaultResourceLoader implements ResourceLoader {
 		this.appendSystemPrompt = this.appendSystemPromptOverride
 			? this.appendSystemPromptOverride(baseAppend)
 			: baseAppend;
-	}
-
-	private async loadCurrentExtensionSet(options: { includeInlineFactories: boolean }): Promise<LoadExtensionsResult> {
-		const resolvedPaths = await this.packageManager.resolve();
-		const cliExtensionPaths = await this.packageManager.resolveExtensionSources(this.additionalExtensionPaths, {
-			temporary: true,
-		});
-		const enabledExtensions = resolvedPaths.extensions.filter((r) => r.enabled).map((r) => r.path);
-		const cliEnabledExtensions = cliExtensionPaths.extensions.filter((r) => r.enabled).map((r) => r.path);
-		const extensionPaths = this.noExtensions
-			? cliEnabledExtensions
-			: this.mergePaths(cliEnabledExtensions, enabledExtensions);
-		const extensionsResult = await loadExtensions(extensionPaths, this.cwd, this.eventBus);
-		if (!options.includeInlineFactories) {
-			return extensionsResult;
-		}
-
-		const inlineExtensions = await this.loadExtensionFactories(extensionsResult.runtime);
-		extensionsResult.extensions.push(...inlineExtensions.extensions);
-		extensionsResult.errors.push(...inlineExtensions.errors);
-		return extensionsResult;
 	}
 
 	private resolveExtensionLoadPath(path: string): string {
@@ -1069,14 +1026,12 @@ export class DefaultResourceLoader implements ResourceLoader {
 
 	private discoverSinglePromptFile(filename: "SYSTEM.md" | "APPEND_SYSTEM.md"): string | undefined {
 		const projectPath = join(this.cwd, CONFIG_DIR_NAME, filename);
-		if (this.settingsManager.isProjectTrusted() && existsSync(projectPath)) {
+		if (existsSync(projectPath)) {
 			return projectPath;
 		}
 
-		if (this.settingsManager.isProjectTrusted()) {
-			for (const path of this.collectProjectStandardAgentFiles(filename)) {
-				if (existsSync(path)) return path;
-			}
+		for (const path of this.collectProjectStandardAgentFiles(filename)) {
+			if (existsSync(path)) return path;
 		}
 
 		const globalPath = join(this.agentDir, filename);

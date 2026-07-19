@@ -61,7 +61,7 @@ const { profiles, diagnostics } = loadAgentProfiles({
 ```
 
 Loads agent profiles from:
-1. Project directories (`.agent/agents/` and `.agents/agents/` in project ancestors, trusted only)
+1. Project directories (`.agent/agents/` and `.agents/agents/` in project ancestors)
 2. User directory (`~/.agent/agents/` and `~/.agents/agents/`)
 3. Package-provided profiles
 
@@ -88,14 +88,13 @@ The core loading function that scans directories, parses frontmatter, and dedupl
 const result = loadAgentDefinitions({
   cwd: process.cwd(),
   agentDir: path.join(homedir(), ".pi", "agent"),
-  projectTrusted: settingsManager.isProjectTrusted(),
   packageAgentPaths: resolvedPaths.agents.map(r => r.path),
 });
 ```
 
 ### Search Order
 
-For trusted projects, agent directories are searched in project ancestors (walking up to the git root or filesystem root), then user-level directories:
+Agent directories are searched in project ancestors (walking up to the git root or filesystem root), then user-level directories:
 
 1. `<project-ancestor>/.agent/agents/*.md` (project, each ancestor)
 2. `<project-ancestor>/.agents/agents/*.md` (project, each ancestor)

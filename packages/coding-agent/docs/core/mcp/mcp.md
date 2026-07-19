@@ -9,7 +9,7 @@ Pi reads MCP server config from:
 - Project config: `.mcp.json`
 - Global config: `~/.pi/mcp.json`
 
-Project config is loaded only for trusted projects. If the same server name exists in both files, the project config wins.
+Project config is loaded from the project root. If the same server name exists in both files, the project config wins.
 
 Example `.mcp.json`:
 
@@ -89,7 +89,7 @@ Phase 1 MCP support focuses on runtime tool execution:
 - stdio transport
 - HTTP/SSE transport
 - tool discovery and calls
-- project trust gate for `.mcp.json`
+- `.mcp.json` project config
 - CLI management and connectivity testing
 
 Not included yet:

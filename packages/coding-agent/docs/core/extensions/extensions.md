@@ -105,7 +105,7 @@ pi
 
 > **Security:** Extensions run with your full system permissions and can execute arbitrary code. Only install from sources you trust.
 
-Extensions are auto-discovered from trusted locations. Project-local `.pi/extensions` entries load only after the project is trusted.
+Extensions are auto-discovered from user/global and project-local locations.
 
 | Location | Scope |
 |----------|-------|
@@ -272,7 +272,6 @@ Run `npm install` in the extension directory, then imports from `node_modules/` 
 ```
 pi starts
   │
-  ├─► project_trust (user/global and CLI extensions only, before project resources load)
   ├─► session_start { reason: "startup" }
   └─► resources_discover { reason: "startup" }
       │
@@ -338,23 +337,6 @@ exit (Ctrl+C, Ctrl+D, SIGHUP, SIGTERM)
 ```
 
 ### Startup Events
-
-#### project_trust
-
-Fired before pi decides whether to trust a project with dynamic configs (`.pi` or `.agents/skills`). It runs during startup and when session replacement (for example `/resume`) enters a cwd whose trust has not been resolved in the current process. Only user/global extensions participate; project-local extensions are not loaded until after trust is resolved.
-
-```typescript
-pi.on("project_trust", async (event, ctx) => {
-  // event.cwd - current working directory
-  // ctx has a limited trust context: cwd, mode, hasUI, and select/confirm/input/notify UI helpers
-  if (await ctx.ui.confirm("Trust project?", event.cwd)) {
-    return { trusted: "yes", remember: true };
-  }
-  return { trusted: "undecided" };
-});
-```
-
-A `project_trust` handler must return `{ trusted: "yes" | "no" | "undecided" }`. A user/global or CLI extension that returns `"yes"` or `"no"` owns the decision; the first yes/no decision wins and suppresses the built-in trust prompt. Use `remember: true` to persist a yes/no decision; otherwise it applies only to the current process. Return `"undecided"` to let later handlers or the built-in trust flow decide. Check `ctx.hasUI` before prompting. If no handler returns yes/no, normal trust resolution continues: saved `trust.json` decisions apply first, then `defaultProjectTrust` controls whether pi asks, trusts, or declines by default.
 
 ### Resource Events
 
@@ -905,12 +887,6 @@ export default function (pi: ExtensionAPI) {
   });
 }
 ```
-
-### ctx.isProjectTrusted()
-
-Returns whether project-local trust is active for the current session context. This includes temporary trust decisions and CLI trust overrides, not just saved decisions in the global trust store.
-
-Use this before reading project-local extension configuration that should only be honored for trusted projects.
 
 ### ctx.sessionManager
 

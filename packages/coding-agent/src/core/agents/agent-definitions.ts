@@ -278,7 +278,6 @@ function applyDuplicateResolution(
 export function loadAgentDefinitions(options: {
 	cwd: string;
 	agentDir: string;
-	projectTrusted: boolean;
 	packageAgentPaths?: string[];
 }): AgentProfileLoadResult {
 	const cwd = canonicalizePath(resolvePath(options.cwd));
@@ -287,11 +286,9 @@ export function loadAgentDefinitions(options: {
 	const candidates: Candidate[] = [];
 	const diagnostics: ResourceDiagnostic[] = [];
 
-	if (options.projectTrusted) {
-		for (const ancestor of projectAncestors(cwd, home)) {
-			addMarkdownCandidates(candidates, join(ancestor, ".agent", "agents"), "project", ancestor);
-			addMarkdownCandidates(candidates, join(ancestor, ".agents", "agents"), "project", ancestor);
-		}
+	for (const ancestor of projectAncestors(cwd, home)) {
+		addMarkdownCandidates(candidates, join(ancestor, ".agent", "agents"), "project", ancestor);
+		addMarkdownCandidates(candidates, join(ancestor, ".agents", "agents"), "project", ancestor);
 	}
 
 	addMarkdownCandidates(candidates, join(home, ".agent", "agents"), "user", home);

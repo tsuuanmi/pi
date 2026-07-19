@@ -5,11 +5,10 @@ export default function mcpExtension(pi: ExtensionAPI): void {
 	let manager: MCPManager | undefined;
 	let unregisterProvider: (() => void) | undefined;
 
-	pi.on("session_start", async (_event, ctx) => {
+	pi.on("session_start", async (_event) => {
 		if (manager) return;
 		manager = new MCPManager({
 			cwd: process.cwd(),
-			isProjectTrusted: ctx.isProjectTrusted(),
 		});
 		manager.onToolsChanged((added, removed) => {
 			for (const name of removed) {

@@ -42,7 +42,7 @@ import {
 	type AgentSessionRuntime,
 	SessionImportFileNotFoundError,
 } from "#coding-agent/core/agent-session/agent-session-runtime";
-import { APP_NAME, CONFIG_DIR_NAME, VERSION } from "#coding-agent/core/config/config";
+import { APP_NAME, VERSION } from "#coding-agent/core/config/config";
 import { configureHttpDispatcher } from "#coding-agent/core/exec/http-dispatcher";
 import type {
 	AutocompleteProviderFactory,
@@ -50,14 +50,12 @@ import type {
 	ExtensionContext,
 	ExtensionRunner,
 	ExtensionUIContext,
-	ProjectTrustContext,
 } from "#coding-agent/core/extensions/index";
 import type { SourceInfo } from "#coding-agent/core/resources/source-info";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#coding-agent/core/session/session-cwd";
 import type { SessionContext, SessionManager } from "#coding-agent/core/session/session-manager";
 import { type AppKeybinding, KeybindingsManager } from "#coding-agent/core/settings/keybindings";
 import { BUILTIN_SLASH_COMMANDS } from "#coding-agent/core/skills/slash-commands";
-import { hasTrustRequiringProjectResources } from "#coding-agent/core/trust/trust-manager";
 import { FooterDataProvider } from "#coding-agent/core/usage/footer-data-provider";
 import { BashExecutionComponent } from "#coding-agent/modes/interactive/components/bash-execution";
 import { CustomEditor } from "#coding-agent/modes/interactive/components/custom-editor";
@@ -150,8 +148,6 @@ export interface InteractiveModeOptions {
 	migratedProviders?: string[];
 	/** Warning message if session model couldn't be restored */
 	modelFallbackMessage?: string;
-	/** Cwd to trust after reload if it gained a .pi directory during this implicitly trusted session. */
-	autoTrustOnReloadCwd?: string;
 	/** Initial message to send on startup (can include @file content) */
 	initialMessage?: string;
 	/** Images to attach to the initial message */
@@ -330,9 +326,7 @@ export class InteractiveMode {
 			getEditor: () => this.editor,
 			getSettingsManager: () => this.settingsManager,
 			agentDir: this.runtimeHost.services.agentDir,
-			autoTrustOnReloadCwd: options.autoTrustOnReloadCwd,
 			showError: (message) => this.showError(message),
-			showWarning: (message) => this.showWarning(message),
 			showStatus: (message) => this.showStatus(message),
 			showSelector: (create) => this._selectorController.showSelector(create),
 			updateEditorBorderColor: () => this.updateEditorBorderColor(),
@@ -390,7 +384,6 @@ export class InteractiveMode {
 			renderInitialMessages: () => this.renderInitialMessages(),
 			flushCompactionQueue: (options) => this.flushCompactionQueue(options),
 			handleFatalRuntimeError: (prefix, error) => this.handleFatalRuntimeError(prefix, error),
-			createProjectTrustContext: (cwd) => this.createProjectTrustContext(cwd),
 			promptForMissingSessionCwd: (error) => this.promptForMissingSessionCwd(error),
 			rebuildChatFromMessages: () => this.rebuildChatFromMessages(),
 			updateEditorBorderColor: () => this.updateEditorBorderColor(),
@@ -427,7 +420,6 @@ export class InteractiveMode {
 			showUserMessageSelector: () => this._selectorController.showUserMessageSelector(),
 			showSessionSelector: () => this._selectorController.showSessionSelector(),
 			showSettingsSelector: () => this._selectorController.showSettingsSelector(),
-			showTrustSelector: () => this._selectorController.showTrustSelector(),
 			handleImportCommand: (command) => this.handleImportCommand(command),
 			handleBashCommand: (command, isExcluded) => this.handleBashCommand(command, isExcluded),
 			handleCompactCommand: (customInstructions) => this.handleCompactCommand(customInstructions),
@@ -875,7 +867,6 @@ export class InteractiveMode {
 			modelRegistry: this.session.modelRegistry,
 			model: this.session.model,
 			isIdle: () => !this.session.isStreaming,
-			isProjectTrusted: () => this.settingsManager.isProjectTrusted(),
 			signal: this.session.agent.signal,
 			abort: () => {
 				this.restoreQueuedMessagesToEditor({ abort: true });
@@ -987,24 +978,6 @@ export class InteractiveMode {
 			this.loadingAnimation.setMessage(`${this.defaultWorkingMessage} (${keyText("app.interrupt")} to interrupt)`);
 		}
 		this.setHiddenThinkingLabel();
-	}
-
-	/**
-	 * Create the ExtensionUIContext for extensions.
-	 */
-	private createProjectTrustContext(cwd: string): ProjectTrustContext {
-		const ui = this.createExtensionUIContext();
-		return {
-			cwd,
-			mode: "tui",
-			hasUI: true,
-			ui: {
-				select: ui.select,
-				confirm: ui.confirm,
-				input: ui.input,
-				notify: ui.notify,
-			},
-		};
 	}
 
 	private createExtensionUIContext(): ExtensionUIContext {
@@ -1701,7 +1674,6 @@ export class InteractiveMode {
 			updateFooter: true,
 			populateHistory: true,
 		});
-		this.renderProjectTrustWarningIfNeeded();
 
 		// Show compaction info if session was compacted
 		const allEntries = this.sessionManager.getEntries();
@@ -1710,26 +1682,6 @@ export class InteractiveMode {
 			const times = compactionCount === 1 ? "1 time" : `${compactionCount} times`;
 			this.showStatus(`Session compacted ${times}`);
 		}
-	}
-
-	private renderProjectTrustWarningIfNeeded(): void {
-		if (this.settingsManager.isProjectTrusted() || !hasTrustRequiringProjectResources(this.sessionManager.getCwd())) {
-			return;
-		}
-
-		if (this.chatContainer.children.length > 0) {
-			this.chatContainer.addChild(new Spacer(1));
-		}
-		this.chatContainer.addChild(
-			new Text(
-				theme.fg(
-					"warning",
-					`This project is not trusted. Project ${CONFIG_DIR_NAME} resources and packages are ignored. Use /trust to save a trust decision, then restart pi.`,
-				),
-				1,
-				0,
-			),
-		);
 	}
 
 	async getUserInput(): Promise<string> {
@@ -2330,16 +2282,11 @@ export class InteractiveMode {
 				force: false,
 				showDiagnosticsWhenQuiet: true,
 			});
-			const savedImplicitProjectTrust = this._accountAuthController.maybeSaveImplicitProjectTrustAfterReload();
 			const modelsJsonError = this.session.modelRegistry.getError();
 			if (modelsJsonError) {
 				this.showError(`models.json error: ${modelsJsonError}`);
 			}
-			this.showStatus(
-				savedImplicitProjectTrust
-					? "Reloaded keybindings, extensions, skills, prompts, themes; saved project trust"
-					: "Reloaded keybindings, extensions, skills, prompts, themes",
-			);
+			this.showStatus("Reloaded keybindings, extensions, skills, prompts, themes");
 		} catch (error) {
 			dismissReloadBox(previousEditor as Component);
 			this.showError(`Reload failed: ${error instanceof Error ? error.message : String(error)}`);

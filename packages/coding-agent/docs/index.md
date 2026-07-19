@@ -43,7 +43,7 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 - [Settings](core/settings/settings.md) - global and project settings.
 - [Sessions](core/session-manager/sessions.md) - session management, branching, and tree navigation.
 - [Compaction](core/compaction/compaction.md) - context compaction and branch summarization.
-- [Security](core/trust/security.md) - project trust, sandbox boundaries, and vulnerability reporting.
+- [Security](core/trust/security.md) - sandbox boundaries and vulnerability reporting.
 - [Containerization](containerization.md) - sandbox pi with Docker or OpenShell.
 
 ## Models and providers

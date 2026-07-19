@@ -385,7 +385,6 @@ describe("loadMCPConfigFile", () => {
 
 		const result = loadMCPConfigs({
 			cwd: tmpDir,
-			isProjectTrusted: true,
 			globalMcpJsonPath: configPath,
 		});
 		expect(result.servers.has("disabled")).toBe(false);
@@ -432,7 +431,6 @@ describe("loadMCPConfigs", () => {
 
 		const result = loadMCPConfigs({
 			cwd: tmpDir,
-			isProjectTrusted: true,
 			globalMcpJsonPath: globalPath,
 		});
 
@@ -444,7 +442,7 @@ describe("loadMCPConfigs", () => {
 		expect(result.warnings.some((w) => w.includes("shared"))).toBe(true);
 	});
 
-	it("should not load project config when project is not trusted", () => {
+	it("should load project config", () => {
 		const globalPath = join(tmpDir, "global2.json");
 		writeFileSync(
 			globalPath,
@@ -469,12 +467,11 @@ describe("loadMCPConfigs", () => {
 
 		const result = loadMCPConfigs({
 			cwd: tmpDir,
-			isProjectTrusted: false,
 			globalMcpJsonPath: globalPath,
 		});
 
 		expect(result.servers.has("globalOnly")).toBe(true);
-		expect(result.servers.has("projectOnly")).toBe(false);
+		expect(result.servers.has("projectOnly")).toBe(true);
 	});
 });
 
@@ -735,7 +732,6 @@ describe("MCPManager", () => {
 
 		const manager = new MCPManager({
 			cwd: tmpDir,
-			isProjectTrusted: true,
 			globalMcpJsonPath: globalPath,
 		});
 
@@ -765,7 +761,6 @@ describe("MCPManager", () => {
 
 		const manager = new MCPManager({
 			cwd: tmpDir,
-			isProjectTrusted: true,
 			globalMcpJsonPath: globalPath,
 		});
 

@@ -32,7 +32,6 @@ type KeyHandlerControllerDependencies = {
 	showUserMessageSelector: () => void;
 	showSessionSelector: () => void;
 	showSettingsSelector: () => void;
-	showTrustSelector: () => void;
 	handleImportCommand: (text: string) => Promise<void>;
 	handleBashCommand: (command: string, isExcluded: boolean) => Promise<void>;
 	handleCompactCommand: (customInstructions?: string) => Promise<void>;
@@ -72,7 +71,6 @@ export class KeyHandlerController {
 	private readonly showUserMessageSelector: () => void;
 	private readonly showSessionSelector: () => void;
 	private readonly showSettingsSelector: () => void;
-	private readonly showTrustSelector: () => void;
 	private readonly handleImportCommand: (text: string) => Promise<void>;
 	private readonly handleBashCommand: (command: string, isExcluded: boolean) => Promise<void>;
 	private readonly handleCompactCommand: (customInstructions?: string) => Promise<void>;
@@ -111,7 +109,6 @@ export class KeyHandlerController {
 		this.showUserMessageSelector = deps.showUserMessageSelector;
 		this.showSessionSelector = deps.showSessionSelector;
 		this.showSettingsSelector = deps.showSettingsSelector;
-		this.showTrustSelector = deps.showTrustSelector;
 		this.handleImportCommand = deps.handleImportCommand;
 		this.handleBashCommand = deps.handleBashCommand;
 		this.handleCompactCommand = deps.handleCompactCommand;
@@ -233,11 +230,6 @@ export class KeyHandlerController {
 			}
 			if (text === "/tree") {
 				this.showTreeSelector();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/trust") {
-				this.showTrustSelector();
 				this.editor.setText("");
 				return;
 			}
