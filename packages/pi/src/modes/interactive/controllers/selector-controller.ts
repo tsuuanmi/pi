@@ -2,7 +2,7 @@
 // Selector UI surface. Moved method bodies are verbatim; injected host dependencies are
 // exposed as same-named fields/getters/delegates so the bodies need no internal remaps.
 
-import type { Component, EditorComponent } from "@tsuuanmi/pi-tui";
+import type { Component, EditorComponent, StatusLineComponent } from "@tsuuanmi/pi-tui";
 import {
 	type Container,
 	getAvailableThemes,
@@ -21,7 +21,6 @@ import { SessionSelectorComponent } from "#pi/modes/interactive/components/selec
 import { SettingsSelectorComponent } from "#pi/modes/interactive/components/selectors/settings-selector";
 import { TreeSelectorComponent } from "#pi/modes/interactive/components/selectors/tree-selector";
 import { UserMessageSelectorComponent } from "#pi/modes/interactive/components/selectors/user-message-selector";
-import type { StatusLineComponent } from "#pi/modes/interactive/components/status-line/index";
 import type { ExtensionUIController } from "#pi/modes/interactive/controllers/extension-ui-controller";
 import type { AgentSession } from "#pi/session/agent-session";
 import type { AgentSessionRuntime } from "#pi/session/agent-session-runtime";

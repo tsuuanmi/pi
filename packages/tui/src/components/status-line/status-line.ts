@@ -1,30 +1,28 @@
-import { type Component, theme, truncateToWidth, visibleWidth } from "@tsuuanmi/pi-tui";
-import { collapsePlanningPipeline, readWorkflowActiveState, type WorkflowActiveEntry } from "@tsuuanmi/pi-workflows";
-import { renderSkillHudBar } from "#pi/modes/interactive/components/skill-hud/render";
-import { type GitStatusSummary, runGitStatusPorcelain } from "#pi/modes/interactive/components/status-line/git-utils";
-import { getPreset } from "#pi/modes/interactive/components/status-line/presets";
-import {
-	computeUsageStats,
-	renderSegment,
-	sanitizeStatusText,
-} from "#pi/modes/interactive/components/status-line/segments";
-import { getSeparator } from "#pi/modes/interactive/components/status-line/separators";
-import type { SegmentContext } from "#pi/modes/interactive/components/status-line/types";
-import type { ReadonlyFooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
-import type { AgentSession } from "#pi/session/agent-session";
+import { collapsePlanningPipeline, renderHudBar } from "#tui/components/hud/render";
+import { type GitStatusSummary, runGitStatusPorcelain } from "#tui/components/status-line/git-utils";
+import { getPreset } from "#tui/components/status-line/presets";
+import { computeUsageStats, renderSegment, sanitizeStatusText } from "#tui/components/status-line/segments";
+import { getSeparator } from "#tui/components/status-line/separators";
 import type {
-	SettingsManager,
+	SegmentContext,
+	StatusLineComponentOptions,
+	StatusLineDataProvider,
 	StatusLineSegmentId,
 	StatusLineSegmentOptions,
+	StatusLineSessionLike,
 	StatusLineSettings,
-} from "#pi/settings/settings-manager";
+	StatusLineWorkflowEntry,
+} from "#tui/components/status-line/types";
+import type { Component } from "#tui/core/tui";
+import { theme } from "#tui/theme/theme";
+import { truncateToWidth, visibleWidth } from "#tui/utilities/text";
 
 /** Minimum gap (columns) between the left and right rail groups. */
 const MIN_PADDING = 2;
 /** Background-refresh interval for the git porcelain cache. */
 const GIT_STATUS_REFRESH_MS = 30_000;
 /** Background-refresh interval for the workflow HUD cache. */
-const SKILL_HUD_REFRESH_MS = 1000;
+const HUD_REFRESH_MS = 1000;
 
 function areGitStatusSummariesEqual(a: GitStatusSummary | null, b: GitStatusSummary | null): boolean {
 	return (
@@ -33,7 +31,7 @@ function areGitStatusSummariesEqual(a: GitStatusSummary | null, b: GitStatusSumm
 }
 
 /**
- * Status line component: renders the skill HUD line (when workflows are
+ * Status line component: renders the HUD line (when workflows are
  * active), the configurable segment rail, and the non-workflow hook status
  * line. Replaces `FooterComponent`.
  *
@@ -44,10 +42,11 @@ function areGitStatusSummariesEqual(a: GitStatusSummary | null, b: GitStatusSumm
  * the workflow active-state HUD cache (1s refresh, error-resilient).
  */
 export class StatusLineComponent implements Component {
-	#session: AgentSession;
-	#footerData: ReadonlyFooterDataProvider;
-	#settingsManager: SettingsManager;
+	#session: StatusLineSessionLike;
+	#footerData: StatusLineDataProvider;
+	#settingsSource: { getStatusLine(): StatusLineSettings };
 	#requestRender: (() => void) | null;
+	#readWorkflowEntries: StatusLineComponentOptions["readWorkflowEntries"];
 	#autoCompactEnabled = true;
 
 	// Git porcelain counts cache (30s refresh). `null` until the first fetch.
@@ -59,23 +58,25 @@ export class StatusLineComponent implements Component {
 	#gitGeneration = 0;
 
 	// Workflow HUD cache (1s refresh). `[]` until the first successful read.
-	#skillHudEntries: WorkflowActiveEntry[] = [];
-	#skillHudLastFetch = 0;
-	#skillHudInFlight = false;
+	#hudEntries: StatusLineWorkflowEntry[] = [];
+	#hudLastFetch = 0;
+	#hudInFlight = false;
 
 	constructor(
-		session: AgentSession,
-		footerData: ReadonlyFooterDataProvider,
-		settingsManager: SettingsManager,
+		session: StatusLineSessionLike,
+		footerData: StatusLineDataProvider,
+		settingsSource: { getStatusLine(): StatusLineSettings },
 		requestRender: () => void,
+		options: StatusLineComponentOptions = {},
 	) {
 		this.#session = session;
 		this.#footerData = footerData;
-		this.#settingsManager = settingsManager;
+		this.#settingsSource = settingsSource;
 		this.#requestRender = requestRender;
+		this.#readWorkflowEntries = options.readWorkflowEntries;
 	}
 
-	setSession(session: AgentSession): void {
+	setSession(session: StatusLineSessionLike): void {
 		this.#session = session;
 	}
 
@@ -97,12 +98,12 @@ export class StatusLineComponent implements Component {
 
 	render(width: number): string[] {
 		const lines: string[] = [];
-		const settings = this.#settingsManager.getStatusLine();
+		const settings = this.#settingsSource.getStatusLine();
 
 		// 1. HUD line (gajae-style `◆ hud ...`), only when workflows are active.
-		this.#refreshSkillHudInBackground();
-		if (settings.showSkillHud !== false) {
-			const hud = renderSkillHudBar(this.#skillHudEntries, width);
+		this.#refreshHudInBackground();
+		if (settings.showHud !== false) {
+			const hud = renderHudBar(this.#hudEntries, width);
 			if (hud) lines.push(hud);
 		}
 
@@ -162,24 +163,25 @@ export class StatusLineComponent implements Component {
 	 * Kick a background workflow active-state read if the HUD cache is stale
 	 * (1s refresh) and none is in flight. The read + pipeline collapse are
 	 * wrapped so workflow-state failures never throw on the render path; on
-	 * failure `#skillHudEntries` is left unchanged.
+	 * failure `#hudEntries` is left unchanged.
 	 */
-	#refreshSkillHudInBackground(): void {
-		if (this.#skillHudInFlight || Date.now() - this.#skillHudLastFetch < SKILL_HUD_REFRESH_MS) {
+	#refreshHudInBackground(): void {
+		if (this.#hudInFlight || Date.now() - this.#hudLastFetch < HUD_REFRESH_MS) {
 			return;
 		}
-		this.#skillHudInFlight = true;
+		this.#hudInFlight = true;
 		const cwd = this.#session.sessionManager.getCwd();
-		const sessionId = this.#session.sessionId;
+		const sessionId = this.#session.sessionId ?? "";
+		const readWorkflowEntries = this.#readWorkflowEntries;
 		void (async () => {
 			try {
-				const state = await readWorkflowActiveState(cwd, { sessionId });
-				this.#skillHudEntries = collapsePlanningPipeline(state?.active_workflows ?? []);
+				const entries = readWorkflowEntries ? await readWorkflowEntries({ cwd, sessionId }) : [];
+				this.#hudEntries = collapsePlanningPipeline(entries ?? []);
 			} catch {
-				// Leave #skillHudEntries unchanged (initially [] until a valid read).
+				// Leave #hudEntries unchanged (initially [] until a valid read).
 			} finally {
-				this.#skillHudLastFetch = Date.now();
-				this.#skillHudInFlight = false;
+				this.#hudLastFetch = Date.now();
+				this.#hudInFlight = false;
 				this.#requestRender?.();
 			}
 		})();
@@ -231,7 +233,7 @@ export class StatusLineComponent implements Component {
 				branch: this.#footerData.getGitBranch(),
 				status: this.#cachedGitStatus,
 			},
-			workflowPhase: this.#skillHudEntries[0]?.phase,
+			workflowPhase: this.#hudEntries[0]?.phase,
 		};
 	}
 

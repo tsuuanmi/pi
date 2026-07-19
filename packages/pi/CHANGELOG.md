@@ -2,7 +2,7 @@
 
 ### Breaking Changes
 
-- Moved Pi's theme engine, bundled theme JSON/schema, and reusable rendering utilities out of Pi's removed `src/theme/*` and `src/ui/rendering/*` paths and into `@tsuuanmi/pi-tui`; import theme APIs, ANSI stripping, keybinding text formatting, visual-line truncation, and diff rendering from the TUI package.
+- Moved Pi's theme engine, bundled theme JSON/schema, status line, workflow HUD, and reusable rendering utilities out of Pi's removed `src/theme/*`, `src/ui/rendering/*`, and interactive status-line paths and into `@tsuuanmi/pi-tui`; import theme APIs, status-line/HUD APIs, ANSI stripping, keybinding text formatting, visual-line truncation, and diff rendering from the TUI package.
 - Renamed the published CLI package and workspace to the fresh Pi package identity; update imports and install commands to `@tsuuanmi/pi`.
 - Removed legacy Pi compatibility aliases from the extension loader, test resolver, and shared theme global key.
 - Removed the native clipboard dependency and binary packaging path; clipboard writes now use platform tools and OSC 52 fallback.
@@ -101,7 +101,7 @@
 - Reduced status-line flicker by refreshing git dirty counts every 30 seconds and skipping unchanged git-status re-renders.
 - Fixed bundled extension loading for imports from `@tsuuanmi/pi-agent/node`.
 - Fixed stale extension runners from emitting handlers after session replacement or reload, preventing stale context errors on later prompts.
-- Fixed spurious "Extension … error: This extension ctx is stale …" messages when an async event handler (e.g. a workflow-skill HUD handler) resumed after an `await` that straddled session replacement/reload. The stale-ctx throw is now treated as a benign lifecycle race (the owning session is gone) and no longer surfaces as an extension error via `ExtensionRunner.emitError`.
+- Fixed spurious "Extension … error: This extension ctx is stale …" messages when an async event handler (e.g. a workflow HUD handler) resumed after an `await` that straddled session replacement/reload. The stale-ctx throw is now treated as a benign lifecycle race (the owning session is gone) and no longer surfaces as an extension error via `ExtensionRunner.emitError`.
 - Fixed subagent sessions sharing the parent session's `ResourceLoader` (and therefore its `ExtensionRuntime` and `Extension` objects), so disposing a completed subagent no longer invalidates the parent's shared extension runtime and stale-ifies the parent's captured extension API on the next `before_agent_start`. This affected every subagent-spawning workflow tool (deep-interview, ralplan, team, ultragoal) and any `subagent_spawn` call. Subagents now build an isolated `ResourceLoader` mirroring the parent's extension configuration while reusing the parent's settings manager to preserve active settings state.
 - Fixed `/model` autocomplete and model selection searches to match provider/model queries regardless of whether the provider or model token is typed first.
 - Fixed the tree navigator to horizontally pan deep entries so the selected item remains readable ([#5830](https://github.com/tsuuanmi/pi/issues/5830)).

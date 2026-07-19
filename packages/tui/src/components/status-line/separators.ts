@@ -1,4 +1,4 @@
-import type { SeparatorDef, StatusLineSeparatorStyle } from "#pi/modes/interactive/components/status-line/types";
+import type { SeparatorDef, StatusLineSeparatorStyle } from "#tui/components/status-line/types";
 
 /**
  * Resolve a separator style to its glyph definition.

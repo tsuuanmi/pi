@@ -1,15 +1,24 @@
+import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { initTheme, stripAnsi, visibleWidth } from "@tsuuanmi/pi-tui";
-import { syncWorkflowActiveState } from "@tsuuanmi/pi-workflows";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { StatusLineComponent } from "#pi/modes/interactive/components/status-line/index";
-import type { ReadonlyFooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
-import type { AgentSession } from "#pi/session/agent-session";
-import type { SettingsManager, StatusLineSettings } from "#pi/settings/settings-manager";
+import { afterEach, before, describe, it } from "node:test";
+import {
+	initTheme,
+	StatusLineComponent,
+	type StatusLineDataProvider,
+	type StatusLineSessionLike,
+	type StatusLineSettings,
+	type StatusLineWorkflowEntry,
+	stripAnsi,
+	visibleWidth,
+} from "#tui/index";
 
-beforeAll(() => {
+function escapeRegExp(value: string): string {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+before(() => {
 	initTheme("dark");
 });
 
@@ -33,10 +42,9 @@ function createSession(options: {
 	usage?: AssistantUsage | null;
 	subagentCount?: number;
 	sessionId?: string;
-}): AgentSession {
+}): StatusLineSessionLike {
 	const usage = options.usage ?? null;
-	const entries =
-		usage === null || usage === undefined ? [] : [{ type: "message", message: { role: "assistant", usage } }];
+	const entries = usage == null ? [] : [{ type: "message", message: { role: "assistant", usage } }];
 	return {
 		state: {
 			model: {
@@ -51,37 +59,40 @@ function createSession(options: {
 		sessionManager: {
 			getEntries: () => entries,
 			getSessionName: () => options.sessionName,
-			// Use a non-existent cwd so background git/HUD fetches are no-ops and
-			// the test does not pick up the real repo's .pi workflow state.
 			getCwd: () => options.cwd ?? "/nonexistent-pi-status-line-test-cwd",
 		},
 		sessionId: options.sessionId ?? "status-line-test-session",
 		getContextUsage: () => ({ contextWindow: options.contextWindow ?? 200_000, percent: 12.3 }),
 		subagentManager: { getActiveCount: () => options.subagentCount ?? 0 },
-	} as unknown as AgentSession;
+	};
 }
 
-function createFooterData(providerCount: number): ReadonlyFooterDataProvider {
+function createFooterData(providerCount: number): StatusLineDataProvider {
 	return {
 		getGitBranch: () => "main",
 		getExtensionStatuses: () => new Map<string, string>(),
 		getAvailableProviderCount: () => providerCount,
-		getCodexUsageSummary: () => null,
-		onBranchChange: () => () => {},
-	} as unknown as ReadonlyFooterDataProvider;
+	};
 }
 
-function createSettings(settings: StatusLineSettings = {}): SettingsManager {
-	return { getStatusLine: () => settings } as unknown as SettingsManager;
+function createSettings(settings: StatusLineSettings = {}): { getStatusLine(): StatusLineSettings } {
+	return { getStatusLine: () => settings };
+}
+
+function makeWorkflowReader(entriesBySession: Map<string, StatusLineWorkflowEntry[]> = new Map()) {
+	return async ({ sessionId }: { cwd: string; sessionId: string }) => entriesBySession.get(sessionId) ?? [];
 }
 
 function makeComponent(
-	session: AgentSession,
+	session: StatusLineSessionLike,
 	providerCount = 1,
 	settings: StatusLineSettings = {},
 	requestRender = () => {},
+	entriesBySession: Map<string, StatusLineWorkflowEntry[]> = new Map(),
 ): StatusLineComponent {
-	return new StatusLineComponent(session, createFooterData(providerCount), createSettings(settings), requestRender);
+	return new StatusLineComponent(session, createFooterData(providerCount), createSettings(settings), requestRender, {
+		readWorkflowEntries: makeWorkflowReader(entriesBySession),
+	});
 }
 
 async function makeTempCwd(): Promise<string> {
@@ -105,10 +116,8 @@ describe("StatusLineComponent width handling", () => {
 		const session = createSession({ sessionName: "한글".repeat(30) });
 		const footer = makeComponent(session);
 		const lines = footer.render(width);
-		expect(lines.length).toBeGreaterThanOrEqual(1);
-		for (const line of lines) {
-			expect(visibleWidth(line)).toBeLessThanOrEqual(width);
-		}
+		assert.ok(lines.length >= 1);
+		for (const line of lines) assert.ok(visibleWidth(line) <= width);
 	});
 
 	it("keeps the rail within width for a wide model + provider + high thinking", () => {
@@ -122,18 +131,13 @@ describe("StatusLineComponent width handling", () => {
 			usage: { input: 12_345, output: 6_789 },
 		});
 		const footer = makeComponent(session, 2);
-		const lines = footer.render(width);
-		for (const line of lines) {
-			expect(visibleWidth(line)).toBeLessThanOrEqual(width);
-		}
+		for (const line of footer.render(width)) assert.ok(visibleWidth(line) <= width);
 	});
 
 	it("still keeps lines within width on an extremely narrow terminal", () => {
 		const session = createSession({ sessionName: "x".repeat(40), usage: { input: 1, output: 2 } });
 		const footer = makeComponent(session, 2);
-		for (const line of footer.render(8)) {
-			expect(visibleWidth(line)).toBeLessThanOrEqual(8);
-		}
+		for (const line of footer.render(8)) assert.ok(visibleWidth(line) <= 8);
 	});
 });
 
@@ -142,70 +146,73 @@ describe("StatusLineComponent provider-prefix width fallback", () => {
 		const session = createSession({ sessionName: "", modelName: "Claude", provider: "anthropic" });
 		const footer = makeComponent(session, 2);
 		const rail = stripAnsi(footer.render(120).at(-1) ?? "");
-		expect(rail).toContain("(anthropic) Claude");
+		assert.match(rail, new RegExp(escapeRegExp("(anthropic) Claude")));
 	});
 
 	it("drops the (provider) prefix on a narrow terminal", () => {
 		const session = createSession({ sessionName: "", modelName: "Claude", provider: "anthropic" });
 		const footer = makeComponent(session, 2);
 		const rail = stripAnsi(footer.render(20).at(-1) ?? "");
-		expect(rail).not.toContain("(anthropic)");
+		assert.doesNotMatch(rail, new RegExp(escapeRegExp("(anthropic)")));
 	});
 });
 
 describe("StatusLineComponent workflow HUD cache", () => {
 	it("reads active workflows scoped to the current session", async () => {
 		const cwd = await makeTempCwd();
-		await syncWorkflowActiveState(
-			cwd,
-			{ skill: "ralplan", active: true, phase: "foreign" },
-			{ sessionId: "foreign-session" },
-		);
-		await syncWorkflowActiveState(cwd, { skill: "team", active: true, phase: "mine" }, { sessionId: "my-session" });
+		const workflows = new Map<string, StatusLineWorkflowEntry[]>([
+			["foreign-session", [{ skill: "ralplan", active: true, phase: "foreign" }]],
+			["my-session", [{ skill: "team", active: true, phase: "mine" }]],
+		]);
 
-		const footer = makeComponent(createSession({ sessionName: "", cwd, sessionId: "my-session" }));
+		const footer = makeComponent(
+			createSession({ sessionName: "", cwd, sessionId: "my-session" }),
+			1,
+			{},
+			() => {},
+			workflows,
+		);
 		const lines = await waitForRender(footer, 120, (rendered) =>
 			stripAnsi(rendered.join("\n")).includes("team:mine"),
 		);
 		const text = stripAnsi(lines.join("\n"));
 
-		expect(text).toContain("team:mine");
-		expect(text).not.toContain("ralplan:foreign");
-		expect(text).not.toContain("foreign");
+		assert.match(text, new RegExp(escapeRegExp("team:mine")));
+		assert.doesNotMatch(text, new RegExp(escapeRegExp("ralplan:foreign")));
+		assert.doesNotMatch(text, new RegExp(escapeRegExp("foreign")));
 	});
 
 	it("collapses the cached planning pipeline before deriving the mode segment", async () => {
 		const cwd = await makeTempCwd();
-		await syncWorkflowActiveState(
-			cwd,
-			{
-				skill: "deep-interview",
-				active: true,
-				phase: "interview",
-				updated_at: "2026-06-21T00:00:00.000Z",
-			},
-			{ sessionId: "status-line-test-session" },
-		);
-		await syncWorkflowActiveState(
-			cwd,
-			{
-				skill: "ultragoal",
-				active: true,
-				phase: "execute",
-				updated_at: "2026-06-21T00:00:01.000Z",
-			},
-			{ sessionId: "status-line-test-session" },
-		);
+		const workflows = new Map<string, StatusLineWorkflowEntry[]>([
+			[
+				"status-line-test-session",
+				[
+					{
+						skill: "deep-interview",
+						active: true,
+						phase: "interview",
+						updated_at: "2026-06-21T00:00:00.000Z",
+					},
+					{
+						skill: "ultragoal",
+						active: true,
+						phase: "execute",
+						updated_at: "2026-06-21T00:00:01.000Z",
+					},
+				],
+			],
+		]);
 
-		const footer = makeComponent(createSession({ sessionName: "", cwd }));
+		const footer = makeComponent(createSession({ sessionName: "", cwd }), 1, {}, () => {}, workflows);
 		const lines = await waitForRender(footer, 120, (rendered) =>
 			stripAnsi(rendered.join("\n")).includes("ultragoal:execute"),
 		);
 		const [hudLine, railLine] = lines.map((line) => stripAnsi(line));
 
-		expect(hudLine).toContain("ultragoal:execute");
-		expect(hudLine).not.toContain("deep-interview:interview");
-		expect(railLine).toContain("execute");
-		expect(railLine).not.toContain("interview");
+		assert.match(hudLine, new RegExp(escapeRegExp("ultragoal:execute")));
+		assert.doesNotMatch(hudLine, new RegExp(escapeRegExp("deep-interview:interview")));
+		assert.match(railLine, new RegExp(escapeRegExp("execute")));
+		assert.doesNotMatch(railLine, new RegExp(escapeRegExp("interview")));
 	});
 });

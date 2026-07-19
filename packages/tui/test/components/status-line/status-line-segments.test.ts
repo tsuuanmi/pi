@@ -1,16 +1,22 @@
-import { initTheme, stripAnsi, visibleWidth } from "@tsuuanmi/pi-tui";
-import { beforeAll, describe, expect, it } from "vitest";
+import assert from "node:assert/strict";
+import { before, describe, it } from "node:test";
+import type { SegmentContext, StatusLineSessionLike } from "#tui/index";
 import {
 	computeUsageStats,
 	formatCwdForFooter,
 	formatTokens,
+	initTheme,
 	renderSegment,
 	sanitizeStatusText,
-} from "#pi/modes/interactive/components/status-line/segments";
-import type { SegmentContext } from "#pi/modes/interactive/components/status-line/types";
-import type { AgentSession } from "#pi/session/agent-session";
+	stripAnsi,
+	visibleWidth,
+} from "#tui/index";
 
-beforeAll(() => {
+function escapeRegExp(value: string): string {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+before(() => {
 	initTheme("dark");
 });
 
@@ -19,8 +25,8 @@ function makeSession(overrides?: {
 	thinkingLevel?: string;
 	cwd?: string;
 	sessionName?: string;
-	entries?: unknown[];
-}): AgentSession {
+	entries?: StatusLineSessionLike["sessionManager"] extends { getEntries(): infer T } ? T : never;
+}): StatusLineSessionLike {
 	return {
 		state: {
 			model: overrides?.model ?? {
@@ -39,7 +45,7 @@ function makeSession(overrides?: {
 		},
 		getContextUsage: () => ({ contextWindow: 200_000, percent: 12.3 }),
 		subagentManager: { getActiveCount: () => 0 },
-	} as unknown as AgentSession;
+	};
 }
 
 function makeCtx(overrides?: Partial<SegmentContext>): SegmentContext {
@@ -71,7 +77,7 @@ describe("model segment", () => {
 				},
 			}),
 		});
-		expect(stripAnsi(renderSegment("model", ctx).content)).toBe("Claude X");
+		assert.equal(stripAnsi(renderSegment("model", ctx).content), "Claude X");
 	});
 
 	it("folds the thinking level into the model segment when reasoning + level != off", () => {
@@ -83,8 +89,8 @@ describe("model segment", () => {
 			options: { model: { showThinkingLevel: true } },
 		});
 		const text = stripAnsi(renderSegment("model", ctx).content);
-		expect(text).toContain("M");
-		expect(text).toContain("high");
+		assert.match(text, new RegExp(escapeRegExp(String("M"))));
+		assert.match(text, new RegExp(escapeRegExp(String("high"))));
 	});
 
 	it("omits the thinking level when it is off", () => {
@@ -95,7 +101,7 @@ describe("model segment", () => {
 			}),
 			options: { model: { showThinkingLevel: true } },
 		});
-		expect(stripAnsi(renderSegment("model", ctx).content)).toBe("M");
+		assert.equal(stripAnsi(renderSegment("model", ctx).content), "M");
 	});
 
 	it("omits the thinking level when showThinkingLevel is false even if reasoning + high", () => {
@@ -106,7 +112,7 @@ describe("model segment", () => {
 			}),
 			options: { model: { showThinkingLevel: false } },
 		});
-		expect(stripAnsi(renderSegment("model", ctx).content)).toBe("M");
+		assert.equal(stripAnsi(renderSegment("model", ctx).content), "M");
 	});
 
 	it("shows the (provider) prefix when more than one provider is available", () => {
@@ -117,7 +123,7 @@ describe("model segment", () => {
 			availableProviderCount: 2,
 			options: { model: { showProviderPrefix: true } },
 		});
-		expect(stripAnsi(renderSegment("model", ctx).content)).toBe("(anthropic) M");
+		assert.equal(stripAnsi(renderSegment("model", ctx).content), "(anthropic) M");
 	});
 
 	it("omits the (provider) prefix when only one provider is available", () => {
@@ -128,33 +134,33 @@ describe("model segment", () => {
 			availableProviderCount: 1,
 			options: { model: { showProviderPrefix: true } },
 		});
-		expect(stripAnsi(renderSegment("model", ctx).content)).toBe("M");
+		assert.equal(stripAnsi(renderSegment("model", ctx).content), "M");
 	});
 });
 
 describe("mode segment", () => {
 	it("is hidden when no workflow phase is active", () => {
 		const ctx = makeCtx({ workflowPhase: undefined });
-		expect(renderSegment("mode", ctx)).toEqual({ content: "", visible: false });
+		assert.deepEqual(renderSegment("mode", ctx), { content: "", visible: false });
 	});
 
 	it("renders the active workflow phase", () => {
 		const ctx = makeCtx({ workflowPhase: "planner" });
-		expect(stripAnsi(renderSegment("mode", ctx).content)).toBe("planner");
+		assert.equal(stripAnsi(renderSegment("mode", ctx).content), "planner");
 	});
 });
 
 describe("git segment", () => {
 	it("is hidden when neither branch nor status is available (non-git cwd)", () => {
 		const ctx = makeCtx({ git: { branch: null, status: null } });
-		expect(renderSegment("git", ctx)).toEqual({ content: "", visible: false });
+		assert.deepEqual(renderSegment("git", ctx), { content: "", visible: false });
 	});
 
 	it("renders a clean branch with the dim color", () => {
 		const ctx = makeCtx({ git: { branch: "main", status: { staged: 0, unstaged: 0, untracked: 0 } } });
 		const rendered = renderSegment("git", ctx);
-		expect(rendered.visible).toBe(true);
-		expect(stripAnsi(rendered.content)).toBe("main");
+		assert.equal(rendered.visible, true);
+		assert.equal(stripAnsi(rendered.content), "main");
 	});
 
 	it("renders dirty indicators (*unstaged +staged ?untracked)", () => {
@@ -162,7 +168,7 @@ describe("git segment", () => {
 			git: { branch: "main", status: { staged: 2, unstaged: 3, untracked: 1 } },
 			options: { git: { showBranch: true, showStaged: true, showUnstaged: true, showUntracked: true } },
 		});
-		expect(stripAnsi(renderSegment("git", ctx).content)).toBe("main *3 +2 ?1");
+		assert.equal(stripAnsi(renderSegment("git", ctx).content), "main *3 +2 ?1");
 	});
 
 	it("respects showUntracked: false", () => {
@@ -170,62 +176,64 @@ describe("git segment", () => {
 			git: { branch: "main", status: { staged: 0, unstaged: 0, untracked: 5 } },
 			options: { git: { showUntracked: false } },
 		});
-		expect(stripAnsi(renderSegment("git", ctx).content)).toBe("main");
+		assert.equal(stripAnsi(renderSegment("git", ctx).content), "main");
 	});
 });
 
 describe("context_pct segment", () => {
 	it("renders a known percent and window", () => {
 		const ctx = makeCtx({ contextPercent: 12.3, contextWindow: 200_000, autoCompactEnabled: false });
-		expect(stripAnsi(renderSegment("context_pct", ctx).content)).toBe("12.3%/200k");
+		assert.equal(stripAnsi(renderSegment("context_pct", ctx).content), "12.3%/200k");
 	});
 
 	it("appends the (auto) indicator when auto-compaction is enabled", () => {
 		const ctx = makeCtx({ contextPercent: 12.3, contextWindow: 200_000, autoCompactEnabled: true });
-		expect(stripAnsi(renderSegment("context_pct", ctx).content)).toBe("12.3%/200k (auto)");
+		assert.equal(stripAnsi(renderSegment("context_pct", ctx).content), "12.3%/200k (auto)");
 	});
 
 	it("renders ? for the percent when it is null", () => {
 		const ctx = makeCtx({ contextPercent: null, contextWindow: 200_000 });
-		expect(stripAnsi(renderSegment("context_pct", ctx).content)).toBe("?/200k");
+		assert.equal(stripAnsi(renderSegment("context_pct", ctx).content), "?/200k");
 	});
 });
 
 describe("context_total segment", () => {
 	it("is hidden when the context window is 0", () => {
 		const ctx = makeCtx({ contextWindow: 0 });
-		expect(renderSegment("context_total", ctx)).toEqual({ content: "", visible: false });
+		assert.deepEqual(renderSegment("context_total", ctx), { content: "", visible: false });
 	});
 
 	it("renders the formatted window size", () => {
 		const ctx = makeCtx({ contextWindow: 200_000 });
-		expect(stripAnsi(renderSegment("context_total", ctx).content)).toBe("200k");
+		assert.equal(stripAnsi(renderSegment("context_total", ctx).content), "200k");
 	});
 });
 
 describe("token_in / token_out segments", () => {
 	it("token_in is hidden when input is 0", () => {
-		expect(renderSegment("token_in", makeCtx({ usageStats: { input: 0, output: 0 } }))).toEqual({
+		assert.deepEqual(renderSegment("token_in", makeCtx({ usageStats: { input: 0, output: 0 } })), {
 			content: "",
 			visible: false,
 		});
 	});
 
 	it("token_in renders the formatted input with an up arrow", () => {
-		expect(stripAnsi(renderSegment("token_in", makeCtx({ usageStats: { input: 1_234, output: 0 } })).content)).toBe(
+		assert.equal(
+			stripAnsi(renderSegment("token_in", makeCtx({ usageStats: { input: 1_234, output: 0 } })).content),
 			"↑1.2k",
 		);
 	});
 
 	it("token_out is hidden when output is 0", () => {
-		expect(renderSegment("token_out", makeCtx({ usageStats: { input: 0, output: 0 } }))).toEqual({
+		assert.deepEqual(renderSegment("token_out", makeCtx({ usageStats: { input: 0, output: 0 } })), {
 			content: "",
 			visible: false,
 		});
 	});
 
 	it("token_out renders the formatted output with a down arrow", () => {
-		expect(stripAnsi(renderSegment("token_out", makeCtx({ usageStats: { input: 0, output: 6_789 } })).content)).toBe(
+		assert.equal(
+			stripAnsi(renderSegment("token_out", makeCtx({ usageStats: { input: 0, output: 6_789 } })).content),
 			"↓6.8k",
 		);
 	});
@@ -234,28 +242,28 @@ describe("token_in / token_out segments", () => {
 describe("session_name segment", () => {
 	it("is hidden when the name is empty", () => {
 		const ctx = makeCtx({ session: makeSession({ sessionName: "" }) });
-		expect(renderSegment("session_name", ctx)).toEqual({ content: "", visible: false });
+		assert.deepEqual(renderSegment("session_name", ctx), { content: "", visible: false });
 	});
 
 	it("renders the session name", () => {
 		const ctx = makeCtx({ session: makeSession({ sessionName: "my-session" }) });
-		expect(stripAnsi(renderSegment("session_name", ctx).content)).toBe("my-session");
+		assert.equal(stripAnsi(renderSegment("session_name", ctx).content), "my-session");
 	});
 
 	it("sanitizes ANSI escape sequences and control characters in the name", () => {
 		const ctx = makeCtx({ session: makeSession({ sessionName: "\x1b[31mred\x1b[0m\x07name" }) });
 		// ANSI stripped + BEL (0x07) replaced with a space, then collapsed/trimmed.
-		expect(stripAnsi(renderSegment("session_name", ctx).content)).toBe("red name");
+		assert.equal(stripAnsi(renderSegment("session_name", ctx).content), "red name");
 	});
 });
 
 describe("subagents segment", () => {
 	it("is hidden when the count is 0", () => {
-		expect(renderSegment("subagents", makeCtx({ subagentCount: 0 }))).toEqual({ content: "", visible: false });
+		assert.deepEqual(renderSegment("subagents", makeCtx({ subagentCount: 0 })), { content: "", visible: false });
 	});
 
 	it("renders the count with the ↳ prefix when > 0", () => {
-		expect(stripAnsi(renderSegment("subagents", makeCtx({ subagentCount: 3 })).content)).toBe("↳3");
+		assert.equal(stripAnsi(renderSegment("subagents", makeCtx({ subagentCount: 3 })).content), "↳3");
 	});
 });
 
@@ -263,7 +271,7 @@ describe("path segment", () => {
 	it("abbreviates the home directory to ~", () => {
 		const home = process.env.HOME ?? process.env.USERPROFILE ?? "/home/user";
 		const ctx = makeCtx({ session: makeSession({ cwd: `${home}/project` }) });
-		expect(stripAnsi(renderSegment("path", ctx).content)).toBe("~/project");
+		assert.equal(stripAnsi(renderSegment("path", ctx).content), "~/project");
 	});
 
 	it("truncates a long path with a leading ellipsis to maxLength", () => {
@@ -273,8 +281,8 @@ describe("path segment", () => {
 			options: { path: { abbreviate: true, maxLength: 10, stripWorkPrefix: false } },
 		});
 		const text = stripAnsi(renderSegment("path", ctx).content);
-		expect(text.startsWith("…")).toBe(true);
-		expect(visibleWidth(text)).toBeLessThanOrEqual(10);
+		assert.equal(text.startsWith("…"), true);
+		assert.ok(visibleWidth(text) <= 10);
 	});
 
 	it("honors abbreviate=false for home-directory paths", () => {
@@ -283,56 +291,56 @@ describe("path segment", () => {
 			session: makeSession({ cwd: `${home}/project` }),
 			options: { path: { abbreviate: false, maxLength: 200 } },
 		});
-		expect(stripAnsi(renderSegment("path", ctx).content)).toBe(`${home}/project`);
+		assert.equal(stripAnsi(renderSegment("path", ctx).content), `${home}/project`);
 	});
 });
 
 describe("formatCwdForFooter", () => {
 	it("does not abbreviate sibling paths that share the home prefix", () => {
 		const home = process.env.HOME ?? process.env.USERPROFILE ?? "/home/user";
-		expect(formatCwdForFooter(`${home}2`, home)).toBe(`${home}2`);
+		assert.equal(formatCwdForFooter(`${home}2`, home), `${home}2`);
 	});
 
 	it("abbreviates the home directory and descendants", () => {
 		const home = process.env.HOME ?? process.env.USERPROFILE ?? "/home/user";
-		expect(formatCwdForFooter(home, home)).toBe("~");
-		expect(formatCwdForFooter(`${home}/project`, home)).toBe("~/project");
+		assert.equal(formatCwdForFooter(home, home), "~");
+		assert.equal(formatCwdForFooter(`${home}/project`, home), "~/project");
 	});
 });
 
 describe("formatTokens", () => {
 	it("formats raw counts under 1k as-is", () => {
-		expect(formatTokens(0)).toBe("0");
-		expect(formatTokens(999)).toBe("999");
+		assert.equal(formatTokens(0), "0");
+		assert.equal(formatTokens(999), "999");
 	});
 
 	it("formats 1k-10k with one decimal", () => {
-		expect(formatTokens(1_234)).toBe("1.2k");
+		assert.equal(formatTokens(1_234), "1.2k");
 	});
 
 	it("formats 10k-1M rounded", () => {
-		expect(formatTokens(12_345)).toBe("12k");
-		expect(formatTokens(200_000)).toBe("200k");
+		assert.equal(formatTokens(12_345), "12k");
+		assert.equal(formatTokens(200_000), "200k");
 	});
 });
 
 describe("sanitizeStatusText", () => {
 	it("strips ANSI escape sequences", () => {
-		expect(sanitizeStatusText("\x1b[31mred\x1b[0m")).toBe("red");
+		assert.equal(sanitizeStatusText("\x1b[31mred\x1b[0m"), "red");
 	});
 
 	it("replaces C0 control characters (including BEL) with a space", () => {
-		expect(sanitizeStatusText("a\x07b")).toBe("a b");
+		assert.equal(sanitizeStatusText("a\x07b"), "a b");
 	});
 
 	it("collapses runs of spaces and trims", () => {
-		expect(sanitizeStatusText("  a   b  ")).toBe("a b");
+		assert.equal(sanitizeStatusText("  a   b  "), "a b");
 	});
 
 	it("strips a raw escape that survives the first pass via the C0 fallback", () => {
 		// Lone ESC (0x1b) with no CSI tail is not matched by the ANSI pattern but
 		// is caught by the C0 control pattern.
-		expect(sanitizeStatusText("a\x1bb")).toBe("a b");
+		assert.equal(sanitizeStatusText("a\x1bb"), "a b");
 	});
 });
 
@@ -345,11 +353,11 @@ describe("computeUsageStats", () => {
 				{ type: "message", message: { role: "assistant", usage: { input: 5, output: 7 } } },
 			],
 		}) as unknown as SegmentContext["session"];
-		expect(computeUsageStats(session)).toEqual({ input: 105, output: 207 });
+		assert.deepEqual(computeUsageStats(session), { input: 105, output: 207 });
 	});
 
 	it("returns zeros when there are no assistant messages", () => {
 		const session = makeSession({ entries: [] }) as unknown as SegmentContext["session"];
-		expect(computeUsageStats(session)).toEqual({ input: 0, output: 0 });
+		assert.deepEqual(computeUsageStats(session), { input: 0, output: 0 });
 	});
 });

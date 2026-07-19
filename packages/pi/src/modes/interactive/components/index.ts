@@ -34,11 +34,6 @@ export { ThemeSelectorComponent } from "#pi/modes/interactive/components/selecto
 export { ThinkingSelectorComponent } from "#pi/modes/interactive/components/selectors/thinking-selector";
 export { TreeSelectorComponent } from "#pi/modes/interactive/components/selectors/tree-selector";
 export { UserMessageSelectorComponent } from "#pi/modes/interactive/components/selectors/user-message-selector";
-/** @deprecated Use `StatusLineComponent`. Constructor signature changed to `(session, footerData, settingsManager, requestRender)`. */
-export {
-	StatusLineComponent,
-	StatusLineComponent as FooterComponent,
-} from "#pi/modes/interactive/components/status-line/index";
 export {
 	ToolExecutionComponent,
 	type ToolExecutionOptions,

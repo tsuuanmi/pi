@@ -1,15 +1,13 @@
 import { isAbsolute, relative, resolve, sep } from "node:path";
-import { type ThemeColor, theme } from "@tsuuanmi/pi-tui";
-import {
-	getContextUsageLevel,
-	getContextUsageThemeColor,
-} from "#pi/modes/interactive/components/status-line/context-thresholds";
+import { getContextUsageLevel, getContextUsageThemeColor } from "#tui/components/status-line/context-thresholds";
 import type {
 	RenderedSegment,
 	SegmentContext,
 	StatusLineSegment,
 	StatusLineSegmentId,
-} from "#pi/modes/interactive/components/status-line/types";
+} from "#tui/components/status-line/types";
+import type { ThemeColor } from "#tui/theme/theme";
+import { theme } from "#tui/theme/theme";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Shared helpers (relocated from footer.ts)
@@ -76,9 +74,9 @@ export function computeUsageStats(session: SegmentContext["session"]): { input: 
 	let input = 0;
 	let output = 0;
 	for (const entry of session.sessionManager.getEntries()) {
-		if (entry.type === "message" && entry.message.role === "assistant") {
-			input += entry.message.usage.input;
-			output += entry.message.usage.output;
+		if (entry.type === "message" && entry.message?.role === "assistant") {
+			input += entry.message.usage?.input ?? 0;
+			output += entry.message.usage?.output ?? 0;
 		}
 	}
 	return { input, output };

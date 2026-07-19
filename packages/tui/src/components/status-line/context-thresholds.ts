@@ -1,4 +1,4 @@
-import type { ThemeColor } from "@tsuuanmi/pi-tui";
+import type { ThemeColor } from "#tui/theme/theme";
 
 export type ContextUsageLevel = "normal" | "warning" | "purple" | "error";
 

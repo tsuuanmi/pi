@@ -10,6 +10,7 @@ export { Text } from "#tui/components/display/text";
 export { TruncatedText } from "#tui/components/display/truncated-text";
 export { CancellableLoader } from "#tui/components/feedback/cancellable-loader";
 export { Loader, type LoaderIndicatorOptions } from "#tui/components/feedback/loader";
+export { collapsePlanningPipeline, renderHudBar } from "#tui/components/hud/render";
 export { Editor, type EditorTheme } from "#tui/components/inputs/editor";
 export { Input } from "#tui/components/inputs/input";
 // Components
@@ -23,6 +24,51 @@ export {
 	type SelectListTruncatePrimaryContext,
 } from "#tui/components/selection/select-list";
 export { type SettingItem, SettingsList, type SettingsListTheme } from "#tui/components/selection/settings-list";
+export {
+	type ContextUsageLevel,
+	getContextUsageLevel,
+	getContextUsageThemeColor,
+} from "#tui/components/status-line/context-thresholds";
+export {
+	type GitStatusSummary,
+	parseStatusPorcelain,
+	runGitStatusPorcelain,
+} from "#tui/components/status-line/git-utils";
+export { getPreset, STATUS_LINE_PRESETS } from "#tui/components/status-line/presets";
+export {
+	ALL_SEGMENT_IDS,
+	computeUsageStats,
+	formatCwdForFooter,
+	formatTokens,
+	renderSegment,
+	SEGMENTS,
+	sanitizeStatusText,
+} from "#tui/components/status-line/segments";
+export { getSeparator } from "#tui/components/status-line/separators";
+export {
+	StatusLineComponent,
+	StatusLineComponent as FooterComponent,
+} from "#tui/components/status-line/status-line";
+export type {
+	PresetDef,
+	RenderedSegment,
+	SegmentContext,
+	SeparatorDef,
+	StatusLineComponentOptions,
+	StatusLineDataProvider,
+	StatusLinePreset,
+	StatusLineSegment,
+	StatusLineSegmentId,
+	StatusLineSegmentOptions,
+	StatusLineSeparatorStyle,
+	StatusLineSessionLike,
+	StatusLineSettings,
+	StatusLineWorkflowEntry,
+	StatusLineWorkflowHudChip,
+	StatusLineWorkflowHudSeverity,
+	StatusLineWorkflowStateReader,
+	StatusLineWorkflowStateReaderOptions,
+} from "#tui/components/status-line/types";
 export {
 	type Component,
 	Container,

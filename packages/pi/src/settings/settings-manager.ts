@@ -1,10 +1,13 @@
 import { normalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Transport } from "@tsuuanmi/pi-ai";
+import type { StatusLineSettings } from "@tsuuanmi/pi-tui";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
 import { CONFIG_DIR_NAME, getAgentDir } from "#pi/config/config";
 import { DEFAULT_HTTP_IDLE_TIMEOUT_MS, parseHttpIdleTimeoutMs } from "#pi/exec/http-dispatcher";
+
+export type { StatusLineSettings } from "@tsuuanmi/pi-tui";
 
 export interface CompactionSettings {
 	enabled?: boolean; // default: true
@@ -45,85 +48,6 @@ export interface RetainedContextSettings {
 	dedupeReadResults?: boolean; // default: true
 	summarizeStaleToolResults?: boolean; // default: true
 	toolResultMaxBytes?: number; // default: 96000
-}
-
-/**
- * Status line segment identifiers. `thinking` is intentionally not a segment;
- * it is rendered inside `model` via `segmentOptions.model.showThinkingLevel`.
- */
-export type StatusLineSegmentId =
-	| "model"
-	| "mode"
-	| "git"
-	| "path"
-	| "context_pct"
-	| "context_total"
-	| "token_in"
-	| "token_out"
-	| "session_name"
-	| "subagents";
-
-/**
- * Status line separator visual style. Only `slash` is rendered today; any other
- * value falls back to slash. Defined as a union for forward-compatible
- * extensibility (additional separators can be added without a settings migration).
- */
-export type StatusLineSeparatorStyle = "slash";
-
-/**
- * Status line preset name. `default` ships the built-in layout; `custom` mirrors
- * `default` and is the home for user overrides applied via the other `StatusLineSettings`
- * fields.
- */
-export type StatusLinePreset = "default" | "custom";
-
-/** Per-segment rendering options for the status line. */
-export interface StatusLineSegmentOptions {
-	model?: {
-		/** Show the thinking level folded into the model segment (default: true). */
-		showThinkingLevel?: boolean;
-		/** Prepend `(provider)` when more than one provider is available (default: true). */
-		showProviderPrefix?: boolean;
-	};
-	path?: {
-		/** Abbreviate the displayed path (default: true). */
-		abbreviate?: boolean;
-		/** Maximum length before truncation, in characters (default: 40). */
-		maxLength?: number;
-		/** Strip a configured work-tree prefix (no-op in Pi; gajae-only; default: false). */
-		stripWorkPrefix?: boolean;
-	};
-	git?: {
-		/** Show the branch name (default: true). */
-		showBranch?: boolean;
-		/** Show the staged file count (default: true). */
-		showStaged?: boolean;
-		/** Show the unstaged file count (default: true). */
-		showUnstaged?: boolean;
-		/** Show the untracked file count (default: true). */
-		showUntracked?: boolean;
-	};
-}
-
-/**
- * Status line settings. The effective layout is resolved by combining the named
- * `preset` (defined in `modes/interactive/components/status-line/presets.ts`) with
- * any explicit overrides in these fields. Empty/undefined fields fall back to the
- * preset defaults.
- */
-export interface StatusLineSettings {
-	/** Preset name (default: "default"). */
-	preset?: StatusLinePreset;
-	/** Left-group segment ids, rendered left-to-right. */
-	leftSegments?: StatusLineSegmentId[];
-	/** Right-group segment ids, rendered right-aligned. */
-	rightSegments?: StatusLineSegmentId[];
-	/** Separator style between segments (default: "slash"). */
-	separator?: StatusLineSeparatorStyle;
-	/** Per-segment options. */
-	segmentOptions?: StatusLineSegmentOptions;
-	/** Render the skill HUD line above the status rail when workflows are active (default: true). */
-	showSkillHud?: boolean;
 }
 
 export type TransportSetting = Transport;
@@ -1072,7 +996,7 @@ export class SettingsManager {
 	/**
 	 * Get the status line settings. Returns the raw user/project settings (possibly
 	 * empty); the effective layout is resolved by the component against the named
-	 * preset (see `modes/interactive/components/status-line/presets.ts`).
+	 * preset (see `StatusLineComponent` in `@tsuuanmi/pi-tui`).
 	 */
 	getStatusLine(): StatusLineSettings {
 		return this.settings.statusLine ?? {};

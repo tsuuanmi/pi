@@ -36,6 +36,7 @@ import {
 	ProcessTerminal,
 	rawKeyHint,
 	Spacer,
+	StatusLineComponent,
 	setKeybindings,
 	setRegisteredThemes,
 	setTheme,
@@ -47,6 +48,7 @@ import {
 	TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
+import { readWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import chalk from "chalk";
 import { spawn } from "child_process";
 import { APP_NAME, VERSION } from "#pi/config/config";
@@ -66,7 +68,6 @@ import { CompactionSummaryMessageComponent } from "#pi/modes/interactive/compone
 import { CustomMessageComponent } from "#pi/modes/interactive/components/messages/custom-message";
 import { SkillInvocationMessageComponent } from "#pi/modes/interactive/components/messages/skill-invocation-message";
 import { UserMessageComponent } from "#pi/modes/interactive/components/messages/user-message";
-import { StatusLineComponent } from "#pi/modes/interactive/components/status-line/index";
 import { ToolExecutionComponent } from "#pi/modes/interactive/components/tool-execution";
 import { CountdownTimer } from "#pi/modes/interactive/components/widgets/countdown-timer";
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
@@ -282,8 +283,17 @@ export class InteractiveMode {
 		this.editorContainer = new Container();
 		this.editorContainer.addChild(this.editor as Component);
 		this.footerDataProvider = new FooterDataProvider(this.sessionManager.getCwd());
-		this.footer = new StatusLineComponent(this.session, this.footerDataProvider, this.settingsManager, () =>
-			this.ui.requestRender(),
+		this.footer = new StatusLineComponent(
+			this.session,
+			this.footerDataProvider,
+			this.settingsManager,
+			() => this.ui.requestRender(),
+			{
+				readWorkflowEntries: async ({ cwd, sessionId }) => {
+					const state = await readWorkflowActiveState(cwd, { sessionId });
+					return state?.active_workflows;
+				},
+			},
 		);
 		this.footer.setAutoCompactEnabled(this.session.autoCompactionEnabled);
 
@@ -1162,11 +1172,10 @@ export class InteractiveMode {
 				break;
 
 			case "turn_end": {
-				// End-of-turn updates (including workflow HUD refreshes) need a render
-				// trigger after the core agent loop finishes. Extension-only lifecycle
-				// events such as session_start and before_agent_start do not flow through
-				// AgentSessionEvent, so they are covered by UI init, agent_start, and the
-				// HUD refresh callback instead.
+				// End-of-turn updates need a render trigger after the core agent loop
+				// finishes. Extension-only lifecycle events such as session_start and
+				// before_agent_start do not flow through AgentSessionEvent, so they are
+				// covered by UI init and agent_start instead.
 				this.ui.requestRender();
 				break;
 			}

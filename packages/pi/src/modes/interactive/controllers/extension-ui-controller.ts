@@ -8,13 +8,12 @@
  * `toolOutputExpanded`). Pure structural / zero behavior change.
  */
 
-import type { Component, EditorComponent, OverlayHandle, OverlayOptions } from "@tsuuanmi/pi-tui";
+import type { Component, EditorComponent, OverlayHandle, OverlayOptions, StatusLineComponent } from "@tsuuanmi/pi-tui";
 import { Container, Spacer, Text, type Theme, type TUI, theme } from "@tsuuanmi/pi-tui";
 import type { ExtensionUIDialogOptions, ExtensionWidgetOptions } from "#pi/extensions/index";
 import { ExtensionEditorComponent } from "#pi/modes/interactive/components/extension-editor";
 import { ExtensionInputComponent } from "#pi/modes/interactive/components/extension-input";
 import { ExtensionSelectorComponent } from "#pi/modes/interactive/components/selectors/extension-selector";
-import type { StatusLineComponent } from "#pi/modes/interactive/components/status-line/index";
 import type { FooterDataProvider, ReadonlyFooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
 

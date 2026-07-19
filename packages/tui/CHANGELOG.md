@@ -11,6 +11,7 @@
 
 ### Added
 
+- Exported the reusable status line and workflow HUD components from TUI.
 - Exported Pi's reusable theme engine and bundled default theme JSON/schema from TUI.
 - Exported reusable rendering utilities migrated from Pi: ANSI stripping, keybinding text formatting, visual-line truncation, and optional-theme diff rendering.
 - Exported `sliceByColumn` for ANSI-aware horizontal column slicing.

@@ -188,7 +188,6 @@ export {
 	ExtensionEditorComponent,
 	ExtensionInputComponent,
 	ExtensionSelectorComponent,
-	FooterComponent,
 	keyHint,
 	keyText,
 	LoginDialogComponent,

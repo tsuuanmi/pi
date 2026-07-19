@@ -9,7 +9,7 @@ import {
 	type OAuthSelectPrompt,
 	type OpenAICodexUsageSummary,
 } from "@tsuuanmi/pi-ai";
-import type { Component, Container, EditorComponent, TUI } from "@tsuuanmi/pi-tui";
+import type { Component, Container, EditorComponent, StatusLineComponent, TUI } from "@tsuuanmi/pi-tui";
 import { getAgentDir, getAuthPath } from "#pi/config/config";
 import { defaultModelPerProvider } from "#pi/model/model-resolver";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#pi/model/provider-utils";
@@ -23,7 +23,6 @@ import {
 	type AuthSelectorProvider,
 	OAuthSelectorComponent,
 } from "#pi/modes/interactive/components/selectors/oauth-selector";
-import type { StatusLineComponent } from "#pi/modes/interactive/components/status-line/index";
 import type { FooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
 import type { AgentSession } from "#pi/session/agent-session";
 import { stripJsonComments } from "#pi/utils/fs/index";

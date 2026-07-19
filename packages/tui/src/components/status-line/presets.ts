@@ -1,4 +1,4 @@
-import type { PresetDef, StatusLinePreset } from "#pi/modes/interactive/components/status-line/types";
+import type { PresetDef, StatusLinePreset } from "#tui/components/status-line/types";
 
 /**
  * Built-in status line presets. Only the 10 Pi segment ids are used

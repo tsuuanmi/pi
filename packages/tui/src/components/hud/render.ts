@@ -1,4 +1,4 @@
-import { collapsePlanningPipeline, type WorkflowActiveEntry, type WorkflowHudChip } from "@tsuuanmi/pi-workflows";
+import type { StatusLineWorkflowEntry, StatusLineWorkflowHudChip } from "#tui/components/status-line/types";
 
 const ANSI_RESET_FG = "\x1b[39m";
 const ANSI_RESET_BOLD = "\x1b[22m";
@@ -7,6 +7,7 @@ const ANSI_ACCENT = "\x1b[36m";
 const ANSI_DIM = "\x1b[2m";
 const ANSI_BOLD = "\x1b[1m";
 const ANSI_PATTERN = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
+const PLANNING_PIPELINE_SKILLS = new Set<string>(["deep-interview", "ralplan", "ultragoal"]);
 
 function visibleWidth(text: string): number {
 	return text.replace(ANSI_PATTERN, "").length;
@@ -27,22 +28,44 @@ function sanitizeHudPart(value: string | undefined): string {
 		.trim();
 }
 
-function compareEntries(a: WorkflowActiveEntry, b: WorkflowActiveEntry): number {
+function entryRecency(entry: StatusLineWorkflowEntry): number {
+	const timestamp = entry.updated_at ? Date.parse(entry.updated_at) : Number.NaN;
+	return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY;
+}
+
+/** Collapse planning-pipeline entries to the most recently updated stage. */
+export function collapsePlanningPipeline(entries: readonly StatusLineWorkflowEntry[]): StatusLineWorkflowEntry[] {
+	const pipeline = entries.filter((entry) => PLANNING_PIPELINE_SKILLS.has(entry.skill));
+	if (pipeline.length <= 1) return [...entries];
+	let current = pipeline[0];
+	let currentRecency = entryRecency(current);
+	for (const entry of pipeline) {
+		const recency = entryRecency(entry);
+		const better = Number.isFinite(recency) && (!Number.isFinite(currentRecency) || recency > currentRecency);
+		if (better) {
+			current = entry;
+			currentRecency = recency;
+		}
+	}
+	return entries.filter((entry) => !PLANNING_PIPELINE_SKILLS.has(entry.skill) || entry === current);
+}
+
+function compareEntries(a: StatusLineWorkflowEntry, b: StatusLineWorkflowEntry): number {
 	return a.skill.localeCompare(b.skill) || (a.phase ?? "").localeCompare(b.phase ?? "");
 }
 
-function compareChips(a: WorkflowHudChip, b: WorkflowHudChip): number {
+function compareChips(a: StatusLineWorkflowHudChip, b: StatusLineWorkflowHudChip): number {
 	return (a.priority ?? 50) - (b.priority ?? 50) || a.label.localeCompare(b.label);
 }
 
-function chipPrefix(chip: WorkflowHudChip): string {
+function chipPrefix(chip: StatusLineWorkflowHudChip): string {
 	if (chip.severity === "error") return "!";
 	if (chip.severity === "blocked") return "block";
 	if (chip.severity === "warning") return "warn";
 	return "";
 }
 
-function formatChip(chip: WorkflowHudChip): string | null {
+function formatChip(chip: StatusLineWorkflowHudChip): string | null {
 	const label = sanitizeHudPart(chip.label);
 	const value = sanitizeHudPart(chip.value);
 	if (!label) return null;
@@ -51,7 +74,7 @@ function formatChip(chip: WorkflowHudChip): string | null {
 	return prefix ? `${prefix}:${body}` : body;
 }
 
-function formatEntry(entry: WorkflowActiveEntry): string {
+function formatEntry(entry: StatusLineWorkflowEntry): string {
 	const skill = sanitizeHudPart(entry.skill);
 	const phase = sanitizeHudPart(entry.phase);
 	const base = phase ? `${skill}:${phase}` : skill;
@@ -68,15 +91,15 @@ function formatEntry(entry: WorkflowActiveEntry): string {
 }
 
 /**
- * Render the skill HUD bar (`◆ hud ...`) for the active workflow entries.
+ * Render the HUD bar (`◆ hud ...`) for the active workflow entries.
  *
  * Returns the styled single line, or null when there are no visible active
  * entries (or width <= 0). Pipeline skills (deep-interview -> ralplan ->
  * ultragoal) are collapsed to the most recently updated stage so the HUD does
  * not show stale upstream skills after a handoff. Ported from gajae-code
- * `skill-hud/render.ts`; ANSI styling and severity prefixes are verbatim.
+ * `hud/render.ts`; ANSI styling and severity prefixes are verbatim.
  */
-export function renderSkillHudBar(entries: readonly WorkflowActiveEntry[], width: number): string | null {
+export function renderHudBar(entries: readonly StatusLineWorkflowEntry[], width: number): string | null {
 	const visible = collapsePlanningPipeline(entries.filter((entry) => entry.active !== false));
 	const active = visible.filter((entry) => sanitizeHudPart(entry.skill)).sort(compareEntries);
 	if (active.length === 0 || width <= 0) return null;
