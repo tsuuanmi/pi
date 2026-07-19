@@ -67,6 +67,7 @@
 
 ### Changed
 
+- Interactive model thinking blocks now render as one-line previews by default; `Ctrl+O` expands or truncates both tool output and thinking details.
 - Moved OpenAI Codex quota display out of the HUD/status line and into an improved `/account` selector with clearer columns and in-place best-effort quota updates for each stored Codex account.
 - Moved bundled workflow agent profiles out of coding-agent core and into the `pi:workflows` package as package `agents` resources.
 - Moved OpenAI Codex quota usage helpers from coding-agent core into `@tsuuanmi/pi-ai`; coding-agent now consumes them through the AI package.
