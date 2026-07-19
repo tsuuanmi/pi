@@ -12,8 +12,7 @@ import "#workflows/harness/team/team-transitions";
 import "#workflows/harness/ultragoal/ultragoal-transitions";
 
 // Workflow commands
-export { runStateCommand } from "#workflows/commands/state-command";
-export { handleWorkflowCommand, runWorkflowCommand } from "#workflows/commands/workflow";
+export { handleWorkflowCommand, runStateCommand, runWorkflowCommand } from "#workflows/commands/workflow";
 // Extension entry point
 export { default } from "#workflows/extensions/workflows";
 export * from "#workflows/harness/deep-interview/deep-interview-hud";

@@ -10,9 +10,13 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
+		"./commands/workflow": {
+			"types": "./dist/commands/workflow.d.ts",
+			"import": "./dist/commands/workflow.js"
+		},
 		"./commands/state-command": {
-			"types": "./dist/commands/state-command.d.ts",
-			"import": "./dist/commands/state-command.js"
+			"types": "./dist/commands/workflow.d.ts",
+			"import": "./dist/commands/workflow.js"
 		},
 		"./runtime/*": {
 			"types": "./dist/runtime/*.d.ts",

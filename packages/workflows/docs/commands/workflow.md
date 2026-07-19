@@ -6,8 +6,7 @@ Command entry points live under `src/commands/`.
 
 | Module | Description |
 |--------|-------------|
-| `workflow.ts` | Parses and routes `pi workflow ...` lifecycle, state, skill, GC, event, and retire verbs. |
-| `state-command.ts` | Implements `pi workflow state <skill> <read|write|clear|handoff|active|doctor>`. |
+| `workflow.ts` | Parses and routes `pi workflow ...` lifecycle, state, skill, GC, event, and retire verbs, including `pi workflow state <skill> <read|write|clear|handoff|active|doctor>`. |
 
 ## Top-Level Verbs
 

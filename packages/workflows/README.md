@@ -322,7 +322,8 @@ import {
 
 The default export is the workflows extension that the coding agent loads. Subpath exports:
 
-- `@tsuuanmi/pi-workflows/commands/state-command` — the `pi workflow state` command.
+- `@tsuuanmi/pi-workflows/commands/workflow` — the `pi workflow` command, including `pi workflow state`.
+- `@tsuuanmi/pi-workflows/commands/state-command` — compatibility alias for `commands/workflow`.
 - `@tsuuanmi/pi-workflows/runtime/*` — individual harness runtime modules (sessions, leases, RPC, GC, mutation, storage, receipt rules, etc.).
 
 See `src/index.ts` for the complete barrel.
