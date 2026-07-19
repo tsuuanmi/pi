@@ -1,4 +1,4 @@
-import type { AssistantMessage, AssistantMessageEvent } from "#ai/core/types";
+import type { AssistantMessage, AssistantMessageEvent } from "#ai/types";
 
 // Generic event stream class for async iteration
 export class EventStream<T, R = T> implements AsyncIterable<T> {
@@ -85,4 +85,12 @@ export class AssistantMessageEventStream extends EventStream<AssistantMessageEve
 /** Factory function for AssistantMessageEventStream (for use in extensions) */
 export function createAssistantMessageEventStream(): AssistantMessageEventStream {
 	return new AssistantMessageEventStream();
+}
+
+export function headersToRecord(headers: Headers): Record<string, string> {
+	const result: Record<string, string> = {};
+	headers.forEach((value, key) => {
+		result[key] = value;
+	});
+	return result;
 }

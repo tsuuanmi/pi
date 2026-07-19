@@ -4,7 +4,7 @@ OpenAI prompt caching support for reducing token costs on repeated context.
 
 ## Overview
 
-`openai-prompt-cache.ts` implements prompt caching for OpenAI models that support it. When enabled, the provider sends cache control headers that instruct OpenAI to cache portions of the context, reducing costs on subsequent requests.
+OpenAI provider modules implement prompt caching for models that support it. When enabled, the provider sends cache control headers that instruct OpenAI to cache portions of the context, reducing costs on subsequent requests.
 
 ## Cache Retention
 

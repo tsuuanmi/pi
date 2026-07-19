@@ -9,7 +9,12 @@ import type {
 	ChatCompletionSystemMessageParam,
 	ChatCompletionToolMessageParam,
 } from "openai/resources/chat/completions.js";
-import { getProviderEnvValue } from "#ai/auth/provider-env";
+import { getProviderEnvValue } from "#ai/auth/env-api-keys";
+import { calculateCost, clampThinkingLevel } from "#ai/models/index";
+import { parseStreamingJson, sanitizeSurrogates } from "#ai/parsing/json-parse";
+import { buildBaseOptions, clampOpenAIPromptCacheKey } from "#ai/providers/openai/simple-options";
+import { transformMessages } from "#ai/providers/openai/transform-messages";
+import { AssistantMessageEventStream, headersToRecord } from "#ai/transport/event-stream";
 import type {
 	AssistantMessage,
 	CacheRetention,
@@ -27,15 +32,7 @@ import type {
 	Tool,
 	ToolCall,
 	ToolResultMessage,
-} from "#ai/core/types";
-import { calculateCost, clampThinkingLevel } from "#ai/models/index";
-import { parseStreamingJson } from "#ai/parsing/json-parse";
-import { sanitizeSurrogates } from "#ai/parsing/sanitize-unicode";
-import { clampOpenAIPromptCacheKey } from "#ai/providers/openai/prompt-cache";
-import { buildBaseOptions } from "#ai/providers/openai/simple-options";
-import { transformMessages } from "#ai/providers/openai/transform-messages";
-import { AssistantMessageEventStream } from "#ai/transport/event-stream";
-import { headersToRecord } from "#ai/transport/headers";
+} from "#ai/types";
 
 /**
  * Check if conversation messages contain tool calls or tool results.

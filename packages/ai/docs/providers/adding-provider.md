@@ -2,7 +2,7 @@
 
 Adding a new LLM provider requires changes across multiple files. This checklist covers all steps.
 
-## 1. Core Types (`src/core/types.ts`)
+## 1. Shared Types (`src/types.ts`)
 
 - Add the API identifier to `KnownApi` (e.g., `"bedrock-converse"`)
 - Create an options interface extending `StreamOptions` (e.g., `BedrockOptions`)

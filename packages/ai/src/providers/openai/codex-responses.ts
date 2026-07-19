@@ -20,7 +20,20 @@ if (typeof process !== "undefined" && (process.versions?.node || process.version
 	});
 }
 
-import { registerSessionResourceCleanup } from "#ai/core/session-resources";
+import { clampThinkingLevel } from "#ai/models/index";
+import { registerSessionResourceCleanup } from "#ai/providers/api-registry";
+import {
+	convertResponsesMessages,
+	convertResponsesTools,
+	processResponsesStream,
+} from "#ai/providers/openai/responses-shared";
+import {
+	applyOpenAIServiceTierPricing,
+	buildBaseOptions,
+	clampOpenAIPromptCacheKey,
+} from "#ai/providers/openai/simple-options";
+import { AssistantMessageEventStream, headersToRecord } from "#ai/transport/event-stream";
+import { resolveHttpProxyUrlForTarget } from "#ai/transport/node-http-proxy";
 import type {
 	Api,
 	AssistantMessage,
@@ -30,25 +43,8 @@ import type {
 	SimpleStreamOptions,
 	StreamFunction,
 	StreamOptions,
-} from "#ai/core/types";
-import {
-	appendAssistantMessageDiagnostic,
-	createAssistantMessageDiagnostic,
-	formatThrownValue,
-} from "#ai/diagnostics/assistant-message";
-import { clampThinkingLevel } from "#ai/models/index";
-import { applyOpenAIServiceTierPricing } from "#ai/providers/openai/pricing";
-import { clampOpenAIPromptCacheKey } from "#ai/providers/openai/prompt-cache";
-import {
-	convertResponsesMessages,
-	convertResponsesTools,
-	processResponsesStream,
-} from "#ai/providers/openai/responses-shared";
-import { buildBaseOptions } from "#ai/providers/openai/simple-options";
-import { combineAbortSignals } from "#ai/transport/abort-signals";
-import { AssistantMessageEventStream } from "#ai/transport/event-stream";
-import { headersToRecord } from "#ai/transport/headers";
-import { resolveHttpProxyUrlForTarget } from "#ai/transport/node-http-proxy";
+} from "#ai/types";
+import { appendAssistantMessageDiagnostic, createAssistantMessageDiagnostic, formatThrownValue } from "#ai/types";
 
 // ============================================================================
 // Configuration
@@ -74,6 +70,48 @@ const CODEX_RESPONSE_STATUSES = new Set<CodexResponseStatus>([
 	"queued",
 	"in_progress",
 ]);
+
+interface CombinedAbortSignal {
+	signal?: AbortSignal;
+	cleanup: () => void;
+}
+
+function combineAbortSignals(signals: readonly (AbortSignal | undefined)[]): CombinedAbortSignal {
+	const activeSignals = signals.filter((signal): signal is AbortSignal => signal !== undefined);
+	if (activeSignals.length === 0) {
+		return { cleanup: () => {} };
+	}
+	if (activeSignals.length === 1) {
+		return { signal: activeSignals[0], cleanup: () => {} };
+	}
+
+	const controller = new AbortController();
+	const listeners: Array<{ signal: AbortSignal; listener: () => void }> = [];
+	const abort = (signal: AbortSignal) => {
+		if (!controller.signal.aborted) {
+			controller.abort(signal.reason);
+		}
+	};
+
+	for (const signal of activeSignals) {
+		if (signal.aborted) {
+			abort(signal);
+			break;
+		}
+		const listener = () => abort(signal);
+		signal.addEventListener("abort", listener, { once: true });
+		listeners.push({ signal, listener });
+	}
+
+	return {
+		signal: controller.signal,
+		cleanup: () => {
+			for (const { signal, listener } of listeners) {
+				signal.removeEventListener("abort", listener);
+			}
+		},
+	};
+}
 
 // ============================================================================
 // Types

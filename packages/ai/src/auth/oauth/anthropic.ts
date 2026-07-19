@@ -6,11 +6,10 @@
  */
 
 import type { Server } from "node:http";
-import { parseOAuthAuthorizationInput } from "#ai/auth/oauth/authorization-input";
+import { getProviderEnvValue } from "#ai/auth/env-api-keys";
 import { oauthErrorHtml, oauthSuccessHtml } from "#ai/auth/oauth/oauth-page";
-import { generatePKCE } from "#ai/auth/oauth/pkce";
 import type { OAuthCredentials, OAuthLoginCallbacks, OAuthPrompt, OAuthProviderInterface } from "#ai/auth/oauth/types";
-import { getProviderEnvValue } from "#ai/auth/provider-env";
+import { generatePKCE, parseOAuthAuthorizationInput } from "#ai/auth/oauth/types";
 
 type CallbackServerInfo = {
 	server: Server;

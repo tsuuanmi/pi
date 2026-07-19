@@ -1,4 +1,9 @@
-import { clearApiProviders, registerApiProvider } from "#ai/core/api-registry";
+import type { AnthropicOptions } from "#ai/providers/anthropic/index";
+import { clearApiProviders, registerApiProvider } from "#ai/providers/api-registry";
+import type { OpenAICodexResponsesOptions } from "#ai/providers/openai/codex-responses";
+import type { OpenAICompletionsOptions } from "#ai/providers/openai/completions";
+import type { OpenAIResponsesOptions } from "#ai/providers/openai/responses";
+import { AssistantMessageEventStream } from "#ai/transport/event-stream";
 import type {
 	Api,
 	AssistantMessage,
@@ -8,12 +13,7 @@ import type {
 	SimpleStreamOptions,
 	StreamFunction,
 	StreamOptions,
-} from "#ai/core/types";
-import type { AnthropicOptions } from "#ai/providers/anthropic/index";
-import type { OpenAICodexResponsesOptions } from "#ai/providers/openai/codex-responses";
-import type { OpenAICompletionsOptions } from "#ai/providers/openai/completions";
-import type { OpenAIResponsesOptions } from "#ai/providers/openai/responses";
-import { AssistantMessageEventStream } from "#ai/transport/event-stream";
+} from "#ai/types";
 
 interface LazyProviderModule<
 	TApi extends Api,

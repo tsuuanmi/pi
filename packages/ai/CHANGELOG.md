@@ -21,6 +21,8 @@
 
 ### Changed
 
+- Reorganized the internal source layout to remove the generic `src/core` folder and colocate small helpers with their owning modules.
+- Consolidated provider tests into provider-level test files and removed overly specific credential-dependent smoke/cache-affinity cases.
 - Generalized the OAuth device-code timeout hint to refer to VM clock drift instead of WSL.
 - `openai-completions` now emits `prompt_cache_key` for all providers when cache retention is not `none` (previously only for `api.openai.com` base URLs or long-retention compat). Use `compat.supportsPromptCacheKey: false` to opt out per-provider.
 - `openai-completions` now drops prior-turn field-name-signature reasoning (`reasoning`/`reasoning_content`/`reasoning_text`) on replay, keeping only the last assistant turn's reasoning, to reduce re-billed input tokens on reasoning providers (e.g. GLM, llama.cpp, gpt-oss). Encrypted/redacted reasoning (`reasoning_details` from `thoughtSignature`; Anthropic `redacted_thinking`) is preserved.

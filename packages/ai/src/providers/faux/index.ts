@@ -1,4 +1,5 @@
-import { registerApiProvider, unregisterApiProviders } from "#ai/core/api-registry";
+import { registerApiProvider, unregisterApiProviders } from "#ai/providers/api-registry";
+import { createAssistantMessageEventStream } from "#ai/transport/event-stream";
 import type {
 	AssistantMessage,
 	AssistantMessageEventStream,
@@ -13,8 +14,7 @@ import type {
 	ToolCall,
 	ToolResultMessage,
 	Usage,
-} from "#ai/core/types";
-import { createAssistantMessageEventStream } from "#ai/transport/event-stream";
+} from "#ai/types";
 
 const DEFAULT_API = "faux";
 const DEFAULT_PROVIDER = "faux";

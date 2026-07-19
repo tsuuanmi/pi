@@ -1,4 +1,4 @@
-import type { AssistantMessage } from "#ai/core/types";
+import type { AssistantMessage } from "#ai/types";
 
 /**
  * Regex patterns to detect context overflow errors from supported providers.

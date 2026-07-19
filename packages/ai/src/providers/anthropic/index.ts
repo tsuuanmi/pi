@@ -7,7 +7,12 @@ import type {
 	RawMessageStreamEvent,
 	RefusalStopDetails,
 } from "@anthropic-ai/sdk/resources/messages.js";
-import { getProviderEnvValue } from "#ai/auth/provider-env";
+import { getProviderEnvValue } from "#ai/auth/env-api-keys";
+import { calculateCost } from "#ai/models/index";
+import { parseJsonWithRepair, parseStreamingJson, sanitizeSurrogates } from "#ai/parsing/json-parse";
+import { buildBaseOptions } from "#ai/providers/openai/simple-options";
+import { transformMessages } from "#ai/providers/openai/transform-messages";
+import { AssistantMessageEventStream, headersToRecord } from "#ai/transport/event-stream";
 import type {
 	AnthropicMessagesCompat,
 	Api,
@@ -26,14 +31,7 @@ import type {
 	Tool,
 	ToolCall,
 	ToolResultMessage,
-} from "#ai/core/types";
-import { calculateCost } from "#ai/models/index";
-import { parseJsonWithRepair, parseStreamingJson } from "#ai/parsing/json-parse";
-import { sanitizeSurrogates } from "#ai/parsing/sanitize-unicode";
-import { buildBaseOptions } from "#ai/providers/openai/simple-options";
-import { transformMessages } from "#ai/providers/openai/transform-messages";
-import { AssistantMessageEventStream } from "#ai/transport/event-stream";
-import { headersToRecord } from "#ai/transport/headers";
+} from "#ai/types";
 
 /**
  * Resolve cache retention preference.

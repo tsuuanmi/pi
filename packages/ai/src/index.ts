@@ -14,14 +14,10 @@ export type {
 	OAuthSelectOption,
 	OAuthSelectPrompt,
 } from "#ai/auth/oauth/types";
-export * from "#ai/core/api-registry";
-export * from "#ai/core/session-resources";
-export * from "#ai/core/stream";
-export * from "#ai/core/types";
-export * from "#ai/diagnostics/assistant-message";
 export * from "#ai/models/index";
 export * from "#ai/parsing/json-parse";
 export type { AnthropicEffort, AnthropicOptions, AnthropicThinkingDisplay } from "#ai/providers/anthropic/index";
+export * from "#ai/providers/api-registry";
 export * from "#ai/providers/faux/index";
 export type {
 	OpenAICodexResponsesOptions,
@@ -38,7 +34,8 @@ export {
 export type { OpenAICompletionsOptions } from "#ai/providers/openai/completions";
 export type { OpenAIResponsesOptions } from "#ai/providers/openai/responses";
 export * from "#ai/providers/register-builtins";
-export * from "#ai/schema/typebox-helpers";
 export * from "#ai/schema/validation";
+export * from "#ai/stream";
 export * from "#ai/text/overflow";
 export * from "#ai/transport/event-stream";
+export * from "#ai/types";

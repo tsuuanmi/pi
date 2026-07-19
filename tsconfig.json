@@ -31,7 +31,7 @@
 			"@tsuuanmi/pi-ai/openai-codex-usage": ["./packages/ai/src/providers/openai/codex-usage.ts"],
 			"@tsuuanmi/pi-ai/openai-completions": ["./packages/ai/src/providers/openai/completions.ts"],
 			"@tsuuanmi/pi-ai/openai-responses": ["./packages/ai/src/providers/openai/responses.ts"],
-			"@tsuuanmi/pi-ai/*": ["./packages/ai/src/*.ts", "./packages/ai/src/core/*.ts", "./packages/ai/src/auth/*.ts", "./packages/ai/src/models/*.ts", "./packages/ai/src/providers/*/index.ts", "./packages/ai/src/providers/openai/*.ts"],
+			"@tsuuanmi/pi-ai/*": ["./packages/ai/src/*.ts", "./packages/ai/src/auth/*.ts", "./packages/ai/src/models/*.ts", "./packages/ai/src/providers/*.ts", "./packages/ai/src/providers/*/index.ts", "./packages/ai/src/providers/openai/*.ts"],
 			"@tsuuanmi/pi-ai/dist/*": ["./packages/ai/src/*"],
 			"#ai/*": ["./packages/ai/src/*"],
 			"#ai-test/*": ["./packages/ai/test/*"],

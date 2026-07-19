@@ -27,16 +27,14 @@ Unified LLM API with automatic model discovery, provider configuration, token an
 ## Utilities
 
 - [Validation](validation.md) - TypeBox schema validation, `validateToolCall`, and custom validators.
-- [Utility Functions](utilities.md) - `StringEnum`, `shortHash`, `visibleWidth`, JSON repair parsing, proxy configuration, and session resource cleanup.
-- [Abort Signals](utils/abort-signals.md) - `timeoutSignal()`, `composeSignals()`, and cancellation patterns.
+- [Utility Functions](utilities.md) - `StringEnum`, JSON repair parsing, proxy configuration, and session resource cleanup.
 - [Diagnostics](utils/diagnostics.md) - Diagnostic collection for provider requests.
 - [Event Stream](utils/event-stream.md) - `EventStream` class for typed async streaming.
-- [Hash](utils/hash.md) - `shortHash()` for session and request identifiers.
 - [HTTP Headers](utils/headers.md) - Header construction for provider requests.
 - [JSON Parse](utils/json-parse.md) - `parseStreamingJson()`, `repairJson()` for LLM output parsing.
 - [Node HTTP Proxy](utils/node-http-proxy.md) - HTTP proxy configuration for Node.js.
 - [Overflow](utils/overflow.md) - Context overflow detection.
 - [Provider Environment](utils/provider-env.md) - `getProviderEnvValue()`, `findEnvKeys()`, `getEnvApiKey()`.
 - [Sanitize Unicode](utils/sanitize-unicode.md) - `sanitizeSurrogates()` for safe text handling.
-- [TypeBox Helpers](utils/typebox-helpers.md) - `createStringEnum()`, `toJsonSchema()` for tool schemas.
+- [TypeBox Helpers](utils/typebox-helpers.md) - `StringEnum()` for tool schemas.
 - [OAuth](utils/oauth.md) - Anthropic and OpenAI Codex OAuth login flows, token refresh, and credential management.

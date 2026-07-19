@@ -1059,7 +1059,7 @@ const response = await complete(model, {
 
 Adding a new LLM provider requires changes across multiple files. This checklist covers all necessary steps:
 
-#### 1. Core Types (`src/core/types.ts`)
+#### 1. Shared Types (`src/types.ts`)
 
 - Add the API identifier to `KnownApi` (for example `"bedrock-converse-stream"`)
 - Create an options interface extending `StreamOptions` (for example `BedrockOptions`)

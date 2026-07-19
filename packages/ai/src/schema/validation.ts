@@ -1,9 +1,26 @@
+import { type TUnsafe, Type } from "typebox";
 import { Compile } from "typebox/compile";
 import type { TLocalizedValidationError } from "typebox/error";
 import { Value } from "typebox/value";
-import type { Tool, ToolCall } from "#ai/core/types";
+import type { Tool, ToolCall } from "#ai/types";
 
 const validatorCache = new WeakMap<object, ReturnType<typeof Compile>>();
+/**
+ * Creates a string enum schema compatible with providers
+ * that don't support anyOf/const patterns.
+ */
+export function StringEnum<T extends readonly string[]>(
+	values: T,
+	options?: { description?: string; default?: T[number] },
+): TUnsafe<T[number]> {
+	return Type.Unsafe<T[number]>({
+		type: "string",
+		enum: values as any,
+		...(options?.description && { description: options.description }),
+		...(options?.default && { default: options.default }),
+	});
+}
+
 const TYPEBOX_KIND = Symbol.for("TypeBox.Kind");
 
 interface JsonSchemaObject {

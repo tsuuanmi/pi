@@ -2,18 +2,14 @@
 
 Utility functions for working with TypeBox schemas in tool definitions.
 
-## `createStringEnum()`
+## `StringEnum()`
 
 ```typescript
-import { createStringEnum } from "@tsuuanmi/pi-ai";
+import { StringEnum } from "@tsuuanmi/pi-ai";
 
-const StatusSchema = createStringEnum(["active", "inactive", "pending"]);
+const StatusSchema = StringEnum(["active", "inactive", "pending"]);
 // Creates a TypeBox schema that validates string enum values
 ```
-
-## `toJsonSchema()`
-
-Converts TypeBox schemas to JSON Schema format for provider tool definitions.
 
 ## See Also
 

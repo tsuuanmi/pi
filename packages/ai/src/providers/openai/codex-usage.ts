@@ -1,4 +1,4 @@
-import type { Api, Model } from "#ai/core/types";
+import type { Api, Model } from "#ai/types";
 
 const CODEX_USAGE_PATH = "wham/usage";
 const JWT_AUTH_CLAIM = "https://api.openai.com/auth";

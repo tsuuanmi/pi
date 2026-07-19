@@ -1,7 +1,7 @@
 import "#ai/providers/register-builtins";
 
 import { getEnvApiKey } from "#ai/auth/env-api-keys";
-import { getApiProvider } from "#ai/core/api-registry";
+import { getApiProvider } from "#ai/providers/api-registry";
 import type {
 	Api,
 	AssistantMessage,
@@ -11,7 +11,7 @@ import type {
 	ProviderStreamOptions,
 	SimpleStreamOptions,
 	StreamOptions,
-} from "#ai/core/types";
+} from "#ai/types";
 
 export { getEnvApiKey } from "#ai/auth/env-api-keys";
 

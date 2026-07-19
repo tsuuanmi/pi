@@ -17,10 +17,9 @@ if (typeof process !== "undefined" && (process.versions?.node || process.version
 	});
 }
 
-import { parseOAuthAuthorizationInput } from "#ai/auth/oauth/authorization-input";
+import { getProviderEnvValue } from "#ai/auth/env-api-keys";
 import { pollOAuthDeviceCodeFlow } from "#ai/auth/oauth/device-code";
 import { oauthErrorHtml, oauthSuccessHtml } from "#ai/auth/oauth/oauth-page";
-import { generatePKCE } from "#ai/auth/oauth/pkce";
 import type {
 	OAuthCredentials,
 	OAuthDeviceCodeInfo,
@@ -28,7 +27,7 @@ import type {
 	OAuthPrompt,
 	OAuthProviderInterface,
 } from "#ai/auth/oauth/types";
-import { getProviderEnvValue } from "#ai/auth/provider-env";
+import { generatePKCE, parseOAuthAuthorizationInput } from "#ai/auth/oauth/types";
 
 const CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann";
 const AUTH_BASE_URL = "https://auth.openai.com";
