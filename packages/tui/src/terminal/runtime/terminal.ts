@@ -1,7 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { setKittyProtocolActive } from "#tui/input/keyboard/keys";
-import { isNativeModifierPressed } from "#tui/input/keyboard/native-modifiers";
 import { StdinBuffer } from "#tui/input/stream/stdin-buffer";
 
 const APPLE_TERMINAL_SHIFT_ENTER_SEQUENCE = "\x1b[13;2u";
@@ -288,11 +287,7 @@ export class ProcessTerminal implements Terminal {
 	private forwardInputSequence(sequence: string): void {
 		if (!this.inputHandler) return;
 		const isAppleTerminal = sequence === "\r" && isAppleTerminalSession();
-		const input = normalizeAppleTerminalInput(
-			sequence,
-			isAppleTerminal,
-			isAppleTerminal && isNativeModifierPressed("shift"),
-		);
+		const input = normalizeAppleTerminalInput(sequence, isAppleTerminal, false);
 		this.inputHandler(input);
 	}
 

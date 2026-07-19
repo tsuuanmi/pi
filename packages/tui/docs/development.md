@@ -22,10 +22,6 @@ npx vitest --run
 ```
 packages/tui/
 ├── docs/                    # Documentation
-├── native/                  # Native prebuilt binaries
-│   └── darwin/
-│       ├── prebuilds/
-│       └── src/
 ├── src/
 │   ├── core/
 │   │   └── tui.ts           # TUI container, Component, Focusable, Overlay
@@ -43,7 +39,7 @@ packages/tui/
 │   │   ├── history/         # UndoStack
 │   │   └── navigation/      # Word boundary navigation
 │   ├── input/
-│   │   ├── keyboard/        # Keybindings, key detection, native modifiers
+│   │   ├── keyboard/        # Keybindings and key detection
 │   │   └── stream/          # Input buffering for escape sequences
 │   └── terminal/
 │       ├── features/        # Capabilities and OSC 11 color parsing
