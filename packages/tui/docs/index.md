@@ -4,12 +4,12 @@ Minimal terminal UI framework with differential rendering and synchronized outpu
 
 ## Start here
 
-- [Core API](core-api.md) - `TUI`, `Terminal`, `Component`, and `Focusable` interfaces.
-- [Terminal Interface](terminal/terminal.md) - `ProcessTerminal`, `VirtualTerminal`, Kitty protocol negotiation, and bracketed paste.
-- [Terminal Capabilities](terminal/capabilities.md) - True color detection, OSC 8 hyperlink support, and tmux forwarding.
+- [Core API](core/tui.md) - `TUI`, `Terminal`, `Component`, and `Focusable` interfaces.
+- [Terminal Interface](terminal/runtime/terminal.md) - `ProcessTerminal`, `VirtualTerminal`, Kitty protocol negotiation, and bracketed paste.
+- [Terminal Capabilities](terminal/features/capabilities.md) - True color detection, OSC 8 hyperlink support, and tmux forwarding.
 - [Differential Rendering](rendering.md) - Three-strategy rendering system, synchronized output, and update protocols.
-- [Autocomplete](editor/autocomplete.md) - `CombinedAutocompleteProvider`, slash commands, file path completion, and custom providers.
-- [Utilities](utilities.md) - `visibleWidth`, `truncateToWidth`, `wrapTextWithAnsi`, `sliceByColumn`, `sliceWithWidth`, and ANSI-aware utilities.
+- [Autocomplete](editor/completion/autocomplete.md) - `CombinedAutocompleteProvider`, slash commands, file path completion, and custom providers.
+- [Utilities](utilities/text.md) - `visibleWidth`, `truncateToWidth`, `wrapTextWithAnsi`, `sliceByColumn`, `sliceWithWidth`, and ANSI-aware utilities.
 - [Custom Components](custom-components.md) - Building components, handling input, line width constraints, caching, and IME support.
 
 ## Components
@@ -18,8 +18,8 @@ Minimal terminal UI framework with differential rendering and synchronized outpu
 
 ## Input
 
-- [Key Detection](input/keys.md) - `matchesKey()`, `Key` helper, Kitty keyboard protocol, and key identifiers.
-- [Keybindings](input/keybindings.md) - `TUI_KEYBINDINGS`, `KeybindingsManager`, and custom keybinding configuration.
+- [Key Detection](input/keyboard/keys.md) - `matchesKey()`, `Key` helper, Kitty keyboard protocol, and key identifiers.
+- [Keybindings](input/keyboard/keybindings.md) - `TUI_KEYBINDINGS`, `KeybindingsManager`, and custom keybinding configuration.
 
 ## Overlays
 

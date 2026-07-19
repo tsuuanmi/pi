@@ -43,7 +43,7 @@
 			"#coding-agent-test/*": ["./packages/coding-agent/test/*"],
 			"typebox": ["./node_modules/typebox"],
 			"@tsuuanmi/pi-tui": ["./packages/tui/src/index.ts"],
-			"@tsuuanmi/pi-tui/test/virtual-terminal": ["./packages/tui/test/virtual-terminal.ts"],
+			"@tsuuanmi/pi-tui/test/terminal/runtime/virtual-terminal": ["./packages/tui/test/terminal/runtime/virtual-terminal.ts"],
 			"@tsuuanmi/pi-tui/test/*": ["./packages/tui/test/*"],
 			"@tsuuanmi/pi-tui/*": ["./packages/tui/src/*"],
 			"#tui/*": ["./packages/tui/src/*"],

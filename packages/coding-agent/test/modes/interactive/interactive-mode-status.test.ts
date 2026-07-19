@@ -8,7 +8,7 @@ import {
 	type Focusable,
 	TUI,
 } from "@tsuuanmi/pi-tui";
-import { VirtualTerminal } from "@tsuuanmi/pi-tui/test/virtual-terminal";
+import { VirtualTerminal } from "@tsuuanmi/pi-tui/test/terminal/runtime/virtual-terminal";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import type { AutocompleteProviderFactory } from "#coding-agent/api/types";
 import type { SourceInfo } from "#coding-agent/core/resources/source-info";
