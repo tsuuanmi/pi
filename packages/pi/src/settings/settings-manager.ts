@@ -69,7 +69,24 @@ export type PackageSource =
 			agents?: string[];
 	  };
 
+export interface ModelProviderSettings {
+	name?: string;
+	baseUrl?: string;
+	apiKey?: string;
+	api?: string;
+	headers?: Record<string, string>;
+	compat?: Record<string, unknown>;
+	authHeader?: boolean;
+	models?: Array<Record<string, unknown> & { id: string }>;
+	modelOverrides?: Record<string, Record<string, unknown>>;
+}
+
+export interface ModelsSettings {
+	providers?: Record<string, ModelProviderSettings>;
+}
+
 export interface Settings {
+	providers?: Record<string, ModelProviderSettings>;
 	defaultProvider?: string;
 	defaultModel?: string;
 	defaultThinkingLevel?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
@@ -588,6 +605,18 @@ export class SettingsManager {
 	getSessionDir(): string | undefined {
 		const sessionDir = this.settings.sessionDir;
 		return sessionDir ? normalizePath(sessionDir) : sessionDir;
+	}
+
+	getModelsConfig(): ModelsSettings | undefined {
+		return this.settings.providers ? { providers: structuredClone(this.settings.providers) } : undefined;
+	}
+
+	upsertModelProvider(providerId: string, provider: ModelProviderSettings): void {
+		const providers = { ...(this.globalSettings.providers ?? {}) };
+		providers[providerId] = provider;
+		this.globalSettings.providers = providers;
+		this.markModified("providers", providerId);
+		this.save();
 	}
 
 	getDefaultProvider(): string | undefined {

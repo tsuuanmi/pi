@@ -88,11 +88,11 @@ Use this when pi should use different provider settings than the project shell e
 
 The `key` field supports command execution, environment interpolation, and literals; see [models.md](./models.md) for the full config value syntax. OAuth credentials are also stored here after `/account add` and managed automatically.
 
-When a custom provider also has `apiKey` in `models.json`, `auth.json` wins. The `models.json` key is only a fallback when there is no active stored account or environment key.
+When a custom provider also has `apiKey` in `settings.json`, `auth.json` wins. The `settings.json` key is only a fallback when there is no active stored account or environment key.
 
 ## Custom Providers
 
-Custom providers can be added with `/provider add` or through `models.json`; see [models.md](./models.md) and [custom-provider.md](./custom-provider.md). For providers that need custom API implementations or OAuth flows, create an extension; see [custom-provider.md](./custom-provider.md).
+Custom providers can be added with `/provider add` or through `settings.json`; see [models.md](./models.md) and [custom-provider.md](./custom-provider.md). For providers that need custom API implementations or OAuth flows, create an extension; see [custom-provider.md](./custom-provider.md).
 
 ## Resolution Order
 
@@ -100,4 +100,4 @@ When resolving credentials for a provider:
 
 1. `auth.json` entry (API key or OAuth token)
 2. Environment variable
-3. Custom provider keys from `models.json`
+3. Custom provider keys from `settings.json`

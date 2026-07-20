@@ -101,7 +101,7 @@ describe("ModelRegistry", () => {
 
 			const registry = ModelRegistry.create(authStorage, modelsJsonPath);
 
-			expect(registry.getError()).toContain("Invalid models.json schema:");
+			expect(registry.getError()).toContain("Invalid models settings schema:");
 			expect(registry.getError()).toContain("providers.custom-provider.models.0.id");
 		});
 	});
@@ -310,6 +310,24 @@ describe("ModelRegistry", () => {
 
 			expect(sonnetModels).toHaveLength(1);
 			expect(sonnetModels[0].baseUrl).toBe("https://my-proxy.example.com/v1");
+		});
+
+		test("ollama-cloud duplicate custom models keep generated metadata", () => {
+			writeRawModelsJson({
+				"ollama-cloud": {
+					baseUrl: "https://ollama.com/v1",
+					api: "openai-completions",
+					models: [{ id: "gpt-oss:120b", contextWindow: 1000, maxTokens: 1000 }],
+				},
+			});
+
+			const registry = ModelRegistry.create(authStorage, modelsJsonPath);
+			const models = getModelsForProvider(registry, "ollama-cloud");
+			const gptOssModels = models.filter((m) => m.id === "gpt-oss:120b");
+
+			expect(gptOssModels).toHaveLength(1);
+			expect(gptOssModels[0].contextWindow).toBeGreaterThan(1000);
+			expect(gptOssModels[0].maxTokens).toBeGreaterThan(1000);
 		});
 
 		test("custom provider with same name as built-in does not affect other built-in providers", () => {
@@ -1488,7 +1506,7 @@ describe("ModelRegistry", () => {
 
 				expect(registry.getProviderAuthStatus("custom-provider")).toEqual({
 					configured: true,
-					source: "models_json_key",
+					source: "settings_json_key",
 				});
 			});
 
@@ -1528,7 +1546,7 @@ describe("ModelRegistry", () => {
 
 				expect(registry.getProviderAuthStatus("custom-provider")).toEqual({
 					configured: true,
-					source: "models_json_command",
+					source: "settings_json_command",
 				});
 				expect(readFileSync(counterFile, "utf-8")).toBe("0");
 			});

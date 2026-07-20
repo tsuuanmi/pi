@@ -37,7 +37,10 @@ import {
 	resolveHeadersOrThrow,
 } from "#pi/config/resolve-config-value";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#pi/model/provider-utils";
+import type { ModelsSettings, SettingsManager } from "#pi/settings/settings-manager";
 import { stripJsonComments } from "#pi/utils/fs/index";
+
+const BUILT_IN_GENERATED_MODEL_PROVIDERS = new Set<string>(["ollama-cloud"]);
 
 // Schema for thinking level support and provider-specific values
 const ThinkingLevelMapValueSchema = Type.Union([Type.String(), Type.Null()]);
@@ -144,7 +147,7 @@ const ProviderConfigSchema = Type.Object({
 });
 
 const ModelsConfigSchema = Type.Object({
-	providers: Type.Record(Type.String(), ProviderConfigSchema),
+	providers: Type.Optional(Type.Record(Type.String(), ProviderConfigSchema)),
 });
 
 const validateModelsConfig = Compile(ModelsConfigSchema);
@@ -175,7 +178,7 @@ export type ResolvedRequestAuth =
 			error: string;
 	  };
 
-/** Result of loading custom models from models.json */
+/** Result of loading custom models from settings.json */
 interface CustomModelsResult {
 	models: Model<Api>[];
 	/** Providers with baseUrl/headers/apiKey overrides for built-in models */
@@ -187,6 +190,14 @@ interface CustomModelsResult {
 
 function emptyCustomModelsResult(error?: string): CustomModelsResult {
 	return { models: [], overrides: new Map(), modelOverrides: new Map(), error };
+}
+
+function loadModelsConfigFromPath(modelsJsonPath: string): ModelsSettings | undefined {
+	if (!existsSync(modelsJsonPath)) {
+		return undefined;
+	}
+	const content = readFileSync(modelsJsonPath, "utf-8");
+	return JSON.parse(stripJsonComments(content)) as ModelsSettings;
 }
 
 function mergeCompat(
@@ -248,24 +259,49 @@ export class ModelRegistry {
 	private registeredProviders: Map<string, ProviderConfigInput> = new Map();
 	private loadError: string | undefined = undefined;
 	readonly authStorage: AuthStorage;
-	private modelsJsonPath: string | undefined;
+	private modelsConfigProvider: (() => ModelsSettings | undefined) | undefined;
+	private modelsConfigPath: string | undefined;
 
-	private constructor(authStorage: AuthStorage, modelsJsonPath: string | undefined) {
+	private constructor(
+		authStorage: AuthStorage,
+		modelsConfigProvider: (() => ModelsSettings | undefined) | undefined,
+		modelsConfigPath: string | undefined,
+	) {
 		this.authStorage = authStorage;
-		this.modelsJsonPath = modelsJsonPath ? normalizePath(modelsJsonPath) : undefined;
+		this.modelsConfigProvider = modelsConfigProvider;
+		this.modelsConfigPath = modelsConfigPath ? normalizePath(modelsConfigPath) : undefined;
 		this.loadModels();
 	}
 
-	static create(authStorage: AuthStorage, modelsJsonPath: string = join(getAgentDir(), "models.json")): ModelRegistry {
-		return new ModelRegistry(authStorage, modelsJsonPath);
+	static create(authStorage: AuthStorage, settingsManagerOrModelsJsonPath?: SettingsManager | string): ModelRegistry {
+		if (typeof settingsManagerOrModelsJsonPath === "string") {
+			return ModelRegistry.createFromModelsJson(authStorage, settingsManagerOrModelsJsonPath);
+		}
+		return new ModelRegistry(
+			authStorage,
+			settingsManagerOrModelsJsonPath ? () => settingsManagerOrModelsJsonPath.getModelsConfig() : undefined,
+			"settings.json",
+		);
+	}
+
+	static createFromModelsConfig(authStorage: AuthStorage, modelsConfig?: ModelsSettings): ModelRegistry {
+		return new ModelRegistry(authStorage, () => modelsConfig, "settings.json");
+	}
+
+	static createFromModelsJson(
+		authStorage: AuthStorage,
+		modelsJsonPath: string = join(getAgentDir(), "models.json"),
+	): ModelRegistry {
+		const normalizedPath = normalizePath(modelsJsonPath);
+		return new ModelRegistry(authStorage, () => loadModelsConfigFromPath(normalizedPath), normalizedPath);
 	}
 
 	static inMemory(authStorage: AuthStorage): ModelRegistry {
-		return new ModelRegistry(authStorage, undefined);
+		return new ModelRegistry(authStorage, undefined, undefined);
 	}
 
 	/**
-	 * Reload models from disk (built-in + custom from models.json).
+	 * Reload models from settings (built-in + custom providers/overrides).
 	 */
 	refresh(): void {
 		this.providerRequestConfigs.clear();
@@ -284,20 +320,20 @@ export class ModelRegistry {
 	}
 
 	/**
-	 * Get any error from loading models.json (undefined if no error).
+	 * Get any error from loading model settings (undefined if no error).
 	 */
 	getError(): string | undefined {
 		return this.loadError;
 	}
 
 	private loadModels(): void {
-		// Load custom models and overrides from models.json
+		// Load custom models and overrides from settings.json
 		const {
 			models: customModels,
 			overrides,
 			modelOverrides,
 			error,
-		} = this.modelsJsonPath ? this.loadCustomModels(this.modelsJsonPath) : emptyCustomModelsResult();
+		} = this.modelsConfigProvider ? this.loadCustomModels(this.modelsConfigProvider()) : emptyCustomModelsResult();
 
 		if (error) {
 			this.loadError = error;
@@ -351,13 +387,15 @@ export class ModelRegistry {
 		});
 	}
 
-	/** Merge custom models into built-in list by provider+id (custom wins on conflicts). */
+	/** Merge custom models into built-in list by provider+id. */
 	private mergeCustomModels(builtInModels: Model<Api>[], customModels: Model<Api>[]): Model<Api>[] {
 		const merged = [...builtInModels];
 		for (const customModel of customModels) {
 			const existingIndex = merged.findIndex((m) => m.provider === customModel.provider && m.id === customModel.id);
 			if (existingIndex >= 0) {
-				merged[existingIndex] = customModel;
+				if (!BUILT_IN_GENERATED_MODEL_PROVIDERS.has(customModel.provider)) {
+					merged[existingIndex] = customModel;
+				}
 			} else {
 				merged.push(customModel);
 			}
@@ -365,14 +403,13 @@ export class ModelRegistry {
 		return merged;
 	}
 
-	private loadCustomModels(modelsJsonPath: string): CustomModelsResult {
-		if (!existsSync(modelsJsonPath)) {
+	private loadCustomModels(configInput: ModelsSettings | undefined): CustomModelsResult {
+		if (!configInput) {
 			return emptyCustomModelsResult();
 		}
 
 		try {
-			const content = readFileSync(modelsJsonPath, "utf-8");
-			const parsed = JSON.parse(stripJsonComments(content)) as unknown;
+			const parsed = configInput as unknown;
 
 			if (!validateModelsConfig.Check(parsed)) {
 				const errors =
@@ -380,7 +417,7 @@ export class ModelRegistry {
 						.Errors(parsed)
 						.map((error) => `  - ${formatTypeBoxValidationPath(error)}: ${error.message}`)
 						.join("\n") || "Unknown schema error";
-				return emptyCustomModelsResult(`Invalid models.json schema:\n${errors}\n\nFile: ${modelsJsonPath}`);
+				return emptyCustomModelsResult(`Invalid models settings schema:\n${errors}${this.configSourceSuffix()}`);
 			}
 
 			const config = parsed as ModelsConfig;
@@ -391,7 +428,7 @@ export class ModelRegistry {
 			const overrides = new Map<string, ProviderOverride>();
 			const modelOverrides = new Map<string, Map<string, ModelOverride>>();
 
-			for (const [providerName, providerConfig] of Object.entries(config.providers)) {
+			for (const [providerName, providerConfig] of Object.entries(config.providers ?? {})) {
 				if (providerConfig.baseUrl || providerConfig.compat) {
 					overrides.set(providerName, {
 						baseUrl: providerConfig.baseUrl,
@@ -411,19 +448,20 @@ export class ModelRegistry {
 
 			return { models: this.parseModels(config), overrides, modelOverrides, error: undefined };
 		} catch (error) {
-			if (error instanceof SyntaxError) {
-				return emptyCustomModelsResult(`Failed to parse models.json: ${error.message}\n\nFile: ${modelsJsonPath}`);
-			}
 			return emptyCustomModelsResult(
-				`Failed to load models.json: ${error instanceof Error ? error.message : error}\n\nFile: ${modelsJsonPath}`,
+				`Failed to load model settings: ${error instanceof Error ? error.message : error}${this.configSourceSuffix()}`,
 			);
 		}
+	}
+
+	private configSourceSuffix(): string {
+		return this.modelsConfigPath ? `\n\nFile: ${this.modelsConfigPath}` : "";
 	}
 
 	private validateConfig(config: ModelsConfig): void {
 		const builtInProviders = new Set<string>(getProviders());
 
-		for (const [providerName, providerConfig] of Object.entries(config.providers)) {
+		for (const [providerName, providerConfig] of Object.entries(config.providers ?? {})) {
 			const isBuiltIn = builtInProviders.has(providerName);
 			const hasProviderApi = !!providerConfig.api;
 			const models = providerConfig.models ?? [];
@@ -439,7 +477,7 @@ export class ModelRegistry {
 				}
 			} else if (!isBuiltIn) {
 				// Non-built-in providers with custom models require an endpoint. Auth can come from
-				// auth.json, environment variables, or models.json apiKey fallback.
+				// auth.json, environment variables, or settings.json apiKey fallback.
 				if (!providerConfig.baseUrl) {
 					throw new Error(`Provider ${providerName}: "baseUrl" is required when defining custom models.`);
 				}
@@ -483,7 +521,7 @@ export class ModelRegistry {
 			return defaults;
 		};
 
-		for (const [providerName, providerConfig] of Object.entries(config.providers)) {
+		for (const [providerName, providerConfig] of Object.entries(config.providers ?? {})) {
 			const modelDefs = providerConfig.models ?? [];
 			if (modelDefs.length === 0) continue; // Override-only, no custom models
 
@@ -523,7 +561,7 @@ export class ModelRegistry {
 
 	/**
 	 * Get all models (built-in + custom).
-	 * If models.json had errors, returns only built-in models.
+	 * If model settings had errors, returns only built-in models.
 	 */
 	getAll(): Model<Api>[] {
 		return this.models;
@@ -643,7 +681,7 @@ export class ModelRegistry {
 	}
 
 	/**
-	 * Return auth status for a provider, including request auth configured in models.json.
+	 * Return auth status for a provider, including request auth configured in settings.json.
 	 * This intentionally does not execute command-backed config values.
 	 */
 	getProviderAuthStatus(provider: string): AuthStatus {
@@ -658,7 +696,7 @@ export class ModelRegistry {
 		}
 
 		if (isCommandConfigValue(providerApiKey)) {
-			return { configured: true, source: "models_json_command" };
+			return { configured: true, source: "settings_json_command" };
 		}
 
 		const envVarNames = getConfigValueEnvVarNames(providerApiKey);
@@ -668,7 +706,7 @@ export class ModelRegistry {
 				: { configured: false };
 		}
 
-		return { configured: true, source: "models_json_key" };
+		return { configured: true, source: "settings_json_key" };
 	}
 
 	/**

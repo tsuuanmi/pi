@@ -44,7 +44,7 @@ export type AuthStorageData = Record<string, AuthStorageEntry>;
 
 export type AuthStatus = {
 	configured: boolean;
-	source?: "stored" | "runtime" | "environment" | "fallback" | "models_json_key" | "models_json_command";
+	source?: "stored" | "runtime" | "environment" | "fallback" | "settings_json_key" | "settings_json_command";
 	label?: string;
 };
 
@@ -266,7 +266,7 @@ export class AuthStorage {
 
 	/**
 	 * Set a fallback resolver for API keys not found in auth.json or env vars.
-	 * Used for custom provider keys from models.json.
+	 * Used for custom provider keys from settings.json.
 	 */
 	setFallbackResolver(resolver: (provider: string) => string | undefined): void {
 		this.fallbackResolver = resolver;
@@ -627,7 +627,7 @@ export class AuthStorage {
 	 * 2. API key from auth.json
 	 * 3. OAuth token from auth.json (auto-refreshed with locking)
 	 * 4. Environment variable
-	 * 5. Fallback resolver (models.json custom providers)
+	 * 5. Fallback resolver (settings.json custom providers)
 	 */
 	async getApiKey(
 		providerId: string,
@@ -689,7 +689,7 @@ export class AuthStorage {
 		const envKey = getEnvApiKey(providerId);
 		if (envKey) return envKey;
 
-		// Fall back to custom resolver (e.g., models.json custom providers)
+		// Fall back to custom resolver (e.g., settings.json custom providers)
 		if (options?.includeFallback !== false) {
 			return this.fallbackResolver?.(providerId) ?? undefined;
 		}

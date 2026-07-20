@@ -165,10 +165,10 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 				return theme.fg("success", " ✓ runtime API key");
 			case "fallback":
 				return theme.fg("success", " ✓ custom API key");
-			case "models_json_key":
-				return theme.fg("success", " ✓ key in models.json");
-			case "models_json_command":
-				return theme.fg("success", " ✓ command in models.json");
+			case "settings_json_key":
+				return theme.fg("success", " ✓ key in settings.json");
+			case "settings_json_command":
+				return theme.fg("success", " ✓ command in settings.json");
 			default:
 				return theme.fg("muted", " • unconfigured");
 		}

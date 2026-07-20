@@ -672,7 +672,7 @@ export class InteractiveMode {
 
 		const modelsJsonError = this.session.modelRegistry.getError();
 		if (modelsJsonError) {
-			this.showError(`models.json error: ${modelsJsonError}`);
+			this.showError(`Model settings error: ${modelsJsonError}`);
 		}
 
 		if (modelFallbackMessage) {
@@ -2290,7 +2290,7 @@ export class InteractiveMode {
 			});
 			const modelsJsonError = this.session.modelRegistry.getError();
 			if (modelsJsonError) {
-				this.showError(`models.json error: ${modelsJsonError}`);
+				this.showError(`Model settings error: ${modelsJsonError}`);
 			}
 			this.showStatus("Reloaded keybindings, extensions, skills, prompts, themes");
 		} catch (error) {

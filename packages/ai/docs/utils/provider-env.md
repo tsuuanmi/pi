@@ -50,7 +50,8 @@ Returns the configured environment variable names that can provide credentials f
 import { getEnvApiKey } from "@tsuuanmi/pi-ai";
 
 const key = getEnvApiKey("openai"); // reads OPENAI_API_KEY
-const key = getEnvApiKey("anthropic"); // reads ANTHROPIC_OAUTH_TOKEN first, then ANTHROPIC_API_KEY
+const ollamaKey = getEnvApiKey("ollama-cloud"); // reads OLLAMA_API_KEY
+const anthropicKey = getEnvApiKey("anthropic"); // reads ANTHROPIC_OAUTH_TOKEN first, then ANTHROPIC_API_KEY
 ```
 
 Returns the first set credential value for a provider, or `undefined` if none is configured. The `stream`/`complete` entrypoints call this automatically when no explicit `apiKey` is passed.
@@ -61,6 +62,7 @@ Returns the first set credential value for a provider, or `undefined` if none is
 |----------|----------------------------------|
 | `anthropic` | `ANTHROPIC_OAUTH_TOKEN`, `ANTHROPIC_API_KEY` |
 | `openai` | `OPENAI_API_KEY` |
+| `ollama-cloud` | `OLLAMA_API_KEY` |
 
 Other providers have no built-in credential lookup; pass `apiKey` explicitly or extend the registry.
 

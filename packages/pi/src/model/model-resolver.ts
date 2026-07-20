@@ -15,6 +15,7 @@ export const defaultModelPerProvider: Record<KnownProvider, string> = {
 	anthropic: "claude-opus-4-8",
 	openai: "gpt-5.4",
 	"openai-codex": "gpt-5.5",
+	"ollama-cloud": "gpt-oss:120b",
 };
 
 export interface ScopedModel {
@@ -321,7 +322,7 @@ export function resolveCliModel(options: {
 		return {
 			model: undefined,
 			warning: undefined,
-			error: "No models available. Check your installation or add models to models.json.",
+			error: "No models available. Check your installation or add models to settings.json.",
 		};
 	}
 

@@ -35,7 +35,7 @@ Returns all available provider names:
 ```typescript
 import { getProviders } from "@tsuuanmi/pi-ai";
 
-console.log(getProviders()); // ['anthropic', 'openai', 'openai-codex']
+console.log(getProviders()); // ['anthropic', 'ollama-cloud', 'openai']
 ```
 
 ## Model Interface
@@ -197,6 +197,7 @@ Built-in providers are lazy-loaded: the provider module is imported on first use
 |----------|-------------|
 | Anthropic | `ANTHROPIC_API_KEY`, `ANTHROPIC_OAUTH_TOKEN` |
 | OpenAI | `OPENAI_API_KEY` |
+| Ollama Cloud | `OLLAMA_API_KEY` |
 
 ### `getEnvApiKey(provider, env?)`
 
@@ -204,6 +205,7 @@ Built-in providers are lazy-loaded: the provider module is imported on first use
 import { getEnvApiKey } from "@tsuuanmi/pi-ai";
 
 const key = getEnvApiKey("openai"); // checks OPENAI_API_KEY
+const ollamaKey = getEnvApiKey("ollama-cloud"); // checks OLLAMA_API_KEY
 ```
 
 ### Provider-Scoped Environment Overrides

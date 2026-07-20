@@ -1,6 +1,6 @@
 # Custom Models
 
-Add custom providers and models (Ollama, vLLM, LM Studio, proxies) with `/provider add` or via `~/.pi/agent/models.json`.
+Add custom providers and models (Ollama, vLLM, LM Studio, proxies) with `/provider add` or via `~/.pi/agent/settings.json`.
 
 ## Table of Contents
 
@@ -32,7 +32,7 @@ Add one or more API keys as named accounts:
 /account ollama-cloud work
 ```
 
-This writes provider/model config to `models.json` and credentials to `auth.json`. Use `/account remove ollama-cloud work` to remove one stored key, or `/account remove ollama-cloud` to remove all stored keys for that provider.
+This writes provider/model config to `settings.json` and credentials to `auth.json`. Use `/account remove ollama-cloud work` to remove one stored key, or `/account remove ollama-cloud` to remove all stored keys for that provider.
 
 ## Minimal Example
 
@@ -46,15 +46,19 @@ For local models (Ollama, LM Studio, vLLM), only `id` is required per model:
       "api": "openai-completions",
       "apiKey": "ollama",
       "models": [
-        { "id": "llama3.1:8b" },
-        { "id": "local-coder" }
+        {
+          "id": "llama3.1:8b"
+        },
+        {
+          "id": "local-coder"
+        }
       ]
     }
   }
 }
 ```
 
-The `apiKey` is optional when credentials are stored with `/account add` or supplied by provider environment variables. Local Ollama ignores API keys, so any value works if you choose to keep one in `models.json`.
+The `apiKey` is optional when credentials are stored with `/account add` or supplied by provider environment variables. Local Ollama ignores API keys, so any value works if you choose to keep one in `settings.json`.
 
 Some OpenAI-compatible servers do not understand the `developer` role used for reasoning-capable models. For those providers, set `compat.supportsDeveloperRole` to `false` so pi sends the system prompt as a `system` message instead. If the server also does not support `reasoning_effort`, set `compat.supportsReasoningEffort` to `false` too.
 
@@ -98,10 +102,17 @@ Override defaults when you need specific values:
           "id": "llama3.1:8b",
           "name": "Llama 3.1 8B (Local)",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "contextWindow": 128000,
           "maxTokens": 32000,
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          }
         }
       ]
     }
@@ -158,7 +169,7 @@ The `apiKey` and `headers` fields support command execution, environment interpo
   "apiKey": "sk-..."
   ```
 
-For `models.json`, shell commands are resolved at request time. pi intentionally does not apply built-in TTL, stale reuse, or recovery logic for arbitrary commands. Different commands need different caching and failure strategies, and pi cannot infer the right one.
+For `settings.json`, shell commands are resolved at request time. pi intentionally does not apply built-in TTL, stale reuse, or recovery logic for arbitrary commands. Different commands need different caching and failure strategies, and pi cannot infer the right one.
 
 If your command is slow, expensive, rate-limited, or should keep using a previous value on transient failures, wrap it in your own script or command that implements the caching or TTL behavior you want.
 
@@ -280,6 +291,7 @@ Merge semantics:
 - Custom models are upserted by `id` within the provider.
 - If a custom model `id` matches a built-in model `id`, the custom model replaces that built-in model.
 - If a custom model `id` is new, it is added alongside built-in models.
+- `ollama-cloud` models are generated from `models.dev`; matching `settings.json` entries do not replace the generated metadata. Use `modelOverrides` for targeted changes.
 
 ## Per-model Overrides
 
@@ -333,7 +345,9 @@ Some Anthropic-compatible providers emit thinking blocks with empty signatures a
         {
           "id": "claude-opus-4-7",
           "reasoning": true,
-          "input": ["text"]
+          "input": [
+            "text"
+          ]
         }
       ]
     }

@@ -651,7 +651,7 @@ import { getProviders, getModels, getModel } from '@tsuuanmi/pi-ai';
 
 // Get all available providers
 const providers = getProviders();
-console.log(providers); // ['openai', 'anthropic', 'openai-codex', ...]
+console.log(providers); // ['anthropic', 'ollama-cloud', 'openai']
 
 // Get all models from a provider (fully typed)
 const anthropicModels = getModels('anthropic');
@@ -971,6 +971,7 @@ import { getEnvApiKey } from '@tsuuanmi/pi-ai';
 
 // Check if an API key is set in environment variables
 const key = getEnvApiKey('openai');  // checks OPENAI_API_KEY
+const ollamaKey = getEnvApiKey('ollama-cloud');  // checks OLLAMA_API_KEY
 ```
 
 ## OAuth Providers

@@ -29,7 +29,7 @@ function formatTokenCount(count: number): string {
 export async function listModels(modelRegistry: ModelRegistry, searchPattern?: string): Promise<void> {
 	const loadError = modelRegistry.getError();
 	if (loadError) {
-		console.error(chalk.yellow(`Warning: errors loading models.json:\n${loadError}`));
+		console.error(chalk.yellow(`Warning: errors loading model settings:\n${loadError}`));
 	}
 
 	const models = modelRegistry.getAvailable();

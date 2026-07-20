@@ -90,7 +90,7 @@ type AuthAccountCollection = {
 2. **API key from auth.json** — Resolved with `resolveConfigValue()` for interpolation
 3. **OAuth token from auth.json** — Auto-refreshed with file locking
 4. **Environment variable** — Provider-specific env vars (e.g., `ANTHROPIC_API_KEY`)
-5. **Fallback resolver** — Custom provider keys from models.json
+5. **Fallback resolver** — Custom provider keys from settings.json
 
 ### Auth Status
 
@@ -99,7 +99,7 @@ type AuthAccountCollection = {
 ```typescript
 type AuthStatus = {
   configured: boolean;
-  source?: "stored" | "runtime" | "environment" | "fallback" | "models_json_key" | "models_json_command";
+  source?: "stored" | "runtime" | "environment" | "fallback" | "settings_json_key" | "settings_json_command";
   label?: string;
 };
 ```

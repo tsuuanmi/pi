@@ -95,7 +95,7 @@ describe("OAuthSelectorComponent", () => {
 		expect(output).not.toContain("unconfigured");
 	});
 
-	it("shows models.json API key auth as configured", () => {
+	it("shows settings.json API key auth as configured", () => {
 		const authStorage = AuthStorage.inMemory();
 		const selector = new OAuthSelectorComponent(
 			"add",
@@ -103,17 +103,17 @@ describe("OAuthSelectorComponent", () => {
 			[{ id: "local-proxy", name: "local-proxy", authType: "api_key" }],
 			() => {},
 			() => {},
-			() => ({ configured: true, source: "models_json_key" }),
+			() => ({ configured: true, source: "settings_json_key" }),
 		);
 
 		const output = stripAnsi(selector.render(120).join("\n"));
 
 		expect(output).toContain("local-proxy");
-		expect(output).toContain("✓ key in models.json");
+		expect(output).toContain("✓ key in settings.json");
 		expect(output).not.toContain("unconfigured");
 	});
 
-	it("shows models.json command auth as configured", () => {
+	it("shows settings.json command auth as configured", () => {
 		const authStorage = AuthStorage.inMemory();
 		const selector = new OAuthSelectorComponent(
 			"add",
@@ -121,13 +121,13 @@ describe("OAuthSelectorComponent", () => {
 			[{ id: "op-proxy", name: "op-proxy", authType: "api_key" }],
 			() => {},
 			() => {},
-			() => ({ configured: true, source: "models_json_command" }),
+			() => ({ configured: true, source: "settings_json_command" }),
 		);
 
 		const output = stripAnsi(selector.render(120).join("\n"));
 
 		expect(output).toContain("op-proxy");
-		expect(output).toContain("✓ command in models.json");
+		expect(output).toContain("✓ command in settings.json");
 		expect(output).not.toContain("unconfigured");
 	});
 });

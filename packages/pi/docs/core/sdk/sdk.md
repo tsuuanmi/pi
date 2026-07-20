@@ -351,7 +351,7 @@ const { session } = await createAgentSession({
 - Global prompts (`prompts/`)
 - Global context file (`AGENTS.md`)
 - Settings (`settings.json`)
-- Custom models (`models.json`)
+- Custom models (`settings.json`)
 - Credentials (`auth.json`)
 - Sessions (`sessions/`)
 
@@ -370,7 +370,7 @@ const modelRegistry = ModelRegistry.create(authStorage);
 const opus = getModel("anthropic", "claude-opus-4-5");
 if (!opus) throw new Error("Model not found");
 
-// Find any model by provider/id, including custom models from models.json
+// Find any model by provider/id, including custom models from settings.json
 // (doesn't check if API key exists)
 const customModel = modelRegistry.find("my-provider", "my-model");
 
@@ -403,12 +403,12 @@ API key resolution priority (handled by AuthStorage):
 1. Runtime overrides (via `setRuntimeApiKey`, not persisted)
 2. Stored credentials in `auth.json` (API keys or OAuth tokens)
 3. Environment variables (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, etc.)
-4. Fallback resolver (for custom provider keys from `models.json`)
+4. Fallback resolver (for custom provider keys from `settings.json`)
 
 ```typescript
 import { AuthStorage, ModelRegistry } from "@tsuuanmi/pi";
 
-// Default: uses ~/.pi/agent/auth.json and ~/.pi/agent/models.json
+// Default: uses ~/.pi/agent/auth.json and ~/.pi/agent/settings.json
 const authStorage = AuthStorage.create();
 const modelRegistry = ModelRegistry.create(authStorage);
 
@@ -423,7 +423,7 @@ authStorage.setRuntimeApiKey("anthropic", "sk-my-temp-key");
 
 // Custom auth storage location
 const customAuth = AuthStorage.create("/my/app/auth.json");
-const customRegistry = ModelRegistry.create(customAuth, "/my/app/models.json");
+const customRegistry = ModelRegistry.create(customAuth, "/my/app/settings.json");
 
 const { session } = await createAgentSession({
   sessionManager: SessionManager.inMemory(),
@@ -431,7 +431,7 @@ const { session } = await createAgentSession({
   modelRegistry: customRegistry,
 });
 
-// No custom models.json (built-in models only)
+// No custom settings.json (built-in models only)
 const simpleRegistry = ModelRegistry.inMemory(authStorage);
 ```
 
@@ -871,7 +871,7 @@ if (process.env.MY_KEY) {
   authStorage.setRuntimeApiKey("anthropic", process.env.MY_KEY);
 }
 
-// Model registry (no custom models.json)
+// Model registry (no custom settings.json)
 const modelRegistry = ModelRegistry.create(authStorage);
 
 // Inline tool

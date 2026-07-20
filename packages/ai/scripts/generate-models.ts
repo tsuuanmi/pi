@@ -39,11 +39,6 @@ function mergeThinkingLevelMap(model: Model<Api>, map: NonNullable<Model<Api>["t
 	model.thinkingLevelMap = { ...model.thinkingLevelMap, ...map };
 }
 
-function isAnthropicTemperatureUnsupportedModel(modelId: string): boolean {
-	const id = modelId.toLowerCase();
-	return id.includes("opus-4-7") || id.includes("opus-4.7") || id.includes("opus-4-8") || id.includes("opus-4.8");
-}
-
 function applyThinkingLevelMetadata(model: Model<Api>): void {
 	if (model.api === "openai-responses" && model.provider === "openai" && model.id.startsWith("gpt-5")) {
 		mergeThinkingLevelMap(model, { off: null });
@@ -56,9 +51,6 @@ function applyThinkingLevelMetadata(model: Model<Api>): void {
 	}
 	if (supportsOpenAiXhigh(model.id)) {
 		mergeThinkingLevelMap(model, { xhigh: "xhigh" });
-	}
-	if (model.provider === "openai-codex" && supportsOpenAiXhigh(model.id)) {
-		mergeThinkingLevelMap(model, { minimal: "low" });
 	}
 	if (model.id.includes("opus-4-6") || model.id.includes("opus-4.6")) {
 		mergeThinkingLevelMap(model, { xhigh: "max" });
@@ -74,15 +66,12 @@ function applyThinkingLevelMetadata(model: Model<Api>): void {
 	if (model.api === "anthropic-messages" && model.id.includes("fable-5")) {
 		mergeThinkingLevelMap(model, { off: null, xhigh: "xhigh" });
 	}
-	if (model.api === "anthropic-messages" && isAnthropicTemperatureUnsupportedModel(model.id)) {
-		model.compat = { ...model.compat, supportsTemperature: false };
-	}
 }
 
 function fromModelsDev(
 	providerModels: Record<string, unknown> | undefined,
-	provider: "anthropic" | "openai",
-	api: "anthropic-messages" | "openai-responses",
+	provider: string,
+	api: Api,
 	baseUrl: string,
 ): Model<Api>[] {
 	if (!providerModels) return [];
@@ -116,9 +105,17 @@ async function loadModelsDevData(): Promise<Model<Api>[]> {
 		console.log("Fetching models from models.dev API...");
 		const response = await fetch("https://models.dev/api.json");
 		const data = await response.json();
+		const openAiModels = fromModelsDev(data.openai?.models, "openai", "openai-responses", "https://api.openai.com/v1");
 		return [
 			...fromModelsDev(data.anthropic?.models, "anthropic", "anthropic-messages", "https://api.anthropic.com"),
-			...fromModelsDev(data.openai?.models, "openai", "openai-responses", "https://api.openai.com/v1"),
+			...openAiModels,
+			...toOpenAiCodexModels(openAiModels),
+			...fromModelsDev(
+				data["ollama-cloud"]?.models,
+				"ollama-cloud",
+				"openai-completions",
+				data["ollama-cloud"]?.api || "https://ollama.com/v1",
+			),
 		];
 	} catch (error) {
 		console.error("Failed to load models.dev data:", error);
@@ -126,13 +123,19 @@ async function loadModelsDevData(): Promise<Model<Api>[]> {
 	}
 }
 
-function addMissingModels(allModels: Model<Api>[]): void {
-	const addIfMissing = (model: Model<Api>) => {
-		if (!allModels.some((candidate) => candidate.provider === model.provider && candidate.id === model.id)) {
-			allModels.push(model);
-		}
-	};
+function toOpenAiCodexModels(openAiModels: Model<Api>[]): Model<Api>[] {
+	const codexModelIds = new Set(["gpt-5.3-codex-spark", "gpt-5.4", "gpt-5.4-mini", "gpt-5.5"]);
+	return openAiModels
+		.filter((model) => codexModelIds.has(model.id))
+		.map((model) => ({
+			...model,
+			api: "openai-codex-responses",
+			provider: "openai-codex",
+			baseUrl: "https://chatgpt.com/backend-api",
+		}));
+}
 
+function applyModelMetadataOverrides(allModels: Model<Api>[]): void {
 	for (const model of allModels) {
 		if (model.provider === "anthropic" && model.id === "claude-opus-4-5") {
 			model.cost.cacheRead = 0.5;
@@ -145,153 +148,24 @@ function addMissingModels(allModels: Model<Api>[]): void {
 		if (model.provider === "openai" && model.id === "gpt-5-pro") {
 			model.maxTokens = 128000;
 		}
+		if (model.api === "anthropic-messages") {
+			const modelId = model.id.toLowerCase();
+			const supportsTemperature = !(
+				modelId.includes("opus-4-7") ||
+				modelId.includes("opus-4.7") ||
+				modelId.includes("opus-4-8") ||
+				modelId.includes("opus-4.8")
+			);
+			if (!supportsTemperature) {
+				model.compat = { ...model.compat, supportsTemperature };
+			}
+		}
 	}
-
-	addIfMissing({
-		id: "claude-opus-4-6",
-		name: "Claude Opus 4.6",
-		api: "anthropic-messages",
-		baseUrl: "https://api.anthropic.com",
-		provider: "anthropic",
-		reasoning: true,
-		input: ["text"],
-		cost: { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
-		contextWindow: 1000000,
-		maxTokens: 128000,
-	});
-	addIfMissing({
-		id: "claude-opus-4-7",
-		name: "Claude Opus 4.7",
-		api: "anthropic-messages",
-		baseUrl: "https://api.anthropic.com",
-		provider: "anthropic",
-		reasoning: true,
-		input: ["text"],
-		cost: { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
-		contextWindow: 1000000,
-		maxTokens: 128000,
-	});
-	addIfMissing({
-		id: "claude-opus-4-8",
-		name: "Claude Opus 4.8",
-		api: "anthropic-messages",
-		baseUrl: "https://api.anthropic.com",
-		provider: "anthropic",
-		reasoning: true,
-		input: ["text"],
-		cost: { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
-		contextWindow: 1000000,
-		maxTokens: 128000,
-	});
-	addIfMissing({
-		id: "claude-sonnet-4-6",
-		name: "Claude Sonnet 4.6",
-		api: "anthropic-messages",
-		baseUrl: "https://api.anthropic.com",
-		provider: "anthropic",
-		reasoning: true,
-		input: ["text"],
-		cost: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
-		contextWindow: 1000000,
-		maxTokens: 64000,
-	});
-	const openAiBase = {
-		api: "openai-responses" as const,
-		baseUrl: "https://api.openai.com/v1",
-		provider: "openai" as const,
-		input: ["text" as const],
-	};
-	addIfMissing({
-		...openAiBase,
-		id: "gpt-5-chat-latest",
-		name: "GPT-5 Chat Latest",
-		reasoning: false,
-		cost: { input: 1.25, output: 10, cacheRead: 0.125, cacheWrite: 0 },
-		contextWindow: 128000,
-		maxTokens: 16384,
-	});
-	addIfMissing({
-		...openAiBase,
-		id: "gpt-5.1-codex",
-		name: "GPT-5.1 Codex",
-		reasoning: true,
-		cost: { input: 1.25, output: 5, cacheRead: 0.125, cacheWrite: 1.25 },
-		contextWindow: 400000,
-		maxTokens: 128000,
-	});
-	addIfMissing({
-		...openAiBase,
-		id: "gpt-5.1-codex-max",
-		name: "GPT-5.1 Codex Max",
-		reasoning: true,
-		cost: { input: 1.25, output: 10, cacheRead: 0.125, cacheWrite: 0 },
-		contextWindow: 400000,
-		maxTokens: 128000,
-	});
-	addIfMissing({
-		...openAiBase,
-		id: "gpt-5.3-codex-spark",
-		name: "GPT-5.3 Codex Spark",
-		reasoning: true,
-		input: ["text"],
-		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-		contextWindow: 128000,
-		maxTokens: 16384,
-	});
-	addIfMissing({
-		...openAiBase,
-		id: "gpt-5.4",
-		name: "GPT-5.4",
-		reasoning: true,
-		cost: { input: 2.5, output: 15, cacheRead: 0.25, cacheWrite: 0 },
-		contextWindow: 272000,
-		maxTokens: 128000,
-	});
-
-	const codexBase = {
-		api: "openai-codex-responses" as const,
-		provider: "openai-codex" as const,
-		baseUrl: "https://chatgpt.com/backend-api",
-		reasoning: true,
-		maxTokens: 128000,
-	};
-	addIfMissing({
-		...codexBase,
-		id: "gpt-5.3-codex-spark",
-		name: "GPT-5.3 Codex Spark",
-		input: ["text"],
-		cost: { input: 1.75, output: 14, cacheRead: 0.175, cacheWrite: 0 },
-		contextWindow: 128000,
-	});
-	addIfMissing({
-		...codexBase,
-		id: "gpt-5.4",
-		name: "GPT-5.4",
-		input: ["text"],
-		cost: { input: 2.5, output: 15, cacheRead: 0.25, cacheWrite: 0 },
-		contextWindow: 272000,
-	});
-	addIfMissing({
-		...codexBase,
-		id: "gpt-5.4-mini",
-		name: "GPT-5.4 mini",
-		input: ["text"],
-		cost: { input: 0.75, output: 4.5, cacheRead: 0.075, cacheWrite: 0 },
-		contextWindow: 272000,
-	});
-	addIfMissing({
-		...codexBase,
-		id: "gpt-5.5",
-		name: "GPT-5.5",
-		input: ["text"],
-		cost: { input: 5, output: 30, cacheRead: 0.5, cacheWrite: 0 },
-		contextWindow: 272000,
-	});
 }
 
 async function generateModels(): Promise<void> {
 	const allModels = await loadModelsDevData();
-	addMissingModels(allModels);
+	applyModelMetadataOverrides(allModels);
 
 	for (const model of allModels) {
 		applyThinkingLevelMetadata(model);

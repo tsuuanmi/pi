@@ -431,7 +431,18 @@ import type { AssistantMessage, AssistantMessageEvent, Context, Message, Model, 
 
 	describe("OpenAI Responses message ID conversion", () => {
 		it("generates unique fallback message IDs for multiple text blocks in one assistant turn", () => {
-			const model = getModel("openai-codex", "gpt-5.5");
+			const model: Model<"openai-codex-responses"> = {
+				id: "gpt-5.5",
+				name: "GPT-5.5",
+				api: "openai-codex-responses",
+				provider: "openai-codex",
+				baseUrl: "https://chatgpt.com/backend-api",
+				reasoning: true,
+				input: ["text"],
+				cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+				contextWindow: 272000,
+				maxTokens: 128000,
+			};
 			const assistant: AssistantMessage = {
 				role: "assistant",
 				content: [

@@ -1,5 +1,3 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
 import {
 	type Api,
 	fetchOpenAICodexUsageSummary,
@@ -10,7 +8,7 @@ import {
 	type OpenAICodexUsageSummary,
 } from "@tsuuanmi/pi-ai";
 import type { Component, Container, EditorComponent, StatusLineComponent, TUI } from "@tsuuanmi/pi-tui";
-import { getAgentDir, getAuthPath } from "#pi/config/config";
+import { getAuthPath } from "#pi/config/config";
 import { defaultModelPerProvider } from "#pi/model/model-resolver";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#pi/model/provider-utils";
 import { LoginDialogComponent } from "#pi/modes/interactive/components/login-dialog";
@@ -25,7 +23,6 @@ import {
 } from "#pi/modes/interactive/components/selectors/oauth-selector";
 import type { FooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
 import type { AgentSession } from "#pi/session/agent-session";
-import { stripJsonComments } from "#pi/utils/fs/index";
 
 function isUnknownModel(model: Model<any> | undefined): boolean {
 	return !!model && model.provider === "unknown" && model.id === "unknown" && model.api === "unknown";
@@ -59,6 +56,7 @@ export class AccountAuthController {
 	private readonly getSession: () => AgentSession;
 	private readonly getEditor: () => EditorComponent;
 	private readonly agentDir: string;
+	private readonly settingsManager: AgentSession["settingsManager"];
 	private readonly showError: (errorMessage: string) => void;
 	private readonly showStatus: (message: string) => void;
 	private readonly showSelector: (create: (done: () => void) => { component: Component; focus: Component }) => void;
@@ -91,7 +89,7 @@ export class AccountAuthController {
 		this.footerDataProvider = opts.footerDataProvider;
 		this.getSession = opts.getSession;
 		this.getEditor = opts.getEditor;
-		void opts.getSettingsManager;
+		this.settingsManager = opts.getSettingsManager();
 		this.agentDir = opts.agentDir;
 		this.showError = opts.showError;
 		this.showStatus = opts.showStatus;
@@ -204,7 +202,7 @@ export class AccountAuthController {
 			}
 
 			const api = this.normalizeProviderApi(options);
-			this.upsertModelsJsonProvider(providerId, baseUrl, api, modelIds);
+			this.upsertModelsSetting(providerId, baseUrl, api, modelIds);
 
 			this.session.modelRegistry.refresh();
 			void this.updateAvailableProviderCount();
@@ -216,14 +214,8 @@ export class AccountAuthController {
 		}
 	}
 
-	private upsertModelsJsonProvider(providerId: string, baseUrl: string, api: Api, modelIds: string[]): void {
-		const modelsPath = path.join(getAgentDir(), "models.json");
-		fs.mkdirSync(path.dirname(modelsPath), { recursive: true, mode: 0o700 });
-		const config = fs.existsSync(modelsPath)
-			? (JSON.parse(stripJsonComments(fs.readFileSync(modelsPath, "utf-8"))) as {
-					providers?: Record<string, { baseUrl?: string; api?: string; models?: Array<{ id: string }> }>;
-				})
-			: {};
+	private upsertModelsSetting(providerId: string, baseUrl: string, api: Api, modelIds: string[]): void {
+		const config = this.settingsManager.getModelsConfig() ?? {};
 		const providers = config.providers ?? {};
 		const existingProvider = providers[providerId] ?? {};
 		const models = [...(existingProvider.models ?? [])];
@@ -234,13 +226,12 @@ export class AccountAuthController {
 			}
 		}
 
-		providers[providerId] = {
+		this.settingsManager.upsertModelProvider(providerId, {
 			...existingProvider,
 			baseUrl,
 			api,
 			models,
-		};
-		fs.writeFileSync(modelsPath, `${JSON.stringify({ ...config, providers }, null, 2)}\n`, { mode: 0o600 });
+		});
 	}
 
 	private findAccountProviderOption(providerId: string): AuthSelectorProvider | undefined {
@@ -576,7 +567,7 @@ export class AccountAuthController {
 		const providerOptions = this.getStoredAccountProviderOptions();
 		if (providerOptions.length === 0) {
 			this.showStatus(
-				"No stored credentials to remove. /account remove only removes credentials saved in auth.json; environment variables and models.json config are unchanged.",
+				"No stored credentials to remove. /account remove only removes credentials saved in auth.json; environment variables and settings.json config are unchanged.",
 			);
 			return;
 		}

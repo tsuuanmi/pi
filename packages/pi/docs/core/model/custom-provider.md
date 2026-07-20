@@ -148,7 +148,7 @@ pi.registerProvider("my-llm", {
 
 When `models` is provided, it **replaces** all existing models for that provider.
 
-`apiKey` and custom header values use the same config value syntax as `models.json`: `!command` at the start executes a command for the whole value, `$ENV_VAR` and `${ENV_VAR}` interpolate environment variables, `$$` emits a literal `$`, and `$!` emits a literal `!`.
+`apiKey` and custom header values use the same config value syntax as `settings.json`: `!command` at the start executes a command for the whole value, `$ENV_VAR` and `${ENV_VAR}` interpolate environment variables, `$$` emits a literal `$`, and `$!` emits a literal `!`.
 
 ## Unregister Provider
 
@@ -746,7 +746,7 @@ With no arguments (or just a provider), `/account` opens an interactive account 
 /account remove <provider> <account>   # remove a single named account
 ```
 
-`/account remove` only deletes credentials saved in `auth.json`; environment variables and `models.json` config are left untouched.
+`/account remove` only deletes credentials saved in `auth.json`; environment variables and `settings.json` config are left untouched.
 
 ### Adding custom providers interactively
 
@@ -754,4 +754,4 @@ With no arguments (or just a provider), `/account` opens an interactive account 
 /provider add <provider> --api <openai-completions|openai-responses|anthropic-messages> --base-url <url> --model <model> [--model <model> ...]
 ```
 
-`/provider add` writes a custom OpenAI/Anthropic-compatible provider into `~/.pi/agent/models.json`, refreshes the model registry, and prompts you to add a key with `/account add <provider> <account>`. Use `--compat` as an alias for `--api` (but not both). At least one `--model` is required.
+`/provider add` writes a custom OpenAI/Anthropic-compatible provider into `~/.pi/agent/settings.json`, refreshes the model registry, and prompts you to add a key with `/account add <provider> <account>`. Use `--compat` as an alias for `--api` (but not both). At least one `--model` is required.

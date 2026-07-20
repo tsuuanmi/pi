@@ -52,7 +52,7 @@ export type KnownApi = "openai-completions" | "openai-responses" | "openai-codex
 
 export type Api = KnownApi | (string & {});
 
-export type KnownProvider = "anthropic" | "openai" | "openai-codex";
+export type KnownProvider = "anthropic" | "openai" | "openai-codex" | "ollama-cloud";
 export type Provider = KnownProvider | string;
 
 export type ThinkingLevel = "minimal" | "low" | "medium" | "high" | "xhigh";
