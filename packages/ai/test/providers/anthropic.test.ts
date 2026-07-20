@@ -8,7 +8,7 @@ import { getModel } from "#ai/models/index";
 import { streamAnthropic } from "#ai/providers/anthropic/index";
 import { stream, streamSimple } from "#ai/stream";
 import type { Context, Model, SimpleStreamOptions, Tool, ToolCall } from "#ai/types";
-import { resolveApiKey } from "#ai-test/utils/oauth/oauth";
+import { resolveApiKey } from "#ai-test/auth/oauth/oauth";
 
 // From anthropic-cache-write-1h-cost.test.ts
 {
