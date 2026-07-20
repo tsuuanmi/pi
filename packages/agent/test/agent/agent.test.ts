@@ -409,43 +409,39 @@ describe("Agent", () => {
 	it("should update state with mutators", () => {
 		const agent = new Agent();
 
-		// Test setSystemPrompt
 		agent.state.systemPrompt = "Custom prompt";
 		expect(agent.state.systemPrompt).toBe("Custom prompt");
 
-		// Test setModel
 		const newModel = getModel("openai", "gpt-5.4");
 		agent.state.model = newModel;
 		expect(agent.state.model).toBe(newModel);
 
-		// Test setThinkingLevel
 		agent.state.thinkingLevel = "high";
 		expect(agent.state.thinkingLevel).toBe("high");
 
-		// Test setTools
+		// Assigning tools copies the top-level array
 		const tools = [{ name: "test", description: "test tool" } as any];
 		agent.state.tools = tools;
 		expect(agent.state.tools).toEqual(tools);
-		expect(agent.state.tools).not.toBe(tools); // Should be a copy
+		expect(agent.state.tools).not.toBe(tools);
 
-		// Test replaceMessages
+		// Assigning messages copies the top-level array
 		const messages = [{ role: "user" as const, content: "Hello", timestamp: Date.now() }];
 		agent.state.messages = messages;
 		expect(agent.state.messages).toEqual(messages);
-		expect(agent.state.messages).not.toBe(messages); // Should be a copy
+		expect(agent.state.messages).not.toBe(messages);
 
-		// Test appendMessage
+		// Mutating the live array is reflected by state
 		const newMessage = { role: "assistant" as const, content: [{ type: "text" as const, text: "Hi" }] };
 		agent.state.messages.push(newMessage as any);
 		expect(agent.state.messages).toHaveLength(2);
 		expect(agent.state.messages[1]).toBe(newMessage);
 
-		// Test clearMessages
 		agent.state.messages = [];
 		expect(agent.state.messages).toEqual([]);
 	});
 
-	it("should support steering message queue", async () => {
+	it("should support steering message queue", () => {
 		const agent = new Agent();
 
 		const message = { role: "user" as const, content: "Steering message", timestamp: Date.now() };
@@ -455,7 +451,7 @@ describe("Agent", () => {
 		expect(agent.state.messages).not.toContainEqual(message);
 	});
 
-	it("should support follow-up message queue", async () => {
+	it("should support follow-up message queue", () => {
 		const agent = new Agent();
 
 		const message = { role: "user" as const, content: "Follow-up message", timestamp: Date.now() };

@@ -11,7 +11,6 @@ import {
 	fauxText,
 	fauxThinking,
 	fauxToolCall,
-	type Model,
 	registerFauxProvider,
 	type ToolResultMessage,
 	type UserMessage,
@@ -143,147 +142,6 @@ afterEach(() => {
 		registrations.pop()?.unregister();
 	}
 });
-
-async function basicPrompt(model: Model<string>) {
-	const agent = new Agent({
-		initialState: {
-			systemPrompt: "You are a helpful assistant. Keep your responses concise.",
-			model,
-			thinkingLevel: "off",
-			tools: [],
-		},
-	});
-
-	await agent.prompt("What is 2+2? Answer with just the number.");
-
-	expect(agent.state.isStreaming).toBe(false);
-	expect(agent.state.messages.length).toBe(2);
-	expect(agent.state.messages[0].role).toBe("user");
-	expect(agent.state.messages[1].role).toBe("assistant");
-
-	const assistantMessage = agent.state.messages[1];
-	if (assistantMessage.role !== "assistant") throw new Error("Expected assistant message");
-	expect(getTextContent(assistantMessage)).toContain("4");
-}
-
-async function toolExecution(model: Model<string>) {
-	const agent = new Agent({
-		initialState: {
-			systemPrompt: "You are a helpful assistant. Always use the calculator tool for math.",
-			model,
-			thinkingLevel: "off",
-			tools: [calculateTool],
-		},
-	});
-
-	const pendingToolCallsDuringEvents: Array<{ type: AgentEvent["type"]; ids: string[] }> = [];
-	agent.subscribe((event) => {
-		if (event.type === "tool_execution_start" || event.type === "tool_execution_end") {
-			pendingToolCallsDuringEvents.push({
-				type: event.type,
-				ids: [...agent.state.pendingToolCalls],
-			});
-		}
-	});
-
-	await agent.prompt("Calculate 123 * 456 using the calculator tool.");
-
-	expect(agent.state.isStreaming).toBe(false);
-	expect(agent.state.messages.length).toBeGreaterThanOrEqual(4);
-	const toolResultMsg = agent.state.messages.find((message) => message.role === "toolResult");
-	expect(toolResultMsg).toBeDefined();
-	if (toolResultMsg?.role !== "toolResult") throw new Error("Expected tool result message");
-	expect(getTextContent(toolResultMsg)).toContain("123 * 456 = 56088");
-
-	const finalMessage = agent.state.messages[agent.state.messages.length - 1];
-	if (finalMessage.role !== "assistant") throw new Error("Expected final assistant message");
-	expect(getTextContent(finalMessage)).toContain("56088");
-	expect(agent.state.pendingToolCalls.size).toBe(0);
-	expect(pendingToolCallsDuringEvents).toEqual([
-		{ type: "tool_execution_start", ids: ["calc-1"] },
-		{ type: "tool_execution_end", ids: [] },
-	]);
-}
-
-async function abortExecution(model: Model<string>) {
-	const agent = new Agent({
-		initialState: {
-			systemPrompt: "You are a helpful assistant.",
-			model,
-			thinkingLevel: "off",
-			tools: [],
-		},
-	});
-
-	const promptPromise = agent.prompt("Count slowly from 1 to 20.");
-	setTimeout(() => {
-		agent.abort();
-	}, 30);
-
-	await promptPromise;
-
-	expect(agent.state.isStreaming).toBe(false);
-	expect(agent.state.messages.length).toBeGreaterThanOrEqual(2);
-
-	const lastMessage = agent.state.messages[agent.state.messages.length - 1];
-	if (lastMessage.role !== "assistant") throw new Error("Expected assistant message");
-	expect(lastMessage.stopReason).toBe("aborted");
-	expect(lastMessage.errorMessage).toBeDefined();
-	expect(agent.state.errorMessage).toBe(lastMessage.errorMessage);
-}
-
-async function stateUpdates(model: Model<string>) {
-	const agent = new Agent({
-		initialState: {
-			systemPrompt: "You are a helpful assistant.",
-			model,
-			thinkingLevel: "off",
-			tools: [],
-		},
-	});
-
-	const events: AgentEvent["type"][] = [];
-	agent.subscribe((event) => {
-		events.push(event.type);
-	});
-
-	await agent.prompt("Count from 1 to 5.");
-
-	expect(events).toContain("agent_start");
-	expect(events).toContain("turn_start");
-	expect(events).toContain("message_start");
-	expect(events).toContain("message_update");
-	expect(events).toContain("message_end");
-	expect(events).toContain("turn_end");
-	expect(events).toContain("agent_end");
-	expect(events.indexOf("agent_start")).toBeLessThan(events.indexOf("message_start"));
-	expect(events.indexOf("message_start")).toBeLessThan(events.indexOf("message_end"));
-	expect(events.indexOf("message_end")).toBeLessThan(events.lastIndexOf("agent_end"));
-
-	expect(agent.state.isStreaming).toBe(false);
-	expect(agent.state.messages.length).toBe(2);
-}
-
-async function multiTurnConversation(model: Model<string>) {
-	const agent = new Agent({
-		initialState: {
-			systemPrompt: "You are a helpful assistant.",
-			model,
-			thinkingLevel: "off",
-			tools: [],
-		},
-	});
-
-	await agent.prompt("My name is Alice.");
-	expect(agent.state.messages.length).toBe(2);
-
-	await agent.prompt("What is my name?");
-	expect(agent.state.messages.length).toBe(4);
-
-	const lastMessage = agent.state.messages[3];
-	if (lastMessage.role !== "assistant") throw new Error("Expected assistant message");
-	expect(getTextContent(lastMessage).toLowerCase()).toContain("alice");
-}
 
 describe("Built Pi CLI workflow pipeline", () => {
 	it("runs deep-interview to ralplan to ultragoal through pi dist", async () => {
@@ -446,7 +304,25 @@ describe("Agent integration with faux provider", () => {
 	it("handles a basic text prompt", async () => {
 		const faux = createFauxRegistration();
 		faux.setResponses([fauxAssistantMessage("4")]);
-		await basicPrompt(faux.getModel());
+		const agent = new Agent({
+			initialState: {
+				systemPrompt: "You are a helpful assistant. Keep your responses concise.",
+				model: faux.getModel(),
+				thinkingLevel: "off",
+				tools: [],
+			},
+		});
+
+		await agent.prompt("What is 2+2? Answer with just the number.");
+
+		expect(agent.state.isStreaming).toBe(false);
+		expect(agent.state.messages.length).toBe(2);
+		expect(agent.state.messages[0].role).toBe("user");
+		expect(agent.state.messages[1].role).toBe("assistant");
+
+		const assistantMessage = agent.state.messages[1];
+		if (assistantMessage.role !== "assistant") throw new Error("Expected assistant message");
+		expect(getTextContent(assistantMessage)).toContain("4");
 	});
 
 	it("executes tools and tracks pending tool calls", async () => {
@@ -461,7 +337,42 @@ describe("Agent integration with faux provider", () => {
 			),
 			fauxAssistantMessage("The result is 56088."),
 		]);
-		await toolExecution(faux.getModel());
+		const agent = new Agent({
+			initialState: {
+				systemPrompt: "You are a helpful assistant. Always use the calculator tool for math.",
+				model: faux.getModel(),
+				thinkingLevel: "off",
+				tools: [calculateTool],
+			},
+		});
+
+		const pendingToolCallsDuringEvents: Array<{ type: AgentEvent["type"]; ids: string[] }> = [];
+		agent.subscribe((event) => {
+			if (event.type === "tool_execution_start" || event.type === "tool_execution_end") {
+				pendingToolCallsDuringEvents.push({
+					type: event.type,
+					ids: [...agent.state.pendingToolCalls],
+				});
+			}
+		});
+
+		await agent.prompt("Calculate 123 * 456 using the calculator tool.");
+
+		expect(agent.state.isStreaming).toBe(false);
+		expect(agent.state.messages.length).toBeGreaterThanOrEqual(4);
+		const toolResultMsg = agent.state.messages.find((message) => message.role === "toolResult");
+		expect(toolResultMsg).toBeDefined();
+		if (toolResultMsg?.role !== "toolResult") throw new Error("Expected tool result message");
+		expect(getTextContent(toolResultMsg)).toContain("123 * 456 = 56088");
+
+		const finalMessage = agent.state.messages[agent.state.messages.length - 1];
+		if (finalMessage.role !== "assistant") throw new Error("Expected final assistant message");
+		expect(getTextContent(finalMessage)).toContain("56088");
+		expect(agent.state.pendingToolCalls.size).toBe(0);
+		expect(pendingToolCallsDuringEvents).toEqual([
+			{ type: "tool_execution_start", ids: ["calc-1"] },
+			{ type: "tool_execution_end", ids: [] },
+		]);
 	});
 
 	it("handles abort during streaming", async () => {
@@ -474,13 +385,64 @@ describe("Agent integration with faux provider", () => {
 				"one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen",
 			),
 		]);
-		await abortExecution(faux.getModel());
+		const agent = new Agent({
+			initialState: {
+				systemPrompt: "You are a helpful assistant.",
+				model: faux.getModel(),
+				thinkingLevel: "off",
+				tools: [],
+			},
+		});
+
+		const promptPromise = agent.prompt("Count slowly from 1 to 20.");
+		setTimeout(() => {
+			agent.abort();
+		}, 30);
+
+		await promptPromise;
+
+		expect(agent.state.isStreaming).toBe(false);
+		expect(agent.state.messages.length).toBeGreaterThanOrEqual(2);
+
+		const lastMessage = agent.state.messages[agent.state.messages.length - 1];
+		if (lastMessage.role !== "assistant") throw new Error("Expected assistant message");
+		expect(lastMessage.stopReason).toBe("aborted");
+		expect(lastMessage.errorMessage).toBeDefined();
+		expect(agent.state.errorMessage).toBe(lastMessage.errorMessage);
 	});
 
 	it("emits lifecycle updates while streaming", async () => {
 		const faux = createFauxRegistration({ tokenSize: { min: 1, max: 1 } });
 		faux.setResponses([fauxAssistantMessage("1 2 3 4 5")]);
-		await stateUpdates(faux.getModel());
+		const agent = new Agent({
+			initialState: {
+				systemPrompt: "You are a helpful assistant.",
+				model: faux.getModel(),
+				thinkingLevel: "off",
+				tools: [],
+			},
+		});
+
+		const events: AgentEvent["type"][] = [];
+		agent.subscribe((event) => {
+			events.push(event.type);
+		});
+
+		await agent.prompt("Count from 1 to 5.");
+
+		expect(events).toContain("agent_start");
+		expect(events).toContain("turn_start");
+		expect(events).toContain("message_start");
+		expect(events).toContain("message_update");
+		expect(events).toContain("message_end");
+		expect(events).toContain("turn_end");
+		expect(events).toContain("agent_end");
+		expect(events.indexOf("agent_start")).toBeLessThan(events.indexOf("message_start"));
+		expect(events.indexOf("message_start")).toBeLessThan(events.indexOf("message_end"));
+		expect(events.indexOf("message_end")).toBeLessThan(events.lastIndexOf("agent_end"));
+
+		expect(agent.state.isStreaming).toBe(false);
+		expect(agent.state.messages.length).toBe(2);
 	});
 
 	it("maintains context across multiple turns", async () => {
@@ -496,7 +458,24 @@ describe("Agent integration with faux provider", () => {
 				return fauxAssistantMessage(hasAlice ? "Your name is Alice." : "I do not know your name.");
 			},
 		]);
-		await multiTurnConversation(faux.getModel());
+		const agent = new Agent({
+			initialState: {
+				systemPrompt: "You are a helpful assistant.",
+				model: faux.getModel(),
+				thinkingLevel: "off",
+				tools: [],
+			},
+		});
+
+		await agent.prompt("My name is Alice.");
+		expect(agent.state.messages.length).toBe(2);
+
+		await agent.prompt("What is my name?");
+		expect(agent.state.messages.length).toBe(4);
+
+		const lastMessage = agent.state.messages[3];
+		if (lastMessage.role !== "assistant") throw new Error("Expected assistant message");
+		expect(getTextContent(lastMessage).toLowerCase()).toContain("alice");
 	});
 
 	it("preserves thinking content blocks", async () => {
