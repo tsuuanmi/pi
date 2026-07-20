@@ -41,7 +41,7 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 - [Quickstart](quickstart.md) - install, authenticate, and run a first session.
 - [Using Pi](usage.md) - interactive mode, slash commands, context files, and CLI reference.
 - [Settings](core/settings/settings.md) - global and project settings.
-- [Sessions](core/session-manager/sessions.md) - session management, branching, and tree navigation.
+- [Sessions](core/session/sessions.md) - session management, branching, and tree navigation.
 - [Compaction](core/compaction/compaction.md) - context compaction and branch summarization.
 - [Security](core/trust/security.md) - sandbox boundaries and vulnerability reporting.
 - [Containerization](containerization.md) - sandbox pi with Docker or OpenShell.
@@ -84,7 +84,7 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 ## Reference
 
-- [Session format](core/session-manager/session-format.md) - JSONL session file format, entry types, and SessionManager API.
+- [Session format](core/session/session-format.md) - JSONL session file format, entry types, and SessionManager API.
 - [Agent Profiles](core/agents/agent-profiles.md) - Named agent configurations with model and tool overrides.
 - [Configuration](core/config/config.md) - Settings hierarchy and resolution.
 - [Events](core/events/events.md) - Agent lifecycle and UI event system.

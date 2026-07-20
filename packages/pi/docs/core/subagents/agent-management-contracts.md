@@ -23,7 +23,7 @@ These are the intended ownership boundaries. If implementation chooses different
 | Agent definition parsing | `packages/pi/src/agents/agent-profiles.ts` or a new `src/agents/agent-definitions.ts` | bundled role-agent prompt assets if added |
 | Project resource loading | `packages/pi/src/settings/settings-manager.ts` and `src/skills/resource-loader.ts` | `docs/security.md` |
 | Source metadata and diagnostics | `packages/pi/src/package-manager/source-info.ts` and `src/package-manager/resource-diagnostics.ts` | resource-specific loaders |
-| Scoped live registry | a new `packages/pi/src/agent-registry.ts` | `src/agent-session/agent-session.ts`, `src/subagents/subagents.ts`, `src/api/types.ts` |
+| Scoped live registry | a new `packages/pi/src/agent-registry.ts` | `src/session/agent-session.ts`, `src/subagents/subagents.ts`, `src/api/types.ts` |
 | Durable subagent/task/receipt state | `packages/pi/src/subagents/subagents.ts` and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |
 | Self-hosting continuity | `pi:workflows` first-party package tools and skills | `packages/workflows/src/harness/*`, `packages/workflows/src/skills/*` |
 | Direct-port adaptation | each porting change owner | this document and code review checklist |

@@ -80,7 +80,7 @@ Useful session commands:
 - `/fork` creates a new session from an earlier user message.
 - `/compact` summarizes older messages to free context.
 
-See [Sessions](core/session-manager/sessions.md) and [Compaction](core/compaction/compaction.md) for details.
+See [Sessions](core/session/sessions.md) and [Compaction](core/compaction/compaction.md) for details.
 
 ## Context Files
 

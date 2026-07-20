@@ -183,6 +183,6 @@ Bash output compression keeps a head and tail of the original output with a mark
 
 ## See Also
 
-- [Session Format](../session-manager/session-format.md) - Message serialization format
+- [Session Format](../session/session-format.md) - Message serialization format
 - [Compaction](../compaction/compaction.md) - Full context compaction
 - [Extensions](../extensions/extensions.md) - Creating and handling custom message types

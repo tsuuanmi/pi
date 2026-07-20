@@ -751,7 +751,7 @@ sm.branchWithSummary(id, "Summary...");  // Branch with context summary
 sm.createBranchedSession(leafId);       // Extract path to new file
 ```
 
-See [Session Format](../session-manager/session-format.md) for session storage internals.
+See [Session Format](../session/session-format.md) for session storage internals.
 
 ### Settings Management
 

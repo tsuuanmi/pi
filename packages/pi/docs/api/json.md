@@ -10,7 +10,7 @@ API usage logging, when enabled, is written only to the sidecar file at `<cwd>/.
 
 ## Event Types
 
-Events are defined in [`AgentSessionEvent`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/agent-session/agent-session.ts#L102):
+Events are defined in [`AgentSessionEvent`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/agent-session.ts#L127):
 
 ```typescript
 type AgentSessionEvent =

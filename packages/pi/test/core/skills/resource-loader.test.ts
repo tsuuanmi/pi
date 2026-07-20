@@ -190,7 +190,9 @@ description: project
 Project skill`,
 			);
 
-			const baseTheme = JSON.parse(readFileSync(join(process.cwd(), "src", "theme", "dark.json"), "utf-8")) as {
+			const baseTheme = JSON.parse(
+				readFileSync(new URL("../../../../tui/src/theme/dark.json", import.meta.url), "utf-8"),
+			) as {
 				name: string;
 				vars?: Record<string, string>;
 			};
@@ -417,7 +419,9 @@ description: Project skill
 Project skill content`,
 			);
 			writeFileSync(join(promptsDir, "project.md"), "Project prompt");
-			const themeData = JSON.parse(readFileSync(join(process.cwd(), "src", "theme", "dark.json"), "utf-8")) as {
+			const themeData = JSON.parse(
+				readFileSync(new URL("../../../../tui/src/theme/dark.json", import.meta.url), "utf-8"),
+			) as {
 				name: string;
 			};
 			themeData.name = "project-theme";
