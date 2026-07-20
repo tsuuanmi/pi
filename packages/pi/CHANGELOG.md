@@ -1,3 +1,9 @@
+## [Unreleased]
+
+### Fixed
+
+- **cli**: `--help` and `--list-models` no longer trigger installation of missing project packages; the resource loader skips missing-package installs for these metadata-only commands so help output stays clean and startup is faster.
+
 ## [0.2.0] - 2026-07-20
 
 ### Breaking Changes

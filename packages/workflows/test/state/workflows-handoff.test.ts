@@ -108,9 +108,11 @@ describe("workflow handoff protocol", () => {
 			{ skill: "deep-interview", active: true, phase: "interviewing" },
 			{ sessionId: TEST_SESSION },
 		);
+		// team is outside the planning pipeline, so the pipeline collapse on read
+		// keeps it alongside the handoff callee.
 		await syncWorkflowActiveState(
 			cwd,
-			{ skill: "ultragoal", active: true, phase: "running" },
+			{ skill: "team", active: true, phase: "executing" },
 			{ sessionId: TEST_SESSION },
 		);
 
@@ -123,7 +125,7 @@ describe("workflow handoff protocol", () => {
 
 		const state = await readWorkflowActiveState(cwd, { sessionId: TEST_SESSION });
 		const skills = state?.active_workflows.map((e) => e.skill).sort();
-		expect(skills).toEqual(["ralplan", "ultragoal"]);
+		expect(skills).toEqual(["ralplan", "team"]);
 	});
 
 	it("preserves caller lineage across multi-step handoff chains", async () => {

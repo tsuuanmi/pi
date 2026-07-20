@@ -467,6 +467,11 @@ export async function main(args: string[], options?: MainOptions) {
 			resourceLoaderOptions: {
 				extensionFactories: options?.extensionFactories,
 			},
+			resourceLoaderReloadOptions: {
+				// help and --list-models only need extension flags from already-installed
+				// resources; skip installing missing project packages to keep help output clean.
+				skipMissingInstalls: parsed.help || parsed.listModels !== undefined,
+			},
 		});
 		const { settingsManager, modelRegistry, resourceLoader } = services;
 		const diagnostics: AgentSessionRuntimeDiagnostic[] = [

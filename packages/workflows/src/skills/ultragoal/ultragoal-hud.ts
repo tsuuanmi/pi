@@ -6,7 +6,7 @@ import type { UltragoalStatus } from "#workflows/skills/ultragoal/ultragoal-runt
  * review_blocked. Moved here from `ultragoal-runtime.ts` because it is only used
  * by `buildUltragoalHud`.
  */
-export function remainingGoalCount(status: UltragoalStatus): number {
+function remainingGoalCount(status: UltragoalStatus): number {
 	return (
 		status.counts.pending +
 		status.counts.active +

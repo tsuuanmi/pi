@@ -98,12 +98,14 @@ describe("session-scoped workflow active state", () => {
 			{ skill: "deep-interview", active: true, phase: "interviewing" },
 			{ sessionId },
 		);
-		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" }, { sessionId });
+		// team is outside the planning pipeline, so it is not collapsed into
+		// deep-interview by the pipeline collapse on read.
+		await syncWorkflowActiveState(cwd, { skill: "team", active: true, phase: "executing" }, { sessionId });
 
 		const state = await readWorkflowActiveState(cwd, { sessionId });
 		expect(state?.active_workflows).toHaveLength(2);
 		const skills = state?.active_workflows.map((w) => w.skill).sort();
-		expect(skills).toEqual(["deep-interview", "ralplan"]);
+		expect(skills).toEqual(["deep-interview", "team"]);
 	});
 
 	it("returns undefined when state file is absent", async () => {

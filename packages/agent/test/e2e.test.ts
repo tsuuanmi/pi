@@ -299,6 +299,23 @@ describe("Built Pi CLI workflow pipeline", () => {
 			expect(initial.body?.state?.threshold).toBe(0.05);
 			expect(initial.body?.statePath).toContain(".pi/agent-e2e-cli/workflows/deep-interview/state.json");
 
+			const restate = await runBuiltPiWorkflowJson<{ ok?: boolean; body?: { restated_goal?: string } }>(
+				[
+					"deep-interview",
+					"restate-goal",
+					"--input",
+					JSON.stringify({
+						workspace: cwd,
+						sessionId,
+						restatedGoal: "Run the bundled CLI workflow pipeline across deep-interview, ralplan, and ultragoal.",
+						confirm: "Yes",
+					}),
+				],
+				cwd,
+			);
+			expect(restate.ok).toBe(true);
+			expect(restate.body?.restated_goal).toBeTruthy();
+
 			const spec = await runBuiltPiWorkflowJson<{ ok?: boolean; body?: { path?: string; handoff?: string } }>(
 				[
 					"deep-interview",
@@ -310,6 +327,7 @@ describe("Built Pi CLI workflow pipeline", () => {
 						slug: "pipeline-spec",
 						spec: "# Deep Interview Spec\n\nApproved CLI pipeline smoke spec.\n",
 						handoff: "ralplan",
+						allowEarlyExit: true,
 					}),
 				],
 				cwd,

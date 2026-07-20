@@ -16,6 +16,7 @@ import {
 import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
+import { installAgentToolHooks } from "#pi/hooks/tool-hooks";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { AgentSession } from "#pi/session/agent-session";
 import { SessionManager } from "#pi/session/session-manager";
@@ -473,6 +474,13 @@ describe("AgentSession concurrent prompt guard", () => {
 			emitBeforeAgentStart: async () => undefined,
 			invalidate: () => {},
 		};
+		// The session installs agent tool hooks against the real runner during
+		// construction; rebind them to the mocked runner so emitToolCall is exercised
+		// through the agent-level beforeToolCall bridge.
+		installAgentToolHooks(
+			agent,
+			sessionWithRunner._extensionRunner as unknown as Parameters<typeof installAgentToolHooks>[1],
+		);
 
 		await session.prompt("hi");
 		await session.agent.waitForIdle();

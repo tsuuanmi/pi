@@ -14,8 +14,8 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/workflows/src/commands/workflow.ts::handlePackageCommand",
-			"file": "packages/workflows/src/commands/workflow.ts",
+			"key": "packages/workflows/src/commands/workflow/index.ts::handlePackageCommand",
+			"file": "packages/workflows/src/commands/workflow/index.ts",
 			"name": "handlePackageCommand",
 			"kind": "exported"
 		}

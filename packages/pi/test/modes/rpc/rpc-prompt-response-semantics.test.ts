@@ -27,7 +27,10 @@ vi.mock("#pi/modes/output-guard", () => ({
 	},
 }));
 
-vi.mock("@tsuuanmi/pi-tui", () => ({ theme: {} }));
+vi.mock("@tsuuanmi/pi-tui", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@tsuuanmi/pi-tui")>();
+	return { ...actual, theme: {} };
+});
 
 vi.mock("#pi/modes/rpc/jsonl", () => ({
 	attachJsonlLineReader: vi.fn((_stream: NodeJS.ReadableStream, onLine: (line: string) => void) => {

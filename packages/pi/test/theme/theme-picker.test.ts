@@ -1,7 +1,12 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getAvailableThemes, getAvailableThemesWithPaths, setRegisteredThemes } from "@tsuuanmi/pi-tui";
+import {
+	getAvailableThemes,
+	getAvailableThemesWithPaths,
+	loadThemeFromPath,
+	setRegisteredThemes,
+} from "@tsuuanmi/pi-tui";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type ThemeFile = {
@@ -38,6 +43,10 @@ describe("theme picker", () => {
 
 		const themePath = join(process.env.PI_AGENT_DIR!, "themes", "foo.json");
 		writeFileSync(themePath, JSON.stringify(customTheme, null, 2));
+
+		// pi loads custom themes through its resource loader and registers them via
+		// setRegisteredThemes; tui no longer scans a custom themes dir directly.
+		setRegisteredThemes([loadThemeFromPath(themePath)]);
 
 		expect(getAvailableThemes()).toContain("bar");
 		expect(getAvailableThemes()).not.toContain("foo");

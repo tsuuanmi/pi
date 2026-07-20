@@ -85,7 +85,7 @@ export function parseWorkflowArgs(args: string[]): ParsedWorkflowCommand {
 	return parsed;
 }
 
-export function parseInput(raw: string | undefined): Record<string, unknown> {
+function parseInput(raw: string | undefined): Record<string, unknown> {
 	if (!raw?.trim()) return {};
 	const parsed = JSON.parse(raw) as unknown;
 	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("input must be a JSON object");

@@ -31,7 +31,9 @@ export interface ResourceExtensionPaths {
 	themePaths?: Array<{ path: string; metadata: PathMetadata }>;
 }
 
-export interface ResourceLoaderReloadOptions {}
+export interface ResourceLoaderReloadOptions {
+	skipMissingInstalls?: boolean;
+}
 
 export interface ResourceLoader {
 	getExtensions(): LoadExtensionsResult;
@@ -405,9 +407,10 @@ export class DefaultResourceLoader implements ResourceLoader {
 		}
 	}
 
-	async reload(_options?: ResourceLoaderReloadOptions): Promise<void> {
+	async reload(options?: ResourceLoaderReloadOptions): Promise<void> {
 		await this.settingsManager.reload();
-		const resolvedPaths = await this.packageManager.resolve();
+		const onMissing = options?.skipMissingInstalls ? async () => "skip" as const : undefined;
+		const resolvedPaths = await this.packageManager.resolve(onMissing);
 		const cliExtensionPaths = await this.packageManager.resolveExtensionSources(this.additionalExtensionPaths, {
 			temporary: true,
 		});

@@ -53,7 +53,7 @@ export function requiredObject(input: Record<string, unknown>, key: string): Rec
 	return value as Record<string, unknown>;
 }
 
-export function inputWorkflowSkill(input: Record<string, unknown>): WorkflowSkill | undefined {
+function inputWorkflowSkill(input: Record<string, unknown>): WorkflowSkill | undefined {
 	const skill = inputString(input, "skill");
 	if (skill === "deep-interview" || skill === "ralplan" || skill === "team" || skill === "ultragoal") return skill;
 	return undefined;
