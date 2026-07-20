@@ -81,12 +81,16 @@ function getAliases(): Record<string, string> {
 	const typeboxValueEntry = require.resolve("typebox/value");
 
 	const packagesRoot = path.resolve(__dirname, "../../../");
+	// Resolve bare @tsuuanmi/* specifiers via ESM (import.meta.resolve) so the
+	// "import" condition in their package "exports" is honored. CJS
+	// require.resolve only sees "require"/"default" conditions, which these
+	// packages do not define, raising "No \"exports\" main defined".
 	const resolveWorkspaceOrImport = (workspaceRelativePath: string, specifier: string): string => {
 		const workspacePath = path.join(packagesRoot, workspaceRelativePath);
 		if (fs.existsSync(workspacePath)) {
 			return workspacePath;
 		}
-		return require.resolve(specifier);
+		return fileURLToPath(import.meta.resolve(specifier));
 	};
 
 	const piEntry = packageIndex;

@@ -1,12 +1,12 @@
 {
 	"name": "@tsuuanmi/pi",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"lockfileVersion": 3,
 	"requires": true,
 	"packages": {
 		"": {
 			"name": "@tsuuanmi/pi",
-			"version": "0.2.0",
+			"version": "0.2.1",
 			"license": "MIT",
 			"dependencies": {
 				"@tsuuanmi/pi-agent": "^0.2.0",

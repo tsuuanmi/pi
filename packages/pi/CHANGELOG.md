@@ -4,6 +4,12 @@
 
 - **cli**: `--help` and `--list-models` no longer trigger installation of missing project packages; the resource loader skips missing-package installs for these metadata-only commands so help output stays clean and startup is faster.
 
+## [0.2.1] - 2026-07-20
+
+### Fixed
+
+- **extensions**: Fixed bundled extensions (`workflows`, `lsp`, `mcp`) failing to load from a global npm install with `No "exports" main defined in .../pi-agent/package.json`. Bare `@tsuuanmi/*` specifiers are now resolved via ESM (`import.meta.resolve`) instead of CJS `require.resolve`, so the `import` condition in each package's `exports` map is honored.
+
 ## [0.2.0] - 2026-07-20
 
 ### Breaking Changes
