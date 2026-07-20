@@ -85,16 +85,20 @@ console.log(thinker?.reasoning); // true
 | `fauxAssistantMessage(contentBlocks, options?)` | Build a complete assistant message with content blocks |
 | `fauxText(text)` | Create a text content block |
 | `fauxThinking(text)` | Create a thinking content block |
-| `fauxToolCall(name, arguments)` | Create a tool call content block |
+| `fauxToolCall(name, arguments, options?)` | Create a tool call content block; `options.id` sets a fixed call id (default: random) |
 
 Options for `fauxAssistantMessage`:
 
 ```typescript
 {
-  stopReason?: StopReason; // default: "stop"
-  usage?: Partial<Usage>;  // default: zero tokens
+  stopReason?: StopReason;   // default: "stop"
+  errorMessage?: string;
+  responseId?: string;
+  timestamp?: number;        // default: Date.now()
 }
 ```
+
+`fauxAssistantMessage` always sets zero-token usage. To return custom usage, provide a `FauxResponseFactory` (a function `(context, options, state, model) => AssistantMessage | Promise<AssistantMessage>`) in the response queue instead — its returned message's `usage` is preserved. `state.callCount` lets factories branch on request number.
 
 ## Queue Management
 

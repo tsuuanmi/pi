@@ -28,12 +28,12 @@ Unified LLM API with automatic model discovery, provider configuration, token an
 
 - [Validation](validation.md) - TypeBox schema validation, `validateToolCall`, and custom validators.
 - [Utility Functions](utilities.md) - `StringEnum`, JSON repair parsing, proxy configuration, and session resource cleanup.
-- [Diagnostics](utils/diagnostics.md) - Diagnostic collection for provider requests.
+- [Diagnostics](utils/diagnostics.md) - `AssistantMessageDiagnostic` helpers for failure and recovery diagnostics.
 - [Event Stream](utils/event-stream.md) - `EventStream` class for typed async streaming.
-- [HTTP Headers](utils/headers.md) - Header construction for provider requests.
-- [JSON Parse](utils/json-parse.md) - `parseStreamingJson()`, `repairJson()` for LLM output parsing.
-- [Node HTTP Proxy](utils/node-http-proxy.md) - HTTP proxy configuration for Node.js.
-- [Overflow](utils/overflow.md) - Context overflow detection.
+- [HTTP Headers](utils/headers.md) - `headersToRecord()` header conversion.
+- [JSON Parse](utils/json-parse.md) - `parseStreamingJson()`, `parseJsonWithRepair()`, `repairJson()` for LLM output parsing.
+- [Node HTTP Proxy](utils/node-http-proxy.md) - `resolveHttpProxyUrlForTarget()` and proxy env resolution.
+- [Overflow](utils/overflow.md) - `isContextOverflow()` context overflow detection.
 - [Provider Environment](utils/provider-env.md) - `getProviderEnvValue()`, `findEnvKeys()`, `getEnvApiKey()`.
 - [Sanitize Unicode](utils/sanitize-unicode.md) - `sanitizeSurrogates()` for safe text handling.
 - [TypeBox Helpers](utils/typebox-helpers.md) - `StringEnum()` for tool schemas.

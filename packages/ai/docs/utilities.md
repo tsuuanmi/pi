@@ -43,20 +43,20 @@ These utilities are used internally for streaming tool call argument parsing and
 
 ## Provider Environment Resolution
 
-`getProviderEnvValue()` resolves environment variables with scoped overrides and Bun sandbox fallbacks:
+`getProviderEnvValue(name, env?)` resolves environment variables with scoped overrides and Bun sandbox fallbacks:
 
 ```typescript
 import { getProviderEnvValue } from "@tsuuanmi/pi-ai";
 
 // Resolution order:
-// 1. Scoped env override (from StreamOptions.env)
+// 1. Scoped env override (the ProviderEnv argument)
 // 2. process.env
 // 3. Bun sandbox fallback (/proc/self/environ)
 
-const apiKey = getProviderEnvValue("ANTHROPIC_API_KEY", scopedEnv);
+const apiKey = getProviderEnvValue("ANTHROPIC_API_KEY", { ANTHROPIC_API_KEY: "per-request-key" });
 ```
 
-This function is used internally for API key and proxy resolution. It handles the Bun compiled binary edge case where `process.env` may be empty inside Linux sandboxes.
+This function is used internally for API key and proxy resolution. It handles the Bun compiled binary edge case where `process.env` may be empty inside Linux sandboxes. See [Provider Environment](utils/provider-env.md) for the credential lookup helpers (`findEnvKeys`, `getEnvApiKey`).
 
 ## HTTP Proxy Configuration
 
@@ -93,9 +93,11 @@ Headers utilities:
 ```typescript
 import { headersToRecord } from "@tsuuanmi/pi-ai";
 
-// Convert Headers or Record<string, string> to a flat Record<string, string | null>
-const record = headersToRecord(headers);
+// Convert a Headers instance to a flat Record<string, string>
+const record = headersToRecord(response.headers);
 ```
+
+See [HTTP Headers](utils/headers.md).
 
 ## Sanitize Unicode Surrogates
 

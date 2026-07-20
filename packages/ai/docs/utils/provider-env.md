@@ -1,26 +1,36 @@
 # Provider Environment
 
-Provider-scoped environment variable resolution for API keys and configuration.
+Environment variable resolution for API keys and provider configuration.
 
 ## `getProviderEnvValue()`
+
+Resolves an environment variable from scoped overrides, then `process.env`, then the Bun sandbox fallback:
 
 ```typescript
 import { getProviderEnvValue } from "@tsuuanmi/pi-ai";
 
-// Reads provider-scoped env vars first, then falls back to global
-const apiKey = getProviderEnvValue("API_KEY", { provider: "anthropic", providerEnv: process.env });
+const apiKey = getProviderEnvValue("ANTHROPIC_API_KEY");
+// Or scoped to a request:
+const apiKey = getProviderEnvValue("ANTHROPIC_API_KEY", { ANTHROPIC_API_KEY: "per-request-key" });
 ```
 
-## Provider-Scoped Variables
+Resolution order:
 
-Environment variables can be scoped to specific providers:
+1. `env` override (the `ProviderEnv` argument)
+2. `process.env`
+3. Bun sandbox fallback (`/proc/self/environ`, for Bun compiled binaries in Linux sandboxes)
 
-| Global Variable | Provider-Scoped Variable | Description |
-|----------------|--------------------------|-------------|
-| `OPENAI_API_KEY` | `OPENAI_OPENAI_API_KEY` | OpenAI API key |
-| `ANTHROPIC_API_KEY` | `ANTHROPIC_ANTHROPIC_API_KEY` | Anthropic API key |
+Case sensitivity matches JavaScript's default (env var names are used as-is). Lookup is not case-normalized here; use the canonical uppercase name.
 
-Provider-scoped variables take precedence over global variables.
+## Per-Request Scoping
+
+Provider-scoping is done via the `env` field on `StreamOptions`, not via special env var names. Values in `env` take precedence over `process.env` for the duration of a single request:
+
+```typescript
+const response = await complete(model, context, {
+  env: { ANTHROPIC_API_KEY: "per-request-key", HTTPS_PROXY: "http://corp:8080" },
+});
+```
 
 ## `findEnvKeys()`
 
@@ -28,23 +38,33 @@ Provider-scoped variables take precedence over global variables.
 import { findEnvKeys } from "@tsuuanmi/pi-ai";
 
 const keys = findEnvKeys("anthropic");
-// Returns: ["ANTHROPIC_OAUTH_TOKEN", "ANTHROPIC_API_KEY"]
+// Returns the subset of ["ANTHROPIC_OAUTH_TOKEN", "ANTHROPIC_API_KEY"] that is set,
+// or undefined if none are set.
 ```
 
-Finds configured environment variable names for a provider.
+Returns the configured environment variable names that can provide credentials for a provider, in precedence order. For unknown providers, returns `undefined`.
 
 ## `getEnvApiKey()`
 
 ```typescript
 import { getEnvApiKey } from "@tsuuanmi/pi-ai";
 
-const key = getEnvApiKey("openai");
-// Reads from OPENAI_API_KEY or OPENAI_OPENAI_API_KEY
+const key = getEnvApiKey("openai"); // reads OPENAI_API_KEY
+const key = getEnvApiKey("anthropic"); // reads ANTHROPIC_OAUTH_TOKEN first, then ANTHROPIC_API_KEY
 ```
 
-Gets the API key value for a provider from environment variables.
+Returns the first set credential value for a provider, or `undefined` if none is configured. The `stream`/`complete` entrypoints call this automatically when no explicit `apiKey` is passed.
+
+## Built-in Credential Env Vars
+
+| Provider | Variables (in precedence order) |
+|----------|----------------------------------|
+| `anthropic` | `ANTHROPIC_OAUTH_TOKEN`, `ANTHROPIC_API_KEY` |
+| `openai` | `OPENAI_API_KEY` |
+
+Other providers have no built-in credential lookup; pass `apiKey` explicitly or extend the registry.
 
 ## See Also
 
 - [Models and Providers](../models.md) - Provider configuration
-- [Browser and Node.js](../browser-usage.md) - Environment detection
+- [Browser and Node.js](../browser-usage.md) - Environment detection and Bun fallback

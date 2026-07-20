@@ -7,7 +7,7 @@ The library supports browser environments. Pass the API key explicitly since `pr
 ```typescript
 import { getModel, complete } from "@tsuuanmi/pi-ai";
 
-const model = getModel("anthropic", "claude-3-5-haiku-20241022");
+const model = getModel("anthropic", "claude-haiku-4-5");
 
 const response = await complete(model, {
   messages: [{ role: "user", content: "Hello!" }],

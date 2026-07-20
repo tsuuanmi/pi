@@ -6,12 +6,14 @@ The API registry manages provider implementations and enables lazy loading of pr
 
 Four provider APIs are registered at module load time:
 
-| API | Default Provider | Stream Function |
-|-----|-----------------|----------------|
-| `anthropic-messages` | Anthropic | `streamAnthropic()` |
-| `openai-completions` | OpenAI, Ollama, vLLM, LiteLLM | `streamOpenAICompletions()` |
-| `openai-responses` | OpenAI | `streamOpenAIResponses()` |
-| `openai-codex-responses` | OpenAI Codex | `streamOpenAICodexResponses()` |
+| API | Stream Function | Common Providers |
+|-----|-----------------|-----------------|
+| `anthropic-messages` | `streamAnthropic()` | Anthropic |
+| `openai-completions` | `streamOpenAICompletions()` | OpenAI, plus OpenAI-compatible servers (Ollama, vLLM, LiteLLM) |
+| `openai-responses` | `streamOpenAIResponses()` | OpenAI |
+| `openai-codex-responses` | `streamOpenAICodexResponses()` | OpenAI Codex |
+
+The registry is keyed by `api`. Multiple `provider` values can share one API (e.g. `openai`, `ollama`, `vllm` all use `openai-completions`).
 
 ### Lazy Loading
 
@@ -19,11 +21,18 @@ Provider modules are loaded on first use, not at import time. Each provider uses
 
 ## Registering a Custom API Provider
 
-Use `registerApiProvider()` to add a custom API implementation:
+Use `registerApiProvider()` to add a custom API implementation. Both `stream` and `streamSimple` are required:
 
 ```typescript
 import { registerApiProvider } from "@tsuuanmi/pi-ai";
-import type { Api, AssistantMessageEventStream, Context, Model, StreamOptions } from "@tsuuanmi/pi-ai";
+import type {
+  Api,
+  AssistantMessageEventStream,
+  Context,
+  Model,
+  SimpleStreamOptions,
+  StreamOptions,
+} from "@tsuuanmi/pi-ai";
 
 interface MyProviderOptions extends StreamOptions {
   customOption?: string;
@@ -31,40 +40,50 @@ interface MyProviderOptions extends StreamOptions {
 
 registerApiProvider({
   api: "my-custom-api",
-  stream: (model: Model<Api>, context: Context, options?: StreamOptions) => {
+  stream: (model: Model<Api>, context: Context, options?: MyProviderOptions): AssistantMessageEventStream => {
     // Return AssistantMessageEventStream
   },
-  streamSimple: (model: Model<Api>, context: Context, options?: SimpleStreamOptions) => {
+  streamSimple: (model: Model<Api>, context: Context, options?: SimpleStreamOptions): AssistantMessageEventStream => {
     // Return AssistantMessageEventStream
   },
 });
 ```
 
+An optional `sourceId` lets you later remove only the providers you registered via `unregisterApiProviders(sourceId)`.
+
 After registration, models with `api: "my-custom-api"` will route to your provider.
 
-## Resetting Providers
+## Resetting and Clearing Providers
 
 ```typescript
-import { resetApiProviders } from "@tsuuanmi/pi-ai";
+import { resetApiProviders, clearApiProviders, unregisterApiProviders } from "@tsuuanmi/pi-ai";
 
-// Clears all providers and re-registers built-in providers
+// Clear all providers and re-register the built-in providers
 resetApiProviders();
+
+// Clear all providers without re-registering built-ins
+clearApiProviders();
+
+// Remove only providers registered with a given sourceId
+unregisterApiProviders("my-extension");
 ```
 
 ## Type Safety
 
-Models are typed by their API, which keeps provider-specific option types enforced:
+Models are typed by their API, which keeps provider-specific option types enforced when you call the per-provider stream function directly:
 
 ```typescript
-import { streamAnthropic } from "@tsuuanmi/pi-ai";
+import { getModel, streamAnthropic } from "@tsuuanmi/pi-ai";
 import type { AnthropicOptions } from "@tsuuanmi/pi-ai";
+
+const claude = getModel("anthropic", "claude-sonnet-4-5");
 
 const options: AnthropicOptions = {
   thinkingEnabled: true,
   effort: "high",
 };
 
-await streamAnthropic(claude, context, options);
+await streamAnthropic(claude, context, options).result();
 ```
 
 The generic `stream()` and `complete()` functions accept `StreamOptions` with additional provider fields, but do not enforce provider-specific types at compile time.

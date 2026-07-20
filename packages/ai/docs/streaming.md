@@ -16,7 +16,7 @@ The `@tsuuanmi/pi-ai` package provides four top-level functions for interacting 
 ```typescript
 import { getModel, stream } from "@tsuuanmi/pi-ai";
 
-const model = getModel("anthropic", "claude-sonnet-4-20250514");
+const model = getModel("anthropic", "claude-sonnet-4-5");
 const s = stream(model, context);
 
 for await (const event of s) {
@@ -47,21 +47,21 @@ These functions accept a `SimpleStreamOptions` object with a unified `reasoning`
 ```typescript
 import { getModel, streamSimple } from "@tsuuanmi/pi-ai";
 
-const model = getModel("anthropic", "claude-sonnet-4-20250514");
+const model = getModel("anthropic", "claude-sonnet-4-5");
 const s = streamSimple(model, context, { reasoning: "high" });
 ```
 
-The `reasoning` option maps to the appropriate provider-specific parameter:
+The `reasoning` option maps to the appropriate provider-specific parameter. The clamped level (via `clampThinkingLevel`) is passed straight through for OpenAI; for Anthropic it is mapped to an effort level:
 
-| Reasoning Level | Anthropic | OpenAI Responses | OpenAI Completions |
-|----------------|-----------|-----------------|-------------------|
-| `"minimal"` | `thinkingEnabled: true, effort: "low"` | `reasoningEffort: "low"` | Omitted |
-| `"low"` | `thinkingEnabled: true, effort: "low"` | `reasoningEffort: "low"` | Omitted |
-| `"medium"` | `thinkingEnabled: true, effort: "medium"` | `reasoningEffort: "medium"` | Omitted |
-| `"high"` | `thinkingEnabled: true, effort: "high"` | `reasoningEffort: "high"` | Omitted |
-| `"xhigh"` | `thinkingEnabled: true, effort: "xhigh"` | Not supported | Not supported |
+| Reasoning Level | Anthropic (`effort`) | OpenAI Responses/Completions (`reasoningEffort`) |
+|----------------|----------------------|-------------------------------------------------|
+| `"minimal"` | `"low"` | `"minimal"` |
+| `"low"` | `"low"` | `"low"` |
+| `"medium"` | `"medium"` | `"medium"` |
+| `"high"` | `"high"` | `"high"` |
+| `"xhigh"` | `"high"` (default; `"xhigh"` only on models that opt in via `thinkingLevelMap`) | `"xhigh"` |
 
-Models without reasoning support ignore the `reasoning` option.
+For Anthropic, `thinkingEnabled: true` is set whenever a reasoning level is requested. `mapThinkingLevelToEffort` consults `model.thinkingLevelMap` first, falling back to the table above. Models without reasoning support ignore the `reasoning` option.
 
 ## Stream Event Reference
 

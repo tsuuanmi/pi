@@ -10,7 +10,7 @@ Built-in providers are automatically registered when the package is imported. Th
 
 | Provider ID | API | Description |
 |-------------|-----|-------------|
-| `anthropic` | `anthropic` | Claude models with extended thinking |
+| `anthropic` | `anthropic-messages` | Claude models with extended thinking |
 | `openai` | `openai-responses` | OpenAI Responses API (primary) |
 | `openai` | `openai-completions` | OpenAI Chat Completions API |
 | `openai-codex` | `openai-codex-responses` | OpenAI Codex Responses API |

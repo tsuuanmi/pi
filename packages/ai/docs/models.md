@@ -11,7 +11,7 @@ Returns a fully typed `Model` object. Both provider and model ID are auto-comple
 ```typescript
 import { getModel } from "@tsuuanmi/pi-ai";
 
-const model = getModel("anthropic", "claude-sonnet-4-20250514");
+const model = getModel("anthropic", "claude-sonnet-4-5");
 // model.api, model.provider, model.name, model.contextWindow, etc. all typed
 ```
 
@@ -35,33 +35,40 @@ Returns all available provider names:
 ```typescript
 import { getProviders } from "@tsuuanmi/pi-ai";
 
-console.log(getProviders()); // ['openai', 'anthropic', 'openai-codex', ...]
+console.log(getProviders()); // ['anthropic', 'openai', 'openai-codex']
 ```
 
 ## Model Interface
 
 ```typescript
-interface Model<TApi extends Api = Api> {
+interface Model<TApi extends Api> {
   id: string;
   name: string;
   api: TApi;
-  provider: string;
+  provider: Provider;
+  baseUrl: string;
   reasoning: boolean;
-  input: ("text" | "image")[];
+  input: "text"[];                    // currently only "text" input is modeled
   cost: {
-    input: number;      // per million tokens
-    output: number;     // per million tokens
-    cacheRead: number;  // per million tokens
-    cacheWrite: number; // per million tokens
+    input: number;      // $/million tokens
+    output: number;     // $/million tokens
+    cacheRead: number;  // $/million tokens
+    cacheWrite: number; // $/million tokens
   };
   contextWindow: number;
   maxTokens: number;
-  baseUrl?: string;
   headers?: Record<string, string>;
-  thinkingLevelMap?: Partial<Record<ModelThinkingLevel, string | null>>;
-  compat?: Record<string, unknown>;
+  /** Maps pi thinking levels to provider-specific values. Missing keys use
+   *  provider defaults; null marks a level as unsupported. */
+  thinkingLevelMap?: ThinkingLevelMap;
+  /** Compatibility overrides. If unset, auto-detected from baseUrl. The shape
+   *  is discriminated by `api`: OpenAICompletionsCompat, OpenAIResponsesCompat,
+   *  or AnthropicMessagesCompat. */
+  compat?: ...;
 }
 ```
+
+`baseUrl` is required. Built-in models are generated from `models.json` into `src/models/generated.ts` (regenerate with `npm run generate-models`); custom models are constructed by hand.
 
 ### Cost Tracking
 
@@ -103,9 +110,11 @@ const localModel: Model<"openai-completions"> = {
 };
 ```
 
+`baseUrl` is required for custom models. Without it, requests cannot be routed.
+
 ### Compatibility Settings
 
-For OpenAI-compatible servers that don't support all features:
+The `compat` field is a discriminated union keyed by `api`: `OpenAICompletionsCompat` (for `"openai-completions"`), `OpenAIResponsesCompat` (for `"openai-responses"`), or `AnthropicMessagesCompat` (for `"anthropic-messages"`). When omitted, compatibility is auto-detected from `baseUrl`. Below is `OpenAICompletionsCompat`, the largest of the three.
 
 ```typescript
 const compat: OpenAICompletionsCompat = {
@@ -135,23 +144,28 @@ const compat: OpenAICompletionsCompat = {
 | `supportsUsageInStreaming` | `stream_options: { include_usage: true }` |
 | `maxTokensField` | `max_completion_tokens` vs `max_tokens` |
 | `requiresToolResultName` | `name` field required on tool results |
-| `requiresAssistantAfterToolResult` | Assistant message after tool results |
-| `requiresThinkingAsText` | Thinking blocks as `<thinking>` text |
+| `requiresAssistantAfterToolResult` | A user message after tool results requires an assistant message in between |
+| `requiresThinkingAsText` | Thinking blocks converted to `<thinking>` text |
+| `requiresReasoningContentOnAssistantMessages` | Replay assistant messages with empty `reasoning_content` when reasoning is on |
 | `thinkingFormat` | `"openai"` (reasoning_effort) or `"string-thinking"` |
 | `supportsStrictMode` | `strict` in tool definitions |
-| `cacheControlFormat` | `"anthropic"` for Anthropic-style cache_control |
-| `sendSessionAffinityHeaders` | Session affinity headers for caching |
+| `cacheControlFormat` | `"anthropic"` for Anthropic-style `cache_control` markers |
+| `sendSessionAffinityHeaders` | Send session-affinity headers for caching |
+| `supportsLongCacheRetention` | Long prompt cache retention (e.g. `prompt_cache_retention: "24h"`) |
 | `supportsPromptCacheKey` | Emit `prompt_cache_key` for OpenAI-style prompt caching. Default: `true`; set `false` per-provider to opt out. |
+
+`OpenAIResponsesCompat` exposes a smaller subset (`supportsDeveloperRole`, `sendSessionIdHeader`, `supportsLongCacheRetention`). `AnthropicMessagesCompat` exposes `supportsLongCacheRetention`, `sendSessionAffinityHeaders`, `supportsCacheControlOnTools`, `supportsTemperature`, and `allowEmptySignature`. See `src/types.ts` for the authoritative field list.
 
 ### Model Thinking Level Maps
 
-Use `thinkingLevelMap` for models with provider-specific reasoning controls:
+`thinkingLevelMap` maps pi thinking levels (`"off"` plus `"minimal"` | `"low"` | `"medium"` | `"high"` | `"xhigh"`) to provider-specific values. Missing keys use provider defaults. A `null` value marks a level as unsupported. Use it for models with provider-specific reasoning controls:
 
 ```typescript
 const model: Model<"openai-completions"> = {
   // ...
   thinkingLevelMap: {
-    minimal: null,     // Unsupported level
+    off: null,        // Thinking cannot be disabled explicitly
+    minimal: null,    // Unsupported level
     low: null,
     medium: null,
     high: "high",     // Maps to provider-specific value
@@ -164,7 +178,7 @@ const model: Model<"openai-completions"> = {
 };
 ```
 
-Missing keys use provider defaults. A `null` value marks a level as unsupported.
+`getSupportedThinkingLevels()` reads `thinkingLevelMap` to compute the available levels. `clampThinkingLevel()` maps a requested level to the nearest supported one.
 
 ## Built-in Providers
 

@@ -1,15 +1,21 @@
 # HTTP Headers
 
-Header construction utilities for LLM provider requests.
+Header conversion utility for provider responses and requests.
 
-## Usage
+## `headersToRecord()`
 
 ```typescript
-import { buildHeaders } from "@tsuuanmi/pi-ai";
+import { headersToRecord } from "@tsuuanmi/pi-ai";
 ```
 
-Provides utilities for constructing HTTP headers for provider API requests, including authentication headers, content-type headers, and provider-specific headers.
+Converts a `Headers` instance (or any `Record<string, string>`-like object with `forEach`) into a flat `Record<string, string>`. Used internally to normalize provider response headers into a plain object.
+
+```typescript
+const record = headersToRecord(response.headers);
+// record: { "content-type": "application/json", ... }
+```
 
 ## See Also
 
 - [API Registry](../providers/api-registry.md) - Provider configuration
+- [Event Stream](event-stream.md) - `headersToRecord` is exported alongside `EventStream`

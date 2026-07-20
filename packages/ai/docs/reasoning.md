@@ -7,7 +7,7 @@ Many models support extended thinking/reasoning capabilities where they show the
 ```typescript
 import { getModel } from "@tsuuanmi/pi-ai";
 
-const model = getModel("anthropic", "claude-sonnet-4-20250514");
+const model = getModel("anthropic", "claude-sonnet-4-5");
 if (model.reasoning) {
   console.log("Model supports reasoning/thinking");
 }
@@ -30,9 +30,9 @@ const levels = getSupportedThinkingLevels(model);
 ```typescript
 import { getModel, completeSimple } from "@tsuuanmi/pi-ai";
 
-const model = getModel("anthropic", "claude-sonnet-4-20250514");
+const model = getModel("anthropic", "claude-sonnet-4-5");
 const response = await completeSimple(model, {
-  messages: [{ role: "user", content: "Solve: 2x + 5 = 13" }],
+  messages: [{ role: "user", content: "Solve: 2x + 5 = 13", timestamp: Date.now() }],
 }, {
   reasoning: "medium",
 });
@@ -44,13 +44,17 @@ Non-reasoning models silently ignore the `reasoning` option.
 
 ### Level Mapping
 
-| Level | Anthropic | OpenAI Responses | OpenAI Completions |
-|-------|-----------|-----------------|-------------------|
-| `minimal` | `thinkingEnabled: true, effort: "low"` | `reasoningEffort: "low"` | Omitted |
-| `low` | `thinkingEnabled: true, effort: "low"` | `reasoningEffort: "low"` | Omitted |
-| `medium` | `thinkingEnabled: true, effort: "medium"` | `reasoningEffort: "medium"` | Omitted |
-| `high` | `thinkingEnabled: true, effort: "high"` | `reasoningEffort: "high"` | Omitted |
-| `xhigh` | `thinkingEnabled: true, effort: "xhigh"` | Not supported | Not supported |
+`streamSimple`/`completeSimple` clamp the requested level to the nearest supported one and pass it through for OpenAI; for Anthropic it is mapped to an effort level:
+
+| Level | Anthropic (`effort`) | OpenAI Responses/Completions (`reasoningEffort`) |
+|-------|----------------------|-------------------------------------------------|
+| `minimal` | `"low"` | `"minimal"` |
+| `low` | `"low"` | `"low"` |
+| `medium` | `"medium"` | `"medium"` |
+| `high` | `"high"` | `"high"` |
+| `xhigh` | `"high"` (default; `"xhigh"` only on models that opt in via `thinkingLevelMap`) | `"xhigh"` |
+
+For Anthropic, `thinkingEnabled: true` is set whenever a level is requested. `mapThinkingLevelToEffort` consults `model.thinkingLevelMap` first, falling back to the table above.
 
 ## Provider-Specific Options
 
@@ -59,7 +63,7 @@ Non-reasoning models silently ignore the `reasoning` option.
 ```typescript
 import { getModel, stream } from "@tsuuanmi/pi-ai";
 
-const model = getModel("anthropic", "claude-sonnet-4-20250514");
+const model = getModel("anthropic", "claude-sonnet-4-5");
 const s = stream(model, context, {
   thinkingEnabled: true,
   effort: "high",
@@ -70,7 +74,7 @@ const s = stream(model, context, {
 | Option | Description |
 |--------|-------------|
 | `thinkingEnabled` | Enable extended thinking |
-| `effort` | `"low"` \| `"medium"` \| `"high"` \| `"xhigh"` \| `"max"` (Opus 4.6 only) |
+| `effort` | `"low"` \| `"medium"` \| `"high"` \| `"xhigh"` \| `"max"` (`"max"` is only valid on Opus 4.6; Opus 4.7+ and Fable 5 use `"xhigh"`) |
 | `thinkingDisplay` | `"summarized"` (default) \| `"omitted"` — controls how thinking content returns |
 
 When `thinkingDisplay` is `"omitted"`, thinking blocks return empty text but the encrypted signature still travels for multi-turn continuity. This yields faster time-to-first-text-token when your UI does not surface thinking.

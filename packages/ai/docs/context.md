@@ -7,7 +7,7 @@ The `Context` object holds the conversation state and is the primary input to al
 ```typescript
 interface Context {
   systemPrompt?: string;
-  messages: AgentMessage[];
+  messages: Message[];
   tools?: Tool[];
 }
 ```
@@ -15,30 +15,29 @@ interface Context {
 | Field | Type | Description |
 |-------|------|-------------|
 | `systemPrompt` | `string?` | System-level instructions |
-| `messages` | `AgentMessage[]` | Conversation history |
+| `messages` | `Message[]` | Conversation history |
 | `tools` | `Tool[]?` | Available tools for this request |
 
 ## Message Types
 
+The `Message` union covers the three roles in a conversation: `UserMessage`, `AssistantMessage`, and `ToolResultMessage`.
+
 ### User Message
 
 ```typescript
-const userMessage: AgentMessage = {
+const userMessage: Message = {
   role: "user",
   content: "What is the weather in London?",
   timestamp: Date.now(),
 };
 ```
 
-Content can be a string or an array of content blocks:
+Content can be a plain string or an array of text content blocks:
 
 ```typescript
-const multimodalMessage: AgentMessage = {
+const message: Message = {
   role: "user",
-  content: [
-    { type: "text", text: "What is in this image?" },
-    { type: "image", url: "https://example.com/photo.jpg" },
-  ],
+  content: [{ type: "text", text: "What is the weather in London?" }],
   timestamp: Date.now(),
 };
 ```
@@ -48,15 +47,17 @@ const multimodalMessage: AgentMessage = {
 ```typescript
 interface AssistantMessage {
   role: "assistant";
-  content: ContentBlock[];     // text, thinking, and toolCall blocks
-  api: string;
-  provider: string;
+  content: (TextContent | ThinkingContent | ToolCall)[];
+  api: Api;
+  provider: Provider;
   model: string;
+  responseModel?: string;   // Concrete `chunk.model` when different from the requested `model`
+  responseId?: string;       // Provider-specific response/message identifier when the upstream API exposes one
+  diagnostics?: AssistantMessageDiagnostic[];
+  usageProvenance?: UsageProvenance;
   usage: Usage;
   stopReason: StopReason;
   errorMessage?: string;
-  responseId?: string;
-  diagnostics?: AssistantMessageDiagnostic[];
   timestamp: number;
 }
 ```
@@ -65,36 +66,25 @@ interface AssistantMessage {
 
 | Block Type | Fields | Description |
 |------------|--------|-------------|
-| `text` | `type: "text"`, `text: string` | Text content |
-| `thinking` | `type: "thinking"`, `thinking: string` | Extended thinking content |
-| `toolCall` | `type: "toolCall"`, `id: string`, `name: string`, `arguments: Record<string, unknown>` | Tool invocation |
+| `text` | `type: "text"`, `text: string`, `textSignature?` | Text content (signature carries OpenAI responses message metadata) |
+| `thinking` | `type: "thinking"`, `thinking: string`, `thinkingSignature?`, `redacted?` | Extended thinking content; `thinkingSignature` carries opaque reasoning IDs for multi-turn continuity; `redacted` marks safety-filtered thinking |
+| `toolCall` | `type: "toolCall"`, `id: string`, `name: string`, `arguments: Record<string, unknown>`, `thoughtSignature?` | Tool invocation |
 
 ### Tool Result Message
 
 ```typescript
-const toolResult: AgentMessage = {
+const toolResult: Message = {
   role: "toolResult",
   toolCallId: call.id,
   toolName: call.name,
   content: [{ type: "text", text: "Result text" }],
+  details: undefined,  // optional provider/tool-specific details
   isError: false,
   timestamp: Date.now(),
 };
 ```
 
-### Notification Message (Custom Type)
-
-Extend `AgentMessage` via declaration merging:
-
-```typescript
-declare module "@tsuuanmi/pi-ai" {
-  interface CustomAgentMessages {
-    notification: { role: "notification"; text: string; timestamp: number };
-  }
-}
-```
-
-Handle custom types in `convertToLlm` (agent package) or filter them when building context for the LLM.
+`ToolResultMessage` is generic over `TDetails` so callers can attach structured details to a result; the field is optional and ignored by providers.
 
 ## Cross-Provider Handoffs
 
@@ -106,18 +96,18 @@ When messages from one provider are sent to a different provider, the library au
 - **Tool calls and regular text**: preserved unchanged
 
 ```typescript
-import { getModel, complete, Context } from "@tsuuanmi/pi-ai";
+import { getModel, complete, type Context } from "@tsuuanmi/pi-ai";
 
-const claude = getModel("anthropic", "claude-sonnet-4-20250514");
+const claude = getModel("anthropic", "claude-sonnet-4-5");
 const context: Context = { messages: [] };
 
-context.messages.push({ role: "user", content: "What is 25 * 18?" });
-const claudeResponse = await complete(claude, context, { thinkingEnabled: true });
+context.messages.push({ role: "user", content: "What is 25 * 18?", timestamp: Date.now() });
+const claudeResponse = await completeSimple(claude, context, { reasoning: "high" });
 context.messages.push(claudeResponse);
 
 // Switch to GPT — Claude's thinking becomes <thinking> tagged text
 const gpt = getModel("openai", "gpt-4o-mini");
-context.messages.push({ role: "user", content: "Is that correct?" });
+context.messages.push({ role: "user", content: "Is that correct?", timestamp: Date.now() });
 const gptResponse = await complete(gpt, context);
 ```
 
@@ -130,7 +120,7 @@ const serialized = JSON.stringify(context);
 
 // Later: restore and continue
 const restored: Context = JSON.parse(serialized);
-restored.messages.push({ role: "user", content: "Follow-up question" });
+restored.messages.push({ role: "user", content: "Follow-up question", timestamp: Date.now() });
 const response = await complete(model, restored);
 ```
 
@@ -144,7 +134,7 @@ interface Usage {
   output: number;
   cacheRead: number;
   cacheWrite: number;
-  cacheWrite1h?: number;
+  cacheWrite1h?: number;  // Subset of cacheWrite written with 1h retention (Anthropic only)
   totalTokens: number;
   cost: {
     input: number;
@@ -157,3 +147,5 @@ interface Usage {
 ```
 
 Costs are in USD. Input and output costs are per-token rates multiplied by usage. Cache costs follow provider-specific pricing (e.g., Anthropic charges 2x base input for 1h cache writes).
+
+`AssistantMessage` also carries an optional `usageProvenance` field describing how usage was obtained: `provider_reported` (with the reported field names), `provider_unavailable`, or `fallback_default`.
