@@ -4,6 +4,7 @@
 
 - **workflows**: Moved the remaining shared/runtime workflow infrastructure out of `src/harness/` into top-level `src/runtime`, `src/subagents`, `src/artifacts`, `src/audit`, `src/compaction`, `src/orchestration`, `src/registry`, `src/session`, and `src/state` paths; no `harness/*` compatibility wrappers are provided.
 - **workflows**: Moved skill-owned TypeScript from `src/harness/<skill>/` to `src/skills/<skill>/` and updated public barrel exports to the new `skills/<skill>` paths; no `harness/<skill>` compatibility wrappers are provided.
+- **workflows**: Moved tests from `test/harness/<category>/` to top-level `test/<src-dir>/` mirrors (`test/deep-interview`, `test/ralplan`, `test/runtime`, `test/team`, `test/ultragoal`, `test/session`, `test/audit`, `test/orchestration`, `test/state`, `test/compaction`, `test/registry`) and split `test/harness/team/team-ultragoal-workflow.test.ts` into `test/team/team-workflow.test.ts` and `test/ultragoal/ultragoal-workflow.test.ts`; no `test/harness/` directory remains.
 
 ### Added
 
@@ -30,7 +31,7 @@
 - **workflows**: Package builds now clear generated skill/agent asset directories before copying source assets, preventing stale `dist/agents` profiles from persisting.
 - **agents**: The bundled `expert` profile now includes required agent frontmatter, and bundled workflow agent prompts include more detailed artifact and gate persistence contracts.
 
-- **workflows**: Skill instructions and docs now require current-session id propagation for every `pi workflow ...` command, document HUD visibility for command-created sessions (attach/switch model), and document model-visible-tool subagent spawning. Added `test/harness/shared/session-propagation.test.ts` covering same-session HUD active-state read and cross-session HUD isolation.
+- **workflows**: Skill instructions and docs now require current-session id propagation for every `pi workflow ...` command, document HUD visibility for command-created sessions (attach/switch model), and document model-visible-tool subagent spawning. Added `test/session/session-propagation.test.ts` covering same-session HUD active-state read and cross-session HUD isolation.
 - **workflows**: Public expected-role selector helpers now register built-in transition tables through the package entrypoint, so consumers do not need side-effect imports before calling them.
 - **ultragoal**: Completion quality-gate validation now reports missing nested fields together, and the skill docs include the full accepted `architectReview`/`executorQa`/`iteration` schema.
 - **ralplan**: The explorer pre-planner gate no longer writes state with `force`; it goes through the normal manifest transition/tamper gate like the released ralplan artifact path, avoiding spurious `force_overwrite` audit entries.

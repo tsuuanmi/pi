@@ -1,4 +1,4 @@
-# Harness Runtime
+# Runtime
 
 Session owner and primitive runtime for `pi workflow` commands.
 
@@ -34,5 +34,8 @@ Most verbs route to a live runtime owner when one is running for the target sess
 
 ## See Also
 
-- [Workflow control plane](../../workflow.md)
+- [Workflow control plane](../workflow.md)
+- [Commands](../commands/workflow.md)
+- [State](../state/state.md)
+- [Session](../session/session.md)
 - [Security](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/trust/security.md) - Sandbox boundaries

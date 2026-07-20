@@ -353,8 +353,8 @@ Workspace tests import packages from the gitignored `dist/`, so rebuild this pac
 - [docs/agents/agents.md](docs/agents/agents.md) — bundled agent profiles.
 - [docs/commands/workflow.md](docs/commands/workflow.md) — command entry points and supported verbs.
 - [docs/extensions/workflows.md](docs/extensions/workflows.md) — workflow extension hooks and registered tools.
-- [docs/skills/](docs/skills/) — per-skill design docs.
-- [docs/harness/](docs/harness/) — harness runtime, shared modules, subagent, and tool docs.
+- [docs/skills/](docs/skills/) — per-skill design and runtime docs.
+- [docs/runtime/](docs/runtime/), [docs/subagents/](docs/subagents/), [docs/state/](docs/state/), [docs/orchestration/](docs/orchestration/), [docs/artifacts/](docs/artifacts/), [docs/audit/](docs/audit/), [docs/compaction/](docs/compaction/), [docs/registry/](docs/registry/), [docs/session/](docs/session/) — per-source-directory module docs.
 - [CHANGELOG.md](CHANGELOG.md) — changes.
 - [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/skills/skills.md) — Pi skill format and installation paths.
 - [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/subagents/subagents.md) — Pi-native SubagentManager and subagent tools.

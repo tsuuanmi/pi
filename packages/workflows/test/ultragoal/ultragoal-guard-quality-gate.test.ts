@@ -522,11 +522,11 @@ test("plain briefs remain one goal and column-zero @goal delimiters split goals"
 
 test("no deferred Tier 2 tool names are registered or advertised in Ultragoal docs", async () => {
 	const transitionsSource = await readFile(
-		join(import.meta.dirname, "..", "..", "..", "src", "harness", "ultragoal", "ultragoal-transitions.ts"),
+		join(import.meta.dirname, "..", "..", "src", "skills", "ultragoal", "ultragoal-transitions.ts"),
 		"utf8",
 	);
 	const skillDoc = await readFile(
-		join(import.meta.dirname, "..", "..", "..", "src", "skills", "ultragoal", "SKILL.md"),
+		join(import.meta.dirname, "..", "..", "src", "skills", "ultragoal", "SKILL.md"),
 		"utf8",
 	);
 	for (const source of [transitionsSource, skillDoc]) {

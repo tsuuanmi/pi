@@ -2,7 +2,7 @@
 
 Goal-tracked autonomous execution for an approved, concrete plan.
 
-**Source:** `src/skills/ultragoal/SKILL.md`
+**Source:** `src/skills/ultragoal/`
 
 ## Usage
 
@@ -10,12 +10,33 @@ Goal-tracked autonomous execution for an approved, concrete plan.
 /skill:ultragoal <approved plan or concrete task>
 ```
 
+## Overview
+
+Ultragoal manages goal-tracked execution under the current session root. Each goal must produce durable checkpoint evidence and pass completion receipt validation before the workflow can close.
+
+## Module Structure
+
+| Module | Description |
+|--------|-------------|
+| `ultragoal-artifacts.ts` | Artifact tracking and validation. |
+| `ultragoal-compact.ts` | Prompt-efficient compact goal projection. |
+| `ultragoal-guard.ts` | Completion/blocker guard logic. |
+| `ultragoal-hud.ts` | HUD chip rendering for goal progress. |
+| `ultragoal-obstacles.ts` | Obstacle/blocker ledger helpers. |
+| `ultragoal-quality-gate.ts` | Quality gate schema validation. |
+| `ultragoal-receipt.ts` | Receipt and ledger validation. |
+| `ultragoal-runtime.ts` | Plan/state I/O and goal transitions. |
+| `ultragoal-tools.ts` | Registers `ultragoal_spawn_goal_agent`. |
+| `ultragoal-transitions.ts` | Skill transition table, expected-next goal selection, fail-closed validators. |
+
 ## Runtime Route
 
 - Read/write envelope state through `pi workflow state ultragoal ...` with the current `sessionId`.
 - Create and inspect goal state through `pi workflow ultragoal <create-plan|status|read-compact>`.
 - Advance/checkpoint goals through `pi workflow ultragoal <start-next|checkpoint|record-review-blockers|classify-blocker|guard>`.
 - Spawn workers through the guarded model-visible `ultragoal_spawn_goal_agent` tool.
+
+Use `ultragoal_spawn_goal_agent` for worker execution. It is state guarded: the harness computes the legal next goal from ultragoal state and refuses off-sequence spawns or runtime model/tool overrides.
 
 ## Workflow
 
@@ -38,7 +59,21 @@ Goal-tracked autonomous execution for an approved, concrete plan.
 | `blocked` | Waiting on a dependency or human decision. |
 | `review_blocked` | Needs review before proceeding. |
 
+## State Files
+
+| File | Description |
+|------|-------------|
+| `.pi/<sessionId>/workflows/ultragoal/state.json` | Active workflow envelope. |
+| `.pi/<sessionId>/ultragoal/goals.json` | Goal plan. |
+| `.pi/<sessionId>/ultragoal/ledger.jsonl` | Goal receipt ledger. |
+
+## Gates
+
+- Completion requires every non-superseded goal to be complete.
+- Completed goals must have valid completion receipts against the plan and ledger.
+- Blocked or failed goals remain human blockers until explicitly classified/resolved.
+
 ## See Also
 
 - [Workflow control plane](../../workflow.md)
-- [Ultragoal harness](../../harness/ultragoal/ultragoal.md)
+- [Subagents and workflow tools](../../subagents/subagents.md)
