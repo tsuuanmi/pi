@@ -1,6 +1,6 @@
 # Types
 
-Core type definitions for `@tsuuanmi/pi-agent`.
+Core type definitions for `@tsuuanmi/pi-agent`. Typebox (`typebox`) is used for tool parameter schemas; `Message`, `Model`, `AssistantMessage`, `AssistantMessageEvent`, `TextContent`, `Tool`, and `ToolResultMessage` are re-exported from `@tsuuanmi/pi-ai`.
 
 ## AgentMessage
 
@@ -39,8 +39,18 @@ interface AgentTool<TParameters extends TSchema = TSchema, TDetails = any> exten
 |-------|-------------|
 | `label` | Human-readable label for UI display |
 | `prepareArguments` | Optional compatibility shim for raw arguments before schema validation |
-| `execute` | Execute the tool call. Throw on failure. |
+| `execute` | Execute the tool call. Throw on failure instead of encoding errors in `content`. |
 | `executionMode` | Per-tool override: `"sequential"` or `"parallel"` |
+
+`Tool<TParameters>` from `@tsuuanmi/pi-ai` supplies `name`, `description`, optional `promptSnippet`, optional `promptGuidelines[]`, and `parameters: TParameters`.
+
+### AgentToolUpdateCallback
+
+```typescript
+type AgentToolUpdateCallback<T = any> = (partialResult: AgentToolResult<T>) => void;
+```
+
+Scoped to the current `execute()` invocation; calls made after the tool promise settles are ignored.
 
 ## AgentToolResult
 
@@ -73,6 +83,14 @@ type AgentEvent =
   | { type: "tool_execution_update"; toolCallId: string; toolName: string; args: any; partialResult: any }
   | { type: "tool_execution_end"; toolCallId: string; toolName: string; result: any; isError: boolean };
 ```
+
+## AgentToolCall
+
+```typescript
+type AgentToolCall = Extract<AssistantMessage["content"][number], { type: "toolCall" }>;
+```
+
+A single tool-call content block emitted by an assistant message.
 
 ## AgentContext
 
@@ -113,13 +131,13 @@ Configuration for the low-level agent loop. Extends `SimpleStreamOptions` with:
 | `transformContext` | `(messages, signal?) => Promise<AgentMessage[]>` | Transform context before convertToLlm |
 | `getApiKey` | `(provider) => string` | Dynamic API key resolution |
 | `providerRequestObserver` | `ProviderRequestObserver` | Observer for LLM request lifecycle |
-| `shouldStopAfterTurn` | `(context) => boolean` | Early termination check |
-| `prepareNextTurn` | `(signal?) => AgentLoopTurnUpdate` | Turn snapshot update |
-| `getSteeringMessages` | `() => AgentMessage[]` | Mid-run message injection |
-| `getFollowUpMessages` | `() => AgentMessage[]` | Post-stop message injection |
-| `toolExecution` | `"sequential" \| "parallel"` | Tool execution strategy |
-| `beforeToolCall` | `(context, signal?) => BeforeToolCallResult` | Pre-execution hook |
-| `afterToolCall` | `(context, signal?) => AfterToolCallResult` | Post-execution hook |
+| `shouldStopAfterTurn` | `(context: ShouldStopAfterTurnContext) => boolean` | Early termination check (called after `turn_end`; returns true to stop before polling steering/follow-up) |
+| `prepareNextTurn` | `(context: PrepareNextTurnContext) => AgentLoopTurnUpdate \| undefined` | Return replacement context/model/thinking state for the next turn |
+| `getSteeringMessages` | `() => Promise<AgentMessage[]>` | Mid-run message injection (after tool calls finish) |
+| `getFollowUpMessages` | `() => Promise<AgentMessage[]>` | Post-stop message injection |
+| `toolExecution` | `"sequential" \| "parallel"` | Tool execution strategy (default `"parallel"`) |
+| `beforeToolCall` | `(context: BeforeToolCallContext, signal?) => Promise<BeforeToolCallResult \| undefined>` | Pre-execution hook (after argument validation) |
+| `afterToolCall` | `(context: AfterToolCallContext, signal?) => Promise<AfterToolCallResult \| undefined>` | Post-execution hook (before `tool_execution_end`) |
 
 ## StreamFn
 
@@ -154,7 +172,46 @@ type QueueMode = "all" | "one-at-a-time";
 
 Controls how many queued messages are injected at each drain point.
 
-## Hook Types
+## Hook context types
+
+### BeforeToolCallContext
+
+```typescript
+interface BeforeToolCallContext {
+  assistantMessage: AssistantMessage;
+  toolCall: AgentToolCall;
+  args: unknown;          // validated arguments for the target tool schema
+  context: AgentContext;  // current agent context at prepare time
+}
+```
+
+### AfterToolCallContext
+
+```typescript
+interface AfterToolCallContext {
+  assistantMessage: AssistantMessage;
+  toolCall: AgentToolCall;
+  args: unknown;
+  result: AgentToolResult<any>;  // executed tool result before overrides
+  isError: boolean;
+  context: AgentContext;          // current agent context at finalize time
+}
+```
+
+### ShouldStopAfterTurnContext
+
+```typescript
+interface ShouldStopAfterTurnContext {
+  message: AssistantMessage;        // assistant message that completed the turn
+  toolResults: ToolResultMessage[]; // passed to the preceding turn_end event
+  context: AgentContext;            // context after the turn's messages were appended
+  newMessages: AgentMessage[];      // messages this loop invocation will return if it exits now
+}
+```
+
+`PrepareNextTurnContext` extends `ShouldStopAfterTurnContext`.
+
+## Hook result types
 
 ### BeforeToolCallResult
 
@@ -165,7 +222,7 @@ interface BeforeToolCallResult {
 }
 ```
 
-Return `{ block: true }` to prevent tool execution.
+Return `{ block: true }` to prevent tool execution; the loop emits an error tool result with `reason` (or a default message).
 
 ### AfterToolCallResult
 
@@ -180,6 +237,18 @@ interface AfterToolCallResult {
 
 Field-by-field override. Omitted fields keep original values. No deep merge.
 
+## AgentLoopTurnUpdate
+
+```typescript
+interface AgentLoopTurnUpdate {
+  context?: AgentContext;
+  model?: Model<any>;
+  thinkingLevel?: ThinkingLevel;
+}
+```
+
+Replacement runtime state applied before the next provider request. Return `undefined` to keep current values.
+
 ## ProviderRequestObserver
 
 ```typescript
@@ -190,5 +259,14 @@ interface ProviderRequestObserver {
   onRequestComplete?: (event: ProviderRequestObserverComplete) => void | Promise<void>;
 }
 ```
+
+Event payloads:
+
+| Event | Fields |
+|-------|--------|
+| `ProviderRequestObserverStart` | `requestId`, `requestSequence`, `model`, `context`, `startedAt` |
+| `ProviderRequestObserverPayload` | start fields + `payload` |
+| `ProviderRequestObserverResponse` | start fields + `response` (`ProviderResponse`) |
+| `ProviderRequestObserverComplete` | start fields + `completedAt`, `durationMs`, optional `message`, optional `error`, `aborted` |
 
 Observer failures are silently ignored and do not affect the loop.

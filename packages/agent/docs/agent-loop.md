@@ -32,7 +32,7 @@ import { agentLoopContinue } from "@tsuuanmi/pi-agent";
 const stream = agentLoopContinue(context, config, signal, streamFn);
 ```
 
-**Important:** The last message in context must convert to a `user` or `toolResult` message via `convertToLlm`. If it doesn't, the LLM provider will reject the request.
+**Important:** The last message in context must convert to a `user` or `toolResult` message via `convertToLlm`. If it doesn't, the LLM provider will reject the request. `agentLoopContinue()` also throws synchronously if the context is empty or if the last context message has role `assistant`; it cannot validate `convertToLlm` output since that runs once per turn.
 
 ## Loop Behavior
 
@@ -51,7 +51,7 @@ Steering messages are injected mid-run after tool calls finish:
 config.getSteeringMessages = async () => steeringQueue.drain();
 ```
 
-On the first turn of a `prompt()` call, steering is polled but returns empty to avoid injecting before the first assistant response.
+On the first turn of a `prompt()` call, steering is polled once at loop entry (so messages queued while waiting are injected before the first assistant response), then again after the first turn's tool calls finish.
 
 ### Follow-Up Messages
 
@@ -65,10 +65,10 @@ config.getFollowUpMessages = async () => followUpQueue.drain();
 
 Tool calls from an assistant message are executed based on `toolExecution` mode:
 
-- **`"parallel"`** (default): Preflight tool calls sequentially, then execute allowed tools concurrently. `tool_execution_end` events fire in completion order.
+- **`"parallel"`** (default): Preflight tool calls sequentially, then execute allowed tools concurrently. `tool_execution_end` events fire in completion order after each tool is finalized; tool-result message artifacts are emitted later in assistant source order.
 - **`"sequential"`**: Each tool call is prepared, executed, and finalized before the next one starts.
 
-Individual tools can override this with `tool.executionMode = "sequential"`.
+Individual tools can override this with `tool.executionMode = "sequential"`. If any tool call in the message targets a sequential-mode tool, the whole batch runs sequentially.
 
 ### Abort Handling
 
@@ -76,7 +76,8 @@ When an `AbortSignal` is provided:
 - Tool execution checks the signal before and during execution
 - Aborted tool calls return an error tool result with message "Operation aborted"
 - Provider aborts are encoded as assistant messages with `stopReason: "aborted"`
-- The loop still emits `agent_end` with the accumulated new messages
+- When an assistant message finishes with `stopReason: "error"` or `"aborted"`, the loop emits `turn_end` (with empty tool results) and `agent_end`, then returns without executing tools or polling queues
+- Otherwise the loop still emits `agent_end` with the accumulated new messages
 
 ### Error Handling
 
@@ -103,8 +104,8 @@ The loop emits these `AgentEvent` types:
 
 The loop applies transforms in order:
 
-1. **`transformContext`** — Operates on `AgentMessage[]` level (pruning, injection)
-2. **`convertToLlm`** — Converts `AgentMessage[]` to `Message[]` for the LLM provider
+1. **`transformContext`** — Operates on `AgentMessage[]` level (pruning, injection); receives the abort signal.
+2. **`convertToLlm`** — Converts `AgentMessage[]` to `Message[]` for the LLM provider.
 
 Both must not throw or reject. Return safe fallback values instead.
 
@@ -121,6 +122,10 @@ The `providerRequestObserver` config option receives lifecycle events:
 
 Observer failures are silently ignored and do not affect the loop.
 
+## `prepareNextTurn`
+
+Called after `turn_end` and before the loop decides whether another provider request should start. Return an `AgentLoopTurnUpdate` to replace the context, model, and/or thinking level for the next turn; return `undefined` to keep the current values. `reasoning` is derived from `thinkingLevel` (`undefined` when `"off"`).
+
 ## `beforeToolCall` and `afterToolCall`
 
 ### `beforeToolCall`
@@ -136,11 +141,11 @@ beforeToolCall: async (context, signal) => {
 }
 ```
 
-Return `{ block: true }` to prevent execution. The loop emits an error tool result instead.
+Return `{ block: true }` to prevent execution. The loop emits an error tool result with `reason` (or a default blocked message) instead. If the abort signal fires during the hook, the loop emits an aborted error tool result.
 
 ### `afterToolCall`
 
-Called after a tool finishes executing, before `tool_execution_end` events:
+Called after a tool finishes executing, before `tool_execution_end` and tool-result message events are emitted:
 
 ```typescript
 afterToolCall: async (context, signal) => ({
@@ -151,4 +156,4 @@ afterToolCall: async (context, signal) => ({
 })
 ```
 
-Omitted fields keep their original values. No deep merge is performed.
+Omitted fields keep their original values. No deep merge is performed. If the hook itself throws, the loop replaces the result with an error tool result and marks it `isError`.

@@ -7,13 +7,13 @@ These helpers are exported only from `@tsuuanmi/pi-agent/node` via `src/node.ts`
 From `src/harness/utils/child-process.ts`:
 
 ```typescript
+spawnProcess(command: string, args: string[], options: SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioPipe>): ChildProcessByStdio<null, Readable, Readable>;
 spawnProcess(command: string, args: string[], options: SpawnOptions): ChildProcess;
-spawnProcess(command: string, args: string[], options?: SpawnOptionsWithoutStdio): ChildProcess;
-spawnProcessSync(command: string, args: string[], options: SpawnSyncOptions): SpawnSyncReturns<Buffer>;
+spawnProcessSync(command: string, args: string[], options: SpawnSyncOptionsWithStringEncoding): SpawnSyncReturns<string>;
 waitForChildProcess(child: ChildProcess): Promise<number | null>;
 ```
 
-`spawnProcess()` and `spawnProcessSync()` wrap Node's spawn APIs. `waitForChildProcess()` resolves with the close code and waits briefly for inherited stdout/stderr pipes to become idle after process exit so detached descendants do not lose tail output.
+`spawnProcess()` and `spawnProcessSync()` wrap Node's spawn APIs. `waitForChildProcess()` resolves with the exit/close code. After the child exits it waits for inherited stdout/stderr pipes to become idle (re-arming a short grace timer on each chunk) so detached descendants that keep writing past `exit` do not have their tail output truncated; it then destroys the streams.
 
 ## File mutation queue
 
@@ -23,7 +23,7 @@ From `src/harness/utils/file-mutation-queue.ts`:
 withFileMutationQueue<T>(filePath: string, fn: () => Promise<T>): Promise<T>;
 ```
 
-Serializes async mutations per file path. The queue entry is removed after the final queued mutation settles.
+Serializes async mutations per file path. Operations for different files still run in parallel. The queue uses a realpath key when the path exists (falling back to the resolved path for not-yet-created files) and removes the queue entry after the final queued mutation settles.
 
 ## JSONL helpers
 
@@ -34,7 +34,7 @@ serializeJsonLine(value: unknown): string;
 attachJsonlLineReader(stream: Readable, onLine: (line: string) => void): () => void;
 ```
 
-`serializeJsonLine()` appends a newline to JSON. `attachJsonlLineReader()` buffers stream data, calls `onLine()` for complete lines, flushes the final partial line on `end`, and returns a cleanup function.
+`serializeJsonLine()` appends an LF to JSON. Framing is LF-only; payload strings may contain other Unicode separators (U+2028, U+2029). `attachJsonlLineReader()` intentionally avoids Node `readline` (which splits on additional Unicode separators that are valid inside JSON strings), buffers stream data, calls `onLine()` for complete lines, strips a trailing CR, flushes the final partial line on `end`, and returns a cleanup function.
 
 ## Path helpers
 

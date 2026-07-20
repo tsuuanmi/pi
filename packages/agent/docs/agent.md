@@ -32,14 +32,14 @@ const agent = new Agent({
 | `providerRequestObserver` | `ProviderRequestObserver` | — | Observer for LLM request lifecycle |
 | `beforeToolCall` | `(context, signal?) => BeforeToolCallResult` | — | Pre-execution hook |
 | `afterToolCall` | `(context, signal?) => AfterToolCallResult` | — | Post-execution hook |
-| `prepareNextTurn` | `(signal?) => AgentLoopTurnUpdate` | — | Turn snapshot update hook |
+| `prepareNextTurn` | `(signal?) => AgentLoopTurnUpdate` | Turn snapshot update hook (signal is the active abort signal) |
 | `steeringMode` | `"all" \| "one-at-a-time"` | `"one-at-a-time"` | How steering messages are drained |
 | `followUpMode` | `"all" \| "one-at-a-time"` | `"one-at-a-time"` | How follow-up messages are drained |
 | `sessionId` | `string` | — | Session identifier for cache-aware backends |
 | `transport` | `Transport` | `"auto"` | Preferred transport |
 | `maxRetryDelayMs` | `number` | — | Cap for provider-requested retry delays |
 | `toolExecution` | `"sequential" \| "parallel"` | `"parallel"` | Default tool execution strategy |
-| `shouldPause` | `() => boolean` | — | Cooperative pause callback |
+| `shouldPause` | `() => boolean` | — | Cooperative pause callback. Checked after each turn; when true the agent stops gracefully. |
 
 ## State
 
@@ -87,6 +87,8 @@ Continue from the current transcript. The last message must be a user or tool-re
 ```typescript
 await agent.continue();
 ```
+
+When the last message is an assistant message, `continue()` first drains queued steering messages; if none are queued, it drains queued follow-up messages. If both queues are empty it throws `Cannot continue from message role: assistant`.
 
 ## Message Queuing
 
@@ -155,10 +157,13 @@ Listener promises are awaited in subscription order. Listeners receive the activ
 ## Lifecycle Control
 
 ```typescript
-agent.abort();              // Abort the current run
-agent.waitForIdle();        // Resolve when current run finishes (after agent_end listeners settle)
-agent.reset();              // Clear transcript, runtime state, and queued messages
+agent.signal;                // Active abort signal for the current run, or undefined
+agent.abort();                // Abort the current run
+agent.waitForIdle();          // Promise that resolves after the current run and awaited agent_end listeners settle
+agent.reset();                // Clear transcript, runtime state, and queued messages
 ```
+
+`waitForIdle()` resolves immediately (to a fulfilled promise) when no run is active.
 
 ## Queue Modes
 

@@ -71,4 +71,4 @@ Converted to a user message wrapped with the compaction-summary prefix/suffix co
 - `createCustomMessage(customType, content, display, details, timestamp)` creates a custom message from an ISO timestamp.
 - `convertToLlm(messages)` converts `AgentMessage[]` to `@tsuuanmi/pi-ai` `Message[]` by handling the roles above, passing through `user`, `assistant`, and `toolResult`, and dropping unknown/omitted messages.
 
-The module augments `CustomAgentMessages` in `src/types.ts` so these roles are part of the package `AgentMessage` union.
+The module augments `CustomAgentMessages` in `src/agent/types.ts` so these roles are part of the package `AgentMessage` union.
