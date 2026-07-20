@@ -2,6 +2,8 @@
 
 Built-in components for common terminal UI patterns.
 
+> Display, feedback, inputs, layout, and selection components are documented here. The HUD and status line modules have their own sub-sections: [HUD](hud/index.md) and [Status Line](status-line/index.md).
+
 ## Text
 
 Displays multi-line text with word wrapping and padding:
