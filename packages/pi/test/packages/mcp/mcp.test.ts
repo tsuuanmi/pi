@@ -651,9 +651,6 @@ describe("StdioTransport", () => {
 // ============================================================================
 
 describe("MCPClient with mock server", () => {
-	// Skip these tests in CI where the mock server script may not be available
-	const _mockServerPath = join(tmpdir(), "pi-mcp-test", "mock-mcp-server.mjs");
-
 	it("starts optional HTTP SSE after initialize and before initialized notification", async () => {
 		const calls: string[] = [];
 		const transport: MCPTransport = {
@@ -702,17 +699,6 @@ describe("MCPClient with mock server", () => {
 			"send:tools/list",
 		]);
 	});
-
-	// These tests require compiling the mock server first, so they may be skipped
-	// in environments where TypeScript compilation isn't available.
-	it.todo("should initialize and discover tools from mock server");
-	it.todo("should call tools on mock server");
-	it.todo("should handle server disconnection gracefully");
-	it.todo("should handle zero-tool servers with a warning");
-	it.todo("should handle server startup timeout");
-	it.todo("should handle concurrent tool calls with multiplexed correlation");
-	it.todo("should truncate results exceeding 1MB");
-	it.todo("should handle special characters in server names");
 });
 
 // ============================================================================
