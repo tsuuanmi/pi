@@ -7,7 +7,6 @@ import { applyOpenAIServiceTierPricing, getOpenAIServiceTierCostMultiplier } fro
 import { AssistantMessageEventStream } from "#ai/transport/event-stream";
 import type { AssistantMessage, AssistantMessageEvent, Context, Message, Model, Usage } from "#ai/types";
 
-// From openai-completions-prompt-cache.test.ts
 {
 	interface FakeOpenAIClientOptions {
 		apiKey: string;
@@ -363,7 +362,6 @@ import type { AssistantMessage, AssistantMessageEvent, Context, Message, Model, 
 	});
 }
 
-// From openai-pricing.test.ts
 {
 	function usage(): Usage {
 		return {
@@ -418,7 +416,6 @@ import type { AssistantMessage, AssistantMessageEvent, Context, Message, Model, 
 	});
 }
 
-// From openai-responses-message-id.test.ts
 {
 	const usage: Usage = {
 		input: 0,
@@ -475,7 +472,6 @@ import type { AssistantMessage, AssistantMessageEvent, Context, Message, Model, 
 	});
 }
 
-// From openai-responses-partial-json-cleanup.test.ts
 {
 	function createOutput(model: Model<"openai-responses">): AssistantMessage {
 		return {

@@ -15,7 +15,6 @@ import {
 } from "#ai/providers/openai/codex-responses";
 import type { Context, Model } from "#ai/types";
 
-// From openai-codex-oauth.test.ts
 {
 	function jsonResponse(body: unknown, status: number = 200): Response {
 		return new Response(JSON.stringify(body), {
@@ -463,7 +462,6 @@ import type { Context, Model } from "#ai/types";
 	});
 }
 
-// From openai-codex-stream.test.ts
 {
 	const originalAgentDir = process.env.PI_AGENT_DIR;
 
