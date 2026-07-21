@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import * as path from "node:path";
+import { STRUCTURED_RECEIPT_VERSION, type StructuredReceipt } from "@tsuuanmi/pi-agent";
 import type { Args } from "#pi/cli/args";
 
 const PI_DEFAULT_TMUX_SESSION = "pi";
@@ -64,6 +65,50 @@ export interface TmuxLaunchPlan {
 	newSessionArgs: string[];
 	branch?: string | null;
 	project?: string | null;
+}
+
+export function buildTmuxGuidanceReceipt(
+	plan: TmuxLaunchPlan,
+	status: "completed" | "failed" = "completed",
+	errorSummary?: string,
+): StructuredReceipt {
+	return {
+		version: STRUCTURED_RECEIPT_VERSION,
+		id: `tmux:${plan.sessionName}:launch`,
+		source: "tmux",
+		actionSummary: `tmux session ${plan.sessionName} launch guidance`,
+		status,
+		location: { cwd: plan.cwd, tmuxSession: plan.sessionName, project: plan.project ?? plan.cwd },
+		timing: {},
+		inspect: [
+			{ label: "attach", kind: "tmux", value: `${plan.tmuxCommand} attach-session -t ${plan.sessionName}` },
+			{ label: "list", kind: "tmux", value: `${plan.tmuxCommand} list-sessions` },
+			{ label: "inspect", kind: "tmux", value: `${plan.tmuxCommand} list-panes -t ${plan.sessionName}` },
+			{ label: "cleanup", kind: "command", value: `${plan.tmuxCommand} kill-session -t ${plan.sessionName}` },
+		],
+		errorSummary,
+	};
+}
+
+export function buildTmuxUnavailableReceipt(input: {
+	tmuxCommand: string;
+	cwd: string;
+	errorSummary: string;
+}): StructuredReceipt {
+	return {
+		version: STRUCTURED_RECEIPT_VERSION,
+		id: `tmux:${input.tmuxCommand}:unavailable`,
+		source: "tmux",
+		actionSummary: "tmux launch guidance unavailable",
+		status: "failed",
+		location: { cwd: input.cwd, tmuxCommand: input.tmuxCommand },
+		timing: {},
+		inspect: [
+			{ label: "setup", kind: "command", value: `command -v -- ${shellQuote(input.tmuxCommand)}` },
+			{ label: "docs", kind: "path", value: "packages/pi/docs/utils/terminal/tmux.md" },
+		],
+		errorSummary: input.errorSummary,
+	};
 }
 
 interface TmuxProfileCommand {

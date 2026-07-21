@@ -8,6 +8,7 @@ import path from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
 import { pathExists, resolveToCwd } from "#pi/tools/path-utils";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
 import { getTextOutput, invalidArgText, shortenPath, str, wrapToolDefinition } from "#pi/tools/utils";
 import { ensureTool } from "#pi/utils/system/tool-installer";
 
@@ -115,12 +116,13 @@ export function createFindToolDefinition(
 		promptSnippet: "Find files by glob pattern (respects .gitignore)",
 		parameters: findSchema,
 		async execute(
-			_toolCallId,
+			toolCallId,
 			{ pattern, path: searchDir, limit }: { pattern: string; path?: string; limit?: number },
 			signal?: AbortSignal,
 			_onUpdate?,
 			_ctx?,
 		) {
+			const startedAt = Date.now();
 			return new Promise((resolve, reject) => {
 				if (signal?.aborted) {
 					reject(new Error("Operation aborted"));
@@ -167,10 +169,24 @@ export function createFindToolDefinition(
 								return;
 							}
 							if (results.length === 0) {
+								const output = "No files found matching pattern";
+								const endedAt = Date.now();
+								const receipt = createBuiltinToolReceipt({
+									toolCallId,
+									toolName: "find",
+									status: "completed",
+									actionSummary: `Found files for ${pattern}`,
+									location: { cwd, path: searchPath, pattern, results: 0 },
+									inspect: [{ label: "path", kind: "path", value: searchPath }],
+									startedAt: new Date(startedAt).toISOString(),
+									endedAt: new Date(endedAt).toISOString(),
+									durationMs: endedAt - startedAt,
+									outputPreview: output,
+								});
 								settle(() =>
 									resolve({
-										content: [{ type: "text", text: "No files found matching pattern" }],
-										details: undefined,
+										content: [{ type: "text", text: output }],
+										details: attachBuiltinToolReceipt(undefined, receipt),
 									}),
 								);
 								return;
@@ -198,10 +214,26 @@ export function createFindToolDefinition(
 							if (notices.length > 0) {
 								resultOutput += `\n\n[${notices.join(". ")}]`;
 							}
+							const endedAt = Date.now();
+							const receipt = createBuiltinToolReceipt({
+								toolCallId,
+								toolName: "find",
+								status: "completed",
+								actionSummary: `Found files for ${pattern}`,
+								location: { cwd, path: searchPath, pattern, results: relativized.length },
+								inspect: [{ label: "path", kind: "path", value: searchPath }],
+								startedAt: new Date(startedAt).toISOString(),
+								endedAt: new Date(endedAt).toISOString(),
+								durationMs: endedAt - startedAt,
+								outputPreview: resultOutput.slice(0, 240),
+							});
 							settle(() =>
 								resolve({
 									content: [{ type: "text", text: resultOutput }],
-									details: Object.keys(details).length > 0 ? details : undefined,
+									details: attachBuiltinToolReceipt(
+										Object.keys(details).length > 0 ? details : undefined,
+										receipt,
+									),
 								}),
 							);
 							return;
@@ -285,10 +317,24 @@ export function createFindToolDefinition(
 								}
 							}
 							if (!output) {
+								const text = "No files found matching pattern";
+								const endedAt = Date.now();
+								const receipt = createBuiltinToolReceipt({
+									toolCallId,
+									toolName: "find",
+									status: "completed",
+									actionSummary: `Found files for ${pattern}`,
+									location: { cwd, path: searchPath, pattern, results: 0 },
+									inspect: [{ label: "path", kind: "path", value: searchPath }],
+									startedAt: new Date(startedAt).toISOString(),
+									endedAt: new Date(endedAt).toISOString(),
+									durationMs: endedAt - startedAt,
+									outputPreview: text,
+								});
 								settle(() =>
 									resolve({
-										content: [{ type: "text", text: "No files found matching pattern" }],
-										details: undefined,
+										content: [{ type: "text", text }],
+										details: attachBuiltinToolReceipt(undefined, receipt),
 									}),
 								);
 								return;
@@ -328,10 +374,26 @@ export function createFindToolDefinition(
 							if (notices.length > 0) {
 								resultOutput += `\n\n[${notices.join(". ")}]`;
 							}
+							const endedAt = Date.now();
+							const receipt = createBuiltinToolReceipt({
+								toolCallId,
+								toolName: "find",
+								status: "completed",
+								actionSummary: `Found files for ${pattern}`,
+								location: { cwd, path: searchPath, pattern, results: relativized.length },
+								inspect: [{ label: "path", kind: "path", value: searchPath }],
+								startedAt: new Date(startedAt).toISOString(),
+								endedAt: new Date(endedAt).toISOString(),
+								durationMs: endedAt - startedAt,
+								outputPreview: resultOutput.slice(0, 240),
+							});
 							settle(() =>
 								resolve({
 									content: [{ type: "text", text: resultOutput }],
-									details: Object.keys(details).length > 0 ? details : undefined,
+									details: attachBuiltinToolReceipt(
+										Object.keys(details).length > 0 ? details : undefined,
+										receipt,
+									),
 								}),
 							);
 						});

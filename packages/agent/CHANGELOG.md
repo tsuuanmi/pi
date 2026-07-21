@@ -1,3 +1,10 @@
+## [Unreleased]
+
+### Added
+
+- **receipts**: Added `StructuredReceipt` helpers for attaching and validating machine-readable execution receipts.
+- **subagents**: Added shared subagent receipt helpers and a `visibility` contract (`native`, `tmux`, `auto`) for subagent run requests.
+
 ## [0.2.0] - 2026-07-20
 
 ### Added

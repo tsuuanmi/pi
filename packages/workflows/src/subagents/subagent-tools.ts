@@ -1,7 +1,7 @@
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
-import { renderSubagentProgress } from "@tsuuanmi/pi-agent";
+import type { ExtensionAPI, ExtensionContext, SubagentVisibility } from "@tsuuanmi/pi-agent";
+import { createSubagentListReceipt, createSubagentReceipt, renderSubagentProgress } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
-import { workflowReceipt } from "#workflows/artifacts/artifacts";
+import { workflowReceiptWithStructuredReceipt } from "#workflows/artifacts/artifacts";
 import { assertAgentThinkingLevel, requireSubagentManager } from "#workflows/orchestration/workflow-tool-utils";
 
 const subagentSpawnSchema = Type.Object({
@@ -22,6 +22,12 @@ const subagentSpawnSchema = Type.Object({
 	),
 	detached: Type.Optional(Type.Boolean({ description: "Return immediately after spawning." })),
 	label: Type.Optional(Type.String({ description: "Human-readable subagent label." })),
+	visibility: Type.Optional(
+		Type.String({
+			description:
+				"Visibility preference: native (default) uses Pi receipts/status, tmux requests an explicit tmux-visible panel, auto lets the runner choose.",
+		}),
+	),
 });
 type SubagentSpawnInput = Static<typeof subagentSpawnSchema>;
 
@@ -74,6 +80,12 @@ const RECEIPT_MAX = 280;
 const PREVIEW_MAX = 2000;
 const FULL_MAX = 12000;
 type SubagentVerbosity = "receipt" | "preview" | "full";
+
+function normalizeSubagentVisibility(value: string | undefined): SubagentVisibility | undefined {
+	if (value === undefined) return undefined;
+	if (value === "native" || value === "tmux" || value === "auto") return value;
+	throw new Error(`invalid subagent visibility: ${value}`);
+}
 
 function normalizeSubagentVerbosity(value: string | undefined): SubagentVerbosity {
 	if (value === undefined) return "receipt";
@@ -136,6 +148,7 @@ async function executeSubagentSpawn(params: SubagentSpawnInput, ctx: ExtensionCo
 		label: params.label,
 		parentSessionId: ctx.sessionManager.getSessionId(),
 		storageSessionId: ctx.sessionManager.getSessionId(),
+		visibility: normalizeSubagentVisibility(params.visibility),
 		signal,
 	});
 	const lines = [`Subagent ${result.record.id} ${result.record.status}`];
@@ -149,7 +162,10 @@ async function executeSubagentSpawn(params: SubagentSpawnInput, ctx: ExtensionCo
 	lines.push(`task: ${truncateOutput(params.prompt, "receipt")}`);
 	return {
 		content: [{ type: "text" as const, text: lines.join("\n") }],
-		details: workflowReceipt({ record: result.record, output: result.output }),
+		details: workflowReceiptWithStructuredReceipt(
+			{ record: result.record, output: result.output },
+			createSubagentReceipt(result.record, ctx.sessionManager.getSessionId()),
+		),
 	};
 }
 
@@ -164,7 +180,10 @@ async function executeSubagentStatus(params: SubagentStatusInput, ctx: Extension
 		const record = await manager.read(params.id, sessionId);
 		return {
 			content: [{ type: "text" as const, text: formatSubagentRecord(record, verbosity) }],
-			details: workflowReceipt({ record: record ?? null }),
+			details: workflowReceiptWithStructuredReceipt(
+				{ record: record ?? null },
+				record ? createSubagentReceipt(record, sessionId) : undefined,
+			),
 		};
 	}
 	const limit = Math.max(1, Math.min(50, Math.floor(params.limit ?? 10)));
@@ -177,7 +196,10 @@ async function executeSubagentStatus(params: SubagentStatusInput, ctx: Extension
 	}));
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(summary, null, 2) }],
-		details: workflowReceipt({ records }),
+		details: workflowReceiptWithStructuredReceipt(
+			{ records, recordReceipts: records.map((record) => createSubagentReceipt(record, sessionId)) },
+			createSubagentListReceipt(sessionId, records.length),
+		),
 	};
 }
 
@@ -200,12 +222,18 @@ async function executeSubagentAwait(params: SubagentAwaitInput, ctx: ExtensionCo
 							: `Subagent ${params.id} not found`,
 				},
 			],
-			details: workflowReceipt({ ok: false, reason: result.reason, record: result.record }),
+			details: workflowReceiptWithStructuredReceipt(
+				{ ok: false, reason: result.reason, record: result.record },
+				result.record ? createSubagentReceipt(result.record, ctx.sessionManager.getSessionId()) : undefined,
+			),
 		};
 	}
 	return {
 		content: [{ type: "text" as const, text: formatSubagentRecord(result.result.record, verbosity) }],
-		details: workflowReceipt({ ok: true, record: result.result.record, output: result.result.output }),
+		details: workflowReceiptWithStructuredReceipt(
+			{ ok: true, record: result.result.record, output: result.result.output },
+			createSubagentReceipt(result.result.record, ctx.sessionManager.getSessionId()),
+		),
 	};
 }
 
@@ -217,12 +245,18 @@ async function executeSubagentResume(params: SubagentResumeInput, ctx: Extension
 	if (!result.ok) {
 		return {
 			content: [{ type: "text" as const, text: `Subagent ${params.id} resume failed: ${result.reason}` }],
-			details: workflowReceipt({ ok: false, reason: result.reason, record: result.record }),
+			details: workflowReceiptWithStructuredReceipt(
+				{ ok: false, reason: result.reason, record: result.record },
+				result.record ? createSubagentReceipt(result.record, ctx.sessionManager.getSessionId()) : undefined,
+			),
 		};
 	}
 	return {
 		content: [{ type: "text" as const, text: `Subagent ${result.result.record.id} ${result.result.record.status}` }],
-		details: workflowReceipt({ ok: true, record: result.result.record, output: result.result.output }),
+		details: workflowReceiptWithStructuredReceipt(
+			{ ok: true, record: result.result.record, output: result.result.output },
+			createSubagentReceipt(result.result.record, ctx.sessionManager.getSessionId()),
+		),
 	};
 }
 
@@ -237,12 +271,18 @@ async function executeSubagentSteer(params: SubagentSteerInput, ctx: ExtensionCo
 	if (!result.ok) {
 		return {
 			content: [{ type: "text" as const, text: `Subagent ${params.id} steer failed: ${result.reason}` }],
-			details: workflowReceipt({ ok: false, reason: result.reason, record: result.record }),
+			details: workflowReceiptWithStructuredReceipt(
+				{ ok: false, reason: result.reason, record: result.record },
+				result.record ? createSubagentReceipt(result.record, ctx.sessionManager.getSessionId()) : undefined,
+			),
 		};
 	}
 	return {
 		content: [{ type: "text" as const, text: `Subagent ${result.result.record.id} steered` }],
-		details: workflowReceipt({ ok: true, record: result.result.record }),
+		details: workflowReceiptWithStructuredReceipt(
+			{ ok: true, record: result.result.record },
+			createSubagentReceipt(result.result.record, ctx.sessionManager.getSessionId()),
+		),
 	};
 }
 
@@ -257,7 +297,10 @@ async function executeSubagentPause(params: SubagentPauseInput, ctx: ExtensionCo
 					: `Subagent ${params.id} pause failed: ${result.reason}`,
 			},
 		],
-		details: workflowReceipt({ ok: result.ok, reason: result.reason, record: result.record }),
+		details: workflowReceiptWithStructuredReceipt(
+			{ ok: result.ok, reason: result.reason, record: result.record },
+			result.record ? createSubagentReceipt(result.record, ctx.sessionManager.getSessionId()) : undefined,
+		),
 	};
 }
 
@@ -270,7 +313,10 @@ async function executeSubagentCancel(params: SubagentIdInput, ctx: ExtensionCont
 				text: record ? `Subagent ${record.id} cancelled` : `Subagent ${params.id} not found`,
 			},
 		],
-		details: workflowReceipt({ record: record ?? null }),
+		details: workflowReceiptWithStructuredReceipt(
+			{ record: record ?? null },
+			record ? createSubagentReceipt(record, ctx.sessionManager.getSessionId()) : undefined,
+		),
 	};
 }
 
@@ -280,7 +326,10 @@ export function registerSubagentTools(pi: ExtensionAPI): void {
 		label: "Subagent Spawn",
 		description: "Spawn a Pi-native subagent session with optional restricted tools and persistence.",
 		promptSnippet: "Spawn a durable Pi subagent for isolated work",
-		promptGuidelines: ["Use subagent_spawn when work should run in an isolated agent context."],
+		promptGuidelines: [
+			"Use subagent_spawn when work should run in an isolated agent context. Its records and persistent session logs are stored under the current Pi session id.",
+			"subagent_spawn is not an attachable tmux pane. If the user explicitly asks for a tmux-visible agent panel, use an explicit tmux session and surface the attach/list/cleanup commands; otherwise inspect Pi-native subagents with subagent_status/subagent_await.",
+		],
 		parameters: subagentSpawnSchema,
 		execute: async (_toolCallId, params, signal, _onUpdate, ctx) => executeSubagentSpawn(params, ctx, signal),
 	});

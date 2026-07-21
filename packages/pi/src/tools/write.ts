@@ -6,6 +6,7 @@ import { dirname } from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
 import { resolveToCwd } from "#pi/tools/path-utils";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
 import { normalizeDisplayText, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#pi/tools/utils";
 
 const writeSchema = Type.Object({
@@ -189,7 +190,7 @@ export function createWriteToolDefinition(
 		promptGuidelines: ["Use write only for new files or complete rewrites."],
 		parameters: writeSchema,
 		async execute(
-			_toolCallId,
+			toolCallId,
 			{ path, content }: { path: string; content: string },
 			signal?: AbortSignal,
 			_onUpdate?,
@@ -197,6 +198,7 @@ export function createWriteToolDefinition(
 		) {
 			const absolutePath = resolveToCwd(path, cwd);
 			const dir = dirname(absolutePath);
+			const startedAt = Date.now();
 			return withFileMutationQueue(absolutePath, async () => {
 				// Do not reject from an abort event listener here: that would release the
 				// mutation queue while an in-flight filesystem operation may still finish.
@@ -215,9 +217,23 @@ export function createWriteToolDefinition(
 				await ops.writeFile(absolutePath, content);
 				throwIfAborted();
 
+				const output = `Successfully wrote ${content.length} bytes to ${path}`;
+				const endedAt = Date.now();
+				const receipt = createBuiltinToolReceipt({
+					toolCallId,
+					toolName: "write",
+					status: "completed",
+					actionSummary: `Wrote ${path}`,
+					location: { cwd, path, bytes: content.length },
+					inspect: [{ label: "path", kind: "path", value: path }],
+					startedAt: new Date(startedAt).toISOString(),
+					endedAt: new Date(endedAt).toISOString(),
+					durationMs: endedAt - startedAt,
+					outputPreview: output.slice(0, 240),
+				});
 				return {
-					content: [{ type: "text", text: `Successfully wrote ${content.length} bytes to ${path}` }],
-					details: undefined,
+					content: [{ type: "text", text: output }],
+					details: attachBuiltinToolReceipt(undefined, receipt),
 				};
 			});
 		},

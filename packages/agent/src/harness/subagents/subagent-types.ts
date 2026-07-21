@@ -12,6 +12,7 @@ import type { YieldDetails } from "#agent/harness/subagents/yield-result";
 export type SubagentStatus = "queued" | "running" | "paused" | "completed" | "failed" | "cancelled";
 export type SubagentResumeFailureReason = "context_unavailable" | "not_found" | "no_runner" | "resume_failed";
 export type SubagentDelivery = "steer" | "followUp";
+export type SubagentVisibility = "native" | "tmux" | "auto";
 
 export interface SubagentRecord {
 	id: string;
@@ -25,6 +26,7 @@ export interface SubagentRecord {
 	session_id?: string;
 	session_file?: string;
 	parent_session_id?: string;
+	visibility?: SubagentVisibility;
 	resumable: boolean;
 	created_at: string;
 	updated_at: string;
@@ -50,6 +52,8 @@ export interface SubagentRunRequest {
 	persistent?: boolean;
 	detached?: boolean;
 	label?: string;
+	/** Visibility preference. `native` uses Pi receipts/status, `tmux` asks for an explicit tmux-visible panel, `auto` lets the runner choose. */
+	visibility?: SubagentVisibility;
 	parentSessionId?: string;
 	/** Session id that owns durable subagent records. Defaults to parentSessionId. */
 	storageSessionId?: string;

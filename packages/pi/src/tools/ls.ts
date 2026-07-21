@@ -7,6 +7,7 @@ import nodePath from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
 import { pathExists, resolveToCwd } from "#pi/tools/path-utils";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
 import { getTextOutput, renderToolPath, str, wrapToolDefinition } from "#pi/tools/utils";
 
 const lsSchema = Type.Object({
@@ -101,12 +102,13 @@ export function createLsToolDefinition(
 		promptSnippet: "List directory contents",
 		parameters: lsSchema,
 		async execute(
-			_toolCallId,
+			toolCallId,
 			{ path, limit }: { path?: string; limit?: number },
 			signal?: AbortSignal,
 			_onUpdate?,
 			_ctx?,
 		) {
+			const startedAt = Date.now();
 			return new Promise((resolve, reject) => {
 				if (signal?.aborted) {
 					reject(new Error("Operation aborted"));
@@ -170,7 +172,24 @@ export function createLsToolDefinition(
 						signal?.removeEventListener("abort", onAbort);
 
 						if (results.length === 0) {
-							resolve({ content: [{ type: "text", text: "(empty directory)" }], details: undefined });
+							const output = "(empty directory)";
+							const endedAt = Date.now();
+							const receipt = createBuiltinToolReceipt({
+								toolCallId,
+								toolName: "ls",
+								status: "completed",
+								actionSummary: `Listed ${dirPath}`,
+								location: { cwd, path: dirPath, entries: 0 },
+								inspect: [{ label: "path", kind: "path", value: dirPath }],
+								startedAt: new Date(startedAt).toISOString(),
+								endedAt: new Date(endedAt).toISOString(),
+								durationMs: endedAt - startedAt,
+								outputPreview: output,
+							});
+							resolve({
+								content: [{ type: "text", text: output }],
+								details: attachBuiltinToolReceipt(undefined, receipt),
+							});
 							return;
 						}
 
@@ -193,9 +212,22 @@ export function createLsToolDefinition(
 							output += `\n\n[${notices.join(". ")}]`;
 						}
 
+						const endedAt = Date.now();
+						const receipt = createBuiltinToolReceipt({
+							toolCallId,
+							toolName: "ls",
+							status: "completed",
+							actionSummary: `Listed ${dirPath}`,
+							location: { cwd, path: dirPath, entries: results.length },
+							inspect: [{ label: "path", kind: "path", value: dirPath }],
+							startedAt: new Date(startedAt).toISOString(),
+							endedAt: new Date(endedAt).toISOString(),
+							durationMs: endedAt - startedAt,
+							outputPreview: output.slice(0, 240),
+						});
 						resolve({
 							content: [{ type: "text", text: output }],
-							details: Object.keys(details).length > 0 ? details : undefined,
+							details: attachBuiltinToolReceipt(Object.keys(details).length > 0 ? details : undefined, receipt),
 						});
 					} catch (e: any) {
 						signal?.removeEventListener("abort", onAbort);

@@ -16,6 +16,7 @@ import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
 import { OutputAccumulator } from "#pi/tools/output-accumulator";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
 import { getTextOutput, invalidArgText, str, wrapToolDefinition } from "#pi/tools/utils";
 import {
 	getShellConfig,
@@ -306,7 +307,7 @@ export function createBashToolDefinition(
 		promptSnippet: "Execute bash commands (ls, grep, find, etc.)",
 		parameters: bashSchema,
 		async execute(
-			_toolCallId,
+			toolCallId,
 			{ command, timeout }: { command: string; timeout?: number },
 			signal?: AbortSignal,
 			onUpdate?,
@@ -314,6 +315,7 @@ export function createBashToolDefinition(
 		) {
 			const resolvedCommand = commandPrefix ? `${commandPrefix}\n${command}` : command;
 			const spawnContext = resolveSpawnContext(resolvedCommand, cwd, spawnHook);
+			const startedAt = Date.now();
 			const output = new OutputAccumulator({ tempFilePrefix: "pi-bash" });
 			let acceptingOutput = true;
 			let updateTimer: NodeJS.Timeout | undefined;
@@ -426,7 +428,23 @@ export function createBashToolDefinition(
 				if (exitCode !== 0 && exitCode !== null) {
 					throw new Error(appendStatus(outputText, `Command exited with code ${exitCode}`));
 				}
-				return { content: [{ type: "text", text: outputText }], details };
+				const endedAt = Date.now();
+				const receipt = createBuiltinToolReceipt({
+					toolCallId,
+					toolName: "bash",
+					status: "completed",
+					actionSummary: "Executed bash command",
+					location: { cwd: spawnContext.cwd, command: spawnContext.command },
+					inspect: [{ label: "command", kind: "command", value: spawnContext.command }],
+					startedAt: new Date(startedAt).toISOString(),
+					endedAt: new Date(endedAt).toISOString(),
+					durationMs: endedAt - startedAt,
+					outputPreview: outputText.slice(0, 240),
+				});
+				return {
+					content: [{ type: "text", text: outputText }],
+					details: attachBuiltinToolReceipt(details, receipt),
+				};
 			} finally {
 				clearUpdateTimer();
 			}

@@ -1,3 +1,9 @@
+## [Unreleased]
+
+### Added
+
+- **subagents**: Subagent tools now attach shared `@tsuuanmi/pi-agent` structured receipts for current-session status and inspection visibility.
+
 ## [0.2.0] - 2026-07-20
 
 ### Breaking Changes

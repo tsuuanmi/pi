@@ -11,6 +11,7 @@ import type {
 	SubagentRunRequest,
 	SubagentRunResult,
 	SubagentStatus,
+	SubagentVisibility,
 	ThinkingLevel,
 } from "@tsuuanmi/pi-agent";
 import {
@@ -204,6 +205,36 @@ function mergeSystemPrompt(profile: AgentProfile | undefined, request: SubagentR
 	return parts.length > 0 ? parts.join("\n\n") : undefined;
 }
 
+function buildSubagentObservabilityPrompt(input: {
+	parentSessionId?: string;
+	subagentId: string;
+	cwd: string;
+	visibility?: SubagentVisibility;
+}): string {
+	const sessionLine = input.parentSessionId
+		? `Parent/current session id: ${input.parentSessionId}. Keep status and final summaries attributable to this session.`
+		: "Parent/current session id: unavailable. Include enough status context for the caller to inspect this run.";
+	const visibility = input.visibility ?? "native";
+	const visibilityLine =
+		visibility === "tmux"
+			? "Visibility requested: tmux. If this task needs live terminal work, create or use an explicit tmux session/pane and report its attach/list/inspect/cleanup commands."
+			: visibility === "auto"
+				? "Visibility requested: auto. Use native Pi receipts for normal work; choose explicit tmux only for live long-running terminal work."
+				: "Visibility requested: native. Use Pi-native receipts/status for normal subagent work; use explicit tmux only if long-running terminal work is necessary.";
+	return [
+		"Subagent observability contract:",
+		sessionLine,
+		`Subagent id: ${input.subagentId}. Working directory: ${input.cwd}.`,
+		visibilityLine,
+		"Do not hide long-running work. For dev servers, watchers, debuggers, REPLs, and log tails, prefer an explicit tmux session over a detached background process.",
+		"When you start or recommend tmux-backed work, surface the session name, command summary, cwd, attach command, inspect/list command, and cleanup command so the parent session can render a structured receipt.",
+	].join("\n");
+}
+
+function appendSystemPrompt(base: string | undefined, addition: string): string {
+	return base && base.trim().length > 0 ? `${base}\n\n${addition}` : addition;
+}
+
 function parseModelRef(ref: string): { provider: string; modelId: string } {
 	const slash = ref.indexOf("/");
 	if (slash <= 0 || slash === ref.length - 1) {
@@ -265,6 +296,10 @@ export class SubagentManager {
 
 	private indexPath(sessionId: string): string {
 		return join(this.root(sessionId), "index.jsonl");
+	}
+
+	private sessionLogDir(sessionId: string): string {
+		return join(this.root(sessionId), "sessions");
 	}
 
 	private async writeTerminal(
@@ -346,6 +381,7 @@ export class SubagentManager {
 				status: "queued",
 				cwd: resolved.cwd ?? this.services.cwd,
 				parent_session_id: resolved.parentSessionId,
+				visibility: resolved.visibility ?? "native",
 				resumable: resolved.persistent !== false,
 				created_at: now,
 				updated_at: now,
@@ -405,11 +441,16 @@ export class SubagentManager {
 		request: ResolvedSubagentRunRequest,
 		signal: AbortSignal,
 	): Promise<SubagentRunResult> {
+		const storageSessionId = request.storageSessionId ?? request.parentSessionId ?? record.parent_session_id;
+		if (!storageSessionId)
+			throw new Error("subagent run requires a session id (storageSessionId or parentSessionId)");
 		const sessionManager = request.resumeSessionFile
 			? SessionManager.open(request.resumeSessionFile, undefined, record.cwd)
 			: request.persistent === false
 				? SessionManager.inMemory(record.cwd)
-				: SessionManager.create(record.cwd, undefined, { id: record.id });
+				: SessionManager.create(record.cwd, storageSessionId ? this.sessionLogDir(storageSessionId) : undefined, {
+						id: record.id,
+					});
 		// Subagents must not share the parent session's ResourceLoader: a ResourceLoader
 		// caches a single ExtensionRuntime and one set of Extension objects, and
 		// disposing a subagent session invalidates that shared runtime, which would
@@ -419,6 +460,12 @@ export class SubagentManager {
 		// loader (reusing the parent's settings manager to preserve active overrides)
 		// that mirrors the parent's extension configuration.
 		const services = await this.createIsolatedServices();
+		const observabilityPrompt = buildSubagentObservabilityPrompt({
+			parentSessionId: request.parentSessionId,
+			subagentId: record.id,
+			cwd: record.cwd,
+			visibility: request.visibility,
+		});
 		const created = await createAgentSessionFromServices({
 			services,
 			sessionManager,
@@ -427,7 +474,7 @@ export class SubagentManager {
 			tools: excludeNestedSubagentTools(request.tools),
 			excludeTools: request.excludeTools,
 			skipWorkflowContinuation: true,
-			extraSystemPrompt: request.resolvedSystemPrompt,
+			extraSystemPrompt: appendSystemPrompt(request.resolvedSystemPrompt, observabilityPrompt),
 			// Subagent sessions do not get their own SubagentManager to prevent unbounded nesting.
 			// A subagent cannot spawn further subagents; use the parent manager for orchestration.
 			subagentManager: null,
@@ -440,9 +487,6 @@ export class SubagentManager {
 		}
 		await bindSubagentExtensions(session);
 
-		const storageSessionId = request.storageSessionId ?? record.parent_session_id;
-		if (!storageSessionId)
-			throw new Error("subagent run requires a session id (storageSessionId or parentSessionId)");
 		await this.writeRecord(
 			{
 				...record,

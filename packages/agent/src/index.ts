@@ -14,11 +14,13 @@ export * from "#agent/harness/messages";
 export * from "#agent/harness/subagents/subagent-manager";
 export * from "#agent/harness/subagents/subagent-manager-factory";
 export * from "#agent/harness/subagents/subagent-progress";
+export * from "#agent/harness/subagents/subagent-receipts";
 export * from "#agent/harness/subagents/subagent-types";
 export * from "#agent/harness/subagents/yield-result";
 // Shell output capture utilities
 export * from "#agent/harness/utils/shell-output";
 // Truncation utilities
 export * from "#agent/harness/utils/truncate";
+export * from "#agent/receipts/structured-receipt";
 // Proxy utilities
 export * from "#agent/transport/proxy";

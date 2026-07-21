@@ -1,3 +1,4 @@
+import { type StructuredReceipt, withStructuredReceipt } from "@tsuuanmi/pi-agent";
 import { type WorkflowWriteOptions, type WriteArtifactResult, writeTextArtifact } from "#workflows/state/state-writer";
 
 export interface StageArtifactInput {
@@ -48,4 +49,11 @@ export function assembleFinalPackage(state: Record<string, unknown>): WorkflowFi
 
 export function workflowReceipt(fields: Record<string, unknown> = {}): WorkflowReceipt {
 	return { ok: true, final_package: assembleFinalPackage(fields), ...fields };
+}
+
+export function workflowReceiptWithStructuredReceipt(
+	fields: Record<string, unknown> = {},
+	receipt?: StructuredReceipt,
+): WorkflowReceipt {
+	return receipt ? workflowReceipt(withStructuredReceipt(fields, receipt)) : workflowReceipt(fields);
 }

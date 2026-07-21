@@ -1,3 +1,4 @@
+import { getStructuredReceipt } from "@tsuuanmi/pi-agent";
 import { applyPatch } from "diff";
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
@@ -59,7 +60,11 @@ describe("Pi Agent Tools", () => {
 			expect(getTextOutput(result)).toBe(content);
 			// No truncation message since file fits within limits
 			expect(getTextOutput(result)).not.toContain("Use offset=");
-			expect(result.details).toBeUndefined();
+			expect(getStructuredReceipt(result.details)).toMatchObject({
+				source: "builtin-tool",
+				status: "completed",
+				location: { toolCallId: "test-call-1", toolName: "read", path: testFile },
+			});
 		});
 
 		it("should handle non-existent files", async () => {
@@ -188,7 +193,11 @@ describe("Pi Agent Tools", () => {
 
 			expect(getTextOutput(result)).toContain("Successfully wrote");
 			expect(getTextOutput(result)).toContain(testFile);
-			expect(result.details).toBeUndefined();
+			expect(getStructuredReceipt(result.details)).toMatchObject({
+				source: "builtin-tool",
+				status: "completed",
+				location: { toolCallId: "test-call-3", toolName: "write", path: testFile },
+			});
 		});
 
 		it("should create parent directories", async () => {
@@ -418,7 +427,11 @@ describe("Pi Agent Tools", () => {
 			const result = await bashTool.execute("test-call-8", { command: "echo 'test output'" });
 
 			expect(getTextOutput(result)).toContain("test output");
-			expect(result.details).toBeUndefined();
+			expect(getStructuredReceipt(result.details)).toMatchObject({
+				source: "builtin-tool",
+				status: "completed",
+				location: { toolCallId: "test-call-8", toolName: "bash", command: "echo 'test output'" },
+			});
 		});
 
 		it("should handle command errors", async () => {

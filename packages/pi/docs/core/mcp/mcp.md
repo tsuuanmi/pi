@@ -62,6 +62,8 @@ Server names are sanitized before registration so tool names are safe for model 
 
 Extensions observe MCP tools through normal tool events. MCP tools behave like any other registered tool.
 
+MCP tools are intentionally not part of the first structured-receipt implementation milestone. The shared receipt schema is designed so a future MCP adapter can attach `details.receipt` with MCP-specific metadata such as server name, tool name, transport, status, and inspect pointers, but milestone one focuses on built-in tools, subagents, and tmux guidance/receipts.
+
 ```typescript
 import type { ExtensionAPI } from "@tsuuanmi/pi";
 

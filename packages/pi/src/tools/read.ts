@@ -16,6 +16,7 @@ import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
 import { getReadmePath } from "#pi/config/config";
 import { resolveReadPathAsync, resolveToCwd } from "#pi/tools/path-utils";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
 import { getTextOutput, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#pi/tools/utils";
 
 const readSchema = Type.Object({
@@ -201,12 +202,13 @@ export function createReadToolDefinition(
 		promptGuidelines: ["Use read to examine files instead of cat or sed."],
 		parameters: readSchema,
 		async execute(
-			_toolCallId,
+			toolCallId,
 			{ path, offset, limit }: { path: string; offset?: number; limit?: number },
 			signal?: AbortSignal,
 			_onUpdate?,
 			_ctx?,
 		) {
+			const startedAt = Date.now();
 			return new Promise<{ content: TextContent[]; details: ReadToolDetails | undefined }>((resolve, reject) => {
 				if (signal?.aborted) {
 					reject(new Error("Operation aborted"));
@@ -283,7 +285,20 @@ export function createReadToolDefinition(
 
 						if (aborted) return;
 						signal?.removeEventListener("abort", onAbort);
-						resolve({ content, details });
+						const endedAt = Date.now();
+						const receipt = createBuiltinToolReceipt({
+							toolCallId,
+							toolName: "read",
+							status: "completed",
+							actionSummary: `Read ${path}`,
+							location: { cwd, path, offset: offset ?? 0, limit: limit ?? 0 },
+							inspect: [{ label: "path", kind: "path", value: path }],
+							startedAt: new Date(startedAt).toISOString(),
+							endedAt: new Date(endedAt).toISOString(),
+							durationMs: endedAt - startedAt,
+							outputPreview: content[0]?.text?.slice(0, 240),
+						});
+						resolve({ content, details: attachBuiltinToolReceipt(details, receipt) });
 					} catch (error: any) {
 						signal?.removeEventListener("abort", onAbort);
 						if (!aborted) reject(error);

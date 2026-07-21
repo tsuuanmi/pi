@@ -5,7 +5,12 @@
  * package's aggregate public API entry point for extension types.
  */
 
-export type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "@tsuuanmi/pi-agent";
+export type {
+	AgentToolResult,
+	AgentToolUpdateCallback,
+	StructuredReceipt,
+	ToolExecutionMode,
+} from "@tsuuanmi/pi-agent";
 export * from "#pi/api/context-types";
 export * from "#pi/api/extension-types";
 export * from "#pi/api/mcp-types";

@@ -20,6 +20,7 @@ import {
 	stripBom,
 } from "#pi/tools/edit-diff";
 import { resolveToCwd } from "#pi/tools/path-utils";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
 import { renderToolPath, str, wrapToolDefinition } from "#pi/tools/utils";
 
 type EditPreview = EditDiffResult | EditDiffError;
@@ -303,10 +304,11 @@ export function createEditToolDefinition(
 		parameters: editSchema,
 		renderShell: "self",
 		prepareArguments: prepareEditArguments,
-		async execute(_toolCallId, input: EditToolInput, signal?: AbortSignal, _onUpdate?, _ctx?) {
+		async execute(toolCallId, input: EditToolInput, signal?: AbortSignal, _onUpdate?, _ctx?) {
 			const { path, edits } = validateEditInput(input);
 			const absolutePath = resolveToCwd(path, cwd);
 
+			const startedAt = Date.now();
 			return withFileMutationQueue(absolutePath, async () => {
 				// Do not reject from an abort event listener here: that would release the
 				// mutation queue while an in-flight filesystem operation may still finish.
@@ -347,14 +349,26 @@ export function createEditToolDefinition(
 
 				const diffResult = generateDiffString(baseContent, newContent);
 				const patch = generateUnifiedPatch(path, baseContent, newContent);
+				const output = `Successfully replaced ${edits.length} block(s) in ${path}.`;
+				const endedAt = Date.now();
+				const receipt = createBuiltinToolReceipt({
+					toolCallId,
+					toolName: "edit",
+					status: "completed",
+					actionSummary: `Edited ${path}`,
+					location: { cwd, path, edits: edits.length },
+					inspect: [{ label: "path", kind: "path", value: path }],
+					startedAt: new Date(startedAt).toISOString(),
+					endedAt: new Date(endedAt).toISOString(),
+					durationMs: endedAt - startedAt,
+					outputPreview: output.slice(0, 240),
+				});
 				return {
-					content: [
-						{
-							type: "text",
-							text: `Successfully replaced ${edits.length} block(s) in ${path}.`,
-						},
-					],
-					details: { diff: diffResult.diff, patch, firstChangedLine: diffResult.firstChangedLine },
+					content: [{ type: "text", text: output }],
+					details: attachBuiltinToolReceipt(
+						{ diff: diffResult.diff, patch, firstChangedLine: diffResult.firstChangedLine },
+						receipt,
+					),
 				};
 			});
 		},

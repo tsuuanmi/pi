@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Added
+
+- **tools**: Built-in tool results now attach `details.receipt` structured execution receipts and the TUI renders them consistently.
+- **tmux**: Added structured tmux launch guidance receipts for inspectable long-running workflow handoffs.
+
 ### Fixed
 
 - **models**: Ollama Cloud duplicate entries in `models.json` no longer replace generated model metadata from `@tsuuanmi/pi-ai`.

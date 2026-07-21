@@ -3,6 +3,7 @@ import { parseArgs } from "#pi/cli/args";
 import {
 	buildDefaultTmuxLaunchPlan,
 	buildPiTmuxWindowTitle,
+	buildTmuxGuidanceReceipt,
 	launchDefaultTmuxIfNeeded,
 	type TmuxSpawnOptions,
 	type TmuxSpawnResult,
@@ -32,6 +33,28 @@ describe("tmux launch", () => {
 			"/repo/project",
 			"exec env PI_TMUX_LAUNCHED=1 '/usr/local/bin/pi' '--tmux'",
 		]);
+	});
+
+	test("builds structured tmux guidance receipts", () => {
+		const plan = buildDefaultTmuxLaunchPlan({
+			parsed: parseArgs(["--tmux"]),
+			rawArgs: ["--tmux"],
+			cwd: "/repo/project",
+			env: { PI_TMUX_SESSION: "pi-test" },
+			argv: ["/usr/bin/node", "/usr/local/bin/pi"],
+			execPath: "/usr/bin/node",
+			tty: { stdin: true, stdout: true },
+			tmuxAvailable: true,
+		});
+
+		const receipt = buildTmuxGuidanceReceipt(plan!);
+
+		expect(receipt).toMatchObject({
+			source: "tmux",
+			status: "completed",
+			location: { cwd: "/repo/project", tmuxSession: "pi-test" },
+		});
+		expect(receipt.inspect.map((entry) => entry.label)).toEqual(["attach", "list", "inspect", "cleanup"]);
 	});
 
 	test("does not launch for non-interactive modes", () => {

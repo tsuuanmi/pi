@@ -148,3 +148,13 @@ The team and ultragoal skills spawn subagent workers through dedicated tools rat
 - **`ultragoal_spawn_goal_agent`** - spawn a subagent to execute an ultragoal goal. Parameters: `goalId`, `agent` (defaults to `worker`), plus the same overrides.
 
 Both reuse the parent session's `SubagentManager`, so spawned workers appear in that session's `state/subagents/index.jsonl` and can be inspected with `subagent_status`/`subagent_await` like any other subagent. After a mutation, team and ultragoal state-mutating tools call `syncWorkflowHudUi` to keep the interactive HUD in sync.
+
+## Structured receipts and current-session visibility
+
+Subagent tools attach a `details.receipt` (`StructuredReceipt`) to their tool results. The receipt is additive: existing `record`, `records`, `output`, and workflow receipt fields remain intact, while the shared receipt gives renderers and extensions a consistent summary of the current-session subagent activity.
+
+A subagent receipt includes the owning `sessionId`, `subagentId`, role, status, cwd, resumability, timing when known, output/error previews, and inspect pointers such as the saved session file. Persistent subagent conversation logs are written under the same current-session bucket at `.pi/<session-id>/state/subagents/sessions/`, while records live under `.pi/<session-id>/state/subagents/<subagent-id>/record.json`. Listing subagents also returns per-record receipts plus an aggregate list receipt. This makes subagents visible from the parent/current session instead of behaving like black-box detached work.
+
+Before a subagent session starts, Pi injects an observability instruction into that subagent's system prompt. The injected guidance includes the parent/current session id when available, the subagent id, the cwd, and the requested visibility mode (`native`, `tmux`, or `auto`). Long-running work should prefer explicit tmux sessions over hidden detached background processes. When tmux-backed work is used, the subagent is instructed to surface the session name, command summary, attach/list/inspect commands, and cleanup command so the parent session can render an inspectable receipt.
+
+`subagent_spawn` defaults to `visibility: "native"`: use Pi-native receipts, status, await, pause, resume, and session-local logs. `visibility: "tmux"` requests an explicit tmux-visible panel for live terminal work, but it is not forced for every subagent because headless mode, CI, short-lived tasks, and non-terminal environments still need native execution. `visibility: "auto"` lets the runner choose tmux only when live long-running terminal work is useful.

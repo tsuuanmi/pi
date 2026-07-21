@@ -748,6 +748,8 @@ In parallel tool mode, `tool_result` and `tool_execution_end` may interleave in 
 - Each handler sees the latest result after previous handler changes
 - Handlers can return partial patches (`content`, `details`, or `isError`); omitted fields keep their current values
 
+Built-in tools and workflow subagent tools may attach `event.details.receipt` (`StructuredReceipt`). Treat it as an additive, machine-readable execution summary for UI, logs, JSON/RPC consumers, and custom renderers. It answers what ran, where it ran, status, timing, output preview, and how to inspect more detail. Extensions that patch `details` should preserve an existing `details.receipt` unless intentionally replacing the receipt with an equivalent structured summary.
+
 Use `ctx.signal` for nested async work inside the handler. This lets Esc cancel model calls, `fetch()`, and other abort-aware operations started by the extension.
 
 ```typescript

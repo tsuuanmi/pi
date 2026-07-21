@@ -294,8 +294,37 @@ PROFILE SYSTEM PROMPT`,
 		expect(result.record.role).toBe("architect");
 		expect(result.record.model).toBe(`${model.provider}/${model.id}`);
 		expect(result.record.thinking_level).toBe("high");
+		expect(result.record.visibility).toBe("native");
 		expect(captured[0]).toMatchObject({ modelId: model.id, reasoning: "high", tools: ["read"] });
 		expect(captured[0]?.systemPrompt).toContain("PROFILE SYSTEM PROMPT");
+		expect(captured[0]?.systemPrompt).toContain("Subagent observability contract:");
+		expect(captured[0]?.systemPrompt).toContain("Visibility requested: native");
+		expect(captured[0]?.systemPrompt).toContain("prefer an explicit tmux session over a detached background process");
+	});
+
+	it("injects tmux visibility guidance when requested", async () => {
+		const captured: Array<{ systemPrompt: string }> = [];
+		faux.setResponses([
+			(context) => {
+				captured.push({ systemPrompt: context.systemPrompt ?? "" });
+				return fauxAssistantMessage("tmux visible");
+			},
+		]);
+
+		const model = faux.getModel();
+		const result = await manager.spawn({
+			role: "planner",
+			prompt: "Run visible work",
+			cwd,
+			storageSessionId: TEST_SESSION,
+			model: `${model.provider}/${model.id}`,
+			visibility: "tmux",
+			persistent: false,
+		});
+
+		expect(result.record.visibility).toBe("tmux");
+		expect(captured[0]?.systemPrompt).toContain("Visibility requested: tmux");
+		expect(captured[0]?.systemPrompt).toContain("tmux session/pane");
 	});
 
 	it("lets explicit subagent spawn overrides win over agent profiles", async () => {
@@ -351,6 +380,7 @@ Worker profile`,
 		});
 		expect(spawnResult.record.status).toBe("completed");
 		expect(spawnResult.record.session_file).toBeDefined();
+		expect(spawnResult.record.session_file).toContain(join(".pi", TEST_SESSION, "state", "subagents", "sessions"));
 
 		// Resume with a new prompt
 		faux.setResponses([fauxAssistantMessage("refined design")]);

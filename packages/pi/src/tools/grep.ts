@@ -16,6 +16,7 @@ import path from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
 import { resolveToCwd } from "#pi/tools/path-utils";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
 import { getTextOutput, invalidArgText, shortenPath, str, wrapToolDefinition } from "#pi/tools/utils";
 import { ensureTool } from "#pi/utils/system/tool-installer";
 
@@ -129,7 +130,7 @@ export function createGrepToolDefinition(
 		promptSnippet: "Search file contents for patterns (respects .gitignore)",
 		parameters: grepSchema,
 		async execute(
-			_toolCallId,
+			toolCallId,
 			{
 				pattern,
 				path: searchDir,
@@ -151,6 +152,7 @@ export function createGrepToolDefinition(
 			_onUpdate?,
 			_ctx?,
 		) {
+			const startedAt = Date.now();
 			return new Promise((resolve, reject) => {
 				if (signal?.aborted) {
 					reject(new Error("Operation aborted"));
@@ -304,8 +306,27 @@ export function createGrepToolDefinition(
 								return;
 							}
 							if (matchCount === 0) {
+								const output = "No matches found";
+								const endedAt = Date.now();
+								const receipt = createBuiltinToolReceipt({
+									toolCallId,
+									toolName: "grep",
+									status: "completed",
+									actionSummary: `Grep ${pattern}`,
+									location: { cwd, path: searchDir ?? ".", pattern, matches: 0 },
+									inspect: [
+										{ label: "path", kind: "path", value: searchDir ? resolveToCwd(searchDir, cwd) : cwd },
+									],
+									startedAt: new Date(startedAt).toISOString(),
+									endedAt: new Date(endedAt).toISOString(),
+									durationMs: endedAt - startedAt,
+									outputPreview: output,
+								});
 								settle(() =>
-									resolve({ content: [{ type: "text", text: "No matches found" }], details: undefined }),
+									resolve({
+										content: [{ type: "text", text: output }],
+										details: attachBuiltinToolReceipt(undefined, receipt),
+									}),
 								);
 								return;
 							}
@@ -351,10 +372,28 @@ export function createGrepToolDefinition(
 								details.linesTruncated = true;
 							}
 							if (notices.length > 0) output += `\n\n[${notices.join(". ")}]`;
+							const endedAt = Date.now();
+							const receipt = createBuiltinToolReceipt({
+								toolCallId,
+								toolName: "grep",
+								status: "completed",
+								actionSummary: `Grep ${pattern}`,
+								location: { cwd, path: searchDir ?? ".", pattern, matches: matchCount },
+								inspect: [
+									{ label: "path", kind: "path", value: searchDir ? resolveToCwd(searchDir, cwd) : cwd },
+								],
+								startedAt: new Date(startedAt).toISOString(),
+								endedAt: new Date(endedAt).toISOString(),
+								durationMs: endedAt - startedAt,
+								outputPreview: output.slice(0, 240),
+							});
 							settle(() =>
 								resolve({
 									content: [{ type: "text", text: output }],
-									details: Object.keys(details).length > 0 ? details : undefined,
+									details: attachBuiltinToolReceipt(
+										Object.keys(details).length > 0 ? details : undefined,
+										receipt,
+									),
 								}),
 							);
 						});

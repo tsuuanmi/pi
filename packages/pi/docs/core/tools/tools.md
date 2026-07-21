@@ -200,14 +200,14 @@ const localOps = createLocalBashOperations({ shellPath: "/bin/bash" });
 
 ### Tool Details
 
-Each tool returns structured details alongside its text output:
+Each tool returns structured details alongside its text output. Built-in tools attach a shared machine-readable `details.receipt` (`StructuredReceipt`) in addition to any tool-specific details. The receipt records what ran, where it ran, status, timing, a short output preview, and inspect pointers so UI renderers and extensions can display a consistent non-magical execution summary.
 
-- **`ReadToolDetails`** — `truncation?: TruncationResult`
-- **`BashToolDetails`** — `truncation?: TruncationResult`, `fullOutputPath?: string` (path to temp file with full output when truncated)
-- **`EditToolDetails`** — Display-oriented diff, unified patch, first changed line number
-- **`GrepToolDetails`** — Truncation info, match limit reached count, lines truncated flag
-- **`FindToolDetails`** — Truncation info, result limit reached count
-- **`LsToolDetails`** — Truncation info, entry limit reached count
+- **`ReadToolDetails`** — `truncation?: TruncationResult`, `receipt?: StructuredReceipt`
+- **`BashToolDetails`** — `truncation?: TruncationResult`, `fullOutputPath?: string` (path to temp file with full output when truncated), `receipt?: StructuredReceipt`
+- **`EditToolDetails`** — Display-oriented diff, unified patch, first changed line number, `receipt?: StructuredReceipt`
+- **`GrepToolDetails`** — Truncation info, match limit reached count, lines truncated flag, `receipt?: StructuredReceipt`
+- **`FindToolDetails`** — Truncation info, result limit reached count, `receipt?: StructuredReceipt`
+- **`LsToolDetails`** — Truncation info, entry limit reached count, `receipt?: StructuredReceipt`
 
 ### Truncation
 

@@ -2,6 +2,8 @@
 
 Pi works inside tmux, but tmux strips modifier information from certain keys by default. Without configuration, `Shift+Enter` and `Ctrl+Enter` are usually indistinguishable from plain `Enter`.
 
+Pi also treats tmux as the preferred primitive for real long-running terminal work. Instead of hiding a native background process manager behind the chat, Pi can surface tmux usage through structured receipts: session name, working directory, attach/list/inspect commands, and cleanup guidance.
+
 ## Recommended Configuration
 
 Add to `~/.tmux.conf`:
@@ -54,6 +56,19 @@ Without tmux extended keys, modified Enter keys collapse to legacy sequences:
 | Alt/Option+Enter | `\x1b\r` | `\x1b[13;3u` |
 
 This affects the default keybindings (`Enter` to submit, `Shift+Enter` for newline) and any custom keybindings using modified Enter.
+
+## Long-running work pattern
+
+Use explicit tmux sessions for dev servers, test watchers, debuggers, and log tails. A good receipt or note should include:
+
+- the tmux session name
+- the command or task summary
+- the working directory
+- how to attach: `tmux attach-session -t <session>`
+- how to list panes: `tmux list-panes -t <session>`
+- how to clean up: `tmux kill-session -t <session>`
+
+This keeps background-like work inspectable: users can attach to the same terminal state and see what happened under the hood.
 
 ## Requirements
 

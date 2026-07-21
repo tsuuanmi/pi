@@ -1,5 +1,10 @@
+import { getStructuredReceipt } from "@tsuuanmi/pi-agent";
 import { Box, type Component, Container, Spacer, Text, type TUI, theme } from "@tsuuanmi/pi-tui";
 import type { ToolDefinition, ToolRenderContext } from "#pi/api/types";
+import {
+	formatStructuredReceiptLines,
+	renderStructuredReceipt,
+} from "#pi/modes/interactive/components/structured-receipt-renderer";
 import { createAllToolDefinitions, type ToolName } from "#pi/tools/index";
 import { getTextOutput as getRenderedTextOutput } from "#pi/tools/utils";
 
@@ -126,10 +131,18 @@ export class ToolExecutionComponent extends Container {
 
 	private createResultFallback(): Component | undefined {
 		const output = this.getTextOutput();
-		if (!output) {
+		const receipt = this.getStructuredReceipt();
+		const lines: string[] = [];
+		if (output) {
+			lines.push(output);
+		}
+		if (receipt) {
+			lines.push(formatStructuredReceiptLines(receipt, this.expanded).join("\n"));
+		}
+		if (lines.length === 0) {
 			return undefined;
 		}
-		return new Text(theme.fg("toolOutput", output), 0, 0);
+		return new Text(theme.fg("toolOutput", lines.join("\n")), 0, 0);
 	}
 
 	updateArgs(args: any): void {
@@ -241,6 +254,10 @@ export class ToolExecutionComponent extends Container {
 						this.resultRendererComponent = component;
 						renderContainer.addChild(component);
 						hasContent = true;
+						const receipt = this.getStructuredReceipt();
+						if (receipt) {
+							renderContainer.addChild(renderStructuredReceipt(receipt, this.expanded, theme));
+						}
 					} catch {
 						this.resultRendererComponent = undefined;
 						const component = this.createResultFallback();
@@ -266,6 +283,10 @@ export class ToolExecutionComponent extends Container {
 		return getRenderedTextOutput(this.result);
 	}
 
+	private getStructuredReceipt(): ReturnType<typeof getStructuredReceipt> {
+		return getStructuredReceipt(this.result?.details);
+	}
+
 	private formatToolExecution(): string {
 		let text = theme.fg("toolTitle", theme.bold(this.toolName));
 		const content = JSON.stringify(this.args, null, 2);
@@ -275,6 +296,10 @@ export class ToolExecutionComponent extends Container {
 		const output = this.getTextOutput();
 		if (output) {
 			text += `\n${output}`;
+		}
+		const receipt = this.getStructuredReceipt();
+		if (receipt) {
+			text += `\n${formatStructuredReceiptLines(receipt, this.expanded).join("\n")}`;
 		}
 		return text;
 	}
