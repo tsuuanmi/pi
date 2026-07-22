@@ -3,7 +3,9 @@
 ### Added
 
 - **receipts**: Added `StructuredReceipt` helpers for attaching and validating machine-readable execution receipts.
-- **subagents**: Added shared subagent receipt helpers and a `visibility` contract (`native`, `tmux`, `auto`) for subagent run requests.
+- **subagents**: Added shared subagent receipt/type exports, including `SubagentStatus`, `SubagentBackendKind`, `SubagentControlAction`, tmux metadata in `receipt.meta`, and the `visibility` contract (`native`, `tmux`, `auto`) for subagent run requests.
+- **subagents**: Added shared inspect, attach, and kill result types to the `SubagentManager` contract.
+- **subagents**: Added the shared `Subagent Run Identity` JSON schema and typed helpers for tmux-backed subagent owner/session/target metadata.
 
 ## [0.2.0] - 2026-07-20
 

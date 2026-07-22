@@ -29,6 +29,16 @@ export function createSubagentReceipt(record: SubagentRecord, sessionId: string)
 	if (record.session_file) {
 		inspect.push({ label: "session file", kind: "path", value: record.session_file });
 	}
+	if (record.artifact_file) {
+		inspect.push({ label: "artifact", kind: "path", value: record.artifact_file });
+	}
+	if (record.tmux) {
+		inspect.push(
+			{ label: "attach", kind: "tmux", value: record.tmux.attach_command },
+			{ label: "inspect", kind: "tmux", value: record.tmux.inspect_command },
+			{ label: "cleanup", kind: "command", value: record.tmux.cleanup_command },
+		);
+	}
 	const startedAt = record.started_at;
 	const endedAt = record.completed_at;
 	const started = startedAt ? Date.parse(startedAt) : undefined;
@@ -63,6 +73,8 @@ export function createSubagentReceipt(record: SubagentRecord, sessionId: string)
 			thinking_level: record.thinking_level,
 			parent_session_id: record.parent_session_id,
 			last_prompt_sha256: record.last_prompt_sha256,
+			artifact_file: record.artifact_file,
+			tmux: record.tmux,
 		},
 	};
 }

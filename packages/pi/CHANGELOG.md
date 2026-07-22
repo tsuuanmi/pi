@@ -4,6 +4,9 @@
 
 - **tools**: Built-in tool results now attach `details.receipt` structured execution receipts and the TUI renders them consistently.
 - **tmux**: Added structured tmux launch guidance receipts for inspectable long-running workflow handoffs.
+- **subagents**: Explicit `visibility: "tmux"` now launches the Pi CLI in tmux worker mode using a session-local `request.json`, while `visibility: "auto"` still resolves to the native backend for this milestone.
+- **subagents**: Added tmux live controls for inspect, attach guidance, and kill with ordered failure reasons.
+- **subagents**: Tmux-backed subagents now record the shared `Subagent Run Identity` schema, capture pane/session targets from tmux output, and fail closed on legacy or mismatched cleanup metadata.
 - **account**: `/account` now shows OpenAI Codex reset credits with quota and can redeem one via `/account reset openai-codex [account]`.
 
 ### Fixed

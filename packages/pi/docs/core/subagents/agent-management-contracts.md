@@ -172,7 +172,7 @@ Pure modules such as spawn gates, concurrency helpers, receipt shaping, ROI reco
 
 ## Worktree/tmux gate
 
-Worktree and tmux orchestration must not begin until a threat-model ADR exists. That ADR must cover:
+Worktree and tmux orchestration must not begin until a threat-model ADR exists. The accepted ADR is [ADR: Worktree and tmux Threat Model](tmux-worktree-threat-model-adr.md). It covers:
 
 - worker owner identity and cleanup authority;
 - parent-checkout protection;
@@ -185,7 +185,7 @@ Worktree and tmux orchestration must not begin until a threat-model ADR exists. 
 - cleanup idempotency and permission failures;
 - tmux absence or version mismatch.
 
-Until that ADR is accepted, `git-worktree-isolation` and `tmux-session-orchestration` remain deferred seams. `cross-harness-omx-fallback` remains permanently blocked unless a later approved plan reverses that policy.
+The ADR is accepted, satisfying this phase gate. Tmux-backed subagents now expose bounded live controls for `inspect`, `attach`, and `kill`: inspect returns the durable record and paths, attach returns target-specific command guidance without attaching automatically, and kill validates the shared `Subagent Run Identity` schema plus worker metadata before target-specific cleanup (`kill-pane` or `kill-session`). Legacy or mismatched identity metadata fails closed. `pause`, `resume`, and `heartbeat` live controls remain deferred. `git-worktree-isolation` remains a deferred seam until implementation lands and passes the ADR controls. `cross-harness-omx-fallback` remains permanently blocked unless a later approved plan reverses that policy.
 
 ## Phase-gate summary
 
@@ -197,5 +197,5 @@ Until that ADR is accepted, `git-worktree-isolation` and `tmux-session-orchestra
 | 3 | Registry isolation passes; `awaitReply` remains gated until side-channel semantics are documented and tested. |
 | 4 | Canonical model-facing task API is selected: `task`, evolved `subagent_*`, or temporary dual surface. |
 | 5 | Task receipt shape and hidden/custom/system-message context policy are stable. |
-| 6 | Worktree/tmux threat-model ADR is accepted. |
+| 6 | Worktree/tmux threat-model ADR is accepted: [ADR: Worktree and tmux Threat Model](tmux-worktree-threat-model-adr.md). |
 | 7 | Mandatory surrounding surfaces for a final parity claim are enumerated by ADR/ROI score. |

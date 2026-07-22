@@ -1,29 +1,42 @@
+import { spawnSync } from "node:child_process";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { appendFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type {
 	AgentMessage,
+	SubagentAttachResult,
 	SubagentAwaitOptions,
 	SubagentAwaitResult,
+	SubagentBackendKind,
 	SubagentDelivery,
+	SubagentInspectResult,
+	SubagentKillResult,
 	SubagentRecord,
 	SubagentResumeResult,
+	SubagentRunIdentity,
 	SubagentRunRequest,
 	SubagentRunResult,
 	SubagentStatus,
+	SubagentTmuxMetadata,
+	SubagentTmuxTarget,
 	SubagentVisibility,
 	ThinkingLevel,
 } from "@tsuuanmi/pi-agent";
 import {
+	buildTmuxCommands,
+	createSubagentRunIdentity,
 	extractYieldFromMessages,
+	isSubagentRunIdentity,
 	renderSubagentProgress,
 	type SubagentProgress,
 	SubagentProgressTracker,
+	tmuxRecordMatchesIdentity,
 } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import { type AgentProfile, loadAgentProfile } from "#pi/agents/agent-profiles";
 import type { ExtensionUIContext } from "#pi/api/types";
+import { buildTmuxSubagentLaunchPlan, isTmuxCommandAvailable, type TmuxSpawnSync } from "#pi/cli/launch-tmux";
 import type { AgentSession } from "#pi/session/agent-session";
 import {
 	type AgentSessionServices,
@@ -34,9 +47,13 @@ import { sessionStateDir } from "#pi/session/session-layout";
 import { SessionManager } from "#pi/session/session-manager";
 
 export type {
+	SubagentAttachResult,
 	SubagentAwaitOptions,
 	SubagentAwaitResult,
+	SubagentBackendKind,
 	SubagentDelivery,
+	SubagentInspectResult,
+	SubagentKillResult,
 	SubagentRecord,
 	SubagentResumeFailureReason,
 	SubagentResumeResult,
@@ -187,6 +204,182 @@ function excludeNestedSubagentTools(tools: string[] | undefined): string[] | und
 	return tools?.filter((tool) => !tool.startsWith("subagent_"));
 }
 
+function resolveSubagentBackendKind(visibility: SubagentVisibility | undefined): SubagentBackendKind {
+	return visibility === "tmux" ? "tmux" : "native";
+}
+
+class TmuxUnavailableError extends Error {
+	readonly code = "tmux_unavailable";
+	readonly backendKind: SubagentBackendKind = "tmux";
+
+	constructor(message = "tmux backend unavailable") {
+		super(message);
+		this.name = "TmuxUnavailableError";
+	}
+}
+
+function isThinkingLevel(value: unknown): value is ThinkingLevel {
+	return (
+		value === "off" ||
+		value === "minimal" ||
+		value === "low" ||
+		value === "medium" ||
+		value === "high" ||
+		value === "xhigh"
+	);
+}
+
+function defaultTmuxSpawnSync(
+	command: string,
+	args: string[],
+	options: Parameters<TmuxSpawnSync>[2],
+): ReturnType<TmuxSpawnSync> {
+	const result = spawnSync(command, args, {
+		cwd: options.cwd,
+		env: options.env,
+		stdio: [options.stdin, options.stdout, options.stderr],
+	});
+	return {
+		exitCode: result.status,
+		signalCode: result.signal,
+		stdout: result.stdout?.toString(),
+		stderr: result.stderr?.toString(),
+	};
+}
+
+function parseTmuxLaunchTargetOutput(output: string | undefined, targetKind: "pane" | "session"): SubagentTmuxTarget {
+	const fields = output?.trim().split(/\s+/) ?? [];
+	if (targetKind === "pane") {
+		const [session_name, session_id, window_id, window_index, pane_id, pane_index] = fields;
+		if (!session_name || !session_id || !window_id || !pane_id || !window_index || !pane_index) {
+			throw new Error(`tmux split-window did not return pane target metadata: ${output ?? "<empty>"}`);
+		}
+		return {
+			kind: "pane",
+			session_name,
+			session_id,
+			window_id,
+			window_index: Number(window_index),
+			pane_id,
+			pane_index: Number(pane_index),
+			target: pane_id,
+		};
+	}
+	const [session_name, session_id] = fields;
+	if (!session_name || !session_id) {
+		throw new Error(`tmux new-session did not return session target metadata: ${output ?? "<empty>"}`);
+	}
+	return {
+		kind: "session",
+		session_name,
+		session_id,
+		target: `=${session_name}`,
+	};
+}
+
+function tmuxMetadataFromTarget(
+	target: SubagentTmuxTarget,
+	requestPath: string,
+	workerMetadataFile: string,
+	visibleByDefault: boolean,
+	tmuxCommand: string,
+): SubagentTmuxMetadata {
+	const commands = buildTmuxCommands(target, tmuxCommand);
+	return {
+		backend: "tmux",
+		session_name: target.session_name,
+		target,
+		request_file: requestPath,
+		worker_metadata_file: workerMetadataFile,
+		attach_command: commands.attachCommand,
+		inspect_command: commands.inspectCommand,
+		cleanup_command: commands.cleanupCommand,
+		visible_by_default: visibleByDefault,
+	};
+}
+
+function tmuxTarget(record: SubagentRecord): string | undefined {
+	return record.identity?.tmux.target.target ?? record.tmux?.target.target;
+}
+
+function tmuxCommandFromMetadata(tmux: SubagentTmuxMetadata, fallback: string): string {
+	const command = tmux.cleanup_command.split(/\s+/, 1)[0]?.trim();
+	return command || fallback;
+}
+
+function tmuxHasTargetArgs(target: SubagentTmuxTarget): string[] {
+	return target.kind === "pane"
+		? ["display-message", "-p", "-t", target.target, "#{pane_id}"]
+		: ["has-session", "-t", target.target];
+}
+
+function tmuxCleanupArgs(target: SubagentTmuxTarget): [string, string, string] {
+	return target.kind === "pane" ? ["kill-pane", "-t", target.target] : ["kill-session", "-t", target.target];
+}
+
+function isWorkerPidAlive(metadata: Pick<SubagentWorkerMetadataFile, "pid"> | undefined): boolean {
+	const pid = metadata?.pid;
+	if (typeof pid !== "number" || !Number.isInteger(pid) || pid <= 0) return false;
+	try {
+		process.kill(pid, 0);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+interface SubagentWorkerMetadataFile {
+	version: 1;
+	subagentId: string;
+	storageSessionId: string;
+	storageRoot: string;
+	pid: number;
+	startedAt: string;
+	requestPath: string;
+	identity?: SubagentRunIdentity;
+}
+
+function readWorkerMetadata(metadata: Record<string, unknown> | undefined): SubagentWorkerMetadataFile | undefined {
+	if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return undefined;
+	const root = metadata as Record<string, unknown>;
+	if (root.version !== 1) return undefined;
+	if (typeof root.subagentId !== "string" || typeof root.storageSessionId !== "string") return undefined;
+	if (typeof root.storageRoot !== "string" || typeof root.pid !== "number" || typeof root.startedAt !== "string") {
+		return undefined;
+	}
+	if (typeof root.requestPath !== "string") return undefined;
+	if (root.identity !== undefined && !isSubagentRunIdentity(root.identity)) return undefined;
+	return {
+		version: 1,
+		subagentId: root.subagentId,
+		storageSessionId: root.storageSessionId,
+		storageRoot: root.storageRoot,
+		pid: root.pid,
+		startedAt: root.startedAt,
+		requestPath: root.requestPath,
+		identity: root.identity as SubagentRunIdentity | undefined,
+	};
+}
+
+interface SubagentManagerOptions {
+	tmux?: {
+		available?: (command: string) => boolean;
+		spawnSync?: TmuxSpawnSync;
+		env?: NodeJS.ProcessEnv;
+		argv?: string[];
+		execPath?: string;
+		sessionName?: string;
+	};
+}
+
+interface SubagentWorkerRequestFile {
+	version: 1;
+	subagentId: string;
+	storageSessionId: string;
+	storageRoot: string;
+	request: SubagentRunRequest;
+}
+
 interface ResolvedSubagentRunRequest extends SubagentRunRequest {
 	role: string;
 	tools?: string[];
@@ -246,10 +439,12 @@ function parseModelRef(ref: string): { provider: string; modelId: string } {
 export class SubagentManager {
 	private readonly live = new Map<string, LiveSubagent>();
 	private readonly services: AgentSessionServices;
+	private readonly options: SubagentManagerOptions;
 	private readonly progressTracker = new SubagentProgressTracker();
 
-	constructor(services: AgentSessionServices) {
+	constructor(services: AgentSessionServices, options: SubagentManagerOptions = {}) {
 		this.services = services;
+		this.options = options;
 	}
 
 	/** Get the retained progress snapshot for a subagent. */
@@ -282,6 +477,23 @@ export class SubagentManager {
 		return join(this.root(sessionId), id, "record.json");
 	}
 
+	private artifactPath(id: string, sessionId: string): string {
+		return join(this.root(sessionId), id, "artifact.json");
+	}
+
+	private async writeArtifact(record: SubagentRecord, sessionId: string): Promise<void> {
+		const artifactPath = record.artifact_file ?? this.artifactPath(record.id, sessionId);
+		await writeJsonAtomic(artifactPath, {
+			version: 1,
+			subagentId: record.id,
+			status: record.status,
+			result_text: record.result_text,
+			error_text: record.error_text,
+			yield_result: record.yield_result,
+			completed_at: record.completed_at,
+		});
+	}
+
 	private async writeRecord(record: SubagentRecord, sessionId: string): Promise<SubagentRecord> {
 		await writeJsonAtomic(this.recordPath(record.id, sessionId), { ...record });
 		await appendJsonlAtomic(this.indexPath(sessionId), {
@@ -308,16 +520,16 @@ export class SubagentManager {
 		sessionId: string,
 		extra?: Partial<SubagentRecord>,
 	): Promise<SubagentRecord> {
-		return this.writeRecord(
-			{
-				...record,
-				...extra,
-				status,
-				updated_at: nowIso(),
-				completed_at: nowIso(),
-			},
-			sessionId,
-		);
+		const terminalRecord = {
+			...record,
+			...extra,
+			artifact_file: record.artifact_file ?? this.artifactPath(record.id, sessionId),
+			status,
+			updated_at: nowIso(),
+			completed_at: nowIso(),
+		};
+		await this.writeArtifact(terminalRecord, sessionId);
+		return this.writeRecord(terminalRecord, sessionId);
 	}
 
 	async read(id: string, sessionId: string): Promise<SubagentRecord | undefined> {
@@ -364,12 +576,15 @@ export class SubagentManager {
 	}
 
 	async spawn(request: SubagentRunRequest): Promise<SubagentRunResult> {
+		const backendKind = resolveSubagentBackendKind(request.visibility);
 		const resolved = await this.resolveRequest(request);
 		const id = defaultSubagentId();
 		const now = nowIso();
 		const storageSessionId = resolved.storageSessionId ?? resolved.parentSessionId;
 		if (!storageSessionId)
 			throw new Error("subagent spawn requires a session id (storageSessionId or parentSessionId)");
+		const artifactFile = this.artifactPath(id, storageSessionId);
+		if (backendKind === "tmux") return this.spawnTmux(id, resolved, storageSessionId, now, artifactFile);
 		const record = await this.writeRecord(
 			{
 				id,
@@ -386,6 +601,7 @@ export class SubagentManager {
 				created_at: now,
 				updated_at: now,
 				last_prompt_sha256: hashText(resolved.prompt),
+				artifact_file: artifactFile,
 			},
 			storageSessionId,
 		);
@@ -395,6 +611,149 @@ export class SubagentManager {
 			return { record: (await this.read(id, storageSessionId)) ?? record, messages: [], output: "" };
 		}
 		return run;
+	}
+
+	private async spawnTmux(
+		id: string,
+		request: ResolvedSubagentRunRequest,
+		storageSessionId: string,
+		now: string,
+		artifactFile: string,
+	): Promise<SubagentRunResult> {
+		const env = this.options.tmux?.env ?? process.env;
+		const tmuxCommand = env.PI_TMUX_COMMAND?.trim() || "tmux";
+		const available = this.options.tmux?.available ?? isTmuxCommandAvailable;
+		if (!available(tmuxCommand)) throw new TmuxUnavailableError(`tmux command not available: ${tmuxCommand}`);
+		const storageRoot = this.services.cwd;
+		const executionCwd = request.cwd ?? storageRoot;
+		const workerDir = dirname(this.recordPath(id, storageSessionId));
+		const requestPath = join(workerDir, "request.json");
+		const workerMetadataFile = join(workerDir, "worker.json");
+		const plan = buildTmuxSubagentLaunchPlan({
+			cwd: executionCwd,
+			subagentId: id,
+			requestPath,
+			env,
+			argv: this.options.tmux?.argv,
+			execPath: this.options.tmux?.execPath,
+			tmuxCommand,
+			sessionName: this.options.tmux?.sessionName,
+		});
+		await writeJsonAtomic(requestPath, {
+			version: 1,
+			subagentId: id,
+			storageSessionId,
+			storageRoot,
+			request: {
+				agent: request.agent,
+				role: request.role,
+				prompt: request.prompt,
+				systemPrompt: request.systemPrompt,
+				cwd: executionCwd,
+				tools: request.tools,
+				excludeTools: request.excludeTools,
+				model: request.modelRef,
+				thinkingLevel: request.thinkingLevel,
+				persistent: request.persistent,
+				label: request.label,
+				parentSessionId: request.parentSessionId,
+			},
+		});
+		const provisionalRecord = await this.writeRecord(
+			{
+				id,
+				role: request.role,
+				label: request.label,
+				agent_profile: request.agent,
+				model: request.modelRef,
+				thinking_level: request.thinkingLevel,
+				status: "running",
+				cwd: executionCwd,
+				parent_session_id: request.parentSessionId ?? storageSessionId,
+				visibility: "tmux",
+				resumable: request.persistent !== false,
+				created_at: now,
+				updated_at: now,
+				started_at: now,
+				last_prompt_sha256: hashText(request.prompt),
+				artifact_file: artifactFile,
+			},
+			storageSessionId,
+		);
+		const spawn = this.options.tmux?.spawnSync ?? defaultTmuxSpawnSync;
+		const launched = spawn(plan.tmuxCommand, plan.launchArgs, {
+			cwd: plan.cwd,
+			env,
+			stdin: "inherit",
+			stdout: "pipe",
+			stderr: "inherit",
+		});
+		if (launched.exitCode !== 0) {
+			const failed = await this.writeTerminal(provisionalRecord, "failed", storageSessionId, {
+				error_text: launched.stderr?.trim() || "tmux worker launch failed",
+			});
+			return { record: failed, messages: [], output: failed.error_text ?? "" };
+		}
+		const targetKind = plan.launchArgs[0] === "split-window" ? "pane" : "session";
+		let target: SubagentTmuxTarget;
+		try {
+			target = parseTmuxLaunchTargetOutput(launched.stdout, targetKind);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			const failed = await this.writeTerminal(provisionalRecord, "failed", storageSessionId, {
+				error_text: message,
+			});
+			return { record: failed, messages: [], output: failed.error_text ?? "" };
+		}
+		const tmux = tmuxMetadataFromTarget(target, requestPath, workerMetadataFile, true, tmuxCommand);
+		const identity = createSubagentRunIdentity({
+			subagentId: id,
+			parentSessionId: request.parentSessionId ?? storageSessionId,
+			storageSessionId,
+			storageRoot,
+			executionCwd,
+			requestPath,
+			recordPath: this.recordPath(id, storageSessionId),
+			artifactPath: artifactFile,
+			workerMetadataPath: workerMetadataFile,
+			lifecycleState: "running",
+			cleanupEligible: true,
+			tmux: {
+				backend: "tmux",
+				target,
+				request_path: requestPath,
+				worker_metadata_path: workerMetadataFile,
+			},
+		});
+		const record = await this.writeRecord(
+			{
+				...provisionalRecord,
+				identity,
+				tmux,
+			},
+			storageSessionId,
+		);
+		return {
+			record: (await this.read(id, storageSessionId)) ?? record,
+			messages: [],
+			output: launched.stdout?.trim() ?? "",
+		};
+	}
+
+	async runWorkerRequest(worker: SubagentWorkerRequestFile): Promise<SubagentRunResult> {
+		if (worker.storageRoot !== this.services.cwd) {
+			throw new Error(`worker storageRoot mismatch: ${worker.storageRoot}`);
+		}
+		const record = await this.read(worker.subagentId, worker.storageSessionId);
+		if (!record) throw new Error(`subagent record not found: ${worker.subagentId}`);
+		const thinkingLevel = worker.request.thinkingLevel;
+		const resolved = await this.resolveRequest({
+			...worker.request,
+			thinkingLevel: isThinkingLevel(thinkingLevel) ? thinkingLevel : undefined,
+			visibility: "native",
+			storageSessionId: worker.storageSessionId,
+		});
+		return this.runRecord(record, resolved);
 	}
 
 	private async runRecord(record: SubagentRecord, request: ResolvedSubagentRunRequest): Promise<SubagentRunResult> {
@@ -536,19 +895,17 @@ export class SubagentManager {
 			const yieldResult = extractYieldFromMessages(messages);
 			const terminalStatus = errorText ? "failed" : "completed";
 			this.progressTracker.markTerminal(record.id, terminalStatus);
-			const completed = await this.writeRecord(
+			const completed = await this.writeTerminal(
+				(await this.read(record.id, storageSessionId)) ?? record,
+				terminalStatus,
+				storageSessionId,
 				{
-					...((await this.read(record.id, storageSessionId)) ?? record),
-					status: terminalStatus,
-					updated_at: nowIso(),
-					completed_at: nowIso(),
 					result_text: output,
 					error_text: errorText,
 					...(yieldResult ? { yield_result: yieldResult } : {}),
 					session_file: session.sessionFile,
 					session_id: session.sessionId,
 				},
-				storageSessionId,
 			);
 			session.dispose();
 			return { record: completed, messages, output };
@@ -578,17 +935,15 @@ export class SubagentManager {
 			}
 			const failStatus = signal.aborted ? "cancelled" : "failed";
 			this.progressTracker.markTerminal(record.id, failStatus);
-			const failed = await this.writeRecord(
+			const failed = await this.writeTerminal(
+				(await this.read(record.id, storageSessionId)) ?? record,
+				failStatus,
+				storageSessionId,
 				{
-					...((await this.read(record.id, storageSessionId)) ?? record),
-					status: failStatus,
-					updated_at: nowIso(),
-					completed_at: nowIso(),
 					error_text: message,
 					session_file: session.sessionFile,
 					session_id: session.sessionId,
 				},
-				storageSessionId,
 			);
 			session.dispose();
 			return {
@@ -705,6 +1060,78 @@ export class SubagentManager {
 			ok: true,
 			result: { record: record ?? (await live.promise).record, messages: [], output: record?.result_text ?? "" },
 		};
+	}
+
+	async inspect(id: string, sessionId: string): Promise<SubagentInspectResult> {
+		const record = await this.read(id, sessionId);
+		if (!record) return { ok: false, reason: "not_found" };
+		return {
+			ok: true,
+			record,
+			artifactPath: record.artifact_file ?? this.artifactPath(id, sessionId),
+			workerMetadataPath: record.tmux?.worker_metadata_file,
+			...(record.tmux ? { meta: { tmux: record.tmux, identity: record.identity } } : {}),
+		};
+	}
+
+	async attach(id: string, sessionId: string): Promise<SubagentAttachResult> {
+		const record = await this.read(id, sessionId);
+		if (!record) return { ok: false, reason: "not_found" };
+		const target = tmuxTarget(record);
+		if (!record.tmux || !target || !record.identity) return { ok: false, reason: "legacy_record", record };
+		const workerMetadata = readWorkerMetadata(await readJsonObject(record.tmux.worker_metadata_file));
+		if (!workerMetadata?.identity) return { ok: false, reason: "legacy_record", record, tmuxTarget: target };
+		if (!tmuxRecordMatchesIdentity(record, workerMetadata.identity)) {
+			return { ok: false, reason: "identity_mismatch", record, tmuxTarget: target };
+		}
+		if (!tmuxRecordMatchesIdentity(record, record.identity)) {
+			return { ok: false, reason: "identity_mismatch", record, tmuxTarget: target };
+		}
+		return {
+			ok: true,
+			record,
+			tmuxTarget: target,
+			attachCommand: record.tmux.attach_command,
+		};
+	}
+
+	async kill(id: string, sessionId: string): Promise<SubagentKillResult> {
+		const record = await this.read(id, sessionId);
+		if (!record) return { ok: false, reason: "not_found" };
+		const target = tmuxTarget(record);
+		if (isTerminalStatus(record.status)) return { ok: false, reason: "already_terminal", record, tmuxTarget: target };
+		if (!record.tmux || !target || !record.identity) return { ok: false, reason: "legacy_record", record };
+		if (!tmuxRecordMatchesIdentity(record, record.identity)) {
+			return { ok: false, reason: "identity_mismatch", record, tmuxTarget: target };
+		}
+		const env = this.options.tmux?.env ?? process.env;
+		const command = tmuxCommandFromMetadata(record.tmux, env.PI_TMUX_COMMAND?.trim() || "tmux");
+		const spawn = this.options.tmux?.spawnSync ?? defaultTmuxSpawnSync;
+		const hasTarget = spawn(command, tmuxHasTargetArgs(record.tmux.target), {
+			cwd: record.cwd,
+			env,
+			stdin: "inherit",
+			stdout: "inherit",
+			stderr: "inherit",
+		});
+		if (hasTarget.exitCode !== 0) return { ok: false, reason: "tmux_pane_not_found", record, tmuxTarget: target };
+		const workerMetadata = readWorkerMetadata(await readJsonObject(record.tmux.worker_metadata_file));
+		if (!workerMetadata?.identity) return { ok: false, reason: "legacy_record", record, tmuxTarget: target };
+		if (!tmuxRecordMatchesIdentity(record, workerMetadata.identity)) {
+			return { ok: false, reason: "identity_mismatch", record, tmuxTarget: target };
+		}
+		if (!isWorkerPidAlive(workerMetadata)) {
+			return { ok: false, reason: "worker_stale", record, tmuxTarget: target };
+		}
+		const killed = spawn(command, tmuxCleanupArgs(record.tmux.target), {
+			cwd: record.cwd,
+			env,
+			stdin: "inherit",
+			stdout: "inherit",
+			stderr: "inherit",
+		});
+		if (killed.exitCode !== 0) return { ok: false, reason: "kill_failed", record, tmuxTarget: target };
+		return { ok: true, record: await this.writeTerminal(record, "cancelled", sessionId), tmuxTarget: target };
 	}
 
 	async cancel(id: string, sessionId: string): Promise<SubagentRecord | undefined> {

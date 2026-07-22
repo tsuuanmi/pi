@@ -6,7 +6,7 @@
 - **commands**: `pi workflow --help` and `pi workflow <skill> --help` now show detailed workflow verbs, skill actions, options, examples, docs, and skill-local JSON schema references.
 - **subagents**: Subagent tools now attach shared `@tsuuanmi/pi-agent` structured receipts for current-session status and inspection visibility.
 - **subagents**: `subagent_spawn` now forwards explicit `visibility` through to the shared subagent manager, while guarded spawns omit it and stay native.
-- **subagents**: Added `subagent_inspect`, `subagent_attach`, and `subagent_kill` tools for tmux-backed subagent live controls.
+- **subagents**: Added `subagent_inspect`, `subagent_attach`, and `subagent_kill` tools for tmux-backed subagent live controls, including pane-aware attach targets surfaced from the shared manager contract.
 
 ## [0.2.0] - 2026-07-20
 

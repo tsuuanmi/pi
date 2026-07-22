@@ -66,6 +66,7 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 - [Subagents](core/subagents/subagents.md) - Pi-native `SubagentManager` for isolated agent workers.
 - [Agent Management Contracts](core/subagents/agent-management-contracts.md) - Phase-gated contracts for agent management migration.
+- [Worktree and tmux Threat Model ADR](core/subagents/tmux-worktree-threat-model-adr.md) - accepted safety contract for worktree/tmux worker orchestration.
 
 ## Skills
 

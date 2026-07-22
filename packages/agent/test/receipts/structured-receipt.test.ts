@@ -4,9 +4,35 @@ import {
 	isStructuredReceipt,
 	STRUCTURED_RECEIPT_VERSION,
 	type StructuredReceipt,
+	type SubagentBackendKind,
+	type SubagentControlAction,
+	type SubagentRecord,
+	type SubagentStatus,
+	type SubagentVisibility,
 	withStructuredReceipt,
 } from "@tsuuanmi/pi-agent";
 import { describe, expect, test } from "vitest";
+
+const subagentBackendKinds = ["native", "tmux"] as const satisfies readonly SubagentBackendKind[];
+const subagentControlActions = ["inspect", "attach", "kill"] as const satisfies readonly SubagentControlAction[];
+const subagentStatuses = [
+	"queued",
+	"running",
+	"paused",
+	"completed",
+	"failed",
+	"cancelled",
+] as const satisfies readonly SubagentStatus[];
+const subagentVisibilities = ["native", "tmux", "auto"] as const satisfies readonly SubagentVisibility[];
+const subagentRecordFixture: SubagentRecord = {
+	id: "sub-test",
+	role: "tester",
+	status: "queued",
+	cwd: "/tmp",
+	resumable: false,
+	created_at: "2026-07-20T14:00:00.000Z",
+	updated_at: "2026-07-20T14:00:00.000Z",
+};
 
 function createReceipt(overrides: Partial<StructuredReceipt> = {}): StructuredReceipt {
 	return {
@@ -23,6 +49,14 @@ function createReceipt(overrides: Partial<StructuredReceipt> = {}): StructuredRe
 }
 
 describe("structured receipt", () => {
+	test("exports shared subagent contract types", () => {
+		expect(subagentBackendKinds).toEqual(["native", "tmux"]);
+		expect(subagentControlActions).toEqual(["inspect", "attach", "kill"]);
+		expect(subagentStatuses).toEqual(["queued", "running", "paused", "completed", "failed", "cancelled"]);
+		expect(subagentVisibilities).toEqual(["native", "tmux", "auto"]);
+		expect(subagentRecordFixture).toMatchObject({ id: "sub-test", status: "queued", role: "tester" });
+	});
+
 	test("accepts a valid receipt and nested attachment", () => {
 		const receipt = createReceipt({
 			meta: { tag: "demo" },

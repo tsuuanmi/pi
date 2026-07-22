@@ -15,6 +15,7 @@ export * from "#agent/harness/subagents/subagent-manager";
 export * from "#agent/harness/subagents/subagent-manager-factory";
 export * from "#agent/harness/subagents/subagent-progress";
 export * from "#agent/harness/subagents/subagent-receipts";
+export * from "#agent/harness/subagents/subagent-run-identity";
 export * from "#agent/harness/subagents/subagent-types";
 export * from "#agent/harness/subagents/yield-result";
 // Shell output capture utilities

@@ -44,6 +44,7 @@ import {
 } from "#pi/session/session-cwd";
 import { SessionManager } from "#pi/session/session-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
+import { runSubagentWorkerMain } from "#pi/subagents/tmux-worker";
 import { printTimings, resetTimings, time } from "#pi/telemetry/timings";
 
 /**
@@ -362,6 +363,8 @@ export async function main(args: string[], options?: MainOptions) {
 	const bootstrapSettingsManager = SettingsManager.create(cwd, agentDir);
 	applyHttpProxySettings(bootstrapSettingsManager.getGlobalSettings().httpProxy);
 	configureHttpDispatcher();
+
+	if (await runSubagentWorkerMain(args)) return;
 
 	if (await handlePackageCommand(args, { extensionFactories: options?.extensionFactories })) {
 		const exitCode = process.exitCode ?? 0;

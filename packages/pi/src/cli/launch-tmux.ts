@@ -10,6 +10,8 @@ const PI_TMUX_PROFILE_ENV = "PI_TMUX_PROFILE";
 const PI_TMUX_MOUSE_ENV = "PI_MOUSE";
 const PI_TMUX_LAUNCHED_ENV = "PI_TMUX_LAUNCHED";
 const PI_LAUNCH_POLICY_ENV = "PI_LAUNCH_POLICY";
+export const PI_SUBAGENT_WORKER_REQUEST_ENV = "PI_SUBAGENT_WORKER_REQUEST";
+export const PI_SUBAGENT_TMUX_TARGET_KIND_ENV = "PI_SUBAGENT_TMUX_TARGET_KIND";
 const PI_TMUX_WINDOW_LABEL_MAX_WIDTH = 48;
 
 const PI_TMUX_PROFILE_OPTION = "@pi-profile";
@@ -44,6 +46,7 @@ export interface TmuxLaunchContext {
 export interface TmuxSpawnResult {
 	exitCode: number | null;
 	signalCode?: NodeJS.Signals | null;
+	stdout?: string;
 	stderr?: string;
 }
 
@@ -53,7 +56,7 @@ export interface TmuxSpawnOptions {
 	cwd: string;
 	env: NodeJS.ProcessEnv;
 	stdin: "inherit";
-	stdout: "inherit";
+	stdout: "inherit" | "pipe";
 	stderr: "inherit";
 }
 
@@ -166,6 +169,87 @@ function buildInnerCommand(context: { cwd: string; argv: string[]; execPath: str
 	const command = resolveCurrentPiCommand(context);
 	const quoted = [...command, ...rawArgs].map(shellQuote).join(" ");
 	return `exec env ${PI_TMUX_LAUNCHED_ENV}=1 ${quoted}`;
+}
+
+export interface TmuxSubagentLaunchContext {
+	cwd: string;
+	subagentId: string;
+	requestPath: string;
+	env?: NodeJS.ProcessEnv;
+	argv?: string[];
+	execPath?: string;
+	tmuxCommand?: string;
+	sessionName?: string;
+}
+
+export interface TmuxSubagentLaunchPlan {
+	tmuxCommand: string;
+	sessionName: string;
+	cwd: string;
+	requestPath: string;
+	innerCommand: string;
+	launchArgs: string[];
+	attachCommand: string;
+	inspectCommand: string;
+	cleanupCommand: string;
+	visibleByDefault: boolean;
+}
+
+export function buildTmuxSubagentLaunchPlan(context: TmuxSubagentLaunchContext): TmuxSubagentLaunchPlan {
+	const env = context.env ?? process.env;
+	const tmuxCommand = context.tmuxCommand ?? resolvePiTmuxCommand(env);
+	const sessionName = context.sessionName ?? `pi-worker-${sanitizeTmuxToken(context.subagentId)}`;
+	const cliCommand = resolveCurrentPiCommand({
+		cwd: context.cwd,
+		argv: context.argv ?? process.argv,
+		execPath: context.execPath ?? process.execPath,
+	});
+	const workerArgs = ["--subagent-worker", context.requestPath];
+	const quoted = [...cliCommand, ...workerArgs].map(shellQuote).join(" ");
+	const targetKind = env.TMUX ? "pane" : "session";
+	const innerCommand = `exec env ${PI_TMUX_LAUNCHED_ENV}=1 ${PI_SUBAGENT_TMUX_TARGET_KIND_ENV}=${shellQuote(targetKind)} ${PI_SUBAGENT_WORKER_REQUEST_ENV}=${shellQuote(
+		context.requestPath,
+	)} ${quoted}`;
+	const launchArgs = env.TMUX
+		? [
+				"split-window",
+				"-v",
+				"-c",
+				context.cwd,
+				"-P",
+				"-F",
+				"#{session_name}\t#{session_id}\t#{window_id}\t#{window_index}\t#{pane_id}\t#{pane_index}",
+				innerCommand,
+			]
+		: [
+				"new-session",
+				"-d",
+				"-s",
+				sessionName,
+				"-c",
+				context.cwd,
+				"-P",
+				"-F",
+				"#{session_name}\t#{session_id}",
+				innerCommand,
+			];
+	const visibleByDefault = true;
+	return {
+		tmuxCommand,
+		sessionName,
+		cwd: context.cwd,
+		requestPath: context.requestPath,
+		innerCommand,
+		launchArgs,
+		attachCommand: `${tmuxCommand} attach-session -t ${sessionName}`,
+		inspectCommand: `${tmuxCommand} list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{pane_current_command}'`,
+		cleanupCommand: `${tmuxCommand} kill-session -t ${sessionName}`,
+		visibleByDefault,
+	};
+}
+
+export function isTmuxCommandAvailable(command: string): boolean {
+	return commandAvailable(command);
 }
 
 function sanitizeTmuxToken(value: string): string {
@@ -302,7 +386,12 @@ function defaultSpawnSync(command: string, args: string[], options: TmuxSpawnOpt
 		env: options.env,
 		stdio: [options.stdin, options.stdout, options.stderr],
 	});
-	return { exitCode: result.status, signalCode: result.signal, stderr: result.stderr?.toString() };
+	return {
+		exitCode: result.status,
+		signalCode: result.signal,
+		stdout: result.stdout?.toString(),
+		stderr: result.stderr?.toString(),
+	};
 }
 
 function renameTmuxWindow(

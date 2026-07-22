@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tsuuanmi.dev/schemas/subagent-run-identity.schema.json",
+  "title": "Subagent Run Identity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "subagent_id",
+    "parent_session_id",
+    "storage_session_id",
+    "storage_root",
+    "execution_cwd",
+    "request_path",
+    "record_path",
+    "artifact_path",
+    "worker_metadata_path",
+    "lifecycle_state",
+    "cleanup_eligible",
+    "owner",
+    "tmux"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "subagent_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parent_session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "storage_session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "storage_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "execution_cwd": {
+      "type": "string",
+      "minLength": 1
+    },
+    "request_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "record_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "worker_metadata_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lifecycle_state": {
+      "type": "string",
+      "enum": ["queued", "running", "paused", "completed", "failed", "cancelled"]
+    },
+    "cleanup_eligible": {
+      "type": "boolean"
+    },
+    "owner": {
+      "$ref": "#/$defs/owner"
+    },
+    "tmux": {
+      "$ref": "#/$defs/tmuxMetadata"
+    }
+  },
+  "$defs": {
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "parent_session_id",
+        "storage_session_id",
+        "storage_root",
+        "execution_cwd"
+      ],
+      "properties": {
+        "kind": {
+          "const": "pi-subagent-worker"
+        },
+        "parent_session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "storage_session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "storage_root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "execution_cwd": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "tmuxMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend", "session_name", "target", "request_path", "worker_metadata_path"],
+      "properties": {
+        "backend": {
+          "const": "tmux"
+        },
+        "session_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "$ref": "#/$defs/tmuxTarget"
+        },
+        "request_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "worker_metadata_path": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "tmuxTarget": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/tmuxPaneTarget"
+        },
+        {
+          "$ref": "#/$defs/tmuxSessionTarget"
+        }
+      ]
+    },
+    "tmuxPaneTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "session_name",
+        "session_id",
+        "window_id",
+        "window_index",
+        "pane_id",
+        "pane_index",
+        "target"
+      ],
+      "properties": {
+        "kind": {
+          "const": "pane"
+        },
+        "session_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "window_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "window_index": {
+          "type": "integer"
+        },
+        "pane_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pane_index": {
+          "type": "integer"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "tmuxSessionTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "session_name", "session_id", "target"],
+      "properties": {
+        "kind": {
+          "const": "session"
+        },
+        "session_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
