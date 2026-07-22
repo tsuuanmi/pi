@@ -3,61 +3,36 @@ import { type ThemeColor, TUI_COLOR_PROFILE } from "#tui/theme/theme";
 export type ContextUsageLevel = "normal" | "warning" | "purple" | "error";
 
 const CONTEXT_WARNING_PERCENT_THRESHOLD = 50;
-const CONTEXT_WARNING_TOKEN_THRESHOLD = 150_000;
-const CONTEXT_PURPLE_PERCENT_THRESHOLD = 70;
-const CONTEXT_PURPLE_TOKEN_THRESHOLD = 270_000;
-const CONTEXT_ERROR_PERCENT_THRESHOLD = 90;
-const CONTEXT_ERROR_TOKEN_THRESHOLD = 500_000;
+const CONTEXT_PURPLE_PERCENT_THRESHOLD = 75;
+const CONTEXT_ERROR_PERCENT_THRESHOLD = 100;
 
 /**
  * Determine whether a context-usage level threshold is reached.
  *
- * A level trips when the context percent reaches `min(percentThreshold,
- * tokenPercentThreshold)`, where `tokenPercentThreshold` is the percent of
- * the context window that `tokenThreshold` tokens occupy. This means a small
- * context window trips a level via absolute tokens before it trips via
- * percent. When the context window is unknown/invalid, only the percent
- * threshold applies. (Ported from gajae-code `context-thresholds.ts:12-28`.)
+ * A level trips when the context percent reaches the configured percent
+ * threshold. The context window is intentionally ignored so the warning stays
+ * model-agnostic across providers with different window sizes.
  */
-function reachesThreshold(
-	contextPercent: number | null,
-	contextWindow: number,
-	percentThreshold: number,
-	tokenThreshold: number,
-): boolean {
+function reachesThreshold(contextPercent: number | null, percentThreshold: number): boolean {
 	if (contextPercent === null || !Number.isFinite(contextPercent) || contextPercent <= 0) {
 		return false;
 	}
 
-	if (!Number.isFinite(contextWindow) || contextWindow <= 0) {
-		return contextPercent >= percentThreshold;
-	}
-
-	const tokenPercentThreshold = (tokenThreshold / contextWindow) * 100;
-	return contextPercent >= Math.min(percentThreshold, tokenPercentThreshold);
+	return contextPercent >= percentThreshold;
 }
 
 export function getContextUsageLevel(contextPercent: number | null, contextWindow: number): ContextUsageLevel {
-	if (
-		reachesThreshold(contextPercent, contextWindow, CONTEXT_ERROR_PERCENT_THRESHOLD, CONTEXT_ERROR_TOKEN_THRESHOLD)
-	) {
+	void contextWindow;
+
+	if (reachesThreshold(contextPercent, CONTEXT_ERROR_PERCENT_THRESHOLD)) {
 		return "error";
 	}
 
-	if (
-		reachesThreshold(contextPercent, contextWindow, CONTEXT_PURPLE_PERCENT_THRESHOLD, CONTEXT_PURPLE_TOKEN_THRESHOLD)
-	) {
+	if (reachesThreshold(contextPercent, CONTEXT_PURPLE_PERCENT_THRESHOLD)) {
 		return "purple";
 	}
 
-	if (
-		reachesThreshold(
-			contextPercent,
-			contextWindow,
-			CONTEXT_WARNING_PERCENT_THRESHOLD,
-			CONTEXT_WARNING_TOKEN_THRESHOLD,
-		)
-	) {
+	if (reachesThreshold(contextPercent, CONTEXT_WARNING_PERCENT_THRESHOLD)) {
 		return "warning";
 	}
 

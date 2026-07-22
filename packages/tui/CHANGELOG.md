@@ -5,6 +5,7 @@
 ### Changed
 
 - **tui**: Centralized HUD and status-line semantic colors in a shared TUI color profile.
+- **tui**: Context warning levels now use percent thresholds only (`50% / 75% / 100%`), so they stay model-agnostic across different context windows.
 
 ## [0.2.0] - 2026-07-20
 

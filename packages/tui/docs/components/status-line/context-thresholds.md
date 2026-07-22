@@ -11,15 +11,17 @@ function getContextUsageThemeColor(level: ContextUsageLevel): ThemeColor;
 
 ## Thresholds
 
-A level trips when `contextPercent` reaches `min(percentThreshold, tokenPercentThreshold)`, where `tokenPercentThreshold` is the percent of the context window that `tokenThreshold` tokens occupy. This means a **small context window trips a level via absolute tokens before it trips via percent**.
+A level trips when `contextPercent` reaches the configured percent threshold.
+The context window is ignored so the warning behavior stays consistent across
+models with different window sizes.
 
-| Level | Percent threshold | Token threshold |
-|---|---|---|
-| `warning` | 50% | 150,000 |
-| `purple` | 70% | 270,000 |
-| `error` | 90% | 500,000 |
+| Level | Percent threshold |
+|---|---|
+| `warning` | 50% |
+| `purple` | 75% |
+| `error` | 100% |
 
-When the context window is unknown/invalid (`<= 0` or non-finite), only the percent threshold applies. When the percent is `null`, non-finite, or `<= 0`, no level trips (returns `normal`).
+When `contextPercent` is `null`, non-finite, or `<= 0`, no level trips (returns `normal`).
 
 Levels are checked `error` → `purple` → `warning` → `normal`, so the highest tripped level wins.
 
