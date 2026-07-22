@@ -17,6 +17,7 @@ import type {
 	StreamFn,
 	ToolExecutionMode,
 } from "#agent/agent/types";
+import { createAgentToolRegistry, type RegisterAgentToolsOptions, registerAgentTools } from "#agent/tools/registry";
 
 export type { QueueMode } from "#agent/agent/types";
 
@@ -236,6 +237,15 @@ export class Agent {
 	 */
 	get state(): AgentState {
 		return this._state;
+	}
+
+	/** Register tools by name, replacing existing tools with the same name. */
+	registerTools(tools: Iterable<AgentTool>, options?: RegisterAgentToolsOptions): AgentTool[] {
+		const registry = createAgentToolRegistry(options?.replace ? [] : this._state.tools);
+		registerAgentTools(registry, tools, options);
+		const nextTools = registry.list();
+		this._state.tools = nextTools;
+		return nextTools;
 	}
 
 	/** Controls how queued steering messages are drained. */

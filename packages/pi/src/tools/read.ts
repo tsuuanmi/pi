@@ -1,13 +1,6 @@
 import { basename, dirname, isAbsolute, relative, resolve as resolvePath, sep } from "node:path";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import {
-	DEFAULT_MAX_BYTES,
-	DEFAULT_MAX_LINES,
-	formatSize,
-	type TruncationResult,
-	truncateHead,
-} from "@tsuuanmi/pi-agent";
-import { formatPathRelativeToCwdOrAbsolute, resolveReadPathAsync, resolveToCwd } from "@tsuuanmi/pi-agent/node";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import { getLanguageFromPath, highlightCode, keyHint, keyText, Text, type Theme } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
@@ -15,7 +8,14 @@ import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
 import { getReadmePath } from "#pi/config/config";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { formatPathRelativeToCwdOrAbsolute, resolveReadPathAsync, resolveToCwd } from "#pi/tools/path-utils";
+import {
+	DEFAULT_MAX_BYTES,
+	DEFAULT_MAX_LINES,
+	formatSize,
+	type TruncationResult,
+	truncateHead,
+} from "#pi/tools/truncate";
 import { getTextOutput, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#pi/tools/utils";
 
 const readSchema = Type.Object({

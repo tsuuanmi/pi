@@ -2,7 +2,6 @@
  * Component for displaying bash command execution with streaming output.
  */
 
-import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, type TruncationResult, truncateTail } from "@tsuuanmi/pi-agent";
 import {
 	type Component,
 	Container,
@@ -18,6 +17,7 @@ import {
 	truncateToVisualLines,
 	truncateToWidth,
 } from "@tsuuanmi/pi-tui";
+import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, type TruncationResult, truncateTail } from "#pi/tools/truncate";
 
 // Preview line limit when not expanded (matches tool execution behavior)
 const PREVIEW_LINES = 20;

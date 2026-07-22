@@ -15,15 +15,18 @@
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
-import type {
-	Agent,
-	AgentEvent,
-	AgentMessage,
-	AgentState,
-	AgentTool,
-	BashExecutionMessage,
-	CustomMessage,
-	ThinkingLevel,
+import {
+	type Agent,
+	type AgentEvent,
+	type AgentMessage,
+	type AgentState,
+	type AgentTool,
+	type AgentToolRegistry,
+	type BashExecutionMessage,
+	type CustomMessage,
+	createAgentToolRegistry,
+	registerAgentTools,
+	type ThinkingLevel,
 } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi-ai";
@@ -322,7 +325,7 @@ export class AgentSession {
 	private _modelRegistry: ModelRegistry;
 
 	// Tool registry for extension getTools/setTools
-	private _toolRegistry: Map<string, AgentTool> = new Map();
+	private _toolRegistry: AgentToolRegistry = createAgentToolRegistry();
 	private _toolDefinitions: Map<string, ToolDefinitionEntry> = new Map();
 	private _toolPromptSnippets: Map<string, string> = new Map();
 	private _toolPromptGuidelines: Map<string, string[]> = new Map();
@@ -789,7 +792,7 @@ export class AgentSession {
 				validToolNames.push(name);
 			}
 		}
-		this.agent.state.tools = tools;
+		this.agent.registerTools(tools, { replace: true });
 
 		// Rebuild base system prompt with new tool set
 		this._baseSystemPrompt = this._rebuildSystemPrompt(validToolNames);
@@ -2096,7 +2099,7 @@ export class AgentSession {
 	}
 
 	private _refreshToolRegistry(options?: { activeToolNames?: string[]; includeAllExtensionTools?: boolean }): void {
-		const previousRegistryNames = new Set(this._toolRegistry.keys());
+		const previousRegistryNames = new Set(this._toolRegistry.names());
 		const previousActiveToolNames = this.getActiveToolNames();
 		const allowedToolNames = this._allowedToolNames;
 		const excludedToolNames = this._excludedToolNames;
@@ -2157,10 +2160,8 @@ export class AgentSession {
 			runner,
 		);
 
-		const toolRegistry = new Map(wrappedBuiltInTools.map((tool) => [tool.name, tool]));
-		for (const tool of wrappedExtensionTools as AgentTool[]) {
-			toolRegistry.set(tool.name, tool);
-		}
+		const toolRegistry = createAgentToolRegistry(wrappedBuiltInTools);
+		registerAgentTools(toolRegistry, wrappedExtensionTools as AgentTool[]);
 		this._toolRegistry = toolRegistry;
 
 		const nextActiveToolNames = (
@@ -2168,7 +2169,7 @@ export class AgentSession {
 		).filter((name) => isAllowedTool(name));
 
 		if (allowedToolNames) {
-			for (const toolName of this._toolRegistry.keys()) {
+			for (const toolName of this._toolRegistry.names()) {
 				if (allowedToolNames.has(toolName)) {
 					nextActiveToolNames.push(toolName);
 				}
@@ -2178,7 +2179,7 @@ export class AgentSession {
 				nextActiveToolNames.push(tool.name);
 			}
 		} else if (!options?.activeToolNames) {
-			for (const toolName of this._toolRegistry.keys()) {
+			for (const toolName of this._toolRegistry.names()) {
 				if (!previousRegistryNames.has(toolName)) {
 					nextActiveToolNames.push(toolName);
 				}

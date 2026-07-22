@@ -3,7 +3,6 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { NodeExecutionEnv } from "#agent/env/nodejs";
 import { FileError, getOrThrow } from "#agent/env/types";
-import { executeShellWithCapture } from "#agent/utils/shell-output";
 import { cleanupTempDirs, createTempDir } from "#agent-test/utils/temp-dir";
 
 const chmodRestorePaths: string[] = [];
@@ -274,16 +273,5 @@ describe("NodeExecutionEnv", () => {
 		const result = await promise;
 		expect(result.ok).toBe(false);
 		if (!result.ok) expect(result.error).toMatchObject({ code: "aborted" });
-	});
-
-	it("captures large shell output to a full output file through the execution env", async () => {
-		const root = createTempDir();
-		const env = new NodeExecutionEnv({ cwd: root });
-		const result = getOrThrow(await executeShellWithCapture(env, "yes line | head -n 15000"));
-		expect(result.truncated).toBe(true);
-		expect(result.fullOutputPath).toBeDefined();
-		const fullOutput = getOrThrow(await env.readTextFile(result.fullOutputPath!));
-		expect(fullOutput.split("\n").length).toBeGreaterThan(10000);
-		expect(result.output.length).toBeLessThan(fullOutput.length);
 	});
 });

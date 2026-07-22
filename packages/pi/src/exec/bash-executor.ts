@@ -10,9 +10,9 @@ import { randomBytes } from "node:crypto";
 import { createWriteStream, type WriteStream } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DEFAULT_MAX_BYTES, truncateTail } from "@tsuuanmi/pi-agent";
 import { stripAnsi } from "@tsuuanmi/pi-tui";
 import type { BashOperations } from "#pi/tools/bash";
+import { DEFAULT_MAX_BYTES, truncateTail } from "#pi/tools/truncate";
 import { sanitizeBinaryOutput } from "#pi/utils/system/shell";
 
 // ============================================================================

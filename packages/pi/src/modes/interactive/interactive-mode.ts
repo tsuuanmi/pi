@@ -6,7 +6,7 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentMessage, TruncationResult } from "@tsuuanmi/pi-agent";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import { createCompactionSummaryMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Message } from "@tsuuanmi/pi-ai";
 import type {
@@ -86,6 +86,7 @@ import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#pi/sessi
 import type { SessionContext, SessionManager } from "#pi/session/session-manager";
 import { type AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
+import type { TruncationResult } from "#pi/tools/truncate";
 import { parseGitUrl } from "#pi/utils/fs/git";
 import { killTrackedDetachedChildren } from "#pi/utils/system/shell";
 import { ensureTool } from "#pi/utils/system/tool-installer";

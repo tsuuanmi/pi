@@ -1,8 +1,8 @@
 import { constants } from "node:fs";
 import { access as fsAccess } from "node:fs/promises";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "@tsuuanmi/pi-agent";
-import { OutputAccumulator, waitForChildProcess } from "@tsuuanmi/pi-agent/node";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { waitForChildProcess } from "@tsuuanmi/pi-agent/node";
 import {
 	type Component,
 	Container,
@@ -15,7 +15,8 @@ import {
 import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { OutputAccumulator } from "#pi/tools/output-accumulator";
+import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "#pi/tools/truncate";
 import { getTextOutput, invalidArgText, str, wrapToolDefinition } from "#pi/tools/utils";
 import {
 	getShellConfig,

@@ -2,7 +2,7 @@
 
 ### Added
 
-- **tools**: Added reusable Node tool utilities for edit diffing, path resolution, bounded output accumulation, compaction message utilities, and builtin tool receipt helpers.
+- **tools**: Added `createAgentToolRegistry()`, `registerAgentTools()`, and `Agent.registerTools()` as the standard registration seam for host-owned tool implementations.
 - **receipts**: Added `StructuredReceipt` helpers for attaching and validating machine-readable execution receipts.
 - **subagents**: Added shared subagent receipt/type exports, including `SubagentStatus`, `SubagentBackendKind`, `SubagentControlAction`, tmux metadata in `receipt.meta`, and the `visibility` contract (`native`, `tmux`, `auto`) for subagent run requests.
 - **subagents**: Added shared inspect, attach, and kill result types to the `SubagentManager` contract.
@@ -10,6 +10,7 @@
 
 ### Breaking Changes
 
+- **tools**: Moved concrete Pi built-in tool helpers for edit diffing, path resolution, bounded output accumulation, shell-output capture, and truncation out of `@tsuuanmi/pi-agent` and into `@tsuuanmi/pi`; `@tsuuanmi/pi-agent` now owns only the generic tool protocol and registration APIs.
 - **agent**: Moved the remaining shared source modules out of `src/harness/` into top-level `src/env`, `src/subagents`, `src/utils`, and `src/messages.ts` paths; no `src/harness/` compatibility wrappers are provided.
 
 ## [0.2.0] - 2026-07-20

@@ -1,5 +1,4 @@
 import { getStructuredReceipt } from "@tsuuanmi/pi-agent";
-import { computeEditsDiff } from "@tsuuanmi/pi-agent/node";
 import { applyPatch } from "diff";
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
@@ -15,6 +14,7 @@ import {
 	createWriteTool,
 } from "#pi/index";
 import { type BashOperations, createBashTool, createLocalBashOperations } from "#pi/tools/bash";
+import { computeEditsDiff } from "#pi/tools/edit-diff";
 import * as shellModule from "#pi/utils/system/shell";
 
 const readTool = createReadTool(process.cwd());

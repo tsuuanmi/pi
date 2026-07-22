@@ -1,6 +1,14 @@
 import { readFile as fsReadFile, stat as fsStat } from "node:fs/promises";
 import { createInterface } from "node:readline";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import type { Theme } from "@tsuuanmi/pi-tui";
+import { keyHint, Text } from "@tsuuanmi/pi-tui";
+import { spawn } from "child_process";
+import path from "path";
+import { type Static, Type } from "typebox";
+import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
+import { resolveToCwd } from "#pi/tools/path-utils";
 import {
 	DEFAULT_MAX_BYTES,
 	formatSize,
@@ -8,15 +16,7 @@ import {
 	type TruncationResult,
 	truncateHead,
 	truncateLine,
-} from "@tsuuanmi/pi-agent";
-import { resolveToCwd } from "@tsuuanmi/pi-agent/node";
-import type { Theme } from "@tsuuanmi/pi-tui";
-import { keyHint, Text } from "@tsuuanmi/pi-tui";
-import { spawn } from "child_process";
-import path from "path";
-import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+} from "#pi/tools/truncate";
 import { getTextOutput, invalidArgText, shortenPath, str, wrapToolDefinition } from "#pi/tools/utils";
 import { ensureTool } from "#pi/utils/system/tool-installer";
 

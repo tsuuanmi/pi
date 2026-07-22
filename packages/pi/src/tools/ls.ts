@@ -1,13 +1,13 @@
 import { readdir as fsReaddir, stat as fsStat } from "node:fs/promises";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "@tsuuanmi/pi-agent";
-import { pathExists, resolveToCwd } from "@tsuuanmi/pi-agent/node";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import nodePath from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { pathExists, resolveToCwd } from "#pi/tools/path-utils";
+import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "#pi/tools/truncate";
 import { getTextOutput, renderToolPath, str, wrapToolDefinition } from "#pi/tools/utils";
 
 const lsSchema = Type.Object({

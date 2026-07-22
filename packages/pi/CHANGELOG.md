@@ -11,7 +11,7 @@
 
 ### Changed
 
-- **packages**: Moved reusable TUI widgets and structured receipt rendering to `@tsuuanmi/pi-tui`, shared Node tool utilities to `@tsuuanmi/pi-agent/node`, compaction message utilities to `@tsuuanmi/pi-agent`, and builtin tool receipt helpers to `@tsuuanmi/pi-agent`; Pi now imports them directly from the owning packages.
+- **packages**: Moved reusable TUI widgets and structured receipt rendering to `@tsuuanmi/pi-tui`; Pi now owns built-in tool helpers for edit diffing, path resolution, bounded output accumulation, shell-output capture, and truncation, and registers current tools through `@tsuuanmi/pi-agent`'s standard tool registry APIs.
 
 ### Fixed
 

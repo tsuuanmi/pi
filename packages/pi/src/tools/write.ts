@@ -1,11 +1,12 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { resolveToCwd, withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { Container, getLanguageFromPath, highlightCode, keyHint, Text, type Theme } from "@tsuuanmi/pi-tui";
 import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname } from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { resolveToCwd } from "#pi/tools/path-utils";
 import { normalizeDisplayText, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#pi/tools/utils";
 
 const writeSchema = Type.Object({

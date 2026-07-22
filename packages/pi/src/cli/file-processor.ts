@@ -3,9 +3,9 @@
  */
 
 import { access, readFile, stat } from "node:fs/promises";
-import { resolveReadPath } from "@tsuuanmi/pi-agent/node";
 import chalk from "chalk";
 import { resolve } from "path";
+import { resolveReadPath } from "#pi/tools/path-utils";
 
 export interface ProcessedFiles {
 	text: string;

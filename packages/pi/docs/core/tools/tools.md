@@ -4,7 +4,9 @@ Pi's built-in tool system providing file operations, shell execution, and code s
 
 ## Overview
 
-Pi ships with seven built-in tools that the agent can use to interact with the filesystem, execute commands, and search code. Each tool follows a pluggable operations pattern that allows extensions to delegate execution to remote systems (for example SSH).
+Pi ships with seven built-in tools that the agent can use to interact with the filesystem, execute commands, and search code. Pi owns the concrete tool implementations and helper modules; `@tsuuanmi/pi-agent` owns the generic `AgentTool` protocol and registration APIs. Each tool follows a pluggable operations pattern that allows extensions to delegate execution to remote systems (for example SSH).
+
+At runtime, Pi wraps built-in and extension tool definitions, registers the resulting `AgentTool` instances through `createAgentToolRegistry()`/`registerAgentTools()` from `@tsuuanmi/pi-agent`, and passes the active tool list to the agent.
 
 Tools are grouped into two categories:
 

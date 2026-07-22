@@ -8,6 +8,6 @@ This package now provides the lower-layer pieces used by durable hosts:
 - [execution-environment contracts](env/nodejs.md)
 - [subagent record/request/result contracts](subagents.md)
 - [extension contracts](extension-contract.md)
-- [shell output capture](utils/shell-output.md)
+- [tool registration](../tools.md)
 
 Durable persistence and recovery are host responsibilities outside `@tsuuanmi/pi-agent`.
