@@ -76,7 +76,6 @@ describe("ExtensionRunner", () => {
 		hasPendingMessages: () => false,
 		shutdown: () => {},
 		getContextUsage: () => undefined,
-		getMcpServerInfos: () => [],
 		compact: () => {},
 		getSystemPrompt: () => "",
 	};

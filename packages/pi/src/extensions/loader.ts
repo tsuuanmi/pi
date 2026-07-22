@@ -159,7 +159,6 @@ export function createExtensionRuntime(): ExtensionRuntime {
 		setThinkingLevel: notInitialized,
 		flagValues: new Map(),
 		pendingProviderRegistrations: [],
-		mcpServerInfoProviders: new Set(),
 		assertActive,
 		invalidate: (message) => {
 			state.staleMessage ??=
@@ -212,11 +211,6 @@ function createExtensionAPI(
 			}
 		},
 
-		registerMcpServerInfoProvider(provider: () => import("#pi/api/types").MCPServerInfo[]): () => void {
-			runtime.assertActive();
-			runtime.mcpServerInfoProviders.add(provider);
-			return () => runtime.mcpServerInfoProviders.delete(provider);
-		},
 
 		refreshTools(options?: { includeAllExtensionTools?: boolean }): void {
 			runtime.assertActive();

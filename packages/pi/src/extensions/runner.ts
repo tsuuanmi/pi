@@ -23,7 +23,6 @@ import type {
 	ExtensionUIContext,
 	InputEvent,
 	InputEventResult,
-	MCPServerInfo,
 	MessageEndEvent,
 	MessageRenderer,
 	ProviderConfig,
@@ -198,7 +197,6 @@ export class ExtensionRunner {
 	private abortFn: () => void = () => {};
 	private hasPendingMessagesFn: () => boolean = () => false;
 	private getContextUsageFn: () => ContextUsage | undefined = () => undefined;
-	private getMcpServerInfosFn: () => MCPServerInfo[] = () => [];
 	private compactFn: (options?: CompactOptions) => void = () => {};
 	private getSystemPromptFn: () => string = () => "";
 	private getSystemPromptOptionsFn: () => BuildSystemPromptOptions = () => ({ cwd: this.cwd });
@@ -263,7 +261,6 @@ export class ExtensionRunner {
 		this.hasPendingMessagesFn = contextActions.hasPendingMessages;
 		this.shutdownHandler = contextActions.shutdown;
 		this.getContextUsageFn = contextActions.getContextUsage;
-		this.getMcpServerInfosFn = contextActions.getMcpServerInfos;
 		this.compactFn = contextActions.compact;
 		this.getSystemPromptFn = contextActions.getSystemPrompt;
 		this.getSystemPromptOptionsFn = contextActions.getSystemPromptOptions ?? (() => ({ cwd: this.cwd }));
@@ -356,10 +353,6 @@ export class ExtensionRunner {
 			}
 		}
 		return Array.from(toolsByName.values());
-	}
-
-	getMcpServerInfos(): MCPServerInfo[] {
-		return Array.from(this.runtime.mcpServerInfoProviders).flatMap((provider) => provider());
 	}
 
 	/** Get a tool definition by name. Returns undefined if not found. */
@@ -620,10 +613,6 @@ export class ExtensionRunner {
 			getContextUsage: () => {
 				runner.assertActive();
 				return runner.getContextUsageFn();
-			},
-			getMcpServerInfos: () => {
-				runner.assertActive();
-				return [...runner.getMcpServerInfosFn(), ...runner.getMcpServerInfos()];
 			},
 			compact: (options) => {
 				runner.assertActive();

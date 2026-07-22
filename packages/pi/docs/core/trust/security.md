@@ -4,7 +4,7 @@ Pi is a local AI agent. It runs with the permissions of the user account that st
 
 ## Project-Local Resources
 
-Pi loads project-local settings, resources, packages, MCP config, and extensions from the current project. This is not a sandbox and it does not restrict what the model can ask tools to do after you start working in a directory.
+Pi loads project-local settings, resources, packages, and extensions from the current project. This is not a sandbox and it does not restrict what the model can ask tools to do after you start working in a directory.
 
 ## Running Untrusted or Unmonitored Work
 

@@ -8,12 +8,6 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/packages/mcp/commands/mcp.ts::handlePackageCommand",
-			"file": "packages/pi/src/packages/mcp/commands/mcp.ts",
-			"name": "handlePackageCommand",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/workflows/src/commands/workflow/index.ts::handlePackageCommand",
 			"file": "packages/workflows/src/commands/workflow/index.ts",
 			"name": "handlePackageCommand",

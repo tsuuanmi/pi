@@ -41,7 +41,7 @@ By default, `install` and `remove` write to user settings (`~/.pi/agent/settings
 
 ## Package Sources
 
-Pi accepts package sources in settings and `pi install`. It also provides reserved first-party `pi:` sources as effective defaults: `pi:workflows`, `pi:lsp`, and `pi:mcp`. These bundled sources resolve through the package host like normal package sources and can be listed, updated, configured, and filtered. Add an explicit object entry for the same source to filter it; an empty resource filter such as `"extensions": []` disables all resources of that type.
+Pi accepts package sources in settings and `pi install`. It also provides reserved first-party `pi:` sources as effective defaults: `pi:workflows` and `pi:lsp`. These bundled sources resolve through the package host like normal package sources and can be listed, updated, configured, and filtered. Add an explicit object entry for the same source to filter it; an empty resource filter such as `"extensions": []` disables all resources of that type.
 
 ### npm
 

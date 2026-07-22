@@ -881,7 +881,6 @@ export class InteractiveMode {
 				this.shutdownRequested = true;
 			},
 			getContextUsage: () => this.session.getContextUsage(),
-			getMcpServerInfos: () => this.session.extensionRunner.getMcpServerInfos(),
 			compact: (options) => {
 				void (async () => {
 					try {

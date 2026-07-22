@@ -60,7 +60,6 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 - [Prompt templates](prompt-templates.md) - reusable prompts that expand from slash commands.
 - [Themes](theme/themes.md) - built-in and custom terminal themes.
 - [Pi packages](packages.md) - bundle and share extensions, skills, prompts, and themes.
-- [MCP](core/mcp/mcp.md) - load Model Context Protocol servers and expose their tools.
 
 ## Workflows and subagents
 

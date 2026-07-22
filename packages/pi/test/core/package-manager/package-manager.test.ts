@@ -39,7 +39,7 @@ interface PackageManagerInternals {
 		| { type: "npm"; spec: string; name: string; pinned: boolean }
 		| { type: "git"; repo: string; host: string; path: string; pinned: boolean; ref?: string }
 		| { type: "local"; path: string }
-		| { type: "bundled"; name: "workflows" | "lsp" | "mcp"; path: string };
+		| { type: "bundled"; name: "workflows" | "lsp"; path: string };
 	getNpmInstallPath(
 		source: { type: "npm"; spec: string; name: string; pinned: boolean },
 		scope: "user" | "project" | "temporary",
@@ -106,10 +106,8 @@ describe("DefaultPackageManager", () => {
 			const result = await packageManager.resolve();
 			expect(result.extensions.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
 			expect(result.extensions.some((r) => r.metadata.source === "pi:lsp" && r.enabled)).toBe(true);
-			expect(result.extensions.some((r) => r.metadata.source === "pi:mcp" && r.enabled)).toBe(true);
 			expect(result.agents.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
 			expect(result.commands.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
-			expect(result.commands.some((r) => r.metadata.source === "pi:mcp" && r.enabled)).toBe(true);
 			expect(result.prompts).toEqual([]);
 			expect(result.themes).toEqual([]);
 			expect(result.skills.every((r) => r.metadata.source === "auto" || r.metadata.source.startsWith("pi:"))).toBe(

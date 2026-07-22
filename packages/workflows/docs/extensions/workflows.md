@@ -10,7 +10,7 @@ On load, the extension:
 - Registers Deep Interview state tools from `src/skills/deep-interview/deep-interview-tools.ts`.
 - Registers guarded workflow spawn tools from `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, and `src/skills/ultragoal/ultragoal-tools.ts`.
 - Imports skill transition tables for Deep Interview, Ralplan, Team, and Ultragoal.
-- Hooks session/turn/tool lifecycle events to refresh workflow/MCP UI state.
+- Hooks session/turn/tool lifecycle events to refresh workflow UI state.
 - Blocks unsafe `edit`/`write` calls when the Deep Interview mutation guard says an unfinished interview is active.
 
 ## Model-Visible Tools
@@ -19,7 +19,7 @@ Registered tools are documented in [subagents/subagents.md](../subagents/subagen
 
 ## HUD Hooks
 
-The extension hooks lifecycle events to refresh workflow/MCP UI state through `@tsuuanmi/pi-tui`. Workflow rendering remains session-scoped: the interactive status line reads session-scoped active state directly.
+The extension hooks lifecycle events to refresh workflow UI state through `@tsuuanmi/pi-tui`. Workflow rendering remains session-scoped: the interactive status line reads session-scoped active state directly.
 
 ## See Also
 

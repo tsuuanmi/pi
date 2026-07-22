@@ -14,14 +14,13 @@
  * package.json matches the actual bundled layout. Dev keeps using the source
  * manifests directly, so no runtime fallback is needed. Run from the
  * pi package dir. Pass package names to rewrite a subset
- * (default: all of lsp, mcp, workflows).
+ * (default: all of lsp, workflows).
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const PACKAGES = {
 	lsp: { src: "src/packages/lsp/package.json", dest: "dist/packages/lsp/package.json" },
-	mcp: { src: "src/packages/mcp/package.json", dest: "dist/packages/mcp/package.json" },
 	workflows: { src: "../workflows/package.json", dest: "dist/packages/workflows/package.json" },
 };
 

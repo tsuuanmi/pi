@@ -68,14 +68,6 @@ export interface ReadonlySessionManager {
 	getSessionId(): string;
 }
 
-/** Minimal MCP server info used by extension HUD rendering. */
-export interface MCPServerInfo {
-	name: string;
-	status: string;
-	toolCount: number;
-	error?: string;
-}
-
 /**
  * Context passed to extension event handlers and tool executors. The
  * pi host provides a superset of these members.
@@ -87,7 +79,6 @@ export interface ExtensionContext {
 	sessionManager: ReadonlySessionManager;
 	subagents?: SubagentManager;
 	skipAutomaticContinuation: boolean;
-	getMcpServerInfos(): MCPServerInfo[];
 	getSystemPrompt(): string;
 }
 

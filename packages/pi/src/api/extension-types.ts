@@ -9,7 +9,6 @@ import type {
 	ExtensionContext,
 	ReplacedSessionContext,
 } from "#pi/api/context-types";
-import type { MCPServerInfo } from "#pi/api/mcp-types";
 import type { ProviderConfig } from "#pi/api/provider-types";
 import type { ToolDefinition } from "#pi/api/tool-types";
 import type { ExecOptions, ExecResult } from "#pi/exec/exec";
@@ -74,8 +73,6 @@ export interface ExtensionAPI extends ExtensionHookAPI {
 	/** Refresh the host tool registry after dynamic tool changes. */
 	refreshTools(options?: { includeAllExtensionTools?: boolean }): void;
 
-	/** Register a provider for runtime MCP server status used by host UI/context APIs. */
-	registerMcpServerInfoProvider(provider: () => MCPServerInfo[]): () => void;
 
 	// =========================================================================
 	// Command, Shortcut, Flag Registration
@@ -324,7 +321,6 @@ export interface ExtensionRuntimeState {
 	flagValues: Map<string, boolean | string>;
 	/** Provider registrations queued during extension loading, processed when runner binds */
 	pendingProviderRegistrations: Array<{ name: string; config: ProviderConfig; extensionPath: string }>;
-	mcpServerInfoProviders: Set<() => MCPServerInfo[]>;
 	/** Throws when this extension instance is stale after runtime replacement. */
 	assertActive: () => void;
 	/** Marks this extension instance as stale after runtime replacement or reload. */
@@ -372,7 +368,6 @@ export interface ExtensionContextActions {
 	hasPendingMessages: () => boolean;
 	shutdown: () => void;
 	getContextUsage: () => ContextUsage | undefined;
-	getMcpServerInfos: () => MCPServerInfo[];
 	compact: (options?: CompactOptions) => void;
 	getSystemPrompt: () => string;
 	getSystemPromptOptions?: () => BuildSystemPromptOptions;

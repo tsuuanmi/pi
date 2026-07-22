@@ -13,7 +13,6 @@ export type {
 } from "@tsuuanmi/pi-agent";
 export * from "#pi/api/context-types";
 export * from "#pi/api/extension-types";
-export * from "#pi/api/mcp-types";
 export * from "#pi/api/provider-types";
 export * from "#pi/api/tool-types";
 export * from "#pi/api/ui-types";

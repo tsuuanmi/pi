@@ -24,7 +24,7 @@
 
 ### Fixed
 
-- **extensions**: Fixed bundled extensions (`workflows`, `lsp`, `mcp`) failing to load from a global npm install with `No "exports" main defined in .../pi-agent/package.json`. Bare `@tsuuanmi/*` specifiers are now resolved via ESM (`import.meta.resolve`) instead of CJS `require.resolve`, so the `import` condition in each package's `exports` map is honored.
+- **extensions**: Fixed bundled extensions (`workflows`, `lsp`) failing to load from a global npm install with `No "exports" main defined in .../pi-agent/package.json`. Bare `@tsuuanmi/*` specifiers are now resolved via ESM (`import.meta.resolve`) instead of CJS `require.resolve`, so the `import` condition in each package's `exports` map is honored.
 
 ## [0.2.0] - 2026-07-20
 
@@ -64,7 +64,7 @@
 ### Added
 
 - Spawn verbs for workflow skills (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `ultragoal_spawn_goal_agent`) are model-visible tools registered by the `@tsuuanmi/pi-workflows` extension. They call this session's `SubagentManager` directly in-process to spawn role agents as ordinary subagents; no `pi workflow` command or socket is involved in spawning. pi-agent owns the agent/subagent process; pi-workflows owns turn order, guarded role checks, and result→artifact handoff.
-- Added reserved bundled package sources `pi:workflows`, `pi:lsp`, and `pi:mcp`, plus filterable package `commands` and `agents` resources and generic pre-session package-command dispatch for first-party `pi workflow` and `pi mcp` commands.
+- Added reserved bundled package sources `pi:workflows` and `pi:lsp`, plus filterable package `commands` and `agents` resources and generic pre-session package-command dispatch for first-party `pi workflow` commands.
 - Added default-on retained-context optimization for future model replay: removable readable thinking blocks are stripped, and oversized retained bash output is compressed with a head/tail marker. Opt out with `retainedContext.stripThinking` and `retainedContext.compressBashOutput`.
 - Added Tier 2 retained-context tool-result optimization: provider-bound replay can dedupe content-identical repeated `read` results and summarize old unprotected `read`, `bash`, and `edit` results with deterministic summary records. Opt out with `retainedContext.dedupeReadResults` and `retainedContext.summarizeStaleToolResults`; tune stale summaries with `retainedContext.toolResultMaxBytes`.
 - Added default-on redacted API usage JSONL sidecar logging per completed LLM provider invocation, with `apiUsageLogging.enabled` opt-out.
@@ -120,8 +120,8 @@
 - Stopped publishing pi docs and examples in the npm package.
 - Updated extension docs, examples, runtime help, trust prompts, and config labels to use the configured project config directory instead of hardcoded `.pi` paths.
 - The package-command dispatcher now early-bails on flag-first invocations (`pi --version`, `pi --help`, `pi -p ...`) so they skip full package resolution before `parseArgs` handles them; no behavior change on the success path.
-- Removed the dead `src/cli/{workflow,state,mcp}-command.ts` re-export shims (the dispatcher imports package command resources directly) and repointed `test/cli/mcp-command.test.ts` to the real `packages/mcp/commands/mcp.ts`.
-- `printHelp` and `docs/cli/cli.md` now list the `pi workflow`, `pi workflow state`, and `pi mcp` subcommands. Because `pi mcp`/`pi workflow` now dispatch through the package-command dispatcher, a user-global third-party package providing a `mcp` or `workflow` command can shadow the bundled command (existing dispatcher collision precedence; stderr warning).
+- Removed the dead `src/cli/{workflow,state}-command.ts` re-export shims (the dispatcher imports package command resources directly).
+- `printHelp` and `docs/cli/cli.md` now list the `pi workflow` and `pi workflow state` subcommands. Because `pi workflow` now dispatches through the package-command dispatcher, a user-global third-party package providing a `workflow` command can shadow the bundled command (existing dispatcher collision precedence; stderr warning).
 
 ### Fixed
 
@@ -133,7 +133,7 @@
 - Fixed subagent sessions sharing the parent session's `ResourceLoader` (and therefore its `ExtensionRuntime` and `Extension` objects), so disposing a completed subagent no longer invalidates the parent's shared extension runtime and stale-ifies the parent's captured extension API on the next `before_agent_start`. This affected every subagent-spawning workflow tool (deep-interview, ralplan, team, ultragoal) and any `subagent_spawn` call. Subagents now build an isolated `ResourceLoader` mirroring the parent's extension configuration while reusing the parent's settings manager to preserve active settings state.
 - Fixed `/model` autocomplete and model selection searches to match provider/model queries regardless of whether the provider or model token is typed first.
 - Fixed the tree navigator to horizontally pan deep entries so the selected item remains readable ([#5830](https://github.com/tsuuanmi/pi/issues/5830)).
-- Fixed `pi mcp` and `pi workflow` / `pi workflow state` CLI dispatch: the bundled command modules now export the `handlePackageCommand(args, ctx?)` contract the package-command dispatcher requires, so `pi mcp list` no longer throws "does not export handlePackageCommand" and `pi workflow` is reachable. Broken since the package refactor that moved the handlers into packages without conforming to the dispatcher contract.
+- Fixed `pi workflow` / `pi workflow state` CLI dispatch: the bundled command modules now export the `handlePackageCommand(args, ctx?)` contract the package-command dispatcher requires, so `pi workflow` is reachable. Broken since the package refactor that moved the handlers into packages without conforming to the dispatcher contract.
 - Fixed broken `docs/workflow.md` links in `README.md` (now `../workflows/docs/workflow.md`) and `docs/core/subagents/subagents.md` (now `../../../../workflows/docs/workflow.md`).
 
 ### Removed
@@ -145,7 +145,7 @@
 
 ### Fixed
 
-- **packaging**: Bundled `workflows` package (skills, agents, commands, and the workflows extension) now loads in npm-installed `pi`. `getBundledPackageRoot("workflows")` now resolves to the bundled `dist/packages/workflows` in production, and the build rewrites the bundled package manifests for `lsp`/`mcp`/`providers`/`workflows` to declare compiled `.js` paths matching the flattened dist layout (the source `src/`-prefixed `.ts` manifests apply only in dev). Raw `.ts` source is no longer shipped for bundled packages, and `.d.ts`/`.map` files are never loaded as extensions.
+- **packaging**: Bundled `workflows` package (skills, agents, commands, and the workflows extension) now loads in npm-installed `pi`. `getBundledPackageRoot("workflows")` now resolves to the bundled `dist/packages/workflows` in production, and the build rewrites the bundled package manifests for `lsp`/`providers`/`workflows` to declare compiled `.js` paths matching the flattened dist layout (the source `src/`-prefixed `.ts` manifests apply only in dev). Raw `.ts` source is no longer shipped for bundled packages, and `.d.ts`/`.map` files are never loaded as extensions.
 - **ui**: "What's New" no longer reappears on every startup. It is now shown once per package-version change instead of comparing against numeric changelog entry versions, which could repeat forever when historical changelog headers outnumber the current package version.
 
 

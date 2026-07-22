@@ -1,6 +1,5 @@
 import type { CustomMessage } from "@tsuuanmi/pi-agent";
 import type { Model, TextContent } from "@tsuuanmi/pi-ai";
-import type { MCPServerInfo } from "#pi/api/mcp-types";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
 import type { CompactionResult } from "#pi/compaction/index";
 import type { ModelRegistry } from "#pi/model/model-registry";
@@ -64,8 +63,6 @@ export interface ExtensionContext {
 	shutdown(): void;
 	/** Get current context usage for the active model. */
 	getContextUsage(): ContextUsage | undefined;
-	/** Current MCP server status for the runtime. */
-	getMcpServerInfos(): MCPServerInfo[];
 	/** Trigger compaction without awaiting completion. */
 	compact(options?: CompactOptions): void;
 	/** Get the current effective system prompt. */

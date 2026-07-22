@@ -40,12 +40,9 @@ interface ExtensionContext {
   sessionManager: { getSessionId(): string };
   subagents?: SubagentManager;
   skipAutomaticContinuation: boolean;
-  getMcpServerInfos(): MCPServerInfo[];
   getSystemPrompt(): string;
 }
 ```
-
-`MCPServerInfo` contains `name`, `status`, `toolCount`, and optional `error`.
 
 ## Events
 

@@ -2070,7 +2070,6 @@ export class AgentSession {
 					this._extensionShutdownHandler?.();
 				},
 				getContextUsage: () => this.getContextUsage(),
-				getMcpServerInfos: () => [],
 				compact: (options) => {
 					void (async () => {
 						try {

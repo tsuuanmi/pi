@@ -37,9 +37,7 @@ function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions
 			!extension.path.includes("/workflows/src/runtime/workflows-extension.ts") &&
 			!extension.path.includes("/workflows/dist/runtime/workflows-extension.js") &&
 			!extension.path.endsWith("/src/packages/lsp/extensions/lsp.ts") &&
-			!extension.path.endsWith("/dist/packages/lsp/extensions/lsp.js") &&
-			!extension.path.endsWith("/src/packages/mcp/extensions/mcp.ts") &&
-			!extension.path.endsWith("/dist/packages/mcp/extensions/mcp.js"),
+			!extension.path.endsWith("/dist/packages/lsp/extensions/lsp.js"),
 	);
 }
 

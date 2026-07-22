@@ -1313,15 +1313,6 @@ Remove a dynamically registered tool by name. This is useful for package-owned r
 pi.unregisterTool("my_dynamic_tool");
 ```
 
-### pi.registerMcpServerInfoProvider(provider)
-
-Register a provider for MCP server status information displayed by generic UI/HUD surfaces. The method returns an unregister function that extensions should call during shutdown or reload cleanup.
-
-```typescript
-const unregister = pi.registerMcpServerInfoProvider(() => manager.getServerInfos());
-pi.on("session_shutdown", () => unregister());
-```
-
 ### pi.sendMessage(message, options?)
 
 Inject a custom message into the session.
