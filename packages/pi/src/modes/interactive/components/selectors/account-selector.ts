@@ -15,31 +15,39 @@ import {
 import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 
 const SELECTOR_GUTTER_WIDTH = 2;
-const MIN_PROVIDER_WIDTH = 36;
-const MIN_ACCOUNT_WIDTH = 18;
-const MAX_ACCOUNT_WIDTH = 28;
-const STATUS_WIDTH = 8;
-const MIN_QUOTA_WIDTH = 12;
-const MAX_QUOTA_WIDTH = 28;
+const MIN_TABLE_WIDTH = 72;
 const TABLE_GAP = "  ";
 const TABLE_BORDER_WIDTH = 2;
 const ROW_PADDING_X = 1;
 
+const COLUMN_WIDTH_PERCENT = {
+	provider: 36,
+	account: 22,
+	status: 10,
+	quota: 32,
+} as const;
+
 function fitCell(text: string, width: number): string {
-	if (text.length > width) return `${text.slice(0, Math.max(0, width - 3))}...`;
-	return text.padEnd(width);
+	const fitted = truncateToWidth(text, width);
+	return `${fitted}${" ".repeat(Math.max(0, width - visibleWidth(fitted)))}`;
 }
 
 function rowGutter(): string {
 	return " ".repeat(SELECTOR_GUTTER_WIDTH);
 }
 
-function contentWidth(text: string): number {
-	return visibleWidth(text);
-}
-
-function clamp(value: number, min: number, max: number): number {
-	return Math.max(min, Math.min(max, value));
+function getColumnWidths(contentWidth: number): Record<keyof typeof COLUMN_WIDTH_PERCENT, number> {
+	const entries = Object.entries(COLUMN_WIDTH_PERCENT) as Array<[keyof typeof COLUMN_WIDTH_PERCENT, number]>;
+	const widths = Object.fromEntries(
+		entries.map(([key, percent]) => [key, Math.floor((contentWidth * percent) / 100)]),
+	) as Record<keyof typeof COLUMN_WIDTH_PERCENT, number>;
+	let remainder = contentWidth - Object.values(widths).reduce((sum, width) => sum + width, 0);
+	for (const [key] of entries) {
+		if (remainder <= 0) break;
+		widths[key]++;
+		remainder--;
+	}
+	return widths;
 }
 
 function tableBorder(left: string, fill: string, right: string, width: number): string {
@@ -163,20 +171,14 @@ export class AccountSelectorComponent extends Container implements Focusable {
 
 	private updateList(): void {
 		this.listContainer.clear();
-		const tableWidth = Math.max(80, this.tableWidth - ROW_PADDING_X * 2);
+		const tableWidth = Math.max(MIN_TABLE_WIDTH, this.tableWidth - ROW_PADDING_X * 2);
 		const innerWidth = Math.max(0, tableWidth - TABLE_BORDER_WIDTH);
-		const maxAccountContentWidth = Math.max(
-			contentWidth("Account"),
-			...this.filteredOptions.map((option) => contentWidth(option.accountName)),
-		);
-		const accountWidth = clamp(maxAccountContentWidth, MIN_ACCOUNT_WIDTH, MAX_ACCOUNT_WIDTH);
-		const maxQuotaContentWidth = Math.max(
-			contentWidth("Quota"),
-			...this.filteredOptions.map((option) => contentWidth(option.quotaText ?? "-")),
-		);
-		const quotaWidth = clamp(maxQuotaContentWidth, MIN_QUOTA_WIDTH, MAX_QUOTA_WIDTH);
-		const fixedContentWidth = SELECTOR_GUTTER_WIDTH + accountWidth + STATUS_WIDTH + quotaWidth + TABLE_GAP.length * 3;
-		const providerWidth = Math.max(MIN_PROVIDER_WIDTH, innerWidth - fixedContentWidth);
+		const columnContentWidth = Math.max(4, innerWidth - SELECTOR_GUTTER_WIDTH - TABLE_GAP.length * 3);
+		const widths = getColumnWidths(columnContentWidth);
+		const providerWidth = widths.provider;
+		const accountWidth = widths.account;
+		const statusWidth = widths.status;
+		const quotaWidth = widths.quota;
 		const maxVisible = 10;
 		const startIndex = Math.max(
 			0,
@@ -188,13 +190,13 @@ export class AccountSelectorComponent extends Container implements Focusable {
 			const header = [
 				fitCell("Provider", providerWidth),
 				fitCell("Account", accountWidth),
-				fitCell("Status", STATUS_WIDTH),
+				fitCell("Status", statusWidth),
 				fitCell("Quota", quotaWidth),
 			].join(TABLE_GAP);
 			const separator = [
 				"-".repeat(providerWidth),
 				"-".repeat(accountWidth),
-				"-".repeat(STATUS_WIDTH),
+				"-".repeat(statusWidth),
 				"-".repeat(quotaWidth),
 			].join(TABLE_GAP);
 			this.listContainer.addChild(
@@ -216,7 +218,7 @@ export class AccountSelectorComponent extends Container implements Focusable {
 			const prefix = selected ? theme.fg("accent", "→ ") : rowGutter();
 			const providerText = fitCell(`${option.providerName} (${option.providerId})`, providerWidth);
 			const accountText = fitCell(option.accountName, accountWidth);
-			const statusText = fitCell(option.active ? "active" : "stored", STATUS_WIDTH);
+			const statusText = fitCell(option.active ? "active" : "stored", statusWidth);
 			const quotaText = fitCell(option.quotaText ?? "-", quotaWidth);
 			const provider = theme.fg(selected ? "accent" : "text", providerText);
 			const account = theme.fg(selected ? "accent" : "text", accountText);

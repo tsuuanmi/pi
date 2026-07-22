@@ -26,7 +26,7 @@ export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [
 	{ name: "fork", description: "Create a new fork from a previous user message" },
 	{ name: "tree", description: "Navigate session tree (switch branches)" },
 	{ name: "provider", description: "Add custom provider models" },
-	{ name: "account", description: "Add, list, switch, or remove provider accounts" },
+	{ name: "account", description: "Add, list, switch, remove, view quota, or reset Codex provider accounts" },
 	{ name: "new", description: "Start a new session" },
 	{ name: "compact", description: "Manually compact the session context" },
 	{ name: "resume", description: "Resume a different session" },

@@ -24,9 +24,14 @@ export type {
 	OpenAICodexWebSocketDebugStats,
 } from "#ai/providers/openai/codex-responses";
 export {
+	consumeOpenAICodexResetCredit,
+	fetchOpenAICodexResetCredits,
 	fetchOpenAICodexUsageSummary,
 	getOpenAICodexUsageCacheTtlMs,
+	type OpenAICodexConsumeResetCreditResult,
 	type OpenAICodexRequestAuth,
+	type OpenAICodexResetCredit,
+	type OpenAICodexResetCreditsSummary,
 	type OpenAICodexUsageAuthProvider,
 	type OpenAICodexUsageStatus,
 	type OpenAICodexUsageSummary,

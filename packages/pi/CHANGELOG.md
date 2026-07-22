@@ -4,6 +4,7 @@
 
 - **tools**: Built-in tool results now attach `details.receipt` structured execution receipts and the TUI renders them consistently.
 - **tmux**: Added structured tmux launch guidance receipts for inspectable long-running workflow handoffs.
+- **account**: `/account` now shows OpenAI Codex reset credits with quota and can redeem one via `/account reset openai-codex [account]`.
 
 ### Fixed
 

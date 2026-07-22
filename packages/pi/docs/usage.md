@@ -34,7 +34,7 @@ Type `/` in the editor to open command completion. Extensions can register custo
 | Command | Description |
 |---------|-------------|
 | `/provider` | Add custom provider models |
-| `/account` | Add, open, switch, remove, and view quota for stored provider accounts |
+| `/account` | Add, open, switch, remove, view quota, and redeem Codex reset credits for stored provider accounts |
 | `/settings` | Role models/thinking, theme, message delivery, transport |
 | `/resume` | Pick from previous sessions |
 | `/new` | Start a new session |
@@ -49,6 +49,8 @@ Type `/` in the editor to open command completion. Extensions can register custo
 | `/hotkeys` | Show all keyboard shortcuts |
 | `/changelog` | Display version history |
 | `/quit` | Quit pi |
+
+Codex subscription accounts show current quota plus available reset credits in `/account`. Redeem one available reset credit with `/account reset openai-codex [account]`; add `--dry-run` to preview without consuming a credit.
 
 ## Message Queue
 

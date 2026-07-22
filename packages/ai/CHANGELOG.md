@@ -1,3 +1,9 @@
+## [Unreleased]
+
+### Added
+
+- Added OpenAI Codex reset-credit helpers for listing and consuming quota reset credits.
+
 ## [0.2.0] - 2026-07-20
 
 ### Breaking Changes

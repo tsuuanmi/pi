@@ -1,10 +1,14 @@
 import {
 	type Api,
+	consumeOpenAICodexResetCredit,
+	fetchOpenAICodexResetCredits,
 	fetchOpenAICodexUsageSummary,
 	getProviders,
 	type Model,
 	type OAuthProviderId,
 	type OAuthSelectPrompt,
+	type OpenAICodexResetCredit,
+	type OpenAICodexUsageAuthProvider,
 	type OpenAICodexUsageSummary,
 } from "@tsuuanmi/pi-ai";
 import type { Component, Container, EditorComponent, StatusLineComponent, TUI } from "@tsuuanmi/pi-tui";
@@ -301,11 +305,26 @@ export class AccountAuthController {
 					option.quotaText = "unavailable";
 					return;
 				}
-				option.quotaText = summary.text;
+				const resetText =
+					summary.resetCreditsAvailable === undefined ? "" : ` reset ${summary.resetCreditsAvailable}`;
+				option.quotaText = `${summary.text}${resetText}`;
 				option.quotaStatus = summary.status === "unknown" ? undefined : summary.status;
 			}),
 		);
 		return this.sortAccountOptions(options);
+	}
+
+	private getOpenAICodexAccountAuthProvider(accountName: string): OpenAICodexUsageAuthProvider {
+		return {
+			isUsingOAuth: () => true,
+			getApiKeyAndHeaders: async () => {
+				const apiKey = await this.session.modelRegistry.authStorage.getApiKey("openai-codex", {
+					includeFallback: false,
+					accountName,
+				});
+				return apiKey ? { ok: true, apiKey } : { ok: false, error: "No OAuth token for account" };
+			},
+		};
 	}
 
 	private async fetchAccountCodexQuota(
@@ -313,19 +332,14 @@ export class AccountAuthController {
 		accountName: string,
 	): Promise<OpenAICodexUsageSummary | null> {
 		try {
-			return await fetchOpenAICodexUsageSummary(
-				{
-					isUsingOAuth: () => true,
-					getApiKeyAndHeaders: async () => {
-						const apiKey = await this.session.modelRegistry.authStorage.getApiKey("openai-codex", {
-							includeFallback: false,
-							accountName,
-						});
-						return apiKey ? { ok: true, apiKey } : { ok: false, error: "No OAuth token for account" };
-					},
-				},
+			const summary = await fetchOpenAICodexUsageSummary(this.getOpenAICodexAccountAuthProvider(accountName), model);
+			if (!summary || summary.resetCreditsAvailable !== undefined) return summary;
+
+			const resetCredits = await fetchOpenAICodexResetCredits(
+				this.getOpenAICodexAccountAuthProvider(accountName),
 				model,
 			);
+			return resetCredits ? { ...summary, resetCreditsAvailable: resetCredits.availableCount } : summary;
 		} catch {
 			return null;
 		}
@@ -406,6 +420,83 @@ export class AccountAuthController {
 		});
 	}
 
+	private confirmCodexResetCredit(accountName: string, credit: OpenAICodexResetCredit): Promise<boolean> {
+		return new Promise((resolve) => {
+			const details = [`credit ${credit.id}`];
+			if (credit.expiresAt) details.push(`expires ${credit.expiresAt}`);
+			if (credit.title) details.push(credit.title);
+			const title = `Redeem OpenAI Codex reset credit for account ${accountName}? ${details.join(" · ")}`;
+			this.showSelector((done) => {
+				const selector = new ExtensionSelectorComponent(
+					title,
+					["Yes", "No"],
+					(option) => {
+						done();
+						resolve(option === "Yes");
+					},
+					() => {
+						done();
+						resolve(false);
+					},
+				);
+				return { component: selector, focus: selector };
+			});
+		});
+	}
+
+	private async resetOpenAICodexAccount(accountName: string | undefined, dryRun: boolean): Promise<void> {
+		const authStorage = this.session.modelRegistry.authStorage;
+		const targetAccount = accountName ?? authStorage.getActiveAccount("openai-codex");
+		if (!targetAccount) {
+			this.showError("No active openai-codex account. Use /account reset openai-codex <account>.");
+			return;
+		}
+		if (!authStorage.getAccountNames("openai-codex").includes(targetAccount)) {
+			this.showError(`No openai-codex account named ${targetAccount}.`);
+			return;
+		}
+
+		const model = this.getOpenAICodexQuotaModel();
+		if (!model) {
+			this.showError("No openai-codex model is configured.");
+			return;
+		}
+
+		const authProvider = this.getOpenAICodexAccountAuthProvider(targetAccount);
+		const credits = await fetchOpenAICodexResetCredits(authProvider, model);
+		const availableCredits = credits?.credits.filter((credit) => credit.status === "available") ?? [];
+		if (!credits || credits.availableCount <= 0 || availableCredits.length === 0) {
+			this.showStatus(`No available Codex reset credits for openai-codex account ${targetAccount}.`);
+			return;
+		}
+
+		const credit = availableCredits[0];
+		if (!credit) {
+			this.showStatus(`No available Codex reset credits for openai-codex account ${targetAccount}.`);
+			return;
+		}
+		if (dryRun) {
+			this.showStatus(
+				`Dry run: ${credits.availableCount} Codex reset credit(s) available; would redeem ${credit.id}.`,
+			);
+			return;
+		}
+
+		if (!(await this.confirmCodexResetCredit(targetAccount, credit))) {
+			this.showStatus("Codex reset cancelled.");
+			return;
+		}
+
+		const result = await consumeOpenAICodexResetCredit(authProvider, model, credit.id);
+		if (!result) {
+			this.showError("Failed to redeem Codex reset credit.");
+			return;
+		}
+		const usage = await this.fetchAccountCodexQuota(model, targetAccount);
+		const usageText = usage ? ` New quota: ${usage.text}.` : "";
+		this.showStatus(`Redeemed Codex reset credit for ${targetAccount}.${usageText}`);
+	}
+
 	async handleAccountCommand(text: string): Promise<void> {
 		const parts = text.split(/\s+/);
 		const action = parts[1];
@@ -441,6 +532,23 @@ export class AccountAuthController {
 				return;
 			}
 			this.removeProviderAccount(providerId, accountName);
+			return;
+		}
+
+		if (action === "reset") {
+			const providerId = parts[2];
+			const args = parts.slice(3);
+			const dryRun = args.includes("--dry-run");
+			const accountArgs = args.filter((arg) => arg !== "--dry-run");
+			if (providerId !== "openai-codex" || accountArgs.length > 1) {
+				this.showStatus("Usage: /account reset openai-codex [account] [--dry-run]");
+				return;
+			}
+			try {
+				await this.resetOpenAICodexAccount(accountArgs[0], dryRun);
+			} catch (error) {
+				this.showError(`Codex reset failed: ${error instanceof Error ? error.message : String(error)}`);
+			}
 			return;
 		}
 

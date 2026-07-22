@@ -1,6 +1,9 @@
+import { randomUUID } from "node:crypto";
 import type { Api, Model } from "#ai/types";
 
 const CODEX_USAGE_PATH = "wham/usage";
+const CODEX_RESET_CREDITS_PATH = "wham/rate-limit-reset-credits";
+const CODEX_RESET_CREDITS_CONSUME_PATH = "wham/rate-limit-reset-credits/consume";
 const JWT_AUTH_CLAIM = "https://api.openai.com/auth";
 const DEFAULT_CODEX_BASE_URL = "https://chatgpt.com/backend-api";
 
@@ -14,6 +17,28 @@ export type OpenAICodexUsageStatus = "ok" | "warning" | "exhausted" | "unknown";
 export type OpenAICodexUsageSummary = {
 	text: string;
 	status: OpenAICodexUsageStatus;
+	resetCreditsAvailable?: number;
+};
+
+export type OpenAICodexResetCredit = {
+	id: string;
+	status?: string;
+	resetType?: string;
+	grantedAt?: string;
+	expiresAt?: string;
+	title?: string;
+};
+
+export type OpenAICodexResetCreditsSummary = {
+	availableCount: number;
+	credits: OpenAICodexResetCredit[];
+};
+
+export type OpenAICodexConsumeResetCreditResult = {
+	windowsReset?: unknown;
+	code?: unknown;
+	redeemedAt?: string;
+	credit?: OpenAICodexResetCredit;
 };
 
 export type OpenAICodexRequestAuth =
@@ -34,6 +59,12 @@ export type OpenAICodexUsageAuthProvider = {
 
 type CodexUsagePayload = {
 	rate_limit?: unknown;
+	rate_limit_reset_credits?: unknown;
+};
+
+type CodexResetCreditsPayload = {
+	available_count?: unknown;
+	credits?: unknown;
 };
 
 type ParsedUsageWindow = {
@@ -106,8 +137,20 @@ function normalizeCodexBaseUrl(baseUrl: string | undefined): string {
 	return base;
 }
 
+function buildCodexUrl(baseUrl: string, path: string): string {
+	return `${baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`}${path}`;
+}
+
 function buildCodexUsageUrl(baseUrl: string): string {
-	return `${baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`}${CODEX_USAGE_PATH}`;
+	return buildCodexUrl(baseUrl, CODEX_USAGE_PATH);
+}
+
+function buildCodexResetCreditsUrl(baseUrl: string): string {
+	return buildCodexUrl(baseUrl, CODEX_RESET_CREDITS_PATH);
+}
+
+function buildCodexConsumeResetCreditUrl(baseUrl: string): string {
+	return buildCodexUrl(baseUrl, CODEX_RESET_CREDITS_CONSUME_PATH);
 }
 
 function parseUsageWindow(payload: unknown): ParsedUsageWindow | undefined {
@@ -131,6 +174,38 @@ function parseUsagePayload(payload: unknown): ParsedLimit | null {
 	if (!isRecord(payload)) return null;
 	const raw = payload as CodexUsagePayload;
 	return parseLimit(raw.rate_limit);
+}
+
+function parseResetCreditsAvailable(payload: unknown): number | undefined {
+	if (!isRecord(payload)) return undefined;
+	const raw = payload as CodexUsagePayload;
+	if (!isRecord(raw.rate_limit_reset_credits)) return undefined;
+	return toNumber(raw.rate_limit_reset_credits.available_count);
+}
+
+function normalizeResetCredit(payload: unknown): OpenAICodexResetCredit | null {
+	if (!isRecord(payload)) return null;
+	const id = typeof payload.id === "string" ? payload.id : undefined;
+	if (!id) return null;
+	return {
+		id,
+		status: typeof payload.status === "string" ? payload.status : undefined,
+		resetType: typeof payload.reset_type === "string" ? payload.reset_type : undefined,
+		grantedAt: typeof payload.granted_at === "string" ? payload.granted_at : undefined,
+		expiresAt: typeof payload.expires_at === "string" ? payload.expires_at : undefined,
+		title: typeof payload.title === "string" ? payload.title : undefined,
+	};
+}
+
+function parseResetCreditsPayload(payload: unknown): OpenAICodexResetCreditsSummary | null {
+	if (!isRecord(payload)) return null;
+	const raw = payload as CodexResetCreditsPayload;
+	const credits = Array.isArray(raw.credits)
+		? raw.credits.map(normalizeResetCredit).filter((credit) => credit !== null)
+		: [];
+	const availableCount =
+		toNumber(raw.available_count) ?? credits.filter((credit) => credit.status === "available").length;
+	return { availableCount, credits };
 }
 
 function formatWindowId(seconds: number | undefined, fallback: "primary" | "secondary"): string {
@@ -162,7 +237,20 @@ function worstStatus(statuses: OpenAICodexUsageStatus[]): OpenAICodexUsageStatus
 	return "ok";
 }
 
-function buildSummary(parsed: ParsedLimit): OpenAICodexUsageSummary | null {
+function buildOpenAICodexHeaders(token: string, headers?: Record<string, string>): Record<string, string> {
+	const accountId = extractAccountId(token);
+	const requestHeaders: Record<string, string> = {
+		Authorization: `Bearer ${token}`,
+		"User-Agent": "Pi-Coding-Agent/1.0",
+		...headers,
+	};
+	if (accountId) {
+		requestHeaders["ChatGPT-Account-Id"] = accountId;
+	}
+	return requestHeaders;
+}
+
+function buildSummary(parsed: ParsedLimit, resetCreditsAvailable?: number): OpenAICodexUsageSummary | null {
 	const parts: string[] = [];
 	const statuses: OpenAICodexUsageStatus[] = [];
 	const windows: Array<["primary" | "secondary", ParsedUsageWindow | undefined]> = [
@@ -177,7 +265,7 @@ function buildSummary(parsed: ParsedLimit): OpenAICodexUsageSummary | null {
 	}
 
 	if (parts.length === 0) return null;
-	return { text: parts.join(" "), status: worstStatus(statuses) };
+	return { text: parts.join(" "), status: worstStatus(statuses), resetCreditsAvailable };
 }
 
 export function getOpenAICodexUsageCacheTtlMs(): number {
@@ -194,20 +282,67 @@ export async function fetchOpenAICodexUsageSummary(
 	const auth = await authProvider.getApiKeyAndHeaders(model);
 	if (!auth.ok || !auth.apiKey) return null;
 
-	const accountId = extractAccountId(auth.apiKey);
-	const headers: Record<string, string> = {
-		Authorization: `Bearer ${auth.apiKey}`,
-		"User-Agent": "Pi-Coding-Agent/1.0",
-		...auth.headers,
-	};
-	if (accountId) {
-		headers["ChatGPT-Account-Id"] = accountId;
-	}
+	const headers = buildOpenAICodexHeaders(auth.apiKey, auth.headers);
 
 	const response = await fetch(buildCodexUsageUrl(normalizeCodexBaseUrl(model.baseUrl)), { headers, signal });
 	if (!response.ok) return null;
 
 	const payload = (await response.json()) as unknown;
 	const parsed = parseUsagePayload(payload);
-	return parsed ? buildSummary(parsed) : null;
+	return parsed ? buildSummary(parsed, parseResetCreditsAvailable(payload)) : null;
+}
+
+export async function fetchOpenAICodexResetCredits(
+	authProvider: OpenAICodexUsageAuthProvider,
+	model: Model<Api>,
+	signal?: AbortSignal,
+): Promise<OpenAICodexResetCreditsSummary | null> {
+	if (model.provider !== "openai-codex" || !authProvider.isUsingOAuth(model)) return null;
+
+	const auth = await authProvider.getApiKeyAndHeaders(model);
+	if (!auth.ok || !auth.apiKey) return null;
+
+	const response = await fetch(buildCodexResetCreditsUrl(normalizeCodexBaseUrl(model.baseUrl)), {
+		headers: buildOpenAICodexHeaders(auth.apiKey, auth.headers),
+		signal,
+	});
+	if (!response.ok) return null;
+
+	return parseResetCreditsPayload((await response.json()) as unknown);
+}
+
+export async function consumeOpenAICodexResetCredit(
+	authProvider: OpenAICodexUsageAuthProvider,
+	model: Model<Api>,
+	creditId: string,
+	signal?: AbortSignal,
+): Promise<OpenAICodexConsumeResetCreditResult | null> {
+	if (model.provider !== "openai-codex" || !authProvider.isUsingOAuth(model)) return null;
+
+	const auth = await authProvider.getApiKeyAndHeaders(model);
+	if (!auth.ok || !auth.apiKey) return null;
+
+	const response = await fetch(buildCodexConsumeResetCreditUrl(normalizeCodexBaseUrl(model.baseUrl)), {
+		body: JSON.stringify({ credit_id: creditId, redeem_request_id: randomUUID() }),
+		headers: {
+			...buildOpenAICodexHeaders(auth.apiKey, auth.headers),
+			"Content-Type": "application/json",
+		},
+		method: "POST",
+		signal,
+	});
+	if (!response.ok) return null;
+
+	const payload = (await response.json()) as unknown;
+	if (!isRecord(payload)) return {};
+	const credit = normalizeResetCredit(payload.credit);
+	return {
+		windowsReset: payload.windows_reset,
+		code: payload.code,
+		redeemedAt:
+			isRecord(payload.credit) && typeof payload.credit.redeemed_at === "string"
+				? payload.credit.redeemed_at
+				: undefined,
+		credit: credit ?? undefined,
+	};
 }

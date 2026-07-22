@@ -103,6 +103,8 @@ For multiple accounts on one provider, name each account and switch manually or 
 /account openai-codex backup
 ```
 
+For OpenAI Codex subscription accounts, `/account` shows quota and available reset credits. Redeem one with `/account reset openai-codex [account]`; add `--dry-run` to preview without consuming a credit.
+
 Then just talk to pi. By default, pi gives the model four tools: `read`, `write`, `edit`, and `bash`. The model uses these to fulfill your requests. Add capabilities via [skills](#skills), [prompt templates](#prompt-templates), [extensions](#extensions), or [pi packages](#pi-packages).
 
 **Platform notes:** pi supports Linux and macOS. See [tmux](docs/tmux.md), [Terminal setup](docs/terminal-setup.md), and [Shell aliases](docs/shell-aliases.md).
