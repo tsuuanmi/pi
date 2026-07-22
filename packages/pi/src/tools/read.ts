@@ -61,6 +61,27 @@ export interface ReadToolOptions {
 
 type ReadRenderArgs = { path?: string; file_path?: string; offset?: number; limit?: number };
 
+function parseReadPathLineRange(args: ReadRenderArgs | undefined): ReadRenderArgs | undefined {
+	if (!args || args.offset !== undefined || args.limit !== undefined) return args;
+	const rawPath = str(args.file_path ?? args.path);
+	if (rawPath === null) return args;
+	const match = /^(.*):(\d+)(?:-(\d+))?$/.exec(rawPath);
+	if (!match || !match[1]) return args;
+
+	const offset = Number(match[2]);
+	const endLine = match[3] !== undefined ? Number(match[3]) : undefined;
+	if (!Number.isSafeInteger(offset) || offset < 1) return args;
+	if (endLine !== undefined && (!Number.isSafeInteger(endLine) || endLine < offset)) return args;
+
+	const parsed = { ...args, offset, limit: endLine !== undefined ? endLine - offset + 1 : undefined };
+	if (args.file_path !== undefined) {
+		parsed.file_path = match[1];
+	} else {
+		parsed.path = match[1];
+	}
+	return parsed;
+}
+
 function formatReadLineRange(args: ReadRenderArgs | undefined, theme: Theme): string {
 	if (args?.offset === undefined && args?.limit === undefined) return "";
 	const startLine = args.offset ?? 1;
@@ -69,8 +90,9 @@ function formatReadLineRange(args: ReadRenderArgs | undefined, theme: Theme): st
 }
 
 function formatReadCall(args: ReadRenderArgs | undefined, theme: Theme, cwd: string): string {
-	const pathDisplay = renderToolPath(str(args?.file_path ?? args?.path), theme, cwd);
-	return `${theme.fg("toolTitle", theme.bold("read"))} ${pathDisplay}${formatReadLineRange(args, theme)}`;
+	const displayArgs = parseReadPathLineRange(args);
+	const pathDisplay = renderToolPath(str(displayArgs?.file_path ?? displayArgs?.path), theme, cwd);
+	return `${theme.fg("toolTitle", theme.bold("read"))} ${pathDisplay}${formatReadLineRange(displayArgs, theme)}`;
 }
 
 function trimTrailingEmptyLines(lines: string[]): string[] {
@@ -108,7 +130,8 @@ function getCompactReadClassification(
 	args: ReadRenderArgs | undefined,
 	cwd: string,
 ): CompactReadClassification | undefined {
-	const rawPath = str(args?.file_path ?? args?.path);
+	const displayArgs = parseReadPathLineRange(args);
+	const rawPath = str(displayArgs?.file_path ?? displayArgs?.path);
 	if (!rawPath) return undefined;
 
 	const absolutePath = resolveToCwd(rawPath, cwd);
@@ -137,7 +160,7 @@ function formatCompactReadCall(
 		return (
 			theme.fg("customMessageLabel", `\x1b[1m[skill]\x1b[22m `) +
 			theme.fg("customMessageText", classification.label) +
-			formatReadLineRange(args, theme) +
+			formatReadLineRange(parseReadPathLineRange(args), theme) +
 			expandHint
 		);
 	}
@@ -146,7 +169,7 @@ function formatCompactReadCall(
 		theme.fg("toolTitle", theme.bold(`read ${classification.kind}`)) +
 		" " +
 		theme.fg("accent", classification.label) +
-		formatReadLineRange(args, theme) +
+		formatReadLineRange(parseReadPathLineRange(args), theme) +
 		expandHint
 	);
 }
@@ -163,7 +186,8 @@ function formatReadResult(
 		return "";
 	}
 
-	const rawPath = str(args?.file_path ?? args?.path);
+	const displayArgs = parseReadPathLineRange(args);
+	const rawPath = str(displayArgs?.file_path ?? displayArgs?.path);
 	const output = getTextOutput(result);
 	const lang = rawPath ? getLanguageFromPath(rawPath) : undefined;
 	const renderedLines = lang ? highlightCode(replaceTabs(output), lang) : output.split("\n");
@@ -223,10 +247,26 @@ export function createReadToolDefinition(
 
 				(async () => {
 					try {
-						const absolutePath = await resolveReadPathAsync(path, cwd);
+						const rawPath = path;
+						let absolutePath = await resolveReadPathAsync(path, cwd);
 						if (aborted) return;
-						// Check if file exists and is readable.
-						await ops.access(absolutePath);
+
+						try {
+							// Check if file exists and is readable. Try the literal path first so
+							// colon-containing filenames still work.
+							await ops.access(absolutePath);
+						} catch (error) {
+							const parsedArgs = parseReadPathLineRange({ path: rawPath, offset, limit });
+							const parsedPath = str(parsedArgs?.path ?? rawPath);
+							if (parsedPath === null || parsedPath === rawPath) throw error;
+
+							path = parsedPath;
+							offset = parsedArgs?.offset;
+							limit = parsedArgs?.limit;
+							absolutePath = await resolveReadPathAsync(path, cwd);
+							if (aborted) return;
+							await ops.access(absolutePath);
+						}
 						if (aborted) return;
 						let content: TextContent[];
 						let details: ReadToolDetails | undefined;

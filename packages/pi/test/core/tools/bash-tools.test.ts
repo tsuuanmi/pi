@@ -130,6 +130,29 @@ describe("Pi Agent Tools", () => {
 			expect(output).toContain("[90 more lines in file. Use offset=11 to continue.]");
 		});
 
+		it("should handle line range suffixes in the path", async () => {
+			const testFile = join(testDir, "range-test.txt");
+			writeFileSync(testFile, "Line 1\nLine 2\nLine 3\nLine 4");
+
+			const result = await readTool.execute("test-call-range", { path: `${testFile}:2-3` });
+			const output = getTextOutput(result);
+
+			expect(output).not.toContain("Line 1");
+			expect(output).toContain("Line 2");
+			expect(output).toContain("Line 3");
+			expect(output).not.toContain("Line 4");
+			expect(output).toContain("[1 more lines in file. Use offset=4 to continue.]");
+		});
+
+		it("should prefer literal paths over line range suffix parsing", async () => {
+			const testFile = join(testDir, "literal-range.txt:2-3");
+			writeFileSync(testFile, "Literal file content");
+
+			const result = await readTool.execute("test-call-literal-range", { path: testFile });
+
+			expect(getTextOutput(result)).toBe("Literal file content");
+		});
+
 		it("should handle offset + limit together", async () => {
 			const testFile = join(testDir, "offset-limit-test.txt");
 			const lines = Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`);
