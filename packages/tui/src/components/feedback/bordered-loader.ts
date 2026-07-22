@@ -1,6 +1,11 @@
-import type { Theme } from "@tsuuanmi/pi-tui";
-import { CancellableLoader, Container, keyHint, Loader, Spacer, Text, type TUI } from "@tsuuanmi/pi-tui";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
+import { Text } from "#tui/components/display/text";
+import { CancellableLoader } from "#tui/components/feedback/cancellable-loader";
+import { DynamicBorder } from "#tui/components/feedback/dynamic-border";
+import { Loader } from "#tui/components/feedback/loader";
+import { Spacer } from "#tui/components/layout/spacer";
+import { Container, type TUI } from "#tui/core/tui";
+import type { Theme } from "#tui/theme/theme";
+import { keyHint } from "#tui/utilities/keybinding-hints";
 
 /** Loader wrapped with borders for extension UI */
 export class BorderedLoader extends Container {

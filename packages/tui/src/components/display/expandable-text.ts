@@ -1,4 +1,4 @@
-import { Text } from "@tsuuanmi/pi-tui";
+import { Text } from "#tui/components/display/text";
 
 /** Interface for components that can be expanded/collapsed */
 export interface Expandable {

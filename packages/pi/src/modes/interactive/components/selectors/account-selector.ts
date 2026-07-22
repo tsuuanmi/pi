@@ -1,5 +1,6 @@
 import {
 	Container,
+	DynamicBorder,
 	type Focusable,
 	fuzzyFilter,
 	getKeybindings,
@@ -12,7 +13,6 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 
 const SELECTOR_GUTTER_WIDTH = 2;
 const MIN_TABLE_WIDTH = 72;

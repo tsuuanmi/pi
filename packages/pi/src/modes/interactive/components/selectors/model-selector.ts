@@ -1,6 +1,7 @@
 import { type Model, modelsAreEqual } from "@tsuuanmi/pi-ai";
 import {
 	Container,
+	DynamicBorder,
 	type Focusable,
 	fuzzyFilter,
 	getKeybindings,
@@ -12,7 +13,6 @@ import {
 	theme,
 } from "@tsuuanmi/pi-tui";
 import type { ModelRegistry } from "#pi/model/model-registry";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import { getModelSearchText } from "#pi/modes/interactive/model-search";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 

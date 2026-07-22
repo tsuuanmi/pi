@@ -9,6 +9,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import {
 	Container,
+	DynamicBorder,
 	Editor,
 	type Focusable,
 	getEditorTheme,
@@ -19,7 +20,6 @@ import {
 	type TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
 
 export class ExtensionEditorComponent extends Container implements Focusable {

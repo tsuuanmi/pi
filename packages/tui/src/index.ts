@@ -1,5 +1,6 @@
 // Core TUI interfaces and classes
 
+export { type Expandable, ExpandableText } from "#tui/components/display/expandable-text";
 export {
 	type DefaultTextStyle,
 	Markdown,
@@ -8,7 +9,10 @@ export {
 } from "#tui/components/display/markdown";
 export { Text } from "#tui/components/display/text";
 export { TruncatedText } from "#tui/components/display/truncated-text";
+export { BorderedLoader } from "#tui/components/feedback/bordered-loader";
 export { CancellableLoader } from "#tui/components/feedback/cancellable-loader";
+export { CountdownTimer } from "#tui/components/feedback/countdown-timer";
+export { DynamicBorder } from "#tui/components/feedback/dynamic-border";
 export { Loader, type LoaderIndicatorOptions } from "#tui/components/feedback/loader";
 export { refreshHudUi } from "#tui/components/hud/extension-ui";
 export type {

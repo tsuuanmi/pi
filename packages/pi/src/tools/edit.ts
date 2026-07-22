@@ -1,11 +1,4 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import type { Theme } from "@tsuuanmi/pi-tui";
-import { Box, Container, renderDiff, Spacer, Text } from "@tsuuanmi/pi-tui";
-import { constants } from "fs";
-import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
-import { type Static, Type } from "typebox";
-import type { ToolDefinition } from "#pi/api/types";
 import {
 	applyEditsToNormalizedContent,
 	computeEditsDiff,
@@ -16,10 +9,17 @@ import {
 	generateDiffString,
 	generateUnifiedPatch,
 	normalizeToLF,
+	resolveToCwd,
 	restoreLineEndings,
 	stripBom,
-} from "#pi/tools/edit-diff";
-import { resolveToCwd } from "#pi/tools/path-utils";
+	withFileMutationQueue,
+} from "@tsuuanmi/pi-agent/node";
+import type { Theme } from "@tsuuanmi/pi-tui";
+import { Box, Container, renderDiff, Spacer, Text } from "@tsuuanmi/pi-tui";
+import { constants } from "fs";
+import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
+import { type Static, Type } from "typebox";
+import type { ToolDefinition } from "#pi/api/types";
 import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
 import { renderToolPath, str, wrapToolDefinition } from "#pi/tools/utils";
 

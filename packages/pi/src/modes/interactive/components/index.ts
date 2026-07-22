@@ -38,5 +38,3 @@ export {
 	ToolExecutionComponent,
 	type ToolExecutionOptions,
 } from "#pi/modes/interactive/components/tool-execution";
-export { BorderedLoader } from "#pi/modes/interactive/components/widgets/bordered-loader";
-export { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";

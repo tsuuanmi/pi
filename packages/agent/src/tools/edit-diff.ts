@@ -6,7 +6,7 @@
 import * as Diff from "diff";
 import { constants } from "fs";
 import { access, readFile } from "fs/promises";
-import { resolveToCwd } from "#pi/tools/path-utils";
+import { resolveToCwd } from "#agent/tools/path-utils";
 
 export function detectLineEnding(content: string): "\r\n" | "\n" {
 	const crlfIdx = content.indexOf("\r\n");

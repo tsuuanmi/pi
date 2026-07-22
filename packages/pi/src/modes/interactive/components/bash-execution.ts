@@ -6,6 +6,7 @@ import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, type TruncationResult, truncateTa
 import {
 	type Component,
 	Container,
+	DynamicBorder,
 	keyHint,
 	keyText,
 	Loader,
@@ -17,7 +18,6 @@ import {
 	truncateToVisualLines,
 	truncateToWidth,
 } from "@tsuuanmi/pi-tui";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 
 // Preview line limit when not expanded (matches tool execution behavior)
 const PREVIEW_LINES = 20;

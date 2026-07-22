@@ -4,6 +4,8 @@
 
 import {
 	Container,
+	CountdownTimer,
+	DynamicBorder,
 	type Focusable,
 	getKeybindings,
 	Input,
@@ -13,8 +15,6 @@ import {
 	type TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import { CountdownTimer } from "#pi/modes/interactive/components/widgets/countdown-timer";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 
 export interface ExtensionInputOptions {
 	tui?: TUI;

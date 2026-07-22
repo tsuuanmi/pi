@@ -1,11 +1,11 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { computeEditsDiff, type Edit } from "@tsuuanmi/pi-agent/node";
 import { Container, initTheme, type Terminal, Text, TUI } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { ToolExecutionComponent } from "#pi/modes/interactive/components/tool-execution";
 import { createEditToolDefinition } from "#pi/tools/edit";
-import { computeEditsDiff, type Edit } from "#pi/tools/edit-diff";
 
 class FakeTerminal implements Terminal {
 	columns = 80;

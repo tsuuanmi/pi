@@ -9,6 +9,10 @@
 - **subagents**: Tmux-backed subagents now record the shared `Subagent Run Identity` schema, capture pane/session targets from tmux output, and fail closed on legacy or mismatched cleanup metadata.
 - **account**: `/account` now shows OpenAI Codex reset credits with quota and can redeem one via `/account reset openai-codex [account]`.
 
+### Changed
+
+- **packages**: Moved reusable TUI widgets to `@tsuuanmi/pi-tui` and shared Node tool utilities to `@tsuuanmi/pi-agent/node`; Pi now imports them directly from the owning packages.
+
 ### Fixed
 
 - **tools**: `read` accepts `path:line` and `path:start-end` shorthand without treating the range as part of the filename.

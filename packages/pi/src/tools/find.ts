@@ -1,13 +1,13 @@
 import { createInterface } from "node:readline";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "@tsuuanmi/pi-agent";
+import { pathExists, resolveToCwd } from "@tsuuanmi/pi-agent/node";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import path from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
-import { pathExists, resolveToCwd } from "#pi/tools/path-utils";
 import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
 import { getTextOutput, invalidArgText, shortenPath, str, wrapToolDefinition } from "#pi/tools/utils";
 import { ensureTool } from "#pi/utils/system/tool-installer";

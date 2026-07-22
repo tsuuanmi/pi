@@ -9,6 +9,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import {
 	type Container,
+	DynamicBorder,
 	formatKeyText,
 	type Keybinding,
 	Markdown,
@@ -20,7 +21,6 @@ import {
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
 import { getDebugLogPath } from "#pi/config/config";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import type { AgentSession } from "#pi/session/agent-session";
 import type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 import { copyToClipboard } from "#pi/utils/clipboard/clipboard";

@@ -2,7 +2,7 @@ import { constants } from "node:fs";
 import { access as fsAccess } from "node:fs/promises";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "@tsuuanmi/pi-agent";
-import { waitForChildProcess } from "@tsuuanmi/pi-agent/node";
+import { OutputAccumulator, waitForChildProcess } from "@tsuuanmi/pi-agent/node";
 import {
 	type Component,
 	Container,
@@ -15,7 +15,6 @@ import {
 import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
-import { OutputAccumulator } from "#pi/tools/output-accumulator";
 import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
 import { getTextOutput, invalidArgText, str, wrapToolDefinition } from "#pi/tools/utils";
 import {

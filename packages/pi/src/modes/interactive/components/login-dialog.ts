@@ -1,6 +1,7 @@
 import { getOAuthProviders, type OAuthDeviceCodeInfo } from "@tsuuanmi/pi-ai/oauth";
 import {
 	Container,
+	DynamicBorder,
 	type Focusable,
 	getKeybindings,
 	Input,
@@ -10,7 +11,6 @@ import {
 	type TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import { openBrowser } from "#pi/utils/terminal/open-browser";
 
 /**

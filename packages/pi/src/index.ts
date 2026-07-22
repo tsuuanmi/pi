@@ -179,12 +179,10 @@ export {
 export {
 	AssistantMessageComponent,
 	BashExecutionComponent,
-	BorderedLoader,
 	BranchSummaryMessageComponent,
 	CompactionSummaryMessageComponent,
 	CustomEditor,
 	CustomMessageComponent,
-	DynamicBorder,
 	ExtensionEditorComponent,
 	ExtensionInputComponent,
 	ExtensionSelectorComponent,

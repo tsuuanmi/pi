@@ -7,6 +7,7 @@ import { basename, dirname, join, relative } from "node:path";
 import {
 	type Component,
 	Container,
+	DynamicBorder,
 	type Focusable,
 	getKeybindings,
 	Input,
@@ -18,7 +19,6 @@ import {
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
 import { CONFIG_DIR_NAME } from "#pi/config/config";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import type { PathMetadata, ResolvedPaths, ResolvedResource } from "#pi/package-manager/package-manager";
 import type { PackageSource, SettingsManager } from "#pi/settings/settings-manager";
 

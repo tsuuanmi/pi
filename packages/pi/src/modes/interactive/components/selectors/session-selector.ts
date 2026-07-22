@@ -6,6 +6,7 @@ import { canonicalizePath as _canonicalizePath } from "@tsuuanmi/pi-agent/node";
 import {
 	type Component,
 	Container,
+	DynamicBorder,
 	type Focusable,
 	getKeybindings,
 	Input,
@@ -23,7 +24,6 @@ import {
 	type NameFilter,
 	type SortMode,
 } from "#pi/modes/interactive/components/selectors/session-selector-search";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import type { SessionInfo, SessionListProgress } from "#pi/session/session-manager";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 

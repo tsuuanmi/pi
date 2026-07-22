@@ -1,6 +1,7 @@
 import {
 	type Component,
 	Container,
+	DynamicBorder,
 	type Focusable,
 	formatKeyText,
 	getKeybindings,
@@ -15,7 +16,6 @@ import {
 	visibleWidth,
 	wrapTextWithAnsi,
 } from "@tsuuanmi/pi-tui";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 import type { SessionTreeNode } from "#pi/session/session-manager";
 
 /** Gutter info: position (displayIndent where connector was) and whether to show │ */

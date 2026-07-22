@@ -21,6 +21,9 @@ import {
 	CombinedAutocompleteProvider,
 	type Component,
 	Container,
+	CountdownTimer,
+	DynamicBorder,
+	ExpandableText,
 	getAvailableThemesWithPaths,
 	getEditorTheme,
 	getMarkdownTheme,
@@ -69,9 +72,6 @@ import { CustomMessageComponent } from "#pi/modes/interactive/components/message
 import { SkillInvocationMessageComponent } from "#pi/modes/interactive/components/messages/skill-invocation-message";
 import { UserMessageComponent } from "#pi/modes/interactive/components/messages/user-message";
 import { ToolExecutionComponent } from "#pi/modes/interactive/components/tool-execution";
-import { CountdownTimer } from "#pi/modes/interactive/components/widgets/countdown-timer";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
-import { ExpandableText } from "#pi/modes/interactive/components/widgets/expandable-text";
 import { AccountAuthController } from "#pi/modes/interactive/controllers/account-auth-controller";
 import { CommandController } from "#pi/modes/interactive/controllers/command-controller";
 import { ExtensionUIController } from "#pi/modes/interactive/controllers/extension-ui-controller";

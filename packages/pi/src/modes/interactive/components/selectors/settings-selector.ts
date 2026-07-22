@@ -2,6 +2,7 @@ import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Transport } from "@tsuuanmi/pi-ai";
 import {
 	Container,
+	DynamicBorder,
 	fuzzyFilter,
 	getKeybindings,
 	getSelectListTheme,
@@ -19,7 +20,6 @@ import {
 	theme,
 } from "@tsuuanmi/pi-tui";
 import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "#pi/exec/http-dispatcher";
-import { DynamicBorder } from "#pi/modes/interactive/components/widgets/dynamic-border";
 
 const SETTINGS_SUBMENU_SELECT_LIST_LAYOUT: SelectListLayoutOptions = {
 	minPrimaryColumnWidth: 12,
