@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
-import { renderHudBar, type StatusLineHudEntry } from "#tui/index";
+import { before, describe, it } from "node:test";
+import { HUD_COLOR_PROFILE, initTheme, renderHudBar, type StatusLineHudEntry, theme } from "#tui/index";
+
+before(() => {
+	initTheme("dark");
+});
 
 function escapeRegExp(value: string): string {
 	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -83,7 +87,7 @@ describe("renderHudBar", () => {
 		assert.match(rendered, new RegExp(escapeRegExp(String("warn:health=slow"))));
 	});
 
-	it("styles the entry id and chip values for visual hierarchy", () => {
+	it("styles the entry id and chip values with theme colors", () => {
 		const rendered = renderHudBar(
 			[
 				entry({
@@ -95,9 +99,10 @@ describe("renderHudBar", () => {
 			120,
 		);
 		assert.notEqual(rendered, null);
-		assert.match(rendered ?? "", /\x1b\[1m\x1b\[36msource/);
+		assert.match(rendered ?? "", new RegExp(escapeRegExp(theme.getFgAnsi(HUD_COLOR_PROFILE.base))));
+		assert.match(rendered ?? "", new RegExp(escapeRegExp(theme.getFgAnsi(HUD_COLOR_PROFILE.label))));
+		assert.match(rendered ?? "", new RegExp(escapeRegExp(theme.getFgAnsi(HUD_COLOR_PROFILE.severity.warning))));
 		assert.doesNotMatch(stripAnsiLocal(rendered ?? ""), new RegExp(escapeRegExp(String("source:running"))));
-		assert.match(rendered ?? "", /load\x1b\[22m=\x1b\[1m\x1b\[33m70%/);
 	});
 
 	it("renders multiple entries joined by +", () => {

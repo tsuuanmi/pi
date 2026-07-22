@@ -1,4 +1,4 @@
-import type { ThemeColor } from "#tui/theme/theme";
+import { type ThemeColor, TUI_COLOR_PROFILE } from "#tui/theme/theme";
 
 export type ContextUsageLevel = "normal" | "warning" | "purple" | "error";
 
@@ -71,14 +71,5 @@ export function getContextUsageLevel(contextPercent: number | null, contextWindo
  * `warning -> warning`, `purple -> thinkingHigh`, `error -> error`.
  */
 export function getContextUsageThemeColor(level: ContextUsageLevel): ThemeColor {
-	switch (level) {
-		case "error":
-			return "error";
-		case "purple":
-			return "thinkingHigh";
-		case "warning":
-			return "warning";
-		case "normal":
-			return "dim";
-	}
+	return TUI_COLOR_PROFILE.statusLine.context[level];
 }

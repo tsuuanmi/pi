@@ -14,7 +14,7 @@ import type {
 	StatusLineSettings,
 } from "#tui/components/status-line/types";
 import type { Component } from "#tui/core/tui";
-import { theme } from "#tui/theme/theme";
+import { TUI_COLOR_PROFILE, theme } from "#tui/theme/theme";
 import { truncateToWidth, visibleWidth } from "#tui/utilities/text";
 
 /** Minimum gap (columns) between the left and right rail groups. */
@@ -243,7 +243,7 @@ export class StatusLineComponent implements Component {
 		const resolved = this.#resolveSettings(settings);
 		const ctx = this.#buildSegmentContext(width, resolved.segmentOptions);
 		const sep = resolved.separator;
-		const sepRendered = theme.fg("dim", ` ${sep.left} `);
+		const sepRendered = theme.fg(TUI_COLOR_PROFILE.statusLine.separator, ` ${sep.left} `);
 
 		// Collect visible right segments.
 		const rightParts: string[] = [];

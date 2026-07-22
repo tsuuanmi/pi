@@ -184,6 +184,100 @@ export type ThemeBg =
 	| "toolSuccessBg"
 	| "toolErrorBg";
 
+export interface HudColorProfile {
+	base: ThemeColor;
+	label: ThemeColor;
+	value: ThemeColor;
+	separator: ThemeColor;
+	stale: ThemeColor;
+	severity: {
+		default: ThemeColor;
+		warning: ThemeColor;
+		error: ThemeColor;
+		blocked: ThemeColor;
+		success: ThemeColor;
+	};
+}
+
+export interface StatusLineColorProfile {
+	model: ThemeColor;
+	thinkingSeparator: ThemeColor;
+	mode: ThemeColor;
+	path: ThemeColor;
+	gitClean: ThemeColor;
+	gitDirty: ThemeColor;
+	contextTotal: ThemeColor;
+	usage: ThemeColor;
+	sessionName: ThemeColor;
+	subagents: ThemeColor;
+	separator: ThemeColor;
+	thinking: {
+		off: ThemeColor;
+		minimal: ThemeColor;
+		low: ThemeColor;
+		medium: ThemeColor;
+		high: ThemeColor;
+		xhigh: ThemeColor;
+	};
+	context: {
+		normal: ThemeColor;
+		warning: ThemeColor;
+		purple: ThemeColor;
+		error: ThemeColor;
+	};
+}
+
+export interface TuiColorProfile {
+	hud: HudColorProfile;
+	statusLine: StatusLineColorProfile;
+}
+
+export const TUI_COLOR_PROFILE: TuiColorProfile = {
+	hud: {
+		base: "accent",
+		label: "dim",
+		value: "accent",
+		separator: "dim",
+		stale: "dim",
+		severity: {
+			default: "accent",
+			warning: "warning",
+			error: "error",
+			blocked: "warning",
+			success: "success",
+		},
+	},
+	statusLine: {
+		model: "dim",
+		thinkingSeparator: "dim",
+		mode: "accent",
+		path: "dim",
+		gitClean: "dim",
+		gitDirty: "warning",
+		contextTotal: "dim",
+		usage: "muted",
+		sessionName: "accent",
+		subagents: "muted",
+		separator: "dim",
+		thinking: {
+			off: "thinkingOff",
+			minimal: "thinkingMinimal",
+			low: "thinkingLow",
+			medium: "thinkingMedium",
+			high: "thinkingHigh",
+			xhigh: "thinkingXhigh",
+		},
+		context: {
+			normal: "dim",
+			warning: "warning",
+			purple: "thinkingHigh",
+			error: "error",
+		},
+	},
+};
+
+export const HUD_COLOR_PROFILE: HudColorProfile = TUI_COLOR_PROFILE.hud;
+
 type ColorMode = "truecolor" | "256color";
 
 // ============================================================================

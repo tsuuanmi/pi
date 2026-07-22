@@ -6,8 +6,7 @@ import type {
 	StatusLineSegment,
 	StatusLineSegmentId,
 } from "#tui/components/status-line/types";
-import type { ThemeColor } from "#tui/theme/theme";
-import { theme } from "#tui/theme/theme";
+import { type ThemeColor, TUI_COLOR_PROFILE, theme } from "#tui/theme/theme";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Shared helpers (relocated from footer.ts)
@@ -53,20 +52,10 @@ export function formatCwdForFooter(cwd: string, home: string | undefined): strin
 
 /** Map a thinking level to its Pi theme color token. */
 function thinkingColorToken(level: string): ThemeColor {
-	switch (level) {
-		case "minimal":
-			return "thinkingMinimal";
-		case "low":
-			return "thinkingLow";
-		case "medium":
-			return "thinkingMedium";
-		case "high":
-			return "thinkingHigh";
-		case "xhigh":
-			return "thinkingXhigh";
-		default:
-			return "thinkingOff";
-	}
+	return (
+		TUI_COLOR_PROFILE.statusLine.thinking[level as keyof typeof TUI_COLOR_PROFILE.statusLine.thinking] ??
+		TUI_COLOR_PROFILE.statusLine.thinking.off
+	);
 }
 
 /** Cumulative input/output usage across all session entries. */
@@ -110,11 +99,11 @@ const modelSegment: StatusLineSegment = {
 		if (opts.showThinkingLevel !== false && state.model?.reasoning) {
 			const level = state.thinkingLevel ?? "off";
 			if (level !== "off") {
-				content += ` ${theme.fg("dim", "•")} ${theme.fg(thinkingColorToken(level), level)}`;
+				content += ` ${theme.fg(TUI_COLOR_PROFILE.statusLine.thinkingSeparator, "•")} ${theme.fg(thinkingColorToken(level), level)}`;
 			}
 		}
 
-		return { content: theme.fg("dim", content), visible: true };
+		return { content: theme.fg(TUI_COLOR_PROFILE.statusLine.model, content), visible: true };
 	},
 };
 
@@ -123,7 +112,7 @@ const modeSegment: StatusLineSegment = {
 	render(ctx) {
 		const phase = ctx.hudPhase;
 		if (!phase) return { content: "", visible: false };
-		return { content: theme.fg("accent", phase), visible: true };
+		return { content: theme.fg(TUI_COLOR_PROFILE.statusLine.mode, phase), visible: true };
 	},
 };
 
@@ -141,7 +130,7 @@ const pathSegment: StatusLineSegment = {
 			pwd = `${ellipsis}${pwd.slice(-Math.max(0, maxLen - ellipsis.length))}`;
 		}
 
-		return { content: theme.fg("dim", pwd), visible: true };
+		return { content: theme.fg(TUI_COLOR_PROFILE.statusLine.path, pwd), visible: true };
 	},
 };
 
@@ -180,7 +169,7 @@ const gitSegment: StatusLineSegment = {
 
 		if (!content) return { content: "", visible: false };
 
-		const color: ThemeColor = isDirty ? "warning" : "dim";
+		const color: ThemeColor = isDirty ? TUI_COLOR_PROFILE.statusLine.gitDirty : TUI_COLOR_PROFILE.statusLine.gitClean;
 		return { content: theme.fg(color, content), visible: true };
 	},
 };
@@ -207,7 +196,7 @@ const contextTotalSegment: StatusLineSegment = {
 	render(ctx) {
 		const window = ctx.contextWindow;
 		if (!window) return { content: "", visible: false };
-		return { content: theme.fg("dim", formatTokens(window)), visible: true };
+		return { content: theme.fg(TUI_COLOR_PROFILE.statusLine.contextTotal, formatTokens(window)), visible: true };
 	},
 };
 
@@ -216,7 +205,7 @@ const tokenInSegment: StatusLineSegment = {
 	render(ctx) {
 		const { input } = ctx.usageStats;
 		if (!input) return { content: "", visible: false };
-		return { content: theme.fg("muted", `↑${formatTokens(input)}`), visible: true };
+		return { content: theme.fg(TUI_COLOR_PROFILE.statusLine.usage, `↑${formatTokens(input)}`), visible: true };
 	},
 };
 
@@ -225,7 +214,7 @@ const tokenOutSegment: StatusLineSegment = {
 	render(ctx) {
 		const { output } = ctx.usageStats;
 		if (!output) return { content: "", visible: false };
-		return { content: theme.fg("muted", `↓${formatTokens(output)}`), visible: true };
+		return { content: theme.fg(TUI_COLOR_PROFILE.statusLine.usage, `↓${formatTokens(output)}`), visible: true };
 	},
 };
 
@@ -234,7 +223,7 @@ const sessionNameSegment: StatusLineSegment = {
 	render(ctx) {
 		const name = ctx.session.sessionManager.getSessionName();
 		if (!name) return { content: "", visible: false };
-		return { content: theme.fg("accent", sanitizeStatusText(name)), visible: true };
+		return { content: theme.fg(TUI_COLOR_PROFILE.statusLine.sessionName, sanitizeStatusText(name)), visible: true };
 	},
 };
 
@@ -242,7 +231,7 @@ const subagentsSegment: StatusLineSegment = {
 	id: "subagents",
 	render(ctx) {
 		if (ctx.subagentCount === 0) return { content: "", visible: false };
-		return { content: theme.fg("muted", `↳${ctx.subagentCount}`), visible: true };
+		return { content: theme.fg(TUI_COLOR_PROFILE.statusLine.subagents, `↳${ctx.subagentCount}`), visible: true };
 	},
 };
 

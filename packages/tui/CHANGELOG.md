@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **tui**: Centralized HUD and status-line semantic colors in a shared TUI color profile.
+
 ## [0.2.0] - 2026-07-20
 
 ### Breaking Changes
