@@ -2,7 +2,7 @@
 
 ### Added
 
-- **tools**: Added reusable Node tool utilities for edit diffing, path resolution, and bounded output accumulation.
+- **tools**: Added reusable Node tool utilities for edit diffing, path resolution, bounded output accumulation, and builtin tool receipt helpers.
 - **receipts**: Added `StructuredReceipt` helpers for attaching and validating machine-readable execution receipts.
 - **subagents**: Added shared subagent receipt/type exports, including `SubagentStatus`, `SubagentBackendKind`, `SubagentControlAction`, tmux metadata in `receipt.meta`, and the `visibility` contract (`native`, `tmux`, `auto`) for subagent run requests.
 - **subagents**: Added shared inspect, attach, and kill result types to the `SubagentManager` contract.

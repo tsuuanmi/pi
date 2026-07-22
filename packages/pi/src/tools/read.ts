@@ -15,7 +15,7 @@ import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
 import { getReadmePath } from "#pi/config/config";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
 import { getTextOutput, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#pi/tools/utils";
 
 const readSchema = Type.Object({

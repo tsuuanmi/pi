@@ -15,7 +15,7 @@ import {
 import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
 import { getTextOutput, invalidArgText, str, wrapToolDefinition } from "#pi/tools/utils";
 import {
 	getShellConfig,

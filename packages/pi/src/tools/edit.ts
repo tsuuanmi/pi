@@ -20,7 +20,7 @@ import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition } from "#pi/api/types";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "#pi/tools/structured-receipts";
+import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
 import { renderToolPath, str, wrapToolDefinition } from "#pi/tools/utils";
 
 type EditPreview = EditDiffResult | EditDiffError;
