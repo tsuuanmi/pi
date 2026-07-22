@@ -22,7 +22,7 @@ import {
 	formatFileOperations,
 	SUMMARIZATION_SYSTEM_PROMPT,
 	serializeConversation,
-} from "#pi/compaction/message-utils";
+} from "@tsuuanmi/pi-agent";
 import { buildSessionContext, type CompactionEntry, type SessionEntry } from "#pi/session/session-manager";
 
 // ============================================================================

@@ -27,6 +27,10 @@ export {
 export { type Args, parseArgs } from "#pi/cli/args";
 // Compaction
 export {
+	type FileOperations,
+	serializeConversation,
+} from "@tsuuanmi/pi-agent";
+export {
 	type BranchPreparation,
 	type BranchSummaryResult,
 	type CollectEntriesResult,
@@ -37,7 +41,6 @@ export {
 	compact,
 	DEFAULT_COMPACTION_SETTINGS,
 	estimateTokens,
-	type FileOperations,
 	findCutPoint,
 	findTurnStartIndex,
 	type GenerateBranchSummaryOptions,
@@ -45,7 +48,6 @@ export {
 	generateSummary,
 	getLastAssistantUsage,
 	prepareBranchEntries,
-	serializeConversation,
 	shouldCompact,
 } from "#pi/compaction/index";
 // Config paths

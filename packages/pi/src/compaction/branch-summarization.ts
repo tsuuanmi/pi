@@ -22,7 +22,7 @@ import {
 	formatFileOperations,
 	SUMMARIZATION_SYSTEM_PROMPT,
 	serializeConversation,
-} from "#pi/compaction/message-utils";
+} from "@tsuuanmi/pi-agent";
 import { estimateTokens } from "#pi/compaction/session-compaction";
 import type { ReadonlySessionManager, SessionEntry } from "#pi/session/session-manager";
 
@@ -44,7 +44,7 @@ export interface BranchSummaryDetails {
 	modifiedFiles: string[];
 }
 
-export type { FileOperations } from "#pi/compaction/message-utils";
+export type { FileOperations } from "@tsuuanmi/pi-agent";
 
 export interface BranchPreparation {
 	/** Messages extracted for summarization, in chronological order */

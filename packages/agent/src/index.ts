@@ -10,6 +10,7 @@ export * from "#agent/api/extension-contract";
 export * from "#agent/env/types";
 // Messages (BashExecutionMessage, CustomMessage, convertToLlm, etc.)
 export * from "#agent/messages";
+export * from "#agent/compaction/message-utils";
 export * from "#agent/receipts/structured-receipt";
 // Subagent types and utilities
 export * from "#agent/subagents/subagent-manager";
