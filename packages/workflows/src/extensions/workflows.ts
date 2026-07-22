@@ -27,7 +27,7 @@ export default function workflowsExtension(pi: ExtensionAPI): void {
 		await refreshHudUi(ctx);
 	});
 	pi.on("before_agent_start", async (_event, ctx) => {
-		if (ctx.skipWorkflowContinuation) return undefined;
+		if (ctx.skipAutomaticContinuation) return undefined;
 		await refreshHudUi(ctx);
 		return undefined;
 	});

@@ -4,7 +4,7 @@ export * from "#agent/agent/agent";
 export * from "#agent/agent/agent-loop";
 // Types
 export * from "#agent/agent/types";
-// Shared extension + subagent contract (lower-layer surface for pi-workflows etc.)
+// Shared extension + subagent contract (lower-layer surface for higher-level packages)
 export * from "#agent/api/extension-contract";
 export * from "#agent/compaction/message-utils";
 // Environment types (ExecutionEnv, FileSystem, Shell, Result, etc.)

@@ -894,6 +894,7 @@ export class InteractiveMode {
 				})();
 			},
 			getSystemPrompt: () => this.session.systemPrompt,
+			skipAutomaticContinuation: false,
 			skipWorkflowContinuation: false,
 		});
 

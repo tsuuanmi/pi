@@ -14,7 +14,7 @@
 - [Types](types.md) - `AgentMessage`, `AgentTool`, `AgentEvent`, `AgentContext`, tool result/update types, and loop option types.
 - [Tool Registration](tools.md) - `createAgentToolRegistry()`, `registerAgentTools()`, and `Agent.registerTools()` for host-owned tools.
 - [Messages](messages.md) - non-LLM agent message roles and `convertToLlm()` conversion.
-- [Extension Contract](extension-contract.md) - minimal extension/tool/UI/subagent host contracts shared with workflow packages.
+- [Extension Contract](extension-contract.md) - minimal extension/tool/UI/subagent host contracts shared with higher-level packages.
 - [Proxy Stream](proxy.md) - `streamProxy()` for routing LLM calls through a server proxy.
 - [Observability](observability.md) - lifecycle events and instrumentation points emitted by `Agent` and the loop.
 

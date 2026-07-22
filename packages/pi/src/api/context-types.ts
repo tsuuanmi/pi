@@ -48,6 +48,8 @@ export interface ExtensionContext {
 	model: Model<any> | undefined;
 	/** Pi-native subagent manager, when available for this runtime. */
 	subagents?: SubagentManager;
+	/** True when automatic continuation prompts should be skipped (subagent sessions). */
+	skipAutomaticContinuation: boolean;
 	/** True when workflow continuation prompts should be skipped (subagent sessions). */
 	skipWorkflowContinuation: boolean;
 	/** Whether the agent is idle (not streaming) */

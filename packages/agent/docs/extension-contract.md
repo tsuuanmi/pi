@@ -1,6 +1,6 @@
 # Extension Contract
 
-`src/api/extension-contract.ts` defines the minimal host surface that workflow and extension packages can depend on without importing the full pi host.
+`src/api/extension-contract.ts` defines the minimal host surface that extension packages can depend on without importing the full pi host.
 
 ## Tool contract
 
@@ -39,7 +39,7 @@ interface ExtensionContext {
   cwd: string;
   sessionManager: { getSessionId(): string };
   subagents?: SubagentManager;
-  skipWorkflowContinuation: boolean;
+  skipAutomaticContinuation: boolean;
   getMcpServerInfos(): MCPServerInfo[];
   getSystemPrompt(): string;
 }

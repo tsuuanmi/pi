@@ -1,6 +1,6 @@
 # Subagents
 
-`src/subagents/*` exposes lower-layer subagent contracts used by workflow packages and host implementations. The package does not implement a full subagent runner here; it defines the shared types, factory registry, progress tracking, and yield-result extraction.
+`src/subagents/*` exposes lower-layer subagent contracts used by higher-level packages and host implementations. The package does not implement a full subagent runner here; it defines the shared types, factory registry, progress tracking, and yield-result extraction.
 
 ## Manager contract
 
@@ -37,7 +37,7 @@ const factory = getSubagentManagerFactory();
 clearSubagentManagerFactoryForTests();
 ```
 
-`SubagentManagerFactoryContext` includes `cwd`, optional `agentDir`, extension flag values, resource-loader options, and an owner lifecycle abort signal. Host packages register a factory; workflow/runtime packages look it up without depending on the host implementation.
+`SubagentManagerFactoryContext` includes `cwd`, optional `agentDir`, extension flag values, resource-loader options, and an owner lifecycle abort signal. Host packages register a factory; runtime packages look it up without depending on the host implementation.
 
 ## Progress tracking
 

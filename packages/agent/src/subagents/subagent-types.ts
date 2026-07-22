@@ -1,8 +1,8 @@
 /**
  * Subagent record, request, and result types.
  *
- * Shared by @tsuuanmi/pi-agent consumers (e.g. @tsuuanmi/pi-workflows) and
- * @tsuuanmi/pi so the subagent contract lives in the lower layer.
+ * Shared by @tsuuanmi/pi-agent consumers and @tsuuanmi/pi so the subagent
+ * contract lives in the lower layer.
  */
 
 import type { AgentMessage, ThinkingLevel } from "#agent/agent/types";

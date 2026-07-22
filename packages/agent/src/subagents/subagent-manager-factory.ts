@@ -1,16 +1,15 @@
 /**
  * Subagent manager factory registry.
  *
- * The registration seam that lets `pi-workflows` obtain a `SubagentManager`
- * without depending on `pi`. `pi` registers a factory
- * at module load (which runs in the detached owner process because it loads via
- * the `pi` entry). `pi-workflows`' `RuntimeOwner` looks up the factory at startup
- * and routes `subagents.*` RPC verbs to the built manager.
+ * The registration seam that lets higher-level packages obtain a
+ * `SubagentManager` without depending on `pi`. `pi` registers a factory at
+ * module load (which runs in the detached owner process because it loads via
+ * the `pi` entry). Runtime owners look up the factory at startup and route
+ * `subagents.*` RPC verbs to the built manager.
  *
- * Design principle: workflows = skills + state (only looks up and routes);
- * subagent management is a reusable agent-layer capability. The factory impl
- * (building `AgentSessionServices` + `SubagentManager`) stays in `pi`;
- * only the contract lives here in `pi-agent`.
+ * Design principle: subagent management is a reusable agent-layer capability.
+ * The factory impl (building `AgentSessionServices` + `SubagentManager`) stays
+ * in `pi`; only the contract lives here in `pi-agent`.
  */
 import type { SubagentManager } from "#agent/subagents/subagent-manager";
 
@@ -44,7 +43,7 @@ export function registerSubagentManagerFactory(fn: SubagentManagerFactory): void
 	factory = fn;
 }
 
-/** Look up the registered factory (`pi-workflows` calls this at owner startup). Returns undefined if none registered. */
+/** Look up the registered factory. Returns undefined if none registered. */
 export function getSubagentManagerFactory(): SubagentManagerFactory | undefined {
 	return factory;
 }

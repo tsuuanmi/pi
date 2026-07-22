@@ -593,6 +593,10 @@ export class ExtensionRunner {
 				runner.assertActive();
 				return runner.skipWorkflowContinuation;
 			},
+			get skipAutomaticContinuation() {
+				runner.assertActive();
+				return runner.skipWorkflowContinuation;
+			},
 			isIdle: () => {
 				runner.assertActive();
 				return runner.isIdleFn();

@@ -2,8 +2,8 @@
  * Minimal subagent manager contract.
  *
  * @tsuuanmi/pi's `SubagentManager` class satisfies this interface
- * structurally; @tsuuanmi/pi-workflows programs against this lower-layer
- * contract so it does not depend on the pi package.
+ * structurally; higher-level packages program against this lower-layer
+ * contract so they do not depend on the pi package.
  */
 import type {
 	SubagentAttachResult,

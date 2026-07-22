@@ -2,7 +2,7 @@
 
 Unified LLM API with automatic model discovery, provider configuration, token and cost tracking, and simple context persistence and hand-off to other models mid-session.
 
-**Note**: This library only includes models that support tool calling (function calling), as this is essential for agentic workflows.
+**Note**: This library only includes models that support tool calling (function calling), as this is essential for agentic applications.
 
 ## Table of Contents
 
@@ -860,7 +860,7 @@ All providers can handle messages from other providers, including:
 - Thinking/reasoning blocks (transformed to tagged text for cross-provider compatibility)
 - Aborted messages with partial content
 
-This enables flexible workflows where you can:
+This enables flexible multi-provider applications where you can:
 - Start with a fast model for initial responses
 - Switch to a more capable model for complex reasoning
 - Use specialized models for specific tasks

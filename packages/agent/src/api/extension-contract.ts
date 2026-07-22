@@ -1,10 +1,9 @@
 /**
- * Extension contract — the minimal host surface that workflow/extension
- * packages program against.
+ * Extension contract — the minimal host surface that extension packages
+ * program against.
  *
- * This lives in @tsuuanmi/pi-agent (the lower layer) so that packages such
- * as @tsuuanmi/pi-workflows can depend only on agent-core and not on
- * @tsuuanmi/pi. @tsuuanmi/pi's full
+ * This lives in @tsuuanmi/pi-agent (the lower layer) so that higher-level
+ * packages can depend only on agent-core and not on @tsuuanmi/pi. @tsuuanmi/pi's full
  * `ExtensionAPI`/`ExtensionContext`/`ToolDefinition`/`SubagentManager` types
  * structurally satisfy these contracts (superset of members, method-shorthand
  * bivariance), so the host can pass its real objects where these minimal
@@ -58,18 +57,18 @@ export interface ExtensionWidgetOptions {
 	placement?: string;
 }
 
-/** Minimal UI context used by workflow HUD/status updates. */
+/** Minimal UI context used by extension HUD/status updates. */
 export interface ExtensionUIContext {
 	setStatus(key: string, text: string | undefined): void;
 	setWidget(key: string, content: string[] | undefined, options?: ExtensionWidgetOptions): void;
 }
 
-/** Minimal read-only session manager surface used by workflows. */
+/** Minimal read-only session manager surface used by extensions. */
 export interface ReadonlySessionManager {
 	getSessionId(): string;
 }
 
-/** Minimal MCP server info used by workflow HUD rendering. */
+/** Minimal MCP server info used by extension HUD rendering. */
 export interface MCPServerInfo {
 	name: string;
 	status: string;
@@ -87,7 +86,7 @@ export interface ExtensionContext {
 	cwd: string;
 	sessionManager: ReadonlySessionManager;
 	subagents?: SubagentManager;
-	skipWorkflowContinuation: boolean;
+	skipAutomaticContinuation: boolean;
 	getMcpServerInfos(): MCPServerInfo[];
 	getSystemPrompt(): string;
 }
@@ -141,7 +140,7 @@ interface ToolCallEventResult {
 // ============================================================================
 
 /**
- * Minimal host extension API used by workflow extensions. The pi
+ * Minimal host extension API used by extension packages. The pi
  * host exposes a superset of these members.
  */
 export interface ExtensionAPI {
