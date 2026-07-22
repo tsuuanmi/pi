@@ -30,7 +30,7 @@ Existing sessions are automatically migrated to the current version (v3) when lo
 
 Source on GitHub ([pi-mono](https://github.com/tsuuanmi/pi)):
 - [`packages/pi/src/session/session-manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/session-manager.ts) - Session entry types and SessionManager
-- [`packages/agent/src/harness/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/harness/messages.ts) - Extended message types (BashExecutionMessage, CustomMessage, etc.)
+- [`packages/agent/src/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/messages.ts) - Extended message types (BashExecutionMessage, CustomMessage, etc.)
 - [`packages/ai/src/core/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/core/types.ts) - Base message types (UserMessage, AssistantMessage, ToolResultMessage)
 - [`packages/agent/src/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/types.ts) - AgentMessage union type
 

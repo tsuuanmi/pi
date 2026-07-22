@@ -12,19 +12,19 @@
 - [Agent Loop](agent-loop.md) - `agentLoop()`, `agentLoopContinue()`, turn execution, tool execution, steering, follow-up, and abort handling.
 - [Agent](agent.md) - `Agent` class, state management, event subscription, message queues, and lifecycle control.
 - [Types](types.md) - `AgentMessage`, `AgentTool`, `AgentEvent`, `AgentContext`, tool result/update types, and loop option types.
-- [Messages](harness/messages.md) - non-LLM harness message roles and `convertToLlm()` conversion.
-- [Extension Contract](harness/extension-contract.md) - minimal extension/tool/UI/subagent host contracts shared with workflow packages.
+- [Messages](messages.md) - non-LLM agent message roles and `convertToLlm()` conversion.
+- [Extension Contract](extension-contract.md) - minimal extension/tool/UI/subagent host contracts shared with workflow packages.
 - [Proxy Stream](proxy.md) - `streamProxy()` for routing LLM calls through a server proxy.
 - [Observability](observability.md) - lifecycle events and instrumentation points emitted by `Agent` and the loop.
 
-## Harness contracts and utilities
+## Shared contracts and utilities
 
-- [Execution Environment Types](harness/env/nodejs.md) - `ExecutionEnv`, `FileSystem`, `Shell`, typed `Result`, `FileError`, `ExecutionError`, and `NodeExecutionEnv`.
-- [Subagents](harness/subagents.md) - `SubagentManager`, durable record/request/result types, factory registry, progress tracking, and yield-result extraction.
-- [Shell Output](harness/utils/shell-output.md) - `executeShellWithCapture()` and binary-output sanitization.
-- [Truncation](harness/utils/truncate.md) - `truncateHead()`, `truncateTail()`, `truncateLine()`, and truncation metadata.
-- [Node Utilities](harness/utils/node.md) - Node-only child-process, JSONL, path, and file-mutation queue helpers.
+- [Execution Environment Types](env/nodejs.md) - `ExecutionEnv`, `FileSystem`, `Shell`, typed `Result`, `FileError`, `ExecutionError`, and `NodeExecutionEnv`.
+- [Subagents](subagents.md) - `SubagentManager`, durable record/request/result types, factory registry, progress tracking, and yield-result extraction.
+- [Shell Output](utils/shell-output.md) - `executeShellWithCapture()` and binary-output sanitization.
+- [Truncation](utils/truncate.md) - `truncateHead()`, `truncateTail()`, `truncateLine()`, and truncation metadata.
+- [Node Utilities](utils/node.md) - Node-only child-process, JSONL, path, and file-mutation queue helpers.
 
 ## Historical docs
 
-The following files are retained as compatibility notes for APIs that no longer live in `packages/agent/src`: [AgentHarness](harness/agent-harness.md), [Durable Harness](harness/durable-harness.md), [Hooks](harness/hooks.md), [Compaction](harness/compaction/compaction.md), [Session](harness/session/session.md), [Prompt Templates](harness/prompt-templates.md), [Skills](harness/skills.md), and [System Prompt](harness/system-prompt.md).
+The following files are retained as compatibility notes for APIs that no longer live in `packages/agent/src`: [AgentHarness](legacy/agent-harness.md), [Durable Harness](legacy/durable-harness.md), [Hooks](legacy/hooks.md), [Compaction](legacy/compaction.md), [Session](legacy/session.md), [Prompt Templates](legacy/prompt-templates.md), [Skills](legacy/skills.md), and [System Prompt](legacy/system-prompt.md).

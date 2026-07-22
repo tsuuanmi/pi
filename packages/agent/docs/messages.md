@@ -1,6 +1,6 @@
-# Harness Messages
+# Agent Messages
 
-`src/harness/messages.ts` defines harness-only message roles and conversion helpers used before sending context to the LLM.
+`src/messages.ts` defines agent-specific message roles and conversion helpers used before sending context to the LLM.
 
 ## Message roles
 

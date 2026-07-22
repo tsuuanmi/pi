@@ -51,7 +51,7 @@ Base messages from [`packages/ai/src/core/types.ts`](https://github.com/tsuuanmi
 - `AssistantMessage` (line 140)
 - `ToolResultMessage` (line 152)
 
-Extended messages from [`packages/agent/src/harness/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/harness/messages.ts):
+Extended messages from [`packages/agent/src/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/messages.ts):
 - `BashExecutionMessage`
 - `CustomMessage`
 - `BranchSummaryMessage`

@@ -1,7 +1,7 @@
-export { NodeExecutionEnv } from "#agent/harness/env/nodejs";
-// Node-only utilities (require Node.js built-ins)
-export * from "#agent/harness/utils/child-process";
-export * from "#agent/harness/utils/file-mutation-queue";
-export * from "#agent/harness/utils/jsonl";
-export * from "#agent/harness/utils/paths";
+export { NodeExecutionEnv } from "#agent/env/nodejs";
 export * from "#agent/index";
+// Node-only utilities (require Node.js built-ins)
+export * from "#agent/utils/child-process";
+export * from "#agent/utils/file-mutation-queue";
+export * from "#agent/utils/jsonl";
+export * from "#agent/utils/paths";

@@ -7,6 +7,10 @@
 - **subagents**: Added shared inspect, attach, and kill result types to the `SubagentManager` contract.
 - **subagents**: Added the shared `Subagent Run Identity` JSON schema and typed helpers for tmux-backed subagent owner/session/target metadata.
 
+### Breaking Changes
+
+- **agent**: Moved the remaining shared source modules out of `src/harness/` into top-level `src/env`, `src/subagents`, `src/utils`, and `src/messages.ts` paths; no `src/harness/` compatibility wrappers are provided.
+
 ## [0.2.0] - 2026-07-20
 
 ### Added

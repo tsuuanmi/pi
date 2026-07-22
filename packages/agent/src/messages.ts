@@ -51,7 +51,7 @@ export interface CompactionSummaryMessage {
 	timestamp: number;
 }
 
-declare module "../agent/types.ts" {
+declare module "#agent/agent/types" {
 	interface CustomAgentMessages {
 		bashExecution: BashExecutionMessage;
 		custom: CustomMessage;

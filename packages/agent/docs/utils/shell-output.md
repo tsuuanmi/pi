@@ -1,6 +1,6 @@
 # Shell Output Capture
 
-`src/harness/utils/shell-output.ts` executes shell commands through an `ExecutionEnv` while capturing combined stdout/stderr for display and context.
+`src/utils/shell-output.ts` executes shell commands through an `ExecutionEnv` while capturing combined stdout/stderr for display and context.
 
 ## `ShellCaptureOptions`
 

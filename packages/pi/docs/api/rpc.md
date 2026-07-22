@@ -1165,7 +1165,7 @@ Parse errors:
 Source files:
 - [`packages/ai/src/core/types.ts`](../../../ai/src/core/types.ts) - `Model`, `UserMessage`, `AssistantMessage`, `ToolResultMessage`
 - [`packages/agent/src/types.ts`](../../../agent/src/types.ts) - `AgentMessage`, `AgentEvent`
-- [`packages/agent/src/harness/messages.ts`](../../../agent/src/harness/messages.ts) - `BashExecutionMessage`
+- [`packages/agent/src/messages.ts`](../../../agent/src/messages.ts) - `BashExecutionMessage`
 - [`src/modes/rpc/rpc-types.ts`](../../src/modes/rpc/rpc-types.ts) - RPC command/response types, extension UI request/response types
 
 ### Model

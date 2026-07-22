@@ -2,7 +2,7 @@
  * Environment types for the Node.js execution environment.
  *
  * Provides filesystem and shell execution abstractions, result utilities,
- * and error types. Extracted from the harness types module for use by
+ * and error types. Extracted from the legacy harness types module for use by
  * NodeExecutionEnv and related utilities.
  */
 
@@ -121,7 +121,7 @@ export interface ExecutionEnvExecOptions {
 }
 
 /**
- * Filesystem capability used by the harness.
+ * Filesystem capability used by the agent runtime.
  *
  * Paths passed to methods may be absolute or relative to {@link cwd}. Paths returned by file operations are addressed paths
  * in the filesystem namespace, but are not canonicalized through symlinks unless returned by {@link canonicalPath}.
@@ -181,7 +181,7 @@ export interface FileSystem {
 	cleanup(): Promise<void>;
 }
 
-/** Shell execution capability used by the harness. */
+/** Shell execution capability used by the agent runtime. */
 export interface Shell {
 	/** Execute a shell command in {@link FileSystem.cwd} unless `options.cwd` is provided. */
 	exec(
@@ -192,5 +192,5 @@ export interface Shell {
 	cleanup(): Promise<void>;
 }
 
-/** Filesystem and process execution environment used by the harness. */
+/** Filesystem and process execution environment used by the agent runtime. */
 export interface ExecutionEnv extends FileSystem, Shell {}

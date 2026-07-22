@@ -6,8 +6,8 @@
  */
 
 import type { AgentMessage, ThinkingLevel } from "#agent/agent/types";
-import type { SubagentProgress } from "#agent/harness/subagents/subagent-progress";
-import type { YieldDetails } from "#agent/harness/subagents/yield-result";
+import type { SubagentProgress } from "#agent/subagents/subagent-progress";
+import type { YieldDetails } from "#agent/subagents/yield-result";
 
 export type SubagentStatus = "queued" | "running" | "paused" | "completed" | "failed" | "cancelled";
 export type SubagentResumeFailureReason = "context_unavailable" | "not_found" | "no_runner" | "resume_failed";

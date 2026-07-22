@@ -1,6 +1,6 @@
 # Subagents
 
-`src/harness/subagents/*` exposes lower-layer subagent contracts used by workflow packages and host implementations. The package does not implement a full subagent runner here; it defines the shared types, factory registry, progress tracking, and yield-result extraction.
+`src/subagents/*` exposes lower-layer subagent contracts used by workflow packages and host implementations. The package does not implement a full subagent runner here; it defines the shared types, factory registry, progress tracking, and yield-result extraction.
 
 ## Manager contract
 

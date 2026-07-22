@@ -13,7 +13,7 @@
 
 import type { Static, TSchema } from "typebox";
 import type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "#agent/agent/types";
-import type { SubagentManager } from "#agent/harness/subagents/subagent-manager";
+import type { SubagentManager } from "#agent/subagents/subagent-manager";
 
 // ============================================================================
 // Tool contract

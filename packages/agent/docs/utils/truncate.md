@@ -1,6 +1,6 @@
 # Text Truncation
 
-`src/harness/utils/truncate.ts` provides shared truncation utilities for tool and shell output.
+`src/utils/truncate.ts` provides shared truncation utilities for tool and shell output.
 
 ## Constants
 

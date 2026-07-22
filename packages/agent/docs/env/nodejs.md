@@ -1,6 +1,6 @@
 # Execution Environment and Node.js Implementation
 
-`src/harness/env/types.ts` defines the execution-environment contract used by the agent layer. `src/harness/env/nodejs.ts` provides the local Node.js implementation exported from `@tsuuanmi/pi-agent/node`.
+`src/env/types.ts` defines the execution-environment contract used by the agent layer. `src/env/nodejs.ts` provides the local Node.js implementation exported from `@tsuuanmi/pi-agent/node`.
 
 ## Result helpers
 

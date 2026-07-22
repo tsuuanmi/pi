@@ -36,7 +36,7 @@ Tool events include stable identifiers and tool metadata:
 - final `result`
 - `isError`
 
-The subagent progress tracker in [`harness/subagents.md`](harness/subagents.md) consumes this same event shape to retain current tool, recent tools, and recent assistant output.
+The subagent progress tracker in [`subagents.md`](subagents.md) consumes this same event shape to retain current tool, recent tools, and recent assistant output.
 
 ## Provider request observation
 

@@ -15,7 +15,7 @@ import type {
 	SubagentResumeResult,
 	SubagentRunRequest,
 	SubagentRunResult,
-} from "#agent/harness/subagents/subagent-types";
+} from "#agent/subagents/subagent-types";
 
 export interface SubagentManager {
 	spawn(request: SubagentRunRequest): Promise<SubagentRunResult>;

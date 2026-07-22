@@ -7,7 +7,7 @@ import type {
 	SubagentTmuxPaneTarget,
 	SubagentTmuxSessionTarget,
 	SubagentTmuxTarget,
-} from "#agent/harness/subagents/subagent-types";
+} from "#agent/subagents/subagent-types";
 
 export const SUBAGENT_RUN_IDENTITY_SCHEMA_PATH = fileURLToPath(
 	new URL("./subagent-run-identity.schema.json", import.meta.url),
