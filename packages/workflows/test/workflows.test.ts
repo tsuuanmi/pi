@@ -149,6 +149,36 @@ describe("workflow runtime", () => {
 		expect(json.body?.statePath).toContain(".pi/cli-pipeline/workflows/deep-interview/state.json");
 	});
 
+	it("prints detailed workflow help", async () => {
+		const result = await runWorkflowCommand(["--help"], cwd);
+		expect(result.status).toBe(0);
+		expect(result.stdout).toContain("Workflow verbs:");
+		expect(result.stdout).toContain("pi workflow <skill> --help");
+		expect(result.stdout).toContain("pi workflow ralplan status");
+	});
+
+	it.each([
+		["deep-interview", "Deep Interview agent flow:", "questionText: string (required; exact one-question prompt)"],
+		["ralplan", "Ralplan agent flow:", "stage: planner|architect|critic|revision|expert-stage|final (required)"],
+		["team", "Team agent flow:", "reviewReport: object (required)"],
+		["ultragoal", "Ultragoal agent flow:", "qualityGate?: object (required for complete)"],
+	])("prints detailed workflow skill help for %s", async (skill, flowHeading, parameter) => {
+		const result = await runWorkflowCommand([skill, "--help"], cwd);
+		expect(result.status).toBe(0);
+		expect(result.stdout).toContain(flowHeading);
+		expect(result.stdout).toContain("Action details and parameters:");
+		expect(result.stdout).toContain(parameter);
+		expect(result.stdout).toContain(`packages/workflows/src/skills/${skill}/SKILL.md`);
+		expect(result.stdout).toContain(`packages/workflows/src/skills/${skill}/references/commands.md`);
+		expect(result.stdout).toContain(`packages/workflows/src/skills/${skill}/assets/schema.json`);
+	});
+
+	it("rejects unknown workflow help subjects", async () => {
+		const result = await runWorkflowCommand(["raplan", "--help"], cwd);
+		expect(result.status).toBe(1);
+		expect(result.stderr).toContain("unknown workflow skill or verb for help: raplan");
+	});
+
 	it("requires explicit session ids for workflow skill commands", async () => {
 		const result = await runWorkflowCommand(["deep-interview", "read-compact", "--input", "{}", "--json"], cwd);
 		expect(result.status).toBe(1);

@@ -15,10 +15,14 @@ Invoke a skill with `/skill:<name>` (e.g. `/skill:ralplan`). See [Skills](https:
 
 ## `pi workflow` control plane
 
-`pi workflow` is the CLI front end for the harness control plane. Every verb accepts `--json` for machine-readable output and `--input '<JSON object>'` for structured arguments.
+`pi workflow` is the CLI front end for the harness control plane. Every verb accepts `--json` for machine-readable output and `--input '<JSON object>'` or `--input-file <path>` for structured arguments. Use `pi workflow --help` for detailed control-plane help, and `pi workflow <deep-interview|ralplan|team|ultragoal> --help` for agent-facing skill workflow order, action parameters, examples, and references to the matching skill docs. Each skill also ships `references/commands.md` and `assets/schema.json` next to its `SKILL.md`.
 
 ```text
-pi workflow state <skill> read --json
+pi workflow <verb> [--input '{...}' | --input-file ./payload.json] [--json]
+pi workflow state <skill> <read|write|clear|handoff|doctor> [options]
+pi workflow <deep-interview|ralplan|team|ultragoal> <action> [--input '{...}' | --input-file ./payload.json] [--json]
+pi workflow <skill> --help
+
 pi workflow start --input '{"workspace":".","sessionId":"optional","detach":true}' --json
 pi workflow submit --input '{"sessionId":"h-...","prompt":"work"}' --json
 pi workflow observe --input '{"sessionId":"h-..."}' --json
@@ -30,6 +34,7 @@ pi workflow operate --input '{"sessionId":"h-...","goal":"...","maxIterations":1
 pi workflow gc [--prune] [--dry-run] --json
 pi workflow events --input '{"sessionId":"h-..."}' --json
 pi workflow retire --input '{"sessionId":"h-..."}' --json
+pi workflow ralplan status --input '{"sessionId":"h-..."}' --json
 ```
 
 State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`.

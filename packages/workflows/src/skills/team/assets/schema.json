@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tsuuanmi.github.io/pi/schemas/workflows/team/schema.json",
+  "title": "pi workflow team command input",
+  "description": "JSON payloads accepted by `pi workflow team <action> --input ...`. The CLI action is selected positionally; validate the object against the matching action definition.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sessionId": { "$ref": "#/$defs/sessionId" },
+    "teamId": { "type": "string" },
+    "task": { "type": "string" },
+    "workers": { "type": "array", "items": { "$ref": "#/$defs/worker" } },
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "owner": { "type": "string" },
+    "dependsOn": { "type": "array", "items": { "type": "string" } },
+    "taskId": { "type": "string" },
+    "status": { "type": "string" },
+    "workerId": { "type": "string" },
+    "evidence": { "type": "object", "additionalProperties": true },
+    "from": { "type": "string" },
+    "to": { "type": "string" },
+    "body": { "type": "string" },
+    "idempotencyKey": { "type": "string" },
+    "reviewReport": { "type": "object", "additionalProperties": true },
+    "evidenceMatrix": { "type": "object", "additionalProperties": true },
+    "recordedBy": { "type": "string" },
+    "phase": { "type": "string", "enum": ["complete", "failed", "cancelled"] },
+    "summary": { "type": "string" }
+  },
+  "$defs": {
+    "sessionId": {
+      "type": "string",
+      "description": "Current Pi session id. Required in agent/runtime use even when the CLI can resolve fallback state."
+    },
+    "worker": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" }
+      }
+    },
+    "startInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "task": { "type": "string" },
+        "teamId": { "type": "string" },
+        "workers": { "type": "array", "items": { "$ref": "#/$defs/worker" } }
+      }
+    },
+    "snapshotInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "teamId": { "type": "string" }
+      }
+    },
+    "readCompactInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "teamId": { "type": "string" }
+      }
+    },
+    "createTaskInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "description"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "teamId": { "type": "string" },
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "owner": { "type": "string" },
+        "dependsOn": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "transitionTaskInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["taskId", "status"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "teamId": { "type": "string" },
+        "taskId": { "type": "string" },
+        "status": { "type": "string" },
+        "workerId": { "type": "string" },
+        "evidence": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "sendMessageInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "body"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "teamId": { "type": "string" },
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "body": { "type": "string" },
+        "idempotencyKey": { "type": "string" }
+      }
+    },
+    "recordReviewGateInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["taskId", "reviewReport"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "teamId": { "type": "string" },
+        "taskId": { "type": "string" },
+        "reviewReport": { "type": "object", "additionalProperties": true },
+        "recordedBy": { "type": "string" }
+      }
+    },
+    "recordCompletionGateInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidenceMatrix"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "teamId": { "type": "string" },
+        "evidenceMatrix": { "type": "object", "additionalProperties": true },
+        "recordedBy": { "type": "string" }
+      }
+    },
+    "completeInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "teamId": { "type": "string" },
+        "phase": { "type": "string", "enum": ["complete", "failed", "cancelled"] },
+        "summary": { "type": "string" }
+      }
+    }
+  },
+  "x-pi-actions": {
+    "start": { "$ref": "#/$defs/startInput" },
+    "snapshot": { "$ref": "#/$defs/snapshotInput" },
+    "read-compact": { "$ref": "#/$defs/readCompactInput" },
+    "create-task": { "$ref": "#/$defs/createTaskInput" },
+    "transition-task": { "$ref": "#/$defs/transitionTaskInput" },
+    "send-message": { "$ref": "#/$defs/sendMessageInput" },
+    "record-review-gate": { "$ref": "#/$defs/recordReviewGateInput" },
+    "record-completion-gate": { "$ref": "#/$defs/recordCompletionGateInput" },
+    "complete": { "$ref": "#/$defs/completeInput" }
+  },
+  "examples": [
+    { "sessionId": "h-...", "task": "Approved implementation plan..." },
+    { "sessionId": "h-...", "title": "Worker task", "description": "Implement scoped change" },
+    { "sessionId": "h-...", "taskId": "task-1", "reviewReport": { "verdict": "pass" } }
+  ]
+}

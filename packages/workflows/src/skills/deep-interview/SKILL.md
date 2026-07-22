@@ -53,6 +53,13 @@ AI can build anything; the hard part is knowing what to build. Single-pass "what
 - After 3 consecutive agent-resolved answers (accepted auto-research candidates or auto-answers), route the next question to the user (dialectic rhythm guard).
 - Run an independent closure audit and a one-sentence goal restatement, each requiring explicit user confirmation, before crystallizing the spec.
 
+## Skill Resources
+
+- Workflow command guide: [references/commands.md](references/commands.md)
+- JSON payload schema for `pi workflow deep-interview <action>`: [assets/schema.json](assets/schema.json)
+
+Critical: before running any `pi workflow deep-interview <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Do not guess `--input` or `--input-file` fields; select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
+
 ## Tools
 
 Pi has no `ask` tool. Ask each question as a single prose message. For option-bearing questions, present a short numbered option list in the same message, plus "free text". Explain every option in simple terms (what it means, when it fits, and the main tradeoff), then mark **Recommended:** with the best option and a concise reason. After the user responds, record the round with `pi workflow deep-interview record-answer` — `selectedOptions` for option picks, `customInput` for free text.

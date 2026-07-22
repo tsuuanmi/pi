@@ -8,6 +8,13 @@ argument-hint: "[--interactive] [--deliberate] <task or spec path>"
 
 Ralplan is Pi's consensus planning workflow. It produces a durable pending-approval plan before execution.
 
+## Skill Resources
+
+- Workflow command guide: [references/commands.md](references/commands.md)
+- JSON payload schema for `pi workflow ralplan <action>`: [assets/schema.json](assets/schema.json)
+
+Critical: before running any `pi workflow ralplan <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Do not guess `--input` or `--input-file` fields; select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
+
 ## Boundaries
 
 - Planning only. Do not mutate product files, commit, push, or invoke execution until the user explicitly approves execution.

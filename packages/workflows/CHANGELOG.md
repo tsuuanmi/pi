@@ -2,6 +2,7 @@
 
 ### Added
 
+- **commands**: `pi workflow --help` and `pi workflow <skill> --help` now show detailed workflow verbs, skill actions, options, examples, docs, and skill-local JSON schema references.
 - **subagents**: Subagent tools now attach shared `@tsuuanmi/pi-agent` structured receipts for current-session status and inspection visibility.
 
 ## [0.2.0] - 2026-07-20

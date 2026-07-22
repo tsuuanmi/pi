@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tsuuanmi.github.io/pi/schemas/workflows/ralplan/schema.json",
+  "title": "pi workflow ralplan command input",
+  "description": "JSON payloads accepted by `pi workflow ralplan <action> --input ...`. The CLI action is selected positionally; validate the object against the matching action definition.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sessionId": { "$ref": "#/$defs/sessionId" },
+    "runId": { "type": "string" },
+    "contextMap": { "type": "object", "additionalProperties": true },
+    "recordedBy": { "type": "string" },
+    "stage": { "type": "string", "enum": ["planner", "architect", "critic", "revision", "expert-stage", "adr", "final"] },
+    "stageN": { "type": "number" },
+    "artifact": { "type": "string" },
+    "plannerSubagentId": { "type": "string" },
+    "plannerResumable": { "type": "boolean" },
+    "approved": { "type": "boolean" },
+    "target": { "type": "string", "enum": ["ultragoal", "team", "stop"] },
+    "note": { "type": "string" },
+    "overrideCriticVerdict": { "type": "boolean" }
+  },
+  "$defs": {
+    "sessionId": {
+      "type": "string",
+      "description": "Current Pi session id. Required in agent/runtime use even when the CLI can resolve fallback state."
+    },
+    "recordExplorerGateInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contextMap"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "runId": { "type": "string" },
+        "contextMap": { "type": "object", "additionalProperties": true },
+        "recordedBy": { "type": "string" }
+      }
+    },
+    "writeArtifactInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "stageN", "artifact"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "runId": { "type": "string" },
+        "stage": { "type": "string", "enum": ["planner", "architect", "critic", "revision", "expert-stage", "adr", "final"] },
+        "stageN": { "type": "number" },
+        "artifact": { "type": "string", "description": "Markdown content or readable file path." },
+        "plannerSubagentId": { "type": "string" },
+        "plannerResumable": { "type": "boolean" }
+      }
+    },
+    "statusInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "runId": { "type": "string" }
+      }
+    },
+    "readCompactInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "runId": { "type": "string" }
+      }
+    },
+    "doctorInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "runId": { "type": "string" }
+      }
+    },
+    "approvePlanInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "runId": { "type": "string" },
+        "target": { "type": "string", "enum": ["ultragoal", "team", "stop"] },
+        "approved": { "type": "boolean", "default": true },
+        "note": { "type": "string" },
+        "overrideCriticVerdict": { "type": "boolean" }
+      }
+    }
+  },
+  "x-pi-actions": {
+    "record-explorer-gate": { "$ref": "#/$defs/recordExplorerGateInput" },
+    "write-artifact": { "$ref": "#/$defs/writeArtifactInput" },
+    "status": { "$ref": "#/$defs/statusInput" },
+    "read-compact": { "$ref": "#/$defs/readCompactInput" },
+    "doctor": { "$ref": "#/$defs/doctorInput" },
+    "approve-plan": { "$ref": "#/$defs/approvePlanInput" }
+  },
+  "examples": [
+    { "sessionId": "h-...", "stage": "planner", "stageN": 1, "artifact": "# Planner pass\n..." },
+    { "sessionId": "h-...", "runId": "ralplan-..." },
+    { "sessionId": "h-...", "approved": true, "target": "ultragoal" }
+  ]
+}

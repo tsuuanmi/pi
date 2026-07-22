@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tsuuanmi.github.io/pi/schemas/workflows/deep-interview/schema.json",
+  "title": "pi workflow deep-interview command input",
+  "description": "JSON payloads accepted by `pi workflow deep-interview <action> --input ...`. The CLI action is selected positionally; validate the object against the matching action definition.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sessionId": { "$ref": "#/$defs/sessionId" },
+    "round": { "type": "number" },
+    "questionId": { "type": "string" },
+    "questionText": { "type": "string" },
+    "component": { "type": "string" },
+    "dimension": { "type": "string" },
+    "ambiguity": { "type": "number", "minimum": 0, "maximum": 1 },
+    "rationale": { "type": "string" },
+    "interviewId": { "type": "string" },
+    "round_id": { "type": "string" },
+    "selectedOptions": { "type": "array", "items": { "type": "string" } },
+    "customInput": { "type": "string" },
+    "topology": { "type": "object", "additionalProperties": true },
+    "scores": { "type": "object", "additionalProperties": { "type": "number" } },
+    "triggers": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "metadata": { "type": "object", "additionalProperties": true },
+    "lastN": { "type": "number" },
+    "restatedGoal": { "type": "string" },
+    "confirm": { "type": "string", "enum": ["Yes", "Adjust", "Missing"] },
+    "adjustment": { "type": "string" },
+    "slug": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
+    "spec": { "type": "string" },
+    "handoff": { "type": "string", "enum": ["ralplan", "team", "ultragoal", "stop"] },
+    "allowEarlyExit": { "type": "boolean" }
+  },
+  "$defs": {
+    "sessionId": {
+      "type": "string",
+      "description": "Current Pi session id. Required in agent/runtime use even when the CLI can resolve fallback state."
+    },
+    "planQuestionInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["round", "questionText"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "round": { "type": "number" },
+        "questionId": { "type": "string" },
+        "questionText": { "type": "string" },
+        "component": { "type": "string" },
+        "dimension": { "type": "string" },
+        "ambiguity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rationale": { "type": "string" }
+      }
+    },
+    "recordAnswerInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "interviewId": { "type": "string" },
+        "round": { "type": "number" },
+        "round_id": { "type": "string" },
+        "questionId": { "type": "string" },
+        "questionText": { "type": "string" },
+        "component": { "type": "string" },
+        "dimension": { "type": "string" },
+        "ambiguity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "selectedOptions": { "type": "array", "items": { "type": "string" } },
+        "customInput": { "type": "string" },
+        "topology": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "recordScoringInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["round", "scores", "ambiguity"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "interviewId": { "type": "string" },
+        "round": { "type": "number" },
+        "round_id": { "type": "string" },
+        "questionId": { "type": "string" },
+        "scores": { "type": "object", "additionalProperties": { "type": "number" } },
+        "ambiguity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "triggers": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "metadata": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "readCompactInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "lastN": { "type": "number" }
+      }
+    },
+    "closureCheckInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" }
+      }
+    },
+    "restateGoalInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["restatedGoal", "confirm"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "restatedGoal": { "type": "string" },
+        "confirm": { "type": "string", "enum": ["Yes", "Adjust", "Missing"] },
+        "adjustment": { "type": "string" }
+      }
+    },
+    "writeSpecInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spec"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/sessionId" },
+        "slug": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
+        "spec": { "type": "string" },
+        "handoff": { "type": "string", "enum": ["ralplan", "team", "ultragoal", "stop"] },
+        "allowEarlyExit": { "type": "boolean" }
+      }
+    }
+  },
+  "x-pi-actions": {
+    "plan-question": { "$ref": "#/$defs/planQuestionInput" },
+    "record-answer": { "$ref": "#/$defs/recordAnswerInput" },
+    "record-scoring": { "$ref": "#/$defs/recordScoringInput" },
+    "read-compact": { "$ref": "#/$defs/readCompactInput" },
+    "closure-check": { "$ref": "#/$defs/closureCheckInput" },
+    "restate-goal": { "$ref": "#/$defs/restateGoalInput" },
+    "write-spec": { "$ref": "#/$defs/writeSpecInput" }
+  },
+  "examples": [
+    { "sessionId": "h-...", "round": 1, "questionText": "Which user outcome matters most?" },
+    { "sessionId": "h-...", "round": 1, "scores": { "goal": 0.4, "constraints": 0.2 }, "ambiguity": 0.3 },
+    { "sessionId": "h-...", "slug": "my-spec", "spec": "# Spec\n...", "handoff": "ralplan" }
+  ]
+}

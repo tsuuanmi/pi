@@ -8,6 +8,13 @@ argument-hint: "<approved plan or task>"
 
 Team coordinates multiple implementation workstreams. Use it only after the user explicitly approves execution.
 
+## Skill Resources
+
+- Workflow command guide: [references/commands.md](references/commands.md)
+- JSON payload schema for `pi workflow team <action>`: [assets/schema.json](assets/schema.json)
+
+Critical: before running any `pi workflow team <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Do not guess `--input` or `--input-file` fields; select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
+
 ## Current-Session Command Propagation
 
 - When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source) — do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution.

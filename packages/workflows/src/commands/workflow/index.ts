@@ -1,7 +1,10 @@
 import {
+	isTopLevelWorkflowVerb,
+	isWorkflowSkill,
 	type ParsedWorkflowCommand,
 	parseWorkflowArgs,
 	parseWorkflowInput,
+	skillUsage,
 	usage,
 } from "#workflows/commands/workflow/args";
 import {
@@ -25,7 +28,13 @@ import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
 export { runStateCommand } from "#workflows/commands/workflow/state";
 
 async function dispatch(parsed: ParsedWorkflowCommand, cwd: string): Promise<WorkflowCommandResult> {
-	if (parsed.help) return { status: 0, stdout: usage(), stderr: "" };
+	if (parsed.help) {
+		if (isWorkflowSkill(parsed.verb)) return { status: 0, stdout: skillUsage(parsed.verb), stderr: "" };
+		if (parsed.verb === "observe" || isTopLevelWorkflowVerb(parsed.verb)) {
+			return { status: 0, stdout: usage(), stderr: "" };
+		}
+		throw new Error(`unknown workflow skill or verb for help: ${parsed.verb}`);
+	}
 	if (parsed.verb !== "gc" && (parsed.prune || parsed.dryRun)) {
 		throw new Error(`--prune/--dry-run are only supported for pi workflow gc, not ${parsed.verb}`);
 	}

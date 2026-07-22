@@ -8,6 +8,13 @@ argument-hint: "<approved plan or concrete task>"
 
 Ultragoal executes an approved concrete goal end-to-end with verification.
 
+## Skill Resources
+
+- Workflow command guide: [references/commands.md](references/commands.md)
+- JSON payload schema for `pi workflow ultragoal <action>`: [assets/schema.json](assets/schema.json)
+
+Critical: before running any `pi workflow ultragoal <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Do not guess `--input` or `--input-file` fields; select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
+
 ## Current-Session Command Propagation
 
 - When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source) — do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution.
@@ -51,90 +58,9 @@ Ultragoal executes an approved concrete goal end-to-end with verification.
 
 ## Complete checkpoint quality gate
 
-Complete checkpoints hard-break to the full gate shape. Do not guess the nested schema: include every field below. The runtime reports missing nested fields together, but a valid complete checkpoint must be self-contained and replayable enough for review.
+Complete checkpoints hard-break to the full `qualityGate` shape defined in [assets/schema.json](assets/schema.json). Do not keep or recreate inline legacy schemas in this file. Before a complete checkpoint, read the `checkpoint` action schema from `x-pi-actions["checkpoint"]` and the nested `qualityGate` definition from `$defs.qualityGate`.
 
-Minimal valid template:
-
-```json
-{
-  "architectReview": {
-    "architectureStatus": "CLEAR",
-    "productStatus": "CLEAR",
-    "codeStatus": "CLEAR",
-    "recommendation": "APPROVE",
-    "commands": ["reviewed final diff and verification"],
-    "evidence": "architecture/product/code review summary",
-    "blockers": []
-  },
-  "executorQa": {
-    "status": "passed",
-    "e2eStatus": "passed",
-    "redTeamStatus": "passed",
-    "evidence": "executor QA and red-team evidence summary",
-    "e2eCommands": ["npm run build && npx vitest --run"],
-    "redTeamCommands": ["rg ... || true"],
-    "artifactRefs": [
-      {
-        "id": "verification-report",
-        "kind": "verification-report",
-        "description": "Build/test/grep verification report",
-        "verifiedReceipt": {
-          "verifiedAt": "2026-07-17T00:00:00.000Z",
-          "summary": "build, tests, typecheck, red-team grep gates passed"
-        }
-      }
-    ],
-    "surfaceEvidence": [
-      {
-        "id": "surface-public-api",
-        "surface": "public package exports and command surface",
-        "contractRef": "contract#single-workflow-surface",
-        "invocation": "rg public tool/export/command patterns",
-        "result": "passed",
-        "artifactRefs": ["verification-report"]
-      }
-    ],
-    "adversarialCases": [
-      {
-        "id": "case-missing-artifact",
-        "contractRef": "contract#fail-closed",
-        "scenario": "missing required artifact or gate",
-        "expectedBehavior": "checkpoint/transition is rejected fail-closed",
-        "result": "passed",
-        "artifactRefs": ["verification-report"]
-      }
-    ],
-    "contractCoverage": [
-      {
-        "id": "coverage-single-surface",
-        "contractRef": "contract#single-workflow-surface",
-        "obligation": "only the approved workflow surface is exposed",
-        "status": "passed",
-        "surfaceEvidenceRefs": ["surface-public-api"],
-        "adversarialCaseRefs": ["case-missing-artifact"]
-      }
-    ],
-    "blockers": []
-  },
-  "iteration": {
-    "status": "passed",
-    "fullRerun": true,
-    "rerunCommands": ["npm run build && npx vitest --run"],
-    "evidence": "full verification reran cleanly after final edits",
-    "blockers": []
-  }
-}
-```
-
-Required nested fields that agents commonly miss:
-
-- `executorQa.artifactRefs[]`: `id`, `kind`, `description`, plus a live proof such as `verifiedReceipt`, `receipt`, `inlineEvidence`, `path`, or a supported replay/exemption object.
-- `executorQa.surfaceEvidence[]`: `id`, `surface`, `contractRef`, `invocation`, `result` (or `verdict`), and `artifactRefs` pointing at `artifactRefs[].id`.
-- `executorQa.adversarialCases[]`: `id`, `contractRef`, `scenario`, `expectedBehavior`, `result` (or `verdict`), and `artifactRefs`.
-- `executorQa.contractCoverage[]`: `id`, `contractRef`, `obligation`, `status`, plus `surfaceEvidenceRefs`, `adversarialCaseRefs`, or `artifactRefs`.
-- Every `blockers` array must be present and empty for completion.
-
-Top-level `contractCoverage`, legacy `codeReview`, old receipts, and unsupported keys fail closed. GJC-only goal/session/CLI mechanics are not part of Pi Ultragoal.
+Important constraints still apply: top-level `contractCoverage`, legacy `codeReview`, old receipts, and unsupported keys fail closed. GJC-only goal/session/CLI mechanics are not part of Pi Ultragoal.
 
 ## Quality Bar
 

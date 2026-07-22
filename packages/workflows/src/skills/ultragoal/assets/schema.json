@@ -1,0 +1,587 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tsuuanmi.github.io/pi/schemas/workflows/ultragoal/schema.json",
+  "title": "pi workflow ultragoal command input",
+  "description": "JSON payloads accepted by `pi workflow ultragoal <action> --input ...`. The CLI action is selected positionally; validate the object against the matching action definition.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sessionId": {
+      "$ref": "#/$defs/sessionId"
+    },
+    "brief": {
+      "type": "string"
+    },
+    "goalMode": {
+      "type": "string",
+      "enum": [
+        "aggregate",
+        "per-story"
+      ]
+    },
+    "retryFailed": {
+      "type": "boolean"
+    },
+    "goalId": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "string"
+    },
+    "qualityGate": {
+      "$ref": "#/$defs/qualityGate"
+    },
+    "title": {
+      "type": "string"
+    },
+    "objective": {
+      "type": "string"
+    },
+    "classification": {
+      "type": "string"
+    },
+    "currentObjective": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "sessionId": {
+      "type": "string",
+      "description": "Current Pi session id. Required in agent/runtime use even when the CLI can resolve fallback state."
+    },
+    "qualityGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "architectReview",
+        "executorQa",
+        "iteration"
+      ],
+      "properties": {
+        "architectReview": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "architectureStatus",
+            "productStatus",
+            "codeStatus",
+            "recommendation",
+            "commands",
+            "evidence",
+            "blockers"
+          ],
+          "properties": {
+            "architectureStatus": {
+              "type": "string"
+            },
+            "productStatus": {
+              "type": "string"
+            },
+            "codeStatus": {
+              "type": "string"
+            },
+            "recommendation": {
+              "type": "string"
+            },
+            "commands": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "evidence": {
+              "type": "string"
+            },
+            "blockers": {
+              "type": "array",
+              "maxItems": 0
+            }
+          }
+        },
+        "executorQa": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "status",
+            "e2eStatus",
+            "redTeamStatus",
+            "evidence",
+            "e2eCommands",
+            "redTeamCommands",
+            "artifactRefs",
+            "surfaceEvidence",
+            "adversarialCases",
+            "contractCoverage",
+            "blockers"
+          ],
+          "properties": {
+            "status": {
+              "type": "string"
+            },
+            "e2eStatus": {
+              "type": "string"
+            },
+            "redTeamStatus": {
+              "type": "string"
+            },
+            "evidence": {
+              "type": "string"
+            },
+            "e2eCommands": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "redTeamCommands": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "artifactRefs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": [
+                  "id",
+                  "kind",
+                  "description"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "verifiedReceipt": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "receipt": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "inlineEvidence": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "surfaceEvidence": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": [
+                  "id",
+                  "surface",
+                  "contractRef",
+                  "invocation",
+                  "artifactRefs"
+                ],
+                "anyOf": [
+                  {
+                    "required": [
+                      "result"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "verdict"
+                    ]
+                  }
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "surface": {
+                    "type": "string"
+                  },
+                  "contractRef": {
+                    "type": "string"
+                  },
+                  "invocation": {
+                    "type": "string"
+                  },
+                  "result": {
+                    "type": "string"
+                  },
+                  "verdict": {
+                    "type": "string"
+                  },
+                  "artifactRefs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  }
+                }
+              }
+            },
+            "adversarialCases": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": [
+                  "id",
+                  "contractRef",
+                  "scenario",
+                  "expectedBehavior",
+                  "artifactRefs"
+                ],
+                "anyOf": [
+                  {
+                    "required": [
+                      "result"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "verdict"
+                    ]
+                  }
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "contractRef": {
+                    "type": "string"
+                  },
+                  "scenario": {
+                    "type": "string"
+                  },
+                  "expectedBehavior": {
+                    "type": "string"
+                  },
+                  "result": {
+                    "type": "string"
+                  },
+                  "verdict": {
+                    "type": "string"
+                  },
+                  "artifactRefs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  }
+                }
+              }
+            },
+            "contractCoverage": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": [
+                  "id",
+                  "contractRef",
+                  "obligation",
+                  "status"
+                ],
+                "anyOf": [
+                  {
+                    "required": [
+                      "surfaceEvidenceRefs"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "adversarialCaseRefs"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "artifactRefs"
+                    ]
+                  }
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "contractRef": {
+                    "type": "string"
+                  },
+                  "obligation": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "surfaceEvidenceRefs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  },
+                  "adversarialCaseRefs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  },
+                  "artifactRefs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  }
+                }
+              }
+            },
+            "blockers": {
+              "type": "array",
+              "maxItems": 0
+            }
+          }
+        },
+        "iteration": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "status",
+            "fullRerun",
+            "rerunCommands",
+            "evidence",
+            "blockers"
+          ],
+          "properties": {
+            "status": {
+              "type": "string"
+            },
+            "fullRerun": {
+              "type": "boolean",
+              "const": true
+            },
+            "rerunCommands": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "evidence": {
+              "type": "string"
+            },
+            "blockers": {
+              "type": "array",
+              "maxItems": 0
+            }
+          }
+        }
+      }
+    },
+    "createPlanInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "brief"
+      ],
+      "properties": {
+        "sessionId": {
+          "$ref": "#/$defs/sessionId"
+        },
+        "brief": {
+          "type": "string"
+        },
+        "goalMode": {
+          "type": "string",
+          "enum": [
+            "aggregate",
+            "per-story"
+          ]
+        }
+      }
+    },
+    "statusInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "$ref": "#/$defs/sessionId"
+        }
+      }
+    },
+    "readCompactInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "$ref": "#/$defs/sessionId"
+        }
+      }
+    },
+    "startNextInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "$ref": "#/$defs/sessionId"
+        },
+        "retryFailed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "checkpointInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "goalId",
+        "status"
+      ],
+      "properties": {
+        "sessionId": {
+          "$ref": "#/$defs/sessionId"
+        },
+        "goalId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "qualityGate": {
+          "$ref": "#/$defs/qualityGate"
+        }
+      }
+    },
+    "recordReviewBlockersInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "goalId",
+        "title",
+        "objective",
+        "evidence"
+      ],
+      "properties": {
+        "sessionId": {
+          "$ref": "#/$defs/sessionId"
+        },
+        "goalId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "objective": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "string"
+        }
+      }
+    },
+    "classifyBlockerInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "evidence"
+      ],
+      "properties": {
+        "sessionId": {
+          "$ref": "#/$defs/sessionId"
+        },
+        "goalId": {
+          "type": "string"
+        },
+        "classification": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "string"
+        }
+      }
+    },
+    "guardInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "$ref": "#/$defs/sessionId"
+        },
+        "goalId": {
+          "type": "string"
+        },
+        "currentObjective": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "x-pi-actions": {
+    "create-plan": {
+      "$ref": "#/$defs/createPlanInput"
+    },
+    "status": {
+      "$ref": "#/$defs/statusInput"
+    },
+    "read-compact": {
+      "$ref": "#/$defs/readCompactInput"
+    },
+    "start-next": {
+      "$ref": "#/$defs/startNextInput"
+    },
+    "checkpoint": {
+      "$ref": "#/$defs/checkpointInput"
+    },
+    "record-review-blockers": {
+      "$ref": "#/$defs/recordReviewBlockersInput"
+    },
+    "classify-blocker": {
+      "$ref": "#/$defs/classifyBlockerInput"
+    },
+    "guard": {
+      "$ref": "#/$defs/guardInput"
+    }
+  },
+  "examples": [
+    {
+      "sessionId": "h-...",
+      "brief": "Approved implementation plan..."
+    },
+    {
+      "sessionId": "h-...",
+      "goalId": "goal-1",
+      "status": "in_progress",
+      "evidence": "Implemented first step."
+    },
+    {
+      "sessionId": "h-...",
+      "goalId": "goal-1",
+      "currentObjective": "Verify final diff"
+    }
+  ]
+}
