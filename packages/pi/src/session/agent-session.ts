@@ -97,7 +97,7 @@ import { apiUsageLogPath } from "#pi/telemetry/api-usage-utils";
 import { type BashOperations, createLocalBashOperations } from "#pi/tools/bash";
 import { createAllToolDefinitions } from "#pi/tools/index";
 import { createToolDefinitionFromAgentTool } from "#pi/tools/utils";
-import { sleep } from "#pi/utils/system/runtime";
+import { sleep } from "#pi/session/runtime";
 
 // ============================================================================
 // Skill Block Parsing

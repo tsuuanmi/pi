@@ -368,7 +368,7 @@ export {
 	type WriteToolOptions,
 } from "#pi/tools/index";
 // Clipboard utilities
-export { copyToClipboard } from "#pi/utils/clipboard/clipboard";
+export { copyToClipboard } from "#pi/modes/interactive/utils/clipboard";
 export { parseFrontmatter, stripFrontmatter } from "#pi/utils/fs/index";
 // Shell utilities
 export { getShellConfig } from "#pi/utils/system/shell";

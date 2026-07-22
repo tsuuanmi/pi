@@ -14,7 +14,7 @@ import {
 import type { Component, Container, EditorComponent, StatusLineComponent, TUI } from "@tsuuanmi/pi-tui";
 import { getAuthPath } from "#pi/config/config";
 import { defaultModelPerProvider } from "#pi/model/model-resolver";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#pi/model/provider-utils";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#pi/model/provider-helpers";
 import { LoginDialogComponent } from "#pi/modes/interactive/components/login-dialog";
 import {
 	AccountSelectorComponent,

@@ -11,7 +11,7 @@ import {
 	type TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import { openBrowser } from "#pi/utils/terminal/open-browser";
+import { openBrowser } from "#pi/modes/interactive/utils/open-browser";
 
 /**
  * Login dialog component - replaces editor during OAuth login flow

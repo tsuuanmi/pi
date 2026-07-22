@@ -20,11 +20,11 @@ import {
 	theme,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import { getDebugLogPath } from "#pi/config/config";
+import { getDebugLogPath, getChangelogPath } from "#pi/config/config";
 import type { AgentSession } from "#pi/session/agent-session";
 import type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
-import { copyToClipboard } from "#pi/utils/clipboard/clipboard";
-import { getChangelogPath, normalizeChangelogLinks, parseChangelog } from "#pi/utils/system/changelog";
+import { copyToClipboard } from "#pi/modes/interactive/utils/clipboard";
+import { normalizeChangelogLinks, parseChangelog } from "#pi/modes/interactive/utils/changelog";
 
 export class CommandController {
 	private readonly ui: TUI;

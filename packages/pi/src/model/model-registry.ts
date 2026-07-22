@@ -36,7 +36,7 @@ import {
 	resolveConfigValueUncached,
 	resolveHeadersOrThrow,
 } from "#pi/config/resolve-config-value";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#pi/model/provider-utils";
+import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#pi/model/provider-helpers";
 import type { ModelsSettings, SettingsManager } from "#pi/settings/settings-manager";
 import { stripJsonComments } from "#pi/utils/fs/index";
 
