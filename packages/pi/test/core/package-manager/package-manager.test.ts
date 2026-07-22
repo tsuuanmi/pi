@@ -39,7 +39,7 @@ interface PackageManagerInternals {
 		| { type: "npm"; spec: string; name: string; pinned: boolean }
 		| { type: "git"; repo: string; host: string; path: string; pinned: boolean; ref?: string }
 		| { type: "local"; path: string }
-		| { type: "bundled"; name: "workflows" | "lsp"; path: string };
+		| { type: "bundled"; name: "workflows"; path: string };
 	getNpmInstallPath(
 		source: { type: "npm"; spec: string; name: string; pinned: boolean },
 		scope: "user" | "project" | "temporary",
@@ -105,7 +105,6 @@ describe("DefaultPackageManager", () => {
 		it("should include bundled first-party package defaults when no sources configured", async () => {
 			const result = await packageManager.resolve();
 			expect(result.extensions.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
-			expect(result.extensions.some((r) => r.metadata.source === "pi:lsp" && r.enabled)).toBe(true);
 			expect(result.agents.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
 			expect(result.commands.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
 			expect(result.prompts).toEqual([]);
@@ -116,11 +115,11 @@ describe("DefaultPackageManager", () => {
 		});
 
 		it("should disable bundled package resources with empty filters", async () => {
-			settingsManager.setPackages([{ source: "pi:lsp", extensions: [] }]);
+			settingsManager.setPackages([{ source: "pi:workflows", extensions: [] }]);
 
 			const result = await packageManager.resolve();
-			expect(result.extensions.some((r) => r.metadata.source === "pi:lsp" && r.enabled)).toBe(false);
-			expect(result.extensions.some((r) => r.metadata.source === "pi:lsp" && !r.enabled)).toBe(true);
+			expect(result.extensions.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(false);
+			expect(result.extensions.some((r) => r.metadata.source === "pi:workflows" && !r.enabled)).toBe(true);
 		});
 
 		it("should resolve local extension paths from settings", async () => {

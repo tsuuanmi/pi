@@ -1,6 +1,14 @@
 // Core session management
 
-export { convertToLlm, extractYieldFromMessages, renderSubagentProgress, type YieldDetails } from "@tsuuanmi/pi-agent";
+// Compaction
+export {
+	convertToLlm,
+	extractYieldFromMessages,
+	type FileOperations,
+	renderSubagentProgress,
+	serializeConversation,
+	type YieldDetails,
+} from "@tsuuanmi/pi-agent";
 export { resolvePath, withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 // Theme utilities for custom tools and extensions
 export {
@@ -25,11 +33,6 @@ export {
 	type OAuthCredential,
 } from "#pi/auth/auth-storage";
 export { type Args, parseArgs } from "#pi/cli/args";
-// Compaction
-export {
-	type FileOperations,
-	serializeConversation,
-} from "@tsuuanmi/pi-agent";
 export {
 	type BranchPreparation,
 	type BranchSummaryResult,
@@ -213,6 +216,8 @@ export {
 } from "#pi/modes/interactive/components/index";
 // Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
 export type { ReadonlyFooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
+// Clipboard utilities
+export { copyToClipboard } from "#pi/modes/interactive/utils/clipboard";
 // JSONL utilities
 export { serializeJsonLine } from "#pi/modes/rpc/jsonl";
 export type {
@@ -247,6 +252,7 @@ export {
 	createEditTool,
 	createFindTool,
 	createGrepTool,
+	createLspTool,
 	createLsTool,
 	createReadOnlyTools,
 	createReadTool,
@@ -367,8 +373,6 @@ export {
 	type WriteToolInput,
 	type WriteToolOptions,
 } from "#pi/tools/index";
-// Clipboard utilities
-export { copyToClipboard } from "#pi/modes/interactive/utils/clipboard";
 export { parseFrontmatter, stripFrontmatter } from "#pi/utils/fs/index";
 // Shell utilities
 export { getShellConfig } from "#pi/utils/system/shell";

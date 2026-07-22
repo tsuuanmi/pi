@@ -15,10 +15,9 @@ export const TOP_LEVEL_RESOURCE_TYPES: TopLevelResourceType[] = ["extensions", "
 
 export const BUNDLED_PACKAGE_SOURCES: Record<string, BundledPackageName> = {
 	"pi:workflows": "workflows",
-	"pi:lsp": "lsp",
 };
 
-export const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows", "pi:lsp"];
+export const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows"];
 
 export const FILE_PATTERNS: Record<ResourceType, RegExp> = {
 	extensions: /\.(ts|js)$/,
@@ -73,25 +72,19 @@ export function getExtensionTempFolder(agentDir: string): string {
 	return tempFolder;
 }
 
-export function getBundledPackageRoot(name: BundledPackageName): string {
-	// "workflows" is now a standalone workspace package at packages/workflows/src/,
-	// not an embedded package under src/packages/. The remaining bundled package
-	// (lsp) stays under src/packages/.
-	if (name === "workflows") {
-		const __dirname = dirname(fileURLToPath(import.meta.url));
-		const bundledDist = resolve(__dirname, "..", "packages", "workflows");
-		if (existsSync(resolve(bundledDist, "package.json"))) {
-			return bundledDist;
-		}
-		// Dev: the workflows package is a workspace sibling at packages/workflows
-		// (source layout with src/) before pi dist has been built.
-		const devWorkspace = resolve(__dirname, "..", "..", "..", "workflows");
-		if (existsSync(resolve(devWorkspace, "package.json"))) {
-			return devWorkspace;
-		}
+export function getBundledPackageRoot(_name: BundledPackageName): string {
+	const __dirname = dirname(fileURLToPath(import.meta.url));
+	const bundledDist = resolve(__dirname, "..", "packages", "workflows");
+	if (existsSync(resolve(bundledDist, "package.json"))) {
 		return bundledDist;
 	}
-	return resolve(dirname(fileURLToPath(import.meta.url)), "..", "packages", name);
+	// Dev: the workflows package is a workspace sibling at packages/workflows
+	// (source layout with src/) before pi dist has been built.
+	const devWorkspace = resolve(__dirname, "..", "..", "..", "workflows");
+	if (existsSync(resolve(devWorkspace, "package.json"))) {
+		return devWorkspace;
+	}
+	return bundledDist;
 }
 
 export function isExactNpmVersion(version: string | undefined): boolean {

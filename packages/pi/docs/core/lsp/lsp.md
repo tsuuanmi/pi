@@ -1,10 +1,10 @@
 # Language Server Protocol (LSP)
 
-Integration with language servers for code intelligence features.
+Built-in tool integration with language servers for code intelligence features.
 
 ## Overview
 
-Pi integrates with language servers to provide diagnostics, hover information, go-to-definition, and references. LSP is exposed as a built-in tool and can also be used by extensions.
+Pi integrates with language servers to provide diagnostics, hover information, go-to-definition, and references. LSP is exposed as the built-in `lsp` tool.
 
 ## Supported Features
 
@@ -48,11 +48,11 @@ Servers are auto-detected from installed system tools. Pi checks if the server c
 The LSP integration is exposed as an `lsp` tool with an `action` parameter:
 
 ```
-lsp({ action: "status", path: "src/file.ts" })
-lsp({ action: "diagnostics", path: "src/file.ts" })
-lsp({ action: "hover", path: "src/file.ts", line: 10, symbol: "myFunc" })
-lsp({ action: "definition", path: "src/file.ts", line: 10, symbol: "MyClass" })
-lsp({ action: "references", path: "src/file.ts", line: 10, symbol: "myVar" })
+lsp({ action: "status", file: "src/file.ts" })
+lsp({ action: "diagnostics", file: "src/file.ts" })
+lsp({ action: "hover", file: "src/file.ts", line: 10, symbol: "myFunc" })
+lsp({ action: "definition", file: "src/file.ts", line: 10, symbol: "MyClass" })
+lsp({ action: "references", file: "src/file.ts", line: 10, symbol: "myVar" })
 ```
 
 For `hover`, `definition`, and `references`, the `line` and `symbol` parameters locate the target within the file.
@@ -98,5 +98,4 @@ Communication uses standard JSON-RPC 2.0 over stdio:
 
 ## See Also
 
-- [LSP Package](../../packages/lsp/lsp.md) - Package-level implementation details
-- [Extensions](../extensions/extensions.md) - Extension API and LSP integration
+- [Built-in Tools](../tools/tools.md) - Tool system documentation

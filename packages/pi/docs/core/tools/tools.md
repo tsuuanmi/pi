@@ -4,14 +4,14 @@ Pi's built-in tool system providing file operations, shell execution, and code s
 
 ## Overview
 
-Pi ships with seven built-in tools that the agent can use to interact with the filesystem, execute commands, and search code. Pi owns the concrete tool implementations and helper modules; `@tsuuanmi/pi-agent` owns the generic `AgentTool` protocol and registration APIs. Each tool follows a pluggable operations pattern that allows extensions to delegate execution to remote systems (for example SSH).
+Pi ships with eight built-in tools that the agent can use to interact with the filesystem, execute commands, search code, and query language servers. Pi owns the concrete tool implementations and helper modules; `@tsuuanmi/pi-agent` owns the generic `AgentTool` protocol and registration APIs. Each tool follows a pluggable operations pattern that allows extensions to delegate execution to remote systems (for example SSH).
 
 At runtime, Pi wraps built-in and extension tool definitions, registers the resulting `AgentTool` instances through `createAgentToolRegistry()`/`registerAgentTools()` from `@tsuuanmi/pi-agent`, and passes the active tool list to the agent.
 
 Tools are grouped into two categories:
 
-- **Read-write tools** — `read`, `bash`, `edit`, `write`
-- **Read-only tools** — `grep`, `find`, `ls`
+- **Default coding tools** — `read`, `bash`, `edit`, `write`, `lsp`
+- **Read-only tools** — `read`, `grep`, `find`, `ls`, `lsp`
 
 ## Built-in Tools
 
@@ -24,6 +24,7 @@ Tools are grouped into two categories:
 | `grep` | `createGrepTool` / `createGrepToolDefinition` | Search file contents with regex |
 | `find` | `createFindTool` / `createFindToolDefinition` | Search for files by name or pattern |
 | `ls` | `createLsTool` / `createLsToolDefinition` | List directory contents |
+| `lsp` | `createLspTool` / `createLspToolDefinition` | Query Language Server Protocol servers for diagnostics, symbols, hover, definitions, and references |
 
 ## Tool Parameters
 
@@ -90,6 +91,16 @@ Each edit in `edits`:
 | `path` | string | no | Directory to list (default: current directory) |
 | `limit` | number | no | Maximum number of entries to return (default: 500) |
 
+### `lsp`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `action` | string | yes | `status`, `diagnostics`, `symbols`, `hover`, `definition`, or `references` |
+| `file` | string | no | File path for file-specific LSP actions |
+| `line` | number | no | 1-indexed line number for position-specific actions |
+| `symbol` | string | no | Symbol substring on the target line, used to choose the column |
+| `timeout` | number | no | Request timeout in seconds |
+
 ## Tool Architecture
 
 Each tool is composed of:
@@ -103,13 +114,13 @@ Each tool is composed of:
 The tools module provides three factory functions for creating tool sets:
 
 ```typescript
-// Create all 7 tool definitions (for extension registration)
+// Create all 8 tool definitions (for extension registration)
 const definitions = createAllToolDefinitions(cwd, options);
 
-// Create read-write tool instances (read, bash, edit, write)
-const readWriteTools = createCodingTools(cwd, options);
+// Create default coding tool instances (read, bash, edit, write, lsp)
+const codingTools = createCodingTools(cwd, options);
 
-// Create read-only tool instances (read, grep, find, ls)
+// Create read-only tool instances (read, grep, find, ls, lsp)
 const readOnlyTools = createReadOnlyTools(cwd, options);
 ```
 
@@ -210,6 +221,7 @@ Each tool returns structured details alongside its text output. Built-in tools a
 - **`GrepToolDetails`** — Truncation info, match limit reached count, lines truncated flag, `receipt?: StructuredReceipt`
 - **`FindToolDetails`** — Truncation info, result limit reached count, `receipt?: StructuredReceipt`
 - **`LsToolDetails`** — Truncation info, entry limit reached count, `receipt?: StructuredReceipt`
+- **`LspToolDetails`** — Queried action and selected server name
 
 ### Truncation
 

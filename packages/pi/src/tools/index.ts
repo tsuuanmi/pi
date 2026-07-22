@@ -42,6 +42,12 @@ export {
 	type LsToolOptions,
 } from "#pi/tools/ls";
 export {
+	createLspTool,
+	createLspToolDefinition,
+	type LspToolDetails,
+	type LspToolInput,
+} from "#pi/tools/lsp/lsp-tool";
+export {
 	createReadTool,
 	createReadToolDefinition,
 	type ReadOperations,
@@ -74,12 +80,13 @@ import { createEditTool, createEditToolDefinition, type EditToolOptions } from "
 import { createFindTool, createFindToolDefinition, type FindToolOptions } from "#pi/tools/find";
 import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "#pi/tools/grep";
 import { createLsTool, createLsToolDefinition, type LsToolOptions } from "#pi/tools/ls";
+import { createLspTool, createLspToolDefinition } from "#pi/tools/lsp/lsp-tool";
 import { createReadTool, createReadToolDefinition, type ReadToolOptions } from "#pi/tools/read";
 import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } from "#pi/tools/write";
 
 export type Tool = AgentTool<any>;
 export type ToolDef = ToolDefinition<any, any>;
-export type ToolName = "read" | "bash" | "edit" | "write" | "grep" | "find" | "ls";
+export type ToolName = "read" | "bash" | "edit" | "write" | "grep" | "find" | "ls" | "lsp";
 export interface ToolsOptions {
 	read?: ReadToolOptions;
 	bash?: BashToolOptions;
@@ -99,6 +106,7 @@ export function createAllToolDefinitions(cwd: string, options?: ToolsOptions): R
 		grep: createGrepToolDefinition(cwd, options?.grep),
 		find: createFindToolDefinition(cwd, options?.find),
 		ls: createLsToolDefinition(cwd, options?.ls),
+		lsp: createLspToolDefinition(cwd),
 	};
 }
 
@@ -108,6 +116,7 @@ export function createCodingTools(cwd: string, options?: ToolsOptions): Tool[] {
 		createBashTool(cwd, options?.bash),
 		createEditTool(cwd, options?.edit),
 		createWriteTool(cwd, options?.write),
+		createLspTool(cwd),
 	];
 }
 
@@ -117,5 +126,6 @@ export function createReadOnlyTools(cwd: string, options?: ToolsOptions): Tool[]
 		createGrepTool(cwd, options?.grep),
 		createFindTool(cwd, options?.find),
 		createLsTool(cwd, options?.ls),
+		createLspTool(cwd),
 	];
 }

@@ -2,7 +2,7 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { createLspTool } from "#pi/packages/lsp/tools/lsp-tool";
+import { createLspTool } from "#pi/tools/lsp/lsp-tool";
 
 async function makeLspProject(): Promise<string> {
 	const dir = join(tmpdir(), `pi-lsp-tool-${process.pid}-${Date.now()}`);

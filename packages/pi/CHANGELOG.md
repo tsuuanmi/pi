@@ -11,6 +11,7 @@
 
 ### Changed
 
+- **tools**: Moved `lsp` out of the bundled `pi:lsp` package and into Pi's core built-in tool registry.
 - **packages**: Moved reusable TUI widgets and structured receipt rendering to `@tsuuanmi/pi-tui`; Pi now owns built-in tool helpers for edit diffing, path resolution, bounded output accumulation, shell-output capture, and truncation, and registers current tools through `@tsuuanmi/pi-agent`'s standard tool registry APIs.
 
 ### Fixed

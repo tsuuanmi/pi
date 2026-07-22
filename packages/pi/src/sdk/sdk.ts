@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { Agent, convertToLlm, type ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import { clampThinkingLevel, type Model, streamSimple } from "@tsuuanmi/pi-ai";
+import { clampThinkingLevel, type Model, mergeHeaderSources, streamSimple } from "@tsuuanmi/pi-ai";
 import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { getAgentDir } from "#pi/config/config";
@@ -9,7 +9,6 @@ import { DEFAULT_THINKING_LEVEL } from "#pi/config/defaults";
 import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { findInitialModel } from "#pi/model/model-resolver";
-import { mergeHeaderSources } from "@tsuuanmi/pi-ai";
 import { optimizeRetainedContext } from "#pi/sdk/context-optimization";
 import { AgentSession } from "#pi/session/agent-session";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/session-manager";
@@ -24,6 +23,7 @@ import {
 	createEditTool,
 	createFindTool,
 	createGrepTool,
+	createLspTool,
 	createLsTool,
 	createReadOnlyTools,
 	createReadTool,
@@ -53,14 +53,14 @@ export interface CreateAgentSessionOptions {
 	 * Optional default tool suppression mode when no explicit allowlist is provided.
 	 *
 	 * - "all": start with no tools enabled
-	 * - "builtin": disable the default built-in tools (read, bash, edit, write)
+	 * - "builtin": disable the default built-in tools (read, bash, edit, write, lsp)
 	 *   but keep extension/custom tools enabled
 	 */
 	noTools?: "all" | "builtin";
 	/**
 	 * Optional allowlist of tool names.
 	 *
-	 * When omitted, pi enables the default built-in tools (read, bash, edit, write)
+	 * When omitted, pi enables the default built-in tools (read, bash, edit, write, lsp)
 	 * and leaves extension/custom tools enabled unless `noTools` changes that default.
 	 * When provided, only the listed tool names are enabled.
 	 */
@@ -125,6 +125,7 @@ export {
 	createGrepTool,
 	createFindTool,
 	createLsTool,
+	createLspTool,
 };
 
 // Helper Functions

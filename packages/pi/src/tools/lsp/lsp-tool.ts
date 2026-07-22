@@ -2,13 +2,13 @@ import { spawnSync } from "node:child_process";
 import { readFile as fsReadFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ExtensionContext, ToolDefinition } from "@tsuuanmi/pi/api/types";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { Text } from "@tsuuanmi/pi-tui";
 import { type Static, Type } from "typebox";
-import { LspSession } from "#lsp/runtime/client";
-import { DEFAULT_LSP_SERVERS } from "#lsp/runtime/defaults";
+import type { ExtensionContext, ToolDefinition } from "#pi/api/types";
+import { LspSession } from "#pi/lsp/runtime/client";
+import { DEFAULT_LSP_SERVERS } from "#pi/lsp/runtime/defaults";
 import {
 	commandExists,
 	detectLanguageId,
@@ -19,7 +19,7 @@ import {
 	findServerForFile,
 	formatLocation,
 	formatSymbol,
-} from "#lsp/runtime/protocol-utils";
+} from "#pi/lsp/runtime/protocol";
 import type {
 	Diagnostic,
 	DocumentSymbol,
@@ -28,7 +28,7 @@ import type {
 	LocationLink,
 	ServerConfig,
 	SymbolInformation,
-} from "#lsp/runtime/types";
+} from "#pi/lsp/runtime/types";
 
 function str(value: unknown): string | null {
 	if (typeof value === "string") return value;
