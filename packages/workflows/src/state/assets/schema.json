@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tsuuanmi.github.io/pi/schemas/workflows/state/schema.json",
+  "title": "pi workflow state command contract",
+  "description": "Agent-facing contract for `pi workflow state`. The skill, action, session id, handoff target, json mode, and force mode are CLI arguments; only write/clear accept a JSON object through --input or --input-file.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "skill": { "$ref": "#/$defs/workflowSkill" },
+    "version": { "type": "number", "const": 1 },
+    "active": { "type": "boolean" },
+    "current_phase": { "$ref": "#/$defs/workflowPhase" },
+    "phase": {
+      "$ref": "#/$defs/workflowPhase",
+      "description": "Write/clear input alias normalized by the CLI to current_phase. Prefer current_phase when writing canonical state."
+    },
+    "state": { "$ref": "#/$defs/statePatch" },
+    "handoff_to": { "$ref": "#/$defs/workflowSkill" },
+    "handoff_from": { "$ref": "#/$defs/workflowSkill" }
+  },
+  "$defs": {
+    "sessionId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Current Pi session id. For `pi workflow state`, pass this as `--session <id>` or PI_SESSION_ID, not inside --input."
+    },
+    "workflowSkill": {
+      "type": "string",
+      "enum": ["deep-interview", "ralplan", "team", "ultragoal"]
+    },
+    "workflowPhase": {
+      "type": "string",
+      "enum": [
+        "active",
+        "adr",
+        "approved",
+        "approved-execution",
+        "architect",
+        "awaiting_integration",
+        "blocked",
+        "canceled",
+        "cancelled",
+        "complete",
+        "completed",
+        "critic",
+        "expert-stage",
+        "failed",
+        "final",
+        "handoff",
+        "inactive",
+        "interviewing",
+        "missing",
+        "pending",
+        "pending-approval",
+        "planner",
+        "rejected",
+        "revision",
+        "running",
+        "starting"
+      ],
+      "description": "Known workflow phases across all built-in skills. The command validates skill-specific phases and allowed transitions using the workflow manifest."
+    },
+    "statePatch": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Partial state envelope patch for write/clear. Additional skill-owned fields are allowed and preserved; skill mismatch, unknown phases, and disallowed transitions fail closed.",
+      "properties": {
+        "skill": { "$ref": "#/$defs/workflowSkill" },
+        "version": { "type": "number", "const": 1 },
+        "active": { "type": "boolean" },
+        "current_phase": { "$ref": "#/$defs/workflowPhase" },
+        "phase": {
+          "$ref": "#/$defs/workflowPhase",
+          "description": "Alias normalized to current_phase."
+        }
+      }
+    },
+    "readInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 0,
+      "description": "No --input payload. Use `pi workflow state <skill> read --session <id> --json`."
+    },
+    "activeInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 0,
+      "description": "No --input payload and no skill positional argument. Use `pi workflow state active --session <id> --json`."
+    },
+    "writeInput": {
+      "oneOf": [
+        { "$ref": "#/$defs/statePatch" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state"],
+          "properties": {
+            "state": { "$ref": "#/$defs/statePatch" }
+          },
+          "description": "Compatibility wrapper accepted by the CLI; the nested state object is unwrapped before validation."
+        }
+      ],
+      "description": "Payload for `--input` or `--input-file` with `pi workflow state <skill> write --session <id>`. Do not include sessionId in this object."
+    },
+    "clearInput": {
+      "oneOf": [
+        { "$ref": "#/$defs/statePatch" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state"],
+          "properties": {
+            "state": { "$ref": "#/$defs/statePatch" }
+          },
+          "description": "Compatibility wrapper accepted by the CLI; the nested state object is unwrapped before validation."
+        }
+      ],
+      "description": "Optional payload for `pi workflow state <skill> clear --session <id>`. Usually omit --input; the manifest chooses the terminal clear phase."
+    },
+    "handoffInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 0,
+      "description": "No --input payload. Pass the target skill as `--to <skill>`."
+    },
+    "doctorInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 0,
+      "description": "No --input payload. Use `pi workflow state <skill> doctor --session <id> --json`."
+    }
+  },
+  "x-pi-cli": {
+    "base": "pi workflow state",
+    "session": "Required for every state action. Pass `--session <id>` or set PI_SESSION_ID; unlike skill action commands, state does not read sessionId from --input.",
+    "json": "Pass --json for machine-readable output.",
+    "force": "Pass --force only for explicit recovery/repair; it bypasses normal terminal/corrupt-state protections and records forced receipt metadata.",
+    "actions": {
+      "read": {
+        "command": "pi workflow state <skill> read --session <id> --json",
+        "input": false,
+        "description": "Read the session-scoped state envelope for one workflow skill."
+      },
+      "write": {
+        "command": "pi workflow state <skill> write --session <id> --input '<statePatch>' --json",
+        "input": true,
+        "description": "Merge a state patch through manifest phase and transition validation, write the skill state file, and sync active-state HUD metadata."
+      },
+      "clear": {
+        "command": "pi workflow state <skill> clear --session <id> --json",
+        "input": "optional",
+        "description": "Mark the skill inactive at the manifest clear target. Usually omit --input; use --force only for recovery."
+      },
+      "handoff": {
+        "command": "pi workflow state <skill> handoff --to <target-skill> --session <id> --json",
+        "input": false,
+        "description": "Mark the source skill inactive with handoff_to and the target skill active with handoff_from. The target is a CLI option, not JSON input."
+      },
+      "active": {
+        "command": "pi workflow state active --session <id> --json",
+        "input": false,
+        "description": "Read the active workflow HUD projection for the session. This action has no skill positional argument."
+      },
+      "doctor": {
+        "command": "pi workflow state <skill> doctor --session <id> --json",
+        "input": false,
+        "description": "Check whether the state file is readable; corrupt state returns a recovery hint."
+      }
+    }
+  },
+  "x-pi-docs": [
+    "packages/workflows/docs/state/commands.md",
+    "packages/workflows/docs/state/state.md"
+  ],
+  "x-pi-actions": {
+    "read": { "$ref": "#/$defs/readInput" },
+    "write": { "$ref": "#/$defs/writeInput" },
+    "clear": { "$ref": "#/$defs/clearInput" },
+    "handoff": { "$ref": "#/$defs/handoffInput" },
+    "active": { "$ref": "#/$defs/activeInput" },
+    "doctor": { "$ref": "#/$defs/doctorInput" }
+  },
+  "examples": [
+    {
+      "description": "Read ralplan state for the current session.",
+      "command": "pi workflow state ralplan read --session h-... --json"
+    },
+    {
+      "description": "Write a known ralplan phase; phase is accepted as an alias for current_phase.",
+      "command": "pi workflow state ralplan write --session h-... --input '{\"phase\":\"planner\",\"run_id\":\"ralplan-...\"}' --json",
+      "input": { "phase": "planner", "run_id": "ralplan-..." }
+    },
+    {
+      "description": "Write using the compatibility state wrapper.",
+      "command": "pi workflow state team write --session h-... --input '{\"state\":{\"current_phase\":\"running\",\"active\":true}}' --json",
+      "input": { "state": { "current_phase": "running", "active": true } }
+    },
+    {
+      "description": "Handoff from deep-interview to ralplan; target is --to, not JSON input.",
+      "command": "pi workflow state deep-interview handoff --to ralplan --session h-... --json"
+    },
+    {
+      "description": "Read active HUD state; no skill argument and no --input.",
+      "command": "pi workflow state active --session h-... --json"
+    }
+  ]
+}

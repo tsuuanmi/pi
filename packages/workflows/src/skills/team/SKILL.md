@@ -31,7 +31,7 @@ Critical: before running any `pi workflow team <action>` command, read [referenc
 ## Workflow
 
 1. Read the approved plan or task.
-2. Read active state with `pi workflow state team read`. If no state exists, initialize it with `pi workflow state team write`: `active: true`, `phase: "approved-execution"`, `data.input` set to the plan path or task.
+2. Read active state with `pi workflow state team read`. If no state exists, initialize it with `pi workflow state team write`: `active: true`, `phase: "approved-execution"`, `data.input` set to the plan path or task. For the exact CLI/session/input split, see [State commands](../../state/commands.md).
 3. Start or resume runtime coordination with `pi workflow team start`, then use `pi workflow team snapshot` or `pi workflow team read-compact` to inspect current state.
 4. Split work into independent workstreams with clear ownership, files, and verification.
 5. For each worker, define:

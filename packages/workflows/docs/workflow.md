@@ -15,7 +15,7 @@ Invoke a skill with `/skill:<name>` (e.g. `/skill:ralplan`). See [Skills](https:
 
 ## `pi workflow` control plane
 
-`pi workflow` is the CLI front end for the harness control plane. Every verb accepts `--json` for machine-readable output and `--input '<JSON object>'` or `--input-file <path>` for structured arguments. Use `pi workflow --help` for detailed control-plane help, and `pi workflow <deep-interview|ralplan|team|ultragoal> --help` for agent-facing skill workflow order, action parameters, examples, and references to the matching skill docs. Each skill also ships `references/commands.md` and `assets/schema.json` next to its `SKILL.md`.
+`pi workflow` is the CLI front end for the harness control plane. Every verb accepts `--json` for machine-readable output and `--input '<JSON object>'` or `--input-file <path>` for structured arguments. Use `pi workflow --help` for detailed control-plane help, `pi workflow state --help` for the agent-facing state contract, and `pi workflow <deep-interview|ralplan|team|ultragoal> --help` for agent-facing skill workflow order, action parameters, examples, and references to the matching skill docs. Each skill also ships `references/commands.md` and `assets/schema.json` next to its `SKILL.md`; the agent-facing state command contract ships separately at `packages/workflows/src/state/assets/schema.json`.
 
 ```text
 pi workflow <verb> [--input '{...}' | --input-file ./payload.json] [--json]

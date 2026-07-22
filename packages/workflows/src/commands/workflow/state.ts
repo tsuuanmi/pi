@@ -29,10 +29,14 @@ function stateUsage(): string {
   pi workflow state active [--session <id>] [--json]
   pi workflow state <skill> doctor [--session <id>] [--json]
 
+State guide: packages/workflows/docs/state/commands.md
+Schema: packages/workflows/src/state/assets/schema.json
+
 Skills: deep-interview, ralplan, team, ultragoal
 Session: --session <id> or PI_SESSION_ID env var scopes state to a session.
          If omitted, the command errors out; there is no global fallback.
 Force: use --force to clear or overwrite terminal/corrupt state.
+Input: only write/clear accept JSON input; handoff uses --to <skill>.
 `;
 }
 

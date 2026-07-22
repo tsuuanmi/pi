@@ -27,7 +27,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 
 ## Generated Package Assets
 
-`npm run build` compiles TypeScript to `dist/` and `npm run copy-assets` overlays `src/skills/*/SKILL.md` and `src/agents/*.md` into package assets without deleting compiled `dist/skills/<skill>/*.js`/`*.d.ts`. Do not edit `dist/` directly.
+`npm run build` compiles TypeScript to `dist/` and `npm run copy-assets` overlays `src/skills/*/SKILL.md`, skill assets/references, `src/state/assets/`, and `src/agents/*.md` into package assets without deleting compiled `dist/skills/<skill>/*.js`/`*.d.ts`. Do not edit `dist/` directly.
 
 ## Test Layout
 

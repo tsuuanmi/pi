@@ -11,7 +11,7 @@ Command entry points live under `src/commands/`.
 | `workflow/index.ts` | Public command dispatcher and package-command contract entry point. |
 | `workflow/runtime.ts` | Lifecycle, owner, primitive runtime, GC, event, and retire verb handlers. |
 | `workflow/skill-verbs.ts` | Deep Interview, ralplan, team, and ultragoal skill verb handlers. |
-| `workflow/state.ts` | `pi workflow state <skill> <read|write|clear|handoff|active|doctor>` implementation. |
+| `workflow/state.ts` | `pi workflow state <skill> <read|write|clear|handoff|active|doctor>` implementation and state contract help. |
 | `workflow/types.ts` | Shared workflow command result type. |
 | `workflow/utils.ts` | Shared command input, output, validation, and manifest helpers. |
 
@@ -39,7 +39,7 @@ pi workflow team <action>
 pi workflow ultragoal <action>
 ```
 
-Every verb accepts `--json` where meaningful and `--input '<JSON object>'` for structured arguments. Session-scoped verbs require `sessionId` in the input or an explicit session source as documented in [workflow.md](../workflow.md#current-session-command-propagation).
+Every verb accepts `--json` where meaningful and `--input '<JSON object>'` for structured arguments. Session-scoped verbs require `sessionId` in the input or an explicit session source as documented in [workflow.md](../workflow.md#current-session-command-propagation). For state usage, see [State commands](../state/commands.md).
 
 ## Skill Actions
 
@@ -57,4 +57,5 @@ Removed compatibility verbs (`ralplan run-agent`, `team spawn-task-agent`, `ultr
 - [Workflow control plane](../workflow.md)
 - [Runtime](../runtime/runtime.md)
 - [State](../state/state.md)
+- [State commands](../state/commands.md)
 - [Orchestration](../orchestration/orchestration.md)

@@ -24,7 +24,7 @@ Critical: before running any `pi workflow ralplan <action>` command, read [refer
 
 ## Workflow
 
-1. Read active state with `pi workflow state` for `skill: "ralplan"`. If no state exists, initialize it with `pi workflow state` `action: write`: `active: true`, `phase: "planner"`, `data.input` set to the task or spec path. A run ID will be assigned automatically on the first artifact write.
+1. Read active state with `pi workflow state` for `skill: "ralplan"`. If no state exists, initialize it with `pi workflow state` `action: write`: `active: true`, `phase: "planner"`, `data.input` set to the task or spec path. A run ID will be assigned automatically on the first artifact write. For the exact CLI/session/input split, see [State commands](../../state/commands.md).
 2. Read run status with `pi workflow ralplan status`. If resuming an existing run or state appears inconsistent, run `pi workflow ralplan doctor` before writing new artifacts.
 3. If the explorer pre-planner gate is missing or retrying, run `ralplan_run_agent` with `role: "explorer"`, `stage: "pre-planner"`, and `stageN: 1`; the explorer must persist `context_map` with `pi workflow ralplan record-explorer-gate`.
 4. If the input is a file path, read it. If it is a task, inspect enough context to plan safely.
