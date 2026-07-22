@@ -19,6 +19,7 @@ import {
 	registerApiProvider,
 	resetApiProviders,
 	type SimpleStreamOptions,
+	BUILT_IN_PROVIDER_DISPLAY_NAMES,
 } from "@tsuuanmi/pi-ai";
 import { registerOAuthProvider, resetOAuthProviders } from "@tsuuanmi/pi-ai/oauth";
 import { existsSync, readFileSync } from "fs";
@@ -36,7 +37,6 @@ import {
 	resolveConfigValueUncached,
 	resolveHeadersOrThrow,
 } from "#pi/config/resolve-config-value";
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "#pi/model/provider-helpers";
 import type { ModelsSettings, SettingsManager } from "#pi/settings/settings-manager";
 import { stripJsonComments } from "#pi/utils/fs/index";
 

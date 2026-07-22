@@ -9,7 +9,7 @@ import { DEFAULT_THINKING_LEVEL } from "#pi/config/defaults";
 import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { findInitialModel } from "#pi/model/model-resolver";
-import { mergeHeaderSources } from "#pi/model/provider-helpers";
+import { mergeHeaderSources } from "@tsuuanmi/pi-ai";
 import { optimizeRetainedContext } from "#pi/sdk/context-optimization";
 import { AgentSession } from "#pi/session/agent-session";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/session-manager";

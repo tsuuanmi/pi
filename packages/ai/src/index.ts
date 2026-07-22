@@ -19,6 +19,7 @@ export * from "#ai/parsing/json-parse";
 export type { AnthropicEffort, AnthropicOptions, AnthropicThinkingDisplay } from "#ai/providers/anthropic/index";
 export * from "#ai/providers/api-registry";
 export * from "#ai/providers/faux/index";
+export * from "#ai/providers/provider-utils";
 export type {
 	OpenAICodexResponsesOptions,
 	OpenAICodexWebSocketDebugStats,

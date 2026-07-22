@@ -3,6 +3,7 @@
 ### Added
 
 - Added OpenAI Codex reset-credit helpers for listing and consuming quota reset credits.
+- Added shared provider display-name and header-merge helpers for downstream packages.
 
 ## [0.2.0] - 2026-07-20
 
