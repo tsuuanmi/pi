@@ -46,7 +46,7 @@
 			"src/extensions/workflows.ts"
 		],
 		"skills": [
-			"src/skills/**/*.md"
+			"src/skills/**/SKILL.md"
 		],
 		"agents": [
 			"src/agents/*.md"
