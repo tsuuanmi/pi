@@ -4,7 +4,7 @@ import type { ToolDefinition, ToolRenderContext } from "#pi/api/types";
 import {
 	formatStructuredReceiptLines,
 	renderStructuredReceipt,
-} from "#pi/modes/interactive/components/structured-receipt-renderer";
+} from "@tsuuanmi/pi-tui";
 import { createAllToolDefinitions, type ToolName } from "#pi/tools/index";
 import { getTextOutput as getRenderedTextOutput } from "#pi/tools/utils";
 

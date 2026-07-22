@@ -14,6 +14,10 @@ export { CancellableLoader } from "#tui/components/feedback/cancellable-loader";
 export { CountdownTimer } from "#tui/components/feedback/countdown-timer";
 export { DynamicBorder } from "#tui/components/feedback/dynamic-border";
 export { Loader, type LoaderIndicatorOptions } from "#tui/components/feedback/loader";
+export {
+	formatStructuredReceiptLines,
+	renderStructuredReceipt,
+} from "#tui/components/feedback/structured-receipt";
 export { refreshHudUi } from "#tui/components/hud/extension-ui";
 export type {
 	ActiveHudEntry,

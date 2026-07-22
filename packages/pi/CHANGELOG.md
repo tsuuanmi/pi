@@ -11,7 +11,7 @@
 
 ### Changed
 
-- **packages**: Moved reusable TUI widgets to `@tsuuanmi/pi-tui`, shared Node tool utilities to `@tsuuanmi/pi-agent/node`, and builtin tool receipt helpers to `@tsuuanmi/pi-agent`; Pi now imports them directly from the owning packages.
+- **packages**: Moved reusable TUI widgets and structured receipt rendering to `@tsuuanmi/pi-tui`, shared Node tool utilities to `@tsuuanmi/pi-agent/node`, and builtin tool receipt helpers to `@tsuuanmi/pi-agent`; Pi now imports them directly from the owning packages.
 
 ### Fixed
 

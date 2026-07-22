@@ -1,5 +1,6 @@
 import type { StructuredReceipt } from "@tsuuanmi/pi-agent";
-import { Text, type Theme } from "@tsuuanmi/pi-tui";
+import { Text } from "#tui/components/display/text";
+import type { Theme } from "#tui/theme/theme";
 
 function formatValue(value: string | number | boolean): string {
 	return typeof value === "string" ? value : String(value);
