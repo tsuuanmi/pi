@@ -34,6 +34,29 @@ describe("ApiUsageLogger", () => {
 		}
 	});
 
+	it("routes subagent api usage logs to the owning session bucket", async () => {
+		const harness = createHarness({
+			responses: ["ok"],
+			sessionId: "subagent-2026-07-22-0741-3f04",
+			apiUsageSessionId: "parent-session-id",
+		});
+		try {
+			await harness.session.prompt("hello");
+			const parentLogPath = apiUsageLogPath(harness.tempDir, "parent-session-id");
+			const subagentLogPath = apiUsageLogPath(harness.tempDir, harness.sessionManager.getSessionId());
+			expect(parentLogPath).toBe(join(harness.tempDir, ".pi", "parent-session-id", "api-usage.jsonl"));
+			expect(subagentLogPath).toBe(join(harness.tempDir, ".pi", "subagent-2026-07-22-0741-3f04", "api-usage.jsonl"));
+			const content = await waitForFile(parentLogPath!);
+			expect(existsSync(subagentLogPath!)).toBe(false);
+			const lines = content.trim().split("\n");
+			expect(lines).toHaveLength(1);
+			const record = JSON.parse(lines[0]);
+			expect(record.session_id).toBe("parent-session-id");
+		} finally {
+			harness.cleanup();
+		}
+	});
+
 	it("honors apiUsageLogging.enabled=false", async () => {
 		const harness = createHarness({ settings: { apiUsageLogging: { enabled: false } }, responses: ["ok"] });
 		try {

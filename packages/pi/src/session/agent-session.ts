@@ -78,6 +78,7 @@ import {
 	setThinkingLevel as modelControlSetThinkingLevel,
 	supportsThinking as modelControlSupportsThinking,
 } from "#pi/session/model-control";
+import { sleep } from "#pi/session/runtime";
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "#pi/session/session-manager";
 import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "#pi/session/session-manager";
 import { expandSkillCommand } from "#pi/session/skill-expansion";
@@ -97,7 +98,6 @@ import { apiUsageLogPath } from "#pi/telemetry/api-usage-utils";
 import { type BashOperations, createLocalBashOperations } from "#pi/tools/bash";
 import { createAllToolDefinitions } from "#pi/tools/index";
 import { createToolDefinitionFromAgentTool } from "#pi/tools/utils";
-import { sleep } from "#pi/session/runtime";
 
 // ============================================================================
 // Skill Block Parsing
@@ -196,6 +196,8 @@ export interface AgentSessionConfig {
 	skipWorkflowContinuation?: boolean;
 	/** Extra system prompt appended to the rebuilt base prompt for this session. */
 	extraSystemPrompt?: string;
+	/** Optional override for API-usage log routing. Defaults to the session id. */
+	apiUsageSessionId?: string;
 }
 
 export interface ExtensionBindings {
@@ -311,6 +313,7 @@ export class AgentSession {
 	private _sessionStartEvent: SessionStartEvent;
 	private _skipWorkflowContinuation: boolean;
 	private _extraSystemPrompt?: string;
+	private _apiUsageSessionId?: string;
 	private _subagentManager?: SubagentManager;
 	private _apiUsageLogger?: ApiUsageLogger;
 	private _extensionUIContext?: ExtensionUIContext;
@@ -351,6 +354,7 @@ export class AgentSession {
 		this._sessionStartEvent = config.sessionStartEvent ?? { type: "session_start", reason: "startup" };
 		this._skipWorkflowContinuation = config.skipWorkflowContinuation ?? false;
 		this._extraSystemPrompt = config.extraSystemPrompt;
+		this._apiUsageSessionId = config.apiUsageSessionId;
 		this._subagentManager = config.subagentManager ?? undefined;
 		this._installApiUsageLogger();
 
@@ -369,7 +373,7 @@ export class AgentSession {
 			this.agent.providerRequestObserver = undefined;
 			return;
 		}
-		const sessionId = this.sessionManager.getSessionId();
+		const sessionId = this._apiUsageSessionId ?? this.sessionManager.getSessionId();
 		const path = apiUsageLogPath(this._cwd, sessionId);
 		if (!path) {
 			this.agent.providerRequestObserver = undefined;

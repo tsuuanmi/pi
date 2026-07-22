@@ -86,6 +86,8 @@ export interface CreateAgentSessionOptions {
 	skipWorkflowContinuation?: boolean;
 	/** Extra system prompt appended to this session's rebuilt base prompt. */
 	extraSystemPrompt?: string;
+	/** Optional override for API-usage log routing. Defaults to the session id. */
+	apiUsageSessionId?: string;
 }
 
 /** Result from createAgentSession */
@@ -351,6 +353,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		subagentManager: options.subagentManager ?? undefined,
 		skipWorkflowContinuation: options.skipWorkflowContinuation,
 		extraSystemPrompt: options.extraSystemPrompt,
+		apiUsageSessionId: options.apiUsageSessionId,
 	});
 	const extensionsResult = resourceLoader.getExtensions();
 

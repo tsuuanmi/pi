@@ -67,6 +67,8 @@ export interface CreateAgentSessionFromServicesOptions {
 	skipWorkflowContinuation?: boolean;
 	/** Extra system prompt appended to this session's rebuilt base prompt. */
 	extraSystemPrompt?: string;
+	/** Optional override for API-usage log routing. Defaults to the session id. */
+	apiUsageSessionId?: string;
 	/** Explicitly set to null to prevent subagent nesting. Omit to create a default manager. */
 	subagentManager?: SubagentManager | null;
 }
@@ -226,5 +228,6 @@ export async function createAgentSessionFromServices(
 				: (options.subagentManager ?? new SubagentManager(options.services)),
 		skipWorkflowContinuation: options.skipWorkflowContinuation ?? false,
 		extraSystemPrompt: options.extraSystemPrompt,
+		apiUsageSessionId: options.apiUsageSessionId,
 	});
 }

@@ -336,6 +336,10 @@ export interface HarnessOptions {
 	resourceLoader?: ResourceLoader;
 	/** Inline extensions to load into the session resource loader. */
 	extensionFactories?: Array<ExtensionFactory | CreateTestExtensionsResultInput>;
+	/** Optional session id override for the harness session manager. */
+	sessionId?: string;
+	/** Optional API-usage telemetry session id override. */
+	apiUsageSessionId?: string;
 }
 
 export interface Harness {
@@ -381,7 +385,9 @@ function createHarnessWithResourceLoader(
 		streamFn,
 	});
 
-	const sessionManager = SessionManager.inMemory();
+	const sessionManager = options.sessionId
+		? SessionManager.create(tempDir, tempDir, { id: options.sessionId })
+		: SessionManager.inMemory();
 	const settingsManager = SettingsManager.create(tempDir, tempDir);
 
 	if (options.settings) {
@@ -400,6 +406,7 @@ function createHarnessWithResourceLoader(
 		modelRegistry,
 		resourceLoader,
 		baseToolsOverride: options.baseToolsOverride,
+		apiUsageSessionId: options.apiUsageSessionId,
 	});
 
 	const events: AgentSessionEvent[] = [];

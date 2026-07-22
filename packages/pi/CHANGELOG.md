@@ -20,6 +20,7 @@
 - **models**: Ollama Cloud duplicate entries in `models.json` no longer replace generated model metadata from `@tsuuanmi/pi-ai`.
 - **settings**: Custom provider config now lives at top-level `providers` in `settings.json` instead of nested under `models.providers`.
 - **cli**: `--help` and `--list-models` no longer trigger installation of missing project packages; the resource loader skips missing-package installs for these metadata-only commands so help output stays clean and startup is faster.
+- **subagents**: API usage sidecars for subagent runs now route into the owning session bucket instead of creating top-level `.pi/subagent-*` directories.
 
 ## [0.2.1] - 2026-07-20
 

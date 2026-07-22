@@ -837,6 +837,7 @@ export class SubagentManager {
 			// Subagent sessions do not get their own SubagentManager to prevent unbounded nesting.
 			// A subagent cannot spawn further subagents; use the parent manager for orchestration.
 			subagentManager: null,
+			apiUsageSessionId: storageSessionId,
 		});
 		const session = created.session;
 		const live = this.live.get(record.id);
