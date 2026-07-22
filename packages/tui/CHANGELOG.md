@@ -7,6 +7,10 @@
 - **tui**: Centralized HUD and status-line semantic colors in a shared TUI color profile.
 - **tui**: Context warning levels now use percent thresholds only (`50% / 75% / 100%`), so they stay model-agnostic across different context windows.
 
+### Fixed
+
+- **tui**: Kept status-line git change counts on the 30-second refresh interval to avoid blinking during frequent rerenders.
+
 ## [0.2.0] - 2026-07-20
 
 ### Breaking Changes

@@ -37,8 +37,8 @@ function areGitStatusSummariesEqual(a: GitStatusSummary | null, b: GitStatusSumm
  * Reuses `FooterDataProvider` for the git branch (`.git/HEAD` watch), extension
  * statuses, and available provider count — it does NOT re-implement the git watcher.
  * The only background refresh it owns is the
- * `git status --porcelain` counts cache (30s refresh, generation-guarded) and
- * the HUD entry HUD cache (1s refresh, error-resilient).
+ * `git status --porcelain` counts cache (30s refresh) and the HUD entry HUD
+ * cache (1s refresh, error-resilient).
  */
 export class StatusLineComponent implements Component {
 	#session: StatusLineSessionLike;
@@ -50,11 +50,9 @@ export class StatusLineComponent implements Component {
 
 	// Git porcelain counts cache (30s refresh). `null` until the first fetch.
 	#cachedGitStatus: GitStatusSummary | null = null;
+	#cachedGitStatusCwd: string | null = null;
 	#gitStatusLastFetch = 0;
 	#gitStatusInFlight = false;
-	// Bumped on invalidate() so a fetch started before a branch switch cannot
-	// overwrite the newer cache state.
-	#gitGeneration = 0;
 
 	// HUD cache (1s refresh). `[]` until the first successful read.
 	#hudEntries: StatusLineHudEntry[] = [];
@@ -83,12 +81,8 @@ export class StatusLineComponent implements Component {
 		this.#autoCompactEnabled = enabled;
 	}
 
-	/** Invalidate the git porcelain cache so the next render re-fetches. */
-	invalidate(): void {
-		this.#cachedGitStatus = null;
-		this.#gitStatusLastFetch = 0;
-		this.#gitGeneration += 1;
-	}
+	/** Keep git porcelain refreshes time-based; callers invalidate the surrounding TUI render separately. */
+	invalidate(): void {}
 
 	dispose(): void {
 		// No watcher to close — FooterDataProvider owns the .git/HEAD watcher.
@@ -128,31 +122,27 @@ export class StatusLineComponent implements Component {
 	 * error-resilient, so this cannot throw on the render path.
 	 */
 	#refreshGitStatusInBackground(): void {
+		const cwd = this.#session.sessionManager.getCwd();
+		if (this.#cachedGitStatusCwd !== null && this.#cachedGitStatusCwd !== cwd) {
+			this.#cachedGitStatus = null;
+			this.#cachedGitStatusCwd = null;
+			this.#gitStatusLastFetch = 0;
+		}
 		if (this.#gitStatusInFlight || Date.now() - this.#gitStatusLastFetch < GIT_STATUS_REFRESH_MS) {
 			return;
 		}
 		this.#gitStatusInFlight = true;
-		const generation = this.#gitGeneration;
-		const cwd = this.#session.sessionManager.getCwd();
 		void (async () => {
 			try {
 				const result = await runGitStatusPorcelain(cwd);
-				// Discard the result if invalidate() bumped the generation since the
-				// fetch started (branch switched mid-fetch).
-				if (generation !== this.#gitGeneration) {
-					// Release the in-flight guard, leave the cache untouched, and request
-					// a re-render so the next render re-fetches immediately.
-					this.#gitStatusInFlight = false;
-					this.#requestRender?.();
-					return;
-				}
 				const shouldRender = !areGitStatusSummariesEqual(this.#cachedGitStatus, result);
 				this.#cachedGitStatus = result;
+				this.#cachedGitStatusCwd = cwd;
 				this.#gitStatusLastFetch = Date.now();
-				this.#gitStatusInFlight = false;
 				if (shouldRender) this.#requestRender?.();
 			} catch {
 				// runGitStatusPorcelain never rejects, but guard defensively.
+			} finally {
 				this.#gitStatusInFlight = false;
 			}
 		})();

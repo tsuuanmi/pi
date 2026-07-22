@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, before, describe, it } from "node:test";
@@ -154,6 +155,23 @@ describe("StatusLineComponent provider-prefix width fallback", () => {
 		const footer = makeComponent(session, 2);
 		const rail = stripAnsi(footer.render(20).at(-1) ?? "");
 		assert.doesNotMatch(rail, new RegExp(escapeRegExp("(anthropic)")));
+	});
+});
+
+describe("StatusLineComponent git status cache", () => {
+	it("keeps git status refreshes on the 30s interval after invalidate", async () => {
+		const cwd = await makeTempCwd();
+		execFileSync("git", ["init", "-b", "main"], { cwd, stdio: "ignore" });
+
+		const footer = makeComponent(createSession({ sessionName: "", cwd }));
+		await waitForRender(footer, 120, (rendered) => stripAnsi(rendered.join("\n")).includes("main"));
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		assert.doesNotMatch(stripAnsi(footer.render(120).join("\n")), new RegExp(escapeRegExp("main ?1")));
+
+		await writeFile(join(cwd, "dirty.txt"), "dirty\n");
+		footer.invalidate();
+
+		assert.doesNotMatch(stripAnsi(footer.render(120).join("\n")), new RegExp(escapeRegExp("main ?1")));
 	});
 });
 
