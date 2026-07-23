@@ -1,18 +1,7 @@
 /**
- * Custom message types and transformers for the AI agent.
+ * Intentionally empty.
  *
- * Re-exported from @tsuuanmi/pi-agent, which provides the canonical
- * implementations. The declaration merge ensures AgentMessage includes
- * these types even when consumed through pi-agent's module.
+ * Shared message primitives are owned by @tsuuanmi/pi-agent. Import them
+ * from @tsuuanmi/pi-agent directly instead of through @tsuuanmi/pi.
  */
-
-export {
-	BashExecutionMessage,
-	BranchSummaryMessage,
-	CompactionSummaryMessage,
-	CustomMessage,
-	convertToLlm,
-	createBranchSummaryMessage,
-	createCompactionSummaryMessage,
-	createCustomMessage,
-} from "@tsuuanmi/pi-agent";
+export {};

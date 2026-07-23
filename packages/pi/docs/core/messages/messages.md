@@ -4,7 +4,7 @@ Agent message types, custom message construction, and context optimization for P
 
 ## Overview
 
-Pi uses a rich message type system that extends the base `AgentMessage` types from `@tsuuanmi/pi-agent` with pi-specific message types. Custom messages are transformed to LLM-compatible messages via `convertToLlm()`.
+Pi uses the shared message type system from `@tsuuanmi/pi-agent`. Custom messages are transformed to LLM-compatible messages via `convertToLlm()` from `@tsuuanmi/pi-agent`.
 
 ## Custom Message Types
 
@@ -84,7 +84,7 @@ import {
   createCompactionSummaryMessage,
   createBranchSummaryMessage,
   createCustomMessage,
-} from "@tsuuanmi/pi";
+} from "@tsuuanmi/pi-agent";
 
 const compaction = createCompactionSummaryMessage(summary, tokensBefore, timestamp);
 const branch = createBranchSummaryMessage(summary, fromId, timestamp);

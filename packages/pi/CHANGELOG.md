@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Breaking Changes
+
+- **agent**: Removed shared agent/subagent primitive re-exports from `@tsuuanmi/pi`; import message helpers, compaction utilities, agent-owned subagent contract types, and node helpers from `@tsuuanmi/pi-agent` or `@tsuuanmi/pi-agent/node` instead. `@tsuuanmi/pi` remains the host/runtime package and continues to export Pi-owned runtime APIs such as `SubagentManager`.
+
 ### Added
 
 - **tools**: Built-in tool results now attach `details.receipt` structured execution receipts and the TUI renders them consistently.

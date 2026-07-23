@@ -5,7 +5,7 @@ LLMs have limited context windows. When conversations grow too long, pi uses com
 **Source files** ([pi-mono](https://github.com/tsuuanmi/pi)):
 - [`packages/pi/src/compaction/session-compaction.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/compaction/session-compaction.ts) - Auto-compaction logic
 - [`packages/pi/src/compaction/branch-summarization.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/compaction/branch-summarization.ts) - Branch summarization
-- [`packages/pi/src/compaction/message-utils.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/compaction/message-utils.ts) - Shared utilities (file tracking, serialization)
+- [`packages/agent/src/compaction/message-utils.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/compaction/message-utils.ts) - Shared utilities (file tracking, serialization)
 - [`packages/pi/src/session/session-manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/session-manager.ts) - Entry types (`CompactionEntry`, `BranchSummaryEntry`)
 - [`packages/pi/src/api/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/api/types.ts) - Extension event types
 
@@ -252,7 +252,7 @@ path/to/changed.ts
 
 ### Message Serialization
 
-Before summarization, messages are serialized to text via [`serializeConversation()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/compaction/message-utils.ts):
+Before summarization, messages are serialized to text via [`serializeConversation()`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/compaction/message-utils.ts):
 
 ```
 [User]: What they said
@@ -309,7 +309,7 @@ pi.on("session_before_compact", async (event, ctx) => {
 To generate a summary with your own model, convert messages to text using `serializeConversation`:
 
 ```typescript
-import { convertToLlm, serializeConversation } from "@tsuuanmi/pi";
+import { convertToLlm, serializeConversation } from "@tsuuanmi/pi-agent";
 
 pi.on("session_before_compact", async (event, ctx) => {
   const { preparation } = event;

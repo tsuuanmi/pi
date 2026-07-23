@@ -1,15 +1,5 @@
 // Core session management
 
-// Compaction
-export {
-	convertToLlm,
-	extractYieldFromMessages,
-	type FileOperations,
-	renderSubagentProgress,
-	serializeConversation,
-	type YieldDetails,
-} from "@tsuuanmi/pi-agent";
-export { resolvePath, withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 // Theme utilities for custom tools and extensions
 export {
 	getLanguageFromPath,
@@ -312,18 +302,7 @@ export {
 	type Skill,
 	type SkillFrontmatter,
 } from "#pi/skills/skills";
-export {
-	type SubagentAwaitOptions,
-	type SubagentAwaitResult,
-	type SubagentDelivery,
-	SubagentManager,
-	type SubagentRecord,
-	type SubagentResumeFailureReason,
-	type SubagentResumeResult,
-	type SubagentRunRequest,
-	type SubagentRunResult,
-	type SubagentStatus,
-} from "#pi/subagents/subagents";
+export { SubagentManager } from "#pi/subagents/subagents";
 // Tools
 export {
 	type BashOperations,

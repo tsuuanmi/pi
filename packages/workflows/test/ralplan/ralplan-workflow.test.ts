@@ -1,7 +1,7 @@
 import { appendFile, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import type { SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi";
+import type { SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi-agent";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
