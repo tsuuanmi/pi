@@ -6,7 +6,7 @@ import { getKeybindings } from "#tui/input/keyboard/keybindings";
  * Extends Loader with an AbortSignal for cancelling async operations.
  *
  * @example
- * const loader = new CancellableLoader(tui, cyan, dim, "Working...");
+ * const loader = new CancellableLoader(tui, cyan, dim, "Indexing");
  * loader.onAbort = () => done(null);
  * doWork(loader.signal).then(done);
  */

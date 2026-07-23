@@ -16,7 +16,7 @@ Built-in components live under `src/components/` and mirror that layout in these
 
 - [Components](components/index.md) - Built-in display/feedback/inputs/layout/selection components: `Text`, `TruncatedText`, `Input`, `Editor`, `Markdown`, `Loader`, `CancellableLoader`, `SelectList`, `SettingsList`, `Spacer`, `Box`, `Container`.
 - [HUD](components/hud/index.md) - Heads-up display model, rendering, and the `refreshHudUi` redraw hook.
-- [Status Line](components/status-line/index.md) - `StatusLineComponent` (HUD line + configurable segment rail + hook status line), segments, presets, separators, context thresholds, and git utils.
+- [Status Line](components/status-line/index.md) - `StatusLineComponent` (configurable one-line rail with inline HUD and hook status), segments, presets, separators, context thresholds, and git utils.
 
 ## Editor
 

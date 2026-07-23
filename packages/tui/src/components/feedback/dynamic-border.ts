@@ -1,3 +1,4 @@
+import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import type { Component } from "#tui/core/tui";
 import { theme } from "#tui/theme/theme";
 
@@ -20,6 +21,9 @@ export class DynamicBorder implements Component {
 	}
 
 	render(width: number): string[] {
-		return [this.color("─".repeat(Math.max(1, width)))];
+		const edgeX = Math.min(LAYOUT_EDGE_X, Math.max(0, Math.floor((width - 1) / 2)));
+		const contentWidth = Math.max(1, width - edgeX * 2);
+		const rightPadding = " ".repeat(Math.max(0, width - edgeX - contentWidth));
+		return [`${" ".repeat(edgeX)}${this.color("─".repeat(contentWidth))}${rightPadding}`];
 	}
 }

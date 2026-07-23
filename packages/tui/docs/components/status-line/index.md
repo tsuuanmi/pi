@@ -1,6 +1,6 @@
 # Status Line
 
-The status line is the configurable bottom rail rendered above the hook status line. It replaced the older `FooterComponent` (still exported under that alias for compatibility).
+The status line is the configurable one-line bottom rail that can inline HUD and hook status details. It replaced the older `FooterComponent` (still exported under that alias for compatibility).
 
 The module lives under `src/components/status-line/` and is re-exported from the package root.
 
@@ -28,13 +28,9 @@ The package re-exports the module's public API. Notable members:
 
 ## Layout
 
-Each render produces up to three lines, top to bottom:
-
-1. **HUD line** — only when HUD entries are active and `showHud !== false`. Rendered by [`renderHudBar`](../hud/render.md).
-2. **Rail** — the configurable left/right segment groups.
-3. **Hook status line** — `Status: <extension statuses>` when any extension has set status text.
+Each render produces at most one line. Active HUD details lead the line when present, followed by the rail and hook status text when space allows; the combined line is truncated to the viewport width.
 
 ## See Also
 
-- [HUD](../hud/index.md) — the HUD model and rendering backing the HUD line.
+- [HUD](../hud/index.md) — the HUD model and rendering backing inline HUD output.
 - [Components](../index.md) — other built-in components.

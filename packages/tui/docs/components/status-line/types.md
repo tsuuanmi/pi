@@ -23,7 +23,7 @@ interface StatusLineSettings {
   rightSegments?: StatusLineSegmentId[];  // right-aligned
   separator?: StatusLineSeparatorStyle;   // "slash"
   segmentOptions?: StatusLineSegmentOptions;
-  showHud?: boolean;                     // render the HUD line (default true)
+  showHud?: boolean;                     // append HUD details inline when present (default true)
 }
 ```
 
@@ -118,7 +118,7 @@ interface StatusLineDataProvider {
 
 ## HUD entry reader
 
-The HUD line is driven by an optional async reader. Provider failures never throw on the render path:
+Inline HUD details are driven by an optional async reader. Provider failures never throw on the render path:
 
 ```typescript
 interface StatusLineHudEntryReaderOptions { cwd: string; sessionId: string; }

@@ -1,6 +1,6 @@
 # HUD Rendering
 
-`renderHudBar` renders the active HUD entries as a single styled line (the gajae-style `◆ hud ...` line above the status rail).
+`renderHudBar` renders the active HUD entries as compact styled text that `StatusLineComponent` can append inline after the status rail.
 
 ```typescript
 function renderHudBar(entries: readonly StatusLineHudEntry[], width: number): string | null;

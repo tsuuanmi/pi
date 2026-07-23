@@ -27,11 +27,12 @@ function formatLocationSummary(location: StructuredReceipt["location"]): string 
 }
 
 export function formatStructuredReceiptLines(receipt: StructuredReceipt, expanded: boolean): string[] {
-	const lines = [
+	const summaryParts = [
 		`Receipt: ${receipt.actionSummary}`,
 		`Status: ${receipt.status}`,
 		`Where: ${formatLocationSummary(receipt.location)}`,
 	];
+	const lines = [summaryParts.join(" • ")];
 	if (receipt.inspect.length > 0) {
 		const first = receipt.inspect[0];
 		lines.push(`Inspect: ${first.label}: ${first.value}`);

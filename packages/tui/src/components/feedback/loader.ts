@@ -1,4 +1,6 @@
+import { performance } from "node:perf_hooks";
 import { Text } from "#tui/components/display/text";
+import { LAYOUT_EDGE_X, LAYOUT_SECTION_GAP_Y } from "#tui/components/layout/spacing";
 import type { TUI } from "#tui/core/tui";
 
 export interface LoaderIndicatorOptions {
@@ -23,7 +25,9 @@ export class Loader extends Text {
 	private renderIndicatorVerbatim = false;
 	private spinnerColorFn: (str: string) => string;
 	private messageColorFn: (str: string) => string;
+	private messageFormatter?: (message: string, elapsedMs: number) => string;
 	private message: string = "Loading...";
+	private startedAt = performance.now();
 
 	constructor(
 		ui: TUI,
@@ -31,20 +35,23 @@ export class Loader extends Text {
 		messageColorFn: (str: string) => string,
 		message: string = "Loading...",
 		indicator?: LoaderIndicatorOptions,
+		messageFormatter?: (message: string, elapsedMs: number) => string,
 	) {
-		super("", 1, 0);
+		super("", LAYOUT_EDGE_X, 0);
 		this.ui = ui;
 		this.spinnerColorFn = spinnerColorFn;
 		this.messageColorFn = messageColorFn;
 		this.message = message;
+		this.messageFormatter = messageFormatter;
 		this.setIndicator(indicator);
 	}
 
 	render(width: number): string[] {
-		return ["", ...super.render(width)];
+		return [...Array.from({ length: LAYOUT_SECTION_GAP_Y }, () => ""), ...super.render(width)];
 	}
 
 	start(): void {
+		this.startedAt = performance.now();
 		this.updateDisplay();
 		this.restartAnimation();
 	}
@@ -58,6 +65,7 @@ export class Loader extends Text {
 
 	setMessage(message: string): void {
 		this.message = message;
+		this.startedAt = performance.now();
 		this.updateDisplay();
 	}
 
@@ -84,7 +92,11 @@ export class Loader extends Text {
 		const frame = this.frames[this.currentFrame] ?? "";
 		const renderedFrame = this.renderIndicatorVerbatim ? frame : this.spinnerColorFn(frame);
 		const indicator = frame.length > 0 ? `${renderedFrame} ` : "";
-		this.setText(`${indicator}${this.messageColorFn(this.message)}`);
+		const elapsedMs = Math.max(0, performance.now() - this.startedAt);
+		const message = this.messageFormatter
+			? this.messageFormatter(this.message, elapsedMs)
+			: this.messageColorFn(this.message);
+		this.setText(`${indicator}${message}`);
 		if (this.ui) {
 			this.ui.requestRender();
 		}

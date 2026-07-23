@@ -3,6 +3,7 @@
 	"name": "light",
 	"vars": {
 		"teal": "#5a8080",
+		"accent": "teal",
 		"blue": "#547da7",
 		"green": "#588458",
 		"red": "#aa5555",
@@ -19,9 +20,9 @@
 		"customMsgBg": "#ede7f6"
 	},
 	"colors": {
-		"accent": "teal",
-		"border": "blue",
-		"borderAccent": "teal",
+		"accent": "accent",
+		"border": "accent",
+		"borderAccent": "accent",
 		"borderMuted": "lightGray",
 		"success": "green",
 		"error": "red",
@@ -35,22 +36,22 @@
 		"userMessageText": "text",
 		"customMessageBg": "customMsgBg",
 		"customMessageText": "text",
-		"customMessageLabel": "#7e57c2",
+		"customMessageLabel": "accent",
 		"toolPendingBg": "toolPendingBg",
 		"toolSuccessBg": "toolSuccessBg",
 		"toolErrorBg": "toolErrorBg",
-		"toolTitle": "text",
+		"toolTitle": "accent",
 		"toolOutput": "mediumGray",
-		"mdHeading": "yellow",
-		"mdLink": "blue",
+		"mdHeading": "accent",
+		"mdLink": "accent",
 		"mdLinkUrl": "dimGray",
-		"mdCode": "teal",
+		"mdCode": "accent",
 		"mdCodeBlock": "green",
 		"mdCodeBlockBorder": "mediumGray",
 		"mdQuote": "mediumGray",
 		"mdQuoteBorder": "mediumGray",
 		"mdHr": "mediumGray",
-		"mdListBullet": "green",
+		"mdListBullet": "accent",
 		"toolDiffAdded": "green",
 		"toolDiffRemoved": "red",
 		"toolDiffContext": "mediumGray",
@@ -69,6 +70,6 @@
 		"thinkingMedium": "teal",
 		"thinkingHigh": "#875f87",
 		"thinkingXhigh": "#8b008b",
-		"bashMode": "green"
+		"bashMode": "accent"
 	}
 }

@@ -1,7 +1,17 @@
 import type { CustomMessage } from "@tsuuanmi/pi-agent";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import type { Component } from "@tsuuanmi/pi-tui";
-import { Box, Container, getMarkdownTheme, Markdown, type MarkdownTheme, Spacer, Text, theme } from "@tsuuanmi/pi-tui";
+import {
+	Box,
+	Container,
+	getMarkdownTheme,
+	LAYOUT_EDGE_X,
+	Markdown,
+	type MarkdownTheme,
+	Spacer,
+	Text,
+	theme,
+} from "@tsuuanmi/pi-tui";
 import type { MessageRenderer } from "#pi/api/types";
 
 /**
@@ -29,7 +39,7 @@ export class CustomMessageComponent extends Container {
 		this.addChild(new Spacer(1));
 
 		// Create box with purple background (used for default rendering)
-		this.box = new Box(1, 1, (t) => theme.bg("customMessageBg", t));
+		this.box = new Box(LAYOUT_EDGE_X, 1, (t) => theme.bg("customMessageBg", t));
 
 		this.rebuild();
 	}

@@ -15,6 +15,8 @@ import {
 	getEditorTheme,
 	getKeybindings,
 	keyHint,
+	LAYOUT_EDGE_X,
+	LAYOUT_SECTION_GAP_Y,
 	Spacer,
 	Text,
 	type TUI,
@@ -55,11 +57,11 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 
 		// Add top border
 		this.addChild(new DynamicBorder());
-		this.addChild(new Spacer(1));
+		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 
 		// Add title
-		this.addChild(new Text(theme.fg("accent", title), 1, 0));
-		this.addChild(new Spacer(1));
+		this.addChild(new Text(theme.fg("accent", title), LAYOUT_EDGE_X, 0));
+		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 
 		// Create editor
 		this.editor = new Editor(tui, getEditorTheme());
@@ -72,7 +74,7 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 		};
 		this.addChild(this.editor);
 
-		this.addChild(new Spacer(1));
+		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 
 		// Add hint
 		const hasExternalEditor = !!(process.env.VISUAL || process.env.EDITOR);
@@ -83,9 +85,9 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 			"  " +
 			keyHint("tui.select.cancel", "cancel") +
 			(hasExternalEditor ? `  ${keyHint("app.editor.external", "external editor")}` : "");
-		this.addChild(new Text(hint, 1, 0));
+		this.addChild(new Text(hint, LAYOUT_EDGE_X, 0));
 
-		this.addChild(new Spacer(1));
+		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 
 		// Add bottom border
 		this.addChild(new DynamicBorder());

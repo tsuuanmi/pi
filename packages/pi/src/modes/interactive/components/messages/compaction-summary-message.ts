@@ -1,5 +1,15 @@
 import type { CompactionSummaryMessage } from "@tsuuanmi/pi-agent";
-import { Box, getMarkdownTheme, keyText, Markdown, type MarkdownTheme, Spacer, Text, theme } from "@tsuuanmi/pi-tui";
+import {
+	Box,
+	getMarkdownTheme,
+	keyText,
+	LAYOUT_EDGE_X,
+	Markdown,
+	type MarkdownTheme,
+	Spacer,
+	Text,
+	theme,
+} from "@tsuuanmi/pi-tui";
 
 /**
  * Component that renders a compaction message with collapsed/expanded state.
@@ -11,7 +21,7 @@ export class CompactionSummaryMessageComponent extends Box {
 	private markdownTheme: MarkdownTheme;
 
 	constructor(message: CompactionSummaryMessage, markdownTheme: MarkdownTheme = getMarkdownTheme()) {
-		super(1, 1, (t) => theme.bg("customMessageBg", t));
+		super(LAYOUT_EDGE_X, 1, (t) => theme.bg("customMessageBg", t));
 		this.message = message;
 		this.markdownTheme = markdownTheme;
 		this.updateDisplay();

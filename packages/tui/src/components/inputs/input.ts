@@ -1,3 +1,4 @@
+import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import { type Component, CURSOR_MARKER, type Focusable } from "#tui/core/tui";
 import { UndoStack } from "#tui/editor/history/undo-stack";
 import { findWordBackward, findWordForward } from "#tui/editor/navigation/word-navigation";
@@ -6,6 +7,7 @@ import { decodeKittyPrintable } from "#tui/input/keyboard/keys";
 import { getGraphemeSegmenter, isWhitespaceChar, sliceByColumn, visibleWidth } from "#tui/utilities/text";
 
 const segmenter = getGraphemeSegmenter();
+const INPUT_PADDING_X = LAYOUT_EDGE_X;
 
 interface InputState {
 	value: string;
@@ -322,7 +324,8 @@ export class Input implements Component, Focusable {
 
 	render(width: number): string[] {
 		// Calculate visible window
-		const prompt = "> ";
+		const paddingX = Math.min(INPUT_PADDING_X, Math.max(0, width - 2));
+		const prompt = `${" ".repeat(paddingX)}> `;
 		const availableWidth = width - prompt.length;
 
 		if (availableWidth <= 0) {

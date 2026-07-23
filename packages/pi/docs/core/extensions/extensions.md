@@ -2231,9 +2231,9 @@ See `timed-confirm.ts` for complete examples.
 ctx.ui.setStatus("my-ext", "Processing...");
 ctx.ui.setStatus("my-ext", undefined);  // Clear
 
-// Working loader (shown during streaming)
-ctx.ui.setWorkingMessage("Thinking deeply...");
-ctx.ui.setWorkingMessage();  // Restore default
+// Working loader (shown during streaming as the current action plus elapsed time)
+ctx.ui.setWorkingMessage("Thinking deeply");
+ctx.ui.setWorkingMessage();  // Restore default action
 ctx.ui.setWorkingVisible(false);  // Hide the built-in working loader row entirely
 ctx.ui.setWorkingVisible(true);   // Show the built-in working loader row
 

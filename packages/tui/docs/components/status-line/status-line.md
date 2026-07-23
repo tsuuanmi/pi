@@ -1,6 +1,6 @@
 # Status Line Component
 
-`StatusLineComponent` is the `Component` that renders the HUD line, the configurable segment rail, and the hook status line. It replaced the older `FooterComponent` (still exported under that alias).
+`StatusLineComponent` is the `Component` that renders the configurable segment rail with inline HUD and hook status details. It replaced the older `FooterComponent` (still exported under that alias).
 
 ```typescript
 class StatusLineComponent implements Component {
@@ -29,11 +29,7 @@ class StatusLineComponent implements Component {
 
 ## Render lifecycle
 
-`render(width)` returns up to three lines, top to bottom:
-
-1. **HUD line** — rendered by `renderHudBar` when `showHud !== false` and there are visible active entries. The HUD cache is refreshed in the background (1s interval).
-2. **Rail** — the left and right segment groups joined by the separator. Settings are resolved by merging the live settings over the resolved preset (see [Presets](presets.md)).
-3. **Hook status line** — `Status: <extension statuses>` when any extension status is set, sanitized and truncated to `width`.
+`render(width)` returns at most one line. HUD output from `renderHudBar` leads when present, then the rail and hook status text are appended inline. The combined line is truncated to `width`; the HUD cache is refreshed in the background (1s interval).
 
 ## Background refresh
 
@@ -53,10 +49,10 @@ Each refresh callback calls `requestRender()` when the cache value changed so th
   2. The left group is truncated (with `...`) if it alone exceeds the width.
   3. The right group is omitted entirely when there is no room for the minimum gap, otherwise it is truncated to the available space.
 
-The hook line is assembled from `footerData.getExtensionStatuses()`, sorted by key, joined with spaces, and truncated to `width`.
+Hook status text is assembled from `footerData.getExtensionStatuses()`, sorted by key, joined with spaces, appended inline after the rail, and truncated with the combined line to `width`.
 
 ## See Also
 
 - [Types](types.md) — settings and host interfaces.
 - [Segments](segments.md) — what each segment renders.
-- [HUD Rendering](../hud/render.md) — the HUD line.
+- [HUD Rendering](../hud/render.md) — inline HUD output.

@@ -6,6 +6,8 @@ import {
 	getKeybindings,
 	Input,
 	keyHint,
+	LAYOUT_EDGE_X,
+	LAYOUT_SECTION_GAP_Y,
 	Spacer,
 	Text,
 	type TUI,
@@ -54,7 +56,7 @@ export class LoginDialogComponent extends Container implements Focusable {
 		this.addChild(new DynamicBorder());
 
 		// Title
-		this.addChild(new Text(theme.fg("accent", theme.bold(title)), 1, 0));
+		this.addChild(new Text(theme.fg("accent", theme.bold(title)), LAYOUT_EDGE_X, 0));
 
 		// Dynamic content area
 		this.contentContainer = new Container();
@@ -85,7 +87,7 @@ export class LoginDialogComponent extends Container implements Focusable {
 
 	private replaceInputWithSubmittedText(value: string): void {
 		this.contentContainer.children = this.contentContainer.children.map((child) =>
-			child === this.input ? new Text(`> ${value}`, 0, 0) : child,
+			child === this.input ? new Text(`> ${value}`, LAYOUT_EDGE_X, 0) : child,
 		);
 	}
 
@@ -104,17 +106,17 @@ export class LoginDialogComponent extends Container implements Focusable {
 	 */
 	showAuth(url: string, instructions?: string): void {
 		this.contentContainer.clear();
-		this.contentContainer.addChild(new Spacer(1));
+		this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		const linkedUrl = `\x1b]8;;${url}\x07${url}\x1b]8;;\x07`;
-		this.contentContainer.addChild(new Text(theme.fg("accent", linkedUrl), 1, 0));
+		this.contentContainer.addChild(new Text(theme.fg("accent", linkedUrl), LAYOUT_EDGE_X, 0));
 
 		const clickHint = process.platform === "darwin" ? "Cmd+click to open" : "Ctrl+click to open";
 		const hyperlink = `\x1b]8;;${url}\x07${clickHint}\x1b]8;;\x07`;
-		this.contentContainer.addChild(new Text(theme.fg("dim", hyperlink), 1, 0));
+		this.contentContainer.addChild(new Text(theme.fg("dim", hyperlink), LAYOUT_EDGE_X, 0));
 
 		if (instructions) {
-			this.contentContainer.addChild(new Spacer(1));
-			this.contentContainer.addChild(new Text(theme.fg("warning", instructions), 1, 0));
+			this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
+			this.contentContainer.addChild(new Text(theme.fg("warning", instructions), LAYOUT_EDGE_X, 0));
 		}
 
 		openBrowser(url);
@@ -126,15 +128,15 @@ export class LoginDialogComponent extends Container implements Focusable {
 	 */
 	showDeviceCode(info: OAuthDeviceCodeInfo): void {
 		this.contentContainer.clear();
-		this.contentContainer.addChild(new Spacer(1));
+		this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		const linkedUrl = `\x1b]8;;${info.verificationUri}\x07${info.verificationUri}\x1b]8;;\x07`;
-		this.contentContainer.addChild(new Text(theme.fg("accent", linkedUrl), 1, 0));
+		this.contentContainer.addChild(new Text(theme.fg("accent", linkedUrl), LAYOUT_EDGE_X, 0));
 
 		const clickHint = process.platform === "darwin" ? "Cmd+click to open" : "Ctrl+click to open";
 		const hyperlink = `\x1b]8;;${info.verificationUri}\x07${clickHint}\x1b]8;;\x07`;
-		this.contentContainer.addChild(new Text(theme.fg("dim", hyperlink), 1, 0));
-		this.contentContainer.addChild(new Spacer(1));
-		this.contentContainer.addChild(new Text(theme.fg("warning", `Enter code: ${info.userCode}`), 1, 0));
+		this.contentContainer.addChild(new Text(theme.fg("dim", hyperlink), LAYOUT_EDGE_X, 0));
+		this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
+		this.contentContainer.addChild(new Text(theme.fg("warning", `Enter code: ${info.userCode}`), LAYOUT_EDGE_X, 0));
 
 		this.tui.requestRender();
 	}
@@ -144,10 +146,10 @@ export class LoginDialogComponent extends Container implements Focusable {
 	 */
 	showManualInput(prompt: string): Promise<string> {
 		this.input.setValue("");
-		this.contentContainer.addChild(new Spacer(1));
-		this.contentContainer.addChild(new Text(theme.fg("dim", prompt), 1, 0));
+		this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
+		this.contentContainer.addChild(new Text(theme.fg("dim", prompt), LAYOUT_EDGE_X, 0));
 		this.contentContainer.addChild(this.input);
-		this.contentContainer.addChild(new Text(`(${keyHint("tui.select.cancel", "to cancel")})`, 1, 0));
+		this.contentContainer.addChild(new Text(`(${keyHint("tui.select.cancel", "to cancel")})`, LAYOUT_EDGE_X, 0));
 		this.tui.requestRender();
 
 		return new Promise((resolve, reject) => {
@@ -161,16 +163,16 @@ export class LoginDialogComponent extends Container implements Focusable {
 	 * Note: Does NOT clear content, appends to existing (preserves URL from showAuth)
 	 */
 	showPrompt(message: string, placeholder?: string): Promise<string> {
-		this.contentContainer.addChild(new Spacer(1));
-		this.contentContainer.addChild(new Text(theme.fg("text", message), 1, 0));
+		this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
+		this.contentContainer.addChild(new Text(theme.fg("text", message), LAYOUT_EDGE_X, 0));
 		if (placeholder) {
-			this.contentContainer.addChild(new Text(theme.fg("dim", `e.g., ${placeholder}`), 1, 0));
+			this.contentContainer.addChild(new Text(theme.fg("dim", `e.g., ${placeholder}`), LAYOUT_EDGE_X, 0));
 		}
 		this.contentContainer.addChild(this.input);
 		this.contentContainer.addChild(
 			new Text(
 				`(${keyHint("tui.select.cancel", "to cancel,")} ${keyHint("tui.select.confirm", "to submit")})`,
-				1,
+				LAYOUT_EDGE_X,
 				0,
 			),
 		);
@@ -189,12 +191,12 @@ export class LoginDialogComponent extends Container implements Focusable {
 	 */
 	showInfo(lines: string[]): void {
 		this.contentContainer.clear();
-		this.contentContainer.addChild(new Spacer(1));
+		this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		for (const line of lines) {
-			this.contentContainer.addChild(new Text(line, 1, 0));
+			this.contentContainer.addChild(new Text(line, LAYOUT_EDGE_X, 0));
 		}
-		this.contentContainer.addChild(new Spacer(1));
-		this.contentContainer.addChild(new Text(`(${keyHint("tui.select.cancel", "to close")})`, 1, 0));
+		this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
+		this.contentContainer.addChild(new Text(`(${keyHint("tui.select.cancel", "to close")})`, LAYOUT_EDGE_X, 0));
 		this.tui.requestRender();
 	}
 
@@ -202,9 +204,9 @@ export class LoginDialogComponent extends Container implements Focusable {
 	 * Show waiting message for polling flows.
 	 */
 	showWaiting(message: string): void {
-		this.contentContainer.addChild(new Spacer(1));
-		this.contentContainer.addChild(new Text(theme.fg("dim", message), 1, 0));
-		this.contentContainer.addChild(new Text(`(${keyHint("tui.select.cancel", "to cancel")})`, 1, 0));
+		this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
+		this.contentContainer.addChild(new Text(theme.fg("dim", message), LAYOUT_EDGE_X, 0));
+		this.contentContainer.addChild(new Text(`(${keyHint("tui.select.cancel", "to cancel")})`, LAYOUT_EDGE_X, 0));
 		this.tui.requestRender();
 	}
 
@@ -212,7 +214,7 @@ export class LoginDialogComponent extends Container implements Focusable {
 	 * Called by onProgress callback
 	 */
 	showProgress(message: string): void {
-		this.contentContainer.addChild(new Text(theme.fg("dim", message), 1, 0));
+		this.contentContainer.addChild(new Text(theme.fg("dim", message), LAYOUT_EDGE_X, 0));
 		this.tui.requestRender();
 	}
 

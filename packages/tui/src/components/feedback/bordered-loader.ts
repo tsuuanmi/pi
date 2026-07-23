@@ -3,6 +3,7 @@ import { CancellableLoader } from "#tui/components/feedback/cancellable-loader";
 import { DynamicBorder } from "#tui/components/feedback/dynamic-border";
 import { Loader } from "#tui/components/feedback/loader";
 import { Spacer } from "#tui/components/layout/spacer";
+import { LAYOUT_EDGE_X, LAYOUT_SECTION_GAP_Y } from "#tui/components/layout/spacing";
 import { Container, type TUI } from "#tui/core/tui";
 import type { Theme } from "#tui/theme/theme";
 import { keyHint } from "#tui/utilities/keybinding-hints";
@@ -36,10 +37,10 @@ export class BorderedLoader extends Container {
 		}
 		this.addChild(this.loader);
 		if (this.cancellable) {
-			this.addChild(new Spacer(1));
-			this.addChild(new Text(keyHint("tui.select.cancel", "cancel"), 1, 0));
+			this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
+			this.addChild(new Text(keyHint("tui.select.cancel", "cancel"), LAYOUT_EDGE_X, 0));
 		}
-		this.addChild(new Spacer(1));
+		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		this.addChild(new DynamicBorder(borderColor));
 	}
 

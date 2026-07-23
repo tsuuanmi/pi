@@ -21,8 +21,8 @@
 	},
 	"colors": {
 		"accent": "accent",
-		"border": "blue",
-		"borderAccent": "cyan",
+		"border": "accent",
+		"borderAccent": "accent",
 		"borderMuted": "darkGray",
 		"success": "green",
 		"error": "red",
@@ -36,14 +36,14 @@
 		"userMessageText": "text",
 		"customMessageBg": "customMsgBg",
 		"customMessageText": "text",
-		"customMessageLabel": "#9575cd",
+		"customMessageLabel": "accent",
 		"toolPendingBg": "toolPendingBg",
 		"toolSuccessBg": "toolSuccessBg",
 		"toolErrorBg": "toolErrorBg",
-		"toolTitle": "text",
+		"toolTitle": "accent",
 		"toolOutput": "gray",
-		"mdHeading": "#f0c674",
-		"mdLink": "#81a2be",
+		"mdHeading": "accent",
+		"mdLink": "accent",
 		"mdLinkUrl": "dimGray",
 		"mdCode": "accent",
 		"mdCodeBlock": "green",
@@ -70,6 +70,6 @@
 		"thinkingMedium": "#81a2be",
 		"thinkingHigh": "#b294bb",
 		"thinkingXhigh": "#d183e8",
-		"bashMode": "green"
+		"bashMode": "accent"
 	}
 }

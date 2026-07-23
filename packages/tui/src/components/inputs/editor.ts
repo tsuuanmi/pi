@@ -1,3 +1,4 @@
+import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import { SelectList, type SelectListLayoutOptions, type SelectListTheme } from "#tui/components/selection/select-list";
 import { type Component, CURSOR_MARKER, type Focusable, type TUI } from "#tui/core/tui";
 import type { AutocompleteProvider, AutocompleteSuggestions } from "#tui/editor/completion/autocomplete";
@@ -16,6 +17,7 @@ import {
 
 const graphemeSegmenter = getGraphemeSegmenter();
 const wordSegmenter = getWordSegmenter();
+const EDITOR_PADDING_X = LAYOUT_EDGE_X;
 
 /** Regex matching paste markers like `[paste #1 +123 lines]` or `[paste #2 1234 chars]`. */
 const PASTE_MARKER_REGEX = /\[paste #(\d+)( (\+\d+ lines|\d+ chars))?\]/g;
@@ -427,7 +429,10 @@ export class Editor implements Component, Focusable {
 
 	render(width: number): string[] {
 		const contentWidth = Math.max(1, width);
-		const layoutWidth = Math.max(1, contentWidth - 1);
+		const paddingX = Math.min(EDITOR_PADDING_X, Math.max(0, contentWidth - 1));
+		const leftPad = " ".repeat(paddingX);
+		const innerWidth = Math.max(1, contentWidth - paddingX * 2);
+		const layoutWidth = Math.max(1, innerWidth - 1);
 
 		// Store for cursor navigation (must match wrapping width)
 		this.lastWidth = layoutWidth;
@@ -464,14 +469,11 @@ export class Editor implements Component, Focusable {
 		// Render top border (with scroll indicator if scrolled down)
 		if (this.scrollOffset > 0) {
 			const indicator = `─── ↑ ${this.scrollOffset} more `;
-			const remaining = width - visibleWidth(indicator);
-			if (remaining >= 0) {
-				result.push(this.borderColor(indicator + "─".repeat(remaining)));
-			} else {
-				result.push(this.borderColor(truncateToWidth(indicator, width)));
-			}
+			const remaining = innerWidth - visibleWidth(indicator);
+			const borderLine = remaining >= 0 ? indicator + "─".repeat(remaining) : truncateToWidth(indicator, innerWidth);
+			result.push(`${leftPad}${this.borderColor(borderLine)}${" ".repeat(paddingX)}`);
 		} else {
-			result.push(horizontal.repeat(width));
+			result.push(`${leftPad}${horizontal.repeat(innerWidth)}${" ".repeat(paddingX)}`);
 		}
 
 		// Render each visible layout line
@@ -510,29 +512,30 @@ export class Editor implements Component, Focusable {
 			}
 
 			// Calculate padding based on actual visible width
-			const padding = " ".repeat(Math.max(0, contentWidth - lineVisibleWidth));
+			const padding = " ".repeat(Math.max(0, contentWidth - paddingX - lineVisibleWidth));
 
 			// Render the line (no side borders, just horizontal lines above and below)
-			result.push(`${displayText}${padding}`);
+			result.push(`${leftPad}${displayText}${padding}`);
 		}
 
 		// Render bottom border (with scroll indicator if more content below)
 		const linesBelow = layoutLines.length - (this.scrollOffset + visibleLines.length);
 		if (linesBelow > 0) {
 			const indicator = `─── ↓ ${linesBelow} more `;
-			const remaining = width - visibleWidth(indicator);
-			result.push(this.borderColor(indicator + "─".repeat(Math.max(0, remaining))));
+			const remaining = innerWidth - visibleWidth(indicator);
+			const borderLine = indicator + "─".repeat(Math.max(0, remaining));
+			result.push(`${leftPad}${this.borderColor(borderLine)}${" ".repeat(paddingX)}`);
 		} else {
-			result.push(horizontal.repeat(width));
+			result.push(`${leftPad}${horizontal.repeat(innerWidth)}${" ".repeat(paddingX)}`);
 		}
 
 		// Add autocomplete list if active
 		if (this.autocompleteState && this.autocompleteList) {
-			const autocompleteResult = this.autocompleteList.render(contentWidth);
+			const autocompleteResult = this.autocompleteList.render(Math.max(1, innerWidth));
 			for (const line of autocompleteResult) {
 				const lineWidth = visibleWidth(line);
-				const linePadding = " ".repeat(Math.max(0, contentWidth - lineWidth));
-				result.push(`${line}${linePadding}`);
+				const linePadding = " ".repeat(Math.max(0, innerWidth - lineWidth));
+				result.push(`${leftPad}${line}${linePadding}${" ".repeat(paddingX)}`);
 			}
 		}
 

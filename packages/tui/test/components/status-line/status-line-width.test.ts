@@ -216,10 +216,11 @@ describe("StatusLineComponent HUD cache", () => {
 
 		const footer = makeComponent(createSession({ sessionName: "", cwd }), 1, {}, () => {}, entriesBySession);
 		const lines = await waitForRender(footer, 120, (rendered) => stripAnsi(rendered.join("\n")).includes("runner"));
-		const [hudLine, railLine] = lines.map((line) => stripAnsi(line));
+		const text = stripAnsi(lines.join("\n"));
 
-		assert.match(hudLine, new RegExp(escapeRegExp("runner")));
-		assert.doesNotMatch(hudLine, new RegExp(escapeRegExp("runner:execute")));
-		assert.match(railLine, new RegExp(escapeRegExp("execute")));
+		assert.equal(lines.length, 1);
+		assert.match(text, new RegExp(escapeRegExp("runner")));
+		assert.doesNotMatch(text, new RegExp(escapeRegExp("runner:execute")));
+		assert.match(text, new RegExp(escapeRegExp("execute")));
 	});
 });

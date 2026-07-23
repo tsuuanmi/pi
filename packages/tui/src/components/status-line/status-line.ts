@@ -1,4 +1,5 @@
 import { renderHudBar } from "#tui/components/hud/render";
+import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import { type GitStatusSummary, runGitStatusPorcelain } from "#tui/components/status-line/git-utils";
 import { getPreset } from "#tui/components/status-line/presets";
 import { computeUsageStats, renderSegment, sanitizeStatusText } from "#tui/components/status-line/segments";
@@ -31,8 +32,8 @@ function areGitStatusSummariesEqual(a: GitStatusSummary | null, b: GitStatusSumm
 }
 
 /**
- * Status line component: renders the HUD line (when entries are active), the
- * configurable segment rail, and the hook status line. Replaces `FooterComponent`.
+ * Status line component: renders the configurable segment rail and appends HUD
+ * and hook status details inline when present. Replaces `FooterComponent`.
  *
  * Reuses `FooterDataProvider` for the git branch (`.git/HEAD` watch), extension
  * statuses, and available provider count — it does NOT re-implement the git watcher.
@@ -90,26 +91,32 @@ export class StatusLineComponent implements Component {
 	}
 
 	render(width: number): string[] {
-		const lines: string[] = [];
 		const settings = this.#settingsSource.getStatusLine();
+		const parts: string[] = [];
 
-		// 1. HUD line (gajae-style `◆ hud ...`), only when HUD entries are active.
+		// Keep HUD, rail, and hook status compacted onto one bottom line.
 		this.#refreshHudInBackground();
+		this.#refreshGitStatusInBackground();
+		const edgeX = Math.min(LAYOUT_EDGE_X, Math.max(0, Math.floor((width - 1) / 2)));
+		const contentWidth = Math.max(1, width - edgeX * 2);
 		if (settings.showHud !== false) {
-			const hud = renderHudBar(this.#hudEntries, width);
-			if (hud) lines.push(hud);
+			const hud = renderHudBar(this.#hudEntries, contentWidth);
+			if (hud) parts.push(hud.trimEnd());
 		}
 
-		// 2. Rail (left group / right group).
-		this.#refreshGitStatusInBackground();
-		const rail = this.#buildStatusLine(width, settings);
-		if (rail) lines.push(rail);
+		const rail = this.#buildStatusLine(contentWidth, settings);
+		if (rail) parts.push(rail.trimEnd());
 
-		// 3. Hook status line (extension statuses).
-		const hook = this.#buildHookLine(width);
-		if (hook) lines.push(hook);
+		const hook = this.#buildHookLine(contentWidth);
+		if (hook) parts.push(hook);
 
-		return lines;
+		if (parts.length === 0) return [];
+		const content = truncateToWidth(
+			parts.join(theme.fg(TUI_COLOR_PROFILE.statusLine.separator, " │ ")),
+			contentWidth,
+		);
+		const rightPadding = " ".repeat(Math.max(0, width - edgeX - visibleWidth(content)));
+		return [`${" ".repeat(edgeX)}${content}${rightPadding}`];
 	}
 
 	// ═══════════════════════════════════════════════════════════════════════════

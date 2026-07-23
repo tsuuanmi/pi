@@ -32,6 +32,8 @@ import {
 	keyDisplayText,
 	keyHint,
 	keyText,
+	LAYOUT_EDGE_X,
+	LAYOUT_SECTION_GAP_Y,
 	Loader,
 	type LoaderIndicatorOptions,
 	matchesKey,
@@ -124,6 +126,19 @@ function quoteIfNeeded(value: string): string {
 	return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
+function formatElapsedDuration(elapsedMs: number): string {
+	if (elapsedMs < 1000) {
+		return `${Math.max(1, Math.round(elapsedMs))}ms`;
+	}
+	const totalSeconds = Math.floor(elapsedMs / 1000);
+	const minutes = Math.floor(totalSeconds / 60);
+	const seconds = totalSeconds % 60;
+	if (minutes > 0) {
+		return `${minutes}m ${seconds.toString().padStart(2, "0")}s`;
+	}
+	return `${(elapsedMs / 1000).toFixed(1)}s`;
+}
+
 export function formatResumeCommand(sessionManager: SessionManager): string | undefined {
 	if (!process.stdout.isTTY) return undefined;
 	if (!sessionManager.isPersisted()) return undefined;
@@ -178,7 +193,7 @@ export class InteractiveMode {
 	private workingMessage: string | undefined = undefined;
 	private workingVisible = true;
 	private workingIndicatorOptions: LoaderIndicatorOptions | undefined = undefined;
-	private readonly defaultWorkingMessage = "Working...";
+	private readonly defaultWorkingMessage = "Working";
 	private readonly defaultHiddenThinkingLabel = "Thinking...";
 	private hiddenThinkingLabel = this.defaultHiddenThinkingLabel;
 
@@ -618,14 +633,14 @@ export class InteractiveMode {
 				() => `${logo}\n${compactInstructions}\n${compactOnboarding}\n\n${onboarding}`,
 				() => `${logo}\n${expandedInstructions}\n\n${onboarding}`,
 				this._resourceDisplayController.getStartupExpansionState(),
-				1,
+				LAYOUT_EDGE_X,
 				0,
 			);
 
 			// Setup UI layout
-			this.headerContainer.addChild(new Spacer(1));
+			this.headerContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 			this.headerContainer.addChild(this.builtInHeader);
-			this.headerContainer.addChild(new Spacer(1));
+			this.headerContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		} else {
 			// Minimal header when silenced
 			this.builtInHeader = new Text("", 0, 0);
@@ -917,13 +932,18 @@ export class InteractiveMode {
 		return this.workingMessage ?? this.defaultWorkingMessage;
 	}
 
+	private formatWorkingLoaderMessage(message: string, elapsedMs: number): string {
+		return `${theme.fg("toolTitle", theme.bold(message))} ${theme.fg("muted", `• ${formatElapsedDuration(elapsedMs)}`)}`;
+	}
+
 	private createWorkingLoader(): Loader {
 		return new Loader(
 			this.ui,
 			(spinner) => theme.fg("accent", spinner),
-			(text) => theme.fg("muted", text),
+			(text) => text,
 			this.getWorkingLoaderMessage(),
 			this.workingIndicatorOptions,
+			(message, elapsedMs) => this.formatWorkingLoaderMessage(message, elapsedMs),
 		);
 	}
 
@@ -1118,7 +1138,7 @@ export class InteractiveMode {
 	 */
 	private showExtensionError(extensionPath: string, error: string, stack?: string): void {
 		const errorMsg = `Extension "${extensionPath}" error: ${error}`;
-		const errorText = new Text(theme.fg("error", errorMsg), 1, 0);
+		const errorText = new Text(theme.fg("error", errorMsg), LAYOUT_EDGE_X, 0);
 		this.chatContainer.addChild(errorText);
 		if (stack) {
 			// Show stack trace in dim color, indented
@@ -1128,7 +1148,7 @@ export class InteractiveMode {
 				.map((line) => theme.fg("dim", `  ${line.trim()}`))
 				.join("\n");
 			if (stackLines) {
-				this.chatContainer.addChild(new Text(stackLines, 1, 0));
+				this.chatContainer.addChild(new Text(stackLines, LAYOUT_EDGE_X, 0));
 			}
 		}
 		this.ui.requestRender();
@@ -1404,7 +1424,7 @@ export class InteractiveMode {
 						this.showError(event.errorMessage);
 					} else {
 						this.chatContainer.addChild(new Spacer(1));
-						this.chatContainer.addChild(new Text(theme.fg("error", event.errorMessage), 1, 0));
+						this.chatContainer.addChild(new Text(theme.fg("error", event.errorMessage), LAYOUT_EDGE_X, 0));
 					}
 				}
 				void this.flushCompactionQueue({ willRetry: event.willRetry });
@@ -1498,7 +1518,7 @@ export class InteractiveMode {
 		}
 
 		const spacer = new Spacer(1);
-		const text = new Text(theme.fg("dim", message), 1, 0);
+		const text = new Text(theme.fg("dim", message), LAYOUT_EDGE_X, 0);
 		this.chatContainer.addChild(spacer);
 		this.chatContainer.addChild(text);
 		this.lastStatusSpacer = spacer;
@@ -2033,14 +2053,14 @@ export class InteractiveMode {
 
 	showError(errorMessage: string): void {
 		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(new Text(theme.fg("error", `Error: ${errorMessage}`), 1, 0));
+		this.chatContainer.addChild(new Text(theme.fg("error", `Error: ${errorMessage}`), LAYOUT_EDGE_X, 0));
 		this.chatContainer.addChild(new Spacer(1));
 		this.ui.requestRender();
 	}
 
 	showWarning(warningMessage: string): void {
 		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(new Text(theme.fg("warning", `Warning: ${warningMessage}`), 1, 0));
+		this.chatContainer.addChild(new Text(theme.fg("warning", `Warning: ${warningMessage}`), LAYOUT_EDGE_X, 0));
 		this.ui.requestRender();
 	}
 
@@ -2087,15 +2107,15 @@ export class InteractiveMode {
 			this.pendingMessagesContainer.addChild(new Spacer(1));
 			for (const message of steeringMessages) {
 				const text = theme.fg("dim", `Steering: ${message}`);
-				this.pendingMessagesContainer.addChild(new TruncatedText(text, 1, 0));
+				this.pendingMessagesContainer.addChild(new TruncatedText(text, LAYOUT_EDGE_X, 0));
 			}
 			for (const message of followUpMessages) {
 				const text = theme.fg("dim", `Follow-up: ${message}`);
-				this.pendingMessagesContainer.addChild(new TruncatedText(text, 1, 0));
+				this.pendingMessagesContainer.addChild(new TruncatedText(text, LAYOUT_EDGE_X, 0));
 			}
 			const dequeueHint = this.getAppKeyDisplay("app.message.dequeue");
 			const hintText = theme.fg("dim", `↳ ${dequeueHint} to edit all queued messages`);
-			this.pendingMessagesContainer.addChild(new TruncatedText(hintText, 1, 0));
+			this.pendingMessagesContainer.addChild(new TruncatedText(hintText, LAYOUT_EDGE_X, 0));
 		}
 	}
 
@@ -2245,7 +2265,7 @@ export class InteractiveMode {
 		reloadBox.addChild(new DynamicBorder(borderColor));
 		reloadBox.addChild(new Spacer(1));
 		reloadBox.addChild(
-			new Text(theme.fg("muted", "Reloading keybindings, extensions, skills, prompts, themes..."), 1, 0),
+			new Text(theme.fg("muted", "Reloading keybindings, extensions, skills, prompts, themes..."), LAYOUT_EDGE_X, 0),
 		);
 		reloadBox.addChild(new Spacer(1));
 		reloadBox.addChild(new DynamicBorder(borderColor));
@@ -2380,7 +2400,7 @@ export class InteractiveMode {
 			}
 			this.renderCurrentSessionState();
 			this.chatContainer.addChild(new Spacer(1));
-			this.chatContainer.addChild(new Text(`${theme.fg("accent", "✓ New session started")}`, 1, 1));
+			this.chatContainer.addChild(new Text(`${theme.fg("accent", "✓ New session started")}`, LAYOUT_EDGE_X, 1));
 			this.ui.requestRender();
 		} catch (error: unknown) {
 			await this.handleFatalRuntimeError("Failed to create session", error);

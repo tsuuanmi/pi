@@ -62,7 +62,7 @@ export function renderToolPath(
 	if (rawPath === null) return invalidArgText(theme);
 	const value = rawPath || options?.emptyFallback;
 	if (!value) return theme.fg("toolOutput", "...");
-	return linkPath(theme.fg("accent", shortenPath(value)), value, cwd);
+	return linkPath(theme.fg("dim", shortenPath(value)), value, cwd);
 }
 
 /** Wrap a ToolDefinition into an AgentTool for the core runtime. */

@@ -8,6 +8,8 @@ import {
 	DynamicBorder,
 	keyHint,
 	keyText,
+	LAYOUT_EDGE_X,
+	LAYOUT_SECTION_GAP_Y,
 	Loader,
 	Spacer,
 	stripAnsi,
@@ -42,11 +44,11 @@ class BashCommandHeaderComponent implements Component {
 	invalidate(): void {}
 
 	render(width: number): string[] {
-		const contentWidth = Math.max(1, width - 2);
+		const contentWidth = Math.max(1, width - LAYOUT_EDGE_X * 2);
 		const command = this.expanded
 			? this.command
 			: truncateToWidth(this.command.replace(/\r?\n/g, "\\n"), Math.max(1, contentWidth - 2));
-		return new Text(theme.fg(this.colorKey, theme.bold(`$ ${command}`)), 1, 0).render(width);
+		return new Text(theme.fg(this.colorKey, theme.bold(`$ ${command}`)), LAYOUT_EDGE_X, 0).render(width);
 	}
 }
 
@@ -72,7 +74,7 @@ export class BashExecutionComponent extends Container {
 		const borderColor = (str: string) => theme.fg(this.colorKey, str);
 
 		// Add spacer
-		this.addChild(new Spacer(1));
+		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 
 		// Top border
 		this.addChild(new DynamicBorder(borderColor));
@@ -177,7 +179,7 @@ export class BashExecutionComponent extends Container {
 			if (this.expanded) {
 				// Show all lines
 				const displayText = availableLines.map((line) => theme.fg("muted", line)).join("\n");
-				this.contentContainer.addChild(new Text(`\n${displayText}`, 1, 0));
+				this.contentContainer.addChild(new Text(`\n${displayText}`, LAYOUT_EDGE_X, 0));
 			} else {
 				// Use shared visual truncation utility with width-aware caching
 				const styledOutput = previewLogicalLines.map((line) => theme.fg("muted", line)).join("\n");
@@ -187,7 +189,7 @@ export class BashExecutionComponent extends Container {
 				this.contentContainer.addChild({
 					render: (width: number) => {
 						if (cachedLines === undefined || cachedWidth !== width) {
-							const result = truncateToVisualLines(styledInput, PREVIEW_LINES, width, 1);
+							const result = truncateToVisualLines(styledInput, PREVIEW_LINES, width, LAYOUT_EDGE_X);
 							cachedLines = result.visualLines;
 							cachedWidth = width;
 						}
@@ -229,11 +231,13 @@ export class BashExecutionComponent extends Container {
 			// Add truncation warning (context truncation, not preview truncation)
 			const wasTruncated = this.truncationResult?.truncated || contextTruncation.truncated;
 			if (wasTruncated && this.fullOutputPath) {
-				statusParts.push(theme.fg("warning", `Output truncated. Full output: ${this.fullOutputPath}`));
+				statusParts.push(
+					theme.fg("warning", "Output truncated. Full output: ") + theme.fg("dim", this.fullOutputPath),
+				);
 			}
 
 			if (statusParts.length > 0) {
-				this.contentContainer.addChild(new Text(`\n${statusParts.join("\n")}`, 1, 0));
+				this.contentContainer.addChild(new Text(`\n${statusParts.join("\n")}`, LAYOUT_EDGE_X, 0));
 			}
 		}
 	}

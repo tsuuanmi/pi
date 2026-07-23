@@ -10,6 +10,8 @@ import {
 	getKeybindings,
 	Input,
 	keyHint,
+	LAYOUT_EDGE_X,
+	LAYOUT_SECTION_GAP_Y,
 	Spacer,
 	Text,
 	type TUI,
@@ -53,11 +55,11 @@ export class ExtensionInputComponent extends Container implements Focusable {
 		this.baseTitle = title;
 
 		this.addChild(new DynamicBorder());
-		this.addChild(new Spacer(1));
+		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 
-		this.titleText = new Text(theme.fg("accent", title), 1, 0);
+		this.titleText = new Text(theme.fg("accent", title), LAYOUT_EDGE_X, 0);
 		this.addChild(this.titleText);
-		this.addChild(new Spacer(1));
+		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 
 		if (opts?.timeout && opts.timeout > 0 && opts.tui) {
 			this.countdown = new CountdownTimer(
@@ -70,11 +72,15 @@ export class ExtensionInputComponent extends Container implements Focusable {
 
 		this.input = new Input();
 		this.addChild(this.input);
-		this.addChild(new Spacer(1));
+		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		this.addChild(
-			new Text(`${keyHint("tui.select.confirm", "submit")}  ${keyHint("tui.select.cancel", "cancel")}`, 1, 0),
+			new Text(
+				`${keyHint("tui.select.confirm", "submit")}  ${keyHint("tui.select.cancel", "cancel")}`,
+				LAYOUT_EDGE_X,
+				0,
+			),
 		);
-		this.addChild(new Spacer(1));
+		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		this.addChild(new DynamicBorder());
 	}
 

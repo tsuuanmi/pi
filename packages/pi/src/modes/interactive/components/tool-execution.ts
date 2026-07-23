@@ -1,10 +1,18 @@
 import { getStructuredReceipt } from "@tsuuanmi/pi-agent";
-import { Box, type Component, Container, Spacer, Text, type TUI, theme } from "@tsuuanmi/pi-tui";
-import type { ToolDefinition, ToolRenderContext } from "#pi/api/types";
 import {
+	Box,
+	type Component,
+	Container,
 	formatStructuredReceiptLines,
+	LAYOUT_EDGE_X,
+	LAYOUT_SECTION_GAP_Y,
 	renderStructuredReceipt,
+	Spacer,
+	Text,
+	type TUI,
+	theme,
 } from "@tsuuanmi/pi-tui";
+import type { ToolDefinition, ToolRenderContext } from "#pi/api/types";
 import { createAllToolDefinitions, type ToolName } from "#pi/tools/index";
 import { getTextOutput as getRenderedTextOutput } from "#pi/tools/utils";
 
@@ -54,13 +62,13 @@ export class ToolExecutionComponent extends Container {
 		this.ui = ui;
 		this.cwd = cwd;
 
-		this.addChild(new Spacer(1));
+		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 
 		// Always create all shell variants. contentBox is used for default renderer-based composition.
 		// selfRenderContainer is used when the tool renders its own framing.
 		// contentText is reserved for generic fallback rendering when no tool definition exists.
-		this.contentBox = new Box(1, 1, (text: string) => theme.bg("toolPendingBg", text));
-		this.contentText = new Text("", 1, 1, (text: string) => theme.bg("toolPendingBg", text));
+		this.contentBox = new Box(LAYOUT_EDGE_X, 1, (text: string) => theme.bg("toolPendingBg", text));
+		this.contentText = new Text("", LAYOUT_EDGE_X, 1, (text: string) => theme.bg("toolPendingBg", text));
 		this.selfRenderContainer = new Container();
 
 		if (this.hasRendererDefinition()) {

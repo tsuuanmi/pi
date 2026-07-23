@@ -11,7 +11,16 @@
 import * as os from "node:os";
 import * as path from "node:path";
 import { getCwdRelativePath } from "@tsuuanmi/pi-agent/node";
-import { type Container, ExpandableText, Spacer, Text, type ThemeColor, theme } from "@tsuuanmi/pi-tui";
+import {
+	type Container,
+	ExpandableText,
+	LAYOUT_EDGE_X,
+	LAYOUT_SECTION_GAP_Y,
+	Spacer,
+	Text,
+	type ThemeColor,
+	theme,
+} from "@tsuuanmi/pi-tui";
 import type { ExtensionRunner } from "#pi/extensions/index";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import type { AgentSession } from "#pi/session/agent-session";
@@ -467,11 +476,11 @@ export class ResourceDisplayController {
 				() => `${sectionHeader(name, color)}\n${collapsedBody}`,
 				() => `${sectionHeader(name, color)}\n${expandedBody}`,
 				this.getStartupExpansionState(),
-				0,
+				LAYOUT_EDGE_X,
 				0,
 			);
 			this.chatContainer.addChild(section);
-			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		};
 
 		const skillsResult = this.session.resourceLoader.getSkills();
@@ -508,7 +517,7 @@ export class ResourceDisplayController {
 		if (showListing) {
 			const contextFiles = this.session.resourceLoader.getAgentsFiles().agentsFiles;
 			if (contextFiles.length > 0) {
-				this.chatContainer.addChild(new Spacer(1));
+				this.chatContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 				const contextList = contextFiles
 					.map((f) => theme.fg("dim", `  ${this.formatDisplayPath(f.path)}`))
 					.join("\n");
@@ -591,17 +600,19 @@ export class ResourceDisplayController {
 			const skillDiagnostics = skillsResult.diagnostics;
 			if (skillDiagnostics.length > 0) {
 				const warningLines = this.formatDiagnostics(skillDiagnostics, sourceInfos);
-				this.chatContainer.addChild(new Text(`${theme.fg("warning", "[Skill conflicts]")}\n${warningLines}`, 0, 0));
-				this.chatContainer.addChild(new Spacer(1));
+				this.chatContainer.addChild(
+					new Text(`${theme.fg("warning", "[Skill conflicts]")}\n${warningLines}`, LAYOUT_EDGE_X, 0),
+				);
+				this.chatContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 			}
 
 			const promptDiagnostics = promptsResult.diagnostics;
 			if (promptDiagnostics.length > 0) {
 				const warningLines = this.formatDiagnostics(promptDiagnostics, sourceInfos);
 				this.chatContainer.addChild(
-					new Text(`${theme.fg("warning", "[Prompt conflicts]")}\n${warningLines}`, 0, 0),
+					new Text(`${theme.fg("warning", "[Prompt conflicts]")}\n${warningLines}`, LAYOUT_EDGE_X, 0),
 				);
-				this.chatContainer.addChild(new Spacer(1));
+				this.chatContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 			}
 
 			const extensionDiagnostics: ResourceDiagnostic[] = [];
@@ -622,16 +633,18 @@ export class ResourceDisplayController {
 			if (extensionDiagnostics.length > 0) {
 				const warningLines = this.formatDiagnostics(extensionDiagnostics, sourceInfos);
 				this.chatContainer.addChild(
-					new Text(`${theme.fg("warning", "[Extension issues]")}\n${warningLines}`, 0, 0),
+					new Text(`${theme.fg("warning", "[Extension issues]")}\n${warningLines}`, LAYOUT_EDGE_X, 0),
 				);
-				this.chatContainer.addChild(new Spacer(1));
+				this.chatContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 			}
 
 			const themeDiagnostics = themesResult.diagnostics;
 			if (themeDiagnostics.length > 0) {
 				const warningLines = this.formatDiagnostics(themeDiagnostics, sourceInfos);
-				this.chatContainer.addChild(new Text(`${theme.fg("warning", "[Theme conflicts]")}\n${warningLines}`, 0, 0));
-				this.chatContainer.addChild(new Spacer(1));
+				this.chatContainer.addChild(
+					new Text(`${theme.fg("warning", "[Theme conflicts]")}\n${warningLines}`, LAYOUT_EDGE_X, 0),
+				);
+				this.chatContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 			}
 		}
 	}

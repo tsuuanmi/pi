@@ -287,6 +287,17 @@ settings.updateValue("theme", "light");
 
 **Controls:** Arrow keys to navigate, Enter/Space to activate (cycle value or open submenu), Escape to cancel.
 
+## Layout Spacing
+
+Shared spacing constants keep screen gutters and section gaps consistent across components:
+
+```typescript
+import { LAYOUT_EDGE_X, LAYOUT_SECTION_GAP_Y, Spacer } from "@tsuuanmi/pi-tui";
+
+const inset = LAYOUT_EDGE_X; // standard left/right gutter
+const spacer = new Spacer(LAYOUT_SECTION_GAP_Y); // standard section gap
+```
+
 ## Spacer
 
 Empty lines for vertical spacing:

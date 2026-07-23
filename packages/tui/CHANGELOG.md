@@ -4,6 +4,8 @@
 
 ### Changed
 
+- **tui**: Centralized screen gutter and section-gap spacing constants for consistent TUI layout.
+- **tui**: Simplified the loader and status-line chrome to compact one-line rows with stronger accent consistency.
 - **tui**: Moved reusable border, loader, countdown, expandable text, and structured receipt rendering helpers into the TUI package.
 - **tui**: Centralized HUD and status-line semantic colors in a shared TUI color profile.
 - **tui**: Context warning levels now use percent thresholds only (`50% / 75% / 100%`), so they stay model-agnostic across different context windows.

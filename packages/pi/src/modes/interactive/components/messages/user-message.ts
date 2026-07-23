@@ -1,4 +1,4 @@
-import { Box, Container, getMarkdownTheme, Markdown, type MarkdownTheme, theme } from "@tsuuanmi/pi-tui";
+import { Box, Container, getMarkdownTheme, LAYOUT_EDGE_X, Markdown, type MarkdownTheme, theme } from "@tsuuanmi/pi-tui";
 
 const OSC133_ZONE_START = "\x1b]133;A\x07";
 const OSC133_ZONE_END = "\x1b]133;B\x07";
@@ -12,7 +12,7 @@ export class UserMessageComponent extends Container {
 
 	constructor(text: string, markdownTheme: MarkdownTheme = getMarkdownTheme()) {
 		super();
-		this.contentBox = new Box(1, 1, (content: string) => theme.bg("userMessageBg", content));
+		this.contentBox = new Box(LAYOUT_EDGE_X, 1, (content: string) => theme.bg("userMessageBg", content));
 		this.contentBox.addChild(
 			new Markdown(
 				text,

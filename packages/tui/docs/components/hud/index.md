@@ -1,6 +1,6 @@
 # HUD (Heads-Up Display)
 
-The HUD renders a single status line above the status rail to surface live extension/plugin state (active phases, progress chips, severity warnings).
+The HUD renders compact status text that the status line can append inline to surface live extension/plugin state (active phases, progress chips, severity warnings).
 
 The module lives under `src/components/hud/` and is re-exported from the package root.
 
@@ -21,4 +21,4 @@ The module lives under `src/components/hud/` and is re-exported from the package
 
 ## See Also
 
-- [Status Line](../status-line/index.md) — the component that hosts the HUD line.
+- [Status Line](../status-line/index.md) — the component that inlines HUD output.

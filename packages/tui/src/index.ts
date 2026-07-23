@@ -41,6 +41,7 @@ export { Input } from "#tui/components/inputs/input";
 // Components
 export { Box } from "#tui/components/layout/box";
 export { Spacer } from "#tui/components/layout/spacer";
+export { LAYOUT_EDGE_X, LAYOUT_SECTION_GAP_Y } from "#tui/components/layout/spacing";
 export {
 	type SelectItem,
 	SelectList,
