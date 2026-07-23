@@ -211,7 +211,6 @@ function createExtensionAPI(
 			}
 		},
 
-
 		refreshTools(options?: { includeAllExtensionTools?: boolean }): void {
 			runtime.assertActive();
 			runtime.refreshTools(options);

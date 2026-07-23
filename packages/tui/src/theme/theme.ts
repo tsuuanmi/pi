@@ -5,12 +5,12 @@ import chalk from "chalk";
 import { type Static, Type } from "typebox";
 import { Compile } from "typebox/compile";
 import type { MarkdownTheme } from "#tui/components/display/markdown";
+import { highlight, supportsLanguage } from "#tui/components/display/syntax-highlight";
 import type { EditorTheme } from "#tui/components/inputs/editor";
 import type { SelectListTheme } from "#tui/components/selection/select-list";
 import type { SettingsListTheme } from "#tui/components/selection/settings-list";
 import { getCapabilities } from "#tui/terminal/features/capabilities";
 import type { RgbColor } from "#tui/terminal/features/terminal-colors";
-import { highlight, supportsLanguage } from "#tui/components/display/syntax-highlight";
 
 export interface ThemeSourceInfo {
 	path: string;

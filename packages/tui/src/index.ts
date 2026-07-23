@@ -7,17 +7,24 @@ export {
 	type MarkdownOptions,
 	type MarkdownTheme,
 } from "#tui/components/display/markdown";
-export { Text } from "#tui/components/display/text";
-export { TruncatedText } from "#tui/components/display/truncated-text";
-export { BorderedLoader } from "#tui/components/feedback/bordered-loader";
-export { CancellableLoader } from "#tui/components/feedback/cancellable-loader";
-export { CountdownTimer } from "#tui/components/feedback/countdown-timer";
-export { DynamicBorder } from "#tui/components/layout/dynamic-border";
-export { Loader, type LoaderIndicatorOptions } from "#tui/components/feedback/loader";
 export {
 	formatStructuredReceiptLines,
 	renderStructuredReceipt,
 } from "#tui/components/display/structured-receipt";
+export {
+	type HighlightOptions,
+	type HighlightTheme,
+	highlight,
+	renderHighlightedHtml,
+	supportsLanguage,
+} from "#tui/components/display/syntax-highlight";
+export { Text } from "#tui/components/display/text";
+export { TruncatedText } from "#tui/components/display/truncated-text";
+export { truncateToVisualLines, type VisualTruncateResult } from "#tui/components/display/visual-truncate";
+export { BorderedLoader } from "#tui/components/feedback/bordered-loader";
+export { CancellableLoader } from "#tui/components/feedback/cancellable-loader";
+export { CountdownTimer } from "#tui/components/feedback/countdown-timer";
+export { Loader, type LoaderIndicatorOptions } from "#tui/components/feedback/loader";
 export { refreshHudUi } from "#tui/components/hud/extension-ui";
 export type {
 	ActiveHudEntry,
@@ -40,6 +47,7 @@ export { Editor, type EditorTheme } from "#tui/components/inputs/editor";
 export { Input } from "#tui/components/inputs/input";
 // Components
 export { Box } from "#tui/components/layout/box";
+export { DynamicBorder } from "#tui/components/layout/dynamic-border";
 export { Spacer } from "#tui/components/layout/spacer";
 export { LAYOUT_EDGE_X, LAYOUT_SECTION_GAP_Y } from "#tui/components/layout/spacing";
 export {
@@ -121,6 +129,14 @@ export {
 export { type FuzzyMatch, fuzzyFilter, fuzzyMatch } from "#tui/editor/completion/fuzzy";
 // Editor component interface (for custom editors)
 export type { EditorComponent } from "#tui/editor/contracts/editor-component";
+export {
+	formatKeyText,
+	type KeyTextFormatOptions,
+	keyDisplayText,
+	keyHint,
+	keyText,
+	rawKeyHint,
+} from "#tui/input/keyboard/keybinding-hints";
 // Keybindings
 export {
 	getKeybindings,
@@ -134,14 +150,6 @@ export {
 	setKeybindings,
 	TUI_KEYBINDINGS,
 } from "#tui/input/keyboard/keybindings";
-export {
-	formatKeyText,
-	type KeyTextFormatOptions,
-	keyDisplayText,
-	keyHint,
-	keyText,
-	rawKeyHint,
-} from "#tui/input/keyboard/keybinding-hints";
 // Keyboard input handling
 export {
 	decodeKittyPrintable,
@@ -174,12 +182,4 @@ export * from "#tui/theme/theme";
 // Utilities
 export { stripAnsi } from "#tui/utilities/ansi";
 export { type DiffRenderTheme, type RenderDiffOptions, renderDiff } from "#tui/utilities/diff";
-export {
-	type HighlightOptions,
-	type HighlightTheme,
-	highlight,
-	renderHighlightedHtml,
-	supportsLanguage,
-} from "#tui/components/display/syntax-highlight";
 export { sliceByColumn, truncateToWidth, visibleWidth, wrapTextWithAnsi } from "#tui/utilities/text";
-export { truncateToVisualLines, type VisualTruncateResult } from "#tui/components/display/visual-truncate";

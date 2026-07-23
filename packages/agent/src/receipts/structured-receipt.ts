@@ -60,8 +60,7 @@ export function isStructuredReceipt(value: unknown): value is StructuredReceipt 
 	if (!isRecord(value)) return false;
 	if (value.version !== STRUCTURED_RECEIPT_VERSION) return false;
 	if (typeof value.id !== "string" || value.id.length === 0) return false;
-	if (typeof value.source !== "string" || !["builtin-tool", "subagent", "tmux"].includes(value.source))
-		return false;
+	if (typeof value.source !== "string" || !["builtin-tool", "subagent", "tmux"].includes(value.source)) return false;
 	if (typeof value.actionSummary !== "string" || value.actionSummary.length === 0) return false;
 	if (
 		typeof value.status !== "string" ||

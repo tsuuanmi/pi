@@ -1,7 +1,7 @@
 import { execSync } from "child_process";
 import { platform } from "os";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { copyToClipboard } from "#pi/utils/clipboard/clipboard";
+import { copyToClipboard } from "#pi/modes/interactive/utils/clipboard";
 
 const mocks = vi.hoisted(() => {
 	return {

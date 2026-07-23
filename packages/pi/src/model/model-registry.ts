@@ -7,6 +7,7 @@ import {
 	type AnthropicMessagesCompat,
 	type Api,
 	type AssistantMessageEventStream,
+	BUILT_IN_PROVIDER_DISPLAY_NAMES,
 	type Context,
 	formatTypeBoxValidationPath,
 	getModels,
@@ -19,7 +20,6 @@ import {
 	registerApiProvider,
 	resetApiProviders,
 	type SimpleStreamOptions,
-	BUILT_IN_PROVIDER_DISPLAY_NAMES,
 } from "@tsuuanmi/pi-ai";
 import { registerOAuthProvider, resetOAuthProviders } from "@tsuuanmi/pi-ai/oauth";
 import { existsSync, readFileSync } from "fs";

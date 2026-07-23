@@ -7,15 +7,11 @@
 
 import type { AgentMessage, StreamFn, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import {
+	computeFileLists,
 	convertToLlm,
 	createBranchSummaryMessage,
 	createCompactionSummaryMessage,
 	createCustomMessage,
-} from "@tsuuanmi/pi-agent";
-import type { AssistantMessage, Context, Model, SimpleStreamOptions, Usage } from "@tsuuanmi/pi-ai";
-import { completeSimple } from "@tsuuanmi/pi-ai";
-import {
-	computeFileLists,
 	createFileOps,
 	extractFileOpsFromMessage,
 	type FileOperations,
@@ -23,6 +19,8 @@ import {
 	SUMMARIZATION_SYSTEM_PROMPT,
 	serializeConversation,
 } from "@tsuuanmi/pi-agent";
+import type { AssistantMessage, Context, Model, SimpleStreamOptions, Usage } from "@tsuuanmi/pi-ai";
+import { completeSimple } from "@tsuuanmi/pi-ai";
 import { buildSessionContext, type CompactionEntry, type SessionEntry } from "#pi/session/session-manager";
 
 // ============================================================================

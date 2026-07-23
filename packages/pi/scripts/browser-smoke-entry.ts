@@ -9,7 +9,6 @@ import {
 	ok,
 	streamProxy,
 	toError,
-	truncateHead,
 } from "@tsuuanmi/pi-agent";
 
 // Keep this entry browser-safe. It is bundled by the check-browser-smoke script
@@ -42,7 +41,6 @@ console.log(
 		truncated: false,
 		timestamp: 0,
 	}),
-	truncateHead("a\nb", { maxLines: 1 }).content,
 	new FileError("not_found", "missing").code,
 	toError("boom").message,
 	typeof streamProxy,

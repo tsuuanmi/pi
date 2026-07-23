@@ -4,7 +4,7 @@
 import type { Model } from "#ai/types";
 
 export const MODELS = {
-	"anthropic": {
+	anthropic: {
 		"claude-fable-5": {
 			id: "claude-fable-5",
 			name: "Claude Fable 5",
@@ -12,7 +12,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 10,
@@ -132,7 +132,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			thinkingLevelMap: {"xhigh":"max"},
+			thinkingLevelMap: { xhigh: "max" },
 			input: ["text"],
 			cost: {
 				input: 5,
@@ -149,9 +149,9 @@ export const MODELS = {
 			api: "anthropic-messages",
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
-			compat: {"supportsTemperature":false},
+			compat: { supportsTemperature: false },
 			reasoning: true,
-			thinkingLevelMap: {"xhigh":"xhigh"},
+			thinkingLevelMap: { xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 5,
@@ -168,9 +168,9 @@ export const MODELS = {
 			api: "anthropic-messages",
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
-			compat: {"supportsTemperature":false},
+			compat: { supportsTemperature: false },
 			reasoning: true,
-			thinkingLevelMap: {"xhigh":"xhigh"},
+			thinkingLevelMap: { xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 5,
@@ -558,7 +558,7 @@ export const MODELS = {
 			maxTokens: 65536,
 		} satisfies Model<"openai-completions">,
 	},
-	"openai": {
+	openai: {
 		"gpt-4": {
 			id: "gpt-4",
 			name: "GPT-4",
@@ -736,7 +736,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 1.25,
@@ -754,7 +754,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 1.25,
@@ -772,7 +772,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 0.25,
@@ -790,7 +790,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 0.05,
@@ -808,7 +808,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 15,
@@ -826,7 +826,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 1.25,
@@ -844,7 +844,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 1.25,
@@ -862,7 +862,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 1.25,
@@ -880,7 +880,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 1.25,
@@ -898,7 +898,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 0.25,
@@ -916,7 +916,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 1.75,
@@ -934,7 +934,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 1.75,
@@ -952,7 +952,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 1.75,
@@ -970,7 +970,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 21,
@@ -988,7 +988,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 1.75,
@@ -1006,7 +1006,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 1.75,
@@ -1024,7 +1024,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 1.75,
@@ -1042,7 +1042,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 2.5,
@@ -1060,7 +1060,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 0.75,
@@ -1078,7 +1078,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 0.2,
@@ -1096,7 +1096,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 30,
@@ -1114,7 +1114,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":"none","minimal":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: "none", minimal: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 5,
@@ -1132,7 +1132,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null,"minimal":null,"low":null,"xhigh":"xhigh"},
+			thinkingLevelMap: { off: null, minimal: null, low: null, xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 30,
@@ -1150,7 +1150,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 5,
@@ -1168,7 +1168,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 1,
@@ -1186,7 +1186,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 5,
@@ -1204,7 +1204,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: {"off":null},
+			thinkingLevelMap: { off: null },
 			input: ["text"],
 			cost: {
 				input: 2.5,
@@ -1232,7 +1232,7 @@ export const MODELS = {
 			contextWindow: 128000,
 			maxTokens: 32000,
 		} satisfies Model<"openai-responses">,
-		"o1": {
+		o1: {
 			id: "o1",
 			name: "o1",
 			api: "openai-responses",
@@ -1266,7 +1266,7 @@ export const MODELS = {
 			contextWindow: 200000,
 			maxTokens: 100000,
 		} satisfies Model<"openai-responses">,
-		"o3": {
+		o3: {
 			id: "o3",
 			name: "o3",
 			api: "openai-responses",
@@ -1377,7 +1377,7 @@ export const MODELS = {
 			provider: "openai-codex",
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
-			thinkingLevelMap: {"xhigh":"xhigh"},
+			thinkingLevelMap: { xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 1.75,
@@ -1395,7 +1395,7 @@ export const MODELS = {
 			provider: "openai-codex",
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
-			thinkingLevelMap: {"xhigh":"xhigh"},
+			thinkingLevelMap: { xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 2.5,
@@ -1413,7 +1413,7 @@ export const MODELS = {
 			provider: "openai-codex",
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
-			thinkingLevelMap: {"xhigh":"xhigh"},
+			thinkingLevelMap: { xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 0.75,
@@ -1431,7 +1431,7 @@ export const MODELS = {
 			provider: "openai-codex",
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
-			thinkingLevelMap: {"xhigh":"xhigh"},
+			thinkingLevelMap: { xhigh: "xhigh" },
 			input: ["text"],
 			cost: {
 				input: 5,

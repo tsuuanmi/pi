@@ -7,15 +7,11 @@
 
 import type { AgentMessage, StreamFn } from "@tsuuanmi/pi-agent";
 import {
+	computeFileLists,
 	convertToLlm,
 	createBranchSummaryMessage,
 	createCompactionSummaryMessage,
 	createCustomMessage,
-} from "@tsuuanmi/pi-agent";
-import type { Model, SimpleStreamOptions } from "@tsuuanmi/pi-ai";
-import { completeSimple } from "@tsuuanmi/pi-ai";
-import {
-	computeFileLists,
 	createFileOps,
 	extractFileOpsFromMessage,
 	type FileOperations,
@@ -23,6 +19,8 @@ import {
 	SUMMARIZATION_SYSTEM_PROMPT,
 	serializeConversation,
 } from "@tsuuanmi/pi-agent";
+import type { Model, SimpleStreamOptions } from "@tsuuanmi/pi-ai";
+import { completeSimple } from "@tsuuanmi/pi-ai";
 import { estimateTokens } from "#pi/compaction/session-compaction";
 import type { ReadonlySessionManager, SessionEntry } from "#pi/session/session-manager";
 

@@ -73,7 +73,6 @@ export interface ExtensionAPI extends ExtensionHookAPI {
 	/** Refresh the host tool registry after dynamic tool changes. */
 	refreshTools(options?: { includeAllExtensionTools?: boolean }): void;
 
-
 	// =========================================================================
 	// Command, Shortcut, Flag Registration
 	// =========================================================================

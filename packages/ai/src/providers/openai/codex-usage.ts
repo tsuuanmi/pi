@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import type { Api, Model } from "#ai/types";
 
 const CODEX_USAGE_PATH = "wham/usage";
@@ -237,6 +236,13 @@ function worstStatus(statuses: OpenAICodexUsageStatus[]): OpenAICodexUsageStatus
 	return "ok";
 }
 
+function createResetCreditRequestId(): string {
+	if (typeof globalThis.crypto?.randomUUID !== "function") {
+		throw new Error("crypto.randomUUID is not available");
+	}
+	return globalThis.crypto.randomUUID();
+}
+
 function buildOpenAICodexHeaders(token: string, headers?: Record<string, string>): Record<string, string> {
 	const accountId = extractAccountId(token);
 	const requestHeaders: Record<string, string> = {
@@ -323,7 +329,7 @@ export async function consumeOpenAICodexResetCredit(
 	if (!auth.ok || !auth.apiKey) return null;
 
 	const response = await fetch(buildCodexConsumeResetCreditUrl(normalizeCodexBaseUrl(model.baseUrl)), {
-		body: JSON.stringify({ credit_id: creditId, redeem_request_id: randomUUID() }),
+		body: JSON.stringify({ credit_id: creditId, redeem_request_id: createResetCreditRequestId() }),
 		headers: {
 			...buildOpenAICodexHeaders(auth.apiKey, auth.headers),
 			"Content-Type": "application/json",

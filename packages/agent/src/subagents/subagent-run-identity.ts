@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import type {
 	SubagentRecord,
 	SubagentRunIdentity,
@@ -8,14 +6,6 @@ import type {
 	SubagentTmuxSessionTarget,
 	SubagentTmuxTarget,
 } from "#agent/subagents/subagent-types";
-
-export const SUBAGENT_RUN_IDENTITY_SCHEMA_PATH = fileURLToPath(
-	new URL("./subagent-run-identity.schema.json", import.meta.url),
-);
-
-export const SUBAGENT_RUN_IDENTITY_SCHEMA = JSON.parse(
-	readFileSync(SUBAGENT_RUN_IDENTITY_SCHEMA_PATH, "utf8"),
-) as Record<string, unknown>;
 
 function isObject(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
