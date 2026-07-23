@@ -133,6 +133,7 @@
 ### Fixed
 
 - Fixed interactive hide controls so thinking visibility updates in place and long bash command headers collapse with tool output expansion.
+- Aligned assistant text and bash tool card padding with the compact shared TUI gutter.
 - Reduced status-line flicker by refreshing git dirty counts every 10 seconds and skipping unchanged git-status re-renders.
 - Fixed bundled extension loading for imports from `@tsuuanmi/pi-agent/node`.
 - Fixed stale extension runners from emitting handlers after session replacement or reload, preventing stale context errors on later prompts.

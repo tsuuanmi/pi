@@ -206,9 +206,8 @@ class BashCallRenderComponent implements Component {
 	invalidate(): void {}
 
 	render(width: number): string[] {
-		const contentWidth = Math.max(1, width - 2);
-		const line = formatBashCall(this.args, this.expanded ? undefined : contentWidth);
-		return new Text(line, 1, 0).render(width);
+		const line = formatBashCall(this.args, this.expanded ? undefined : width);
+		return new Text(line, 0, 0).render(width);
 	}
 }
 

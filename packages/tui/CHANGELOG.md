@@ -5,6 +5,7 @@
 ### Changed
 
 - **tui**: Centralized screen gutter and section-gap spacing constants for consistent TUI layout.
+- **tui**: Reduced the shared horizontal gutter from three cells to two for a more compact layout.
 - **tui**: Simplified the loader and status-line chrome to compact one-line rows with stronger accent consistency.
 - **tui**: Moved reusable border, loader, countdown, expandable text, and structured receipt rendering helpers into the TUI package.
 - **tui**: Centralized HUD and status-line semantic colors in a shared TUI color profile.
