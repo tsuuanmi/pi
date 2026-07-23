@@ -142,15 +142,15 @@ export class ToolExecutionComponent extends Container {
 		const receipt = this.getStructuredReceipt();
 		const lines: string[] = [];
 		if (output) {
-			lines.push(output);
+			lines.push(theme.fg("toolOutput", output));
 		}
 		if (receipt) {
-			lines.push(formatStructuredReceiptLines(receipt, this.expanded).join("\n"));
+			lines.push(formatStructuredReceiptLines(receipt, this.expanded, theme).join("\n"));
 		}
 		if (lines.length === 0) {
 			return undefined;
 		}
-		return new Text(theme.fg("toolOutput", lines.join("\n")), 0, 0);
+		return new Text(lines.join("\n"), 0, 0);
 	}
 
 	updateArgs(args: any): void {
@@ -307,7 +307,7 @@ export class ToolExecutionComponent extends Container {
 		}
 		const receipt = this.getStructuredReceipt();
 		if (receipt) {
-			text += `\n${formatStructuredReceiptLines(receipt, this.expanded).join("\n")}`;
+			text += `\n${formatStructuredReceiptLines(receipt, this.expanded, theme).join("\n")}`;
 		}
 		return text;
 	}

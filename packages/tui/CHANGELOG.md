@@ -14,6 +14,7 @@
 ### Fixed
 
 - **tui**: Kept status-line git change counts on the 10-second refresh interval to avoid blinking during frequent rerenders.
+- **tui**: Structured tool receipts now color status by severity and suppress redundant bash command/cwd details in the compact view.
 
 ## [0.2.0] - 2026-07-20
 

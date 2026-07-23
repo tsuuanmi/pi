@@ -21,6 +21,7 @@
 
 ### Fixed
 
+- **tools**: Structured tool receipts now color status by severity and suppress redundant bash command/cwd details in the compact interactive view.
 - **tools**: `read` accepts `path:line` and `path:start-end` shorthand without treating the range as part of the filename.
 - **models**: Ollama Cloud duplicate entries in `models.json` no longer replace generated model metadata from `@tsuuanmi/pi-ai`.
 - **settings**: Custom provider config now lives at top-level `providers` in `settings.json` instead of nested under `models.providers`.
