@@ -43,6 +43,14 @@ export type UltragoalGoalMode = "aggregate" | "per-story";
 
 export type UltragoalReceiptKind = "per-goal" | "final-aggregate";
 
+export interface UltragoalMainGoal {
+	id: string;
+	title: string;
+	objective: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
 export interface UltragoalGoal {
 	id: string;
 	title: string;
@@ -50,6 +58,8 @@ export interface UltragoalGoal {
 	status: UltragoalGoalStatus;
 	createdAt: string;
 	updatedAt: string;
+	parentGoalId?: string;
+	sequence?: number;
 	startedAt?: string;
 	completedAt?: string;
 	evidence?: string;
@@ -60,6 +70,7 @@ export interface UltragoalGoal {
 export interface UltragoalPlan {
 	version: 1;
 	brief: string;
+	mainGoal?: UltragoalMainGoal;
 	goalMode: UltragoalGoalMode;
 	objective: string;
 	objectiveAliases?: string[];
@@ -264,6 +275,7 @@ export function planSnapshotForReceipt(input: {
 	return {
 		version: input.plan.version,
 		brief: input.plan.brief,
+		mainGoal: input.plan.mainGoal,
 		goalMode: input.plan.goalMode,
 		objective: input.plan.objective,
 		objectiveAliases: input.plan.objectiveAliases,

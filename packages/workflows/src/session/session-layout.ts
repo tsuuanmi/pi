@@ -221,6 +221,14 @@ export function ultragoalLedgerPath(cwd: string, sessionId: string): string {
 	return join(ultragoalDir(cwd, sessionId), "ledger.jsonl");
 }
 
+export function ultragoalCheckpointsDir(cwd: string, sessionId: string): string {
+	return join(ultragoalDir(cwd, sessionId), "checkpoints");
+}
+
+export function ultragoalCheckpointPath(cwd: string, sessionId: string, checkpointId: string): string {
+	return join(ultragoalCheckpointsDir(cwd, sessionId), `${checkpointId}.json`);
+}
+
 export function teamDir(cwd: string, sessionId: string): string {
 	return join(piSessionRoot(cwd, sessionId), "team");
 }

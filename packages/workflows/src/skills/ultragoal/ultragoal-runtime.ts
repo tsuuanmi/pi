@@ -3,6 +3,7 @@ import type { ObstacleRegression, ObstacleStatus } from "#workflows/audit/decisi
 import { projectCompactStateFor } from "#workflows/compaction/compaction";
 import {
 	ultragoalBriefPath,
+	ultragoalCheckpointPath,
 	ultragoalGoalsPath,
 	ultragoalLedgerPath,
 	workflowStatePath,
@@ -18,6 +19,7 @@ import { validateCompletionQualityGate } from "#workflows/skills/ultragoal/ultra
 import {
 	buildCompletionReceipt,
 	chooseReceiptKind,
+	hashStructuredValue,
 	readUltragoalLedger,
 	type UltragoalCompletionVerification,
 	type UltragoalGoal,
@@ -50,10 +52,23 @@ export type {
 	UltragoalReceiptKind,
 };
 
+export interface UltragoalCheckpointSummary {
+	checkpointId: string;
+	goalId: string;
+	status: UltragoalGoalStatus;
+	createdAt: string;
+	path: string;
+	planHash: string;
+	restoreWarning: string;
+}
+
 export interface UltragoalStatus {
 	exists: boolean;
 	status: "missing" | "pending" | "active" | "complete" | "blocked" | "failed";
+	mainGoal?: UltragoalPlan["mainGoal"];
 	currentGoal?: UltragoalGoal;
+	lastCheckpoint?: UltragoalCheckpointSummary;
+	planHash?: string;
 	counts: Record<UltragoalGoalStatus, number>;
 	goals: UltragoalGoal[];
 	brief_path: string;
@@ -146,9 +161,19 @@ function normalizePlan(raw: unknown): UltragoalPlan {
 	if (!isPlainObject(raw)) throw new Error("Invalid ultragoal plan: expected object");
 	const createdAt = typeof raw.createdAt === "string" ? raw.createdAt : nowIso();
 	const goals = Array.isArray(raw.goals) ? raw.goals : [];
+	const mainGoal = isPlainObject(raw.mainGoal)
+		? {
+				id: typeof raw.mainGoal.id === "string" ? raw.mainGoal.id : "MAIN",
+				title: typeof raw.mainGoal.title === "string" ? raw.mainGoal.title : "Complete approved goal",
+				objective: typeof raw.mainGoal.objective === "string" ? raw.mainGoal.objective : "Complete approved goal",
+				createdAt: typeof raw.mainGoal.createdAt === "string" ? raw.mainGoal.createdAt : createdAt,
+				updatedAt: typeof raw.mainGoal.updatedAt === "string" ? raw.mainGoal.updatedAt : createdAt,
+			}
+		: undefined;
 	return {
 		version: 1,
 		brief: typeof raw.brief === "string" ? raw.brief : "",
+		mainGoal,
 		goalMode: raw.goalMode === "per-story" ? "per-story" : "aggregate",
 		objective: typeof raw.objective === "string" ? raw.objective : "Complete all approved goals with verification",
 		objectiveAliases: Array.isArray(raw.objectiveAliases)
@@ -169,6 +194,9 @@ function normalizePlan(raw: unknown): UltragoalPlan {
 				status: normalizeGoalStatus(record.status),
 				createdAt: goalCreatedAt,
 				updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : goalCreatedAt,
+				parentGoalId: typeof record.parentGoalId === "string" ? record.parentGoalId : undefined,
+				sequence:
+					typeof record.sequence === "number" && Number.isFinite(record.sequence) ? record.sequence : undefined,
 				startedAt: typeof record.startedAt === "string" ? record.startedAt : undefined,
 				completedAt: typeof record.completedAt === "string" ? record.completedAt : undefined,
 				evidence: typeof record.evidence === "string" ? record.evidence : undefined,
@@ -214,6 +242,97 @@ async function writePlan(cwd: string, plan: UltragoalPlan, sessionId: string): P
 	await writeJsonAtomic(ultragoalGoalsPath(cwd, sessionId), { ...plan }, { cwd });
 }
 
+function planIdentity(plan: UltragoalPlan): Record<string, unknown> {
+	return {
+		mainGoal: plan.mainGoal,
+		goals: plan.goals.map((goal) => ({ id: goal.id, parentGoalId: goal.parentGoalId, sequence: goal.sequence })),
+	};
+}
+
+function planHash(plan: UltragoalPlan): string {
+	return hashStructuredValue(plan);
+}
+
+async function latestCheckpointFromLedger(
+	cwd: string,
+	sessionId: string,
+): Promise<UltragoalCheckpointSummary | undefined> {
+	let ledger: UltragoalLedgerEvent[];
+	try {
+		ledger = await readUltragoalLedger(cwd, sessionId);
+	} catch {
+		return undefined;
+	}
+	for (const event of ledger.slice().reverse()) {
+		if (event.event !== "checkpoint_snapshot_written") continue;
+		if (
+			typeof event.checkpointId === "string" &&
+			typeof event.goalId === "string" &&
+			typeof event.status === "string" &&
+			typeof event.path === "string" &&
+			typeof event.planHash === "string"
+		) {
+			return {
+				checkpointId: event.checkpointId,
+				goalId: event.goalId,
+				status: normalizeGoalStatus(event.status),
+				createdAt: typeof event.timestamp === "string" ? event.timestamp : nowIso(),
+				path: event.path,
+				planHash: event.planHash,
+				restoreWarning: "State-only restore: workspace files are not rolled back.",
+			};
+		}
+	}
+	return undefined;
+}
+
+async function writeCheckpointSnapshot(
+	cwd: string,
+	sessionId: string,
+	plan: UltragoalPlan,
+	goal: UltragoalGoal,
+	checkpointLedgerEventId: string,
+): Promise<UltragoalCheckpointSummary> {
+	const checkpointId = `${goal.id}-${Date.now()}-${randomUUID().slice(0, 8)}`;
+	const path = ultragoalCheckpointPath(cwd, sessionId, checkpointId);
+	const snapshot = {
+		schemaVersion: 1,
+		checkpointId,
+		createdAt: nowIso(),
+		goalId: goal.id,
+		status: goal.status,
+		checkpointLedgerEventId,
+		plan,
+		planHash: planHash(plan),
+		identityHash: hashStructuredValue(planIdentity(plan)),
+		restoreWarning: "State-only restore: workspace files are not rolled back.",
+	};
+	await writeJsonAtomic(path, snapshot, { cwd });
+	await appendLedger(
+		cwd,
+		{
+			event: "checkpoint_snapshot_written",
+			checkpointId,
+			goalId: goal.id,
+			status: goal.status,
+			path,
+			planHash: snapshot.planHash,
+			identityHash: snapshot.identityHash,
+			checkpointLedgerEventId,
+		},
+		sessionId,
+	);
+	return {
+		checkpointId,
+		goalId: goal.id,
+		status: goal.status,
+		createdAt: snapshot.createdAt,
+		path,
+		planHash: snapshot.planHash,
+		restoreWarning: snapshot.restoreWarning,
+	};
+}
+
 async function syncUltragoalState(cwd: string, status: UltragoalStatus, sessionId: string): Promise<void> {
 	const state = await writeWorkflowState(
 		cwd,
@@ -221,7 +340,12 @@ async function syncUltragoalState(cwd: string, status: UltragoalStatus, sessionI
 		{
 			active: status.status !== "complete" && status.status !== "missing",
 			current_phase: status.status,
+			main_goal_id: status.mainGoal?.id,
 			current_goal_id: status.currentGoal?.id,
+			last_checkpoint_id: status.lastCheckpoint?.checkpointId,
+			last_checkpoint_path: status.lastCheckpoint?.path,
+			plan_hash: status.planHash,
+			restore_warning: status.lastCheckpoint?.restoreWarning,
 			counts: status.counts,
 		},
 		"pi workflow state write",
@@ -257,9 +381,17 @@ export async function createUltragoalPlan(
 	const brief = (await readFileOrLiteral(input.brief, cwd)).trim();
 	if (!brief) throw new Error("ultragoal brief is required");
 	const now = nowIso();
+	const mainGoal = {
+		id: "MAIN",
+		title: clampTitle(firstNonEmptyLine(brief) ?? "Complete approved goal"),
+		objective: brief,
+		createdAt: now,
+		updatedAt: now,
+	};
 	const plan: UltragoalPlan = {
 		version: 1,
 		brief,
+		mainGoal,
 		goalMode: input.goalMode ?? "aggregate",
 		objective: "Complete all approved goals with verification",
 		goals: parseGoalsFromBrief(brief).map((goal, index) => ({
@@ -269,6 +401,8 @@ export async function createUltragoalPlan(
 			status: "pending",
 			createdAt: now,
 			updatedAt: now,
+			parentGoalId: mainGoal.id,
+			sequence: index + 1,
 		})),
 		createdAt: now,
 		updatedAt: now,
@@ -303,7 +437,10 @@ export async function getUltragoalStatus(cwd: string, sessionId: string): Promis
 	return {
 		exists: true,
 		status,
+		mainGoal: plan.mainGoal,
 		currentGoal,
+		lastCheckpoint: await latestCheckpointFromLedger(cwd, sessionId),
+		planHash: planHash(plan),
 		counts,
 		goals: plan.goals,
 		brief_path: ultragoalBriefPath(cwd, sessionId),
@@ -495,8 +632,9 @@ export async function checkpointUltragoalGoal(
 		if (diagnostic.state !== "active_verified_complete") {
 			throw new Error(`ultragoal complete checkpoint refused before mutation: ${diagnostic.message}`);
 		}
-		await writePlan(cwd, finalPlan, sessionId);
 		await appendLedger(cwd, event, sessionId);
+		await writePlan(cwd, finalPlan, sessionId);
+		await writeCheckpointSnapshot(cwd, sessionId, finalPlan, completedGoal, checkpointLedgerEventId);
 		await syncUltragoalState(cwd, await getUltragoalStatus(cwd, sessionId), sessionId);
 		return completedGoal;
 	}
@@ -506,10 +644,11 @@ export async function checkpointUltragoalGoal(
 	if (status === "active") nextGoal.startedAt = nextGoal.startedAt ?? now;
 	if (input.evidence?.trim()) nextGoal.evidence = input.evidence.trim();
 	const nextPlan = replaceGoal({ ...plan, updatedAt: now }, nextGoal);
-	await writePlan(cwd, nextPlan, sessionId);
+	const checkpointLedgerEventId = randomUUID();
 	await appendLedger(
 		cwd,
 		{
+			eventId: checkpointLedgerEventId,
 			event: "goal_checkpointed",
 			goalId: goal.id,
 			status,
@@ -518,8 +657,49 @@ export async function checkpointUltragoalGoal(
 		},
 		sessionId,
 	);
+	await writePlan(cwd, nextPlan, sessionId);
+	await writeCheckpointSnapshot(cwd, sessionId, nextPlan, nextGoal, checkpointLedgerEventId);
 	await syncUltragoalState(cwd, await getUltragoalStatus(cwd, sessionId), sessionId);
 	return nextGoal;
+}
+
+export async function restoreUltragoalCheckpoint(
+	cwd: string,
+	input: { checkpointId?: string; expectedPlanHash?: string },
+	sessionId: string,
+): Promise<{ plan: UltragoalPlan; checkpoint: UltragoalCheckpointSummary }> {
+	const currentPlan = await readUltragoalPlan(cwd, sessionId);
+	if (!currentPlan) throw new Error("No ultragoal plan found. Create one first.");
+	const latest = await latestCheckpointFromLedger(cwd, sessionId);
+	if (!latest) throw new Error("No ultragoal checkpoint snapshot found to restore.");
+	if (input.checkpointId && input.checkpointId !== latest.checkpointId) {
+		throw new Error("restore-checkpoint only restores the latest checkpoint for this ultragoal run");
+	}
+	if (input.expectedPlanHash && input.expectedPlanHash !== planHash(currentPlan)) {
+		throw new Error(
+			"restore-checkpoint expectedPlanHash does not match current plan; refresh status before retrying",
+		);
+	}
+	const read = await readExistingStateForMutation(latest.path);
+	if (read.kind === "absent") throw new Error(`ultragoal checkpoint snapshot is missing: ${latest.path}`);
+	if (read.kind === "corrupt") throw new Error(`ultragoal checkpoint snapshot is corrupt: ${read.error}`);
+	if (!isPlainObject(read.value)) throw new Error("ultragoal checkpoint snapshot is invalid");
+	const snapshot = read.value;
+	if (snapshot.schemaVersion !== 1) throw new Error("unsupported ultragoal checkpoint snapshot schema");
+	if (snapshot.checkpointId !== latest.checkpointId) throw new Error("ultragoal checkpoint snapshot id drift");
+	const snapshotPlan = normalizePlan(snapshot.plan);
+	if (snapshot.planHash !== planHash(snapshotPlan) || latest.planHash !== planHash(snapshotPlan)) {
+		throw new Error("ultragoal checkpoint snapshot hash mismatch");
+	}
+	const currentIdentity = hashStructuredValue(planIdentity(currentPlan));
+	const snapshotIdentity = hashStructuredValue(planIdentity(snapshotPlan));
+	if (snapshot.identityHash !== snapshotIdentity || currentIdentity !== snapshotIdentity) {
+		throw new Error("restore-checkpoint refused because main goal or task identity changed");
+	}
+	await appendLedger(cwd, { event: "checkpoint_restored", checkpointId: latest.checkpointId }, sessionId);
+	await writePlan(cwd, snapshotPlan, sessionId);
+	await syncUltragoalState(cwd, await getUltragoalStatus(cwd, sessionId), sessionId);
+	return { plan: snapshotPlan, checkpoint: latest };
 }
 
 export async function recordUltragoalReviewBlockers(

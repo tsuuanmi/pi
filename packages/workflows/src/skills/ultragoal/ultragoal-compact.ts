@@ -23,7 +23,24 @@ export function projectUltragoalCompact(input: UltragoalCompactInput): Record<st
 		state_path: statePath,
 		phase: state?.current_phase,
 		status: status.status,
+		plan_hash: status.planHash,
 		counts: status.counts,
+		main_goal: status.mainGoal
+			? {
+					id: status.mainGoal.id,
+					title: status.mainGoal.title,
+					objective: status.mainGoal.objective,
+				}
+			: undefined,
+		last_checkpoint: status.lastCheckpoint
+			? {
+					id: status.lastCheckpoint.checkpointId,
+					goal_id: status.lastCheckpoint.goalId,
+					status: status.lastCheckpoint.status,
+					path: status.lastCheckpoint.path,
+					restore_warning: status.lastCheckpoint.restoreWarning,
+				}
+			: undefined,
 		current_goal: status.currentGoal
 			? {
 					id: status.currentGoal.id,

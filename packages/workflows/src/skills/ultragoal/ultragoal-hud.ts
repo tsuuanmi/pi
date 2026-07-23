@@ -30,6 +30,7 @@ export function buildUltragoalHud(status: UltragoalStatus): HudSummary {
 		summary: status.currentGoal ? `${status.currentGoal.id}: ${status.currentGoal.title}` : status.status,
 		chips: [
 			progressChip(status.counts.complete, status.goals.length, 15),
+			...(status.lastCheckpoint ? [hudChip("restore", "state-only", 40, "info")] : []),
 			...(status.counts.review_blocked > 0 ? [hudChip("ship", "caveats:review-blocked", 45, "warning")] : []),
 			...(status.counts.blocked + status.counts.review_blocked > 0
 				? [hudChip("limitations", status.counts.blocked + status.counts.review_blocked, 50, "info")]

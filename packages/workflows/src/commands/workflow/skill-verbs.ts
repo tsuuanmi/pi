@@ -62,6 +62,7 @@ import {
 	readUltragoalCompact,
 	recordUltragoalBlockerClassification,
 	recordUltragoalReviewBlockers,
+	restoreUltragoalCheckpoint,
 	startNextUltragoalGoal,
 } from "#workflows/skills/ultragoal/ultragoal-runtime";
 import { assertSafePathComponent } from "#workflows/state/state-schema";
@@ -429,6 +430,17 @@ export async function ultragoalVerb(
 					status: requiredString(input, "status"),
 					evidence: inputString(input, "evidence"),
 					qualityGate: (input.qualityGate as Record<string, unknown>) ?? undefined,
+				},
+				sessionId,
+			);
+			break;
+		}
+		case "restore-checkpoint": {
+			body = await restoreUltragoalCheckpoint(
+				cwd,
+				{
+					checkpointId: inputString(input, "checkpointId"),
+					expectedPlanHash: inputString(input, "expectedPlanHash"),
 				},
 				sessionId,
 			);

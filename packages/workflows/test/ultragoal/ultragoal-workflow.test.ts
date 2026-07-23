@@ -7,6 +7,7 @@ import {
 	getUltragoalStatus,
 	readUltragoalCompact,
 	readWorkflowActiveState,
+	restoreUltragoalCheckpoint,
 	startNextUltragoalGoal,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -139,6 +140,49 @@ describe("ultragoal workflow runtime", () => {
 		expect(status.counts.complete).toBe(1);
 		expect(status.currentGoal?.id).toBe("G002");
 		expect((await readUltragoalCompact(cwd, sessionId)).current_goal).toMatchObject({ id: "G002" });
+	});
+
+	it("restores workflow state to the latest checkpoint without changing task identity", async () => {
+		await createUltragoalPlan(
+			cwd,
+			{
+				brief: "@goal First task\nFinish checkpoint one.\n@goal Second task\nFinish checkpoint two.",
+			},
+			sessionId,
+		);
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		await checkpointUltragoalGoal(
+			cwd,
+			{
+				goalId: "G001",
+				status: "complete",
+				evidence: "Completed the first task and verified it enough to create a durable checkpoint.",
+				qualityGate: cliQualityGate(),
+			},
+			sessionId,
+		);
+		const checkpointed = await getUltragoalStatus(cwd, sessionId);
+		expect(checkpointed.mainGoal?.id).toBe("MAIN");
+		expect(checkpointed.lastCheckpoint?.goalId).toBe("G001");
+		expect(checkpointed.lastCheckpoint?.restoreWarning).toMatch(/State-only/);
+		expect(checkpointed.planHash).toBeDefined();
+
+		await startNextUltragoalGoal(cwd, false, sessionId);
+		expect((await getUltragoalStatus(cwd, sessionId)).currentGoal?.id).toBe("G002");
+
+		const restored = await restoreUltragoalCheckpoint(
+			cwd,
+			{ expectedPlanHash: (await getUltragoalStatus(cwd, sessionId)).planHash },
+			sessionId,
+		);
+		expect(restored.checkpoint.checkpointId).toBe(checkpointed.lastCheckpoint?.checkpointId);
+		const status = await getUltragoalStatus(cwd, sessionId);
+		expect(status.currentGoal?.id).toBe("G002");
+		expect(status.currentGoal?.status).toBe("pending");
+		expect(status.counts.complete).toBe(1);
+		const compact = await readUltragoalCompact(cwd, sessionId);
+		expect(compact.plan_hash).toBeDefined();
+		expect(compact.last_checkpoint).toMatchObject({ goal_id: "G001" });
 	});
 
 	it("marks ultragoal complete and demotes active state", async () => {

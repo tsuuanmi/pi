@@ -45,6 +45,12 @@
     },
     "currentObjective": {
       "type": "string"
+    },
+    "checkpointId": {
+      "type": "string"
+    },
+    "expectedPlanHash": {
+      "type": "string"
     }
   },
   "$defs": {
@@ -539,6 +545,21 @@
           "type": "string"
         }
       }
+    },
+    "restoreCheckpointInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "$ref": "#/$defs/sessionId"
+        },
+        "checkpointId": {
+          "type": "string"
+        },
+        "expectedPlanHash": {
+          "type": "string"
+        }
+      }
     }
   },
   "x-pi-actions": {
@@ -565,6 +586,9 @@
     },
     "guard": {
       "$ref": "#/$defs/guardInput"
+    },
+    "restore-checkpoint": {
+      "$ref": "#/$defs/restoreCheckpointInput"
     }
   },
   "examples": [
@@ -582,6 +606,11 @@
       "sessionId": "h-...",
       "goalId": "goal-1",
       "currentObjective": "Verify final diff"
+    },
+    {
+      "sessionId": "h-...",
+      "checkpointId": "G001-...",
+      "expectedPlanHash": "..."
     }
   ]
 }

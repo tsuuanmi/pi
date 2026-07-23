@@ -2,6 +2,7 @@
 
 ### Added
 
+- **ultragoal**: Added checkpointed task execution under one main goal, including state-only checkpoint snapshots and `restore-checkpoint` recovery for the latest valid checkpoint.
 - **state**: Added a packaged JSON Schema for `pi workflow state <skill> <action>` payloads at `src/state/assets/schema.json`, copied to `dist/state/assets/schema.json` during builds.
 - **commands**: `pi workflow --help` and `pi workflow <skill> --help` now show detailed workflow verbs, skill actions, options, examples, docs, and skill-local JSON schema references.
 - **subagents**: Subagent tools now attach shared `@tsuuanmi/pi-agent` structured receipts for current-session status and inspection visibility.
