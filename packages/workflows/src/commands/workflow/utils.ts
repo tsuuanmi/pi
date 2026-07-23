@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { isBlockingQuestionPhaseForSkill } from "#workflows/registry/skill-registry";
-import { getWorkflowManifest } from "#workflows/registry/workflow-manifest";
 import type { WorkflowSkill } from "#workflows/session/paths";
+import { getWorkflowSkillCommandNames } from "#workflows/skills/workflow-help-registry";
 
 export function gitOutput(workspace: string, args: string[]): string | null {
 	try {
@@ -44,7 +44,7 @@ export function optionalStringArray(input: Record<string, unknown>, key: string)
 }
 
 export function workflowVerbSet(skill: "deep-interview" | "ralplan" | "team" | "ultragoal"): Set<string> {
-	return new Set(getWorkflowManifest(skill).verbs.map((verb) => verb.name));
+	return new Set(getWorkflowSkillCommandNames(skill));
 }
 
 export function requiredObject(input: Record<string, unknown>, key: string): Record<string, unknown> {

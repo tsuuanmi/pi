@@ -14,6 +14,7 @@ import {
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
+import { getWorkflowSkillCommandNames } from "#workflows/skills/workflow-help-registry";
 
 const sessionId = "test-session-id";
 
@@ -47,7 +48,7 @@ describe("workflow manifest state validation", () => {
 			expect(isWorkflowSkill(skill)).toBe(true);
 			expect(manifest.states).toContain(manifest.initialState);
 			expect(manifest.terminalStates.length).toBeGreaterThan(0);
-			expect(manifest.verbs.length).toBeGreaterThan(0);
+			expect(manifest.verbs.map((verb) => verb.name)).toEqual(getWorkflowSkillCommandNames(skill));
 			expect(manifest.retention.length).toBeGreaterThan(0);
 			expect(manifest.hudFields.length).toBeGreaterThan(0);
 		}

@@ -1,0 +1,121 @@
+import type { WorkflowSkillHelp } from "#workflows/skills/workflow-help-types";
+
+export const TEAM_SKILL_HELP: WorkflowSkillHelp = {
+	skill: "team",
+	label: "Team",
+	docs: [
+		"packages/workflows/src/skills/team/SKILL.md",
+		"packages/workflows/src/skills/team/references/commands.md",
+		"packages/workflows/src/skills/team/assets/schema.json",
+	],
+	commandOrder: [
+		"`pi workflow state team read --session <id> --json` to inspect state.",
+		"`pi workflow team start` with the approved task/plan.",
+		"`pi workflow team snapshot` or `pi workflow team read-compact` before assigning work.",
+		"`pi workflow team create-task` for each independent workstream.",
+		"`pi workflow team transition-task` for start/block/fail/complete status changes.",
+		"`pi workflow team send-message` for durable coordination.",
+		"`pi workflow team record-review-gate` after reviewer evidence.",
+		"`pi workflow team record-completion-gate` after prover evidence.",
+		"`pi workflow team complete` only after integration and verification.",
+	],
+	referenceFooter: [
+		"Always pass the current session id as `sessionId` in action payloads. Spawn workers/reviewers/prover only through guarded team tools.",
+	],
+	agentFlow: [
+		"Use only after explicit execution approval and only when parallel workstreams are useful.",
+		"Start/resume the run, split work with `create-task`, and record coordination with `send-message`.",
+		"Use guarded spawn tools for workers/reviewers/prover; persist review/completion gates before completion.",
+		"Close with `complete` only after integration and verification evidence exists.",
+	],
+	actions: {
+		start: {
+			summary: "Start a coordinated team run.",
+			when: "Use after reading an approved plan/task and initializing state if needed.",
+			input: ["sessionId?: string", "task: string (required)", "teamId?: string", "workers?: {id?,name?,role?}[]"],
+			example: `pi workflow team start --input '{"sessionId":"h-...","task":"approved plan..."}' --json`,
+		},
+		snapshot: {
+			summary: "Read the full team snapshot.",
+			when: "Use before assigning, reviewing, or completing work.",
+			input: ["sessionId?: string", "teamId?: string"],
+			example: `pi workflow team snapshot --input '{"sessionId":"h-..."}' --json`,
+		},
+		"read-compact": {
+			summary: "Read prompt-efficient team state.",
+			when: "Use when resuming or prompting a worker/reviewer/prover.",
+			input: ["sessionId?: string", "teamId?: string"],
+			example: `pi workflow team read-compact --input '{"sessionId":"h-..."}' --json`,
+		},
+		"create-task": {
+			summary: "Create a worker task with ownership and dependencies.",
+			when: "Use after splitting the approved work into non-overlapping workstreams.",
+			input: [
+				"sessionId?: string",
+				"title: string (required)",
+				"description: string (required)",
+				"teamId?: string",
+				"id?: string",
+				"owner?: string",
+				"dependsOn?: string[]",
+			],
+			example: `pi workflow team create-task --input '{"sessionId":"h-...","title":"...","description":"..."}' --json`,
+		},
+		"transition-task": {
+			summary: "Move a task to another status with evidence.",
+			when: "Use for start/block/fail/complete task transitions; completion requires evidence.",
+			input: [
+				"sessionId?: string",
+				"taskId: string (required)",
+				"status: string (required)",
+				"teamId?: string",
+				"workerId?: string",
+				"evidence?: object",
+			],
+			example: `pi workflow team transition-task --input '{"sessionId":"h-...","taskId":"task-1","status":"in_progress"}' --json`,
+		},
+		"send-message": {
+			summary: "Append a coordination message.",
+			when: "Use for durable cross-workstream decisions and handoffs.",
+			input: [
+				"sessionId?: string",
+				"from: string (required)",
+				"to: string (required)",
+				"body: string (required)",
+				"teamId?: string",
+				"idempotencyKey?: string",
+			],
+			example: `pi workflow team send-message --input '{"sessionId":"h-...","from":"lead","to":"task-1","body":"..."}' --json`,
+		},
+		"record-review-gate": {
+			summary: "Persist a reviewer gate artifact for a task.",
+			when: "Use after reviewer subagent completes and before task completion.",
+			input: [
+				"sessionId?: string",
+				"taskId: string (required)",
+				"reviewReport: object (required)",
+				"teamId?: string",
+				"recordedBy?: string",
+			],
+			example: `pi workflow team record-review-gate --input '{"sessionId":"h-...","taskId":"task-1","reviewReport":{}}' --json`,
+		},
+		"record-completion-gate": {
+			summary: "Persist final completion evidence.",
+			when: "Use after all tasks complete and prover evidence is available.",
+			input: ["sessionId?: string", "evidenceMatrix: object (required)", "teamId?: string", "recordedBy?: string"],
+			example: `pi workflow team record-completion-gate --input '{"sessionId":"h-...","evidenceMatrix":{}}' --json`,
+		},
+		complete: {
+			summary: "Complete, fail, or cancel a team run.",
+			when: "Use after integration/verification or when explicitly closing the run.",
+			input: ["sessionId?: string", "teamId?: string", "phase?: complete|failed|cancelled", "summary?: string"],
+			example: `pi workflow team complete --input '{"sessionId":"h-...","phase":"complete","summary":"..."}' --json`,
+		},
+	},
+	typedArgs: [
+		{ name: "task", type: "string" },
+		{ name: "teamId", type: "string" },
+		{ name: "taskId", type: "string" },
+		{ name: "status", type: "string" },
+	],
+} as const;
