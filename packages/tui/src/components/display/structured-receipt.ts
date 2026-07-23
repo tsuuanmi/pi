@@ -2,30 +2,6 @@ import type { StructuredReceipt } from "@tsuuanmi/pi-agent";
 import { Text } from "#tui/components/display/text";
 import type { Theme } from "#tui/theme/theme";
 
-function formatValue(value: string | number | boolean): string {
-	return typeof value === "string" ? value : String(value);
-}
-
-function formatLocationSummary(location: StructuredReceipt["location"]): string {
-	const preferredKeys = [
-		"cwd",
-		"sessionId",
-		"toolCallId",
-		"toolName",
-		"subagentId",
-		"tmuxSession",
-		"tmuxPane",
-		"artifactPath",
-	];
-	const entries = Object.entries(location);
-	for (const key of preferredKeys) {
-		const match = entries.find(([entryKey]) => entryKey === key);
-		if (match) return `${match[0]}=${formatValue(match[1])}`;
-	}
-	const first = entries[0];
-	return first ? `${first[0]}=${formatValue(first[1])}` : "n/a";
-}
-
 function formatStatus(status: StructuredReceipt["status"], theme?: Theme): string {
 	const label = `Status: ${status}`;
 	if (!theme) return label;
@@ -47,9 +23,6 @@ function shouldHideBuiltinCommandDetails(receipt: StructuredReceipt): boolean {
 
 export function formatStructuredReceiptLines(receipt: StructuredReceipt, expanded: boolean, theme?: Theme): string[] {
 	const summaryParts = [`Receipt: ${receipt.actionSummary}`, formatStatus(receipt.status, theme)];
-	if (!shouldHideBuiltinCommandDetails(receipt)) {
-		summaryParts.push(`Where: ${formatLocationSummary(receipt.location)}`);
-	}
 	const lines = [summaryParts.join(" • ")];
 	if (!shouldHideBuiltinCommandDetails(receipt) && receipt.inspect.length > 0) {
 		const first = receipt.inspect[0];

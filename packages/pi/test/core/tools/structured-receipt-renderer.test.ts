@@ -1,7 +1,6 @@
 import { STRUCTURED_RECEIPT_VERSION, type StructuredReceipt } from "@tsuuanmi/pi-agent";
-import { initTheme, stripAnsi, theme } from "@tsuuanmi/pi-tui";
-import { describe, expect, test, beforeAll } from "vitest";
-import { formatStructuredReceiptLines, renderStructuredReceipt } from "@tsuuanmi/pi-tui";
+import { formatStructuredReceiptLines, initTheme, renderStructuredReceipt, stripAnsi, theme } from "@tsuuanmi/pi-tui";
+import { beforeAll, describe, expect, test } from "vitest";
 
 beforeAll(() => {
 	initTheme("dark");
@@ -25,7 +24,7 @@ describe("structured receipt renderer", () => {
 		};
 
 		expect(formatStructuredReceiptLines(receipt, false)).toEqual([
-			"Receipt: Subagent subagent-123 running • Status: running • Where: cwd=/repo",
+			"Receipt: Subagent subagent-123 running • Status: running",
 			"Inspect: session: session-1",
 		]);
 		expect(formatStructuredReceiptLines(receipt, true)).toContain("Preview: working...");

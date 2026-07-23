@@ -63,6 +63,7 @@ describe("Pi Agent Tools", () => {
 			expect(getStructuredReceipt(result.details)).toMatchObject({
 				source: "builtin-tool",
 				status: "completed",
+				actionSummary: "Read file",
 				location: { toolCallId: "test-call-1", toolName: "read", path: testFile },
 			});
 		});
@@ -453,6 +454,7 @@ describe("Pi Agent Tools", () => {
 			expect(getStructuredReceipt(result.details)).toMatchObject({
 				source: "builtin-tool",
 				status: "completed",
+				actionSummary: "Executed bash command",
 				location: { toolCallId: "test-call-8", toolName: "bash", command: "echo 'test output'" },
 			});
 		});

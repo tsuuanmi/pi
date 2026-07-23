@@ -329,7 +329,7 @@ export function createReadToolDefinition(
 							toolCallId,
 							toolName: "read",
 							status: "completed",
-							actionSummary: `Read ${path}`,
+							actionSummary: "Read file",
 							location: { cwd, path, offset: offset ?? 0, limit: limit ?? 0 },
 							inspect: [{ label: "path", kind: "path", value: path }],
 							startedAt: new Date(startedAt).toISOString(),
