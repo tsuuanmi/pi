@@ -159,7 +159,7 @@ describe("StatusLineComponent provider-prefix width fallback", () => {
 });
 
 describe("StatusLineComponent git status cache", () => {
-	it("keeps git status refreshes on the 30s interval after invalidate", async () => {
+	it("keeps git status refreshes on the 10s interval after invalidate", async () => {
 		const cwd = await makeTempCwd();
 		execFileSync("git", ["init", "-b", "main"], { cwd, stdio: "ignore" });
 

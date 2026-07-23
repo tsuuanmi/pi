@@ -35,7 +35,7 @@ class StatusLineComponent implements Component {
 
 The component owns two caches, both error-resilient (never throw on the render path):
 
-- **Git porcelain cache** — `git status --porcelain` counts, refreshed every 30s. `invalidate()` bumps a generation counter so a fetch started before a branch switch cannot overwrite the newer cache state.
+- **Git porcelain cache** — `git status --porcelain` counts, refreshed every 10s. `invalidate()` bumps a generation counter so a fetch started before a branch switch cannot overwrite the newer cache state.
 - **HUD cache** — `readHudEntries({ cwd, sessionId })`, refreshed every 1s. On failure the cache is left unchanged (initially `[]` until a valid read).
 
 Each refresh callback calls `requestRender()` when the cache value changed so the host redraws.

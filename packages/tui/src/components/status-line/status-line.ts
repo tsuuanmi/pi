@@ -21,7 +21,7 @@ import { truncateToWidth, visibleWidth } from "#tui/utilities/text";
 /** Minimum gap (columns) between the left and right rail groups. */
 const MIN_PADDING = 2;
 /** Background-refresh interval for the git porcelain cache. */
-const GIT_STATUS_REFRESH_MS = 30_000;
+const GIT_STATUS_REFRESH_MS = 10_000;
 /** Background-refresh interval for the HUD cache. */
 const HUD_REFRESH_MS = 1000;
 
@@ -38,7 +38,7 @@ function areGitStatusSummariesEqual(a: GitStatusSummary | null, b: GitStatusSumm
  * Reuses `FooterDataProvider` for the git branch (`.git/HEAD` watch), extension
  * statuses, and available provider count — it does NOT re-implement the git watcher.
  * The only background refresh it owns is the
- * `git status --porcelain` counts cache (30s refresh) and the HUD entry HUD
+ * `git status --porcelain` counts cache (10s refresh) and the HUD entry HUD
  * cache (1s refresh, error-resilient).
  */
 export class StatusLineComponent implements Component {
@@ -49,7 +49,7 @@ export class StatusLineComponent implements Component {
 	#readHudEntries: StatusLineComponentOptions["readHudEntries"];
 	#autoCompactEnabled = true;
 
-	// Git porcelain counts cache (30s refresh). `null` until the first fetch.
+	// Git porcelain counts cache (10s refresh). `null` until the first fetch.
 	#cachedGitStatus: GitStatusSummary | null = null;
 	#cachedGitStatusCwd: string | null = null;
 	#gitStatusLastFetch = 0;
@@ -125,7 +125,7 @@ export class StatusLineComponent implements Component {
 
 	/**
 	 * Kick a background `git status --porcelain` fetch if the cache is stale
-	 * (30s refresh) and none is in flight. `runGitStatusPorcelain` is
+	 * (10s refresh) and none is in flight. `runGitStatusPorcelain` is
 	 * error-resilient, so this cannot throw on the render path.
 	 */
 	#refreshGitStatusInBackground(): void {

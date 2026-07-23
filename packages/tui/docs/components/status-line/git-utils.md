@@ -27,7 +27,7 @@ Runs `git --no-optional-locks status --porcelain` in `cwd` and parses the counts
 - non-zero exit (e.g. inside a corrupt repo)
 - a non-git cwd (`.git` absent)
 
-The caller renders an empty/branch-only git segment when the result is `null`. The status line component caches results with a 30s refresh and a generation guard (see [Component](status-line.md)).
+The caller renders an empty/branch-only git segment when the result is `null`. The status line component caches results with a 10s refresh and a generation guard (see [Component](status-line.md)).
 
 ## See Also
 

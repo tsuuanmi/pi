@@ -12,7 +12,7 @@
 
 ### Fixed
 
-- **tui**: Kept status-line git change counts on the 30-second refresh interval to avoid blinking during frequent rerenders.
+- **tui**: Kept status-line git change counts on the 10-second refresh interval to avoid blinking during frequent rerenders.
 
 ## [0.2.0] - 2026-07-20
 
