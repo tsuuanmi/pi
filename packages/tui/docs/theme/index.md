@@ -84,7 +84,7 @@ function highlightCode(code: string, lang?: string): string[];
 function getLanguageFromPath(filePath: string): string | undefined;
 ```
 
-- `highlightCode` — highlights `code` with the active theme's syntax tokens via [Syntax Highlight](../utilities/syntax-highlight.md). When `lang` is missing or unsupported, returns each line colored as `mdCodeBlock` (no auto-detection, to avoid cli-highlight misidentifying prose). Never throws — on error, returns plain `mdCodeBlock`-colored lines.
+- `highlightCode` — highlights `code` with the active theme's syntax tokens via [Syntax Highlight](../components/display/syntax-highlight.md). When `lang` is missing or unsupported, returns each line colored as `mdCodeBlock` (no auto-detection, to avoid cli-highlight misidentifying prose). Never throws — on error, returns plain `mdCodeBlock`-colored lines.
 - `getLanguageFromPath` — maps a file extension to a language id (`ts` → `typescript`, `py` → `python`, `rs` → `rust`, ...). Returns `undefined` for unknown/no extension.
 
 ## Per-component theme adapters
@@ -103,5 +103,5 @@ Adapters map component hooks (`heading`, `selectedText`, `borderColor`, `cursor`
 ## See Also
 
 - [Theme Schema](theme-schema.md) — the JSON shape theme files must satisfy.
-- [Syntax Highlight](../utilities/syntax-highlight.md) — the lower-level highlighter used by `highlightCode`.
+- [Syntax Highlight](../components/display/syntax-highlight.md) — the lower-level highlighter used by `highlightCode`.
 - [Components](../components/index.md) — component theme adapters.

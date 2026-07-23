@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { truncateToVisualLines } from "#tui/utilities/visual-truncate";
+import { truncateToVisualLines } from "#tui/components/display/visual-truncate";
 
 describe("truncateToVisualLines", () => {
 	it("returns empty for empty text", () => {

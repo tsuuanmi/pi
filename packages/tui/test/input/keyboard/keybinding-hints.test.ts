@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { before, describe, it } from "node:test";
 import { initTheme } from "#tui/index";
-import { formatKeyText, keyDisplayText, keyHint, keyText, rawKeyHint } from "#tui/utilities/keybinding-hints";
+import { formatKeyText, keyDisplayText, keyHint, keyText, rawKeyHint } from "#tui/input/keyboard/keybinding-hints";
 
 const ANSI_PATTERN = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 function strip(text: string): string {

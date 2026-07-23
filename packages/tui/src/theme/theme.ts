@@ -10,7 +10,7 @@ import type { SelectListTheme } from "#tui/components/selection/select-list";
 import type { SettingsListTheme } from "#tui/components/selection/settings-list";
 import { getCapabilities } from "#tui/terminal/features/capabilities";
 import type { RgbColor } from "#tui/terminal/features/terminal-colors";
-import { highlight, supportsLanguage } from "#tui/utilities/syntax-highlight";
+import { highlight, supportsLanguage } from "#tui/components/display/syntax-highlight";
 
 export interface ThemeSourceInfo {
 	path: string;

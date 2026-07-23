@@ -30,6 +30,7 @@ Built-in components live under `src/components/` and mirror that layout in these
 
 - [Key Detection](input/keyboard/keys.md) - `matchesKey()`, `Key` helper, Kitty keyboard protocol, and key identifiers.
 - [Keybindings](input/keyboard/keybindings.md) - `TUI_KEYBINDINGS`, `KeybindingsManager`, and custom keybinding configuration.
+- [Keybinding Hints](input/keyboard/keybinding-hints.md) - `keyText`, `keyHint`, `rawKeyHint`, `formatKeyText`.
 - [Stdin Buffer](input/stream/stdin-buffer.md) - Input buffering and escape-sequence batch splitting.
 
 ## Terminal
@@ -48,9 +49,6 @@ Built-in components live under `src/components/` and mirror that layout in these
 - [Text](utilities/text.md) - `visibleWidth`, `truncateToWidth`, `wrapTextWithAnsi`, `sliceByColumn`, `sliceWithWidth`, and ANSI-aware utilities.
 - [ANSI](utilities/ansi.md) - `stripAnsi` ANSI escape stripping.
 - [Diff](utilities/diff.md) - `renderDiff` unified diff rendering with intra-line highlighting.
-- [Keybinding Hints](utilities/keybinding-hints.md) - `keyText`, `keyHint`, `rawKeyHint`, `formatKeyText`.
-- [Syntax Highlight](utilities/syntax-highlight.md) - `highlight`, `renderHighlightedHtml`, `supportsLanguage` (highlight.js wrapper).
-- [Visual Truncation](utilities/visual-truncate.md) - `truncateToVisualLines` end-anchored visual-line truncation.
 
 ## Overlays
 

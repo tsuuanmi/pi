@@ -166,6 +166,18 @@ md.setText("Updated markdown");
 - Optional syntax highlighting via `highlightCode`
 - Padding and render caching
 
+## Syntax Highlight
+
+Wrapper around `highlight.js` that turns highlighted HTML into ANSI-styled terminal output.
+
+- [Syntax Highlight](display/syntax-highlight.md) - `highlight`, `renderHighlightedHtml`, `supportsLanguage`.
+
+## Visual Truncation
+
+End-anchored wrapping-aware truncation for text buffers and other wrapped displays.
+
+- [Visual Truncation](display/visual-truncate.md) - `truncateToVisualLines` and `VisualTruncateResult`.
+
 ## Loader
 
 Animated loading spinner:

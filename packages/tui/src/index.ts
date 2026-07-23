@@ -12,12 +12,12 @@ export { TruncatedText } from "#tui/components/display/truncated-text";
 export { BorderedLoader } from "#tui/components/feedback/bordered-loader";
 export { CancellableLoader } from "#tui/components/feedback/cancellable-loader";
 export { CountdownTimer } from "#tui/components/feedback/countdown-timer";
-export { DynamicBorder } from "#tui/components/feedback/dynamic-border";
+export { DynamicBorder } from "#tui/components/layout/dynamic-border";
 export { Loader, type LoaderIndicatorOptions } from "#tui/components/feedback/loader";
 export {
 	formatStructuredReceiptLines,
 	renderStructuredReceipt,
-} from "#tui/components/feedback/structured-receipt";
+} from "#tui/components/display/structured-receipt";
 export { refreshHudUi } from "#tui/components/hud/extension-ui";
 export type {
 	ActiveHudEntry,
@@ -134,6 +134,14 @@ export {
 	setKeybindings,
 	TUI_KEYBINDINGS,
 } from "#tui/input/keyboard/keybindings";
+export {
+	formatKeyText,
+	type KeyTextFormatOptions,
+	keyDisplayText,
+	keyHint,
+	keyText,
+	rawKeyHint,
+} from "#tui/input/keyboard/keybinding-hints";
 // Keyboard input handling
 export {
 	decodeKittyPrintable,
@@ -167,19 +175,11 @@ export * from "#tui/theme/theme";
 export { stripAnsi } from "#tui/utilities/ansi";
 export { type DiffRenderTheme, type RenderDiffOptions, renderDiff } from "#tui/utilities/diff";
 export {
-	formatKeyText,
-	type KeyTextFormatOptions,
-	keyDisplayText,
-	keyHint,
-	keyText,
-	rawKeyHint,
-} from "#tui/utilities/keybinding-hints";
-export {
 	type HighlightOptions,
 	type HighlightTheme,
 	highlight,
 	renderHighlightedHtml,
 	supportsLanguage,
-} from "#tui/utilities/syntax-highlight";
+} from "#tui/components/display/syntax-highlight";
 export { sliceByColumn, truncateToWidth, visibleWidth, wrapTextWithAnsi } from "#tui/utilities/text";
-export { truncateToVisualLines, type VisualTruncateResult } from "#tui/utilities/visual-truncate";
+export { truncateToVisualLines, type VisualTruncateResult } from "#tui/components/display/visual-truncate";

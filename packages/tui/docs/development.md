@@ -28,15 +28,12 @@ packages/tui/
 │   ├── utilities/
 │   │   ├── ansi.ts           # stripAnsi
 │   │   ├── diff.ts            # renderDiff (unified diff with intra-line highlighting)
-│   │   ├── keybinding-hints.ts  # keyText, keyHint, formatKeyText
-│   │   ├── syntax-highlight.ts  # highlight.js wrapper
-│   │   ├── text.ts           # visibleWidth, truncateToWidth, wrapTextWithAnsi
-│   │   └── visual-truncate.ts  # truncateToVisualLines
+│   │   └── text.ts           # visibleWidth, truncateToWidth, wrapTextWithAnsi
 │   ├── components/
-│   │   ├── display/         # Markdown, Text, TruncatedText
-│   │   ├── feedback/        # Loader, CancellableLoader
+│   │   ├── display/         # Markdown, Text, TruncatedText, syntax highlight, receipts, visual truncation
+│   │   ├── feedback/        # Loader, CancellableLoader, countdown, bordered loader
 │   │   ├── inputs/          # Input, Editor
-│   │   ├── layout/          # Box, Spacer
+│   │   ├── layout/          # Box, Spacer, dynamic border
 │   │   ├── selection/       # SelectList, SettingsList
 │   │   ├── hud/             # HUD model, rendering, extension UI hook
 │   │   └── status-line/     # StatusLineComponent, segments, presets, git utils
@@ -46,7 +43,7 @@ packages/tui/
 │   │   ├── history/         # UndoStack
 │   │   └── navigation/      # Word boundary navigation
 │   ├── input/
-│   │   ├── keyboard/        # Keybindings and key detection
+│   │   ├── keyboard/        # Keybindings, key detection, and keybinding hints
 │   │   └── stream/          # Input buffering for escape sequences
 │   ├── terminal/
 │   │   ├── features/        # Capabilities and OSC 11 color parsing
