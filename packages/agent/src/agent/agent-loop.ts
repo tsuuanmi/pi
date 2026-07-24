@@ -11,6 +11,7 @@ import {
 	type ToolResultMessage,
 	validateToolArguments,
 } from "@tsuuanmi/pi-ai";
+import { LoopDetector, normalizeLoopDetectionOptions } from "#agent/agent/loop-detection";
 import type {
 	AgentContext,
 	AgentEvent,
@@ -177,6 +178,8 @@ async function runLoop(
 ): Promise<void> {
 	let currentContext = initialContext;
 	let config = initialConfig;
+	const loopDetectionOptions = normalizeLoopDetectionOptions(initialConfig.loopDetection);
+	const loopDetector = loopDetectionOptions ? new LoopDetector(loopDetectionOptions) : undefined;
 	let firstTurn = true;
 	// Check for steering messages at start (user may have typed while waiting)
 	let pendingMessages: AgentMessage[] = (await config.getSteeringMessages?.()) || [];
@@ -231,6 +234,15 @@ async function runLoop(
 			}
 
 			await emit({ type: "turn_end", message, toolResults });
+
+			const loopResult = loopDetector?.record({ message, toolResults, newMessages });
+			if (loopResult) {
+				await emit({ type: "loop_detected", result: loopResult });
+				if (loopResult.action === "stop") {
+					await emit({ type: "agent_end", messages: newMessages });
+					return;
+				}
+			}
 
 			const nextTurnContext = {
 				message,

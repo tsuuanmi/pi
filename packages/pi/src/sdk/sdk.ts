@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { RuntimeAgent as Agent, convertToLlm, type ThinkingLevel } from "@tsuuanmi/pi-agent";
+import { RuntimeAgent as Agent, convertToLlm, type LoopDetectionOptions, type ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { clampThinkingLevel, type Model, mergeHeaderSources, streamSimple } from "@tsuuanmi/pi-ai";
 import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
@@ -70,6 +70,8 @@ export interface CreateAgentSessionOptions {
 	excludeTools?: string[];
 	/** Custom tools to register (in addition to built-in tools). */
 	customTools?: ToolDefinition[];
+	/** Detect repeated assistant turns. Pass true for conservative tool-call detection. Default: disabled. */
+	loopDetection?: boolean | LoopDetectionOptions;
 
 	/** Resource loader. When omitted, DefaultResourceLoader is used. */
 	resourceLoader?: ResourceLoader;
@@ -322,6 +324,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		followUpMode: settingsManager.getFollowUpMode(),
 		transport: settingsManager.getTransport(),
 		maxRetryDelayMs: settingsManager.getProviderRetrySettings().maxRetryDelayMs,
+		loopDetection: options.loopDetection,
 	});
 
 	// Restore messages if session has existing data

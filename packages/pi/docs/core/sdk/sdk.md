@@ -62,6 +62,8 @@ const { session } = await createAgentSession({
   model: myModel,
   tools: ["read", "bash"],
   sessionManager: SessionManager.inMemory(),
+  // Optional reliability guard: true enables conservative repeated tool-call detection.
+  loopDetection: true,
 });
 ```
 
@@ -73,6 +75,9 @@ The session manages agent lifecycle, message history, model state, compaction, a
 interface AgentSession {
   // Send a prompt and wait for completion
   prompt(text: string, options?: PromptOptions): Promise<void>;
+
+  // Send a prompt that must return JSON matching a TypeBox schema
+  promptStructured<TSchema extends TypeBoxSchema>(text: string, options: PromptOptions & StructuredOutputOptions<TSchema>): Promise<StructuredOutputResult<Static<TSchema>>>;
 
   // Queue messages during streaming
   steer(text: string): Promise<void>;
@@ -229,6 +234,21 @@ await session.followUp("After you're done, also do this");
 
 Both `steer()` and `followUp()` expand file-based prompt templates but error on extension commands (extension commands cannot be queued).
 
+For provider-neutral structured JSON, use `promptStructured()` with a TypeBox schema. Pi appends a JSON-only contract to the prompt, extracts the JSON value from the final assistant text, validates it locally, and returns either `{ ok: true, value }` or `{ ok: false, error, issues }`.
+
+```typescript
+import { Type } from "typebox";
+
+const result = await session.promptStructured("Summarize this run", {
+  schema: Type.Object({ summary: Type.String(), risks: Type.Array(Type.String()) }),
+  retryOnInvalid: true,
+});
+
+if (result.ok) {
+  console.log(result.value.summary);
+}
+```
+
 ### Agent and AgentState
 
 The `Agent` class (from `@tsuuanmi/pi-agent`) handles the core LLM interaction. Access it via `session.agent`.
@@ -272,6 +292,14 @@ session.subscribe((event) => {
       }
       break;
     
+    // Reliability events
+    case "loop_detected":
+      console.warn(event.result.reason);
+      break;
+    case "structured_output":
+      console.log(event.ok ? "structured output valid" : event.error);
+      break;
+
     // Tool execution
     case "tool_execution_start":
       console.log(`Tool: ${event.toolName}`);

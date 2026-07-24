@@ -24,13 +24,20 @@ import {
 	type BashExecutionMessage,
 	type CustomMessage,
 	createAgentToolRegistry,
+	createStructuredOutputPrompt,
+	createStructuredOutputRepairPrompt,
+	getStructuredOutputRetryLimit,
+	parseStructuredOutput,
 	type RuntimeAgent,
 	registerAgentTools,
+	type StructuredOutputOptions,
+	type StructuredOutputResult,
 	type ThinkingLevel,
 } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi-ai";
 import { cleanupSessionResources, isContextOverflow, resetApiProviders, streamSimple } from "@tsuuanmi/pi-ai";
+import type { Static, TSchema } from "typebox";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/auth-guidance";
 import {
 	type CompactionResult,
@@ -126,6 +133,13 @@ export function parseSkillBlock(text: string): ParsedSkillBlock | null {
 	};
 }
 
+function getAssistantText(message: AssistantMessage): string {
+	return message.content
+		.filter((content) => content.type === "text")
+		.map((content) => content.text)
+		.join("\n");
+}
+
 /** Session-specific events that extend the core AgentEvent */
 export type AgentSessionEvent =
 	| Exclude<AgentEvent, { type: "agent_end" }>
@@ -151,7 +165,15 @@ export type AgentSessionEvent =
 			errorMessage?: string;
 	  }
 	| { type: "auto_retry_start"; attempt: number; maxAttempts: number; delayMs: number; errorMessage: string }
-	| { type: "auto_retry_end"; success: boolean; attempt: number; finalError?: string };
+	| { type: "auto_retry_end"; success: boolean; attempt: number; finalError?: string }
+	| {
+			type: "structured_output";
+			ok: boolean;
+			attempt: number;
+			error?: string;
+			issues?: string[];
+			preview?: string;
+	  };
 
 /** Listener function for agent session events */
 export type AgentSessionEventListener = (event: AgentSessionEvent) => void;
@@ -657,6 +679,10 @@ export class AgentSession {
 				isError: event.isError,
 			};
 			await this._extensionRunner.emit(extensionEvent);
+		} else if (event.type === "loop_detected") {
+			await this._extensionRunner.emit({ type: "loop_detected", result: event.result });
+		} else if (event.type === "structured_output") {
+			await this._extensionRunner.emit(event);
 		}
 	}
 
@@ -972,6 +998,36 @@ export class AgentSession {
 	 * @throws Error if streaming and no streamingBehavior specified
 	 * @throws Error if no model selected or no API key available (when not streaming)
 	 */
+	async promptStructured<TSchemaValue extends TSchema>(
+		text: string,
+		options: PromptOptions & StructuredOutputOptions<TSchemaValue>,
+	): Promise<StructuredOutputResult<Static<TSchemaValue>>> {
+		const retryLimit = getStructuredOutputRetryLimit(options.retryOnInvalid);
+		let prompt = createStructuredOutputPrompt(text, options);
+		let result: StructuredOutputResult<Static<TSchemaValue>> | undefined;
+
+		for (let attempt = 0; attempt <= retryLimit; attempt += 1) {
+			await this.prompt(prompt, options);
+			const assistant = this._findLastAssistantMessage();
+			const rawText = assistant ? getAssistantText(assistant) : "";
+			result = parseStructuredOutput(rawText, options.schema);
+			const event = {
+				type: "structured_output" as const,
+				ok: result.ok,
+				attempt: attempt + 1,
+				...(result.ok
+					? { preview: result.jsonText.slice(0, 240) }
+					: { error: result.error, issues: result.issues, preview: rawText.slice(0, 240) }),
+			};
+			this._emit(event);
+			await this._extensionRunner.emit(event);
+			if (result.ok || attempt === retryLimit) return result;
+			prompt = createStructuredOutputPrompt(createStructuredOutputRepairPrompt(result), options);
+		}
+
+		return result ?? { ok: false, error: "Structured output did not run", rawText: "" };
+	}
+
 	async prompt(text: string, options?: PromptOptions): Promise<void> {
 		const expandPromptTemplates = options?.expandPromptTemplates ?? true;
 		const preflightResult = options?.preflightResult;

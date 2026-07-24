@@ -12,6 +12,7 @@ import type {
 	ToolResultMessage,
 } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
+import type { LoopDetectionOptions, LoopDetectionResult } from "#agent/agent/loop-detection";
 
 /**
  * Stream function used by the agent loop.
@@ -231,6 +232,12 @@ export interface AgentLoopConfig extends SimpleStreamOptions {
 	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
 
 	/**
+	 * Detect repeated assistant turns. Disabled by default; pass `true` for conservative
+	 * tool-call loop detection, or provide options for custom thresholds and actions.
+	 */
+	loopDetection?: boolean | LoopDetectionOptions;
+
+	/**
 	 * Called after each turn fully completes and `turn_end` has been emitted.
 	 *
 	 * If it returns true, the loop emits `agent_end` and exits before polling steering or follow-up queues,
@@ -447,6 +454,15 @@ export type AgentEvent =
 	// Turn lifecycle - a turn is one assistant response + any tool calls/results
 	| { type: "turn_start" }
 	| { type: "turn_end"; message: AgentMessage; toolResults: ToolResultMessage[] }
+	| { type: "loop_detected"; result: LoopDetectionResult }
+	| {
+			type: "structured_output";
+			ok: boolean;
+			attempt: number;
+			error?: string;
+			issues?: string[];
+			preview?: string;
+	  }
 	// Message lifecycle - emitted for user, assistant, and toolResult messages
 	| { type: "message_start"; message: AgentMessage }
 	// Only emitted for assistant messages during streaming

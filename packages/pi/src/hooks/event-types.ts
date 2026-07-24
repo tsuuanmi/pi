@@ -1,4 +1,4 @@
-import type { AgentMessage, CustomMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, CustomMessage, LoopDetectionResult, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { AssistantMessageEvent, Model, TextContent, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { CompactionPreparation, CompactionResult } from "#pi/compaction/index";
 import type { BashResult } from "#pi/exec/bash-executor";
@@ -236,6 +236,22 @@ export interface ToolExecutionEndEvent {
 	toolName: string;
 	result: any;
 	isError: boolean;
+}
+
+/** Fired when configured loop detection identifies repeated assistant turns */
+export interface LoopDetectedEvent {
+	type: "loop_detected";
+	result: LoopDetectionResult;
+}
+
+/** Fired after a structured-output prompt attempt is validated */
+export interface StructuredOutputEvent {
+	type: "structured_output";
+	ok: boolean;
+	attempt: number;
+	error?: string;
+	issues?: string[];
+	preview?: string;
 }
 
 // ============================================================================
@@ -511,6 +527,8 @@ export type ExtensionEvent =
 	| ToolExecutionStartEvent
 	| ToolExecutionUpdateEvent
 	| ToolExecutionEndEvent
+	| LoopDetectedEvent
+	| StructuredOutputEvent
 	| ModelSelectEvent
 	| ThinkingLevelSelectEvent
 	| UserBashEvent

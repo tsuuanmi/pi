@@ -1,5 +1,22 @@
-import { type Message, type Model, type SimpleStreamOptions, streamSimple, type Transport } from "@tsuuanmi/pi-ai";
+import {
+	type AssistantMessage,
+	type Message,
+	type Model,
+	type SimpleStreamOptions,
+	streamSimple,
+	type Transport,
+} from "@tsuuanmi/pi-ai";
+import type { Static, TSchema } from "typebox";
 import { runAgentLoop, runAgentLoopContinue } from "#agent/agent/agent-loop";
+import type { LoopDetectionOptions } from "#agent/agent/loop-detection";
+import {
+	createStructuredOutputPrompt,
+	createStructuredOutputRepairPrompt,
+	getStructuredOutputRetryLimit,
+	parseStructuredOutput,
+	type StructuredOutputOptions,
+	type StructuredOutputResult,
+} from "#agent/agent/structured-output";
 import type {
 	AfterToolCallContext,
 	AfterToolCallResult,
@@ -25,6 +42,13 @@ function defaultConvertToLlm(messages: AgentMessage[]): Message[] {
 	return messages.filter(
 		(message) => message.role === "user" || message.role === "assistant" || message.role === "toolResult",
 	);
+}
+
+function getAssistantText(message: AssistantMessage): string {
+	return message.content
+		.filter((content) => content.type === "text")
+		.map((content) => content.text)
+		.join("\n");
 }
 
 const EMPTY_USAGE = {
@@ -106,6 +130,8 @@ export interface AgentOptions {
 	transport?: Transport;
 	maxRetryDelayMs?: number;
 	toolExecution?: ToolExecutionMode;
+	/** Detect repeated assistant turns. Disabled by default; pass true for conservative tool-call detection. */
+	loopDetection?: boolean | LoopDetectionOptions;
 	/** Cooperative pause callback. Checked after each turn; when true the agent stops gracefully. */
 	shouldPause?: () => boolean;
 }
@@ -191,6 +217,8 @@ export class Agent {
 	public maxRetryDelayMs?: number;
 	/** Tool execution strategy for assistant messages that contain multiple tool calls. */
 	public toolExecution: ToolExecutionMode;
+	/** Optional repeated-turn detector configuration for this agent. */
+	public loopDetection?: boolean | LoopDetectionOptions;
 	/** Cooperative pause callback. Checked after each turn; when true the agent stops gracefully. */
 	public shouldPause?: () => boolean;
 
@@ -212,6 +240,7 @@ export class Agent {
 		this.transport = options.transport ?? "auto";
 		this.maxRetryDelayMs = options.maxRetryDelayMs;
 		this.toolExecution = options.toolExecution ?? "parallel";
+		this.loopDetection = options.loopDetection;
 		this.shouldPause = options.shouldPause;
 	}
 
@@ -340,6 +369,35 @@ export class Agent {
 		await this.runPromptMessages(messages);
 	}
 
+	/** Prompt the model for JSON that matches a TypeBox schema, then validate and return it. */
+	async promptStructured<TSchemaValue extends TSchema>(
+		input: string,
+		options: StructuredOutputOptions<TSchemaValue>,
+	): Promise<StructuredOutputResult<Static<TSchemaValue>>> {
+		const retryLimit = getStructuredOutputRetryLimit(options.retryOnInvalid);
+		let prompt = createStructuredOutputPrompt(input, options);
+		let result: StructuredOutputResult<Static<TSchemaValue>> | undefined;
+
+		for (let attempt = 0; attempt <= retryLimit; attempt += 1) {
+			await this.prompt(prompt);
+			const assistant = this.findLastAssistantMessage();
+			const rawText = assistant ? getAssistantText(assistant) : "";
+			result = parseStructuredOutput(rawText, options.schema);
+			await this.emitOutOfBand({
+				type: "structured_output",
+				ok: result.ok,
+				attempt: attempt + 1,
+				...(result.ok
+					? { preview: result.jsonText.slice(0, 240) }
+					: { error: result.error, issues: result.issues, preview: rawText.slice(0, 240) }),
+			});
+			if (result.ok || attempt === retryLimit) return result;
+			prompt = createStructuredOutputPrompt(createStructuredOutputRepairPrompt(result), options);
+		}
+
+		return result ?? { ok: false, error: "Structured output did not run", rawText: "" };
+	}
+
 	/** Continue from the current transcript. The last message must be a user or tool-result message. */
 	async continue(): Promise<void> {
 		if (this.activeRun) {
@@ -430,6 +488,7 @@ export class Agent {
 			transport: this.transport,
 			maxRetryDelayMs: this.maxRetryDelayMs,
 			toolExecution: this.toolExecution,
+			loopDetection: this.loopDetection,
 			beforeToolCall: this.beforeToolCall,
 			afterToolCall: this.afterToolCall,
 			prepareNextTurn: this.prepareNextTurn ? async () => await this.prepareNextTurn?.(this.signal) : undefined,
@@ -506,6 +565,21 @@ export class Agent {
 	 * considered idle later, after all awaited listeners for `agent_end` finish
 	 * and `finishRun()` clears runtime-owned state.
 	 */
+	private findLastAssistantMessage(): AssistantMessage | undefined {
+		for (let index = this._state.messages.length - 1; index >= 0; index -= 1) {
+			const message = this._state.messages[index];
+			if (message?.role === "assistant") return message;
+		}
+		return undefined;
+	}
+
+	private async emitOutOfBand(event: AgentEvent): Promise<void> {
+		const abortController = new AbortController();
+		for (const listener of this.listeners) {
+			await listener(event, abortController.signal);
+		}
+	}
+
 	private async processEvents(event: AgentEvent): Promise<void> {
 		switch (event.type) {
 			case "message_start":

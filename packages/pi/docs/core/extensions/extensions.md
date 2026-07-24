@@ -529,6 +529,26 @@ pi.on("turn_end", async (event, ctx) => {
 });
 ```
 
+#### loop_detected
+
+Fired when `createAgentSession({ loopDetection })` or `AgentOptions.loopDetection` detects repeated assistant turns.
+
+```typescript
+pi.on("loop_detected", async (event, ctx) => {
+  // event.result.reason, repeats, maxRepeats, action, preview
+});
+```
+
+#### structured_output
+
+Fired after each `promptStructured()` validation attempt.
+
+```typescript
+pi.on("structured_output", async (event, ctx) => {
+  // event.ok, event.attempt, event.error, event.issues, event.preview
+});
+```
+
 #### message_start / message_update / message_end
 
 Fired for message lifecycle updates.
