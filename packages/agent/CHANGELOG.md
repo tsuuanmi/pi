@@ -10,6 +10,10 @@
 - **orchestrator**: Added dependency-aware pipelining, composite scheduling, and structured dependency handoffs.
 - **attribution**: Added MIT attribution for the open-multi-agent architecture.
 
+### Fixed
+
+- **exports**: Restored shared public exports from `@tsuuanmi/pi-agent`, including structured receipt helpers, the runtime agent alias, and the Node helper subpath.
+
 ## [0.2.2] - 2026-07-23
 
 ### Added

@@ -16,7 +16,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
 import {
-	type Agent,
 	type AgentEvent,
 	type AgentMessage,
 	type AgentState,
@@ -25,6 +24,7 @@ import {
 	type BashExecutionMessage,
 	type CustomMessage,
 	createAgentToolRegistry,
+	type RuntimeAgent,
 	registerAgentTools,
 	type ThinkingLevel,
 } from "@tsuuanmi/pi-agent";
@@ -161,7 +161,7 @@ export type AgentSessionEventListener = (event: AgentSessionEvent) => void;
 // ============================================================================
 
 export interface AgentSessionConfig {
-	agent: Agent;
+	agent: RuntimeAgent;
 	sessionManager: SessionManager;
 	settingsManager: SettingsManager;
 	cwd: string;
@@ -264,7 +264,7 @@ interface ToolDefinitionEntry {
 // ============================================================================
 
 export class AgentSession {
-	readonly agent: Agent;
+	readonly agent: RuntimeAgent;
 	readonly sessionManager: SessionManager;
 	readonly settingsManager: SettingsManager;
 

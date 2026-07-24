@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { Agent, convertToLlm, type ThinkingLevel } from "@tsuuanmi/pi-agent";
+import { RuntimeAgent as Agent, convertToLlm, type ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { clampThinkingLevel, type Model, mergeHeaderSources, streamSimple } from "@tsuuanmi/pi-ai";
 import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";

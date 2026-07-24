@@ -14,7 +14,7 @@ npm install @tsuuanmi/pi-agent
 
 See [Orchestrator update logic](./docs/orchestrator.md) for scheduling, pipelining, and structured handoff behavior.
 
-The package no longer exports the legacy `@tsuuanmi/pi-agent/node` subpath.
+Node-only helpers are available from the `@tsuuanmi/pi-agent/node` subpath.
 
 ## Quick Start
 
