@@ -1,4 +1,4 @@
-import type { ExtensionAPI, ExtensionContext, SubagentVisibility } from "@tsuuanmi/pi-agent";
+import type { ExtensionAPI, ExtensionContext, SubagentRecord, SubagentVisibility } from "@tsuuanmi/pi-agent";
 import { createSubagentListReceipt, createSubagentReceipt, renderSubagentProgress } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceiptWithStructuredReceipt } from "#workflows/artifacts/artifacts";
@@ -188,7 +188,7 @@ async function executeSubagentStatus(params: SubagentStatusInput, ctx: Extension
 	}
 	const limit = Math.max(1, Math.min(50, Math.floor(params.limit ?? 10)));
 	const records = (await manager.list(sessionId)).slice(0, limit);
-	const summary = records.map((r) => ({
+	const summary = records.map((r: SubagentRecord) => ({
 		id: r.id,
 		role: r.role,
 		status: r.status,
@@ -197,7 +197,7 @@ async function executeSubagentStatus(params: SubagentStatusInput, ctx: Extension
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(summary, null, 2) }],
 		details: workflowReceiptWithStructuredReceipt(
-			{ records, recordReceipts: records.map((record) => createSubagentReceipt(record, sessionId)) },
+			{ records, recordReceipts: records.map((record: SubagentRecord) => createSubagentReceipt(record, sessionId)) },
 			createSubagentListReceipt(sessionId, records.length),
 		),
 	};
