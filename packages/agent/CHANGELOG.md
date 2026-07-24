@@ -1,3 +1,14 @@
+## [Unreleased]
+
+### Breaking Changes
+
+- **agent**: Replaced the legacy stateful agent loop public surface with `Agent`, `Team`, `Task`, `TaskQueue`, and `Orchestrator` primitives.
+- **exports**: Removed the `@tsuuanmi/pi-agent/node` package export.
+
+### Added
+
+- **attribution**: Added MIT attribution for the open-multi-agent architecture.
+
 ## [0.2.2] - 2026-07-23
 
 ### Added

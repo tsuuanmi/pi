@@ -1,7 +1,7 @@
 {
 	"name": "@tsuuanmi/pi-agent",
 	"version": "0.2.2",
-	"description": "General-purpose agent with transport abstraction, state management, and attachment support",
+	"description": "Multi-agent orchestration primitives for Pi",
 	"type": "module",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -9,10 +9,6 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
-		},
-		"./node": {
-			"types": "./dist/node.d.ts",
-			"import": "./dist/node.js"
 		},
 		"./package.json": "./package.json"
 	},
@@ -28,7 +24,8 @@
 	},
 	"files": [
 		"dist",
-		"README.md"
+		"README.md",
+		"NOTICE"
 	],
 	"scripts": {
 		"clean": "shx rm -rf dist",
@@ -46,8 +43,8 @@
 		"ai",
 		"agent",
 		"llm",
-		"transport",
-		"state-management"
+		"orchestration",
+		"multi-agent"
 	],
 	"author": "Superman",
 	"license": "MIT",

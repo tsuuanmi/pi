@@ -1,3 +1,9 @@
+## [Unreleased]
+
+### Added
+
+- **llm**: Added a normalized `LlmAdapter` contract and `PiProviderAdapter` bridge for orchestration packages.
+
 ## [0.2.2] - 2026-07-23
 
 ### Added

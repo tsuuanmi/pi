@@ -60,6 +60,26 @@ npm install @tsuuanmi/pi-ai
 
 TypeBox exports are re-exported from `@tsuuanmi/pi-ai`: `Type`, `Static`, and `TSchema`.
 
+## LLM Adapter Contract
+
+`@tsuuanmi/pi-ai` exports a normalized `LlmAdapter` contract for orchestration packages such as `@tsuuanmi/pi-agent`:
+
+```typescript
+import { PiProviderAdapter, complete, getModel } from "@tsuuanmi/pi-ai";
+
+const adapter = new PiProviderAdapter({
+  model: getModel("openai", "gpt-4o-mini"),
+  completeSimple: complete,
+});
+
+const response = await adapter.complete([{ role: "user", content: "Hello" }]);
+console.log(response.content);
+```
+
+## Attribution
+
+The orchestration adapter seam was added alongside architecture adapted from `open-multi-agent` under the MIT license.
+
 ## Quick Start
 
 ```typescript

@@ -14,6 +14,7 @@ export type {
 	OAuthSelectOption,
 	OAuthSelectPrompt,
 } from "#ai/auth/oauth/types";
+export * from "#ai/llm/adapter";
 export * from "#ai/models/index";
 export * from "#ai/parsing/json-parse";
 export type { AnthropicEffort, AnthropicOptions, AnthropicThinkingDisplay } from "#ai/providers/anthropic/index";
