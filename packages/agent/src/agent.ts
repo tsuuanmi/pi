@@ -34,7 +34,7 @@ export class Agent {
 				metadata: options.metadata,
 				tools: this.tools,
 			});
-			return { success: true, output: response.content, response };
+			return { success: true, output: response.content, structured: response.structured, response };
 		} catch (error) {
 			return { success: false, output: error instanceof Error ? error.message : String(error), error };
 		}
@@ -42,7 +42,7 @@ export class Agent {
 
 	async executeTask(context: TaskExecutionContext, options: AgentRunOptions = {}): Promise<AgentRunResult> {
 		const dependencyText = context.completedDependencies
-			.map((task) => `## ${task.title}\n${task.result ?? ""}`)
+			.map((task) => `## ${task.title}\n${dependencyContent(task)}`)
 			.join("\n\n");
 		const prompt = [
 			`# Task: ${context.task.title}`,
@@ -53,4 +53,11 @@ export class Agent {
 			.join("\n\n");
 		return this.run(prompt, options);
 	}
+}
+
+function dependencyContent(task: TaskExecutionContext["task"]): string {
+	const payload = task.dependencyPayload ?? "output";
+	if (payload === "structured") return JSON.stringify(task.structured ?? null);
+	if (payload === "both") return `${task.result ?? ""}\n\n${JSON.stringify(task.structured ?? null)}`.trim();
+	return task.result ?? "";
 }

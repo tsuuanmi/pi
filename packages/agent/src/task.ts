@@ -24,6 +24,7 @@ export class Task {
 			updatedAt: now,
 			...(input.assignee ? { assignee: input.assignee } : {}),
 			...(input.metadata ? { metadata: { ...input.metadata } } : {}),
+			...(input.dependencyPayload ? { dependencyPayload: input.dependencyPayload } : {}),
 		};
 	}
 
@@ -51,8 +52,8 @@ export class Task {
 		this.patch({ status: "in_progress" });
 	}
 
-	complete(result: string): void {
-		this.patch({ status: "completed", result, error: undefined });
+	complete(result: string, structured?: unknown): void {
+		this.patch({ status: "completed", result, structured, error: undefined });
 	}
 
 	fail(error: string): void {

@@ -72,6 +72,7 @@ export interface LlmResponse {
 	toolCalls?: readonly LlmToolCallPart[];
 	usage?: LlmUsage;
 	stopReason?: LlmStopReason;
+	structured?: unknown;
 	raw?: unknown;
 }
 

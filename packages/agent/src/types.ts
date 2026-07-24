@@ -2,7 +2,22 @@
 import type { LlmAdapter, LlmResponse, LlmToolDefinition } from "@tsuuanmi/pi-ai";
 
 export type TaskStatus = "pending" | "in_progress" | "completed" | "failed" | "blocked";
-export type SchedulingStrategy = "round-robin" | "least-busy" | "dependency-first" | "capability-match";
+export type DependencyPayload = "output" | "structured" | "both";
+export type SchedulingStrategy = "round-robin" | "least-busy" | "dependency-first" | "capability-match" | "composite";
+
+export interface SchedulingWeights {
+	fit: number;
+	load: number;
+}
+
+export interface SchedulerWarning {
+	code: "NO_ELIGIBLE_AGENT";
+	message: string;
+	taskId: string;
+	taskTitle: string;
+	reasons: readonly string[];
+	fallback: "zero-fit-current-load";
+}
 
 export interface ToolDefinition extends LlmToolDefinition {
 	execute?: (args: Record<string, unknown>, context: TaskExecutionContext) => Promise<string> | string;
@@ -18,6 +33,13 @@ export interface AgentConfig {
 	maxConcurrentTasks?: number;
 }
 
+export interface OrchestratorConfig {
+	strategy?: SchedulingStrategy;
+	maxConcurrency?: number;
+	schedulingWeights?: Partial<SchedulingWeights>;
+	onWarning?: (warning: SchedulerWarning) => void;
+}
+
 export interface AgentRunOptions {
 	signal?: AbortSignal;
 	metadata?: Record<string, unknown>;
@@ -26,6 +48,7 @@ export interface AgentRunOptions {
 export interface AgentRunResult {
 	success: boolean;
 	output: string;
+	structured?: unknown;
 	response?: LlmResponse;
 	error?: unknown;
 }
@@ -38,6 +61,7 @@ export interface TaskInput {
 	dependsOn?: readonly string[];
 	requires?: readonly string[];
 	metadata?: Record<string, unknown>;
+	dependencyPayload?: DependencyPayload;
 }
 
 export interface TaskSnapshot extends Required<Pick<TaskInput, "title" | "description">> {
@@ -47,7 +71,9 @@ export interface TaskSnapshot extends Required<Pick<TaskInput, "title" | "descri
 	dependsOn: readonly string[];
 	requires: readonly string[];
 	metadata?: Record<string, unknown>;
+	dependencyPayload?: DependencyPayload;
 	result?: string;
+	structured?: unknown;
 	error?: string;
 	createdAt: string;
 	updatedAt: string;
@@ -63,6 +89,8 @@ export interface TaskExecutionContext {
 export interface RunTeamOptions {
 	strategy?: SchedulingStrategy;
 	maxConcurrency?: number;
+	schedulingWeights?: Partial<SchedulingWeights>;
+	onWarning?: (warning: SchedulerWarning) => void;
 	signal?: AbortSignal;
 	onTaskStart?: (task: TaskSnapshot) => void;
 	onTaskComplete?: (task: TaskSnapshot) => void;

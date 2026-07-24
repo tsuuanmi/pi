@@ -27,7 +27,21 @@ class EchoAdapter implements LlmAdapter {
 	}
 }
 
-function agentConfig(name: string, adapter = new EchoAdapter(), capabilities: string[] = []): AgentConfig {
+class StructuredAdapter implements LlmAdapter {
+	readonly calls: string[] = [];
+
+	async complete(messages: readonly LlmMessage[]): Promise<LlmResponse> {
+		const prompt = String(messages.at(-1)?.content ?? "");
+		this.calls.push(prompt);
+		return {
+			content: "text-result",
+			parts: [{ type: "text", text: "text-result" }],
+			structured: { value: 42 } as never,
+		};
+	}
+}
+
+function agentConfig(name: string, adapter: LlmAdapter = new EchoAdapter(), capabilities: string[] = []): AgentConfig {
 	return { name, adapter, capabilities };
 }
 
@@ -153,5 +167,66 @@ describe("multi-agent primitives", () => {
 		expect(result.success).toBe(false);
 		expect(result.tasks[0]?.status).toBe("failed");
 		expect(result.tasks[0]?.error).toBe("aborted");
+	});
+
+	it("pipelines newly unblocked tasks before unrelated long-running tasks finish", async () => {
+		const timeline: string[] = [];
+		class TimingAdapter implements LlmAdapter {
+			async complete(messages: readonly LlmMessage[]): Promise<LlmResponse> {
+				const prompt = String(messages.at(-1)?.content ?? "");
+				const title = prompt.match(/# Task: (.*)/)?.[1] ?? "unknown";
+				timeline.push(`start:${title}`);
+				if (title === "Slow") await new Promise((resolve) => setTimeout(resolve, 30));
+				timeline.push(`end:${title}`);
+				return { content: title, parts: [{ type: "text", text: title }] };
+			}
+		}
+
+		await runTeam(
+			new Team("builders", [agentConfig("worker", new TimingAdapter())]),
+			[
+				{ id: "fast", title: "Fast", description: "Fast" },
+				{ id: "slow", title: "Slow", description: "Slow" },
+				{ id: "after-fast", title: "AfterFast", description: "After fast", dependsOn: ["fast"] },
+			],
+			{ maxConcurrency: 2 },
+		);
+
+		expect(timeline.indexOf("start:AfterFast")).toBeGreaterThan(timeline.indexOf("end:Fast"));
+		expect(timeline.indexOf("start:AfterFast")).toBeLessThan(timeline.indexOf("end:Slow"));
+	});
+
+	it("uses composite scheduling with warnings for impossible requirements", async () => {
+		const warnings: unknown[] = [];
+		const writerAdapter = new EchoAdapter();
+		const reviewerAdapter = new EchoAdapter();
+		const result = await runTeam(
+			new Team("builders", [
+				agentConfig("writer", writerAdapter, ["write"]),
+				agentConfig("reviewer", reviewerAdapter, ["review"]),
+			]),
+			[
+				{ id: "review", title: "Review", description: "Review", requires: ["review"] },
+				{ id: "missing", title: "Deploy", description: "Deploy", requires: ["deploy"] },
+			],
+			{ strategy: "composite", onWarning: (warning) => warnings.push(warning) },
+		);
+
+		expect(result.success).toBe(true);
+		expect(result.tasks.find((task) => task.id === "review")?.assignee).toBe("reviewer");
+		expect(warnings).toHaveLength(1);
+		expect(warnings[0]).toMatchObject({ code: "NO_ELIGIBLE_AGENT", taskId: "missing" });
+	});
+
+	it("passes structured dependency payloads to dependent tasks", async () => {
+		const adapter = new StructuredAdapter();
+		const result = await runTeam(new Team("builders", [agentConfig("worker", adapter)]), [
+			{ id: "produce", title: "Produce", description: "Produce structured output", dependencyPayload: "structured" },
+			{ id: "consume", title: "Consume", description: "Consume structured output", dependsOn: ["produce"] },
+		]);
+
+		expect(result.success).toBe(true);
+		expect(result.tasks[0]?.structured).toEqual({ value: 42 });
+		expect(adapter.calls[1]).toContain('{"value":42}');
 	});
 });

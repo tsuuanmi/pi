@@ -12,6 +12,8 @@ npm install @tsuuanmi/pi-agent
 
 `@tsuuanmi/pi-agent` provides lightweight `Agent`, `Team`, `Task`, `TaskQueue`, and `Orchestrator` primitives. Provider/model transport lives in `@tsuuanmi/pi-ai`; pass an `LlmAdapter` to each agent.
 
+See [Orchestrator update logic](./docs/orchestrator.md) for scheduling, pipelining, and structured handoff behavior.
+
 The package no longer exports the legacy `@tsuuanmi/pi-agent/node` subpath.
 
 ## Quick Start
@@ -55,7 +57,7 @@ console.log(result.success, result.output);
 - `Task`: tracks title, description, dependency IDs, requirements, assignee, status, result, and error.
 - `TaskQueue`: owns task snapshots and dependency readiness.
 - `Team`: named roster of agents.
-- `Orchestrator`: assigns ready tasks and executes dependency batches until completion or failure.
+- `Orchestrator`: assigns ready tasks, pipelines newly unblocked work, and executes dependency batches until completion or failure.
 
 ## Scheduling
 

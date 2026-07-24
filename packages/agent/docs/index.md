@@ -1,6 +1,6 @@
 # @tsuuanmi/pi-agent Documentation
 
-`@tsuuanmi/pi-agent` contains the lower-layer agent runtime: the `Agent` class, the agent loop, shared message/tool/event types, proxy streaming, execution-environment abstractions, subagent contracts, and small Node-only utilities.
+`@tsuuanmi/pi-agent` contains the lower-layer agent runtime: the `Agent` class, `Orchestrator` scheduling, the agent loop, shared message/tool/event types, proxy streaming, execution-environment abstractions, subagent contracts, and small Node-only utilities.
 
 ## Package entry points
 
@@ -11,6 +11,7 @@
 
 - [Agent Loop](agent-loop.md) - `agentLoop()`, `agentLoopContinue()`, turn execution, tool execution, steering, follow-up, and abort handling.
 - [Agent](agent.md) - `Agent` class, state management, event subscription, message queues, and lifecycle control.
+- [Orchestrator](orchestrator.md) - dependency-aware task batching, scheduling strategies, and structured dependency handoffs.
 - [Types](types.md) - `AgentMessage`, `AgentTool`, `AgentEvent`, `AgentContext`, tool result/update types, and loop option types.
 - [Tool Registration](tools.md) - `createAgentToolRegistry()`, `registerAgentTools()`, and `Agent.registerTools()` for host-owned tools.
 - [Messages](messages.md) - non-LLM agent message roles and `convertToLlm()` conversion.

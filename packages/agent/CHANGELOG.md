@@ -7,6 +7,7 @@
 
 ### Added
 
+- **orchestrator**: Added dependency-aware pipelining, composite scheduling, and structured dependency handoffs.
 - **attribution**: Added MIT attribution for the open-multi-agent architecture.
 
 ## [0.2.2] - 2026-07-23
