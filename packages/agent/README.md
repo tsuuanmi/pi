@@ -53,7 +53,7 @@ console.log(result.success, result.output);
 
 ## Core Concepts
 
-- `Agent`: wraps instructions, capabilities, tools, and an `LlmAdapter`. Runtime agents can set `maxTurns` to stop gracefully before runaway provider calls.
+- `Agent`: wraps instructions, capabilities, tools, and an `LlmAdapter`. Runtime agents can set `maxTurns` to stop gracefully before runaway provider calls and use `createSlidingWindowContextTransform()` for safe context pruning.
 - `Task`: tracks title, description, dependency IDs, requirements, assignee, status, result, and error.
 - `TaskQueue`: owns task snapshots and dependency readiness.
 - `Team`: named roster of agents.

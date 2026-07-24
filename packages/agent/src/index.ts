@@ -1,5 +1,6 @@
 export { Agent } from "#agent/agent";
 export { Agent as RuntimeAgent } from "#agent/agent/agent";
+export * from "#agent/agent/context-pruning";
 export * from "#agent/agent/loop-detection";
 export * from "#agent/agent/structured-output";
 export * from "#agent/agent/types";

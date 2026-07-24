@@ -8,6 +8,7 @@
 ### Added
 
 - **agent**: Added a `maxTurns` guard for graceful agent-loop termination before runaway provider calls.
+- **agent**: Added context-pruning helpers for sliding-window transforms that preserve assistant tool calls with matching tool results.
 - **orchestrator**: Added dependency-aware pipelining, composite scheduling, and structured dependency handoffs.
 - **attribution**: Added MIT attribution for the open-multi-agent architecture.
 
