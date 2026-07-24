@@ -132,6 +132,8 @@ export interface AgentOptions {
 	toolExecution?: ToolExecutionMode;
 	/** Detect repeated assistant turns. Disabled by default; pass true for conservative tool-call detection. */
 	loopDetection?: boolean | LoopDetectionOptions;
+	/** Maximum assistant turns for each prompt/continuation run. Finite values are floored and clamped to at least 1. */
+	maxTurns?: number;
 	/** Cooperative pause callback. Checked after each turn; when true the agent stops gracefully. */
 	shouldPause?: () => boolean;
 }
@@ -219,6 +221,8 @@ export class Agent {
 	public toolExecution: ToolExecutionMode;
 	/** Optional repeated-turn detector configuration for this agent. */
 	public loopDetection?: boolean | LoopDetectionOptions;
+	/** Maximum assistant turns for each prompt/continuation run. */
+	public maxTurns?: number;
 	/** Cooperative pause callback. Checked after each turn; when true the agent stops gracefully. */
 	public shouldPause?: () => boolean;
 
@@ -241,6 +245,7 @@ export class Agent {
 		this.maxRetryDelayMs = options.maxRetryDelayMs;
 		this.toolExecution = options.toolExecution ?? "parallel";
 		this.loopDetection = options.loopDetection;
+		this.maxTurns = options.maxTurns;
 		this.shouldPause = options.shouldPause;
 	}
 
@@ -489,6 +494,7 @@ export class Agent {
 			maxRetryDelayMs: this.maxRetryDelayMs,
 			toolExecution: this.toolExecution,
 			loopDetection: this.loopDetection,
+			maxTurns: this.maxTurns,
 			beforeToolCall: this.beforeToolCall,
 			afterToolCall: this.afterToolCall,
 			prepareNextTurn: this.prepareNextTurn ? async () => await this.prepareNextTurn?.(this.signal) : undefined,

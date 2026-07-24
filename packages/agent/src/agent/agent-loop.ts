@@ -165,6 +165,13 @@ function createAgentStream(): EventStream<AgentEvent, AgentMessage[]> {
 	);
 }
 
+function normalizeMaxTurns(maxTurns: number | undefined): number | undefined {
+	if (maxTurns === undefined || !Number.isFinite(maxTurns)) {
+		return undefined;
+	}
+	return Math.max(1, Math.floor(maxTurns));
+}
+
 /**
  * Main loop logic shared by agentLoop and agentLoopContinue.
  */
@@ -178,6 +185,8 @@ async function runLoop(
 ): Promise<void> {
 	let currentContext = initialContext;
 	let config = initialConfig;
+	const maxTurns = normalizeMaxTurns(initialConfig.maxTurns);
+	let assistantTurns = 0;
 	const loopDetectionOptions = normalizeLoopDetectionOptions(initialConfig.loopDetection);
 	const loopDetector = loopDetectionOptions ? new LoopDetector(loopDetectionOptions) : undefined;
 	let firstTurn = true;
@@ -190,6 +199,12 @@ async function runLoop(
 
 		// Inner loop: process tool calls and steering messages
 		while (hasMoreToolCalls || pendingMessages.length > 0) {
+			if (maxTurns !== undefined && assistantTurns >= maxTurns) {
+				await emit({ type: "max_turns_reached", turns: assistantTurns, maxTurns });
+				await emit({ type: "agent_end", messages: newMessages });
+				return;
+			}
+
 			if (!firstTurn) {
 				await emit({ type: "turn_start" });
 			} else {
@@ -209,6 +224,7 @@ async function runLoop(
 
 			// Stream assistant response
 			const message = await streamAssistantResponse(currentContext, config, signal, emit, streamFn);
+			assistantTurns += 1;
 			newMessages.push(message);
 
 			if (message.stopReason === "error" || message.stopReason === "aborted") {

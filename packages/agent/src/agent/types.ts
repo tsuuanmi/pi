@@ -238,6 +238,13 @@ export interface AgentLoopConfig extends SimpleStreamOptions {
 	loopDetection?: boolean | LoopDetectionOptions;
 
 	/**
+	 * Maximum assistant turns allowed for this loop invocation.
+	 * When reached, the loop emits `max_turns_reached` and stops gracefully before another provider request.
+	 * Finite values are floored and clamped to at least 1.
+	 */
+	maxTurns?: number;
+
+	/**
 	 * Called after each turn fully completes and `turn_end` has been emitted.
 	 *
 	 * If it returns true, the loop emits `agent_end` and exits before polling steering or follow-up queues,
@@ -455,6 +462,7 @@ export type AgentEvent =
 	| { type: "turn_start" }
 	| { type: "turn_end"; message: AgentMessage; toolResults: ToolResultMessage[] }
 	| { type: "loop_detected"; result: LoopDetectionResult }
+	| { type: "max_turns_reached"; turns: number; maxTurns: number }
 	| {
 			type: "structured_output";
 			ok: boolean;
