@@ -106,9 +106,15 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const hasGrep = tools.includes("grep");
 	const hasFind = tools.includes("find");
 	const hasLs = tools.includes("ls");
+	const hasLsp = tools.includes("lsp");
 	const hasRead = tools.includes("read");
 
 	// File exploration guidelines
+	if (hasLsp) {
+		addGuideline(
+			"Prefer lsp before grep/find for supported code intelligence tasks: diagnostics, symbols, definitions, references, hover, and symbol-aware call-site audits.",
+		);
+	}
 	if (hasBash && !hasGrep && !hasFind && !hasLs) {
 		addGuideline("Use bash for file operations like ls, rg, find");
 	}

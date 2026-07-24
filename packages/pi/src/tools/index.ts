@@ -26,6 +26,15 @@ export {
 	type FindToolOptions,
 } from "#pi/tools/find";
 export {
+	createGlobTool,
+	createGlobToolDefinition,
+	type GlobOperations,
+	type GlobToolDetails,
+	type GlobToolInput,
+	type GlobToolOptions,
+	matchesGlob,
+} from "#pi/tools/glob";
+export {
 	createGrepTool,
 	createGrepToolDefinition,
 	type GrepOperations,
@@ -46,7 +55,7 @@ export {
 	createLspToolDefinition,
 	type LspToolDetails,
 	type LspToolInput,
-} from "#pi/tools/lsp/lsp-tool";
+} from "#pi/tools/lsp";
 export {
 	createReadTool,
 	createReadToolDefinition,
@@ -78,15 +87,16 @@ import type { ToolDefinition } from "#pi/api/types";
 import { type BashToolOptions, createBashTool, createBashToolDefinition } from "#pi/tools/bash";
 import { createEditTool, createEditToolDefinition, type EditToolOptions } from "#pi/tools/edit";
 import { createFindTool, createFindToolDefinition, type FindToolOptions } from "#pi/tools/find";
+import { createGlobTool, createGlobToolDefinition, type GlobToolOptions } from "#pi/tools/glob";
 import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "#pi/tools/grep";
 import { createLsTool, createLsToolDefinition, type LsToolOptions } from "#pi/tools/ls";
-import { createLspTool, createLspToolDefinition } from "#pi/tools/lsp/lsp-tool";
+import { createLspTool, createLspToolDefinition } from "#pi/tools/lsp";
 import { createReadTool, createReadToolDefinition, type ReadToolOptions } from "#pi/tools/read";
 import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } from "#pi/tools/write";
 
 export type Tool = AgentTool<any>;
 export type ToolDef = ToolDefinition<any, any>;
-export type ToolName = "read" | "bash" | "edit" | "write" | "grep" | "find" | "ls" | "lsp";
+export type ToolName = "read" | "bash" | "edit" | "write" | "lsp" | "grep" | "find" | "glob" | "ls";
 export interface ToolsOptions {
 	read?: ReadToolOptions;
 	bash?: BashToolOptions;
@@ -94,6 +104,7 @@ export interface ToolsOptions {
 	edit?: EditToolOptions;
 	grep?: GrepToolOptions;
 	find?: FindToolOptions;
+	glob?: GlobToolOptions;
 	ls?: LsToolOptions;
 }
 
@@ -103,10 +114,11 @@ export function createAllToolDefinitions(cwd: string, options?: ToolsOptions): R
 		bash: createBashToolDefinition(cwd, options?.bash),
 		edit: createEditToolDefinition(cwd, options?.edit),
 		write: createWriteToolDefinition(cwd, options?.write),
+		lsp: createLspToolDefinition(cwd),
 		grep: createGrepToolDefinition(cwd, options?.grep),
 		find: createFindToolDefinition(cwd, options?.find),
+		glob: createGlobToolDefinition(cwd, options?.glob),
 		ls: createLsToolDefinition(cwd, options?.ls),
-		lsp: createLspToolDefinition(cwd),
 	};
 }
 
@@ -123,9 +135,10 @@ export function createCodingTools(cwd: string, options?: ToolsOptions): Tool[] {
 export function createReadOnlyTools(cwd: string, options?: ToolsOptions): Tool[] {
 	return [
 		createReadTool(cwd, options?.read),
+		createLspTool(cwd),
 		createGrepTool(cwd, options?.grep),
 		createFindTool(cwd, options?.find),
+		createGlobTool(cwd, options?.glob),
 		createLsTool(cwd, options?.ls),
-		createLspTool(cwd),
 	];
 }

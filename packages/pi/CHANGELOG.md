@@ -6,6 +6,8 @@
 
 ### Added
 
+- **sdk**: Added opt-in loop detection, `promptStructured()` TypeBox validation helpers, and minimal `loop_detected` / `structured_output` events for SDK and extension observability.
+- **tools**: Added a built-in Agent-registered `glob` tool for capped file listing with common bulky directory skips.
 - **tools**: Built-in tool results now attach `details.receipt` structured execution receipts and the TUI renders them consistently.
 - **tmux**: Added structured tmux launch guidance receipts for inspectable long-running workflow handoffs.
 - **subagents**: Explicit `visibility: "tmux"` now launches the Pi CLI in tmux worker mode using a session-local `request.json`, while `visibility: "auto"` still resolves to the native backend for this milestone.
@@ -16,7 +18,7 @@
 ### Changed
 
 - **interactive**: Centralized chat/tool/editor/status spacing, made tool actions accent-forward, dimmed path metadata, and changed the working loader to show action plus elapsed time.
-- **tools**: Moved `lsp` out of the bundled `pi:lsp` package and into Pi's core built-in tool registry.
+- **tools**: Moved `lsp` out of the bundled `pi:lsp` package and into Pi's core built-in tool registry, renamed its source module to `src/tools/lsp.ts`, and prompts now prioritize LSP before grep/find for symbol-aware code intelligence.
 - **packages**: Moved reusable TUI widgets and structured receipt rendering to `@tsuuanmi/pi-tui`; Pi now owns built-in tool helpers for edit diffing, path resolution, bounded output accumulation, shell-output capture, and truncation, and registers current tools through `@tsuuanmi/pi-agent`'s standard tool registry APIs.
 
 ### Fixed

@@ -4,7 +4,7 @@ Built-in tool integration with language servers for code intelligence features.
 
 ## Overview
 
-Pi integrates with language servers to provide diagnostics, hover information, go-to-definition, and references. LSP is exposed as the built-in `lsp` tool.
+Pi integrates with language servers to provide diagnostics, hover information, go-to-definition, and references. LSP is exposed as the built-in `lsp` tool. Prefer `lsp` before textual `grep` or `find` for supported code intelligence tasks such as diagnostics, symbols, definitions, references, hover, and symbol-aware call-site audits.
 
 ## Supported Features
 

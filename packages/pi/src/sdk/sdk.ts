@@ -22,6 +22,7 @@ import {
 	createCodingTools,
 	createEditTool,
 	createFindTool,
+	createGlobTool,
 	createGrepTool,
 	createLspTool,
 	createLsTool,
@@ -126,6 +127,7 @@ export {
 	createWriteTool,
 	createGrepTool,
 	createFindTool,
+	createGlobTool,
 	createLsTool,
 	createLspTool,
 };

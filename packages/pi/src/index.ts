@@ -241,6 +241,7 @@ export {
 	createCodingTools,
 	createEditTool,
 	createFindTool,
+	createGlobTool,
 	createGrepTool,
 	createLspTool,
 	createLsTool,

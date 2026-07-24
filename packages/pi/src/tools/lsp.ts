@@ -251,10 +251,11 @@ export function createLspToolDefinition(cwd: string): ToolDefinition<typeof lspS
 		name: "lsp",
 		label: "lsp",
 		description:
-			"Query Language Server Protocol servers for code intelligence. Supports status, diagnostics, document symbols, hover, definition, and references. Uses installed language servers for TypeScript/JavaScript, Python, and Rust.",
-		promptSnippet: "Query language servers for diagnostics, symbols, hover, definitions, and references",
+			"Query Language Server Protocol servers for code intelligence. Prefer this over textual grep/find for symbol-aware diagnostics, document symbols, hover, definition, and references when a supported language server is available. Uses installed language servers for TypeScript/JavaScript, Python, and Rust.",
+		promptSnippet: "Prefer language servers for diagnostics, symbols, hover, definitions, and references",
 		promptGuidelines: [
-			"Use lsp for code intelligence when a supported language server is available, especially diagnostics, symbols, definitions, and references.",
+			"Prefer lsp before grep/find for supported code intelligence tasks: diagnostics, symbols, definitions, references, hover, and symbol-aware call-site audits.",
+			"Use grep/find after lsp when searching raw text, comments, generated files, unsupported languages, or dynamic string-based usages.",
 		],
 		parameters: lspSchema,
 		executionMode: "sequential",

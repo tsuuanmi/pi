@@ -4,14 +4,14 @@ Pi's built-in tool system providing file operations, shell execution, and code s
 
 ## Overview
 
-Pi ships with eight built-in tools that the agent can use to interact with the filesystem, execute commands, search code, and query language servers. Pi owns the concrete tool implementations and helper modules; `@tsuuanmi/pi-agent` owns the generic `AgentTool` protocol and registration APIs. Each tool follows a pluggable operations pattern that allows extensions to delegate execution to remote systems (for example SSH).
+Pi ships with nine built-in tools that the agent can use to interact with the filesystem, execute commands, search code, and query language servers. Pi owns the concrete tool implementations and helper modules; `@tsuuanmi/pi-agent` owns the generic `AgentTool` protocol and registration APIs. Each tool follows a pluggable operations pattern that allows extensions to delegate execution to remote systems (for example SSH).
 
 At runtime, Pi wraps built-in and extension tool definitions, registers the resulting `AgentTool` instances through `createAgentToolRegistry()`/`registerAgentTools()` from `@tsuuanmi/pi-agent`, and passes the active tool list to the agent.
 
 Tools are grouped into two categories:
 
 - **Default coding tools** — `read`, `bash`, `edit`, `write`, `lsp`
-- **Read-only tools** — `read`, `grep`, `find`, `ls`, `lsp`
+- **Read-only tools** — `read`, `lsp`, `grep`, `find`, `glob`, `ls`
 
 ## Built-in Tools
 
@@ -21,10 +21,11 @@ Tools are grouped into two categories:
 | `bash` | `createBashTool` / `createBashToolDefinition` | Execute shell commands |
 | `edit` | `createEditTool` / `createEditToolDefinition` | Make surgical edits to files |
 | `write` | `createWriteTool` / `createWriteToolDefinition` | Create or overwrite files |
+| `lsp` | `createLspTool` / `createLspToolDefinition` | Query Language Server Protocol servers for diagnostics, symbols, hover, definitions, and references; prefer before grep/find for symbol-aware code intelligence |
 | `grep` | `createGrepTool` / `createGrepToolDefinition` | Search file contents with regex |
 | `find` | `createFindTool` / `createFindToolDefinition` | Search for files by name or pattern |
+| `glob` | `createGlobTool` / `createGlobToolDefinition` | List file paths by filename glob without reading contents |
 | `ls` | `createLsTool` / `createLsToolDefinition` | List directory contents |
-| `lsp` | `createLspTool` / `createLspToolDefinition` | Query Language Server Protocol servers for diagnostics, symbols, hover, definitions, and references |
 
 ## Tool Parameters
 
@@ -64,6 +65,18 @@ Each edit in `edits`:
 | `path` | string | yes | Path to the file to write (relative or absolute) |
 | `content` | string | yes | Content to write to the file |
 
+### `lsp`
+
+Prefer `lsp` before `grep` or `find` for supported code intelligence tasks such as diagnostics, symbols, definitions, references, hover, and symbol-aware call-site audits. Use textual search for raw strings, comments, generated files, unsupported languages, or dynamic string-based usages.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `action` | string | yes | `status`, `diagnostics`, `symbols`, `hover`, `definition`, or `references` |
+| `file` | string | no | File path for file-specific LSP actions |
+| `line` | number | no | 1-indexed line number for position-specific actions |
+| `symbol` | string | no | Symbol substring on the target line, used to choose the column |
+| `timeout` | number | no | Request timeout in seconds |
+
 ### `grep`
 
 | Parameter | Type | Required | Description |
@@ -84,22 +97,20 @@ Each edit in `edits`:
 | `path` | string | no | Directory to search in (default: current directory) |
 | `limit` | number | no | Maximum number of results (default: 1000) |
 
+### `glob`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `path` | string | no | Directory or file path to list (default: current directory) |
+| `pattern` | string | no | Filename glob to match, e.g. `*.ts` or `**/*.json` |
+| `maxFiles` | number | no | Maximum number of file paths to return (default: 500) |
+
 ### `ls`
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `path` | string | no | Directory to list (default: current directory) |
 | `limit` | number | no | Maximum number of entries to return (default: 500) |
-
-### `lsp`
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `action` | string | yes | `status`, `diagnostics`, `symbols`, `hover`, `definition`, or `references` |
-| `file` | string | no | File path for file-specific LSP actions |
-| `line` | number | no | 1-indexed line number for position-specific actions |
-| `symbol` | string | no | Symbol substring on the target line, used to choose the column |
-| `timeout` | number | no | Request timeout in seconds |
 
 ## Tool Architecture
 
@@ -114,13 +125,13 @@ Each tool is composed of:
 The tools module provides three factory functions for creating tool sets:
 
 ```typescript
-// Create all 8 tool definitions (for extension registration)
+// Create all 9 tool definitions (for extension registration)
 const definitions = createAllToolDefinitions(cwd, options);
 
 // Create default coding tool instances (read, bash, edit, write, lsp)
 const codingTools = createCodingTools(cwd, options);
 
-// Create read-only tool instances (read, grep, find, ls, lsp)
+// Create read-only tool instances (read, lsp, grep, find, glob, ls)
 const readOnlyTools = createReadOnlyTools(cwd, options);
 ```
 
@@ -134,6 +145,7 @@ interface ToolsOptions {
   edit?: EditToolOptions;
   grep?: GrepToolOptions;
   find?: FindToolOptions;
+  glob?: GlobToolOptions;
   ls?: LsToolOptions;
 }
 ```
