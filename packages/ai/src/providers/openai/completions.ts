@@ -10,8 +10,8 @@ import type {
 	ChatCompletionToolMessageParam,
 } from "openai/resources/chat/completions.js";
 import { getProviderEnvValue } from "#ai/auth/env-api-keys";
-import { calculateCost, clampThinkingLevel } from "#ai/models/index";
-import { parseStreamingJson, sanitizeSurrogates } from "#ai/parsing/json-parse";
+import { calculateCost, clampThinkingLevel } from "#ai/models/model-catalog";
+import { parseStreamingJson, sanitizeSurrogates } from "#ai/parsing/json-parser";
 import { buildBaseOptions, clampOpenAIPromptCacheKey } from "#ai/providers/openai/simple-options";
 import { transformMessages } from "#ai/providers/openai/transform-messages";
 import { AssistantMessageEventStream, headersToRecord } from "#ai/transport/event-stream";

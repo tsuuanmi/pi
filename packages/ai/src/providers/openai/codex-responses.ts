@@ -20,8 +20,7 @@ if (typeof process !== "undefined" && (process.versions?.node || process.version
 	});
 }
 
-import { clampThinkingLevel } from "#ai/models/index";
-import { registerSessionResourceCleanup } from "#ai/providers/api-registry";
+import { clampThinkingLevel } from "#ai/models/model-catalog";
 import {
 	convertResponsesMessages,
 	convertResponsesTools,
@@ -32,8 +31,9 @@ import {
 	buildBaseOptions,
 	clampOpenAIPromptCacheKey,
 } from "#ai/providers/openai/simple-options";
+import { registerSessionResourceCleanup } from "#ai/providers/provider-registry";
 import { AssistantMessageEventStream, headersToRecord } from "#ai/transport/event-stream";
-import { resolveHttpProxyUrlForTarget } from "#ai/transport/node-http-proxy";
+import { resolveHttpProxyUrlForTarget } from "#ai/transport/http-proxy";
 import type {
 	Api,
 	AssistantMessage,

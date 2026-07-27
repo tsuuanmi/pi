@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import type { ResponseCreateParamsStreaming } from "openai/resources/responses/responses.js";
 import { getProviderEnvValue } from "#ai/auth/env-api-keys";
-import { clampThinkingLevel } from "#ai/models/index";
+import { clampThinkingLevel } from "#ai/models/model-catalog";
 import {
 	convertResponsesMessages,
 	convertResponsesTools,

@@ -9,8 +9,8 @@ import type {
 	ResponseReasoningItem,
 	ResponseStreamEvent,
 } from "openai/resources/responses/responses.js";
-import { calculateCost } from "#ai/models/index";
-import { parseStreamingJson, sanitizeSurrogates } from "#ai/parsing/json-parse";
+import { calculateCost } from "#ai/models/model-catalog";
+import { parseStreamingJson, sanitizeSurrogates } from "#ai/parsing/json-parser";
 import { transformMessages } from "#ai/providers/openai/transform-messages";
 import type { AssistantMessageEventStream } from "#ai/transport/event-stream";
 import type {

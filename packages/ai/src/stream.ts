@@ -1,7 +1,7 @@
-import "#ai/providers/register-builtins";
+import "#ai/providers/register-built-in-providers";
 
 import { getEnvApiKey } from "#ai/auth/env-api-keys";
-import { getApiProvider } from "#ai/providers/api-registry";
+import { getApiProvider } from "#ai/providers/provider-registry";
 import type {
 	Api,
 	AssistantMessage,

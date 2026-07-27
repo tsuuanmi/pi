@@ -1,4 +1,4 @@
-import { registerApiProvider, unregisterApiProviders } from "#ai/providers/api-registry";
+import { registerApiProvider, unregisterApiProviders } from "#ai/providers/provider-registry";
 import { createAssistantMessageEventStream } from "#ai/transport/event-stream";
 import type {
 	AssistantMessage,

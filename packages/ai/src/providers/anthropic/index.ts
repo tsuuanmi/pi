@@ -8,8 +8,8 @@ import type {
 	RefusalStopDetails,
 } from "@anthropic-ai/sdk/resources/messages.js";
 import { getProviderEnvValue } from "#ai/auth/env-api-keys";
-import { calculateCost } from "#ai/models/index";
-import { parseJsonWithRepair, parseStreamingJson, sanitizeSurrogates } from "#ai/parsing/json-parse";
+import { calculateCost } from "#ai/models/model-catalog";
+import { parseJsonWithRepair, parseStreamingJson, sanitizeSurrogates } from "#ai/parsing/json-parser";
 import { buildBaseOptions } from "#ai/providers/openai/simple-options";
 import { transformMessages } from "#ai/providers/openai/transform-messages";
 import { AssistantMessageEventStream, headersToRecord } from "#ai/transport/event-stream";

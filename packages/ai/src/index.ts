@@ -14,16 +14,20 @@ export type {
 	OAuthSelectOption,
 	OAuthSelectPrompt,
 } from "#ai/auth/oauth/types";
-export * from "#ai/llm/adapter";
-export * from "#ai/models/index";
-export * from "#ai/parsing/json-parse";
-export type { AnthropicEffort, AnthropicOptions, AnthropicThinkingDisplay } from "#ai/providers/anthropic/index";
-export * from "#ai/providers/api-registry";
+export * from "#ai/models/model";
+export * from "#ai/models/model-catalog";
+export * from "#ai/parsing/json-parser";
+export * from "#ai/protocol/output-limit";
+export type {
+	AnthropicEffort,
+	AnthropicOptions,
+	AnthropicThinkingDisplay,
+} from "#ai/providers/anthropic/anthropic-provider";
 export * from "#ai/providers/faux/index";
 export type {
 	OpenAICodexResponsesOptions,
 	OpenAICodexWebSocketDebugStats,
-} from "#ai/providers/openai/codex-responses";
+} from "#ai/providers/openai/codex-responses-api";
 export {
 	consumeOpenAICodexResetCredit,
 	fetchOpenAICodexResetCredits,
@@ -37,12 +41,12 @@ export {
 	type OpenAICodexUsageStatus,
 	type OpenAICodexUsageSummary,
 } from "#ai/providers/openai/codex-usage";
-export type { OpenAICompletionsOptions } from "#ai/providers/openai/completions";
-export type { OpenAIResponsesOptions } from "#ai/providers/openai/responses";
+export type { OpenAICompletionsOptions } from "#ai/providers/openai/completions-api";
+export type { OpenAIResponsesOptions } from "#ai/providers/openai/responses-api";
+export * from "#ai/providers/provider-registry";
 export * from "#ai/providers/provider-utils";
-export * from "#ai/providers/register-builtins";
-export * from "#ai/schema/validation";
+export * from "#ai/providers/register-built-in-providers";
+export * from "#ai/schema/schema-validator";
 export * from "#ai/stream";
-export * from "#ai/text/overflow";
 export * from "#ai/transport/event-stream";
 export * from "#ai/types";
