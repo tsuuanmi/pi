@@ -2,19 +2,20 @@
 
 ### Breaking Changes
 
-- **agent**: Replaced the legacy stateful agent loop public surface with `Agent`, `Team`, `Task`, `TaskQueue`, and `Orchestrator` primitives.
+- **agent**: Collapsed the split simple/runtime Agent surface into one public runtime-capable `Agent`; `RuntimeAgent` is no longer exported.
 - **exports**: Removed the `@tsuuanmi/pi-agent/node` package export.
 
 ### Added
 
 - **agent**: Added a `maxTurns` guard for graceful agent-loop termination before runaway provider calls.
 - **agent**: Added context-pruning helpers for sliding-window transforms that preserve assistant tool calls with matching tool results.
+- **agent**: Added isolated `run()`, state/history accessors, lifecycle run hooks, status tracing events, capabilities, and per-agent task serialization.
 - **orchestrator**: Added dependency-aware pipelining, composite scheduling, and structured dependency handoffs.
 - **attribution**: Added MIT attribution for the open-multi-agent architecture.
 
 ### Fixed
 
-- **exports**: Restored shared public exports from `@tsuuanmi/pi-agent`, including structured receipt helpers, the runtime agent alias, and the Node helper subpath.
+- **exports**: Restored shared public exports from `@tsuuanmi/pi-agent`, including structured receipt helpers and the Node helper subpath.
 
 ## [0.2.2] - 2026-07-23
 

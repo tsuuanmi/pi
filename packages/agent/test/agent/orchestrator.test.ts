@@ -1,8 +1,71 @@
-import { Agent, type AgentConfig, Orchestrator, runTeam, Task, Team } from "@tsuuanmi/pi-agent";
-import type { LlmAdapter, LlmMessage, LlmResponse } from "@tsuuanmi/pi-ai";
+import { Agent, type AgentOptions, Orchestrator, runTeam, type StreamFn, Task, Team } from "@tsuuanmi/pi-agent";
+import {
+	type AssistantMessage,
+	type AssistantMessageEventStream,
+	createAssistantMessageEventStream,
+	type Model,
+} from "@tsuuanmi/pi-ai";
 import { describe, expect, it } from "vitest";
 
-class EchoAdapter implements LlmAdapter {
+const model: Model<"openai-completions"> = {
+	id: "gpt-5",
+	name: "GPT-5",
+	api: "openai-completions",
+	provider: "openai",
+	baseUrl: "https://example.test/v1",
+	reasoning: false,
+	input: ["text"],
+	cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+	contextWindow: 128_000,
+	maxTokens: 4096,
+};
+
+const usage = {
+	input: 1,
+	output: 1,
+	totalTokens: 2,
+	cacheRead: 0,
+	cacheWrite: 0,
+	cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+};
+
+function doneStream(message: AssistantMessage): AssistantMessageEventStream {
+	const stream = createAssistantMessageEventStream();
+	queueMicrotask(() => {
+		stream.push({ type: "start", partial: { ...message, content: [] } });
+		stream.push({ type: "done", reason: message.stopReason as "stop" | "toolUse", message });
+	});
+	return stream;
+}
+
+function promptText(content: unknown): string {
+	if (typeof content === "string") return content;
+	if (Array.isArray(content)) {
+		return content
+			.filter(
+				(part): part is { type: "text"; text: string } =>
+					typeof part === "object" && part !== null && "type" in part && part.type === "text" && "text" in part,
+			)
+			.map((part) => part.text)
+			.join("\n");
+	}
+	return JSON.stringify(content);
+}
+
+function assistantText(text: string): AssistantMessage {
+	return {
+		role: "assistant",
+		content: [{ type: "text", text }],
+		api: "test",
+		provider: "test",
+		model: "test-model",
+		usage,
+		stopReason: "stop",
+		timestamp: Date.now(),
+	};
+}
+
+class EchoStream {
 	readonly calls: string[] = [];
 	private readonly delayMs: number;
 	private readonly fail: boolean;
@@ -12,43 +75,78 @@ class EchoAdapter implements LlmAdapter {
 		this.fail = options.fail ?? false;
 	}
 
-	async complete(messages: readonly LlmMessage[], options?: { signal?: AbortSignal }): Promise<LlmResponse> {
-		if (options?.signal?.aborted) throw new Error("aborted");
-		if (this.delayMs > 0) await new Promise((resolve) => setTimeout(resolve, this.delayMs));
-		if (options?.signal?.aborted) throw new Error("aborted");
-		if (this.fail) throw new Error("adapter failed");
-		const prompt = messages.at(-1)?.content;
-		const content = typeof prompt === "string" ? prompt : JSON.stringify(prompt);
-		this.calls.push(content);
-		return {
-			content: `done:${content.split("\n")[0]}`,
-			parts: [{ type: "text", text: `done:${content.split("\n")[0]}` }],
-		};
-	}
+	readonly stream: StreamFn = (_model, context, options) => {
+		const content = promptText(context.messages.at(-1)?.content);
+		const stream = createAssistantMessageEventStream();
+		void (async () => {
+			if (options?.signal?.aborted) {
+				stream.push({
+					type: "error",
+					reason: "aborted",
+					error: { ...assistantText(""), stopReason: "aborted", errorMessage: "aborted" },
+				});
+				return;
+			}
+			if (this.delayMs > 0) await new Promise((resolve) => setTimeout(resolve, this.delayMs));
+			if (options?.signal?.aborted) {
+				stream.push({
+					type: "error",
+					reason: "aborted",
+					error: { ...assistantText(""), stopReason: "aborted", errorMessage: "aborted" },
+				});
+				return;
+			}
+			if (this.fail) {
+				stream.push({
+					type: "error",
+					reason: "error",
+					error: { ...assistantText(""), stopReason: "error", errorMessage: "adapter failed" },
+				});
+				return;
+			}
+			this.calls.push(content);
+			const text = `done:${content.split("\n")[0]}`;
+			stream.push({ type: "start", partial: { ...assistantText(text), content: [] } });
+			stream.push({ type: "done", reason: "stop", message: assistantText(text) });
+		})();
+		return stream;
+	};
 }
 
-class StructuredAdapter implements LlmAdapter {
+class StructuredStream {
 	readonly calls: string[] = [];
 
-	async complete(messages: readonly LlmMessage[]): Promise<LlmResponse> {
-		const prompt = String(messages.at(-1)?.content ?? "");
+	readonly stream: StreamFn = (_model, context) => {
+		const prompt = promptText(context.messages.at(-1)?.content);
 		this.calls.push(prompt);
-		return {
-			content: "text-result",
-			parts: [{ type: "text", text: "text-result" }],
-			structured: { value: 42 } as never,
-		};
-	}
+		return doneStream(assistantText('{"value":42}'));
+	};
 }
 
-function agentConfig(name: string, adapter: LlmAdapter = new EchoAdapter(), capabilities: string[] = []): AgentConfig {
-	return { name, adapter, capabilities };
+function agentConfig(
+	name: string,
+	stream: { stream: StreamFn } = new EchoStream(),
+	capabilities: string[] = [],
+): AgentOptions {
+	return {
+		name,
+		capabilities,
+		initialState: { model, systemPrompt: "Be direct.", tools: [] },
+		streamFn: stream.stream,
+		extractStructured: (output: string) => {
+			try {
+				return JSON.parse(output);
+			} catch {
+				return undefined;
+			}
+		},
+	};
 }
 
 describe("multi-agent primitives", () => {
 	it("runs an agent through an LLM adapter", async () => {
-		const adapter = new EchoAdapter();
-		const agent = new Agent({ name: "worker", instructions: "Be direct.", adapter });
+		const adapter = new EchoStream();
+		const agent = new Agent(agentConfig("worker", adapter));
 
 		const result = await agent.run("Build it");
 
@@ -58,7 +156,7 @@ describe("multi-agent primitives", () => {
 	});
 
 	it("executes dependency-ready tasks and injects dependency output", async () => {
-		const adapter = new EchoAdapter();
+		const adapter = new EchoStream();
 		const team = new Team("builders", [agentConfig("worker", adapter)]);
 		const result = await runTeam(team, [
 			new Task({ id: "plan", title: "Plan", description: "Plan the work" }),
@@ -67,13 +165,13 @@ describe("multi-agent primitives", () => {
 
 		expect(result.success).toBe(true);
 		expect(result.tasks.map((task) => task.status)).toEqual(["completed", "completed"]);
-		expect(adapter.calls[1]).toContain("# Completed dependencies");
-		expect(adapter.calls[1]).toContain("done:# Task: Plan");
+		expect(adapter.calls[1]).toContain("Completed dependencies");
+		expect(adapter.calls[1]).toContain("done:Task: Plan");
 	});
 
 	it("assigns capability-matched tasks to matching agents", async () => {
-		const writerAdapter = new EchoAdapter();
-		const reviewerAdapter = new EchoAdapter();
+		const writerAdapter = new EchoStream();
+		const reviewerAdapter = new EchoStream();
 		const team = new Team("review", [
 			agentConfig("writer", writerAdapter, ["write"]),
 			agentConfig("reviewer", reviewerAdapter, ["review"]),
@@ -127,7 +225,7 @@ describe("multi-agent primitives", () => {
 	});
 
 	it("blocks tasks whose prerequisites fail", async () => {
-		const team = new Team("builders", [agentConfig("worker", new EchoAdapter({ fail: true }))]);
+		const team = new Team("builders", [agentConfig("worker", new EchoStream({ fail: true }))]);
 		const result = await runTeam(team, [
 			{ id: "a", title: "A", description: "A" },
 			{ id: "b", title: "B", description: "B", dependsOn: ["a"] },
@@ -138,7 +236,7 @@ describe("multi-agent primitives", () => {
 	});
 
 	it("honors concurrency overrides and keeps result order stable", async () => {
-		const adapter = new EchoAdapter({ delayMs: 5 });
+		const adapter = new EchoStream({ delayMs: 5 });
 		const starts: string[] = [];
 		const result = await runTeam(
 			new Team("builders", [agentConfig("worker", adapter)]),
@@ -152,14 +250,14 @@ describe("multi-agent primitives", () => {
 
 		expect(starts).toEqual(["a", "b", "c"]);
 		expect(result.tasks.map((task) => task.id)).toEqual(["a", "b", "c"]);
-		expect(result.output).toContain("done:# Task: A");
+		expect(result.output).toContain("done:Task: A");
 	});
 
 	it("propagates abort signals to agents", async () => {
 		const controller = new AbortController();
 		controller.abort();
 		const result = await runTeam(
-			new Team("builders", [agentConfig("worker", new EchoAdapter())]),
+			new Team("builders", [agentConfig("worker", new EchoStream())]),
 			[{ id: "a", title: "A", description: "A" }],
 			{ signal: controller.signal },
 		);
@@ -169,21 +267,26 @@ describe("multi-agent primitives", () => {
 		expect(result.tasks[0]?.error).toBe("aborted");
 	});
 
-	it("pipelines newly unblocked tasks before unrelated long-running tasks finish", async () => {
+	it("serializes overlapping task prompts for the same agent instance", async () => {
 		const timeline: string[] = [];
-		class TimingAdapter implements LlmAdapter {
-			async complete(messages: readonly LlmMessage[]): Promise<LlmResponse> {
-				const prompt = String(messages.at(-1)?.content ?? "");
-				const title = prompt.match(/# Task: (.*)/)?.[1] ?? "unknown";
-				timeline.push(`start:${title}`);
-				if (title === "Slow") await new Promise((resolve) => setTimeout(resolve, 30));
-				timeline.push(`end:${title}`);
-				return { content: title, parts: [{ type: "text", text: title }] };
-			}
+		class TimingStream {
+			readonly stream: StreamFn = (_model, context) => {
+				const prompt = promptText(context.messages.at(-1)?.content);
+				const title = prompt.match(/Task: (.*)/)?.[1] ?? "unknown";
+				const stream = createAssistantMessageEventStream();
+				void (async () => {
+					timeline.push(`start:${title}`);
+					if (title === "Slow") await new Promise((resolve) => setTimeout(resolve, 30));
+					timeline.push(`end:${title}`);
+					stream.push({ type: "start", partial: { ...assistantText(title), content: [] } });
+					stream.push({ type: "done", reason: "stop", message: assistantText(title) });
+				})();
+				return stream;
+			};
 		}
 
 		await runTeam(
-			new Team("builders", [agentConfig("worker", new TimingAdapter())]),
+			new Team("builders", [agentConfig("worker", new TimingStream())]),
 			[
 				{ id: "fast", title: "Fast", description: "Fast" },
 				{ id: "slow", title: "Slow", description: "Slow" },
@@ -193,13 +296,13 @@ describe("multi-agent primitives", () => {
 		);
 
 		expect(timeline.indexOf("start:AfterFast")).toBeGreaterThan(timeline.indexOf("end:Fast"));
-		expect(timeline.indexOf("start:AfterFast")).toBeLessThan(timeline.indexOf("end:Slow"));
+		expect(timeline.indexOf("start:AfterFast")).toBeGreaterThan(timeline.indexOf("end:Slow"));
 	});
 
 	it("uses composite scheduling with warnings for impossible requirements", async () => {
 		const warnings: unknown[] = [];
-		const writerAdapter = new EchoAdapter();
-		const reviewerAdapter = new EchoAdapter();
+		const writerAdapter = new EchoStream();
+		const reviewerAdapter = new EchoStream();
 		const result = await runTeam(
 			new Team("builders", [
 				agentConfig("writer", writerAdapter, ["write"]),
@@ -219,7 +322,7 @@ describe("multi-agent primitives", () => {
 	});
 
 	it("passes structured dependency payloads to dependent tasks", async () => {
-		const adapter = new StructuredAdapter();
+		const adapter = new StructuredStream();
 		const result = await runTeam(new Team("builders", [agentConfig("worker", adapter)]), [
 			{ id: "produce", title: "Produce", description: "Produce structured output", dependencyPayload: "structured" },
 			{ id: "consume", title: "Consume", description: "Consume structured output", dependsOn: ["produce"] },

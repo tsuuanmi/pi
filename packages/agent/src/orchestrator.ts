@@ -1,6 +1,6 @@
 // Architecture adapted from open-multi-agent (MIT).
-import type { Agent } from "#agent/agent";
-import { type Task, TaskQueue } from "#agent/task";
+import type { Agent } from "#agent/agent/agent";
+import { extractTaskBridgeResult, formatTaskPrompt, type Task, TaskQueue } from "#agent/task";
 import type { Team } from "#agent/team";
 import type {
 	OrchestratorConfig,
@@ -207,15 +207,14 @@ export class Orchestrator {
 		const completedDependencies = snapshot.dependsOn
 			.map((id) => queue.get(id)?.snapshot())
 			.filter((dependency): dependency is TaskSnapshot => dependency?.status === "completed");
-		const result = await agent.executeTask(
-			{ task: snapshot, agent, team, completedDependencies },
-			{ signal: options.signal },
-		);
+		const prompt = formatTaskPrompt({ task: snapshot, completedDependencies });
+		const result = await agent.run(prompt, { signal: options.signal, metadata: { taskId: snapshot.id } });
 		if (result.success) {
-			task.complete(result.output, result.structured);
+			const bridgeResult = extractTaskBridgeResult(result);
+			task.complete(bridgeResult.output, bridgeResult.structured);
 			options.onTaskComplete?.(task.snapshot());
 		} else {
-			task.fail(result.output);
+			task.fail(result.error instanceof Error ? result.error.message : result.output || String(result.error));
 			options.onTaskFail?.(task.snapshot());
 		}
 	}

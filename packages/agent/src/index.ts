@@ -1,5 +1,5 @@
-export { Agent } from "#agent/agent";
-export { Agent as RuntimeAgent } from "#agent/agent/agent";
+export type { AgentOptions } from "#agent/agent/agent";
+export { Agent } from "#agent/agent/agent";
 export * from "#agent/agent/context-pruning";
 export * from "#agent/agent/loop-detection";
 export * from "#agent/agent/structured-output";
@@ -21,7 +21,6 @@ export { Task, TaskQueue } from "#agent/task";
 export { Team } from "#agent/team";
 export * from "#agent/tools/registry";
 export type {
-	AgentConfig,
 	AgentRunOptions,
 	AgentRunResult,
 	DependencyPayload,
@@ -35,5 +34,4 @@ export type {
 	TaskInput,
 	TaskSnapshot,
 	TaskStatus,
-	ToolDefinition,
 } from "#agent/types";

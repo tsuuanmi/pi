@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { RuntimeAgent as Agent, convertToLlm, type LoopDetectionOptions, type ThinkingLevel } from "@tsuuanmi/pi-agent";
+import { Agent, convertToLlm, type LoopDetectionOptions, type ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { clampThinkingLevel, type Model, mergeHeaderSources, streamSimple } from "@tsuuanmi/pi-ai";
 import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";

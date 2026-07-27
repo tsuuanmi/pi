@@ -1,6 +1,6 @@
 # Agent
 
-The `Agent` class is a stateful wrapper around the low-level agent loop. It owns the current transcript, emits lifecycle events, executes tools, and exposes queueing APIs for steering and follow-up messages.
+The `Agent` class is the single standard Pi agent. It wraps the low-level runtime loop, owns persistent prompt history, supports isolated `run()` calls for task/orchestration bridges, emits lifecycle/status events, executes tools, and exposes queueing APIs for steering and follow-up messages.
 
 ## Creating an Agent
 
@@ -22,6 +22,8 @@ const agent = new Agent({
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| `name` | `string` | `"agent"` | Stable name for teams, orchestrators, logs, and tracing |
+| `capabilities` | `readonly string[]` | `[]` | Capability labels for scheduling |
 | `initialState` | `Partial<AgentState>` | Empty | Initial system prompt, model, tools, messages |
 | `convertToLlm` | `(messages) => Message[]` | Filters to user/assistant/toolResult | Convert AgentMessage[] to LLM-compatible Message[] |
 | `transformContext` | `(messages, signal?) => Promise<AgentMessage[]>` | — | Transform context before convertToLlm |
@@ -30,6 +32,9 @@ const agent = new Agent({
 | `onPayload` | `SimpleStreamOptions["onPayload"]` | — | Payload transform hook |
 | `onResponse` | `SimpleStreamOptions["onResponse"]` | — | Response hook |
 | `providerRequestObserver` | `ProviderRequestObserver` | — | Observer for LLM request lifecycle |
+| `beforeRun` | `(context, signal?) => void` | — | Hook before isolated `run()` execution |
+| `afterRun` | `(context, signal?) => void` | — | Hook after isolated `run()` execution |
+| `extractStructured` | `(output) => unknown` | — | Optional extraction for structured task/orchestration payloads |
 | `beforeToolCall` | `(context, signal?) => BeforeToolCallResult` | — | Pre-execution hook |
 | `afterToolCall` | `(context, signal?) => AfterToolCallResult` | — | Post-execution hook |
 | `prepareNextTurn` | `(signal?) => AgentLoopTurnUpdate` | Turn snapshot update hook (signal is the active abort signal) |
@@ -58,6 +63,16 @@ agent.state.errorMessage   // Error message from last failed/aborted turn
 Assigning `state.tools` or `state.messages` copies the top-level array.
 
 ## Prompting
+
+### `agent.run()`
+
+Run a fresh, isolated prompt and return an `AgentRunResult` without mutating the persistent transcript. This is the path used by team/orchestration task bridges.
+
+```typescript
+const result = await agent.run("Build the task", { signal, metadata: { taskId: "build" } });
+```
+
+Task-bridge `run()` calls are single-flight per Agent instance.
 
 ### `agent.prompt()`
 
@@ -125,6 +140,9 @@ const unsubscribe = agent.subscribe((event, signal) => {
   switch (event.type) {
     case "agent_start":
       console.log("Agent started");
+      break;
+    case "agent_status":
+      console.log("Agent status", event.status, event.trace);
       break;
     case "agent_end":
       console.log("Agent ended", event.messages);

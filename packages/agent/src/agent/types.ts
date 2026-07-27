@@ -363,6 +363,15 @@ export type AgentMessage = Message | CustomAgentMessages[keyof CustomAgentMessag
  * `tools` and `messages` use accessor properties so implementations can copy
  * assigned arrays before storing them.
  */
+export type AgentStatus = "idle" | "running" | "paused" | "aborted" | "failed";
+
+export interface AgentTraceEvent {
+	type: "trace";
+	name: string;
+	timestamp: number;
+	details?: Record<string, unknown>;
+}
+
 export interface AgentState {
 	/** System prompt sent with each model request. */
 	systemPrompt: string;
@@ -457,6 +466,7 @@ export interface AgentContext {
 export type AgentEvent =
 	// Agent lifecycle
 	| { type: "agent_start" }
+	| { type: "agent_status"; status: AgentStatus; trace?: AgentTraceEvent }
 	| { type: "agent_end"; messages: AgentMessage[] }
 	// Turn lifecycle - a turn is one assistant response + any tool calls/results
 	| { type: "turn_start" }

@@ -1,8 +1,8 @@
-import type { RuntimeAgent } from "@tsuuanmi/pi-agent";
+import type { Agent } from "@tsuuanmi/pi-agent";
 import type { ExtensionRunner } from "#pi/extensions/index";
 
 /** Install the Agent-level bridge for extension tool hooks. */
-export function installAgentToolHooks(agent: RuntimeAgent, runner: ExtensionRunner): void {
+export function installAgentToolHooks(agent: Agent, runner: ExtensionRunner): void {
 	agent.beforeToolCall = async ({ toolCall, args }) => {
 		if (!runner.hasHandlers("tool_call")) {
 			return undefined;

@@ -16,6 +16,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
 import {
+	type Agent,
 	type AgentEvent,
 	type AgentMessage,
 	type AgentState,
@@ -28,7 +29,6 @@ import {
 	createStructuredOutputRepairPrompt,
 	getStructuredOutputRetryLimit,
 	parseStructuredOutput,
-	type RuntimeAgent,
 	registerAgentTools,
 	type StructuredOutputOptions,
 	type StructuredOutputResult,
@@ -183,7 +183,7 @@ export type AgentSessionEventListener = (event: AgentSessionEvent) => void;
 // ============================================================================
 
 export interface AgentSessionConfig {
-	agent: RuntimeAgent;
+	agent: Agent;
 	sessionManager: SessionManager;
 	settingsManager: SettingsManager;
 	cwd: string;
@@ -286,7 +286,7 @@ interface ToolDefinitionEntry {
 // ============================================================================
 
 export class AgentSession {
-	readonly agent: RuntimeAgent;
+	readonly agent: Agent;
 	readonly sessionManager: SessionManager;
 	readonly settingsManager: SettingsManager;
 

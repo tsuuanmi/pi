@@ -1,4 +1,4 @@
-import { RuntimeAgent as Agent, type AgentEvent, parseStructuredOutput } from "@tsuuanmi/pi-agent";
+import { Agent, type AgentEvent, parseStructuredOutput } from "@tsuuanmi/pi-agent";
 import {
 	type AssistantMessage,
 	type AssistantMessageEventStream,

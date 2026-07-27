@@ -35,6 +35,7 @@ import type {
 	ToolExecutionMode,
 } from "#agent/agent/types";
 import { createAgentToolRegistry, type RegisterAgentToolsOptions, registerAgentTools } from "#agent/tools/registry";
+import type { AgentRunOptions, AgentRunResult } from "#agent/types";
 
 export type { QueueMode } from "#agent/agent/types";
 
@@ -111,6 +112,10 @@ function createMutableAgentState(
 
 /** Options for constructing an {@link Agent}. */
 export interface AgentOptions {
+	/** Stable name used by teams, orchestrators, logs, and tracing. */
+	name?: string;
+	/** Capability labels used by team/orchestrator scheduling. */
+	capabilities?: readonly string[];
 	initialState?: Partial<Omit<AgentState, "pendingToolCalls" | "isStreaming" | "streamingMessage" | "errorMessage">>;
 	convertToLlm?: (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
 	transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
@@ -119,6 +124,15 @@ export interface AgentOptions {
 	onPayload?: SimpleStreamOptions["onPayload"];
 	onResponse?: SimpleStreamOptions["onResponse"];
 	providerRequestObserver?: ProviderRequestObserver;
+	beforeRun?: (
+		context: { agent: Agent; input?: string; metadata?: Record<string, unknown> },
+		signal?: AbortSignal,
+	) => void | Promise<void>;
+	afterRun?: (
+		context: { agent: Agent; result?: AgentRunResult; error?: unknown; metadata?: Record<string, unknown> },
+		signal?: AbortSignal,
+	) => void | Promise<void>;
+	extractStructured?: (output: string) => unknown;
 	beforeToolCall?: (context: BeforeToolCallContext, signal?: AbortSignal) => Promise<BeforeToolCallResult | undefined>;
 	afterToolCall?: (context: AfterToolCallContext, signal?: AbortSignal) => Promise<AfterToolCallResult | undefined>;
 	prepareNextTurn?: (
@@ -189,6 +203,11 @@ type ActiveRun = {
 export class Agent {
 	private _state: MutableAgentState;
 	private readonly listeners = new Set<(event: AgentEvent, signal: AbortSignal) => Promise<void> | void>();
+	private readonly initialOptions: AgentOptions;
+	private taskRunQueue: Promise<void> = Promise.resolve();
+
+	readonly name: string;
+	readonly capabilities: readonly string[];
 	private readonly steeringQueue: PendingMessageQueue;
 	private readonly followUpQueue: PendingMessageQueue;
 
@@ -199,6 +218,9 @@ export class Agent {
 	public onPayload?: SimpleStreamOptions["onPayload"];
 	public onResponse?: SimpleStreamOptions["onResponse"];
 	public providerRequestObserver?: ProviderRequestObserver;
+	public beforeRun?: AgentOptions["beforeRun"];
+	public afterRun?: AgentOptions["afterRun"];
+	public extractStructured?: AgentOptions["extractStructured"];
 	public beforeToolCall?: (
 		context: BeforeToolCallContext,
 		signal?: AbortSignal,
@@ -227,6 +249,9 @@ export class Agent {
 	public shouldPause?: () => boolean;
 
 	constructor(options: AgentOptions = {}) {
+		this.initialOptions = options;
+		this.name = options.name ?? "agent";
+		this.capabilities = options.capabilities?.slice() ?? [];
 		this._state = createMutableAgentState(options.initialState);
 		this.convertToLlm = options.convertToLlm ?? defaultConvertToLlm;
 		this.transformContext = options.transformContext;
@@ -235,6 +260,9 @@ export class Agent {
 		this.onPayload = options.onPayload;
 		this.onResponse = options.onResponse;
 		this.providerRequestObserver = options.providerRequestObserver;
+		this.beforeRun = options.beforeRun;
+		this.afterRun = options.afterRun;
+		this.extractStructured = options.extractStructured;
 		this.beforeToolCall = options.beforeToolCall;
 		this.afterToolCall = options.afterToolCall;
 		this.prepareNextTurn = options.prepareNextTurn;
@@ -361,17 +389,55 @@ export class Agent {
 		this.clearSteeringQueue();
 	}
 
-	/** Start a new prompt from text, a single message, or a batch of messages. */
-	async prompt(message: AgentMessage | AgentMessage[]): Promise<void>;
-	async prompt(input: string): Promise<void>;
-	async prompt(input: string | AgentMessage | AgentMessage[]): Promise<void> {
+	/** Return a stable state snapshot for observers and tests. */
+	getState(): AgentState {
+		return this._state;
+	}
+
+	/** Return a transcript snapshot. */
+	getHistory(): AgentMessage[] {
+		return this._state.messages.slice();
+	}
+
+	/** Run an isolated fresh prompt and return the final assistant result. */
+	async run(input: string, options: AgentRunOptions = {}): Promise<AgentRunResult> {
+		const execute = async (): Promise<AgentRunResult> => {
+			const clone = this.createIsolatedRunAgent();
+			await clone.beforeRun?.({ agent: clone, input, metadata: options.metadata }, options.signal);
+			try {
+				await clone.prompt(input, { signal: options.signal });
+				const assistant = clone.findLastAssistantMessage();
+				const output = assistant ? getAssistantText(assistant) : "";
+				const structured = this.extractStructured?.(output);
+				const result: AgentRunResult = {
+					success: !clone.state.errorMessage,
+					output,
+					...(structured !== undefined ? { structured } : {}),
+					...(clone.state.errorMessage ? { error: clone.state.errorMessage } : {}),
+				};
+				await clone.afterRun?.({ agent: clone, result, metadata: options.metadata }, options.signal);
+				return result;
+			} catch (error) {
+				const result: AgentRunResult = { success: false, output: "", error };
+				await clone.afterRun?.({ agent: clone, result, error, metadata: options.metadata }, options.signal);
+				return result;
+			}
+		};
+
+		return this.enqueueTaskRun(execute);
+	}
+
+	/** Start a new persistent prompt from text, a single message, or a batch of messages. */
+	async prompt(message: AgentMessage | AgentMessage[], options?: AgentRunOptions): Promise<void>;
+	async prompt(input: string, options?: AgentRunOptions): Promise<void>;
+	async prompt(input: string | AgentMessage | AgentMessage[], options: AgentRunOptions = {}): Promise<void> {
 		if (this.activeRun) {
 			throw new Error(
 				"Agent is already processing a prompt. Use steer() or followUp() to queue messages, or wait for completion.",
 			);
 		}
 		const messages = this.normalizePromptInput(input);
-		await this.runPromptMessages(messages);
+		await this.runPromptMessages(messages, { signal: options.signal });
 	}
 
 	/** Prompt the model for JSON that matches a TypeBox schema, then validate and return it. */
@@ -433,6 +499,57 @@ export class Agent {
 		await this.runContinuation();
 	}
 
+	private createIsolatedRunAgent(): Agent {
+		return new Agent({
+			...this.initialOptions,
+			name: this.name,
+			capabilities: this.capabilities,
+			initialState: {
+				systemPrompt: this._state.systemPrompt,
+				model: this._state.model,
+				thinkingLevel: this._state.thinkingLevel,
+				tools: this._state.tools.slice(),
+				messages: [],
+			},
+			convertToLlm: this.convertToLlm,
+			transformContext: this.transformContext,
+			streamFn: this.streamFn,
+			getApiKey: this.getApiKey,
+			onPayload: this.onPayload,
+			onResponse: this.onResponse,
+			providerRequestObserver: this.providerRequestObserver,
+			beforeRun: this.beforeRun,
+			afterRun: this.afterRun,
+			extractStructured: this.extractStructured,
+			beforeToolCall: this.beforeToolCall,
+			afterToolCall: this.afterToolCall,
+			prepareNextTurn: this.prepareNextTurn,
+			steeringMode: this.steeringMode,
+			followUpMode: this.followUpMode,
+			sessionId: this.sessionId,
+			transport: this.transport,
+			maxRetryDelayMs: this.maxRetryDelayMs,
+			toolExecution: this.toolExecution,
+			loopDetection: this.loopDetection,
+			maxTurns: this.maxTurns,
+			shouldPause: this.shouldPause,
+		});
+	}
+
+	private async enqueueTaskRun<T>(execute: () => Promise<T>): Promise<T> {
+		const previous = this.taskRunQueue;
+		let release!: () => void;
+		this.taskRunQueue = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		await previous;
+		try {
+			return await execute();
+		} finally {
+			release();
+		}
+	}
+
 	private normalizePromptInput(input: string | AgentMessage | AgentMessage[]): AgentMessage[] {
 		if (Array.isArray(input)) {
 			return input;
@@ -447,7 +564,7 @@ export class Agent {
 
 	private async runPromptMessages(
 		messages: AgentMessage[],
-		options: { skipInitialSteeringPoll?: boolean } = {},
+		options: { skipInitialSteeringPoll?: boolean; signal?: AbortSignal } = {},
 	): Promise<void> {
 		await this.runWithLifecycle(async (signal) => {
 			await runAgentLoop(
@@ -458,7 +575,7 @@ export class Agent {
 				signal,
 				this.streamFn,
 			);
-		});
+		}, options.signal);
 	}
 
 	private async runContinuation(): Promise<void> {
@@ -513,12 +630,22 @@ export class Agent {
 		};
 	}
 
-	private async runWithLifecycle(executor: (signal: AbortSignal) => Promise<void>): Promise<void> {
+	private async runWithLifecycle(
+		executor: (signal: AbortSignal) => Promise<void>,
+		externalSignal?: AbortSignal,
+	): Promise<void> {
 		if (this.activeRun) {
 			throw new Error("Agent is already processing.");
 		}
 
 		const abortController = new AbortController();
+		const abortFromExternal = () => abortController.abort(externalSignal?.reason);
+		if (externalSignal?.aborted) {
+			abortFromExternal();
+		} else {
+			externalSignal?.addEventListener("abort", abortFromExternal, { once: true });
+		}
+
 		let resolvePromise = () => {};
 		const promise = new Promise<void>((resolve) => {
 			resolvePromise = resolve;
@@ -530,10 +657,21 @@ export class Agent {
 		this._state.errorMessage = undefined;
 
 		try {
+			await this.emitOutOfBand({
+				type: "agent_status",
+				status: "running",
+				trace: this.createTrace("agent.run.start"),
+			});
 			await executor(abortController.signal);
 		} catch (error) {
+			await this.emitOutOfBand({
+				type: "agent_status",
+				status: abortController.signal.aborted ? "aborted" : "failed",
+				trace: this.createTrace("agent.run.error"),
+			});
 			await this.handleRunFailure(error, abortController.signal.aborted);
 		} finally {
+			externalSignal?.removeEventListener("abort", abortFromExternal);
 			this.finishRun();
 		}
 	}
@@ -577,6 +715,15 @@ export class Agent {
 			if (message?.role === "assistant") return message;
 		}
 		return undefined;
+	}
+
+	private createTrace(name: string): {
+		type: "trace";
+		name: string;
+		timestamp: number;
+		details?: Record<string, unknown>;
+	} {
+		return { type: "trace", name, timestamp: Date.now(), details: { agent: this.name } };
 	}
 
 	private async emitOutOfBand(event: AgentEvent): Promise<void> {

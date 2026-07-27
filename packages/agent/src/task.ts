@@ -1,5 +1,15 @@
 // Architecture adapted from open-multi-agent (MIT).
-import type { TaskInput, TaskSnapshot, TaskStatus } from "#agent/types";
+import type { AgentRunResult, DependencyPayload, TaskInput, TaskSnapshot, TaskStatus } from "#agent/types";
+
+export interface FormatTaskPromptOptions {
+	task: TaskSnapshot;
+	completedDependencies: readonly TaskSnapshot[];
+}
+
+export interface TaskBridgeResult {
+	output: string;
+	structured?: unknown;
+}
 
 let nextTaskId = 0;
 
@@ -80,6 +90,46 @@ export class Task {
 			updatedAt: new Date().toISOString(),
 		};
 	}
+}
+
+function formatDependencyPayload(dependency: TaskSnapshot, payload: DependencyPayload): string {
+	const lines = [`- ${dependency.id}: ${dependency.title}`];
+	if (payload === "output" || payload === "both") {
+		lines.push(`  Output: ${dependency.result ?? ""}`);
+	}
+	if ((payload === "structured" || payload === "both") && dependency.structured !== undefined) {
+		lines.push(`  Structured: ${JSON.stringify(dependency.structured)}`);
+	}
+	return lines.join("\n");
+}
+
+export function formatTaskPrompt({ task, completedDependencies }: FormatTaskPromptOptions): string {
+	const payload = task.dependencyPayload ?? "output";
+	const dependencyBlock = completedDependencies.length
+		? completedDependencies.map((dependency) => formatDependencyPayload(dependency, payload)).join("\n")
+		: "None";
+	const metadataBlock = task.metadata ? `\nMetadata:\n${JSON.stringify(task.metadata, null, 2)}\n` : "";
+	return [
+		`Task: ${task.title}`,
+		"",
+		"Description:",
+		task.description,
+		metadataBlock.trimEnd(),
+		"",
+		"Completed dependencies:",
+		dependencyBlock,
+		"",
+		"Return the task result clearly and concisely.",
+	]
+		.filter((part) => part.length > 0)
+		.join("\n");
+}
+
+export function extractTaskBridgeResult(result: AgentRunResult): TaskBridgeResult {
+	return {
+		output: result.output,
+		...(result.structured !== undefined ? { structured: result.structured } : {}),
+	};
 }
 
 export class TaskQueue {

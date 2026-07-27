@@ -33,7 +33,9 @@ Tasks may request dependency payload behavior with `dependencyPayload`:
 - `structured`: pass only structured output
 - `both`: pass text and structured output
 
-Agents can return `structured` output alongside text. Dependent tasks receive that payload in their prompt context.
+Agents can return `structured` output alongside text through `AgentRunResult` extraction. Dependent tasks receive that payload in their prompt context.
+
+The orchestrator formats each task as a normal Agent prompt and calls `agent.run()`. Task execution is isolated from persistent Agent history and serialized per Agent instance.
 
 ## Example
 
@@ -42,8 +44,8 @@ import { Agent, Orchestrator, Team } from "@tsuuanmi/pi-agent";
 
 const orchestrator = new Orchestrator({ strategy: "composite" });
 const team = new Team("builders", [
-  new Agent({ name: "writer", adapter, capabilities: ["write"] }),
-  new Agent({ name: "reviewer", adapter, capabilities: ["review"] }),
+  new Agent({ name: "writer", capabilities: ["write"], initialState: { model, systemPrompt, tools }, streamFn }),
+  new Agent({ name: "reviewer", capabilities: ["review"], initialState: { model, systemPrompt, tools }, streamFn }),
 ]);
 
 const result = await orchestrator.run(team, [

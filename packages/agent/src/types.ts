@@ -1,5 +1,5 @@
 // Architecture adapted from open-multi-agent (MIT).
-import type { LlmAdapter, LlmResponse, LlmToolDefinition } from "@tsuuanmi/pi-ai";
+import type { Agent } from "#agent/agent/agent";
 
 export type TaskStatus = "pending" | "in_progress" | "completed" | "failed" | "blocked";
 export type DependencyPayload = "output" | "structured" | "both";
@@ -19,27 +19,6 @@ export interface SchedulerWarning {
 	fallback: "zero-fit-current-load";
 }
 
-export interface ToolDefinition extends LlmToolDefinition {
-	execute?: (args: Record<string, unknown>, context: TaskExecutionContext) => Promise<string> | string;
-}
-
-export interface AgentConfig {
-	name: string;
-	instructions?: string;
-	model?: string;
-	adapter: LlmAdapter;
-	tools?: readonly ToolDefinition[];
-	capabilities?: readonly string[];
-	maxConcurrentTasks?: number;
-}
-
-export interface OrchestratorConfig {
-	strategy?: SchedulingStrategy;
-	maxConcurrency?: number;
-	schedulingWeights?: Partial<SchedulingWeights>;
-	onWarning?: (warning: SchedulerWarning) => void;
-}
-
 export interface AgentRunOptions {
 	signal?: AbortSignal;
 	metadata?: Record<string, unknown>;
@@ -49,7 +28,6 @@ export interface AgentRunResult {
 	success: boolean;
 	output: string;
 	structured?: unknown;
-	response?: LlmResponse;
 	error?: unknown;
 }
 
@@ -86,6 +64,13 @@ export interface TaskExecutionContext {
 	completedDependencies: readonly TaskSnapshot[];
 }
 
+export interface OrchestratorConfig {
+	strategy?: SchedulingStrategy;
+	maxConcurrency?: number;
+	schedulingWeights?: Partial<SchedulingWeights>;
+	onWarning?: (warning: SchedulerWarning) => void;
+}
+
 export interface RunTeamOptions {
 	strategy?: SchedulingStrategy;
 	maxConcurrency?: number;
@@ -101,11 +86,6 @@ export interface RunTeamResult {
 	success: boolean;
 	tasks: readonly TaskSnapshot[];
 	output: string;
-}
-
-export interface Agent {
-	readonly name: string;
-	run(prompt: string, options?: AgentRunOptions): Promise<AgentRunResult>;
 }
 
 export interface Team {
