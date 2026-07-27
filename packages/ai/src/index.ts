@@ -68,3 +68,4 @@ export * from "#ai/provider/provider-registry";
 export * from "#ai/schema/schema-validator";
 export * from "#ai/stream";
 export * from "#ai/transport/event-stream";
+export * from "#ai/transport/proxy";

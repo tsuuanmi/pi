@@ -1,4 +1,4 @@
-import { complete, createAssistantMessageEventStream, getModel, getProviders, Type } from "@tsuuanmi/pi-ai";
+import { complete, createAssistantMessageEventStream, getModel, getProviders, streamProxy, Type } from "@tsuuanmi/pi-ai";
 import {
 	Agent,
 	bashExecutionToText,
@@ -7,7 +7,6 @@ import {
 	FileError,
 	getOrThrow,
 	ok,
-	streamProxy,
 	toError,
 } from "@tsuuanmi/pi-agent";
 

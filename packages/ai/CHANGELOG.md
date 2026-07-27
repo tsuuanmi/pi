@@ -13,6 +13,7 @@
 - **model**: Renamed model files to concise names: `model/index`, `model/catalog`, `model/request`, and `model/response`.
 - **provider**: Grouped OpenAI provider implementations under `openai/completions`, `openai/responses`, and `openai/codex` folders.
 - **docs**: Added an AI package architecture guide and grouped the root package exports by domain.
+- **transport**: Moved the generic proxy stream helper from `@tsuuanmi/pi-agent` to `@tsuuanmi/pi-ai`.
 - **protocol**: Merged context-overflow response helpers into `model/response`.
 
 ## [0.2.2] - 2026-07-23

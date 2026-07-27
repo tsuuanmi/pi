@@ -1,20 +1,15 @@
 /**
- * Proxy stream function for apps that route LLM calls through a server.
- * The server manages auth and proxies requests to LLM providers.
+ * Proxy stream function for apps that route provider calls through a server.
+ * The server manages auth and proxies requests to providers.
  */
 
-// Internal import for JSON parsing utility
-import {
-	type AssistantMessage,
-	type AssistantMessageEvent,
-	type Context,
-	EventStream,
-	type Model,
-	parseStreamingJson,
-	type StopReason,
-	type StreamOptions,
-	type ToolCall,
-} from "@tsuuanmi/pi-ai";
+import type { Model } from "#ai/model/index";
+import { parseStreamingJson } from "#ai/parsing/json-parser";
+import type { ToolCall } from "#ai/protocol/content";
+import type { Context } from "#ai/protocol/context";
+import type { AssistantMessage, AssistantMessageEvent, StopReason } from "#ai/protocol/message";
+import type { StreamOptions } from "#ai/protocol/options";
+import { EventStream } from "#ai/transport/event-stream";
 
 // Create stream class matching ProxyMessageEventStream
 class ProxyMessageEventStream extends EventStream<AssistantMessageEvent, AssistantMessage> {
@@ -79,7 +74,7 @@ export interface ProxyStreamOptions extends ProxySerializableStreamOptions {
 }
 
 /**
- * Stream function that proxies through a server instead of calling LLM providers directly.
+ * Stream function that proxies through a server instead of calling providers directly.
  * The server strips the partial field from delta events to reduce bandwidth.
  * We reconstruct the partial message client-side.
  *
