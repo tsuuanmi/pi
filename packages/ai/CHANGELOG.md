@@ -2,7 +2,9 @@
 
 ### Breaking Changes
 
-- **api**: Renamed AI package public concepts to standard `Api`, `ProviderId`, `Provider`, `StreamOptions`, and `Adapter` names, replacing the old `KnownProvider`, `ApiProvider`, `SimpleStreamOptions`, and `PiProviderAdapter` surface.
+- **api**: Renamed AI package public concepts to standard `Api`, `ProviderId`, `Provider`, and `StreamOptions` names, replacing the old `KnownProvider`, `ApiProvider`, `SimpleStreamOptions`, and `PiProviderAdapter` surface.
+- **api**: Removed the public `Adapter` facade; use `stream(model, context, options)` and `complete(model, context, options)` directly.
+- **auth**: Removed deprecated OAuth compatibility exports: `getOAuthProviderInfoList()`, `refreshOAuthToken()`, `OAuthProvider`, and `OAuthProviderInfo`.
 - **auth**: Removed environment-variable API key discovery from `@tsuuanmi/pi-ai`; callers now pass credentials explicitly, typically from Pi `auth.json`.
 - **test-provider**: Removed the public faux provider helpers from `@tsuuanmi/pi-ai`.
 

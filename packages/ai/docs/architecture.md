@@ -49,7 +49,6 @@ AssistantMessageEventStream
 
 ```text
 src/
-  adapter/      model-bound Adapter wrapper
   auth/         OAuth flows only
   model/        Model metadata, catalog, config, request and response helpers
   parsing/      general JSON parsing and repair

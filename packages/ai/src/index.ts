@@ -1,9 +1,6 @@
 export type { Static, TSchema } from "typebox";
 export { Type } from "typebox";
 
-// Adapter
-export * from "#ai/adapter/adapter";
-
 // OAuth types. Runtime OAuth helpers are exported from @tsuuanmi/pi-ai/oauth.
 export type {
 	OAuthAuthInfo,
@@ -11,9 +8,7 @@ export type {
 	OAuthDeviceCodeInfo,
 	OAuthLoginCallbacks,
 	OAuthPrompt,
-	OAuthProvider,
 	OAuthProviderId,
-	OAuthProviderInfo,
 	OAuthProviderInterface,
 	OAuthSelectOption,
 	OAuthSelectPrompt,

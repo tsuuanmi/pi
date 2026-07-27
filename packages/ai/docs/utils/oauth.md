@@ -105,7 +105,7 @@ import {
 | `registerOAuthProvider(provider)` | Register a custom OAuth provider |
 | `unregisterOAuthProvider(id)` | Unregister a provider by ID |
 
-`getOAuthProviderInfoList()` and `refreshOAuthToken()` are deprecated; use `getOAuthProviders()` and `getOAuthProvider(id).refreshToken()` instead.
+Use `getOAuthProviders()` for registry enumeration and `getOAuthProvider(id).refreshToken()` for provider-specific token refresh.
 
 ## OAuth Provider Interface
 

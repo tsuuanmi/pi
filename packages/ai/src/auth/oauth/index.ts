@@ -27,12 +27,7 @@ export * from "#ai/auth/oauth/types";
 
 import { anthropicOAuthProvider } from "#ai/auth/oauth/anthropic/index";
 import { openaiCodexOAuthProvider } from "#ai/auth/oauth/openai-codex/index";
-import type {
-	OAuthCredentials,
-	OAuthProviderId,
-	OAuthProviderInfo,
-	OAuthProviderInterface,
-} from "#ai/auth/oauth/types";
+import type { OAuthCredentials, OAuthProviderId, OAuthProviderInterface } from "#ai/auth/oauth/types";
 
 const BUILT_IN_OAUTH_PROVIDERS: OAuthProviderInterface[] = [anthropicOAuthProvider, openaiCodexOAuthProvider];
 
@@ -86,35 +81,9 @@ export function getOAuthProviders(): OAuthProviderInterface[] {
 	return Array.from(oauthProviderRegistry.values());
 }
 
-/**
- * @deprecated Use getOAuthProviders() which returns OAuthProviderInterface[]
- */
-export function getOAuthProviderInfoList(): OAuthProviderInfo[] {
-	return getOAuthProviders().map((p) => ({
-		id: p.id,
-		name: p.name,
-		available: true,
-	}));
-}
-
 // ============================================================================
 // High-level API (uses provider registry)
 // ============================================================================
-
-/**
- * Refresh token for any OAuth provider.
- * @deprecated Use getOAuthProvider(id).refreshToken() instead
- */
-export async function refreshOAuthToken(
-	providerId: OAuthProviderId,
-	credentials: OAuthCredentials,
-): Promise<OAuthCredentials> {
-	const provider = getOAuthProvider(providerId);
-	if (!provider) {
-		throw new Error(`Unknown OAuth provider: ${providerId}`);
-	}
-	return provider.refreshToken(credentials);
-}
 
 /**
  * Get API key for a provider from OAuth credentials.

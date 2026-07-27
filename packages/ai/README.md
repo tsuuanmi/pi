@@ -9,7 +9,6 @@ Provider and model API with automatic model discovery, provider configuration, t
 - [Supported Providers](#supported-providers)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [Adapter](#adapter)
 - [Tools](#tools)
   - [Defining Tools](#defining-tools)
   - [Handling Tool Calls](#handling-tool-calls)
@@ -61,26 +60,9 @@ npm install @tsuuanmi/pi-ai
 
 TypeBox exports are re-exported from `@tsuuanmi/pi-ai`: `Type`, `Static`, and `TSchema`.
 
-## Adapter
-
-`@tsuuanmi/pi-ai` exports a small `Adapter` class for packages that need a stable model-bound provider interface:
-
-```typescript
-import { Adapter, getModel } from "@tsuuanmi/pi-ai";
-
-const adapter = new Adapter({
-  model: getModel("openai", "gpt-4o-mini"),
-});
-
-const response = await adapter.complete({
-  messages: [{ role: "user", content: "Hello", timestamp: Date.now() }],
-});
-console.log(response.content);
-```
-
 ## Attribution
 
-The orchestration adapter seam was added alongside architecture adapted from `open-multi-agent` under the MIT license.
+The orchestration layer was added alongside architecture adapted from `open-multi-agent` under the MIT license.
 
 ## Quick Start
 
@@ -905,11 +887,10 @@ import {
   loginOpenAICodex,
 
   // Token management
-  refreshOAuthToken,   // (provider, credentials) => new credentials
   getOAuthApiKey,      // (provider, credentialsMap) => { newCredentials, apiKey } | null
 
   // Types
-  type OAuthProvider,
+  type OAuthProviderId,
   type OAuthCredentials,
 } from '@tsuuanmi/pi-ai/oauth';
 ```
