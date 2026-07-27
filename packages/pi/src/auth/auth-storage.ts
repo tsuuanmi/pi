@@ -8,13 +8,12 @@
 
 import { normalizePath } from "@tsuuanmi/pi-agent/node";
 import {
-	findEnvKeys,
-	getEnvApiKey,
+	getOAuthProvider,
+	getOAuthProviders,
 	type OAuthCredentials,
 	type OAuthLoginCallbacks,
 	type OAuthProviderId,
-} from "@tsuuanmi/pi-ai";
-import { getOAuthProvider, getOAuthProviders } from "@tsuuanmi/pi-ai/oauth";
+} from "@tsuuanmi/pi-ai/oauth";
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
@@ -504,7 +503,6 @@ export class AuthStorage {
 	hasAuth(provider: string): boolean {
 		if (this.runtimeOverrides.has(provider)) return true;
 		if (this.data[provider]) return true;
-		if (getEnvApiKey(provider)) return true;
 		if (this.fallbackResolver?.(provider)) return true;
 		return false;
 	}
@@ -519,11 +517,6 @@ export class AuthStorage {
 
 		if (this.runtimeOverrides.has(provider)) {
 			return { configured: false, source: "runtime", label: "runtime API key" };
-		}
-
-		const envKeys = findEnvKeys(provider);
-		if (envKeys?.[0]) {
-			return { configured: false, source: "environment", label: envKeys[0] };
 		}
 
 		if (this.fallbackResolver?.(provider)) {
@@ -626,8 +619,7 @@ export class AuthStorage {
 	 * 1. Runtime override
 	 * 2. API key from auth.json
 	 * 3. OAuth token from auth.json (auto-refreshed with locking)
-	 * 4. Environment variable
-	 * 5. Fallback resolver (settings.json custom providers)
+	 * 4. Fallback resolver (settings.json custom providers)
 	 */
 	async getApiKey(
 		providerId: string,
@@ -684,10 +676,6 @@ export class AuthStorage {
 				return provider.getApiKey(cred);
 			}
 		}
-
-		// Fall back to environment variable
-		const envKey = getEnvApiKey(providerId);
-		if (envKey) return envKey;
 
 		// Fall back to custom resolver (e.g., settings.json custom providers)
 		if (options?.includeFallback !== false) {

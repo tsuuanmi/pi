@@ -7,8 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AgentMessage, AgentTool } from "@tsuuanmi/pi-agent";
 import { Agent, convertToLlm } from "@tsuuanmi/pi-agent";
-import type { FauxModelDefinition, FauxProviderRegistration, FauxResponseStep, Model } from "@tsuuanmi/pi-ai";
-import { registerFauxProvider } from "@tsuuanmi/pi-ai";
+import type { Model } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import type { ExtensionRunner } from "#pi/extensions/index";
 import type { ExtensionFactory, ResourceLoader } from "#pi/index";
@@ -17,6 +16,12 @@ import { AgentSession, type AgentSessionEvent } from "#pi/session/agent-session"
 import { SessionManager } from "#pi/session/session-manager";
 import type { Settings } from "#pi/settings/settings-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
+import {
+	type FauxModelDefinition,
+	type FauxProviderRegistration,
+	type FauxResponseStep,
+	registerFauxProvider,
+} from "#pi-test/helpers/provider";
 import {
 	type CreateTestExtensionsResultInput,
 	createTestExtensionsResult,

@@ -6,8 +6,8 @@ The `@tsuuanmi/pi-ai` package provides four top-level functions for interacting 
 |----------|-------------|
 | `stream(model, context, options?)` | Stream events as an `AsyncIterable` |
 | `complete(model, context, options?)` | Await a complete `AssistantMessage` |
-| `streamSimple(model, context, options?)` | Stream with unified reasoning options |
-| `completeSimple(model, context, options?)` | Complete with unified reasoning options |
+| `stream(model, context, options?)` | Stream with unified reasoning options |
+| `complete(model, context, options?)` | Complete with unified reasoning options |
 
 ## `stream()` and `complete()`
 
@@ -40,15 +40,15 @@ const message = await complete(model, context);
 console.log(message.stopReason); // "stop" | "length" | "toolUse" | "error" | "aborted"
 ```
 
-## `streamSimple()` and `completeSimple()`
+## `stream()` and `complete()`
 
-These functions accept a `SimpleStreamOptions` object with a unified `reasoning` option instead of provider-specific thinking parameters:
+These functions accept a `StreamOptions` object with a unified `reasoning` option instead of provider-specific thinking parameters:
 
 ```typescript
-import { getModel, streamSimple } from "@tsuuanmi/pi-ai";
+import { getModel, stream } from "@tsuuanmi/pi-ai";
 
 const model = getModel("anthropic", "claude-sonnet-4-5");
-const s = streamSimple(model, context, { reasoning: "high" });
+const s = stream(model, context, { reasoning: "high" });
 ```
 
 The `reasoning` option maps to the appropriate provider-specific parameter. The clamped level (via `clampThinkingLevel`) is passed straight through for OpenAI; for Anthropic it is mapped to an effort level:
@@ -137,7 +137,7 @@ const response = await complete(model, context, {
 });
 ```
 
-Supported by `stream`, `complete`, `streamSimple`, and `completeSimple`.
+Supported by `stream`, `complete`, `stream`, and `complete`.
 
 ## `AssistantMessageEventStream`
 

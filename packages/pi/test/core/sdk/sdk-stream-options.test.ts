@@ -6,7 +6,7 @@ import {
 	type AssistantMessage,
 	createAssistantMessageEventStream,
 	type Model,
-	type SimpleStreamOptions,
+	type StreamOptions,
 } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
@@ -75,19 +75,19 @@ describe("createAgentSession stream options", () => {
 	async function captureStreamOptions(
 		api: Api,
 		settings: { httpIdleTimeoutMs?: number; websocketConnectTimeoutMs?: number },
-		requestOptions: SimpleStreamOptions = {},
-	): Promise<SimpleStreamOptions | undefined> {
+		requestOptions: StreamOptions = {},
+	): Promise<StreamOptions | undefined> {
 		const model = createModel(api);
 		const settingsManager = SettingsManager.inMemory(settings);
 
 		const authStorage = AuthStorage.create(join(agentDir, "auth.json"));
 		authStorage.setRuntimeApiKey(model.provider, "test-api-key");
 		const modelRegistry = ModelRegistry.create(authStorage, join(agentDir, "models.json"));
-		let capturedOptions: SimpleStreamOptions | undefined;
+		let capturedOptions: StreamOptions | undefined;
 
 		modelRegistry.registerProvider(model.provider, {
 			api,
-			streamSimple: (_model, _context, providerOptions) => {
+			stream: (_model, _context, providerOptions) => {
 				capturedOptions = providerOptions;
 				return createDoneStream(api);
 			},

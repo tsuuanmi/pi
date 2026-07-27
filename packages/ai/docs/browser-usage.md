@@ -2,97 +2,41 @@
 
 ## Browser Usage
 
-The library supports browser environments. Pass the API key explicitly since `process.env` is unavailable:
+The package can run in browser environments when credentials are supplied by the caller or a backend proxy. Do not expose production provider keys in frontend code.
 
 ```typescript
-import { getModel, complete } from "@tsuuanmi/pi-ai";
+import { complete, getModel } from "@tsuuanmi/pi-ai";
 
 const model = getModel("anthropic", "claude-haiku-4-5");
-
-const response = await complete(model, {
-  messages: [{ role: "user", content: "Hello!" }],
-}, {
-  apiKey: "your-api-key",
-});
+const response = await complete(
+  model,
+  { messages: [{ role: "user", content: "Hello!", timestamp: Date.now() }] },
+  { apiKey: "development-key" },
+);
 ```
 
-> **Security Warning**: Exposing API keys in frontend code is dangerous. Anyone can extract and abuse your keys. Only use this approach for internal tools or demos. For production applications, use a backend proxy.
+## Node.js
 
-### Browser Compatibility Notes
+In Pi, provider credentials come from `auth.json` and are passed to `@tsuuanmi/pi-ai` through `StreamOptions.apiKey`. The AI package does not discover API keys from environment variables.
 
-- OAuth login flows are not supported in browser environments
-- Use `@tsuuanmi/pi-ai/oauth` only in Node.js environments
-- The `getEnvApiKey()` function returns `undefined` in browsers (no `process.env`)
-- WebSocket and SSE transports work in browsers for proxy backends
-
-## Node.js Environment Variables
-
-In Node.js, API keys are resolved from environment variables automatically:
-
-| Provider | Variable(s) |
-|----------|-------------|
-| Anthropic | `ANTHROPIC_API_KEY` or `ANTHROPIC_OAUTH_TOKEN` |
-| OpenAI | `OPENAI_API_KEY` |
-
-Resolution priority:
-
-1. Explicit `apiKey` in `StreamOptions`
-2. Scoped `env` overrides in `StreamOptions`
-3. `process.env`
-4. Bun sandbox fallback (`/proc/self/environ`)
-
-```typescript
-// Uses OPENAI_API_KEY from process.env
-const model = getModel("openai", "gpt-4o-mini");
-const response = await complete(model, context);
-
-// Override with explicit key
-const response2 = await complete(model, context, {
-  apiKey: "sk-different-key",
-});
-```
-
-## Provider-Scoped Environment Overrides
-
-Pass `env` in stream options to scope provider configuration to a single request:
+Provider-scoped `env` values are still available for non-credential settings such as proxy configuration and cache retention:
 
 ```typescript
 const response = await complete(model, context, {
+  apiKey,
   env: {
-    ANTHROPIC_API_KEY: "per-request-key",
     PI_CACHE_RETENTION: "long",
+    HTTPS_PROXY: "http://localhost:8080",
   },
 });
 ```
 
-Values in `env` take precedence over `process.env` for API key discovery and provider configuration. Use this when one process needs different provider settings per request.
-
-## Bun Sandbox Fallback
-
-When running inside a Bun compiled binary on Linux, `process.env` may be empty inside sandboxed environments. The library automatically falls back to reading `/proc/self/environ` in this case. This fallback is implemented in `getProviderEnvValue()` and is transparent to callers.
-
-If you use `@tsuuanmi/pi-ai` directly (not through the AI agent), this fallback ensures provider environment variables are still resolved correctly inside Bun sandboxes.
-
-## Checking Environment Variables
-
-```typescript
-import { getEnvApiKey, findEnvKeys } from "@tsuuanmi/pi-ai";
-
-// Check if an API key is configured
-const key = getEnvApiKey("openai"); // checks OPENAI_API_KEY
-
-// Find which environment variables are set for a provider
-const keys = findEnvKeys("anthropic"); // ["ANTHROPIC_OAUTH_TOKEN", "ANTHROPIC_API_KEY"] or subset
-```
-
 ## Proxy Configuration
 
-In Node.js environments, the library respects standard proxy environment variables:
+Node.js transports respect standard proxy environment variables, including scoped `env` overrides:
 
 | Variable | Description |
 |----------|-------------|
 | `HTTP_PROXY` | Proxy for HTTP requests |
 | `HTTPS_PROXY` | Proxy for HTTPS requests |
 | `NO_PROXY` | Hosts to exclude from proxying |
-
-These can also be passed via scoped `env` overrides in `StreamOptions`.

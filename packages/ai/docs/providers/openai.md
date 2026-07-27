@@ -10,7 +10,7 @@ The OpenAI family of providers implements the OpenAI API with multiple backends.
 | `openai-completions` | `streamOpenAICompletions` | OpenAI Chat Completions API |
 | `openai-codex-responses` | `streamOpenAICodexResponses` | OpenAI Codex Responses API |
 
-All three are registered automatically by `register-builtins.ts` and lazy-loaded on first use. They are also exported directly from `@tsuuanmi/pi-ai`.
+All three are registered automatically and loaded on demand on first use. They are also exported directly from `@tsuuanmi/pi-ai`.
 
 ## OpenAI Responses API
 
@@ -29,7 +29,7 @@ The primary OpenAI provider using the Responses API. Available as `provider: "op
 
 | Option | Description |
 |--------|-------------|
-| `reasoningEffort` | Reasoning effort passed straight through (set by `streamSimple` from the clamped `reasoning` level) |
+| `reasoningEffort` | Reasoning effort passed straight through (set by `stream` from the clamped `reasoning` level) |
 | `reasoningSummary` | OpenAI Responses API reasoning summary mode |
 | `serviceTier` | OpenAI service tier (see `OpenAIServiceTier`) |
 
@@ -84,11 +84,10 @@ import {
 
 ## Prompt Caching
 
-OpenAI providers support prompt caching via `cacheRetention` (`"none"` | `"short"` | `"long"`) for models that support it. See [Prompt Cache](openai-prompt-cache.md).
+OpenAI providers support prompt caching via `cacheRetention` (`"none"` | `"short"` | `"long"`) for models that support it.
 
 ## See Also
 
 - [Adding a New Provider](adding-provider.md) - Step-by-step guide
-- [API Registry](api-registry.md) - Provider registration and lazy loading
-- [Prompt Cache](openai-prompt-cache.md) - `cacheRetention` details
-- [Simple Options](simple-options.md) - Shared option reference
+- [Models and Providers](../models.md) - provider registration and model lookup
+- [Streaming and Completion](../streaming.md) - shared stream option reference

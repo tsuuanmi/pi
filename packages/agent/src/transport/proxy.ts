@@ -11,8 +11,8 @@ import {
 	EventStream,
 	type Model,
 	parseStreamingJson,
-	type SimpleStreamOptions,
 	type StopReason,
+	type StreamOptions,
 	type ToolCall,
 } from "@tsuuanmi/pi-ai";
 
@@ -57,7 +57,7 @@ export type ProxyAssistantMessageEvent =
 	  };
 
 type ProxySerializableStreamOptions = Pick<
-	SimpleStreamOptions,
+	StreamOptions,
 	| "temperature"
 	| "maxTokens"
 	| "reasoning"

@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { Agent, convertToLlm, type LoopDetectionOptions, type ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import { clampThinkingLevel, type Model, mergeHeaderSources, streamSimple } from "@tsuuanmi/pi-ai";
+import { clampThinkingLevel, type Model, mergeHeaderSources, type ProviderResponse, stream } from "@tsuuanmi/pi-ai";
 import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { getAgentDir } from "#pi/config/config";
@@ -285,7 +285,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 			const timeoutMs = options?.timeoutMs ?? providerRetrySettings.timeoutMs ?? effectiveTimeoutMs;
 			const websocketConnectTimeoutMs =
 				options?.websocketConnectTimeoutMs ?? settingsManager.getWebSocketConnectTimeoutMs();
-			return streamSimple(model, context, {
+			return stream(model, context, {
 				...options,
 				apiKey: auth.apiKey,
 				env,
@@ -296,14 +296,14 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 				headers: mergeHeaderSources(auth.headers, options?.headers),
 			});
 		},
-		onPayload: async (payload, _model) => {
+		onPayload: async (payload: unknown, _model: Model) => {
 			const runner = extensionRunnerRef.current;
 			if (!runner?.hasHandlers("before_provider_request")) {
 				return payload;
 			}
 			return runner.emitBeforeProviderRequest(payload);
 		},
-		onResponse: async (response, _model) => {
+		onResponse: async (response: ProviderResponse, _model: Model) => {
 			const runner = extensionRunnerRef.current;
 			if (!runner?.hasHandlers("after_provider_response")) {
 				return;

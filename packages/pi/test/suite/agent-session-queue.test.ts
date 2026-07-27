@@ -1,8 +1,8 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { fauxAssistantMessage, fauxToolCall } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
+import { fauxAssistantMessage, fauxToolCall } from "#pi-test/helpers/provider";
 import { createHarness, getAssistantTexts, getMessageText, getUserTexts, type Harness } from "#pi-test/suite/harness";
 
 async function createWaitingHarness(

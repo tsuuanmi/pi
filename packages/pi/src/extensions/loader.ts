@@ -11,7 +11,7 @@ import * as _bundledPiAgent from "@tsuuanmi/pi-agent";
 import * as _bundledPiAgentNode from "@tsuuanmi/pi-agent/node";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import * as _bundledPiAi from "@tsuuanmi/pi-ai";
-import * as _bundledPiAiOauth from "@tsuuanmi/pi-ai/oauth";
+import * as _bundledPiAiOauth from "@tsuuanmi/pi-ai";
 import type { KeyId } from "@tsuuanmi/pi-tui";
 import * as _bundledPiTui from "@tsuuanmi/pi-tui";
 import * as _bundledPiWorkflows from "@tsuuanmi/pi-workflows";
@@ -99,7 +99,7 @@ function getAliases(): Record<string, string> {
 	const piAgentNodeEntry = resolveWorkspaceOrImport("agent/dist/node.js", "@tsuuanmi/pi-agent/node");
 	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@tsuuanmi/pi-tui");
 	const piAiEntry = resolveWorkspaceOrImport("ai/dist/index.js", "@tsuuanmi/pi-ai");
-	const piAiOauthEntry = resolveWorkspaceOrImport("ai/dist/auth/oauth.js", "@tsuuanmi/pi-ai/oauth");
+	const piAiOauthEntry = resolveWorkspaceOrImport("ai/dist/auth/oauth/index.js", "@tsuuanmi/pi-ai/oauth");
 	const piWorkflowsEntry = resolveWorkspaceOrImport("workflows/dist/index.js", "@tsuuanmi/pi-workflows");
 	const piWorkflowsInternal = fs.existsSync(path.join(packagesRoot, "workflows/src"))
 		? path.join(packagesRoot, "workflows/src/*")

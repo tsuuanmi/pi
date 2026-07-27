@@ -179,7 +179,7 @@ export interface ExtensionAPI extends ExtensionHookAPI {
 	 * If `models` is provided: replaces all existing models for this provider.
 	 * If only `baseUrl` is provided: overrides the URL for existing models.
 	 * If `oauth` is provided: registers OAuth provider for /account add support.
-	 * If `streamSimple` is provided: registers a custom API stream handler.
+	 * If `stream` is provided: registers a custom API stream handler.
 	 *
 	 * During initial extension load this call is queued and applied once the
 	 * runner has bound its context. After that it takes effect immediately, so

@@ -1,8 +1,19 @@
 ## [Unreleased]
 
-### Added
+### Breaking Changes
 
-- **llm**: Added a normalized `LlmAdapter` contract and `PiProviderAdapter` bridge for orchestration packages.
+- **api**: Renamed AI package public concepts to standard `Api`, `ProviderId`, `Provider`, `StreamOptions`, and `Adapter` names, replacing the old `KnownProvider`, `ApiProvider`, `SimpleStreamOptions`, and `PiProviderAdapter` surface.
+- **auth**: Removed environment-variable API key discovery from `@tsuuanmi/pi-ai`; callers now pass credentials explicitly, typically from Pi `auth.json`.
+- **test-provider**: Removed the public faux provider helpers from `@tsuuanmi/pi-ai`.
+
+### Changed
+
+- **api**: Reorganized source files under singular `model/` and `provider/` domains, split protocol types into explicit `protocol/*` files, removed trivial one-line re-export shims, and trimmed implementation-only docs.
+- **model**: Moved reusable model config schemas and override merge helpers from Pi into `@tsuuanmi/pi-ai`.
+- **model**: Renamed model files to concise names: `model/index`, `model/catalog`, `model/request`, and `model/response`.
+- **provider**: Grouped OpenAI provider implementations under `openai/completions`, `openai/responses`, and `openai/codex` folders.
+- **docs**: Added an AI package architecture guide and grouped the root package exports by domain.
+- **protocol**: Merged context-overflow response helpers into `model/response`.
 
 ## [0.2.2] - 2026-07-23
 
@@ -16,14 +27,14 @@
 ### Breaking Changes
 
 - Removed the non-core providers and their built-in model catalogs, env-key resolution, OAuth flows, provider modules, image-generation providers, and image-generation API surface: Mistral, Amazon Bedrock, Groq, Cerebras, DeepSeek, NVIDIA NIM, Cloudflare (AI Gateway and Workers AI), OpenRouter, Vercel AI Gateway, ZAI (and ZAI Coding Plan China), Together AI, Fireworks, Kimi For Coding (Moonshot AI), Xiaomi MiMo (all regions), OpenCode Zen/Go, MiniMax, Hugging Face, GitHub Copilot, Azure OpenAI, Ant Ling, Google Generative AI (`google-generative-ai`), and xAI. The library now ships built-in chat support for `anthropic-messages`, `openai-responses`, `openai-codex-responses`, and `openai-completions` (generic OpenAI-compatible).
-- Removed legacy Anthropic budget-based thinking (`thinking.type: "enabled"` / `thinkingBudgetTokens`), the `fine-grained-tool-streaming-2025-05-14` and `interleaved-thinking-2025-05-14` beta headers, the `forceAdaptiveThinking` and `supportsEagerToolInputStreaming` compat flags, and `ThinkingBudgets` / `SimpleStreamOptions.thinkingBudgets`. Reasoning Anthropic models now always use adaptive thinking and per-tool `eager_input_streaming`.
+- Removed legacy Anthropic budget-based thinking (`thinking.type: "enabled"` / `thinkingBudgetTokens`), the `fine-grained-tool-streaming-2025-05-14` and `interleaved-thinking-2025-05-14` beta headers, the `forceAdaptiveThinking` and `supportsEagerToolInputStreaming` compat flags, and `ThinkingBudgets` / `StreamOptions.thinkingBudgets`. Reasoning Anthropic models now always use adaptive thinking and per-tool `eager_input_streaming`.
 - Removed legacy plain-string `textSignature` parsing in the OpenAI Responses provider; only `TextSignatureV1` JSON signatures are replayed.
 - Removed third-party overflow detection patterns (Google, xAI, llama.cpp, LM Studio, Ollama, generic fallbacks); only Anthropic and OpenAI patterns remain.
 - Removed the standalone `pi-ai` CLI binary (the `bin.pi-ai` entry and `src/cli.ts`); the `@tsuuanmi/pi-ai` library and its `./oauth` subpath are unaffected. Use the `pi` CLI or the programmatic `@tsuuanmi/pi-ai/oauth` entry point instead.
 
 ### Removed
 
-- Removed the `@google/genai` dependency and the `./google` package export, plus `GoogleOptions`, `GoogleThinkingLevel`, `streamGoogle`/`streamSimpleGoogle`, and Google/xAI models from the generated model catalog.
+- Removed the `@google/genai` dependency and the `./google` package export, plus `GoogleOptions`, `GoogleThinkingLevel`, `streamGoogle`/`streamGoogle`, and Google/xAI models from the generated model catalog.
 
 ### Added
 

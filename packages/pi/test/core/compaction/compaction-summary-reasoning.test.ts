@@ -3,15 +3,15 @@ import type { AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type CompactionPreparation, compact, generateSummary } from "#pi/compaction/index";
 
-const { completeSimpleMock } = vi.hoisted(() => ({
-	completeSimpleMock: vi.fn(),
+const { completeMock } = vi.hoisted(() => ({
+	completeMock: vi.fn(),
 }));
 
 vi.mock("@tsuuanmi/pi-ai", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("@tsuuanmi/pi-ai")>();
 	return {
 		...actual,
-		completeSimple: completeSimpleMock,
+		complete: completeMock,
 	};
 });
 
@@ -52,8 +52,8 @@ const messages: AgentMessage[] = [{ role: "user", content: "Summarize this.", ti
 
 describe("generateSummary reasoning options", () => {
 	beforeEach(() => {
-		completeSimpleMock.mockReset();
-		completeSimpleMock.mockResolvedValue(mockSummaryResponse);
+		completeMock.mockReset();
+		completeMock.mockResolvedValue(mockSummaryResponse);
 	});
 
 	it("uses the provided thinking level for reasoning-capable models", async () => {
@@ -69,8 +69,8 @@ describe("generateSummary reasoning options", () => {
 			"medium",
 		);
 
-		expect(completeSimpleMock).toHaveBeenCalledTimes(1);
-		expect(completeSimpleMock.mock.calls[0][2]).toMatchObject({
+		expect(completeMock).toHaveBeenCalledTimes(1);
+		expect(completeMock.mock.calls[0][2]).toMatchObject({
 			reasoning: "medium",
 			apiKey: "test-key",
 		});
@@ -89,11 +89,11 @@ describe("generateSummary reasoning options", () => {
 			"off",
 		);
 
-		expect(completeSimpleMock).toHaveBeenCalledTimes(1);
-		expect(completeSimpleMock.mock.calls[0][2]).toMatchObject({
+		expect(completeMock).toHaveBeenCalledTimes(1);
+		expect(completeMock.mock.calls[0][2]).toMatchObject({
 			apiKey: "test-key",
 		});
-		expect(completeSimpleMock.mock.calls[0][2]).not.toHaveProperty("reasoning");
+		expect(completeMock.mock.calls[0][2]).not.toHaveProperty("reasoning");
 	});
 
 	it("does not set reasoning for non-reasoning models", async () => {
@@ -109,11 +109,11 @@ describe("generateSummary reasoning options", () => {
 			"medium",
 		);
 
-		expect(completeSimpleMock).toHaveBeenCalledTimes(1);
-		expect(completeSimpleMock.mock.calls[0][2]).toMatchObject({
+		expect(completeMock).toHaveBeenCalledTimes(1);
+		expect(completeMock.mock.calls[0][2]).toMatchObject({
 			apiKey: "test-key",
 		});
-		expect(completeSimpleMock.mock.calls[0][2]).not.toHaveProperty("reasoning");
+		expect(completeMock.mock.calls[0][2]).not.toHaveProperty("reasoning");
 	});
 
 	it("clamps compaction summary maxTokens to the model output cap", async () => {
@@ -129,6 +129,6 @@ describe("generateSummary reasoning options", () => {
 
 		await compact(preparation, createModel(false, 128000), "test-key");
 
-		expect(completeSimpleMock.mock.calls.map((call) => call[2]?.maxTokens)).toEqual([128000, 128000]);
+		expect(completeMock.mock.calls.map((call) => call[2]?.maxTokens)).toEqual([128000, 128000]);
 	});
 });

@@ -18,8 +18,8 @@ import type {
 	AssistantMessageEventStream,
 	Context,
 	Model,
-	SimpleStreamOptions,
 	StopReason,
+	StreamOptions,
 	TextContent,
 	ThinkingContent,
 	ToolCall,
@@ -279,7 +279,7 @@ export interface FauxStreamFnState {
  * Returns the stream function and a state object for inspection.
  */
 function createFauxStreamFn(responses: FauxResponseInput[]): {
-	streamFn: (model: Model<any>, context: Context, options?: SimpleStreamOptions) => AssistantMessageEventStream;
+	streamFn: (model: Model<any>, context: Context, options?: StreamOptions) => AssistantMessageEventStream;
 	state: FauxStreamFnState;
 } {
 	if (responses.length === 0) {
@@ -288,7 +288,7 @@ function createFauxStreamFn(responses: FauxResponseInput[]): {
 
 	const state: FauxStreamFnState = { callCount: 0, contexts: [] };
 
-	const streamFn = (_model: Model<any>, context: Context, _options?: SimpleStreamOptions) => {
+	const streamFn = (_model: Model<any>, context: Context, _options?: StreamOptions) => {
 		const index = state.callCount % responses.length;
 		state.callCount++;
 		state.contexts.push(context);

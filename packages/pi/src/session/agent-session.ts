@@ -36,7 +36,7 @@ import {
 } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi-ai";
-import { cleanupSessionResources, isContextOverflow, resetApiProviders, streamSimple } from "@tsuuanmi/pi-ai";
+import { cleanupSessionResources, isContextOverflow, resetProviders, stream } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/auth-guidance";
 import {
@@ -447,7 +447,7 @@ export class AgentSession {
 		headers?: Record<string, string>;
 		env?: Record<string, string>;
 	}> {
-		if (this.agent.streamFn === streamSimple) {
+		if (this.agent.streamFn === stream) {
 			return this._getRequiredRequestAuth(model);
 		}
 
@@ -1769,7 +1769,7 @@ export class AgentSession {
 			let apiKey: string | undefined;
 			let headers: Record<string, string> | undefined;
 			let env: Record<string, string> | undefined;
-			if (this.agent.streamFn === streamSimple) {
+			if (this.agent.streamFn === stream) {
 				const authResult = await this._modelRegistry.getApiKeyAndHeaders(this.model);
 				if (!authResult.ok || !authResult.apiKey) {
 					this._emit({
@@ -2309,7 +2309,7 @@ export class AgentSession {
 		await this.settingsManager.reload();
 		this._installApiUsageLogger();
 		this.syncQueueModesFromSettings();
-		resetApiProviders();
+		resetProviders();
 		await this._resourceLoader.reload();
 		this._buildRuntime({
 			activeToolNames: this.getActiveToolNames(),

@@ -106,7 +106,7 @@ The `parameters` field is a TypeBox schema object. Use `Type.Object()` for the t
 
 ## Error Handling
 
-When a tool fails, throw an error from `execute()`. The error is caught and reported to the LLM as a tool error with `isError: true`:
+When a tool fails, throw an error from `execute()`. The error is caught and reported to the model as a tool error with `isError: true`:
 
 ```typescript
 try {

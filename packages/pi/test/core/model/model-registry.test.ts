@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AnthropicMessagesCompat, Api, Context, Model, OpenAICompletionsCompat } from "@tsuuanmi/pi-ai";
-import { getApiProvider } from "@tsuuanmi/pi-ai";
+import { getProvider } from "@tsuuanmi/pi-ai";
 import { getOAuthProvider } from "@tsuuanmi/pi-ai/oauth";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
@@ -907,16 +907,16 @@ describe("ModelRegistry", () => {
 			}
 		});
 
-		test("failed registerProvider does not persist invalid streamSimple config", () => {
+		test("failed registerProvider does not persist invalid stream config", () => {
 			const registry = ModelRegistry.create(authStorage, modelsJsonPath);
 
 			expect(() =>
 				registry.registerProvider("broken-provider", {
-					streamSimple: (() => {
+					stream: (() => {
 						throw new Error("should not run");
 					}) as any,
 				}),
-			).toThrow('Provider broken-provider: "api" is required when registering streamSimple.');
+			).toThrow('Provider broken-provider: "api" is required when registering stream.');
 
 			expect(() => registry.refresh()).not.toThrow();
 		});
@@ -989,21 +989,21 @@ describe("ModelRegistry", () => {
 			expect(getOAuthProvider("anthropic")?.name).not.toBe("Custom Anthropic OAuth");
 		});
 
-		test("unregisterProvider removes custom streamSimple override and restores built-in API stream handler", () => {
+		test("unregisterProvider removes custom stream override and restores built-in API stream handler", () => {
 			const registry = ModelRegistry.create(authStorage, modelsJsonPath);
 
 			registry.registerProvider("stream-override-provider", {
 				api: "openai-completions",
-				streamSimple: () => {
-					throw new Error("custom streamSimple override");
+				stream: () => {
+					throw new Error("custom stream override");
 				},
 			});
 
 			let threwCustomOverride = false;
 			try {
-				getApiProvider("openai-completions")?.streamSimple(openAiModel, emptyContext);
+				getProvider("openai-completions")?.stream(openAiModel, emptyContext);
 			} catch (error) {
-				threwCustomOverride = error instanceof Error && error.message === "custom streamSimple override";
+				threwCustomOverride = error instanceof Error && error.message === "custom stream override";
 			}
 			expect(threwCustomOverride).toBe(true);
 
@@ -1011,10 +1011,9 @@ describe("ModelRegistry", () => {
 
 			let threwCustomOverrideAfterUnregister = false;
 			try {
-				getApiProvider("openai-completions")?.streamSimple(openAiModel, emptyContext);
+				getProvider("openai-completions")?.stream(openAiModel, emptyContext);
 			} catch (error) {
-				threwCustomOverrideAfterUnregister =
-					error instanceof Error && error.message === "custom streamSimple override";
+				threwCustomOverrideAfterUnregister = error instanceof Error && error.message === "custom stream override";
 			}
 			expect(threwCustomOverrideAfterUnregister).toBe(false);
 		});

@@ -1,12 +1,5 @@
-import type {
-	Api,
-	AssistantMessageEventStream,
-	Context,
-	Model,
-	OAuthCredentials,
-	OAuthLoginCallbacks,
-	SimpleStreamOptions,
-} from "@tsuuanmi/pi-ai";
+import type { Api, AssistantMessageEventStream, Context, Model, StreamOptions } from "@tsuuanmi/pi-ai";
+import type { OAuthCredentials, OAuthLoginCallbacks } from "@tsuuanmi/pi-ai/oauth";
 
 // ============================================================================
 // Provider Registration Types
@@ -22,8 +15,8 @@ export interface ProviderConfig {
 	apiKey?: string;
 	/** API type. Required at provider or model level when defining models. */
 	api?: Api;
-	/** Optional streamSimple handler for custom APIs. */
-	streamSimple?: (model: Model<Api>, context: Context, options?: SimpleStreamOptions) => AssistantMessageEventStream;
+	/** Optional stream handler for custom APIs. */
+	stream?: (model: Model<Api>, context: Context, options?: StreamOptions) => AssistantMessageEventStream;
 	/** Custom headers to include in requests. */
 	headers?: Record<string, string>;
 	/** If true, adds Authorization: Bearer header with the resolved API key. */

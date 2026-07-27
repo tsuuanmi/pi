@@ -1,107 +1,55 @@
 # Adding a New Provider
 
-Adding a new LLM provider requires changes across multiple files. This checklist covers all steps.
+Adding a provider should keep the package structure explicit and minimal.
 
-## 1. Shared Types (`src/types.ts`)
+## 1. Protocol and Model Types
 
-- Add the API identifier to `KnownApi` (e.g., `"bedrock-converse"`)
-- Create an options interface extending `StreamOptions` (e.g., `BedrockOptions`)
-- Add the provider name to `KnownProvider` (e.g., `"amazon-bedrock"`)
+- Add the API identifier to `KnownApi` in `src/protocol/ids.ts`.
+- Add the provider name to `KnownProviderId` when it should appear in model catalogs.
+- Add provider-specific options only when `StreamOptions` is not enough.
 
-## 2. Provider Implementation (`src/providers/<provider>/`)
+## 2. Provider Implementation
 
-Create a provider-specific folder and entry file (e.g., `src/providers/bedrock/index.ts`) that exports:
+Create a provider folder with an `index.ts`, for example:
 
-- `stream<Provider>()` function returning `AssistantMessageEventStream`
-- `streamSimple<Provider>()` for `SimpleStreamOptions` mapping
-- Provider-specific options interface
-- Message conversion functions to transform `Context` to provider format
-- Tool conversion if the provider supports tools
-- Response parsing to emit standardized events (`text`, `tool_call`, `thinking`, `usage`, `stop`)
-
-The stream function must:
-
-1. Convert `Context` messages to the provider's format
-2. Build the provider-specific request payload
-3. Send the request to the provider API
-4. Parse SSE or WebSocket responses into `AssistantMessageEvent` objects
-5. Push events into an `AssistantMessageEventStream`
-6. Handle errors by pushing an `error` event and ending the stream
-
-## 3. API Registry Integration (`src/providers/register-builtins.ts`)
-
-- Add a lazy loader wrapper for the new provider module
-- Register the API with `registerApiProvider()` in `registerBuiltInApiProviders()`
-- Add a package subpath export in `package.json` for the provider module (`./dist/providers/<provider>/index.js`)
-- Add `export type` re-exports in `src/index.ts` for any provider-specific types that should be importable from `@tsuuanmi/pi-ai`
-- Add credential detection in `src/auth/env-api-keys.ts` for the new provider
-- Ensure `streamSimple` handles auth lookup via `getEnvApiKey()` or provider-specific auth
-
-Example lazy loader:
-
-```typescript
-let bedrockProviderModulePromise:
-  | Promise<LazyProviderModule<"bedrock-converse", BedrockOptions, SimpleStreamOptions>>
-  | undefined;
-
-function loadBedrockProviderModule(): Promise<...> {
-  bedrockProviderModulePromise ||= import("#ai/providers/bedrock/index").then((module) => {
-    const provider = module as BedrockProviderModule;
-    return { stream: provider.streamBedrock, streamSimple: provider.streamSimpleBedrock };
-  });
-  return bedrockProviderModulePromise;
-}
-
-export const streamBedrock = createLazyStream(loadBedrockProviderModule);
-export const streamSimpleBedrock = createLazySimpleStream(loadBedrockProviderModule);
+```text
+src/provider/bedrock/index.ts
 ```
 
-**Important**: Do not statically import provider implementation modules in `register-builtins.ts`. Use dynamic `import()` to keep startup fast.
+Export one public stream function, such as `streamBedrock()`. The function should:
 
-## 4. Model Generation (`scripts/generate-models.ts`)
+1. Convert `Context` messages to the provider request format.
+2. Build the provider request payload.
+3. Send the request.
+4. Parse SSE, WebSocket, or response events into `AssistantMessageEvent` values.
+5. Return an `AssistantMessageEventStream`.
+6. Push an `error` event and end the stream on failures.
 
-- Add logic to fetch and parse models from the provider's source
-- Map provider model data to the standardized `Model` interface
-- Handle provider-specific quirks (pricing format, capability flags, model ID transformations)
+## 3. Built-in Registration
 
-## 5. Tests (`test/`)
+Update `src/provider/built-ins.ts`:
 
-Add tests under `packages/ai/test/` covering:
+- Add a dynamic `import()` loader for the provider module.
+- Register the API with `registerProvider()` in `registerBuiltInProviders()`.
+- Add display metadata to `BUILT_IN_PROVIDER_DISPLAY_NAMES` when needed.
 
-- Streaming and tool use
-- Token usage reporting
-- Request abort
-- Context replay
-- Provider-specific features
+Do not statically import provider implementation modules from `built-ins.ts`; dynamic imports keep startup fast.
 
-Follow the existing provider-specific test pattern (e.g., `anthropic-sse-parsing.test.ts`, `openai-codex-stream.test.ts`).
+## 4. Model Generation
 
-For scripted deterministic flows, use `registerFauxProvider()` instead of hitting a live API.
+Update `scripts/generate-models.ts` when the provider participates in generated model metadata.
 
-## 6. Pi Integration (`../pi/`)
+## 5. Public Exports
 
-Update `packages/pi/src/model/model-resolver.ts`:
+Update:
 
-- Add a default model ID for the provider in `defaultModelPerProvider`
+- `src/index.ts` for provider-specific types that should be importable from `@tsuuanmi/pi-ai`.
+- `package.json` subpath exports when direct provider imports are needed.
 
-Update `src/cli/args.ts`:
+## 6. Tests
 
-- Add environment variable documentation in the help text
+Add provider-specific tests under `packages/ai/test/provider/` covering streaming, tool use, usage reporting, aborts, and provider-specific behavior.
 
-## 7. Documentation
+## 7. Docs
 
-Update `packages/ai/README.md` and `packages/ai/docs/`:
-
-- Add the provider to the Supported Providers table
-- Document any provider-specific options or authentication requirements
-- Add environment variable to the Environment Variables section
-- Update `api-registry.md` and `models.md` with the new provider
-
-## 8. Changelog
-
-Add an entry to `packages/ai/CHANGELOG.md` under `## [Unreleased]`:
-
-```markdown
-### Added
-- Added support for [Provider Name] provider
-```
+Update `packages/ai/README.md` and the relevant docs page under `packages/ai/docs/providers/`.

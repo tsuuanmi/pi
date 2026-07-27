@@ -1,6 +1,6 @@
 # Anthropic Provider
 
-The Anthropic provider implements the Claude Messages API (`api: "anthropic-messages"`) with extended thinking, tool use, prompt caching, and streaming support. It is registered automatically by `register-builtins.ts` and lazy-loaded on first use.
+The Anthropic provider implements the Claude Messages API (`api: "anthropic-messages"`) with extended thinking, tool use, prompt caching, and streaming support. It is registered automatically and loaded on demand on first use.
 
 ## Usage
 
@@ -11,11 +11,11 @@ const model = getModel("anthropic", "claude-sonnet-4-5");
 const response = await complete(model, context);
 ```
 
-The stream function is also exported directly as `streamAnthropic` / `streamSimpleAnthropic` from `@tsuuanmi/pi-ai`.
+The stream function is also exported directly as `streamAnthropic` / `streamAnthropic` from `@tsuuanmi/pi-ai`.
 
 ## Features
 
-- **Extended thinking**: Supports `thinkingLevel` options (`minimal`, `low`, `medium`, `high`, `xhigh`) via `streamSimple`/`completeSimple`, or `thinkingEnabled` + `effort` via `stream`/`complete`. See [Thinking and Reasoning](../reasoning.md).
+- **Extended thinking**: Supports `thinkingLevel` options (`minimal`, `low`, `medium`, `high`, `xhigh`) via `stream`/`complete`, or `thinkingEnabled` + `effort` via `stream`/`complete`. See [Thinking and Reasoning](../reasoning.md).
 - **Tool use**: Full tool call and tool result streaming with partial JSON parsing.
 - **Caching**: Prompt caching via `cacheRetention` (`"none"` | `"short"` | `"long"`). `"long"` maps to `cache_control.ttl: "1h"` when `supportsLongCacheRetention` is true.
 - **Streaming**: Real-time text, thinking, and tool call streaming events.
@@ -36,7 +36,7 @@ Keys can also be passed via the `apiKey` option or scoped through the `env` opti
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `thinkingEnabled` | `boolean` | Enable extended thinking. Default: omitted (thinking is omitted unless `streamSimple` maps a reasoning level). |
+| `thinkingEnabled` | `boolean` | Enable extended thinking. Default: omitted (thinking is omitted unless `stream` maps a reasoning level). |
 | `effort` | `AnthropicEffort` | `"low"` \| `"medium"` \| `"high"` \| `"xhigh"` \| `"max"`. `"max"` is only valid on Opus 4.6; Opus 4.7+ and Fable 5 use `"xhigh"`. |
 | `thinkingDisplay` | `AnthropicThinkingDisplay` | `"summarized"` (default) \| `"omitted"`. When `"omitted"`, thinking blocks return empty text but the encrypted signature still travels for multi-turn continuity. |
 
@@ -54,11 +54,10 @@ Custom Anthropic-compatible models can set `compat` to override auto-detection:
 
 ## Model IDs
 
-Common model IDs (see `src/models/generated.ts` for the full list): `claude-opus-4-5`, `claude-opus-4-7`, `claude-haiku-4-5`, `claude-fable-5`, `claude-sonnet-4-5`.
+Common model IDs (see `src/model/generated.ts` for the full list): `claude-opus-4-5`, `claude-opus-4-7`, `claude-haiku-4-5`, `claude-fable-5`, `claude-sonnet-4-5`.
 
 ## See Also
 
 - [Adding a New Provider](adding-provider.md) - Step-by-step guide
-- [API Registry](api-registry.md) - Provider registration and lazy loading
-- [Faux Provider](faux-provider.md) - Test doubles
+- [Models and Providers](../models.md) - provider registration and model lookup
 - [Thinking and Reasoning](../reasoning.md) - Reasoning level mapping

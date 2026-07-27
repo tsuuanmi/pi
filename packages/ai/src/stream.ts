@@ -1,38 +1,17 @@
-import "#ai/providers/register-built-in-providers";
+import "#ai/provider/built-ins";
 
-import { getEnvApiKey } from "#ai/auth/env-api-keys";
-import { getApiProvider } from "#ai/providers/provider-registry";
-import type {
-	Api,
-	AssistantMessage,
-	AssistantMessageEventStream,
-	Context,
-	Model,
-	ProviderStreamOptions,
-	SimpleStreamOptions,
-	StreamOptions,
-} from "#ai/types";
+import type { Model } from "#ai/model/index";
+import type { Context } from "#ai/protocol/context";
+import type { Api } from "#ai/protocol/ids";
+import type { AssistantMessage } from "#ai/protocol/message";
+import type { StreamOptions } from "#ai/protocol/options";
+import { getProvider } from "#ai/provider/provider-registry";
+import type { AssistantMessageEventStream } from "#ai/transport/event-stream";
 
-export { getEnvApiKey } from "#ai/auth/env-api-keys";
-
-function hasExplicitApiKey(apiKey: string | undefined): apiKey is string {
-	return typeof apiKey === "string" && apiKey.trim().length > 0;
-}
-
-function withEnvApiKey<TOptions extends StreamOptions>(
-	model: Model<Api>,
-	options: TOptions | undefined,
-): TOptions | undefined {
-	if (hasExplicitApiKey(options?.apiKey)) return options;
-	const apiKey = getEnvApiKey(model.provider, options?.env);
-	if (!apiKey) return options;
-	return { ...options, apiKey } as TOptions;
-}
-
-function resolveApiProvider(api: Api) {
-	const provider = getApiProvider(api);
+function resolveProvider(api: Api) {
+	const provider = getProvider(api);
 	if (!provider) {
-		throw new Error(`No API provider registered for api: ${api}`);
+		throw new Error(`No provider registered for api: ${api}`);
 	}
 	return provider;
 }
@@ -40,35 +19,17 @@ function resolveApiProvider(api: Api) {
 export function stream<TApi extends Api>(
 	model: Model<TApi>,
 	context: Context,
-	options?: ProviderStreamOptions,
+	options?: StreamOptions,
 ): AssistantMessageEventStream {
-	const provider = resolveApiProvider(model.api);
-	return provider.stream(model, context, withEnvApiKey(model, options) as StreamOptions);
+	const provider = resolveProvider(model.api);
+	return provider.stream(model, context, options);
 }
 
 export async function complete<TApi extends Api>(
 	model: Model<TApi>,
 	context: Context,
-	options?: ProviderStreamOptions,
+	options?: StreamOptions,
 ): Promise<AssistantMessage> {
 	const s = stream(model, context, options);
-	return s.result();
-}
-
-export function streamSimple<TApi extends Api>(
-	model: Model<TApi>,
-	context: Context,
-	options?: SimpleStreamOptions,
-): AssistantMessageEventStream {
-	const provider = resolveApiProvider(model.api);
-	return provider.streamSimple(model, context, withEnvApiKey(model, options));
-}
-
-export async function completeSimple<TApi extends Api>(
-	model: Model<TApi>,
-	context: Context,
-	options?: SimpleStreamOptions,
-): Promise<AssistantMessage> {
-	const s = streamSimple(model, context, options);
 	return s.result();
 }

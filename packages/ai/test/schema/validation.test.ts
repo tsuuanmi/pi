@@ -1,8 +1,9 @@
 import { Type } from "typebox";
 import { Compile } from "typebox/compile";
 import { describe, expect, it } from "vitest";
-import { formatTypeBoxValidationPath, validateToolArguments } from "#ai/schema/validation";
-import type { Tool, ToolCall } from "#ai/types";
+import type { ToolCall } from "#ai/protocol/content";
+import type { Tool } from "#ai/protocol/tool";
+import { formatTypeBoxValidationPath, validateToolArguments } from "#ai/schema/schema-validator";
 
 function createToolCallWithPlainSchema(
 	schema: Tool["parameters"],

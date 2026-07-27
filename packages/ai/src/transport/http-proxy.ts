@@ -1,5 +1,5 @@
-import { getProviderEnvValue } from "#ai/auth/env-api-keys";
-import type { ProviderEnv } from "#ai/types";
+import type { ProviderEnv } from "#ai/protocol/options";
+import { getProviderEnvValue } from "#ai/provider/config";
 
 const DEFAULT_PROXY_PORTS: Record<string, number> = {
 	ftp: 21,

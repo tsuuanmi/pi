@@ -1,6 +1,10 @@
 export type { Static, TSchema } from "typebox";
 export { Type } from "typebox";
-export * from "#ai/auth/env-api-keys";
+
+// Adapter
+export * from "#ai/adapter/adapter";
+
+// OAuth types. Runtime OAuth helpers are exported from @tsuuanmi/pi-ai/oauth.
 export type {
 	OAuthAuthInfo,
 	OAuthCredentials,
@@ -14,20 +18,37 @@ export type {
 	OAuthSelectOption,
 	OAuthSelectPrompt,
 } from "#ai/auth/oauth/types";
-export * from "#ai/models/model";
-export * from "#ai/models/model-catalog";
+
+// Model
+export * from "#ai/model/catalog";
+export * from "#ai/model/config";
+export * from "#ai/model/index";
+export * from "#ai/model/request";
+export * from "#ai/model/response";
+// Runtime helpers
 export * from "#ai/parsing/json-parser";
-export * from "#ai/protocol/output-limit";
+// Protocol
+export * from "#ai/protocol/content";
+export * from "#ai/protocol/context";
+export * from "#ai/protocol/diagnostic";
+export * from "#ai/protocol/ids";
+export * from "#ai/protocol/message";
+export * from "#ai/protocol/options";
+export * from "#ai/protocol/tool";
+export * from "#ai/protocol/usage";
+// Provider-specific surfaces
 export type {
 	AnthropicEffort,
 	AnthropicOptions,
 	AnthropicThinkingDisplay,
-} from "#ai/providers/anthropic/anthropic-provider";
-export * from "#ai/providers/faux/index";
+} from "#ai/provider/anthropic/index";
+// Provider registry and built-ins
+export * from "#ai/provider/built-ins";
+export * from "#ai/provider/config";
 export type {
 	OpenAICodexResponsesOptions,
 	OpenAICodexWebSocketDebugStats,
-} from "#ai/providers/openai/codex-responses-api";
+} from "#ai/provider/openai/codex/responses";
 export {
 	consumeOpenAICodexResetCredit,
 	fetchOpenAICodexResetCredits,
@@ -40,13 +61,10 @@ export {
 	type OpenAICodexUsageAuthProvider,
 	type OpenAICodexUsageStatus,
 	type OpenAICodexUsageSummary,
-} from "#ai/providers/openai/codex-usage";
-export type { OpenAICompletionsOptions } from "#ai/providers/openai/completions-api";
-export type { OpenAIResponsesOptions } from "#ai/providers/openai/responses-api";
-export * from "#ai/providers/provider-registry";
-export * from "#ai/providers/provider-utils";
-export * from "#ai/providers/register-built-in-providers";
+} from "#ai/provider/openai/codex/usage";
+export type { OpenAICompletionsOptions } from "#ai/provider/openai/completions/index";
+export type { OpenAIResponsesOptions } from "#ai/provider/openai/responses/index";
+export * from "#ai/provider/provider-registry";
 export * from "#ai/schema/schema-validator";
 export * from "#ai/stream";
 export * from "#ai/transport/event-stream";
-export * from "#ai/types";

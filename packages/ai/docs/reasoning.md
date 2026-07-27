@@ -25,13 +25,13 @@ const levels = getSupportedThinkingLevels(model);
 
 ## Unified Interface
 
-`streamSimple()` and `completeSimple()` accept a `reasoning` option that maps to provider-specific parameters:
+`stream()` and `complete()` accept a `reasoning` option that maps to provider-specific parameters:
 
 ```typescript
-import { getModel, completeSimple } from "@tsuuanmi/pi-ai";
+import { getModel, complete } from "@tsuuanmi/pi-ai";
 
 const model = getModel("anthropic", "claude-sonnet-4-5");
-const response = await completeSimple(model, {
+const response = await complete(model, {
   messages: [{ role: "user", content: "Solve: 2x + 5 = 13", timestamp: Date.now() }],
 }, {
   reasoning: "medium",
@@ -44,7 +44,7 @@ Non-reasoning models silently ignore the `reasoning` option.
 
 ### Level Mapping
 
-`streamSimple`/`completeSimple` clamp the requested level to the nearest supported one and pass it through for OpenAI; for Anthropic it is mapped to an effort level:
+`stream`/`complete` clamp the requested level to the nearest supported one and pass it through for OpenAI; for Anthropic it is mapped to an effort level:
 
 | Level | Anthropic (`effort`) | OpenAI Responses/Completions (`reasoningEffort`) |
 |-------|----------------------|-------------------------------------------------|
@@ -96,7 +96,7 @@ const response = await complete(model, context, {
 Thinking blocks are delivered through dedicated streaming events:
 
 ```typescript
-const s = streamSimple(model, context, { reasoning: "high" });
+const s = stream(model, context, { reasoning: "high" });
 
 for await (const event of s) {
   switch (event.type) {
@@ -118,7 +118,7 @@ for await (const event of s) {
 After completion, thinking blocks are available in the message content:
 
 ```typescript
-const message = await completeSimple(model, context, { reasoning: "high" });
+const message = await complete(model, context, { reasoning: "high" });
 
 for (const block of message.content) {
   if (block.type === "thinking") {

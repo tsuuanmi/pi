@@ -7,7 +7,7 @@ import {
 	type AssistantMessage,
 	type Context,
 	EventStream,
-	streamSimple,
+	stream,
 	type ToolResultMessage,
 	validateToolArguments,
 } from "@tsuuanmi/pi-ai";
@@ -338,7 +338,7 @@ async function streamAssistantResponse(
 		tools: context.tools,
 	};
 
-	const streamFunction = streamFn || streamSimple;
+	const streamFunction = streamFn || stream;
 	const requestId = createRequestId();
 	const requestSequence = providerRequestSequence;
 	const startedAt = Date.now();

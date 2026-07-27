@@ -19,8 +19,8 @@ import {
 	SUMMARIZATION_SYSTEM_PROMPT,
 	serializeConversation,
 } from "@tsuuanmi/pi-agent";
-import type { AssistantMessage, Context, Model, SimpleStreamOptions, Usage } from "@tsuuanmi/pi-ai";
-import { completeSimple } from "@tsuuanmi/pi-ai";
+import type { AssistantMessage, Context, Model, StreamOptions, Usage } from "@tsuuanmi/pi-ai";
+import { complete } from "@tsuuanmi/pi-ai";
 import { buildSessionContext, type CompactionEntry, type SessionEntry } from "#pi/session/session-manager";
 
 // ============================================================================
@@ -525,8 +525,8 @@ function createSummarizationOptions(
 	env: Record<string, string> | undefined,
 	signal: AbortSignal | undefined,
 	thinkingLevel: ThinkingLevel | undefined,
-): SimpleStreamOptions {
-	const options: SimpleStreamOptions = { maxTokens, signal, apiKey, headers, env };
+): StreamOptions {
+	const options: StreamOptions = { maxTokens, signal, apiKey, headers, env };
 	if (model.reasoning && thinkingLevel && thinkingLevel !== "off") {
 		options.reasoning = thinkingLevel;
 	}
@@ -536,11 +536,11 @@ function createSummarizationOptions(
 async function completeSummarization(
 	model: Model<any>,
 	context: Context,
-	options: SimpleStreamOptions,
+	options: StreamOptions,
 	streamFn?: StreamFn,
 ): Promise<AssistantMessage> {
 	if (!streamFn) {
-		return completeSimple(model, context, options);
+		return complete(model, context, options);
 	}
 	const stream = await streamFn(model, context, options);
 	return stream.result();

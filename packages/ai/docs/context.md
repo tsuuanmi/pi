@@ -102,7 +102,7 @@ const claude = getModel("anthropic", "claude-sonnet-4-5");
 const context: Context = { messages: [] };
 
 context.messages.push({ role: "user", content: "What is 25 * 18?", timestamp: Date.now() });
-const claudeResponse = await completeSimple(claude, context, { reasoning: "high" });
+const claudeResponse = await complete(claude, context, { reasoning: "high" });
 context.messages.push(claudeResponse);
 
 // Switch to GPT — Claude's thinking becomes <thinking> tagged text

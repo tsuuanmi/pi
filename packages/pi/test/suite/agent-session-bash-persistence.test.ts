@@ -1,9 +1,9 @@
 import { Buffer } from "node:buffer";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { fauxAssistantMessage, fauxToolCall } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import type { BashOperations } from "#pi/tools/bash";
+import { fauxAssistantMessage, fauxToolCall } from "#pi-test/helpers/provider";
 import { createHarness, type Harness } from "#pi-test/suite/harness";
 
 function getEntryTypes(harness: Harness): string[] {

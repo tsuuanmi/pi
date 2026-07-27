@@ -1,6 +1,6 @@
 # @tsuuanmi/pi-ai
 
-Unified LLM API with automatic model discovery, provider configuration, token and cost tracking, and simple context persistence and hand-off to other models mid-session.
+Provider and model API with automatic model discovery, provider configuration, token and cost tracking, and simple context persistence and hand-off to other models mid-session.
 
 **Note**: This library only includes models that support tool calling (function calling), as this is essential for agentic applications.
 
@@ -9,6 +9,7 @@ Unified LLM API with automatic model discovery, provider configuration, token an
 - [Supported Providers](#supported-providers)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Adapter](#adapter)
 - [Tools](#tools)
   - [Defining Tools](#defining-tools)
   - [Handling Tool Calls](#handling-tool-calls)
@@ -60,19 +61,20 @@ npm install @tsuuanmi/pi-ai
 
 TypeBox exports are re-exported from `@tsuuanmi/pi-ai`: `Type`, `Static`, and `TSchema`.
 
-## LLM Adapter Contract
+## Adapter
 
-`@tsuuanmi/pi-ai` exports a normalized `LlmAdapter` contract for orchestration packages such as `@tsuuanmi/pi-agent`:
+`@tsuuanmi/pi-ai` exports a small `Adapter` class for packages that need a stable model-bound provider interface:
 
 ```typescript
-import { PiProviderAdapter, complete, getModel } from "@tsuuanmi/pi-ai";
+import { Adapter, getModel } from "@tsuuanmi/pi-ai";
 
-const adapter = new PiProviderAdapter({
+const adapter = new Adapter({
   model: getModel("openai", "gpt-4o-mini"),
-  completeSimple: complete,
 });
 
-const response = await adapter.complete([{ role: "user", content: "Hello" }]);
+const response = await adapter.complete({
+  messages: [{ role: "user", content: "Hello", timestamp: Date.now() }],
+});
 console.log(response.content);
 ```
 
@@ -373,10 +375,10 @@ Streaming events for different content blocks are not guaranteed to be contiguou
 
 Many models support thinking/reasoning capabilities where they can show their internal thought process. You can check if a model supports reasoning via the `reasoning` property. If you pass reasoning options to a non-reasoning model, they are silently ignored.
 
-### Unified Interface (streamSimple/completeSimple)
+### Unified Interface (stream/complete)
 
 ```typescript
-import { getModel, streamSimple, completeSimple } from '@tsuuanmi/pi-ai';
+import { getModel, stream, complete } from '@tsuuanmi/pi-ai';
 
 // Many models across providers support thinking/reasoning
 const model = getModel('anthropic', 'claude-sonnet-4-20250514');
@@ -389,7 +391,7 @@ if (model.reasoning) {
 }
 
 // Use the simplified reasoning option
-const response = await completeSimple(model, {
+const response = await complete(model, {
   messages: [{ role: 'user', content: 'Solve: 2x + 5 = 13' }]
 }, {
   reasoning: 'medium'  // 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
@@ -433,7 +435,7 @@ await complete(anthropicModel, context, {
 When streaming, thinking content is delivered through specific events:
 
 ```typescript
-const s = streamSimple(model, context, { reasoning: 'high' });
+const s = stream(model, context, { reasoning: 'high' });
 
 for await (const event of s) {
   switch (event.type) {
@@ -560,7 +562,7 @@ const response = await complete(model, context, {
 });
 ```
 
-The callback is supported by `stream`, `complete`, `streamSimple`, and `completeSimple`.
+The callback is supported by `stream`, `complete`, `stream`, and `complete`.
 
 ## APIs, Models, and Providers
 
@@ -570,92 +572,6 @@ The library uses a registry of API implementations. Built-in APIs include:
 - **`openai-completions`**: OpenAI Chat Completions API (`streamOpenAICompletions`, `OpenAICompletionsOptions`)
 - **`openai-responses`**: OpenAI Responses API (`streamOpenAIResponses`, `OpenAIResponsesOptions`)
 - **`openai-codex-responses`**: OpenAI Codex Responses API (`streamOpenAICodexResponses`, `OpenAICodexResponsesOptions`)
-
-### Faux provider for tests
-
-`registerFauxProvider()` registers a temporary in-memory provider for tests and demos. It is opt-in and not part of the built-in provider set.
-
-```typescript
-import {
-  complete,
-  fauxAssistantMessage,
-  fauxText,
-  fauxThinking,
-  fauxToolCall,
-  registerFauxProvider,
-  stream,
-} from '@tsuuanmi/pi-ai';
-
-const registration = registerFauxProvider({
-  tokensPerSecond: 50 // optional
-});
-
-const model = registration.getModel();
-const context = {
-  messages: [{ role: 'user', content: 'Summarize package.json and then call echo', timestamp: Date.now() }]
-};
-
-registration.setResponses([
-  fauxAssistantMessage([
-    fauxThinking('Need to inspect package metadata first.'),
-    fauxToolCall('echo', { text: 'package.json' })
-  ], { stopReason: 'toolUse' })
-]);
-
-const first = await complete(model, context, {
-  sessionId: 'session-1',
-  cacheRetention: 'short'
-});
-context.messages.push(first);
-
-context.messages.push({
-  role: 'toolResult',
-  toolCallId: first.content.find((block) => block.type === 'toolCall')!.id,
-  toolName: 'echo',
-  content: [{ type: 'text', text: 'package.json contents here' }],
-  isError: false,
-  timestamp: Date.now()
-});
-
-registration.setResponses([
-  fauxAssistantMessage([
-    fauxThinking('Now I can summarize the tool output.'),
-    fauxText('Here is the summary.')
-  ])
-]);
-
-const s = stream(model, context);
-for await (const event of s) {
-  console.log(event.type);
-}
-
-// Optional: register multiple faux models for model-switching tests
-const multiModel = registerFauxProvider({
-  models: [
-    { id: 'faux-fast', reasoning: false },
-    { id: 'faux-thinker', reasoning: true }
-  ]
-});
-const thinker = multiModel.getModel('faux-thinker');
-
-console.log(thinker?.reasoning);
-console.log(registration.getPendingResponseCount());
-console.log(registration.state.callCount);
-registration.unregister();
-multiModel.unregister();
-```
-
-Notes:
-- Responses are consumed from a queue in request start order.
-- If the queue is empty, the faux provider returns an assistant error message with `errorMessage: "No more faux responses queued"`.
-- Use `registration.setResponses([...])` to replace the remaining queue and `registration.appendResponses([...])` to add more responses.
-- `registration.models` exposes all registered faux models. `registration.getModel()` returns the first one, and `registration.getModel(id)` returns a specific one.
-- Use `fauxAssistantMessage(...)` for scripted assistant replies. Use `fauxText(...)`, `fauxThinking(...)`, and `fauxToolCall(...)` to build content blocks without filling in low-level fields manually.
-- `registration.unregister()` removes the temporary provider from the global API registry.
-- Usage is estimated at roughly 1 token per 4 characters. When `sessionId` is present and `cacheRetention` is not `"none"`, prompt cache reads and writes are simulated automatically.
-- Tool call arguments stream incrementally via `toolcall_delta` chunks.
-- By default, each streamed chunk is emitted on its own microtask. Set `tokensPerSecond` to pace chunk delivery in real time.
-- The intended use is one deterministic scripted flow per registration. If you need independent concurrent flows, register separate faux providers.
 
 ### Providers and Models
 
@@ -667,10 +583,10 @@ A **provider** offers models through a specific API. For example:
 ### Querying Providers and Models
 
 ```typescript
-import { getProviders, getModels, getModel } from '@tsuuanmi/pi-ai';
+import { getModelProviders, getModels, getModel } from '@tsuuanmi/pi-ai';
 
 // Get all available providers
-const providers = getProviders();
+const providers = getModelProviders();
 console.log(providers); // ['anthropic', 'ollama-cloud', 'openai']
 
 // Get all models from a provider (fully typed)
@@ -836,7 +752,7 @@ await streamAnthropic(claude, context, options);
 
 ## Cross-Provider Handoffs
 
-The library supports seamless handoffs between different LLM providers within the same conversation. This allows you to switch models mid-conversation while preserving context, including thinking blocks, tool calls, and tool results.
+The library supports seamless handoffs between different provider within the same conversation. This allows you to switch models mid-conversation while preserving context, including thinking blocks, tool calls, and tool results.
 
 ### How It Works
 
@@ -969,30 +885,7 @@ const response = await complete(model, context, {
 
 ### Provider-Scoped Environment Overrides
 
-Pass `env` in stream options to scope provider configuration to a request. Values in `env` take precedence over process environment variables for API key discovery and provider configuration such as `PI_CACHE_RETENTION` and `HTTP_PROXY`/`HTTPS_PROXY`.
-
-```typescript
-const model = getModel('anthropic', 'claude-sonnet-4-20250514');
-
-const response = await complete(model, context, {
-  env: {
-    ANTHROPIC_API_KEY: 'sk-ant-per-request-key',
-    PI_CACHE_RETENTION: 'long',
-  }
-});
-```
-
-Use this when one process needs different provider settings per request, or when ambient environment variables should not leak into a provider call.
-
-### Checking Environment Variables
-
-```typescript
-import { getEnvApiKey } from '@tsuuanmi/pi-ai';
-
-// Check if an API key is set in environment variables
-const key = getEnvApiKey('openai');  // checks OPENAI_API_KEY
-const ollamaKey = getEnvApiKey('ollama-cloud');  // checks OLLAMA_API_KEY
-```
+Pass `env` in stream options to scope provider configuration such as `PI_CACHE_RETENTION` and `HTTP_PROXY`/`HTTPS_PROXY` to a request. API credentials are supplied by the caller, typically from `auth.json` in Pi.
 
 ## OAuth Providers
 
@@ -1078,33 +971,32 @@ const response = await complete(model, {
 
 ### Adding a New Provider
 
-Adding a new LLM provider requires changes across multiple files. This checklist covers all necessary steps:
+Adding a new provider requires changes across multiple files. This checklist covers all necessary steps:
 
-#### 1. Shared Types (`src/types.ts`)
+#### 1. Shared Types (`src/model/index.ts` and `src/protocol/*`)
 
 - Add the API identifier to `KnownApi` (for example `"bedrock-converse-stream"`)
 - Create an options interface extending `StreamOptions` (for example `BedrockOptions`)
-- Add the provider name to `KnownProvider` (for example `"amazon-bedrock"`)
+- Add the provider name to `KnownProviderId` (for example `"amazon-bedrock"`)
 
-#### 2. Provider Implementation (`src/providers/<provider>/`)
+#### 2. Provider Implementation (`src/provider/<provider>/`)
 
-Create a provider-specific folder and entry file (for example `src/providers/amazon-bedrock/index.ts`) that exports:
+Create a provider-specific folder and entry file (for example `src/provider/amazon-bedrock/index.ts`) that exports:
 
 - `stream<Provider>()` function returning `AssistantMessageEventStream`
-- `streamSimple<Provider>()` for `SimpleStreamOptions` mapping
+- Provider-specific option mapping when required
 - Provider-specific options interface
 - Message conversion functions to transform `Context` to provider format
 - Tool conversion if the provider supports tools
 - Response parsing to emit standardized events (`text`, `tool_call`, `thinking`, `usage`, `stop`)
 
-#### 3. API Registry Integration (`src/providers/register-builtins.ts`)
+#### 3. API Registry Integration (`src/provider/built-ins.ts`)
 
-- Register the API with `registerApiProvider()`
-- Add a package subpath export in `package.json` for the provider module (`./dist/providers/<provider>/index.js`)
-- Add lazy loader wrappers in `src/providers/register-builtins.ts`, do not statically import provider implementation modules there
+- Register the API with `registerProvider()`
+- Add a package subpath export in `package.json` for the provider module (`./dist/provider/<provider>/index.js`)
+- Add module loaders in `src/provider/built-ins.ts`, do not statically import provider implementation modules there
 - Add any root-level `export type` re-exports in `src/index.ts` that should remain available from `@tsuuanmi/pi-ai`
-- Add credential detection in `auth/env-api-keys.ts` for the new provider
-- Ensure `streamSimple` handles auth lookup via `getEnvApiKey()` or provider-specific auth
+- Ensure caller-supplied credentials in `StreamOptions.apiKey` are passed through correctly
 
 #### 4. Model Generation (`scripts/generate-models.ts`)
 
@@ -1114,19 +1006,13 @@ Create a provider-specific folder and entry file (for example `src/providers/ama
 
 #### 5. Tests (`test/`)
 
-Add tests under `packages/ai/test/` covering the new provider — streaming and tool use, token usage reporting, request abort, and context replay. The existing suites are provider-specific (for example `anthropic-sse-parsing.test.ts`, `openai-codex-stream.test.ts`, `openai-responses-message-id.test.ts`); follow that pattern. For scripted, deterministic flows, use the `registerFauxProvider()` helper (see "Faux provider for tests" above) instead of hitting a live API.
-
-For providers with non-standard auth, add credential-detection helpers alongside `auth/env-api-keys.ts` (and a matching `env-api-keys.test.ts` case).
+Add tests under `packages/ai/test/` covering the new provider: streaming and tool use, token usage reporting, request abort, and context replay. The existing suites are provider-specific; follow that pattern.
 
 #### 6. Pi Integration (`../pi/`)
 
 Update `src/model/model-resolver.ts`:
 
 - Add a default model ID for the provider in `defaultModelPerProvider`
-
-Update `src/cli/args.ts`:
-
-- Add environment variable documentation in the help text
 
 Update `README.md`:
 

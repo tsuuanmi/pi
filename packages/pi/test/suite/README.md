@@ -4,7 +4,7 @@ Use `test/suite/` for the new harness-based test suite around `AgentSession` and
 
 Rules:
 - Use `test/suite/harness.ts`
-- Use the faux provider from `packages/ai/src/providers/faux/index.ts`
+- Use the test provider helper from `packages/pi/test/helpers/provider.ts`
 - Do not use real provider APIs, real API keys, network calls, or paid tokens
 - Keep these tests CI-safe and deterministic
 - Do not use or extend the legacy `test/unit-harness.ts` path unless a missing capability forces it

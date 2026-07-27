@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fauxAssistantMessage, registerFauxProvider } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import type {
@@ -18,6 +17,7 @@ import {
 	createAgentSessionServices,
 } from "#pi/session/agent-session-runtime";
 import { SessionManager } from "#pi/session/session-manager";
+import { fauxAssistantMessage, registerFauxProvider } from "#pi-test/helpers/provider";
 
 type RecordedSessionEvent =
 	| SessionBeforeSwitchEvent

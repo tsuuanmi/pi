@@ -2,12 +2,13 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { fauxAssistantMessage, fauxToolCall, type Model } from "@tsuuanmi/pi-ai";
+import type { Model } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import type { InputEvent } from "#pi/extensions/index";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
 import type { PromptTemplate } from "#pi/skills/prompt-templates";
+import { fauxAssistantMessage, fauxToolCall } from "#pi-test/helpers/provider";
 import { createHarness, getMessageText, type Harness } from "#pi-test/suite/harness";
 import { createTestResourceLoader } from "#pi-test/test-utils";
 

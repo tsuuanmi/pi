@@ -83,7 +83,7 @@ describe("SDK context transform ordering", () => {
 
 		modelRegistry.registerProvider(model.provider, {
 			api: model.api,
-			streamSimple: (_model, context) => {
+			stream: (_model, context) => {
 				capturedContext = context;
 				return doneStream();
 			},
@@ -184,7 +184,7 @@ describe("SDK context transform ordering", () => {
 
 		modelRegistry.registerProvider(model.provider, {
 			api: model.api,
-			streamSimple: (_model, context) => {
+			stream: (_model, context) => {
 				capturedContext = context;
 				return doneStream();
 			},

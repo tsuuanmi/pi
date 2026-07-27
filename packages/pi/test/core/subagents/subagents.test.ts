@@ -1,7 +1,6 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fauxAssistantMessage, fauxToolCall, registerFauxProvider } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/model/model-registry";
@@ -10,6 +9,7 @@ import { SettingsManager } from "#pi/settings/settings-manager";
 import { DefaultResourceLoader } from "#pi/skills/resource-loader";
 import { SubagentManager, type SubagentRecord } from "#pi/subagents/subagents";
 import { readSubagentWorkerRequest } from "#pi/subagents/tmux-worker";
+import { fauxAssistantMessage, fauxToolCall, registerFauxProvider } from "#pi-test/helpers/provider";
 
 const TEST_SESSION = "test-session";
 

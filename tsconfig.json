@@ -2,7 +2,9 @@
 	"compilerOptions": {
 		"target": "ES2022",
 		"module": "Node16",
-		"lib": ["ES2022"],
+		"lib": [
+			"ES2022"
+		],
 		"strict": true,
 		"erasableSyntaxOnly": true,
 		"esModuleInterop": true,
@@ -20,42 +22,124 @@
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
 		"useDefineForClassFields": false,
-		"types": ["node"],
+		"types": [
+			"node"
+		],
 		"noEmit": true,
 		"paths": {
-			"*": ["./*"],
-			"@tsuuanmi/pi-ai": ["./packages/ai/src/index.ts"],
-			"@tsuuanmi/pi-ai/oauth": ["./packages/ai/src/auth/oauth.ts"],
-			"@tsuuanmi/pi-ai/anthropic": ["./packages/ai/src/providers/anthropic/index.ts"],
-			"@tsuuanmi/pi-ai/openai-codex-responses": ["./packages/ai/src/providers/openai/codex-responses.ts"],
-			"@tsuuanmi/pi-ai/openai-codex-usage": ["./packages/ai/src/providers/openai/codex-usage.ts"],
-			"@tsuuanmi/pi-ai/openai-completions": ["./packages/ai/src/providers/openai/completions.ts"],
-			"@tsuuanmi/pi-ai/openai-responses": ["./packages/ai/src/providers/openai/responses.ts"],
-			"@tsuuanmi/pi-ai/*": ["./packages/ai/src/*.ts", "./packages/ai/src/auth/*.ts", "./packages/ai/src/models/*.ts", "./packages/ai/src/providers/*.ts", "./packages/ai/src/providers/*/index.ts", "./packages/ai/src/providers/openai/*.ts"],
-			"@tsuuanmi/pi-ai/dist/*": ["./packages/ai/src/*"],
-			"#ai/*": ["./packages/ai/src/*"],
-			"#ai-test/*": ["./packages/ai/test/*"],
-			"@tsuuanmi/pi-agent": ["./packages/agent/src/index.ts"],
-			"@tsuuanmi/pi-agent/*": ["./packages/agent/src/*"],
-			"#agent/*": ["./packages/agent/src/*"],
-			"#agent-test/*": ["./packages/agent/test/*"],
-			"@tsuuanmi/pi": ["./packages/pi/src/index.ts"],
-			"@tsuuanmi/pi/api/types": ["./packages/pi/src/api/types.ts"],
-			"@tsuuanmi/pi/config/config": ["./packages/pi/src/config/config.ts"],
-			"#pi/*": ["./packages/pi/src/*"],
-			"#pi-test/*": ["./packages/pi/test/*"],
-			"typebox": ["./node_modules/typebox"],
-			"@tsuuanmi/pi-tui": ["./packages/tui/src/index.ts"],
-			"@tsuuanmi/pi-tui/test/terminal/runtime/virtual-terminal": ["./packages/tui/test/terminal/runtime/virtual-terminal.ts"],
-			"@tsuuanmi/pi-tui/test/*": ["./packages/tui/test/*"],
-			"@tsuuanmi/pi-tui/*": ["./packages/tui/src/*"],
-			"#tui/*": ["./packages/tui/src/*"],
-			"#tui-test/*": ["./packages/tui/test/*"],
-			"@tsuuanmi/pi-agent-old": ["./packages/agent-old/src/index.ts"],
-			"@tsuuanmi/pi-agent-old/*": ["./packages/agent-old/src/*"],
-			"#workflows/*": ["./packages/workflows/src/*"]
+			"*": [
+				"./*"
+			],
+			"@tsuuanmi/pi-ai": [
+				"./packages/ai/src/index.ts"
+			],
+			"@tsuuanmi/pi-ai/oauth": [
+				"./packages/ai/src/auth/oauth/index.ts"
+			],
+			"@tsuuanmi/pi-ai/anthropic": [
+				"./packages/ai/src/provider/anthropic/index.ts"
+			],
+			"@tsuuanmi/pi-ai/openai-codex-responses": [
+				"./packages/ai/src/provider/openai/codex/responses.ts"
+			],
+			"@tsuuanmi/pi-ai/openai-codex-usage": [
+				"./packages/ai/src/provider/openai/codex/usage.ts"
+			],
+			"@tsuuanmi/pi-ai/openai-completions": [
+				"./packages/ai/src/provider/openai/completions/index.ts"
+			],
+			"@tsuuanmi/pi-ai/openai-responses": [
+				"./packages/ai/src/provider/openai/responses/index.ts"
+			],
+			"@tsuuanmi/pi-ai/*": [
+				"./packages/ai/src/*.ts",
+				"./packages/ai/src/auth/*.ts",
+				"./packages/ai/src/auth/*/index.ts",
+				"./packages/ai/src/auth/oauth/*/index.ts",
+				"./packages/ai/src/model/*.ts",
+				"./packages/ai/src/protocol/*.ts",
+				"./packages/ai/src/provider/*.ts",
+				"./packages/ai/src/provider/*/index.ts",
+				"./packages/ai/src/provider/openai/*.ts",
+				"./packages/ai/src/provider/openai/*/index.ts",
+				"./packages/ai/src/provider/openai/codex/*.ts",
+				"./packages/ai/src/provider/openai/completions/*.ts",
+				"./packages/ai/src/provider/openai/responses/*.ts"
+			],
+			"@tsuuanmi/pi-ai/dist/*": [
+				"./packages/ai/src/*"
+			],
+			"#ai/*": [
+				"./packages/ai/src/*"
+			],
+			"#ai-test/*": [
+				"./packages/ai/test/*"
+			],
+			"@tsuuanmi/pi-agent": [
+				"./packages/agent/src/index.ts"
+			],
+			"@tsuuanmi/pi-agent/*": [
+				"./packages/agent/src/*"
+			],
+			"#agent/*": [
+				"./packages/agent/src/*"
+			],
+			"#agent-test/*": [
+				"./packages/agent/test/*"
+			],
+			"@tsuuanmi/pi": [
+				"./packages/pi/src/index.ts"
+			],
+			"@tsuuanmi/pi/api/types": [
+				"./packages/pi/src/api/types.ts"
+			],
+			"@tsuuanmi/pi/config/config": [
+				"./packages/pi/src/config/config.ts"
+			],
+			"#pi/*": [
+				"./packages/pi/src/*"
+			],
+			"#pi-test/*": [
+				"./packages/pi/test/*"
+			],
+			"typebox": [
+				"./node_modules/typebox"
+			],
+			"@tsuuanmi/pi-tui": [
+				"./packages/tui/src/index.ts"
+			],
+			"@tsuuanmi/pi-tui/test/terminal/runtime/virtual-terminal": [
+				"./packages/tui/test/terminal/runtime/virtual-terminal.ts"
+			],
+			"@tsuuanmi/pi-tui/test/*": [
+				"./packages/tui/test/*"
+			],
+			"@tsuuanmi/pi-tui/*": [
+				"./packages/tui/src/*"
+			],
+			"#tui/*": [
+				"./packages/tui/src/*"
+			],
+			"#tui-test/*": [
+				"./packages/tui/test/*"
+			],
+			"@tsuuanmi/pi-agent-old": [
+				"./packages/agent-old/src/index.ts"
+			],
+			"@tsuuanmi/pi-agent-old/*": [
+				"./packages/agent-old/src/*"
+			],
+			"#workflows/*": [
+				"./packages/workflows/src/*"
+			]
 		}
 	},
-	"include": ["packages/*/src/**/*", "packages/*/test/**/*", "tests/**/*"],
-	"exclude": ["**/dist/**"]
+	"include": [
+		"packages/*/src/**/*",
+		"packages/*/test/**/*",
+		"tests/**/*"
+	],
+	"exclude": [
+		"**/dist/**"
+	]
 }

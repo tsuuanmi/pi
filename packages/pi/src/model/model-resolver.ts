@@ -3,7 +3,7 @@
  */
 
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
-import { type Api, type KnownProvider, type Model, modelsAreEqual } from "@tsuuanmi/pi-ai";
+import { type Api, type KnownProviderId, type Model, modelsAreEqual } from "@tsuuanmi/pi-ai";
 import chalk from "chalk";
 import { minimatch } from "minimatch";
 import { isValidThinkingLevel } from "#pi/cli/args";
@@ -11,7 +11,7 @@ import { DEFAULT_THINKING_LEVEL } from "#pi/config/defaults";
 import type { ModelRegistry } from "#pi/model/model-registry";
 
 /** Default model IDs for each known provider */
-export const defaultModelPerProvider: Record<KnownProvider, string> = {
+export const defaultModelPerProvider: Record<KnownProviderId, string> = {
 	anthropic: "claude-opus-4-8",
 	openai: "gpt-5.4",
 	"openai-codex": "gpt-5.5",
@@ -130,7 +130,7 @@ function buildFallbackModel(provider: string, modelId: string, availableModels: 
 	const providerModels = availableModels.filter((m) => m.provider === provider);
 	if (providerModels.length === 0) return undefined;
 
-	const defaultId = defaultModelPerProvider[provider as KnownProvider];
+	const defaultId = defaultModelPerProvider[provider as KnownProviderId];
 	const baseModel = defaultId
 		? (providerModels.find((m) => m.id === defaultId) ?? providerModels[0])
 		: providerModels[0];
@@ -553,7 +553,7 @@ export async function findInitialModel(options: {
 
 	if (availableModels.length > 0) {
 		// Try to find a default model from known providers
-		for (const provider of Object.keys(defaultModelPerProvider) as KnownProvider[]) {
+		for (const provider of Object.keys(defaultModelPerProvider) as KnownProviderId[]) {
 			const defaultId = defaultModelPerProvider[provider];
 			const match = availableModels.find((m) => m.provider === provider && m.id === defaultId);
 			if (match) {

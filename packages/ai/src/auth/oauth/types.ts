@@ -1,4 +1,5 @@
-import type { Api, Model } from "#ai/types";
+import type { Model } from "#ai/model/index";
+import type { Api } from "#ai/protocol/ids";
 
 export type OAuthCredentials = {
 	refresh: string;

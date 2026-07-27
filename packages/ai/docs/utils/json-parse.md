@@ -1,6 +1,6 @@
 # JSON Parse
 
-Robust JSON parsing that handles common LLM output issues. All functions are exported from `@tsuuanmi/pi-ai`.
+Robust JSON parsing that handles common model output issues. All functions are exported from `@tsuuanmi/pi-ai`.
 
 ## `parseStreamingJson()`
 
@@ -12,7 +12,7 @@ const result = parseStreamingJson('{"key": "val');
 // Returns: { key: "val" }
 ```
 
-Parses potentially incomplete or malformed JSON strings produced by LLM streaming. Returns a best-effort object (never `undefined`); fields may be missing or incomplete while the stream is in progress. Used internally for streaming tool call argument parsing.
+Parses potentially incomplete or malformed JSON strings produced by provider streaming. Returns a best-effort object (never `undefined`); fields may be missing or incomplete while the stream is in progress. Used internally for streaming tool call argument parsing.
 
 ## `parseJsonWithRepair()`
 

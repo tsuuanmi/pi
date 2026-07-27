@@ -7,7 +7,7 @@
  */
 
 // Anthropic
-export { anthropicOAuthProvider, loginAnthropic, refreshAnthropicToken } from "#ai/auth/oauth/anthropic";
+export { anthropicOAuthProvider, loginAnthropic, refreshAnthropicToken } from "#ai/auth/oauth/anthropic/index";
 export * from "#ai/auth/oauth/device-code";
 // OpenAI Codex (ChatGPT OAuth)
 export {
@@ -17,16 +17,16 @@ export {
 	OPENAI_CODEX_DEVICE_CODE_LOGIN_METHOD,
 	openaiCodexOAuthProvider,
 	refreshOpenAICodexToken,
-} from "#ai/auth/oauth/openai-codex";
+} from "#ai/auth/oauth/openai-codex/index";
 
 export * from "#ai/auth/oauth/types";
 
 // ============================================================================
-// Provider Registry
+// ProviderId Registry
 // ============================================================================
 
-import { anthropicOAuthProvider } from "#ai/auth/oauth/anthropic";
-import { openaiCodexOAuthProvider } from "#ai/auth/oauth/openai-codex";
+import { anthropicOAuthProvider } from "#ai/auth/oauth/anthropic/index";
+import { openaiCodexOAuthProvider } from "#ai/auth/oauth/openai-codex/index";
 import type {
 	OAuthCredentials,
 	OAuthProviderId,

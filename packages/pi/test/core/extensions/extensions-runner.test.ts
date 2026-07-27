@@ -776,7 +776,7 @@ describe("ExtensionRunner", () => {
 			runtime.registerProvider(
 				"broken-provider",
 				{
-					streamSimple: (() => {
+					stream: (() => {
 						throw new Error("should not run");
 					}) as any,
 				},
@@ -789,7 +789,7 @@ describe("ExtensionRunner", () => {
 
 			expect(() => runner.bindCore(extensionActions, extensionContextActions)).not.toThrow();
 			expect(errors).toEqual([
-				'/tmp/broken-extension.ts: Provider broken-provider: "api" is required when registering streamSimple.',
+				'/tmp/broken-extension.ts: Provider broken-provider: "api" is required when registering stream.',
 			]);
 			expect(() => modelRegistry.refresh()).not.toThrow();
 		});

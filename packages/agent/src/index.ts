@@ -20,6 +20,8 @@ export * from "#agent/subagents/yield-result";
 export { Task, TaskQueue } from "#agent/task";
 export { Team } from "#agent/team";
 export * from "#agent/tools/registry";
+export type { ProxyAssistantMessageEvent, ProxyStreamOptions } from "#agent/transport/proxy";
+export { streamProxy } from "#agent/transport/proxy";
 export type {
 	AgentRunOptions,
 	AgentRunResult,

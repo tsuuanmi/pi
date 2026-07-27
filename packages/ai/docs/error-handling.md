@@ -130,7 +130,7 @@ The `diagnostics` field is appended internally by the library when provider erro
 
 ## Provider Load Errors
 
-When a lazy-loaded provider module fails to load, the stream emits an error event and ends:
+When a loaded on demand provider module fails to load, the stream emits an error event and ends:
 
 ```typescript
 // If the Anthropic SDK module fails to load:

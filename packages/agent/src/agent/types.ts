@@ -5,8 +5,8 @@ import type {
 	Message,
 	Model,
 	ProviderResponse,
-	SimpleStreamOptions,
-	streamSimple,
+	StreamOptions,
+	stream,
 	TextContent,
 	Tool,
 	ToolResultMessage,
@@ -24,8 +24,8 @@ import type { LoopDetectionOptions, LoopDetectionResult } from "#agent/agent/loo
  *   final AssistantMessage with stopReason "error" or "aborted" and errorMessage.
  */
 export type StreamFn = (
-	...args: Parameters<typeof streamSimple>
-) => ReturnType<typeof streamSimple> | Promise<ReturnType<typeof streamSimple>>;
+	...args: Parameters<typeof stream>
+) => ReturnType<typeof stream> | Promise<ReturnType<typeof stream>>;
 
 /**
  * Configuration for how tool calls from a single assistant message are executed.
@@ -165,8 +165,12 @@ export interface AgentLoopTurnUpdate {
 
 export interface PrepareNextTurnContext extends ShouldStopAfterTurnContext {}
 
-export interface AgentLoopConfig extends SimpleStreamOptions {
+export interface AgentLoopConfig extends StreamOptions {
 	model: Model<any>;
+	reasoning?: StreamOptions["reasoning"];
+	apiKey?: StreamOptions["apiKey"];
+	onPayload?: StreamOptions["onPayload"];
+	onResponse?: StreamOptions["onResponse"];
 
 	/** Generic observer for logical provider invocations. Observer failures are ignored. */
 	providerRequestObserver?: ProviderRequestObserver;

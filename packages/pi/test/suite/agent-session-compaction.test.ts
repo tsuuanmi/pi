@@ -1,10 +1,6 @@
-import {
-	type AssistantMessage,
-	createAssistantMessageEventStream,
-	fauxAssistantMessage,
-	type Model,
-} from "@tsuuanmi/pi-ai";
+import { type AssistantMessage, createAssistantMessageEventStream, type Model } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { fauxAssistantMessage } from "#pi-test/helpers/provider";
 import { createHarness, type Harness } from "#pi-test/suite/harness";
 
 type SessionWithCompactionInternals = {

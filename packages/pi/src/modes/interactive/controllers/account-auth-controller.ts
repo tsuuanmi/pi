@@ -4,14 +4,13 @@ import {
 	consumeOpenAICodexResetCredit,
 	fetchOpenAICodexResetCredits,
 	fetchOpenAICodexUsageSummary,
-	getProviders,
+	getModelProviders,
 	type Model,
-	type OAuthProviderId,
-	type OAuthSelectPrompt,
 	type OpenAICodexResetCredit,
 	type OpenAICodexUsageAuthProvider,
 	type OpenAICodexUsageSummary,
 } from "@tsuuanmi/pi-ai";
+import type { OAuthProviderId, OAuthSelectPrompt } from "@tsuuanmi/pi-ai/oauth";
 import type { Component, Container, EditorComponent, StatusLineComponent, TUI } from "@tsuuanmi/pi-tui";
 import { getAuthPath } from "#pi/config/config";
 import { defaultModelPerProvider } from "#pi/model/model-resolver";
@@ -36,7 +35,7 @@ function hasDefaultModelProvider(providerId: string): providerId is keyof typeof
 	return providerId in defaultModelPerProvider;
 }
 
-const BUILT_IN_MODEL_PROVIDERS = new Set<string>(getProviders());
+const BUILT_IN_MODEL_PROVIDERS = new Set<string>(getModelProviders());
 
 export function isApiKeyAccountProvider(
 	providerId: string,

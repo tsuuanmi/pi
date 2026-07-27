@@ -2,7 +2,8 @@ import { type TUnsafe, Type } from "typebox";
 import { Compile } from "typebox/compile";
 import type { TLocalizedValidationError } from "typebox/error";
 import { Value } from "typebox/value";
-import type { Tool, ToolCall } from "#ai/types";
+import type { ToolCall } from "#ai/protocol/content";
+import type { Tool } from "#ai/protocol/tool";
 
 const validatorCache = new WeakMap<object, ReturnType<typeof Compile>>();
 /**
@@ -287,7 +288,7 @@ export function formatTypeBoxValidationPath(error: TLocalizedValidationError): s
 /**
  * Finds a tool by name and validates the tool call arguments against its TypeBox schema
  * @param tools Array of tool definitions
- * @param toolCall The tool call from the LLM
+ * @param toolCall The provider tool call
  * @returns The validated arguments
  * @throws Error if tool is not found or validation fails
  */
@@ -302,7 +303,7 @@ export function validateToolCall(tools: Tool[], toolCall: ToolCall): any {
 /**
  * Validates tool call arguments against the tool's TypeBox schema
  * @param tool The tool definition with TypeBox schema
- * @param toolCall The tool call from the LLM
+ * @param toolCall The provider tool call
  * @returns The validated (and potentially coerced) arguments
  * @throws Error with formatted message if validation fails
  */

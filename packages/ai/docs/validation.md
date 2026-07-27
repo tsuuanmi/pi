@@ -37,7 +37,7 @@ The validator:
 3. Validates the raw arguments using `TypeBox/Value`
 4. Returns the parsed and validated arguments object
 
-If the tool is not found or arguments fail validation, an error is thrown with a descriptive message that can be returned to the LLM for retry.
+If the tool is not found or arguments fail validation, an error is thrown with a descriptive message that can be returned to the model for retry.
 
 ## Custom Schemas
 

@@ -352,12 +352,12 @@ interface OAuthCredentials {
 
 ## Custom Streaming API
 
-For providers with non-standard APIs, implement `streamSimple`. Study the existing provider implementations before writing your own:
+For providers with non-standard APIs, implement `stream`. Study the existing provider implementations before writing your own:
 
 **Reference implementations:**
-- [providers/anthropic/index.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/providers/anthropic/index.ts) - Anthropic Messages API
-- [providers/openai/completions.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/providers/openai/completions.ts) - OpenAI Chat Completions
-- [providers/openai/responses.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/providers/openai/responses.ts) - OpenAI Responses API
+- [provider/anthropic/index.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/provider/anthropic/index.ts) - Anthropic Messages API
+- [provider/openai/completions/index.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/provider/openai/completions/index.ts) - OpenAI Chat Completions
+- [provider/openai/responses/index.ts](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/provider/openai/responses/index.ts) - OpenAI Responses API
 
 ### Stream Pattern
 
@@ -369,7 +369,7 @@ import {
   type AssistantMessageEventStream,
   type Context,
   type Model,
-  type SimpleStreamOptions,
+  type StreamOptions,
   calculateCost,
   createAssistantMessageEventStream,
 } from "@tsuuanmi/pi-ai";
@@ -377,7 +377,7 @@ import {
 function streamMyProvider(
   model: Model<any>,
   context: Context,
-  options?: SimpleStreamOptions
+  options?: StreamOptions
 ): AssistantMessageEventStream {
   const stream = createAssistantMessageEventStream();
 
@@ -577,7 +577,7 @@ pi.registerProvider("my-provider", {
   apiKey: "$MY_API_KEY",
   api: "my-custom-api",
   models: [...],
-  streamSimple: streamMyProvider
+  stream: streamMyProvider
 });
 ```
 
@@ -616,10 +616,10 @@ interface ProviderConfig {
   api?: Api;
 
   /** Custom streaming implementation for non-standard APIs. */
-  streamSimple?: (
+  stream?: (
     model: Model<Api>,
     context: Context,
-    options?: SimpleStreamOptions
+    options?: StreamOptions
   ) => AssistantMessageEventStream;
 
   /** Custom headers to include in requests. Values use the same resolution syntax as apiKey. */

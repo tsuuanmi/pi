@@ -28,14 +28,14 @@ for (const model of anthropicModels) {
 }
 ```
 
-### `getProviders()`
+### `getModelProviders()`
 
 Returns all available provider names:
 
 ```typescript
-import { getProviders } from "@tsuuanmi/pi-ai";
+import { getModelProviders } from "@tsuuanmi/pi-ai";
 
-console.log(getProviders()); // ['anthropic', 'ollama-cloud', 'openai']
+console.log(getModelProviders()); // ['anthropic', 'ollama-cloud', 'openai']
 ```
 
 ## Model Interface
@@ -68,7 +68,7 @@ interface Model<TApi extends Api> {
 }
 ```
 
-`baseUrl` is required. Built-in models are generated from `models.json` into `src/models/generated.ts` (regenerate with `npm run generate-models`); custom models are constructed by hand.
+`baseUrl` is required. Built-in models are generated from `models.json` into `src/model/generated.ts` (regenerate with `npm run generate-models`); custom models are constructed by hand.
 
 ### Cost Tracking
 
@@ -154,7 +154,7 @@ const compat: OpenAICompletionsCompat = {
 | `supportsLongCacheRetention` | Long prompt cache retention (e.g. `prompt_cache_retention: "24h"`) |
 | `supportsPromptCacheKey` | Emit `prompt_cache_key` for OpenAI-style prompt caching. Default: `true`; set `false` per-provider to opt out. |
 
-`OpenAIResponsesCompat` exposes a smaller subset (`supportsDeveloperRole`, `sendSessionIdHeader`, `supportsLongCacheRetention`). `AnthropicMessagesCompat` exposes `supportsLongCacheRetention`, `sendSessionAffinityHeaders`, `supportsCacheControlOnTools`, `supportsTemperature`, and `allowEmptySignature`. See `src/types.ts` for the authoritative field list.
+`OpenAIResponsesCompat` exposes a smaller subset (`supportsDeveloperRole`, `sendSessionIdHeader`, `supportsLongCacheRetention`). `AnthropicMessagesCompat` exposes `supportsLongCacheRetention`, `sendSessionAffinityHeaders`, `supportsCacheControlOnTools`, `supportsTemperature`, and `allowEmptySignature`. See `src/model/index.ts` and `src/protocol/*` for the authoritative field list.
 
 ### Model Thinking Level Maps
 
@@ -189,39 +189,11 @@ const model: Model<"openai-completions"> = {
 | `openai-responses` | OpenAI Responses API | `streamOpenAIResponses()` |
 | `openai-codex-responses` | OpenAI Codex | `streamOpenAICodexResponses()` |
 
-Built-in providers are lazy-loaded: the provider module is imported on first use, not at application startup.
+Built-in providers are loaded on demand: the provider module is imported on first use, not at application startup.
 
-## Environment Variables
+## Provider Configuration
 
-| Provider | Variable(s) |
-|----------|-------------|
-| Anthropic | `ANTHROPIC_API_KEY`, `ANTHROPIC_OAUTH_TOKEN` |
-| OpenAI | `OPENAI_API_KEY` |
-| Ollama Cloud | `OLLAMA_API_KEY` |
-
-### `getEnvApiKey(provider, env?)`
-
-```typescript
-import { getEnvApiKey } from "@tsuuanmi/pi-ai";
-
-const key = getEnvApiKey("openai"); // checks OPENAI_API_KEY
-const ollamaKey = getEnvApiKey("ollama-cloud"); // checks OLLAMA_API_KEY
-```
-
-### Provider-Scoped Environment Overrides
-
-Pass `env` in stream options to override environment variables per request:
-
-```typescript
-const response = await complete(model, context, {
-  env: {
-    ANTHROPIC_API_KEY: "per-request-key",
-    PI_CACHE_RETENTION: "long",
-  },
-});
-```
-
-Values in `env` take precedence over `process.env` for API key discovery and provider configuration.
+API credentials are supplied by the caller, typically from Pi's `auth.json`. Provider-scoped `env` values are still available for non-credential settings such as `PI_CACHE_RETENTION`, `HTTP_PROXY`, and `HTTPS_PROXY`.
 
 ## Supported Thinking Levels
 

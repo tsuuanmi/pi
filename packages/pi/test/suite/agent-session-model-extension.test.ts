@@ -1,8 +1,9 @@
 import type { AgentTool, ThinkingLevel } from "@tsuuanmi/pi-agent";
-import { fauxAssistantMessage, fauxToolCall, type Model } from "@tsuuanmi/pi-ai";
+import type { Model } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import type { BuildSystemPromptOptions, ExtensionAPI } from "#pi/index";
+import { fauxAssistantMessage, fauxToolCall } from "#pi-test/helpers/provider";
 import { createHarness, getAssistantTexts, type Harness } from "#pi-test/suite/harness";
 
 describe("AgentSession model and extension characterization", () => {

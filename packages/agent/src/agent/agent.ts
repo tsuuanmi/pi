@@ -2,8 +2,8 @@ import {
 	type AssistantMessage,
 	type Message,
 	type Model,
-	type SimpleStreamOptions,
-	streamSimple,
+	type StreamOptions,
+	stream,
 	type Transport,
 } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
@@ -121,8 +121,8 @@ export interface AgentOptions {
 	transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
 	streamFn?: StreamFn;
 	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
-	onPayload?: SimpleStreamOptions["onPayload"];
-	onResponse?: SimpleStreamOptions["onResponse"];
+	onPayload?: StreamOptions["onPayload"];
+	onResponse?: StreamOptions["onResponse"];
 	providerRequestObserver?: ProviderRequestObserver;
 	beforeRun?: (
 		context: { agent: Agent; input?: string; metadata?: Record<string, unknown> },
@@ -215,8 +215,8 @@ export class Agent {
 	public transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
 	public streamFn: StreamFn;
 	public getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
-	public onPayload?: SimpleStreamOptions["onPayload"];
-	public onResponse?: SimpleStreamOptions["onResponse"];
+	public onPayload?: StreamOptions["onPayload"];
+	public onResponse?: StreamOptions["onResponse"];
 	public providerRequestObserver?: ProviderRequestObserver;
 	public beforeRun?: AgentOptions["beforeRun"];
 	public afterRun?: AgentOptions["afterRun"];
@@ -255,7 +255,7 @@ export class Agent {
 		this._state = createMutableAgentState(options.initialState);
 		this.convertToLlm = options.convertToLlm ?? defaultConvertToLlm;
 		this.transformContext = options.transformContext;
-		this.streamFn = options.streamFn ?? streamSimple;
+		this.streamFn = options.streamFn ?? stream;
 		this.getApiKey = options.getApiKey;
 		this.onPayload = options.onPayload;
 		this.onResponse = options.onResponse;

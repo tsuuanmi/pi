@@ -56,7 +56,7 @@ import { getProviderEnvValue } from "@tsuuanmi/pi-ai";
 const apiKey = getProviderEnvValue("ANTHROPIC_API_KEY", { ANTHROPIC_API_KEY: "per-request-key" });
 ```
 
-This function is used internally for API key and proxy resolution. It handles the Bun compiled binary edge case where `process.env` may be empty inside Linux sandboxes. See [Provider Environment](utils/provider-env.md) for the credential lookup helpers (`findEnvKeys`, `getEnvApiKey`).
+This function is used internally for API key and proxy resolution. It handles the Bun compiled binary edge case where `process.env` may be empty inside Linux sandboxes.
 
 ## HTTP Proxy Configuration
 
@@ -97,7 +97,7 @@ import { headersToRecord } from "@tsuuanmi/pi-ai";
 const record = headersToRecord(response.headers);
 ```
 
-See [HTTP Headers](utils/headers.md).
+Used internally by provider transports.
 
 ## Sanitize Unicode Surrogates
 

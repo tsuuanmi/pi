@@ -19,8 +19,8 @@ import {
 	SUMMARIZATION_SYSTEM_PROMPT,
 	serializeConversation,
 } from "@tsuuanmi/pi-agent";
-import type { Model, SimpleStreamOptions } from "@tsuuanmi/pi-ai";
-import { completeSimple } from "@tsuuanmi/pi-ai";
+import type { Content, Model, StreamOptions } from "@tsuuanmi/pi-ai";
+import { complete } from "@tsuuanmi/pi-ai";
 import { estimateTokens } from "#pi/compaction/session-compaction";
 import type { ReadonlySessionManager, SessionEntry } from "#pi/session/session-manager";
 
@@ -336,10 +336,10 @@ export async function generateBranchSummary(
 	// request behavior (timeouts, retries, attribution headers) stays consistent
 	// without running through agent state/events.
 	const context = { systemPrompt: SUMMARIZATION_SYSTEM_PROMPT, messages: summarizationMessages };
-	const requestOptions: SimpleStreamOptions = { apiKey, headers, env, signal, maxTokens: 2048 };
+	const requestOptions: StreamOptions = { apiKey, headers, env, signal, maxTokens: 2048 };
 	const response = streamFn
 		? await (await streamFn(model, context, requestOptions)).result()
-		: await completeSimple(model, context, requestOptions);
+		: await complete(model, context, requestOptions);
 
 	// Check if aborted or errored
 	if (response.stopReason === "aborted") {
@@ -350,8 +350,8 @@ export async function generateBranchSummary(
 	}
 
 	let summary = response.content
-		.filter((c): c is { type: "text"; text: string } => c.type === "text")
-		.map((c) => c.text)
+		.filter((c: Content): c is { type: "text"; text: string } => c.type === "text")
+		.map((c: { type: "text"; text: string }) => c.text)
 		.join("\n");
 
 	// Prepend preamble to provide context about the branch summary

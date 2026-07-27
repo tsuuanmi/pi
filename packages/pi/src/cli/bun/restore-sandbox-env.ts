@@ -5,9 +5,8 @@
  * sandbox environments (e.g. nono on Linux/macOS). On Linux we can recover
  * the environment from `/proc/self/environ`.
  *
- * Keep this in sync with getBunSandboxEnvValue() in
- * packages/ai/src/utils/provider-env.ts. The ai package duplicates the lookup
- * for direct consumers that do not go through this pi entrypoint.
+ * Provider packages should not duplicate this process-level workaround; Pi
+ * restores the environment once at startup.
  */
 
 import { readFileSync } from "node:fs";
