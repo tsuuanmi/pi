@@ -71,8 +71,8 @@ This keeps agent behavior centralized while allowing applications, extensions, a
 - `AgentRuntime`: the execution seam for the default LLM/tool loop or external backends. Runtime implementations stream events and finish with one done or error event.
 - `AgentTool`: the generic tool protocol implemented by host-owned tools.
 - `ToolRegistry`: name-keyed tool registration for hosts and extensions.
-- `Task`: tracks title, description, dependency IDs, requirements, assignee, status, result, and error.
-- `TaskQueue`: owns task snapshots and dependency readiness.
+- `Task`: tracks UUID-backed IDs, title, description, dependency IDs, requirements, assignee, validated/redacted metadata, status, result, and error.
+- `TaskQueue`: owns task snapshots, dependency readiness, queue snapshots, and blocked/skipped lifecycle resolution.
 - `Team`: named roster of agents created with `new Team({ name, agents })`, with inter-agent messaging and typed message events.
 - `Orchestrator`: assigns ready tasks, pipelines newly unblocked work, and executes dependency batches until completion or failure.
 

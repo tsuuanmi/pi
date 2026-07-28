@@ -29,12 +29,26 @@ export * from "#agent/subagents/subagent-receipts";
 export * from "#agent/subagents/subagent-run-identity";
 export * from "#agent/subagents/subagent-types";
 export * from "#agent/subagents/yield-result";
-export { Task, TaskQueue } from "#agent/task/task";
+export type {
+	FormatTaskPromptOptions,
+	TaskBridgeResult,
+	TaskDependencyValidationResult,
+	TaskQueueProgress,
+} from "#agent/task/task";
+export {
+	getTaskDependencyOrder,
+	isTaskReady,
+	Task,
+	TaskQueue,
+	validateTaskDependencies,
+} from "#agent/task/task";
 export type {
 	DependencyPayload,
 	TaskInput,
 	TaskMemoryScope,
+	TaskMetadata,
 	TaskPriority,
+	TaskQueueSnapshot,
 	TaskSnapshot,
 	TaskStatus,
 	TaskVerifyOptions,

@@ -250,21 +250,20 @@ describe("multi-agent primitives", () => {
 				{ id: "same", title: "One", description: "First" },
 				{ id: "same", title: "Two", description: "Second" },
 			]),
-		).rejects.toThrow("Task already exists: same");
+		).rejects.toThrow("Duplicate task id: same");
 	});
 
-	it("blocks missing dependencies and dependency cycles", async () => {
+	it("rejects missing dependencies and dependency cycles", async () => {
 		const team = new Team({ name: "builders", agents: [agentConfig("worker")] });
-		const missing = await runTeam(team, [{ id: "a", title: "A", description: "A", dependsOn: ["missing"] }]);
-		const cycle = await runTeam(team, [
-			{ id: "a", title: "A", description: "A", dependsOn: ["b"] },
-			{ id: "b", title: "B", description: "B", dependsOn: ["a"] },
-		]);
-
-		expect(missing.success).toBe(false);
-		expect(missing.tasks[0]?.status).toBe("blocked");
-		expect(cycle.success).toBe(false);
-		expect(cycle.tasks.map((task) => task.status)).toEqual(["blocked", "blocked"]);
+		await expect(runTeam(team, [{ id: "a", title: "A", description: "A", dependsOn: ["missing"] }])).rejects.toThrow(
+			'Task "A" (a) references unknown dependency "missing".',
+		);
+		await expect(
+			runTeam(team, [
+				{ id: "a", title: "A", description: "A", dependsOn: ["b"] },
+				{ id: "b", title: "B", description: "B", dependsOn: ["a"] },
+			]),
+		).rejects.toThrow("Cyclic dependency detected");
 	});
 
 	it("fails unknown assignees and empty teams deterministically", async () => {

@@ -7,7 +7,8 @@ The `Orchestrator` assigns ready tasks to agents and executes them with dependen
 - Ready tasks are launched as soon as they become runnable.
 - Newly unblocked tasks do not wait for unrelated long-running work to finish.
 - Task snapshots carry `priority`, `role`, `memoryScope`, `dependencyPayload`, and retry settings through scheduling and execution.
-- Failed or impossible dependency chains are marked blocked deterministically.
+- Invalid dependency graphs fail before execution.
+- Failed, skipped, or impossible dependency chains are marked non-success deterministically.
 - Retryable tasks are re-run in place until `maxRetries` is exhausted.
 
 ## Scheduling strategies

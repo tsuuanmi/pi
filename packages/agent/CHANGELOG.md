@@ -7,6 +7,7 @@
 - **agent**: Standardized the public tool module on `src/tool`, with `createToolRegistry()`, `registerTool()`, `Agent.registerTool()`, and `RegisterToolOptions`.
 - **node**: Renamed the process runtime public API to `ProcessRuntime` and `ProcessRuntimeOptions`.
 - **team**: Replaced the positional `Team` constructor with `new Team({ name, agents })`.
+- **task**: Replaced legacy sequential task IDs and permissive task metadata/dependency handling with UUID-backed IDs, strict metadata validation/redaction, skipped lifecycle state, and fail-fast dependency validation.
 
 ### Added
 

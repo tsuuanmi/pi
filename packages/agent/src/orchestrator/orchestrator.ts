@@ -32,7 +32,7 @@ export class Orchestrator {
 
 	async run(team: Team, tasks: readonly (Task | TaskInput)[], options: RunTeamOptions = {}): Promise<RunTeamResult> {
 		const queue = new TaskQueue();
-		for (const task of tasks) queue.add(task);
+		queue.addBatch(tasks);
 		const maxConcurrency = Math.max(1, options.maxConcurrency ?? this.maxConcurrency);
 		const inFlight = new Map<string, Promise<void>>();
 
@@ -60,7 +60,9 @@ export class Orchestrator {
 			}
 		}
 		const snapshots = queue.snapshots();
-		const failed = snapshots.filter((task) => task.status === "failed" || task.status === "blocked");
+		const failed = snapshots.filter(
+			(task) => task.status === "failed" || task.status === "blocked" || task.status === "skipped",
+		);
 		return {
 			success: failed.length === 0,
 			tasks: snapshots,
