@@ -1,8 +1,18 @@
-import type { Context, Message, Model, ProviderResponse, StreamOptions, stream, ToolResultMessage } from "@tsuuanmi/pi-ai";
-import type { AgentContext, AgentToolResult } from "#agent/agent/state/tool";
+import type {
+	Context,
+	Message,
+	Model,
+	ProviderResponse,
+	StreamOptions,
+	stream,
+	ToolResultMessage,
+} from "@tsuuanmi/pi-ai";
 import type { AgentMessage } from "#agent/agent/state/state";
+import type { AgentContext, AgentToolResult } from "#agent/tool/types";
 
-export type StreamFn = (...args: Parameters<typeof stream>) => ReturnType<typeof stream> | Promise<ReturnType<typeof stream>>;
+export type StreamFn = (
+	...args: Parameters<typeof stream>
+) => ReturnType<typeof stream> | Promise<ReturnType<typeof stream>>;
 
 export type ToolExecutionMode = "sequential" | "parallel";
 
@@ -39,7 +49,10 @@ export interface ProviderRequestObserver {
 
 export type QueueMode = "all" | "one-at-a-time";
 
-export type AgentToolCall = Extract<import("@tsuuanmi/pi-ai").AssistantMessage["content"][number], { type: "toolCall" }>;
+export type AgentToolCall = Extract<
+	import("@tsuuanmi/pi-ai").AssistantMessage["content"][number],
+	{ type: "toolCall" }
+>;
 
 export interface BeforeToolCallResult {
 	block?: boolean;

@@ -1,7 +1,7 @@
 import type { TextContent, Tool } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
-import type { AgentMessage } from "#agent/agent/state/state";
 import type { ToolExecutionMode } from "#agent/agent/runtime/config";
+import type { AgentMessage } from "#agent/agent/state/state";
 
 export type AgentToolUpdateCallback<T = any> = (partialResult: AgentToolResult<T>) => void;
 

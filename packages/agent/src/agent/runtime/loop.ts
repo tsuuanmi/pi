@@ -15,7 +15,7 @@ import { LoopDetector, normalizeLoopDetectionOptions } from "#agent/agent/loop-d
 import type { AgentLoopConfig, AgentToolCall, StreamFn } from "#agent/agent/runtime/config";
 import type { AgentEvent } from "#agent/agent/runtime/events";
 import type { AgentMessage } from "#agent/agent/state/state";
-import type { AgentContext, AgentTool, AgentToolResult } from "#agent/agent/state/tool";
+import type { AgentContext, AgentTool, AgentToolResult } from "#agent/tool/types";
 
 let providerRequestSequence = 0;
 

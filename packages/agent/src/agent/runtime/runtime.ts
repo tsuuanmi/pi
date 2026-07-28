@@ -3,7 +3,7 @@ import type { AgentLoopConfig, StreamFn } from "#agent/agent/runtime/config";
 import type { AgentEvent } from "#agent/agent/runtime/events";
 import { runAgentLoop, runAgentLoopContinue } from "#agent/agent/runtime/loop";
 import type { AgentMessage, AgentTraceEvent } from "#agent/agent/state/state";
-import type { AgentContext } from "#agent/agent/state/tool";
+import type { AgentContext } from "#agent/tool/types";
 
 /** Receives events emitted by an agent backend or runtime. */
 export type EventSink = (event: AgentEvent) => Promise<void> | void;

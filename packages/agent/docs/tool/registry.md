@@ -5,17 +5,17 @@
 ## Registry helpers
 
 ```typescript
-import { createToolRegistry, registerTools } from "@tsuuanmi/pi-agent";
+import { createToolRegistry, registerTool } from "@tsuuanmi/pi-agent";
 
 const registry = createToolRegistry();
-registerTools(registry, hostTools);
+registerTool(registry, hostTools);
 
-agent.registerTools(registry.list(), { replace: true });
+agent.registerTool(registry.list(), { replace: true });
 ```
 
 `createToolRegistry(initialTools?)` returns a `ToolRegistry` keyed by tool name. Registering a tool with an existing name replaces the previous tool.
 
-`registerTools(registry, tools, options?)` registers a group of tools. Pass `{ replace: true }` to clear the registry before registration.
+`registerTool(registry, tools, options?)` registers a group of tools. Pass `{ replace: true }` to clear the registry before registration.
 
 ## Tool access policy
 
@@ -39,17 +39,17 @@ Use `ToolAccessPolicy` and `ToolSelectionPolicy` to keep allow/exclude rules con
 ## Agent convenience method
 
 ```typescript
-agent.registerTools(hostTools);
-agent.registerTools(nextTools, { replace: true });
+agent.registerTool(hostTools);
+agent.registerTool(nextTools, { replace: true });
 ```
 
-`Agent.registerTools()` updates `agent.state.tools` using the same name-keyed registry behavior and returns the active tool list.
+`Agent.registerTool()` updates `agent.state.tools` using the same name-keyed registry behavior and returns the active tool list.
 
 ## Standard integration pattern
 
 Use one name-keyed registry at the host boundary, then pass `registry.list()` into the active agent state. Extensions and workflow packages should contribute `AgentTool` instances, not mutate the runtime loop directly.
 
-When tools change during a session, call `agent.registerTools(nextTools)` to merge by name or `agent.registerTools(nextTools, { replace: true })` to replace the active set.
+When tools change during a session, call `agent.registerTool(nextTools)` to merge by name or `agent.registerTool(nextTools, { replace: true })` to replace the active set.
 
 ## Package boundary
 

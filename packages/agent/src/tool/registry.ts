@@ -1,4 +1,4 @@
-import type { AgentTool } from "#agent/agent/state/tool";
+import type { AgentTool } from "#agent/tool/types";
 
 export interface ToolRegistry {
 	register(tool: AgentTool): void;
@@ -12,7 +12,7 @@ export interface ToolRegistry {
 	toMap(): Map<string, AgentTool>;
 }
 
-export interface RegisterToolsOptions {
+export interface RegisterToolOptions {
 	/** Replace any existing registry contents before registering the provided tools. */
 	replace?: boolean;
 }
@@ -56,10 +56,10 @@ export function createToolRegistry(initialTools: Iterable<AgentTool> = []): Tool
 	return registry;
 }
 
-export function registerTools(
+export function registerTool(
 	registry: ToolRegistry,
 	tools: Iterable<AgentTool>,
-	options: RegisterToolsOptions = {},
+	options: RegisterToolOptions = {},
 ): ToolRegistry {
 	if (options.replace) {
 		registry.clear();

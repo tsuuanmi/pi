@@ -16,12 +16,12 @@ Provider adapters and streaming transport live in `@tsuuanmi/pi-ai`. Concrete Pi
 
 Node-only helpers are available from the `@tsuuanmi/pi-agent/node` subpath.
 
-See [Agent documentation](./docs/agent/agent.md), [Tool Registration](./docs/tools/registry.md), and [Orchestrator update logic](./docs/orchestrator/orchestrator.md) for the standard integration patterns.
+See [Agent documentation](./docs/agent/agent.md), [Tool Registration](./docs/tool/registry.md), and [Orchestrator update logic](./docs/orchestrator/orchestrator.md) for the standard integration patterns.
 
 ## Quick Start
 
 ```typescript
-import { Agent, createToolRegistry, registerTools } from "@tsuuanmi/pi-agent";
+import { Agent, createToolRegistry, registerTool } from "@tsuuanmi/pi-agent";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 
@@ -35,7 +35,7 @@ const model: Model<any> = {
 
 const hostTools: AgentTool[] = [/* concrete tools owned by the host package */];
 const registry = createToolRegistry();
-registerTools(registry, hostTools);
+registerTool(registry, hostTools);
 
 const agent = new Agent({
   name: "planner",
@@ -57,7 +57,7 @@ High-level packages should integrate with `@tsuuanmi/pi-agent` by following thes
 
 1. Create or obtain a `Model` and stream transport from `@tsuuanmi/pi-ai`.
 2. Define concrete tools in the host package.
-3. Register tools with `createToolRegistry()`, `registerTools()`, or `Agent.registerTools()`.
+3. Register tools with `createToolRegistry()`, `registerTool()`, or `Agent.registerTool()`.
 4. Subscribe to `AgentEvent` with `agent.subscribe()` for UI, logs, traces, metrics, and progress state.
 5. Use `Agent.run()` for isolated task/orchestration calls and `Agent.prompt()` / `Agent.continue()` for persistent interactive sessions.
 6. Provide a custom `AgentRuntime` only when replacing the built-in LLM/tool loop with an external runtime.
@@ -73,7 +73,7 @@ This keeps agent behavior centralized while allowing applications, extensions, a
 - `ToolRegistry`: name-keyed tool registration for hosts and extensions.
 - `Task`: tracks title, description, dependency IDs, requirements, assignee, status, result, and error.
 - `TaskQueue`: owns task snapshots and dependency readiness.
-- `Team`: named roster of agents.
+- `Team`: named roster of agents with inter-agent messaging and lightweight task coordination helpers.
 - `Orchestrator`: assigns ready tasks, pipelines newly unblocked work, and executes dependency batches until completion or failure.
 
 ## Runtime and Backend Boundary

@@ -8,7 +8,6 @@ export * from "#agent/agent/runtime/runtime";
 export type { AgentRunOptions, AgentRunResult } from "#agent/agent/runtime/types";
 export * from "#agent/agent/state/messages";
 export * from "#agent/agent/state/state";
-export * from "#agent/agent/state/tool";
 export * from "#agent/agent/structured-output";
 export * from "#agent/api/extension-contract";
 export * from "#agent/compaction/message-utils";
@@ -41,5 +40,6 @@ export type {
 	TaskVerifyOptions,
 } from "#agent/task/types";
 export { Team } from "#agent/team/team";
-export * from "#agent/tools/policy";
-export * from "#agent/tools/registry";
+export * from "#agent/tool/policy";
+export * from "#agent/tool/registry";
+export * from "#agent/tool/types";

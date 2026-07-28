@@ -28,7 +28,7 @@ import {
 	createToolRegistry,
 	getStructuredOutputRetryLimit,
 	parseStructuredOutput,
-	registerTools,
+	registerTool,
 	resolveToolSelection,
 	type StructuredOutputOptions,
 	type StructuredOutputResult,
@@ -824,7 +824,7 @@ export class AgentSession {
 				tools.push(tool);
 			}
 		}
-		this.agent.registerTools(tools, { replace: true });
+		this.agent.registerTool(tools, { replace: true });
 
 		// Rebuild base system prompt with new tool set
 		this._baseSystemPrompt = this._rebuildSystemPrompt(validToolNames);
@@ -2221,7 +2221,7 @@ export class AgentSession {
 		);
 
 		const toolRegistry = createToolRegistry(wrappedBuiltInTools);
-		registerTools(toolRegistry, wrappedExtensionTools as AgentTool[]);
+		registerTool(toolRegistry, wrappedExtensionTools as AgentTool[]);
 		this._toolRegistry = toolRegistry;
 
 		const nextActiveToolNames = resolveToolSelection(this._toolRegistry.names(), previousActiveToolNames, {

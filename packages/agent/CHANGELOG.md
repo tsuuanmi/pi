@@ -4,7 +4,7 @@
 
 - **agent**: Collapsed the split simple/runtime Agent surface into one public runtime-capable `Agent`; `RuntimeAgent` is no longer exported.
 - **agent**: Standardized custom runtimes on `AgentRuntime.stream()` and removed split `runPrompt()`/`continue()` runtime methods.
-- **agent**: Renamed tool registry helpers to `createToolRegistry()` and `registerTools()`; renamed registry and options types to `ToolRegistry` and `RegisterToolsOptions`.
+- **agent**: Standardized the public tool module on `src/tool`, with `createToolRegistry()`, `registerTool()`, `Agent.registerTool()`, and `RegisterToolOptions`.
 - **node**: Renamed the process runtime public API to `ProcessRuntime` and `ProcessRuntimeOptions`.
 
 ### Added
@@ -34,7 +34,7 @@
 
 ### Added
 
-- **tools**: Added `createToolRegistry()`, `registerTools()`, and `Agent.registerTools()` as the standard registration seam for host-owned tool implementations.
+- **tool**: Added `createToolRegistry()`, `registerTool()`, and `Agent.registerTool()` as the standard registration seam for host-owned tool implementations.
 - **receipts**: Added `StructuredReceipt` helpers for attaching and validating machine-readable execution receipts.
 - **subagents**: Added shared subagent receipt/type exports, including `SubagentStatus`, `SubagentBackendKind`, `SubagentControlAction`, tmux metadata in `receipt.meta`, and the `visibility` contract (`native`, `tmux`, `auto`) for subagent run requests.
 - **subagents**: Added shared inspect, attach, and kill result types to the `SubagentManager` contract.
@@ -43,7 +43,7 @@
 ### Breaking Changes
 
 - **extensions**: Renamed the extension context continuation-skip flag to `skipAutomaticContinuation` so the lower-layer contract stays feature-agnostic.
-- **tools**: Moved concrete Pi built-in tool helpers for edit diffing, path resolution, bounded output accumulation, shell-output capture, and truncation out of `@tsuuanmi/pi-agent` and into `@tsuuanmi/pi`; `@tsuuanmi/pi-agent` now owns only the generic tool protocol and registration APIs.
+- **tool**: Moved concrete Pi built-in tool helpers for edit diffing, path resolution, bounded output accumulation, shell-output capture, and truncation out of `@tsuuanmi/pi-agent` and into `@tsuuanmi/pi`; `@tsuuanmi/pi-agent` now owns only the generic tool protocol and registration APIs.
 - **agent**: Moved the remaining shared source modules out of `src/harness/` into focused `src/agent`, `src/subagents`, `src/node`, and `src/agent/state` paths; no `src/harness/` compatibility wrappers are provided.
 
 ## [0.2.0] - 2026-07-20

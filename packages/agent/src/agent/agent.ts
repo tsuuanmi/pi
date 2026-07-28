@@ -31,7 +31,6 @@ import {
 } from "#agent/agent/runtime/runtime";
 import type { AgentRunOptions, AgentRunResult } from "#agent/agent/runtime/types";
 import type { AgentMessage, AgentState } from "#agent/agent/state/state";
-import type { AgentContext, AgentTool } from "#agent/agent/state/tool";
 import {
 	createStructuredOutputPrompt,
 	createStructuredOutputRepairPrompt,
@@ -40,7 +39,8 @@ import {
 	type StructuredOutputOptions,
 	type StructuredOutputResult,
 } from "#agent/agent/structured-output";
-import { createToolRegistry, type RegisterToolsOptions, registerTools as registerToolSet } from "#agent/tools/registry";
+import { createToolRegistry, type RegisterToolOptions, registerTool as registerToolSet } from "#agent/tool/registry";
+import type { AgentContext, AgentTool } from "#agent/tool/types";
 
 export type { QueueMode } from "#agent/agent/runtime/config";
 
@@ -311,7 +311,7 @@ export class Agent {
 	}
 
 	/** Register tools by name, replacing existing tools with the same name. */
-	registerTools(tools: Iterable<AgentTool>, options?: RegisterToolsOptions): AgentTool[] {
+	registerTool(tools: Iterable<AgentTool>, options?: RegisterToolOptions): AgentTool[] {
 		const registry = createToolRegistry(options?.replace ? [] : this._state.tools);
 		registerToolSet(registry, tools, options);
 		const nextTools = registry.list();

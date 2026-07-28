@@ -33,6 +33,6 @@ The docs tree mirrors `packages/agent/src` so source modules and their docs use 
 - [`orchestrator/types.md`](orchestrator/types.md) - `src/orchestrator/types.ts`: orchestration config, scheduling, callbacks, and run-result types.
 - [`task/types.md`](task/types.md) - `src/task/types.ts`: task input, snapshot, status, priority, memory scope, dependency-payload, and verification types.
 - [`subagents/index.md`](subagents/index.md) - `src/subagents/*`: `SubagentManager`, durable record/request/result types, factory registry, progress tracking, and yield-result extraction.
-- [`tools/registry.md`](tools/registry.md) - `src/tools/registry.ts` and `src/tools/policy.ts`: `createToolRegistry()`, `registerTools()`, and `Agent.registerTools()` for host-owned tools.
+- [`tool/registry.md`](tool/registry.md) - `src/tool/registry.ts` and `src/tool/policy.ts`: `createToolRegistry()`, `registerTool()`, and `Agent.registerTool()` for host-owned tools.
 
 Legacy compatibility docs and docs for removed source modules are intentionally not retained.

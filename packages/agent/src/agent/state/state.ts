@@ -1,5 +1,5 @@
 import type { Model } from "@tsuuanmi/pi-ai";
-import type { AgentTool } from "#agent/agent/state/tool";
+import type { AgentTool } from "#agent/tool/types";
 
 export type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
