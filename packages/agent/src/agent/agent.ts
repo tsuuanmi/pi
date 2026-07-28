@@ -1,16 +1,13 @@
-import { type AssistantMessage, type Message, type Model, type StreamOptions, stream, type Transport } from "@tsuuanmi/pi-ai";
+import {
+	type AssistantMessage,
+	type Message,
+	type Model,
+	type StreamOptions,
+	stream,
+	type Transport,
+} from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
 import type { LoopDetectionOptions } from "#agent/agent/loop-detection";
-import { DefaultAgentRuntime, type AgentRuntime } from "#agent/agent/runtime/runtime";
-import {
-	createStructuredOutputPrompt,
-	createStructuredOutputRepairPrompt,
-	getStructuredOutputRetryLimit,
-	parseStructuredOutput,
-	type StructuredOutputOptions,
-	type StructuredOutputResult,
-} from "#agent/agent/structured-output";
-import type { AgentEvent } from "#agent/agent/runtime/events";
 import type {
 	AfterToolCallContext,
 	AfterToolCallResult,
@@ -23,9 +20,26 @@ import type {
 	StreamFn,
 	ToolExecutionMode,
 } from "#agent/agent/runtime/config";
+import type { AgentEvent } from "#agent/agent/runtime/events";
+import {
+	type AgentRuntime,
+	type ContinueRequest,
+	DefaultAgentRuntime,
+	type PromptRequest,
+	type RunRequest,
+	type RunResult,
+} from "#agent/agent/runtime/runtime";
 import type { AgentMessage, AgentState } from "#agent/agent/state/state";
 import type { AgentContext, AgentTool } from "#agent/agent/state/tool";
-import { createAgentToolRegistry, type RegisterAgentToolsOptions, registerAgentTools } from "#agent/tools/registry";
+import {
+	createStructuredOutputPrompt,
+	createStructuredOutputRepairPrompt,
+	getStructuredOutputRetryLimit,
+	parseStructuredOutput,
+	type StructuredOutputOptions,
+	type StructuredOutputResult,
+} from "#agent/agent/structured-output";
+import { createToolRegistry, type RegisterToolsOptions, registerTools as registerToolSet } from "#agent/tools/registry";
 import type { AgentRunOptions, AgentRunResult } from "#agent/types";
 
 export type { QueueMode } from "#agent/agent/runtime/config";
@@ -188,7 +202,7 @@ type ActiveRun = {
 };
 
 /**
- * Stateful wrapper around the low-level agent loop.
+ * Stateful agent facade over a pluggable runtime stream.
  *
  * `Agent` owns the current transcript, emits lifecycle events, executes tools,
  * and exposes queueing APIs for steering and follow-up messages.
@@ -297,9 +311,9 @@ export class Agent {
 	}
 
 	/** Register tools by name, replacing existing tools with the same name. */
-	registerTools(tools: Iterable<AgentTool>, options?: RegisterAgentToolsOptions): AgentTool[] {
-		const registry = createAgentToolRegistry(options?.replace ? [] : this._state.tools);
-		registerAgentTools(registry, tools, options);
+	registerTools(tools: Iterable<AgentTool>, options?: RegisterToolsOptions): AgentTool[] {
+		const registry = createToolRegistry(options?.replace ? [] : this._state.tools);
+		registerToolSet(registry, tools, options);
 		const nextTools = registry.list();
 		this._state.tools = nextTools;
 		return nextTools;
@@ -382,6 +396,16 @@ export class Agent {
 		this._state.errorMessage = undefined;
 		this.clearFollowUpQueue();
 		this.clearSteeringQueue();
+	}
+
+	/**
+	 * Tear down the current runtime after the active run settles.
+	 *
+	 * Custom runtimes can release external processes, sockets, or protocol sessions here.
+	 */
+	async dispose(): Promise<void> {
+		await this.waitForIdle();
+		await this.runtime.dispose?.();
 	}
 
 	/** Return a stable state snapshot for observers and tests. */
@@ -563,27 +587,54 @@ export class Agent {
 		options: { skipInitialSteeringPoll?: boolean; signal?: AbortSignal } = {},
 	): Promise<void> {
 		await this.runWithLifecycle(async (signal) => {
-			await this.runtime.runPrompt({
+			const request: PromptRequest = {
+				kind: "prompt",
 				messages,
 				context: this.createContextSnapshot(),
 				config: this.createLoopConfig(options),
-				emit: (event) => this.processEvents(event),
+				emit: async () => {},
 				signal,
 				streamFn: this.streamFn,
-			});
+			};
+			await this.runRuntime(request);
 		}, options.signal);
 	}
 
 	private async runContinuation(): Promise<void> {
 		await this.runWithLifecycle(async (signal) => {
-			await this.runtime.continue({
+			const request: ContinueRequest = {
+				kind: "continue",
 				context: this.createContextSnapshot(),
 				config: this.createLoopConfig(),
-				emit: (event) => this.processEvents(event),
+				emit: async () => {},
 				signal,
 				streamFn: this.streamFn,
-			});
+			};
+			await this.runRuntime(request);
 		});
+	}
+
+	private async runRuntime(request: RunRequest): Promise<RunResult> {
+		let result: RunResult | undefined;
+		for await (const event of this.runtime.stream(request)) {
+			if (event.type === "event") {
+				await this.processEvents(event.event);
+			} else if (event.type === "backend") {
+				void event.backend;
+			} else if (event.type === "warning") {
+				await this.processEvents({ type: "runtime_warning", warning: event.warning });
+			} else if (event.type === "trace") {
+				await this.processEvents({ type: "runtime_trace", trace: event.trace });
+			} else if (event.type === "done") {
+				result = event.result;
+			} else {
+				throw event.error;
+			}
+		}
+		if (!result) {
+			throw new Error("Agent runtime stream ended without a done event");
+		}
+		return result;
 	}
 
 	private createContextSnapshot(): AgentContext {

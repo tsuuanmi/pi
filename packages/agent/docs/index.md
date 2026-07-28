@@ -1,11 +1,11 @@
 # @tsuuanmi/pi-agent Documentation
 
-`@tsuuanmi/pi-agent` contains the lower-layer agent runtime: the `Agent` class, `Orchestrator` scheduling, the agent loop, shared message/tool/event types, proxy streaming, execution-environment abstractions, subagent contracts, and small Node-only utilities.
+`@tsuuanmi/pi-agent` contains the lower-layer agent runtime: the `Agent` class, `Orchestrator` scheduling, the agent loop, shared message/tool/event types, explicit runtime/backend contracts, proxy streaming, execution-environment abstractions, subagent contracts, and small Node-only utilities.
 
 ## Package entry points
 
 - `@tsuuanmi/pi-agent` exports browser-safe/core APIs from `src/index.ts`.
-- `@tsuuanmi/pi-agent/node` exports `NodeExecutionEnv` and Node-only process/file utilities from `src/node.ts`, plus the core APIs.
+- `@tsuuanmi/pi-agent/node` exports `NodeExecutionEnv`, `ProcessRuntime`, and Node-only process/file utilities from `src/node.ts`, plus the core APIs.
 
 ## Core APIs
 
@@ -13,7 +13,7 @@
 - [Agent](agent.md) - `Agent` class, state management, event subscription, message queues, and lifecycle control.
 - [Orchestrator](orchestrator.md) - dependency-aware task batching, scheduling strategies, and structured dependency handoffs.
 - [Types](types.md) - `AgentMessage`, `AgentTool`, `AgentEvent`, `AgentContext`, tool result/update types, and loop option types.
-- [Tool Registration](tools.md) - `createAgentToolRegistry()`, `registerAgentTools()`, and `Agent.registerTools()` for host-owned tools.
+- [Tool Registration](tools.md) - `createToolRegistry()`, `registerTools()`, and `Agent.registerTools()` for host-owned tools.
 - [Messages](messages.md) - non-LLM agent message roles and `convertToLlm()` conversion.
 - [Extension Contract](extension-contract.md) - minimal extension/tool/UI/subagent host contracts shared with higher-level packages.
 - [Proxy Stream](proxy.md) - `streamProxy()` for routing LLM calls through a server proxy.

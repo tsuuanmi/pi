@@ -3,12 +3,19 @@
  * Transforms to Message[] only at the LLM call boundary.
  */
 
-import { type AssistantMessage, type Context, EventStream, stream, type ToolResultMessage, validateToolArguments } from "@tsuuanmi/pi-ai";
+import {
+	type AssistantMessage,
+	type Context,
+	EventStream,
+	stream,
+	type ToolResultMessage,
+	validateToolArguments,
+} from "@tsuuanmi/pi-ai";
 import { LoopDetector, normalizeLoopDetectionOptions } from "#agent/agent/loop-detection";
-import type { AgentEvent } from "#agent/agent/runtime/events";
-import type { AgentContext, AgentTool, AgentToolResult } from "#agent/agent/state/tool";
 import type { AgentLoopConfig, AgentToolCall, StreamFn } from "#agent/agent/runtime/config";
+import type { AgentEvent } from "#agent/agent/runtime/events";
 import type { AgentMessage } from "#agent/agent/state/state";
+import type { AgentContext, AgentTool, AgentToolResult } from "#agent/agent/state/tool";
 
 let providerRequestSequence = 0;
 
@@ -25,7 +32,7 @@ async function observeProviderRequest(callback: (() => void | Promise<void>) | u
 	}
 }
 
-export type AgentEventSink = (event: AgentEvent) => Promise<void> | void;
+type EventSink = (event: AgentEvent) => Promise<void> | void;
 
 /**
  * Start an agent loop with a new prompt message.
@@ -99,7 +106,7 @@ export async function runAgentLoop(
 	prompts: AgentMessage[],
 	context: AgentContext,
 	config: AgentLoopConfig,
-	emit: AgentEventSink,
+	emit: EventSink,
 	signal?: AbortSignal,
 	streamFn?: StreamFn,
 ): Promise<AgentMessage[]> {
@@ -123,7 +130,7 @@ export async function runAgentLoop(
 export async function runAgentLoopContinue(
 	context: AgentContext,
 	config: AgentLoopConfig,
-	emit: AgentEventSink,
+	emit: EventSink,
 	signal?: AbortSignal,
 	streamFn?: StreamFn,
 ): Promise<AgentMessage[]> {
@@ -167,7 +174,7 @@ async function runLoop(
 	newMessages: AgentMessage[],
 	initialConfig: AgentLoopConfig,
 	signal: AbortSignal | undefined,
-	emit: AgentEventSink,
+	emit: EventSink,
 	streamFn?: StreamFn,
 ): Promise<void> {
 	let currentContext = initialContext;
@@ -306,7 +313,7 @@ async function streamAssistantResponse(
 	context: AgentContext,
 	config: AgentLoopConfig,
 	signal: AbortSignal | undefined,
-	emit: AgentEventSink,
+	emit: EventSink,
 	streamFn?: StreamFn,
 ): Promise<AssistantMessage> {
 	// Apply context transform if configured (AgentMessage[] → AgentMessage[])
@@ -454,7 +461,7 @@ async function executeToolCalls(
 	assistantMessage: AssistantMessage,
 	config: AgentLoopConfig,
 	signal: AbortSignal | undefined,
-	emit: AgentEventSink,
+	emit: EventSink,
 ): Promise<ExecutedToolCallBatch> {
 	const toolCalls = assistantMessage.content.filter((c) => c.type === "toolCall");
 	const hasSequentialToolCall = toolCalls.some(
@@ -477,7 +484,7 @@ async function executeToolCallsSequential(
 	toolCalls: AgentToolCall[],
 	config: AgentLoopConfig,
 	signal: AbortSignal | undefined,
-	emit: AgentEventSink,
+	emit: EventSink,
 ): Promise<ExecutedToolCallBatch> {
 	const finalizedCalls: FinalizedToolCallOutcome[] = [];
 	const messages: ToolResultMessage[] = [];
@@ -533,7 +540,7 @@ async function executeToolCallsParallel(
 	toolCalls: AgentToolCall[],
 	config: AgentLoopConfig,
 	signal: AbortSignal | undefined,
-	emit: AgentEventSink,
+	emit: EventSink,
 ): Promise<ExecutedToolCallBatch> {
 	const finalizedCalls: FinalizedToolCallEntry[] = [];
 
@@ -707,7 +714,7 @@ async function prepareToolCall(
 async function executePreparedToolCall(
 	prepared: PreparedToolCall,
 	signal: AbortSignal | undefined,
-	emit: AgentEventSink,
+	emit: EventSink,
 ): Promise<ExecutedToolCallOutcome> {
 	const updateEvents: Promise<void>[] = [];
 	let acceptingUpdates = true;
@@ -799,7 +806,7 @@ function createErrorToolResult(message: string): AgentToolResult<any> {
 	};
 }
 
-async function emitToolExecutionEnd(finalized: FinalizedToolCallOutcome, emit: AgentEventSink): Promise<void> {
+async function emitToolExecutionEnd(finalized: FinalizedToolCallOutcome, emit: EventSink): Promise<void> {
 	await emit({
 		type: "tool_execution_end",
 		toolCallId: finalized.toolCall.id,
@@ -821,7 +828,7 @@ function createToolResultMessage(finalized: FinalizedToolCallOutcome): ToolResul
 	};
 }
 
-async function emitToolResultMessage(toolResultMessage: ToolResultMessage, emit: AgentEventSink): Promise<void> {
+async function emitToolResultMessage(toolResultMessage: ToolResultMessage, emit: EventSink): Promise<void> {
 	await emit({ type: "message_start", message: toolResultMessage });
 	await emit({ type: "message_end", message: toolResultMessage });
 }

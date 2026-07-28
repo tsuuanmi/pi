@@ -5,6 +5,8 @@ import type { AgentMessage, AgentStatus, AgentTraceEvent } from "#agent/agent/st
 export type AgentEvent =
 	| { type: "agent_start" }
 	| { type: "agent_status"; status: AgentStatus; trace?: AgentTraceEvent }
+	| { type: "runtime_trace"; trace: AgentTraceEvent }
+	| { type: "runtime_warning"; warning: { code: string; message: string; details?: Record<string, unknown> } }
 	| { type: "agent_end"; messages: AgentMessage[] }
 	| { type: "turn_start" }
 	| { type: "turn_end"; message: AgentMessage; toolResults: ToolResultMessage[] }

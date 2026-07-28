@@ -21,19 +21,19 @@ import {
 	type AgentMessage,
 	type AgentState,
 	type AgentTool,
-	type AgentToolRegistry,
 	type BashExecutionMessage,
 	type CustomMessage,
-	createAgentToolRegistry,
 	createStructuredOutputPrompt,
 	createStructuredOutputRepairPrompt,
+	createToolRegistry,
 	getStructuredOutputRetryLimit,
 	parseStructuredOutput,
-	registerAgentTools,
+	registerTools,
 	resolveToolSelection,
 	type StructuredOutputOptions,
 	type StructuredOutputResult,
 	type ThinkingLevel,
+	type ToolRegistry,
 } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi-ai";
@@ -351,7 +351,7 @@ export class AgentSession {
 	private _modelRegistry: ModelRegistry;
 
 	// Tool registry for extension getTools/setTools
-	private _toolRegistry: AgentToolRegistry = createAgentToolRegistry();
+	private _toolRegistry: ToolRegistry = createToolRegistry();
 	private _toolDefinitions: Map<string, ToolDefinitionEntry> = new Map();
 	private _toolPromptSnippets: Map<string, string> = new Map();
 	private _toolPromptGuidelines: Map<string, string[]> = new Map();
@@ -2220,8 +2220,8 @@ export class AgentSession {
 			runner,
 		);
 
-		const toolRegistry = createAgentToolRegistry(wrappedBuiltInTools);
-		registerAgentTools(toolRegistry, wrappedExtensionTools as AgentTool[]);
+		const toolRegistry = createToolRegistry(wrappedBuiltInTools);
+		registerTools(toolRegistry, wrappedExtensionTools as AgentTool[]);
 		this._toolRegistry = toolRegistry;
 
 		const nextActiveToolNames = resolveToolSelection(this._toolRegistry.names(), previousActiveToolNames, {

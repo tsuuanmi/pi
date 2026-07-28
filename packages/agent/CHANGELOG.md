@@ -4,10 +4,17 @@
 
 - **agent**: Collapsed the split simple/runtime Agent surface into one public runtime-capable `Agent`; `RuntimeAgent` is no longer exported.
 - **exports**: Removed the `@tsuuanmi/pi-agent/node` package export.
+- **agent**: Standardized custom runtimes on `AgentRuntime.stream()` and removed split `runPrompt()`/`continue()` runtime methods.
+- **agent**: Renamed tool registry helpers to `createToolRegistry()` and `registerTools()`; renamed registry and options types to `ToolRegistry` and `RegisterToolsOptions`.
+- **node**: Renamed the process runtime public API to `ProcessRuntime` and `ProcessRuntimeOptions`.
 
 ### Added
 
 - **agent**: Added `AgentBackend` and `AgentRuntime` as the standard execution seam for swapping the built-in loop with external backends.
+- **agent**: Added optional runtime teardown via `Agent.dispose()` and `AgentRuntime.dispose()` for external backend cleanup.
+- **agent**: Added `AgentRuntime.stream()` as the backend seam for prompt and continuation runs, with runtime event, done, and error stream events.
+- **agent**: Added `RunResult` for structured runtime completion metadata, backend metadata, warnings, traces, and loop/max-turn flags.
+- **node**: Added `ProcessRuntime` as the standard Node process backend seam.
 - **agent**: Added `ToolAccessPolicy` and `ToolSelectionPolicy` helpers for shared tool gating and active-tool resolution.
 - **agent**: Added a `maxTurns` guard for graceful agent-loop termination before runaway provider calls.
 - **agent**: Added context-pruning helpers for sliding-window transforms that preserve assistant tool calls with matching tool results.
@@ -26,7 +33,7 @@
 
 ### Added
 
-- **tools**: Added `createAgentToolRegistry()`, `registerAgentTools()`, and `Agent.registerTools()` as the standard registration seam for host-owned tool implementations.
+- **tools**: Added `createToolRegistry()`, `registerTools()`, and `Agent.registerTools()` as the standard registration seam for host-owned tool implementations.
 - **receipts**: Added `StructuredReceipt` helpers for attaching and validating machine-readable execution receipts.
 - **subagents**: Added shared subagent receipt/type exports, including `SubagentStatus`, `SubagentBackendKind`, `SubagentControlAction`, tmux metadata in `receipt.meta`, and the `visibility` contract (`native`, `tmux`, `auto`) for subagent run requests.
 - **subagents**: Added shared inspect, attach, and kill result types to the `SubagentManager` contract.

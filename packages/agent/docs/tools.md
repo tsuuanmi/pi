@@ -5,16 +5,16 @@
 ## Registry helpers
 
 ```typescript
-import { createAgentToolRegistry, registerAgentTools } from "@tsuuanmi/pi-agent";
+import { createToolRegistry, registerTools } from "@tsuuanmi/pi-agent";
 
-const registry = createAgentToolRegistry();
-registerAgentTools(registry, hostTools);
+const registry = createToolRegistry();
+registerTools(registry, hostTools);
 const tools = registry.list();
 ```
 
-`createAgentToolRegistry(initialTools?)` returns an `AgentToolRegistry` keyed by tool name. Registering a tool with an existing name replaces the previous tool.
+`createToolRegistry(initialTools?)` returns a `ToolRegistry` keyed by tool name. Registering a tool with an existing name replaces the previous tool.
 
-`registerAgentTools(registry, tools, options?)` registers a group of tools. Pass `{ replace: true }` to clear the registry before registration.
+`registerTools(registry, tools, options?)` registers a group of tools. Pass `{ replace: true }` to clear the registry before registration.
 
 ## Tool access policy
 

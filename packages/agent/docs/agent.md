@@ -108,10 +108,14 @@ When the last message is an assistant message, `continue()` first drains queued 
 
 ## Runner / backend seam
 
-`Agent` now delegates turn production through an `AgentRuntime`.
+`Agent` delegates turn production through an `AgentRuntime`.
 
 - Use the default runtime for the built-in LLM/tool loop.
 - Provide a custom runtime when you want to swap in external backends.
+- Implement `stream()` as the single runtime execution seam; split `runPrompt()`/`continue()` and run-to-completion wrapper methods are intentionally not part of the standard contract.
+- Emit runtime backend, warning, and trace stream events, then finish with a single done or error event.
+- Return a `RunResult` with backend metadata, produced messages, final output text, assistant turn count, completed tool-call summaries, warnings, traces, loop/max-turn flags, timing, and coarse status.
+- Runtime implementations may expose `dispose()` for teardown of external resources.
 - Node-specific backend implementations belong under `@tsuuanmi/pi-agent/node`.
 
 ## Message Queuing
@@ -188,6 +192,7 @@ agent.signal;                // Active abort signal for the current run, or unde
 agent.abort();                // Abort the current run
 agent.waitForIdle();          // Promise that resolves after the current run and awaited agent_end listeners settle
 agent.reset();                // Clear transcript, runtime state, and queued messages
+agent.dispose();              // Wait for the active run to settle, then tear down the runtime
 ```
 
 `waitForIdle()` resolves immediately (to a fulfilled promise) when no run is active.
