@@ -3,7 +3,6 @@
 ### Breaking Changes
 
 - **agent**: Collapsed the split simple/runtime Agent surface into one public runtime-capable `Agent`; `RuntimeAgent` is no longer exported.
-- **exports**: Removed the `@tsuuanmi/pi-agent/node` package export.
 - **agent**: Standardized custom runtimes on `AgentRuntime.stream()` and removed split `runPrompt()`/`continue()` runtime methods.
 - **agent**: Renamed tool registry helpers to `createToolRegistry()` and `registerTools()`; renamed registry and options types to `ToolRegistry` and `RegisterToolsOptions`.
 - **node**: Renamed the process runtime public API to `ProcessRuntime` and `ProcessRuntimeOptions`.
@@ -27,7 +26,7 @@
 
 - **docs**: Reorganized package docs to mirror `src/`, removed legacy/unused docs, and updated package, agent, tool, and observability docs to reflect the current `AgentOptions`, runtime seam, tool registration, and optional protocol-runtime boundaries.
 - **exports**: Restored shared public exports from `@tsuuanmi/pi-agent`, including structured receipt helpers and the Node helper subpath.
-- **agent**: Split the monolithic agent type module into focused runtime, state, event, and tool type modules.
+- **agent**: Split the monolithic agent type module into focused runtime, task, and orchestrator type modules, and moved message helpers under agent state.
 - **agent**: Refactored the public `Agent` to route prompt and continuation execution through the new runtime seam without changing behavior.
 - **pi**: Centralized active-tool selection in the shared tool policy helpers.
 
@@ -45,7 +44,7 @@
 
 - **extensions**: Renamed the extension context continuation-skip flag to `skipAutomaticContinuation` so the lower-layer contract stays feature-agnostic.
 - **tools**: Moved concrete Pi built-in tool helpers for edit diffing, path resolution, bounded output accumulation, shell-output capture, and truncation out of `@tsuuanmi/pi-agent` and into `@tsuuanmi/pi`; `@tsuuanmi/pi-agent` now owns only the generic tool protocol and registration APIs.
-- **agent**: Moved the remaining shared source modules out of `src/harness/` into top-level `src/env`, `src/subagents`, `src/utils`, and `src/messages.ts` paths; no `src/harness/` compatibility wrappers are provided.
+- **agent**: Moved the remaining shared source modules out of `src/harness/` into focused `src/agent`, `src/subagents`, `src/node`, and `src/agent/state` paths; no `src/harness/` compatibility wrappers are provided.
 
 ## [0.2.0] - 2026-07-20
 

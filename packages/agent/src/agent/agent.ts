@@ -29,6 +29,7 @@ import {
 	type RunRequest,
 	type RunResult,
 } from "#agent/agent/runtime/runtime";
+import type { AgentRunOptions, AgentRunResult } from "#agent/agent/runtime/types";
 import type { AgentMessage, AgentState } from "#agent/agent/state/state";
 import type { AgentContext, AgentTool } from "#agent/agent/state/tool";
 import {
@@ -40,7 +41,6 @@ import {
 	type StructuredOutputResult,
 } from "#agent/agent/structured-output";
 import { createToolRegistry, type RegisterToolsOptions, registerTools as registerToolSet } from "#agent/tools/registry";
-import type { AgentRunOptions, AgentRunResult } from "#agent/types";
 
 export type { QueueMode } from "#agent/agent/runtime/config";
 

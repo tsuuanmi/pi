@@ -1,7 +1,5 @@
 // Architecture adapted from open-multi-agent (MIT).
 import type { Agent } from "#agent/agent/agent";
-import { extractTaskBridgeResult, formatTaskPrompt, type Task, TaskQueue } from "#agent/task";
-import type { Team } from "#agent/team";
 import type {
 	OrchestratorConfig,
 	RunTeamOptions,
@@ -9,10 +7,10 @@ import type {
 	SchedulerWarning,
 	SchedulingStrategy,
 	SchedulingWeights,
-	TaskInput,
-	TaskPriority,
-	TaskSnapshot,
-} from "#agent/types";
+} from "#agent/orchestrator/types";
+import { extractTaskBridgeResult, formatTaskPrompt, type Task, TaskQueue } from "#agent/task/task";
+import type { TaskInput, TaskPriority, TaskSnapshot } from "#agent/task/types";
+import type { Team } from "#agent/team/team";
 
 const DEFAULT_SCHEDULING_WEIGHTS: SchedulingWeights = { fit: 0.7, load: 0.3 };
 const DEFAULT_RETRY_DELAY_MS = 1000;

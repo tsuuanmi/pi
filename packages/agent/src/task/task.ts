@@ -1,12 +1,6 @@
 // Architecture adapted from open-multi-agent (MIT).
-import type {
-	AgentRunResult,
-	DependencyPayload,
-	TaskInput,
-	TaskPriority,
-	TaskSnapshot,
-	TaskStatus,
-} from "#agent/types";
+import type { AgentRunResult } from "#agent/agent/runtime/types";
+import type { DependencyPayload, TaskInput, TaskPriority, TaskSnapshot, TaskStatus } from "#agent/task/types";
 
 export interface FormatTaskPromptOptions {
 	task: TaskSnapshot;

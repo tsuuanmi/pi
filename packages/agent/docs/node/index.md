@@ -1,6 +1,6 @@
 # Node Entry Point
 
-These helpers are exported only from `@tsuuanmi/pi-agent/node` via `src/node.ts`.
+These helpers are exported only from `@tsuuanmi/pi-agent/node` via `src/node/node.ts`.
 
 ## Child process helpers
 

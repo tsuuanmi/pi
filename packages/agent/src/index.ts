@@ -5,13 +5,23 @@ export * from "#agent/agent/loop-detection";
 export * from "#agent/agent/runtime/config";
 export * from "#agent/agent/runtime/events";
 export * from "#agent/agent/runtime/runtime";
+export type { AgentRunOptions, AgentRunResult } from "#agent/agent/runtime/types";
+export * from "#agent/agent/state/messages";
 export * from "#agent/agent/state/state";
 export * from "#agent/agent/state/tool";
 export * from "#agent/agent/structured-output";
 export * from "#agent/api/extension-contract";
 export * from "#agent/compaction/message-utils";
-export * from "#agent/messages";
-export { Orchestrator, runTeam } from "#agent/orchestrator";
+export { Orchestrator, runTeam } from "#agent/orchestrator/orchestrator";
+export type {
+	OrchestratorConfig,
+	RunTeamOptions,
+	RunTeamResult,
+	SchedulerWarning,
+	SchedulingStrategy,
+	SchedulingWeights,
+	TaskExecutionContext,
+} from "#agent/orchestrator/types";
 export * from "#agent/receipts/structured-receipt";
 export * from "#agent/subagents/subagent-manager";
 export * from "#agent/subagents/subagent-manager-factory";
@@ -20,25 +30,16 @@ export * from "#agent/subagents/subagent-receipts";
 export * from "#agent/subagents/subagent-run-identity";
 export * from "#agent/subagents/subagent-types";
 export * from "#agent/subagents/yield-result";
-export { Task, TaskQueue } from "#agent/task";
-export { Team } from "#agent/team";
-export * from "#agent/tools/policy";
-export * from "#agent/tools/registry";
+export { Task, TaskQueue } from "#agent/task/task";
 export type {
-	AgentRunOptions,
-	AgentRunResult,
 	DependencyPayload,
-	OrchestratorConfig,
-	RunTeamOptions,
-	RunTeamResult,
-	SchedulerWarning,
-	SchedulingStrategy,
-	SchedulingWeights,
-	TaskExecutionContext,
 	TaskInput,
 	TaskMemoryScope,
 	TaskPriority,
 	TaskSnapshot,
 	TaskStatus,
 	TaskVerifyOptions,
-} from "#agent/types";
+} from "#agent/task/types";
+export { Team } from "#agent/team/team";
+export * from "#agent/tools/policy";
+export * from "#agent/tools/registry";
