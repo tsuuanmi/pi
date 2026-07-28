@@ -39,6 +39,9 @@ export type {
 	TaskStatus,
 	TaskVerifyOptions,
 } from "#agent/task/types";
+export type { Message, MessageBusSnapshot, MessageReadStateSnapshot, MessageSnapshot } from "#agent/team/messaging";
+export { MessageBus } from "#agent/team/messaging";
+export type { TeamEvent, TeamEventName, TeamOptions } from "#agent/team/team";
 export { Team } from "#agent/team/team";
 export * from "#agent/tool/policy";
 export * from "#agent/tool/registry";

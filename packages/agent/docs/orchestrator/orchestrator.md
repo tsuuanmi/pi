@@ -52,10 +52,13 @@ The orchestrator formats each task as a normal Agent prompt and calls `agent.run
 import { Agent, Orchestrator, Team } from "@tsuuanmi/pi-agent";
 
 const orchestrator = new Orchestrator({ strategy: "composite" });
-const team = new Team("builders", [
-  new Agent({ name: "writer", capabilities: ["write"], initialState: { model, systemPrompt, tools }, streamFn }),
-  new Agent({ name: "reviewer", capabilities: ["review"], initialState: { model, systemPrompt, tools }, streamFn }),
-]);
+const team = new Team({
+  name: "builders",
+  agents: [
+    new Agent({ name: "writer", capabilities: ["write"], initialState: { model, systemPrompt, tools }, streamFn }),
+    new Agent({ name: "reviewer", capabilities: ["review"], initialState: { model, systemPrompt, tools }, streamFn }),
+  ],
+});
 
 const result = await orchestrator.run(team, [
   { id: "draft", title: "Draft", description: "Write the draft", dependencyPayload: "structured" },

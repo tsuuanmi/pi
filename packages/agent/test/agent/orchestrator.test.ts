@@ -155,9 +155,60 @@ describe("multi-agent primitives", () => {
 		expect(adapter.calls).toEqual(["Build it"]);
 	});
 
+	it("routes team messages, tracks read state, and validates the roster", () => {
+		const team = new Team({
+			name: "builders",
+			agents: [agentConfig("writer"), agentConfig("reviewer"), agentConfig("observer")],
+		});
+		const events: string[] = [];
+		const received: string[] = [];
+		team.on("message", (event) => events.push(`${event.type}:${event.agent}:${event.message.to}`));
+		team.on("broadcast", (event) => events.push(`${event.type}:${event.agent}:${event.message.to}`));
+		const unsubscribe = team.subscribe("reviewer", (message) => received.push(message.content));
+
+		const direct = team.sendMessage("writer", "reviewer", "please review");
+		const broadcast = team.broadcast("reviewer", "review complete");
+
+		expect(events).toEqual(["message:writer:reviewer", "broadcast:reviewer:*"]);
+		expect(received).toEqual(["please review"]);
+		expect(team.getMessages("reviewer").map((message) => message.content)).toEqual(["please review"]);
+		expect(team.getMessages("writer").map((message) => message.content)).toEqual(["review complete"]);
+		expect(team.getMessages("observer").map((message) => message.content)).toEqual(["review complete"]);
+		expect(team.getUnreadMessages("reviewer").map((message) => message.id)).toEqual([direct.id]);
+		team.markMessagesRead("reviewer", [direct.id]);
+		expect(team.getUnreadMessages("reviewer")).toEqual([]);
+		expect(team.getConversation("writer", "reviewer").map((message) => message.content)).toEqual(["please review"]);
+
+		const returned = team.getMessages("writer")[0]!;
+		returned.timestamp.setUTCFullYear(2000);
+		expect(team.getMessages("writer")[0]!.timestamp.getUTCFullYear()).not.toBe(2000);
+
+		unsubscribe();
+		team.sendMessage("writer", "reviewer", "second pass");
+		expect(received).toEqual(["please review"]);
+
+		const restored = new Team({
+			name: "builders",
+			agents: [agentConfig("writer"), agentConfig("reviewer"), agentConfig("observer")],
+		});
+		restored.restoreMessageBus(team.snapshotMessageBus());
+		expect(restored.getMessages("reviewer").map((message) => message.content)).toEqual([
+			"please review",
+			"second pass",
+		]);
+		expect(() => team.sendMessage("writer", "missing", "nope")).toThrow("Unknown agent: missing");
+		expect(() =>
+			team.restoreMessageBus({
+				version: 1,
+				messages: [{ ...broadcast, from: "missing", timestamp: broadcast.timestamp.toISOString() }],
+				readState: [],
+			}),
+		).toThrow("Unknown agent: missing");
+	});
+
 	it("executes dependency-ready tasks and injects dependency output", async () => {
 		const adapter = new EchoStream();
-		const team = new Team("builders", [agentConfig("worker", adapter)]);
+		const team = new Team({ name: "builders", agents: [agentConfig("worker", adapter)] });
 		const result = await runTeam(team, [
 			new Task({ id: "plan", title: "Plan", description: "Plan the work" }),
 			new Task({ id: "build", title: "Build", description: "Build from the plan", dependsOn: ["plan"] }),
@@ -172,10 +223,13 @@ describe("multi-agent primitives", () => {
 	it("assigns capability-matched tasks to matching agents", async () => {
 		const writerAdapter = new EchoStream();
 		const reviewerAdapter = new EchoStream();
-		const team = new Team("review", [
-			agentConfig("writer", writerAdapter, ["write"]),
-			agentConfig("reviewer", reviewerAdapter, ["review"]),
-		]);
+		const team = new Team({
+			name: "review",
+			agents: [
+				agentConfig("writer", writerAdapter, ["write"]),
+				agentConfig("reviewer", reviewerAdapter, ["review"]),
+			],
+		});
 		const orchestrator = new Orchestrator({ strategy: "capability-match" });
 
 		const result = await orchestrator.run(team, [
@@ -189,7 +243,7 @@ describe("multi-agent primitives", () => {
 	});
 
 	it("rejects duplicate task ids", async () => {
-		const team = new Team("builders", [agentConfig("worker")]);
+		const team = new Team({ name: "builders", agents: [agentConfig("worker")] });
 
 		await expect(
 			runTeam(team, [
@@ -200,7 +254,7 @@ describe("multi-agent primitives", () => {
 	});
 
 	it("blocks missing dependencies and dependency cycles", async () => {
-		const team = new Team("builders", [agentConfig("worker")]);
+		const team = new Team({ name: "builders", agents: [agentConfig("worker")] });
 		const missing = await runTeam(team, [{ id: "a", title: "A", description: "A", dependsOn: ["missing"] }]);
 		const cycle = await runTeam(team, [
 			{ id: "a", title: "A", description: "A", dependsOn: ["b"] },
@@ -214,18 +268,18 @@ describe("multi-agent primitives", () => {
 	});
 
 	it("fails unknown assignees and empty teams deterministically", async () => {
-		const team = new Team("builders", [agentConfig("worker")]);
+		const team = new Team({ name: "builders", agents: [agentConfig("worker")] });
 		const result = await runTeam(team, [{ id: "a", title: "A", description: "A", assignee: "missing" }]);
 		expect(result.success).toBe(false);
 		expect(result.tasks[0]?.status).toBe("failed");
 		expect(result.tasks[0]?.error).toBe("Unknown assignee: missing");
-		await expect(runTeam(new Team("empty"), [{ id: "a", title: "A", description: "A" }])).rejects.toThrow(
+		await expect(runTeam(new Team({ name: "empty" }), [{ id: "a", title: "A", description: "A" }])).rejects.toThrow(
 			"Cannot run a team without agents.",
 		);
 	});
 
 	it("blocks tasks whose prerequisites fail", async () => {
-		const team = new Team("builders", [agentConfig("worker", new EchoStream({ fail: true }))]);
+		const team = new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream({ fail: true }))] });
 		const result = await runTeam(team, [
 			{ id: "a", title: "A", description: "A" },
 			{ id: "b", title: "B", description: "B", dependsOn: ["a"] },
@@ -239,7 +293,7 @@ describe("multi-agent primitives", () => {
 		const adapter = new EchoStream({ delayMs: 5 });
 		const starts: string[] = [];
 		const result = await runTeam(
-			new Team("builders", [agentConfig("worker", adapter)]),
+			new Team({ name: "builders", agents: [agentConfig("worker", adapter)] }),
 			[
 				{ id: "a", title: "A", description: "A" },
 				{ id: "b", title: "B", description: "B" },
@@ -257,7 +311,7 @@ describe("multi-agent primitives", () => {
 		const controller = new AbortController();
 		controller.abort();
 		const result = await runTeam(
-			new Team("builders", [agentConfig("worker", new EchoStream())]),
+			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
 			[{ id: "a", title: "A", description: "A" }],
 			{ signal: controller.signal },
 		);
@@ -286,7 +340,7 @@ describe("multi-agent primitives", () => {
 		}
 
 		await runTeam(
-			new Team("builders", [agentConfig("worker", new TimingStream())]),
+			new Team({ name: "builders", agents: [agentConfig("worker", new TimingStream())] }),
 			[
 				{ id: "fast", title: "Fast", description: "Fast" },
 				{ id: "slow", title: "Slow", description: "Slow" },
@@ -304,10 +358,13 @@ describe("multi-agent primitives", () => {
 		const writerAdapter = new EchoStream();
 		const reviewerAdapter = new EchoStream();
 		const result = await runTeam(
-			new Team("builders", [
-				agentConfig("writer", writerAdapter, ["write"]),
-				agentConfig("reviewer", reviewerAdapter, ["review"]),
-			]),
+			new Team({
+				name: "builders",
+				agents: [
+					agentConfig("writer", writerAdapter, ["write"]),
+					agentConfig("reviewer", reviewerAdapter, ["review"]),
+				],
+			}),
 			[
 				{ id: "review", title: "Review", description: "Review", requires: ["review"] },
 				{ id: "missing", title: "Deploy", description: "Deploy", requires: ["deploy"] },
@@ -323,7 +380,7 @@ describe("multi-agent primitives", () => {
 
 	it("passes structured dependency payloads to dependent tasks", async () => {
 		const adapter = new StructuredStream();
-		const result = await runTeam(new Team("builders", [agentConfig("worker", adapter)]), [
+		const result = await runTeam(new Team({ name: "builders", agents: [agentConfig("worker", adapter)] }), [
 			{ id: "produce", title: "Produce", description: "Produce structured output", dependencyPayload: "structured" },
 			{ id: "consume", title: "Consume", description: "Consume structured output", dependsOn: ["produce"] },
 		]);

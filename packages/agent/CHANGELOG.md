@@ -6,6 +6,7 @@
 - **agent**: Standardized custom runtimes on `AgentRuntime.stream()` and removed split `runPrompt()`/`continue()` runtime methods.
 - **agent**: Standardized the public tool module on `src/tool`, with `createToolRegistry()`, `registerTool()`, `Agent.registerTool()`, and `RegisterToolOptions`.
 - **node**: Renamed the process runtime public API to `ProcessRuntime` and `ProcessRuntimeOptions`.
+- **team**: Replaced the positional `Team` constructor with `new Team({ name, agents })`.
 
 ### Added
 
@@ -20,6 +21,7 @@
 - **agent**: Added isolated `run()`, state/history accessors, lifecycle run hooks, status tracing events, capabilities, and per-agent task serialization.
 - **orchestrator**: Added dependency-aware pipelining, composite scheduling, structured dependency handoffs, task priority ordering, and retry-aware task execution.
 - **task**: Added richer task metadata for memory scope, priority, retry settings, role hints, and verification payloads.
+- **team**: Added inter-agent messaging, message snapshots, subscriptions, and typed team events.
 - **attribution**: Added MIT attribution for the open-multi-agent architecture.
 
 ### Fixed

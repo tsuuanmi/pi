@@ -73,7 +73,7 @@ This keeps agent behavior centralized while allowing applications, extensions, a
 - `ToolRegistry`: name-keyed tool registration for hosts and extensions.
 - `Task`: tracks title, description, dependency IDs, requirements, assignee, status, result, and error.
 - `TaskQueue`: owns task snapshots and dependency readiness.
-- `Team`: named roster of agents with inter-agent messaging and lightweight task coordination helpers.
+- `Team`: named roster of agents created with `new Team({ name, agents })`, with inter-agent messaging and typed message events.
 - `Orchestrator`: assigns ready tasks, pipelines newly unblocked work, and executes dependency batches until completion or failure.
 
 ## Runtime and Backend Boundary
