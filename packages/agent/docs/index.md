@@ -1,30 +1,36 @@
 # @tsuuanmi/pi-agent Documentation
 
-`@tsuuanmi/pi-agent` contains the lower-layer agent runtime: the `Agent` class, `Orchestrator` scheduling, the agent loop, shared message/tool/event types, explicit runtime/backend contracts, proxy streaming, execution-environment abstractions, subagent contracts, and small Node-only utilities.
+`@tsuuanmi/pi-agent` contains the lower-layer standard agent runtime: the `Agent` class, `Orchestrator` scheduling, the agent loop, shared message/tool/event types, explicit runtime/backend contracts, execution-environment abstractions, subagent contracts, and small Node-only utilities. Higher-level packages import these contracts, register concrete tools, and attach UI/telemetry without reimplementing agent behavior.
 
 ## Package entry points
 
 - `@tsuuanmi/pi-agent` exports browser-safe/core APIs from `src/index.ts`.
 - `@tsuuanmi/pi-agent/node` exports `NodeExecutionEnv`, `ProcessRuntime`, and Node-only process/file utilities from `src/node.ts`, plus the core APIs.
 
-## Core APIs
+## Standard package boundary
 
-- [Agent Loop](agent-loop.md) - `agentLoop()`, `agentLoopContinue()`, turn execution, tool execution, steering, follow-up, and abort handling.
-- [Agent](agent.md) - `Agent` class, state management, event subscription, message queues, and lifecycle control.
-- [Orchestrator](orchestrator.md) - dependency-aware task batching, scheduling strategies, and structured dependency handoffs.
-- [Types](types.md) - `AgentMessage`, `AgentTool`, `AgentEvent`, `AgentContext`, tool result/update types, and loop option types.
-- [Tool Registration](tools.md) - `createToolRegistry()`, `registerTools()`, and `Agent.registerTools()` for host-owned tools.
-- [Messages](messages.md) - non-LLM agent message roles and `convertToLlm()` conversion.
-- [Extension Contract](extension-contract.md) - minimal extension/tool/UI/subagent host contracts shared with higher-level packages.
-- [Proxy Stream](proxy.md) - `streamProxy()` for routing LLM calls through a server proxy.
-- [Observability](observability.md) - lifecycle events and instrumentation points emitted by `Agent` and the loop.
+- `@tsuuanmi/pi-agent` owns agent behavior, runtime seams, message/event/tool contracts, orchestration primitives, and shared subagent contracts.
+- `@tsuuanmi/pi-ai` owns provider/model transport and streaming adapters.
+- Host packages such as `@tsuuanmi/pi` own concrete tools and register them with `AgentTool` / `ToolRegistry` APIs.
+- Node-only runtimes and utilities are exported from `@tsuuanmi/pi-agent/node`.
+- Protocol-specific integrations such as ACP should be implemented as `AgentRuntime` providers in the Node subpath or optional integration packages, not by adding protocol dependencies to the browser-safe core entry point.
 
-## Shared contracts and utilities
+This package intentionally differs from monolithic config-driven agents: it centralizes reusable behavior and contracts while keeping provider transport, concrete tools, and optional protocol backends pluggable.
 
-- [Execution Environment Types](env/nodejs.md) - `ExecutionEnv`, `FileSystem`, `Shell`, typed `Result`, `FileError`, `ExecutionError`, and `NodeExecutionEnv`.
-- [Subagents](subagents.md) - `SubagentManager`, durable record/request/result types, factory registry, progress tracking, and yield-result extraction.
-- [Node Utilities](utils/node.md) - Node-only child-process, JSONL, path, and file-mutation queue helpers.
+## Documentation map
 
-## Historical docs
+The docs tree mirrors `packages/agent/src` so source modules and their docs use the same folder structure.
 
-The following files are retained as compatibility notes for APIs that no longer live in `packages/agent/src`: [AgentHarness](legacy/agent-harness.md), [Durable Harness](legacy/durable-harness.md), [Hooks](legacy/hooks.md), [Compaction](legacy/compaction.md), [Session](legacy/session.md), [Prompt Templates](legacy/prompt-templates.md), [Skills](legacy/skills.md), and [System Prompt](legacy/system-prompt.md).
+- [`agent/agent.md`](agent/agent.md) - `src/agent/agent.ts`: `Agent` class, state management, event subscription, message queues, and lifecycle control.
+- [`agent/runtime/loop.md`](agent/runtime/loop.md) - `src/agent/runtime/loop.ts`: `agentLoop()`, `agentLoopContinue()`, turn execution, tool execution, steering, follow-up, and abort handling.
+- [`agent/runtime/events.md`](agent/runtime/events.md) - `src/agent/runtime/events.ts`: lifecycle events and instrumentation points emitted by `Agent` and the loop.
+- [`api/extension-contract.md`](api/extension-contract.md) - `src/api/extension-contract.ts`: minimal extension/tool/UI/subagent host contracts shared with higher-level packages.
+- [`messages.md`](messages.md) - `src/messages.ts`: non-LLM agent message roles and `convertToLlm()` conversion.
+- [`node/index.md`](node/index.md) - `src/node.ts` and `src/node/*`: Node-only child-process, process-runtime, JSONL, path, and file-mutation queue helpers.
+- [`node/env/nodejs.md`](node/env/nodejs.md) - `src/node/env/*`: `ExecutionEnv`, `FileSystem`, `Shell`, typed `Result`, `FileError`, `ExecutionError`, and `NodeExecutionEnv`.
+- [`orchestrator.md`](orchestrator.md) - `src/orchestrator.ts`: dependency-aware task batching, scheduling strategies, and structured dependency handoffs.
+- [`subagents/index.md`](subagents/index.md) - `src/subagents/*`: `SubagentManager`, durable record/request/result types, factory registry, progress tracking, and yield-result extraction.
+- [`tools/registry.md`](tools/registry.md) - `src/tools/registry.ts` and `src/tools/policy.ts`: `createToolRegistry()`, `registerTools()`, and `Agent.registerTools()` for host-owned tools.
+- [`types.md`](types.md) - `src/types.ts`: orchestrator and task execution option/result types.
+
+Legacy compatibility docs and docs for removed source modules are intentionally not retained.

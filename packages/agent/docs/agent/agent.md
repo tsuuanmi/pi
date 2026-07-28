@@ -13,7 +13,6 @@ const agent = new Agent({
     model: { id: "claude-4-sonnet", name: "Claude 4 Sonnet", api: "anthropic", provider: "anthropic", /* ... */ },
     tools: [/* AgentTool instances */],
   },
-  streamFn: streamSimple,
   toolExecution: "parallel",
 });
 ```
@@ -27,11 +26,11 @@ const agent = new Agent({
 | `initialState` | `Partial<AgentState>` | Empty | Initial system prompt, model, tools, messages |
 | `convertToLlm` | `(messages) => Message[]` | Filters to user/assistant/toolResult | Convert AgentMessage[] to LLM-compatible Message[] |
 | `transformContext` | `(messages, signal?) => Promise<AgentMessage[]>` | — | Transform context before convertToLlm |
-| `streamFn` | `StreamFn` | `streamSimple` | Stream function for LLM calls |
+| `streamFn` | `StreamFn` | `stream` from `@tsuuanmi/pi-ai` | Stream function for LLM calls |
 | `runtime` | `AgentRuntime` | built-in default | Execution runtime used to produce turns |
 | `getApiKey` | `(provider) => string` | — | Dynamic API key resolution |
-| `onPayload` | `SimpleStreamOptions["onPayload"]` | — | Payload transform hook |
-| `onResponse` | `SimpleStreamOptions["onResponse"]` | — | Response hook |
+| `onPayload` | `StreamOptions["onPayload"]` | — | Payload transform hook |
+| `onResponse` | `StreamOptions["onResponse"]` | — | Response hook |
 | `providerRequestObserver` | `ProviderRequestObserver` | — | Observer for LLM request lifecycle |
 | `beforeRun` | `(context, signal?) => void` | — | Hook before isolated `run()` execution |
 | `afterRun` | `(context, signal?) => void` | — | Hook after isolated `run()` execution |
@@ -116,7 +115,7 @@ When the last message is an assistant message, `continue()` first drains queued 
 - Emit runtime backend, warning, and trace stream events, then finish with a single done or error event.
 - Return a `RunResult` with backend metadata, produced messages, final output text, assistant turn count, completed tool-call summaries, warnings, traces, loop/max-turn flags, timing, and coarse status.
 - Runtime implementations may expose `dispose()` for teardown of external resources.
-- Node-specific backend implementations belong under `@tsuuanmi/pi-agent/node`.
+- Node-specific backend implementations belong under `@tsuuanmi/pi-agent/node`; protocol-specific integrations such as ACP can also live in optional packages that implement `AgentRuntime` and depend on `@tsuuanmi/pi-agent` for shared contracts.
 
 ## Message Queuing
 

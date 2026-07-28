@@ -122,7 +122,7 @@ interface AgentState {
 
 ## AgentLoopConfig
 
-Configuration for the low-level agent loop. Extends `SimpleStreamOptions` with:
+Configuration for the low-level agent loop. Extends `StreamOptions` with:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -142,10 +142,10 @@ Configuration for the low-level agent loop. Extends `SimpleStreamOptions` with:
 ## StreamFn
 
 ```typescript
-type StreamFn = (...args: Parameters<typeof streamSimple>) => ReturnType<typeof streamSimple>;
+type StreamFn = (...args: Parameters<typeof stream>) => ReturnType<typeof stream> | Promise<ReturnType<typeof stream>>;
 ```
 
-Stream function used by the agent loop. Must not throw for request/model/runtime failures — encode failures in the returned stream.
+Stream function used by the agent loop. The default is `stream` from `@tsuuanmi/pi-ai`. Implementations should encode request/model/runtime failures in the returned stream when possible.
 
 ## ThinkingLevel
 

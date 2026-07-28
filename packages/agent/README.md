@@ -1,6 +1,6 @@
 # @tsuuanmi/pi-agent
 
-Multi-agent orchestration primitives for Pi. Built on `@tsuuanmi/pi-ai` adapter contracts.
+Standard agent behavior, runtime, tool, message, orchestration, and subagent contracts for Pi. Built on `@tsuuanmi/pi-ai` provider/model transport contracts.
 
 ## Installation
 
@@ -10,54 +10,77 @@ npm install @tsuuanmi/pi-agent
 
 ## Package Scope
 
-`@tsuuanmi/pi-agent` provides lightweight `Agent`, `AgentRuntime`, `Team`, `Task`, `TaskQueue`, and `Orchestrator` primitives. Provider/model transport lives in `@tsuuanmi/pi-ai`; pass a stream-backed runtime or custom runtime to each agent.
+`@tsuuanmi/pi-agent` is the central lower-layer agent package for Pi. It owns the standard `Agent` facade, persistent transcript state, the default LLM/tool runtime loop, lifecycle events, generic tool protocol, tool registration helpers, orchestration primitives, shared message/subagent contracts, and runtime/backend seams.
 
-See [Orchestrator update logic](./docs/orchestrator.md) for scheduling, pipelining, and structured handoff behavior.
+Provider adapters and streaming transport live in `@tsuuanmi/pi-ai`. Concrete Pi tools live in higher-level host packages such as `@tsuuanmi/pi`; hosts register those tools with the agent package.
 
 Node-only helpers are available from the `@tsuuanmi/pi-agent/node` subpath.
+
+See [Agent documentation](./docs/agent/agent.md), [Tool Registration](./docs/tools/registry.md), and [Orchestrator update logic](./docs/orchestrator.md) for the standard integration patterns.
 
 ## Quick Start
 
 ```typescript
-import { Agent, Team, runTeam } from "@tsuuanmi/pi-agent";
-import type { LlmAdapter } from "@tsuuanmi/pi-ai";
+import { Agent, createToolRegistry, registerTools } from "@tsuuanmi/pi-agent";
+import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Model } from "@tsuuanmi/pi-ai";
 
-const adapter: LlmAdapter = {
-  async complete(messages) {
-    return { content: `handled ${messages.at(-1)?.content}` };
-  },
+const model: Model<any> = {
+  id: "claude-4-sonnet",
+  name: "Claude 4 Sonnet",
+  api: "anthropic",
+  provider: "anthropic",
+  contextWindow: 200_000,
 };
 
-const team = new Team("builders", [
-  new Agent({
-    name: "planner",
-    instructions: "Plan concise implementation steps.",
-    adapter,
-    capabilities: ["planning"],
-  }),
-  new Agent({
-    name: "reviewer",
-    instructions: "Review outputs for correctness.",
-    adapter,
-    capabilities: ["review"],
-  }),
-]);
+const hostTools: AgentTool[] = [/* concrete tools owned by the host package */];
+const registry = createToolRegistry();
+registerTools(registry, hostTools);
 
-const result = await runTeam(team, [
-  { id: "plan", title: "Plan", description: "Create the plan", requires: ["planning"] },
-  { id: "review", title: "Review", description: "Review the plan", dependsOn: ["plan"], requires: ["review"] },
-], { strategy: "capability-match" });
+const agent = new Agent({
+  name: "planner",
+  capabilities: ["planning"],
+  initialState: {
+    systemPrompt: "Plan concise implementation steps.",
+    model,
+    tools: registry.list(),
+  },
+});
 
-console.log(result.success, result.output);
+await agent.prompt("Create a short implementation plan.");
+console.log(agent.state.messages.at(-1));
 ```
+
+## Standard Integration Pattern
+
+High-level packages should integrate with `@tsuuanmi/pi-agent` by following these boundaries:
+
+1. Create or obtain a `Model` and stream transport from `@tsuuanmi/pi-ai`.
+2. Define concrete tools in the host package.
+3. Register tools with `createToolRegistry()`, `registerTools()`, or `Agent.registerTools()`.
+4. Subscribe to `AgentEvent` with `agent.subscribe()` for UI, logs, traces, metrics, and progress state.
+5. Use `Agent.run()` for isolated task/orchestration calls and `Agent.prompt()` / `Agent.continue()` for persistent interactive sessions.
+6. Provide a custom `AgentRuntime` only when replacing the built-in LLM/tool loop with an external runtime.
+7. Import `@tsuuanmi/pi-agent/node` only from Node-specific code.
+
+This keeps agent behavior centralized while allowing applications, extensions, and workflow packages to supply their own tools and runtime integrations.
 
 ## Core Concepts
 
-- `Agent`: wraps instructions, capabilities, tools, and an `LlmAdapter`. Runtime agents can set `maxTurns` to stop gracefully before runaway provider calls and use `createSlidingWindowContextTransform()` for safe context pruning.
+- `Agent`: the single standard Pi agent facade. It wraps state, prompt history, the runtime seam, queues, lifecycle events, tools, and task-oriented `run()` execution.
+- `AgentRuntime`: the execution seam for the default LLM/tool loop or external backends. Runtime implementations stream events and finish with one done or error event.
+- `AgentTool`: the generic tool protocol implemented by host-owned tools.
+- `ToolRegistry`: name-keyed tool registration for hosts and extensions.
 - `Task`: tracks title, description, dependency IDs, requirements, assignee, status, result, and error.
 - `TaskQueue`: owns task snapshots and dependency readiness.
 - `Team`: named roster of agents.
 - `Orchestrator`: assigns ready tasks, pipelines newly unblocked work, and executes dependency batches until completion or failure.
+
+## Runtime and Backend Boundary
+
+The default runtime uses `@tsuuanmi/pi-ai` streaming plus registered `AgentTool` instances. External process, protocol, or ACP-style integrations should implement `AgentRuntime` and be supplied through `new Agent({ runtime })`.
+
+Node-specific runtime implementations belong under `@tsuuanmi/pi-agent/node` or in dedicated optional integration packages that depend on `@tsuuanmi/pi-agent` as their contract package. They should not force browser-safe core consumers to install Node-only or protocol-specific dependencies.
 
 ## Scheduling
 

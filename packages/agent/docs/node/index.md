@@ -1,10 +1,10 @@
-# Node-only Utilities
+# Node Entry Point
 
 These helpers are exported only from `@tsuuanmi/pi-agent/node` via `src/node.ts`.
 
 ## Child process helpers
 
-From `src/utils/child-process.ts`:
+From `src/node/child-process.ts`:
 
 ```typescript
 spawnProcess(command: string, args: string[], options: SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioPipe>): ChildProcessByStdio<null, Readable, Readable>;
@@ -17,7 +17,7 @@ waitForChildProcess(child: ChildProcess): Promise<number | null>;
 
 ## File mutation queue
 
-From `src/utils/file-mutation-queue.ts`:
+From `src/node/file-mutation-queue.ts`:
 
 ```typescript
 withFileMutationQueue<T>(filePath: string, fn: () => Promise<T>): Promise<T>;
@@ -27,7 +27,7 @@ Serializes async mutations per file path. Operations for different files still r
 
 ## JSONL helpers
 
-From `src/utils/jsonl.ts`:
+From `src/node/jsonl.ts`:
 
 ```typescript
 serializeJsonLine(value: unknown): string;
@@ -38,7 +38,7 @@ attachJsonlLineReader(stream: Readable, onLine: (line: string) => void): () => v
 
 ## Path helpers
 
-From `src/utils/paths.ts`:
+From `src/node/paths.ts`:
 
 ```typescript
 interface PathInputOptions {

@@ -23,7 +23,7 @@ Core event categories:
 - `message_start` / `message_update` / `message_end`
 - `tool_execution_start` / `tool_execution_update` / `tool_execution_end`
 
-Use these events to build logs, traces, metrics, UI state, or progress snapshots. See [Types](types.md) for the full `AgentEvent` union.
+Use these events to build logs, traces, metrics, UI state, or progress snapshots. See [Types](../../types.md) for related public types.
 
 ## Tool execution events
 
@@ -36,19 +36,18 @@ Tool events include stable identifiers and tool metadata:
 - final `result`
 - `isError`
 
-The subagent progress tracker in [`subagents.md`](subagents.md) consumes this same event shape to retain current tool, recent tools, and recent assistant output.
+The subagent progress tracker in [`subagents/index.md`](../../subagents/index.md) consumes this same event shape to retain current tool, recent tools, and recent assistant output.
 
 ## Provider request observation
 
 `AgentOptions.providerRequestObserver` is forwarded to the underlying AI stream options. Use it to observe provider request lifecycle details emitted by `@tsuuanmi/pi-ai` without coupling agent event listeners to provider internals.
 
-## Proxy streaming
-
-`streamProxy()` reconstructs assistant partials from server-sent events and encodes proxy/HTTP/abort failures as assistant stream error events instead of throwing. See [Proxy Stream](proxy.md).
-
 ## Recommended integration pattern
 
 - Subscribe once at the application boundary.
 - Convert events into your telemetry format outside this package.
+- Keep UI/progress state in higher-level packages by consuming `AgentEvent` rather than forking the runtime loop.
+- Observe provider request lifecycle with `providerRequestObserver` when provider-level details are needed.
+- Observe process/protocol/ACP-style runtimes through their `RuntimeEvent` backend, warning, trace, done, and error events.
 - Avoid storing raw prompt/tool payloads unless your privacy policy allows it.
 - Treat `agent_end` as the final event for a run; the agent becomes idle after all awaited `agent_end` listeners settle.
