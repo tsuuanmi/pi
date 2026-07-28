@@ -3,25 +3,12 @@
  * Transforms to Message[] only at the LLM call boundary.
  */
 
-import {
-	type AssistantMessage,
-	type Context,
-	EventStream,
-	stream,
-	type ToolResultMessage,
-	validateToolArguments,
-} from "@tsuuanmi/pi-ai";
+import { type AssistantMessage, type Context, EventStream, stream, type ToolResultMessage, validateToolArguments } from "@tsuuanmi/pi-ai";
 import { LoopDetector, normalizeLoopDetectionOptions } from "#agent/agent/loop-detection";
-import type {
-	AgentContext,
-	AgentEvent,
-	AgentLoopConfig,
-	AgentMessage,
-	AgentTool,
-	AgentToolCall,
-	AgentToolResult,
-	StreamFn,
-} from "#agent/agent/types";
+import type { AgentEvent } from "#agent/agent/runtime/events";
+import type { AgentContext, AgentTool, AgentToolResult } from "#agent/agent/state/tool";
+import type { AgentLoopConfig, AgentToolCall, StreamFn } from "#agent/agent/runtime/config";
+import type { AgentMessage } from "#agent/agent/state/state";
 
 let providerRequestSequence = 0;
 

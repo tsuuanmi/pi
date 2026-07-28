@@ -16,6 +16,25 @@ const tools = registry.list();
 
 `registerAgentTools(registry, tools, options?)` registers a group of tools. Pass `{ replace: true }` to clear the registry before registration.
 
+## Tool access policy
+
+```typescript
+import { resolveToolNames, resolveToolSelection } from "@tsuuanmi/pi-agent";
+
+const visibleTools = resolveToolNames(allTools, {
+  allowedToolNames: ["read", "bash"],
+  excludedToolNames: ["bash"],
+});
+
+const activeTools = resolveToolSelection(allTools, previousActiveTools, {
+  allowedToolNames: ["read", "bash"],
+  activeToolNames: ["read"],
+  includeNewlyRegisteredTools: true,
+});
+```
+
+Use `ToolAccessPolicy` and `ToolSelectionPolicy` to keep allow/exclude rules consistent across agent runtimes.
+
 ## Agent convenience method
 
 ```typescript

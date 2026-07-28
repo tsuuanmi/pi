@@ -28,6 +28,7 @@ const agent = new Agent({
 | `convertToLlm` | `(messages) => Message[]` | Filters to user/assistant/toolResult | Convert AgentMessage[] to LLM-compatible Message[] |
 | `transformContext` | `(messages, signal?) => Promise<AgentMessage[]>` | — | Transform context before convertToLlm |
 | `streamFn` | `StreamFn` | `streamSimple` | Stream function for LLM calls |
+| `runtime` | `AgentRuntime` | built-in default | Execution runtime used to produce turns |
 | `getApiKey` | `(provider) => string` | — | Dynamic API key resolution |
 | `onPayload` | `SimpleStreamOptions["onPayload"]` | — | Payload transform hook |
 | `onResponse` | `SimpleStreamOptions["onResponse"]` | — | Response hook |
@@ -104,6 +105,14 @@ await agent.continue();
 ```
 
 When the last message is an assistant message, `continue()` first drains queued steering messages; if none are queued, it drains queued follow-up messages. If both queues are empty it throws `Cannot continue from message role: assistant`.
+
+## Runner / backend seam
+
+`Agent` now delegates turn production through an `AgentRuntime`.
+
+- Use the default runtime for the built-in LLM/tool loop.
+- Provide a custom runtime when you want to swap in external backends.
+- Node-specific backend implementations belong under `@tsuuanmi/pi-agent/node`.
 
 ## Message Queuing
 

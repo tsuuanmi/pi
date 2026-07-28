@@ -1,0 +1,26 @@
+import type { AssistantMessageEvent, ToolResultMessage } from "@tsuuanmi/pi-ai";
+import type { LoopDetectionResult } from "#agent/agent/loop-detection";
+import type { AgentMessage, AgentStatus, AgentTraceEvent } from "#agent/agent/state/state";
+
+export type AgentEvent =
+	| { type: "agent_start" }
+	| { type: "agent_status"; status: AgentStatus; trace?: AgentTraceEvent }
+	| { type: "agent_end"; messages: AgentMessage[] }
+	| { type: "turn_start" }
+	| { type: "turn_end"; message: AgentMessage; toolResults: ToolResultMessage[] }
+	| { type: "loop_detected"; result: LoopDetectionResult }
+	| { type: "max_turns_reached"; turns: number; maxTurns: number }
+	| {
+			type: "structured_output";
+			ok: boolean;
+			attempt: number;
+			error?: string;
+			issues?: string[];
+			preview?: string;
+	  }
+	| { type: "message_start"; message: AgentMessage }
+	| { type: "message_update"; message: AgentMessage; assistantMessageEvent: AssistantMessageEvent }
+	| { type: "message_end"; message: AgentMessage }
+	| { type: "tool_execution_start"; toolCallId: string; toolName: string; args: any }
+	| { type: "tool_execution_update"; toolCallId: string; toolName: string; args: any; partialResult: any }
+	| { type: "tool_execution_end"; toolCallId: string; toolName: string; result: any; isError: boolean };

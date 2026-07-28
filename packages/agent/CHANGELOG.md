@@ -7,6 +7,8 @@
 
 ### Added
 
+- **agent**: Added `AgentBackend` and `AgentRuntime` as the standard execution seam for swapping the built-in loop with external backends.
+- **agent**: Added `ToolAccessPolicy` and `ToolSelectionPolicy` helpers for shared tool gating and active-tool resolution.
 - **agent**: Added a `maxTurns` guard for graceful agent-loop termination before runaway provider calls.
 - **agent**: Added context-pruning helpers for sliding-window transforms that preserve assistant tool calls with matching tool results.
 - **agent**: Added isolated `run()`, state/history accessors, lifecycle run hooks, status tracing events, capabilities, and per-agent task serialization.
@@ -16,6 +18,9 @@
 ### Fixed
 
 - **exports**: Restored shared public exports from `@tsuuanmi/pi-agent`, including structured receipt helpers and the Node helper subpath.
+- **agent**: Split the monolithic agent type module into focused runtime, state, event, and tool type modules.
+- **agent**: Refactored the public `Agent` to route prompt and continuation execution through the new runtime seam without changing behavior.
+- **pi**: Centralized active-tool selection in the shared tool policy helpers.
 
 ## [0.2.2] - 2026-07-23
 

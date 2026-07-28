@@ -1,4 +1,4 @@
-import { getStructuredReceipt } from "@tsuuanmi/pi-agent";
+import { getStructuredReceipt, type StructuredReceipt } from "@tsuuanmi/pi-agent";
 import {
 	Box,
 	type Component,
@@ -9,6 +9,7 @@ import {
 	renderStructuredReceipt,
 	Spacer,
 	Text,
+	type StructuredReceiptDisplayModel,
 	type TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
@@ -145,7 +146,7 @@ export class ToolExecutionComponent extends Container {
 			lines.push(theme.fg("toolOutput", output));
 		}
 		if (receipt) {
-			lines.push(formatStructuredReceiptLines(receipt, this.expanded, theme).join("\n"));
+			lines.push(formatStructuredReceiptLines(this.toStructuredReceiptDisplayModel(receipt), this.expanded, theme).join("\n"));
 		}
 		if (lines.length === 0) {
 			return undefined;
@@ -264,7 +265,7 @@ export class ToolExecutionComponent extends Container {
 						hasContent = true;
 						const receipt = this.getStructuredReceipt();
 						if (receipt) {
-							renderContainer.addChild(renderStructuredReceipt(receipt, this.expanded, theme));
+							renderContainer.addChild(renderStructuredReceipt(this.toStructuredReceiptDisplayModel(receipt), this.expanded, theme));
 						}
 					} catch {
 						this.resultRendererComponent = undefined;
@@ -291,8 +292,21 @@ export class ToolExecutionComponent extends Container {
 		return getRenderedTextOutput(this.result);
 	}
 
-	private getStructuredReceipt(): ReturnType<typeof getStructuredReceipt> {
+	private getStructuredReceipt(): StructuredReceipt | undefined {
 		return getStructuredReceipt(this.result?.details);
+	}
+
+	private toStructuredReceiptDisplayModel(receipt: StructuredReceipt): StructuredReceiptDisplayModel {
+		return {
+			actionSummary: receipt.actionSummary,
+			status: receipt.status,
+			source: receipt.source,
+			location: receipt.location,
+			inspect: receipt.inspect,
+			timing: receipt.timing,
+			outputPreview: receipt.outputPreview,
+			errorSummary: receipt.errorSummary,
+		};
 	}
 
 	private formatToolExecution(): string {
@@ -307,7 +321,7 @@ export class ToolExecutionComponent extends Container {
 		}
 		const receipt = this.getStructuredReceipt();
 		if (receipt) {
-			text += `\n${formatStructuredReceiptLines(receipt, this.expanded, theme).join("\n")}`;
+			text += `\n${formatStructuredReceiptLines(this.toStructuredReceiptDisplayModel(receipt), this.expanded, theme).join("\n")}`;
 		}
 		return text;
 	}

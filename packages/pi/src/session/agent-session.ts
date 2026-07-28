@@ -30,6 +30,7 @@ import {
 	getStructuredOutputRetryLimit,
 	parseStructuredOutput,
 	registerAgentTools,
+	resolveToolSelection,
 	type StructuredOutputOptions,
 	type StructuredOutputResult,
 	type ThinkingLevel,
@@ -813,13 +814,14 @@ export class AgentSession {
 	 * Changes take effect on the next agent turn.
 	 */
 	setActiveToolsByName(toolNames: string[]): void {
+		const validToolNames = resolveToolSelection(this._toolRegistry.names(), undefined, {
+			activeToolNames: toolNames,
+		});
 		const tools: AgentTool[] = [];
-		const validToolNames: string[] = [];
-		for (const name of toolNames) {
+		for (const name of validToolNames) {
 			const tool = this._toolRegistry.get(name);
 			if (tool) {
 				tools.push(tool);
-				validToolNames.push(name);
 			}
 		}
 		this.agent.registerTools(tools, { replace: true });
@@ -2158,7 +2160,6 @@ export class AgentSession {
 	}
 
 	private _refreshToolRegistry(options?: { activeToolNames?: string[]; includeAllExtensionTools?: boolean }): void {
-		const previousRegistryNames = new Set(this._toolRegistry.names());
 		const previousActiveToolNames = this.getActiveToolNames();
 		const allowedToolNames = this._allowedToolNames;
 		const excludedToolNames = this._excludedToolNames;
@@ -2223,29 +2224,15 @@ export class AgentSession {
 		registerAgentTools(toolRegistry, wrappedExtensionTools as AgentTool[]);
 		this._toolRegistry = toolRegistry;
 
-		const nextActiveToolNames = (
-			options?.activeToolNames ? [...options.activeToolNames] : [...previousActiveToolNames]
-		).filter((name) => isAllowedTool(name));
+		const nextActiveToolNames = resolveToolSelection(this._toolRegistry.names(), previousActiveToolNames, {
+			activeToolNames: options?.activeToolNames,
+			includeAllRegisteredTools: options?.includeAllExtensionTools,
+			includeNewlyRegisteredTools: !options?.activeToolNames && !options?.includeAllExtensionTools,
+			allowedToolNames: allowedToolNames ? Array.from(allowedToolNames) : undefined,
+			excludedToolNames: excludedToolNames ? Array.from(excludedToolNames) : undefined,
+		});
 
-		if (allowedToolNames) {
-			for (const toolName of this._toolRegistry.names()) {
-				if (allowedToolNames.has(toolName)) {
-					nextActiveToolNames.push(toolName);
-				}
-			}
-		} else if (options?.includeAllExtensionTools) {
-			for (const tool of wrappedExtensionTools) {
-				nextActiveToolNames.push(tool.name);
-			}
-		} else if (!options?.activeToolNames) {
-			for (const toolName of this._toolRegistry.names()) {
-				if (!previousRegistryNames.has(toolName)) {
-					nextActiveToolNames.push(toolName);
-				}
-			}
-		}
-
-		this.setActiveToolsByName([...new Set(nextActiveToolNames)]);
+		this.setActiveToolsByName(nextActiveToolNames);
 	}
 
 	private _buildRuntime(options: {

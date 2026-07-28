@@ -1,12 +1,15 @@
 export type { AgentOptions } from "#agent/agent/agent";
 export { Agent } from "#agent/agent/agent";
 export * from "#agent/agent/context-pruning";
+export * from "#agent/agent/runtime/events";
 export * from "#agent/agent/loop-detection";
+export * from "#agent/agent/runtime/config";
+export * from "#agent/agent/runtime/runtime";
+export * from "#agent/agent/state/state";
 export * from "#agent/agent/structured-output";
-export * from "#agent/agent/types";
+export * from "#agent/agent/state/tool";
 export * from "#agent/api/extension-contract";
 export * from "#agent/compaction/message-utils";
-export * from "#agent/env/types";
 export * from "#agent/messages";
 export { Orchestrator, runTeam } from "#agent/orchestrator";
 export * from "#agent/receipts/structured-receipt";
@@ -19,6 +22,7 @@ export * from "#agent/subagents/subagent-types";
 export * from "#agent/subagents/yield-result";
 export { Task, TaskQueue } from "#agent/task";
 export { Team } from "#agent/team";
+export * from "#agent/tools/policy";
 export * from "#agent/tools/registry";
 export type {
 	AgentRunOptions,

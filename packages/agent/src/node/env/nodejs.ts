@@ -26,7 +26,7 @@ import {
 	ok,
 	type Result,
 	toError,
-} from "#agent/env/types";
+} from "#agent/node/env/types";
 
 function resolvePath(cwd: string, path: string): string {
 	return isAbsolute(path) ? path : resolve(cwd, path);

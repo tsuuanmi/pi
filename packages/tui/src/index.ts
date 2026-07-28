@@ -8,6 +8,7 @@ export {
 	type MarkdownTheme,
 } from "#tui/components/display/markdown";
 export {
+	type StructuredReceiptDisplayModel,
 	formatStructuredReceiptLines,
 	renderStructuredReceipt,
 } from "#tui/components/display/structured-receipt";

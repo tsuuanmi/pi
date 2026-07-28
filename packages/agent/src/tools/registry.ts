@@ -1,4 +1,4 @@
-import type { AgentTool } from "#agent/agent/types";
+import type { AgentTool } from "#agent/agent/state/tool";
 
 export interface AgentToolRegistry {
 	register(tool: AgentTool): void;

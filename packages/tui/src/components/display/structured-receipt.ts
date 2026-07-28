@@ -1,8 +1,28 @@
-import type { StructuredReceipt } from "@tsuuanmi/pi-agent";
 import { Text } from "#tui/components/display/text";
 import type { Theme } from "#tui/theme/theme";
 
-function formatStatus(status: StructuredReceipt["status"], theme?: Theme): string {
+export interface StructuredReceiptDisplayModel {
+	actionSummary: string;
+	status: "queued" | "started" | "running" | "paused" | "completed" | "failed" | "cancelled";
+	source?: string;
+	location: {
+		command?: string;
+	};
+	inspect: Array<{
+		label: string;
+		value: string;
+		kind?: string;
+	}>;
+	timing: {
+		startedAt?: string;
+		endedAt?: string;
+		durationMs?: number;
+	};
+	outputPreview?: string;
+	errorSummary?: string;
+}
+
+function formatStatus(status: StructuredReceiptDisplayModel["status"], theme?: Theme): string {
 	const label = `Status: ${status}`;
 	if (!theme) return label;
 	switch (status) {
@@ -12,16 +32,22 @@ function formatStatus(status: StructuredReceipt["status"], theme?: Theme): strin
 			return theme.fg("error", label);
 		case "cancelled":
 			return theme.fg("muted", label);
-		default:
+		case "queued":
+		case "started":
+		case "running":
 			return theme.fg("warning", label);
+		case "paused":
+			return theme.fg("muted", label);
+		default:
+			return label;
 	}
 }
 
-function shouldHideBuiltinCommandDetails(receipt: StructuredReceipt): boolean {
+function shouldHideBuiltinCommandDetails(receipt: StructuredReceiptDisplayModel): boolean {
 	return receipt.source === "builtin-tool" && receipt.location.command !== undefined;
 }
 
-export function formatStructuredReceiptLines(receipt: StructuredReceipt, expanded: boolean, theme?: Theme): string[] {
+export function formatStructuredReceiptLines(receipt: StructuredReceiptDisplayModel, expanded: boolean, theme?: Theme): string[] {
 	const summaryParts = [`Receipt: ${receipt.actionSummary}`, formatStatus(receipt.status, theme)];
 	const lines = [summaryParts.join(" • ")];
 	if (!shouldHideBuiltinCommandDetails(receipt) && receipt.inspect.length > 0) {
@@ -41,6 +67,6 @@ export function formatStructuredReceiptLines(receipt: StructuredReceipt, expande
 	return lines;
 }
 
-export function renderStructuredReceipt(receipt: StructuredReceipt, expanded: boolean, theme: Theme): Text {
+export function renderStructuredReceipt(receipt: StructuredReceiptDisplayModel, expanded: boolean, theme: Theme): Text {
 	return new Text(formatStructuredReceiptLines(receipt, expanded, theme).join("\n"), 0, 0);
 }

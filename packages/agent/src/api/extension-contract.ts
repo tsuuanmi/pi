@@ -11,7 +11,8 @@
  */
 
 import type { Static, TSchema } from "typebox";
-import type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode } from "#agent/agent/types";
+import type { ToolExecutionMode } from "#agent/agent/runtime/config";
+import type { AgentToolResult, AgentToolUpdateCallback } from "#agent/agent/state/tool";
 import type { SubagentManager } from "#agent/subagents/subagent-manager";
 
 // ============================================================================

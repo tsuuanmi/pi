@@ -1,4 +1,5 @@
-import type { AgentMessage, AgentToolCall } from "#agent/agent/types";
+import type { AgentMessage } from "#agent/agent/state/state";
+import type { AgentToolCall } from "#agent/agent/runtime/config";
 
 export interface AgentMessageTurn {
 	/** Messages that must be kept or dropped together to avoid orphaned tool calls/results. */

@@ -1,14 +1,7 @@
-import {
-	type AssistantMessage,
-	type Message,
-	type Model,
-	type StreamOptions,
-	stream,
-	type Transport,
-} from "@tsuuanmi/pi-ai";
+import { type AssistantMessage, type Message, type Model, type StreamOptions, stream, type Transport } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
-import { runAgentLoop, runAgentLoopContinue } from "#agent/agent/agent-loop";
 import type { LoopDetectionOptions } from "#agent/agent/loop-detection";
+import { DefaultAgentRuntime, type AgentRuntime } from "#agent/agent/runtime/runtime";
 import {
 	createStructuredOutputPrompt,
 	createStructuredOutputRepairPrompt,
@@ -17,27 +10,25 @@ import {
 	type StructuredOutputOptions,
 	type StructuredOutputResult,
 } from "#agent/agent/structured-output";
+import type { AgentEvent } from "#agent/agent/runtime/events";
 import type {
 	AfterToolCallContext,
 	AfterToolCallResult,
-	AgentContext,
-	AgentEvent,
 	AgentLoopConfig,
 	AgentLoopTurnUpdate,
-	AgentMessage,
-	AgentState,
-	AgentTool,
 	BeforeToolCallContext,
 	BeforeToolCallResult,
 	ProviderRequestObserver,
 	QueueMode,
 	StreamFn,
 	ToolExecutionMode,
-} from "#agent/agent/types";
+} from "#agent/agent/runtime/config";
+import type { AgentMessage, AgentState } from "#agent/agent/state/state";
+import type { AgentContext, AgentTool } from "#agent/agent/state/tool";
 import { createAgentToolRegistry, type RegisterAgentToolsOptions, registerAgentTools } from "#agent/tools/registry";
 import type { AgentRunOptions, AgentRunResult } from "#agent/types";
 
-export type { QueueMode } from "#agent/agent/types";
+export type { QueueMode } from "#agent/agent/runtime/config";
 
 function defaultConvertToLlm(messages: AgentMessage[]): Message[] {
 	return messages.filter(
@@ -120,6 +111,8 @@ export interface AgentOptions {
 	convertToLlm?: (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
 	transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
 	streamFn?: StreamFn;
+	/** Agent runtime used to produce turns. Defaults to the built-in LLM/tool runtime. */
+	runtime?: AgentRuntime;
 	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
 	onPayload?: StreamOptions["onPayload"];
 	onResponse?: StreamOptions["onResponse"];
@@ -214,6 +207,7 @@ export class Agent {
 	public convertToLlm: (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
 	public transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
 	public streamFn: StreamFn;
+	public runtime: AgentRuntime;
 	public getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
 	public onPayload?: StreamOptions["onPayload"];
 	public onResponse?: StreamOptions["onResponse"];
@@ -256,6 +250,7 @@ export class Agent {
 		this.convertToLlm = options.convertToLlm ?? defaultConvertToLlm;
 		this.transformContext = options.transformContext;
 		this.streamFn = options.streamFn ?? stream;
+		this.runtime = options.runtime ?? new DefaultAgentRuntime(this.streamFn);
 		this.getApiKey = options.getApiKey;
 		this.onPayload = options.onPayload;
 		this.onResponse = options.onResponse;
@@ -514,6 +509,7 @@ export class Agent {
 			convertToLlm: this.convertToLlm,
 			transformContext: this.transformContext,
 			streamFn: this.streamFn,
+			runtime: this.runtime,
 			getApiKey: this.getApiKey,
 			onPayload: this.onPayload,
 			onResponse: this.onResponse,
@@ -567,26 +563,26 @@ export class Agent {
 		options: { skipInitialSteeringPoll?: boolean; signal?: AbortSignal } = {},
 	): Promise<void> {
 		await this.runWithLifecycle(async (signal) => {
-			await runAgentLoop(
+			await this.runtime.runPrompt({
 				messages,
-				this.createContextSnapshot(),
-				this.createLoopConfig(options),
-				(event) => this.processEvents(event),
+				context: this.createContextSnapshot(),
+				config: this.createLoopConfig(options),
+				emit: (event) => this.processEvents(event),
 				signal,
-				this.streamFn,
-			);
+				streamFn: this.streamFn,
+			});
 		}, options.signal);
 	}
 
 	private async runContinuation(): Promise<void> {
 		await this.runWithLifecycle(async (signal) => {
-			await runAgentLoopContinue(
-				this.createContextSnapshot(),
-				this.createLoopConfig(),
-				(event) => this.processEvents(event),
+			await this.runtime.continue({
+				context: this.createContextSnapshot(),
+				config: this.createLoopConfig(),
+				emit: (event) => this.processEvents(event),
 				signal,
-				this.streamFn,
-			);
+				streamFn: this.streamFn,
+			});
 		});
 	}
 

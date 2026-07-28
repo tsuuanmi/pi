@@ -5,7 +5,7 @@
  * contract lives in the lower layer.
  */
 
-import type { AgentMessage, ThinkingLevel } from "#agent/agent/types";
+import type { AgentMessage, ThinkingLevel } from "#agent/agent/state/state";
 import type { SubagentProgress } from "#agent/subagents/subagent-progress";
 import type { YieldDetails } from "#agent/subagents/yield-result";
 

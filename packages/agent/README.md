@@ -10,7 +10,7 @@ npm install @tsuuanmi/pi-agent
 
 ## Package Scope
 
-`@tsuuanmi/pi-agent` provides lightweight `Agent`, `Team`, `Task`, `TaskQueue`, and `Orchestrator` primitives. Provider/model transport lives in `@tsuuanmi/pi-ai`; pass an `LlmAdapter` to each agent.
+`@tsuuanmi/pi-agent` provides lightweight `Agent`, `AgentRuntime`, `Team`, `Task`, `TaskQueue`, and `Orchestrator` primitives. Provider/model transport lives in `@tsuuanmi/pi-ai`; pass a stream-backed runtime or custom runtime to each agent.
 
 See [Orchestrator update logic](./docs/orchestrator.md) for scheduling, pipelining, and structured handoff behavior.
 
