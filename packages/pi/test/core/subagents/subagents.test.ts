@@ -9,7 +9,7 @@ import { SettingsManager } from "#pi/settings/settings-manager";
 import { DefaultResourceLoader } from "#pi/skills/resource-loader";
 import { SubagentManager, type SubagentRecord } from "#pi/subagents/subagents";
 import { readSubagentWorkerRequest } from "#pi/subagents/tmux-worker";
-import { fauxAssistantMessage, fauxToolCall, registerFauxProvider } from "#pi-test/helpers/provider";
+import { testAssistantMessage, testToolCall, registerTestProvider } from "#pi-test/helpers/provider";
 
 const TEST_SESSION = "test-session";
 
@@ -176,23 +176,23 @@ describe("SubagentManager live spawn and resume", () => {
 	let manager: SubagentManager;
 	let services: ConstructorParameters<typeof SubagentManager>[0];
 	let resourceLoader: DefaultResourceLoader;
-	let faux: ReturnType<typeof registerFauxProvider>;
+	let testProvider: ReturnType<typeof registerTestProvider>;
 
 	beforeEach(async () => {
 		cwd = join(tmpdir(), `pi-subagent-live-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		const agentDir = join(cwd, "agent");
-		faux = registerFauxProvider({ models: [{ id: "faux-reasoning", reasoning: true }] });
-		faux.setResponses([fauxAssistantMessage("planner response")]);
-		const model = faux.getModel();
+		testProvider = registerTestProvider({ models: [{ id: "test-reasoning", reasoning: true }] });
+		testProvider.setResponses([testAssistantMessage("planner response")]);
+		const model = testProvider.getModel();
 		const settingsManager = SettingsManager.create(cwd, agentDir);
 		settingsManager.setDefaultModelAndProvider(model.provider, model.id);
 		const authStorage = AuthStorage.create(join(agentDir, "auth.json"));
-		authStorage.setRuntimeApiKey(model.provider, "faux-key");
+		authStorage.setRuntimeApiKey(model.provider, "test-key");
 		const modelRegistry = ModelRegistry.create(authStorage, join(agentDir, "models.json"));
 		modelRegistry.registerProvider(model.provider, {
 			baseUrl: model.baseUrl,
-			apiKey: "faux-key",
-			api: faux.api,
+			apiKey: "test-key",
+			api: testProvider.api,
 			models: [
 				{
 					id: model.id,
@@ -222,12 +222,12 @@ describe("SubagentManager live spawn and resume", () => {
 	});
 
 	afterEach(async () => {
-		faux.unregister();
+		testProvider.unregister();
 		await rm(cwd, { recursive: true, force: true });
 	});
 
 	it("spawns a subagent and records completion", async () => {
-		faux.setResponses([fauxAssistantMessage("task done")]);
+		testProvider.setResponses([testAssistantMessage("task done")]);
 		const result = await manager.spawn({
 			role: "planner",
 			prompt: "Plan the project",
@@ -257,7 +257,7 @@ describe("SubagentManager live spawn and resume", () => {
 	});
 
 	it("persists parent session ids on spawned records", async () => {
-		faux.setResponses([fauxAssistantMessage("child done")]);
+		testProvider.setResponses([testAssistantMessage("child done")]);
 		const result = await manager.spawn({
 			role: "planner",
 			prompt: "Plan the project",
@@ -272,7 +272,7 @@ describe("SubagentManager live spawn and resume", () => {
 	});
 
 	it("applies project agent profile model, thinking level, tools, and system prompt", async () => {
-		const model = faux.getModel();
+		const model = testProvider.getModel();
 		const profileDir = join(cwd, ".agent", "agents");
 		await mkdir(profileDir, { recursive: true });
 		await writeFile(
@@ -290,7 +290,7 @@ PROFILE SYSTEM PROMPT`,
 			"utf8",
 		);
 		const captured: Array<{ modelId: string; reasoning: unknown; tools: string[]; systemPrompt: string }> = [];
-		faux.setResponses([
+		testProvider.setResponses([
 			(context, options, _state, requestModel) => {
 				captured.push({
 					modelId: requestModel.id,
@@ -298,7 +298,7 @@ PROFILE SYSTEM PROMPT`,
 					tools: context.tools?.map((tool) => tool.name) ?? [],
 					systemPrompt: context.systemPrompt ?? "",
 				});
-				return fauxAssistantMessage("profiled");
+				return testAssistantMessage("profiled");
 			},
 		]);
 
@@ -559,7 +559,7 @@ PROFILE SYSTEM PROMPT`,
 	});
 
 	it("runs auto visibility through the native backend for this milestone", async () => {
-		faux.setResponses([fauxAssistantMessage("auto native")]);
+		testProvider.setResponses([testAssistantMessage("auto native")]);
 
 		const result = await manager.spawn({
 			role: "planner",
@@ -592,10 +592,10 @@ Worker profile`,
 			"utf8",
 		);
 		const captured: Array<{ reasoning: unknown; tools: string[] }> = [];
-		faux.setResponses([
+		testProvider.setResponses([
 			(context, options) => {
 				captured.push({ reasoning: getReasoning(options), tools: context.tools?.map((tool) => tool.name) ?? [] });
-				return fauxAssistantMessage("override");
+				return testAssistantMessage("override");
 			},
 		]);
 
@@ -617,7 +617,7 @@ Worker profile`,
 
 	it("resumes a persisted subagent session with a follow-up prompt", async () => {
 		// Spawn with a persistent session so we can resume
-		faux.setResponses([fauxAssistantMessage("initial response")]);
+		testProvider.setResponses([testAssistantMessage("initial response")]);
 		const spawnResult = await manager.spawn({
 			role: "architect",
 			prompt: "Design the system",
@@ -631,7 +631,7 @@ Worker profile`,
 		expect(spawnResult.record.session_file).toContain(join(".pi", TEST_SESSION, "state", "subagents", "sessions"));
 
 		// Resume with a new prompt
-		faux.setResponses([fauxAssistantMessage("refined design")]);
+		testProvider.setResponses([testAssistantMessage("refined design")]);
 		const resumeResult = await manager.resume(spawnResult.record.id, "Refine the design", {
 			tools: ["read", "bash"],
 			storageSessionId: TEST_SESSION,
@@ -644,8 +644,8 @@ Worker profile`,
 	});
 
 	it("cooperatively pauses a running subagent", async () => {
-		// Use a multi-turn faux response so pauseRequested can be checked between turns
-		faux.setResponses([fauxAssistantMessage("first response"), fauxAssistantMessage("second response")]);
+		// Use a multi-turn test response so pauseRequested can be checked between turns
+		testProvider.setResponses([testAssistantMessage("first response"), testAssistantMessage("second response")]);
 
 		// Start spawn and pause after a brief delay
 		const spawnPromise = manager.spawn({
@@ -657,16 +657,16 @@ Worker profile`,
 			persistent: true,
 		});
 
-		// The spawn runs synchronously with the faux provider.
+		// The spawn runs synchronously with the test provider.
 		// Since pause is cooperative (checked after each turn),
-		// a single-turn faux response will complete before pause takes effect.
+		// a single-turn test response will complete before pause takes effect.
 		// For a single-turn test, the subagent completes normally.
 		const result = await spawnPromise;
 		expect(result.record.status).toBe("completed");
 	});
 
 	it("cancels a running subagent", async () => {
-		faux.setResponses([fauxAssistantMessage("should be cancelled")]);
+		testProvider.setResponses([testAssistantMessage("should be cancelled")]);
 		const result = await manager.spawn({
 			role: "planner",
 			prompt: "Quick task",
@@ -675,7 +675,7 @@ Worker profile`,
 			tools: ["read"],
 			persistent: false,
 		});
-		// Already completed since faux provider is synchronous
+		// Already completed since test provider is synchronous
 		expect(result.record.status).toBe("completed");
 
 		// Cancel on a completed record is a no-op.
@@ -684,7 +684,7 @@ Worker profile`,
 	});
 
 	it("await returns completed record for finished subagent", async () => {
-		faux.setResponses([fauxAssistantMessage("awaited result")]);
+		testProvider.setResponses([testAssistantMessage("awaited result")]);
 		const spawnResult = await manager.spawn({
 			role: "planner",
 			prompt: "Do something",
@@ -700,11 +700,11 @@ Worker profile`,
 	});
 
 	it("detached spawn can time out while live and later complete", async () => {
-		faux.setResponses([
-			fauxAssistantMessage(fauxToolCall("bash", { command: "sleep 0.1 && echo tool-done" }, { id: "call-1" }), {
+		testProvider.setResponses([
+			testAssistantMessage(testToolCall("bash", { command: "sleep 0.1 && echo tool-done" }, { id: "call-1" }), {
 				stopReason: "toolUse",
 			}),
-			fauxAssistantMessage("detached complete"),
+			testAssistantMessage("detached complete"),
 		]);
 		const spawned = await manager.spawn({
 			role: "worker",
@@ -731,10 +731,10 @@ Worker profile`,
 
 	it("does not expose subagent tools inside spawned sessions", async () => {
 		const capturedTools: string[][] = [];
-		faux.setResponses([
+		testProvider.setResponses([
 			(context) => {
 				capturedTools.push(context.tools?.map((tool) => tool.name) ?? []);
-				return fauxAssistantMessage("isolated");
+				return testAssistantMessage("isolated");
 			},
 		]);
 		const result = await manager.spawn({

@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { InputEvent } from "#pi/extensions/index";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
 import type { PromptTemplate } from "#pi/skills/prompt-templates";
-import { fauxAssistantMessage, fauxToolCall } from "#pi-test/helpers/provider";
+import { testAssistantMessage, testToolCall } from "#pi-test/helpers/provider";
 import { createHarness, getMessageText, type Harness } from "#pi-test/suite/harness";
 import { createTestResourceLoader } from "#pi-test/test-utils";
 
@@ -32,7 +32,7 @@ describe("AgentSession prompt characterization", () => {
 		const harness = await createHarness();
 		harnesses.push(harness);
 
-		harness.setResponses([fauxAssistantMessage("hello")]);
+		harness.setResponses([testAssistantMessage("hello")]);
 
 		await harness.session.prompt("hi");
 
@@ -61,8 +61,8 @@ describe("AgentSession prompt characterization", () => {
 		harnesses.push(harness);
 
 		harness.setResponses([
-			fauxAssistantMessage(fauxToolCall("echo", { text: "hello" }), { stopReason: "toolUse" }),
-			fauxAssistantMessage("done"),
+			testAssistantMessage(testToolCall("echo", { text: "hello" }), { stopReason: "toolUse" }),
+			testAssistantMessage("done"),
 		]);
 
 		await harness.session.prompt("start");
@@ -100,12 +100,12 @@ describe("AgentSession prompt characterization", () => {
 		harnesses.push(harness);
 
 		harness.setResponses([
-			fauxAssistantMessage([fauxToolCall("slow", { value: "a" }), fauxToolCall("fast", { value: "b" })], {
+			testAssistantMessage([testToolCall("slow", { value: "a" }), testToolCall("fast", { value: "b" })], {
 				stopReason: "toolUse",
 			}),
 			(context) => {
 				const toolResults = context.messages.filter((message) => message.role === "toolResult");
-				return fauxAssistantMessage(`tool results: ${toolResults.length}`);
+				return testAssistantMessage(`tool results: ${toolResults.length}`);
 			},
 		]);
 
@@ -152,7 +152,7 @@ describe("AgentSession prompt characterization", () => {
 			(context) => {
 				const user = context.messages.find((message) => message.role === "user");
 				expandedPrompt = user ? getMessageText(user) : "";
-				return fauxAssistantMessage("ok");
+				return testAssistantMessage("ok");
 			},
 		]);
 
@@ -187,7 +187,7 @@ describe("AgentSession prompt characterization", () => {
 			(context) => {
 				const user = context.messages.find((message) => message.role === "user");
 				expandedPrompt = user ? getMessageText(user) : "";
-				return fauxAssistantMessage("ok");
+				return testAssistantMessage("ok");
 			},
 		]);
 
@@ -211,7 +211,7 @@ describe("AgentSession prompt characterization", () => {
 			],
 		});
 		harnesses.push(harness);
-		harness.setResponses([fauxAssistantMessage("should stay queued")]);
+		harness.setResponses([testAssistantMessage("should stay queued")]);
 
 		await harness.session.prompt("/testcmd hello world");
 
@@ -224,7 +224,7 @@ describe("AgentSession prompt characterization", () => {
 		const harness = await createHarness();
 		harnesses.push(harness);
 
-		harness.setResponses([fauxAssistantMessage("response")]);
+		harness.setResponses([testAssistantMessage("response")]);
 
 		await harness.session.sendUserMessage("from extension");
 
@@ -244,7 +244,7 @@ describe("AgentSession prompt characterization", () => {
 			],
 		});
 		harnesses.push(harness);
-		harness.setResponses([fauxAssistantMessage("ok")]);
+		harness.setResponses([testAssistantMessage("ok")]);
 
 		await harness.session.prompt("idle", { streamingBehavior: "followUp" });
 
@@ -283,8 +283,8 @@ describe("AgentSession prompt characterization", () => {
 		});
 		harnesses.push(harness);
 		harness.setResponses([
-			fauxAssistantMessage(fauxToolCall("wait", {}), { stopReason: "toolUse" }),
-			fauxAssistantMessage("done"),
+			testAssistantMessage(testToolCall("wait", {}), { stopReason: "toolUse" }),
+			testAssistantMessage("done"),
 		]);
 
 		const sawToolStart = new Promise<void>((resolve) => {
@@ -327,8 +327,8 @@ describe("AgentSession prompt characterization", () => {
 		const harness = await createHarness({ tools: [waitTool] });
 		harnesses.push(harness);
 		harness.setResponses([
-			fauxAssistantMessage(fauxToolCall("wait", {}), { stopReason: "toolUse" }),
-			fauxAssistantMessage("done"),
+			testAssistantMessage(testToolCall("wait", {}), { stopReason: "toolUse" }),
+			testAssistantMessage("done"),
 		]);
 
 		const sawToolStart = new Promise<void>((resolve) => {

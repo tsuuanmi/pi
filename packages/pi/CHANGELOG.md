@@ -97,7 +97,7 @@
 - Added reusable agent profiles (`planner`, `architect`, `critic`, `worker`) with project/global JSON overrides for per-agent model, thinking level, tools, system prompt, and persistence defaults.
 - Added `skipWorkflowContinuation` flag on `AgentSession`/`ExtensionContext` to prevent workflow continuation prompts from leaking into subagent sessions.
 - Subagent sessions no longer receive a `SubagentManager` to prevent unbounded nesting; orchestration stays in the parent.
-- Added live spawn, resume, pause, cancel, and await tests using the faux provider.
+- Added live spawn, resume, pause, cancel, and await tests using the test provider.
 - **deep-interview**: Added a phase-boundary mutation guard that runtime-blocks the `edit` and `write` tools while a deep-interview workflow is active in a non-finished phase, always blocks direct `.pi/**` edits regardless of phase, and allows only system-temp scratch outside the project. Wired through the `tool_call` extension hook so it runs before tool execution.
 - **deep-interview**: Added a `deep_interview_closure_check` tool that runs the closure/acceptance guard against current state and returns blocking gaps, making the pre-crystallization closure gate enforced rather than prose-only.
 - **deep-interview**: Added an advisory `metadata` channel to `deep_interview_record_scoring` (auto-answer streak, refined rounds, ambiguity milestone, lateral/auto tallies, architect failures) and an optional `topology` field on `deep_interview_record_answer`, both merged safely via the deep-interview envelope merger so mid-interview state updates never clobber `rounds`. `deep_interview_read_compact` now surfaces `auto_answer_streak`, `ambiguity_milestone`, and advisory counter totals.

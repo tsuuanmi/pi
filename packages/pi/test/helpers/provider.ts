@@ -14,10 +14,10 @@ import type {
 } from "@tsuuanmi/pi-ai";
 import { createAssistantMessageEventStream, registerProvider, unregisterProviders } from "@tsuuanmi/pi-ai";
 
-const DEFAULT_API = "faux";
-const DEFAULT_PROVIDER = "faux";
-const DEFAULT_MODEL_ID = "faux-1";
-const DEFAULT_MODEL_NAME = "Faux Model";
+const DEFAULT_API = "test";
+const DEFAULT_PROVIDER = "test";
+const DEFAULT_MODEL_ID = "test-1";
+const DEFAULT_MODEL_NAME = "Test Model";
 const DEFAULT_BASE_URL = "http://localhost:0";
 const DEFAULT_MIN_TOKEN_SIZE = 3;
 const DEFAULT_MAX_TOKEN_SIZE = 5;
@@ -31,7 +31,7 @@ const DEFAULT_USAGE: Usage = {
 	cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
 };
 
-export interface FauxModelDefinition {
+export interface TestModelDefinition {
 	id: string;
 	name?: string;
 	reasoning?: boolean;
@@ -41,17 +41,17 @@ export interface FauxModelDefinition {
 	maxTokens?: number;
 }
 
-export type FauxContentBlock = TextContent | ThinkingContent | ToolCall;
+export type TestContentBlock = TextContent | ThinkingContent | ToolCall;
 
-export function fauxText(text: string): TextContent {
+export function testText(text: string): TextContent {
 	return { type: "text", text };
 }
 
-export function fauxThinking(thinking: string): ThinkingContent {
+export function testThinking(thinking: string): ThinkingContent {
 	return { type: "thinking", thinking };
 }
 
-export function fauxToolCall(name: string, arguments_: ToolCall["arguments"], options: { id?: string } = {}): ToolCall {
+export function testToolCall(name: string, arguments_: ToolCall["arguments"], options: { id?: string } = {}): ToolCall {
 	return {
 		type: "toolCall",
 		id: options.id ?? randomId("tool"),
@@ -60,15 +60,15 @@ export function fauxToolCall(name: string, arguments_: ToolCall["arguments"], op
 	};
 }
 
-function normalizeFauxAssistantContent(content: string | FauxContentBlock | FauxContentBlock[]): FauxContentBlock[] {
+function normalizeTestAssistantContent(content: string | TestContentBlock | TestContentBlock[]): TestContentBlock[] {
 	if (typeof content === "string") {
-		return [fauxText(content)];
+		return [testText(content)];
 	}
 	return Array.isArray(content) ? content : [content];
 }
 
-export function fauxAssistantMessage(
-	content: string | FauxContentBlock | FauxContentBlock[],
+export function testAssistantMessage(
+	content: string | TestContentBlock | TestContentBlock[],
 	options: {
 		stopReason?: AssistantMessage["stopReason"];
 		errorMessage?: string;
@@ -78,7 +78,7 @@ export function fauxAssistantMessage(
 ): AssistantMessage {
 	return {
 		role: "assistant",
-		content: normalizeFauxAssistantContent(content),
+		content: normalizeTestAssistantContent(content),
 		api: DEFAULT_API,
 		provider: DEFAULT_PROVIDER,
 		model: DEFAULT_MODEL_ID,
@@ -90,19 +90,19 @@ export function fauxAssistantMessage(
 	};
 }
 
-export type FauxResponseFactory = (
+export type TestResponseFactory = (
 	context: Context,
 	options: StreamOptions | undefined,
 	state: { callCount: number },
 	model: Model<string>,
 ) => AssistantMessage | Promise<AssistantMessage>;
 
-export type FauxResponseStep = AssistantMessage | FauxResponseFactory;
+export type TestResponseStep = AssistantMessage | TestResponseFactory;
 
-export interface RegisterFauxProviderOptions {
+export interface RegisterTestProviderOptions {
 	api?: string;
 	provider?: string;
-	models?: FauxModelDefinition[];
+	models?: TestModelDefinition[];
 	tokensPerSecond?: number;
 	tokenSize?: {
 		min?: number;
@@ -110,14 +110,14 @@ export interface RegisterFauxProviderOptions {
 	};
 }
 
-export interface FauxProviderRegistration {
+export interface TestProviderRegistration {
 	api: string;
 	models: [Model<string>, ...Model<string>[]];
 	getModel(): Model<string>;
 	getModel(modelId: string): Model<string> | undefined;
 	state: { callCount: number };
-	setResponses: (responses: FauxResponseStep[]) => void;
-	appendResponses: (responses: FauxResponseStep[]) => void;
+	setResponses: (responses: TestResponseStep[]) => void;
+	appendResponses: (responses: TestResponseStep[]) => void;
 	getPendingResponseCount: () => number;
 	unregister: () => void;
 }
@@ -378,16 +378,16 @@ async function streamWithDeltas(
 	stream.end(message);
 }
 
-export function registerFauxProvider(options: RegisterFauxProviderOptions = {}): FauxProviderRegistration {
+export function registerTestProvider(options: RegisterTestProviderOptions = {}): TestProviderRegistration {
 	const api = options.api ?? randomId(DEFAULT_API);
 	const provider = options.provider ?? DEFAULT_PROVIDER;
-	const sourceId = randomId("faux-provider");
+	const sourceId = randomId("test-provider");
 	const minTokenSize = Math.max(
 		1,
 		Math.min(options.tokenSize?.min ?? DEFAULT_MIN_TOKEN_SIZE, options.tokenSize?.max ?? DEFAULT_MAX_TOKEN_SIZE),
 	);
 	const maxTokenSize = Math.max(minTokenSize, options.tokenSize?.max ?? DEFAULT_MAX_TOKEN_SIZE);
-	let pendingResponses: FauxResponseStep[] = [];
+	let pendingResponses: TestResponseStep[] = [];
 	const tokensPerSecond = options.tokensPerSecond;
 	const state = { callCount: 0 };
 	const promptCache = new Map<string, string>();
@@ -428,7 +428,7 @@ export function registerFauxProvider(options: RegisterFauxProviderOptions = {}):
 				await streamOptions?.onResponse?.({ status: 200, headers: {} }, requestModel);
 				if (!step) {
 					let message = createErrorMessage(
-						new Error("No more faux responses queued"),
+						new Error("No more test responses queued"),
 						api,
 						provider,
 						requestModel.id,

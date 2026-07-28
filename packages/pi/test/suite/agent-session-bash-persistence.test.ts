@@ -3,7 +3,7 @@ import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import type { BashOperations } from "#pi/tools/bash";
-import { fauxAssistantMessage, fauxToolCall } from "#pi-test/helpers/provider";
+import { testAssistantMessage, testToolCall } from "#pi-test/helpers/provider";
 import { createHarness, type Harness } from "#pi-test/suite/harness";
 
 function getEntryTypes(harness: Harness): string[] {
@@ -56,9 +56,9 @@ describe("AgentSession bash and persistence characterization", () => {
 		const harness = await createHarness({ tools: [waitTool] });
 		harnesses.push(harness);
 		harness.setResponses([
-			fauxAssistantMessage([fauxToolCall("wait", {})], { stopReason: "toolUse" }),
-			fauxAssistantMessage("done"),
-			fauxAssistantMessage("after flush"),
+			testAssistantMessage([testToolCall("wait", {})], { stopReason: "toolUse" }),
+			testAssistantMessage("done"),
+			testAssistantMessage("after flush"),
 		]);
 
 		const sawToolStart = new Promise<void>((resolve) => {
@@ -146,8 +146,8 @@ describe("AgentSession bash and persistence characterization", () => {
 		const harness = await createHarness({ tools: [echoTool] });
 		harnesses.push(harness);
 		harness.setResponses([
-			fauxAssistantMessage([fauxToolCall("echo", { text: "hello" })], { stopReason: "toolUse" }),
-			fauxAssistantMessage("done"),
+			testAssistantMessage([testToolCall("echo", { text: "hello" })], { stopReason: "toolUse" }),
+			testAssistantMessage("done"),
 		]);
 
 		await harness.session.sendCustomMessage({
@@ -198,7 +198,7 @@ describe("AgentSession bash and persistence characterization", () => {
 	it("persists aborted assistant messages", async () => {
 		const harness = await createHarness();
 		harnesses.push(harness);
-		harness.setResponses([fauxAssistantMessage("x".repeat(20_000))]);
+		harness.setResponses([testAssistantMessage("x".repeat(20_000))]);
 
 		const sawMessageUpdate = new Promise<void>((resolve) => {
 			const unsubscribe = harness.session.subscribe((event) => {

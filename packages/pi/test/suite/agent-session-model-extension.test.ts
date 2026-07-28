@@ -3,7 +3,7 @@ import type { Model } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import type { BuildSystemPromptOptions, ExtensionAPI } from "#pi/index";
-import { fauxAssistantMessage, fauxToolCall } from "#pi-test/helpers/provider";
+import { testAssistantMessage, testToolCall } from "#pi-test/helpers/provider";
 import { createHarness, getAssistantTexts, type Harness } from "#pi-test/suite/harness";
 
 describe("AgentSession model and extension characterization", () => {
@@ -19,8 +19,8 @@ describe("AgentSession model and extension characterization", () => {
 		const modelEvents: string[] = [];
 		const harness = await createHarness({
 			models: [
-				{ id: "faux-1", name: "One", reasoning: true },
-				{ id: "faux-2", name: "Two", reasoning: true },
+				{ id: "test-1", name: "One", reasoning: true },
+				{ id: "test-2", name: "Two", reasoning: true },
 			],
 			extensionFactories: [
 				(pi) => {
@@ -31,12 +31,12 @@ describe("AgentSession model and extension characterization", () => {
 			],
 		});
 		harnesses.push(harness);
-		const nextModel = harness.getModel("faux-2")!;
+		const nextModel = harness.getModel("test-2")!;
 
 		await harness.session.setModel(nextModel);
 
-		expect(harness.session.model?.id).toBe("faux-2");
-		expect(modelEvents).toEqual(["faux-1->faux-2:set"]);
+		expect(harness.session.model?.id).toBe("test-2");
+		expect(modelEvents).toEqual(["test-1->test-2:set"]);
 		expect(
 			harness.sessionManager
 				.getEntries()
@@ -48,13 +48,13 @@ describe("AgentSession model and extension characterization", () => {
 	it("cycles through scoped models and preserves the scoped thinking preference", async () => {
 		const harness = await createHarness({
 			models: [
-				{ id: "faux-1", name: "One", reasoning: true },
-				{ id: "faux-2", name: "Two", reasoning: false },
+				{ id: "test-1", name: "One", reasoning: true },
+				{ id: "test-2", name: "Two", reasoning: false },
 			],
 		});
 		harnesses.push(harness);
-		const modelOne = harness.getModel("faux-1")!;
-		const modelTwo = harness.getModel("faux-2")!;
+		const modelOne = harness.getModel("test-1")!;
+		const modelTwo = harness.getModel("test-2")!;
 		harness.session.setScopedModels([{ model: modelOne, thinkingLevel: "high" }, { model: modelTwo }] as Array<{
 			model: Model<string>;
 			thinkingLevel?: ThinkingLevel;
@@ -62,16 +62,16 @@ describe("AgentSession model and extension characterization", () => {
 		harness.session.setThinkingLevel("high");
 
 		await harness.session.cycleModel();
-		expect(harness.session.model?.id).toBe("faux-2");
+		expect(harness.session.model?.id).toBe("test-2");
 		expect(harness.session.thinkingLevel).toBe("off");
 
 		await harness.session.cycleModel();
-		expect(harness.session.model?.id).toBe("faux-1");
+		expect(harness.session.model?.id).toBe("test-1");
 		expect(harness.session.thinkingLevel).toBe("high");
 	});
 
 	it("clamps thinking levels to model capabilities and cycles available levels", async () => {
-		const harness = await createHarness({ models: [{ id: "faux-1", reasoning: false }] });
+		const harness = await createHarness({ models: [{ id: "test-1", reasoning: false }] });
 		harnesses.push(harness);
 
 		harness.session.setThinkingLevel("high");
@@ -82,15 +82,15 @@ describe("AgentSession model and extension characterization", () => {
 	it("throws when setModel is called without configured auth", async () => {
 		const harness = await createHarness({
 			models: [
-				{ id: "faux-1", name: "One", reasoning: true },
-				{ id: "faux-2", name: "Two", reasoning: true },
+				{ id: "test-1", name: "One", reasoning: true },
+				{ id: "test-2", name: "Two", reasoning: true },
 			],
 			withConfiguredAuth: false,
 		});
 		harnesses.push(harness);
 
-		await expect(harness.session.setModel(harness.getModel("faux-2")!)).rejects.toThrow(
-			`No API key for ${harness.getModel().provider}/faux-2`,
+		await expect(harness.session.setModel(harness.getModel("test-2")!)).rejects.toThrow(
+			`No API key for ${harness.getModel().provider}/test-2`,
 		);
 	});
 
@@ -114,7 +114,7 @@ describe("AgentSession model and extension characterization", () => {
 		});
 		harnesses.push(harness);
 		harness.setResponses([
-			fauxAssistantMessage([fauxToolCall("echo", { text: "hello" })], { stopReason: "toolUse" }),
+			testAssistantMessage([testToolCall("echo", { text: "hello" })], { stopReason: "toolUse" }),
 			(context) => {
 				const toolResult = context.messages.find((message) => message.role === "toolResult");
 				const errorText =
@@ -124,7 +124,7 @@ describe("AgentSession model and extension characterization", () => {
 								.map((part) => part.text)
 								.join("\n")
 						: "";
-				return fauxAssistantMessage(errorText);
+				return testAssistantMessage(errorText);
 			},
 		]);
 
@@ -160,7 +160,7 @@ describe("AgentSession model and extension characterization", () => {
 		});
 		harnesses.push(harness);
 		harness.setResponses([
-			fauxAssistantMessage([fauxToolCall("echo", { text: "hello" })], { stopReason: "toolUse" }),
+			testAssistantMessage([testToolCall("echo", { text: "hello" })], { stopReason: "toolUse" }),
 			(context) => {
 				const toolResult = context.messages.find((message) => message.role === "toolResult");
 				const text =
@@ -170,7 +170,7 @@ describe("AgentSession model and extension characterization", () => {
 								.map((part) => part.text)
 								.join("\n")
 						: "";
-				return fauxAssistantMessage(text);
+				return testAssistantMessage(text);
 			},
 		]);
 
@@ -208,7 +208,7 @@ describe("AgentSession model and extension characterization", () => {
 								.map((part) => part.text)
 								.join("\n")
 						: "";
-				return fauxAssistantMessage("done");
+				return testAssistantMessage("done");
 			},
 		]);
 
@@ -249,7 +249,7 @@ describe("AgentSession model and extension characterization", () => {
 								.map((part) => part.text)
 								.join("\n")
 						: "";
-				return fauxAssistantMessage("done");
+				return testAssistantMessage("done");
 			},
 		]);
 
@@ -317,7 +317,7 @@ describe("AgentSession model and extension characterization", () => {
 						typeof message.content !== "string" &&
 						message.content.some((part) => part.type === "text" && part.text === "injected"),
 				);
-				return fauxAssistantMessage("done");
+				return testAssistantMessage("done");
 			},
 		]);
 

@@ -1,6 +1,6 @@
 /**
  * Tests for the test harness itself.
- * Validates that the faux provider and session factory work correctly.
+ * Validates that the test provider and session factory work correctly.
  */
 
 import type { AgentTool } from "@tsuuanmi/pi-agent";
@@ -21,7 +21,7 @@ describe("test harness", () => {
 
 		await harness.session.prompt("hi");
 
-		expect(harness.faux.callCount).toBe(1);
+		expect(harness.provider.callCount).toBe(1);
 
 		const assistantMessages = harness.session.messages.filter((m) => m.role === "assistant");
 		expect(assistantMessages).toHaveLength(1);
@@ -38,7 +38,7 @@ describe("test harness", () => {
 		await harness.session.prompt("b");
 		await harness.session.prompt("c");
 
-		expect(harness.faux.callCount).toBe(3);
+		expect(harness.provider.callCount).toBe(3);
 
 		const assistantTexts = harness.session.messages
 			.filter((m): m is AssistantMessage => m.role === "assistant")
@@ -69,7 +69,7 @@ describe("test harness", () => {
 		await harness.session.prompt("use the tool");
 
 		expect(toolExecuted).toBe(true);
-		expect(harness.faux.callCount).toBe(2);
+		expect(harness.provider.callCount).toBe(2);
 
 		const toolResults = harness.session.messages.filter((m) => m.role === "toolResult");
 		expect(toolResults).toHaveLength(1);
@@ -96,7 +96,7 @@ describe("test harness", () => {
 
 		await harness.session.prompt("hi");
 
-		expect(harness.faux.callCount).toBe(2);
+		expect(harness.provider.callCount).toBe(2);
 
 		const retryStarts = harness.eventsOfType("auto_retry_start");
 		expect(retryStarts).toHaveLength(1);
@@ -138,8 +138,8 @@ describe("test harness", () => {
 
 		await harness.session.prompt("my question");
 
-		expect(harness.faux.contexts).toHaveLength(1);
-		const ctx = harness.faux.contexts[0];
+		expect(harness.provider.contexts).toHaveLength(1);
+		const ctx = harness.provider.contexts[0];
 		const userMsg = ctx.messages.find((m) => m.role === "user");
 		expect(userMsg).toBeDefined();
 	});
@@ -151,7 +151,7 @@ describe("test harness", () => {
 		await harness.session.prompt("2");
 		await harness.session.prompt("3");
 
-		expect(harness.faux.callCount).toBe(3);
+		expect(harness.provider.callCount).toBe(3);
 
 		const texts = harness.session.messages
 			.filter((m): m is AssistantMessage => m.role === "assistant")

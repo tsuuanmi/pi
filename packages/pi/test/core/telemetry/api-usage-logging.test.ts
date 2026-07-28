@@ -25,7 +25,7 @@ describe("ApiUsageLogger", () => {
 			const record = JSON.parse(lines[0]);
 			expect(record.schema_version).toBe(1);
 			expect(record.session_id).toBe(harness.sessionManager.getSessionId());
-			expect(record.provider).toBe("faux");
+			expect(record.provider).toBe("test");
 			expect(record.consumed_context.messages[0].content[0].text).toContain("[REDACTED]");
 			expect(record.usage_unavailable).toBe("usage_provenance_missing");
 			expect(record.token_usage).toBeUndefined();

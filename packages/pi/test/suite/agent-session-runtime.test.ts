@@ -18,7 +18,7 @@ import {
 	createAgentSessionServices,
 } from "#pi/session/agent-session-runtime";
 import { SessionManager } from "#pi/session/session-manager";
-import { fauxAssistantMessage, registerFauxProvider } from "#pi-test/helpers/provider";
+import { testAssistantMessage, registerTestProvider } from "#pi-test/helpers/provider";
 
 type RecordedSessionEvent =
 	| SessionBeforeSwitchEvent
@@ -43,30 +43,30 @@ describe("AgentSessionRuntime characterization", () => {
 			options?.cwd ?? join(tmpdir(), `pi-runtime-suite-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		mkdirSync(tempDir, { recursive: true });
 
-		const faux = registerFauxProvider({
+		const testProvider = registerTestProvider({
 			models: [
-				{ id: "faux-1", reasoning: true },
-				{ id: "faux-2", reasoning: false },
+				{ id: "test-1", reasoning: true },
+				{ id: "test-2", reasoning: false },
 			],
 		});
-		faux.setResponses([fauxAssistantMessage("one"), fauxAssistantMessage("two"), fauxAssistantMessage("three")]);
+		testProvider.setResponses([testAssistantMessage("one"), testAssistantMessage("two"), testAssistantMessage("three")]);
 
 		const authStorage = AuthStorage.inMemory();
-		authStorage.setRuntimeApiKey(faux.getModel().provider, "faux-key");
+		authStorage.setRuntimeApiKey(testProvider.getModel().provider, "test-key");
 
 		const runtimeOptions = {
 			agentDir: tempDir,
 			authStorage,
-			model: options?.bootstrapModel === false ? undefined : faux.getModel(),
+			model: options?.bootstrapModel === false ? undefined : testProvider.getModel(),
 			thinkingLevel: options?.bootstrapThinkingLevel === false ? undefined : undefined,
 			resourceLoaderOptions: {
 				extensionFactories: [
 					(pi: ExtensionAPI) => {
-						pi.registerProvider(faux.getModel().provider, {
-							baseUrl: faux.getModel().baseUrl,
-							apiKey: "faux-key",
-							api: faux.api,
-							models: faux.models.map((registeredModel) => ({
+						pi.registerProvider(testProvider.getModel().provider, {
+							baseUrl: testProvider.getModel().baseUrl,
+							apiKey: "test-key",
+							api: testProvider.api,
+							models: testProvider.models.map((registeredModel) => ({
 								id: registeredModel.id,
 								name: registeredModel.name,
 								api: registeredModel.api,
@@ -111,13 +111,13 @@ describe("AgentSessionRuntime characterization", () => {
 
 		cleanups.push(async () => {
 			await runtime.dispose();
-			faux.unregister();
+			testProvider.unregister();
 			if (existsSync(tempDir)) {
 				rmSync(tempDir, { recursive: true, force: true });
 			}
 		});
 
-		return { runtime, faux, tempDir };
+		return { runtime, provider: testProvider, tempDir };
 	}
 
 	it("persists message_end assistant replacements to the session manager", async () => {
@@ -334,29 +334,29 @@ describe("AgentSessionRuntime characterization", () => {
 		const tempDir = join(tmpdir(), `pi-runtime-suite-in-memory-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		mkdirSync(tempDir, { recursive: true });
 
-		const faux = registerFauxProvider({
+		const testProvider = registerTestProvider({
 			models: [
-				{ id: "faux-1", reasoning: true },
-				{ id: "faux-2", reasoning: false },
+				{ id: "test-1", reasoning: true },
+				{ id: "test-2", reasoning: false },
 			],
 		});
-		faux.setResponses([fauxAssistantMessage("one"), fauxAssistantMessage("two"), fauxAssistantMessage("three")]);
+		testProvider.setResponses([testAssistantMessage("one"), testAssistantMessage("two"), testAssistantMessage("three")]);
 
 		const authStorage = AuthStorage.inMemory();
-		authStorage.setRuntimeApiKey(faux.getModel().provider, "faux-key");
+		authStorage.setRuntimeApiKey(testProvider.getModel().provider, "test-key");
 
 		const runtimeOptions = {
 			agentDir: tempDir,
 			authStorage,
-			model: faux.getModel(),
+			model: testProvider.getModel(),
 			resourceLoaderOptions: {
 				extensionFactories: [
 					(pi: ExtensionAPI) => {
-						pi.registerProvider(faux.getModel().provider, {
-							baseUrl: faux.getModel().baseUrl,
-							apiKey: "faux-key",
-							api: faux.api,
-							models: faux.models.map((registeredModel) => ({
+						pi.registerProvider(testProvider.getModel().provider, {
+							baseUrl: testProvider.getModel().baseUrl,
+							apiKey: "test-key",
+							api: testProvider.api,
+							models: testProvider.models.map((registeredModel) => ({
 								id: registeredModel.id,
 								name: registeredModel.name,
 								api: registeredModel.api,
@@ -398,7 +398,7 @@ describe("AgentSessionRuntime characterization", () => {
 		await runtime.session.bindExtensions({});
 		cleanups.push(async () => {
 			await runtime.dispose();
-			faux.unregister();
+			testProvider.unregister();
 			if (existsSync(tempDir)) {
 				rmSync(tempDir, { recursive: true, force: true });
 			}
@@ -452,20 +452,20 @@ describe("AgentSessionRuntime characterization", () => {
 		const secondDir = join(tmpdir(), `pi-runtime-cwd-b-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		mkdirSync(firstDir, { recursive: true });
 		mkdirSync(secondDir, { recursive: true });
-		const { runtime, faux, tempDir } = await createRuntimeForTest(() => {}, { cwd: firstDir });
+		const { runtime, provider, tempDir } = await createRuntimeForTest(() => {}, { cwd: firstDir });
 		const otherAuthStorage = AuthStorage.inMemory();
-		otherAuthStorage.setRuntimeApiKey(faux.getModel().provider, "faux-key");
+		otherAuthStorage.setRuntimeApiKey(provider.getModel().provider, "test-key");
 		const otherRuntimeOptions = {
 			agentDir: tempDir,
 			authStorage: otherAuthStorage,
 			resourceLoaderOptions: {
 				extensionFactories: [
 					(pi: ExtensionAPI) => {
-						pi.registerProvider(faux.getModel().provider, {
-							baseUrl: faux.getModel().baseUrl,
-							apiKey: "faux-key",
-							api: faux.api,
-							models: faux.models.map((registeredModel) => ({
+						pi.registerProvider(provider.getModel().provider, {
+							baseUrl: provider.getModel().baseUrl,
+							apiKey: "test-key",
+							api: provider.api,
+							models: provider.models.map((registeredModel) => ({
 								id: registeredModel.id,
 								name: registeredModel.name,
 								api: registeredModel.api,
@@ -520,25 +520,25 @@ describe("AgentSessionRuntime characterization", () => {
 	});
 
 	it("restores model and thinking state from the destination session", async () => {
-		const { runtime, faux, tempDir } = await createRuntimeForTest(() => {}, {
+		const { runtime, provider, tempDir } = await createRuntimeForTest(() => {}, {
 			bootstrapModel: false,
 			bootstrapThinkingLevel: false,
 		});
 		const otherDir = join(tempDir, "other");
 		mkdirSync(otherDir, { recursive: true });
 		const otherAuthStorage = AuthStorage.inMemory();
-		otherAuthStorage.setRuntimeApiKey(faux.getModel().provider, "faux-key");
+		otherAuthStorage.setRuntimeApiKey(provider.getModel().provider, "test-key");
 		const otherRuntimeOptions = {
 			agentDir: tempDir,
 			authStorage: otherAuthStorage,
 			resourceLoaderOptions: {
 				extensionFactories: [
 					(pi: ExtensionAPI) => {
-						pi.registerProvider(faux.getModel().provider, {
-							baseUrl: faux.getModel().baseUrl,
-							apiKey: "faux-key",
-							api: faux.api,
-							models: faux.models.map((registeredModel) => ({
+						pi.registerProvider(provider.getModel().provider, {
+							baseUrl: provider.getModel().baseUrl,
+							apiKey: "test-key",
+							api: provider.api,
+							models: provider.models.map((registeredModel) => ({
 								id: registeredModel.id,
 								name: registeredModel.name,
 								api: registeredModel.api,
@@ -583,14 +583,14 @@ describe("AgentSessionRuntime characterization", () => {
 		cleanups.push(async () => {
 			await otherRuntime.dispose();
 		});
-		await otherRuntime.session.setModel(faux.getModel("faux-2")!);
+		await otherRuntime.session.setModel(provider.getModel("test-2")!);
 		otherRuntime.session.setThinkingLevel("off");
 		await otherRuntime.session.prompt("hello");
 		const targetSessionFile = otherRuntime.session.sessionFile!;
 
 		await runtime.switchSession(targetSessionFile);
 
-		expect(runtime.session.model?.id).toBe("faux-2");
+		expect(runtime.session.model?.id).toBe("test-2");
 		expect(runtime.session.thinkingLevel).toBe("off");
 	});
 });

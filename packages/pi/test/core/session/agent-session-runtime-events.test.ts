@@ -17,7 +17,7 @@ import {
 	createAgentSessionServices,
 } from "#pi/session/agent-session-runtime";
 import { SessionManager } from "#pi/session/session-manager";
-import { fauxAssistantMessage, registerFauxProvider } from "#pi-test/helpers/provider";
+import { testAssistantMessage, registerTestProvider } from "#pi-test/helpers/provider";
 
 type RecordedSessionEvent =
 	| SessionBeforeSwitchEvent
@@ -38,16 +38,16 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 		const tempDir = join(tmpdir(), `pi-runtime-events-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		mkdirSync(tempDir, { recursive: true });
 
-		const faux = registerFauxProvider();
-		faux.setResponses([fauxAssistantMessage("one"), fauxAssistantMessage("two"), fauxAssistantMessage("three")]);
+		const testProvider = registerTestProvider();
+		testProvider.setResponses([testAssistantMessage("one"), testAssistantMessage("two"), testAssistantMessage("three")]);
 
 		const authStorage = AuthStorage.inMemory();
-		authStorage.setRuntimeApiKey(faux.getModel().provider, "faux-key");
+		authStorage.setRuntimeApiKey(testProvider.getModel().provider, "test-key");
 
 		const runtimeOptions = {
 			agentDir: tempDir,
 			authStorage,
-			model: faux.getModel(),
+			model: testProvider.getModel(),
 			resourceLoaderOptions: {
 				extensionFactories: [extensionFactory],
 				noSkills: true,
@@ -65,7 +65,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 					services,
 					sessionManager,
 					sessionStartEvent,
-					model: faux.getModel(),
+					model: testProvider.getModel(),
 				})),
 				services,
 				diagnostics: services.diagnostics,
@@ -80,13 +80,13 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 
 		cleanups.push(async () => {
 			await runtimeHost.dispose();
-			faux.unregister();
+			testProvider.unregister();
 			if (existsSync(tempDir)) {
 				rmSync(tempDir, { recursive: true, force: true });
 			}
 		});
 
-		return { runtimeHost, faux };
+		return { runtimeHost, provider: testProvider };
 	}
 
 	it("emits session_before_switch and session_start for new and resume flows", async () => {

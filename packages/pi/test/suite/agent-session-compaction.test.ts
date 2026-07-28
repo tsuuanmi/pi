@@ -1,6 +1,6 @@
 import { type AssistantMessage, createAssistantMessageEventStream, type Model } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fauxAssistantMessage } from "#pi-test/helpers/provider";
+import { testAssistantMessage } from "#pi-test/helpers/provider";
 import { createHarness, type Harness } from "#pi-test/suite/harness";
 
 type SessionWithCompactionInternals = {
@@ -30,7 +30,7 @@ function createAssistant(
 ): AssistantMessage {
 	const model = harness.getModel();
 	return {
-		...fauxAssistantMessage("", {
+		...testAssistantMessage("", {
 			stopReason: options.stopReason,
 			errorMessage: options.errorMessage,
 			timestamp: options.timestamp,
@@ -49,7 +49,7 @@ function useSummaryStreamFn(harness: Harness, summary: string): () => number {
 		const stream = createAssistantMessageEventStream();
 		queueMicrotask(() => {
 			const message: AssistantMessage = {
-				...fauxAssistantMessage(summary),
+				...testAssistantMessage(summary),
 				api: model.api,
 				provider: model.provider,
 				model: model.id,
@@ -201,7 +201,7 @@ describe("AgentSession compaction characterization", () => {
 			],
 		});
 		harnesses.push(harness);
-		harness.setResponses([fauxAssistantMessage("one"), fauxAssistantMessage("two")]);
+		harness.setResponses([testAssistantMessage("one"), testAssistantMessage("two")]);
 		await harness.session.prompt("first");
 		await harness.session.prompt("second");
 
@@ -379,7 +379,7 @@ describe("AgentSession compaction characterization", () => {
 	it("does not trigger threshold compaction below the threshold or when disabled", async () => {
 		const belowThresholdHarness = await createHarness({
 			settings: { compaction: { enabled: true, reserveTokens: 1000 } },
-			models: [{ id: "faux-1", contextWindow: 200_000 }],
+			models: [{ id: "test-1", contextWindow: 200_000 }],
 		});
 		harnesses.push(belowThresholdHarness);
 		const disabledHarness = await createHarness({ settings: { compaction: { enabled: false } } });
