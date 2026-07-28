@@ -1,8 +1,9 @@
-import type { ExtensionAPI, ExtensionContext, SubagentRecord, SubagentVisibility } from "@tsuuanmi/pi-agent";
+import type { SubagentRecord, SubagentVisibility } from "@tsuuanmi/pi-agent";
 import { createSubagentListReceipt, createSubagentReceipt, renderSubagentProgress } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceiptWithStructuredReceipt } from "#workflows/artifacts/artifacts";
 import { assertAgentThinkingLevel, requireSubagentManager } from "#workflows/orchestration/workflow-tool-utils";
+import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
 
 const subagentSpawnSchema = Type.Object({
 	agent: Type.Optional(
@@ -132,7 +133,7 @@ function formatSubagentRecord(
 	);
 }
 
-async function executeSubagentSpawn(params: SubagentSpawnInput, ctx: ExtensionContext, signal?: AbortSignal) {
+async function executeSubagentSpawn(params: SubagentSpawnInput, ctx: WorkflowContext, signal?: AbortSignal) {
 	assertAgentThinkingLevel(params.thinkingLevel);
 	const result = await requireSubagentManager(ctx).spawn({
 		agent: params.agent,
@@ -169,7 +170,7 @@ async function executeSubagentSpawn(params: SubagentSpawnInput, ctx: ExtensionCo
 	};
 }
 
-async function executeSubagentStatus(params: SubagentStatusInput, ctx: ExtensionContext) {
+async function executeSubagentStatus(params: SubagentStatusInput, ctx: WorkflowContext) {
 	const manager = requireSubagentManager(ctx);
 	const verbosity = normalizeSubagentVerbosity(params.verbosity);
 	if (verbosity === "full" && !params.id) {
@@ -203,7 +204,7 @@ async function executeSubagentStatus(params: SubagentStatusInput, ctx: Extension
 	};
 }
 
-async function executeSubagentAwait(params: SubagentAwaitInput, ctx: ExtensionContext) {
+async function executeSubagentAwait(params: SubagentAwaitInput, ctx: WorkflowContext) {
 	const manager = requireSubagentManager(ctx);
 	const verbosity = normalizeSubagentVerbosity(params.verbosity);
 	const result = await manager.waitFor(params.id, {
@@ -237,7 +238,7 @@ async function executeSubagentAwait(params: SubagentAwaitInput, ctx: ExtensionCo
 	};
 }
 
-async function executeSubagentResume(params: SubagentResumeInput, ctx: ExtensionContext, signal?: AbortSignal) {
+async function executeSubagentResume(params: SubagentResumeInput, ctx: WorkflowContext, signal?: AbortSignal) {
 	const result = await requireSubagentManager(ctx).resume(params.id, params.message, {
 		signal,
 		storageSessionId: ctx.sessionManager.getSessionId(),
@@ -260,7 +261,7 @@ async function executeSubagentResume(params: SubagentResumeInput, ctx: Extension
 	};
 }
 
-async function executeSubagentSteer(params: SubagentSteerInput, ctx: ExtensionContext) {
+async function executeSubagentSteer(params: SubagentSteerInput, ctx: WorkflowContext) {
 	const delivery = params.delivery === "followUp" ? "followUp" : "steer";
 	const result = await requireSubagentManager(ctx).steer(
 		params.id,
@@ -286,7 +287,7 @@ async function executeSubagentSteer(params: SubagentSteerInput, ctx: ExtensionCo
 	};
 }
 
-async function executeSubagentPause(params: SubagentPauseInput, ctx: ExtensionContext) {
+async function executeSubagentPause(params: SubagentPauseInput, ctx: WorkflowContext) {
 	const result = await requireSubagentManager(ctx).pause(params.id, ctx.sessionManager.getSessionId());
 	return {
 		content: [
@@ -304,7 +305,7 @@ async function executeSubagentPause(params: SubagentPauseInput, ctx: ExtensionCo
 	};
 }
 
-async function executeSubagentCancel(params: SubagentIdInput, ctx: ExtensionContext) {
+async function executeSubagentCancel(params: SubagentIdInput, ctx: WorkflowContext) {
 	const record = await requireSubagentManager(ctx).cancel(params.id, ctx.sessionManager.getSessionId());
 	return {
 		content: [
@@ -320,7 +321,7 @@ async function executeSubagentCancel(params: SubagentIdInput, ctx: ExtensionCont
 	};
 }
 
-async function executeSubagentInspect(params: SubagentIdInput, ctx: ExtensionContext) {
+async function executeSubagentInspect(params: SubagentIdInput, ctx: WorkflowContext) {
 	const result = await requireSubagentManager(ctx).inspect(params.id, ctx.sessionManager.getSessionId());
 	return {
 		content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
@@ -331,7 +332,7 @@ async function executeSubagentInspect(params: SubagentIdInput, ctx: ExtensionCon
 	};
 }
 
-async function executeSubagentAttach(params: SubagentIdInput, ctx: ExtensionContext) {
+async function executeSubagentAttach(params: SubagentIdInput, ctx: WorkflowContext) {
 	const result = await requireSubagentManager(ctx).attach(params.id, ctx.sessionManager.getSessionId());
 	const text = result.ok
 		? `Attach ${params.id}: ${result.attachCommand}`
@@ -345,7 +346,7 @@ async function executeSubagentAttach(params: SubagentIdInput, ctx: ExtensionCont
 	};
 }
 
-async function executeSubagentKill(params: SubagentIdInput, ctx: ExtensionContext) {
+async function executeSubagentKill(params: SubagentIdInput, ctx: WorkflowContext) {
 	const result = await requireSubagentManager(ctx).kill(params.id, ctx.sessionManager.getSessionId());
 	const text = result.ok ? `Subagent ${params.id} killed` : `Subagent ${params.id} kill failed: ${result.reason}`;
 	return {
@@ -357,7 +358,7 @@ async function executeSubagentKill(params: SubagentIdInput, ctx: ExtensionContex
 	};
 }
 
-export function registerSubagentTools(pi: ExtensionAPI): void {
+export function registerSubagentTools(pi: WorkflowToolHost): void {
 	pi.registerTool({
 		name: "subagent_spawn",
 		label: "Subagent Spawn",

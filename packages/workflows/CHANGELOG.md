@@ -1,5 +1,9 @@
 ## [0.2.2] - 2026-07-23
 
+### Breaking Changes
+
+- **extensions**: Removed the built-in workflows extension entrypoint from `@tsuuanmi/pi-workflows`; `@tsuuanmi/pi` now owns the bundled registration layer.
+
 ### Added
 
 - **ultragoal**: Added checkpointed task execution under one main goal, including state-only checkpoint snapshots and `restore-checkpoint` recovery for the latest valid checkpoint.

@@ -320,10 +320,13 @@ import {
 } from "@tsuuanmi/pi-workflows";
 ```
 
-The default export is the workflows extension that the AI agent loads. Subpath exports:
+`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools/workflow-tools`. The bundled Pi extension entrypoint now lives in `@tsuuanmi/pi`.
+
+Subpath exports:
 
 - `@tsuuanmi/pi-workflows/commands/workflow` — the `pi workflow` command, including `pi workflow state`.
 - `@tsuuanmi/pi-workflows/commands/state-command` — compatibility alias for `commands/workflow`.
+- `@tsuuanmi/pi-workflows/tools/workflow-tools` — workflow tool registration helper used by Pi's bundled extension.
 - `@tsuuanmi/pi-workflows/runtime/*` — individual harness runtime modules (sessions, leases, RPC, GC, mutation, storage, receipt rules, etc.).
 
 See `src/index.ts` for the complete barrel.
@@ -352,7 +355,7 @@ Workspace tests import packages from the gitignored `dist/`, so rebuild this pac
 - [docs/workflow.md](docs/workflow.md) — full `pi workflow` control-plane reference, agent profiles, and internals.
 - [docs/agents/agents.md](docs/agents/agents.md) — bundled agent profiles.
 - [docs/commands/workflow.md](docs/commands/workflow.md) — command entry points and supported verbs.
-- [docs/extensions/workflows.md](docs/extensions/workflows.md) — workflow extension hooks and registered tools.
+- [docs/extensions/workflows.md](docs/extensions/workflows.md) — Pi integration boundaries and registered tools.
 - [docs/skills/](docs/skills/) — per-skill design and runtime docs.
 - [docs/runtime/](docs/runtime/), [docs/subagents/](docs/subagents/), [docs/state/](docs/state/), [docs/orchestration/](docs/orchestration/), [docs/artifacts/](docs/artifacts/), [docs/audit/](docs/audit/), [docs/compaction/](docs/compaction/), [docs/registry/](docs/registry/), [docs/session/](docs/session/) — per-source-directory module docs.
 - [CHANGELOG.md](CHANGELOG.md) — changes.

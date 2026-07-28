@@ -18,6 +18,10 @@
 			"types": "./dist/commands/workflow.d.ts",
 			"import": "./dist/commands/workflow.js"
 		},
+		"./tools/workflow-tools": {
+			"types": "./dist/tools/workflow-tools.d.ts",
+			"import": "./dist/tools/workflow-tools.js"
+		},
 		"./runtime/*": {
 			"types": "./dist/runtime/*.d.ts",
 			"import": "./dist/runtime/*.js"
@@ -42,9 +46,6 @@
 		"test": "vitest --run"
 	},
 	"pi": {
-		"extensions": [
-			"src/extensions/workflows.ts"
-		],
 		"skills": [
 			"src/skills/**/SKILL.md"
 		],

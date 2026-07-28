@@ -1,4 +1,4 @@
-import type { ExtensionContext } from "@tsuuanmi/pi-agent";
+import type { WorkflowContext } from "#workflows/tools/workflow-tools";
 
 export type DeepInterviewHandoff = "ralplan" | "team" | "ultragoal" | "stop";
 export type RalplanApprovalTarget = "ultragoal" | "team" | "stop";
@@ -34,7 +34,7 @@ export function assertAgentThinkingLevel(value: string | undefined): asserts val
 	}
 }
 
-export function requireSubagentManager(ctx: ExtensionContext) {
+export function requireSubagentManager(ctx: WorkflowContext) {
 	if (!ctx.subagents) throw new Error("No subagent manager is available in this session.");
 	return ctx.subagents;
 }

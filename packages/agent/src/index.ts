@@ -9,7 +9,6 @@ export type { AgentRunOptions, AgentRunResult } from "#agent/agent/runtime/types
 export * from "#agent/agent/state/messages";
 export * from "#agent/agent/state/state";
 export * from "#agent/agent/structured-output";
-export * from "#agent/api/extension-contract";
 export * from "#agent/compaction/message-utils";
 export { Orchestrator, runTeam } from "#agent/orchestrator/orchestrator";
 export type {

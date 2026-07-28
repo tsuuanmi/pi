@@ -28,14 +28,10 @@ const BUILT_IN_WORKFLOW_AGENT_TOOLS = new Set(["team_spawn_task_agent", "ultrago
 function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions: T[]): T[] {
 	return extensions.filter(
 		(extension) =>
-			!extension.path.endsWith("/src/packages/workflows/extensions/workflows.ts") &&
-			!extension.path.endsWith("/dist/packages/workflows/extensions/workflows.js") &&
-			!extension.path.endsWith("/src/packages/workflows/runtime/workflows-extension.ts") &&
-			!extension.path.endsWith("/dist/packages/workflows/runtime/workflows-extension.js") &&
-			!extension.path.includes("/workflows/src/extensions/workflows.ts") &&
-			!extension.path.includes("/workflows/dist/extensions/workflows.js") &&
-			!extension.path.includes("/workflows/src/runtime/workflows-extension.ts") &&
-			!extension.path.includes("/workflows/dist/runtime/workflows-extension.js"),
+			!extension.path.endsWith("/src/packages/pi/extensions/builtin-workflows.ts") &&
+			!extension.path.endsWith("/dist/packages/pi/extensions/builtin-workflows.js") &&
+			!extension.path.includes("/pi/src/extensions/builtin-workflows.ts") &&
+			!extension.path.includes("/pi/dist/extensions/builtin-workflows.js"),
 	);
 }
 

@@ -1,4 +1,3 @@
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { handoffWorkflow } from "#workflows/orchestration/handoff";
@@ -21,6 +20,7 @@ import type {
 import { assertSafePathComponent } from "#workflows/state/state-schema";
 import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/state/state-writer";
 import { activeRalplanRunId, defaultWorkflowId } from "#workflows/state/workflow-state";
+import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
 
 const planQuestionSchema = Type.Object({
 	interviewId: Type.Optional(Type.String()),
@@ -84,7 +84,7 @@ type ReadCompactInput = Static<typeof readCompactSchema>;
 type RestateGoalInput = Static<typeof restateGoalSchema>;
 type WriteSpecInput = Static<typeof writeSpecSchema>;
 
-function sessionId(ctx: ExtensionContext): string {
+function sessionId(ctx: WorkflowContext): string {
 	return ctx.sessionManager.getSessionId();
 }
 
@@ -92,7 +92,7 @@ function textResult(text: string, details: unknown) {
 	return { content: [{ type: "text" as const, text }], details: workflowReceipt(details as Record<string, unknown>) };
 }
 
-async function executeWriteSpec(params: WriteSpecInput, ctx: ExtensionContext) {
+async function executeWriteSpec(params: WriteSpecInput, ctx: WorkflowContext) {
 	await assertDeepInterviewSpecReady(ctx.cwd, sessionId(ctx), { allowEarlyExit: params.allowEarlyExit === true });
 	const slug = params.slug?.trim() || defaultWorkflowId("spec");
 	assertSafePathComponent(slug, "slug");
@@ -141,7 +141,7 @@ async function executeWriteSpec(params: WriteSpecInput, ctx: ExtensionContext) {
 	});
 }
 
-export function registerDeepInterviewTools(pi: ExtensionAPI): void {
+export function registerDeepInterviewTools(pi: WorkflowToolHost): void {
 	pi.registerTool({
 		name: "deep_interview_plan_question",
 		label: "Deep Interview Plan Question",

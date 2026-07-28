@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **extensions**: Removed the shared extension contract surface from `@tsuuanmi/pi-agent`; the public Pi extension API now owns extension hook registration and actions.
 - **agent**: Collapsed the split simple/runtime Agent surface into one public runtime-capable `Agent`; `RuntimeAgent` is no longer exported.
 - **agent**: Standardized custom runtimes on `AgentRuntime.stream()` and removed split `runPrompt()`/`continue()` runtime methods.
 - **agent**: Standardized the public tool module on `src/tool`, with `createToolRegistry()`, `registerTool()`, `Agent.registerTool()`, and `RegisterToolOptions`.

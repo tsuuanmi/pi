@@ -1,4 +1,3 @@
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import {
@@ -13,6 +12,7 @@ import { normalizeRalplanExplorerGate } from "#workflows/skills/ralplan/ralplan-
 import { readRalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";
 import { assertRalplanStage, assertSafePathComponent } from "#workflows/state/state-schema";
 import { defaultWorkflowId, readWorkflowState } from "#workflows/state/workflow-state";
+import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
 
 const ralplanRunAgentSchema = Type.Object({
 	role: Type.Optional(
@@ -44,7 +44,7 @@ const ralplanRunAgentSchema = Type.Object({
 
 type RalplanRunAgentInput = Static<typeof ralplanRunAgentSchema>;
 
-async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: ExtensionContext, signal?: AbortSignal) {
+async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: WorkflowContext, signal?: AbortSignal) {
 	assertRalplanStage(params.stage);
 	assertRalplanRole(params.role);
 	assertAgentThinkingLevel(params.thinkingLevel);
@@ -136,7 +136,7 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Extensi
 	};
 }
 
-export function registerRalplanTools(pi: ExtensionAPI): void {
+export function registerRalplanTools(pi: WorkflowToolHost): void {
 	pi.registerTool({
 		name: "ralplan_run_agent",
 		label: "Ralplan Role Agent",

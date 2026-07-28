@@ -24,7 +24,6 @@ The docs tree mirrors `packages/agent/src` so source modules and their docs use 
 - [`agent/agent.md`](agent/agent.md) - `src/agent/agent.ts`: `Agent` class, state management, event subscription, message queues, and lifecycle control.
 - [`agent/runtime/loop.md`](agent/runtime/loop.md) - `src/agent/runtime/loop.ts`: `agentLoop()`, `agentLoopContinue()`, turn execution, tool execution, steering, follow-up, and abort handling.
 - [`agent/runtime/events.md`](agent/runtime/events.md) - `src/agent/runtime/events.ts`: lifecycle events and instrumentation points emitted by `Agent` and the loop.
-- [`api/extension-contract.md`](api/extension-contract.md) - `src/api/extension-contract.ts`: minimal extension/tool/UI/subagent host contracts shared with higher-level packages.
 - [`agent/state/messages.md`](agent/state/messages.md) - `src/agent/state/messages.ts`: non-LLM agent message roles and `convertToLlm()` conversion.
 - [`agent/runtime/types.md`](agent/runtime/types.md) - `src/agent/runtime/types.ts`: `Agent.run()` option and result types.
 - [`node/index.md`](node/index.md) - `src/node/node.ts` and `src/node/*`: Node-only child-process, process-runtime, JSONL, path, and file-mutation queue helpers.

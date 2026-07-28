@@ -99,7 +99,7 @@ Rejecting a standalone `.agent` platform does not reject, deprecate, or remove P
 A future implementation plan may inspect these areas as likely references:
 
 - `packages/workflows/docs/workflow.md` for current workflow behavior and boundaries;
-- `packages/workflows/src/extensions/workflows.ts` for workflow tool registration and extension integration;
+- `packages/workflows/src/tools/workflow-tools.ts` for workflow tool registration helpers and `packages/pi/src/extensions/builtin-workflows.ts` for the Pi-owned extension entrypoint;
 - workflow state, handoff, receipt, subagent, team, ralplan, deep-interview, and ultragoal harness areas under `packages/workflows/src/`;
 - `packages/pi/README.md` for Pi's extension, skill, prompt, package, and customization philosophy.
 

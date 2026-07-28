@@ -2,12 +2,10 @@
  * Writes dist-correct package.json manifests for the bundled packages.
  *
  * Bundled package source manifests declare `src/`-prefixed `.ts` paths because
- * the dev package roots are the workspace source dirs (e.g. the workflows
- * extension is src/extensions/workflows.ts). When bundled into pi,
+ * the dev package roots are the workspace source dirs. When bundled into pi,
  * copy-assets flattens the compiled output into dist/packages/<name> with no
- * `src/` segment and `.js` extensions (e.g. dist/packages/workflows/extensions/
- * workflows.js). The verbatim source manifest would resolve to non-existent
- * paths and load nothing in the published dist.
+ * `src/` segment and `.js` extensions. The verbatim source manifest would
+ * resolve to non-existent paths and load nothing in the published dist.
  *
  * This script reads each bundled package's source manifest, strips a leading
  * `src/` and maps `.ts` to `.js`, and writes the result so the dist
@@ -31,7 +29,7 @@ function rewriteEntry(entry) {
 	if (typeof p === "string" && p.startsWith("./dist/")) {
 		p = `./${p.slice(7)}`;
 	}
-	if (typeof p === "string" && p.endsWith(".ts")) {
+	if (typeof p === "string" && p.endsWith(".ts") && !p.endsWith(".d.ts")) {
 		p = `${p.slice(0, -3)}.js`;
 	}
 	return p;
@@ -59,6 +57,9 @@ for (const name of targets) {
 				Array.isArray(value) ? value.map(rewriteEntry) : value,
 			]),
 		);
+	}
+	if (pkg.exports && typeof pkg.exports === "object") {
+		pkg.exports = rewriteImports(pkg.exports);
 	}
 	if (pkg.imports && typeof pkg.imports === "object") {
 		pkg.imports = rewriteImports(pkg.imports);

@@ -1,6 +1,7 @@
-import type { ExtensionAPI, ExtensionContext, SubagentManager, SubagentRunRequest } from "@tsuuanmi/pi-agent";
-import workflowsExtension from "@tsuuanmi/pi-workflows";
+import type { SubagentManager, SubagentRunRequest } from "@tsuuanmi/pi-agent";
 import { describe, expect, it } from "vitest";
+import { registerSubagentTools } from "#workflows/subagents/subagent-tools";
+import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
 
 type RegisteredTool = {
 	name: string;
@@ -9,7 +10,7 @@ type RegisteredTool = {
 		params: Record<string, unknown>,
 		signal: AbortSignal | undefined,
 		onUpdate: undefined,
-		ctx: ExtensionContext,
+		ctx: WorkflowContext,
 	) => Promise<unknown>;
 };
 
@@ -22,8 +23,8 @@ function collectRegisteredTools(): Map<string, RegisteredTool> {
 		registerCommand(): void {},
 		on(): void {},
 		sendUserMessage(): void {},
-	} as unknown as ExtensionAPI;
-	workflowsExtension(api);
+	} as unknown as WorkflowToolHost;
+	registerSubagentTools(api);
 	return tools;
 }
 
@@ -64,7 +65,7 @@ describe("subagent tools", () => {
 			cwd: "/repo",
 			sessionManager: { getSessionId: () => "session-1" },
 			subagents,
-		} as unknown as ExtensionContext;
+		} as unknown as WorkflowContext;
 
 		const tool = collectRegisteredTools().get("subagent_spawn");
 		expect(tool).toBeDefined();
@@ -126,7 +127,7 @@ describe("subagent tools", () => {
 			cwd: "/repo",
 			sessionManager: { getSessionId: () => "session-1" },
 			subagents,
-		} as unknown as ExtensionContext;
+		} as unknown as WorkflowContext;
 		const tools = collectRegisteredTools();
 
 		const inspected = await tools

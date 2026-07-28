@@ -1,25 +1,24 @@
-# Workflows Extension
+# Workflows Integration
 
-The package extension entry point lives at `src/extensions/workflows.ts` and is the package default export.
+`@tsuuanmi/pi-workflows` exposes model-visible workflow tool registration and host contracts from `src/tools/workflow-tools.ts` and the `@tsuuanmi/pi-workflows/tools/workflow-tools` subpath.
+
+Pi owns the built-in extension entrypoint at `packages/pi/src/extensions/builtin-workflows.ts`. That entrypoint registers workflow tools, wires Pi hook actions, refreshes HUD state, and applies the Deep Interview mutation guard.
 
 ## Registration
 
-On load, the extension:
+The workflow tool helper registers:
 
-- Registers generic subagent lifecycle tools from `src/subagents/subagent-tools.ts`.
-- Registers Deep Interview state tools from `src/skills/deep-interview/deep-interview-tools.ts`.
-- Registers guarded workflow spawn tools from `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, and `src/skills/ultragoal/ultragoal-tools.ts`.
-- Imports skill transition tables for Deep Interview, Ralplan, Team, and Ultragoal.
-- Hooks session/turn/tool lifecycle events to refresh workflow UI state.
-- Blocks unsafe `edit`/`write` calls when the Deep Interview mutation guard says an unfinished interview is active.
+- Generic subagent lifecycle tools from `src/subagents/subagent-tools.ts`.
+- Deep Interview state tools from `src/skills/deep-interview/deep-interview-tools.ts`.
+- Guarded workflow spawn tools from `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, and `src/skills/ultragoal/ultragoal-tools.ts`.
 
 ## Model-Visible Tools
 
 Registered tools are documented in [subagents/subagents.md](../subagents/subagents.md).
 
-## HUD Hooks
+## Hook Actions
 
-The extension hooks lifecycle events to refresh workflow UI state through `@tsuuanmi/pi-tui`. Workflow rendering remains session-scoped: the interactive status line reads session-scoped active state directly.
+Pi owns lifecycle hooks and hook actions. Workflow rendering remains session-scoped: the interactive status line reads session-scoped active state directly.
 
 ## See Also
 

@@ -39,7 +39,6 @@ import {
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
-import workflowsExtension from "#workflows/extensions/workflows";
 import {
 	isBlockingQuestionPhaseForSkill,
 	skillGateValidators,
@@ -55,6 +54,7 @@ import {
 	writeSessionState,
 } from "#workflows/runtime/storage";
 import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/runtime/types";
+import { registerWorkflowTools } from "#workflows/tools/workflow-tools";
 
 const sessionId = "test-session-id";
 const execFileAsync = promisify(execFile);
@@ -256,13 +256,12 @@ describe("workflow runtime", () => {
 		}
 	});
 
-	it("registers model-visible workflow spawn tools through the extension", () => {
+	it("registers model-visible workflow spawn tools", () => {
 		const registeredTools: string[] = [];
-		workflowsExtension({
+		registerWorkflowTools({
 			registerTool(tool: { name: string }) {
 				registeredTools.push(tool.name);
 			},
-			on() {},
 		} as never);
 
 		expect(registeredTools).toEqual(

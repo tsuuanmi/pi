@@ -1,10 +1,10 @@
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { assertExpectedNextRole, assertNoGuardedSpawnOverrides } from "#workflows/orchestration/expected-next-role";
 import { assertAgentThinkingLevel, requireSubagentManager } from "#workflows/orchestration/workflow-tool-utils";
 import { expectedNextRoleForSkill } from "#workflows/registry/skill-registry";
 import { getUltragoalStatus } from "#workflows/skills/ultragoal/ultragoal-runtime";
+import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
 
 const ultragoalSpawnGoalAgentSchema = Type.Object({
 	goalId: Type.String({ description: "Goal id to assign to the subagent." }),
@@ -18,7 +18,7 @@ type UltragoalSpawnGoalAgentInput = Static<typeof ultragoalSpawnGoalAgentSchema>
 
 async function executeUltragoalSpawnGoalAgent(
 	params: UltragoalSpawnGoalAgentInput,
-	ctx: ExtensionContext,
+	ctx: WorkflowContext,
 	signal?: AbortSignal,
 ) {
 	assertAgentThinkingLevel(params.thinkingLevel);
@@ -58,7 +58,7 @@ async function executeUltragoalSpawnGoalAgent(
 	};
 }
 
-export function registerUltragoalTools(pi: ExtensionAPI): void {
+export function registerUltragoalTools(pi: WorkflowToolHost): void {
 	pi.registerTool({
 		name: "ultragoal_spawn_goal_agent",
 		label: "Ultragoal Spawn Goal Agent",

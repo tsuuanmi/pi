@@ -1,8 +1,7 @@
 import { readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ExtensionAPI } from "@tsuuanmi/pi";
-import workflowsExtension, {
+import {
 	appendOrMergeDeepInterviewRound,
 	assertDeepInterviewHandoff,
 	assertDeepInterviewSpecReady,
@@ -22,6 +21,8 @@ import workflowsExtension, {
 	writeWorkflowState,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { WorkflowToolHost } from "#workflows/tools/workflow-tools";
+import { registerWorkflowTools } from "#workflows/tools/workflow-tools";
 
 const TEST_SESSION = "test-session-id";
 
@@ -31,11 +32,8 @@ function collectRegisteredToolNames(): string[] {
 		registerTool(tool: { name: string }): void {
 			tools.push(tool.name);
 		},
-		registerCommand(): void {},
-		on(): void {},
-		sendUserMessage(): void {},
-	} as unknown as ExtensionAPI;
-	workflowsExtension(api);
+	} as unknown as WorkflowToolHost;
+	registerWorkflowTools(api);
 	return tools;
 }
 

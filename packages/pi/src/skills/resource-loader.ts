@@ -15,6 +15,7 @@ export type { ResourceCollision, ResourceDiagnostic } from "#pi/package-manager/
 
 import { canonicalizePath, isLocalPath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#pi/api/types";
+import builtinWorkflowsExtension from "#pi/extensions/builtin-workflows";
 import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
 import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "#pi/extensions/loader";
 import { DefaultPackageManager, type PathMetadata, type ResolvedResource } from "#pi/package-manager/package-manager";
@@ -299,7 +300,10 @@ export class DefaultResourceLoader implements ResourceLoader {
 		this.additionalSkillPaths = options.additionalSkillPaths ?? [];
 		this.additionalPromptTemplatePaths = options.additionalPromptTemplatePaths ?? [];
 		this.additionalThemePaths = options.additionalThemePaths ?? [];
-		this.extensionFactories = options.extensionFactories ?? [];
+		this.extensionFactories = [
+			...(options.noExtensions ? [] : [builtinWorkflowsExtension]),
+			...(options.extensionFactories ?? []),
+		];
 		this.noExtensions = options.noExtensions ?? false;
 		this.noSkills = options.noSkills ?? false;
 		this.noPromptTemplates = options.noPromptTemplates ?? false;

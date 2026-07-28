@@ -19,8 +19,6 @@ export * from "#workflows/audit/transaction-journal";
 // Workflow commands
 export { handleWorkflowCommand, runStateCommand, runWorkflowCommand } from "#workflows/commands/workflow";
 export * from "#workflows/compaction/compaction";
-// Extension entry point
-export { default } from "#workflows/extensions/workflows";
 export * from "#workflows/orchestration/context-templates";
 export * from "#workflows/orchestration/expected-next-role";
 export * from "#workflows/orchestration/gate-verdicts";
@@ -102,6 +100,7 @@ export {
 	validateCompletionReceipt,
 } from "#workflows/skills/ultragoal/ultragoal-receipt";
 export * from "#workflows/skills/ultragoal/ultragoal-runtime";
+
 // Runtime modules — re-export everything for external consumers
 export * from "#workflows/state/active-state";
 export * from "#workflows/state/state-schema";

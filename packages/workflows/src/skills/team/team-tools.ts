@@ -1,4 +1,3 @@
-import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import {
@@ -8,6 +7,7 @@ import {
 } from "#workflows/orchestration/expected-next-role";
 import { assertAgentThinkingLevel, requireSubagentManager } from "#workflows/orchestration/workflow-tool-utils";
 import { readTeamSnapshot } from "#workflows/skills/team/team-runtime";
+import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
 
 const teamSpawnTaskAgentSchema = Type.Object({
 	teamId: Type.Optional(Type.String({ description: "Team run id. Defaults to the active team." })),
@@ -41,7 +41,7 @@ const teamSpawnProverAgentSchema = Type.Object({
 });
 type TeamSpawnProverAgentInput = Static<typeof teamSpawnProverAgentSchema>;
 
-async function executeTeamSpawnTaskAgent(params: TeamSpawnTaskAgentInput, ctx: ExtensionContext, signal?: AbortSignal) {
+async function executeTeamSpawnTaskAgent(params: TeamSpawnTaskAgentInput, ctx: WorkflowContext, signal?: AbortSignal) {
 	assertAgentThinkingLevel(params.thinkingLevel);
 	const snapshot = await readTeamSnapshot(ctx.cwd, ctx.sessionManager.getSessionId(), params.teamId);
 	const task = snapshot.tasks.find((t) => t.id === params.taskId);
@@ -82,7 +82,7 @@ async function executeTeamSpawnTaskAgent(params: TeamSpawnTaskAgentInput, ctx: E
 
 async function executeTeamSpawnReviewAgent(
 	params: TeamSpawnReviewAgentInput,
-	ctx: ExtensionContext,
+	ctx: WorkflowContext,
 	signal?: AbortSignal,
 ) {
 	assertAgentThinkingLevel(params.thinkingLevel);
@@ -123,7 +123,7 @@ async function executeTeamSpawnReviewAgent(
 
 async function executeTeamSpawnProverAgent(
 	params: TeamSpawnProverAgentInput,
-	ctx: ExtensionContext,
+	ctx: WorkflowContext,
 	signal?: AbortSignal,
 ) {
 	assertAgentThinkingLevel(params.thinkingLevel);
@@ -160,7 +160,7 @@ async function executeTeamSpawnProverAgent(
 	};
 }
 
-export function registerTeamTools(pi: ExtensionAPI): void {
+export function registerTeamTools(pi: WorkflowToolHost): void {
 	pi.registerTool({
 		name: "team_spawn_task_agent",
 		label: "Team Spawn Task Agent",
