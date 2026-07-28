@@ -104,6 +104,63 @@ interface AgentContext {
 
 Snapshot passed into the low-level agent loop.
 
+## Task
+
+```typescript
+export type TaskStatus = "pending" | "in_progress" | "completed" | "failed" | "blocked";
+export type TaskPriority = "low" | "normal" | "high" | "critical";
+export type TaskMemoryScope = "dependencies" | "all";
+export type DependencyPayload = "output" | "structured" | "both";
+
+interface TaskInput {
+  id?: string;
+  title: string;
+  description: string;
+  assignee?: string;
+  dependsOn?: readonly string[];
+  memoryScope?: TaskMemoryScope;
+  dependencyPayload?: DependencyPayload;
+  role?: string;
+  priority?: TaskPriority;
+  metadata?: Record<string, unknown>;
+  maxRetries?: number;
+  retryDelayMs?: number;
+  retryBackoff?: number;
+  requires?: readonly string[];
+  verify?: Readonly<Record<string, unknown>>;
+}
+
+interface TaskSnapshot extends Required<Pick<TaskInput, "title" | "description">> {
+  id: string;
+  status: TaskStatus;
+  assignee?: string;
+  dependsOn: readonly string[];
+  requires: readonly string[];
+  memoryScope?: TaskMemoryScope;
+  dependencyPayload?: DependencyPayload;
+  role?: string;
+  priority?: TaskPriority;
+  metadata?: Record<string, unknown>;
+  maxRetries?: number;
+  retryDelayMs?: number;
+  retryBackoff?: number;
+  verify?: Readonly<Record<string, unknown>>;
+  result?: string;
+  structured?: unknown;
+  error?: string;
+  attempts: number;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+- `priority` guides ready-task ordering before the scheduling strategy is applied.
+- `role` is a soft routing hint that feeds capability scoring and least-busy tie-breaking.
+- `memoryScope` and `dependencyPayload` shape the task prompt context.
+- `maxRetries`, `retryDelayMs`, and `retryBackoff` control retry-aware execution.
+- `attempts` tracks the current attempt count in task snapshots.
+- `verify` is carried through the snapshot and prompt as opaque structured data.
+
 ## AgentState
 
 ```typescript

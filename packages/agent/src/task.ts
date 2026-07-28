@@ -1,5 +1,12 @@
 // Architecture adapted from open-multi-agent (MIT).
-import type { AgentRunResult, DependencyPayload, TaskInput, TaskSnapshot, TaskStatus } from "#agent/types";
+import type {
+	AgentRunResult,
+	DependencyPayload,
+	TaskInput,
+	TaskPriority,
+	TaskSnapshot,
+	TaskStatus,
+} from "#agent/types";
 
 export interface FormatTaskPromptOptions {
 	task: TaskSnapshot;
@@ -29,12 +36,20 @@ export class Task {
 			description: input.description,
 			status: "pending",
 			dependsOn: [...(input.dependsOn ?? [])],
+			memoryScope: input.memoryScope,
+			dependencyPayload: input.dependencyPayload,
+			role: input.role,
+			priority: input.priority,
+			metadata: input.metadata ? { ...input.metadata } : undefined,
+			maxRetries: input.maxRetries,
+			retryDelayMs: input.retryDelayMs,
+			retryBackoff: input.retryBackoff,
 			requires: [...(input.requires ?? [])],
+			verify: input.verify ? { ...input.verify } : undefined,
+			attempts: 0,
 			createdAt: now,
 			updatedAt: now,
 			...(input.assignee ? { assignee: input.assignee } : {}),
-			...(input.metadata ? { metadata: { ...input.metadata } } : {}),
-			...(input.dependencyPayload ? { dependencyPayload: input.dependencyPayload } : {}),
 		};
 	}
 
@@ -51,7 +66,10 @@ export class Task {
 		return this.snapshotValue.dependsOn;
 	}
 	get requires(): readonly string[] {
-		return this.snapshotValue.requires;
+		return this.snapshotValue.requires ?? [];
+	}
+	get priority(): TaskPriority | undefined {
+		return this.snapshotValue.priority;
 	}
 
 	assign(agentName: string): void {
@@ -59,7 +77,11 @@ export class Task {
 	}
 
 	start(): void {
-		this.patch({ status: "in_progress" });
+		this.patch({ status: "in_progress", attempts: this.snapshotValue.attempts + 1, error: undefined });
+	}
+
+	retry(error: string): void {
+		this.patch({ status: "pending", error });
 	}
 
 	complete(result: string, structured?: unknown): void {
@@ -79,7 +101,8 @@ export class Task {
 			...this.snapshotValue,
 			dependsOn: [...this.snapshotValue.dependsOn],
 			requires: [...this.snapshotValue.requires],
-			...(this.snapshotValue.metadata ? { metadata: { ...this.snapshotValue.metadata } } : {}),
+			metadata: this.snapshotValue.metadata ? { ...this.snapshotValue.metadata } : undefined,
+			verify: this.snapshotValue.verify ? { ...this.snapshotValue.verify } : undefined,
 		};
 	}
 
@@ -103,18 +126,32 @@ function formatDependencyPayload(dependency: TaskSnapshot, payload: DependencyPa
 	return lines.join("\n");
 }
 
+function formatHeaderLines(task: TaskSnapshot): string[] {
+	const lines = [`Task: ${task.title}`];
+	if (task.role) lines.push(`Role: ${task.role}`);
+	if (task.priority) lines.push(`Priority: ${task.priority}`);
+	if (task.memoryScope) lines.push(`Memory scope: ${task.memoryScope}`);
+	if (task.attempts > 1) lines.push(`Attempt: ${task.attempts}`);
+	return lines;
+}
+
 export function formatTaskPrompt({ task, completedDependencies }: FormatTaskPromptOptions): string {
 	const payload = task.dependencyPayload ?? "output";
 	const dependencyBlock = completedDependencies.length
 		? completedDependencies.map((dependency) => formatDependencyPayload(dependency, payload)).join("\n")
 		: "None";
 	const metadataBlock = task.metadata ? `\nMetadata:\n${JSON.stringify(task.metadata, null, 2)}\n` : "";
+	const requirementBlock =
+		task.requires && task.requires.length > 0 ? `\nRequirements:\n- ${task.requires.join("\n- ")}` : "";
+	const verifyBlock = task.verify ? `\nVerify:\n${JSON.stringify(task.verify, null, 2)}` : "";
 	return [
-		`Task: ${task.title}`,
+		...formatHeaderLines(task),
 		"",
 		"Description:",
 		task.description,
 		metadataBlock.trimEnd(),
+		requirementBlock.trimEnd(),
+		verifyBlock.trimEnd(),
 		"",
 		"Completed dependencies:",
 		dependencyBlock,

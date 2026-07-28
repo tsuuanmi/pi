@@ -19,7 +19,8 @@
 - **agent**: Added a `maxTurns` guard for graceful agent-loop termination before runaway provider calls.
 - **agent**: Added context-pruning helpers for sliding-window transforms that preserve assistant tool calls with matching tool results.
 - **agent**: Added isolated `run()`, state/history accessors, lifecycle run hooks, status tracing events, capabilities, and per-agent task serialization.
-- **orchestrator**: Added dependency-aware pipelining, composite scheduling, and structured dependency handoffs.
+- **orchestrator**: Added dependency-aware pipelining, composite scheduling, structured dependency handoffs, task priority ordering, and retry-aware task execution.
+- **task**: Added richer task metadata for memory scope, priority, retry settings, role hints, and verification payloads.
 - **attribution**: Added MIT attribution for the open-multi-agent architecture.
 
 ### Fixed

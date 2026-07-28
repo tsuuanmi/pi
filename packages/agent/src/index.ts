@@ -36,6 +36,9 @@ export type {
 	SchedulingWeights,
 	TaskExecutionContext,
 	TaskInput,
+	TaskMemoryScope,
+	TaskPriority,
 	TaskSnapshot,
 	TaskStatus,
+	TaskVerifyOptions,
 } from "#agent/types";

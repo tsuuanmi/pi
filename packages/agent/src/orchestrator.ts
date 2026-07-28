@@ -10,10 +10,13 @@ import type {
 	SchedulingStrategy,
 	SchedulingWeights,
 	TaskInput,
+	TaskPriority,
 	TaskSnapshot,
 } from "#agent/types";
 
 const DEFAULT_SCHEDULING_WEIGHTS: SchedulingWeights = { fit: 0.7, load: 0.3 };
+const DEFAULT_RETRY_DELAY_MS = 1000;
+const DEFAULT_RETRY_BACKOFF = 2;
 
 export class Orchestrator {
 	private readonly strategy: SchedulingStrategy;
@@ -54,8 +57,9 @@ export class Orchestrator {
 		}
 
 		for (const task of queue.list()) {
-			if (task.status === "pending")
+			if (task.status === "pending") {
 				task.block("Task is not reachable because its dependencies form a cycle or cannot be scheduled.");
+			}
 		}
 		const snapshots = queue.snapshots();
 		const failed = snapshots.filter((task) => task.status === "failed" || task.status === "blocked");
@@ -91,10 +95,16 @@ export class Orchestrator {
 	}
 
 	private orderTasks(tasks: readonly Task[], allTasks: readonly TaskSnapshot[]): Task[] {
-		if (this.strategy !== "dependency-first" && this.strategy !== "composite") return [...tasks];
-		return [...tasks].sort(
-			(left, right) => this.countDependents(right.id, allTasks) - this.countDependents(left.id, allTasks),
-		);
+		return [...tasks].sort((left, right) => {
+			const priorityOrder = comparePriority(right.snapshot().priority, left.snapshot().priority);
+			if (priorityOrder !== 0) return priorityOrder;
+			if (this.strategy !== "dependency-first" && this.strategy !== "composite") {
+				return left.id.localeCompare(right.id);
+			}
+			const dependencyOrder = this.countDependents(right.id, allTasks) - this.countDependents(left.id, allTasks);
+			if (dependencyOrder !== 0) return dependencyOrder;
+			return left.id.localeCompare(right.id);
+		});
 	}
 
 	private selectAgent(
@@ -110,7 +120,7 @@ export class Orchestrator {
 			if (!assigned) throw new Error(`Unknown assignee: ${task.assignee}`);
 			return assigned;
 		}
-		if (this.strategy === "least-busy") return leastBusyAgent(agents, load);
+		if (this.strategy === "least-busy") return leastBusyAgent(task, agents, load);
 		if (this.strategy === "capability-match") return this.selectCapabilityAgent(task, agents, index, options);
 		if (this.strategy === "composite") return this.selectCompositeAgent(task, agents, allTasks, load, options);
 		const agent = agents[this.roundRobinCursor % agents.length]!;
@@ -170,7 +180,7 @@ export class Orchestrator {
 			taskId: task.id,
 			taskTitle: task.title,
 			reasons:
-				task.requires.length > 0
+				task.requires && task.requires.length > 0
 					? [`Missing required capabilities: ${task.requires.join(", ")}`]
 					: ["No positive capability match."],
 			fallback: "zero-fit-current-load",
@@ -195,8 +205,6 @@ export class Orchestrator {
 	}
 
 	private async executeTask(task: Task, queue: TaskQueue, team: Team, options: RunTeamOptions): Promise<void> {
-		task.start();
-		options.onTaskStart?.(task.snapshot());
 		const snapshot = task.snapshot();
 		const agent = team.getAgent(snapshot.assignee ?? "");
 		if (!agent) {
@@ -204,18 +212,50 @@ export class Orchestrator {
 			options.onTaskFail?.(task.snapshot());
 			return;
 		}
-		const completedDependencies = snapshot.dependsOn
-			.map((id) => queue.get(id)?.snapshot())
-			.filter((dependency): dependency is TaskSnapshot => dependency?.status === "completed");
-		const prompt = formatTaskPrompt({ task: snapshot, completedDependencies });
-		const result = await agent.run(prompt, { signal: options.signal, metadata: { taskId: snapshot.id } });
-		if (result.success) {
-			const bridgeResult = extractTaskBridgeResult(result);
-			task.complete(bridgeResult.output, bridgeResult.structured);
-			options.onTaskComplete?.(task.snapshot());
-		} else {
-			task.fail(result.error instanceof Error ? result.error.message : result.output || String(result.error));
-			options.onTaskFail?.(task.snapshot());
+		const maxRetries = resolveRetryCount(snapshot.maxRetries);
+		const retryDelayMs = resolveRetryDelay(snapshot.retryDelayMs);
+		const retryBackoff = resolveRetryBackoff(snapshot.retryBackoff);
+
+		while (true) {
+			task.start();
+			options.onTaskStart?.(task.snapshot());
+			const attemptSnapshot = task.snapshot();
+			const completedDependencies = attemptSnapshot.dependsOn
+				.map((id) => queue.get(id)?.snapshot())
+				.filter((dependency): dependency is TaskSnapshot => dependency?.status === "completed");
+			const prompt = formatTaskPrompt({ task: attemptSnapshot, completedDependencies });
+			let result: { success: boolean; output: string; structured?: unknown; error?: unknown };
+			try {
+				result = await agent.run(prompt, {
+					signal: options.signal,
+					metadata: { taskId: attemptSnapshot.id, attempt: attemptSnapshot.attempts },
+				});
+			} catch (error) {
+				result = {
+					success: false,
+					output: "",
+					error,
+				};
+			}
+
+			if (result.success) {
+				const bridgeResult = extractTaskBridgeResult(result);
+				task.complete(bridgeResult.output, bridgeResult.structured);
+				options.onTaskComplete?.(task.snapshot());
+				return;
+			}
+
+			const errorMessage = formatFailureMessage(result.error, result.output);
+			const shouldRetry = attemptSnapshot.attempts <= maxRetries;
+			if (!shouldRetry) {
+				task.fail(errorMessage);
+				options.onTaskFail?.(task.snapshot());
+				return;
+			}
+
+			task.retry(errorMessage);
+			const delayMs = Math.max(0, Math.round(retryDelayMs * retryBackoff ** (attemptSnapshot.attempts - 1)));
+			if (delayMs > 0) await wait(delayMs);
 		}
 	}
 }
@@ -247,23 +287,90 @@ function currentLoad(agents: readonly Agent[], allTasks: readonly TaskSnapshot[]
 	return load;
 }
 
-function leastBusyAgent(agents: readonly Agent[], load: ReadonlyMap<string, number>): Agent {
-	return [...agents].sort((left, right) => (load.get(left.name) ?? 0) - (load.get(right.name) ?? 0))[0]!;
+function leastBusyAgent(task: TaskSnapshot, agents: readonly Agent[], load: ReadonlyMap<string, number>): Agent {
+	return [...agents].sort((left, right) => {
+		const loadOrder = (load.get(left.name) ?? 0) - (load.get(right.name) ?? 0);
+		if (loadOrder !== 0) return loadOrder;
+		const leftRole = matchesRole(task, left) ? 1 : 0;
+		const rightRole = matchesRole(task, right) ? 1 : 0;
+		if (leftRole !== rightRole) return rightRole - leftRole;
+		return left.name.localeCompare(right.name);
+	})[0]!;
 }
 
 function eligibleAgents(task: TaskSnapshot, agents: readonly Agent[]): Agent[] {
-	if (task.requires.length === 0) return [...agents];
-	return agents.filter((agent) => task.requires.every((required) => agent.capabilities.includes(required)));
+	if (task.requires && task.requires.length > 0)
+		return agents.filter((agent) => task.requires!.every((required) => agent.capabilities.includes(required)));
+	return [...agents];
 }
 
 function capabilityScore(task: TaskSnapshot, agent: Agent): number {
-	const haystack = `${task.title} ${task.description} ${task.requires.join(" ")}`.toLowerCase();
+	const haystack =
+		`${task.title} ${task.description} ${task.requires?.join(" ") ?? ""} ${task.role ?? ""}`.toLowerCase();
 	let score = 0;
+	if (matchesRole(task, agent)) score += 3;
 	for (const capability of agent.capabilities) {
-		if (task.requires.includes(capability)) score += 2;
+		if (task.requires?.includes(capability)) score += 2;
 		if (haystack.includes(capability.toLowerCase())) score += 1;
 	}
 	return score;
+}
+
+function matchesRole(task: TaskSnapshot, agent: Agent): boolean {
+	if (!task.role) return false;
+	return agent.name === task.role || agent.capabilities.includes(task.role);
+}
+
+function comparePriority(left?: TaskPriority, right?: TaskPriority): number {
+	return priorityRank(left) - priorityRank(right);
+}
+
+function priorityRank(priority?: TaskPriority): number {
+	switch (priority) {
+		case "critical":
+			return 4;
+		case "high":
+			return 3;
+		case "normal":
+			return 2;
+		case "low":
+			return 1;
+		default:
+			return 2;
+	}
+}
+
+function resolveRetryCount(value?: number): number {
+	if (value === undefined) return 0;
+	if (!Number.isFinite(value) || value < 0)
+		throw new RangeError("Task maxRetries must be a finite, non-negative number.");
+	return Math.floor(value);
+}
+
+function resolveRetryDelay(value?: number): number {
+	if (value === undefined) return DEFAULT_RETRY_DELAY_MS;
+	if (!Number.isFinite(value) || value < 0)
+		throw new RangeError("Task retryDelayMs must be a finite, non-negative number.");
+	return Math.floor(value);
+}
+
+function resolveRetryBackoff(value?: number): number {
+	if (value === undefined) return DEFAULT_RETRY_BACKOFF;
+	if (!Number.isFinite(value) || value < 1)
+		throw new RangeError("Task retryBackoff must be a finite number greater than or equal to 1.");
+	return value;
+}
+
+function formatFailureMessage(error: unknown, output: string): string {
+	if (error instanceof Error) return error.message;
+	if (typeof error === "string" && error.length > 0) return error;
+	return output || String(error);
+}
+
+function wait(ms: number): Promise<void> {
+	return new Promise((resolve) => {
+		setTimeout(resolve, ms);
+	});
 }
 
 export async function runTeam(

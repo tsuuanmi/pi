@@ -6,12 +6,14 @@ The `Orchestrator` assigns ready tasks to agents and executes them with dependen
 
 - Ready tasks are launched as soon as they become runnable.
 - Newly unblocked tasks do not wait for unrelated long-running work to finish.
+- Task snapshots carry `priority`, `role`, `memoryScope`, `dependencyPayload`, and retry settings through scheduling and execution.
 - Failed or impossible dependency chains are marked blocked deterministically.
+- Retryable tasks are re-run in place until `maxRetries` is exhausted.
 
 ## Scheduling strategies
 
 - `dependency-first`: prioritize tasks that unblock the most downstream work.
-- `composite`: rank by dependency criticality, capability fit, and current load.
+- `composite`: rank by dependency criticality, capability fit, role hints, and current load.
 - `capability-match`: prefer the first agent whose capabilities satisfy task requirements.
 - `least-busy`: prefer the agent with the fewest active tasks.
 - `round-robin`: distribute work evenly across the roster.
@@ -25,6 +27,13 @@ Composite scheduling uses weighted scoring:
 
 When no agent satisfies task requirements, the orchestrator emits a warning and falls back to deterministic zero-fit assignment.
 
+## Retry behavior
+
+- `maxRetries` controls how many retries are allowed after the first failed attempt.
+- `retryDelayMs` sets the base backoff delay.
+- `retryBackoff` multiplies the delay after each failed attempt.
+- `onTaskStart` fires on every attempt; `onTaskComplete` and `onTaskFail` only fire on the final outcome.
+
 ## Structured handoffs
 
 Tasks may request dependency payload behavior with `dependencyPayload`:
@@ -33,7 +42,7 @@ Tasks may request dependency payload behavior with `dependencyPayload`:
 - `structured`: pass only structured output
 - `both`: pass text and structured output
 
-Agents can return `structured` output alongside text through `AgentRunResult` extraction. Dependent tasks receive that payload in their prompt context.
+`role`, `priority`, `memoryScope`, and `verify` are included in the task prompt context. Agents can return `structured` output alongside text through `AgentRunResult` extraction. Dependent tasks receive that payload in their prompt context.
 
 The orchestrator formats each task as a normal Agent prompt and calls `agent.run()`. Task execution is isolated from persistent Agent history and serialized per Agent instance.
 
