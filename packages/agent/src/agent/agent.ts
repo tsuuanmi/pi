@@ -38,7 +38,7 @@ import {
 	parseStructuredOutput,
 	type StructuredOutputOptions,
 	type StructuredOutputResult,
-} from "#agent/agent/structured-output";
+} from "#agent/agent/json-schema-output";
 import { createToolRegistry, type RegisterToolOptions, registerTool as registerToolSet } from "#agent/tool/registry";
 import type { AgentContext, AgentTool } from "#agent/tool/types";
 

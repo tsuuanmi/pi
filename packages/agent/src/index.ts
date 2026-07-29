@@ -8,7 +8,7 @@ export * from "#agent/agent/runtime/runtime";
 export type { AgentRunOptions, AgentRunResult } from "#agent/agent/runtime/types";
 export * from "#agent/agent/state/messages";
 export * from "#agent/agent/state/state";
-export * from "#agent/agent/structured-output";
+export * from "#agent/agent/json-schema-output";
 export * from "#agent/compaction/message-utils";
 export { Orchestrator, runTeam } from "#agent/orchestrator/orchestrator";
 export type {
@@ -20,7 +20,7 @@ export type {
 	SchedulingWeights,
 	TaskExecutionContext,
 } from "#agent/orchestrator/types";
-export * from "#agent/receipts/structured-receipt";
+export * from "#agent/receipts/execution-receipt";
 export * from "#agent/subagents/subagent-manager";
 export * from "#agent/subagents/subagent-manager-factory";
 export * from "#agent/subagents/subagent-progress";
