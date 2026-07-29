@@ -1,27 +1,35 @@
 # @tsuuanmi/pi-ai Documentation
 
-Provider and model API with automatic model discovery, provider configuration, token and cost tracking, context serialization, and cross-provider handoffs.
+Provider and model API with automatic model discovery, provider registration, streaming, token and cost tracking, context serialization, OAuth, and browser/server proxy support.
 
-## Core
+This directory mirrors `packages/ai/src/`. Each section below maps to the matching source folder.
 
-- [Architecture](architecture.md) - package boundaries, runtime flow, and source layout.
-- [Streaming and Completion](streaming.md) - `stream()`, `complete()`, stream events, and the provider protocol.
-- [Models and Providers](models.md) - model lookup, provider ids, custom model configuration, and environment keys.
-- [Context and Messages](context.md) - `Context`, messages, content blocks, tool calls, and tool results.
-- [Tools](tools.md) - TypeBox tool schemas, validation, and tool call handling.
-- [Thinking and Reasoning](reasoning.md) - reasoning levels, thinking blocks, and provider behavior.
-- [Validation](validation.md) - schema validation helpers.
-- [Error Handling](error-handling.md) - abort handling, context overflow, and diagnostics.
-- [Browser and Node.js](browser-usage.md) - runtime behavior and proxy support.
+## Entry Points
 
-## Providers
+- [index](index.md) - package exports and public subpath exports.
+- [stream](stream.md) - `stream()` and `complete()` provider dispatch.
 
-- [Anthropic](providers/anthropic.md) - Claude models, extended thinking, OAuth, and prompt caching.
-- [OpenAI](providers/openai.md) - OpenAI Responses, Completions, and Codex API variants.
-- [Adding a New Provider](providers/adding-provider.md) - checklist for implementing a provider.
+## Source Layout
 
-## Utilities
+- [auth/oauth](auth/oauth/index.md) - OAuth provider registry, login flows, token refresh, and device-code polling.
+- [model](model/index.md) - model shape, catalog lookup, config schemas, requests, responses, cost, and thinking-level helpers.
+- [parsing](parsing/json-parser.md) - JSON repair, partial streaming JSON parsing, and surrogate sanitization.
+- [protocol](protocol/index.md) - context, content, messages, tools, usage, options, ids, and diagnostics.
+- [provider](provider/index.md) - provider registry, built-ins, provider env, and lazy loading.
+  - [provider/anthropic](provider/anthropic/index.md) - Anthropic Messages provider.
+  - [provider/openai](provider/openai/index.md) - OpenAI-family providers and shared behavior.
+  - [provider/openai/codex](provider/openai/codex/index.md) - Codex Responses streaming and usage summaries.
+  - [provider/openai/completions](provider/openai/completions/index.md) - OpenAI-compatible Chat Completions.
+  - [provider/openai/responses](provider/openai/responses/index.md) - OpenAI Responses API.
+- [schema](schema/schema-validator.md) - TypeBox/string-enum helpers and tool argument validation.
+- [transport](transport/index.md) - event streams, HTTP proxy resolution, and server proxy streaming.
 
-- [Utility Functions](utilities.md) - JSON parsing, output limits, OAuth, and helpers.
-- [JSON Parse](utils/json-parse.md) - `parseStreamingJson()`, `parseJsonWithRepair()`, and `repairJson()`.
-- [OAuth](utils/oauth.md) - Anthropic and OpenAI Codex OAuth login flows.
+## Public Package Subpaths
+
+- `@tsuuanmi/pi-ai` maps to `src/index.ts`.
+- `@tsuuanmi/pi-ai/oauth` maps to `src/auth/oauth/index.ts`.
+- `@tsuuanmi/pi-ai/anthropic` maps to `src/provider/anthropic/index.ts`.
+- `@tsuuanmi/pi-ai/openai-completions` maps to `src/provider/openai/completions/index.ts`.
+- `@tsuuanmi/pi-ai/openai-responses` maps to `src/provider/openai/responses/index.ts`.
+- `@tsuuanmi/pi-ai/openai-codex-responses` maps to `src/provider/openai/codex/responses.ts`.
+- `@tsuuanmi/pi-ai/openai-codex-usage` maps to `src/provider/openai/codex/usage.ts`.
