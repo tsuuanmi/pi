@@ -1,10 +1,10 @@
 import { Text } from "#tui/components/display/text";
-import { CancellableLoader } from "#tui/components/feedback/cancellable-loader";
+import { CancellableLoader } from "#tui/components/feedback/cancel";
 import { Loader } from "#tui/components/feedback/loader";
-import { DynamicBorder } from "#tui/components/layout/dynamic-border";
+import { DynamicBorder } from "#tui/components/layout/border";
 import { Spacer } from "#tui/components/layout/spacer";
 import { LAYOUT_EDGE_X, LAYOUT_SECTION_GAP_Y } from "#tui/components/layout/spacing";
-import { keyHint } from "#tui/input/keyboard/keybinding-hints";
+import { keyHint } from "#tui/input/keyboard/key-hints";
 import type { Theme } from "#tui/theme/theme";
 import { Container, type TUI } from "#tui/tui";
 

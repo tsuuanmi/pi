@@ -1,5 +1,5 @@
 import { isAbsolute, relative, resolve, sep } from "node:path";
-import { getContextUsageLevel, getContextUsageThemeColor } from "#tui/components/status-line/context-thresholds";
+import { getContextUsageLevel, getContextUsageThemeColor } from "#tui/components/status-line/context-levels";
 import type {
 	RenderedSegment,
 	SegmentContext,

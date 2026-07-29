@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { findWordBackward, findWordForward } from "#tui/editor/navigation/word-navigation";
+import { findWordBackward, findWordForward } from "#tui/editor/navigation/word";
 
 describe("findWordBackward", () => {
 	it("basic words: hello world", () => {

@@ -8,22 +8,20 @@ import {
 	Container,
 	DynamicBorder,
 	type Focusable,
+	filterAndSortSearchableSessions,
 	getKeybindings,
+	hasSearchableSessionName,
 	Input,
 	keyHint,
 	keyText,
+	type SessionNameFilter,
+	type SessionSortMode,
 	Spacer,
 	Text,
 	theme,
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import {
-	filterAndSortSessions,
-	hasSessionName,
-	type NameFilter,
-	type SortMode,
-} from "#pi/modes/interactive/components/selectors/session-selector-search";
 import type { SessionInfo, SessionListProgress } from "#pi/session/session-manager";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 
@@ -61,8 +59,8 @@ function canonicalizePath(path: string | undefined): string | undefined {
 
 class SessionSelectorHeader implements Component {
 	private scope: SessionScope;
-	private sortMode: SortMode;
-	private nameFilter: NameFilter;
+	private sortMode: SessionSortMode;
+	private nameFilter: SessionNameFilter;
 	private requestRender: () => void;
 	private loading = false;
 	private loadProgress: { loaded: number; total: number } | null = null;
@@ -72,7 +70,12 @@ class SessionSelectorHeader implements Component {
 	private statusTimeout: ReturnType<typeof setTimeout> | null = null;
 	private showRenameHint = false;
 
-	constructor(scope: SessionScope, sortMode: SortMode, nameFilter: NameFilter, requestRender: () => void) {
+	constructor(
+		scope: SessionScope,
+		sortMode: SessionSortMode,
+		nameFilter: SessionNameFilter,
+		requestRender: () => void,
+	) {
 		this.scope = scope;
 		this.sortMode = sortMode;
 		this.nameFilter = nameFilter;
@@ -83,11 +86,11 @@ class SessionSelectorHeader implements Component {
 		this.scope = scope;
 	}
 
-	setSortMode(sortMode: SortMode): void {
+	setSortMode(sortMode: SessionSortMode): void {
 		this.sortMode = sortMode;
 	}
 
-	setNameFilter(nameFilter: NameFilter): void {
+	setNameFilter(nameFilter: SessionNameFilter): void {
 		this.nameFilter = nameFilter;
 	}
 
@@ -282,8 +285,8 @@ class SessionList implements Component, Focusable {
 	private selectedIndex: number = 0;
 	private searchInput: Input;
 	private showCwd = false;
-	private sortMode: SortMode = "threaded";
-	private nameFilter: NameFilter = "all";
+	private sortMode: SessionSortMode = "threaded";
+	private nameFilter: SessionNameFilter = "all";
 	private keybindings: KeybindingsManager;
 	private showPath = false;
 	private confirmingDeletePath: string | null = null;
@@ -314,8 +317,8 @@ class SessionList implements Component, Focusable {
 	constructor(
 		sessions: SessionInfo[],
 		showCwd: boolean,
-		sortMode: SortMode,
-		nameFilter: NameFilter,
+		sortMode: SessionSortMode,
+		nameFilter: SessionNameFilter,
 		keybindings: KeybindingsManager,
 		currentSessionFilePath?: string,
 	) {
@@ -340,12 +343,12 @@ class SessionList implements Component, Focusable {
 		};
 	}
 
-	setSortMode(sortMode: SortMode): void {
+	setSortMode(sortMode: SessionSortMode): void {
 		this.sortMode = sortMode;
 		this.filterSessions(this.searchInput.getValue());
 	}
 
-	setNameFilter(nameFilter: NameFilter): void {
+	setNameFilter(nameFilter: SessionNameFilter): void {
 		this.nameFilter = nameFilter;
 		this.filterSessions(this.searchInput.getValue());
 	}
@@ -359,7 +362,9 @@ class SessionList implements Component, Focusable {
 	private filterSessions(query: string): void {
 		const trimmed = query.trim();
 		const nameFiltered =
-			this.nameFilter === "all" ? this.allSessions : this.allSessions.filter((session) => hasSessionName(session));
+			this.nameFilter === "all"
+				? this.allSessions
+				: this.allSessions.filter((session) => hasSearchableSessionName(session));
 
 		if (this.sortMode === "threaded" && !trimmed) {
 			// Threaded mode without search: show tree structure
@@ -367,7 +372,7 @@ class SessionList implements Component, Focusable {
 			this.filteredSessions = flattenSessionTree(roots);
 		} else {
 			// Other modes or with search: flat list
-			const filtered = filterAndSortSessions(nameFiltered, query, this.sortMode, "all");
+			const filtered = filterAndSortSearchableSessions(nameFiltered, query, this.sortMode, "all");
 			this.filteredSessions = filtered.map((session) => ({
 				session,
 				depth: 0,
@@ -694,8 +699,8 @@ export class SessionSelectorComponent extends Container implements Focusable {
 	private header: SessionSelectorHeader;
 	private keybindings: KeybindingsManager;
 	private scope: SessionScope = "current";
-	private sortMode: SortMode = "threaded";
-	private nameFilter: NameFilter = "all";
+	private sortMode: SessionSortMode = "threaded";
+	private nameFilter: SessionNameFilter = "all";
 	private currentSessions: SessionInfo[] | null = null;
 	private allSessions: SessionInfo[] | null = null;
 	private currentSessionsLoader: SessionsLoader;

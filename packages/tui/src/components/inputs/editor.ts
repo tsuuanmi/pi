@@ -1,8 +1,8 @@
 import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import { SelectList, type SelectListLayoutOptions, type SelectListTheme } from "#tui/components/selection/select-list";
 import type { AutocompleteProvider, AutocompleteSuggestions } from "#tui/editor/completion/autocomplete";
-import { UndoStack } from "#tui/editor/history/undo-stack";
-import { findWordBackward, findWordForward } from "#tui/editor/navigation/word-navigation";
+import { UndoStack } from "#tui/editor/history/undo";
+import { findWordBackward, findWordForward } from "#tui/editor/navigation/word";
 import { getKeybindings } from "#tui/input/keyboard/keybindings";
 import { decodePrintableKey, matchesKey } from "#tui/input/keyboard/keys";
 import { type Component, CURSOR_MARKER, type Focusable, type TUI } from "#tui/tui";

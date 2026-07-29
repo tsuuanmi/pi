@@ -5,7 +5,7 @@ import {
 	highlight,
 	renderHighlightedHtml,
 	supportsLanguage,
-} from "#tui/components/display/syntax-highlight";
+} from "#tui/components/display/highlight";
 
 describe("supportsLanguage", () => {
 	it("returns true for known languages and false for unknown", () => {

@@ -1,21 +1,28 @@
-import { fuzzyMatch } from "@tsuuanmi/pi-tui";
-import type { SessionInfo } from "#pi/session/session-manager";
+import { fuzzyMatch } from "#tui/editor/completion/fuzzy";
 
-export type SortMode = "threaded" | "recent" | "relevance";
+export type SessionSortMode = "threaded" | "recent" | "relevance";
 
-export type NameFilter = "all" | "named";
+export type SessionNameFilter = "all" | "named";
 
-export interface ParsedSearchQuery {
+export interface SearchableSessionInfo {
+	id: string;
+	name?: string | undefined;
+	allMessagesText: string;
+	cwd: string;
+	modified: Date;
+}
+
+export interface ParsedSessionSearchQuery {
 	mode: "tokens" | "regex";
 	tokens: { kind: "fuzzy" | "phrase"; value: string }[];
 	regex: RegExp | null;
-	/** If set, parsing failed and we should treat query as non-matching. */
+	/** If set, parsing failed and the query should be treated as non-matching. */
 	error?: string;
 }
 
-export interface MatchResult {
+export interface SessionSearchMatchResult {
 	matches: boolean;
-	/** Lower is better; only meaningful when matches === true */
+	/** Lower is better; only meaningful when matches === true. */
 	score: number;
 }
 
@@ -23,26 +30,25 @@ function normalizeWhitespaceLower(text: string): string {
 	return text.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
-function getSessionSearchText(session: SessionInfo): string {
+function getSessionSearchText(session: SearchableSessionInfo): string {
 	return `${session.id} ${session.name ?? ""} ${session.allMessagesText} ${session.cwd}`;
 }
 
-export function hasSessionName(session: SessionInfo): boolean {
+export function hasSearchableSessionName(session: SearchableSessionInfo): boolean {
 	return Boolean(session.name?.trim());
 }
 
-function matchesNameFilter(session: SessionInfo, filter: NameFilter): boolean {
+function matchesNameFilter(session: SearchableSessionInfo, filter: SessionNameFilter): boolean {
 	if (filter === "all") return true;
-	return hasSessionName(session);
+	return hasSearchableSessionName(session);
 }
 
-function parseSearchQuery(query: string): ParsedSearchQuery {
+function parseSessionSearchQuery(query: string): ParsedSessionSearchQuery {
 	const trimmed = query.trim();
 	if (!trimmed) {
 		return { mode: "tokens", tokens: [], regex: null };
 	}
 
-	// Regex mode: re:<pattern>
 	if (trimmed.startsWith("re:")) {
 		const pattern = trimmed.slice(3).trim();
 		if (!pattern) {
@@ -56,18 +62,16 @@ function parseSearchQuery(query: string): ParsedSearchQuery {
 		}
 	}
 
-	// Token mode with quote support.
-	// Example: foo "node cve" bar
 	const tokens: { kind: "fuzzy" | "phrase"; value: string }[] = [];
 	let buf = "";
 	let inQuote = false;
 	let hadUnclosedQuote = false;
 
 	const flush = (kind: "fuzzy" | "phrase"): void => {
-		const v = buf.trim();
+		const value = buf.trim();
 		buf = "";
-		if (!v) return;
-		tokens.push({ kind, value: v });
+		if (!value) return;
+		tokens.push({ kind, value });
 	};
 
 	for (let i = 0; i < trimmed.length; i++) {
@@ -95,15 +99,14 @@ function parseSearchQuery(query: string): ParsedSearchQuery {
 		hadUnclosedQuote = true;
 	}
 
-	// If quotes were unbalanced, fall back to plain whitespace tokenization.
 	if (hadUnclosedQuote) {
 		return {
 			mode: "tokens",
 			tokens: trimmed
 				.split(/\s+/)
-				.map((t) => t.trim())
-				.filter((t) => t.length > 0)
-				.map((t) => ({ kind: "fuzzy" as const, value: t })),
+				.map((token) => token.trim())
+				.filter((token) => token.length > 0)
+				.map((token) => ({ kind: "fuzzy" as const, value: token })),
 			regex: null,
 		};
 	}
@@ -113,7 +116,7 @@ function parseSearchQuery(query: string): ParsedSearchQuery {
 	return { mode: "tokens", tokens, regex: null };
 }
 
-function matchSession(session: SessionInfo, parsed: ParsedSearchQuery): MatchResult {
+function matchSession(session: SearchableSessionInfo, parsed: ParsedSessionSearchQuery): SessionSearchMatchResult {
 	const text = getSessionSearchText(session);
 
 	if (parsed.mode === "regex") {
@@ -145,44 +148,42 @@ function matchSession(session: SessionInfo, parsed: ParsedSearchQuery): MatchRes
 			continue;
 		}
 
-		const m = fuzzyMatch(token.value, text);
-		if (!m.matches) return { matches: false, score: 0 };
-		totalScore += m.score;
+		const match = fuzzyMatch(token.value, text);
+		if (!match.matches) return { matches: false, score: 0 };
+		totalScore += match.score;
 	}
 
 	return { matches: true, score: totalScore };
 }
 
-export function filterAndSortSessions(
-	sessions: SessionInfo[],
+export function filterAndSortSearchableSessions<T extends SearchableSessionInfo>(
+	sessions: T[],
 	query: string,
-	sortMode: SortMode,
-	nameFilter: NameFilter = "all",
-): SessionInfo[] {
+	sortMode: SessionSortMode,
+	nameFilter: SessionNameFilter = "all",
+): T[] {
 	const nameFiltered =
 		nameFilter === "all" ? sessions : sessions.filter((session) => matchesNameFilter(session, nameFilter));
 	const trimmed = query.trim();
 	if (!trimmed) return nameFiltered;
 
-	const parsed = parseSearchQuery(query);
+	const parsed = parseSessionSearchQuery(query);
 	if (parsed.error) return [];
 
-	// Recent mode: filter only, keep incoming order.
 	if (sortMode === "recent") {
-		const filtered: SessionInfo[] = [];
-		for (const s of nameFiltered) {
-			const res = matchSession(s, parsed);
-			if (res.matches) filtered.push(s);
+		const filtered: T[] = [];
+		for (const session of nameFiltered) {
+			const result = matchSession(session, parsed);
+			if (result.matches) filtered.push(session);
 		}
 		return filtered;
 	}
 
-	// Relevance mode: sort by score, tie-break by modified desc.
-	const scored: { session: SessionInfo; score: number }[] = [];
-	for (const s of nameFiltered) {
-		const res = matchSession(s, parsed);
-		if (!res.matches) continue;
-		scored.push({ session: s, score: res.score });
+	const scored: { session: T; score: number }[] = [];
+	for (const session of nameFiltered) {
+		const result = matchSession(session, parsed);
+		if (!result.matches) continue;
+		scored.push({ session, score: result.score });
 	}
 
 	scored.sort((a, b) => {
@@ -190,5 +191,5 @@ export function filterAndSortSessions(
 		return b.session.modified.getTime() - a.session.modified.getTime();
 	});
 
-	return scored.map((r) => r.session);
+	return scored.map((result) => result.session);
 }

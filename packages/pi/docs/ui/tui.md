@@ -6,6 +6,28 @@ Extensions and custom tools can render custom TUI components for interactive use
 
 **Source:** [`@tsuuanmi/pi-tui`](https://github.com/tsuuanmi/pi/tree/main/packages/tui)
 
+## Source Boundaries
+
+The TUI package keeps runtime, editing behavior, and rendered widgets separate:
+
+```text
+packages/tui/src/tui.ts       # render orchestration, focus, overlays, differential updates
+packages/tui/src/components/ # rendered UI widgets that implement Component
+packages/tui/src/editor/     # non-visual editing primitives used by input components
+packages/tui/src/input/      # keyboard decoding, keybindings, and input stream parsing
+packages/tui/src/terminal/   # terminal runtime adapter, escape sequences, and capabilities
+packages/tui/src/theme/      # theme selection and terminal-aware color choices
+packages/tui/src/utilities/  # generic text, ANSI, and rendering helpers
+```
+
+Use these boundaries when adding or changing TUI code:
+
+- Put rendered widgets in `components/`. A component returns lines from `render(width)`, optionally handles focused input, and should not manage raw terminal lifecycle directly.
+- Put shared editing behavior in `editor/`. This is for autocomplete, undo, word navigation, and editor contracts; the rendered `Editor` component lives in `components/inputs/editor.ts`.
+- Put terminal device integration in `terminal/`. Raw mode, stdin/stdout wiring, cursor visibility, screen clearing, terminal dimensions, escape-sequence negotiation, and terminal capability detection belong there.
+- Put keyboard parsing and key matching in `input/`.
+- Put generic ANSI/text/rendering helpers in `utilities/`, especially when they are used outside editing components.
+
 ## Component Interface
 
 All components implement:

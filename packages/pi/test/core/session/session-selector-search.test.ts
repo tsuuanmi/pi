@@ -1,5 +1,5 @@
+import { filterAndSortSearchableSessions } from "@tsuuanmi/pi-tui";
 import { describe, expect, it } from "vitest";
-import { filterAndSortSessions } from "#pi/modes/interactive/components/selectors/session-selector-search";
 import type { SessionInfo } from "#pi/session/session-manager";
 
 function makeSession(
@@ -33,7 +33,7 @@ describe("session selector search", () => {
 			}),
 		];
 
-		const result = filterAndSortSessions(sessions, '"node cve"', "recent");
+		const result = filterAndSortSearchableSessions(sessions, '"node cve"', "recent");
 		expect(result.map((s) => s.id)).toEqual(["a"]);
 	});
 
@@ -51,7 +51,7 @@ describe("session selector search", () => {
 			}),
 		];
 
-		const result = filterAndSortSessions(sessions, "re:\\bbrave\\b", "recent");
+		const result = filterAndSortSearchableSessions(sessions, "re:\\bbrave\\b", "recent");
 		expect(result.map((s) => s.id)).toEqual(["a"]);
 	});
 
@@ -74,7 +74,7 @@ describe("session selector search", () => {
 			}),
 		];
 
-		const result = filterAndSortSessions(sessions, '"brave"', "recent");
+		const result = filterAndSortSearchableSessions(sessions, '"brave"', "recent");
 		expect(result.map((s) => s.id)).toEqual(["newer", "older"]);
 	});
 
@@ -92,7 +92,7 @@ describe("session selector search", () => {
 			}),
 		];
 
-		const result1 = filterAndSortSessions(sessions, '"brave"', "relevance");
+		const result1 = filterAndSortSearchableSessions(sessions, '"brave"', "relevance");
 		expect(result1.map((s) => s.id)).toEqual(["early", "late"]);
 
 		const tieSessions: SessionInfo[] = [
@@ -108,7 +108,7 @@ describe("session selector search", () => {
 			}),
 		];
 
-		const result2 = filterAndSortSessions(tieSessions, '"brave"', "relevance");
+		const result2 = filterAndSortSearchableSessions(tieSessions, '"brave"', "relevance");
 		expect(result2.map((s) => s.id)).toEqual(["newer", "older"]);
 	});
 
@@ -121,7 +121,7 @@ describe("session selector search", () => {
 			}),
 		];
 
-		const result = filterAndSortSessions(sessions, "re:(", "recent");
+		const result = filterAndSortSearchableSessions(sessions, "re:(", "recent");
 		expect(result).toEqual([]);
 	});
 
@@ -152,17 +152,17 @@ describe("session selector search", () => {
 		];
 
 		it("returns all sessions when nameFilter is 'all'", () => {
-			const result = filterAndSortSessions(sessions, "", "recent", "all");
+			const result = filterAndSortSearchableSessions(sessions, "", "recent", "all");
 			expect(result.map((session) => session.id)).toEqual(["named1", "named2", "other1", "other2"]);
 		});
 
 		it("returns only named sessions when nameFilter is 'named'", () => {
-			const result = filterAndSortSessions(sessions, "", "recent", "named");
+			const result = filterAndSortSearchableSessions(sessions, "", "recent", "named");
 			expect(result.map((session) => session.id)).toEqual(["named1", "named2"]);
 		});
 
 		it("applies name filter before search query", () => {
-			const result = filterAndSortSessions(sessions, "blueberry", "recent", "named");
+			const result = filterAndSortSearchableSessions(sessions, "blueberry", "recent", "named");
 			expect(result.map((session) => session.id)).toEqual(["named1", "named2"]);
 		});
 
@@ -188,7 +188,7 @@ describe("session selector search", () => {
 				}),
 			];
 
-			const result = filterAndSortSessions(sessionsWithWhitespace, "", "recent", "named");
+			const result = filterAndSortSearchableSessions(sessionsWithWhitespace, "", "recent", "named");
 			expect(result.map((session) => session.id)).toEqual(["named"]);
 		});
 	});

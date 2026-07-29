@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { refreshHudUi } from "#tui/components/hud/extension-ui";
+import { refreshHudUi } from "#tui/components/hud/extension";
 
 describe("refreshHudUi", () => {
 	it("calls setStatus to clear the __hud_refresh__ key", async () => {

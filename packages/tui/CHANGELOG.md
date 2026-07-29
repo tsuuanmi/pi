@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- **selection**: Added a reusable searchable table selector for domain-specific selector adapters, including initial queries, wrapped navigation, selected-item details, and key-based selection.
+- **messages**: Added `CollapsibleMessage` for reusable collapsed/expanded markdown summaries.
+- **messages**: Moved the reusable user message component into TUI.
+- **selection**: Moved the reusable theme selector component into TUI.
+- **selection**: Exported reusable session search and sorting helpers for TUI-hosted session selectors.
+
 ## [0.2.2] - 2026-07-23
 
 ### Changed

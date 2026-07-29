@@ -2,11 +2,9 @@ import {
 	Container,
 	DynamicBorder,
 	type Focusable,
-	fuzzyFilter,
-	getKeybindings,
-	Input,
+	type SearchableTableColumn,
+	SearchableTableSelector,
 	Spacer,
-	TruncatedText,
 	theme,
 } from "@tsuuanmi/pi-tui";
 import type { AuthStatus, AuthStorage } from "#pi/auth/auth-storage";
@@ -17,34 +15,28 @@ export type AuthSelectorProvider = {
 	authType: "oauth" | "api_key";
 };
 
+type OAuthSelectorMode = "add" | "remove";
+
+function getProviderKey(provider: AuthSelectorProvider): string {
+	return `${provider.authType}:${provider.id}`;
+}
+
+function getProviderSearchText(provider: AuthSelectorProvider): string {
+	return `${provider.name} ${provider.id} ${provider.authType}`;
+}
+
 /**
- * Component that renders an auth provider selector
+ * Component that renders an auth provider selector.
  */
 export class OAuthSelectorComponent extends Container implements Focusable {
-	private searchInput: Input;
-
-	// Focusable implementation - propagate to search input for IME cursor positioning
-	private _focused = false;
-	get focused(): boolean {
-		return this._focused;
-	}
-	set focused(value: boolean) {
-		this._focused = value;
-		this.searchInput.focused = value;
-	}
-
-	private listContainer: Container;
-	private allProviders: AuthSelectorProvider[];
-	private filteredProviders: AuthSelectorProvider[];
-	private selectedIndex: number = 0;
-	private mode: "add" | "remove";
+	private selector: SearchableTableSelector<AuthSelectorProvider>;
+	private mode: OAuthSelectorMode;
 	private authStorage: AuthStorage;
 	private getAuthStatus: (providerId: string) => AuthStatus;
-	private onSelectCallback: (providerId: string) => void;
-	private onCancelCallback: () => void;
+	private allProviders: AuthSelectorProvider[];
 
 	constructor(
-		mode: "add" | "remove",
+		mode: OAuthSelectorMode,
 		authStorage: AuthStorage,
 		providers: AuthSelectorProvider[],
 		onSelect: (providerId: string) => void,
@@ -57,95 +49,65 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 		this.authStorage = authStorage;
 		this.getAuthStatus = getAuthStatus ?? ((providerId) => this.authStorage.getAuthStatus(providerId));
 		this.allProviders = providers;
-		this.filteredProviders = providers;
-		this.onSelectCallback = onSelect;
-		this.onCancelCallback = onCancel;
 
-		// Add top border
 		this.addChild(new DynamicBorder());
 		this.addChild(new Spacer(1));
-
-		// Add title
-		const title = mode === "add" ? "Select provider to add account:" : "Select provider to remove accounts:";
-		this.addChild(new TruncatedText(theme.fg("accent", theme.bold(title)), 1, 0));
+		this.selector = new SearchableTableSelector({
+			items: providers,
+			columns: this.getColumns(),
+			getSearchText: getProviderSearchText,
+			getItemKey: getProviderKey,
+			onSelect: (provider) => onSelect(provider.id),
+			onCancel,
+			title: mode === "add" ? "Select provider to add account:" : "Select provider to remove accounts:",
+			emptyTitle: "  No matching providers",
+			getEmptyLines: () => [theme.fg("muted", `  ${this.getEmptyMessage()}`)],
+			maxVisibleItems: 8,
+			minTableWidth: 56,
+		});
+		this.addChild(this.selector);
 		this.addChild(new Spacer(1));
-
-		this.searchInput = new Input();
-		this.searchInput.onSubmit = () => {
-			const selectedProvider = this.filteredProviders[this.selectedIndex];
-			if (selectedProvider) {
-				this.onSelectCallback(selectedProvider.id);
-			}
-		};
-		this.addChild(this.searchInput);
-		this.addChild(new Spacer(1));
-
-		// Create list container
-		this.listContainer = new Container();
-		this.addChild(this.listContainer);
-
-		this.addChild(new Spacer(1));
-
-		// Add bottom border
 		this.addChild(new DynamicBorder());
-
-		// Initial render
-		this.filterProviders("");
 	}
 
-	private filterProviders(query: string): void {
-		this.filteredProviders = query
-			? fuzzyFilter(this.allProviders, query, (provider) => `${provider.name} ${provider.id} ${provider.authType}`)
-			: this.allProviders;
-		this.selectedIndex = Math.max(0, Math.min(this.selectedIndex, Math.max(0, this.filteredProviders.length - 1)));
-		this.updateList();
+	get focused(): boolean {
+		return this.selector.focused;
 	}
 
-	private updateList(): void {
-		this.listContainer.clear();
+	set focused(value: boolean) {
+		this.selector.focused = value;
+	}
 
-		const maxVisible = 8;
-		const startIndex = Math.max(
-			0,
-			Math.min(this.selectedIndex - Math.floor(maxVisible / 2), this.filteredProviders.length - maxVisible),
-		);
-		const endIndex = Math.min(startIndex + maxVisible, this.filteredProviders.length);
+	handleInput(keyData: string): void {
+		this.selector.handleInput(keyData);
+	}
 
-		for (let i = startIndex; i < endIndex; i++) {
-			const provider = this.filteredProviders[i];
-			if (!provider) continue;
+	private getColumns(): SearchableTableColumn<AuthSelectorProvider>[] {
+		return [
+			{
+				id: "provider",
+				label: "Provider",
+				widthPercent: 44,
+				render: (provider, selected) => theme.fg(selected ? "accent" : "text", provider.name),
+			},
+			{
+				id: "type",
+				label: "Type",
+				widthPercent: 16,
+				render: (provider) => theme.fg("muted", provider.authType === "oauth" ? "OAuth" : "API key"),
+			},
+			{
+				id: "status",
+				label: "Status",
+				widthPercent: 40,
+				render: (provider) => this.formatStatusIndicator(provider).trimStart(),
+			},
+		];
+	}
 
-			const isSelected = i === this.selectedIndex;
-
-			const statusIndicator = this.formatStatusIndicator(provider);
-			let line = "";
-			if (isSelected) {
-				const prefix = theme.fg("accent", "→ ");
-				const text = theme.fg("accent", provider.name);
-				line = prefix + text + statusIndicator;
-			} else {
-				const text = `  ${theme.fg("text", provider.name)}`;
-				line = text + statusIndicator;
-			}
-
-			this.listContainer.addChild(new TruncatedText(line, 1, 0));
-		}
-
-		if (startIndex > 0 || endIndex < this.filteredProviders.length) {
-			const scrollInfo = theme.fg("muted", `  (${this.selectedIndex + 1}/${this.filteredProviders.length})`);
-			this.listContainer.addChild(new TruncatedText(scrollInfo, 1, 0));
-		}
-
-		// Show "no providers" if empty
-		if (this.filteredProviders.length === 0) {
-			const message =
-				this.allProviders.length === 0
-					? this.mode === "add"
-						? "No providers available"
-						: "No stored accounts. Use /account add first."
-					: "No matching providers";
-			this.listContainer.addChild(new TruncatedText(theme.fg("muted", `  ${message}`), 1, 0));
-		}
+	private getEmptyMessage(): string {
+		if (this.allProviders.length > 0) return "No matching providers";
+		return this.mode === "add" ? "No providers available" : "No stored accounts. Use /account add first.";
 	}
 
 	private formatStatusIndicator(provider: AuthSelectorProvider): string {
@@ -171,38 +133,6 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 				return theme.fg("success", " ✓ command in settings.json");
 			default:
 				return theme.fg("muted", " • unconfigured");
-		}
-	}
-
-	handleInput(keyData: string): void {
-		const kb = getKeybindings();
-		// Up arrow
-		if (kb.matches(keyData, "tui.select.up")) {
-			if (this.filteredProviders.length === 0) return;
-			this.selectedIndex = Math.max(0, this.selectedIndex - 1);
-			this.updateList();
-		}
-		// Down arrow
-		else if (kb.matches(keyData, "tui.select.down")) {
-			if (this.filteredProviders.length === 0) return;
-			this.selectedIndex = Math.min(this.filteredProviders.length - 1, this.selectedIndex + 1);
-			this.updateList();
-		}
-		// Enter
-		else if (kb.matches(keyData, "tui.select.confirm")) {
-			const selectedProvider = this.filteredProviders[this.selectedIndex];
-			if (selectedProvider) {
-				this.onSelectCallback(selectedProvider.id);
-			}
-		}
-		// Escape or Ctrl+C
-		else if (kb.matches(keyData, "tui.select.cancel")) {
-			this.onCancelCallback();
-		}
-		// Pass everything else to search input
-		else {
-			this.searchInput.handleInput(keyData);
-			this.filterProviders(this.searchInput.getValue());
 		}
 	}
 }

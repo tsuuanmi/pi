@@ -1,67 +1,21 @@
 import type { CompactionSummaryMessage } from "@tsuuanmi/pi-agent";
-import {
-	Box,
-	getMarkdownTheme,
-	keyText,
-	LAYOUT_EDGE_X,
-	Markdown,
-	type MarkdownTheme,
-	Spacer,
-	Text,
-	theme,
-} from "@tsuuanmi/pi-tui";
+import { CollapsibleMessage, getMarkdownTheme, keyText, theme } from "@tsuuanmi/pi-tui";
 
 /**
- * Component that renders a compaction message with collapsed/expanded state.
- * Uses same background color as custom messages for visual consistency.
+ * Component that renders a compaction summary message with collapsed/expanded state.
  */
-export class CompactionSummaryMessageComponent extends Box {
-	private expanded = false;
-	private message: CompactionSummaryMessage;
-	private markdownTheme: MarkdownTheme;
-
-	constructor(message: CompactionSummaryMessage, markdownTheme: MarkdownTheme = getMarkdownTheme()) {
-		super(LAYOUT_EDGE_X, 1, (t) => theme.bg("customMessageBg", t));
-		this.message = message;
-		this.markdownTheme = markdownTheme;
-		this.updateDisplay();
-	}
-
-	setExpanded(expanded: boolean): void {
-		this.expanded = expanded;
-		this.updateDisplay();
-	}
-
-	override invalidate(): void {
-		super.invalidate();
-		this.updateDisplay();
-	}
-
-	private updateDisplay(): void {
-		this.clear();
-
-		const tokenStr = this.message.tokensBefore.toLocaleString();
-		const label = theme.fg("customMessageLabel", `\x1b[1m[compaction]\x1b[22m`);
-		this.addChild(new Text(label, 0, 0));
-		this.addChild(new Spacer(1));
-
-		if (this.expanded) {
-			const header = `**Compacted from ${tokenStr} tokens**\n\n`;
-			this.addChild(
-				new Markdown(header + this.message.summary, 0, 0, this.markdownTheme, {
-					color: (text: string) => theme.fg("customMessageText", text),
-				}),
-			);
-		} else {
-			this.addChild(
-				new Text(
-					theme.fg("customMessageText", `Compacted from ${tokenStr} tokens (`) +
-						theme.fg("dim", keyText("app.tools.expand")) +
-						theme.fg("customMessageText", " to expand)"),
-					0,
-					0,
-				),
-			);
-		}
+export class CompactionSummaryMessageComponent extends CollapsibleMessage {
+	constructor(message: CompactionSummaryMessage, markdownTheme = getMarkdownTheme()) {
+		const tokenStr = message.tokensBefore.toLocaleString();
+		super({
+			label: theme.fg("customMessageLabel", `\x1b[1m[compaction]\x1b[22m`),
+			collapsedText:
+				theme.fg("customMessageText", `Compacted from ${tokenStr} tokens (`) +
+				theme.fg("dim", keyText("app.tools.expand")) +
+				theme.fg("customMessageText", " to expand)"),
+			expandedHeaderMarkdown: `**Compacted from ${tokenStr} tokens**\n\n`,
+			expandedBodyMarkdown: message.summary,
+			markdownTheme,
+		});
 	}
 }

@@ -194,13 +194,11 @@ export {
 	type SettingsConfig,
 	SettingsSelectorComponent,
 	SkillInvocationMessageComponent,
-	ThemeSelectorComponent,
 	ThinkingSelectorComponent,
 	ToolExecutionComponent,
 	type ToolExecutionOptions,
 	TreeSelectorComponent,
 	truncateToVisualLines,
-	UserMessageComponent,
 	UserMessageSelectorComponent,
 	type VisualTruncateResult,
 } from "#pi/modes/interactive/components/index";

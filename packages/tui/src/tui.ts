@@ -11,7 +11,7 @@ import {
 	isOsc11BackgroundColorResponse,
 	parseOsc11BackgroundColor,
 	type RgbColor,
-} from "#tui/terminal/features/terminal-colors";
+} from "#tui/terminal/features/colors";
 import type { Terminal } from "#tui/terminal/runtime/terminal";
 import {
 	extractSegments,

@@ -19,7 +19,6 @@ export { BranchSummaryMessageComponent } from "#pi/modes/interactive/components/
 export { CompactionSummaryMessageComponent } from "#pi/modes/interactive/components/messages/compaction-summary-message";
 export { CustomMessageComponent } from "#pi/modes/interactive/components/messages/custom-message";
 export { SkillInvocationMessageComponent } from "#pi/modes/interactive/components/messages/skill-invocation-message";
-export { UserMessageComponent } from "#pi/modes/interactive/components/messages/user-message";
 export type { AccountSelectorOption } from "#pi/modes/interactive/components/selectors/account-selector";
 export { ExtensionSelectorComponent } from "#pi/modes/interactive/components/selectors/extension-selector";
 export { ModelSelectorComponent } from "#pi/modes/interactive/components/selectors/model-selector";
@@ -30,7 +29,6 @@ export {
 	type SettingsConfig,
 	SettingsSelectorComponent,
 } from "#pi/modes/interactive/components/selectors/settings-selector";
-export { ThemeSelectorComponent } from "#pi/modes/interactive/components/selectors/theme-selector";
 export { ThinkingSelectorComponent } from "#pi/modes/interactive/components/selectors/thinking-selector";
 export { TreeSelectorComponent } from "#pi/modes/interactive/components/selectors/tree-selector";
 export { UserMessageSelectorComponent } from "#pi/modes/interactive/components/selectors/user-message-selector";

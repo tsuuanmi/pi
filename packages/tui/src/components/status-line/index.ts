@@ -5,12 +5,12 @@ export {
 	type ContextUsageLevel,
 	getContextUsageLevel,
 	getContextUsageThemeColor,
-} from "#tui/components/status-line/context-thresholds";
+} from "#tui/components/status-line/context-levels";
 export {
 	type GitStatusSummary,
 	parseStatusPorcelain,
 	runGitStatusPorcelain,
-} from "#tui/components/status-line/git-utils";
+} from "#tui/components/status-line/git";
 export { getPreset, STATUS_LINE_PRESETS } from "#tui/components/status-line/presets";
 export {
 	ALL_SEGMENT_IDS,

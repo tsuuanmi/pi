@@ -1,6 +1,6 @@
 // Core TUI interfaces and classes
 
-export { type Expandable, ExpandableText } from "#tui/components/display/expandable-text";
+export { type Expandable, ExpandableText } from "#tui/components/display/expandable";
 export {
 	type DefaultTextStyle,
 	Markdown,
@@ -11,22 +11,22 @@ export {
 	formatStructuredReceiptLines,
 	renderStructuredReceipt,
 	type StructuredReceiptDisplayModel,
-} from "#tui/components/display/structured-receipt";
+} from "#tui/components/display/receipt";
 export {
 	type HighlightOptions,
 	type HighlightTheme,
 	highlight,
 	renderHighlightedHtml,
 	supportsLanguage,
-} from "#tui/components/display/syntax-highlight";
+} from "#tui/components/display/highlight";
 export { Text } from "#tui/components/display/text";
-export { TruncatedText } from "#tui/components/display/truncated-text";
-export { truncateToVisualLines, type VisualTruncateResult } from "#tui/components/display/visual-truncate";
-export { BorderedLoader } from "#tui/components/feedback/bordered-loader";
-export { CancellableLoader } from "#tui/components/feedback/cancellable-loader";
-export { CountdownTimer } from "#tui/components/feedback/countdown-timer";
+export { TruncatedText } from "#tui/components/display/truncated";
+export { truncateToVisualLines, type VisualTruncateResult } from "#tui/components/display/truncate";
+export { BorderedLoader } from "#tui/components/feedback/bordered";
+export { CancellableLoader } from "#tui/components/feedback/cancel";
+export { CountdownTimer } from "#tui/components/feedback/countdown";
 export { Loader, type LoaderIndicatorOptions } from "#tui/components/feedback/loader";
-export { refreshHudUi } from "#tui/components/hud/extension-ui";
+export { refreshHudUi } from "#tui/components/hud/extension";
 export type {
 	ActiveHudEntry,
 	HudChip,
@@ -48,9 +48,16 @@ export { Editor, type EditorTheme } from "#tui/components/inputs/editor";
 export { Input } from "#tui/components/inputs/input";
 // Components
 export { Box } from "#tui/components/layout/box";
-export { DynamicBorder } from "#tui/components/layout/dynamic-border";
+export { DynamicBorder } from "#tui/components/layout/border";
 export { Spacer } from "#tui/components/layout/spacer";
 export { LAYOUT_EDGE_X, LAYOUT_SECTION_GAP_Y } from "#tui/components/layout/spacing";
+export { CollapsibleMessage, type CollapsibleMessageOptions } from "#tui/components/messages/collapsible-message";
+export { UserMessageComponent } from "#tui/components/messages/user-message";
+export {
+	type SearchableTableColumn,
+	SearchableTableSelector,
+	type SearchableTableSelectorOptions,
+} from "#tui/components/selection/table-selector";
 export {
 	type SelectItem,
 	SelectList,
@@ -58,17 +65,27 @@ export {
 	type SelectListTheme,
 	type SelectListTruncatePrimaryContext,
 } from "#tui/components/selection/select-list";
+export {
+	filterAndSortSearchableSessions,
+	hasSearchableSessionName,
+	type ParsedSessionSearchQuery,
+	type SearchableSessionInfo,
+	type SessionNameFilter,
+	type SessionSearchMatchResult,
+	type SessionSortMode,
+} from "#tui/components/selection/session-filter";
 export { type SettingItem, SettingsList, type SettingsListTheme } from "#tui/components/selection/settings-list";
+export { ThemeSelectorComponent } from "#tui/components/selection/theme-selector";
 export {
 	type ContextUsageLevel,
 	getContextUsageLevel,
 	getContextUsageThemeColor,
-} from "#tui/components/status-line/context-thresholds";
+} from "#tui/components/status-line/context-levels";
 export {
 	type GitStatusSummary,
 	parseStatusPorcelain,
 	runGitStatusPorcelain,
-} from "#tui/components/status-line/git-utils";
+} from "#tui/components/status-line/git";
 export { getPreset, STATUS_LINE_PRESETS } from "#tui/components/status-line/presets";
 export {
 	ALL_SEGMENT_IDS,
@@ -115,7 +132,7 @@ export {
 // Fuzzy matching
 export { type FuzzyMatch, fuzzyFilter, fuzzyMatch } from "#tui/editor/completion/fuzzy";
 // Editor component interface (for custom editors)
-export type { EditorComponent } from "#tui/editor/contracts/editor-component";
+export type { EditorComponent } from "#tui/editor/contracts/component";
 export {
 	formatKeyText,
 	type KeyTextFormatOptions,
@@ -123,7 +140,7 @@ export {
 	keyHint,
 	keyText,
 	rawKeyHint,
-} from "#tui/input/keyboard/keybinding-hints";
+} from "#tui/input/keyboard/key-hints";
 // Keybindings
 export {
 	getKeybindings,
@@ -162,7 +179,7 @@ export {
 	type TerminalCapabilities,
 } from "#tui/terminal/features/capabilities";
 // Terminal colors
-export { parseOsc11BackgroundColor, type RgbColor } from "#tui/terminal/features/terminal-colors";
+export { parseOsc11BackgroundColor, type RgbColor } from "#tui/terminal/features/colors";
 // Terminal interface and implementations
 export { ProcessTerminal, type Terminal } from "#tui/terminal/runtime/terminal";
 export * from "#tui/theme/theme";

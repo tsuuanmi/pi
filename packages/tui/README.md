@@ -9,9 +9,31 @@ Minimal terminal UI framework with differential rendering and synchronized outpu
 - **Bracketed Paste Mode**: Handles large pastes correctly with markers for >10 line pastes
 - **Component-based**: Simple Component interface with render() method
 - **Theme Support**: Components accept theme interfaces for customizable styling
-- **Built-in Components**: Text, TruncatedText, Input, Editor, Markdown, Loader, SelectList, SettingsList, Spacer, Image, Box, Container
+- **Built-in Components**: Text, TruncatedText, Input, Editor, Markdown, UserMessageComponent, CollapsibleMessage, Loader, SelectList, SearchableTableSelector, SettingsList, ThemeSelectorComponent, Spacer, Image, Box, Container
 - **Autocomplete Support**: File paths and slash commands
 - **Reusable Rendering Utilities**: ANSI stripping, keybinding text formatting, visual-line truncation, and themable diff rendering
+
+## Source Layout and Boundaries
+
+The TUI package is split by responsibility:
+
+```text
+src/tui.ts       # render orchestration, focus, overlays, differential updates
+src/components/ # rendered UI widgets that implement Component
+src/editor/     # non-visual editing primitives used by input components
+src/input/      # keyboard decoding, keybindings, and input stream parsing
+src/terminal/   # terminal runtime adapter, escape sequences, and capabilities
+src/theme/      # theme selection and terminal-aware color choices
+src/utilities/  # generic text, ANSI, and rendering helpers
+```
+
+Boundary rules:
+
+- `components/` owns visual widgets. Components render lines, handle focused input, and may compose helpers from `editor/`, `input/`, `terminal/features`, `theme/`, and `utilities/`.
+- `editor/` owns reusable editing behavior, not rendered widgets. It contains autocomplete, fuzzy matching, undo, word navigation, and editor contracts used by `components/inputs/editor.ts` and `components/inputs/input.ts`.
+- `terminal/` owns interaction with the terminal device. It should stay independent of components and editor behavior.
+- Terminal lifecycle work (`start`, `stop`, raw mode, cursor movement, screen clearing) belongs in `terminal/` or `tui.ts`, not in individual components.
+- Generic helpers used outside text editing should live in `utilities/`; move code out of `editor/` only when it is no longer editing-specific.
 
 ## Quick Start
 

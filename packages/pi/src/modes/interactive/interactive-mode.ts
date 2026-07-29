@@ -52,6 +52,7 @@ import {
 	TruncatedText,
 	TUI,
 	theme,
+	UserMessageComponent,
 } from "@tsuuanmi/pi-tui";
 import { readWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import chalk from "chalk";
@@ -72,7 +73,6 @@ import { BranchSummaryMessageComponent } from "#pi/modes/interactive/components/
 import { CompactionSummaryMessageComponent } from "#pi/modes/interactive/components/messages/compaction-summary-message";
 import { CustomMessageComponent } from "#pi/modes/interactive/components/messages/custom-message";
 import { SkillInvocationMessageComponent } from "#pi/modes/interactive/components/messages/skill-invocation-message";
-import { UserMessageComponent } from "#pi/modes/interactive/components/messages/user-message";
 import { ToolExecutionComponent } from "#pi/modes/interactive/components/tool-execution";
 import { AccountAuthController } from "#pi/modes/interactive/controllers/account-auth-controller";
 import { CommandController } from "#pi/modes/interactive/controllers/command-controller";

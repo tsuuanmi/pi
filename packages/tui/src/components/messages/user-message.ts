@@ -1,4 +1,8 @@
-import { Box, Container, getMarkdownTheme, LAYOUT_EDGE_X, Markdown, type MarkdownTheme, theme } from "@tsuuanmi/pi-tui";
+import { Markdown, type MarkdownTheme } from "#tui/components/display/markdown";
+import { Box } from "#tui/components/layout/box";
+import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
+import { getMarkdownTheme, theme } from "#tui/theme/theme";
+import { Container } from "#tui/tui";
 
 const OSC133_ZONE_START = "\x1b]133;A\x07";
 const OSC133_ZONE_END = "\x1b]133;B\x07";

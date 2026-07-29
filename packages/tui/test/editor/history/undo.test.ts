@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { UndoStack } from "#tui/editor/history/undo-stack";
+import { UndoStack } from "#tui/editor/history/undo";
 
 describe("UndoStack", () => {
 	it("starts empty", () => {

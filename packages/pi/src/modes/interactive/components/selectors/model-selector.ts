@@ -3,10 +3,11 @@ import {
 	Container,
 	DynamicBorder,
 	type Focusable,
-	fuzzyFilter,
 	getKeybindings,
-	Input,
+	type Input,
 	keyHint,
+	type SearchableTableColumn,
+	SearchableTableSelector,
 	Spacer,
 	Text,
 	type TUI,
@@ -29,32 +30,26 @@ interface ScopedModelItem {
 
 type ModelScope = "all" | "scoped";
 
+function getModelItemKey(item: ModelItem): string {
+	return `${item.provider}:${item.id}`;
+}
+
+function getModelKey(model: Model<any> | undefined): string | undefined {
+	return model ? `${model.provider}:${model.id}` : undefined;
+}
+
 /**
- * Component that renders a model selector with search
+ * Component that renders a model selector with search.
  */
 export class ModelSelectorComponent extends Container implements Focusable {
-	private searchInput: Input;
-
-	// Focusable implementation - propagate to searchInput for IME cursor positioning
-	private _focused = false;
-	get focused(): boolean {
-		return this._focused;
-	}
-	set focused(value: boolean) {
-		this._focused = value;
-		this.searchInput.focused = value;
-	}
-	private listContainer: Container;
+	private selector: SearchableTableSelector<ModelItem>;
 	private allModels: ModelItem[] = [];
 	private scopedModelItems: ModelItem[] = [];
 	private activeModels: ModelItem[] = [];
-	private filteredModels: ModelItem[] = [];
-	private selectedIndex: number = 0;
 	private currentModel?: Model<any>;
 	private settingsManager: SettingsManager;
 	private modelRegistry: ModelRegistry;
 	private onSelectCallback: (model: Model<any>) => void;
-	private onCancelCallback: () => void;
 	private errorMessage?: string;
 	private tui: TUI;
 	private scopedModels: ReadonlyArray<ScopedModelItem>;
@@ -81,13 +76,10 @@ export class ModelSelectorComponent extends Container implements Focusable {
 		this.scopedModels = scopedModels;
 		this.scope = scopedModels.length > 0 ? "scoped" : "all";
 		this.onSelectCallback = onSelect;
-		this.onCancelCallback = onCancel;
 
-		// Add top border
 		this.addChild(new DynamicBorder());
 		this.addChild(new Spacer(1));
 
-		// Add hint about model filtering
 		if (scopedModels.length > 0) {
 			this.scopeText = new Text(this.getScopeText(), 0, 0);
 			this.addChild(this.scopeText);
@@ -99,55 +91,70 @@ export class ModelSelectorComponent extends Container implements Focusable {
 		}
 		this.addChild(new Spacer(1));
 
-		// Create search input
-		this.searchInput = new Input();
-		if (initialSearchInput) {
-			this.searchInput.setValue(initialSearchInput);
-		}
-		this.searchInput.onSubmit = () => {
-			// Enter on search input selects the first filtered item
-			if (this.filteredModels[this.selectedIndex]) {
-				this.handleSelect(this.filteredModels[this.selectedIndex].model);
-			}
-		};
-		this.addChild(this.searchInput);
-
+		this.selector = new SearchableTableSelector({
+			items: [],
+			columns: this.getColumns(),
+			getSearchText: ({ id, provider, model }) => getModelSearchText({ id, provider, name: model.name }),
+			getItemKey: getModelItemKey,
+			onSelect: (item) => this.handleSelect(item.model),
+			onCancel,
+			initialQuery: initialSearchInput,
+			wrapNavigation: true,
+			maxVisibleItems: 10,
+			emptyTitle: "  No matching models",
+			getEmptyLines: () => this.getEmptyLines(),
+			renderSelectedDetails: (item) => ["", theme.fg("muted", `  Model Name: ${item.model.name}`)],
+		});
+		this.addChild(this.selector);
 		this.addChild(new Spacer(1));
-
-		// Create list container
-		this.listContainer = new Container();
-		this.addChild(this.listContainer);
-
-		this.addChild(new Spacer(1));
-
-		// Add bottom border
 		this.addChild(new DynamicBorder());
 
-		// Load models and do initial render
 		this.loadModels().then(() => {
-			if (initialSearchInput) {
-				this.filterModels(initialSearchInput);
-			} else {
-				this.updateList();
-			}
-			// Request re-render after models are loaded
 			this.tui.requestRender();
 		});
+	}
+
+	get focused(): boolean {
+		return this.selector.focused;
+	}
+
+	set focused(value: boolean) {
+		this.selector.focused = value;
+	}
+
+	private getColumns(): SearchableTableColumn<ModelItem>[] {
+		return [
+			{
+				id: "model",
+				label: "Model",
+				widthPercent: 58,
+				render: (item, selected) => theme.fg(selected ? "accent" : "text", item.id),
+			},
+			{
+				id: "provider",
+				label: "Provider",
+				widthPercent: 30,
+				render: (item) => theme.fg("muted", `[${item.provider}]`),
+			},
+			{
+				id: "current",
+				label: "Current",
+				widthPercent: 12,
+				render: (item) => (modelsAreEqual(this.currentModel, item.model) ? theme.fg("success", "✓") : ""),
+			},
+		];
 	}
 
 	private async loadModels(): Promise<void> {
 		let models: ModelItem[];
 
-		// Refresh to pick up any changes to model settings
 		this.modelRegistry.refresh();
 
-		// Check for model settings errors
 		const loadError = this.modelRegistry.getError();
 		if (loadError) {
 			this.errorMessage = loadError;
 		}
 
-		// Load available models (built-in models still work even if model settings failed)
 		try {
 			const availableModels = await this.modelRegistry.getAvailable();
 			models = availableModels.map((model: Model<any>) => ({
@@ -159,8 +166,8 @@ export class ModelSelectorComponent extends Container implements Focusable {
 			this.allModels = [];
 			this.scopedModelItems = [];
 			this.activeModels = [];
-			this.filteredModels = [];
 			this.errorMessage = error instanceof Error ? error.message : String(error);
+			this.selector.setItems([], false);
 			return;
 		}
 
@@ -174,16 +181,11 @@ export class ModelSelectorComponent extends Container implements Focusable {
 			id: scoped.model.id,
 			model: scoped.model,
 		}));
-		this.activeModels = this.scope === "scoped" ? this.scopedModelItems : this.allModels;
-		this.filteredModels = this.activeModels;
-		const currentIndex = this.filteredModels.findIndex((item) => modelsAreEqual(this.currentModel, item.model));
-		this.selectedIndex =
-			currentIndex >= 0 ? currentIndex : Math.min(this.selectedIndex, Math.max(0, this.filteredModels.length - 1));
+		this.setActiveModels(false);
 	}
 
 	private sortModels(models: ModelItem[]): ModelItem[] {
 		const sorted = [...models];
-		// Sort: current model first, then by provider
 		sorted.sort((a, b) => {
 			const aIsCurrent = modelsAreEqual(this.currentModel, a.model);
 			const bIsCurrent = modelsAreEqual(this.currentModel, b.model);
@@ -207,131 +209,48 @@ export class ModelSelectorComponent extends Container implements Focusable {
 	private setScope(scope: ModelScope): void {
 		if (this.scope === scope) return;
 		this.scope = scope;
-		this.activeModels = this.scope === "scoped" ? this.scopedModelItems : this.allModels;
-		const currentIndex = this.activeModels.findIndex((item) => modelsAreEqual(this.currentModel, item.model));
-		this.selectedIndex = currentIndex >= 0 ? currentIndex : 0;
-		this.filterModels(this.searchInput.getValue());
+		this.setActiveModels(false);
 		if (this.scopeText) {
 			this.scopeText.setText(this.getScopeText());
 		}
 	}
 
-	private filterModels(query: string): void {
-		this.filteredModels = query
-			? fuzzyFilter(this.activeModels, query, ({ id, provider, model }) =>
-					getModelSearchText({ id, provider, name: model.name }),
-				)
-			: this.activeModels;
-		this.selectedIndex = Math.min(this.selectedIndex, Math.max(0, this.filteredModels.length - 1));
-		this.updateList();
+	private setActiveModels(preserveSelection: boolean): void {
+		this.activeModels = this.scope === "scoped" ? this.scopedModelItems : this.allModels;
+		this.selector.setItems(this.activeModels, preserveSelection);
+		const currentKey = getModelKey(this.currentModel);
+		if (currentKey) {
+			this.selector.selectItemByKey(currentKey);
+		}
 	}
 
-	private updateList(): void {
-		this.listContainer.clear();
-
-		const maxVisible = 10;
-		const startIndex = Math.max(
-			0,
-			Math.min(this.selectedIndex - Math.floor(maxVisible / 2), this.filteredModels.length - maxVisible),
-		);
-		const endIndex = Math.min(startIndex + maxVisible, this.filteredModels.length);
-
-		// Show visible slice of filtered models
-		for (let i = startIndex; i < endIndex; i++) {
-			const item = this.filteredModels[i];
-			if (!item) continue;
-
-			const isSelected = i === this.selectedIndex;
-			const isCurrent = modelsAreEqual(this.currentModel, item.model);
-
-			let line = "";
-			if (isSelected) {
-				const prefix = theme.fg("accent", "→ ");
-				const modelText = `${item.id}`;
-				const providerBadge = theme.fg("muted", `[${item.provider}]`);
-				const checkmark = isCurrent ? theme.fg("success", " ✓") : "";
-				line = `${prefix + theme.fg("accent", modelText)} ${providerBadge}${checkmark}`;
-			} else {
-				const modelText = `  ${item.id}`;
-				const providerBadge = theme.fg("muted", `[${item.provider}]`);
-				const checkmark = isCurrent ? theme.fg("success", " ✓") : "";
-				line = `${modelText} ${providerBadge}${checkmark}`;
-			}
-
-			this.listContainer.addChild(new Text(line, 0, 0));
+	private getEmptyLines(): string[] {
+		if (!this.errorMessage) {
+			return [theme.fg("muted", "  No matching models")];
 		}
-
-		// Add scroll indicator if needed
-		if (startIndex > 0 || endIndex < this.filteredModels.length) {
-			const scrollInfo = theme.fg("muted", `  (${this.selectedIndex + 1}/${this.filteredModels.length})`);
-			this.listContainer.addChild(new Text(scrollInfo, 0, 0));
-		}
-
-		// Show error message or "no results" if empty
-		if (this.errorMessage) {
-			// Show error in red
-			const errorLines = this.errorMessage.split("\n");
-			for (const line of errorLines) {
-				this.listContainer.addChild(new Text(theme.fg("error", line), 0, 0));
-			}
-		} else if (this.filteredModels.length === 0) {
-			this.listContainer.addChild(new Text(theme.fg("muted", "  No matching models"), 0, 0));
-		} else {
-			const selected = this.filteredModels[this.selectedIndex];
-			this.listContainer.addChild(new Spacer(1));
-			this.listContainer.addChild(new Text(theme.fg("muted", `  Model Name: ${selected.model.name}`), 0, 0));
-		}
+		return this.errorMessage.split("\n").map((line) => theme.fg("error", line));
 	}
 
 	handleInput(keyData: string): void {
 		const kb = getKeybindings();
-		if (kb.matches(keyData, "tui.input.tab")) {
-			if (this.scopedModelItems.length > 0) {
-				const nextScope: ModelScope = this.scope === "all" ? "scoped" : "all";
-				this.setScope(nextScope);
-				if (this.scopeHintText) {
-					this.scopeHintText.setText(this.getScopeHintText());
-				}
+		if (this.scopedModelItems.length > 0 && kb.matches(keyData, "tui.input.tab")) {
+			const nextScope: ModelScope = this.scope === "all" ? "scoped" : "all";
+			this.setScope(nextScope);
+			if (this.scopeHintText) {
+				this.scopeHintText.setText(this.getScopeHintText());
 			}
 			return;
 		}
-		// Up arrow - wrap to bottom when at top
-		if (kb.matches(keyData, "tui.select.up")) {
-			if (this.filteredModels.length === 0) return;
-			this.selectedIndex = this.selectedIndex === 0 ? this.filteredModels.length - 1 : this.selectedIndex - 1;
-			this.updateList();
-		}
-		// Down arrow - wrap to top when at bottom
-		else if (kb.matches(keyData, "tui.select.down")) {
-			if (this.filteredModels.length === 0) return;
-			this.selectedIndex = this.selectedIndex === this.filteredModels.length - 1 ? 0 : this.selectedIndex + 1;
-			this.updateList();
-		}
-		// Enter
-		else if (kb.matches(keyData, "tui.select.confirm")) {
-			const selectedModel = this.filteredModels[this.selectedIndex];
-			if (selectedModel) {
-				this.handleSelect(selectedModel.model);
-			}
-		}
-		// Escape or Ctrl+C
-		else if (kb.matches(keyData, "tui.select.cancel")) {
-			this.onCancelCallback();
-		}
-		// Pass everything else to search input
-		else {
-			this.searchInput.handleInput(keyData);
-			this.filterModels(this.searchInput.getValue());
-		}
+
+		this.selector.handleInput(keyData);
 	}
 
 	private handleSelect(model: Model<any>): void {
-		// Save as new default
 		this.settingsManager.setDefaultModelAndProvider(model.provider, model.id);
 		this.onSelectCallback(model);
 	}
 
 	getSearchInput(): Input {
-		return this.searchInput;
+		return this.selector.getSearchInput();
 	}
 }

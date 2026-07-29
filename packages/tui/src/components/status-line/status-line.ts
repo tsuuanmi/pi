@@ -1,6 +1,6 @@
 import { renderHudBar } from "#tui/components/hud/render";
 import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
-import { type GitStatusSummary, runGitStatusPorcelain } from "#tui/components/status-line/git-utils";
+import { type GitStatusSummary, runGitStatusPorcelain } from "#tui/components/status-line/git";
 import { getPreset } from "#tui/components/status-line/presets";
 import { computeUsageStats, renderSegment, sanitizeStatusText } from "#tui/components/status-line/segments";
 import { getSeparator } from "#tui/components/status-line/separators";
