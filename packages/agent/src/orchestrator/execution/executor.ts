@@ -1,14 +1,14 @@
 import { extractTaskBridgeResult, formatTaskPrompt, type Task, type TaskQueue } from "#agent/task/task";
 import type { TaskSnapshot } from "#agent/task/types";
-import { emitBudgetExceeded, isRunBudgetExceeded } from "../runtime/budget.js";
-import type { OrchestratorRunContext } from "../runtime/context.js";
+import { emitBudgetExceeded, isRunBudgetExceeded } from "#agent/orchestrator/runtime/budget";
+import type { OrchestratorRunContext } from "#agent/orchestrator/runtime/context";
 import type {
 	TaskFailureAction,
 	TaskFailureContext,
 	TaskRetryClassification,
 	TaskVerificationContext,
-} from "../types.js";
-import { approveConsequentialTask } from "./consequential.js";
+} from "#agent/orchestrator/types";
+import { approveConsequentialTask } from "#agent/orchestrator/execution/consequential";
 import {
 	computeRetryDecision,
 	formatFailureMessage,
@@ -17,7 +17,7 @@ import {
 	resolveRetryCount,
 	resolveRetryDelay,
 	wait,
-} from "./retry.js";
+} from "#agent/orchestrator/execution/retry";
 
 interface FailureResolution {
 	action: TaskFailureAction;

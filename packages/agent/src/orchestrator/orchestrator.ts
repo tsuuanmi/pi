@@ -3,23 +3,23 @@
 import { Task, TaskQueue } from "#agent/task/task";
 import type { TaskInput } from "#agent/task/types";
 import type { Team } from "#agent/team/team";
-import { executeTask } from "./execution/executor.js";
+import { executeTask } from "#agent/orchestrator/execution/executor";
 import {
 	approveTaskDispatch,
 	assertKnownAssignees,
 	assertTeamCanRun,
 	blockUnreachableTasks,
 	skipPendingTasks,
-} from "./execution/governance.js";
-import { planTasks } from "./planning/planner.js";
-import { routeReadyTasks } from "./routing/routing.js";
-import { Scheduler } from "./routing/scheduler.js";
-import { resolveRunBudget } from "./runtime/budget.js";
-import { normalizeCheckpoint, type OrchestratorCheckpoint } from "./runtime/checkpoint.js";
-import { createRunContext } from "./runtime/context.js";
-import { assertResumeFacts, createRunFacts } from "./runtime/facts.js";
-import { assertSameRunIdentity, createRunIdentity, normalizeRunIdentity } from "./runtime/identity.js";
-import type { OrchestratorConfig, PlanOptions, PlanResult, RunTeamOptions, RunTeamResult } from "./types.js";
+} from "#agent/orchestrator/execution/governance";
+import { planTasks } from "#agent/orchestrator/planning/planner";
+import { routeReadyTasks } from "#agent/orchestrator/routing/routing";
+import { Scheduler } from "#agent/orchestrator/routing/scheduler";
+import { resolveRunBudget } from "#agent/orchestrator/runtime/budget";
+import { normalizeCheckpoint, type OrchestratorCheckpoint } from "#agent/orchestrator/runtime/checkpoint";
+import { createRunContext } from "#agent/orchestrator/runtime/context";
+import { assertResumeFacts, createRunFacts } from "#agent/orchestrator/runtime/facts";
+import { assertSameRunIdentity, createRunIdentity, normalizeRunIdentity } from "#agent/orchestrator/runtime/identity";
+import type { OrchestratorConfig, PlanOptions, PlanResult, RunTeamOptions, RunTeamResult } from "#agent/orchestrator/types";
 
 export class Orchestrator {
 	private readonly scheduler: Scheduler;

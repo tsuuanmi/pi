@@ -1,6 +1,6 @@
 import type { TaskSnapshot, TaskStatus } from "#agent/task/types";
-import type { TaskRoutingDecision } from "../routing/routing.js";
-import type { TaskRetryClassification } from "../types.js";
+import type { TaskRoutingDecision } from "#agent/orchestrator/routing/routing";
+import type { TaskRetryClassification } from "#agent/orchestrator/types";
 
 export interface TaskConsequentialReceipt {
 	required: boolean;

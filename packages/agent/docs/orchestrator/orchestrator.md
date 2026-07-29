@@ -95,7 +95,7 @@ Use `createConsensusVerifier({ judges, minApprovals })` when verification should
 
 Use `onTaskFailure` to classify failed attempts as `retry`, `fail`, `skip`, or `abort`. This is the only hook that controls failure policy.
 
-Use `onTrace` for structured planning/execution telemetry and `onProgress` for user-facing production observability. Task routing is exposed through the `routeReadyTasks` boundary and emitted as `routing_decision` trace events with a `TaskRoutingDecision` payload. Trace events include:
+Use `onTrace` for structured planning/execution telemetry and `onProgress` for user-facing production observability. Task routing is exposed through the `routeReadyTasks` boundary and the exported `Scheduler` / `AgentSelector` routing primitives, then emitted as `routing_decision` trace events with a `TaskRoutingDecision` payload. Trace events include:
 
 - `plan_start`
 - `plan_complete`

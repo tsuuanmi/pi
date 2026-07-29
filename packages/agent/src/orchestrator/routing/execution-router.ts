@@ -1,6 +1,6 @@
 import type { TaskSnapshot } from "#agent/task/types";
-import type { SchedulingStrategy } from "../types.js";
-import type { TaskRoutingDecision } from "./routing.js";
+import type { SchedulingStrategy } from "#agent/orchestrator/types";
+import type { TaskRoutingDecision } from "#agent/orchestrator/routing/routing";
 
 export function resolveSchedulingStrategy(
 	defaultStrategy: SchedulingStrategy,

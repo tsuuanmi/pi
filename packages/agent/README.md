@@ -16,7 +16,7 @@ Provider adapters and streaming transport live in `@tsuuanmi/pi-ai`. Concrete Pi
 
 Node-only helpers are available from the `@tsuuanmi/pi-agent/node` subpath.
 
-See [Agent documentation](./docs/agent/agent.md), [Tool Registration](./docs/tool/registry.md), and [Orchestrator update logic](./docs/orchestrator/orchestrator.md) for the standard integration patterns.
+See [Agent documentation](./docs/agent/agent.md), [Tool Registration](./docs/tool/registry.md), and [Orchestrator documentation](./docs/orchestrator/orchestrator.md) for the standard integration patterns.
 
 ## Quick Start
 
@@ -74,7 +74,18 @@ This keeps agent behavior centralized while allowing applications, extensions, a
 - `Task`: tracks UUID-backed IDs, title, description, dependency IDs, requirements, assignee, validated/redacted metadata, status, result, and error.
 - `TaskQueue`: owns task snapshots, dependency readiness, queue snapshots, and blocked/skipped lifecycle resolution.
 - `Team`: named roster of agents created with `new Team({ name, agents })`, with inter-agent messaging and typed message events.
-- `Orchestrator`: strictly plans task DAGs with an explicit coordinator, assigns ready tasks, pipelines newly unblocked work, and executes dependency batches with progress events, trace hooks, abort handling, dispatch gates, budgets, checkpoints, consensus verification, failure policies, and per-task metrics.
+- `Orchestrator`: the standard contract package for strict task-DAG planning, ready-task routing, dependency-aware execution, progress events, trace hooks, abort handling, dispatch gates, budgets, checkpoints, consensus verification, failure policies, and per-task metrics.
+
+## Orchestrator API and Routing Gap Overview
+
+| Area | Current `@tsuuanmi/pi-agent` surface | Standard update decision |
+| --- | --- | --- |
+| Orchestrator entry points | `Orchestrator.plan(team, goal, { coordinator })` and `Orchestrator.run(team, tasks, options)` keep planning and execution explicit. | Keep `Orchestrator` as the standard contract package; do not add a monolithic `OpenMultiAgent`-style wrapper. |
+| Routing boundary | `routeReadyTasks()` assigns ready tasks to team agents and emits `routing_decision` traces with a stable `TaskRoutingDecision`. | Keep routing as a typed, task-level boundary. Any richer execution router should remain optional and fail-safe, not required by the core package. |
+| Scheduling strategies | `dependency-first`, `composite`, `capability-match`, `least-busy`, and `round-robin` are already exposed. | Keep the existing strategy set and standardize behavior around these names instead of introducing new strategy families. |
+| Selection metadata | Current routing decisions record task id, task title, assignee, and strategy. | Expand only with stable, JSON-safe metadata if needed; avoid adding host-specific policy objects or runtime coupling. |
+| Short-circuiting | Goal-level helper selection exists separately from orchestration. | Keep short-circuit logic separate from `Orchestrator.run()` so execution stays explicit and reusable. |
+| Queue mutation | The orchestrator owns queue transitions after routing. | Keep routing pure enough to remain portable across hosts and runtimes. |
 
 ## Runtime and Backend Boundary
 

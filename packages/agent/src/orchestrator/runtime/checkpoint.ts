@@ -1,8 +1,8 @@
 import type { TaskQueueSnapshot } from "#agent/task/types";
-import type { TaskExecutionMetrics } from "../types.js";
-import { normalizeRunFacts, type RunFacts } from "./facts.js";
-import { normalizeRunIdentity, type RunIdentity } from "./identity.js";
-import { normalizeTaskExecutionReceipts, type TaskExecutionReceipt } from "./receipt.js";
+import type { TaskExecutionMetrics } from "#agent/orchestrator/types";
+import { normalizeRunFacts, type RunFacts } from "#agent/orchestrator/runtime/facts";
+import { normalizeRunIdentity, type RunIdentity } from "#agent/orchestrator/runtime/identity";
+import { normalizeTaskExecutionReceipts, type TaskExecutionReceipt } from "#agent/orchestrator/runtime/receipt";
 
 export const CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION = 4;
 

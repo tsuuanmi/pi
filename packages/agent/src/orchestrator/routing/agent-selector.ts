@@ -1,7 +1,7 @@
 import type { Agent } from "#agent/agent/agent";
 import type { TaskSnapshot } from "#agent/task/types";
-import type { RunTeamOptions, SchedulingStrategy, SchedulingWeights } from "../types.js";
-import { resolveAssignedAgent } from "./short-circuit.js";
+import type { RunTeamOptions, SchedulingStrategy, SchedulingWeights } from "#agent/orchestrator/types";
+import { resolveAssignedAgent } from "#agent/orchestrator/routing/short-circuit";
 
 const DEFAULT_SCHEDULING_WEIGHTS: SchedulingWeights = { fit: 0.7, load: 0.3 };
 

@@ -1,5 +1,5 @@
 import type { Task } from "#agent/task/task";
-import type { OrchestratorRunContext } from "../runtime/context.js";
+import type { OrchestratorRunContext } from "#agent/orchestrator/runtime/context";
 
 export async function approveConsequentialTask(task: Task, context: OrchestratorRunContext): Promise<boolean> {
 	const snapshot = task.snapshot();

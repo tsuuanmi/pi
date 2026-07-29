@@ -1,9 +1,9 @@
 import type { Agent } from "#agent/agent/agent";
 import type { Task } from "#agent/task/task";
 import type { TaskSnapshot } from "#agent/task/types";
-import type { RunTeamOptions, SchedulingStrategy } from "../types.js";
-import { createRoutingDecision } from "./execution-router.js";
-import type { Scheduler } from "./scheduler.js";
+import type { RunTeamOptions, SchedulingStrategy } from "#agent/orchestrator/types";
+import { createRoutingDecision } from "#agent/orchestrator/routing/execution-router";
+import type { Scheduler } from "#agent/orchestrator/routing/scheduler";
 
 export interface TaskRoutingDecision {
 	taskId: string;

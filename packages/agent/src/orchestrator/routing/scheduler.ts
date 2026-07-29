@@ -1,8 +1,8 @@
 import type { Task } from "#agent/task/task";
 import type { TaskPriority, TaskSnapshot } from "#agent/task/types";
-import type { RunTeamOptions, SchedulingStrategy, SchedulingWeights } from "../types.js";
-import { AgentSelector } from "./agent-selector.js";
-import { resolveSchedulingStrategy } from "./execution-router.js";
+import type { RunTeamOptions, SchedulingStrategy, SchedulingWeights } from "#agent/orchestrator/types";
+import { AgentSelector } from "#agent/orchestrator/routing/agent-selector";
+import { resolveSchedulingStrategy } from "#agent/orchestrator/routing/execution-router";
 
 export interface SchedulerConfig {
 	schedulingStrategy?: SchedulingStrategy;

@@ -1,4 +1,4 @@
-import type { RetryDecision } from "../types.js";
+import type { RetryDecision } from "#agent/orchestrator/types";
 
 export const DEFAULT_RETRY_DELAY_MS = 1000;
 export const DEFAULT_RETRY_BACKOFF = 2;

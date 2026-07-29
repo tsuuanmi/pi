@@ -1,9 +1,9 @@
 import type { Agent } from "#agent/agent/agent";
 import type { TaskInput, TaskQueueSnapshot, TaskSnapshot } from "#agent/task/types";
 import type { Team } from "#agent/team/team";
-import type { RunFacts } from "./runtime/facts.js";
-import type { RunIdentity } from "./runtime/identity.js";
-import type { TaskExecutionReceipt } from "./runtime/receipt.js";
+import type { RunFacts } from "#agent/orchestrator/runtime/facts";
+import type { RunIdentity } from "#agent/orchestrator/runtime/identity";
+import type { TaskExecutionReceipt } from "#agent/orchestrator/runtime/receipt";
 
 export type SchedulingStrategy = "round-robin" | "least-busy" | "dependency-first" | "capability-match" | "composite";
 
