@@ -50,7 +50,7 @@ Type `/` in the editor to open command completion. Extensions can register custo
 | `/changelog` | Display version history |
 | `/quit` | Quit pi |
 
-Codex subscription accounts show current quota plus available reset credits in `/account`. Redeem one available reset credit with `/account reset openai-codex [account]`; add `--dry-run` to preview without consuming a credit.
+Codex subscription accounts show current quota, quota reset timing when the provider reports it, and available reset credits in `/account`. Redeem one available reset credit with `/account reset openai-codex [account]`; add `--dry-run` to preview without consuming a credit.
 
 ## Message Queue
 

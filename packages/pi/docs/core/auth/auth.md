@@ -43,7 +43,7 @@ pi auth status   # Check authentication status
 pi auth logout   # Clear tokens
 ```
 
-OAuth credentials are stored with refresh tokens and expiry times. Pi automatically refreshes expired tokens using file locking to prevent race conditions. The `/account` selector shows best-effort OpenAI Codex quota for each stored Codex account.
+OAuth credentials are stored with refresh tokens and expiry times. Pi automatically refreshes expired tokens using file locking to prevent race conditions. The `/account` selector shows best-effort OpenAI Codex quota, reset timing when reported, and reset credits for each stored Codex account.
 
 ## AuthStorage
 

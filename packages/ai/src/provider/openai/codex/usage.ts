@@ -70,6 +70,7 @@ type CodexResetCreditsPayload = {
 type ParsedUsageWindow = {
 	usedPercent?: number;
 	limitWindowSeconds?: number;
+	resetAtMs?: number;
 };
 
 type ParsedLimit = {
@@ -153,12 +154,25 @@ function buildCodexConsumeResetCreditUrl(baseUrl: string): string {
 	return buildCodexUrl(baseUrl, CODEX_RESET_CREDITS_CONSUME_PATH);
 }
 
+function toTimestampMs(value: unknown): number | undefined {
+	const numeric = toNumber(value);
+	if (numeric !== undefined) return numeric > 1_000_000_000_000 ? numeric : numeric * 1000;
+	if (typeof value !== "string") return undefined;
+	const parsed = Date.parse(value);
+	return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 function parseUsageWindow(payload: unknown): ParsedUsageWindow | undefined {
 	if (!isRecord(payload)) return undefined;
 	const usedPercent = toNumber(payload.used_percent);
 	const limitWindowSeconds = toNumber(payload.limit_window_seconds);
-	if (usedPercent === undefined && limitWindowSeconds === undefined) return undefined;
-	return { usedPercent, limitWindowSeconds };
+	const resetAtMs =
+		toTimestampMs(payload.resets_at) ??
+		toTimestampMs(payload.reset_at) ??
+		toTimestampMs(payload.resetsAt) ??
+		toTimestampMs(payload.resetAt);
+	if (usedPercent === undefined && limitWindowSeconds === undefined && resetAtMs === undefined) return undefined;
+	return { usedPercent, limitWindowSeconds, resetAtMs };
 }
 
 function parseLimit(payload: unknown): ParsedLimit | null {
@@ -222,6 +236,17 @@ function formatUsedPercent(usedPercent: number | undefined): string {
 	return `${clamped.toFixed(1)}%`;
 }
 
+function formatResetIn(resetAtMs: number | undefined, nowMs: number): string {
+	if (resetAtMs === undefined || !Number.isFinite(resetAtMs)) return "";
+	const remainingMs = Math.max(0, resetAtMs - nowMs);
+	const remainingMinutes = Math.round(remainingMs / 60_000);
+	if (remainingMinutes <= 0) return " reset now";
+	if (remainingMinutes < 60) return ` reset ${remainingMinutes}m`;
+	const remainingHours = Math.round(remainingMinutes / 60);
+	if (remainingHours < 48) return ` reset ${remainingHours}h`;
+	return ` reset ${Math.round(remainingHours / 24)}d`;
+}
+
 function usageStatus(usedPercent: number | undefined, limitReached: boolean | undefined): OpenAICodexUsageStatus {
 	if (limitReached) return "exhausted";
 	if (usedPercent === undefined) return "unknown";
@@ -265,9 +290,12 @@ function buildSummary(parsed: ParsedLimit, resetCreditsAvailable?: number): Open
 		["secondary", parsed.secondary],
 	];
 
+	const nowMs = Date.now();
 	for (const [key, window] of windows) {
 		if (!window) continue;
-		parts.push(`${formatWindowId(window.limitWindowSeconds, key)} ${formatUsedPercent(window.usedPercent)}`);
+		parts.push(
+			`${formatWindowId(window.limitWindowSeconds, key)} ${formatUsedPercent(window.usedPercent)}${formatResetIn(window.resetAtMs, nowMs)}`,
+		);
 		statuses.push(usageStatus(window.usedPercent, parsed.limitReached));
 	}
 

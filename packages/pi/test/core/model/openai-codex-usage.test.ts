@@ -36,6 +36,7 @@ function createModelRegistry(token: string): OpenAICodexUsageAuthProvider {
 
 afterEach(() => {
 	globalThis.fetch = originalFetch;
+	vi.useRealTimers();
 	vi.restoreAllMocks();
 });
 
@@ -68,5 +69,34 @@ describe("fetchOpenAICodexUsageSummary", () => {
 		expect(requestedHeaders?.get("chatgpt-account-id")).toBe("account-123");
 		expect(requestedHeaders?.get("x-test")).toBe("yes");
 		expect(summary).toEqual({ text: "5H 12.3% 1W 67.9%", status: "ok" });
+	});
+
+	it("includes Codex quota reset times when present", async () => {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date("2026-07-29T12:00:00.000Z"));
+		globalThis.fetch = vi.fn(async () => {
+			return new Response(
+				JSON.stringify({
+					rate_limit: {
+						limit_reached: false,
+						primary_window: {
+							used_percent: 50,
+							limit_window_seconds: 5 * 60 * 60,
+							resets_at: Date.parse("2026-07-29T12:30:00.000Z") / 1000,
+						},
+						secondary_window: {
+							used_percent: 75,
+							limit_window_seconds: 7 * 24 * 60 * 60,
+							reset_at: "2026-08-04T12:00:00.000Z",
+						},
+					},
+				}),
+				{ status: 200, headers: { "Content-Type": "application/json" } },
+			);
+		});
+
+		const summary = await fetchOpenAICodexUsageSummary(createModelRegistry("token"), createCodexModel());
+
+		expect(summary).toEqual({ text: "5H 50.0% reset 30m 1W 75.0% reset 6d", status: "ok" });
 	});
 });
