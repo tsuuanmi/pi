@@ -12,7 +12,7 @@ Follow instructions in this order: the user's latest explicit instruction, this 
 
 ## 2. Communication
 
-Be concise, direct, and technical. No emojis in commits, issues, PR comments, code, or technical summaries. No filler or excessive praise. Answer the user's direct question before making edits or running implementation commands. When responding to feedback or analysis, explicitly say whether you agree or disagree before explaining changes. State assumptions when proceeding under uncertainty.
+Be concise, direct, and technical. Use clear, simple terms when possible so responses are easy to understand. Avoid unnecessary jargon; when technical terms are required, keep the explanation short and practical. No emojis in commits, issues, PR comments, code, or technical summaries. No filler or excessive praise. Answer the user's direct question before making edits or running implementation commands. When responding to feedback or analysis, explicitly say whether you agree or disagree before explaining changes. State assumptions when proceeding under uncertainty.
 
 Ask before proceeding when ambiguity affects correctness, data loss, public APIs, schemas, user-visible behavior, dependency changes, destructive operations, or removal of intentional functionality. For low-risk ambiguity, state the assumption and proceed with the simplest reversible approach.
 
@@ -24,7 +24,7 @@ Before implementation, read both relevant documentation and affected source code
 
 ### LSP vs textual search
 
-Prefer the `lsp` tool over `grep`/`read` for **symbol** queries when a supported language server (TypeScript/JavaScript, Python, Rust) is warm: call sites (`references`), declarations (`definition`), types and docs (`hover`), file outlines (`documentSymbols`), and per-file type errors (`diagnostics`). LSP resolves imports, re-exports, and aliases that textual search cannot.
+Prefer the `lsp` tool over `grep`/`read` for **symbol** queries when a supported language server (TypeScript/JavaScript, Python, Rust) is available and warm: call sites (`references`), declarations (`definition`), types and docs (`hover`), file outlines (`documentSymbols`), and per-file type errors (`diagnostics`). LSP resolves imports, re-exports, and aliases that textual search cannot. If LSP tools are unavailable, use textual search plus the relevant typecheck/test command instead.
 
 Prefer `grep`/`read`/`bash` for **textual** queries: string literals, comments, `TODO`s, config values, regex patterns, cross-file content search, non-indexed or generated files, and dynamic/reflective (string-based) usages LSP cannot see.
 
@@ -38,7 +38,7 @@ When auditing call sites before a refactor or rename, use `lsp` `references` for
 
 **Plan.** Before implementation, briefly state what will change, what will stay the same, likely affected files, and verification to run. Ask for confirmation only when the change is risky, destructive, blocking-ambiguous, or broader than requested.
 
-**Implement.** Work in an isolated worktree when available (`omx -w <branch>`). Create temporary backups in `/tmp` before editing files. Make surgical changes only. Follow existing style, use existing utilities before adding new ones, avoid unrelated cleanup and speculative abstractions, and preserve intentional behavior unless the user asks to change it. Prefer small, uniquely-anchored `edit` replacements over large blocks; large multi-line edits (many tabs) or non-ASCII punctuation such as em-dashes fail more often, so split big rewrites into sequential smaller edits.
+**Implement.** Work in the current worktree while avoiding unrelated files. Create temporary backups in `/tmp` before editing files; review-only tasks do not require backups unless files will be modified. Make surgical changes only. Follow existing style, use existing utilities before adding new ones, avoid unrelated cleanup and speculative abstractions, and preserve intentional behavior unless the user asks to change it. Prefer small, uniquely-anchored `edit` replacements over large blocks; large multi-line edits (many tabs) or non-ASCII punctuation such as em-dashes fail more often, so split big rewrites into sequential smaller edits.
 
 **Verify.** Before finalizing: review diffs, run required language-specific checks, run only allowed tests, confirm no backup files were created inside the repo, update docs and changelogs when required, and confirm `git status` contains only intentional changes.
 
@@ -81,7 +81,17 @@ When committing: run required checks first, run `git status`, stage explicit pat
 
 ## 7. Change Scope
 
-Every changed line must trace back to the task. Do not refactor unrelated code, reformat unrelated files, rename unrelated symbols, remove unrelated dead code, upgrade unrelated dependencies, modify generated files directly, change lockfiles unless required, or add new configuration unless needed. If unrelated issues are found, mention them instead of fixing them. Prefer the smallest correct change. Do not add speculative features, single-use abstractions, unused configuration, unnecessary flexibility or error handling, backward-compatibility shims, legacy branches, compatibility aliases, or broad rewrites for small fixes. Do not preserve obsolete behavior by default; remove or replace legacy logic when the task touches it unless the user explicitly asks for compatibility. Before adding new logic or creating a new file, first inspect existing helpers, utilities, models, constants, validators, serializers, logging patterns, error types, CLI patterns, test patterns, and nearby feature implementations to avoid duplication and unnecessary complexity.
+Critical rules:
+
+- Every changed line must trace back to the task.
+- Prefer the smallest correct production-ready change.
+- Do not refactor unrelated code, reformat unrelated files, rename unrelated symbols, remove unrelated dead code, upgrade unrelated dependencies, modify generated files directly, change lockfiles unless required, or add new configuration unless needed.
+- Do not add speculative features, fallback paths, single-use abstractions, unused configuration, unnecessary flexibility or error handling, backward-compatibility shims, legacy branches, compatibility aliases, or broad rewrites for small fixes.
+- Do not preserve obsolete behavior by default. Remove or replace legacy logic when the task touches it unless the user explicitly asks for compatibility.
+- Keep module/API boundaries clear, public surfaces minimal, and internal details contained within their layer.
+- Use concise, standard, domain-appropriate names for variables, functions, classes, files, and types. Avoid vague names, unnecessary suffixes/prefixes, unestablished abbreviations, and names that encode obsolete behavior.
+- Before adding logic or files, inspect existing helpers, utilities, models, constants, validators, serializers, logging patterns, error types, CLI patterns, test patterns, and nearby feature implementations to avoid duplication.
+- If unrelated issues are found, mention them instead of fixing them.
 
 ---
 
@@ -158,7 +168,7 @@ Actual verification commands (the generic `npm run lint`/`npm run typecheck` do 
 
 ## 9. Tests
 
-Do not run full test suites unless explicitly asked. Do not create new tests unless explicitly asked. If asked to create or modify a test, run only the relevant test file or case and iterate until it passes. Do not run integration, network, credential-dependent, paid-provider, destructive, or long-running tests unless explicitly requested.
+Do not run full repository test suites unless explicitly asked. Do not create new tests unless explicitly asked. If asked to create or modify a test, run only the relevant test file or case and iterate until it passes. Do not run integration, network, credential-dependent, paid-provider, destructive, or long-running tests unless explicitly requested.
 
 Before attributing a failing test to your change, determine whether it is pre-existing: use `git log`/`git blame` and `git diff` to check whether a prior commit (not your changes) caused it. Report pre-existing failures separately. Never revert an intentional prior change just to make a test green; if a prior intentional change legitimately changed behavior, update the test to match the new intended behavior and note it.
 
@@ -183,7 +193,7 @@ cargo test --test integration_file test_name
 
 ## 10. Generated Files
 
-Do not modify generated files directly unless project rules explicitly allow it. If a generated file must change, find the generator, modify the generator or source data, regenerate, review the diff, and mention generated files in the final response. Generated files may include `*.generated.ts`, API clients, schemas, protobuf outputs, OpenAPI outputs, model metadata, or codegen snapshots. If unsure whether a file is generated, inspect headers, docs, and build scripts before editing.
+Do not modify generated files directly unless project rules explicitly allow it. If a generated file must change, find the generator, modify the generator or source data, regenerate, review the diff, and mention generated files in the final response. Generated files may include `*.generated.ts`, API clients, schemas, protobuf outputs, OpenAPI outputs, model metadata, or codegen snapshots. Build artifacts may need to be regenerated for verification, but do not commit them unless they are tracked and expected for the project. If unsure whether a file is generated, inspect headers, docs, and build scripts before editing.
 
 ---
 
@@ -195,6 +205,8 @@ Before running lint, format, type check, tests, builds, or package commands, con
 git status
 find . -name "*.bak" -print
 ```
+
+Run commands from the appropriate repository, workspace, or package root. Repo-specific verification instructions override generic language examples. Prefer scoped formatting/checks when possible; if a repo-wide formatter is required, review the diff and revert unrelated formatting churn.
 
 If `.bak` files are found, stop — do not remove them without confirmation. Run language-specific checks based on change type: docs lint for docs-only changes; Python lint/format/typecheck for Python source; TypeScript check command for TypeScript source; Rust format/clippy for Rust source; safe package-manager commands and lockfile review for dependency changes; generator + diff review for generated file changes. For quick per-file type feedback before the full project typecheck, run `lsp` `diagnostics` on touched files (TypeScript/JavaScript, Python, Rust).
 
@@ -251,26 +263,29 @@ Before final response, verify: relevant docs were read, affected source files we
 
 ```markdown
 Changed:
-- <summary>
+- <plain-language summary of the result>
+- <important behavior or scope change, if any>
 
 Files:
-- <file>: <what changed>
+- <file>: <what changed and why>
 
 Verification:
-- <command>: passed / failed / not run, with reason
+- <command>: passed / failed / not run — <short reason or key output>
 
 Tests:
-- <test command>
-- Not run because full test suites require explicit request
+- <test command>: passed / failed / not run — <short reason>
+- Not run: <why tests were skipped, if applicable>
 
 Docs:
-- Updated <doc>
-- Not updated because <reason>
+- Updated <doc>: <what changed>
+- Not updated: <why docs were not needed>
 
 Changelog:
-- Updated <changelog>
-- Not updated because <reason>
+- Updated <changelog>: <entry added>
+- Not updated: <why changelog was not needed>
 
 Notes:
-- <assumptions or risks>
+- Assumptions: <assumptions made, or none>
+- Risks: <remaining risks, follow-ups, or none>
+- Unrelated changes: <pre-existing workspace changes noticed, or none>
 ```
