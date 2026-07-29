@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { type Component, TUI } from "#tui/core/tui";
+import { type Component, TUI } from "#tui/tui";
 import { VirtualTerminal } from "#tui-test/terminal/runtime/virtual-terminal";
 
 class Lines implements Component {

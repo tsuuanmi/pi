@@ -3,8 +3,8 @@ import { afterEach, describe, it } from "node:test";
 import type { Terminal as XtermTerminalType } from "@xterm/headless";
 import { Chalk } from "chalk";
 import { Markdown } from "#tui/components/display/markdown";
-import { type Component, TUI } from "#tui/core/tui";
 import { resetCapabilitiesCache, setCapabilities } from "#tui/terminal/features/capabilities";
+import { type Component, TUI } from "#tui/tui";
 import { defaultMarkdownTheme } from "#tui-test/support/test-themes";
 import { VirtualTerminal } from "#tui-test/terminal/runtime/virtual-terminal";
 

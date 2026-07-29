@@ -1,5 +1,5 @@
-import type { Component } from "#tui/core/tui";
 import type { AutocompleteProvider } from "#tui/editor/completion/autocomplete";
+import type { Component } from "#tui/tui";
 
 /**
  * Interface for custom editor components.

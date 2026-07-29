@@ -8,9 +8,9 @@ export {
 	type MarkdownTheme,
 } from "#tui/components/display/markdown";
 export {
-	type StructuredReceiptDisplayModel,
 	formatStructuredReceiptLines,
 	renderStructuredReceipt,
+	type StructuredReceiptDisplayModel,
 } from "#tui/components/display/structured-receipt";
 export {
 	type HighlightOptions,
@@ -104,20 +104,6 @@ export type {
 	StatusLineSessionLike,
 	StatusLineSettings,
 } from "#tui/components/status-line/types";
-export {
-	type Component,
-	Container,
-	CURSOR_MARKER,
-	type Focusable,
-	isFocusable,
-	type OverlayAnchor,
-	type OverlayHandle,
-	type OverlayMargin,
-	type OverlayOptions,
-	type OverlayUnfocusOptions,
-	type SizeValue,
-	TUI,
-} from "#tui/core/tui";
 // Autocomplete support
 export {
 	type AutocompleteItem,
@@ -180,6 +166,20 @@ export { parseOsc11BackgroundColor, type RgbColor } from "#tui/terminal/features
 // Terminal interface and implementations
 export { ProcessTerminal, type Terminal } from "#tui/terminal/runtime/terminal";
 export * from "#tui/theme/theme";
+export {
+	type Component,
+	Container,
+	CURSOR_MARKER,
+	type Focusable,
+	isFocusable,
+	type OverlayAnchor,
+	type OverlayHandle,
+	type OverlayMargin,
+	type OverlayOptions,
+	type OverlayUnfocusOptions,
+	type SizeValue,
+	TUI,
+} from "#tui/tui";
 // Utilities
 export { stripAnsi } from "#tui/utilities/ansi";
 export { type DiffRenderTheme, type RenderDiffOptions, renderDiff } from "#tui/utilities/diff";

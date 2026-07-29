@@ -14,8 +14,8 @@ import type {
 	StatusLineSessionLike,
 	StatusLineSettings,
 } from "#tui/components/status-line/types";
-import type { Component } from "#tui/core/tui";
 import { TUI_COLOR_PROFILE, theme } from "#tui/theme/theme";
+import type { Component } from "#tui/tui";
 import { truncateToWidth, visibleWidth } from "#tui/utilities/text";
 
 /** Minimum gap (columns) between the left and right rail groups. */

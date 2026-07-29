@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { TUI } from "#tui/core/tui";
+import { TUI } from "#tui/tui";
 import { extractSegments, sliceByColumn, visibleWidth } from "#tui/utilities/text";
 import { VirtualTerminal } from "#tui-test/terminal/runtime/virtual-terminal";
 

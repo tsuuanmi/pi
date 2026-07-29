@@ -1,6 +1,6 @@
 import { Marked, type Token, Tokenizer, type Tokens } from "marked";
-import type { Component } from "#tui/core/tui";
 import { getCapabilities, hyperlink } from "#tui/terminal/features/capabilities";
+import type { Component } from "#tui/tui";
 import { applyBackgroundToLine, visibleWidth, wrapTextWithAnsi } from "#tui/utilities/text";
 
 const STRICT_STRIKETHROUGH_REGEX = /^(~~)(?=[^\s~])((?:\\.|[^\\])*?(?:\\.|[^\s~\\]))\1(?=[^~]|$)/;

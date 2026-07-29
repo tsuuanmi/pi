@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import type { Component } from "#tui/core/tui";
-import { TUI } from "#tui/core/tui";
+import type { Component } from "#tui/tui";
+import { TUI } from "#tui/tui";
 import { VirtualTerminal } from "#tui-test/terminal/runtime/virtual-terminal";
 
 class StaticOverlay implements Component {

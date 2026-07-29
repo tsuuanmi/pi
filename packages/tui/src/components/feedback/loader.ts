@@ -1,7 +1,7 @@
 import { performance } from "node:perf_hooks";
 import { Text } from "#tui/components/display/text";
 import { LAYOUT_EDGE_X, LAYOUT_SECTION_GAP_Y } from "#tui/components/layout/spacing";
-import type { TUI } from "#tui/core/tui";
+import type { TUI } from "#tui/tui";
 
 export interface LoaderIndicatorOptions {
 	/** Animation frames. Use an empty array to hide the indicator. */
