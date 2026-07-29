@@ -21,6 +21,7 @@ export interface TaskInput {
 	retryBackoff?: number;
 	requires?: readonly string[];
 	verify?: TaskVerifyOptions;
+	consequential?: boolean;
 }
 
 export interface TaskSnapshot extends Required<Pick<TaskInput, "title" | "description">> {
@@ -38,6 +39,7 @@ export interface TaskSnapshot extends Required<Pick<TaskInput, "title" | "descri
 	retryBackoff?: number;
 	requires: readonly string[];
 	verify?: TaskVerifyOptions;
+	consequential?: boolean;
 	result?: string;
 	structured?: unknown;
 	error?: string;

@@ -63,13 +63,22 @@ The orchestrator can enforce coarse runtime budgets with `runBudget`.
 
 Budget exhaustion emits a `budget_exceeded` progress event, aborts active agent calls through the execution signal, and skips remaining pending work deterministically.
 
+## Run identity
+
+Each run has a `RunIdentity` with a non-empty `runId` and optional metadata. Pass `runIdentity` on `Orchestrator` or per `run()` when callers need deterministic correlation; otherwise the orchestrator creates one for the run. Execution progress events, trace events, checkpoints, receipts, and `RunTeamResult` all carry the same identity. Checkpoint resume rejects a caller-supplied identity that does not exactly match the checkpoint identity. Resume also validates run facts: team name, agent roster order, and task ids must match the checkpoint.
+
+## Execution receipts
+
+`RunTeamResult.receipts` exposes stable per-task `TaskExecutionReceipt` records keyed by task id. Receipts include run id, task identity, status, attempts, timing, retry count, optional routing decision, optional verification result, optional consequential approval result, and task error text. Checkpoints persist the same receipt map so resumed runs keep prior task receipts.
+
 ## Checkpoints
 
 Provide a `checkpointStore` to persist and resume orchestrator runs.
 
 - The store receives a versioned checkpoint with `CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION`.
-- The checkpoint includes a `TaskQueueSnapshot`, per-task metrics, and the current task-start count.
+- Version 4 checkpoints include `runIdentity`, run facts, a `TaskQueueSnapshot`, per-task metrics, execution receipts, and the current task-start count.
 - Checkpoint loads are validated before execution; unsupported versions and malformed payloads fail fast.
+- Only `running` checkpoints are resumable; completed or aborted checkpoints are terminal.
 - A resumed run restores the task queue from the checkpoint snapshot and continues from the remaining work.
 - Interrupted `in_progress` checkpoint tasks are reset before retrying.
 - Checkpoints are written at run start, on task transitions, and on run completion or abort.
@@ -80,11 +89,13 @@ Use `onTaskDispatch` to approve or reject task launch after scheduling but befor
 
 Use `onTaskVerify` to reject completed task output before it is finalized. Verification runs only for tasks that set `verify`.
 
+Use `onTaskConsequential` to approve or reject tasks that explicitly set `consequential: true`. Consequential tasks are blocked before execution when approval is missing or denied.
+
 Use `createConsensusVerifier({ judges, minApprovals })` when verification should require explicit judge agreement. Judges must be supplied explicitly, `minApprovals` must be set explicitly, and every judge must return strict JSON with exactly `approved` and `reason` fields. Malformed judge output fails verification.
 
 Use `onTaskFailure` to classify failed attempts as `retry`, `fail`, `skip`, or `abort`. This is the only hook that controls failure policy.
 
-Use `onTrace` for structured planning/execution telemetry and `onProgress` for user-facing production observability. Trace events include:
+Use `onTrace` for structured planning/execution telemetry and `onProgress` for user-facing production observability. Task routing is exposed through the `routeReadyTasks` boundary and emitted as `routing_decision` trace events with a `TaskRoutingDecision` payload. Trace events include:
 
 - `plan_start`
 - `plan_complete`
@@ -97,16 +108,22 @@ Use `onTrace` for structured planning/execution telemetry and `onProgress` for u
 - `run_start`
 - `run_complete`
 - `run_abort`
+- `routing_decision`
 - `task_dispatch`
 - `task_start`
 - `task_complete`
 - `task_retry`
 - `task_skipped`
 - `task_verify`
+- `task_consequential`
 - `task_short_circuit`
 - `checkpoint_save`
+- `checkpoint_save_error`
 - `budget_exceeded`
 - `error`
+
+`task_retry` includes a structured `retryDecision` payload with the exponential delay, jitter, and final wait duration. When `onTaskRetryClassify` is provided, `task_retry` also includes a stable retry classification.
+`task_consequential` includes an `approved` flag for explicit high-impact task approval.
 
 Progress events include:
 
@@ -115,6 +132,7 @@ Progress events include:
 - `task_retry`
 - `task_skipped`
 - `task_verify`
+- `task_consequential`
 - `error`
 
 ## Structured handoffs

@@ -7,9 +7,7 @@ import {
 	runConsensusVerification,
 	type StreamFn,
 	Task,
-	type TaskExecutionMetrics,
 	TaskQueue,
-	type TaskQueueSnapshot,
 	Team,
 } from "@tsuuanmi/pi-agent";
 import {
@@ -18,7 +16,7 @@ import {
 	createAssistantMessageEventStream,
 	type Model,
 } from "@tsuuanmi/pi-ai";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const model: Model<"openai-completions"> = {
 	id: "gpt-5",
@@ -676,7 +674,10 @@ describe("multi-agent primitives", () => {
 	});
 
 	it("emits trace events for run and task lifecycle", async () => {
-		const traces: string[] = [];
+		const traceTypes: string[] = [];
+		const traceRunIds: string[] = [];
+		const routingDecisions: unknown[] = [];
+		const runIdentity = { runId: "trace-run", metadata: { purpose: "test" } };
 		const result = await new Orchestrator().run(
 			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
 			[{ id: "a", title: "A", description: "A", verify: { required: true } }],
@@ -685,16 +686,22 @@ describe("multi-agent primitives", () => {
 					load: () => undefined,
 					save: async () => undefined,
 				},
+				runIdentity,
 				onTaskVerify: async () => true,
-				onTrace: (event) => traces.push(event.type),
+				onTrace: (event) => {
+					traceTypes.push(event.type);
+					traceRunIds.push(event.runIdentity?.runId ?? "missing");
+					if (event.type === "routing_decision") routingDecisions.push(event.data);
+				},
 			},
 		);
 
 		expect(result.success).toBe(true);
-		expect(traces).toEqual([
+		expect(result.runIdentity).toEqual(runIdentity);
+		expect(traceTypes).toEqual([
 			"run_start",
 			"checkpoint_save",
-			"task_dispatch",
+			"routing_decision",
 			"task_start",
 			"task_verify",
 			"task_complete",
@@ -702,6 +709,136 @@ describe("multi-agent primitives", () => {
 			"checkpoint_save",
 			"run_complete",
 		]);
+		expect(traceRunIds).toEqual(Array.from({ length: traceTypes.length }, () => "trace-run"));
+		expect(routingDecisions).toEqual([
+			{ taskId: "a", taskTitle: "A", agent: "worker", schedulingStrategy: "dependency-first" },
+		]);
+		expect(result.receipts.a).toMatchObject({
+			receiptId: "trace-run:a",
+			runId: "trace-run",
+			taskId: "a",
+			taskTitle: "A",
+			agent: "worker",
+			status: "completed",
+			attempts: 1,
+			routing: { taskId: "a", taskTitle: "A", agent: "worker", schedulingStrategy: "dependency-first" },
+			retryCount: 0,
+			verified: true,
+		});
+	});
+
+	it("emits structured jittered retry decisions", async () => {
+		const random = vi.spyOn(Math, "random").mockReturnValue(0.75);
+		try {
+			const traces: unknown[] = [];
+			const result = await new Orchestrator().run(
+				new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream({ fail: true }))] }),
+				[{ id: "a", title: "A", description: "A", maxRetries: 1, retryDelayMs: 100, retryBackoff: 1 }],
+				{
+					onTaskRetryClassify: async () => "transient" as const,
+					onTaskFailure: async (context) => (context.attempt === 1 ? "retry" : "fail"),
+					onTrace: (event) => {
+						if (event.type === "task_retry") traces.push(event.data);
+					},
+				},
+			);
+
+			expect(result.success).toBe(false);
+			expect(traces).toEqual([
+				{
+					retryDecision: {
+						attempt: 1,
+						nextAttempt: 2,
+						exponentialDelayMs: 100,
+						jitterRatio: 0.2,
+						jitterMs: 10,
+						delayMs: 110,
+					},
+					retryClassification: "transient",
+				},
+			]);
+			expect(result.receipts.a?.retryClassification).toBe("transient");
+		} finally {
+			random.mockRestore();
+		}
+	});
+
+	it("halts consequential tasks without explicit approval", async () => {
+		const traces: string[] = [];
+		const stream = new EchoStream();
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", stream)] }),
+			[{ id: "a", title: "A", description: "A", consequential: true }],
+			{
+				onTrace: (event) => traces.push(event.type),
+			},
+		);
+
+		expect(result.status).toBe("aborted");
+		expect(result.success).toBe(false);
+		expect(result.abortedReason).toContain("Consequential task requires explicit approval");
+		expect(result.tasks.map((task) => task.status)).toEqual(["skipped"]);
+		expect(stream.calls).toHaveLength(0);
+		expect(traces).toContain("task_consequential");
+	});
+
+	it("executes consequential tasks after explicit approval", async () => {
+		const stream = new EchoStream();
+		const approvals: string[] = [];
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", stream)] }),
+			[{ id: "a", title: "A", description: "A", consequential: true }],
+			{
+				onTaskConsequential: async (task) => {
+					approvals.push(task.id);
+					return true;
+				},
+			},
+		);
+
+		expect(result.success).toBe(true);
+		expect(approvals).toEqual(["a"]);
+		expect(stream.calls).toHaveLength(1);
+		expect(result.receipts.a?.consequential).toEqual({ required: true, approved: true });
+	});
+
+	it("aborts consequential tasks rejected by approval", async () => {
+		const stream = new EchoStream();
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", stream)] }),
+			[{ id: "a", title: "A", description: "A", consequential: true }],
+			{ onTaskConsequential: async () => false },
+		);
+
+		expect(result.status).toBe("aborted");
+		expect(result.abortedReason).toBe("Consequential task rejected: a");
+		expect(result.tasks.map((task) => task.status)).toEqual(["skipped"]);
+		expect(stream.calls).toHaveLength(0);
+		expect(result.receipts.a?.consequential).toEqual({ required: true, approved: false });
+	});
+
+	it("aborts consequential tasks when approval throws", async () => {
+		const errors: string[] = [];
+		const stream = new EchoStream();
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", stream)] }),
+			[{ id: "a", title: "A", description: "A", consequential: true }],
+			{
+				onTaskConsequential: async () => {
+					throw new Error("approval unavailable");
+				},
+				onProgress: (event) => {
+					if (event.type === "error") errors.push(event.message ?? "");
+				},
+			},
+		);
+
+		expect(result.status).toBe("aborted");
+		expect(result.abortedReason).toBe("Consequential task approval failed: approval unavailable");
+		expect(result.tasks.map((task) => task.status)).toEqual(["skipped"]);
+		expect(stream.calls).toHaveLength(0);
+		expect(errors).toEqual(["approval unavailable"]);
+		expect(result.receipts.a?.consequential).toEqual({ required: true, approved: false });
 	});
 
 	it("short-circuits fatal failures with policy hooks", async () => {
@@ -731,11 +868,43 @@ describe("multi-agent primitives", () => {
 		await expect(
 			new Orchestrator().run(team, [{ id: "a", title: "A", description: "A" }], {
 				checkpointStore: {
-					load: () => ({ version: 2 }),
+					load: () => ({ version: 1 }),
 					save: async () => undefined,
 				} as never,
 			}),
-		).rejects.toThrow("Unsupported orchestrator checkpoint version: 2");
+		).rejects.toThrow("Unsupported orchestrator checkpoint version: 1");
+	});
+
+	it("rejects v4 checkpoints missing required production fields", async () => {
+		const queue = new TaskQueue();
+		queue.add({ id: "a", title: "A", description: "A" });
+		const base: OrchestratorCheckpoint = {
+			version: 4,
+			status: "running",
+			runIdentity: { runId: "required-fields" },
+			runFacts: {
+				teamName: "builders",
+				agentNames: ["worker"],
+				taskIds: ["a"],
+				startedAt: new Date().toISOString(),
+			},
+			tasks: queue.snapshot(),
+			metrics: {},
+			receipts: {},
+			taskStarts: 0,
+			updatedAt: new Date().toISOString(),
+		};
+		const team = new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] });
+		await expect(
+			new Orchestrator().run(team, [{ id: "a", title: "A", description: "A" }], {
+				checkpointStore: { load: () => ({ ...base, runFacts: undefined }), save: async () => undefined } as never,
+			}),
+		).rejects.toThrow("Run facts must be an object");
+		await expect(
+			new Orchestrator().run(team, [{ id: "a", title: "A", description: "A" }], {
+				checkpointStore: { load: () => ({ ...base, receipts: undefined }), save: async () => undefined } as never,
+			}),
+		).rejects.toThrow("Orchestrator checkpoint receipts must be an object");
 	});
 
 	it("resets interrupted checkpoint tasks before resuming", async () => {
@@ -745,16 +914,24 @@ describe("multi-agent primitives", () => {
 		task.assign("worker");
 		task.start();
 		let checkpoint: OrchestratorCheckpoint = {
-			version: 1,
+			version: 4,
 			status: "running",
+			runIdentity: { runId: "resume-interrupted" },
+			runFacts: {
+				teamName: "builders",
+				agentNames: ["worker"],
+				taskIds: ["a"],
+				startedAt: new Date().toISOString(),
+			},
 			tasks: queue.snapshot(),
 			metrics: {},
+			receipts: {},
 			taskStarts: 1,
 			updatedAt: new Date().toISOString(),
 		};
 		const result = await new Orchestrator().run(
 			new Team({ name: "builders", agents: [agentConfig("worker", adapter)] }),
-			[{ id: "ignored", title: "Ignored", description: "Ignored" }],
+			[{ id: "a", title: "A", description: "A" }],
 			{
 				checkpointStore: {
 					load: () => checkpoint,
@@ -771,19 +948,67 @@ describe("multi-agent primitives", () => {
 		expect(adapter.calls[0]).toContain("Task: A");
 	});
 
+	it("rejects checkpoint resume when run facts do not match", async () => {
+		const queue = new TaskQueue();
+		queue.add({ id: "a", title: "A", description: "A" });
+		const checkpoint: OrchestratorCheckpoint = {
+			version: 4,
+			status: "running",
+			runIdentity: { runId: "facts-mismatch" },
+			runFacts: {
+				teamName: "builders",
+				agentNames: ["worker"],
+				taskIds: ["a"],
+				startedAt: new Date().toISOString(),
+			},
+			tasks: queue.snapshot(),
+			metrics: {},
+			receipts: {},
+			taskStarts: 0,
+			updatedAt: new Date().toISOString(),
+		};
+
+		await expect(
+			new Orchestrator().run(
+				new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
+				[{ id: "b", title: "B", description: "B" }],
+				{ checkpointStore: { load: () => checkpoint, save: async () => undefined } },
+			),
+		).rejects.toThrow("Checkpoint run facts task ids mismatch");
+	});
+
+	it("rejects checkpoint resume when agent roster does not match", async () => {
+		const queue = new TaskQueue();
+		queue.add({ id: "a", title: "A", description: "A" });
+		const checkpoint: OrchestratorCheckpoint = {
+			version: 4,
+			status: "running",
+			runIdentity: { runId: "roster-mismatch" },
+			runFacts: {
+				teamName: "builders",
+				agentNames: ["worker", "reviewer"],
+				taskIds: ["a"],
+				startedAt: new Date().toISOString(),
+			},
+			tasks: queue.snapshot(),
+			metrics: {},
+			receipts: {},
+			taskStarts: 0,
+			updatedAt: new Date().toISOString(),
+		};
+
+		await expect(
+			new Orchestrator().run(
+				new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
+				[{ id: "a", title: "A", description: "A" }],
+				{ checkpointStore: { load: () => checkpoint, save: async () => undefined } },
+			),
+		).rejects.toThrow("Checkpoint run facts agent roster mismatch");
+	});
+
 	it("resumes from checkpoint snapshots", async () => {
 		const adapter = new EchoStream();
-		let checkpoint:
-			| {
-					version: 1;
-					status: "running" | "completed" | "aborted";
-					tasks: TaskQueueSnapshot;
-					metrics: Readonly<Record<string, TaskExecutionMetrics>>;
-					taskStarts: number;
-					updatedAt: string;
-					abortedReason?: string;
-			  }
-			| undefined;
+		let checkpoint: OrchestratorCheckpoint | undefined;
 		const store = {
 			load: async () => checkpoint,
 			save: async (value: typeof checkpoint) => {
@@ -803,6 +1028,8 @@ describe("multi-agent primitives", () => {
 		});
 		expect(checkpoint?.status).toBe("aborted");
 		expect(checkpoint?.tasks.tasks.map((task) => task.status)).toEqual(["completed", "skipped"]);
+		const completedReceipt = checkpoint?.receipts.a;
+		expect(completedReceipt).toMatchObject({ taskId: "a", status: "completed" });
 		checkpoint = {
 			...checkpoint!,
 			status: "running",
@@ -827,6 +1054,8 @@ describe("multi-agent primitives", () => {
 		expect(adapter.calls[0]).toContain("Task: A");
 		expect(adapter.calls[1]).toContain("Task: B");
 		expect(resumed.tasks.map((task) => task.status)).toEqual(["completed", "completed"]);
+		expect(resumed.receipts.a).toEqual(completedReceipt);
+		expect(resumed.receipts.b).toMatchObject({ taskId: "b", status: "completed" });
 	});
 
 	it("serializes overlapping task prompts for the same agent instance", async () => {

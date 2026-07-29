@@ -24,6 +24,14 @@
 - **agent**: Added isolated `run()`, state/history accessors, lifecycle run hooks, status tracing events, capabilities, and per-agent task serialization.
 - **orchestrator**: Added strict goal-to-DAG planning with explicit coordinator agents, exact dependency preservation, abortable planning, plan-time cycle rejection, dependency-aware pipelining, composite scheduling, structured dependency handoffs, task priority ordering, and retry-aware task execution.
 - **orchestrator**: Added progress events, trace hooks, dispatch gating, abort-aware retry delays, aborted run status, per-task execution metrics, coarse run budgets with in-flight timeout aborts, validated checkpoint resume support, task verification hooks, strict consensus verification helpers, and failure-policy short-circuiting.
+- **orchestrator**: Added explicit run identity correlation across events, traces, checkpoints, and run results with version 2 checkpoint schema validation.
+- **orchestrator**: Added a dedicated routing boundary with `TaskRoutingDecision` payloads emitted before dispatch approval and task execution.
+- **orchestrator**: Added retry classification metadata for retry traces and receipts with explicit hook-driven classification.
+- **orchestrator**: Added version 4 run facts to run results and checkpoints with strict resume validation for team, roster, and task ids.
+- **orchestrator**: Added execution receipts across run results and checkpoints for structured per-task observability.
+- **orchestrator**: Added an explicit consequential-task approval boundary with `task_consequential` traces and `onTaskConsequential` hooks.
+- **orchestrator**: Hardened retry handling with structured jittered retry decisions and retry trace payloads.
+- **orchestrator**: Fixed verification failure metrics to record the real task start time, prevented duplicate `budget_exceeded` events after timer-driven aborts, kept checkpoint writes recoverable after a save failure, made only `running` checkpoints resumable, emitted a dedicated checkpoint-save failure trace, and removed duplicate task-dispatch tracing when approval hooks are enabled.
 - **task**: Added richer task metadata for memory scope, priority, retry settings, role hints, and verification payloads.
 - **team**: Added inter-agent messaging, message snapshots, subscriptions, and typed team events.
 - **attribution**: Added MIT attribution for the open-multi-agent architecture.

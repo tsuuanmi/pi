@@ -84,7 +84,7 @@ Node-specific runtime implementations belong under `@tsuuanmi/pi-agent/node` or 
 
 ## Scheduling
 
-Use `orchestrator.plan(team, goal, { coordinator })` for strict goal-to-DAG planning, then call `orchestrator.run(team, plan.tasks)` explicitly. Planning is abortable and emits strict trace events. Set `schedulingStrategy` on `Orchestrator` or per run. Use `runBudget`, `checkpointStore`, `onTaskVerify`, `createConsensusVerifier`, `onTaskFailure`, and `onTrace` to add production guardrails, resumability, verification, failure classification, and structured telemetry. `onTaskFailure` controls retry/fail/skip/abort decisions. Supported strategies:
+Use `orchestrator.plan(team, goal, { coordinator })` for strict goal-to-DAG planning, then call `orchestrator.run(team, plan.tasks)` explicitly. Planning is abortable and emits strict trace events. Set `schedulingStrategy` on `Orchestrator` or per run. Use `runIdentity`, `runBudget`, `checkpointStore`, `onTaskVerify`, `onTaskConsequential`, `createConsensusVerifier`, `onTaskFailure`, and `onTrace` to add production correlation, guardrails, resumability, verification, failure classification, structured telemetry, and execution receipts. Only `running` checkpoints are resumable, and checkpoint resume requires matching run identity plus matching run facts. `onTaskFailure` controls retry/fail/skip/abort decisions. Supported strategies:
 
 - `dependency-first` (default): run tasks that unblock the largest downstream set first.
 - `composite`: combine dependency criticality, capability fit, and current agent load.

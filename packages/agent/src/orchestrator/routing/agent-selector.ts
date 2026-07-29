@@ -1,61 +1,23 @@
 import type { Agent } from "#agent/agent/agent";
-import type { RunTeamOptions, SchedulingStrategy, SchedulingWeights } from "#agent/orchestrator/types";
-import type { Task } from "#agent/task/task";
-import type { TaskPriority, TaskSnapshot } from "#agent/task/types";
+import type { TaskSnapshot } from "#agent/task/types";
+import type { RunTeamOptions, SchedulingStrategy, SchedulingWeights } from "../types.js";
+import { resolveAssignedAgent } from "./short-circuit.js";
 
 const DEFAULT_SCHEDULING_WEIGHTS: SchedulingWeights = { fit: 0.7, load: 0.3 };
 
-export interface SchedulerConfig {
-	schedulingStrategy?: SchedulingStrategy;
-	schedulingWeights?: Partial<SchedulingWeights>;
+export interface AgentSelectorConfig {
+	weights?: Partial<SchedulingWeights>;
 }
 
-export class Scheduler {
-	private readonly schedulingStrategy: SchedulingStrategy;
+export class AgentSelector {
 	private readonly weights: SchedulingWeights;
 	private roundRobinCursor = 0;
 
-	constructor(config: SchedulerConfig = {}) {
-		this.schedulingStrategy = config.schedulingStrategy ?? "dependency-first";
-		this.weights = resolveSchedulingWeights(config.schedulingWeights);
+	constructor(config: AgentSelectorConfig = {}) {
+		this.weights = resolveSchedulingWeights(config.weights);
 	}
 
-	assignReadyTasks(
-		tasks: Task[],
-		allTasks: readonly TaskSnapshot[],
-		agents: readonly Agent[],
-		options: RunTeamOptions,
-	): Task[] {
-		const available = [...agents];
-		if (available.length === 0) throw new Error("Cannot run a team without agents.");
-		const strategy = options.schedulingStrategy ?? this.schedulingStrategy;
-		const ordered = this.orderTasks(tasks, allTasks, strategy);
-		const load = currentLoad(available, allTasks);
-		return ordered.map((task, index) => {
-			const snapshot = task.snapshot();
-			if (!snapshot.assignee) {
-				const agent = this.selectAgent(snapshot, available, allTasks, load, index, options, strategy);
-				task.assign(agent.name);
-				load.set(agent.name, (load.get(agent.name) ?? 0) + 1);
-			}
-			return task;
-		});
-	}
-
-	private orderTasks(tasks: readonly Task[], allTasks: readonly TaskSnapshot[], strategy: SchedulingStrategy): Task[] {
-		return [...tasks].sort((left, right) => {
-			const priorityOrder = comparePriority(right.snapshot().priority, left.snapshot().priority);
-			if (priorityOrder !== 0) return priorityOrder;
-			if (strategy !== "dependency-first" && strategy !== "composite") {
-				return left.id.localeCompare(right.id);
-			}
-			const dependencyOrder = this.countDependents(right.id, allTasks) - this.countDependents(left.id, allTasks);
-			if (dependencyOrder !== 0) return dependencyOrder;
-			return left.id.localeCompare(right.id);
-		});
-	}
-
-	private selectAgent(
+	selectAgent(
 		task: TaskSnapshot,
 		agents: readonly Agent[],
 		allTasks: readonly TaskSnapshot[],
@@ -64,11 +26,8 @@ export class Scheduler {
 		options: RunTeamOptions,
 		strategy: SchedulingStrategy,
 	): Agent {
-		if (task.assignee) {
-			const assigned = agents.find((agent) => agent.name === task.assignee);
-			if (!assigned) throw new Error(`Unknown assignee: ${task.assignee}`);
-			return assigned;
-		}
+		const assigned = resolveAssignedAgent(task, agents);
+		if (assigned) return assigned;
 		if (strategy === "least-busy") return leastBusyAgent(task, agents, load);
 		if (strategy === "capability-match") return this.selectCapabilityAgent(task, agents, index);
 		if (strategy === "composite") return this.selectCompositeAgent(task, agents, allTasks, load, options);
@@ -147,16 +106,6 @@ export function resolveSchedulingWeights(weights: Partial<SchedulingWeights> = {
 	return resolved;
 }
 
-function currentLoad(agents: readonly Agent[], allTasks: readonly TaskSnapshot[]): Map<string, number> {
-	const load = new Map<string, number>(agents.map((agent) => [agent.name, 0]));
-	for (const task of allTasks) {
-		if (task.status === "in_progress" && task.assignee && load.has(task.assignee)) {
-			load.set(task.assignee, (load.get(task.assignee) ?? 0) + 1);
-		}
-	}
-	return load;
-}
-
 function leastBusyAgent(task: TaskSnapshot, agents: readonly Agent[], load: ReadonlyMap<string, number>): Agent {
 	return [...agents].sort((left, right) => {
 		const loadOrder = (load.get(left.name) ?? 0) - (load.get(right.name) ?? 0);
@@ -195,23 +144,4 @@ function capabilityScore(task: TaskSnapshot, agent: Agent): number {
 function matchesRole(task: TaskSnapshot, agent: Agent): boolean {
 	if (!task.role) return false;
 	return agent.name === task.role || agent.capabilities.includes(task.role);
-}
-
-function comparePriority(left?: TaskPriority, right?: TaskPriority): number {
-	return priorityRank(left) - priorityRank(right);
-}
-
-function priorityRank(priority?: TaskPriority): number {
-	switch (priority) {
-		case "critical":
-			return 4;
-		case "high":
-			return 3;
-		case "normal":
-			return 2;
-		case "low":
-			return 1;
-		default:
-			return 2;
-	}
 }

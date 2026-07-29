@@ -1,6 +1,6 @@
-import type { OrchestratorRunContext } from "#agent/orchestrator/context";
 import type { Task, TaskQueue } from "#agent/task/task";
 import type { Team } from "#agent/team/team";
+import type { OrchestratorRunContext } from "../runtime/context.js";
 
 export function assertTeamCanRun(team: Team): void {
 	if (team.getAgents().length === 0) throw new Error("Cannot run a team without agents.");

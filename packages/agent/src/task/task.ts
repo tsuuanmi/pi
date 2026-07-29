@@ -99,6 +99,12 @@ function normalizeOptionalNumber(value: number | undefined, field: string, minim
 	return value;
 }
 
+function normalizeOptionalBoolean(value: boolean | undefined, field: string): boolean | undefined {
+	if (value === undefined) return undefined;
+	if (typeof value !== "boolean") throw new Error(`Task ${field} must be a boolean.`);
+	return value;
+}
+
 function cloneTaskMetadata(metadata: TaskMetadata | undefined): TaskMetadata | undefined {
 	return validateTaskMetadata(metadata);
 }
@@ -164,6 +170,7 @@ export class Task {
 			retryBackoff: normalizeOptionalNumber(input.retryBackoff, "retryBackoff", 1),
 			requires: normalizeStringList(input.requires, "requires"),
 			verify: cloneVerifyOptions(input.verify),
+			consequential: normalizeOptionalBoolean(input.consequential, "consequential"),
 			attempts: 0,
 			createdAt: now,
 			updatedAt: now,
@@ -188,6 +195,7 @@ export class Task {
 			retryBackoff: snapshot.retryBackoff,
 			requires: snapshot.requires,
 			verify: snapshot.verify,
+			consequential: snapshot.consequential,
 		});
 		task.snapshotValue = Object.freeze({
 			...task.snapshot(),
@@ -268,6 +276,7 @@ export class Task {
 			metadata: cloneTaskMetadata(this.snapshotValue.metadata),
 			structured: cloneStructuredValue(this.snapshotValue.structured, "Task snapshot structured value"),
 			verify: cloneVerifyOptions(this.snapshotValue.verify),
+			consequential: this.snapshotValue.consequential,
 		};
 	}
 

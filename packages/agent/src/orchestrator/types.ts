@@ -1,6 +1,9 @@
 import type { Agent } from "#agent/agent/agent";
 import type { TaskInput, TaskQueueSnapshot, TaskSnapshot } from "#agent/task/types";
 import type { Team } from "#agent/team/team";
+import type { RunFacts } from "./runtime/facts.js";
+import type { RunIdentity } from "./runtime/identity.js";
+import type { TaskExecutionReceipt } from "./runtime/receipt.js";
 
 export type SchedulingStrategy = "round-robin" | "least-busy" | "dependency-first" | "capability-match" | "composite";
 
@@ -23,6 +26,16 @@ export interface TaskVerificationContext extends TaskExecutionContext {
 }
 
 export type TaskFailureAction = "retry" | "fail" | "skip" | "abort";
+export type TaskRetryClassification = "transient" | "capacity" | "dependency" | "policy" | "unknown";
+
+export interface RetryDecision {
+	attempt: number;
+	nextAttempt: number;
+	exponentialDelayMs: number;
+	jitterRatio: number;
+	jitterMs: number;
+	delayMs: number;
+}
 
 export interface TaskFailureContext extends TaskExecutionContext {
 	agent: string;
@@ -40,8 +53,17 @@ export interface TaskExecutionMetrics {
 }
 
 export interface OrchestratorEvent {
-	type: "task_start" | "task_complete" | "task_retry" | "task_skipped" | "task_verify" | "error" | "budget_exceeded";
+	type:
+		| "task_start"
+		| "task_complete"
+		| "task_retry"
+		| "task_skipped"
+		| "task_verify"
+		| "task_consequential"
+		| "error"
+		| "budget_exceeded";
 	timestamp: string;
+	runIdentity?: RunIdentity;
 	taskId?: string;
 	taskTitle?: string;
 	agent?: string;
@@ -62,17 +84,21 @@ export interface OrchestratorTraceEvent {
 		| "run_start"
 		| "run_complete"
 		| "run_abort"
+		| "routing_decision"
 		| "task_dispatch"
 		| "task_start"
 		| "task_complete"
 		| "task_retry"
 		| "task_skipped"
 		| "task_verify"
+		| "task_consequential"
 		| "task_short_circuit"
 		| "checkpoint_save"
+		| "checkpoint_save_error"
 		| "budget_exceeded"
 		| "error";
 	timestamp: string;
+	runIdentity?: RunIdentity;
 	runStatus?: "running" | "completed" | "aborted";
 	taskId?: string;
 	taskTitle?: string;
@@ -124,10 +150,13 @@ export interface OrchestratorConfig {
 	maxConcurrency?: number;
 	schedulingWeights?: Partial<SchedulingWeights>;
 	runBudget?: Partial<RunBudget>;
-	checkpointStore?: import("#agent/orchestrator/checkpoint").OrchestratorCheckpointStore;
+	checkpointStore?: import("./runtime/checkpoint.js").OrchestratorCheckpointStore;
+	runIdentity?: RunIdentity;
 	onProgress?: (event: OrchestratorEvent) => void;
 	onTrace?: (event: OrchestratorTraceEvent) => void;
 	onTaskVerify?: (context: TaskVerificationContext) => boolean | Promise<boolean>;
+	onTaskConsequential?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
+	onTaskRetryClassify?: (context: TaskFailureContext) => TaskRetryClassification | Promise<TaskRetryClassification>;
 	onTaskFailure?: (context: TaskFailureContext) => TaskFailureAction | Promise<TaskFailureAction>;
 }
 
@@ -136,11 +165,14 @@ export interface RunTeamOptions {
 	maxConcurrency?: number;
 	schedulingWeights?: Partial<SchedulingWeights>;
 	runBudget?: Partial<RunBudget>;
-	checkpointStore?: import("#agent/orchestrator/checkpoint").OrchestratorCheckpointStore;
+	checkpointStore?: import("./runtime/checkpoint.js").OrchestratorCheckpointStore;
+	runIdentity?: RunIdentity;
 	abortSignal?: AbortSignal;
 	onProgress?: (event: OrchestratorEvent) => void;
 	onTrace?: (event: OrchestratorTraceEvent) => void;
 	onTaskVerify?: (context: TaskVerificationContext) => boolean | Promise<boolean>;
+	onTaskConsequential?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
+	onTaskRetryClassify?: (context: TaskFailureContext) => TaskRetryClassification | Promise<TaskRetryClassification>;
 	onTaskFailure?: (context: TaskFailureContext) => TaskFailureAction | Promise<TaskFailureAction>;
 	onTaskDispatch?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
 	onTaskStart?: (task: TaskSnapshot) => void;
@@ -151,19 +183,25 @@ export interface RunTeamResult {
 	status: "completed" | "aborted";
 	success: boolean;
 	abortedReason?: string;
+	runIdentity: RunIdentity;
+	runFacts: RunFacts;
 	tasks: readonly TaskSnapshot[];
 	metrics: Readonly<Record<string, TaskExecutionMetrics>>;
+	receipts: Readonly<Record<string, TaskExecutionReceipt>>;
 	output: string;
 }
 
 export interface OrchestratorCheckpointSnapshot {
-	version: 1;
+	version: 4;
 	status: "running" | "completed" | "aborted";
+	runIdentity: RunIdentity;
+	runFacts: RunFacts;
 	tasks: TaskQueueSnapshot;
 	metrics: Readonly<Record<string, TaskExecutionMetrics>>;
+	receipts: Readonly<Record<string, TaskExecutionReceipt>>;
 	taskStarts: number;
 	updatedAt: string;
 	abortedReason?: string;
 }
 
-export type { TaskInput, TaskSnapshot, TaskQueueSnapshot };
+export type { RunFacts, RunIdentity, TaskExecutionReceipt, TaskInput, TaskSnapshot, TaskQueueSnapshot };

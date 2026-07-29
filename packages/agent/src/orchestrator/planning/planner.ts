@@ -1,7 +1,7 @@
-import { isAbortError, OrchestratorAbortError } from "#agent/orchestrator/retry";
-import type { PlanOptions, PlanResult } from "#agent/orchestrator/types";
 import type { TaskInput, TaskPriority } from "#agent/task/types";
 import type { Team } from "#agent/team/team";
+import { isAbortError, OrchestratorAbortError } from "../execution/retry.js";
+import type { PlanOptions, PlanResult } from "../types.js";
 
 export async function planTasks(team: Team, goal: string, options: PlanOptions): Promise<PlanResult> {
 	const normalizedGoal = normalizeGoal(goal);

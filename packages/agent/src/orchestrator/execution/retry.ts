@@ -1,5 +1,8 @@
+import type { RetryDecision } from "../types.js";
+
 export const DEFAULT_RETRY_DELAY_MS = 1000;
 export const DEFAULT_RETRY_BACKOFF = 2;
+export const DEFAULT_RETRY_JITTER_RATIO = 0.2;
 
 export class OrchestratorAbortError extends Error {
 	constructor(message = "Run aborted by abort signal.") {
@@ -35,8 +38,24 @@ export function formatFailureMessage(error: unknown, output: string): string {
 	return output || String(error);
 }
 
-export function getRetryDelayMs(baseDelayMs: number, backoff: number, attempts: number): number {
-	return Math.max(0, Math.round(baseDelayMs * backoff ** Math.max(0, attempts - 1)));
+export function computeRetryDecision(
+	baseDelayMs: number,
+	backoff: number,
+	attempts: number,
+	jitterRatio = DEFAULT_RETRY_JITTER_RATIO,
+	random = Math.random,
+): RetryDecision {
+	const exponentialDelayMs = Math.max(0, Math.round(baseDelayMs * backoff ** Math.max(0, attempts - 1)));
+	const jitterWindowMs = Math.round(exponentialDelayMs * jitterRatio);
+	const jitterMs = jitterWindowMs === 0 ? 0 : Math.round((random() * 2 - 1) * jitterWindowMs);
+	return Object.freeze({
+		attempt: attempts,
+		nextAttempt: attempts + 1,
+		exponentialDelayMs,
+		jitterRatio,
+		jitterMs,
+		delayMs: Math.max(0, exponentialDelayMs + jitterMs),
+	});
 }
 
 export function isAbortError(error: unknown): boolean {

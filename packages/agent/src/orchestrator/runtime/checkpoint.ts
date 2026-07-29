@@ -1,13 +1,19 @@
-import type { TaskExecutionMetrics } from "#agent/orchestrator/types";
 import type { TaskQueueSnapshot } from "#agent/task/types";
+import type { TaskExecutionMetrics } from "../types.js";
+import { normalizeRunFacts, type RunFacts } from "./facts.js";
+import { normalizeRunIdentity, type RunIdentity } from "./identity.js";
+import { normalizeTaskExecutionReceipts, type TaskExecutionReceipt } from "./receipt.js";
 
-export const CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION = 1;
+export const CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION = 4;
 
 export interface OrchestratorCheckpoint {
 	version: typeof CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION;
 	status: "running" | "completed" | "aborted";
+	runIdentity: RunIdentity;
+	runFacts: RunFacts;
 	tasks: TaskQueueSnapshot;
 	metrics: Readonly<Record<string, TaskExecutionMetrics>>;
+	receipts: Readonly<Record<string, TaskExecutionReceipt>>;
 	taskStarts: number;
 	updatedAt: string;
 	abortedReason?: string;
@@ -27,8 +33,11 @@ export function normalizeCheckpoint(checkpoint: unknown): OrchestratorCheckpoint
 	const status = normalizeStatus(input.status);
 	const taskStarts = normalizeTaskStarts(input.taskStarts);
 	const updatedAt = normalizeUpdatedAt(input.updatedAt);
+	const runIdentity = normalizeRunIdentity(input.runIdentity);
+	const runFacts = normalizeRunFacts(input.runFacts);
 	const tasks = normalizeTaskQueueSnapshot(input.tasks);
 	const metrics = normalizeMetrics(input.metrics);
+	const receipts = normalizeTaskExecutionReceipts(input.receipts);
 	const abortedReason = normalizeOptionalString(input.abortedReason, "abortedReason");
 	if (status === "aborted" && abortedReason === undefined) {
 		throw new Error("Aborted orchestrator checkpoints must include abortedReason.");
@@ -36,8 +45,11 @@ export function normalizeCheckpoint(checkpoint: unknown): OrchestratorCheckpoint
 	return {
 		version: CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION,
 		status,
+		runIdentity,
+		runFacts,
 		tasks,
 		metrics,
+		receipts,
 		taskStarts,
 		updatedAt,
 		...(abortedReason !== undefined ? { abortedReason } : {}),

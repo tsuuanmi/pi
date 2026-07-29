@@ -10,31 +10,6 @@ export type { AgentRunOptions, AgentRunResult } from "#agent/agent/runtime/types
 export * from "#agent/agent/state/messages";
 export * from "#agent/agent/state/state";
 export * from "#agent/compaction/message-utils";
-export type { OrchestratorCheckpoint, OrchestratorCheckpointStore } from "#agent/orchestrator/checkpoint";
-export { CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION } from "#agent/orchestrator/checkpoint";
-export { createConsensusVerifier, runConsensusVerification } from "#agent/orchestrator/consensus";
-export { Orchestrator } from "#agent/orchestrator/orchestrator";
-export type {
-	ConsensusResult,
-	ConsensusVerifierOptions,
-	ConsensusVote,
-	OrchestratorCheckpointSnapshot,
-	OrchestratorConfig,
-	OrchestratorEvent,
-	OrchestratorTraceEvent,
-	PlanOptions,
-	PlanResult,
-	RunBudget,
-	RunTeamOptions,
-	RunTeamResult,
-	SchedulingStrategy,
-	SchedulingWeights,
-	TaskExecutionContext,
-	TaskExecutionMetrics,
-	TaskFailureAction,
-	TaskFailureContext,
-	TaskVerificationContext,
-} from "#agent/orchestrator/types";
 export * from "#agent/receipts/execution-receipt";
 export * from "#agent/subagents/subagent-manager";
 export * from "#agent/subagents/subagent-manager-factory";
@@ -74,3 +49,36 @@ export { Team } from "#agent/team/team";
 export * from "#agent/tool/policy";
 export * from "#agent/tool/registry";
 export * from "#agent/tool/types";
+export { Orchestrator } from "./orchestrator/orchestrator.js";
+export { createConsensusVerifier, runConsensusVerification } from "./orchestrator/planning/consensus.js";
+export type { RoutedTask, RouteReadyTasksInput, TaskRoutingDecision } from "./orchestrator/routing/routing.js";
+export { routeReadyTasks } from "./orchestrator/routing/routing.js";
+export type { OrchestratorCheckpoint, OrchestratorCheckpointStore } from "./orchestrator/runtime/checkpoint.js";
+export { CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION } from "./orchestrator/runtime/checkpoint.js";
+export type { RunFacts } from "./orchestrator/runtime/facts.js";
+export { assertResumeFacts, createRunFacts, normalizeRunFacts } from "./orchestrator/runtime/facts.js";
+export type { RunIdentity } from "./orchestrator/runtime/identity.js";
+export { createRunIdentity, normalizeRunIdentity } from "./orchestrator/runtime/identity.js";
+export type { TaskConsequentialReceipt, TaskExecutionReceipt } from "./orchestrator/runtime/receipt.js";
+export type {
+	ConsensusResult,
+	ConsensusVerifierOptions,
+	ConsensusVote,
+	OrchestratorCheckpointSnapshot,
+	OrchestratorConfig,
+	OrchestratorEvent,
+	OrchestratorTraceEvent,
+	PlanOptions,
+	PlanResult,
+	RunBudget,
+	RunTeamOptions,
+	RunTeamResult,
+	SchedulingStrategy,
+	SchedulingWeights,
+	TaskExecutionContext,
+	TaskExecutionMetrics,
+	TaskFailureAction,
+	TaskFailureContext,
+	TaskRetryClassification,
+	TaskVerificationContext,
+} from "./orchestrator/types.js";

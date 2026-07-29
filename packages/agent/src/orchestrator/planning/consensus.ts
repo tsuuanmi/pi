@@ -1,9 +1,4 @@
-import type {
-	ConsensusResult,
-	ConsensusVerifierOptions,
-	ConsensusVote,
-	TaskVerificationContext,
-} from "#agent/orchestrator/types";
+import type { ConsensusResult, ConsensusVerifierOptions, ConsensusVote, TaskVerificationContext } from "../types.js";
 
 export function createConsensusVerifier(
 	options: ConsensusVerifierOptions,

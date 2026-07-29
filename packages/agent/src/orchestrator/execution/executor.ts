@@ -1,17 +1,23 @@
-import { emitBudgetExceeded, isRunBudgetExceeded } from "#agent/orchestrator/budget";
-import type { OrchestratorRunContext } from "#agent/orchestrator/context";
+import { extractTaskBridgeResult, formatTaskPrompt, type Task, type TaskQueue } from "#agent/task/task";
+import type { TaskSnapshot } from "#agent/task/types";
+import { emitBudgetExceeded, isRunBudgetExceeded } from "../runtime/budget.js";
+import type { OrchestratorRunContext } from "../runtime/context.js";
+import type {
+	TaskFailureAction,
+	TaskFailureContext,
+	TaskRetryClassification,
+	TaskVerificationContext,
+} from "../types.js";
+import { approveConsequentialTask } from "./consequential.js";
 import {
+	computeRetryDecision,
 	formatFailureMessage,
-	getRetryDelayMs,
 	isAbortError,
 	resolveRetryBackoff,
 	resolveRetryCount,
 	resolveRetryDelay,
 	wait,
-} from "#agent/orchestrator/retry";
-import type { TaskFailureAction, TaskFailureContext, TaskVerificationContext } from "#agent/orchestrator/types";
-import { extractTaskBridgeResult, formatTaskPrompt, type Task, type TaskQueue } from "#agent/task/task";
-import type { TaskSnapshot } from "#agent/task/types";
+} from "./retry.js";
 
 interface FailureResolution {
 	action: TaskFailureAction;
@@ -38,8 +44,9 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 	while (true) {
 		const budgetExceeded = isRunBudgetExceeded(context);
 		if (budgetExceeded) {
+			const alreadyEmitted = context.abortedReason === budgetExceeded;
 			context.abort(budgetExceeded);
-			emitBudgetExceeded(context, budgetExceeded);
+			if (!alreadyEmitted) emitBudgetExceeded(context, budgetExceeded);
 			skipTask(task, context, budgetExceeded, startedAtMs);
 			await context.saveCheckpoint("aborted");
 			return;
@@ -47,6 +54,11 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 
 		if (context.aborted) {
 			skipTask(task, context, context.abortedReason ?? "Run aborted.", startedAtMs);
+			await context.saveCheckpoint("aborted");
+			return;
+		}
+
+		if (!(await approveConsequentialTask(task, context))) {
 			await context.saveCheckpoint("aborted");
 			return;
 		}
@@ -105,6 +117,7 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 				bridgeResult.structured,
 				completedDependencies,
 				attemptSnapshot.attempts,
+				startedAtMs,
 			);
 			if (!verified) {
 				await context.saveCheckpoint("running");
@@ -148,13 +161,27 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 		if (resolution.action === "retry") {
 			task.retry(errorMessage);
 			const retrySnapshot = task.snapshot();
+			const retryDecision = computeRetryDecision(retryDelayMs, retryBackoff, attemptSnapshot.attempts);
+			const retryClassification = await resolveRetryClassification({
+				task,
+				context,
+				agent: agent.name,
+				error: result.error,
+				output: result.output,
+				structured: result.structured,
+				completedDependencies,
+				attempt: attemptSnapshot.attempts,
+			});
+			if (retryClassification !== undefined) {
+				context.recordTaskRetryClassification(retrySnapshot, startedAtMs, Date.now(), retryClassification);
+			}
 			context.emit({
 				type: "task_retry",
 				taskId: retrySnapshot.id,
 				taskTitle: retrySnapshot.title,
 				agent: agent.name,
 				message: errorMessage,
-				data: { attempt: attemptSnapshot.attempts, nextAttempt: attemptSnapshot.attempts + 1 },
+				data: { retryDecision, ...(retryClassification ? { retryClassification } : {}) },
 			});
 			context.emitTrace({
 				type: "task_retry",
@@ -163,10 +190,10 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 				taskTitle: retrySnapshot.title,
 				agent: agent.name,
 				message: errorMessage,
-				data: { attempt: attemptSnapshot.attempts, nextAttempt: attemptSnapshot.attempts + 1 },
+				data: { retryDecision, ...(retryClassification ? { retryClassification } : {}) },
 			});
 			await context.saveCheckpoint("running");
-			const delayMs = getRetryDelayMs(retryDelayMs, retryBackoff, attemptSnapshot.attempts);
+			const delayMs = retryDecision.delayMs;
 			try {
 				await wait(delayMs, context.executionSignal);
 			} catch (error) {
@@ -188,6 +215,46 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 			startedAtMs,
 		});
 		return;
+	}
+}
+
+async function resolveRetryClassification(input: {
+	task: Task;
+	context: OrchestratorRunContext;
+	agent: string;
+	error: unknown;
+	output: string;
+	structured?: unknown;
+	completedDependencies: readonly TaskSnapshot[];
+	attempt: number;
+}): Promise<TaskRetryClassification | undefined> {
+	const classifier = input.context.options.onTaskRetryClassify ?? input.context.defaultOnTaskRetryClassify;
+	if (!classifier) return undefined;
+	const snapshot = input.task.snapshot();
+	const failureContext: TaskFailureContext = {
+		task: snapshot,
+		team: input.context.team,
+		completedDependencies: input.completedDependencies,
+		attempt: input.attempt,
+		agent: input.agent,
+		error: input.error,
+		output: input.output,
+		structured: input.structured,
+	};
+	try {
+		return await classifier(failureContext);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		input.context.emitTrace({
+			type: "error",
+			runStatus: input.context.aborted ? "aborted" : "running",
+			taskId: snapshot.id,
+			taskTitle: snapshot.title,
+			agent: input.agent,
+			message,
+			data: error,
+		});
+		return undefined;
 	}
 }
 
@@ -294,6 +361,7 @@ async function verifyTask(
 	structured: unknown,
 	completedDependencies: readonly TaskSnapshot[],
 	attempt: number,
+	startedAtMs: number,
 ): Promise<boolean> {
 	const verifier = context.options.onTaskVerify ?? context.defaultOnTaskVerify;
 	if (!verifier || task.snapshot().verify === undefined) return true;
@@ -309,6 +377,7 @@ async function verifyTask(
 	};
 	try {
 		const approved = await verifier(verificationContext);
+		context.recordTaskVerification(snapshot.id, approved);
 		context.emit({
 			type: "task_verify",
 			taskId: snapshot.id,
@@ -330,16 +399,17 @@ async function verifyTask(
 			task.fail("Task verification failed.");
 			const failed = task.snapshot();
 			emitTaskError(context, failed, "Task verification failed.", agent);
-			context.recordTaskMetrics(failed, Date.now(), Date.now());
+			context.recordTaskMetrics(failed, startedAtMs, Date.now());
 			return false;
 		}
 		return true;
 	} catch (error) {
+		context.recordTaskVerification(snapshot.id, false);
 		const message = error instanceof Error ? error.message : String(error);
 		task.fail(message);
 		const failed = task.snapshot();
 		emitTaskError(context, failed, message, agent, error);
-		context.recordTaskMetrics(failed, Date.now(), Date.now());
+		context.recordTaskMetrics(failed, startedAtMs, Date.now());
 		return false;
 	}
 }

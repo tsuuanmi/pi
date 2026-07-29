@@ -1,37 +1,36 @@
 // Architecture adapted from open-multi-agent (MIT).
 
-import { resolveRunBudget } from "#agent/orchestrator/budget";
-import { normalizeCheckpoint } from "#agent/orchestrator/checkpoint";
-import { createRunContext } from "#agent/orchestrator/context";
-import { executeTask } from "#agent/orchestrator/executor";
+import { Task, TaskQueue } from "#agent/task/task";
+import type { TaskInput } from "#agent/task/types";
+import type { Team } from "#agent/team/team";
+import { executeTask } from "./execution/executor.js";
 import {
 	approveTaskDispatch,
 	assertKnownAssignees,
 	assertTeamCanRun,
 	blockUnreachableTasks,
 	skipPendingTasks,
-} from "#agent/orchestrator/governance";
-import { planTasks } from "#agent/orchestrator/planner";
-import { Scheduler } from "#agent/orchestrator/scheduler";
-import type {
-	OrchestratorConfig,
-	PlanOptions,
-	PlanResult,
-	RunTeamOptions,
-	RunTeamResult,
-} from "#agent/orchestrator/types";
-import { type Task, TaskQueue } from "#agent/task/task";
-import type { TaskInput } from "#agent/task/types";
-import type { Team } from "#agent/team/team";
+} from "./execution/governance.js";
+import { planTasks } from "./planning/planner.js";
+import { routeReadyTasks } from "./routing/routing.js";
+import { Scheduler } from "./routing/scheduler.js";
+import { resolveRunBudget } from "./runtime/budget.js";
+import { normalizeCheckpoint, type OrchestratorCheckpoint } from "./runtime/checkpoint.js";
+import { createRunContext } from "./runtime/context.js";
+import { assertResumeFacts, createRunFacts } from "./runtime/facts.js";
+import { assertSameRunIdentity, createRunIdentity, normalizeRunIdentity } from "./runtime/identity.js";
+import type { OrchestratorConfig, PlanOptions, PlanResult, RunTeamOptions, RunTeamResult } from "./types.js";
 
 export class Orchestrator {
 	private readonly scheduler: Scheduler;
 	private readonly maxConcurrency: number;
 	private readonly onProgress?: OrchestratorConfig["onProgress"];
 	private readonly onTaskVerify?: OrchestratorConfig["onTaskVerify"];
+	private readonly onTaskConsequential?: OrchestratorConfig["onTaskConsequential"];
 	private readonly onTaskFailure?: OrchestratorConfig["onTaskFailure"];
 	private readonly runBudget?: OrchestratorConfig["runBudget"];
 	private readonly checkpointStore?: OrchestratorConfig["checkpointStore"];
+	private readonly runIdentity?: OrchestratorConfig["runIdentity"];
 
 	constructor(config: OrchestratorConfig = {}) {
 		this.scheduler = new Scheduler({
@@ -41,9 +40,11 @@ export class Orchestrator {
 		this.maxConcurrency = config.maxConcurrency ?? 4;
 		this.onProgress = config.onProgress;
 		this.onTaskVerify = config.onTaskVerify;
+		this.onTaskConsequential = config.onTaskConsequential;
 		this.onTaskFailure = config.onTaskFailure;
 		this.runBudget = resolveRunBudget(config.runBudget);
 		this.checkpointStore = config.checkpointStore;
+		this.runIdentity = config.runIdentity ? normalizeRunIdentity(config.runIdentity) : undefined;
 	}
 
 	async plan(team: Team, goal: string, options: PlanOptions): Promise<PlanResult> {
@@ -54,10 +55,10 @@ export class Orchestrator {
 	async run(team: Team, tasks: readonly (Task | TaskInput)[], options: RunTeamOptions = {}): Promise<RunTeamResult> {
 		assertTeamCanRun(team);
 		const checkpoint = await loadCheckpoint(this.checkpointStore ?? options.checkpointStore);
-		const queue = checkpoint
-			? TaskQueue.fromSnapshot(normalizeCheckpoint(checkpoint).tasks, { resetInProgress: true })
-			: new TaskQueue();
+		const runIdentity = resolveRunIdentity(checkpoint, options.runIdentity ?? this.runIdentity);
+		const queue = checkpoint ? TaskQueue.fromSnapshot(checkpoint.tasks, { resetInProgress: true }) : new TaskQueue();
 		if (!checkpoint) queue.addBatch(tasks);
+		const runFacts = resolveRunFacts(team, tasks, queue, checkpoint);
 		assertKnownAssignees(queue, team);
 		const normalizedRunBudget = resolveRunBudget(options.runBudget ?? this.runBudget);
 		const context = createRunContext({
@@ -65,13 +66,17 @@ export class Orchestrator {
 			queue,
 			options,
 			scheduler: this.scheduler,
+			runIdentity,
+			runFacts,
 			defaultMaxConcurrency: this.maxConcurrency,
 			defaultOnProgress: this.onProgress,
 			defaultOnTaskVerify: this.onTaskVerify,
+			defaultOnTaskConsequential: this.onTaskConsequential,
 			defaultOnTaskFailure: this.onTaskFailure,
 			checkpointStore: options.checkpointStore ?? this.checkpointStore,
 			runBudget: normalizedRunBudget,
 			initialMetrics: checkpoint?.metrics,
+			initialReceipts: checkpoint?.receipts,
 			initialTaskStarts: checkpoint?.taskStarts,
 		});
 
@@ -107,8 +112,11 @@ export class Orchestrator {
 			status,
 			success: status === "completed" && failed.length === 0,
 			...(context.abortedReason ? { abortedReason: context.abortedReason } : {}),
+			runIdentity,
+			runFacts,
 			tasks: snapshots,
 			metrics: context.metricsSnapshot(),
+			receipts: context.receiptsSnapshot(),
 			output: snapshots
 				.filter((task) => task.status === "completed")
 				.map((task) => task.result ?? "")
@@ -124,21 +132,24 @@ export class Orchestrator {
 			context.queue.blockImpossible();
 			let stopDispatch = false;
 			while (!stopDispatch && context.inFlight.size < context.maxConcurrency) {
-				const ready = context.scheduler.assignReadyTasks(
-					context.queue.ready(),
-					context.queue.snapshots(),
-					context.team.getAgents(),
-					context.options,
-				);
-				const next = ready.find((task) => !context.inFlight.has(task.id));
-				if (!next) break;
-				const nextSnapshot = next.snapshot();
+				const ready = routeReadyTasks({
+					scheduler: context.scheduler,
+					readyTasks: context.queue.ready(),
+					allTasks: context.queue.snapshots(),
+					agents: context.team.getAgents(),
+					options: context.options,
+				});
+				const routed = ready.find(({ task }) => !context.inFlight.has(task.id));
+				if (!routed) break;
+				const next = routed.task;
+				context.recordRoutingDecision(routed.decision);
 				context.emitTrace({
-					type: "task_dispatch",
+					type: "routing_decision",
 					runStatus: context.aborted ? "aborted" : "running",
-					taskId: nextSnapshot.id,
-					taskTitle: nextSnapshot.title,
-					data: { assignee: nextSnapshot.assignee ?? null },
+					taskId: routed.decision.taskId,
+					taskTitle: routed.decision.taskTitle,
+					agent: routed.decision.agent,
+					data: routed.decision,
 				});
 				if (!(await approveTaskDispatch(next, context))) {
 					stopDispatch = true;
@@ -159,10 +170,40 @@ export class Orchestrator {
 	}
 }
 
+function resolveRunIdentity(
+	checkpoint: OrchestratorCheckpoint | undefined,
+	requested: OrchestratorConfig["runIdentity"] | RunTeamOptions["runIdentity"] | undefined,
+) {
+	if (!checkpoint) return createRunIdentity(requested);
+	if (requested) assertSameRunIdentity(checkpoint.runIdentity, normalizeRunIdentity(requested));
+	return checkpoint.runIdentity;
+}
+
+function resolveRunFacts(
+	team: Team,
+	tasks: readonly (Task | TaskInput)[],
+	queue: TaskQueue,
+	checkpoint: OrchestratorCheckpoint | undefined,
+) {
+	if (!checkpoint) return createRunFacts(team, queue.snapshots());
+	const requestedFacts = createRunFacts(team, tasks.map(taskIdReference), checkpoint.runFacts.startedAt);
+	assertResumeFacts(checkpoint.runFacts, requestedFacts);
+	return checkpoint.runFacts;
+}
+
+function taskIdReference(task: Task | TaskInput): { id: string } {
+	return task instanceof Task ? { id: task.id } : { id: task.id ?? "" };
+}
+
 async function loadCheckpoint(
 	checkpointStore: OrchestratorConfig["checkpointStore"] | RunTeamOptions["checkpointStore"] | undefined,
 ) {
 	if (!checkpointStore) return undefined;
 	const checkpoint = await checkpointStore.load();
-	return checkpoint ? normalizeCheckpoint(checkpoint) : undefined;
+	if (!checkpoint) return undefined;
+	const normalized = normalizeCheckpoint(checkpoint);
+	if (normalized.status !== "running") {
+		throw new Error(`Cannot resume orchestrator from ${normalized.status} checkpoint.`);
+	}
+	return normalized;
 }
