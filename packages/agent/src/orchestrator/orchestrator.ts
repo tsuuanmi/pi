@@ -1,382 +1,168 @@
 // Architecture adapted from open-multi-agent (MIT).
-import type { Agent } from "#agent/agent/agent";
+
+import { resolveRunBudget } from "#agent/orchestrator/budget";
+import { normalizeCheckpoint } from "#agent/orchestrator/checkpoint";
+import { createRunContext } from "#agent/orchestrator/context";
+import { executeTask } from "#agent/orchestrator/executor";
+import {
+	approveTaskDispatch,
+	assertKnownAssignees,
+	assertTeamCanRun,
+	blockUnreachableTasks,
+	skipPendingTasks,
+} from "#agent/orchestrator/governance";
+import { planTasks } from "#agent/orchestrator/planner";
+import { Scheduler } from "#agent/orchestrator/scheduler";
 import type {
 	OrchestratorConfig,
+	PlanOptions,
+	PlanResult,
 	RunTeamOptions,
 	RunTeamResult,
-	SchedulerWarning,
-	SchedulingStrategy,
-	SchedulingWeights,
 } from "#agent/orchestrator/types";
-import { extractTaskBridgeResult, formatTaskPrompt, type Task, TaskQueue } from "#agent/task/task";
-import type { TaskInput, TaskPriority, TaskSnapshot } from "#agent/task/types";
+import { type Task, TaskQueue } from "#agent/task/task";
+import type { TaskInput } from "#agent/task/types";
 import type { Team } from "#agent/team/team";
 
-const DEFAULT_SCHEDULING_WEIGHTS: SchedulingWeights = { fit: 0.7, load: 0.3 };
-const DEFAULT_RETRY_DELAY_MS = 1000;
-const DEFAULT_RETRY_BACKOFF = 2;
-
 export class Orchestrator {
-	private readonly strategy: SchedulingStrategy;
+	private readonly scheduler: Scheduler;
 	private readonly maxConcurrency: number;
-	private readonly weights: SchedulingWeights;
-	private readonly onWarning?: (warning: SchedulerWarning) => void;
-	private roundRobinCursor = 0;
+	private readonly onProgress?: OrchestratorConfig["onProgress"];
+	private readonly onTaskVerify?: OrchestratorConfig["onTaskVerify"];
+	private readonly onTaskFailure?: OrchestratorConfig["onTaskFailure"];
+	private readonly runBudget?: OrchestratorConfig["runBudget"];
+	private readonly checkpointStore?: OrchestratorConfig["checkpointStore"];
 
 	constructor(config: OrchestratorConfig = {}) {
-		this.strategy = config.strategy ?? "dependency-first";
+		this.scheduler = new Scheduler({
+			schedulingStrategy: config.schedulingStrategy,
+			schedulingWeights: config.schedulingWeights,
+		});
 		this.maxConcurrency = config.maxConcurrency ?? 4;
-		this.weights = resolveWeights(config.schedulingWeights);
-		this.onWarning = config.onWarning;
+		this.onProgress = config.onProgress;
+		this.onTaskVerify = config.onTaskVerify;
+		this.onTaskFailure = config.onTaskFailure;
+		this.runBudget = resolveRunBudget(config.runBudget);
+		this.checkpointStore = config.checkpointStore;
+	}
+
+	async plan(team: Team, goal: string, options: PlanOptions): Promise<PlanResult> {
+		assertTeamCanRun(team);
+		return planTasks(team, goal, options);
 	}
 
 	async run(team: Team, tasks: readonly (Task | TaskInput)[], options: RunTeamOptions = {}): Promise<RunTeamResult> {
-		const queue = new TaskQueue();
-		queue.addBatch(tasks);
-		const maxConcurrency = Math.max(1, options.maxConcurrency ?? this.maxConcurrency);
-		const inFlight = new Map<string, Promise<void>>();
+		assertTeamCanRun(team);
+		const checkpoint = await loadCheckpoint(this.checkpointStore ?? options.checkpointStore);
+		const queue = checkpoint
+			? TaskQueue.fromSnapshot(normalizeCheckpoint(checkpoint).tasks, { resetInProgress: true })
+			: new TaskQueue();
+		if (!checkpoint) queue.addBatch(tasks);
+		assertKnownAssignees(queue, team);
+		const normalizedRunBudget = resolveRunBudget(options.runBudget ?? this.runBudget);
+		const context = createRunContext({
+			team,
+			queue,
+			options,
+			scheduler: this.scheduler,
+			defaultMaxConcurrency: this.maxConcurrency,
+			defaultOnProgress: this.onProgress,
+			defaultOnTaskVerify: this.onTaskVerify,
+			defaultOnTaskFailure: this.onTaskFailure,
+			checkpointStore: options.checkpointStore ?? this.checkpointStore,
+			runBudget: normalizedRunBudget,
+			initialMetrics: checkpoint?.metrics,
+			initialTaskStarts: checkpoint?.taskStarts,
+		});
 
-		while (true) {
+		context.emitTrace({ type: "run_start", runStatus: "running", data: { taskCount: queue.list().length } });
+		await context.saveCheckpoint("running");
+		if (context.aborted) {
+			context.abort(context.abortedReason ?? "Run aborted.");
+			skipPendingTasks(queue, context, context.abortedReason ?? "Run aborted.");
+		} else {
+			await this.runLoop(context);
+		}
+
+		if (context.aborted) {
+			skipPendingTasks(queue, context, context.abortedReason ?? "Run aborted.");
+		} else {
 			queue.blockImpossible();
-			let launched = false;
-			while (inFlight.size < maxConcurrency) {
-				const ready = this.assignReady(queue.ready(), queue.snapshots(), team.getAgents(), options);
-				const next = ready.find((task) => !inFlight.has(task.id));
-				if (!next) break;
-				const promise = this.executeTask(next, queue, team, options).finally(() => {
-					inFlight.delete(next.id);
-				});
-				inFlight.set(next.id, promise);
-				launched = true;
-			}
-			if (inFlight.size === 0) break;
-			if (!launched && inFlight.size >= maxConcurrency) await Promise.race(inFlight.values());
-			else if (!launched) await Promise.race(inFlight.values());
+			blockUnreachableTasks(queue);
 		}
 
-		for (const task of queue.list()) {
-			if (task.status === "pending") {
-				task.block("Task is not reachable because its dependencies form a cycle or cannot be scheduled.");
-			}
-		}
 		const snapshots = queue.snapshots();
 		const failed = snapshots.filter(
 			(task) => task.status === "failed" || task.status === "blocked" || task.status === "skipped",
 		);
-		return {
-			success: failed.length === 0,
+		const status = context.aborted ? "aborted" : "completed";
+		await context.saveCheckpoint(status);
+		context.emitTrace({
+			type: status === "aborted" ? "run_abort" : "run_complete",
+			runStatus: status,
+			...(context.abortedReason ? { message: context.abortedReason } : {}),
+			data: { success: status === "completed" && failed.length === 0, taskCount: snapshots.length },
+		});
+		const result = {
+			status,
+			success: status === "completed" && failed.length === 0,
+			...(context.abortedReason ? { abortedReason: context.abortedReason } : {}),
 			tasks: snapshots,
+			metrics: context.metricsSnapshot(),
 			output: snapshots
 				.filter((task) => task.status === "completed")
 				.map((task) => task.result ?? "")
 				.join("\n\n"),
-		};
+		} satisfies RunTeamResult;
+		context.dispose();
+		return result;
 	}
 
-	private assignReady(
-		tasks: Task[],
-		allTasks: readonly TaskSnapshot[],
-		agents: readonly Agent[],
-		options: RunTeamOptions,
-	): Task[] {
-		const available = [...agents];
-		if (available.length === 0) throw new Error("Cannot run a team without agents.");
-		const ordered = this.orderTasks(tasks, allTasks);
-		const load = currentLoad(available, allTasks);
-		return ordered.map((task, index) => {
-			const snapshot = task.snapshot();
-			if (!snapshot.assignee) {
-				const agent = this.selectAgent(snapshot, available, allTasks, load, index, options);
-				task.assign(agent.name);
-				load.set(agent.name, (load.get(agent.name) ?? 0) + 1);
-			}
-			return task;
-		});
-	}
-
-	private orderTasks(tasks: readonly Task[], allTasks: readonly TaskSnapshot[]): Task[] {
-		return [...tasks].sort((left, right) => {
-			const priorityOrder = comparePriority(right.snapshot().priority, left.snapshot().priority);
-			if (priorityOrder !== 0) return priorityOrder;
-			if (this.strategy !== "dependency-first" && this.strategy !== "composite") {
-				return left.id.localeCompare(right.id);
-			}
-			const dependencyOrder = this.countDependents(right.id, allTasks) - this.countDependents(left.id, allTasks);
-			if (dependencyOrder !== 0) return dependencyOrder;
-			return left.id.localeCompare(right.id);
-		});
-	}
-
-	private selectAgent(
-		task: TaskSnapshot,
-		agents: readonly Agent[],
-		allTasks: readonly TaskSnapshot[],
-		load: ReadonlyMap<string, number>,
-		index: number,
-		options: RunTeamOptions,
-	): Agent {
-		if (task.assignee) {
-			const assigned = agents.find((agent) => agent.name === task.assignee);
-			if (!assigned) throw new Error(`Unknown assignee: ${task.assignee}`);
-			return assigned;
-		}
-		if (this.strategy === "least-busy") return leastBusyAgent(task, agents, load);
-		if (this.strategy === "capability-match") return this.selectCapabilityAgent(task, agents, index, options);
-		if (this.strategy === "composite") return this.selectCompositeAgent(task, agents, allTasks, load, options);
-		const agent = agents[this.roundRobinCursor % agents.length]!;
-		this.roundRobinCursor = (this.roundRobinCursor + 1) % agents.length;
-		return agent;
-	}
-
-	private selectCapabilityAgent(
-		task: TaskSnapshot,
-		agents: readonly Agent[],
-		index: number,
-		options: RunTeamOptions,
-	): Agent {
-		const eligible = eligibleAgents(task, agents);
-		if (eligible.length === 0) {
-			this.warnNoEligible(task, options);
-			return agents[index % agents.length]!;
-		}
-		const scored = eligible.map((agent) => ({ agent, score: capabilityScore(task, agent) }));
-		const best = scored.reduce((left, right) => (right.score > left.score ? right : left));
-		if (best.score === 0) return agents[index % agents.length]!;
-		return best.agent;
-	}
-
-	private selectCompositeAgent(
-		task: TaskSnapshot,
-		agents: readonly Agent[],
-		allTasks: readonly TaskSnapshot[],
-		load: ReadonlyMap<string, number>,
-		options: RunTeamOptions,
-	): Agent {
-		const eligible = eligibleAgents(task, agents);
-		const candidates = eligible.length > 0 ? eligible : agents;
-		if (eligible.length === 0) this.warnNoEligible(task, options);
-		const maxLoad = Math.max(1, ...agents.map((agent) => load.get(agent.name) ?? 0));
-		const weights = resolveWeights(options.schedulingWeights ?? this.weights);
-		const criticality = Math.max(1, this.countDependents(task.id, allTasks));
-		return candidates
-			.map((agent) => {
-				const normalizedLoad = (load.get(agent.name) ?? 0) / maxLoad;
-				return {
-					agent,
-					score: weights.fit * capabilityScore(task, agent) * criticality + weights.load * (1 - normalizedLoad),
-				};
-			})
-			.sort((left, right) => {
-				const scoreOrder = right.score - left.score;
-				if (scoreOrder !== 0) return scoreOrder;
-				return left.agent.name.localeCompare(right.agent.name);
-			})[0]!.agent;
-	}
-
-	private warnNoEligible(task: TaskSnapshot, options: RunTeamOptions): void {
-		const warning: SchedulerWarning = {
-			code: "NO_ELIGIBLE_AGENT",
-			message: `No agent satisfies requirements for task "${task.title}"; falling back to deterministic assignment.`,
-			taskId: task.id,
-			taskTitle: task.title,
-			reasons:
-				task.requires && task.requires.length > 0
-					? [`Missing required capabilities: ${task.requires.join(", ")}`]
-					: ["No positive capability match."],
-			fallback: "zero-fit-current-load",
-		};
-		options.onWarning?.(warning);
-		if (this.onWarning !== options.onWarning) this.onWarning?.(warning);
-	}
-
-	private countDependents(taskId: string, allTasks: readonly TaskSnapshot[]): number {
-		const seen = new Set<string>();
-		const queue = [taskId];
-		while (queue.length > 0) {
-			const current = queue.shift()!;
-			for (const task of allTasks) {
-				if (task.dependsOn.includes(current) && !seen.has(task.id)) {
-					seen.add(task.id);
-					queue.push(task.id);
-				}
-			}
-		}
-		return seen.size;
-	}
-
-	private async executeTask(task: Task, queue: TaskQueue, team: Team, options: RunTeamOptions): Promise<void> {
-		const snapshot = task.snapshot();
-		const agent = team.getAgent(snapshot.assignee ?? "");
-		if (!agent) {
-			task.fail(`Unknown assignee: ${snapshot.assignee ?? "unassigned"}`);
-			options.onTaskFail?.(task.snapshot());
-			return;
-		}
-		const maxRetries = resolveRetryCount(snapshot.maxRetries);
-		const retryDelayMs = resolveRetryDelay(snapshot.retryDelayMs);
-		const retryBackoff = resolveRetryBackoff(snapshot.retryBackoff);
-
+	private async runLoop(context: ReturnType<typeof createRunContext>): Promise<void> {
 		while (true) {
-			task.start();
-			options.onTaskStart?.(task.snapshot());
-			const attemptSnapshot = task.snapshot();
-			const completedDependencies = attemptSnapshot.dependsOn
-				.map((id) => queue.get(id)?.snapshot())
-				.filter((dependency): dependency is TaskSnapshot => dependency?.status === "completed");
-			const prompt = formatTaskPrompt({ task: attemptSnapshot, completedDependencies });
-			let result: { success: boolean; output: string; structured?: unknown; error?: unknown };
-			try {
-				result = await agent.run(prompt, {
-					signal: options.signal,
-					metadata: { taskId: attemptSnapshot.id, attempt: attemptSnapshot.attempts },
+			if (context.aborted) return;
+			context.queue.blockImpossible();
+			let stopDispatch = false;
+			while (!stopDispatch && context.inFlight.size < context.maxConcurrency) {
+				const ready = context.scheduler.assignReadyTasks(
+					context.queue.ready(),
+					context.queue.snapshots(),
+					context.team.getAgents(),
+					context.options,
+				);
+				const next = ready.find((task) => !context.inFlight.has(task.id));
+				if (!next) break;
+				const nextSnapshot = next.snapshot();
+				context.emitTrace({
+					type: "task_dispatch",
+					runStatus: context.aborted ? "aborted" : "running",
+					taskId: nextSnapshot.id,
+					taskTitle: nextSnapshot.title,
+					data: { assignee: nextSnapshot.assignee ?? null },
 				});
-			} catch (error) {
-				result = {
-					success: false,
-					output: "",
-					error,
-				};
+				if (!(await approveTaskDispatch(next, context))) {
+					stopDispatch = true;
+					break;
+				}
+				const promise = executeTask(next, context.queue, context).finally(() => {
+					context.inFlight.delete(next.id);
+				});
+				context.inFlight.set(next.id, promise);
 			}
-
-			if (result.success) {
-				const bridgeResult = extractTaskBridgeResult(result);
-				task.complete(bridgeResult.output, bridgeResult.structured);
-				options.onTaskComplete?.(task.snapshot());
+			if (stopDispatch) {
+				if (context.inFlight.size > 0) await Promise.allSettled(context.inFlight.values());
 				return;
 			}
-
-			const errorMessage = formatFailureMessage(result.error, result.output);
-			const shouldRetry = attemptSnapshot.attempts <= maxRetries;
-			if (!shouldRetry) {
-				task.fail(errorMessage);
-				options.onTaskFail?.(task.snapshot());
-				return;
-			}
-
-			task.retry(errorMessage);
-			const delayMs = Math.max(0, Math.round(retryDelayMs * retryBackoff ** (attemptSnapshot.attempts - 1)));
-			if (delayMs > 0) await wait(delayMs);
+			if (context.inFlight.size === 0) break;
+			await Promise.race(context.inFlight.values());
 		}
 	}
 }
 
-function resolveWeights(weights: Partial<SchedulingWeights> = {}): SchedulingWeights {
-	const resolved = {
-		fit: weights.fit ?? DEFAULT_SCHEDULING_WEIGHTS.fit,
-		load: weights.load ?? DEFAULT_SCHEDULING_WEIGHTS.load,
-	};
-	if (
-		!Number.isFinite(resolved.fit) ||
-		!Number.isFinite(resolved.load) ||
-		resolved.fit < 0 ||
-		resolved.load < 0 ||
-		(resolved.fit === 0 && resolved.load === 0)
-	) {
-		throw new RangeError("Scheduling weights must be finite, non-negative, and not both zero.");
-	}
-	return resolved;
-}
-
-function currentLoad(agents: readonly Agent[], allTasks: readonly TaskSnapshot[]): Map<string, number> {
-	const load = new Map<string, number>(agents.map((agent) => [agent.name, 0]));
-	for (const task of allTasks) {
-		if (task.status === "in_progress" && task.assignee && load.has(task.assignee)) {
-			load.set(task.assignee, (load.get(task.assignee) ?? 0) + 1);
-		}
-	}
-	return load;
-}
-
-function leastBusyAgent(task: TaskSnapshot, agents: readonly Agent[], load: ReadonlyMap<string, number>): Agent {
-	return [...agents].sort((left, right) => {
-		const loadOrder = (load.get(left.name) ?? 0) - (load.get(right.name) ?? 0);
-		if (loadOrder !== 0) return loadOrder;
-		const leftRole = matchesRole(task, left) ? 1 : 0;
-		const rightRole = matchesRole(task, right) ? 1 : 0;
-		if (leftRole !== rightRole) return rightRole - leftRole;
-		return left.name.localeCompare(right.name);
-	})[0]!;
-}
-
-function eligibleAgents(task: TaskSnapshot, agents: readonly Agent[]): Agent[] {
-	if (task.requires && task.requires.length > 0)
-		return agents.filter((agent) => task.requires!.every((required) => agent.capabilities.includes(required)));
-	return [...agents];
-}
-
-function capabilityScore(task: TaskSnapshot, agent: Agent): number {
-	const haystack =
-		`${task.title} ${task.description} ${task.requires?.join(" ") ?? ""} ${task.role ?? ""}`.toLowerCase();
-	let score = 0;
-	if (matchesRole(task, agent)) score += 3;
-	for (const capability of agent.capabilities) {
-		if (task.requires?.includes(capability)) score += 2;
-		if (haystack.includes(capability.toLowerCase())) score += 1;
-	}
-	return score;
-}
-
-function matchesRole(task: TaskSnapshot, agent: Agent): boolean {
-	if (!task.role) return false;
-	return agent.name === task.role || agent.capabilities.includes(task.role);
-}
-
-function comparePriority(left?: TaskPriority, right?: TaskPriority): number {
-	return priorityRank(left) - priorityRank(right);
-}
-
-function priorityRank(priority?: TaskPriority): number {
-	switch (priority) {
-		case "critical":
-			return 4;
-		case "high":
-			return 3;
-		case "normal":
-			return 2;
-		case "low":
-			return 1;
-		default:
-			return 2;
-	}
-}
-
-function resolveRetryCount(value?: number): number {
-	if (value === undefined) return 0;
-	if (!Number.isFinite(value) || value < 0)
-		throw new RangeError("Task maxRetries must be a finite, non-negative number.");
-	return Math.floor(value);
-}
-
-function resolveRetryDelay(value?: number): number {
-	if (value === undefined) return DEFAULT_RETRY_DELAY_MS;
-	if (!Number.isFinite(value) || value < 0)
-		throw new RangeError("Task retryDelayMs must be a finite, non-negative number.");
-	return Math.floor(value);
-}
-
-function resolveRetryBackoff(value?: number): number {
-	if (value === undefined) return DEFAULT_RETRY_BACKOFF;
-	if (!Number.isFinite(value) || value < 1)
-		throw new RangeError("Task retryBackoff must be a finite number greater than or equal to 1.");
-	return value;
-}
-
-function formatFailureMessage(error: unknown, output: string): string {
-	if (error instanceof Error) return error.message;
-	if (typeof error === "string" && error.length > 0) return error;
-	return output || String(error);
-}
-
-function wait(ms: number): Promise<void> {
-	return new Promise((resolve) => {
-		setTimeout(resolve, ms);
-	});
-}
-
-export async function runTeam(
-	team: Team,
-	tasks: readonly (Task | TaskInput)[],
-	options: RunTeamOptions = {},
-): Promise<RunTeamResult> {
-	return new Orchestrator(options).run(team, tasks, options);
+async function loadCheckpoint(
+	checkpointStore: OrchestratorConfig["checkpointStore"] | RunTeamOptions["checkpointStore"] | undefined,
+) {
+	if (!checkpointStore) return undefined;
+	const checkpoint = await checkpointStore.load();
+	return checkpoint ? normalizeCheckpoint(checkpoint) : undefined;
 }

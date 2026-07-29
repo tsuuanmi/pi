@@ -1,4 +1,17 @@
-import { Agent, type AgentOptions, Orchestrator, runTeam, type StreamFn, Task, Team } from "@tsuuanmi/pi-agent";
+import {
+	Agent,
+	type AgentOptions,
+	createConsensusVerifier,
+	Orchestrator,
+	type OrchestratorCheckpoint,
+	runConsensusVerification,
+	type StreamFn,
+	Task,
+	type TaskExecutionMetrics,
+	TaskQueue,
+	type TaskQueueSnapshot,
+	Team,
+} from "@tsuuanmi/pi-agent";
 import {
 	type AssistantMessage,
 	type AssistantMessageEventStream,
@@ -123,6 +136,36 @@ class StructuredStream {
 	};
 }
 
+class PlannerStream {
+	readonly calls: string[] = [];
+	private readonly output: string;
+
+	constructor(output: string) {
+		this.output = output;
+	}
+
+	readonly stream: StreamFn = (_model, context) => {
+		const prompt = promptText(context.messages.at(-1)?.content);
+		this.calls.push(prompt);
+		return doneStream(assistantText(this.output));
+	};
+}
+
+class JudgeStream {
+	readonly calls: string[] = [];
+	private readonly output: string;
+
+	constructor(output: string) {
+		this.output = output;
+	}
+
+	readonly stream: StreamFn = (_model, context) => {
+		const prompt = promptText(context.messages.at(-1)?.content);
+		this.calls.push(prompt);
+		return doneStream(assistantText(this.output));
+	};
+}
+
 function agentConfig(
 	name: string,
 	stream: { stream: StreamFn } = new EchoStream(),
@@ -153,6 +196,156 @@ describe("multi-agent primitives", () => {
 		expect(result.success).toBe(true);
 		expect(result.output).toBe("done:Build it");
 		expect(adapter.calls).toEqual(["Build it"]);
+	});
+
+	it("plans strict task DAGs with an explicit coordinator", async () => {
+		const planner = new PlannerStream(
+			JSON.stringify([
+				{
+					id: "draft",
+					title: "Draft",
+					description: "Write draft",
+					assignee: "writer",
+					requires: ["write"],
+					verify: { required: true },
+				},
+				{
+					id: "review",
+					title: "Review",
+					description: "Review draft",
+					assignee: "reviewer",
+					dependsOn: ["draft"],
+					requires: ["review"],
+				},
+			]),
+		);
+		const traces: string[] = [];
+		const team = new Team({
+			name: "builders",
+			agents: [
+				agentConfig("writer", new EchoStream(), ["write"]),
+				agentConfig("reviewer", new EchoStream(), ["review"]),
+			],
+		});
+		const coordinator = new Agent(agentConfig("coordinator", planner, ["plan"]));
+
+		const plan = await new Orchestrator().plan(team, "Ship the article", {
+			coordinator,
+			onTrace: (event) => traces.push(event.type),
+		});
+
+		expect(plan.goal).toBe("Ship the article");
+		expect(plan.tasks).toHaveLength(2);
+		expect(plan.tasks[1]?.dependsOn).toEqual(["draft"]);
+		expect(plan.tasks[0]?.verify).toEqual({ required: true });
+		expect(planner.calls[0]).toContain("Roster:");
+		expect(traces).toEqual(["plan_start", "plan_complete"]);
+	});
+
+	it("aborts planning when the abort signal is already set", async () => {
+		const controller = new AbortController();
+		controller.abort();
+		const team = new Team({ name: "builders", agents: [agentConfig("writer", new EchoStream(), ["write"])] });
+		const coordinator = new Agent(agentConfig("coordinator", new PlannerStream("[]"), ["plan"]));
+		await expect(
+			new Orchestrator().plan(team, "Plan", { coordinator, abortSignal: controller.signal }),
+		).rejects.toThrow("Run aborted by abort signal.");
+	});
+
+	it("rejects malformed planner output", async () => {
+		const team = new Team({ name: "builders", agents: [agentConfig("writer", new EchoStream(), ["write"])] });
+		const coordinator = new Agent(agentConfig("coordinator", new PlannerStream("not-json"), ["plan"]));
+		await expect(new Orchestrator().plan(team, "Plan", { coordinator })).rejects.toThrow(
+			"Planner output must be valid JSON",
+		);
+	});
+
+	it("rejects planner output with unknown assignees", async () => {
+		const team = new Team({ name: "builders", agents: [agentConfig("writer", new EchoStream(), ["write"])] });
+		const coordinator = new Agent(
+			agentConfig(
+				"coordinator",
+				new PlannerStream(JSON.stringify([{ id: "a", title: "A", description: "A", assignee: "missing" }])),
+				["plan"],
+			),
+		);
+		await expect(new Orchestrator().plan(team, "Plan", { coordinator })).rejects.toThrow(
+			'Planner task "a" uses unknown assignee: missing',
+		);
+	});
+
+	it("rejects planner output with unknown dependencies", async () => {
+		const team = new Team({ name: "builders", agents: [agentConfig("writer", new EchoStream(), ["write"])] });
+		const coordinator = new Agent(
+			agentConfig(
+				"coordinator",
+				new PlannerStream(JSON.stringify([{ id: "a", title: "A", description: "A", dependsOn: ["missing"] }])),
+				["plan"],
+			),
+		);
+		await expect(new Orchestrator().plan(team, "Plan", { coordinator })).rejects.toThrow(
+			'Planner task "a" depends on unknown task id: missing',
+		);
+	});
+
+	it("preserves exactly declared planner dependencies", async () => {
+		const team = new Team({
+			name: "builders",
+			agents: [
+				agentConfig("requirements", new EchoStream(), ["requirements"]),
+				agentConfig("security", new EchoStream(), ["security"]),
+				agentConfig("architect", new EchoStream(), ["architecture"]),
+			],
+		});
+		const coordinator = new Agent(
+			agentConfig(
+				"coordinator",
+				new PlannerStream(
+					JSON.stringify([
+						{ id: "requirements", title: "Requirements", description: "Gather", assignee: "requirements" },
+						{
+							id: "security",
+							title: "Security",
+							description: "Audit",
+							assignee: "security",
+							dependsOn: ["requirements"],
+						},
+						{
+							id: "architecture",
+							title: "Architecture",
+							description: "Design",
+							assignee: "architect",
+							dependsOn: ["requirements"],
+						},
+					]),
+				),
+				["plan"],
+			),
+		);
+
+		const plan = await new Orchestrator().plan(team, "Plan", { coordinator });
+
+		expect(plan.tasks.find((task) => task.id === "architecture")?.dependsOn).toEqual(["requirements"]);
+		expect(plan.tasks.find((task) => task.id === "architecture")?.dependsOn).not.toContain("security");
+	});
+
+	it("rejects cyclic planner dependencies", async () => {
+		const team = new Team({ name: "builders", agents: [agentConfig("writer", new EchoStream(), ["write"])] });
+		const coordinator = new Agent(
+			agentConfig(
+				"coordinator",
+				new PlannerStream(
+					JSON.stringify([
+						{ id: "a", title: "A", description: "A", dependsOn: ["b"] },
+						{ id: "b", title: "B", description: "B", dependsOn: ["a"] },
+					]),
+				),
+				["plan"],
+			),
+		);
+		await expect(new Orchestrator().plan(team, "Plan", { coordinator })).rejects.toThrow(
+			"Planner output contains cyclic dependencies: a -> b -> a",
+		);
 	});
 
 	it("routes team messages, tracks read state, and validates the roster", () => {
@@ -209,7 +402,7 @@ describe("multi-agent primitives", () => {
 	it("executes dependency-ready tasks and injects dependency output", async () => {
 		const adapter = new EchoStream();
 		const team = new Team({ name: "builders", agents: [agentConfig("worker", adapter)] });
-		const result = await runTeam(team, [
+		const result = await new Orchestrator().run(team, [
 			new Task({ id: "plan", title: "Plan", description: "Plan the work" }),
 			new Task({ id: "build", title: "Build", description: "Build from the plan", dependsOn: ["plan"] }),
 		]);
@@ -230,7 +423,7 @@ describe("multi-agent primitives", () => {
 				agentConfig("reviewer", reviewerAdapter, ["review"]),
 			],
 		});
-		const orchestrator = new Orchestrator({ strategy: "capability-match" });
+		const orchestrator = new Orchestrator({ schedulingStrategy: "capability-match" });
 
 		const result = await orchestrator.run(team, [
 			{ id: "review-task", title: "Review", description: "Review output", requires: ["review"] },
@@ -246,7 +439,7 @@ describe("multi-agent primitives", () => {
 		const team = new Team({ name: "builders", agents: [agentConfig("worker")] });
 
 		await expect(
-			runTeam(team, [
+			new Orchestrator().run(team, [
 				{ id: "same", title: "One", description: "First" },
 				{ id: "same", title: "Two", description: "Second" },
 			]),
@@ -255,11 +448,11 @@ describe("multi-agent primitives", () => {
 
 	it("rejects missing dependencies and dependency cycles", async () => {
 		const team = new Team({ name: "builders", agents: [agentConfig("worker")] });
-		await expect(runTeam(team, [{ id: "a", title: "A", description: "A", dependsOn: ["missing"] }])).rejects.toThrow(
-			'Task "A" (a) references unknown dependency "missing".',
-		);
 		await expect(
-			runTeam(team, [
+			new Orchestrator().run(team, [{ id: "a", title: "A", description: "A", dependsOn: ["missing"] }]),
+		).rejects.toThrow('Task "A" (a) references unknown dependency "missing".');
+		await expect(
+			new Orchestrator().run(team, [
 				{ id: "a", title: "A", description: "A", dependsOn: ["b"] },
 				{ id: "b", title: "B", description: "B", dependsOn: ["a"] },
 			]),
@@ -268,18 +461,17 @@ describe("multi-agent primitives", () => {
 
 	it("fails unknown assignees and empty teams deterministically", async () => {
 		const team = new Team({ name: "builders", agents: [agentConfig("worker")] });
-		const result = await runTeam(team, [{ id: "a", title: "A", description: "A", assignee: "missing" }]);
-		expect(result.success).toBe(false);
-		expect(result.tasks[0]?.status).toBe("failed");
-		expect(result.tasks[0]?.error).toBe("Unknown assignee: missing");
-		await expect(runTeam(new Team({ name: "empty" }), [{ id: "a", title: "A", description: "A" }])).rejects.toThrow(
-			"Cannot run a team without agents.",
-		);
+		await expect(
+			new Orchestrator().run(team, [{ id: "a", title: "A", description: "A", assignee: "missing" }]),
+		).rejects.toThrow("Invalid task assignee(s): a -> missing");
+		await expect(
+			new Orchestrator().run(new Team({ name: "empty" }), [{ id: "a", title: "A", description: "A" }]),
+		).rejects.toThrow("Cannot run a team without agents.");
 	});
 
 	it("blocks tasks whose prerequisites fail", async () => {
 		const team = new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream({ fail: true }))] });
-		const result = await runTeam(team, [
+		const result = await new Orchestrator().run(team, [
 			{ id: "a", title: "A", description: "A" },
 			{ id: "b", title: "B", description: "B", dependsOn: ["a"] },
 		]);
@@ -291,7 +483,7 @@ describe("multi-agent primitives", () => {
 	it("honors concurrency overrides and keeps result order stable", async () => {
 		const adapter = new EchoStream({ delayMs: 5 });
 		const starts: string[] = [];
-		const result = await runTeam(
+		const result = await new Orchestrator().run(
 			new Team({ name: "builders", agents: [agentConfig("worker", adapter)] }),
 			[
 				{ id: "a", title: "A", description: "A" },
@@ -309,15 +501,332 @@ describe("multi-agent primitives", () => {
 	it("propagates abort signals to agents", async () => {
 		const controller = new AbortController();
 		controller.abort();
-		const result = await runTeam(
+		const result = await new Orchestrator().run(
 			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
 			[{ id: "a", title: "A", description: "A" }],
-			{ signal: controller.signal },
+			{ abortSignal: controller.signal },
 		);
 
+		expect(result.status).toBe("aborted");
+		expect(result.success).toBe(false);
+		expect(result.tasks[0]?.status).toBe("skipped");
+		expect(result.tasks[0]?.error).toBe("Run aborted by abort signal.");
+	});
+
+	it("enforces task-start budgets and emits budget events", async () => {
+		const adapter = new EchoStream();
+		const events: string[] = [];
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", adapter)] }),
+			[
+				{ id: "a", title: "A", description: "A" },
+				{ id: "b", title: "B", description: "B" },
+			],
+			{
+				maxConcurrency: 1,
+				runBudget: { maxTaskStarts: 1 },
+				onProgress: (event) => {
+					if (event.type === "budget_exceeded") events.push(event.message ?? "");
+				},
+			},
+		);
+
+		expect(result.status).toBe("aborted");
+		expect(result.success).toBe(false);
+		expect(result.tasks.map((task) => task.status)).toEqual(["completed", "skipped"]);
+		expect(events[0]).toContain("maxTaskStarts=1");
+	});
+
+	it("aborts in-flight tasks when maxRunMs is exceeded", async () => {
+		const adapter = new EchoStream({ delayMs: 30 });
+		const budgetEvents: string[] = [];
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", adapter)] }),
+			[{ id: "a", title: "A", description: "A" }],
+			{
+				runBudget: { maxRunMs: 1 },
+				onProgress: (event) => {
+					if (event.type === "budget_exceeded") budgetEvents.push(event.message ?? "");
+				},
+			},
+		);
+
+		expect(result.status).toBe("aborted");
+		expect(result.success).toBe(false);
+		expect(result.tasks[0]?.status).toBe("skipped");
+		expect(result.abortedReason).toBe("Run budget exceeded: maxRunMs=1.");
+		expect(adapter.calls).toHaveLength(0);
+		expect(budgetEvents).toEqual(["Run budget exceeded: maxRunMs=1."]);
+	});
+
+	it("fails tasks rejected by verification hooks", async () => {
+		const events: string[] = [];
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
+			[{ id: "a", title: "A", description: "A", verify: { required: true } }],
+			{
+				onTaskVerify: async () => false,
+				onProgress: (event) => {
+					if (event.type === "task_verify") events.push(event.message ?? "");
+				},
+			},
+		);
+
+		expect(result.status).toBe("completed");
 		expect(result.success).toBe(false);
 		expect(result.tasks[0]?.status).toBe("failed");
-		expect(result.tasks[0]?.error).toBe("aborted");
+		expect(events[0]).toBe("Task verification failed.");
+	});
+
+	it("runs consensus verification with explicit judges", async () => {
+		const context = {
+			task: {
+				id: "a",
+				title: "A",
+				description: "A",
+				status: "completed" as const,
+				dependsOn: [],
+				requires: [],
+				attempts: 1,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				verify: { required: true },
+			},
+			team: new Team({ name: "builders", agents: [agentConfig("worker")] }),
+			completedDependencies: [],
+			attempt: 1,
+			agent: "worker",
+			output: "done",
+		};
+		const traces: string[] = [];
+		const result = await runConsensusVerification(context, {
+			judges: [
+				new Agent(agentConfig("judge-a", new JudgeStream('{"approved":true,"reason":"good"}'))),
+				new Agent(agentConfig("judge-b", new JudgeStream('{"approved":false,"reason":"weak"}'))),
+				new Agent(agentConfig("judge-c", new JudgeStream('{"approved":true,"reason":"ok"}'))),
+			],
+			minApprovals: 2,
+			onTrace: (event) => traces.push(event.type),
+		});
+
+		expect(result.approved).toBe(true);
+		expect(result.approvals).toBe(2);
+		expect(result.rejections).toBe(1);
+		expect(result.votes.map((vote) => vote.reason)).toEqual(["good", "weak", "ok"]);
+		expect(traces).toEqual([
+			"consensus_start",
+			"consensus_vote",
+			"consensus_vote",
+			"consensus_vote",
+			"consensus_complete",
+		]);
+	});
+
+	it("uses consensus verifier through onTaskVerify", async () => {
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
+			[{ id: "a", title: "A", description: "A", verify: { required: true } }],
+			{
+				onTaskVerify: createConsensusVerifier({
+					judges: [new Agent(agentConfig("judge", new JudgeStream('{"approved":true,"reason":"valid"}')))],
+					minApprovals: 1,
+				}),
+			},
+		);
+
+		expect(result.success).toBe(true);
+		expect(result.tasks[0]?.status).toBe("completed");
+	});
+
+	it("rejects invalid consensus options and malformed judge output", async () => {
+		expect(() => createConsensusVerifier({ judges: [], minApprovals: 1 })).toThrow(
+			"Consensus verification requires at least one judge.",
+		);
+		expect(() =>
+			createConsensusVerifier({
+				judges: [new Agent(agentConfig("judge", new JudgeStream('{"approved":true,"reason":"valid"}')))],
+				minApprovals: 2,
+			}),
+		).toThrow("Consensus minApprovals must be an integer between 1 and 1.");
+		const context = {
+			task: {
+				id: "a",
+				title: "A",
+				description: "A",
+				status: "completed" as const,
+				dependsOn: [],
+				requires: [],
+				attempts: 1,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				verify: { required: true },
+			},
+			team: new Team({ name: "builders", agents: [agentConfig("worker")] }),
+			completedDependencies: [],
+			attempt: 1,
+			agent: "worker",
+			output: "done",
+		};
+		await expect(
+			runConsensusVerification(context, {
+				judges: [new Agent(agentConfig("judge", new JudgeStream("not-json")))],
+				minApprovals: 1,
+			}),
+		).rejects.toThrow('Consensus judge "judge" returned invalid JSON');
+	});
+
+	it("emits trace events for run and task lifecycle", async () => {
+		const traces: string[] = [];
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
+			[{ id: "a", title: "A", description: "A", verify: { required: true } }],
+			{
+				checkpointStore: {
+					load: () => undefined,
+					save: async () => undefined,
+				},
+				onTaskVerify: async () => true,
+				onTrace: (event) => traces.push(event.type),
+			},
+		);
+
+		expect(result.success).toBe(true);
+		expect(traces).toEqual([
+			"run_start",
+			"checkpoint_save",
+			"task_dispatch",
+			"task_start",
+			"task_verify",
+			"task_complete",
+			"checkpoint_save",
+			"checkpoint_save",
+			"run_complete",
+		]);
+	});
+
+	it("short-circuits fatal failures with policy hooks", async () => {
+		const traces: string[] = [];
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream({ fail: true }))] }),
+			[
+				{ id: "a", title: "A", description: "A", maxRetries: 3 },
+				{ id: "b", title: "B", description: "B", dependsOn: ["a"] },
+			],
+			{
+				maxConcurrency: 1,
+				onTaskFailure: async (context) => (context.attempt === 1 ? "abort" : "fail"),
+				onTrace: (event) => traces.push(event.type),
+			},
+		);
+
+		expect(result.status).toBe("aborted");
+		expect(result.success).toBe(false);
+		expect(result.tasks.map((task) => task.status)).toEqual(["failed", "skipped"]);
+		expect(result.tasks[0]?.attempts).toBe(1);
+		expect(traces).toContain("task_short_circuit");
+	});
+
+	it("rejects unsupported checkpoint versions", async () => {
+		const team = new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] });
+		await expect(
+			new Orchestrator().run(team, [{ id: "a", title: "A", description: "A" }], {
+				checkpointStore: {
+					load: () => ({ version: 2 }),
+					save: async () => undefined,
+				} as never,
+			}),
+		).rejects.toThrow("Unsupported orchestrator checkpoint version: 2");
+	});
+
+	it("resets interrupted checkpoint tasks before resuming", async () => {
+		const adapter = new EchoStream();
+		const queue = new TaskQueue();
+		const task = queue.add({ id: "a", title: "A", description: "A" });
+		task.assign("worker");
+		task.start();
+		let checkpoint: OrchestratorCheckpoint = {
+			version: 1,
+			status: "running",
+			tasks: queue.snapshot(),
+			metrics: {},
+			taskStarts: 1,
+			updatedAt: new Date().toISOString(),
+		};
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", adapter)] }),
+			[{ id: "ignored", title: "Ignored", description: "Ignored" }],
+			{
+				checkpointStore: {
+					load: () => checkpoint,
+					save: async (value) => {
+						checkpoint = value;
+					},
+				},
+			},
+		);
+
+		expect(result.success).toBe(true);
+		expect(result.tasks[0]?.status).toBe("completed");
+		expect(result.tasks[0]?.attempts).toBe(2);
+		expect(adapter.calls[0]).toContain("Task: A");
+	});
+
+	it("resumes from checkpoint snapshots", async () => {
+		const adapter = new EchoStream();
+		let checkpoint:
+			| {
+					version: 1;
+					status: "running" | "completed" | "aborted";
+					tasks: TaskQueueSnapshot;
+					metrics: Readonly<Record<string, TaskExecutionMetrics>>;
+					taskStarts: number;
+					updatedAt: string;
+					abortedReason?: string;
+			  }
+			| undefined;
+		const store = {
+			load: async () => checkpoint,
+			save: async (value: typeof checkpoint) => {
+				checkpoint = value;
+			},
+		};
+		const team = new Team({ name: "builders", agents: [agentConfig("worker", adapter)] });
+		const tasks = [
+			{ id: "a", title: "A", description: "A" },
+			{ id: "b", title: "B", description: "B", dependsOn: ["a"] },
+		];
+
+		await new Orchestrator().run(team, tasks, {
+			maxConcurrency: 1,
+			runBudget: { maxTaskStarts: 1 },
+			checkpointStore: store,
+		});
+		expect(checkpoint?.status).toBe("aborted");
+		expect(checkpoint?.tasks.tasks.map((task) => task.status)).toEqual(["completed", "skipped"]);
+		checkpoint = {
+			...checkpoint!,
+			status: "running",
+			tasks: {
+				...checkpoint!.tasks,
+				tasks: checkpoint!.tasks.tasks.map((task) =>
+					task.id === "b" ? { ...task, status: "pending", error: undefined } : task,
+				),
+				pending: ["b"],
+				inProgress: [],
+				completed: ["a"],
+				failed: [],
+				blocked: [],
+				skipped: [],
+			},
+		};
+
+		const resumed = await new Orchestrator().run(team, tasks, { maxConcurrency: 1, checkpointStore: store });
+		expect(resumed.status).toBe("completed");
+		expect(resumed.success).toBe(true);
+		expect(adapter.calls).toHaveLength(2);
+		expect(adapter.calls[0]).toContain("Task: A");
+		expect(adapter.calls[1]).toContain("Task: B");
+		expect(resumed.tasks.map((task) => task.status)).toEqual(["completed", "completed"]);
 	});
 
 	it("serializes overlapping task prompts for the same agent instance", async () => {
@@ -338,7 +847,7 @@ describe("multi-agent primitives", () => {
 			};
 		}
 
-		await runTeam(
+		await new Orchestrator().run(
 			new Team({ name: "builders", agents: [agentConfig("worker", new TimingStream())] }),
 			[
 				{ id: "fast", title: "Fast", description: "Fast" },
@@ -352,37 +861,33 @@ describe("multi-agent primitives", () => {
 		expect(timeline.indexOf("start:AfterFast")).toBeGreaterThan(timeline.indexOf("end:Slow"));
 	});
 
-	it("uses composite scheduling with warnings for impossible requirements", async () => {
-		const warnings: unknown[] = [];
-		const writerAdapter = new EchoStream();
-		const reviewerAdapter = new EchoStream();
-		const result = await runTeam(
-			new Team({
-				name: "builders",
-				agents: [
-					agentConfig("writer", writerAdapter, ["write"]),
-					agentConfig("reviewer", reviewerAdapter, ["review"]),
-				],
-			}),
-			[
-				{ id: "review", title: "Review", description: "Review", requires: ["review"] },
-				{ id: "missing", title: "Deploy", description: "Deploy", requires: ["deploy"] },
-			],
-			{ strategy: "composite", onWarning: (warning) => warnings.push(warning) },
-		);
-
-		expect(result.success).toBe(true);
-		expect(result.tasks.find((task) => task.id === "review")?.assignee).toBe("reviewer");
-		expect(warnings).toHaveLength(1);
-		expect(warnings[0]).toMatchObject({ code: "NO_ELIGIBLE_AGENT", taskId: "missing" });
+	it("fails fast when no agent satisfies task requirements", async () => {
+		await expect(
+			new Orchestrator().run(
+				new Team({
+					name: "builders",
+					agents: [agentConfig("writer", new EchoStream(), ["write"])],
+				}),
+				[{ id: "missing", title: "Deploy", description: "Deploy", requires: ["deploy"] }],
+				{ schedulingStrategy: "composite" },
+			),
+		).rejects.toThrow('No eligible agent for task "Deploy" (missing); required capabilities: deploy.');
 	});
 
 	it("passes structured dependency payloads to dependent tasks", async () => {
 		const adapter = new StructuredStream();
-		const result = await runTeam(new Team({ name: "builders", agents: [agentConfig("worker", adapter)] }), [
-			{ id: "produce", title: "Produce", description: "Produce structured output", dependencyPayload: "structured" },
-			{ id: "consume", title: "Consume", description: "Consume structured output", dependsOn: ["produce"] },
-		]);
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", adapter)] }),
+			[
+				{
+					id: "produce",
+					title: "Produce",
+					description: "Produce structured output",
+					dependencyPayload: "structured",
+				},
+				{ id: "consume", title: "Consume", description: "Consume structured output", dependsOn: ["produce"] },
+			],
+		);
 
 		expect(result.success).toBe(true);
 		expect(result.tasks[0]?.structured).toEqual({ value: 42 });

@@ -9,6 +9,7 @@
 - **node**: Renamed the process runtime public API to `ProcessRuntime` and `ProcessRuntimeOptions`.
 - **team**: Replaced the positional `Team` constructor with `new Team({ name, agents })`.
 - **task**: Replaced legacy sequential task IDs and permissive task metadata/dependency handling with UUID-backed IDs, strict metadata validation/redaction, skipped lifecycle state, and fail-fast dependency validation.
+- **orchestrator**: Standardized orchestrator options on `schedulingStrategy` and `abortSignal`, removed `runTeam`, removed `onTaskFail`, removed scheduler fallback assignment, and made explicit task assignees fail fast when they do not match the team roster.
 
 ### Added
 
@@ -21,7 +22,8 @@
 - **agent**: Added a `maxTurns` guard for graceful agent-loop termination before runaway provider calls.
 - **agent**: Added context-pruning helpers for sliding-window transforms that preserve assistant tool calls with matching tool results.
 - **agent**: Added isolated `run()`, state/history accessors, lifecycle run hooks, status tracing events, capabilities, and per-agent task serialization.
-- **orchestrator**: Added dependency-aware pipelining, composite scheduling, structured dependency handoffs, task priority ordering, and retry-aware task execution.
+- **orchestrator**: Added strict goal-to-DAG planning with explicit coordinator agents, exact dependency preservation, abortable planning, plan-time cycle rejection, dependency-aware pipelining, composite scheduling, structured dependency handoffs, task priority ordering, and retry-aware task execution.
+- **orchestrator**: Added progress events, trace hooks, dispatch gating, abort-aware retry delays, aborted run status, per-task execution metrics, coarse run budgets with in-flight timeout aborts, validated checkpoint resume support, task verification hooks, strict consensus verification helpers, and failure-policy short-circuiting.
 - **task**: Added richer task metadata for memory scope, priority, retry settings, role hints, and verification payloads.
 - **team**: Added inter-agent messaging, message snapshots, subscriptions, and typed team events.
 - **attribution**: Added MIT attribution for the open-multi-agent architecture.
