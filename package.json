@@ -7,7 +7,7 @@
 	],
 	"scripts": {
 		"clean": "npm run clean --workspaces",
-		"build": "cd packages/ai && npm run build && cd ../agent && npm run build && cd ../tui && npm run build && cd ../workflows && npm run build && cd ../pi && npm run build",
+		"build": "cd packages/ai && npm run build && cd ../agent && npm run build && cd ../orchestrator && npm run build && cd ../tui && npm run build && cd ../workflows && npm run build && cd ../pi && npm run build",
 		"check": "biome check --write --error-on-warnings . && npm run check:pinned-deps && npm run check:ts-imports && npm run check:shrinkwrap && tsgo --noEmit && npm run check:browser-smoke",
 		"check:browser-smoke": "node packages/pi/scripts/check-browser-smoke.mjs",
 		"check:pinned-deps": "node scripts/check-pinned-deps.mjs",

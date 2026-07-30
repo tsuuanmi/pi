@@ -1,7 +1,7 @@
 {
-	"name": "@tsuuanmi/pi-agent",
+	"name": "@tsuuanmi/pi-orchestrator",
 	"version": "0.2.2",
-	"description": "Standard agent runtime, tool, message, and subagent contracts for Pi",
+	"description": "Task, team, and multi-agent orchestration primitives for Pi",
 	"type": "module",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -10,57 +10,47 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
-		"./node": {
-			"types": "./dist/node/node.d.ts",
-			"import": "./dist/node/node.js"
-		},
 		"./package.json": "./package.json"
 	},
 	"imports": {
-		"#agent/*": {
+		"#orchestrator/*": {
 			"types": "./dist/*.d.ts",
 			"import": "./dist/*.js"
-		},
-		"#agent-test/*": {
-			"types": "./test/*.ts",
-			"import": "./test/*.ts"
 		}
 	},
 	"files": [
 		"dist",
-		"README.md",
-		"NOTICE"
+		"README.md"
 	],
 	"scripts": {
 		"clean": "shx rm -rf dist",
-		"build": "tsgo -p tsconfig.build.json && node ./scripts/copy-schema-assets.mjs",
+		"build": "tsgo -p tsconfig.build.json",
 		"test": "vitest --run",
 		"prepublishOnly": "npm run clean && npm run build"
 	},
 	"dependencies": {
-		"@tsuuanmi/pi-ai": "^0.2.2",
-		"ignore": "7.0.5",
-		"typebox": "1.1.38",
-		"yaml": "2.9.0"
+		"@tsuuanmi/pi-agent": "^0.2.2"
 	},
 	"keywords": [
 		"ai",
 		"agent",
-		"llm"
+		"llm",
+		"orchestration",
+		"multi-agent"
 	],
 	"author": "Superman",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/tsuuanmi/pi.git",
-		"directory": "packages/agent"
+		"directory": "packages/orchestrator"
 	},
 	"engines": {
 		"node": ">=22.19.0"
 	},
 	"devDependencies": {
+		"@tsuuanmi/pi-ai": "^0.2.2",
 		"@types/node": "24.12.4",
-		"@vitest/coverage-v8": "3.2.6",
 		"typescript": "5.9.3",
 		"vitest": "3.2.6"
 	}

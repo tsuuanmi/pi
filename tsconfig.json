@@ -131,6 +131,15 @@
 			],
 			"#workflows/*": [
 				"./packages/workflows/src/*"
+			],
+			"@tsuuanmi/pi-orchestrator": [
+				"./packages/orchestrator/src/index.ts"
+			],
+			"@tsuuanmi/pi-orchestrator/*": [
+				"./packages/orchestrator/src/*"
+			],
+			"#orchestrator/*": [
+				"./packages/orchestrator/src/*"
 			]
 		}
 	},

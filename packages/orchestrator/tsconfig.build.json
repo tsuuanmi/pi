@@ -1,0 +1,15 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"noEmit": false,
+		"outDir": "./dist",
+		"paths": {
+			"#orchestrator/*": ["./src/*"],
+			"@tsuuanmi/pi-agent": ["../agent/dist/index.d.ts"],
+			"@tsuuanmi/pi-agent/*": ["../agent/dist/*.d.ts"]
+		},
+		"rootDir": "./src"
+	},
+	"include": ["src/**/*.ts"],
+	"exclude": ["node_modules", "dist", "**/*.d.ts", "src/**/*.d.ts"]
+}

@@ -22,6 +22,7 @@ This is the home of the pi agent harness project including our self extensible A
 
 * **[@tsuuanmi/pi](packages/pi)**: Interactive Pi CLI
 * **[@tsuuanmi/pi-agent](packages/agent)**: Agent runtime with tool calling and state management
+* **[@tsuuanmi/pi-orchestrator](packages/orchestrator)**: Task, team, and multi-agent orchestration primitives
 * **[@tsuuanmi/pi-ai](packages/ai)**: Unified multi-provider LLM API (OpenAI, Anthropic, Google, …)
 
 To learn more about pi:
@@ -51,6 +52,7 @@ I regularly publish my own `pi-mono` work sessions here:
 |---------|-------------|
 | **[@tsuuanmi/pi-ai](packages/ai)** | Unified multi-provider LLM API (OpenAI, Anthropic, Google, etc.) |
 | **[@tsuuanmi/pi-agent](packages/agent)** | Agent runtime with tool calling and state management |
+| **[@tsuuanmi/pi-orchestrator](packages/orchestrator)** | Task, team, and multi-agent orchestration primitives |
 | **[@tsuuanmi/pi](packages/pi)** | Interactive Pi CLI |
 | **[@tsuuanmi/pi-tui](packages/tui)** | Terminal UI library with differential rendering |
 

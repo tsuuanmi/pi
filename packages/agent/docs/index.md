@@ -1,6 +1,6 @@
 # @tsuuanmi/pi-agent Documentation
 
-`@tsuuanmi/pi-agent` contains the lower-layer standard agent runtime: the `Agent` class, `Orchestrator` scheduling, the agent loop, shared message/tool/event types, explicit runtime/backend contracts, execution-environment abstractions, subagent contracts, and small Node-only utilities. Higher-level packages import these contracts, register concrete tools, and attach UI/telemetry without reimplementing agent behavior.
+`@tsuuanmi/pi-agent` contains the lower-layer standard agent runtime: the `Agent` class, the agent loop, shared message/tool/event types, explicit runtime/backend contracts, execution-environment abstractions, subagent contracts, and small Node-only utilities. Higher-level packages import these contracts, register concrete tools, and attach UI/telemetry without reimplementing agent behavior.
 
 ## Package entry points
 
@@ -9,7 +9,8 @@
 
 ## Standard package boundary
 
-- `@tsuuanmi/pi-agent` owns agent behavior, runtime seams, message/event/tool contracts, orchestration primitives, and shared subagent contracts.
+- `@tsuuanmi/pi-agent` owns agent behavior, runtime seams, message/event/tool contracts, and shared subagent contracts.
+- `@tsuuanmi/pi-orchestrator` owns task, team, and orchestration contracts built on `Agent`.
 - `@tsuuanmi/pi-ai` owns provider/model transport and streaming adapters.
 - Host packages such as `@tsuuanmi/pi` own concrete tools and register them with `AgentTool` / `ToolRegistry` APIs.
 - Node-only runtimes and utilities are exported from `@tsuuanmi/pi-agent/node`.
@@ -28,9 +29,6 @@ The docs tree mirrors `packages/agent/src` so source modules and their docs use 
 - [`agent/runtime/types.md`](agent/runtime/types.md) - `src/agent/runtime/types.ts`: `Agent.run()` option and result types.
 - [`node/index.md`](node/index.md) - `src/node/node.ts` and `src/node/*`: Node-only child-process, process-runtime, JSONL, path, and file-mutation queue helpers.
 - [`node/env/nodejs.md`](node/env/nodejs.md) - `src/node/env/*`: `ExecutionEnv`, `FileSystem`, `Shell`, typed `Result`, `FileError`, `ExecutionError`, and `NodeExecutionEnv`.
-- [`orchestrator/orchestrator.md`](orchestrator/orchestrator.md) - `src/orchestrator/orchestrator.ts`: dependency-aware task batching, scheduling strategies, and structured dependency handoffs.
-- [`orchestrator/types.md`](orchestrator/types.md) - `src/orchestrator/types.ts`: orchestration config, scheduling, callbacks, and run-result types.
-- [`task/types.md`](task/types.md) - `src/task/types.ts`: task input, snapshot, status, priority, memory scope, dependency-payload, and verification types.
 - [`subagents/index.md`](subagents/index.md) - `src/subagents/*`: `SubagentManager`, durable record/request/result types, factory registry, progress tracking, and yield-result extraction.
 - [`tool/registry.md`](tool/registry.md) - `src/tool/registry.ts` and `src/tool/policy.ts`: `createToolRegistry()`, `registerTool()`, and `Agent.registerTool()` for host-owned tools.
 

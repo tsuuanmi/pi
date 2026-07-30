@@ -591,5 +591,6 @@ MIT
 ## See Also
 
 - [@tsuuanmi/pi-ai](https://www.npmjs.com/package/@tsuuanmi/pi-ai): Core LLM toolkit
-- [@tsuuanmi/pi-agent](https://www.npmjs.com/package/@tsuuanmi/pi-agent): Agent framework
+- [@tsuuanmi/pi-agent](https://www.npmjs.com/package/@tsuuanmi/pi-agent): Agent runtime
+- [@tsuuanmi/pi-orchestrator](https://www.npmjs.com/package/@tsuuanmi/pi-orchestrator): Task, team, and orchestration primitives
 - [@tsuuanmi/pi-tui](https://www.npmjs.com/package/@tsuuanmi/pi-tui): Terminal UI components

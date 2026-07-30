@@ -7,6 +7,7 @@ import { join } from "node:path";
 const packages = [
 	{ directory: "packages/ai", name: "@tsuuanmi/pi-ai" },
 	{ directory: "packages/agent", name: "@tsuuanmi/pi-agent" },
+	{ directory: "packages/orchestrator", name: "@tsuuanmi/pi-orchestrator" },
 	{ directory: "packages/tui", name: "@tsuuanmi/pi-tui" },
 	{ directory: "packages/workflows", name: "@tsuuanmi/pi-workflows" },
 	{ directory: "packages/pi", name: "@tsuuanmi/pi" },
