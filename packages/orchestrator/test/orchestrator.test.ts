@@ -10,6 +10,7 @@ import {
 	Orchestrator,
 	type OrchestratorCheckpoint,
 	runConsensusVerification,
+	Scheduler,
 	Task,
 	TaskQueue,
 	Team,
@@ -202,7 +203,7 @@ describe("multi-agent primitives", () => {
 					title: "Draft",
 					description: "Write draft",
 					assignee: "writer",
-					requires: ["write"],
+					requires: { capabilities: ["write"] },
 					verify: { required: true },
 				},
 				{
@@ -211,7 +212,7 @@ describe("multi-agent primitives", () => {
 					description: "Review draft",
 					assignee: "reviewer",
 					dependsOn: ["draft"],
-					requires: ["review"],
+					requires: { capabilities: ["review"] },
 				},
 			]),
 		);
@@ -422,7 +423,7 @@ describe("multi-agent primitives", () => {
 		const orchestrator = new Orchestrator({ schedulingStrategy: "capability-match" });
 
 		const result = await orchestrator.run(team, [
-			{ id: "review-task", title: "Review", description: "Review output", requires: ["review"] },
+			{ id: "review-task", title: "Review", description: "Review output", requires: { capabilities: ["review"] } },
 		]);
 
 		expect(result.success).toBe(true);
@@ -582,7 +583,7 @@ describe("multi-agent primitives", () => {
 				description: "A",
 				status: "completed" as const,
 				dependsOn: [],
-				requires: [],
+				requires: {},
 				attempts: 1,
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
@@ -651,7 +652,7 @@ describe("multi-agent primitives", () => {
 				description: "A",
 				status: "completed" as const,
 				dependsOn: [],
-				requires: [],
+				requires: {},
 				attempts: 1,
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
@@ -669,6 +670,42 @@ describe("multi-agent primitives", () => {
 				minApprovals: 1,
 			}),
 		).rejects.toThrow('Consensus judge "judge" returned invalid JSON');
+	});
+
+	it("emits queue lifecycle events", async () => {
+		const events: string[] = [];
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
+			[{ id: "a", title: "A", description: "A" }],
+			{ onQueueEvent: (event) => events.push(event.type) },
+		);
+
+		expect(result.success).toBe(true);
+		expect(events).toEqual(["task_ready", "task_start", "task_complete", "all_complete"]);
+	});
+
+	it("schedules a single task with explicit selection data", () => {
+		const scheduler = new Scheduler({ schedulingStrategy: "capability-match" });
+		const task = new Task({
+			id: "review",
+			title: "Review",
+			description: "Review",
+			requires: { capabilities: ["review"] },
+		});
+		const selection = scheduler.scheduleTask({
+			task,
+			allTasks: [task.snapshot()],
+			agents: [
+				new Agent(agentConfig("writer", new EchoStream(), ["write"])),
+				new Agent(agentConfig("reviewer", new EchoStream(), ["review"])),
+			],
+			options: {},
+		}).selection;
+
+		expect(task.snapshot().assignee).toBe("reviewer");
+		expect(selection.agent.name).toBe("reviewer");
+		expect(selection.reasons).toContain("capability=1.000");
+		expect(selection.rejected).toEqual([{ agent: "writer", reasons: ['missing capability "review"'] }]);
 	});
 
 	it("emits trace events for run and task lifecycle", async () => {
@@ -708,8 +745,17 @@ describe("multi-agent primitives", () => {
 			"run_complete",
 		]);
 		expect(traceRunIds).toEqual(Array.from({ length: traceTypes.length }, () => "trace-run"));
-		expect(routingDecisions).toEqual([
-			{ taskId: "a", taskTitle: "A", agent: "worker", schedulingStrategy: "dependency-first" },
+		expect(routingDecisions).toMatchObject([
+			{
+				taskId: "a",
+				taskTitle: "A",
+				agent: "worker",
+				schedulingStrategy: "dependency-first",
+				score: expect.any(Number),
+				reasons: expect.any(Array),
+				candidates: expect.any(Array),
+				rejected: expect.any(Array),
+			},
 		]);
 		expect(result.receipts.a).toMatchObject({
 			receiptId: "trace-run:a",
@@ -719,10 +765,57 @@ describe("multi-agent primitives", () => {
 			agent: "worker",
 			status: "completed",
 			attempts: 1,
-			routing: { taskId: "a", taskTitle: "A", agent: "worker", schedulingStrategy: "dependency-first" },
+			routing: {
+				taskId: "a",
+				taskTitle: "A",
+				agent: "worker",
+				schedulingStrategy: "dependency-first",
+				score: expect.any(Number),
+			},
 			retryCount: 0,
 			verified: true,
 		});
+	});
+
+	it("continues after checkpoint save failures by default", async () => {
+		const events: string[] = [];
+		const traces: string[] = [];
+		const result = await new Orchestrator().run(
+			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
+			[{ id: "a", title: "A", description: "A" }],
+			{
+				checkpointStore: {
+					load: () => undefined,
+					save: async () => {
+						throw new Error("store unavailable");
+					},
+				},
+				onProgress: (event) => events.push(event.type),
+				onTrace: (event) => traces.push(event.type),
+			},
+		);
+
+		expect(result.success).toBe(true);
+		expect(events).toContain("error");
+		expect(traces).toContain("checkpoint_save_error");
+	});
+
+	it("fails checkpoint save failures in strict mode", async () => {
+		await expect(
+			new Orchestrator().run(
+				new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
+				[{ id: "a", title: "A", description: "A" }],
+				{
+					checkpointFailurePolicy: "strict",
+					checkpointStore: {
+						load: () => undefined,
+						save: async () => {
+							throw new Error("store unavailable");
+						},
+					},
+				},
+			),
+		).rejects.toThrow("store unavailable");
 	});
 
 	it("emits structured jittered retry decisions", async () => {
@@ -873,11 +966,11 @@ describe("multi-agent primitives", () => {
 		).rejects.toThrow("Unsupported orchestrator checkpoint version: 1");
 	});
 
-	it("rejects v4 checkpoints missing required production fields", async () => {
+	it("rejects checkpoints missing required production fields", async () => {
 		const queue = new TaskQueue();
 		queue.add({ id: "a", title: "A", description: "A" });
 		const base: OrchestratorCheckpoint = {
-			version: 4,
+			version: 6,
 			status: "running",
 			runIdentity: { runId: "required-fields" },
 			runFacts: {
@@ -889,6 +982,7 @@ describe("multi-agent primitives", () => {
 			tasks: queue.snapshot(),
 			metrics: {},
 			receipts: {},
+			resume: { resumed: false },
 			taskStarts: 0,
 			updatedAt: new Date().toISOString(),
 		};
@@ -903,6 +997,11 @@ describe("multi-agent primitives", () => {
 				checkpointStore: { load: () => ({ ...base, receipts: undefined }), save: async () => undefined } as never,
 			}),
 		).rejects.toThrow("Orchestrator checkpoint receipts must be an object");
+		await expect(
+			new Orchestrator().run(team, [{ id: "a", title: "A", description: "A" }], {
+				checkpointStore: { load: () => ({ ...base, resume: undefined }), save: async () => undefined } as never,
+			}),
+		).rejects.toThrow("Orchestrator checkpoint resume must be an object");
 	});
 
 	it("resets interrupted checkpoint tasks before resuming", async () => {
@@ -912,7 +1011,7 @@ describe("multi-agent primitives", () => {
 		task.assign("worker");
 		task.start();
 		let checkpoint: OrchestratorCheckpoint = {
-			version: 4,
+			version: 6,
 			status: "running",
 			runIdentity: { runId: "resume-interrupted" },
 			runFacts: {
@@ -924,6 +1023,7 @@ describe("multi-agent primitives", () => {
 			tasks: queue.snapshot(),
 			metrics: {},
 			receipts: {},
+			resume: { resumed: false },
 			taskStarts: 1,
 			updatedAt: new Date().toISOString(),
 		};
@@ -941,6 +1041,7 @@ describe("multi-agent primitives", () => {
 		);
 
 		expect(result.success).toBe(true);
+		expect(result.resume).toEqual({ resumed: true, checkpointUpdatedAt: expect.any(String), taskStarts: 1 });
 		expect(result.tasks[0]?.status).toBe("completed");
 		expect(result.tasks[0]?.attempts).toBe(2);
 		expect(adapter.calls[0]).toContain("Task: A");
@@ -950,7 +1051,7 @@ describe("multi-agent primitives", () => {
 		const queue = new TaskQueue();
 		queue.add({ id: "a", title: "A", description: "A" });
 		const checkpoint: OrchestratorCheckpoint = {
-			version: 4,
+			version: 6,
 			status: "running",
 			runIdentity: { runId: "facts-mismatch" },
 			runFacts: {
@@ -962,6 +1063,7 @@ describe("multi-agent primitives", () => {
 			tasks: queue.snapshot(),
 			metrics: {},
 			receipts: {},
+			resume: { resumed: false },
 			taskStarts: 0,
 			updatedAt: new Date().toISOString(),
 		};
@@ -979,7 +1081,7 @@ describe("multi-agent primitives", () => {
 		const queue = new TaskQueue();
 		queue.add({ id: "a", title: "A", description: "A" });
 		const checkpoint: OrchestratorCheckpoint = {
-			version: 4,
+			version: 6,
 			status: "running",
 			runIdentity: { runId: "roster-mismatch" },
 			runFacts: {
@@ -991,6 +1093,7 @@ describe("multi-agent primitives", () => {
 			tasks: queue.snapshot(),
 			metrics: {},
 			receipts: {},
+			resume: { resumed: false },
 			taskStarts: 0,
 			updatedAt: new Date().toISOString(),
 		};
@@ -1048,6 +1151,7 @@ describe("multi-agent primitives", () => {
 		const resumed = await new Orchestrator().run(team, tasks, { maxConcurrency: 1, checkpointStore: store });
 		expect(resumed.status).toBe("completed");
 		expect(resumed.success).toBe(true);
+		expect(resumed.resume).toEqual({ resumed: true, checkpointUpdatedAt: expect.any(String), taskStarts: 1 });
 		expect(adapter.calls).toHaveLength(2);
 		expect(adapter.calls[0]).toContain("Task: A");
 		expect(adapter.calls[1]).toContain("Task: B");
@@ -1088,17 +1192,27 @@ describe("multi-agent primitives", () => {
 		expect(timeline.indexOf("start:AfterFast")).toBeGreaterThan(timeline.indexOf("end:Slow"));
 	});
 
-	it("fails fast when no agent satisfies task requirements", async () => {
+	it("fails fast and warns when no agent satisfies task requirements", async () => {
+		const warnings: unknown[] = [];
 		await expect(
 			new Orchestrator().run(
 				new Team({
 					name: "builders",
 					agents: [agentConfig("writer", new EchoStream(), ["write"])],
 				}),
-				[{ id: "missing", title: "Deploy", description: "Deploy", requires: ["deploy"] }],
-				{ schedulingStrategy: "composite" },
+				[{ id: "missing", title: "Deploy", description: "Deploy", requires: { capabilities: ["deploy"] } }],
+				{ schedulingStrategy: "composite", onSchedulingWarning: (warning) => warnings.push(warning) },
 			),
-		).rejects.toThrow('No eligible agent for task "Deploy" (missing); required capabilities: deploy.');
+		).rejects.toThrow('No eligible agent for task "Deploy" (missing): writer: missing capability "deploy"');
+		expect(warnings).toEqual([
+			{
+				code: "no_eligible_agent",
+				message: 'No eligible agent for task "Deploy" (missing): writer: missing capability "deploy"',
+				taskId: "missing",
+				taskTitle: "Deploy",
+				rejected: [{ agent: "writer", reasons: ['missing capability "deploy"'] }],
+			},
+		]);
 	});
 
 	it("passes structured dependency payloads to dependent tasks", async () => {

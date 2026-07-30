@@ -1,7 +1,11 @@
 import type { TaskRoutingDecision } from "#orchestrator/routing/routing";
 import type { Scheduler } from "#orchestrator/routing/scheduler";
 import { type BudgetState, initializeBudgetState } from "#orchestrator/runtime/budget";
-import type { OrchestratorCheckpointStore } from "#orchestrator/runtime/checkpoint";
+import {
+	CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION,
+	type OrchestratorCheckpoint,
+	type OrchestratorCheckpointStore,
+} from "#orchestrator/runtime/checkpoint";
 import type { RunFacts } from "#orchestrator/runtime/facts";
 import type { RunIdentity } from "#orchestrator/runtime/identity";
 import {
@@ -9,13 +13,15 @@ import {
 	type TaskConsequentialReceipt,
 	type TaskExecutionReceipt,
 } from "#orchestrator/runtime/receipt";
-import type { TaskQueue } from "#orchestrator/task/task";
+import type { TaskQueue } from "#orchestrator/task/queue";
 import type { TaskSnapshot } from "#orchestrator/task/types";
 import type { Team } from "#orchestrator/team/team";
 import type {
+	CheckpointFailurePolicy,
 	OrchestratorEvent,
 	OrchestratorTraceEvent,
 	RunBudget,
+	RunResume,
 	RunTeamOptions,
 	TaskExecutionMetrics,
 	TaskFailureAction,
@@ -44,6 +50,7 @@ export interface CreateRunContextInput {
 	runBudget?: RunBudget;
 	initialMetrics?: Readonly<Record<string, TaskExecutionMetrics>>;
 	initialReceipts?: Readonly<Record<string, TaskExecutionReceipt>>;
+	initialResume: RunResume;
 	initialTaskStarts?: number;
 }
 
@@ -57,7 +64,9 @@ export class OrchestratorRunContext {
 	readonly maxConcurrency: number;
 	readonly inFlight = new Map<string, Promise<void>>();
 	readonly checkpointStore?: OrchestratorCheckpointStore;
+	readonly checkpointFailurePolicy: CheckpointFailurePolicy;
 	readonly runBudget?: RunBudget;
+	readonly resume: RunResume;
 	readonly budget: BudgetState;
 	readonly executionSignal?: AbortSignal;
 
@@ -80,6 +89,7 @@ export class OrchestratorRunContext {
 	private budgetTimer?: ReturnType<typeof setTimeout>;
 	private readonly budgetController?: AbortController;
 	private readonly onCallerAbort?: () => void;
+	private readonly disposers: (() => void)[] = [];
 
 	constructor(input: CreateRunContextInput) {
 		this.team = input.team;
@@ -96,8 +106,11 @@ export class OrchestratorRunContext {
 		this.defaultOnTaskRetryClassify = input.options.onTaskRetryClassify ?? input.defaultOnTaskRetryClassify;
 		this.defaultOnTaskFailure = input.options.onTaskFailure ?? input.defaultOnTaskFailure;
 		this.checkpointStore = input.options.checkpointStore ?? input.checkpointStore;
+		this.checkpointFailurePolicy = input.options.checkpointFailurePolicy ?? "best-effort";
+		this.resume = Object.freeze({ ...input.initialResume });
 		this.runBudget = input.options.runBudget ?? input.runBudget;
 		this.budget = initializeBudgetState(input.initialTaskStarts ?? 0);
+		if (input.options.onQueueEvent) this.disposers.push(this.queue.subscribe(input.options.onQueueEvent));
 		if (this.runBudget?.maxRunMs !== undefined) {
 			this.budgetController = new AbortController();
 			this.executionSignal = this.budgetController.signal;
@@ -147,6 +160,7 @@ export class OrchestratorRunContext {
 
 	dispose(): void {
 		if (this.budgetTimer) clearTimeout(this.budgetTimer);
+		for (const dispose of this.disposers.splice(0)) dispose();
 		if (this.onCallerAbort && this.options.abortSignal) {
 			this.options.abortSignal.removeEventListener("abort", this.onCallerAbort);
 		}
@@ -256,14 +270,15 @@ export class OrchestratorRunContext {
 
 	async saveCheckpoint(status: "running" | "completed" | "aborted"): Promise<void> {
 		if (!this.checkpointStore) return;
-		const checkpoint = {
-			version: 4 as const,
+		const checkpoint: OrchestratorCheckpoint = {
+			version: CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION,
 			status,
 			runIdentity: this.runIdentity,
 			runFacts: this.runFacts,
 			tasks: this.queue.snapshot(),
 			metrics: this.metricsSnapshot(),
 			receipts: this.receiptsSnapshot(),
+			resume: this.resume,
 			taskStarts: this.budget.taskStarts,
 			updatedAt: new Date().toISOString(),
 			...(this.abortedReason ? { abortedReason: this.abortedReason } : {}),
@@ -293,7 +308,7 @@ export class OrchestratorRunContext {
 				message,
 				data: error,
 			});
-			throw error;
+			if (this.checkpointFailurePolicy === "strict") throw error;
 		}
 	}
 }

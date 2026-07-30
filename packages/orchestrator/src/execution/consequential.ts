@@ -1,7 +1,12 @@
 import type { OrchestratorRunContext } from "#orchestrator/runtime/context";
+import type { TaskQueue } from "#orchestrator/task/queue";
 import type { Task } from "#orchestrator/task/task";
 
-export async function approveConsequentialTask(task: Task, context: OrchestratorRunContext): Promise<boolean> {
+export async function approveConsequentialTask(
+	task: Task,
+	queue: TaskQueue,
+	context: OrchestratorRunContext,
+): Promise<boolean> {
 	const snapshot = task.snapshot();
 	if (!snapshot.consequential) return true;
 	const approver = context.options.onTaskConsequential ?? context.defaultOnTaskConsequential;
@@ -11,6 +16,7 @@ export async function approveConsequentialTask(task: Task, context: Orchestrator
 		context.abort(message);
 		task.skip(message);
 		const skipped = task.snapshot();
+		queue.emit({ type: "task_skip", task: skipped, message });
 		const timestamp = Date.now();
 		context.recordTaskMetrics(skipped, timestamp, timestamp);
 		context.emit({
@@ -59,6 +65,7 @@ export async function approveConsequentialTask(task: Task, context: Orchestrator
 		context.abort(message);
 		task.skip(message);
 		const skipped = task.snapshot();
+		queue.emit({ type: "task_skip", task: skipped, message });
 		const timestamp = Date.now();
 		context.recordTaskMetrics(skipped, timestamp, timestamp);
 		context.emit({
@@ -74,6 +81,7 @@ export async function approveConsequentialTask(task: Task, context: Orchestrator
 		context.abort(`Consequential task approval failed: ${message}`);
 		task.skip(context.abortedReason ?? message);
 		const skipped = task.snapshot();
+		queue.emit({ type: "task_skip", task: skipped, message: context.abortedReason ?? message });
 		const timestamp = Date.now();
 		context.recordTaskMetrics(skipped, timestamp, timestamp);
 		context.emit({

@@ -10,7 +10,9 @@ import {
 } from "#orchestrator/execution/retry";
 import { emitBudgetExceeded, isRunBudgetExceeded } from "#orchestrator/runtime/budget";
 import type { OrchestratorRunContext } from "#orchestrator/runtime/context";
-import { extractTaskBridgeResult, formatTaskPrompt, type Task, type TaskQueue } from "#orchestrator/task/task";
+import type { TaskQueue } from "#orchestrator/task/queue";
+import type { Task } from "#orchestrator/task/task";
+import { extractTaskBridgeResult, formatTaskPrompt } from "#orchestrator/task/task";
 import type { TaskSnapshot } from "#orchestrator/task/types";
 import type {
 	TaskFailureAction,
@@ -32,6 +34,7 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 		const message = `Unknown assignee: ${initialSnapshot.assignee ?? "unassigned"}`;
 		task.fail(message);
 		const failed = task.snapshot();
+		queue.emit({ type: "task_fail", task: failed, message });
 		emitTaskError(context, failed, message);
 		context.recordTaskMetrics(failed, startedAtMs, Date.now());
 		await context.saveCheckpoint("running");
@@ -58,7 +61,7 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 			return;
 		}
 
-		if (!(await approveConsequentialTask(task, context))) {
+		if (!(await approveConsequentialTask(task, queue, context))) {
 			await context.saveCheckpoint("aborted");
 			return;
 		}
@@ -66,6 +69,7 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 		context.recordTaskStart();
 		task.start();
 		const attemptSnapshot = task.snapshot();
+		queue.emit({ type: "task_start", task: attemptSnapshot });
 		context.options.onTaskStart?.(attemptSnapshot);
 		context.emit({
 			type: "task_start",
@@ -111,6 +115,7 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 			const bridgeResult = extractTaskBridgeResult(result);
 			const verified = await verifyTask(
 				task,
+				queue,
 				context,
 				agent.name,
 				bridgeResult.output,
@@ -125,6 +130,7 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 			}
 			task.complete(bridgeResult.output, bridgeResult.structured);
 			const completed = task.snapshot();
+			queue.emit({ type: "task_complete", task: completed });
 			context.options.onTaskComplete?.(completed);
 			context.emit({
 				type: "task_complete",
@@ -312,6 +318,7 @@ async function finalizeFailure(input: {
 	if (input.resolution.action === "skip") {
 		input.task.skip(input.message);
 		const skipped = input.task.snapshot();
+		input.context.queue.emit({ type: "task_skip", task: skipped, message: input.message });
 		input.context.emit({
 			type: "task_skipped",
 			taskId: skipped.id,
@@ -327,6 +334,7 @@ async function finalizeFailure(input: {
 
 	input.task.fail(input.message);
 	const failed = input.task.snapshot();
+	input.context.queue.emit({ type: "task_fail", task: failed, message: input.message });
 	if (input.resolution.action === "abort") input.context.abort(input.message);
 	input.context.emit({
 		type: "error",
@@ -355,6 +363,7 @@ async function finalizeFailure(input: {
 
 async function verifyTask(
 	task: Task,
+	queue: TaskQueue,
 	context: OrchestratorRunContext,
 	agent: string,
 	output: string,
@@ -398,6 +407,7 @@ async function verifyTask(
 		if (!approved) {
 			task.fail("Task verification failed.");
 			const failed = task.snapshot();
+			queue.emit({ type: "task_fail", task: failed, message: "Task verification failed." });
 			emitTaskError(context, failed, "Task verification failed.", agent);
 			context.recordTaskMetrics(failed, startedAtMs, Date.now());
 			return false;
@@ -408,6 +418,7 @@ async function verifyTask(
 		const message = error instanceof Error ? error.message : String(error);
 		task.fail(message);
 		const failed = task.snapshot();
+		queue.emit({ type: "task_fail", task: failed, message });
 		emitTaskError(context, failed, message, agent, error);
 		context.recordTaskMetrics(failed, startedAtMs, Date.now());
 		return false;
@@ -417,6 +428,7 @@ async function verifyTask(
 function skipTask(task: Task, context: OrchestratorRunContext, reason: string, startedAtMs: number): void {
 	task.skip(reason);
 	const skipped = task.snapshot();
+	context.queue.emit({ type: "task_skip", task: skipped, message: reason });
 	context.emit({
 		type: "task_skipped",
 		taskId: skipped.id,

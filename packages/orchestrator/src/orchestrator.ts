@@ -16,10 +16,18 @@ import { normalizeCheckpoint, type OrchestratorCheckpoint } from "#orchestrator/
 import { createRunContext } from "#orchestrator/runtime/context";
 import { assertResumeFacts, createRunFacts } from "#orchestrator/runtime/facts";
 import { assertSameRunIdentity, createRunIdentity, normalizeRunIdentity } from "#orchestrator/runtime/identity";
-import { Task, TaskQueue } from "#orchestrator/task/task";
+import { TaskQueue } from "#orchestrator/task/queue";
+import { Task } from "#orchestrator/task/task";
 import type { TaskInput } from "#orchestrator/task/types";
 import type { Team } from "#orchestrator/team/team";
-import type { OrchestratorConfig, PlanOptions, PlanResult, RunTeamOptions, RunTeamResult } from "#orchestrator/types";
+import type {
+	OrchestratorConfig,
+	PlanOptions,
+	PlanResult,
+	RunResume,
+	RunTeamOptions,
+	RunTeamResult,
+} from "#orchestrator/types";
 
 export class Orchestrator {
 	private readonly scheduler: Scheduler;
@@ -30,7 +38,10 @@ export class Orchestrator {
 	private readonly onTaskFailure?: OrchestratorConfig["onTaskFailure"];
 	private readonly runBudget?: OrchestratorConfig["runBudget"];
 	private readonly checkpointStore?: OrchestratorConfig["checkpointStore"];
+	private readonly checkpointFailurePolicy?: OrchestratorConfig["checkpointFailurePolicy"];
 	private readonly runIdentity?: OrchestratorConfig["runIdentity"];
+	private readonly onQueueEvent?: OrchestratorConfig["onQueueEvent"];
+	private readonly onSchedulingWarning?: OrchestratorConfig["onSchedulingWarning"];
 
 	constructor(config: OrchestratorConfig = {}) {
 		this.scheduler = new Scheduler({
@@ -44,7 +55,10 @@ export class Orchestrator {
 		this.onTaskFailure = config.onTaskFailure;
 		this.runBudget = resolveRunBudget(config.runBudget);
 		this.checkpointStore = config.checkpointStore;
+		this.checkpointFailurePolicy = config.checkpointFailurePolicy;
 		this.runIdentity = config.runIdentity ? normalizeRunIdentity(config.runIdentity) : undefined;
+		this.onQueueEvent = config.onQueueEvent;
+		this.onSchedulingWarning = config.onSchedulingWarning;
 	}
 
 	async plan(team: Team, goal: string, options: PlanOptions): Promise<PlanResult> {
@@ -59,12 +73,19 @@ export class Orchestrator {
 		const queue = checkpoint ? TaskQueue.fromSnapshot(checkpoint.tasks, { resetInProgress: true }) : new TaskQueue();
 		if (!checkpoint) queue.addBatch(tasks);
 		const runFacts = resolveRunFacts(team, tasks, queue, checkpoint);
+		const resume = createResume(checkpoint);
 		assertKnownAssignees(queue, team);
 		const normalizedRunBudget = resolveRunBudget(options.runBudget ?? this.runBudget);
+		const runOptions: RunTeamOptions = {
+			...options,
+			checkpointFailurePolicy: options.checkpointFailurePolicy ?? this.checkpointFailurePolicy,
+			onQueueEvent: options.onQueueEvent ?? this.onQueueEvent,
+			onSchedulingWarning: options.onSchedulingWarning ?? this.onSchedulingWarning,
+		};
 		const context = createRunContext({
 			team,
 			queue,
-			options,
+			options: runOptions,
 			scheduler: this.scheduler,
 			runIdentity,
 			runFacts,
@@ -77,6 +98,7 @@ export class Orchestrator {
 			runBudget: normalizedRunBudget,
 			initialMetrics: checkpoint?.metrics,
 			initialReceipts: checkpoint?.receipts,
+			initialResume: resume,
 			initialTaskStarts: checkpoint?.taskStarts,
 		});
 
@@ -95,6 +117,8 @@ export class Orchestrator {
 			queue.blockImpossible();
 			blockUnreachableTasks(queue);
 		}
+
+		if (queue.isComplete()) queue.emit({ type: "all_complete" });
 
 		const snapshots = queue.snapshots();
 		const failed = snapshots.filter(
@@ -117,6 +141,7 @@ export class Orchestrator {
 			tasks: snapshots,
 			metrics: context.metricsSnapshot(),
 			receipts: context.receiptsSnapshot(),
+			resume,
 			output: snapshots
 				.filter((task) => task.status === "completed")
 				.map((task) => task.result ?? "")
@@ -127,14 +152,22 @@ export class Orchestrator {
 	}
 
 	private async runLoop(context: ReturnType<typeof createRunContext>): Promise<void> {
+		const readyIds = new Set<string>();
 		while (true) {
 			if (context.aborted) return;
 			context.queue.blockImpossible();
 			let stopDispatch = false;
 			while (!stopDispatch && context.inFlight.size < context.maxConcurrency) {
+				const readyTasks = context.queue.ready();
+				for (const task of readyTasks) {
+					if (!readyIds.has(task.id)) {
+						readyIds.add(task.id);
+						context.queue.emit({ type: "task_ready", task: task.snapshot() });
+					}
+				}
 				const ready = routeReadyTasks({
 					scheduler: context.scheduler,
-					readyTasks: context.queue.ready(),
+					readyTasks,
 					allTasks: context.queue.snapshots(),
 					agents: context.team.getAgents(),
 					options: context.options,
@@ -189,6 +222,15 @@ function resolveRunFacts(
 	const requestedFacts = createRunFacts(team, tasks.map(taskIdReference), checkpoint.runFacts.startedAt);
 	assertResumeFacts(checkpoint.runFacts, requestedFacts);
 	return checkpoint.runFacts;
+}
+
+function createResume(checkpoint: OrchestratorCheckpoint | undefined): RunResume {
+	if (!checkpoint) return Object.freeze({ resumed: false });
+	return Object.freeze({
+		resumed: true,
+		checkpointUpdatedAt: checkpoint.updatedAt,
+		taskStarts: checkpoint.taskStarts,
+	});
 }
 
 function taskIdReference(task: Task | TaskInput): { id: string } {

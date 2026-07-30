@@ -2,12 +2,13 @@
 import { randomUUID } from "node:crypto";
 import type { AgentRunResult } from "@tsuuanmi/pi-agent";
 import { validateTaskMetadata } from "#orchestrator/task/metadata";
+import { cloneRequirements, formatRequirements, normalizeRequirements } from "#orchestrator/task/requirements";
 import type {
 	DependencyPayload,
 	TaskInput,
 	TaskMetadata,
 	TaskPriority,
-	TaskQueueSnapshot,
+	TaskRequirements,
 	TaskSnapshot,
 	TaskStatus,
 	TaskVerifyOptions,
@@ -18,7 +19,6 @@ const TASK_STATUSES: readonly TaskStatus[] = ["pending", "in_progress", "complet
 const TASK_MEMORY_SCOPES = ["dependencies", "all"] as const;
 const DEPENDENCY_PAYLOADS = ["output", "structured", "both"] as const;
 const TASK_PRIORITIES: readonly TaskPriority[] = ["low", "normal", "high", "critical"];
-const TERMINAL_STATUSES = new Set<TaskStatus>(["completed", "failed", "blocked", "skipped"]);
 
 export interface FormatTaskPromptOptions {
 	task: TaskSnapshot;
@@ -33,16 +33,6 @@ export interface TaskBridgeResult {
 export interface TaskDependencyValidationResult {
 	valid: boolean;
 	errors: readonly string[];
-}
-
-export interface TaskQueueProgress {
-	total: number;
-	pending: number;
-	inProgress: number;
-	completed: number;
-	failed: number;
-	blocked: number;
-	skipped: number;
 }
 
 function nowIso(): string {
@@ -168,7 +158,7 @@ export class Task {
 			maxRetries: normalizeOptionalInteger(input.maxRetries, "maxRetries", 0),
 			retryDelayMs: normalizeOptionalInteger(input.retryDelayMs, "retryDelayMs", 0),
 			retryBackoff: normalizeOptionalNumber(input.retryBackoff, "retryBackoff", 1),
-			requires: normalizeStringList(input.requires, "requires"),
+			requires: normalizeRequirements(input.requires),
 			verify: cloneVerifyOptions(input.verify),
 			consequential: normalizeOptionalBoolean(input.consequential, "consequential"),
 			attempts: 0,
@@ -222,7 +212,7 @@ export class Task {
 	get dependsOn(): readonly string[] {
 		return this.snapshotValue.dependsOn;
 	}
-	get requires(): readonly string[] {
+	get requires(): TaskRequirements {
 		return this.snapshotValue.requires;
 	}
 	get priority(): TaskPriority | undefined {
@@ -272,7 +262,7 @@ export class Task {
 		return {
 			...this.snapshotValue,
 			dependsOn: [...this.snapshotValue.dependsOn],
-			requires: [...this.snapshotValue.requires],
+			requires: cloneRequirements(this.snapshotValue.requires),
 			metadata: cloneTaskMetadata(this.snapshotValue.metadata),
 			structured: cloneStructuredValue(this.snapshotValue.structured, "Task snapshot structured value"),
 			verify: cloneVerifyOptions(this.snapshotValue.verify),
@@ -421,7 +411,8 @@ export function formatTaskPrompt({ task, completedDependencies }: FormatTaskProm
 		? completedDependencies.map((dependency) => formatDependencyPayload(dependency, payload)).join("\n")
 		: "None";
 	const metadataBlock = task.metadata ? `Metadata:\n${stringifyBounded(validateTaskMetadata(task.metadata))}` : "";
-	const requirementBlock = task.requires.length > 0 ? `Requirements:\n- ${task.requires.join("\n- ")}` : "";
+	const requirements = formatRequirements(task.requires);
+	const requirementBlock = requirements.length > 0 ? `Requirements:\n- ${requirements.join("\n- ")}` : "";
 	return [
 		...formatHeaderLines(task),
 		"",
@@ -444,174 +435,4 @@ export function extractTaskBridgeResult(result: AgentRunResult): TaskBridgeResul
 		output: result.output,
 		...(result.structured !== undefined ? { structured: result.structured } : {}),
 	};
-}
-
-export class TaskQueue {
-	private readonly tasks = new Map<string, Task>();
-
-	static fromSnapshot(snapshot: TaskQueueSnapshot, options: { readonly resetInProgress?: boolean } = {}): TaskQueue {
-		if (snapshot.version !== 1) {
-			throw new Error(`TaskQueue.fromSnapshot: unsupported snapshot version ${String(snapshot.version)}.`);
-		}
-		validateQueueSnapshotPartitions(snapshot);
-		const queue = new TaskQueue();
-		const tasks = snapshot.tasks.map((taskSnapshot) => {
-			const restored = Task.fromSnapshot(taskSnapshot);
-			if (options.resetInProgress && restored.status === "in_progress")
-				restored.retry("Restored from interrupted run.");
-			return restored;
-		});
-		queue.addBatch(tasks);
-		return queue;
-	}
-
-	add(input: TaskInput | Task): Task {
-		const task = input instanceof Task ? input : new Task(input);
-		if (this.tasks.has(task.id)) throw new Error(`Task already exists: ${task.id}`);
-		const validation = validateTaskDependencies([...this.list(), task]);
-		if (!validation.valid) throw new Error(`Invalid task dependency graph:\n${validation.errors.join("\n")}`);
-		this.tasks.set(task.id, task);
-		return task;
-	}
-
-	addBatch(inputs: readonly (TaskInput | Task)[]): readonly Task[] {
-		const tasks = inputs.map((input) => (input instanceof Task ? input : new Task(input)));
-		for (const task of tasks) {
-			if (this.tasks.has(task.id)) throw new Error(`Task already exists: ${task.id}`);
-		}
-		const validation = validateTaskDependencies([...this.list(), ...tasks]);
-		if (!validation.valid) throw new Error(`Invalid task dependency graph:\n${validation.errors.join("\n")}`);
-		for (const task of tasks) this.tasks.set(task.id, task);
-		return tasks;
-	}
-
-	get(id: string): Task | undefined {
-		return this.tasks.get(id);
-	}
-
-	list(): Task[] {
-		return [...this.tasks.values()];
-	}
-
-	getByStatus(status: TaskStatus): Task[] {
-		return this.list().filter((task) => task.status === status);
-	}
-
-	snapshots(): TaskSnapshot[] {
-		return this.list().map((task) => task.snapshot());
-	}
-
-	snapshot(): TaskQueueSnapshot {
-		const tasks = this.snapshots();
-		return {
-			version: 1,
-			tasks,
-			pending: idsWithStatus(tasks, "pending"),
-			inProgress: idsWithStatus(tasks, "in_progress"),
-			completed: idsWithStatus(tasks, "completed"),
-			failed: idsWithStatus(tasks, "failed"),
-			blocked: idsWithStatus(tasks, "blocked"),
-			skipped: idsWithStatus(tasks, "skipped"),
-		};
-	}
-
-	ready(): Task[] {
-		const tasks = this.list();
-		return tasks.filter((task) => isTaskReady(task, tasks));
-	}
-
-	next(assignee?: string): Task | undefined {
-		const ready = this.ready();
-		return assignee ? ready.find((task) => task.assignee === assignee) : ready[0];
-	}
-
-	isComplete(): boolean {
-		return this.list().every((task) => TERMINAL_STATUSES.has(task.status));
-	}
-
-	getProgress(): TaskQueueProgress {
-		const progress: TaskQueueProgress = {
-			total: this.tasks.size,
-			pending: 0,
-			inProgress: 0,
-			completed: 0,
-			failed: 0,
-			blocked: 0,
-			skipped: 0,
-		};
-		for (const task of this.tasks.values()) {
-			switch (task.status) {
-				case "pending":
-					progress.pending += 1;
-					break;
-				case "in_progress":
-					progress.inProgress += 1;
-					break;
-				case "completed":
-					progress.completed += 1;
-					break;
-				case "failed":
-					progress.failed += 1;
-					break;
-				case "blocked":
-					progress.blocked += 1;
-					break;
-				case "skipped":
-					progress.skipped += 1;
-					break;
-			}
-		}
-		return progress;
-	}
-
-	blockImpossible(): void {
-		let changed = true;
-		while (changed) {
-			changed = false;
-			for (const task of this.list()) {
-				if (task.status !== "pending" && task.status !== "in_progress") continue;
-				const blockedDependency = task.dependsOn.find((id) => {
-					const dependency = this.tasks.get(id);
-					return (
-						!dependency ||
-						dependency.status === "failed" ||
-						dependency.status === "blocked" ||
-						dependency.status === "skipped"
-					);
-				});
-				if (blockedDependency) {
-					task.block(`Dependency is not completable: ${blockedDependency}`);
-					changed = true;
-				}
-			}
-		}
-	}
-}
-
-function idsWithStatus(tasks: readonly TaskSnapshot[], status: TaskStatus): readonly string[] {
-	return Object.freeze(tasks.filter((task) => task.status === status).map((task) => task.id));
-}
-
-function validateQueueSnapshotPartitions(snapshot: TaskQueueSnapshot): void {
-	const tasks = snapshot.tasks.map((task) => ({ ...task, status: normalizeStatus(task.status) }));
-	const expected = {
-		pending: idsWithStatus(tasks, "pending"),
-		inProgress: idsWithStatus(tasks, "in_progress"),
-		completed: idsWithStatus(tasks, "completed"),
-		failed: idsWithStatus(tasks, "failed"),
-		blocked: idsWithStatus(tasks, "blocked"),
-		skipped: idsWithStatus(tasks, "skipped"),
-	};
-	for (const [key, value] of Object.entries(expected)) {
-		const actual = snapshot[key as keyof typeof expected];
-		if (!sameStringSet(actual, value)) throw new Error(`TaskQueue snapshot ${key} partition does not match tasks.`);
-	}
-}
-
-function sameStringSet(left: unknown, right: readonly string[]): boolean {
-	if (!Array.isArray(left) || left.some((value) => typeof value !== "string")) return false;
-	if (left.length !== right.length) return false;
-	const normalizedLeft = [...left].sort();
-	const normalizedRight = [...right].sort();
-	return normalizedLeft.every((value, index) => value === normalizedRight[index]);
 }

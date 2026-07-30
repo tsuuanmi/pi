@@ -3,7 +3,7 @@ import type { OrchestratorCheckpointStore } from "#orchestrator/runtime/checkpoi
 import type { RunFacts } from "#orchestrator/runtime/facts";
 import type { RunIdentity } from "#orchestrator/runtime/identity";
 import type { TaskExecutionReceipt } from "#orchestrator/runtime/receipt";
-import type { TaskInput, TaskQueueSnapshot, TaskSnapshot } from "#orchestrator/task/types";
+import type { TaskInput, TaskQueueEvent, TaskQueueSnapshot, TaskSnapshot } from "#orchestrator/task/types";
 import type { Team } from "#orchestrator/team/team";
 
 export type SchedulingStrategy = "round-robin" | "least-busy" | "dependency-first" | "capability-match" | "composite";
@@ -113,6 +113,22 @@ export interface RunBudget {
 	maxRunMs?: number;
 }
 
+export type CheckpointFailurePolicy = "best-effort" | "strict";
+
+export interface SchedulingWarning {
+	code: "no_eligible_agent";
+	message: string;
+	taskId: string;
+	taskTitle: string;
+	rejected: readonly { agent: string; reasons: readonly string[] }[];
+}
+
+export interface RunResume {
+	resumed: boolean;
+	checkpointUpdatedAt?: string;
+	taskStarts?: number;
+}
+
 export interface PlanOptions {
 	coordinator: Agent;
 	abortSignal?: AbortSignal;
@@ -152,8 +168,11 @@ export interface OrchestratorConfig {
 	schedulingWeights?: Partial<SchedulingWeights>;
 	runBudget?: Partial<RunBudget>;
 	checkpointStore?: OrchestratorCheckpointStore;
+	checkpointFailurePolicy?: CheckpointFailurePolicy;
 	runIdentity?: RunIdentity;
 	onProgress?: (event: OrchestratorEvent) => void;
+	onQueueEvent?: (event: TaskQueueEvent) => void;
+	onSchedulingWarning?: (warning: SchedulingWarning) => void;
 	onTrace?: (event: OrchestratorTraceEvent) => void;
 	onTaskVerify?: (context: TaskVerificationContext) => boolean | Promise<boolean>;
 	onTaskConsequential?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
@@ -167,9 +186,12 @@ export interface RunTeamOptions {
 	schedulingWeights?: Partial<SchedulingWeights>;
 	runBudget?: Partial<RunBudget>;
 	checkpointStore?: OrchestratorCheckpointStore;
+	checkpointFailurePolicy?: CheckpointFailurePolicy;
 	runIdentity?: RunIdentity;
 	abortSignal?: AbortSignal;
 	onProgress?: (event: OrchestratorEvent) => void;
+	onQueueEvent?: (event: TaskQueueEvent) => void;
+	onSchedulingWarning?: (warning: SchedulingWarning) => void;
 	onTrace?: (event: OrchestratorTraceEvent) => void;
 	onTaskVerify?: (context: TaskVerificationContext) => boolean | Promise<boolean>;
 	onTaskConsequential?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
@@ -189,17 +211,19 @@ export interface RunTeamResult {
 	tasks: readonly TaskSnapshot[];
 	metrics: Readonly<Record<string, TaskExecutionMetrics>>;
 	receipts: Readonly<Record<string, TaskExecutionReceipt>>;
+	resume: RunResume;
 	output: string;
 }
 
 export interface OrchestratorCheckpointSnapshot {
-	version: 4;
+	version: 6;
 	status: "running" | "completed" | "aborted";
 	runIdentity: RunIdentity;
 	runFacts: RunFacts;
 	tasks: TaskQueueSnapshot;
 	metrics: Readonly<Record<string, TaskExecutionMetrics>>;
 	receipts: Readonly<Record<string, TaskExecutionReceipt>>;
+	resume: RunResume;
 	taskStarts: number;
 	updatedAt: string;
 	abortedReason?: string;

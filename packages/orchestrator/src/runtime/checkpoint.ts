@@ -2,9 +2,9 @@ import { normalizeRunFacts, type RunFacts } from "#orchestrator/runtime/facts";
 import { normalizeRunIdentity, type RunIdentity } from "#orchestrator/runtime/identity";
 import { normalizeTaskExecutionReceipts, type TaskExecutionReceipt } from "#orchestrator/runtime/receipt";
 import type { TaskQueueSnapshot } from "#orchestrator/task/types";
-import type { TaskExecutionMetrics } from "#orchestrator/types";
+import type { RunResume, TaskExecutionMetrics } from "#orchestrator/types";
 
-export const CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION = 4;
+export const CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION = 6;
 
 export interface OrchestratorCheckpoint {
 	version: typeof CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION;
@@ -14,6 +14,7 @@ export interface OrchestratorCheckpoint {
 	tasks: TaskQueueSnapshot;
 	metrics: Readonly<Record<string, TaskExecutionMetrics>>;
 	receipts: Readonly<Record<string, TaskExecutionReceipt>>;
+	resume: RunResume;
 	taskStarts: number;
 	updatedAt: string;
 	abortedReason?: string;
@@ -38,6 +39,7 @@ export function normalizeCheckpoint(checkpoint: unknown): OrchestratorCheckpoint
 	const tasks = normalizeTaskQueueSnapshot(input.tasks);
 	const metrics = normalizeMetrics(input.metrics);
 	const receipts = normalizeTaskExecutionReceipts(input.receipts);
+	const resume = normalizeResume(input.resume);
 	const abortedReason = normalizeOptionalString(input.abortedReason, "abortedReason");
 	if (status === "aborted" && abortedReason === undefined) {
 		throw new Error("Aborted orchestrator checkpoints must include abortedReason.");
@@ -50,6 +52,7 @@ export function normalizeCheckpoint(checkpoint: unknown): OrchestratorCheckpoint
 		tasks,
 		metrics,
 		receipts,
+		resume,
 		taskStarts,
 		updatedAt,
 		...(abortedReason !== undefined ? { abortedReason } : {}),
@@ -89,6 +92,19 @@ function normalizeTaskQueueSnapshot(value: unknown): TaskQueueSnapshot {
 		blocked: normalizeStringArray(snapshot.blocked, "blocked"),
 		skipped: normalizeStringArray(snapshot.skipped, "skipped"),
 	};
+}
+
+function normalizeResume(value: unknown): RunResume {
+	const resume = asRecord(value, "Orchestrator checkpoint resume");
+	const resumed = resume.resumed;
+	if (typeof resumed !== "boolean") throw new Error("Orchestrator checkpoint resume.resumed must be boolean.");
+	return Object.freeze({
+		resumed,
+		...(resume.checkpointUpdatedAt !== undefined
+			? { checkpointUpdatedAt: normalizeUpdatedAt(resume.checkpointUpdatedAt) }
+			: {}),
+		...(resume.taskStarts !== undefined ? { taskStarts: normalizeTaskStarts(resume.taskStarts) } : {}),
+	});
 }
 
 function normalizeMetrics(value: unknown): Readonly<Record<string, TaskExecutionMetrics>> {

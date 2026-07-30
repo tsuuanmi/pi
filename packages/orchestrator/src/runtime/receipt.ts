@@ -121,7 +121,43 @@ function normalizeRoutingDecision(value: unknown): TaskRoutingDecision {
 		taskTitle: stringField(routing.taskTitle, "routing.taskTitle"),
 		agent: stringField(routing.agent, "routing.agent"),
 		schedulingStrategy: schedulingStrategyField(routing.schedulingStrategy),
+		score: nonNegativeNumberField(routing.score, "routing.score"),
+		reasons: stringArrayField(routing.reasons, "routing.reasons"),
+		candidates: scoreArrayField(routing.candidates, "routing.candidates"),
+		rejected: rejectionArrayField(routing.rejected, "routing.rejected"),
 	});
+}
+
+function scoreArrayField(value: unknown, label: string): TaskRoutingDecision["candidates"] {
+	if (!Array.isArray(value)) throw new Error(`${label} must be an array.`);
+	return Object.freeze(
+		value.map((item, index) => {
+			const score = asRecord(item, `${label}[${index}]`);
+			return Object.freeze({
+				agent: stringField(score.agent, `${label}[${index}].agent`),
+				score: nonNegativeNumberField(score.score, `${label}[${index}].score`),
+				reasons: stringArrayField(score.reasons, `${label}[${index}].reasons`),
+			});
+		}),
+	);
+}
+
+function rejectionArrayField(value: unknown, label: string): TaskRoutingDecision["rejected"] {
+	if (!Array.isArray(value)) throw new Error(`${label} must be an array.`);
+	return Object.freeze(
+		value.map((item, index) => {
+			const rejection = asRecord(item, `${label}[${index}]`);
+			return Object.freeze({
+				agent: stringField(rejection.agent, `${label}[${index}].agent`),
+				reasons: stringArrayField(rejection.reasons, `${label}[${index}].reasons`),
+			});
+		}),
+	);
+}
+
+function stringArrayField(value: unknown, label: string): readonly string[] {
+	if (!Array.isArray(value)) throw new Error(`${label} must be an array.`);
+	return Object.freeze(value.map((item, index) => stringField(item, `${label}[${index}]`)));
 }
 
 function normalizeConsequentialReceipt(value: unknown): TaskConsequentialReceipt {

@@ -1,5 +1,6 @@
 import type { OrchestratorRunContext } from "#orchestrator/runtime/context";
-import type { Task, TaskQueue } from "#orchestrator/task/task";
+import type { TaskQueue } from "#orchestrator/task/queue";
+import type { Task } from "#orchestrator/task/task";
 import type { Team } from "#orchestrator/team/team";
 
 export function assertTeamCanRun(team: Team): void {
@@ -35,6 +36,7 @@ export async function approveTaskDispatch(task: Task, context: OrchestratorRunCo
 		context.abort(message);
 		task.skip(message);
 		const skipped = task.snapshot();
+		context.queue.emit({ type: "task_skip", task: skipped, message });
 		const timestamp = Date.now();
 		context.recordTaskMetrics(skipped, timestamp, timestamp);
 		context.emit({
@@ -49,6 +51,7 @@ export async function approveTaskDispatch(task: Task, context: OrchestratorRunCo
 		context.abort(`Task dispatch gate failed: ${message}`);
 		task.skip(context.abortedReason ?? message);
 		const skipped = task.snapshot();
+		context.queue.emit({ type: "task_skip", task: skipped, message: context.abortedReason ?? message });
 		const timestamp = Date.now();
 		context.recordTaskMetrics(skipped, timestamp, timestamp);
 		context.emit({
@@ -75,6 +78,7 @@ export function skipPendingTasks(queue: TaskQueue, context: OrchestratorRunConte
 		if (task.status !== "pending") continue;
 		task.skip(reason);
 		const snapshot = task.snapshot();
+		queue.emit({ type: "task_skip", task: snapshot, message: reason });
 		const timestamp = Date.now();
 		context.recordTaskMetrics(snapshot, timestamp, timestamp);
 		context.emit({
@@ -94,9 +98,11 @@ export function skipPendingTasks(queue: TaskQueue, context: OrchestratorRunConte
 }
 
 export function blockUnreachableTasks(queue: TaskQueue): void {
+	const message = "Task is not reachable because its dependencies form a cycle or cannot be scheduled.";
 	for (const task of queue.list()) {
 		if (task.status === "pending") {
-			task.block("Task is not reachable because its dependencies form a cycle or cannot be scheduled.");
+			task.block(message);
+			queue.emit({ type: "task_block", task: task.snapshot(), message });
 		}
 	}
 }

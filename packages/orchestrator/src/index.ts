@@ -1,10 +1,15 @@
 export { Orchestrator } from "#orchestrator/orchestrator";
 export { createConsensusVerifier, runConsensusVerification } from "#orchestrator/planning/consensus";
 export type {
+	AgentRejection,
+	AgentScore,
+	AgentSelection,
 	AgentSelectorConfig,
 	RoutedTask,
 	RouteReadyTasksInput,
+	ScheduledTask,
 	SchedulerConfig,
+	ScheduleTaskInput,
 	TaskRoutingDecision,
 } from "#orchestrator/routing/index";
 export {
@@ -21,26 +26,24 @@ export { assertResumeFacts, createRunFacts, normalizeRunFacts } from "#orchestra
 export type { RunIdentity } from "#orchestrator/runtime/identity";
 export { createRunIdentity, normalizeRunIdentity } from "#orchestrator/runtime/identity";
 export type { TaskConsequentialReceipt, TaskExecutionReceipt } from "#orchestrator/runtime/receipt";
+export { TaskQueue } from "#orchestrator/task/queue";
 export type {
 	FormatTaskPromptOptions,
 	TaskBridgeResult,
 	TaskDependencyValidationResult,
-	TaskQueueProgress,
 } from "#orchestrator/task/task";
-export {
-	getTaskDependencyOrder,
-	isTaskReady,
-	Task,
-	TaskQueue,
-	validateTaskDependencies,
-} from "#orchestrator/task/task";
+export { getTaskDependencyOrder, isTaskReady, Task, validateTaskDependencies } from "#orchestrator/task/task";
 export type {
 	DependencyPayload,
 	TaskInput,
 	TaskMemoryScope,
 	TaskMetadata,
 	TaskPriority,
+	TaskQueueEvent,
+	TaskQueueEventName,
+	TaskQueueProgress,
 	TaskQueueSnapshot,
+	TaskRequirements,
 	TaskSnapshot,
 	TaskStatus,
 	TaskVerifyOptions,
@@ -55,6 +58,7 @@ export { MessageBus } from "#orchestrator/team/messaging";
 export type { TeamEvent, TeamEventName, TeamOptions } from "#orchestrator/team/team";
 export { Team } from "#orchestrator/team/team";
 export type {
+	CheckpointFailurePolicy,
 	ConsensusResult,
 	ConsensusVerifierOptions,
 	ConsensusVote,
@@ -65,9 +69,11 @@ export type {
 	PlanOptions,
 	PlanResult,
 	RunBudget,
+	RunResume,
 	RunTeamOptions,
 	RunTeamResult,
 	SchedulingStrategy,
+	SchedulingWarning,
 	SchedulingWeights,
 	TaskExecutionContext,
 	TaskExecutionMetrics,

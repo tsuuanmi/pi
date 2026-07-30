@@ -1,147 +1,197 @@
 import type { Agent } from "@tsuuanmi/pi-agent";
-import { resolveAssignedAgent } from "#orchestrator/routing/short-circuit";
 import type { TaskSnapshot } from "#orchestrator/task/types";
 import type { RunTeamOptions, SchedulingStrategy, SchedulingWeights } from "#orchestrator/types";
-
-const DEFAULT_SCHEDULING_WEIGHTS: SchedulingWeights = { fit: 0.7, load: 0.3 };
 
 export interface AgentSelectorConfig {
 	weights?: Partial<SchedulingWeights>;
 }
 
+export interface AgentScore {
+	agent: string;
+	score: number;
+	reasons: readonly string[];
+}
+
+export interface AgentRejection {
+	agent: string;
+	reasons: readonly string[];
+}
+
+export interface AgentSelection {
+	agent: Agent;
+	score: number;
+	reasons: readonly string[];
+	candidates: readonly AgentScore[];
+	rejected: readonly AgentRejection[];
+}
+
+export class AgentSelectionError extends Error {
+	readonly taskId: string;
+	readonly taskTitle: string;
+	readonly rejected: readonly AgentRejection[];
+
+	constructor(task: TaskSnapshot, rejected: readonly AgentRejection[]) {
+		super(`No eligible agent for task "${task.title}" (${task.id}): ${formatRejections(rejected)}`);
+		this.name = "AgentSelectionError";
+		this.taskId = task.id;
+		this.taskTitle = task.title;
+		this.rejected = Object.freeze(
+			rejected.map((item) => ({ agent: item.agent, reasons: Object.freeze([...item.reasons]) })),
+		);
+	}
+}
+
 export class AgentSelector {
-	private readonly weights: SchedulingWeights;
-	private roundRobinCursor = 0;
+	private readonly weights: Required<SchedulingWeights>;
 
 	constructor(config: AgentSelectorConfig = {}) {
-		this.weights = resolveSchedulingWeights(config.weights);
+		this.weights = {
+			fit: config.weights?.fit ?? 0.7,
+			load: config.weights?.load ?? 0.3,
+		};
 	}
 
-	selectAgent(
+	select(
 		task: TaskSnapshot,
 		agents: readonly Agent[],
 		allTasks: readonly TaskSnapshot[],
 		load: ReadonlyMap<string, number>,
 		index: number,
-		options: RunTeamOptions,
+		_options: RunTeamOptions,
 		strategy: SchedulingStrategy,
-	): Agent {
-		const assigned = resolveAssignedAgent(task, agents);
-		if (assigned) return assigned;
-		if (strategy === "least-busy") return leastBusyAgent(task, agents, load);
-		if (strategy === "capability-match") return this.selectCapabilityAgent(task, agents, index);
-		if (strategy === "composite") return this.selectCompositeAgent(task, agents, allTasks, load, options);
-		const agent = agents[this.roundRobinCursor % agents.length]!;
-		this.roundRobinCursor = (this.roundRobinCursor + 1) % agents.length;
-		return agent;
-	}
-
-	private selectCapabilityAgent(task: TaskSnapshot, agents: readonly Agent[], index: number): Agent {
-		const eligible = eligibleAgents(task, agents);
-		assertEligibleAgents(task, eligible);
-		const scored = eligible.map((agent) => ({ agent, score: capabilityScore(task, agent) }));
-		const best = scored.reduce((left, right) => (right.score > left.score ? right : left));
-		if (best.score === 0) return eligible[index % eligible.length]!;
-		return best.agent;
-	}
-
-	private selectCompositeAgent(
-		task: TaskSnapshot,
-		agents: readonly Agent[],
-		allTasks: readonly TaskSnapshot[],
-		load: ReadonlyMap<string, number>,
-		options: RunTeamOptions,
-	): Agent {
-		const eligible = eligibleAgents(task, agents);
-		assertEligibleAgents(task, eligible);
-		const candidates = eligible;
-		const maxLoad = Math.max(1, ...agents.map((agent) => load.get(agent.name) ?? 0));
-		const weights = resolveSchedulingWeights(options.schedulingWeights ?? this.weights);
-		const criticality = Math.max(1, this.countDependents(task.id, allTasks));
-		return candidates
-			.map((agent) => {
-				const normalizedLoad = (load.get(agent.name) ?? 0) / maxLoad;
-				return {
-					agent,
-					score: weights.fit * capabilityScore(task, agent) * criticality + weights.load * (1 - normalizedLoad),
-				};
-			})
-			.sort((left, right) => {
-				const scoreOrder = right.score - left.score;
-				if (scoreOrder !== 0) return scoreOrder;
-				return left.agent.name.localeCompare(right.agent.name);
-			})[0]!.agent;
-	}
-
-	private countDependents(taskId: string, allTasks: readonly TaskSnapshot[]): number {
-		const seen = new Set<string>();
-		const queue = [taskId];
-		while (queue.length > 0) {
-			const current = queue.shift()!;
-			for (const task of allTasks) {
-				if (task.dependsOn.includes(current) && !seen.has(task.id)) {
-					seen.add(task.id);
-					queue.push(task.id);
-				}
+	): AgentSelection {
+		if (agents.length === 0) throw new Error("Cannot select an agent from an empty team.");
+		const rejected: AgentRejection[] = [];
+		const eligible = agents.flatMap((agent) => {
+			const reasons = rejectionReasons(task, agent);
+			if (reasons.length > 0) {
+				rejected.push({ agent: agent.name, reasons });
+				return [];
 			}
-		}
-		return seen.size;
+			return [agent];
+		});
+
+		if (eligible.length === 0) throw new AgentSelectionError(task, rejected);
+
+		const scores = eligible
+			.map((agent) => scoreAgent(task, agent, allTasks, load, strategy, this.weights))
+			.sort((left, right) => right.score - left.score || left.agent.name.localeCompare(right.agent.name));
+		const candidates = scores.map(({ agent, score, reasons }) => ({ agent: agent.name, score, reasons }));
+		const selected = strategy === "round-robin" ? scores[index % scores.length] : scores[0];
+		if (!selected) throw new Error(`No eligible agent for task "${task.title}" (${task.id}).`);
+		return Object.freeze({
+			agent: selected.agent,
+			score: selected.score,
+			reasons: selected.reasons,
+			candidates: Object.freeze(candidates),
+			rejected: Object.freeze(rejected),
+		});
 	}
 }
 
-export function resolveSchedulingWeights(weights: Partial<SchedulingWeights> = {}): SchedulingWeights {
-	const resolved = {
-		fit: weights.fit ?? DEFAULT_SCHEDULING_WEIGHTS.fit,
-		load: weights.load ?? DEFAULT_SCHEDULING_WEIGHTS.load,
+function rejectionReasons(task: TaskSnapshot, agent: Agent): string[] {
+	const reasons: string[] = [];
+	const requirements = task.requires;
+	const capabilities = new Set(agent.capabilities);
+	const tools = new Set(agent.state.tools?.map((tool) => tool.name) ?? []);
+	for (const capability of requirements.capabilities ?? []) {
+		if (!capabilities.has(capability)) reasons.push(`missing capability "${capability}"`);
+	}
+	for (const tool of requirements.tools ?? []) {
+		if (!tools.has(tool)) reasons.push(`missing tool "${tool}"`);
+	}
+	if (requirements.provider !== undefined && agent.state.model.provider !== requirements.provider) {
+		reasons.push(`provider "${agent.state.model.provider}" does not match "${requirements.provider}"`);
+	}
+	if (requirements.api !== undefined && agent.state.model.api !== requirements.api) {
+		reasons.push(`api "${agent.state.model.api}" does not match "${requirements.api}"`);
+	}
+	if (requirements.model !== undefined && agent.state.model.id !== requirements.model) {
+		reasons.push(`model "${agent.state.model.id}" does not match "${requirements.model}"`);
+	}
+	return reasons;
+}
+
+function formatRejections(rejected: readonly AgentRejection[]): string {
+	return rejected.map((item) => `${item.agent}: ${item.reasons.join(", ")}`).join("; ");
+}
+
+function scoreAgent(
+	task: TaskSnapshot,
+	agent: Agent,
+	allTasks: readonly TaskSnapshot[],
+	load: ReadonlyMap<string, number>,
+	strategy: SchedulingStrategy,
+	weights: Required<SchedulingWeights>,
+): { agent: Agent; score: number; reasons: readonly string[] } {
+	const capability = capabilityScore(task, agent);
+	const loadScoreValue = loadScore(agent, load);
+	const priority = priorityScore(task);
+	const dependency = dependencyScore(task, allTasks);
+	const score = strategyScore(strategy, capability, loadScoreValue, priority, dependency, weights);
+	return {
+		agent,
+		score,
+		reasons: Object.freeze([
+			`capability=${capability.toFixed(3)}`,
+			`load=${loadScoreValue.toFixed(3)}`,
+			`priority=${priority.toFixed(3)}`,
+			`dependency=${dependency.toFixed(3)}`,
+		]),
 	};
-	if (
-		!Number.isFinite(resolved.fit) ||
-		!Number.isFinite(resolved.load) ||
-		resolved.fit < 0 ||
-		resolved.load < 0 ||
-		(resolved.fit === 0 && resolved.load === 0)
-	) {
-		throw new RangeError("Scheduling weights must be finite, non-negative, and not both zero.");
+}
+
+function strategyScore(
+	strategy: SchedulingStrategy,
+	capability: number,
+	load: number,
+	priority: number,
+	dependency: number,
+	weights: Required<SchedulingWeights>,
+): number {
+	switch (strategy) {
+		case "capability-match":
+			return capability;
+		case "least-busy":
+			return load;
+		case "dependency-first":
+			return dependency + priority * 0.01;
+		case "round-robin":
+			return 0;
+		case "composite":
+			return ((capability + priority + dependency) / 3) * weights.fit + load * weights.load;
 	}
-	return resolved;
-}
-
-function leastBusyAgent(task: TaskSnapshot, agents: readonly Agent[], load: ReadonlyMap<string, number>): Agent {
-	return [...agents].sort((left, right) => {
-		const loadOrder = (load.get(left.name) ?? 0) - (load.get(right.name) ?? 0);
-		if (loadOrder !== 0) return loadOrder;
-		const leftRole = matchesRole(task, left) ? 1 : 0;
-		const rightRole = matchesRole(task, right) ? 1 : 0;
-		if (leftRole !== rightRole) return rightRole - leftRole;
-		return left.name.localeCompare(right.name);
-	})[0]!;
-}
-
-function assertEligibleAgents(task: TaskSnapshot, agents: readonly Agent[]): void {
-	if (agents.length > 0) return;
-	const required = task.requires.length > 0 ? task.requires.join(", ") : "none";
-	throw new Error(`No eligible agent for task "${task.title}" (${task.id}); required capabilities: ${required}.`);
-}
-
-function eligibleAgents(task: TaskSnapshot, agents: readonly Agent[]): Agent[] {
-	if (task.requires && task.requires.length > 0)
-		return agents.filter((agent) => task.requires!.every((required) => agent.capabilities.includes(required)));
-	return [...agents];
 }
 
 function capabilityScore(task: TaskSnapshot, agent: Agent): number {
-	const haystack =
-		`${task.title} ${task.description} ${task.requires?.join(" ") ?? ""} ${task.role ?? ""}`.toLowerCase();
-	let score = 0;
-	if (matchesRole(task, agent)) score += 3;
-	for (const capability of agent.capabilities) {
-		if (task.requires?.includes(capability)) score += 2;
-		if (haystack.includes(capability.toLowerCase())) score += 1;
-	}
-	return score;
+	const required = task.requires.capabilities ?? [];
+	if (required.length === 0) return 1;
+	const capabilities = new Set(agent.capabilities);
+	const matched = required.filter((capability) => capabilities.has(capability)).length;
+	return matched / required.length;
 }
 
-function matchesRole(task: TaskSnapshot, agent: Agent): boolean {
-	if (!task.role) return false;
-	return agent.name === task.role || agent.capabilities.includes(task.role);
+function loadScore(agent: Agent, load: ReadonlyMap<string, number>): number {
+	const count = load.get(agent.name) ?? 0;
+	return 1 / (1 + count);
+}
+
+function priorityScore(task: TaskSnapshot): number {
+	switch (task.priority) {
+		case "critical":
+			return 1;
+		case "high":
+			return 0.75;
+		case "normal":
+			return 0.5;
+		case "low":
+			return 0.25;
+		default:
+			return 0.5;
+	}
+}
+
+function dependencyScore(task: TaskSnapshot, allTasks: readonly TaskSnapshot[]): number {
+	const dependents = allTasks.filter((candidate) => candidate.dependsOn.includes(task.id)).length;
+	return Math.min(1, dependents / Math.max(1, allTasks.length - 1));
 }

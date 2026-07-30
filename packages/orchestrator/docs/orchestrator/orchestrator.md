@@ -30,17 +30,37 @@ Use `orchestrator.plan(team, goal, { coordinator })` to create a strict task pla
 Configure the default strategy with `schedulingStrategy` on `new Orchestrator()` or override it per run.
 
 - `dependency-first`: prioritize tasks that unblock the most downstream work.
-- `composite`: rank by dependency criticality, capability fit, role hints, and current load.
-- `capability-match`: prefer agents whose capabilities satisfy task requirements.
+- `composite`: rank by dependency criticality, requirement fit, priority, and current load.
+- `capability-match`: prefer agents whose declared capabilities satisfy task requirements.
 - `least-busy`: prefer the agent with the fewest active tasks.
 - `round-robin`: distribute work evenly across the roster.
 
 Composite scheduling uses weighted scoring:
 
-- `fit`: capability match score
+- `fit`: overall requirement-fit score
 - `load`: current agent load
 
-When no agent satisfies task requirements, scheduling fails fast and the run does not start that task.
+Task requirements are structured objects with optional `capabilities`, `tools`, `provider`, `api`, and `model` fields. All declared requirements are hard constraints. When no agent satisfies task requirements, scheduling emits `onSchedulingWarning` with rejected-agent reasons, fails fast, and does not start that task.
+
+```typescript
+await new Orchestrator().run(team, [
+  {
+    id: "review",
+    title: "Review",
+    description: "Review the draft",
+    requires: { capabilities: ["review"], tools: ["read"] },
+  },
+]);
+```
+
+Routing diagnostics are available through warnings, trace events, and receipts.
+
+| Field | Meaning |
+| --- | --- |
+| `score` | Selected agent score for the active strategy |
+| `reasons` | Score components used for the selected agent |
+| `candidates` | Eligible agents with scores and reasons |
+| `rejected` | Rejected agents and hard requirement failures |
 
 ## Retry and abort behavior
 
@@ -65,7 +85,7 @@ Budget exhaustion emits a `budget_exceeded` progress event, aborts active agent 
 
 ## Run identity
 
-Each run has a `RunIdentity` with a non-empty `runId` and optional metadata. Pass `runIdentity` on `Orchestrator` or per `run()` when callers need deterministic correlation; otherwise the orchestrator creates one for the run. Execution progress events, trace events, checkpoints, receipts, and `RunTeamResult` all carry the same identity. Checkpoint resume rejects a caller-supplied identity that does not exactly match the checkpoint identity. Resume also validates run facts: team name, agent roster order, and task ids must match the checkpoint.
+Each run has a `RunIdentity` with a non-empty `runId` and optional metadata. Pass `runIdentity` on `Orchestrator` or per `run()` when callers need deterministic correlation; otherwise the orchestrator creates one for the run. Execution progress events, trace events, checkpoints, receipts, and `RunTeamResult` all carry the same identity. `RunTeamResult.resume` records whether a run resumed from a checkpoint, the source checkpoint timestamp, and the source task-start count. Checkpoint resume rejects a caller-supplied identity that does not exactly match the checkpoint identity. Resume also validates run facts: team name, agent roster order, and task ids must match the checkpoint.
 
 ## Execution receipts
 
@@ -76,12 +96,27 @@ Each run has a `RunIdentity` with a non-empty `runId` and optional metadata. Pas
 Provide a `checkpointStore` to persist and resume orchestrator runs.
 
 - The store receives a versioned checkpoint with `CURRENT_ORCHESTRATOR_CHECKPOINT_VERSION`.
-- Version 4 checkpoints include `runIdentity`, run facts, a `TaskQueueSnapshot`, per-task metrics, execution receipts, and the current task-start count.
+- Version 6 checkpoints include `runIdentity`, run facts, resume metadata, a `TaskQueueSnapshot`, per-task metrics, rich routing receipts, and the current task-start count.
 - Checkpoint loads are validated before execution; unsupported versions and malformed payloads fail fast.
 - Only `running` checkpoints are resumable; completed or aborted checkpoints are terminal.
 - A resumed run restores the task queue from the checkpoint snapshot and continues from the remaining work.
 - Interrupted `in_progress` checkpoint tasks are reset before retrying.
 - Checkpoints are written at run start, on task transitions, and on run completion or abort.
+- Checkpoint save failures use `checkpointFailurePolicy`. The default `best-effort` policy emits progress/trace errors and continues the run. The `strict` policy rethrows the checkpoint error.
+
+```typescript
+const result = await new Orchestrator().run(team, tasks, { checkpointStore });
+
+if (result.resume.resumed) {
+  console.log(result.resume.checkpointUpdatedAt);
+}
+```
+
+| `RunResume` field | Meaning |
+| --- | --- |
+| `resumed` | Whether the run loaded from a checkpoint |
+| `checkpointUpdatedAt` | Source checkpoint update timestamp |
+| `taskStarts` | Source checkpoint task-start count |
 
 ## Governance hooks
 
@@ -95,7 +130,31 @@ Use `createConsensusVerifier({ judges, minApprovals })` when verification should
 
 Use `onTaskFailure` to classify failed attempts as `retry`, `fail`, `skip`, or `abort`. This is the only hook that controls failure policy.
 
-Use `onTrace` for structured planning/execution telemetry and `onProgress` for user-facing production observability. Task routing is exposed through the `routeReadyTasks` boundary and the exported `Scheduler` / `AgentSelector` routing primitives, then emitted as `routing_decision` trace events with a `TaskRoutingDecision` payload. Trace events include:
+Use `onTrace` for structured planning/execution telemetry, `onProgress` for user-facing production observability, and `onQueueEvent` for task-queue lifecycle events. Task routing is exposed through the `routeReadyTasks` boundary and the exported `Scheduler` / `AgentSelector` routing primitives. `Scheduler.scheduleTask()` schedules one task with explicit selection data for incremental execution. Routing decisions are emitted as `routing_decision` trace events with a `TaskRoutingDecision` payload.
+
+```typescript
+await new Orchestrator().run(team, tasks, {
+  onQueueEvent: (event) => console.log(event.type, event.task?.id),
+  onSchedulingWarning: (warning) => console.error(warning.message),
+  onTrace: (event) => {
+    if (event.type === "routing_decision") console.log(event.data);
+  },
+});
+```
+
+Queue lifecycle events:
+
+| Event | Meaning |
+| --- | --- |
+| `task_ready` | Task dependencies are complete and the task is dispatchable |
+| `task_start` | Task state changed to `in_progress` |
+| `task_complete` | Task state changed to `completed` |
+| `task_fail` | Task state changed to `failed` |
+| `task_skip` | Task state changed to `skipped` |
+| `task_block` | Task state changed to `blocked` |
+| `all_complete` | All tasks reached a terminal state |
+
+Trace events include:
 
 - `plan_start`
 - `plan_complete`
@@ -170,7 +229,13 @@ const result = await orchestrator.run(
   team,
   [
     { id: "draft", title: "Draft", description: "Write the draft", dependencyPayload: "structured" },
-    { id: "review", title: "Review", description: "Review the draft", dependsOn: ["draft"], requires: ["review"] },
+    {
+      id: "review",
+      title: "Review",
+      description: "Review the draft",
+      dependsOn: ["draft"],
+      requires: { capabilities: ["review"] },
+    },
   ],
   { abortSignal },
 );

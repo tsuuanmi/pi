@@ -1,5 +1,6 @@
 import { isAbortError, OrchestratorAbortError } from "#orchestrator/execution/retry";
-import type { TaskInput, TaskPriority } from "#orchestrator/task/types";
+import { normalizeRequirements } from "#orchestrator/task/requirements";
+import type { TaskInput, TaskPriority, TaskRequirements } from "#orchestrator/task/types";
 import type { Team } from "#orchestrator/team/team";
 import type { PlanOptions, PlanResult } from "#orchestrator/types";
 
@@ -67,6 +68,7 @@ function buildPlannerPrompt(team: Team, goal: string): string {
 		"Return ONLY a JSON array. Do not wrap it in prose.",
 		"Each task object must include string fields: id, title, description.",
 		"Optional fields: assignee, dependsOn, requires, role, priority, memoryScope, dependencyPayload, maxRetries, retryDelayMs, retryBackoff, verify, metadata.",
+		"requires must be an object with optional capabilities, tools, provider, api, and model fields.",
 		"dependsOn must contain task ids from the same JSON array, never titles.",
 		"assignee must match one of the roster agent names exactly when present.",
 		"Do not invent undeclared agent names.",
@@ -136,7 +138,9 @@ function normalizeTask(item: unknown, index: number, roster: ReadonlySet<string>
 		...(task.dependsOn !== undefined
 			? { dependsOn: stringArray(task.dependsOn, `Planner task "${id}" dependsOn`) }
 			: {}),
-		...(task.requires !== undefined ? { requires: stringArray(task.requires, `Planner task "${id}" requires`) } : {}),
+		...(task.requires !== undefined
+			? { requires: requirements(task.requires, `Planner task "${id}" requires`) }
+			: {}),
 		...(task.role !== undefined ? { role: requiredString(task.role, `Planner task "${id}" role`) } : {}),
 		...(task.priority !== undefined ? { priority: priority(task.priority, id) } : {}),
 		...(task.memoryScope !== undefined
@@ -199,6 +203,22 @@ function optionalString(value: unknown, label: string): string | undefined {
 function stringArray(value: unknown, label: string): readonly string[] {
 	if (!Array.isArray(value)) throw new Error(`${label} must be an array of strings.`);
 	return Object.freeze(value.map((item, index) => requiredString(item, `${label}[${index}]`)));
+}
+
+function requirements(value: unknown, label: string): TaskRequirements {
+	const record = asRecord(value, label);
+	return normalizeRequirements(
+		{
+			...(record.capabilities !== undefined
+				? { capabilities: stringArray(record.capabilities, `${label}.capabilities`) }
+				: {}),
+			...(record.tools !== undefined ? { tools: stringArray(record.tools, `${label}.tools`) } : {}),
+			...(record.provider !== undefined ? { provider: requiredString(record.provider, `${label}.provider`) } : {}),
+			...(record.api !== undefined ? { api: requiredString(record.api, `${label}.api`) } : {}),
+			...(record.model !== undefined ? { model: requiredString(record.model, `${label}.model`) } : {}),
+		},
+		label,
+	);
 }
 
 function priority(value: unknown, id: string): TaskPriority {

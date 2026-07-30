@@ -10,6 +10,10 @@ export interface TaskRoutingDecision {
 	taskTitle: string;
 	agent: string;
 	schedulingStrategy: SchedulingStrategy;
+	score: number;
+	reasons: readonly string[];
+	candidates: readonly { agent: string; score: number; reasons: readonly string[] }[];
+	rejected: readonly { agent: string; reasons: readonly string[] }[];
 }
 
 export interface RoutedTask {
@@ -29,8 +33,8 @@ export function routeReadyTasks(input: RouteReadyTasksInput): readonly RoutedTas
 	const schedulingStrategy = input.scheduler.resolveStrategy(input.options);
 	return input.scheduler
 		.assignReadyTasks([...input.readyTasks], input.allTasks, input.agents, input.options)
-		.map((task) => ({
+		.map(({ task, selection }) => ({
 			task,
-			decision: createRoutingDecision(task.snapshot(), schedulingStrategy),
+			decision: createRoutingDecision(task.snapshot(), schedulingStrategy, selection),
 		}));
 }
