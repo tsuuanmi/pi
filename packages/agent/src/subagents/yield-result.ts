@@ -1,4 +1,4 @@
-import type { AgentMessage } from "#agent/state/state";
+import type { AgentMessage } from "#agent/messages/state";
 
 export interface YieldDetails {
 	data: unknown;

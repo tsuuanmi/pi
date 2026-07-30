@@ -7,7 +7,16 @@ import {
 	type Transport,
 } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
-import type { LoopDetectionOptions } from "#agent/loop-detector";
+import type { LoopDetectionOptions } from "#agent/agent/loop-detector";
+import {
+	createStructuredOutputPrompt,
+	createStructuredOutputRepairPrompt,
+	getStructuredOutputRetryLimit,
+	parseStructuredOutput,
+	type StructuredOutputOptions,
+	type StructuredOutputResult,
+} from "#agent/agent/structured-output";
+import type { AgentMessage, AgentState } from "#agent/messages/state";
 import type {
 	AfterToolCallContext,
 	AfterToolCallResult,
@@ -30,15 +39,6 @@ import {
 	type RunResult,
 } from "#agent/runtime/runtime";
 import type { AgentRunOptions, AgentRunResult } from "#agent/runtime/types";
-import type { AgentMessage, AgentState } from "#agent/state/state";
-import {
-	createStructuredOutputPrompt,
-	createStructuredOutputRepairPrompt,
-	getStructuredOutputRetryLimit,
-	parseStructuredOutput,
-	type StructuredOutputOptions,
-	type StructuredOutputResult,
-} from "#agent/structured-output";
 import { createToolRegistry, type RegisterToolOptions, registerTool as registerToolSet } from "#agent/tool/registry";
 import type { AgentContext, AgentTool } from "#agent/tool/types";
 

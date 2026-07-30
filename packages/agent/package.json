@@ -17,6 +17,10 @@
 		"./package.json": "./package.json"
 	},
 	"imports": {
+		"#agent/agent": {
+			"types": "./dist/agent/index.d.ts",
+			"import": "./dist/agent/index.js"
+		},
 		"#agent/*": {
 			"types": "./dist/*.d.ts",
 			"import": "./dist/*.js"

@@ -41,6 +41,7 @@
 
 - **agent**: Flattened core agent source modules from `src/agent/*` into `src/*`.
 - **agent**: Renamed long internal source filenames to concise module names such as `structured-output`, `loop-detector`, `run-identity`, and `mutation-queue`.
+- **agent**: Grouped agent behavior under `src/agent/`, message logic under `src/messages/`, and shared receipt metadata under `src/metadata/` with builtin-tool receipt builders under `src/tool/`.
 
 ### Fixed
 

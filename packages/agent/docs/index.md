@@ -20,12 +20,12 @@ This package intentionally differs from monolithic config-driven agents: it cent
 
 ## Documentation map
 
-The docs tree groups core agent modules under `agent/` while source modules live at the top level of `packages/agent/src`.
+The docs tree follows the source domain folders under `packages/agent/src`, including agent behavior in `agent/` and message modeling in `messages/`.
 
-- [`agent/agent.md`](agent/agent.md) - `src/agent.ts`: `Agent` class, state management, event subscription, message queues, and lifecycle control.
+- [`agent/index.md`](agent/index.md) - `src/agent/index.ts`: `Agent` class, state management, event subscription, message queues, and lifecycle control.
 - [`agent/runtime/loop.md`](agent/runtime/loop.md) - `src/runtime/loop.ts`: `agentLoop()`, `agentLoopContinue()`, turn execution, tool execution, steering, follow-up, and abort handling.
 - [`agent/runtime/events.md`](agent/runtime/events.md) - `src/runtime/events.ts`: lifecycle events and instrumentation points emitted by `Agent` and the loop.
-- [`agent/state/messages.md`](agent/state/messages.md) - `src/state/messages.ts`: non-LLM agent message roles and `convertToLlm()` conversion.
+- [`messages/messages.md`](messages/messages.md) - `src/messages/messages.ts`: non-LLM agent message roles and `convertToLlm()` conversion.
 - [`agent/runtime/types.md`](agent/runtime/types.md) - `src/runtime/types.ts`: `Agent.run()` option and result types.
 - [`node/index.md`](node/index.md) - `src/node/node.ts` and `src/node/*`: Node-only process, process-runtime, JSONL, path, and mutation-queue helpers.
 - [`node/env/nodejs.md`](node/env/nodejs.md) - `src/node/env/*`: `ExecutionEnv`, `FileSystem`, `Shell`, typed `Result`, `FileError`, `ExecutionError`, and `NodeExecutionEnv`.

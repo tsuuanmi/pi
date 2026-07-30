@@ -3,7 +3,7 @@
  */
 
 import type { Message } from "@tsuuanmi/pi-ai";
-import type { AgentMessage } from "#agent/state/state";
+import type { AgentMessage } from "#agent/messages/state";
 
 // ============================================================================
 // File Operation Tracking

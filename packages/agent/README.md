@@ -16,7 +16,7 @@ Provider adapters and streaming transport live in `@tsuuanmi/pi-ai`. Concrete Pi
 
 Node-only helpers are available from the `@tsuuanmi/pi-agent/node` subpath.
 
-See [Agent documentation](./docs/agent/agent.md) and [Tool Registration](./docs/tool/registry.md) for the standard integration patterns. Task, team, and orchestration contracts live in `@tsuuanmi/pi-orchestrator`.
+See [Agent documentation](./docs/agent/index.md) and [Tool Registration](./docs/tool/registry.md) for the standard integration patterns. Task, team, and orchestration contracts live in `@tsuuanmi/pi-orchestrator`.
 
 ## Quick Start
 

@@ -2,7 +2,7 @@ import {
 	STRUCTURED_RECEIPT_VERSION,
 	type StructuredReceipt,
 	type StructuredReceiptInspectEntry,
-} from "#agent/receipts/execution";
+} from "#agent/metadata/receipt";
 import type { SubagentRecord } from "#agent/subagents/types";
 
 function truncatePreview(value: string | undefined, limit = 240): string | undefined {
