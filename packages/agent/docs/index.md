@@ -20,14 +20,14 @@ This package intentionally differs from monolithic config-driven agents: it cent
 
 ## Documentation map
 
-The docs tree mirrors `packages/agent/src` so source modules and their docs use the same folder structure.
+The docs tree groups core agent modules under `agent/` while source modules live at the top level of `packages/agent/src`.
 
-- [`agent/agent.md`](agent/agent.md) - `src/agent/agent.ts`: `Agent` class, state management, event subscription, message queues, and lifecycle control.
-- [`agent/runtime/loop.md`](agent/runtime/loop.md) - `src/agent/runtime/loop.ts`: `agentLoop()`, `agentLoopContinue()`, turn execution, tool execution, steering, follow-up, and abort handling.
-- [`agent/runtime/events.md`](agent/runtime/events.md) - `src/agent/runtime/events.ts`: lifecycle events and instrumentation points emitted by `Agent` and the loop.
-- [`agent/state/messages.md`](agent/state/messages.md) - `src/agent/state/messages.ts`: non-LLM agent message roles and `convertToLlm()` conversion.
-- [`agent/runtime/types.md`](agent/runtime/types.md) - `src/agent/runtime/types.ts`: `Agent.run()` option and result types.
-- [`node/index.md`](node/index.md) - `src/node/node.ts` and `src/node/*`: Node-only child-process, process-runtime, JSONL, path, and file-mutation queue helpers.
+- [`agent/agent.md`](agent/agent.md) - `src/agent.ts`: `Agent` class, state management, event subscription, message queues, and lifecycle control.
+- [`agent/runtime/loop.md`](agent/runtime/loop.md) - `src/runtime/loop.ts`: `agentLoop()`, `agentLoopContinue()`, turn execution, tool execution, steering, follow-up, and abort handling.
+- [`agent/runtime/events.md`](agent/runtime/events.md) - `src/runtime/events.ts`: lifecycle events and instrumentation points emitted by `Agent` and the loop.
+- [`agent/state/messages.md`](agent/state/messages.md) - `src/state/messages.ts`: non-LLM agent message roles and `convertToLlm()` conversion.
+- [`agent/runtime/types.md`](agent/runtime/types.md) - `src/runtime/types.ts`: `Agent.run()` option and result types.
+- [`node/index.md`](node/index.md) - `src/node/node.ts` and `src/node/*`: Node-only process, process-runtime, JSONL, path, and mutation-queue helpers.
 - [`node/env/nodejs.md`](node/env/nodejs.md) - `src/node/env/*`: `ExecutionEnv`, `FileSystem`, `Shell`, typed `Result`, `FileError`, `ExecutionError`, and `NodeExecutionEnv`.
 - [`subagents/index.md`](subagents/index.md) - `src/subagents/*`: `SubagentManager`, durable record/request/result types, factory registry, progress tracking, and yield-result extraction.
 - [`tool/registry.md`](tool/registry.md) - `src/tool/registry.ts` and `src/tool/policy.ts`: `createToolRegistry()`, `registerTool()`, and `Agent.registerTool()` for host-owned tools.

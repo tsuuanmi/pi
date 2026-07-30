@@ -7,7 +7,7 @@ import {
 	type Transport,
 } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
-import type { LoopDetectionOptions } from "#agent/agent/loop-detection";
+import type { LoopDetectionOptions } from "#agent/loop-detector";
 import type {
 	AfterToolCallContext,
 	AfterToolCallResult,
@@ -19,8 +19,8 @@ import type {
 	QueueMode,
 	StreamFn,
 	ToolExecutionMode,
-} from "#agent/agent/runtime/config";
-import type { AgentEvent } from "#agent/agent/runtime/events";
+} from "#agent/runtime/config";
+import type { AgentEvent } from "#agent/runtime/events";
 import {
 	type AgentRuntime,
 	type ContinueRequest,
@@ -28,9 +28,9 @@ import {
 	type PromptRequest,
 	type RunRequest,
 	type RunResult,
-} from "#agent/agent/runtime/runtime";
-import type { AgentRunOptions, AgentRunResult } from "#agent/agent/runtime/types";
-import type { AgentMessage, AgentState } from "#agent/agent/state/state";
+} from "#agent/runtime/runtime";
+import type { AgentRunOptions, AgentRunResult } from "#agent/runtime/types";
+import type { AgentMessage, AgentState } from "#agent/state/state";
 import {
 	createStructuredOutputPrompt,
 	createStructuredOutputRepairPrompt,
@@ -38,11 +38,11 @@ import {
 	parseStructuredOutput,
 	type StructuredOutputOptions,
 	type StructuredOutputResult,
-} from "#agent/agent/json-schema-output";
+} from "#agent/structured-output";
 import { createToolRegistry, type RegisterToolOptions, registerTool as registerToolSet } from "#agent/tool/registry";
 import type { AgentContext, AgentTool } from "#agent/tool/types";
 
-export type { QueueMode } from "#agent/agent/runtime/config";
+export type { QueueMode } from "#agent/runtime/config";
 
 function defaultConvertToLlm(messages: AgentMessage[]): Message[] {
 	return messages.filter(

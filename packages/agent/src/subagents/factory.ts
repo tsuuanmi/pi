@@ -11,7 +11,7 @@
  * The factory impl (building `AgentSessionServices` + `SubagentManager`) stays
  * in `pi`; only the contract lives here in `pi-agent`.
  */
-import type { SubagentManager } from "#agent/subagents/subagent-manager";
+import type { SubagentManager } from "#agent/subagents/manager";
 
 export interface SubagentManagerFactoryContext {
 	/** Workspace root the owner runs in; the factory derives agent dir/config from it. */

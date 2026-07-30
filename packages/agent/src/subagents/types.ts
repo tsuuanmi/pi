@@ -5,8 +5,8 @@
  * contract lives in the lower layer.
  */
 
-import type { AgentMessage, ThinkingLevel } from "#agent/agent/state/state";
-import type { SubagentProgress } from "#agent/subagents/subagent-progress";
+import type { AgentMessage, ThinkingLevel } from "#agent/state/state";
+import type { SubagentProgress } from "#agent/subagents/progress";
 import type { YieldDetails } from "#agent/subagents/yield-result";
 
 export type SubagentStatus = "queued" | "running" | "paused" | "completed" | "failed" | "cancelled";

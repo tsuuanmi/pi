@@ -4,7 +4,7 @@ These helpers are exported only from `@tsuuanmi/pi-agent/node` via `src/node/nod
 
 ## Child process helpers
 
-From `src/node/child-process.ts`:
+From `src/node/process.ts`:
 
 ```typescript
 spawnProcess(command: string, args: string[], options: SpawnOptionsWithStdioTuple<StdioNull, StdioPipe, StdioPipe>): ChildProcessByStdio<null, Readable, Readable>;
@@ -17,7 +17,7 @@ waitForChildProcess(child: ChildProcess): Promise<number | null>;
 
 ## File mutation queue
 
-From `src/node/file-mutation-queue.ts`:
+From `src/node/mutation-queue.ts`:
 
 ```typescript
 withFileMutationQueue<T>(filePath: string, fn: () => Promise<T>): Promise<T>;

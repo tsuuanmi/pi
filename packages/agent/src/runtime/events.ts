@@ -1,6 +1,6 @@
 import type { AssistantMessageEvent, ToolResultMessage } from "@tsuuanmi/pi-ai";
-import type { LoopDetectionResult } from "#agent/agent/loop-detection";
-import type { AgentMessage, AgentStatus, AgentTraceEvent } from "#agent/agent/state/state";
+import type { LoopDetectionResult } from "#agent/loop-detector";
+import type { AgentMessage, AgentStatus, AgentTraceEvent } from "#agent/state/state";
 
 export type AgentEvent =
 	| { type: "agent_start" }

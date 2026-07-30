@@ -37,6 +37,11 @@
 - **team**: Added inter-agent messaging, message snapshots, subscriptions, and typed team events.
 - **attribution**: Added MIT attribution for the open-multi-agent architecture.
 
+### Changed
+
+- **agent**: Flattened core agent source modules from `src/agent/*` into `src/*`.
+- **agent**: Renamed long internal source filenames to concise module names such as `structured-output`, `loop-detector`, `run-identity`, and `mutation-queue`.
+
 ### Fixed
 
 - **docs**: Reorganized package docs to mirror `src/`, removed legacy/unused docs, and updated package, agent, tool, and observability docs to reflect the current `AgentOptions`, runtime seam, tool registration, and optional protocol-runtime boundaries.

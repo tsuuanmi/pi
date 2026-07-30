@@ -11,10 +11,10 @@ import {
 	type ToolResultMessage,
 	validateToolArguments,
 } from "@tsuuanmi/pi-ai";
-import { LoopDetector, normalizeLoopDetectionOptions } from "#agent/agent/loop-detection";
-import type { AgentLoopConfig, AgentToolCall, StreamFn } from "#agent/agent/runtime/config";
-import type { AgentEvent } from "#agent/agent/runtime/events";
-import type { AgentMessage } from "#agent/agent/state/state";
+import { LoopDetector, normalizeLoopDetectionOptions } from "#agent/loop-detector";
+import type { AgentLoopConfig, AgentToolCall, StreamFn } from "#agent/runtime/config";
+import type { AgentEvent } from "#agent/runtime/events";
+import type { AgentMessage } from "#agent/state/state";
 import type { AgentContext, AgentTool, AgentToolResult } from "#agent/tool/types";
 
 let providerRequestSequence = 0;

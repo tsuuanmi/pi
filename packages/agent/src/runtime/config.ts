@@ -7,7 +7,7 @@ import type {
 	stream,
 	ToolResultMessage,
 } from "@tsuuanmi/pi-ai";
-import type { AgentMessage } from "#agent/agent/state/state";
+import type { AgentMessage } from "#agent/state/state";
 import type { AgentContext, AgentToolResult } from "#agent/tool/types";
 
 export type StreamFn = (
@@ -92,7 +92,7 @@ export interface ShouldStopAfterTurnContext {
 export interface AgentLoopTurnUpdate {
 	context?: AgentContext;
 	model?: Model<any>;
-	thinkingLevel?: import("#agent/agent/state/state").ThinkingLevel;
+	thinkingLevel?: import("#agent/state/state").ThinkingLevel;
 }
 
 export interface PrepareNextTurnContext extends ShouldStopAfterTurnContext {}
@@ -107,7 +107,7 @@ export interface AgentLoopConfig extends StreamOptions {
 	convertToLlm: (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
 	transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
 	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
-	loopDetection?: boolean | import("#agent/agent/loop-detection").LoopDetectionOptions;
+	loopDetection?: boolean | import("#agent/loop-detector").LoopDetectionOptions;
 	maxTurns?: number;
 	shouldStopAfterTurn?: (context: ShouldStopAfterTurnContext) => boolean | Promise<boolean>;
 	prepareNextTurn?: (

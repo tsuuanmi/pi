@@ -15,7 +15,7 @@ import type {
 	SubagentResumeResult,
 	SubagentRunRequest,
 	SubagentRunResult,
-} from "#agent/subagents/subagent-types";
+} from "#agent/subagents/types";
 
 export interface SubagentManager {
 	spawn(request: SubagentRunRequest): Promise<SubagentRunResult>;

@@ -5,7 +5,7 @@ import type {
 	SubagentTmuxPaneTarget,
 	SubagentTmuxSessionTarget,
 	SubagentTmuxTarget,
-} from "#agent/subagents/subagent-types";
+} from "#agent/subagents/types";
 
 function isObject(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);

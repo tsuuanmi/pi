@@ -2,8 +2,8 @@ import {
 	STRUCTURED_RECEIPT_VERSION,
 	type StructuredReceipt,
 	type StructuredReceiptInspectEntry,
-} from "#agent/receipts/execution-receipt";
-import type { SubagentRecord } from "#agent/subagents/subagent-types";
+} from "#agent/receipts/execution";
+import type { SubagentRecord } from "#agent/subagents/types";
 
 function truncatePreview(value: string | undefined, limit = 240): string | undefined {
 	if (!value) return undefined;
