@@ -3,7 +3,7 @@ import { dirname } from "node:path";
 import { writeStageArtifact } from "#workflows/artifacts/artifacts";
 import { type FailSoftError, recordFailSoftError } from "#workflows/audit/audit-log";
 import { projectCompactStateFor } from "#workflows/compaction/compaction";
-import { handoffWorkflow } from "#workflows/orchestration/handoff";
+import { handoffWorkflow } from "#workflows/handoff/handoff";
 import type { RalplanStage, WorkflowSkill } from "#workflows/session/paths";
 import {
 	ralplanIndexPath,

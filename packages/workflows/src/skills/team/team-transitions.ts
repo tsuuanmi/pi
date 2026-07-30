@@ -1,4 +1,4 @@
-import type { ExpectedNextRole, TeamSelectorSnapshot } from "#workflows/orchestration/expected-next-role";
+import type { ExpectedNextRole, TeamSelectorSnapshot } from "#workflows/policy/expected-next-role";
 import { registerSkillTransitionTable, type SkillTransitionContext } from "#workflows/registry/skill-registry";
 import { readTeamCompact, readTeamSnapshot, type TeamSnapshot } from "#workflows/skills/team/team-runtime";
 

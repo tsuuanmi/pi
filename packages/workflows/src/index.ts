@@ -19,11 +19,11 @@ export * from "#workflows/audit/transaction-journal";
 // Workflow commands
 export { handleWorkflowCommand, runStateCommand, runWorkflowCommand } from "#workflows/commands/workflow";
 export * from "#workflows/compaction/compaction";
-export * from "#workflows/orchestration/context-templates";
-export * from "#workflows/orchestration/expected-next-role";
-export * from "#workflows/orchestration/gate-verdicts";
-export * from "#workflows/orchestration/handoff";
-export * from "#workflows/orchestration/vagueness-gate";
+export * from "#workflows/handoff/handoff";
+export * from "#workflows/policy/context-templates";
+export * from "#workflows/policy/expected-next-role";
+export * from "#workflows/policy/gate-verdicts";
+export * from "#workflows/policy/vagueness-gate";
 // workflow-tool-utils: avoid re-exporting RalplanApprovalTarget (conflicts with ralplan-runtime)
 export {
 	type AgentThinkingLevel,
@@ -33,7 +33,7 @@ export {
 	assertRalplanRole,
 	type DeepInterviewHandoff,
 	requireSubagentManager,
-} from "#workflows/orchestration/workflow-tool-utils";
+} from "#workflows/policy/workflow-tool-utils";
 export * from "#workflows/registry/skill-registry";
 export * from "#workflows/registry/workflow-manifest";
 export * from "#workflows/runtime/endpoint";
@@ -68,6 +68,9 @@ export * from "#workflows/skills/ralplan/ralplan-orchestration-snapshot";
 export * from "#workflows/skills/ralplan/ralplan-runtime";
 export * from "#workflows/skills/ralplan/ralplan-verdicts";
 // Harness runtime
+export * from "#workflows/skills/team/orchestrator-adapter";
+export * from "#workflows/skills/team/orchestrator-checkpoint";
+export * from "#workflows/skills/team/orchestrator-events";
 export * from "#workflows/skills/team/team-compact";
 export * from "#workflows/skills/team/team-runtime";
 export * from "#workflows/skills/ultragoal/ultragoal-artifacts";

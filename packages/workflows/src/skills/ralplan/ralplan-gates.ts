@@ -1,4 +1,4 @@
-import { validateContextMapVerdict } from "#workflows/orchestration/gate-verdicts";
+import { validateContextMapVerdict } from "#workflows/policy/gate-verdicts";
 import { ralplanGateArtifactPath, workflowStatePath } from "#workflows/session/session-layout";
 import { writeJsonAtomic } from "#workflows/state/state-writer";
 import {

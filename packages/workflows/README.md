@@ -47,6 +47,8 @@ npm install @tsuuanmi/pi-workflows
 
 State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`. Runtime artifacts persist under the current session root, e.g. `.pi/<session-id>/workflows/<skill>/` and `.pi/<session-id>/state/`.
 
+Workflow policy helpers live under `src/policy/`, handoff logic lives under `src/handoff/`, and workflow-to-orchestrator bridges live under `src/skills/team/`.
+
 ## Built-in Skills
 
 | Skill | Purpose | When to use |
@@ -320,7 +322,7 @@ import {
 } from "@tsuuanmi/pi-workflows";
 ```
 
-`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools/workflow-tools`. The bundled Pi extension entrypoint now lives in `@tsuuanmi/pi`.
+`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools/workflow-tools`. It also exports pure team-to-orchestrator mapping helpers, a callback-backed team checkpoint store, and a queue-event sink for future workflow-owned orchestrator integration; these helpers do not change runtime behavior. The bundled Pi extension entrypoint now lives in `@tsuuanmi/pi`.
 
 Subpath exports:
 

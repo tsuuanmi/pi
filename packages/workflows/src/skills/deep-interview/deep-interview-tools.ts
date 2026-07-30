@@ -1,7 +1,7 @@
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
-import { handoffWorkflow } from "#workflows/orchestration/handoff";
-import { assertDeepInterviewHandoff } from "#workflows/orchestration/workflow-tool-utils";
+import { handoffWorkflow } from "#workflows/handoff/handoff";
+import { assertDeepInterviewHandoff } from "#workflows/policy/workflow-tool-utils";
 import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";
 import {
 	appendOrMergeDeepInterviewRound,

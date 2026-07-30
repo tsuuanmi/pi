@@ -1,4 +1,4 @@
-import type { ExpectedNextRole, RalplanSelectorState } from "#workflows/orchestration/expected-next-role";
+import type { ExpectedNextRole, RalplanSelectorState } from "#workflows/policy/expected-next-role";
 import { registerSkillTransitionTable } from "#workflows/registry/skill-registry";
 import { assertRalplanExplorerGatePassed } from "#workflows/skills/ralplan/ralplan-gates";
 import { readRalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";

@@ -5,8 +5,8 @@ import {
 	assertNoGuardedSpawnOverrides,
 	expectedNextRalplanRole,
 	type RalplanSelectorVerdict,
-} from "#workflows/orchestration/expected-next-role";
-import { assertAgentThinkingLevel, assertRalplanRole } from "#workflows/orchestration/workflow-tool-utils";
+} from "#workflows/policy/expected-next-role";
+import { assertAgentThinkingLevel, assertRalplanRole } from "#workflows/policy/workflow-tool-utils";
 import { ralplanRoleForStage, runRalplanAgent } from "#workflows/skills/ralplan/ralplan-agents";
 import { normalizeRalplanExplorerGate } from "#workflows/skills/ralplan/ralplan-gates";
 import { readRalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";

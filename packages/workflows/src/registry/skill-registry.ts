@@ -1,4 +1,4 @@
-import type { ExpectedNextRole } from "#workflows/orchestration/expected-next-role";
+import type { ExpectedNextRole } from "#workflows/policy/expected-next-role";
 import type { RuntimeReceipt } from "#workflows/runtime/types";
 import type { WorkflowSkill } from "#workflows/session/paths";
 

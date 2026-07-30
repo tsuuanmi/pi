@@ -9,7 +9,7 @@ import {
 	reviewReportBlocks,
 	validateEvidenceMatrixVerdict,
 	validateReviewReportVerdict,
-} from "#workflows/orchestration/gate-verdicts";
+} from "#workflows/policy/gate-verdicts";
 import {
 	teamConfigPath,
 	teamDir,

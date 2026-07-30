@@ -4,8 +4,8 @@ import {
 	assertExpectedNextRole,
 	assertNoGuardedSpawnOverrides,
 	expectedNextTeamRole,
-} from "#workflows/orchestration/expected-next-role";
-import { assertAgentThinkingLevel, requireSubagentManager } from "#workflows/orchestration/workflow-tool-utils";
+} from "#workflows/policy/expected-next-role";
+import { assertAgentThinkingLevel, requireSubagentManager } from "#workflows/policy/workflow-tool-utils";
 import { readTeamSnapshot } from "#workflows/skills/team/team-runtime";
 import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
 

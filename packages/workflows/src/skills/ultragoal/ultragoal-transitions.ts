@@ -1,4 +1,4 @@
-import type { ExpectedNextRole } from "#workflows/orchestration/expected-next-role";
+import type { ExpectedNextRole } from "#workflows/policy/expected-next-role";
 import { registerSkillTransitionTable, type SkillTransitionContext } from "#workflows/registry/skill-registry";
 import {
 	chooseReceiptKind,

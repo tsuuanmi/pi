@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import type { AgentMessage, SubagentManager, SubagentRunResult, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Message } from "@tsuuanmi/pi-ai";
-import { buildRalplanRoleSystemPrompt, buildRalplanTaskPrompt } from "#workflows/orchestration/context-templates";
+import { buildRalplanRoleSystemPrompt, buildRalplanTaskPrompt } from "#workflows/policy/context-templates";
 import type { RalplanStage } from "#workflows/session/paths";
 import { workflowStatePath } from "#workflows/session/session-layout";
 import { assertRalplanExplorerGatePassed } from "#workflows/skills/ralplan/ralplan-gates";
