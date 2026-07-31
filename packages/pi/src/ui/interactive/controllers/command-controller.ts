@@ -1,10 +1,3 @@
-// Extracted from InteractiveMode (Phase-2 safe-slice, zero behavior change).
-// Self-contained command handlers whose bodies do not touch core-loop invariant
-// state. Moved verbatim; host deps exposed with their original this.* names
-// (session/sessionManager are live getters). The bash/compact/clear/reload/import
-// handlers and stop() stay inline because they carry core-loop or lifecycle
-// invariants.
-
 import * as fs from "node:fs";
 import * as path from "node:path";
 import {
@@ -21,8 +14,8 @@ import {
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
 import { getChangelogPath, getDebugLogPath } from "#pi/config/config";
-import { normalizeChangelogLinks, parseChangelog } from "#pi/modes/interactive/utils/changelog";
-import { copyToClipboard } from "#pi/modes/interactive/utils/clipboard";
+import { normalizeChangelogLinks, parseChangelog } from "#pi/ui/interactive/utils/changelog";
+import { copyToClipboard } from "#pi/ui/interactive/utils/clipboard";
 import type { AgentSession } from "#pi/runtime/agent";
 import type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 

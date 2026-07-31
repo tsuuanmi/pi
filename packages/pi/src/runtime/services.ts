@@ -14,7 +14,7 @@ import {
 	type DefaultResourceLoaderOptions,
 	type ResourceLoader,
 	type ResourceLoaderReloadOptions,
-} from "#pi/skills/resource-loader";
+} from "#pi/resources/resource-loader";
 import { SubagentManager } from "#pi/subagents/subagents";
 
 /**

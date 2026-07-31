@@ -5,7 +5,7 @@ import type { ModelRegistry } from "#pi/model/model-registry";
 import type { AgentSessionEvent } from "#pi/runtime/agent";
 import type { SessionManager } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
-import type { ResourceLoader } from "#pi/skills/resource-loader";
+import type { ResourceLoader } from "#pi/resources/resource-loader";
 
 /**
  * Type-only seam for Pi session runtime helpers.

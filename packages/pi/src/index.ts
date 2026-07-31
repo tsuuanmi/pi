@@ -181,11 +181,11 @@ export {
 	truncateToVisualLines,
 	UserMessageSelectorComponent,
 	type VisualTruncateResult,
-} from "#pi/modes/interactive/components/index";
+} from "#pi/ui/interactive/components/index";
 // Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
-export type { ReadonlyFooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
+export type { ReadonlyFooterDataProvider } from "#pi/ui/interactive/footer-data";
 // Clipboard utilities
-export { copyToClipboard } from "#pi/modes/interactive/utils/clipboard";
+export { copyToClipboard } from "#pi/ui/interactive/utils/clipboard";
 // JSONL utilities
 export { serializeJsonLine } from "#pi/modes/rpc/jsonl";
 export type {
@@ -289,8 +289,8 @@ export {
 	SettingsManager,
 	type SettingsManagerCreateOptions,
 } from "#pi/settings/settings-manager";
-export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#pi/skills/resource-loader";
-export { DefaultResourceLoader, loadProjectContextFiles } from "#pi/skills/resource-loader";
+export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#pi/resources/resource-loader";
+export { DefaultResourceLoader, loadProjectContextFiles } from "#pi/resources/resource-loader";
 // Skills
 export {
 	formatSkillsForPrompt,

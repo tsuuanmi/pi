@@ -2,15 +2,6 @@ import { readFileSync } from "node:fs";
 import type { AgentSessionContext } from "#pi/runtime/context";
 import { stripFrontmatter } from "#pi/utils/fs/index";
 
-/**
- * Phase-1 SkillExpansion subsystem (stateless module function on
- * `AgentSessionContext`). Extracted verbatim from `AgentSession._expandSkillCommand`
- * (`pi-session.ts:1204`); the private method on `AgentSession` now delegates
- * here. Pure structural / zero behavior change.
- *
- * `parseSkillBlock` is intentionally NOT imported: it is a public SDK export
- * that stays in `pi-session.ts`, and `_expandSkillCommand` does not use it.
- */
 export function expandSkillCommand(text: string, ctx: AgentSessionContext): string {
 	if (!text.startsWith("/skill:")) return text;
 

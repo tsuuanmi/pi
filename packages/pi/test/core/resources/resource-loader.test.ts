@@ -9,7 +9,7 @@ import { ModelRegistry } from "#pi/model/model-registry";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { DefaultResourceLoader } from "#pi/skills/resource-loader";
+import { DefaultResourceLoader } from "#pi/resources/resource-loader";
 import type { Skill } from "#pi/skills/skills";
 
 const BUILT_IN_WORKFLOW_COMMANDS = new Set(["deep-interview", "ralplan", "team", "ultragoal"]);

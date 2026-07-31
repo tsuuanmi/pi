@@ -3,18 +3,6 @@ import type { AgentSessionContext } from "#pi/runtime/context";
 import { collectEntriesForBranchSummary, generateBranchSummary } from "#pi/session/compaction";
 import type { BranchSummaryEntry } from "#pi/session/manager";
 
-/**
- * Phase-1 TreeNavigation subsystem (stateless module functions on
- * `AgentSessionContext`). Extracted verbatim from `AgentSession.navigateTree`
- * (`pi-session.ts:2567`), `getUserMessagesForForking` (`:2758`), and
- * `_extractUserMessageText` (`:2775`, moved verbatim — the runtime duplicate at
- * `pi-session-runtime.ts` is module-private and behaviorally different, so
- * it is NOT imported). The public methods on `AgentSession` now delegate here.
- * `_getRequiredRequestAuth` stays on `AgentSession` (also called by the
- * core-loop) and is reached via `ctx.getRequiredRequestAuth`. Pure structural /
- * zero behavior change.
- */
-
 export async function navigateTree(
 	targetId: string,
 	options: { summarize?: boolean; customInstructions?: string; replaceInstructions?: boolean; label?: string },
@@ -137,7 +125,7 @@ export async function navigateTree(
 		if (targetEntry.type === "message" && targetEntry.message.role === "user") {
 			// User message: leaf = parent (null if root), text goes to editor
 			newLeafId = targetEntry.parentId;
-			editorText = _extractUserMessageText(targetEntry.message.content);
+			editorText = extractUserMessageText(targetEntry.message.content);
 		} else if (targetEntry.type === "custom_message") {
 			// Custom message: leaf = parent (null if root), text goes to editor
 			newLeafId = targetEntry.parentId;
@@ -191,8 +179,6 @@ export async function navigateTree(
 			fromExtension: summaryText ? fromExtension : undefined,
 		});
 
-		// Emit to custom tools
-
 		return { editorText, cancelled: false, summaryEntry };
 	} finally {
 		ctx.branchSummaryAbortController = undefined;
@@ -207,7 +193,7 @@ export function getUserMessagesForForking(ctx: AgentSessionContext): Array<{ ent
 		if (entry.type !== "message") continue;
 		if (entry.message.role !== "user") continue;
 
-		const text = _extractUserMessageText(entry.message.content);
+		const text = extractUserMessageText(entry.message.content);
 		if (text) {
 			result.push({ entryId: entry.id, text });
 		}
@@ -216,7 +202,7 @@ export function getUserMessagesForForking(ctx: AgentSessionContext): Array<{ ent
 	return result;
 }
 
-function _extractUserMessageText(content: string | Array<{ type: string; text?: string }>): string {
+function extractUserMessageText(content: string | Array<{ type: string; text?: string }>): string {
 	if (typeof content === "string") return content;
 	if (Array.isArray(content)) {
 		return content

@@ -579,7 +579,7 @@ class ResourceList implements Component, Focusable {
 	}
 }
 
-export class ConfigSelectorComponent extends Container implements Focusable {
+export class ResourceSelector extends Container implements Focusable {
 	private resourceList: ResourceList;
 
 	private _focused = false;

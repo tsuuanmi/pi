@@ -1,13 +1,3 @@
-// Extracted from InteractiveMode (Phase-2 pure-structural split, zero behavior change).
-// Resource-display / loaded-resources rendering. Moved methods are verbatim; injected
-// host dependencies are exposed as fields/live-getters with their original `this.*`
-// names so the moved bodies need no internal remaps. `session` and `sessionManager` are
-// live getters because the host rebinds the session at runtime. `options.verbose`,
-// `toolOutputExpanded`, and `settingsManager.getQuietStartup()` are also live (they
-// reflect mutable host state), so they are backed by delegates but exposed under the
-// verbatim names the bodies reference. `getBuiltInCommandConflictDiagnostics` is only
-// called from `showLoadedResources` (kept internal).
-
 import * as os from "node:os";
 import * as path from "node:path";
 import { getCwdRelativePath } from "@tsuuanmi/pi-agent/node";
@@ -24,7 +14,7 @@ import {
 import type { ExtensionRunner } from "#pi/extensions/index";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import type { AgentSession } from "#pi/runtime/agent";
-import type { ResourceDiagnostic } from "#pi/skills/resource-loader";
+import type { ResourceDiagnostic } from "#pi/resources/resource-loader";
 import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
 import { parseGitUrl } from "#pi/utils/fs/git";
 

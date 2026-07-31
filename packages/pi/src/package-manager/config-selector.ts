@@ -3,7 +3,7 @@
  */
 
 import { initTheme, ProcessTerminal, stopThemeWatcher, TUI } from "@tsuuanmi/pi-tui";
-import { ConfigSelectorComponent } from "#pi/package-manager/config-selector-component";
+import { ResourceSelector } from "#pi/ui/package-manager/resource-selector";
 import type { ResolvedPaths } from "#pi/package-manager/package-manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 
@@ -23,7 +23,7 @@ export async function selectConfig(options: ConfigSelectorOptions): Promise<void
 		const ui = new TUI(new ProcessTerminal());
 		let resolved = false;
 
-		const selector = new ConfigSelectorComponent(
+		const selector = new ResourceSelector(
 			options.resolvedPaths,
 			options.settingsManager,
 			options.cwd,

@@ -16,7 +16,7 @@ import {
 import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
-import { installAgentToolHooks } from "#pi/hooks/tool-hooks";
+import { installAgentToolHooks } from "#pi/extensions/hooks/tool-hooks";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { AgentSession } from "#pi/runtime/agent";
 import { SessionManager } from "#pi/session/manager";

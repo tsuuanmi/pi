@@ -1,5 +1,5 @@
 import { initTheme, ProcessTerminal, setKeybindings, TUI } from "@tsuuanmi/pi-tui";
-import { ExtensionSelectorComponent } from "#pi/modes/interactive/components/selectors/extension-selector";
+import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension-selector";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 

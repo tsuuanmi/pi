@@ -6,7 +6,7 @@ import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { sessionStateDir } from "#pi/session/layout";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { DefaultResourceLoader } from "#pi/skills/resource-loader";
+import { DefaultResourceLoader } from "#pi/resources/resource-loader";
 import { SubagentManager, type SubagentRecord } from "#pi/subagents/subagents";
 import { readSubagentWorkerRequest } from "#pi/subagents/tmux-worker";
 import { testAssistantMessage, testToolCall, registerTestProvider } from "#pi-test/helpers/provider";

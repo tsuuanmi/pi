@@ -59,7 +59,7 @@ import {
 	wrapRegisteredTools,
 } from "#pi/extensions/index";
 import { emitSessionShutdownEvent } from "#pi/extensions/runner";
-import { installAgentToolHooks } from "#pi/hooks/tool-hooks";
+import { installAgentToolHooks } from "#pi/extensions/hooks/tool-hooks";
 import type { ModelRegistry } from "#pi/model/model-registry";
 import { createSyntheticSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
 import type { AgentSessionContext } from "#pi/runtime/context";
@@ -78,19 +78,19 @@ import {
 	setModel as modelControlSetModel,
 	setThinkingLevel as modelControlSetThinkingLevel,
 	supportsThinking as modelControlSupportsThinking,
-} from "#pi/session/model-control";
+} from "#pi/runtime/session-model";
 import { sleep } from "#pi/runtime/platform";
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "#pi/session/manager";
 import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "#pi/session/manager";
-import { expandSkillCommand } from "#pi/session/skill-expansion";
-import { computeContextUsage, computeSessionStats } from "#pi/session/stats-export";
+import { expandSkillCommand } from "#pi/runtime/session-skills";
+import { computeContextUsage, computeSessionStats } from "#pi/runtime/session-stats";
 import {
 	getUserMessagesForForking as treeNavGetUserMessagesForForking,
 	navigateTree as treeNavNavigateTree,
-} from "#pi/session/tree-navigation";
+} from "#pi/runtime/session-tree";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 import { expandPromptTemplate, type PromptTemplate } from "#pi/skills/prompt-templates";
-import type { ResourceExtensionPaths, ResourceLoader } from "#pi/skills/resource-loader";
+import type { ResourceExtensionPaths, ResourceLoader } from "#pi/resources/resource-loader";
 import type { SlashCommandInfo } from "#pi/skills/slash-commands";
 import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/skills/system-prompt";
 import type { SubagentManager } from "#pi/subagents/subagents";
@@ -2676,14 +2676,7 @@ export class AgentSession {
 		return this._extensionRunner;
 	}
 
-	/**
-	 * Build a fresh `AgentSessionContext` seam for Phase-1 subsystem modules.
-	 *
-	 * Allocates a NEW object literal on every call so live field values
-	 * (`this.model`, `this.state`, `this._scopedModels`, ...) are read at call
-	 * time. Do NOT cache or memoize — caching would freeze stale state and
-	 * silently break ModelControl/TreeNavigation.
-	 */
+	/** Build a fresh runtime context on each call. */
 	private _ctx(): AgentSessionContext {
 		const self = this;
 		return {

@@ -1,20 +1,12 @@
-/**
- * ExtensionUIController — extension UI subsystem extracted verbatim from
- * `InteractiveMode` (`modes/interactive/interactive-mode.ts`). Owns the
- * extension selector/input/editor overlays, widgets, custom header/footer,
- * terminal-input listeners, and the extension UI dialog surface. The host
- * `InteractiveMode` delegates to this controller and injects getters for the
- * three pieces of mutable host state it still owns (`editor`, `builtInHeader`,
- * `toolOutputExpanded`). Pure structural / zero behavior change.
- */
+/** Extension UI controller. */
 
 import type { Component, EditorComponent, OverlayHandle, OverlayOptions, StatusLineComponent } from "@tsuuanmi/pi-tui";
 import { Container, Spacer, Text, type Theme, type TUI, theme } from "@tsuuanmi/pi-tui";
 import type { ExtensionUIDialogOptions, ExtensionWidgetOptions } from "#pi/extensions/index";
-import { ExtensionEditorComponent } from "#pi/modes/interactive/components/extension-editor";
-import { ExtensionInputComponent } from "#pi/modes/interactive/components/extension-input";
-import { ExtensionSelectorComponent } from "#pi/modes/interactive/components/selectors/extension-selector";
-import type { FooterDataProvider, ReadonlyFooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
+import { ExtensionEditorComponent } from "#pi/ui/interactive/components/extension-editor";
+import { ExtensionInputComponent } from "#pi/ui/interactive/components/extension-input";
+import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension-selector";
+import type { FooterDataProvider, ReadonlyFooterDataProvider } from "#pi/ui/interactive/footer-data";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
 
 /** Interface for components that can be expanded/collapsed */

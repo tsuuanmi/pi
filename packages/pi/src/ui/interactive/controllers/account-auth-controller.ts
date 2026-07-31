@@ -14,17 +14,17 @@ import type { OAuthProviderId, OAuthSelectPrompt } from "@tsuuanmi/pi-ai/oauth";
 import type { Component, Container, EditorComponent, StatusLineComponent, TUI } from "@tsuuanmi/pi-tui";
 import { getAuthPath } from "#pi/config/config";
 import { defaultModelPerProvider } from "#pi/model/model-resolver";
-import { LoginDialogComponent } from "#pi/modes/interactive/components/login-dialog";
+import { LoginDialogComponent } from "#pi/ui/interactive/components/login-dialog";
 import {
 	AccountSelectorComponent,
 	type AccountSelectorOption,
-} from "#pi/modes/interactive/components/selectors/account-selector";
-import { ExtensionSelectorComponent } from "#pi/modes/interactive/components/selectors/extension-selector";
+} from "#pi/ui/interactive/components/selectors/account-selector";
+import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension-selector";
 import {
 	type AuthSelectorProvider,
 	OAuthSelectorComponent,
-} from "#pi/modes/interactive/components/selectors/oauth-selector";
-import type { FooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
+} from "#pi/ui/interactive/components/selectors/oauth-selector";
+import type { FooterDataProvider } from "#pi/ui/interactive/footer-data";
 import type { AgentSession } from "#pi/runtime/agent";
 
 function isUnknownModel(model: Model<any> | undefined): boolean {

@@ -37,7 +37,7 @@ vi.mock("child_process", () => ({
 	}),
 }));
 
-import { FooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
+import { FooterDataProvider } from "#pi/ui/interactive/footer-data";
 
 type WorktreeFixture = {
 	worktreeDir: string;
@@ -93,7 +93,7 @@ describe("FooterDataProvider reftable branch detection", () => {
 
 	beforeEach(() => {
 		originalCwd = process.cwd();
-		tempDir = mkdtempSync(join(tmpdir(), "footer-data-provider-"));
+		tempDir = mkdtempSync(join(tmpdir(), "footer-data-"));
 		resolvedBranch = "main";
 		vi.mocked(spawnSync).mockClear();
 		vi.mocked(execFile).mockClear();

@@ -8,7 +8,7 @@ import type {
 	Theme,
 	TUI,
 } from "@tsuuanmi/pi-tui";
-import type { ReadonlyFooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
+import type { ReadonlyFooterDataProvider } from "#pi/ui/interactive/footer-data";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
 
 // ============================================================================

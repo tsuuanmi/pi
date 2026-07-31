@@ -16,7 +16,7 @@ import { ModelRegistry } from "#pi/model/model-registry";
 import { AgentSession } from "#pi/runtime/agent";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import type { ResourceLoader } from "#pi/skills/resource-loader";
+import type { ResourceLoader } from "#pi/resources/resource-loader";
 
 /**
  * API key for authenticated tests. Tests using this should be wrapped in

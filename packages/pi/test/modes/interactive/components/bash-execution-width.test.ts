@@ -4,7 +4,7 @@
  */
 import { initTheme, visibleWidth } from "@tsuuanmi/pi-tui";
 import { beforeAll, describe, expect, it } from "vitest";
-import { BashExecutionComponent } from "#pi/modes/interactive/components/bash-execution";
+import { BashExecutionComponent } from "#pi/ui/interactive/components/bash-execution";
 
 /** Minimal TUI stub that only exposes terminal.columns */
 function createTuiStub(columns: number): { columns: number; stub: any } {

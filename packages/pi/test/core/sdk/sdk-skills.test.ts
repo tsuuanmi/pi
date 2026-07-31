@@ -6,7 +6,7 @@ import { createExtensionRuntime } from "#pi/extensions/loader";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
 import { createAgentSession } from "#pi/runtime/sdk";
 import { SessionManager } from "#pi/session/manager";
-import type { ResourceLoader } from "#pi/skills/resource-loader";
+import type { ResourceLoader } from "#pi/resources/resource-loader";
 
 describe("createAgentSession skills option", () => {
 	let tempDir: string;

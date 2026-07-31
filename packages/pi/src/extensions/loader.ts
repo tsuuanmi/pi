@@ -38,7 +38,7 @@ import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "#pi/config/config";
 import type { ExecOptions } from "#pi/exec/exec";
 import { execCommand } from "#pi/exec/exec";
 import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
-import { type HookHandlerFn, registerExtensionHook } from "#pi/hooks/registration";
+import { type HookHandlerFn, registerExtensionHook } from "#pi/extensions/hooks/registration";
 // NOTE: This import works because loader.ts exports are NOT re-exported from index.ts,
 // avoiding a circular dependency. Extensions can import from @tsuuanmi/pi.
 import * as _bundledPi from "#pi/index";

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import type { CustomEditor } from "#pi/modes/interactive/components/custom-editor";
-import { KeyHandlerController } from "#pi/modes/interactive/controllers/key-handler-controller";
+import type { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
+import { KeyHandlerController } from "#pi/ui/interactive/controllers/key-handler-controller";
 import { InteractiveMode } from "#pi/modes/interactive/interactive-mode";
 import type { AgentSession } from "#pi/runtime/agent";
 

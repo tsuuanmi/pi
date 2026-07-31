@@ -14,7 +14,7 @@ import {
 	theme,
 } from "@tsuuanmi/pi-tui";
 import type { ModelRegistry } from "#pi/model/model-registry";
-import { getModelSearchText } from "#pi/modes/interactive/model-search";
+import { getModelSearchText } from "#pi/ui/interactive/model-search";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 
 interface ModelItem {

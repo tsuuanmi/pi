@@ -4,7 +4,7 @@ import { Type } from "typebox";
 import { beforeAll, describe, expect, test } from "vitest";
 import type { ToolDefinition } from "#pi/api/types";
 import { getReadmePath } from "#pi/config/config";
-import { ToolExecutionComponent } from "#pi/modes/interactive/components/tool-execution";
+import { ToolExecutionComponent } from "#pi/ui/interactive/components/tool-execution";
 import { type BashOperations, createBashToolDefinition } from "#pi/tools/bash";
 import { createReadTool, createReadToolDefinition } from "#pi/tools/read";
 import { createWriteToolDefinition } from "#pi/tools/write";

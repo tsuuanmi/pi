@@ -55,7 +55,7 @@ import {
 	hasExtensionHookHandlers,
 	type RunnerEmitEvent,
 	type RunnerEmitResult,
-} from "#pi/hooks/runner-dispatch";
+} from "#pi/extensions/hooks/runner-dispatch";
 import type { ModelRegistry } from "#pi/model/model-registry";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 import type { SessionManager } from "#pi/session/manager";
@@ -629,7 +629,7 @@ export class ExtensionRunner {
 		return {
 			extensions: this.extensions,
 			ctx,
-			emitError: (error) => this.emitError(error),
+			emitError: (error: ExtensionError) => this.emitError(error),
 			isStale: () => this.isStale(),
 		};
 	}

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Container, initTheme, type Terminal, Text, TUI } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { ToolExecutionComponent } from "#pi/modes/interactive/components/tool-execution";
+import { ToolExecutionComponent } from "#pi/ui/interactive/components/tool-execution";
 import { createEditToolDefinition } from "#pi/tools/edit";
 import { computeEditsDiff, type Edit } from "#pi/tools/edit-diff";
 

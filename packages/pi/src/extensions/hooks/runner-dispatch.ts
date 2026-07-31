@@ -23,7 +23,7 @@ import type {
 	ToolResultEventResult,
 	UserBashEvent,
 	UserBashEventResult,
-} from "#pi/hooks/event-types";
+} from "#pi/extensions/hooks/event-types";
 import type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";
 
 export type HookErrorEmitter = (error: ExtensionError) => void;
@@ -401,13 +401,13 @@ export async function emitResourcesDiscoverHook(
 				const result = handlerResult as ResourcesDiscoverResult | undefined;
 
 				if (result?.skillPaths?.length) {
-					skillPaths.push(...result.skillPaths.map((path) => ({ path, extensionPath: ext.path })));
+					skillPaths.push(...result.skillPaths.map((path: string) => ({ path, extensionPath: ext.path })));
 				}
 				if (result?.promptPaths?.length) {
-					promptPaths.push(...result.promptPaths.map((path) => ({ path, extensionPath: ext.path })));
+					promptPaths.push(...result.promptPaths.map((path: string) => ({ path, extensionPath: ext.path })));
 				}
 				if (result?.themePaths?.length) {
-					themePaths.push(...result.themePaths.map((path) => ({ path, extensionPath: ext.path })));
+					themePaths.push(...result.themePaths.map((path: string) => ({ path, extensionPath: ext.path })));
 				}
 			} catch (err) {
 				recordHookError(state, ext.path, "resources_discover", err);

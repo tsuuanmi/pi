@@ -13,8 +13,8 @@ import { AgentSession } from "#pi/runtime/agent";
 import { optimizeRetainedContext } from "#pi/runtime/context-optimization";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import type { ResourceLoader } from "#pi/skills/resource-loader";
-import { DefaultResourceLoader } from "#pi/skills/resource-loader";
+import type { ResourceLoader } from "#pi/resources/resource-loader";
+import { DefaultResourceLoader } from "#pi/resources/resource-loader";
 import type { SubagentManager } from "#pi/subagents/subagents";
 import { time } from "#pi/telemetry/timings";
 import {

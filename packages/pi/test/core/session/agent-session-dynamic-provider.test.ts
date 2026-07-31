@@ -8,7 +8,7 @@ import type { ExtensionFactory } from "#pi/runtime/sdk";
 import { createAgentSession } from "#pi/runtime/sdk";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { DefaultResourceLoader } from "#pi/skills/resource-loader";
+import { DefaultResourceLoader } from "#pi/resources/resource-loader";
 
 describe("AgentSession dynamic provider registration", () => {
 	let tempDir: string;

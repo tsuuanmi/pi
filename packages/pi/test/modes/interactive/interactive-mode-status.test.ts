@@ -12,8 +12,8 @@ import {
 import { VirtualTerminal } from "@tsuuanmi/pi-tui/test/terminal/runtime/virtual-terminal";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import type { AutocompleteProviderFactory } from "#pi/api/types";
-import { ExtensionUIController } from "#pi/modes/interactive/controllers/extension-ui-controller";
-import { ResourceDisplayController } from "#pi/modes/interactive/controllers/resource-display-controller";
+import { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui-controller";
+import { ResourceDisplayController } from "#pi/ui/interactive/controllers/resource-display-controller";
 import { InteractiveMode } from "#pi/modes/interactive/interactive-mode";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 

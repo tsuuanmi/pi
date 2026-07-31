@@ -66,21 +66,21 @@ import type {
 	ExtensionRunner,
 	ExtensionUIContext,
 } from "#pi/extensions/index";
-import { BashExecutionComponent } from "#pi/modes/interactive/components/bash-execution";
-import { CustomEditor } from "#pi/modes/interactive/components/custom-editor";
-import { AssistantMessageComponent } from "#pi/modes/interactive/components/messages/assistant-message";
-import { BranchSummaryMessageComponent } from "#pi/modes/interactive/components/messages/branch-summary-message";
-import { CompactionSummaryMessageComponent } from "#pi/modes/interactive/components/messages/compaction-summary-message";
-import { CustomMessageComponent } from "#pi/modes/interactive/components/messages/custom-message";
-import { SkillInvocationMessageComponent } from "#pi/modes/interactive/components/messages/skill-invocation-message";
-import { ToolExecutionComponent } from "#pi/modes/interactive/components/tool-execution";
-import { AccountAuthController } from "#pi/modes/interactive/controllers/account-auth-controller";
-import { CommandController } from "#pi/modes/interactive/controllers/command-controller";
-import { ExtensionUIController } from "#pi/modes/interactive/controllers/extension-ui-controller";
-import { KeyHandlerController } from "#pi/modes/interactive/controllers/key-handler-controller";
-import { ResourceDisplayController } from "#pi/modes/interactive/controllers/resource-display-controller";
-import { SelectorController } from "#pi/modes/interactive/controllers/selector-controller";
-import { FooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
+import { BashExecutionComponent } from "#pi/ui/interactive/components/bash-execution";
+import { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
+import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant-message";
+import { BranchSummaryMessageComponent } from "#pi/ui/interactive/components/messages/branch-summary-message";
+import { CompactionSummaryMessageComponent } from "#pi/ui/interactive/components/messages/compaction-summary-message";
+import { CustomMessageComponent } from "#pi/ui/interactive/components/messages/custom-message";
+import { SkillInvocationMessageComponent } from "#pi/ui/interactive/components/messages/skill-invocation-message";
+import { ToolExecutionComponent } from "#pi/ui/interactive/components/tool-execution";
+import { AccountAuthController } from "#pi/ui/interactive/controllers/account-auth-controller";
+import { CommandController } from "#pi/ui/interactive/controllers/command-controller";
+import { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui-controller";
+import { KeyHandlerController } from "#pi/ui/interactive/controllers/key-handler-controller";
+import { ResourceDisplayController } from "#pi/ui/interactive/controllers/resource-display-controller";
+import { SelectorController } from "#pi/ui/interactive/controllers/selector-controller";
+import { FooterDataProvider } from "#pi/ui/interactive/footer-data";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#pi/runtime/agent";
 import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/runtime/runtime";
@@ -93,7 +93,7 @@ import { parseGitUrl } from "#pi/utils/fs/git";
 import { killTrackedDetachedChildren } from "#pi/utils/system/shell";
 import { ensureTool } from "#pi/utils/system/tool-installer";
 
-export { isApiKeyAccountProvider } from "#pi/modes/interactive/controllers/account-auth-controller";
+export { isApiKeyAccountProvider } from "#pi/ui/interactive/controllers/account-auth-controller";
 
 /** Interface for components that can be expanded/collapsed */
 interface Expandable {

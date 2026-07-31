@@ -1,7 +1,3 @@
-// Extracted from InteractiveMode (Phase-2 structural split, zero behavior change).
-// Selector UI surface. Moved method bodies are verbatim; injected host dependencies are
-// exposed as same-named fields/getters/delegates so the bodies need no internal remaps.
-
 import type { Component, EditorComponent, StatusLineComponent } from "@tsuuanmi/pi-tui";
 import {
 	type Container,
@@ -15,13 +11,13 @@ import {
 } from "@tsuuanmi/pi-tui";
 import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "#pi/exec/http-dispatcher";
 import type { ExtensionCommandContext } from "#pi/extensions/index";
-import type { CustomEditor } from "#pi/modes/interactive/components/custom-editor";
-import { AssistantMessageComponent } from "#pi/modes/interactive/components/messages/assistant-message";
-import { SessionSelectorComponent } from "#pi/modes/interactive/components/selectors/session-selector";
-import { SettingsSelectorComponent } from "#pi/modes/interactive/components/selectors/settings-selector";
-import { TreeSelectorComponent } from "#pi/modes/interactive/components/selectors/tree-selector";
-import { UserMessageSelectorComponent } from "#pi/modes/interactive/components/selectors/user-message-selector";
-import type { ExtensionUIController } from "#pi/modes/interactive/controllers/extension-ui-controller";
+import type { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
+import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant-message";
+import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session-selector";
+import { SettingsSelectorComponent } from "#pi/ui/interactive/components/selectors/settings-selector";
+import { TreeSelectorComponent } from "#pi/ui/interactive/components/selectors/tree-selector";
+import { UserMessageSelectorComponent } from "#pi/ui/interactive/components/selectors/user-message-selector";
+import type { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui-controller";
 import type { AgentSession } from "#pi/runtime/agent";
 import type { AgentSessionRuntime } from "#pi/runtime/runtime";
 import { MissingSessionCwdError } from "#pi/session/cwd";

@@ -5,14 +5,6 @@ import type { AgentSessionContext } from "#pi/runtime/context";
 import { calculateContextTokens, estimateContextTokens } from "#pi/session/compaction";
 import { getLatestCompactionEntry } from "#pi/session/manager";
 
-/**
- * Phase-1 StatsExport subsystem (stateless module functions on
- * `AgentSessionContext`). Extracted verbatim from `AgentSession.getSessionStats`
- * (`pi-session.ts:2940`) and `AgentSession.getContextUsage`
- * (`pi-session.ts:2985`); the public methods on `AgentSession` now delegate
- * here. Pure structural / zero behavior change.
- */
-
 export function computeSessionStats(ctx: AgentSessionContext): SessionStats {
 	const state = ctx.state;
 	const userMessages = state.messages.filter((m) => m.role === "user").length;
