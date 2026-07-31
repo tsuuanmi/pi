@@ -12,8 +12,9 @@ Use the generic orchestrator engine for generic team task DAG execution only whe
 - Do not move workflow gates into orchestrator.
 - Do not move workflow HUD state into orchestrator.
 - Do not move workflow artifact layout into orchestrator.
-- Do not add fallback routing.
-- Do not add legacy task formats.
+- Do not add fallback routing or fallback execution.
+- Do not add alternate task formats or aliases.
+- Do not add compatibility wrappers.
 - Do not implement runtime code in this design step.
 
 ## Ownership
@@ -169,15 +170,15 @@ Team workflow command/tool
 | A | Add adapter types and mapping tests | Done; no runtime behavior change |
 | B | Add `TeamCheckpointStore` | Done; stores strict orchestrator checkpoint JSON through workflow-owned callbacks |
 | C | Add queue event sink | Done; maps orchestrator queue events to workflow-owned events without runtime wiring |
-| D | Run orchestrator behind explicit workflow config | Existing workflow behavior preserved until enabled |
-| D | Remove duplicate generic DAG execution after parity | No fallback/legacy task path remains |
+| D | Run orchestrator behind explicit workflow config | `on` mode calls orchestrator; `off` mode uses the workflow-owned path |
+| E | Remove duplicate generic DAG execution | One generic DAG implementation remains after parity is proven and approved |
 
 ## Acceptance criteria for implementation
 
 - No package boundary violations.
 - Workflows import orchestrator; orchestrator imports nothing from workflows.
-- No fallback routing is added.
-- No legacy task shape is accepted.
+- No fallback routing or fallback execution is added.
+- No alternate task shape or compatibility wrapper is accepted.
 - Workflow gates remain workflow-owned.
 - Workflow artifacts remain workflow-owned.
 - Orchestrator checkpoints remain strict versioned payloads.

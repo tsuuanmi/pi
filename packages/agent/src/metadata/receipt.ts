@@ -1,6 +1,6 @@
 export const STRUCTURED_RECEIPT_VERSION = 1 as const;
 
-export type StructuredReceiptSource = "builtin-tool" | "subagent" | "tmux";
+export type StructuredReceiptSource = "tool" | "subagent" | "session";
 export type StructuredReceiptStatus =
 	| "queued"
 	| "started"
@@ -12,7 +12,7 @@ export type StructuredReceiptStatus =
 
 export interface StructuredReceiptInspectEntry {
 	label: string;
-	kind: "command" | "path" | "session" | "tool-call" | "tmux";
+	kind: "command" | "path" | "session" | "tool-call";
 	value: string;
 }
 
@@ -47,11 +47,7 @@ function isStructuredReceiptInspectEntry(value: unknown): value is StructuredRec
 	return (
 		typeof value.label === "string" &&
 		typeof value.kind === "string" &&
-		(value.kind === "command" ||
-			value.kind === "path" ||
-			value.kind === "session" ||
-			value.kind === "tool-call" ||
-			value.kind === "tmux") &&
+		(value.kind === "command" || value.kind === "path" || value.kind === "session" || value.kind === "tool-call") &&
 		typeof value.value === "string"
 	);
 }
@@ -60,7 +56,7 @@ export function isStructuredReceipt(value: unknown): value is StructuredReceipt 
 	if (!isRecord(value)) return false;
 	if (value.version !== STRUCTURED_RECEIPT_VERSION) return false;
 	if (typeof value.id !== "string" || value.id.length === 0) return false;
-	if (typeof value.source !== "string" || !["builtin-tool", "subagent", "tmux"].includes(value.source)) return false;
+	if (typeof value.source !== "string" || !["tool", "subagent", "session"].includes(value.source)) return false;
 	if (typeof value.actionSummary !== "string" || value.actionSummary.length === 0) return false;
 	if (
 		typeof value.status !== "string" ||

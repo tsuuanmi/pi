@@ -1,6 +1,6 @@
 import { basename, dirname, isAbsolute, relative, resolve as resolvePath, sep } from "node:path";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import { getLanguageFromPath, highlightCode, keyHint, keyText, Text, type Theme } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
@@ -58,11 +58,11 @@ export interface ReadToolOptions {
 	operations?: ReadOperations;
 }
 
-type ReadRenderArgs = { path?: string; file_path?: string; offset?: number; limit?: number };
+type ReadRenderArgs = { path?: string; offset?: number; limit?: number };
 
 function parseReadPathLineRange(args: ReadRenderArgs | undefined): ReadRenderArgs | undefined {
 	if (!args || args.offset !== undefined || args.limit !== undefined) return args;
-	const rawPath = str(args.file_path ?? args.path);
+	const rawPath = str(args.path);
 	if (rawPath === null) return args;
 	const match = /^(.*):(\d+)(?:-(\d+))?$/.exec(rawPath);
 	if (!match || !match[1]) return args;
@@ -72,13 +72,7 @@ function parseReadPathLineRange(args: ReadRenderArgs | undefined): ReadRenderArg
 	if (!Number.isSafeInteger(offset) || offset < 1) return args;
 	if (endLine !== undefined && (!Number.isSafeInteger(endLine) || endLine < offset)) return args;
 
-	const parsed = { ...args, offset, limit: endLine !== undefined ? endLine - offset + 1 : undefined };
-	if (args.file_path !== undefined) {
-		parsed.file_path = match[1];
-	} else {
-		parsed.path = match[1];
-	}
-	return parsed;
+	return { ...args, path: match[1], offset, limit: endLine !== undefined ? endLine - offset + 1 : undefined };
 }
 
 function formatReadLineRange(args: ReadRenderArgs | undefined, theme: Theme): string {
@@ -90,7 +84,7 @@ function formatReadLineRange(args: ReadRenderArgs | undefined, theme: Theme): st
 
 function formatReadCall(args: ReadRenderArgs | undefined, theme: Theme, cwd: string): string {
 	const displayArgs = parseReadPathLineRange(args);
-	const pathDisplay = renderToolPath(str(displayArgs?.file_path ?? displayArgs?.path), theme, cwd);
+	const pathDisplay = renderToolPath(str(displayArgs?.path), theme, cwd);
 	return `${theme.fg("toolTitle", theme.bold("read"))} ${pathDisplay}${formatReadLineRange(displayArgs, theme)}`;
 }
 
@@ -130,7 +124,7 @@ function getCompactReadClassification(
 	cwd: string,
 ): CompactReadClassification | undefined {
 	const displayArgs = parseReadPathLineRange(args);
-	const rawPath = str(displayArgs?.file_path ?? displayArgs?.path);
+	const rawPath = str(displayArgs?.path);
 	if (!rawPath) return undefined;
 
 	const absolutePath = resolveToCwd(rawPath, cwd);
@@ -186,7 +180,7 @@ function formatReadResult(
 	}
 
 	const displayArgs = parseReadPathLineRange(args);
-	const rawPath = str(displayArgs?.file_path ?? displayArgs?.path);
+	const rawPath = str(displayArgs?.path);
 	const output = getTextOutput(result);
 	const lang = rawPath ? getLanguageFromPath(rawPath) : undefined;
 	const renderedLines = lang ? highlightCode(replaceTabs(output), lang) : output.split("\n");
@@ -325,7 +319,7 @@ export function createReadToolDefinition(
 						if (aborted) return;
 						signal?.removeEventListener("abort", onAbort);
 						const endedAt = Date.now();
-						const receipt = createBuiltinToolReceipt({
+						const receipt = createToolReceipt({
 							toolCallId,
 							toolName: "read",
 							status: "completed",
@@ -337,7 +331,7 @@ export function createReadToolDefinition(
 							durationMs: endedAt - startedAt,
 							outputPreview: content[0]?.text?.slice(0, 240),
 						});
-						resolve({ content, details: attachBuiltinToolReceipt(details, receipt) });
+						resolve({ content, details: attachToolReceipt(details, receipt) });
 					} catch (error: any) {
 						signal?.removeEventListener("abort", onAbort);
 						if (!aborted) reject(error);

@@ -235,7 +235,7 @@ function normalizeToolPath(rawPath: unknown, cwd: string | undefined): string | 
 }
 
 function getPathArg(args: Record<string, unknown>): unknown {
-	return args.path ?? args.file_path;
+	return args.path;
 }
 
 function getReadKey(call: ToolCallMetadata | undefined, cwd: string | undefined): ReadKey | undefined {

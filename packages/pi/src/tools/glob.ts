@@ -1,6 +1,6 @@
 import { lstat, readdir } from "node:fs/promises";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import path from "path";
@@ -230,7 +230,7 @@ export function createGlobToolDefinition(
 			const location: Record<string, string | number | boolean> = pattern
 				? { cwd, path: searchPath, pattern, results: outputLines.length }
 				: { cwd, path: searchPath, results: outputLines.length };
-			const receipt = createBuiltinToolReceipt({
+			const receipt = createToolReceipt({
 				toolCallId,
 				toolName: "glob",
 				status: "completed",
@@ -244,7 +244,7 @@ export function createGlobToolDefinition(
 			});
 			return {
 				content: [{ type: "text", text: output }],
-				details: attachBuiltinToolReceipt(Object.keys(details).length > 0 ? details : undefined, receipt),
+				details: attachToolReceipt(Object.keys(details).length > 0 ? details : undefined, receipt),
 			};
 		},
 		renderCall(args, theme, context) {

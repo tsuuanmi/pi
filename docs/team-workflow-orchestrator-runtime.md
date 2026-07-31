@@ -1,6 +1,6 @@
 # Team Workflow Orchestrator Runtime
 
-This document designs the future feature-gated runtime path for using `@tsuuanmi/pi-orchestrator` inside the team workflow. It is a design only; it does not change runtime behavior.
+This document designs the feature-gated runtime path for using `@tsuuanmi/pi-orchestrator` inside the team workflow. It is a design only; it does not change runtime behavior.
 
 ## Purpose
 
@@ -17,8 +17,9 @@ Define how `@tsuuanmi/pi-workflows` can run generic team task DAGs through `@tsu
 ## Non-goals
 
 - Do not switch default team workflow behavior.
-- Do not add fallback from the orchestrator path to the current path.
-- Do not accept legacy task shapes.
+- Do not add fallback from the orchestrator path to the workflow-owned path.
+- Do not accept alternate task shapes or aliases.
+- Do not add compatibility wrappers.
 - Do not move workflow gates into orchestrator.
 - Do not move workflow artifacts into orchestrator.
 - Do not make orchestrator aware of workflow storage.
@@ -34,12 +35,12 @@ type TeamOrchestratorMode = "off" | "on";
 
 | Value | Behavior |
 | --- | --- |
-| `off` | Use the current team workflow path |
+| `off` | Use the workflow-owned team runtime path |
 | `on` | Use the orchestrator-backed path |
 | missing | Same as `off` |
 | invalid | Fail config validation |
 
-If the `on` path fails, it fails visibly. It must not silently fall back to the current path.
+If the `on` path fails, it fails visibly. It must not silently fall back to the workflow-owned path.
 
 ## Runtime flow
 
@@ -47,7 +48,7 @@ If the `on` path fails, it fails visibly. It must not silently fall back to the 
 team workflow start
   |
   +-- teamOrchestrator === "off"
-  |     -> current workflow path
+  |     -> workflow-owned path
   |
   +-- teamOrchestrator === "on"
         -> load workflow team state
@@ -77,7 +78,7 @@ team workflow start
 
 ## Parity matrix
 
-| Current team behavior | Orchestrator path equivalent | Notes |
+| Workflow-owned behavior | Orchestrator path equivalent | Notes |
 | --- | --- | --- |
 | create task | map to `TaskInput` | strict fields only |
 | assign worker | `assignee` or requirements | no fallback assignment |
@@ -106,7 +107,7 @@ team workflow start
 | workflow gate failure | workflow-owned failure after orchestrator run |
 | adapter write failure | fail visibly |
 
-No failure path may silently fall back from orchestrator mode to the current workflow path.
+No failure path may silently fall back from orchestrator mode to the workflow-owned path.
 
 ## Required seams
 
@@ -127,17 +128,17 @@ These seams live in `@tsuuanmi/pi-workflows`.
 | Phase | Work | Acceptance |
 | --- | --- | --- |
 | A | Add `TeamOrchestratorMode` config validation | Done; invalid values fail before execution |
-| B | Add injected seams | default mode remains current path |
+| B | Add injected seams | `off` mode uses the workflow-owned path |
 | C | Add `on` runtime path | calls orchestrator only when explicitly enabled |
-| D | Add parity tests | current and orchestrator modes are both covered |
-| E | Remove duplicate generic DAG logic | only after parity is proven and approved |
+| D | Add parity tests | `off` and `on` modes are both covered |
+| E | Remove duplicate generic DAG logic | one generic DAG implementation remains after parity is proven and approved |
 
 ## Future test plan
 
 | Test | Expected |
 | --- | --- |
-| default mode uses current path | no orchestrator calls |
-| `teamOrchestrator: "off"` uses current path | no orchestrator calls |
+| default mode uses workflow-owned path | no orchestrator calls |
+| `teamOrchestrator: "off"` uses workflow-owned path | no orchestrator calls |
 | `teamOrchestrator: "on"` maps tasks and calls orchestrator | one orchestrator run |
 | orchestrator failure does not fall back | visible failure |
 | queue event updates workflow state | mapped event |
@@ -149,10 +150,10 @@ These seams live in `@tsuuanmi/pi-workflows`.
 
 ## Acceptance criteria for runtime implementation
 
-- Default behavior remains unchanged.
+- Default mode is `off`.
 - The feature gate is explicit.
-- No fallback from orchestrator mode to current mode is added.
-- No legacy task shape is accepted.
+- No fallback from orchestrator mode to `off` mode is added.
+- No alternate task shape or compatibility wrapper is accepted.
 - Boundary checker passes.
 - Team workflow tests pass in both modes.
 - Orchestrator remains unaware of workflows.

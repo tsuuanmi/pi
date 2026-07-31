@@ -131,7 +131,7 @@ A workflow-owned orchestrator adapter must:
 Do not add these without a concrete workflow implementation plan:
 
 - shared storage abstractions across all packages
-- checkpoint version adapters or fallback loaders
+- checkpoint version adapters, fallback loaders, or compatibility wrappers
 - workflow storage imports in orchestrator
 - Pi session imports in workflows
 - generic lease ownership in orchestrator

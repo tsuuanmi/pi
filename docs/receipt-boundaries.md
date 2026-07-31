@@ -123,4 +123,4 @@ Owns only app/session integration records when needed. It should render or route
 - Higher layers use references or public helpers, not copied schemas.
 - Lower layers do not mention higher-layer concepts.
 - Receipt fields are stable, explicit, and audit-oriented.
-- No fallback or legacy receipt aliases are added without an explicit migration plan.
+- No fallback receipt path, alternate receipt shape, or compatibility wrapper is added.

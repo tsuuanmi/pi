@@ -31,11 +31,11 @@ describe("structured receipt renderer", () => {
 		expect(formatStructuredReceiptLines(receipt, true)).toContain("Inspect: session file: /tmp/subagent.jsonl");
 	});
 
-	test("hides redundant builtin bash details and colors receipt status", () => {
+	test("hides redundant bash tool details and colors receipt status", () => {
 		const receipt: StructuredReceipt = {
 			version: STRUCTURED_RECEIPT_VERSION,
 			id: "tool-1",
-			source: "builtin-tool",
+			source: "tool",
 			actionSummary: "Executed bash command",
 			status: "completed",
 			location: { cwd: "/repo", toolCallId: "tool-1", toolName: "bash", command: "git status" },

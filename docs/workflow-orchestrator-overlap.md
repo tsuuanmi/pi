@@ -6,9 +6,10 @@ This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-
 
 - `@tsuuanmi/pi-orchestrator` owns generic task DAG execution over runtime `Agent`s.
 - `@tsuuanmi/pi-workflows` owns named Pi workflow UX, state, gates, artifacts, and command/tool control planes.
-- `@tsuuanmi/pi-workflows` may import `@tsuuanmi/pi-orchestrator` when a workflow needs generic DAG/team execution.
+- `@tsuuanmi/pi-workflows` may import `@tsuuanmi/pi-orchestrator` only through workflow-owned adapters when a workflow needs generic DAG/team execution.
 - `@tsuuanmi/pi-orchestrator` must not import workflows.
 - `@tsuuanmi/pi-workflows` must not import `@tsuuanmi/pi` or `@tsuuanmi/pi/*`.
+- Integration code must reject unsupported shapes instead of adding fallback, alias, or compatibility paths.
 
 ## Summary table
 
@@ -161,4 +162,4 @@ Any workflow-to-orchestrator adapter must satisfy:
 
 ## Do not implement yet
 
-Do not start runtime integration until the team adapter design is written and reviewed. The current priority is boundary clarity and overlap reduction, not moving behavior speculatively.
+Do not start runtime integration until the team adapter design is approved. The current priority is boundary clarity and overlap reduction, not moving behavior speculatively.

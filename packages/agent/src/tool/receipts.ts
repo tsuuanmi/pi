@@ -7,7 +7,7 @@ import {
 	withStructuredReceipt,
 } from "#agent/metadata/receipt";
 
-export interface BuiltinToolReceiptInput {
+export interface ToolReceiptInput {
 	toolCallId: string;
 	toolName: string;
 	status: StructuredReceiptStatus;
@@ -22,11 +22,11 @@ export interface BuiltinToolReceiptInput {
 	meta?: Record<string, unknown>;
 }
 
-export function createBuiltinToolReceipt(input: BuiltinToolReceiptInput): StructuredReceipt {
+export function createToolReceipt(input: ToolReceiptInput): StructuredReceipt {
 	return {
 		version: STRUCTURED_RECEIPT_VERSION,
 		id: `tool:${input.toolCallId}`,
-		source: "builtin-tool" satisfies StructuredReceiptSource,
+		source: "tool" satisfies StructuredReceiptSource,
 		actionSummary: input.actionSummary,
 		status: input.status,
 		location: {
@@ -46,7 +46,7 @@ export function createBuiltinToolReceipt(input: BuiltinToolReceiptInput): Struct
 	};
 }
 
-export function attachBuiltinToolReceipt<TDetails>(
+export function attachToolReceipt<TDetails>(
 	details: TDetails,
 	receipt: StructuredReceipt,
 ): TDetails & { receipt: StructuredReceipt } {

@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
@@ -171,7 +171,7 @@ export function createFindToolDefinition(
 							if (results.length === 0) {
 								const output = "No files found matching pattern";
 								const endedAt = Date.now();
-								const receipt = createBuiltinToolReceipt({
+								const receipt = createToolReceipt({
 									toolCallId,
 									toolName: "find",
 									status: "completed",
@@ -186,7 +186,7 @@ export function createFindToolDefinition(
 								settle(() =>
 									resolve({
 										content: [{ type: "text", text: output }],
-										details: attachBuiltinToolReceipt(undefined, receipt),
+										details: attachToolReceipt(undefined, receipt),
 									}),
 								);
 								return;
@@ -215,7 +215,7 @@ export function createFindToolDefinition(
 								resultOutput += `\n\n[${notices.join(". ")}]`;
 							}
 							const endedAt = Date.now();
-							const receipt = createBuiltinToolReceipt({
+							const receipt = createToolReceipt({
 								toolCallId,
 								toolName: "find",
 								status: "completed",
@@ -230,10 +230,7 @@ export function createFindToolDefinition(
 							settle(() =>
 								resolve({
 									content: [{ type: "text", text: resultOutput }],
-									details: attachBuiltinToolReceipt(
-										Object.keys(details).length > 0 ? details : undefined,
-										receipt,
-									),
+									details: attachToolReceipt(Object.keys(details).length > 0 ? details : undefined, receipt),
 								}),
 							);
 							return;
@@ -319,7 +316,7 @@ export function createFindToolDefinition(
 							if (!output) {
 								const text = "No files found matching pattern";
 								const endedAt = Date.now();
-								const receipt = createBuiltinToolReceipt({
+								const receipt = createToolReceipt({
 									toolCallId,
 									toolName: "find",
 									status: "completed",
@@ -334,7 +331,7 @@ export function createFindToolDefinition(
 								settle(() =>
 									resolve({
 										content: [{ type: "text", text }],
-										details: attachBuiltinToolReceipt(undefined, receipt),
+										details: attachToolReceipt(undefined, receipt),
 									}),
 								);
 								return;
@@ -375,7 +372,7 @@ export function createFindToolDefinition(
 								resultOutput += `\n\n[${notices.join(". ")}]`;
 							}
 							const endedAt = Date.now();
-							const receipt = createBuiltinToolReceipt({
+							const receipt = createToolReceipt({
 								toolCallId,
 								toolName: "find",
 								status: "completed",
@@ -390,10 +387,7 @@ export function createFindToolDefinition(
 							settle(() =>
 								resolve({
 									content: [{ type: "text", text: resultOutput }],
-									details: attachBuiltinToolReceipt(
-										Object.keys(details).length > 0 ? details : undefined,
-										receipt,
-									),
+									details: attachToolReceipt(Object.keys(details).length > 0 ? details : undefined, receipt),
 								}),
 							);
 						});

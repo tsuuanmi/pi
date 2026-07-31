@@ -1,6 +1,6 @@
 import { readdir as fsReaddir, stat as fsStat } from "node:fs/promises";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import nodePath from "path";
@@ -174,7 +174,7 @@ export function createLsToolDefinition(
 						if (results.length === 0) {
 							const output = "(empty directory)";
 							const endedAt = Date.now();
-							const receipt = createBuiltinToolReceipt({
+							const receipt = createToolReceipt({
 								toolCallId,
 								toolName: "ls",
 								status: "completed",
@@ -188,7 +188,7 @@ export function createLsToolDefinition(
 							});
 							resolve({
 								content: [{ type: "text", text: output }],
-								details: attachBuiltinToolReceipt(undefined, receipt),
+								details: attachToolReceipt(undefined, receipt),
 							});
 							return;
 						}
@@ -213,7 +213,7 @@ export function createLsToolDefinition(
 						}
 
 						const endedAt = Date.now();
-						const receipt = createBuiltinToolReceipt({
+						const receipt = createToolReceipt({
 							toolCallId,
 							toolName: "ls",
 							status: "completed",
@@ -227,7 +227,7 @@ export function createLsToolDefinition(
 						});
 						resolve({
 							content: [{ type: "text", text: output }],
-							details: attachBuiltinToolReceipt(Object.keys(details).length > 0 ? details : undefined, receipt),
+							details: attachToolReceipt(Object.keys(details).length > 0 ? details : undefined, receipt),
 						});
 					} catch (e: any) {
 						signal?.removeEventListener("abort", onAbort);

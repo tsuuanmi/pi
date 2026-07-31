@@ -1,7 +1,7 @@
 import { constants } from "node:fs";
 import { access as fsAccess } from "node:fs/promises";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import { waitForChildProcess } from "@tsuuanmi/pi-agent/node";
 import {
 	type Component,
@@ -428,7 +428,7 @@ export function createBashToolDefinition(
 					throw new Error(appendStatus(outputText, `Command exited with code ${exitCode}`));
 				}
 				const endedAt = Date.now();
-				const receipt = createBuiltinToolReceipt({
+				const receipt = createToolReceipt({
 					toolCallId,
 					toolName: "bash",
 					status: "completed",
@@ -442,7 +442,7 @@ export function createBashToolDefinition(
 				});
 				return {
 					content: [{ type: "text", text: outputText }],
-					details: attachBuiltinToolReceipt(details, receipt),
+					details: attachToolReceipt(details, receipt),
 				};
 			} finally {
 				clearUpdateTimer();

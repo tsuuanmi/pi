@@ -34,8 +34,8 @@ export function createSubagentReceipt(record: SubagentRecord, sessionId: string)
 	}
 	if (record.tmux) {
 		inspect.push(
-			{ label: "attach", kind: "tmux", value: record.tmux.attach_command },
-			{ label: "inspect", kind: "tmux", value: record.tmux.inspect_command },
+			{ label: "attach", kind: "session", value: record.tmux.attach_command },
+			{ label: "inspect", kind: "session", value: record.tmux.inspect_command },
 			{ label: "cleanup", kind: "command", value: record.tmux.cleanup_command },
 		);
 	}

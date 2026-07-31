@@ -156,9 +156,10 @@ function cloneStrings(value: readonly string[] | undefined, field: string): read
 
 function requiredString(value: unknown, field: string): string {
 	if (typeof value !== "string") throw new Error(`${field} must be a string`);
-	const text = value.trim();
-	if (text.length === 0) throw new Error(`${field} must be non-empty`);
-	return text;
+	const trimmed = value.trim();
+	if (trimmed.length === 0) throw new Error(`${field} must be non-empty`);
+	if (trimmed !== value) throw new Error(`${field} must not have surrounding whitespace`);
+	return value;
 }
 
 function nonNegativeInteger(value: unknown, field: string): number {

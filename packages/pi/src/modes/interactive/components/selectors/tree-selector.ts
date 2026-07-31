@@ -909,7 +909,7 @@ class TreeList implements Component {
 
 		switch (name) {
 			case "read": {
-				const path = shortenPath(String(args.path || args.file_path || ""));
+				const path = shortenPath(String(args.path || ""));
 				const offset = args.offset as number | undefined;
 				const limit = args.limit as number | undefined;
 				let display = path;
@@ -921,11 +921,11 @@ class TreeList implements Component {
 				return `[read: ${display}]`;
 			}
 			case "write": {
-				const path = shortenPath(String(args.path || args.file_path || ""));
+				const path = shortenPath(String(args.path || ""));
 				return `[write: ${path}]`;
 			}
 			case "edit": {
-				const path = shortenPath(String(args.path || args.file_path || ""));
+				const path = shortenPath(String(args.path || ""));
 				return `[edit: ${path}]`;
 			}
 			case "bash": {

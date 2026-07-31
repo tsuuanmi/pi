@@ -4,6 +4,10 @@
 
 - **team**: Added pure team-to-orchestrator adapter mappings, explicit mode validation, a callback-backed checkpoint store, and a queue-event sink for future workflow-owned orchestrator integration.
 
+### Changed
+
+- **team**: Team orchestrator adapter string fields now reject surrounding whitespace instead of normalizing values.
+
 ## [0.2.2] - 2026-07-23
 
 ### Breaking Changes

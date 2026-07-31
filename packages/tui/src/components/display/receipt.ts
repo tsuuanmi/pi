@@ -44,10 +44,14 @@ function formatStatus(status: StructuredReceiptDisplayModel["status"], theme?: T
 }
 
 function shouldHideBuiltinCommandDetails(receipt: StructuredReceiptDisplayModel): boolean {
-	return receipt.source === "builtin-tool" && receipt.location.command !== undefined;
+	return receipt.source === "tool" && receipt.location.command !== undefined;
 }
 
-export function formatStructuredReceiptLines(receipt: StructuredReceiptDisplayModel, expanded: boolean, theme?: Theme): string[] {
+export function formatStructuredReceiptLines(
+	receipt: StructuredReceiptDisplayModel,
+	expanded: boolean,
+	theme?: Theme,
+): string[] {
 	const summaryParts = [`Receipt: ${receipt.actionSummary}`, formatStatus(receipt.status, theme)];
 	const lines = [summaryParts.join(" • ")];
 	if (!shouldHideBuiltinCommandDetails(receipt) && receipt.inspect.length > 0) {

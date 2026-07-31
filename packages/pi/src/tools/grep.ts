@@ -1,7 +1,7 @@
 import { readFile as fsReadFile, stat as fsStat } from "node:fs/promises";
 import { createInterface } from "node:readline";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
@@ -308,7 +308,7 @@ export function createGrepToolDefinition(
 							if (matchCount === 0) {
 								const output = "No matches found";
 								const endedAt = Date.now();
-								const receipt = createBuiltinToolReceipt({
+								const receipt = createToolReceipt({
 									toolCallId,
 									toolName: "grep",
 									status: "completed",
@@ -325,7 +325,7 @@ export function createGrepToolDefinition(
 								settle(() =>
 									resolve({
 										content: [{ type: "text", text: output }],
-										details: attachBuiltinToolReceipt(undefined, receipt),
+										details: attachToolReceipt(undefined, receipt),
 									}),
 								);
 								return;
@@ -373,7 +373,7 @@ export function createGrepToolDefinition(
 							}
 							if (notices.length > 0) output += `\n\n[${notices.join(". ")}]`;
 							const endedAt = Date.now();
-							const receipt = createBuiltinToolReceipt({
+							const receipt = createToolReceipt({
 								toolCallId,
 								toolName: "grep",
 								status: "completed",
@@ -390,10 +390,7 @@ export function createGrepToolDefinition(
 							settle(() =>
 								resolve({
 									content: [{ type: "text", text: output }],
-									details: attachBuiltinToolReceipt(
-										Object.keys(details).length > 0 ? details : undefined,
-										receipt,
-									),
+									details: attachToolReceipt(Object.keys(details).length > 0 ? details : undefined, receipt),
 								}),
 							);
 						});

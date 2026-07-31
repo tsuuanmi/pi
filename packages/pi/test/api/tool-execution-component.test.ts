@@ -117,21 +117,6 @@ describe("ToolExecutionComponent parity", () => {
 		expect(rendered).not.toContain(":1");
 	});
 
-	test("preserves legacy file_path rendering compatibility for built-in tools", () => {
-		const component = new ToolExecutionComponent(
-			"read",
-			"tool-3",
-			{ file_path: "README.md" },
-			{},
-			undefined,
-			createFakeTui(),
-			process.cwd(),
-		);
-		const rendered = stripAnsi(component.render(120).join("\n"));
-		expect(rendered).toContain("read");
-		expect(rendered).toContain("README.md");
-	});
-
 	test("bash execute emits an initial empty partial update before output arrives", async () => {
 		const updates: Array<{ content: Array<{ type: string; text?: string }>; details?: unknown }> = [];
 		const operations: BashOperations = {

@@ -19,10 +19,18 @@ The direction means higher layers may use lower layers. Lower layers must not de
 | Package | Owns | Must not own |
 | --- | --- | --- |
 | `@tsuuanmi/pi-ai` | Provider/model APIs, message content transport, streaming primitives | Agent loop, tools, orchestration, workflows, CLI/UI |
-| `@tsuuanmi/pi-agent` | Single-agent runtime, tool protocol, tool registry, message state, subagents, tool receipts | Multi-agent task scheduling, workflow state, CLI/UI |
+| `@tsuuanmi/pi-agent` | Single-agent runtime, standard tool protocol, tool registry APIs, message state, subagents, tool receipts | Concrete Pi tools, workflow tools, multi-agent task scheduling, workflow state, CLI/UI |
 | `@tsuuanmi/pi-orchestrator` | Generic task DAG orchestration over `Agent`s: `Task`, `TaskQueue`, `Team`, scheduling, routing, checkpoints, task receipts | Pi workflow commands, skill UX, CLI session state, file artifacts |
 | `@tsuuanmi/pi-workflows` | Pi workflow skills, workflow tools, workflow commands, workflow runtime state, workflow-specific policies | Low-level agent loop, model provider transport, generic task engine internals |
 | `@tsuuanmi/pi` | CLI, TUI integration, session manager, resource loading, extension runtime, built-in tools | Generic orchestration engine, workflow business logic, provider internals |
+
+## Hard boundary rules
+
+- Each concept has one owner; do not add shared ownership, fallback ownership, or compatibility wrappers.
+- Higher layers may call lower layers only through public APIs.
+- Lower layers must not import higher layers.
+- Adapters live in the higher layer that needs the integration.
+- Names must identify the owning layer when a term overlaps, such as workflow team state versus orchestrator `Team`.
 
 ## Dependency rules
 
@@ -58,7 +66,7 @@ pi-workflows -> pi
 pi-workflows -> pi/*
 ```
 
-`@tsuuanmi/pi-workflows` must not import `@tsuuanmi/pi` or any `@tsuuanmi/pi/*` subpath. Pi app APIs must be passed into workflows through explicit workflow-owned seams instead of direct package imports.
+`@tsuuanmi/pi-workflows` must not import `@tsuuanmi/pi` or any `@tsuuanmi/pi/*` subpath. Pi app APIs must be passed into workflows through explicit workflow-owned seams instead of direct package imports. `@tsuuanmi/pi-orchestrator` must not import workflow code, workflow storage, workflow gates, workflow receipts, or workflow artifacts.
 
 ## Boundary diagram
 
@@ -91,10 +99,10 @@ pi-workflows -> pi/*
 
 ## Rule of thumb
 
-- If it is about one agent executing tools, it belongs in `@tsuuanmi/pi-agent`.
+- If it is about the standard tool protocol, registry, or one agent executing registered tools, it belongs in `@tsuuanmi/pi-agent`.
 - If it is about many agents executing a task DAG, it belongs in `@tsuuanmi/pi-orchestrator`.
 - If it is about a named Pi workflow or skill with user-facing state, it belongs in `@tsuuanmi/pi-workflows`.
-- If it is about CLI, sessions, TUI, or resource loading, it belongs in `@tsuuanmi/pi`.
+- If it is about concrete Pi tools, CLI, sessions, TUI, or resource loading, it belongs in `@tsuuanmi/pi`.
 
 ## Receipt ownership
 
@@ -143,7 +151,7 @@ Rules:
 | 4 | Split receipt terminology in docs: tool receipt, task receipt, workflow receipt | High | `pi-agent`, `pi-orchestrator`, `pi-workflows` | Makes audit records clear and prevents cross-layer schema drift |
 | 5 | Define checkpoint vs workflow-state persistence contracts side by side | High | `pi-orchestrator`, `pi-workflows` | Clarifies recovery responsibilities and avoids storage coupling |
 | 6 | Add package-boundary checks for forbidden imports | Medium-high | repo scripts | Makes the boundary enforceable in CI |
-| 7 | Evaluate whether workflow `team` or `ultragoal` should call `Orchestrator` internally | Medium | `pi-workflows`, `pi-orchestrator` | Converts real DAG/team execution to the generic engine only where valuable |
+| 7 | Evaluate whether workflow `team` or `ultragoal` should call `Orchestrator` internally | Medium | `pi-workflows`, `pi-orchestrator` | Converts real DAG/team execution to the generic engine only where valuable; no fallback path remains after approval |
 | 8 | Normalize event naming docs across agent, orchestrator, and workflows | Medium | `pi-agent`, `pi-orchestrator`, `pi-workflows` | Improves observability without merging event systems |
 | 9 | Add adapter examples for workflow-owned checkpoint stores backed by workflow storage | Medium | `pi-workflows`, `pi-orchestrator` | Shows integration without making orchestrator depend on workflow storage |
 | 10 | Consider shared memory only after workflow/orchestrator task overlap is resolved | Low-medium | `pi-workflows`, `pi-orchestrator` | Larger API/storage design; not needed for boundary clarity |

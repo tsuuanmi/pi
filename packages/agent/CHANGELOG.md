@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **tool**: Renamed structured tool receipt helpers from built-in-specific names to standard protocol names and changed receipt sources to generic `tool` and `session` values.
 - **extensions**: Removed the shared extension contract surface from `@tsuuanmi/pi-agent`; the public Pi extension API now owns extension hook registration and actions.
 - **agent**: Collapsed the split simple/runtime Agent surface into one public runtime-capable `Agent`; `RuntimeAgent` is no longer exported.
 - **agent**: Standardized custom runtimes on `AgentRuntime.stream()` and removed split `runPrompt()`/`continue()` runtime methods.
@@ -49,7 +50,7 @@
 
 - **agent**: Flattened core agent source modules from `src/agent/*` into `src/*`.
 - **agent**: Renamed long internal source filenames to concise module names such as `structured-output`, `loop-detector`, `run-identity`, and `mutation-queue`.
-- **agent**: Grouped agent behavior under `src/agent/`, message logic under `src/messages/`, and shared receipt metadata under `src/metadata/` with builtin-tool receipt builders under `src/tool/`.
+- **agent**: Grouped agent behavior under `src/agent/`, message logic under `src/messages/`, and shared receipt metadata under `src/metadata/` with standard tool receipt builders under `src/tool/`.
 - **tool**: Tool registries now fail fast on duplicate tool names; use explicit replacement when changing an existing tool.
 
 ### Fixed

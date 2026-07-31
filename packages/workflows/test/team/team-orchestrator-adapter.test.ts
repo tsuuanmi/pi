@@ -76,6 +76,16 @@ describe("team orchestrator adapter", () => {
 		expect(() => mapTeamTask({ ...teamTask, description: "" })).toThrow("task.description must be non-empty");
 	});
 
+	it("rejects silently normalized workflow task fields", () => {
+		expect(() => mapTeamTask({ ...teamTask, id: " draft" })).toThrow("task.id must not have surrounding whitespace");
+		expect(() => mapTeamTask({ ...teamTask, depends_on: ["outline "] })).toThrow(
+			"task.depends_on[0] must not have surrounding whitespace",
+		);
+		expect(() => mapTeamTask(teamTask, { assignee: " alice" })).toThrow(
+			"route.assignee must not have surrounding whitespace",
+		);
+	});
+
 	it("maps supported task statuses explicitly", () => {
 		expect(mapTaskStatus("pending")).toBe("pending");
 		expect(mapTaskStatus("in_progress")).toBe("in_progress");

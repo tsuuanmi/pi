@@ -1,5 +1,5 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { Box, Container, renderDiff, Spacer, Text } from "@tsuuanmi/pi-tui";
@@ -52,10 +52,6 @@ const editSchema = Type.Object(
 );
 
 export type EditToolInput = Static<typeof editSchema>;
-type LegacyEditToolInput = EditToolInput & {
-	oldText?: unknown;
-	newText?: unknown;
-};
 
 export interface EditToolDetails {
 	/** Display-oriented diff of the changes made */
@@ -90,32 +86,6 @@ export interface EditToolOptions {
 	operations?: EditOperations;
 }
 
-function prepareEditArguments(input: unknown): EditToolInput {
-	if (!input || typeof input !== "object") {
-		return input as EditToolInput;
-	}
-
-	const args = input as Record<string, unknown>;
-
-	// Some models (Opus 4.6, GLM-5.1) send edits as a JSON string instead of an array
-	if (typeof args.edits === "string") {
-		try {
-			const parsed = JSON.parse(args.edits);
-			if (Array.isArray(parsed)) args.edits = parsed;
-		} catch {}
-	}
-
-	const legacy = args as LegacyEditToolInput;
-	if (typeof legacy.oldText !== "string" || typeof legacy.newText !== "string") {
-		return args as EditToolInput;
-	}
-
-	const edits = Array.isArray(legacy.edits) ? [...legacy.edits] : [];
-	edits.push({ oldText: legacy.oldText, newText: legacy.newText });
-	const { oldText: _oldText, newText: _newText, ...rest } = legacy;
-	return { ...rest, edits } as EditToolInput;
-}
-
 function validateEditInput(input: EditToolInput): { path: string; edits: Edit[] } {
 	if (!Array.isArray(input.edits) || input.edits.length === 0) {
 		throw new Error("Edit tool input is invalid. edits must contain at least one replacement.");
@@ -125,10 +95,7 @@ function validateEditInput(input: EditToolInput): { path: string; edits: Edit[] 
 
 type RenderableEditArgs = {
 	path?: string;
-	file_path?: string;
 	edits?: Edit[];
-	oldText?: string;
-	newText?: string;
 };
 
 type EditToolResultLike = {
@@ -171,28 +138,19 @@ function getRenderablePreviewInput(args: RenderableEditArgs | undefined): { path
 		return null;
 	}
 
-	const path = typeof args.path === "string" ? args.path : typeof args.file_path === "string" ? args.file_path : null;
-	if (!path) {
+	if (typeof args.path !== "string") return null;
+	if (
+		!Array.isArray(args.edits) ||
+		args.edits.length === 0 ||
+		!args.edits.every((edit) => typeof edit?.oldText === "string" && typeof edit?.newText === "string")
+	) {
 		return null;
 	}
-
-	if (
-		Array.isArray(args.edits) &&
-		args.edits.length > 0 &&
-		args.edits.every((edit) => typeof edit?.oldText === "string" && typeof edit?.newText === "string")
-	) {
-		return { path, edits: args.edits };
-	}
-
-	if (typeof args.oldText === "string" && typeof args.newText === "string") {
-		return { path, edits: [{ oldText: args.oldText, newText: args.newText }] };
-	}
-
-	return null;
+	return { path: args.path, edits: args.edits };
 }
 
 function formatEditCall(args: RenderableEditArgs | undefined, theme: Theme, cwd: string): string {
-	const pathDisplay = renderToolPath(str(args?.file_path ?? args?.path), theme, cwd);
+	const pathDisplay = renderToolPath(str(args?.path), theme, cwd);
 	return `${theme.fg("toolTitle", theme.bold("edit"))} ${pathDisplay}`;
 }
 
@@ -203,7 +161,7 @@ function formatEditResult(
 	theme: Theme,
 	isError: boolean,
 ): string | undefined {
-	const rawPath = str(args?.file_path ?? args?.path);
+	const rawPath = str(args?.path);
 	const previewDiff = preview && !("error" in preview) ? preview.diff : undefined;
 	const previewError = preview && "error" in preview ? preview.error : undefined;
 	if (isError) {
@@ -303,7 +261,6 @@ export function createEditToolDefinition(
 		],
 		parameters: editSchema,
 		renderShell: "self",
-		prepareArguments: prepareEditArguments,
 		async execute(toolCallId, input: EditToolInput, signal?: AbortSignal, _onUpdate?, _ctx?) {
 			const { path, edits } = validateEditInput(input);
 			const absolutePath = resolveToCwd(path, cwd);
@@ -351,7 +308,7 @@ export function createEditToolDefinition(
 				const patch = generateUnifiedPatch(path, baseContent, newContent);
 				const output = `Successfully replaced ${edits.length} block(s) in ${path}.`;
 				const endedAt = Date.now();
-				const receipt = createBuiltinToolReceipt({
+				const receipt = createToolReceipt({
 					toolCallId,
 					toolName: "edit",
 					status: "completed",
@@ -365,7 +322,7 @@ export function createEditToolDefinition(
 				});
 				return {
 					content: [{ type: "text", text: output }],
-					details: attachBuiltinToolReceipt(
+					details: attachToolReceipt(
 						{ diff: diffResult.diff, patch, firstChangedLine: diffResult.firstChangedLine },
 						receipt,
 					),

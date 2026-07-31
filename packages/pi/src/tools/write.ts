@@ -1,5 +1,5 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { attachBuiltinToolReceipt, createBuiltinToolReceipt } from "@tsuuanmi/pi-agent";
+import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { Container, getLanguageFromPath, highlightCode, keyHint, Text, type Theme } from "@tsuuanmi/pi-tui";
 import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
@@ -127,13 +127,13 @@ function trimTrailingEmptyLines(lines: string[]): string[] {
 }
 
 function formatWriteCall(
-	args: { path?: string; file_path?: string; content?: string } | undefined,
+	args: { path?: string; content?: string } | undefined,
 	options: ToolRenderResultOptions,
 	theme: Theme,
 	cache: WriteHighlightCache | undefined,
 	cwd: string,
 ): string {
-	const rawPath = str(args?.file_path ?? args?.path);
+	const rawPath = str(args?.path);
 	const fileContent = str(args?.content);
 	const pathDisplay = renderToolPath(rawPath, theme, cwd);
 	let text = `${theme.fg("toolTitle", theme.bold("write"))} ${pathDisplay}`;
@@ -219,7 +219,7 @@ export function createWriteToolDefinition(
 
 				const output = `Successfully wrote ${content.length} bytes to ${path}`;
 				const endedAt = Date.now();
-				const receipt = createBuiltinToolReceipt({
+				const receipt = createToolReceipt({
 					toolCallId,
 					toolName: "write",
 					status: "completed",
@@ -233,13 +233,13 @@ export function createWriteToolDefinition(
 				});
 				return {
 					content: [{ type: "text", text: output }],
-					details: attachBuiltinToolReceipt(undefined, receipt),
+					details: attachToolReceipt(undefined, receipt),
 				};
 			});
 		},
 		renderCall(args, theme, context) {
-			const renderArgs = args as { path?: string; file_path?: string; content?: string } | undefined;
-			const rawPath = str(renderArgs?.file_path ?? renderArgs?.path);
+			const renderArgs = args as { path?: string; content?: string } | undefined;
+			const rawPath = str(renderArgs?.path);
 			const fileContent = str(renderArgs?.content);
 			const component =
 				(context.lastComponent as WriteCallRenderComponent | undefined) ?? new WriteCallRenderComponent();

@@ -75,7 +75,7 @@ describe("tmux launch", () => {
 		const receipt = buildTmuxGuidanceReceipt(plan!);
 
 		expect(receipt).toMatchObject({
-			source: "tmux",
+			source: "session",
 			status: "completed",
 			location: { cwd: "/repo/project", tmuxSession: "pi-test" },
 		});

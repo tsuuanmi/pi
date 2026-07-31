@@ -8,7 +8,7 @@ This audit turns package-boundary rules into actionable cleanup tasks. It focuse
 - Keep generic multi-agent task DAG execution in `@tsuuanmi/pi-orchestrator`.
 - Keep named Pi workflow state and UX in `@tsuuanmi/pi-workflows`.
 - Keep CLI, TUI, sessions, and extension wiring in `@tsuuanmi/pi`.
-- Do not add compatibility shims or fallback ownership when a concept has one clear owner.
+- Do not add fallback ownership, alternate shapes, aliases, or compatibility wrappers when a concept has one clear owner.
 
 ## Overlap decisions
 
@@ -47,7 +47,7 @@ This audit turns package-boundary rules into actionable cleanup tasks. It focuse
 
 ## Workflow integration checklist
 
-Use this checklist before moving workflow code to orchestrator:
+Use this checklist before moving workflow code to orchestrator. A missing requirement blocks the move; it does not create a fallback or compatibility path.
 
 1. Does the workflow need a generic task DAG?
 2. Does it assign tasks to a roster of `Agent`s?
@@ -57,7 +57,7 @@ Use this checklist before moving workflow code to orchestrator:
 6. Can queue events drive the workflow HUD through a workflow-owned adapter?
 7. Are workflow receipts only referencing task receipts instead of duplicating their schema?
 
-If any answer is no, keep the behavior in `pi-workflows` until the boundary is clearer.
+If any answer is no, keep the behavior in `pi-workflows` until the boundary is clear and the generic path can be implemented directly.
 
 ## Do not move
 
