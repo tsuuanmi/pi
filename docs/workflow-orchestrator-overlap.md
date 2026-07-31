@@ -1,6 +1,6 @@
 # Workflow and Orchestrator Overlap
 
-This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-orchestrator` and records what should move, stay, or remain under review. See [`receipt-boundaries.md`](./receipt-boundaries.md) for receipt ownership rules, [`persistence-boundaries.md`](./persistence-boundaries.md) for state ownership rules, and [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) for the team adapter design.
+This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-orchestrator` and records what should move, stay, or remain under review. See [`receipt-boundaries.md`](./receipt-boundaries.md) for receipt ownership rules, [`persistence-boundaries.md`](./persistence-boundaries.md) for state ownership rules, [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) for the team adapter design, and [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the feature-gated runtime design.
 
 ## Boundary rule
 

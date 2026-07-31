@@ -1,6 +1,6 @@
 # Team Workflow Orchestrator Adapter
 
-This document designs how `@tsuuanmi/pi-workflows` may use `@tsuuanmi/pi-orchestrator` inside the team workflow without weakening package boundaries.
+This document designs how `@tsuuanmi/pi-workflows` may use `@tsuuanmi/pi-orchestrator` inside the team workflow without weakening package boundaries. See [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the feature-gated runtime design.
 
 ## Purpose
 
@@ -185,4 +185,4 @@ Team workflow command/tool
 
 ## Do not implement yet
 
-Do not start runtime integration until the feature-gated execution path design is approved. The completed implementation steps contain only adapter mappings, mapping tests, a callback-backed checkpoint store, and a queue-event sink.
+Do not start runtime integration until [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) is approved. The completed implementation steps contain only adapter mappings, mapping tests, a callback-backed checkpoint store, and a queue-event sink.

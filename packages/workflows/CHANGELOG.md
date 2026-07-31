@@ -2,7 +2,7 @@
 
 ### Added
 
-- **team**: Added pure team-to-orchestrator adapter mappings, a callback-backed checkpoint store, and a queue-event sink for future workflow-owned orchestrator integration.
+- **team**: Added pure team-to-orchestrator adapter mappings, explicit mode validation, a callback-backed checkpoint store, and a queue-event sink for future workflow-owned orchestrator integration.
 
 ## [0.2.2] - 2026-07-23
 

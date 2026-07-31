@@ -71,6 +71,7 @@ export * from "#workflows/skills/ralplan/ralplan-verdicts";
 export * from "#workflows/skills/team/orchestrator-adapter";
 export * from "#workflows/skills/team/orchestrator-checkpoint";
 export * from "#workflows/skills/team/orchestrator-events";
+export * from "#workflows/skills/team/orchestrator-mode";
 export * from "#workflows/skills/team/team-compact";
 export * from "#workflows/skills/team/team-runtime";
 export * from "#workflows/skills/ultragoal/ultragoal-artifacts";

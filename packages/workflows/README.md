@@ -322,7 +322,7 @@ import {
 } from "@tsuuanmi/pi-workflows";
 ```
 
-`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools/workflow-tools`. It also exports pure team-to-orchestrator mapping helpers, a callback-backed team checkpoint store, and a queue-event sink for future workflow-owned orchestrator integration; these helpers do not change runtime behavior. The bundled Pi extension entrypoint now lives in `@tsuuanmi/pi`.
+`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools/workflow-tools`. It also exports pure team-to-orchestrator mapping helpers, a callback-backed team checkpoint store, a queue-event sink, and explicit mode validation for future workflow-owned orchestrator integration; these helpers do not change runtime behavior. The bundled Pi extension entrypoint now lives in `@tsuuanmi/pi`.
 
 Subpath exports:
 
