@@ -16,8 +16,8 @@ import {
 	createAgentSessionFromServices,
 	createAgentSessionRuntime,
 	createAgentSessionServices,
-} from "#pi/runtime/session-runtime";
-import { SessionManager } from "#pi/session/session-manager";
+} from "#pi/runtime/runtime";
+import { SessionManager } from "#pi/session/manager";
 import { testAssistantMessage, registerTestProvider } from "#pi-test/helpers/provider";
 
 type RecordedSessionEvent =

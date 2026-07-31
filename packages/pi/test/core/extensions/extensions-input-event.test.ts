@@ -6,7 +6,7 @@ import { AuthStorage } from "#pi/auth/auth-storage";
 import { discoverAndLoadExtensions } from "#pi/extensions/loader";
 import { ExtensionRunner } from "#pi/extensions/runner";
 import { ModelRegistry } from "#pi/model/model-registry";
-import { SessionManager } from "#pi/session/session-manager";
+import { SessionManager } from "#pi/session/manager";
 
 describe("Input Event", () => {
 	let tempDir: string;

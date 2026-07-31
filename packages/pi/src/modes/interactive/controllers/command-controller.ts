@@ -23,7 +23,7 @@ import {
 import { getChangelogPath, getDebugLogPath } from "#pi/config/config";
 import { normalizeChangelogLinks, parseChangelog } from "#pi/modes/interactive/utils/changelog";
 import { copyToClipboard } from "#pi/modes/interactive/utils/clipboard";
-import type { AgentSession } from "#pi/runtime/session";
+import type { AgentSession } from "#pi/runtime/agent";
 import type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 
 export class CommandController {

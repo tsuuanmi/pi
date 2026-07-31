@@ -1,6 +1,6 @@
 import { filterAndSortSearchableSessions } from "@tsuuanmi/pi-tui";
 import { describe, expect, it } from "vitest";
-import type { SessionInfo } from "#pi/session/session-manager";
+import type { SessionInfo } from "#pi/session/manager";
 
 function makeSession(
 	overrides: Partial<SessionInfo> & { id: string; modified: Date; allMessagesText: string },

@@ -30,7 +30,7 @@ import { InteractiveMode, runPrintMode, runRpcMode } from "#pi/modes/index";
 import { restoreStdout, takeOverStdout } from "#pi/modes/output-guard";
 import { handleConfigCommand, handlePackageCommand } from "#pi/package-manager/package-manager-cli";
 import type { CreateAgentSessionOptions } from "#pi/runtime/sdk";
-import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/runtime/session-runtime";
+import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/runtime/runtime";
 import {
 	type AgentSessionRuntimeDiagnostic,
 	createAgentSessionFromServices,
@@ -41,8 +41,8 @@ import {
 	getMissingSessionCwdIssue,
 	MissingSessionCwdError,
 	type SessionCwdIssue,
-} from "#pi/session/session-cwd";
-import { SessionManager } from "#pi/session/session-manager";
+} from "#pi/session/cwd";
+import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { runSubagentWorkerMain } from "#pi/subagents/tmux-worker";
 import { printTimings, resetTimings, time } from "#pi/telemetry/timings";

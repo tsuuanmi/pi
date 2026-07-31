@@ -13,8 +13,8 @@ import type { Extension, ExtensionFactory, LoadExtensionsResult } from "#pi/exte
 import { createExtensionRuntime, loadExtensionFromFactory } from "#pi/extensions/loader";
 import { createCodingTools } from "#pi/index";
 import { ModelRegistry } from "#pi/model/model-registry";
-import { AgentSession } from "#pi/runtime/session";
-import { SessionManager } from "#pi/session/session-manager";
+import { AgentSession } from "#pi/runtime/agent";
+import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import type { ResourceLoader } from "#pi/skills/resource-loader";
 

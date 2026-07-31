@@ -16,7 +16,7 @@ import type { EventBus } from "#pi/extensions/event-bus";
 import type { ExtensionHookAPI } from "#pi/hooks/extension-api-hooks";
 import type { HookHandlerFn } from "#pi/hooks/registration";
 import type { SourceInfo } from "#pi/package-manager/source-info";
-import type { SessionManager } from "#pi/session/session-manager";
+import type { SessionManager } from "#pi/session/manager";
 import type { SlashCommandInfo } from "#pi/skills/slash-commands";
 import type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";
 

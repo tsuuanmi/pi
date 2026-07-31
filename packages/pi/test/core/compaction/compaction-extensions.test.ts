@@ -19,8 +19,8 @@ import {
 import { createCodingTools } from "#pi/index";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
-import { AgentSession } from "#pi/runtime/session";
-import { SessionManager } from "#pi/session/session-manager";
+import { AgentSession } from "#pi/runtime/agent";
+import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { createTestResourceLoader } from "#pi-test/test-utils";
 

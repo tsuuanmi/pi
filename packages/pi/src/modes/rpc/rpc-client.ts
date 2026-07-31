@@ -9,7 +9,7 @@ import type { AgentEvent, AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent
 import type { BashResult } from "#pi/exec/bash-executor";
 import { attachJsonlLineReader, serializeJsonLine } from "#pi/modes/rpc/jsonl";
 import type { RpcCommand, RpcResponse, RpcSessionState, RpcSlashCommand } from "#pi/modes/rpc/rpc-types";
-import type { SessionStats } from "#pi/runtime/session";
+import type { SessionStats } from "#pi/runtime/agent";
 import type { CompactionResult } from "#pi/session/compaction";
 
 // ============================================================================

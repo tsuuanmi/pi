@@ -21,7 +21,7 @@ import {
 } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Context, Model, StreamOptions, Usage } from "@tsuuanmi/pi-ai";
 import { complete } from "@tsuuanmi/pi-ai";
-import { buildSessionContext, type CompactionEntry, type SessionEntry } from "#pi/session/session-manager";
+import { buildSessionContext, type CompactionEntry, type SessionEntry } from "#pi/session/manager";
 
 // ============================================================================
 // File Operation Tracking

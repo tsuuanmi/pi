@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { initTheme } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { SessionHeader } from "#pi/session/session-manager";
-import { SessionManager } from "#pi/session/session-manager";
+import type { SessionHeader } from "#pi/session/manager";
+import { SessionManager } from "#pi/session/manager";
 
 function createSessionFile(path: string): void {
 	const header: SessionHeader = {

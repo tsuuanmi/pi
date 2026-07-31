@@ -1,7 +1,7 @@
 import type { SessionBeforeTreeResult, TreePreparation } from "#pi/extensions/index";
 import type { AgentSessionContext } from "#pi/runtime/context";
 import { collectEntriesForBranchSummary, generateBranchSummary } from "#pi/session/compaction";
-import type { BranchSummaryEntry } from "#pi/session/session-manager";
+import type { BranchSummaryEntry } from "#pi/session/manager";
 
 /**
  * Phase-1 TreeNavigation subsystem (stateless module functions on

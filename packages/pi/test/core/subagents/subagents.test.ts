@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/model/model-registry";
-import { sessionStateDir } from "#pi/session/session-layout";
+import { sessionStateDir } from "#pi/session/layout";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { DefaultResourceLoader } from "#pi/skills/resource-loader";
 import { SubagentManager, type SubagentRecord } from "#pi/subagents/subagents";

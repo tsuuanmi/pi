@@ -3,7 +3,7 @@ import type { Model, TextContent } from "@tsuuanmi/pi-ai";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
 import type { ModelRegistry } from "#pi/model/model-registry";
 import type { CompactionResult } from "#pi/session/compaction";
-import type { ReadonlySessionManager, SessionManager } from "#pi/session/session-manager";
+import type { ReadonlySessionManager, SessionManager } from "#pi/session/manager";
 import type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";
 import type { SubagentManager } from "#pi/subagents/subagents";
 

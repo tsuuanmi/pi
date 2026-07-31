@@ -7,9 +7,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { runRpcMode } from "#pi/modes/rpc/rpc-mode";
-import { AgentSession } from "#pi/runtime/session";
-import type { AgentSessionRuntime } from "#pi/runtime/session-runtime";
-import { SessionManager } from "#pi/session/session-manager";
+import { AgentSession } from "#pi/runtime/agent";
+import type { AgentSessionRuntime } from "#pi/runtime/runtime";
+import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { createTestResourceLoader } from "#pi-test/test-utils";
 

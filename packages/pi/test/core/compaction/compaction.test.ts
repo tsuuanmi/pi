@@ -24,7 +24,7 @@ import {
 	type SessionEntry,
 	type SessionMessageEntry,
 	type ThinkingLevelChangeEntry,
-} from "#pi/session/session-manager";
+} from "#pi/session/manager";
 
 // ============================================================================
 // Test fixtures

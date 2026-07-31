@@ -7,7 +7,7 @@ import { getAgentDir } from "#pi/config/config";
 import type { SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "#pi/runtime/sdk";
-import type { SessionManager } from "#pi/session/session-manager";
+import type { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import {
 	DefaultResourceLoader,

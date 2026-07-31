@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import type { AssistantMessage, Context, ProviderResponse, UsageProvenance } from "@tsuuanmi/pi-ai";
-import { piSessionRoot } from "#pi/session/session-layout";
+import { piSessionRoot } from "#pi/session/layout";
 
 const DEFAULT_MAX_DEPTH = 12;
 const DEFAULT_MAX_ARRAY = 200;

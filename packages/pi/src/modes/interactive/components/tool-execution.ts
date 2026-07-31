@@ -14,7 +14,7 @@ import {
 	theme,
 } from "@tsuuanmi/pi-tui";
 import type { ToolDefinition, ToolRenderContext } from "#pi/api/types";
-import { createAllToolDefinitions, type ToolName } from "#pi/tools/default-tools";
+import { createAllToolDefinitions, type ToolName } from "#pi/tools/default-tools/index";
 import { getTextOutput as getRenderedTextOutput } from "#pi/tools/utils";
 
 export interface ToolExecutionOptions {}

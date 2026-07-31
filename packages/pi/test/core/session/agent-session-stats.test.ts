@@ -3,8 +3,8 @@ import { type AssistantMessage, getModel, type Usage } from "@tsuuanmi/pi-ai";
 import { describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/model/model-registry";
-import { AgentSession } from "#pi/runtime/session";
-import { SessionManager } from "#pi/session/session-manager";
+import { AgentSession } from "#pi/runtime/agent";
+import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { createTestResourceLoader } from "#pi-test/test-utils";
 

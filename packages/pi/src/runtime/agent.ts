@@ -80,8 +80,8 @@ import {
 	supportsThinking as modelControlSupportsThinking,
 } from "#pi/session/model-control";
 import { sleep } from "#pi/runtime/platform";
-import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "#pi/session/session-manager";
-import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "#pi/session/session-manager";
+import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "#pi/session/manager";
+import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "#pi/session/manager";
 import { expandSkillCommand } from "#pi/session/skill-expansion";
 import { computeContextUsage, computeSessionStats } from "#pi/session/stats-export";
 import {
@@ -97,7 +97,7 @@ import type { SubagentManager } from "#pi/subagents/subagents";
 import { ApiUsageLogger } from "#pi/telemetry/api-usage-logger";
 import { apiUsageLogPath } from "#pi/telemetry/api-usage-utils";
 import { type BashOperations, createLocalBashOperations } from "#pi/tools/bash";
-import { createAllToolDefinitions } from "#pi/tools/default-tools";
+import { createAllToolDefinitions } from "#pi/tools/default-tools/index";
 import { createToolDefinitionFromAgentTool } from "#pi/tools/utils";
 
 // ============================================================================

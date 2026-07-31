@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { APP_NAME } from "#pi/config/config";
 import { formatResumeCommand } from "#pi/modes/interactive/interactive-mode";
-import type { SessionManager } from "#pi/session/session-manager";
+import type { SessionManager } from "#pi/session/manager";
 
 const tempDirs: string[] = [];
 const originalStdoutIsTTY = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");

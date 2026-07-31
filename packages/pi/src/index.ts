@@ -208,7 +208,7 @@ export {
 	type PromptOptions,
 	parseSkillBlock,
 	type SessionStats,
-} from "#pi/runtime/session";
+} from "#pi/runtime/agent";
 // SDK for programmatic usage
 export {
 	AgentSessionRuntime,
@@ -281,7 +281,7 @@ export {
 	SessionManager,
 	type SessionMessageEntry,
 	type ThinkingLevelChangeEntry,
-} from "#pi/session/session-manager";
+} from "#pi/session/manager";
 export {
 	type CompactionSettings,
 	type PackageSource,
@@ -350,7 +350,7 @@ export {
 	type WriteOperations,
 	type WriteToolInput,
 	type WriteToolOptions,
-} from "#pi/tools/default-tools";
+} from "#pi/tools/default-tools/index";
 export { parseFrontmatter, stripFrontmatter } from "#pi/utils/fs/index";
 // Shell utilities
 export { getShellConfig } from "#pi/utils/system/shell";

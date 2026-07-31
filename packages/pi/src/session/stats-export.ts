@@ -1,9 +1,9 @@
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import type { ContextUsage } from "#pi/extensions/index";
-import type { SessionStats } from "#pi/runtime/session";
+import type { SessionStats } from "#pi/runtime/agent";
 import type { AgentSessionContext } from "#pi/runtime/context";
 import { calculateContextTokens, estimateContextTokens } from "#pi/session/compaction";
-import { getLatestCompactionEntry } from "#pi/session/session-manager";
+import { getLatestCompactionEntry } from "#pi/session/manager";
 
 /**
  * Phase-1 StatsExport subsystem (stateless module functions on

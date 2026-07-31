@@ -16,7 +16,7 @@ import {
 	visibleWidth,
 	wrapTextWithAnsi,
 } from "@tsuuanmi/pi-tui";
-import type { SessionTreeNode } from "#pi/session/session-manager";
+import type { SessionTreeNode } from "#pi/session/manager";
 
 /** Gutter info: position (displayIndent where connector was) and whether to show │ */
 interface GutterInfo {

@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { createAgentSession } from "#pi/runtime/sdk";
-import { SessionManager } from "#pi/session/session-manager";
+import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { DefaultResourceLoader } from "#pi/skills/resource-loader";
 

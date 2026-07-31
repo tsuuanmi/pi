@@ -13,15 +13,15 @@ import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
-import type { AgentSession } from "#pi/runtime/session";
+import type { AgentSession } from "#pi/runtime/agent";
 import {
 	type AgentSessionRuntime,
 	type CreateAgentSessionRuntimeFactory,
 	createAgentSessionFromServices,
 	createAgentSessionRuntime,
 	createAgentSessionServices,
-} from "#pi/runtime/session-runtime";
-import { SessionManager } from "#pi/session/session-manager";
+} from "#pi/runtime/runtime";
+import { SessionManager } from "#pi/session/manager";
 import { API_KEY } from "#pi-test/test-utils";
 
 describe.skipIf(!API_KEY)("AgentSession forking", () => {

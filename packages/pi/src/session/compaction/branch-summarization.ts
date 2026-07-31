@@ -22,7 +22,7 @@ import {
 import type { Content, Model, StreamOptions } from "@tsuuanmi/pi-ai";
 import { complete } from "@tsuuanmi/pi-ai";
 import { estimateTokens } from "#pi/session/compaction/session-compaction";
-import type { ReadonlySessionManager, SessionEntry } from "#pi/session/session-manager";
+import type { ReadonlySessionManager, SessionEntry } from "#pi/session/manager";
 
 // ============================================================================
 // Types

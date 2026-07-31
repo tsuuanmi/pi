@@ -2,7 +2,7 @@ import type { AgentMessage, CustomMessage, LoopDetectionResult, ThinkingLevel } 
 import type { AssistantMessageEvent, Model, TextContent, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { BashResult } from "#pi/exec/bash-executor";
 import type { CompactionPreparation, CompactionResult } from "#pi/session/compaction";
-import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "#pi/session/session-manager";
+import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "#pi/session/manager";
 import type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";
 import type { BashOperations } from "#pi/tools/bash";
 import type {
@@ -20,7 +20,7 @@ import type {
 	ReadToolDetails,
 	ReadToolInput,
 	WriteToolInput,
-} from "#pi/tools/default-tools";
+} from "#pi/tools/default-tools/index";
 import type { EditToolDetails } from "#pi/tools/edit";
 
 // ============================================================================

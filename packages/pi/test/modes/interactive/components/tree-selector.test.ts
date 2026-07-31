@@ -2,7 +2,7 @@ import { stripVTControlCharacters } from "node:util";
 import { initTheme, setKeybindings, visibleWidth } from "@tsuuanmi/pi-tui";
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { TreeSelectorComponent } from "#pi/modes/interactive/components/selectors/tree-selector";
-import type { ModelChangeEntry, SessionEntry, SessionMessageEntry, SessionTreeNode } from "#pi/session/session-manager";
+import type { ModelChangeEntry, SessionEntry, SessionMessageEntry, SessionTreeNode } from "#pi/session/manager";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 
 beforeAll(() => {

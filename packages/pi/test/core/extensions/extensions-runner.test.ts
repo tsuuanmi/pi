@@ -11,7 +11,7 @@ import { AuthStorage } from "#pi/auth/auth-storage";
 import { createExtensionRuntime, discoverAndLoadExtensions } from "#pi/extensions/loader";
 import { ExtensionRunner } from "#pi/extensions/runner";
 import { ModelRegistry } from "#pi/model/model-registry";
-import { SessionManager } from "#pi/session/session-manager";
+import { SessionManager } from "#pi/session/manager";
 import { KeybindingsManager, type KeyId } from "#pi/settings/keybindings";
 
 describe("ExtensionRunner", () => {
