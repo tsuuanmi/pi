@@ -11,6 +11,8 @@ const ThinkingLevelMapSchema = Type.Object({
 	medium: Type.Optional(ThinkingLevelMapValueSchema),
 	high: Type.Optional(ThinkingLevelMapValueSchema),
 	xhigh: Type.Optional(ThinkingLevelMapValueSchema),
+	max: Type.Optional(ThinkingLevelMapValueSchema),
+	ultra: Type.Optional(ThinkingLevelMapValueSchema),
 });
 
 const OpenAICompletionsCompatSchema = Type.Object({
@@ -42,9 +44,17 @@ const AnthropicMessagesCompatSchema = Type.Object({
 	supportsCacheControlOnTools: Type.Optional(Type.Boolean()),
 });
 
+const OpenAICodexResponsesCompatSchema = Type.Object({
+	supportsParallelToolCalls: Type.Optional(Type.Boolean()),
+	supportsImageDetailOriginal: Type.Optional(Type.Boolean()),
+	preferWebSockets: Type.Optional(Type.Boolean()),
+	minimalClientVersion: Type.Optional(Type.String()),
+});
+
 const ProviderCompatSchema = Type.Union([
 	OpenAICompletionsCompatSchema,
 	OpenAIResponsesCompatSchema,
+	OpenAICodexResponsesCompatSchema,
 	AnthropicMessagesCompatSchema,
 ]);
 
@@ -55,7 +65,7 @@ export const ModelDefinitionSchema = Type.Object({
 	baseUrl: Type.Optional(Type.String({ minLength: 1 })),
 	reasoning: Type.Optional(Type.Boolean()),
 	thinkingLevelMap: Type.Optional(ThinkingLevelMapSchema),
-	input: Type.Optional(Type.Array(Type.Literal("text"))),
+	input: Type.Optional(Type.Array(Type.Union([Type.Literal("text"), Type.Literal("image")]))),
 	cost: Type.Optional(
 		Type.Object({
 			input: Type.Number(),
@@ -74,7 +84,7 @@ export const ModelOverrideSchema = Type.Object({
 	name: Type.Optional(Type.String({ minLength: 1 })),
 	reasoning: Type.Optional(Type.Boolean()),
 	thinkingLevelMap: Type.Optional(ThinkingLevelMapSchema),
-	input: Type.Optional(Type.Array(Type.Literal("text"))),
+	input: Type.Optional(Type.Array(Type.Union([Type.Literal("text"), Type.Literal("image")]))),
 	cost: Type.Optional(
 		Type.Object({
 			input: Type.Optional(Type.Number()),
@@ -138,7 +148,7 @@ export function applyModelOverride(model: Model<Api>, override: ModelOverride): 
 	if (override.thinkingLevelMap !== undefined) {
 		result.thinkingLevelMap = { ...model.thinkingLevelMap, ...override.thinkingLevelMap };
 	}
-	if (override.input !== undefined) result.input = override.input as "text"[];
+	if (override.input !== undefined) result.input = override.input as ("text" | "image")[];
 	if (override.contextWindow !== undefined) result.contextWindow = override.contextWindow;
 	if (override.maxTokens !== undefined) result.maxTokens = override.maxTokens;
 

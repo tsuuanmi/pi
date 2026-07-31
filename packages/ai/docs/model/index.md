@@ -16,8 +16,9 @@ Mirrors `src/model/`.
 `Model<TApi>` describes an individual provider model:
 
 - `id`, `name`, `provider`, `api`, and `baseUrl` identify where requests go.
-- `reasoning` and `thinkingLevelMap` describe supported reasoning levels.
-- `cost` stores per-million-token input, output, cache-read, and cache-write prices.
+- `reasoning` and `thinkingLevelMap` describe supported reasoning levels, including extended `max` and `ultra` levels when a provider catalog exposes them.
+- `input` lists supported input modalities (`text`, and `image` when available).
+- `cost` stores per-million-token input, output, cache-read, and cache-write prices. Subscription-backed generated models use zeroed costs instead of API pricing.
 - `contextWindow` and `maxTokens` describe capacity.
 - `headers` and API-specific `compat` tune provider behavior.
 

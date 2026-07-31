@@ -4,6 +4,10 @@
 
 - **tools**: Removed non-canonical `edit` tool argument forms; the tool now accepts only `path` plus `edits[]` and no longer normalizes alternate shapes.
 
+### Changed
+
+- **models**: Custom provider model configs now accept image input metadata and `max`/`ultra` thinking-level mappings.
+
 ## [0.2.2] - 2026-07-23
 
 ### Breaking Changes

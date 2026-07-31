@@ -10,6 +10,8 @@
 
 ### Changed
 
+- **model**: Generate OpenAI Codex models from the official `openai/codex` catalog, including Codex-specific context windows, input modalities, and reasoning levels.
+- **model**: Moved model generator code into `src/model/` and provider-specific source parsing into `src/provider/`.
 - **api**: Reorganized source files under singular `model/` and `provider/` domains, split protocol types into explicit `protocol/*` files, removed trivial one-line re-export shims, and trimmed implementation-only docs.
 - **model**: Moved reusable model config schemas and override merge helpers from Pi into `@tsuuanmi/pi-ai`.
 - **model**: Renamed model files to concise names: `model/index`, `model/catalog`, `model/request`, and `model/response`.

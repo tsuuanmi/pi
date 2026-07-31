@@ -979,11 +979,11 @@ Create a provider-specific folder and entry file (for example `src/provider/amaz
 - Add any root-level `export type` re-exports in `src/index.ts` that should remain available from `@tsuuanmi/pi-ai`
 - Ensure caller-supplied credentials in `StreamOptions.apiKey` are passed through correctly
 
-#### 4. Model Generation (`scripts/generate-models.ts`)
+#### 4. Model Generation (`src/model/generate.ts`)
 
-- Add logic to fetch and parse models from the provider's source (e.g., models.dev API)
-- Map chat/tool-capable provider model data to the standardized `Model` interface via `scripts/generate-models.ts`
-- Handle provider-specific quirks (pricing format, capability flags, model ID transformations)
+- Add provider-specific source parsing under `src/provider/<provider>/`
+- Map chat/tool-capable provider model data to the standardized `Model` interface
+- Keep cross-provider orchestration in `src/model/generate.ts` and shared generator utilities under `src/model/generator/`
 
 #### 5. Tests (`test/`)
 
