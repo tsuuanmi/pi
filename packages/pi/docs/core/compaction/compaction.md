@@ -3,8 +3,8 @@
 LLMs have limited context windows. When conversations grow too long, pi uses compaction to summarize older content while preserving recent work. This page covers both auto-compaction and branch summarization.
 
 **Source files** ([pi-mono](https://github.com/tsuuanmi/pi)):
-- [`packages/pi/src/compaction/session-compaction.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/compaction/session-compaction.ts) - Auto-compaction logic
-- [`packages/pi/src/compaction/branch-summarization.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/compaction/branch-summarization.ts) - Branch summarization
+- [`packages/pi/src/session/compaction/session-compaction.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/session-compaction.ts) - Auto-compaction logic
+- [`packages/pi/src/session/compaction/branch-summarization.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch-summarization.ts) - Branch summarization
 - [`packages/agent/src/compaction/message-utils.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/compaction/message-utils.ts) - Shared utilities (file tracking, serialization)
 - [`packages/pi/src/session/session-manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/session-manager.ts) - Entry types (`CompactionEntry`, `BranchSummaryEntry`)
 - [`packages/pi/src/api/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/api/types.ts) - Extension event types
@@ -142,7 +142,7 @@ interface CompactionDetails {
 
 Extensions can store any JSON-serializable data in `details`. The default compaction tracks file operations, but custom extension implementations can use their own structure.
 
-See [`prepareCompaction()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/compaction/session-compaction.ts) and [`compact()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/compaction/session-compaction.ts) for the implementation.
+See [`prepareCompaction()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/session-compaction.ts) and [`compact()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/session-compaction.ts) for the implementation.
 
 ## Branch Summarization
 
@@ -208,7 +208,7 @@ interface BranchSummaryDetails {
 
 Same as compaction, extensions can store custom data in `details`.
 
-See [`collectEntriesForBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/compaction/branch-summarization.ts), [`prepareBranchEntries()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/compaction/branch-summarization.ts), and [`generateBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/compaction/branch-summarization.ts) for the implementation.
+See [`collectEntriesForBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch-summarization.ts), [`prepareBranchEntries()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch-summarization.ts), and [`generateBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch-summarization.ts) for the implementation.
 
 ## Summary Format
 

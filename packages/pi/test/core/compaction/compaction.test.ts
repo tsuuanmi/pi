@@ -14,7 +14,7 @@ import {
 	getLastAssistantUsage,
 	prepareCompaction,
 	shouldCompact,
-} from "#pi/compaction/index";
+} from "#pi/session/compaction";
 import {
 	buildSessionContext,
 	type CompactionEntry,

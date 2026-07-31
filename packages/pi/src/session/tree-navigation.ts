@@ -1,14 +1,14 @@
-import { collectEntriesForBranchSummary, generateBranchSummary } from "#pi/compaction/index";
 import type { SessionBeforeTreeResult, TreePreparation } from "#pi/extensions/index";
-import type { AgentSessionContext } from "#pi/session/agent-session-context";
+import type { AgentSessionContext } from "#pi/runtime/pi-session-context";
+import { collectEntriesForBranchSummary, generateBranchSummary } from "#pi/session/compaction";
 import type { BranchSummaryEntry } from "#pi/session/session-manager";
 
 /**
  * Phase-1 TreeNavigation subsystem (stateless module functions on
  * `AgentSessionContext`). Extracted verbatim from `AgentSession.navigateTree`
- * (`agent-session.ts:2567`), `getUserMessagesForForking` (`:2758`), and
+ * (`pi-session.ts:2567`), `getUserMessagesForForking` (`:2758`), and
  * `_extractUserMessageText` (`:2775`, moved verbatim — the runtime duplicate at
- * `agent-session-runtime.ts` is module-private and behaviorally different, so
+ * `pi-session-runtime.ts` is module-private and behaviorally different, so
  * it is NOT imported). The public methods on `AgentSession` now delegate here.
  * `_getRequiredRequestAuth` stays on `AgentSession` (also called by the
  * core-loop) and is reached via `ctx.getRequiredRequestAuth`. Pure structural /

@@ -1,13 +1,13 @@
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { clampThinkingLevel, getSupportedThinkingLevels, type Model, modelsAreEqual } from "@tsuuanmi/pi-ai";
 import { DEFAULT_THINKING_LEVEL } from "#pi/config/defaults";
-import type { ModelCycleResult } from "#pi/session/agent-session";
-import type { AgentSessionContext } from "#pi/session/agent-session-context";
+import type { ModelCycleResult } from "#pi/runtime/pi-session";
+import type { AgentSessionContext } from "#pi/runtime/pi-session-context";
 
 /**
  * Phase-1 ModelControl subsystem (stateless module functions on
  * `AgentSessionContext`). Extracted verbatim from `AgentSession` (model +
- * thinking-level management, `agent-session.ts:1413-1597`); the public methods
+ * thinking-level management, `pi-session.ts:1413-1597`); the public methods
  * on `AgentSession` now delegate here. `_emitModelSelect` travels with the
  * cluster (else it would gain a back-dependency on `AgentSession`). Pure
  * structural / zero behavior change. Private helper names are preserved

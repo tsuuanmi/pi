@@ -23,7 +23,7 @@ import {
 } from "@tsuuanmi/pi-tui";
 import type { ExtensionRunner } from "#pi/extensions/index";
 import type { SourceInfo } from "#pi/package-manager/source-info";
-import type { AgentSession } from "#pi/session/agent-session";
+import type { AgentSession } from "#pi/runtime/pi-session";
 import type { ResourceDiagnostic } from "#pi/skills/resource-loader";
 import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
 import { parseGitUrl } from "#pi/utils/fs/git";

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { CommandController } from "#pi/modes/interactive/controllers/command-controller";
 import { InteractiveMode } from "#pi/modes/interactive/interactive-mode";
-import { SessionImportFileNotFoundError } from "#pi/session/agent-session-runtime";
+import { SessionImportFileNotFoundError } from "#pi/runtime/pi-session-runtime";
 
 type PathCommand = "/import";
 

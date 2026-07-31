@@ -25,7 +25,7 @@ import {
 	OAuthSelectorComponent,
 } from "#pi/modes/interactive/components/selectors/oauth-selector";
 import type { FooterDataProvider } from "#pi/modes/interactive/footer-data-provider";
-import type { AgentSession } from "#pi/session/agent-session";
+import type { AgentSession } from "#pi/runtime/pi-session";
 
 function isUnknownModel(model: Model<any> | undefined): boolean {
 	return !!model && model.provider === "unknown" && model.id === "unknown" && model.api === "unknown";

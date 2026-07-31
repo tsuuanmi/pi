@@ -1,11 +1,10 @@
 import type { AgentMessage, CustomMessage, LoopDetectionResult, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { AssistantMessageEvent, Model, TextContent, ToolResultMessage } from "@tsuuanmi/pi-ai";
-import type { CompactionPreparation, CompactionResult } from "#pi/compaction/index";
 import type { BashResult } from "#pi/exec/bash-executor";
+import type { CompactionPreparation, CompactionResult } from "#pi/session/compaction";
 import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "#pi/session/session-manager";
 import type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";
 import type { BashOperations } from "#pi/tools/bash";
-import type { EditToolDetails } from "#pi/tools/edit";
 import type {
 	BashToolDetails,
 	BashToolInput,
@@ -21,7 +20,8 @@ import type {
 	ReadToolDetails,
 	ReadToolInput,
 	WriteToolInput,
-} from "#pi/tools/index";
+} from "#pi/tools/default-tools";
+import type { EditToolDetails } from "#pi/tools/edit";
 
 // ============================================================================
 // Startup/Resource Events

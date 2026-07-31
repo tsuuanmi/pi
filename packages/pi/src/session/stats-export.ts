@@ -1,15 +1,15 @@
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
-import { calculateContextTokens, estimateContextTokens } from "#pi/compaction/index";
 import type { ContextUsage } from "#pi/extensions/index";
-import type { SessionStats } from "#pi/session/agent-session";
-import type { AgentSessionContext } from "#pi/session/agent-session-context";
+import type { SessionStats } from "#pi/runtime/pi-session";
+import type { AgentSessionContext } from "#pi/runtime/pi-session-context";
+import { calculateContextTokens, estimateContextTokens } from "#pi/session/compaction";
 import { getLatestCompactionEntry } from "#pi/session/session-manager";
 
 /**
  * Phase-1 StatsExport subsystem (stateless module functions on
  * `AgentSessionContext`). Extracted verbatim from `AgentSession.getSessionStats`
- * (`agent-session.ts:2940`) and `AgentSession.getContextUsage`
- * (`agent-session.ts:2985`); the public methods on `AgentSession` now delegate
+ * (`pi-session.ts:2940`) and `AgentSession.getContextUsage`
+ * (`pi-session.ts:2985`); the public methods on `AgentSession` now delegate
  * here. Pure structural / zero behavior change.
  */
 

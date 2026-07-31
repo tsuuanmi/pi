@@ -8,13 +8,13 @@ import {
 	LAYOUT_SECTION_GAP_Y,
 	renderStructuredReceipt,
 	Spacer,
-	Text,
 	type StructuredReceiptDisplayModel,
+	Text,
 	type TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
 import type { ToolDefinition, ToolRenderContext } from "#pi/api/types";
-import { createAllToolDefinitions, type ToolName } from "#pi/tools/index";
+import { createAllToolDefinitions, type ToolName } from "#pi/tools/default-tools";
 import { getTextOutput as getRenderedTextOutput } from "#pi/tools/utils";
 
 export interface ToolExecutionOptions {}
@@ -146,7 +146,11 @@ export class ToolExecutionComponent extends Container {
 			lines.push(theme.fg("toolOutput", output));
 		}
 		if (receipt) {
-			lines.push(formatStructuredReceiptLines(this.toStructuredReceiptDisplayModel(receipt), this.expanded, theme).join("\n"));
+			lines.push(
+				formatStructuredReceiptLines(this.toStructuredReceiptDisplayModel(receipt), this.expanded, theme).join(
+					"\n",
+				),
+			);
 		}
 		if (lines.length === 0) {
 			return undefined;
@@ -265,7 +269,9 @@ export class ToolExecutionComponent extends Container {
 						hasContent = true;
 						const receipt = this.getStructuredReceipt();
 						if (receipt) {
-							renderContainer.addChild(renderStructuredReceipt(this.toStructuredReceiptDisplayModel(receipt), this.expanded, theme));
+							renderContainer.addChild(
+								renderStructuredReceipt(this.toStructuredReceiptDisplayModel(receipt), this.expanded, theme),
+							);
 						}
 					} catch {
 						this.resultRendererComponent = undefined;

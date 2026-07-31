@@ -6,12 +6,12 @@ import { type AssistantMessage, getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/model/model-registry";
-import { AgentSession } from "#pi/session/agent-session";
+import { AgentSession } from "#pi/runtime/pi-session";
 import { SessionManager } from "#pi/session/session-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { createTestResourceLoader } from "#pi-test/test-utils";
 
-vi.mock("#pi/compaction/index", () => ({
+vi.mock("#pi/session/compaction", () => ({
 	calculateContextTokens: (usage: {
 		input: number;
 		output: number;

@@ -23,26 +23,6 @@ export {
 	type OAuthCredential,
 } from "#pi/auth/auth-storage";
 export { type Args, parseArgs } from "#pi/cli/args";
-export {
-	type BranchPreparation,
-	type BranchSummaryResult,
-	type CollectEntriesResult,
-	type CompactionResult,
-	type CutPointResult,
-	calculateContextTokens,
-	collectEntriesForBranchSummary,
-	compact,
-	DEFAULT_COMPACTION_SETTINGS,
-	estimateTokens,
-	findCutPoint,
-	findTurnStartIndex,
-	type GenerateBranchSummaryOptions,
-	generateBranchSummary,
-	generateSummary,
-	getLastAssistantUsage,
-	prepareBranchEntries,
-	shouldCompact,
-} from "#pi/compaction/index";
 // Config paths
 export {
 	CONFIG_DIR_NAME,
@@ -218,6 +198,17 @@ export type {
 } from "#pi/package-manager/package-manager";
 export { DefaultPackageManager } from "#pi/package-manager/package-manager";
 export { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
+export {
+	AgentSession,
+	type AgentSessionConfig,
+	type AgentSessionEvent,
+	type AgentSessionEventListener,
+	type ModelCycleResult,
+	type ParsedSkillBlock,
+	type PromptOptions,
+	parseSkillBlock,
+	type SessionStats,
+} from "#pi/runtime/pi-session";
 // SDK for programmatic usage
 export {
 	AgentSessionRuntime,
@@ -249,16 +240,25 @@ export {
 	type PromptTemplate,
 } from "#pi/sdk/sdk";
 export {
-	AgentSession,
-	type AgentSessionConfig,
-	type AgentSessionEvent,
-	type AgentSessionEventListener,
-	type ModelCycleResult,
-	type ParsedSkillBlock,
-	type PromptOptions,
-	parseSkillBlock,
-	type SessionStats,
-} from "#pi/session/agent-session";
+	type BranchPreparation,
+	type BranchSummaryResult,
+	type CollectEntriesResult,
+	type CompactionResult,
+	type CutPointResult,
+	calculateContextTokens,
+	collectEntriesForBranchSummary,
+	compact,
+	DEFAULT_COMPACTION_SETTINGS,
+	estimateTokens,
+	findCutPoint,
+	findTurnStartIndex,
+	type GenerateBranchSummaryOptions,
+	generateBranchSummary,
+	generateSummary,
+	getLastAssistantUsage,
+	prepareBranchEntries,
+	shouldCompact,
+} from "#pi/session/compaction";
 export {
 	type BranchSummaryEntry,
 	buildSessionContext,
@@ -350,7 +350,7 @@ export {
 	type WriteOperations,
 	type WriteToolInput,
 	type WriteToolOptions,
-} from "#pi/tools/index";
+} from "#pi/tools/default-tools";
 export { parseFrontmatter, stripFrontmatter } from "#pi/utils/fs/index";
 // Shell utilities
 export { getShellConfig } from "#pi/utils/system/shell";

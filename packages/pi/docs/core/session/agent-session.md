@@ -73,7 +73,7 @@ interface SessionBeforeTreeResult {
 
 ## Session Services
 
-`AgentSessionServices` is the cwd-bound runtime service container for one effective session cwd. It is created separately from the `AgentSession` itself so session options can be resolved against these services first. Defined in [`src/session/agent-session-services.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/agent-session-services.ts):
+`AgentSessionServices` is the cwd-bound runtime service container for one effective session cwd. It is created separately from the `AgentSession` itself so session options can be resolved against these services first. Defined in [`src/runtime/pi-session-services.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/runtime/pi-session-services.ts):
 
 ```typescript
 interface AgentSessionServices {

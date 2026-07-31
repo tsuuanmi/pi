@@ -1,16 +1,9 @@
 /**
- * AgentSession - Core abstraction for agent lifecycle and session management.
+ * Pi session runtime shared by interactive, print, and RPC modes.
  *
- * This class is shared between all run modes (interactive, print, rpc).
- * It encapsulates:
- * - Agent state access
- * - Event subscription with automatic session persistence
- * - Model and thinking level management
- * - Compaction (manual and auto)
- * - Bash execution
- * - Session switching and branching
- *
- * Modes use this class and add their own I/O layer on top.
+ * The exported AgentSession class is the public session API; this module owns
+ * Pi-specific orchestration around the core agent, persisted session history,
+ * extensions, tools, model controls, compaction, and shell execution.
  */
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
@@ -40,14 +33,6 @@ import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi
 import { cleanupSessionResources, isContextOverflow, resetProviders, stream } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/auth-guidance";
-import {
-	type CompactionResult,
-	calculateContextTokens,
-	compact,
-	estimateContextTokens,
-	prepareCompaction,
-	shouldCompact,
-} from "#pi/compaction/index";
 import { type BashResult, executeBashWithOperations } from "#pi/exec/bash-executor";
 import {
 	type ContextUsage,
@@ -77,7 +62,15 @@ import { emitSessionShutdownEvent } from "#pi/extensions/runner";
 import { installAgentToolHooks } from "#pi/hooks/tool-hooks";
 import type { ModelRegistry } from "#pi/model/model-registry";
 import { createSyntheticSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
-import type { AgentSessionContext } from "#pi/session/agent-session-context";
+import type { AgentSessionContext } from "#pi/runtime/pi-session-context";
+import {
+	type CompactionResult,
+	calculateContextTokens,
+	compact,
+	estimateContextTokens,
+	prepareCompaction,
+	shouldCompact,
+} from "#pi/session/compaction";
 import {
 	cycleModel as modelControlCycleModel,
 	cycleThinkingLevel as modelControlCycleThinkingLevel,
@@ -104,7 +97,7 @@ import type { SubagentManager } from "#pi/subagents/subagents";
 import { ApiUsageLogger } from "#pi/telemetry/api-usage-logger";
 import { apiUsageLogPath } from "#pi/telemetry/api-usage-utils";
 import { type BashOperations, createLocalBashOperations } from "#pi/tools/bash";
-import { createAllToolDefinitions } from "#pi/tools/index";
+import { createAllToolDefinitions } from "#pi/tools/default-tools";
 import { createToolDefinitionFromAgentTool } from "#pi/tools/utils";
 
 // ============================================================================

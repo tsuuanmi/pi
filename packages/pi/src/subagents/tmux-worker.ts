@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import type { SubagentTmuxTarget, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { buildTmuxCommands, createSubagentRunIdentity } from "@tsuuanmi/pi-agent";
 import { PI_SUBAGENT_TMUX_TARGET_KIND_ENV, PI_SUBAGENT_WORKER_REQUEST_ENV } from "#pi/cli/launch-tmux";
-import { createAgentSessionServices } from "#pi/session/agent-session-services";
+import { createAgentSessionServices } from "#pi/runtime/pi-session-services";
 import { SubagentManager } from "#pi/subagents/subagents";
 
 export class SubagentWorkerMetadataInvalidError extends Error {

@@ -30,12 +30,12 @@ import { InteractiveMode, runPrintMode, runRpcMode } from "#pi/modes/index";
 import { restoreStdout, takeOverStdout } from "#pi/modes/output-guard";
 import { handleConfigCommand, handlePackageCommand } from "#pi/package-manager/package-manager-cli";
 import type { CreateAgentSessionOptions } from "#pi/sdk/sdk";
-import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/session/agent-session-runtime";
+import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/runtime/pi-session-runtime";
 import {
 	type AgentSessionRuntimeDiagnostic,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
-} from "#pi/session/agent-session-services";
+} from "#pi/runtime/pi-session-services";
 import {
 	formatMissingSessionCwdPrompt,
 	getMissingSessionCwdIssue,

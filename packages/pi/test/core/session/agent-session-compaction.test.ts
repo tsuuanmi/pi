@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { createCodingTools } from "#pi/index";
 import { ModelRegistry } from "#pi/model/model-registry";
-import { AgentSession, type AgentSessionEvent } from "#pi/session/agent-session";
+import { AgentSession, type AgentSessionEvent } from "#pi/runtime/pi-session";
 import { SessionManager } from "#pi/session/session-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { API_KEY, createTestResourceLoader } from "#pi-test/test-utils";

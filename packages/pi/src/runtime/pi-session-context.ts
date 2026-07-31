@@ -2,34 +2,20 @@ import type { AgentState, StreamFn, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import type { ExtensionRunner } from "#pi/extensions/index";
 import type { ModelRegistry } from "#pi/model/model-registry";
-import type { AgentSessionEvent } from "#pi/session/agent-session";
+import type { AgentSessionEvent } from "#pi/runtime/pi-session";
 import type { SessionManager } from "#pi/session/session-manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 import type { ResourceLoader } from "#pi/skills/resource-loader";
 
 /**
- * Type-only seam for the Phase-1 `AgentSession` subsystem extraction.
+ * Type-only seam for Pi session runtime helpers.
  *
- * No `AgentSession` import. `agent` is NOT exposed whole — only its `state`
- * (mutable reference) and `streamFn` are, so extracted modules cannot reach
- * core-loop concerns (`abort`/`subscribe`/`prompt`/`steer`/`followUp`/...).
- * Members are grown per extraction step: only the members a module reads are
- * added at that step, keeping the surface narrow and reviewable.
+ * Helpers receive only the state they need instead of the whole AgentSession,
+ * keeping runtime orchestration in `pi-session.ts` and preventing helper modules
+ * from reaching core-loop controls such as abort, prompt, steer, or follow-up.
  *
- * The single accepted type-only edge is `import type { AgentSessionEvent }`:
- * `AgentSessionEvent` is defined in `agent-session.ts` and re-exported from
- * `src/index.ts`, so it cannot move without breaking the byte-for-byte public
- * SDK surface. This is a type-only import — erased at emit (this is a
- * strip-only TypeScript repo) — so there is no runtime cycle.
- *
- * IMPORTANT: the `AgentSession._ctx()` getter must allocate a FRESH object
- * literal on every call so live field values are read at call time. Do NOT
- * cache or memoize the context — caching would freeze stale
- * `model`/`scopedModels` and silently break ModelControl/TreeNavigation.
- * Per-call allocation of a ~10-field literal is negligible.
- *
- * Extracted AgentSession subsystem modules must NOT touch
- * `state.tools`/`state.systemPrompt`/`state.isStreaming` (orchestrator-core).
+ * The `AgentSession._ctx()` getter must allocate a fresh object on every call
+ * so live field values are read at call time. Do not cache this context.
  */
 export interface AgentSessionContext {
 	// --- Common (shared baseline; present from first use) ---
