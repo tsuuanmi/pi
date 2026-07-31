@@ -14,7 +14,7 @@ import {
 } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
+import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import { OutputAccumulator } from "#pi/tools/output-accumulator";
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "#pi/tools/truncate";
 import { getTextOutput, invalidArgText, str, wrapToolDefinition } from "#pi/tools/utils";

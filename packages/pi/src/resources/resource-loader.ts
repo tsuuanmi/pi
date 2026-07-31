@@ -14,12 +14,12 @@ import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostic
 export type { ResourceCollision, ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 
 import { canonicalizePath, isLocalPath, resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#pi/api/types";
+import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#pi/runtime/extension-types";
 import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
 import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "#pi/extensions/loader";
 import { DefaultPackageManager, type PathMetadata, type ResolvedResource } from "#pi/package-manager/package-manager";
 import { createSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
-import { getBuiltinExtensionFactories } from "#pi/registry/builtin-extensions";
+import { getBuiltinExtensionFactories } from "#pi/extensions/registry/builtin-extensions";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import type { PromptTemplate } from "#pi/skills/prompt-templates";
 import { loadPromptTemplatesWithDiagnostics } from "#pi/skills/prompt-templates";

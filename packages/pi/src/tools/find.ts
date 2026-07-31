@@ -6,7 +6,7 @@ import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import path from "path";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
+import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import { pathExists, resolveToCwd } from "#pi/tools/path-utils";
 import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "#pi/tools/truncate";
 import { getTextOutput, invalidArgText, shortenPath, str, wrapToolDefinition } from "#pi/tools/utils";

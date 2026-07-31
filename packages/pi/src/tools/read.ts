@@ -6,7 +6,7 @@ import { getLanguageFromPath, highlightCode, keyHint, keyText, Text, type Theme 
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
+import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import { getReadmePath } from "#pi/config/config";
 import { formatPathRelativeToCwdOrAbsolute, resolveReadPathAsync, resolveToCwd } from "#pi/tools/path-utils";
 import {

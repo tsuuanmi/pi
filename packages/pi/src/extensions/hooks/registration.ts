@@ -1,4 +1,4 @@
-import type { Extension, ExtensionRuntime } from "#pi/api/types";
+import type { Extension, ExtensionRuntime } from "#pi/runtime/extension-types";
 
 export type HookHandlerFn = (...args: unknown[]) => Promise<unknown>;
 

@@ -13,7 +13,7 @@ import {
 	type TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import type { ToolDefinition, ToolRenderContext } from "#pi/api/types";
+import type { ToolDefinition, ToolRenderContext } from "#pi/api/tool-types";
 import { createAllToolDefinitions, type ToolName } from "#pi/tools/default-tools/index";
 import { getTextOutput as getRenderedTextOutput } from "#pi/tools/utils";
 

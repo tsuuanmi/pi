@@ -4,7 +4,7 @@
 
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import chalk from "chalk";
-import type { ExtensionFlag } from "#pi/api/types";
+import type { ExtensionFlag } from "#pi/runtime/extension-types";
 import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, ENV_SESSION_DIR } from "#pi/config/config";
 
 export type Mode = "text" | "json" | "rpc";

@@ -7,7 +7,7 @@ import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import path from "path";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
+import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import { resolveToCwd } from "#pi/tools/path-utils";
 import {
 	DEFAULT_MAX_BYTES,

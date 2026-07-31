@@ -5,7 +5,7 @@ import type { Theme } from "@tsuuanmi/pi-tui";
 import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import path from "path";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
+import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import { resolveToCwd } from "#pi/tools/path-utils";
 import { getTextOutput, invalidArgText, shortenPath, str, wrapToolDefinition } from "#pi/tools/utils";
 

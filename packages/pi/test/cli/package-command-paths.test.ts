@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ENV_AGENT_DIR, PACKAGE_NAME } from "#pi/config/config";
 import { main } from "#pi/main";
-import { handlePackageCommand } from "#pi/package-manager/package-manager-cli";
+import { handlePackageCommand } from "#pi/cli/package-manager";
 
 describe("package commands", () => {
 	let tempDir: string;

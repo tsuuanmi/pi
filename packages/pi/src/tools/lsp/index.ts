@@ -6,7 +6,8 @@ import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { Text } from "@tsuuanmi/pi-tui";
 import { type Static, Type } from "typebox";
-import type { ExtensionContext, ToolDefinition } from "#pi/api/types";
+import type { ExtensionContext } from "#pi/runtime/context-types";
+import type { ToolDefinition } from "#pi/api/tool-types";
 import { LspSession } from "#pi/tools/lsp/client";
 import { DEFAULT_LSP_SERVERS } from "#pi/tools/lsp/defaults";
 import {

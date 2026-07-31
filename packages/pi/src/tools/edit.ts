@@ -6,7 +6,7 @@ import { Box, Container, renderDiff, Spacer, Text } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition } from "#pi/api/types";
+import type { ToolDefinition } from "#pi/api/tool-types";
 import {
 	applyEditsToNormalizedContent,
 	computeEditsDiff,

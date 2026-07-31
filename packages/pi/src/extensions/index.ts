@@ -1,101 +1,98 @@
 /**
- * Extension system for lifecycle events and custom tools.
+ * Extension subsystem exports.
  */
 
+export type {
+	AgentToolResult,
+	AgentToolUpdateCallback,
+	ToolExecutionMode,
+} from "@tsuuanmi/pi-agent";
+export type { ExecOptions, ExecResult } from "#pi/exec/exec";
+export type {
+	CompactOptions,
+	ContextUsage,
+	ExtensionCommandContext,
+	ExtensionContext,
+	ExtensionMode,
+	ReplacedSessionContext,
+} from "#pi/runtime/context-types";
+export type {
+	AppendEntryHandler,
+	Extension,
+	ExtensionActions,
+	ExtensionAPI,
+	ExtensionCommandContextActions,
+	ExtensionContextActions,
+	ExtensionError,
+	ExtensionFactory,
+	ExtensionFlag,
+	ExtensionRuntime,
+	ExtensionShortcut,
+	GetActiveToolsHandler,
+	GetAllToolsHandler,
+	GetCommandsHandler,
+	GetThinkingLevelHandler,
+	LoadExtensionsResult,
+	MessageRenderer,
+	MessageRenderOptions,
+	RegisteredCommand,
+	RegisteredTool,
+	ResolvedCommand,
+	SendMessageHandler,
+	SendUserMessageHandler,
+	SetActiveToolsHandler,
+	SetLabelHandler,
+	SetModelHandler,
+	SetThinkingLevelHandler,
+	ToolInfo,
+} from "#pi/runtime/extension-types";
+export type { ProviderConfig, ProviderModelConfig } from "#pi/api/provider-types";
+export type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
+export type {
+	AutocompleteProviderFactory,
+	EditorFactory,
+	ExtensionUIContext,
+	ExtensionUIDialogOptions,
+	ExtensionWidgetOptions,
+	TerminalInputHandler,
+	WidgetPlacement,
+	WorkingIndicatorOptions,
+} from "#pi/api/ui-types";
 export type {
 	AfterProviderResponseEvent,
 	AgentEndEvent,
 	AgentStartEvent,
-	// Re-exports
-	AgentToolResult,
-	AgentToolUpdateCallback,
-	AppendEntryHandler,
-	// App keybindings (for custom editors)
-	AppKeybinding,
-	AutocompleteProviderFactory,
-	// Events - Tool (ToolCallEvent types)
 	BashToolCallEvent,
 	BashToolResultEvent,
 	BeforeAgentStartEvent,
 	BeforeAgentStartEventResult,
 	BeforeProviderRequestEvent,
 	BeforeProviderRequestEventResult,
-	BuildSystemPromptOptions,
-	// Context
-	CompactOptions,
-	// Events - Agent
 	ContextEvent,
-	// Event Results
 	ContextEventResult,
-	ContextUsage,
 	CustomToolCallEvent,
 	CustomToolResultEvent,
-	EditorFactory,
 	EditToolCallEvent,
 	EditToolResultEvent,
-	ExecOptions,
-	ExecResult,
-	Extension,
-	ExtensionActions,
-	// API
-	ExtensionAPI,
-	ExtensionCommandContext,
-	ExtensionCommandContextActions,
-	ExtensionContext,
-	ExtensionContextActions,
-	// Errors
-	ExtensionError,
 	ExtensionEvent,
-	ExtensionFactory,
-	ExtensionFlag,
-	ExtensionHandler,
-	ExtensionMode,
-	// Runtime
-	ExtensionRuntime,
-	ExtensionShortcut,
-	ExtensionUIContext,
-	ExtensionUIDialogOptions,
-	ExtensionWidgetOptions,
 	FindToolCallEvent,
 	FindToolResultEvent,
-	GetActiveToolsHandler,
-	GetAllToolsHandler,
-	GetCommandsHandler,
-	GetThinkingLevelHandler,
 	GrepToolCallEvent,
 	GrepToolResultEvent,
-	// Events - Input
 	InputEvent,
 	InputEventResult,
 	InputSource,
-	KeybindingsManager,
-	LoadExtensionsResult,
 	LsToolCallEvent,
 	LsToolResultEvent,
-	// Events - Message
 	MessageEndEvent,
-	// Message Rendering
-	MessageRenderer,
-	MessageRenderOptions,
 	MessageStartEvent,
 	MessageUpdateEvent,
 	ModelSelectEvent,
 	ModelSelectSource,
-	// Provider Registration
-	ProviderConfig,
-	ProviderModelConfig,
 	ReadToolCallEvent,
 	ReadToolResultEvent,
-	// Commands
-	RegisteredCommand,
-	RegisteredTool,
-	ReplacedSessionContext,
-	ResolvedCommand,
-	// Events - Resources
 	ResourcesDiscoverEvent,
 	ResourcesDiscoverResult,
-	SendMessageHandler,
-	SendUserMessageHandler,
 	SessionBeforeCompactEvent,
 	SessionBeforeCompactResult,
 	SessionBeforeForkEvent,
@@ -107,43 +104,26 @@ export type {
 	SessionCompactEvent,
 	SessionEvent,
 	SessionShutdownEvent,
-	// Events - Session
 	SessionStartEvent,
 	SessionTreeEvent,
-	SetActiveToolsHandler,
-	SetLabelHandler,
-	SetModelHandler,
-	SetThinkingLevelHandler,
-	TerminalInputHandler,
-	// Events - Tool
 	ToolCallEvent,
 	ToolCallEventResult,
-	// Tools
-	ToolDefinition,
-	// Events - Tool Execution
 	ToolExecutionEndEvent,
-	// Tool execution mode
-	ToolExecutionMode,
 	ToolExecutionStartEvent,
 	ToolExecutionUpdateEvent,
-	ToolInfo,
-	ToolRenderResultOptions,
 	ToolResultEvent,
 	ToolResultEventResult,
 	TreePreparation,
 	TurnEndEvent,
 	TurnStartEvent,
-	// Events - User Bash
 	UserBashEvent,
 	UserBashEventResult,
-	WidgetPlacement,
-	WorkingIndicatorOptions,
 	WriteToolCallEvent,
 	WriteToolResultEvent,
-} from "#pi/api/types";
-// Type guards
+} from "#pi/extensions/hooks/event-types";
+export type { ExtensionHandler, ExtensionHookAPI } from "#pi/extensions/hooks/extension-api-hooks";
+export { defineTool } from "#pi/api/tool-types";
 export {
-	defineTool,
 	isBashToolResult,
 	isEditToolResult,
 	isFindToolResult,
@@ -152,7 +132,7 @@ export {
 	isReadToolResult,
 	isToolCallEventType,
 	isWriteToolResult,
-} from "#pi/api/types";
+} from "#pi/extensions/hooks/event-types";
 export {
 	createExtensionRuntime,
 	discoverAndLoadExtensions,
@@ -168,4 +148,6 @@ export type {
 export { ExtensionRunner } from "#pi/extensions/runner";
 export { wrapRegisteredTool, wrapRegisteredTools } from "#pi/extensions/wrapper";
 export type { SourceInfo } from "#pi/package-manager/source-info";
+export type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 export type { SlashCommandInfo, SlashCommandSource } from "#pi/skills/slash-commands";
+export type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";

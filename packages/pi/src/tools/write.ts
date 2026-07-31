@@ -5,7 +5,7 @@ import { Container, getLanguageFromPath, highlightCode, keyHint, Text, type Them
 import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname } from "path";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/types";
+import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import { resolveToCwd } from "#pi/tools/path-utils";
 import { normalizeDisplayText, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#pi/tools/utils";
 

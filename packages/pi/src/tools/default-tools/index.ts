@@ -83,7 +83,7 @@ export {
 } from "#pi/tools/write";
 
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import type { ToolDefinition } from "#pi/api/types";
+import type { ToolDefinition } from "#pi/api/tool-types";
 import { type BashToolOptions, createBashTool, createBashToolDefinition } from "#pi/tools/bash";
 import { createEditTool, createEditToolDefinition, type EditToolOptions } from "#pi/tools/edit";
 import { createFindTool, createFindToolDefinition, type FindToolOptions } from "#pi/tools/find";

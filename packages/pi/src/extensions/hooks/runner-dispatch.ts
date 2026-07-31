@@ -1,5 +1,6 @@
 import type { AgentMessage } from "@tsuuanmi/pi-agent";
-import type { Extension, ExtensionContext, ExtensionError } from "#pi/api/types";
+import type { Extension, ExtensionError } from "#pi/runtime/extension-types";
+import type { ExtensionContext } from "#pi/runtime/context-types";
 import type {
 	BeforeAgentStartEvent,
 	BeforeAgentStartEventResult,

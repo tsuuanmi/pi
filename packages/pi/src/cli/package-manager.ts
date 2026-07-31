@@ -1,7 +1,7 @@
 import { spawnProcess } from "@tsuuanmi/pi-agent/node";
 import { Markdown, type MarkdownTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
-import type { ExtensionFactory } from "#pi/api/types";
+import type { ExtensionFactory } from "#pi/runtime/extension-types";
 import {
 	APP_NAME,
 	CONFIG_DIR_NAME,
