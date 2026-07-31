@@ -36,9 +36,7 @@ describe("pi public agent boundary", () => {
 		const packageJson = JSON.parse(await readRepoFile("packages/pi/package.json")) as {
 			exports?: Record<string, unknown>;
 		};
-		const sdkMessages = await readRepoFile("packages/pi/src/sdk/messages.ts");
 
 		expect(packageJson.exports).not.toHaveProperty("./sdk/messages");
-		expect(sdkMessages).not.toContain('from "@tsuuanmi/pi-agent"');
 	});
 });

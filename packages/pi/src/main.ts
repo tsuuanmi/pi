@@ -29,13 +29,13 @@ import { resolveCliModel, resolveModelScope, type ScopedModel } from "#pi/model/
 import { InteractiveMode, runPrintMode, runRpcMode } from "#pi/modes/index";
 import { restoreStdout, takeOverStdout } from "#pi/modes/output-guard";
 import { handleConfigCommand, handlePackageCommand } from "#pi/package-manager/package-manager-cli";
-import type { CreateAgentSessionOptions } from "#pi/sdk/sdk";
-import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/runtime/pi-session-runtime";
+import type { CreateAgentSessionOptions } from "#pi/runtime/sdk";
+import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/runtime/session-runtime";
 import {
 	type AgentSessionRuntimeDiagnostic,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
-} from "#pi/runtime/pi-session-services";
+} from "#pi/runtime/services";
 import {
 	formatMissingSessionCwdPrompt,
 	getMissingSessionCwdIssue,

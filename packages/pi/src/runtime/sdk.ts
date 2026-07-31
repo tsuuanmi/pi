@@ -9,8 +9,8 @@ import { DEFAULT_THINKING_LEVEL } from "#pi/config/defaults";
 import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { findInitialModel } from "#pi/model/model-resolver";
-import { AgentSession } from "#pi/runtime/pi-session";
-import { optimizeRetainedContext } from "#pi/sdk/context-optimization";
+import { AgentSession } from "#pi/runtime/session";
+import { optimizeRetainedContext } from "#pi/runtime/context-optimization";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/session-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import type { ResourceLoader } from "#pi/skills/resource-loader";
@@ -114,7 +114,7 @@ export type {
 	SlashCommandSource,
 	ToolDefinition,
 } from "#pi/extensions/index";
-export * from "#pi/runtime/pi-session-runtime";
+export * from "#pi/runtime/session-runtime";
 export type { PromptTemplate } from "#pi/skills/prompt-templates";
 export type { Skill } from "#pi/skills/skills";
 export type { Tool } from "#pi/tools/default-tools";

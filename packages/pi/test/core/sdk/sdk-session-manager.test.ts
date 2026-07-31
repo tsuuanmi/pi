@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createAgentSession } from "#pi/sdk/sdk";
+import { createAgentSession } from "#pi/runtime/sdk";
 import { SessionManager } from "#pi/session/session-manager";
 
 describe("createAgentSession session manager defaults", () => {

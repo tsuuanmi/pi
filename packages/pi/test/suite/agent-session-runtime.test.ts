@@ -16,7 +16,7 @@ import {
 	createAgentSessionFromServices,
 	createAgentSessionRuntime,
 	createAgentSessionServices,
-} from "#pi/runtime/pi-session-runtime";
+} from "#pi/runtime/session-runtime";
 import { SessionManager } from "#pi/session/session-manager";
 import { testAssistantMessage, registerTestProvider } from "#pi-test/helpers/provider";
 

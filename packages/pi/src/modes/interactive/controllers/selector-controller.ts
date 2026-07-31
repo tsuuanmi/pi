@@ -22,8 +22,8 @@ import { SettingsSelectorComponent } from "#pi/modes/interactive/components/sele
 import { TreeSelectorComponent } from "#pi/modes/interactive/components/selectors/tree-selector";
 import { UserMessageSelectorComponent } from "#pi/modes/interactive/components/selectors/user-message-selector";
 import type { ExtensionUIController } from "#pi/modes/interactive/controllers/extension-ui-controller";
-import type { AgentSession } from "#pi/runtime/pi-session";
-import type { AgentSessionRuntime } from "#pi/runtime/pi-session-runtime";
+import type { AgentSession } from "#pi/runtime/session";
+import type { AgentSessionRuntime } from "#pi/runtime/session-runtime";
 import { MissingSessionCwdError } from "#pi/session/session-cwd";
 import { SessionManager } from "#pi/session/session-manager";
 import type { KeybindingsManager } from "#pi/settings/keybindings";

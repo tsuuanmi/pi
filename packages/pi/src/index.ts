@@ -208,7 +208,7 @@ export {
 	type PromptOptions,
 	parseSkillBlock,
 	type SessionStats,
-} from "#pi/runtime/pi-session";
+} from "#pi/runtime/session";
 // SDK for programmatic usage
 export {
 	AgentSessionRuntime,
@@ -238,7 +238,7 @@ export {
 	createReadTool,
 	createWriteTool,
 	type PromptTemplate,
-} from "#pi/sdk/sdk";
+} from "#pi/runtime/sdk";
 export {
 	type BranchPreparation,
 	type BranchSummaryResult,

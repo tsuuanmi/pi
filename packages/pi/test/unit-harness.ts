@@ -29,7 +29,7 @@ import { createAssistantMessageEventStream } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import type { ExtensionFactory, ResourceLoader } from "#pi/index";
 import { ModelRegistry } from "#pi/model/model-registry";
-import { AgentSession, type AgentSessionEvent } from "#pi/runtime/pi-session";
+import { AgentSession, type AgentSessionEvent } from "#pi/runtime/session";
 import { SessionManager } from "#pi/session/session-manager";
 import type { Settings } from "#pi/settings/settings-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";

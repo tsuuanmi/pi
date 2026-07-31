@@ -6,7 +6,7 @@ import { AuthStorage } from "#pi/auth/auth-storage";
 import { getAgentDir } from "#pi/config/config";
 import type { SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
 import { ModelRegistry } from "#pi/model/model-registry";
-import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "#pi/sdk/sdk";
+import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "#pi/runtime/sdk";
 import type { SessionManager } from "#pi/session/session-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import {

@@ -3,9 +3,9 @@ import { basename, join, resolve } from "node:path";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { ReplacedSessionContext, SessionShutdownEvent, SessionStartEvent } from "#pi/extensions/index";
 import { emitSessionShutdownEvent } from "#pi/extensions/runner";
-import type { AgentSession } from "#pi/runtime/pi-session";
-import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "#pi/runtime/pi-session-services";
-import type { CreateAgentSessionResult } from "#pi/sdk/sdk";
+import type { AgentSession } from "#pi/runtime/session";
+import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "#pi/runtime/services";
+import type { CreateAgentSessionResult } from "#pi/runtime/sdk";
 import { assertSessionCwdExists } from "#pi/session/session-cwd";
 import { SessionManager } from "#pi/session/session-manager";
 
@@ -422,4 +422,4 @@ export {
 	type CreateAgentSessionServicesOptions,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
-} from "#pi/runtime/pi-session-services";
+} from "#pi/runtime/services";

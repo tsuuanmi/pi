@@ -62,7 +62,7 @@ import { emitSessionShutdownEvent } from "#pi/extensions/runner";
 import { installAgentToolHooks } from "#pi/hooks/tool-hooks";
 import type { ModelRegistry } from "#pi/model/model-registry";
 import { createSyntheticSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
-import type { AgentSessionContext } from "#pi/runtime/pi-session-context";
+import type { AgentSessionContext } from "#pi/runtime/context";
 import {
 	type CompactionResult,
 	calculateContextTokens,
@@ -79,7 +79,7 @@ import {
 	setThinkingLevel as modelControlSetThinkingLevel,
 	supportsThinking as modelControlSupportsThinking,
 } from "#pi/session/model-control";
-import { sleep } from "#pi/session/runtime";
+import { sleep } from "#pi/runtime/platform";
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "#pi/session/session-manager";
 import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "#pi/session/session-manager";
 import { expandSkillCommand } from "#pi/session/skill-expansion";
