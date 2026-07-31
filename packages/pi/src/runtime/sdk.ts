@@ -30,7 +30,7 @@ import {
 	createReadTool,
 	createWriteTool,
 	type ToolName,
-} from "#pi/tools/default-tools/index";
+} from "#pi/tools/default-tools";
 
 export interface CreateAgentSessionOptions {
 	/** Working directory for project-local discovery. Default: process.cwd() */
@@ -100,7 +100,7 @@ export interface CreateAgentSessionResult {
 	/** Extensions result (for UI context setup in interactive mode) */
 	extensionsResult: LoadExtensionsResult;
 	/** Warning if session was restored with a different model than saved */
-	modelFallbackMessage?: string;
+	modelStartupWarning?: string;
 }
 
 // Re-exports
@@ -117,7 +117,7 @@ export type {
 export * from "#pi/runtime/runtime";
 export type { PromptTemplate } from "#pi/skills/prompt-templates";
 export type { Skill } from "#pi/skills/skills";
-export type { Tool } from "#pi/tools/default-tools/index";
+export type { Tool } from "#pi/tools/default-tools";
 
 export {
 	// Tool factories (for custom cwd)
@@ -156,7 +156,7 @@ function getDefaultAgentDir(): string {
  * });
  *
  * // Continue previous session
- * const { session, modelFallbackMessage } = await createAgentSession({
+ * const { session, modelStartupWarning } = await createAgentSession({
  *   continueSession: true,
  * });
  *
@@ -199,7 +199,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	const hasThinkingEntry = sessionManager.getBranch().some((entry) => entry.type === "thinking_level_change");
 
 	let model = options.model;
-	let modelFallbackMessage: string | undefined;
+	let modelStartupWarning: string | undefined;
 
 	// If session has data, try to restore model from it
 	if (!model && hasExistingSession && existingSession.model) {
@@ -208,7 +208,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 			model = restoredModel;
 		}
 		if (!model) {
-			modelFallbackMessage = `Could not restore model ${existingSession.model.provider}/${existingSession.model.modelId}`;
+			modelStartupWarning = `Could not restore model ${existingSession.model.provider}/${existingSession.model.modelId}`;
 		}
 	}
 
@@ -224,9 +224,9 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		});
 		model = result.model;
 		if (!model) {
-			modelFallbackMessage = formatNoModelsAvailableMessage();
-		} else if (modelFallbackMessage) {
-			modelFallbackMessage += `. Using ${model.provider}/${model.id}`;
+			modelStartupWarning = formatNoModelsAvailableMessage();
+		} else if (modelStartupWarning) {
+			modelStartupWarning += `. Using ${model.provider}/${model.id}`;
 		}
 	}
 
@@ -365,6 +365,6 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	return {
 		session,
 		extensionsResult,
-		modelFallbackMessage,
+		modelStartupWarning,
 	};
 }

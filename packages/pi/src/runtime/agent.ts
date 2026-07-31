@@ -97,7 +97,7 @@ import type { SubagentManager } from "#pi/subagents/subagents";
 import { ApiUsageLogger } from "#pi/telemetry/api-usage-logger";
 import { apiUsageLogPath } from "#pi/telemetry/api-usage-utils";
 import { type BashOperations, createLocalBashOperations } from "#pi/tools/bash";
-import { createAllToolDefinitions } from "#pi/tools/default-tools/index";
+import { createAllToolDefinitions } from "#pi/tools/default-tools";
 import { createToolDefinitionFromAgentTool } from "#pi/tools/utils";
 
 // ============================================================================

@@ -20,7 +20,7 @@ import type {
 	ReadToolDetails,
 	ReadToolInput,
 	WriteToolInput,
-} from "#pi/tools/default-tools/index";
+} from "#pi/tools/default-tools";
 import type { EditToolDetails } from "#pi/tools/edit";
 
 // ============================================================================
