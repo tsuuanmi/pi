@@ -72,20 +72,20 @@ export class AgentSessionRuntime {
 	private _services: AgentSessionServices;
 	private readonly createRuntime: CreateAgentSessionRuntimeFactory;
 	private _diagnostics: AgentSessionRuntimeDiagnostic[];
-	private _modelFallbackMessage?: string;
+	private _modelStartupWarning?: string;
 
 	constructor(
 		_session: AgentSession,
 		_services: AgentSessionServices,
 		createRuntime: CreateAgentSessionRuntimeFactory,
 		_diagnostics: AgentSessionRuntimeDiagnostic[] = [],
-		_modelFallbackMessage?: string,
+		_modelStartupWarning?: string,
 	) {
 		this._session = _session;
 		this._services = _services;
 		this.createRuntime = createRuntime;
 		this._diagnostics = _diagnostics;
-		this._modelFallbackMessage = _modelFallbackMessage;
+		this._modelStartupWarning = _modelStartupWarning;
 	}
 
 	get services(): AgentSessionServices {
@@ -104,8 +104,8 @@ export class AgentSessionRuntime {
 		return this._diagnostics;
 	}
 
-	get modelFallbackMessage(): string | undefined {
-		return this._modelFallbackMessage;
+	get modelStartupWarning(): string | undefined {
+		return this._modelStartupWarning;
 	}
 
 	setRebindSession(rebindSession?: (session: AgentSession) => Promise<void>): void {
@@ -172,7 +172,7 @@ export class AgentSessionRuntime {
 		this._session = result.session;
 		this._services = result.services;
 		this._diagnostics = result.diagnostics;
-		this._modelFallbackMessage = result.modelFallbackMessage;
+		this._modelStartupWarning = result.modelStartupWarning;
 	}
 
 	private async finishSessionReplacement(withSession?: (ctx: ReplacedSessionContext) => Promise<void>): Promise<void> {
@@ -411,7 +411,7 @@ export async function createAgentSessionRuntime(
 		result.services,
 		createRuntime,
 		result.diagnostics,
-		result.modelFallbackMessage,
+		result.modelStartupWarning,
 	);
 }
 

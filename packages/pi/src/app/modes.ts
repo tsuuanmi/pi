@@ -15,7 +15,7 @@ export interface RunModeOptions {
 	parsed: Args;
 	initialMessage?: string;
 	migratedProviders: string[];
-	modelFallbackMessage?: string;
+	modelStartupWarning?: string;
 }
 
 function isTruthyEnv(value: string | undefined): boolean {
@@ -37,7 +37,7 @@ async function waitForOutputDrain(): Promise<void> {
 }
 
 export async function runAppMode(options: RunModeOptions): Promise<void> {
-	const { appMode, runtime, parsed, initialMessage, migratedProviders, modelFallbackMessage } = options;
+	const { appMode, runtime, parsed, initialMessage, migratedProviders, modelStartupWarning } = options;
 	const session = runtime.session;
 
 	if (appMode !== "interactive" && !session.model) {
@@ -60,7 +60,7 @@ export async function runAppMode(options: RunModeOptions): Promise<void> {
 	if (appMode === "interactive") {
 		const interactiveMode = new InteractiveMode(runtime, {
 			migratedProviders,
-			modelFallbackMessage,
+			modelStartupWarning,
 			initialMessage,
 			initialMessages: parsed.messages,
 			verbose: parsed.verbose,

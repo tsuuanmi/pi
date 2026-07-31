@@ -158,7 +158,7 @@ export interface InteractiveModeOptions {
 	/** Providers that were migrated to auth.json (shows warning) */
 	migratedProviders?: string[];
 	/** Warning message if session model couldn't be restored */
-	modelFallbackMessage?: string;
+	modelStartupWarning?: string;
 	/** Initial message to send on startup (can include @file content) */
 	initialMessage?: string;
 	/** Images to attach to the initial message */
@@ -680,7 +680,7 @@ export class InteractiveMode {
 		await this.init();
 
 		// Show startup warnings
-		const { migratedProviders, modelFallbackMessage, initialMessage, initialMessages } = this.options;
+		const { migratedProviders, modelStartupWarning, initialMessage, initialMessages } = this.options;
 
 		if (migratedProviders && migratedProviders.length > 0) {
 			this.showWarning(`Migrated credentials to auth.json: ${migratedProviders.join(", ")}`);
@@ -691,8 +691,8 @@ export class InteractiveMode {
 			this.showError(`Model settings error: ${modelsJsonError}`);
 		}
 
-		if (modelFallbackMessage) {
-			this.showWarning(modelFallbackMessage);
+		if (modelStartupWarning) {
+			this.showWarning(modelStartupWarning);
 		}
 
 		// Process initial messages

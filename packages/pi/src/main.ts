@@ -94,7 +94,7 @@ export async function main(args: string[], options?: MainOptions) {
 		extensionFactories: options?.extensionFactories,
 	});
 	time("createAgentSessionRuntime");
-	const { services, modelFallbackMessage } = runtime;
+	const { services, modelStartupWarning } = runtime;
 	const { settingsManager, modelRegistry, resourceLoader } = services;
 
 	if (parsed.help) {
@@ -138,6 +138,6 @@ export async function main(args: string[], options?: MainOptions) {
 		parsed,
 		initialMessage,
 		migratedProviders,
-		modelFallbackMessage,
+		modelStartupWarning,
 	});
 }

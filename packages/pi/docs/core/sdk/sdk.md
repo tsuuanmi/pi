@@ -703,11 +703,11 @@ const { session: persisted } = await createAgentSession({
 });
 
 // Continue most recent
-const { session: continued, modelFallbackMessage } = await createAgentSession({
+const { session: continued, modelStartupWarning } = await createAgentSession({
   sessionManager: SessionManager.continueRecent(process.cwd()),
 });
-if (modelFallbackMessage) {
-  console.log("Note:", modelFallbackMessage);
+if (modelStartupWarning) {
+  console.log("Note:", modelStartupWarning);
 }
 
 // Open specific file
@@ -866,7 +866,7 @@ interface CreateAgentSessionResult {
   extensionsResult: LoadExtensionsResult;
   
   // Warning if session model couldn't be restored
-  modelFallbackMessage?: string;
+  modelStartupWarning?: string;
 }
 
 interface LoadExtensionsResult {
@@ -992,7 +992,7 @@ const runtime = await createAgentSessionRuntime(createRuntime, {
 
 const mode = new InteractiveMode(runtime, {
   migratedProviders: [],
-  modelFallbackMessage: undefined,
+  modelStartupWarning: undefined,
   initialMessage: "Hello",
   initialImages: [],
   initialMessages: [],
