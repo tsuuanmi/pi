@@ -6,7 +6,7 @@ import type {
 	JsonRpcRequest,
 	JsonRpcResponse,
 	ServerConfig,
-} from "#pi/lsp/runtime/types";
+} from "#pi/tools/lsp/types";
 
 const DEFAULT_TIMEOUT_MS = 20_000;
 const DIAGNOSTIC_WAIT_MS = 1_000;

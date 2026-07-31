@@ -55,7 +55,7 @@ export {
 	createLspToolDefinition,
 	type LspToolDetails,
 	type LspToolInput,
-} from "#pi/tools/lsp";
+} from "#pi/tools/lsp/lsp";
 export {
 	createReadTool,
 	createReadToolDefinition,
@@ -90,7 +90,7 @@ import { createFindTool, createFindToolDefinition, type FindToolOptions } from "
 import { createGlobTool, createGlobToolDefinition, type GlobToolOptions } from "#pi/tools/glob";
 import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "#pi/tools/grep";
 import { createLsTool, createLsToolDefinition, type LsToolOptions } from "#pi/tools/ls";
-import { createLspTool, createLspToolDefinition } from "#pi/tools/lsp";
+import { createLspTool, createLspToolDefinition } from "#pi/tools/lsp/lsp";
 import { createReadTool, createReadToolDefinition, type ReadToolOptions } from "#pi/tools/read";
 import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } from "#pi/tools/write";
 

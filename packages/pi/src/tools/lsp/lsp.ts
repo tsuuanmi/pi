@@ -7,8 +7,8 @@ import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { Text } from "@tsuuanmi/pi-tui";
 import { type Static, Type } from "typebox";
 import type { ExtensionContext, ToolDefinition } from "#pi/api/types";
-import { LspSession } from "#pi/lsp/runtime/client";
-import { DEFAULT_LSP_SERVERS } from "#pi/lsp/runtime/defaults";
+import { LspSession } from "#pi/tools/lsp/client";
+import { DEFAULT_LSP_SERVERS } from "#pi/tools/lsp/defaults";
 import {
 	commandExists,
 	detectLanguageId,
@@ -19,7 +19,7 @@ import {
 	findServerForFile,
 	formatLocation,
 	formatSymbol,
-} from "#pi/lsp/runtime/protocol";
+} from "#pi/tools/lsp/protocol";
 import type {
 	Diagnostic,
 	DocumentSymbol,
@@ -28,7 +28,7 @@ import type {
 	LocationLink,
 	ServerConfig,
 	SymbolInformation,
-} from "#pi/lsp/runtime/types";
+} from "#pi/tools/lsp/types";
 
 function str(value: unknown): string | null {
 	if (typeof value === "string") return value;

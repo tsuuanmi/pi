@@ -1,4 +1,4 @@
-import type { ServerConfig } from "#pi/lsp/runtime/types";
+import type { ServerConfig } from "#pi/tools/lsp/types";
 
 export const DEFAULT_LSP_SERVERS: Record<string, ServerConfig> = {
 	"typescript-language-server": {
