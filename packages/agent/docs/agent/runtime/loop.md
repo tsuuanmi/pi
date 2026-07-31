@@ -65,10 +65,12 @@ config.getFollowUpMessages = async () => followUpQueue.drain();
 
 Tool calls from an assistant message are executed based on `toolExecution` mode:
 
-- **`"parallel"`** (default): Preflight tool calls sequentially, then execute allowed tools concurrently. `tool_execution_end` events fire in completion order after each tool is finalized; tool-result message artifacts are emitted later in assistant source order.
+- **`"parallel"`** (default): Preflight tool calls sequentially, then execute allowed tools concurrently. Set `maxToolConcurrency` to bound concurrency for production hosts. `tool_execution_end` events fire in completion order after each tool is finalized; tool-result message artifacts are emitted later in assistant source order.
 - **`"sequential"`**: Each tool call is prepared, executed, and finalized before the next one starts.
 
 Individual tools can override this with `tool.executionMode = "sequential"`. If any tool call in the message targets a sequential-mode tool, the whole batch runs sequentially.
+
+Set `maxToolOutputChars` to keep at most that many original text characters from each tool result. A tool can set `maxOutputChars` to use a stricter or looser per-tool limit. Truncated text receives a deterministic marker that includes the kept and original character counts. The final `tool_execution_end` event also reports truncation counts in `meta`.
 
 ### Abort Handling
 
@@ -78,6 +80,8 @@ When an `AbortSignal` is provided:
 - Provider aborts are encoded as assistant messages with `stopReason: "aborted"`
 - When an assistant message finishes with `stopReason: "error"` or `"aborted"`, the loop emits `turn_end` (with empty tool results) and `agent_end`, then returns without executing tools or polling queues
 - Otherwise the loop still emits `agent_end` with the accumulated new messages
+
+Terminal shutdown is owned by the `Agent` boundary. After `dispose()`, new work is rejected instead of restarted.
 
 ### Error Handling
 
@@ -108,6 +112,12 @@ The loop applies transforms in order:
 2. **`convertToLlm`** — Converts `AgentMessage[]` to `Message[]` for the LLM provider.
 
 Both must not throw or reject. Return safe fallback values instead.
+
+## Runtime Determinism
+
+Pass `now` to control runtime timestamps, trace spans, and `createRequestId` to create provider request ids from the monotonic request sequence and request start timestamp. Defaults use `Date.now()` and the standard `llm_<timestamp>_<sequence>` id format.
+
+Set `requestTimeoutMs` to bound each provider request. The timeout aborts the active provider stream and reports a deterministic timeout error through the existing run failure path. Request completion emits a protocol-level trace span with timing and status.
 
 ## Provider Request Observer
 
@@ -145,7 +155,7 @@ Return `{ block: true }` to prevent execution. The loop emits an error tool resu
 
 ### `afterToolCall`
 
-Called after a tool finishes executing, before `tool_execution_end` and tool-result message events are emitted:
+Called after a tool finishes executing, before `tool_execution_end` and tool-result message events are emitted. If the tool declares `detailsSchema`, details are validated after this hook applies any replacement. Invalid details produce a deterministic failed tool result. Final tool events include a protocol-level span with tool call timing and status; concrete tool implementations stay in host packages and are only registered with this runtime.
 
 ```typescript
 afterToolCall: async (context, signal) => ({

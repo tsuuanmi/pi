@@ -57,11 +57,13 @@ export function normalizeLoopDetectionOptions(
 	if (options === undefined || options === false) return undefined;
 	if (options === true) return { ...DEFAULT_LOOP_DETECTION };
 	if (options.enabled === false) return undefined;
+	const maxRepeats = Math.max(2, Math.floor(options.maxRepeats ?? DEFAULT_LOOP_DETECTION.maxRepeats));
+	const requestedWindowSize = Math.floor(options.windowSize ?? DEFAULT_LOOP_DETECTION.windowSize);
 	return {
 		...DEFAULT_LOOP_DETECTION,
 		...options,
-		maxRepeats: Math.max(2, Math.floor(options.maxRepeats ?? DEFAULT_LOOP_DETECTION.maxRepeats)),
-		windowSize: Math.max(2, Math.floor(options.windowSize ?? DEFAULT_LOOP_DETECTION.windowSize)),
+		maxRepeats,
+		windowSize: Math.max(maxRepeats, requestedWindowSize),
 	};
 }
 
@@ -105,9 +107,14 @@ function createTurnSignature(turn: LoopDetectionTurn, options: NormalizedLoopDet
 	if (options.includeToolCalls) {
 		const toolCalls = turn.message.content.filter((content) => content.type === "toolCall");
 		if (toolCalls.length > 0) {
-			parts.push(
-				`tools:${toolCalls.map((toolCall) => `${toolCall.name}:${stableStringify(toolCall.arguments)}`).join("|")}`,
-			);
+			const signatures = toolCalls
+				.map((toolCall) => ({
+					signature: `${toolCall.name}:${stableStringify(toolCall.arguments)}`,
+					sortKey: `${toolCall.name}:${stableStringify(toolCall.arguments)}:${toolCall.id}`,
+				}))
+				.sort((left, right) => left.sortKey.localeCompare(right.sortKey))
+				.map((toolCall) => toolCall.signature);
+			parts.push(`tools:${signatures.join("|")}`);
 		}
 	}
 	if (options.includeText) {

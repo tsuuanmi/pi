@@ -9,7 +9,7 @@ Subscribe with `Agent.subscribe()`:
 ```typescript
 const unsubscribe = agent.subscribe(async (event, signal) => {
   if (event.type === "tool_execution_end") {
-    console.log(event.toolName, event.result);
+    console.log(event.toolName, event.meta.status, event.meta.span, event.result);
   }
 });
 ```
@@ -35,12 +35,27 @@ Tool events include stable identifiers and tool metadata:
 - streaming update `details`
 - final `result`
 - `isError`
+- final `meta.status`: `completed`, `failed`, `blocked`, or `aborted`
+- final `meta.span` with tool id, name, timing, duration, and trace status
+- truncation metadata when output limits truncate tool text
 
 The subagent progress tracker in [`subagents/index.md`](../../subagents/index.md) consumes this same event shape to retain current tool, recent tools, and recent assistant output.
 
+## Trace spans
+
+Runtime traces and final tool events carry additive `span` metadata:
+
+- `kind`: `request` or `tool`
+- `id`: provider request id or tool call id
+- `name`: span name
+- `startedAt` / `endedAt` / `durationMs`
+- `status`: `ok`, `error`, `aborted`, `timeout`, or `blocked`
+
+Spans are protocol-level observability data. Concrete tool implementations remain owned and registered by host packages.
+
 ## Provider request observation
 
-`AgentOptions.providerRequestObserver` is forwarded to the underlying AI stream options. Use it to observe provider request lifecycle details emitted by `@tsuuanmi/pi-ai` without coupling agent event listeners to provider internals.
+`AgentOptions.providerRequestObserver` is forwarded to the underlying AI stream options. Use it to observe provider request lifecycle details emitted by `@tsuuanmi/pi-ai` without coupling agent event listeners to provider internals. Completion events include the same request `span` emitted through runtime traces.
 
 ## Recommended integration pattern
 

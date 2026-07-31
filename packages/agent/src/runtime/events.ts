@@ -1,6 +1,16 @@
 import type { AssistantMessageEvent, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { LoopDetectionResult } from "#agent/agent/loop-detector";
-import type { AgentMessage, AgentStatus, AgentTraceEvent } from "#agent/messages/state";
+import type { AgentMessage, AgentStatus, AgentTraceEvent, TraceSpan } from "#agent/messages/state";
+
+export type ToolExecutionStatus = "completed" | "failed" | "blocked" | "aborted";
+
+export interface ToolExecutionMeta {
+	status: ToolExecutionStatus;
+	span: TraceSpan;
+	truncated?: boolean;
+	originalChars?: number;
+	emittedChars?: number;
+}
 
 export type AgentEvent =
 	| { type: "agent_start" }
@@ -25,4 +35,11 @@ export type AgentEvent =
 	| { type: "message_end"; message: AgentMessage }
 	| { type: "tool_execution_start"; toolCallId: string; toolName: string; args: any }
 	| { type: "tool_execution_update"; toolCallId: string; toolName: string; args: any; partialResult: any }
-	| { type: "tool_execution_end"; toolCallId: string; toolName: string; result: any; isError: boolean };
+	| {
+			type: "tool_execution_end";
+			toolCallId: string;
+			toolName: string;
+			result: any;
+			isError: boolean;
+			meta: ToolExecutionMeta;
+	  };

@@ -16,11 +16,19 @@
 
 - **agent**: Added `AgentBackend` and `AgentRuntime` as the standard execution seam for swapping the built-in loop with external backends.
 - **agent**: Added optional runtime teardown via `Agent.dispose()` and `AgentRuntime.dispose()` for external backend cleanup.
+- **agent**: Made `Agent.dispose()` terminal and idempotent, and rejected new work after disposal.
 - **agent**: Added `AgentRuntime.stream()` as the backend seam for prompt and continuation runs, with runtime event, done, and error stream events.
 - **agent**: Added `RunResult` for structured runtime completion metadata, backend metadata, warnings, traces, and loop/max-turn flags.
 - **node**: Added `ProcessRuntime` as the standard Node process backend seam.
 - **agent**: Added `ToolAccessPolicy` and `ToolSelectionPolicy` helpers for shared tool gating and active-tool resolution.
 - **agent**: Added a `maxTurns` guard for graceful agent-loop termination before runaway provider calls.
+- **agent**: Added deterministic runtime clock/request-id hooks and bounded parallel tool execution with `maxToolConcurrency`.
+- **agent**: Added opt-in tool output limits with deterministic truncation markers.
+- **agent**: Added provider request timeouts for deterministic stream aborts.
+- **agent**: Added structured tool execution metadata for final tool events.
+- **agent**: Added request and tool trace spans for runtime observability.
+- **tool**: Added `defineTool()` for validated TypeBox-native tool declarations.
+- **tool**: Added opt-in TypeBox validation for tool result details.
 - **agent**: Added context-pruning helpers for sliding-window transforms that preserve assistant tool calls with matching tool results.
 - **agent**: Added isolated `run()`, state/history accessors, lifecycle run hooks, status tracing events, capabilities, and per-agent task serialization.
 - **orchestrator**: Added strict goal-to-DAG planning with explicit coordinator agents, exact dependency preservation, abortable planning, plan-time cycle rejection, dependency-aware pipelining, composite scheduling, structured dependency handoffs, task priority ordering, and retry-aware task execution.
@@ -42,6 +50,7 @@
 - **agent**: Flattened core agent source modules from `src/agent/*` into `src/*`.
 - **agent**: Renamed long internal source filenames to concise module names such as `structured-output`, `loop-detector`, `run-identity`, and `mutation-queue`.
 - **agent**: Grouped agent behavior under `src/agent/`, message logic under `src/messages/`, and shared receipt metadata under `src/metadata/` with builtin-tool receipt builders under `src/tool/`.
+- **tool**: Tool registries now fail fast on duplicate tool names; use explicit replacement when changing an existing tool.
 
 ### Fixed
 

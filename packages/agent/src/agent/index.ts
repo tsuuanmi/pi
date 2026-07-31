@@ -26,6 +26,8 @@ import type {
 	BeforeToolCallResult,
 	ProviderRequestObserver,
 	QueueMode,
+	RequestIdFactory,
+	RuntimeClock,
 	StreamFn,
 	ToolExecutionMode,
 } from "#agent/runtime/config";
@@ -125,12 +127,18 @@ export interface AgentOptions {
 	convertToLlm?: (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
 	transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
 	streamFn?: StreamFn;
-	/** Agent runtime used to produce turns. Defaults to the built-in LLM/tool runtime. */
+	/** Agent runtime used to produce turns. Defaults to the standard runtime. */
 	runtime?: AgentRuntime;
 	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
 	onPayload?: StreamOptions["onPayload"];
 	onResponse?: StreamOptions["onResponse"];
 	providerRequestObserver?: ProviderRequestObserver;
+	/** Clock used for agent-created timestamps and runtime request timestamps. Defaults to Date.now. */
+	now?: RuntimeClock;
+	/** Creates provider request ids from the runtime request sequence and timestamp. */
+	createRequestId?: RequestIdFactory;
+	/** Maximum duration for one provider request. */
+	requestTimeoutMs?: number;
 	beforeRun?: (
 		context: { agent: Agent; input?: string; metadata?: Record<string, unknown> },
 		signal?: AbortSignal,
@@ -151,6 +159,10 @@ export interface AgentOptions {
 	transport?: Transport;
 	maxRetryDelayMs?: number;
 	toolExecution?: ToolExecutionMode;
+	/** Maximum concurrently executing tools for parallel tool batches. */
+	maxToolConcurrency?: number;
+	/** Maximum text characters emitted from each tool result. */
+	maxToolOutputChars?: number;
 	/** Detect repeated assistant turns. Disabled by default; pass true for conservative tool-call detection. */
 	loopDetection?: boolean | LoopDetectionOptions;
 	/** Maximum assistant turns for each prompt/continuation run. Finite values are floored and clamped to at least 1. */
@@ -195,6 +207,17 @@ class PendingMessageQueue {
 	}
 }
 
+function createAbortSignal(signals: Array<AbortSignal | undefined>): AbortSignal | undefined {
+	const activeSignals = signals.filter((signal): signal is AbortSignal => signal !== undefined);
+	if (activeSignals.length === 0) {
+		return undefined;
+	}
+	if (activeSignals.length === 1) {
+		return activeSignals[0];
+	}
+	return AbortSignal.any(activeSignals);
+}
+
 type ActiveRun = {
 	promise: Promise<void>;
 	resolve: () => void;
@@ -226,6 +249,9 @@ export class Agent {
 	public onPayload?: StreamOptions["onPayload"];
 	public onResponse?: StreamOptions["onResponse"];
 	public providerRequestObserver?: ProviderRequestObserver;
+	public now: RuntimeClock;
+	public createRequestId?: RequestIdFactory;
+	public requestTimeoutMs?: number;
 	public beforeRun?: AgentOptions["beforeRun"];
 	public afterRun?: AgentOptions["afterRun"];
 	public extractStructured?: AgentOptions["extractStructured"];
@@ -241,6 +267,9 @@ export class Agent {
 		signal?: AbortSignal,
 	) => Promise<AgentLoopTurnUpdate | undefined> | AgentLoopTurnUpdate | undefined;
 	private activeRun?: ActiveRun;
+	private disposed = false;
+	private disposePromise?: Promise<void>;
+	private readonly disposeController = new AbortController();
 	/** Session identifier forwarded to providers for cache-aware backends. */
 	public sessionId?: string;
 	/** Preferred transport forwarded to the stream function. */
@@ -249,6 +278,10 @@ export class Agent {
 	public maxRetryDelayMs?: number;
 	/** Tool execution strategy for assistant messages that contain multiple tool calls. */
 	public toolExecution: ToolExecutionMode;
+	/** Maximum concurrently executing tools for parallel tool batches. */
+	public maxToolConcurrency?: number;
+	/** Maximum text characters emitted from each tool result. */
+	public maxToolOutputChars?: number;
 	/** Optional repeated-turn detector configuration for this agent. */
 	public loopDetection?: boolean | LoopDetectionOptions;
 	/** Maximum assistant turns for each prompt/continuation run. */
@@ -269,6 +302,9 @@ export class Agent {
 		this.onPayload = options.onPayload;
 		this.onResponse = options.onResponse;
 		this.providerRequestObserver = options.providerRequestObserver;
+		this.now = options.now ?? Date.now;
+		this.createRequestId = options.createRequestId;
+		this.requestTimeoutMs = options.requestTimeoutMs;
 		this.beforeRun = options.beforeRun;
 		this.afterRun = options.afterRun;
 		this.extractStructured = options.extractStructured;
@@ -281,6 +317,8 @@ export class Agent {
 		this.transport = options.transport ?? "auto";
 		this.maxRetryDelayMs = options.maxRetryDelayMs;
 		this.toolExecution = options.toolExecution ?? "parallel";
+		this.maxToolConcurrency = options.maxToolConcurrency;
+		this.maxToolOutputChars = options.maxToolOutputChars;
 		this.loopDetection = options.loopDetection;
 		this.maxTurns = options.maxTurns;
 		this.shouldPause = options.shouldPause;
@@ -310,13 +348,20 @@ export class Agent {
 		return this._state;
 	}
 
-	/** Register tools by name, replacing existing tools with the same name. */
+	/** Register tools by name. Duplicate names throw unless the active set is replaced first. */
 	registerTool(tools: Iterable<AgentTool>, options?: RegisterToolOptions): AgentTool[] {
+		this.assertNotDisposed();
 		const registry = createToolRegistry(options?.replace ? [] : this._state.tools);
 		registerToolSet(registry, tools, options);
 		const nextTools = registry.list();
 		this._state.tools = nextTools;
 		return nextTools;
+	}
+
+	private assertNotDisposed(): void {
+		if (this.disposed) {
+			throw new Error("Agent has been disposed");
+		}
 	}
 
 	/** Controls how queued steering messages are drained. */
@@ -339,26 +384,31 @@ export class Agent {
 
 	/** Queue a message to be injected after the current assistant turn finishes. */
 	steer(message: AgentMessage): void {
+		this.assertNotDisposed();
 		this.steeringQueue.enqueue(message);
 	}
 
 	/** Queue a message to run only after the agent would otherwise stop. */
 	followUp(message: AgentMessage): void {
+		this.assertNotDisposed();
 		this.followUpQueue.enqueue(message);
 	}
 
 	/** Remove all queued steering messages. */
 	clearSteeringQueue(): void {
+		this.assertNotDisposed();
 		this.steeringQueue.clear();
 	}
 
 	/** Remove all queued follow-up messages. */
 	clearFollowUpQueue(): void {
+		this.assertNotDisposed();
 		this.followUpQueue.clear();
 	}
 
 	/** Remove all queued steering and follow-up messages. */
 	clearAllQueues(): void {
+		this.assertNotDisposed();
 		this.clearSteeringQueue();
 		this.clearFollowUpQueue();
 	}
@@ -389,6 +439,7 @@ export class Agent {
 
 	/** Clear transcript state, runtime state, and queued messages. */
 	reset(): void {
+		this.assertNotDisposed();
 		this._state.messages = [];
 		this._state.isStreaming = false;
 		this._state.streamingMessage = undefined;
@@ -404,8 +455,21 @@ export class Agent {
 	 * Custom runtimes can release external processes, sockets, or protocol sessions here.
 	 */
 	async dispose(): Promise<void> {
-		await this.waitForIdle();
-		await this.runtime.dispose?.();
+		if (this.disposePromise) {
+			return this.disposePromise;
+		}
+
+		this.disposed = true;
+		this.steeringQueue.clear();
+		this.followUpQueue.clear();
+		this.disposeController.abort();
+		this.abort();
+		this.disposePromise = (async () => {
+			await this.waitForIdle();
+			await this.taskRunQueue;
+			await this.runtime.dispose?.();
+		})();
+		return this.disposePromise;
 	}
 
 	/** Return a stable state snapshot for observers and tests. */
@@ -420,11 +484,14 @@ export class Agent {
 
 	/** Run an isolated fresh prompt and return the final assistant result. */
 	async run(input: string, options: AgentRunOptions = {}): Promise<AgentRunResult> {
+		this.assertNotDisposed();
 		const execute = async (): Promise<AgentRunResult> => {
+			this.assertNotDisposed();
 			const clone = this.createIsolatedRunAgent();
-			await clone.beforeRun?.({ agent: clone, input, metadata: options.metadata }, options.signal);
+			const signal = createAbortSignal([options.signal, this.disposeController.signal]);
+			await clone.beforeRun?.({ agent: clone, input, metadata: options.metadata }, signal);
 			try {
-				await clone.prompt(input, { signal: options.signal });
+				await clone.prompt(input, { signal });
 				const assistant = clone.findLastAssistantMessage();
 				const output = assistant ? getAssistantText(assistant) : "";
 				const structured = this.extractStructured?.(output);
@@ -434,11 +501,11 @@ export class Agent {
 					...(structured !== undefined ? { structured } : {}),
 					...(clone.state.errorMessage ? { error: clone.state.errorMessage } : {}),
 				};
-				await clone.afterRun?.({ agent: clone, result, metadata: options.metadata }, options.signal);
+				await clone.afterRun?.({ agent: clone, result, metadata: options.metadata }, signal);
 				return result;
 			} catch (error) {
 				const result: AgentRunResult = { success: false, output: "", error };
-				await clone.afterRun?.({ agent: clone, result, error, metadata: options.metadata }, options.signal);
+				await clone.afterRun?.({ agent: clone, result, error, metadata: options.metadata }, signal);
 				return result;
 			}
 		};
@@ -450,6 +517,7 @@ export class Agent {
 	async prompt(message: AgentMessage | AgentMessage[], options?: AgentRunOptions): Promise<void>;
 	async prompt(input: string, options?: AgentRunOptions): Promise<void>;
 	async prompt(input: string | AgentMessage | AgentMessage[], options: AgentRunOptions = {}): Promise<void> {
+		this.assertNotDisposed();
 		if (this.activeRun) {
 			throw new Error(
 				"Agent is already processing a prompt. Use steer() or followUp() to queue messages, or wait for completion.",
@@ -490,6 +558,7 @@ export class Agent {
 
 	/** Continue from the current transcript. The last message must be a user or tool-result message. */
 	async continue(): Promise<void> {
+		this.assertNotDisposed();
 		if (this.activeRun) {
 			throw new Error("Agent is already processing. Wait for completion before continuing.");
 		}
@@ -538,6 +607,9 @@ export class Agent {
 			onPayload: this.onPayload,
 			onResponse: this.onResponse,
 			providerRequestObserver: this.providerRequestObserver,
+			now: this.now,
+			createRequestId: this.createRequestId,
+			requestTimeoutMs: this.requestTimeoutMs,
 			beforeRun: this.beforeRun,
 			afterRun: this.afterRun,
 			extractStructured: this.extractStructured,
@@ -550,9 +622,11 @@ export class Agent {
 			transport: this.transport,
 			maxRetryDelayMs: this.maxRetryDelayMs,
 			toolExecution: this.toolExecution,
+			maxToolConcurrency: this.maxToolConcurrency,
 			loopDetection: this.loopDetection,
 			maxTurns: this.maxTurns,
 			shouldPause: this.shouldPause,
+			maxToolOutputChars: this.maxToolOutputChars,
 		});
 	}
 
@@ -579,7 +653,7 @@ export class Agent {
 			return [input];
 		}
 
-		return [{ role: "user", content: [{ type: "text", text: input }], timestamp: Date.now() }];
+		return [{ role: "user", content: [{ type: "text", text: input }], timestamp: this.now() }];
 	}
 
 	private async runPromptMessages(
@@ -654,9 +728,14 @@ export class Agent {
 			onPayload: this.onPayload,
 			onResponse: this.onResponse,
 			providerRequestObserver: this.providerRequestObserver,
+			now: this.now,
+			createRequestId: this.createRequestId,
+			requestTimeoutMs: this.requestTimeoutMs,
 			transport: this.transport,
 			maxRetryDelayMs: this.maxRetryDelayMs,
 			toolExecution: this.toolExecution,
+			maxToolConcurrency: this.maxToolConcurrency,
+			maxToolOutputChars: this.maxToolOutputChars,
 			loopDetection: this.loopDetection,
 			maxTurns: this.maxTurns,
 			beforeToolCall: this.beforeToolCall,
@@ -733,7 +812,7 @@ export class Agent {
 			usage: EMPTY_USAGE,
 			stopReason: aborted ? "aborted" : "error",
 			errorMessage: error instanceof Error ? error.message : String(error),
-			timestamp: Date.now(),
+			timestamp: this.now(),
 		} satisfies AgentMessage;
 		await this.processEvents({ type: "message_start", message: failureMessage });
 		await this.processEvents({ type: "message_end", message: failureMessage });
@@ -770,7 +849,7 @@ export class Agent {
 		timestamp: number;
 		details?: Record<string, unknown>;
 	} {
-		return { type: "trace", name, timestamp: Date.now(), details: { agent: this.name } };
+		return { type: "trace", name, timestamp: this.now(), details: { agent: this.name } };
 	}
 
 	private async emitOutOfBand(event: AgentEvent): Promise<void> {

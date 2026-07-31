@@ -5,22 +5,35 @@
 
 import {
 	type AssistantMessage,
+	type AssistantMessageEvent,
 	type Context,
 	EventStream,
 	stream,
 	type ToolResultMessage,
 	validateToolArguments,
 } from "@tsuuanmi/pi-ai";
+import { Compile } from "typebox/compile";
 import { LoopDetector, normalizeLoopDetectionOptions } from "#agent/agent/loop-detector";
-import type { AgentMessage } from "#agent/messages/state";
+import type { AgentMessage, TraceSpan, TraceStatus } from "#agent/messages/state";
 import type { AgentLoopConfig, AgentToolCall, StreamFn } from "#agent/runtime/config";
-import type { AgentEvent } from "#agent/runtime/events";
+import type { AgentEvent, ToolExecutionMeta, ToolExecutionStatus } from "#agent/runtime/events";
+import { limitToolOutput, normalizeToolOutputLimit } from "#agent/tool/output";
 import type { AgentContext, AgentTool, AgentToolResult } from "#agent/tool/types";
 
+const detailsValidatorCache = new WeakMap<object, ReturnType<typeof Compile>>();
 let providerRequestSequence = 0;
 
-function createRequestId(): string {
-	return `llm_${Date.now().toString(36)}_${(++providerRequestSequence).toString(36)}`;
+function nextProviderRequestSequence(): number {
+	providerRequestSequence += 1;
+	return providerRequestSequence;
+}
+
+function defaultRequestId(sequence: number, startedAt: number): string {
+	return `llm_${startedAt.toString(36)}_${sequence.toString(36)}`;
+}
+
+function getNow(config: AgentLoopConfig): () => number {
+	return config.now ?? Date.now;
 }
 
 async function observeProviderRequest(callback: (() => void | Promise<void>) | undefined): Promise<void> {
@@ -164,6 +177,143 @@ function normalizeMaxTurns(maxTurns: number | undefined): number | undefined {
 		return undefined;
 	}
 	return Math.max(1, Math.floor(maxTurns));
+}
+
+function normalizeMaxToolConcurrency(maxToolConcurrency: number | undefined): number | undefined {
+	if (maxToolConcurrency === undefined || !Number.isFinite(maxToolConcurrency)) {
+		return undefined;
+	}
+	return Math.max(1, Math.floor(maxToolConcurrency));
+}
+
+function getToolOutputLimit(config: AgentLoopConfig, tool: AgentTool<any> | undefined): number | undefined {
+	return normalizeToolOutputLimit(tool?.maxOutputChars ?? config.maxToolOutputChars);
+}
+
+function normalizeRequestTimeoutMs(requestTimeoutMs: number | undefined): number | undefined {
+	if (requestTimeoutMs === undefined || !Number.isFinite(requestTimeoutMs)) {
+		return undefined;
+	}
+	return Math.max(1, Math.floor(requestTimeoutMs));
+}
+
+class RequestTimeoutError extends Error {
+	constructor(timeoutMs: number) {
+		super(`Provider request timed out after ${timeoutMs}ms`);
+		this.name = "RequestTimeoutError";
+	}
+}
+
+interface ProviderRequestSignal {
+	signal?: AbortSignal;
+	aborted: () => boolean;
+	timedOut: () => boolean;
+	dispose: () => void;
+}
+
+function createProviderRequestSignal(
+	parent: AbortSignal | undefined,
+	timeoutMs: number | undefined,
+): ProviderRequestSignal {
+	const normalizedTimeoutMs = normalizeRequestTimeoutMs(timeoutMs);
+	if (normalizedTimeoutMs === undefined) {
+		return {
+			signal: parent,
+			aborted: () => parent?.aborted === true,
+			timedOut: () => false,
+			dispose: () => {},
+		};
+	}
+
+	const controller = new AbortController();
+	let timedOut = false;
+	const abortFromParent = () => controller.abort(parent?.reason);
+	const abortFromTimeout = () => {
+		timedOut = true;
+		controller.abort(new RequestTimeoutError(normalizedTimeoutMs));
+	};
+	const timeout = setTimeout(abortFromTimeout, normalizedTimeoutMs);
+
+	if (parent?.aborted) {
+		abortFromParent();
+	} else {
+		parent?.addEventListener("abort", abortFromParent, { once: true });
+	}
+
+	return {
+		signal: controller.signal,
+		aborted: () => controller.signal.aborted,
+		timedOut: () => timedOut,
+		dispose: () => {
+			clearTimeout(timeout);
+			parent?.removeEventListener("abort", abortFromParent);
+		},
+	};
+}
+
+function getAbortError(signal: AbortSignal | undefined): Error {
+	const reason = signal?.reason;
+	if (reason instanceof Error) {
+		return reason;
+	}
+	return new Error(reason === undefined ? "Provider request aborted" : String(reason));
+}
+
+async function waitForProvider<T>(promise: Promise<T>, signal: AbortSignal | undefined): Promise<T> {
+	if (!signal) {
+		return await promise;
+	}
+	if (signal.aborted) {
+		throw getAbortError(signal);
+	}
+
+	return await new Promise<T>((resolve, reject) => {
+		const abort = () => {
+			signal.removeEventListener("abort", abort);
+			reject(getAbortError(signal));
+		};
+		signal.addEventListener("abort", abort, { once: true });
+		promise.then(
+			(value) => {
+				signal.removeEventListener("abort", abort);
+				resolve(value);
+			},
+			(error: unknown) => {
+				signal.removeEventListener("abort", abort);
+				reject(error);
+			},
+		);
+	});
+}
+
+async function nextProviderEvent(
+	iterator: AsyncIterator<AssistantMessageEvent>,
+	signal: AbortSignal | undefined,
+): Promise<IteratorResult<AssistantMessageEvent>> {
+	if (!signal) {
+		return iterator.next();
+	}
+	if (signal.aborted) {
+		throw getAbortError(signal);
+	}
+
+	return await new Promise<IteratorResult<AssistantMessageEvent>>((resolve, reject) => {
+		const abort = () => {
+			signal.removeEventListener("abort", abort);
+			reject(getAbortError(signal));
+		};
+		signal.addEventListener("abort", abort, { once: true });
+		iterator.next().then(
+			(result) => {
+				signal.removeEventListener("abort", abort);
+				resolve(result);
+			},
+			(error: unknown) => {
+				signal.removeEventListener("abort", abort);
+				reject(error);
+			},
+		);
+	});
 }
 
 /**
@@ -333,17 +483,27 @@ async function streamAssistantResponse(
 	};
 
 	const streamFunction = streamFn || stream;
-	const requestId = createRequestId();
-	const requestSequence = providerRequestSequence;
-	const startedAt = Date.now();
+	const now = getNow(config);
+	const requestSequence = nextProviderRequestSequence();
+	const startedAt = now();
+	const requestId = (config.createRequestId ?? defaultRequestId)(requestSequence, startedAt);
 	const observerBase = { requestId, requestSequence, model: config.model, context: llmContext, startedAt };
+	const requestSignal = createProviderRequestSignal(signal, config.requestTimeoutMs);
 	await observeProviderRequest(() => config.providerRequestObserver?.onRequestStart?.(observerBase));
 
 	let observedCompletion = false;
 	const observeCompletion = async (message: AssistantMessage | undefined, error?: unknown) => {
 		if (observedCompletion) return;
 		observedCompletion = true;
-		const completedAt = Date.now();
+		const completedAt = now();
+		const span = createTraceSpan(
+			"request",
+			requestId,
+			"request",
+			startedAt,
+			completedAt,
+			getRequestStatus(requestSignal, message, error),
+		);
 		await observeProviderRequest(() =>
 			config.providerRequestObserver?.onRequestComplete?.({
 				...observerBase,
@@ -351,9 +511,26 @@ async function streamAssistantResponse(
 				durationMs: completedAt - startedAt,
 				message,
 				error,
-				aborted: signal?.aborted === true || message?.stopReason === "aborted",
+				aborted: requestSignal.aborted() || message?.stopReason === "aborted",
+				span,
 			}),
 		);
+		await emit({
+			type: "runtime_trace",
+			trace: {
+				type: "trace",
+				name: "request",
+				timestamp: completedAt,
+				details: {
+					requestId,
+					requestSequence,
+					model: config.model.id,
+					provider: config.model.provider,
+					status: span.status,
+				},
+				span,
+			},
+		});
 	};
 
 	// Resolve API key (important for expiring tokens)
@@ -362,26 +539,35 @@ async function streamAssistantResponse(
 
 	let response: Awaited<ReturnType<StreamFn>>;
 	try {
-		response = await streamFunction(config.model, llmContext, {
-			...config,
-			apiKey: resolvedApiKey,
-			signal,
-			onPayload: async (payload, model) => {
-				const nextPayload = await config.onPayload?.(payload, model);
-				const finalPayload = nextPayload === undefined ? payload : nextPayload;
-				await observeProviderRequest(() =>
-					config.providerRequestObserver?.onRequestPayload?.({ ...observerBase, payload: finalPayload }),
-				);
-				return nextPayload;
-			},
-			onResponse: async (providerResponse, model) => {
-				await config.onResponse?.(providerResponse, model);
-				await observeProviderRequest(() =>
-					config.providerRequestObserver?.onRequestResponse?.({ ...observerBase, response: providerResponse }),
-				);
-			},
-		});
+		response = await waitForProvider(
+			Promise.resolve(
+				streamFunction(config.model, llmContext, {
+					...config,
+					apiKey: resolvedApiKey,
+					signal: requestSignal.signal,
+					onPayload: async (payload, model) => {
+						const nextPayload = await config.onPayload?.(payload, model);
+						const finalPayload = nextPayload === undefined ? payload : nextPayload;
+						await observeProviderRequest(() =>
+							config.providerRequestObserver?.onRequestPayload?.({ ...observerBase, payload: finalPayload }),
+						);
+						return nextPayload;
+					},
+					onResponse: async (providerResponse, model) => {
+						await config.onResponse?.(providerResponse, model);
+						await observeProviderRequest(() =>
+							config.providerRequestObserver?.onRequestResponse?.({
+								...observerBase,
+								response: providerResponse,
+							}),
+						);
+					},
+				}),
+			),
+			requestSignal.signal,
+		);
 	} catch (error) {
+		requestSignal.dispose();
 		await observeCompletion(undefined, error);
 		throw error;
 	}
@@ -390,7 +576,13 @@ async function streamAssistantResponse(
 	let addedPartial = false;
 
 	try {
-		for await (const event of response) {
+		const iterator = response[Symbol.asyncIterator]();
+		while (true) {
+			const nextEvent = await nextProviderEvent(iterator, requestSignal.signal);
+			if (nextEvent.done) {
+				break;
+			}
+			const event = nextEvent.value;
 			switch (event.type) {
 				case "start":
 					partialMessage = event.partial;
@@ -421,7 +613,7 @@ async function streamAssistantResponse(
 
 				case "done":
 				case "error": {
-					const finalMessage = await response.result();
+					const finalMessage = await waitForProvider(response.result(), requestSignal.signal);
 					await observeCompletion(finalMessage);
 					if (addedPartial) {
 						context.messages[context.messages.length - 1] = finalMessage;
@@ -436,21 +628,23 @@ async function streamAssistantResponse(
 				}
 			}
 		}
+
+		const finalMessage = await waitForProvider(response.result(), requestSignal.signal);
+		await observeCompletion(finalMessage);
+		if (addedPartial) {
+			context.messages[context.messages.length - 1] = finalMessage;
+		} else {
+			context.messages.push(finalMessage);
+			await emit({ type: "message_start", message: { ...finalMessage } });
+		}
+		await emit({ type: "message_end", message: finalMessage });
+		return finalMessage;
 	} catch (error) {
 		await observeCompletion(undefined, error);
 		throw error;
+	} finally {
+		requestSignal.dispose();
 	}
-
-	const finalMessage = await response.result();
-	await observeCompletion(finalMessage);
-	if (addedPartial) {
-		context.messages[context.messages.length - 1] = finalMessage;
-	} else {
-		context.messages.push(finalMessage);
-		await emit({ type: "message_start", message: { ...finalMessage } });
-	}
-	await emit({ type: "message_end", message: finalMessage });
-	return finalMessage;
 }
 
 /**
@@ -500,13 +694,28 @@ async function executeToolCallsSequential(
 		const preparation = await prepareToolCall(currentContext, assistantMessage, toolCall, config, signal);
 		let finalized: FinalizedToolCallOutcome;
 		if (preparation.kind === "immediate") {
-			finalized = {
-				toolCall,
-				result: preparation.result,
-				isError: preparation.isError,
-			};
+			finalized = limitFinalizedToolCall(
+				{
+					toolCall,
+					result: preparation.result,
+					isError: preparation.isError,
+					meta: createToolExecutionMeta(
+						preparation.status,
+						createTraceSpan(
+							"tool",
+							toolCall.id,
+							toolCall.name,
+							preparation.startedAt,
+							preparation.startedAt,
+							mapToolStatus(preparation.status),
+						),
+					),
+					startedAt: preparation.startedAt,
+				},
+				config,
+			);
 		} else {
-			const executed = await executePreparedToolCall(preparation, signal, emit);
+			const executed = await executePreparedToolCall(preparation, config, signal, emit);
 			finalized = await finalizeExecutedToolCall(
 				currentContext,
 				assistantMessage,
@@ -515,10 +724,11 @@ async function executeToolCallsSequential(
 				config,
 				signal,
 			);
+			finalized = limitFinalizedToolCall(finalized, config, preparation.tool);
 		}
 
 		await emitToolExecutionEnd(finalized, emit);
-		const toolResultMessage = createToolResultMessage(finalized);
+		const toolResultMessage = createToolResultMessage(finalized, config);
 		await emitToolResultMessage(toolResultMessage, emit);
 		finalizedCalls.push(finalized);
 		messages.push(toolResultMessage);
@@ -554,11 +764,26 @@ async function executeToolCallsParallel(
 
 		const preparation = await prepareToolCall(currentContext, assistantMessage, toolCall, config, signal);
 		if (preparation.kind === "immediate") {
-			const finalized = {
-				toolCall,
-				result: preparation.result,
-				isError: preparation.isError,
-			} satisfies FinalizedToolCallOutcome;
+			const finalized = limitFinalizedToolCall(
+				{
+					toolCall,
+					result: preparation.result,
+					isError: preparation.isError,
+					meta: createToolExecutionMeta(
+						preparation.status,
+						createTraceSpan(
+							"tool",
+							toolCall.id,
+							toolCall.name,
+							preparation.startedAt,
+							preparation.startedAt,
+							mapToolStatus(preparation.status),
+						),
+					),
+					startedAt: preparation.startedAt,
+				},
+				config,
+			);
 			await emitToolExecutionEnd(finalized, emit);
 			finalizedCalls.push(finalized);
 			if (signal?.aborted) {
@@ -568,7 +793,7 @@ async function executeToolCallsParallel(
 		}
 
 		finalizedCalls.push(async () => {
-			const executed = await executePreparedToolCall(preparation, signal, emit);
+			const executed = await executePreparedToolCall(preparation, config, signal, emit);
 			const finalized = await finalizeExecutedToolCall(
 				currentContext,
 				assistantMessage,
@@ -577,20 +802,20 @@ async function executeToolCallsParallel(
 				config,
 				signal,
 			);
-			await emitToolExecutionEnd(finalized, emit);
-			return finalized;
+			const limited = limitFinalizedToolCall(finalized, config, preparation.tool);
+			await emitToolExecutionEnd(limited, emit);
+			return limited;
 		});
 		if (signal?.aborted) {
 			break;
 		}
 	}
 
-	const orderedFinalizedCalls = await Promise.all(
-		finalizedCalls.map((entry) => (typeof entry === "function" ? entry() : Promise.resolve(entry))),
-	);
+	const maxConcurrency = normalizeMaxToolConcurrency(config.maxToolConcurrency);
+	const orderedFinalizedCalls = await runFinalizers(finalizedCalls, maxConcurrency);
 	const messages: ToolResultMessage[] = [];
 	for (const finalized of orderedFinalizedCalls) {
-		const toolResultMessage = createToolResultMessage(finalized);
+		const toolResultMessage = createToolResultMessage(finalized, config);
 		await emitToolResultMessage(toolResultMessage, emit);
 		messages.push(toolResultMessage);
 	}
@@ -601,28 +826,55 @@ async function executeToolCallsParallel(
 	};
 }
 
+async function runFinalizers(
+	entries: FinalizedToolCallEntry[],
+	maxConcurrency: number | undefined,
+): Promise<FinalizedToolCallOutcome[]> {
+	const outcomes: FinalizedToolCallOutcome[] = new Array(entries.length);
+	let nextIndex = 0;
+	const workerCount = Math.min(maxConcurrency ?? entries.length, entries.length);
+
+	const runNext = async (): Promise<void> => {
+		while (nextIndex < entries.length) {
+			const index = nextIndex;
+			nextIndex += 1;
+			const entry = entries[index];
+			outcomes[index] = typeof entry === "function" ? await entry() : entry;
+		}
+	};
+
+	await Promise.all(Array.from({ length: workerCount }, runNext));
+	return outcomes;
+}
+
 type PreparedToolCall = {
 	kind: "prepared";
 	toolCall: AgentToolCall;
 	tool: AgentTool<any>;
 	args: unknown;
+	startedAt: number;
 };
 
 type ImmediateToolCallOutcome = {
 	kind: "immediate";
 	result: AgentToolResult<any>;
 	isError: boolean;
+	status: ToolExecutionStatus;
+	startedAt: number;
 };
 
 type ExecutedToolCallOutcome = {
 	result: AgentToolResult<any>;
 	isError: boolean;
+	status: ToolExecutionStatus;
 };
 
 type FinalizedToolCallOutcome = {
 	toolCall: AgentToolCall;
 	result: AgentToolResult<any>;
 	isError: boolean;
+	meta: ToolExecutionMeta;
+	startedAt: number;
 };
 
 type FinalizedToolCallEntry = FinalizedToolCallOutcome | (() => Promise<FinalizedToolCallOutcome>);
@@ -652,12 +904,15 @@ async function prepareToolCall(
 	config: AgentLoopConfig,
 	signal: AbortSignal | undefined,
 ): Promise<PreparedToolCall | ImmediateToolCallOutcome> {
+	const startedAt = getNow(config)();
 	const tool = currentContext.tools?.find((t) => t.name === toolCall.name);
 	if (!tool) {
 		return {
 			kind: "immediate",
 			result: createErrorToolResult(`Tool ${toolCall.name} not found`),
 			isError: true,
+			status: "blocked",
+			startedAt,
 		};
 	}
 
@@ -679,6 +934,8 @@ async function prepareToolCall(
 					kind: "immediate",
 					result: createErrorToolResult("Operation aborted"),
 					isError: true,
+					status: "aborted",
+					startedAt,
 				};
 			}
 			if (beforeResult?.block) {
@@ -686,6 +943,8 @@ async function prepareToolCall(
 					kind: "immediate",
 					result: createErrorToolResult(beforeResult.reason || "Tool execution was blocked"),
 					isError: true,
+					status: "blocked",
+					startedAt,
 				};
 			}
 		}
@@ -694,6 +953,8 @@ async function prepareToolCall(
 				kind: "immediate",
 				result: createErrorToolResult("Operation aborted"),
 				isError: true,
+				status: "aborted",
+				startedAt,
 			};
 		}
 		return {
@@ -701,18 +962,22 @@ async function prepareToolCall(
 			toolCall,
 			tool,
 			args: validatedArgs,
+			startedAt,
 		};
 	} catch (error) {
 		return {
 			kind: "immediate",
 			result: createErrorToolResult(error instanceof Error ? error.message : String(error)),
 			isError: true,
+			status: "failed",
+			startedAt,
 		};
 	}
 }
 
 async function executePreparedToolCall(
 	prepared: PreparedToolCall,
+	config: AgentLoopConfig,
 	signal: AbortSignal | undefined,
 	emit: EventSink,
 ): Promise<ExecutedToolCallOutcome> {
@@ -726,6 +991,7 @@ async function executePreparedToolCall(
 			signal,
 			(partialResult) => {
 				if (!acceptingUpdates) return;
+				const limitedResult = limitToolResult(partialResult, config, prepared.tool);
 				updateEvents.push(
 					Promise.resolve(
 						emit({
@@ -733,7 +999,7 @@ async function executePreparedToolCall(
 							toolCallId: prepared.toolCall.id,
 							toolName: prepared.toolCall.name,
 							args: prepared.toolCall.arguments,
-							partialResult,
+							partialResult: limitedResult,
 						}),
 					),
 				);
@@ -741,13 +1007,14 @@ async function executePreparedToolCall(
 		);
 		acceptingUpdates = false;
 		await Promise.all(updateEvents);
-		return { result, isError: false };
+		return { result, isError: false, status: signal?.aborted ? "aborted" : "completed" };
 	} catch (error) {
 		acceptingUpdates = false;
 		await Promise.all(updateEvents);
 		return {
 			result: createErrorToolResult(error instanceof Error ? error.message : String(error)),
 			isError: true,
+			status: signal?.aborted ? "aborted" : "failed",
 		};
 	} finally {
 		acceptingUpdates = false;
@@ -764,6 +1031,7 @@ async function finalizeExecutedToolCall(
 ): Promise<FinalizedToolCallOutcome> {
 	let result = executed.result;
 	let isError = executed.isError;
+	let status = executed.status;
 
 	if (config.afterToolCall) {
 		try {
@@ -785,18 +1053,163 @@ async function finalizeExecutedToolCall(
 					terminate: afterResult.terminate ?? result.terminate,
 				};
 				isError = afterResult.isError ?? isError;
+				if (isError && status === "completed") {
+					status = "failed";
+				}
 			}
 		} catch (error) {
 			result = createErrorToolResult(error instanceof Error ? error.message : String(error));
 			isError = true;
+			status = signal?.aborted ? "aborted" : "failed";
 		}
 	}
 
+	const validationError = validateToolDetails(result, prepared.tool);
+	if (validationError) {
+		result = createErrorToolResult(`Tool ${prepared.tool.name} returned invalid details: ${validationError}`);
+		isError = true;
+		status = "failed";
+	}
+
+	const endedAt = getNow(config)();
+	const span = createTraceSpan(
+		"tool",
+		prepared.toolCall.id,
+		prepared.toolCall.name,
+		prepared.startedAt,
+		endedAt,
+		mapToolStatus(status),
+	);
 	return {
 		toolCall: prepared.toolCall,
 		result,
 		isError,
+		meta: createToolExecutionMeta(status, span),
+		startedAt: prepared.startedAt,
 	};
+}
+
+function validateToolDetails(result: AgentToolResult<any>, tool: AgentTool<any>): string | undefined {
+	if (!tool.detailsSchema) {
+		return undefined;
+	}
+
+	let validator = detailsValidatorCache.get(tool.detailsSchema);
+	if (!validator) {
+		validator = Compile(tool.detailsSchema);
+		detailsValidatorCache.set(tool.detailsSchema, validator);
+	}
+
+	if (validator.Check(result.details)) {
+		return undefined;
+	}
+
+	const issues = Array.from(validator.Errors(result.details)).map((issue) => issue.message);
+	return issues.length > 0 ? issues.join("; ") : "Tool result details failed validation";
+}
+
+function limitFinalizedToolCall(
+	finalized: FinalizedToolCallOutcome,
+	config: AgentLoopConfig,
+	tool?: AgentTool<any>,
+): FinalizedToolCallOutcome {
+	const maxChars = getToolOutputLimit(config, tool);
+	if (maxChars === undefined) {
+		return finalized;
+	}
+
+	const output = limitToolOutput(finalized.result.content, { maxChars });
+	if (!output.stats.truncated) {
+		return finalized;
+	}
+
+	return {
+		...finalized,
+		result: {
+			...finalized.result,
+			content: output.content,
+		},
+		meta: {
+			...finalized.meta,
+			truncated: true,
+			originalChars: output.stats.originalChars,
+			emittedChars: output.stats.emittedChars,
+		},
+	};
+}
+
+function limitToolResult<T>(
+	result: AgentToolResult<T>,
+	config: AgentLoopConfig,
+	tool?: AgentTool<any>,
+): AgentToolResult<T> {
+	const maxChars = getToolOutputLimit(config, tool);
+	if (maxChars === undefined) {
+		return result;
+	}
+
+	const output = limitToolOutput(result.content, { maxChars });
+	if (!output.stats.truncated) {
+		return result;
+	}
+
+	return {
+		...result,
+		content: output.content,
+	};
+}
+
+function createTraceSpan(
+	kind: "request" | "tool",
+	id: string,
+	name: string | undefined,
+	startedAt: number,
+	endedAt: number,
+	status: TraceStatus,
+): TraceSpan {
+	return {
+		kind,
+		id,
+		name,
+		startedAt,
+		endedAt,
+		durationMs: endedAt - startedAt,
+		status,
+	};
+}
+
+function getRequestStatus(
+	signal: ProviderRequestSignal,
+	message: AssistantMessage | undefined,
+	error: unknown,
+): "ok" | "error" | "aborted" | "timeout" {
+	if (signal.timedOut()) {
+		return "timeout";
+	}
+	if (error) {
+		return "error";
+	}
+	if (signal.aborted() || message?.stopReason === "aborted") {
+		return "aborted";
+	}
+	return "ok";
+}
+
+function mapToolStatus(status: ToolExecutionStatus): TraceStatus {
+	switch (status) {
+		case "completed":
+			return "ok";
+		case "failed":
+			return "error";
+		case "blocked":
+			return "blocked";
+		case "aborted":
+			return "aborted";
+	}
+}
+
+function createToolExecutionMeta(status: ToolExecutionStatus, span: TraceSpan): ToolExecutionMeta {
+	return { status, span };
 }
 
 function createErrorToolResult(message: string): AgentToolResult<any> {
@@ -813,10 +1226,11 @@ async function emitToolExecutionEnd(finalized: FinalizedToolCallOutcome, emit: E
 		toolName: finalized.toolCall.name,
 		result: finalized.result,
 		isError: finalized.isError,
+		meta: finalized.meta,
 	});
 }
 
-function createToolResultMessage(finalized: FinalizedToolCallOutcome): ToolResultMessage {
+function createToolResultMessage(finalized: FinalizedToolCallOutcome, config: AgentLoopConfig): ToolResultMessage {
 	return {
 		role: "toolResult",
 		toolCallId: finalized.toolCall.id,
@@ -824,7 +1238,7 @@ function createToolResultMessage(finalized: FinalizedToolCallOutcome): ToolResul
 		content: finalized.result.content,
 		details: finalized.result.details,
 		isError: finalized.isError,
-		timestamp: Date.now(),
+		timestamp: getNow(config)(),
 	};
 }
 

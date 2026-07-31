@@ -123,8 +123,8 @@ export type RuntimeEvent =
  * Runtime execution backend for an Agent.
  *
  * Implementations own how agent turns are produced. The default backend uses
- * the built-in LLM/tool loop, while Node-only packages can provide process or
- * protocol-backed implementations through `@tsuuanmi/pi-agent/node`.
+ * the standard agent protocol/runtime loop, while Node-only packages can provide
+ * process or protocol-backed implementations through `@tsuuanmi/pi-agent/node`.
  */
 export interface AgentBackend {
 	/** Stream runtime events and finish with one done or error event. */
@@ -135,7 +135,7 @@ export interface AgentBackend {
 /** Standard LLM/tool-loop runtime interface. */
 export interface AgentRuntime extends AgentBackend {}
 
-/** Default AgentRuntime backed by the package's low-level LLM/tool loop. */
+/** Default AgentRuntime backed by the package's low-level standard runtime loop. */
 export class DefaultAgentRuntime implements AgentRuntime {
 	private readonly defaultStreamFn: StreamFn;
 
@@ -144,7 +144,8 @@ export class DefaultAgentRuntime implements AgentRuntime {
 	}
 
 	async *stream(request: RunRequest): AsyncIterable<RuntimeEvent> {
-		const startedAt = Date.now();
+		const now = request.config.now ?? Date.now;
+		const startedAt = now();
 		const backend = createDefaultBackendInfo(request);
 		const toolCalls: ToolCallSummary[] = [];
 		const warnings: RuntimeWarning[] = [];
@@ -220,6 +221,7 @@ export class DefaultAgentRuntime implements AgentRuntime {
 						maxTurnsReached,
 						backend,
 						startedAt,
+						now,
 					),
 				});
 			} catch (error) {
@@ -252,10 +254,11 @@ function createRunResult(
 	maxTurnsReached: boolean,
 	backend: RuntimeBackend,
 	startedAt: number,
+	now: () => number,
 ): RunResult {
 	const assistantMessages = messages.filter(isAssistantMessage);
 	const lastAssistant = assistantMessages.at(-1);
-	const completedAt = Date.now();
+	const completedAt = now();
 	return {
 		messages,
 		output: lastAssistant ? getAssistantText(lastAssistant) : "",

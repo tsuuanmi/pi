@@ -27,11 +27,14 @@ const agent = new Agent({
 | `convertToLlm` | `(messages) => Message[]` | Filters to user/assistant/toolResult | Convert AgentMessage[] to LLM-compatible Message[] |
 | `transformContext` | `(messages, signal?) => Promise<AgentMessage[]>` | — | Transform context before convertToLlm |
 | `streamFn` | `StreamFn` | `stream` from `@tsuuanmi/pi-ai` | Stream function for LLM calls |
-| `runtime` | `AgentRuntime` | built-in default | Execution runtime used to produce turns |
+| `runtime` | `AgentRuntime` | default runtime | Execution runtime used to produce turns |
 | `getApiKey` | `(provider) => string` | — | Dynamic API key resolution |
 | `onPayload` | `StreamOptions["onPayload"]` | — | Payload transform hook |
 | `onResponse` | `StreamOptions["onResponse"]` | — | Response hook |
 | `providerRequestObserver` | `ProviderRequestObserver` | — | Observer for LLM request lifecycle |
+| `now` | `() => number` | `Date.now` | Clock for agent-created timestamps and runtime request timestamps |
+| `createRequestId` | `(sequence, startedAt) => string` | Standard `llm_*` ids | Provider request id factory |
+| `requestTimeoutMs` | `number` | — | Maximum duration for one provider request |
 | `beforeRun` | `(context, signal?) => void` | — | Hook before isolated `run()` execution |
 | `afterRun` | `(context, signal?) => void` | — | Hook after isolated `run()` execution |
 | `extractStructured` | `(output) => unknown` | — | Optional extraction for structured task/orchestration payloads |
@@ -44,6 +47,8 @@ const agent = new Agent({
 | `transport` | `Transport` | `"auto"` | Preferred transport |
 | `maxRetryDelayMs` | `number` | — | Cap for provider-requested retry delays |
 | `toolExecution` | `"sequential" \| "parallel"` | `"parallel"` | Default tool execution strategy |
+| `maxToolConcurrency` | `number` | — | Maximum concurrently executing tools for parallel tool batches |
+| `maxToolOutputChars` | `number` | — | Maximum original text characters kept from each tool result |
 | `shouldPause` | `() => boolean` | — | Cooperative pause callback. Checked after each turn; when true the agent stops gracefully. |
 
 ## State
@@ -109,7 +114,7 @@ When the last message is an assistant message, `continue()` first drains queued 
 
 `Agent` delegates turn production through an `AgentRuntime`.
 
-- Use the default runtime for the built-in LLM/tool loop.
+- Use the default runtime for the standard agent protocol loop.
 - Provide a custom runtime when you want to swap in external backends.
 - Implement `stream()` as the single runtime execution seam; split `runPrompt()`/`continue()` and run-to-completion wrapper methods are intentionally not part of the standard contract.
 - Emit runtime backend, warning, and trace stream events, then finish with a single done or error event.
@@ -191,8 +196,10 @@ agent.signal;                // Active abort signal for the current run, or unde
 agent.abort();                // Abort the current run
 agent.waitForIdle();          // Promise that resolves after the current run and awaited agent_end listeners settle
 agent.reset();                // Clear transcript, runtime state, and queued messages
-agent.dispose();              // Wait for the active run to settle, then tear down the runtime
+agent.dispose();              // Terminal shutdown: abort current work, wait for active work to settle, then tear down the runtime
 ```
+
+`dispose()` is terminal and idempotent. After disposal, the agent rejects new prompts, isolated runs, queue mutations, and resets.
 
 `waitForIdle()` resolves immediately (to a fulfilled promise) when no run is active.
 

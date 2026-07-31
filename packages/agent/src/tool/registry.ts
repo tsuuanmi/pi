@@ -3,6 +3,8 @@ import type { AgentTool } from "#agent/tool/types";
 export interface ToolRegistry {
 	register(tool: AgentTool): void;
 	registerMany(tools: Iterable<AgentTool>): void;
+	replace(tool: AgentTool): void;
+	replaceMany(tools: Iterable<AgentTool>): void;
 	get(name: string): AgentTool | undefined;
 	has(name: string): boolean;
 	delete(name: string): boolean;
@@ -13,7 +15,7 @@ export interface ToolRegistry {
 }
 
 export interface RegisterToolOptions {
-	/** Replace any existing registry contents before registering the provided tools. */
+	/** Clear the registry before registering the provided tools. */
 	replace?: boolean;
 }
 
@@ -22,11 +24,20 @@ export function createToolRegistry(initialTools: Iterable<AgentTool> = []): Tool
 
 	const registry: ToolRegistry = {
 		register(tool) {
+			assertUniqueToolName(tools, tool.name);
 			tools.set(tool.name, tool);
 		},
 		registerMany(nextTools) {
 			for (const tool of nextTools) {
 				registry.register(tool);
+			}
+		},
+		replace(tool) {
+			tools.set(tool.name, tool);
+		},
+		replaceMany(nextTools) {
+			for (const tool of nextTools) {
+				registry.replace(tool);
 			}
 		},
 		get(name) {
@@ -66,4 +77,10 @@ export function registerTool(
 	}
 	registry.registerMany(tools);
 	return registry;
+}
+
+function assertUniqueToolName(tools: Map<string, AgentTool>, name: string): void {
+	if (tools.has(name)) {
+		throw new Error(`Tool "${name}" is already registered`);
+	}
 }

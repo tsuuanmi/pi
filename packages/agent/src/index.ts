@@ -18,6 +18,8 @@ export * from "#agent/subagents/receipts";
 export * from "#agent/subagents/run-identity";
 export * from "#agent/subagents/types";
 export * from "#agent/subagents/yield-result";
+export * from "#agent/tool/define";
+export * from "#agent/tool/output";
 export * from "#agent/tool/policy";
 export * from "#agent/tool/receipts";
 export * from "#agent/tool/registry";

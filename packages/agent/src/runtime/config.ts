@@ -7,7 +7,7 @@ import type {
 	stream,
 	ToolResultMessage,
 } from "@tsuuanmi/pi-ai";
-import type { AgentMessage } from "#agent/messages/state";
+import type { AgentMessage, TraceSpan } from "#agent/messages/state";
 import type { AgentContext, AgentToolResult } from "#agent/tool/types";
 
 export type StreamFn = (
@@ -15,6 +15,9 @@ export type StreamFn = (
 ) => ReturnType<typeof stream> | Promise<ReturnType<typeof stream>>;
 
 export type ToolExecutionMode = "sequential" | "parallel";
+
+export type RuntimeClock = () => number;
+export type RequestIdFactory = (sequence: number, startedAt: number) => string;
 
 export interface ProviderRequestObserverStart {
 	requestId: string;
@@ -38,6 +41,7 @@ export interface ProviderRequestObserverComplete extends ProviderRequestObserver
 	message?: import("@tsuuanmi/pi-ai").AssistantMessage;
 	error?: unknown;
 	aborted: boolean;
+	span?: TraceSpan;
 }
 
 export interface ProviderRequestObserver {
@@ -104,6 +108,12 @@ export interface AgentLoopConfig extends StreamOptions {
 	onPayload?: StreamOptions["onPayload"];
 	onResponse?: StreamOptions["onResponse"];
 	providerRequestObserver?: ProviderRequestObserver;
+	/** Clock used for runtime timestamps. Defaults to Date.now. */
+	now?: RuntimeClock;
+	/** Creates provider request ids from the monotonic in-process sequence and start timestamp. */
+	createRequestId?: RequestIdFactory;
+	/** Maximum duration for one provider request. Finite values are floored and clamped to at least 1. */
+	requestTimeoutMs?: number;
 	convertToLlm: (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
 	transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
 	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
@@ -116,6 +126,10 @@ export interface AgentLoopConfig extends StreamOptions {
 	getSteeringMessages?: () => Promise<AgentMessage[]>;
 	getFollowUpMessages?: () => Promise<AgentMessage[]>;
 	toolExecution?: ToolExecutionMode;
+	/** Maximum concurrently executing tools for parallel tool batches. Finite values are floored and clamped to at least 1. */
+	maxToolConcurrency?: number;
+	/** Maximum text characters emitted from each tool result. Finite values are floored and clamped to at least 1. */
+	maxToolOutputChars?: number;
 	beforeToolCall?: (context: BeforeToolCallContext, signal?: AbortSignal) => Promise<BeforeToolCallResult | undefined>;
 	afterToolCall?: (context: AfterToolCallContext, signal?: AbortSignal) => Promise<AfterToolCallResult | undefined>;
 }

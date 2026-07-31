@@ -21,6 +21,10 @@ export interface AgentTool<TParameters extends TSchema = TSchema, TDetails = any
 		onUpdate?: AgentToolUpdateCallback<TDetails>,
 	) => Promise<AgentToolResult<TDetails>>;
 	executionMode?: ToolExecutionMode;
+	/** Optional TypeBox schema for validating result details. */
+	detailsSchema?: TSchema;
+	/** Maximum text characters emitted from this tool result. Overrides the loop-level limit. */
+	maxOutputChars?: number;
 }
 
 export interface AgentContext {
