@@ -133,7 +133,7 @@ Per-invocation overrides such as `model`, `thinkingLevel`, `tools`, and `exclude
 
 ## Model-visible workflow tools
 
-Spawn verbs are model-visible tools; non-spawn verbs are `pi workflow` commands. Workflow-owned spawn tools (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `team_spawn_review_agent`, `team_spawn_prover_agent`, `ultragoal_spawn_goal_agent`) are registered by the workflow extension and call the main session's `SubagentManager` directly in-process — the only place a subagent can be spawned and run to completion. The role agents are ordinary subagents; the workflow's special part is the turn order, the guarded role check, and the result→artifact handoff. Non-spawn workflow ops (state, artifacts, gates, status, approve-plan, etc.) remain `pi workflow ...` commands.
+Spawn verbs are model-visible tools; non-spawn verbs are `pi workflow` commands. Workflow-owned spawn tools (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `team_spawn_review_agent`, `team_spawn_prover_agent`, `ultragoal_spawn_goal_agent`) are registered by the bundled workflow registration and call the main session's `SubagentManager` directly in-process — the only place a subagent can be spawned and run to completion. The role agents are ordinary subagents; the workflow's special part is the turn order, the guarded role check, and the result→artifact handoff. Non-spawn workflow ops (state, artifacts, gates, status, approve-plan, etc.) remain `pi workflow ...` commands.
 
 ## Current-session command propagation
 
@@ -143,7 +143,7 @@ Spawn tools read the session id from `ctx.sessionManager.getSessionId()`, so the
 
 ## HUD visibility for command-created sessions
 
-The interactive status line reads session-scoped workflow active state (`.pi/<session-id>/workflows/active-state.json`) on a 1s refresh and renders the HUD for the current interactive session only. Workflow HUD synchronization is registered by the extension through `@tsuuanmi/pi-tui`; the status line is the single source of truth.
+The interactive status line reads session-scoped workflow active state (`.pi/<session-id>/workflows/active-state.json`) on a 1s refresh and renders the HUD for the current interactive session only. Workflow HUD synchronization is registered by `@tsuuanmi/pi-workflows/register` through `@tsuuanmi/pi-tui`; the status line is the single source of truth.
 
 Behavior:
 - Only the active/attached interactive session shows its own workflow in the HUD.

@@ -7,6 +7,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | Source path | Purpose | Docs |
 |-------------|---------|------|
 | `src/index.ts` | Public package barrel. | [README Public API](../README.md#public-api) |
+| `src/register.ts` | Bundled Pi workflow integration registration. | [extensions/workflows.md](extensions/workflows.md) |
 | `src/agents/` | Bundled markdown agent profiles. | [agents/agents.md](agents/agents.md) |
 | `src/artifacts/` | Durable artifact writing and receipt helpers. | [artifacts/artifacts.md](artifacts/artifacts.md) |
 | `src/audit/` | Append-only audit records, decision ledgers, tamper evidence, and mutation journals. | [audit/audit.md](audit/audit.md) |

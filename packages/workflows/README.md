@@ -252,7 +252,7 @@ Profiles are authored as markdown files with YAML frontmatter. Pi discovers them
 
 ## Model-Visible Tools
 
-Workflow-owned tools are model-visible and registered by the workflow extension. Spawn tools include `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `team_spawn_review_agent`, `team_spawn_prover_agent`, and `ultragoal_spawn_goal_agent`. Deep Interview also exposes first-class runtime tools: `deep_interview_plan_question`, `deep_interview_record_answer`, `deep_interview_record_scoring`, `deep_interview_read_compact`, `deep_interview_closure_check`, `deep_interview_restate_goal`, and `deep_interview_write_spec`. Spawn tools call the main session's `SubagentManager` directly in-process — the only place a subagent can be spawned and run to completion. The role agents are ordinary subagents; the workflow's special part is turn order, guarded role checks, and result→artifact handoff. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
+Workflow-owned tools are model-visible and registered by the bundled workflow registration. Spawn tools include `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `team_spawn_review_agent`, `team_spawn_prover_agent`, and `ultragoal_spawn_goal_agent`. Deep Interview also exposes first-class runtime tools: `deep_interview_plan_question`, `deep_interview_record_answer`, `deep_interview_record_scoring`, `deep_interview_read_compact`, `deep_interview_closure_check`, `deep_interview_restate_goal`, and `deep_interview_write_spec`. Spawn tools call the main session's `SubagentManager` directly in-process — the only place a subagent can be spawned and run to completion. The role agents are ordinary subagents; the workflow's special part is turn order, guarded role checks, and result→artifact handoff. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
 
 ## Harness Runtime
 
@@ -262,7 +262,7 @@ Key seams for contributors:
 
 - **Deferred-seam registry** (`runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
 - **`validateReceiptFamilyConsistency`** (`runtime/receipt-rules.ts`): a write-path guard inside `mutateRuntimeSession` that rejects receipts whose post-state lifecycle contradicts their family target. It throws before any write so a contradiction leaves zero orphan events/receipts/state. Conservative and pluggable; future receipt families register rules in `receiptFamilyConsistencyRules`.
-- **HUD rendering**: per-skill HUD builders live in the owning skill folders (`deep-interview-hud.ts`, `ralplan-hud.ts`, `team-hud.ts`, `ultragoal-hud.ts`). Workflow HUD synchronization is registered by the extension through `@tsuuanmi/pi-tui`; workflow mirroring remains session-scoped because the status line reads active state directly.
+- **HUD rendering**: per-skill HUD builders live in the owning skill folders (`deep-interview-hud.ts`, `ralplan-hud.ts`, `team-hud.ts`, `ultragoal-hud.ts`). Workflow HUD synchronization is registered by `@tsuuanmi/pi-workflows/register` through `@tsuuanmi/pi-tui`; workflow mirroring remains session-scoped because the status line reads active state directly.
 
 ### Session Layout
 
@@ -322,13 +322,14 @@ import {
 } from "@tsuuanmi/pi-workflows";
 ```
 
-`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools/workflow-tools`. It also exports pure team-to-orchestrator mapping helpers, a callback-backed team checkpoint store, a queue-event sink, and explicit mode validation for future workflow-owned orchestrator integration; these helpers do not change runtime behavior. The bundled Pi extension entrypoint now lives in `@tsuuanmi/pi`.
+`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools/workflow-tools`. It also exports pure team-to-orchestrator mapping helpers, a callback-backed team checkpoint store, a queue-event sink, and explicit mode validation for future workflow-owned orchestrator integration; these helpers do not change runtime behavior. Pi hosts bundled workflow integration through `@tsuuanmi/pi-workflows/register`.
 
 Subpath exports:
 
+- `@tsuuanmi/pi-workflows/register` — bundled workflow integration registration for Pi hosts.
 - `@tsuuanmi/pi-workflows/commands/workflow` — the `pi workflow` command, including `pi workflow state`.
 - `@tsuuanmi/pi-workflows/commands/state-command` — compatibility alias for `commands/workflow`.
-- `@tsuuanmi/pi-workflows/tools/workflow-tools` — workflow tool registration helper used by Pi's bundled extension.
+- `@tsuuanmi/pi-workflows/tools/workflow-tools` — workflow tool registration helper for custom hosts.
 - `@tsuuanmi/pi-workflows/runtime/*` — individual harness runtime modules (sessions, leases, RPC, GC, mutation, storage, receipt rules, etc.).
 
 See `src/index.ts` for the complete barrel.

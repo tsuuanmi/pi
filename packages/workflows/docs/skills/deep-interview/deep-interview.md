@@ -59,7 +59,7 @@ Use `pi workflow state deep-interview <read|write|clear|handoff|active|doctor>` 
 | `deep_interview_restate_goal` | Record the one-sentence restated goal confirmation or adjustment. |
 | `deep_interview_write_spec` | Persist a finalized spec and optionally hand off to ralplan, ultragoal, or team. |
 
-These tools are registered by the workflow extension and run in-process against the current session.
+These tools are registered by bundled workflow registration and run in-process against the current session.
 
 ## State Files
 
@@ -71,7 +71,7 @@ These tools are registered by the workflow extension and run in-process against 
 
 ## Mutation Guard
 
-The extension calls `getDeepInterviewMutationDecision` before `edit` and `write` tool execution. If a non-finished Deep Interview workflow is active, direct product-code edits are blocked; sanctioned workflow state/artifact writes must go through the command layer.
+The bundled workflow registration calls `getDeepInterviewMutationDecision` before `edit`, `write`, and mutating `bash` tool execution. If a non-finished Deep Interview workflow is active, direct product-code edits are blocked; sanctioned workflow state/artifact writes must go through the command layer.
 
 ## See Also
 

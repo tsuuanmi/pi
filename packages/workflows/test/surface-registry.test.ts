@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { registerWorkflows, type WorkflowHost } from "#workflows/register";
 import { PI_WORKFLOW_SKILLS } from "#workflows/registry/workflow-manifest";
 import { getWorkflowSkillHelp, renderWorkflowCommandsReference } from "#workflows/skills/workflow-help-registry";
 import {
@@ -103,5 +104,28 @@ describe("workflow surface registry", () => {
 		} as never);
 
 		expect(registeredTools.slice().sort()).toEqual(WORKFLOW_TOOL_SURFACES.map((tool) => tool.toolName).sort());
+	});
+
+	it("registers bundled workflow tools and hooks through one host entry point", () => {
+		const registeredTools: string[] = [];
+		const registeredHooks: string[] = [];
+		const host: WorkflowHost = {
+			registerTool(tool) {
+				registeredTools.push(tool.name);
+			},
+			on(event) {
+				registeredHooks.push(event);
+			},
+		};
+		registerWorkflows(host);
+
+		expect(registeredTools.slice().sort()).toEqual(WORKFLOW_TOOL_SURFACES.map((tool) => tool.toolName).sort());
+		expect(registeredHooks).toEqual([
+			"session_start",
+			"turn_end",
+			"tool_execution_end",
+			"before_agent_start",
+			"tool_call",
+		]);
 	});
 });

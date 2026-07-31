@@ -2,6 +2,7 @@
 
 ### Added
 
+- **extensions**: Added `@tsuuanmi/pi-workflows/register` as the bundled Pi workflow integration entry point.
 - **team**: Added pure team-to-orchestrator adapter mappings, explicit mode validation, a callback-backed checkpoint store, and a queue-event sink for future workflow-owned orchestrator integration.
 
 ### Changed

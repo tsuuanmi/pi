@@ -1,12 +1,12 @@
 # Subagents and Workflow Tools
 
-Generic and workflow-owned subagent spawning, plus the workflow-owned model-visible tool surface, registered by the workflow tool helper and Pi's bundled extension.
+Generic and workflow-owned subagent spawning, plus the workflow-owned model-visible tool surface, registered by the workflow tool helper and bundled workflow registration.
 
-**Source:** `src/subagents/subagent-tools.ts`, `src/skills/deep-interview/deep-interview-tools.ts`, `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, `src/skills/ultragoal/ultragoal-tools.ts`, `src/tools/workflow-tools.ts`
+**Source:** `src/register.ts`, `src/subagents/subagent-tools.ts`, `src/skills/deep-interview/deep-interview-tools.ts`, `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, `src/skills/ultragoal/ultragoal-tools.ts`, `src/tools/workflow-tools.ts`
 
 ## Model-Visible Tools
 
-The extension registers these model-visible tools:
+The bundled workflow registration registers these model-visible tools:
 
 | Tool | Purpose |
 |------|---------|
