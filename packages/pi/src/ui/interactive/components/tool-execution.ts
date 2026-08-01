@@ -14,7 +14,7 @@ import {
 	theme,
 } from "@tsuuanmi/pi-tui";
 import type { ToolDefinition, ToolRenderContext } from "#pi/api/tool-types";
-import { createAllToolDefinitions, type ToolName } from "#pi/tools/default-tools";
+import { createToolDefinitions, type ToolName } from "#pi/tools/default-tools";
 import { getTextOutput as getRenderedTextOutput } from "#pi/tools/utils";
 
 export interface ToolExecutionOptions {}
@@ -59,7 +59,7 @@ export class ToolExecutionComponent extends Container {
 		this.args = args;
 		void options;
 		this.toolDefinition = toolDefinition;
-		this.builtInToolDefinition = createAllToolDefinitions(cwd)[toolName as ToolName];
+		this.builtInToolDefinition = createToolDefinitions(cwd)[toolName as ToolName];
 		this.ui = ui;
 		this.cwd = cwd;
 

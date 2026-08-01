@@ -6,8 +6,8 @@ import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname } from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
-import { resolveToCwd } from "#pi/tools/path-utils";
-import { normalizeDisplayText, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#pi/tools/utils";
+import { resolveToCwd } from "#pi/tools/paths";
+import { normalizeDisplayText, renderToolPath, replaceTabs, str, toAgentTool } from "#pi/tools/utils";
 
 const writeSchema = Type.Object({
 	path: Type.String({ description: "Path to the file to write (relative or absolute)" }),
@@ -276,5 +276,5 @@ export function createWriteToolDefinition(
 }
 
 export function createWriteTool(cwd: string, options?: WriteToolOptions): AgentTool<typeof writeSchema> {
-	return wrapToolDefinition(createWriteToolDefinition(cwd, options));
+	return toAgentTool(createWriteToolDefinition(cwd, options));
 }

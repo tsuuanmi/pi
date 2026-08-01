@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, type TruncationResult, truncateTail } from "#pi/tools/truncate";
 
-export interface OutputAccumulatorOptions {
+export interface OutputBufferOptions {
 	maxLines?: number;
 	maxBytes?: number;
 	tempFilePrefix?: string;
@@ -32,7 +32,7 @@ function byteLength(text: string): number {
  * tail for display snapshots, and opens a temp file when the full output needs
  * to be preserved.
  */
-export class OutputAccumulator {
+export class OutputBuffer {
 	private readonly maxLines: number;
 	private readonly maxBytes: number;
 	private readonly maxRollingBytes: number;
@@ -54,7 +54,7 @@ export class OutputAccumulator {
 	private tempFilePath: string | undefined;
 	private tempFileStream: WriteStream | undefined;
 
-	constructor(options: OutputAccumulatorOptions = {}) {
+	constructor(options: OutputBufferOptions = {}) {
 		this.maxLines = options.maxLines ?? DEFAULT_MAX_LINES;
 		this.maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
 		this.maxRollingBytes = Math.max(this.maxBytes * 2, 1);

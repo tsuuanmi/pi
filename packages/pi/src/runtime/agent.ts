@@ -97,8 +97,8 @@ import type { SubagentManager } from "#pi/subagents/subagents";
 import { ApiUsageLogger } from "#pi/telemetry/api-usage-logger";
 import { apiUsageLogPath } from "#pi/telemetry/api-usage-utils";
 import { type BashOperations, createLocalBashOperations } from "#pi/tools/bash";
-import { createAllToolDefinitions } from "#pi/tools/default-tools";
-import { createToolDefinitionFromAgentTool } from "#pi/tools/utils";
+import { createToolDefinitions } from "#pi/tools/default-tools";
+import { toToolDefinition } from "#pi/tools/utils";
 
 // ============================================================================
 // Skill Block Parsing
@@ -2237,12 +2237,9 @@ export class AgentSession {
 		const shellPath = this.settingsManager.getShellPath();
 		const baseToolDefinitions = this._baseToolsOverride
 			? Object.fromEntries(
-					Object.entries(this._baseToolsOverride).map(([name, tool]) => [
-						name,
-						createToolDefinitionFromAgentTool(tool),
-					]),
+					Object.entries(this._baseToolsOverride).map(([name, tool]) => [name, toToolDefinition(tool)]),
 				)
-			: createAllToolDefinitions(this._cwd, {
+			: createToolDefinitions(this._cwd, {
 					bash: { commandPrefix: shellCommandPrefix, shellPath },
 				});
 

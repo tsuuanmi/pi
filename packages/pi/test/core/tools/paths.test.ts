@@ -2,33 +2,9 @@ import { mkdtempSync, readdirSync, rmdirSync, unlinkSync, writeFileSync } from "
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { expandPath, resolveReadPath, resolveToCwd } from "#pi/tools/path-utils";
+import { resolveReadPath, resolveToCwd } from "#pi/tools/paths";
 
-describe("path-utils", () => {
-	describe("expandPath", () => {
-		it("should expand ~ to home directory", () => {
-			const result = expandPath("~");
-			expect(result).not.toContain("~");
-		});
-
-		it("should expand ~/path to home directory", () => {
-			const result = expandPath("~/Documents/file.txt");
-			expect(result).not.toContain("~/");
-		});
-
-		it("should keep tilde-prefixed filenames literal", () => {
-			expect(expandPath("~draft.md")).toBe("~draft.md");
-			expect(expandPath("@~draft.md")).toBe("~draft.md");
-		});
-
-		it("should normalize Unicode spaces", () => {
-			// Non-breaking space (U+00A0) should become regular space
-			const withNBSP = "file\u00A0name.txt";
-			const result = expandPath(withNBSP);
-			expect(result).toBe("file name.txt");
-		});
-	});
-
+describe("paths", () => {
 	describe("resolveToCwd", () => {
 		it("should resolve absolute paths as-is", () => {
 			const absolutePath = resolve(tmpdir(), "absolute", "path", "file.txt");
@@ -42,7 +18,7 @@ describe("path-utils", () => {
 		});
 
 		it("should resolve tilde-prefixed filenames against cwd", () => {
-			const cwd = join(tmpdir(), "pi-path-utils-cwd");
+			const cwd = join(tmpdir(), "pi-paths-cwd");
 			expect(resolveToCwd("~draft.md", cwd)).toBe(resolve(cwd, "~draft.md"));
 			expect(resolveToCwd("@~draft.md", cwd)).toBe(resolve(cwd, "~draft.md"));
 		});
@@ -52,7 +28,7 @@ describe("path-utils", () => {
 		let tempDir: string;
 
 		beforeEach(() => {
-			tempDir = mkdtempSync(join(tmpdir(), "path-utils-test-"));
+			tempDir = mkdtempSync(join(tmpdir(), "paths-test-"));
 		});
 
 		afterEach(() => {

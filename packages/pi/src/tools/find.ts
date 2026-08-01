@@ -7,9 +7,9 @@ import { spawn } from "child_process";
 import path from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
-import { pathExists, resolveToCwd } from "#pi/tools/path-utils";
+import { pathExists, resolveToCwd } from "#pi/tools/paths";
 import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "#pi/tools/truncate";
-import { getTextOutput, invalidArgText, shortenPath, str, wrapToolDefinition } from "#pi/tools/utils";
+import { getTextOutput, invalidArgText, shortenPath, str, toAgentTool } from "#pi/tools/utils";
 import { ensureTool } from "#pi/utils/system/tool-installer";
 
 function toPosixPath(value: string): string {
@@ -416,5 +416,5 @@ export function createFindToolDefinition(
 }
 
 export function createFindTool(cwd: string, options?: FindToolOptions): AgentTool<typeof findSchema> {
-	return wrapToolDefinition(createFindToolDefinition(cwd, options));
+	return toAgentTool(createFindToolDefinition(cwd, options));
 }

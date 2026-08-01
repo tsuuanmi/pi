@@ -6,9 +6,9 @@ import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import nodePath from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
-import { pathExists, resolveToCwd } from "#pi/tools/path-utils";
+import { pathExists, resolveToCwd } from "#pi/tools/paths";
 import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "#pi/tools/truncate";
-import { getTextOutput, renderToolPath, str, wrapToolDefinition } from "#pi/tools/utils";
+import { getTextOutput, renderToolPath, str, toAgentTool } from "#pi/tools/utils";
 
 const lsSchema = Type.Object({
 	path: Type.Optional(Type.String({ description: "Directory to list (default: current directory)" })),
@@ -250,5 +250,5 @@ export function createLsToolDefinition(
 }
 
 export function createLsTool(cwd: string, options?: LsToolOptions): AgentTool<typeof lsSchema> {
-	return wrapToolDefinition(createLsToolDefinition(cwd, options));
+	return toAgentTool(createLsToolDefinition(cwd, options));
 }

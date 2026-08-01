@@ -3,10 +3,8 @@ import { readFile as fsReadFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
-import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { Text } from "@tsuuanmi/pi-tui";
 import { type Static, Type } from "typebox";
-import type { ExtensionContext } from "#pi/runtime/context-types";
 import type { ToolDefinition } from "#pi/api/tool-types";
 import { LspSession } from "#pi/tools/lsp/client";
 import { DEFAULT_LSP_SERVERS } from "#pi/tools/lsp/defaults";
@@ -30,31 +28,13 @@ import type {
 	ServerConfig,
 	SymbolInformation,
 } from "#pi/tools/lsp/types";
+import { resolveToCwd } from "#pi/tools/paths";
+import { toAgentTool } from "#pi/tools/utils";
 
 function str(value: unknown): string | null {
 	if (typeof value === "string") return value;
 	if (value == null) return "";
 	return null;
-}
-
-function resolveToCwd(filePath: string, cwd: string): string {
-	return resolvePath(filePath, cwd, { normalizeUnicodeSpaces: true, stripAtPrefix: true });
-}
-
-function wrapToolDefinition<TDetails = unknown>(
-	definition: ToolDefinition<any, TDetails>,
-	ctxFactory?: () => ExtensionContext,
-): AgentTool<any, TDetails> {
-	return {
-		name: definition.name,
-		label: definition.label,
-		description: definition.description,
-		parameters: definition.parameters,
-		prepareArguments: definition.prepareArguments,
-		executionMode: definition.executionMode,
-		execute: (toolCallId, params, signal, onUpdate) =>
-			definition.execute(toolCallId, params, signal, onUpdate, ctxFactory?.() as ExtensionContext),
-	};
 }
 
 const lspSchema = Type.Object({
@@ -274,5 +254,5 @@ export function createLspToolDefinition(cwd: string): ToolDefinition<typeof lspS
 }
 
 export function createLspTool(cwd: string): AgentTool<typeof lspSchema> {
-	return wrapToolDefinition(createLspToolDefinition(cwd));
+	return toAgentTool(createLspToolDefinition(cwd));
 }

@@ -5,7 +5,7 @@
 import { access, readFile, stat } from "node:fs/promises";
 import chalk from "chalk";
 import { resolve } from "path";
-import { resolveReadPath } from "#pi/tools/path-utils";
+import { resolveReadPath } from "#pi/tools/paths";
 
 export interface ProcessedFiles {
 	text: string;

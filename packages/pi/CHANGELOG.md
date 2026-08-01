@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **tools**: Renamed `createAllToolDefinitions` to `createToolDefinitions`, clarified the Pi tool definition boundary, and centralized built-in tool construction in the tool catalog.
 - **sdk**: Renamed the session model fallback warning result from `modelFallbackMessage` to `modelStartupWarning`.
 - **tools**: Removed non-canonical `edit` tool argument forms; the tool now accepts only `path` plus `edits[]` and no longer normalizes alternate shapes.
 

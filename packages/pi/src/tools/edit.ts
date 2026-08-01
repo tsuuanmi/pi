@@ -7,21 +7,17 @@ import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition } from "#pi/api/tool-types";
+import { computeEditsDiff, type EditDiffError, type EditDiffResult, generateDiffString, generateUnifiedPatch } from "#pi/tools/edit-diff";
 import {
 	applyEditsToNormalizedContent,
-	computeEditsDiff,
 	detectLineEnding,
-	type Edit,
-	type EditDiffError,
-	type EditDiffResult,
-	generateDiffString,
-	generateUnifiedPatch,
 	normalizeToLF,
 	restoreLineEndings,
 	stripBom,
-} from "#pi/tools/edit-diff";
-import { resolveToCwd } from "#pi/tools/path-utils";
-import { renderToolPath, str, wrapToolDefinition } from "#pi/tools/utils";
+	type Edit,
+} from "#pi/tools/edit-operations";
+import { resolveToCwd } from "#pi/tools/paths";
+import { renderToolPath, str, toAgentTool } from "#pi/tools/utils";
 
 type EditPreview = EditDiffResult | EditDiffError;
 
@@ -402,5 +398,5 @@ export function createEditToolDefinition(
 }
 
 export function createEditTool(cwd: string, options?: EditToolOptions): AgentTool<typeof editSchema> {
-	return wrapToolDefinition(createEditToolDefinition(cwd, options));
+	return toAgentTool(createEditToolDefinition(cwd, options));
 }

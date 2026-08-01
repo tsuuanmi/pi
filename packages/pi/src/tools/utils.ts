@@ -1,12 +1,12 @@
 import * as os from "node:os";
 import { pathToFileURL } from "node:url";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import { type AgentTool, defineTool } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { getCapabilities, hyperlink, stripAnsi } from "@tsuuanmi/pi-tui";
-import type { ExtensionContext } from "#pi/runtime/context-types";
 import type { ToolDefinition } from "#pi/api/tool-types";
+import type { ExtensionContext } from "#pi/runtime/context-types";
 import { sanitizeBinaryOutput } from "#pi/utils/system/shell";
 
 export function shortenPath(path: unknown): string {
@@ -67,11 +67,11 @@ export function renderToolPath(
 }
 
 /** Wrap a ToolDefinition into an AgentTool for the core runtime. */
-export function wrapToolDefinition<TDetails = unknown>(
+export function toAgentTool<TDetails = unknown>(
 	definition: ToolDefinition<any, TDetails>,
 	ctxFactory?: () => ExtensionContext,
 ): AgentTool<any, TDetails> {
-	return {
+	return defineTool({
 		name: definition.name,
 		label: definition.label,
 		description: definition.description,
@@ -80,24 +80,24 @@ export function wrapToolDefinition<TDetails = unknown>(
 		executionMode: definition.executionMode,
 		execute: (toolCallId, params, signal, onUpdate) =>
 			definition.execute(toolCallId, params, signal, onUpdate, ctxFactory?.() as ExtensionContext),
-	};
+	});
 }
 
-/** Wrap multiple ToolDefinitions into AgentTools for the core runtime. */
-export function wrapToolDefinitions(
+/** Convert multiple ToolDefinitions into AgentTools for the core runtime. */
+export function toAgentTools(
 	definitions: ToolDefinition<any, any>[],
 	ctxFactory?: () => ExtensionContext,
 ): AgentTool<any>[] {
-	return definitions.map((definition) => wrapToolDefinition(definition, ctxFactory));
+	return definitions.map((definition) => toAgentTool(definition, ctxFactory));
 }
 
 /**
  * Synthesize a minimal ToolDefinition from an AgentTool.
  *
- * This keeps AgentSession's internal registry definition-first even when a caller
- * provides plain AgentTool overrides that do not include prompt metadata or renderers.
+ * This keeps AgentSession's internal registry definition-first when a caller
+ * provides an AgentTool without prompt metadata or renderers.
  */
-export function createToolDefinitionFromAgentTool(tool: AgentTool<any>): ToolDefinition<any, unknown> {
+export function toToolDefinition(tool: AgentTool<any>): ToolDefinition<any, unknown> {
 	return {
 		name: tool.name,
 		label: tool.label,

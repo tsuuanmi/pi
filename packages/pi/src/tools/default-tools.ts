@@ -65,6 +65,14 @@ export {
 	type ReadToolOptions,
 } from "#pi/tools/read";
 export {
+	createCodingTools,
+	createReadOnlyTools,
+	createToolDefinitions,
+	type Tool,
+	type ToolName,
+	type ToolsOptions,
+} from "#pi/tools/tool-catalog";
+export {
 	DEFAULT_MAX_BYTES,
 	DEFAULT_MAX_LINES,
 	formatSize,
@@ -81,64 +89,3 @@ export {
 	type WriteToolInput,
 	type WriteToolOptions,
 } from "#pi/tools/write";
-
-import type { AgentTool } from "@tsuuanmi/pi-agent";
-import type { ToolDefinition } from "#pi/api/tool-types";
-import { type BashToolOptions, createBashTool, createBashToolDefinition } from "#pi/tools/bash";
-import { createEditTool, createEditToolDefinition, type EditToolOptions } from "#pi/tools/edit";
-import { createFindTool, createFindToolDefinition, type FindToolOptions } from "#pi/tools/find";
-import { createGlobTool, createGlobToolDefinition, type GlobToolOptions } from "#pi/tools/glob";
-import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "#pi/tools/grep";
-import { createLsTool, createLsToolDefinition, type LsToolOptions } from "#pi/tools/ls";
-import { createLspTool, createLspToolDefinition } from "#pi/tools/lsp/index";
-import { createReadTool, createReadToolDefinition, type ReadToolOptions } from "#pi/tools/read";
-import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } from "#pi/tools/write";
-
-export type Tool = AgentTool<any>;
-export type ToolDef = ToolDefinition<any, any>;
-export type ToolName = "read" | "bash" | "edit" | "write" | "lsp" | "grep" | "find" | "glob" | "ls";
-export interface ToolsOptions {
-	read?: ReadToolOptions;
-	bash?: BashToolOptions;
-	write?: WriteToolOptions;
-	edit?: EditToolOptions;
-	grep?: GrepToolOptions;
-	find?: FindToolOptions;
-	glob?: GlobToolOptions;
-	ls?: LsToolOptions;
-}
-
-export function createAllToolDefinitions(cwd: string, options?: ToolsOptions): Record<ToolName, ToolDef> {
-	return {
-		read: createReadToolDefinition(cwd, options?.read),
-		bash: createBashToolDefinition(cwd, options?.bash),
-		edit: createEditToolDefinition(cwd, options?.edit),
-		write: createWriteToolDefinition(cwd, options?.write),
-		lsp: createLspToolDefinition(cwd),
-		grep: createGrepToolDefinition(cwd, options?.grep),
-		find: createFindToolDefinition(cwd, options?.find),
-		glob: createGlobToolDefinition(cwd, options?.glob),
-		ls: createLsToolDefinition(cwd, options?.ls),
-	};
-}
-
-export function createCodingTools(cwd: string, options?: ToolsOptions): Tool[] {
-	return [
-		createReadTool(cwd, options?.read),
-		createBashTool(cwd, options?.bash),
-		createEditTool(cwd, options?.edit),
-		createWriteTool(cwd, options?.write),
-		createLspTool(cwd),
-	];
-}
-
-export function createReadOnlyTools(cwd: string, options?: ToolsOptions): Tool[] {
-	return [
-		createReadTool(cwd, options?.read),
-		createLspTool(cwd),
-		createGrepTool(cwd, options?.grep),
-		createFindTool(cwd, options?.find),
-		createGlobTool(cwd, options?.glob),
-		createLsTool(cwd, options?.ls),
-	];
-}

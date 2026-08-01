@@ -6,8 +6,8 @@ import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import path from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
-import { resolveToCwd } from "#pi/tools/path-utils";
-import { getTextOutput, invalidArgText, shortenPath, str, wrapToolDefinition } from "#pi/tools/utils";
+import { resolveToCwd } from "#pi/tools/paths";
+import { getTextOutput, invalidArgText, shortenPath, str, toAgentTool } from "#pi/tools/utils";
 
 const DEFAULT_MAX_FILES = 500;
 const SKIP_DIRS = new Set([".git", ".svn", ".hg", "node_modules", ".next", "dist", "build"]);
@@ -261,5 +261,5 @@ export function createGlobToolDefinition(
 }
 
 export function createGlobTool(cwd: string, options?: GlobToolOptions): AgentTool<typeof globSchema> {
-	return wrapToolDefinition(createGlobToolDefinition(cwd, options));
+	return toAgentTool(createGlobToolDefinition(cwd, options));
 }

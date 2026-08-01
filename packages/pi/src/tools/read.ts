@@ -8,7 +8,7 @@ import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import { getReadmePath } from "#pi/config/config";
-import { formatPathRelativeToCwdOrAbsolute, resolveReadPathAsync, resolveToCwd } from "#pi/tools/path-utils";
+import { formatPathRelativeToCwdOrAbsolute, resolveReadPathAsync, resolveToCwd } from "#pi/tools/paths";
 import {
 	DEFAULT_MAX_BYTES,
 	DEFAULT_MAX_LINES,
@@ -16,7 +16,7 @@ import {
 	type TruncationResult,
 	truncateHead,
 } from "#pi/tools/truncate";
-import { getTextOutput, renderToolPath, replaceTabs, str, wrapToolDefinition } from "#pi/tools/utils";
+import { getTextOutput, renderToolPath, replaceTabs, str, toAgentTool } from "#pi/tools/utils";
 
 const readSchema = Type.Object({
 	path: Type.String({ description: "Path to the file to read (relative or absolute)" }),
@@ -358,5 +358,5 @@ export function createReadToolDefinition(
 }
 
 export function createReadTool(cwd: string, options?: ReadToolOptions): AgentTool<typeof readSchema> {
-	return wrapToolDefinition(createReadToolDefinition(cwd, options));
+	return toAgentTool(createReadToolDefinition(cwd, options));
 }

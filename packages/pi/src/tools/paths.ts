@@ -1,6 +1,6 @@
 import { accessSync, constants } from "node:fs";
 import { access } from "node:fs/promises";
-import { formatPathRelativeToCwdOrAbsolute, normalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
+import { formatPathRelativeToCwdOrAbsolute, resolvePath } from "@tsuuanmi/pi-agent/node";
 
 export { formatPathRelativeToCwdOrAbsolute };
 
@@ -37,10 +37,6 @@ export async function pathExists(filePath: string): Promise<boolean> {
 	} catch {
 		return false;
 	}
-}
-
-export function expandPath(filePath: string): string {
-	return normalizePath(filePath, { normalizeUnicodeSpaces: true, stripAtPrefix: true });
 }
 
 /**

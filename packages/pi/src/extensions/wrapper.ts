@@ -8,14 +8,14 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import type { RegisteredTool } from "#pi/runtime/extension-types";
 import type { ExtensionRunner } from "#pi/extensions/runner";
-import { wrapToolDefinition, wrapToolDefinitions } from "#pi/tools/utils";
+import { toAgentTool, toAgentTools } from "#pi/tools/utils";
 
 /**
  * Wrap a RegisteredTool into an AgentTool.
  * Uses the runner's createContext() for consistent context across tools and event handlers.
  */
 export function wrapRegisteredTool(registeredTool: RegisteredTool, runner: ExtensionRunner): AgentTool {
-	return wrapToolDefinition(registeredTool.definition, () => runner.createContext());
+	return toAgentTool(registeredTool.definition, () => runner.createContext());
 }
 
 /**
@@ -23,7 +23,7 @@ export function wrapRegisteredTool(registeredTool: RegisteredTool, runner: Exten
  * Uses the runner's createContext() for consistent context across tools and event handlers.
  */
 export function wrapRegisteredTools(registeredTools: RegisteredTool[], runner: ExtensionRunner): AgentTool[] {
-	return wrapToolDefinitions(
+	return toAgentTools(
 		registeredTools.map((registeredTool) => registeredTool.definition),
 		() => runner.createContext(),
 	);

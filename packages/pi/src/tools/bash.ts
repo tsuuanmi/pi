@@ -15,9 +15,9 @@ import {
 import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
-import { OutputAccumulator } from "#pi/tools/output-accumulator";
+import { OutputBuffer } from "#pi/tools/output-buffer";
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "#pi/tools/truncate";
-import { getTextOutput, invalidArgText, str, wrapToolDefinition } from "#pi/tools/utils";
+import { getTextOutput, invalidArgText, str, toAgentTool } from "#pi/tools/utils";
 import {
 	getShellConfig,
 	getShellEnv,
@@ -315,7 +315,7 @@ export function createBashToolDefinition(
 			const resolvedCommand = commandPrefix ? `${commandPrefix}\n${command}` : command;
 			const spawnContext = resolveSpawnContext(resolvedCommand, cwd, spawnHook);
 			const startedAt = Date.now();
-			const output = new OutputAccumulator({ tempFilePrefix: "pi-bash" });
+			const output = new OutputBuffer({ tempFilePrefix: "pi-bash" });
 			let acceptingOutput = true;
 			let updateTimer: NodeJS.Timeout | undefined;
 			let updateDirty = false;
@@ -482,5 +482,5 @@ export function createBashToolDefinition(
 }
 
 export function createBashTool(cwd: string, options?: BashToolOptions): AgentTool<typeof bashSchema> {
-	return wrapToolDefinition(createBashToolDefinition(cwd, options));
+	return toAgentTool(createBashToolDefinition(cwd, options));
 }

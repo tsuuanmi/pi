@@ -116,9 +116,11 @@ Prefer `lsp` before `grep` or `find` for supported code intelligence tasks such 
 
 Each tool is composed of:
 
-1. **Definition** — TypeBox JSON schema for input parameters, created by the `createXToolDefinition` function
+1. **Definition** — Pi-specific TypeBox and TUI metadata, created by the `createXToolDefinition` function
 2. **Implementation** — Async function that executes the tool, created by the `createXTool` function
 3. **Display** — Optional TUI rendering for tool calls and results
+
+Pi converts these definitions into the runtime-standard `AgentTool` contract from `@tsuuanmi/pi-agent` before registration. The agent package owns execution and registration; Pi owns tool schemas, extension context, and TUI rendering.
 
 ### Factory Functions
 
@@ -126,7 +128,7 @@ The tools module provides three factory functions for creating tool sets:
 
 ```typescript
 // Create all 9 tool definitions (for extension registration)
-const definitions = createAllToolDefinitions(cwd, options);
+const definitions = createToolDefinitions(cwd, options);
 
 // Create default coding tool instances (read, bash, edit, write, lsp)
 const codingTools = createCodingTools(cwd, options);
