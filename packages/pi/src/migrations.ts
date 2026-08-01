@@ -9,7 +9,7 @@ import { CONFIG_DIR_NAME, getAgentDir, getBinDir } from "#pi/config/config";
 import { migrateKeybindingsConfig } from "#pi/settings/keybindings";
 
 const MIGRATION_GUIDE_URL = "https://github.com/tsuuanmi/pi/blob/main/packages/pi/CHANGELOG.md#extensions-migration";
-const EXTENSIONS_DOC_URL = "https://github.com/tsuuanmi/pi/blob/main/packages/pi/docs/extensions.md";
+const EXTENSIONS_DOC_URL = "https://github.com/tsuuanmi/pi/blob/main/packages/pi/docs/extensions/extensions.md";
 
 /**
  * Migrate legacy oauth.json and settings.json apiKeys to auth.json.

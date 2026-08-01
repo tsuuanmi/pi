@@ -1,6 +1,6 @@
 # @tsuuanmi/pi-workflows
 
-Workflow runtime skills for Pi: `deep-interview`, `ralplan`, `team`, and `ultragoal`. This package provides the `pi workflow` control plane, the four bundled [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/skills/skills.md), reusable role agent profiles, and the harness runtime that backs them.
+Workflow runtime skills for Pi: `deep-interview`, `ralplan`, `team`, and `ultragoal`. This package provides the `pi workflow` control plane, the four bundled [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/skills/skills.md), reusable role agent profiles, and the harness runtime that backs them.
 
 The four skills form a gated pipeline:
 
@@ -362,8 +362,8 @@ Workspace tests import packages from the gitignored `dist/`, so rebuild this pac
 - [docs/skills/](docs/skills/) — per-skill design and runtime docs.
 - [docs/runtime/](docs/runtime/), [docs/subagents/](docs/subagents/), [docs/state/](docs/state/), [docs/orchestration/](docs/orchestration/), [docs/artifacts/](docs/artifacts/), [docs/audit/](docs/audit/), [docs/compaction/](docs/compaction/), [docs/registry/](docs/registry/), [docs/session/](docs/session/) — per-source-directory module docs.
 - [CHANGELOG.md](CHANGELOG.md) — changes.
-- [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/skills/skills.md) — Pi skill format and installation paths.
-- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/subagents/subagents.md) — Pi-native SubagentManager and subagent tools.
+- [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/skills/skills.md) — Pi skill format and installation paths.
+- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/subagents/subagents.md) — Pi-native SubagentManager and subagent tools.
 
 ## License
 

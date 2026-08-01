@@ -6,18 +6,24 @@ See [AGENTS.md](https://github.com/tsuuanmi/pi/blob/main/AGENTS.md) for addition
 
 ```bash
 git clone https://github.com/tsuuanmi/pi
-cd pi-mono
+cd pi
 npm install
 npm run build
 ```
 
-Run from source:
+Run the CLI from source:
 
 ```bash
-/path/to/pi-mono/pi-test.sh
+npx tsx packages/pi/src/cli.ts --help
 ```
 
-The script can be run from any directory. Pi keeps the caller's current working directory.
+Run Pi's package tests with:
+
+```bash
+npm run test --workspace @tsuuanmi/pi
+```
+
+The CLI keeps the caller's current working directory.
 
 ## Forking / Rebranding
 
@@ -55,17 +61,41 @@ Never use `__dirname` directly for package assets.
 ## Testing
 
 ```bash
-./test.sh                         # Run non-LLM tests (no API keys needed)
-npm test                          # Run all tests
-npm test -- test/specific.test.ts # Run specific test
+npm run test --workspace @tsuuanmi/pi
+npm run test --workspace @tsuuanmi/pi -- test/specific.test.ts
 ```
 
-## Project Structure
+## Source Structure
+
+The Pi package is implemented under `packages/pi/src/`:
 
 ```
-packages/
-  ai/           # LLM provider abstraction
-  agent/        # Agent loop and message types  
-  tui/          # Terminal UI components
-  pi/ # CLI and interactive mode
+packages/pi/src/
+  cli.ts                 # CLI entry point
+  main.ts                # startup and mode dispatch
+  index.ts               # public package exports
+  migrations.ts          # startup migrations
+  agents/                # agent profile definitions and loading
+  api/                   # public API and extension-facing types
+  app/                   # startup, runtime, session, and mode orchestration
+  auth/                  # authentication storage and guidance
+  cli/                   # argument parsing and CLI helpers
+  config/                # paths, defaults, and configuration resolution
+  exec/                  # command execution and HTTP dispatch
+  extensions/            # extension loading, hooks, registry, and runner
+  model/                 # model registry, resolution, and thinking levels
+  modes/                 # interactive, print, and RPC modes
+  package-manager/       # package discovery, installation, and diagnostics
+  resources/             # skills, prompts, agents, and extension loading
+  runtime/               # AgentSession, runtime services, context, and stats
+  session/               # session persistence, layout, and compaction
+  settings/              # settings and keybinding management
+  skills/                # skills, prompts, slash commands, and system prompts
+  subagents/             # subagent orchestration and tmux workers
+  telemetry/             # API usage and timing telemetry
+  tools/                 # built-in tools and LSP support
+  ui/                    # interactive components and package-manager UI
+  utils/                 # filesystem and system helpers
 ```
+
+The other workspace packages provide shared layers: `packages/ai` contains model protocols and providers, `packages/agent` contains the agent loop and message types, and `packages/tui` contains terminal UI primitives.

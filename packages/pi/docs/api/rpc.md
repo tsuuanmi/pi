@@ -2,7 +2,7 @@
 
 RPC mode enables headless operation of the AI agent via a JSON protocol over stdin/stdout. This is useful for embedding the agent in other applications, IDEs, or custom UIs.
 
-**Note for Node.js/TypeScript users**: If you're building a Node.js application, consider using `AgentSession` directly from `@tsuuanmi/pi` instead of spawning a subprocess. See [`src/runtime/pi-session.ts`](../../src/runtime/pi-session.ts) for the API. For a subprocess-based TypeScript client, see [`src/modes/rpc/rpc-client.ts`](../../src/modes/rpc/rpc-client.ts).
+**Note for Node.js/TypeScript users**: If you're building a Node.js application, consider using `AgentSession` directly from `@tsuuanmi/pi` instead of spawning a subprocess. See [`src/runtime/agent.ts`](../../src/runtime/agent.ts) for the API. For a subprocess-based TypeScript client, see [`src/modes/rpc/rpc-client.ts`](../../src/modes/rpc/rpc-client.ts).
 
 ## Starting RPC Mode
 
@@ -1163,9 +1163,9 @@ Parse errors:
 ## Types
 
 Source files:
-- [`packages/ai/src/core/types.ts`](../../../ai/src/core/types.ts) - `Model`, `UserMessage`, `AssistantMessage`, `ToolResultMessage`
-- [`packages/agent/src/types.ts`](../../../agent/src/types.ts) - `AgentMessage`, `AgentEvent`
-- [`packages/agent/src/messages.ts`](../../../agent/src/messages.ts) - `BashExecutionMessage`
+- [`packages/ai/src/protocol/message.ts`](../../../ai/src/protocol/message.ts) - `UserMessage`, `AssistantMessage`, `ToolResultMessage`
+- [`packages/agent/src/messages/state.ts`](../../../agent/src/messages/state.ts) - `AgentMessage` and [`runtime/events.ts`](../../../agent/src/runtime/events.ts) - `AgentEvent`
+- [`packages/agent/src/messages/messages.ts`](../../../agent/src/messages/messages.ts) - `BashExecutionMessage`
 - [`src/modes/rpc/rpc-types.ts`](../../src/modes/rpc/rpc-types.ts) - RPC command/response types, extension UI request/response types
 
 ### Model

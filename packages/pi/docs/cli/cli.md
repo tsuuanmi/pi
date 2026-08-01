@@ -4,7 +4,7 @@ Command-line interface for Pi.
 
 ## Overview
 
-Pi's CLI (`pi`) parses arguments and launches the appropriate mode (interactive text, single-shot text/JSON, or RPC). Argument parsing is handled by `parseArgs()` in `src/cli/args.ts`.
+Pi's CLI (`pi`) parses arguments and launches the appropriate mode (interactive text, single-shot text/JSON, or RPC). Argument parsing is handled by `parseArgs()` in `packages/pi/src/cli/args.ts`.
 
 ## Commands
 
@@ -106,4 +106,4 @@ Pi also supports several subcommands:
 - [Using Pi](../usage.md) - Full usage reference
 - [RPC Mode](../api/rpc.md) - RPC protocol
 - [JSON Mode](../api/json.md) - JSON event stream
-- [Settings](../core/settings/settings.md) - Configuration reference
+- [Settings](../settings/settings.md) - Configuration reference

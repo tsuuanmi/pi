@@ -38,4 +38,4 @@ Most verbs route to a live runtime owner when one is running for the target sess
 - [Commands](../commands/workflow.md)
 - [State](../state/state.md)
 - [Session](../session/session.md)
-- [Security](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/core/trust/security.md) - Sandbox boundaries
+- [Security](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/security.md) - Sandbox boundaries

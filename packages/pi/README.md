@@ -52,7 +52,7 @@ I regularly publish my own `pi-mono` work sessions here:
   - [Branching](#branching)
   - [Compaction](#compaction)
 - [Settings](#settings)
-- [API Usage Logging](docs/api-usage-logging.md)
+- [API Usage Logging](docs/telemetry/api-usage-logging.md)
 - [Context Files](#context-files)
 - [Customization](#customization)
   - [Prompt Templates](#prompt-templates)
@@ -107,7 +107,7 @@ For OpenAI Codex subscription accounts, `/account` shows quota and available res
 
 Then just talk to pi. By default, pi gives the model four tools: `read`, `write`, `edit`, and `bash`. The model uses these to fulfill your requests. Add capabilities via [skills](#skills), [prompt templates](#prompt-templates), [extensions](#extensions), or [pi packages](#pi-packages).
 
-**Platform notes:** pi supports Linux and macOS. See [tmux](docs/tmux.md), [Terminal setup](docs/terminal-setup.md), and [Shell aliases](docs/shell-aliases.md).
+**Platform notes:** pi supports Linux and macOS. See [tmux](docs/utils/terminal/tmux.md), [Terminal setup](docs/utils/terminal/terminal-setup.md), and [Shell aliases](docs/utils/terminal/shell-aliases.md).
 
 ---
 
@@ -123,11 +123,11 @@ For each built-in provider, pi maintains a list of tool-capable models, updated 
 - Anthropic
 - OpenAI
 
-Any other OpenAI-compatible API (Ollama, vLLM, LM Studio, LiteLLM, etc.) can be added as a custom model/provider; see [docs/models.md](docs/models.md) and [docs/custom-provider.md](docs/custom-provider.md).
+Any other OpenAI-compatible API (Ollama, vLLM, LM Studio, LiteLLM, etc.) can be added as a custom model/provider; see [docs/model/models.md](docs/model/models.md) and [docs/model/custom-provider.md](docs/model/custom-provider.md).
 
-See [docs/providers.md](docs/providers.md) for detailed setup instructions.
+See [docs/model/providers.md](docs/model/providers.md) for detailed setup instructions.
 
-**Custom providers & models:** Add providers via `~/.pi/agent/settings.json` if they speak a supported API (OpenAI, Anthropic). For custom APIs or OAuth, use extensions. See [docs/models.md](docs/models.md) and [docs/custom-provider.md](docs/custom-provider.md).
+**Custom providers & models:** Add providers via `~/.pi/agent/settings.json` if they speak a supported API (OpenAI, Anthropic). For custom APIs or OAuth, use extensions. See [docs/model/models.md](docs/model/models.md) and [docs/model/custom-provider.md](docs/model/custom-provider.md).
 
 ---
 
@@ -152,7 +152,7 @@ The editor can be temporarily replaced by other UI, like built-in `/settings` or
 | Images | Ctrl+V to paste, or drag onto terminal |
 | Bash commands | `!command` runs and sends output to LLM, `!!command` runs without sending |
 
-Standard editing keybindings for delete word, undo, etc. See [docs/keybindings.md](docs/keybindings.md).
+Standard editing keybindings for delete word, undo, etc. See [docs/modes/interactive/keybindings.md](docs/modes/interactive/keybindings.md).
 
 ### Commands
 
@@ -179,7 +179,7 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 
 ### Keyboard Shortcuts
 
-See `/hotkeys` for the full list. Customize via `~/.pi/agent/keybindings.json`. See [docs/keybindings.md](docs/keybindings.md).
+See `/hotkeys` for the full list. Customize via `~/.pi/agent/keybindings.json`. See [docs/modes/interactive/keybindings.md](docs/modes/interactive/keybindings.md).
 
 **Commonly used:**
 
@@ -203,13 +203,13 @@ Submit messages while the agent is working:
 - **Alt+Up** retrieves queued messages back to editor
 
 
-Configure delivery in [settings](docs/settings.md): `steeringMode` and `followUpMode` can be `"one-at-a-time"` (default, waits for response) or `"all"` (delivers all queued at once). `transport` selects provider transport preference (`"sse"`, `"websocket"`, or `"auto"`) for providers that support multiple transports.
+Configure delivery in [settings](docs/settings/settings.md): `steeringMode` and `followUpMode` can be `"one-at-a-time"` (default, waits for response) or `"all"` (delivers all queued at once). `transport` selects provider transport preference (`"sse"`, `"websocket"`, or `"auto"`) for providers that support multiple transports.
 
 ---
 
 ## Sessions
 
-Sessions are stored as JSONL files with a tree structure. Each entry has an `id` and `parentId`, enabling in-place branching without creating new files. See [docs/session-format.md](docs/session-format.md) for file format.
+Sessions are stored as JSONL files with a tree structure. Each entry has an `id` and `parentId`, enabling in-place branching without creating new files. See [docs/session/session-format.md](docs/session/session-format.md) for file format.
 
 ### Management
 
@@ -242,7 +242,7 @@ Long sessions can exhaust context windows. Compaction summarizes older messages 
 
 **Automatic:** Enabled by default. Triggers on context overflow (recovers and retries) or when approaching the limit (proactive). Configure via `/settings` or `settings.json`.
 
-Compaction is lossy. The full history remains in the JSONL file; use `/tree` to revisit. Customize compaction behavior via [extensions](#extensions). See [docs/compaction.md](docs/compaction.md) for internals.
+Compaction is lossy. The full history remains in the JSONL file; use `/tree` to revisit. Customize compaction behavior via [extensions](#extensions). See [docs/session/compaction/compaction.md](docs/session/compaction/compaction.md) for internals.
 
 ---
 
@@ -255,7 +255,7 @@ Use `/settings` to modify common options, or edit JSON files directly:
 | `~/.pi/agent/settings.json` | Global (all projects) |
 | `.pi/settings.json` | Project (overrides global) |
 
-See [docs/settings.md](docs/settings.md) for all options.
+See [docs/settings/settings.md](docs/settings/settings.md) for all options.
 
 ---
 
@@ -304,7 +304,7 @@ Use this skill when the user asks about X.
 2. Then that
 ```
 
-Place in `~/.pi/agent/skills/`, `~/.agents/skills/`, `.pi/skills/`, or `.agents/skills/` (from `cwd` up through parent directories) or a [pi package](#pi-packages) to share with others. See [docs/skills.md](docs/skills.md).
+Place in `~/.pi/agent/skills/`, `~/.agents/skills/`, `.pi/skills/`, or `.agents/skills/` (from `cwd` up through parent directories) or a [pi package](#pi-packages) to share with others. See [docs/skills/skills.md](docs/skills/skills.md).
 
 ### Extensions
 
@@ -332,13 +332,13 @@ The default export can also be `async`. pi waits for async extension factories b
 - Make pi look like Claude Code
 - ...anything you can dream up
 
-Place in `~/.pi/agent/extensions/`, `.pi/extensions/`, or a [pi package](#pi-packages) to share with others. See [docs/extensions.md](docs/extensions.md).
+Place in `~/.pi/agent/extensions/`, `.pi/extensions/`, or a [pi package](#pi-packages) to share with others. See [docs/extensions/extensions.md](docs/extensions/extensions.md).
 
 ### Themes
 
 Built-in: `dark`, `light`. Themes hot-reload: modify the active theme file and pi immediately applies changes.
 
-Place in `~/.pi/agent/themes/`, `.pi/themes/`, or a [pi package](#pi-packages) to share with others. See [docs/themes.md](docs/themes.md).
+Place in `~/.pi/agent/themes/`, `.pi/themes/`, or a [pi package](#pi-packages) to share with others. See [docs/theme/themes.md](docs/theme/themes.md).
 
 ### Pi Packages
 
@@ -411,7 +411,7 @@ await session.prompt("What files are in the current directory?");
 
 For advanced multi-session runtime replacement, use `createAgentSessionRuntime()` and `AgentSessionRuntime`.
 
-See [docs/sdk.md](docs/sdk.md).
+See [docs/api/sdk.md](docs/api/sdk.md).
 
 ### RPC Mode
 
@@ -423,7 +423,7 @@ pi --mode rpc
 
 RPC mode uses strict LF-delimited JSONL framing. Clients must split records on `\n` only. Do not use generic line readers like Node `readline`, which also split on Unicode separators inside JSON payloads.
 
-See [docs/rpc.md](docs/rpc.md) for the protocol.
+See [docs/api/rpc.md](docs/api/rpc.md) for the protocol.
 
 ---
 
@@ -444,10 +444,10 @@ Pi is aggressively extensible so it doesn't have to dictate your workflow. Featu
 Pi stays minimal, but ships a small set of built-in features so common workflows work out of the box. Each is documented in `docs/`.
 
 - **`lsp` tool** - minimal Language Server Protocol support (TypeScript/JavaScript, Python, Rust) for status, diagnostics, symbols, hover, definitions, and references.
-- **`pi --tmux`** - launch interactive startup inside a new tmux session. See [docs/tmux.md](docs/tmux.md).
-- **Account profiles** - store multiple accounts per provider and switch between them with `/account add`, `/account`, `/account <provider> <account>`, `/provider add`, and `/account remove`. See [Account profiles](docs/custom-provider.md#account-profiles) in the Custom Providers docs.
+- **`pi --tmux`** - launch interactive startup inside a new tmux session. See [docs/utils/terminal/tmux.md](docs/utils/terminal/tmux.md).
+- **Account profiles** - store multiple accounts per provider and switch between them with `/account add`, `/account`, `/account <provider> <account>`, `/provider add`, and `/account remove`. See [Account profiles](docs/model/custom-provider.md#account-profiles) in the Custom Providers docs.
 - **Pi workflow + skills** - a `pi workflow` control plane plus the built-in `deep-interview`, `ralplan`, `team`, and `ultragoal` skills for planning and parallel execution. See [workflows/docs/workflow.md](../workflows/docs/workflow.md).
-- **Subagents** - a Pi-native `SubagentManager` with spawn/await/resume/steer/pause/cancel tools for isolated agent workers. See [docs/subagents.md](docs/subagents.md).
+- **Subagents** - a Pi-native `SubagentManager` with spawn/await/resume/steer/pause/cancel tools for isolated agent workers. See [docs/subagents/subagents.md](docs/subagents/subagents.md).
 
 ---
 
@@ -480,8 +480,8 @@ pi config                    # Enable/disable package resources
 |------|-------------|
 | (default) | Interactive mode |
 | `-p`, `--print` | Print response and exit |
-| `--mode json` | Output all events as JSON lines (see [docs/json.md](docs/json.md)) |
-| `--mode rpc` | RPC mode for process integration (see [docs/rpc.md](docs/rpc.md)) |
+| `--mode json` | Output all events as JSON lines (see [docs/api/json.md](docs/api/json.md)) |
+| `--mode rpc` | RPC mode for process integration (see [docs/api/rpc.md](docs/api/rpc.md)) |
 | `--tmux` | Launch interactive startup inside a new tmux session |
 
 In print mode, pi also reads piped stdin and merges it into the initial prompt:
@@ -510,15 +510,15 @@ Interactive role model selection is available from `/settings` → Model & think
 | `--session <path\|id>` | Use specific session file or partial session ID |
 | `--name <name>`, `-n <name>` | Set session display name at startup |
 
-Session storage directory is set via the `PI_SESSION_DIR` environment variable or the `sessionDir` setting (see [docs/settings.md](docs/settings.md)).
+Session storage directory is set via the `PI_SESSION_DIR` environment variable or the `sessionDir` setting (see [docs/settings/settings.md](docs/settings/settings.md)).
 
 ### Tools
 
-Available built-in tools: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`. Extensions can register additional tools or override built-ins (see [docs/extensions.md](docs/extensions.md)). The active tool set is controlled via the SDK (`customTools` / `setActiveTools`); there are no CLI flags for tool selection.
+Available built-in tools: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`. Extensions can register additional tools or override built-ins (see [docs/extensions/extensions.md](docs/extensions/extensions.md)). The active tool set is controlled via the SDK (`customTools` / `setActiveTools`); there are no CLI flags for tool selection.
 
 ### Resources
 
-Extensions, skills, prompt templates, and themes are auto-discovered from `~/.pi/agent/` and `.pi/` directories and can be added via the `extensions`, `skills`, `prompts`, and `themes` arrays in `settings.json`. There are no CLI flags for loading or disabling these; see [docs/extensions.md](docs/extensions.md), [docs/skills.md](docs/skills.md), [docs/prompt-templates.md](docs/prompt-templates.md), and [docs/themes.md](docs/themes.md).
+Extensions, skills, prompt templates, and themes are auto-discovered from `~/.pi/agent/` and `.pi/` directories and can be added via the `extensions`, `skills`, `prompts`, and `themes` arrays in `settings.json`. There are no CLI flags for loading or disabling these; see [docs/extensions/extensions.md](docs/extensions/extensions.md), [docs/skills/skills.md](docs/skills/skills.md), [docs/prompt-templates.md](docs/prompt-templates.md), and [docs/theme/themes.md](docs/theme/themes.md).
 
 ### Other Options
 

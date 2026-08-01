@@ -14,4 +14,4 @@ The rendering pipeline converts component output into terminal escape sequences,
 
 ## See Also
 
-- [TUI Components](../../ui/tui.md) - Component API
+- [TUI Components](../tui.md) - Component API
