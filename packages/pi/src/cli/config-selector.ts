@@ -1,11 +1,7 @@
-/**
- * TUI config selector for `pi config` command
- */
-
 import { initTheme, ProcessTerminal, stopThemeWatcher, TUI } from "@tsuuanmi/pi-tui";
-import { ResourceSelector } from "#pi/ui/package-manager/resource-selector";
 import type { ResolvedPaths } from "#pi/package-manager/package-manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
+import { ResourceSelector } from "#pi/ui/package-manager/resource-selector";
 
 export interface ConfigSelectorOptions {
 	resolvedPaths: ResolvedPaths;
@@ -14,9 +10,7 @@ export interface ConfigSelectorOptions {
 	agentDir: string;
 }
 
-/** Show TUI config selector and return when closed */
 export async function selectConfig(options: ConfigSelectorOptions): Promise<void> {
-	// Initialize theme before showing TUI
 	initTheme(options.settingsManager.getTheme(), true);
 
 	return new Promise((resolve) => {

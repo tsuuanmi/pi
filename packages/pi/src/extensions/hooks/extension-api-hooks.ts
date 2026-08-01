@@ -1,4 +1,4 @@
-import type { ExtensionContext } from "#pi/runtime/context-types";
+import type { ExtensionContext } from "#pi/api/context-types";
 import type {
 	AfterProviderResponseEvent,
 	AgentEndEvent,

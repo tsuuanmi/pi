@@ -11,6 +11,8 @@ export {
 	Theme,
 	type ThemeColor,
 } from "@tsuuanmi/pi-tui";
+// Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
+export type { ReadonlyFooterDataProvider } from "#pi/api/ui-types";
 // Auth and model registry
 export {
 	type ApiKeyCredential,
@@ -115,9 +117,7 @@ export type {
 	WriteToolCallEvent,
 } from "#pi/extensions/index";
 export {
-	createExtensionRuntime,
 	defineTool,
-	discoverAndLoadExtensions,
 	ExtensionRunner,
 	isBashToolResult,
 	isEditToolResult,
@@ -130,6 +130,7 @@ export {
 	wrapRegisteredTool,
 	wrapRegisteredTools,
 } from "#pi/extensions/index";
+export { createExtensionRuntime, discoverAndLoadExtensions } from "#pi/extensions/loader";
 // Main entry point
 export { type MainOptions, main } from "#pi/main";
 export { ModelRegistry } from "#pi/model/model-registry";
@@ -150,42 +151,6 @@ export {
 	runPrintMode,
 	runRpcMode,
 } from "#pi/modes/index";
-// UI components for extensions
-export {
-	AssistantMessageComponent,
-	BashExecutionComponent,
-	BranchSummaryMessageComponent,
-	CompactionSummaryMessageComponent,
-	CustomEditor,
-	CustomMessageComponent,
-	ExtensionEditorComponent,
-	ExtensionInputComponent,
-	ExtensionSelectorComponent,
-	keyHint,
-	keyText,
-	LoginDialogComponent,
-	ModelSelectorComponent,
-	OAuthSelectorComponent,
-	type RenderDiffOptions,
-	rawKeyHint,
-	renderDiff,
-	SessionSelectorComponent,
-	type SettingsCallbacks,
-	type SettingsConfig,
-	SettingsSelectorComponent,
-	SkillInvocationMessageComponent,
-	ThinkingSelectorComponent,
-	ToolExecutionComponent,
-	type ToolExecutionOptions,
-	TreeSelectorComponent,
-	truncateToVisualLines,
-	UserMessageSelectorComponent,
-	type VisualTruncateResult,
-} from "#pi/ui/interactive/components/index";
-// Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
-export type { ReadonlyFooterDataProvider } from "#pi/ui/interactive/footer-data";
-// Clipboard utilities
-export { copyToClipboard } from "#pi/ui/interactive/utils/clipboard";
 // JSONL utilities
 export { serializeJsonLine } from "#pi/modes/rpc/jsonl";
 export type {
@@ -198,6 +163,9 @@ export type {
 } from "#pi/package-manager/package-manager";
 export { DefaultPackageManager } from "#pi/package-manager/package-manager";
 export { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
+export { loadProjectContextFiles } from "#pi/resources/context-files";
+export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#pi/resources/resource-loader";
+export { DefaultResourceLoader } from "#pi/resources/resource-loader";
 export {
 	AgentSession,
 	type AgentSessionConfig,
@@ -209,24 +177,26 @@ export {
 	parseSkillBlock,
 	type SessionStats,
 } from "#pi/runtime/agent";
-// SDK for programmatic usage
 export {
 	AgentSessionRuntime,
+	type CreateAgentSessionRuntimeFactory,
+	type CreateAgentSessionRuntimeResult,
+	createAgentSessionRuntime,
+} from "#pi/runtime/runtime";
+export {
 	type AgentSessionRuntimeDiagnostic,
 	type AgentSessionServices,
 	type CreateAgentSessionFromServicesOptions,
+	type CreateAgentSessionServicesOptions,
+	createAgentSessionFromServices,
+	createAgentSessionServices,
+} from "#pi/runtime/services";
+// SDK for programmatic usage
+export {
 	type CreateAgentSessionOptions,
 	type CreateAgentSessionResult,
-	type CreateAgentSessionRuntimeFactory,
-	type CreateAgentSessionRuntimeResult,
-	type CreateAgentSessionServicesOptions,
-	// Factory
 	createAgentSession,
-	createAgentSessionFromServices,
-	createAgentSessionRuntime,
-	createAgentSessionServices,
 	createBashTool,
-	// Tool factories (for custom cwd)
 	createCodingTools,
 	createEditTool,
 	createFindTool,
@@ -238,7 +208,7 @@ export {
 	createReadTool,
 	createWriteTool,
 	type PromptTemplate,
-} from "#pi/runtime/sdk";
+} from "#pi/runtime/session-factory";
 export {
 	type BranchPreparation,
 	type BranchSummaryResult,
@@ -289,8 +259,6 @@ export {
 	SettingsManager,
 	type SettingsManagerCreateOptions,
 } from "#pi/settings/settings-manager";
-export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#pi/resources/resource-loader";
-export { DefaultResourceLoader, loadProjectContextFiles } from "#pi/resources/resource-loader";
 // Skills
 export {
 	formatSkillsForPrompt,
@@ -351,6 +319,40 @@ export {
 	type WriteToolInput,
 	type WriteToolOptions,
 } from "#pi/tools/default-tools";
+// UI components for extensions
+export {
+	AssistantMessageComponent,
+	BashExecutionComponent,
+	BranchSummaryMessageComponent,
+	CompactionSummaryMessageComponent,
+	CustomEditor,
+	CustomMessageComponent,
+	ExtensionEditorComponent,
+	ExtensionInputComponent,
+	ExtensionSelectorComponent,
+	keyHint,
+	keyText,
+	LoginDialogComponent,
+	ModelSelectorComponent,
+	OAuthSelectorComponent,
+	type RenderDiffOptions,
+	rawKeyHint,
+	renderDiff,
+	SessionSelectorComponent,
+	type SettingsCallbacks,
+	type SettingsConfig,
+	SettingsSelectorComponent,
+	SkillInvocationMessageComponent,
+	ThinkingSelectorComponent,
+	ToolExecutionComponent,
+	type ToolExecutionOptions,
+	TreeSelectorComponent,
+	truncateToVisualLines,
+	UserMessageSelectorComponent,
+	type VisualTruncateResult,
+} from "#pi/ui/interactive/components/index";
+// Clipboard utilities
+export { copyToClipboard } from "#pi/ui/interactive/utils/clipboard";
 export { parseFrontmatter, stripFrontmatter } from "#pi/utils/fs/index";
 // Shell utilities
 export { getShellConfig } from "#pi/utils/system/shell";

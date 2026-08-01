@@ -4,12 +4,14 @@ import {
 	buildDefaultTmuxLaunchPlan,
 	buildPiTmuxWindowTitle,
 	buildTmuxGuidanceReceipt,
-	buildTmuxSubagentLaunchPlan,
 	launchDefaultTmuxIfNeeded,
+} from "#pi/cli/launch-tmux";
+import {
+	buildTmuxSubagentLaunchPlan,
 	PI_SUBAGENT_TMUX_TARGET_KIND_ENV,
 	type TmuxSpawnOptions,
 	type TmuxSpawnResult,
-} from "#pi/cli/launch-tmux";
+} from "#pi/subagents/tmux-launch";
 
 describe("tmux launch", () => {
 	test("builds a detached tmux launch plan for interactive --tmux", () => {

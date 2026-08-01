@@ -1,7 +1,8 @@
 import { spawnProcess } from "@tsuuanmi/pi-agent/node";
 import { Markdown, type MarkdownTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
-import type { ExtensionFactory } from "#pi/runtime/extension-types";
+import type { ExtensionFactory } from "#pi/api/extension-types";
+import { selectConfig } from "#pi/cli/config-selector";
 import {
 	APP_NAME,
 	CONFIG_DIR_NAME,
@@ -11,7 +12,6 @@ import {
 	PACKAGE_NAME,
 	type SelfUpdateCommand,
 } from "#pi/config/config";
-import { selectConfig } from "#pi/package-manager/config-selector";
 import { DefaultPackageManager } from "#pi/package-manager/package-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
@@ -351,7 +351,12 @@ export async function handleConfigCommand(
 	void runtimeOptions;
 	const settingsManager = createCommandSettingsManager({ cwd, agentDir });
 	reportSettingsErrors(settingsManager, "config command");
-	const packageManager = new DefaultPackageManager({ cwd, agentDir, settingsManager });
+	const packageManager = new DefaultPackageManager({
+		cwd,
+		agentDir,
+		settingsManager,
+		commandOutput: "inherit",
+	});
 	const resolvedPaths = await packageManager.resolve();
 
 	await selectConfig({
@@ -421,7 +426,12 @@ export async function handlePackageCommand(
 	reportSettingsErrors(settingsManager, "package command");
 	const selfUpdateNpmCommand = settingsManager.getGlobalSettings().npmCommand;
 
-	const packageManager = new DefaultPackageManager({ cwd, agentDir, settingsManager });
+	const packageManager = new DefaultPackageManager({
+		cwd,
+		agentDir,
+		settingsManager,
+		commandOutput: "inherit",
+	});
 
 	packageManager.setProgressCallback((event) => {
 		if (event.type === "start") {

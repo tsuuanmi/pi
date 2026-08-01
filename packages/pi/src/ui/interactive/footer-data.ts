@@ -358,9 +358,3 @@ export class FooterDataProvider {
 		}
 	}
 }
-
-/** Read-only view for extensions - excludes setExtensionStatus, setAvailableProviderCount and dispose */
-export type ReadonlyFooterDataProvider = Pick<
-	FooterDataProvider,
-	"getGitBranch" | "getExtensionStatuses" | "getAvailableProviderCount" | "getCodexUsageSummary" | "onBranchChange"
->;

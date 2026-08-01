@@ -66,10 +66,13 @@ export interface PackageManager {
 	getInstalledPath(source: string, scope: "user" | "project"): string | undefined;
 }
 
+export type CommandOutput = "inherit" | "ignore";
+
 export interface PackageManagerOptions {
 	cwd: string;
 	agentDir: string;
 	settingsManager: SettingsManager;
+	commandOutput?: CommandOutput;
 }
 
 export type SourceScope = "user" | "project" | "temporary";

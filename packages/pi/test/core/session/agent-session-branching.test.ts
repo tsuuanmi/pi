@@ -17,10 +17,9 @@ import type { AgentSession } from "#pi/runtime/agent";
 import {
 	type AgentSessionRuntime,
 	type CreateAgentSessionRuntimeFactory,
-	createAgentSessionFromServices,
 	createAgentSessionRuntime,
-	createAgentSessionServices,
 } from "#pi/runtime/runtime";
+import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/runtime/services";
 import { SessionManager } from "#pi/session/manager";
 import { API_KEY } from "#pi-test/test-utils";
 

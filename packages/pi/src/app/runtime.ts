@@ -1,17 +1,21 @@
 import { modelsAreEqual } from "@tsuuanmi/pi-ai";
-import type { ExtensionFactory } from "#pi/runtime/extension-types";
+import type { ExtensionFactory } from "#pi/api/extension-types";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import type { Args } from "#pi/cli/args";
 import { applyHttpProxySettings, configureHttpDispatcher } from "#pi/exec/http-dispatcher";
 import type { ModelRegistry } from "#pi/model/model-registry";
 import { resolveCliModel, resolveModelScope, type ScopedModel } from "#pi/model/model-resolver";
-import type { CreateAgentSessionOptions } from "#pi/runtime/sdk";
-import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime, type AgentSessionRuntime } from "#pi/runtime/runtime";
+import {
+	type AgentSessionRuntime,
+	type CreateAgentSessionRuntimeFactory,
+	createAgentSessionRuntime,
+} from "#pi/runtime/runtime";
 import {
 	type AgentSessionRuntimeDiagnostic,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
 } from "#pi/runtime/services";
+import type { CreateAgentSessionOptions } from "#pi/runtime/session-factory";
 import type { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
@@ -69,7 +73,9 @@ function buildSessionOptions(
 		const savedProvider = settingsManager.getDefaultProvider();
 		const savedModelId = settingsManager.getDefaultModel();
 		const savedModel = savedProvider && savedModelId ? modelRegistry.find(savedProvider, savedModelId) : undefined;
-		const savedInScope = savedModel ? scopedModels.find((scoped) => modelsAreEqual(scoped.model, savedModel)) : undefined;
+		const savedInScope = savedModel
+			? scopedModels.find((scoped) => modelsAreEqual(scoped.model, savedModel))
+			: undefined;
 
 		const selected = savedInScope ?? scopedModels[0];
 		options.model = selected.model;

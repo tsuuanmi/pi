@@ -7,20 +7,20 @@
 
 import { initTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
-import type { ExtensionFactory } from "#pi/runtime/extension-types";
-import { type Args, parseArgs, printHelp } from "#pi/cli/args";
-import { launchDefaultTmuxIfNeeded } from "#pi/cli/launch-tmux";
-import { listModels } from "#pi/cli/list-models";
-import { VERSION } from "#pi/config/config";
-import { showDeprecationWarnings } from "#pi/migrations";
+import type { ExtensionFactory } from "#pi/api/extension-types";
 import { bootstrapStartup, runStartupMigrations } from "#pi/app/bootstrap";
 import { runStartupCommands } from "#pi/app/commands";
 import { applyStdoutMode, prepareInput, resolveStartupMode } from "#pi/app/input";
 import { runAppMode } from "#pi/app/modes";
-import { createStartupSession } from "#pi/app/session";
-import { type AgentSessionRuntimeDiagnostic } from "#pi/runtime/services";
-import { SettingsManager } from "#pi/settings/settings-manager";
 import { collectSettingsDiagnostics, createAppRuntime } from "#pi/app/runtime";
+import { createStartupSession } from "#pi/app/session";
+import { parseArgs, printHelp } from "#pi/cli/args";
+import { launchDefaultTmuxIfNeeded } from "#pi/cli/launch-tmux";
+import { listModels } from "#pi/cli/list-models";
+import { VERSION } from "#pi/config/config";
+import { showDeprecationWarnings } from "#pi/migrations";
+import type { AgentSessionRuntimeDiagnostic } from "#pi/runtime/services";
+import { SettingsManager } from "#pi/settings/settings-manager";
 import { resetTimings, time } from "#pi/telemetry/timings";
 
 function reportDiagnostics(diagnostics: readonly AgentSessionRuntimeDiagnostic[]): void {
@@ -30,7 +30,6 @@ function reportDiagnostics(diagnostics: readonly AgentSessionRuntimeDiagnostic[]
 		console.error(color(`${prefix}${diagnostic.message}`));
 	}
 }
-
 
 export interface MainOptions {
 	extensionFactories?: ExtensionFactory[];

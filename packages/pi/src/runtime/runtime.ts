@@ -5,7 +5,7 @@ import type { ReplacedSessionContext, SessionShutdownEvent, SessionStartEvent } 
 import { emitSessionShutdownEvent } from "#pi/extensions/runner";
 import type { AgentSession } from "#pi/runtime/agent";
 import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "#pi/runtime/services";
-import type { CreateAgentSessionResult } from "#pi/runtime/sdk";
+import type { CreateAgentSessionResult } from "#pi/runtime/session-factory";
 import { assertSessionCwdExists } from "#pi/session/cwd";
 import { SessionManager } from "#pi/session/manager";
 
@@ -414,12 +414,3 @@ export async function createAgentSessionRuntime(
 		result.modelStartupWarning,
 	);
 }
-
-export {
-	type AgentSessionRuntimeDiagnostic,
-	type AgentSessionServices,
-	type CreateAgentSessionFromServicesOptions,
-	type CreateAgentSessionServicesOptions,
-	createAgentSessionFromServices,
-	createAgentSessionServices,
-} from "#pi/runtime/services";

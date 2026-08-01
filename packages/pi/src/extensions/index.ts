@@ -7,7 +7,6 @@ export type {
 	AgentToolUpdateCallback,
 	ToolExecutionMode,
 } from "@tsuuanmi/pi-agent";
-export type { ExecOptions, ExecResult } from "#pi/exec/exec";
 export type {
 	CompactOptions,
 	ContextUsage,
@@ -15,7 +14,7 @@ export type {
 	ExtensionContext,
 	ExtensionMode,
 	ReplacedSessionContext,
-} from "#pi/runtime/context-types";
+} from "#pi/api/context-types";
 export type {
 	AppendEntryHandler,
 	Extension,
@@ -45,9 +44,10 @@ export type {
 	SetModelHandler,
 	SetThinkingLevelHandler,
 	ToolInfo,
-} from "#pi/runtime/extension-types";
+} from "#pi/api/extension-types";
 export type { ProviderConfig, ProviderModelConfig } from "#pi/api/provider-types";
 export type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
+export { defineTool } from "#pi/api/tool-types";
 export type {
 	AutocompleteProviderFactory,
 	EditorFactory,
@@ -58,6 +58,7 @@ export type {
 	WidgetPlacement,
 	WorkingIndicatorOptions,
 } from "#pi/api/ui-types";
+export type { ExecOptions, ExecResult } from "#pi/exec/exec";
 export type {
 	AfterProviderResponseEvent,
 	AgentEndEvent,
@@ -121,8 +122,6 @@ export type {
 	WriteToolCallEvent,
 	WriteToolResultEvent,
 } from "#pi/extensions/hooks/event-types";
-export type { ExtensionHandler, ExtensionHookAPI } from "#pi/extensions/hooks/extension-api-hooks";
-export { defineTool } from "#pi/api/tool-types";
 export {
 	isBashToolResult,
 	isEditToolResult,
@@ -133,10 +132,7 @@ export {
 	isToolCallEventType,
 	isWriteToolResult,
 } from "#pi/extensions/hooks/event-types";
-export {
-	createExtensionRuntime,
-	discoverAndLoadExtensions,
-} from "#pi/extensions/loader";
+export type { ExtensionHandler, ExtensionHookAPI } from "#pi/extensions/hooks/extension-api-hooks";
 export type {
 	ExtensionErrorListener,
 	ForkHandler,

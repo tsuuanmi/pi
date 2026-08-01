@@ -4,8 +4,9 @@
 
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import chalk from "chalk";
-import type { ExtensionFlag } from "#pi/runtime/extension-types";
+import type { ExtensionFlag } from "#pi/api/extension-types";
 import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, ENV_SESSION_DIR } from "#pi/config/config";
+import { isValidThinkingLevel, THINKING_LEVELS } from "#pi/model/thinking-level";
 
 export type Mode = "text" | "json" | "rpc";
 
@@ -29,12 +30,6 @@ export interface Args {
 	/** Unknown flags (potentially extension flags) - map of flag name to value */
 	unknownFlags: Map<string, boolean | string>;
 	diagnostics: Array<{ type: "warning" | "error"; message: string }>;
-}
-
-const VALID_THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh"] as const;
-
-export function isValidThinkingLevel(level: string): level is ThinkingLevel {
-	return VALID_THINKING_LEVELS.includes(level as ThinkingLevel);
 }
 
 export function parseArgs(args: string[]): Args {
@@ -80,7 +75,7 @@ export function parseArgs(args: string[]): Args {
 			} else {
 				result.diagnostics.push({
 					type: "warning",
-					message: `Invalid thinking level "${level}". Valid values: ${VALID_THINKING_LEVELS.join(", ")}`,
+					message: `Invalid thinking level "${level}". Valid values: ${THINKING_LEVELS.join(", ")}`,
 				});
 			}
 		} else if (arg === "--print" || arg === "-p") {

@@ -8,7 +8,7 @@ import type {
 	ExtensionCommandContext,
 	ExtensionContext,
 	ReplacedSessionContext,
-} from "#pi/runtime/context-types";
+} from "#pi/api/context-types";
 import type { ProviderConfig } from "#pi/api/provider-types";
 import type { ToolDefinition } from "#pi/api/tool-types";
 import type { ExecOptions, ExecResult } from "#pi/exec/exec";

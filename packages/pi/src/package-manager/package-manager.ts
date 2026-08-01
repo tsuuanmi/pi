@@ -1,20 +1,10 @@
-import type { ChildProcess, ChildProcessByStdio } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
-import type { Readable } from "node:stream";
-import {
-	canonicalizePath,
-	isLocalPath,
-	markPathIgnoredByCloudSync,
-	resolvePath,
-	spawnProcess,
-	spawnProcessSync,
-} from "@tsuuanmi/pi-agent/node";
+import { canonicalizePath, isLocalPath, markPathIgnoredByCloudSync, resolvePath } from "@tsuuanmi/pi-agent/node";
 import { globSync } from "glob";
 import { maxSatisfying, rcompare, satisfies } from "semver";
 import { CONFIG_DIR_NAME } from "#pi/config/config";
-import { isStdoutTakenOver } from "#pi/modes/output-guard";
 import type { PackageSource, SettingsManager } from "#pi/settings/settings-manager";
 import { type GitSource, parseGitUrl } from "#pi/utils/fs/git";
 import type {
@@ -43,6 +33,7 @@ import type {
 } from "./types.ts";
 
 export type {
+	CommandOutput,
 	ConfiguredPackage,
 	MissingSourceAction,
 	PackageManager,
@@ -60,7 +51,6 @@ import {
 	BUNDLED_PACKAGE_SOURCES,
 	GIT_UPDATE_CONCURRENCY,
 	getBundledPackageRoot,
-	getEnv,
 	getExtensionTempFolder,
 	getHomeDir,
 	getNpmVersionRange,
@@ -71,6 +61,7 @@ import {
 	TOP_LEVEL_RESOURCE_TYPES,
 	UPDATE_CHECK_CONCURRENCY,
 } from "#pi/package-manager/utils";
+import { CommandRunner } from "./commands.ts";
 import {
 	collectAncestorAgentsResourceDirs,
 	collectAutoExtensionEntries,
@@ -92,14 +83,14 @@ export class DefaultPackageManager implements PackageManager {
 	private cwd: string;
 	private agentDir: string;
 	private settingsManager: SettingsManager;
-	private globalNpmRoot: string | undefined;
-	private globalNpmRootCommandKey: string | undefined;
+	private commandRunner: CommandRunner;
 	private progressCallback: ProgressCallback | undefined;
 
 	constructor(options: PackageManagerOptions) {
 		this.cwd = resolvePath(options.cwd);
 		this.agentDir = resolvePath(options.agentDir);
 		this.settingsManager = options.settingsManager;
+		this.commandRunner = new CommandRunner(options.commandOutput ?? "ignore");
 	}
 
 	setProgressCallback(callback: ProgressCallback | undefined): void {
@@ -834,7 +825,7 @@ export class DefaultPackageManager implements PackageManager {
 
 	private async getLatestNpmVersion(packageSpec: string, range?: string): Promise<string> {
 		const npmCommand = this.getNpmCommand();
-		const stdout = await this.runCommandCapture(
+		const stdout = await this.commandRunner.capture(
 			npmCommand.command,
 			[...npmCommand.args, "view", packageSpec, "version", "--json"],
 			{ cwd: this.cwd, timeoutMs: NETWORK_TIMEOUT_MS },
@@ -859,7 +850,7 @@ export class DefaultPackageManager implements PackageManager {
 		}
 
 		try {
-			const localHead = await this.runCommandCapture("git", ["rev-parse", "HEAD"], {
+			const localHead = await this.commandRunner.capture("git", ["rev-parse", "HEAD"], {
 				cwd: installedPath,
 				timeoutMs: NETWORK_TIMEOUT_MS,
 			});
@@ -892,7 +883,7 @@ export class DefaultPackageManager implements PackageManager {
 		installedPath: string,
 	): Promise<{ ref: string; head: string; fetchArgs: string[] }> {
 		try {
-			const upstream = await this.runCommandCapture("git", ["rev-parse", "--abbrev-ref", "@{upstream}"], {
+			const upstream = await this.commandRunner.capture("git", ["rev-parse", "--abbrev-ref", "@{upstream}"], {
 				cwd: installedPath,
 				timeoutMs: NETWORK_TIMEOUT_MS,
 			});
@@ -904,7 +895,7 @@ export class DefaultPackageManager implements PackageManager {
 			if (!branch) {
 				throw new Error("Missing upstream branch name");
 			}
-			const head = await this.runCommandCapture("git", ["rev-parse", "@{upstream}"], {
+			const head = await this.commandRunner.capture("git", ["rev-parse", "@{upstream}"], {
 				cwd: installedPath,
 				timeoutMs: NETWORK_TIMEOUT_MS,
 			});
@@ -920,15 +911,19 @@ export class DefaultPackageManager implements PackageManager {
 				],
 			};
 		} catch {
-			await this.runCommand("git", ["remote", "set-head", "origin", "-a"], { cwd: installedPath }).catch(() => {});
-			const head = await this.runCommandCapture("git", ["rev-parse", "origin/HEAD"], {
+			await this.commandRunner
+				.run("git", ["remote", "set-head", "origin", "-a"], { cwd: installedPath })
+				.catch(() => {});
+			const head = await this.commandRunner.capture("git", ["rev-parse", "origin/HEAD"], {
 				cwd: installedPath,
 				timeoutMs: NETWORK_TIMEOUT_MS,
 			});
-			const originHeadRef = await this.runCommandCapture("git", ["symbolic-ref", "refs/remotes/origin/HEAD"], {
-				cwd: installedPath,
-				timeoutMs: NETWORK_TIMEOUT_MS,
-			}).catch(() => "");
+			const originHeadRef = await this.commandRunner
+				.capture("git", ["symbolic-ref", "refs/remotes/origin/HEAD"], {
+					cwd: installedPath,
+					timeoutMs: NETWORK_TIMEOUT_MS,
+				})
+				.catch(() => "");
 			const branch = originHeadRef.trim().replace(/^refs\/remotes\/origin\//, "");
 			if (branch) {
 				return {
@@ -953,7 +948,7 @@ export class DefaultPackageManager implements PackageManager {
 
 	private async getGitUpstreamRef(installedPath: string): Promise<string | undefined> {
 		try {
-			const upstream = await this.runCommandCapture("git", ["rev-parse", "--abbrev-ref", "@{upstream}"], {
+			const upstream = await this.commandRunner.capture("git", ["rev-parse", "--abbrev-ref", "@{upstream}"], {
 				cwd: installedPath,
 				timeoutMs: NETWORK_TIMEOUT_MS,
 			});
@@ -969,7 +964,7 @@ export class DefaultPackageManager implements PackageManager {
 	}
 
 	private runGitRemoteCommand(installedPath: string, args: string[]): Promise<string> {
-		return this.runCommandCapture("git", args, {
+		return this.commandRunner.capture("git", args, {
 			cwd: installedPath,
 			timeoutMs: NETWORK_TIMEOUT_MS,
 			env: {
@@ -1083,7 +1078,7 @@ export class DefaultPackageManager implements PackageManager {
 
 	private async runNpmCommand(args: string[], options?: { cwd?: string }): Promise<void> {
 		const npmCommand = this.getNpmCommand();
-		await this.runCommand(npmCommand.command, [...npmCommand.args, ...args], options);
+		await this.commandRunner.run(npmCommand.command, [...npmCommand.args, ...args], options);
 	}
 
 	private getGitDependencyInstallArgs(): string[] {
@@ -1092,11 +1087,6 @@ export class DefaultPackageManager implements PackageManager {
 			return ["install"];
 		}
 		return ["install", "--omit=dev"];
-	}
-
-	private runNpmCommandSync(args: string[]): string {
-		const npmCommand = this.getNpmCommand();
-		return this.runCommandSync(npmCommand.command, [...npmCommand.args, ...args]);
 	}
 
 	private getNpmInstallArgs(specs: string[], installRoot: string): string[] {
@@ -1157,9 +1147,9 @@ export class DefaultPackageManager implements PackageManager {
 		}
 		mkdirSync(dirname(targetDir), { recursive: true });
 
-		await this.runCommand("git", ["clone", source.repo, targetDir]);
+		await this.commandRunner.run("git", ["clone", source.repo, targetDir]);
 		if (source.ref) {
-			await this.runCommand("git", ["checkout", source.ref], { cwd: targetDir });
+			await this.commandRunner.run("git", ["checkout", source.ref], { cwd: targetDir });
 		}
 		const packageJsonPath = join(targetDir, "package.json");
 		if (existsSync(packageJsonPath)) {
@@ -1185,14 +1175,14 @@ export class DefaultPackageManager implements PackageManager {
 
 	private async ensureGitRef(targetDir: string, fetchArgs: string[], ref: string): Promise<void> {
 		// Fetch only the ref we will reset to, avoiding unrelated branch/tag noise.
-		await this.runCommand("git", fetchArgs, { cwd: targetDir });
+		await this.commandRunner.run("git", fetchArgs, { cwd: targetDir });
 
-		const localHead = await this.runCommandCapture("git", ["rev-parse", "HEAD"], {
+		const localHead = await this.commandRunner.capture("git", ["rev-parse", "HEAD"], {
 			cwd: targetDir,
 			timeoutMs: NETWORK_TIMEOUT_MS,
 		});
 		const commitRef = `${ref}^{commit}`;
-		const targetHead = await this.runCommandCapture("git", ["rev-parse", commitRef], {
+		const targetHead = await this.commandRunner.capture("git", ["rev-parse", commitRef], {
 			cwd: targetDir,
 			timeoutMs: NETWORK_TIMEOUT_MS,
 		});
@@ -1200,10 +1190,10 @@ export class DefaultPackageManager implements PackageManager {
 			return;
 		}
 
-		await this.runCommand("git", ["reset", "--hard", commitRef], { cwd: targetDir });
+		await this.commandRunner.run("git", ["reset", "--hard", commitRef], { cwd: targetDir });
 
 		// Clean untracked files (extensions should be pristine)
-		await this.runCommand("git", ["clean", "-fdx"], { cwd: targetDir });
+		await this.commandRunner.run("git", ["clean", "-fdx"], { cwd: targetDir });
 
 		const packageJsonPath = join(targetDir, "package.json");
 		if (existsSync(packageJsonPath)) {
@@ -1286,36 +1276,6 @@ export class DefaultPackageManager implements PackageManager {
 		return join(this.agentDir, "npm");
 	}
 
-	private getGlobalNpmRoot(): string {
-		const npmCommand = this.getNpmCommand();
-		const commandKey = [npmCommand.command, ...npmCommand.args].join("\0");
-		if (this.globalNpmRoot && this.globalNpmRootCommandKey === commandKey) {
-			return this.globalNpmRoot;
-		}
-		if (this.getPackageManagerName() === "bun") {
-			const binDir = this.runNpmCommandSync(["pm", "bin", "-g"]).trim();
-			this.globalNpmRoot = join(dirname(binDir), "install", "global", "node_modules");
-		} else {
-			this.globalNpmRoot = this.runNpmCommandSync(["root", "-g"]).trim();
-		}
-		this.globalNpmRootCommandKey = commandKey;
-		return this.globalNpmRoot;
-	}
-
-	private getPnpmGlobalPackagePath(packageName: string): string | undefined {
-		if (this.getPackageManagerName() !== "pnpm") {
-			return undefined;
-		}
-
-		const output = this.runNpmCommandSync(["list", "-g", "--depth", "0", "--json"]);
-		const entries = JSON.parse(output) as Array<{ dependencies?: Record<string, { path?: string }> }>;
-		for (const entry of entries) {
-			const path = entry.dependencies?.[packageName]?.path;
-			if (path) return path;
-		}
-		return undefined;
-	}
-
 	private getManagedNpmInstallPath(source: NpmSource, scope: SourceScope): string {
 		if (scope === "temporary") {
 			return join(this.getTemporaryDir("npm"), "node_modules", source.name);
@@ -1326,21 +1286,8 @@ export class DefaultPackageManager implements PackageManager {
 		return join(this.agentDir, "npm", "node_modules", source.name);
 	}
 
-	private getLegacyGlobalNpmInstallPath(source: NpmSource): string | undefined {
-		try {
-			return this.getPnpmGlobalPackagePath(source.name) ?? join(this.getGlobalNpmRoot(), source.name);
-		} catch {
-			return undefined;
-		}
-	}
-
 	private getNpmInstallPath(source: NpmSource, scope: SourceScope): string {
-		const managedPath = this.getManagedNpmInstallPath(source, scope);
-		if (scope !== "user" || existsSync(managedPath)) {
-			return managedPath;
-		}
-		const legacyPath = this.getLegacyGlobalNpmInstallPath(source);
-		return legacyPath && existsSync(legacyPath) ? legacyPath : managedPath;
+		return this.getManagedNpmInstallPath(source, scope);
 	}
 
 	private getGitInstallPath(source: GitSource, scope: SourceScope): string {
@@ -1882,101 +1829,5 @@ export class DefaultPackageManager implements PackageManager {
 			commands: mapToResolved(accumulator.commands),
 			agents: mapToResolved(accumulator.agents),
 		};
-	}
-
-	private spawnCommand(command: string, args: string[], options?: { cwd?: string }): ChildProcess {
-		const env = getEnv();
-		return spawnProcess(command, args, {
-			cwd: options?.cwd,
-			stdio: isStdoutTakenOver() ? ["ignore", 2, 2] : "inherit",
-			env,
-		});
-	}
-
-	private spawnCaptureCommand(
-		command: string,
-		args: string[],
-		options?: { cwd?: string; env?: Record<string, string> },
-	): ChildProcessByStdio<null, Readable, Readable> {
-		const baseEnv = getEnv();
-		const env = options?.env ? { ...baseEnv, ...options.env } : baseEnv;
-		return spawnProcess(command, args, {
-			cwd: options?.cwd,
-			stdio: ["ignore", "pipe", "pipe"],
-			env,
-		});
-	}
-
-	private runCommandCapture(
-		command: string,
-		args: string[],
-		options?: { cwd?: string; timeoutMs?: number; env?: Record<string, string> },
-	): Promise<string> {
-		return new Promise((resolvePromise, reject) => {
-			const child = this.spawnCaptureCommand(command, args, options);
-			let stdout = "";
-			let stderr = "";
-			let timedOut = false;
-			const timeout =
-				typeof options?.timeoutMs === "number"
-					? setTimeout(() => {
-							timedOut = true;
-							child.kill();
-						}, options.timeoutMs)
-					: undefined;
-
-			child.stdout?.on("data", (data) => {
-				stdout += data.toString();
-			});
-			child.stderr?.on("data", (data) => {
-				stderr += data.toString();
-			});
-			child.once("error", (error) => {
-				if (timeout) clearTimeout(timeout);
-				reject(error);
-			});
-			child.once("close", (code, signal) => {
-				if (timeout) clearTimeout(timeout);
-				if (timedOut) {
-					reject(new Error(`${command} ${args.join(" ")} timed out after ${options?.timeoutMs}ms`));
-					return;
-				}
-				if (code === 0) {
-					resolvePromise(stdout.trim());
-					return;
-				}
-				const exitStatus = code === null ? `signal ${signal ?? "unknown"}` : `code ${code}`;
-				reject(new Error(`${command} ${args.join(" ")} failed with ${exitStatus}: ${stderr || stdout}`));
-			});
-		});
-	}
-
-	private runCommand(command: string, args: string[], options?: { cwd?: string }): Promise<void> {
-		return new Promise((resolvePromise, reject) => {
-			const child = this.spawnCommand(command, args, options);
-			child.on("error", reject);
-			child.on("exit", (code) => {
-				if (code === 0) {
-					resolvePromise();
-				} else {
-					reject(new Error(`${command} ${args.join(" ")} failed with code ${code}`));
-				}
-			});
-		});
-	}
-
-	private runCommandSync(command: string, args: string[]): string {
-		const env = getEnv();
-		const result = spawnProcessSync(command, args, {
-			stdio: ["ignore", "pipe", "pipe"],
-			encoding: "utf-8",
-			env,
-		});
-		if (result.error || result.status !== 0) {
-			throw new Error(
-				`Failed to run ${command} ${args.join(" ")}: ${result.error?.message || result.stderr || result.stdout}`,
-			);
-		}
-		return (result.stdout || result.stderr || "").trim();
 	}
 }

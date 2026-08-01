@@ -9,13 +9,8 @@ import { Agent } from "@tsuuanmi/pi-agent";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
-import {
-	createExtensionRuntime,
-	type Extension,
-	type SessionBeforeCompactEvent,
-	type SessionCompactEvent,
-	type SessionEvent,
-} from "#pi/extensions/index";
+import type { Extension, SessionBeforeCompactEvent, SessionCompactEvent, SessionEvent } from "#pi/extensions/index";
+import { createExtensionRuntime } from "#pi/extensions/loader";
 import { createCodingTools } from "#pi/index";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";

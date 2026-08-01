@@ -36,7 +36,6 @@ import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import { type AgentProfile, loadAgentProfile } from "#pi/agents/agent-profiles";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
-import { buildTmuxSubagentLaunchPlan, isTmuxCommandAvailable, type TmuxSpawnSync } from "#pi/cli/launch-tmux";
 import type { AgentSession } from "#pi/runtime/agent";
 import {
 	type AgentSessionServices,
@@ -45,6 +44,7 @@ import {
 } from "#pi/runtime/services";
 import { sessionStateDir } from "#pi/session/layout";
 import { SessionManager } from "#pi/session/manager";
+import { buildTmuxSubagentLaunchPlan, isTmuxCommandAvailable, type TmuxSpawnSync } from "#pi/subagents/tmux-launch";
 
 export type {
 	SubagentAttachResult,

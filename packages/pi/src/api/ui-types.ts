@@ -1,3 +1,4 @@
+import type { OpenAICodexUsageSummary } from "@tsuuanmi/pi-ai";
 import type {
 	AutocompleteProvider,
 	Component,
@@ -8,8 +9,15 @@ import type {
 	Theme,
 	TUI,
 } from "@tsuuanmi/pi-tui";
-import type { ReadonlyFooterDataProvider } from "#pi/ui/interactive/footer-data";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
+
+export interface ReadonlyFooterDataProvider {
+	getGitBranch(): string | null;
+	getExtensionStatuses(): ReadonlyMap<string, string>;
+	getAvailableProviderCount(): number;
+	getCodexUsageSummary(): OpenAICodexUsageSummary | null;
+	onBranchChange(callback: () => void): () => void;
+}
 
 // ============================================================================
 // UI Context

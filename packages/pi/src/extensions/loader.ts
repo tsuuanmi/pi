@@ -39,9 +39,7 @@ import type { ExecOptions } from "#pi/exec/exec";
 import { execCommand } from "#pi/exec/exec";
 import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
 import { type HookHandlerFn, registerExtensionHook } from "#pi/extensions/hooks/registration";
-// NOTE: This import works because loader.ts exports are NOT re-exported from index.ts,
-// avoiding a circular dependency. Extensions can import from @tsuuanmi/pi.
-import * as _bundledPi from "#pi/index";
+import * as _bundledPi from "#pi/extensions/public-api";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
 
 /** Modules available to extensions via virtualModules (for compiled Bun binary) */
@@ -96,7 +94,7 @@ function getAliases(): Record<string, string> {
 	const piEntry = packageIndex;
 	const piConfigEntry = path.resolve(__dirname, "..", "config", "config.js");
 	const piAgentEntry = resolveWorkspaceOrImport("agent/dist/index.js", "@tsuuanmi/pi-agent");
-	const piAgentNodeEntry = resolveWorkspaceOrImport("agent/dist/node.js", "@tsuuanmi/pi-agent/node");
+	const piAgentNodeEntry = resolveWorkspaceOrImport("agent/dist/node/node.js", "@tsuuanmi/pi-agent/node");
 	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@tsuuanmi/pi-tui");
 	const piAiEntry = resolveWorkspaceOrImport("ai/dist/index.js", "@tsuuanmi/pi-ai");
 	const piAiOauthEntry = resolveWorkspaceOrImport("ai/dist/auth/oauth/index.js", "@tsuuanmi/pi-ai/oauth");

@@ -3,9 +3,9 @@ import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { SubagentTmuxTarget, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { buildTmuxCommands, createSubagentRunIdentity } from "@tsuuanmi/pi-agent";
-import { PI_SUBAGENT_TMUX_TARGET_KIND_ENV, PI_SUBAGENT_WORKER_REQUEST_ENV } from "#pi/cli/launch-tmux";
 import { createAgentSessionServices } from "#pi/runtime/services";
 import { SubagentManager } from "#pi/subagents/subagents";
+import { PI_SUBAGENT_TMUX_TARGET_KIND_ENV, PI_SUBAGENT_WORKER_REQUEST_ENV } from "#pi/subagents/tmux-launch";
 
 export class SubagentWorkerMetadataInvalidError extends Error {
 	readonly code = "worker_metadata_invalid";

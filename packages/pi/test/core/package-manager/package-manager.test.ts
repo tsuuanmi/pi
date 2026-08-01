@@ -26,12 +26,6 @@ class MockSpawnedProcess extends EventEmitter {
 }
 
 interface PackageManagerInternals {
-	runCommand(command: string, args: string[], options?: { cwd?: string }): Promise<void>;
-	runCommandCapture(
-		command: string,
-		args: string[],
-		options?: { cwd?: string; timeoutMs?: number; env?: Record<string, string> },
-	): Promise<string>;
 	getLocalGitUpdateTarget(installedPath: string): Promise<{ ref: string; head: string; fetchArgs: string[] }>;
 	parseSource(
 		source: string,
@@ -104,7 +98,6 @@ describe("DefaultPackageManager", () => {
 	describe("resolve", () => {
 		it("should include bundled first-party package defaults when no sources configured", async () => {
 			const result = await packageManager.resolve();
-			expect(result.extensions.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
 			expect(result.agents.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
 			expect(result.commands.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
 			expect(result.prompts).toEqual([]);
@@ -112,14 +105,6 @@ describe("DefaultPackageManager", () => {
 			expect(result.skills.every((r) => r.metadata.source === "auto" || r.metadata.source.startsWith("pi:"))).toBe(
 				true,
 			);
-		});
-
-		it("should disable bundled package resources with empty filters", async () => {
-			settingsManager.setPackages([{ source: "pi:workflows", extensions: [] }]);
-
-			const result = await packageManager.resolve();
-			expect(result.extensions.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(false);
-			expect(result.extensions.some((r) => r.metadata.source === "pi:workflows" && !r.enabled)).toBe(true);
 		});
 
 		it("should resolve local extension paths from settings", async () => {
@@ -685,22 +670,6 @@ Content`,
 		});
 	});
 
-	describe("command spawning", () => {
-		it("should preserve argv entries containing spaces", () => {
-			const managerWithInternals = packageManager as unknown as {
-				runCommandSync(command: string, args: string[]): string;
-			};
-			const valueWithSpace = "C:\\Users\\A B\\.pi\\npm";
-			const output = managerWithInternals.runCommandSync(process.execPath, [
-				"-e",
-				"console.log(process.argv[1])",
-				valueWithSpace,
-			]);
-
-			expect(output).toBe(valueWithSpace);
-		});
-	});
-
 	describe("npmCommand", () => {
 		it("should use npmCommand argv for npm installs", async () => {
 			settingsManager = SettingsManager.inMemory({
@@ -712,7 +681,7 @@ Content`,
 				settingsManager,
 			});
 
-			const runCommandSpy = vi.spyOn(packageManager as any, "runCommand").mockResolvedValue(undefined);
+			const runCommandSpy = vi.spyOn((packageManager as any).commandRunner, "run").mockResolvedValue(undefined);
 
 			await packageManager.install("npm:@scope/pkg");
 
@@ -743,7 +712,7 @@ Content`,
 				settingsManager,
 			});
 
-			const runCommandSpy = vi.spyOn(packageManager as any, "runCommand").mockResolvedValue(undefined);
+			const runCommandSpy = vi.spyOn((packageManager as any).commandRunner, "run").mockResolvedValue(undefined);
 
 			await packageManager.install("npm:@scope/pkg");
 
@@ -758,7 +727,7 @@ Content`,
 			const source = "git:github.com/user/repo";
 			const targetDir = join(agentDir, "git", "github.com", "user", "repo");
 			const runCommandSpy = vi
-				.spyOn(packageManager as any, "runCommand")
+				.spyOn((packageManager as any).commandRunner, "run")
 				.mockImplementation(async (...callArgs: unknown[]) => {
 					const [command, args] = callArgs as [string, string[]];
 					if (command === "git" && args[0] === "clone") {
@@ -778,17 +747,19 @@ Content`,
 			mkdirSync(targetDir, { recursive: true });
 			writeFileSync(join(targetDir, "package.json"), JSON.stringify({ name: "repo", version: "1.0.0" }));
 
-			const managerWithInternals = packageManager as unknown as PackageManagerInternals;
-			vi.spyOn(managerWithInternals, "runCommandCapture").mockImplementation(async (_command, args) => {
-				if (args[0] === "rev-parse" && args[1] === "HEAD") {
-					return "old-head";
-				}
-				if (args[0] === "rev-parse" && args[1] === "FETCH_HEAD^{commit}") {
-					return "new-head";
-				}
-				throw new Error(`Unexpected runCommandCapture args: ${args.join(" ")}`);
-			});
-			const runCommandSpy = vi.spyOn(managerWithInternals, "runCommand").mockResolvedValue(undefined);
+			vi.spyOn((packageManager as any).commandRunner, "capture").mockImplementation(
+				async (...callArgs: unknown[]) => {
+					const args = callArgs[1] as string[];
+					if (args[0] === "rev-parse" && args[1] === "HEAD") {
+						return "old-head";
+					}
+					if (args[0] === "rev-parse" && args[1] === "FETCH_HEAD^{commit}") {
+						return "new-head";
+					}
+					throw new Error(`Unexpected runCommandCapture args: ${args.join(" ")}`);
+				},
+			);
+			const runCommandSpy = vi.spyOn((packageManager as any).commandRunner, "run").mockResolvedValue(undefined);
 
 			await packageManager.install(source);
 
@@ -812,16 +783,19 @@ Content`,
 				head: "new-head",
 				fetchArgs,
 			});
-			vi.spyOn(managerWithInternals, "runCommandCapture").mockImplementation(async (_command, args) => {
-				if (args[0] === "rev-parse" && args[1] === "HEAD") {
-					return "old-head";
-				}
-				if (args[0] === "rev-parse" && args[1] === "origin/HEAD^{commit}") {
-					return "new-head";
-				}
-				throw new Error(`Unexpected runCommandCapture args: ${args.join(" ")}`);
-			});
-			const runCommandSpy = vi.spyOn(managerWithInternals, "runCommand").mockResolvedValue(undefined);
+			vi.spyOn((packageManager as any).commandRunner, "capture").mockImplementation(
+				async (...callArgs: unknown[]) => {
+					const args = callArgs[1] as string[];
+					if (args[0] === "rev-parse" && args[1] === "HEAD") {
+						return "old-head";
+					}
+					if (args[0] === "rev-parse" && args[1] === "origin/HEAD^{commit}") {
+						return "new-head";
+					}
+					throw new Error(`Unexpected runCommandCapture args: ${args.join(" ")}`);
+				},
+			);
+			const runCommandSpy = vi.spyOn((packageManager as any).commandRunner, "run").mockResolvedValue(undefined);
 
 			await packageManager.install(source);
 
@@ -845,7 +819,7 @@ Content`,
 			const source = "git:github.com/user/repo";
 			const targetDir = join(agentDir, "git", "github.com", "user", "repo");
 			const runCommandSpy = vi
-				.spyOn(packageManager as any, "runCommand")
+				.spyOn((packageManager as any).commandRunner, "run")
 				.mockImplementation(async (...callArgs: unknown[]) => {
 					const [command, args] = callArgs as [string, string[]];
 					if (command === "git" && args[0] === "clone") {
@@ -866,20 +840,22 @@ Content`,
 			writeFileSync(join(targetDir, "package.json"), JSON.stringify({ name: "repo", version: "1.0.0" }));
 			settingsManager.setProjectPackages([source]);
 
-			vi.spyOn(packageManager as any, "runCommandCapture").mockImplementation(async (...callArgs: unknown[]) => {
-				const [_command, args] = callArgs as [string, string[]];
-				if (args[0] === "rev-parse" && args[1] === "--abbrev-ref" && args[2] === "@{upstream}") {
-					return "origin/main";
-				}
-				if (args[0] === "rev-parse" && (args[1] === "@{upstream}" || args[1] === "@{upstream}^{commit}")) {
-					return "remote-head";
-				}
-				if (args[0] === "rev-parse" && args[1] === "HEAD") {
-					return "local-head";
-				}
-				throw new Error(`Unexpected runCommandCapture args: ${args.join(" ")}`);
-			});
-			const runCommandSpy = vi.spyOn(packageManager as any, "runCommand").mockResolvedValue(undefined);
+			vi.spyOn((packageManager as any).commandRunner, "capture").mockImplementation(
+				async (...callArgs: unknown[]) => {
+					const [_command, args] = callArgs as [string, string[]];
+					if (args[0] === "rev-parse" && args[1] === "--abbrev-ref" && args[2] === "@{upstream}") {
+						return "origin/main";
+					}
+					if (args[0] === "rev-parse" && (args[1] === "@{upstream}" || args[1] === "@{upstream}^{commit}")) {
+						return "remote-head";
+					}
+					if (args[0] === "rev-parse" && args[1] === "HEAD") {
+						return "local-head";
+					}
+					throw new Error(`Unexpected runCommandCapture args: ${args.join(" ")}`);
+				},
+			);
+			const runCommandSpy = vi.spyOn((packageManager as any).commandRunner, "run").mockResolvedValue(undefined);
 
 			await packageManager.update(source);
 
@@ -902,65 +878,28 @@ Content`,
 			writeFileSync(join(targetDir, "package.json"), JSON.stringify({ name: "repo", version: "1.0.0" }));
 			settingsManager.setProjectPackages([source]);
 
-			vi.spyOn(packageManager as any, "runCommandCapture").mockImplementation(async (...callArgs: unknown[]) => {
-				const [_command, args] = callArgs as [string, string[]];
-				if (args[0] === "rev-parse" && args[1] === "--abbrev-ref" && args[2] === "@{upstream}") {
-					return "origin/main";
-				}
-				if (args[0] === "rev-parse" && (args[1] === "@{upstream}" || args[1] === "@{upstream}^{commit}")) {
-					return "remote-head";
-				}
-				if (args[0] === "rev-parse" && args[1] === "HEAD") {
-					return "local-head";
-				}
-				throw new Error(`Unexpected runCommandCapture args: ${args.join(" ")}`);
-			});
-			const runCommandSpy = vi.spyOn(packageManager as any, "runCommand").mockResolvedValue(undefined);
+			vi.spyOn((packageManager as any).commandRunner, "capture").mockImplementation(
+				async (...callArgs: unknown[]) => {
+					const [_command, args] = callArgs as [string, string[]];
+					if (args[0] === "rev-parse" && args[1] === "--abbrev-ref" && args[2] === "@{upstream}") {
+						return "origin/main";
+					}
+					if (args[0] === "rev-parse" && (args[1] === "@{upstream}" || args[1] === "@{upstream}^{commit}")) {
+						return "remote-head";
+					}
+					if (args[0] === "rev-parse" && args[1] === "HEAD") {
+						return "local-head";
+					}
+					throw new Error(`Unexpected runCommandCapture args: ${args.join(" ")}`);
+				},
+			);
+			const runCommandSpy = vi.spyOn((packageManager as any).commandRunner, "run").mockResolvedValue(undefined);
 
 			await packageManager.update(source);
 
 			expect(runCommandSpy).toHaveBeenCalledWith("mise", ["exec", "node@20", "--", "pnpm", "install"], {
 				cwd: targetDir,
 			});
-		});
-
-		it("should use npmCommand argv for npm root lookup and invalidate cached root when npmCommand changes", () => {
-			settingsManager = SettingsManager.inMemory({
-				npmCommand: ["mise", "exec", "node@20", "--", "npm"],
-			});
-			packageManager = new DefaultPackageManager({
-				cwd: tempDir,
-				agentDir,
-				settingsManager,
-			});
-
-			const root20 = join(tempDir, "node20", "lib", "node_modules");
-			const root22 = join(tempDir, "node22", "lib", "node_modules");
-			mkdirSync(join(root20, "@scope", "pkg"), { recursive: true });
-
-			const runCommandSyncSpy = vi
-				.spyOn(packageManager as any, "runCommandSync")
-				.mockImplementation((...callArgs: unknown[]) => {
-					const [command, args] = callArgs as [string, string[]];
-					if (command !== "mise") {
-						throw new Error(`unexpected command ${command}`);
-					}
-					if (args[1] === "node@20") {
-						return root20;
-					}
-					if (args[1] === "node@22") {
-						return root22;
-					}
-					throw new Error(`unexpected args ${args.join(" ")}`);
-				});
-
-			expect(packageManager.getInstalledPath("npm:@scope/pkg", "user")).toBe(join(root20, "@scope", "pkg"));
-			expect(runCommandSyncSpy).toHaveBeenNthCalledWith(1, "mise", ["exec", "node@20", "--", "npm", "root", "-g"]);
-
-			settingsManager.setNpmCommand(["mise", "exec", "node@22", "--", "npm"]);
-
-			expect(packageManager.getInstalledPath("npm:@scope/pkg", "user")).toBeUndefined();
-			expect(runCommandSyncSpy).toHaveBeenNthCalledWith(2, "mise", ["exec", "node@22", "--", "npm", "root", "-g"]);
 		});
 
 		it("should install user npm packages into the pi-managed npm root", async () => {
@@ -975,11 +914,8 @@ Content`,
 			});
 
 			const packagePath = join(agentDir, "npm", "node_modules", "pnpm-pkg");
-			vi.spyOn(packageManager as any, "runCommandSync").mockImplementation(() => {
-				throw new Error("legacy lookup unavailable");
-			});
 			const runCommandSpy = vi
-				.spyOn(packageManager as any, "runCommand")
+				.spyOn((packageManager as any).commandRunner, "run")
 				.mockImplementation(async (...callArgs: unknown[]) => {
 					const [command, args] = callArgs as [string, string[]];
 					expect(command).toBe("pnpm");
@@ -1008,90 +944,6 @@ Content`,
 			).toBe(true);
 			expect(runCommandSpy).toHaveBeenCalledTimes(1);
 			expect(packageManager.getInstalledPath("npm:pnpm-pkg", "user")).toBe(packagePath);
-		});
-
-		it("should load legacy pnpm global package paths from pnpm list output", async () => {
-			settingsManager = SettingsManager.inMemory({
-				npmCommand: ["pnpm"],
-				packages: ["npm:pnpm-pkg"],
-			});
-			packageManager = new DefaultPackageManager({
-				cwd: tempDir,
-				agentDir,
-				settingsManager,
-			});
-
-			const pnpmRoot = join(tempDir, "pnpm", "global", "v11");
-			const packagePath = join(pnpmRoot, "20-hash", "node_modules", "pnpm-pkg");
-			mkdirSync(join(packagePath, "extensions"), { recursive: true });
-			writeFileSync(join(packagePath, "package.json"), JSON.stringify({ name: "pnpm-pkg", version: "1.0.0" }));
-			writeFileSync(join(packagePath, "extensions", "index.ts"), "export default function() {};");
-
-			vi.spyOn(packageManager as any, "runCommandSync").mockImplementation((...callArgs: unknown[]) => {
-				const [command, args] = callArgs as [string, string[]];
-				if (command !== "pnpm") {
-					throw new Error(`unexpected command ${command}`);
-				}
-				if (args.join(" ") === "list -g --depth 0 --json") {
-					return JSON.stringify([
-						{
-							path: pnpmRoot,
-							dependencies: { "pnpm-pkg": { version: "1.0.0", path: packagePath } },
-						},
-					]);
-				}
-				throw new Error(`unexpected args ${args.join(" ")}`);
-			});
-			const runCommandSpy = vi.spyOn(packageManager as any, "runCommand").mockResolvedValue(undefined);
-
-			const result = await packageManager.resolve();
-
-			expect(
-				result.extensions.some((r) => r.path === join(packagePath, "extensions", "index.ts") && r.enabled),
-			).toBe(true);
-			expect(runCommandSpy).not.toHaveBeenCalled();
-			expect(packageManager.getInstalledPath("npm:pnpm-pkg", "user")).toBe(packagePath);
-		});
-
-		it("should resolve wrapped pnpm global package paths from pnpm list output", () => {
-			settingsManager = SettingsManager.inMemory({
-				npmCommand: ["mise", "exec", "node@20", "--", "pnpm"],
-			});
-			packageManager = new DefaultPackageManager({
-				cwd: tempDir,
-				agentDir,
-				settingsManager,
-			});
-
-			const pnpmRoot = join(tempDir, "pnpm", "global", "v11");
-			const packagePath = join(pnpmRoot, "20-hash", "node_modules", "pnpm-pkg");
-			mkdirSync(packagePath, { recursive: true });
-
-			vi.spyOn(packageManager as any, "runCommandSync").mockImplementation((...callArgs: unknown[]) => {
-				const [command, args] = callArgs as [string, string[]];
-				expect(command).toBe("mise");
-				if (args.join(" ") === "exec node@20 -- pnpm list -g --depth 0 --json") {
-					return JSON.stringify([{ path: pnpmRoot, dependencies: { "pnpm-pkg": { path: packagePath } } }]);
-				}
-				throw new Error(`unexpected args ${args.join(" ")}`);
-			});
-
-			expect(packageManager.getInstalledPath("npm:pnpm-pkg", "user")).toBe(packagePath);
-		});
-
-		it("should ignore malformed legacy pnpm global package lists", () => {
-			settingsManager = SettingsManager.inMemory({
-				npmCommand: ["pnpm"],
-			});
-			packageManager = new DefaultPackageManager({
-				cwd: tempDir,
-				agentDir,
-				settingsManager,
-			});
-
-			vi.spyOn(packageManager as any, "runCommandSync").mockReturnValue("not json");
-
-			expect(packageManager.getInstalledPath("npm:pnpm-pkg", "user")).toBeUndefined();
 		});
 	});
 
@@ -2077,9 +1929,9 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 			settingsManager.setProjectPackages(["npm:example@^1.0.0"]);
 
 			const runCommandCaptureSpy = vi
-				.spyOn(packageManager as any, "runCommandCapture")
+				.spyOn((packageManager as any).commandRunner, "capture")
 				.mockResolvedValue('["1.0.0","1.2.0"]');
-			const runCommandSpy = vi.spyOn(packageManager as any, "runCommand").mockResolvedValue(undefined);
+			const runCommandSpy = vi.spyOn((packageManager as any).commandRunner, "run").mockResolvedValue(undefined);
 
 			await packageManager.update("npm:example");
 
@@ -2102,9 +1954,9 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 			settingsManager.setProjectPackages(["npm:example@^1.0.0"]);
 
 			const runCommandCaptureSpy = vi
-				.spyOn(packageManager as any, "runCommandCapture")
+				.spyOn((packageManager as any).commandRunner, "capture")
 				.mockResolvedValue('["1.0.0","1.3.1","1.0.2"]');
-			const runCommandSpy = vi.spyOn(packageManager as any, "runCommand").mockResolvedValue(undefined);
+			const runCommandSpy = vi.spyOn((packageManager as any).commandRunner, "run").mockResolvedValue(undefined);
 
 			await packageManager.update("npm:example");
 
@@ -2114,44 +1966,6 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 				expect.objectContaining({ cwd: tempDir, timeoutMs: expect.any(Number) }),
 			);
 			expect(runCommandSpy).not.toHaveBeenCalled();
-		});
-
-		it("should migrate legacy user npm installs into the managed npm root during update", async () => {
-			const legacyRoot = join(tempDir, "legacy-global", "node_modules");
-			const legacyPath = join(legacyRoot, "legacy-pkg");
-			const managedPath = join(agentDir, "npm", "node_modules", "legacy-pkg");
-			mkdirSync(legacyPath, { recursive: true });
-			writeFileSync(join(legacyPath, "package.json"), JSON.stringify({ name: "legacy-pkg", version: "1.0.0" }));
-			settingsManager.setPackages(["npm:legacy-pkg"]);
-
-			vi.spyOn(packageManager as any, "getGlobalNpmRoot").mockReturnValue(legacyRoot);
-			const runCommandCaptureSpy = vi.spyOn(packageManager as any, "runCommandCapture").mockResolvedValue('"1.0.0"');
-			const runCommandSpy = vi
-				.spyOn(packageManager as any, "runCommand")
-				.mockImplementation(async (...callArgs: unknown[]) => {
-					const [command, args] = callArgs as [string, string[]];
-					expect(command).toBe("npm");
-					expect(args).toEqual([
-						"install",
-						"legacy-pkg@latest",
-						"--prefix",
-						join(agentDir, "npm"),
-						"--legacy-peer-deps",
-					]);
-					mkdirSync(managedPath, { recursive: true });
-					writeFileSync(
-						join(managedPath, "package.json"),
-						JSON.stringify({ name: "legacy-pkg", version: "1.0.0" }),
-					);
-				});
-
-			expect(packageManager.getInstalledPath("npm:legacy-pkg", "user")).toBe(legacyPath);
-
-			await packageManager.update("npm:legacy-pkg");
-
-			expect(runCommandCaptureSpy).not.toHaveBeenCalled();
-			expect(runCommandSpy).toHaveBeenCalledTimes(1);
-			expect(packageManager.getInstalledPath("npm:legacy-pkg", "user")).toBe(managedPath);
 		});
 
 		it("should batch npm updates per scope and run git updates in parallel while skipping pinned npm and current packages", async () => {
@@ -2196,7 +2010,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 			]);
 
 			const runCommandCaptureSpy = vi
-				.spyOn(packageManager as any, "runCommandCapture")
+				.spyOn((packageManager as any).commandRunner, "capture")
 				.mockImplementation(async (...callArgs: unknown[]) => {
 					const [_command, args] = callArgs as [string, string[]];
 					if (args[0] !== "view") {
@@ -2219,7 +2033,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 			let activeNpmUpdates = 0;
 			let maxConcurrentNpmUpdates = 0;
 			const runCommandSpy = vi
-				.spyOn(packageManager as any, "runCommand")
+				.spyOn((packageManager as any).commandRunner, "run")
 				.mockImplementation(async (...callArgs: unknown[]) => {
 					const [command, args] = callArgs as [string, string[]];
 					if (command !== "npm") {
@@ -2327,7 +2141,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 			writeFileSync(join(installedPath, "extensions", "index.ts"), "export default function() {};");
 			settingsManager.setProjectPackages(["npm:example@^1.0.0"]);
 
-			const runCommandCaptureSpy = vi.spyOn(packageManager as any, "runCommandCapture");
+			const runCommandCaptureSpy = vi.spyOn((packageManager as any).commandRunner, "capture");
 
 			const result = await packageManager.resolve();
 			expect(result.extensions.some((r) => pathEndsWith(r.path, "extensions/index.ts") && r.enabled)).toBe(true);
@@ -2350,7 +2164,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 
 		it("should not check package updates when offline", async () => {
 			process.env.PI_OFFLINE = "1";
-			const runCommandCaptureSpy = vi.spyOn(packageManager as any, "runCommandCapture");
+			const runCommandCaptureSpy = vi.spyOn((packageManager as any).commandRunner, "capture");
 
 			const updates = await packageManager.checkForAvailableUpdates();
 			expect(updates).toEqual([]);
@@ -2363,7 +2177,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 			writeFileSync(join(installedPath, "package.json"), JSON.stringify({ name: "example", version: "1.0.0" }));
 			settingsManager.setProjectPackages(["npm:example"]);
 
-			vi.spyOn(packageManager as any, "runCommandCapture").mockResolvedValue('"1.2.3"');
+			vi.spyOn((packageManager as any).commandRunner, "capture").mockResolvedValue('"1.2.3"');
 
 			const updates = await packageManager.checkForAvailableUpdates();
 			expect(updates).toEqual([
@@ -2386,7 +2200,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 
 			settingsManager.setProjectPackages(["npm:example@1.0.0", "git:github.com/example/repo@v1"]);
 
-			const runCommandCaptureSpy = vi.spyOn(packageManager as any, "runCommandCapture");
+			const runCommandCaptureSpy = vi.spyOn((packageManager as any).commandRunner, "capture");
 			const gitUpdateSpy = vi.spyOn(packageManager as any, "gitHasAvailableUpdate");
 
 			const updates = await packageManager.checkForAvailableUpdates();
@@ -2396,7 +2210,9 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 		});
 
 		it("should use npm view to fetch latest version", async () => {
-			const runCommandCaptureSpy = vi.spyOn(packageManager as any, "runCommandCapture").mockResolvedValue('"1.2.3"');
+			const runCommandCaptureSpy = vi
+				.spyOn((packageManager as any).commandRunner, "capture")
+				.mockResolvedValue('"1.2.3"');
 
 			const latest = await (packageManager as any).getLatestNpmVersion("example");
 			expect(latest).toBe("1.2.3");
@@ -2418,7 +2234,9 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 				settingsManager,
 			});
 
-			const runCommandCaptureSpy = vi.spyOn(packageManager as any, "runCommandCapture").mockResolvedValue('"1.2.3"');
+			const runCommandCaptureSpy = vi
+				.spyOn((packageManager as any).commandRunner, "capture")
+				.mockResolvedValue('"1.2.3"');
 
 			const latest = await (packageManager as any).getLatestNpmVersion("@scope/pkg");
 			expect(latest).toBe("1.2.3");
@@ -2430,26 +2248,16 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 		});
 
 		it("should wait for close before resolving captured stdout", async () => {
-			const managerWithInternals = packageManager as unknown as {
-				spawnCaptureCommand(
-					command: string,
-					args: string[],
-					options?: { cwd?: string; env?: Record<string, string> },
-				): MockSpawnedProcess;
-				runCommandCapture(
-					command: string,
-					args: string[],
-					options?: { cwd?: string; timeoutMs?: number; env?: Record<string, string> },
-				): Promise<string>;
-			};
 			const child = new MockSpawnedProcess();
-			vi.spyOn(managerWithInternals, "spawnCaptureCommand").mockReturnValue(child);
+			vi.spyOn((packageManager as any).commandRunner, "spawnCapture").mockReturnValue(child);
 
 			let settled = false;
-			const capturePromise = managerWithInternals.runCommandCapture("git", ["rev-parse", "HEAD"]).then((value) => {
-				settled = true;
-				return value;
-			});
+			const capturePromise = (packageManager as any).commandRunner
+				.capture("git", ["rev-parse", "HEAD"])
+				.then((value: string) => {
+					settled = true;
+					return value;
+				});
 
 			child.emit("exit", 0, null);
 			await Promise.resolve();

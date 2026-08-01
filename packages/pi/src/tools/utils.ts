@@ -5,8 +5,8 @@ import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { getCapabilities, hyperlink, stripAnsi } from "@tsuuanmi/pi-tui";
+import type { ExtensionContext } from "#pi/api/context-types";
 import type { ToolDefinition } from "#pi/api/tool-types";
-import type { ExtensionContext } from "#pi/runtime/context-types";
 import { sanitizeBinaryOutput } from "#pi/utils/system/shell";
 
 export function shortenPath(path: unknown): string {

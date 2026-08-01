@@ -7,9 +7,9 @@ import { AuthStorage } from "#pi/auth/auth-storage";
 import { ExtensionRunner } from "#pi/extensions/runner";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
+import { DefaultResourceLoader } from "#pi/resources/resource-loader";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { DefaultResourceLoader } from "#pi/resources/resource-loader";
 import type { Skill } from "#pi/skills/skills";
 
 const BUILT_IN_WORKFLOW_COMMANDS = new Set(["deep-interview", "ralplan", "team", "ultragoal"]);
@@ -28,6 +28,7 @@ const BUILT_IN_WORKFLOW_AGENT_TOOLS = new Set(["team_spawn_task_agent", "ultrago
 function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions: T[]): T[] {
 	return extensions.filter(
 		(extension) =>
+			!extension.path.startsWith("<inline:") &&
 			!extension.path.endsWith("/src/packages/pi/extensions/builtin-workflows.ts") &&
 			!extension.path.endsWith("/dist/packages/pi/extensions/builtin-workflows.js") &&
 			!extension.path.includes("/pi/src/extensions/builtin-workflows.ts") &&

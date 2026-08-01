@@ -2,12 +2,13 @@
 
 import type { Component, EditorComponent, OverlayHandle, OverlayOptions, StatusLineComponent } from "@tsuuanmi/pi-tui";
 import { Container, Spacer, Text, type Theme, type TUI, theme } from "@tsuuanmi/pi-tui";
+import type { ReadonlyFooterDataProvider } from "#pi/api/ui-types";
 import type { ExtensionUIDialogOptions, ExtensionWidgetOptions } from "#pi/extensions/index";
+import type { KeybindingsManager } from "#pi/settings/keybindings";
 import { ExtensionEditorComponent } from "#pi/ui/interactive/components/extension-editor";
 import { ExtensionInputComponent } from "#pi/ui/interactive/components/extension-input";
 import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension-selector";
-import type { FooterDataProvider, ReadonlyFooterDataProvider } from "#pi/ui/interactive/footer-data";
-import type { KeybindingsManager } from "#pi/settings/keybindings";
+import type { FooterDataProvider } from "#pi/ui/interactive/footer-data";
 
 /** Interface for components that can be expanded/collapsed */
 interface Expandable {

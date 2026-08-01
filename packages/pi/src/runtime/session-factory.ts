@@ -9,12 +9,12 @@ import { DEFAULT_THINKING_LEVEL } from "#pi/config/defaults";
 import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { findInitialModel } from "#pi/model/model-resolver";
+import type { ResourceLoader } from "#pi/resources/resource-loader";
+import { DefaultResourceLoader } from "#pi/resources/resource-loader";
 import { AgentSession } from "#pi/runtime/agent";
 import { optimizeRetainedContext } from "#pi/runtime/context-optimization";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import type { ResourceLoader } from "#pi/resources/resource-loader";
-import { DefaultResourceLoader } from "#pi/resources/resource-loader";
 import type { SubagentManager } from "#pi/subagents/subagents";
 import { time } from "#pi/telemetry/timings";
 import {
@@ -114,7 +114,6 @@ export type {
 	SlashCommandSource,
 	ToolDefinition,
 } from "#pi/extensions/index";
-export * from "#pi/runtime/runtime";
 export type { PromptTemplate } from "#pi/skills/prompt-templates";
 export type { Skill } from "#pi/skills/skills";
 export type { Tool } from "#pi/tools/default-tools";
@@ -255,8 +254,11 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	const allowedToolNames = options.tools ?? (options.noTools === "all" ? [] : undefined);
 	const excludedToolNames = options.excludeTools;
 	const excludedToolNameSet = excludedToolNames ? new Set(excludedToolNames) : undefined;
-	const initialActiveToolNames: string[] = (
-		options.tools ? [...options.tools] : options.noTools ? [] : defaultActiveToolNames
+	const initialActiveToolNames = Array.from(
+		new Set([
+			...(options.tools ? [...options.tools] : options.noTools ? [] : defaultActiveToolNames),
+			...(options.customTools?.map((tool) => tool.name) ?? []),
+		]),
 	).filter((name) => !excludedToolNameSet?.has(name));
 
 	let agent: Agent;

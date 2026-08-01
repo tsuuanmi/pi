@@ -38,6 +38,13 @@ const allowedImports = {
 };
 
 const ignoredDirectories = new Set(["dist", "node_modules"]);
+const internalRules = [
+	{ directory: "packages/pi/src/api", forbidden: ["#pi/runtime/", "#pi/ui/"] },
+	{ directory: "packages/pi/src/model", forbidden: ["#pi/cli/"] },
+	{ directory: "packages/pi/src/package-manager", forbidden: ["#pi/cli/", "#pi/modes/", "#pi/ui/"] },
+	{ directory: "packages/pi/src/subagents", forbidden: ["#pi/cli/"] },
+	{ directory: "packages/pi/src/extensions/loader.ts", forbidden: ["#pi/index"] },
+];
 const importPattern = /(?:import|export)\s+(?:type\s+)?(?:[^"'()]*?\s+from\s+)?["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)/g;
 const failures = [];
 
@@ -45,6 +52,10 @@ for (const [owner, root] of Object.entries(packageRoots)) {
 	const src = join(root, "src");
 	if (!exists(src)) continue;
 	for (const file of collectTsFiles(src)) checkFile(owner, file);
+}
+for (const rule of internalRules) {
+	const files = rule.directory.endsWith(".ts") ? [rule.directory] : collectTsFiles(rule.directory);
+	for (const file of files) checkInternalFile(rule, file);
 }
 
 if (failures.length > 0) {
@@ -60,6 +71,15 @@ function checkFile(owner, file) {
 		if (!target || target === owner) continue;
 		if (allowedImports[owner]?.has(target)) continue;
 		failures.push(`${relative(process.cwd(), file)}: ${specifier} is not allowed in ${owner}`);
+	}
+}
+
+function checkInternalFile(rule, file) {
+	const text = readFileSync(file, "utf8");
+	for (const specifier of importSpecifiers(text)) {
+		if (rule.forbidden.some((prefix) => specifier.startsWith(prefix))) {
+			failures.push(`${relative(process.cwd(), file)}: ${specifier} violates its internal boundary`);
+		}
 	}
 }
 

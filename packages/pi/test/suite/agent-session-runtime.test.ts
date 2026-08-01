@@ -11,14 +11,10 @@ import type {
 	SessionShutdownEvent,
 	SessionStartEvent,
 } from "#pi/index";
-import {
-	type CreateAgentSessionRuntimeFactory,
-	createAgentSessionFromServices,
-	createAgentSessionRuntime,
-	createAgentSessionServices,
-} from "#pi/runtime/runtime";
+import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/runtime/runtime";
+import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/runtime/services";
 import { SessionManager } from "#pi/session/manager";
-import { testAssistantMessage, registerTestProvider } from "#pi-test/helpers/provider";
+import { registerTestProvider, testAssistantMessage } from "#pi-test/helpers/provider";
 
 type RecordedSessionEvent =
 	| SessionBeforeSwitchEvent
@@ -49,7 +45,11 @@ describe("AgentSessionRuntime characterization", () => {
 				{ id: "test-2", reasoning: false },
 			],
 		});
-		testProvider.setResponses([testAssistantMessage("one"), testAssistantMessage("two"), testAssistantMessage("three")]);
+		testProvider.setResponses([
+			testAssistantMessage("one"),
+			testAssistantMessage("two"),
+			testAssistantMessage("three"),
+		]);
 
 		const authStorage = AuthStorage.inMemory();
 		authStorage.setRuntimeApiKey(testProvider.getModel().provider, "test-key");
@@ -340,7 +340,11 @@ describe("AgentSessionRuntime characterization", () => {
 				{ id: "test-2", reasoning: false },
 			],
 		});
-		testProvider.setResponses([testAssistantMessage("one"), testAssistantMessage("two"), testAssistantMessage("three")]);
+		testProvider.setResponses([
+			testAssistantMessage("one"),
+			testAssistantMessage("two"),
+			testAssistantMessage("three"),
+		]);
 
 		const authStorage = AuthStorage.inMemory();
 		authStorage.setRuntimeApiKey(testProvider.getModel().provider, "test-key");

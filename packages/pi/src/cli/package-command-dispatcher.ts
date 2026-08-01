@@ -1,5 +1,5 @@
 import { basename, extname } from "node:path";
-import type { ExtensionFactory } from "#pi/runtime/extension-types";
+import type { ExtensionFactory } from "#pi/api/extension-types";
 import { getAgentDir } from "#pi/config/config";
 import { DefaultPackageManager, type ResolvedResource } from "#pi/package-manager/package-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";

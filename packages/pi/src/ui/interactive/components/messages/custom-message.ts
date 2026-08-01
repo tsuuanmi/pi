@@ -12,7 +12,7 @@ import {
 	Text,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import type { MessageRenderer } from "#pi/runtime/extension-types";
+import type { MessageRenderer } from "#pi/api/extension-types";
 
 /**
  * Component that renders a custom message entry from extensions.

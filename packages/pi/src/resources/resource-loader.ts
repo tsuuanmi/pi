@@ -1,7 +1,7 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
-import { loadThemeFromPath, type Theme } from "@tsuuanmi/pi-tui";
+import type { Theme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import {
 	type AgentProfileLoadResult,
@@ -10,16 +10,23 @@ import {
 } from "#pi/agents/agent-definitions";
 import { CONFIG_DIR_NAME } from "#pi/config/config";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
+import { loadProjectContextFiles } from "#pi/resources/context-files";
 
 export type { ResourceCollision, ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 
 import { canonicalizePath, isLocalPath, resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#pi/runtime/extension-types";
+import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#pi/api/extension-types";
 import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
 import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "#pi/extensions/loader";
-import { DefaultPackageManager, type PathMetadata, type ResolvedResource } from "#pi/package-manager/package-manager";
-import { createSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
 import { getBuiltinExtensionFactories } from "#pi/extensions/registry/builtin-extensions";
+import {
+	type CommandOutput,
+	DefaultPackageManager,
+	type PathMetadata,
+	type ResolvedResource,
+} from "#pi/package-manager/package-manager";
+import { createSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
+import { loadThemes } from "#pi/resources/themes";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import type { PromptTemplate } from "#pi/skills/prompt-templates";
 import { loadPromptTemplatesWithDiagnostics } from "#pi/skills/prompt-templates";
@@ -72,128 +79,14 @@ function getHomeDir(): string {
 	return process.env.HOME || homedir();
 }
 
-function loadContextFileFromDir(dir: string): { path: string; content: string } | null {
-	const candidates = ["AGENTS.md", "AGENTS.MD", "CLAUDE.md", "CLAUDE.MD"];
-	for (const filename of candidates) {
-		const filePath = join(dir, filename);
-		if (existsSync(filePath)) {
-			try {
-				return {
-					path: filePath,
-					content: readFileSync(filePath, "utf-8"),
-				};
-			} catch (error) {
-				console.error(chalk.yellow(`Warning: Could not read ${filePath}: ${error}`));
-			}
-		}
-	}
-	return null;
-}
-
-function loadTextFile(path: string): { path: string; content: string } | null {
-	if (!existsSync(path)) return null;
-	try {
-		return { path, content: readFileSync(path, "utf-8") };
-	} catch (error) {
-		console.error(chalk.yellow(`Warning: Could not read ${path}: ${error}`));
-		return null;
-	}
-}
-
-function loadRulesFromDir(dir: string): Array<{ path: string; content: string }> {
-	if (!existsSync(dir)) return [];
-	const rules: Array<{ path: string; content: string }> = [];
-	try {
-		const entries = readdirSync(dir, { withFileTypes: true });
-		for (const entry of entries) {
-			const fullPath = join(dir, entry.name);
-			let isFile = entry.isFile();
-			if (entry.isSymbolicLink()) {
-				try {
-					isFile = statSync(fullPath).isFile();
-				} catch {
-					continue;
-				}
-			}
-			if (!isFile || (!entry.name.endsWith(".md") && !entry.name.endsWith(".mdc"))) continue;
-			const rule = loadTextFile(fullPath);
-			if (rule) rules.push(rule);
-		}
-	} catch (error) {
-		console.error(chalk.yellow(`Warning: Could not read rules directory ${dir}: ${error}`));
-	}
-	return rules;
-}
-
 function standardAgentDirsForBase(baseDir: string): string[] {
 	return STANDARD_AGENT_DIR_NAMES.map((dirName) => join(baseDir, dirName));
-}
-
-export function loadProjectContextFiles(options: {
-	cwd: string;
-	agentDir: string;
-}): Array<{ path: string; content: string }> {
-	const resolvedCwd = resolvePath(options.cwd);
-	const resolvedAgentDir = resolvePath(options.agentDir);
-	const homeDir = resolvePath(getHomeDir());
-
-	const contextFiles: Array<{ path: string; content: string }> = [];
-	const seenPaths = new Set<string>();
-
-	const addContextFile = (file: { path: string; content: string } | null): void => {
-		if (!file) return;
-		const canonicalPath = canonicalizePath(file.path);
-		if (seenPaths.has(canonicalPath)) return;
-		contextFiles.push(file);
-		seenPaths.add(canonicalPath);
-	};
-
-	addContextFile(loadContextFileFromDir(resolvedAgentDir));
-	for (const dir of standardAgentDirsForBase(homeDir)) {
-		addContextFile(loadTextFile(join(dir, "AGENTS.md")));
-		for (const rule of loadRulesFromDir(join(dir, "rules"))) addContextFile(rule);
-	}
-
-	const ancestorContextFiles: Array<{ path: string; content: string }> = [];
-
-	let currentDir = resolvedCwd;
-	const root = resolve("/");
-
-	while (true) {
-		const discovered: Array<{ path: string; content: string }> = [];
-		const contextFile = loadContextFileFromDir(currentDir);
-		if (contextFile) discovered.push(contextFile);
-		if (currentDir !== homeDir) {
-			for (const dir of standardAgentDirsForBase(currentDir)) {
-				const standardContext = loadTextFile(join(dir, "AGENTS.md"));
-				if (standardContext) discovered.push(standardContext);
-				discovered.push(...loadRulesFromDir(join(dir, "rules")));
-			}
-		}
-		for (let index = discovered.length - 1; index >= 0; index--) {
-			const file = discovered[index]!;
-			const canonicalPath = canonicalizePath(file.path);
-			if (!seenPaths.has(canonicalPath)) {
-				ancestorContextFiles.unshift(file);
-				seenPaths.add(canonicalPath);
-			}
-		}
-
-		if (currentDir === root) break;
-
-		const parentDir = resolve(currentDir, "..");
-		if (parentDir === currentDir) break;
-		currentDir = parentDir;
-	}
-
-	contextFiles.push(...ancestorContextFiles);
-
-	return contextFiles;
 }
 
 export interface DefaultResourceLoaderOptions {
 	cwd: string;
 	agentDir: string;
+	commandOutput?: CommandOutput;
 	settingsManager?: SettingsManager;
 	eventBus?: EventBus;
 	additionalExtensionPaths?: string[];
@@ -295,6 +188,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 			cwd: this.cwd,
 			agentDir: this.agentDir,
 			settingsManager: this.settingsManager,
+			commandOutput: options.commandOutput,
 		});
 		this.additionalExtensionPaths = options.additionalExtensionPaths ?? [];
 		this.additionalSkillPaths = options.additionalSkillPaths ?? [];
@@ -721,7 +615,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 		if (this.noThemes && themePaths.length === 0) {
 			themesResult = { themes: [], diagnostics: [] };
 		} else {
-			const loaded = this.loadThemes(themePaths, false);
+			const loaded = loadThemes(themePaths, this.cwd);
 			const deduped = this.dedupeThemes(loaded.themes);
 			themesResult = { themes: deduped.themes, diagnostics: [...loaded.diagnostics, ...deduped.diagnostics] };
 		}
@@ -862,87 +756,6 @@ export class DefaultResourceLoader implements ResourceLoader {
 
 	private resolveResourcePath(p: string): string {
 		return resolvePath(p, this.cwd, { trim: true });
-	}
-
-	private loadThemes(
-		paths: string[],
-		includeDefaults: boolean = true,
-	): {
-		themes: Theme[];
-		diagnostics: ResourceDiagnostic[];
-	} {
-		const themes: Theme[] = [];
-		const diagnostics: ResourceDiagnostic[] = [];
-		if (includeDefaults) {
-			const defaultDirs = [join(this.agentDir, "themes"), join(this.cwd, CONFIG_DIR_NAME, "themes")];
-
-			for (const dir of defaultDirs) {
-				this.loadThemesFromDir(dir, themes, diagnostics);
-			}
-		}
-
-		for (const p of paths) {
-			const resolved = this.resolveResourcePath(p);
-			if (!existsSync(resolved)) {
-				diagnostics.push({ type: "warning", message: "theme path does not exist", path: resolved });
-				continue;
-			}
-
-			try {
-				const stats = statSync(resolved);
-				if (stats.isDirectory()) {
-					this.loadThemesFromDir(resolved, themes, diagnostics);
-				} else if (stats.isFile() && resolved.endsWith(".json")) {
-					this.loadThemeFromFile(resolved, themes, diagnostics);
-				} else {
-					diagnostics.push({ type: "warning", message: "theme path is not a json file", path: resolved });
-				}
-			} catch (error) {
-				const message = error instanceof Error ? error.message : "failed to read theme path";
-				diagnostics.push({ type: "warning", message, path: resolved });
-			}
-		}
-
-		return { themes, diagnostics };
-	}
-
-	private loadThemesFromDir(dir: string, themes: Theme[], diagnostics: ResourceDiagnostic[]): void {
-		if (!existsSync(dir)) {
-			return;
-		}
-
-		try {
-			const entries = readdirSync(dir, { withFileTypes: true });
-			for (const entry of entries) {
-				let isFile = entry.isFile();
-				if (entry.isSymbolicLink()) {
-					try {
-						isFile = statSync(join(dir, entry.name)).isFile();
-					} catch {
-						continue;
-					}
-				}
-				if (!isFile) {
-					continue;
-				}
-				if (!entry.name.endsWith(".json")) {
-					continue;
-				}
-				this.loadThemeFromFile(join(dir, entry.name), themes, diagnostics);
-			}
-		} catch (error) {
-			const message = error instanceof Error ? error.message : "failed to read theme directory";
-			diagnostics.push({ type: "warning", message, path: dir });
-		}
-	}
-
-	private loadThemeFromFile(filePath: string, themes: Theme[], diagnostics: ResourceDiagnostic[]): void {
-		try {
-			themes.push(loadThemeFromPath(filePath));
-		} catch (error) {
-			const message = error instanceof Error ? error.message : "failed to load theme";
-			diagnostics.push({ type: "warning", message, path: filePath });
-		}
 	}
 
 	private async loadExtensionFactories(runtime: ExtensionRuntime): Promise<{

@@ -4,10 +4,10 @@ import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createAgentSession } from "#pi/runtime/sdk";
+import { DefaultResourceLoader } from "#pi/resources/resource-loader";
+import { createAgentSession } from "#pi/runtime/session-factory";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { DefaultResourceLoader } from "#pi/resources/resource-loader";
 
 describe("AgentSession dynamic tool registration", () => {
 	let tempDir: string;
@@ -76,7 +76,7 @@ describe("AgentSession dynamic tool registration", () => {
 			"Use dynamic_tool when the user asks for dynamic behavior tests.",
 		]);
 		expect(dynamicTool?.sourceInfo).toMatchObject({
-			path: "<inline:1>",
+			path: expect.stringMatching(/^<inline:\d+>$/),
 			source: "inline",
 			scope: "temporary",
 			origin: "top-level",

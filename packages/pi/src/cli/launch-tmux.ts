@@ -2,16 +2,23 @@ import { spawnSync } from "node:child_process";
 import * as path from "node:path";
 import { STRUCTURED_RECEIPT_VERSION, type StructuredReceipt } from "@tsuuanmi/pi-agent";
 import type { Args } from "#pi/cli/args";
+import {
+	commandAvailable,
+	PI_TMUX_LAUNCHED_ENV,
+	resolvePiCommand,
+	resolveTmuxCommand,
+	sanitizeTmuxToken,
+	shellQuote,
+	type TmuxSpawnOptions,
+	type TmuxSpawnResult,
+	type TmuxSpawnSync,
+} from "#pi/subagents/tmux-launch";
 
 const PI_DEFAULT_TMUX_SESSION = "pi";
 const PI_TMUX_SESSION_PREFIX = `${PI_DEFAULT_TMUX_SESSION}_`;
-const PI_TMUX_COMMAND_ENV = "PI_TMUX_COMMAND";
 const PI_TMUX_PROFILE_ENV = "PI_TMUX_PROFILE";
 const PI_TMUX_MOUSE_ENV = "PI_MOUSE";
-const PI_TMUX_LAUNCHED_ENV = "PI_TMUX_LAUNCHED";
 const PI_LAUNCH_POLICY_ENV = "PI_LAUNCH_POLICY";
-export const PI_SUBAGENT_WORKER_REQUEST_ENV = "PI_SUBAGENT_WORKER_REQUEST";
-export const PI_SUBAGENT_TMUX_TARGET_KIND_ENV = "PI_SUBAGENT_TMUX_TARGET_KIND";
 const PI_TMUX_WINDOW_LABEL_MAX_WIDTH = 48;
 
 const PI_TMUX_PROFILE_OPTION = "@pi-profile";
@@ -41,23 +48,6 @@ export interface TmuxLaunchContext {
 	currentBranch?: string | null;
 	project?: string | null;
 	diagnosticWriter?: (message: string) => void;
-}
-
-export interface TmuxSpawnResult {
-	exitCode: number | null;
-	signalCode?: NodeJS.Signals | null;
-	stdout?: string;
-	stderr?: string;
-}
-
-export type TmuxSpawnSync = (command: string, args: string[], options: TmuxSpawnOptions) => TmuxSpawnResult;
-
-export interface TmuxSpawnOptions {
-	cwd: string;
-	env: NodeJS.ProcessEnv;
-	stdin: "inherit";
-	stdout: "inherit" | "pipe";
-	stderr: "inherit";
 }
 
 export interface TmuxLaunchPlan {
@@ -143,123 +133,10 @@ function isInteractiveRootLaunch(parsed: Args, tty: TtyState): boolean {
 	);
 }
 
-function shellQuote(value: string): string {
-	if (value.length === 0) return "''";
-	return `'${value.replace(/'/g, `'\\''`)}'`;
-}
-
-function isBunVirtualPath(value: string | undefined): boolean {
-	return value?.startsWith("/$bunfs/") === true;
-}
-
-function resolveCurrentPiCommand(context: { cwd: string; argv: string[]; execPath: string }): string[] {
-	const entrypoint = context.argv[1];
-	if (!entrypoint) return ["pi"];
-	if (isBunVirtualPath(entrypoint)) {
-		return isBunVirtualPath(context.execPath) ? ["pi"] : [context.execPath];
-	}
-	const resolvedEntrypoint = path.isAbsolute(entrypoint) ? entrypoint : path.resolve(context.cwd, entrypoint);
-	if (entrypoint.endsWith(".ts") || entrypoint.endsWith(".js") || entrypoint.endsWith(".mjs")) {
-		return [context.execPath, resolvedEntrypoint];
-	}
-	return [resolvedEntrypoint];
-}
-
 function buildInnerCommand(context: { cwd: string; argv: string[]; execPath: string }, rawArgs: string[]): string {
-	const command = resolveCurrentPiCommand(context);
+	const command = resolvePiCommand(context);
 	const quoted = [...command, ...rawArgs].map(shellQuote).join(" ");
 	return `exec env ${PI_TMUX_LAUNCHED_ENV}=1 ${quoted}`;
-}
-
-export interface TmuxSubagentLaunchContext {
-	cwd: string;
-	subagentId: string;
-	requestPath: string;
-	env?: NodeJS.ProcessEnv;
-	argv?: string[];
-	execPath?: string;
-	tmuxCommand?: string;
-	sessionName?: string;
-}
-
-export interface TmuxSubagentLaunchPlan {
-	tmuxCommand: string;
-	sessionName: string;
-	cwd: string;
-	requestPath: string;
-	innerCommand: string;
-	launchArgs: string[];
-	attachCommand: string;
-	inspectCommand: string;
-	cleanupCommand: string;
-	visibleByDefault: boolean;
-}
-
-export function buildTmuxSubagentLaunchPlan(context: TmuxSubagentLaunchContext): TmuxSubagentLaunchPlan {
-	const env = context.env ?? process.env;
-	const tmuxCommand = context.tmuxCommand ?? resolvePiTmuxCommand(env);
-	const sessionName = context.sessionName ?? `pi-worker-${sanitizeTmuxToken(context.subagentId)}`;
-	const cliCommand = resolveCurrentPiCommand({
-		cwd: context.cwd,
-		argv: context.argv ?? process.argv,
-		execPath: context.execPath ?? process.execPath,
-	});
-	const workerArgs = ["--subagent-worker", context.requestPath];
-	const quoted = [...cliCommand, ...workerArgs].map(shellQuote).join(" ");
-	const targetKind = env.TMUX ? "pane" : "session";
-	const innerCommand = `exec env ${PI_TMUX_LAUNCHED_ENV}=1 ${PI_SUBAGENT_TMUX_TARGET_KIND_ENV}=${shellQuote(targetKind)} ${PI_SUBAGENT_WORKER_REQUEST_ENV}=${shellQuote(
-		context.requestPath,
-	)} ${quoted}`;
-	const launchArgs = env.TMUX
-		? [
-				"split-window",
-				"-v",
-				"-c",
-				context.cwd,
-				"-P",
-				"-F",
-				"#{session_name}\t#{session_id}\t#{window_id}\t#{window_index}\t#{pane_id}\t#{pane_index}",
-				innerCommand,
-			]
-		: [
-				"new-session",
-				"-d",
-				"-s",
-				sessionName,
-				"-c",
-				context.cwd,
-				"-P",
-				"-F",
-				"#{session_name}\t#{session_id}",
-				innerCommand,
-			];
-	const visibleByDefault = true;
-	return {
-		tmuxCommand,
-		sessionName,
-		cwd: context.cwd,
-		requestPath: context.requestPath,
-		innerCommand,
-		launchArgs,
-		attachCommand: `${tmuxCommand} attach-session -t ${sessionName}`,
-		inspectCommand: `${tmuxCommand} list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{pane_current_command}'`,
-		cleanupCommand: `${tmuxCommand} kill-session -t ${sessionName}`,
-		visibleByDefault,
-	};
-}
-
-export function isTmuxCommandAvailable(command: string): boolean {
-	return commandAvailable(command);
-}
-
-function sanitizeTmuxToken(value: string): string {
-	return (
-		value
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, "-")
-			.replace(/-+/g, "-")
-			.replace(/^-|-$/g, "") || "default"
-	);
 }
 
 function buildPiTmuxSessionSlug(value: string): string {
@@ -311,15 +188,6 @@ export function buildPiTmuxWindowTitle(cwd: string, branch: string | null | unde
 	const remainingBranchWidth = PI_TMUX_WINDOW_LABEL_MAX_WIDTH - visibleWidth(project) - 1;
 	if (remainingBranchWidth <= 0) return truncateVisible(project, PI_TMUX_WINDOW_LABEL_MAX_WIDTH);
 	return `${project}:${truncateVisibleTail(trimmedBranch, remainingBranchWidth)}`;
-}
-
-function resolvePiTmuxCommand(env: NodeJS.ProcessEnv = process.env): string {
-	return env[PI_TMUX_COMMAND_ENV]?.trim() || "tmux";
-}
-
-function commandAvailable(command: string): boolean {
-	const result = spawnSync("sh", ["-c", `command -v -- ${shellQuote(command)}`], { stdio: "ignore" });
-	return result.status === 0;
 }
 
 function readCurrentBranch(cwd: string): string | null {
@@ -412,7 +280,7 @@ function renameExistingTmuxWindowIfNeeded(context: TmuxLaunchContext): void {
 	if ((context.platform ?? process.platform) === "win32") return;
 	const tty = context.tty ?? { stdin: Boolean(process.stdin.isTTY), stdout: Boolean(process.stdout.isTTY) };
 	if (!isInteractiveRootLaunch(context.parsed, tty)) return;
-	const tmuxCommand = resolvePiTmuxCommand(env);
+	const tmuxCommand = resolveTmuxCommand(env);
 	if (!(context.tmuxAvailable ?? commandAvailable(tmuxCommand))) return;
 	const cwd = context.cwd ?? process.cwd();
 	const branch = context.currentBranch ?? readCurrentBranch(cwd);
@@ -439,7 +307,7 @@ export function buildDefaultTmuxLaunchPlan(context: TmuxLaunchContext): TmuxLaun
 	if (!isInteractiveRootLaunch(context.parsed, tty)) return undefined;
 	const cwd = context.cwd ?? process.cwd();
 	const branch = context.currentBranch ?? readCurrentBranch(cwd);
-	const tmuxCommand = resolvePiTmuxCommand(env);
+	const tmuxCommand = resolveTmuxCommand(env);
 	if (!(context.tmuxAvailable ?? commandAvailable(tmuxCommand))) return undefined;
 	const sessionName = buildPiTmuxSessionName(env, { branch });
 	const innerCommand = buildInnerCommand(

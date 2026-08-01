@@ -1,4 +1,4 @@
-import type { ExtensionFactory } from "#pi/runtime/extension-types";
+import type { ExtensionFactory } from "#pi/api/extension-types";
 import { dispatchPreSessionPackageCommand } from "#pi/cli/package-command-dispatcher";
 import { handleConfigCommand, handlePackageCommand } from "#pi/cli/package-manager";
 import { runSubagentWorkerMain } from "#pi/subagents/tmux-worker";
