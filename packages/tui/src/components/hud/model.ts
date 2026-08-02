@@ -1,3 +1,6 @@
+import { stripAnsi } from "#tui/utilities/ansi";
+import { truncateToWidth } from "#tui/utilities/text";
+
 export type HudSeverity = "info" | "warning" | "blocked" | "error" | "success";
 
 export interface HudChip {
@@ -52,12 +55,11 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function sanitizeText(value: unknown, limit: number): string | undefined {
 	if (typeof value !== "string") return undefined;
-	const clean = value
-		.replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, "")
+	const clean = stripAnsi(value)
 		.replace(/[\r\n\t]+/g, " ")
 		.trim();
 	if (!clean) return undefined;
-	return clean.length > limit ? clean.slice(0, limit) : clean;
+	return stripAnsi(truncateToWidth(clean, limit, "")) || undefined;
 }
 
 export function normalizeHudSeverity(value: unknown): HudSeverity | undefined {

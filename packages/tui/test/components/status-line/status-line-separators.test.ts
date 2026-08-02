@@ -7,13 +7,7 @@ describe("getSeparator", () => {
 		assert.deepEqual(getSeparator("slash"), { left: "/", right: "/" });
 	});
 
-	it("falls back to slash for undefined", () => {
-		assert.deepEqual(getSeparator(undefined), { left: "/", right: "/" });
-	});
-
-	it("falls back to slash for unknown future styles", () => {
-		// StatusLineSeparatorStyle is currently only "slash"; treat any other
-		// value as a forward-compat fallback to slash.
-		assert.deepEqual(getSeparator("pipe" as never), { left: "/", right: "/" });
+	it("rejects unsupported styles", () => {
+		assert.throws(() => getSeparator("pipe" as never), RangeError);
 	});
 });

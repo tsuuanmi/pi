@@ -4,8 +4,11 @@ import { join } from "node:path";
 import {
 	getAvailableThemes,
 	getAvailableThemesWithPaths,
+	initTheme,
 	loadThemeFromPath,
 	setRegisteredThemes,
+	setTheme,
+	theme,
 } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -30,6 +33,14 @@ describe("theme picker", () => {
 		setRegisteredThemes([]);
 		rmSync(tempRoot, { recursive: true, force: true });
 		vi.unstubAllEnvs();
+	});
+
+	it("keeps the active theme when a requested theme is invalid", () => {
+		initTheme("light");
+		const result = setTheme("missing-theme");
+
+		expect(result.success).toBe(false);
+		expect(theme.name).toBe("light");
 	});
 
 	it("uses custom theme content names instead of file names", () => {

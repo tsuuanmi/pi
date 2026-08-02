@@ -12,10 +12,10 @@ import {
 import { VirtualTerminal } from "@tsuuanmi/pi-tui/test/terminal/runtime/virtual-terminal";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import type { AutocompleteProviderFactory } from "#pi/api/ui-types";
-import { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui-controller";
-import { ResourceDisplayController } from "#pi/ui/interactive/controllers/resource-display-controller";
 import { InteractiveMode } from "#pi/modes/interactive/interactive-mode";
 import type { SourceInfo } from "#pi/package-manager/source-info";
+import { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui-controller";
+import { ResourceDisplayController } from "#pi/ui/interactive/controllers/resource-display-controller";
 
 function renderLastLine(container: Container, width = 120): string {
 	const last = container.children[container.children.length - 1];
@@ -650,7 +650,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.chatContainer)).toMatchInlineSnapshot(`
 			"[Extensions]
-			     @scope/pi-scoped, answer.ts, cli-extension.ts, HazAT/pi-interactive-subagents, HazAT/pi-interactive-subagents:subagents, local-index, pi-markdown-preview, user-index"
+			    @scope/pi-scoped, answer.ts, cli-extension.ts, HazAT/pi-interactive-subagents, HazAT/pi-interactive-subagents:subagents, local-index, pi-markdown-preview, user-index"
 		`);
 	});
 
@@ -697,7 +697,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.chatContainer)).toMatchInlineSnapshot(`
 			"[Extensions]
-			     alpha/one, beta/one, gamma/one"
+			    alpha/one, beta/one, gamma/one"
 		`);
 	});
 
@@ -726,7 +726,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.chatContainer)).toMatchInlineSnapshot(`
 			"[Extensions]
-			     plan-mode"
+			    plan-mode"
 		`);
 	});
 
@@ -755,7 +755,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.chatContainer)).toMatchInlineSnapshot(`
 			"[Extensions]
-			     plan-mode"
+			    plan-mode"
 		`);
 	});
 
@@ -793,7 +793,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.chatContainer)).toMatchInlineSnapshot(`
 			"[Extensions]
-			     plan-mode, webfetch.ts"
+			    plan-mode, webfetch.ts"
 		`);
 	});
 
@@ -831,7 +831,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.chatContainer)).toMatchInlineSnapshot(`
 			"[Extensions]
-			     bar, foo"
+			    bar, foo"
 		`);
 	});
 
@@ -869,7 +869,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.chatContainer)).toMatchInlineSnapshot(`
 			"[Extensions]
-			     alpha/tools, beta/tools"
+			    alpha/tools, beta/tools"
 		`);
 	});
 
@@ -898,7 +898,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.chatContainer)).toMatchInlineSnapshot(`
 			"[Extensions]
-			     main.ts"
+			    main.ts"
 		`);
 	});
 
@@ -927,7 +927,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.chatContainer)).toMatchInlineSnapshot(`
 			"[Extensions]
-			     pi-markdown-preview"
+			    pi-markdown-preview"
 		`);
 	});
 	test("captures mixed extension layouts in expanded output", () => {
@@ -944,20 +944,20 @@ describe("InteractiveMode.showLoadedResources", () => {
 
 		expect(normalizeRenderedOutput(fakeThis.chatContainer)).toMatchInlineSnapshot(`
 			"[Extensions]
-			     project
-			       /tmp/project/.pi/extensions/answer.ts
-			       /tmp/project/.pi/extensions/local-index
-			       git:github.com/HazAT/pi-interactive-subagents
-			         extensions
-			         extensions/subagents
-			       npm:@scope/pi-scoped
-			         extensions
-			       npm:pi-markdown-preview
-			         extensions
-			     user
-			       /tmp/agent/extensions/user-index
-			     path
-			       /tmp/temp/cli-extension.ts"
+			    project
+			      /tmp/project/.pi/extensions/answer.ts
+			      /tmp/project/.pi/extensions/local-index
+			      git:github.com/HazAT/pi-interactive-subagents
+			        extensions
+			        extensions/subagents
+			      npm:@scope/pi-scoped
+			        extensions
+			      npm:pi-markdown-preview
+			        extensions
+			    user
+			      /tmp/agent/extensions/user-index
+			    path
+			      /tmp/temp/cli-extension.ts"
 		`);
 	});
 

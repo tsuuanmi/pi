@@ -1,3 +1,4 @@
+import { Container, type Focusable } from "#tui/components/component";
 import { TruncatedText } from "#tui/components/display/truncated";
 import { Input } from "#tui/components/inputs/input";
 import { Spacer } from "#tui/components/layout/spacer";
@@ -5,7 +6,6 @@ import { fuzzyFilter } from "#tui/editor/completion/fuzzy";
 import { keyHint, rawKeyHint } from "#tui/input/keyboard/key-hints";
 import { getKeybindings } from "#tui/input/keyboard/keybindings";
 import { theme } from "#tui/theme/theme";
-import { Container, type Focusable } from "#tui/tui";
 import { truncateToWidth, visibleWidth } from "#tui/utilities/text";
 
 const DEFAULT_GUTTER_WIDTH = 2;

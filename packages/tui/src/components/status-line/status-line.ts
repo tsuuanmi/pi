@@ -1,3 +1,4 @@
+import type { Component } from "#tui/components/component";
 import { renderHudBar } from "#tui/components/hud/render";
 import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import { type GitStatusSummary, runGitStatusPorcelain } from "#tui/components/status-line/git";
@@ -15,7 +16,6 @@ import type {
 	StatusLineSettings,
 } from "#tui/components/status-line/types";
 import { TUI_COLOR_PROFILE, theme } from "#tui/theme/theme";
-import type { Component } from "#tui/tui";
 import { truncateToWidth, visibleWidth } from "#tui/utilities/text";
 
 /** Minimum gap (columns) between the left and right rail groups. */
@@ -33,17 +33,17 @@ function areGitStatusSummariesEqual(a: GitStatusSummary | null, b: GitStatusSumm
 
 /**
  * Status line component: renders the configurable segment rail and appends HUD
- * and hook status details inline when present. Replaces `FooterComponent`.
+ * and hook status details inline when present.
  *
- * Reuses `FooterDataProvider` for the git branch (`.git/HEAD` watch), extension
+ * Uses the host data provider for the git branch (`.git/HEAD` watch), extension
  * statuses, and available provider count — it does NOT re-implement the git watcher.
  * The only background refresh it owns is the
- * `git status --porcelain` counts cache (10s refresh) and the HUD entry HUD
+ * `git status --porcelain` counts cache (10s refresh) and the HUD entry
  * cache (1s refresh, error-resilient).
  */
 export class StatusLineComponent implements Component {
 	#session: StatusLineSessionLike;
-	#footerData: StatusLineDataProvider;
+	#dataProvider: StatusLineDataProvider;
 	#settingsSource: { getStatusLine(): StatusLineSettings };
 	#requestRender: (() => void) | null;
 	#readHudEntries: StatusLineComponentOptions["readHudEntries"];
@@ -59,16 +59,17 @@ export class StatusLineComponent implements Component {
 	#hudEntries: StatusLineHudEntry[] = [];
 	#hudLastFetch = 0;
 	#hudInFlight = false;
+	#refreshGeneration = 0;
 
 	constructor(
 		session: StatusLineSessionLike,
-		footerData: StatusLineDataProvider,
+		dataProvider: StatusLineDataProvider,
 		settingsSource: { getStatusLine(): StatusLineSettings },
 		requestRender: () => void,
 		options: StatusLineComponentOptions = {},
 	) {
 		this.#session = session;
-		this.#footerData = footerData;
+		this.#dataProvider = dataProvider;
 		this.#settingsSource = settingsSource;
 		this.#requestRender = requestRender;
 		this.#readHudEntries = options.readHudEntries;
@@ -76,6 +77,15 @@ export class StatusLineComponent implements Component {
 
 	setSession(session: StatusLineSessionLike): void {
 		this.#session = session;
+		this.#refreshGeneration += 1;
+		this.#cachedGitStatus = null;
+		this.#cachedGitStatusCwd = null;
+		this.#gitStatusLastFetch = 0;
+		this.#gitStatusInFlight = false;
+		this.#hudEntries = [];
+		this.#hudLastFetch = 0;
+		this.#hudInFlight = false;
+		this.#requestRender?.();
 	}
 
 	setAutoCompactEnabled(enabled: boolean): void {
@@ -86,7 +96,10 @@ export class StatusLineComponent implements Component {
 	invalidate(): void {}
 
 	dispose(): void {
-		// No watcher to close — FooterDataProvider owns the .git/HEAD watcher.
+		// No watcher to close — the host data provider owns the .git/HEAD watcher.
+		this.#refreshGeneration += 1;
+		this.#gitStatusInFlight = false;
+		this.#hudInFlight = false;
 		this.#requestRender = null;
 	}
 
@@ -139,18 +152,20 @@ export class StatusLineComponent implements Component {
 			return;
 		}
 		this.#gitStatusInFlight = true;
+		const generation = this.#refreshGeneration;
 		void (async () => {
 			try {
 				const result = await runGitStatusPorcelain(cwd);
+				if (generation !== this.#refreshGeneration) return;
 				const shouldRender = !areGitStatusSummariesEqual(this.#cachedGitStatus, result);
 				this.#cachedGitStatus = result;
 				this.#cachedGitStatusCwd = cwd;
 				this.#gitStatusLastFetch = Date.now();
 				if (shouldRender) this.#requestRender?.();
 			} catch {
-				// runGitStatusPorcelain never rejects, but guard defensively.
+				// The Git reader owns its error boundary.
 			} finally {
-				this.#gitStatusInFlight = false;
+				if (generation === this.#refreshGeneration) this.#gitStatusInFlight = false;
 			}
 		})();
 	}
@@ -165,19 +180,23 @@ export class StatusLineComponent implements Component {
 			return;
 		}
 		this.#hudInFlight = true;
+		const generation = this.#refreshGeneration;
 		const cwd = this.#session.sessionManager.getCwd();
 		const sessionId = this.#session.sessionId ?? "";
 		const readHudEntries = this.#readHudEntries;
 		void (async () => {
 			try {
 				const entries = readHudEntries ? await readHudEntries({ cwd, sessionId }) : [];
+				if (generation !== this.#refreshGeneration) return;
 				this.#hudEntries = [...(entries ?? [])];
 			} catch {
-				// Leave #hudEntries unchanged (initially [] until a valid read).
+				// Keep the last valid HUD snapshot when a provider fails.
 			} finally {
-				this.#hudLastFetch = Date.now();
-				this.#hudInFlight = false;
-				this.#requestRender?.();
+				if (generation === this.#refreshGeneration) {
+					this.#hudLastFetch = Date.now();
+					this.#hudInFlight = false;
+					this.#requestRender?.();
+				}
 			}
 		})();
 	}
@@ -223,9 +242,9 @@ export class StatusLineComponent implements Component {
 			contextWindow,
 			autoCompactEnabled: this.#autoCompactEnabled,
 			subagentCount: session.subagentManager?.getActiveCount() ?? 0,
-			availableProviderCount: this.#footerData.getAvailableProviderCount(),
+			availableProviderCount: this.#dataProvider.getAvailableProviderCount(),
 			git: {
-				branch: this.#footerData.getGitBranch(),
+				branch: this.#dataProvider.getGitBranch(),
 				status: this.#cachedGitStatus,
 			},
 			hudPhase: this.#hudEntries[0]?.phase,
@@ -249,15 +268,11 @@ export class StatusLineComponent implements Component {
 			if (rendered.visible && rendered.content) rightParts.push(rendered.content);
 		}
 
-		// Collect visible left segments (track the model part for the provider fallback).
+		// Collect visible left segments.
 		const leftParts: string[] = [];
-		let modelPartIdx = -1;
 		for (const segId of resolved.leftSegments) {
 			const rendered = renderSegment(segId, ctx);
-			if (rendered.visible && rendered.content) {
-				if (segId === "model") modelPartIdx = leftParts.length;
-				leftParts.push(rendered.content);
-			}
+			if (rendered.visible && rendered.content) leftParts.push(rendered.content);
 		}
 
 		const join = (parts: string[]): string => parts.join(sepRendered);
@@ -266,26 +281,6 @@ export class StatusLineComponent implements Component {
 
 		let leftWidth = visibleWidth(leftGroup);
 		const rightWidth = visibleWidth(rightGroup);
-
-		// If the model segment included a `(provider)` prefix and the rail does not
-		// fit, re-render the model segment with the prefix disabled and recompute.
-		const providerApplicable =
-			modelPartIdx >= 0 &&
-			ctx.availableProviderCount > 1 &&
-			ctx.options.model?.showProviderPrefix !== false &&
-			Boolean(ctx.session.state.model);
-		if (providerApplicable && leftWidth + MIN_PADDING + rightWidth > width) {
-			const fallbackCtx: SegmentContext = {
-				...ctx,
-				options: { ...ctx.options, model: { ...ctx.options.model, showProviderPrefix: false } },
-			};
-			const fallback = renderSegment("model", fallbackCtx);
-			if (fallback.visible && fallback.content) {
-				leftParts[modelPartIdx] = fallback.content;
-				leftGroup = join(leftParts);
-				leftWidth = visibleWidth(leftGroup);
-			}
-		}
 
 		// Truncate the left group if it alone exceeds the available width.
 		if (leftWidth > width) {
@@ -321,7 +316,7 @@ export class StatusLineComponent implements Component {
 	#buildHookLine(width: number): string {
 		const parts: string[] = [];
 
-		const statuses = this.#footerData.getExtensionStatuses();
+		const statuses = this.#dataProvider.getExtensionStatuses();
 		if (statuses.size > 0) {
 			const text = Array.from(statuses.entries())
 				.sort(([a], [b]) => a.localeCompare(b))

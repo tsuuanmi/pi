@@ -142,7 +142,7 @@ describe("StatusLineComponent width handling", () => {
 	});
 });
 
-describe("StatusLineComponent provider-prefix width fallback", () => {
+describe("StatusLineComponent provider-prefix width", () => {
 	it("shows the (provider) prefix on a wide terminal", () => {
 		const session = createSession({ sessionName: "", modelName: "Claude", provider: "anthropic" });
 		const footer = makeComponent(session, 2);
@@ -150,11 +150,12 @@ describe("StatusLineComponent provider-prefix width fallback", () => {
 		assert.match(rail, new RegExp(escapeRegExp("(anthropic) Claude")));
 	});
 
-	it("drops the (provider) prefix on a narrow terminal", () => {
+	it("truncates the full provider-prefixed rail on a narrow terminal", () => {
 		const session = createSession({ sessionName: "", modelName: "Claude", provider: "anthropic" });
 		const footer = makeComponent(session, 2);
 		const rail = stripAnsi(footer.render(20).at(-1) ?? "");
-		assert.doesNotMatch(rail, new RegExp(escapeRegExp("(anthropic)")));
+		assert.match(rail, new RegExp(escapeRegExp("(anthropic)")));
+		assert.ok(rail.includes("..."));
 	});
 });
 

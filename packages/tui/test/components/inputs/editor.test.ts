@@ -2,6 +2,7 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import { stripVTControlCharacters } from "node:util";
 import { Editor, wordWrapLine } from "#tui/components/inputs/editor";
+import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import { type AutocompleteProvider, CombinedAutocompleteProvider } from "#tui/editor/completion/autocomplete";
 import { TUI } from "#tui/tui";
 import { visibleWidth } from "#tui/utilities/text";
@@ -746,7 +747,7 @@ describe("Editor component", () => {
 
 		it("wraps CJK characters correctly (each is 2 columns wide)", () => {
 			const editor = new Editor(createTestTUI(), defaultEditorTheme);
-			const width = 10 + 1; // +1 col reserved for cursor
+			const width = 10 + 1 + LAYOUT_EDGE_X * 2; // content width plus cursor and gutters
 
 			// Each CJK char is 2 columns. "日本語テスト" = 6 chars = 12 columns
 			editor.setText("日本語テスト");
@@ -766,7 +767,7 @@ describe("Editor component", () => {
 
 		it("handles mixed ASCII and wide characters in wrapping", () => {
 			const editor = new Editor(createTestTUI(), defaultEditorTheme);
-			const width = 15 + 1; // +1 col reserved for cursor
+			const width = 15 + 1 + LAYOUT_EDGE_X * 2; // content width plus cursor and gutters
 
 			// "Test ✅ OK 日本" = 4 + 1 + 2 + 1 + 2 + 1 + 4 = 15 columns (fits in width-1=15)
 			editor.setText("Test ✅ OK 日本");
@@ -812,7 +813,7 @@ describe("Editor component", () => {
 		});
 
 		it("shows cursor at end of line before wrap, wraps on next char", () => {
-			const width = 10;
+			const width = 10 + LAYOUT_EDGE_X * 2;
 			const editor = new Editor(createTestTUI(width), defaultEditorTheme);
 
 			// Type 9 chars → fills layoutWidth exactly, cursor at end on same line
@@ -820,7 +821,7 @@ describe("Editor component", () => {
 			let lines = editor.render(width);
 			let contentLines = lines.slice(1, -1);
 			assert.strictEqual(contentLines.length, 1, "Should be 1 content line before wrap");
-			assert.ok(contentLines[0]!.endsWith("\x1b[7m \x1b[0m"), "Cursor should be at end of line");
+			assert.ok(contentLines[0]!.includes("\x1b[7m \x1b[0m"), "Cursor should be visible at end of line");
 
 			// Type 1 more → text wraps to second line
 			editor.handleInput("a");
@@ -865,7 +866,7 @@ describe("Editor component", () => {
 
 			// No line should start with whitespace (except for padding at the end)
 			for (let i = 0; i < contentLines.length; i++) {
-				const line = stripVTControlCharacters(contentLines[i]!);
+				const line = stripVTControlCharacters(contentLines[i]!).slice(LAYOUT_EDGE_X);
 				const trimmedStart = line.trimStart();
 				// The line should either be all padding or start with a word character
 				if (trimmedStart.length > 0) {
@@ -913,7 +914,7 @@ describe("Editor component", () => {
 
 		it("handles single word that fits exactly", () => {
 			const editor = new Editor(createTestTUI(), defaultEditorTheme);
-			const width = 10 + 1; // +1 col reserved for cursor
+			const width = 10 + 1 + LAYOUT_EDGE_X * 2; // content width plus cursor and gutters
 
 			editor.setText("1234567890");
 			const lines = editor.render(width);
@@ -1674,6 +1675,34 @@ describe("Editor component", () => {
 	});
 
 	describe("Autocomplete", () => {
+		it("continues after a provider failure", async () => {
+			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			let calls = 0;
+			const provider: AutocompleteProvider = {
+				getSuggestions: async () => {
+					calls += 1;
+					if (calls === 1) throw new Error("provider failed");
+					return {
+						items: [
+							{ value: "one", label: "one" },
+							{ value: "two", label: "two" },
+						],
+						prefix: "",
+					};
+				},
+				applyCompletion,
+			};
+
+			editor.setAutocompleteProvider(provider);
+			editor.handleInput("\t");
+			await flushAutocomplete();
+			editor.handleInput("\t");
+			await flushAutocomplete();
+
+			assert.strictEqual(calls, 2);
+			assert.strictEqual(editor.isShowingAutocomplete(), true);
+		});
+
 		it("auto-applies single force-file suggestion without showing menu", async () => {
 			const editor = new Editor(createTestTUI(), defaultEditorTheme);
 
@@ -3029,7 +3058,7 @@ describe("Editor component", () => {
 			assert.deepStrictEqual(editor.getCursor(), { line: 0, col: 15 });
 
 			// Render with narrower width to simulate resize
-			editor.render(12); // Width 12
+			editor.render(16); // 11 content columns plus cursor and gutters
 
 			// Move down - sticky should be clamped to new width
 			editor.handleInput("\x1b[B"); // Down - line 1
@@ -3056,9 +3085,9 @@ describe("Editor component", () => {
 			assert.deepStrictEqual(editor.getCursor(), { line: 0, col: 5 });
 
 			// Narrow the editor
-			editor.render(10);
+			editor.render(14);
 
-			// Move down - preferredVisualCol was 15, but width is 10
+			// Move down - preferredVisualCol was 15, but content width is 9
 			// Should land on line 1, clamped to width (visual col 9, which is logical col 9)
 			editor.handleInput("\x1b[B"); // Down to line 1
 			assert.deepStrictEqual(editor.getCursor(), { line: 1, col: 8 });
@@ -3083,9 +3112,9 @@ describe("Editor component", () => {
 			positionCursor(editor, 0, 18);
 			assert.deepStrictEqual(editor.getCursor(), { line: 0, col: 18 });
 
-			// Narrow to width 10 (layoutWidth = 9).
+			// Narrow to a 9-column content area.
 			// Line 0 last segment has visual col max 9, line 1 first segment max 8
-			editor.render(10);
+			editor.render(14);
 
 			// Move down: cursor clamps to 8
 			editor.handleInput("\x1b[B");
@@ -3109,8 +3138,8 @@ describe("Editor component", () => {
 			positionCursor(editor, 0, 18);
 			assert.deepStrictEqual(editor.getCursor(), { line: 0, col: 18 });
 
-			// Narrow to width 10 (layoutWidth = 9). Moving down clamps to col 8
-			editor.render(10);
+			// Narrow to a 9-column content area. Moving down clamps to col 8
+			editor.render(14);
 			editor.handleInput("\x1b[B");
 			assert.deepStrictEqual(editor.getCursor(), { line: 1, col: 8 });
 
@@ -3528,7 +3557,7 @@ describe("Editor component", () => {
 			for (const ch of "ijklmnopqr") editor.handleInput(ch);
 			editor.handleInput("\n");
 			for (const ch of "123456789012345678") editor.handleInput(ch);
-			editor.render(20);
+			editor.render(24);
 
 			const text = editor.getText();
 			const markerMatch = text.match(/\[paste #\d+ \+\d+ lines]/);
@@ -3583,7 +3612,7 @@ describe("Editor component", () => {
 			for (const ch of "ijklmnopqr") editor.handleInput(ch);
 			editor.handleInput("\n");
 			for (const ch of "123456789012345678") editor.handleInput(ch);
-			editor.render(20);
+			editor.render(24);
 
 			// Navigate to line 0, col 3 (on "d")
 			editor.handleInput("\x1b[A"); // Up to line 0

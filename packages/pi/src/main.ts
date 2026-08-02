@@ -116,7 +116,7 @@ export async function main(args: string[], options?: MainOptions) {
 
 	const { initialMessage } = preparedInput;
 	time("prepareInitialMessage");
-	initTheme(settingsManager.getTheme(), appMode === "interactive");
+	initTheme(settingsManager.getTheme());
 	time("initTheme");
 
 	// Show deprecation warnings in interactive mode

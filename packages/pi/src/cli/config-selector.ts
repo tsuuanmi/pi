@@ -1,4 +1,4 @@
-import { initTheme, ProcessTerminal, stopThemeWatcher, TUI } from "@tsuuanmi/pi-tui";
+import { initTheme, ProcessTerminal, TUI } from "@tsuuanmi/pi-tui";
 import type { ResolvedPaths } from "#pi/package-manager/package-manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 import { ResourceSelector } from "#pi/ui/package-manager/resource-selector";
@@ -11,7 +11,7 @@ export interface ConfigSelectorOptions {
 }
 
 export async function selectConfig(options: ConfigSelectorOptions): Promise<void> {
-	initTheme(options.settingsManager.getTheme(), true);
+	initTheme(options.settingsManager.getTheme());
 
 	return new Promise((resolve) => {
 		const ui = new TUI(new ProcessTerminal());
@@ -26,13 +26,11 @@ export async function selectConfig(options: ConfigSelectorOptions): Promise<void
 				if (!resolved) {
 					resolved = true;
 					ui.stop();
-					stopThemeWatcher();
 					resolve();
 				}
 			},
 			() => {
 				ui.stop();
-				stopThemeWatcher();
 				process.exit(0);
 			},
 			() => ui.requestRender(),

@@ -22,6 +22,15 @@ describe("stripAnsi", () => {
 		assert.equal(stripAnsi("\x1b[38:2:255:0:0mtext\x1b[39m"), "text");
 	});
 
+	it("removes non-style CSI sequences without consuming following text", () => {
+		assert.equal(stripAnsi("\x1b[?25lhidden\x1b[?25htext"), "hiddentext");
+	});
+
+	it("removes C1 control sequences", () => {
+		assert.equal(stripAnsi("\x9b31mred\x9b0m"), "red");
+		assert.equal(stripAnsi("\x9d8;;https://example.com\x07link"), "link");
+	});
+
 	it("removes OSC sequences terminated by BEL", () => {
 		assert.equal(stripAnsi("\x1b]0;window title\x07rest"), "rest");
 	});

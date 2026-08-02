@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import type { Component } from "#tui/tui";
+import type { Component } from "#tui/components/component";
 import { TUI } from "#tui/tui";
 import { VirtualTerminal } from "#tui-test/terminal/runtime/virtual-terminal";
 

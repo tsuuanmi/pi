@@ -101,6 +101,10 @@ describe("wrapTextWithAnsi", () => {
 	});
 
 	describe("basic wrapping", () => {
+		it("should measure non-style CSI sequences as zero-width", () => {
+			assert.strictEqual(visibleWidth("\x1b[?25ltext\x1b[?25h"), 4);
+		});
+
 		it("should wrap plain text correctly", () => {
 			const text = "hello world this is a test";
 			const wrapped = wrapTextWithAnsi(text, 10);

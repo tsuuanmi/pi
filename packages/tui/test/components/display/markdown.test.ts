@@ -2,9 +2,10 @@ import assert from "node:assert";
 import { afterEach, describe, it } from "node:test";
 import type { Terminal as XtermTerminalType } from "@xterm/headless";
 import { Chalk } from "chalk";
+import type { Component } from "#tui/components/component";
 import { Markdown } from "#tui/components/display/markdown";
 import { resetCapabilitiesCache, setCapabilities } from "#tui/terminal/features/capabilities";
-import { type Component, TUI } from "#tui/tui";
+import { TUI } from "#tui/tui";
 import { defaultMarkdownTheme } from "#tui-test/support/test-themes";
 import { VirtualTerminal } from "#tui-test/terminal/runtime/virtual-terminal";
 

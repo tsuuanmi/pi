@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 import { type Static, Type } from "typebox";
 import { Compile } from "typebox/compile";
-import type { MarkdownTheme } from "#tui/components/display/markdown";
 import { highlight, supportsLanguage } from "#tui/components/display/highlight";
+import type { MarkdownTheme } from "#tui/components/display/markdown";
 import type { EditorTheme } from "#tui/components/inputs/editor";
 import type { SelectListTheme } from "#tui/components/selection/select-list";
 import type { SettingsListTheme } from "#tui/components/selection/settings-list";
@@ -25,27 +25,6 @@ const __dirname = path.dirname(__filename);
 
 function getThemesDir(): string {
 	return path.join(__dirname);
-}
-
-function getCustomThemesDir(): string | undefined {
-	return undefined;
-}
-
-function watchThemeDir(
-	dir: string,
-	listener: (eventType: fs.WatchEventType, filename: string | null) => void,
-	onError: (error: unknown) => void,
-): fs.FSWatcher | undefined {
-	try {
-		return fs.watch(dir, listener);
-	} catch (error) {
-		onError(error);
-		return undefined;
-	}
-}
-
-function closeThemeWatcher(watcher: fs.FSWatcher | undefined): void {
-	watcher?.close();
 }
 
 // ============================================================================
@@ -585,41 +564,11 @@ export function getAvailableThemesWithPaths(): ThemeInfo[] {
 		addTheme({ name, path: path.join(themesDir, `${name}.json`) });
 	}
 
-	// Custom themes
-	for (const themeInfo of getCustomThemeInfos()) {
-		addTheme(themeInfo);
-	}
-
 	for (const [name, theme] of registeredThemes.entries()) {
 		addTheme({ name, path: theme.sourcePath });
 	}
 
 	return result.sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function getCustomThemeInfos(): ThemeInfo[] {
-	const customThemesDir = getCustomThemesDir();
-	const result: ThemeInfo[] = [];
-	if (!customThemesDir || !fs.existsSync(customThemesDir)) {
-		return result;
-	}
-
-	for (const file of fs.readdirSync(customThemesDir)) {
-		if (!file.endsWith(".json")) {
-			continue;
-		}
-		const themePath = path.join(customThemesDir, file);
-		try {
-			const customTheme = loadThemeFromPath(themePath);
-			if (customTheme.name) {
-				result.push({ name: customTheme.name, path: themePath });
-			}
-		} catch {
-			// Invalid themes are ignored here; the resource loader reports them
-			// during normal startup/reload.
-		}
-	}
-	return result;
 }
 
 function parseThemeJson(label: string, json: unknown): ThemeJson {
@@ -676,24 +625,7 @@ function loadThemeJson(name: string): ThemeJson {
 	if (name in builtinThemes) {
 		return builtinThemes[name];
 	}
-	const registeredTheme = registeredThemes.get(name);
-	if (registeredTheme?.sourcePath) {
-		const content = fs.readFileSync(registeredTheme.sourcePath, "utf-8");
-		return parseThemeJsonContent(registeredTheme.sourcePath, content);
-	}
-	if (registeredTheme) {
-		throw new Error(`Theme "${name}" does not have a source path for export`);
-	}
-	const customThemesDir = getCustomThemesDir();
-	if (!customThemesDir) {
-		throw new Error(`Theme not found: ${name}`);
-	}
-	const themePath = path.join(customThemesDir, `${name}.json`);
-	if (!fs.existsSync(themePath)) {
-		throw new Error(`Theme not found: ${name}`);
-	}
-	const content = fs.readFileSync(themePath, "utf-8");
-	return parseThemeJsonContent(name, content);
+	throw new Error(`Theme not found: ${name}`);
 }
 
 function createTheme(themeJson: ThemeJson, mode?: ColorMode, sourcePath?: string): Theme {
@@ -862,11 +794,12 @@ function setGlobalTheme(t: Theme): void {
 	(globalThis as Record<symbol, Theme>)[THEME_KEY] = t;
 }
 
-let currentThemeName: string | undefined;
-let themeWatcher: fs.FSWatcher | undefined;
-let themeReloadTimer: NodeJS.Timeout | undefined;
-let onThemeChangeCallback: (() => void) | undefined;
 const registeredThemes = new Map<string, Theme>();
+const themeChangeListeners = new Set<() => void>();
+
+function notifyThemeChange(): void {
+	for (const listener of themeChangeListeners) listener();
+}
 
 export function setRegisteredThemes(themes: Theme[]): void {
 	registeredThemes.clear();
@@ -877,141 +810,35 @@ export function setRegisteredThemes(themes: Theme[]): void {
 	}
 }
 
-export function initTheme(themeName?: string, enableWatcher: boolean = false): void {
+export function initTheme(themeName?: string): void {
 	const name = themeName ?? getDefaultTheme();
-	currentThemeName = name;
-	try {
-		setGlobalTheme(loadTheme(name));
-		if (enableWatcher) {
-			startThemeWatcher();
-		}
-	} catch (_error) {
-		// Theme is invalid - fall back to dark theme silently
-		currentThemeName = "dark";
-		setGlobalTheme(loadTheme("dark"));
-		// Don't start watcher for fallback theme
-	}
+	setGlobalTheme(loadTheme(name));
 }
 
-export function setTheme(name: string, enableWatcher: boolean = false): { success: boolean; error?: string } {
-	currentThemeName = name;
+export function setTheme(name: string): { success: boolean; error?: string } {
+	let nextTheme: Theme;
 	try {
-		setGlobalTheme(loadTheme(name));
-		if (enableWatcher) {
-			startThemeWatcher();
-		}
-		if (onThemeChangeCallback) {
-			onThemeChangeCallback();
-		}
-		return { success: true };
+		nextTheme = loadTheme(name);
 	} catch (error) {
-		// Theme is invalid - fall back to dark theme
-		currentThemeName = "dark";
-		setGlobalTheme(loadTheme("dark"));
-		// Don't start watcher for fallback theme
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : String(error),
 		};
 	}
+
+	setGlobalTheme(nextTheme);
+	notifyThemeChange();
+	return { success: true };
 }
 
 export function setThemeInstance(themeInstance: Theme): void {
 	setGlobalTheme(themeInstance);
-	currentThemeName = "<in-memory>";
-	stopThemeWatcher(); // Can't watch a direct instance
-	if (onThemeChangeCallback) {
-		onThemeChangeCallback();
-	}
+	notifyThemeChange();
 }
 
-export function onThemeChange(callback: () => void): void {
-	onThemeChangeCallback = callback;
-}
-
-function startThemeWatcher(): void {
-	stopThemeWatcher();
-
-	// Only watch if it's a custom theme (not built-in)
-	if (!currentThemeName || currentThemeName === "dark" || currentThemeName === "light") {
-		return;
-	}
-
-	const customThemesDir = getCustomThemesDir();
-	if (!customThemesDir) {
-		return;
-	}
-	const watchedThemeName = currentThemeName;
-	const watchedFileName = `${watchedThemeName}.json`;
-	const themeFile = path.join(customThemesDir, watchedFileName);
-
-	// Only watch if the file exists
-	if (!fs.existsSync(themeFile)) {
-		return;
-	}
-
-	const scheduleReload = () => {
-		if (themeReloadTimer) {
-			clearTimeout(themeReloadTimer);
-		}
-		themeReloadTimer = setTimeout(() => {
-			themeReloadTimer = undefined;
-
-			// Ignore stale timers after switching themes or stopping the watcher
-			if (currentThemeName !== watchedThemeName) {
-				return;
-			}
-
-			// Keep the last successfully loaded theme active if the file is temporarily missing
-			if (!fs.existsSync(themeFile)) {
-				return;
-			}
-
-			try {
-				// Reload the theme from disk and refresh the registry cache
-				const reloadedTheme = loadThemeFromPath(themeFile);
-				registeredThemes.set(watchedThemeName, reloadedTheme);
-				setGlobalTheme(reloadedTheme);
-				// Notify callback (to invalidate UI)
-				if (onThemeChangeCallback) {
-					onThemeChangeCallback();
-				}
-			} catch (_error) {
-				// Ignore errors (file might be in invalid state while being edited)
-			}
-		}, 100);
-	};
-
-	themeWatcher =
-		watchThemeDir(
-			customThemesDir,
-			(_eventType, filename) => {
-				if (currentThemeName !== watchedThemeName) {
-					return;
-				}
-				if (!filename) {
-					scheduleReload();
-					return;
-				}
-				if (filename !== watchedFileName) {
-					return;
-				}
-				scheduleReload();
-			},
-			() => {
-				closeThemeWatcher(themeWatcher);
-				themeWatcher = undefined;
-			},
-		) ?? undefined;
-}
-
-export function stopThemeWatcher(): void {
-	if (themeReloadTimer) {
-		clearTimeout(themeReloadTimer);
-		themeReloadTimer = undefined;
-	}
-	closeThemeWatcher(themeWatcher);
-	themeWatcher = undefined;
+export function onThemeChange(callback: () => void): () => void {
+	themeChangeListeners.add(callback);
+	return () => themeChangeListeners.delete(callback);
 }
 
 /**

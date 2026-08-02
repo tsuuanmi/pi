@@ -7,12 +7,13 @@ import type {
 	StatusLineSegmentId,
 } from "#tui/components/status-line/types";
 import { type ThemeColor, TUI_COLOR_PROFILE, theme } from "#tui/theme/theme";
+import { stripAnsi } from "#tui/utilities/ansi";
+import { sliceByColumn, visibleWidth } from "#tui/utilities/text";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Shared helpers (relocated from footer.ts)
+// Shared helpers for status-line segments
 // ═══════════════════════════════════════════════════════════════════════════
 
-const ANSI_PATTERN = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 const C0_CONTROL_PATTERN = /[\x00-\x1f\x7f]/g;
 
 /**
@@ -23,7 +24,7 @@ const C0_CONTROL_PATTERN = /[\x00-\x1f\x7f]/g;
  * trims. This prevents raw escape sequences from leaking into the terminal.
  */
 export function sanitizeStatusText(text: string): string {
-	return text.replace(ANSI_PATTERN, " ").replace(C0_CONTROL_PATTERN, " ").replace(/ +/g, " ").trim();
+	return stripAnsi(text).replace(C0_CONTROL_PATTERN, " ").replace(/ +/g, " ").trim();
 }
 
 /** Format token counts for compact status display. */
@@ -36,7 +37,7 @@ export function formatTokens(count: number): string {
 }
 
 /** Abbreviate a cwd for display: replace the home directory prefix with `~`. */
-export function formatCwdForFooter(cwd: string, home: string | undefined): string {
+export function formatCwd(cwd: string, home: string | undefined): string {
 	if (!home) return cwd;
 
 	const resolvedCwd = resolve(cwd);
@@ -86,8 +87,7 @@ const modelSegment: StatusLineSegment = {
 		const modelName = state.model?.name || state.model?.id || "no-model";
 
 		// Prepend `(provider)` when more than one provider is available and the
-		// option is enabled. Width fallback is applied by StatusLineComponent by
-		// re-rendering this segment with showProviderPrefix=false.
+		// option is enabled.
 		let prefix = "";
 		if (ctx.availableProviderCount > 1 && opts.showProviderPrefix !== false && state.model) {
 			prefix = `(${state.model.provider}) `;
@@ -122,12 +122,14 @@ const pathSegment: StatusLineSegment = {
 		const opts = ctx.options.path ?? {};
 
 		const cwd = ctx.session.sessionManager.getCwd();
-		let pwd = opts.abbreviate === false ? cwd : formatCwdForFooter(cwd, process.env.HOME || process.env.USERPROFILE);
+		let pwd = opts.abbreviate === false ? cwd : formatCwd(cwd, process.env.HOME || process.env.USERPROFILE);
 
 		const maxLen = opts.maxLength ?? 40;
-		if (pwd.length > maxLen) {
+		const pathWidth = visibleWidth(pwd);
+		if (pathWidth > maxLen) {
 			const ellipsis = "…";
-			pwd = `${ellipsis}${pwd.slice(-Math.max(0, maxLen - ellipsis.length))}`;
+			const suffixWidth = Math.max(0, maxLen - visibleWidth(ellipsis));
+			pwd = ellipsis + sliceByColumn(pwd, pathWidth - suffixWidth, suffixWidth, true);
 		}
 
 		return { content: theme.fg(TUI_COLOR_PROFILE.statusLine.path, pwd), visible: true };

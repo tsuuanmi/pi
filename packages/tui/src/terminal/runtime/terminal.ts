@@ -85,6 +85,7 @@ export interface Terminal {
  */
 export class ProcessTerminal implements Terminal {
 	private wasRaw = false;
+	private started = false;
 	private inputHandler?: (data: string) => void;
 	private resizeHandler?: () => void;
 	private _kittyProtocolActive = false;
@@ -118,6 +119,8 @@ export class ProcessTerminal implements Terminal {
 	}
 
 	start(onInput: (data: string) => void, onResize: () => void): void {
+		if (this.started) return;
+		this.started = true;
 		this.inputHandler = onInput;
 		this.resizeHandler = onResize;
 
@@ -342,6 +345,7 @@ export class ProcessTerminal implements Terminal {
 	}
 
 	stop(): void {
+		this.started = false;
 		// Disable bracketed paste mode
 		process.stdout.write("\x1b[?2004l");
 

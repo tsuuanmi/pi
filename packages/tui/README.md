@@ -19,6 +19,7 @@ The TUI package is split by responsibility:
 
 ```text
 src/tui.ts       # render orchestration, focus, overlays, differential updates
+src/components/component.ts # Component contract and Container
 src/components/ # rendered UI widgets that implement Component
 src/editor/     # non-visual editing primitives used by input components
 src/input/      # keyboard decoding, keybindings, and input stream parsing
@@ -29,6 +30,7 @@ src/utilities/  # generic text, ANSI, and rendering helpers
 
 Boundary rules:
 
+- `components/component.ts` owns the component contract and child-container lifecycle.
 - `components/` owns visual widgets. Components render lines, handle focused input, and may compose helpers from `editor/`, `input/`, `terminal/features`, `theme/`, and `utilities/`.
 - `editor/` owns reusable editing behavior, not rendered widgets. It contains autocomplete, fuzzy matching, undo, word navigation, and editor contracts used by `components/inputs/editor.ts` and `components/inputs/input.ts`.
 - `terminal/` owns interaction with the terminal device. It should stay independent of components and editor behavior.
@@ -176,15 +178,17 @@ All components implement:
 interface Component {
   render(width: number): string[];
   handleInput?(data: string): void;
-  invalidate?(): void;
+  invalidate(): void;
+  dispose?(): void;
 }
 ```
 
 | Method | Description |
 |--------|-------------|
-| `render(width)` | Returns an array of strings, one per line. Each line **must not exceed `width`** or the TUI will error. Use `truncateToWidth()` or manual wrapping to ensure this. |
+| `render(width)` | Returns an array of strings, one per line. Each line **must not exceed `width`** or the TUI will stop with an error. Use `truncateToWidth()` or manual wrapping to ensure this. |
 | `handleInput?(data)` | Called when the component has focus and receives keyboard input. The `data` string contains raw terminal input (may include ANSI escape sequences). |
-| `invalidate?()` | Called to clear any cached render state. Components should re-render from scratch on the next `render()` call. |
+| `invalidate()` | Clears cached render state. Components should re-render from scratch on the next `render()` call. |
+| `dispose?()` | Releases timers, requests, and listeners when the component is removed. |
 
 The TUI appends a full SGR reset and OSC 8 reset at the end of each rendered line. Styles do not carry across lines. If you emit multi-line text with styling, reapply styles per line or use `wrapTextWithAnsi()` so styles are preserved for each wrapped line.
 
@@ -752,8 +756,10 @@ class CachedComponent implements Component {
 # Install dependencies (from monorepo root)
 npm install
 
-# Run type checking
-npm run check
+# Build this package
+npm run build --workspace @tsuuanmi/pi-tui
 
+# Run this package's tests
+npm test --workspace @tsuuanmi/pi-tui
 ```
 

@@ -6,6 +6,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { performance } from "node:perf_hooks";
+import { type Component, Container, CURSOR_MARKER, isFocusable } from "#tui/components/component";
 import { isKeyRelease, matchesKey } from "#tui/input/keyboard/keys";
 import {
 	isOsc11BackgroundColorResponse,
@@ -21,35 +22,6 @@ import {
 	visibleWidth,
 } from "#tui/utilities/text";
 
-/**
- * Component interface - all components must implement this
- */
-export interface Component {
-	/**
-	 * Render the component to lines for the given viewport width
-	 * @param width - Current viewport width
-	 * @returns Array of strings, each representing a line
-	 */
-	render(width: number): string[];
-
-	/**
-	 * Optional handler for keyboard input when component has focus
-	 */
-	handleInput?(data: string): void;
-
-	/**
-	 * If true, component receives key release events (Kitty protocol).
-	 * Default is false - release events are filtered out.
-	 */
-	wantsKeyRelease?: boolean;
-
-	/**
-	 * Invalidate any cached rendering state.
-	 * Called when theme changes or when component needs to re-render from scratch.
-	 */
-	invalidate(): void;
-}
-
 type InputListenerResult = { consume?: boolean; data?: string } | undefined;
 type InputListener = (data: string) => InputListenerResult;
 type PendingOsc11BackgroundQuery = {
@@ -57,30 +29,6 @@ type PendingOsc11BackgroundQuery = {
 	resolve: ((rgb: RgbColor | undefined) => void) | undefined;
 	timer: NodeJS.Timeout | undefined;
 };
-
-/**
- * Interface for components that can receive focus and display a hardware cursor.
- * When focused, the component should emit CURSOR_MARKER at the cursor position
- * in its render output. TUI will find this marker and position the hardware
- * cursor there for proper IME candidate window positioning.
- */
-export interface Focusable {
-	/** Set by TUI when focus changes. Component should emit CURSOR_MARKER when true. */
-	focused: boolean;
-}
-
-/** Type guard to check if a component implements Focusable */
-export function isFocusable(component: Component | null): component is Component & Focusable {
-	return component !== null && "focused" in component;
-}
-
-/**
- * Cursor position marker - APC (Application Program Command) sequence.
- * This is a zero-width escape sequence that terminals ignore.
- * Components emit this at the cursor position when focused.
- * TUI finds and strips this marker, then positions the hardware cursor there.
- */
-export const CURSOR_MARKER = "\x1b_pi:c\x07";
 
 /**
  * Anchor position for overlays
@@ -212,45 +160,6 @@ type OverlayFocusRestoreState = { status: "inactive" } | ActiveOverlayFocusResto
 type OverlayFocusRestorePolicy = "clear" | "preserve";
 
 /**
- * Container - a component that contains other components
- */
-export class Container implements Component {
-	children: Component[] = [];
-
-	addChild(component: Component): void {
-		this.children.push(component);
-	}
-
-	removeChild(component: Component): void {
-		const index = this.children.indexOf(component);
-		if (index !== -1) {
-			this.children.splice(index, 1);
-		}
-	}
-
-	clear(): void {
-		this.children = [];
-	}
-
-	invalidate(): void {
-		for (const child of this.children) {
-			child.invalidate?.();
-		}
-	}
-
-	render(width: number): string[] {
-		const lines: string[] = [];
-		for (const child of this.children) {
-			const childLines = child.render(width);
-			for (const line of childLines) {
-				lines.push(line);
-			}
-		}
-		return lines;
-	}
-}
-
-/**
  * TUI - Main class for managing terminal UI with differential rendering
  */
 export class TUI extends Container {
@@ -270,10 +179,9 @@ export class TUI extends Container {
 	private cursorRow = 0; // Logical cursor row (end of rendered content)
 	private hardwareCursorRow = 0; // Actual terminal cursor row (may differ due to IME positioning)
 	private showHardwareCursor = process.env.PI_HARDWARE_CURSOR === "1";
-	private maxLinesRendered = 0; // Track terminal's working area (max lines ever rendered)
 	private previousViewportTop = 0; // Track previous viewport top for resize-aware cursor moves
 	private fullRedrawCount = 0;
-	private stopped = false;
+	private started = false;
 	private pendingOsc11BackgroundReplies = 0;
 	private pendingOsc11BackgroundQueries: PendingOsc11BackgroundQuery[] = [];
 
@@ -458,11 +366,13 @@ export class TUI extends Container {
 					this.clearOverlayFocusRestoreFor(entry);
 					this.retargetOverlayPreFocus(entry);
 					this.overlayStack.splice(index, 1);
+
 					// Restore focus if this overlay had focus
 					if (this.focusedComponent === component) {
 						const topVisible = this.getTopmostVisibleOverlay();
 						this.setFocus(topVisible?.component ?? entry.preFocus);
 					}
+					component.dispose?.();
 					if (this.overlayStack.length === 0) this.terminal.hideCursor();
 					this.requestRender();
 				}
@@ -536,11 +446,13 @@ export class TUI extends Container {
 		this.clearOverlayFocusRestoreFor(overlay);
 		this.retargetOverlayPreFocus(overlay);
 		this.overlayStack.pop();
+
 		if (this.focusedComponent === overlay.component) {
 			// Find topmost visible overlay, or fall back to preFocus
 			const topVisible = this.getTopmostVisibleOverlay();
 			this.setFocus(topVisible?.component ?? overlay.preFocus);
 		}
+		overlay.component.dispose?.();
 		if (this.overlayStack.length === 0) this.terminal.hideCursor();
 		this.requestRender();
 	}
@@ -577,13 +489,14 @@ export class TUI extends Container {
 	}
 
 	start(): void {
-		this.stopped = false;
+		if (this.started) return;
+		this.started = true;
 		this.terminal.start(
 			(data) => this.handleInput(data),
 			() => this.requestRender(),
 		);
 		this.terminal.hideCursor();
-		this.requestRender();
+		this.requestRender(true);
 	}
 
 	addInputListener(listener: InputListener): () => void {
@@ -598,7 +511,9 @@ export class TUI extends Container {
 	}
 
 	stop(): void {
-		this.stopped = true;
+		if (!this.started) return;
+		this.started = false;
+		this.renderRequested = false;
 		if (this.renderTimer) {
 			clearTimeout(this.renderTimer);
 			this.renderTimer = undefined;
@@ -620,13 +535,13 @@ export class TUI extends Container {
 	}
 
 	requestRender(force = false): void {
+		if (!this.started) return;
 		if (force) {
 			this.previousLines = [];
 			this.previousWidth = -1; // -1 triggers widthChanged, forcing a full clear
 			this.previousHeight = -1; // -1 triggers heightChanged, forcing a full clear
 			this.cursorRow = 0;
 			this.hardwareCursorRow = 0;
-			this.maxLinesRendered = 0;
 			this.previousViewportTop = 0;
 			if (this.renderTimer) {
 				clearTimeout(this.renderTimer);
@@ -634,7 +549,7 @@ export class TUI extends Container {
 			}
 			this.renderRequested = true;
 			process.nextTick(() => {
-				if (this.stopped || !this.renderRequested) {
+				if (!this.started || !this.renderRequested) {
 					return;
 				}
 				this.renderRequested = false;
@@ -649,14 +564,14 @@ export class TUI extends Container {
 	}
 
 	private scheduleRender(): void {
-		if (this.stopped || this.renderTimer || !this.renderRequested) {
+		if (!this.started || this.renderTimer || !this.renderRequested) {
 			return;
 		}
 		const elapsed = performance.now() - this.lastRenderAt;
 		const delay = Math.max(0, TUI.MIN_RENDER_INTERVAL_MS - elapsed);
 		this.renderTimer = setTimeout(() => {
 			this.renderTimer = undefined;
-			if (this.stopped || !this.renderRequested) {
+			if (!this.started || !this.renderRequested) {
 				return;
 			}
 			this.renderRequested = false;
@@ -932,8 +847,6 @@ export class TUI extends Container {
 		}
 
 		// Pad to at least terminal height so overlays have screen-relative positions.
-		// Excludes maxLinesRendered: the historical high-water mark caused self-reinforcing
-		// inflation that pushed content into scrollback on terminal widen.
 		const workingHeight = Math.max(result.length, termHeight, minLinesNeeded);
 
 		// Extend result with empty lines if content is too short for overlay placement or working area
@@ -1018,6 +931,16 @@ export class TUI extends Container {
 		return sliceByColumn(result, 0, totalWidth, true);
 	}
 
+	private assertLineWidths(lines: string[], width: number): void {
+		for (const [row, line] of lines.entries()) {
+			const actualWidth = visibleWidth(line);
+			if (actualWidth > width) {
+				this.stop();
+				throw new RangeError(`Component rendered ${actualWidth} columns on row ${row}; maximum is ${width}`);
+			}
+		}
+	}
+
 	/**
 	 * Find and extract cursor position from rendered lines.
 	 * Searches for CURSOR_MARKER, calculates its position, and strips it from the output.
@@ -1047,7 +970,7 @@ export class TUI extends Container {
 	}
 
 	private doRender(): void {
-		if (this.stopped) return;
+		if (!this.started) return;
 		const width = this.terminal.columns;
 		const height = this.terminal.rows;
 		const widthChanged = this.previousWidth !== 0 && this.previousWidth !== width;
@@ -1070,6 +993,8 @@ export class TUI extends Container {
 			newLines = this.compositeOverlays(newLines, width, height);
 		}
 
+		this.assertLineWidths(newLines, width);
+
 		// Extract cursor position before applying line resets (marker must be found first)
 		const cursorPos = this.extractCursorPosition(newLines, height);
 
@@ -1090,12 +1015,6 @@ export class TUI extends Container {
 			this.terminal.write(buffer);
 			this.cursorRow = Math.max(0, newLines.length - 1);
 			this.hardwareCursorRow = this.cursorRow;
-			// Reset max lines when clearing, otherwise track growth
-			if (clear) {
-				this.maxLinesRendered = newLines.length;
-			} else {
-				this.maxLinesRendered = Math.max(this.maxLinesRendered, newLines.length);
-			}
 			const bufferLength = Math.max(height, newLines.length);
 			this.previousViewportTop = Math.max(0, bufferLength - height);
 			this.positionHardwareCursor(cursorPos, newLines.length);
@@ -1347,8 +1266,6 @@ export class TUI extends Container {
 		// hardwareCursorRow tracks actual terminal cursor position (for movement)
 		this.cursorRow = Math.max(0, newLines.length - 1);
 		this.hardwareCursorRow = finalCursorRow;
-		// Track terminal's working area (grows but doesn't shrink unless cleared)
-		this.maxLinesRendered = Math.max(this.maxLinesRendered, newLines.length);
 		this.previousViewportTop = Math.max(prevViewportTop, finalCursorRow - height + 1);
 
 		// Position hardware cursor for IME

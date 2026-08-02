@@ -1,9 +1,9 @@
+import { type Component, CURSOR_MARKER, type Focusable } from "#tui/components/component";
 import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import { UndoStack } from "#tui/editor/history/undo";
 import { findWordBackward, findWordForward } from "#tui/editor/navigation/word";
 import { getKeybindings } from "#tui/input/keyboard/keybindings";
 import { decodeKittyPrintable } from "#tui/input/keyboard/keys";
-import { type Component, CURSOR_MARKER, type Focusable } from "#tui/tui";
 import { getGraphemeSegmenter, isWhitespaceChar, sliceByColumn, visibleWidth } from "#tui/utilities/text";
 
 const segmenter = getGraphemeSegmenter();

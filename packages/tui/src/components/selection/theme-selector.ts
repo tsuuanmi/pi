@@ -1,7 +1,7 @@
+import { Container } from "#tui/components/component";
 import { DynamicBorder } from "#tui/components/layout/border";
 import { type SelectItem, SelectList, type SelectListLayoutOptions } from "#tui/components/selection/select-list";
 import { getAvailableThemes, getSelectListTheme } from "#tui/theme/theme";
-import { Container } from "#tui/tui";
 
 const THEME_SELECT_LIST_LAYOUT: SelectListLayoutOptions = {
 	minPrimaryColumnWidth: 12,

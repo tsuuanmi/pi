@@ -1,6 +1,6 @@
 # Status Line
 
-The status line is the configurable one-line bottom rail that can inline HUD and hook status details. It replaced the older `FooterComponent` (still exported under that alias for compatibility).
+The status line is the configurable one-line bottom rail that can inline HUD and hook status details.
 
 The module lives under `src/components/status-line/` and is re-exported from the package root.
 
@@ -8,7 +8,7 @@ The module lives under `src/components/status-line/` and is re-exported from the
 
 - [Types](types.md) — `StatusLineSettings`, `StatusLineSegmentId`, segment/preset/separator definitions, and the host interfaces (`StatusLineSessionLike`, `StatusLineDataProvider`).
 - [Component](status-line.md) — `StatusLineComponent`: render lifecycle, background refresh caches, rail assembly.
-- [Segments](segments.md) — the 10 built-in segment renderers and shared helpers (`formatTokens`, `formatCwdForFooter`, `computeUsageStats`, `sanitizeStatusText`).
+- [Segments](segments.md) — the 10 built-in segment renderers and shared helpers (`formatTokens`, `formatCwd`, `computeUsageStats`, `sanitizeStatusText`).
 - [Context Thresholds](context-thresholds.md) — context-usage level thresholds and theme color mapping.
 - [Presets](presets.md) — `default` and `custom` presets.
 - [Separators](separators.md) — separator glyph resolution.
@@ -18,7 +18,7 @@ The module lives under `src/components/status-line/` and is re-exported from the
 
 The package re-exports the module's public API. Notable members:
 
-- `StatusLineComponent` (and `FooterComponent` alias)
+- ``StatusLineComponent`
 - `STATUS_LINE_PRESETS`, `getPreset`
 - `SEGMENTS`, `ALL_SEGMENT_IDS`, `renderSegment`
 - `getSeparator`

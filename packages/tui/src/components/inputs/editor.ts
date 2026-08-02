@@ -1,3 +1,4 @@
+import { type Component, CURSOR_MARKER, type Focusable } from "#tui/components/component";
 import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import { SelectList, type SelectListLayoutOptions, type SelectListTheme } from "#tui/components/selection/select-list";
 import type { AutocompleteProvider, AutocompleteSuggestions } from "#tui/editor/completion/autocomplete";
@@ -5,7 +6,7 @@ import { UndoStack } from "#tui/editor/history/undo";
 import { findWordBackward, findWordForward } from "#tui/editor/navigation/word";
 import { getKeybindings } from "#tui/input/keyboard/keybindings";
 import { decodePrintableKey, matchesKey } from "#tui/input/keyboard/keys";
-import { type Component, CURSOR_MARKER, type Focusable, type TUI } from "#tui/tui";
+import type { TUI } from "#tui/tui";
 import {
 	cjkBreakRegex,
 	getGraphemeSegmenter,
@@ -278,7 +279,6 @@ export class Editor implements Component, Focusable {
 	private readonly autocompleteVisibleItemLimit = 5;
 	private autocompleteAbort?: AbortController;
 	private autocompleteDebounceTimer?: ReturnType<typeof setTimeout>;
-	private autocompleteRequestTask: Promise<void> = Promise.resolve();
 	private autocompleteStartToken: number = 0;
 	private autocompleteRequestId: number = 0;
 
@@ -425,6 +425,10 @@ export class Editor implements Component, Focusable {
 
 	invalidate(): void {
 		// No cached state to invalidate currently
+	}
+
+	dispose(): void {
+		this.cancelAutocomplete();
 	}
 
 	render(width: number): string[] {
@@ -1942,35 +1946,47 @@ export class Editor implements Component, Focusable {
 		if (debounceMs > 0) {
 			this.autocompleteDebounceTimer = setTimeout(() => {
 				this.autocompleteDebounceTimer = undefined;
-				void this.startAutocompleteRequest(startToken, options);
+				this.startAutocompleteRequest(startToken, options);
 			}, debounceMs);
 			return;
 		}
 
-		void this.startAutocompleteRequest(startToken, options);
+		this.startAutocompleteRequest(startToken, options);
 	}
 
-	private async startAutocompleteRequest(
-		startToken: number,
-		options: { force: boolean; explicitTab: boolean },
-	): Promise<void> {
-		const previousTask = this.autocompleteRequestTask;
-		this.autocompleteRequestTask = (async () => {
-			await previousTask;
-			if (startToken !== this.autocompleteStartToken || !this.autocompleteProvider) {
-				return;
-			}
+	private startAutocompleteRequest(startToken: number, options: { force: boolean; explicitTab: boolean }): void {
+		if (startToken !== this.autocompleteStartToken || !this.autocompleteProvider) return;
 
-			const controller = new AbortController();
-			this.autocompleteAbort = controller;
-			const requestId = ++this.autocompleteRequestId;
-			const snapshotText = this.getText();
-			const snapshotLine = this.state.cursorLine;
-			const snapshotCol = this.state.cursorCol;
+		const controller = new AbortController();
+		this.autocompleteAbort = controller;
+		const requestId = ++this.autocompleteRequestId;
+		const snapshotText = this.getText();
+		const snapshotLines = [...this.state.lines];
+		const snapshotLine = this.state.cursorLine;
+		const snapshotCol = this.state.cursorCol;
 
-			await this.runAutocompleteRequest(requestId, controller, snapshotText, snapshotLine, snapshotCol, options);
-		})();
-		await this.autocompleteRequestTask;
+		void this.runAutocompleteRequest(
+			requestId,
+			controller,
+			snapshotText,
+			snapshotLines,
+			snapshotLine,
+			snapshotCol,
+			options,
+		)
+			.catch(() => {
+				if (
+					controller.signal.aborted ||
+					!this.isAutocompleteRequestCurrent(requestId, controller, snapshotText, snapshotLine, snapshotCol)
+				) {
+					return;
+				}
+				this.clearAutocompleteUi();
+				this.tui.requestRender();
+			})
+			.finally(() => {
+				if (this.autocompleteAbort === controller) this.autocompleteAbort = undefined;
+			});
 	}
 
 	private setAutocompleteTriggerCharacters(triggerCharacters: string[]): void {
@@ -2000,18 +2016,17 @@ export class Editor implements Component, Focusable {
 		requestId: number,
 		controller: AbortController,
 		snapshotText: string,
+		snapshotLines: string[],
 		snapshotLine: number,
 		snapshotCol: number,
 		options: { force: boolean; explicitTab: boolean },
 	): Promise<void> {
 		if (!this.autocompleteProvider) return;
 
-		const suggestions = await this.autocompleteProvider.getSuggestions(
-			this.state.lines,
-			this.state.cursorLine,
-			this.state.cursorCol,
-			{ signal: controller.signal, force: options.force },
-		);
+		const suggestions = await this.autocompleteProvider.getSuggestions(snapshotLines, snapshotLine, snapshotCol, {
+			signal: controller.signal,
+			force: options.force,
+		});
 
 		if (!this.isAutocompleteRequestCurrent(requestId, controller, snapshotText, snapshotLine, snapshotCol)) {
 			return;

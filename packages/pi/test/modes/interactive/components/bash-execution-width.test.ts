@@ -28,7 +28,7 @@ function createTuiStub(columns: number): { columns: number; stub: any } {
 
 describe("BashExecutionComponent width handling (#2569)", () => {
 	beforeAll(() => {
-		initTheme(undefined, false);
+		initTheme();
 	});
 
 	it("collapses long command headers until expanded", () => {

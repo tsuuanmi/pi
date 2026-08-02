@@ -1,6 +1,6 @@
 # Status Line Segments
 
-The 10 built-in segment renderers, the segment registry, and the shared helpers relocated from the old `footer.ts`.
+The 10 built-in status-line segment renderers, the segment registry, and their shared helpers.
 
 ## Segment registry
 
@@ -30,7 +30,7 @@ const ALL_SEGMENT_IDS: StatusLineSegmentId[];
 ### `model`
 
 - `name` falls back to `id`, then `no-model`.
-- `(provider)` is prefixed only when `availableProviderCount > 1`, `showProviderPrefix !== false`, and a model is present. The component handles the width fallback by re-rendering this segment with the prefix disabled.
+- `(provider)` is prefixed only when `availableProviderCount > 1`, `showProviderPrefix !== false`, and a model is present. The complete rail is truncated when it exceeds the available width.
 - The thinking level is folded in (`name • level`) when `showThinkingLevel !== false` and the model has `reasoning`. `off` is not shown. Each level uses its own `thinking*` theme color (see [Context Thresholds](context-thresholds.md) for the level-to-color mapping of context, and the theme for thinking levels).
 
 ### `git`
@@ -43,20 +43,20 @@ Renders `pct.toFixed(1)%/window (auto)` where `(auto)` appears only when `autoCo
 
 ### `path`
 
-Abbreviates the cwd to `~` when inside `$HOME` (`formatCwdForFooter`), then truncates to `maxLength` (default 40) with a leading `…`.
+Abbreviates the cwd to `~` when inside `$HOME` (`formatCwd`), then truncates to `maxLength` (default 40) with a leading `…`.
 
 ## Shared helpers
 
 ```typescript
 function sanitizeStatusText(text: string): string;
 function formatTokens(count: number): string;
-function formatCwdForFooter(cwd: string, home: string | undefined): string;
+function formatCwd(cwd: string, home: string | undefined): string;
 function computeUsageStats(session: SegmentContext["session"]): { input: number; output: number };
 ```
 
 - `sanitizeStatusText` — strips ANSI escapes, replaces C0 controls and DEL with spaces, collapses runs, trims. Prevents raw escapes from leaking into the rail.
 - `formatTokens` — `<1k` as raw number, `<10k` as `N.Nk`, `<1M` as `Nk`, `<10M` as `N.NM`, else `NM`.
-- `formatCwdForFooter` — resolves cwd/home and replaces the home prefix with `~`; returns the cwd unchanged when home is unset or cwd is outside it.
+- `formatCwd` — resolves cwd/home and replaces the home prefix with `~`; returns the cwd unchanged when home is unset or cwd is outside it.
 - `computeUsageStats` — sums `input`/`output` usage across all assistant message entries in the session.
 
 ## See Also

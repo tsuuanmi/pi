@@ -1,7 +1,8 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import type { Terminal as XtermTerminalType } from "@xterm/headless";
-import { type Component, TUI } from "#tui/tui";
+import type { Component } from "#tui/components/component";
+import { TUI } from "#tui/tui";
 import { VirtualTerminal } from "#tui-test/terminal/runtime/virtual-terminal";
 
 class TestComponent implements Component {
@@ -62,6 +63,41 @@ function getCellItalic(terminal: VirtualTerminal, row: number, col: number): num
 	assert.ok(cell, `Missing cell at row ${row} col ${col}`);
 	return cell.isItalic();
 }
+
+describe("TUI lifecycle", () => {
+	it("forces a full redraw after restart", async () => {
+		const terminal = new VirtualTerminal(40, 10);
+		const tui = new TUI(terminal);
+		const content = new TestComponent();
+		content.lines = ["before"];
+		tui.addChild(content);
+		tui.start();
+		await terminal.waitForRender();
+
+		tui.stop();
+		content.lines = ["after"];
+		tui.start();
+		await terminal.waitForRender();
+
+		assert.ok(terminal.getViewport()[0]?.includes("after"));
+		tui.stop();
+	});
+
+	it("disposes a child when it is removed", () => {
+		let disposeCount = 0;
+		const content: Component = {
+			render: () => ["content"],
+			invalidate: () => {},
+			dispose: () => {
+				disposeCount += 1;
+			},
+		};
+		const tui = new TUI(new VirtualTerminal(40, 10));
+		tui.addChild(content);
+		tui.removeChild(content);
+		assert.strictEqual(disposeCount, 1);
+	});
+});
 
 describe("TUI resize handling", () => {
 	it("triggers full re-render when terminal height changes", async () => {
@@ -369,7 +405,7 @@ describe("TUI differential rendering", () => {
 		tui.stop();
 	});
 
-	it("clears stale content when maxLinesRendered was inflated by a transient component", async () => {
+	it("clears stale content after a transient component expands the view", async () => {
 		const terminal = new VirtualTerminal(40, 10);
 		const tui = new TUI(terminal);
 		const chat = new TestComponent();

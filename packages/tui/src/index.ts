@@ -1,6 +1,20 @@
 // Core TUI interfaces and classes
 
+export {
+	type Component,
+	Container,
+	CURSOR_MARKER,
+	type Focusable,
+	isFocusable,
+} from "#tui/components/component";
 export { type Expandable, ExpandableText } from "#tui/components/display/expandable";
+export {
+	type HighlightOptions,
+	type HighlightTheme,
+	highlight,
+	renderHighlightedHtml,
+	supportsLanguage,
+} from "#tui/components/display/highlight";
 export {
 	type DefaultTextStyle,
 	Markdown,
@@ -12,16 +26,9 @@ export {
 	renderStructuredReceipt,
 	type StructuredReceiptDisplayModel,
 } from "#tui/components/display/receipt";
-export {
-	type HighlightOptions,
-	type HighlightTheme,
-	highlight,
-	renderHighlightedHtml,
-	supportsLanguage,
-} from "#tui/components/display/highlight";
 export { Text } from "#tui/components/display/text";
-export { TruncatedText } from "#tui/components/display/truncated";
 export { truncateToVisualLines, type VisualTruncateResult } from "#tui/components/display/truncate";
+export { TruncatedText } from "#tui/components/display/truncated";
 export { BorderedLoader } from "#tui/components/feedback/bordered";
 export { CancellableLoader } from "#tui/components/feedback/cancel";
 export { CountdownTimer } from "#tui/components/feedback/countdown";
@@ -46,18 +53,13 @@ export {
 export { renderHudBar } from "#tui/components/hud/render";
 export { Editor, type EditorTheme } from "#tui/components/inputs/editor";
 export { Input } from "#tui/components/inputs/input";
+export { DynamicBorder } from "#tui/components/layout/border";
 // Components
 export { Box } from "#tui/components/layout/box";
-export { DynamicBorder } from "#tui/components/layout/border";
 export { Spacer } from "#tui/components/layout/spacer";
 export { LAYOUT_EDGE_X, LAYOUT_SECTION_GAP_Y } from "#tui/components/layout/spacing";
 export { CollapsibleMessage, type CollapsibleMessageOptions } from "#tui/components/messages/collapsible-message";
 export { UserMessageComponent } from "#tui/components/messages/user-message";
-export {
-	type SearchableTableColumn,
-	SearchableTableSelector,
-	type SearchableTableSelectorOptions,
-} from "#tui/components/selection/table-selector";
 export {
 	type SelectItem,
 	SelectList,
@@ -75,6 +77,11 @@ export {
 	type SessionSortMode,
 } from "#tui/components/selection/session-filter";
 export { type SettingItem, SettingsList, type SettingsListTheme } from "#tui/components/selection/settings-list";
+export {
+	type SearchableTableColumn,
+	SearchableTableSelector,
+	type SearchableTableSelectorOptions,
+} from "#tui/components/selection/table-selector";
 export { ThemeSelectorComponent } from "#tui/components/selection/theme-selector";
 export {
 	type ContextUsageLevel,
@@ -90,17 +97,14 @@ export { getPreset, STATUS_LINE_PRESETS } from "#tui/components/status-line/pres
 export {
 	ALL_SEGMENT_IDS,
 	computeUsageStats,
-	formatCwdForFooter,
+	formatCwd,
 	formatTokens,
 	renderSegment,
 	SEGMENTS,
 	sanitizeStatusText,
 } from "#tui/components/status-line/segments";
 export { getSeparator } from "#tui/components/status-line/separators";
-export {
-	StatusLineComponent,
-	StatusLineComponent as FooterComponent,
-} from "#tui/components/status-line/status-line";
+export { StatusLineComponent } from "#tui/components/status-line/status-line";
 export type {
 	PresetDef,
 	RenderedSegment,
@@ -184,11 +188,6 @@ export { parseOsc11BackgroundColor, type RgbColor } from "#tui/terminal/features
 export { ProcessTerminal, type Terminal } from "#tui/terminal/runtime/terminal";
 export * from "#tui/theme/theme";
 export {
-	type Component,
-	Container,
-	CURSOR_MARKER,
-	type Focusable,
-	isFocusable,
 	type OverlayAnchor,
 	type OverlayHandle,
 	type OverlayMargin,

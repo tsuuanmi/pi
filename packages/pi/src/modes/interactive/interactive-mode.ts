@@ -46,7 +46,6 @@ import {
 	setRegisteredThemes,
 	setTheme,
 	setThemeInstance,
-	stopThemeWatcher,
 	Text,
 	Theme,
 	TruncatedText,
@@ -66,6 +65,14 @@ import type {
 	ExtensionRunner,
 	ExtensionUIContext,
 } from "#pi/extensions/index";
+import type { SourceInfo } from "#pi/package-manager/source-info";
+import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#pi/runtime/agent";
+import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/runtime/runtime";
+import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#pi/session/cwd";
+import type { SessionContext, SessionManager } from "#pi/session/manager";
+import { type AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
+import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
+import type { TruncationResult } from "#pi/tools/truncate";
 import { BashExecutionComponent } from "#pi/ui/interactive/components/bash-execution";
 import { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
 import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant-message";
@@ -81,14 +88,6 @@ import { KeyHandlerController } from "#pi/ui/interactive/controllers/key-handler
 import { ResourceDisplayController } from "#pi/ui/interactive/controllers/resource-display-controller";
 import { SelectorController } from "#pi/ui/interactive/controllers/selector-controller";
 import { FooterDataProvider } from "#pi/ui/interactive/footer-data";
-import type { SourceInfo } from "#pi/package-manager/source-info";
-import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#pi/runtime/agent";
-import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/runtime/runtime";
-import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#pi/session/cwd";
-import type { SessionContext, SessionManager } from "#pi/session/manager";
-import { type AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
-import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
-import type { TruncationResult } from "#pi/tools/truncate";
 import { parseGitUrl } from "#pi/utils/fs/git";
 import { killTrackedDetachedChildren } from "#pi/utils/system/shell";
 import { ensureTool } from "#pi/utils/system/tool-installer";
@@ -221,6 +220,7 @@ export class InteractiveMode {
 
 	// Agent subscription unsubscribe function
 	private unsubscribe?: () => void;
+	private themeChangeCleanup?: () => void;
 	private signalCleanupHandlers: Array<() => void> = [];
 
 	// Track if editor is in bash mode (text starts with !)
@@ -318,7 +318,7 @@ export class InteractiveMode {
 
 		// Register themes from resource loader and initialize
 		setRegisteredThemes(this.session.resourceLoader.getThemes().themes);
-		initTheme(this.settingsManager.getTheme(), true);
+		initTheme(this.settingsManager.getTheme());
 
 		// Extension UI subsystem owns extension overlays/widgets/custom header/footer.
 		// Initialized first in the pinned controller order; getters read live host values.
@@ -654,8 +654,7 @@ export class InteractiveMode {
 		// Render initial messages AFTER showing loaded resources
 		this.renderInitialMessages();
 
-		// Set up theme file watcher
-		onThemeChange(() => {
+		this.themeChangeCleanup = onThemeChange(() => {
 			this.ui.invalidate();
 			this.updateEditorBorderColor();
 			this.ui.requestRender();
@@ -848,7 +847,6 @@ export class InteractiveMode {
 	private async handleFatalRuntimeError(prefix: string, error: unknown): Promise<never> {
 		const message = error instanceof Error ? error.message : String(error);
 		this.showError(`${prefix}: ${message}`);
-		stopThemeWatcher();
 		this.stop();
 		process.exit(1);
 	}
@@ -1048,7 +1046,7 @@ export class InteractiveMode {
 					this.ui.requestRender();
 					return { success: true };
 				}
-				const result = setTheme(themeOrName, true);
+				const result = setTheme(themeOrName);
 				if (result.success) {
 					if (this.settingsManager.getTheme() !== themeOrName) {
 						this.settingsManager.setTheme(themeOrName);
@@ -2295,9 +2293,11 @@ export class InteractiveMode {
 			setRegisteredThemes(this.session.resourceLoader.getThemes().themes);
 			this.hideThinkingBlock = this.settingsManager.getHideThinkingBlock();
 			const themeName = this.settingsManager.getTheme();
-			const themeResult = themeName ? setTheme(themeName, true) : { success: true };
-			if (!themeResult.success) {
-				this.showError(`Failed to load theme "${themeName}": ${themeResult.error}\nFell back to dark theme.`);
+			if (themeName) {
+				const themeResult = setTheme(themeName);
+				if (!themeResult.success) {
+					this.showError(`Failed to load theme "${themeName}": ${themeResult.error}`);
+				}
 			}
 			this.ui.setShowHardwareCursor(this.settingsManager.getShowHardwareCursor());
 			this.setupAutocompleteProvider();
@@ -2524,9 +2524,10 @@ export class InteractiveMode {
 		this._extensionUIController.clearExtensionTerminalInputListeners();
 		this.footer.dispose();
 		this.footerDataProvider.dispose();
-		if (this.unsubscribe) {
-			this.unsubscribe();
-		}
+		this.themeChangeCleanup?.();
+		this.themeChangeCleanup = undefined;
+		this.unsubscribe?.();
+		this.unsubscribe = undefined;
 		if (this.isInitialized) {
 			this.ui.stop();
 			this.isInitialized = false;

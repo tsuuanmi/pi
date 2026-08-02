@@ -1,7 +1,8 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import type { Component, Focusable } from "#tui/tui";
-import { Container, TUI } from "#tui/tui";
+import type { Component, Focusable } from "#tui/components/component";
+import { Container } from "#tui/components/component";
+import { TUI } from "#tui/tui";
 import { VirtualTerminal } from "#tui-test/terminal/runtime/virtual-terminal";
 
 class StaticOverlay implements Component {

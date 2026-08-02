@@ -1,4 +1,4 @@
-import type { Component } from "#tui/tui";
+import type { Component } from "#tui/components/component";
 import { applyBackgroundToLine, visibleWidth } from "#tui/utilities/text";
 
 type RenderCache = {

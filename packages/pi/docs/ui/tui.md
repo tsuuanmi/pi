@@ -12,6 +12,7 @@ The TUI package keeps runtime, editing behavior, and rendered widgets separate:
 
 ```text
 packages/tui/src/tui.ts       # render orchestration, focus, overlays, differential updates
+packages/tui/src/components/component.ts # Component contract and Container
 packages/tui/src/components/ # rendered UI widgets that implement Component
 packages/tui/src/editor/     # non-visual editing primitives used by input components
 packages/tui/src/input/      # keyboard decoding, keybindings, and input stream parsing
@@ -22,6 +23,7 @@ packages/tui/src/utilities/  # generic text, ANSI, and rendering helpers
 
 Use these boundaries when adding or changing TUI code:
 
+- Put the component contract and child lifecycle in `components/component.ts`.
 - Put rendered widgets in `components/`. A component returns lines from `render(width)`, optionally handles focused input, and should not manage raw terminal lifecycle directly.
 - Put shared editing behavior in `editor/`. This is for autocomplete, undo, word navigation, and editor contracts; the rendered `Editor` component lives in `components/inputs/editor.ts`.
 - Put terminal device integration in `terminal/`. Raw mode, stdin/stdout wiring, cursor visibility, screen clearing, terminal dimensions, escape-sequence negotiation, and terminal capability detection belong there.
@@ -38,15 +40,17 @@ interface Component {
   handleInput?(data: string): void;
   wantsKeyRelease?: boolean;
   invalidate(): void;
+  dispose?(): void;
 }
 ```
 
 | Method | Description |
 |--------|-------------|
-| `render(width)` | Return array of strings (one per line). Each line **must not exceed `width`**. |
+| `render(width)` | Return array of strings (one per line). Each line **must not exceed `width`**; the TUI stops with an error when this contract is violated. |
 | `handleInput?(data)` | Receive keyboard input when component has focus. |
 | `wantsKeyRelease?` | If true, component receives key release events (Kitty protocol). Default: false. |
 | `invalidate()` | Clear cached render state. Called on theme changes. |
+| `dispose?()` | Release timers, requests, and listeners when the component is removed. |
 
 The TUI appends a full SGR reset and OSC 8 reset at the end of each rendered line. Styles do not carry across lines. If you emit multi-line text with styling, reapply styles per line or use `wrapTextWithAnsi()` so styles are preserved for each wrapped line.
 
@@ -58,7 +62,7 @@ Components that display a text cursor and need IME (Input Method Editor) support
 import { CURSOR_MARKER, type Component, type Focusable } from "@tsuuanmi/pi-tui";
 
 class MyInput implements Component, Focusable {
-  focused: boolean = false;  // Set by TUI when focus changes
+  focused = false;  // Set by TUI when focus changes
   
   render(width: number): string[] {
     const marker = this.focused ? CURSOR_MARKER : "";
@@ -305,7 +309,7 @@ handleInput(data: string) {
 
 ## Line Width
 
-**Critical:** Each line from `render()` must not exceed the `width` parameter.
+**Critical:** Each line from `render()` must not exceed the `width` parameter. The TUI stops with an error if a component violates this contract.
 
 ```typescript
 import { visibleWidth, truncateToWidth } from "@tsuuanmi/pi-tui";

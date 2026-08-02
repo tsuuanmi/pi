@@ -1,4 +1,3 @@
-import { stopThemeWatcher } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
 import type { Args, Mode } from "#pi/cli/args";
@@ -71,7 +70,6 @@ export async function runAppMode(options: RunModeOptions): Promise<void> {
 			time("interactiveMode.init");
 			printTimings();
 			interactiveMode.stop();
-			stopThemeWatcher();
 			await waitForOutputDrain();
 			return;
 		}
@@ -87,7 +85,6 @@ export async function runAppMode(options: RunModeOptions): Promise<void> {
 		messages: parsed.messages,
 		initialMessage,
 	});
-	stopThemeWatcher();
 	restoreStdout();
 	if (exitCode !== 0) {
 		process.exitCode = exitCode;

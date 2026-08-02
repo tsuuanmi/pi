@@ -48,6 +48,11 @@ describe("StdinBuffer", () => {
 			processInput("hello 世界");
 			assert.deepStrictEqual(emittedSequences, ["h", "e", "l", "l", "o", " ", "世", "界"]);
 		});
+
+		it("should emit astral characters as one sequence", () => {
+			processInput("🙂");
+			assert.deepStrictEqual(emittedSequences, ["🙂"]);
+		});
 	});
 
 	describe("Complete Escape Sequences", () => {
@@ -233,6 +238,11 @@ describe("StdinBuffer", () => {
 			processInput("\x1b[64u");
 			processInput("@");
 			assert.deepStrictEqual(emittedSequences, ["\x1b[64u"]);
+		});
+
+		it("should drop an astral duplicate character after a matching Kitty sequence", () => {
+			processInput("\x1b[128578u🙂");
+			assert.deepStrictEqual(emittedSequences, ["\x1b[128578u"]);
 		});
 
 		it("should keep non-matching plain character after Kitty printable sequence", () => {

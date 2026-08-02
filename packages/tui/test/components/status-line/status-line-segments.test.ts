@@ -3,7 +3,7 @@ import { before, describe, it } from "node:test";
 import type { SegmentContext, StatusLineSessionLike } from "#tui/index";
 import {
 	computeUsageStats,
-	formatCwdForFooter,
+	formatCwd,
 	formatTokens,
 	initTheme,
 	renderSegment,
@@ -295,16 +295,16 @@ describe("path segment", () => {
 	});
 });
 
-describe("formatCwdForFooter", () => {
+describe("formatCwd", () => {
 	it("does not abbreviate sibling paths that share the home prefix", () => {
 		const home = process.env.HOME ?? process.env.USERPROFILE ?? "/home/user";
-		assert.equal(formatCwdForFooter(`${home}2`, home), `${home}2`);
+		assert.equal(formatCwd(`${home}2`, home), `${home}2`);
 	});
 
 	it("abbreviates the home directory and descendants", () => {
 		const home = process.env.HOME ?? process.env.USERPROFILE ?? "/home/user";
-		assert.equal(formatCwdForFooter(home, home), "~");
-		assert.equal(formatCwdForFooter(`${home}/project`, home), "~/project");
+		assert.equal(formatCwd(home, home), "~");
+		assert.equal(formatCwd(`${home}/project`, home), "~/project");
 	});
 });
 
@@ -337,10 +337,8 @@ describe("sanitizeStatusText", () => {
 		assert.equal(sanitizeStatusText("  a   b  "), "a b");
 	});
 
-	it("strips a raw escape that survives the first pass via the C0 fallback", () => {
-		// Lone ESC (0x1b) with no CSI tail is not matched by the ANSI pattern but
-		// is caught by the C0 control pattern.
-		assert.equal(sanitizeStatusText("a\x1bb"), "a b");
+	it("removes two-byte escape sequences", () => {
+		assert.equal(sanitizeStatusText("a\x1bb"), "a");
 	});
 });
 

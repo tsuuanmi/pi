@@ -11,6 +11,12 @@ import {
 } from "@tsuuanmi/pi-tui";
 import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "#pi/exec/http-dispatcher";
 import type { ExtensionCommandContext } from "#pi/extensions/index";
+import type { AgentSession } from "#pi/runtime/agent";
+import type { AgentSessionRuntime } from "#pi/runtime/runtime";
+import { MissingSessionCwdError } from "#pi/session/cwd";
+import { SessionManager } from "#pi/session/manager";
+import type { KeybindingsManager } from "#pi/settings/keybindings";
+import type { SettingsManager } from "#pi/settings/settings-manager";
 import type { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
 import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant-message";
 import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session-selector";
@@ -18,12 +24,6 @@ import { SettingsSelectorComponent } from "#pi/ui/interactive/components/selecto
 import { TreeSelectorComponent } from "#pi/ui/interactive/components/selectors/tree-selector";
 import { UserMessageSelectorComponent } from "#pi/ui/interactive/components/selectors/user-message-selector";
 import type { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui-controller";
-import type { AgentSession } from "#pi/runtime/agent";
-import type { AgentSessionRuntime } from "#pi/runtime/runtime";
-import { MissingSessionCwdError } from "#pi/session/cwd";
-import { SessionManager } from "#pi/session/manager";
-import type { KeybindingsManager } from "#pi/settings/keybindings";
-import type { SettingsManager } from "#pi/settings/settings-manager";
 
 type SelectorControllerDependencies = {
 	ui: TUI;
@@ -245,15 +245,16 @@ export class SelectorController {
 						this.updateEditorBorderColor();
 					},
 					onThemeChange: (themeName) => {
-						const result = setTheme(themeName, true);
+						const result = setTheme(themeName);
+						if (!result.success) {
+							this.showError(`Failed to load theme "${themeName}": ${result.error}`);
+							return;
+						}
 						this.settingsManager.setTheme(themeName);
 						this.ui.invalidate();
-						if (!result.success) {
-							this.showError(`Failed to load theme "${themeName}": ${result.error}\nFell back to dark theme.`);
-						}
 					},
 					onThemePreview: (themeName) => {
-						const result = setTheme(themeName, true);
+						const result = setTheme(themeName);
 						if (result.success) {
 							this.ui.invalidate();
 							this.ui.requestRender();

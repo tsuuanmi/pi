@@ -1,7 +1,7 @@
+import type { Component } from "#tui/components/component";
 import { Input } from "#tui/components/inputs/input";
 import { fuzzyFilter } from "#tui/editor/completion/fuzzy";
 import { getKeybindings } from "#tui/input/keyboard/keybindings";
-import type { Component } from "#tui/tui";
 import { truncateToWidth, visibleWidth, wrapTextWithAnsi } from "#tui/utilities/text";
 
 export interface SettingItem {

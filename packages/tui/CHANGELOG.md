@@ -10,6 +10,22 @@
 - **selection**: Moved the reusable theme selector component into TUI.
 - **selection**: Exported reusable session search and sorting helpers for TUI-hosted session selectors.
 
+### Changed
+
+- **lifecycle**: Components can release timers, requests, and listeners through optional `dispose()` cleanup.
+- **theme**: Custom theme discovery is owned by the host resource loader; TUI now loads only built-in and registered themes.
+- **rendering**: ANSI parsing is shared across stripping, width measurement, wrapping, and status text sanitization.
+
+### Fixed
+
+- **editor**: Autocomplete failures no longer block later requests, and Unicode input remains grouped by code point.
+- **tui**: Restarting the renderer resets terminal state and forces a complete redraw.
+
+### Removed
+
+- **status-line**: Removed the obsolete `FooterComponent` and `formatCwdForFooter` aliases.
+- **theme**: Removed direct theme-directory watching and the `enableWatcher`/`stopThemeWatcher` API.
+
 ## [0.2.2] - 2026-07-23
 
 ### Changed

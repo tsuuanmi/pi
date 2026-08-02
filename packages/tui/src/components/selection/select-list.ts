@@ -1,5 +1,5 @@
+import type { Component } from "#tui/components/component";
 import { getKeybindings } from "#tui/input/keyboard/keybindings";
-import type { Component } from "#tui/tui";
 import { truncateToWidth, visibleWidth } from "#tui/utilities/text";
 
 const DEFAULT_PRIMARY_COLUMN_WIDTH = 32;

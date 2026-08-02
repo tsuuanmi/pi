@@ -1,6 +1,6 @@
+import type { Component } from "#tui/components/component";
 import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import { theme } from "#tui/theme/theme";
-import type { Component } from "#tui/tui";
 
 /**
  * Dynamic border component that adjusts to viewport width.

@@ -1,12 +1,12 @@
 import { createInterface } from "node:readline";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import { initTheme, stopThemeWatcher } from "@tsuuanmi/pi-tui";
+import { initTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
+import type { AppMode } from "#pi/app/modes";
 import type { Args } from "#pi/cli/args";
 import { selectSession } from "#pi/cli/session-picker";
 import { showStartupSelector } from "#pi/cli/startup-ui";
 import { ENV_SESSION_DIR, expandTildePath } from "#pi/config/config";
-import type { AppMode } from "#pi/app/modes";
 import {
 	formatMissingSessionCwdPrompt,
 	getMissingSessionCwdIssue,
@@ -96,20 +96,16 @@ async function createSessionManager(
 	}
 
 	if (parsed.resume) {
-		initTheme(settingsManager.getTheme(), true);
-		try {
-			const selectedPath = await selectSession(
-				(onProgress) => SessionManager.list(cwd, sessionDir, onProgress),
-				(onProgress) => SessionManager.listAll(sessionDir, onProgress),
-			);
-			if (!selectedPath) {
-				console.log(chalk.dim("No session selected"));
-				process.exit(0);
-			}
-			return SessionManager.open(selectedPath, sessionDir);
-		} finally {
-			stopThemeWatcher();
+		initTheme(settingsManager.getTheme());
+		const selectedPath = await selectSession(
+			(onProgress) => SessionManager.list(cwd, sessionDir, onProgress),
+			(onProgress) => SessionManager.listAll(sessionDir, onProgress),
+		);
+		if (!selectedPath) {
+			console.log(chalk.dim("No session selected"));
+			process.exit(0);
 		}
+		return SessionManager.open(selectedPath, sessionDir);
 	}
 
 	if (parsed.continue) return SessionManager.continueRecent(cwd, sessionDir);

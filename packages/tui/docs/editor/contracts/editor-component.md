@@ -1,6 +1,6 @@
 # Editor Component Interface
 
-The `EditorComponent` interface defines the contract for custom multi-line editor implementations.
+The `EditorComponent` interface defines the contract for custom multi-line editor implementations. Removed editors must release timers and asynchronous work from `dispose()`.
 
 ## Interface
 
@@ -26,6 +26,9 @@ interface EditorComponent extends Component {
 
   // Appearance (optional)
   borderColor?: (str: string) => string;
+
+  // Cleanup (optional)
+  dispose?(): void;
 }
 ```
 
@@ -49,9 +52,10 @@ class EmacsEditor implements EditorComponent {
 
   onSubmit?: (text: string) => void;
   onChange?: (text: string) => void;
+  dispose?(): void;
 
   // Component required
-  focused: boolean = false;
+  focused = false;
 }
 ```
 

@@ -1,12 +1,12 @@
+import type { Component } from "#tui/components/component";
 import type { AutocompleteProvider } from "#tui/editor/completion/autocomplete";
-import type { Component } from "#tui/tui";
 
 /**
  * Interface for custom editor components.
  *
  * This allows extensions to provide their own editor implementation
- * (e.g., vim mode, emacs mode, custom keybindings) while maintaining
- * compatibility with the core application.
+ * (e.g., vim mode, emacs mode, custom keybindings) through the editor
+ * component boundary.
  */
 export interface EditorComponent extends Component {
 	// =========================================================================

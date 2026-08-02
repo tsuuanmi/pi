@@ -26,35 +26,96 @@
  * SOFTWARE.
  */
 
-function ansiRegex({ onlyFirst = false }: { onlyFirst?: boolean } = {}): RegExp {
-	// Valid string terminator sequences are BEL, ESC\, and 0x9c
-	const ST = "(?:\\u0007|\\u001B\\u005C|\\u009C)";
+const ESC = 0x1b;
+const BEL = 0x07;
+const C1_CSI = 0x9b;
+const C1_STRING_STARTS = new Set([0x90, 0x98, 0x9d, 0x9e, 0x9f]);
+const STRING_ESCAPED_STARTS = new Set(["P", "X", "]", "^", "_"]);
 
-	// OSC sequences only: ESC ] ... ST (non-greedy until the first ST)
-	const osc = `(?:\\u001B\\][\\s\\S]*?${ST})`;
-
-	// CSI and related: ESC/C1, optional intermediates, optional params (supports ; and :) then final byte
-	const csi = "[\\u001B\\u009B][[\\]()#;?]*(?:\\d{1,4}(?:[;:]\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]";
-
-	const pattern = `${osc}|${csi}`;
-
-	return new RegExp(pattern, onlyFirst ? undefined : "g");
+export interface AnsiSequence {
+	code: string;
+	length: number;
 }
 
-const regex = ansiRegex();
+function isCsiFinal(code: number): boolean {
+	return code >= 0x40 && code <= 0x7e;
+}
+
+function consumeCsi(value: string, start: number, payloadStart: number): AnsiSequence | undefined {
+	for (let index = payloadStart; index < value.length; index += 1) {
+		if (isCsiFinal(value.charCodeAt(index))) {
+			return {
+				code: value.slice(start, index + 1),
+				length: index + 1 - start,
+			};
+		}
+	}
+	return undefined;
+}
+
+function consumeString(value: string, start: number, payloadStart: number): AnsiSequence | undefined {
+	for (let index = payloadStart; index < value.length; index += 1) {
+		const code = value.charCodeAt(index);
+		if (code === BEL || code === 0x9c) {
+			return {
+				code: value.slice(start, index + 1),
+				length: index + 1 - start,
+			};
+		}
+		if (code === ESC && value.charCodeAt(index + 1) === 0x5c) {
+			return {
+				code: value.slice(start, index + 2),
+				length: index + 2 - start,
+			};
+		}
+	}
+	return undefined;
+}
+
+/** Read one complete ANSI control sequence beginning at `start`. */
+export function consumeAnsiSequence(value: string, start: number): AnsiSequence | undefined {
+	if (start < 0 || start >= value.length) return undefined;
+
+	const first = value.charCodeAt(start);
+	if (first === C1_CSI) {
+		return consumeCsi(value, start, start + 1);
+	}
+	if (C1_STRING_STARTS.has(first)) {
+		return consumeString(value, start, start + 1);
+	}
+	if (first !== ESC) return undefined;
+
+	if (start + 1 >= value.length) return undefined;
+	const second = value[start + 1];
+	if (second === "[") {
+		return consumeCsi(value, start, start + 2);
+	}
+	if (second !== undefined && STRING_ESCAPED_STARTS.has(second)) {
+		return consumeString(value, start, start + 2);
+	}
+	if (second === "O") {
+		return start + 2 < value.length ? { code: value.slice(start, start + 3), length: 3 } : undefined;
+	}
+
+	// Two-byte ESC sequences (for example charset selection and Meta keys).
+	return { code: value.slice(start, start + 2), length: 2 };
+}
 
 export function stripAnsi(value: string): string {
 	if (typeof value !== "string") {
 		throw new TypeError(`Expected a \`string\`, got \`${typeof value}\``);
 	}
 
-	// Fast path: ANSI codes require ESC (7-bit) or CSI (8-bit) introducer
-	if (!value.includes("\u001B") && !value.includes("\u009B")) {
-		return value;
+	let result = "";
+	let index = 0;
+	while (index < value.length) {
+		const sequence = consumeAnsiSequence(value, index);
+		if (sequence) {
+			index += sequence.length;
+			continue;
+		}
+		result += value[index];
+		index += 1;
 	}
-
-	// Even though the regex is global, we don't need to reset the `.lastIndex`
-	// because unlike `.exec()` and `.test()`, `.replace()` does it automatically
-	// and doing it manually has a performance penalty.
-	return value.replace(regex, "");
+	return result;
 }

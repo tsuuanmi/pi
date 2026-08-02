@@ -1,4 +1,5 @@
 import { eastAsianWidth } from "get-east-asian-width";
+import { consumeAnsiSequence } from "#tui/utilities/ansi";
 
 // segmenters (shared instance)
 const graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
@@ -90,7 +91,7 @@ function truncateFragmentToWidth(text: string, maxWidth: number): { text: string
 	let pendingAnsi = "";
 
 	while (i < text.length) {
-		const ansi = extractAnsiCode(text, i);
+		const ansi = consumeAnsiSequence(text, i);
 		if (ansi) {
 			pendingAnsi += ansi.code;
 			i += ansi.length;
@@ -113,7 +114,7 @@ function truncateFragmentToWidth(text: string, maxWidth: number): { text: string
 
 		let end = i;
 		while (end < text.length && text[end] !== "\t") {
-			const nextAnsi = extractAnsiCode(text, end);
+			const nextAnsi = consumeAnsiSequence(text, end);
 			if (nextAnsi) {
 				break;
 			}
@@ -241,7 +242,7 @@ export function visibleWidth(str: string): number {
 		let stripped = "";
 		let i = 0;
 		while (i < clean.length) {
-			const ansi = extractAnsiCode(clean, i);
+			const ansi = consumeAnsiSequence(clean, i);
 			if (ansi) {
 				i += ansi.length;
 				continue;
@@ -282,49 +283,6 @@ const THAI_LAO_AM_GLOBAL_REGEX = /[\u0e33\u0eb3]/g;
 export function normalizeTerminalOutput(str: string): string {
 	if (!THAI_LAO_AM_REGEX.test(str)) return str;
 	return str.replace(THAI_LAO_AM_GLOBAL_REGEX, (char) => (char === "\u0e33" ? "\u0e4d\u0e32" : "\u0ecd\u0eb2"));
-}
-
-/**
- * Extract ANSI escape sequences from a string at the given position.
- */
-function extractAnsiCode(str: string, pos: number): { code: string; length: number } | null {
-	if (pos >= str.length || str[pos] !== "\x1b") return null;
-
-	const next = str[pos + 1];
-
-	// CSI sequence: ESC [ ... m/G/K/H/J
-	if (next === "[") {
-		let j = pos + 2;
-		while (j < str.length && !/[mGKHJ]/.test(str[j]!)) j++;
-		if (j < str.length) return { code: str.substring(pos, j + 1), length: j + 1 - pos };
-		return null;
-	}
-
-	// OSC sequence: ESC ] ... BEL or ESC ] ... ST (ESC \)
-	// Used for hyperlinks (OSC 8), window titles, etc.
-	if (next === "]") {
-		let j = pos + 2;
-		while (j < str.length) {
-			if (str[j] === "\x07") return { code: str.substring(pos, j + 1), length: j + 1 - pos };
-			if (str[j] === "\x1b" && str[j + 1] === "\\") return { code: str.substring(pos, j + 2), length: j + 2 - pos };
-			j++;
-		}
-		return null;
-	}
-
-	// APC sequence: ESC _ ... BEL or ESC _ ... ST (ESC \)
-	// Used for cursor marker and application-specific commands
-	if (next === "_") {
-		let j = pos + 2;
-		while (j < str.length) {
-			if (str[j] === "\x07") return { code: str.substring(pos, j + 1), length: j + 1 - pos };
-			if (str[j] === "\x1b" && str[j + 1] === "\\") return { code: str.substring(pos, j + 2), length: j + 2 - pos };
-			j++;
-		}
-		return null;
-	}
-
-	return null;
 }
 
 type Osc8Terminator = "\x07" | "\x1b\\";
@@ -593,7 +551,7 @@ class AnsiCodeTracker {
 function updateTrackerFromText(text: string, tracker: AnsiCodeTracker): void {
 	let i = 0;
 	while (i < text.length) {
-		const ansiResult = extractAnsiCode(text, i);
+		const ansiResult = consumeAnsiSequence(text, i);
 		if (ansiResult) {
 			tracker.process(ansiResult.code);
 			i += ansiResult.length;
@@ -623,7 +581,7 @@ function splitIntoTokensWithAnsi(text: string): string[] {
 	};
 
 	while (i < text.length) {
-		const ansiResult = extractAnsiCode(text, i);
+		const ansiResult = consumeAnsiSequence(text, i);
 		if (ansiResult) {
 			// Hold ANSI codes separately - they'll be attached to the next visible char
 			pendingAnsi += ansiResult.code;
@@ -632,7 +590,7 @@ function splitIntoTokensWithAnsi(text: string): string[] {
 		}
 
 		let end = i;
-		while (end < text.length && !extractAnsiCode(text, end)) {
+		while (end < text.length && !consumeAnsiSequence(text, end)) {
 			end++;
 		}
 
@@ -819,7 +777,7 @@ function breakLongWord(word: string, width: number, tracker: AnsiCodeTracker): s
 	const segments: Array<{ type: "ansi" | "grapheme"; value: string }> = [];
 
 	while (i < word.length) {
-		const ansiResult = extractAnsiCode(word, i);
+		const ansiResult = consumeAnsiSequence(word, i);
 		if (ansiResult) {
 			segments.push({ type: "ansi", value: ansiResult.code });
 			i += ansiResult.length;
@@ -827,7 +785,7 @@ function breakLongWord(word: string, width: number, tracker: AnsiCodeTracker): s
 			// Find the next ANSI code or end of string
 			let end = i;
 			while (end < word.length) {
-				const nextAnsi = extractAnsiCode(word, end);
+				const nextAnsi = consumeAnsiSequence(word, end);
 				if (nextAnsi) break;
 				end++;
 			}
@@ -973,7 +931,7 @@ export function truncateToWidth(
 	} else {
 		let i = 0;
 		while (i < text.length) {
-			const ansi = extractAnsiCode(text, i);
+			const ansi = consumeAnsiSequence(text, i);
 			if (ansi) {
 				pendingAnsi += ansi.code;
 				i += ansi.length;
@@ -1003,7 +961,7 @@ export function truncateToWidth(
 
 			let end = i;
 			while (end < text.length && text[end] !== "\t") {
-				const nextAnsi = extractAnsiCode(text, end);
+				const nextAnsi = consumeAnsiSequence(text, end);
 				if (nextAnsi) {
 					break;
 				}
@@ -1069,7 +1027,7 @@ export function sliceWithWidth(
 		pendingAnsi = "";
 
 	while (i < line.length) {
-		const ansi = extractAnsiCode(line, i);
+		const ansi = consumeAnsiSequence(line, i);
 		if (ansi) {
 			if (currentCol >= startCol && currentCol < endCol) result += ansi.code;
 			else if (currentCol < startCol) pendingAnsi += ansi.code;
@@ -1078,7 +1036,7 @@ export function sliceWithWidth(
 		}
 
 		let textEnd = i;
-		while (textEnd < line.length && !extractAnsiCode(line, textEnd)) textEnd++;
+		while (textEnd < line.length && !consumeAnsiSequence(line, textEnd)) textEnd++;
 
 		for (const { segment } of graphemeSegmenter.segment(line.slice(i, textEnd))) {
 			const w = graphemeWidth(segment);
@@ -1130,7 +1088,7 @@ export function extractSegments(
 	pooledStyleTracker.clear();
 
 	while (i < line.length) {
-		const ansi = extractAnsiCode(line, i);
+		const ansi = consumeAnsiSequence(line, i);
 		if (ansi) {
 			// Track all SGR codes to know styling state at afterStart
 			pooledStyleTracker.process(ansi.code);
@@ -1146,7 +1104,7 @@ export function extractSegments(
 		}
 
 		let textEnd = i;
-		while (textEnd < line.length && !extractAnsiCode(line, textEnd)) textEnd++;
+		while (textEnd < line.length && !consumeAnsiSequence(line, textEnd)) textEnd++;
 
 		for (const { segment } of graphemeSegmenter.segment(line.slice(i, textEnd))) {
 			const w = graphemeWidth(segment);

@@ -11,21 +11,19 @@ The module lives under `src/theme/` and is re-exported from the package root (`e
 ### Lifecycle
 
 ```typescript
-function initTheme(themeName?: string, enableWatcher?: boolean): void;
-function setTheme(name: string, enableWatcher?: boolean): { success: boolean; error?: string };
+function initTheme(themeName?: string): void;
+function setTheme(name: string): { success: boolean; error?: string };
 function setThemeInstance(themeInstance: Theme): void;
 function setRegisteredThemes(themes: Theme[]): void;
-function onThemeChange(callback: () => void): void;
-function stopThemeWatcher(): void;
+function onThemeChange(callback: () => void): () => void;
 ```
 
-- `initTheme` — load the named theme (defaults to detected terminal background); on any error falls back to `dark` silently. Optionally starts a file watcher for custom themes.
-- `setTheme` — switch theme at runtime, returns `{ success, error? }`, and calls the change callback on success. Falls back to `dark` on failure.
-- `setThemeInstance` — install an in-memory `Theme` directly (cannot be file-watched).
-- `onThemeChange` — register a single redraw callback invoked on `setTheme`/`setThemeInstance`/watcher reloads.
-- `stopThemeWatcher` — stops the custom-theme file watcher and clears the reload timer.
+- `initTheme` — load the named theme (defaults to detected terminal background). Invalid theme names throw.
+- `setTheme` — switch theme at runtime, returns `{ success, error? }`, and leaves the current theme unchanged when loading fails.
+- `setThemeInstance` — install an in-memory `Theme` directly.
+- `onThemeChange` — register a redraw callback and receive an unsubscribe function.
 
-The watcher only runs for custom themes (not `dark`/`light`), debounces reloads by 100ms, keeps the last valid theme on a transient invalid file, and refreshes the registry cache on successful reload.
+Pi's resource loader discovers and watches user themes, then registers the resulting `Theme` instances with `setRegisteredThemes`. The TUI package does not scan or watch theme directories.
 
 ### Lookup
 
@@ -36,7 +34,7 @@ function getThemeByName(name: string): Theme | undefined;
 function loadThemeFromPath(themePath: string, mode?: ColorMode): Theme;
 ```
 
-`ThemeInfo` exposes `{ name, path }`. Themes are discovered from the built-in directory and the user's custom themes directory.
+`ThemeInfo` exposes `{ name, path }`. Themes are discovered from the built-in directory and the themes registered by the host application.
 
 ## Theme class
 
