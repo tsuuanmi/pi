@@ -39,7 +39,7 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 - Execute task reviewers through `team_execute`; reviewers persist `review_report` with `pi workflow team record-review-gate`.
 - Execute completion provers through `team_execute`; provers persist `evidence_matrix` with `pi workflow team record-completion-gate`.
 
-Use `team_execute` for worker, reviewer, and prover execution, and `team_resume` only for checkpoint recovery. Worker and reviewer runs require a running team; the legal prover run is allowed during `awaiting_integration`. A reviewer or prover result succeeds only when its gate status is `passed` and its structured verdict validates and passes. The coordinator computes the legal next team role and refuses off-sequence execution or implicit checkpoint reuse.
+Use `team_execute` for worker, reviewer, and prover execution, and `team_resume` only for recovery of an interrupted `running` checkpoint. Completed and aborted checkpoints are terminal; retrying an aborted role requires a fresh `team_execute` run. Worker and reviewer runs require a running team; the legal prover run is allowed during `awaiting_integration`. A reviewer or prover result succeeds only when its gate status is `passed` and its structured verdict validates and passes. The coordinator computes the legal next team role and refuses off-sequence execution or implicit checkpoint reuse.
 
 ## Workflow
 
@@ -60,6 +60,16 @@ Use `team_execute` for worker, reviewer, and prover execution, and `team_resume`
 | `blocked` | Waiting on dependency or human decision. |
 | `completed` | Task finished and passed required gates. |
 | `failed` | Task failed. |
+
+## Role Routing
+
+| Role | Required capability |
+|------|---------------------|
+| worker | `worker` |
+| reviewer | `reviewer` |
+| prover | `prover` |
+
+Role capability matching is exact. Missing capabilities and duplicate agent ids fail before execution; no alternate agent or capability is selected.
 
 ## State Files
 

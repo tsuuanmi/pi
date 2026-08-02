@@ -1,6 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import type { OrchestratorCheckpoint } from "@tsuuanmi/pi-orchestrator";
 import { createTeamTask, executeTeam, readTeamSnapshot, resumeTeam, startTeam } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { teamCheckpointPath, teamReceiptsPath } from "#workflows/session/session-layout";
@@ -122,6 +123,94 @@ describe("team execution boundary", () => {
 				agents: [],
 			}),
 		).rejects.toThrow("team resume requires an existing checkpoint");
+	});
+
+	it("resumes an interrupted running checkpoint", async () => {
+		const snapshot = await createSnapshot(cwd);
+		const controller = new AbortController();
+		controller.abort();
+		const agents = createTeamAgents(
+			createFakeManager(async () => {}),
+			sessionId,
+			[{ id: "worker", profile: "worker", capabilities: ["worker"] }],
+		);
+		await expect(
+			executeTeam({
+				cwd,
+				sessionId,
+				runId: "run-interrupted",
+				role: "worker",
+				snapshot,
+				tasks: snapshot.tasks,
+				persistIds: ["task-1"],
+				agents,
+				routes: { "task-1": { capabilities: ["worker"] } },
+				options: { abortSignal: controller.signal },
+			}),
+		).rejects.toThrow();
+
+		const path = teamCheckpointPath(cwd, "team-1", sessionId, "run-interrupted");
+		const checkpoint = JSON.parse(await readFile(path, "utf8")) as OrchestratorCheckpoint;
+		expect(checkpoint.status).toBe("aborted");
+		await writeFile(
+			path,
+			JSON.stringify({
+				...checkpoint,
+				status: "running",
+				abortedReason: undefined,
+				tasks: {
+					...checkpoint.tasks,
+					tasks: checkpoint.tasks.tasks.map((task) => ({ ...task, status: "pending", error: undefined })),
+					pending: ["task-1"],
+					inProgress: [],
+					completed: [],
+					failed: [],
+					blocked: [],
+					skipped: [],
+				},
+			}),
+			"utf8",
+		);
+
+		const recovered = await readTeamSnapshot(cwd, sessionId, "team-1");
+		const result = await resumeTeam({
+			cwd,
+			sessionId,
+			runId: "run-interrupted",
+			role: "worker",
+			snapshot: recovered,
+			tasks: recovered.tasks,
+			persistIds: ["task-1"],
+			agents: createTeamAgents(
+				createFakeManager(async () => {}),
+				sessionId,
+				[{ id: "worker", profile: "worker", capabilities: ["worker"] }],
+			),
+			routes: { "task-1": { capabilities: ["worker"] } },
+		});
+		expect(result.tasks[0]?.execution?.status).toBe("completed");
+		const completed = JSON.parse(await readFile(path, "utf8")) as OrchestratorCheckpoint;
+		expect(completed.status).toBe("completed");
+	});
+
+	it("rejects an aborted checkpoint", async () => {
+		const snapshot = await createSnapshot(cwd);
+		const path = teamCheckpointPath(cwd, "team-1", sessionId, "run-aborted");
+		await mkdir(dirname(path), { recursive: true });
+		await writeFile(path, JSON.stringify({ status: "aborted" }), "utf8");
+
+		await expect(
+			resumeTeam({
+				cwd,
+				sessionId,
+				runId: "run-aborted",
+				role: "worker",
+				snapshot,
+				tasks: snapshot.tasks,
+				persistIds: ["task-1"],
+				agents: [],
+			}),
+		).rejects.toThrow("team resume cannot use an aborted checkpoint");
 	});
 
 	it("persists checkpoint receipts when resume fails", async () => {

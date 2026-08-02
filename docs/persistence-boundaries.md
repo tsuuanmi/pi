@@ -61,6 +61,8 @@ The checkpoint payload is not workflow state. Workflows may store it, but orches
 
 When a workflow uses orchestrator, workflow state must map to orchestrator inputs and outputs through an adapter.
 
+Team execution persistence is owned by `execution-store.ts`. It rejects older execution timestamps and conflicting same-timestamp payloads, while allowing identical retries. The generic state writer remains responsible only for atomic file operations.
+
 ```text
 Workflow state
   -> adapter

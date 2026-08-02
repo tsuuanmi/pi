@@ -32,7 +32,7 @@ There is one execution engine and two explicit operations:
 | Operation | Behavior |
 | --- | --- |
 | `team_execute` | Start a fresh orchestrator run; reject an existing checkpoint; allow the legal prover run during `awaiting_integration` |
-| `team_resume` | Resume an existing non-completed orchestrator checkpoint |
+| `team_resume` | Resume an existing `running` orchestrator checkpoint; completed and aborted checkpoints are terminal |
 
 There is no mode flag, default path, alternate task shape, or fallback executor.
 
@@ -59,6 +59,8 @@ team_execute / team_resume
 | `TeamTask.status` | `TaskSnapshot.status` mapped back | workflow adapter |
 | worker roster | `Team` of `Agent`s | workflow runtime |
 | worker capability | `TaskRequirements.capabilities` | workflow adapter |
+| reviewer capability | `TaskRequirements.capabilities` | workflow adapter |
+| prover capability | `TaskRequirements.capabilities` | workflow adapter |
 | required tools | `TaskRequirements.tools` | workflow adapter |
 | dependencies | `TaskInput.dependsOn` | workflow adapter |
 | workflow checkpoint file | `TeamCheckpointStore` | workflows |
@@ -116,7 +118,8 @@ Runtime seams are explicit and workflow-owned:
 | event sink factory | Maps queue events for workflow persistence | Implemented by `event-mapper.ts` and `event-store.ts` |
 | task mapper | Converts workflow tasks to `TaskInput[]` | Implemented by `task-mapper.ts` |
 | result mapper | Converts `RunTeamResult` into execution-only workflow state | Implemented by `execution-applier.ts` and receipt mappers |
-| execution store | Persists execution fields without changing workflow status | Implemented by `execution-store.ts` |
+| execution store | Persists execution fields without changing workflow status; rejects stale or conflicting writes | Implemented by `execution-store.ts` |
+| capability routing | Requires exact role capability matches; missing matches fail closed | Implemented by Orchestrator routing and `agent-adapter.ts` |
 | execution boundary | Composes run, apply, and persist | Implemented by `team-execution.ts` |
 | explicit runtime tools | Supply fresh/resume operation and agent roster | Implemented by `team_execute` and `team_resume` |
 
@@ -138,7 +141,7 @@ These seams live in `@tsuuanmi/pi-workflows`.
 | Test | Expected |
 | --- | --- |
 | `team_execute` rejects an existing checkpoint | visible failure |
-| `team_resume` rejects a missing checkpoint | visible failure |
+| `team_resume` rejects a missing, completed, or aborted checkpoint | visible failure |
 | every team operation calls orchestrator | one orchestrator execution path |
 | orchestrator failure does not fall back | visible failure |
 | queue event updates workflow state | mapped event |
@@ -151,10 +154,10 @@ These seams live in `@tsuuanmi/pi-workflows`.
 ## Acceptance criteria for runtime implementation
 
 - All team execution uses `@tsuuanmi/pi-orchestrator`.
-- Fresh and resume operations are explicit.
+- Fresh and resume operations are explicit; only interrupted `running` checkpoints are resumable.
 - No second execution engine or fallback path exists.
 - No alternate task shape or compatibility wrapper is accepted.
 - Boundary checker passes.
-- Team execution, coordinator role progression, strict role-contract, retry, abort, recovery, checkpoint-receipt, failure-persistence, and idempotency tests pass.
+- Team execution, coordinator role progression, strict role-contract, retry, abort, recovery, stale-write, checkpoint-receipt, failure-persistence, and idempotency tests pass.
 - Orchestrator remains unaware of workflows.
 - Workflow gates, artifacts, and HUD state remain workflow-owned.

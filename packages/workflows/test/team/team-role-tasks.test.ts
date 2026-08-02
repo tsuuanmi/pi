@@ -40,6 +40,7 @@ describe("team role batches", () => {
 		const batch = createRoleBatch(snapshot, role("reviewer", "task-1"), "run-2");
 
 		expect(batch.persistIds).toEqual(["task-1"]);
+		expect(batch.routes).toEqual({ "task-1": { capabilities: ["reviewer"] } });
 		expect(batch.tasks[0]?.status).toBe("pending");
 		expect(batch.tasks[0]?.description).toContain("You are the reviewer");
 	});
@@ -48,6 +49,7 @@ describe("team role batches", () => {
 		const batch = createRoleBatch(snapshot, role("prover"), "run-3");
 
 		expect(batch.persistIds).toEqual([]);
+		expect(batch.routes).toEqual({ "team-1-prover-run-3": { capabilities: ["prover"] } });
 		expect(batch.tasks[0]?.id).toBe("team-1-prover-run-3");
 		expect(batch.tasks[0]?.description).toContain("evidence_matrix");
 	});

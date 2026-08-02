@@ -70,6 +70,7 @@ async function prepareResumeRun(input: TeamExecutionInput) {
 	const checkpoint = await checkpointStore.load();
 	if (!checkpoint) throw new Error("team resume requires an existing checkpoint");
 	if (checkpoint.status === "completed") throw new Error("team resume cannot use a completed checkpoint");
+	if (checkpoint.status === "aborted") throw new Error("team resume cannot use an aborted checkpoint");
 	return checkpointStore;
 }
 

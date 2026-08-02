@@ -5,7 +5,8 @@ import { createTeamTask, executeTeam, readTeamSnapshot, startTeam } from "@tsuua
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { teamEventsPath, teamReceiptsPath, teamRoleRunPath, teamTaskPath } from "#workflows/session/session-layout";
 import { createTeamAgents } from "#workflows/skills/team/agent-adapter";
-import type { TeamSnapshot } from "#workflows/skills/team/team-runtime";
+import { saveTeamExecution } from "#workflows/skills/team/execution-store";
+import type { TeamSnapshot, TeamTaskExecution } from "#workflows/skills/team/team-runtime";
 import { createFakeManager } from "#workflows-test/team/team-fakes";
 
 const sessionId = "persistence-test";
@@ -69,6 +70,23 @@ describe("team persistence failures", () => {
 		await expect(readFile(teamRoleRunPath(cwd, teamId, sessionId, "run-task-failure"), "utf8")).resolves.toContain(
 			"run-task-failure",
 		);
+	});
+
+	it("fails closed when an execution result is stale", async () => {
+		const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
+		const current: TeamTaskExecution = {
+			status: "completed",
+			updated_at: "2099-01-01T00:00:00.000Z",
+			receipt_ids: ["receipt-current"],
+		};
+		await saveTeamExecution(cwd, sessionId, {
+			...snapshot,
+			tasks: snapshot.tasks.map((task) => (task.id === "task-1" ? { ...task, execution: current } : task)),
+		});
+
+		await expect(runTeam(cwd, snapshot, "run-stale")).rejects.toThrow("team execution failure persistence failed");
+		const persisted = await readTeamSnapshot(cwd, sessionId, teamId);
+		expect(persisted.tasks[0]?.execution).toEqual(current);
 	});
 
 	it("fails closed when synthetic role failure persistence fails", async () => {

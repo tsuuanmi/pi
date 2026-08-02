@@ -12,6 +12,8 @@
 - **team**: Fresh and resume execution are separate APIs; failed execution state and all role receipts are persisted, including synthetic prover receipts; event records are idempotent.
 - **team**: Reviewer and prover execution now fails closed unless the workflow records a passed gate with valid, non-blocking structured evidence; legal prover runs are accepted during `awaiting_integration`, and synthetic role failures and interrupted checkpoint receipts are persisted separately from task state.
 - **ultragoal**: Checkpoint snapshot bookkeeping no longer stales freshly generated completion receipts.
+- **team**: Reject stale or conflicting task execution writes while preserving identical retries.
+- **team**: Resume only interrupted `running` checkpoints; completed and aborted checkpoints are terminal.
 - **help**: Synchronize Team and Ultragoal command reference documents with generated workflow help.
 
 ## [0.2.2] - 2026-07-23
