@@ -23,23 +23,19 @@ import {
 	Container,
 	CountdownTimer,
 	DynamicBorder,
-	ExpandableText,
 	getAvailableThemesWithPaths,
 	getEditorTheme,
 	getMarkdownTheme,
 	getThemeByName,
 	initTheme,
 	keyDisplayText,
-	keyHint,
 	keyText,
 	LAYOUT_EDGE_X,
-	LAYOUT_SECTION_GAP_Y,
 	Loader,
 	type LoaderIndicatorOptions,
 	matchesKey,
 	onThemeChange,
 	ProcessTerminal,
-	rawKeyHint,
 	Spacer,
 	StatusLineComponent,
 	setKeybindings,
@@ -56,7 +52,7 @@ import {
 import { readWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import chalk from "chalk";
 import { spawn } from "child_process";
-import { APP_NAME, VERSION } from "#pi/config/config";
+import { APP_NAME } from "#pi/config/config";
 import { configureHttpDispatcher } from "#pi/exec/http-dispatcher";
 import type {
 	AutocompleteProviderFactory,
@@ -85,7 +81,7 @@ import { AccountAuthController } from "#pi/ui/interactive/controllers/account-au
 import { CommandController } from "#pi/ui/interactive/controllers/command-controller";
 import { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui-controller";
 import { KeyHandlerController } from "#pi/ui/interactive/controllers/key-handler-controller";
-import { ResourceDisplayController } from "#pi/ui/interactive/controllers/resource-display-controller";
+import { ResourceDiagnosticsController } from "#pi/ui/interactive/controllers/resource-diagnostics-controller";
 import { SelectorController } from "#pi/ui/interactive/controllers/selector-controller";
 import { FooterDataProvider } from "#pi/ui/interactive/footer-data";
 import { parseGitUrl } from "#pi/utils/fs/git";
@@ -163,8 +159,6 @@ export interface InteractiveModeOptions {
 	/** Images to attach to the initial message */
 	/** Additional messages to send after the initial message */
 	initialMessages?: string[];
-	/** Force verbose startup (overrides quietStartup setting) */
-	verbose?: boolean;
 }
 
 export class InteractiveMode {
@@ -184,7 +178,6 @@ export class InteractiveMode {
 	private footerDataProvider: FooterDataProvider;
 	// Stored so the same manager can be injected into custom editors, selectors, and extension UI.
 	private keybindings: KeybindingsManager;
-	private version: string;
 	private isInitialized = false;
 	private onInputCallback?: (text: string) => void;
 	private pendingUserInputs: string[] = [];
@@ -251,14 +244,14 @@ export class InteractiveMode {
 	private _extensionUIController!: ExtensionUIController;
 	private _accountAuthController!: AccountAuthController;
 	private _commandController!: CommandController;
-	private _resourceDisplayController!: ResourceDisplayController;
+	private _resourceDiagnosticsController!: ResourceDiagnosticsController;
 	private _selectorController!: SelectorController;
 	private _keyHandlerController!: KeyHandlerController;
 
 	// Header container that holds the built-in or custom header
 	private headerContainer: Container;
 
-	// Built-in header (logo + keybinding hints + changelog)
+	// Built-in header placeholder used when extensions do not provide a custom header.
 	private builtInHeader: Component | undefined = undefined;
 
 	private options: InteractiveModeOptions;
@@ -286,7 +279,6 @@ export class InteractiveMode {
 		this.runtimeHost.setRebindSession(async () => {
 			await this.rebindCurrentSession();
 		});
-		this.version = VERSION;
 		this.ui = new TUI(new ProcessTerminal(), this.settingsManager.getShowHardwareCursor());
 		this.headerContainer = new Container();
 		this.chatContainer = new Container();
@@ -365,15 +357,11 @@ export class InteractiveMode {
 		});
 
 		// Pinned host-constructor order (load-bearing — tsgo does not catch a `!`-typed
-		// instance-field misorder): extensionUI -> accountAuth -> command -> resourceDisplay
+		// instance-field misorder): extensionUI -> accountAuth -> command -> resourceDiagnostics
 		// -> selector -> keyHandler. Each later controller may reference earlier ones.
-		this._resourceDisplayController = new ResourceDisplayController({
+		this._resourceDiagnosticsController = new ResourceDiagnosticsController({
 			chatContainer: this.chatContainer,
 			getSession: () => this.session,
-			getSessionManager: () => this.sessionManager,
-			getOptionsVerbose: () => this.options.verbose,
-			getToolOutputExpanded: () => this.toolOutputExpanded,
-			getQuietStartup: () => this.settingsManager.getQuietStartup(),
 		});
 		this._selectorController = new SelectorController({
 			ui: this.ui,
@@ -560,16 +548,6 @@ export class InteractiveMode {
 		const [fdPath] = await Promise.all([ensureTool("fd"), ensureTool("rg")]);
 		this.fdPath = fdPath;
 
-		if (this.session.scopedModels.length > 0 && (this.options.verbose || !this.settingsManager.getQuietStartup())) {
-			const modelList = this.session.scopedModels
-				.map((sm) => {
-					const thinkingStr = sm.thinkingLevel ? `:${sm.thinkingLevel}` : "";
-					return `${sm.model.id}${thinkingStr}`;
-				})
-				.join(", ");
-			console.log(theme.fg("dim", `Model scope: ${modelList}`));
-		}
-
 		// Add header container as first child.
 		this.ui.addChild(this.headerContainer);
 
@@ -590,68 +568,14 @@ export class InteractiveMode {
 		this.ui.start();
 		this.isInitialized = true;
 
-		// Add header unless silenced.
-		if (this.options.verbose || !this.settingsManager.getQuietStartup()) {
-			const logo = theme.bold(theme.fg("accent", APP_NAME)) + theme.fg("dim", ` v${this.version}`);
-
-			// Build startup instructions.
-			const hint = (keybinding: AppKeybinding, description: string) => keyHint(keybinding, description);
-
-			const expandedInstructions = [
-				hint("app.interrupt", "to interrupt"),
-				hint("app.clear", "to clear"),
-				rawKeyHint(`${keyText("app.clear")} twice`, "to exit"),
-				hint("app.exit", "to exit (empty)"),
-				keyHint("tui.editor.deleteToLineEnd", "to delete to end"),
-				hint("app.thinking.cycle", "to cycle thinking level"),
-				hint("app.tools.expand", "to expand tools"),
-				hint("app.thinking.toggle", "to expand thinking"),
-				hint("app.editor.external", "for external editor"),
-				rawKeyHint("/", "for commands"),
-				rawKeyHint("!", "to run bash"),
-				rawKeyHint("!!", "to run bash (no context)"),
-				hint("app.message.followUp", "to queue follow-up"),
-				hint("app.message.dequeue", "to edit all queued messages"),
-				rawKeyHint("drop files", "to attach"),
-			].join("\n");
-			const compactInstructions = [
-				hint("app.interrupt", "interrupt"),
-				rawKeyHint(`${keyText("app.clear")}/${keyText("app.exit")}`, "clear/exit"),
-				rawKeyHint("/", "commands"),
-				rawKeyHint("!", "bash"),
-				hint("app.tools.expand", "more"),
-			].join(theme.fg("muted", " · "));
-			const compactOnboarding = theme.fg(
-				"dim",
-				`Press ${keyText("app.tools.expand")} to show full startup help and loaded resources.`,
-			);
-			const onboarding = theme.fg(
-				"dim",
-				`Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.`,
-			);
-			this.builtInHeader = new ExpandableText(
-				() => `${logo}\n${compactInstructions}\n${compactOnboarding}\n\n${onboarding}`,
-				() => `${logo}\n${expandedInstructions}\n\n${onboarding}`,
-				this._resourceDisplayController.getStartupExpansionState(),
-				LAYOUT_EDGE_X,
-				0,
-			);
-
-			// Setup UI layout
-			this.headerContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
-			this.headerContainer.addChild(this.builtInHeader);
-			this.headerContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
-		} else {
-			// Minimal header when silenced
-			this.builtInHeader = new Text("", 0, 0);
-			this.headerContainer.addChild(this.builtInHeader);
-		}
+		// Keep the header container available for extension-provided headers.
+		this.builtInHeader = new Text("", 0, 0);
+		this.headerContainer.addChild(this.builtInHeader);
 		this.ui.requestRender();
 
-		// Initialize extensions first so resources are shown before messages
+		// Initialize extensions before rendering messages.
 		await this.rebindCurrentSession();
 
-		// Render initial messages AFTER showing loaded resources
 		this.renderInitialMessages();
 
 		this.themeChangeCleanup = onThemeChange(() => {
@@ -820,7 +744,7 @@ export class InteractiveMode {
 
 		const extensionRunner = this.session.extensionRunner;
 		this.setupExtensionShortcuts(extensionRunner);
-		this._resourceDisplayController.showLoadedResources({ force: false, showDiagnosticsWhenQuiet: true });
+		this._resourceDiagnosticsController.showDiagnostics();
 	}
 
 	private applyRuntimeSettings(): void {
@@ -2305,10 +2229,7 @@ export class InteractiveMode {
 			this.setupExtensionShortcuts(runner);
 			this.rebuildChatFromMessages();
 			dismissReloadBox(this.editor as Component);
-			this._resourceDisplayController.showLoadedResources({
-				force: false,
-				showDiagnosticsWhenQuiet: true,
-			});
+			this._resourceDiagnosticsController.showDiagnostics();
 			const modelsJsonError = this.session.modelRegistry.getError();
 			if (modelsJsonError) {
 				this.showError(`Model settings error: ${modelsJsonError}`);

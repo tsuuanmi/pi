@@ -24,7 +24,6 @@ export interface Args {
 	print?: boolean;
 	listModels?: string | true;
 	tmux?: boolean;
-	verbose?: boolean;
 	messages: string[];
 	fileArgs: string[];
 	/** Unknown flags (potentially extension flags) - map of flag name to value */
@@ -94,8 +93,6 @@ export function parseArgs(args: string[]): Args {
 			} else {
 				result.listModels = true;
 			}
-		} else if (arg === "--verbose") {
-			result.verbose = true;
 		} else if (arg.startsWith("@")) {
 			result.fileArgs.push(arg.slice(1)); // Remove @ prefix
 		} else if (arg.startsWith("--")) {
@@ -160,7 +157,6 @@ ${chalk.bold("Options:")}
   --thinking <level>             Set thinking level: off, minimal, low, medium, high, xhigh
   --list-models [search]         List available models (with optional fuzzy search)
   --tmux                         Launch interactive startup inside a new tmux session
-  --verbose                      Force verbose startup (overrides quietStartup setting)
   --help, -h                     Show this help
   --version, -v                  Show version number
 

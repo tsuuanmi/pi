@@ -146,13 +146,6 @@ describe("parseArgs", () => {
 		});
 	});
 
-	describe("--verbose flag", () => {
-		test("parses --verbose flag", () => {
-			const result = parseArgs(["--verbose"]);
-			expect(result.verbose).toBe(true);
-		});
-	});
-
 	describe("--tmux flag", () => {
 		test("parses --tmux flag", () => {
 			const result = parseArgs(["--tmux"]);

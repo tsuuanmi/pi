@@ -11,6 +11,10 @@
 
 - **models**: Custom provider model configs now accept image input metadata and `max`/`ultra` thinking-level mappings.
 
+### Removed
+
+- **interactive**: Removed automatic startup help and loaded-resource listing, along with the `--verbose` flag and `quietStartup` setting.
+
 ## [0.2.2] - 2026-07-23
 
 ### Breaking Changes

@@ -23,7 +23,6 @@ pi --name <name> / -n           # Name for the session
 pi --session <path|id>          # Resume specific session file or partial session ID
 pi --tmux                       # Launch interactive startup inside a new tmux session
 pi --list-models [search]       # List available models, optionally filtered by fuzzy search
-pi --verbose                    # Verbose logging
 pi --version / -v               # Print version
 pi --help / -h                  # Print help
 ```

@@ -62,7 +62,6 @@ export async function runAppMode(options: RunModeOptions): Promise<void> {
 			modelStartupWarning,
 			initialMessage,
 			initialMessages: parsed.messages,
-			verbose: parsed.verbose,
 		});
 
 		if (startupBenchmark) {

@@ -524,7 +524,6 @@ Extensions, skills, prompt templates, and themes are auto-discovered from `~/.pi
 
 | Option | Description |
 |--------|-------------|
-| `--verbose` | Force verbose startup (overrides `quietStartup` setting) |
 | `-h`, `--help` | Show help |
 | `-v`, `--version` | Show version |
 

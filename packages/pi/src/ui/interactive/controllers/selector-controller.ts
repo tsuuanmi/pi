@@ -209,7 +209,6 @@ export class SelectorController {
 					availableThemes: getAvailableThemes(),
 					hideThinkingBlock: this.hideThinkingBlock,
 					showHardwareCursor: this.settingsManager.getShowHardwareCursor(),
-					quietStartup: this.settingsManager.getQuietStartup(),
 					agentProfiles,
 					agentModelOverrides: this.settingsManager.getAgentModelOverrides(),
 					agentThinkingLevelOverrides: this.settingsManager.getAgentThinkingLevelOverrides(),
@@ -269,9 +268,6 @@ export class SelectorController {
 							}
 						}
 						this.ui.requestRender();
-					},
-					onQuietStartupChange: (enabled) => {
-						this.settingsManager.setQuietStartup(enabled);
 					},
 					onShowHardwareCursorChange: (enabled) => {
 						this.settingsManager.setShowHardwareCursor(enabled);

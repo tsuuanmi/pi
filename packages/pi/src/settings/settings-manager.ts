@@ -101,7 +101,6 @@ export interface Settings {
 	retry?: RetrySettings;
 	hideThinkingBlock?: boolean;
 	shellPath?: string; // Custom shell path
-	quietStartup?: boolean;
 	shellCommandPrefix?: string; // Prefix prepended to every bash command (e.g., "shopt -s expand_aliases" for alias support)
 	npmCommand?: string[]; // Command used for npm package lookup/install operations, argv-style (e.g., ["mise", "exec", "node@20", "--", "npm"])
 	packages?: PackageSource[]; // Array of package sources (npm/git/local or reserved pi: bundles; string or object with filtering)
@@ -845,16 +844,6 @@ export class SettingsManager {
 	setShellPath(path: string | undefined): void {
 		this.globalSettings.shellPath = path;
 		this.markModified("shellPath");
-		this.save();
-	}
-
-	getQuietStartup(): boolean {
-		return this.settings.quietStartup ?? false;
-	}
-
-	setQuietStartup(quiet: boolean): void {
-		this.globalSettings.quietStartup = quiet;
-		this.markModified("quietStartup");
 		this.save();
 	}
 

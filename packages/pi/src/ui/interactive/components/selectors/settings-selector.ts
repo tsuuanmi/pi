@@ -62,7 +62,6 @@ export interface SettingsConfig {
 	availableThemes: string[];
 	hideThinkingBlock: boolean;
 	showHardwareCursor: boolean;
-	quietStartup: boolean;
 	agentProfiles: AgentSettingsProfile[];
 	agentModelOverrides: Record<string, string>;
 	agentThinkingLevelOverrides: Record<string, ThinkingLevel>;
@@ -81,7 +80,6 @@ export interface SettingsCallbacks {
 	onThemePreview?: (theme: string) => void;
 	onHideThinkingBlockChange: (hidden: boolean) => void;
 	onShowHardwareCursorChange: (enabled: boolean) => void;
-	onQuietStartupChange: (enabled: boolean) => void;
 	onMainModelChange: (modelRef: string) => void;
 	onAgentModelOverrideChange: (agentName: string, modelRef: string | undefined) => void;
 	onAgentThinkingLevelOverrideChange: (agentName: string, level: ThinkingLevel | undefined) => void;
@@ -525,9 +523,6 @@ export class SettingsSelectorComponent extends Container {
 				case "hide-thinking":
 					callbacks.onHideThinkingBlockChange(newValue === "true");
 					break;
-				case "quiet-startup":
-					callbacks.onQuietStartupChange(newValue === "true");
-					break;
 				case "show-hardware-cursor":
 					callbacks.onShowHardwareCursorChange(newValue === "true");
 					break;
@@ -632,13 +627,6 @@ export class SettingsSelectorComponent extends Container {
 				label: "Show hardware cursor",
 				description: "Show the terminal cursor while still positioning it for IME support",
 				currentValue: config.showHardwareCursor ? "true" : "false",
-				values: ["true", "false"],
-			},
-			{
-				id: "quiet-startup",
-				label: "Quiet startup",
-				description: "Disable verbose printing at startup",
-				currentValue: config.quietStartup ? "true" : "false",
 				values: ["true", "false"],
 			},
 		];
