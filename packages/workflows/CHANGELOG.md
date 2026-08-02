@@ -3,11 +3,16 @@
 ### Added
 
 - **extensions**: Added `@tsuuanmi/pi-workflows/register` as the bundled Pi workflow integration entry point.
-- **team**: Added pure team-to-orchestrator adapter mappings, explicit mode validation, a callback-backed checkpoint store, and a queue-event sink for future workflow-owned orchestrator integration.
+- **team**: Replaced direct team subagent spawning with explicit `team_execute` and `team_resume` orchestrator operations; role-task batching, fresh/resume checkpoint control, separate execution state, workflow-owned persistence, and no fallback execution path are enforced.
 
 ### Changed
 
+- **team**: Split task, status, event, receipt, checkpoint, and event-sink responsibilities into focused workflow-owned modules; no mixed adapter module is retained.
 - **team**: Team orchestrator adapter string fields now reject surrounding whitespace instead of normalizing values.
+- **team**: Fresh and resume execution are separate APIs; failed execution state and all role receipts are persisted, including synthetic prover receipts; event records are idempotent.
+- **team**: Reviewer and prover execution now fails closed unless the workflow records a passed gate with valid, non-blocking structured evidence; legal prover runs are accepted during `awaiting_integration`, and synthetic role failures and interrupted checkpoint receipts are persisted separately from task state.
+- **ultragoal**: Checkpoint snapshot bookkeeping no longer stales freshly generated completion receipts.
+- **help**: Synchronize Team and Ultragoal command reference documents with generated workflow help.
 
 ## [0.2.2] - 2026-07-23
 
@@ -36,14 +41,14 @@
 
 - **ralplan**: Added a deterministic orchestration snapshot, pure expected-action selector, and journaled artifact completion transaction with provenance sidecars, idempotent same-hash handling, and doctor-visible journal health.
 - **deep-interview**: Added first-class model-visible tools for planning questions, recording answers/scoring, reading compact state, closure checks, restating goals, and writing specs with current-session propagation.
-- **subagents**: Workflow subagent spawning is now done via model-visible tools that call the main session's `SubagentManager` directly in-process (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `team_spawn_review_agent`, `team_spawn_prover_agent`, `ultragoal_spawn_goal_agent`). pi-agent owns the agent/subagent process; pi-workflows registers the tools and owns turn order, guarded role checks, and result→artifact handoff. Subagent records persist to `.pi/<session>/state/subagents/` (reusing the agent-layer format). `pi-workflows` contains no spawning logic of its own — it delegates each spawn to the session's manager. No circular dependency.
+- **subagents**: Workflow agent execution is exposed through model-visible tools (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, `ultragoal_spawn_goal_agent`). Generic and Ultragoal tools use the main session's `SubagentManager`; team roles execute through `@tsuuanmi/pi-orchestrator`. pi-agent owns runtime agents; pi-workflows owns turn order, guarded role checks, persistence, and result→artifact handoff. No circular dependency.
 - **agent**: Added `SubagentManagerFactory` registry (`registerSubagentManagerFactory`/`getSubagentManagerFactory`/`clearSubagentManagerFactoryForTests`) + `SubagentManagerFactoryContext` type, and `dispose(): Promise<void>` on the `SubagentManager` interface.
 - **workflows**: `pi workflow <skill> <action>` CLI verbs now drive the retained skill runtime directly, replacing the removed in-process tool surface: `pi workflow deep-interview <plan-question|record-answer|record-scoring|read-compact|closure-check|restate-goal|write-spec>`, `pi workflow ralplan <record-explorer-gate|write-artifact|status|read-compact|doctor|approve-plan>`, `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>`, `pi workflow ultragoal <create-plan|status|read-compact|start-next|checkpoint|record-review-blockers|classify-blocker|guard>`.
 - **workflows**: Added a shared skill transition registry with per-skill transition tables.
 - **team**: Added prover and reviewer gates for team workflows, including `pi workflow team record-completion-gate`, `pi workflow team record-review-gate`, fail-closed `evidence_matrix` / `review_report` validation, bounded retry escalation, and deterministic gate artifact storage.
 - **ralplan**: Added an explorer pre-planner gate with `pi workflow ralplan record-explorer-gate`, fail-closed `context_map` validation, bounded retry escalation, and shared deterministic context-template builders for ralplan role prompts and tasks.
-- **workflows**: Added scoped expected-next role helpers for guarded workflow spawns, rejecting off-script role mismatches and runtime model/tool overrides in workflow-owned spawn paths.
-- **workflows**: Added state-driven `expectedNextRalplanRole`/`expectedNextTeamRole` selectors that compute the one legal next spawn from workflow state (ralplan artifact index + critic verdict branching; team lexicographic task selection). Workflow spawn tools now refuse spawns that do not match the state-computed legal next role. The ralplan selector also models the explorer pre-planner gate, returning `{ stage: "pre-planner", role: "explorer" }` until a passing `context_map` is recorded, so planner spawns are deterministically refused at the selector seam rather than only inside the role-agent runner.
+- **workflows**: Added scoped expected-next role helpers for guarded workflow execution, rejecting off-script role mismatches and runtime model/tool overrides in workflow-owned execution paths.
+- **workflows**: Added state-driven `expectedNextRalplanRole`/`expectedNextTeamRole` selectors that compute the one legal next role from workflow state (ralplan artifact index + critic verdict branching; team lexicographic task selection). Workflow execution tools now refuse roles that do not match the state-computed legal role. The ralplan selector also models the explorer pre-planner gate, returning `{ stage: "pre-planner", role: "explorer" }` until a passing `context_map` is recorded, so planner execution is deterministically refused at the selector seam rather than only inside the role-agent runner.
 - **workflows**: Added carried handoff contract fields for obstacles, deterministic final-package receipt assembly, shared HUD chip helpers, and a shared stage artifact writer.
 - **ralplan**: Added expert-stage escalation with an `expert` role after iterate-cap or explorer-gate `human_blocked` escalation.
 - **workflows**: Wired every bundled workflow agent profile into an end-to-end guarded spawn path: ralplan can spawn `explorer`/`expert`, team can spawn `reviewer`/`prover`, and worker remains shared by team and ultragoal.

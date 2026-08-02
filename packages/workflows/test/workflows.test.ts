@@ -268,9 +268,8 @@ describe("workflow runtime", () => {
 			expect.arrayContaining([
 				"subagent_spawn",
 				"ralplan_run_agent",
-				"team_spawn_task_agent",
-				"team_spawn_review_agent",
-				"team_spawn_prover_agent",
+				"team_execute",
+				"team_resume",
 				"ultragoal_spawn_goal_agent",
 			]),
 		);
@@ -1005,13 +1004,13 @@ describe("workflow runtime", () => {
 			const snapshot = await readTeamSnapshot(cwd, sessionId, "team-e2e");
 			const expected = expectedNextTeamRole(snapshot);
 			expect(expected?.taskId).toBe("task-a");
-			// Spawning for task-b (not the legal next) is refused.
+			// Executing task-b (not the legal next) is refused.
 			expect(() =>
 				assertExpectedNextRole(expected!, {
 					skill: "team",
 					stage: "task-worker",
 					role: "worker",
-					owner: "team_spawn_task_agent",
+					owner: "team_execute",
 					teamId: "team-e2e",
 					taskId: "task-b",
 				}),

@@ -1,6 +1,6 @@
 # Workflow and Orchestrator Overlap
 
-This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-orchestrator` and records what should move, stay, or remain under review. See [`receipt-boundaries.md`](./receipt-boundaries.md) for receipt ownership rules, [`persistence-boundaries.md`](./persistence-boundaries.md) for state ownership rules, [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) for the team adapter design, and [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the feature-gated runtime design.
+This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-orchestrator` and records what should move, stay, or remain under review. See [`receipt-boundaries.md`](./receipt-boundaries.md) for receipt ownership rules, [`persistence-boundaries.md`](./persistence-boundaries.md) for state ownership rules, [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) for the team adapter boundary, and [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the runtime contract.
 
 ## Boundary rule
 
@@ -15,11 +15,11 @@ This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-
 
 | Workflow area | Current behavior | Overlap | Decision | ROI | Next action |
 | --- | --- | --- | --- | --- | --- |
-| `team` | Persists team tasks, workers, gates, mailbox, and spawns worker/reviewer/prover subagents | Task queue, team roster, routing, events, receipts | Keep workflow state/gates; evaluate orchestrator for generic task execution only | High | Design adapter from workflow task state to orchestrator task DAG |
+| `team` | Persists team tasks, workers, gates, mailbox, and delegates all role execution to Orchestrator | Task queue, team roster, routing, events, receipts | Keep workflow state/gates; use Orchestrator as the sole execution engine | High | Complete parity and recovery coverage |
 | `ultragoal` | Persists approved goals, checkpoints, quality gates, blockers, ledger, and completion receipts | Task/goal state, checkpoints, receipts, progress | Keep workflow-owned goal UX and gates; consider orchestrator only for multi-goal DAG execution if goals become generic tasks | Medium-high | Audit goal dependency semantics before any code move |
 | `ralplan` | Produces pending-approval plans through role-agent stages, verdicts, obstacles, approval handoff | Planning, role sequencing, artifacts | Keep workflow-owned; do not move to orchestrator | Medium | Document handoff outputs that can become orchestrator task inputs |
 | `deep-interview` | Runs requirements interview, ambiguity scoring, closure guard, spec writing | None significant | Keep workflow-owned | Low | No orchestrator integration |
-| Workflow runtime | Owns session state, leases, RPC, GC, mutation queues, storage layout | Checkpoint/recovery concepts | Keep workflow-owned; may implement orchestrator checkpoint stores | High | Add adapter example only after a workflow uses orchestrator |
+| Workflow runtime | Owns session state, leases, RPC, GC, mutation queues, storage layout | Checkpoint/recovery concepts | Keep workflow-owned; may implement orchestrator checkpoint stores | High | Keep the team checkpoint/event stores workflow-owned |
 
 ## Detailed findings
 
@@ -34,12 +34,12 @@ This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-
 - mailbox and event files
 - workflow HUD state
 
-`packages/workflows/src/skills/team/team-tools.ts` spawns guarded subagents for worker, reviewer, and prover roles. These are workflow policy roles, not generic `orchestrator.Team` agents.
+`packages/workflows/src/skills/team/team-tools.ts` selects guarded worker, reviewer, and prover roles, then submits each role batch to the orchestrator. These are workflow policy roles, not generic `orchestrator.Team` agents.
 
 Decision:
 
 - Keep workflow-owned task state because it includes review gates, completion evidence, mailbox state, HUD state, and workflow artifacts.
-- Consider `Orchestrator` only for the inner generic execution loop when team tasks form a strict DAG and can be assigned to runtime `Agent`s with `TaskRequirements`.
+- Use `Orchestrator` for every role execution loop; workflow submits only the legally selected role task with runtime `Agent`s and `TaskRequirements`.
 - Do not rename `orchestrator.Team`; instead, document that workflow team state is a workflow skill concept.
 
 Potential adapter:
@@ -57,7 +57,7 @@ Do not move into orchestrator:
 - reviewer/prover gate policy
 - team mailbox files
 - workflow HUD state
-- guarded spawn role order
+- guarded role order
 - workflow artifact paths
 
 ### Ultragoal workflow
@@ -140,13 +140,14 @@ Decision:
 | ---: | --- | --- | --- |
 | 1 | Write a team-workflow adapter design | Done | Defined in [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) |
 | 2 | Add receipt boundary docs in package docs | High | Clarify tool/task/workflow receipts at package level |
-| 3 | Add checkpoint-store adapter example | Medium-high | Workflows can implement `OrchestratorCheckpointStore` without reverse imports |
+| 3 | Add checkpoint-store adapter example | Done | `orchestrator-checkpoint.ts` provides the workflow-owned store |
 | 4 | Audit team task dependency fields against `TaskQueue` semantics | Medium-high | `depends_on` and `blocked_by` need strict mapping rules |
 | 5 | Audit ultragoal goal dependencies | Medium | Only integrate orchestrator if goals form a real DAG |
-| 6 | Add event mapping docs | Medium | Queue events to workflow HUD/events should be adapter-owned |
-| 7 | Consider implementing orchestrator inside team workflow | Medium | Only after adapter design is approved |
-| 8 | Consider implementing orchestrator inside ultragoal | Low-medium | Only if dependency-DAG goals are required |
-| 9 | Keep ralplan/deep-interview workflow-owned | Low | No code movement needed |
+| 6 | Add event mapping docs | Done | Queue events are mapped by workflow-owned modules |
+| 7 | Implement explicit team orchestrator runner | Done | `team-orchestrator.ts` requires agents and tasks and never falls back |
+| 8 | Replace mode with explicit team operations | Done | `team_execute` starts fresh work and `team_resume` requires a checkpoint |
+| 9 | Consider implementing orchestrator inside ultragoal | Low-medium | Only if dependency-DAG goals are required |
+| 10 | Keep ralplan/deep-interview workflow-owned | Low | No code movement needed |
 
 ## Adapter acceptance criteria
 
@@ -160,6 +161,6 @@ Any workflow-to-orchestrator adapter must satisfy:
 6. It records workflow receipts that reference orchestrator task receipt ids instead of copying task receipt schema.
 7. It preserves workflow gates as workflow-owned policy.
 
-## Do not implement yet
+## Remaining runtime work
 
-Do not start runtime integration until the team adapter design is approved. The current priority is boundary clarity and overlap reduction, not moving behavior speculatively.
+The adapter, explicit role coordinator, fresh/resume tools, failure persistence, and idempotent event store are implemented. Remaining work is parity/recovery testing and dependency-semantic audit. Do not integrate it into ultragoal, ralplan, or deep-interview without a separate DAG requirement.

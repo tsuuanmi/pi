@@ -20,6 +20,7 @@ import {
 	teamTaskPath,
 	workflowStatePath,
 } from "#workflows/session/session-layout";
+import type { TeamExecutionStatus } from "#workflows/skills/team/status-mapper";
 import { buildTeamHud } from "#workflows/skills/team/team-hud";
 import { syncWorkflowActiveState } from "#workflows/state/active-state";
 import {
@@ -74,6 +75,13 @@ export interface TeamCompletionGate {
 	updated_at: string;
 }
 
+export interface TeamTaskExecution {
+	status: TeamExecutionStatus;
+	updated_at: string;
+	receipt_ids: string[];
+	error?: string;
+}
+
 export interface TeamTask {
 	id: string;
 	title: string;
@@ -86,6 +94,7 @@ export interface TeamTask {
 	review_gate?: TeamReviewGate;
 	gate_escalation?: TeamTaskGateEscalation;
 	completion_evidence?: TeamCompletionEvidence;
+	execution?: TeamTaskExecution;
 	version: number;
 	created_at: string;
 	updated_at: string;
@@ -185,6 +194,45 @@ function normalizeStringArray(value: unknown): string[] | undefined {
 	return items.length > 0 ? items : undefined;
 }
 
+function normalizeExecution(value: unknown): TeamTaskExecution | undefined {
+	if (value === undefined) return undefined;
+	if (!isPlainObject(value)) throw new Error("team task execution must be an object");
+	const status = value.status;
+	if (
+		status !== "pending" &&
+		status !== "in_progress" &&
+		status !== "completed" &&
+		status !== "failed" &&
+		status !== "blocked" &&
+		status !== "skipped"
+	) {
+		throw new Error(`invalid team task execution status: ${String(status)}`);
+	}
+	if (
+		typeof value.updated_at !== "string" ||
+		value.updated_at.trim().length === 0 ||
+		value.updated_at.trim() !== value.updated_at
+	) {
+		throw new Error("team task execution updated_at must be a non-empty, trimmed string");
+	}
+	if (
+		!Array.isArray(value.receipt_ids) ||
+		value.receipt_ids.some((id) => typeof id !== "string" || id.trim().length === 0 || id.trim() !== id)
+	) {
+		throw new Error("team task execution receipt_ids must be non-empty, trimmed strings");
+	}
+	const error = value.error;
+	if (error !== undefined && (typeof error !== "string" || error.trim().length === 0 || error.trim() !== error)) {
+		throw new Error("team task execution error must be a non-empty string");
+	}
+	return {
+		status,
+		updated_at: value.updated_at,
+		receipt_ids: [...value.receipt_ids],
+		error: typeof error === "string" ? error : undefined,
+	};
+}
+
 function normalizeTask(raw: unknown): TeamTask {
 	if (!isPlainObject(raw)) throw new Error("team task must be an object");
 	const now = nowIso();
@@ -206,6 +254,7 @@ function normalizeTask(raw: unknown): TeamTask {
 		completion_evidence: isPlainObject(raw.completion_evidence)
 			? normalizeEvidence(id, raw.completion_evidence)
 			: undefined,
+		execution: normalizeExecution(raw.execution),
 		version: typeof raw.version === "number" && Number.isInteger(raw.version) ? raw.version : 1,
 		created_at: createdAt,
 		updated_at: typeof raw.updated_at === "string" ? raw.updated_at : createdAt,
@@ -408,7 +457,7 @@ async function listTasks(cwd: string, teamId: string, sessionId: string): Promis
 	return tasks.sort((a, b) => a.id.localeCompare(b.id));
 }
 
-async function syncTeamState(cwd: string, snapshot: TeamSnapshot, sessionId: string): Promise<void> {
+export async function syncTeamState(cwd: string, snapshot: TeamSnapshot, sessionId: string): Promise<void> {
 	const active = snapshot.phase !== "missing" && snapshot.phase !== "complete" && snapshot.phase !== "cancelled";
 	const state = await writeWorkflowState(
 		cwd,

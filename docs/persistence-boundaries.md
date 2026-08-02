@@ -57,6 +57,7 @@ The checkpoint payload is not workflow state. Workflows may store it, but orches
 - workflow HUD state
 - workflow artifacts
 - workflow recovery markers
+- team role execution receipts and idempotent event records
 
 When a workflow uses orchestrator, workflow state must map to orchestrator inputs and outputs through an adapter.
 
@@ -67,7 +68,7 @@ Workflow state
   -> Orchestrator.run()
   -> queue events / RunTeamResult / receipts
   -> adapter
-  -> workflow state / HUD / artifacts
+  -> workflow state / HUD / artifacts / role receipts
 ```
 
 ## Pi session contract
@@ -119,12 +120,11 @@ A workflow-owned orchestrator adapter must:
 
 | Rank | Task | ROI | Owner |
 | ---: | --- | --- | --- |
-| 1 | Add a workflow-owned `OrchestratorCheckpointStore` adapter design | Done | `pi-workflows` |
-| 2 | Add a checkpoint-store example after an adapter design is approved | Medium-high | `pi-workflows` |
-| 3 | Audit workflow storage payloads that resemble task checkpoints | Medium-high | `pi-workflows` |
-| 4 | Add docs showing `RunTeamResult.resume` display through workflow/UI layers | Medium | `pi-workflows`, `pi` |
-| 5 | Add integration tests only after a real workflow uses orchestrator | Medium | `pi-workflows` |
-| 6 | Avoid generic storage helpers in orchestrator until multiple stores need them | Low | `pi-orchestrator` |
+| 1 | Persist role receipts and idempotent team events in workflow-owned stores | Done | `pi-workflows` |
+| 2 | Add deterministic fresh/resume and failure-recovery tests | In progress | `pi-workflows` |
+| 3 | Audit workflow storage payloads that resemble task checkpoints | In progress | `pi-workflows` |
+| 4 | Add docs showing `RunTeamResult.resume` display through workflow/UI layers | Done | `pi-workflows`, `pi` |
+| 5 | Keep generic storage helpers in orchestrator only when multiple stores need them | Ongoing guardrail | `pi-orchestrator` |
 
 ## Do not add yet
 

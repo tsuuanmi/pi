@@ -89,6 +89,7 @@ test("latestRelevantLedgerEventId excludes excludeEventId and ignores blank ids"
 		{ eventId: "e1", event: "plan_created" },
 		{ eventId: "e2", event: "goal_started", goalId: "G001" },
 		{ eventId: "e3", event: "goal_checkpointed", goalId: "G001", status: "complete" },
+		{ eventId: "e4", event: "checkpoint_snapshot_written", goalId: "G001", status: "complete" },
 	];
 	assert.strictEqual(latestRelevantLedgerEventId(ledger, ["G001"]), "e3");
 	assert.strictEqual(latestRelevantLedgerEventId(ledger, ["G001"], "e3"), "e2");

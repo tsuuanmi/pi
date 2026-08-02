@@ -32,15 +32,15 @@ describe("workflow surface registry", () => {
 				{
 					skill: "team",
 					toolName: "dup-a",
-					spawnOwner: "team_spawn_task_agent",
-					toolOwnerId: "team_spawn_task_agent",
+					spawnOwner: "ralplan_run_agent",
+					toolOwnerId: "ralplan_run_agent",
 					guardedSpawn: true,
 				},
 				{
 					skill: "team",
 					toolName: "dup-b",
-					spawnOwner: "team_spawn_task_agent",
-					toolOwnerId: "team_spawn_task_agent",
+					spawnOwner: "ralplan_run_agent",
+					toolOwnerId: "ralplan_run_agent",
 					guardedSpawn: true,
 				},
 			]),
@@ -50,7 +50,7 @@ describe("workflow surface registry", () => {
 	it("rejects unguarded owner metadata and guarded owner mismatches", () => {
 		expect(() =>
 			validateWorkflowSurfaceRegistry(WORKFLOW_SKILL_SURFACES, [
-				{ skill: "team", toolName: "unguarded-owner", spawnOwner: "team_spawn_task_agent" },
+				{ skill: "team", toolName: "unguarded-owner", spawnOwner: "ralplan_run_agent" },
 			]),
 		).toThrow(/unguarded workflow tool must not declare spawnOwner\/toolOwnerId/);
 		expect(() =>
@@ -58,7 +58,7 @@ describe("workflow surface registry", () => {
 				{
 					skill: "team",
 					toolName: "bad-owner",
-					spawnOwner: "team_spawn_task_agent",
+					spawnOwner: "ralplan_run_agent",
 					toolOwnerId: "different_owner",
 					guardedSpawn: true,
 				},
@@ -68,15 +68,7 @@ describe("workflow surface registry", () => {
 
 	it("keeps guarded spawn owners aligned with expected role owner ids", () => {
 		const guardedOwners = WORKFLOW_TOOL_SURFACES.filter((tool) => tool.guardedSpawn).map((tool) => tool.spawnOwner);
-		expect(guardedOwners.slice().sort()).toEqual(
-			[
-				"ralplan_run_agent",
-				"team_spawn_prover_agent",
-				"team_spawn_review_agent",
-				"team_spawn_task_agent",
-				"ultragoal_spawn_goal_agent",
-			].sort(),
-		);
+		expect(guardedOwners.slice().sort()).toEqual(["ralplan_run_agent", "ultragoal_spawn_goal_agent"].sort());
 		expect(
 			WORKFLOW_TOOL_SURFACES.filter((tool) => tool.guardedSpawn).every(
 				(tool) => tool.spawnOwner === tool.toolOwnerId,

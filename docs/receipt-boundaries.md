@@ -8,7 +8,7 @@ Receipts are audit records. Each package owns receipts for its own layer and mus
 | --- | --- | --- | --- |
 | Tool receipt | `@tsuuanmi/pi-agent` | One tool execution inside one agent run | Task routing, workflow state, workflow artifact layout |
 | Task receipt | `@tsuuanmi/pi-orchestrator` | One orchestrated task execution, including routing, retry, metrics, and consequential approval | Workflow state, workflow gates, workflow artifact layout |
-| Workflow receipt | `@tsuuanmi/pi-workflows` | One workflow action or workflow state transition | Agent tool receipt schema, orchestrator task receipt schema |
+| Workflow receipt | `@tsuuanmi/pi-workflows` | One workflow action or workflow state transition, including persisted role receipt references | Agent tool receipt schema, orchestrator task receipt schema |
 | Session receipt | `@tsuuanmi/pi` when needed | CLI/session integration evidence | Agent, task, or workflow internal schemas |
 
 ## Dependency rule
@@ -84,6 +84,7 @@ Owns:
 - workflow gate receipts
 - workflow transaction journals
 - workflow artifact receipts
+- role receipt index and event references
 
 Does not own:
 
@@ -110,10 +111,10 @@ Owns only app/session integration records when needed. It should render or route
 
 | Rank | Task | ROI | Owner |
 | ---: | --- | --- | --- |
-| 1 | Audit existing receipt type names and exports across packages | High | all packages |
-| 2 | Ensure workflow receipts reference task/tool receipts by id instead of embedding schemas | High | `pi-workflows` |
-| 3 | Document package-level receipt exports in each package README/docs | Medium-high | all packages |
-| 4 | Add a shared `ReceiptRef` only if multiple packages need a stable public reference | Medium | design follow-up |
+| 1 | Ensure workflow role receipts reference task receipts by id instead of embedding schemas | Done | `pi-workflows` |
+| 2 | Audit existing receipt type names and exports across packages | In progress | all packages |
+| 3 | Document package-level receipt exports in each package README/docs | In progress | all packages |
+| 4 | Add a shared `ReceiptRef` only if multiple packages need a stable public reference | Deferred | design follow-up |
 | 5 | Add receipt rendering adapters at package boundaries | Medium | `pi`, package owners |
 | 6 | Add cryptographic integrity helpers only after receipt ownership is stable | Low-medium | package owners |
 

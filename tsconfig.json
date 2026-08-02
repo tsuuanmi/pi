@@ -132,6 +132,9 @@
 			"#workflows/*": [
 				"./packages/workflows/src/*"
 			],
+			"#workflows-test/*": [
+				"./packages/workflows/test/*"
+			],
 			"@tsuuanmi/pi-orchestrator": [
 				"./packages/orchestrator/src/index.ts"
 			],

@@ -12,7 +12,7 @@ function selectNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): Expecte
 			skill: "team",
 			stage: "task-review",
 			role: "reviewer",
-			owner: "team_spawn_review_agent",
+			owner: "team_execute",
 			teamId: snapshot.team_id,
 			taskId: inReview.id,
 		};
@@ -25,7 +25,7 @@ function selectNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): Expecte
 			skill: "team",
 			stage: "task-worker",
 			role: "worker",
-			owner: "team_spawn_task_agent",
+			owner: "team_execute",
 			teamId: snapshot.team_id,
 			taskId: pending.id,
 		};
@@ -40,7 +40,7 @@ function selectNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): Expecte
 			skill: "team",
 			stage: "team-proof",
 			role: "prover",
-			owner: "team_spawn_prover_agent",
+			owner: "team_execute",
 			teamId: snapshot.team_id,
 		};
 	}

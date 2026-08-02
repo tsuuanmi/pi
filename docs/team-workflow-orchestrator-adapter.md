@@ -1,10 +1,10 @@
 # Team Workflow Orchestrator Adapter
 
-This document designs how `@tsuuanmi/pi-workflows` may use `@tsuuanmi/pi-orchestrator` inside the team workflow without weakening package boundaries. See [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the feature-gated runtime design.
+This document records how `@tsuuanmi/pi-workflows` uses `@tsuuanmi/pi-orchestrator` inside the team workflow without weakening package boundaries. See [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the runtime contract.
 
 ## Purpose
 
-Use the generic orchestrator engine for generic team task DAG execution only when the team workflow has tasks that map cleanly to `TaskInput`, runtime `Agent`s, queue events, and task receipts.
+Use the generic orchestrator engine for every worker, reviewer, and prover role. Workflow role selection and gates remain outside the engine; only admitted role tasks map to `TaskInput`, runtime `Agent`s, queue events, and task receipts.
 
 ## Non-goals
 
@@ -36,26 +36,41 @@ The adapter lives in `@tsuuanmi/pi-workflows`.
 
 ```text
 workflow team state
-  -> TeamOrchestratorAdapter
+  -> team_execute / team_resume
   -> TaskInput[] / Team / Orchestrator options
   -> Orchestrator.run()
   -> RunTeamResult / TaskQueueEvent / TaskExecutionReceipt
-  -> TeamOrchestratorAdapter
-  -> workflow team state / HUD / workflow receipts
+  -> mapped task state / HUD / workflow receipt references
+  -> workflow team state
 ```
 
 `@tsuuanmi/pi-orchestrator` remains unaware of workflow storage, workflow gates, workflow HUD state, and workflow artifacts.
 
-## Proposed names
+## Implemented boundary modules
 
-| Name | Purpose |
+| Module | Purpose |
 | --- | --- |
-| `TeamOrchestratorAdapter` | Workflow-owned coordinator around `Orchestrator.run()` |
-| `TeamCheckpointStore` | Workflow-owned `OrchestratorCheckpointStore` implementation |
-| `mapTeamTask` | Convert workflow task state to `TaskInput` |
-| `mapTaskStatus` | Convert `TaskSnapshot` status to workflow task status |
-| `mapQueueEvent` | Convert queue events to workflow event/HUD updates |
-| `mapTaskReceipt` | Convert task receipt to workflow receipt reference |
+| `task-mapper.ts` | Convert workflow task state and snapshots to and from orchestrator task types |
+| `status-mapper.ts` | Convert orchestrator task statuses to workflow task statuses |
+| `event-mapper.ts` | Convert queue events to workflow event/HUD updates |
+| `receipt-mapper.ts` | Convert task receipts to workflow receipt references |
+| `orchestrator-checkpoint.ts` | Store orchestrator checkpoints through workflow-owned persistence |
+| `orchestrator-events.ts` | Deliver mapped queue events to workflow-owned sinks |
+| `agent-adapter.ts` | Convert explicit subagent profiles into orchestrator agents |
+| `execution-applier.ts` | Apply execution state without changing workflow gate status |
+| `execution-store.ts` | Persist execution fields without overwriting workflow status |
+| `team-execution.ts` | Compose run, apply, and persist as one fail-fast operation |
+| `team-tools.ts` | Expose explicit `team_execute` and `team_resume` entry points |
+| `role-contract.ts` | Validate required reviewer and prover workflow evidence |
+| `role-run-store.ts` | Persist failures for every role run |
+| `role-tasks.ts` | Build the next worker, reviewer, or prover task batch |
+| `role-transitions.ts` | Apply workflow-owned transitions after successful role execution |
+| `team-coordinator.ts` | Select the legal role and call fresh/resume execution |
+| `receipt-store.ts` | Persist all role receipts, including synthetic prover receipts |
+| `execution-failure.ts` | Build persisted failure state for aborted or failed runs |
+| `team-orchestrator.ts` | Run an explicitly configured team through `Orchestrator.run()` |
+
+`team-execution.ts` is the workflow-owned composition boundary for a persisted role run. `executeTeam()` requires a new run id and fresh pending role tasks; `resumeTeam()` requires an existing non-completed checkpoint. Both operations reject unresolved workflow blockers, persist failure state, deduplicate event records, and write execution fields without changing workflow status. Review and completion gates remain authoritative. Mapping modules do not own orchestration policy.
 
 Names stay concise and workflow-owned. Orchestrator does not define workflow adapter names.
 
@@ -167,11 +182,13 @@ Team workflow command/tool
 
 | Phase | Work | Acceptance |
 | --- | --- | --- |
-| A | Add adapter types and mapping tests | Done; no runtime behavior change |
+| A | Add focused mapping modules and mapping tests | Done; no mixed adapter module remains |
 | B | Add `TeamCheckpointStore` | Done; stores strict orchestrator checkpoint JSON through workflow-owned callbacks |
-| C | Add queue event sink | Done; maps orchestrator queue events to workflow-owned events without runtime wiring |
-| D | Run orchestrator behind explicit workflow config | `on` mode calls orchestrator; `off` mode uses the workflow-owned path |
-| E | Remove duplicate generic DAG execution | One generic DAG implementation remains after parity is proven and approved |
+| C | Add queue event sink | Done; maps orchestrator queue events to workflow-owned events |
+| D | Add explicit team orchestrator runner | Done; `runTeamOrchestrator` requires agents and tasks and never falls back |
+| E | Remove alternate direct spawn execution | Done; all team roles enter through the orchestrator tools |
+| F | Build role task batches and gate progression | Done; coordinator submits worker, reviewer, and prover tasks through the orchestrator |
+| G | Remove duplicate generic DAG execution | Done; one generic DAG implementation remains in `@tsuuanmi/pi-orchestrator` |
 
 ## Acceptance criteria for implementation
 
@@ -184,6 +201,6 @@ Team workflow command/tool
 - Orchestrator checkpoints remain strict versioned payloads.
 - Queue events and receipts are mapped through workflow-owned adapter code.
 
-## Do not implement yet
+## Remaining runtime work
 
-Do not start runtime integration until [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) is approved. The completed implementation steps contain only adapter mappings, mapping tests, a callback-backed checkpoint store, and a queue-event sink.
+The focused adapter modules, explicit role coordinator, and fresh/resume operations are implemented. Each role batch has its own checkpoint; failed results are persisted and event writes are idempotent. Gate decisions remain workflow-owned. Do not integrate this team DAG into ultragoal, ralplan, or deep-interview without a separate requirement.

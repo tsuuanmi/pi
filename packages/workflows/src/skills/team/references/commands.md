@@ -14,4 +14,4 @@ Command order for agents:
 8. `pi workflow team record-completion-gate` after prover evidence.
 9. `pi workflow team complete` only after integration and verification.
 
-Always pass the current session id as `sessionId` in action payloads. Spawn workers/reviewers/prover only through guarded team tools.
+Always pass the current session id as `sessionId` in action payloads. Execute workers/reviewers/prover only through `team_execute` or recover them with `team_resume`.

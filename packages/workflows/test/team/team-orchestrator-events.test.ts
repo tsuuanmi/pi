@@ -32,6 +32,7 @@ describe("team event sink", () => {
 			type: "team_task_completed",
 			taskId: "draft",
 			status: "completed",
+			attempt: 1,
 			timestamp: "2026-01-01T00:10:00.000Z",
 		});
 	});
@@ -102,6 +103,7 @@ describe("team event sink", () => {
 				type: "team_task_skipped",
 				taskId: "draft",
 				message: "not needed",
+				attempt: 1,
 				timestamp: event.timestamp,
 			},
 		]);

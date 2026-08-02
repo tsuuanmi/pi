@@ -1,6 +1,6 @@
 # Team Workflow Orchestrator Runtime
 
-This document designs the feature-gated runtime path for using `@tsuuanmi/pi-orchestrator` inside the team workflow. It is a design only; it does not change runtime behavior.
+This document defines the runtime path for using `@tsuuanmi/pi-orchestrator` inside the team workflow. Workflow-owned task mapping, role selection, strict admission checks, explicit fresh/resume operations, and persisted execution state are implemented.
 
 ## Purpose
 
@@ -25,39 +25,28 @@ Define how `@tsuuanmi/pi-workflows` can run generic team task DAGs through `@tsu
 - Do not make orchestrator aware of workflow storage.
 - Do not import `@tsuuanmi/pi` or `@tsuuanmi/pi/*` from workflows.
 
-## Feature gate
+## Execution operations
 
-Use an explicit mode:
+There is one execution engine and two explicit operations:
 
-```ts
-type TeamOrchestratorMode = "off" | "on";
-```
-
-| Value | Behavior |
+| Operation | Behavior |
 | --- | --- |
-| `off` | Use the workflow-owned team runtime path |
-| `on` | Use the orchestrator-backed path |
-| missing | Same as `off` |
-| invalid | Fail config validation |
+| `team_execute` | Start a fresh orchestrator run; reject an existing checkpoint; allow the legal prover run during `awaiting_integration` |
+| `team_resume` | Resume an existing non-completed orchestrator checkpoint |
 
-If the `on` path fails, it fails visibly. It must not silently fall back to the workflow-owned path.
+There is no mode flag, default path, alternate task shape, or fallback executor.
 
 ## Runtime flow
 
 ```text
-team workflow start
-  |
-  +-- teamOrchestrator === "off"
-  |     -> workflow-owned path
-  |
-  +-- teamOrchestrator === "on"
+team_execute / team_resume
         -> load workflow team state
-        -> map TeamTask[] to TaskInput[]
-        -> build orchestrator Team from runtime Agents
-        -> create TeamCheckpointStore
-        -> create TeamEventSink
+        -> select the legal workflow role
+        -> map role tasks to TaskInput[]
+        -> build orchestrator Team from explicit Agents
+        -> create TeamCheckpointStore and event sink
         -> Orchestrator.run(team, tasks, options)
-        -> map RunTeamResult back to workflow state
+        -> map RunTeamResult to execution state
         -> evaluate workflow gates
         -> write workflow receipts/artifacts
 ```
@@ -98,7 +87,7 @@ team workflow start
 | Failure | Behavior |
 | --- | --- |
 | mapping error | fail before `Orchestrator.run()` |
-| invalid feature value | fail config validation |
+| invalid operation input | fail before run |
 | no eligible agent | fail visibly and emit scheduling warning |
 | task failure | map to workflow task failure |
 | task skipped | map to workflow skip event without inventing status |
@@ -107,19 +96,29 @@ team workflow start
 | workflow gate failure | workflow-owned failure after orchestrator run |
 | adapter write failure | fail visibly |
 
-No failure path may silently fall back from orchestrator mode to the workflow-owned path.
+No failure path may invoke a second execution engine.
 
 ## Required seams
 
-Future runtime implementation should inject these seams explicitly:
+Runtime seams are explicit and workflow-owned:
 
-| Seam | Purpose |
-| --- | --- |
-| orchestrator runner | Calls `Orchestrator.run()` in `on` mode |
-| checkpoint store factory | Creates `TeamCheckpointStore` from workflow storage |
-| event sink factory | Creates `TeamEventSink` for queue events |
-| task mapper | Converts workflow tasks to `TaskInput[]` |
-| result mapper | Converts `RunTeamResult` back to workflow-owned state |
+| Seam | Purpose | Status |
+| --- | --- | --- |
+| agent roster | Converts explicit subagent profiles into orchestrator agents | Implemented by `agent-adapter.ts` |
+| coordinator | Selects the legal role and builds the admitted task batch | Implemented by `team-coordinator.ts` |
+| role contract | Requires passed gate status and valid, non-blocking reviewer/prover evidence before success is reported | Implemented by `role-contract.ts` |
+| role failure | Persists failures when no workflow task can hold execution state | Implemented by `role-run-store.ts` |
+| role transition | Applies workflow-owned status changes after execution | Implemented by `role-transitions.ts` |
+| receipt store | Persists every role receipt | Implemented by `receipt-store.ts` |
+| failure state | Converts failed/aborted execution into durable workflow execution state | Implemented by `execution-failure.ts` and `role-run-store.ts` |
+| orchestrator runner | Calls `Orchestrator.run()` for every team execution | Implemented by `team-orchestrator.ts` |
+| checkpoint store factory | Creates `TeamCheckpointStore` from workflow storage | Implemented by `orchestrator-checkpoint.ts` |
+| event sink factory | Maps queue events for workflow persistence | Implemented by `event-mapper.ts` and `event-store.ts` |
+| task mapper | Converts workflow tasks to `TaskInput[]` | Implemented by `task-mapper.ts` |
+| result mapper | Converts `RunTeamResult` into execution-only workflow state | Implemented by `execution-applier.ts` and receipt mappers |
+| execution store | Persists execution fields without changing workflow status | Implemented by `execution-store.ts` |
+| execution boundary | Composes run, apply, and persist | Implemented by `team-execution.ts` |
+| explicit runtime tools | Supply fresh/resume operation and agent roster | Implemented by `team_execute` and `team_resume` |
 
 These seams live in `@tsuuanmi/pi-workflows`.
 
@@ -127,34 +126,35 @@ These seams live in `@tsuuanmi/pi-workflows`.
 
 | Phase | Work | Acceptance |
 | --- | --- | --- |
-| A | Add `TeamOrchestratorMode` config validation | Done; invalid values fail before execution |
-| B | Add injected seams | `off` mode uses the workflow-owned path |
-| C | Add `on` runtime path | calls orchestrator only when explicitly enabled |
-| D | Add parity tests | `off` and `on` modes are both covered |
-| E | Remove duplicate generic DAG logic | one generic DAG implementation remains after parity is proven and approved |
+| A | Remove alternate execution paths | Done; all team execution enters the orchestrator boundary |
+| B | Add focused mapping, checkpoint, event, runner, execution-state, and persistence seams | Done; the composed execution boundary preserves workflow gates |
+| C | Add explicit fresh/resume operations | Done; checkpoint reuse is explicit |
+| D | Build role task batches | Implemented; worker, reviewer, and prover batches use the orchestrator |
+| E | Add parity and recovery tests | In progress; admission, persistence, and role-batch coverage is complete |
+| F | Remove duplicate generic DAG logic | Done; team has one Orchestrator execution boundary |
 
 ## Future test plan
 
 | Test | Expected |
 | --- | --- |
-| default mode uses workflow-owned path | no orchestrator calls |
-| `teamOrchestrator: "off"` uses workflow-owned path | no orchestrator calls |
-| `teamOrchestrator: "on"` maps tasks and calls orchestrator | one orchestrator run |
+| `team_execute` rejects an existing checkpoint | visible failure |
+| `team_resume` rejects a missing checkpoint | visible failure |
+| every team operation calls orchestrator | one orchestrator execution path |
 | orchestrator failure does not fall back | visible failure |
 | queue event updates workflow state | mapped event |
 | checkpoint store load/save called | strict payload |
 | workflow gates still run after task completion | gate-owned behavior |
 | no eligible agent emits warning | warning captured |
-| invalid mode fails validation | no run |
+| invalid operation input fails validation | no run |
 | receipts are refs only | no embedded task receipt schema |
 
 ## Acceptance criteria for runtime implementation
 
-- Default mode is `off`.
-- The feature gate is explicit.
-- No fallback from orchestrator mode to `off` mode is added.
+- All team execution uses `@tsuuanmi/pi-orchestrator`.
+- Fresh and resume operations are explicit.
+- No second execution engine or fallback path exists.
 - No alternate task shape or compatibility wrapper is accepted.
 - Boundary checker passes.
-- Team workflow tests pass in both modes.
+- Team execution, coordinator role progression, strict role-contract, retry, abort, recovery, checkpoint-receipt, failure-persistence, and idempotency tests pass.
 - Orchestrator remains unaware of workflows.
 - Workflow gates, artifacts, and HUD state remain workflow-owned.

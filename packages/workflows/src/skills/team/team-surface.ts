@@ -12,24 +12,13 @@ export const TEAM_SURFACE: WorkflowSkillSurface = {
 	tools: [
 		{
 			skill: "team",
-			toolName: "team_spawn_task_agent",
-			spawnOwner: "team_spawn_task_agent",
-			toolOwnerId: "team_spawn_task_agent",
-			guardedSpawn: true,
+			toolName: "team_execute",
+			description: "Execute the next team role through the orchestrator.",
 		},
 		{
 			skill: "team",
-			toolName: "team_spawn_review_agent",
-			spawnOwner: "team_spawn_review_agent",
-			toolOwnerId: "team_spawn_review_agent",
-			guardedSpawn: true,
-		},
-		{
-			skill: "team",
-			toolName: "team_spawn_prover_agent",
-			spawnOwner: "team_spawn_prover_agent",
-			toolOwnerId: "team_spawn_prover_agent",
-			guardedSpawn: true,
+			toolName: "team_resume",
+			description: "Resume team execution through the orchestrator.",
 		},
 	],
 };

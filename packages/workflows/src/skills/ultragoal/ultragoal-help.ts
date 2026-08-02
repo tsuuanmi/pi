@@ -13,14 +13,14 @@ export const ULTRAGOAL_SKILL_HELP: WorkflowSkillHelp = {
 		"`pi workflow ultragoal status` or `pi workflow ultragoal read-compact` to inspect goals.",
 		"`pi workflow ultragoal create-plan` when no goal plan exists.",
 		"`pi workflow ultragoal start-next` before implementation.",
-		"`pi workflow ultragoal checkpoint` after progress or completion evidence; this writes a state-only restore checkpoint.",
-		"`pi workflow ultragoal restore-checkpoint` only to restore Ultragoal state to the latest valid checkpoint; pass expectedPlanHash from status/read-compact when available; workspace files are not rolled back.",
+		"`pi workflow ultragoal checkpoint` after progress or completion evidence; each checkpoint writes a state-only restore snapshot.",
+		"`pi workflow ultragoal restore-checkpoint` only after later-task failure when you need to restore Ultragoal state to the latest valid checkpoint. Pass `expectedPlanHash` from `status.planHash` or `read-compact.plan_hash` when available.",
 		"`pi workflow ultragoal record-review-blockers` when review creates durable blockers.",
 		"`pi workflow ultragoal classify-blocker` only for policy-classified failed/blocked work.",
 		"`pi workflow ultragoal guard` when readiness or quality is uncertain.",
 	],
 	referenceFooter: [
-		"Always pass the current session id as `sessionId` in action payloads. Complete checkpoints require the nested `qualityGate` shape from `../assets/schema.json`. Checkpoint restore is state-only and never rolls back workspace files.",
+		"Always pass the current session id as `sessionId` in action payloads. Complete checkpoints require the nested `qualityGate` shape from `../assets/schema.json`. Restore is state-only: it restores `.pi/<session-id>/ultragoal/goals.json` and workflow state, but it never rolls back workspace files.",
 	],
 	agentFlow: [
 		"Use only for approved concrete execution; route vague requests to deep-interview or ralplan.",

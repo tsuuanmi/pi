@@ -20,12 +20,12 @@ export const TEAM_SKILL_HELP: WorkflowSkillHelp = {
 		"`pi workflow team complete` only after integration and verification.",
 	],
 	referenceFooter: [
-		"Always pass the current session id as `sessionId` in action payloads. Spawn workers/reviewers/prover only through guarded team tools.",
+		"Always pass the current session id as `sessionId` in action payloads. Execute workers/reviewers/prover only through `team_execute` or recover them with `team_resume`.",
 	],
 	agentFlow: [
 		"Use only after explicit execution approval and only when parallel workstreams are useful.",
 		"Start/resume the run, split work with `create-task`, and record coordination with `send-message`.",
-		"Use guarded spawn tools for workers/reviewers/prover; persist review/completion gates before completion.",
+		"Use `team_execute` for worker/reviewer/prover roles and `team_resume` only for checkpoint recovery; persist review/completion gates before completion.",
 		"Close with `complete` only after integration and verification evidence exists.",
 	],
 	actions: {

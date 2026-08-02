@@ -137,18 +137,18 @@ Cancels a live subagent by aborting its controller; writes a `cancelled` termina
 
 ## Nesting guard
 
-Subagent sessions do **not** receive their own `SubagentManager`. A subagent cannot spawn further subagents; orchestration stays in the parent. The `subagent_*` tools are filtered out of a subagent's tool set. Use the parent manager (or `team_spawn_task_agent` / `ultragoal_spawn_goal_agent`) to dispatch more workers.
+Subagent sessions do **not** receive their own `SubagentManager`. A subagent cannot spawn further subagents; orchestration stays in the parent. The `subagent_*` tools are filtered out of a subagent's tool set. Use the parent orchestrator coordinator (or `ultragoal_spawn_goal_agent` for Ultragoal) to dispatch more workers.
 
 Subagent sessions also set `ctx.skipWorkflowContinuation = true` (exposed on `ExtensionContext`), which prevents workflow continuation prompts from leaking into the subagent. Extensions that drive workflows should honor this flag so they do not re-prompt from inside a subagent.
 
-## Team and ultragoal spawn linking
+## Team and Ultragoal execution linking
 
-The team and ultragoal skills spawn subagent workers through dedicated tools rather than calling `subagent_spawn` directly:
+Team roles execute through `@tsuuanmi/pi-orchestrator`, which uses the parent session's agent runtime through the workflow-owned adapter. Ultragoal continues to use its dedicated goal tool:
 
-- **`team_spawn_task_agent`** - spawn a subagent to execute a team task. Parameters: `teamId`, `taskId`, `agent` (defaults to `worker`), plus `model`/`thinkingLevel`/`tools`/`excludeTools` overrides.
-- **`ultragoal_spawn_goal_agent`** - spawn a subagent to execute an ultragoal goal. Parameters: `goalId`, `agent` (defaults to `worker`), plus the same overrides.
+- **`team_execute` / `team_resume`** - execute or resume worker, reviewer, and prover roles through the orchestrator.
+- **`ultragoal_spawn_goal_agent`** - spawn an ultragoal goal agent.
 
-Both reuse the parent session's `SubagentManager`, so spawned workers appear in that session's `state/subagents/index.jsonl` and can be inspected with `subagent_status`/`subagent_await` like any other subagent. After a mutation, team and ultragoal state-mutating tools call `syncWorkflowHudUi` to keep the interactive HUD in sync.
+Team and Ultragoal records remain visible in the parent session and are persisted under the current session state. After a mutation, workflow state-mutating tools call `syncWorkflowHudUi` to keep the interactive HUD in sync.
 
 ## Structured receipts and current-session visibility
 

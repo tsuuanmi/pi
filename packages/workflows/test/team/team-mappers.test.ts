@@ -1,14 +1,9 @@
 import type { TaskExecutionReceipt, TaskQueueEvent, TaskSnapshot } from "@tsuuanmi/pi-orchestrator";
 import { describe, expect, it } from "vitest";
-import {
-	mapQueueEvent,
-	mapTaskReceipt,
-	mapTaskSnapshot,
-	mapTaskStatus,
-	mapTeamTask,
-	mapTeamTasks,
-	type TeamEvent,
-} from "#workflows/skills/team/orchestrator-adapter";
+import { mapQueueEvent, type TeamEvent } from "#workflows/skills/team/event-mapper";
+import { mapTaskReceipt } from "#workflows/skills/team/receipt-mapper";
+import { mapTaskStatus } from "#workflows/skills/team/status-mapper";
+import { mapTaskExecution, mapTeamTask, mapTeamTasks } from "#workflows/skills/team/task-mapper";
 import type { TeamTask } from "#workflows/skills/team/team-runtime";
 
 const teamTask: TeamTask = {
@@ -38,7 +33,7 @@ const taskSnapshot: TaskSnapshot = {
 	updatedAt: "2026-01-01T00:10:00.000Z",
 };
 
-describe("team orchestrator adapter", () => {
+describe("team orchestrator mappers", () => {
 	it("maps workflow tasks to strict orchestrator task inputs", () => {
 		const mapped = mapTeamTask(teamTask, {
 			capabilities: ["write"],
@@ -74,6 +69,9 @@ describe("team orchestrator adapter", () => {
 		expect(() => mapTeamTask({ ...teamTask, id: "" })).toThrow("task.id must be non-empty");
 		expect(() => mapTeamTask({ ...teamTask, title: "" })).toThrow("task.title must be non-empty");
 		expect(() => mapTeamTask({ ...teamTask, description: "" })).toThrow("task.description must be non-empty");
+		expect(() => mapTeamTask({ ...teamTask, blocked_by: ["review"] })).toThrow(
+			"workflow task draft has unresolved blockers: review",
+		);
 	});
 
 	it("rejects silently normalized workflow task fields", () => {
@@ -106,6 +104,7 @@ describe("team orchestrator adapter", () => {
 			type: "team_task_completed",
 			taskId: "draft",
 			status: "completed",
+			attempt: 1,
 			timestamp: "2026-01-01T00:10:00.000Z",
 		} satisfies TeamEvent);
 		expect(mapQueueEvent({ type: "all_complete", timestamp: event.timestamp })).toEqual({
@@ -126,12 +125,14 @@ describe("team orchestrator adapter", () => {
 			type: "team_task_skipped",
 			taskId: "draft",
 			message: "not needed",
+			attempt: 1,
 			timestamp: "2026-01-01T00:10:00.000Z",
 		});
 	});
 
 	it("maps task receipts to references only", () => {
 		const receipt = {
+			receiptId: "receipt-1",
 			taskId: "draft",
 			taskTitle: "Draft",
 			agent: "alice",
@@ -141,16 +142,31 @@ describe("team orchestrator adapter", () => {
 		expect(mapTaskReceipt(receipt)).toEqual({
 			package: "@tsuuanmi/pi-orchestrator",
 			type: "task",
-			id: "draft",
+			id: "receipt-1",
+			task_id: "draft",
 		});
 	});
 
-	it("maps task snapshots to workflow status patches", () => {
-		expect(mapTaskSnapshot(taskSnapshot)).toEqual({
+	it("maps task snapshots to execution state", () => {
+		expect(mapTaskExecution(taskSnapshot)).toEqual({
 			id: "draft",
-			status: "completed",
-			updated_at: "2026-01-01T00:10:00.000Z",
-			completed_at: "2026-01-01T00:10:00.000Z",
+			execution: {
+				status: "completed",
+				updated_at: "2026-01-01T00:10:00.000Z",
+				receipt_ids: [],
+			},
+		});
+	});
+
+	it("persists orchestrator failure details in execution state", () => {
+		expect(mapTaskExecution({ ...taskSnapshot, status: "failed", error: "agent stopped" })).toEqual({
+			id: "draft",
+			execution: {
+				status: "failed",
+				updated_at: "2026-01-01T00:10:00.000Z",
+				receipt_ids: [],
+				error: "agent stopped",
+			},
 		});
 	});
 });

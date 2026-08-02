@@ -12,7 +12,7 @@ Coordinate parallel implementation workers after an approved plan exists.
 
 ## Overview
 
-Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It tracks tasks, worker messages, review gates, completion evidence, and guarded worker/reviewer/prover spawns.
+Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It tracks tasks, worker messages, review gates, completion evidence, and guarded worker/reviewer/prover execution.
 
 ## Module Structure
 
@@ -21,18 +21,25 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 | `team-compact.ts` | Prompt-efficient compact state projection. |
 | `team-hud.ts` | HUD chip rendering for team status. |
 | `team-runtime.ts` | State I/O, task transitions, messages, gates, completion, and snapshot/read-compact operations. |
-| `team-tools.ts` | Registers `team_spawn_task_agent`, `team_spawn_review_agent`, and `team_spawn_prover_agent`. |
+| `team-tools.ts` | Registers `team_execute` and `team_resume`. |
+| `team-coordinator.ts` | Selects the legal role and submits its batch to Orchestrator. |
+| `role-contract.ts` | Validates required reviewer/prover workflow evidence. |
+| `role-run-store.ts` | Persists failures for synthetic and concrete role runs. |
+| `role-tasks.ts` | Builds worker, reviewer, and prover task batches. |
+| `role-transitions.ts` | Applies workflow-owned transitions after successful role execution. |
+| `receipt-store.ts` | Persists role receipts with idempotent keys. |
+| `execution-failure.ts` | Builds durable failed execution state. |
 | `team-transitions.ts` | Skill transition table, expected-next worker selection, fail-closed gate validators. |
 
 ## Runtime Route
 
 - Read/write envelope state through `pi workflow state team ...` with the current `sessionId`.
 - Manage the team board through `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>`.
-- Spawn workers through the guarded model-visible `team_spawn_task_agent` tool.
-- Spawn task reviewers through `team_spawn_review_agent`; reviewers persist `review_report` with `pi workflow team record-review-gate`.
-- Spawn completion provers through `team_spawn_prover_agent`; provers persist `evidence_matrix` with `pi workflow team record-completion-gate`.
+- Execute workers through the model-visible `team_execute` tool.
+- Execute task reviewers through `team_execute`; reviewers persist `review_report` with `pi workflow team record-review-gate`.
+- Execute completion provers through `team_execute`; provers persist `evidence_matrix` with `pi workflow team record-completion-gate`.
 
-Use `team_spawn_task_agent` for worker execution, `team_spawn_review_agent` for task review gates, and `team_spawn_prover_agent` for the completion evidence gate. These tools are state guarded: the harness computes the legal next team role from team state and refuses off-sequence spawns or runtime model/tool overrides.
+Use `team_execute` for worker, reviewer, and prover execution, and `team_resume` only for checkpoint recovery. Worker and reviewer runs require a running team; the legal prover run is allowed during `awaiting_integration`. A reviewer or prover result succeeds only when its gate status is `passed` and its structured verdict validates and passes. The coordinator computes the legal next team role and refuses off-sequence execution or implicit checkpoint reuse.
 
 ## Workflow
 
@@ -40,7 +47,7 @@ Use `team_spawn_task_agent` for worker execution, `team_spawn_review_agent` for 
 2. Start or resume a team run.
 3. Split the approved plan into independent, non-overlapping tasks.
 4. Persist tasks with objectives, constraints, ownership, expected output, and verification.
-5. Spawn or coordinate workers.
+5. Execute the selected role through `team_execute` or recover it with `team_resume`.
 6. Record progress, messages, review gates, and completion evidence.
 7. Integrate results and close only after required gates pass.
 

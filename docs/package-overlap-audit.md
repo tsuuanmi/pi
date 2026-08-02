@@ -1,6 +1,6 @@
 # Package Overlap Audit
 
-This audit turns package-boundary rules into actionable cleanup tasks. It focuses on concepts shared by `@tsuuanmi/pi-agent`, `@tsuuanmi/pi-orchestrator`, `@tsuuanmi/pi-workflows`, and `@tsuuanmi/pi`. See [`workflow-orchestrator-overlap.md`](./workflow-orchestrator-overlap.md) for workflow-specific findings, [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) for the team adapter design, [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the feature-gated runtime design, [`receipt-boundaries.md`](./receipt-boundaries.md) for receipt ownership rules, and [`persistence-boundaries.md`](./persistence-boundaries.md) for state ownership rules.
+This audit turns package-boundary rules into actionable cleanup tasks. It focuses on concepts shared by `@tsuuanmi/pi-agent`, `@tsuuanmi/pi-orchestrator`, `@tsuuanmi/pi-workflows`, and `@tsuuanmi/pi`. See [`workflow-orchestrator-overlap.md`](./workflow-orchestrator-overlap.md) for workflow-specific findings, [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) for the team adapter boundary, [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the runtime contract, [`receipt-boundaries.md`](./receipt-boundaries.md) for receipt ownership rules, and [`persistence-boundaries.md`](./persistence-boundaries.md) for state ownership rules.
 
 ## Decision rules
 

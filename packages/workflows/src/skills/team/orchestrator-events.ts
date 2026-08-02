@@ -1,5 +1,5 @@
 import type { TaskQueueEvent } from "@tsuuanmi/pi-orchestrator";
-import { mapQueueEvent, type TeamEvent } from "#workflows/skills/team/orchestrator-adapter";
+import { mapQueueEvent, type TeamEvent } from "#workflows/skills/team/event-mapper";
 
 export interface TeamEventSinkOptions {
 	emit: (event: TeamEvent) => void | Promise<void>;

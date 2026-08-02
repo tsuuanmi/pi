@@ -150,7 +150,7 @@ Team coordinates multiple implementation workstreams as subagent sessions. Use i
 
 **Gates:** completed tasks require a reviewer `review_report` (`pi workflow team record-review-gate`) and completion requires a prover `evidence_matrix` (`pi workflow team record-completion-gate`). Both are fail-closed validated; blocking artifacts escalate to `human_blocked` on the second blocking attempt (bounded retry).
 
-**Control plane:** use `pi workflow state team ...` for envelope state; `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>` for non-spawn runtime operations; and `team_spawn_task_agent`, `team_spawn_review_agent`, and `team_spawn_prover_agent` for guarded worker/reviewer/prover execution.
+**Control plane:** use `pi workflow state team ...` for envelope state; `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>` for workflow state and gates; and `team_execute` / `team_resume` for all worker, reviewer, and prover execution through the orchestrator.
 
 **Boundaries:** if the request is vague or lacks acceptance criteria, route to `/skill:ralplan` first. If a single autonomous worker is enough, prefer `/skill:ultragoal`. Keep workers scoped to non-overlapping files/components when possible.
 
@@ -246,13 +246,13 @@ Workflows dispatch isolated role agents using reusable agent profiles. This pack
 | `prover` | Produce the team completion `evidence_matrix`. | `low` | `read`, `bash` |
 | `reviewer` | Produce the team task `review_report`. | `medium` | `read`, `bash` |
 
-Bundled profiles with frontmatter set `persistent: true` when they need resumable context. Generic `subagent_*` tools accept per-invocation profile overrides. Guarded workflow spawns compute the legal role/task/goal first; team and ultragoal spawn tools reject runtime model/tool overrides, while `ralplan_run_agent` exposes role-agent overrides for explorer/planner/architect/critic/expert passes.
+Bundled profiles with frontmatter set `persistent: true` when they need resumable context. Generic `subagent_*` tools accept per-invocation profile overrides. Guarded workflow execution computes the legal role/task/goal first; team execution uses explicit `team_execute`/`team_resume` agent rosters, Ultragoal keeps its goal-agent tool, and `ralplan_run_agent` exposes role-agent overrides for explorer/planner/architect/critic/expert passes.
 
 Profiles are authored as markdown files with YAML frontmatter. Pi discovers them from user `~/.agent`/`~/.agents`, enabled package `agents/*.md` resources (including these), and trusted project `.agent`/`.agents` directories. Project ancestor profiles closest to the current directory win. See [docs/workflow.md](docs/workflow.md) for the full discovery rules, frontmatter fields, and the standard `.agent`/`.agents` resource layout.
 
 ## Model-Visible Tools
 
-Workflow-owned tools are model-visible and registered by the bundled workflow registration. Spawn tools include `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_spawn_task_agent`, `team_spawn_review_agent`, `team_spawn_prover_agent`, and `ultragoal_spawn_goal_agent`. Deep Interview also exposes first-class runtime tools: `deep_interview_plan_question`, `deep_interview_record_answer`, `deep_interview_record_scoring`, `deep_interview_read_compact`, `deep_interview_closure_check`, `deep_interview_restate_goal`, and `deep_interview_write_spec`. Spawn tools call the main session's `SubagentManager` directly in-process — the only place a subagent can be spawned and run to completion. The role agents are ordinary subagents; the workflow's special part is turn order, guarded role checks, and result→artifact handoff. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
+Workflow-owned tools are model-visible and registered by the bundled workflow registration. Tools include `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, and `ultragoal_spawn_goal_agent`. Deep Interview also exposes first-class runtime tools: `deep_interview_plan_question`, `deep_interview_record_answer`, `deep_interview_record_scoring`, `deep_interview_read_compact`, `deep_interview_closure_check`, `deep_interview_restate_goal`, and `deep_interview_write_spec`. Team role agents are always invoked through `@tsuuanmi/pi-orchestrator`; workflow code owns turn order, gates, and result-to-artifact handoff. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
 
 ## Harness Runtime
 
@@ -282,7 +282,7 @@ Team coordination state lives under `.pi/{sessionId}/team/{teamId}/`, scoped to 
 
 ### Session-Scoped Isolation
 
-Workflow state and artifacts are isolated per session. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions. A session id is required on every `pi workflow ...` verb (including `start`); no verb mints a session id, and all fail closed with `sessionId is required` when it is missing. The `pi workflow` CLI requires `--session <id>` or `PI_SESSION_ID` for the `state` command. There is no global `.pi/` fallback; without a session id the CLI errors out. Spawn tools read the session id from `ctx.sessionManager.getSessionId()`, so spawns always co-locate under the current session. The detached `RuntimeOwner` is lifecycle-only (no `SubagentManager`).
+Workflow state and artifacts are isolated per session. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions. A session id is required on every `pi workflow ...` verb (including `start`); no verb mints a session id, and all fail closed with `sessionId is required` when it is missing. The `pi workflow` CLI requires `--session <id>` or `PI_SESSION_ID` for the `state` command. There is no global `.pi/` fallback; without a session id the CLI errors out. Agent execution tools read the session id from `ctx.sessionManager.getSessionId()`, so execution always co-locates under the current session. The detached `RuntimeOwner` is lifecycle-only (no `SubagentManager`).
 
 ### Corrupt-State Recovery
 
@@ -322,7 +322,7 @@ import {
 } from "@tsuuanmi/pi-workflows";
 ```
 
-`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools/workflow-tools`. It also exports pure team-to-orchestrator mapping helpers, a callback-backed team checkpoint store, a queue-event sink, and explicit mode validation for future workflow-owned orchestrator integration; these helpers do not change runtime behavior. Pi hosts bundled workflow integration through `@tsuuanmi/pi-workflows/register`.
+`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools/workflow-tools`. It also exports pure team-to-orchestrator mapping helpers, workflow-owned checkpoint, event, and role-receipt stores, role-batch builders, and explicit fresh/resume execution boundaries. Pi hosts bundled workflow integration through `@tsuuanmi/pi-workflows/register`.
 
 Subpath exports:
 

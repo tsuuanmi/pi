@@ -214,8 +214,9 @@ export function ledgerEventId(event: UltragoalLedgerEvent): string | null {
 /**
  * Latest ledger event id relevant to `relevantGoalIds`, scanning newest-first.
  * Events whose `goalId` is absent (e.g. `plan_created`) count as relevant to
- * every goal. `excludeEventId` excludes a single event (the receipt's own
- * checkpoint event) so a freshly written receipt does not self-stale.
+ * every goal. Checkpoint snapshot rows are bookkeeping and do not change goal
+ * state. `excludeEventId` excludes a single event (the receipt's own checkpoint
+ * event) so a freshly written receipt does not self-stale.
  */
 export function latestRelevantLedgerEventId(
 	ledger: readonly UltragoalLedgerEvent[],
@@ -227,6 +228,7 @@ export function latestRelevantLedgerEventId(
 		const eventId = ledgerEventId(event);
 		if (!eventId) continue;
 		if (excludeEventId !== undefined && eventId === excludeEventId) continue;
+		if (event.event === "checkpoint_snapshot_written") continue;
 		const goalId = typeof event.goalId === "string" ? event.goalId : null;
 		if (!goalId || relevant.has(goalId)) return eventId;
 	}

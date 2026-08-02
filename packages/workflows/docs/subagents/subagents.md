@@ -1,8 +1,8 @@
 # Subagents and Workflow Tools
 
-Generic and workflow-owned subagent spawning, plus the workflow-owned model-visible tool surface, registered by the workflow tool helper and bundled workflow registration.
+Generic and workflow-owned agent execution, plus the workflow-owned model-visible tool surface, registered by the workflow tool helper and bundled workflow registration.
 
-**Source:** `src/register.ts`, `src/subagents/subagent-tools.ts`, `src/skills/deep-interview/deep-interview-tools.ts`, `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, `src/skills/ultragoal/ultragoal-tools.ts`, `src/tools/workflow-tools.ts`
+**Source:** `src/register.ts`, `src/subagents/subagent-tools.ts`, `src/skills/deep-interview/deep-interview-tools.ts`, `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, `src/skills/team/team-coordinator.ts`, `src/skills/ultragoal/ultragoal-tools.ts`, `src/tools/workflow-tools.ts`
 
 ## Model-Visible Tools
 
@@ -25,22 +25,21 @@ The bundled workflow registration registers these model-visible tools:
 | `deep_interview_restate_goal` | Record the one-sentence restated goal confirmation or adjustment. |
 | `deep_interview_write_spec` | Persist a finalized Deep Interview spec and optionally hand off to ralplan, ultragoal, or team. |
 | `ralplan_run_agent` | Run the next legal Ralplan role agent and persist role artifacts. |
-| `team_spawn_task_agent` | Spawn the next legal Team task worker. |
-| `team_spawn_review_agent` | Spawn the next legal Team task reviewer. |
-| `team_spawn_prover_agent` | Spawn the next legal Team completion prover. |
+| `team_execute` | Execute the next legal Team worker, reviewer, or prover through the orchestrator. |
+| `team_resume` | Resume Team execution from an orchestrator checkpoint. |
 | `ultragoal_spawn_goal_agent` | Spawn the next legal Ultragoal goal worker. |
 
-All tools call the main session's `SubagentManager` in-process. The detached workflow owner is lifecycle-only and does not host spawns.
+Generic and Ultragoal tools call the main session's `SubagentManager` in-process. Team roles call the Orchestrator through the workflow-owned agent adapter; the detached workflow owner is lifecycle-only.
 
-## Guarded Workflow Spawns
+## Guarded Workflow Execution
 
 - Ralplan computes the legal next role/stage from its run artifacts before `ralplan_run_agent` proceeds.
-- Team computes the expected worker/reviewer/prover role before a team spawn tool proceeds and rejects runtime model/tool overrides.
+- Team computes the expected worker/reviewer/prover role before an execution tool proceeds and rejects off-sequence execution.
 - Ultragoal computes the expected goal before `ultragoal_spawn_goal_agent` proceeds and rejects runtime model/tool overrides.
 
 ## Command Surface
 
-Agents drive state, artifacts, gates, receipts, compaction, status, approval, and runtime owner lifecycle through `pi workflow ...` commands. Tool implementations are skill-owned under `src/skills/<skill>/` (workflow-owned interview and spawn tools) or generic subagent tools under `src/subagents/`. The package has no separate generic workflow tools directory in the current source tree.
+Agents drive state, artifacts, gates, receipts, compaction, status, approval, and runtime owner lifecycle through `pi workflow ...` commands. Tool implementations are skill-owned under `src/skills/<skill>/` (workflow-owned interview and execution tools) or generic subagent tools under `src/subagents/`. The package has no separate generic workflow tools directory in the current source tree.
 
 ## Command Layer Boundary
 

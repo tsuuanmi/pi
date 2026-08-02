@@ -253,6 +253,18 @@ export function teamEventsPath(cwd: string, teamId: string, sessionId: string): 
 	return join(teamRunDir(cwd, teamId, sessionId), "events.jsonl");
 }
 
+export function teamReceiptsPath(cwd: string, teamId: string, sessionId: string): string {
+	return join(teamRunDir(cwd, teamId, sessionId), "receipts.jsonl");
+}
+
+export function teamCheckpointPath(cwd: string, teamId: string, sessionId: string, runId: string): string {
+	return join(teamRunDir(cwd, teamId, sessionId), "checkpoints", `${runId}.json`);
+}
+
+export function teamRoleRunPath(cwd: string, teamId: string, sessionId: string, runId: string): string {
+	return join(teamRunDir(cwd, teamId, sessionId), "runs", `${runId}.json`);
+}
+
 export function teamGateArtifactPath(
 	cwd: string,
 	teamId: string,

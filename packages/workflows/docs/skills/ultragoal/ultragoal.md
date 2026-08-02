@@ -73,6 +73,7 @@ Use `ultragoal_spawn_goal_agent` for worker execution. It is state guarded: the 
 
 - Completion requires every non-superseded goal to be complete.
 - Completed goals must have valid completion receipts against the plan and ledger.
+- Checkpoint snapshot ledger rows are bookkeeping and do not change receipt freshness.
 - Blocked or failed goals remain human blockers until explicitly classified/resolved.
 - Checkpoint restore fails closed on missing/corrupt/tampered snapshots, stale expected plan hashes from `status.planHash` / `read-compact.plan_hash`, or main-goal/task identity drift. Restore never rolls back workspace files.
 
