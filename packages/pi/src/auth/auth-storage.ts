@@ -17,8 +17,8 @@ import {
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
-import { getAgentDir } from "#pi/config/config";
-import { resolveConfigValue } from "#pi/config/resolve-config-value";
+import { getAgentDir } from "#pi/loader/paths";
+import { resolveConfigValue } from "#pi/loader/value";
 
 export type ApiKeyCredential = {
 	type: "api_key";

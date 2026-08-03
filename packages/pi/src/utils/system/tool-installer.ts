@@ -5,7 +5,8 @@ import { arch, platform } from "os";
 import { join } from "path";
 import { Readable } from "stream";
 import { pipeline } from "stream/promises";
-import { APP_NAME, getBinDir } from "#pi/config/config";
+import { APP_NAME } from "#pi/loader/app";
+import { getBinDir } from "#pi/loader/paths";
 
 const TOOLS_DIR = getBinDir();
 const NETWORK_TIMEOUT_MS = 10_000;

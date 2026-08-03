@@ -4,7 +4,7 @@ import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { canonicalizePath, isLocalPath, markPathIgnoredByCloudSync, resolvePath } from "@tsuuanmi/pi-agent/node";
 import { globSync } from "glob";
 import { maxSatisfying, rcompare, satisfies } from "semver";
-import { CONFIG_DIR_NAME } from "#pi/config/config";
+import { CONFIG_DIR_NAME } from "#pi/loader/app";
 import type { PackageSource, SettingsManager } from "#pi/settings/settings-manager";
 import { type GitSource, parseGitUrl } from "#pi/utils/fs/git";
 import type {

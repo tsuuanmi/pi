@@ -12,11 +12,11 @@ import { createEventBus } from "#pi/extensions/event-bus";
 import type { Extension, ExtensionFactory, LoadExtensionsResult } from "#pi/extensions/index";
 import { createExtensionRuntime, loadExtensionFromFactory } from "#pi/extensions/loader";
 import { createCodingTools } from "#pi/index";
+import type { ResourceLoader } from "#pi/loader/resources";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { AgentSession } from "#pi/runtime/agent";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import type { ResourceLoader } from "#pi/resources/resource-loader";
 
 /**
  * API key for authenticated tests. Tests using this should be wrapped in

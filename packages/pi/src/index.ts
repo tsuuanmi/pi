@@ -25,15 +25,6 @@ export {
 	type OAuthCredential,
 } from "#pi/auth/auth-storage";
 export { type Args, parseArgs } from "#pi/cli/args";
-// Config paths
-export {
-	CONFIG_DIR_NAME,
-	getAgentDir,
-	getDocsPath,
-	getPackageDir,
-	getReadmePath,
-	VERSION,
-} from "#pi/config/config";
 export { createEventBus, type EventBus, type EventBusController } from "#pi/extensions/event-bus";
 // Extension system
 export type {
@@ -131,6 +122,13 @@ export {
 	wrapRegisteredTools,
 } from "#pi/extensions/index";
 export { createExtensionRuntime, discoverAndLoadExtensions } from "#pi/extensions/loader";
+// Loader exports
+export { CONFIG_DIR_NAME, VERSION } from "#pi/loader/app";
+export { loadProjectContextFiles } from "#pi/loader/context";
+export { getDocsPath, getPackageDir, getReadmePath } from "#pi/loader/package";
+export { getAgentDir } from "#pi/loader/paths";
+export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#pi/loader/resources";
+export { DefaultResourceLoader } from "#pi/loader/resources";
 // Main entry point
 export { type MainOptions, main } from "#pi/main";
 export { ModelRegistry } from "#pi/model/model-registry";
@@ -163,9 +161,6 @@ export type {
 } from "#pi/package-manager/package-manager";
 export { DefaultPackageManager } from "#pi/package-manager/package-manager";
 export { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
-export { loadProjectContextFiles } from "#pi/resources/context-files";
-export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#pi/resources/resource-loader";
-export { DefaultResourceLoader } from "#pi/resources/resource-loader";
 export {
 	AgentSession,
 	type AgentSessionConfig,

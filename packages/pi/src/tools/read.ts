@@ -7,7 +7,7 @@ import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
-import { getReadmePath } from "#pi/config/config";
+import { getReadmePath } from "#pi/loader/package";
 import {
 	DEFAULT_MAX_BYTES,
 	DEFAULT_MAX_LINES,

@@ -1,4 +1,4 @@
-import { APP_NAME } from "#pi/config/config";
+import { APP_NAME } from "#pi/loader/app";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 
 export type SlashCommandSource = "extension" | "prompt" | "skill";

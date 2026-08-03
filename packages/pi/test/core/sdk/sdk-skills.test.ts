@@ -3,8 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createExtensionRuntime } from "#pi/extensions/loader";
+import type { ResourceLoader } from "#pi/loader/resources";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
-import type { ResourceLoader } from "#pi/resources/resource-loader";
 import { createAgentSession } from "#pi/runtime/session-factory";
 import { SessionManager } from "#pi/session/manager";
 

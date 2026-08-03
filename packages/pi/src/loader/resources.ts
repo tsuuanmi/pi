@@ -1,17 +1,17 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
-import { homedir } from "node:os";
-import { dirname, join, resolve, sep } from "node:path";
+import { existsSync, statSync } from "node:fs";
+import { join, resolve, sep } from "node:path";
 import type { Theme } from "@tsuuanmi/pi-tui";
-import chalk from "chalk";
-import {
-	type AgentProfileLoadResult,
-	type LoadedAgentProfile,
-	loadAgentDefinitions,
-} from "#pi/agent/definitions";
-import { CONFIG_DIR_NAME } from "#pi/config/config";
+import { type AgentProfileLoadResult, type LoadedAgentProfile, loadAgentDefinitions } from "#pi/agent/definitions";
+import { CONFIG_DIR_NAME } from "#pi/loader/app";
+import { findPromptFile, loadProjectContextFiles, resolvePrompt } from "#pi/loader/context";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
-import { loadProjectContextFiles } from "#pi/resources/context-files";
 
+export type {
+	DefaultResourceLoaderOptions,
+	ResourceExtensionPaths,
+	ResourceLoader,
+	ResourceLoaderReloadOptions,
+} from "#pi/loader/types";
 export type { ResourceCollision, ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 
 import { canonicalizePath, isLocalPath, resolvePath } from "@tsuuanmi/pi-agent/node";
@@ -19,108 +19,20 @@ import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResul
 import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
 import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "#pi/extensions/loader";
 import { getBuiltinExtensionFactories } from "#pi/extensions/registry/builtin-extensions";
-import {
-	type CommandOutput,
-	DefaultPackageManager,
-	type PathMetadata,
-	type ResolvedResource,
-} from "#pi/package-manager/package-manager";
+import { loadThemes } from "#pi/loader/themes";
+import type {
+	DefaultResourceLoaderOptions,
+	ResourceExtensionPaths,
+	ResourceLoader,
+	ResourceLoaderReloadOptions,
+} from "#pi/loader/types";
+import { DefaultPackageManager, type PathMetadata, type ResolvedResource } from "#pi/package-manager/package-manager";
 import { createSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
-import { loadThemes } from "#pi/resources/themes";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import type { PromptTemplate } from "#pi/skills/prompt-templates";
 import { loadPromptTemplatesWithDiagnostics } from "#pi/skills/prompt-templates";
 import type { Skill } from "#pi/skills/skills";
 import { loadSkills } from "#pi/skills/skills";
-
-export interface ResourceExtensionPaths {
-	skillPaths?: Array<{ path: string; metadata: PathMetadata }>;
-	promptPaths?: Array<{ path: string; metadata: PathMetadata }>;
-	themePaths?: Array<{ path: string; metadata: PathMetadata }>;
-}
-
-export interface ResourceLoaderReloadOptions {
-	skipMissingInstalls?: boolean;
-}
-
-export interface ResourceLoader {
-	getExtensions(): LoadExtensionsResult;
-	getSkills(): { skills: Skill[]; diagnostics: ResourceDiagnostic[] };
-	getPrompts(): { prompts: PromptTemplate[]; diagnostics: ResourceDiagnostic[] };
-	getThemes(): { themes: Theme[]; diagnostics: ResourceDiagnostic[] };
-	getAgentsFiles(): { agentsFiles: Array<{ path: string; content: string }> };
-	getAgentProfiles(): AgentProfileLoadResult;
-	getSystemPrompt(): string | undefined;
-	getAppendSystemPrompt(): string[];
-	extendResources(paths: ResourceExtensionPaths): void;
-	reload(options?: ResourceLoaderReloadOptions): Promise<void>;
-}
-
-function resolvePromptInput(input: string | undefined, description: string): string | undefined {
-	if (!input) {
-		return undefined;
-	}
-
-	if (existsSync(input)) {
-		try {
-			return readFileSync(input, "utf-8");
-		} catch (error) {
-			console.error(chalk.yellow(`Warning: Could not read ${description} file ${input}: ${error}`));
-			return input;
-		}
-	}
-
-	return input;
-}
-
-const STANDARD_AGENT_DIR_NAMES = [".agent", ".agents"] as const;
-
-function getHomeDir(): string {
-	return process.env.HOME || homedir();
-}
-
-function standardAgentDirsForBase(baseDir: string): string[] {
-	return STANDARD_AGENT_DIR_NAMES.map((dirName) => join(baseDir, dirName));
-}
-
-export interface DefaultResourceLoaderOptions {
-	cwd: string;
-	agentDir: string;
-	commandOutput?: CommandOutput;
-	settingsManager?: SettingsManager;
-	eventBus?: EventBus;
-	additionalExtensionPaths?: string[];
-	additionalSkillPaths?: string[];
-	additionalPromptTemplatePaths?: string[];
-	additionalThemePaths?: string[];
-	extensionFactories?: ExtensionFactory[];
-	noExtensions?: boolean;
-	noSkills?: boolean;
-	noPromptTemplates?: boolean;
-	noThemes?: boolean;
-	noContextFiles?: boolean;
-	systemPrompt?: string;
-	appendSystemPrompt?: string[];
-	extensionsOverride?: (base: LoadExtensionsResult) => LoadExtensionsResult;
-	skillsOverride?: (base: { skills: Skill[]; diagnostics: ResourceDiagnostic[] }) => {
-		skills: Skill[];
-		diagnostics: ResourceDiagnostic[];
-	};
-	promptsOverride?: (base: { prompts: PromptTemplate[]; diagnostics: ResourceDiagnostic[] }) => {
-		prompts: PromptTemplate[];
-		diagnostics: ResourceDiagnostic[];
-	};
-	themesOverride?: (base: { themes: Theme[]; diagnostics: ResourceDiagnostic[] }) => {
-		themes: Theme[];
-		diagnostics: ResourceDiagnostic[];
-	};
-	agentsFilesOverride?: (base: { agentsFiles: Array<{ path: string; content: string }> }) => {
-		agentsFiles: Array<{ path: string; content: string }>;
-	};
-	agentProfilesOverride?: (base: AgentProfileLoadResult) => AgentProfileLoadResult;
-	systemPromptOverride?: (base: string | undefined) => string | undefined;
-	appendSystemPromptOverride?: (base: string[]) => string[];
-}
 
 export class DefaultResourceLoader implements ResourceLoader {
 	private cwd: string;
@@ -440,17 +352,16 @@ export class DefaultResourceLoader implements ResourceLoader {
 		const resolvedAgentsFiles = this.agentsFilesOverride ? this.agentsFilesOverride(agentsFiles) : agentsFiles;
 		this.agentsFiles = resolvedAgentsFiles.agentsFiles;
 
-		const baseSystemPrompt = resolvePromptInput(
-			this.systemPromptSource ?? this.discoverSystemPromptFile(),
+		const baseSystemPrompt = resolvePrompt(
+			this.systemPromptSource ?? findPromptFile("SYSTEM.md", this.cwd, this.agentDir),
 			"system prompt",
 		);
 		this.systemPrompt = this.systemPromptOverride ? this.systemPromptOverride(baseSystemPrompt) : baseSystemPrompt;
 
-		const appendSources =
-			this.appendSystemPromptSource ??
-			(this.discoverAppendSystemPromptFile() ? [this.discoverAppendSystemPromptFile()!] : []);
+		const appendPrompt = findPromptFile("APPEND_SYSTEM.md", this.cwd, this.agentDir);
+		const appendSources = this.appendSystemPromptSource ?? (appendPrompt ? [appendPrompt] : []);
 		const baseAppend = appendSources
-			.map((s) => resolvePromptInput(s, "append system prompt"))
+			.map((s) => resolvePrompt(s, "append system prompt"))
 			.filter((s): s is string => s !== undefined);
 		this.appendSystemPrompt = this.appendSystemPromptOverride
 			? this.appendSystemPromptOverride(baseAppend)
@@ -830,56 +741,6 @@ export class DefaultResourceLoader implements ResourceLoader {
 		}
 
 		return { themes: Array.from(seen.values()), diagnostics };
-	}
-
-	private discoverSystemPromptFile(): string | undefined {
-		return this.discoverSinglePromptFile("SYSTEM.md");
-	}
-
-	private discoverAppendSystemPromptFile(): string | undefined {
-		return this.discoverSinglePromptFile("APPEND_SYSTEM.md");
-	}
-
-	private discoverSinglePromptFile(filename: "SYSTEM.md" | "APPEND_SYSTEM.md"): string | undefined {
-		const projectPath = join(this.cwd, CONFIG_DIR_NAME, filename);
-		if (existsSync(projectPath)) {
-			return projectPath;
-		}
-
-		for (const path of this.collectProjectStandardAgentFiles(filename)) {
-			if (existsSync(path)) return path;
-		}
-
-		const globalPath = join(this.agentDir, filename);
-		if (existsSync(globalPath)) {
-			return globalPath;
-		}
-
-		for (const dir of standardAgentDirsForBase(getHomeDir())) {
-			const path = join(dir, filename);
-			if (existsSync(path)) return path;
-		}
-
-		return undefined;
-	}
-
-	private collectProjectStandardAgentFiles(filename: string): string[] {
-		const homeDir = resolvePath(getHomeDir());
-		const paths: string[] = [];
-		let currentDir = this.cwd;
-		const root = resolve("/");
-		while (true) {
-			if (currentDir !== homeDir) {
-				for (const dir of standardAgentDirsForBase(currentDir)) {
-					paths.push(join(dir, filename));
-				}
-			}
-			if (currentDir === root) break;
-			const parentDir = dirname(currentDir);
-			if (parentDir === currentDir) break;
-			currentDir = parentDir;
-		}
-		return paths;
 	}
 
 	private isUnderPath(target: string, root: string): boolean {

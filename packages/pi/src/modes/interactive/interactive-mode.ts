@@ -52,7 +52,6 @@ import {
 import { readWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import chalk from "chalk";
 import { spawn } from "child_process";
-import { APP_NAME } from "#pi/config/config";
 import { configureHttpDispatcher } from "#pi/exec/http-dispatcher";
 import type {
 	AutocompleteProviderFactory,
@@ -61,6 +60,7 @@ import type {
 	ExtensionRunner,
 	ExtensionUIContext,
 } from "#pi/extensions/index";
+import { APP_NAME } from "#pi/loader/app";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#pi/runtime/agent";
 import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/runtime/runtime";

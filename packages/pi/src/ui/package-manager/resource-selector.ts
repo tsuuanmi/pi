@@ -18,7 +18,7 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import { CONFIG_DIR_NAME } from "#pi/config/config";
+import { CONFIG_DIR_NAME } from "#pi/loader/app";
 import type { PathMetadata, ResolvedPaths, ResolvedResource } from "#pi/package-manager/package-manager";
 import type { PackageSource, SettingsManager } from "#pi/settings/settings-manager";
 

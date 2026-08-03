@@ -1,5 +1,5 @@
-import { getAgentDir } from "#pi/config/config";
 import { applyHttpProxySettings, configureHttpDispatcher } from "#pi/exec/http-dispatcher";
+import { getAgentDir } from "#pi/loader/paths";
 import { runMigrations } from "#pi/migrations";
 import { SettingsManager } from "#pi/settings/settings-manager";
 

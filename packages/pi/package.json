@@ -24,9 +24,9 @@
 			"types": "./dist/api/types.d.ts",
 			"import": "./dist/api/types.js"
 		},
-		"./config/config": {
-			"types": "./dist/config/config.d.ts",
-			"import": "./dist/config/config.js"
+		"./loader/config": {
+			"types": "./dist/loader/config.d.ts",
+			"import": "./dist/loader/config.js"
 		}
 	},
 	"imports": {

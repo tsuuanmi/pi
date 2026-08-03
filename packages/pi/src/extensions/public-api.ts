@@ -9,11 +9,9 @@ export {
 	type ThemeColor,
 } from "@tsuuanmi/pi-tui";
 export { AuthStorage } from "#pi/auth/auth-storage";
-export {
-	CONFIG_DIR_NAME,
-	getAgentDir,
-} from "#pi/config/config";
 export * from "#pi/extensions/index";
+export { CONFIG_DIR_NAME } from "#pi/loader/app";
+export { getAgentDir } from "#pi/loader/paths";
 export { ModelRegistry } from "#pi/model/model-registry";
 export { SessionManager } from "#pi/session/manager";
 export { SettingsManager } from "#pi/settings/settings-manager";

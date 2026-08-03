@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { APP_NAME } from "#pi/config/config";
+import { APP_NAME } from "#pi/loader/config";
 import { formatResumeCommand } from "#pi/modes/interactive/interactive-mode";
 import type { SessionManager } from "#pi/session/manager";
 

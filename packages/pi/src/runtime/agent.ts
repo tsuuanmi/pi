@@ -55,8 +55,8 @@ import {
 	type TurnStartEvent,
 } from "#pi/extensions/index";
 import { emitSessionShutdownEvent } from "#pi/extensions/runner";
+import type { ResourceExtensionPaths, ResourceLoader } from "#pi/loader/resources";
 import type { ModelRegistry } from "#pi/model/model-registry";
-import type { ResourceExtensionPaths, ResourceLoader } from "#pi/resources/resource-loader";
 import type { AgentSessionContext } from "#pi/runtime/context";
 import { sleep } from "#pi/runtime/platform";
 import {

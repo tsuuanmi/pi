@@ -5,7 +5,8 @@
 import chalk from "chalk";
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
-import { CONFIG_DIR_NAME, getAgentDir, getBinDir } from "#pi/config/config";
+import { CONFIG_DIR_NAME } from "#pi/loader/app";
+import { getAgentDir, getBinDir } from "#pi/loader/paths";
 import { migrateKeybindingsConfig } from "#pi/settings/keybindings";
 
 const MIGRATION_GUIDE_URL = "https://github.com/tsuuanmi/pi/blob/main/packages/pi/CHANGELOG.md#extensions-migration";

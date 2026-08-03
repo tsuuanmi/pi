@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { APP_NAME } from "#pi/config/config";
+import { APP_NAME } from "#pi/loader/app";
 
 process.title = APP_NAME;
 process.emitWarning = (() => {}) as typeof process.emitWarning;

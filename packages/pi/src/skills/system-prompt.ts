@@ -2,7 +2,7 @@
  * System prompt construction and project context loading
  */
 
-import { getDocsPath, getReadmePath } from "#pi/config/config";
+import { getDocsPath, getReadmePath } from "#pi/loader/package";
 import { formatSkillsForPrompt, type Skill } from "#pi/skills/skills";
 
 export interface BuildSystemPromptOptions {

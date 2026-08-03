@@ -2,8 +2,8 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { type Container, LAYOUT_EDGE_X, LAYOUT_SECTION_GAP_Y, Spacer, Text, theme } from "@tsuuanmi/pi-tui";
 import type { ExtensionRunner } from "#pi/extensions/index";
+import type { ResourceDiagnostic } from "#pi/loader/resources";
 import type { SourceInfo } from "#pi/package-manager/source-info";
-import type { ResourceDiagnostic } from "#pi/resources/resource-loader";
 import type { AgentSession } from "#pi/runtime/agent";
 import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
 

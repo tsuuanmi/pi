@@ -17,7 +17,7 @@ import { createStartupSession } from "#pi/app/session";
 import { parseArgs, printHelp } from "#pi/cli/args";
 import { launchDefaultTmuxIfNeeded } from "#pi/cli/launch-tmux";
 import { listModels } from "#pi/cli/list-models";
-import { VERSION } from "#pi/config/config";
+import { VERSION } from "#pi/loader/app";
 import { showDeprecationWarnings } from "#pi/migrations";
 import type { AgentSessionRuntimeDiagnostic } from "#pi/runtime/services";
 import { SettingsManager } from "#pi/settings/settings-manager";

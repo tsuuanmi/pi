@@ -2,9 +2,9 @@ import { mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ENV_AGENT_DIR, PACKAGE_NAME } from "#pi/config/config";
-import { main } from "#pi/main";
 import { handlePackageCommand } from "#pi/cli/package-manager";
+import { ENV_AGENT_DIR, PACKAGE_NAME } from "#pi/loader/config";
+import { main } from "#pi/main";
 
 describe("package commands", () => {
 	let tempDir: string;

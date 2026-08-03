@@ -1,11 +1,11 @@
 import type { AgentState, StreamFn, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import type { ExtensionRunner } from "#pi/extensions/index";
+import type { ResourceLoader } from "#pi/loader/resources";
 import type { ModelRegistry } from "#pi/model/model-registry";
 import type { AgentSessionEvent } from "#pi/runtime/agent";
 import type { SessionManager } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
-import type { ResourceLoader } from "#pi/resources/resource-loader";
 
 /**
  * Type-only seam for Pi session runtime helpers.

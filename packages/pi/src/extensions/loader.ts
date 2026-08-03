@@ -33,13 +33,15 @@ import type {
 	RegisteredCommand,
 	ToolDefinition,
 } from "#pi/api/types";
-import * as _bundledPiConfig from "#pi/config/config";
-import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "#pi/config/config";
 import type { ExecOptions } from "#pi/exec/exec";
 import { execCommand } from "#pi/exec/exec";
 import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
 import { type HookHandlerFn, registerExtensionHook } from "#pi/extensions/hooks/registration";
 import * as _bundledPi from "#pi/extensions/public-api";
+import { CONFIG_DIR_NAME } from "#pi/loader/app";
+import * as _bundledPiConfig from "#pi/loader/config";
+import { isBunBinary } from "#pi/loader/package";
+import { getAgentDir } from "#pi/loader/paths";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
 
 /** Modules available to extensions via virtualModules (for compiled Bun binary) */
@@ -56,7 +58,7 @@ const VIRTUAL_MODULES: Record<string, unknown> = {
 	"@tsuuanmi/pi-ai": _bundledPiAi,
 	"@tsuuanmi/pi-ai/oauth": _bundledPiAiOauth,
 	"@tsuuanmi/pi": _bundledPi,
-	"@tsuuanmi/pi/config/config": _bundledPiConfig,
+	"@tsuuanmi/pi/loader/config": _bundledPiConfig,
 	"@tsuuanmi/pi-workflows": _bundledPiWorkflows,
 };
 
@@ -92,7 +94,7 @@ function getAliases(): Record<string, string> {
 	};
 
 	const piEntry = packageIndex;
-	const piConfigEntry = path.resolve(__dirname, "..", "config", "config.js");
+	const piConfigEntry = path.resolve(__dirname, "..", "loader", "config.js");
 	const piAgentEntry = resolveWorkspaceOrImport("agent/dist/index.js", "@tsuuanmi/pi-agent");
 	const piAgentNodeEntry = resolveWorkspaceOrImport("agent/dist/node/node.js", "@tsuuanmi/pi-agent/node");
 	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@tsuuanmi/pi-tui");
@@ -104,7 +106,7 @@ function getAliases(): Record<string, string> {
 		: path.join(packagesRoot, "workflows/dist/*");
 
 	_aliases = {
-		"@tsuuanmi/pi/config/config": piConfigEntry,
+		"@tsuuanmi/pi/loader/config": piConfigEntry,
 		"@tsuuanmi/pi": piEntry,
 		"@tsuuanmi/pi-agent/node": piAgentNodeEntry,
 		"@tsuuanmi/pi-agent": piAgentEntry,

@@ -1,8 +1,9 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { canonicalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import chalk from "chalk";
+import { CONFIG_DIR_NAME } from "#pi/loader/app";
 
 type ContextFile = {
 	path: string;
@@ -65,6 +66,62 @@ function getHomeDir(): string {
 
 function standardAgentDirs(baseDir: string): string[] {
 	return STANDARD_AGENT_DIRS.map((name) => join(baseDir, name));
+}
+
+export function resolvePrompt(input: string | undefined, description: string): string | undefined {
+	if (!input) return undefined;
+	if (existsSync(input)) {
+		try {
+			return readFileSync(input, "utf-8");
+		} catch (error) {
+			console.error(chalk.yellow(`Warning: Could not read ${description} file ${input}: ${error}`));
+			return input;
+		}
+	}
+	return input;
+}
+
+export function findPromptFile(
+	filename: "SYSTEM.md" | "APPEND_SYSTEM.md",
+	cwd: string,
+	agentDir: string,
+): string | undefined {
+	const projectPath = join(cwd, CONFIG_DIR_NAME, filename);
+	if (existsSync(projectPath)) return projectPath;
+
+	for (const path of collectPromptFiles(filename, cwd)) {
+		if (existsSync(path)) return path;
+	}
+
+	const globalPath = join(agentDir, filename);
+	if (existsSync(globalPath)) return globalPath;
+
+	for (const dir of standardAgentDirs(getHomeDir())) {
+		const path = join(dir, filename);
+		if (existsSync(path)) return path;
+	}
+
+	return undefined;
+}
+
+function collectPromptFiles(filename: string, cwd: string): string[] {
+	const homeDir = resolvePath(getHomeDir());
+	const paths: string[] = [];
+	let currentDir = cwd;
+	const root = resolve("/");
+
+	while (true) {
+		if (currentDir !== homeDir) {
+			for (const dir of standardAgentDirs(currentDir)) {
+				paths.push(join(dir, filename));
+			}
+		}
+		if (currentDir === root) break;
+		const parentDir = dirname(currentDir);
+		if (parentDir === currentDir) break;
+		currentDir = parentDir;
+	}
+	return paths;
 }
 
 function loadContextFile(dir: string): ContextFile | null {

@@ -12,7 +12,7 @@ import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { afterAll, describe, expect, test } from "vitest";
-import { getAgentDir } from "#pi/config/config";
+import { getAgentDir } from "#pi/loader/config";
 import {
 	expandPromptTemplate,
 	loadPromptTemplates,

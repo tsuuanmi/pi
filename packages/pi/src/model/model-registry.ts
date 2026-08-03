@@ -27,7 +27,7 @@ import { type OAuthProviderInterface, registerOAuthProvider, resetOAuthProviders
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import type { AuthStatus, AuthStorage } from "#pi/auth/auth-storage";
-import { getAgentDir } from "#pi/config/config";
+import { getAgentDir } from "#pi/loader/paths";
 import {
 	clearConfigValueCache,
 	getConfigValueEnvVarNames,
@@ -36,7 +36,7 @@ import {
 	resolveConfigValueOrThrow,
 	resolveConfigValueUncached,
 	resolveHeadersOrThrow,
-} from "#pi/config/resolve-config-value";
+} from "#pi/loader/value";
 import type { ModelsSettings, SettingsManager } from "#pi/settings/settings-manager";
 import { stripJsonComments } from "#pi/utils/fs/index";
 

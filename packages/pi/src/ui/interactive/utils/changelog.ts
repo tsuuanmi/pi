@@ -167,5 +167,5 @@ export function parseChangelog(changelogPath: string): ChangelogEntry[] {
 	}
 }
 
-// Re-export getChangelogPath from paths.ts for convenience
-export { getChangelogPath } from "#pi/config/config";
+// Re-export the package changelog path for convenience.
+export { getChangelogPath } from "#pi/loader/package";

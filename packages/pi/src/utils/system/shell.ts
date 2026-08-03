@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { delimiter } from "node:path";
 import { spawnSync } from "child_process";
-import { getBinDir } from "#pi/config/config";
+import { getBinDir } from "#pi/loader/paths";
 
 export interface ShellConfig {
 	shell: string;

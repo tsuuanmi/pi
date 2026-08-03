@@ -3,15 +3,9 @@ import { Markdown, type MarkdownTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import type { ExtensionFactory } from "#pi/api/extension-types";
 import { selectConfig } from "#pi/cli/config-selector";
-import {
-	APP_NAME,
-	CONFIG_DIR_NAME,
-	getAgentDir,
-	getSelfUpdateCommand,
-	getSelfUpdateUnavailableInstruction,
-	PACKAGE_NAME,
-	type SelfUpdateCommand,
-} from "#pi/config/config";
+import { APP_NAME, CONFIG_DIR_NAME, PACKAGE_NAME } from "#pi/loader/app";
+import { getSelfUpdateCommand, getSelfUpdateUnavailableInstruction, type SelfUpdateCommand } from "#pi/loader/install";
+import { getAgentDir } from "#pi/loader/paths";
 import { DefaultPackageManager } from "#pi/package-manager/package-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 

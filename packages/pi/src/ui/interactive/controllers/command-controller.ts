@@ -13,11 +13,12 @@ import {
 	theme,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import { getChangelogPath, getDebugLogPath } from "#pi/config/config";
-import { normalizeChangelogLinks, parseChangelog } from "#pi/ui/interactive/utils/changelog";
-import { copyToClipboard } from "#pi/ui/interactive/utils/clipboard";
+import { getChangelogPath } from "#pi/loader/package";
+import { getDebugLogPath } from "#pi/loader/paths";
 import type { AgentSession } from "#pi/runtime/agent";
 import type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
+import { normalizeChangelogLinks, parseChangelog } from "#pi/ui/interactive/utils/changelog";
+import { copyToClipboard } from "#pi/ui/interactive/utils/clipboard";
 
 export class CommandController {
 	private readonly ui: TUI;

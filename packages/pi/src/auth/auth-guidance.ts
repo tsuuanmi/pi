@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { getDocsPath } from "#pi/config/config";
+import { getDocsPath } from "#pi/loader/package";
 
 const UNKNOWN_PROVIDER = "unknown";
 

@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DefaultResourceLoader } from "#pi/resources/resource-loader";
+import { DefaultResourceLoader } from "#pi/loader/resources";
 import { createAgentSession } from "#pi/runtime/session-factory";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";

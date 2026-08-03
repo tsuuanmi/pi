@@ -3,11 +3,11 @@ import { initTheme, stripAnsi, Text, type TUI } from "@tsuuanmi/pi-tui";
 import { Type } from "typebox";
 import { beforeAll, describe, expect, test } from "vitest";
 import type { ToolDefinition } from "#pi/api/tool-types";
-import { getReadmePath } from "#pi/config/config";
-import { ToolExecutionComponent } from "#pi/ui/interactive/components/tool-execution";
+import { getReadmePath } from "#pi/loader/config";
 import { type BashOperations, createBashToolDefinition } from "#pi/tools/bash";
 import { createReadTool, createReadToolDefinition } from "#pi/tools/read";
 import { createWriteToolDefinition } from "#pi/tools/write";
+import { ToolExecutionComponent } from "#pi/ui/interactive/components/tool-execution";
 
 function createBaseToolDefinition(name = "custom_tool"): ToolDefinition {
 	return {

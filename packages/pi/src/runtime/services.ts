@@ -3,15 +3,15 @@ import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Model } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/auth-storage";
-import { getAgentDir } from "#pi/config/config";
 import type { SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
-import { ModelRegistry } from "#pi/model/model-registry";
+import { getAgentDir } from "#pi/loader/paths";
 import {
 	DefaultResourceLoader,
 	type DefaultResourceLoaderOptions,
 	type ResourceLoader,
 	type ResourceLoaderReloadOptions,
-} from "#pi/resources/resource-loader";
+} from "#pi/loader/resources";
+import { ModelRegistry } from "#pi/model/model-registry";
 import {
 	type CreateAgentSessionOptions,
 	type CreateAgentSessionResult,

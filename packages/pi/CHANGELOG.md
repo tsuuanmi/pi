@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **loader**: Moved configuration and resource loading into `src/loader/`, renamed the public configuration path to `@tsuuanmi/pi/loader/config`, and removed the old paths.
 - **architecture**: Split extension contracts, context types, tmux subagent launch code, and CLI configuration UI into dedicated modules; removed package-manager legacy global-install discovery and CLI/mode/UI dependencies from core modules.
 - **tools**: Renamed `createAllToolDefinitions` to `createToolDefinitions`, clarified the Pi tool definition boundary, and centralized built-in tool construction in the tool catalog.
 - **sdk**: Renamed the session model fallback warning result from `modelFallbackMessage` to `modelStartupWarning`.

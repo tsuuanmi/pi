@@ -6,7 +6,8 @@ import type { AppMode } from "#pi/app/modes";
 import type { Args } from "#pi/cli/args";
 import { selectSession } from "#pi/cli/session-picker";
 import { showStartupSelector } from "#pi/cli/startup-ui";
-import { ENV_SESSION_DIR, expandTildePath } from "#pi/config/config";
+import { ENV_SESSION_DIR } from "#pi/loader/app";
+import { expandTildePath } from "#pi/loader/paths";
 import {
 	formatMissingSessionCwdPrompt,
 	getMissingSessionCwdIssue,

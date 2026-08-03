@@ -5,7 +5,7 @@ import { registerOAuthProvider } from "@tsuuanmi/pi-ai/oauth";
 import lockfile from "proper-lockfile";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
-import { clearConfigValueCache } from "#pi/config/resolve-config-value";
+import { clearConfigValueCache } from "#pi/loader/value";
 
 describe("AuthStorage", () => {
 	let tempDir: string;

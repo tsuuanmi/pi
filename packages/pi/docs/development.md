@@ -44,10 +44,10 @@ Change `name`, `configDir`, and `bin` field for your fork. Affects CLI banner, c
 
 Three execution modes: npm install, standalone binary, tsx from source.
 
-**Always use `src/config/config.ts`** for package assets:
+**Always use `src/loader/config.ts`** for package assets:
 
 ```typescript
-import { getPackageDir, getThemesDir } from "./config/config.js";
+import { getPackageDir } from "./loader/config.js";
 ```
 
 Never use `__dirname` directly for package assets.
@@ -80,13 +80,12 @@ packages/pi/src/
   app/                   # startup, runtime, session, and mode orchestration
   auth/                  # authentication storage and guidance
   cli/                   # argument parsing and CLI helpers
-  config/                # paths, defaults, and configuration resolution
   exec/                  # command execution and HTTP dispatch
   extensions/            # extension loading, hooks, registry, and runner
+  loader/                # package paths, configuration, and resource loading
   model/                 # model registry, resolution, and thinking levels
   modes/                 # interactive, print, and RPC modes
   package-manager/       # package discovery, installation, and diagnostics
-  resources/             # skills, prompts, agents, and extension loading
   runtime/               # AgentSession, runtime services, context, and stats
   session/               # session persistence, layout, and compaction
   settings/              # settings and keybinding management

@@ -25,7 +25,7 @@ import { readdir, stat } from "fs/promises";
 import { join, resolve } from "path";
 import { createInterface } from "readline";
 import { StringDecoder } from "string_decoder";
-import { getAgentDir as getDefaultAgentDir, getSessionsDir } from "#pi/config/config";
+import { getAgentDir as getDefaultAgentDir, getSessionsDir } from "#pi/loader/paths";
 
 export const CURRENT_SESSION_VERSION = 3;
 

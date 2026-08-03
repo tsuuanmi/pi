@@ -5,8 +5,8 @@
  *
  * Test with: npx tsx src/cli-new.ts [args...]
  */
-import { APP_NAME } from "#pi/config/config";
 import { configureHttpDispatcher } from "#pi/exec/http-dispatcher";
+import { APP_NAME } from "#pi/loader/app";
 import { main } from "#pi/main";
 
 process.title = APP_NAME;

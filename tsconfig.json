@@ -93,8 +93,8 @@
 			"@tsuuanmi/pi/api/types": [
 				"./packages/pi/src/api/types.ts"
 			],
-			"@tsuuanmi/pi/config/config": [
-				"./packages/pi/src/config/config.ts"
+			"@tsuuanmi/pi/loader/config": [
+				"./packages/pi/src/loader/config.ts"
 			],
 			"#pi/*": [
 				"./packages/pi/src/*"
