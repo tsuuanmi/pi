@@ -9,6 +9,7 @@
 - **test-provider**: Removed the public test provider helpers from `@tsuuanmi/pi-ai`.
 - **runtime**: Provider OAuth and WebSocket paths are now Node-only; alternate-runtime compatibility branches were removed.
 - **model**: Canonicalized `ThinkingLevel` across agent and provider APIs, and made pure model-pattern parsing public from `@tsuuanmi/pi-ai`.
+- **model**: Removed unused OpenAI Codex compatibility metadata that had no runtime consumer.
 
 ### Changed
 

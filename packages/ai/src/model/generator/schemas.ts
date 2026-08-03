@@ -51,11 +51,7 @@ export interface CodexCatalogModel {
 	default_reasoning_level?: string;
 	supported_reasoning_levels?: CodexReasoningLevel[];
 	support_verbosity?: boolean;
-	supports_parallel_tool_calls?: boolean;
-	prefer_websockets?: boolean;
-	supports_image_detail_original?: boolean;
 	visibility?: "list" | "hidden" | string;
-	minimal_client_version?: string;
 	supported_in_api?: boolean;
 }
 

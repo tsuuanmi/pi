@@ -44,17 +44,9 @@ const AnthropicMessagesCompatSchema = Type.Object({
 	supportsCacheControlOnTools: Type.Optional(Type.Boolean()),
 });
 
-const OpenAICodexResponsesCompatSchema = Type.Object({
-	supportsParallelToolCalls: Type.Optional(Type.Boolean()),
-	supportsImageDetailOriginal: Type.Optional(Type.Boolean()),
-	preferWebSockets: Type.Optional(Type.Boolean()),
-	minimalClientVersion: Type.Optional(Type.String()),
-});
-
 const ProviderCompatSchema = Type.Union([
 	OpenAICompletionsCompatSchema,
 	OpenAIResponsesCompatSchema,
-	OpenAICodexResponsesCompatSchema,
 	AnthropicMessagesCompatSchema,
 ]);
 

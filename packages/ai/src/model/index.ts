@@ -38,13 +38,6 @@ export interface AnthropicMessagesCompat {
 	allowEmptySignature?: boolean;
 }
 
-export interface OpenAICodexResponsesCompat {
-	supportsParallelToolCalls?: boolean;
-	supportsImageDetailOriginal?: boolean;
-	preferWebSockets?: boolean;
-	minimalClientVersion?: string;
-}
-
 export interface Model<TApi extends Api = Api> {
 	id: string;
 	name: string;
@@ -67,11 +60,9 @@ export interface Model<TApi extends Api = Api> {
 		? OpenAICompletionsCompat
 		: TApi extends "openai-responses"
 			? OpenAIResponsesCompat
-			: TApi extends "openai-codex-responses"
-				? OpenAICodexResponsesCompat
-				: TApi extends "anthropic-messages"
-					? AnthropicMessagesCompat
-					: never;
+			: TApi extends "anthropic-messages"
+				? AnthropicMessagesCompat
+				: never;
 }
 
 export type StreamFunction<TApi extends Api = Api, TOptions extends StreamOptions = StreamOptions> = (

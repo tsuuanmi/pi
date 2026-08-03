@@ -12,15 +12,6 @@ function contextWindow(model: CodexCatalogModel): number {
 	return value;
 }
 
-function compat(model: CodexCatalogModel): Model<"openai-codex-responses">["compat"] {
-	return {
-		supportsParallelToolCalls: model.supports_parallel_tool_calls,
-		supportsImageDetailOriginal: model.supports_image_detail_original,
-		preferWebSockets: model.prefer_websockets,
-		minimalClientVersion: model.minimal_client_version,
-	};
-}
-
 function canBuildCodexModel(model: CodexCatalogModel, openAiModels: ReadonlyMap<string, Model<Api>>): boolean {
 	return model.visibility !== "hidden" && openAiModels.has(model.slug);
 }
@@ -60,7 +51,6 @@ export function fromCodex(
 			},
 			contextWindow: contextWindow(sourceModel),
 			maxTokens: apiModel.maxTokens,
-			compat: compat(sourceModel),
 		});
 	}
 
