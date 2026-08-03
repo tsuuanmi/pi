@@ -12,34 +12,75 @@ const ARTIFACT_RETENTION: WorkflowRetentionPolicy = { category: "artifact" };
 const LEDGER_RETENTION: WorkflowRetentionPolicy = { category: "ledger" };
 const AGENTS_RETENTION: WorkflowRetentionPolicy = { category: "agents" };
 
-function transition(
-	from: string | "*",
-	to: string,
-	operations: readonly WorkflowStateOperation[],
-	options: Omit<WorkflowTransition, "from" | "to" | "operations"> = {},
-): WorkflowTransition {
-	return { from, to, operations, ...options };
+function transition(from: string, to: string, operations: readonly WorkflowStateOperation[]): WorkflowTransition {
+	return { from, to, operations };
 }
 
-function samePhaseTransitions(states: readonly string[]): WorkflowTransition[] {
+function samePhase(states: readonly string[]): WorkflowTransition[] {
 	return states.map((state) => transition(state, state, ["write", "replace", "runtime-sync"]));
 }
+
+function fromStates(
+	states: readonly string[],
+	to: string,
+	operations: readonly WorkflowStateOperation[],
+): WorkflowTransition[] {
+	return states.map((from) => transition(from, to, operations));
+}
+
+const DEEP_INTERVIEW_STATES = ["interviewing", "handoff", "complete"] as const;
+const RALPLAN_STATES = [
+	"planner",
+	"architect",
+	"critic",
+	"revision",
+	"expert-stage",
+	"adr",
+	"pending-approval",
+	"final",
+	"handoff",
+	"approved",
+	"rejected",
+	"complete",
+	"failed",
+	"cancelled",
+] as const;
+const ULTRAGOAL_STATES = [
+	"approved-execution",
+	"missing",
+	"pending",
+	"active",
+	"blocked",
+	"failed",
+	"complete",
+	"handoff",
+] as const;
+const TEAM_STATES = [
+	"approved-execution",
+	"starting",
+	"running",
+	"awaiting_integration",
+	"complete",
+	"failed",
+	"cancelled",
+	"handoff",
+	"missing",
+] as const;
 
 export const PI_WORKFLOW_RUNTIME_MANIFEST = {
 	"deep-interview": {
 		skill: "deep-interview",
-		states: ["interviewing", "handoff", "complete"],
+		states: DEEP_INTERVIEW_STATES,
 		initialState: "interviewing",
 		terminalStates: ["handoff", "complete"],
 		clearState: "complete",
 		transitions: [
-			...samePhaseTransitions(["interviewing", "handoff", "complete"]),
+			...samePhase(DEEP_INTERVIEW_STATES),
 			transition("interviewing", "handoff", ["write", "replace", "handoff-send"]),
-			transition("interviewing", "complete", ["replace"]),
+			transition("interviewing", "complete", ["replace", "clear"]),
 			transition("handoff", "complete", ["write", "clear"]),
-			transition("interviewing", "complete", ["clear"]),
-			transition("*", "complete", ["clear"]),
-			transition("*", "handoff", ["handoff-receive"], { compatibility: true }),
+			transition("complete", "complete", ["clear"]),
+			...fromStates(DEEP_INTERVIEW_STATES, "handoff", ["handoff-receive"]),
 		],
 		retention: [STATE_RETENTION, ARTIFACT_RETENTION],
 		hudFields: ["current_phase", "ambiguity_score", "threshold", "spec_slug", "spec_path", "topology"],
@@ -47,58 +88,12 @@ export const PI_WORKFLOW_RUNTIME_MANIFEST = {
 	},
 	ralplan: {
 		skill: "ralplan",
-		states: [
-			"planner",
-			"architect",
-			"critic",
-			"revision",
-			"expert-stage",
-			"adr",
-			"pending-approval",
-			"final",
-			"handoff",
-			"approved",
-			"rejected",
-			"complete",
-			"completed",
-			"failed",
-			"cancelled",
-			"canceled",
-			"inactive",
-		],
+		states: RALPLAN_STATES,
 		initialState: "planner",
-		terminalStates: [
-			"handoff",
-			"approved",
-			"rejected",
-			"complete",
-			"completed",
-			"failed",
-			"cancelled",
-			"canceled",
-			"inactive",
-		],
+		terminalStates: ["handoff", "approved", "rejected", "complete", "failed", "cancelled"],
 		clearState: "complete",
 		transitions: [
-			...samePhaseTransitions([
-				"planner",
-				"architect",
-				"critic",
-				"revision",
-				"expert-stage",
-				"adr",
-				"pending-approval",
-				"final",
-				"handoff",
-				"approved",
-				"rejected",
-				"complete",
-				"completed",
-				"failed",
-				"cancelled",
-				"canceled",
-				"inactive",
-			]),
+			...samePhase(RALPLAN_STATES),
 			transition("planner", "architect", ["write", "replace"]),
 			transition("architect", "critic", ["write", "replace"]),
 			transition("critic", "revision", ["write", "replace"]),
@@ -119,13 +114,10 @@ export const PI_WORKFLOW_RUNTIME_MANIFEST = {
 			transition("approved", "planner", ["write", "replace", "handoff-receive"]),
 			transition("rejected", "planner", ["write", "replace", "handoff-receive"]),
 			transition("complete", "planner", ["write", "replace", "handoff-receive"]),
-			transition("completed", "planner", ["write", "replace", "handoff-receive"]),
 			transition("failed", "planner", ["write", "replace", "handoff-receive"]),
 			transition("cancelled", "planner", ["write", "replace", "handoff-receive"]),
-			transition("canceled", "planner", ["write", "replace", "handoff-receive"]),
-			transition("inactive", "planner", ["write", "replace", "handoff-receive"]),
-			transition("*", "handoff", ["handoff-send", "handoff-receive"], { compatibility: true }),
-			transition("*", "complete", ["clear"]),
+			...fromStates(RALPLAN_STATES, "handoff", ["handoff-send", "handoff-receive"]),
+			...fromStates(RALPLAN_STATES, "complete", ["clear"]),
 		],
 		retention: [STATE_RETENTION, ARTIFACT_RETENTION, LEDGER_RETENTION, AGENTS_RETENTION],
 		hudFields: ["current_phase", "run_id", "stage", "stage_n", "plan_path", "pending_approval_path"],
@@ -133,21 +125,12 @@ export const PI_WORKFLOW_RUNTIME_MANIFEST = {
 	},
 	ultragoal: {
 		skill: "ultragoal",
-		states: ["approved-execution", "missing", "pending", "active", "blocked", "failed", "complete", "handoff"],
+		states: ULTRAGOAL_STATES,
 		initialState: "approved-execution",
 		terminalStates: ["missing", "failed", "complete", "handoff"],
 		clearState: "complete",
 		transitions: [
-			...samePhaseTransitions([
-				"approved-execution",
-				"missing",
-				"pending",
-				"active",
-				"blocked",
-				"failed",
-				"complete",
-				"handoff",
-			]),
+			...samePhase(ULTRAGOAL_STATES),
 			transition("approved-execution", "missing", ["runtime-sync"]),
 			transition("approved-execution", "pending", ["runtime-sync", "write"]),
 			transition("approved-execution", "active", ["runtime-sync", "write"]),
@@ -162,9 +145,9 @@ export const PI_WORKFLOW_RUNTIME_MANIFEST = {
 			transition("failed", "pending", ["runtime-sync", "replace"]),
 			transition("blocked", "pending", ["runtime-sync", "replace"]),
 			transition("complete", "pending", ["runtime-sync", "replace"]),
-			transition("*", "handoff", ["handoff-send", "handoff-receive"], { compatibility: true }),
-			transition("*", "approved-execution", ["handoff-receive"]),
-			transition("*", "complete", ["clear"]),
+			...fromStates(ULTRAGOAL_STATES, "handoff", ["handoff-send", "handoff-receive"]),
+			...fromStates(ULTRAGOAL_STATES, "approved-execution", ["handoff-receive"]),
+			...fromStates(ULTRAGOAL_STATES, "complete", ["clear"]),
 		],
 		retention: [STATE_RETENTION, ARTIFACT_RETENTION, LEDGER_RETENTION],
 		hudFields: [
@@ -184,32 +167,12 @@ export const PI_WORKFLOW_RUNTIME_MANIFEST = {
 	},
 	team: {
 		skill: "team",
-		states: [
-			"approved-execution",
-			"starting",
-			"running",
-			"awaiting_integration",
-			"complete",
-			"failed",
-			"cancelled",
-			"handoff",
-			"missing",
-		],
+		states: TEAM_STATES,
 		initialState: "approved-execution",
 		terminalStates: ["complete", "failed", "cancelled", "handoff", "missing"],
 		clearState: "complete",
 		transitions: [
-			...samePhaseTransitions([
-				"approved-execution",
-				"starting",
-				"running",
-				"awaiting_integration",
-				"complete",
-				"failed",
-				"cancelled",
-				"handoff",
-				"missing",
-			]),
+			...samePhase(TEAM_STATES),
 			transition("approved-execution", "missing", ["runtime-sync"]),
 			transition("approved-execution", "running", ["runtime-sync", "write", "replace"]),
 			transition("missing", "running", ["runtime-sync", "replace"]),
@@ -223,9 +186,9 @@ export const PI_WORKFLOW_RUNTIME_MANIFEST = {
 			transition("complete", "running", ["runtime-sync", "replace"]),
 			transition("failed", "running", ["runtime-sync", "replace"]),
 			transition("cancelled", "running", ["runtime-sync", "replace"]),
-			transition("*", "handoff", ["handoff-send", "handoff-receive"], { compatibility: true }),
-			transition("*", "approved-execution", ["handoff-receive"]),
-			transition("*", "complete", ["clear"]),
+			...fromStates(TEAM_STATES, "handoff", ["handoff-send", "handoff-receive"]),
+			...fromStates(TEAM_STATES, "approved-execution", ["handoff-receive"]),
+			...fromStates(TEAM_STATES, "complete", ["clear"]),
 		],
 		retention: [STATE_RETENTION, ARTIFACT_RETENTION, LEDGER_RETENTION],
 		hudFields: ["current_phase", "team_name", "workers", "task_counts", "phase", "integration"],
@@ -259,7 +222,6 @@ export function isValidWorkflowTransition(
 ): boolean {
 	if (context.force) return true;
 	return getWorkflowRuntimeManifest(skill).transitions.some(
-		(item) =>
-			(item.from === "*" || item.from === from) && item.to === to && item.operations.includes(context.operation),
+		(item) => item.from === from && item.to === to && item.operations.includes(context.operation),
 	);
 }

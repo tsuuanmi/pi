@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Breaking Changes
+
+- **registry**: Removed compatibility transition metadata, wildcard source-state matching, and legacy Ralplan phases; workflow state transitions now use explicit canonical states only.
+- **state**: Active-state persistence is now version 2 with mandatory session ownership; unsupported versions, global, malformed, and foreign-session entries are rejected without migration.
+- **handoff**: Transaction journals are version 2 and use one top-level session identity; per-side session compatibility fields were removed.
+- **commands**: Removed the `@tsuuanmi/pi-workflows/commands/state-command` compatibility export; use `commands/workflow`.
+
 ### Added
 
 - **extensions**: Added `@tsuuanmi/pi-workflows/register` as the bundled Pi workflow integration entry point.
@@ -7,6 +14,7 @@
 
 ### Changed
 
+- **team**: Moved manager acquisition into the Team agent adapter and added a fail-closed boundary check for direct `SubagentManager` calls.
 - **team**: Split task, status, event, receipt, checkpoint, and event-sink responsibilities into focused workflow-owned modules; no mixed adapter module is retained.
 - **team**: Team orchestrator adapter string fields now reject surrounding whitespace instead of normalizing values.
 - **team**: Fresh and resume execution are separate APIs; failed execution state and all role receipts are persisted, including synthetic prover receipts; event records are idempotent.

@@ -58,6 +58,9 @@ The checkpoint payload is not workflow state. Workflows may store it, but orches
 - workflow artifacts
 - workflow recovery markers
 - team role execution receipts and idempotent event records
+- session-owned active state and handoff transaction journals
+
+Active-state schema version 2 requires every entry to carry the owning `session_id`; reads reject unsupported versions, missing, malformed, and foreign-session entries. Handoff journals use one top-level `session_id` and do not duplicate identity on caller or callee sides. No migration or global fallback is supported.
 
 When a workflow uses orchestrator, workflow state must map to orchestrator inputs and outputs through an adapter.
 
@@ -119,6 +122,8 @@ A workflow-owned orchestrator adapter must:
 7. Keep orchestrator unaware of workflow storage paths and session layout.
 
 ## ROI-ranked follow-up tasks
+
+Session identity hardening is complete: active-state entries and handoff journals are versioned, session-owned, and reject legacy or foreign identities.
 
 | Rank | Task | ROI | Owner |
 | ---: | --- | --- | --- |

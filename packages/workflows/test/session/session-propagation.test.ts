@@ -59,6 +59,7 @@ describe("current-session workflow propagation", () => {
 		await writeSessionState(root, makeState(cwd, sessionId));
 		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" }, { sessionId });
 		const state = await readWorkflowActiveState(cwd, { sessionId });
+		expect(state?.version).toBe(2);
 		expect(state?.active_workflows.some((w) => w.skill === "ralplan" && w.session_id === sessionId)).toBe(true);
 	});
 

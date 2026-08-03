@@ -7,17 +7,7 @@ export type RalplanExpectedAction =
 	| { kind: "blocked"; reason: string }
 	| { kind: "no-action"; reason: string };
 
-const CLOSED_PHASES = new Set([
-	"pending-approval",
-	"approved",
-	"handoff",
-	"complete",
-	"completed",
-	"failed",
-	"cancelled",
-	"canceled",
-	"inactive",
-]);
+const CLOSED_PHASES = new Set(["pending-approval", "approved", "handoff", "complete", "failed", "cancelled"]);
 
 function spawn(
 	snapshot: RalplanOrchestrationSnapshot,

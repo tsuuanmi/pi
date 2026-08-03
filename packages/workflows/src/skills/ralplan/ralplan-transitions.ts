@@ -3,17 +3,7 @@ import { registerSkillTransitionTable } from "#workflows/registry/skill-registry
 import { assertRalplanExplorerGatePassed } from "#workflows/skills/ralplan/ralplan-gates";
 import { readRalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";
 
-const RALPLAN_CLOSED_PHASES = new Set([
-	"pending-approval",
-	"approved",
-	"handoff",
-	"complete",
-	"completed",
-	"failed",
-	"cancelled",
-	"canceled",
-	"inactive",
-]);
+const RALPLAN_CLOSED_PHASES = new Set(["pending-approval", "approved", "handoff", "complete", "failed", "cancelled"]);
 
 function selectNextRalplanRole(state: RalplanSelectorState | undefined, runId: string): ExpectedNextRole | undefined {
 	if (state?.current_phase && RALPLAN_CLOSED_PHASES.has(state.current_phase)) return undefined;

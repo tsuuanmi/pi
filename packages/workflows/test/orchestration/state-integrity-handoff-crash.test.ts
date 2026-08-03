@@ -1,9 +1,11 @@
-import { mkdir, readFile, rm } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+	beginWorkflowTransactionJournal,
 	handoffWorkflow,
 	transactionJournalPath,
+	updateWorkflowTransactionJournal,
 	type WorkflowTransactionJournal,
 	writeWorkflowState,
 } from "@tsuuanmi/pi-workflows";
@@ -24,6 +26,28 @@ describe("state-integrity handoff crash-injection (STATE-006)", () => {
 	afterEach(async () => {
 		delete process.env[ENV_VAR];
 		await rm(cwd, { recursive: true, force: true });
+	});
+
+	it("rejects unsupported journal versions", async () => {
+		const mutationId = "legacy-journal-test";
+		const filePath = transactionJournalPath(cwd, sessionId, mutationId);
+		await mkdir(join(filePath, ".."), { recursive: true });
+		await writeFile(filePath, JSON.stringify({ version: 99, session_id: sessionId }));
+
+		await expect(
+			beginWorkflowTransactionJournal({
+				cwd,
+				sessionId,
+				mutationId,
+				caller: { skill: "deep-interview", phase: "handoff" },
+				callee: { skill: "ralplan", phase: "planner" },
+				paths: [],
+				stepNames: [],
+			}),
+		).rejects.toThrow("version");
+		await expect(updateWorkflowTransactionJournal(cwd, sessionId, mutationId, "active-state")).rejects.toThrow(
+			"version",
+		);
 	});
 
 	it("throws after the caller write and leaves a pending journal with callee/caller done and active-state pending", async () => {
@@ -47,15 +71,18 @@ describe("state-integrity handoff crash-injection (STATE-006)", () => {
 		// A pending journal remains (orphan — repair deferred to STATE-007).
 		const raw = await readFile(transactionJournalPath(cwd, sessionId, mutationId), "utf8");
 		const journal = JSON.parse(raw) as WorkflowTransactionJournal;
-		expect(journal.version).toBe(1);
+		expect(journal.version).toBe(2);
+		expect(journal.session_id).toBe(sessionId);
 		expect(journal.mutation_id).toBe(mutationId);
 		expect(journal.status).toBe("pending");
 		expect(typeof journal.created_at).toBe("string");
 		expect(typeof journal.updated_at).toBe("string");
 		expect(journal.caller.skill).toBe("deep-interview");
 		expect(journal.caller.phase).toBe("handoff");
+		expect("sessionId" in journal.caller).toBe(false);
 		expect(journal.callee.skill).toBe("ralplan");
 		expect(journal.callee.phase).toBe("planner");
+		expect("sessionId" in journal.callee).toBe(false);
 		expect(journal.paths).toHaveLength(3);
 
 		// Exact partial-step state: callee done, caller done, active-state pending.

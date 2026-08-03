@@ -78,7 +78,7 @@ describe("workflow handoff protocol", () => {
 		expect(ralplan?.handoff_at).toBe("2026-06-20T00:00:00.000Z");
 	});
 
-	it("tags both entries with session_id when provided", async () => {
+	it("requires the same session_id on both entries", async () => {
 		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 		await syncWorkflowActiveState(
 			cwd,
@@ -94,12 +94,24 @@ describe("workflow handoff protocol", () => {
 		});
 
 		const entries = await readRawEntries(cwd, sessionId);
-		const di = entries.find((e) => e.skill === "deep-interview" && e.session_id === sessionId);
-		const ralplan = entries.find((e) => e.skill === "ralplan" && e.session_id === sessionId);
+		expect(entries.every((entry) => entry.session_id === sessionId)).toBe(true);
+		const di = entries.find((e) => e.skill === "deep-interview");
+		const ralplan = entries.find((e) => e.skill === "ralplan");
 		expect(di?.active).toBe(false);
 		expect(di?.handoff_to).toBe("ralplan");
 		expect(ralplan?.active).toBe(true);
 		expect(ralplan?.handoff_from).toBe("deep-interview");
+	});
+
+	it("rejects an empty session before writing", async () => {
+		await expect(
+			applyHandoffToActiveState({
+				cwd,
+				caller: { skill: "deep-interview", phase: "handoff" },
+				callee: { skill: "ralplan", phase: "planner" },
+				sessionId: " ",
+			}),
+		).rejects.toThrow("No session ID provided");
 	});
 
 	it("preserves other entries not involved in the handoff", async () => {

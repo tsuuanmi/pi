@@ -1,4 +1,4 @@
-import { readFile, rm } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -17,6 +17,7 @@ import {
 	readWorkflowState,
 	runClosureAcceptanceGuard,
 	syncWorkflowActiveState,
+	workflowActiveStatePath,
 	writeTextArtifact,
 	writeWorkflowState,
 } from "@tsuuanmi/pi-workflows";
@@ -450,6 +451,29 @@ describe("deep-interview workflow runtime", () => {
 
 		expect(readOnly.blocked).toBe(false);
 		expect(mutating.blocked).toBe(true);
+	});
+
+	it("fails closed for invalid active state", async () => {
+		const filePath = workflowActiveStatePath(cwd, TEST_SESSION);
+		await mkdir(join(filePath, ".."), { recursive: true });
+		await writeFile(
+			filePath,
+			JSON.stringify({
+				version: 2,
+				active: true,
+				updated_at: "2026-01-01T00:00:00.000Z",
+				active_workflows: [{ skill: "deep-interview", active: true, phase: "interviewing" }],
+			}),
+		);
+
+		await expect(
+			getDeepInterviewMutationDecision({
+				cwd,
+				sessionId: TEST_SESSION,
+				toolName: "bash",
+				input: { command: "echo changed > packages/workflows/src/file.ts" },
+			}),
+		).rejects.toThrow("requires session_id");
 	});
 
 	it("runtime spec finalization seeds direct execution handoffs", async () => {

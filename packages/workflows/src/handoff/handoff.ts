@@ -9,7 +9,7 @@ import {
 } from "#workflows/audit/transaction-journal";
 import { initialWorkflowPhase } from "#workflows/registry/workflow-manifest";
 import type { WorkflowSkill } from "#workflows/session/paths";
-import { workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
+import { assertNonEmptySessionId, workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
 import { assertRalplanObstacle, writeRalplanObstacle } from "#workflows/skills/ralplan/ralplan-obstacles";
 import { assertUltragoalObstacle, writeUltragoalObstacle } from "#workflows/skills/ultragoal/ultragoal-obstacles";
 import { applyHandoffToActiveState } from "#workflows/state/active-state";
@@ -44,7 +44,6 @@ export interface HandoffSidePatch {
 	patch: Record<string, unknown> & {
 		carried_obstacles?: ObstacleInput[];
 	};
-	sessionId?: string;
 }
 
 export interface HandoffWorkflowOptions {
@@ -169,20 +168,8 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		throw new Error(`handoff target must differ from caller (both are "${callerSkill}")`);
 	}
 
-	// Intra-session enforcement: mismatched session ids throw, one present uses
-	// for both. sessionId is always required at the HandoffWorkflowOptions level.
-	const callerSessionId = options.caller.sessionId?.trim() || undefined;
-	const calleeSessionId = options.callee.sessionId?.trim() || undefined;
-	if (callerSessionId && calleeSessionId && callerSessionId !== calleeSessionId) {
-		throw new Error(
-			`handoff session mismatch: caller has session ${callerSessionId} but callee has session ${calleeSessionId}`,
-		);
-	}
-	// sessionId is required in HandoffWorkflowOptions, but also accept it from caller/callee
-	// for backward compatibility with callers that pass it per-side.
-	const sessionId = options.sessionId;
-	void callerSessionId;
-	void calleeSessionId;
+	assertNonEmptySessionId(options.sessionId, "handoffWorkflow");
+	const sessionId = options.sessionId.trim();
 	const handoffAt = options.nowIso ?? new Date().toISOString();
 	const mutationId = options.mutationId ?? `${callerSkill}:handoff:${calleeSkill}:${handoffAt}`;
 	const force = options.force ?? false;
@@ -211,18 +198,17 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 
 	const callerSide: WorkflowTransactionSide = {
 		skill: callerSkill,
-		sessionId,
 		phase: "handoff",
 	};
 	const calleeInitial = initialWorkflowPhase(calleeSkill);
 	const calleeSide: WorkflowTransactionSide = {
 		skill: calleeSkill,
-		sessionId,
 		phase: calleeInitial,
 	};
 
 	await beginWorkflowTransactionJournal({
 		cwd,
+		sessionId,
 		mutationId,
 		caller: callerSide,
 		callee: calleeSide,

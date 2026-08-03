@@ -163,17 +163,7 @@ function ralplanCompletionRole(stage: RalplanStage): string {
 	}
 }
 
-const RALPLAN_PHASE_LOCK = new Set([
-	"expert-stage",
-	"final",
-	"handoff",
-	"complete",
-	"completed",
-	"failed",
-	"cancelled",
-	"canceled",
-	"inactive",
-]);
+const RALPLAN_PHASE_LOCK = new Set(["expert-stage", "final", "handoff", "complete", "failed", "cancelled"]);
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -333,7 +323,7 @@ function plannerStatePatch(update: RalplanPlannerStateUpdate | undefined): Recor
 }
 
 function isApprovalClosed(phase: unknown): boolean {
-	return phase === "approved" || phase === "handoff" || phase === "complete" || phase === "completed";
+	return phase === "approved" || phase === "handoff" || phase === "complete";
 }
 
 export async function readRalplanStatus(cwd: string, sessionId: string, runIdInput?: string): Promise<RalplanStatus> {
@@ -752,7 +742,6 @@ export async function approveRalplanPlan(
 					approval_note: options.note,
 					approved_at: now,
 				},
-				sessionId,
 			},
 			callee: {
 				skill: targetSkill,
@@ -762,7 +751,6 @@ export async function approveRalplanPlan(
 					source_run_id: status.run_id,
 					carried_obstacles: carriedObstacles,
 				},
-				sessionId,
 			},
 			command: "pi ralplan approve",
 			sessionId,

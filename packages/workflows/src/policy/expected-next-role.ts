@@ -62,11 +62,10 @@ export function assertExpectedNextRole(
 // ---------------------------------------------------------------------------
 // Deterministic table-driven selectors
 //
-// These exported functions are compatibility facades for existing tests and
-// runtime helpers. The phase logic itself is registered by per-skill transition
-// sidecars (for example, skills/ralplan/ralplan-transitions.ts). This keeps the
-// guarded spawn contract in one shared module while avoiding a second, hardcoded
-// transition engine here.
+// These exports are deterministic selectors used by tests and runtime helpers.
+// Phase logic is registered by per-skill transition sidecars (for example,
+// skills/ralplan/ralplan-transitions.ts), so this module does not duplicate a
+// hardcoded transition engine.
 // ---------------------------------------------------------------------------
 
 /** Ralplan verdict slice accepted by the selector (architect or critic). */

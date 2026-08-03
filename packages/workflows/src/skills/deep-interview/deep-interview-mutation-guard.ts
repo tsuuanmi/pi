@@ -30,9 +30,10 @@ import { readWorkflowActiveState } from "#workflows/state/active-state";
  *    it must not mutate product code until the user explicitly approves an
  *    execution handoff.
  *
- * Fail-open contract: a missing or unreadable active-state file releases the
- * phase-boundary block (a corrupt state file must not lock all mutation). The
- * always-on `.pi/**` rule is lexical and never depends on state readability.
+ * Missing active state means no planning workflow is active. Invalid or
+ * unreadable active state fails the guard operation; it never releases the
+ * phase boundary through a fallback. The always-on `.pi/**` rule is lexical
+ * and never depends on state readability.
  */
 
 export const DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE =
@@ -43,16 +44,15 @@ export const WORKFLOW_STATE_MUTATION_BLOCK_MESSAGE =
 const BLOCKED_TOOL_NAMES = new Set(["edit", "write", "bash"]);
 
 /**
- * Phases that genuinely finish a workflow skill. `handoff` is intentionally
- * absent so a handoff-required planning skill keeps blocking through its
- * handoff window until it is demoted or cleared. Mirrors gajae-code's
- * `WORKFLOW_FINISHED_PHASES`.
+ * The canonical deep-interview completion phase. `handoff` is intentionally
+ * absent so the planning skill keeps blocking through its handoff window
+ * until it is demoted or cleared.
  */
-const WORKFLOW_FINISHED_PHASES = new Set(["complete", "completed", "failed", "cancelled", "canceled", "inactive"]);
+const FINISHED_PHASES = new Set(["complete"]);
 
 export interface MutationGuardInput {
 	cwd: string;
-	sessionId?: string;
+	sessionId: string;
 	/** Tool name, e.g. "edit" or "write". Non-mutation tools are never blocked. */
 	toolName: string;
 	/** Validated tool arguments (the `tool_call` event `input`). */
@@ -162,21 +162,18 @@ function hasPiStateTarget(cwd: string, targets: ExtractedTargets): boolean {
 /**
  * Resolve the single active `deep-interview` entry for this context, or null.
  *
- * `readWorkflowActiveState` already filters to active entries, dedupes by
- * skill, and scopes by session, so the first matching deep-interview row is
- * the canonical current one. Fail-open: an absent/unreadable state file
- * returns undefined and releases the phase-boundary block.
+ * `readWorkflowActiveState` already validates the session, filters to active
+ * entries, and dedupes by skill, so the first matching deep-interview row is
+ * the canonical current one.
  */
-async function getActiveDeepInterview(cwd: string, sessionId?: string): Promise<{ phase: string } | null> {
-	const resolvedSessionId = sessionId?.trim();
-	if (!resolvedSessionId) return null;
-	const state = await readWorkflowActiveState(cwd, { sessionId: resolvedSessionId }).catch(() => undefined);
+async function getActiveDeepInterview(cwd: string, sessionId: string): Promise<{ phase: string } | null> {
+	const state = await readWorkflowActiveState(cwd, { sessionId });
 	if (!state) return null;
 	const entry = state.active_workflows.find((item) => item.skill === "deep-interview");
 	if (!entry) return null;
 	if (entry.active !== true) return null;
 	const phase = (entry.phase ?? "").trim().toLowerCase();
-	if (WORKFLOW_FINISHED_PHASES.has(phase)) return null;
+	if (FINISHED_PHASES.has(phase)) return null;
 	return { phase: entry.phase ?? "" };
 }
 

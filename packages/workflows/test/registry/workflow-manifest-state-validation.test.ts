@@ -5,6 +5,7 @@ import {
 	clearWorkflowState,
 	getWorkflowManifest,
 	isKnownWorkflowPhase,
+	isValidWorkflowTransition,
 	isWorkflowSkill,
 	PI_WORKFLOW_SKILLS,
 	replaceWorkflowState,
@@ -48,6 +49,7 @@ describe("workflow manifest state validation", () => {
 			expect(isWorkflowSkill(skill)).toBe(true);
 			expect(manifest.states).toContain(manifest.initialState);
 			expect(manifest.terminalStates.length).toBeGreaterThan(0);
+			expect(manifest.transitions.every((row) => manifest.states.includes(row.from))).toBe(true);
 			expect(manifest.verbs.map((verb) => verb.name)).toEqual(getWorkflowSkillCommandNames(skill));
 			expect(manifest.retention.length).toBeGreaterThan(0);
 			expect(manifest.hudFields.length).toBeGreaterThan(0);
@@ -55,7 +57,21 @@ describe("workflow manifest state validation", () => {
 		expect(isKnownWorkflowPhase("ultragoal", "approved-execution")).toBe(true);
 		expect(isKnownWorkflowPhase("ralplan", "pending-approval")).toBe(true);
 		expect(isKnownWorkflowPhase("team", "awaiting_integration")).toBe(true);
-		expect(getWorkflowManifest("ralplan").transitions.some((row) => row.compatibility === true)).toBe(true);
+		expect(isKnownWorkflowPhase("ralplan", "complete")).toBe(true);
+		expect(isKnownWorkflowPhase("ralplan", "completed")).toBe(false);
+		expect(isKnownWorkflowPhase("ralplan", "canceled")).toBe(false);
+		expect(isKnownWorkflowPhase("ralplan", "inactive")).toBe(false);
+		for (const skill of SKILLS) {
+			const manifest = getWorkflowManifest(skill);
+			expect(manifest.transitions.every((row) => !Object.hasOwn(row, "compatibility"))).toBe(true);
+		}
+		expect(
+			isValidWorkflowTransition("team", "unknown-phase", "handoff", {
+				operation: "handoff-receive",
+				command: "test",
+				force: false,
+			}),
+		).toBe(false);
 	});
 
 	it("defaults new and missing phases to the manifest initial phase", async () => {
@@ -164,7 +180,7 @@ describe("workflow manifest state validation", () => {
 		expect(cleared.active).toBe(false);
 		expect(cleared.current_phase).toBe("complete");
 
-		await seedState(cwd, "team", { current_phase: "unknown_legacy" });
+		await seedState(cwd, "team", { current_phase: "unknown-phase" });
 		const repaired = await clearWorkflowState(cwd, "team", {}, { sessionId });
 		expect(repaired.active).toBe(false);
 		expect(repaired.current_phase).toBe("complete");
@@ -207,7 +223,7 @@ describe("workflow manifest state validation", () => {
 		expect(result.stderr).toContain("unknown next phase");
 	});
 
-	it("preserves generic handoff receive compatibility", async () => {
+	it("accepts canonical handoff transitions", async () => {
 		const result = await runWorkflowCommand(
 			["state", "deep-interview", "handoff", "--to", "ralplan", "--session", sessionId, "--json"],
 			cwd,

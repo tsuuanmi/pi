@@ -10,9 +10,11 @@ Built-in skill registry plus split workflow runtime/action/tool metadata.
 |--------|-------------|
 | `skill-registry.ts` | Built-in skill registry for `deep-interview`, `ralplan`, `team`, and `ultragoal`. |
 | `workflow-runtime-manifest.ts` | Runtime-state manifest: phases, transitions, retention, HUD fields. |
-| `workflow-manifest.ts` | Compatibility aggregate that preserves the historical manifest shape by joining runtime state with skill action metadata. |
+| `workflow-manifest.ts` | Canonical workflow manifest that joins runtime state with skill action metadata. |
 | `../skills/*/*-help.ts` | Per-skill action/help metadata used for workflow command help and command reference validation. |
 | `../skills/*/*-surface.ts` | Per-skill command/tool surface metadata used by the validated tool registry. |
+
+Runtime transitions require an exact canonical source phase; wildcard and compatibility transitions are not supported. Ralplan uses `complete` and `cancelled` as its canonical completion phases.
 
 ## See Also
 

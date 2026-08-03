@@ -15,6 +15,7 @@ Session-scoped path builders and session id resolution.
 ## Important Contracts
 
 - Session-scoped helpers require an explicit `sessionId`; workflow state must not fall back to a global bucket.
+- Active-state entries and handoff journals must carry the same session identity as their owning path; missing or mismatched identity is invalid.
 - One logical workflow (one interview, one plan, one team run, one goal run) must keep all state, specs, plans, and handoff artifacts under one session id.
 
 ## See Also

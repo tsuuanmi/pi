@@ -5,8 +5,9 @@ This audit turns package-boundary rules into actionable cleanup tasks. It focuse
 ## Decision rules
 
 - Keep generic single-agent execution in `@tsuuanmi/pi-agent`.
-- Keep generic multi-agent task DAG execution in `@tsuuanmi/pi-orchestrator`.
+- Keep generic multi-agent task DAG execution, scheduling, routing, retries, dependencies, and team execution in `@tsuuanmi/pi-orchestrator`.
 - Keep named Pi workflow state and UX in `@tsuuanmi/pi-workflows`.
+- Keep one-subagent lifecycle control behind the `SubagentManager` contract; do not move it into the orchestrator.
 - Keep CLI, TUI, sessions, and extension wiring in `@tsuuanmi/pi`.
 - Do not add fallback ownership, alternate shapes, aliases, or compatibility wrappers when a concept has one clear owner.
 
@@ -27,23 +28,28 @@ This audit turns package-boundary rules into actionable cleanup tasks. It focuse
 | Persistence locks/leases | workflow runtime storage, Pi sessions | `pi-workflows` / `pi` | Do not move leases into orchestrator; keep checkpoint store abstract | P2 |
 | Coordinator synthesis | workflow planning skills, orchestrator planner | Split ownership | Orchestrator planner stays generic; workflow planning UX remains workflow-owned | P2 |
 | Shared memory | possible in workflows and orchestrator | Undecided | Do not add until a concrete workflow requires generic cross-task memory | P3 |
-| Delegation | agent subagents, workflows, orchestrator | Undecided | Do not add until a concrete workflow use case defines ownership | P3 |
+| Delegation | `pi-agent` contract, `pi` implementation, workflow lifecycle tools, orchestrator adapters | Split ownership | `SubagentManager` owns one-subagent lifecycle; `Orchestrator` owns multi-agent coordination; workflows own policy and adapters | P0 |
 
-## ROI-ranked cleanup tasks
+## Completed baseline
 
-| Rank | Task | ROI | Output |
-| ---: | --- | --- | --- |
-| 1 | Enforce package import boundaries | Very high | `scripts/check-package-boundaries.mjs` in root `check` |
-| 2 | Audit workflow task/team concepts against orchestrator concepts | Very high | Follow-up issue list for `packages/workflows/src/skills/team` and `ultragoal` |
-| 3 | Clarify receipt terminology in package docs | High | Tool/task/workflow receipt sections in relevant docs |
-| 4 | Define checkpoint vs workflow-state contracts | High | Persistence boundary docs and adapter guidance |
-| 5 | Add workflow-owned orchestrator checkpoint-store example | Medium-high | Example adapter that imports orchestrator from workflows, never the reverse |
-| 6 | Evaluate `team` workflow for orchestrator integration | Medium | Decision doc: keep custom workflow state or use `Orchestrator.run` internally |
-| 7 | Evaluate `ultragoal` workflow for orchestrator integration | Medium | Decision doc: map goal steps to task DAG only if generic enough |
-| 8 | Normalize event naming docs across layers | Medium | Event ownership table and adapter examples |
-| 9 | Add receipt reference ids across layers | Medium | Optional stable ids without schema ownership leakage |
-| 10 | Consider shared memory | Low | Only with concrete storage and ownership requirements |
-| 11 | Consider delegation | Low | Only with concrete cross-package runtime design |
+- Package ownership and execution direction are documented and enforced by `scripts/check-package-boundaries.mjs`.
+- Direct `SubagentManager` access is limited to approved workflow adapters.
+- Team multi-agent execution uses `Orchestrator` as its single coordination path.
+- Workflow guards, manifest transitions, and legacy phase aliases have been canonicalized.
+- Active state and handoff identity are now strictly session-scoped with versioned persistence.
+
+## Remaining ROI-ranked cleanup tasks
+
+| Rank | Task | ROI | Scope | Exit criteria |
+| ---: | --- | --- | --- | --- |
+| 1 | Reconcile Team dependency and recovery semantics with `TaskQueue` | High | Map `depends_on` only to orchestrator dependencies; derive or reject `blocked_by`; cover resume, cycles, missing dependencies, and failed prerequisites | One dependency owner, deterministic blocked states, and recovery parity tests pass |
+| 2 | Remove remaining Ultragoal legacy/dual-write paths | High | Canonicalize obstacle, review-blocker, quality-gate, and receipt writes without compatibility facades | Unsupported legacy shapes fail closed and only one canonical persistence path remains |
+| 3 | Complete receipt reference boundaries | Medium-high | Keep tool, task, and workflow receipt schemas separate; document package-level references and validate stable task receipt IDs | Workflow receipts reference lower-layer IDs without copying lower-layer schemas |
+| 4 | Prove workflow-owned checkpoint recovery parity | Medium-high | Exercise the workflow-owned `OrchestratorCheckpointStore` through restart, duplicate-event, interrupted-task, and failed-save cases | Checkpoint recovery is idempotent and remains independent of workflow session state |
+| 5 | Normalize cross-layer event documentation | Medium | Publish one event ownership and adapter table for agent lifecycle, queue, workflow, and Pi UI events | Every cross-package event bridge has one owner and an explicit mapping |
+| 6 | Define approved Ralplan output adapters | Medium-low | Document the canonical handoff from approved plans to Team or future orchestrator tasks; keep planning policy in workflows | No planning-role or verdict logic moves into orchestrator |
+| 7 | Decide whether Ultragoal ever needs a real DAG | Low-medium | Require concrete independent-goal dependencies before adding an orchestrator adapter | No orchestrator integration is added without a demonstrated generic DAG |
+| 8 | Defer shared memory | Low | Do not design a shared-memory API until a concrete workflow and owner exist | No speculative shared state or delegation API is added |
 
 ## Workflow integration checklist
 

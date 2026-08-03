@@ -6,24 +6,20 @@ import { transactionJournalPath } from "#workflows/session/paths";
 /**
  * Per-mutation transaction journal for crash-recoverable workflow handoffs.
  *
- * One JSON file per handoff mutation at `.pi/{session}/state/transactions/<id>.json`
- * (mirrors Gajae's `.gjc/state/transactions/<id>.json`). The journal is
- * written **before** any mode-state mutation (`status:"pending"`), updated as
- * each step completes, and removed once the handoff is fully applied
- * (`status:"complete"` then unlink). A crash mid-handoff leaves a `pending`
- * journal with partial `steps` — durable evidence for the deferred STATE-007
- * doctor to detect and repair orphans.
+ * One JSON file per handoff mutation at `.pi/{session}/state/transactions/<id>.json`.
+ * The journal is written before mode-state mutation, updated as each step
+ * completes, and removed after the handoff is fully applied. A crash leaves a
+ * pending journal with partial steps for recovery tooling.
  *
  * Shape follows the approved spec D3 (object `steps` with per-step
- * `status`+`at`, `status:"complete"`, object `caller`/`callee`) augmented with
- * Gajae's forward-compat fields (`version`, `mutation_id`, `created_at`,
- * `updated_at`) so the future doctor can correlate journals with audit
- * `mutation_id`s and assess staleness without a migration.
+ * `status`+`at`, `status:"complete"`, object `caller`/`callee`) with the
+ * workflow-owned journal fields required for crash recovery.
  */
+
+const JOURNAL_VERSION = 2 as const;
 
 export interface WorkflowTransactionSide {
 	skill: WorkflowSkill;
-	sessionId?: string;
 	phase: string;
 }
 
@@ -34,7 +30,7 @@ export interface WorkflowTransactionStep {
 }
 
 export interface WorkflowTransactionJournal {
-	version: 1;
+	version: typeof JOURNAL_VERSION;
 	mutation_id: string;
 	status: "pending" | "complete";
 	created_at: string;
@@ -58,18 +54,21 @@ function jsonText(value: unknown): string {
 /** Create the journal file with `status:"pending"` and all steps `pending`. */
 export async function beginWorkflowTransactionJournal(input: {
 	cwd: string;
+	sessionId: string;
 	mutationId: string;
 	caller: WorkflowTransactionSide;
 	callee: WorkflowTransactionSide;
 	paths: string[];
 	stepNames: readonly string[];
 }): Promise<string> {
-	const sessionId = input.caller.sessionId?.trim() || input.callee.sessionId?.trim();
-	if (!sessionId) throw new Error("workflow transaction journal requires a session id");
+	if (typeof input.sessionId !== "string" || input.sessionId.trim().length === 0) {
+		throw new Error("workflow transaction journal requires a session id");
+	}
+	const sessionId = input.sessionId.trim();
 	const filePath = transactionJournalPath(input.cwd, sessionId, input.mutationId);
 	const now = nowIso();
 	const journal: WorkflowTransactionJournal = {
-		version: 1,
+		version: JOURNAL_VERSION,
 		mutation_id: input.mutationId,
 		status: "pending",
 		created_at: now,
@@ -88,7 +87,10 @@ export async function beginWorkflowTransactionJournal(input: {
 		await handle.writeFile(jsonText(journal));
 	} catch (error) {
 		const err = error as NodeJS.ErrnoException;
-		if (err.code === "EEXIST") return filePath;
+		if (err.code === "EEXIST") {
+			await readJournal(input.cwd, sessionId, input.mutationId);
+			return filePath;
+		}
 		throw error;
 	} finally {
 		await handle?.close();
@@ -99,7 +101,14 @@ export async function beginWorkflowTransactionJournal(input: {
 async function readJournal(cwd: string, sessionId: string, mutationId: string): Promise<WorkflowTransactionJournal> {
 	const filePath = transactionJournalPath(cwd, sessionId, mutationId);
 	const raw = await readFile(filePath, "utf8");
-	return JSON.parse(raw) as WorkflowTransactionJournal;
+	const journal = JSON.parse(raw) as Partial<WorkflowTransactionJournal>;
+	if (journal.version !== JOURNAL_VERSION) {
+		throw new Error(`unsupported workflow transaction journal version: ${String(journal.version)}`);
+	}
+	if (journal.session_id !== sessionId) {
+		throw new Error(`workflow transaction journal session mismatch: expected ${sessionId}`);
+	}
+	return journal as WorkflowTransactionJournal;
 }
 
 /** Mark a named step `done` with a timestamp; bump `updated_at`. */

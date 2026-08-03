@@ -6,7 +6,7 @@ Command entry points live under `src/commands/`.
 
 | Module | Description |
 |--------|-------------|
-| `workflow.ts` | Public compatibility wrapper for the workflow command exports. |
+| `workflow.ts` | Public workflow command entry and dispatcher adapter. |
 | `workflow/args.ts` | Shared parsing for `pi workflow ...` command arguments and structured input. |
 | `workflow/index.ts` | Public command dispatcher and package-command contract entry point. |
 | `workflow/runtime.ts` | Lifecycle, owner, primitive runtime, GC, event, and retire verb handlers. |
@@ -39,7 +39,7 @@ pi workflow team <action>
 pi workflow ultragoal <action>
 ```
 
-Every verb accepts `--json` where meaningful and `--input '<JSON object>'` for structured arguments. Session-scoped verbs require `sessionId` in the input or an explicit session source as documented in [workflow.md](../workflow.md#current-session-command-propagation). For state usage, see [State commands](../state/commands.md).
+Every verb accepts `--json` where meaningful and `--input '<JSON object>'` for structured arguments. Session-scoped verbs require `sessionId` in the input or an explicit session source as documented in [workflow.md](../workflow.md#current-session-command-propagation). Active state and handoff records use that one session identity; missing or mismatched persisted identity fails closed. For state usage, see [State commands](../state/commands.md).
 
 ## Skill Actions
 

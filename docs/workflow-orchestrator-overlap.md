@@ -15,11 +15,11 @@ This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-
 
 | Workflow area | Current behavior | Overlap | Decision | ROI | Next action |
 | --- | --- | --- | --- | --- | --- |
-| `team` | Persists team tasks, workers, gates, mailbox, and delegates all role execution to Orchestrator | Task queue, team roster, routing, events, receipts | Keep workflow state/gates; use Orchestrator as the sole execution engine | High | Complete parity and recovery coverage |
-| `ultragoal` | Persists approved goals, checkpoints, quality gates, blockers, ledger, and completion receipts | Task/goal state, checkpoints, receipts, progress | Keep workflow-owned goal UX and gates; consider orchestrator only for multi-goal DAG execution if goals become generic tasks | Medium-high | Audit goal dependency semantics before any code move |
+| `team` | Persists team tasks, workers, gates, mailbox, and delegates all role execution to Orchestrator | Task queue, team roster, routing, events, receipts | Keep workflow state/gates; use Orchestrator as the sole multi-agent execution engine | High | Complete dependency-semantic and recovery parity coverage |
+| `ultragoal` | Persists approved goals, checkpoints, quality gates, blockers, ledger, and completion receipts | Task/goal state, checkpoints, receipts, progress | Keep workflow-owned goal UX and gates; direct manager use is limited to one guarded worker; use the orchestrator only for a real multi-goal DAG | Medium-high | Remove legacy writes, then audit goal dependency semantics before any code move |
 | `ralplan` | Produces pending-approval plans through role-agent stages, verdicts, obstacles, approval handoff | Planning, role sequencing, artifacts | Keep workflow-owned; do not move to orchestrator | Medium | Document handoff outputs that can become orchestrator task inputs |
 | `deep-interview` | Runs requirements interview, ambiguity scoring, closure guard, spec writing | None significant | Keep workflow-owned | Low | No orchestrator integration |
-| Workflow runtime | Owns session state, leases, RPC, GC, mutation queues, storage layout | Checkpoint/recovery concepts | Keep workflow-owned; may implement orchestrator checkpoint stores | High | Keep the team checkpoint/event stores workflow-owned |
+| Workflow runtime | Owns session state, leases, RPC, GC, mutation queues, storage layout | Checkpoint/recovery concepts | Keep workflow-owned; may implement orchestrator checkpoint stores | High | Keep checkpoint/event stores workflow-owned |
 
 ## Detailed findings
 
@@ -136,18 +136,20 @@ Decision:
 
 ## ROI-ranked follow-up tasks
 
-| Rank | Task | ROI | Notes |
-| ---: | --- | --- | --- |
-| 1 | Write a team-workflow adapter design | Done | Defined in [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) |
-| 2 | Add receipt boundary docs in package docs | High | Clarify tool/task/workflow receipts at package level |
-| 3 | Add checkpoint-store adapter example | Done | `orchestrator-checkpoint.ts` provides the workflow-owned store |
-| 4 | Audit team task dependency fields against `TaskQueue` semantics | Medium-high | `depends_on` and `blocked_by` need strict mapping rules |
-| 5 | Audit ultragoal goal dependencies | Medium | Only integrate orchestrator if goals form a real DAG |
-| 6 | Add event mapping docs | Done | Queue events are mapped by workflow-owned modules |
-| 7 | Implement explicit team orchestrator runner | Done | `team-orchestrator.ts` requires agents and tasks and never falls back |
-| 8 | Replace mode with explicit team operations | Done | `team_execute` starts fresh work and `team_resume` requires a checkpoint |
-| 9 | Consider implementing orchestrator inside ultragoal | Low-medium | Only if dependency-DAG goals are required |
-| 10 | Keep ralplan/deep-interview workflow-owned | Low | No code movement needed |
+| Rank | Task | ROI | Status | Exit criteria |
+| ---: | --- | --- | --- | --- |
+| 1 | Audit Team dependency and recovery semantics against `TaskQueue` | High | Next | `depends_on` has one mapping, `blocked_by` has one owner, and resume/recovery parity passes |
+| 2 | Remove Ultragoal legacy and dual-write paths | High | Planned | Obstacle, review-blocker, quality-gate, and receipt writes have one canonical path |
+| 3 | Complete package-level receipt boundary documentation | Medium-high | Planned | Workflow receipts reference task IDs without copying task receipt schemas |
+| 4 | Complete checkpoint recovery parity tests | Medium-high | Planned | Restart, duplicate event, interrupted task, and checkpoint-save failure cases are covered |
+| 5 | Normalize event ownership and adapter documentation | Medium | Planned | Agent, queue, workflow, and Pi UI events have explicit owners and mappings |
+| 6 | Define approved Ralplan output adapters | Medium-low | Planned | Approved plans map into downstream task inputs without moving planning policy |
+| 7 | Evaluate Ultragoal orchestrator integration only for a real DAG | Low-medium | Decision gate | No adapter is added without independent goals and generic dependencies |
+| 8 | Keep Ralplan and Deep-interview workflow-owned | Low | Guardrail | No code movement unless a concrete generic DAG requirement appears |
+
+## Direct manager exception
+
+Workflow code may call `SubagentManager` directly only when the operation controls one subagent or runs one workflow-owned worker. The allowed adapters are `subagents/subagent-tools.ts`, `skills/team/agent-adapter.ts`, `skills/ralplan/ralplan-agents.ts`, and `skills/ultragoal/ultragoal-tools.ts`. A workflow must use the orchestrator for task dependencies, agent assignment, retries, queue execution, or agent collaboration. Unknown manager call sites fail the package boundary check.
 
 ## Adapter acceptance criteria
 
@@ -163,4 +165,4 @@ Any workflow-to-orchestrator adapter must satisfy:
 
 ## Remaining runtime work
 
-The adapter, explicit role coordinator, fresh/resume tools, failure persistence, and idempotent event store are implemented. Remaining work is parity/recovery testing and dependency-semantic audit. Do not integrate it into ultragoal, ralplan, or deep-interview without a separate DAG requirement.
+The adapter, explicit role coordinator, fresh/resume tools, failure persistence, and idempotent event store are implemented. Remaining work is session-isolation hardening, dependency/recovery parity, and removal of workflow compatibility paths. Do not integrate it into ultragoal, ralplan, or deep-interview without a separate DAG requirement.

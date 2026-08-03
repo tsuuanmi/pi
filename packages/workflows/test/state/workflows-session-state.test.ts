@@ -21,6 +21,7 @@ describe("session-scoped workflow active state", () => {
 		await syncWorkflowActiveState(cwd, { skill: "ralplan", active: true, phase: "planner" }, { sessionId });
 
 		const state = await readWorkflowActiveState(cwd, { sessionId });
+		expect(state?.version).toBe(2);
 		expect(state?.active_workflows).toHaveLength(1);
 		expect(state?.active_workflows[0]?.skill).toBe("ralplan");
 		expect(state?.active_workflows[0]?.phase).toBe("planner");
@@ -38,7 +39,7 @@ describe("session-scoped workflow active state", () => {
 		expect(stateB).toBeUndefined();
 	});
 
-	it("session entry takes precedence for the same skill within the same session", async () => {
+	it("newer entries replace older entries for the same skill", async () => {
 		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
 		// First write: planner phase
@@ -125,16 +126,57 @@ describe("session-scoped workflow active state", () => {
 		expect(state?.active_workflows).toHaveLength(0);
 	});
 
-	it("tolerates corrupt state file without throwing", async () => {
+	it("rejects corrupt state files", async () => {
 		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 		const filePath = workflowActiveStatePath(cwd, sessionId);
 		await mkdir(join(filePath, ".."), { recursive: true });
 		await writeFile(filePath, "{ not valid json");
 
-		const state = await readWorkflowActiveState(cwd, { sessionId });
-		// Corrupt file is tolerated — returns defined state with no entries
-		expect(state).toBeDefined();
-		expect(state?.active_workflows).toHaveLength(0);
+		await expect(readWorkflowActiveState(cwd, { sessionId })).rejects.toThrow("unreadable");
+	});
+
+	it("rejects unsupported active-state versions", async () => {
+		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+		const filePath = workflowActiveStatePath(cwd, sessionId);
+		await mkdir(join(filePath, ".."), { recursive: true });
+		await writeFile(
+			filePath,
+			JSON.stringify({
+				version: 99,
+				active: true,
+				updated_at: "2026-01-01T00:00:00.000Z",
+				active_workflows: [{ skill: "ralplan", active: true, updated_at: "2026-01-01T00:00:00.000Z" }],
+			}),
+		);
+
+		await expect(readWorkflowActiveState(cwd, { sessionId })).rejects.toThrow("version");
+	});
+
+	it("rejects missing or foreign entry session identities", async () => {
+		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+		const filePath = workflowActiveStatePath(cwd, sessionId);
+		await mkdir(join(filePath, ".."), { recursive: true });
+		const base = { version: 2, active: true, updated_at: "2026-01-01T00:00:00.000Z" };
+
+		await writeFile(
+			filePath,
+			JSON.stringify({
+				...base,
+				active_workflows: [{ skill: "ralplan", active: true, updated_at: base.updated_at }],
+			}),
+		);
+		await expect(readWorkflowActiveState(cwd, { sessionId })).rejects.toThrow("requires session_id");
+
+		await writeFile(
+			filePath,
+			JSON.stringify({
+				...base,
+				active_workflows: [
+					{ skill: "ralplan", active: true, updated_at: base.updated_at, session_id: "other-session" },
+				],
+			}),
+		);
+		await expect(readWorkflowActiveState(cwd, { sessionId })).rejects.toThrow("session mismatch");
 	});
 
 	it("supports multiple sessions with independent state", async () => {

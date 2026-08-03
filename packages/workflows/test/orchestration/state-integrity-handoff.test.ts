@@ -201,7 +201,7 @@ describe("state-integrity transaction-backed handoff (STATE-006)", () => {
 		expect(await journalExists(cwd, result.mutationId)).toBe(false);
 	});
 
-	it("sessionId tags active-state entries via session_id only (no stray camelCase sessionId field)", async () => {
+	it("uses one top-level session id for active-state entries", async () => {
 		const sessionId = "sess-1";
 		await writeWorkflowState(
 			cwd,
@@ -227,9 +227,7 @@ describe("state-integrity transaction-backed handoff (STATE-006)", () => {
 		for (const entry of entries) {
 			// The session id is recorded as the declared `session_id` field.
 			expect(entry.session_id).toBe("sess-1");
-			// No stray camelCase `sessionId` field pollutes the persisted entry
-			// (regression: handoffWorkflow must not spread sessionId into the
-			// HandoffSide objects, only pass it at the top level).
+			// Persisted active-state identity uses only the snake_case field.
 			expect("sessionId" in entry).toBe(false);
 		}
 	});

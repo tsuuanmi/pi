@@ -26,7 +26,7 @@ export {
 
 export const PI_WORKFLOW_SKILLS = Object.keys(PI_WORKFLOW_RUNTIME_MANIFEST) as WorkflowSkill[];
 
-function compatibilityManifest(skill: WorkflowSkill): WorkflowManifest {
+function buildManifest(skill: WorkflowSkill): WorkflowManifest {
 	const runtime = getWorkflowRuntimeManifest(skill);
 	const help = WORKFLOW_SKILL_HELP[skill];
 	const verbs: WorkflowVerb[] = Object.keys(help.actions).map((name) => ({ name }));
@@ -35,10 +35,10 @@ function compatibilityManifest(skill: WorkflowSkill): WorkflowManifest {
 }
 
 export const PI_WORKFLOW_MANIFEST: Record<WorkflowSkill, WorkflowManifest> = {
-	"deep-interview": compatibilityManifest("deep-interview"),
-	ralplan: compatibilityManifest("ralplan"),
-	team: compatibilityManifest("team"),
-	ultragoal: compatibilityManifest("ultragoal"),
+	"deep-interview": buildManifest("deep-interview"),
+	ralplan: buildManifest("ralplan"),
+	team: buildManifest("team"),
+	ultragoal: buildManifest("ultragoal"),
 };
 
 export function getWorkflowManifest(skill: WorkflowSkill): WorkflowManifest {

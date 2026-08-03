@@ -11,11 +11,10 @@ export type WorkflowStateOperation =
 	| "force-repair";
 
 export interface WorkflowTransition {
-	from: string | "*";
+	from: string;
 	to: string;
 	operations: readonly WorkflowStateOperation[];
 	verb?: string;
-	compatibility?: boolean;
 	reason?: string;
 }
 
