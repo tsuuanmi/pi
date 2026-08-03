@@ -85,6 +85,12 @@ This keeps agent behavior centralized while allowing applications, extensions, a
 - `ToolRegistry`: name-keyed tool registration for hosts and extensions.
 - `@tsuuanmi/pi-orchestrator`: owns task, team, and orchestration contracts built on top of `Agent`.
 
+## Subagent and Orchestration Boundary
+
+This package defines the `SubagentManager` lifecycle contract and shared subagent records. It does not create Pi sessions, persist Pi-native subagent records, launch tmux workers, or schedule multiple agents. Those responsibilities belong to the Pi host and `@tsuuanmi/pi-orchestrator`, respectively.
+
+Use the manager contract for one-subagent lifecycle operations. Use `@tsuuanmi/pi-orchestrator` for task dependencies, routing, retries, queues, and agent collaboration.
+
 ## Runtime and Backend Boundary
 
 The default runtime uses `@tsuuanmi/pi-ai` streaming plus registered `AgentTool` instances supplied by the host package. External process, protocol, or ACP-style integrations should implement `AgentRuntime` and be supplied through `new Agent({ runtime })`.

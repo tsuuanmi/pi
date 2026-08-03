@@ -13,7 +13,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | `src/audit/` | Append-only audit records, decision ledgers, tamper evidence, and mutation journals. | [audit/audit.md](audit/audit.md) |
 | `src/commands/` | `pi workflow` command wrapper and implementation modules. | [commands/workflow.md](commands/workflow.md) |
 | `src/compaction/` | Prompt-budgeted compact state projections. | [compaction/compaction.md](compaction/compaction.md) |
-| `src/orchestration/` | Cross-workflow prompts, handoffs, gates, expected-next checks, and tool helpers. | [orchestration/orchestration.md](orchestration/orchestration.md) |
+| `src/policy/`, `src/handoff/` | Cross-workflow prompts, gates, expected-next checks, and workflow handoffs. | [orchestration/orchestration.md](orchestration/orchestration.md) |
 | `src/registry/` | Built-in skill registry and workflow manifest metadata. | [registry/registry.md](registry/registry.md) |
 | `src/runtime/` | Runtime owner, RPC, leases, GC, mutation, storage, receipts. | [runtime/runtime.md](runtime/runtime.md) |
 | `src/session/` | Session-scoped path builders and session id resolution. | [session/session.md](session/session.md) |
@@ -23,7 +23,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | `src/skills/team/` | Team `SKILL.md` plus coordination runtime, tools, transitions, HUD, compact view. | [skills/team/team.md](skills/team/team.md) |
 | `src/skills/ultragoal/` | Ultragoal `SKILL.md` plus goal execution runtime, artifacts, quality gates, receipts, tools, HUD. | [skills/ultragoal/ultragoal.md](skills/ultragoal/ultragoal.md) |
 | `src/state/` | Active workflow state, state validation/writes, workflow ids, and base state models. | [state/state.md](state/state.md) |
-| `src/subagents/` | Generic subagent model-visible tool registration. | [subagents/subagents.md](subagents/subagents.md) |
+| `src/subagents/` | Generic subagent lifecycle tools, manager access, and execution-level validation. | [subagents/subagents.md](subagents/subagents.md) |
 | `src/tools/` | Model-visible workflow tool registration helpers and host contracts. | [extensions/workflows.md](extensions/workflows.md) |
 
 ## Generated Package Assets

@@ -7,15 +7,17 @@ import { teamEventsPath, teamReceiptsPath, teamRoleRunPath, teamTaskPath } from 
 import { createTeamAgents } from "#workflows/skills/team/agent-adapter";
 import { saveTeamExecution } from "#workflows/skills/team/execution-store";
 import type { TeamSnapshot, TeamTaskExecution } from "#workflows/skills/team/team-runtime";
-import { createFakeManager } from "#workflows-test/team/team-fakes";
+import { createFakeManager, createTeamContext } from "#workflows-test/team/team-fakes";
 
 const sessionId = "persistence-test";
 const teamId = "team-1";
 
 function createAgents() {
 	return createTeamAgents(
-		createFakeManager(async () => {}),
-		sessionId,
+		createTeamContext(
+			createFakeManager(async () => {}),
+			sessionId,
+		),
 		[{ id: "worker", profile: "worker", capabilities: ["worker"] }],
 	);
 }

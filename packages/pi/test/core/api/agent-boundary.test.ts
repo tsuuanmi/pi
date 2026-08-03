@@ -25,7 +25,7 @@ describe("pi public agent boundary", () => {
 	it("keeps only the pi-owned subagent runtime implementation on the pi root", async () => {
 		const source = await readRepoFile("packages/pi/src/index.ts");
 
-		expect(source).toContain('export { SubagentManager } from "#pi/subagents/subagents"');
+		expect(source).toContain('export { SubagentManager } from "#pi/subagents/manager"');
 		expect(source).not.toContain("type SubagentRunRequest");
 		expect(source).not.toContain("type SubagentRunResult");
 		expect(source).not.toContain("type SubagentRecord");

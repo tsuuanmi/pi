@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { createTeamTask, executeTeam, readTeamSnapshot, startTeam } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createTeamAgents } from "#workflows/skills/team/agent-adapter";
-import { createFakeManager } from "#workflows-test/team/team-fakes";
+import { createFakeManager, createTeamContext } from "#workflows-test/team/team-fakes";
 
 const sessionId = "routing-test";
 const teamId = "team-1";
@@ -26,11 +26,13 @@ describe("team capability routing", () => {
 		const roles: string[] = [];
 		const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
 		const agents = createTeamAgents(
-			createFakeManager(async (request) => {
-				if (!request.role) throw new Error("routing test request is missing a role");
-				roles.push(request.role);
-			}),
-			sessionId,
+			createTeamContext(
+				createFakeManager(async (request) => {
+					if (!request.role) throw new Error("routing test request is missing a role");
+					roles.push(request.role);
+				}),
+				sessionId,
+			),
 			[{ id: "worker", profile: "worker", capabilities: ["worker"] }],
 		);
 

@@ -4,12 +4,12 @@ import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/model/model-registry";
+import { DefaultResourceLoader } from "#pi/resources/resource-loader";
 import { sessionStateDir } from "#pi/session/layout";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { DefaultResourceLoader } from "#pi/resources/resource-loader";
-import { SubagentManager, type SubagentRecord } from "#pi/subagents/subagents";
+import { SubagentManager, type SubagentRecord } from "#pi/subagents/manager";
 import { readSubagentWorkerRequest } from "#pi/subagents/tmux-worker";
-import { testAssistantMessage, testToolCall, registerTestProvider } from "#pi-test/helpers/provider";
+import { registerTestProvider, testAssistantMessage, testToolCall } from "#pi-test/helpers/provider";
 
 const TEST_SESSION = "test-session";
 
@@ -491,7 +491,7 @@ PROFILE SYSTEM PROMPT`,
 		expect(await manager.kill("done", TEST_SESSION)).toMatchObject({ ok: false, reason: "already_terminal" });
 
 		await writeRecord(cwd, {
-			id: "legacy",
+			id: "invalid-identity",
 			role: "planner",
 			status: "running",
 			cwd,
@@ -499,9 +499,31 @@ PROFILE SYSTEM PROMPT`,
 			created_at: "2026-01-01T00:00:00.000Z",
 			updated_at: "2026-01-01T00:00:00.000Z",
 			visibility: "tmux",
-			tmux: tmuxFor("legacy"),
+			tmux: tmuxFor("invalid-identity"),
 		});
-		expect(await manager.attach("legacy", TEST_SESSION)).toMatchObject({ ok: false, reason: "legacy_record" });
+		expect(await manager.attach("invalid-identity", TEST_SESSION)).toMatchObject({
+			ok: false,
+			reason: "invalid_identity",
+		});
+
+		const missingCommand = tmuxFor("missing-command");
+		missingCommand.cleanup_command = "";
+		await writeRecord(cwd, {
+			id: "missing-command",
+			role: "planner",
+			status: "running",
+			cwd,
+			resumable: false,
+			created_at: "2026-01-01T00:00:00.000Z",
+			updated_at: "2026-01-01T00:00:00.000Z",
+			visibility: "tmux",
+			identity: identityFor("missing-command"),
+			tmux: missingCommand,
+		});
+		expect(await manager.kill("missing-command", TEST_SESSION)).toMatchObject({
+			ok: false,
+			reason: "invalid_metadata",
+		});
 
 		await writeTmuxRecord("missing-pane");
 		expect(await manager.kill("missing-pane", TEST_SESSION)).toMatchObject({

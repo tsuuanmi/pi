@@ -1,6 +1,6 @@
 # Subagents
 
-Pi ships a Pi-native `SubagentManager` that runs isolated agent sessions as subagents of the current session. It is exposed to extensions as `ctx.subagents` and to the agent through seven `subagent_*` tools. Subagents are the execution primitive used by the [team](../../../workflows/docs/workflow.md) and [ultragoal](../../../workflows/docs/workflow.md) skills to spawn parallel workers.
+Pi ships a Pi-native `SubagentManager` that runs isolated agent sessions as subagents of the current session. It is exposed to extensions as `ctx.subagents` and to the agent through the `subagent_*` lifecycle tools. It owns session creation, durable records, native execution, and tmux controls; it is not the generic multi-agent scheduler. Team coordination uses `@tsuuanmi/pi-orchestrator` through a workflow-owned adapter.
 
 ## Records and durability
 
@@ -20,9 +20,9 @@ A `SubagentRecord` carries: `id`, `role`, `label`, `agent_profile`, `model`, `th
 
 `status` is one of `queued`, `running`, `paused`, `completed`, `failed`, `cancelled`.
 
-## The seven subagent tools
+## Subagent lifecycle tools
 
-All seven tools are registered by the built-in workflows extension and operate on the parent session's `SubagentManager` via `ctx.subagents`.
+All lifecycle tools are registered by the built-in workflows extension and operate on the parent session's `SubagentManager` via `ctx.subagents`.
 
 ### `subagent_spawn`
 
@@ -141,6 +141,10 @@ Subagent sessions do **not** receive their own `SubagentManager`. A subagent can
 
 Subagent sessions also set `ctx.skipWorkflowContinuation = true` (exposed on `ExtensionContext`), which prevents workflow continuation prompts from leaking into the subagent. Extensions that drive workflows should honor this flag so they do not re-prompt from inside a subagent.
 
+## Lifecycle and orchestration boundary
+
+`SubagentManager` owns one-subagent lifecycle operations: spawn, await, steer, pause, resume, cancel, inspect, attach, and kill. `@tsuuanmi/pi-orchestrator` owns task dependencies, agent routing, retries, queues, and collaboration. Workflow adapters connect the two without making the orchestrator depend on Pi.
+
 ## Team and Ultragoal execution linking
 
 Team roles execute through `@tsuuanmi/pi-orchestrator`, which uses the parent session's agent runtime through the workflow-owned adapter. Ultragoal continues to use its dedicated goal tool:
@@ -160,4 +164,4 @@ Before a subagent session starts, Pi injects an observability instruction into t
 
 `subagent_spawn` defaults to `visibility: "native"`: use Pi-native receipts, status, await, pause, resume, and session-local logs. `visibility: "tmux"` requests an explicit tmux-visible panel for live terminal work, but it is not forced for every subagent because headless mode, CI, short-lived tasks, and non-terminal environments still need native execution. `visibility: "auto"` currently resolves to the native backend until a later tmux policy gate changes that behavior.
 
-Tmux-backed subagents expose bounded live controls through `subagent_inspect`, `subagent_attach`, and `subagent_kill`. Inspect returns durable record/artifact/worker paths plus tmux metadata. Attach returns the exact target-specific command: pane-backed workers use a recorded pane id and `select-pane`, while session-backed workers use the recorded session target and `attach-session`. Kill validates the shared `Subagent Run Identity` schema metadata in the record and worker metadata before cleanup, then uses `kill-pane` for pane targets or `kill-session` for session targets. Legacy or mismatched identity metadata fails closed. Pause, resume, and heartbeat controls remain deferred.
+Tmux-backed subagents expose bounded live controls through `subagent_inspect`, `subagent_attach`, and `subagent_kill`. Inspect returns durable record/artifact/worker paths plus tmux metadata. Attach returns the exact target-specific command: pane-backed workers use a recorded pane id and `select-pane`, while session-backed workers use the recorded session target and `attach-session`. Kill validates the shared `Subagent Run Identity` schema metadata in the record and worker metadata before cleanup, then uses `kill-pane` for pane targets or `kill-session` for session targets. Invalid identity or tmux command metadata fails closed. Pause, resume, and heartbeat controls remain deferred.

@@ -269,7 +269,7 @@ export {
 	type Skill,
 	type SkillFrontmatter,
 } from "#pi/skills/skills";
-export { SubagentManager } from "#pi/subagents/subagents";
+export { SubagentManager } from "#pi/subagents/manager";
 // Tools
 export {
 	type BashOperations,

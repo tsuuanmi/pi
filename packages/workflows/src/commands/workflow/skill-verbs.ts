@@ -15,7 +15,6 @@ import {
 	workflowVerbSet,
 } from "#workflows/commands/workflow/utils";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
-import { assertDeepInterviewHandoff } from "#workflows/policy/workflow-tool-utils";
 import type { RalplanStage } from "#workflows/session/paths";
 import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";
 import {
@@ -32,6 +31,7 @@ import type {
 	DeepInterviewAdvisoryMetadata,
 	DeepInterviewRoundRecord,
 } from "#workflows/skills/deep-interview/deep-interview-state";
+import { assertDeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
 import { recordRalplanExplorerGateArtifact } from "#workflows/skills/ralplan/ralplan-gates";
 import type { RalplanApprovalTarget } from "#workflows/skills/ralplan/ralplan-runtime";
 import {

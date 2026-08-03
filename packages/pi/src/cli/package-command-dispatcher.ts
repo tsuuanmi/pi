@@ -4,11 +4,9 @@ import { getAgentDir } from "#pi/config/config";
 import { DefaultPackageManager, type ResolvedResource } from "#pi/package-manager/package-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
-// Register the agent-layer SubagentManagerFactory at module load so the detached
-// RuntimeOwner (which loads pi via the pi entry) can look it up and
-// route pi workflow subagents verbs to a real SubagentManager. Side-effect import
-// only; pi-workflows never imports this.
-import "#pi/subagents/subagent-manager-factory-registration";
+// Register the Pi SubagentManagerFactory for detached runtime owners.
+// This is the only Pi-side wiring path; workflows consume the injected contract.
+import "#pi/subagents/factory";
 
 export interface PackageCommandContext {
 	cwd: string;

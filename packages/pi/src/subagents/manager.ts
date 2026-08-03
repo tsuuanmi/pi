@@ -299,12 +299,12 @@ function tmuxMetadataFromTarget(
 }
 
 function tmuxTarget(record: SubagentRecord): string | undefined {
-	return record.identity?.tmux.target.target ?? record.tmux?.target.target;
+	return record.identity?.tmux.target.target;
 }
 
-function tmuxCommandFromMetadata(tmux: SubagentTmuxMetadata, fallback: string): string {
+function tmuxCommand(tmux: SubagentTmuxMetadata): string | undefined {
 	const command = tmux.cleanup_command.split(/\s+/, 1)[0]?.trim();
-	return command || fallback;
+	return command || undefined;
 }
 
 function tmuxHasTargetArgs(target: SubagentTmuxTarget): string[] {
@@ -1079,20 +1079,22 @@ export class SubagentManager {
 		const record = await this.read(id, sessionId);
 		if (!record) return { ok: false, reason: "not_found" };
 		const target = tmuxTarget(record);
-		if (!record.tmux || !target || !record.identity) return { ok: false, reason: "legacy_record", record };
+		if (!record.tmux || !target || !record.identity) return { ok: false, reason: "invalid_identity", record };
 		const workerMetadata = readWorkerMetadata(await readJsonObject(record.tmux.worker_metadata_file));
-		if (!workerMetadata?.identity) return { ok: false, reason: "legacy_record", record, tmuxTarget: target };
+		if (!workerMetadata?.identity) return { ok: false, reason: "invalid_identity", record, tmuxTarget: target };
 		if (!tmuxRecordMatchesIdentity(record, workerMetadata.identity)) {
 			return { ok: false, reason: "identity_mismatch", record, tmuxTarget: target };
 		}
 		if (!tmuxRecordMatchesIdentity(record, record.identity)) {
 			return { ok: false, reason: "identity_mismatch", record, tmuxTarget: target };
 		}
+		const attachCommand = record.tmux.attach_command?.trim();
+		if (!attachCommand) return { ok: false, reason: "invalid_metadata", record, tmuxTarget: target };
 		return {
 			ok: true,
 			record,
 			tmuxTarget: target,
-			attachCommand: record.tmux.attach_command,
+			attachCommand,
 		};
 	}
 
@@ -1101,12 +1103,13 @@ export class SubagentManager {
 		if (!record) return { ok: false, reason: "not_found" };
 		const target = tmuxTarget(record);
 		if (isTerminalStatus(record.status)) return { ok: false, reason: "already_terminal", record, tmuxTarget: target };
-		if (!record.tmux || !target || !record.identity) return { ok: false, reason: "legacy_record", record };
+		if (!record.tmux || !target || !record.identity) return { ok: false, reason: "invalid_identity", record };
 		if (!tmuxRecordMatchesIdentity(record, record.identity)) {
 			return { ok: false, reason: "identity_mismatch", record, tmuxTarget: target };
 		}
 		const env = this.options.tmux?.env ?? process.env;
-		const command = tmuxCommandFromMetadata(record.tmux, env.PI_TMUX_COMMAND?.trim() || "tmux");
+		const command = tmuxCommand(record.tmux);
+		if (!command) return { ok: false, reason: "invalid_metadata", record, tmuxTarget: target };
 		const spawn = this.options.tmux?.spawnSync ?? defaultTmuxSpawnSync;
 		const hasTarget = spawn(command, tmuxHasTargetArgs(record.tmux.target), {
 			cwd: record.cwd,
@@ -1117,7 +1120,7 @@ export class SubagentManager {
 		});
 		if (hasTarget.exitCode !== 0) return { ok: false, reason: "tmux_pane_not_found", record, tmuxTarget: target };
 		const workerMetadata = readWorkerMetadata(await readJsonObject(record.tmux.worker_metadata_file));
-		if (!workerMetadata?.identity) return { ok: false, reason: "legacy_record", record, tmuxTarget: target };
+		if (!workerMetadata?.identity) return { ok: false, reason: "invalid_identity", record, tmuxTarget: target };
 		if (!tmuxRecordMatchesIdentity(record, workerMetadata.identity)) {
 			return { ok: false, reason: "identity_mismatch", record, tmuxTarget: target };
 		}

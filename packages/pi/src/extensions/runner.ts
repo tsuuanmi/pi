@@ -61,7 +61,7 @@ import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostic
 import type { SessionManager } from "#pi/session/manager";
 import type { KeybindingsConfig } from "#pi/settings/keybindings";
 import type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";
-import type { SubagentManager } from "#pi/subagents/subagents";
+import type { SubagentManager } from "#pi/subagents/manager";
 
 // Extension shortcuts compete with canonical keybinding ids from keybindings.json.
 // Only editor-global shortcuts are reserved here. Picker-specific bindings are not.

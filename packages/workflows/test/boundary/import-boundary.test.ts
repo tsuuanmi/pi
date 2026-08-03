@@ -1,8 +1,11 @@
+import { execFile } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = join(import.meta.dirname, "../../../../");
+const execFileAsync = promisify(execFile);
 const workflowsSrc = join(repoRoot, "packages/workflows/src");
 const allowedAgentNodeImports = new Set(["resolvePath", "serializeJsonLine", "withFileMutationQueue"]);
 
@@ -60,5 +63,18 @@ describe("workflow package import boundary", () => {
 		}
 
 		expect(offenders).toEqual([]);
+	});
+
+	it("routes Team execution through the orchestrator", async () => {
+		const source = await readFile(join(workflowsSrc, "skills/team/team-execution.ts"), "utf8");
+
+		expect(source).toContain("runTeamOrchestrator");
+		expect(source).not.toMatch(
+			/\.(spawn|resume|steer|pause|cancel|read|list|waitFor|inspect|attach|kill|dispose)\s*\(/,
+		);
+	});
+
+	it("passes the package and semantic boundary checker", async () => {
+		await execFileAsync(process.execPath, ["scripts/check-package-boundaries.mjs"], { cwd: repoRoot });
 	});
 });

@@ -1,6 +1,15 @@
 import type { SubagentManager, SubagentRecord, SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi-agent";
+import type { WorkflowContext } from "#workflows/tools/workflow-tools";
 
 export type SpawnAction = (request: SubagentRunRequest) => void | Promise<void>;
+
+export function createTeamContext(manager: SubagentManager, sessionId = "test-session", cwd = "test"): WorkflowContext {
+	return {
+		cwd,
+		sessionManager: { getSessionId: () => sessionId },
+		subagents: manager,
+	};
+}
 
 export function createFakeManager(action: SpawnAction): SubagentManager {
 	const unavailable = async (): Promise<never> => {

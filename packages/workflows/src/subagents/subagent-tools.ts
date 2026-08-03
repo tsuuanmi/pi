@@ -2,7 +2,8 @@ import type { SubagentRecord, SubagentVisibility } from "@tsuuanmi/pi-agent";
 import { createSubagentListReceipt, createSubagentReceipt, renderSubagentProgress } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceiptWithStructuredReceipt } from "#workflows/artifacts/artifacts";
-import { assertAgentThinkingLevel, requireSubagentManager } from "#workflows/policy/workflow-tool-utils";
+import { requireSubagentManager } from "#workflows/subagents/manager";
+import { assertAgentThinkingLevel } from "#workflows/subagents/thinking-level";
 import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
 
 const subagentSpawnSchema = Type.Object({

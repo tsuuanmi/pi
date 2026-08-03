@@ -6,7 +6,6 @@
 		"rootDir": "./src",
 		"paths": {
 			"#workflows/*": ["./src/*"],
-			"@tsuuanmi/pi": ["../pi/dist/index.d.ts"],
 			"@tsuuanmi/pi-agent": ["../agent/dist/index.d.ts"],
 			"@tsuuanmi/pi-agent/*": ["../agent/dist/*.d.ts"],
 			"@tsuuanmi/pi-ai": ["../ai/dist/index.d.ts"],

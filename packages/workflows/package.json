@@ -14,10 +14,6 @@
 			"types": "./dist/commands/workflow.d.ts",
 			"import": "./dist/commands/workflow.js"
 		},
-		"./commands/state-command": {
-			"types": "./dist/commands/workflow.d.ts",
-			"import": "./dist/commands/workflow.js"
-		},
 		"./tools/workflow-tools": {
 			"types": "./dist/tools/workflow-tools.d.ts",
 			"import": "./dist/tools/workflow-tools.js"

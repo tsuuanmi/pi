@@ -6,7 +6,7 @@ import { createTeamTask, executeTeam, readTeamSnapshot, resumeTeam, startTeam } 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { teamCheckpointPath, teamReceiptsPath } from "#workflows/session/session-layout";
 import { createTeamAgents } from "#workflows/skills/team/agent-adapter";
-import { createFakeManager } from "#workflows-test/team/team-fakes";
+import { createFakeManager, createTeamContext } from "#workflows-test/team/team-fakes";
 
 const sessionId = "execution-test";
 
@@ -47,7 +47,7 @@ describe("team execution boundary", () => {
 			attempts += 1;
 			if (attempts === 1) throw new Error("transient role failure");
 		});
-		const agents = createTeamAgents(manager, sessionId, [
+		const agents = createTeamAgents(createTeamContext(manager, sessionId), [
 			{ id: "worker", profile: "worker", capabilities: ["worker"] },
 		]);
 
@@ -86,7 +86,7 @@ describe("team execution boundary", () => {
 				request.signal.addEventListener("abort", () => reject(new Error("worker aborted")), { once: true });
 			});
 		});
-		const agents = createTeamAgents(manager, sessionId, [
+		const agents = createTeamAgents(createTeamContext(manager, sessionId), [
 			{ id: "worker", profile: "worker", capabilities: ["worker"] },
 		]);
 		const execution = executeTeam({
@@ -130,8 +130,10 @@ describe("team execution boundary", () => {
 		const controller = new AbortController();
 		controller.abort();
 		const agents = createTeamAgents(
-			createFakeManager(async () => {}),
-			sessionId,
+			createTeamContext(
+				createFakeManager(async () => {}),
+				sessionId,
+			),
 			[{ id: "worker", profile: "worker", capabilities: ["worker"] }],
 		);
 		await expect(
@@ -182,8 +184,10 @@ describe("team execution boundary", () => {
 			tasks: recovered.tasks,
 			persistIds: ["task-1"],
 			agents: createTeamAgents(
-				createFakeManager(async () => {}),
-				sessionId,
+				createTeamContext(
+					createFakeManager(async () => {}),
+					sessionId,
+				),
 				[{ id: "worker", profile: "worker", capabilities: ["worker"] }],
 			),
 			routes: { "task-1": { capabilities: ["worker"] } },

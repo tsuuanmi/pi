@@ -23,8 +23,8 @@ These are the intended ownership boundaries. If implementation chooses different
 | Agent definition parsing | `packages/pi/src/agent/definitions.ts` | `src/agent/profiles.ts`, bundled role-agent prompt assets if added |
 | Project resource loading | `packages/pi/src/settings/settings-manager.ts` and `src/resources/resource-loader.ts` | `packages/pi/docs/security.md` |
 | Source metadata and diagnostics | `packages/pi/src/package-manager/source-info.ts` and `src/package-manager/resource-diagnostics.ts` | resource-specific loaders |
-| Scoped live registry | `packages/pi/src/runtime/services.ts` and `packages/pi/src/subagents/subagents.ts` | `src/runtime/agent.ts`, `src/api/types.ts` |
-| Durable subagent/task/receipt state | `packages/pi/src/subagents/subagents.ts` and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |
+| Scoped live registry | `packages/pi/src/runtime/services.ts` and `packages/pi/src/subagents/manager.ts` | `src/runtime/agent.ts`, `src/api/types.ts` |
+| Durable subagent/task/receipt state | `packages/pi/src/subagents/manager.ts` and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |
 | Self-hosting continuity | `pi:workflows` first-party package tools and skills | `packages/workflows/src/harness/*`, `packages/workflows/src/skills/*` |
 | Direct-port adaptation | each porting change owner | this document and code review checklist |
 | Worktree/tmux orchestration | future task/worktree modules and `@tsuuanmi/pi-workflows` harness/runtime/seams.ts | docs/utils/terminal/tmux.md, workflow docs |
@@ -185,7 +185,7 @@ Worktree and tmux orchestration must not begin until a threat-model ADR exists. 
 - cleanup idempotency and permission failures;
 - tmux absence or version mismatch.
 
-The ADR is accepted, satisfying this phase gate. Tmux-backed subagents now expose bounded live controls for `inspect`, `attach`, and `kill`: inspect returns the durable record and paths, attach returns target-specific command guidance without attaching automatically, and kill validates the shared `Subagent Run Identity` schema plus worker metadata before target-specific cleanup (`kill-pane` or `kill-session`). Legacy or mismatched identity metadata fails closed. `pause`, `resume`, and `heartbeat` live controls remain deferred. `git-worktree-isolation` remains a deferred seam until implementation lands and passes the ADR controls. `cross-harness-omx-fallback` remains permanently blocked unless a later approved plan reverses that policy.
+The ADR is accepted, satisfying this phase gate. Tmux-backed subagents now expose bounded live controls for `inspect`, `attach`, and `kill`: inspect returns the durable record and paths, attach returns target-specific command guidance without attaching automatically, and kill validates the shared `Subagent Run Identity` schema plus worker metadata before target-specific cleanup (`kill-pane` or `kill-session`). Invalid identity or tmux command metadata fails closed. `pause`, `resume`, and `heartbeat` live controls remain deferred. `git-worktree-isolation` remains a deferred seam until implementation lands and passes the ADR controls. `cross-harness-omx-fallback` remains permanently blocked unless a later approved plan reverses that policy.
 
 ## Phase-gate summary
 

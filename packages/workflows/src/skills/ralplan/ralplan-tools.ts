@@ -6,12 +6,13 @@ import {
 	expectedNextRalplanRole,
 	type RalplanSelectorVerdict,
 } from "#workflows/policy/expected-next-role";
-import { assertAgentThinkingLevel, assertRalplanRole } from "#workflows/policy/workflow-tool-utils";
+import { assertRalplanRole } from "#workflows/skills/ralplan/guards";
 import { ralplanRoleForStage, runRalplanAgent } from "#workflows/skills/ralplan/ralplan-agents";
 import { normalizeRalplanExplorerGate } from "#workflows/skills/ralplan/ralplan-gates";
 import { readRalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";
 import { assertRalplanStage, assertSafePathComponent } from "#workflows/state/state-schema";
 import { defaultWorkflowId, readWorkflowState } from "#workflows/state/workflow-state";
+import { assertAgentThinkingLevel } from "#workflows/subagents/thinking-level";
 import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
 
 const ralplanRunAgentSchema = Type.Object({

@@ -1,8 +1,8 @@
-# Orchestration
+# Workflow Policy
 
-Cross-workflow prompts, handoffs, gates, expected-next guards, and command/tool helpers.
+Cross-workflow prompts, handoffs, gates, and expected-next guards. Generic multi-agent execution belongs to `@tsuuanmi/pi-orchestrator`; subagent lifecycle guards live under `src/subagents/`.
 
-**Source:** `src/orchestration/`
+**Source:** `src/policy/`, `src/handoff/`
 
 ## Module Structure
 
@@ -13,7 +13,10 @@ Cross-workflow prompts, handoffs, gates, expected-next guards, and command/tool 
 | `gate-verdicts.ts` | Gate verdict types shared across skills. |
 | `handoff.ts` | Handoff types for workflow transitions and spec handoff. |
 | `vagueness-gate.ts` | Vagueness gating helpers. |
-| `workflow-tool-utils.ts` | Command and tool helpers shared by skill tool registrations. |
+| `deep-interview/guards.ts` | Deep Interview handoff validation. |
+| `ralplan/guards.ts` | Ralplan role and approval-target validation. |
+| `subagents/manager.ts` | Required injected `SubagentManager` access. |
+| `subagents/thinking-level.ts` | Agent thinking-level validation. |
 
 ## Important Contracts
 

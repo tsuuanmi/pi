@@ -45,15 +45,34 @@ const internalRules = [
 	{ directory: "packages/pi/src/subagents", forbidden: ["#pi/cli/"] },
 	{ directory: "packages/pi/src/extensions/loader.ts", forbidden: ["#pi/index"] },
 ];
+const workflowManagerCallers = new Set([
+	"packages/workflows/src/subagents/subagent-tools.ts",
+	"packages/workflows/src/skills/team/agent-adapter.ts",
+	"packages/workflows/src/skills/ralplan/ralplan-agents.ts",
+	"packages/workflows/src/skills/ultragoal/ultragoal-tools.ts",
+]);
+const workflowManagerCallPattern = /\.(spawn|resume|steer|pause|cancel|read|list|waitFor|inspect|attach|kill|dispose)\s*\(/g;
+const workflowManagerReferencePattern = /\bSubagentManager\b|\brequireSubagentManager\b/;
+const teamExecutionPath = "packages/workflows/src/skills/team/team-execution.ts";
 const importPattern = /(?:import|export)\s+(?:type\s+)?(?:[^"'()]*?\s+from\s+)?["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)/g;
 const failures = [];
 const manifests = new Map();
 const buildConfigs = new Map();
 
 for (const [owner, root] of Object.entries(packageRoots)) {
+	manifests.set(owner, readJsonFile(join(root, "package.json"), owner));
+	buildConfigs.set(owner, readJsonFileIfPresent(join(root, "tsconfig.build.json")));
+}
+
+checkAllowedGraph();
+
+for (const [owner, root] of Object.entries(packageRoots)) {
 	const src = join(root, "src");
 	if (!exists(src)) continue;
-	for (const file of collectTsFiles(src)) checkFile(owner, file);
+	for (const file of collectTsFiles(src)) {
+		checkFile(owner, file);
+		if (owner === "@tsuuanmi/pi-workflows") checkWorkflowExecution(file);
+	}
 }
 for (const rule of internalRules) {
 	const files = rule.directory.endsWith(".ts") ? [rule.directory] : collectTsFiles(rule.directory);
@@ -107,6 +126,24 @@ function checkInternalFile(rule, file) {
 		if (rule.forbidden.some((prefix) => specifier.startsWith(prefix))) {
 			failures.push(`${relative(process.cwd(), file)}: ${specifier} violates its internal boundary`);
 		}
+	}
+}
+
+function checkWorkflowExecution(file) {
+	const path = relative(process.cwd(), file).replaceAll("\\\\", "/");
+	const text = readFileSync(file, "utf8");
+	if (path !== teamExecutionPath && !workflowManagerReferencePattern.test(text)) return;
+	const managerCalls = [...text.matchAll(workflowManagerCallPattern)].map((match) => match[1]);
+	if (managerCalls.length > 0 && !workflowManagerCallers.has(path)) {
+		failures.push(`${path}: direct SubagentManager calls are not allowed here; use Orchestrator`);
+	}
+
+	if (path !== teamExecutionPath) return;
+	if (!text.includes("runTeamOrchestrator")) {
+		failures.push(`${path}: Team execution must use runTeamOrchestrator`);
+	}
+	if (managerCalls.length > 0) {
+		failures.push(`${path}: Team execution must not call SubagentManager directly`);
 	}
 }
 

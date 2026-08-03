@@ -15,7 +15,7 @@ import { AgentSession } from "#pi/runtime/agent";
 import { optimizeRetainedContext } from "#pi/runtime/context-optimization";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import type { SubagentManager } from "#pi/subagents/subagents";
+import type { SubagentManager } from "#pi/subagents/manager";
 import { time } from "#pi/telemetry/timings";
 import {
 	createBashTool,

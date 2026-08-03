@@ -298,7 +298,7 @@ Top-level shared folders provide common utilities used by all four skills:
 | `audit/` | `audit-log.ts`, `decision-ledger.ts`, `tamper-detection.ts`, `transaction-journal.ts` | Append-only audit, decision, tamper, and transaction records. |
 | `compaction/` | `compaction.ts` | Prompt-budgeted compact workflow projections. |
 | Skill HUD modules | `deep-interview-hud.ts`, `ralplan-hud.ts`, `team-hud.ts`, `ultragoal-hud.ts` | HUD chip formatting for each workflow skill, colocated with the owning skill folder. |
-| `orchestration/` | `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `handoff.ts`, `vagueness-gate.ts`, `workflow-tool-utils.ts` | Cross-workflow prompts, handoffs, gates, expected-next checks, and tool helpers. |
+| `policy/`, `handoff/` | `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Cross-workflow prompts, handoffs, gates, and expected-next checks. Skill-specific guards live with their skill; subagent lifecycle guards live under `src/subagents/`. |
 | `registry/` | `skill-registry.ts`, `workflow-manifest.ts` | Built-in skill registry and manifest metadata. |
 | `session/` | `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Session-scoped path builders and session-id resolution. |
 | `state/` | `active-state.ts`, `state-schema.ts`, `state-writer.ts`, `workflow-state.ts` | Active-state, state validation/writes, workflow ids, and base state types. |
@@ -327,8 +327,7 @@ import {
 Subpath exports:
 
 - `@tsuuanmi/pi-workflows/register` — bundled workflow integration registration for Pi hosts.
-- `@tsuuanmi/pi-workflows/commands/workflow` — the `pi workflow` command, including `pi workflow state`.
-- `@tsuuanmi/pi-workflows/commands/state-command` — compatibility alias for `commands/workflow`.
+- `@tsuuanmi/pi-workflows/commands/workflow` — the public `pi workflow` command entry, including `pi workflow state`.
 - `@tsuuanmi/pi-workflows/tools/workflow-tools` — workflow tool registration helper for custom hosts.
 - `@tsuuanmi/pi-workflows/runtime/*` — individual harness runtime modules (sessions, leases, RPC, GC, mutation, storage, receipt rules, etc.).
 

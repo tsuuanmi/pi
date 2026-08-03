@@ -88,7 +88,7 @@ import type { SettingsManager } from "#pi/settings/settings-manager";
 import { expandPromptTemplate, type PromptTemplate } from "#pi/skills/prompt-templates";
 import type { SlashCommandInfo } from "#pi/skills/slash-commands";
 import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/skills/system-prompt";
-import type { SubagentManager } from "#pi/subagents/subagents";
+import type { SubagentManager } from "#pi/subagents/manager";
 import { ApiUsageLogger } from "#pi/telemetry/api-usage-logger";
 import { apiUsageLogPath } from "#pi/telemetry/api-usage-utils";
 import { type BashOperations, createLocalBashOperations } from "#pi/tools/bash";

@@ -18,7 +18,8 @@ export type SubagentControlAction = "inspect" | "attach" | "kill";
 export type SubagentKillFailureReason =
 	| "not_found"
 	| "not_tmux"
-	| "legacy_record"
+	| "invalid_identity"
+	| "invalid_metadata"
 	| "identity_mismatch"
 	| "already_terminal"
 	| "tmux_pane_not_found"
@@ -177,7 +178,7 @@ export interface SubagentAttachResult {
 	record?: SubagentRecord;
 	tmuxTarget?: string;
 	attachCommand?: string;
-	reason?: "not_found" | "not_tmux" | "legacy_record" | "identity_mismatch";
+	reason?: "not_found" | "not_tmux" | "invalid_identity" | "invalid_metadata" | "identity_mismatch";
 }
 
 export type SubagentKillResult =

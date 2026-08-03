@@ -24,16 +24,6 @@ export * from "#workflows/policy/context-templates";
 export * from "#workflows/policy/expected-next-role";
 export * from "#workflows/policy/gate-verdicts";
 export * from "#workflows/policy/vagueness-gate";
-// workflow-tool-utils: avoid re-exporting RalplanApprovalTarget (conflicts with ralplan-runtime)
-export {
-	type AgentThinkingLevel,
-	assertAgentThinkingLevel,
-	assertDeepInterviewHandoff,
-	assertRalplanApprovalTarget,
-	assertRalplanRole,
-	type DeepInterviewHandoff,
-	requireSubagentManager,
-} from "#workflows/policy/workflow-tool-utils";
 export * from "#workflows/registry/skill-registry";
 export * from "#workflows/registry/workflow-manifest";
 export * from "#workflows/runtime/endpoint";
@@ -58,6 +48,11 @@ export * from "#workflows/skills/deep-interview/deep-interview-mutation-guard";
 export * from "#workflows/skills/deep-interview/deep-interview-runtime";
 export * from "#workflows/skills/deep-interview/deep-interview-state";
 export * from "#workflows/skills/deep-interview/deep-interview-tools";
+export { assertDeepInterviewHandoff, type DeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
+export {
+	assertRalplanApprovalTarget,
+	assertRalplanRole,
+} from "#workflows/skills/ralplan/guards";
 export * from "#workflows/skills/ralplan/ralplan-agents";
 export * from "#workflows/skills/ralplan/ralplan-compact";
 export * from "#workflows/skills/ralplan/ralplan-completion-transaction";
@@ -120,9 +115,10 @@ export {
 	validateCompletionReceipt,
 } from "#workflows/skills/ultragoal/ultragoal-receipt";
 export * from "#workflows/skills/ultragoal/ultragoal-runtime";
-
 // Runtime modules — re-export everything for external consumers
 export * from "#workflows/state/active-state";
 export * from "#workflows/state/state-schema";
 export * from "#workflows/state/state-writer";
 export * from "#workflows/state/workflow-state";
+export { requireSubagentManager } from "#workflows/subagents/manager";
+export { type AgentThinkingLevel, assertAgentThinkingLevel } from "#workflows/subagents/thinking-level";

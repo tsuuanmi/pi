@@ -1,6 +1,6 @@
 # Subagents and Workflow Tools
 
-Generic and workflow-owned agent execution, plus the workflow-owned model-visible tool surface, registered by the workflow tool helper and bundled workflow registration.
+Generic subagent lifecycle tools and workflow-owned agent execution, plus the workflow-owned model-visible tool surface, registered by the workflow tool helper and bundled workflow registration.
 
 **Source:** `src/register.ts`, `src/subagents/subagent-tools.ts`, `src/skills/deep-interview/deep-interview-tools.ts`, `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, `src/skills/team/team-coordinator.ts`, `src/skills/ultragoal/ultragoal-tools.ts`, `src/tools/workflow-tools.ts`
 
@@ -29,7 +29,7 @@ The bundled workflow registration registers these model-visible tools:
 | `team_resume` | Resume Team execution from an orchestrator checkpoint. |
 | `ultragoal_spawn_goal_agent` | Spawn the next legal Ultragoal goal worker. |
 
-Generic and Ultragoal tools call the main session's `SubagentManager` in-process. Team roles call the Orchestrator through the workflow-owned agent adapter; the detached workflow owner is lifecycle-only.
+Direct `SubagentManager` calls are limited to four workflow adapters: `subagents/subagent-tools.ts` for lifecycle tools, `skills/team/agent-adapter.ts` for the `Agent` bridge, `skills/ralplan/ralplan-agents.ts` for sequential role execution, and `skills/ultragoal/ultragoal-tools.ts` for one guarded goal worker. Team roles call the Orchestrator through the workflow-owned adapter; the detached workflow owner is lifecycle-only. Workflows must use the Orchestrator for generic task dependencies, routing, retries, queues, or agent collaboration.
 
 ## Guarded Workflow Execution
 

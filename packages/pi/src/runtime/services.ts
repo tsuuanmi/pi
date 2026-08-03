@@ -19,7 +19,7 @@ import {
 } from "#pi/runtime/session-factory";
 import type { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { SubagentManager } from "#pi/subagents/subagents";
+import { SubagentManager } from "#pi/subagents/manager";
 
 /**
  * Non-fatal issues collected while creating services or sessions.

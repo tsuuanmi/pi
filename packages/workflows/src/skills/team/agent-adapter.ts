@@ -1,5 +1,7 @@
 import { Agent, type SubagentManager } from "@tsuuanmi/pi-agent";
 import { type AssistantMessage, AssistantMessageEventStream, type Context, type Model } from "@tsuuanmi/pi-ai";
+import { requireSubagentManager } from "#workflows/subagents/manager";
+import type { WorkflowContext } from "#workflows/tools/workflow-tools";
 
 export interface TeamAgentSpec {
 	id: string;
@@ -9,12 +11,10 @@ export interface TeamAgentSpec {
 	excludeTools?: readonly string[];
 }
 
-export function createTeamAgents(
-	manager: SubagentManager,
-	sessionId: string,
-	specs: readonly TeamAgentSpec[],
-): readonly Agent[] {
+export function createTeamAgents(ctx: WorkflowContext, specs: readonly TeamAgentSpec[]): readonly Agent[] {
 	if (specs.length === 0) throw new Error("team agent roster requires at least one agent");
+	const manager = requireSubagentManager(ctx);
+	const sessionId = ctx.sessionManager.getSessionId();
 	const ids = new Set<string>();
 	return Object.freeze(
 		specs.map((spec) => {

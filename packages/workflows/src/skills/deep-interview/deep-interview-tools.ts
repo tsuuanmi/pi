@@ -1,7 +1,6 @@
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
-import { assertDeepInterviewHandoff } from "#workflows/policy/workflow-tool-utils";
 import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";
 import {
 	appendOrMergeDeepInterviewRound,
@@ -17,6 +16,7 @@ import type {
 	DeepInterviewAdvisoryMetadata,
 	DeepInterviewRoundRecord,
 } from "#workflows/skills/deep-interview/deep-interview-state";
+import { assertDeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
 import { assertSafePathComponent } from "#workflows/state/state-schema";
 import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/state/state-writer";
 import { activeRalplanRunId, defaultWorkflowId } from "#workflows/state/workflow-state";

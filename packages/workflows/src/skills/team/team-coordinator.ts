@@ -1,6 +1,5 @@
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { assertExpectedNextRole, expectedNextTeamRole } from "#workflows/policy/expected-next-role";
-import { requireSubagentManager } from "#workflows/policy/workflow-tool-utils";
 import { createTeamAgents, type TeamAgentSpec } from "#workflows/skills/team/agent-adapter";
 import { assertRoleResult } from "#workflows/skills/team/role-contract";
 import { createRoleBatch } from "#workflows/skills/team/role-tasks";
@@ -59,7 +58,7 @@ async function prepareRole(
 	});
 	const batch = createRoleBatch(snapshot, expected, runId);
 	return {
-		agents: createTeamAgents(requireSubagentManager(ctx), sessionId, agentSpecs),
+		agents: createTeamAgents(ctx, agentSpecs),
 		batch,
 		expected,
 		snapshot,
