@@ -8,14 +8,14 @@ import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import { getReadmePath } from "#pi/config/config";
-import { formatPathRelativeToCwdOrAbsolute, resolveReadPathAsync, resolveToCwd } from "#pi/tools/paths";
 import {
 	DEFAULT_MAX_BYTES,
 	DEFAULT_MAX_LINES,
 	formatSize,
 	type TruncationResult,
 	truncateHead,
-} from "#pi/tools/truncate";
+} from "#pi/tools/output-truncation";
+import { formatPathRelativeToCwdOrAbsolute, resolveReadPathAsync, resolveToCwd } from "#pi/tools/paths";
 import { getTextOutput, renderToolPath, replaceTabs, str, toAgentTool } from "#pi/tools/utils";
 
 const readSchema = Type.Object({

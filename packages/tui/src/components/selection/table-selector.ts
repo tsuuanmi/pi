@@ -1,5 +1,5 @@
 import { Container, type Focusable } from "#tui/components/component";
-import { TruncatedText } from "#tui/components/display/truncated";
+import { TruncatedText } from "#tui/components/display/truncated-text";
 import { Input } from "#tui/components/inputs/input";
 import { Spacer } from "#tui/components/layout/spacer";
 import { fuzzyFilter } from "#tui/editor/completion/fuzzy";

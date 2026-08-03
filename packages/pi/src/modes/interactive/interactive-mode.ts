@@ -68,7 +68,7 @@ import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#pi/sessi
 import type { SessionContext, SessionManager } from "#pi/session/manager";
 import { type AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
-import type { TruncationResult } from "#pi/tools/truncate";
+import type { TruncationResult } from "#pi/tools/output-truncation";
 import { BashExecutionComponent } from "#pi/ui/interactive/components/bash-execution";
 import { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
 import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant-message";

@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { Chalk } from "chalk";
-import { TruncatedText } from "#tui/components/display/truncated";
+import { TruncatedText } from "#tui/components/display/truncated-text";
 import { visibleWidth } from "#tui/utilities/text";
 
 // Force full color in CI so ANSI assertions are deterministic

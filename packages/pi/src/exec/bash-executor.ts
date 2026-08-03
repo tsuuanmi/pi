@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { stripAnsi } from "@tsuuanmi/pi-tui";
 import type { BashOperations } from "#pi/tools/bash";
-import { DEFAULT_MAX_BYTES, truncateTail } from "#pi/tools/truncate";
+import { DEFAULT_MAX_BYTES, truncateTail } from "#pi/tools/output-truncation";
 import { sanitizeBinaryOutput } from "#pi/utils/system/shell";
 
 // ============================================================================

@@ -30,7 +30,9 @@ packages/tui/
 │   │   ├── diff.ts            # renderDiff (unified diff with intra-line highlighting)
 │   │   └── text.ts           # visibleWidth, truncateToWidth, wrapTextWithAnsi
 │   ├── components/
-│   │   ├── display/         # Markdown, Text, TruncatedText, syntax highlight, receipts, visual truncation
+│   │   ├── display/         # Markdown, Text, syntax highlighting, receipts, and truncation
+│   │   │   ├── truncated-text.ts  # TruncatedText, single-line width fitting
+│   │   │   └── visual-truncate.ts # truncateToVisualLines, wrapped visual rows
 │   │   ├── feedback/        # Loader, CancellableLoader, countdown, bordered loader
 │   │   ├── inputs/          # Input, Editor
 │   │   ├── layout/          # Box, Spacer, dynamic border

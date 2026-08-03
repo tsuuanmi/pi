@@ -7,7 +7,7 @@ import {
 	type Result,
 	toError,
 } from "@tsuuanmi/pi-agent/node";
-import { DEFAULT_MAX_BYTES, truncateTail } from "#pi/tools/truncate";
+import { DEFAULT_MAX_BYTES, truncateTail } from "#pi/tools/output-truncation";
 
 export interface ShellCaptureOptions extends Omit<ExecutionEnvExecOptions, "onStdout" | "onStderr"> {
 	onChunk?: (chunk: string) => void;

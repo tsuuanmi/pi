@@ -19,7 +19,7 @@ import {
 	truncateToVisualLines,
 	truncateToWidth,
 } from "@tsuuanmi/pi-tui";
-import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, type TruncationResult, truncateTail } from "#pi/tools/truncate";
+import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, type TruncationResult, truncateTail } from "#pi/tools/output-truncation";
 
 // Preview line limit when not expanded (matches tool execution behavior)
 const PREVIEW_LINES = 20;

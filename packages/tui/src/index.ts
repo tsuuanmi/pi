@@ -27,8 +27,8 @@ export {
 	type StructuredReceiptDisplayModel,
 } from "#tui/components/display/receipt";
 export { Text } from "#tui/components/display/text";
-export { truncateToVisualLines, type VisualTruncateResult } from "#tui/components/display/truncate";
-export { TruncatedText } from "#tui/components/display/truncated";
+export { TruncatedText } from "#tui/components/display/truncated-text";
+export { truncateToVisualLines, type VisualTruncateResult } from "#tui/components/display/visual-truncate";
 export { BorderedLoader } from "#tui/components/feedback/bordered";
 export { CancellableLoader } from "#tui/components/feedback/cancel";
 export { CountdownTimer } from "#tui/components/feedback/countdown";

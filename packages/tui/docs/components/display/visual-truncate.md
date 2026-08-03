@@ -1,6 +1,8 @@
 # Visual Truncation
 
-`truncateToVisualLines` truncates text to a maximum number of visual lines from the end, accounting for line wrapping based on terminal width.
+`truncateToVisualLines` truncates text to a maximum number of visual lines from the end, accounting for line wrapping based on terminal width. Its implementation is in `src/components/display/visual-truncate.ts`.
+
+This is the row-oriented helper: use `TruncatedText` for a padded single-line component, or `truncateToWidth` for the low-level ANSI-aware column operation.
 
 ```typescript
 interface VisualTruncateResult {

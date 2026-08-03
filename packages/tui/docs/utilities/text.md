@@ -2,6 +2,8 @@
 
 ANSI-aware text utilities for terminal rendering.
 
+`truncateToWidth` is the low-level column-fitting primitive. `TruncatedText` composes it with component padding and rendering, while `truncateToVisualLines` handles wrapped visual rows.
+
 ## `visibleWidth`
 
 Calculate the visible width of a string, ignoring ANSI escape codes:

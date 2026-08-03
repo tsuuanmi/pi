@@ -8,7 +8,6 @@ import { spawn } from "child_process";
 import path from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
-import { resolveToCwd } from "#pi/tools/paths";
 import {
 	DEFAULT_MAX_BYTES,
 	formatSize,
@@ -16,7 +15,8 @@ import {
 	type TruncationResult,
 	truncateHead,
 	truncateLine,
-} from "#pi/tools/truncate";
+} from "#pi/tools/output-truncation";
+import { resolveToCwd } from "#pi/tools/paths";
 import { getTextOutput, invalidArgText, shortenPath, str, toAgentTool } from "#pi/tools/utils";
 import { ensureTool } from "#pi/utils/system/tool-installer";
 
