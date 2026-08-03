@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -24,13 +24,12 @@ Options:
   --force              Remove --out first if it already exists
   --skip-check         Do not run npm run check before building
   --skip-install       Only create tarballs; do not create isolated installs
-  --skip-bun-install   Do not create the isolated Bun install
   --help               Show this help
 `);
 }
 
 function parseArgs() {
-	const options = { force: false, outDir: undefined, skipBunInstall: false, skipCheck: false, skipInstall: false };
+	const options = { force: false, outDir: undefined, skipCheck: false, skipInstall: false };
 	const args = process.argv.slice(2);
 
 	for (let i = 0; i < args.length; i++) {
@@ -49,10 +48,6 @@ function parseArgs() {
 		}
 		if (arg === "--skip-install") {
 			options.skipInstall = true;
-			continue;
-		}
-		if (arg === "--skip-bun-install") {
-			options.skipBunInstall = true;
 			continue;
 		}
 		if (arg === "--out") {
@@ -88,10 +83,6 @@ function readPackageJson(directory) {
 	return JSON.parse(readFileSync(join(directory, "package.json"), "utf8"));
 }
 
-function commandExists(command) {
-	return spawnSync(command, ["--version"], { stdio: "ignore" }).status === 0;
-}
-
 function isInsidePath(child, parent) {
 	const relativePath = relative(parent, child);
 	return relativePath === "" || (!relativePath.startsWith("..") && !isAbsolute(relativePath));
@@ -124,33 +115,6 @@ function fileSpecifier(fromDirectory, file) {
 	return `file:${relativePath.startsWith(".") ? relativePath : `./${relativePath}`}`;
 }
 
-function currentBinaryPlatform() {
-	if (process.platform === "darwin") return process.arch === "arm64" ? "darwin-arm64" : "darwin-x64";
-	if (process.platform === "linux") return process.arch === "arm64" ? "linux-arm64" : "linux-x64";
-	throw new Error(`Unsupported binary platform: ${process.platform} ${process.arch}`);
-}
-
-function buildBunBinaryRelease(targetDirectory, archiveDirectory) {
-	if (!commandExists("bun")) {
-		throw new Error("Bun is required for the local binary release build.");
-	}
-	const platform = currentBinaryPlatform();
-	const binaryBuildDirectory = join(archiveDirectory, "binary-build");
-	run("./scripts/build-binaries.sh", [
-		"--skip-install",
-		"--skip-build",
-		"--platform",
-		platform,
-		"--out",
-		binaryBuildDirectory,
-	]);
-	rmSync(targetDirectory, { force: true, recursive: true });
-	cpSync(join(binaryBuildDirectory, platform), targetDirectory, { recursive: true });
-	const archiveName = `pi-${platform}.tar.gz`;
-	cpSync(join(binaryBuildDirectory, archiveName), join(archiveDirectory, archiveName));
-	return platform;
-}
-
 function createPiShim(installDirectory) {
 	symlinkSync(join("node_modules", ".bin", "pi"), join(installDirectory, "pi"));
 }
@@ -180,8 +144,6 @@ if (rootPackageJson.name !== "pi") {
 const outDir = prepareOutputDirectory(options, repoRoot);
 const tarballDirectory = join(outDir, "tarballs");
 const nodeInstallDirectory = join(outDir, "node");
-const bunInstallDirectory = join(outDir, "bun-install");
-const binaryDirectory = join(outDir, "bun");
 mkdirSync(tarballDirectory, { recursive: true });
 
 if (!options.skipCheck) {
@@ -199,10 +161,7 @@ for (const pkg of packages) {
 	tarballs.set(pkg.name, tarball);
 }
 
-let binaryPlatform;
 if (!options.skipInstall) {
-	binaryPlatform = buildBunBinaryRelease(binaryDirectory, outDir);
-
 	mkdirSync(nodeInstallDirectory, { recursive: true });
 	const dependencies = Object.fromEntries(
 		packages.map((pkg) => [pkg.name, fileSpecifier(nodeInstallDirectory, tarballs.get(pkg.name))]),
@@ -212,19 +171,6 @@ if (!options.skipInstall) {
 
 	run("npm", ["install", "--omit=dev", "--ignore-scripts"], { cwd: nodeInstallDirectory });
 	createPiShim(nodeInstallDirectory);
-
-	if (!options.skipBunInstall) {
-		if (!commandExists("bun")) {
-			throw new Error("Bun is required for the isolated Bun install. Use --skip-bun-install to skip it.");
-		}
-		mkdirSync(bunInstallDirectory, { recursive: true });
-		const bunDependencies = Object.fromEntries(
-			packages.map((pkg) => [pkg.name, fileSpecifier(bunInstallDirectory, tarballs.get(pkg.name))]),
-		);
-		writeFileSync(join(bunInstallDirectory, "package.json"), `${JSON.stringify({ private: true, dependencies: bunDependencies, overrides: bunDependencies }, undefined, "\t")}\n`);
-		run("bun", ["install", "--production", "--ignore-scripts"], { cwd: bunInstallDirectory });
-		createPiShim(bunInstallDirectory);
-	}
 }
 
 console.log("\nLocal release artifacts created:");
@@ -235,21 +181,8 @@ for (const tarball of tarballs.values()) {
 }
 
 if (!options.skipInstall) {
-	console.log("\nLocal Bun binary release:");
-	console.log(`  ${binaryDirectory}`);
-	console.log(`  ${join(outDir, `pi-${binaryPlatform}.tar.gz`)}`);
-	console.log("\nRun the local Bun binary release from outside the repository:");
-	console.log(`  ${join(binaryDirectory, "pi")} --help`);
-
 	console.log("\nIsolated npm install:");
 	console.log(`  ${nodeInstallDirectory}`);
 	console.log("\nRun the locally packed npm CLI from outside the repository:");
 	console.log(`  ${join(nodeInstallDirectory, "pi")} --help`);
-
-	if (!options.skipBunInstall) {
-		console.log("\nIsolated Bun package install:");
-		console.log(`  ${bunInstallDirectory}`);
-		console.log("\nRun the locally packed Bun package CLI from outside the repository:");
-		console.log(`  ${join(bunInstallDirectory, "pi")} --help`);
-	}
 }

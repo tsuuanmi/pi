@@ -24,7 +24,7 @@ To uninstall pi itself, use npm for curl and npm installs:
 npm uninstall -g @tsuuanmi/pi
 ```
 
-For pnpm, Yarn, or Bun installs, use the matching global remove command: `pnpm remove -g @tsuuanmi/pi`, `yarn global remove @tsuuanmi/pi`, or `bun uninstall -g @tsuuanmi/pi`.
+For pnpm or Yarn installs, use the matching global remove command: `pnpm remove -g @tsuuanmi/pi` or `yarn global remove @tsuuanmi/pi`.
 
 Then run it in a project directory:
 
@@ -108,4 +108,3 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 - [Development](development.md) - local setup, project structure, and contribution guidance.
 - [CLI](cli/cli.md) - Command-line interface.
-- [Bun](cli/bun/bun.md) - Bun runtime support.

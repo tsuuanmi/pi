@@ -38,7 +38,7 @@ const SCOPES =
 async function getNodeApis(): Promise<NodeApis> {
 	if (nodeApis) return nodeApis;
 	if (!nodeApisPromise) {
-		if (typeof process === "undefined" || (!process.versions?.node && !process.versions?.bun)) {
+		if (typeof process === "undefined" || !process.versions?.node) {
 			throw new Error("Anthropic OAuth is only available in Node.js environments");
 		}
 		nodeApisPromise = import("node:http").then((httpModule) => ({

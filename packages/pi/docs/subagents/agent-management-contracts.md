@@ -161,7 +161,7 @@ Before directly porting Gajae code, verify and document:
 
 - package imports are changed from `@gajae-code/*` to Pi packages or local modules;
 - schema libraries match Pi conventions, preferably TypeBox for tools;
-- Bun-only text imports, APIs, or native helpers are replaced or explicitly justified;
+- Runtime-specific text imports, APIs, or native helpers are replaced or explicitly justified;
 - filesystem paths use Pi config and resource resolution helpers;
 - abort/cancellation semantics match Pi agent/session behavior;
 - diagnostics and source metadata use the shared contract above;

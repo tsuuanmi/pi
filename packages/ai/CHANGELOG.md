@@ -7,6 +7,7 @@
 - **auth**: Removed deprecated OAuth compatibility exports: `getOAuthProviderInfoList()`, `refreshOAuthToken()`, `OAuthProvider`, and `OAuthProviderInfo`.
 - **auth**: Removed environment-variable API key discovery from `@tsuuanmi/pi-ai`; callers now pass credentials explicitly, typically from Pi `auth.json`.
 - **test-provider**: Removed the public test provider helpers from `@tsuuanmi/pi-ai`.
+- **runtime**: Provider OAuth and WebSocket paths are now Node-only; alternate-runtime compatibility branches were removed.
 
 ### Changed
 

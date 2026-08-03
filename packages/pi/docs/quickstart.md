@@ -26,8 +26,6 @@ pnpm remove -g @tsuuanmi/pi
 # Yarn
 yarn global remove @tsuuanmi/pi
 
-# Bun
-bun uninstall -g @tsuuanmi/pi
 ```
 
 Uninstalling pi leaves settings, credentials, sessions, and installed pi packages in `~/.pi/agent/`.

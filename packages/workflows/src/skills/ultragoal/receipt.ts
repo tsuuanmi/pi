@@ -12,7 +12,7 @@
  *   Runtime imports this module (`runtime -> receipt`); guard imports this module
  *   plus runtime (`guard -> receipt + runtime`). Receipt only depends on
  *   `shared/state/state-writer.ts`, `shared/session/paths.ts`, and `node:crypto` / `node:fs/promises`.
- * - No `Bun.*` APIs (portability: Node-only).
+ * - Node-only APIs for portability.
  *
  * Field-name mapping from Gajae (locked, do not re-litigate):
  *   gjcGoalMode        -> goalMode
@@ -577,8 +577,8 @@ export function validateCompletionReceipt(input: {
  *
  * Missing file = empty ledger (`[]`). A present-but-unparseable JSONL line
  * throws `UltragoalLedgerUnreadable`; callers map that to the
- * `unreadable_fail_closed` guard state. Uses only `node:fs/promises` (no
- * `Bun.*`) for portability, with ENOENT handling consistent with
+ * `unreadable_fail_closed` guard state. Uses only `node:fs/promises` for
+ * portability, with ENOENT handling consistent with
  * `state-writer.ts`'s `readExistingStateForMutation`.
  */
 export async function readUltragoalLedger(cwd: string, sessionId: string): Promise<UltragoalLedgerEvent[]> {

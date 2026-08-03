@@ -1,46 +1,20 @@
-import { spawnProcess } from "@tsuuanmi/pi-agent/node";
-import { Markdown, type MarkdownTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import type { ExtensionFactory } from "#pi/api/extension-types";
 import { selectConfig } from "#pi/cli/config-selector";
-import { APP_NAME, CONFIG_DIR_NAME, PACKAGE_NAME } from "#pi/loader/app";
-import { getSelfUpdateCommand, getSelfUpdateUnavailableInstruction, type SelfUpdateCommand } from "#pi/loader/install";
+import { APP_NAME, CONFIG_DIR_NAME } from "#pi/loader/app";
 import { getAgentDir } from "#pi/loader/paths";
 import { DefaultPackageManager } from "#pi/package-manager/package-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
 export type PackageCommand = "install" | "remove" | "update" | "list";
 
-type UpdateTarget = { type: "all" } | { type: "self" } | { type: "extensions"; source?: string };
-
-const SELF_UPDATE_NOTE_MARKDOWN_THEME: MarkdownTheme = {
-	heading: (text: string) => chalk.bold(chalk.yellow(text)),
-	link: (text: string) => chalk.cyan(text),
-	linkUrl: (text: string) => chalk.dim(text),
-	code: (text: string) => chalk.yellow(text),
-	codeBlock: (text: string) => chalk.dim(text),
-	codeBlockBorder: (text: string) => chalk.dim(text),
-	quote: (text: string) => chalk.dim(text),
-	quoteBorder: (text: string) => chalk.dim(text),
-	hr: (text: string) => chalk.dim(text),
-	listBullet: (text: string) => chalk.yellow(text),
-	bold: (text: string) => chalk.bold(text),
-	italic: (text: string) => chalk.italic(text),
-	strikethrough: (text: string) => chalk.strikethrough(text),
-	underline: (text: string) => chalk.underline(text),
-};
-
 interface PackageCommandOptions {
 	command: PackageCommand;
 	source?: string;
-	updateTarget?: UpdateTarget;
 	local: boolean;
-	force: boolean;
 	help: boolean;
 	invalidOption?: string;
 	invalidArgument?: string;
-	missingOptionValue?: string;
-	conflictingOptions?: string;
 }
 
 function reportSettingsErrors(settingsManager: SettingsManager, context: string): void {
@@ -60,7 +34,7 @@ function getPackageCommandUsage(command: PackageCommand): string {
 		case "remove":
 			return `${APP_NAME} remove <source> [-l]`;
 		case "update":
-			return `${APP_NAME} update [source|self|pi] [--self] [--extensions] [--force]`;
+			return `${APP_NAME} update [source]`;
 		case "list":
 			return `${APP_NAME} list`;
 	}
@@ -107,17 +81,11 @@ Examples:
 			console.log(`${chalk.bold("Usage:")}
   ${getPackageCommandUsage("update")}
 
-Update pi and installed packages.
+Update installed packages.
 
-Options:
-  --self                  Update pi only
-  --extensions            Update installed packages only
-  --force                 Reinstall pi even if the current version is latest
-
-Short forms:
-  ${APP_NAME} update                Update pi and all extensions
+Examples:
+  ${APP_NAME} update                Update all installed packages
   ${APP_NAME} update <source>       Update one package
-  ${APP_NAME} update pi             Update pi only (self works as alias to pi)
 `);
 			return;
 
@@ -144,15 +112,10 @@ function parsePackageCommand(args: string[]): PackageCommandOptions | undefined 
 	}
 
 	let local = false;
-	let force = false;
 	let help = false;
 	let invalidOption: string | undefined;
 	let invalidArgument: string | undefined;
-	let missingOptionValue: string | undefined;
-	let conflictingOptions: string | undefined;
 	let source: string | undefined;
-	let selfFlag = false;
-	let extensionsFlag = false;
 
 	for (let index = 0; index < rest.length; index++) {
 		const arg = rest[index];
@@ -164,33 +127,6 @@ function parsePackageCommand(args: string[]): PackageCommandOptions | undefined 
 		if (arg === "-l" || arg === "--local") {
 			if (command === "install" || command === "remove") {
 				local = true;
-			} else {
-				invalidOption = invalidOption ?? arg;
-			}
-			continue;
-		}
-
-		if (arg === "--self") {
-			if (command === "update") {
-				selfFlag = true;
-			} else {
-				invalidOption = invalidOption ?? arg;
-			}
-			continue;
-		}
-
-		if (arg === "--extensions") {
-			if (command === "update") {
-				extensionsFlag = true;
-			} else {
-				invalidOption = invalidOption ?? arg;
-			}
-			continue;
-		}
-
-		if (arg === "--force") {
-			if (command === "update") {
-				force = true;
 			} else {
 				invalidOption = invalidOption ?? arg;
 			}
@@ -209,119 +145,14 @@ function parsePackageCommand(args: string[]): PackageCommandOptions | undefined 
 		}
 	}
 
-	let updateTarget: UpdateTarget | undefined;
-	if (command === "update") {
-		if (source) {
-			const sourceIsSelf = source === "self" || source === "pi";
-			if (sourceIsSelf) {
-				updateTarget = extensionsFlag ? { type: "all" } : { type: "self" };
-			} else {
-				if (extensionsFlag || selfFlag) {
-					conflictingOptions =
-						conflictingOptions ?? "positional update targets cannot be combined with --self or --extensions";
-				}
-				updateTarget = { type: "extensions", source };
-			}
-		} else if (selfFlag && extensionsFlag) {
-			updateTarget = { type: "all" };
-		} else if (selfFlag) {
-			updateTarget = { type: "self" };
-		} else if (extensionsFlag) {
-			updateTarget = { type: "extensions" };
-		} else {
-			updateTarget = { type: "all" };
-		}
-	}
-
 	return {
 		command,
 		source,
-		updateTarget,
 		local,
-		force,
 		help,
 		invalidOption,
 		invalidArgument,
-		missingOptionValue,
-		conflictingOptions,
 	};
-}
-
-function updateTargetIncludesSelf(target: UpdateTarget): boolean {
-	return target.type === "all" || target.type === "self";
-}
-
-function updateTargetIncludesExtensions(target: UpdateTarget): boolean {
-	return target.type === "all" || target.type === "extensions";
-}
-
-function printSelfUpdateUnavailable(npmCommand?: string[], updatePackageName = PACKAGE_NAME): void {
-	console.error(`error: ${APP_NAME} cannot self-update this installation.`);
-	console.error(getSelfUpdateUnavailableInstruction(PACKAGE_NAME, npmCommand, updatePackageName));
-
-	const entrypoint = process.argv[1];
-	if (entrypoint) {
-		console.error("");
-		console.error(`Location of pi executable: ${entrypoint}`);
-	}
-}
-
-function printSelfUpdateFallback(command: SelfUpdateCommand): void {
-	console.error(chalk.dim(`If this keeps failing, run this command yourself: ${command.display}`));
-}
-
-function printSelfUpdateNote(note: string): void {
-	const trimmedNote = note.trim();
-	if (!trimmedNote) {
-		return;
-	}
-
-	console.log();
-	console.log(chalk.bold(chalk.yellow("Update note")));
-	try {
-		const width = Math.max(20, process.stdout.columns ?? 80);
-		const renderedLines = new Markdown(trimmedNote, 0, 0, SELF_UPDATE_NOTE_MARKDOWN_THEME)
-			.render(width)
-			.map((line) => line.trimEnd());
-		console.log(renderedLines.join("\n"));
-	} catch {
-		console.log(trimmedNote);
-	}
-	console.log();
-}
-
-interface SelfUpdatePlan {
-	packageName: string;
-	shouldRun: boolean;
-	note?: string;
-}
-
-async function getSelfUpdatePlan(force: boolean): Promise<SelfUpdatePlan> {
-	void force;
-	return { packageName: PACKAGE_NAME, shouldRun: true };
-}
-
-async function runSelfUpdate(command: SelfUpdateCommand): Promise<void> {
-	console.log(chalk.dim(`Updating ${APP_NAME} with ${command.display}...`));
-	for (const step of command.steps ?? [command]) {
-		await new Promise<void>((resolve, reject) => {
-			const child = spawnProcess(step.command, step.args, {
-				stdio: "inherit",
-			});
-			child.on("error", (error) => {
-				reject(error);
-			});
-			child.on("close", (code, signal) => {
-				if (code === 0) {
-					resolve();
-				} else if (signal) {
-					reject(new Error(`${step.display} terminated by signal ${signal}`));
-				} else {
-					reject(new Error(`${step.display} exited with code ${code ?? "unknown"}`));
-				}
-			});
-		});
-	}
 }
 
 export interface PackageCommandRuntimeOptions {
@@ -384,22 +215,8 @@ export async function handlePackageCommand(
 		return true;
 	}
 
-	if (options.missingOptionValue) {
-		console.error(chalk.red(`Missing value for ${options.missingOptionValue}.`));
-		console.error(chalk.dim(`Usage: ${getPackageCommandUsage(options.command)}`));
-		process.exitCode = 1;
-		return true;
-	}
-
 	if (options.invalidArgument) {
 		console.error(chalk.red(`Unexpected argument ${options.invalidArgument}.`));
-		console.error(chalk.dim(`Usage: ${getPackageCommandUsage(options.command)}`));
-		process.exitCode = 1;
-		return true;
-	}
-
-	if (options.conflictingOptions) {
-		console.error(chalk.red(options.conflictingOptions));
 		console.error(chalk.dim(`Usage: ${getPackageCommandUsage(options.command)}`));
 		process.exitCode = 1;
 		return true;
@@ -418,7 +235,6 @@ export async function handlePackageCommand(
 	void runtimeOptions;
 	const settingsManager = createCommandSettingsManager({ cwd, agentDir });
 	reportSettingsErrors(settingsManager, "package command");
-	const selfUpdateNpmCommand = settingsManager.getGlobalSettings().npmCommand;
 
 	const packageManager = new DefaultPackageManager({
 		cwd,
@@ -487,48 +303,10 @@ export async function handlePackageCommand(
 				return true;
 			}
 
-			case "update": {
-				const target = options.updateTarget ?? { type: "all" };
-				if (updateTargetIncludesExtensions(target)) {
-					const updateSource = target.type === "extensions" ? target.source : undefined;
-					await packageManager.update(updateSource);
-					if (updateSource) {
-						console.log(chalk.green(`Updated ${updateSource}`));
-					} else {
-						console.log(chalk.green("Updated packages"));
-					}
-				}
-				if (updateTargetIncludesSelf(target)) {
-					const selfUpdatePlan = await getSelfUpdatePlan(options.force);
-					if (!selfUpdatePlan.shouldRun) {
-						return true;
-					}
-					const selfUpdateCommand = getSelfUpdateCommand(
-						PACKAGE_NAME,
-						selfUpdateNpmCommand,
-						selfUpdatePlan.packageName,
-					);
-					if (!selfUpdateCommand) {
-						printSelfUpdateUnavailable(selfUpdateNpmCommand, selfUpdatePlan.packageName);
-						process.exitCode = 1;
-						return true;
-					}
-					if (selfUpdatePlan.note) {
-						printSelfUpdateNote(selfUpdatePlan.note);
-					}
-					try {
-						await runSelfUpdate(selfUpdateCommand);
-					} catch (error: unknown) {
-						const message = error instanceof Error ? error.message : "Unknown package command error";
-						console.error(chalk.red(`Error: ${message}`));
-						printSelfUpdateFallback(selfUpdateCommand);
-						process.exitCode = 1;
-						return true;
-					}
-					console.log(chalk.green(`Updated ${APP_NAME}`));
-				}
+			case "update":
+				await packageManager.update(source);
+				console.log(chalk.green(source ? `Updated ${source}` : "Updated packages"));
 				return true;
-			}
 		}
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : "Unknown package command error";

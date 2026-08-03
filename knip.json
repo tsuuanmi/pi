@@ -40,7 +40,6 @@
 		"packages/pi": {
 			"entry": [
 				"src/cli.ts",
-				"src/bun/cli.ts",
 				"src/index.ts",
 				"src/extensions/workflows.ts",
 				"src/utils/image-resize-worker.ts",

@@ -5,19 +5,11 @@ import { normalizePath } from "@tsuuanmi/pi-agent/node";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-/** Detect if we're running as a Bun compiled binary. */
-export const isBunBinary =
-	import.meta.url.includes("$bunfs") || import.meta.url.includes("~BUN") || import.meta.url.includes("%7EBUN");
-
 /** Resolve the package root used for bundled assets and metadata. */
 export function getPackageDir(): string {
 	const envDir = process.env.PI_PACKAGE_DIR;
 	if (envDir) {
 		return normalizePath(envDir);
-	}
-
-	if (isBunBinary) {
-		return dirname(process.execPath);
 	}
 
 	let dir = __dirname;

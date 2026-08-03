@@ -310,7 +310,7 @@ function isAllowedCliReplayCommand(command: readonly string[]): boolean {
 	if (!isBareExecutableName(command[0]!)) return false;
 	const executable = basenameCommand(command[0]!);
 	const args = command.slice(1);
-	if (executable === "bun" || executable === "node") {
+	if (executable === "node") {
 		if (args.length === 1 && args[0] === "--version") return true;
 		return args.length === 2 && args[0] === "-e" && isDeterministicConsoleLogReplay(args[1]!);
 	}
@@ -324,7 +324,7 @@ function isAllowedCliReplayCommand(command: readonly string[]): boolean {
 
 function cliReplayAllowlistDescription(): string {
 	return [
-		'`bun --version`, `node --version`, or deterministic `bun/node -e "console.log(...)"`',
+		'`node --version` or deterministic `node -e "console.log(...)"`',
 		"`npm|pnpm|yarn --version` or `npm|pnpm|yarn list`",
 		"read-only `git status|rev-parse|merge-base|diff|show|log` with safe args",
 	].join("; ");

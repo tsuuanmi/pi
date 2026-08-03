@@ -42,7 +42,7 @@ Change `name`, `configDir`, and `bin` field for your fork. Affects CLI banner, c
 
 ## Path Resolution
 
-Three execution modes: npm install, standalone binary, tsx from source.
+Supported package paths: npm install and tsx from source. Standalone compiled binaries are not produced.
 
 **Always use `src/loader/config.ts`** for package assets:
 

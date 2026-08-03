@@ -8,19 +8,10 @@ export {
 	VERSION,
 } from "#pi/loader/app";
 export {
-	detectInstallMethod,
-	getSelfUpdateCommand,
-	getSelfUpdateUnavailableInstruction,
-	getUpdateInstruction,
-	type InstallMethod,
-	type SelfUpdateCommand,
-} from "#pi/loader/install";
-export {
 	getChangelogPath,
 	getDocsPath,
 	getPackageDir,
 	getReadmePath,
-	isBunBinary,
 } from "#pi/loader/package";
 export {
 	expandTildePath,

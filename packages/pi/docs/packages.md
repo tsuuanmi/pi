@@ -28,10 +28,7 @@ pi install ./relative/path/to/package
 
 pi remove npm:@foo/bar
 pi list                     # show installed packages from settings
-pi update                   # update pi, update packages, and reconcile pinned git refs
-pi update --extensions      # update packages and reconcile pinned git refs only
-pi update --self            # update pi only
-pi update --self --force    # reinstall pi even if current
+pi update                   # update packages and reconcile pinned git refs
 pi update npm:@foo/bar      # update one package
 ```
 
@@ -50,7 +47,7 @@ npm:@scope/pkg@1.2.3
 npm:pkg
 ```
 
-- Versioned specs are pinned and skipped by package updates (`pi update`, `pi update --extensions`).
+- Versioned specs are pinned and skipped by package updates (`pi update`).
 - User installs go under `~/.pi/agent/npm/`.
 - Project installs go under `.pi/npm/`.
 - Set `npmCommand` in `settings.json` to pin npm package lookup and install operations to a specific wrapper command such as `mise` or `asdf`.
@@ -77,7 +74,7 @@ ssh://git@github.com/user/repo@v1
 - HTTPS and SSH URLs are both supported.
 - SSH URLs use your configured SSH keys automatically (respects `~/.ssh/config`).
 - For non-interactive runs (for example CI), you can set `GIT_TERMINAL_PROMPT=0` to disable credential prompts and set `GIT_SSH_COMMAND` (for example `ssh -o BatchMode=yes -o ConnectTimeout=5`) to fail fast.
-- Refs are pinned tags or commits. `pi update` and `pi update --extensions` do not move them to newer refs, but they do reconcile an existing clone to the configured ref.
+- Refs are pinned tags or commits. `pi update` does not move them to newer refs, but it does reconcile an existing clone to the configured ref.
 - Use `pi install git:host/user/repo@new-ref` to update settings and move an existing package to a new pinned ref.
 - Cloned to `~/.pi/agent/git/<host>/<path>` (global) or `.pi/git/<host>/<path>` (project).
 - When reconciliation changes the checkout, pi resets and cleans the clone, then runs `npm install` if `package.json` exists.

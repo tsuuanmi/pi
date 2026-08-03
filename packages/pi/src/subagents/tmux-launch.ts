@@ -106,9 +106,6 @@ export function isTmuxCommandAvailable(command: string): boolean {
 export function resolvePiCommand(context: { cwd: string; argv: string[]; execPath: string }): string[] {
 	const entrypoint = context.argv[1];
 	if (!entrypoint) return ["pi"];
-	if (isBunVirtualPath(entrypoint)) {
-		return isBunVirtualPath(context.execPath) ? ["pi"] : [context.execPath];
-	}
 	const resolvedEntrypoint = path.isAbsolute(entrypoint) ? entrypoint : path.resolve(context.cwd, entrypoint);
 	if (entrypoint.endsWith(".ts") || entrypoint.endsWith(".js") || entrypoint.endsWith(".mjs")) {
 		return [context.execPath, resolvedEntrypoint];
@@ -133,10 +130,6 @@ export function sanitizeTmuxToken(value: string): string {
 export function shellQuote(value: string): string {
 	if (value.length === 0) return "''";
 	return `'${value.replace(/'/g, `'\\''`)}'`;
-}
-
-function isBunVirtualPath(value: string | undefined): boolean {
-	return value?.startsWith("/$bunfs/") === true;
 }
 
 export function commandAvailable(command: string): boolean {

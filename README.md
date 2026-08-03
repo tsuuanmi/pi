@@ -87,8 +87,8 @@ We treat npm dependency changes as reviewed code changes.
 - `package-lock.json` is the dependency ground truth and dependency changes should be reviewed explicitly.
 - `npm run check` verifies pinned direct deps, native TypeScript import compatibility, and the generated pi shrinkwrap.
 - The published CLI package includes `packages/pi/npm-shrinkwrap.json`, generated from the root lockfile, to pin transitive deps for npm users.
-- Release smoke tests use `npm run release:local` to build, pack, and create isolated npm and Bun installs outside the repo before tagging a release.
-- Local release installs, documented npm installs, and `pi update --self` use `--ignore-scripts` where supported.
+- Release smoke tests use `npm run release:local` to build, pack, and create an isolated npm install outside the repo before tagging a release.
+- Local release installs and documented npm installs use `--ignore-scripts` where supported.
 - CI installs with `npm ci --ignore-scripts`, and a scheduled GitHub workflow runs `npm audit --omit=dev` plus `npm audit signatures --omit=dev`.
 - Shrinkwrap generation has an explicit allowlist for dependency lifecycle scripts; new lifecycle-script deps fail checks until reviewed.
 

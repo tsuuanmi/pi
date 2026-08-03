@@ -702,27 +702,6 @@ Content`,
 			);
 		});
 
-		it("should use bun --cwd for npm package installs", async () => {
-			settingsManager = SettingsManager.inMemory({
-				npmCommand: ["mise", "exec", "bun@1", "--", "bun"],
-			});
-			packageManager = new DefaultPackageManager({
-				cwd: tempDir,
-				agentDir,
-				settingsManager,
-			});
-
-			const runCommandSpy = vi.spyOn((packageManager as any).commandRunner, "run").mockResolvedValue(undefined);
-
-			await packageManager.install("npm:@scope/pkg");
-
-			expect(runCommandSpy).toHaveBeenCalledWith(
-				"mise",
-				["exec", "bun@1", "--", "bun", "install", "@scope/pkg", "--cwd", join(agentDir, "npm"), "--omit=peer"],
-				undefined,
-			);
-		});
-
 		it("should install git package dependencies with --omit=dev", async () => {
 			const source = "git:github.com/user/repo";
 			const targetDir = join(agentDir, "git", "github.com", "user", "repo");

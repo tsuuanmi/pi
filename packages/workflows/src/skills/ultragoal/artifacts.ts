@@ -12,7 +12,7 @@
  * import `runtime.ts`, `quality-gate.ts`, or
  * `receipt.ts`.
  *
- * Portability: no `Bun.*` APIs. `node:fs/promises.readFile` + `node:zlib.inflateSync`
+ * Portability: use `node:fs/promises.readFile` + `node:zlib.inflateSync`
  * only. ENOENT is handled consistently with `state-writer.ts`'s
  * `readExistingStateForMutation`.
  */

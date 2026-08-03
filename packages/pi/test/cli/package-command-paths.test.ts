@@ -2,8 +2,7 @@ import { mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { handlePackageCommand } from "#pi/cli/package-manager";
-import { ENV_AGENT_DIR, PACKAGE_NAME } from "#pi/loader/config";
+import { ENV_AGENT_DIR } from "#pi/loader/config";
 import { main } from "#pi/main";
 
 describe("package commands", () => {
@@ -13,13 +12,7 @@ describe("package commands", () => {
 	let packageDir: string;
 	let originalCwd: string;
 	let originalAgentDir: string | undefined;
-	let originalPiPackageDir: string | undefined;
 	let originalExitCode: typeof process.exitCode;
-	let originalExecPath: string;
-
-	async function runPackageCommandDirectly(args: string[]): Promise<void> {
-		expect(await handlePackageCommand(args)).toBe(true);
-	}
 
 	beforeEach(() => {
 		tempDir = join(tmpdir(), `pi-package-commands-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -32,9 +25,7 @@ describe("package commands", () => {
 
 		originalCwd = process.cwd();
 		originalAgentDir = process.env[ENV_AGENT_DIR];
-		originalPiPackageDir = process.env.PI_PACKAGE_DIR;
 		originalExitCode = process.exitCode;
-		originalExecPath = process.execPath;
 		process.exitCode = undefined;
 		vi.spyOn(process, "exit").mockImplementation(((code?: string | number | null) => {
 			if (code === undefined || code === null || Number(code) === 0) {
@@ -58,12 +49,6 @@ describe("package commands", () => {
 		} else {
 			process.env[ENV_AGENT_DIR] = originalAgentDir;
 		}
-		if (originalPiPackageDir === undefined) {
-			delete process.env.PI_PACKAGE_DIR;
-		} else {
-			process.env.PI_PACKAGE_DIR = originalPiPackageDir;
-		}
-		Object.defineProperty(process, "execPath", { value: originalExecPath, configurable: true });
 		rmSync(tempDir, { recursive: true, force: true });
 	});
 
@@ -166,146 +151,6 @@ describe("package commands", () => {
 			expect(stderr).not.toContain("at ");
 			expect(process.exitCode).toBe(1);
 		} finally {
-			errorSpy.mockRestore();
-		}
-	});
-
-	it("uses global npmCommand and current package name for forced self updates without checking the api", async () => {
-		const globalPrefix = join(tempDir, "global-prefix");
-		const projectPrefix = join(tempDir, "project-prefix");
-		const selfPackageDir = join(globalPrefix, "lib", "node_modules", "@tsuuanmi", "pi");
-		const fakeNpmPath = join(tempDir, "fake-npm.cjs");
-		const recordPath = join(tempDir, "self-update.json");
-		mkdirSync(selfPackageDir, { recursive: true });
-		mkdirSync(join(projectDir, ".pi"), { recursive: true });
-		writeFileSync(
-			fakeNpmPath,
-			`const fs=require("node:fs"),path=require("node:path"),args=process.argv.slice(2),prefix=args[args.indexOf("--prefix")+1];
-if(args.includes("root")) console.log(path.join(prefix,"lib","node_modules"));
-else fs.writeFileSync(${JSON.stringify(recordPath)},JSON.stringify(args));
-`,
-		);
-		writeFileSync(
-			join(agentDir, "settings.json"),
-			JSON.stringify({ npmCommand: [originalExecPath, fakeNpmPath, "--prefix", globalPrefix] }, null, 2),
-		);
-		writeFileSync(
-			join(projectDir, ".pi", "settings.json"),
-			JSON.stringify({ npmCommand: [originalExecPath, fakeNpmPath, "--prefix", projectPrefix] }, null, 2),
-		);
-		process.env.PI_PACKAGE_DIR = selfPackageDir;
-		Object.defineProperty(process, "execPath", {
-			value: join(selfPackageDir, "dist", "cli.js"),
-			configurable: true,
-		});
-		const fetchMock = vi.fn();
-		vi.stubGlobal("fetch", fetchMock);
-
-		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-		try {
-			await expect(runPackageCommandDirectly(["update", "--self", "--force"])).resolves.toBeUndefined();
-
-			expect(process.exitCode).toBeUndefined();
-			expect(errorSpy).not.toHaveBeenCalled();
-			expect(fetchMock).not.toHaveBeenCalled();
-			const recordedArgs = JSON.parse(readFileSync(recordPath, "utf-8")) as string[];
-			expect(recordedArgs).toContain(globalPrefix);
-			expect(recordedArgs).toContain(PACKAGE_NAME);
-			expect(recordedArgs).not.toContain(projectPrefix);
-		} finally {
-			logSpy.mockRestore();
-			errorSpy.mockRestore();
-		}
-	});
-
-	it("self-updates the current package name without checking the api", async () => {
-		const globalPrefix = join(tempDir, "global-prefix");
-		const selfPackageDir = join(globalPrefix, "lib", "node_modules", "@legacy-scope", "pi");
-		const fakeNpmPath = join(tempDir, "fake-npm.cjs");
-		const recordPath = join(tempDir, "self-update.json");
-		mkdirSync(selfPackageDir, { recursive: true });
-		writeFileSync(
-			fakeNpmPath,
-			`const fs=require("node:fs"),path=require("node:path"),args=process.argv.slice(2),prefix=args[args.indexOf("--prefix")+1];
-if(args.includes("root")) console.log(path.join(prefix,"lib","node_modules"));
-else fs.writeFileSync(${JSON.stringify(recordPath)},JSON.stringify(args));
-`,
-		);
-		writeFileSync(
-			join(agentDir, "settings.json"),
-			JSON.stringify({ npmCommand: [originalExecPath, fakeNpmPath, "--prefix", globalPrefix] }, null, 2),
-		);
-		process.env.PI_PACKAGE_DIR = selfPackageDir;
-		Object.defineProperty(process, "execPath", {
-			value: join(selfPackageDir, "dist", "cli.js"),
-			configurable: true,
-		});
-		const fetchMock = vi.fn();
-		vi.stubGlobal("fetch", fetchMock);
-
-		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-		try {
-			await expect(runPackageCommandDirectly(["update", "--self"])).resolves.toBeUndefined();
-
-			expect(process.exitCode).toBeUndefined();
-			expect(errorSpy).not.toHaveBeenCalled();
-			expect(fetchMock).not.toHaveBeenCalled();
-			const recordedArgs = JSON.parse(readFileSync(recordPath, "utf-8")) as string[];
-			expect(recordedArgs).toContain(PACKAGE_NAME);
-		} finally {
-			logSpy.mockRestore();
-			errorSpy.mockRestore();
-		}
-	});
-
-	it("fails self-update when npm package installation fails", async () => {
-		const globalPrefix = join(tempDir, "global-prefix");
-		const selfPackageDir = join(globalPrefix, "lib", "node_modules", "@legacy-scope", "pi");
-		const fakeNpmPath = join(tempDir, "fake-npm-fail.cjs");
-		const recordPath = join(tempDir, "self-update-fail.json");
-		mkdirSync(selfPackageDir, { recursive: true });
-		writeFileSync(
-			fakeNpmPath,
-			`const fs=require("node:fs"),path=require("node:path"),args=process.argv.slice(2),prefix=args[args.indexOf("--prefix")+1];
-if(args.includes("root")) {
-	console.log(path.join(prefix,"lib","node_modules"));
-	process.exit(0);
-}
-const records=fs.existsSync(${JSON.stringify(recordPath)})?JSON.parse(fs.readFileSync(${JSON.stringify(recordPath)},"utf-8")):[];
-records.push(args);
-fs.writeFileSync(${JSON.stringify(recordPath)},JSON.stringify(records));
-if(args.includes("install")) process.exit(23);
-`,
-		);
-		writeFileSync(
-			join(agentDir, "settings.json"),
-			JSON.stringify({ npmCommand: [originalExecPath, fakeNpmPath, "--prefix", globalPrefix] }, null, 2),
-		);
-		process.env.PI_PACKAGE_DIR = selfPackageDir;
-		Object.defineProperty(process, "execPath", {
-			value: join(selfPackageDir, "dist", "cli.js"),
-			configurable: true,
-		});
-
-		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-		try {
-			await expect(runPackageCommandDirectly(["update", "--self"])).resolves.toBeUndefined();
-
-			expect(process.exitCode).toBe(1);
-			const stdout = logSpy.mock.calls.map(([message]) => String(message)).join("\n");
-			const stderr = errorSpy.mock.calls.map(([message]) => String(message)).join("\n");
-			expect(stdout).not.toContain(`Updated pi`);
-			expect(stderr).toContain("exited with code 23");
-			const recordedCalls = JSON.parse(readFileSync(recordPath, "utf-8")) as string[][];
-			expect(recordedCalls).toEqual([expect.arrayContaining(["install", "-g", PACKAGE_NAME])]);
-		} finally {
-			logSpy.mockRestore();
 			errorSpy.mockRestore();
 		}
 	});

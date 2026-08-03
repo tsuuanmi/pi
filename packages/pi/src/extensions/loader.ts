@@ -7,21 +7,9 @@ import * as fs from "node:fs";
 import { createRequire } from "node:module";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import * as _bundledPiAgent from "@tsuuanmi/pi-agent";
-import * as _bundledPiAgentNode from "@tsuuanmi/pi-agent/node";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import * as _bundledPiAi from "@tsuuanmi/pi-ai";
-import * as _bundledPiAiOauth from "@tsuuanmi/pi-ai";
 import type { KeyId } from "@tsuuanmi/pi-tui";
-import * as _bundledPiTui from "@tsuuanmi/pi-tui";
-import * as _bundledPiWorkflows from "@tsuuanmi/pi-workflows";
 import { createJiti } from "jiti/static";
-// Static imports of packages that extensions may use.
-// These MUST be static so Bun bundles them into the compiled binary.
-// The virtualModules option then makes them available to extensions.
-import * as _bundledTypebox from "typebox";
-import * as _bundledTypeboxCompile from "typebox/compile";
-import * as _bundledTypeboxValue from "typebox/value";
 import type {
 	Extension,
 	ExtensionAPI,
@@ -37,37 +25,13 @@ import type { ExecOptions } from "#pi/exec/exec";
 import { execCommand } from "#pi/exec/exec";
 import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
 import { type HookHandlerFn, registerExtensionHook } from "#pi/extensions/hooks/registration";
-import * as _bundledPi from "#pi/extensions/public-api";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
-import * as _bundledPiConfig from "#pi/loader/config";
-import { isBunBinary } from "#pi/loader/package";
 import { getAgentDir } from "#pi/loader/paths";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
 
-/** Modules available to extensions via virtualModules (for compiled Bun binary) */
-const VIRTUAL_MODULES: Record<string, unknown> = {
-	typebox: _bundledTypebox,
-	"typebox/compile": _bundledTypeboxCompile,
-	"typebox/value": _bundledTypeboxValue,
-	"@sinclair/typebox": _bundledTypebox,
-	"@sinclair/typebox/compile": _bundledTypeboxCompile,
-	"@sinclair/typebox/value": _bundledTypeboxValue,
-	"@tsuuanmi/pi-agent/node": _bundledPiAgentNode,
-	"@tsuuanmi/pi-agent": _bundledPiAgent,
-	"@tsuuanmi/pi-tui": _bundledPiTui,
-	"@tsuuanmi/pi-ai": _bundledPiAi,
-	"@tsuuanmi/pi-ai/oauth": _bundledPiAiOauth,
-	"@tsuuanmi/pi": _bundledPi,
-	"@tsuuanmi/pi/loader/config": _bundledPiConfig,
-	"@tsuuanmi/pi-workflows": _bundledPiWorkflows,
-};
-
 const require = createRequire(import.meta.url);
 
-/**
- * Get aliases for jiti (used in Node.js/development mode).
- * In Bun binary mode, virtualModules is used instead.
- */
+/** Get aliases for jiti extension imports. */
 let _aliases: Record<string, string> | null = null;
 
 function getAliases(): Record<string, string> {
@@ -349,10 +313,7 @@ function createExtensionAPI(
 async function loadExtensionModule(extensionPath: string) {
 	const jiti = createJiti(import.meta.url, {
 		moduleCache: false,
-		// In Bun binary: use virtualModules for bundled packages (no filesystem resolution)
-		// Also disable tryNative so jiti handles ALL imports (not just the entry point)
-		// In Node.js/dev: use aliases to resolve to node_modules paths
-		...(isBunBinary ? { virtualModules: VIRTUAL_MODULES, tryNative: false } : { alias: getAliases() }),
+		alias: getAliases(),
 	});
 
 	const module = await jiti.import(extensionPath, { default: true });
