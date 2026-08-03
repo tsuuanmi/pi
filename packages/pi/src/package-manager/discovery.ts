@@ -298,7 +298,8 @@ export function collectAutoThemeEntries(dir: string): string[] {
 	return entries;
 }
 
-function readPiManifestFile(packageJsonPath: string): PiManifest | null {
+/** Read the pi manifest from a package.json file. */
+export function readPiManifestFile(packageJsonPath: string): PiManifest | null {
 	try {
 		const content = readFileSync(packageJsonPath, "utf-8");
 		const pkg = JSON.parse(content) as { pi?: PiManifest };

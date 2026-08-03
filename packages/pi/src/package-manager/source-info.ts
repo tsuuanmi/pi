@@ -1,24 +1,13 @@
-import type { PathMetadata } from "#pi/package-manager/package-manager";
+import type { PathMetadata, SourceOrigin, SourceScope } from "#pi/package-manager/types";
 
-export type SourceScope = "user" | "project" | "temporary";
-export type SourceOrigin = "package" | "top-level";
+export type { SourceOrigin, SourceScope } from "#pi/package-manager/types";
 
-export interface SourceInfo {
+export interface SourceInfo extends PathMetadata {
 	path: string;
-	source: string;
-	scope: SourceScope;
-	origin: SourceOrigin;
-	baseDir?: string;
 }
 
 export function createSourceInfo(path: string, metadata: PathMetadata): SourceInfo {
-	return {
-		path,
-		source: metadata.source,
-		scope: metadata.scope,
-		origin: metadata.origin,
-		baseDir: metadata.baseDir,
-	};
+	return { path, ...metadata };
 }
 
 export function createSyntheticSourceInfo(

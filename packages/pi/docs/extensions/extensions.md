@@ -137,6 +137,7 @@ To share extensions via npm or git as pi packages, see [packages.md](../packages
 | Package | Purpose |
 |---------|---------|
 | `@tsuuanmi/pi` | Extension types (`ExtensionAPI`, `ExtensionContext`, events) and host helpers (`SessionManager`, `SettingsManager`, tool factories) |
+| `@tsuuanmi/pi/extensions` | Complete extension contracts and extension runtime helpers |
 | `@tsuuanmi/pi/loader` | Model registry and model-loading APIs |
 | `typebox` | Schema definitions for tool parameters |
 | `@tsuuanmi/pi-ai` | AI utilities (`StringEnum` for enums) |

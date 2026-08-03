@@ -7,7 +7,7 @@ LLMs have limited context windows. When conversations grow too long, pi uses com
 - [`packages/pi/src/session/compaction/branch-summarization.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch-summarization.ts) - Branch summarization
 - [`packages/agent/src/compaction/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/compaction/messages.ts) - Shared utilities (file tracking, serialization)
 - [`packages/pi/src/session/manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/manager.ts) - Entry types (`CompactionEntry`, `BranchSummaryEntry`)
-- [`packages/pi/src/api/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/api/types.ts) - Extension event types
+- [`packages/pi/src/package-manager/extensions/hooks/event-types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/package-manager/extensions/hooks/event-types.ts) - Extension event types
 
 For TypeScript definitions in your project, inspect `node_modules/@tsuuanmi/pi/dist/`.
 
@@ -268,7 +268,7 @@ Tool results are truncated to 2000 characters during serialization. Content beyo
 
 ## Custom Summarization via Extensions
 
-Extensions can intercept and customize both compaction and branch summarization. See [`api/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/api/types.ts) for event type definitions.
+Extensions can intercept and customize both compaction and branch summarization. See [`event-types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/package-manager/extensions/hooks/event-types.ts) for event type definitions.
 
 ### session_before_compact
 

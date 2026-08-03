@@ -7,6 +7,24 @@ import type { Model } from "@tsuuanmi/pi-ai";
 import type { KeyId } from "@tsuuanmi/pi-tui";
 import { type Theme, theme } from "@tsuuanmi/pi-tui";
 import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
+import type { ModelRegistry } from "#pi/loader/model-registry";
+import {
+	type BeforeAgentStartCombinedResult,
+	emitBeforeAgentStartHook,
+	emitBeforeProviderRequestHook,
+	emitContextHook,
+	emitExtensionHook,
+	emitInputHook,
+	emitMessageEndHook,
+	emitResourcesDiscoverHook,
+	emitToolCallHook,
+	emitToolResultHook,
+	emitUserBashHook,
+	type HookDispatchState,
+	hasExtensionHookHandlers,
+	type RunnerEmitEvent,
+	type RunnerEmitResult,
+} from "#pi/package-manager/extensions/hooks/runner-dispatch";
 import type {
 	CompactOptions,
 	ContextUsage,
@@ -39,25 +57,7 @@ import type {
 	ToolResultEventResult,
 	UserBashEvent,
 	UserBashEventResult,
-} from "#pi/api/types";
-import type { ModelRegistry } from "#pi/loader/model-registry";
-import {
-	type BeforeAgentStartCombinedResult,
-	emitBeforeAgentStartHook,
-	emitBeforeProviderRequestHook,
-	emitContextHook,
-	emitExtensionHook,
-	emitInputHook,
-	emitMessageEndHook,
-	emitResourcesDiscoverHook,
-	emitToolCallHook,
-	emitToolResultHook,
-	emitUserBashHook,
-	type HookDispatchState,
-	hasExtensionHookHandlers,
-	type RunnerEmitEvent,
-	type RunnerEmitResult,
-} from "#pi/package-manager/extensions/hooks/runner-dispatch";
+} from "#pi/package-manager/extensions/types";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 import type { SessionManager } from "#pi/session/manager";
 import type { KeybindingsConfig } from "#pi/settings/keybindings";

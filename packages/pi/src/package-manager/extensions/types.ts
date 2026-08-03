@@ -45,6 +45,8 @@ export type {
 	SetLabelHandler,
 	SetModelHandler,
 	SetThinkingLevelHandler,
+	SlashCommandInfo,
+	SlashCommandSource,
 	ToolInfo,
 } from "#pi/api/extension-types";
 export type { ProviderConfig, ProviderModelConfig } from "#pi/api/provider-types";

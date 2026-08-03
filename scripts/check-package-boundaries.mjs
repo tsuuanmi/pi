@@ -43,9 +43,6 @@ const internalRules = [
 	{
 		directory: "packages/pi/src/package-manager",
 		forbidden: ["#pi/cli/", "#pi/modes/", "#pi/ui/"],
-		exceptions: {
-			"packages/pi/src/package-manager/extensions/public-api.ts": ["#pi/ui/"],
-		},
 	},
 	{ directory: "packages/pi/src/subagents", forbidden: ["#pi/cli/"] },
 	{ directory: "packages/pi/src/package-manager/extensions/loader.ts", forbidden: ["#pi/index"] },

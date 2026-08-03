@@ -5,6 +5,7 @@
 - **rpc**: RPC JSONL now rejects CRLF input and unterminated records instead of accepting them.
 - **loader**: Moved configuration and resource loading into `src/loader/`, renamed the public configuration path to `@tsuuanmi/pi/loader/config`, and removed the old paths.
 - **architecture**: Split extension contracts, context types, tmux subagent launch code, and CLI configuration UI into dedicated modules; removed package-manager legacy global-install discovery and CLI/mode/UI dependencies from core modules.
+- **extensions**: Removed the legacy `@tsuuanmi/pi/api/types` export; use `@tsuuanmi/pi/extensions` for the complete extension surface.
 - **cli**: `pi update` now manages packages only; the self-update commands and public self-update exports were removed.
 - **tools**: Renamed `createAllToolDefinitions` to `createToolDefinitions`, clarified the Pi tool definition boundary, and centralized built-in tool construction in the tool catalog.
 - **sdk**: Renamed the session model fallback warning result from `modelFallbackMessage` to `modelStartupWarning`.

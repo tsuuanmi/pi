@@ -20,9 +20,9 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
-		"./api/types": {
-			"types": "./dist/api/types.d.ts",
-			"import": "./dist/api/types.js"
+		"./extensions": {
+			"types": "./dist/package-manager/extensions/index.d.ts",
+			"import": "./dist/package-manager/extensions/index.js"
 		},
 		"./loader": {
 			"types": "./dist/loader/index.d.ts",

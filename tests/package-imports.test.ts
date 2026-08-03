@@ -136,7 +136,7 @@ describe("package public imports", () => {
 			  "@tsuuanmi/pi-workflows./runtime/vanish",
 			  "@tsuuanmi/pi-workflows./tools/workflow-tools",
 			  "@tsuuanmi/pi.",
-			  "@tsuuanmi/pi./api/types",
+			  "@tsuuanmi/pi./extensions",
 			  "@tsuuanmi/pi./loader",
 			  "@tsuuanmi/pi./loader/config",
 			]

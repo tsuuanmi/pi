@@ -4,7 +4,7 @@ import type { SettingsManager } from "#pi/settings/settings-manager";
 export interface PathMetadata {
 	source: string;
 	scope: SourceScope;
-	origin: "package" | "top-level";
+	origin: SourceOrigin;
 	baseDir?: string;
 }
 
@@ -76,6 +76,7 @@ export interface PackageManagerOptions {
 }
 
 export type SourceScope = "user" | "project" | "temporary";
+export type SourceOrigin = "package" | "top-level";
 
 export type NpmSource = {
 	type: "npm";
