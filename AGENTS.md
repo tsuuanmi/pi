@@ -168,7 +168,7 @@ Actual verification commands (the generic `npm run lint`/`npm run typecheck` do 
 
 ## 9. Tests
 
-Do not run full repository test suites unless explicitly asked. Do not create new tests unless explicitly asked. If asked to create or modify a test, run only the relevant test file or case and iterate until it passes. Do not run integration, network, credential-dependent, paid-provider, destructive, or long-running tests unless explicitly requested.
+Do not run full repository test suites unless explicitly asked. Do not create new tests by default; create them only when they are truly important and needed to verify correctness. If asked to create or modify a test, run only the relevant test file or case and iterate until it passes. Do not run integration, network, credential-dependent, paid-provider, destructive, or long-running tests unless explicitly requested.
 
 Before attributing a failing test to your change, determine whether it is pre-existing: use `git log`/`git blame` and `git diff` to check whether a prior commit (not your changes) caused it. Report pre-existing failures separately. Never revert an intentional prior change just to make a test green; if a prior intentional change legitimately changed behavior, update the test to match the new intended behavior and note it.
 
