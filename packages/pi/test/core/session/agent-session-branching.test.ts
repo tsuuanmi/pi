@@ -13,13 +13,13 @@ import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
-import type { AgentSession } from "#pi/runtime/agent";
+import type { AgentSession } from "#pi/runtime/agent-session";
 import {
 	type AgentSessionRuntime,
 	type CreateAgentSessionRuntimeFactory,
 	createAgentSessionRuntime,
-} from "#pi/runtime/runtime";
-import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/runtime/services";
+} from "#pi/runtime/agent-session-runtime";
+import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/runtime/agent-session-services";
 import { SessionManager } from "#pi/session/manager";
 import { API_KEY } from "#pi-test/test-utils";
 

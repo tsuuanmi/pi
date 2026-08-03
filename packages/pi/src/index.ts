@@ -171,21 +171,7 @@ export {
 	type PromptOptions,
 	parseSkillBlock,
 	type SessionStats,
-} from "#pi/runtime/agent";
-export {
-	AgentSessionRuntime,
-	type CreateAgentSessionRuntimeFactory,
-	type CreateAgentSessionRuntimeResult,
-	createAgentSessionRuntime,
-} from "#pi/runtime/runtime";
-export {
-	type AgentSessionRuntimeDiagnostic,
-	type AgentSessionServices,
-	type CreateAgentSessionFromServicesOptions,
-	type CreateAgentSessionServicesOptions,
-	createAgentSessionFromServices,
-	createAgentSessionServices,
-} from "#pi/runtime/services";
+} from "#pi/runtime/agent-session";
 // SDK for programmatic usage
 export {
 	type CreateAgentSessionOptions,
@@ -203,7 +189,21 @@ export {
 	createReadTool,
 	createWriteTool,
 	type PromptTemplate,
-} from "#pi/runtime/session-factory";
+} from "#pi/runtime/agent-session-factory";
+export {
+	AgentSessionRuntime,
+	type CreateAgentSessionRuntimeFactory,
+	type CreateAgentSessionRuntimeResult,
+	createAgentSessionRuntime,
+} from "#pi/runtime/agent-session-runtime";
+export {
+	type AgentSessionRuntimeDiagnostic,
+	type AgentSessionServices,
+	type CreateAgentSessionFromServicesOptions,
+	type CreateAgentSessionServicesOptions,
+	createAgentSessionFromServices,
+	createAgentSessionServices,
+} from "#pi/runtime/agent-session-services";
 export {
 	type BranchPreparation,
 	type BranchSummaryResult,

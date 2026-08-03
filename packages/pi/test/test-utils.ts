@@ -14,7 +14,7 @@ import { createExtensionRuntime, loadExtensionFromFactory } from "#pi/extensions
 import { createCodingTools } from "#pi/index";
 import type { ResourceLoader } from "#pi/loader/resources";
 import { ModelRegistry } from "#pi/model/model-registry";
-import { AgentSession } from "#pi/runtime/agent";
+import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 

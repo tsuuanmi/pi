@@ -16,7 +16,7 @@ import {
 	type CreateAgentSessionOptions,
 	type CreateAgentSessionResult,
 	createAgentSession,
-} from "#pi/runtime/session-factory";
+} from "#pi/runtime/agent-session-factory";
 import type { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { SubagentManager } from "#pi/subagents/manager";

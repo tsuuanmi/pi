@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import type { AgentSessionContext } from "#pi/runtime/context";
+import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
 import { stripFrontmatter } from "#pi/utils/fs/index";
 
 export function expandSkillCommand(text: string, ctx: AgentSessionContext): string {

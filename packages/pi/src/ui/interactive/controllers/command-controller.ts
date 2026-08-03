@@ -11,7 +11,7 @@ import {
 	theme,
 } from "@tsuuanmi/pi-tui";
 import { getChangelogPath } from "#pi/loader/package";
-import type { AgentSession } from "#pi/runtime/agent";
+import type { AgentSession } from "#pi/runtime/agent-session";
 import type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 import { normalizeChangelogLinks, parseChangelog } from "#pi/ui/interactive/utils/changelog";
 import { copyToClipboard } from "#pi/ui/interactive/utils/clipboard";

@@ -62,8 +62,8 @@ import type {
 } from "#pi/extensions/index";
 import { APP_NAME } from "#pi/loader/app";
 import type { SourceInfo } from "#pi/package-manager/source-info";
-import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#pi/runtime/agent";
-import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/runtime/runtime";
+import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#pi/runtime/agent-session";
+import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/runtime/agent-session-runtime";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#pi/session/cwd";
 import type { SessionContext, SessionManager } from "#pi/session/manager";
 import { type AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";

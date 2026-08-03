@@ -29,7 +29,7 @@ import type {
 	RpcSessionState,
 	RpcSlashCommand,
 } from "#pi/modes/rpc/rpc-types";
-import type { AgentSessionRuntime } from "#pi/runtime/runtime";
+import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 import { killTrackedDetachedChildren } from "#pi/utils/system/shell";
 
 // Re-export types for consumers

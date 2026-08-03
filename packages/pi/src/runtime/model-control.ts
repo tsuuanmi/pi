@@ -1,8 +1,8 @@
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { clampThinkingLevel, getSupportedThinkingLevels, type Model, modelsAreEqual } from "@tsuuanmi/pi-ai";
 import { DEFAULT_THINKING_LEVEL } from "#pi/model/thinking-level";
-import type { ModelCycleResult } from "#pi/runtime/agent";
-import type { AgentSessionContext } from "#pi/runtime/context";
+import type { ModelCycleResult } from "#pi/runtime/agent-session";
+import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
 
 const THINKING_LEVELS: ThinkingLevel[] = ["off", "minimal", "low", "medium", "high"];
 

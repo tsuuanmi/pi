@@ -36,12 +36,12 @@ import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import { type AgentProfile, loadAgentProfile } from "#pi/agent/profiles";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
-import type { AgentSession } from "#pi/runtime/agent";
+import type { AgentSession } from "#pi/runtime/agent-session";
 import {
 	type AgentSessionServices,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
-} from "#pi/runtime/services";
+} from "#pi/runtime/agent-session-services";
 import { sessionStateDir } from "#pi/session/layout";
 import { SessionManager } from "#pi/session/manager";
 import { buildTmuxSubagentLaunchPlan, isTmuxCommandAvailable, type TmuxSpawnSync } from "#pi/subagents/tmux-launch";

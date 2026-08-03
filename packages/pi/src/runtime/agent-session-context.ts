@@ -3,7 +3,7 @@ import type { Model } from "@tsuuanmi/pi-ai";
 import type { ExtensionRunner } from "#pi/extensions/index";
 import type { ResourceLoader } from "#pi/loader/resources";
 import type { ModelRegistry } from "#pi/model/model-registry";
-import type { AgentSessionEvent } from "#pi/runtime/agent";
+import type { AgentSessionEvent } from "#pi/runtime/agent-session";
 import type { SessionManager } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 

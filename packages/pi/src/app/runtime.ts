@@ -5,17 +5,17 @@ import type { Args } from "#pi/cli/args";
 import { applyHttpProxySettings, configureHttpDispatcher } from "#pi/exec/http-dispatcher";
 import type { ModelRegistry } from "#pi/model/model-registry";
 import { resolveCliModel, resolveModelScope, type ScopedModel } from "#pi/model/model-resolver";
+import type { CreateAgentSessionOptions } from "#pi/runtime/agent-session-factory";
 import {
 	type AgentSessionRuntime,
 	type CreateAgentSessionRuntimeFactory,
 	createAgentSessionRuntime,
-} from "#pi/runtime/runtime";
+} from "#pi/runtime/agent-session-runtime";
 import {
 	type AgentSessionRuntimeDiagnostic,
 	createAgentSessionFromServices,
 	createAgentSessionServices,
-} from "#pi/runtime/services";
-import type { CreateAgentSessionOptions } from "#pi/runtime/session-factory";
+} from "#pi/runtime/agent-session-services";
 import type { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 

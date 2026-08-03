@@ -5,7 +5,7 @@
  * runtime inputs and does not create a second parent session.
  */
 import { registerSubagentManagerFactory, type SubagentManagerFactoryContext } from "@tsuuanmi/pi-agent";
-import { createAgentSessionServices } from "#pi/runtime/services";
+import { createAgentSessionServices } from "#pi/runtime/agent-session-services";
 import { SubagentManager } from "#pi/subagents/manager";
 
 function toExtensionFlagValues(

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createExtensionRuntime } from "#pi/extensions/loader";
 import type { ResourceLoader } from "#pi/loader/resources";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
-import { createAgentSession } from "#pi/runtime/session-factory";
+import { createAgentSession } from "#pi/runtime/agent-session-factory";
 import { SessionManager } from "#pi/session/manager";
 
 describe("createAgentSession skills option", () => {

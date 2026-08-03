@@ -1,5 +1,5 @@
 import type { EditorComponent, TUI } from "@tsuuanmi/pi-tui";
-import type { AgentSession } from "#pi/runtime/agent";
+import type { AgentSession } from "#pi/runtime/agent-session";
 import type { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
 import type { AccountAuthController } from "#pi/ui/interactive/controllers/account-auth-controller";
 import type { CommandController } from "#pi/ui/interactive/controllers/command-controller";

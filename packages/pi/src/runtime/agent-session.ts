@@ -59,8 +59,7 @@ import {
 import { emitSessionShutdownEvent } from "#pi/extensions/runner";
 import type { ResourceExtensionPaths, ResourceLoader } from "#pi/loader/resources";
 import type { ModelRegistry } from "#pi/model/model-registry";
-import type { AgentSessionContext } from "#pi/runtime/context";
-import { sleep } from "#pi/runtime/platform";
+import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
 import {
 	cycleModel as modelControlCycleModel,
 	cycleThinkingLevel as modelControlCycleThinkingLevel,
@@ -68,14 +67,15 @@ import {
 	setModel as modelControlSetModel,
 	setThinkingLevel as modelControlSetThinkingLevel,
 	supportsThinking as modelControlSupportsThinking,
-} from "#pi/runtime/session-model";
-import { expandSkillCommand } from "#pi/runtime/session-skills";
-import { computeContextUsage, computeSessionStats } from "#pi/runtime/session-stats";
+} from "#pi/runtime/model-control";
+import { sleep } from "#pi/runtime/platform";
+import { expandSkillCommand } from "#pi/runtime/skill-expansion";
+import { computeContextUsage, computeSessionStats } from "#pi/runtime/stats-export";
+import { ToolManager } from "#pi/runtime/tool-manager";
 import {
 	getUserMessagesForForking as treeNavGetUserMessagesForForking,
 	navigateTree as treeNavNavigateTree,
-} from "#pi/runtime/session-tree";
-import { ToolManager } from "#pi/runtime/tool-manager";
+} from "#pi/runtime/tree-navigation";
 import {
 	type CompactionResult,
 	calculateContextTokens,

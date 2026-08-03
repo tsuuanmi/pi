@@ -10,8 +10,8 @@ import type {
 	SessionShutdownEvent,
 	SessionStartEvent,
 } from "#pi/index";
-import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/runtime/runtime";
-import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/runtime/services";
+import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
+import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/runtime/agent-session-services";
 import { SessionManager } from "#pi/session/manager";
 import { registerTestProvider, testAssistantMessage } from "#pi-test/helpers/provider";
 

@@ -3,7 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { SubagentTmuxTarget, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { buildTmuxCommands, createSubagentRunIdentity } from "@tsuuanmi/pi-agent";
-import { createAgentSessionServices } from "#pi/runtime/services";
+import { createAgentSessionServices } from "#pi/runtime/agent-session-services";
 import { SubagentManager } from "#pi/subagents/manager";
 import { PI_SUBAGENT_TMUX_TARGET_KIND_ENV, PI_SUBAGENT_WORKER_REQUEST_ENV } from "#pi/subagents/tmux-launch";
 

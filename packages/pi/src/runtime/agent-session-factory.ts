@@ -11,7 +11,7 @@ import { DefaultResourceLoader } from "#pi/loader/resources";
 import { ModelRegistry } from "#pi/model/model-registry";
 import { findInitialModel } from "#pi/model/model-resolver";
 import { DEFAULT_THINKING_LEVEL } from "#pi/model/thinking-level";
-import { AgentSession } from "#pi/runtime/agent";
+import { AgentSession } from "#pi/runtime/agent-session";
 import { optimizeRetainedContext } from "#pi/runtime/context-optimization";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";

@@ -3,7 +3,7 @@ import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
 import type { Args, Mode } from "#pi/cli/args";
 import { InteractiveMode, runPrintMode, runRpcMode } from "#pi/modes/index";
 import { restoreStdout } from "#pi/modes/output-guard";
-import type { AgentSessionRuntime } from "#pi/runtime/runtime";
+import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 
 export type AppMode = "interactive" | "print" | "json" | "rpc";
 

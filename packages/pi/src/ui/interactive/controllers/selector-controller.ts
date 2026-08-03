@@ -11,8 +11,8 @@ import {
 } from "@tsuuanmi/pi-tui";
 import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "#pi/exec/http-dispatcher";
 import type { ExtensionCommandContext } from "#pi/extensions/index";
-import type { AgentSession } from "#pi/runtime/agent";
-import type { AgentSessionRuntime } from "#pi/runtime/runtime";
+import type { AgentSession } from "#pi/runtime/agent-session";
+import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 import { MissingSessionCwdError } from "#pi/session/cwd";
 import { SessionManager } from "#pi/session/manager";
 import type { KeybindingsManager } from "#pi/settings/keybindings";

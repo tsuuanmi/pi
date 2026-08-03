@@ -19,7 +19,7 @@ import { launchDefaultTmuxIfNeeded } from "#pi/cli/launch-tmux";
 import { listModels } from "#pi/cli/list-models";
 import { VERSION } from "#pi/loader/app";
 import { showDeprecationWarnings } from "#pi/migrations";
-import type { AgentSessionRuntimeDiagnostic } from "#pi/runtime/services";
+import type { AgentSessionRuntimeDiagnostic } from "#pi/runtime/agent-session-services";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
 function reportDiagnostics(diagnostics: readonly AgentSessionRuntimeDiagnostic[]): void {
