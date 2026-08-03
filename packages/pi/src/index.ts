@@ -1,5 +1,7 @@
 // Core session management
 
+// JSONL utilities
+export { serializeJsonLine } from "@tsuuanmi/pi-agent/node";
 // Theme utilities for custom tools and extensions
 export {
 	getLanguageFromPath,
@@ -161,8 +163,6 @@ export {
 	runPrintMode,
 	runRpcMode,
 } from "#pi/modes/index";
-// JSONL utilities
-export { serializeJsonLine } from "#pi/modes/rpc/jsonl";
 export type {
 	PackageManager,
 	PathMetadata,

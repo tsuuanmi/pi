@@ -12,6 +12,7 @@
  */
 
 import * as crypto from "node:crypto";
+import { attachJsonlLineReader, serializeJsonLine } from "@tsuuanmi/pi-agent/node";
 import { type Theme, theme } from "@tsuuanmi/pi-tui";
 import { killTrackedProcesses } from "#pi/execution/process-tree";
 import type {
@@ -21,7 +22,6 @@ import type {
 	WorkingIndicatorOptions,
 } from "#pi/extensions/index";
 import { flushRawStdout, takeOverStdout, waitForRawStdoutBackpressure, writeRawStdout } from "#pi/modes/output-guard";
-import { attachJsonlLineReader, serializeJsonLine } from "#pi/modes/rpc/jsonl";
 import type {
 	RpcCommand,
 	RpcExtensionUIRequest,
@@ -29,7 +29,7 @@ import type {
 	RpcResponse,
 	RpcSessionState,
 	RpcSlashCommand,
-} from "#pi/modes/rpc/rpc-types";
+} from "#pi/modes/rpc/types";
 import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 
 // Re-export types for consumers
@@ -39,7 +39,7 @@ export type {
 	RpcExtensionUIResponse,
 	RpcResponse,
 	RpcSessionState,
-} from "#pi/modes/rpc/rpc-types";
+} from "#pi/modes/rpc/types";
 
 /**
  * Run in RPC mode.

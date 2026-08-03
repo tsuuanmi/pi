@@ -2,11 +2,12 @@ import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent";
+import type * as AgentNode from "@tsuuanmi/pi-agent/node";
 import { type AssistantMessage, type AssistantMessageEvent, EventStream, getModel, type Model } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/loader/model-registry";
-import { runRpcMode } from "#pi/modes/rpc/rpc-mode";
+import { runRpcMode } from "#pi/modes/rpc/mode";
 import { AgentSession } from "#pi/runtime/agent-session";
 import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 import { SessionManager } from "#pi/session/manager";
@@ -32,15 +33,19 @@ vi.mock("@tsuuanmi/pi-tui", async (importOriginal) => {
 	return { ...actual, theme: {} };
 });
 
-vi.mock("#pi/modes/rpc/jsonl", () => ({
-	attachJsonlLineReader: vi.fn(
-		(_stream: NodeJS.ReadableStream, onLine: (line: string) => void, _onError: (error: Error) => void) => {
-			rpcIo.lineHandler = onLine;
-			return () => {};
-		},
-	),
-	serializeJsonLine: (value: unknown) => `${JSON.stringify(value)}\n`,
-}));
+vi.mock("@tsuuanmi/pi-agent/node", async (importOriginal) => {
+	const actual = await importOriginal<typeof AgentNode>();
+	return {
+		...actual,
+		attachJsonlLineReader: vi.fn(
+			(_stream: NodeJS.ReadableStream, onLine: (line: string) => void, _onError: (error: Error) => void) => {
+				rpcIo.lineHandler = onLine;
+				return () => {};
+			},
+		),
+		serializeJsonLine: (value: unknown) => `${JSON.stringify(value)}\n`,
+	};
+});
 
 class MockAssistantStream extends EventStream<AssistantMessageEvent, AssistantMessage> {
 	constructor() {

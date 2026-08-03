@@ -1,6 +1,6 @@
 import { Readable } from "node:stream";
+import { attachJsonlLineReader, serializeJsonLine } from "@tsuuanmi/pi-agent/node";
 import { describe, expect, test } from "vitest";
-import { attachJsonlLineReader, serializeJsonLine } from "#pi/modes/rpc/jsonl";
 
 describe("RPC JSONL framing", () => {
 	test("serializes strict JSONL records without escaping Unicode separators", () => {

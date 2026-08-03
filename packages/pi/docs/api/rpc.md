@@ -2,7 +2,7 @@
 
 RPC mode enables headless operation of the AI agent via a JSON protocol over stdin/stdout. This is useful for embedding the agent in other applications, IDEs, or custom UIs.
 
-**Note for Node.js/TypeScript users**: If you're building a Node.js application, consider using `AgentSession` directly from `@tsuuanmi/pi` instead of spawning a subprocess. See [`src/runtime/agent-session.ts`](../../src/runtime/agent-session.ts) for the API. For a subprocess-based TypeScript client, see [`src/modes/rpc/rpc-client.ts`](../../src/modes/rpc/rpc-client.ts).
+**Note for Node.js/TypeScript users**: If you're building a Node.js application, consider using `AgentSession` directly from `@tsuuanmi/pi` instead of spawning a subprocess. See [`src/runtime/agent-session.ts`](../../src/runtime/agent-session.ts) for the API. For a subprocess-based TypeScript client, see [`src/modes/rpc/client.ts`](../../src/modes/rpc/client.ts).
 
 ## Starting RPC Mode
 
@@ -1166,7 +1166,7 @@ Source files:
 - [`packages/ai/src/protocol/message.ts`](../../../ai/src/protocol/message.ts) - `UserMessage`, `AssistantMessage`, `ToolResultMessage`
 - [`packages/agent/src/messages/state.ts`](../../../agent/src/messages/state.ts) - `AgentMessage` and [`runtime/events.ts`](../../../agent/src/runtime/events.ts) - `AgentEvent`
 - [`packages/agent/src/messages/messages.ts`](../../../agent/src/messages/messages.ts) - `BashExecutionMessage`
-- [`src/modes/rpc/rpc-types.ts`](../../src/modes/rpc/rpc-types.ts) - RPC command/response types, extension UI request/response types
+- [`src/modes/rpc/types.ts`](../../src/modes/rpc/types.ts) - RPC command/response types, extension UI request/response types
 
 ### Model
 
@@ -1298,7 +1298,7 @@ for event in read_events():
 
 ## Example: Interactive Client (Node.js)
 
-See [`src/modes/rpc/rpc-client.ts`](../../src/modes/rpc/rpc-client.ts) for a typed client implementation.
+See [`src/modes/rpc/client.ts`](../../src/modes/rpc/client.ts) for a typed client implementation.
 
 ```javascript
 const { spawn } = require("child_process");

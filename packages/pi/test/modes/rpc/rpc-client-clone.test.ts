@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { RpcClient } from "#pi/modes/rpc/rpc-client";
+import { RpcClient } from "#pi/modes/rpc/client";
 
 type RpcClientPrivate = {
 	send: (command: { type: string }) => Promise<unknown>;

@@ -6,10 +6,10 @@
 
 import { type ChildProcess, spawn } from "node:child_process";
 import type { AgentEvent, AgentMessage } from "@tsuuanmi/pi-agent";
+import { attachJsonlLineReader, serializeJsonLine } from "@tsuuanmi/pi-agent/node";
 import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { BashResult } from "#pi/execution/bash-executor";
-import { attachJsonlLineReader, serializeJsonLine } from "#pi/modes/rpc/jsonl";
-import type { RpcCommand, RpcResponse, RpcSessionState, RpcSlashCommand } from "#pi/modes/rpc/rpc-types";
+import type { RpcCommand, RpcResponse, RpcSessionState, RpcSlashCommand } from "#pi/modes/rpc/types";
 import type { SessionStats } from "#pi/runtime/agent-session";
 import type { CompactionResult } from "#pi/session/compaction";
 

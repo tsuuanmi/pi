@@ -9,12 +9,12 @@ export {
 	RpcClient,
 	type RpcClientOptions,
 	type RpcEventListener,
-} from "#pi/modes/rpc/rpc-client";
-export { runRpcMode } from "#pi/modes/rpc/rpc-mode";
+} from "#pi/modes/rpc/client";
+export { runRpcMode } from "#pi/modes/rpc/mode";
 export type {
 	RpcCommand,
 	RpcExtensionUIRequest,
 	RpcExtensionUIResponse,
 	RpcResponse,
 	RpcSessionState,
-} from "#pi/modes/rpc/rpc-types";
+} from "#pi/modes/rpc/types";
