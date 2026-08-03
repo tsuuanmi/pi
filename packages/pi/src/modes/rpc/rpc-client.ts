@@ -4,8 +4,11 @@
  * Spawns the agent in RPC mode and provides a typed API for all operations.
  */
 
-import { type ChildProcess, spawn } from "node:child_process";
-import type { AgentEvent, AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
+import {
+type ChildProcess, spawn } from "node:child_process";
+import type { AgentEvent, AgentMessage
+} from "@tsuuanmi/pi-agent";
+import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { BashResult } from "#pi/execution/bash-executor";
 import { attachJsonlLineReader, serializeJsonLine } from "#pi/modes/rpc/jsonl";
 import type { RpcCommand, RpcResponse, RpcSessionState, RpcSlashCommand } from "#pi/modes/rpc/rpc-types";

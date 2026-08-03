@@ -8,6 +8,7 @@
 - **auth**: Removed environment-variable API key discovery from `@tsuuanmi/pi-ai`; callers now pass credentials explicitly, typically from Pi `auth.json`.
 - **test-provider**: Removed the public test provider helpers from `@tsuuanmi/pi-ai`.
 - **runtime**: Provider OAuth and WebSocket paths are now Node-only; alternate-runtime compatibility branches were removed.
+- **model**: Canonicalized `ThinkingLevel` across agent and provider APIs, and made pure model-pattern parsing public from `@tsuuanmi/pi-ai`.
 
 ### Changed
 

@@ -2,11 +2,11 @@
  * CLI argument parsing and help display
  */
 
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
+import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import chalk from "chalk";
 import type { ExtensionFlag } from "#pi/api/extension-types";
+import { CLI_THINKING_LEVELS, isValidCliThinkingLevel } from "#pi/cli/thinking-level";
 import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, ENV_SESSION_DIR } from "#pi/loader/app";
-import { isValidThinkingLevel, THINKING_LEVELS } from "#pi/model/thinking-level";
 
 export type Mode = "text" | "json" | "rpc";
 
@@ -69,12 +69,12 @@ export function parseArgs(args: string[]): Args {
 			result.session = args[++i];
 		} else if (arg === "--thinking" && i + 1 < args.length) {
 			const level = args[++i];
-			if (isValidThinkingLevel(level)) {
+			if (isValidCliThinkingLevel(level)) {
 				result.thinking = level;
 			} else {
 				result.diagnostics.push({
 					type: "warning",
-					message: `Invalid thinking level "${level}". Valid values: ${THINKING_LEVELS.join(", ")}`,
+					message: `Invalid thinking level "${level}". Valid values: ${CLI_THINKING_LEVELS.join(", ")}`,
 				});
 			}
 		} else if (arg === "--print" || arg === "-p") {

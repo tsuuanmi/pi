@@ -1,4 +1,4 @@
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
+import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import {
 	Container,
 	DynamicBorder,
@@ -20,6 +20,8 @@ const LEVEL_DESCRIPTIONS: Record<ThinkingLevel, string> = {
 	medium: "Moderate reasoning (~8k tokens)",
 	high: "Deep reasoning (~16k tokens)",
 	xhigh: "Maximum reasoning (~32k tokens)",
+	max: "Extended reasoning",
+	ultra: "Longest reasoning",
 };
 
 /**

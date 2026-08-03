@@ -1,7 +1,7 @@
 import { MODELS } from "#ai/model/generated";
 import type { Model } from "#ai/model/index";
 import type { Api, KnownProviderId } from "#ai/protocol/ids";
-import type { ModelThinkingLevel } from "#ai/protocol/options";
+import { type ModelThinkingLevel, THINKING_LEVELS } from "#ai/protocol/options";
 import type { Usage } from "#ai/protocol/usage";
 
 const modelRegistry: Map<string, Map<string, Model<Api>>> = new Map();
@@ -51,21 +51,10 @@ export function calculateCost<TApi extends Api>(model: Model<TApi>, usage: Usage
 	return usage.cost;
 }
 
-const EXTENDED_THINKING_LEVELS: ModelThinkingLevel[] = [
-	"off",
-	"minimal",
-	"low",
-	"medium",
-	"high",
-	"xhigh",
-	"max",
-	"ultra",
-];
-
 export function getSupportedThinkingLevels<TApi extends Api>(model: Model<TApi>): ModelThinkingLevel[] {
 	if (!model.reasoning) return ["off"];
 
-	return EXTENDED_THINKING_LEVELS.filter((level) => {
+	return THINKING_LEVELS.filter((level) => {
 		const mapped = model.thinkingLevelMap?.[level];
 		if (mapped === null) return false;
 		if (level === "xhigh" || level === "max" || level === "ultra") return mapped !== undefined;
@@ -80,15 +69,15 @@ export function clampThinkingLevel<TApi extends Api>(
 	const availableLevels = getSupportedThinkingLevels(model);
 	if (availableLevels.includes(level)) return level;
 
-	const requestedIndex = EXTENDED_THINKING_LEVELS.indexOf(level);
+	const requestedIndex = THINKING_LEVELS.indexOf(level);
 	if (requestedIndex === -1) return availableLevels[0] ?? "off";
 
-	for (let i = requestedIndex; i < EXTENDED_THINKING_LEVELS.length; i++) {
-		const candidate = EXTENDED_THINKING_LEVELS[i];
+	for (let i = requestedIndex; i < THINKING_LEVELS.length; i++) {
+		const candidate = THINKING_LEVELS[i];
 		if (availableLevels.includes(candidate)) return candidate;
 	}
 	for (let i = requestedIndex - 1; i >= 0; i--) {
-		const candidate = EXTENDED_THINKING_LEVELS[i];
+		const candidate = THINKING_LEVELS[i];
 		if (availableLevels.includes(candidate)) return candidate;
 	}
 	return availableLevels[0] ?? "off";

@@ -20,6 +20,7 @@ Provider and model API with automatic model discovery, provider configuration, t
   - [Unified Interface](#unified-interface-streamsimplecompletesimple)
   - [Provider-Specific Options](#provider-specific-options-streamcomplete)
   - [Streaming Thinking Content](#streaming-thinking-content)
+- [Model Selection](#model-selection)
 - [Stop Reasons](#stop-reasons)
 - [Error Handling](#error-handling)
   - [Aborting Requests](#aborting-requests)
@@ -376,7 +377,7 @@ if (model.reasoning) {
 const response = await complete(model, {
   messages: [{ role: 'user', content: 'Solve: 2x + 5 = 13' }]
 }, {
-  reasoning: 'medium'  // 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
+  reasoning: 'medium'  // 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max' | 'ultra'
 });
 
 // Access thinking and text blocks
@@ -433,6 +434,23 @@ for await (const event of s) {
   }
 }
 ```
+
+## Model Selection
+
+`ThinkingLevel` is the canonical model-level union: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`, and `ultra`. Provider request options use `ReasoningLevel`, which excludes `off`.
+
+Use `parseModelPattern` for provider-independent model matching:
+
+```typescript
+import { parseModelPattern, type Model } from "@tsuuanmi/pi-ai";
+
+const result = parseModelPattern("openai/gpt-5:high", models);
+if (result.model) {
+  console.log(result.model.id, result.thinkingLevel);
+}
+```
+
+The parser accepts model IDs containing colons and returns an optional warning for an invalid thinking-level suffix. Registry loading, authentication, and CLI policy remain outside this package.
 
 ## Stop Reasons
 

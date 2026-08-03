@@ -96,7 +96,7 @@ export interface ShouldStopAfterTurnContext {
 export interface AgentLoopTurnUpdate {
 	context?: AgentContext;
 	model?: Model<any>;
-	thinkingLevel?: import("#agent/messages/state").ThinkingLevel;
+	thinkingLevel?: import("@tsuuanmi/pi-ai").ThinkingLevel;
 }
 
 export interface PrepareNextTurnContext extends ShouldStopAfterTurnContext {}

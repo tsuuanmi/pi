@@ -5,7 +5,7 @@ import { Agent } from "@tsuuanmi/pi-agent";
 import { type AssistantMessage, type AssistantMessageEvent, EventStream, getModel, type Model } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
-import { ModelRegistry } from "#pi/model/model-registry";
+import { ModelRegistry } from "#pi/loader/model-registry";
 import { runRpcMode } from "#pi/modes/rpc/rpc-mode";
 import { AgentSession } from "#pi/runtime/agent-session";
 import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";

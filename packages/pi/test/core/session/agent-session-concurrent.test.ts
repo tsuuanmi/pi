@@ -18,7 +18,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { installAgentToolHooks } from "#pi/extensions/hooks/tool-hooks";
-import { ModelRegistry } from "#pi/model/model-registry";
+import { ModelRegistry } from "#pi/loader/model-registry";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";

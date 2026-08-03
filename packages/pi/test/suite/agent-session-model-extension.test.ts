@@ -1,5 +1,5 @@
-import type { AgentTool, ThinkingLevel } from "@tsuuanmi/pi-agent";
-import type { Model } from "@tsuuanmi/pi-ai";
+import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import type { BuildSystemPromptOptions, ExtensionAPI } from "#pi/index";

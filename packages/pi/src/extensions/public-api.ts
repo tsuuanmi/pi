@@ -12,7 +12,6 @@ export { AuthStorage } from "#pi/auth/auth-storage";
 export * from "#pi/extensions/index";
 export { CONFIG_DIR_NAME } from "#pi/loader/app";
 export { getAgentDir } from "#pi/loader/paths";
-export { ModelRegistry } from "#pi/model/model-registry";
 export { SessionManager } from "#pi/session/manager";
 export { SettingsManager } from "#pi/settings/settings-manager";
 export type { PromptTemplate } from "#pi/skills/prompt-templates";

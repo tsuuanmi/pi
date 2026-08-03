@@ -28,7 +28,7 @@ import type {
 import { createAssistantMessageEventStream } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import type { ExtensionFactory, ResourceLoader } from "#pi/index";
-import { ModelRegistry } from "#pi/model/model-registry";
+import { ModelRegistry } from "#pi/loader/model-registry";
 import { AgentSession, type AgentSessionEvent } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
 import type { Settings } from "#pi/settings/settings-manager";

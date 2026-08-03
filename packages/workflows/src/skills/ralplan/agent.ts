@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
+import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { buildRalplanRoleSystemPrompt, buildRalplanTaskPrompt } from "#workflows/policy/context-templates";
 import type { RalplanStage } from "#workflows/session/paths";
 

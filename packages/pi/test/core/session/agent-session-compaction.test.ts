@@ -15,7 +15,7 @@ import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { createCodingTools } from "#pi/index";
-import { ModelRegistry } from "#pi/model/model-registry";
+import { ModelRegistry } from "#pi/loader/model-registry";
 import { AgentSession, type AgentSessionEvent } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";

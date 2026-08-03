@@ -20,6 +20,7 @@ export * from "#ai/model/config";
 export * from "#ai/model/index";
 export * from "#ai/model/request";
 export * from "#ai/model/response";
+export * from "#ai/model/selection";
 // Runtime helpers
 export * from "#ai/parsing/json-parser";
 // Protocol

@@ -1,8 +1,9 @@
 import { spawnSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { SubagentTmuxTarget, ThinkingLevel } from "@tsuuanmi/pi-agent";
+import type { SubagentTmuxTarget } from "@tsuuanmi/pi-agent";
 import { buildTmuxCommands, createSubagentRunIdentity } from "@tsuuanmi/pi-agent";
+import { isValidThinkingLevel, type ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { createAgentSessionServices } from "#pi/runtime/agent-session-services";
 import { SubagentManager } from "#pi/subagents/manager";
 import { PI_SUBAGENT_TMUX_TARGET_KIND_ENV, PI_SUBAGENT_WORKER_REQUEST_ENV } from "#pi/subagents/tmux-launch";
@@ -56,15 +57,7 @@ function optionalBoolean(value: unknown, field: string): boolean | undefined {
 
 function optionalThinkingLevel(value: unknown, field: string): ThinkingLevel | undefined {
 	if (value === undefined) return undefined;
-	if (
-		value === "off" ||
-		value === "minimal" ||
-		value === "low" ||
-		value === "medium" ||
-		value === "high" ||
-		value === "xhigh"
-	)
-		return value;
+	if (typeof value === "string" && isValidThinkingLevel(value)) return value;
 	throw new SubagentWorkerMetadataInvalidError(`${field} is invalid`);
 }
 

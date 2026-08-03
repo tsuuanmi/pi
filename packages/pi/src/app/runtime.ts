@@ -1,9 +1,9 @@
-import { modelsAreEqual } from "@tsuuanmi/pi-ai";
+import { modelsAreEqual, type ScopedModel } from "@tsuuanmi/pi-ai";
 import type { ExtensionFactory } from "#pi/api/extension-types";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import type { Args } from "#pi/cli/args";
-import type { ModelRegistry } from "#pi/model/model-registry";
-import { resolveCliModel, resolveModelScope, type ScopedModel } from "#pi/model/model-resolver";
+import { resolveCliModel, resolveModelScope } from "#pi/cli/model-resolver";
+import type { ModelRegistry } from "#pi/loader/model-registry";
 import { applyHttpProxySettings, configureHttpDispatcher } from "#pi/network/http-dispatcher";
 import type { CreateAgentSessionOptions } from "#pi/runtime/agent-session-factory";
 import {

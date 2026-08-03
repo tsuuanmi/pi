@@ -143,12 +143,20 @@ export class ModelRegistry {
 
 	private loadModels(): void {
 		// Load custom models and overrides from settings.json
-		const {
-			models: customModels,
-			overrides,
-			modelOverrides,
-			error,
-		} = this.modelsConfigProvider ? this.loadCustomModels(this.modelsConfigProvider()) : emptyCustomModelsResult();
+		let customModelsResult: CustomModelsResult;
+		if (!this.modelsConfigProvider) {
+			customModelsResult = emptyCustomModelsResult();
+		} else {
+			try {
+				customModelsResult = this.loadCustomModels(this.modelsConfigProvider());
+			} catch (error) {
+				customModelsResult = emptyCustomModelsResult(
+					`Failed to load model settings: ${error instanceof Error ? error.message : String(error)}${this.configSourceSuffix()}`,
+				);
+			}
+		}
+
+		const { models: customModels, overrides, modelOverrides, error } = customModelsResult;
 
 		if (error) {
 			this.loadError = error;
@@ -579,7 +587,7 @@ export class ModelRegistry {
 	/**
 	 * Unregister a previously registered provider.
 	 *
-	 * Removes the provider from the registry and reloads models from disk so that
+	 * Removes the provider from the registry and reloads models from settings so that
 	 * built-in models overridden by this provider are restored to their original state.
 	 * Also resets dynamic OAuth and API stream registrations before reapplying
 	 * remaining dynamic providers.

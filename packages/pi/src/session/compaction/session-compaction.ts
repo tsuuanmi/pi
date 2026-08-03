@@ -5,7 +5,7 @@
  * and after compaction the session is reloaded.
  */
 
-import type { AgentMessage, StreamFn, ThinkingLevel } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, StreamFn } from "@tsuuanmi/pi-agent";
 import {
 	computeFileLists,
 	convertToLlm,
@@ -19,7 +19,7 @@ import {
 	SUMMARIZATION_SYSTEM_PROMPT,
 	serializeConversation,
 } from "@tsuuanmi/pi-agent";
-import type { AssistantMessage, Context, Model, StreamOptions, Usage } from "@tsuuanmi/pi-ai";
+import type { AssistantMessage, Context, Model, StreamOptions, ThinkingLevel, Usage } from "@tsuuanmi/pi-ai";
 import { complete } from "@tsuuanmi/pi-ai";
 import { buildSessionContext, type CompactionEntry, type SessionEntry } from "#pi/session/manager";
 

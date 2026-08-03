@@ -1,9 +1,5 @@
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
-import {
-	type AgentProfileLoadResult,
-	type LoadedAgentProfile,
-	loadAgentDefinitions,
-} from "#pi/agent/definitions";
+import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
+import { type AgentProfileLoadResult, type LoadedAgentProfile, loadAgentDefinitions } from "#pi/agent/definitions";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 
 export interface AgentProfile {

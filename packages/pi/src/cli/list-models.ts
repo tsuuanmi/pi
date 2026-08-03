@@ -6,7 +6,7 @@ import type { Api, Model } from "@tsuuanmi/pi-ai";
 import { fuzzyFilter } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
-import type { ModelRegistry } from "#pi/model/model-registry";
+import type { ModelRegistry } from "#pi/loader/model-registry";
 
 /**
  * Format a number as human-readable (e.g., 200000 -> "200K", 1000000 -> "1M")

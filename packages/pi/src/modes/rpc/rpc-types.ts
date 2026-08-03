@@ -5,8 +5,8 @@
  * Responses and events are emitted as JSON lines on stdout.
  */
 
-import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
-import type { Model } from "@tsuuanmi/pi-ai";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
+import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { BashResult } from "#pi/execution/bash-executor";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import type { SessionStats } from "#pi/runtime/agent-session";

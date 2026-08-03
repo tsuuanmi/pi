@@ -22,10 +22,9 @@ import {
 	parseStructuredOutput,
 	type StructuredOutputOptions,
 	type StructuredOutputResult,
-	type ThinkingLevel,
 } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi-ai";
+import type { AssistantMessage, Message, Model, TextContent, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { cleanupSessionResources, isContextOverflow, resetProviders, stream } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
 import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/agent/system-prompt";
@@ -60,8 +59,8 @@ import {
 	type TurnStartEvent,
 } from "#pi/extensions/index";
 import { emitSessionShutdownEvent } from "#pi/extensions/runner";
+import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceExtensionPaths, ResourceLoader } from "#pi/loader/resources";
-import type { ModelRegistry } from "#pi/model/model-registry";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
 import {
 	cycleModel as modelControlCycleModel,

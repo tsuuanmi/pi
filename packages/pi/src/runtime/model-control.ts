@@ -1,10 +1,14 @@
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
-import { clampThinkingLevel, getSupportedThinkingLevels, type Model, modelsAreEqual } from "@tsuuanmi/pi-ai";
-import { DEFAULT_THINKING_LEVEL } from "#pi/model/thinking-level";
+import {
+	clampThinkingLevel,
+	getSupportedThinkingLevels,
+	type Model,
+	modelsAreEqual,
+	THINKING_LEVELS,
+	type ThinkingLevel,
+} from "@tsuuanmi/pi-ai";
+import { DEFAULT_THINKING_LEVEL } from "#pi/cli/thinking-level";
 import type { ModelCycleResult } from "#pi/runtime/agent-session";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
-
-const THINKING_LEVELS: ThinkingLevel[] = ["off", "minimal", "low", "medium", "high"];
 
 export async function setModel(model: Model<any>, ctx: AgentSessionContext): Promise<void> {
 	if (!ctx.modelRegistry.hasConfiguredAuth(model)) {
@@ -134,7 +138,7 @@ export function cycleThinkingLevel(ctx: AgentSessionContext): ThinkingLevel | un
 }
 
 export function getAvailableThinkingLevels(ctx: AgentSessionContext): ThinkingLevel[] {
-	if (!ctx.model) return THINKING_LEVELS;
+	if (!ctx.model) return [...THINKING_LEVELS];
 	return getSupportedThinkingLevels(ctx.model) as ThinkingLevel[];
 }
 
@@ -155,11 +159,7 @@ function getThinkingLevelForModelSwitch(
 	return ctx.state.thinkingLevel;
 }
 
-function clampLevel(
-	level: ThinkingLevel,
-	_availableLevels: ThinkingLevel[],
-	ctx: AgentSessionContext,
-): ThinkingLevel {
+function clampLevel(level: ThinkingLevel, _availableLevels: ThinkingLevel[], ctx: AgentSessionContext): ThinkingLevel {
 	return ctx.model ? (clampThinkingLevel(ctx.model, level) as ThinkingLevel) : "off";
 }
 

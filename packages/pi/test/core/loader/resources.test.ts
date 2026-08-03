@@ -7,7 +7,7 @@ import { AuthStorage } from "#pi/auth/auth-storage";
 import { ExtensionRunner } from "#pi/extensions/runner";
 import { DefaultResourceLoader } from "#pi/loader/resources";
 import type { Skill } from "#pi/loader/skill";
-import { ModelRegistry } from "#pi/model/model-registry";
+import { ModelRegistry } from "#pi/loader/model-registry";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";

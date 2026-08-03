@@ -2,12 +2,19 @@
  * Model resolution, scoping, and initial selection
  */
 
-import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
-import { type Api, type KnownProviderId, type Model, modelsAreEqual } from "@tsuuanmi/pi-ai";
+import {
+	type Api,
+	type KnownProviderId,
+	type Model,
+	modelsAreEqual,
+	parseModelPattern,
+	type ScopedModel,
+	type ThinkingLevel,
+} from "@tsuuanmi/pi-ai";
 import chalk from "chalk";
 import { minimatch } from "minimatch";
-import type { ModelRegistry } from "#pi/model/model-registry";
-import { DEFAULT_THINKING_LEVEL, isValidThinkingLevel } from "#pi/model/thinking-level";
+import { CLI_THINKING_LEVELS, DEFAULT_THINKING_LEVEL, isValidCliThinkingLevel } from "#pi/cli/thinking-level";
+import type { ModelRegistry } from "#pi/loader/model-registry";
 
 /** Default model IDs for each known provider */
 export const defaultModelPerProvider: Record<KnownProviderId, string> = {
@@ -16,114 +23,6 @@ export const defaultModelPerProvider: Record<KnownProviderId, string> = {
 	"openai-codex": "gpt-5.5",
 	"ollama-cloud": "gpt-oss:120b",
 };
-
-export interface ScopedModel {
-	model: Model<Api>;
-	/** Thinking level if explicitly specified in pattern (e.g., "model:high"), undefined otherwise */
-	thinkingLevel?: ThinkingLevel;
-}
-
-/**
- * Helper to check if a model ID looks like an alias (no date suffix)
- * Dates are typically in format: -20241022 or -20250929
- */
-function isAlias(id: string): boolean {
-	// Check if ID ends with -latest
-	if (id.endsWith("-latest")) return true;
-
-	// Check if ID ends with a date pattern (-YYYYMMDD)
-	const datePattern = /-\d{8}$/;
-	return !datePattern.test(id);
-}
-
-/**
- * Find an exact model reference match.
- * Supports either a bare model id or a canonical provider/modelId reference.
- * When matching by bare id, ambiguous matches across providers are rejected.
- */
-function findExactModelReferenceMatch(modelReference: string, availableModels: Model<Api>[]): Model<Api> | undefined {
-	const trimmedReference = modelReference.trim();
-	if (!trimmedReference) {
-		return undefined;
-	}
-
-	const normalizedReference = trimmedReference.toLowerCase();
-
-	const canonicalMatches = availableModels.filter(
-		(model) => `${model.provider}/${model.id}`.toLowerCase() === normalizedReference,
-	);
-	if (canonicalMatches.length === 1) {
-		return canonicalMatches[0];
-	}
-	if (canonicalMatches.length > 1) {
-		return undefined;
-	}
-
-	const slashIndex = trimmedReference.indexOf("/");
-	if (slashIndex !== -1) {
-		const provider = trimmedReference.substring(0, slashIndex).trim();
-		const modelId = trimmedReference.substring(slashIndex + 1).trim();
-		if (provider && modelId) {
-			const providerMatches = availableModels.filter(
-				(model) =>
-					model.provider.toLowerCase() === provider.toLowerCase() &&
-					model.id.toLowerCase() === modelId.toLowerCase(),
-			);
-			if (providerMatches.length === 1) {
-				return providerMatches[0];
-			}
-			if (providerMatches.length > 1) {
-				return undefined;
-			}
-		}
-	}
-
-	const idMatches = availableModels.filter((model) => model.id.toLowerCase() === normalizedReference);
-	return idMatches.length === 1 ? idMatches[0] : undefined;
-}
-
-/**
- * Try to match a pattern to a model from the available models list.
- * Returns the matched model or undefined if no match found.
- */
-function tryMatchModel(modelPattern: string, availableModels: Model<Api>[]): Model<Api> | undefined {
-	const exactMatch = findExactModelReferenceMatch(modelPattern, availableModels);
-	if (exactMatch) {
-		return exactMatch;
-	}
-
-	// No exact match - fall back to partial matching
-	const matches = availableModels.filter(
-		(m) =>
-			m.id.toLowerCase().includes(modelPattern.toLowerCase()) ||
-			m.name?.toLowerCase().includes(modelPattern.toLowerCase()),
-	);
-
-	if (matches.length === 0) {
-		return undefined;
-	}
-
-	// Separate into aliases and dated versions
-	const aliases = matches.filter((m) => isAlias(m.id));
-	const datedVersions = matches.filter((m) => !isAlias(m.id));
-
-	if (aliases.length > 0) {
-		// Prefer alias - if multiple aliases, pick the one that sorts highest
-		aliases.sort((a, b) => b.id.localeCompare(a.id));
-		return aliases[0];
-	} else {
-		// No alias found, pick latest dated version
-		datedVersions.sort((a, b) => b.id.localeCompare(a.id));
-		return datedVersions[0];
-	}
-}
-
-export interface ParsedModelResult {
-	model: Model<Api> | undefined;
-	/** Thinking level if explicitly specified in pattern, undefined otherwise */
-	thinkingLevel?: ThinkingLevel;
-	warning: string | undefined;
-}
 
 function buildFallbackModel(provider: string, modelId: string, availableModels: Model<Api>[]): Model<Api> | undefined {
 	const providerModels = availableModels.filter((m) => m.provider === provider);
@@ -139,74 +38,6 @@ function buildFallbackModel(provider: string, modelId: string, availableModels: 
 		id: modelId,
 		name: modelId,
 	};
-}
-
-/**
- * Parse a pattern to extract model and thinking level.
- * Handles models with colons in their IDs.
- *
- * Algorithm:
- * 1. Try to match full pattern as a model
- * 2. If found, return it with "off" thinking level
- * 3. If not found and has colons, split on last colon:
- *    - If suffix is valid thinking level, use it and recurse on prefix
- *    - If suffix is invalid, warn and recurse on prefix with "off"
- *
- * @internal Exported for testing
- */
-export function parseModelPattern(
-	pattern: string,
-	availableModels: Model<Api>[],
-	options?: { allowInvalidThinkingLevelFallback?: boolean },
-): ParsedModelResult {
-	// Try exact match first
-	const exactMatch = tryMatchModel(pattern, availableModels);
-	if (exactMatch) {
-		return { model: exactMatch, thinkingLevel: undefined, warning: undefined };
-	}
-
-	// No match - try splitting on last colon if present
-	const lastColonIndex = pattern.lastIndexOf(":");
-	if (lastColonIndex === -1) {
-		// No colons, pattern simply doesn't match any model
-		return { model: undefined, thinkingLevel: undefined, warning: undefined };
-	}
-
-	const prefix = pattern.substring(0, lastColonIndex);
-	const suffix = pattern.substring(lastColonIndex + 1);
-
-	if (isValidThinkingLevel(suffix)) {
-		// Valid thinking level - recurse on prefix and use this level
-		const result = parseModelPattern(prefix, availableModels, options);
-		if (result.model) {
-			// Only use this thinking level if no warning from inner recursion
-			return {
-				model: result.model,
-				thinkingLevel: result.warning ? undefined : suffix,
-				warning: result.warning,
-			};
-		}
-		return result;
-	} else {
-		// Invalid suffix
-		const allowFallback = options?.allowInvalidThinkingLevelFallback ?? true;
-		if (!allowFallback) {
-			// In strict mode (CLI --model parsing), treat it as part of the model id and fail.
-			// This avoids accidentally resolving to a different model.
-			return { model: undefined, thinkingLevel: undefined, warning: undefined };
-		}
-
-		// Scope mode: recurse on prefix and warn
-		const result = parseModelPattern(prefix, availableModels, options);
-		if (result.model) {
-			return {
-				model: result.model,
-				thinkingLevel: undefined,
-				warning: `Invalid thinking level "${suffix}" in pattern "${pattern}". Using default instead.`,
-			};
-		}
-		return result;
-	}
 }
 
 /**
@@ -234,7 +65,7 @@ export async function resolveModelScope(patterns: string[], modelRegistry: Model
 
 			if (colonIdx !== -1) {
 				const suffix = pattern.substring(colonIdx + 1);
-				if (isValidThinkingLevel(suffix)) {
+				if (isValidCliThinkingLevel(suffix)) {
 					thinkingLevel = suffix;
 					globPattern = pattern.substring(0, colonIdx);
 				}
@@ -260,7 +91,9 @@ export async function resolveModelScope(patterns: string[], modelRegistry: Model
 			continue;
 		}
 
-		const { model, thinkingLevel, warning } = parseModelPattern(pattern, availableModels);
+		const { model, thinkingLevel, warning } = parseModelPattern(pattern, availableModels, {
+			levels: CLI_THINKING_LEVELS,
+		});
 
 		if (warning) {
 			console.warn(chalk.yellow(`Warning: ${warning}`));
@@ -382,6 +215,7 @@ export function resolveCliModel(options: {
 	const candidates = provider ? availableModels.filter((m) => m.provider === provider) : availableModels;
 	const { model, thinkingLevel, warning } = parseModelPattern(pattern, candidates, {
 		allowInvalidThinkingLevelFallback: false,
+		levels: CLI_THINKING_LEVELS,
 	});
 
 	if (model) {
@@ -423,6 +257,7 @@ export function resolveCliModel(options: {
 		// Also try parseModelPattern on the full input against all models
 		const fallback = parseModelPattern(cliModel, availableModels, {
 			allowInvalidThinkingLevelFallback: false,
+			levels: CLI_THINKING_LEVELS,
 		});
 		if (fallback.model) {
 			return {
@@ -444,7 +279,7 @@ export function resolveCliModel(options: {
 			const lastColon = pattern.lastIndexOf(":");
 			if (lastColon !== -1) {
 				const suffix = pattern.substring(lastColon + 1);
-				if (isValidThinkingLevel(suffix)) {
+				if (isValidCliThinkingLevel(suffix)) {
 					fallbackPattern = pattern.substring(0, lastColon);
 					fallbackThinking = suffix;
 				}

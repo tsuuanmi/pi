@@ -20,7 +20,6 @@ import type {
 	SubagentTmuxMetadata,
 	SubagentTmuxTarget,
 	SubagentVisibility,
-	ThinkingLevel,
 } from "@tsuuanmi/pi-agent";
 import {
 	buildTmuxCommands,
@@ -33,7 +32,7 @@ import {
 	tmuxRecordMatchesIdentity,
 } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
+import { type Api, type AssistantMessage, isValidThinkingLevel, type Model, type ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { type AgentProfile, loadAgentProfile } from "#pi/agent/profiles";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
 import type { AgentSession } from "#pi/runtime/agent-session";
@@ -219,14 +218,7 @@ class TmuxUnavailableError extends Error {
 }
 
 function isThinkingLevel(value: unknown): value is ThinkingLevel {
-	return (
-		value === "off" ||
-		value === "minimal" ||
-		value === "low" ||
-		value === "medium" ||
-		value === "high" ||
-		value === "xhigh"
-	);
+	return typeof value === "string" && isValidThinkingLevel(value);
 }
 
 function defaultTmuxSpawnSync(

@@ -1,5 +1,5 @@
 import { normalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { Transport } from "@tsuuanmi/pi-ai";
+import type { ThinkingLevel, Transport } from "@tsuuanmi/pi-ai";
 import type { StatusLineSettings } from "@tsuuanmi/pi-tui";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
@@ -90,9 +90,9 @@ export interface Settings {
 	providers?: Record<string, ModelProviderSettings>;
 	defaultProvider?: string;
 	defaultModel?: string;
-	defaultThinkingLevel?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
+	defaultThinkingLevel?: ThinkingLevel;
 	agentModels?: Record<string, string>; // Per-agent profile model overrides keyed by agent name
-	agentThinkingLevels?: Record<string, "off" | "minimal" | "low" | "medium" | "high" | "xhigh">; // Per-agent thinking overrides keyed by agent name
+	agentThinkingLevels?: Record<string, ThinkingLevel>; // Per-agent thinking overrides keyed by agent name
 	transport?: TransportSetting; // default: "auto"
 	steeringMode?: "all" | "one-at-a-time";
 	followUpMode?: "all" | "one-at-a-time";
@@ -677,11 +677,11 @@ export class SettingsManager {
 		this.save();
 	}
 
-	getDefaultThinkingLevel(): "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | undefined {
+	getDefaultThinkingLevel(): ThinkingLevel | undefined {
 		return this.settings.defaultThinkingLevel;
 	}
 
-	setDefaultThinkingLevel(level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh"): void {
+	setDefaultThinkingLevel(level: ThinkingLevel): void {
 		this.globalSettings.defaultThinkingLevel = level;
 		this.markModified("defaultThinkingLevel");
 		this.save();
@@ -707,20 +707,15 @@ export class SettingsManager {
 		this.save();
 	}
 
-	getAgentThinkingLevelOverrides(): Record<string, "off" | "minimal" | "low" | "medium" | "high" | "xhigh"> {
+	getAgentThinkingLevelOverrides(): Record<string, ThinkingLevel> {
 		return { ...(this.settings.agentThinkingLevels ?? {}) };
 	}
 
-	getAgentThinkingLevelOverride(
-		agentName: string,
-	): "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | undefined {
+	getAgentThinkingLevelOverride(agentName: string): ThinkingLevel | undefined {
 		return this.settings.agentThinkingLevels?.[agentName];
 	}
 
-	setAgentThinkingLevelOverride(
-		agentName: string,
-		level: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | undefined,
-	): void {
+	setAgentThinkingLevelOverride(agentName: string, level: ThinkingLevel | undefined): void {
 		const next = { ...(this.globalSettings.agentThinkingLevels ?? {}) };
 		if (level === undefined) {
 			delete next[agentName];

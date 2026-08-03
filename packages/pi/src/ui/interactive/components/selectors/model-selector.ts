@@ -13,9 +13,9 @@ import {
 	type TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import type { ModelRegistry } from "#pi/model/model-registry";
-import { getModelSearchText } from "#pi/ui/interactive/model-search";
+import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { SettingsManager } from "#pi/settings/settings-manager";
+import { getModelSearchText } from "#pi/ui/interactive/model-search";
 
 interface ModelItem {
 	provider: string;

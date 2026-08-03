@@ -1,11 +1,6 @@
-import type { Model } from "@tsuuanmi/pi-ai";
+import { type Model, parseModelPattern } from "@tsuuanmi/pi-ai";
 import { describe, expect, test } from "vitest";
-import {
-	defaultModelPerProvider,
-	findInitialModel,
-	parseModelPattern,
-	resolveCliModel,
-} from "#pi/model/model-resolver";
+import { defaultModelPerProvider, findInitialModel, resolveCliModel } from "#pi/cli/model-resolver";
 
 // Mock models for testing
 const mockModels: Model<"anthropic-messages">[] = [

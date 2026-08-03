@@ -40,7 +40,6 @@ const allowedImports = {
 const ignoredDirectories = new Set(["dist", "node_modules"]);
 const internalRules = [
 	{ directory: "packages/pi/src/api", forbidden: ["#pi/runtime/", "#pi/ui/"] },
-	{ directory: "packages/pi/src/model", forbidden: ["#pi/cli/"] },
 	{ directory: "packages/pi/src/package-manager", forbidden: ["#pi/cli/", "#pi/modes/", "#pi/ui/"] },
 	{ directory: "packages/pi/src/subagents", forbidden: ["#pi/cli/"] },
 	{ directory: "packages/pi/src/extensions/loader.ts", forbidden: ["#pi/index"] },

@@ -1,9 +1,16 @@
 import type { Model } from "#ai/model/index";
 import type { Api } from "#ai/protocol/ids";
 
-export type ThinkingLevel = "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
-export type ModelThinkingLevel = "off" | ThinkingLevel;
+export const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"] as const;
+
+export type ThinkingLevel = (typeof THINKING_LEVELS)[number];
+export type ReasoningLevel = Exclude<ThinkingLevel, "off">;
+export type ModelThinkingLevel = ThinkingLevel;
 export type ThinkingLevelMap = Partial<Record<ModelThinkingLevel, string | null>>;
+
+export function isValidThinkingLevel(level: string): level is ThinkingLevel {
+	return THINKING_LEVELS.includes(level as ThinkingLevel);
+}
 
 export type CacheRetention = "none" | "short" | "long";
 
@@ -20,7 +27,7 @@ export interface ProviderResponse {
 export interface StreamOptions {
 	temperature?: number;
 	maxTokens?: number;
-	reasoning?: ThinkingLevel;
+	reasoning?: ReasoningLevel;
 	signal?: AbortSignal;
 	apiKey?: string;
 	transport?: Transport;

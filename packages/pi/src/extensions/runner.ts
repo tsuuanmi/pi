@@ -57,7 +57,7 @@ import {
 	type RunnerEmitEvent,
 	type RunnerEmitResult,
 } from "#pi/extensions/hooks/runner-dispatch";
-import type { ModelRegistry } from "#pi/model/model-registry";
+import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 import type { SessionManager } from "#pi/session/manager";
 import type { KeybindingsConfig } from "#pi/settings/keybindings";

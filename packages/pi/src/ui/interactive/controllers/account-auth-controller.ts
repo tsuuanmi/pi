@@ -12,8 +12,8 @@ import {
 } from "@tsuuanmi/pi-ai";
 import type { OAuthProviderId, OAuthSelectPrompt } from "@tsuuanmi/pi-ai/oauth";
 import type { Component, Container, EditorComponent, StatusLineComponent, TUI } from "@tsuuanmi/pi-tui";
+import { defaultModelPerProvider } from "#pi/cli/model-resolver";
 import { getAuthPath } from "#pi/loader/paths";
-import { defaultModelPerProvider } from "#pi/model/model-resolver";
 import type { AgentSession } from "#pi/runtime/agent-session";
 import { LoginDialogComponent } from "#pi/ui/interactive/components/login-dialog";
 import {

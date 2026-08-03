@@ -13,6 +13,7 @@
 - **orchestrator**: Moved task, team, and orchestrator contracts out of `@tsuuanmi/pi-agent` into `@tsuuanmi/pi-orchestrator`.
 - **orchestrator**: Standardized orchestrator options on `schedulingStrategy` and `abortSignal`, removed `runTeam`, removed `onTaskFail`, removed scheduler fallback assignment, and made explicit task assignees fail fast when they do not match the team roster.
 - **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
+- **model**: Removed the agent-owned `ThinkingLevel` type; consumers must import the canonical type from `@tsuuanmi/pi-ai`.
 
 ### Added
 

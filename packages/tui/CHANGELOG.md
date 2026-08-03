@@ -15,6 +15,7 @@
 - **lifecycle**: Components can release timers, requests, and listeners through optional `dispose()` cleanup.
 - **theme**: Custom theme discovery is owned by the host resource loader; TUI now loads only built-in and registered themes.
 - **rendering**: ANSI parsing is shared across stripping, width measurement, wrapping, and status text sanitization.
+- **theme**: Thinking border colors accept the canonical extended levels `max` and `ultra`.
 
 ### Fixed
 

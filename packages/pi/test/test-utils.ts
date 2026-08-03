@@ -13,7 +13,7 @@ import type { Extension, ExtensionFactory, LoadExtensionsResult } from "#pi/exte
 import { createExtensionRuntime, loadExtensionFromFactory } from "#pi/extensions/loader";
 import { createCodingTools } from "#pi/index";
 import type { ResourceLoader } from "#pi/loader/resources";
-import { ModelRegistry } from "#pi/model/model-registry";
+import { ModelRegistry } from "#pi/loader/model-registry";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";

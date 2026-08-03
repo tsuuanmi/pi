@@ -12,7 +12,7 @@ import { AuthStorage } from "#pi/auth/auth-storage";
 import type { Extension, SessionBeforeCompactEvent, SessionCompactEvent, SessionEvent } from "#pi/extensions/index";
 import { createExtensionRuntime } from "#pi/extensions/loader";
 import { createCodingTools } from "#pi/index";
-import { ModelRegistry } from "#pi/model/model-registry";
+import { ModelRegistry } from "#pi/loader/model-registry";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
