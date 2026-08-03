@@ -1,7 +1,7 @@
 import { initTheme, ProcessTerminal, TUI } from "@tsuuanmi/pi-tui";
 import type { ResolvedPaths } from "#pi/package-manager/package-manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
-import { ResourceSelector } from "#pi/ui/package-manager/resource-selector";
+import { ResourceSettingsComponent } from "#pi/ui/package-manager/resource-settings";
 
 export interface ConfigSelectorOptions {
 	resolvedPaths: ResolvedPaths;
@@ -17,7 +17,7 @@ export async function selectConfig(options: ConfigSelectorOptions): Promise<void
 		const ui = new TUI(new ProcessTerminal());
 		let resolved = false;
 
-		const selector = new ResourceSelector(
+		const selector = new ResourceSettingsComponent(
 			options.resolvedPaths,
 			options.settingsManager,
 			options.cwd,
