@@ -13,12 +13,8 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { afterAll, describe, expect, test } from "vitest";
 import { getAgentDir } from "#pi/loader/config";
-import {
-	expandPromptTemplate,
-	loadPromptTemplates,
-	parseCommandArgs,
-	substituteArgs,
-} from "#pi/skills/prompt-templates";
+import { loadPromptTemplates } from "#pi/loader/prompt-templates";
+import { expandPromptTemplate, parseCommandArgs, substituteArgs } from "#pi/runtime/prompt-expansion";
 
 // ============================================================================
 // substituteArgs

@@ -70,8 +70,8 @@ import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/ru
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#pi/session/cwd";
 import type { SessionContext, SessionManager } from "#pi/session/manager";
 import { type AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
-import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
 import { ensureTool } from "#pi/tools/tool-installer";
+import { BUILTIN_SLASH_COMMANDS } from "#pi/ui/interactive/builtin-commands";
 import { BashExecutionComponent } from "#pi/ui/interactive/components/bash-execution";
 import { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
 import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant-message";

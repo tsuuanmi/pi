@@ -110,6 +110,7 @@ export interface CreateAgentSessionResult {
 
 // Re-exports
 
+export type { PromptTemplate } from "#pi/loader/prompt-templates";
 export type { Skill } from "#pi/loader/skill";
 export type {
 	ExtensionAPI,
@@ -120,7 +121,6 @@ export type {
 	SlashCommandSource,
 	ToolDefinition,
 } from "#pi/package-manager/extensions/index";
-export type { PromptTemplate } from "#pi/skills/prompt-templates";
 export type { Tool } from "#pi/tools/default-tools";
 
 export {

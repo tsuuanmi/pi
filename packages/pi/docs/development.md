@@ -82,10 +82,9 @@ packages/pi/src/
   output/                # output buffering, sanitization, and truncation
   package-manager/       # package discovery, installation, and diagnostics
     extensions/          # extension loading, hooks, registry, and runner
-  runtime/               # AgentSession, runtime services, context, and stats
+  runtime/               # AgentSession, runtime services, context, stats, prompt and skill expansion
   session/               # session persistence, layout, and compaction
   settings/              # settings and keybinding management
-  skills/                # skills, prompts, slash commands, and system prompts
   subagents/             # subagent orchestration and tmux workers
   telemetry/             # API usage logging
   tools/                 # built-in tools and LSP support

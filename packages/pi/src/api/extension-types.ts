@@ -18,7 +18,6 @@ import type { ExtensionHookAPI } from "#pi/package-manager/extensions/hooks/exte
 import type { HookHandlerFn } from "#pi/package-manager/extensions/hooks/registration";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import type { SessionManager } from "#pi/session/manager";
-import type { SlashCommandInfo } from "#pi/skills/slash-commands";
 
 export interface MessageRenderOptions {
 	expanded: boolean;
@@ -40,6 +39,15 @@ export interface RegisteredCommand {
 
 export interface ResolvedCommand extends RegisteredCommand {
 	invocationName: string;
+}
+
+export type SlashCommandSource = "extension" | "prompt" | "skill";
+
+export interface SlashCommandInfo {
+	name: string;
+	description?: string;
+	source: SlashCommandSource;
+	sourceInfo: SourceInfo;
 }
 
 export interface ExtensionAPI extends ExtensionHookAPI {

@@ -14,7 +14,7 @@ export { getAgentDir } from "#pi/loader/paths";
 export * from "#pi/package-manager/extensions/index";
 export { SessionManager } from "#pi/session/manager";
 export { SettingsManager } from "#pi/settings/settings-manager";
-export type { PromptTemplate } from "#pi/skills/prompt-templates";
+export type { PromptTemplate } from "#pi/loader/prompt-templates";
 export {
 	type BashOperations,
 	createBashTool,

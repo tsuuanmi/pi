@@ -30,11 +30,13 @@ import type { Static, TSchema } from "typebox";
 import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/agent/system-prompt";
 import { ApiUsageLogger } from "#pi/api/api-usage-logger";
 import { apiUsageLogPath } from "#pi/api/api-usage-utils";
+import type { SlashCommandInfo } from "#pi/api/extension-types";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/auth-guidance";
 import { type BashResult, executeBashWithOperations } from "#pi/execution/bash-executor";
 import type { BashOperations } from "#pi/execution/bash-operations";
 import { createLocalBashOperations } from "#pi/execution/local-shell";
 import type { ModelRegistry } from "#pi/loader/model-registry";
+import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import type { ResourceExtensionPaths, ResourceLoader } from "#pi/loader/resources";
 import { installAgentToolHooks } from "#pi/package-manager/extensions/hooks/tool-hooks";
 import {
@@ -71,6 +73,7 @@ import {
 	supportsThinking as modelControlSupportsThinking,
 } from "#pi/runtime/model-control";
 import { sleep } from "#pi/runtime/platform";
+import { expandPromptTemplate } from "#pi/runtime/prompt-expansion";
 import { expandSkillCommand } from "#pi/runtime/skill-expansion";
 import { computeContextUsage, computeSessionStats } from "#pi/runtime/stats-export";
 import { ToolManager } from "#pi/runtime/tool-manager";
@@ -89,8 +92,6 @@ import {
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "#pi/session/manager";
 import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
-import { expandPromptTemplate, type PromptTemplate } from "#pi/skills/prompt-templates";
-import type { SlashCommandInfo } from "#pi/skills/slash-commands";
 import type { SubagentManager } from "#pi/subagents/manager";
 import { createToolDefinitions } from "#pi/tools/default-tools";
 import { toToolDefinition } from "#pi/tools/utils";

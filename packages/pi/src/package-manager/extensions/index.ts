@@ -44,6 +44,8 @@ export type {
 	SetLabelHandler,
 	SetModelHandler,
 	SetThinkingLevelHandler,
+	SlashCommandInfo,
+	SlashCommandSource,
 	ToolInfo,
 } from "#pi/api/extension-types";
 export type { ProviderConfig, ProviderModelConfig } from "#pi/api/provider-types";
@@ -146,4 +148,3 @@ export { ExtensionRunner } from "#pi/package-manager/extensions/runner";
 export { wrapRegisteredTool, wrapRegisteredTools } from "#pi/package-manager/extensions/wrapper";
 export type { SourceInfo } from "#pi/package-manager/source-info";
 export type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
-export type { SlashCommandInfo, SlashCommandSource } from "#pi/skills/slash-commands";
