@@ -440,6 +440,7 @@ describe("AgentSession concurrent prompt guard", () => {
 		const snapshots: string[][] = [];
 
 		const sessionWithRunner = session as unknown as {
+			_agentToolHookDisposer?: () => void;
 			_extensionRunner?: {
 				hasHandlers: (eventType: string) => boolean;
 				emit: (event: { type: string; message?: { role?: string } }) => Promise<void>;
@@ -477,9 +478,8 @@ describe("AgentSession concurrent prompt guard", () => {
 			emitBeforeAgentStart: async () => undefined,
 			invalidate: () => {},
 		};
-		// The session installs agent tool hooks against the real runner during
-		// construction; rebind them to the mocked runner so emitToolCall is exercised
-		// through the agent-level beforeToolCall bridge.
+		// Replace the construction-time bridge with the mocked runner.
+		sessionWithRunner._agentToolHookDisposer?.();
 		installAgentToolHooks(
 			agent,
 			sessionWithRunner._extensionRunner as unknown as Parameters<typeof installAgentToolHooks>[1],

@@ -88,6 +88,7 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 - [Agent Profiles](agents/agent-profiles.md) - Named agent configurations with model and tool overrides.
 - [Configuration](config/config.md) - Settings hierarchy and resolution.
 - [Events](runtime/events.md) - Agent lifecycle and UI event system.
+- [Hook architecture](runtime/hooks.md) - Package ownership, registration, and lifecycle boundaries.
 - [LSP](tools/lsp/lsp.md) - Language Server Protocol integration.
 - [Messages](api/messages.md) - Agent message types.
 - [Package manager](package-manager/package-manager.md) - Pi package distribution.

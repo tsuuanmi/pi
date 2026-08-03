@@ -9,6 +9,11 @@ export * from "#agent/messages/state";
 export * from "#agent/metadata/receipt";
 export * from "#agent/runtime/config";
 export * from "#agent/runtime/events";
+export type {
+	AgentHook,
+	AgentRunHookContext,
+	AgentRunResultHookContext,
+} from "#agent/runtime/hooks";
 export * from "#agent/runtime/runtime";
 export type { AgentRunOptions, AgentRunResult } from "#agent/runtime/types";
 export * from "#agent/subagents/factory";

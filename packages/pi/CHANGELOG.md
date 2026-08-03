@@ -19,6 +19,8 @@
 
 ### Changed
 
+- **api**: Removed the stale `serializeJsonLine` root export; node JSONL utilities are imported from `@tsuuanmi/pi-agent/node`.
+- **extensions**: Agent tool interception is now installed through `Agent.registerHook()`; Pi remains the host adapter and no longer assigns agent hook callbacks directly.
 - **models**: Custom provider model configs now accept image input metadata and `max`/`ultra` thinking-level mappings.
 
 ### Fixed

@@ -1,10 +1,12 @@
 # Events
 
-Pi event system for extensions and the TUI.
+Pi's host event system for extensions and the TUI.
 
 ## Overview
 
-The event system provides a typed publish-subscribe event bus for agent lifecycle, tool execution, and UI updates. Events are emitted by the agent and can be subscribed to by extensions and UI components.
+The Pi event bus adapts agent lifecycle and tool execution events for extensions and UI components. The host bus owns session and UI context; the host does not replace the host-neutral `AgentEvent` stream or agent execution hooks provided by `@tsuuanmi/pi-agent`.
+
+See [Hook architecture](hooks.md) for package ownership and registration boundaries.
 
 ## EventBus
 
@@ -55,7 +57,7 @@ Handlers may be `async`. The bus awaits each handler in order. Errors in async h
 
 ## Event Channels
 
-Extensions subscribe to events using the `ctx.on()` method. See the [Extensions](../extensions/extensions.md) documentation for the full list of event channels and hook signatures.
+Extensions subscribe to host events using the `ctx.on()` method. Agent-level policies use `Agent.registerHook()` instead. See the [Extensions](../extensions/extensions.md) documentation for the full list of event channels and hook signatures.
 
 ## See Also
 

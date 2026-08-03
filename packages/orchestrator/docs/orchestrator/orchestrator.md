@@ -1,6 +1,6 @@
 # Orchestrator
 
-The `Orchestrator` runs explicit task DAGs with dependency-aware scheduling, agent assignment, retries, abort handling, trace hooks, and production progress events.
+The `Orchestrator` runs explicit task DAGs with dependency-aware scheduling, agent assignment, retries, abort handling, trace hooks, and production progress events. Its hooks are task and run policies; they are separate from agent execution hooks and Pi extension hooks. See [Hook architecture](../../../pi/docs/runtime/hooks.md) for the package boundary.
 
 ## Planning model
 

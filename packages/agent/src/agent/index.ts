@@ -18,12 +18,7 @@ import {
 } from "#agent/agent/structured-output";
 import type { AgentMessage, AgentState } from "#agent/messages/state";
 import type {
-	AfterToolCallContext,
-	AfterToolCallResult,
 	AgentLoopConfig,
-	AgentLoopTurnUpdate,
-	BeforeToolCallContext,
-	BeforeToolCallResult,
 	ProviderRequestObserver,
 	QueueMode,
 	RequestIdFactory,
@@ -43,6 +38,7 @@ import {
 import type { AgentRunOptions, AgentRunResult } from "#agent/runtime/types";
 import { createToolRegistry, type RegisterToolOptions, registerTool as registerToolSet } from "#agent/tool/registry";
 import type { AgentContext, AgentTool } from "#agent/tool/types";
+import { type AgentHook, AgentHookRegistry, createLoopHooks, runAfterHooks, runBeforeHooks } from "../runtime/hooks.js";
 
 export type { QueueMode } from "#agent/runtime/config";
 
@@ -139,20 +135,9 @@ export interface AgentOptions {
 	createRequestId?: RequestIdFactory;
 	/** Maximum duration for one provider request. */
 	requestTimeoutMs?: number;
-	beforeRun?: (
-		context: { agent: Agent; input?: string; metadata?: Record<string, unknown> },
-		signal?: AbortSignal,
-	) => void | Promise<void>;
-	afterRun?: (
-		context: { agent: Agent; result?: AgentRunResult; error?: unknown; metadata?: Record<string, unknown> },
-		signal?: AbortSignal,
-	) => void | Promise<void>;
+	/** Initial agent lifecycle and execution hooks. */
+	hooks?: readonly AgentHook[];
 	extractStructured?: (output: string) => unknown;
-	beforeToolCall?: (context: BeforeToolCallContext, signal?: AbortSignal) => Promise<BeforeToolCallResult | undefined>;
-	afterToolCall?: (context: AfterToolCallContext, signal?: AbortSignal) => Promise<AfterToolCallResult | undefined>;
-	prepareNextTurn?: (
-		signal?: AbortSignal,
-	) => Promise<AgentLoopTurnUpdate | undefined> | AgentLoopTurnUpdate | undefined;
 	steeringMode?: QueueMode;
 	followUpMode?: QueueMode;
 	sessionId?: string;
@@ -234,6 +219,7 @@ export class Agent {
 	private _state: MutableAgentState;
 	private readonly listeners = new Set<(event: AgentEvent, signal: AbortSignal) => Promise<void> | void>();
 	private readonly initialOptions: AgentOptions;
+	private readonly hookRegistry: AgentHookRegistry;
 	private taskRunQueue: Promise<void> = Promise.resolve();
 
 	readonly name: string;
@@ -252,20 +238,7 @@ export class Agent {
 	public now: RuntimeClock;
 	public createRequestId?: RequestIdFactory;
 	public requestTimeoutMs?: number;
-	public beforeRun?: AgentOptions["beforeRun"];
-	public afterRun?: AgentOptions["afterRun"];
 	public extractStructured?: AgentOptions["extractStructured"];
-	public beforeToolCall?: (
-		context: BeforeToolCallContext,
-		signal?: AbortSignal,
-	) => Promise<BeforeToolCallResult | undefined>;
-	public afterToolCall?: (
-		context: AfterToolCallContext,
-		signal?: AbortSignal,
-	) => Promise<AfterToolCallResult | undefined>;
-	public prepareNextTurn?: (
-		signal?: AbortSignal,
-	) => Promise<AgentLoopTurnUpdate | undefined> | AgentLoopTurnUpdate | undefined;
 	private activeRun?: ActiveRun;
 	private disposed = false;
 	private disposePromise?: Promise<void>;
@@ -291,6 +264,7 @@ export class Agent {
 
 	constructor(options: AgentOptions = {}) {
 		this.initialOptions = options;
+		this.hookRegistry = new AgentHookRegistry(options.hooks);
 		this.name = options.name ?? "agent";
 		this.capabilities = options.capabilities?.slice() ?? [];
 		this._state = createMutableAgentState(options.initialState);
@@ -305,12 +279,7 @@ export class Agent {
 		this.now = options.now ?? Date.now;
 		this.createRequestId = options.createRequestId;
 		this.requestTimeoutMs = options.requestTimeoutMs;
-		this.beforeRun = options.beforeRun;
-		this.afterRun = options.afterRun;
 		this.extractStructured = options.extractStructured;
-		this.beforeToolCall = options.beforeToolCall;
-		this.afterToolCall = options.afterToolCall;
-		this.prepareNextTurn = options.prepareNextTurn;
 		this.steeringQueue = new PendingMessageQueue(options.steeringMode ?? "one-at-a-time");
 		this.followUpQueue = new PendingMessageQueue(options.followUpMode ?? "one-at-a-time");
 		this.sessionId = options.sessionId;
@@ -337,6 +306,12 @@ export class Agent {
 	subscribe(listener: (event: AgentEvent, signal: AbortSignal) => Promise<void> | void): () => void {
 		this.listeners.add(listener);
 		return () => this.listeners.delete(listener);
+	}
+
+	/** Register an agent lifecycle or execution hook. */
+	registerHook(hook: AgentHook): () => void {
+		this.assertNotDisposed();
+		return this.hookRegistry.register(hook);
 	}
 
 	/**
@@ -465,9 +440,14 @@ export class Agent {
 		this.disposeController.abort();
 		this.abort();
 		this.disposePromise = (async () => {
-			await this.waitForIdle();
-			await this.taskRunQueue;
-			await this.runtime.dispose?.();
+			try {
+				await this.waitForIdle();
+				await this.taskRunQueue;
+				await this.runtime.dispose?.();
+			} finally {
+				this.hookRegistry.clear();
+				this.listeners.clear();
+			}
 		})();
 		return this.disposePromise;
 	}
@@ -489,25 +469,38 @@ export class Agent {
 			this.assertNotDisposed();
 			const clone = this.createIsolatedRunAgent();
 			const signal = createAbortSignal([options.signal, this.disposeController.signal]);
-			await clone.beforeRun?.({ agent: clone, input, metadata: options.metadata }, signal);
+			const hooks = clone.hookRegistry.snapshot();
+			await runBeforeHooks(hooks, { agent: clone, input, metadata: options.metadata }, signal);
+
+			let result: AgentRunResult;
+			let failed = false;
 			try {
 				await clone.prompt(input, { signal });
 				const assistant = clone.findLastAssistantMessage();
 				const output = assistant ? getAssistantText(assistant) : "";
 				const structured = this.extractStructured?.(output);
-				const result: AgentRunResult = {
+				result = {
 					success: !clone.state.errorMessage,
 					output,
 					...(structured !== undefined ? { structured } : {}),
 					...(clone.state.errorMessage ? { error: clone.state.errorMessage } : {}),
 				};
-				await clone.afterRun?.({ agent: clone, result, metadata: options.metadata }, signal);
-				return result;
 			} catch (error) {
-				const result: AgentRunResult = { success: false, output: "", error };
-				await clone.afterRun?.({ agent: clone, result, error, metadata: options.metadata }, signal);
-				return result;
+				failed = true;
+				result = { success: false, output: "", error };
 			}
+
+			await runAfterHooks(
+				hooks,
+				{
+					agent: clone,
+					result,
+					...(failed ? { error: result.error } : {}),
+					metadata: options.metadata,
+				},
+				signal,
+			);
+			return result;
 		};
 
 		return this.enqueueTaskRun(execute);
@@ -610,12 +603,8 @@ export class Agent {
 			now: this.now,
 			createRequestId: this.createRequestId,
 			requestTimeoutMs: this.requestTimeoutMs,
-			beforeRun: this.beforeRun,
-			afterRun: this.afterRun,
+			hooks: this.hookRegistry.snapshot(),
 			extractStructured: this.extractStructured,
-			beforeToolCall: this.beforeToolCall,
-			afterToolCall: this.afterToolCall,
-			prepareNextTurn: this.prepareNextTurn,
 			steeringMode: this.steeringMode,
 			followUpMode: this.followUpMode,
 			sessionId: this.sessionId,
@@ -721,6 +710,7 @@ export class Agent {
 
 	private createLoopConfig(options: { skipInitialSteeringPoll?: boolean } = {}): AgentLoopConfig {
 		let skipInitialSteeringPoll = options.skipInitialSteeringPoll === true;
+		const loopHooks = createLoopHooks(this.hookRegistry.snapshot(), () => this.signal);
 		return {
 			model: this._state.model,
 			reasoning: this._state.thinkingLevel === "off" ? undefined : this._state.thinkingLevel,
@@ -738,9 +728,7 @@ export class Agent {
 			maxToolOutputChars: this.maxToolOutputChars,
 			loopDetection: this.loopDetection,
 			maxTurns: this.maxTurns,
-			beforeToolCall: this.beforeToolCall,
-			afterToolCall: this.afterToolCall,
-			prepareNextTurn: this.prepareNextTurn ? async () => await this.prepareNextTurn?.(this.signal) : undefined,
+			...loopHooks,
 			convertToLlm: this.convertToLlm,
 			transformContext: this.transformContext,
 			getApiKey: this.getApiKey,

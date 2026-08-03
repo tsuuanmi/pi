@@ -42,6 +42,7 @@ Extensions are TypeScript modules that extend pi's behavior. They can subscribe 
 - [ExtensionContext](#extensioncontext)
 - [ExtensionCommandContext](#extensioncommandcontext)
 - [ExtensionAPI Methods](#extensionapi-methods)
+- [Hook boundary](#hook-boundary)
 - [State Management](#state-management)
 - [Custom Tools](#custom-tools)
 - [Custom UI](#custom-ui)
@@ -148,6 +149,12 @@ For distributed pi packages installed with `pi install` (npm or git), runtime de
 Node.js built-ins (`node:fs`, `node:path`, etc.) are also available.
 
 The `@tsuuanmi/pi` import is a dedicated extension surface. It does not expose CLI, mode, or runtime-construction modules; use the documented extension contracts and helpers only.
+
+## Hook boundary
+
+Extension hooks belong to Pi because they carry host context such as sessions, UI, package loading, and extension identity. Agent-level execution hooks belong to `@tsuuanmi/pi-agent` and are exposed through `Agent.registerHook()`; extensions reach them through Pi's adapter rather than importing agent internals.
+
+Workflow packages register workflow-specific handlers through their own narrow host interfaces. See [Hook architecture](../runtime/hooks.md) for the package ownership and registration model.
 
 ## Writing an Extension
 

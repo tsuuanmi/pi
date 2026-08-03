@@ -151,6 +151,33 @@ describe("agent reliability helpers", () => {
 		expect(events).toContain("structured_output");
 	});
 
+	test("runs registered lifecycle hooks in isolated runs", async () => {
+		const phases: string[] = [];
+		const agent = new Agent({
+			initialState: { model, systemPrompt: "test", tools: [] },
+			streamFn: () => doneStream(assistantText("done")),
+		});
+		const hook = {
+			name: "lifecycle",
+			beforeRun: async () => {
+				phases.push("before");
+			},
+			afterRun: async () => {
+				phases.push("after");
+			},
+		};
+		const removeHook = agent.registerHook(hook);
+		expect(() => agent.registerHook(hook)).toThrow("already registered");
+
+		const result = await agent.run("start");
+
+		removeHook();
+		agent.registerHook(hook);
+
+		expect(result.success).toBe(true);
+		expect(phases).toEqual(["before", "after"]);
+	});
+
 	test("normalizes loop detection windows and tool-call order", () => {
 		const options = normalizeLoopDetectionOptions({ maxRepeats: 3, windowSize: 1 });
 		expect(options?.windowSize).toBe(3);
@@ -394,7 +421,12 @@ describe("agent reliability helpers", () => {
 		tool.detailsSchema = Type.Object({ count: Type.Number() });
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [tool] },
-			afterToolCall: async () => ({ details: { count: "one" } }),
+			hooks: [
+				{
+					name: "invalid-details",
+					afterToolCall: async () => ({ details: { count: "one" } }),
+				},
+			],
 			streamFn: () => {
 				streamCalls += 1;
 				return doneStream(

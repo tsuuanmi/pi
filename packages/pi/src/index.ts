@@ -1,7 +1,5 @@
 // Core session management
 
-// JSONL utilities
-export { serializeJsonLine } from "@tsuuanmi/pi-agent/node";
 // Theme utilities for custom tools and extensions
 export {
 	getLanguageFromPath,

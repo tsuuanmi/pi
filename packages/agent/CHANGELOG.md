@@ -4,6 +4,7 @@
 
 - **tool**: Renamed structured tool receipt helpers from built-in-specific names to standard protocol names and changed receipt sources to generic `tool` and `session` values.
 - **extensions**: Removed the shared extension contract surface from `@tsuuanmi/pi-agent`; the public Pi extension API now owns extension hook registration and actions.
+- **hooks**: Replaced the individual `AgentOptions` lifecycle and tool hook callbacks with named `AgentHook` registrations through `Agent.registerHook()`.
 - **agent**: Collapsed the split simple/runtime Agent surface into one public runtime-capable `Agent`; `RuntimeAgent` is no longer exported.
 - **agent**: Standardized custom runtimes on `AgentRuntime.stream()` and removed split `runPrompt()`/`continue()` runtime methods.
 - **agent**: Standardized the public tool module on `src/tool`, with `createToolRegistry()`, `registerTool()`, `Agent.registerTool()`, and `RegisterToolOptions`.
@@ -36,6 +37,7 @@
 - **tool**: Added opt-in TypeBox validation for tool result details.
 - **agent**: Added context-pruning helpers for sliding-window transforms that preserve assistant tool calls with matching tool results.
 - **agent**: Added isolated `run()`, state/history accessors, lifecycle run hooks, status tracing events, capabilities, and per-agent task serialization.
+- **hooks**: Added ordered, disposable `AgentHook` registrations with isolated-run propagation and typed tool/turn hook composition.
 - **orchestrator**: Added strict goal-to-DAG planning with explicit coordinator agents, exact dependency preservation, abortable planning, plan-time cycle rejection, dependency-aware pipelining, composite scheduling, structured dependency handoffs, task priority ordering, and retry-aware task execution.
 - **orchestrator**: Added progress events, trace hooks, dispatch gating, abort-aware retry delays, aborted run status, per-task execution metrics, coarse run budgets with in-flight timeout aborts, validated checkpoint resume support, task verification hooks, strict consensus verification helpers, and failure-policy short-circuiting.
 - **orchestrator**: Added explicit run identity correlation across events, traces, checkpoints, and run results with version 2 checkpoint schema validation.

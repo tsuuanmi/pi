@@ -35,12 +35,8 @@ const agent = new Agent({
 | `now` | `() => number` | `Date.now` | Clock for agent-created timestamps and runtime request timestamps |
 | `createRequestId` | `(sequence, startedAt) => string` | Standard `llm_*` ids | Provider request id factory |
 | `requestTimeoutMs` | `number` | — | Maximum duration for one provider request |
-| `beforeRun` | `(context, signal?) => void` | — | Hook before isolated `run()` execution |
-| `afterRun` | `(context, signal?) => void` | — | Hook after isolated `run()` execution |
+| `hooks` | `readonly AgentHook[]` | `[]` | Agent lifecycle and execution hooks, applied in registration order |
 | `extractStructured` | `(output) => unknown` | — | Optional extraction for structured task/orchestration payloads |
-| `beforeToolCall` | `(context, signal?) => BeforeToolCallResult` | — | Pre-execution hook |
-| `afterToolCall` | `(context, signal?) => AfterToolCallResult` | — | Post-execution hook |
-| `prepareNextTurn` | `(signal?) => AgentLoopTurnUpdate` | Turn snapshot update hook (signal is the active abort signal) |
 | `steeringMode` | `"all" \| "one-at-a-time"` | `"one-at-a-time"` | How steering messages are drained |
 | `followUpMode` | `"all" \| "one-at-a-time"` | `"one-at-a-time"` | How follow-up messages are drained |
 | `sessionId` | `string` | — | Session identifier for cache-aware backends |
@@ -66,6 +62,26 @@ agent.state.errorMessage   // Error message from last failed/aborted turn
 ```
 
 Assigning `state.tools` or `state.messages` copies the top-level array.
+
+## Hooks
+
+Register typed lifecycle and execution hooks with `registerHook()`. Registration order is execution order. A hook name must be unique for an agent, and registration returns a disposer.
+
+```typescript
+const removeHook = agent.registerHook({
+  name: "policy",
+  beforeToolCall: async (context) => {
+    if (context.toolCall.name === "dangerous") {
+      return { block: true, reason: "Operation blocked" };
+    }
+    return undefined;
+  },
+});
+
+removeHook();
+```
+
+`subscribe()` remains the event observation API. Agent hooks are copied into isolated `run()` agents; event subscriptions remain attached to their original agent instance.
 
 ## Prompting
 

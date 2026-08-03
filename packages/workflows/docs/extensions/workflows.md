@@ -1,20 +1,17 @@
 # Workflows Integration
 
-`@tsuuanmi/pi-workflows/register` exposes the bundled workflow integration for Pi hosts. The registration entry point owns workflow tool registration, workflow lifecycle hook wiring, HUD refresh triggers, and the Deep Interview mutation guard.
+`@tsuuanmi/pi-workflows/register` exposes the bundled workflow integration for Pi hosts. The package owns workflow tools and workflow policy; Pi supplies the host capabilities and context.
 
 Pi's bundled extension is a thin adapter at `packages/pi/src/package-manager/extensions/builtin-workflows.ts`; it imports `registerWorkflows` and passes the Pi extension API host through unchanged.
 
 ## Registration
 
-`registerWorkflows(host)` registers:
+`registerWorkflows(host)` composes two independent registrars:
 
-- Generic subagent lifecycle tools from `src/subagents/subagent-tools.ts`.
-- Deep Interview state tools from `src/skills/deep-interview/tools.ts`.
-- Guarded workflow spawn tools from `src/skills/ralplan/tools.ts`, `src/skills/team/tools.ts`, and `src/skills/ultragoal/tools.ts`.
-- HUD refresh hooks for workflow-visible state changes.
-- The Deep Interview mutation guard for `edit`, `write`, and `bash` tool calls.
+- `registerWorkflowTools(host)` registers generic subagent lifecycle tools, Deep Interview state tools, and guarded workflow spawn tools.
+- `registerWorkflowHooks(host)` from `@tsuuanmi/pi-workflows/hooks` registers HUD refresh hooks and the Deep Interview mutation guard for `edit`, `write`, and `bash` tool calls.
 
-`@tsuuanmi/pi-workflows/tools/workflow-tools` remains the lower-level tool registration helper for custom hosts that need tools without bundled hook integration.
+`@tsuuanmi/pi-workflows/tools/workflow-tools` remains the lower-level tool registration helper for custom hosts that need tools without workflow hook integration.
 
 ## Model-Visible Tools
 
@@ -22,7 +19,9 @@ Registered tools are documented in [subagents/subagents.md](../subagents/subagen
 
 ## Hook Actions
 
-Workflow-owned hook actions live in the workflows package. Pi provides the host extension API and does not import skill-specific workflow internals.
+Workflow hook actions live in `src/hooks.ts` and use `WorkflowHookHost`. They receive only workflow-relevant session and UI context. The generic agent hook mechanism lives in `@tsuuanmi/pi-agent`; workflow hooks do not move that host context into the agent package.
+
+Pi's bundled extension remains an adapter: it passes its host capabilities to `registerWorkflows()` and does not implement workflow policy.
 
 ## See Also
 

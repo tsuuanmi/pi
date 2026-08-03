@@ -132,23 +132,28 @@ The `providerRequestObserver` config option receives lifecycle events:
 
 Observer failures are silently ignored and do not affect the loop.
 
-## `prepareNextTurn`
+## Registered execution hooks
+
+Hooks are registered with `Agent.registerHook()` and run in registration order. A hook can observe or control an execution phase without exposing host or extension types to the agent runtime.
+
+### `prepareNextTurn`
 
 Called after `turn_end` and before the loop decides whether another provider request should start. Return an `AgentLoopTurnUpdate` to replace the context, model, and/or thinking level for the next turn; return `undefined` to keep the current values. `reasoning` is derived from `thinkingLevel` (`undefined` when `"off"`).
-
-## `beforeToolCall` and `afterToolCall`
 
 ### `beforeToolCall`
 
 Called after arguments are validated but before execution:
 
 ```typescript
-beforeToolCall: async (context, signal) => {
-  if (isDangerous(context.toolCall.name)) {
-    return { block: true, reason: "Dangerous operation blocked" };
-  }
-  return undefined;
-}
+agent.registerHook({
+  name: "policy",
+  beforeToolCall: async (context, signal) => {
+    if (isDangerous(context.toolCall.name)) {
+      return { block: true, reason: "Dangerous operation blocked" };
+    }
+    return undefined;
+  },
+});
 ```
 
 Return `{ block: true }` to prevent execution. The loop emits an error tool result with `reason` (or a default blocked message) instead. If the abort signal fires during the hook, the loop emits an aborted error tool result.
@@ -158,12 +163,15 @@ Return `{ block: true }` to prevent execution. The loop emits an error tool resu
 Called after a tool finishes executing, before `tool_execution_end` and tool-result message events are emitted. If the tool declares `detailsSchema`, details are validated after this hook applies any replacement. Invalid details produce a deterministic failed tool result. Final tool events include a protocol-level span with tool call timing and status; concrete tool implementations stay in host packages and are only registered with this runtime.
 
 ```typescript
-afterToolCall: async (context, signal) => ({
-  content: overrideContent,   // Replace content array
-  details: overrideDetails,  // Replace details
-  isError: false,             // Override error flag
-  terminate: false,           // Override early-termination hint
-})
+agent.registerHook({
+  name: "result-policy",
+  afterToolCall: async (context, signal) => ({
+    content: overrideContent,  // Replace content array
+    details: overrideDetails,  // Replace details
+    isError: false,             // Override error flag
+    terminate: false,           // Override early-termination hint
+  }),
+});
 ```
 
 Omitted fields keep their original values. No deep merge is performed. If the hook itself throws, the loop replaces the result with an error tool result and marks it `isError`.

@@ -305,6 +305,7 @@ export class AgentSession {
 
 	// Extension system
 	private _extensionRunner!: ExtensionRunner;
+	private _agentToolHookDisposer?: () => void;
 	private _turnIndex = 0;
 
 	private _resourceLoader: ResourceLoader;
@@ -434,9 +435,10 @@ export class AgentSession {
 		return result.ok ? { apiKey: result.apiKey, headers: result.headers, env: result.env } : {};
 	}
 
-	/** Install tool hooks once on the Agent instance. */
+	/** Install the current extension bridge on the Agent instance. */
 	private _installAgentToolHooks(): void {
-		installAgentToolHooks(this.agent, this._extensionRunner);
+		this._agentToolHookDisposer?.();
+		this._agentToolHookDisposer = installAgentToolHooks(this.agent, this._extensionRunner);
 	}
 
 	// =========================================================================
