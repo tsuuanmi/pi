@@ -3,7 +3,7 @@ import {
 	type AgentProfileLoadResult,
 	type LoadedAgentProfile,
 	loadAgentDefinitions,
-} from "#pi/agents/agent-definitions";
+} from "#pi/agent/definitions";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 
 export interface AgentProfile {

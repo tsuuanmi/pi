@@ -7,7 +7,7 @@ import {
 	type AgentProfileLoadResult,
 	type LoadedAgentProfile,
 	loadAgentDefinitions,
-} from "#pi/agents/agent-definitions";
+} from "#pi/agent/definitions";
 import { CONFIG_DIR_NAME } from "#pi/config/config";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 import { loadProjectContextFiles } from "#pi/resources/context-files";

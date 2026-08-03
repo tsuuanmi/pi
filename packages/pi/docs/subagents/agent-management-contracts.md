@@ -19,8 +19,8 @@ These are the intended ownership boundaries. If implementation chooses different
 
 | Contract area | Primary owner | Related owners |
 | --- | --- | --- |
-| Resource/discovery ownership and provider precedence | `packages/pi/src/resources/resource-loader.ts` | `src/agents/agent-profiles.ts`, `src/skills/skills.ts`, `src/skills/prompt-templates.ts`, `src/package-manager/package-manager.ts` |
-| Agent definition parsing | `packages/pi/src/agents/agent-definitions.ts` | `src/agents/agent-profiles.ts`, bundled role-agent prompt assets if added |
+| Resource/discovery ownership and provider precedence | `packages/pi/src/resources/resource-loader.ts` | `src/agent/profiles.ts`, `src/skills/skills.ts`, `src/skills/prompt-templates.ts`, `src/package-manager/package-manager.ts` |
+| Agent definition parsing | `packages/pi/src/agent/definitions.ts` | `src/agent/profiles.ts`, bundled role-agent prompt assets if added |
 | Project resource loading | `packages/pi/src/settings/settings-manager.ts` and `src/resources/resource-loader.ts` | `packages/pi/docs/security.md` |
 | Source metadata and diagnostics | `packages/pi/src/package-manager/source-info.ts` and `src/package-manager/resource-diagnostics.ts` | resource-specific loaders |
 | Scoped live registry | `packages/pi/src/runtime/services.ts` and `packages/pi/src/subagents/subagents.ts` | `src/runtime/agent.ts`, `src/api/types.ts` |

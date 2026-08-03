@@ -34,7 +34,7 @@ import {
 } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type { Api, AssistantMessage, Model } from "@tsuuanmi/pi-ai";
-import { type AgentProfile, loadAgentProfile } from "#pi/agents/agent-profiles";
+import { type AgentProfile, loadAgentProfile } from "#pi/agent/profiles";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
 import type { AgentSession } from "#pi/runtime/agent";
 import {

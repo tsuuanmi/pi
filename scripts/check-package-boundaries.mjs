@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
 
 const packageRoots = {
 	"@tsuuanmi/pi-ai": "packages/ai",
@@ -47,6 +47,8 @@ const internalRules = [
 ];
 const importPattern = /(?:import|export)\s+(?:type\s+)?(?:[^"'()]*?\s+from\s+)?["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)/g;
 const failures = [];
+const manifests = new Map();
+const buildConfigs = new Map();
 
 for (const [owner, root] of Object.entries(packageRoots)) {
 	const src = join(root, "src");
@@ -69,8 +71,33 @@ function checkFile(owner, file) {
 	for (const specifier of importSpecifiers(text)) {
 		const target = targetPackage(specifier);
 		if (!target || target === owner) continue;
-		if (allowedImports[owner]?.has(target)) continue;
-		failures.push(`${relative(process.cwd(), file)}: ${specifier} is not allowed in ${owner}`);
+		if (!allowedImports[owner]?.has(target)) {
+			failures.push(`${relative(process.cwd(), file)}: ${specifier} is not allowed in ${owner}`);
+			continue;
+		}
+		checkPackageImport(owner, file, specifier, target);
+	}
+}
+
+function checkPackageImport(owner, file, specifier, target) {
+	const manifest = manifests.get(owner) ?? {};
+	const dependencies = new Set([
+		...Object.keys(manifest.dependencies ?? {}),
+		...Object.keys(manifest.peerDependencies ?? {}),
+	]);
+	if (!dependencies.has(target)) {
+		failures.push(`${relative(process.cwd(), file)}: ${specifier} requires a direct dependency on ${target}`);
+	}
+
+	const config = buildConfigs.get(owner);
+	if (!hasPathAlias(config, specifier)) {
+		failures.push(`${relative(process.cwd(), file)}: ${specifier} has no matching tsconfig.build.json path in ${owner}`);
+	} else if (!pathAliasTargetsPackage(owner, config, specifier, target)) {
+		failures.push(`${relative(process.cwd(), file)}: ${specifier} resolves outside ${target} in ${owner}'s tsconfig.build.json`);
+	}
+
+	if (!isPublishedImport(target, specifier)) {
+		failures.push(`${relative(process.cwd(), file)}: ${specifier} is not a published export of ${target}`);
 	}
 }
 
@@ -80,6 +107,92 @@ function checkInternalFile(rule, file) {
 		if (rule.forbidden.some((prefix) => specifier.startsWith(prefix))) {
 			failures.push(`${relative(process.cwd(), file)}: ${specifier} violates its internal boundary`);
 		}
+	}
+}
+
+function checkAllowedGraph() {
+	const visiting = new Set();
+	const visited = new Set();
+	const stack = [];
+
+	function visit(owner) {
+		if (visited.has(owner)) return;
+		if (visiting.has(owner)) {
+			const cycleStart = stack.indexOf(owner);
+			const cycle = [...stack.slice(cycleStart), owner].join(" -> ");
+			failures.push(`allowed package graph contains a cycle: ${cycle}`);
+			return;
+		}
+
+		visiting.add(owner);
+		stack.push(owner);
+		for (const target of allowedImports[owner] ?? []) visit(target);
+		stack.pop();
+		visiting.delete(owner);
+		visited.add(owner);
+	}
+
+	for (const owner of Object.keys(packageRoots)) visit(owner);
+}
+
+function hasPathAlias(config, specifier) {
+	const paths = config?.compilerOptions?.paths;
+	if (!paths || typeof paths !== "object") return false;
+	return Object.keys(paths).some((pattern) => matchesPathPattern(pattern, specifier));
+}
+
+function pathAliasTargetsPackage(owner, config, specifier, target) {
+	const paths = config?.compilerOptions?.paths;
+	if (!paths || typeof paths !== "object") return false;
+	const pattern = Object.keys(paths).find((candidate) => matchesPathPattern(candidate, specifier));
+	if (!pattern) return false;
+
+	const configuredPaths = paths[pattern];
+	if (!Array.isArray(configuredPaths)) return false;
+	const targetRoot = resolve(packageRoots[target]);
+	return configuredPaths.some((configuredPath) => {
+		if (typeof configuredPath !== "string") return false;
+		const placeholder = configuredPath.replaceAll("*", "__pi_boundary__");
+		const resolvedPath = resolve(packageRoots[owner], placeholder);
+		return resolvedPath.startsWith(`${targetRoot}/dist/`);
+	});
+}
+
+function matchesPathPattern(pattern, specifier) {
+	if (pattern === specifier) return true;
+	return pattern.endsWith("/*") && specifier.startsWith(pattern.slice(0, -1));
+}
+
+function isPublishedImport(target, specifier) {
+	const manifest = manifests.get(target) ?? {};
+	const suffix = specifier.slice(target.length);
+	const subpath = suffix ? `.${suffix}` : ".";
+	const exportsField = manifest.exports;
+	if (exportsField === undefined || typeof exportsField === "string") return subpath === ".";
+	if (!exportsField || typeof exportsField !== "object") return false;
+
+	const exportKeys = Object.keys(exportsField);
+	if (!exportKeys.some((key) => key.startsWith("."))) return subpath === ".";
+	return exportKeys.some((key) => {
+		if (key === subpath) return true;
+		return key.endsWith("/*") && subpath.startsWith(key.slice(0, -1));
+	});
+}
+
+function readJsonFile(path, label) {
+	try {
+		return JSON.parse(readFileSync(path, "utf8"));
+	} catch {
+		failures.push(`${label}: unable to read ${relative(process.cwd(), path)}`);
+		return {};
+	}
+}
+
+function readJsonFileIfPresent(path) {
+	try {
+		return JSON.parse(readFileSync(path, "utf8"));
+	} catch {
+		return undefined;
 	}
 }
 

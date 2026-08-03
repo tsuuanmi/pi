@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { canonicalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { AgentProfile } from "#pi/agents/agent-profiles";
+import type { AgentProfile } from "#pi/agent/profiles";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 import { parseFrontmatter } from "#pi/utils/fs/index";
 
