@@ -7,7 +7,6 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, w
 import { dirname, join } from "path";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
 import { getAgentDir, getBinDir } from "#pi/loader/paths";
-import { migrateKeybindingsConfig } from "#pi/settings/keybindings";
 
 /**
  * Migrate legacy oauth.json and settings.json apiKeys to auth.json.
@@ -150,23 +149,6 @@ function migrateCommandsToPrompts(baseDir: string, label: string): boolean {
 	return false;
 }
 
-function migrateKeybindingsConfigFile(): void {
-	const configPath = join(getAgentDir(), "keybindings.json");
-	if (!existsSync(configPath)) return;
-
-	try {
-		const parsed = JSON.parse(readFileSync(configPath, "utf-8")) as unknown;
-		if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-			return;
-		}
-		const { config, migrated } = migrateKeybindingsConfig(parsed as Record<string, unknown>);
-		if (!migrated) return;
-		writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf-8");
-	} catch {
-		// Ignore malformed files during migration
-	}
-}
-
 /**
  * Move fd/rg binaries from tools/ to bin/ if they exist.
  */
@@ -233,7 +215,6 @@ export function runMigrations(cwd: string): {
 	const migratedAuthProviders = migrateAuthToAuthJson();
 	migrateSessionsFromAgentRoot();
 	migrateToolsToBin();
-	migrateKeybindingsConfigFile();
 	migrateExtensionSystem(cwd);
 	return { migratedAuthProviders };
 }

@@ -10,7 +10,6 @@ export interface ChangelogEntry {
 
 const GITHUB_REPO = "tsuuanmi/pi";
 const CHANGELOG_LINK_BASE_PATH = "packages/pi";
-const LEGACY_REPO_RE = /^https:\/\/github\.com\/(?:badlogic|tsuuanmi)\/pi-mono(?=\/|$)/;
 const URL_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
 const INLINE_MARKDOWN_LINK_RE = /(!?\[[^\]\n]+\]\()([^\s)]+)((?:\s+[^)]*)?\))/g;
 
@@ -67,30 +66,30 @@ function isDirectoryTarget(originalPath: string, repositoryPath: string): boolea
 }
 
 function normalizeChangelogLinkTarget(target: string, tag: string): string {
-	let canonicalTarget = target.replace(LEGACY_REPO_RE, `https://github.com/${GITHUB_REPO}`);
+	let normalizedTarget = target;
 	const repoUrl = `https://github.com/${GITHUB_REPO}`;
 
 	for (const route of ["blob", "tree"]) {
 		for (const branch of ["main", "master"]) {
 			const floatingRefPrefix = `${repoUrl}/${route}/${branch}/`;
-			if (canonicalTarget.startsWith(floatingRefPrefix)) {
-				canonicalTarget = `${repoUrl}/${route}/${tag}/${canonicalTarget.slice(floatingRefPrefix.length)}`;
+			if (normalizedTarget.startsWith(floatingRefPrefix)) {
+				normalizedTarget = `${repoUrl}/${route}/${tag}/${normalizedTarget.slice(floatingRefPrefix.length)}`;
 			}
 		}
 	}
 
-	if (canonicalTarget.startsWith("#") || canonicalTarget.startsWith("//") || URL_SCHEME_RE.test(canonicalTarget)) {
-		return canonicalTarget;
+	if (normalizedTarget.startsWith("#") || normalizedTarget.startsWith("//") || URL_SCHEME_RE.test(normalizedTarget)) {
+		return normalizedTarget;
 	}
 
-	const { fragment, pathPart, query } = splitLocalTarget(canonicalTarget);
+	const { fragment, pathPart, query } = splitLocalTarget(normalizedTarget);
 	if (!pathPart) {
-		return canonicalTarget;
+		return normalizedTarget;
 	}
 
 	const repositoryPath = resolveRepositoryPath(pathPart);
 	if (!repositoryPath) {
-		return canonicalTarget;
+		return normalizedTarget;
 	}
 
 	const route = isDirectoryTarget(pathPart, repositoryPath) ? "tree" : "blob";
