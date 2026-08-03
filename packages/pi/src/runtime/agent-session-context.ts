@@ -1,8 +1,8 @@
 import type { AgentState, StreamFn } from "@tsuuanmi/pi-agent";
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
-import type { ExtensionRunner } from "#pi/extensions/index";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceLoader } from "#pi/loader/resources";
+import type { ExtensionRunner } from "#pi/package-manager/extensions/index";
 import type { AgentSessionEvent } from "#pi/runtime/agent-session";
 import type { SessionManager } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";

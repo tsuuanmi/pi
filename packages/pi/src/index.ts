@@ -30,7 +30,43 @@ export {
 export { type Args, parseArgs } from "#pi/cli/args";
 // Shell utilities
 export { getShellConfig } from "#pi/execution/shell-config";
-export { createEventBus, type EventBus, type EventBusController } from "#pi/extensions/event-bus";
+// Loader exports
+export { CONFIG_DIR_NAME, VERSION } from "#pi/loader/app";
+export { loadProjectContextFiles } from "#pi/loader/context";
+export { parseFrontmatter, stripFrontmatter } from "#pi/loader/frontmatter";
+export { getDocsPath, getPackageDir, getReadmePath } from "#pi/loader/package";
+export { getAgentDir } from "#pi/loader/paths";
+export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#pi/loader/resources";
+export { DefaultResourceLoader } from "#pi/loader/resources";
+// Skills
+export {
+	type LoadSkillsFromDirOptions,
+	type LoadSkillsResult,
+	loadSkills,
+	loadSkillsFromDir,
+	type Skill,
+	type SkillFrontmatter,
+} from "#pi/loader/skill";
+// Main entry point
+export { type MainOptions, main } from "#pi/main";
+// Run modes for programmatic SDK usage
+export {
+	InteractiveMode,
+	type InteractiveModeOptions,
+	type ModelInfo,
+	type PrintModeOptions,
+	RpcClient,
+	type RpcClientOptions,
+	type RpcCommand,
+	type RpcEventListener,
+	type RpcExtensionUIRequest,
+	type RpcExtensionUIResponse,
+	type RpcResponse,
+	type RpcSessionState,
+	runPrintMode,
+	runRpcMode,
+} from "#pi/modes/index";
+export { createEventBus, type EventBus, type EventBusController } from "#pi/package-manager/extensions/event-bus";
 // Extension system
 export type {
 	AgentEndEvent,
@@ -111,7 +147,7 @@ export type {
 	WidgetPlacement,
 	WorkingIndicatorOptions,
 	WriteToolCallEvent,
-} from "#pi/extensions/index";
+} from "#pi/package-manager/extensions/index";
 export {
 	defineTool,
 	ExtensionRunner,
@@ -125,44 +161,8 @@ export {
 	isWriteToolResult,
 	wrapRegisteredTool,
 	wrapRegisteredTools,
-} from "#pi/extensions/index";
-export { createExtensionRuntime, discoverAndLoadExtensions } from "#pi/extensions/loader";
-// Loader exports
-export { CONFIG_DIR_NAME, VERSION } from "#pi/loader/app";
-export { loadProjectContextFiles } from "#pi/loader/context";
-export { parseFrontmatter, stripFrontmatter } from "#pi/loader/frontmatter";
-export { getDocsPath, getPackageDir, getReadmePath } from "#pi/loader/package";
-export { getAgentDir } from "#pi/loader/paths";
-export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#pi/loader/resources";
-export { DefaultResourceLoader } from "#pi/loader/resources";
-// Skills
-export {
-	type LoadSkillsFromDirOptions,
-	type LoadSkillsResult,
-	loadSkills,
-	loadSkillsFromDir,
-	type Skill,
-	type SkillFrontmatter,
-} from "#pi/loader/skill";
-// Main entry point
-export { type MainOptions, main } from "#pi/main";
-// Run modes for programmatic SDK usage
-export {
-	InteractiveMode,
-	type InteractiveModeOptions,
-	type ModelInfo,
-	type PrintModeOptions,
-	RpcClient,
-	type RpcClientOptions,
-	type RpcCommand,
-	type RpcEventListener,
-	type RpcExtensionUIRequest,
-	type RpcExtensionUIResponse,
-	type RpcResponse,
-	type RpcSessionState,
-	runPrintMode,
-	runRpcMode,
-} from "#pi/modes/index";
+} from "#pi/package-manager/extensions/index";
+export { createExtensionRuntime, discoverAndLoadExtensions } from "#pi/package-manager/extensions/loader";
 export type {
 	PackageManager,
 	PathMetadata,

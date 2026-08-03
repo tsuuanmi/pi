@@ -40,6 +40,7 @@ import type {
 	UserBashEvent,
 	UserBashEventResult,
 } from "#pi/api/types";
+import type { ModelRegistry } from "#pi/loader/model-registry";
 import {
 	type BeforeAgentStartCombinedResult,
 	emitBeforeAgentStartHook,
@@ -56,8 +57,7 @@ import {
 	hasExtensionHookHandlers,
 	type RunnerEmitEvent,
 	type RunnerEmitResult,
-} from "#pi/extensions/hooks/runner-dispatch";
-import type { ModelRegistry } from "#pi/loader/model-registry";
+} from "#pi/package-manager/extensions/hooks/runner-dispatch";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 import type { SessionManager } from "#pi/session/manager";
 import type { KeybindingsConfig } from "#pi/settings/keybindings";

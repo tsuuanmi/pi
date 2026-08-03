@@ -23,10 +23,10 @@ import type {
 } from "#pi/api/types";
 import type { ExecOptions } from "#pi/execution/command-executor";
 import { execCommand } from "#pi/execution/command-executor";
-import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
-import { type HookHandlerFn, registerExtensionHook } from "#pi/extensions/hooks/registration";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
 import { getAgentDir } from "#pi/loader/paths";
+import { createEventBus, type EventBus } from "#pi/package-manager/extensions/event-bus";
+import { type HookHandlerFn, registerExtensionHook } from "#pi/package-manager/extensions/hooks/registration";
 import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
 
 const require = createRequire(import.meta.url);
@@ -38,13 +38,13 @@ function getAliases(): Record<string, string> {
 	if (_aliases) return _aliases;
 
 	const __dirname = path.dirname(fileURLToPath(import.meta.url));
-	const packageIndex = path.resolve(__dirname, "..", "index.js");
+	const packageIndex = path.resolve(__dirname, "..", "..", "index.js");
 
 	const typeboxEntry = require.resolve("typebox");
 	const typeboxCompileEntry = require.resolve("typebox/compile");
 	const typeboxValueEntry = require.resolve("typebox/value");
 
-	const packagesRoot = path.resolve(__dirname, "../../../");
+	const packagesRoot = path.resolve(__dirname, "../../../../");
 	// Resolve bare @tsuuanmi/* specifiers via ESM (import.meta.resolve) so the
 	// "import" condition in their package "exports" is honored. CJS
 	// require.resolve only sees "require"/"default" conditions, which these
@@ -58,7 +58,7 @@ function getAliases(): Record<string, string> {
 	};
 
 	const piEntry = packageIndex;
-	const piConfigEntry = path.resolve(__dirname, "..", "loader", "config.js");
+	const piConfigEntry = path.resolve(__dirname, "..", "..", "loader", "config.js");
 	const piAgentEntry = resolveWorkspaceOrImport("agent/dist/index.js", "@tsuuanmi/pi-agent");
 	const piAgentNodeEntry = resolveWorkspaceOrImport("agent/dist/node/node.js", "@tsuuanmi/pi-agent/node");
 	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@tsuuanmi/pi-tui");

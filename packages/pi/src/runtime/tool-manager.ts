@@ -2,8 +2,8 @@ import type { AgentTool, ToolRegistry } from "@tsuuanmi/pi-agent";
 import { createToolRegistry, registerTool, resolveToolSelection } from "@tsuuanmi/pi-agent";
 import type { RegisteredTool, ToolInfo } from "#pi/api/extension-types";
 import type { ToolDefinition } from "#pi/api/tool-types";
-import type { ExtensionRunner } from "#pi/extensions/runner";
-import { wrapRegisteredTools } from "#pi/extensions/wrapper";
+import type { ExtensionRunner } from "#pi/package-manager/extensions/runner";
+import { wrapRegisteredTools } from "#pi/package-manager/extensions/wrapper";
 import { createSyntheticSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
 
 interface ToolEntry {

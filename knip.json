@@ -41,7 +41,7 @@
 			"entry": [
 				"src/cli.ts",
 				"src/index.ts",
-				"src/extensions/workflows.ts",
+				"src/package-manager/extensions/builtin-workflows.ts",
 				"src/utils/image-resize-worker.ts",
 				"scripts/generate-shrinkwrap.mjs",
 				"scripts/check-browser-smoke.mjs",

@@ -34,7 +34,9 @@ import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/au
 import { type BashResult, executeBashWithOperations } from "#pi/execution/bash-executor";
 import type { BashOperations } from "#pi/execution/bash-operations";
 import { createLocalBashOperations } from "#pi/execution/local-shell";
-import { installAgentToolHooks } from "#pi/extensions/hooks/tool-hooks";
+import type { ModelRegistry } from "#pi/loader/model-registry";
+import type { ResourceExtensionPaths, ResourceLoader } from "#pi/loader/resources";
+import { installAgentToolHooks } from "#pi/package-manager/extensions/hooks/tool-hooks";
 import {
 	type ContextUsage,
 	type ExtensionCommandContextActions,
@@ -57,10 +59,8 @@ import {
 	type ToolInfo,
 	type TurnEndEvent,
 	type TurnStartEvent,
-} from "#pi/extensions/index";
-import { emitSessionShutdownEvent } from "#pi/extensions/runner";
-import type { ModelRegistry } from "#pi/loader/model-registry";
-import type { ResourceExtensionPaths, ResourceLoader } from "#pi/loader/resources";
+} from "#pi/package-manager/extensions/index";
+import { emitSessionShutdownEvent } from "#pi/package-manager/extensions/runner";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
 import {
 	cycleModel as modelControlCycleModel,

@@ -56,8 +56,8 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/extensions/hooks/event-types.ts::isGlobToolResult",
-			"file": "packages/pi/src/extensions/hooks/event-types.ts",
+			"key": "packages/pi/src/package-manager/extensions/hooks/event-types.ts::isGlobToolResult",
+			"file": "packages/pi/src/package-manager/extensions/hooks/event-types.ts",
 			"name": "isGlobToolResult",
 			"kind": "exported"
 		},

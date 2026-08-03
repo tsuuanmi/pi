@@ -2,7 +2,7 @@
 
 `@tsuuanmi/pi-workflows/register` exposes the bundled workflow integration for Pi hosts. The registration entry point owns workflow tool registration, workflow lifecycle hook wiring, HUD refresh triggers, and the Deep Interview mutation guard.
 
-Pi's bundled extension is a thin adapter at `packages/pi/src/extensions/builtin-workflows.ts`; it imports `registerWorkflows` and passes the Pi extension API host through unchanged.
+Pi's bundled extension is a thin adapter at `packages/pi/src/package-manager/extensions/builtin-workflows.ts`; it imports `registerWorkflows` and passes the Pi extension API host through unchanged.
 
 ## Registration
 

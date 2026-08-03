@@ -40,9 +40,15 @@ const allowedImports = {
 const ignoredDirectories = new Set(["dist", "node_modules"]);
 const internalRules = [
 	{ directory: "packages/pi/src/api", forbidden: ["#pi/runtime/", "#pi/ui/"] },
-	{ directory: "packages/pi/src/package-manager", forbidden: ["#pi/cli/", "#pi/modes/", "#pi/ui/"] },
+	{
+		directory: "packages/pi/src/package-manager",
+		forbidden: ["#pi/cli/", "#pi/modes/", "#pi/ui/"],
+		exceptions: {
+			"packages/pi/src/package-manager/extensions/public-api.ts": ["#pi/ui/"],
+		},
+	},
 	{ directory: "packages/pi/src/subagents", forbidden: ["#pi/cli/"] },
-	{ directory: "packages/pi/src/extensions/loader.ts", forbidden: ["#pi/index"] },
+	{ directory: "packages/pi/src/package-manager/extensions/loader.ts", forbidden: ["#pi/index"] },
 ];
 const workflowManagerCallers = new Set([
 	"packages/workflows/src/subagents/subagent-tools.ts",
@@ -121,9 +127,12 @@ function checkPackageImport(owner, file, specifier, target) {
 
 function checkInternalFile(rule, file) {
 	const text = readFileSync(file, "utf8");
+	const relativeFile = relative(process.cwd(), file).replaceAll("\\\\", "/");
+	const exceptions = rule.exceptions?.[relativeFile] ?? [];
 	for (const specifier of importSpecifiers(text)) {
+		if (exceptions.some((prefix) => specifier.startsWith(prefix))) continue;
 		if (rule.forbidden.some((prefix) => specifier.startsWith(prefix))) {
-			failures.push(`${relative(process.cwd(), file)}: ${specifier} violates its internal boundary`);
+			failures.push(`${relativeFile}: ${specifier} violates its internal boundary`);
 		}
 	}
 }

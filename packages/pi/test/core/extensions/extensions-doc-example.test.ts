@@ -3,7 +3,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { ExtensionAPI, SessionBeforeCompactEvent, SessionCompactEvent } from "#pi/extensions/index";
+import type {
+	ExtensionAPI,
+	SessionBeforeCompactEvent,
+	SessionCompactEvent,
+} from "#pi/package-manager/extensions/index";
 
 describe("Documentation example", () => {
 	it("custom compaction example should type-check correctly", () => {

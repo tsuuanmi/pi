@@ -1,5 +1,5 @@
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
-import type { ContextUsage } from "#pi/extensions/index";
+import type { ContextUsage } from "#pi/package-manager/extensions/index";
 import type { SessionStats } from "#pi/runtime/agent-session";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
 import { calculateContextTokens, estimateContextTokens } from "#pi/session/compaction";

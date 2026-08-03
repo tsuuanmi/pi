@@ -1,8 +1,8 @@
 import type { Theme } from "@tsuuanmi/pi-tui";
 import type { AgentProfileLoadResult } from "#pi/agent/definitions";
 import type { ExtensionFactory, LoadExtensionsResult } from "#pi/api/extension-types";
-import type { EventBus } from "#pi/extensions/event-bus";
 import type { Skill } from "#pi/loader/skill";
+import type { EventBus } from "#pi/package-manager/extensions/event-bus";
 import type { CommandOutput, PathMetadata } from "#pi/package-manager/package-manager";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 import type { SettingsManager } from "#pi/settings/settings-manager";

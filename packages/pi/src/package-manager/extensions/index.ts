@@ -122,7 +122,7 @@ export type {
 	UserBashEventResult,
 	WriteToolCallEvent,
 	WriteToolResultEvent,
-} from "#pi/extensions/hooks/event-types";
+} from "#pi/package-manager/extensions/hooks/event-types";
 export {
 	isBashToolResult,
 	isEditToolResult,
@@ -132,8 +132,8 @@ export {
 	isReadToolResult,
 	isToolCallEventType,
 	isWriteToolResult,
-} from "#pi/extensions/hooks/event-types";
-export type { ExtensionHandler, ExtensionHookAPI } from "#pi/extensions/hooks/extension-api-hooks";
+} from "#pi/package-manager/extensions/hooks/event-types";
+export type { ExtensionHandler, ExtensionHookAPI } from "#pi/package-manager/extensions/hooks/extension-api-hooks";
 export type {
 	ExtensionErrorListener,
 	ForkHandler,
@@ -141,9 +141,9 @@ export type {
 	NewSessionHandler,
 	ShutdownHandler,
 	SwitchSessionHandler,
-} from "#pi/extensions/runner";
-export { ExtensionRunner } from "#pi/extensions/runner";
-export { wrapRegisteredTool, wrapRegisteredTools } from "#pi/extensions/wrapper";
+} from "#pi/package-manager/extensions/runner";
+export { ExtensionRunner } from "#pi/package-manager/extensions/runner";
+export { wrapRegisteredTool, wrapRegisteredTools } from "#pi/package-manager/extensions/wrapper";
 export type { SourceInfo } from "#pi/package-manager/source-info";
 export type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 export type { SlashCommandInfo, SlashCommandSource } from "#pi/skills/slash-commands";

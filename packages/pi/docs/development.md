@@ -75,13 +75,13 @@ packages/pi/src/
   auth/                  # authentication storage and guidance
   cli/                   # argument parsing and CLI helpers
   execution/             # command and shell execution
-  extensions/            # extension loading, hooks, registry, and runner
   loader/                # package paths, configuration, and resource loading
   model/                 # model registry, resolution, and thinking levels
   modes/                 # interactive, print, and RPC modes
   network/               # HTTP transport configuration
   output/                # output buffering, sanitization, and truncation
   package-manager/       # package discovery, installation, and diagnostics
+    extensions/          # extension loading, hooks, registry, and runner
   runtime/               # AgentSession, runtime services, context, and stats
   session/               # session persistence, layout, and compaction
   settings/              # settings and keybinding management

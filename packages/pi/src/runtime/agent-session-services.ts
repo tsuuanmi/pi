@@ -2,7 +2,6 @@ import { join } from "node:path";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/auth-storage";
-import type { SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { getAgentDir } from "#pi/loader/paths";
 import {
@@ -11,6 +10,7 @@ import {
 	type ResourceLoader,
 	type ResourceLoaderReloadOptions,
 } from "#pi/loader/resources";
+import type { SessionStartEvent, ToolDefinition } from "#pi/package-manager/extensions/index";
 import {
 	type CreateAgentSessionOptions,
 	type CreateAgentSessionResult,

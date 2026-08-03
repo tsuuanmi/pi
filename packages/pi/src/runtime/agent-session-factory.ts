@@ -7,11 +7,16 @@ import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { findInitialModel } from "#pi/cli/model-resolver";
 import { DEFAULT_THINKING_LEVEL } from "#pi/cli/thinking-level";
-import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { getAgentDir } from "#pi/loader/paths";
 import type { ResourceLoader } from "#pi/loader/resources";
 import { DefaultResourceLoader } from "#pi/loader/resources";
+import type {
+	ExtensionRunner,
+	LoadExtensionsResult,
+	SessionStartEvent,
+	ToolDefinition,
+} from "#pi/package-manager/extensions/index";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { optimizeRetainedContext } from "#pi/runtime/context-optimization";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/manager";
@@ -105,6 +110,7 @@ export interface CreateAgentSessionResult {
 
 // Re-exports
 
+export type { Skill } from "#pi/loader/skill";
 export type {
 	ExtensionAPI,
 	ExtensionCommandContext,
@@ -113,8 +119,7 @@ export type {
 	SlashCommandInfo,
 	SlashCommandSource,
 	ToolDefinition,
-} from "#pi/extensions/index";
-export type { Skill } from "#pi/loader/skill";
+} from "#pi/package-manager/extensions/index";
 export type { PromptTemplate } from "#pi/skills/prompt-templates";
 export type { Tool } from "#pi/tools/default-tools";
 

@@ -13,9 +13,9 @@ import type {
 import type { ProviderConfig } from "#pi/api/provider-types";
 import type { ToolDefinition } from "#pi/api/tool-types";
 import type { ExecOptions, ExecResult } from "#pi/execution/command-executor";
-import type { EventBus } from "#pi/extensions/event-bus";
-import type { ExtensionHookAPI } from "#pi/extensions/hooks/extension-api-hooks";
-import type { HookHandlerFn } from "#pi/extensions/hooks/registration";
+import type { EventBus } from "#pi/package-manager/extensions/event-bus";
+import type { ExtensionHookAPI } from "#pi/package-manager/extensions/hooks/extension-api-hooks";
+import type { HookHandlerFn } from "#pi/package-manager/extensions/hooks/registration";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import type { SessionManager } from "#pi/session/manager";
 import type { SlashCommandInfo } from "#pi/skills/slash-commands";

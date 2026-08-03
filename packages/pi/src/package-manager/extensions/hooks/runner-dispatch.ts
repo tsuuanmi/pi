@@ -25,7 +25,7 @@ import type {
 	ToolResultEventResult,
 	UserBashEvent,
 	UserBashEventResult,
-} from "#pi/extensions/hooks/event-types";
+} from "#pi/package-manager/extensions/hooks/event-types";
 
 export type HookErrorEmitter = (error: ExtensionError) => void;
 
