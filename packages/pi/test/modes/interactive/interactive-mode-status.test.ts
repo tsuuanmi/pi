@@ -11,7 +11,7 @@ import { VirtualTerminal } from "@tsuuanmi/pi-tui/test/terminal/runtime/virtual-
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import type { AutocompleteProviderFactory } from "#pi/api/ui-types";
 import { InteractiveMode } from "#pi/modes/interactive/interactive-mode";
-import { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui-controller";
+import { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui";
 
 function renderLastLine(container: Container, width = 120): string {
 	const last = container.children[container.children.length - 1];

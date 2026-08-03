@@ -3,9 +3,9 @@
  */
 
 import { ProcessTerminal, setKeybindings, TUI } from "@tsuuanmi/pi-tui";
-import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session-selector";
 import type { SessionInfo, SessionListProgress } from "#pi/session/manager";
 import { KeybindingsManager } from "#pi/settings/keybindings";
+import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session";
 
 type SessionsLoader = (onProgress?: SessionListProgress) => Promise<SessionInfo[]>;
 

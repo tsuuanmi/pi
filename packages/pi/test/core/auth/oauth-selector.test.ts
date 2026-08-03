@@ -5,7 +5,7 @@ import { AuthStorage } from "#pi/auth/auth-storage";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { isApiKeyAccountProvider } from "#pi/modes/interactive/interactive-mode";
 import { KeybindingsManager } from "#pi/settings/keybindings";
-import { OAuthSelectorComponent } from "#pi/ui/interactive/components/selectors/oauth-selector";
+import { OAuthSelectorComponent } from "#pi/ui/interactive/components/selectors/oauth";
 
 const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
 

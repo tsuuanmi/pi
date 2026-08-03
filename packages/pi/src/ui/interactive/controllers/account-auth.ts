@@ -16,16 +16,10 @@ import { defaultModelPerProvider } from "#pi/cli/model-resolver";
 import { getAuthPath } from "#pi/loader/paths";
 import type { AgentSession } from "#pi/runtime/agent-session";
 import { LoginDialogComponent } from "#pi/ui/interactive/components/login-dialog";
-import {
-	AccountSelectorComponent,
-	type AccountSelectorOption,
-} from "#pi/ui/interactive/components/selectors/account-selector";
-import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension-selector";
-import {
-	type AuthSelectorProvider,
-	OAuthSelectorComponent,
-} from "#pi/ui/interactive/components/selectors/oauth-selector";
-import type { FooterDataProvider } from "#pi/ui/interactive/footer-data";
+import { AccountSelectorComponent, type AccountSelectorOption } from "#pi/ui/interactive/components/selectors/account";
+import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension";
+import { type AuthSelectorProvider, OAuthSelectorComponent } from "#pi/ui/interactive/components/selectors/oauth";
+import type { FooterDataProvider } from "#pi/ui/interactive/footer-data-provider";
 
 function isUnknownModel(model: Model<any> | undefined): boolean {
 	return !!model && model.provider === "unknown" && model.id === "unknown" && model.api === "unknown";

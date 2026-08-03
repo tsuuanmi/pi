@@ -18,12 +18,12 @@ import { SessionManager } from "#pi/session/manager";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 import type { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
-import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant-message";
-import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session-selector";
-import { SettingsSelectorComponent } from "#pi/ui/interactive/components/selectors/settings-selector";
-import { TreeSelectorComponent } from "#pi/ui/interactive/components/selectors/tree-selector";
-import { UserMessageSelectorComponent } from "#pi/ui/interactive/components/selectors/user-message-selector";
-import type { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui-controller";
+import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant";
+import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session";
+import { SettingsSelectorComponent } from "#pi/ui/interactive/components/selectors/settings";
+import { TreeSelectorComponent } from "#pi/ui/interactive/components/selectors/tree";
+import { UserMessageSelectorComponent } from "#pi/ui/interactive/components/selectors/user-message";
+import type { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui";
 
 type SelectorControllerDependencies = {
 	ui: TUI;

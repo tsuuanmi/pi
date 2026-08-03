@@ -39,7 +39,6 @@ interface ResourceItem {
 	resourceType: ResourceType;
 	displayName: string;
 	groupKey: string;
-	subgroupKey: string;
 }
 
 interface ResourceSubgroup {
@@ -110,7 +109,6 @@ function buildGroups(resolved: ResolvedPaths, agentDir: string): ResourceGroup[]
 			}
 
 			const group = groupMap.get(groupKey)!;
-			const subgroupKey = `${groupKey}:${resourceType}`;
 
 			let subgroup = group.subgroups.find((sg) => sg.type === resourceType);
 			if (!subgroup) {
@@ -139,7 +137,6 @@ function buildGroups(resolved: ResolvedPaths, agentDir: string): ResourceGroup[]
 				resourceType,
 				displayName,
 				groupKey,
-				subgroupKey,
 			});
 		}
 	};

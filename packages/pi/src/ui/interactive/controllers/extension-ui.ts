@@ -7,8 +7,8 @@ import type { ExtensionUIDialogOptions, ExtensionWidgetOptions } from "#pi/packa
 import type { KeybindingsManager } from "#pi/settings/keybindings";
 import { ExtensionEditorComponent } from "#pi/ui/interactive/components/extension-editor";
 import { ExtensionInputComponent } from "#pi/ui/interactive/components/extension-input";
-import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension-selector";
-import type { FooterDataProvider } from "#pi/ui/interactive/footer-data";
+import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension";
+import type { FooterDataProvider } from "#pi/ui/interactive/footer-data-provider";
 
 /** Interface for components that can be expanded/collapsed */
 interface Expandable {

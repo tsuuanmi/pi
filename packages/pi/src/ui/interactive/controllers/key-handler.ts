@@ -1,9 +1,9 @@
 import type { EditorComponent, TUI } from "@tsuuanmi/pi-tui";
 import type { AgentSession } from "#pi/runtime/agent-session";
 import type { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
-import type { AccountAuthController } from "#pi/ui/interactive/controllers/account-auth-controller";
-import type { CommandController } from "#pi/ui/interactive/controllers/command-controller";
-import type { SelectorController } from "#pi/ui/interactive/controllers/selector-controller";
+import type { AccountAuthController } from "#pi/ui/interactive/controllers/account-auth";
+import type { CommandController } from "#pi/ui/interactive/controllers/command";
+import type { SelectorController } from "#pi/ui/interactive/controllers/selector";
 
 type KeyHandlerControllerDependencies = {
 	ui: TUI;

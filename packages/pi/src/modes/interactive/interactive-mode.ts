@@ -74,21 +74,21 @@ import { ensureTool } from "#pi/tools/tool-installer";
 import { BUILTIN_SLASH_COMMANDS } from "#pi/ui/interactive/builtin-commands";
 import { BashExecutionComponent } from "#pi/ui/interactive/components/bash-execution";
 import { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
-import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant-message";
-import { BranchSummaryMessageComponent } from "#pi/ui/interactive/components/messages/branch-summary-message";
-import { CompactionSummaryMessageComponent } from "#pi/ui/interactive/components/messages/compaction-summary-message";
-import { CustomMessageComponent } from "#pi/ui/interactive/components/messages/custom-message";
-import { SkillInvocationMessageComponent } from "#pi/ui/interactive/components/messages/skill-invocation-message";
+import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant";
+import { BranchSummaryMessageComponent } from "#pi/ui/interactive/components/messages/branch-summary";
+import { CompactionSummaryMessageComponent } from "#pi/ui/interactive/components/messages/compaction-summary";
+import { CustomMessageComponent } from "#pi/ui/interactive/components/messages/custom";
+import { SkillInvocationMessageComponent } from "#pi/ui/interactive/components/messages/skill-invocation";
 import { ToolExecutionComponent } from "#pi/ui/interactive/components/tool-execution";
-import { AccountAuthController } from "#pi/ui/interactive/controllers/account-auth-controller";
-import { CommandController } from "#pi/ui/interactive/controllers/command-controller";
-import { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui-controller";
-import { KeyHandlerController } from "#pi/ui/interactive/controllers/key-handler-controller";
-import { ResourceDiagnosticsController } from "#pi/ui/interactive/controllers/resource-diagnostics-controller";
-import { SelectorController } from "#pi/ui/interactive/controllers/selector-controller";
-import { FooterDataProvider } from "#pi/ui/interactive/footer-data";
+import { AccountAuthController } from "#pi/ui/interactive/controllers/account-auth";
+import { CommandController } from "#pi/ui/interactive/controllers/command";
+import { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui";
+import { KeyHandlerController } from "#pi/ui/interactive/controllers/key-handler";
+import { ResourceDiagnosticsController } from "#pi/ui/interactive/controllers/resource-diagnostics";
+import { SelectorController } from "#pi/ui/interactive/controllers/selector";
+import { FooterDataProvider } from "#pi/ui/interactive/footer-data-provider";
 
-export { isApiKeyAccountProvider } from "#pi/ui/interactive/controllers/account-auth-controller";
+export { isApiKeyAccountProvider } from "#pi/ui/interactive/controllers/account-auth";
 
 /** Interface for components that can be expanded/collapsed */
 interface Expandable {
