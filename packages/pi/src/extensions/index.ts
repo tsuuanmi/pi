@@ -7,6 +7,7 @@ export type {
 	AgentToolUpdateCallback,
 	ToolExecutionMode,
 } from "@tsuuanmi/pi-agent";
+export type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
 export type {
 	CompactOptions,
 	ContextUsage,
@@ -146,4 +147,3 @@ export { wrapRegisteredTool, wrapRegisteredTools } from "#pi/extensions/wrapper"
 export type { SourceInfo } from "#pi/package-manager/source-info";
 export type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 export type { SlashCommandInfo, SlashCommandSource } from "#pi/skills/slash-commands";
-export type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";

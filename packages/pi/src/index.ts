@@ -11,6 +11,7 @@ export {
 	Theme,
 	type ThemeColor,
 } from "@tsuuanmi/pi-tui";
+export { formatSkillsForPrompt } from "#pi/agent/system-prompt";
 // Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
 export type { ReadonlyFooterDataProvider } from "#pi/api/ui-types";
 // Auth and model registry
@@ -132,6 +133,15 @@ export { getDocsPath, getPackageDir, getReadmePath } from "#pi/loader/package";
 export { getAgentDir } from "#pi/loader/paths";
 export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#pi/loader/resources";
 export { DefaultResourceLoader } from "#pi/loader/resources";
+// Skills
+export {
+	type LoadSkillsFromDirOptions,
+	type LoadSkillsResult,
+	loadSkills,
+	loadSkillsFromDir,
+	type Skill,
+	type SkillFrontmatter,
+} from "#pi/loader/skill";
 // Main entry point
 export { type MainOptions, main } from "#pi/main";
 export { ModelRegistry } from "#pi/model/model-registry";
@@ -257,16 +267,6 @@ export {
 	SettingsManager,
 	type SettingsManagerCreateOptions,
 } from "#pi/settings/settings-manager";
-// Skills
-export {
-	formatSkillsForPrompt,
-	type LoadSkillsFromDirOptions,
-	type LoadSkillsResult,
-	loadSkills,
-	loadSkillsFromDir,
-	type Skill,
-	type SkillFrontmatter,
-} from "#pi/skills/skills";
 export { SubagentManager } from "#pi/subagents/manager";
 // Tools
 export {

@@ -3,7 +3,7 @@
  */
 
 import { getDocsPath, getReadmePath } from "#pi/loader/package";
-import { formatSkillsForPrompt, type Skill } from "#pi/skills/skills";
+import type { Skill } from "#pi/loader/skill";
 
 export interface BuildSystemPromptOptions {
 	/** Custom system prompt (replaces default). */
@@ -22,6 +22,51 @@ export interface BuildSystemPromptOptions {
 	contextFiles?: Array<{ path: string; content: string }>;
 	/** Pre-loaded skills. */
 	skills?: Skill[];
+}
+
+/**
+ * Format skills for inclusion in a system prompt.
+ * Uses XML format per Agent Skills standard.
+ * See: https://agentskills.io/integrate-skills
+ *
+ * Skills with disableModelInvocation=true are excluded from the prompt
+ * (they can only be invoked explicitly via /skill:name commands).
+ */
+export function formatSkillsForPrompt(skills: Skill[]): string {
+	const visibleSkills = skills.filter((s) => !s.disableModelInvocation);
+
+	if (visibleSkills.length === 0) {
+		return "";
+	}
+
+	const lines = [
+		"\n\nThe following skills provide specialized instructions for specific tasks.",
+		"Use the read tool to load a skill's file when the task matches its description.",
+		"When a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.",
+		"",
+		"<available_skills>",
+	];
+
+	for (const skill of visibleSkills) {
+		lines.push("  <skill>");
+		lines.push(`    <name>${escapeXml(skill.name)}</name>`);
+		lines.push(`    <description>${escapeXml(skill.description)}</description>`);
+		lines.push(`    <location>${escapeXml(skill.filePath)}</location>`);
+		lines.push("  </skill>");
+	}
+
+	lines.push("</available_skills>");
+
+	return lines.join("\n");
+}
+
+function escapeXml(value: string): string {
+	return value
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&apos;");
 }
 
 /** Build the system prompt with tools, guidelines, and context */

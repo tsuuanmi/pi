@@ -28,6 +28,7 @@ import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi-ai";
 import { cleanupSessionResources, isContextOverflow, resetProviders, stream } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
+import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/agent/system-prompt";
 import { ApiUsageLogger } from "#pi/api/api-usage-logger";
 import { apiUsageLogPath } from "#pi/api/api-usage-utils";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/auth-guidance";
@@ -89,7 +90,6 @@ import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader }
 import type { SettingsManager } from "#pi/settings/settings-manager";
 import { expandPromptTemplate, type PromptTemplate } from "#pi/skills/prompt-templates";
 import type { SlashCommandInfo } from "#pi/skills/slash-commands";
-import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/skills/system-prompt";
 import type { SubagentManager } from "#pi/subagents/manager";
 import { type BashOperations, createLocalBashOperations } from "#pi/tools/bash";
 import { createToolDefinitions } from "#pi/tools/default-tools";

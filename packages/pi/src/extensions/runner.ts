@@ -6,6 +6,7 @@ import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import type { KeyId } from "@tsuuanmi/pi-tui";
 import { type Theme, theme } from "@tsuuanmi/pi-tui";
+import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
 import type {
 	CompactOptions,
 	ContextUsage,
@@ -60,7 +61,6 @@ import type { ModelRegistry } from "#pi/model/model-registry";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 import type { SessionManager } from "#pi/session/manager";
 import type { KeybindingsConfig } from "#pi/settings/keybindings";
-import type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";
 import type { SubagentManager } from "#pi/subagents/manager";
 
 // Extension shortcuts compete with canonical keybinding ids from keybindings.json.

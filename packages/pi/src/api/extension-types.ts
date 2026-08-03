@@ -2,6 +2,7 @@ import type { CustomMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Model, TextContent } from "@tsuuanmi/pi-ai";
 import type { AutocompleteItem, Component, KeyId, Theme } from "@tsuuanmi/pi-tui";
 import type { TSchema } from "typebox";
+import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
 import type {
 	CompactOptions,
 	ContextUsage,
@@ -18,7 +19,6 @@ import type { HookHandlerFn } from "#pi/extensions/hooks/registration";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import type { SessionManager } from "#pi/session/manager";
 import type { SlashCommandInfo } from "#pi/skills/slash-commands";
-import type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";
 
 export interface MessageRenderOptions {
 	expanded: boolean;

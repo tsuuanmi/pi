@@ -113,8 +113,8 @@ export type {
 	SlashCommandSource,
 	ToolDefinition,
 } from "#pi/extensions/index";
+export type { Skill } from "#pi/loader/skill";
 export type { PromptTemplate } from "#pi/skills/prompt-templates";
-export type { Skill } from "#pi/skills/skills";
 export type { Tool } from "#pi/tools/default-tools";
 
 export {

@@ -19,6 +19,8 @@ import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResul
 import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
 import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "#pi/extensions/loader";
 import { getBuiltinExtensionFactories } from "#pi/extensions/registry/builtin-extensions";
+import type { Skill } from "#pi/loader/skill";
+import { loadSkills } from "#pi/loader/skill";
 import { loadThemes } from "#pi/loader/themes";
 import type {
 	DefaultResourceLoaderOptions,
@@ -31,8 +33,6 @@ import { createSourceInfo, type SourceInfo } from "#pi/package-manager/source-in
 import { SettingsManager } from "#pi/settings/settings-manager";
 import type { PromptTemplate } from "#pi/skills/prompt-templates";
 import { loadPromptTemplatesWithDiagnostics } from "#pi/skills/prompt-templates";
-import type { Skill } from "#pi/skills/skills";
-import { loadSkills } from "#pi/skills/skills";
 
 export class DefaultResourceLoader implements ResourceLoader {
 	private cwd: string;

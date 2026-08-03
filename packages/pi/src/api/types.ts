@@ -8,6 +8,7 @@ export type {
 	StructuredReceipt,
 	ToolExecutionMode,
 } from "@tsuuanmi/pi-agent";
+export type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
 export type {
 	CompactOptions,
 	ContextUsage,
@@ -139,4 +140,3 @@ export {
 } from "#pi/extensions/hooks/event-types";
 export type { ExtensionHandler, ExtensionHookAPI } from "#pi/extensions/hooks/extension-api-hooks";
 export type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
-export type { BuildSystemPromptOptions } from "#pi/skills/system-prompt";
