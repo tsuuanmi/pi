@@ -107,7 +107,7 @@ For OpenAI Codex subscription accounts, `/account` shows quota and available res
 
 Then just talk to pi. By default, pi gives the model four tools: `read`, `write`, `edit`, and `bash`. The model uses these to fulfill your requests. Add capabilities via [skills](#skills), [prompt templates](#prompt-templates), [extensions](#extensions), or [pi packages](#pi-packages).
 
-**Platform notes:** pi supports Linux and macOS. See [tmux](docs/utils/terminal/tmux.md), [Terminal setup](docs/utils/terminal/terminal-setup.md), and [Shell aliases](docs/utils/terminal/shell-aliases.md).
+**Platform notes:** pi supports Linux and macOS.
 
 ---
 
@@ -444,7 +444,7 @@ Pi is aggressively extensible so it doesn't have to dictate your workflow. Featu
 Pi stays minimal, but ships a small set of built-in features so common workflows work out of the box. Each is documented in `docs/`.
 
 - **`lsp` tool** - minimal Language Server Protocol support (TypeScript/JavaScript, Python, Rust) for status, diagnostics, symbols, hover, definitions, and references.
-- **`pi --tmux`** - launch interactive startup inside a new tmux session. See [docs/utils/terminal/tmux.md](docs/utils/terminal/tmux.md).
+- **`pi --tmux`** - launch interactive startup inside a new tmux session.
 - **Account profiles** - store multiple accounts per provider and switch between them with `/account add`, `/account`, `/account <provider> <account>`, `/provider add`, and `/account remove`. See [Account profiles](docs/model/custom-provider.md#account-profiles) in the Custom Providers docs.
 - **Pi workflow + skills** - a `pi workflow` control plane plus the built-in `deep-interview`, `ralplan`, `team`, and `ultragoal` skills for planning and parallel execution. See [workflows/docs/workflow.md](../workflows/docs/workflow.md).
 - **Subagents** - a Pi-native `SubagentManager` with lifecycle and tmux controls for isolated agent workers. Generic multi-agent coordination belongs to `@tsuuanmi/pi-orchestrator`. See [docs/subagents/subagents.md](docs/subagents/subagents.md).

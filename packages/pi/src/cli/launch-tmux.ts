@@ -96,10 +96,7 @@ export function buildTmuxUnavailableReceipt(input: {
 		status: "failed",
 		location: { cwd: input.cwd, tmuxCommand: input.tmuxCommand },
 		timing: {},
-		inspect: [
-			{ label: "setup", kind: "command", value: `command -v -- ${shellQuote(input.tmuxCommand)}` },
-			{ label: "docs", kind: "path", value: "packages/pi/docs/utils/terminal/tmux.md" },
-		],
+		inspect: [{ label: "setup", kind: "command", value: `command -v -- ${shellQuote(input.tmuxCommand)}` }],
 		errorSummary: input.errorSummary,
 	};
 }

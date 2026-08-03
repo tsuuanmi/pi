@@ -7,6 +7,7 @@ import {
 	type Result,
 	toError,
 } from "@tsuuanmi/pi-agent/node";
+import { sanitizeBinaryOutput } from "#pi/exec/shell";
 import { DEFAULT_MAX_BYTES, truncateTail } from "#pi/tools/output-truncation";
 
 export interface ShellCaptureOptions extends Omit<ExecutionEnvExecOptions, "onStdout" | "onStderr"> {
@@ -25,19 +26,6 @@ function toExecutionError(error: unknown): ExecutionError {
 	if (error instanceof ExecutionError) return error;
 	const cause = toError(error);
 	return new ExecutionError("unknown", cause.message, cause);
-}
-
-export function sanitizeBinaryOutput(str: string): string {
-	return Array.from(str)
-		.filter((char) => {
-			const code = char.codePointAt(0);
-			if (code === undefined) return false;
-			if (code === 0x09 || code === 0x0a || code === 0x0d) return true;
-			if (code <= 0x1f) return false;
-			if (code >= 0xfff9 && code <= 0xfffb) return false;
-			return true;
-		})
-		.join("");
 }
 
 export async function executeShellWithCapture(

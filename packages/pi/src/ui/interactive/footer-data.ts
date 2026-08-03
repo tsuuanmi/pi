@@ -1,8 +1,39 @@
 import type { OpenAICodexUsageSummary } from "@tsuuanmi/pi-ai";
 import { type ExecFileException, execFile, spawnSync } from "child_process";
-import { existsSync, type FSWatcher, readFileSync, statSync, unwatchFile, watchFile } from "fs";
+import {
+	existsSync,
+	type FSWatcher,
+	readFileSync,
+	statSync,
+	unwatchFile,
+	type WatchListener,
+	watch,
+	watchFile,
+} from "fs";
 import { dirname, join, resolve } from "path";
-import { closeWatcher, FS_WATCH_RETRY_DELAY_MS, watchWithErrorHandler } from "#pi/utils/fs/index";
+
+const WATCH_RETRY_DELAY_MS = 5000;
+
+function closeWatch(watcher: FSWatcher | null | undefined): void {
+	if (!watcher) return;
+
+	try {
+		watcher.close();
+	} catch {
+		// Ignore watcher close errors
+	}
+}
+
+function watchWithError(path: string, listener: WatchListener<string>, onError: () => void): FSWatcher | null {
+	try {
+		const watcher = watch(path, listener);
+		watcher.on("error", onError);
+		return watcher;
+	} catch {
+		onError();
+		return null;
+	}
+}
 
 type GitPaths = {
 	repoDir: string;
@@ -265,11 +296,11 @@ export class FooterDataProvider {
 	}
 
 	private clearGitWatchers(): void {
-		closeWatcher(this.headWatcher);
+		closeWatch(this.headWatcher);
 		this.headWatcher = null;
-		closeWatcher(this.reftableWatcher);
+		closeWatch(this.reftableWatcher);
 		this.reftableWatcher = null;
-		closeWatcher(this.reftableTablesListWatcher);
+		closeWatch(this.reftableTablesListWatcher);
 		this.reftableTablesListWatcher = null;
 		if (this.reftableTablesListPath) {
 			unwatchFile(this.reftableTablesListPath);
@@ -289,7 +320,7 @@ export class FooterDataProvider {
 		this.gitWatcherRetryTimer = setTimeout(() => {
 			this.gitWatcherRetryTimer = null;
 			this.setupGitWatcher();
-		}, FS_WATCH_RETRY_DELAY_MS);
+		}, WATCH_RETRY_DELAY_MS);
 	}
 
 	private handleGitWatcherError(): void {
@@ -304,7 +335,7 @@ export class FooterDataProvider {
 		// Watch the directory containing HEAD, not HEAD itself.
 		// Git uses atomic writes (write temp, rename over HEAD), which changes the inode.
 		// fs.watch on a file stops working after the inode changes.
-		this.headWatcher = watchWithErrorHandler(
+		this.headWatcher = watchWithError(
 			dirname(this.gitPaths.headPath),
 			(_eventType, filename) => {
 				if (!filename || filename === "HEAD") {
@@ -321,7 +352,7 @@ export class FooterDataProvider {
 		// instead of HEAD. Watch it separately so the footer picks up those changes.
 		const reftableDir = join(this.gitPaths.commonGitDir, "reftable");
 		if (existsSync(reftableDir)) {
-			this.reftableWatcher = watchWithErrorHandler(
+			this.reftableWatcher = watchWithError(
 				reftableDir,
 				() => {
 					this.scheduleRefresh();
@@ -335,7 +366,7 @@ export class FooterDataProvider {
 			const tablesListPath = join(reftableDir, "tables.list");
 			if (existsSync(tablesListPath)) {
 				this.reftableTablesListPath = tablesListPath;
-				this.reftableTablesListWatcher = watchWithErrorHandler(
+				this.reftableTablesListWatcher = watchWithError(
 					tablesListPath,
 					() => {
 						this.scheduleRefresh();

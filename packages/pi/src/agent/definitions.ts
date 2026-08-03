@@ -4,8 +4,8 @@ import { dirname, join, resolve } from "node:path";
 import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { canonicalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AgentProfile } from "#pi/agent/profiles";
+import { parseFrontmatter } from "#pi/loader/frontmatter";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
-import { parseFrontmatter } from "#pi/utils/fs/index";
 
 export type AgentSourceLevel = "bundled" | "user" | "project" | "package" | "temporary";
 export type AgentProfileFormat = "markdown" | "bundled";

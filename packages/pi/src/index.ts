@@ -25,6 +25,8 @@ export {
 	type OAuthCredential,
 } from "#pi/auth/auth-storage";
 export { type Args, parseArgs } from "#pi/cli/args";
+// Shell utilities
+export { getShellConfig } from "#pi/exec/shell";
 export { createEventBus, type EventBus, type EventBusController } from "#pi/extensions/event-bus";
 // Extension system
 export type {
@@ -125,6 +127,7 @@ export { createExtensionRuntime, discoverAndLoadExtensions } from "#pi/extension
 // Loader exports
 export { CONFIG_DIR_NAME, VERSION } from "#pi/loader/app";
 export { loadProjectContextFiles } from "#pi/loader/context";
+export { parseFrontmatter, stripFrontmatter } from "#pi/loader/frontmatter";
 export { getDocsPath, getPackageDir, getReadmePath } from "#pi/loader/package";
 export { getAgentDir } from "#pi/loader/paths";
 export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "#pi/loader/resources";
@@ -348,6 +351,3 @@ export {
 } from "#pi/ui/interactive/components/index";
 // Clipboard utilities
 export { copyToClipboard } from "#pi/ui/interactive/utils/clipboard";
-export { parseFrontmatter, stripFrontmatter } from "#pi/utils/fs/index";
-// Shell utilities
-export { getShellConfig } from "#pi/utils/system/shell";

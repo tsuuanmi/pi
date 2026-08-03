@@ -27,7 +27,7 @@ These are the intended ownership boundaries. If implementation chooses different
 | Durable subagent/task/receipt state | `packages/pi/src/subagents/manager.ts` and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |
 | Self-hosting continuity | `pi:workflows` first-party package tools and skills | `packages/workflows/src/harness/*`, `packages/workflows/src/skills/*` |
 | Direct-port adaptation | each porting change owner | this document and code review checklist |
-| Worktree/tmux orchestration | future task/worktree modules and `@tsuuanmi/pi-workflows` harness/runtime/seams.ts | docs/utils/terminal/tmux.md, workflow docs |
+| Worktree/tmux orchestration | future task/worktree modules and `@tsuuanmi/pi-workflows` harness/runtime/seams.ts | workflow docs |
 
 ## Resource discovery contract
 

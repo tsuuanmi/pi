@@ -17,8 +17,8 @@ import {
 	truncateLine,
 } from "#pi/tools/output-truncation";
 import { resolveToCwd } from "#pi/tools/paths";
+import { ensureTool } from "#pi/tools/tool-installer";
 import { getTextOutput, invalidArgText, shortenPath, str, toAgentTool } from "#pi/tools/utils";
-import { ensureTool } from "#pi/utils/system/tool-installer";
 
 const grepSchema = Type.Object({
 	pattern: Type.String({ description: "Search pattern (regex or literal string)" }),

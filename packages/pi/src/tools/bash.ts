@@ -15,16 +15,16 @@ import {
 import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
-import { OutputBuffer } from "#pi/tools/output-buffer";
-import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "#pi/tools/output-truncation";
-import { getTextOutput, invalidArgText, str, toAgentTool } from "#pi/tools/utils";
 import {
 	getShellConfig,
 	getShellEnv,
 	killProcessTree,
 	trackDetachedChildPid,
 	untrackDetachedChildPid,
-} from "#pi/utils/system/shell";
+} from "#pi/exec/shell";
+import { OutputBuffer } from "#pi/tools/output-buffer";
+import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "#pi/tools/output-truncation";
+import { getTextOutput, invalidArgText, str, toAgentTool } from "#pi/tools/utils";
 
 const bashSchema = Type.Object({
 	command: Type.String({ description: "Bash command to execute" }),

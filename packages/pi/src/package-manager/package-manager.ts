@@ -5,8 +5,8 @@ import { canonicalizePath, isLocalPath, markPathIgnoredByCloudSync, resolvePath 
 import { globSync } from "glob";
 import { maxSatisfying, rcompare, satisfies } from "semver";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
+import { type GitSource, parseGitUrl } from "#pi/package-manager/git";
 import type { PackageSource, SettingsManager } from "#pi/settings/settings-manager";
-import { type GitSource, parseGitUrl } from "#pi/utils/fs/git";
 import type {
 	ConfiguredPackage,
 	ConfiguredUpdateSource,

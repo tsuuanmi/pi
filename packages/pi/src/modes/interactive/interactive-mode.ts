@@ -53,6 +53,7 @@ import { readWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import chalk from "chalk";
 import { spawn } from "child_process";
 import { configureHttpDispatcher } from "#pi/exec/http-dispatcher";
+import { killTrackedDetachedChildren } from "#pi/exec/shell";
 import type {
 	AutocompleteProviderFactory,
 	EditorFactory,
@@ -61,6 +62,7 @@ import type {
 	ExtensionUIContext,
 } from "#pi/extensions/index";
 import { APP_NAME } from "#pi/loader/app";
+import { parseGitUrl } from "#pi/package-manager/git";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#pi/runtime/agent-session";
 import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/runtime/agent-session-runtime";
@@ -69,6 +71,7 @@ import type { SessionContext, SessionManager } from "#pi/session/manager";
 import { type AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
 import type { TruncationResult } from "#pi/tools/output-truncation";
+import { ensureTool } from "#pi/tools/tool-installer";
 import { BashExecutionComponent } from "#pi/ui/interactive/components/bash-execution";
 import { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
 import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant-message";
@@ -84,9 +87,6 @@ import { KeyHandlerController } from "#pi/ui/interactive/controllers/key-handler
 import { ResourceDiagnosticsController } from "#pi/ui/interactive/controllers/resource-diagnostics-controller";
 import { SelectorController } from "#pi/ui/interactive/controllers/selector-controller";
 import { FooterDataProvider } from "#pi/ui/interactive/footer-data";
-import { parseGitUrl } from "#pi/utils/fs/git";
-import { killTrackedDetachedChildren } from "#pi/utils/system/shell";
-import { ensureTool } from "#pi/utils/system/tool-installer";
 
 export { isApiKeyAccountProvider } from "#pi/ui/interactive/controllers/account-auth-controller";
 

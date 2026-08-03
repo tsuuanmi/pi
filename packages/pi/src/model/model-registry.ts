@@ -27,6 +27,7 @@ import { type OAuthProviderInterface, registerOAuthProvider, resetOAuthProviders
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import type { AuthStatus, AuthStorage } from "#pi/auth/auth-storage";
+import { stripJsonComments } from "#pi/loader/json";
 import { getAgentDir } from "#pi/loader/paths";
 import {
 	clearConfigValueCache,
@@ -38,7 +39,6 @@ import {
 	resolveHeadersOrThrow,
 } from "#pi/loader/value";
 import type { ModelsSettings, SettingsManager } from "#pi/settings/settings-manager";
-import { stripJsonComments } from "#pi/utils/fs/index";
 
 const BUILT_IN_GENERATED_MODEL_PROVIDERS = new Set<string>(["ollama-cloud"]);
 

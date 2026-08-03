@@ -13,6 +13,7 @@
 
 import * as crypto from "node:crypto";
 import { type Theme, theme } from "@tsuuanmi/pi-tui";
+import { killTrackedDetachedChildren } from "#pi/exec/shell";
 import type {
 	ExtensionUIContext,
 	ExtensionUIDialogOptions,
@@ -30,7 +31,6 @@ import type {
 	RpcSlashCommand,
 } from "#pi/modes/rpc/rpc-types";
 import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
-import { killTrackedDetachedChildren } from "#pi/utils/system/shell";
 
 // Re-export types for consumers
 export type {

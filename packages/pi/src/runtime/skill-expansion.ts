@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
+import { stripFrontmatter } from "#pi/loader/frontmatter";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
-import { stripFrontmatter } from "#pi/utils/fs/index";
 
 export function expandSkillCommand(text: string, ctx: AgentSessionContext): string {
 	if (!text.startsWith("/skill:")) return text;

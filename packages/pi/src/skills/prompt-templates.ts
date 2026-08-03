@@ -2,9 +2,9 @@ import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { basename, dirname, join, resolve, sep } from "path";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
+import { parseFrontmatter } from "#pi/loader/frontmatter";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 import { createSyntheticSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
-import { parseFrontmatter } from "#pi/utils/fs/index";
 
 /**
  * Represents a prompt template loaded from a markdown file

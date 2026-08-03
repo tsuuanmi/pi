@@ -88,7 +88,6 @@ packages/pi/src/
   telemetry/             # API usage logging
   tools/                 # built-in tools and LSP support
   ui/                    # interactive components and package-manager UI
-  utils/                 # filesystem and system helpers
 ```
 
 The other workspace packages provide shared layers: `packages/ai` contains model protocols and providers, `packages/agent` contains the agent loop and message types, and `packages/tui` contains terminal UI primitives.

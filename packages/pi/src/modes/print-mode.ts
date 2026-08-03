@@ -7,9 +7,9 @@
  */
 
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
+import { killTrackedDetachedChildren } from "#pi/exec/shell";
 import { flushRawStdout, writeRawStdout } from "#pi/modes/output-guard";
 import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
-import { killTrackedDetachedChildren } from "#pi/utils/system/shell";
 
 /**
  * Options for print mode.

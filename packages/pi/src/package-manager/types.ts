@@ -1,5 +1,5 @@
+import type { GitSource } from "#pi/package-manager/git";
 import type { SettingsManager } from "#pi/settings/settings-manager";
-import type { GitSource } from "#pi/utils/fs/git";
 
 export interface PathMetadata {
 	source: string;

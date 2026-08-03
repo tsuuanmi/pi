@@ -3,10 +3,10 @@ import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import ignore from "ignore";
 import { basename, dirname, join, relative, resolve, sep } from "path";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
+import { parseFrontmatter } from "#pi/loader/frontmatter";
 import { getAgentDir } from "#pi/loader/paths";
 import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
 import { createSyntheticSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
-import { parseFrontmatter } from "#pi/utils/fs/index";
 
 /** Max name length per spec */
 const MAX_NAME_LENGTH = 64;
