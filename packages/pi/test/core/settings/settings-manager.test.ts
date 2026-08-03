@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DEFAULT_HTTP_IDLE_TIMEOUT_MS } from "#pi/exec/http-dispatcher";
+import { DEFAULT_HTTP_IDLE_TIMEOUT_MS } from "#pi/network/http-dispatcher";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
 describe("SettingsManager", () => {

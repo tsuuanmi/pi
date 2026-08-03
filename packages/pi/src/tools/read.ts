@@ -14,7 +14,7 @@ import {
 	formatSize,
 	type TruncationResult,
 	truncateHead,
-} from "#pi/tools/output-truncation";
+} from "#pi/output/truncation";
 import { formatPathRelativeToCwdOrAbsolute, resolveReadPathAsync, resolveToCwd } from "#pi/tools/paths";
 import { getTextOutput, renderToolPath, replaceTabs, str, toAgentTool } from "#pi/tools/utils";
 

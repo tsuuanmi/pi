@@ -21,8 +21,8 @@ import type {
 	RegisteredCommand,
 	ToolDefinition,
 } from "#pi/api/types";
-import type { ExecOptions } from "#pi/exec/exec";
-import { execCommand } from "#pi/exec/exec";
+import type { ExecOptions } from "#pi/execution/command-executor";
+import { execCommand } from "#pi/execution/command-executor";
 import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
 import { type HookHandlerFn, registerExtensionHook } from "#pi/extensions/hooks/registration";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";

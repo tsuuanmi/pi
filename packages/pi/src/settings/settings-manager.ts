@@ -4,9 +4,9 @@ import type { StatusLineSettings } from "@tsuuanmi/pi-tui";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
-import { DEFAULT_HTTP_IDLE_TIMEOUT_MS, parseHttpIdleTimeoutMs } from "#pi/exec/http-dispatcher";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
 import { getAgentDir } from "#pi/loader/paths";
+import { DEFAULT_HTTP_IDLE_TIMEOUT_MS, parseHttpIdleTimeoutMs } from "#pi/network/http-dispatcher";
 
 export type { StatusLineSettings } from "@tsuuanmi/pi-tui";
 

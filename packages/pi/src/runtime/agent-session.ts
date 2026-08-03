@@ -32,7 +32,9 @@ import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/agent/syst
 import { ApiUsageLogger } from "#pi/api/api-usage-logger";
 import { apiUsageLogPath } from "#pi/api/api-usage-utils";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/auth-guidance";
-import { type BashResult, executeBashWithOperations } from "#pi/exec/bash-executor";
+import { type BashResult, executeBashWithOperations } from "#pi/execution/bash-executor";
+import type { BashOperations } from "#pi/execution/bash-operations";
+import { createLocalBashOperations } from "#pi/execution/local-shell";
 import { installAgentToolHooks } from "#pi/extensions/hooks/tool-hooks";
 import {
 	type ContextUsage,
@@ -91,7 +93,6 @@ import type { SettingsManager } from "#pi/settings/settings-manager";
 import { expandPromptTemplate, type PromptTemplate } from "#pi/skills/prompt-templates";
 import type { SlashCommandInfo } from "#pi/skills/slash-commands";
 import type { SubagentManager } from "#pi/subagents/manager";
-import { type BashOperations, createLocalBashOperations } from "#pi/tools/bash";
 import { createToolDefinitions } from "#pi/tools/default-tools";
 import { toToolDefinition } from "#pi/tools/utils";
 

@@ -52,8 +52,7 @@ import {
 import { readWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import chalk from "chalk";
 import { spawn } from "child_process";
-import { configureHttpDispatcher } from "#pi/exec/http-dispatcher";
-import { killTrackedDetachedChildren } from "#pi/exec/shell";
+import { killTrackedProcesses } from "#pi/execution/process-tree";
 import type {
 	AutocompleteProviderFactory,
 	EditorFactory,
@@ -62,6 +61,8 @@ import type {
 	ExtensionUIContext,
 } from "#pi/extensions/index";
 import { APP_NAME } from "#pi/loader/app";
+import { configureHttpDispatcher } from "#pi/network/http-dispatcher";
+import type { TruncationResult } from "#pi/output/truncation";
 import { parseGitUrl } from "#pi/package-manager/git";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#pi/runtime/agent-session";
@@ -70,7 +71,6 @@ import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#pi/sessi
 import type { SessionContext, SessionManager } from "#pi/session/manager";
 import { type AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 import { BUILTIN_SLASH_COMMANDS } from "#pi/skills/slash-commands";
-import type { TruncationResult } from "#pi/tools/output-truncation";
 import { ensureTool } from "#pi/tools/tool-installer";
 import { BashExecutionComponent } from "#pi/ui/interactive/components/bash-execution";
 import { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
@@ -1720,7 +1720,7 @@ export class InteractiveMode {
 	private emergencyTerminalExit(): never {
 		this.isShuttingDown = true;
 		this.unregisterSignalHandlers();
-		killTrackedDetachedChildren();
+		killTrackedProcesses();
 		// The terminal is gone. Do not run normal shutdown because TUI and
 		// extension cleanup can write restore sequences and re-trigger EIO.
 		process.exit(129);
@@ -1746,7 +1746,7 @@ export class InteractiveMode {
 			this.unregisterSignalHandlers();
 		} catch {}
 		try {
-			killTrackedDetachedChildren();
+			killTrackedProcesses();
 		} catch {}
 		try {
 			this.ui.stop();
@@ -1775,7 +1775,7 @@ export class InteractiveMode {
 				// first, then attempts terminal restore. A genuinely dead terminal
 				// surfaces as an EIO on the restore writes, which the stdout/stderr
 				// error handler converts into emergencyTerminalExit (see #4144, #5080).
-				killTrackedDetachedChildren();
+				killTrackedProcesses();
 				void this.shutdown({ fromSignal: true });
 			};
 			process.prependListener(signal, handler);

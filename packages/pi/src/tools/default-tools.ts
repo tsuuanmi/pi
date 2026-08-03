@@ -1,4 +1,14 @@
 export {
+	DEFAULT_MAX_BYTES,
+	DEFAULT_MAX_LINES,
+	formatSize,
+	type TruncationOptions,
+	type TruncationResult,
+	truncateHead,
+	truncateLine,
+	truncateTail,
+} from "#pi/output/truncation";
+export {
 	type BashOperations,
 	type BashSpawnContext,
 	type BashSpawnHook,
@@ -56,16 +66,6 @@ export {
 	type LspToolDetails,
 	type LspToolInput,
 } from "#pi/tools/lsp/index";
-export {
-	DEFAULT_MAX_BYTES,
-	DEFAULT_MAX_LINES,
-	formatSize,
-	type TruncationOptions,
-	type TruncationResult,
-	truncateHead,
-	truncateLine,
-	truncateTail,
-} from "#pi/tools/output-truncation";
 export {
 	createReadTool,
 	createReadToolDefinition,

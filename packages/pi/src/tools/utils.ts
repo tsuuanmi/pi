@@ -7,7 +7,7 @@ import type { Theme } from "@tsuuanmi/pi-tui";
 import { getCapabilities, hyperlink, stripAnsi } from "@tsuuanmi/pi-tui";
 import type { ExtensionContext } from "#pi/api/context-types";
 import type { ToolDefinition } from "#pi/api/tool-types";
-import { sanitizeBinaryOutput } from "#pi/exec/shell";
+import { sanitizeBinaryOutput } from "#pi/output/sanitize";
 
 export function shortenPath(path: unknown): string {
 	if (typeof path !== "string") return "";

@@ -1,8 +1,5 @@
-import { constants } from "node:fs";
-import { access as fsAccess } from "node:fs/promises";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
-import { waitForChildProcess } from "@tsuuanmi/pi-agent/node";
 import {
 	type Component,
 	Container,
@@ -12,19 +9,17 @@ import {
 	truncateToVisualLines,
 	truncateToWidth,
 } from "@tsuuanmi/pi-tui";
-import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
-import {
-	getShellConfig,
-	getShellEnv,
-	killProcessTree,
-	trackDetachedChildPid,
-	untrackDetachedChildPid,
-} from "#pi/exec/shell";
-import { OutputBuffer } from "#pi/tools/output-buffer";
-import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "#pi/tools/output-truncation";
+import type { BashOperations } from "#pi/execution/bash-operations";
+import { createLocalBashOperations } from "#pi/execution/local-shell";
+import { getShellEnv } from "#pi/execution/shell-config";
+import { OutputBuffer } from "#pi/output/buffer";
+import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "#pi/output/truncation";
 import { getTextOutput, invalidArgText, str, toAgentTool } from "#pi/tools/utils";
+
+export type { BashOperations } from "#pi/execution/bash-operations";
+export { createLocalBashOperations };
 
 const bashSchema = Type.Object({
 	command: Type.String({ description: "Bash command to execute" }),
@@ -36,97 +31,6 @@ export type BashToolInput = Static<typeof bashSchema>;
 export interface BashToolDetails {
 	truncation?: TruncationResult;
 	fullOutputPath?: string;
-}
-
-/**
- * Pluggable operations for the bash tool.
- * Override these to delegate command execution to remote systems (for example SSH).
- */
-export interface BashOperations {
-	/**
-	 * Execute a command and stream output.
-	 * @param command The command to execute
-	 * @param cwd Working directory
-	 * @param options Execution options
-	 * @returns Promise resolving to exit code (null if killed)
-	 */
-	exec: (
-		command: string,
-		cwd: string,
-		options: {
-			onData: (data: Buffer) => void;
-			signal?: AbortSignal;
-			timeout?: number;
-			env?: NodeJS.ProcessEnv;
-		},
-	) => Promise<{ exitCode: number | null }>;
-}
-
-/**
- * Create bash operations using pi's built-in local shell execution backend.
- *
- * This is useful for extensions that intercept user_bash and still want pi's
- * standard local shell behavior while wrapping or rewriting commands.
- */
-export function createLocalBashOperations(options?: { shellPath?: string }): BashOperations {
-	return {
-		exec: async (command, cwd, { onData, signal, timeout, env }) => {
-			const { shell, args } = getShellConfig(options?.shellPath);
-			try {
-				await fsAccess(cwd, constants.F_OK);
-			} catch {
-				throw new Error(`Working directory does not exist: ${cwd}\nCannot execute bash commands.`);
-			}
-			if (signal?.aborted) {
-				throw new Error("aborted");
-			}
-
-			const child = spawn(shell, [...args, command], {
-				cwd,
-				detached: true,
-				env: env ?? getShellEnv(),
-				stdio: ["ignore", "pipe", "pipe"],
-			});
-			if (child.pid) trackDetachedChildPid(child.pid);
-			let timedOut = false;
-			let timeoutHandle: NodeJS.Timeout | undefined;
-			const onAbort = () => {
-				if (child.pid) killProcessTree(child.pid);
-			};
-
-			try {
-				// Set timeout if provided.
-				if (timeout !== undefined && timeout > 0) {
-					timeoutHandle = setTimeout(() => {
-						timedOut = true;
-						if (child.pid) killProcessTree(child.pid);
-					}, timeout * 1000);
-				}
-				// Stream stdout and stderr.
-				child.stdout?.on("data", onData);
-				child.stderr?.on("data", onData);
-				// Handle abort signal by killing the entire process tree.
-				if (signal) {
-					if (signal.aborted) onAbort();
-					else signal.addEventListener("abort", onAbort, { once: true });
-				}
-				// Handle shell spawn errors and wait for the process to terminate without hanging
-				// on inherited stdio handles held by detached descendants.
-				const exitCode = await waitForChildProcess(child);
-				if (signal?.aborted) {
-					throw new Error("aborted");
-				}
-				if (timedOut) {
-					throw new Error(`timeout:${timeout}`);
-				}
-				return { exitCode };
-			} finally {
-				if (child.pid) untrackDetachedChildPid(child.pid);
-				if (timeoutHandle) clearTimeout(timeoutHandle);
-				if (signal) signal.removeEventListener("abort", onAbort);
-			}
-		},
-	};
 }
 
 export interface BashSpawnContext {

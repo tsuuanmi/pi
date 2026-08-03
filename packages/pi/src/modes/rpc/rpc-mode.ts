@@ -13,7 +13,7 @@
 
 import * as crypto from "node:crypto";
 import { type Theme, theme } from "@tsuuanmi/pi-tui";
-import { killTrackedDetachedChildren } from "#pi/exec/shell";
+import { killTrackedProcesses } from "#pi/execution/process-tree";
 import type {
 	ExtensionUIContext,
 	ExtensionUIDialogOptions,
@@ -359,7 +359,7 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 
 		for (const signal of signals) {
 			const handler = () => {
-				killTrackedDetachedChildren();
+				killTrackedProcesses();
 				void shutdown(signal === "SIGHUP" ? 129 : 143, signal);
 			};
 			process.on(signal, handler);

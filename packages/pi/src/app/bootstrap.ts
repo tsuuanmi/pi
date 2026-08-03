@@ -1,6 +1,6 @@
-import { applyHttpProxySettings, configureHttpDispatcher } from "#pi/exec/http-dispatcher";
 import { getAgentDir } from "#pi/loader/paths";
 import { runMigrations } from "#pi/migrations";
+import { applyHttpProxySettings, configureHttpDispatcher } from "#pi/network/http-dispatcher";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
 export interface StartupPaths {

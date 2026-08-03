@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { truncateHead, truncateTail } from "#pi/tools/output-truncation";
+import { truncateHead, truncateTail } from "#pi/output/truncation";
 
 const encoder = new TextEncoder();
 

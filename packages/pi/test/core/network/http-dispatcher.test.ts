@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { applyHttpProxySettings } from "#pi/exec/http-dispatcher";
+import { applyHttpProxySettings } from "#pi/network/http-dispatcher";
 
 const PROXY_ENV_KEYS = ["HTTP_PROXY", "HTTPS_PROXY"] as const;
 

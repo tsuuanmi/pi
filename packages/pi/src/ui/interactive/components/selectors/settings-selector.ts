@@ -19,7 +19,7 @@ import {
 	Text,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "#pi/exec/http-dispatcher";
+import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "#pi/network/http-dispatcher";
 
 const SETTINGS_SUBMENU_SELECT_LIST_LAYOUT: SelectListLayoutOptions = {
 	minPrimaryColumnWidth: 12,

@@ -239,7 +239,7 @@ Each tool returns structured details alongside its text output. Built-in tools a
 
 ### Truncation
 
-The `output-truncation` module (`src/tools/output-truncation.ts`) provides shared agent-output truncation utilities used by `read`, `grep`, `find`, and `ls`. It limits logical lines and UTF-8 bytes; it does not perform terminal-column or visual-row truncation:
+The `truncation` module (`src/output/truncation.ts`) provides shared agent-output truncation utilities used by `read`, `grep`, `find`, and `ls`. It limits logical lines and UTF-8 bytes; it does not perform terminal-column or visual-row truncation:
 
 ```typescript
 const DEFAULT_MAX_LINES = 2000;

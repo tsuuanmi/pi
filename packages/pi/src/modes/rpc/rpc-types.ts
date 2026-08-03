@@ -7,7 +7,7 @@
 
 import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
-import type { BashResult } from "#pi/exec/bash-executor";
+import type { BashResult } from "#pi/execution/bash-executor";
 import type { SourceInfo } from "#pi/package-manager/source-info";
 import type { SessionStats } from "#pi/runtime/agent-session";
 import type { CompactionResult } from "#pi/session/compaction";

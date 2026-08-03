@@ -6,7 +6,7 @@ import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import nodePath from "path";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
-import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "#pi/tools/output-truncation";
+import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "#pi/output/truncation";
 import { pathExists, resolveToCwd } from "#pi/tools/paths";
 import { getTextOutput, renderToolPath, str, toAgentTool } from "#pi/tools/utils";
 

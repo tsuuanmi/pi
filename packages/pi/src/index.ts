@@ -27,7 +27,7 @@ export {
 } from "#pi/auth/auth-storage";
 export { type Args, parseArgs } from "#pi/cli/args";
 // Shell utilities
-export { getShellConfig } from "#pi/exec/shell";
+export { getShellConfig } from "#pi/execution/shell-config";
 export { createEventBus, type EventBus, type EventBusController } from "#pi/extensions/event-bus";
 // Extension system
 export type {

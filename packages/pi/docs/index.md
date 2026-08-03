@@ -93,6 +93,8 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 - [Package manager](package-manager/package-manager.md) - Pi package distribution.
 - [Resources](resources/resources.md) - Resource loading and diagnostics.
 - [Tools](tools/tools.md) - Built-in tools and custom tool registration.
+- [Command execution](exec/exec.md) - Shell and command execution boundaries.
+- [HTTP networking](network/http.md) - HTTP proxy and idle-timeout configuration.
 
 ## Platform setup
 

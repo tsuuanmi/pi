@@ -7,7 +7,7 @@
  */
 
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
-import { killTrackedDetachedChildren } from "#pi/exec/shell";
+import { killTrackedProcesses } from "#pi/execution/process-tree";
 import { flushRawStdout, writeRawStdout } from "#pi/modes/output-guard";
 import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 
@@ -47,7 +47,7 @@ export async function runPrintMode(runtimeHost: AgentSessionRuntime, options: Pr
 
 		for (const signal of signals) {
 			const handler = () => {
-				killTrackedDetachedChildren();
+				killTrackedProcesses();
 				void disposeRuntime().finally(() => {
 					process.exit(signal === "SIGHUP" ? 129 : 143);
 				});
