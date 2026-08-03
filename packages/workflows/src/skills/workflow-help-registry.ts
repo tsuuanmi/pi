@@ -1,8 +1,8 @@
 import type { WorkflowSkill } from "#workflows/session/paths";
-import { DEEP_INTERVIEW_SKILL_HELP } from "#workflows/skills/deep-interview/deep-interview-help";
-import { RALPLAN_SKILL_HELP } from "#workflows/skills/ralplan/ralplan-help";
-import { TEAM_SKILL_HELP } from "#workflows/skills/team/team-help";
-import { ULTRAGOAL_SKILL_HELP } from "#workflows/skills/ultragoal/ultragoal-help";
+import { DEEP_INTERVIEW_SKILL_HELP } from "#workflows/skills/deep-interview/help";
+import { RALPLAN_SKILL_HELP } from "#workflows/skills/ralplan/help";
+import { TEAM_SKILL_HELP } from "#workflows/skills/team/help";
+import { ULTRAGOAL_SKILL_HELP } from "#workflows/skills/ultragoal/help";
 import type { WorkflowSkillHelp, WorkflowTypedArg } from "#workflows/skills/workflow-help-types";
 
 export const WORKFLOW_SKILL_HELP = {

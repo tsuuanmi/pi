@@ -10,8 +10,8 @@ import {
 import { initialWorkflowPhase } from "#workflows/registry/workflow-manifest";
 import type { WorkflowSkill } from "#workflows/session/paths";
 import { assertNonEmptySessionId, workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
-import { assertRalplanObstacle, writeRalplanObstacle } from "#workflows/skills/ralplan/ralplan-obstacles";
-import { assertUltragoalObstacle, writeUltragoalObstacle } from "#workflows/skills/ultragoal/ultragoal-obstacles";
+import { assertRalplanObstacle, writeRalplanObstacle } from "#workflows/skills/ralplan/obstacles";
+import { assertUltragoalObstacle, writeUltragoalObstacle } from "#workflows/skills/ultragoal/obstacles";
 import { applyHandoffToActiveState } from "#workflows/state/active-state";
 import { assertWorkflowSkill, type WorkflowStateEnvelope } from "#workflows/state/state-schema";
 import { readWorkflowState, writeWorkflowState } from "#workflows/state/workflow-state";

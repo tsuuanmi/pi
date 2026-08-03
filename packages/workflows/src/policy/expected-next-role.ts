@@ -64,7 +64,7 @@ export function assertExpectedNextRole(
 //
 // These exports are deterministic selectors used by tests and runtime helpers.
 // Phase logic is registered by per-skill transition sidecars (for example,
-// skills/ralplan/ralplan-transitions.ts), so this module does not duplicate a
+// skills/ralplan/transitions.ts), so this module does not duplicate a
 // hardcoded transition engine.
 // ---------------------------------------------------------------------------
 

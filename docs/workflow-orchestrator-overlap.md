@@ -25,7 +25,7 @@ This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-
 
 ### Team workflow
 
-`packages/workflows/src/skills/team/team-runtime.ts` defines workflow-specific team state:
+`packages/workflows/src/skills/team/runtime.ts` defines workflow-specific team state:
 
 - `TeamConfig`
 - `TeamWorker`
@@ -34,7 +34,7 @@ This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-
 - mailbox and event files
 - workflow HUD state
 
-`packages/workflows/src/skills/team/team-tools.ts` selects guarded worker, reviewer, and prover roles, then submits each role batch to the orchestrator. These are workflow policy roles, not generic `orchestrator.Team` agents.
+`packages/workflows/src/skills/team/tools.ts` selects guarded worker, reviewer, and prover roles, then submits each role batch to the orchestrator. These are workflow policy roles, not generic `orchestrator.Team` agents.
 
 Decision:
 
@@ -62,7 +62,7 @@ Do not move into orchestrator:
 
 ### Ultragoal workflow
 
-`packages/workflows/src/skills/ultragoal/ultragoal-runtime.ts` owns goal state, blocker handling, ledger events, quality gates, and checkpoint artifacts. These are user-facing workflow concepts.
+`packages/workflows/src/skills/ultragoal/runtime.ts` owns goal state, blocker handling, ledger events, quality gates, and checkpoint artifacts. These are user-facing workflow concepts.
 
 Overlap with orchestrator exists around:
 
@@ -87,7 +87,7 @@ Do not move into orchestrator:
 
 ### Ralplan workflow
 
-`packages/workflows/src/skills/ralplan/ralplan-runtime.ts` owns role-stage planning artifacts, critic verdicts, approval handoff, obstacles, and completion transaction journals. `ralplan-orchestrator.ts` submits one guarded role task to `@tsuuanmi/pi-orchestrator` and verifies the workflow artifact before task completion.
+`packages/workflows/src/skills/ralplan/runtime.ts` owns role-stage planning artifacts, critic verdicts, approval handoff, obstacles, and completion transaction journals. `orchestrator.ts` submits one guarded role task to `@tsuuanmi/pi-orchestrator` and verifies the workflow artifact before task completion.
 
 The overlap is execution, not policy. Ralplan selects the legal role and stage, while the generic engine invokes the workflow-created runtime Agent, persists its checkpoint, and records its task receipt.
 
@@ -117,7 +117,7 @@ Do not move into orchestrator:
 
 ### Deep-interview workflow
 
-`packages/workflows/src/skills/deep-interview/deep-interview-runtime.ts` owns ambiguity scoring, interview rounds, topology/question state, closure, and spec handoff. This has no meaningful generic task-DAG overlap.
+`packages/workflows/src/skills/deep-interview/runtime.ts` owns ambiguity scoring, interview rounds, topology/question state, closure, and spec handoff. This has no meaningful generic task-DAG overlap.
 
 Decision:
 
@@ -160,7 +160,7 @@ Decision:
 
 ## Direct manager exception
 
-Workflow code may call `SubagentManager` directly only when the operation controls one subagent or runs one workflow-owned worker. The allowed adapters are `subagents/subagent-tools.ts`, `skills/team/agent-adapter.ts`, `skills/ralplan/ralplan-agent-adapter.ts`, and `skills/ultragoal/ultragoal-tools.ts`. A workflow must use the orchestrator for task dependencies, agent assignment, retries, queue execution, or agent collaboration. Unknown manager call sites fail the package boundary check.
+Workflow code may call `SubagentManager` directly only when the operation controls one subagent or runs one workflow-owned worker. The allowed adapters are `subagents/subagent-tools.ts`, `skills/team/agent-adapter.ts`, `skills/ralplan/agent-adapter.ts`, and `skills/ultragoal/tools.ts`. A workflow must use the orchestrator for task dependencies, agent assignment, retries, queue execution, or agent collaboration. Unknown manager call sites fail the package boundary check.
 
 ## Adapter acceptance criteria
 

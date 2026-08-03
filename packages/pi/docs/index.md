@@ -69,10 +69,10 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 ## Skills
 
-- [Deep Interview](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/deep-interview/deep-interview.md) - Socratic requirements interview with ambiguity scoring.
-- [Ralplan](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/ralplan/ralplan.md) - Consensus planning with Planner, Architect, and Critic.
-- [Team](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/team/team.md) - Coordinate parallel implementation workers.
-- [Ultragoal](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/ultragoal/ultragoal.md) - Goal-tracked autonomous execution.
+- [Deep Interview](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/deep-interview/index.md) - Socratic requirements interview with ambiguity scoring.
+- [Ralplan](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/ralplan/index.md) - Consensus planning with Planner, Architect, and Critic.
+- [Team](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/team/index.md) - Coordinate parallel implementation workers.
+- [Ultragoal](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/ultragoal/index.md) - Goal-tracked autonomous execution.
 
 ## Programmatic usage
 

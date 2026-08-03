@@ -6,10 +6,10 @@
  */
 
 // Register built-in skill transition tables for selector/gate helpers exported below.
-import "#workflows/skills/deep-interview/deep-interview-transitions";
-import "#workflows/skills/ralplan/ralplan-transitions";
-import "#workflows/skills/team/team-transitions";
-import "#workflows/skills/ultragoal/ultragoal-transitions";
+import "#workflows/skills/deep-interview/transitions";
+import "#workflows/skills/ralplan/transitions";
+import "#workflows/skills/team/transitions";
+import "#workflows/skills/ultragoal/transitions";
 
 export * from "#workflows/artifacts/artifacts";
 export * from "#workflows/audit/audit-log";
@@ -44,45 +44,49 @@ export * from "#workflows/runtime/vanish";
 export * from "#workflows/session/paths";
 export * from "#workflows/session/session-layout";
 export * from "#workflows/session/session-resolution";
-export * from "#workflows/skills/deep-interview/deep-interview-mutation-guard";
-export * from "#workflows/skills/deep-interview/deep-interview-runtime";
-export * from "#workflows/skills/deep-interview/deep-interview-state";
-export * from "#workflows/skills/deep-interview/deep-interview-tools";
 export { assertDeepInterviewHandoff, type DeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
-export {
-	assertRalplanApprovalTarget,
-	assertRalplanRole,
-} from "#workflows/skills/ralplan/guards";
+export * from "#workflows/skills/deep-interview/mutation-guard";
+export * from "#workflows/skills/deep-interview/runtime";
+export * from "#workflows/skills/deep-interview/state";
+export * from "#workflows/skills/deep-interview/tools";
 export {
 	createRalplanAgentRequest,
 	type RalplanAgentInput,
 	type RalplanAgentRequest,
 	type RalplanAgentRole,
 	roleForStage,
-} from "#workflows/skills/ralplan/ralplan-agent";
-export * from "#workflows/skills/ralplan/ralplan-compact";
-export * from "#workflows/skills/ralplan/ralplan-completion-transaction";
-export * from "#workflows/skills/ralplan/ralplan-expected-action";
-export * from "#workflows/skills/ralplan/ralplan-gates";
-export * from "#workflows/skills/ralplan/ralplan-obstacles";
-export * from "#workflows/skills/ralplan/ralplan-orchestration-snapshot";
+} from "#workflows/skills/ralplan/agent";
+export * from "#workflows/skills/ralplan/compact";
+export * from "#workflows/skills/ralplan/completion-transaction";
+export * from "#workflows/skills/ralplan/expected-action";
+export * from "#workflows/skills/ralplan/gates";
+export {
+	assertRalplanApprovalTarget,
+	assertRalplanRole,
+} from "#workflows/skills/ralplan/guards";
+export * from "#workflows/skills/ralplan/obstacles";
+export * from "#workflows/skills/ralplan/orchestration-snapshot";
 export {
 	planRalplanAgent,
 	type RalplanStageInput,
 	type RalplanStageResult,
 	runRalplanStage,
-} from "#workflows/skills/ralplan/ralplan-orchestrator";
-export type { RalplanAgentRecord } from "#workflows/skills/ralplan/ralplan-record";
-export * from "#workflows/skills/ralplan/ralplan-runtime";
-export * from "#workflows/skills/ralplan/ralplan-verdicts";
+} from "#workflows/skills/ralplan/orchestrator";
+export type { RalplanAgentRecord } from "#workflows/skills/ralplan/record";
+export * from "#workflows/skills/ralplan/runtime";
+export * from "#workflows/skills/ralplan/verdicts";
 // Harness runtime
 export * from "#workflows/skills/team/agent-adapter";
 export * from "#workflows/skills/team/checkpoint-store";
+export * from "#workflows/skills/team/compact";
+export * from "#workflows/skills/team/coordinator";
 export * from "#workflows/skills/team/event-mapper";
 export * from "#workflows/skills/team/event-store";
+export * from "#workflows/skills/team/execution";
 export * from "#workflows/skills/team/execution-applier";
 export * from "#workflows/skills/team/execution-failure";
 export * from "#workflows/skills/team/execution-store";
+export * from "#workflows/skills/team/orchestrator";
 export * from "#workflows/skills/team/orchestrator-checkpoint";
 export * from "#workflows/skills/team/orchestrator-events";
 export * from "#workflows/skills/team/receipt-mapper";
@@ -91,19 +95,15 @@ export * from "#workflows/skills/team/role-contract";
 export * from "#workflows/skills/team/role-run-store";
 export * from "#workflows/skills/team/role-tasks";
 export * from "#workflows/skills/team/role-transitions";
+export * from "#workflows/skills/team/runtime";
 export * from "#workflows/skills/team/status-mapper";
 export * from "#workflows/skills/team/task-mapper";
-export * from "#workflows/skills/team/team-compact";
-export * from "#workflows/skills/team/team-coordinator";
-export * from "#workflows/skills/team/team-execution";
-export * from "#workflows/skills/team/team-orchestrator";
-export * from "#workflows/skills/team/team-runtime";
-export * from "#workflows/skills/ultragoal/ultragoal-artifacts";
-export * from "#workflows/skills/ultragoal/ultragoal-compact";
-export * from "#workflows/skills/ultragoal/ultragoal-guard";
-export * from "#workflows/skills/ultragoal/ultragoal-obstacles";
-export * from "#workflows/skills/ultragoal/ultragoal-quality-gate";
-// ultragoal-receipt: avoid re-exporting requiredGoals (conflicts with ultragoal-runtime)
+export * from "#workflows/skills/ultragoal/artifacts";
+export * from "#workflows/skills/ultragoal/compact";
+export * from "#workflows/skills/ultragoal/guard";
+export * from "#workflows/skills/ultragoal/obstacles";
+export * from "#workflows/skills/ultragoal/quality-gate";
+// Receipt module: avoid re-exporting requiredGoals (conflicts with runtime).
 export {
 	buildCompletionReceipt,
 	chooseReceiptKind,
@@ -126,8 +126,8 @@ export {
 	type UltragoalReceiptDiagnosticState,
 	type UltragoalReceiptKind,
 	validateCompletionReceipt,
-} from "#workflows/skills/ultragoal/ultragoal-receipt";
-export * from "#workflows/skills/ultragoal/ultragoal-runtime";
+} from "#workflows/skills/ultragoal/receipt";
+export * from "#workflows/skills/ultragoal/runtime";
 // Runtime modules — re-export everything for external consumers
 export * from "#workflows/state/active-state";
 export * from "#workflows/state/state-schema";

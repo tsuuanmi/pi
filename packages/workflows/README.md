@@ -262,7 +262,7 @@ Key seams for contributors:
 
 - **Deferred-seam registry** (`runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
 - **`validateReceiptFamilyConsistency`** (`runtime/receipt-rules.ts`): a write-path guard inside `mutateRuntimeSession` that rejects receipts whose post-state lifecycle contradicts their family target. It throws before any write so a contradiction leaves zero orphan events/receipts/state. Conservative and pluggable; future receipt families register rules in `receiptFamilyConsistencyRules`.
-- **HUD rendering**: per-skill HUD builders live in the owning skill folders (`deep-interview-hud.ts`, `ralplan-hud.ts`, `team-hud.ts`, `ultragoal-hud.ts`). Workflow HUD synchronization is registered by `@tsuuanmi/pi-workflows/register` through `@tsuuanmi/pi-tui`; workflow mirroring remains session-scoped because the status line reads active state directly.
+- **HUD rendering**: per-skill HUD builders live in the owning skill folders (`deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts`). Workflow HUD synchronization is registered by `@tsuuanmi/pi-workflows/register` through `@tsuuanmi/pi-tui`; workflow mirroring remains session-scoped because the status line reads active state directly.
 
 ### Session Layout
 
@@ -297,7 +297,7 @@ Top-level shared folders provide common utilities used by all four skills:
 | `artifacts/` | `artifacts.ts` | Durable artifact writes and receipt helpers. |
 | `audit/` | `audit-log.ts`, `decision-ledger.ts`, `tamper-detection.ts`, `transaction-journal.ts` | Append-only audit, decision, tamper, and transaction records. |
 | `compaction/` | `compaction.ts` | Prompt-budgeted compact workflow projections. |
-| Skill HUD modules | `deep-interview-hud.ts`, `ralplan-hud.ts`, `team-hud.ts`, `ultragoal-hud.ts` | HUD chip formatting for each workflow skill, colocated with the owning skill folder. |
+| Skill HUD modules | `deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts` | HUD chip formatting for each workflow skill, colocated with the owning skill folder. |
 | `policy/`, `handoff/` | `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Cross-workflow prompts, handoffs, gates, and expected-next checks. Skill-specific guards live with their skill; subagent lifecycle guards live under `src/subagents/`. |
 | `registry/` | `skill-registry.ts`, `workflow-manifest.ts` | Built-in skill registry and manifest metadata. |
 | `session/` | `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Session-scoped path builders and session-id resolution. |

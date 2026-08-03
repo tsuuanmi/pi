@@ -59,18 +59,18 @@ workflow team state
 | `agent-adapter.ts` | Convert explicit subagent profiles into orchestrator agents |
 | `execution-applier.ts` | Apply execution state without changing workflow gate status |
 | `execution-store.ts` | Persist execution fields without overwriting workflow status |
-| `team-execution.ts` | Compose run, apply, and persist as one fail-fast operation |
-| `team-tools.ts` | Expose explicit `team_execute` and `team_resume` entry points |
+| `execution.ts` | Compose run, apply, and persist as one fail-fast operation |
+| `tools.ts` | Expose explicit `team_execute` and `team_resume` entry points |
 | `role-contract.ts` | Validate required reviewer and prover workflow evidence |
 | `role-run-store.ts` | Persist failures for every role run |
 | `role-tasks.ts` | Build the next worker, reviewer, or prover task batch |
 | `role-transitions.ts` | Apply workflow-owned transitions after successful role execution |
-| `team-coordinator.ts` | Select the legal role and call fresh/resume execution |
+| `coordinator.ts` | Select the legal role and call fresh/resume execution |
 | `receipt-store.ts` | Persist all role receipts, including synthetic prover receipts |
 | `execution-failure.ts` | Build persisted failure state for aborted or failed runs |
-| `team-orchestrator.ts` | Run an explicitly configured team through `Orchestrator.run()` |
+| `orchestrator.ts` | Run an explicitly configured team through `Orchestrator.run()` |
 
-`team-execution.ts` is the workflow-owned composition boundary for a persisted role run. `executeTeam()` requires a new run id and fresh pending role tasks; `resumeTeam()` requires an existing non-completed checkpoint. Both operations reject unresolved workflow blockers, persist failure state, deduplicate event records, and write execution fields without changing workflow status. Review and completion gates remain authoritative. Mapping modules do not own orchestration policy.
+`execution.ts` is the workflow-owned composition boundary for a persisted role run. `executeTeam()` requires a new run id and fresh pending role tasks; `resumeTeam()` requires an existing non-completed checkpoint. Both operations reject unresolved workflow blockers, persist failure state, deduplicate event records, and write execution fields without changing workflow status. Review and completion gates remain authoritative. Mapping modules do not own orchestration policy.
 
 Names stay concise and workflow-owned. Orchestrator does not define workflow adapter names.
 

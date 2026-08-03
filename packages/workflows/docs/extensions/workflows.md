@@ -9,8 +9,8 @@ Pi's bundled extension is a thin adapter at `packages/pi/src/extensions/builtin-
 `registerWorkflows(host)` registers:
 
 - Generic subagent lifecycle tools from `src/subagents/subagent-tools.ts`.
-- Deep Interview state tools from `src/skills/deep-interview/deep-interview-tools.ts`.
-- Guarded workflow spawn tools from `src/skills/ralplan/ralplan-tools.ts`, `src/skills/team/team-tools.ts`, and `src/skills/ultragoal/ultragoal-tools.ts`.
+- Deep Interview state tools from `src/skills/deep-interview/tools.ts`.
+- Guarded workflow spawn tools from `src/skills/ralplan/tools.ts`, `src/skills/team/tools.ts`, and `src/skills/ultragoal/tools.ts`.
 - HUD refresh hooks for workflow-visible state changes.
 - The Deep Interview mutation guard for `edit`, `write`, and `bash` tool calls.
 

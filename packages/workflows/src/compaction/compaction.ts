@@ -18,11 +18,11 @@
  * runtime readers import this dispatcher; the pure projections do not.
  */
 
-import { projectCompactState } from "#workflows/skills/deep-interview/deep-interview-state";
-import { projectRalplanCompact } from "#workflows/skills/ralplan/ralplan-compact";
-import type { RalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";
-import { projectTeamCompact, type TeamCompactInput } from "#workflows/skills/team/team-compact";
-import { projectUltragoalCompact, type UltragoalCompactInput } from "#workflows/skills/ultragoal/ultragoal-compact";
+import { projectCompactState } from "#workflows/skills/deep-interview/state";
+import { projectRalplanCompact } from "#workflows/skills/ralplan/compact";
+import type { RalplanStatus } from "#workflows/skills/ralplan/runtime";
+import { projectTeamCompact, type TeamCompactInput } from "#workflows/skills/team/compact";
+import { projectUltragoalCompact, type UltragoalCompactInput } from "#workflows/skills/ultragoal/compact";
 
 /** Budget options a compact schema may apply during projection. */
 export interface CompactBudget {

@@ -1,5 +1,5 @@
 import type { TaskStatus } from "@tsuuanmi/pi-orchestrator";
-import type { TeamTaskStatus } from "#workflows/skills/team/team-runtime";
+import type { TeamTaskStatus } from "#workflows/skills/team/runtime";
 
 export type TeamExecutionStatus = TaskStatus;
 

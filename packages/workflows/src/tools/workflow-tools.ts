@@ -1,9 +1,9 @@
 import type { AgentToolResult, AgentToolUpdateCallback, SubagentManager, ToolExecutionMode } from "@tsuuanmi/pi-agent";
 import type { Static, TSchema } from "typebox";
-import { registerDeepInterviewTools } from "#workflows/skills/deep-interview/deep-interview-tools";
-import { registerRalplanTools } from "#workflows/skills/ralplan/ralplan-tools";
-import { registerTeamTools } from "#workflows/skills/team/team-tools";
-import { registerUltragoalTools } from "#workflows/skills/ultragoal/ultragoal-tools";
+import { registerDeepInterviewTools } from "#workflows/skills/deep-interview/tools";
+import { registerRalplanTools } from "#workflows/skills/ralplan/tools";
+import { registerTeamTools } from "#workflows/skills/team/tools";
+import { registerUltragoalTools } from "#workflows/skills/ultragoal/tools";
 import { registerSubagentTools } from "#workflows/subagents/subagent-tools";
 
 export interface WorkflowContext {

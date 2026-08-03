@@ -1,6 +1,6 @@
 import type { ExpectedNextRole } from "#workflows/policy/expected-next-role";
+import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/runtime";
 import type { TeamTaskRoute } from "#workflows/skills/team/task-mapper";
-import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/team-runtime";
 
 export interface RoleBatch {
 	tasks: readonly TeamTask[];

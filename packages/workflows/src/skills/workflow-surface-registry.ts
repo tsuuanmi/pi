@@ -1,8 +1,8 @@
 import type { WorkflowSkill } from "#workflows/session/paths";
-import { DEEP_INTERVIEW_SURFACE } from "#workflows/skills/deep-interview/deep-interview-surface";
-import { RALPLAN_SURFACE } from "#workflows/skills/ralplan/ralplan-surface";
-import { TEAM_SURFACE } from "#workflows/skills/team/team-surface";
-import { ULTRAGOAL_SURFACE } from "#workflows/skills/ultragoal/ultragoal-surface";
+import { DEEP_INTERVIEW_SURFACE } from "#workflows/skills/deep-interview/surface";
+import { RALPLAN_SURFACE } from "#workflows/skills/ralplan/surface";
+import { TEAM_SURFACE } from "#workflows/skills/team/surface";
+import { ULTRAGOAL_SURFACE } from "#workflows/skills/ultragoal/surface";
 import type { WorkflowSkillSurface, WorkflowToolSurface } from "#workflows/skills/workflow-surface-types";
 import { SUBAGENT_TOOLS } from "#workflows/subagents/subagent-surface";
 

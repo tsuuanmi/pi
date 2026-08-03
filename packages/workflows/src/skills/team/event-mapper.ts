@@ -1,6 +1,6 @@
 import type { TaskQueueEvent } from "@tsuuanmi/pi-orchestrator";
+import type { TeamTaskStatus } from "#workflows/skills/team/runtime";
 import { mapTaskStatus } from "#workflows/skills/team/status-mapper";
-import type { TeamTaskStatus } from "#workflows/skills/team/team-runtime";
 
 export interface TeamEvent {
 	type:

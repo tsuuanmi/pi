@@ -1,5 +1,5 @@
 import type { TeamTaskReceiptRef } from "#workflows/skills/team/receipt-mapper";
-import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/team-runtime";
+import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/runtime";
 
 export function applyExecutionFailure(
 	snapshot: TeamSnapshot,

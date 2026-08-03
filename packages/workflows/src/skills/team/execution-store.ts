@@ -1,5 +1,5 @@
 import { teamTaskPath } from "#workflows/session/session-layout";
-import { syncTeamState, type TeamSnapshot, type TeamTaskExecution } from "#workflows/skills/team/team-runtime";
+import { syncTeamState, type TeamSnapshot, type TeamTaskExecution } from "#workflows/skills/team/runtime";
 import { canonicalizeJson, readExistingStateForMutation, writeJsonAtomic } from "#workflows/state/state-writer";
 
 export async function saveTeamExecution(cwd: string, sessionId: string, snapshot: TeamSnapshot): Promise<void> {

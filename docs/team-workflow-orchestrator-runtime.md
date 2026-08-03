@@ -107,20 +107,20 @@ Runtime seams are explicit and workflow-owned:
 | Seam | Purpose | Status |
 | --- | --- | --- |
 | agent roster | Converts explicit subagent profiles into orchestrator agents | Implemented by `agent-adapter.ts` |
-| coordinator | Selects the legal role and builds the admitted task batch | Implemented by `team-coordinator.ts` |
+| coordinator | Selects the legal role and builds the admitted task batch | Implemented by `coordinator.ts` |
 | role contract | Requires passed gate status and valid, non-blocking reviewer/prover evidence before success is reported | Implemented by `role-contract.ts` |
 | role failure | Persists failures when no workflow task can hold execution state | Implemented by `role-run-store.ts` |
 | role transition | Applies workflow-owned status changes after execution | Implemented by `role-transitions.ts` |
 | receipt store | Persists every role receipt | Implemented by `receipt-store.ts` |
 | failure state | Converts failed/aborted execution into durable workflow execution state | Implemented by `execution-failure.ts` and `role-run-store.ts` |
-| orchestrator runner | Calls `Orchestrator.run()` for every team execution | Implemented by `team-orchestrator.ts` |
+| orchestrator runner | Calls `Orchestrator.run()` for every team execution | Implemented by `orchestrator.ts` |
 | checkpoint store factory | Creates `TeamCheckpointStore` from workflow storage | Implemented by `orchestrator-checkpoint.ts` |
 | event sink factory | Maps queue events for workflow persistence | Implemented by `event-mapper.ts` and `event-store.ts` |
 | task mapper | Converts workflow tasks to `TaskInput[]` | Implemented by `task-mapper.ts` |
 | result mapper | Converts `RunTeamResult` into execution-only workflow state | Implemented by `execution-applier.ts` and receipt mappers |
 | execution store | Persists execution fields without changing workflow status; rejects stale or conflicting writes | Implemented by `execution-store.ts` |
 | capability routing | Requires exact role capability matches; missing matches fail closed | Implemented by Orchestrator routing and `agent-adapter.ts` |
-| execution boundary | Composes run, apply, and persist | Implemented by `team-execution.ts` |
+| execution boundary | Composes run, apply, and persist | Implemented by `execution.ts` |
 | explicit runtime tools | Supply fresh/resume operation and agent roster | Implemented by `team_execute` and `team_resume` |
 
 These seams live in `@tsuuanmi/pi-workflows`.

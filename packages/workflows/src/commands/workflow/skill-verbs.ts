@@ -1,7 +1,7 @@
-import "#workflows/skills/deep-interview/deep-interview-transitions";
-import "#workflows/skills/ralplan/ralplan-transitions";
-import "#workflows/skills/team/team-transitions";
-import "#workflows/skills/ultragoal/ultragoal-transitions";
+import "#workflows/skills/deep-interview/transitions";
+import "#workflows/skills/ralplan/transitions";
+import "#workflows/skills/team/transitions";
+import "#workflows/skills/ultragoal/transitions";
 import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
 import {
 	inputString,
@@ -17,6 +17,7 @@ import {
 import { handoffWorkflow } from "#workflows/handoff/handoff";
 import type { RalplanStage } from "#workflows/session/paths";
 import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";
+import { assertDeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
 import {
 	appendOrMergeDeepInterviewRound,
 	assertDeepInterviewSpecReady,
@@ -26,21 +27,17 @@ import {
 	readDeepInterviewStateCompact,
 	restateGoalGate,
 	runClosureCheckForSession,
-} from "#workflows/skills/deep-interview/deep-interview-runtime";
-import type {
-	DeepInterviewAdvisoryMetadata,
-	DeepInterviewRoundRecord,
-} from "#workflows/skills/deep-interview/deep-interview-state";
-import { assertDeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
-import { recordRalplanExplorerGateArtifact } from "#workflows/skills/ralplan/ralplan-gates";
-import type { RalplanApprovalTarget } from "#workflows/skills/ralplan/ralplan-runtime";
+} from "#workflows/skills/deep-interview/runtime";
+import type { DeepInterviewAdvisoryMetadata, DeepInterviewRoundRecord } from "#workflows/skills/deep-interview/state";
+import { recordRalplanExplorerGateArtifact } from "#workflows/skills/ralplan/gates";
+import type { RalplanApprovalTarget } from "#workflows/skills/ralplan/runtime";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
 	readRalplanCompactStatus,
 	readRalplanStatus,
 	writeRalplanArtifact,
-} from "#workflows/skills/ralplan/ralplan-runtime";
+} from "#workflows/skills/ralplan/runtime";
 import {
 	completeTeam,
 	createTeamTask,
@@ -51,10 +48,10 @@ import {
 	sendTeamMessage,
 	startTeam,
 	transitionTeamTask,
-} from "#workflows/skills/team/team-runtime";
-import { ultragoalGuard } from "#workflows/skills/ultragoal/ultragoal-guard";
-import type { UltragoalGoalMode } from "#workflows/skills/ultragoal/ultragoal-receipt";
-import type { UltragoalBlockerClassification } from "#workflows/skills/ultragoal/ultragoal-runtime";
+} from "#workflows/skills/team/runtime";
+import { ultragoalGuard } from "#workflows/skills/ultragoal/guard";
+import type { UltragoalGoalMode } from "#workflows/skills/ultragoal/receipt";
+import type { UltragoalBlockerClassification } from "#workflows/skills/ultragoal/runtime";
 import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
@@ -64,7 +61,7 @@ import {
 	recordUltragoalReviewBlockers,
 	restoreUltragoalCheckpoint,
 	startNextUltragoalGoal,
-} from "#workflows/skills/ultragoal/ultragoal-runtime";
+} from "#workflows/skills/ultragoal/runtime";
 import { assertSafePathComponent } from "#workflows/state/state-schema";
 import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/state/state-writer";
 import { activeRalplanRunId, defaultWorkflowId } from "#workflows/state/workflow-state";

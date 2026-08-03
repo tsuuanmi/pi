@@ -1,5 +1,5 @@
 import { refreshHudUi } from "@tsuuanmi/pi-tui";
-import { getDeepInterviewMutationDecision } from "#workflows/skills/deep-interview/deep-interview-mutation-guard";
+import { getDeepInterviewMutationDecision } from "#workflows/skills/deep-interview/mutation-guard";
 import { registerWorkflowTools, type WorkflowToolHost } from "#workflows/tools/workflow-tools";
 
 interface WorkflowUi {

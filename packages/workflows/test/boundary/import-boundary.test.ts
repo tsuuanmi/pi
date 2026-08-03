@@ -66,7 +66,7 @@ describe("workflow package import boundary", () => {
 	});
 
 	it("routes Team execution through the orchestrator", async () => {
-		const source = await readFile(join(workflowsSrc, "skills/team/team-execution.ts"), "utf8");
+		const source = await readFile(join(workflowsSrc, "skills/team/execution.ts"), "utf8");
 
 		expect(source).toContain("runTeamOrchestrator");
 		expect(source).not.toMatch(
