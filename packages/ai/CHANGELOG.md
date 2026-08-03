@@ -23,6 +23,10 @@
 - **transport**: Moved the generic proxy stream helper from `@tsuuanmi/pi-agent` to `@tsuuanmi/pi-ai`.
 - **protocol**: Merged context-overflow response helpers into `model/response`.
 
+### Fixed
+
+- **models**: Restored generated provider compatibility metadata for Anthropic temperature/thinking behavior and current OpenAI reasoning levels.
+
 ## [0.2.2] - 2026-07-23
 
 ### Added

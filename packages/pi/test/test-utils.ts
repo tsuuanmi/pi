@@ -12,8 +12,8 @@ import { createEventBus } from "#pi/extensions/event-bus";
 import type { Extension, ExtensionFactory, LoadExtensionsResult } from "#pi/extensions/index";
 import { createExtensionRuntime, loadExtensionFromFactory } from "#pi/extensions/loader";
 import { createCodingTools } from "#pi/index";
-import type { ResourceLoader } from "#pi/loader/resources";
 import { ModelRegistry } from "#pi/loader/model-registry";
+import type { ResourceLoader } from "#pi/loader/resources";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
@@ -155,7 +155,7 @@ export function createTestSession(options: TestSessionOptions = {}): TestSession
 	}
 
 	const authStorage = AuthStorage.create(join(tempDir, "auth.json"));
-	const modelRegistry = ModelRegistry.create(authStorage, tempDir);
+	const modelRegistry = ModelRegistry.create(authStorage, settingsManager);
 
 	const session = new AgentSession({
 		agent,

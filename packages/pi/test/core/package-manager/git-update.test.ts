@@ -10,7 +10,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { CommandRunner } from "#pi/package-manager/commands";
 import { DefaultPackageManager } from "#pi/package-manager/package-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
@@ -62,6 +63,10 @@ type GitSourceForTest = {
 interface PackageManagerPathInternals {
 	parseSource(source: string): GitSourceForTest;
 	getGitInstallPath(source: GitSourceForTest, scope: "temporary"): string;
+}
+
+function getCommandRunner(packageManager: DefaultPackageManager): CommandRunner {
+	return (packageManager as unknown as { commandRunner: CommandRunner }).commandRunner;
 }
 
 describe("DefaultPackageManager git update", () => {
@@ -134,26 +139,11 @@ describe("DefaultPackageManager git update", () => {
 			git(["clone", remoteDir, installedDir], tempDir);
 			settingsManager.setPackages([gitSource]);
 
-			const executedCommands: string[] = [];
-			const managerWithInternals = packageManager as unknown as {
-				runCommand: (command: string, args: string[], options?: { cwd?: string }) => Promise<void>;
-			};
-			managerWithInternals.runCommand = async (command, args, options) => {
-				executedCommands.push(`${command} ${args.join(" ")}`);
-				if (command === "npm") {
-					return;
-				}
-				const result = spawnSync(command, args, {
-					cwd: options?.cwd,
-					encoding: "utf-8",
-				});
-				if (result.status !== 0) {
-					throw new Error(`Command failed: ${command} ${args.join(" ")}\n${result.stderr}`);
-				}
-			};
+			const runCommandSpy = vi.spyOn(getCommandRunner(packageManager), "run");
 
 			await packageManager.update();
 
+			const executedCommands = runCommandSpy.mock.calls.map(([command, args]) => `${command} ${args.join(" ")}`);
 			expect(executedCommands).toContain(
 				"git fetch --prune --no-tags origin +refs/heads/main:refs/remotes/origin/main",
 			);
@@ -201,23 +191,11 @@ describe("DefaultPackageManager git update", () => {
 			const detachedCommit = getCurrentCommit(installedDir);
 			git(["checkout", detachedCommit], installedDir);
 
-			const executedCommands: string[] = [];
-			const managerWithInternals = packageManager as unknown as {
-				runCommand: (command: string, args: string[], options?: { cwd?: string }) => Promise<void>;
-			};
-			managerWithInternals.runCommand = async (command, args, options) => {
-				executedCommands.push(`${command} ${args.join(" ")}`);
-				const result = spawnSync(command, args, {
-					cwd: options?.cwd,
-					encoding: "utf-8",
-				});
-				if (result.status !== 0) {
-					throw new Error(`Command failed: ${command} ${args.join(" ")}\n${result.stderr}`);
-				}
-			};
+			const runCommandSpy = vi.spyOn(getCommandRunner(packageManager), "run");
 
 			await packageManager.update();
 
+			const executedCommands = runCommandSpy.mock.calls.map(([command, args]) => `${command} ${args.join(" ")}`);
 			expect(executedCommands).toContain(
 				"git fetch --prune --no-tags origin +refs/heads/main:refs/remotes/origin/main",
 			);
@@ -363,23 +341,11 @@ describe("DefaultPackageManager git update", () => {
 
 			settingsManager.setPackages([`${gitSource}@v1`]);
 
-			const executedCommands: string[] = [];
-			const managerWithInternals = packageManager as unknown as {
-				runCommand: (command: string, args: string[], options?: { cwd?: string }) => Promise<void>;
-			};
-			managerWithInternals.runCommand = async (command, args, options) => {
-				executedCommands.push(`${command} ${args.join(" ")}`);
-				const result = spawnSync(command, args, {
-					cwd: options?.cwd,
-					encoding: "utf-8",
-				});
-				if (result.status !== 0) {
-					throw new Error(`Command failed: ${command} ${args.join(" ")}\n${result.stderr}`);
-				}
-			};
+			const runCommandSpy = vi.spyOn(getCommandRunner(packageManager), "run");
 
 			await packageManager.update();
 
+			const executedCommands = runCommandSpy.mock.calls.map(([command, args]) => `${command} ${args.join(" ")}`);
 			expect(executedCommands).toContain("git fetch origin v1");
 			expect(executedCommands.some((command) => command.startsWith("git reset --hard"))).toBe(false);
 			expect(executedCommands).not.toContain("git clean -fdx");
@@ -401,32 +367,31 @@ describe("DefaultPackageManager git update", () => {
 			);
 			writeFileSync(extensionFile, "// stale");
 
-			const executedCommands: string[] = [];
-			const managerWithInternals = packageManager as unknown as {
-				runCommand: (command: string, args: string[], options?: { cwd?: string }) => Promise<void>;
-				runCommandCapture: (command: string, args: string[], options?: { cwd?: string }) => Promise<string>;
-			};
-			managerWithInternals.runCommand = async (command, args) => {
-				executedCommands.push(`${command} ${args.join(" ")}`);
+			const commandRunner = getCommandRunner(packageManager);
+			const runCommandSpy = vi.spyOn(commandRunner, "run").mockImplementation(async (command, args) => {
 				if (command === "git" && args[0] === "reset") {
 					writeFileSync(extensionFile, "// fresh");
 				}
-			};
-			managerWithInternals.runCommandCapture = async (_command, args) => {
-				if (args[0] === "rev-parse" && args[1] === "HEAD") {
-					return "local-head";
+			});
+			vi.spyOn(commandRunner, "capture").mockImplementation(async (_command, args) => {
+				if (args[0] === "rev-parse" && args[1] === "--abbrev-ref" && args[2] === "@{upstream}") {
+					return "origin/main";
 				}
 				if (args[0] === "rev-parse" && args[1] === "@{upstream}") {
 					return "remote-head";
 				}
-				if (args[0] === "rev-parse" && args[1] === "--abbrev-ref") {
-					return "origin/main";
+				if (args[0] === "rev-parse" && args[1] === "HEAD") {
+					return "local-head";
+				}
+				if (args[0] === "rev-parse" && args[1] === "@{upstream}^{commit}") {
+					return "remote-head";
 				}
 				return "";
-			};
+			});
 
 			await packageManager.resolveExtensionSources([gitSource], { temporary: true });
 
+			const executedCommands = runCommandSpy.mock.calls.map(([command, args]) => `${command} ${args.join(" ")}`);
 			expect(executedCommands).toContain(
 				"git fetch --prune --no-tags origin +refs/heads/main:refs/remotes/origin/main",
 			);
@@ -446,16 +411,11 @@ describe("DefaultPackageManager git update", () => {
 			);
 			writeFileSync(extensionFile, "// pinned");
 
-			const executedCommands: string[] = [];
-			const managerWithInternals = packageManager as unknown as {
-				runCommand: (command: string, args: string[], options?: { cwd?: string }) => Promise<void>;
-			};
-			managerWithInternals.runCommand = async (command, args) => {
-				executedCommands.push(`${command} ${args.join(" ")}`);
-			};
+			const runCommandSpy = vi.spyOn(getCommandRunner(packageManager), "run");
 
 			await packageManager.resolveExtensionSources([`${gitSource}@main`], { temporary: true });
 
+			const executedCommands = runCommandSpy.mock.calls.map(([command, args]) => `${command} ${args.join(" ")}`);
 			expect(executedCommands).toEqual([]);
 			expect(getFileContent(cachedDir, "pi-extensions/session-breakdown.ts")).toBe("// pinned");
 		});

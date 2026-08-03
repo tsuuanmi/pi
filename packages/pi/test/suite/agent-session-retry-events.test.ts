@@ -7,6 +7,9 @@ import { createHarness, type Harness } from "#pi-test/suite/harness";
 function normalizeEventOrder(events: Harness["events"]): string[] {
 	const normalized: string[] = [];
 	for (const event of events) {
+		// Status and trace events are observability signals, not lifecycle ordering points.
+		if (event.type === "agent_status" || event.type === "runtime_trace") continue;
+
 		const label =
 			event.type === "message_start" || event.type === "message_end"
 				? `${event.type}:${event.message.role}`

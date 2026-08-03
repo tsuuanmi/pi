@@ -152,7 +152,7 @@ export class DefaultAgentRuntime implements AgentRuntime {
 		const traces: RuntimeTrace[] = [];
 		let loopDetected = false;
 		let maxTurnsReached = false;
-		const queue: RuntimeEvent[] = [];
+		const queue: Array<{ event: RuntimeEvent; acknowledge?: () => void }> = [];
 		let finished = false;
 		let wake: (() => void) | undefined;
 
@@ -160,15 +160,15 @@ export class DefaultAgentRuntime implements AgentRuntime {
 			wake?.();
 			wake = undefined;
 		};
-		const push = (event: RuntimeEvent) => {
-			queue.push(event);
+		const push = (event: RuntimeEvent, acknowledge?: () => void) => {
+			queue.push({ event, acknowledge });
 			notify();
 		};
 		const waitForEvent = () =>
 			new Promise<void>((resolve) => {
 				wake = resolve;
 			});
-		const forwardedEmit = async (event: AgentEvent) => {
+		const forwardedEmit = (event: AgentEvent): Promise<void> => {
 			if (event.type === "tool_execution_end") {
 				toolCalls.push({ id: event.toolCallId, name: event.toolName, isError: event.isError });
 			} else if (event.type === "loop_detected") {
@@ -185,7 +185,10 @@ export class DefaultAgentRuntime implements AgentRuntime {
 				traces.push(event.trace);
 				push({ type: "trace", trace: event.trace });
 			}
-			push({ type: "event", event });
+
+			return new Promise<void>((resolve) => {
+				push({ type: "event", event }, resolve);
+			});
 		};
 
 		push({ type: "backend", backend });
@@ -233,9 +236,10 @@ export class DefaultAgentRuntime implements AgentRuntime {
 		})();
 
 		while (!finished || queue.length > 0) {
-			const event = queue.shift();
-			if (event) {
-				yield event;
+			const queuedEvent = queue.shift();
+			if (queuedEvent) {
+				yield queuedEvent.event;
+				queuedEvent.acknowledge?.();
 				continue;
 			}
 			await waitForEvent();

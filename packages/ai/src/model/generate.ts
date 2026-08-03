@@ -17,6 +17,76 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageRoot = join(__dirname, "../..");
 
+function mergeThinkingLevelMap(model: Model<Api>, map: NonNullable<Model<Api>["thinkingLevelMap"]>): void {
+	model.thinkingLevelMap = { ...model.thinkingLevelMap, ...map };
+}
+
+function supportsOpenAiXhigh(modelId: string): boolean {
+	return (
+		modelId.includes("gpt-5.2") ||
+		modelId.includes("gpt-5.3") ||
+		modelId.includes("gpt-5.4") ||
+		modelId.includes("gpt-5.5")
+	);
+}
+
+function applyThinkingLevelMetadata(model: Model<Api>): void {
+	if (model.api === "openai-responses" && model.provider === "openai" && model.id.startsWith("gpt-5")) {
+		mergeThinkingLevelMap(model, { off: null });
+	}
+	if (model.api === "openai-responses" && model.provider === "openai" && model.id === "gpt-5.5") {
+		mergeThinkingLevelMap(model, { off: "none", minimal: null });
+	}
+	if (model.id.endsWith("gpt-5.5-pro")) {
+		mergeThinkingLevelMap(model, { off: null, minimal: null, low: null });
+	}
+	if (supportsOpenAiXhigh(model.id)) {
+		mergeThinkingLevelMap(model, { xhigh: "xhigh" });
+	}
+	if (model.id.includes("opus-4-6") || model.id.includes("opus-4.6")) {
+		mergeThinkingLevelMap(model, { xhigh: "max" });
+	}
+	if (
+		model.id.includes("opus-4-7") ||
+		model.id.includes("opus-4.7") ||
+		model.id.includes("opus-4-8") ||
+		model.id.includes("opus-4.8")
+	) {
+		mergeThinkingLevelMap(model, { xhigh: "xhigh" });
+	}
+	if (model.api === "anthropic-messages" && model.id.includes("fable-5")) {
+		mergeThinkingLevelMap(model, { off: null, xhigh: "xhigh" });
+	}
+}
+
+function applyModelMetadataOverrides(models: Model<Api>[]): void {
+	for (const model of models) {
+		if (model.provider === "anthropic" && model.id === "claude-opus-4-5") {
+			model.cost.cacheRead = 0.5;
+			model.cost.cacheWrite = 6.25;
+		}
+		if (model.provider === "openai" && (model.id === "gpt-5.4" || model.id === "gpt-5.5")) {
+			model.contextWindow = 272000;
+			model.maxTokens = 128000;
+		}
+		if (model.provider === "openai" && model.id === "gpt-5-pro") {
+			model.maxTokens = 128000;
+		}
+		if (model.api === "anthropic-messages") {
+			const modelId = model.id.toLowerCase();
+			const supportsTemperature = !(
+				modelId.includes("opus-4-7") ||
+				modelId.includes("opus-4.7") ||
+				modelId.includes("opus-4-8") ||
+				modelId.includes("opus-4.8")
+			);
+			if (!supportsTemperature) {
+				model.compat = { ...model.compat, supportsTemperature };
+			}
+		}
+	}
+}
+
 async function loadModels(): Promise<Model<Api>[]> {
 	console.log("Fetching model catalogs...");
 	const [modelsDev, codex] = await Promise.all([
@@ -39,7 +109,12 @@ async function loadModels(): Promise<Model<Api>[]> {
 	const openAiModels = new Map(
 		apiModels.filter((model) => model.provider === "openai").map((model) => [model.id, model]),
 	);
-	return [...apiModels, ...fromCodex(codex, openAiModels, codexProviderSpec)];
+	const models = [...apiModels, ...fromCodex(codex, openAiModels, codexProviderSpec)];
+	applyModelMetadataOverrides(models);
+	for (const model of models) {
+		applyThinkingLevelMetadata(model);
+	}
+	return models;
 }
 
 function writeGenerated(output: string): void {

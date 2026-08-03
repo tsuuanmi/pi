@@ -2,15 +2,129 @@
 	"version": 1,
 	"deadFunctions": [
 		{
-			"key": "packages/pi/src/packages/lsp/tools/lsp-tool.ts::createLspToolDefinition",
-			"file": "packages/pi/src/packages/lsp/tools/lsp-tool.ts",
-			"name": "createLspToolDefinition",
+			"key": "packages/agent/src/runtime/loop.ts::agentLoop",
+			"file": "packages/agent/src/runtime/loop.ts",
+			"name": "agentLoop",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/agent/src/runtime/loop.ts::agentLoopContinue",
+			"file": "packages/agent/src/runtime/loop.ts",
+			"name": "agentLoopContinue",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/ai/src/auth/oauth/index.ts::getOAuthApiKey",
+			"file": "packages/ai/src/auth/oauth/index.ts",
+			"name": "getOAuthApiKey",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/ai/src/auth/oauth/index.ts::unregisterOAuthProvider",
+			"file": "packages/ai/src/auth/oauth/index.ts",
+			"name": "unregisterOAuthProvider",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/ai/src/auth/oauth/openai-codex/index.ts::loginOpenAICodex",
+			"file": "packages/ai/src/auth/oauth/openai-codex/index.ts",
+			"name": "loginOpenAICodex",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/ai/src/auth/oauth/openai-codex/index.ts::loginOpenAICodexDeviceCode",
+			"file": "packages/ai/src/auth/oauth/openai-codex/index.ts",
+			"name": "loginOpenAICodexDeviceCode",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/ai/src/auth/oauth/openai-codex/index.ts::refreshOpenAICodexToken",
+			"file": "packages/ai/src/auth/oauth/openai-codex/index.ts",
+			"name": "refreshOpenAICodexToken",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/orchestrator/src/runtime/budget.ts::recordTaskStart",
+			"file": "packages/orchestrator/src/runtime/budget.ts",
+			"name": "recordTaskStart",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/cli/launch-tmux.ts::buildTmuxUnavailableReceipt",
+			"file": "packages/pi/src/cli/launch-tmux.ts",
+			"name": "buildTmuxUnavailableReceipt",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/extensions/hooks/event-types.ts::isGlobToolResult",
+			"file": "packages/pi/src/extensions/hooks/event-types.ts",
+			"name": "isGlobToolResult",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/modes/output-guard.ts::isStdoutTakenOver",
+			"file": "packages/pi/src/modes/output-guard.ts",
+			"name": "isStdoutTakenOver",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/runtime/platform.ts::getPiUserAgent",
+			"file": "packages/pi/src/runtime/platform.ts",
+			"name": "getPiUserAgent",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/subagents/tmux-worker.ts::runSubagentWorkerRequest",
+			"file": "packages/pi/src/subagents/tmux-worker.ts",
+			"name": "runSubagentWorkerRequest",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/tools/glob.ts::matchesGlob",
+			"file": "packages/pi/src/tools/glob.ts",
+			"name": "matchesGlob",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/test/helpers/provider.ts::testText",
+			"file": "packages/pi/test/helpers/provider.ts",
+			"name": "testText",
 			"kind": "exported"
 		},
 		{
 			"key": "packages/workflows/src/commands/workflow/index.ts::handlePackageCommand",
 			"file": "packages/workflows/src/commands/workflow/index.ts",
 			"name": "handlePackageCommand",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/workflows/src/skills/workflow-help-registry.ts::renderWorkflowSkillHelp",
+			"file": "packages/workflows/src/skills/workflow-help-registry.ts",
+			"name": "renderWorkflowSkillHelp",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/workflows/src/skills/workflow-help-registry.ts::typedArgsForWorkflowVerb",
+			"file": "packages/workflows/src/skills/workflow-help-registry.ts",
+			"name": "typedArgsForWorkflowVerb",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/workflows/src/skills/workflow-surface-registry.ts::getWorkflowSkillCommandNames",
+			"file": "packages/workflows/src/skills/workflow-surface-registry.ts",
+			"name": "getWorkflowSkillCommandNames",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/workflows/src/skills/workflow-surface-registry.ts::getWorkflowSkillSurface",
+			"file": "packages/workflows/src/skills/workflow-surface-registry.ts",
+			"name": "getWorkflowSkillSurface",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/workflows/src/skills/workflow-surface-registry.ts::getWorkflowToolNames",
+			"file": "packages/workflows/src/skills/workflow-surface-registry.ts",
+			"name": "getWorkflowToolNames",
 			"kind": "exported"
 		}
 	]

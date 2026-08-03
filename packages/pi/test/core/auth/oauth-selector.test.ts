@@ -2,9 +2,10 @@ import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "@tsuuanmi/pi-ai";
 import { initTheme, setKeybindings, stripAnsi } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
-import { OAuthSelectorComponent } from "#pi/ui/interactive/components/selectors/oauth-selector";
+import { ModelRegistry } from "#pi/loader/model-registry";
 import { isApiKeyAccountProvider } from "#pi/modes/interactive/interactive-mode";
 import { KeybindingsManager } from "#pi/settings/keybindings";
+import { OAuthSelectorComponent } from "#pi/ui/interactive/components/selectors/oauth-selector";
 
 const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
 
@@ -62,12 +63,21 @@ describe("OAuthSelectorComponent", () => {
 	it("shows environment API key auth as configured", () => {
 		process.env.OPENAI_API_KEY = "test-openai-key";
 		const authStorage = AuthStorage.inMemory();
+		const modelRegistry = ModelRegistry.createFromModelsConfig(authStorage, {
+			providers: {
+				openai: {
+					baseUrl: "https://api.openai.com/v1",
+					apiKey: "$OPENAI_API_KEY",
+				},
+			},
+		});
 		const selector = new OAuthSelectorComponent(
 			"add",
 			authStorage,
 			[{ id: "openai", name: "OpenAI", authType: "api_key" }],
 			() => {},
 			() => {},
+			(providerId) => modelRegistry.getProviderAuthStatus(providerId),
 		);
 
 		const output = stripAnsi(selector.render(120).join("\n"));

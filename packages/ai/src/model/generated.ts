@@ -12,7 +12,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			thinkingLevelMap: { low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
+			thinkingLevelMap: { low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max", off: null },
 			input: ["text", "image"],
 			cost: {
 				input: 10,
@@ -134,7 +134,7 @@ export const MODELS = {
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
 			reasoning: true,
-			thinkingLevelMap: { low: "low", medium: "medium", high: "high", max: "max" },
+			thinkingLevelMap: { low: "low", medium: "medium", high: "high", max: "max", xhigh: "max" },
 			input: ["text", "image"],
 			cost: {
 				input: 5,
@@ -151,6 +151,9 @@ export const MODELS = {
 			api: "anthropic-messages",
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
+			compat: {
+				supportsTemperature: false,
+			},
 			reasoning: true,
 			thinkingLevelMap: { low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
 			input: ["text", "image"],
@@ -169,6 +172,9 @@ export const MODELS = {
 			api: "anthropic-messages",
 			provider: "anthropic",
 			baseUrl: "https://api.anthropic.com",
+			compat: {
+				supportsTemperature: false,
+			},
 			reasoning: true,
 			thinkingLevelMap: { low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
 			input: ["text", "image"],
@@ -274,6 +280,24 @@ export const MODELS = {
 		"deepseek-v4-flash": {
 			id: "deepseek-v4-flash",
 			name: "deepseek-v4-flash",
+			api: "openai-completions",
+			provider: "ollama-cloud",
+			baseUrl: "https://ollama.com/v1",
+			reasoning: true,
+			thinkingLevelMap: { high: "high", max: "max" },
+			input: ["text"],
+			cost: {
+				input: 0,
+				output: 0,
+				cacheRead: 0,
+				cacheWrite: 0,
+			},
+			contextWindow: 1048576,
+			maxTokens: 1048576,
+		} satisfies Model<"openai-completions">,
+		"deepseek-v4-flash:0731": {
+			id: "deepseek-v4-flash:0731",
+			name: "DeepSeek V4 Flash 0731",
 			api: "openai-completions",
 			provider: "ollama-cloud",
 			baseUrl: "https://ollama.com/v1",
@@ -780,7 +804,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { minimal: "minimal", low: "low", medium: "medium", high: "high" },
+			thinkingLevelMap: { minimal: "minimal", low: "low", medium: "medium", high: "high", off: null },
 			input: ["text", "image"],
 			cost: {
 				input: 1.25,
@@ -798,7 +822,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { minimal: "minimal", low: "low", medium: "medium", high: "high" },
+			thinkingLevelMap: { minimal: "minimal", low: "low", medium: "medium", high: "high", off: null },
 			input: ["text", "image"],
 			cost: {
 				input: 0.25,
@@ -816,7 +840,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { minimal: "minimal", low: "low", medium: "medium", high: "high" },
+			thinkingLevelMap: { minimal: "minimal", low: "low", medium: "medium", high: "high", off: null },
 			input: ["text", "image"],
 			cost: {
 				input: 0.05,
@@ -834,7 +858,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { high: "high" },
+			thinkingLevelMap: { high: "high", off: null },
 			input: ["text", "image"],
 			cost: {
 				input: 15,
@@ -843,7 +867,7 @@ export const MODELS = {
 				cacheWrite: 0,
 			},
 			contextWindow: 400000,
-			maxTokens: 272000,
+			maxTokens: 128000,
 		} satisfies Model<"openai-responses">,
 		"gpt-5.1": {
 			id: "gpt-5.1",
@@ -852,7 +876,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high" },
+			thinkingLevelMap: { off: null, low: "low", medium: "medium", high: "high" },
 			input: ["text", "image"],
 			cost: {
 				input: 1.25,
@@ -870,7 +894,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { off: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
 			input: ["text", "image"],
 			cost: {
 				input: 1.75,
@@ -888,7 +912,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { medium: "medium" },
+			thinkingLevelMap: { medium: "medium", off: null, xhigh: "xhigh" },
 			input: ["text", "image"],
 			cost: {
 				input: 1.75,
@@ -906,7 +930,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { medium: "medium", high: "high", xhigh: "xhigh", off: null },
 			input: ["text", "image"],
 			cost: {
 				input: 21,
@@ -924,6 +948,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: false,
+			thinkingLevelMap: { off: null, xhigh: "xhigh" },
 			input: ["text", "image"],
 			cost: {
 				input: 1.75,
@@ -941,7 +966,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { off: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
 			input: ["text", "image"],
 			cost: {
 				input: 1.75,
@@ -959,7 +984,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { off: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
 			input: ["text", "image"],
 			cost: {
 				input: 1.75,
@@ -977,7 +1002,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { off: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
 			input: ["text", "image"],
 			cost: {
 				input: 2.5,
@@ -985,7 +1010,7 @@ export const MODELS = {
 				cacheRead: 0.25,
 				cacheWrite: 0,
 			},
-			contextWindow: 1050000,
+			contextWindow: 272000,
 			maxTokens: 128000,
 		} satisfies Model<"openai-responses">,
 		"gpt-5.4-mini": {
@@ -995,7 +1020,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { off: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
 			input: ["text", "image"],
 			cost: {
 				input: 0.75,
@@ -1013,7 +1038,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { off: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
 			input: ["text", "image"],
 			cost: {
 				input: 0.2,
@@ -1031,7 +1056,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { medium: "medium", high: "high", xhigh: "xhigh", off: null },
 			input: ["text", "image"],
 			cost: {
 				input: 30,
@@ -1049,7 +1074,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh", minimal: null },
 			input: ["text", "image"],
 			cost: {
 				input: 5,
@@ -1057,7 +1082,7 @@ export const MODELS = {
 				cacheRead: 0.5,
 				cacheWrite: 0,
 			},
-			contextWindow: 1050000,
+			contextWindow: 272000,
 			maxTokens: 128000,
 		} satisfies Model<"openai-responses">,
 		"gpt-5.5-pro": {
@@ -1067,7 +1092,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { medium: "medium", high: "high", xhigh: "xhigh", off: null, minimal: null, low: null },
 			input: ["text", "image"],
 			cost: {
 				input: 30,
@@ -1085,7 +1110,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
+			thinkingLevelMap: { off: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
 			input: ["text", "image"],
 			cost: {
 				input: 5,
@@ -1103,7 +1128,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
+			thinkingLevelMap: { off: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
 			input: ["text", "image"],
 			cost: {
 				input: 0.2,
@@ -1121,7 +1146,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
+			thinkingLevelMap: { off: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
 			input: ["text", "image"],
 			cost: {
 				input: 5,
@@ -1139,7 +1164,7 @@ export const MODELS = {
 			provider: "openai",
 			baseUrl: "https://api.openai.com/v1",
 			reasoning: true,
-			thinkingLevelMap: { off: "none", low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
+			thinkingLevelMap: { off: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
 			input: ["text", "image"],
 			cost: {
 				input: 2,

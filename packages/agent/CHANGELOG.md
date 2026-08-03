@@ -63,6 +63,7 @@
 
 - **docs**: Reorganized package docs to mirror `src/`, removed legacy/unused docs, and updated package, agent, tool, and observability docs to reflect the current `AgentOptions`, runtime seam, tool registration, and optional protocol-runtime boundaries.
 - **exports**: Restored shared public exports from `@tsuuanmi/pi-agent`, including structured receipt helpers and the Node helper subpath.
+- **runtime**: Waited for lifecycle event consumers before continuing tool execution, preserving persisted event order.
 - **agent**: Split the monolithic agent type module into focused runtime, task, and orchestrator type modules, and moved message helpers under agent state.
 - **agent**: Refactored the public `Agent` to route prompt and continuation execution through the new runtime seam without changing behavior.
 - **pi**: Centralized active-tool selection in the shared tool policy helpers.
