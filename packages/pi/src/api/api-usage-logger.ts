@@ -16,7 +16,7 @@ import {
 	safeHeaders,
 	safeSerialize,
 	toJsonLine,
-} from "#pi/telemetry/api-usage-utils";
+} from "#pi/api/api-usage-utils";
 
 export interface ApiUsageLoggerOptions {
 	cwd: string;

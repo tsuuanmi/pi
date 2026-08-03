@@ -27,6 +27,5 @@ export {
 	getAgentDir,
 	getAuthPath,
 	getBinDir,
-	getDebugLogPath,
 	getSessionsDir,
 } from "#pi/loader/paths";

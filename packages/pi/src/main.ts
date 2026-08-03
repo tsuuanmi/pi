@@ -21,7 +21,6 @@ import { VERSION } from "#pi/loader/app";
 import { showDeprecationWarnings } from "#pi/migrations";
 import type { AgentSessionRuntimeDiagnostic } from "#pi/runtime/services";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { resetTimings, time } from "#pi/telemetry/timings";
 
 function reportDiagnostics(diagnostics: readonly AgentSessionRuntimeDiagnostic[]): void {
 	for (const diagnostic of diagnostics) {
@@ -36,7 +35,6 @@ export interface MainOptions {
 }
 
 export async function main(args: string[], options?: MainOptions) {
-	resetTimings();
 	const { cwd, agentDir } = bootstrapStartup();
 
 	if (await runStartupCommands(args, { extensionFactories: options?.extensionFactories })) return;
@@ -51,7 +49,6 @@ export async function main(args: string[], options?: MainOptions) {
 			process.exit(1);
 		}
 	}
-	time("parseArgs");
 
 	if (parsed.version) {
 		console.log(VERSION);
@@ -72,7 +69,6 @@ export async function main(args: string[], options?: MainOptions) {
 
 	// Run migrations (pass cwd for project-local migrations)
 	const { migratedProviders, deprecationWarnings } = runStartupMigrations(cwd);
-	time("runMigrations");
 
 	const startupSettingsManager = SettingsManager.create(cwd, agentDir);
 	reportDiagnostics(collectSettingsDiagnostics(startupSettingsManager, "startup session lookup"));
@@ -83,16 +79,13 @@ export async function main(args: string[], options?: MainOptions) {
 	// the target session cwd is known. The startup-cwd settings manager is used only for
 	// sessionDir lookup during session selection.
 	const { sessionManager } = await createStartupSession(parsed, cwd, appMode, startupSettingsManager);
-	time("createSessionManager");
 
-	time("createRuntime");
 	const runtime = await createAppRuntime({
 		parsed,
 		agentDir,
 		sessionManager,
 		extensionFactories: options?.extensionFactories,
 	});
-	time("createAgentSessionRuntime");
 	const { services, modelStartupWarning } = runtime;
 	const { settingsManager, modelRegistry, resourceLoader } = services;
 
@@ -112,24 +105,19 @@ export async function main(args: string[], options?: MainOptions) {
 
 	const preparedInput = await prepareInput(parsed, appMode);
 	appMode = preparedInput.appMode;
-	time("readPipedStdin");
 
 	const { initialMessage } = preparedInput;
-	time("prepareInitialMessage");
 	initTheme(settingsManager.getTheme());
-	time("initTheme");
 
 	// Show deprecation warnings in interactive mode
 	if (appMode === "interactive" && deprecationWarnings.length > 0) {
 		await showDeprecationWarnings(deprecationWarnings);
 	}
 
-	time("resolveModelScope");
 	reportDiagnostics(runtime.diagnostics);
 	if (runtime.diagnostics.some((diagnostic) => diagnostic.type === "error")) {
 		process.exit(1);
 	}
-	time("createAgentSession");
 
 	await runAppMode({
 		appMode,

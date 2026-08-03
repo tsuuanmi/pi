@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { normalizePath } from "@tsuuanmi/pi-agent/node";
-import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR } from "#pi/loader/app";
+import { CONFIG_DIR_NAME, ENV_AGENT_DIR } from "#pi/loader/app";
 
 export function expandTildePath(path: string): string {
 	return normalizePath(path);
@@ -25,8 +25,4 @@ export function getBinDir(): string {
 
 export function getSessionsDir(): string {
 	return join(getAgentDir(), "sessions");
-}
-
-export function getDebugLogPath(): string {
-	return join(getAgentDir(), `${APP_NAME}-debug.log`);
 }

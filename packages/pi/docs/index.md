@@ -92,7 +92,6 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 - [Messages](api/messages.md) - Agent message types.
 - [Package manager](package-manager/package-manager.md) - Pi package distribution.
 - [Resources](resources/resources.md) - Resource loading and diagnostics.
-- [Telemetry](telemetry/telemetry.md) - Usage tracking.
 - [Tools](tools/tools.md) - Built-in tools and custom tool registration.
 
 ## Platform setup
@@ -107,6 +106,6 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 ## Development
 
-- [Development](development.md) - local setup, project structure, and debugging.
+- [Development](development.md) - local setup, project structure, and contribution guidance.
 - [CLI](cli/cli.md) - Command-line interface.
 - [Bun](cli/bun/bun.md) - Bun runtime support.

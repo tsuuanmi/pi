@@ -16,7 +16,6 @@ import { optimizeRetainedContext } from "#pi/runtime/context-optimization";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import type { SubagentManager } from "#pi/subagents/manager";
-import { time } from "#pi/telemetry/timings";
 import {
 	createBashTool,
 	createCodingTools,
@@ -189,7 +188,6 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	if (!resourceLoader) {
 		resourceLoader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
 		await resourceLoader.reload();
-		time("resourceLoader.reload");
 	}
 
 	// Check if session has existing data to restore

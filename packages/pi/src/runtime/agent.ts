@@ -28,6 +28,8 @@ import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AssistantMessage, Message, Model, TextContent } from "@tsuuanmi/pi-ai";
 import { cleanupSessionResources, isContextOverflow, resetProviders, stream } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
+import { ApiUsageLogger } from "#pi/api/api-usage-logger";
+import { apiUsageLogPath } from "#pi/api/api-usage-utils";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/auth-guidance";
 import { type BashResult, executeBashWithOperations } from "#pi/exec/bash-executor";
 import { installAgentToolHooks } from "#pi/extensions/hooks/tool-hooks";
@@ -89,8 +91,6 @@ import { expandPromptTemplate, type PromptTemplate } from "#pi/skills/prompt-tem
 import type { SlashCommandInfo } from "#pi/skills/slash-commands";
 import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/skills/system-prompt";
 import type { SubagentManager } from "#pi/subagents/manager";
-import { ApiUsageLogger } from "#pi/telemetry/api-usage-logger";
-import { apiUsageLogPath } from "#pi/telemetry/api-usage-utils";
 import { type BashOperations, createLocalBashOperations } from "#pi/tools/bash";
 import { createToolDefinitions } from "#pi/tools/default-tools";
 import { toToolDefinition } from "#pi/tools/utils";

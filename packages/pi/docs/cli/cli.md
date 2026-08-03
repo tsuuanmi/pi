@@ -93,7 +93,6 @@ Pi also supports several subcommands:
 |----------|-------------|
 | `PI_AGENT_DIR` | Override default agent directory (`~/.pi/agent`) |
 | `PI_SESSION_DIR` | Override session storage directory |
-| `PI_TIMING` | Enable startup timing instrumentation (`1` to enable) |
 | `PI_PACKAGE_DIR` | Override package directory (for Nix/Guix store paths) |
 | `PI_OFFLINE` | Disable package registry lookups and other network package operations (`1`, `true`, or `yes`) |
 | `ANTHROPIC_API_KEY` | Anthropic API key |

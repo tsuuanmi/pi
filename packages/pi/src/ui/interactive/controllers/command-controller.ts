@@ -1,5 +1,3 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
 import {
 	type Container,
 	DynamicBorder,
@@ -11,10 +9,8 @@ import {
 	Text,
 	type TUI,
 	theme,
-	visibleWidth,
 } from "@tsuuanmi/pi-tui";
 import { getChangelogPath } from "#pi/loader/package";
-import { getDebugLogPath } from "#pi/loader/paths";
 import type { AgentSession } from "#pi/runtime/agent";
 import type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 import { normalizeChangelogLinks, parseChangelog } from "#pi/ui/interactive/utils/changelog";
@@ -279,38 +275,6 @@ export class CommandController {
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new Markdown(hotkeys.trim(), 1, 1, this.getMarkdownThemeWithSettings()));
 		this.chatContainer.addChild(new DynamicBorder());
-		this.ui.requestRender();
-	}
-	handleDebugCommand(): void {
-		const width = this.ui.terminal.columns;
-		const height = this.ui.terminal.rows;
-		const allLines = this.ui.render(width);
-
-		const debugLogPath = getDebugLogPath();
-		const debugData = [
-			`Debug output at ${new Date().toISOString()}`,
-			`Terminal: ${width}x${height}`,
-			`Total lines: ${allLines.length}`,
-			"",
-			"=== All rendered lines with visible widths ===",
-			...allLines.map((line, idx) => {
-				const vw = visibleWidth(line);
-				const escaped = JSON.stringify(line);
-				return `[${idx}] (w=${vw}) ${escaped}`;
-			}),
-			"",
-			"=== Agent messages (JSONL) ===",
-			...this.session.messages.map((msg) => JSON.stringify(msg)),
-			"",
-		].join("\n");
-
-		fs.mkdirSync(path.dirname(debugLogPath), { recursive: true });
-		fs.writeFileSync(debugLogPath, debugData);
-
-		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(
-			new Text(`${theme.fg("accent", "✓ Debug log written")}\n${theme.fg("muted", debugLogPath)}`, 1, 1),
-		);
 		this.ui.requestRender();
 	}
 }

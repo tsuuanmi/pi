@@ -87,9 +87,6 @@ tui.removeChild(component);
 tui.start();
 tui.stop();
 tui.requestRender(); // Request a re-render
-
-// Global debug key handler (Shift+Ctrl+D)
-tui.onDebug = () => console.log("Debug triggered");
 ```
 
 ### Overlays

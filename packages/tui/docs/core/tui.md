@@ -64,14 +64,6 @@ tui.addInputListener((data) => {
 });
 ```
 
-### Debug Mode
-
-```typescript
-tui.onDebug = () => {
-  console.log("Debug triggered (Shift+Ctrl+D)");
-};
-```
-
 ### Hardware Cursor
 
 By default, the real terminal cursor is hidden and replaced by a fake cursor rendered by focused components. To show the hardware cursor (needed for IME on some terminals):

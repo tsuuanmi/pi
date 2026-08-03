@@ -23,6 +23,7 @@
 
 ### Removed
 
+- **debug**: Removed debug callbacks, key handling, log capture, redraw tracing, render dumps, and crash-file output.
 - **status-line**: Removed the obsolete `FooterComponent` and `formatCwdForFooter` aliases.
 - **theme**: Removed direct theme-directory watching and the `enableWatcher`/`stopThemeWatcher` API.
 

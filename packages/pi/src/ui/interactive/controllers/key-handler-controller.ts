@@ -1,9 +1,9 @@
 import type { EditorComponent, TUI } from "@tsuuanmi/pi-tui";
+import type { AgentSession } from "#pi/runtime/agent";
 import type { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
 import type { AccountAuthController } from "#pi/ui/interactive/controllers/account-auth-controller";
 import type { CommandController } from "#pi/ui/interactive/controllers/command-controller";
 import type { SelectorController } from "#pi/ui/interactive/controllers/selector-controller";
-import type { AgentSession } from "#pi/runtime/agent";
 
 type KeyHandlerControllerDependencies = {
 	ui: TUI;
@@ -161,8 +161,6 @@ export class KeyHandlerController {
 		this.defaultEditor.onCtrlD = () => this.handleCtrlD();
 		this.defaultEditor.onAction("app.thinking.cycle", () => this.cycleThinkingLevel());
 
-		// Global debug handler on TUI (works regardless of focus)
-		this.ui.onDebug = () => this._commandController.handleDebugCommand();
 		this.defaultEditor.onAction("app.tools.expand", () => this.toggleToolOutputExpansion());
 		this.defaultEditor.onAction("app.thinking.toggle", () => this.toggleThinkingBlockVisibility());
 		this.defaultEditor.onAction("app.editor.external", () => this.openExternalEditor());
@@ -257,11 +255,6 @@ export class KeyHandlerController {
 			if (text === "/reload") {
 				this.editor.setText("");
 				await this.handleReloadCommand();
-				return;
-			}
-			if (text === "/debug") {
-				this._commandController.handleDebugCommand();
-				this.editor.setText("");
 				return;
 			}
 			if (text === "/resume") {

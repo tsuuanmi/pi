@@ -15,6 +15,8 @@
 
 ### Removed
 
+- **debug**: Removed the hidden `/debug` command and its debug log output.
+- **telemetry**: Removed `PI_TIMING` startup instrumentation and its undocumented benchmark mode.
 - **interactive**: Removed automatic startup help and loaded-resource listing, along with the `--verbose` flag and `quietStartup` setting.
 
 ## [0.2.2] - 2026-07-23

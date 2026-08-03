@@ -52,12 +52,6 @@ import { getPackageDir } from "./loader/config.js";
 
 Never use `__dirname` directly for package assets.
 
-## Debug Command
-
-`/debug` (hidden) writes to `~/.pi/agent/pi-debug.log`:
-- Rendered TUI lines with ANSI codes
-- Last messages sent to the LLM
-
 ## Testing
 
 ```bash
@@ -91,7 +85,7 @@ packages/pi/src/
   settings/              # settings and keybinding management
   skills/                # skills, prompts, slash commands, and system prompts
   subagents/             # subagent orchestration and tmux workers
-  telemetry/             # API usage and timing telemetry
+  telemetry/             # API usage logging
   tools/                 # built-in tools and LSP support
   ui/                    # interactive components and package-manager UI
   utils/                 # filesystem and system helpers
