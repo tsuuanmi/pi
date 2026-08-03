@@ -33,10 +33,12 @@ vi.mock("@tsuuanmi/pi-tui", async (importOriginal) => {
 });
 
 vi.mock("#pi/modes/rpc/jsonl", () => ({
-	attachJsonlLineReader: vi.fn((_stream: NodeJS.ReadableStream, onLine: (line: string) => void) => {
-		rpcIo.lineHandler = onLine;
-		return () => {};
-	}),
+	attachJsonlLineReader: vi.fn(
+		(_stream: NodeJS.ReadableStream, onLine: (line: string) => void, _onError: (error: Error) => void) => {
+			rpcIo.lineHandler = onLine;
+			return () => {};
+		},
+	),
 	serializeJsonLine: (value: unknown) => `${JSON.stringify(value)}\n`,
 }));
 

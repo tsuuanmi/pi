@@ -106,7 +106,7 @@ export class RpcClient {
 
 		childProcess.once("exit", (code, signal) => {
 			if (this.process !== childProcess) return;
-			const error = this.createProcessExitError(code, signal);
+			const error = this.exitError ?? this.createProcessExitError(code, signal);
 			this.exitError = error;
 			this.rejectPendingRequests(error);
 		});
@@ -125,9 +125,20 @@ export class RpcClient {
 		});
 
 		// Set up strict JSONL reader for stdout.
-		this.stopReadingStdout = attachJsonlLineReader(childProcess.stdout!, (line) => {
-			this.handleLine(line);
-		});
+		this.stopReadingStdout = attachJsonlLineReader(
+			childProcess.stdout!,
+			(line) => {
+				this.handleLine(line);
+			},
+			(error) => {
+				if (this.process !== childProcess) return;
+				const protocolError = new Error(`RPC protocol error: ${error.message}. Stderr: ${this.stderr}`);
+				this.exitError = protocolError;
+				this.stopReadingStdout = null;
+				this.rejectPendingRequests(protocolError);
+				childProcess.kill("SIGTERM");
+			},
+		);
 
 		// Wait a moment for process to initialize
 		await new Promise((resolve) => setTimeout(resolve, 100));
@@ -474,23 +485,21 @@ export class RpcClient {
 	// =========================================================================
 
 	private handleLine(line: string): void {
-		try {
-			const data = JSON.parse(line);
+		const data: unknown = JSON.parse(line);
+		if (typeof data !== "object" || data === null || Array.isArray(data)) {
+			throw new Error("RPC output must be a JSON object");
+		}
+		const record = data as Record<string, unknown>;
 
-			// Check if it's a response to a pending request
-			if (data.type === "response" && data.id && this.pendingRequests.has(data.id)) {
-				const pending = this.pendingRequests.get(data.id)!;
-				this.pendingRequests.delete(data.id);
-				pending.resolve(data as RpcResponse);
-				return;
-			}
+		if (record.type === "response" && typeof record.id === "string" && this.pendingRequests.has(record.id)) {
+			const pending = this.pendingRequests.get(record.id)!;
+			this.pendingRequests.delete(record.id);
+			pending.resolve(record as unknown as RpcResponse);
+			return;
+		}
 
-			// Otherwise it's an event
-			for (const listener of this.eventListeners) {
-				listener(data as AgentEvent);
-			}
-		} catch {
-			// Ignore non-JSON lines
+		for (const listener of this.eventListeners) {
+			listener(record as unknown as AgentEvent);
 		}
 	}
 

@@ -352,6 +352,7 @@ PROFILE SYSTEM PROMPT`,
 		expect(result.record.visibility).toBe("tmux");
 		expect(result.record.tmux).toMatchObject({ backend: "tmux", visible_by_default: true, target: { kind: "pane" } });
 		expect(result.record.identity).toMatchObject({ storage_root: cwd, lifecycle_state: "running" });
+		expect(result.record.identity?.tmux.session_name).toBe(result.record.identity?.tmux.target.session_name);
 		expect(result.record.tmux?.worker_metadata_file.endsWith("/worker.json")).toBe(true);
 		expect(calls[0]?.args[0]).toBe("split-window");
 		expect(calls[0]?.args).toContain("-P");

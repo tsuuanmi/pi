@@ -56,12 +56,12 @@ function truncate(value: string, limit: number): string {
 	return value.length > limit ? `${value.slice(0, limit)}…` : value;
 }
 
-function truncateArgs(args: unknown): string {
+function truncateArgs(args: unknown): string | undefined {
 	try {
 		const str = typeof args === "string" ? args : JSON.stringify(args);
-		return truncate(str ?? "", MAX_TOOL_ARGS_LEN);
+		return str === undefined ? undefined : truncate(str, MAX_TOOL_ARGS_LEN);
 	} catch {
-		return "[unserializable args]";
+		return undefined;
 	}
 }
 
@@ -118,22 +118,25 @@ export class SubagentProgressTracker {
 		switch (event.type) {
 			case "tool_execution_start": {
 				snapshot.currentTool = event.toolName;
-				const argsStr = truncateArgs(event.args);
-				snapshot.currentToolArgs = argsStr;
-				this.currentToolArgs.set(id, argsStr);
+				const args = truncateArgs(event.args);
+				snapshot.currentToolArgs = args;
+				if (args === undefined) {
+					this.currentToolArgs.delete(id);
+				} else {
+					this.currentToolArgs.set(id, args);
+				}
 				snapshot.currentToolStartMs = now;
 				snapshot.toolCount++;
 				break;
 			}
 			case "tool_execution_end": {
-				const args = this.currentToolArgs.get(id) ?? "";
-				snapshot.recentTools.unshift({
-					tool: event.toolName ?? "unknown",
-					args,
-					endMs: now,
-				});
-				if (snapshot.recentTools.length > MAX_RECENT_TOOLS) {
-					snapshot.recentTools.length = MAX_RECENT_TOOLS;
+				const tool = event.toolName;
+				const args = this.currentToolArgs.get(id);
+				if (tool !== undefined && args !== undefined) {
+					snapshot.recentTools.unshift({ tool, args, endMs: now });
+					if (snapshot.recentTools.length > MAX_RECENT_TOOLS) {
+						snapshot.recentTools.length = MAX_RECENT_TOOLS;
+					}
 				}
 				snapshot.currentTool = undefined;
 				snapshot.currentToolArgs = undefined;

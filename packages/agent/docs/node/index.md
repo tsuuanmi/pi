@@ -31,10 +31,14 @@ From `src/node/jsonl.ts`:
 
 ```typescript
 serializeJsonLine(value: unknown): string;
-attachJsonlLineReader(stream: Readable, onLine: (line: string) => void): () => void;
+attachJsonlLineReader(
+  stream: Readable,
+  onLine: (line: string) => void,
+  onError: (error: Error) => void,
+): () => void;
 ```
 
-`serializeJsonLine()` appends an LF to JSON. Framing is LF-only; payload strings may contain other Unicode separators (U+2028, U+2029). `attachJsonlLineReader()` intentionally avoids Node `readline` (which splits on additional Unicode separators that are valid inside JSON strings), buffers stream data, calls `onLine()` for complete lines, strips a trailing CR, flushes the final partial line on `end`, and returns a cleanup function.
+`serializeJsonLine()` appends an LF to JSON. Framing is LF-only; payload strings may contain other Unicode separators (U+2028, U+2029). `attachJsonlLineReader()` intentionally avoids Node `readline` (which splits on additional Unicode separators that are valid inside JSON strings), reports CRLF, unterminated-record, and line-handler errors through `onError()`, then detaches. It calls `onLine()` only for complete LF-terminated records and returns a cleanup function.
 
 ## Path helpers
 

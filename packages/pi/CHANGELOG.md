@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **rpc**: RPC JSONL now rejects CRLF input and unterminated records instead of accepting them.
 - **loader**: Moved configuration and resource loading into `src/loader/`, renamed the public configuration path to `@tsuuanmi/pi/loader/config`, and removed the old paths.
 - **architecture**: Split extension contracts, context types, tmux subagent launch code, and CLI configuration UI into dedicated modules; removed package-manager legacy global-install discovery and CLI/mode/UI dependencies from core modules.
 - **cli**: `pi update` now manages packages only; the self-update commands and public self-update exports were removed.
@@ -9,6 +10,7 @@
 - **sdk**: Renamed the session model fallback warning result from `modelFallbackMessage` to `modelStartupWarning`.
 - **tools**: Removed non-canonical `edit` tool argument forms; the tool now accepts only `path` plus `edits[]` and no longer normalizes alternate shapes.
 - **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
+- **subagents**: Tmux run identity now uses only the canonical nested target session name.
 - **runtime**: Pi is now Node-only; removed alternate-runtime detection and package-manager branches.
 - **cli**: Removed the `pi uninstall` alias; use `pi remove`.
 - **models**: Moved `ModelRegistry` to `@tsuuanmi/pi/loader`, removed the root and legacy model exports, removed path-based construction, and moved CLI resolution to `src/cli/model-resolver.ts`; pass a `SettingsManager` or use `createFromModelsConfig()`.

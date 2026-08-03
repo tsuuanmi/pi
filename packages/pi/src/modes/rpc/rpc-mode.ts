@@ -746,9 +746,15 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 	process.stdin.on("end", onInputEnd);
 
 	detachInput = (() => {
-		const detachJsonl = attachJsonlLineReader(process.stdin, (line) => {
-			void handleInputLine(line);
-		});
+		const detachJsonl = attachJsonlLineReader(
+			process.stdin,
+			(line) => {
+				void handleInputLine(line);
+			},
+			() => {
+				void shutdown(1);
+			},
+		);
 		return () => {
 			detachJsonl();
 			process.stdin.off("end", onInputEnd);

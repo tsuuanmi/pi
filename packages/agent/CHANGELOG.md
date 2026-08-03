@@ -13,7 +13,9 @@
 - **orchestrator**: Moved task, team, and orchestrator contracts out of `@tsuuanmi/pi-agent` into `@tsuuanmi/pi-orchestrator`.
 - **orchestrator**: Standardized orchestrator options on `schedulingStrategy` and `abortSignal`, removed `runTeam`, removed `onTaskFail`, removed scheduler fallback assignment, and made explicit task assignees fail fast when they do not match the team roster.
 - **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
+- **subagents**: `createSubagentRunIdentity()` now accepts only the canonical nested tmux target session name.
 - **model**: Removed the agent-owned `ThinkingLevel` type; consumers must import the canonical type from `@tsuuanmi/pi-ai`.
+- **jsonl**: `attachJsonlLineReader()` now requires an error callback and rejects CRLF or unterminated records.
 
 ### Added
 
@@ -50,6 +52,8 @@
 
 ### Changed
 
+- **progress**: Omit incomplete tool diagnostics instead of emitting placeholder values.
+- **receipts**: Omit unavailable subagent visibility and failure metadata from structured receipts.
 - **agent**: Flattened core agent source modules from `src/agent/*` into `src/*`.
 - **agent**: Renamed long internal source filenames to concise module names such as `structured-output`, `loop-detector`, `run-identity`, and `mutation-queue`.
 - **agent**: Grouped agent behavior under `src/agent/`, message logic under `src/messages/`, and shared receipt metadata under `src/metadata/` with standard tool receipt builders under `src/tool/`.

@@ -119,6 +119,20 @@ describe("SubagentProgressTracker", () => {
 		expect(progress?.currentToolArgs?.length).toBeLessThan(250);
 		expect(progress?.currentToolArgs?.endsWith("…")).toBe(true);
 	});
+
+	it("omits incomplete tool diagnostics", () => {
+		tracker.startTracking("sub-1", createSubscribe());
+		emit({ type: "tool_execution_start", toolName: "read", toolCallId: "tc-1", args: 1n });
+		expect(tracker.getProgress("sub-1")?.currentToolArgs).toBeUndefined();
+		emit({ type: "tool_execution_end", toolName: "read", toolCallId: "tc-1" });
+
+		emit({ type: "tool_execution_start", toolCallId: "tc-2", args: { path: "/foo" } });
+		emit({ type: "tool_execution_end", toolCallId: "tc-2" });
+
+		const progress = tracker.getProgress("sub-1")!;
+		expect(progress.recentTools).toEqual([]);
+		expect(renderSubagentProgress(progress)).not.toMatch(/unknown|unserializable/);
+	});
 });
 
 describe("renderSubagentProgress", () => {

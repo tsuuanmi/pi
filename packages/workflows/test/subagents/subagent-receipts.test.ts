@@ -48,6 +48,24 @@ describe("subagent structured receipts", () => {
 		});
 	});
 
+	test("omits unavailable visibility metadata", () => {
+		const record: SubagentRecord = {
+			id: "subagent-2",
+			role: "worker",
+			status: "failed",
+			cwd: "/repo",
+			resumable: false,
+			created_at: "2026-07-20T15:00:00.000Z",
+			updated_at: "2026-07-20T15:00:01.000Z",
+		};
+
+		const receipt = createSubagentReceipt(record, "session-1");
+
+		expect(isStructuredReceipt(receipt)).toBe(true);
+		expect(receipt.location).not.toHaveProperty("visibility");
+		expect(receipt.errorSummary).toBeUndefined();
+	});
+
 	test("attaches aggregate list receipts without changing workflow receipt shape", () => {
 		const receipt = createSubagentListReceipt("session-1", 2);
 		const envelope = workflowReceiptWithStructuredReceipt({ records: [] }, receipt);

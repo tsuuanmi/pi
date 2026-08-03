@@ -43,21 +43,25 @@ export function createSubagentReceipt(record: SubagentRecord, sessionId: string)
 	const endedAt = record.completed_at;
 	const started = startedAt ? Date.parse(startedAt) : undefined;
 	const ended = endedAt ? Date.parse(endedAt) : undefined;
+	const location: StructuredReceipt["location"] = {
+		sessionId,
+		subagentId: record.id,
+		cwd: record.cwd,
+		role: record.role,
+		status: record.status,
+		resumable: record.resumable,
+	};
+	if (record.visibility !== undefined) {
+		location.visibility = record.visibility;
+	}
+
 	return {
 		version: STRUCTURED_RECEIPT_VERSION,
 		id: `subagent:${record.id}`,
 		source: "subagent",
 		actionSummary: `Subagent ${record.id} ${record.status}`,
 		status: record.status,
-		location: {
-			sessionId,
-			subagentId: record.id,
-			cwd: record.cwd,
-			role: record.role,
-			status: record.status,
-			resumable: record.resumable,
-			visibility: record.visibility ?? "native",
-		},
+		location,
 		timing: {
 			startedAt,
 			endedAt,
@@ -65,7 +69,7 @@ export function createSubagentReceipt(record: SubagentRecord, sessionId: string)
 		},
 		inspect,
 		outputPreview: truncatePreview(record.result_text),
-		errorSummary: record.status === "failed" ? (truncatePreview(record.error_text) ?? "Subagent failed") : undefined,
+		errorSummary: record.status === "failed" ? truncatePreview(record.error_text) : undefined,
 		meta: {
 			label: record.label,
 			agent_profile: record.agent_profile,

@@ -26,11 +26,11 @@ All commands support an optional `id` field for request/response correlation. If
 
 ### Framing
 
-RPC mode uses strict JSONL semantics with LF (`\n`) as the only record delimiter.
+RPC mode uses strict JSONL semantics with LF (`\n`) as the only record delimiter. Every record must end with `\n`; CRLF input and unterminated final records are protocol errors.
 
 This matters for clients:
 - Split records on `\n` only
-- Accept optional `\r\n` input by stripping a trailing `\r`
+- Reject `\r\n` input and records without a trailing `\n`
 - Do not use generic line readers that treat Unicode separators as newlines
 
 In particular, Node `readline` is not protocol-compliant for RPC mode because it also splits on `U+2028` and `U+2029`, which are valid inside JSON strings.
@@ -1306,33 +1306,63 @@ const { StringDecoder } = require("string_decoder");
 
 const agent = spawn("pi", ["--mode", "rpc"]);
 
-function attachJsonlReader(stream, onLine) {
+function attachJsonlLineReader(stream, onLine, onError) {
     const decoder = new StringDecoder("utf8");
     let buffer = "";
+    let stopped = false;
 
-    stream.on("data", (chunk) => {
+    const cleanup = () => {
+        if (stopped) return;
+        stopped = true;
+        stream.off("data", onData);
+        stream.off("end", onEnd);
+    };
+
+    const fail = (error) => {
+        cleanup();
+        onError(error instanceof Error ? error : new Error(String(error)));
+    };
+
+    const emitLine = (line) => {
+        if (line.endsWith("\r")) {
+            fail(new Error("JSONL records must use LF delimiters"));
+            return false;
+        }
+        try {
+            onLine(line);
+            return true;
+        } catch (error) {
+            fail(error);
+            return false;
+        }
+    };
+
+    const onData = (chunk) => {
+        if (stopped) return;
         buffer += typeof chunk === "string" ? chunk : decoder.write(chunk);
 
         while (true) {
             const newlineIndex = buffer.indexOf("\n");
-            if (newlineIndex === -1) break;
-
-            let line = buffer.slice(0, newlineIndex);
+            if (newlineIndex === -1) return;
+            if (!emitLine(buffer.slice(0, newlineIndex))) return;
             buffer = buffer.slice(newlineIndex + 1);
-            if (line.endsWith("\r")) line = line.slice(0, -1);
-            onLine(line);
         }
-    });
+    };
 
-    stream.on("end", () => {
+    const onEnd = () => {
+        if (stopped) return;
         buffer += decoder.end();
         if (buffer.length > 0) {
-            onLine(buffer.endsWith("\r") ? buffer.slice(0, -1) : buffer);
+            fail(new Error("JSONL stream ended before a record delimiter"));
         }
-    });
+    };
+
+    stream.on("data", onData);
+    stream.on("end", onEnd);
+    return cleanup;
 }
 
-attachJsonlReader(agent.stdout, (line) => {
+attachJsonlLineReader(agent.stdout, (line) => {
     const event = JSON.parse(line);
 
     if (event.type === "message_update") {
@@ -1341,6 +1371,9 @@ attachJsonlReader(agent.stdout, (line) => {
             process.stdout.write(assistantMessageEvent.delta);
         }
     }
+}, (error) => {
+    console.error(`RPC protocol error: ${error.message}`);
+    agent.kill();
 });
 
 // Send prompt

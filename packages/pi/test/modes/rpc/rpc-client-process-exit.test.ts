@@ -35,4 +35,23 @@ process.stdin.resume();
 
 		await expect(client.getCommands()).rejects.toThrow(/Agent process exited \(code=43 signal=null\)/);
 	});
+
+	test("rejects an in-flight request on invalid JSONL framing", async () => {
+		const client = new RpcClient({
+			cliPath: writeChildScript(`
+process.stdin.once("data", () => {
+	process.stdout.write('{"type":"response"}\\r\\n');
+});
+process.stdin.resume();
+`),
+		});
+
+		await client.start();
+
+		try {
+			await expect(client.getCommands()).rejects.toThrow(/JSONL records must use LF delimiters/);
+		} finally {
+			await client.stop();
+		}
+	});
 });

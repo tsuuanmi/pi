@@ -101,7 +101,7 @@ export function createSubagentRunIdentity(input: {
 	workerMetadataPath: string;
 	lifecycleState: SubagentStatus;
 	cleanupEligible: boolean;
-	tmux: Omit<SubagentRunIdentity["tmux"], "session_name"> & { session_name?: string };
+	tmux: Omit<SubagentRunIdentity["tmux"], "session_name">;
 }): SubagentRunIdentity {
 	return {
 		version: 1,
@@ -125,7 +125,7 @@ export function createSubagentRunIdentity(input: {
 		},
 		tmux: {
 			...input.tmux,
-			session_name: input.tmux.session_name ?? input.tmux.target.session_name,
+			session_name: input.tmux.target.session_name,
 		},
 	};
 }
