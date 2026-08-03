@@ -13,6 +13,10 @@
 
 - **models**: Custom provider model configs now accept image input metadata and `max`/`ultra` thinking-level mappings.
 
+### Fixed
+
+- **auth**: Preserve the OpenAI Codex OAuth callback URL paste input after selecting a login method.
+
 ### Removed
 
 - **debug**: Removed the hidden `/debug` command and its debug log output.

@@ -819,8 +819,10 @@ export class AccountAuthController {
 					resolve(undefined);
 				},
 			);
-			this.editorContainer.clear();
-			this.editorContainer.addChild(selector);
+			// Keep the dialog alive while the provider-specific login method is selected.
+			// Clearing the container would dispose it, so the callback URL and paste input
+			// added after the selector closes would no longer be rendered.
+			this.editorContainer.children = [selector];
 			this.ui.setFocus(selector);
 			this.ui.requestRender();
 		});
