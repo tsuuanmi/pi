@@ -1,6 +1,6 @@
 # Workflow and Orchestrator Overlap
 
-This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-orchestrator` and records what should move, stay, or remain under review. See [`receipt-boundaries.md`](./receipt-boundaries.md) for receipt ownership rules, [`persistence-boundaries.md`](./persistence-boundaries.md) for state ownership rules, [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) for the team adapter boundary, and [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the runtime contract.
+This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-orchestrator` and records what should move, stay, or remain under review. See [`ralplan-orchestrator-contract.md`](./ralplan-orchestrator-contract.md) for the Ralplan adapter contract, [`receipt-boundaries.md`](./receipt-boundaries.md) for receipt ownership rules, [`persistence-boundaries.md`](./persistence-boundaries.md) for state ownership rules, [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) for the Team adapter boundary, and [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the runtime contract.
 
 ## Boundary rule
 
@@ -17,7 +17,7 @@ This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-
 | --- | --- | --- | --- | --- | --- |
 | `team` | Persists team tasks, workers, gates, mailbox, and delegates all role execution to Orchestrator | Task queue, team roster, routing, events, receipts | Keep workflow state/gates; use Orchestrator as the sole multi-agent execution engine | High | Complete dependency-semantic and recovery parity coverage |
 | `ultragoal` | Persists approved goals, checkpoints, quality gates, blockers, ledger, and completion receipts | Task/goal state, checkpoints, receipts, progress | Keep workflow-owned goal UX and gates; direct manager use is limited to one guarded worker; use the orchestrator only for a real multi-goal DAG | Medium-high | Remove legacy writes, then audit goal dependency semantics before any code move |
-| `ralplan` | Produces pending-approval plans through role-agent stages, verdicts, obstacles, approval handoff | Planning, role sequencing, artifacts | Keep workflow-owned; do not move to orchestrator | Medium | Document handoff outputs that can become orchestrator task inputs |
+| `ralplan` | Produces pending-approval plans through guarded role-agent stages, verdicts, obstacles, and approval handoff; executes admitted roles through a workflow-owned adapter | Role execution, checkpoints, receipts, artifacts | Keep workflow policy/state/artifacts in workflows; use Orchestrator for one admitted role task at a time | High | Maintain artifact verification and recovery parity |
 | `deep-interview` | Runs requirements interview, ambiguity scoring, closure guard, spec writing | None significant | Keep workflow-owned | Low | No orchestrator integration |
 | Workflow runtime | Owns session state, leases, RPC, GC, mutation queues, storage layout | Checkpoint/recovery concepts | Keep workflow-owned; may implement orchestrator checkpoint stores | High | Keep checkpoint/event stores workflow-owned |
 
@@ -87,15 +87,25 @@ Do not move into orchestrator:
 
 ### Ralplan workflow
 
-`packages/workflows/src/skills/ralplan/ralplan-runtime.ts` owns role-stage planning artifacts, critic verdicts, approval handoff, obstacles, and completion transaction journals.
+`packages/workflows/src/skills/ralplan/ralplan-runtime.ts` owns role-stage planning artifacts, critic verdicts, approval handoff, obstacles, and completion transaction journals. `ralplan-orchestrator.ts` submits one guarded role task to `@tsuuanmi/pi-orchestrator` and verifies the workflow artifact before task completion.
 
-Overlap with orchestrator is limited to planning terms. Ralplan is not generic task execution; it is a workflow-specific planning and approval process.
+The overlap is execution, not policy. Ralplan selects the legal role and stage, while the generic engine invokes the workflow-created runtime Agent, persists its checkpoint, and records its task receipt.
 
 Decision:
 
-- Keep ralplan in workflows.
-- The output of an approved ralplan plan may become input to team, ultragoal, or a future orchestrator-backed workflow adapter.
-- Do not move role-stage sequencing or verdict logic into orchestrator.
+- Keep Ralplan role order, verdicts, artifacts, approval, and workflow state in workflows.
+- Use the Orchestrator adapter for Explorer, Planner, Architect, Critic, Revision, and Expert role execution.
+- Keep revision and expert branches workflow-controlled; do not encode conditional loops as a static engine graph.
+
+Adapter flow:
+
+```text
+Ralplan expected-next action
+  -> RalplanAgentInput
+  -> Orchestrator.run(one TaskInput, one runtime Agent)
+  -> artifact/provenance verification
+  -> workflow receipt and next-action selection
+```
 
 Do not move into orchestrator:
 
@@ -138,18 +148,19 @@ Decision:
 
 | Rank | Task | ROI | Status | Exit criteria |
 | ---: | --- | --- | --- | --- |
-| 1 | Audit Team dependency and recovery semantics against `TaskQueue` | High | Next | `depends_on` has one mapping, `blocked_by` has one owner, and resume/recovery parity passes |
-| 2 | Remove Ultragoal legacy and dual-write paths | High | Planned | Obstacle, review-blocker, quality-gate, and receipt writes have one canonical path |
-| 3 | Complete package-level receipt boundary documentation | Medium-high | Planned | Workflow receipts reference task IDs without copying task receipt schemas |
-| 4 | Complete checkpoint recovery parity tests | Medium-high | Planned | Restart, duplicate event, interrupted task, and checkpoint-save failure cases are covered |
-| 5 | Normalize event ownership and adapter documentation | Medium | Planned | Agent, queue, workflow, and Pi UI events have explicit owners and mappings |
-| 6 | Define approved Ralplan output adapters | Medium-low | Planned | Approved plans map into downstream task inputs without moving planning policy |
-| 7 | Evaluate Ultragoal orchestrator integration only for a real DAG | Low-medium | Decision gate | No adapter is added without independent goals and generic dependencies |
-| 8 | Keep Ralplan and Deep-interview workflow-owned | Low | Guardrail | No code movement unless a concrete generic DAG requirement appears |
+| 1 | Complete Ralplan role execution adapter and artifact barrier | High | Implemented | Every admitted role runs through Orchestrator and cannot complete without its workflow artifact |
+| 2 | Audit Team dependency and recovery semantics against `TaskQueue` | High | Next | `depends_on` has one mapping, `blocked_by` has one owner, and resume/recovery parity passes |
+| 3 | Remove Ultragoal legacy and dual-write paths | High | Planned | Obstacle, review-blocker, quality-gate, and receipt writes have one canonical path |
+| 4 | Complete package-level receipt boundary documentation | Medium-high | Planned | Workflow receipts reference task IDs without copying task receipt schemas |
+| 5 | Complete checkpoint recovery parity tests | Medium-high | Planned | Restart, duplicate event, interrupted task, and checkpoint-save failure cases are covered |
+| 6 | Normalize event ownership and adapter documentation | Medium | Planned | Agent, queue, workflow, and Pi UI events have explicit owners and mappings |
+| 7 | Define approved Ralplan output adapters | Medium-low | Planned | Approved plans map into downstream task inputs without moving planning policy |
+| 8 | Evaluate Ultragoal orchestrator integration only for a real DAG | Low-medium | Decision gate | No adapter is added without independent goals and generic dependencies |
+| 9 | Keep Ralplan policy and Deep-interview workflow-owned | Low | Guardrail | No policy, artifact, verdict, or approval logic moves into orchestrator |
 
 ## Direct manager exception
 
-Workflow code may call `SubagentManager` directly only when the operation controls one subagent or runs one workflow-owned worker. The allowed adapters are `subagents/subagent-tools.ts`, `skills/team/agent-adapter.ts`, `skills/ralplan/ralplan-agents.ts`, and `skills/ultragoal/ultragoal-tools.ts`. A workflow must use the orchestrator for task dependencies, agent assignment, retries, queue execution, or agent collaboration. Unknown manager call sites fail the package boundary check.
+Workflow code may call `SubagentManager` directly only when the operation controls one subagent or runs one workflow-owned worker. The allowed adapters are `subagents/subagent-tools.ts`, `skills/team/agent-adapter.ts`, `skills/ralplan/ralplan-agent-adapter.ts`, and `skills/ultragoal/ultragoal-tools.ts`. A workflow must use the orchestrator for task dependencies, agent assignment, retries, queue execution, or agent collaboration. Unknown manager call sites fail the package boundary check.
 
 ## Adapter acceptance criteria
 
@@ -165,4 +176,4 @@ Any workflow-to-orchestrator adapter must satisfy:
 
 ## Remaining runtime work
 
-The adapter, explicit role coordinator, fresh/resume tools, failure persistence, and idempotent event store are implemented. Remaining work is session-isolation hardening, dependency/recovery parity, and removal of workflow compatibility paths. Do not integrate it into ultragoal, ralplan, or deep-interview without a separate DAG requirement.
+The Team adapter, Ralplan role adapter, explicit role coordinators, failure persistence, and idempotent event stores are implemented. Remaining work is session-isolation hardening, dependency/recovery parity, and removal of workflow compatibility paths. Do not integrate Ultragoal or Deep-interview without a separate generic DAG requirement.

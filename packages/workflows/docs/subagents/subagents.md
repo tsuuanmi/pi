@@ -29,7 +29,7 @@ The bundled workflow registration registers these model-visible tools:
 | `team_resume` | Resume Team execution from an orchestrator checkpoint. |
 | `ultragoal_spawn_goal_agent` | Spawn the next legal Ultragoal goal worker. |
 
-Direct `SubagentManager` calls are limited to four workflow adapters: `subagents/subagent-tools.ts` for lifecycle tools, `skills/team/agent-adapter.ts` for the `Agent` bridge, `skills/ralplan/ralplan-agents.ts` for sequential role execution, and `skills/ultragoal/ultragoal-tools.ts` for one guarded goal worker. Team roles call the Orchestrator through the workflow-owned adapter; the detached workflow owner is lifecycle-only. Workflows must use the Orchestrator for generic task dependencies, routing, retries, queues, or agent collaboration.
+Direct `SubagentManager` calls are limited to workflow adapters: `subagents/subagent-tools.ts` for lifecycle tools, `skills/team/agent-adapter.ts` for Team agents, `skills/ralplan/ralplan-agent-adapter.ts` for Ralplan agents, and `skills/ultragoal/ultragoal-tools.ts` for one guarded goal worker. Ralplan and Team roles call the Orchestrator through workflow-owned adapters; the detached workflow owner is lifecycle-only. Workflows must use the Orchestrator for generic task dependencies, routing, retries, queues, or agent collaboration.
 
 ## Guarded Workflow Execution
 

@@ -6,12 +6,16 @@ import {
 	expectedNextRalplanRole,
 	type RalplanSelectorVerdict,
 } from "#workflows/policy/expected-next-role";
+import { ralplanGateArtifactPath } from "#workflows/session/session-layout";
 import { assertRalplanRole } from "#workflows/skills/ralplan/guards";
-import { ralplanRoleForStage, runRalplanAgent } from "#workflows/skills/ralplan/ralplan-agents";
+import { type RalplanAgentInput, roleForStage } from "#workflows/skills/ralplan/ralplan-agent";
 import { normalizeRalplanExplorerGate } from "#workflows/skills/ralplan/ralplan-gates";
+import { buildRalplanOrchestrationSnapshot } from "#workflows/skills/ralplan/ralplan-orchestration-snapshot";
+import { planRalplanAgent, runRalplanStage } from "#workflows/skills/ralplan/ralplan-orchestrator";
 import { readRalplanStatus } from "#workflows/skills/ralplan/ralplan-runtime";
 import { assertRalplanStage, assertSafePathComponent } from "#workflows/state/state-schema";
 import { defaultWorkflowId, readWorkflowState } from "#workflows/state/workflow-state";
+import { requireSubagentManager } from "#workflows/subagents/manager";
 import { assertAgentThinkingLevel } from "#workflows/subagents/thinking-level";
 import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
 
@@ -63,14 +67,16 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Workflo
 		throw new Error(`invalid stageN: ${params.stageN}`);
 	}
 	if (params.runId) assertSafePathComponent(params.runId, "runId");
-	const role = params.role ?? ralplanRoleForStage(params.stage);
+	const stage = params.stage;
+	const role = params.role ?? roleForStage(stage);
 	const sessionId = ctx.sessionManager.getSessionId();
-	const ralplanState = await readWorkflowState(ctx.cwd, "ralplan", { sessionId }).catch(() => undefined);
+	const ralplanState = await readWorkflowState(ctx.cwd, "ralplan", { sessionId });
 	const selectorRunId =
 		params.runId?.trim() ||
 		(typeof ralplanState?.run_id === "string" ? ralplanState.run_id : undefined) ||
 		defaultWorkflowId("ralplan");
-	const ralplanStatus = await readRalplanStatus(ctx.cwd, sessionId, selectorRunId).catch(() => undefined);
+	assertSafePathComponent(selectorRunId, "runId");
+	const ralplanStatus = await readRalplanStatus(ctx.cwd, sessionId, selectorRunId);
 	const explorerGate = normalizeRalplanExplorerGate(ralplanState?.explorer_gate);
 	const expected = expectedNextRalplanRole(
 		{
@@ -103,38 +109,82 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Workflo
 		runId: params.runId,
 	});
 	assertNoGuardedSpawnOverrides(params);
-	const result = await runRalplanAgent(
-		ctx.cwd,
-		{
-			role,
-			agent: params.agent,
-			model: params.model,
-			thinkingLevel: params.thinkingLevel,
-			tools: params.tools,
-			excludeTools: params.excludeTools,
-			task: params.task,
-			stage: params.stage,
-			stageN: params.stageN,
-			runId: params.runId,
-			contextArtifacts: params.contextArtifacts,
-			deliberate: params.deliberate,
-			plannerSubagentId: params.plannerSubagentId,
-			attemptResume: params.attemptResume,
-			dryRun: params.dryRun,
-			subagentManager: ctx.subagents,
-		},
-		ctx.sessionManager.getSessionId(),
+	const agentInput = {
+		role,
+		agent: params.agent,
+		model: params.model,
+		thinkingLevel: params.thinkingLevel,
+		tools: params.tools,
+		excludeTools: params.excludeTools,
+		task: params.task,
+		stage,
+		stageN: params.stageN,
+		runId: selectorRunId,
+		contextArtifacts: params.contextArtifacts,
+		deliberate: params.deliberate,
+		plannerSubagentId: params.plannerSubagentId,
+		attemptResume: params.attemptResume,
+	} satisfies RalplanAgentInput;
+	if (params.dryRun === true) {
+		const planned = await planRalplanAgent(ctx.cwd, sessionId, agentInput);
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: `${planned.role} agent ${planned.status} for ralplan ${planned.stage} stage ${planned.stage_n}`,
+				},
+			],
+			details: workflowReceipt({ ...planned }),
+		};
+	}
+
+	const result = await runRalplanStage({
+		...agentInput,
+		cwd: ctx.cwd,
+		sessionId,
+		manager: requireSubagentManager(ctx),
 		signal,
-	);
+		verifyArtifact: () => verifyRalplanArtifact(ctx.cwd, sessionId, selectorRunId, stage, params.stageN),
+	});
 	return {
 		content: [
 			{
 				type: "text" as const,
-				text: `${result.role} agent ${result.status} for ralplan ${result.stage} stage ${result.stage_n}`,
+				text: `${result.agent.role} agent ${result.agent.status} for ralplan ${result.agent.stage} stage ${result.agent.stage_n}`,
 			},
 		],
-		details: workflowReceipt({ ...result }),
+		details: workflowReceipt({
+			...result.agent,
+			orchestrator_run_id: result.run.runIdentity.runId,
+			orchestrator_task_id: result.task.id,
+			orchestrator_receipt_id: result.receipt.receiptId,
+		}),
 	};
+}
+
+async function verifyRalplanArtifact(
+	cwd: string,
+	sessionId: string,
+	runId: string,
+	stage: RalplanAgentInput["stage"],
+	stageN: number,
+): Promise<boolean> {
+	const snapshot = await buildRalplanOrchestrationSnapshot({ cwd, sessionId, runId });
+	if (stage === "pre-planner") {
+		const gate = snapshot.explorerGate;
+		return (
+			gate?.status === "passed" &&
+			"artifact_path" in gate &&
+			gate.artifact_path === ralplanGateArtifactPath(cwd, runId, "explorer", gate.attempt, sessionId)
+		);
+	}
+	const artifact = snapshot.index.rows.find((row) => row.stage === stage && row.stage_n === stageN);
+	return (
+		artifact !== undefined &&
+		snapshot.artifactHealth.health === "complete" &&
+		snapshot.provenanceHealth.health === "complete" &&
+		snapshot.transactionJournal.health === "complete"
+	);
 }
 
 export function registerRalplanTools(pi: WorkflowToolHost): void {
@@ -142,10 +192,10 @@ export function registerRalplanTools(pi: WorkflowToolHost): void {
 		name: "ralplan_run_agent",
 		label: "Ralplan Role Agent",
 		description:
-			"Run an isolated Pi role agent for ralplan Planner, Architect, or Critic and record the invocation under .pi/<session-id>/workflows/ralplan/agents.",
-		promptSnippet: "Run ralplan Planner/Architect/Critic role agents",
+			"Run one guarded Ralplan role agent for Explorer, Planner, Architect, Critic, Revision, or Expert and record the invocation under .pi/<session-id>/workflows/ralplan/agents.",
+		promptSnippet: "Run one guarded Ralplan role agent",
 		promptGuidelines: [
-			"Use ralplan_run_agent for Planner, Architect, Critic, and Planner revision passes instead of pretending one model persona reviewed itself inline.",
+			"Use ralplan_run_agent for Explorer, Planner, Architect, Critic, Revision, and Expert passes instead of pretending one model persona reviewed itself inline.",
 			"Role agents must persist durable output with ralplan_write_artifact and return receipt-only summaries.",
 		],
 		parameters: ralplanRunAgentSchema,

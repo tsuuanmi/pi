@@ -90,7 +90,11 @@ export async function recordRalplanExplorerGateArtifact(
 export async function assertRalplanExplorerGatePassed(cwd: string, runId: string, sessionId: string): Promise<void> {
 	const state = await readWorkflowState(cwd, "ralplan", { sessionId });
 	const gate = normalizeRalplanExplorerGate(state?.explorer_gate);
-	if (gate?.status === "passed" && gate.artifact_path) return;
+	if (
+		gate?.status === "passed" &&
+		gate.artifact_path === ralplanGateArtifactPath(cwd, runId, "explorer", gate.attempt, sessionId)
+	)
+		return;
 	const attempt = (gate?.attempt ?? 0) + 1;
 	const status = attempt >= 2 ? "human_blocked" : "retry_requested";
 	const reason = "ralplan planner requires a passing explorer context_map";

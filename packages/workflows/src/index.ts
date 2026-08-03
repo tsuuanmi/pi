@@ -53,13 +53,26 @@ export {
 	assertRalplanApprovalTarget,
 	assertRalplanRole,
 } from "#workflows/skills/ralplan/guards";
-export * from "#workflows/skills/ralplan/ralplan-agents";
+export {
+	createRalplanAgentRequest,
+	type RalplanAgentInput,
+	type RalplanAgentRequest,
+	type RalplanAgentRole,
+	roleForStage,
+} from "#workflows/skills/ralplan/ralplan-agent";
 export * from "#workflows/skills/ralplan/ralplan-compact";
 export * from "#workflows/skills/ralplan/ralplan-completion-transaction";
 export * from "#workflows/skills/ralplan/ralplan-expected-action";
 export * from "#workflows/skills/ralplan/ralplan-gates";
 export * from "#workflows/skills/ralplan/ralplan-obstacles";
 export * from "#workflows/skills/ralplan/ralplan-orchestration-snapshot";
+export {
+	planRalplanAgent,
+	type RalplanStageInput,
+	type RalplanStageResult,
+	runRalplanStage,
+} from "#workflows/skills/ralplan/ralplan-orchestrator";
+export type { RalplanAgentRecord } from "#workflows/skills/ralplan/ralplan-record";
 export * from "#workflows/skills/ralplan/ralplan-runtime";
 export * from "#workflows/skills/ralplan/ralplan-verdicts";
 // Harness runtime

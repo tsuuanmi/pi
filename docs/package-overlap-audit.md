@@ -1,6 +1,6 @@
 # Package Overlap Audit
 
-This audit turns package-boundary rules into actionable cleanup tasks. It focuses on concepts shared by `@tsuuanmi/pi-agent`, `@tsuuanmi/pi-orchestrator`, `@tsuuanmi/pi-workflows`, and `@tsuuanmi/pi`. See [`workflow-orchestrator-overlap.md`](./workflow-orchestrator-overlap.md) for workflow-specific findings, [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) for the team adapter boundary, [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the runtime contract, [`receipt-boundaries.md`](./receipt-boundaries.md) for receipt ownership rules, and [`persistence-boundaries.md`](./persistence-boundaries.md) for state ownership rules.
+This audit turns package-boundary rules into actionable cleanup tasks. It focuses on concepts shared by `@tsuuanmi/pi-agent`, `@tsuuanmi/pi-orchestrator`, `@tsuuanmi/pi-workflows`, and `@tsuuanmi/pi`. See [`workflow-orchestrator-overlap.md`](./workflow-orchestrator-overlap.md) for workflow-specific findings, [`ralplan-orchestrator-contract.md`](./ralplan-orchestrator-contract.md) for the Ralplan adapter boundary, [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md) for the Team adapter boundary, [`team-workflow-orchestrator-runtime.md`](./team-workflow-orchestrator-runtime.md) for the runtime contract, [`receipt-boundaries.md`](./receipt-boundaries.md) for receipt ownership rules, and [`persistence-boundaries.md`](./persistence-boundaries.md) for state ownership rules.
 
 ## Decision rules
 
@@ -35,6 +35,7 @@ This audit turns package-boundary rules into actionable cleanup tasks. It focuse
 - Package ownership and execution direction are documented and enforced by `scripts/check-package-boundaries.mjs`.
 - Direct `SubagentManager` access is limited to approved workflow adapters.
 - Team multi-agent execution uses `Orchestrator` as its single coordination path.
+- Ralplan role-agent execution uses its workflow-owned Orchestrator adapter; Ralplan policy and artifacts remain workflow-owned.
 - Workflow guards, manifest transitions, and legacy phase aliases have been canonicalized.
 - Active state and handoff identity are now strictly session-scoped with versioned persistence.
 

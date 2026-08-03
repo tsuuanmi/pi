@@ -171,6 +171,20 @@ export function ralplanIndexPath(cwd: string, runId: string, sessionId: string):
 	return join(ralplanRunDir(cwd, runId, sessionId), "index.jsonl");
 }
 
+export function ralplanCheckpointPath(
+	cwd: string,
+	runId: string,
+	stageN: number,
+	stage: RalplanStage,
+	sessionId: string,
+): string {
+	return join(
+		ralplanRunDir(cwd, runId, sessionId),
+		"checkpoints",
+		`${stageN.toString().padStart(2, "0")}-${stage}.json`,
+	);
+}
+
 export function ralplanStageArtifactPath(
 	cwd: string,
 	runId: string,

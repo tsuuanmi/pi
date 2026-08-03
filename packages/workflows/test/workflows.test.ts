@@ -19,6 +19,7 @@ import {
 	expectedNextRalplanRole,
 	expectedNextTeamRole,
 	PI_WORKFLOW_MANIFEST,
+	planRalplanAgent,
 	type RalplanSelectorVerdict,
 	readExistingStateForMutation,
 	readFileOrLiteral,
@@ -29,7 +30,6 @@ import {
 	recordRalplanExplorerGateArtifact,
 	recordTeamCompletionGateArtifact,
 	recordTeamReviewGateArtifact,
-	runRalplanAgent,
 	startTeam,
 	syncWorkflowActiveState,
 	transitionTeamTask,
@@ -525,10 +525,9 @@ describe("workflow runtime", () => {
 				stageN: 1,
 				runId: "explorer-run",
 				task: "Plan implementation",
-				dryRun: true,
 			};
-			await expect(runRalplanAgent(cwd, plannerInput, sessionId)).rejects.toThrow(/context_map/);
-			await expect(runRalplanAgent(cwd, plannerInput, sessionId)).rejects.toThrow(/human_blocked/);
+			await expect(planRalplanAgent(cwd, sessionId, plannerInput)).rejects.toThrow(/context_map/);
+			await expect(planRalplanAgent(cwd, sessionId, plannerInput)).rejects.toThrow(/human_blocked/);
 
 			const gate = await recordRalplanExplorerGateArtifact(
 				cwd,
@@ -540,7 +539,7 @@ describe("workflow runtime", () => {
 			);
 			expect(gate.status).toBe("passed");
 
-			const result = await runRalplanAgent(cwd, plannerInput, sessionId);
+			const result = await planRalplanAgent(cwd, sessionId, plannerInput);
 			expect(result.status).toBe("planned");
 		});
 	});

@@ -48,7 +48,7 @@ const internalRules = [
 const workflowManagerCallers = new Set([
 	"packages/workflows/src/subagents/subagent-tools.ts",
 	"packages/workflows/src/skills/team/agent-adapter.ts",
-	"packages/workflows/src/skills/ralplan/ralplan-agents.ts",
+	"packages/workflows/src/skills/ralplan/ralplan-agent-adapter.ts",
 	"packages/workflows/src/skills/ultragoal/ultragoal-tools.ts",
 ]);
 const workflowManagerCallPattern = /\.(spawn|resume|steer|pause|cancel|read|list|waitFor|inspect|attach|kill|dispose)\s*\(/g;

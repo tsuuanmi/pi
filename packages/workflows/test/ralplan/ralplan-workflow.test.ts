@@ -5,14 +5,15 @@ import type { SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi-agent";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
+	planRalplanAgent,
 	ralplanIndexPath,
-	ralplanRoleForStage,
 	readRalplanCompactStatus,
 	readRalplanStatus,
 	readWorkflowActiveState,
 	readWorkflowState,
 	recordRalplanExplorerGateArtifact,
-	runRalplanAgent,
+	roleForStage,
+	runRalplanStage,
 	writeRalplanArtifact,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -179,20 +180,15 @@ describe("ralplan workflow runtime", () => {
 	});
 
 	it("records ralplan role-agent invocations", async () => {
-		expect(ralplanRoleForStage("revision")).toBe("planner");
-		const result = await runRalplanAgent(
-			cwd,
-			{
-				role: "architect",
-				runId: "run-6",
-				stage: "architect",
-				stageN: 2,
-				task: "Review the persisted planner artifact.",
-				contextArtifacts: [".pi/plans/ralplan/run-6/stage-01-planner.md"],
-				dryRun: true,
-			},
-			sessionId,
-		);
+		expect(roleForStage("revision")).toBe("planner");
+		const result = await planRalplanAgent(cwd, sessionId, {
+			role: "architect",
+			runId: "run-6",
+			stage: "architect",
+			stageN: 2,
+			task: "Review the persisted planner artifact.",
+			contextArtifacts: [".pi/plans/ralplan/run-6/stage-01-planner.md"],
+		});
 
 		expect(result.status).toBe("planned");
 		expect(result.role).toBe("architect");
@@ -220,57 +216,55 @@ describe("ralplan workflow runtime", () => {
 			{ runId: "run-subagent", contextMap: { context_needed: false, summary: "No extra context required." } },
 			sessionId,
 		);
-		const result = await runRalplanAgent(
+		const result = await runRalplanStage({
 			cwd,
-			{
-				role: "planner",
-				runId: "run-subagent",
-				stage: "planner",
-				stageN: 1,
-				task: "Plan it.",
-				subagentManager: {
-					spawn: async (request: SubagentRunRequest) => {
-						spawnPrompt = request.prompt;
-						return subagentResult;
-					},
-					resume: async () => ({ ok: false, reason: "not_found" }),
-				},
-			},
 			sessionId,
-		);
+			role: "planner",
+			runId: "run-subagent",
+			stage: "planner",
+			stageN: 1,
+			task: "Plan it.",
+			manager: {
+				spawn: async (request: SubagentRunRequest) => {
+					spawnPrompt = request.prompt;
+					return subagentResult;
+				},
+				resume: async () => ({ ok: false, reason: "not_found" }),
+			},
+			verifyArtifact: async () => true,
+		});
 
 		expect(spawnPrompt).toContain("Run id: run-subagent");
-		expect(result.status).toBe("completed");
-		expect(result.planner_subagent_id).toBe("subagent-planner-1");
-		expect(result.output).toBe("planner receipt");
+		expect(result.agent.status).toBe("completed");
+		expect(result.agent.planner_subagent_id).toBe("subagent-planner-1");
+		expect(result.agent.output).toBe("planner receipt");
 	});
 
 	it("fails clearly when planner resume is unavailable", async () => {
 		const calls: string[] = [];
 		await expect(
-			runRalplanAgent(
+			runRalplanStage({
 				cwd,
-				{
-					role: "planner",
-					runId: "run-resume",
-					stage: "revision",
-					stageN: 2,
-					task: "Revise it.",
-					plannerSubagentId: "old-planner",
-					attemptResume: true,
-					subagentManager: {
-						resume: async () => {
-							calls.push("resume");
-							return { ok: false, reason: "context_unavailable" };
-						},
-						spawn: async () => {
-							calls.push("spawn");
-							throw new Error("spawn should not be called");
-						},
+				sessionId,
+				role: "planner",
+				runId: "run-resume",
+				stage: "revision",
+				stageN: 2,
+				task: "Revise it.",
+				plannerSubagentId: "old-planner",
+				attemptResume: true,
+				manager: {
+					resume: async () => {
+						calls.push("resume");
+						return { ok: false, reason: "context_unavailable" };
+					},
+					spawn: async () => {
+						calls.push("spawn");
+						throw new Error("spawn should not be called");
 					},
 				},
-				sessionId,
-			),
+				verifyArtifact: async () => true,
+			}),
 		).rejects.toThrow("ralplan planner resume failed: context_unavailable");
 
 		expect(calls).toEqual(["resume"]);

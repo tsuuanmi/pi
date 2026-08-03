@@ -19,7 +19,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | `src/session/` | Session-scoped path builders and session id resolution. | [session/session.md](session/session.md) |
 | `src/skills/` | Bundled skill folders containing `SKILL.md` assets and skill-owned TypeScript implementation. | [skills](skills/) |
 | `src/skills/deep-interview/` | Deep Interview `SKILL.md` plus runtime, state, transitions, HUD, mutation guard, and tool registration. | [skills/deep-interview/deep-interview.md](skills/deep-interview/deep-interview.md) |
-| `src/skills/ralplan/` | Ralplan `SKILL.md` plus planning runtime, gates, verdicts, tools, HUD, compaction, orchestration snapshot, expected-action selection, and journaled completion transactions. | [skills/ralplan/ralplan.md](skills/ralplan/ralplan.md) |
+| `src/skills/ralplan/` | Ralplan `SKILL.md` plus role request construction, the Pi-agent adapter, Orchestrator runner, checkpoint and agent-record persistence, planning runtime, gates, verdicts, tools, HUD, compaction, orchestration snapshot, expected-action selection, and journaled completion transactions. | [skills/ralplan/ralplan.md](skills/ralplan/ralplan.md) |
 | `src/skills/team/` | Team `SKILL.md` plus coordination runtime, tools, transitions, HUD, compact view. | [skills/team/team.md](skills/team/team.md) |
 | `src/skills/ultragoal/` | Ultragoal `SKILL.md` plus goal execution runtime, artifacts, quality gates, receipts, tools, HUD. | [skills/ultragoal/ultragoal.md](skills/ultragoal/ultragoal.md) |
 | `src/state/` | Active workflow state, state validation/writes, workflow ids, and base state models. | [state/state.md](state/state.md) |

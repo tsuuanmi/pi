@@ -39,7 +39,7 @@ The semantic boundary checker allows direct manager calls only in these workflow
 
 - `src/subagents/subagent-tools.ts` for lifecycle tools;
 - `src/skills/team/agent-adapter.ts` for the `Agent` bridge;
-- `src/skills/ralplan/ralplan-agents.ts` for sequential role execution;
+- `src/skills/ralplan/ralplan-agent-adapter.ts` for Orchestrator-backed role execution;
 - `src/skills/ultragoal/ultragoal-tools.ts` for one guarded goal worker.
 
 Unknown manager call sites fail the check instead of falling back to another execution engine.

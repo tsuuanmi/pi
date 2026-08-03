@@ -12,7 +12,7 @@ import {
 	transactionJournalPath,
 	workflowStatePath,
 } from "#workflows/session/session-layout";
-import { ralplanRoleForStage } from "#workflows/skills/ralplan/ralplan-agents";
+import { roleForStage } from "#workflows/skills/ralplan/ralplan-agent";
 import {
 	beginRalplanCompletionJournal,
 	commitRalplanCompletionJournal,
@@ -156,11 +156,8 @@ const RALPLAN_ITERATE_CAP_DEFAULT = 5;
 const RALPLAN_EXPERT_CAP_DEFAULT = 3;
 
 function ralplanCompletionRole(stage: RalplanStage): string {
-	try {
-		return ralplanRoleForStage(stage);
-	} catch {
-		return "pi";
-	}
+	if (stage === "final") return "pi";
+	return roleForStage(stage);
 }
 
 const RALPLAN_PHASE_LOCK = new Set(["expert-stage", "final", "handoff", "complete", "failed", "cancelled"]);

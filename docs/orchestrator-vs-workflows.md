@@ -37,7 +37,7 @@ workflow TeamTask[]
 
 The workflow decides which role may run, validates workflow gates, owns persistence paths, and maps results back to workflow state. The orchestrator handles task dependencies, routing, retries, execution, and generic run checkpoints. A workflow-owned checkpoint store may persist an orchestrator checkpoint, but the checkpoint schema remains owned by the orchestrator.
 
-`ralplan` and `deep-interview` remain workflow-specific processes. `ultragoal` should use the orchestrator only if it acquires a genuine generic task DAG; its goals and quality gates are otherwise workflow concepts.
+`ralplan` remains workflow-specific in policy, state, artifacts, verdicts, and approval, but its admitted role-agent execution runs through a workflow-owned Orchestrator adapter. The initial integration executes one stage per Orchestrator run so revision and expert branches remain workflow-controlled. `deep-interview` remains workflow-owned because its next step is driven by interactive answers rather than task scheduling. `ultragoal` should use the orchestrator only if it acquires a genuine generic multi-goal DAG; its goals and quality gates are otherwise workflow concepts.
 
 ## Choosing the package
 
@@ -57,4 +57,4 @@ Use `@tsuuanmi/pi-workflows` when the problem is about:
 
 For a single agent run or one subagent's lifecycle, use the `@tsuuanmi/pi-agent` and `SubagentManager` contracts instead of adding that behavior to the orchestrator.
 
-For the complete package ownership rules, see [`package-boundaries.md`](./package-boundaries.md). For the team adapter contract, see [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md).
+For the complete package ownership rules, see [`package-boundaries.md`](./package-boundaries.md). For the detailed Ralplan contract, see [`ralplan-orchestrator-contract.md`](./ralplan-orchestrator-contract.md). For the Team adapter contract, see [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md). Ralplan keeps the same adapter boundary: the workflow chooses and verifies the role task, while the engine executes it.
