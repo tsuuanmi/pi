@@ -17,10 +17,10 @@ import { SessionManager } from "#pi/session/manager";
 import type { Settings } from "#pi/settings/settings-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import {
+	registerTestProvider,
 	type TestModelDefinition,
 	type TestProviderRegistration,
 	type TestResponseStep,
-	registerTestProvider,
 } from "#pi-test/helpers/provider";
 import {
 	type CreateTestExtensionsResultInput,
