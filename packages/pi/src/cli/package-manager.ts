@@ -159,10 +159,6 @@ export interface PackageCommandRuntimeOptions {
 	extensionFactories?: ExtensionFactory[];
 }
 
-function createCommandSettingsManager(options: { cwd: string; agentDir: string }): SettingsManager {
-	return SettingsManager.create(options.cwd, options.agentDir);
-}
-
 export async function handleConfigCommand(
 	args: string[],
 	runtimeOptions: PackageCommandRuntimeOptions = {},
@@ -174,7 +170,7 @@ export async function handleConfigCommand(
 	const cwd = process.cwd();
 	const agentDir = getAgentDir();
 	void runtimeOptions;
-	const settingsManager = createCommandSettingsManager({ cwd, agentDir });
+	const settingsManager = SettingsManager.create(cwd, agentDir);
 	reportSettingsErrors(settingsManager, "config command");
 	const packageManager = new DefaultPackageManager({
 		cwd,
@@ -233,7 +229,7 @@ export async function handlePackageCommand(
 	const cwd = process.cwd();
 	const agentDir = getAgentDir();
 	void runtimeOptions;
-	const settingsManager = createCommandSettingsManager({ cwd, agentDir });
+	const settingsManager = SettingsManager.create(cwd, agentDir);
 	reportSettingsErrors(settingsManager, "package command");
 
 	const packageManager = new DefaultPackageManager({
