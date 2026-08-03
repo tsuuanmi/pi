@@ -11,8 +11,8 @@ import {
 } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
+import { ModelRegistry } from "#pi/loader/model-registry";
 import { DefaultResourceLoader } from "#pi/loader/resources";
-import { ModelRegistry } from "#pi/model/model-registry";
 import { createAgentSession } from "#pi/runtime/agent-session-factory";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
@@ -77,7 +77,7 @@ describe("SDK context transform ordering", () => {
 		const settingsManager = SettingsManager.inMemory({ retainedContext: { stripThinking: true } });
 		const authStorage = AuthStorage.create(join(agentDir, "auth.json"));
 		authStorage.setRuntimeApiKey(model.provider, "test-api-key");
-		const modelRegistry = ModelRegistry.create(authStorage, join(agentDir, "models.json"));
+		const modelRegistry = ModelRegistry.inMemory(authStorage);
 		let capturedContext: Context | undefined;
 		let extensionSawRawThinking = false;
 
@@ -178,7 +178,7 @@ describe("SDK context transform ordering", () => {
 		});
 		const authStorage = AuthStorage.create(join(agentDir, "auth.json"));
 		authStorage.setRuntimeApiKey(model.provider, "test-api-key");
-		const modelRegistry = ModelRegistry.create(authStorage, join(agentDir, "models.json"));
+		const modelRegistry = ModelRegistry.inMemory(authStorage);
 		let capturedContext: Context | undefined;
 		let extensionSawRawDuplicate = false;
 

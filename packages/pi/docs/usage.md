@@ -119,7 +119,6 @@ pi [options] [@files...] [messages...]
 ```bash
 pi install <source> [-l]     # Install package, -l for project-local
 pi remove <source> [-l]      # Remove package
-pi uninstall <source> [-l]   # Alias for remove
 pi update [source]          # Update installed packages; reconcile pinned git refs
 pi update <src>              # Update one package
 pi list                      # List installed packages

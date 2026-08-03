@@ -358,7 +358,6 @@ pi install https://github.com/user/repo@v1      # tag or commit
 pi install ssh://git@github.com/user/repo
 pi install ssh://git@github.com/user/repo@v1    # tag or commit
 pi remove npm:@foo/pi-tools
-pi uninstall npm:@foo/pi-tools          # alias for remove
 pi list
 pi update                               # update packages (skips pinned packages)
 pi update npm:@foo/pi-tools             # update one package
@@ -393,7 +392,8 @@ See [docs/packages.md](docs/packages.md).
 ### SDK
 
 ```typescript
-import { AuthStorage, createAgentSession, ModelRegistry, SessionManager } from "@tsuuanmi/pi";
+import { AuthStorage, createAgentSession, SessionManager } from "@tsuuanmi/pi";
+import { ModelRegistry } from "@tsuuanmi/pi/loader";
 
 const authStorage = AuthStorage.create();
 const modelRegistry = ModelRegistry.create(authStorage);
@@ -459,7 +459,6 @@ pi [options] [@files...] [messages...]
 ```bash
 pi install <source> [-l]     # Install package, -l for project-local
 pi remove <source> [-l]      # Remove package
-pi uninstall <source> [-l]   # Alias for remove
 pi update [source]          # Update installed packages
 pi update <src>              # Update one package
 pi list                      # List installed packages

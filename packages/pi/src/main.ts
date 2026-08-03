@@ -18,7 +18,6 @@ import { parseArgs, printHelp } from "#pi/cli/args";
 import { launchDefaultTmuxIfNeeded } from "#pi/cli/launch-tmux";
 import { listModels } from "#pi/cli/list-models";
 import { VERSION } from "#pi/loader/app";
-import { showDeprecationWarnings } from "#pi/migrations";
 import type { AgentSessionRuntimeDiagnostic } from "#pi/runtime/agent-session-services";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
@@ -68,7 +67,7 @@ export async function main(args: string[], options?: MainOptions) {
 	}
 
 	// Run migrations (pass cwd for project-local migrations)
-	const { migratedProviders, deprecationWarnings } = runStartupMigrations(cwd);
+	const { migratedProviders } = runStartupMigrations(cwd);
 
 	const startupSettingsManager = SettingsManager.create(cwd, agentDir);
 	reportDiagnostics(collectSettingsDiagnostics(startupSettingsManager, "startup session lookup"));
@@ -108,11 +107,6 @@ export async function main(args: string[], options?: MainOptions) {
 
 	const { initialMessage } = preparedInput;
 	initTheme(settingsManager.getTheme());
-
-	// Show deprecation warnings in interactive mode
-	if (appMode === "interactive" && deprecationWarnings.length > 0) {
-		await showDeprecationWarnings(deprecationWarnings);
-	}
 
 	reportDiagnostics(runtime.diagnostics);
 	if (runtime.diagnostics.some((diagnostic) => diagnostic.type === "error")) {

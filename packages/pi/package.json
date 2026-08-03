@@ -24,6 +24,10 @@
 			"types": "./dist/api/types.d.ts",
 			"import": "./dist/api/types.js"
 		},
+		"./loader": {
+			"types": "./dist/loader/index.d.ts",
+			"import": "./dist/loader/index.js"
+		},
 		"./loader/config": {
 			"types": "./dist/loader/config.d.ts",
 			"import": "./dist/loader/config.js"

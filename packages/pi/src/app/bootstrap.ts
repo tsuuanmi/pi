@@ -10,7 +10,6 @@ export interface StartupPaths {
 
 export interface StartupMigrations {
 	migratedProviders: string[];
-	deprecationWarnings: string[];
 }
 
 function isTruthyEnv(value: string | undefined): boolean {
@@ -33,9 +32,6 @@ export function bootstrapStartup(): StartupPaths {
 }
 
 export function runStartupMigrations(cwd: string): StartupMigrations {
-	const { migratedAuthProviders, deprecationWarnings } = runMigrations(cwd);
-	return {
-		migratedProviders: migratedAuthProviders,
-		deprecationWarnings,
-	};
+	const { migratedAuthProviders } = runMigrations(cwd);
+	return { migratedProviders: migratedAuthProviders };
 }

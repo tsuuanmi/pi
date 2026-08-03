@@ -4,8 +4,9 @@ import * as path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
 import { ENV_AGENT_DIR } from "#pi/loader/config";
+import { ModelRegistry } from "#pi/loader/model-registry";
 import { runMigrations } from "#pi/migrations";
-import { ModelRegistry } from "#pi/model/model-registry";
+import type { ModelsSettings } from "#pi/settings/settings-manager";
 
 describe("config value env var syntax migration", () => {
 	const tempDirs: string[] = [];
@@ -68,24 +69,7 @@ describe("config value env var syntax migration", () => {
 		expect(logSpy).not.toHaveBeenCalled();
 	});
 
-	it.each([
-		["malformed", '{\n  "providers": {\n'],
-		["blank", ""],
-	])("does not throw on %s models.json during migrations", (_name, content) => {
-		const agentDir = createAgentDir();
-		const modelsPath = path.join(agentDir, "models.json");
-		fs.writeFileSync(modelsPath, content, "utf-8");
-
-		withAgentDir(agentDir, () => expect(() => runMigrations(agentDir)).not.toThrow());
-
-		expect(fs.readFileSync(modelsPath, "utf-8")).toBe(content);
-		const registry = ModelRegistry.create(AuthStorage.create(path.join(agentDir, "auth.json")), modelsPath);
-		const loadError = registry.getError();
-		expect(loadError).toContain("Failed to parse models.json");
-		expect(loadError).toContain(`File: ${modelsPath}`);
-	});
-
-	it("leaves uppercase models.json API key and header values unchanged", async () => {
+	it("leaves uppercase provider API key and header values unchanged", async () => {
 		const agentDir = createAgentDir();
 		const envKeys = ["CUSTOM_API_KEY", "HEADER_API_KEY", "MODEL_API_KEY", "OVERRIDE_API_KEY"];
 		const savedEnv: Record<string, string | undefined> = {};
@@ -95,62 +79,32 @@ describe("config value env var syntax migration", () => {
 		}
 
 		try {
-			fs.writeFileSync(
-				path.join(agentDir, "models.json"),
-				`${JSON.stringify(
-					{
-						providers: {
-							"custom-provider": {
-								baseUrl: "https://example.com/v1",
-								apiKey: "CUSTOM_API_KEY",
-								api: "openai-completions",
-								headers: {
-									"x-api-key": "HEADER_API_KEY",
-									"x-literal": "literal",
-								},
-								models: [
-									{
-										id: "model-a",
-										headers: { "x-model-key": "MODEL_API_KEY" },
-									},
-								],
-								modelOverrides: {
-									"model-b": { headers: { "x-override-key": "OVERRIDE_API_KEY" } },
-								},
+			const modelsConfig = {
+				providers: {
+					"custom-provider": {
+						baseUrl: "https://example.com/v1",
+						apiKey: "CUSTOM_API_KEY",
+						api: "openai-completions",
+						headers: {
+							"x-api-key": "HEADER_API_KEY",
+							"x-literal": "literal",
+						},
+						models: [
+							{
+								id: "model-a",
+								headers: { "x-model-key": "MODEL_API_KEY" },
 							},
+						],
+						modelOverrides: {
+							"model-b": { headers: { "x-override-key": "OVERRIDE_API_KEY" } },
 						},
 					},
-					null,
-					2,
-				)}\n`,
-				"utf-8",
-			);
-			const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+				},
+			} as ModelsSettings;
 
-			withAgentDir(agentDir, () => runMigrations(agentDir));
-
-			const migrated = JSON.parse(fs.readFileSync(path.join(agentDir, "models.json"), "utf-8")) as {
-				providers: Record<
-					string,
-					{
-						apiKey?: string;
-						headers?: Record<string, string>;
-						models?: Array<{ headers?: Record<string, string> }>;
-						modelOverrides?: Record<string, { headers?: Record<string, string> }>;
-					}
-				>;
-			};
-			const provider = migrated.providers["custom-provider"]!;
-			expect(provider.apiKey).toBe("CUSTOM_API_KEY");
-			expect(provider.headers?.["x-api-key"]).toBe("HEADER_API_KEY");
-			expect(provider.headers?.["x-literal"]).toBe("literal");
-			expect(provider.models?.[0]?.headers?.["x-model-key"]).toBe("MODEL_API_KEY");
-			expect(provider.modelOverrides?.["model-b"]?.headers?.["x-override-key"]).toBe("OVERRIDE_API_KEY");
-			expect(logSpy).not.toHaveBeenCalled();
-
-			const registry = ModelRegistry.create(
+			const registry = ModelRegistry.createFromModelsConfig(
 				AuthStorage.create(path.join(agentDir, "auth.json")),
-				path.join(agentDir, "models.json"),
+				modelsConfig,
 			);
 			const model = registry.find("custom-provider", "model-a");
 			expect(model).toBeDefined();

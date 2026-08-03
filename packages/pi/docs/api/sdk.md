@@ -14,7 +14,8 @@ The SDK provides programmatic access to pi's agent capabilities. Use it to embed
 ## Quick Start
 
 ```typescript
-import { AuthStorage, createAgentSession, ModelRegistry, SessionManager } from "@tsuuanmi/pi";
+import { AuthStorage, createAgentSession, SessionManager } from "@tsuuanmi/pi";
+import { ModelRegistry } from "@tsuuanmi/pi/loader";
 
 // Set up credential storage and model registry
 const authStorage = AuthStorage.create();
@@ -389,7 +390,8 @@ When you pass a custom `ResourceLoader`, `cwd` and `agentDir` no longer control 
 
 ```typescript
 import { getModel } from "@tsuuanmi/pi-ai";
-import { AuthStorage, ModelRegistry } from "@tsuuanmi/pi";
+import { AuthStorage } from "@tsuuanmi/pi";
+import { ModelRegistry } from "@tsuuanmi/pi/loader";
 
 const authStorage = AuthStorage.create();
 const modelRegistry = ModelRegistry.create(authStorage);
@@ -434,7 +436,8 @@ API key resolution priority (handled by AuthStorage):
 4. Fallback resolver (for custom provider keys from `settings.json`)
 
 ```typescript
-import { AuthStorage, ModelRegistry } from "@tsuuanmi/pi";
+import { AuthStorage, SettingsManager } from "@tsuuanmi/pi";
+import { ModelRegistry } from "@tsuuanmi/pi/loader";
 
 // Default: uses ~/.pi/agent/auth.json and ~/.pi/agent/settings.json
 const authStorage = AuthStorage.create();
@@ -449,9 +452,10 @@ const { session } = await createAgentSession({
 // Runtime API key override (not persisted to disk)
 authStorage.setRuntimeApiKey("anthropic", "sk-my-temp-key");
 
-// Custom auth storage location
+// Custom auth and settings locations
 const customAuth = AuthStorage.create("/my/app/auth.json");
-const customRegistry = ModelRegistry.create(customAuth, "/my/app/settings.json");
+const customSettings = SettingsManager.create("/my/app", "/my/app");
+const customRegistry = ModelRegistry.create(customAuth, customSettings);
 
 const { session } = await createAgentSession({
   sessionManager: SessionManager.inMemory(),
@@ -881,12 +885,12 @@ interface LoadExtensionsResult {
 ```typescript
 import { getModel } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
+import { ModelRegistry } from "@tsuuanmi/pi/loader";
 import {
   AuthStorage,
   createAgentSession,
   DefaultResourceLoader,
   defineTool,
-  ModelRegistry,
   SessionManager,
   SettingsManager,
 } from "@tsuuanmi/pi";

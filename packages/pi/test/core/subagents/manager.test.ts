@@ -3,8 +3,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/auth-storage";
+import { ModelRegistry } from "#pi/loader/model-registry";
 import { DefaultResourceLoader } from "#pi/loader/resources";
-import { ModelRegistry } from "#pi/model/model-registry";
 import { sessionStateDir } from "#pi/session/layout";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { SubagentManager, type SubagentRecord } from "#pi/subagents/manager";
@@ -34,7 +34,7 @@ describe("SubagentManager", () => {
 		const agentDir = join(cwd, "agent");
 		const settingsManager = SettingsManager.create(cwd, agentDir);
 		const authStorage = AuthStorage.create(join(agentDir, "auth.json"));
-		const modelRegistry = ModelRegistry.create(authStorage, join(agentDir, "models.json"));
+		const modelRegistry = ModelRegistry.inMemory(authStorage);
 		resourceLoader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
 		await resourceLoader.reload();
 		manager = new SubagentManager({
@@ -188,7 +188,7 @@ describe("SubagentManager live spawn and resume", () => {
 		settingsManager.setDefaultModelAndProvider(model.provider, model.id);
 		const authStorage = AuthStorage.create(join(agentDir, "auth.json"));
 		authStorage.setRuntimeApiKey(model.provider, "test-key");
-		const modelRegistry = ModelRegistry.create(authStorage, join(agentDir, "models.json"));
+		const modelRegistry = ModelRegistry.inMemory(authStorage);
 		modelRegistry.registerProvider(model.provider, {
 			baseUrl: model.baseUrl,
 			apiKey: "test-key",

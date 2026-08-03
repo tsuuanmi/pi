@@ -144,7 +144,6 @@ export {
 } from "#pi/loader/skill";
 // Main entry point
 export { type MainOptions, main } from "#pi/main";
-export { ModelRegistry } from "#pi/model/model-registry";
 // Run modes for programmatic SDK usage
 export {
 	InteractiveMode,

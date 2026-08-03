@@ -10,6 +10,8 @@
 - **tools**: Removed non-canonical `edit` tool argument forms; the tool now accepts only `path` plus `edits[]` and no longer normalizes alternate shapes.
 - **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
 - **runtime**: Pi is now Node-only; removed alternate-runtime detection and package-manager branches.
+- **cli**: Removed the `pi uninstall` alias; use `pi remove`.
+- **models**: Moved `ModelRegistry` to `@tsuuanmi/pi/loader`, removed the root and legacy model exports, removed path-based construction, and moved CLI resolution to `src/cli/model-resolver.ts`; pass a `SettingsManager` or use `createFromModelsConfig()`.
 
 ### Changed
 
@@ -26,6 +28,7 @@
 - **interactive**: Removed automatic startup help and loaded-resource listing, along with the `--verbose` flag and `quietStartup` setting.
 - **packaging**: Removed standalone binary release tooling and alternate-runtime package artifacts.
 - **packaging**: Removed standalone compiled binary builds and their binary-only runtime bootstrap.
+- **startup**: Removed the interactive warning prompt for deprecated extension directories.
 
 ## [0.2.2] - 2026-07-23
 

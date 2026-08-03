@@ -24,11 +24,7 @@ import {
 	validateModelsConfig,
 } from "@tsuuanmi/pi-ai";
 import { type OAuthProviderInterface, registerOAuthProvider, resetOAuthProviders } from "@tsuuanmi/pi-ai/oauth";
-import { existsSync, readFileSync } from "fs";
-import { join } from "path";
 import type { AuthStatus, AuthStorage } from "#pi/auth/auth-storage";
-import { stripJsonComments } from "#pi/loader/json";
-import { getAgentDir } from "#pi/loader/paths";
 import {
 	clearConfigValueCache,
 	getConfigValueEnvVarNames,
@@ -76,14 +72,6 @@ function emptyCustomModelsResult(error?: string): CustomModelsResult {
 	return { models: [], overrides: new Map(), modelOverrides: new Map(), error };
 }
 
-function loadModelsConfigFromPath(modelsJsonPath: string): ModelsSettings | undefined {
-	if (!existsSync(modelsJsonPath)) {
-		return undefined;
-	}
-	const content = readFileSync(modelsJsonPath, "utf-8");
-	return JSON.parse(stripJsonComments(content)) as ModelsSettings;
-}
-
 /** Clear the config value command cache. Exported for testing. */
 export const clearApiKeyCache = clearConfigValueCache;
 
@@ -111,27 +99,16 @@ export class ModelRegistry {
 		this.loadModels();
 	}
 
-	static create(authStorage: AuthStorage, settingsManagerOrModelsJsonPath?: SettingsManager | string): ModelRegistry {
-		if (typeof settingsManagerOrModelsJsonPath === "string") {
-			return ModelRegistry.createFromModelsJson(authStorage, settingsManagerOrModelsJsonPath);
-		}
+	static create(authStorage: AuthStorage, settingsManager?: SettingsManager): ModelRegistry {
 		return new ModelRegistry(
 			authStorage,
-			settingsManagerOrModelsJsonPath ? () => settingsManagerOrModelsJsonPath.getModelsConfig() : undefined,
+			settingsManager ? () => settingsManager.getModelsConfig() : undefined,
 			"settings.json",
 		);
 	}
 
 	static createFromModelsConfig(authStorage: AuthStorage, modelsConfig?: ModelsSettings): ModelRegistry {
 		return new ModelRegistry(authStorage, () => modelsConfig, "settings.json");
-	}
-
-	static createFromModelsJson(
-		authStorage: AuthStorage,
-		modelsJsonPath: string = join(getAgentDir(), "models.json"),
-	): ModelRegistry {
-		const normalizedPath = normalizePath(modelsJsonPath);
-		return new ModelRegistry(authStorage, () => loadModelsConfigFromPath(normalizedPath), normalizedPath);
 	}
 
 	static inMemory(authStorage: AuthStorage): ModelRegistry {

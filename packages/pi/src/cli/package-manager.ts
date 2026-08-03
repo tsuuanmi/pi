@@ -66,14 +66,12 @@ Examples:
   ${getPackageCommandUsage("remove")}
 
 Remove a package and its source from settings.
-Alias: ${APP_NAME} uninstall <source> [-l]
 
 Options:
   -l, --local       Remove from project settings (${CONFIG_DIR_NAME}/settings.json)
 
 Examples:
   ${APP_NAME} remove npm:@foo/bar
-  ${APP_NAME} uninstall npm:@foo/bar
 `);
 			return;
 
@@ -102,9 +100,7 @@ List installed packages from user and project settings.
 function parsePackageCommand(args: string[]): PackageCommandOptions | undefined {
 	const [rawCommand, ...rest] = args;
 	let command: PackageCommand | undefined;
-	if (rawCommand === "uninstall") {
-		command = "remove";
-	} else if (rawCommand === "install" || rawCommand === "remove" || rawCommand === "update" || rawCommand === "list") {
+	if (rawCommand === "install" || rawCommand === "remove" || rawCommand === "update" || rawCommand === "list") {
 		command = rawCommand;
 	}
 	if (!command) {

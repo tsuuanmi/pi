@@ -116,6 +116,7 @@ describe("package commands", () => {
 			const stdout = logSpy.mock.calls.map(([message]) => String(message)).join("\n");
 			expect(stdout).toContain("Usage:");
 			expect(stdout).toContain("pi install <source> [-l]");
+			expect(stdout).not.toContain("uninstall");
 			expect(errorSpy).not.toHaveBeenCalled();
 			expect(process.exitCode).toBeUndefined();
 		} finally {
