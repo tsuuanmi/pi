@@ -265,5 +265,5 @@ echo $COLORTERM  # Should output "truecolor" or "24bit"
 ## Examples
 
 See the built-in themes:
-- [dark.json](../../../tui/src/theme/dark.json)
-- [light.json](../../../tui/src/theme/light.json)
+- [dark.json](../../../../tui/src/theme/dark.json)
+- [light.json](../../../../tui/src/theme/light.json)

@@ -165,6 +165,6 @@ Set `PI_OFFLINE=1` to disable npm registry lookups and other network package ope
 
 ## See Also
 
-- [Pi Packages](../packages.md) - Full package management documentation
-- [Extensions](../extensions/extensions.md) - Extension development
-- [Settings](../settings/settings.md) - Package configuration
+- [Pi Packages](packages.md) - Full package management documentation
+- [Extensions](../extensions/index.md) - Extension development
+- [Settings](../settings/index.md) - Package configuration

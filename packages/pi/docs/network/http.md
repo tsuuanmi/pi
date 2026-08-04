@@ -34,5 +34,5 @@ The implementation lives in `packages/pi/src/network/http-dispatcher.ts`. It is 
 
 ## See Also
 
-- [Settings](../settings/settings.md) - HTTP proxy and idle timeout configuration
-- [Security](../security.md) - Trust boundaries and sandboxing
+- [Settings](../settings/index.md) - HTTP proxy and idle timeout configuration
+- [Security](../app/security.md) - Trust boundaries and sandboxing

@@ -101,6 +101,6 @@ The winner is determined by source priority (project > user > package > bundled)
 
 ## See Also
 
-- [Extensions](../extensions/extensions.md) - Extension resource loading and API
-- [Skills](../skills/skills.md) - Skill resource loading
-- [Agents](../agents/agent-profiles.md) - Agent profile loading
+- [Extensions](../extensions/index.md) - Extension resource loading and API
+- [Skills](../loader/skills/index.md) - Skill resource loading
+- [Agents](../agent/profiles.md) - Agent profile loading

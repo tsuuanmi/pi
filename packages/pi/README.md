@@ -13,7 +13,7 @@
   <a href="https://exe.dev">exe.dev</a>
 </p>
 
-> New issues and PRs from new contributors are auto-closed by default. Maintainers review auto-closed issues daily. See [CONTRIBUTING.md](../../CONTRIBUTING.md).
+> New issues and PRs from new contributors are auto-closed by default. Maintainers review auto-closed issues daily. See [AGENTS.md](../../AGENTS.md).
 
 ---
 
@@ -52,7 +52,7 @@ I regularly publish my own `pi-mono` work sessions here:
   - [Branching](#branching)
   - [Compaction](#compaction)
 - [Settings](#settings)
-- [API Usage Logging](docs/telemetry/api-usage-logging.md)
+- [API Usage Logging](docs/runtime/telemetry/api-usage-logging.md)
 - [Context Files](#context-files)
 - [Customization](#customization)
   - [Prompt Templates](#prompt-templates)
@@ -123,11 +123,11 @@ For each built-in provider, pi maintains a list of tool-capable models, updated 
 - Anthropic
 - OpenAI
 
-Any other OpenAI-compatible API (Ollama, vLLM, LM Studio, LiteLLM, etc.) can be added as a custom model/provider; see [docs/model/models.md](docs/model/models.md) and [docs/model/custom-provider.md](docs/model/custom-provider.md).
+Any other OpenAI-compatible API (Ollama, vLLM, LM Studio, LiteLLM, etc.) can be added as a custom model/provider; see [docs/runtime/models/models.md](docs/runtime/models/models.md) and [docs/runtime/models/custom-provider.md](docs/runtime/models/custom-provider.md).
 
-See [docs/model/providers.md](docs/model/providers.md) for detailed setup instructions.
+See [docs/runtime/models/providers.md](docs/runtime/models/providers.md) for detailed setup instructions.
 
-**Custom providers & models:** Add providers via `~/.pi/agent/settings.json` if they speak a supported API (OpenAI, Anthropic). For custom APIs or OAuth, use extensions. See [docs/model/models.md](docs/model/models.md) and [docs/model/custom-provider.md](docs/model/custom-provider.md).
+**Custom providers & models:** Add providers via `~/.pi/agent/settings.json` if they speak a supported API (OpenAI, Anthropic). For custom APIs or OAuth, use extensions. See [docs/runtime/models/models.md](docs/runtime/models/models.md) and [docs/runtime/models/custom-provider.md](docs/runtime/models/custom-provider.md).
 
 ---
 
@@ -202,7 +202,7 @@ Submit messages while the agent is working:
 - **Alt+Up** retrieves queued messages back to editor
 
 
-Configure delivery in [settings](docs/settings/settings.md): `steeringMode` and `followUpMode` can be `"one-at-a-time"` (default, waits for response) or `"all"` (delivers all queued at once). `transport` selects provider transport preference (`"sse"`, `"websocket"`, or `"auto"`) for providers that support multiple transports.
+Configure delivery in [settings](docs/settings/index.md): `steeringMode` and `followUpMode` can be `"one-at-a-time"` (default, waits for response) or `"all"` (delivers all queued at once). `transport` selects provider transport preference (`"sse"`, `"websocket"`, or `"auto"`) for providers that support multiple transports.
 
 ---
 
@@ -241,7 +241,7 @@ Long sessions can exhaust context windows. Compaction summarizes older messages 
 
 **Automatic:** Enabled by default. Triggers on context overflow (recovers and retries) or when approaching the limit (proactive). Configure via `/settings` or `settings.json`.
 
-Compaction is lossy. The full history remains in the JSONL file; use `/tree` to revisit. Customize compaction behavior via [extensions](#extensions). See [docs/session/compaction/compaction.md](docs/session/compaction/compaction.md) for internals.
+Compaction is lossy. The full history remains in the JSONL file; use `/tree` to revisit. Customize compaction behavior via [extensions](#extensions). See [docs/session/compaction/index.md](docs/session/compaction/index.md) for internals.
 
 ---
 
@@ -254,7 +254,7 @@ Use `/settings` to modify common options, or edit JSON files directly:
 | `~/.pi/agent/settings.json` | Global (all projects) |
 | `.pi/settings.json` | Project (overrides global) |
 
-See [docs/settings/settings.md](docs/settings/settings.md) for all options.
+See [docs/settings/index.md](docs/settings/index.md) for all options.
 
 ---
 
@@ -287,7 +287,7 @@ Review this code for bugs, security issues, and performance problems.
 Focus on: {{focus}}
 ```
 
-Place in `~/.pi/agent/prompts/`, `.pi/prompts/`, or a [pi package](#pi-packages) to share with others. See [docs/prompt-templates.md](docs/prompt-templates.md).
+Place in `~/.pi/agent/prompts/`, `.pi/prompts/`, or a [pi package](#pi-packages) to share with others. See [docs/loader/prompt-templates.md](docs/loader/prompt-templates.md).
 
 ### Skills
 
@@ -303,7 +303,7 @@ Use this skill when the user asks about X.
 2. Then that
 ```
 
-Place in `~/.pi/agent/skills/`, `~/.agents/skills/`, `.pi/skills/`, or `.agents/skills/` (from `cwd` up through parent directories) or a [pi package](#pi-packages) to share with others. See [docs/skills/skills.md](docs/skills/skills.md).
+Place in `~/.pi/agent/skills/`, `~/.agents/skills/`, `.pi/skills/`, or `.agents/skills/` (from `cwd` up through parent directories) or a [pi package](#pi-packages) to share with others. See [docs/loader/skills/index.md](docs/loader/skills/index.md).
 
 ### Extensions
 
@@ -331,13 +331,13 @@ The default export can also be `async`. pi waits for async extension factories b
 - Make pi look like Claude Code
 - ...anything you can dream up
 
-Place in `~/.pi/agent/extensions/`, `.pi/extensions/`, or a [pi package](#pi-packages) to share with others. See [docs/extensions/extensions.md](docs/extensions/extensions.md).
+Place in `~/.pi/agent/extensions/`, `.pi/extensions/`, or a [pi package](#pi-packages) to share with others. See [docs/extensions/index.md](docs/extensions/index.md).
 
 ### Themes
 
 Built-in: `dark`, `light`. Themes hot-reload: modify the active theme file and pi immediately applies changes.
 
-Place in `~/.pi/agent/themes/`, `.pi/themes/`, or a [pi package](#pi-packages) to share with others. See [docs/theme/themes.md](docs/theme/themes.md).
+Place in `~/.pi/agent/themes/`, `.pi/themes/`, or a [pi package](#pi-packages) to share with others. See [docs/ui/theme/index.md](docs/ui/theme/index.md).
 
 ### Pi Packages
 
@@ -382,7 +382,7 @@ Create a package by adding a `pi` key to `package.json`:
 
 Without a `pi` manifest, pi auto-discovers from conventional directories (`extensions/`, `skills/`, `prompts/`, `themes/`).
 
-See [docs/packages.md](docs/packages.md).
+See [docs/package-manager/packages.md](docs/package-manager/packages.md).
 
 ---
 
@@ -441,9 +441,9 @@ Pi stays minimal, but ships a small set of built-in features so common workflows
 
 - **`lsp` tool** - minimal Language Server Protocol support (TypeScript/JavaScript, Python, Rust) for status, diagnostics, symbols, hover, definitions, and references.
 - **`pi --tmux`** - launch interactive startup inside a new tmux session.
-- **Account profiles** - store multiple accounts per provider and switch between them with `/account add`, `/account`, `/account <provider> <account>`, `/provider add`, and `/account remove`. See [Account profiles](docs/model/custom-provider.md#account-profiles) in the Custom Providers docs.
+- **Account profiles** - store multiple accounts per provider and switch between them with `/account add`, `/account`, `/account <provider> <account>`, `/provider add`, and `/account remove`. See [Account profiles](docs/runtime/models/custom-provider.md#account-profiles) in the Custom Providers docs.
 - **Pi workflow + skills** - a `pi workflow` control plane plus the built-in `deep-interview`, `ralplan`, `team`, and `ultragoal` skills for planning and parallel execution. See [workflows/docs/workflow.md](../workflows/docs/workflow.md).
-- **Subagents** - a Pi-native `SubagentManager` with lifecycle and tmux controls for isolated agent workers. Generic multi-agent coordination belongs to `@tsuuanmi/pi-orchestrator`. See [docs/subagents/subagents.md](docs/subagents/subagents.md).
+- **Subagents** - a Pi-native `SubagentManager` with lifecycle and tmux controls for isolated agent workers. Generic multi-agent coordination belongs to `@tsuuanmi/pi-orchestrator`. See [docs/subagents/index.md](docs/subagents/index.md).
 
 ---
 
@@ -502,15 +502,15 @@ Interactive role model selection is available from `/settings` → Model & think
 | `--session <path\|id>` | Use specific session file or partial session ID |
 | `--name <name>`, `-n <name>` | Set session display name at startup |
 
-Session storage directory is set via the `PI_SESSION_DIR` environment variable or the `sessionDir` setting (see [docs/settings/settings.md](docs/settings/settings.md)).
+Session storage directory is set via the `PI_SESSION_DIR` environment variable or the `sessionDir` setting (see [docs/settings/index.md](docs/settings/index.md)).
 
 ### Tools
 
-Available built-in tools: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`. Extensions can register additional tools or override built-ins (see [docs/extensions/extensions.md](docs/extensions/extensions.md)). The active tool set is controlled via the SDK (`customTools` / `setActiveTools`); there are no CLI flags for tool selection.
+Available built-in tools: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`. Extensions can register additional tools or override built-ins (see [docs/extensions/index.md](docs/extensions/index.md)). The active tool set is controlled via the SDK (`customTools` / `setActiveTools`); there are no CLI flags for tool selection.
 
 ### Resources
 
-Extensions, skills, prompt templates, and themes are auto-discovered from `~/.pi/agent/` and `.pi/` directories and can be added via the `extensions`, `skills`, `prompts`, and `themes` arrays in `settings.json`. There are no CLI flags for loading or disabling these; see [docs/extensions/extensions.md](docs/extensions/extensions.md), [docs/skills/skills.md](docs/skills/skills.md), [docs/prompt-templates.md](docs/prompt-templates.md), and [docs/theme/themes.md](docs/theme/themes.md).
+Extensions, skills, prompt templates, and themes are auto-discovered from `~/.pi/agent/` and `.pi/` directories and can be added via the `extensions`, `skills`, `prompts`, and `themes` arrays in `settings.json`. There are no CLI flags for loading or disabling these; see [docs/extensions/index.md](docs/extensions/index.md), [docs/loader/skills/index.md](docs/loader/skills/index.md), [docs/loader/prompt-templates.md](docs/loader/prompt-templates.md), and [docs/ui/theme/index.md](docs/ui/theme/index.md).
 
 ### Other Options
 
@@ -571,7 +571,7 @@ pi --thinking high "Solve this complex problem"
 
 ## Contributing & Development
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines and [docs/development.md](docs/development.md) for setup, forking, and development.
+See [AGENTS.md](../../AGENTS.md) for guidelines and [docs/app/development.md](docs/app/development.md) for setup, forking, and development.
 
 ---
 

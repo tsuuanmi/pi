@@ -98,4 +98,4 @@ Communication uses standard JSON-RPC 2.0 over stdio:
 
 ## See Also
 
-- [Built-in Tools](../tools.md) - Tool system documentation
+- [Built-in Tools](../index.md) - Tool system documentation

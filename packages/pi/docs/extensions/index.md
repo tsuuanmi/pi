@@ -130,7 +130,7 @@ Additional paths via `settings.json`:
 }
 ```
 
-To share extensions via npm or git as pi packages, see [packages.md](../packages.md).
+To share extensions via npm or git as pi packages, see [packages.md](../package-manager/packages.md).
 
 ## Available Imports
 
@@ -422,7 +422,7 @@ Do cleanup work in `session_shutdown`, then reestablish any in-memory state in `
 
 #### session_before_compact / session_compact
 
-Fired on compaction. See [compaction.md](../session/compaction/compaction.md) for details.
+Fired on compaction. See [compaction.md](../session/compaction/index.md) for details.
 
 ```typescript
 pi.on("session_before_compact", async (event, ctx) => {
@@ -1587,7 +1587,7 @@ Typical `sourceInfo.source` values:
 
 ### pi.setModel(model)
 
-Set the current model. Returns `false` if no API key is available for the model. See [models.md](../model/models.md) for configuring custom models.
+Set the current model. Returns `false` if no API key is available for the model. See [models.md](../runtime/models/models.md) for configuring custom models.
 
 ```typescript
 const model = ctx.modelRegistry.find("anthropic", "claude-sonnet-4-5");
@@ -1685,7 +1685,7 @@ pi.registerProvider("corporate-ai", {
 - `oauth` - OAuth provider config for `/account add` support. When provided, the provider appears in the account-add menu.
 - `stream` - Custom streaming implementation for non-standard APIs.
 
-See [custom-provider.md](../model/custom-provider.md) for advanced topics: custom streaming APIs, OAuth details, model definition reference.
+See [custom-provider.md](../runtime/models/custom-provider.md) for advanced topics: custom streaming APIs, OAuth details, model definition reference.
 
 ### pi.unregisterProvider(name)
 
@@ -2549,7 +2549,7 @@ pi.sendMessage({
 
 ### Theme Colors
 
-All render functions receive a `theme` object. See [themes.md](../theme/themes.md) for creating custom themes and the full color palette.
+All render functions receive a `theme` object. See [themes.md](../ui/theme/index.md) for creating custom themes and the full color palette.
 
 ```typescript
 // Foreground colors

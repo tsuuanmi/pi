@@ -93,6 +93,6 @@ Create it with `createAgentSessionServices(options)`, which returns the services
 
 ## See Also
 
-- [Sessions](sessions.md) - Session management and persistence
-- [Compaction](compaction/compaction.md) - Context compaction and summarization
-- [Extensions](../extensions/extensions.md) - Extension lifecycle and hooks
+- [Sessions](../session/sessions.md) - Session management and persistence
+- [Compaction](../session/compaction/index.md) - Context compaction and summarization
+- [Extensions](../extensions/index.md) - Extension lifecycle and hooks

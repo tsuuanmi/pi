@@ -77,7 +77,7 @@ Segment IDs are `model`, `mode`, `git`, `path`, `context_pct`, `context_total`, 
 |---------|------|---------|-------------|
 | `apiUsageLogging.enabled` | boolean | `true` | Write redacted sidecar API usage records to `<cwd>/.pi/{encodedSessionId}/api-usage.jsonl` |
 
-See [API Usage Logging](../telemetry/api-usage-logging.md) for schema, privacy, and mode behavior.
+See [API Usage Logging](../runtime/telemetry/api-usage-logging.md) for schema, privacy, and mode behavior.
 
 ```json
 {
@@ -266,7 +266,7 @@ Object form filters which resources to load:
 }
 ```
 
-See [packages.md](../packages.md) for package management details.
+See [packages.md](../package-manager/packages.md) for package management details.
 
 ## Example
 

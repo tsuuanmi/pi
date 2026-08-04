@@ -27,7 +27,7 @@ For the JSONL file format and SessionManager API, see [Session Format](session-f
 | `/session` | Show session info |
 | `/tree` | Navigate the current session tree |
 | `/fork` | Create a new session from a previous user message |
-| `/compact [prompt]` | Summarize older context; see [Compaction](compaction/compaction.md) |
+| `/compact [prompt]` | Summarize older context; see [Compaction](compaction/index.md) |
 
 ## Resuming and Deleting Sessions
 
@@ -129,7 +129,7 @@ When prompted, choose one of:
 2. summarize with the default prompt
 3. summarize with custom focus instructions
 
-See [Compaction](compaction/compaction.md) for branch summarization internals and extension hooks.
+See [Compaction](compaction/index.md) for branch summarization internals and extension hooks.
 
 ## Session Format
 

@@ -50,4 +50,4 @@ Generic `pi workflow subagent` / `subagents` command shims are removed. Spawn op
 - [Agents](../agents/agents.md)
 - [Workflow control plane](../workflow.md)
 - [Commands](../commands/workflow.md)
-- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/subagents/subagents.md) - Pi-native SubagentManager
+- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/subagents/index.md) - Pi-native SubagentManager

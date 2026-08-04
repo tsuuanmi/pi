@@ -57,8 +57,8 @@ Handlers may be `async`. The bus awaits each handler in order. Errors in async h
 
 ## Event Channels
 
-Extensions subscribe to host events using the `ctx.on()` method. Agent-level policies use `Agent.registerHook()` instead. See the [Extensions](../extensions/extensions.md) documentation for the full list of event channels and hook signatures.
+Extensions subscribe to host events using the `ctx.on()` method. Agent-level policies use `Agent.registerHook()` instead. See the [Extensions](../extensions/index.md) documentation for the full list of event channels and hook signatures.
 
 ## See Also
 
-- [Extensions](../extensions/extensions.md) - Extension API and event hooks
+- [Extensions](../extensions/index.md) - Extension API and event hooks

@@ -21,7 +21,7 @@ These are the intended ownership boundaries. If implementation chooses different
 | --- | --- | --- |
 | Resource/discovery ownership and provider precedence | `packages/pi/src/loader/resources.ts` | `src/agent/profiles.ts`, `src/loader/skill.ts`, `src/loader/prompt-templates.ts`, `src/package-manager/package-manager.ts` |
 | Agent definition parsing | `packages/pi/src/agent/definitions.ts` | `src/agent/profiles.ts`, bundled role-agent prompt assets if added |
-| Project resource loading | `packages/pi/src/settings/settings-manager.ts` and `src/loader/resources.ts` | `packages/pi/docs/security.md` |
+| Project resource loading | `packages/pi/src/settings/settings-manager.ts` and `src/loader/resources.ts` | `packages/pi/docs/app/security.md` |
 | Source metadata and diagnostics | `packages/pi/src/resources/source-info.ts` and `src/resources/diagnostics.ts` | resource-specific loaders |
 | Scoped live registry | `packages/pi/src/runtime/agent-session-services.ts` and `packages/pi/src/subagents/manager.ts` | `src/runtime/agent-session.ts`, `src/extensions/types.ts` |
 | Durable subagent/task/receipt state | `packages/pi/src/subagents/manager.ts` and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |

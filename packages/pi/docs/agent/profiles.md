@@ -186,5 +186,5 @@ Unknown fields produce a `warning` diagnostic.
 
 ## See Also
 
-- [Settings](../settings/settings.md) - Configuration system
-- [Resources](../resources/resources.md) - Resource diagnostics and collision reporting
+- [Settings](../settings/index.md) - Configuration system
+- [Resources](../resources/index.md) - Resource diagnostics and collision reporting

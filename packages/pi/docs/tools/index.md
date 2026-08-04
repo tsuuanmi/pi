@@ -292,5 +292,5 @@ export default {
 
 ## See Also
 
-- [Extensions](../extensions/extensions.md) - Extension API and tool registration
-- [Security](../security.md) - Tool execution security
+- [Extensions](../extensions/index.md) - Extension API and tool registration
+- [Security](../app/security.md) - Tool execution security

@@ -590,7 +590,7 @@ await loader.reload();
 const { session } = await createAgentSession({ resourceLoader: loader });
 ```
 
-Extensions can register tools, subscribe to events, add commands, and more. See [extensions.md](../extensions/extensions.md) for the full API.
+Extensions can register tools, subscribe to events, add commands, and more. See [extensions.md](../extensions/index.md) for the full API.
 
 **Event Bus:** Extensions can communicate via `pi.events`. Pass a shared `eventBus` to `DefaultResourceLoader` if you need to emit or listen from outside:
 
@@ -606,7 +606,7 @@ await loader.reload();
 eventBus.on("my-extension:status", (data) => console.log(data));
 ```
 
-See [extensions.md](../extensions/extensions.md) for the full extension API.
+See [extensions.md](../extensions/index.md) for the full extension API.
 
 ### Skills
 
@@ -1144,4 +1144,4 @@ type PromptTemplate
 type Tool
 ```
 
-For extension types, see [extensions.md](../extensions/extensions.md) for the full API.
+For extension types, see [extensions.md](../extensions/index.md) for the full API.

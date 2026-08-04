@@ -100,7 +100,7 @@ Pi also supports several subcommands:
 
 ## See Also
 
-- [Using Pi](../usage.md) - Full usage reference
+- [Using Pi](../app/usage.md) - Full usage reference
 - [RPC Mode](../api/rpc.md) - RPC protocol
 - [JSON Mode](../api/json.md) - JSON event stream
-- [Settings](../settings/settings.md) - Configuration reference
+- [Settings](../settings/index.md) - Configuration reference

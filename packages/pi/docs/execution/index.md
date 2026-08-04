@@ -123,6 +123,6 @@ HTTP dispatcher configuration is documented in [HTTP Networking](../network/http
 
 ## See Also
 
-- [Tools](../tools/tools.md) - Built-in tool definitions and operations
-- [Security](../security.md) - Trust boundaries and sandboxing
+- [Tools](../tools/index.md) - Built-in tool definitions and operations
+- [Security](../app/security.md) - Trust boundaries and sandboxing
 - [HTTP Networking](../network/http.md) - HTTP proxy and idle timeout configuration

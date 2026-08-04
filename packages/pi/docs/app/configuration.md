@@ -50,5 +50,5 @@ This is used by API key credentials and other configurable values that support e
 
 ## See Also
 
-- [Settings](../settings/settings.md) - Full settings reference
-- [Authentication](../auth/auth.md) - Auth configuration and credential storage
+- [Settings](../settings/index.md) - Full settings reference
+- [Authentication](../auth/index.md) - Auth configuration and credential storage

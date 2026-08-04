@@ -164,6 +164,6 @@ Auth files are created with mode `0o600` (owner read/write only). Parent directo
 
 ## See Also
 
-- [Providers](../model/providers.md) - Provider configuration
-- [Settings](../settings/settings.md) - Settings reference
-- [Security](../security.md) - Security model
+- [Providers](../runtime/models/providers.md) - Provider configuration
+- [Settings](../settings/index.md) - Settings reference
+- [Security](../app/security.md) - Security model
