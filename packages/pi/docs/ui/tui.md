@@ -269,7 +269,7 @@ const spacer = new Spacer(2);  // 2 empty lines
 
 ### Markdown
 
-Renders markdown with syntax highlighting.
+Renders Markdown with syntax highlighting and terminal Mermaid diagrams.
 
 ```typescript
 const md = new Markdown(
@@ -280,6 +280,8 @@ const md = new Markdown(
 );
 md.setText("Updated markdown");
 ```
+
+Fenced `mermaid` blocks render supported flowchart, sequence, class, ER, state, and xychart diagrams as terminal Unicode output. Unsupported, invalid, or over-width diagrams raise a render error instead of displaying the source text.
 
 ## Keyboard Input
 

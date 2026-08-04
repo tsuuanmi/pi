@@ -19,6 +19,10 @@
 - **keybindings**: Removed pre-namespaced keybinding IDs and automatic keybinding config migration; use namespaced IDs.
 - **changelog**: Removed rewriting of links from the legacy `pi-mono` repository.
 
+### Added
+
+- **interactive**: Mermaid fenced diagrams now render as width-checked terminal Unicode diagrams in Markdown output.
+
 ### Changed
 
 - **api**: Removed the stale `serializeJsonLine` root export; node JSONL utilities are imported from `@tsuuanmi/pi-agent/node`.

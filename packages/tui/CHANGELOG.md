@@ -9,6 +9,7 @@
 - **messages**: Moved the reusable user message component into TUI.
 - **selection**: Moved the reusable theme selector component into TUI.
 - **selection**: Exported reusable session search and sorting helpers for TUI-hosted session selectors.
+- **markdown**: Rendered supported Mermaid fenced diagrams as width-checked terminal Unicode output.
 
 ### Changed
 

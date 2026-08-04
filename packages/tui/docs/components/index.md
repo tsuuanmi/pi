@@ -118,7 +118,7 @@ editor.borderColor = (s) => chalk.blue(s);
 
 ## Markdown
 
-Renders markdown with syntax highlighting and theming:
+Renders Markdown with syntax highlighting, terminal Mermaid diagrams, and theming:
 
 ```typescript
 import { Markdown } from "@tsuuanmi/pi-tui";
@@ -164,6 +164,9 @@ md.setText("Updated markdown");
 - Headings, bold, italic, code blocks, lists, links, blockquotes
 - HTML tags rendered as plain text
 - Optional syntax highlighting via `highlightCode`
+- Mermaid fenced diagrams rendered as terminal Unicode diagrams
+- Supported Mermaid types: flowcharts, sequence, class, ER, state, and xychart
+- Unsupported, invalid, or over-width Mermaid diagrams raise a render error
 - Padding and render caching
 
 ## Syntax Highlight

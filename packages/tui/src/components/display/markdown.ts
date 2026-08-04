@@ -1,5 +1,6 @@
 import { Marked, type Token, Tokenizer, type Tokens } from "marked";
 import type { Component } from "#tui/components/component";
+import { renderMermaid } from "#tui/components/display/mermaid";
 import { getCapabilities, hyperlink } from "#tui/terminal/features/capabilities";
 import { applyBackgroundToLine, visibleWidth, wrapTextWithAnsi } from "#tui/utilities/text";
 
@@ -343,6 +344,15 @@ export class Markdown implements Component {
 				break;
 
 			case "code": {
+				if (token.lang?.trim().toLowerCase() === "mermaid") {
+					const diagramLines = renderMermaid(token.text, width);
+					lines.push(...diagramLines.map((line) => this.theme.codeBlock(line)));
+					if (nextTokenType && nextTokenType !== "space") {
+						lines.push("");
+					}
+					break;
+				}
+
 				// A no-language fenced block (```) often wraps markdown the model
 				// intended to render (e.g. a table) rather than verbatim code. If the
 				// content parses as markdown containing a table, render that markdown

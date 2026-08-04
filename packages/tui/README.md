@@ -356,7 +356,7 @@ editor.borderColor = (s) => chalk.blue(s); // Change border dynamically
 
 ### Markdown
 
-Renders markdown with syntax highlighting and theming support.
+Renders Markdown with syntax highlighting, terminal Mermaid diagrams, and theming support.
 
 ```typescript
 interface MarkdownTheme {
@@ -400,6 +400,7 @@ md.setText("Updated markdown");
 - Headings, bold, italic, code blocks, lists, links, blockquotes
 - HTML tags rendered as plain text
 - Optional syntax highlighting via `highlightCode`
+- Mermaid fenced diagrams render as terminal Unicode diagrams
 - Padding support
 - Render caching for performance
 
