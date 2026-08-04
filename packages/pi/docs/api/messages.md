@@ -107,11 +107,11 @@ const custom = createCustomMessage("myType", content, true, details, timestamp);
 
 ## Retained Context Optimization
 
-The `context-optimization` module provides replay-only optimization of retained context (messages kept in the conversation window). This is distinct from compaction (which removes messages entirely) — context optimization replaces or compresses messages in-place to reduce token usage.
+The runtime uses a session-local `ContextOptimizer` for replay-only optimization of retained context (messages kept in the conversation window). This is distinct from compaction (which removes messages entirely) — context optimization replaces or compresses messages in-place to reduce token usage. The optimizer keeps summary decisions stable for append-only history and resets when the context history is replaced.
 
 ### How It Works
 
-`optimizeRetainedContext(messages, options)` applies a series of transformations:
+`ContextOptimizer.optimize(messages, options)` applies a series of transformations:
 
 1. **Thinking block stripping** — Removes plain readable thinking blocks from assistant messages, preserving redacted/signed thinking for continuity
 2. **Bash output compression** — Truncates oversized bash outputs, keeping a head/tail with a compression marker showing bytes/lines omitted
@@ -121,7 +121,7 @@ The `context-optimization` module provides replay-only optimization of retained 
 ### Options
 
 ```typescript
-interface RetainedContextOptimizationOptions {
+interface ContextOptions {
   stripThinking: boolean;              // Strip removable thinking blocks (default: true)
   compressBashOutput: boolean;          // Compress oversized bash outputs (default: true)
   bashMaxBytes: number;                 // UTF-8 byte budget for bash output compression (default: 16384)

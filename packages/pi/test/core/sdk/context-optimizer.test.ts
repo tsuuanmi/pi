@@ -1,7 +1,8 @@
 import type { AgentMessage, BashExecutionMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import { describe, expect, it } from "vitest";
-import { compressBashReplayOutput, optimizeRetainedContext } from "#pi/runtime/context-optimization";
+import { compressBashOutput } from "#pi/runtime/bash-output";
+import { ContextOptimizer } from "#pi/runtime/context-optimizer";
 
 const usage: AssistantMessage["usage"] = {
 	input: 0,
@@ -21,6 +22,13 @@ const defaultOptions = {
 	toolResultMaxBytes: 96_000,
 	cwd: "/repo",
 };
+
+function runOptimizer(
+	messages: AgentMessage[],
+	options: Parameters<ContextOptimizer["optimize"]>[1] = defaultOptions,
+): AgentMessage[] {
+	return new ContextOptimizer().optimize(messages, options);
+}
 
 function assistant(content: AssistantMessage["content"]): AssistantMessage {
 	return {
@@ -81,7 +89,7 @@ function expectSummary(text: string): Record<string, unknown> {
 	return JSON.parse(json) as Record<string, unknown>;
 }
 
-describe("retained context optimization", () => {
+describe("context optimizer", () => {
 	it("removes plain readable thinking without mutating the original message", () => {
 		const message = assistant([
 			{ type: "thinking", thinking: "private reasoning" },
@@ -90,7 +98,7 @@ describe("retained context optimization", () => {
 		]);
 		const originalContent = message.content;
 
-		const optimized = optimizeRetainedContext([message], {
+		const optimized = runOptimizer([message], {
 			...defaultOptions,
 			stripThinking: true,
 			dedupeReadResults: false,
@@ -112,7 +120,7 @@ describe("retained context optimization", () => {
 			{ type: "thinking", thinking: "redacted", thinkingSignature: "opaque", redacted: true },
 		]);
 
-		const optimized = optimizeRetainedContext([message], {
+		const optimized = runOptimizer([message], {
 			...defaultOptions,
 			stripThinking: true,
 			dedupeReadResults: false,
@@ -126,7 +134,7 @@ describe("retained context optimization", () => {
 	it("drops assistant messages that only contain removable thinking", () => {
 		const message = assistant([{ type: "thinking", thinking: "remove" }]);
 
-		const optimized = optimizeRetainedContext([message], {
+		const optimized = runOptimizer([message], {
 			...defaultOptions,
 			stripThinking: true,
 			dedupeReadResults: false,
@@ -149,7 +157,7 @@ describe("retained context optimization", () => {
 			timestamp: 1,
 		};
 
-		const optimized = optimizeRetainedContext([message], {
+		const optimized = runOptimizer([message], {
 			...defaultOptions,
 			compressBashOutput: true,
 			bashMaxBytes: 4096,
@@ -168,7 +176,7 @@ describe("retained context optimization", () => {
 	it("compresses bash tool result text and preserves IDs/metadata", () => {
 		const message: AgentMessage = toolResult("call_bash", "bash", "x".repeat(10_000));
 
-		const optimized = optimizeRetainedContext([message], {
+		const optimized = runOptimizer([message], {
 			...defaultOptions,
 			compressBashOutput: true,
 			bashMaxBytes: 2048,
@@ -184,7 +192,7 @@ describe("retained context optimization", () => {
 	it("leaves non-bash tool results unchanged when Tier 2 is disabled", () => {
 		const message: AgentMessage = toolResult("call_read", "read", "x".repeat(10_000));
 
-		const optimized = optimizeRetainedContext([message], {
+		const optimized = runOptimizer([message], {
 			...defaultOptions,
 			compressBashOutput: true,
 			bashMaxBytes: 2048,
@@ -198,7 +206,7 @@ describe("retained context optimization", () => {
 
 	it("respects utf8 byte budgets with multibyte characters", () => {
 		const output = `${"é".repeat(5000)}\n${"界".repeat(5000)}`;
-		const compressed = compressBashReplayOutput(output, { maxBytes: 3000 });
+		const compressed = compressBashOutput(output, { maxBytes: 3000 });
 
 		expect(Buffer.byteLength(compressed, "utf8")).toBeLessThanOrEqual(3000);
 		expect(() => Buffer.from(compressed, "utf8").toString("utf8")).not.toThrow();
@@ -211,7 +219,7 @@ describe("retained context optimization", () => {
 			...protectionFillers(),
 		];
 
-		const optimized = optimizeRetainedContext(messages, defaultOptions);
+		const optimized = runOptimizer(messages, defaultOptions);
 		const oldSummary = expectSummary(textOf(optimized[1]));
 
 		expect(oldSummary.policy).toBe("read_duplicate");
@@ -227,7 +235,7 @@ describe("retained context optimization", () => {
 			...protectionFillers(),
 		];
 
-		const optimized = optimizeRetainedContext(messages, defaultOptions);
+		const optimized = runOptimizer(messages, defaultOptions);
 
 		expect(textOf(optimized[1])).toBe("old content");
 		expect(textOf(optimized[4])).toBe("new content");
@@ -241,7 +249,7 @@ describe("retained context optimization", () => {
 			...protectionFillers(),
 		];
 
-		const optimized = optimizeRetainedContext(messages, defaultOptions);
+		const optimized = runOptimizer(messages, defaultOptions);
 
 		expect(textOf(optimized[1])).toBe("old content");
 		expect(textOf(optimized[7])).toBe("new content");
@@ -255,7 +263,7 @@ describe("retained context optimization", () => {
 			...protectionFillers(),
 		];
 
-		const optimized = optimizeRetainedContext(messages, defaultOptions);
+		const optimized = runOptimizer(messages, defaultOptions);
 		const oldSummary = expectSummary(textOf(optimized[1]));
 
 		expect(oldSummary.policy).toBe("read_duplicate");
@@ -271,7 +279,7 @@ describe("retained context optimization", () => {
 			...protectionFillers(),
 		];
 
-		const optimized = optimizeRetainedContext(messages, defaultOptions);
+		const optimized = runOptimizer(messages, defaultOptions);
 
 		expect(textOf(optimized[1])).toBe("same content");
 		expect(textOf(optimized[7])).toBe("same content");
@@ -287,7 +295,7 @@ describe("retained context optimization", () => {
 			...protectionFillers(),
 		];
 
-		const optimized = optimizeRetainedContext(messages, defaultOptions);
+		const optimized = runOptimizer(messages, defaultOptions);
 		const oldSummary = expectSummary(textOf(optimized[1]));
 
 		expect(oldSummary.duplicateOfToolCallId).toBe("call_new");
@@ -302,7 +310,7 @@ describe("retained context optimization", () => {
 			...protectionFillers(),
 		];
 
-		const optimized = optimizeRetainedContext(messages, { ...defaultOptions, toolResultMaxBytes: 1 });
+		const optimized = runOptimizer(messages, { ...defaultOptions, toolResultMaxBytes: 1 });
 
 		expect(textOf(optimized[4])).toBe("read failed");
 	});
@@ -314,7 +322,7 @@ describe("retained context optimization", () => {
 			...protectionFillers(),
 		];
 
-		const optimized = optimizeRetainedContext(messages, defaultOptions);
+		const optimized = runOptimizer(messages, defaultOptions);
 
 		expect(textOf(optimized[1])).toBe("same content");
 	});
@@ -326,7 +334,7 @@ describe("retained context optimization", () => {
 			{ role: "user", content: "next", timestamp: 1 },
 		];
 
-		const optimized = optimizeRetainedContext(messages, { ...defaultOptions, toolResultMaxBytes: 1 });
+		const optimized = runOptimizer(messages, { ...defaultOptions, toolResultMaxBytes: 1 });
 
 		expect(textOf(optimized[1])).toBe("x".repeat(3000));
 	});
@@ -340,12 +348,38 @@ describe("retained context optimization", () => {
 			...consumedToolBatch("call_recent_2", "edit", { path: "recent2.ts", edits: [] }, large),
 		];
 
-		const optimized = optimizeRetainedContext(messages, { ...defaultOptions, toolResultMaxBytes: 1000 });
+		const optimized = runOptimizer(messages, { ...defaultOptions, toolResultMaxBytes: 1000 });
 
 		expect(expectSummary(textOf(optimized[1])).policy).toBe("stale_budget");
 		expect(expectSummary(textOf(optimized[4])).policy).toBe("stale_budget");
 		expect(textOf(optimized[7])).toBe(large);
 		expect(textOf(optimized[10])).toBe(large);
+	});
+
+	it("keeps the incremental summary ledger stable across append-only context", () => {
+		const optimizer = new ContextOptimizer();
+		const messages: AgentMessage[] = [
+			...consumedToolBatch("call_old", "read", { path: "src/a.ts" }, "same content"),
+			...consumedToolBatch("call_new", "read", { path: "src/a.ts" }, "same content"),
+			...protectionFillers(),
+		];
+
+		const first = optimizer.optimize(messages, defaultOptions);
+		const firstSummary = textOf(first[1]);
+		expectSummary(firstSummary);
+		expect(optimizer.optimize(messages, defaultOptions)).toEqual(first);
+
+		const appended = [...messages, ...consumedToolBatch("call_later", "read", { path: "src/a.ts" }, "same content")];
+		const next = optimizer.optimize(appended, defaultOptions);
+		expect(textOf(next[1])).toBe(firstSummary);
+		expect(textOf(runOptimizer(appended, defaultOptions)[1])).not.toBe(firstSummary);
+
+		const branch = [
+			toolCall("call_old", "read", { path: "src/a.ts" }),
+			toolResult("call_old", "read", "same content"),
+			{ role: "user", content: "branch", timestamp: 2 } as AgentMessage,
+		];
+		expect(textOf(optimizer.optimize(branch, defaultOptions)[1])).toBe("same content");
 	});
 
 	it("preserves multi-tool-call ordering, outer metadata, idempotence, and raw duplicate targets", () => {
@@ -361,8 +395,8 @@ describe("retained context optimization", () => {
 			...protectionFillers(),
 		];
 
-		const optimized = optimizeRetainedContext(messages, defaultOptions);
-		const optimizedAgain = optimizeRetainedContext(optimized, defaultOptions);
+		const optimized = runOptimizer(messages, defaultOptions);
+		const optimizedAgain = runOptimizer(optimized, defaultOptions);
 		const oldResult = optimized[1] as ToolResultMessage;
 		const summary = expectSummary(textOf(oldResult));
 
@@ -382,7 +416,7 @@ describe("retained context optimization", () => {
 			...protectionFillers(),
 		];
 
-		const optimized = optimizeRetainedContext(messages, {
+		const optimized = runOptimizer(messages, {
 			...defaultOptions,
 			dedupeReadResults: false,
 			summarizeStaleToolResults: false,

@@ -89,7 +89,7 @@ See [API Usage Logging](../telemetry/api-usage-logging.md) for schema, privacy, 
 
 ### Retained Context Optimization
 
-Retained-context optimization is replay-only: session files, restored history, UI display, raw tool output, and extension `context` hooks stay raw. Provider-bound replay, including `before_provider_request` payload observers, may see optimized summaries.
+Retained-context optimization is replay-only: session files, restored history, UI display, raw tool output, and extension `context` hooks stay raw. Provider-bound replay, including `before_provider_request` payload observers, may see optimized summaries. Within an append-only session, retained summaries are maintained incrementally; branch, compaction, or replaced context history resets the optimizer safely.
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|

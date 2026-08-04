@@ -34,6 +34,7 @@
 
 ### Fixed
 
+- **runtime**: Preserve stable provider-bound context prefixes during retained tool-result optimization.
 - **interactive**: Prevent selecting stale session rows while the `/resume` scope is loading.
 - **interactive**: Load `/resume` sessions in pages of 50 with a Load more option.
 - **interactive**: Accept tmux/Kitty LF Enter input when confirming a session selection.

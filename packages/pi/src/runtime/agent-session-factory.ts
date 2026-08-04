@@ -14,7 +14,7 @@ import { getAgentDir } from "#pi/loader/paths";
 import type { ResourceLoader } from "#pi/loader/resources";
 import { DefaultResourceLoader } from "#pi/loader/resources";
 import { AgentSession } from "#pi/runtime/agent-session";
-import { optimizeRetainedContext } from "#pi/runtime/context-optimization";
+import { ContextOptimizer } from "#pi/runtime/context-optimizer";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import {
@@ -263,6 +263,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	let agent: Agent;
 
 	const extensionRunnerRef: { current?: ExtensionRunner } = {};
+	const contextOptimizer = new ContextOptimizer();
 
 	agent = new Agent({
 		initialState: {
@@ -319,7 +320,10 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		transformContext: async (messages) => {
 			const runner = extensionRunnerRef.current;
 			const transformed = runner ? await runner.emitContext(messages) : messages;
-			return optimizeRetainedContext(transformed, { ...settingsManager.getRetainedContextSettings(), cwd });
+			return contextOptimizer.optimize(transformed, {
+				...settingsManager.getRetainedContextSettings(),
+				cwd,
+			});
 		},
 		steeringMode: settingsManager.getSteeringMode(),
 		followUpMode: settingsManager.getFollowUpMode(),
