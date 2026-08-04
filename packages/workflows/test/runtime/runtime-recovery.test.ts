@@ -4,7 +4,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
-import { preserveDirtyWorktree } from "#workflows/runtime/preservation";
 import {
 	buildClassificationInput,
 	buildWorkspaceMarker,
@@ -14,7 +13,8 @@ import {
 	isRuntimeReceiptValid,
 	type RecoveryDecision,
 	recoverPrimitive,
-} from "#workflows/runtime/primitives";
+} from "#workflows/runtime/fallback-commands";
+import { preserveDirtyWorktree } from "#workflows/runtime/preservation";
 import type { HarnessRpc, RpcStateSnapshot } from "#workflows/runtime/rpc";
 import { operate } from "#workflows/runtime/runner";
 import {

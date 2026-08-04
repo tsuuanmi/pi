@@ -2,7 +2,6 @@ import "#workflows/skills/deep-interview/transitions";
 import "#workflows/skills/ralplan/transitions";
 import "#workflows/skills/team/transitions";
 import "#workflows/skills/ultragoal/transitions";
-import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
 import {
 	inputString,
 	optionalNumber,
@@ -13,7 +12,8 @@ import {
 	requiredString,
 	sessionIdFromInput,
 	workflowVerbSet,
-} from "#workflows/commands/workflow/utils";
+} from "#workflows/commands/workflow/command-utils";
+import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
 import type { RalplanStage } from "#workflows/session/paths";
 import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";

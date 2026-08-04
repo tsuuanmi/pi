@@ -4,7 +4,7 @@ import { registerDeepInterviewTools } from "#workflows/skills/deep-interview/too
 import { registerRalplanTools } from "#workflows/skills/ralplan/tools";
 import { registerTeamTools } from "#workflows/skills/team/tools";
 import { registerUltragoalTools } from "#workflows/skills/ultragoal/tools";
-import { registerSubagentTools } from "#workflows/subagents/subagent-tools";
+import { registerSubagentTools } from "#workflows/subagents/tools";
 
 export interface WorkflowContext {
 	cwd: string;

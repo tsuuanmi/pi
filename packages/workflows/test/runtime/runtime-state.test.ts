@@ -5,8 +5,12 @@ import { join } from "node:path";
 import { clearSubagentManagerFactoryForTests } from "@tsuuanmi/pi-agent";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
+import {
+	buildClassificationInput,
+	classifyRecovery,
+	isRuntimeReceiptValid,
+} from "#workflows/runtime/fallback-commands";
 import { RuntimeOwner } from "#workflows/runtime/owner";
-import { buildClassificationInput, classifyRecovery, isRuntimeReceiptValid } from "#workflows/runtime/primitives";
 import type { HarnessRpc, RpcStateSnapshot } from "#workflows/runtime/rpc";
 import {
 	readRuntimeReceipts,

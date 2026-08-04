@@ -1,6 +1,6 @@
 # Registry
 
-Built-in skill registry plus split workflow runtime/action/tool metadata.
+Workflow transition registry plus split workflow runtime/action/tool metadata.
 
 **Source:** `src/registry/`
 
@@ -8,7 +8,7 @@ Built-in skill registry plus split workflow runtime/action/tool metadata.
 
 | Module | Description |
 |--------|-------------|
-| `skill-registry.ts` | Built-in skill registry for `deep-interview`, `ralplan`, `team`, and `ultragoal`. |
+| `transition-registry.ts` | Runtime registry for skill transition tables, gates, terminal detectors, and next-role selectors. |
 | `workflow-runtime-manifest.ts` | Runtime-state manifest: phases, transitions, retention, HUD fields. |
 | `workflow-manifest.ts` | Canonical workflow manifest that joins runtime state with skill action metadata. |
 | `../skills/*/*-help.ts` | Per-skill action/help metadata used for workflow command help and command reference validation. |

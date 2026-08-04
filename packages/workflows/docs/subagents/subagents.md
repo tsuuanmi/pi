@@ -2,7 +2,7 @@
 
 Generic subagent lifecycle tools and workflow-owned agent execution, plus the workflow-owned model-visible tool surface, registered by the workflow tool helper and bundled workflow registration.
 
-**Source:** `src/register.ts`, `src/subagents/subagent-tools.ts`, `src/skills/deep-interview/tools.ts`, `src/skills/ralplan/tools.ts`, `src/skills/team/tools.ts`, `src/skills/team/coordinator.ts`, `src/skills/ultragoal/tools.ts`, `src/tools/workflow-tools.ts`
+**Source:** `src/register.ts`, `src/subagents/tools.ts`, `src/skills/deep-interview/tools.ts`, `src/skills/ralplan/tools.ts`, `src/skills/team/tools.ts`, `src/skills/team/coordinator.ts`, `src/skills/ultragoal/tools.ts`, `src/tools/workflow-tools.ts`
 
 ## Model-Visible Tools
 
@@ -29,7 +29,7 @@ The bundled workflow registration registers these model-visible tools:
 | `team_resume` | Resume Team execution from an orchestrator checkpoint. |
 | `ultragoal_spawn_goal_agent` | Spawn the next legal Ultragoal goal worker. |
 
-Direct `SubagentManager` calls are limited to workflow adapters: `subagents/subagent-tools.ts` for lifecycle tools, `skills/team/agent-adapter.ts` for Team agents, `skills/ralplan/agent-adapter.ts` for Ralplan agents, and `skills/ultragoal/tools.ts` for one guarded goal worker. Ralplan and Team roles call the Orchestrator through workflow-owned adapters; the detached workflow owner is lifecycle-only. Workflows must use the Orchestrator for generic task dependencies, routing, retries, queues, or agent collaboration.
+Direct `SubagentManager` calls are limited to workflow adapters: `subagents/tools.ts` for lifecycle tools, `skills/team/agent-adapter.ts` for Team agents, `skills/ralplan/agent-adapter.ts` for Ralplan agents, and `skills/ultragoal/tools.ts` for one guarded goal worker. Ralplan and Team roles call the Orchestrator through workflow-owned adapters; the detached workflow owner is lifecycle-only. Workflows must use the Orchestrator for generic task dependencies, routing, retries, queues, or agent collaboration.
 
 ## Guarded Workflow Execution
 

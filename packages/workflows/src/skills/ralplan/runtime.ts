@@ -12,7 +12,7 @@ import {
 	transactionJournalPath,
 	workflowStatePath,
 } from "#workflows/session/session-layout";
-import { roleForStage } from "#workflows/skills/ralplan/agent";
+import { roleForStage } from "#workflows/skills/ralplan/agent-roles";
 import {
 	beginRalplanCompletionJournal,
 	commitRalplanCompletionJournal,

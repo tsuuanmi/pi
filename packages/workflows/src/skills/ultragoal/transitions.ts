@@ -1,5 +1,5 @@
 import type { ExpectedNextRole } from "#workflows/policy/expected-next-role";
-import { registerSkillTransitionTable, type SkillTransitionContext } from "#workflows/registry/skill-registry";
+import { registerSkillTransitionTable, type SkillTransitionContext } from "#workflows/registry/transition-registry";
 import { chooseReceiptKind, readUltragoalLedger, validateCompletionReceipt } from "#workflows/skills/ultragoal/receipt";
 import { getUltragoalStatus, readUltragoalPlan } from "#workflows/skills/ultragoal/runtime";
 

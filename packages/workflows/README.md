@@ -299,7 +299,7 @@ Top-level shared folders provide common utilities used by all four skills:
 | `compaction/` | `compaction.ts` | Prompt-budgeted compact workflow projections. |
 | Skill HUD modules | `deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts` | HUD chip formatting for each workflow skill, colocated with the owning skill folder. |
 | `policy/`, `handoff/` | `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Cross-workflow prompts, handoffs, gates, and expected-next checks. Skill-specific guards live with their skill; subagent lifecycle guards live under `src/subagents/`. |
-| `registry/` | `skill-registry.ts`, `workflow-manifest.ts` | Built-in skill registry and manifest metadata. |
+| `registry/` | `transition-registry.ts`, `workflow-manifest.ts` | Workflow transition registry and manifest metadata. |
 | `session/` | `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Session-scoped path builders and session-id resolution. |
 | `state/` | `active-state.ts`, `state-schema.ts`, `state-writer.ts`, `workflow-state.ts` | Active-state, state validation/writes, workflow ids, and base state types. |
 

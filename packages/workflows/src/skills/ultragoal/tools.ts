@@ -1,7 +1,7 @@
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { assertExpectedNextRole, assertNoGuardedSpawnOverrides } from "#workflows/policy/expected-next-role";
-import { expectedNextRoleForSkill } from "#workflows/registry/skill-registry";
+import { expectedNextRoleForSkill } from "#workflows/registry/transition-registry";
 import { getUltragoalStatus } from "#workflows/skills/ultragoal/runtime";
 import { requireSubagentManager } from "#workflows/subagents/manager";
 import { assertAgentThinkingLevel } from "#workflows/subagents/thinking-level";

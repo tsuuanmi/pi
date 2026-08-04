@@ -6,7 +6,7 @@ Session owner and primitive runtime for `pi workflow` commands.
 
 ## Overview
 
-The runtime owns workflow sessions, leases, RPC routing, primitive fallback execution, mutation receipts, state storage, preservation, GC, and finalization. It is the command/control substrate used by the `src/commands/workflow.ts` wrapper and `src/commands/workflow/` implementation modules; model-visible subagent spawns still run in-process through the main session's `SubagentManager`.
+The runtime owns workflow sessions, leases, RPC routing, fallback command execution, mutation receipts, state storage, preservation, GC, and finalization. It is the command/control substrate used by the `src/commands/workflow.ts` wrapper and `src/commands/workflow/` implementation modules; model-visible subagent spawns still run in-process through the main session's `SubagentManager`.
 
 ## Module Structure
 
@@ -18,12 +18,12 @@ The runtime owns workflow sessions, leases, RPC routing, primitive fallback exec
 | `mutation.ts` | Runtime mutation path and receipt consistency guard. |
 | `owner.ts` | Detached runtime owner lifecycle. |
 | `preservation.ts` | State/artifact preservation helpers. |
-| `primitives.ts` | No-owner primitive command fallback implementations. |
+| `fallback-commands.ts` | No-owner fallback command implementations. |
 | `receipt-rules.ts` | Receipt-family post-state consistency rules. |
 | `rpc.ts` | Runtime owner RPC client/server protocol. |
 | `runner.ts` | Runtime command runner helpers. |
 | `seams.ts` | Deferred-seam registry for designed-not-built extensions. |
-| `state.ts` | Runtime state model helpers. |
+| `lifecycle.ts` | Runtime lifecycle state and response helpers. |
 | `storage.ts` | Runtime storage adapters and session paths. |
 | `types.ts` | Runtime command, receipt, and state types. |
 | `vanish.ts` | Session retire/vanish helpers. |

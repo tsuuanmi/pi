@@ -7,7 +7,7 @@ import {
 	type RalplanSelectorVerdict,
 } from "#workflows/policy/expected-next-role";
 import { ralplanGateArtifactPath } from "#workflows/session/session-layout";
-import { type RalplanAgentInput, roleForStage } from "#workflows/skills/ralplan/agent";
+import { type RalplanAgentInput, roleForStage } from "#workflows/skills/ralplan/agent-roles";
 import { normalizeRalplanExplorerGate } from "#workflows/skills/ralplan/gates";
 import { assertRalplanRole } from "#workflows/skills/ralplan/guards";
 import { buildRalplanOrchestrationSnapshot } from "#workflows/skills/ralplan/orchestration-snapshot";

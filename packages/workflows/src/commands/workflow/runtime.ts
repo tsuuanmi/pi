@@ -1,17 +1,13 @@
 import { spawn } from "node:child_process";
-import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
 import {
 	assertDetachedInteractiveAllowed,
 	gitOutput,
 	inputString,
 	output,
 	sessionIdFromInput,
-} from "#workflows/commands/workflow/utils";
+} from "#workflows/commands/workflow/command-utils";
+import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
 import { callEndpoint } from "#workflows/runtime/endpoint";
-import type { GcContext } from "#workflows/runtime/gc";
-import { collectGcReport, computeGcExitCode, gcPidProbe, HarnessLeasesGcStoreAdapter } from "#workflows/runtime/gc";
-import { mutateRuntimeSession } from "#workflows/runtime/mutation";
-import { RuntimeOwner, resolveOwner } from "#workflows/runtime/owner";
 import {
 	buildClassificationInput,
 	buildWorkspaceMarker,
@@ -19,10 +15,14 @@ import {
 	finalizePrimitive,
 	recoverPrimitive,
 	validatePrimitive,
-} from "#workflows/runtime/primitives";
+} from "#workflows/runtime/fallback-commands";
+import type { GcContext } from "#workflows/runtime/gc";
+import { collectGcReport, computeGcExitCode, gcPidProbe, HarnessLeasesGcStoreAdapter } from "#workflows/runtime/gc";
+import { buildResponse, submitUnavailableReason } from "#workflows/runtime/lifecycle";
+import { mutateRuntimeSession } from "#workflows/runtime/mutation";
+import { RuntimeOwner, resolveOwner } from "#workflows/runtime/owner";
 import { type HarnessRpc, PiRpc } from "#workflows/runtime/rpc";
 import { operate } from "#workflows/runtime/runner";
-import { buildResponse, submitUnavailableReason } from "#workflows/runtime/state";
 import {
 	canonicalWorkspacePath,
 	defaultRepoName,

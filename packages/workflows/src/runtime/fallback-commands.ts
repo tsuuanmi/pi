@@ -1,13 +1,13 @@
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { evaluateSkillGateValidators, evaluateSkillTerminalDetectors } from "#workflows/registry/skill-registry";
+import { evaluateSkillGateValidators, evaluateSkillTerminalDetectors } from "#workflows/registry/transition-registry";
+import { buildResponse } from "#workflows/runtime/lifecycle";
 import { mutateRuntimeSession } from "#workflows/runtime/mutation";
 import { preserveDirtyWorktree } from "#workflows/runtime/preservation";
 import type { HarnessRpc } from "#workflows/runtime/rpc";
 import { singleFlightAccept } from "#workflows/runtime/rpc";
 import { seamUnsupported } from "#workflows/runtime/seams";
-import { buildResponse } from "#workflows/runtime/state";
 import { readRuntimeReceipts, readSessionState } from "#workflows/runtime/storage";
 import type {
 	GitDelta,

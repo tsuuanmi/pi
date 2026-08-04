@@ -2,7 +2,7 @@ import { dirname, join } from "node:path";
 import type { Message } from "@tsuuanmi/pi-ai";
 import type { RalplanStage } from "#workflows/session/paths";
 import { workflowStatePath } from "#workflows/session/session-layout";
-import type { RalplanAgentRole } from "#workflows/skills/ralplan/agent";
+import type { RalplanAgentRole } from "#workflows/skills/ralplan/agent-roles";
 import { writeJsonAtomic } from "#workflows/state/state-writer";
 
 export interface RalplanAgentRecord {

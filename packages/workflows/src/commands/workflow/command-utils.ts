@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { isBlockingQuestionPhaseForSkill } from "#workflows/registry/skill-registry";
+import { isBlockingQuestionPhaseForSkill } from "#workflows/registry/transition-registry";
 import type { WorkflowSkill } from "#workflows/session/paths";
 import { getWorkflowSkillCommandNames } from "#workflows/skills/workflow-help-registry";
 

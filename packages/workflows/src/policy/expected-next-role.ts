@@ -1,4 +1,4 @@
-import { expectedNextRoleForSkill } from "#workflows/registry/skill-registry";
+import { expectedNextRoleForSkill } from "#workflows/registry/transition-registry";
 import type { WorkflowSkill } from "#workflows/session/paths";
 
 export interface ExpectedNextRole {

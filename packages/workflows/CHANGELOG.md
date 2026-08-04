@@ -7,6 +7,7 @@
 - **handoff**: Transaction journals are version 2 and use one top-level session identity; per-side session compatibility fields were removed.
 - **commands**: Removed the `@tsuuanmi/pi-workflows/commands/state-command` compatibility export; use `commands/workflow`.
 - **quality-gate**: CLI validation now accepts Node commands only; alternate-runtime command support was removed.
+- **exports**: Renamed workflow runtime and command implementation modules; direct runtime imports now use `runtime/fallback-commands` and `runtime/lifecycle`.
 
 ### Added
 

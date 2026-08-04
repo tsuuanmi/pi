@@ -10,10 +10,10 @@ Command entry points live under `src/commands/`.
 | `workflow/args.ts` | Shared parsing for `pi workflow ...` command arguments and structured input. |
 | `workflow/index.ts` | Public command dispatcher and package-command contract entry point. |
 | `workflow/runtime.ts` | Lifecycle, owner, primitive runtime, GC, event, and retire verb handlers. |
-| `workflow/skill-verbs.ts` | Deep Interview, ralplan, team, and ultragoal skill verb handlers. |
+| `workflow/skill-commands.ts` | Deep Interview, ralplan, team, and ultragoal skill command handlers. |
 | `workflow/state.ts` | `pi workflow state <skill> <read|write|clear|handoff|active|doctor>` implementation and state contract help. |
 | `workflow/types.ts` | Shared workflow command result type. |
-| `workflow/utils.ts` | Shared command input, output, validation, and manifest helpers. |
+| `workflow/command-utils.ts` | Shared command input, output, validation, and manifest helpers. |
 
 ## Top-Level Verbs
 

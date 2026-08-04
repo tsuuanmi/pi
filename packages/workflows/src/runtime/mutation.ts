@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
+import { assertTransition, buildStateView, nextAllowedActions } from "#workflows/runtime/lifecycle";
 import { ReceiptConsistencyError, validateReceiptFamilyConsistency } from "#workflows/runtime/receipt-rules";
-import { assertTransition, buildStateView, nextAllowedActions } from "#workflows/runtime/state";
 import {
 	appendRuntimeEvent,
 	appendRuntimeReceipt,

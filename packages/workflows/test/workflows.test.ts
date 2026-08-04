@@ -43,8 +43,8 @@ import {
 	isBlockingQuestionPhaseForSkill,
 	skillGateValidators,
 	skillTerminalDetectors,
-} from "#workflows/registry/skill-registry";
-import { buildResponse } from "#workflows/runtime/state";
+} from "#workflows/registry/transition-registry";
+import { buildResponse } from "#workflows/runtime/lifecycle";
 import {
 	generateSessionId,
 	readRuntimeReceipts,

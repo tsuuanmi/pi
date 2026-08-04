@@ -6,8 +6,8 @@ import {
 	type Message,
 	type Model,
 } from "@tsuuanmi/pi-ai";
-import type { RalplanAgentRequest } from "#workflows/skills/ralplan/agent";
-import { type RalplanAgentRecord, writeRalplanAgentRecord } from "#workflows/skills/ralplan/record";
+import { type RalplanAgentRecord, writeRalplanAgentRecord } from "#workflows/skills/ralplan/agent-record";
+import type { RalplanAgentRequest } from "#workflows/skills/ralplan/agent-roles";
 
 export interface RalplanAgentAdapterInput {
 	cwd: string;

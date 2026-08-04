@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
+import { type RecoveryDecision, recoverPrimitive } from "#workflows/runtime/fallback-commands";
 import {
 	collectGcReport,
 	computeGcExitCode,
@@ -18,7 +19,6 @@ import {
 } from "#workflows/runtime/gc";
 import { classifyLeaseStatus, readLease, type SessionLease } from "#workflows/runtime/lease";
 import { mutateRuntimeSession } from "#workflows/runtime/mutation";
-import { type RecoveryDecision, recoverPrimitive } from "#workflows/runtime/primitives";
 import {
 	RECEIPT_FAMILY_LIFECYCLE_TARGETS,
 	ReceiptConsistencyError,

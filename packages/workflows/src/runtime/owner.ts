@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { ControlServer, type EndpointRequest } from "#workflows/runtime/endpoint";
 import {
+	buildClassificationInput,
+	classifyPrimitive,
+	finalizePrimitive,
+	recoverPrimitive,
+	validatePrimitive,
+} from "#workflows/runtime/fallback-commands";
+import {
 	acquireLease,
 	canWriteEvents,
 	classifyLeaseStatus,
@@ -10,15 +17,13 @@ import {
 	type SessionLease,
 } from "#workflows/runtime/lease";
 import {
-	buildClassificationInput,
-	classifyPrimitive,
-	finalizePrimitive,
-	recoverPrimitive,
-	validatePrimitive,
-} from "#workflows/runtime/primitives";
+	buildResponse,
+	buildStateView,
+	nextAllowedActions,
+	submitUnavailableReason,
+} from "#workflows/runtime/lifecycle";
 import { type HarnessRpc, singleFlightAccept } from "#workflows/runtime/rpc";
 import { operate } from "#workflows/runtime/runner";
-import { buildResponse, buildStateView, nextAllowedActions, submitUnavailableReason } from "#workflows/runtime/state";
 import {
 	appendEvent,
 	readEvents,

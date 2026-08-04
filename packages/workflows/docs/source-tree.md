@@ -14,7 +14,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | `src/commands/` | `pi workflow` command wrapper and implementation modules. | [commands/workflow.md](commands/workflow.md) |
 | `src/compaction/` | Prompt-budgeted compact state projections. | [compaction/compaction.md](compaction/compaction.md) |
 | `src/policy/`, `src/handoff/` | Cross-workflow prompts, gates, expected-next checks, and workflow handoffs. | [orchestration/orchestration.md](orchestration/orchestration.md) |
-| `src/registry/` | Built-in skill registry and workflow manifest metadata. | [registry/registry.md](registry/registry.md) |
+| `src/registry/` | Workflow transition registry and workflow manifest metadata. | [registry/registry.md](registry/registry.md) |
 | `src/runtime/` | Runtime owner, RPC, leases, GC, mutation, storage, receipts. | [runtime/runtime.md](runtime/runtime.md) |
 | `src/session/` | Session-scoped path builders and session id resolution. | [session/session.md](session/session.md) |
 | `src/skills/` | Bundled skill folders containing `SKILL.md` assets and skill-owned TypeScript implementation. | [skills](skills/) |

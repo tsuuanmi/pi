@@ -8,11 +8,11 @@ import {
 	Team,
 } from "@tsuuanmi/pi-orchestrator";
 import type { RalplanStage } from "#workflows/session/paths";
-import { createRalplanAgentRequest, type RalplanAgentInput } from "#workflows/skills/ralplan/agent";
 import { createRalplanAgent } from "#workflows/skills/ralplan/agent-adapter";
-import { createRalplanCheckpointStore } from "#workflows/skills/ralplan/checkpoint";
+import { type RalplanAgentRecord, writeRalplanAgentRecord } from "#workflows/skills/ralplan/agent-record";
+import { createRalplanAgentRequest, type RalplanAgentInput } from "#workflows/skills/ralplan/agent-roles";
+import { createRalplanCheckpointStore } from "#workflows/skills/ralplan/checkpoint-store";
 import { assertRalplanExplorerGatePassed } from "#workflows/skills/ralplan/gates";
-import { type RalplanAgentRecord, writeRalplanAgentRecord } from "#workflows/skills/ralplan/record";
 import { assertSafePathComponent } from "#workflows/state/state-schema";
 
 export interface RalplanStageInput extends RalplanAgentInput {

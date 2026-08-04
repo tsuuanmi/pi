@@ -21,9 +21,9 @@ import {
 	type RecoveryDecision,
 	type RecoveryDecisionKind,
 	recoverPrimitive,
-} from "#workflows/runtime/primitives";
+} from "#workflows/runtime/fallback-commands";
+import { isTerminal } from "#workflows/runtime/lifecycle";
 import { type HarnessRpc, singleFlightAccept } from "#workflows/runtime/rpc";
-import { isTerminal } from "#workflows/runtime/state";
 import { readRuntimeReceipts } from "#workflows/runtime/storage";
 import type { HarnessLifecycle, PrimitiveResponse, RuntimeWriter, SessionState } from "#workflows/runtime/types";
 

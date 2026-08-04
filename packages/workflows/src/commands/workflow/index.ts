@@ -21,7 +21,7 @@ import {
 	submit,
 	validate,
 } from "#workflows/commands/workflow/runtime";
-import { deepInterviewVerb, ralplanVerb, teamVerb, ultragoalVerb } from "#workflows/commands/workflow/skill-verbs";
+import { deepInterviewVerb, ralplanVerb, teamVerb, ultragoalVerb } from "#workflows/commands/workflow/skill-commands";
 import { runStateCommand } from "#workflows/commands/workflow/state";
 import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
 

@@ -24,20 +24,20 @@ export * from "#workflows/policy/context-templates";
 export * from "#workflows/policy/expected-next-role";
 export * from "#workflows/policy/gate-verdicts";
 export * from "#workflows/policy/vagueness-gate";
-export * from "#workflows/registry/skill-registry";
+export * from "#workflows/registry/transition-registry";
 export * from "#workflows/registry/workflow-manifest";
 export * from "#workflows/runtime/endpoint";
+export * from "#workflows/runtime/fallback-commands";
 export * from "#workflows/runtime/gc";
 export * from "#workflows/runtime/lease";
+export * from "#workflows/runtime/lifecycle";
 export * from "#workflows/runtime/mutation";
 export * from "#workflows/runtime/owner";
 export * from "#workflows/runtime/preservation";
-export * from "#workflows/runtime/primitives";
 export * from "#workflows/runtime/receipt-rules";
 export * from "#workflows/runtime/rpc";
 export * from "#workflows/runtime/runner";
 export * from "#workflows/runtime/seams";
-export * from "#workflows/runtime/state";
 export * from "#workflows/runtime/storage";
 export * from "#workflows/runtime/types";
 export * from "#workflows/runtime/vanish";
@@ -49,13 +49,14 @@ export * from "#workflows/skills/deep-interview/mutation-guard";
 export * from "#workflows/skills/deep-interview/runtime";
 export * from "#workflows/skills/deep-interview/state";
 export * from "#workflows/skills/deep-interview/tools";
+export type { RalplanAgentRecord } from "#workflows/skills/ralplan/agent-record";
 export {
 	createRalplanAgentRequest,
 	type RalplanAgentInput,
 	type RalplanAgentRequest,
 	type RalplanAgentRole,
 	roleForStage,
-} from "#workflows/skills/ralplan/agent";
+} from "#workflows/skills/ralplan/agent-roles";
 export * from "#workflows/skills/ralplan/compact";
 export * from "#workflows/skills/ralplan/completion-transaction";
 export * from "#workflows/skills/ralplan/expected-action";
@@ -72,7 +73,6 @@ export {
 	type RalplanStageResult,
 	runRalplanStage,
 } from "#workflows/skills/ralplan/orchestrator";
-export type { RalplanAgentRecord } from "#workflows/skills/ralplan/record";
 export * from "#workflows/skills/ralplan/runtime";
 export * from "#workflows/skills/ralplan/verdicts";
 // Harness runtime
