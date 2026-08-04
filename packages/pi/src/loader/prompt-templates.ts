@@ -3,8 +3,9 @@ import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { basename, dirname, join, resolve, sep } from "path";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
 import { parseFrontmatter } from "#pi/loader/frontmatter";
-import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
-import { createSyntheticSourceInfo, type SourceInfo } from "#pi/package-manager/source-info";
+import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
+import { createSourceInfo, createSyntheticSourceInfo, type SourceInfo } from "#pi/resources/source-info";
+import type { ResolvedResource } from "#pi/resources/types";
 
 /**
  * Represents a prompt template loaded from a markdown file
@@ -114,8 +115,8 @@ export interface LoadPromptTemplatesOptions {
 	cwd: string;
 	/** Agent config directory for global templates. */
 	agentDir: string;
-	/** Explicit prompt template paths (files or directories). */
-	promptPaths: string[];
+	/** Resolved prompt template resources. */
+	promptResources: ResolvedResource[];
 	/** Include default prompt directories. */
 	includeDefaults: boolean;
 }
@@ -129,8 +130,7 @@ export interface LoadPromptTemplatesOptions {
 export function loadPromptTemplatesWithDiagnostics(options: LoadPromptTemplatesOptions): LoadPromptTemplatesResult {
 	const resolvedCwd = resolvePath(options.cwd);
 	const resolvedAgentDir = resolvePath(options.agentDir);
-	const promptPaths = options.promptPaths;
-	const includeDefaults = options.includeDefaults;
+	const { promptResources, includeDefaults } = options;
 
 	const templates: PromptTemplate[] = [];
 	const diagnostics: ResourceDiagnostic[] = [];
@@ -177,9 +177,9 @@ export function loadPromptTemplatesWithDiagnostics(options: LoadPromptTemplatesO
 		diagnostics.push(...projectResult.diagnostics);
 	}
 
-	// 3. Load explicit prompt paths
-	for (const rawPath of promptPaths) {
-		const resolvedPath = resolvePath(rawPath, resolvedCwd, { trim: true });
+	// 3. Load explicit prompt resources
+	for (const resource of promptResources) {
+		const resolvedPath = resolvePath(resource.path, resolvedCwd, { trim: true });
 		if (!existsSync(resolvedPath)) {
 			diagnostics.push({ type: "warning", message: "prompt template path does not exist", path: resolvedPath });
 			continue;
@@ -187,12 +187,17 @@ export function loadPromptTemplatesWithDiagnostics(options: LoadPromptTemplatesO
 
 		try {
 			const stats = statSync(resolvedPath);
+			const sourceInfo = (filePath: string) =>
+				createSourceInfo(filePath, {
+					...resource.metadata,
+					baseDir: resource.metadata.baseDir ?? (stats.isDirectory() ? resolvedPath : dirname(resolvedPath)),
+				});
 			if (stats.isDirectory()) {
-				const result = loadTemplatesFromDir(resolvedPath, getSourceInfo);
+				const result = loadTemplatesFromDir(resolvedPath, sourceInfo);
 				templates.push(...result.templates);
 				diagnostics.push(...result.diagnostics);
 			} else if (stats.isFile() && resolvedPath.endsWith(".md")) {
-				const result = loadTemplateFromFileResult(resolvedPath, getSourceInfo(resolvedPath));
+				const result = loadTemplateFromFileResult(resolvedPath, sourceInfo(resolvedPath));
 				if (result.template) {
 					templates.push(result.template);
 				}

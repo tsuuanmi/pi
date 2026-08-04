@@ -2,19 +2,20 @@ import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { loadThemeFromPath, type Theme } from "@tsuuanmi/pi-tui";
-import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
+import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
+import type { ResolvedResource } from "#pi/resources/types";
 
 export interface ThemeResult {
 	themes: Theme[];
 	diagnostics: ResourceDiagnostic[];
 }
 
-export function loadThemes(paths: string[], cwd: string): ThemeResult {
+export function loadThemes(resources: ResolvedResource[], cwd: string): ThemeResult {
 	const themes: Theme[] = [];
 	const diagnostics: ResourceDiagnostic[] = [];
 
-	for (const path of paths) {
-		const resolved = resolvePath(path, cwd, { trim: true });
+	for (const resource of resources) {
+		const resolved = resolvePath(resource.path, cwd, { trim: true });
 		if (!existsSync(resolved)) {
 			diagnostics.push({ type: "warning", message: "theme path does not exist", path: resolved });
 			continue;

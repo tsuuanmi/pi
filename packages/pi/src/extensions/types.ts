@@ -129,7 +129,7 @@ export type {
 	UserBashEventResult,
 	WriteToolCallEvent,
 	WriteToolResultEvent,
-} from "#pi/package-manager/extensions/hooks/event-types";
+} from "#pi/extensions/hooks/event-types";
 export {
 	isBashToolResult,
 	isEditToolResult,
@@ -139,6 +139,6 @@ export {
 	isReadToolResult,
 	isToolCallEventType,
 	isWriteToolResult,
-} from "#pi/package-manager/extensions/hooks/event-types";
-export type { ExtensionHandler, ExtensionHookAPI } from "#pi/package-manager/extensions/hooks/extension-api-hooks";
+} from "#pi/extensions/hooks/event-types";
+export type { ExtensionHandler, ExtensionHookAPI } from "#pi/extensions/hooks/extension-api-hooks";
 export type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";

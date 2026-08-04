@@ -53,18 +53,18 @@ import { readWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import chalk from "chalk";
 import { spawn } from "child_process";
 import { killTrackedProcesses } from "#pi/execution/process-tree";
-import { APP_NAME } from "#pi/loader/app";
-import { configureHttpDispatcher } from "#pi/network/http-dispatcher";
-import type { TruncationResult } from "#pi/output/truncation";
 import type {
 	AutocompleteProviderFactory,
 	EditorFactory,
 	ExtensionContext,
 	ExtensionRunner,
 	ExtensionUIContext,
-} from "#pi/package-manager/extensions/index";
+} from "#pi/extensions/index";
+import { APP_NAME } from "#pi/loader/app";
+import { configureHttpDispatcher } from "#pi/network/http-dispatcher";
+import type { TruncationResult } from "#pi/output/truncation";
 import { parseGitUrl } from "#pi/package-manager/git";
-import type { SourceInfo } from "#pi/package-manager/source-info";
+import type { SourceInfo } from "#pi/resources/source-info";
 import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "#pi/runtime/agent-session";
 import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/runtime/agent-session-runtime";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#pi/session/cwd";

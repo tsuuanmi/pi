@@ -1,10 +1,16 @@
 # Package Manager
 
-Pi package management for discovering, installing, and resolving extensions, skills, prompts, themes, package commands, and agent profiles from npm and git sources.
+Pi package management for installing and resolving package-provided extensions, skills, prompts, themes, package commands, and agent profiles from npm, git, and local sources.
 
 ## Overview
 
-Pi packages bundle distributable content (extensions, skills, prompts, themes, commands, and agents) that can be installed from npm or git repositories. The package manager handles resolution, installation, updates, and resource discovery.
+Pi packages bundle distributable content (extensions, skills, prompts, themes, commands, and agents) that can be installed from npm, git, or local sources. The package manager handles package installation, updates, and package resource resolution. General user and project resource discovery remains in the resource loader.
+
+## Package Loader Boundary
+
+The package manager resolves package sources to package roots. Its package loader then reads the package manifest or convention directories and returns package resource paths with source metadata.
+
+The package loader does not inspect user or project resource directories, parse resource files, import modules, apply session flags, or execute commands. Those responsibilities belong to the general resource loader and command dispatcher. Local package sources must be directories; explicit local extension files are handled by the resource loader.
 
 ## Package Format
 
@@ -35,7 +41,7 @@ Packages can come from npm or git:
 | npm | `package-name` or `package-name@version` | `pi-skills`, `@org/my-ext@1.2.0` |
 | npm (scoped) | `@scope/package` | `@tsuuanmi/pi-skills` |
 | git | Git URL or `git+` prefix | `https://github.com/user/repo.git`, `git+https://...` |
-| local | File path | `./my-extension/` |
+| local | Package directory | `./my-extension/` |
 
 ### Filtered Packages
 
@@ -57,9 +63,9 @@ Packages can be filtered to load only specific resource types:
 }
 ```
 
-## PathMetadata
+## Resource descriptors
 
-Every resolved resource carries metadata identifying its origin:
+The resource boundary owns the descriptor types used by package resolution. Every resolved resource carries metadata identifying its origin:
 
 ```typescript
 interface PathMetadata {
@@ -70,9 +76,9 @@ interface PathMetadata {
 }
 ```
 
-## ResolvedPaths
+### ResolvedPaths
 
-The package manager resolves all configured resources into structured paths:
+The package manager resolves configured package resources into structured paths:
 
 ```typescript
 interface ResolvedPaths {
@@ -102,7 +108,7 @@ interface PackageManager {
   removeAndPersist(source: string, options?): Promise<boolean>;
   update(source?: string): Promise<void>;
   listConfiguredPackages(): ConfiguredPackage[];
-  resolveExtensionSources(sources: string[], options?): Promise<ResolvedPaths>;
+  resolveSources(sources: string[], options?): Promise<ResolvedPaths>;
   addSourceToSettings(source: string, options?): boolean;
   removeSourceFromSettings(source: string, options?): boolean;
   setProgressCallback(callback?: ProgressCallback): void;
@@ -114,7 +120,8 @@ interface PackageManager {
 
 | Method | Description |
 |--------|-------------|
-| `resolve()` | Resolve all configured packages and local resources into `ResolvedPaths` |
+| `resolve()` | Resolve configured package resources into `ResolvedPaths` |
+| `resolveSources()` | Resolve explicit package sources into `ResolvedPaths` |
 | `install()` | Install a package to the local cache |
 | `installAndPersist()` | Install and add to settings |
 | `remove()` | Remove a package from the local cache |

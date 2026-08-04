@@ -5,12 +5,13 @@ import { canonicalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { AgentProfile } from "#pi/agent/profiles";
 import { parseFrontmatter } from "#pi/loader/frontmatter";
-import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
+import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
+import type { PathMetadata, ResolvedResource } from "#pi/resources/types";
 
 export type AgentSourceLevel = "bundled" | "user" | "project" | "package" | "temporary";
 export type AgentProfileFormat = "markdown" | "bundled";
 
-export interface AgentSourceInfo {
+export interface AgentSourceInfo extends PathMetadata {
 	path: string;
 	providerId: string;
 	providerDisplayName: string;
@@ -224,6 +225,10 @@ function addMarkdownCandidates(candidates: Candidate[], dir: string, level: Agen
 			path,
 			sourceInfo: {
 				path,
+				source: "local",
+				scope: level === "project" ? "project" : "user",
+				origin: "top-level",
+				baseDir: scopeRoot,
 				providerId: "agents-markdown",
 				providerDisplayName: "Agents markdown",
 				level,
@@ -234,12 +239,13 @@ function addMarkdownCandidates(candidates: Candidate[], dir: string, level: Agen
 	}
 }
 
-function addPackageAgentCandidates(candidates: Candidate[], paths: string[] | undefined): void {
-	for (const path of paths ?? []) {
+function addPackageAgentCandidates(candidates: Candidate[], resources: ResolvedResource[]): void {
+	for (const resource of resources) {
 		candidates.push({
-			path,
+			path: resource.path,
 			sourceInfo: {
-				path,
+				path: resource.path,
+				...resource.metadata,
 				providerId: "package-agents",
 				providerDisplayName: "Package agents",
 				level: "package",
@@ -278,7 +284,7 @@ function applyDuplicateResolution(
 export function loadAgentDefinitions(options: {
 	cwd: string;
 	agentDir: string;
-	packageAgentPaths?: string[];
+	packageAgentResources?: ResolvedResource[];
 }): AgentProfileLoadResult {
 	const cwd = canonicalizePath(resolvePath(options.cwd));
 	void options.agentDir;
@@ -293,7 +299,7 @@ export function loadAgentDefinitions(options: {
 
 	addMarkdownCandidates(candidates, join(home, ".agent", "agents"), "user", home);
 	addMarkdownCandidates(candidates, join(home, ".agents", "agents"), "user", home);
-	addPackageAgentCandidates(candidates, options.packageAgentPaths);
+	addPackageAgentCandidates(candidates, options.packageAgentResources ?? []);
 	const loaded: Array<{ profile: LoadedAgentProfile; path: string }> = [];
 	for (const candidate of candidates) {
 		const result = parseMarkdownProfile(candidate.path, readFileSync(candidate.path, "utf8"), candidate.sourceInfo);

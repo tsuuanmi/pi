@@ -2,6 +2,7 @@ import chalk from "chalk";
 import type { ExtensionFactory } from "#pi/api/extension-types";
 import { selectConfig } from "#pi/cli/config-selector";
 import { APP_NAME, CONFIG_DIR_NAME } from "#pi/loader/app";
+import { resolveResources } from "#pi/loader/discovery";
 import { getAgentDir } from "#pi/loader/paths";
 import { DefaultPackageManager } from "#pi/package-manager/package-manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
@@ -174,7 +175,11 @@ export async function handleConfigCommand(
 		settingsManager,
 		commandOutput: "inherit",
 	});
-	const resolvedPaths = await packageManager.resolve();
+	const resolvedPaths = await resolveResources(packageManager, {
+		cwd,
+		agentDir,
+		settingsManager,
+	});
 
 	await selectConfig({
 		resolvedPaths,

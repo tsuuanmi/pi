@@ -4,11 +4,11 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
+import { ExtensionRunner } from "#pi/extensions/runner";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { DefaultResourceLoader } from "#pi/loader/resources";
 import type { Skill } from "#pi/loader/skill";
-import { ExtensionRunner } from "#pi/package-manager/extensions/runner";
-import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
+import { createSyntheticSourceInfo } from "#pi/resources/source-info";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
@@ -29,10 +29,10 @@ function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions
 	return extensions.filter(
 		(extension) =>
 			!extension.path.startsWith("<inline:") &&
-			!extension.path.endsWith("/src/packages/pi/package-manager/extensions/builtin-workflows.ts") &&
-			!extension.path.endsWith("/dist/packages/pi/package-manager/extensions/builtin-workflows.js") &&
-			!extension.path.includes("/pi/src/package-manager/extensions/builtin-workflows.ts") &&
-			!extension.path.includes("/pi/dist/package-manager/extensions/builtin-workflows.js"),
+			!extension.path.endsWith("/src/packages/pi/extensions/builtin-workflows.ts") &&
+			!extension.path.endsWith("/dist/packages/pi/extensions/builtin-workflows.js") &&
+			!extension.path.includes("/pi/src/extensions/builtin-workflows.ts") &&
+			!extension.path.includes("/pi/dist/extensions/builtin-workflows.js"),
 	);
 }
 
@@ -662,6 +662,9 @@ Project planner body`,
 							description: "custom",
 							sourceInfo: {
 								path: "<test>",
+								source: "test",
+								scope: "temporary",
+								origin: "top-level",
 								providerId: "test",
 								providerDisplayName: "Test",
 								level: "temporary",
@@ -973,6 +976,9 @@ export default function(pi: ExtensionAPI) {
 
 			const extensionsResult = loader.getExtensions();
 			expect(extensionsResult.extensions[0]?.path).toBe(explicitExtPath);
+			expect(extensionsResult.extensions[0]?.sourceInfo.source).toBe("cli");
+			expect(extensionsResult.extensions[0]?.sourceInfo.scope).toBe("temporary");
+			expect(extensionsResult.extensions[0]?.sourceInfo.origin).toBe("top-level");
 
 			const sessionManager = SessionManager.inMemory();
 			const authStorage = AuthStorage.create(join(tempDir, "auth-explicit.json"));

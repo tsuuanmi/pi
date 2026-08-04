@@ -2,10 +2,17 @@ import { homedir } from "os";
 import { join, resolve } from "path";
 import { describe, expect, it } from "vitest";
 import { loadSkills, loadSkillsFromDir, type Skill } from "#pi/loader/skill";
-import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
+import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
+import type { ResolvedResource } from "#pi/resources/types";
 
 const fixturesDir = resolve(__dirname, "../../fixtures/skills");
 const collisionFixturesDir = resolve(__dirname, "../../fixtures/skills-collision");
+
+const resource = (path: string): ResolvedResource => ({
+	path,
+	enabled: true,
+	metadata: { source: "test", scope: "temporary", origin: "top-level" },
+});
 
 describe("skills", () => {
 	describe("loadSkillsFromDir", () => {
@@ -210,7 +217,7 @@ describe("skills", () => {
 			const { skills, diagnostics } = loadSkills({
 				agentDir: emptyAgentDir,
 				cwd: emptyCwd,
-				skillPaths: [join(fixturesDir, "valid-skill")],
+				skillResources: [resource(join(fixturesDir, "valid-skill"))],
 				includeDefaults: true,
 			});
 			expect(skills).toHaveLength(1);
@@ -222,7 +229,7 @@ describe("skills", () => {
 			const { skills, diagnostics } = loadSkills({
 				agentDir: emptyAgentDir,
 				cwd: emptyCwd,
-				skillPaths: ["/non/existent/path"],
+				skillResources: [resource("/non/existent/path")],
 				includeDefaults: true,
 			});
 			expect(skills).toHaveLength(0);
@@ -234,13 +241,13 @@ describe("skills", () => {
 			const { skills: withTilde } = loadSkills({
 				agentDir: emptyAgentDir,
 				cwd: emptyCwd,
-				skillPaths: ["~/.pi/agent/skills"],
+				skillResources: [resource("~/.pi/agent/skills")],
 				includeDefaults: true,
 			});
 			const { skills: withoutTilde } = loadSkills({
 				agentDir: emptyAgentDir,
 				cwd: emptyCwd,
-				skillPaths: [homeSkillsDir],
+				skillResources: [resource(homeSkillsDir)],
 				includeDefaults: true,
 			});
 			expect(withTilde.length).toBe(withoutTilde.length);

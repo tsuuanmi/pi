@@ -88,7 +88,7 @@ The core loading function that scans directories, parses frontmatter, and dedupl
 const result = loadAgentDefinitions({
   cwd: process.cwd(),
   agentDir: path.join(homedir(), ".pi", "agent"),
-  packageAgentPaths: resolvedPaths.agents.map(r => r.path),
+  packageAgentResources: resolvedPaths.agents,
 });
 ```
 

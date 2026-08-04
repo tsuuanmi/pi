@@ -3,7 +3,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { discoverAndLoadExtensions } from "#pi/package-manager/extensions/loader";
+import { discoverAndLoadExtensions } from "#pi/loader/extensions";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -452,8 +452,17 @@ describe("extensions discovery", () => {
 		fs.writeFileSync(explicitPath, extensionCodeWithTool("explicit"));
 
 		// Use loadExtensions directly to skip discovery
-		const { loadExtensions } = await import("#pi/package-manager/extensions/loader");
-		const result = await loadExtensions([explicitPath], tempDir);
+		const { loadExtensions } = await import("#pi/loader/extensions");
+		const result = await loadExtensions(
+			[
+				{
+					path: explicitPath,
+					enabled: true,
+					metadata: { source: "test", scope: "temporary", origin: "top-level", baseDir: tempDir },
+				},
+			],
+			tempDir,
+		);
 
 		expect(result.errors).toHaveLength(0);
 		expect(result.extensions).toHaveLength(1);
@@ -466,7 +475,7 @@ describe("extensions discovery", () => {
 		fs.writeFileSync(path.join(extensionsDir, "discovered.ts"), extensionCode);
 
 		// Use loadExtensions directly with empty paths
-		const { loadExtensions } = await import("#pi/package-manager/extensions/loader");
+		const { loadExtensions } = await import("#pi/loader/extensions");
 		const result = await loadExtensions([], tempDir);
 
 		expect(result.errors).toHaveLength(0);

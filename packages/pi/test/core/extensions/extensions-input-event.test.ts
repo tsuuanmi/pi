@@ -3,9 +3,9 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
+import { ExtensionRunner } from "#pi/extensions/runner";
+import { discoverAndLoadExtensions } from "#pi/loader/extensions";
 import { ModelRegistry } from "#pi/loader/model-registry";
-import { discoverAndLoadExtensions } from "#pi/package-manager/extensions/loader";
-import { ExtensionRunner } from "#pi/package-manager/extensions/runner";
 import { SessionManager } from "#pi/session/manager";
 
 describe("Input Event", () => {

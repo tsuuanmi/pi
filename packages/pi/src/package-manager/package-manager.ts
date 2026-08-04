@@ -1,12 +1,28 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
-import { canonicalizePath, isLocalPath, markPathIgnoredByCloudSync, resolvePath } from "@tsuuanmi/pi-agent/node";
-import { globSync } from "glob";
+import { isLocalPath, markPathIgnoredByCloudSync, resolvePath } from "@tsuuanmi/pi-agent/node";
 import { maxSatisfying, rcompare, satisfies } from "semver";
-import { CONFIG_DIR_NAME } from "#pi/loader/app";
+import { CONFIG_DIR_NAME } from "#pi/config";
 import { type GitSource, parseGitUrl } from "#pi/package-manager/git";
+import {
+	BUNDLED_DEFAULT_PACKAGES,
+	BUNDLED_PACKAGE_SOURCES,
+	GIT_UPDATE_CONCURRENCY,
+	getBundledPackageRoot,
+	getExtensionTempFolder,
+	getNpmVersionRange,
+	isExactNpmVersion,
+	isOfflineModeEnabled,
+	NETWORK_TIMEOUT_MS,
+	UPDATE_CHECK_CONCURRENCY,
+} from "#pi/package-manager/utils";
+import { getHomeDir } from "#pi/resources/constants";
+import { addPaths, createResourceTable, type ResourceTable, toResolvedPaths } from "#pi/resources/paths";
+import type { PackageFilter, PathMetadata, ResolvedPaths, SourceScope } from "#pi/resources/types";
 import type { PackageSource, SettingsManager } from "#pi/settings/settings-manager";
+import { CommandRunner } from "./commands.ts";
+import { loadPackage } from "./loader.ts";
 import type {
 	ConfiguredPackage,
 	ConfiguredUpdateSource,
@@ -16,69 +32,13 @@ import type {
 	MissingSourceAction,
 	NpmSource,
 	NpmUpdateTarget,
-	PackageFilter,
 	PackageManager,
 	PackageManagerOptions,
 	PackageUpdate,
 	ParsedSource,
-	PathMetadata,
-	PiManifest,
 	ProgressCallback,
 	ProgressEvent,
-	ResolvedPaths,
-	ResolvedResource,
-	ResourceAccumulator,
-	ResourceType,
-	SourceScope,
 } from "./types.ts";
-
-export type {
-	CommandOutput,
-	ConfiguredPackage,
-	MissingSourceAction,
-	PackageManager,
-	PackageUpdate,
-	PathMetadata,
-	ProgressCallback,
-	ProgressEvent,
-	ResolvedPaths,
-	ResolvedResource,
-} from "./types.ts";
-
-import {
-	AGENTS_STANDARD_DIR_NAMES,
-	BUNDLED_DEFAULT_PACKAGES,
-	BUNDLED_PACKAGE_SOURCES,
-	GIT_UPDATE_CONCURRENCY,
-	getBundledPackageRoot,
-	getExtensionTempFolder,
-	getHomeDir,
-	getNpmVersionRange,
-	isExactNpmVersion,
-	isOfflineModeEnabled,
-	NETWORK_TIMEOUT_MS,
-	RESOURCE_TYPES,
-	TOP_LEVEL_RESOURCE_TYPES,
-	UPDATE_CHECK_CONCURRENCY,
-} from "#pi/package-manager/utils";
-import { CommandRunner } from "./commands.ts";
-import {
-	collectAncestorAgentsResourceDirs,
-	collectAutoExtensionEntries,
-	collectAutoPromptEntries,
-	collectAutoSkillEntries,
-	collectAutoThemeEntries,
-	collectResourceFiles,
-	readPiManifestFile,
-} from "./discovery.ts";
-import {
-	applyPatterns,
-	hasGlobPattern,
-	isEnabledByOverrides,
-	isOverridePattern,
-	resourcePrecedenceRank,
-	splitPatterns,
-} from "./patterns.ts";
 
 export class DefaultPackageManager implements PackageManager {
 	private cwd: string;
@@ -160,7 +120,7 @@ export class DefaultPackageManager implements PackageManager {
 		if (parsed.type === "local") {
 			const baseDir = this.getBaseDirForScope(scope);
 			const path = this.resolvePathFromBase(parsed.path, baseDir);
-			return existsSync(path) ? path : undefined;
+			return existsSync(path) && statSync(path).isDirectory() ? path : undefined;
 		}
 		if (parsed.type === "bundled") {
 			return existsSync(parsed.path) ? parsed.path : undefined;
@@ -189,74 +149,24 @@ export class DefaultPackageManager implements PackageManager {
 		}
 	}
 
+	/** Resolve configured package resources only. */
 	async resolve(onMissing?: (source: string) => Promise<MissingSourceAction>): Promise<ResolvedPaths> {
-		const accumulator = this.createAccumulator();
 		const globalSettings = this.settingsManager.getGlobalSettings();
 		const projectSettings = this.settingsManager.getProjectSettings();
+		const packages: Array<{ pkg: PackageSource; scope: SourceScope }> = [];
 
-		// Collect all packages with scope (project first so cwd resources win collisions).
-		// Bundled first-party packages are effective defaults; explicit settings entries
-		// for the same pi: source replace the default and may disable resources with [] filters.
-		const allPackages: Array<{ pkg: PackageSource; scope: SourceScope }> = [];
-		for (const pkg of projectSettings.packages ?? []) {
-			allPackages.push({ pkg, scope: "project" });
-		}
-		for (const pkg of globalSettings.packages ?? []) {
-			allPackages.push({ pkg, scope: "user" });
-		}
-		for (const pkg of BUNDLED_DEFAULT_PACKAGES) {
-			allPackages.push({ pkg, scope: "user" });
-		}
+		for (const pkg of projectSettings.packages ?? []) packages.push({ pkg, scope: "project" });
+		for (const pkg of globalSettings.packages ?? []) packages.push({ pkg, scope: "user" });
+		for (const pkg of BUNDLED_DEFAULT_PACKAGES) packages.push({ pkg, scope: "user" });
 
-		// Dedupe: project scope wins over global for same package identity
-		const packageSources = this.dedupePackages(allPackages);
-		await this.resolvePackageSources(packageSources, accumulator, onMissing);
-
-		const globalBaseDir = this.agentDir;
-		const projectBaseDir = join(this.cwd, CONFIG_DIR_NAME);
-
-		for (const resourceType of TOP_LEVEL_RESOURCE_TYPES) {
-			const target = this.getTargetMap(accumulator, resourceType);
-			const globalEntries = (globalSettings[resourceType] ?? []) as string[];
-			const projectEntries = (projectSettings[resourceType] ?? []) as string[];
-			this.resolveLocalEntries(
-				projectEntries,
-				resourceType,
-				target,
-				{
-					source: "local",
-					scope: "project",
-					origin: "top-level",
-				},
-				projectBaseDir,
-			);
-			this.resolveLocalEntries(
-				globalEntries,
-				resourceType,
-				target,
-				{
-					source: "local",
-					scope: "user",
-					origin: "top-level",
-				},
-				globalBaseDir,
-			);
-		}
-
-		this.addAutoDiscoveredResources(accumulator, globalSettings, projectSettings, globalBaseDir, projectBaseDir);
-
-		return this.toResolvedPaths(accumulator);
+		return this.resolvePackageSources(this.dedupePackages(packages), onMissing);
 	}
 
-	async resolveExtensionSources(
-		sources: string[],
-		options?: { local?: boolean; temporary?: boolean },
-	): Promise<ResolvedPaths> {
-		const accumulator = this.createAccumulator();
+	/** Resolve explicit package sources only. */
+	async resolveSources(sources: string[], options?: { local?: boolean; temporary?: boolean }): Promise<ResolvedPaths> {
 		const scope: SourceScope = options?.temporary ? "temporary" : options?.local ? "project" : "user";
-		const packageSources = sources.map((source) => ({ pkg: source as PackageSource, scope }));
-		await this.resolvePackageSources(packageSources, accumulator);
-		return this.toResolvedPaths(accumulator);
+		const packages = sources.map((source) => ({ pkg: source as PackageSource, scope }));
+		return this.resolvePackageSources(packages);
 	}
 
 	listConfiguredPackages(): ConfiguredPackage[] {
@@ -323,6 +233,9 @@ export class DefaultPackageManager implements PackageManager {
 				const resolved = this.resolvePath(parsed.path);
 				if (!existsSync(resolved)) {
 					throw new Error(`Path does not exist: ${resolved}`);
+				}
+				if (!statSync(resolved).isDirectory()) {
+					throw new Error(`Package path must be a directory: ${resolved}`);
 				}
 				return;
 			}
@@ -565,99 +478,81 @@ export class DefaultPackageManager implements PackageManager {
 
 	private async resolvePackageSources(
 		sources: Array<{ pkg: PackageSource; scope: SourceScope }>,
-		accumulator: ResourceAccumulator,
 		onMissing?: (source: string) => Promise<MissingSourceAction>,
-	): Promise<void> {
+	): Promise<ResolvedPaths> {
+		const table = createResourceTable();
+
 		for (const { pkg, scope } of sources) {
-			const sourceStr = typeof pkg === "string" ? pkg : pkg.source;
+			const source = typeof pkg === "string" ? pkg : pkg.source;
 			const filter = typeof pkg === "object" ? pkg : undefined;
-			const parsed = this.parseSource(sourceStr);
-			const metadata: PathMetadata = { source: sourceStr, scope, origin: "package" };
+			const parsed = this.parseSource(source);
+			const metadata: PathMetadata = { source, scope, origin: "package" };
 
 			if (parsed.type === "bundled") {
 				metadata.baseDir = parsed.path;
-				this.collectPackageResources(parsed.path, accumulator, filter, metadata);
+				addPaths(table, loadPackage({ root: parsed.path, metadata, filter }));
 				continue;
 			}
 
 			if (parsed.type === "local") {
-				const baseDir = this.getBaseDirForScope(scope);
-				this.resolveLocalExtensionSource(parsed, accumulator, filter, metadata, baseDir);
+				this.resolveLocalSource(table, parsed, filter, metadata, this.getBaseDirForScope(scope));
 				continue;
 			}
 
 			const installMissing = async (): Promise<boolean> => {
-				if (isOfflineModeEnabled()) {
-					return false;
-				}
+				if (isOfflineModeEnabled()) return false;
 				if (!onMissing) {
 					await this.installParsedSource(parsed, scope);
 					return true;
 				}
-				const action = await onMissing(sourceStr);
+				const action = await onMissing(source);
 				if (action === "skip") return false;
-				if (action === "error") throw new Error(`Missing source: ${sourceStr}`);
+				if (action === "error") throw new Error(`Missing source: ${source}`);
 				await this.installParsedSource(parsed, scope);
 				return true;
 			};
 
 			if (parsed.type === "npm") {
-				let installedPath = this.getNpmInstallPath(parsed, scope);
-				const needsInstall =
-					!existsSync(installedPath) || !(await this.installedNpmMatchesConfiguredVersion(parsed, installedPath));
+				let root = this.getNpmInstallPath(parsed, scope);
+				const needsInstall = !existsSync(root) || !(await this.installedNpmMatchesConfiguredVersion(parsed, root));
 				if (needsInstall) {
-					const installed = await installMissing();
-					if (!installed) continue;
-					installedPath = this.getNpmInstallPath(parsed, scope);
+					if (!(await installMissing())) continue;
+					root = this.getNpmInstallPath(parsed, scope);
 				}
-				metadata.baseDir = installedPath;
-				this.collectPackageResources(installedPath, accumulator, filter, metadata);
+				metadata.baseDir = root;
+				addPaths(table, loadPackage({ root, metadata, filter }));
 				continue;
 			}
 
 			if (parsed.type === "git") {
-				const installedPath = this.getGitInstallPath(parsed, scope);
-				if (!existsSync(installedPath)) {
-					const installed = await installMissing();
-					if (!installed) continue;
+				const root = this.getGitInstallPath(parsed, scope);
+				if (!existsSync(root)) {
+					if (!(await installMissing())) continue;
 				} else if (scope === "temporary" && !parsed.pinned && !isOfflineModeEnabled()) {
-					await this.refreshTemporaryGitSource(parsed, sourceStr);
+					await this.refreshTemporaryGitSource(parsed, source);
 				}
-				metadata.baseDir = installedPath;
-				this.collectPackageResources(installedPath, accumulator, filter, metadata);
+				metadata.baseDir = root;
+				addPaths(table, loadPackage({ root, metadata, filter }));
 			}
 		}
+
+		return toResolvedPaths(table);
 	}
 
-	private resolveLocalExtensionSource(
+	private resolveLocalSource(
+		table: ResourceTable,
 		source: LocalSource,
-		accumulator: ResourceAccumulator,
 		filter: PackageFilter | undefined,
 		metadata: PathMetadata,
 		baseDir: string,
 	): void {
-		const resolved = this.resolvePathFromBase(source.path, baseDir);
-		if (!existsSync(resolved)) {
-			return;
-		}
+		const path = this.resolvePathFromBase(source.path, baseDir);
+		if (!existsSync(path)) return;
 
-		try {
-			const stats = statSync(resolved);
-			if (stats.isFile()) {
-				metadata.baseDir = dirname(resolved);
-				this.addResource(accumulator.extensions, resolved, metadata, true);
-				return;
-			}
-			if (stats.isDirectory()) {
-				metadata.baseDir = resolved;
-				const resources = this.collectPackageResources(resolved, accumulator, filter, metadata);
-				if (!resources) {
-					this.addResource(accumulator.extensions, resolved, metadata, true);
-				}
-			}
-		} catch {
-			return;
-		}
+		const stats = statSync(path);
+		if (!stats.isDirectory()) return;
+
+		addPaths(table, loadPackage({ root: path, metadata: { ...metadata, baseDir: path }, filter }));
 	}
 
 	private async installParsedSource(parsed: ParsedSource, scope: SourceScope): Promise<void> {
@@ -1339,474 +1234,5 @@ export class DefaultPackageManager implements PackageManager {
 
 	private resolvePathFromBase(input: string, baseDir: string): string {
 		return resolvePath(input, baseDir, { homeDir: getHomeDir(), trim: true });
-	}
-
-	private collectPackageResources(
-		packageRoot: string,
-		accumulator: ResourceAccumulator,
-		filter: PackageFilter | undefined,
-		metadata: PathMetadata,
-	): boolean {
-		if (filter) {
-			for (const resourceType of RESOURCE_TYPES) {
-				const patterns = filter[resourceType as keyof PackageFilter];
-				const target = this.getTargetMap(accumulator, resourceType);
-				if (patterns !== undefined) {
-					this.applyPackageFilter(packageRoot, patterns, resourceType, target, metadata);
-				} else {
-					this.collectDefaultResources(packageRoot, resourceType, target, metadata);
-				}
-			}
-			return true;
-		}
-
-		const manifest = readPiManifestFile(join(packageRoot, "package.json"));
-		if (manifest) {
-			for (const resourceType of RESOURCE_TYPES) {
-				const entries = manifest[resourceType as keyof PiManifest];
-				this.addManifestEntries(
-					entries,
-					packageRoot,
-					resourceType,
-					this.getTargetMap(accumulator, resourceType),
-					metadata,
-				);
-			}
-			return true;
-		}
-
-		let hasAnyDir = false;
-		for (const resourceType of RESOURCE_TYPES) {
-			const dir = join(packageRoot, resourceType);
-			if (existsSync(dir)) {
-				// Collect all files from the directory (all enabled by default)
-				const files = collectResourceFiles(dir, resourceType);
-				for (const f of files) {
-					this.addResource(this.getTargetMap(accumulator, resourceType), f, metadata, true);
-				}
-				hasAnyDir = true;
-			}
-		}
-		return hasAnyDir;
-	}
-
-	private collectDefaultResources(
-		packageRoot: string,
-		resourceType: ResourceType,
-		target: Map<string, { metadata: PathMetadata; enabled: boolean }>,
-		metadata: PathMetadata,
-	): void {
-		const manifest = readPiManifestFile(join(packageRoot, "package.json"));
-		const entries = manifest?.[resourceType as keyof PiManifest];
-		if (entries) {
-			this.addManifestEntries(entries, packageRoot, resourceType, target, metadata);
-			return;
-		}
-		const dir = join(packageRoot, resourceType);
-		if (existsSync(dir)) {
-			// Collect all files from the directory (all enabled by default)
-			const files = collectResourceFiles(dir, resourceType);
-			for (const f of files) {
-				this.addResource(target, f, metadata, true);
-			}
-		}
-	}
-
-	private applyPackageFilter(
-		packageRoot: string,
-		userPatterns: string[],
-		resourceType: ResourceType,
-		target: Map<string, { metadata: PathMetadata; enabled: boolean }>,
-		metadata: PathMetadata,
-	): void {
-		const { allFiles } = this.collectManifestFiles(packageRoot, resourceType);
-
-		if (userPatterns.length === 0) {
-			// Empty array explicitly disables all resources of this type
-			for (const f of allFiles) {
-				this.addResource(target, f, metadata, false);
-			}
-			return;
-		}
-
-		// Apply user patterns
-		const enabledByUser = applyPatterns(allFiles, userPatterns, packageRoot);
-
-		for (const f of allFiles) {
-			const enabled = enabledByUser.has(f);
-			this.addResource(target, f, metadata, enabled);
-		}
-	}
-
-	/**
-	 * Collect all files from a package for a resource type, applying manifest patterns.
-	 * Returns { allFiles, enabledByManifest } where enabledByManifest is the set of files
-	 * that pass the manifest's own patterns.
-	 */
-	private collectManifestFiles(
-		packageRoot: string,
-		resourceType: ResourceType,
-	): { allFiles: string[]; enabledByManifest: Set<string> } {
-		const manifest = readPiManifestFile(join(packageRoot, "package.json"));
-		const entries = manifest?.[resourceType as keyof PiManifest];
-		if (entries && entries.length > 0) {
-			const allFiles = this.collectFilesFromManifestEntries(entries, packageRoot, resourceType);
-			const manifestPatterns = entries.filter(isOverridePattern);
-			const enabledByManifest =
-				manifestPatterns.length > 0 ? applyPatterns(allFiles, manifestPatterns, packageRoot) : new Set(allFiles);
-			return { allFiles: Array.from(enabledByManifest), enabledByManifest };
-		}
-
-		const conventionDir = join(packageRoot, resourceType);
-		if (!existsSync(conventionDir)) {
-			return { allFiles: [], enabledByManifest: new Set() };
-		}
-		const allFiles = collectResourceFiles(conventionDir, resourceType);
-		return { allFiles, enabledByManifest: new Set(allFiles) };
-	}
-
-	private addManifestEntries(
-		entries: string[] | undefined,
-		root: string,
-		resourceType: ResourceType,
-		target: Map<string, { metadata: PathMetadata; enabled: boolean }>,
-		metadata: PathMetadata,
-	): void {
-		if (!entries) return;
-
-		const allFiles = this.collectFilesFromManifestEntries(entries, root, resourceType);
-		const patterns = entries.filter(isOverridePattern);
-		const enabledPaths = applyPatterns(allFiles, patterns, root);
-
-		for (const f of allFiles) {
-			if (enabledPaths.has(f)) {
-				this.addResource(target, f, metadata, true);
-			}
-		}
-	}
-
-	private collectFilesFromManifestEntries(entries: string[], root: string, resourceType: ResourceType): string[] {
-		const sourceEntries = entries.filter((entry) => !isOverridePattern(entry));
-		const resolved = sourceEntries.flatMap((entry) => {
-			if (!hasGlobPattern(entry)) {
-				return [resolve(root, entry)];
-			}
-
-			return globSync(entry, {
-				cwd: root,
-				absolute: true,
-				dot: false,
-				nodir: false,
-			}).map((match) => resolve(match));
-		});
-		return this.collectFilesFromPaths(resolved, resourceType);
-	}
-
-	private resolveLocalEntries(
-		entries: string[],
-		resourceType: ResourceType,
-		target: Map<string, { metadata: PathMetadata; enabled: boolean }>,
-		metadata: PathMetadata,
-		baseDir: string,
-	): void {
-		if (entries.length === 0) return;
-
-		// Collect all files from plain entries (non-pattern entries)
-		const { plain, patterns } = splitPatterns(entries);
-		const resolvedPlain = plain.map((p) => this.resolvePathFromBase(p, baseDir));
-		const allFiles = this.collectFilesFromPaths(resolvedPlain, resourceType);
-
-		// Determine which files are enabled based on patterns
-		const enabledPaths = applyPatterns(allFiles, patterns, baseDir);
-
-		// Add all files with their enabled state
-		for (const f of allFiles) {
-			this.addResource(target, f, metadata, enabledPaths.has(f));
-		}
-	}
-
-	private addAutoDiscoveredResources(
-		accumulator: ResourceAccumulator,
-		globalSettings: ReturnType<SettingsManager["getGlobalSettings"]>,
-		projectSettings: ReturnType<SettingsManager["getProjectSettings"]>,
-		globalBaseDir: string,
-		projectBaseDir: string,
-	): void {
-		const userMetadata: PathMetadata = {
-			source: "auto",
-			scope: "user",
-			origin: "top-level",
-			baseDir: globalBaseDir,
-		};
-		const projectMetadata: PathMetadata = {
-			source: "auto",
-			scope: "project",
-			origin: "top-level",
-			baseDir: projectBaseDir,
-		};
-
-		const userOverrides = {
-			extensions: (globalSettings.extensions ?? []) as string[],
-			skills: (globalSettings.skills ?? []) as string[],
-			prompts: (globalSettings.prompts ?? []) as string[],
-			themes: (globalSettings.themes ?? []) as string[],
-			commands: [] as string[],
-			agents: [] as string[],
-		};
-		const projectOverrides = {
-			extensions: (projectSettings.extensions ?? []) as string[],
-			skills: (projectSettings.skills ?? []) as string[],
-			prompts: (projectSettings.prompts ?? []) as string[],
-			themes: (projectSettings.themes ?? []) as string[],
-			commands: [] as string[],
-			agents: [] as string[],
-		};
-
-		const userDirs = {
-			extensions: join(globalBaseDir, "extensions"),
-			skills: join(globalBaseDir, "skills"),
-			prompts: join(globalBaseDir, "prompts"),
-			themes: join(globalBaseDir, "themes"),
-			agents: join(globalBaseDir, "agents"),
-		};
-		const projectDirs = {
-			extensions: join(projectBaseDir, "extensions"),
-			skills: join(projectBaseDir, "skills"),
-			prompts: join(projectBaseDir, "prompts"),
-			themes: join(projectBaseDir, "themes"),
-			agents: join(projectBaseDir, "agents"),
-		};
-		const userAgentsSkillDirs = AGENTS_STANDARD_DIR_NAMES.map((standardDir) =>
-			join(getHomeDir(), standardDir, "skills"),
-		);
-		const userAgentsPromptDirs = AGENTS_STANDARD_DIR_NAMES.map((standardDir) =>
-			join(getHomeDir(), standardDir, "prompts"),
-		);
-		const projectAgentsSkillDirs = collectAncestorAgentsResourceDirs(this.cwd, "skills");
-		const projectAgentsPromptDirs = collectAncestorAgentsResourceDirs(this.cwd, "prompts");
-
-		const addResources = (
-			resourceType: ResourceType,
-			paths: string[],
-			metadata: PathMetadata,
-			overrides: string[],
-			baseDir: string,
-		) => {
-			const target = this.getTargetMap(accumulator, resourceType);
-			for (const path of paths) {
-				const enabled = isEnabledByOverrides(path, overrides, baseDir);
-				this.addResource(target, path, metadata, enabled);
-			}
-		};
-
-		// Project extensions from .pi/
-		addResources(
-			"extensions",
-			collectAutoExtensionEntries(projectDirs.extensions),
-			projectMetadata,
-			projectOverrides.extensions,
-			projectBaseDir,
-		);
-
-		// Project skills from .pi/
-		addResources(
-			"skills",
-			collectAutoSkillEntries(projectDirs.skills, "pi"),
-			projectMetadata,
-			projectOverrides.skills,
-			projectBaseDir,
-		);
-
-		// Project skills from .agent/.agents (each with its own baseDir)
-		for (const agentsSkillsDir of projectAgentsSkillDirs) {
-			const agentsBaseDir = dirname(agentsSkillsDir);
-			const agentsMetadata: PathMetadata = {
-				...projectMetadata,
-				baseDir: agentsBaseDir,
-			};
-			addResources(
-				"skills",
-				collectAutoSkillEntries(agentsSkillsDir, "agents"),
-				agentsMetadata,
-				projectOverrides.skills,
-				agentsBaseDir,
-			);
-		}
-
-		addResources(
-			"prompts",
-			collectAutoPromptEntries(projectDirs.prompts),
-			projectMetadata,
-			projectOverrides.prompts,
-			projectBaseDir,
-		);
-		for (const agentsPromptsDir of projectAgentsPromptDirs) {
-			const agentsBaseDir = dirname(agentsPromptsDir);
-			addResources(
-				"prompts",
-				collectAutoPromptEntries(agentsPromptsDir),
-				{ ...projectMetadata, baseDir: agentsBaseDir },
-				projectOverrides.prompts,
-				agentsBaseDir,
-			);
-		}
-		addResources(
-			"themes",
-			collectAutoThemeEntries(projectDirs.themes),
-			projectMetadata,
-			projectOverrides.themes,
-			projectBaseDir,
-		);
-
-		// User extensions from ~/.pi/agent/
-		addResources(
-			"extensions",
-			collectAutoExtensionEntries(userDirs.extensions),
-			userMetadata,
-			userOverrides.extensions,
-			globalBaseDir,
-		);
-
-		// User skills from ~/.pi/agent/
-		addResources(
-			"skills",
-			collectAutoSkillEntries(userDirs.skills, "pi"),
-			userMetadata,
-			userOverrides.skills,
-			globalBaseDir,
-		);
-
-		// User skills from ~/.agent and ~/.agents (each with its own baseDir)
-		for (const userAgentsSkillsDir of userAgentsSkillDirs) {
-			const userAgentsBaseDir = dirname(userAgentsSkillsDir);
-			addResources(
-				"skills",
-				collectAutoSkillEntries(userAgentsSkillsDir, "agents"),
-				{ ...userMetadata, baseDir: userAgentsBaseDir },
-				userOverrides.skills,
-				userAgentsBaseDir,
-			);
-		}
-
-		addResources(
-			"prompts",
-			collectAutoPromptEntries(userDirs.prompts),
-			userMetadata,
-			userOverrides.prompts,
-			globalBaseDir,
-		);
-		for (const userAgentsPromptsDir of userAgentsPromptDirs) {
-			const userAgentsBaseDir = dirname(userAgentsPromptsDir);
-			addResources(
-				"prompts",
-				collectAutoPromptEntries(userAgentsPromptsDir),
-				{ ...userMetadata, baseDir: userAgentsBaseDir },
-				userOverrides.prompts,
-				userAgentsBaseDir,
-			);
-		}
-		addResources(
-			"themes",
-			collectAutoThemeEntries(userDirs.themes),
-			userMetadata,
-			userOverrides.themes,
-			globalBaseDir,
-		);
-	}
-
-	private collectFilesFromPaths(paths: string[], resourceType: ResourceType): string[] {
-		const files: string[] = [];
-		for (const p of paths) {
-			if (!existsSync(p)) continue;
-			// Never treat type declarations or source maps as loadable resources.
-			if (p.endsWith(".d.ts") || p.endsWith(".map")) continue;
-
-			try {
-				const stats = statSync(p);
-				if (stats.isFile()) {
-					files.push(p);
-				} else if (stats.isDirectory()) {
-					files.push(...collectResourceFiles(p, resourceType));
-				}
-			} catch {
-				// Ignore errors
-			}
-		}
-		return files;
-	}
-
-	private getTargetMap(
-		accumulator: ResourceAccumulator,
-		resourceType: ResourceType,
-	): Map<string, { metadata: PathMetadata; enabled: boolean }> {
-		switch (resourceType) {
-			case "extensions":
-				return accumulator.extensions;
-			case "skills":
-				return accumulator.skills;
-			case "prompts":
-				return accumulator.prompts;
-			case "themes":
-				return accumulator.themes;
-			case "commands":
-				return accumulator.commands;
-			case "agents":
-				return accumulator.agents;
-			default:
-				throw new Error(`Unknown resource type: ${resourceType}`);
-		}
-	}
-
-	private addResource(
-		map: Map<string, { metadata: PathMetadata; enabled: boolean }>,
-		path: string,
-		metadata: PathMetadata,
-		enabled: boolean,
-	): void {
-		if (!path) return;
-		if (!map.has(path)) {
-			map.set(path, { metadata, enabled });
-		}
-	}
-
-	private createAccumulator(): ResourceAccumulator {
-		return {
-			extensions: new Map(),
-			skills: new Map(),
-			prompts: new Map(),
-			themes: new Map(),
-			commands: new Map(),
-			agents: new Map(),
-		};
-	}
-
-	private toResolvedPaths(accumulator: ResourceAccumulator): ResolvedPaths {
-		const mapToResolved = (
-			entries: Map<string, { metadata: PathMetadata; enabled: boolean }>,
-		): ResolvedResource[] => {
-			const resolved = Array.from(entries.entries()).map(([path, { metadata, enabled }]) => ({
-				path,
-				enabled,
-				metadata,
-			}));
-			resolved.sort((a, b) => resourcePrecedenceRank(a.metadata) - resourcePrecedenceRank(b.metadata));
-
-			const seen = new Set<string>();
-			return resolved.filter((entry) => {
-				const canonicalPath = canonicalizePath(entry.path);
-				if (seen.has(canonicalPath)) return false;
-				seen.add(canonicalPath);
-				return true;
-			});
-		};
-
-		return {
-			extensions: mapToResolved(accumulator.extensions),
-			skills: mapToResolved(accumulator.skills),
-			prompts: mapToResolved(accumulator.prompts),
-			themes: mapToResolved(accumulator.themes),
-			commands: mapToResolved(accumulator.commands),
-			agents: mapToResolved(accumulator.agents),
-		};
 	}
 }

@@ -7,7 +7,6 @@ import type { Model } from "@tsuuanmi/pi-ai";
 import type { KeyId } from "@tsuuanmi/pi-tui";
 import { type Theme, theme } from "@tsuuanmi/pi-tui";
 import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
-import type { ModelRegistry } from "#pi/loader/model-registry";
 import {
 	type BeforeAgentStartCombinedResult,
 	emitBeforeAgentStartHook,
@@ -24,7 +23,7 @@ import {
 	hasExtensionHookHandlers,
 	type RunnerEmitEvent,
 	type RunnerEmitResult,
-} from "#pi/package-manager/extensions/hooks/runner-dispatch";
+} from "#pi/extensions/hooks/runner-dispatch";
 import type {
 	CompactOptions,
 	ContextUsage,
@@ -57,8 +56,9 @@ import type {
 	ToolResultEventResult,
 	UserBashEvent,
 	UserBashEventResult,
-} from "#pi/package-manager/extensions/types";
-import type { ResourceDiagnostic } from "#pi/package-manager/resource-diagnostics";
+} from "#pi/extensions/types";
+import type { ModelRegistry } from "#pi/loader/model-registry";
+import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
 import type { SessionManager } from "#pi/session/manager";
 import type { KeybindingsConfig } from "#pi/settings/keybindings";
 

@@ -1,26 +1,7 @@
-import { existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { normalizePath } from "@tsuuanmi/pi-agent/node";
+import { join, resolve } from "node:path";
+import { getPackageDir } from "#pi/config";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-/** Resolve the package root used for bundled assets and metadata. */
-export function getPackageDir(): string {
-	const envDir = process.env.PI_PACKAGE_DIR;
-	if (envDir) {
-		return normalizePath(envDir);
-	}
-
-	let dir = __dirname;
-	while (dir !== dirname(dir)) {
-		if (existsSync(join(dir, "package.json"))) {
-			return dir;
-		}
-		dir = dirname(dir);
-	}
-	return __dirname;
-}
+export { getPackageDir } from "#pi/config";
 
 export function getReadmePath(): string {
 	return resolve(join(getPackageDir(), "README.md"));

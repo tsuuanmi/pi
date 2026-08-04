@@ -1,27 +1,6 @@
 import type { GitSource } from "#pi/package-manager/git";
+import type { ResolvedPaths, SourceScope } from "#pi/resources/types";
 import type { SettingsManager } from "#pi/settings/settings-manager";
-
-export interface PathMetadata {
-	source: string;
-	scope: SourceScope;
-	origin: SourceOrigin;
-	baseDir?: string;
-}
-
-export interface ResolvedResource {
-	path: string;
-	enabled: boolean;
-	metadata: PathMetadata;
-}
-
-export interface ResolvedPaths {
-	extensions: ResolvedResource[];
-	skills: ResolvedResource[];
-	prompts: ResolvedResource[];
-	themes: ResolvedResource[];
-	commands: ResolvedResource[];
-	agents: ResolvedResource[];
-}
 
 export type MissingSourceAction = "install" | "skip" | "error";
 
@@ -56,10 +35,7 @@ export interface PackageManager {
 	removeAndPersist(source: string, options?: { local?: boolean }): Promise<boolean>;
 	update(source?: string): Promise<void>;
 	listConfiguredPackages(): ConfiguredPackage[];
-	resolveExtensionSources(
-		sources: string[],
-		options?: { local?: boolean; temporary?: boolean },
-	): Promise<ResolvedPaths>;
+	resolveSources(sources: string[], options?: { local?: boolean; temporary?: boolean }): Promise<ResolvedPaths>;
 	addSourceToSettings(source: string, options?: { local?: boolean }): boolean;
 	removeSourceFromSettings(source: string, options?: { local?: boolean }): boolean;
 	setProgressCallback(callback: ProgressCallback | undefined): void;
@@ -74,9 +50,6 @@ export interface PackageManagerOptions {
 	settingsManager: SettingsManager;
 	commandOutput?: CommandOutput;
 }
-
-export type SourceScope = "user" | "project" | "temporary";
-export type SourceOrigin = "package" | "top-level";
 
 export type NpmSource = {
 	type: "npm";
@@ -115,36 +88,4 @@ export interface GitUpdateTarget extends ConfiguredUpdateSource {
 	parsed: GitSource;
 }
 
-export interface PiManifest {
-	extensions?: string[];
-	skills?: string[];
-	prompts?: string[];
-	themes?: string[];
-	commands?: string[];
-	agents?: string[];
-}
-
-export interface ResourceAccumulator {
-	extensions: Map<string, { metadata: PathMetadata; enabled: boolean }>;
-	skills: Map<string, { metadata: PathMetadata; enabled: boolean }>;
-	prompts: Map<string, { metadata: PathMetadata; enabled: boolean }>;
-	themes: Map<string, { metadata: PathMetadata; enabled: boolean }>;
-	commands: Map<string, { metadata: PathMetadata; enabled: boolean }>;
-	agents: Map<string, { metadata: PathMetadata; enabled: boolean }>;
-}
-
-export interface PackageFilter {
-	extensions?: string[];
-	skills?: string[];
-	prompts?: string[];
-	themes?: string[];
-	commands?: string[];
-	agents?: string[];
-}
-
-export type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands" | "agents";
-export type TopLevelResourceType = "extensions" | "skills" | "prompts" | "themes";
-
 export type BundledPackageName = "workflows";
-
-export type SkillDiscoveryMode = "pi" | "agents";

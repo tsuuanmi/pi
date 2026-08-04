@@ -14,7 +14,14 @@ import { join } from "path";
 import { afterAll, describe, expect, test } from "vitest";
 import { getAgentDir } from "#pi/loader/config";
 import { loadPromptTemplates } from "#pi/loader/prompt-templates";
+import type { ResolvedResource } from "#pi/resources/types";
 import { expandPromptTemplate, parseCommandArgs, substituteArgs } from "#pi/runtime/prompt-expansion";
+
+const resource = (path: string): ResolvedResource => ({
+	path,
+	enabled: true,
+	metadata: { source: "test", scope: "temporary", origin: "top-level" },
+});
 
 // ============================================================================
 // substituteArgs
@@ -505,7 +512,7 @@ You are given one or more GitHub PR URLs: $@`,
 		const templates = loadPromptTemplates({
 			cwd: process.cwd(),
 			agentDir: getAgentDir(),
-			promptPaths: [testDir],
+			promptResources: [resource(testDir)],
 			includeDefaults: false,
 		});
 
@@ -528,7 +535,7 @@ Wrap it. Additional instructions: $ARGUMENTS`,
 		const templates = loadPromptTemplates({
 			cwd: process.cwd(),
 			agentDir: getAgentDir(),
-			promptPaths: [testDir],
+			promptResources: [resource(testDir)],
 			includeDefaults: false,
 		});
 
@@ -550,7 +557,7 @@ Audit changelog entries for all commits since the last release.`,
 		const templates = loadPromptTemplates({
 			cwd: process.cwd(),
 			agentDir: getAgentDir(),
-			promptPaths: [testDir],
+			promptResources: [resource(testDir)],
 			includeDefaults: false,
 		});
 
@@ -572,7 +579,7 @@ Do something`,
 		const templates = loadPromptTemplates({
 			cwd: process.cwd(),
 			agentDir: getAgentDir(),
-			promptPaths: [testDir],
+			promptResources: [resource(testDir)],
 			includeDefaults: false,
 		});
 
@@ -594,7 +601,7 @@ Analyze GitHub issue(s): $ARGUMENTS`,
 		const templates = loadPromptTemplates({
 			cwd: process.cwd(),
 			agentDir: getAgentDir(),
-			promptPaths: [testDir],
+			promptResources: [resource(testDir)],
 			includeDefaults: false,
 		});
 

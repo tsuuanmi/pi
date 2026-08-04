@@ -4,7 +4,13 @@ Resource loading, diagnostic reporting, and source tracking for extensions, skil
 
 ## Overview
 
-The resources module provides a unified system for discovering, loading, and validating resources from multiple source locations (bundled, user, project, package). It tracks where resources come from and reports collisions and diagnostics.
+The resource loader provides a unified system for loading and validating resources from package and top-level sources. Package source resolution is owned by `package-manager/loader.ts`; general user and project discovery remains in this module. The loader tracks where resources come from and reports collisions and diagnostics.
+
+## Resolution Boundary
+
+Package resources are resolved from a package root using its `pi` manifest or convention directories. The package loader returns absolute resource paths and source metadata but does not parse or execute resources.
+
+This module resolves top-level user/project resources and passes both top-level and package descriptors to the type-specific loaders. Type-specific loaders parse Markdown, JSON, and modules; the package manager never performs those operations. Extension runtime code lives under `src/extensions/`, while module loading remains under `src/loader/extensions.ts`.
 
 ## Resource Sources
 

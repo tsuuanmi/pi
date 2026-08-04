@@ -389,7 +389,7 @@ describe("DefaultPackageManager git update", () => {
 				return "";
 			});
 
-			await packageManager.resolveExtensionSources([gitSource], { temporary: true });
+			await packageManager.resolveSources([gitSource], { temporary: true });
 
 			const executedCommands = runCommandSpy.mock.calls.map(([command, args]) => `${command} ${args.join(" ")}`);
 			expect(executedCommands).toContain(
@@ -413,7 +413,7 @@ describe("DefaultPackageManager git update", () => {
 
 			const runCommandSpy = vi.spyOn(getCommandRunner(packageManager), "run");
 
-			await packageManager.resolveExtensionSources([`${gitSource}@main`], { temporary: true });
+			await packageManager.resolveSources([`${gitSource}@main`], { temporary: true });
 
 			const executedCommands = runCommandSpy.mock.calls.map(([command, args]) => `${command} ${args.join(" ")}`);
 			expect(executedCommands).toEqual([]);

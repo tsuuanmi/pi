@@ -10,9 +10,9 @@ import type { ExtensionActions, ExtensionContextActions } from "#pi/api/extensio
 import type { ProviderConfig } from "#pi/api/provider-types";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
 import { AuthStorage } from "#pi/auth/storage";
+import { ExtensionRunner } from "#pi/extensions/runner";
+import { createExtensionRuntime, discoverAndLoadExtensions } from "#pi/loader/extensions";
 import { ModelRegistry } from "#pi/loader/model-registry";
-import { createExtensionRuntime, discoverAndLoadExtensions } from "#pi/package-manager/extensions/loader";
-import { ExtensionRunner } from "#pi/package-manager/extensions/runner";
 import { SessionManager } from "#pi/session/manager";
 import { KeybindingsManager, type KeyId } from "#pi/settings/keybindings";
 

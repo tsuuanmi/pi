@@ -19,7 +19,7 @@ import {
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
-import type { PathMetadata, ResolvedPaths, ResolvedResource } from "#pi/package-manager/package-manager";
+import type { PathMetadata, ResolvedPaths, ResolvedResource } from "#pi/resources/types";
 import type { PackageSource, SettingsManager } from "#pi/settings/settings-manager";
 
 type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands";

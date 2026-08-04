@@ -1,6 +1,6 @@
-import type { PathMetadata, SourceOrigin, SourceScope } from "#pi/package-manager/types";
+import type { PathMetadata, SourceOrigin, SourceScope } from "#pi/resources/types";
 
-export type { SourceOrigin, SourceScope } from "#pi/package-manager/types";
+export type { SourceOrigin, SourceScope } from "#pi/resources/types";
 
 export interface SourceInfo extends PathMetadata {
 	path: string;

@@ -2,7 +2,7 @@
 
 `@tsuuanmi/pi-workflows/register` exposes the bundled workflow integration for Pi hosts. The package owns workflow tools and workflow policy; Pi supplies the host capabilities and context.
 
-Pi's bundled extension is a thin adapter at `packages/pi/src/package-manager/extensions/builtin-workflows.ts`; it imports `registerWorkflows` and passes the Pi extension API host through unchanged.
+Pi's bundled extension is a thin adapter at `packages/pi/src/extensions/builtin-workflows.ts`; it imports `registerWorkflows` and passes the Pi extension API host through unchanged.
 
 ## Registration
 

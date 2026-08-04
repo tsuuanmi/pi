@@ -1,7 +1,8 @@
 import { basename, extname } from "node:path";
 import type { ExtensionFactory } from "#pi/api/extension-types";
 import { getAgentDir } from "#pi/loader/paths";
-import { DefaultPackageManager, type ResolvedResource } from "#pi/package-manager/package-manager";
+import { DefaultPackageManager } from "#pi/package-manager/package-manager";
+import type { ResolvedResource } from "#pi/resources/types";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
 // Register the Pi SubagentManagerFactory for detached runtime owners.

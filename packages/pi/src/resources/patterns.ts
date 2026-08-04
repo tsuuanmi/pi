@@ -1,7 +1,7 @@
 import { basename, dirname, relative } from "node:path";
 import { minimatch } from "minimatch";
-import type { PathMetadata } from "#pi/package-manager/types";
-import { toPosixPath } from "#pi/package-manager/utils";
+import { toPosixPath } from "#pi/resources/constants";
+import type { PathMetadata } from "#pi/resources/types";
 
 function isPattern(s: string): boolean {
 	return s.startsWith("!") || s.startsWith("+") || s.startsWith("-") || s.includes("*") || s.includes("?");

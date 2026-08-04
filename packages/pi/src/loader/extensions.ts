@@ -12,11 +12,8 @@ import type { KeyId } from "@tsuuanmi/pi-tui";
 import { createJiti } from "jiti/static";
 import type { ExecOptions } from "#pi/execution/command-executor";
 import { execCommand } from "#pi/execution/command-executor";
-import { CONFIG_DIR_NAME } from "#pi/loader/app";
-import { getAgentDir } from "#pi/loader/paths";
-import { collectAutoExtensionEntries } from "#pi/package-manager/discovery";
-import { createEventBus, type EventBus } from "#pi/package-manager/extensions/event-bus";
-import { type HookHandlerFn, registerExtensionHook } from "#pi/package-manager/extensions/hooks/registration";
+import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
+import { type HookHandlerFn, registerExtensionHook } from "#pi/extensions/hooks/registration";
 import type {
 	Extension,
 	ExtensionAPI,
@@ -27,8 +24,12 @@ import type {
 	ProviderConfig,
 	RegisteredCommand,
 	ToolDefinition,
-} from "#pi/package-manager/extensions/types";
-import { createSyntheticSourceInfo } from "#pi/package-manager/source-info";
+} from "#pi/extensions/types";
+import { CONFIG_DIR_NAME } from "#pi/loader/app";
+import { getAgentDir } from "#pi/loader/paths";
+import { collectAutoExtensionEntries } from "#pi/resources/discovery";
+import { createSourceInfo } from "#pi/resources/source-info";
+import type { PathMetadata, ResolvedResource } from "#pi/resources/types";
 
 const require = createRequire(import.meta.url);
 
@@ -39,13 +40,13 @@ function getAliases(): Record<string, string> {
 	if (_aliases) return _aliases;
 
 	const __dirname = path.dirname(fileURLToPath(import.meta.url));
-	const packageIndex = path.resolve(__dirname, "..", "..", "index.js");
+	const packageIndex = path.resolve(__dirname, "..", "index.js");
 
 	const typeboxEntry = require.resolve("typebox");
 	const typeboxCompileEntry = require.resolve("typebox/compile");
 	const typeboxValueEntry = require.resolve("typebox/value");
 
-	const packagesRoot = path.resolve(__dirname, "../../../../");
+	const packagesRoot = path.resolve(__dirname, "../../../");
 	// Resolve bare @tsuuanmi/* specifiers via ESM (import.meta.resolve) so the
 	// "import" condition in their package "exports" is honored. CJS
 	// require.resolve only sees "require"/"default" conditions, which these
@@ -59,7 +60,7 @@ function getAliases(): Record<string, string> {
 	};
 
 	const piEntry = packageIndex;
-	const piConfigEntry = path.resolve(__dirname, "..", "..", "loader", "config.js");
+	const piConfigEntry = path.resolve(__dirname, "config.js");
 	const piAgentEntry = resolveWorkspaceOrImport("agent/dist/index.js", "@tsuuanmi/pi-agent");
 	const piAgentNodeEntry = resolveWorkspaceOrImport("agent/dist/node/node.js", "@tsuuanmi/pi-agent/node");
 	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@tsuuanmi/pi-tui");
@@ -194,7 +195,7 @@ function createExtensionAPI(
 			shortcut: KeyId,
 			options: {
 				description?: string;
-				handler: (ctx: import("#pi/package-manager/extensions/types").ExtensionContext) => Promise<void> | void;
+				handler: (ctx: import("#pi/extensions/types").ExtensionContext) => Promise<void> | void;
 			},
 		): void {
 			runtime.assertActive();
@@ -325,17 +326,11 @@ async function loadExtensionModule(extensionPath: string) {
 /**
  * Create an Extension object with empty collections.
  */
-function createExtension(extensionPath: string, resolvedPath: string): Extension {
-	const source =
-		extensionPath.startsWith("<") && extensionPath.endsWith(">")
-			? extensionPath.slice(1, -1).split(":")[0] || "temporary"
-			: "local";
-	const baseDir = extensionPath.startsWith("<") ? undefined : path.dirname(resolvedPath);
-
+function createExtension(extensionPath: string, resolvedPath: string, metadata: PathMetadata): Extension {
 	return {
 		path: extensionPath,
 		resolvedPath,
-		sourceInfo: createSyntheticSourceInfo(extensionPath, { source, baseDir }),
+		sourceInfo: createSourceInfo(extensionPath, metadata),
 		handlers: new Map(),
 		tools: new Map(),
 		messageRenderers: new Map(),
@@ -346,27 +341,27 @@ function createExtension(extensionPath: string, resolvedPath: string): Extension
 }
 
 async function loadExtension(
-	extensionPath: string,
+	resource: ResolvedResource,
 	cwd: string,
 	eventBus: EventBus,
 	runtime: ExtensionRuntime,
 ): Promise<{ extension: Extension | null; error: string | null }> {
-	const resolvedPath = resolvePath(extensionPath, cwd, { normalizeUnicodeSpaces: true });
+	const resolvedPath = resolvePath(resource.path, cwd, { normalizeUnicodeSpaces: true });
 
 	try {
 		const factory = await loadExtensionModule(resolvedPath);
 		if (!factory) {
-			return { extension: null, error: `Extension does not export a valid factory function: ${extensionPath}` };
+			return { extension: null, error: `Extension does not export a valid factory function: ${resource.path}` };
 		}
 
-		const extension = createExtension(extensionPath, resolvedPath);
+		const extension = createExtension(resource.path, resolvedPath, resource.metadata);
 		const api = createExtensionAPI(extension, runtime, cwd, eventBus);
 		await factory(api);
 
 		return { extension, error: null };
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
-		return { extension: null, error: `Failed to load extension: ${message}` };
+		return { extension: null, error: `Failed to load extension ${resource.path}: ${message}` };
 	}
 }
 
@@ -380,7 +375,11 @@ export async function loadExtensionFromFactory(
 	runtime: ExtensionRuntime,
 	extensionPath = "<inline>",
 ): Promise<Extension> {
-	const extension = createExtension(extensionPath, extensionPath);
+	const extension = createExtension(extensionPath, extensionPath, {
+		source: "inline",
+		scope: "temporary",
+		origin: "top-level",
+	});
 	const resolvedCwd = resolvePath(cwd);
 	const api = createExtensionAPI(extension, runtime, resolvedCwd, eventBus);
 	await factory(api);
@@ -391,7 +390,7 @@ export async function loadExtensionFromFactory(
  * Load extensions from paths.
  */
 export async function loadExtensions(
-	paths: string[],
+	resources: ResolvedResource[],
 	cwd: string,
 	eventBus?: EventBus,
 	runtime?: ExtensionRuntime,
@@ -402,11 +401,11 @@ export async function loadExtensions(
 	const resolvedEventBus = eventBus ?? createEventBus();
 	const resolvedRuntime = runtime ?? createExtensionRuntime();
 
-	for (const extPath of paths) {
-		const { extension, error } = await loadExtension(extPath, resolvedCwd, resolvedEventBus, resolvedRuntime);
+	for (const resource of resources) {
+		const { extension, error } = await loadExtension(resource, resolvedCwd, resolvedEventBus, resolvedRuntime);
 
 		if (error) {
-			errors.push({ path: extPath, error });
+			errors.push({ path: resource.path, error });
 			continue;
 		}
 
@@ -433,37 +432,41 @@ export async function discoverAndLoadExtensions(
 ): Promise<LoadExtensionsResult> {
 	const resolvedCwd = resolvePath(cwd);
 	const resolvedAgentDir = resolvePath(agentDir);
-	const allPaths: string[] = [];
+	const resources: ResolvedResource[] = [];
 	const seen = new Set<string>();
 
-	const addPaths = (paths: string[]) => {
-		for (const p of paths) {
-			const resolved = path.resolve(p);
-			if (!seen.has(resolved)) {
-				seen.add(resolved);
-				allPaths.push(p);
-			}
+	const addPaths = (paths: string[], metadata: PathMetadata) => {
+		for (const resourcePath of paths) {
+			const resolved = path.resolve(resourcePath);
+			if (seen.has(resolved)) continue;
+			seen.add(resolved);
+			resources.push({ path: resourcePath, enabled: true, metadata });
 		}
 	};
 
-	// 1. Project-local extensions: cwd/${CONFIG_DIR_NAME}/extensions/
-	const localExtDir = path.join(resolvedCwd, CONFIG_DIR_NAME, "extensions");
-	addPaths(collectAutoExtensionEntries(localExtDir));
+	const projectDir = path.join(resolvedCwd, CONFIG_DIR_NAME, "extensions");
+	addPaths(collectAutoExtensionEntries(projectDir), {
+		source: "auto",
+		scope: "project",
+		origin: "top-level",
+		baseDir: projectDir,
+	});
 
-	// 2. Global extensions: agentDir/extensions/
-	const globalExtDir = path.join(resolvedAgentDir, "extensions");
-	addPaths(collectAutoExtensionEntries(globalExtDir));
+	const userDir = path.join(resolvedAgentDir, "extensions");
+	addPaths(collectAutoExtensionEntries(userDir), {
+		source: "auto",
+		scope: "user",
+		origin: "top-level",
+		baseDir: userDir,
+	});
 
-	// 3. Explicitly configured paths
-	for (const p of configuredPaths) {
-		const resolved = resolvePath(p, resolvedCwd, { normalizeUnicodeSpaces: true });
-		if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
-			addPaths(collectAutoExtensionEntries(resolved));
-			continue;
-		}
-
-		addPaths([resolved]);
+	for (const configuredPath of configuredPaths) {
+		const resolved = resolvePath(configuredPath, resolvedCwd, { normalizeUnicodeSpaces: true });
+		const baseDir =
+			fs.existsSync(resolved) && fs.statSync(resolved).isDirectory() ? resolved : path.dirname(resolved);
+		const paths = baseDir === resolved ? collectAutoExtensionEntries(resolved) : [resolved];
+		addPaths(paths, { source: "local", scope: "project", origin: "top-level", baseDir });
 	}
 
-	return loadExtensions(allPaths, resolvedCwd, eventBus);
+	return loadExtensions(resources, resolvedCwd, eventBus);
 }

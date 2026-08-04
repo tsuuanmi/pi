@@ -1,4 +1,4 @@
-import type { SessionBeforeTreeResult, TreePreparation } from "#pi/package-manager/extensions/index";
+import type { SessionBeforeTreeResult, TreePreparation } from "#pi/extensions/index";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
 import { collectEntriesForBranchSummary, generateBranchSummary } from "#pi/session/compaction";
 import type { BranchSummaryEntry } from "#pi/session/manager";

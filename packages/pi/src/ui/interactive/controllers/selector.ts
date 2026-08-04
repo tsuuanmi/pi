@@ -9,8 +9,8 @@ import {
 	type TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
+import type { ExtensionCommandContext } from "#pi/extensions/index";
 import { configureHttpDispatcher, formatHttpIdleTimeoutMs } from "#pi/network/http-dispatcher";
-import type { ExtensionCommandContext } from "#pi/package-manager/extensions/index";
 import type { AgentSession } from "#pi/runtime/agent-session";
 import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 import { MissingSessionCwdError } from "#pi/session/cwd";

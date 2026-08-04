@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { loadAgentDefinitions } from "#pi/agent/definitions";
+import type { ResolvedResource } from "#pi/resources/types";
 
 function agentMd(name: string, description = `${name} description`, body = `${name} body`): string {
 	return `---
@@ -10,6 +11,14 @@ name: ${name}
 description: ${description}
 ---
 ${body}`;
+}
+
+function resource(path: string): ResolvedResource {
+	return {
+		path,
+		enabled: true,
+		metadata: { source: "test", scope: "temporary", origin: "package" },
+	};
 }
 
 describe("agent definitions", () => {
@@ -48,7 +57,10 @@ describe("agent definitions", () => {
 		const result = loadAgentDefinitions({
 			cwd,
 			agentDir,
-			packageAgentPaths: [join(packageAgents, "planner.md"), join(packageAgents, "worker.md")],
+			packageAgentResources: [
+				resource(join(packageAgents, "planner.md")),
+				resource(join(packageAgents, "worker.md")),
+			],
 		});
 		const names = result.profiles.map((profile) => profile.name);
 
@@ -70,7 +82,7 @@ describe("agent definitions", () => {
 		const packageAgent = join(tempDir, "package-worker.md");
 		writeFileSync(packageAgent, agentMd("worker", "package worker", "package worker body"));
 
-		const result = loadAgentDefinitions({ cwd, agentDir, packageAgentPaths: [packageAgent] });
+		const result = loadAgentDefinitions({ cwd, agentDir, packageAgentResources: [resource(packageAgent)] });
 		const worker = result.profiles.find((profile) => profile.name === "worker");
 
 		expect(worker?.description).toBe("project worker");

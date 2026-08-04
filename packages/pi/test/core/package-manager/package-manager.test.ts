@@ -4,7 +4,10 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { PassThrough } from "node:stream";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DefaultPackageManager, type ProgressEvent, type ResolvedResource } from "#pi/package-manager/package-manager";
+import { resolveResources } from "#pi/loader/discovery";
+import { DefaultPackageManager } from "#pi/package-manager/package-manager";
+import type { ProgressEvent } from "#pi/package-manager/types";
+import type { ResolvedResource } from "#pi/resources/types";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
 function normalizeForMatch(value: string): string {
@@ -68,6 +71,13 @@ describe("DefaultPackageManager", () => {
 	let packageManager: DefaultPackageManager;
 	let previousOfflineEnv: string | undefined;
 
+	const resolveAll = (
+		manager: DefaultPackageManager = packageManager,
+		cwd = tempDir,
+		baseDir = agentDir,
+		managerSettings = settingsManager,
+	) => resolveResources(manager, { cwd, agentDir: baseDir, settingsManager: managerSettings });
+
 	beforeEach(() => {
 		previousOfflineEnv = process.env.PI_OFFLINE;
 		delete process.env.PI_OFFLINE;
@@ -97,7 +107,7 @@ describe("DefaultPackageManager", () => {
 
 	describe("resolve", () => {
 		it("should include bundled first-party package defaults when no sources configured", async () => {
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.agents.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
 			expect(result.commands.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
 			expect(result.prompts).toEqual([]);
@@ -107,6 +117,16 @@ describe("DefaultPackageManager", () => {
 			);
 		});
 
+		it("should resolve packages without top-level resources", async () => {
+			const extPath = join(agentDir, "extensions", "top-level.ts");
+			mkdirSync(join(agentDir, "extensions"), { recursive: true });
+			writeFileSync(extPath, "export default function() {}\n");
+			settingsManager.setExtensionPaths(["extensions/top-level.ts"]);
+
+			const result = await packageManager.resolve();
+			expect(result.extensions.some((resource) => resource.path === extPath)).toBe(false);
+		});
+
 		it("should resolve local extension paths from settings", async () => {
 			const extDir = join(agentDir, "extensions");
 			mkdirSync(extDir, { recursive: true });
@@ -114,7 +134,7 @@ describe("DefaultPackageManager", () => {
 			writeFileSync(extPath, "export default function() {}");
 			settingsManager.setExtensionPaths(["extensions/my-extension.ts"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => r.path === extPath && r.enabled)).toBe(true);
 		});
 
@@ -133,7 +153,7 @@ Content`,
 
 			settingsManager.setSkillPaths(["skills"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			// Skills with SKILL.md are returned as file paths
 			expect(result.skills.some((r) => r.path === skillFile && r.enabled)).toBe(true);
 		});
@@ -150,7 +170,7 @@ description: A root markdown skill
 Content`,
 			);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.skills.some((r) => r.path === skillFile && r.enabled)).toBe(true);
 		});
 
@@ -162,7 +182,7 @@ Content`,
 
 			settingsManager.setProjectExtensionPaths(["extensions/project-ext.ts"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => r.path === extPath && r.enabled)).toBe(true);
 		});
 
@@ -174,7 +194,7 @@ Content`,
 
 			settingsManager.setPromptTemplatePaths(["!prompts/auto.md"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.prompts.some((r) => r.path === promptPath && !r.enabled)).toBe(true);
 		});
 
@@ -217,7 +237,7 @@ Content`,
 				symlinkSync(sharedPromptsDir, join(tempDir, ".pi", "prompts"), "dir");
 				symlinkSync(sharedThemesDir, join(tempDir, ".pi", "themes"), "dir");
 
-				const result = await packageManager.resolve();
+				const result = await resolveAll();
 				const autoExtensions = result.extensions.filter((r) => r.metadata.source === "auto");
 				const autoSkills = result.skills.filter((r) => r.metadata.source === "auto");
 
@@ -256,7 +276,7 @@ Content`,
 
 			settingsManager.setProjectPromptTemplatePaths(["!prompts/is.md"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.prompts.some((r) => r.path === promptPath && !r.enabled)).toBe(true);
 		});
 
@@ -280,7 +300,7 @@ Content`,
 			// Add the directory to extensions setting (not packages setting)
 			settingsManager.setExtensionPaths([pkgDir]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 
 			// Should find the extensions declared in package.json pi.extensions
 			expect(result.extensions.some((r) => r.path === join(pkgDir, "extensions", "clip.ts") && r.enabled)).toBe(
@@ -301,7 +321,7 @@ Content`,
 			mkdirSync(join(agentDir, "skills", "user-pi"), { recursive: true });
 			writeFileSync(skillPath, "---\nname: user-pi\ndescription: user pi\n---\n");
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			const skill = result.skills.find((r) => r.path === skillPath);
 
 			expect(skill?.metadata.source).toBe("auto");
@@ -315,7 +335,7 @@ Content`,
 			mkdirSync(join(projectBaseDir, "skills", "project-pi"), { recursive: true });
 			writeFileSync(skillPath, "---\nname: project-pi\ndescription: project pi\n---\n");
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			const skill = result.skills.find((r) => r.path === skillPath);
 
 			expect(skill?.metadata.source).toBe("auto");
@@ -333,7 +353,7 @@ Content`,
 				mkdirSync(join(agentsBaseDir, "skills", "user-agents"), { recursive: true });
 				writeFileSync(skillPath, "---\nname: user-agents\ndescription: user agents\n---\n");
 
-				const result = await packageManager.resolve();
+				const result = await resolveAll();
 				const skill = result.skills.find((r) => r.path === skillPath);
 
 				expect(skill?.metadata.source).toBe("auto");
@@ -370,7 +390,7 @@ Content`,
 				settingsManager,
 			});
 
-			const result = await pm.resolve();
+			const result = await resolveAll(pm, nestedCwd, agentDir);
 			const resolvedRepoSkill = result.skills.find((r) => r.path === repoSkill);
 			const resolvedPackageSkill = result.skills.find((r) => r.path === packageSkill);
 
@@ -408,7 +428,7 @@ Content`,
 				settingsManager,
 			});
 
-			const result = await pm.resolve();
+			const result = await resolveAll(pm, nestedCwd, agentDir);
 			expect(result.skills.some((r) => r.path === repoRootSkill && r.enabled)).toBe(true);
 			expect(result.skills.some((r) => r.path === nestedSkill && r.enabled)).toBe(true);
 			expect(result.skills.some((r) => r.path === aboveRepoSkill)).toBe(false);
@@ -433,7 +453,7 @@ Content`,
 				settingsManager,
 			});
 
-			const result = await pm.resolve();
+			const result = await resolveAll(pm, nestedCwd, agentDir);
 			expect(result.skills.some((r) => r.path === rootSkill && r.enabled)).toBe(true);
 			expect(result.skills.some((r) => r.path === middleSkill && r.enabled)).toBe(true);
 		});
@@ -453,7 +473,7 @@ Content`,
 			});
 			mkdirSync(join(tempDir, "work"), { recursive: true });
 
-			const result = await pm.resolve();
+			const result = await resolveAll(pm, join(tempDir, "work"), agentDir);
 			expect(result.skills.some((r) => r.path === rootSkill)).toBe(false);
 			expect(result.skills.some((r) => r.path === nestedSkill && r.enabled)).toBe(true);
 		});
@@ -479,7 +499,7 @@ Content`,
 					settingsManager: localSettingsManager,
 				});
 
-				const result = await pm.resolve();
+				const result = await resolveAll(pm, cwd, localAgentDir, localSettingsManager);
 				const matchingSkills = result.skills.filter((r) => r.path === homeSkill);
 				expect(matchingSkills).toHaveLength(1);
 				expect(matchingSkills[0]?.enabled).toBe(true);
@@ -508,7 +528,7 @@ Content`,
 				mkdirSync(join(agentsSkillsDir, "foo"), { recursive: true });
 				writeFileSync(skillPath, "---\nname: foo\ndescription: foo\n---\n");
 
-				const result = await packageManager.resolve();
+				const result = await resolveAll();
 				const fooSkills = result.skills.filter((r) => pathEndsWith(r.path, "foo/SKILL.md"));
 
 				expect(fooSkills).toHaveLength(1);
@@ -538,7 +558,7 @@ Content`,
 
 			settingsManager.setSkillPaths(["skills"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.skills.some((r) => r.path.includes("good-skill") && r.enabled)).toBe(true);
 			expect(result.skills.some((r) => r.path.includes("venv") && r.enabled)).toBe(false);
 		});
@@ -551,18 +571,18 @@ Content`,
 			const skillPath = join(skillDir, "SKILL.md");
 			writeFileSync(skillPath, "---\nname: auto-skill\ndescription: Auto\n---\nContent");
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.skills.some((r) => r.path === skillPath && r.enabled)).toBe(true);
 		});
 	});
 
-	describe("resolveExtensionSources", () => {
-		it("should resolve local paths", async () => {
+	describe("resolveSources", () => {
+		it("should ignore direct local files", async () => {
 			const extPath = join(tempDir, "ext.ts");
 			writeFileSync(extPath, "export default function() {}");
 
-			const result = await packageManager.resolveExtensionSources([extPath]);
-			expect(result.extensions.some((r) => r.path === extPath && r.enabled)).toBe(true);
+			const result = await packageManager.resolveSources([extPath]);
+			expect(result.extensions.some((r) => r.path === extPath)).toBe(false);
 		});
 
 		it("should handle directories with pi manifest", async () => {
@@ -586,7 +606,7 @@ Content`,
 				"---\nname: my-skill\ndescription: Test\n---\nContent",
 			);
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 			expect(result.extensions.some((r) => r.path === join(pkgDir, "src", "index.ts") && r.enabled)).toBe(true);
 			// Skills with SKILL.md are returned as file paths
 			expect(result.skills.some((r) => r.path === join(pkgDir, "skills", "my-skill", "SKILL.md") && r.enabled)).toBe(
@@ -620,7 +640,7 @@ Content`,
 				}),
 			);
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 
 			expect(result.extensions.some((r) => r.path === directExtensionPath && r.enabled)).toBe(true);
 			expect(result.extensions.some((r) => r.path === slashExtensionPath && r.enabled)).toBe(true);
@@ -635,7 +655,7 @@ Content`,
 			writeFileSync(join(pkgDir, "extensions", "main.ts"), "export default function() {}");
 			writeFileSync(join(pkgDir, "themes", "dark.json"), "{}");
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 			expect(result.extensions.some((r) => pathEndsWith(r.path, "main.ts") && r.enabled)).toBe(true);
 			expect(result.themes.some((r) => pathEndsWith(r.path, "dark.json") && r.enabled)).toBe(true);
 		});
@@ -648,7 +668,7 @@ Content`,
 			writeFileSync(rootSkill, "---\nname: root-skill\ndescription: Root skill\n---\n");
 			writeFileSync(nestedSkill, "---\nname: nested-skill\ndescription: Nested skill\n---\n");
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 			expect(result.skills.some((r) => r.path === rootSkill && r.enabled)).toBe(true);
 			expect(result.skills.some((r) => r.path === nestedSkill)).toBe(false);
 		});
@@ -663,7 +683,7 @@ Content`,
 			writeFileSync(extPath, "export default function() {}");
 
 			// Local paths don't trigger install progress, but we can verify the callback is set
-			await packageManager.resolveExtensionSources([extPath]);
+			await packageManager.resolveSources([extPath]);
 
 			// For now just verify no errors - npm/git would trigger actual events
 			expect(events.length).toBe(0);
@@ -912,8 +932,8 @@ Content`,
 					writeFileSync(join(packagePath, "extensions", "index.ts"), "export default function() {};");
 				});
 
-			const first = await packageManager.resolve();
-			const second = await packageManager.resolve();
+			const first = await resolveAll();
+			const second = await resolveAll();
 
 			expect(first.extensions.some((r) => r.path === join(packagePath, "extensions", "index.ts") && r.enabled)).toBe(
 				true,
@@ -1243,7 +1263,7 @@ Content`,
 
 			settingsManager.setExtensionPaths(["extensions", "!**/remove.ts"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => isEnabled(r, "keep.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isDisabled(r, "remove.ts"))).toBe(true);
 		});
@@ -1257,7 +1277,7 @@ Content`,
 
 			settingsManager.setThemePaths(["themes", "!funky.json"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.themes.some((r) => isEnabled(r, "dark.json"))).toBe(true);
 			expect(result.themes.some((r) => isEnabled(r, "light.json"))).toBe(true);
 			expect(result.themes.some((r) => isDisabled(r, "funky.json"))).toBe(true);
@@ -1271,7 +1291,7 @@ Content`,
 
 			settingsManager.setPromptTemplatePaths(["prompts", "!explain.md"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.prompts.some((r) => isEnabled(r, "review.md"))).toBe(true);
 			expect(result.prompts.some((r) => isDisabled(r, "explain.md"))).toBe(true);
 		});
@@ -1291,12 +1311,12 @@ Content`,
 
 			settingsManager.setSkillPaths(["skills", "!**/bad-skill"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.skills.some((r) => isEnabled(r, "good-skill", "includes"))).toBe(true);
 			expect(result.skills.some((r) => isDisabled(r, "bad-skill", "includes"))).toBe(true);
 		});
 
-		it("should work without patterns (backward compatible)", async () => {
+		it("should work without patterns", async () => {
 			const extDir = join(agentDir, "extensions");
 			mkdirSync(extDir, { recursive: true });
 			const extPath = join(extDir, "my-ext.ts");
@@ -1304,7 +1324,7 @@ Content`,
 
 			settingsManager.setExtensionPaths(["extensions/my-ext.ts"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => r.path === extPath && r.enabled)).toBe(true);
 		});
 	});
@@ -1327,7 +1347,7 @@ Content`,
 				}),
 			);
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 			expect(result.extensions.some((r) => isEnabled(r, "local.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isEnabled(r, "remote.ts"))).toBe(true);
 			expect(result.extensions.some((r) => pathEndsWith(r.path, "skip.ts"))).toBe(false);
@@ -1355,7 +1375,7 @@ Content`,
 				}),
 			);
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 			expect(result.skills.some((r) => isEnabled(r, "good-skill", "includes"))).toBe(true);
 			expect(result.skills.some((r) => r.path.includes("bad-skill"))).toBe(false);
 		});
@@ -1382,7 +1402,7 @@ Content`,
 				}),
 			);
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 			expect(result.skills.some((r) => isEnabled(r, "pdf-to-markdown", "includes"))).toBe(true);
 			expect(result.skills.some((r) => isEnabled(r, "document-processor-api", "includes"))).toBe(true);
 		});
@@ -1418,7 +1438,7 @@ Content`,
 				},
 			]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			// foo.ts should be included (not excluded by anyone)
 			expect(result.extensions.some((r) => isEnabled(r, "foo.ts"))).toBe(true);
 			// bar.ts should be excluded (by user)
@@ -1444,7 +1464,7 @@ Content`,
 				},
 			]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => isEnabled(r, "foo.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isEnabled(r, "bar.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isDisabled(r, "baz.ts"))).toBe(true);
@@ -1466,7 +1486,7 @@ Content`,
 				},
 			]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.themes.some((r) => isEnabled(r, "nice.json"))).toBe(true);
 			expect(result.themes.some((r) => isDisabled(r, "ugly.json"))).toBe(true);
 		});
@@ -1488,7 +1508,7 @@ Content`,
 				},
 			]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => isEnabled(r, "alpha.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isDisabled(r, "beta.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isDisabled(r, "gamma.ts"))).toBe(true);
@@ -1510,7 +1530,7 @@ Content`,
 				},
 			]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => isEnabled(r, "one.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isDisabled(r, "two.ts"))).toBe(true);
 		});
@@ -1527,7 +1547,7 @@ Content`,
 			// Exclude all, then force-include one back
 			settingsManager.setExtensionPaths(["extensions", "!extensions/*.ts", "+extensions/force-back.ts"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => isDisabled(r, "keep.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isDisabled(r, "excluded.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isEnabled(r, "force-back.ts"))).toBe(true);
@@ -1550,7 +1570,7 @@ Content`,
 				},
 			]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => isDisabled(r, "alpha.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isEnabled(r, "beta.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isDisabled(r, "gamma.ts"))).toBe(true);
@@ -1575,7 +1595,7 @@ Content`,
 				},
 			]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.skills.some((r) => isEnabled(r, "skill-a", "includes"))).toBe(true);
 			expect(result.skills.some((r) => isDisabled(r, "skill-b", "includes"))).toBe(true);
 			expect(result.skills.some((r) => isEnabled(r, "skill-c", "includes"))).toBe(true);
@@ -1590,7 +1610,7 @@ Content`,
 			// Specifically exclude b.ts, then force it back
 			settingsManager.setExtensionPaths(["extensions", "!extensions/b.ts", "+extensions/b.ts"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => isEnabled(r, "a.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isEnabled(r, "b.ts"))).toBe(true);
 		});
@@ -1611,7 +1631,7 @@ Content`,
 				}),
 			);
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 			expect(result.extensions.some((r) => isEnabled(r, "one.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isEnabled(r, "two.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isEnabled(r, "three.ts"))).toBe(true);
@@ -1626,7 +1646,7 @@ Content`,
 
 			settingsManager.setThemePaths(["themes", "!themes/*.json", "+themes/special.json"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.themes.some((r) => isDisabled(r, "dark.json"))).toBe(true);
 			expect(result.themes.some((r) => isDisabled(r, "light.json"))).toBe(true);
 			expect(result.themes.some((r) => isEnabled(r, "special.json"))).toBe(true);
@@ -1641,7 +1661,7 @@ Content`,
 
 			settingsManager.setPromptTemplatePaths(["prompts", "!prompts/*.md", "+prompts/debug.md"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.prompts.some((r) => isDisabled(r, "review.md"))).toBe(true);
 			expect(result.prompts.some((r) => isDisabled(r, "explain.md"))).toBe(true);
 			expect(result.prompts.some((r) => isEnabled(r, "debug.md"))).toBe(true);
@@ -1657,7 +1677,7 @@ Content`,
 
 			settingsManager.setExtensionPaths(["extensions", "+extensions/alpha.ts", "-extensions/alpha.ts"]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => isDisabled(r, "alpha.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isEnabled(r, "beta.ts"))).toBe(true);
 		});
@@ -1678,7 +1698,7 @@ Content`,
 				},
 			]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => isDisabled(r, "alpha.ts"))).toBe(true);
 			expect(result.extensions.some((r) => isEnabled(r, "beta.ts"))).toBe(true);
 		});
@@ -1700,7 +1720,7 @@ Content`,
 			expect(globalSettings.packages).toEqual([pkgDir]);
 			expect(projectSettings.packages).toEqual([pkgDir]);
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			// Should only appear once (deduped), with project scope
 			const sharedPaths = result.extensions.filter((r) => r.path.includes("shared-pkg"));
 			expect(sharedPaths.length).toBe(1);
@@ -1718,7 +1738,7 @@ Content`,
 			settingsManager.setPackages([pkg1Dir]); // global
 			settingsManager.setProjectPackages([pkg2Dir]); // project
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => r.path.includes("pkg1"))).toBe(true);
 			expect(result.extensions.some((r) => r.path.includes("pkg2"))).toBe(true);
 		});
@@ -1817,7 +1837,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 			// Top-level extension file (should be loaded)
 			writeFileSync(join(pkgDir, "extensions", "standalone.ts"), "export default function(api) {}");
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 
 			// Should find the index.ts and standalone.ts
 			expect(result.extensions.some((r) => pathEndsWith(r.path, "subagent/index.ts") && r.enabled)).toBe(true);
@@ -1843,7 +1863,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 			writeFileSync(join(pkgDir, "extensions", "custom", "main.ts"), "export default function(api) {}");
 			writeFileSync(join(pkgDir, "extensions", "custom", "utils.ts"), "export const util = 1;");
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 
 			// Should find main.ts declared in manifest
 			expect(result.extensions.some((r) => pathEndsWith(r.path, "custom/main.ts") && r.enabled)).toBe(true);
@@ -1867,7 +1887,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 			writeFileSync(join(pkgDir, "extensions", "complex", "a.ts"), "export const a = 1;");
 			writeFileSync(join(pkgDir, "extensions", "complex", "b.ts"), "export const b = 2;");
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 
 			// Should find simple.ts and complex/index.ts
 			expect(result.extensions.some((r) => pathEndsWith(r.path, "simple.ts") && r.enabled)).toBe(true);
@@ -1892,7 +1912,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 			// Valid top-level extension
 			writeFileSync(join(pkgDir, "extensions", "valid.ts"), "export default function(api) {}");
 
-			const result = await packageManager.resolveExtensionSources([pkgDir]);
+			const result = await packageManager.resolveSources([pkgDir]);
 
 			// Should only find the valid top-level extension
 			expect(result.extensions.some((r) => pathEndsWith(r.path, "valid.ts") && r.enabled)).toBe(true);
@@ -2090,7 +2110,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 
 			const installParsedSourceSpy = vi.spyOn(packageManager as any, "installParsedSource");
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			const allResources = [...result.extensions, ...result.skills, ...result.prompts, ...result.themes];
 			expect(allResources.some((r) => r.metadata.source === "npm:missing-package")).toBe(false);
 			expect(installParsedSourceSpy).not.toHaveBeenCalled();
@@ -2107,7 +2127,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 
 			const refreshTemporaryGitSourceSpy = vi.spyOn(packageManager as any, "refreshTemporaryGitSource");
 
-			const result = await packageManager.resolveExtensionSources([gitSource], { temporary: true });
+			const result = await packageManager.resolveSources([gitSource], { temporary: true });
 			expect(result.extensions.some((r) => pathEndsWith(r.path, "extensions/index.ts") && r.enabled)).toBe(true);
 			expect(refreshTemporaryGitSourceSpy).not.toHaveBeenCalled();
 		});
@@ -2122,7 +2142,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 
 			const runCommandCaptureSpy = vi.spyOn((packageManager as any).commandRunner, "capture");
 
-			const result = await packageManager.resolve();
+			const result = await resolveAll();
 			expect(result.extensions.some((r) => pathEndsWith(r.path, "extensions/index.ts") && r.enabled)).toBe(true);
 			expect(runCommandCaptureSpy).not.toHaveBeenCalled();
 		});
@@ -2137,7 +2157,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 				.spyOn(packageManager as any, "installParsedSource")
 				.mockResolvedValue(undefined);
 
-			await packageManager.resolve();
+			await resolveAll();
 			expect(installParsedSourceSpy).toHaveBeenCalledTimes(1);
 		});
 
