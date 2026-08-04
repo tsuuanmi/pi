@@ -1,6 +1,6 @@
 import { modelsAreEqual, type ScopedModel } from "@tsuuanmi/pi-ai";
 import type { ExtensionFactory } from "#pi/api/extension-types";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { AuthStorage } from "#pi/auth/storage";
 import type { Args } from "#pi/cli/args";
 import { resolveCliModel, resolveModelScope } from "#pi/cli/model-resolver";
 import type { ModelRegistry } from "#pi/loader/model-registry";

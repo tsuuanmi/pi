@@ -3,8 +3,8 @@ import { Agent, convertToLlm, type LoopDetectionOptions } from "@tsuuanmi/pi-age
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { clampThinkingLevel, type Model, mergeHeaderSources, type ProviderResponse, stream } from "@tsuuanmi/pi-ai";
-import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { formatNoModelsAvailableMessage } from "#pi/auth/guidance";
+import { AuthStorage } from "#pi/auth/storage";
 import { findInitialModel } from "#pi/cli/model-resolver";
 import { DEFAULT_THINKING_LEVEL } from "#pi/cli/thinking-level";
 import { ModelRegistry } from "#pi/loader/model-registry";

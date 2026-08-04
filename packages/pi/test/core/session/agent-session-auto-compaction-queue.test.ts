@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { type AssistantMessage, getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { AuthStorage } from "#pi/auth/storage";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";

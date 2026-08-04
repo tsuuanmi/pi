@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
+import { formatNoModelsAvailableMessage } from "#pi/auth/guidance";
 import type { Args, Mode } from "#pi/cli/args";
 import { InteractiveMode, runPrintMode, runRpcMode } from "#pi/modes/index";
 import { restoreStdout } from "#pi/modes/output-guard";

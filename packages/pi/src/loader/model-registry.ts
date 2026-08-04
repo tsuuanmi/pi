@@ -24,7 +24,7 @@ import {
 	validateModelsConfig,
 } from "@tsuuanmi/pi-ai";
 import { type OAuthProviderInterface, registerOAuthProvider, resetOAuthProviders } from "@tsuuanmi/pi-ai/oauth";
-import type { AuthStatus, AuthStorage } from "#pi/auth/auth-storage";
+import type { AuthStatus, AuthStorage } from "#pi/auth/storage";
 import {
 	clearConfigValueCache,
 	getConfigValueEnvVarNames,

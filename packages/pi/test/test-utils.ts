@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { getModel } from "@tsuuanmi/pi-ai";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { AuthStorage } from "#pi/auth/storage";
 import { createCodingTools } from "#pi/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceLoader } from "#pi/loader/resources";

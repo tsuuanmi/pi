@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { AuthStorage } from "#pi/auth/storage";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { discoverAndLoadExtensions } from "#pi/package-manager/extensions/loader";
 import { ExtensionRunner } from "#pi/package-manager/extensions/runner";

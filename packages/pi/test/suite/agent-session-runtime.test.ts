@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, parse } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { AuthStorage } from "#pi/auth/storage";
 import type {
 	ExtensionAPI,
 	ExtensionFactory,

@@ -24,7 +24,7 @@ export {
 	FileAuthStorageBackend,
 	InMemoryAuthStorageBackend,
 	type OAuthCredential,
-} from "#pi/auth/auth-storage";
+} from "#pi/auth/storage";
 export { type Args, parseArgs } from "#pi/cli/args";
 // Shell utilities
 export { getShellConfig } from "#pi/execution/shell-config";

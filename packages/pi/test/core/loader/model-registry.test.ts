@@ -5,7 +5,7 @@ import type { AnthropicMessagesCompat, Api, Context, Model, OpenAICompletionsCom
 import { getProvider } from "@tsuuanmi/pi-ai";
 import { getOAuthProvider } from "@tsuuanmi/pi-ai/oauth";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { AuthStorage } from "#pi/auth/storage";
 import { clearApiKeyCache, ModelRegistry, type ProviderConfigInput } from "#pi/loader/model-registry";
 import type { ModelsSettings } from "#pi/settings/settings-manager";
 

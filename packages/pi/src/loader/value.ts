@@ -1,6 +1,6 @@
 /**
  * Resolve configuration values that may be shell commands, environment variables, or literals.
- * Used by auth-storage.ts and model-registry.ts.
+ * Used by storage.ts and model-registry.ts.
  */
 
 import { execSync } from "child_process";

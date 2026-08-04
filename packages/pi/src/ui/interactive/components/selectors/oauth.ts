@@ -7,7 +7,7 @@ import {
 	Spacer,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import type { AuthStatus, AuthStorage } from "#pi/auth/auth-storage";
+import type { AuthStatus, AuthStorage } from "#pi/auth/storage";
 
 export type AuthSelectorProvider = {
 	id: string;

@@ -80,7 +80,7 @@ export interface AuthStorageBackend {
 }
 
 export class FileAuthStorageBackend implements AuthStorageBackend {
-	private authPath: string;
+	private readonly authPath: string;
 
 	constructor(authPath: string = join(getAgentDir(), "auth.json")) {
 		this.authPath = normalizePath(authPath);
@@ -228,7 +228,7 @@ export class AuthStorage {
 	private fallbackResolver?: (provider: string) => string | undefined;
 	private loadError: Error | null = null;
 	private errors: Error[] = [];
-	private storage: AuthStorageBackend;
+	private readonly storage: AuthStorageBackend;
 
 	private constructor(storage: AuthStorageBackend) {
 		this.storage = storage;
@@ -236,7 +236,7 @@ export class AuthStorage {
 	}
 
 	static create(authPath?: string): AuthStorage {
-		return new AuthStorage(new FileAuthStorageBackend(authPath ?? join(getAgentDir(), "auth.json")));
+		return new AuthStorage(new FileAuthStorageBackend(authPath));
 	}
 
 	static fromStorage(storage: AuthStorageBackend): AuthStorage {
@@ -298,8 +298,10 @@ export class AuthStorage {
 		accountName: string | undefined,
 	): AuthCredential | undefined {
 		if (isAuthCredential(entry)) return accountName === undefined || accountName === "default" ? entry : undefined;
+		if (!isAuthAccountCollection(entry)) return undefined;
+
 		const resolvedAccount = accountName ?? this.getActiveAccountName(entry);
-		return resolvedAccount ? entry?.accounts[resolvedAccount] : undefined;
+		return resolvedAccount ? entry.accounts[resolvedAccount] : undefined;
 	}
 
 	private setCredentialInEntry(
@@ -318,11 +320,15 @@ export class AuthStorage {
 			return credential;
 		}
 
-		const accounts: Record<string, AuthCredential> = isAuthAccountCollection(entry)
-			? { ...entry.accounts }
-			: isAuthCredential(entry)
-				? { default: entry }
-				: {};
+		let accounts: Record<string, AuthCredential>;
+		if (isAuthAccountCollection(entry)) {
+			accounts = { ...entry.accounts };
+		} else if (isAuthCredential(entry)) {
+			accounts = { default: entry };
+		} else {
+			accounts = {};
+		}
+
 		accounts[accountName] = credential;
 		return { active: accountName, accounts };
 	}

@@ -8,7 +8,7 @@ import { join } from "node:path";
 import type { AgentMessage, AgentTool } from "@tsuuanmi/pi-agent";
 import { Agent, convertToLlm } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { AuthStorage } from "#pi/auth/storage";
 import type { ExtensionFactory, ResourceLoader } from "#pi/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import type { ExtensionRunner } from "#pi/package-manager/extensions/index";

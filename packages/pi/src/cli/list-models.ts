@@ -5,7 +5,7 @@
 import type { Api, Model } from "@tsuuanmi/pi-ai";
 import { fuzzyFilter } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
-import { formatNoModelsAvailableMessage } from "#pi/auth/auth-guidance";
+import { formatNoModelsAvailableMessage } from "#pi/auth/guidance";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 
 /**

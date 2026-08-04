@@ -31,7 +31,7 @@ import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/agent/syst
 import { ApiUsageLogger } from "#pi/api/api-usage-logger";
 import { apiUsageLogPath } from "#pi/api/api-usage-utils";
 import type { SlashCommandInfo } from "#pi/api/extension-types";
-import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/auth-guidance";
+import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/guidance";
 import { type BashResult, executeBashWithOperations } from "#pi/execution/bash-executor";
 import type { BashOperations } from "#pi/execution/bash-operations";
 import { createLocalBashOperations } from "#pi/execution/local-shell";

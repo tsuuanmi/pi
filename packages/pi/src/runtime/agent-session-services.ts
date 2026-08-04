@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { AuthStorage } from "#pi/auth/storage";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { getAgentDir } from "#pi/loader/paths";
 import {

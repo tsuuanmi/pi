@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { AuthStorage } from "#pi/auth/storage";
 import { ENV_AGENT_DIR } from "#pi/loader/config";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { runMigrations } from "#pi/migrations";

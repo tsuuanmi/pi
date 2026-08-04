@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { AuthStorage } from "#pi/auth/storage";
 import { DefaultResourceLoader } from "#pi/loader/resources";
 import type { ExtensionFactory } from "#pi/runtime/agent-session-factory";
 import { createAgentSession } from "#pi/runtime/agent-session-factory";

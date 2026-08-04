@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ExtensionActions, ExtensionContextActions } from "#pi/api/extension-types";
 import type { ProviderConfig } from "#pi/api/provider-types";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
-import { AuthStorage } from "#pi/auth/auth-storage";
+import { AuthStorage } from "#pi/auth/storage";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { createExtensionRuntime, discoverAndLoadExtensions } from "#pi/package-manager/extensions/loader";
 import { ExtensionRunner } from "#pi/package-manager/extensions/runner";
