@@ -1,11 +1,36 @@
-import type {
-	SubagentRecord,
-	SubagentRunIdentity,
-	SubagentStatus,
-	SubagentTmuxPaneTarget,
-	SubagentTmuxSessionTarget,
-	SubagentTmuxTarget,
-} from "#agent/subagents/types";
+import type { SubagentRecord, SubagentStatus } from "@tsuuanmi/pi-agent";
+import type { TmuxTarget } from "#pi/subagents/tmux";
+
+export interface RunIdentityOwner {
+	kind: "pi-subagent-worker";
+	parent_session_id: string;
+	storage_session_id: string;
+	storage_root: string;
+	execution_cwd: string;
+}
+
+export interface RunIdentity {
+	version: 1;
+	subagent_id: string;
+	parent_session_id: string;
+	storage_session_id: string;
+	storage_root: string;
+	execution_cwd: string;
+	request_path: string;
+	record_path: string;
+	artifact_path: string;
+	worker_metadata_path: string;
+	lifecycle_state: SubagentStatus;
+	cleanup_eligible: boolean;
+	owner: RunIdentityOwner;
+	tmux: {
+		backend: "tmux";
+		session_name: string;
+		target: TmuxTarget;
+		request_path: string;
+		worker_metadata_path: string;
+	};
+}
 
 function isObject(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -26,7 +51,7 @@ function isStatus(value: unknown): value is SubagentStatus {
 	);
 }
 
-function isTargetPane(value: unknown): value is SubagentTmuxPaneTarget {
+function isPane(value: unknown): value is Extract<TmuxTarget, { kind: "pane" }> {
 	if (!isObject(value)) return false;
 	return (
 		value.kind === "pane" &&
@@ -42,18 +67,18 @@ function isTargetPane(value: unknown): value is SubagentTmuxPaneTarget {
 	);
 }
 
-function isTargetSession(value: unknown): value is SubagentTmuxSessionTarget {
+function isSession(value: unknown): value is Extract<TmuxTarget, { kind: "session" }> {
 	if (!isObject(value)) return false;
 	return (
 		value.kind === "session" && isString(value.session_name) && isString(value.session_id) && isString(value.target)
 	);
 }
 
-function isTmuxTarget(value: unknown): value is SubagentTmuxTarget {
-	return isTargetPane(value) || isTargetSession(value);
+function isTarget(value: unknown): value is TmuxTarget {
+	return isPane(value) || isSession(value);
 }
 
-function isIdentityOwner(value: unknown): boolean {
+function isOwner(value: unknown): value is RunIdentityOwner {
 	if (!isObject(value)) return false;
 	return (
 		value.kind === "pi-subagent-worker" &&
@@ -64,7 +89,7 @@ function isIdentityOwner(value: unknown): boolean {
 	);
 }
 
-export function isSubagentRunIdentity(value: unknown): value is SubagentRunIdentity {
+export function isRunIdentity(value: unknown): value is RunIdentity {
 	if (!isObject(value)) return false;
 	return (
 		value.version === 1 &&
@@ -79,17 +104,17 @@ export function isSubagentRunIdentity(value: unknown): value is SubagentRunIdent
 		isString(value.worker_metadata_path) &&
 		isStatus(value.lifecycle_state) &&
 		typeof value.cleanup_eligible === "boolean" &&
-		isIdentityOwner(value.owner) &&
+		isOwner(value.owner) &&
 		isObject(value.tmux) &&
 		value.tmux.backend === "tmux" &&
 		isString(value.tmux.session_name) &&
-		isTmuxTarget(value.tmux.target) &&
+		isTarget(value.tmux.target) &&
 		isString(value.tmux.request_path) &&
 		isString(value.tmux.worker_metadata_path)
 	);
 }
 
-export function createSubagentRunIdentity(input: {
+export function createRunIdentity(input: {
 	subagentId: string;
 	parentSessionId: string;
 	storageSessionId: string;
@@ -101,8 +126,8 @@ export function createSubagentRunIdentity(input: {
 	workerMetadataPath: string;
 	lifecycleState: SubagentStatus;
 	cleanupEligible: boolean;
-	tmux: Omit<SubagentRunIdentity["tmux"], "session_name">;
-}): SubagentRunIdentity {
+	tmux: Omit<RunIdentity["tmux"], "session_name">;
+}): RunIdentity {
 	return {
 		version: 1,
 		subagent_id: input.subagentId,
@@ -130,36 +155,9 @@ export function createSubagentRunIdentity(input: {
 	};
 }
 
-export function buildTmuxCommands(
-	target: SubagentTmuxTarget,
-	tmuxCommand: string,
-): {
-	attachCommand: string;
-	inspectCommand: string;
-	cleanupCommand: string;
-} {
-	const attachCommand =
-		target.kind === "pane"
-			? `${tmuxCommand} select-pane -t ${target.target}`
-			: `${tmuxCommand} attach-session -t ${target.target}`;
-	const inspectCommand =
-		target.kind === "pane"
-			? `${tmuxCommand} list-panes -t ${target.session_name} -F '#{pane_id} #{pane_index} #{pane_current_command}'`
-			: `${tmuxCommand} list-sessions -F '#{session_name} #{session_id} #{session_windows}'`;
-	const cleanupCommand =
-		target.kind === "pane"
-			? `${tmuxCommand} kill-pane -t ${target.target}`
-			: `${tmuxCommand} kill-session -t ${target.target}`;
-	return { attachCommand, inspectCommand, cleanupCommand };
-}
-
-export function tmuxTargetToString(target: SubagentTmuxTarget): string {
-	return target.target;
-}
-
-export function tmuxRecordMatchesIdentity(
-	record: SubagentRecord | undefined,
-	identity: SubagentRunIdentity | undefined,
+export function recordMatchesIdentity(
+	record: (SubagentRecord & { cwd: string; parent_session_id?: string; identity?: RunIdentity }) | undefined,
+	identity: RunIdentity | undefined,
 ): boolean {
 	if (!record || !identity) return false;
 	if (record.id !== identity.subagent_id) return false;

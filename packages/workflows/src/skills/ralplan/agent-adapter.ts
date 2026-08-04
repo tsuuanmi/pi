@@ -74,7 +74,6 @@ async function runAgent(input: RalplanAgentAdapterInput, signal?: AbortSignal): 
 			label: `ralplan ${request.role} ${request.stage}#${request.stageN}`,
 			prompt: request.taskPrompt,
 			systemPrompt: request.systemPrompt,
-			cwd: input.cwd,
 			tools: request.tools ? [...request.tools] : undefined,
 			excludeTools: request.excludeTools ? [...request.excludeTools] : undefined,
 			persistent: true,

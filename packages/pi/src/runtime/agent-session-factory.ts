@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import type { SubagentManager } from "@tsuuanmi/pi-agent";
 import { Agent, convertToLlm, type LoopDetectionOptions } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
@@ -21,7 +22,6 @@ import { AgentSession } from "#pi/runtime/agent-session";
 import { optimizeRetainedContext } from "#pi/runtime/context-optimization";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import type { SubagentManager } from "#pi/subagents/manager";
 import {
 	createBashTool,
 	createCodingTools,

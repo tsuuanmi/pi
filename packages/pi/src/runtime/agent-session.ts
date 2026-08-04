@@ -8,6 +8,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
+import type { SubagentManager } from "@tsuuanmi/pi-agent";
 import {
 	type Agent,
 	type AgentEvent,
@@ -92,7 +93,6 @@ import {
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "#pi/session/manager";
 import { CURRENT_SESSION_VERSION, getLatestCompactionEntry, type SessionHeader } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
-import type { SubagentManager } from "#pi/subagents/manager";
 import { createToolDefinitions } from "#pi/tools/default-tools";
 import { toToolDefinition } from "#pi/tools/utils";
 

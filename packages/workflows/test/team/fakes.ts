@@ -31,9 +31,7 @@ export function createFakeManager(action: SpawnAction): SubagentManager {
 		read: unavailable,
 		list: unavailable,
 		waitFor: unavailable,
-		inspect: unavailable,
-		attach: unavailable,
-		kill: unavailable,
+		getActiveCount: () => 0,
 		dispose: unavailable,
 	};
 }
@@ -46,7 +44,6 @@ function fakeRecord(request: SubagentRunRequest): SubagentRecord {
 		id: `fake-${role}`,
 		role,
 		status: "completed",
-		cwd: "test",
 		resumable: false,
 		created_at: now,
 		updated_at: now,

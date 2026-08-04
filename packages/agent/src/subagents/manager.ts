@@ -6,11 +6,8 @@
  * contract so they do not depend on the pi package.
  */
 import type {
-	SubagentAttachResult,
 	SubagentAwaitOptions,
 	SubagentAwaitResult,
-	SubagentInspectResult,
-	SubagentKillResult,
 	SubagentRecord,
 	SubagentResumeResult,
 	SubagentRunRequest,
@@ -33,9 +30,7 @@ export interface SubagentManager {
 	read(id: string, sessionId: string): Promise<SubagentRecord | undefined>;
 	list(sessionId: string): Promise<SubagentRecord[]>;
 	waitFor(id: string, options: SubagentAwaitOptions): Promise<SubagentAwaitResult>;
-	inspect(id: string, sessionId: string): Promise<SubagentInspectResult>;
-	attach(id: string, sessionId: string): Promise<SubagentAttachResult>;
-	kill(id: string, sessionId: string): Promise<SubagentKillResult>;
+	getActiveCount(): number;
 	/** Tear down the manager: cancel all live subagents, dispose per-spawn sessions, clear the live map. Called by RuntimeOwner.stop(). */
 	dispose(): Promise<void>;
 }

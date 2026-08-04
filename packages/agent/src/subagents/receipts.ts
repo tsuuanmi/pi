@@ -26,19 +26,6 @@ export function createSubagentListReceipt(sessionId: string, count: number): Str
 
 export function createSubagentReceipt(record: SubagentRecord, sessionId: string): StructuredReceipt {
 	const inspect: StructuredReceiptInspectEntry[] = [{ label: "session", kind: "session", value: sessionId }];
-	if (record.session_file) {
-		inspect.push({ label: "session file", kind: "path", value: record.session_file });
-	}
-	if (record.artifact_file) {
-		inspect.push({ label: "artifact", kind: "path", value: record.artifact_file });
-	}
-	if (record.tmux) {
-		inspect.push(
-			{ label: "attach", kind: "session", value: record.tmux.attach_command },
-			{ label: "inspect", kind: "session", value: record.tmux.inspect_command },
-			{ label: "cleanup", kind: "command", value: record.tmux.cleanup_command },
-		);
-	}
 	const startedAt = record.started_at;
 	const endedAt = record.completed_at;
 	const started = startedAt ? Date.parse(startedAt) : undefined;
@@ -46,15 +33,10 @@ export function createSubagentReceipt(record: SubagentRecord, sessionId: string)
 	const location: StructuredReceipt["location"] = {
 		sessionId,
 		subagentId: record.id,
-		cwd: record.cwd,
 		role: record.role,
 		status: record.status,
 		resumable: record.resumable,
 	};
-	if (record.visibility !== undefined) {
-		location.visibility = record.visibility;
-	}
-
 	return {
 		version: STRUCTURED_RECEIPT_VERSION,
 		id: `subagent:${record.id}`,
@@ -75,10 +57,7 @@ export function createSubagentReceipt(record: SubagentRecord, sessionId: string)
 			agent_profile: record.agent_profile,
 			model: record.model,
 			thinking_level: record.thinking_level,
-			parent_session_id: record.parent_session_id,
 			last_prompt_sha256: record.last_prompt_sha256,
-			artifact_file: record.artifact_file,
-			tmux: record.tmux,
 		},
 	};
 }

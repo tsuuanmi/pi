@@ -1,6 +1,6 @@
 # Subagents
 
-`src/subagents/*` exposes lower-layer subagent contracts used by higher-level packages and host implementations. The package does not implement a full subagent runner here; it defines the shared types, factory registry, progress tracking, and yield-result extraction.
+`src/subagents/*` exposes lower-layer subagent contracts used by higher-level packages and host implementations. The package defines what an agent run is and how callers manage its lifecycle; it does not implement execution, persistence, filesystem workers, terminal backends, or tmux.
 
 ## Manager contract
 
@@ -14,6 +14,7 @@ interface SubagentManager {
   read(id: string, sessionId: string): Promise<SubagentRecord | undefined>;
   list(sessionId: string): Promise<SubagentRecord[]>;
   waitFor(id: string, options: SubagentAwaitOptions): Promise<SubagentAwaitResult>;
+  getActiveCount(): number;
   dispose(): Promise<void>;
 }
 ```
@@ -23,8 +24,8 @@ interface SubagentManager {
 - `SubagentStatus`: `queued`, `running`, `paused`, `completed`, `failed`, `cancelled`.
 - `SubagentDelivery`: `steer` or `followUp`.
 - `SubagentResumeFailureReason`: `context_unavailable`, `not_found`, `no_runner`, `resume_failed`.
-- `SubagentRecord`: durable metadata, status, session ids/files, timestamps, result/error text, and optional structured `yield_result`.
-- `SubagentRunRequest`: spawn options including profile, role, prompt, system prompt, cwd, tool filters, model, thinking level, persistence, detached mode, labels, parent/storage session ids, signal, and resume session file.
+- `SubagentRecord`: agent-run metadata, status, owner correlation id, timestamps, result/error text, and optional structured `yield_result`.
+- `SubagentRunRequest`: agent-run fields including profile, role, prompt, system prompt, tool filters, model, thinking level, persistence, detached mode, label, lifecycle signal, and owner correlation ids.
 - `SubagentRunResult`: final record, messages, and text output.
 - `SubagentAwaitResult`: success with a run result, or `not_found`/`timeout` with optional record and retained progress.
 - `SubagentResumeResult`: success with a run result, or one of the resume failure reasons with optional record.
@@ -37,7 +38,7 @@ const factory = getSubagentManagerFactory();
 clearSubagentManagerFactoryForTests();
 ```
 
-`SubagentManagerFactoryContext` includes `cwd`, optional `agentDir`, extension flag values, resource-loader options, and an owner lifecycle abort signal. Host packages register a factory; runtime packages look it up without depending on the host implementation.
+`SubagentManagerFactoryContext` includes `cwd`, optional `agentDir`, extension flag values, resource-loader options, and an owner lifecycle abort signal. Host packages register a factory; runtime packages look it up without depending on the host implementation. The factory returns the host's concrete manager implementation; this package never constructs it.
 
 ## Progress tracking
 

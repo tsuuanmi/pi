@@ -1,4 +1,4 @@
-import type { SubagentRecord, SubagentVisibility } from "@tsuuanmi/pi-agent";
+import type { SubagentRecord } from "@tsuuanmi/pi-agent";
 import { createSubagentListReceipt, createSubagentReceipt, renderSubagentProgress } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceiptWithStructuredReceipt } from "#workflows/artifacts/artifacts";
@@ -24,12 +24,6 @@ const subagentSpawnSchema = Type.Object({
 	),
 	detached: Type.Optional(Type.Boolean({ description: "Return immediately after spawning." })),
 	label: Type.Optional(Type.String({ description: "Human-readable subagent label." })),
-	visibility: Type.Optional(
-		Type.String({
-			description:
-				"Visibility preference: native (default) uses Pi receipts/status, tmux requests an explicit tmux-visible panel, auto lets the runner choose.",
-		}),
-	),
 });
 type SubagentSpawnInput = Static<typeof subagentSpawnSchema>;
 
@@ -83,12 +77,6 @@ const PREVIEW_MAX = 2000;
 const FULL_MAX = 12000;
 type SubagentVerbosity = "receipt" | "preview" | "full";
 
-function normalizeSubagentVisibility(value: string | undefined): SubagentVisibility | undefined {
-	if (value === undefined) return undefined;
-	if (value === "native" || value === "tmux" || value === "auto") return value;
-	throw new Error(`invalid subagent visibility: ${value}`);
-}
-
 function normalizeSubagentVerbosity(value: string | undefined): SubagentVerbosity {
 	if (value === undefined) return "receipt";
 	if (value === "receipt" || value === "preview" || value === "full") return value;
@@ -112,7 +100,6 @@ function formatSubagentRecord(
 				updated_at?: string;
 				result_text?: string;
 				error_text?: string;
-				session_file?: string;
 		  }
 		| undefined,
 	verbosity: SubagentVerbosity,
@@ -127,7 +114,6 @@ function formatSubagentRecord(
 			created_at: record.created_at,
 			updated_at: record.updated_at,
 			...(output ? { output } : {}),
-			...(record.session_file ? { session_file: record.session_file } : {}),
 		},
 		null,
 		2,
@@ -150,7 +136,6 @@ async function executeSubagentSpawn(params: SubagentSpawnInput, ctx: WorkflowCon
 		label: params.label,
 		parentSessionId: ctx.sessionManager.getSessionId(),
 		storageSessionId: ctx.sessionManager.getSessionId(),
-		visibility: normalizeSubagentVisibility(params.visibility),
 		signal,
 	});
 	const lines = [`Subagent ${result.record.id} ${result.record.status}`];
@@ -322,43 +307,6 @@ async function executeSubagentCancel(params: SubagentIdInput, ctx: WorkflowConte
 	};
 }
 
-async function executeSubagentInspect(params: SubagentIdInput, ctx: WorkflowContext) {
-	const result = await requireSubagentManager(ctx).inspect(params.id, ctx.sessionManager.getSessionId());
-	return {
-		content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
-		details: workflowReceiptWithStructuredReceipt(
-			result as unknown as Record<string, unknown>,
-			result.record ? createSubagentReceipt(result.record, ctx.sessionManager.getSessionId()) : undefined,
-		),
-	};
-}
-
-async function executeSubagentAttach(params: SubagentIdInput, ctx: WorkflowContext) {
-	const result = await requireSubagentManager(ctx).attach(params.id, ctx.sessionManager.getSessionId());
-	const text = result.ok
-		? `Attach ${params.id}: ${result.attachCommand}`
-		: `Subagent ${params.id} attach failed: ${result.reason}`;
-	return {
-		content: [{ type: "text" as const, text }],
-		details: workflowReceiptWithStructuredReceipt(
-			result as unknown as Record<string, unknown>,
-			result.record ? createSubagentReceipt(result.record, ctx.sessionManager.getSessionId()) : undefined,
-		),
-	};
-}
-
-async function executeSubagentKill(params: SubagentIdInput, ctx: WorkflowContext) {
-	const result = await requireSubagentManager(ctx).kill(params.id, ctx.sessionManager.getSessionId());
-	const text = result.ok ? `Subagent ${params.id} killed` : `Subagent ${params.id} kill failed: ${result.reason}`;
-	return {
-		content: [{ type: "text" as const, text }],
-		details: workflowReceiptWithStructuredReceipt(
-			result as unknown as Record<string, unknown>,
-			result.record ? createSubagentReceipt(result.record, ctx.sessionManager.getSessionId()) : undefined,
-		),
-	};
-}
-
 export function registerSubagentTools(pi: WorkflowToolHost): void {
 	pi.registerTool({
 		name: "subagent_spawn",
@@ -367,7 +315,6 @@ export function registerSubagentTools(pi: WorkflowToolHost): void {
 		promptSnippet: "Spawn a durable Pi subagent for isolated work",
 		promptGuidelines: [
 			"Use subagent_spawn when work should run in an isolated agent context. Its records and persistent session logs are stored under the current Pi session id.",
-			"Use visibility=tmux only when the user explicitly asks for a tmux-visible agent panel; inspect, attach, or kill tmux-backed subagents with subagent_inspect/subagent_attach/subagent_kill.",
 		],
 		parameters: subagentSpawnSchema,
 		execute: async (_toolCallId, params, signal, _onUpdate, ctx) => executeSubagentSpawn(params, ctx, signal),
@@ -431,37 +378,5 @@ export function registerSubagentTools(pi: WorkflowToolHost): void {
 		promptGuidelines: ["Use subagent_cancel to stop work that should no longer continue."],
 		parameters: subagentIdSchema,
 		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeSubagentCancel(params, ctx),
-	});
-
-	pi.registerTool({
-		name: "subagent_inspect",
-		label: "Subagent Inspect",
-		description: "Inspect a subagent record, artifact path, worker metadata, and tmux metadata when present.",
-		promptSnippet: "Inspect durable subagent state and tmux metadata",
-		promptGuidelines: ["Use subagent_inspect to see status, artifact path, worker metadata, and tmux pane metadata."],
-		parameters: subagentIdSchema,
-		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeSubagentInspect(params, ctx),
-	});
-
-	pi.registerTool({
-		name: "subagent_attach",
-		label: "Subagent Attach",
-		description: "Return tmux attach guidance for a tmux-backed subagent.",
-		promptSnippet: "Attach to a tmux-backed subagent pane",
-		promptGuidelines: ["Use subagent_attach to return the exact tmux attach command for a tmux-backed subagent."],
-		parameters: subagentIdSchema,
-		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeSubagentAttach(params, ctx),
-	});
-
-	pi.registerTool({
-		name: "subagent_kill",
-		label: "Subagent Kill",
-		description: "Kill a tmux-backed subagent using ordered live-control failure reasons.",
-		promptSnippet: "Kill a tmux-backed subagent",
-		promptGuidelines: [
-			"Use subagent_kill to stop tmux-backed subagents when inspect/attach show they should not continue.",
-		],
-		parameters: subagentIdSchema,
-		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => executeSubagentKill(params, ctx),
 	});
 }

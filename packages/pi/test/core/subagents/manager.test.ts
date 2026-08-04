@@ -581,23 +581,6 @@ PROFILE SYSTEM PROMPT`,
 		expect(await manager.list(TEST_SESSION)).toEqual([]);
 	});
 
-	it("runs auto visibility through the native backend for this milestone", async () => {
-		testProvider.setResponses([testAssistantMessage("auto native")]);
-
-		const result = await manager.spawn({
-			role: "planner",
-			prompt: "Run auto work",
-			cwd,
-			storageSessionId: TEST_SESSION,
-			visibility: "auto",
-			persistent: false,
-		});
-
-		expect(result.record.status).toBe("completed");
-		expect(result.record.visibility).toBe("auto");
-		expect(result.output).toContain("auto native");
-	});
-
 	it("lets explicit subagent spawn overrides win over agent profiles", async () => {
 		const profileDir = join(cwd, ".agent", "agents");
 		await mkdir(profileDir, { recursive: true });

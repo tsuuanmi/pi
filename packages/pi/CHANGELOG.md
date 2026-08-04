@@ -11,6 +11,7 @@
 - **sdk**: Renamed the session model fallback warning result from `modelFallbackMessage` to `modelStartupWarning`.
 - **tools**: Removed non-canonical `edit` tool argument forms; the tool now accepts only `path` plus `edits[]` and no longer normalizes alternate shapes.
 - **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
+- **subagents**: `SubagentManager` is now the Pi implementation of the manager contract from `@tsuuanmi/pi-agent`; Pi owns execution, persistence, tmux workers, run identity, and live controls.
 - **subagents**: Tmux run identity now uses only the canonical nested target session name.
 - **runtime**: Pi is now Node-only; removed alternate-runtime detection and package-manager branches.
 - **cli**: Removed the `pi uninstall` alias; use `pi remove`.

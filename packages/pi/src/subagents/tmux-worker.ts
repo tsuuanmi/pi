@@ -1,12 +1,13 @@
 import { spawnSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { SubagentTmuxTarget } from "@tsuuanmi/pi-agent";
-import { buildTmuxCommands, createSubagentRunIdentity } from "@tsuuanmi/pi-agent";
 import { isValidThinkingLevel, type ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { createAgentSessionServices } from "#pi/runtime/agent-session-services";
 import { SubagentManager } from "#pi/subagents/manager";
+import { createRunIdentity } from "#pi/subagents/run-identity";
+import { buildTmuxCommands, type TmuxTarget } from "#pi/subagents/tmux";
 import { PI_SUBAGENT_TMUX_TARGET_KIND_ENV, PI_SUBAGENT_WORKER_REQUEST_ENV } from "#pi/subagents/tmux-launch";
+import type { WorkerRequest } from "#pi/subagents/types";
 
 export class SubagentWorkerMetadataInvalidError extends Error {
 	readonly code = "worker_metadata_invalid";
@@ -15,28 +16,6 @@ export class SubagentWorkerMetadataInvalidError extends Error {
 		super(message);
 		this.name = "SubagentWorkerMetadataInvalidError";
 	}
-}
-
-export interface SubagentWorkerRequestFile {
-	version: 1;
-	subagentId: string;
-	storageSessionId: string;
-	storageRoot: string;
-	request: {
-		prompt: string;
-		role?: string;
-		agent?: string;
-		systemPrompt?: string;
-		cwd?: string;
-		tools?: string[];
-		excludeTools?: string[];
-		model?: string;
-		thinkingLevel?: ThinkingLevel;
-		persistent?: boolean;
-		detached?: boolean;
-		label?: string;
-		parentSessionId?: string;
-	};
 }
 
 function isStringArray(value: unknown): value is string[] {
@@ -61,7 +40,7 @@ function optionalThinkingLevel(value: unknown, field: string): ThinkingLevel | u
 	throw new SubagentWorkerMetadataInvalidError(`${field} is invalid`);
 }
 
-function parseTmuxTarget(targetKind: "pane" | "session", raw: string | undefined): SubagentTmuxTarget {
+function parseTmuxTarget(targetKind: "pane" | "session", raw: string | undefined): TmuxTarget {
 	const fields = raw?.trim().split(/\s+/) ?? [];
 	if (targetKind === "pane") {
 		const [session_name, session_id, window_id, window_index, pane_id, pane_index] = fields;
@@ -91,7 +70,7 @@ function parseTmuxTarget(targetKind: "pane" | "session", raw: string | undefined
 	};
 }
 
-function detectCurrentTmuxTarget(targetKind: "pane" | "session"): SubagentTmuxTarget {
+function detectCurrentTmuxTarget(targetKind: "pane" | "session"): TmuxTarget {
 	const tmuxCommand = process.env.PI_TMUX_COMMAND?.trim() || "tmux";
 	const format =
 		targetKind === "pane"
@@ -110,7 +89,7 @@ function detectCurrentTmuxTarget(targetKind: "pane" | "session"): SubagentTmuxTa
 	return parseTmuxTarget(targetKind, result.stdout?.toString());
 }
 
-export async function readSubagentWorkerRequest(path: string): Promise<SubagentWorkerRequestFile> {
+export async function readSubagentWorkerRequest(path: string): Promise<WorkerRequest> {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(await readFile(path, "utf8")) as unknown;
@@ -135,13 +114,19 @@ export async function readSubagentWorkerRequest(path: string): Promise<SubagentW
 	const request = requestValue as Record<string, unknown>;
 	const prompt = optionalString(request.prompt, "request.prompt");
 	if (!prompt?.trim()) throw new SubagentWorkerMetadataInvalidError("request.prompt is required");
-	const tools = request.tools === undefined ? undefined : request.tools;
-	const excludeTools = request.excludeTools === undefined ? undefined : request.excludeTools;
-	if (tools !== undefined && !isStringArray(tools)) {
-		throw new SubagentWorkerMetadataInvalidError("request.tools must be string[]");
+	const toolsValue = request.tools;
+	const excludeToolsValue = request.excludeTools;
+	let tools: string[] | undefined;
+	let excludeTools: string[] | undefined;
+	if (toolsValue !== undefined) {
+		if (!isStringArray(toolsValue)) throw new SubagentWorkerMetadataInvalidError("request.tools must be string[]");
+		tools = toolsValue;
 	}
-	if (excludeTools !== undefined && !isStringArray(excludeTools)) {
-		throw new SubagentWorkerMetadataInvalidError("request.excludeTools must be string[]");
+	if (excludeToolsValue !== undefined) {
+		if (!isStringArray(excludeToolsValue)) {
+			throw new SubagentWorkerMetadataInvalidError("request.excludeTools must be string[]");
+		}
+		excludeTools = excludeToolsValue;
 	}
 	return {
 		version: 1,
@@ -177,7 +162,7 @@ export async function runSubagentWorkerRequest(path: string): Promise<void> {
 	const workerMetadataPath = join(dirname(path), "worker.json");
 	const recordPath = join(dirname(path), "record.json");
 	const artifactPath = join(dirname(path), "artifact.json");
-	const identity = createSubagentRunIdentity({
+	const identity = createRunIdentity({
 		subagentId: worker.subagentId,
 		parentSessionId: worker.request.parentSessionId ?? worker.storageSessionId,
 		storageSessionId: worker.storageSessionId,

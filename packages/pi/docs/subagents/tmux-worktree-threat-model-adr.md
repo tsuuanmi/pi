@@ -69,9 +69,9 @@ If tmux is missing, unavailable, or below the feature level needed by the reques
 
 ## Implementation gates
 
-This ADR is accepted and satisfies the precondition for beginning subsequent Gate 4 worker implementation and Gate 5 live controls design. Those gates must still implement and test the controls above before enabling live worktree/tmux behavior.
+This ADR is accepted. Pi now owns and tests the tmux worker and live-control implementation described here; worktree isolation remains a separate deferred capability.
 
-Until an implementation lands, `git-worktree-isolation` and `tmux-session-orchestration` remain deferred seams that fail closed when requested.
+`git-worktree-isolation` remains a deferred seam that fails closed when requested. Tmux session orchestration is implemented only by Pi and fails closed when ownership metadata or the required tmux command is unavailable.
 
 ## Consequences
 
