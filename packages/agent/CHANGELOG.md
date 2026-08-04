@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **node**: Added the byte-preserving `runProcess()` API, changed Node shell resolution to fail when Bash is unavailable, and changed execution results to preserve `null` signal exits.
 - **tool**: Renamed structured tool receipt helpers from built-in-specific names to standard protocol names and changed receipt sources to generic `tool` and `session` values.
 - **extensions**: Removed the shared extension contract surface from `@tsuuanmi/pi-agent`; the public Pi extension API now owns extension hook registration and actions.
 - **hooks**: Replaced the individual `AgentOptions` lifecycle and tool hook callbacks with named `AgentHook` registrations through `Agent.registerHook()`.

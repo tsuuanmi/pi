@@ -5,7 +5,7 @@ export interface BashOperations {
 	 * @param command The command to execute
 	 * @param cwd Working directory
 	 * @param options Execution options
-	 * @returns Promise resolving to the exit code (null if killed)
+	 * @returns Promise resolving to the exit code (null when terminated)
 	 */
 	exec: (
 		command: string,
@@ -13,7 +13,8 @@ export interface BashOperations {
 		options: {
 			onData: (data: Buffer) => void;
 			signal?: AbortSignal;
-			timeout?: number;
+			/** Timeout in seconds. */
+			timeoutSeconds?: number;
 			env?: NodeJS.ProcessEnv;
 		},
 	) => Promise<{ exitCode: number | null }>;

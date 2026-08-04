@@ -1,8 +1,8 @@
 import type { AgentMessage, CustomMessage, LoopDetectionResult } from "@tsuuanmi/pi-agent";
 import type { AssistantMessageEvent, Model, TextContent, ThinkingLevel, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
-import type { BashResult } from "#pi/execution/bash-executor";
-import type { BashOperations } from "#pi/execution/bash-operations";
+import type { BashOperations } from "#pi/execution/backend";
+import type { BashResult } from "#pi/execution/bash";
 import type { CompactionPreparation, CompactionResult } from "#pi/session/compaction";
 import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "#pi/session/manager";
 import type {

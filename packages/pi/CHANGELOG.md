@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **execution**: Split process, shell, lifecycle, Bash, and program adapters into focused modules; renamed the local backend and shell resolver, removed the `sh` fallback, and standardized program results on `exitCode`, `signal`, and `reason`.
 - **rpc**: RPC JSONL now rejects CRLF input and unterminated records instead of accepting them.
 - **loader**: Moved configuration and resource loading into `src/loader/`, renamed the public configuration path to `@tsuuanmi/pi/loader/config`, and removed the old paths.
 - **architecture**: Split extension contracts, context types, tmux subagent launch code, and CLI configuration UI into dedicated modules; removed package-manager legacy global-install discovery and CLI/mode/UI dependencies from core modules.

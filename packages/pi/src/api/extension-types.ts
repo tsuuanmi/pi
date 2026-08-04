@@ -12,7 +12,7 @@ import type {
 } from "#pi/api/context-types";
 import type { ProviderConfig } from "#pi/api/provider-types";
 import type { ToolDefinition } from "#pi/api/tool-types";
-import type { ExecOptions, ExecResult } from "#pi/execution/command-executor";
+import type { ProgramOptions, ProgramResult } from "#pi/execution/program";
 import type { EventBus } from "#pi/extensions/event-bus";
 import type { ExtensionHookAPI } from "#pi/extensions/hooks/extension-api-hooks";
 import type { HookHandlerFn } from "#pi/extensions/hooks/registration";
@@ -83,7 +83,7 @@ export interface ExtensionAPI extends ExtensionHookAPI {
 	setSessionName(name: string): void;
 	getSessionName(): string | undefined;
 	setLabel(entryId: string, label: string | undefined): void;
-	exec(command: string, args: string[], options?: ExecOptions): Promise<ExecResult>;
+	exec(command: string, args: string[], options?: ProgramOptions): Promise<ProgramResult>;
 	getActiveTools(): string[];
 	getAllTools(): ToolInfo[];
 	setActiveTools(toolNames: string[]): void;

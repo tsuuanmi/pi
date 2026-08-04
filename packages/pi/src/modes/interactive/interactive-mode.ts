@@ -52,7 +52,7 @@ import {
 import { readWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import chalk from "chalk";
 import { spawn } from "child_process";
-import { killTrackedProcesses } from "#pi/execution/process-tree";
+import { killTracked } from "#pi/execution/lifecycle";
 import type {
 	AutocompleteProviderFactory,
 	EditorFactory,
@@ -1714,7 +1714,7 @@ export class InteractiveMode {
 	private emergencyTerminalExit(): never {
 		this.isShuttingDown = true;
 		this.unregisterSignalHandlers();
-		killTrackedProcesses();
+		killTracked();
 		// The terminal is gone. Do not run normal shutdown because TUI and
 		// extension cleanup can write restore sequences and re-trigger EIO.
 		process.exit(129);
@@ -1740,7 +1740,7 @@ export class InteractiveMode {
 			this.unregisterSignalHandlers();
 		} catch {}
 		try {
-			killTrackedProcesses();
+			killTracked();
 		} catch {}
 		try {
 			this.ui.stop();
@@ -1769,7 +1769,7 @@ export class InteractiveMode {
 				// first, then attempts terminal restore. A genuinely dead terminal
 				// surfaces as an EIO on the restore writes, which the stdout/stderr
 				// error handler converts into emergencyTerminalExit (see #4144, #5080).
-				killTrackedProcesses();
+				killTracked();
 				void this.shutdown({ fromSignal: true });
 			};
 			process.prependListener(signal, handler);

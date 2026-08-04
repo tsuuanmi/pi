@@ -7,3 +7,4 @@ export * from "#agent/node/paths";
 // Node-only utilities (require Node.js built-ins)
 export * from "#agent/node/process";
 export * from "#agent/node/process-runtime";
+export * from "#agent/node/shell";

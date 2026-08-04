@@ -812,7 +812,7 @@ pi.on("tool_result", async (event, ctx) => {
 Fired when user executes `!` or `!!` commands. **Can intercept.**
 
 ```typescript
-import { createLocalBashOperations } from "@tsuuanmi/pi";
+import { createLocalBash } from "@tsuuanmi/pi";
 
 pi.on("user_bash", (event, ctx) => {
   // event.command - the bash command
@@ -823,7 +823,7 @@ pi.on("user_bash", (event, ctx) => {
   return { operations: remoteBashOps };
 
   // Option 2: Wrap pi's built-in local bash backend
-  const local = createLocalBashOperations();
+  const local = createLocalBash();
   return {
     operations: {
       exec(command, cwd, options) {
@@ -1551,11 +1551,11 @@ if (pi.getFlag("plan")) {
 
 ### pi.exec(command, args, options?)
 
-Execute a shell command.
+Execute a program without invoking a shell.
 
 ```typescript
-const result = await pi.exec("git", ["status"], { signal, timeout: 5000 });
-// result.stdout, result.stderr, result.code, result.killed
+const result = await pi.exec("git", ["status"], { signal, timeoutMs: 5000 });
+// result.stdout, result.stderr, result.exitCode, result.signal, result.reason
 ```
 
 ### pi.getActiveTools() / pi.getAllTools() / pi.setActiveTools(names)
@@ -1958,7 +1958,7 @@ pi.registerTool({
 
 **Operations interfaces:** `ReadOperations`, `WriteOperations`, `EditOperations`, `BashOperations`, `LsOperations`, `GrepOperations`, `FindOperations`
 
-For `user_bash`, extensions can reuse pi's local shell backend via `createLocalBashOperations()` instead of reimplementing local process spawning, shell resolution, and process-tree termination.
+For `user_bash`, extensions can reuse Pi's local shell backend via `createLocalBash()` instead of reimplementing local process spawning, shell resolution, and process-tree termination.
 
 The bash tool also supports a spawn hook to adjust the command, cwd, or env before execution:
 

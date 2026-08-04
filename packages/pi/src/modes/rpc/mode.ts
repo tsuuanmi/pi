@@ -14,7 +14,7 @@
 import * as crypto from "node:crypto";
 import { attachJsonlLineReader, serializeJsonLine } from "@tsuuanmi/pi-agent/node";
 import { type Theme, theme } from "@tsuuanmi/pi-tui";
-import { killTrackedProcesses } from "#pi/execution/process-tree";
+import { killTracked } from "#pi/execution/lifecycle";
 import type {
 	ExtensionUIContext,
 	ExtensionUIDialogOptions,
@@ -359,7 +359,7 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 
 		for (const signal of signals) {
 			const handler = () => {
-				killTrackedProcesses();
+				killTracked();
 				void shutdown(signal === "SIGHUP" ? 129 : 143, signal);
 			};
 			process.on(signal, handler);

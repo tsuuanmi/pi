@@ -10,8 +10,8 @@ import { fileURLToPath } from "node:url";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { KeyId } from "@tsuuanmi/pi-tui";
 import { createJiti } from "jiti/static";
-import type { ExecOptions } from "#pi/execution/command-executor";
-import { execCommand } from "#pi/execution/command-executor";
+import type { ProgramOptions } from "#pi/execution/program";
+import { runProgram } from "#pi/execution/program";
 import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
 import { type HookHandlerFn, registerExtensionHook } from "#pi/extensions/hooks/registration";
 import type {
@@ -256,9 +256,9 @@ function createExtensionAPI(
 			runtime.setLabel(entryId, label);
 		},
 
-		exec(command: string, args: string[], options?: ExecOptions) {
+		exec(command: string, args: string[], options?: ProgramOptions) {
 			runtime.assertActive();
-			return execCommand(command, args, options?.cwd ?? cwd, options);
+			return runProgram(command, args, { ...options, cwd: options?.cwd ?? cwd });
 		},
 
 		getActiveTools(): string[] {

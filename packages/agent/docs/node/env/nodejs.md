@@ -55,7 +55,7 @@ interface FileSystem {
 
 ```typescript
 interface Shell {
-  exec(command: string, options?: ExecutionEnvExecOptions): Promise<Result<{ stdout: string; stderr: string; exitCode: number }, ExecutionError>>;
+  exec(command: string, options?: ExecutionEnvExecOptions): Promise<Result<{ stdout: string; stderr: string; exitCode: number | null }, ExecutionError>>;
   cleanup(): Promise<void>;
 }
 
@@ -63,6 +63,20 @@ interface ExecutionEnv extends FileSystem, Shell {}
 ```
 
 `ExecutionEnvExecOptions` supports `cwd`, `env`, `timeout` in seconds, `abortSignal`, `onStdout`, and `onStderr`.
+
+## Process runner
+
+```typescript
+import { runProcess } from "@tsuuanmi/pi-agent/node";
+
+const result = await runProcess("node", ["-e", "console.log('ready')"], {
+  cwd: process.cwd(),
+  timeoutMs: 5000,
+  onStdout: (chunk) => process.stdout.write(chunk),
+});
+```
+
+`runProcess()` preserves byte output, reports `exitCode`, `signal`, and a termination `reason`, and rejects with `ExecutionError` for spawn or callback failures. Shell execution is explicit through the `shell` option; no shell fallback is applied.
 
 ## `NodeExecutionEnv`
 
@@ -79,7 +93,7 @@ const env = new NodeExecutionEnv({
 The Node implementation:
 
 - Resolves relative paths against `cwd`.
-- Uses `/bin/bash`, a `bash` found on `PATH`, or `sh` unless `shellPath` is provided.
-- Runs shell commands through `spawn()` with process-tree cleanup on timeout/abort.
+- Uses `/bin/bash` or an executable `bash` found on `PATH`; it fails with `shell_unavailable` when Bash is unavailable.
+- Runs shell commands through the shared `runProcess()` primitive with process-tree cleanup on timeout/abort.
 - Creates parent directories for `writeFile()` and `appendFile()`.
 - Returns `Result` failures for expected filesystem/shell errors.

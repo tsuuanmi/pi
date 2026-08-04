@@ -66,7 +66,7 @@ export type {
 	WidgetPlacement,
 	WorkingIndicatorOptions,
 } from "#pi/api/ui-types";
-export type { ExecOptions, ExecResult } from "#pi/execution/command-executor";
+export type { ProgramOptions, ProgramResult } from "#pi/execution/program";
 export type {
 	AfterProviderResponseEvent,
 	AgentEndEvent,

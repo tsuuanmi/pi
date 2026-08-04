@@ -187,7 +187,7 @@ export interface Shell {
 	exec(
 		command: string,
 		options?: ExecutionEnvExecOptions,
-	): Promise<Result<{ stdout: string; stderr: string; exitCode: number }, ExecutionError>>;
+	): Promise<Result<{ stdout: string; stderr: string; exitCode: number | null }, ExecutionError>>;
 	/** Release shell resources. Must be best-effort and must not throw or reject. */
 	cleanup(): Promise<void>;
 }

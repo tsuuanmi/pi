@@ -11,9 +11,22 @@ spawnProcess(command: string, args: string[], options: SpawnOptionsWithStdioTupl
 spawnProcess(command: string, args: string[], options: SpawnOptions): ChildProcess;
 spawnProcessSync(command: string, args: string[], options: SpawnSyncOptionsWithStringEncoding): SpawnSyncReturns<string>;
 waitForChildProcess(child: ChildProcess): Promise<number | null>;
+killProcessTree(pid: number, signal?: NodeJS.Signals): void;
+runProcess(command: string, args: string[], options?: ProcessOptions): Promise<ProcessResult>;
 ```
 
-`spawnProcess()` and `spawnProcessSync()` wrap Node's spawn APIs. `waitForChildProcess()` resolves with the exit/close code. After the child exits it waits for inherited stdout/stderr pipes to become idle (re-arming a short grace timer on each chunk) so detached descendants that keep writing past `exit` do not have their tail output truncated; it then destroys the streams.
+`spawnProcess()` and `spawnProcessSync()` wrap Node's spawn APIs. `waitForChildProcess()` resolves with the exit/close code. After the child exits it waits for inherited stdout/stderr pipes to become idle (re-arming a short grace timer on each chunk) so detached descendants that keep writing past `exit` do not have their tail output truncated; it then destroys the streams. `runProcess()` adds byte-preserving stdout/stderr callbacks, timeout and abort handling, and typed process results. It does not choose a fallback shell.
+
+## Shell resolution
+
+From `src/node/shell.ts`:
+
+```typescript
+interface ShellConfig { shell: string; args: string[] }
+resolveShell(shellPath?: string): ShellConfig;
+```
+
+`resolveShell()` accepts an executable override or locates Bash at `/bin/bash` or on `PATH`. It throws when Bash cannot be resolved.
 
 ## File mutation queue
 

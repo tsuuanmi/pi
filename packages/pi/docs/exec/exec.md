@@ -1,87 +1,79 @@
 # Command Execution
 
-Shell command execution and streaming Bash executor.
+Pi separates low-level process execution from Pi-specific Bash adapters and output handling.
 
 ## Overview
 
-Pi executes commands using the system shell with streaming output capture and configurable timeouts. The execution environment provides:
+The shared Node process runner provides:
 
-- Working directory management
-- Environment variable inheritance and configuration
-- Streaming output with chunk callbacks
-- Output truncation with overflow files
-- Timeout enforcement (in seconds for tools, milliseconds for `execCommand`)
-- Abort signal support
+- Explicit executable or shell execution
+- Working directory and environment handling
+- Byte-preserving stdout/stderr callbacks
+- Timeout and abort handling
+- Process-group termination for detached commands
+- Structured exit, signal, and termination results
 
-## execCommand
+Pi adds Bash backends, output buffering, sanitization, truncation, and session integration.
 
-`execCommand` provides a simple command execution API for extensions and internal use:
+## `runProgram`
+
+`runProgram` executes an executable with arguments and never invokes a shell.
 
 ```typescript
-interface ExecOptions {
-  signal?: AbortSignal;    // AbortSignal to cancel the command
-  timeout?: number;        // Timeout in milliseconds
-  cwd?: string;            // Working directory
+interface ProgramOptions {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  cwd?: string;
 }
 
-interface ExecResult {
-  stdout: string;          // Combined stdout output
-  stderr: string;          // Combined stderr output
-  code: number;            // Process exit code
-  killed: boolean;         // Whether the process was killed
+interface ProgramResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number | null;
+  signal: NodeJS.Signals | null;
+  reason: "completed" | "aborted" | "timeout" | "signal";
 }
 
-function execCommand(
+function runProgram(
   command: string,
   args: string[],
-  cwd: string,
-  options?: ExecOptions,
-): Promise<ExecResult>;
+  options?: ProgramOptions,
+): Promise<ProgramResult>;
 ```
 
-Commands are spawned with `shell: false` and separate stdio pipes. On timeout or abort, the process receives `SIGTERM`, followed by `SIGKILL` after 5 seconds if it hasn't terminated.
+A missing executable or output callback failure rejects with `ExecutionError`. A terminated process retains its `null` exit code; it is never reported as successful.
 
-## BashExecutor
+## `runBash`
 
-The bash executor provides streaming bash execution for interactive sessions and RPC modes. It uses the pluggable `BashOperations` interface from the execution module.
-
-### BashExecutorOptions
+`runBash` provides streaming Bash execution for interactive sessions and RPC modes. It uses the pluggable `BashOperations` backend and the shared `OutputBuffer`.
 
 ```typescript
-interface BashExecutorOptions {
-  onChunk?: (chunk: string) => void;  // Streaming output callback
-  signal?: AbortSignal;                 // Cancellation signal
+interface BashRunOptions {
+  onChunk?: (chunk: string) => void;
+  signal?: AbortSignal;
 }
-```
 
-### BashResult
-
-```typescript
 interface BashResult {
-  output: string;              // Combined stdout + stderr (sanitized, possibly truncated)
-  exitCode: number | undefined; // Process exit code (undefined if killed)
-  cancelled: boolean;           // Whether cancelled via signal
-  truncated: boolean;           // Whether output was truncated
-  fullOutputPath?: string;     // Path to temp file with full output
+  output: string;
+  exitCode: number | undefined;
+  cancelled: boolean;
+  truncated: boolean;
+  fullOutputPath?: string;
 }
-```
 
-### executeBashWithOperations
-
-```typescript
-function executeBashWithOperations(
+function runBash(
   command: string,
   cwd: string,
-  operations: BashOperations,
-  options?: BashExecutorOptions,
+  backend: BashOperations,
+  options?: BashRunOptions,
 ): Promise<BashResult>;
 ```
 
-Uses the pluggable `BashOperations` interface from the execution module. Output is sanitized (ANSI stripped, binary normalized) before being returned. When output exceeds the truncation threshold, it's truncated in memory and the full output is saved to a temp file referenced by `fullOutputPath`.
+Output is buffered as bytes, decoded only after complete process chunks are received, sanitized for display, and truncated according to the shared output policy. Full output is written before the result resolves.
 
-## BashOperations
+## `BashOperations`
 
-The `BashOperations` interface (defined in the execution module) enables remote execution delegation:
+`BashOperations` enables local, remote, or container-backed execution:
 
 ```typescript
 interface BashOperations {
@@ -91,25 +83,23 @@ interface BashOperations {
     options: {
       onData: (data: Buffer) => void;
       signal?: AbortSignal;
-      timeout?: number;
+      timeoutSeconds?: number;
       env?: NodeJS.ProcessEnv;
     },
   ) => Promise<{ exitCode: number | null }>;
 }
 ```
 
-The `exec` method streams output via the `onData` callback. The default implementation (`createLocalBashOperations`) spawns a local shell process.
+The default implementation is `createLocalBash`. It resolves an explicit executable shell or Bash at `/bin/bash` or on `PATH`; it fails with `shell_unavailable` when Bash cannot be resolved. There is no `sh` fallback.
 
-### BashToolOptions
-
-The bash tool accepts additional configuration:
+### Bash tool options
 
 ```typescript
 interface BashToolOptions {
-  operations?: BashOperations;      // Custom operations (default: local shell)
-  commandPrefix?: string;          // Prefix prepended to every command
-  shellPath?: string;              // Explicit shell path from settings
-  spawnHook?: BashSpawnHook;       // Hook to adjust command/cwd/env before execution
+  operations?: BashOperations;
+  commandPrefix?: string;
+  shellPath?: string;
+  spawnHook?: BashSpawnHook;
 }
 
 interface BashSpawnContext {
@@ -121,7 +111,11 @@ interface BashSpawnContext {
 type BashSpawnHook = (context: BashSpawnContext) => BashSpawnContext;
 ```
 
-The `spawnHook` allows adjusting the command, working directory, or environment variables before execution. It receives the base context (command, cwd, shell env) and must return a `BashSpawnContext`.
+The `spawnHook` adjusts the command, working directory, or environment before execution.
+
+## Shell resolution
+
+`resolveShell(shellPath?)` accepts an executable override or locates Bash at `/bin/bash` or on `PATH`. It throws when the shell cannot be resolved.
 
 ## Networking
 

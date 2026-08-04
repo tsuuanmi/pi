@@ -1,5 +1,6 @@
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
+import { ExecutionError } from "@tsuuanmi/pi-agent/node";
 import {
 	type Component,
 	Container,
@@ -11,15 +12,15 @@ import {
 } from "@tsuuanmi/pi-tui";
 import { type Static, Type } from "typebox";
 import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
-import type { BashOperations } from "#pi/execution/bash-operations";
-import { createLocalBashOperations } from "#pi/execution/local-shell";
-import { getShellEnv } from "#pi/execution/shell-config";
+import type { BashOperations } from "#pi/execution/backend";
+import { createLocalBash } from "#pi/execution/local";
+import { getShellEnv } from "#pi/execution/shell";
 import { OutputBuffer } from "#pi/output/buffer";
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "#pi/output/truncation";
 import { getTextOutput, invalidArgText, str, toAgentTool } from "#pi/tools/utils";
 
-export type { BashOperations } from "#pi/execution/bash-operations";
-export { createLocalBashOperations };
+export type { BashOperations } from "#pi/execution/backend";
+export { createLocalBash };
 
 const bashSchema = Type.Object({
 	command: Type.String({ description: "Bash command to execute" }),
@@ -200,7 +201,7 @@ export function createBashToolDefinition(
 	cwd: string,
 	options?: BashToolOptions,
 ): ToolDefinition<typeof bashSchema, BashToolDetails | undefined, BashRenderState> {
-	const ops = options?.operations ?? createLocalBashOperations({ shellPath: options?.shellPath });
+	const ops = options?.operations ?? createLocalBash({ shellPath: options?.shellPath });
 	const commandPrefix = options?.commandPrefix;
 	const spawnHook = options?.spawnHook;
 	return {
@@ -309,19 +310,18 @@ export function createBashToolDefinition(
 					const result = await ops.exec(spawnContext.command, spawnContext.cwd, {
 						onData: handleData,
 						signal,
-						timeout,
+						timeoutSeconds: timeout,
 						env: spawnContext.env,
 					});
 					exitCode = result.exitCode;
 				} catch (err) {
 					const snapshot = await finishOutput();
 					const { text } = formatOutput(snapshot, "");
-					if (err instanceof Error && err.message === "aborted") {
+					if (err instanceof ExecutionError && err.code === "aborted") {
 						throw new Error(appendStatus(text, "Command aborted"));
 					}
-					if (err instanceof Error && err.message.startsWith("timeout:")) {
-						const timeoutSecs = err.message.split(":")[1];
-						throw new Error(appendStatus(text, `Command timed out after ${timeoutSecs} seconds`));
+					if (err instanceof ExecutionError && err.code === "timeout") {
+						throw new Error(appendStatus(text, `Command timed out after ${timeout ?? "the configured"} seconds`));
 					}
 					throw err;
 				}

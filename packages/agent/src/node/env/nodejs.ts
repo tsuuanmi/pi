@@ -1,21 +1,10 @@
-import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { constants, createReadStream } from "node:fs";
-import {
-	access,
-	appendFile,
-	lstat,
-	mkdir,
-	mkdtemp,
-	readdir,
-	readFile,
-	realpath,
-	rm,
-	writeFile,
-} from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { appendFile, lstat, mkdir, mkdtemp, readdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
+import { TextDecoder } from "node:util";
 import {
 	type ExecutionEnv,
 	ExecutionError,
@@ -27,6 +16,8 @@ import {
 	type Result,
 	toError,
 } from "#agent/node/env/types";
+import { runProcess } from "#agent/node/process";
+import { resolveShell } from "#agent/node/shell";
 
 function resolvePath(cwd: string, path: string): string {
 	return isAbsolute(path) ? path : resolve(cwd, path);
@@ -90,93 +81,12 @@ function abortResult<TValue>(signal: AbortSignal | undefined, path?: string): Re
 	return signal?.aborted ? err(new FileError("aborted", "aborted", path)) : undefined;
 }
 
-async function pathExists(path: string): Promise<boolean> {
-	try {
-		await access(path, constants.F_OK);
-		return true;
-	} catch {
-		return false;
-	}
-}
-
-async function runCommand(
-	command: string,
-	args: string[],
-	timeoutMs: number,
-): Promise<{ stdout: string; status: number | null }> {
-	return await new Promise((resolve) => {
-		let stdout = "";
-		let child: ReturnType<typeof spawn>;
-		try {
-			child = spawn(command, args, {
-				stdio: ["ignore", "pipe", "ignore"],
-			});
-		} catch {
-			resolve({ stdout: "", status: null });
-			return;
-		}
-		const timeout = setTimeout(() => {
-			if (child.pid) killProcessTree(child.pid);
-		}, timeoutMs);
-		child.stdout?.setEncoding("utf8");
-		child.stdout?.on("data", (chunk: string) => {
-			stdout += chunk;
-		});
-		child.on("error", () => {
-			clearTimeout(timeout);
-			resolve({ stdout: "", status: null });
-		});
-		child.on("close", (status) => {
-			clearTimeout(timeout);
-			resolve({ stdout, status });
-		});
-	});
-}
-
-async function findBashOnPath(): Promise<string | null> {
-	const result = await runCommand("which", ["bash"], 5000);
-	if (result.status !== 0 || !result.stdout) return null;
-	const firstMatch = result.stdout.trim().split(/\r?\n/)[0];
-	return firstMatch && (await pathExists(firstMatch)) ? firstMatch : null;
-}
-
-async function getShellConfig(
-	customShellPath?: string,
-): Promise<Result<{ shell: string; args: string[] }, ExecutionError>> {
-	if (customShellPath) {
-		if (await pathExists(customShellPath)) {
-			return ok({ shell: customShellPath, args: ["-c"] });
-		}
-		return err(new ExecutionError("shell_unavailable", `Custom shell path not found: ${customShellPath}`));
-	}
-	if (await pathExists("/bin/bash")) {
-		return ok({ shell: "/bin/bash", args: ["-c"] });
-	}
-	const bashOnPath = await findBashOnPath();
-	if (bashOnPath) {
-		return ok({ shell: bashOnPath, args: ["-c"] });
-	}
-	return ok({ shell: "sh", args: ["-c"] });
-}
-
 function getShellEnv(baseEnv?: NodeJS.ProcessEnv, extraEnv?: Record<string, string>): NodeJS.ProcessEnv {
 	return {
 		...process.env,
 		...baseEnv,
 		...extraEnv,
 	};
-}
-
-function killProcessTree(pid: number): void {
-	try {
-		process.kill(-pid, "SIGKILL");
-	} catch {
-		try {
-			process.kill(pid, "SIGKILL");
-		} catch {
-			// Process already dead.
-		}
-	}
 }
 
 export class NodeExecutionEnv implements ExecutionEnv {
@@ -208,110 +118,81 @@ export class NodeExecutionEnv implements ExecutionEnv {
 			onStdout?: (chunk: string) => void;
 			onStderr?: (chunk: string) => void;
 		},
-	): Promise<Result<{ stdout: string; stderr: string; exitCode: number }, ExecutionError>> {
-		if (options?.abortSignal?.aborted) return err(new ExecutionError("aborted", "aborted"));
+	): Promise<Result<{ stdout: string; stderr: string; exitCode: number | null }, ExecutionError>> {
+		if (options?.abortSignal?.aborted) return err(new ExecutionError("aborted", "Command aborted"));
 
 		const cwd = options?.cwd ? resolvePath(this.cwd, options.cwd) : this.cwd;
-		const shellConfig = await getShellConfig(this.shellPath);
-		if (!shellConfig.ok) return shellConfig;
+		let shellConfig: { shell: string; args: string[] };
+		try {
+			shellConfig = resolveShell(this.shellPath);
+		} catch (error) {
+			const cause = toError(error);
+			return err(new ExecutionError("shell_unavailable", cause.message, cause));
+		}
 
-		return await new Promise((resolvePromise) => {
-			let stdout = "";
-			let stderr = "";
-			let settled = false;
-			let timedOut = false;
-			let callbackError: ExecutionError | undefined;
-			let child: ReturnType<typeof spawn> | undefined;
-			let timeoutId: ReturnType<typeof setTimeout> | undefined;
+		let stdout = "";
+		let stderr = "";
+		const stdoutDecoder = new TextDecoder();
+		const stderrDecoder = new TextDecoder();
+		const append = (
+			decoder: TextDecoder,
+			chunk: Buffer,
+			callback: ((chunk: string) => void) | undefined,
+			appendText: (text: string) => void,
+		): void => {
+			const text = decoder.decode(chunk, { stream: true });
+			if (!text) return;
+			appendText(text);
+			callback?.(text);
+		};
+		const flush = (
+			decoder: TextDecoder,
+			callback: ((chunk: string) => void) | undefined,
+			appendText: (text: string) => void,
+		): void => {
+			const text = decoder.decode();
+			if (!text) return;
+			appendText(text);
+			callback?.(text);
+		};
+		const appendStdout = (text: string): void => {
+			stdout += text;
+		};
+		const appendStderr = (text: string): void => {
+			stderr += text;
+		};
 
-			const onAbort = () => {
-				if (child?.pid) {
-					killProcessTree(child.pid);
-				}
-			};
-
-			const settle = (result: Result<{ stdout: string; stderr: string; exitCode: number }, ExecutionError>) => {
-				if (timeoutId) clearTimeout(timeoutId);
-				if (options?.abortSignal) options.abortSignal.removeEventListener("abort", onAbort);
-				if (settled) return;
-				settled = true;
-				resolvePromise(result);
-			};
+		try {
+			const result = await runProcess(shellConfig.shell, [...shellConfig.args, command], {
+				cwd,
+				detached: true,
+				env: getShellEnv(this.shellEnv, options?.env),
+				signal: options?.abortSignal,
+				timeoutMs: options?.timeout === undefined ? undefined : options.timeout * 1000,
+				onStdout: (chunk) => append(stdoutDecoder, chunk, options?.onStdout, appendStdout),
+				onStderr: (chunk) => append(stderrDecoder, chunk, options?.onStderr, appendStderr),
+			});
 
 			try {
-				child = spawn(shellConfig.value.shell, [...shellConfig.value.args, command], {
-					cwd,
-					detached: true,
-					env: getShellEnv(this.shellEnv, options?.env),
-					stdio: ["ignore", "pipe", "pipe"],
-				});
+				flush(stdoutDecoder, options?.onStdout, appendStdout);
+				flush(stderrDecoder, options?.onStderr, appendStderr);
 			} catch (error) {
 				const cause = toError(error);
-				settle(err(new ExecutionError("spawn_error", cause.message, cause)));
-				return;
+				return err(new ExecutionError("callback_error", cause.message, cause));
 			}
 
-			timeoutId =
-				typeof options?.timeout === "number"
-					? setTimeout(() => {
-							timedOut = true;
-							if (child?.pid) {
-								killProcessTree(child.pid);
-							}
-						}, options.timeout * 1000)
-					: undefined;
-
-			if (options?.abortSignal) {
-				if (options.abortSignal.aborted) {
-					onAbort();
-				} else {
-					options.abortSignal.addEventListener("abort", onAbort, { once: true });
-				}
+			if (result.reason === "timeout") {
+				return err(new ExecutionError("timeout", `Command timed out after ${options?.timeout} seconds`));
 			}
-
-			child.stdout?.setEncoding("utf8");
-			child.stderr?.setEncoding("utf8");
-			child.stdout?.on("data", (chunk: string) => {
-				stdout += chunk;
-				try {
-					options?.onStdout?.(chunk);
-				} catch (error) {
-					const cause = toError(error);
-					callbackError = new ExecutionError("callback_error", cause.message, cause);
-					onAbort();
-				}
-			});
-			child.stderr?.on("data", (chunk: string) => {
-				stderr += chunk;
-				try {
-					options?.onStderr?.(chunk);
-				} catch (error) {
-					const cause = toError(error);
-					callbackError = new ExecutionError("callback_error", cause.message, cause);
-					onAbort();
-				}
-			});
-
-			child.on("error", (error) => {
-				settle(err(new ExecutionError("spawn_error", error.message, error)));
-			});
-
-			child.on("close", (code) => {
-				if (callbackError) {
-					settle(err(callbackError));
-					return;
-				}
-				if (timedOut) {
-					settle(err(new ExecutionError("timeout", `timeout:${options?.timeout}`)));
-					return;
-				}
-				if (options?.abortSignal?.aborted) {
-					settle(err(new ExecutionError("aborted", "aborted")));
-					return;
-				}
-				settle(ok({ stdout, stderr, exitCode: code ?? 0 }));
-			});
-		});
+			if (result.reason === "aborted") {
+				return err(new ExecutionError("aborted", "Command aborted"));
+			}
+			return ok({ stdout, stderr, exitCode: result.exitCode });
+		} catch (error) {
+			if (error instanceof ExecutionError) return err(error);
+			const cause = toError(error);
+			return err(new ExecutionError("unknown", cause.message, cause));
+		}
 	}
 
 	async readTextFile(path: string, abortSignal?: AbortSignal): Promise<Result<string, FileError>> {

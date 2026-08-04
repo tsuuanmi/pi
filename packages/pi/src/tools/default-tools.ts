@@ -17,7 +17,7 @@ export {
 	type BashToolOptions,
 	createBashTool,
 	createBashToolDefinition,
-	createLocalBashOperations,
+	createLocalBash,
 } from "#pi/tools/bash";
 export {
 	createEditTool,

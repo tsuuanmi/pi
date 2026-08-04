@@ -33,9 +33,9 @@ import { ApiUsageLogger } from "#pi/api/api-usage-logger";
 import { apiUsageLogPath } from "#pi/api/api-usage-utils";
 import type { SlashCommandInfo } from "#pi/api/extension-types";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/guidance";
-import { type BashResult, executeBashWithOperations } from "#pi/execution/bash-executor";
-import type { BashOperations } from "#pi/execution/bash-operations";
-import { createLocalBashOperations } from "#pi/execution/local-shell";
+import type { BashOperations } from "#pi/execution/backend";
+import { type BashResult, runBash } from "#pi/execution/bash";
+import { createLocalBash } from "#pi/execution/local";
 import { installAgentToolHooks } from "#pi/extensions/hooks/tool-hooks";
 import {
 	type ContextUsage,
@@ -2308,10 +2308,10 @@ export class AgentSession {
 		const resolvedCommand = prefix ? `${prefix}\n${command}` : command;
 
 		try {
-			const result = await executeBashWithOperations(
+			const result = await runBash(
 				resolvedCommand,
 				this.sessionManager.getCwd(),
-				options?.operations ?? createLocalBashOperations({ shellPath }),
+				options?.operations ?? createLocalBash({ shellPath }),
 				{
 					onChunk,
 					signal: this._bashAbortController.signal,

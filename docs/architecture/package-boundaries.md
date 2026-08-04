@@ -19,10 +19,10 @@ The direction means higher layers may use lower layers. Lower layers must not de
 | Package | Owns | Must not own |
 | --- | --- | --- |
 | `@tsuuanmi/pi-ai` | Provider/model APIs, message content transport, streaming primitives | Agent loop, tools, orchestration, workflows, CLI/UI |
-| `@tsuuanmi/pi-agent` | Single-agent runtime, standard tool protocol, tool registry APIs, message state, subagent lifecycle contracts, tool receipts | Pi-specific subagent sessions, tmux, multi-agent task scheduling, workflow state, CLI/UI |
+| `@tsuuanmi/pi-agent` | Single-agent runtime, standard tool protocol, tool registry APIs, message state, subagent lifecycle contracts, tool receipts, Node process and shell primitives | Pi-specific Bash/output adapters, subagent sessions, tmux, multi-agent task scheduling, workflow state, CLI/UI |
 | `@tsuuanmi/pi-orchestrator` | Generic task DAG orchestration over `Agent`s: `Task`, `TaskQueue`, `Team`, scheduling, routing, checkpoints, task receipts | Pi workflow commands, skill UX, CLI session state, file artifacts |
 | `@tsuuanmi/pi-workflows` | Pi workflow skills, workflow tools, workflow commands, workflow runtime state, workflow-specific policies | Low-level agent loop, model provider transport, generic task engine internals |
-| `@tsuuanmi/pi` | CLI, TUI integration, session manager, resource loading, extension runtime, built-in tools, concrete `SubagentManager` sessions and tmux integration | Generic orchestration engine, workflow business logic, provider internals |
+| `@tsuuanmi/pi` | CLI, TUI integration, session manager, resource loading, extension runtime, built-in tools, Pi Bash/output adapters, concrete `SubagentManager` sessions and tmux integration | Generic process primitives, generic orchestration engine, workflow business logic, provider internals |
 
 ## Execution boundary
 
@@ -52,6 +52,7 @@ Unknown manager call sites fail the check instead of falling back to another exe
 - Adapters live in the higher layer that needs the integration.
 - Names must identify the owning layer when a term overlaps, such as workflow team state versus orchestrator `Team`.
 - Do not create a second execution path for behavior already owned by `@tsuuanmi/pi-orchestrator`.
+- Keep process spawning, waiting, termination, and shell resolution in `@tsuuanmi/pi-agent/node`; keep Pi-specific Bash backends, output policy, and process lifecycle registration in `@tsuuanmi/pi`.
 
 ## Dependency rules
 

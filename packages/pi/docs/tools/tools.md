@@ -170,7 +170,7 @@ interface BashOperations {
     options: {
       onData: (data: Buffer) => void;
       signal?: AbortSignal;
-      timeout?: number;
+      timeoutSeconds?: number;
       env?: NodeJS.ProcessEnv;
     },
   ) => Promise<{ exitCode: number | null }>;
@@ -209,7 +209,7 @@ Pass custom operations via each tool's options:
 ```typescript
 const tool = createBashTool(cwd, {
   operations: {
-    exec: async (command, cwd, { onData, signal, timeout, env }) => {
+    exec: async (command, cwd, { onData, signal, timeoutSeconds, env }) => {
       // custom execution logic
       return { exitCode: 0 };
     },
@@ -217,12 +217,12 @@ const tool = createBashTool(cwd, {
 });
 ```
 
-Default implementations use the local filesystem and system shell. The `createLocalBashOperations` factory creates a `BashOperations` instance that spawns local shell processes:
+Default implementations use the local filesystem and Bash. The `createLocalBash` factory creates a `BashOperations` instance that spawns local Bash processes:
 
 ```typescript
-import { createLocalBashOperations } from "@tsuuanmi/pi";
+import { createLocalBash } from "@tsuuanmi/pi";
 
-const localOps = createLocalBashOperations({ shellPath: "/bin/bash" });
+const localOps = createLocalBash({ shellPath: "/bin/bash" });
 ```
 
 ### Tool Details
