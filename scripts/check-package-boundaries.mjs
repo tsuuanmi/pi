@@ -45,7 +45,7 @@ const internalRules = [
 		forbidden: ["#pi/cli/", "#pi/modes/", "#pi/ui/"],
 	},
 	{ directory: "packages/pi/src/subagents", forbidden: ["#pi/cli/"] },
-	{ directory: "packages/pi/src/package-manager/extensions/loader.ts", forbidden: ["#pi/index"] },
+	{ directory: "packages/pi/src/package-manager/loader.ts", forbidden: ["#pi/index"] },
 ];
 const workflowManagerCallers = new Set([
 	"packages/workflows/src/subagents/tools.ts",
