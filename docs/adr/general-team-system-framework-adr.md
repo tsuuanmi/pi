@@ -2,9 +2,13 @@
 
 ## Status
 
-Accepted for direction; implementation pending future ralplan and explicit approval.
+Accepted direction; implementation is incremental and requires separate ralplan and explicit approval.
+
+**Reviewed:** 2026-08-04
 
 This document records an approved direction for Pi workflow evolution. It does not approve source-code implementation, schema changes, package restructuring, or mutation of workflow internals.
+
+The requirements baseline for this decision is [Pi Workflow Task Lifecycle SRS](../srs/pi-workflow-task-lifecycle-srs.md).
 
 ## Context
 
@@ -52,16 +56,16 @@ The important architectural shift is ownership: lifecycle and evidence boundarie
 
 The first implementable direction should define one minimal contract with these invariants:
 
-1. **Goal preservation across handoffs**  
+1. **Goal preservation across handoffs**
    The user-approved goal and acceptance criteria remain attached as work moves from shaping to planning to execution.
 
-2. **Harness-owned lifecycle state and approval gates**  
+2. **Harness-owned lifecycle state and approval gates**
    Workflow state, approval boundaries, status transitions, and finalization are managed by Pi runtime tools rather than informal model claims.
 
-3. **Bounded subagent and worker authority**  
+3. **Bounded subagent and worker authority**
    Subagents and workers operate through assigned tasks, allowed tools, dependencies, and evidence requirements instead of open-ended delegation.
 
-4. **Evidence-backed completion and final status**  
+4. **Evidence-backed completion and final status**
    Completion requires substantive evidence such as diffs, commands, receipts, review results, or documented verification. Final responses should distinguish complete, partial, blocked, and failed outcomes using evidence rather than assertion.
 
 The MVP should describe these invariants in prose. It should not define a full schema registry, storage model, enum set, or final API surface in this ADR.
@@ -77,6 +81,8 @@ The lifecycle should evolve current Pi workflows rather than create a parallel s
 - Subagents remain bounded execution/review/research helpers, not an unconstrained role zoo.
 
 Selected roles from the earlier framework, such as planner, reviewer, prover, librarian, or strategist, may become explicit subagent profiles only when they add implementation value. The default should be mapping roles to existing workflow phases first, then promoting only useful roles to durable profiles.
+
+A generic orchestrator may be used behind a workflow-owned adapter for task scheduling. It must not own Pi workflow gates, artifacts, receipts, or workflow persistence.
 
 ## Boundaries and Non-Goals
 

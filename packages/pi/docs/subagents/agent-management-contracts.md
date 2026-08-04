@@ -172,7 +172,7 @@ Pure modules such as spawn gates, concurrency helpers, receipt shaping, ROI reco
 
 ## Worktree/tmux gate
 
-Worktree and tmux orchestration must not begin until a threat-model ADR exists. The accepted ADR is [ADR: Worktree and tmux Threat Model](tmux-worktree-threat-model-adr.md). It covers:
+Worktree and tmux orchestration must not begin until a threat-model ADR exists. The accepted ADR is [ADR: Worktree and tmux Threat Model](../../../../docs/adr/tmux-worktree-threat-model-adr.md). It covers:
 
 - worker owner identity and cleanup authority;
 - parent-checkout protection;
@@ -197,5 +197,5 @@ The ADR is accepted, satisfying this phase gate. Tmux-backed subagents now expos
 | 3 | Registry isolation passes; `awaitReply` remains gated until side-channel semantics are documented and tested. |
 | 4 | Canonical model-facing task API is selected: `task`, evolved `subagent_*`, or temporary dual surface. |
 | 5 | Task receipt shape and hidden/custom/system-message context policy are stable. |
-| 6 | Worktree/tmux threat-model ADR is accepted: [ADR: Worktree and tmux Threat Model](tmux-worktree-threat-model-adr.md). |
+| 6 | Worktree/tmux threat-model ADR is accepted: [ADR: Worktree and tmux Threat Model](../../../../docs/adr/tmux-worktree-threat-model-adr.md). |
 | 7 | Mandatory surrounding surfaces for a final parity claim are enumerated by ADR/ROI score. |

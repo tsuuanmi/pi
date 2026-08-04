@@ -74,4 +74,4 @@ Final plans remain pending until `pi workflow ralplan approve-plan` records an e
 - [Workflow control plane](../../workflow.md)
 - [Deep Interview](../deep-interview/index.md)
 - [Subagents and workflow tools](../../subagents/subagents.md)
-- [Ralplan Orchestrator contract](../../../../../docs/ralplan-orchestrator-contract.md)
+- [Ralplan Orchestrator contract](../../../../../docs/architecture/ralplan-orchestrator-contract.md)

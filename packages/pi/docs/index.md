@@ -65,7 +65,12 @@ For the full first-run flow, see [Quickstart](quickstart.md).
 
 - [Subagents](subagents/subagents.md) - Pi-native `SubagentManager` for isolated agent workers.
 - [Agent Management Contracts](subagents/agent-management-contracts.md) - Phase-gated contracts for agent management migration.
-- [Worktree and tmux Threat Model ADR](subagents/tmux-worktree-threat-model-adr.md) - accepted safety contract for worktree/tmux worker orchestration.
+
+Architecture records for these boundaries live in the repository-level [documentation hub](../../../docs/index.md):
+
+- [Pi Workflow Task Lifecycle SRS](../../../docs/srs/pi-workflow-task-lifecycle-srs.md) - requirements baseline for workflow, task, subagent, and bounded tmux execution.
+- [Harness-Owned Task Contract ADR](../../../docs/adr/general-team-system-framework-adr.md) - accepted direction for runtime-owned task lifecycle state and evidence.
+- [Worktree and tmux Threat Model ADR](../../../docs/adr/tmux-worktree-threat-model-adr.md) - accepted safety contract for Pi-owned tmux workers and deferred worktree isolation.
 
 ## Skills
 

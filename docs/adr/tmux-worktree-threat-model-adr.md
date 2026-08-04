@@ -2,20 +2,24 @@
 
 Status: Accepted
 Date: 2026-07-21
+Reviewed: 2026-08-04
+
+The system-level requirements are captured in [Pi Workflow Task Lifecycle SRS](../srs/pi-workflow-task-lifecycle-srs.md).
 
 ## Context
 
-Pi's agent-management migration can use git worktrees and tmux sessions for inspectable worker implementation and live controls, but these primitives can affect a user's checkout, filesystem, terminal processes, and uncommitted work. Worktree and tmux orchestration must therefore be threat-modeled before Gate 4 worker implementation or Gate 5 live controls begin.
+Pi's agent-management runtime owns a Pi-native tmux worker and bounded live controls for inspectable execution. Git worktrees and tmux sessions can affect a user's checkout, filesystem, terminal processes, and uncommitted work. The tmux backend does not provide worktree isolation; that remains a separate deferred capability.
 
-This ADR accepts the minimum safety contract for future implementation. It does not implement worktree or tmux orchestration by itself.
+This ADR defines the minimum safety contract for the implemented tmux path and for any future worktree orchestration. It does not authorize silently adopting existing resources or replacing unavailable tmux execution with a hidden detached process.
 
 ## Decision
 
-Future worktree/tmux orchestration must be Pi-native, fail-closed, and receipt-oriented:
+Worktree orchestration and any new tmux-backed worker behavior must be Pi-native, fail-closed, and receipt-oriented:
 
 - Pi owns only worktrees, branches, metadata, and tmux sessions it creates and records.
-- The parent checkout is protected by default and is never used as a worker checkout.
-- Dirty parent checkouts block destructive or ambiguous operations unless an explicit user-approved policy allows proceeding.
+- Worktree workers use dedicated checkout paths; the parent checkout is protected by default and is never used as a worker checkout.
+- A tmux-backed subagent may run in a caller-provided `cwd`, but that is not worktree isolation and must not be presented as such.
+- Dirty parent checkouts block destructive or ambiguous worktree operations unless an explicit user-approved policy allows proceeding.
 - Existing paths, existing worktrees, nested repositories, and nested worktrees are detected before creation and treated as collisions unless explicitly adopted by a recorded owner.
 - Manual edits inside worker checkouts are preserved until surfaced and resolved by the user or by an explicit merge/apply policy.
 - tmux resources are recorded as a pane/session target union and cleaned up only by matching owner metadata.
@@ -33,7 +37,7 @@ Each worker resource must have durable owner metadata including workspace root, 
 
 ### Parent-checkout protection
 
-Worker commands must run in dedicated worktree paths, not the parent checkout. The parent checkout may be read for branch/base metadata, but worker implementation must not edit it directly. Any command that would write to the parent checkout is blocked unless the user explicitly requested parent-checkout work outside the worker orchestration path.
+For worktree orchestration, worker commands must run in dedicated worktree paths, not the parent checkout. The parent checkout may be read for branch/base metadata, but worktree worker implementation must not edit it directly. The current tmux-backed subagent path may use an explicitly supplied `cwd` and does not claim this isolation. Any command that would write to the parent checkout through worktree orchestration is blocked unless the user explicitly requested parent-checkout work outside that path.
 
 ### Dirty parent checkout behavior
 
