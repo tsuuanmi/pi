@@ -81,10 +81,7 @@ import type {
 import { expandSkillCommand } from "#pi/runtime/skill-expansion";
 import { computeContextUsage, computeSessionStats } from "#pi/runtime/stats-export";
 import { ToolManager } from "#pi/runtime/tool-manager";
-import {
-	getUserMessagesForForking as treeNavGetUserMessagesForForking,
-	navigateTree as treeNavNavigateTree,
-} from "#pi/runtime/tree-navigation";
+import { navigateTree as treeNavNavigateTree } from "#pi/runtime/tree-navigation";
 import type { CompactionResult } from "#pi/session/compaction";
 import type { BranchSummaryEntry, SessionManager } from "#pi/session/manager";
 import { CURRENT_SESSION_VERSION, type SessionHeader } from "#pi/session/manager";
@@ -560,7 +557,7 @@ export class AgentSession {
 		}
 
 		this._extensionRunner.invalidate(
-			"This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession(), ctx.fork(), ctx.switchSession(), or ctx.reload(). For newSession, fork, and switchSession, move post-replacement work into withSession and use the ctx passed to withSession. For reload, do not use the old ctx after await ctx.reload().",
+			"This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession(), ctx.switchSession(), or ctx.reload(). For newSession and switchSession, move post-replacement work into withSession and use the ctx passed to withSession. For reload, do not use the old ctx after await ctx.reload().",
 		);
 		this._disconnectFromAgent();
 		this._eventListeners = [];
@@ -1290,7 +1287,6 @@ export class AgentSession {
 
 	/**
 	 * Navigate to a different node in the session tree.
-	 * Unlike fork() which creates a new session file, this stays in the same file.
 	 *
 	 * @param targetId The entry ID to navigate to
 	 * @param options.summarize Whether user wants to summarize abandoned branch
@@ -1304,13 +1300,6 @@ export class AgentSession {
 		options: { summarize?: boolean; customInstructions?: string; replaceInstructions?: boolean; label?: string } = {},
 	): Promise<{ editorText?: string; cancelled: boolean; aborted?: boolean; summaryEntry?: BranchSummaryEntry }> {
 		return treeNavNavigateTree(targetId, options, this._ctx());
-	}
-
-	/**
-	 * Get all user messages from session for fork selector.
-	 */
-	getUserMessagesForForking(): Array<{ entryId: string; text: string }> {
-		return treeNavGetUserMessagesForForking(this._ctx());
 	}
 
 	/**

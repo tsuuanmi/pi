@@ -20,8 +20,6 @@ import type {
 	ResourcesDiscoverResult,
 	SessionBeforeCompactEvent,
 	SessionBeforeCompactResult,
-	SessionBeforeForkEvent,
-	SessionBeforeForkResult,
 	SessionBeforeSwitchEvent,
 	SessionBeforeSwitchResult,
 	SessionBeforeTreeEvent,
@@ -56,7 +54,6 @@ export interface ExtensionHookAPI {
 		event: "session_before_switch",
 		handler: ExtensionHandler<SessionBeforeSwitchEvent, SessionBeforeSwitchResult>,
 	): void;
-	on(event: "session_before_fork", handler: ExtensionHandler<SessionBeforeForkEvent, SessionBeforeForkResult>): void;
 	on(
 		event: "session_before_compact",
 		handler: ExtensionHandler<SessionBeforeCompactEvent, SessionBeforeCompactResult>,

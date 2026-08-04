@@ -1,4 +1,3 @@
-import { createInterface } from "node:readline";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { initTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
@@ -22,50 +21,16 @@ export interface StartupSession {
 	sessionManager: SessionManager;
 }
 
-type ResolvedSession =
-	| { type: "path"; path: string }
-	| { type: "local"; path: string }
-	| { type: "global"; path: string; cwd: string }
-	| { type: "not_found"; arg: string };
-
-async function resolveSessionPath(sessionArg: string, cwd: string, sessionDir?: string): Promise<ResolvedSession> {
+async function resolveSessionPath(sessionArg: string, cwd: string, sessionDir?: string): Promise<string | undefined> {
 	if (sessionArg.includes("/") || sessionArg.includes("\\") || sessionArg.endsWith(".jsonl")) {
-		return { type: "path", path: resolvePath(sessionArg, cwd) };
+		return resolvePath(sessionArg, cwd);
 	}
 
-	const localSessions = await SessionManager.list(cwd, sessionDir);
-	const localMatch =
-		localSessions.find((session) => session.id === sessionArg) ??
-		localSessions.find((session) => session.id.startsWith(sessionArg));
-	if (localMatch) return { type: "local", path: localMatch.path };
-
-	const allSessions = await SessionManager.listAll(sessionDir);
-	const globalMatch =
-		allSessions.find((session) => session.id === sessionArg) ??
-		allSessions.find((session) => session.id.startsWith(sessionArg));
-	if (globalMatch) return { type: "global", path: globalMatch.path, cwd: globalMatch.cwd };
-
-	return { type: "not_found", arg: sessionArg };
-}
-
-async function confirm(message: string): Promise<boolean> {
-	return new Promise((resolve) => {
-		const reader = createInterface({ input: process.stdin, output: process.stdout });
-		reader.question(`${message} [y/N] `, (answer) => {
-			reader.close();
-			resolve(answer.toLowerCase() === "y" || answer.toLowerCase() === "yes");
-		});
-	});
-}
-
-function forkSession(sourcePath: string, cwd: string, sessionDir?: string): SessionManager {
-	try {
-		return SessionManager.forkFrom(sourcePath, cwd, sessionDir);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error(chalk.red(`Error: ${message}`));
-		process.exit(1);
-	}
+	const sessions = await SessionManager.list(cwd, sessionDir);
+	const match =
+		sessions.find((session) => session.id === sessionArg) ??
+		sessions.find((session) => session.id.startsWith(sessionArg));
+	return match?.path;
 }
 
 async function createSessionManager(
@@ -77,23 +42,10 @@ async function createSessionManager(
 	if (parsed.help || parsed.listModels !== undefined) return SessionManager.inMemory(cwd);
 
 	if (parsed.session) {
-		const resolved = await resolveSessionPath(parsed.session, cwd, sessionDir);
-		switch (resolved.type) {
-			case "path":
-			case "local":
-				return SessionManager.open(resolved.path, sessionDir);
-			case "global": {
-				console.log(chalk.yellow(`Session found in different project: ${resolved.cwd}`));
-				if (!(await confirm("Fork this session into current directory?"))) {
-					console.log(chalk.dim("Aborted."));
-					process.exit(0);
-				}
-				return forkSession(resolved.path, cwd, sessionDir);
-			}
-			case "not_found":
-				console.error(chalk.red(`No session found matching '${resolved.arg}'`));
-				process.exit(1);
-		}
+		const sessionPath = await resolveSessionPath(parsed.session, cwd, sessionDir);
+		if (sessionPath) return SessionManager.open(sessionPath, sessionDir);
+		console.error(chalk.red(`No session found matching '${parsed.session}'`));
+		process.exit(1);
 	}
 
 	if (parsed.resume) {

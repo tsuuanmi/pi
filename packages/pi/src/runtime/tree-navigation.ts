@@ -185,23 +185,6 @@ export async function navigateTree(
 	}
 }
 
-export function getUserMessagesForForking(ctx: AgentSessionContext): Array<{ entryId: string; text: string }> {
-	const entries = ctx.sessionManager.getEntries();
-	const result: Array<{ entryId: string; text: string }> = [];
-
-	for (const entry of entries) {
-		if (entry.type !== "message") continue;
-		if (entry.message.role !== "user") continue;
-
-		const text = extractUserMessageText(entry.message.content);
-		if (text) {
-			result.push({ entryId: entry.id, text });
-		}
-	}
-
-	return result;
-}
-
 function extractUserMessageText(content: string | Array<{ type: string; text?: string }>): string {
 	if (typeof content === "string") return content;
 	if (Array.isArray(content)) {

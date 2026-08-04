@@ -3,7 +3,6 @@ import type { AgentSession } from "#pi/runtime/agent-session";
 import type { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
 import type { AccountAuthController } from "#pi/ui/interactive/controllers/account-auth";
 import type { CommandController } from "#pi/ui/interactive/controllers/command";
-import type { SelectorController } from "#pi/ui/interactive/controllers/selector";
 
 type KeyHandlerControllerDependencies = {
 	ui: TUI;
@@ -16,7 +15,6 @@ type KeyHandlerControllerDependencies = {
 	getPendingUserInputs: () => string[];
 	_commandController: CommandController;
 	_accountAuthController: AccountAuthController;
-	_selectorController: SelectorController;
 	restoreQueuedMessagesToEditor: (options?: { abort?: boolean; currentText?: string }) => number;
 	updateEditorBorderColor: () => void;
 	handleCtrlC: () => void;
@@ -29,10 +27,8 @@ type KeyHandlerControllerDependencies = {
 	handleDequeue: () => void;
 	handleClearCommand: () => Promise<void>;
 	showTreeSelector: (initialSelectedId?: string) => void;
-	showUserMessageSelector: () => void;
 	showSessionSelector: () => void;
 	showSettingsSelector: () => void;
-	handleImportCommand: (text: string) => Promise<void>;
 	handleBashCommand: (command: string, isExcluded: boolean) => Promise<void>;
 	handleCompactCommand: (customInstructions?: string) => Promise<void>;
 	handleReloadCommand: () => Promise<void>;
@@ -55,7 +51,6 @@ export class KeyHandlerController {
 	private readonly getPendingUserInputs: () => string[];
 	private readonly _commandController: CommandController;
 	private readonly _accountAuthController: AccountAuthController;
-	private readonly _selectorController: SelectorController;
 	private readonly restoreQueuedMessagesToEditor: (options?: { abort?: boolean; currentText?: string }) => number;
 	private readonly updateEditorBorderColor: () => void;
 	private readonly handleCtrlC: () => void;
@@ -68,10 +63,8 @@ export class KeyHandlerController {
 	private readonly handleDequeue: () => void;
 	private readonly handleClearCommand: () => Promise<void>;
 	private readonly showTreeSelector: (initialSelectedId?: string) => void;
-	private readonly showUserMessageSelector: () => void;
 	private readonly showSessionSelector: () => void;
 	private readonly showSettingsSelector: () => void;
-	private readonly handleImportCommand: (text: string) => Promise<void>;
 	private readonly handleBashCommand: (command: string, isExcluded: boolean) => Promise<void>;
 	private readonly handleCompactCommand: (customInstructions?: string) => Promise<void>;
 	private readonly handleReloadCommand: () => Promise<void>;
@@ -93,7 +86,6 @@ export class KeyHandlerController {
 		this.getPendingUserInputs = deps.getPendingUserInputs;
 		this._commandController = deps._commandController;
 		this._accountAuthController = deps._accountAuthController;
-		this._selectorController = deps._selectorController;
 		this.restoreQueuedMessagesToEditor = deps.restoreQueuedMessagesToEditor;
 		this.updateEditorBorderColor = deps.updateEditorBorderColor;
 		this.handleCtrlC = deps.handleCtrlC;
@@ -106,10 +98,8 @@ export class KeyHandlerController {
 		this.handleDequeue = deps.handleDequeue;
 		this.handleClearCommand = deps.handleClearCommand;
 		this.showTreeSelector = deps.showTreeSelector;
-		this.showUserMessageSelector = deps.showUserMessageSelector;
 		this.showSessionSelector = deps.showSessionSelector;
 		this.showSettingsSelector = deps.showSettingsSelector;
-		this.handleImportCommand = deps.handleImportCommand;
 		this.handleBashCommand = deps.handleBashCommand;
 		this.handleCompactCommand = deps.handleCompactCommand;
 		this.handleReloadCommand = deps.handleReloadCommand;
@@ -168,7 +158,6 @@ export class KeyHandlerController {
 		this.defaultEditor.onAction("app.message.dequeue", () => this.handleDequeue());
 		this.defaultEditor.onAction("app.session.new", () => this.handleClearCommand());
 		this.defaultEditor.onAction("app.session.tree", () => this.showTreeSelector());
-		this.defaultEditor.onAction("app.session.fork", () => this.showUserMessageSelector());
 		this.defaultEditor.onAction("app.session.resume", () => this.showSessionSelector());
 
 		this.defaultEditor.onChange = (text: string) => {
@@ -191,11 +180,6 @@ export class KeyHandlerController {
 				this.editor.setText("");
 				return;
 			}
-			if (text === "/import" || text.startsWith("/import ")) {
-				await this.handleImportCommand(text);
-				this.editor.setText("");
-				return;
-			}
 			if (text === "/copy") {
 				await this._commandController.handleCopyCommand();
 				this.editor.setText("");
@@ -208,16 +192,6 @@ export class KeyHandlerController {
 			}
 			if (text === "/session") {
 				this._commandController.handleSessionCommand();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/hotkeys") {
-				this._commandController.handleHotkeysCommand();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/fork") {
-				this.showUserMessageSelector();
 				this.editor.setText("");
 				return;
 			}

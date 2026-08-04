@@ -4,7 +4,6 @@
 
 export type {
 	ExtensionErrorListener,
-	ForkHandler,
 	NavigateTreeHandler,
 	NewSessionHandler,
 	ShutdownHandler,

@@ -153,7 +153,6 @@ async function bindSubagentExtensions(session: AgentSession): Promise<void> {
 		commandContextActions: {
 			waitForIdle: () => session.agent.waitForIdle(),
 			newSession: async () => ({ cancelled: true }),
-			fork: async () => ({ cancelled: true }),
 			navigateTree: async () => ({ cancelled: true }),
 			switchSession: async () => ({ cancelled: true }),
 			reload: async () => session.reload(),

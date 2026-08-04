@@ -22,7 +22,6 @@ import { AssistantMessageComponent } from "#pi/ui/interactive/components/message
 import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session";
 import { SettingsSelectorComponent } from "#pi/ui/interactive/components/selectors/settings";
 import { TreeSelectorComponent } from "#pi/ui/interactive/components/selectors/tree";
-import { UserMessageSelectorComponent } from "#pi/ui/interactive/components/selectors/user-message";
 import type { ExtensionUIController } from "#pi/ui/interactive/controllers/extension-ui";
 
 type SelectorControllerDependencies = {
@@ -311,47 +310,6 @@ export class SelectorController {
 	}
 
 	/** Update the footer's available provider count from current model candidates */
-
-	showUserMessageSelector(): void {
-		const userMessages = this.session.getUserMessagesForForking();
-
-		if (userMessages.length === 0) {
-			this.showStatus("No messages to fork from");
-			return;
-		}
-
-		const initialSelectedId = userMessages[userMessages.length - 1]?.entryId;
-
-		this.showSelector((done) => {
-			const selector = new UserMessageSelectorComponent(
-				userMessages.map((m) => ({ id: m.entryId, text: m.text })),
-				async (entryId) => {
-					try {
-						const result = await this.runtimeHost.fork(entryId);
-						if (result.cancelled) {
-							done();
-							this.ui.requestRender();
-							return;
-						}
-
-						this.renderCurrentSessionState();
-						this.editor.setText(result.selectedText ?? "");
-						done();
-						this.showStatus("Forked to new session");
-					} catch (error: unknown) {
-						done();
-						this.showError(error instanceof Error ? error.message : String(error));
-					}
-				},
-				() => {
-					done();
-					this.ui.requestRender();
-				},
-				initialSelectedId,
-			);
-			return { component: selector, focus: selector.getMessageList() };
-		});
-	}
 
 	showTreeSelector(initialSelectedId?: string): void {
 		const tree = this.sessionManager.getTree();

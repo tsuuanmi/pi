@@ -31,7 +31,6 @@ export {
 } from "#pi/ui/interactive/components/selectors/settings";
 export { ThinkingSelectorComponent } from "#pi/ui/interactive/components/selectors/thinking";
 export { TreeSelectorComponent } from "#pi/ui/interactive/components/selectors/tree";
-export { UserMessageSelectorComponent } from "#pi/ui/interactive/components/selectors/user-message";
 export {
 	ToolExecutionComponent,
 	type ToolExecutionOptions,

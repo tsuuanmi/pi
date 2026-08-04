@@ -230,12 +230,11 @@ export class RpcClient {
 	}
 
 	/**
-	 * Start a new session, optionally with parent tracking.
-	 * @param parentSession - Optional parent session path for lineage tracking
+	 * Start a new session.
 	 * @returns Object with `cancelled: true` if an extension cancelled the new session
 	 */
-	async newSession(parentSession?: string): Promise<{ cancelled: boolean }> {
-		const response = await this.send({ type: "new_session", parentSession });
+	async newSession(): Promise<{ cancelled: boolean }> {
+		const response = await this.send({ type: "new_session" });
 		return this.getData(response);
 	}
 
@@ -363,32 +362,6 @@ export class RpcClient {
 	async switchSession(sessionPath: string): Promise<{ cancelled: boolean }> {
 		const response = await this.send({ type: "switch_session", sessionPath });
 		return this.getData(response);
-	}
-
-	/**
-	 * Fork from a specific message.
-	 * @returns Object with `text` (the message text) and `cancelled` (if extension cancelled)
-	 */
-	async fork(entryId: string): Promise<{ text: string; cancelled: boolean }> {
-		const response = await this.send({ type: "fork", entryId });
-		return this.getData(response);
-	}
-
-	/**
-	 * Clone the current active branch into a new session.
-	 * @returns Object with `cancelled: true` if an extension cancelled the clone
-	 */
-	async clone(): Promise<{ cancelled: boolean }> {
-		const response = await this.send({ type: "clone" });
-		return this.getData(response);
-	}
-
-	/**
-	 * Get messages available for forking.
-	 */
-	async getForkMessages(): Promise<Array<{ entryId: string; text: string }>> {
-		const response = await this.send({ type: "get_fork_messages" });
-		return this.getData<{ messages: Array<{ entryId: string; text: string }> }>(response).messages;
 	}
 
 	/**

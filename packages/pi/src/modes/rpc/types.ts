@@ -22,7 +22,7 @@ export type RpcCommand =
 	| { id?: string; type: "steer"; message: string }
 	| { id?: string; type: "follow_up"; message: string }
 	| { id?: string; type: "abort" }
-	| { id?: string; type: "new_session"; parentSession?: string }
+	| { id?: string; type: "new_session" }
 
 	// State
 	| { id?: string; type: "get_state" }
@@ -55,9 +55,6 @@ export type RpcCommand =
 	// Session
 	| { id?: string; type: "get_session_stats" }
 	| { id?: string; type: "switch_session"; sessionPath: string }
-	| { id?: string; type: "fork"; entryId: string }
-	| { id?: string; type: "clone" }
-	| { id?: string; type: "get_fork_messages" }
 	| { id?: string; type: "get_last_assistant_text" }
 	| { id?: string; type: "set_session_name"; name: string }
 
@@ -170,15 +167,6 @@ export type RpcResponse =
 	// Session
 	| { id?: string; type: "response"; command: "get_session_stats"; success: true; data: SessionStats }
 	| { id?: string; type: "response"; command: "switch_session"; success: true; data: { cancelled: boolean } }
-	| { id?: string; type: "response"; command: "fork"; success: true; data: { text: string; cancelled: boolean } }
-	| { id?: string; type: "response"; command: "clone"; success: true; data: { cancelled: boolean } }
-	| {
-			id?: string;
-			type: "response";
-			command: "get_fork_messages";
-			success: true;
-			data: { messages: Array<{ entryId: string; text: string }> };
-	  }
 	| {
 			id?: string;
 			type: "response";

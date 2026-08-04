@@ -84,7 +84,6 @@ export type {
 	RegisteredTool,
 	ResolvedCommand,
 	SessionBeforeCompactEvent,
-	SessionBeforeForkEvent,
 	SessionBeforeSwitchEvent,
 	SessionBeforeTreeEvent,
 	SessionCompactEvent,
@@ -337,7 +336,6 @@ export {
 	type ToolExecutionOptions,
 	TreeSelectorComponent,
 	truncateToVisualLines,
-	UserMessageSelectorComponent,
 	type VisualTruncateResult,
 } from "#pi/ui/interactive/components/index";
 // Clipboard utilities

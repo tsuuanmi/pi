@@ -16,7 +16,6 @@ import type {
 	ResourcesDiscoverEvent,
 	ResourcesDiscoverResult,
 	SessionBeforeCompactResult,
-	SessionBeforeForkResult,
 	SessionBeforeSwitchResult,
 	SessionBeforeTreeResult,
 	ToolCallEvent,
@@ -57,24 +56,18 @@ export type RunnerEmitEvent = Exclude<
 
 export type SessionBeforeEvent = Extract<
 	RunnerEmitEvent,
-	{ type: "session_before_switch" | "session_before_fork" | "session_before_compact" | "session_before_tree" }
+	{ type: "session_before_switch" | "session_before_compact" | "session_before_tree" }
 >;
 
-export type SessionBeforeEventResult =
-	| SessionBeforeSwitchResult
-	| SessionBeforeForkResult
-	| SessionBeforeCompactResult
-	| SessionBeforeTreeResult;
+export type SessionBeforeEventResult = SessionBeforeSwitchResult | SessionBeforeCompactResult | SessionBeforeTreeResult;
 
 export type RunnerEmitResult<TEvent extends RunnerEmitEvent> = TEvent extends { type: "session_before_switch" }
 	? SessionBeforeSwitchResult | undefined
-	: TEvent extends { type: "session_before_fork" }
-		? SessionBeforeForkResult | undefined
-		: TEvent extends { type: "session_before_compact" }
-			? SessionBeforeCompactResult | undefined
-			: TEvent extends { type: "session_before_tree" }
-				? SessionBeforeTreeResult | undefined
-				: undefined;
+	: TEvent extends { type: "session_before_compact" }
+		? SessionBeforeCompactResult | undefined
+		: TEvent extends { type: "session_before_tree" }
+			? SessionBeforeTreeResult | undefined
+			: undefined;
 
 export function hasExtensionHookHandlers(extensions: Extension[], isStale: () => boolean, eventType: string): boolean {
 	if (isStale()) return false;
@@ -99,7 +92,6 @@ function recordHookError(state: HookDispatchState, extensionPath: string, event:
 function isSessionBeforeEvent(event: RunnerEmitEvent): event is SessionBeforeEvent {
 	return (
 		event.type === "session_before_switch" ||
-		event.type === "session_before_fork" ||
 		event.type === "session_before_compact" ||
 		event.type === "session_before_tree"
 	);

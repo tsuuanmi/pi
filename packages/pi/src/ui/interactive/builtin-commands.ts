@@ -7,12 +7,9 @@ export interface BuiltinSlashCommand {
 
 export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [
 	{ name: "settings", description: "Open settings menu" },
-	{ name: "import", description: "Import and resume a session from a JSONL file" },
 	{ name: "copy", description: "Copy last agent message to clipboard" },
 	{ name: "name", description: "Set session display name" },
 	{ name: "session", description: "Show session info and stats" },
-	{ name: "hotkeys", description: "Show all keyboard shortcuts" },
-	{ name: "fork", description: "Create a new fork from a previous user message" },
 	{ name: "tree", description: "Navigate session tree (switch branches)" },
 	{ name: "provider", description: "Add custom provider models" },
 	{ name: "account", description: "Add, list, switch, remove, view quota, or reset Codex provider accounts" },

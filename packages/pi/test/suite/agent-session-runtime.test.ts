@@ -1,12 +1,11 @@
 import { existsSync, mkdirSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, parse } from "node:path";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
 import type {
 	ExtensionAPI,
 	ExtensionFactory,
-	SessionBeforeForkEvent,
 	SessionBeforeSwitchEvent,
 	SessionShutdownEvent,
 	SessionStartEvent,
@@ -16,11 +15,7 @@ import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/
 import { SessionManager } from "#pi/session/manager";
 import { registerTestProvider, testAssistantMessage } from "#pi-test/helpers/provider";
 
-type RecordedSessionEvent =
-	| SessionBeforeSwitchEvent
-	| SessionBeforeForkEvent
-	| SessionShutdownEvent
-	| SessionStartEvent;
+type RecordedSessionEvent = SessionBeforeSwitchEvent | SessionShutdownEvent | SessionStartEvent;
 
 describe("AgentSessionRuntime characterization", () => {
 	const cleanups: Array<() => Promise<void> | void> = [];
@@ -239,216 +234,6 @@ describe("AgentSessionRuntime characterization", () => {
 		const resumeResult = await runtime.switchSession(otherSessionFile!);
 		expect(resumeResult.cancelled).toBe(true);
 		expect(runtime.session.sessionFile).toBe(originalSessionFile);
-	});
-
-	it("emits session_before_fork and session_start and honors cancellation", async () => {
-		const events: RecordedSessionEvent[] = [];
-		let cancelNextFork = false;
-		const { runtime } = await createRuntimeForTest((pi: ExtensionAPI) => {
-			pi.on("session_before_fork", (event) => {
-				events.push(event);
-				if (cancelNextFork) {
-					cancelNextFork = false;
-					return { cancel: true };
-				}
-			});
-			pi.on("session_shutdown", (event) => {
-				events.push(event);
-			});
-			pi.on("session_start", (event) => {
-				events.push(event);
-			});
-		});
-
-		events.length = 0;
-		await runtime.session.prompt("hello");
-		const userMessage = runtime.session.getUserMessagesForForking()[0]!;
-		const previousSessionFile = runtime.session.sessionFile;
-
-		const successResult = await runtime.fork(userMessage.entryId);
-		expect(successResult.cancelled).toBe(false);
-		expect(successResult.selectedText).toBe("hello");
-		await runtime.session.bindExtensions({});
-		expect(events).toEqual([
-			{ type: "session_before_fork", entryId: userMessage.entryId, position: "before" },
-			{ type: "session_shutdown", reason: "fork", targetSessionFile: runtime.session.sessionFile },
-			{ type: "session_start", reason: "fork", previousSessionFile },
-		]);
-		const sessionFileName = parse(runtime.session.sessionFile!).name;
-		expect(sessionFileName.endsWith(`_${runtime.session.sessionId}`)).toBe(true);
-
-		events.length = 0;
-		cancelNextFork = true;
-		const cancelResult = await runtime.fork(userMessage.entryId);
-		expect(cancelResult).toEqual({ cancelled: true });
-		expect(events).toEqual([{ type: "session_before_fork", entryId: userMessage.entryId, position: "before" }]);
-
-		events.length = 0;
-		cancelNextFork = true;
-		const cancelAtResult = await runtime.fork("missing-entry", { position: "at" });
-		expect(cancelAtResult).toEqual({ cancelled: true });
-		expect(events).toEqual([{ type: "session_before_fork", entryId: "missing-entry", position: "at" }]);
-	});
-
-	it("duplicates the current active branch when forking at the current position", async () => {
-		const { runtime } = await createRuntimeForTest(() => {});
-		await runtime.session.prompt("hello");
-		await runtime.session.prompt("again");
-
-		const beforeMessages = runtime.session.messages.map((message) => ({
-			role: message.role,
-			text:
-				message.role === "user"
-					? typeof message.content === "string"
-						? message.content
-						: message.content
-								.filter((part): part is { type: "text"; text: string } => part.type === "text")
-								.map((part) => part.text)
-								.join("")
-					: undefined,
-		}));
-		const previousSessionFile = runtime.session.sessionFile;
-		const leafId = runtime.session.sessionManager.getLeafId();
-		expect(leafId).toBeTruthy();
-
-		const result = await runtime.fork(leafId!, { position: "at" });
-		expect(result).toEqual({ cancelled: false, selectedText: undefined });
-		expect(runtime.session.sessionFile).not.toBe(previousSessionFile);
-		expect(
-			runtime.session.messages.map((message) => ({
-				role: message.role,
-				text:
-					message.role === "user"
-						? typeof message.content === "string"
-							? message.content
-							: message.content
-									.filter((part): part is { type: "text"; text: string } => part.type === "text")
-									.map((part) => part.text)
-									.join("")
-						: undefined,
-			})),
-		).toEqual(beforeMessages);
-	});
-
-	it("duplicates the current active branch in-memory when forking at the current position", async () => {
-		const tempDir = join(tmpdir(), `pi-runtime-suite-in-memory-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-		mkdirSync(tempDir, { recursive: true });
-
-		const testProvider = registerTestProvider({
-			models: [
-				{ id: "test-1", reasoning: true },
-				{ id: "test-2", reasoning: false },
-			],
-		});
-		testProvider.setResponses([
-			testAssistantMessage("one"),
-			testAssistantMessage("two"),
-			testAssistantMessage("three"),
-		]);
-
-		const authStorage = AuthStorage.inMemory();
-		authStorage.setRuntimeApiKey(testProvider.getModel().provider, "test-key");
-
-		const runtimeOptions = {
-			agentDir: tempDir,
-			authStorage,
-			model: testProvider.getModel(),
-			resourceLoaderOptions: {
-				extensionFactories: [
-					(pi: ExtensionAPI) => {
-						pi.registerProvider(testProvider.getModel().provider, {
-							baseUrl: testProvider.getModel().baseUrl,
-							apiKey: "test-key",
-							api: testProvider.api,
-							models: testProvider.models.map((registeredModel) => ({
-								id: registeredModel.id,
-								name: registeredModel.name,
-								api: registeredModel.api,
-								reasoning: registeredModel.reasoning,
-								input: registeredModel.input,
-								cost: registeredModel.cost,
-								contextWindow: registeredModel.contextWindow,
-								maxTokens: registeredModel.maxTokens,
-							})),
-						});
-					},
-				],
-				noSkills: true,
-				noPromptTemplates: true,
-				noThemes: true,
-			},
-		};
-		const createRuntime: CreateAgentSessionRuntimeFactory = async ({ cwd, sessionManager, sessionStartEvent }) => {
-			const services = await createAgentSessionServices({
-				...runtimeOptions,
-				cwd,
-			});
-			return {
-				...(await createAgentSessionFromServices({
-					services,
-					sessionManager,
-					sessionStartEvent,
-					model: runtimeOptions.model,
-				})),
-				services,
-				diagnostics: services.diagnostics,
-			};
-		};
-		const runtime = await createAgentSessionRuntime(createRuntime, {
-			cwd: tempDir,
-			agentDir: tempDir,
-			sessionManager: SessionManager.inMemory(tempDir),
-		});
-		await runtime.session.bindExtensions({});
-		cleanups.push(async () => {
-			await runtime.dispose();
-			testProvider.unregister();
-			if (existsSync(tempDir)) {
-				rmSync(tempDir, { recursive: true, force: true });
-			}
-		});
-
-		await runtime.session.prompt("hello");
-		await runtime.session.prompt("again");
-
-		const beforeMessages = runtime.session.messages.map((message) => ({
-			role: message.role,
-			text:
-				message.role === "user"
-					? typeof message.content === "string"
-						? message.content
-						: message.content
-								.filter((part): part is { type: "text"; text: string } => part.type === "text")
-								.map((part) => part.text)
-								.join("")
-					: undefined,
-		}));
-		const leafId = runtime.session.sessionManager.getLeafId();
-		expect(leafId).toBeTruthy();
-		expect(runtime.session.sessionFile).toBeUndefined();
-
-		const result = await runtime.fork(leafId!, { position: "at" });
-		expect(result).toEqual({ cancelled: false, selectedText: undefined });
-		expect(runtime.session.sessionFile).toBeUndefined();
-		expect(
-			runtime.session.messages.map((message) => ({
-				role: message.role,
-				text:
-					message.role === "user"
-						? typeof message.content === "string"
-							? message.content
-							: message.content
-									.filter((part): part is { type: "text"; text: string } => part.type === "text")
-									.map((part) => part.text)
-									.join("")
-						: undefined,
-			})),
-		).toEqual(beforeMessages);
-	});
-
-	it("throws when forking with an invalid entry id", async () => {
-		const { runtime } = await createRuntimeForTest(() => {});
-		await expect(runtime.fork("missing-entry")).rejects.toThrow("Invalid entry ID for forking");
 	});
 
 	it("updates the runtime session cwd on cross-cwd session replacement", async () => {

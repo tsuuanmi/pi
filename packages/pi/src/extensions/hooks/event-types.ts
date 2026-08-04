@@ -49,8 +49,8 @@ export interface ResourcesDiscoverResult {
 export interface SessionStartEvent {
 	type: "session_start";
 	/** Why this session start happened. */
-	reason: "startup" | "reload" | "new" | "resume" | "fork";
-	/** Previously active session file. Present for "new", "resume", and "fork". */
+	reason: "startup" | "reload" | "new" | "resume";
+	/** Previously active session file. Present for "new" and "resume". */
 	previousSessionFile?: string;
 }
 
@@ -59,13 +59,6 @@ export interface SessionBeforeSwitchEvent {
 	type: "session_before_switch";
 	reason: "new" | "resume";
 	targetSessionFile?: string;
-}
-
-/** Fired before forking a session (can be cancelled) */
-export interface SessionBeforeForkEvent {
-	type: "session_before_fork";
-	entryId: string;
-	position: "before" | "at";
 }
 
 /** Fired before context compaction (can be cancelled or customized) */
@@ -87,7 +80,7 @@ export interface SessionCompactEvent {
 /** Fired before an extension runtime is torn down due to quit, reload, or session replacement. */
 export interface SessionShutdownEvent {
 	type: "session_shutdown";
-	reason: "quit" | "reload" | "new" | "resume" | "fork";
+	reason: "quit" | "reload" | "new" | "resume";
 	/** Destination session file when shutting down due to session replacement. */
 	targetSessionFile?: string;
 }
@@ -126,7 +119,6 @@ export interface SessionTreeEvent {
 export type SessionEvent =
 	| SessionStartEvent
 	| SessionBeforeSwitchEvent
-	| SessionBeforeForkEvent
 	| SessionBeforeCompactEvent
 	| SessionCompactEvent
 	| SessionShutdownEvent
@@ -579,11 +571,6 @@ export interface BeforeAgentStartEventResult {
 
 export interface SessionBeforeSwitchResult {
 	cancel?: boolean;
-}
-
-export interface SessionBeforeForkResult {
-	cancel?: boolean;
-	skipConversationRestore?: boolean;
 }
 
 export interface SessionBeforeCompactResult {

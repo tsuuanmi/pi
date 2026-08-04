@@ -9,14 +9,7 @@ import * as path from "node:path";
 import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import { createCompactionSummaryMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Message } from "@tsuuanmi/pi-ai";
-import type {
-	AutocompleteProvider,
-	EditorComponent,
-	Keybinding,
-	KeyId,
-	MarkdownTheme,
-	SlashCommand,
-} from "@tsuuanmi/pi-tui";
+import type { AutocompleteProvider, EditorComponent, KeyId, MarkdownTheme, SlashCommand } from "@tsuuanmi/pi-tui";
 import {
 	CombinedAutocompleteProvider,
 	type Component,
@@ -66,10 +59,10 @@ import type { TruncationResult } from "#pi/output/truncation";
 import { parseGitUrl } from "#pi/package-manager/git";
 import type { SourceInfo } from "#pi/resources/source-info";
 import type { AgentSession } from "#pi/runtime/agent-session";
-import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "#pi/runtime/agent-session-runtime";
+import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 import { parseSkillBlock } from "#pi/runtime/session/skill-block";
 import type { AgentSessionEvent } from "#pi/runtime/session/types";
-import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "#pi/session/cwd";
+import { formatMissingSessionCwdPrompt, type MissingSessionCwdError } from "#pi/session/cwd";
 import type { SessionContext, SessionManager } from "#pi/session/manager";
 import { type AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
 import { ensureTool } from "#pi/tools/tool-installer";
@@ -346,14 +339,10 @@ export class InteractiveMode {
 		this._commandController = new CommandController({
 			ui: this.ui,
 			chatContainer: this.chatContainer,
-			keybindings: this.keybindings,
 			getSession: () => this.session,
 			showError: (message) => this.showError(message),
 			showWarning: (message) => this.showWarning(message),
 			showStatus: (message) => this.showStatus(message),
-			getMarkdownThemeWithSettings: () => this.getMarkdownThemeWithSettings(),
-			getAppKeyDisplay: (action) => this.getAppKeyDisplay(action),
-			getEditorKeyDisplay: (action) => this.getEditorKeyDisplay(action),
 		});
 
 		// Pinned host-constructor order (load-bearing — tsgo does not catch a `!`-typed
@@ -412,7 +401,6 @@ export class InteractiveMode {
 			getPendingUserInputs: () => this.pendingUserInputs,
 			_commandController: this._commandController,
 			_accountAuthController: this._accountAuthController,
-			_selectorController: this._selectorController,
 			restoreQueuedMessagesToEditor: (options) => this.restoreQueuedMessagesToEditor(options),
 			updateEditorBorderColor: () => this.updateEditorBorderColor(),
 			handleCtrlC: () => this.handleCtrlC(),
@@ -425,10 +413,8 @@ export class InteractiveMode {
 			handleDequeue: () => this.handleDequeue(),
 			handleClearCommand: () => this.handleClearCommand(),
 			showTreeSelector: (initialSelectedId) => this._selectorController.showTreeSelector(initialSelectedId),
-			showUserMessageSelector: () => this._selectorController.showUserMessageSelector(),
 			showSessionSelector: () => this._selectorController.showSessionSelector(),
 			showSettingsSelector: () => this._selectorController.showSettingsSelector(),
-			handleImportCommand: (command) => this.handleImportCommand(command),
 			handleBashCommand: (command, isExcluded) => this.handleBashCommand(command, isExcluded),
 			handleCompactCommand: (customInstructions) => this.handleCompactCommand(customInstructions),
 			handleReloadCommand: () => this.handleReloadCommand(),
@@ -682,19 +668,6 @@ export class InteractiveMode {
 						return result;
 					} catch (error: unknown) {
 						return this.handleFatalRuntimeError("Failed to create session", error);
-					}
-				},
-				fork: async (entryId, options) => {
-					try {
-						const result = await this.runtimeHost.fork(entryId, options);
-						if (!result.cancelled) {
-							this.renderCurrentSessionState();
-							this.editor.setText(result.selectedText ?? "");
-							this.showStatus("Forked to new session");
-						}
-						return { cancelled: result.cancelled };
-					} catch (error: unknown) {
-						return this.handleFatalRuntimeError("Failed to fork session", error);
 					}
 				},
 				navigateTree: async (targetId, options) => {
@@ -2237,70 +2210,10 @@ export class InteractiveMode {
 		}
 	}
 
-	private async handleImportCommand(text: string): Promise<void> {
-		const inputPath = this._commandController.getPathCommandArgument(text, "/import");
-		if (!inputPath) {
-			this.showError("Usage: /import <path.jsonl>");
-			return;
-		}
-
-		const confirmed = await this._extensionUIController.showExtensionConfirm(
-			"Import session",
-			`Replace current session with ${inputPath}?`,
-		);
-		if (!confirmed) {
-			this.showStatus("Import cancelled");
-			return;
-		}
-
-		try {
-			if (this.loadingAnimation) {
-				this.loadingAnimation.stop();
-				this.loadingAnimation = undefined;
-			}
-			this.statusContainer.clear();
-			const result = await this.runtimeHost.importFromJsonl(inputPath);
-			if (result.cancelled) {
-				this.showStatus("Import cancelled");
-				return;
-			}
-			this.renderCurrentSessionState();
-			this.showStatus(`Session imported from: ${inputPath}`);
-		} catch (error: unknown) {
-			if (error instanceof MissingSessionCwdError) {
-				const selectedCwd = await this.promptForMissingSessionCwd(error);
-				if (!selectedCwd) {
-					this.showStatus("Import cancelled");
-					return;
-				}
-				const result = await this.runtimeHost.importFromJsonl(inputPath, selectedCwd);
-				if (result.cancelled) {
-					this.showStatus("Import cancelled");
-					return;
-				}
-				this.renderCurrentSessionState();
-				this.showStatus(`Session imported from: ${inputPath}`);
-				return;
-			}
-			if (error instanceof SessionImportFileNotFoundError) {
-				this.showError(`Failed to import session: ${error.message}`);
-				return;
-			}
-			await this.handleFatalRuntimeError("Failed to import session", error);
-		}
-	}
-
 	/**
 	 * Get capitalized display string for an app keybinding action.
 	 */
 	private getAppKeyDisplay(action: AppKeybinding): string {
-		return keyDisplayText(action);
-	}
-
-	/**
-	 * Get capitalized display string for an editor keybinding action.
-	 */
-	private getEditorKeyDisplay(action: Keybinding): string {
 		return keyDisplayText(action);
 	}
 

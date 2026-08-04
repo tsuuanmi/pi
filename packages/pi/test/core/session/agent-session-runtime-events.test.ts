@@ -3,23 +3,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
-import type {
-	ExtensionFactory,
-	SessionBeforeForkEvent,
-	SessionBeforeSwitchEvent,
-	SessionShutdownEvent,
-	SessionStartEvent,
-} from "#pi/index";
+import type { ExtensionFactory, SessionBeforeSwitchEvent, SessionShutdownEvent, SessionStartEvent } from "#pi/index";
 import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/runtime/agent-session-services";
 import { SessionManager } from "#pi/session/manager";
 import { registerTestProvider, testAssistantMessage } from "#pi-test/helpers/provider";
 
-type RecordedSessionEvent =
-	| SessionBeforeSwitchEvent
-	| SessionBeforeForkEvent
-	| SessionShutdownEvent
-	| SessionStartEvent;
+type RecordedSessionEvent = SessionBeforeSwitchEvent | SessionShutdownEvent | SessionStartEvent;
 
 describe("AgentSessionRuntime session lifecycle events", () => {
 	const cleanups: Array<() => Promise<void> | void> = [];
@@ -186,58 +176,9 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 		).resolves.toBeUndefined();
 		expect(beforeAgentStartCalls).toBe(0);
 		expect(() => oldSession.extensionRunner.createContext().cwd).toThrow(
-			"This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession(), ctx.fork(), ctx.switchSession(), or ctx.reload(). For newSession, fork, and switchSession, move post-replacement work into withSession and use the ctx passed to withSession. For reload, do not use the old ctx after await ctx.reload().",
+			"This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession(), ctx.switchSession(), or ctx.reload(). For newSession and switchSession, move post-replacement work into withSession and use the ctx passed to withSession. For reload, do not use the old ctx after await ctx.reload().",
 		);
 		runtimeHost.setBeforeSessionInvalidate(undefined);
 		runtimeHost.setRebindSession(undefined);
-	});
-
-	it("emits session_before_fork and session_start and honors cancellation", async () => {
-		const events: RecordedSessionEvent[] = [];
-		let cancelNextFork = false;
-		const { runtimeHost } = await createRuntimeHost((pi) => {
-			pi.on("session_before_fork", (event) => {
-				events.push(event);
-				if (cancelNextFork) {
-					cancelNextFork = false;
-					return { cancel: true };
-				}
-			});
-			pi.on("session_shutdown", (event) => {
-				events.push(event);
-			});
-			pi.on("session_start", (event) => {
-				events.push(event);
-			});
-		});
-
-		expect(events).toEqual([{ type: "session_start", reason: "startup" }]);
-		events.length = 0;
-
-		await runtimeHost.session.prompt("hello");
-		const userMessage = runtimeHost.session.getUserMessagesForForking()[0];
-		const previousSessionFile = runtimeHost.session.sessionFile;
-
-		const successResult = await runtimeHost.fork(userMessage.entryId);
-		expect(successResult.cancelled).toBe(false);
-		expect(successResult.selectedText).toBe("hello");
-		await runtimeHost.session.bindExtensions({});
-		expect(events).toEqual([
-			{ type: "session_before_fork", entryId: userMessage.entryId, position: "before" },
-			{ type: "session_shutdown", reason: "fork", targetSessionFile: runtimeHost.session.sessionFile },
-			{ type: "session_start", reason: "fork", previousSessionFile },
-		]);
-
-		events.length = 0;
-		cancelNextFork = true;
-		const cancelResult = await runtimeHost.fork(userMessage.entryId);
-		expect(cancelResult).toEqual({ cancelled: true });
-		expect(events).toEqual([{ type: "session_before_fork", entryId: userMessage.entryId, position: "before" }]);
-
-		events.length = 0;
-		cancelNextFork = true;
-		const cancelAtResult = await runtimeHost.fork("missing-entry", { position: "at" });
-		expect(cancelAtResult).toEqual({ cancelled: true });
-		expect(events).toEqual([{ type: "session_before_fork", entryId: "missing-entry", position: "at" }]);
 	});
 });

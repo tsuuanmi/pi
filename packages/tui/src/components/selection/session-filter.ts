@@ -1,6 +1,6 @@
 import { fuzzyMatch } from "#tui/editor/completion/fuzzy";
 
-export type SessionSortMode = "threaded" | "recent" | "relevance";
+export type SessionSortMode = "recent" | "relevance";
 
 export type SessionNameFilter = "all" | "named";
 

@@ -23,7 +23,6 @@ export interface AppKeybindings {
 	"app.message.dequeue": true;
 	"app.session.new": true;
 	"app.session.tree": true;
-	"app.session.fork": true;
 	"app.session.resume": true;
 	"app.tree.foldOrUp": true;
 	"app.tree.unfoldOrDown": true;
@@ -81,7 +80,6 @@ const KEYBINDINGS = {
 	},
 	"app.session.new": { defaultKeys: [], description: "Start a new session" },
 	"app.session.tree": { defaultKeys: [], description: "Open session tree" },
-	"app.session.fork": { defaultKeys: [], description: "Fork current session" },
 	"app.session.resume": { defaultKeys: [], description: "Resume a session" },
 	"app.tree.foldOrUp": {
 		defaultKeys: ["ctrl+left", "alt+left"],

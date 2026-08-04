@@ -44,6 +44,7 @@
 ### Removed
 
 - **interactive**: Removed the `/changelog` command and its changelog parser.
+- **interactive**: Removed `/fork`, `/hotkeys`, and `/import` plus the session-forking, cloning, import-runtime, and related extension/RPC APIs.
 - **startup**: Removed legacy startup migrations; Pi now assumes current installation paths and formats.
 - **debug**: Removed the hidden `/debug` command and its debug log output.
 - **telemetry**: Removed `PI_TIMING` startup instrumentation and its undocumented benchmark mode.

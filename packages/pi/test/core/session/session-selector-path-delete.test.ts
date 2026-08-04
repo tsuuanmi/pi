@@ -29,17 +29,12 @@ async function flushPromises(): Promise<void> {
 	});
 }
 
-function stripAnsi(text: string): string {
-	return text.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
-}
-
 function makeSession(overrides: Partial<SessionInfo> & { id: string }): SessionInfo {
 	return {
 		path: overrides.path ?? `/tmp/${overrides.id}.jsonl`,
 		id: overrides.id,
 		cwd: overrides.cwd ?? "",
 		name: overrides.name,
-		parentSessionPath: overrides.parentSessionPath,
 		created: overrides.created ?? new Date(0),
 		modified: overrides.modified ?? new Date(0),
 		messageCount: overrides.messageCount ?? 1,
@@ -298,42 +293,6 @@ describe("session selector path/delete interactions", () => {
 
 		allDeferred.resolve([makeSession({ id: "all" })]);
 		await flushPromises();
-	});
-
-	it("threads sessions when parent and child paths use different symlink aliases", async () => {
-		const paths = createSymlinkedSessionPaths();
-		tempDirs.push(paths.baseDir);
-
-		const sessions = [
-			makeSession({
-				id: "parent",
-				path: paths.parentAliasB,
-				name: "Parent",
-				modified: new Date("2026-01-01T00:00:00.000Z"),
-			}),
-			makeSession({
-				id: "child",
-				path: paths.childAliasB,
-				parentSessionPath: paths.parentAliasA,
-				name: "Child",
-				modified: new Date("2025-12-31T00:00:00.000Z"),
-			}),
-		];
-
-		const selector = new SessionSelectorComponent(
-			async () => sessions,
-			async () => [],
-			() => {},
-			() => {},
-			() => {},
-			() => {},
-			{ keybindings },
-		);
-		await flushPromises();
-
-		const output = stripAnsi(selector.render(120).join("\n"));
-		expect(output).toContain("Parent");
-		expect(output).toContain("└─ Child");
 	});
 
 	it("treats the current session as active across symlink aliases", async () => {

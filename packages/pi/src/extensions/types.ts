@@ -104,8 +104,6 @@ export type {
 	ResourcesDiscoverResult,
 	SessionBeforeCompactEvent,
 	SessionBeforeCompactResult,
-	SessionBeforeForkEvent,
-	SessionBeforeForkResult,
 	SessionBeforeSwitchEvent,
 	SessionBeforeSwitchResult,
 	SessionBeforeTreeEvent,
