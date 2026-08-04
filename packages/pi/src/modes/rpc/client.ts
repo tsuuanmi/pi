@@ -10,7 +10,7 @@ import { attachJsonlLineReader, serializeJsonLine } from "@tsuuanmi/pi-agent/nod
 import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { BashResult } from "#pi/execution/bash";
 import type { RpcCommand, RpcResponse, RpcSessionState, RpcSlashCommand } from "#pi/modes/rpc/types";
-import type { SessionStats } from "#pi/runtime/agent-session";
+import type { SessionStats } from "#pi/runtime/session/types";
 import type { CompactionResult } from "#pi/session/compaction";
 
 // ============================================================================

@@ -165,17 +165,7 @@ export { DefaultPackageManager } from "#pi/package-manager/package-manager";
 export type { PackageManager, ProgressCallback, ProgressEvent } from "#pi/package-manager/types";
 export { createSyntheticSourceInfo } from "#pi/resources/source-info";
 export type { PathMetadata, ResolvedPaths, ResolvedResource } from "#pi/resources/types";
-export {
-	AgentSession,
-	type AgentSessionConfig,
-	type AgentSessionEvent,
-	type AgentSessionEventListener,
-	type ModelCycleResult,
-	type ParsedSkillBlock,
-	type PromptOptions,
-	parseSkillBlock,
-	type SessionStats,
-} from "#pi/runtime/agent-session";
+export { AgentSession } from "#pi/runtime/agent-session";
 // SDK for programmatic usage
 export {
 	type CreateAgentSessionOptions,
@@ -208,6 +198,16 @@ export {
 	createAgentSessionFromServices,
 	createAgentSessionServices,
 } from "#pi/runtime/agent-session-services";
+export type { ParsedSkillBlock } from "#pi/runtime/session/skill-block";
+export { parseSkillBlock } from "#pi/runtime/session/skill-block";
+export type {
+	AgentSessionConfig,
+	AgentSessionEvent,
+	AgentSessionEventListener,
+	ModelCycleResult,
+	PromptOptions,
+	SessionStats,
+} from "#pi/runtime/session/types";
 export {
 	type BranchPreparation,
 	type BranchSummaryResult,

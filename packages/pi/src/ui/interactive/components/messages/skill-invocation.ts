@@ -8,7 +8,7 @@ import {
 	Text,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import type { ParsedSkillBlock } from "#pi/runtime/agent-session";
+import type { ParsedSkillBlock } from "#pi/runtime/session/skill-block";
 
 /**
  * Component that renders a skill invocation message with collapsed/expanded state.

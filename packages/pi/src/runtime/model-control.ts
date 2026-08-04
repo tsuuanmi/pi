@@ -7,8 +7,8 @@ import {
 	type ThinkingLevel,
 } from "@tsuuanmi/pi-ai";
 import { DEFAULT_THINKING_LEVEL } from "#pi/cli/thinking-level";
-import type { ModelCycleResult } from "#pi/runtime/agent-session";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
+import type { ModelCycleResult } from "#pi/runtime/session/types";
 
 export async function setModel(model: Model<any>, ctx: AgentSessionContext): Promise<void> {
 	if (!ctx.modelRegistry.hasConfiguredAuth(model)) {

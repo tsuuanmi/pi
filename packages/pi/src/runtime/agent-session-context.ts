@@ -3,7 +3,7 @@ import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { ExtensionRunner } from "#pi/extensions/index";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceLoader } from "#pi/loader/resources";
-import type { AgentSessionEvent } from "#pi/runtime/agent-session";
+import type { AgentSessionEvent } from "#pi/runtime/session/types";
 import type { SessionManager } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 
@@ -11,7 +11,7 @@ import type { SettingsManager } from "#pi/settings/settings-manager";
  * Type-only seam for Pi session runtime helpers.
  *
  * Helpers receive only the state they need instead of the whole AgentSession,
- * keeping runtime orchestration in `pi-session.ts` and preventing helper modules
+ * keeping runtime orchestration in `agent-session.ts` and preventing helper modules
  * from reaching core-loop controls such as abort, prompt, steer, or follow-up.
  *
  * The `AgentSession._ctx()` getter must allocate a fresh object on every call
