@@ -47,7 +47,6 @@ Type `/` in the editor to open command completion. Extensions can register custo
 | `/import <file>` | Import and resume a session from a JSONL file |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files |
 | `/hotkeys` | Show all keyboard shortcuts |
-| `/changelog` | Display version history |
 | `/quit` | Quit pi |
 
 Codex subscription accounts show current quota, quota reset timing when the provider reports it, and available reset credits in `/account`. Redeem one available reset credit with `/account reset openai-codex [account]`; add `--dry-run` to preview without consuming a credit.

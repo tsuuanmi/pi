@@ -10,10 +10,8 @@ import {
 	type TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import { getChangelogPath } from "#pi/loader/package";
 import type { AgentSession } from "#pi/runtime/agent-session";
 import type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
-import { normalizeChangelogLinks, parseChangelog } from "#pi/ui/interactive/utils/changelog";
 import { copyToClipboard } from "#pi/ui/interactive/utils/clipboard";
 
 export class CommandController {
@@ -154,26 +152,6 @@ export class CommandController {
 
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new Text(info, 1, 0));
-		this.ui.requestRender();
-	}
-	handleChangelogCommand(): void {
-		const changelogPath = getChangelogPath();
-		const allEntries = parseChangelog(changelogPath);
-
-		const changelogMarkdown =
-			allEntries.length > 0
-				? allEntries
-						.reverse()
-						.map((e) => normalizeChangelogLinks(e.content, e))
-						.join("\n\n")
-				: "No changelog entries found.";
-
-		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(new DynamicBorder());
-		this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "What's New")), 1, 0));
-		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(new Markdown(changelogMarkdown, 1, 1, this.getMarkdownThemeWithSettings()));
-		this.chatContainer.addChild(new DynamicBorder());
 		this.ui.requestRender();
 	}
 	handleHotkeysCommand(): void {

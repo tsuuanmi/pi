@@ -211,11 +211,6 @@ export class KeyHandlerController {
 				this.editor.setText("");
 				return;
 			}
-			if (text === "/changelog") {
-				this._commandController.handleChangelogCommand();
-				this.editor.setText("");
-				return;
-			}
 			if (text === "/hotkeys") {
 				this._commandController.handleHotkeysCommand();
 				this.editor.setText("");

@@ -10,7 +10,3 @@ export function getReadmePath(): string {
 export function getDocsPath(): string {
 	return resolve(join(getPackageDir(), "docs"));
 }
-
-export function getChangelogPath(): string {
-	return resolve(join(getPackageDir(), "CHANGELOG.md"));
-}

@@ -174,7 +174,6 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 | `/import <file>` | Import and resume a session from a JSONL file |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files (themes hot-reload automatically) |
 | `/hotkeys` | Show all keyboard shortcuts |
-| `/changelog` | Display version history |
 | `/quit` | Quit pi |
 
 ### Keyboard Shortcuts

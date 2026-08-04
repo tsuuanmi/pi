@@ -8,7 +8,6 @@ export {
 	VERSION,
 } from "#pi/loader/app";
 export {
-	getChangelogPath,
 	getDocsPath,
 	getPackageDir,
 	getReadmePath,
