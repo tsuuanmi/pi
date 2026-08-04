@@ -3,11 +3,15 @@
  */
 
 import { ProcessTerminal, setKeybindings, TUI } from "@tsuuanmi/pi-tui";
-import type { SessionInfo, SessionListProgress } from "#pi/session/manager";
+import type { SessionInfo, SessionListPage, SessionListProgress } from "#pi/session/manager";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session";
 
-type SessionsLoader = (onProgress?: SessionListProgress) => Promise<SessionInfo[]>;
+type SessionsLoader = (
+	onProgress?: SessionListProgress,
+	offset?: number,
+	limit?: number,
+) => Promise<SessionInfo[] | SessionListPage>;
 
 /** Show TUI session selector and return selected session path or null if cancelled */
 export async function selectSession(

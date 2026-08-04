@@ -99,8 +99,8 @@ async function createSessionManager(
 	if (parsed.resume) {
 		initTheme(settingsManager.getTheme());
 		const selectedPath = await selectSession(
-			(onProgress) => SessionManager.list(cwd, sessionDir, onProgress),
-			(onProgress) => SessionManager.listAll(sessionDir, onProgress),
+			(onProgress, offset, limit) => SessionManager.listPage(cwd, sessionDir, onProgress, offset, limit),
+			(onProgress, offset, limit) => SessionManager.listAllPage(sessionDir, onProgress, offset, limit),
 		);
 		if (!selectedPath) {
 			console.log(chalk.dim("No session selected"));

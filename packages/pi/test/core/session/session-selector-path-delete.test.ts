@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { initTheme, setKeybindings } from "@tsuuanmi/pi-tui";
+import { initTheme, setKeybindings, setKittyProtocolActive } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { SessionInfo } from "#pi/session/manager";
 import { KeybindingsManager } from "#pi/settings/keybindings";
@@ -181,6 +181,61 @@ describe("session selector path/delete interactions", () => {
 		list.handleInput("\r");
 		expect(confirmationChanges).toEqual([sessions[0]!.path, null]);
 		expect(deletedPath).toBe(sessions[0]!.path);
+	});
+
+	it("confirms the selected session when tmux reports Enter as LF", async () => {
+		const sessions = [makeSession({ id: "selected" })];
+		let selectedPath: string | undefined;
+		const selector = new SessionSelectorComponent(
+			async () => sessions,
+			async () => [],
+			(path) => {
+				selectedPath = path;
+			},
+			() => {},
+			() => {},
+			() => {},
+			{ keybindings },
+		);
+		await flushPromises();
+
+		setKittyProtocolActive(true);
+		try {
+			selector.getSessionList().handleInput("\n");
+		} finally {
+			setKittyProtocolActive(false);
+		}
+
+		expect(selectedPath).toBe(sessions[0]!.path);
+	});
+
+	it("does not select stale current sessions while All is loading", async () => {
+		const currentSession = makeSession({ id: "current" });
+		const allSession = makeSession({ id: "all" });
+		const allDeferred = createDeferred<SessionInfo[]>();
+		let selectedPath: string | undefined;
+		const selector = new SessionSelectorComponent(
+			async () => [currentSession],
+			async () => allDeferred.promise,
+			(path) => {
+				selectedPath = path;
+			},
+			() => {},
+			() => {},
+			() => {},
+			{ keybindings },
+		);
+		await flushPromises();
+
+		const list = selector.getSessionList();
+		list.handleInput("\t");
+		list.handleInput("\r");
+		expect(selectedPath).toBeUndefined();
+
+		allDeferred.resolve([allSession]);
+		await flushPromises();
+		list.handleInput("\r");
+		expect(selectedPath).toBe(allSession.path);
 	});
 
 	it("does not switch scope back to All when All load resolves after toggling back to Current", async () => {

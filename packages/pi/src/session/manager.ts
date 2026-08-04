@@ -183,6 +183,14 @@ export interface SessionInfo {
 	allMessagesText: string;
 }
 
+export const SESSION_PAGE_SIZE = 50;
+
+export interface SessionListPage {
+	sessions: SessionInfo[];
+	hasMore: boolean;
+	nextOffset: number;
+}
+
 export type ReadonlySessionManager = Pick<
 	SessionManager,
 	| "getCwd"
@@ -744,6 +752,67 @@ async function listSessionsFromDir(
 	}
 
 	return sessions;
+}
+
+interface SessionFileCandidate {
+	path: string;
+	mtimeMs: number;
+}
+
+async function listSessionFileCandidates(dir: string, cwd?: string): Promise<SessionFileCandidate[]> {
+	if (!existsSync(dir)) return [];
+
+	try {
+		const dirEntries = await readdir(dir);
+		const files = dirEntries.filter((f) => f.endsWith(".jsonl")).map((f) => join(dir, f));
+		const candidates = await Promise.all(
+			files.map(async (path): Promise<SessionFileCandidate | null> => {
+				const header = readSessionHeader(path);
+				if (!header || (cwd !== undefined && !sessionCwdMatches(getSessionHeaderCwd(header), cwd))) {
+					return null;
+				}
+				try {
+					const fileStats = await stat(path);
+					return { path, mtimeMs: fileStats.mtimeMs };
+				} catch {
+					return null;
+				}
+			}),
+		);
+
+		return candidates
+			.filter((candidate): candidate is SessionFileCandidate => candidate !== null)
+			.sort((a, b) => b.mtimeMs - a.mtimeMs);
+	} catch {
+		return [];
+	}
+}
+
+async function loadSessionPage(
+	candidates: SessionFileCandidate[],
+	offset: number,
+	limit: number,
+	onProgress?: SessionListProgress,
+): Promise<SessionListPage> {
+	const start = Math.max(0, offset);
+	const pageSize = Math.max(1, limit);
+	const pageCandidates = candidates.slice(start, start + pageSize);
+	let loaded = 0;
+	const results = await buildSessionInfosWithConcurrency(
+		pageCandidates.map((candidate) => candidate.path),
+		() => {
+			loaded++;
+			onProgress?.(loaded, pageCandidates.length);
+		},
+	);
+	const sessions = results.filter((info): info is SessionInfo => info !== null);
+	sessions.sort((a, b) => b.modified.getTime() - a.modified.getTime());
+	const nextOffset = start + pageCandidates.length;
+	return {
+		sessions,
+		hasMore: nextOffset < candidates.length,
+		nextOffset,
+	};
 }
 
 /**
@@ -1493,6 +1562,46 @@ export class SessionManager {
 		}
 
 		return new SessionManager(resolvedTargetCwd, dir, newSessionFile, true);
+	}
+
+	static async listPage(
+		cwd: string,
+		sessionDir?: string,
+		onProgress?: SessionListProgress,
+		offset = 0,
+		limit = SESSION_PAGE_SIZE,
+	): Promise<SessionListPage> {
+		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(cwd);
+		const filterCwd = sessionDir !== undefined && dir !== getDefaultSessionDirPath(cwd);
+		const resolvedCwd = filterCwd ? resolvePath(cwd) : undefined;
+		const candidates = await listSessionFileCandidates(dir, resolvedCwd);
+		return loadSessionPage(candidates, offset, limit, onProgress);
+	}
+
+	static async listAllPage(
+		sessionDir: string | undefined,
+		onProgress?: SessionListProgress,
+		offset = 0,
+		limit = SESSION_PAGE_SIZE,
+	): Promise<SessionListPage> {
+		if (sessionDir) {
+			const candidates = await listSessionFileCandidates(normalizePath(sessionDir));
+			return loadSessionPage(candidates, offset, limit, onProgress);
+		}
+
+		const sessionsDir = getSessionsDir();
+		if (!existsSync(sessionsDir)) return { sessions: [], hasMore: false, nextOffset: Math.max(0, offset) };
+
+		try {
+			const entries = await readdir(sessionsDir, { withFileTypes: true });
+			const dirs = entries.filter((entry) => entry.isDirectory()).map((entry) => join(sessionsDir, entry.name));
+			const candidates = (await Promise.all(dirs.map((dir) => listSessionFileCandidates(dir))))
+				.flat()
+				.sort((a, b) => b.mtimeMs - a.mtimeMs);
+			return loadSessionPage(candidates, offset, limit, onProgress);
+		} catch {
+			return { sessions: [], hasMore: false, nextOffset: Math.max(0, offset) };
+		}
 	}
 
 	/**

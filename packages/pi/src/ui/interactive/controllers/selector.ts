@@ -484,12 +484,18 @@ export class SelectorController {
 	showSessionSelector(): void {
 		this.showSelector((done) => {
 			const selector = new SessionSelectorComponent(
-				(onProgress) =>
-					SessionManager.list(this.sessionManager.getCwd(), this.sessionManager.getSessionDir(), onProgress),
-				(onProgress) =>
+				(onProgress, offset, limit) =>
+					SessionManager.listPage(
+						this.sessionManager.getCwd(),
+						this.sessionManager.getSessionDir(),
+						onProgress,
+						offset,
+						limit,
+					),
+				(onProgress, offset, limit) =>
 					this.sessionManager.usesDefaultSessionDir()
-						? SessionManager.listAll(onProgress)
-						: SessionManager.listAll(this.sessionManager.getSessionDir(), onProgress),
+						? SessionManager.listAllPage(undefined, onProgress, offset, limit)
+						: SessionManager.listAllPage(this.sessionManager.getSessionDir(), onProgress, offset, limit),
 				async (sessionPath) => {
 					done();
 					await this.handleResumeSession(sessionPath);
