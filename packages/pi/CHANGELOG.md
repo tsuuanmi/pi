@@ -30,6 +30,7 @@
 
 ### Removed
 
+- **auth**: Removed startup migration support for legacy `oauth.json`; stored credentials use `auth.json`.
 - **debug**: Removed the hidden `/debug` command and its debug log output.
 - **telemetry**: Removed `PI_TIMING` startup instrumentation and its undocumented benchmark mode.
 - **interactive**: Removed automatic startup help and loaded-resource listing, along with the `--verbose` flag and `quietStartup` setting.

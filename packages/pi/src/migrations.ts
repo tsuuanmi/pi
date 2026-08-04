@@ -9,14 +9,13 @@ import { CONFIG_DIR_NAME } from "#pi/loader/app";
 import { getAgentDir, getBinDir } from "#pi/loader/paths";
 
 /**
- * Migrate legacy oauth.json and settings.json apiKeys to auth.json.
+ * Migrate legacy settings.json apiKeys to auth.json.
  *
  * @returns Array of provider names that were migrated
  */
 function migrateAuthToAuthJson(): string[] {
 	const agentDir = getAgentDir();
 	const authPath = join(agentDir, "auth.json");
-	const oauthPath = join(agentDir, "oauth.json");
 	const settingsPath = join(agentDir, "settings.json");
 
 	// Skip if auth.json already exists
@@ -24,20 +23,6 @@ function migrateAuthToAuthJson(): string[] {
 
 	const migrated: Record<string, unknown> = {};
 	const providers: string[] = [];
-
-	// Migrate oauth.json
-	if (existsSync(oauthPath)) {
-		try {
-			const oauth = JSON.parse(readFileSync(oauthPath, "utf-8"));
-			for (const [provider, cred] of Object.entries(oauth)) {
-				migrated[provider] = { type: "oauth", ...(cred as object) };
-				providers.push(provider);
-			}
-			renameSync(oauthPath, `${oauthPath}.migrated`);
-		} catch {
-			// Skip on error
-		}
-	}
 
 	// Migrate settings.json apiKeys
 	if (existsSync(settingsPath)) {
