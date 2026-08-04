@@ -68,7 +68,6 @@ packages/pi/src/
   cli.ts                 # CLI entry point
   main.ts                # startup and mode dispatch
   index.ts               # public package exports
-  migrations.ts          # startup migrations
   agent/                 # agent profile definitions and loading
   api/                   # public API and extension-facing types
   app/                   # startup, runtime, session, and mode orchestration

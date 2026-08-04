@@ -1,15 +1,10 @@
 import { getAgentDir } from "#pi/loader/paths";
-import { runMigrations } from "#pi/migrations";
 import { applyHttpProxySettings, configureHttpDispatcher } from "#pi/network/http-dispatcher";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
 export interface StartupPaths {
 	cwd: string;
 	agentDir: string;
-}
-
-export interface StartupMigrations {
-	migratedProviders: string[];
 }
 
 function isTruthyEnv(value: string | undefined): boolean {
@@ -29,9 +24,4 @@ export function bootstrapStartup(): StartupPaths {
 	configureHttpDispatcher();
 
 	return { cwd, agentDir };
-}
-
-export function runStartupMigrations(cwd: string): StartupMigrations {
-	const { migratedAuthProviders } = runMigrations(cwd);
-	return { migratedProviders: migratedAuthProviders };
 }

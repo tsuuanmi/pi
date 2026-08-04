@@ -8,7 +8,7 @@
 import { initTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import type { ExtensionFactory } from "#pi/api/extension-types";
-import { bootstrapStartup, runStartupMigrations } from "#pi/app/bootstrap";
+import { bootstrapStartup } from "#pi/app/bootstrap";
 import { runStartupCommands } from "#pi/app/commands";
 import { applyStdoutMode, prepareInput, resolveStartupMode } from "#pi/app/input";
 import { runAppMode } from "#pi/app/modes";
@@ -66,9 +66,6 @@ export async function main(args: string[], options?: MainOptions) {
 		process.exit(1);
 	}
 
-	// Run migrations (pass cwd for project-local migrations)
-	const { migratedProviders } = runStartupMigrations(cwd);
-
 	const startupSettingsManager = SettingsManager.create(cwd, agentDir);
 	reportDiagnostics(collectSettingsDiagnostics(startupSettingsManager, "startup session lookup"));
 
@@ -118,7 +115,6 @@ export async function main(args: string[], options?: MainOptions) {
 		runtime,
 		parsed,
 		initialMessage,
-		migratedProviders,
 		modelStartupWarning,
 	});
 }

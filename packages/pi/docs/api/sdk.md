@@ -995,7 +995,6 @@ const runtime = await createAgentSessionRuntime(createRuntime, {
 });
 
 const mode = new InteractiveMode(runtime, {
-  migratedProviders: [],
   modelStartupWarning: undefined,
   initialMessage: "Hello",
   initialImages: [],

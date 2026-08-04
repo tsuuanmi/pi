@@ -9,6 +9,7 @@
 - **cli**: `pi update` now manages packages only; the self-update commands and public self-update exports were removed.
 - **tools**: Renamed `createAllToolDefinitions` to `createToolDefinitions`, clarified the Pi tool definition boundary, and centralized built-in tool construction in the tool catalog.
 - **sdk**: Renamed the session model fallback warning result from `modelFallbackMessage` to `modelStartupWarning`.
+- **sdk**: Removed the obsolete `migratedProviders` field from `InteractiveModeOptions`.
 - **tools**: Removed non-canonical `edit` tool argument forms; the tool now accepts only `path` plus `edits[]` and no longer normalizes alternate shapes.
 - **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
 - **subagents**: `SubagentManager` is now the Pi implementation of the manager contract from `@tsuuanmi/pi-agent`; Pi owns execution, persistence, tmux workers, run identity, and live controls.
@@ -35,7 +36,7 @@
 
 ### Removed
 
-- **auth**: Removed startup migration support for legacy `oauth.json`; stored credentials use `auth.json`.
+- **startup**: Removed legacy startup migrations; Pi now assumes current installation paths and formats.
 - **debug**: Removed the hidden `/debug` command and its debug log output.
 - **telemetry**: Removed `PI_TIMING` startup instrumentation and its undocumented benchmark mode.
 - **interactive**: Removed automatic startup help and loaded-resource listing, along with the `--verbose` flag and `quietStartup` setting.

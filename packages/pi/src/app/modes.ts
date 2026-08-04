@@ -12,7 +12,6 @@ export interface RunModeOptions {
 	runtime: AgentSessionRuntime;
 	parsed: Args;
 	initialMessage?: string;
-	migratedProviders: string[];
 	modelStartupWarning?: string;
 }
 
@@ -21,7 +20,7 @@ function toPrintOutputMode(appMode: AppMode): Exclude<Mode, "rpc"> {
 }
 
 export async function runAppMode(options: RunModeOptions): Promise<void> {
-	const { appMode, runtime, parsed, initialMessage, migratedProviders, modelStartupWarning } = options;
+	const { appMode, runtime, parsed, initialMessage, modelStartupWarning } = options;
 	const session = runtime.session;
 
 	if (appMode !== "interactive" && !session.model) {
@@ -36,7 +35,6 @@ export async function runAppMode(options: RunModeOptions): Promise<void> {
 
 	if (appMode === "interactive") {
 		const interactiveMode = new InteractiveMode(runtime, {
-			migratedProviders,
 			modelStartupWarning,
 			initialMessage,
 			initialMessages: parsed.messages,
