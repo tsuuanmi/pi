@@ -160,7 +160,7 @@ Decision:
 
 ## Direct manager exception
 
-Workflow code may call `SubagentManager` directly only when the operation controls one subagent or runs one workflow-owned worker. The allowed adapters are `subagents/tools.ts`, `skills/team/agent-adapter.ts`, `skills/ralplan/agent-adapter.ts`, and `skills/ultragoal/tools.ts`. A workflow must use the orchestrator for task dependencies, agent assignment, retries, queue execution, or agent collaboration. Unknown manager call sites fail the package boundary check.
+Workflow code may call `SubagentManager` directly only when the operation controls one subagent or runs one workflow-owned worker. The allowed workflow adapters are `packages/workflows/src/subagents/tools.ts`, `packages/workflows/src/skills/team/agent-adapter.ts`, `packages/workflows/src/skills/ralplan/agent-adapter.ts`, and `packages/workflows/src/skills/ultragoal/tools.ts`. A workflow must use the orchestrator for task dependencies, agent assignment, retries, queue execution, or agent collaboration. Pi-native controls in `packages/pi/src/subagents/tools.ts` are host-owned and are not workflow adapters; they must not import workflow contracts or receipt assembly. Unknown manager call sites fail the package boundary check.
 
 ## Adapter acceptance criteria
 

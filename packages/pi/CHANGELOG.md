@@ -15,6 +15,7 @@
 - **tools**: Removed non-canonical `edit` tool argument forms; the tool now accepts only `path` plus `edits[]` and no longer normalizes alternate shapes.
 - **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
 - **subagents**: `SubagentManager` is now the Pi implementation of the manager contract from `@tsuuanmi/pi-agent`; Pi owns execution, persistence, tmux workers, run identity, and live controls.
+- **subagents**: Pi-native inspect, attach, and kill controls no longer depend on workflow tool contracts or emit workflow `final_package` fields; they use Pi context and generic agent receipts.
 - **subagents**: Tmux run identity now uses only the canonical nested target session name.
 - **runtime**: Pi is now Node-only; removed alternate-runtime detection and package-manager branches.
 - **cli**: Removed the `pi uninstall` alias; use `pi remove`.

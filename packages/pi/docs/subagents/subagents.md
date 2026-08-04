@@ -2,6 +2,8 @@
 
 Pi ships a Pi-native `SubagentManager` that runs isolated agent sessions as subagents of the current session. It is exposed to extensions as `ctx.subagents` and to the agent through the `subagent_*` lifecycle tools. It owns session creation, durable records, native execution, and tmux controls; it is not the generic multi-agent scheduler. Team coordination uses `@tsuuanmi/pi-orchestrator` through a workflow-owned adapter.
 
+Pi-native control registration lives in `src/subagents/tools.ts`, concrete-manager access in `src/subagents/controls.ts`, and generic agent receipt attachment in `src/subagents/receipts.ts`.
+
 ## Records and durability
 
 Each subagent is stored under the owning session's state tree:
@@ -156,7 +158,7 @@ Team and Ultragoal records remain visible in the parent session and are persiste
 
 ## Structured receipts and current-session visibility
 
-Subagent tools attach a `details.receipt` (`StructuredReceipt`) to their tool results. The receipt is additive: existing `record`, `records`, `output`, and workflow receipt fields remain intact, while the shared receipt gives renderers and extensions a consistent summary of the current-session subagent activity.
+Subagent tools attach a `details.receipt` (`StructuredReceipt`) to their tool results. Pi-native inspect, attach, and kill controls preserve their control result fields and attach the generic `@tsuuanmi/pi-agent` receipt without workflow `final_package` fields. Workflow-owned lifecycle tools may add workflow receipt fields separately.
 
 A subagent receipt includes the owning `sessionId`, `subagentId`, role, status, resumability, timing when known, and output/error previews. Pi inspection returns execution paths and backend metadata separately. Persistent subagent conversation logs are written under the same current-session bucket at `.pi/<session-id>/state/subagents/sessions/`, while lifecycle records live under `.pi/<session-id>/state/subagents/<subagent-id>/record.json` and terminal artifacts live under `.pi/<session-id>/state/subagents/<subagent-id>/artifact.json`. Listing subagents also returns per-record receipts plus an aggregate list receipt. This makes subagents visible from the parent/current session instead of behaving like black-box detached work.
 

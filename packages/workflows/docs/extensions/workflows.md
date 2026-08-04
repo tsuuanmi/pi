@@ -8,10 +8,12 @@ Pi's bundled extension is a thin adapter at `packages/pi/src/extensions/builtin-
 
 `registerWorkflows(host)` composes two independent registrars:
 
-- `registerWorkflowTools(host)` registers generic subagent lifecycle tools, Deep Interview state tools, and guarded workflow spawn tools.
+- `registerWorkflowTools(host)` registers workflow-owned subagent lifecycle tools, Deep Interview state tools, and guarded workflow spawn tools.
 - `registerWorkflowHooks(host)` from `@tsuuanmi/pi-workflows/hooks` registers HUD refresh hooks and the Deep Interview mutation guard for `edit`, `write`, and `bash` tool calls.
 
 `@tsuuanmi/pi-workflows/tools/workflow-tools` remains the lower-level tool registration helper for custom hosts that need tools without workflow hook integration.
+
+Pi-native `subagent_inspect`, `subagent_attach`, and `subagent_kill` controls are registered separately by Pi. They use Pi's host context and generic `@tsuuanmi/pi-agent` receipts; they do not depend on workflow tool contracts or workflow final-package assembly.
 
 ## Model-Visible Tools
 

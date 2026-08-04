@@ -1,5 +1,5 @@
-import type { WorkflowToolHost } from "@tsuuanmi/pi-workflows/tools/workflow-tools";
 import { describe, expect, it } from "vitest";
+import type { ExtensionAPI } from "#pi/api/extension-types";
 import { registerSubagentControls } from "#pi/subagents/tools";
 
 describe("Pi subagent controls", () => {
@@ -9,7 +9,7 @@ describe("Pi subagent controls", () => {
 			registerTool(tool: { name: string }) {
 				names.push(tool.name);
 			},
-		} as WorkflowToolHost;
+		} as Pick<ExtensionAPI, "registerTool">;
 
 		registerSubagentControls(host);
 
