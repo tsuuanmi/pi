@@ -1,6 +1,6 @@
 {
 	"name": "@tsuuanmi/pi-agent",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"description": "Standard agent runtime, tool, message, and subagent contracts for Pi",
 	"type": "module",
 	"main": "./dist/index.js",
@@ -42,7 +42,7 @@
 		"prepublishOnly": "npm run clean && npm run build"
 	},
 	"dependencies": {
-		"@tsuuanmi/pi-ai": "^0.2.2",
+		"@tsuuanmi/pi-ai": "^0.2.3",
 		"ignore": "7.0.5",
 		"typebox": "1.1.38",
 		"yaml": "2.9.0"

@@ -81,6 +81,12 @@
 			"@tsuuanmi/pi-agent/*": [
 				"./packages/agent/src/*"
 			],
+			"#agent/agent": [
+				"./packages/agent/src/agent/index.ts"
+			],
+			"#agent/runtime/hooks": [
+				"./packages/agent/src/runtime/hooks.ts"
+			],
 			"#agent/*": [
 				"./packages/agent/src/*"
 			],

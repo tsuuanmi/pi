@@ -1,6 +1,6 @@
 {
 	"name": "@tsuuanmi/pi-orchestrator",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"description": "Task, team, and multi-agent orchestration primitives for Pi",
 	"type": "module",
 	"main": "./dist/index.js",
@@ -29,7 +29,7 @@
 		"prepublishOnly": "npm run clean && npm run build"
 	},
 	"dependencies": {
-		"@tsuuanmi/pi-agent": "^0.2.2"
+		"@tsuuanmi/pi-agent": "^0.2.3"
 	},
 	"keywords": [
 		"ai",
@@ -49,7 +49,7 @@
 		"node": ">=22.19.0"
 	},
 	"devDependencies": {
-		"@tsuuanmi/pi-ai": "^0.2.2",
+		"@tsuuanmi/pi-ai": "^0.2.3",
 		"@types/node": "24.12.4",
 		"typescript": "5.9.3",
 		"vitest": "3.2.6"

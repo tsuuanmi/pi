@@ -94,6 +94,24 @@ When a custom provider also has `apiKey` in `settings.json`, `auth.json` wins. T
 
 Custom providers can be added with `/provider add` or through `settings.json`; see [models.md](models.md) and [custom-provider.md](custom-provider.md). For providers that need custom API implementations or OAuth flows, create an extension; see [custom-provider.md](custom-provider.md).
 
+### ChatGPT Web local bridge
+
+Pi includes an opt-in provider for the local ChatGPT Web Responses bridge. Start the bridge, then
+set its OpenAI-compatible `/v1` endpoint before starting Pi:
+
+```bash
+export PI_CHATGPT_WEB_BASE_URL=http://127.0.0.1:17841/v1
+pi
+```
+
+The provider exposes fixed-effort `light`, `medium`, `high`, `extra-high`, and `pro` routes. Pi
+rewrites these IDs to the bridge's exact `chatgpt-web/*` model IDs at the transport boundary. The
+bridge remains authoritative for account-gated routes; an unavailable route fails instead of
+falling back to another model.
+
+The endpoint must be an absolute `http` or `https` URL ending in `/v1` and must not contain
+credentials, a query, or a fragment. The provider is not registered when the variable is absent.
+
 ## Resolution Order
 
 When resolving credentials for a provider:

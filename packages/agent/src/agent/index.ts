@@ -28,6 +28,13 @@ import type {
 } from "#agent/runtime/config";
 import type { AgentEvent } from "#agent/runtime/events";
 import {
+	type AgentHook,
+	AgentHookRegistry,
+	createLoopHooks,
+	runAfterHooks,
+	runBeforeHooks,
+} from "#agent/runtime/hooks";
+import {
 	type AgentRuntime,
 	type ContinueRequest,
 	DefaultAgentRuntime,
@@ -38,7 +45,6 @@ import {
 import type { AgentRunOptions, AgentRunResult } from "#agent/runtime/types";
 import { createToolRegistry, type RegisterToolOptions, registerTool as registerToolSet } from "#agent/tool/registry";
 import type { AgentContext, AgentTool } from "#agent/tool/types";
-import { type AgentHook, AgentHookRegistry, createLoopHooks, runAfterHooks, runBeforeHooks } from "../runtime/hooks.js";
 
 export type { QueueMode } from "#agent/runtime/config";
 

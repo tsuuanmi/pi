@@ -25,6 +25,7 @@
 
 ### Added
 
+- **models**: Added an opt-in native ChatGPT Web provider for local Responses bridges with fixed routes and no model fallback.
 - **interactive**: Mermaid fenced diagrams now render as width-checked terminal Unicode diagrams in Markdown output.
 
 ### Changed

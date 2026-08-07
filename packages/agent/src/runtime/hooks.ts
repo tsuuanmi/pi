@@ -1,3 +1,4 @@
+import type { Agent } from "#agent/agent";
 import type {
 	AfterToolCallContext,
 	AfterToolCallResult,
@@ -8,7 +9,6 @@ import type {
 	PrepareNextTurnContext,
 } from "#agent/runtime/config";
 import type { AgentRunResult } from "#agent/runtime/types";
-import type { Agent } from "../agent/index.js";
 
 export interface AgentRunHookContext {
 	agent: Agent;
