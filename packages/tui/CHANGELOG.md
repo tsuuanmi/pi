@@ -20,6 +20,7 @@
 
 ### Fixed
 
+- **markdown**: Render fenced code blocks with terminal borders and decode HTML entities emitted by syntax highlighting.
 - **editor**: Autocomplete failures no longer block later requests, and Unicode input remains grouped by code point.
 - **tui**: Restarting the renderer resets terminal state and forces a complete redraw.
 

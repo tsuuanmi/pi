@@ -25,7 +25,7 @@ function supportsLanguage(name: string): boolean;
 
 ## `renderHighlightedHtml`
 
-Walks the HTML string, tracking a stack of open scopes. Each `<span class="hljs-...">` pushes a scope and each `</span>` pops one.
+Walks the HTML string, tracking a stack of open scopes. Each `<span class="hljs-...">` pushes a scope and each `</span>` pops one. HTML entities emitted by `highlight.js` are decoded once as text, so code characters such as `<`, `>`, and `&` are not displayed as entities.
 
 Scope lookup tries, in order:
 

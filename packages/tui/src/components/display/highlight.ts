@@ -13,6 +13,38 @@ export interface HighlightOptions {
 const SPAN_CLOSE = "</span>";
 const HIGHLIGHT_CLASS_PREFIX = "hljs-";
 
+function decodeHtmlEntityAt(html: string, index: number): { text: string; length: number } | undefined {
+	const semicolonIndex = html.indexOf(";", index + 1);
+	if (semicolonIndex === -1 || semicolonIndex - index > 16) {
+		return undefined;
+	}
+
+	const entity = html.slice(index + 1, semicolonIndex);
+	const namedEntities: Record<string, string> = {
+		amp: "&",
+		lt: "<",
+		gt: ">",
+		quot: '"',
+		apos: "'",
+	};
+	const decoded = namedEntities[entity];
+	if (decoded !== undefined) {
+		return { text: decoded, length: semicolonIndex - index + 1 };
+	}
+
+	const codePoint =
+		entity.startsWith("#x") || entity.startsWith("#X")
+			? Number.parseInt(entity.slice(2), 16)
+			: entity.startsWith("#")
+				? Number.parseInt(entity.slice(1), 10)
+				: undefined;
+	if (codePoint === undefined || !Number.isInteger(codePoint) || codePoint < 0 || codePoint > 0x10ffff) {
+		return undefined;
+	}
+
+	return { text: String.fromCodePoint(codePoint), length: semicolonIndex - index + 1 };
+}
+
 function getScopeFromSpanTag(tag: string): string | undefined {
 	const match = /\sclass\s*=\s*(?:"([^"]*)"|'([^']*)')/.exec(tag);
 	const classValue = match?.[1] ?? match?.[2];
@@ -111,6 +143,15 @@ export function renderHighlightedHtml(html: string, theme: HighlightTheme = {}):
 			}
 			index += SPAN_CLOSE.length;
 			continue;
+		}
+
+		if (html[index] === "&") {
+			const decoded = decodeHtmlEntityAt(html, index);
+			if (decoded) {
+				textBuffer += decoded.text;
+				index += decoded.length;
+				continue;
+			}
 		}
 
 		textBuffer += html[index];

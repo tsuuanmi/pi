@@ -295,7 +295,7 @@ describe("Markdown component", () => {
 
 			const lines = markdown.render(24).map((line) => stripAnsi(line).trimEnd());
 
-			assert.deepStrictEqual(lines, ["- ```ts", "    alpha beta gamma", "  delta epsilon zeta", "  ```"]);
+			assert.deepStrictEqual(lines, ["- ╭─ ts", "    alpha beta gamma", "  delta epsilon zeta", "  ╰"]);
 		});
 	});
 
@@ -767,16 +767,16 @@ again, hello world`,
 			const lines = markdown.render(80);
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
 
-			const closingBackticksIndex = plainLines.indexOf("```");
-			assert.ok(closingBackticksIndex !== -1, "Should have closing backticks");
+			const closingBorderIndex = plainLines.indexOf("╰");
+			assert.ok(closingBorderIndex !== -1, "Should have a closing code-block border");
 
-			const afterBackticks = plainLines.slice(closingBackticksIndex + 1);
-			const emptyLineCount = afterBackticks.findIndex((line) => line !== "");
+			const afterCodeBlock = plainLines.slice(closingBorderIndex + 1);
+			const emptyLineCount = afterCodeBlock.findIndex((line) => line !== "");
 
 			assert.strictEqual(
 				emptyLineCount,
 				1,
-				`Expected 1 empty line after code block, but found ${emptyLineCount}. Lines after backticks: ${JSON.stringify(afterBackticks.slice(0, 5))}`,
+				`Expected 1 empty line after code block, but found ${emptyLineCount}. Lines after code block: ${JSON.stringify(afterCodeBlock.slice(0, 5))}`,
 			);
 		});
 
@@ -795,7 +795,7 @@ code block
 
 more text`,
 			];
-			const expectedLines = ["hello this is text", "", "```", "  code block", "```", "", "more text"];
+			const expectedLines = ["hello this is text", "", "╭", "  code block", "╰", "", "more text"];
 
 			for (const text of cases) {
 				const markdown = new Markdown(text, 0, 0, defaultMarkdownTheme);

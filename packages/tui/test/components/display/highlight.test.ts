@@ -21,6 +21,11 @@ describe("renderHighlightedHtml", () => {
 		assert.equal(renderHighlightedHtml("hello world", {}), "hello world");
 	});
 
+	it("decodes entities emitted by highlight.js exactly once", () => {
+		const html = "&lt;tag attr=&quot;value&quot;&gt;&amp;#x41;&#65;&lt;/tag&gt;";
+		assert.equal(renderHighlightedHtml(html), '<tag attr="value">&#x41;A</tag>');
+	});
+
 	it("applies the matching scope formatter to text inside spans", () => {
 		const theme: HighlightTheme = {
 			keyword: (t) => `K(${t})`,
@@ -54,6 +59,12 @@ describe("renderHighlightedHtml", () => {
 });
 
 describe("highlight", () => {
+	it("decodes escaped code characters from highlight.js", () => {
+		const output = highlight("const transform = value -> result;", { language: "typescript" });
+		assert.ok(output.includes("->"));
+		assert.ok(!output.includes("&gt;"));
+	});
+
 	it("highlights code with an explicit language using the supplied theme", () => {
 		const theme: HighlightTheme = {
 			keyword: (t) => `K(${t})`,
