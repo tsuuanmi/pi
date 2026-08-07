@@ -2,9 +2,9 @@ import type { Context, Model } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { ExtensionAPI } from "#pi/api/extension-types";
 import type { ProviderConfig } from "#pi/api/provider-types";
-import builtinChatGptWebExtension from "#pi/extensions/builtin-chatgpt-web";
-import { CHATGPT_WEB_BASE_URL_ENV } from "#pi/extensions/chatgpt-web-models";
-import { getBuiltinExtensionFactories } from "#pi/extensions/registry/builtin-extensions";
+import { getBuiltinExtensionFactories } from "#pi/extensions/builtins";
+import builtinChatGptWebExtension from "#pi/extensions/chatgpt-web/extension";
+import { CHATGPT_WEB_BASE_URL_ENV } from "#pi/extensions/chatgpt-web/models";
 
 interface Registration {
 	name: string;

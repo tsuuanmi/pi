@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";

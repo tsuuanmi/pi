@@ -1,9 +1,14 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type {
+	ExtensionFactory,
+	SessionBeforeSwitchEvent,
+	SessionShutdownEvent,
+	SessionStartEvent,
+} from "@tsuuanmi/pi/extensions";
 import { afterEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
-import type { ExtensionFactory, SessionBeforeSwitchEvent, SessionShutdownEvent, SessionStartEvent } from "#pi/index";
 import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/runtime/agent-session-services";
 import { SessionManager } from "#pi/session/manager";

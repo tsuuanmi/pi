@@ -1,8 +1,9 @@
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
-import type { BuildSystemPromptOptions, ExtensionAPI } from "#pi/index";
+import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
 import { testAssistantMessage, testToolCall } from "#pi-test/helpers/provider";
 import { createHarness, getAssistantTexts, type Harness } from "#pi-test/suite/harness";
 

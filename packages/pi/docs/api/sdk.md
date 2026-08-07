@@ -537,7 +537,8 @@ const { session } = await createAgentSession({
 
 ```typescript
 import { Type } from "typebox";
-import { createAgentSession, defineTool } from "@tsuuanmi/pi";
+import { createAgentSession } from "@tsuuanmi/pi";
+import { defineTool } from "@tsuuanmi/pi/extensions";
 
 // Inline custom tool
 const myTool = defineTool({
@@ -592,7 +593,8 @@ Extensions can register tools, subscribe to events, add commands, and more. See 
 **Event Bus:** Extensions can communicate via `pi.events`. Pass a shared `eventBus` to `DefaultResourceLoader` if you need to emit or listen from outside:
 
 ```typescript
-import { createEventBus, DefaultResourceLoader } from "@tsuuanmi/pi";
+import { DefaultResourceLoader } from "@tsuuanmi/pi";
+import { createEventBus } from "@tsuuanmi/pi/extensions";
 
 const eventBus = createEventBus();
 const loader = new DefaultResourceLoader({

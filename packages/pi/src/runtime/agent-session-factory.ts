@@ -8,13 +8,14 @@ import { formatNoModelsAvailableMessage } from "#pi/auth/guidance";
 import { AuthStorage } from "#pi/auth/storage";
 import { findInitialModel } from "#pi/cli/model-resolver";
 import { DEFAULT_THINKING_LEVEL } from "#pi/cli/thinking-level";
-import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
+import type { LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { getAgentDir } from "#pi/loader/paths";
 import type { ResourceLoader } from "#pi/loader/resources";
 import { DefaultResourceLoader } from "#pi/loader/resources";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { ContextOptimizer } from "#pi/runtime/context-optimizer";
+import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import {

@@ -8,6 +8,7 @@
 - **architecture**: Split extension contracts, context types, tmux subagent launch code, and CLI configuration UI into dedicated modules; removed package-manager legacy global-install discovery and CLI/mode/UI dependencies from core modules.
 - **resources**: Package resolution now accepts package directories only; explicit resource files are handled by the resource loader, and resource metadata/descriptors are owned by the resource boundary.
 - **extensions**: Removed the legacy `@tsuuanmi/pi/api/types` export; use `@tsuuanmi/pi/extensions` for the complete extension surface.
+- **extensions**: `@tsuuanmi/pi/extensions` is now the sole public extension entry point. The root extension exports, deep extension paths, `ExtensionRunner`, and tool wrappers were removed; use the cohesive `ExtensionAPI` contract instead.
 - **cli**: `pi update` now manages packages only; the self-update commands and public self-update exports were removed.
 - **tools**: Renamed `createAllToolDefinitions` to `createToolDefinitions`, clarified the Pi tool definition boundary, and centralized built-in tool construction in the tool catalog.
 - **sdk**: Renamed the session model fallback warning result from `modelFallbackMessage` to `modelStartupWarning`.

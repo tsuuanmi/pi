@@ -24,7 +24,7 @@ Extensions can register custom model providers via `pi.registerProvider()`. This
 ## Quick Reference
 
 ```typescript
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 
 export default function (pi: ExtensionAPI) {
   // Override baseUrl for existing provider
@@ -90,7 +90,7 @@ To add a completely new provider, specify `models` along with the required confi
 If the model list comes from a remote endpoint, use an async extension factory:
 
 ```typescript
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 
 export default async function (pi: ExtensionAPI) {
   const response = await fetch("http://localhost:1234/v1/models");

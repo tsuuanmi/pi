@@ -45,7 +45,7 @@ interface ParsedSkillBlock {
 
 ### SessionBeforeCompactResult
 
-Result of pre-compaction hooks from extensions. Defined in [`src/extensions/hooks/event-types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/extensions/hooks/event-types.ts):
+Result of pre-compaction hooks from extensions. Defined in [`src/hooks/events.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/hooks/events.ts):
 
 ```typescript
 interface SessionBeforeCompactResult {
@@ -56,7 +56,7 @@ interface SessionBeforeCompactResult {
 
 ### SessionBeforeTreeResult
 
-Result of pre-tree-navigation hooks from extensions. Defined in [`src/extensions/hooks/event-types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/extensions/hooks/event-types.ts):
+Result of pre-tree-navigation hooks from extensions. Defined in [`src/hooks/events.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/hooks/events.ts):
 
 ```typescript
 interface SessionBeforeTreeResult {

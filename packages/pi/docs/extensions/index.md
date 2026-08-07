@@ -54,7 +54,7 @@ Extensions are TypeScript modules that extend pi's behavior. They can subscribe 
 Create `~/.pi/agent/extensions/my-extension.ts`:
 
 ```typescript
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 
 export default function (pi: ExtensionAPI) {
@@ -136,8 +136,8 @@ To share extensions via npm or git as pi packages, see [packages.md](../package-
 
 | Package | Purpose |
 |---------|---------|
-| `@tsuuanmi/pi` | Extension types (`ExtensionAPI`, `ExtensionContext`, events) and host helpers (`SessionManager`, `SettingsManager`, tool factories) |
-| `@tsuuanmi/pi/extensions` | Complete extension contracts and extension runtime helpers |
+| `@tsuuanmi/pi` | Host helpers (`SessionManager`, `SettingsManager`, tool factories) |
+| `@tsuuanmi/pi/extensions` | The sole public extension entry point: extension contracts and extension-facing helpers |
 | `@tsuuanmi/pi/loader` | Model registry and model-loading APIs |
 | `typebox` | Schema definitions for tool parameters |
 | `@tsuuanmi/pi-ai` | AI utilities (`StringEnum` for enums) |
@@ -149,7 +149,23 @@ For distributed pi packages installed with `pi install` (npm or git), runtime de
 
 Node.js built-ins (`node:fs`, `node:path`, etc.) are also available.
 
-The `@tsuuanmi/pi` import is a dedicated extension surface. It does not expose CLI, mode, or runtime-construction modules; use the documented extension contracts and helpers only.
+`@tsuuanmi/pi/extensions` is the only supported extension surface. It exposes cohesive extension contracts and extension-facing helpers; loader discovery, `ExtensionRunner`, hook dispatch, wrappers, and integration modules are private and have no supported deep-import paths.
+
+## Runtime ownership
+
+The host loads an extension in one direction:
+
+```text
+package-manager -> loader -> extension module -> runtime lifecycle + hooks
+```
+
+- `src/package-manager/` resolves installed package resources only. It does not import or execute extension modules.
+- `src/loader/extensions.ts` discovers and imports project, user, and package extension modules.
+- `src/runtime/extensions/` creates `ExtensionAPI` instances and owns extension activation, disposal, and registered-tool adaptation.
+- `src/hooks/` owns hook contracts, registration, dispatch, event ordering, transformations, errors, and the agent bridge.
+- `src/extensions/` contains concrete built-in extensions such as workflows and ChatGPT; it also contains the public `index.ts` entry point.
+
+Only `@tsuuanmi/pi/extensions` is public. Internal paths in these directories are not supported imports.
 
 ## Hook boundary
 
@@ -162,7 +178,7 @@ Workflow packages register workflow-specific handlers through their own narrow h
 An extension exports a default factory function that receives `ExtensionAPI`. The factory can be synchronous or asynchronous:
 
 ```typescript
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 
 export default function (pi: ExtensionAPI) {
   // Subscribe to events
@@ -191,7 +207,7 @@ If the factory returns a `Promise`, pi awaits it before continuing startup. That
 Use an async factory for one-time startup work such as fetching remote configuration or dynamically discovering available models.
 
 ```typescript
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 
 export default async function (pi: ExtensionAPI) {
   const response = await fetch("http://localhost:1234/v1/models");
@@ -699,7 +715,7 @@ Behavior guarantees:
 - Return values from `tool_call` only control blocking via `{ block: true, reason?: string }`
 
 ```typescript
-import { isToolCallEventType } from "@tsuuanmi/pi";
+import { isToolCallEventType } from "@tsuuanmi/pi/extensions";
 
 pi.on("tool_call", async (event, ctx) => {
   // event.toolName - "bash", "read", "write", "edit", etc.
@@ -735,7 +751,7 @@ export type MyToolInput = Static<typeof myToolSchema>;
 Use `isToolCallEventType` with explicit type parameters:
 
 ```typescript
-import { isToolCallEventType } from "@tsuuanmi/pi";
+import { isToolCallEventType } from "@tsuuanmi/pi/extensions";
 import type { MyToolInput } from "my-extension";
 
 pi.on("tool_call", (event) => {
@@ -761,7 +777,7 @@ Built-in tools and workflow subagent tools may attach `event.details.receipt` (`
 Use `ctx.signal` for nested async work inside the handler. This lets Esc cancel model calls, `fetch()`, and other abort-aware operations started by the extension.
 
 ```typescript
-import { isBashToolResult } from "@tsuuanmi/pi";
+import { isBashToolResult } from "@tsuuanmi/pi/extensions";
 
 pi.on("tool_result", async (event, ctx) => {
   // event.toolName, event.toolCallId, event.input
@@ -887,7 +903,8 @@ Current working directory.
 Use `CONFIG_DIR_NAME` instead of hardcoding `.pi` when constructing project-local config paths. Rebranded distributions can use a different config directory name.
 
 ```typescript
-import { CONFIG_DIR_NAME, type ExtensionAPI } from "@tsuuanmi/pi";
+import { CONFIG_DIR_NAME } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { join } from "node:path";
 
 export default function (pi: ExtensionAPI) {
@@ -1198,7 +1215,7 @@ Tools run with `ExtensionContext`, so they cannot call `ctx.reload()` directly. 
 Example tool the LLM can call to trigger reload:
 
 ```typescript
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 
 export default function (pi: ExtensionAPI) {
@@ -2418,7 +2435,8 @@ See [tui.md](../ui/tui.md) for the full `OverlayOptions` and `OverlayHandle` API
 Replace the main input editor with a custom implementation (vim mode, emacs mode, etc.):
 
 ```typescript
-import { CustomEditor, type ExtensionAPI } from "@tsuuanmi/pi";
+import { CustomEditor } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { matchesKey } from "@tsuuanmi/pi-tui";
 
 class VimEditor extends CustomEditor {

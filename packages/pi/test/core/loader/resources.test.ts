@@ -4,11 +4,11 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
-import { ExtensionRunner } from "#pi/extensions/runner";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { DefaultResourceLoader } from "#pi/loader/resources";
 import type { Skill } from "#pi/loader/skill";
 import { createSyntheticSourceInfo } from "#pi/resources/source-info";
+import { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
@@ -29,10 +29,10 @@ function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions
 	return extensions.filter(
 		(extension) =>
 			!extension.path.startsWith("<inline:") &&
-			!extension.path.endsWith("/src/packages/pi/extensions/builtin-workflows.ts") &&
-			!extension.path.endsWith("/dist/packages/pi/extensions/builtin-workflows.js") &&
-			!extension.path.includes("/pi/src/extensions/builtin-workflows.ts") &&
-			!extension.path.includes("/pi/dist/extensions/builtin-workflows.js"),
+			!extension.path.endsWith("/src/packages/pi/extensions/workflows.ts") &&
+			!extension.path.endsWith("/dist/packages/pi/extensions/workflows.js") &&
+			!extension.path.includes("/pi/src/extensions/workflows.ts") &&
+			!extension.path.includes("/pi/dist/extensions/workflows.js"),
 	);
 }
 
@@ -890,7 +890,7 @@ Content`,
 			writeFileSync(
 				join(ext1Dir, "index.ts"),
 				`
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 export default function(pi: ExtensionAPI) {
   pi.registerTool({
@@ -905,7 +905,7 @@ export default function(pi: ExtensionAPI) {
 			writeFileSync(
 				join(ext2Dir, "index.ts"),
 				`
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 export default function(pi: ExtensionAPI) {
   pi.registerTool({
@@ -932,7 +932,7 @@ export default function(pi: ExtensionAPI) {
 			writeFileSync(
 				join(globalExtDir, "global.ts"),
 				`
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 export default function(pi: ExtensionAPI) {
   pi.registerTool({
@@ -951,7 +951,7 @@ export default function(pi: ExtensionAPI) {
 			writeFileSync(
 				explicitExtPath,
 				`
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 export default function(pi: ExtensionAPI) {
   pi.registerTool({

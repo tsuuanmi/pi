@@ -40,7 +40,7 @@ import type {
 	TurnStartEvent,
 	UserBashEvent,
 	UserBashEventResult,
-} from "#pi/extensions/hooks/event-types";
+} from "#pi/hooks/events";
 
 /** Handler function type for extension hook events. */
 // biome-ignore lint/suspicious/noConfusingVoidType: void allows bare return statements

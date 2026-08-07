@@ -1,6 +1,6 @@
+import type { SessionShutdownEvent } from "@tsuuanmi/pi/extensions";
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { SessionShutdownEvent } from "#pi/index";
 import { runPrintMode } from "#pi/modes/print-mode";
 
 type EmitEvent = SessionShutdownEvent;

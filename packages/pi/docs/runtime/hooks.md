@@ -26,7 +26,7 @@ Lower-level packages do not import `@tsuuanmi/pi`.
 | `@tsuuanmi/pi-agent` | Agent lifecycle and execution hooks | `Agent.registerHook()` and `Agent.subscribe()` |
 | `@tsuuanmi/pi-orchestrator` | Task, team, retry, verification, progress, and trace hooks | Orchestrator configuration and events |
 | `@tsuuanmi/pi-workflows` | Workflow tools and workflow policy | `registerWorkflowTools()` and `registerWorkflowHooks()` |
-| `@tsuuanmi/pi` | Extension loading, session/UI context, and dynamic extension events | `ExtensionAPI` and `ExtensionRunner` |
+| `@tsuuanmi/pi` | Extension loading, session/UI context, and dynamic extension events | Public `ExtensionAPI` from `@tsuuanmi/pi/extensions`; private lifecycle and hook subsystems |
 
 ## Agent hooks
 
@@ -58,11 +58,11 @@ The agent package does not know about sessions, extensions, TUI state, or packag
 
 ## Pi extension hooks
 
-Pi owns `ExtensionAPI`, `ExtensionRunner`, and the host extension event bus. These APIs carry host context such as sessions, UI, package identity, and resource loading.
+Pi exposes `ExtensionAPI` through `@tsuuanmi/pi/extensions`. The lifecycle runner and hook dispatcher are private host implementation details; the event bus is available only through the extension contract.
 
 Pi bridges extension tool events into the agent with an agent hook registration. The bridge is an adapter; `pi-agent` does not import extension types.
 
-Extension events that require host context remain in Pi, including session lifecycle, UI updates, resource discovery, and extension loading. Dynamic extension handlers are registered and disposed by `ExtensionRunner`.
+Extension events that require host context remain in Pi, including session lifecycle, UI updates, resource discovery, and extension loading. The private hook subsystem owns dynamic handler registration, ordering, transformation, and errors; the private lifecycle runner owns activation and disposal.
 
 ## Workflow registration
 

@@ -1,11 +1,11 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { InputEvent } from "@tsuuanmi/pi/extensions";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
-import type { InputEvent } from "#pi/extensions/index";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import { createSyntheticSourceInfo } from "#pi/resources/source-info";
 import { testAssistantMessage, testToolCall } from "#pi-test/helpers/provider";

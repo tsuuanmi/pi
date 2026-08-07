@@ -6,7 +6,7 @@ import {
 	CHATGPT_WEB_MODELS,
 	CHATGPT_WEB_PROVIDER,
 	CHATGPT_WEB_ROUTE_PREFIX,
-} from "#pi/extensions/chatgpt-web-models";
+} from "#pi/extensions/chatgpt-web/models";
 
 const LOCAL_API_KEY = "local";
 

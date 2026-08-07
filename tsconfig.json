@@ -97,7 +97,7 @@
 				"./packages/pi/src/index.ts"
 			],
 			"@tsuuanmi/pi/extensions": [
-				"./packages/pi/src/package-manager/extensions/index.ts"
+				"./packages/pi/src/extensions/index.ts"
 			],
 			"@tsuuanmi/pi/loader/config": [
 				"./packages/pi/src/loader/config.ts"

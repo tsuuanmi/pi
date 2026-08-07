@@ -50,7 +50,6 @@ import type {
 	AutocompleteProviderFactory,
 	EditorFactory,
 	ExtensionContext,
-	ExtensionRunner,
 	ExtensionUIContext,
 } from "#pi/extensions/index";
 import { APP_NAME } from "#pi/loader/app";
@@ -60,6 +59,7 @@ import { parseGitUrl } from "#pi/package-manager/git";
 import type { SourceInfo } from "#pi/resources/source-info";
 import type { AgentSession } from "#pi/runtime/agent-session";
 import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
+import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { parseSkillBlock } from "#pi/runtime/session/skill-block";
 import type { AgentSessionEvent } from "#pi/runtime/session/types";
 import { formatMissingSessionCwdPrompt, type MissingSessionCwdError } from "#pi/session/cwd";

@@ -7,7 +7,7 @@
 
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import type { RegisteredTool } from "#pi/api/extension-types";
-import type { ExtensionRunner } from "#pi/extensions/runner";
+import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { toAgentTool, toAgentTools } from "#pi/tools/utils";
 
 /**

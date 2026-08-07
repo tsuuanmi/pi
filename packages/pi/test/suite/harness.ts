@@ -5,14 +5,15 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { ExtensionFactory } from "@tsuuanmi/pi/extensions";
 import type { AgentMessage, AgentTool } from "@tsuuanmi/pi-agent";
 import { Agent, convertToLlm } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/storage";
-import type { ExtensionRunner } from "#pi/extensions/index";
-import type { ExtensionFactory, ResourceLoader } from "#pi/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
+import type { ResourceLoader } from "#pi/loader/resources";
 import { AgentSession } from "#pi/runtime/agent-session";
+import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import type { AgentSessionEvent } from "#pi/runtime/session/types";
 import { SessionManager } from "#pi/session/manager";
 import type { Settings } from "#pi/settings/settings-manager";

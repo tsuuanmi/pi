@@ -17,9 +17,9 @@ export type { ResourceCollision, ResourceDiagnostic } from "#pi/resources/diagno
 
 import { canonicalizePath, isLocalPath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#pi/api/extension-types";
-import { createEventBus, type EventBus } from "#pi/extensions/event-bus";
-import { getBuiltinExtensionFactories } from "#pi/extensions/registry/builtin-extensions";
-import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "#pi/loader/extensions";
+import { getBuiltinExtensionFactories } from "#pi/extensions/builtins";
+import { createEventBus, type EventBus } from "#pi/hooks/event-bus";
+import { loadExtensionFromFactory, loadExtensions } from "#pi/loader/extensions";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import { loadPromptTemplatesWithDiagnostics } from "#pi/loader/prompt-templates";
 import type { Skill } from "#pi/loader/skill";
@@ -33,6 +33,7 @@ import type {
 } from "#pi/loader/types";
 import { DefaultPackageManager } from "#pi/package-manager/package-manager";
 import type { PathMetadata, ResolvedResource, ResourceType } from "#pi/resources/types";
+import { createExtensionRuntime } from "#pi/runtime/extensions/api";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
 export class DefaultResourceLoader implements ResourceLoader {

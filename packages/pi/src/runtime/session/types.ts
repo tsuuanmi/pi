@@ -5,17 +5,15 @@ import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type {
 	ContextUsage,
 	ExtensionCommandContextActions,
-	ExtensionErrorListener,
 	ExtensionMode,
-	ExtensionRunner,
 	ExtensionUIContext,
 	InputSource,
 	SessionStartEvent,
-	ShutdownHandler,
 	ToolDefinition,
 } from "#pi/extensions/index";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceLoader } from "#pi/loader/resources";
+import type { ExtensionErrorListener, ExtensionRunner, ShutdownHandler } from "#pi/runtime/extensions/runner";
 import type { CompactionResult } from "#pi/session/compaction";
 import type { SessionManager } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";

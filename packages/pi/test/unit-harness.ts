@@ -10,6 +10,7 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { ExtensionFactory } from "@tsuuanmi/pi/extensions";
 import type { AgentTool } from "@tsuuanmi/pi-agent";
 import { Agent } from "@tsuuanmi/pi-agent";
 import type {
@@ -27,8 +28,8 @@ import type {
 } from "@tsuuanmi/pi-ai";
 import { createAssistantMessageEventStream } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/storage";
-import type { ExtensionFactory, ResourceLoader } from "#pi/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
+import type { ResourceLoader } from "#pi/loader/resources";
 import { AgentSession } from "#pi/runtime/agent-session";
 import type { AgentSessionEvent } from "#pi/runtime/session/types";
 import { SessionManager } from "#pi/session/manager";

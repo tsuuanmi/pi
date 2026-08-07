@@ -26,7 +26,7 @@ interface EventBusController extends EventBus {
 ### Creating an Event Bus
 
 ```typescript
-import { createEventBus } from "@tsuuanmi/pi";
+import { createEventBus } from "@tsuuanmi/pi/extensions";
 
 const bus = createEventBus();
 

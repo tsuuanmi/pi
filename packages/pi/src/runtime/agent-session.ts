@@ -30,33 +30,35 @@ import type { SlashCommandInfo } from "#pi/api/extension-types";
 import { formatNoApiKeyFoundMessage } from "#pi/auth/guidance";
 import type { BashOperations } from "#pi/execution/backend";
 import type { BashResult } from "#pi/execution/bash";
-import { installAgentToolHooks } from "#pi/extensions/hooks/tool-hooks";
-import {
-	type ContextUsage,
-	type ExtensionCommandContextActions,
-	type ExtensionErrorListener,
-	type ExtensionMode,
-	ExtensionRunner,
-	type ExtensionUIContext,
-	type MessageEndEvent,
-	type MessageStartEvent,
-	type MessageUpdateEvent,
-	type ReplacedSessionContext,
-	type SessionStartEvent,
-	type ShutdownHandler,
-	type ToolDefinition,
-	type ToolExecutionEndEvent,
-	type ToolExecutionStartEvent,
-	type ToolExecutionUpdateEvent,
-	type ToolInfo,
-	type TurnEndEvent,
-	type TurnStartEvent,
+import type {
+	ContextUsage,
+	ExtensionCommandContextActions,
+	ExtensionMode,
+	ExtensionUIContext,
+	MessageEndEvent,
+	MessageStartEvent,
+	MessageUpdateEvent,
+	ReplacedSessionContext,
+	SessionStartEvent,
+	ToolDefinition,
+	ToolExecutionEndEvent,
+	ToolExecutionStartEvent,
+	ToolExecutionUpdateEvent,
+	ToolInfo,
+	TurnEndEvent,
+	TurnStartEvent,
 } from "#pi/extensions/index";
-import { emitSessionShutdownEvent } from "#pi/extensions/runner";
+import { installAgentToolHooks } from "#pi/hooks/agent-bridge";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import type { ResourceExtensionPaths, ResourceLoader } from "#pi/loader/resources";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
+import {
+	type ExtensionErrorListener,
+	ExtensionRunner,
+	emitSessionShutdownEvent,
+	type ShutdownHandler,
+} from "#pi/runtime/extensions/runner";
 import {
 	cycleModel as modelControlCycleModel,
 	cycleThinkingLevel as modelControlCycleThinkingLevel,

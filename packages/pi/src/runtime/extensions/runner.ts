@@ -7,6 +7,30 @@ import type { Model } from "@tsuuanmi/pi-ai";
 import type { KeyId } from "@tsuuanmi/pi-tui";
 import { type Theme, theme } from "@tsuuanmi/pi-tui";
 import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
+import type {
+	CompactOptions,
+	ContextUsage,
+	ExtensionCommandContext,
+	ExtensionContext,
+	ExtensionMode,
+	ReplacedSessionContext,
+} from "#pi/api/context-types";
+import type {
+	Extension,
+	ExtensionActions,
+	ExtensionCommandContextActions,
+	ExtensionContextActions,
+	ExtensionError,
+	ExtensionFlag,
+	ExtensionRuntime,
+	ExtensionShortcut,
+	MessageRenderer,
+	RegisteredCommand,
+	RegisteredTool,
+	ResolvedCommand,
+} from "#pi/api/extension-types";
+import type { ProviderConfig } from "#pi/api/provider-types";
+import type { ExtensionUIContext } from "#pi/api/ui-types";
 import {
 	type BeforeAgentStartCombinedResult,
 	emitBeforeAgentStartHook,
@@ -23,31 +47,11 @@ import {
 	hasExtensionHookHandlers,
 	type RunnerEmitEvent,
 	type RunnerEmitResult,
-} from "#pi/extensions/hooks/runner-dispatch";
+} from "#pi/hooks/dispatch";
 import type {
-	CompactOptions,
-	ContextUsage,
-	Extension,
-	ExtensionActions,
-	ExtensionCommandContext,
-	ExtensionCommandContextActions,
-	ExtensionContext,
-	ExtensionContextActions,
-	ExtensionError,
-	ExtensionFlag,
-	ExtensionMode,
-	ExtensionRuntime,
-	ExtensionShortcut,
-	ExtensionUIContext,
 	InputEvent,
 	InputEventResult,
 	MessageEndEvent,
-	MessageRenderer,
-	ProviderConfig,
-	RegisteredCommand,
-	RegisteredTool,
-	ReplacedSessionContext,
-	ResolvedCommand,
 	ResourcesDiscoverEvent,
 	SessionShutdownEvent,
 	ToolCallEvent,
@@ -56,7 +60,7 @@ import type {
 	ToolResultEventResult,
 	UserBashEvent,
 	UserBashEventResult,
-} from "#pi/extensions/types";
+} from "#pi/hooks/events";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
 import type { SessionManager } from "#pi/session/manager";

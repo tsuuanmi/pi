@@ -1,5 +1,5 @@
 import type { Agent } from "@tsuuanmi/pi-agent";
-import type { ExtensionRunner } from "#pi/extensions/index";
+import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 
 /** Install the agent bridge for extension tool hooks. */
 export function installAgentToolHooks(agent: Agent, runner: ExtensionRunner): () => void {

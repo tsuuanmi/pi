@@ -606,7 +606,7 @@ These patterns cover the most common UI needs in extensions. **Copy these patter
 For letting users pick from a list of options. Use `SelectList` from `@tsuuanmi/pi-tui` with `DynamicBorder` for framing.
 
 ```typescript
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { DynamicBorder } from "@tsuuanmi/pi";
 import { Container, type SelectItem, SelectList, Text } from "@tsuuanmi/pi-tui";
 
@@ -838,7 +838,8 @@ Token stats available via `ctx.sessionManager.getBranch()` and `ctx.model`.
 Replace the main input editor with a custom implementation. Useful for modal editing (vim), different keybindings (emacs), or specialized input handling.
 
 ```typescript
-import { CustomEditor, type ExtensionAPI } from "@tsuuanmi/pi";
+import { CustomEditor } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { matchesKey, truncateToWidth } from "@tsuuanmi/pi-tui";
 
 type Mode = "normal" | "insert";

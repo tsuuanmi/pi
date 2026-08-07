@@ -5,16 +5,17 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { Extension, ExtensionFactory, LoadExtensionsResult } from "@tsuuanmi/pi/extensions";
+import { createEventBus } from "@tsuuanmi/pi/extensions";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/storage";
-import { createEventBus } from "#pi/extensions/event-bus";
-import type { Extension, ExtensionFactory, LoadExtensionsResult } from "#pi/extensions/index";
 import { createCodingTools } from "#pi/index";
-import { createExtensionRuntime, loadExtensionFromFactory } from "#pi/loader/extensions";
+import { loadExtensionFromFactory } from "#pi/loader/extensions";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceLoader } from "#pi/loader/resources";
 import { AgentSession } from "#pi/runtime/agent-session";
+import { createExtensionRuntime } from "#pi/runtime/extensions/api";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
