@@ -138,7 +138,7 @@ pi --name "my task"    # Set session display name at startup
 pi --session <path|id> # Open a specific session
 ```
 
-Inside pi, use `/resume`, `/new`, `/tree`, and `/fork` to manage sessions.
+Inside pi, use `/resume`, `/new`, and `/tree` to manage sessions.
 
 ### Non-interactive mode
 

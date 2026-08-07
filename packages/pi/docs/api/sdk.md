@@ -119,7 +119,7 @@ interface AgentSession {
 }
 ```
 
-Session replacement APIs such as new-session, resume, fork, and import live on `AgentSessionRuntime`, not on `AgentSession`.
+Session replacement APIs such as new-session and resume live on `AgentSessionRuntime`, not on `AgentSession`.
 
 ### createAgentSessionRuntime() and AgentSessionRuntime
 
@@ -162,9 +162,6 @@ const runtime = await createAgentSessionRuntime(createRuntime, {
 
 - `newSession()`
 - `switchSession()`
-- `fork()`
-- clone flows via `fork(entryId, { position: "at" })`
-- `importFromJsonl()`
 
 Important behavior:
 
@@ -723,7 +720,7 @@ const { session: opened } = await createAgentSession({
 const currentProjectSessions = await SessionManager.list(process.cwd());
 const allSessions = await SessionManager.listAll(process.cwd());
 
-// Session replacement API for /new, /resume, /fork, and import flows.
+// Session replacement API for new sessions and session switches.
 const createRuntime: CreateAgentSessionRuntimeFactory = async ({ cwd, sessionManager, sessionStartEvent }) => {
   const services = await createAgentSessionServices({ cwd });
   return {
@@ -749,11 +746,6 @@ await runtime.newSession();
 // Replace the active session with another saved session
 await runtime.switchSession("/path/to/session.jsonl");
 
-// Replace the active session with a fork from a specific user entry
-await runtime.fork("entry-id");
-
-// Clone the active path through a specific entry
-await runtime.fork("entry-id", { position: "at" });
 ```
 
 **SessionManager tree API:**
@@ -780,7 +772,6 @@ sm.appendLabelChange(id, "checkpoint"); // Set label
 // Branching
 sm.branch(entryId);                     // Move leaf to earlier entry
 sm.branchWithSummary(id, "Summary...");  // Branch with context summary
-sm.createBranchedSession(leafId);       // Extract path to new file
 ```
 
 See [Session Format](../session/session-format.md) for session storage internals.

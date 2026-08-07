@@ -186,12 +186,6 @@ First line of the file. Metadata only, not part of the tree (no `id`/`parentId`)
 {"type":"session","version":3,"id":"20241203-140000","timestamp":"2024-12-03T14:00:00.000Z","cwd":"/path/to/project"}
 ```
 
-For sessions with a parent (created via `/fork` or `newSession({ parentSession })`):
-
-```json
-{"type":"session","version":3,"id":"20241203-140000","timestamp":"2024-12-03T14:00:00.000Z","cwd":"/path/to/project","parentSession":"/path/to/original/session.jsonl"}
-```
-
 ### SessionMessageEntry
 
 A message in the conversation. The `message` field contains an `AgentMessage`.
@@ -362,16 +356,13 @@ Key methods for working with sessions programmatically.
 - `SessionManager.open(path, sessionDir?)` - Open existing session file
 - `SessionManager.continueRecent(cwd, sessionDir?)` - Continue most recent or create new
 - `SessionManager.inMemory(cwd?)` - No file persistence
-- `SessionManager.forkFrom(sourcePath, targetCwd, sessionDir?)` - Fork session from another project
 
 ### Static Listing Methods
 - `SessionManager.list(cwd, sessionDir?, onProgress?)` - List sessions for a directory
 - `SessionManager.listAll(onProgress?)` - List all sessions across all projects
 
 ### Instance Methods - Session Management
-- `newSession(options?)` - Start a new session (options: `{ parentSession?: string }`)
 - `setSessionFile(path)` - Switch to a different session file
-- `createBranchedSession(leafId)` - Extract branch to new session file
 
 ### Instance Methods - Appending (all return entry ID)
 - `appendMessage(message)` - Add message

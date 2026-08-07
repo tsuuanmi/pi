@@ -124,11 +124,6 @@ Start a fresh session. Can be cancelled by a `session_before_switch` extension e
 {"type": "new_session"}
 ```
 
-With optional parent session tracking:
-```json
-{"type": "new_session", "parentSession": "/path/to/parent-session.jsonl"}
-```
-
 Response:
 ```json
 {"type": "response", "command": "new_session", "success": true, "data": {"cancelled": false}}
@@ -538,85 +533,6 @@ If an extension cancelled the switch:
 {"type": "response", "command": "switch_session", "success": true, "data": {"cancelled": true}}
 ```
 
-#### fork
-
-Create a new fork from a previous user message on the active branch. Can be cancelled by a `session_before_fork` extension event handler. Returns the text of the message being forked from.
-
-```json
-{"type": "fork", "entryId": "abc123"}
-```
-
-Response:
-```json
-{
-  "type": "response",
-  "command": "fork",
-  "success": true,
-  "data": {"text": "The original prompt text...", "cancelled": false}
-}
-```
-
-If an extension cancelled the fork:
-```json
-{
-  "type": "response",
-  "command": "fork",
-  "success": true,
-  "data": {"text": "The original prompt text...", "cancelled": true}
-}
-```
-
-#### clone
-
-Duplicate the current active branch into a new session at the current position. Can be cancelled by a `session_before_fork` extension event handler.
-
-```json
-{"type": "clone"}
-```
-
-Response:
-```json
-{
-  "type": "response",
-  "command": "clone",
-  "success": true,
-  "data": {"cancelled": false}
-}
-```
-
-If an extension cancelled the clone:
-```json
-{
-  "type": "response",
-  "command": "clone",
-  "success": true,
-  "data": {"cancelled": true}
-}
-```
-
-#### get_fork_messages
-
-Get user messages available for forking.
-
-```json
-{"type": "get_fork_messages"}
-```
-
-Response:
-```json
-{
-  "type": "response",
-  "command": "get_fork_messages",
-  "success": true,
-  "data": {
-    "messages": [
-      {"entryId": "abc123", "text": "First prompt..."},
-      {"entryId": "def456", "text": "Second prompt..."}
-    ]
-  }
-}
-```
-
 #### get_last_assistant_text
 
 Get the text content of the last assistant message.
@@ -698,7 +614,7 @@ Each command has:
 
 Use `sourceInfo` as the canonical provenance field; do not infer ownership from command names or path parsing.
 
-**Note**: Built-in TUI commands (`/settings`, `/hotkeys`, etc.) are not included. They are handled only in interactive mode and would not execute if sent via `prompt`.
+**Note**: Built-in TUI commands are not included. They are handled only in interactive mode and would not execute if sent via `prompt`.
 
 ## Events
 

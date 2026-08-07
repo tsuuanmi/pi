@@ -41,12 +41,9 @@ Type `/` in the editor to open command completion. Extensions can register custo
 | `/name <name>` | Set session display name |
 | `/session` | Show session file, ID, messages, tokens, and cost |
 | `/tree` | Jump to any point in the session and continue from there |
-| `/fork` | Create a new session from a previous user message |
 | `/compact [prompt]` | Manually compact context, optionally with custom instructions |
 | `/copy` | Copy last assistant message to clipboard |
-| `/import <file>` | Import and resume a session from a JSONL file |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files |
-| `/hotkeys` | Show all keyboard shortcuts |
 | `/quit` | Quit pi |
 
 Codex subscription accounts show current quota, quota reset timing when the provider reports it, and available reset credits in `/account`. Redeem one available reset credit with `/account reset openai-codex [account]`; add `--dry-run` to preview without consuming a credit.
@@ -78,7 +75,6 @@ Useful session commands:
 
 - `/session` shows the current session file and ID.
 - `/tree` navigates the in-file session tree and can summarize abandoned branches.
-- `/fork` creates a new session from an earlier user message.
 - `/compact` summarizes older messages to free context.
 
 See [Sessions](../session/sessions.md) and [Compaction](../session/compaction/index.md) for details.

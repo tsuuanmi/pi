@@ -26,7 +26,6 @@ For the JSONL file format and SessionManager API, see [Session Format](session-f
 | `/name <name>` | Set the current session display name |
 | `/session` | Show session info |
 | `/tree` | Navigate the current session tree |
-| `/fork` | Create a new session from a previous user message |
 | `/compact [prompt]` | Summarize older context; see [Compaction](compaction/index.md) |
 
 ## Resuming and Deleting Sessions
@@ -107,17 +106,6 @@ Selecting an assistant, tool, compaction, or other non-user entry:
 3. Lets you continue from that point.
 
 Selecting the root user message resets the leaf to an empty conversation and places the original prompt in the editor.
-
-## `/tree` and `/fork`
-
-| Feature | `/tree` | `/fork` |
-|---------|---------|---------|
-| Output | Same session file | New session file |
-| View | Full tree | User-message selector |
-| Typical use | Explore alternatives in place | Start a new session from an earlier prompt |
-| Summary | Optional branch summary | None |
-
-Use `/tree` when you want to keep alternatives together. Use `/fork` when you want a separate session file.
 
 ## Branch Summaries
 

@@ -135,7 +135,7 @@ See [docs/runtime/models/providers.md](docs/runtime/models/providers.md) for det
 
 The interface from top to bottom:
 
-- **Startup header** - Shows shortcuts (`/hotkeys` for all), loaded AGENTS.md files, prompt templates, skills, and extensions
+- **Startup header** - Shows loaded AGENTS.md files, prompt templates, skills, and extensions
 - **Messages** - Your messages, assistant responses, tool calls and results, notifications, errors, and extension UI
 - **Editor** - Where you type; border color indicates thinking level
 - **Footer** - Working directory, session name, total token/cache usage (`↑` input, `↓` output, `R` cache read, `W` cache write, `CH` latest cache hit rate), cost, context usage, current model
@@ -168,17 +168,14 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 | `/name <name>` | Set session display name |
 | `/session` | Show session info (file, ID, messages, tokens, cost) |
 | `/tree` | Jump to any point in the session and continue from there |
-| `/fork` | Create a new session from a previous user message |
 | `/compact [prompt]` | Manually compact context, optional custom instructions |
 | `/copy` | Copy last assistant message to clipboard |
-| `/import <file>` | Import and resume a session from a JSONL file |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files (themes hot-reload automatically) |
-| `/hotkeys` | Show all keyboard shortcuts |
 | `/quit` | Quit pi |
 
 ### Keyboard Shortcuts
 
-See `/hotkeys` for the full list. Customize via `~/.pi/agent/keybindings.json`. See [docs/modes/interactive/keybindings.md](docs/modes/interactive/keybindings.md).
+Customize keyboard shortcuts via `~/.pi/agent/keybindings.json`. See [docs/modes/interactive/keybindings.md](docs/modes/interactive/keybindings.md) for the full list.
 
 **Commonly used:**
 
@@ -230,8 +227,6 @@ Use `/session` in interactive mode to see the current session ID before reusing 
 - Search by typing, fold/unfold and jump between branches with Ctrl+←/Ctrl+→ or Alt+←/Alt+→, page with ←/→
 - Filter modes (Ctrl+O): default → no-tools → user-only → labeled-only → all
 - Press Shift+L to label entries as bookmarks and Shift+T to toggle label timestamps
-
-**`/fork`** - Create a new session file from a previous user message on the active branch. Opens a selector, copies the active path up to that point, and places the selected prompt in the editor for modification.
 
 ### Compaction
 

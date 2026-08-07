@@ -322,12 +322,6 @@ user sends another prompt ◄─────────────────
   ├─► session_start { reason: "new" | "resume", previousSessionFile? }
   └─► resources_discover { reason: "startup" }
 
-/fork
-  ├─► session_before_fork (can cancel)
-  ├─► session_shutdown
-  ├─► session_start { reason: "fork", previousSessionFile }
-  └─► resources_discover { reason: "startup" }
-
 /compact or auto-compaction
   ├─► session_before_compact (can cancel or customize)
   └─► session_compact
@@ -378,8 +372,8 @@ Fired when a session is started, loaded, or reloaded.
 
 ```typescript
 pi.on("session_start", async (event, ctx) => {
-  // event.reason - "startup" | "reload" | "new" | "resume" | "fork"
-  // event.previousSessionFile - present for "new", "resume", and "fork"
+  // event.reason - "startup" | "reload" | "new" | "resume"
+  // event.previousSessionFile - present for "new" and "resume"
   ctx.ui.notify(`Session: ${ctx.sessionManager.getSessionFile() ?? "ephemeral"}`, "info");
 });
 ```
@@ -401,23 +395,6 @@ pi.on("session_before_switch", async (event, ctx) => {
 ```
 
 After a successful switch or new-session action, pi emits `session_shutdown` for the old extension instance, reloads and rebinds extensions for the new session, then emits `session_start` with `reason: "new" | "resume"` and `previousSessionFile`.
-Do cleanup work in `session_shutdown`, then reestablish any in-memory state in `session_start`.
-
-#### session_before_fork
-
-Fired when forking via `/fork`.
-
-```typescript
-pi.on("session_before_fork", async (event, ctx) => {
-  // event.entryId - ID of the selected entry
-  // event.position - "before" for /fork
-  return { cancel: true }; // Cancel fork
-  // OR
-  return { skipConversationRestore: true }; // Reserved for future conversation restore control
-});
-```
-
-After a successful fork, pi emits `session_shutdown` for the old extension instance, reloads and rebinds extensions for the new session, then emits `session_start` with `reason: "fork"` and `previousSessionFile`.
 Do cleanup work in `session_shutdown`, then reestablish any in-memory state in `session_start`.
 
 #### session_before_compact / session_compact
@@ -470,7 +447,7 @@ Fired before a started session runtime is torn down. Use this to clean up resour
 
 ```typescript
 pi.on("session_shutdown", async (event, ctx) => {
-  // event.reason - "quit" | "reload" | "new" | "resume" | "fork"
+  // event.reason - "quit" | "reload" | "new" | "resume"
   // event.targetSessionFile - destination session for session replacement flows
   // Cleanup, save state, etc.
 });
@@ -1062,11 +1039,9 @@ pi.registerCommand("my-cmd", {
 Create a new session:
 
 ```typescript
-const parentSession = ctx.sessionManager.getSessionFile();
 const kickoff = "Continue in the replacement session";
 
 const result = await ctx.newSession({
-  parentSession,
   setup: async (sm) => {
     sm.appendMessage({
       role: "user",
@@ -1086,34 +1061,7 @@ if (result.cancelled) {
 ```
 
 Options:
-- `parentSession`: parent session file to record in the new session header
 - `setup`: mutate the new session's `SessionManager` before `withSession` runs
-- `withSession`: run post-switch work against a fresh replacement-session context. Do not use captured old `pi` / command `ctx`; see [Session replacement lifecycle and footguns](#session-replacement-lifecycle-and-footguns).
-
-### ctx.fork(entryId, options?)
-
-Fork from a specific entry, creating a new session file:
-
-```typescript
-const result = await ctx.fork("entry-id-123", {
-  withSession: async (ctx) => {
-    // Use only the replacement-session ctx here.
-    ctx.ui.notify("Now in the forked session", "info");
-  },
-});
-if (result.cancelled) {
-  // An extension cancelled the fork
-}
-
-const cloneResult = await ctx.fork("entry-id-456", { position: "at" });
-if (cloneResult.cancelled) {
-  // An extension cancelled the clone
-}
-```
-
-Options:
-- `position`: `"before"` (default) forks before the selected user message, restoring that prompt into the editor
-- `position`: `"at"` duplicates the active path through the selected entry without restoring editor text
 - `withSession`: run post-switch work against a fresh replacement-session context. Do not use captured old `pi` / command `ctx`; see [Session replacement lifecycle and footguns](#session-replacement-lifecycle-and-footguns).
 
 ### ctx.navigateTree(targetId, options?)
