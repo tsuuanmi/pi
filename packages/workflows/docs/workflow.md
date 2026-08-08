@@ -44,7 +44,7 @@ Workflows expose two independent host-facing surfaces. They are adapters over th
 | Surface | Entry point | Caller and context | Return contract |
 |---------|-------------|--------------------|-----------------|
 | CLI commands | `src/commands/workflow.ts` and `src/commands/workflow/` | User, shell script, CI, or recovery process. Receives argv, a working directory, and session-scoped input. | `status`, `stdout`, and `stderr`; suitable for scripting and machine-readable `--json` output. |
-| Model-visible tools | `src/extension.ts`, `src/tools.ts`, and skill-owned `tools.ts` modules | The model during an interactive Pi session. Receives typed parameters, `WorkflowContext`, cancellation, and an optional host subagent manager. | `AgentToolResult` content and structured workflow receipts. |
+| Model-visible tools | `src/extension.ts`, `src/tools.ts`, `src/tools/`, and skill-owned `tools.ts` modules | The model during an interactive Pi session. Receives typed parameters, `WorkflowContext`, cancellation, and an optional host subagent manager. | `AgentToolResult` content and structured workflow receipts. |
 
 The normal call paths are:
 
@@ -63,10 +63,10 @@ model tool call
 Boundary rules:
 
 - Commands own CLI parsing, session and working-directory resolution, output formatting, exit status, external lifecycle, inspection, and recovery.
-- Tools own model-facing schemas, in-session context, cancellation, receipts, and interactive orchestration or subagent actions.
+- Workflow adapters own host-facing registration, in-session context, cancellation, and workflow receipts. Agent-owned lifecycle tools provide reusable subagent actions; skill tools own workflow orchestration and policy.
 - Shared workflow implementation belongs below these adapters. If a command and a tool need the same behavior, they call a shared runtime or skill function; they do not call or shell out to each other.
 - A command may route to a live `RuntimeOwner` through workflow RPC or use a no-owner fallback. That is runtime communication, not a tool invocation.
-- `src/tools.ts` is the workflow tool contract and registration aggregator, not a second workflow runtime. Skill-specific tool behavior lives under `src/skills/*/tools.ts`.
+- `src/tools.ts` is the workflow tool contract and registration aggregator, not a second workflow runtime. Agent lifecycle adaptation lives under `src/tools/`; skill-specific tool behavior lives under `src/skills/*/tools.ts`.
 
 Use `pi workflow ...` for external control-plane operations and scripting. Use model-visible tools for actions that must run inside the current Pi session, especially guarded orchestration and subagent work.
 

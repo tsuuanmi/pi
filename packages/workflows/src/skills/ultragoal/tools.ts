@@ -1,10 +1,9 @@
+import { parseThinkingLevel } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { assertExpectedNextRole, assertNoGuardedSpawnOverrides } from "#workflows/policy/expected-next-role";
 import { expectedNextRoleForSkill } from "#workflows/registry/transition-registry";
 import { getUltragoalStatus } from "#workflows/skills/ultragoal/runtime";
-import { requireSubagentManager } from "#workflows/subagents/manager";
-import { assertAgentThinkingLevel } from "#workflows/subagents/thinking-level";
 import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools";
 
 const ultragoalSpawnGoalAgentSchema = Type.Object({
@@ -22,7 +21,7 @@ async function executeUltragoalSpawnGoalAgent(
 	ctx: WorkflowContext,
 	signal?: AbortSignal,
 ) {
-	assertAgentThinkingLevel(params.thinkingLevel);
+	const thinkingLevel = parseThinkingLevel(params.thinkingLevel);
 	const status = await getUltragoalStatus(ctx.cwd, ctx.sessionManager.getSessionId());
 	const goal = status.goals.find((g) => g.id === params.goalId);
 	if (!goal) throw new Error(`ultragoal goal not found: ${params.goalId}`);
@@ -38,11 +37,13 @@ async function executeUltragoalSpawnGoalAgent(
 		taskId: goal.id,
 	});
 	assertNoGuardedSpawnOverrides(params);
-	const result = await requireSubagentManager(ctx).spawn({
+	const manager = ctx.subagents;
+	if (!manager) throw new Error("No subagent manager is available in this session.");
+	const result = await manager.spawn({
 		agent: params.agent ?? "worker",
 		role: `ultragoal-worker-${goal.id}`,
 		model: params.model,
-		thinkingLevel: params.thinkingLevel,
+		thinkingLevel,
 		prompt: `Main goal: ${status.mainGoal?.title ?? "Ultragoal"}\nTask ${goal.sequence ?? goal.id}: ${goal.title}\nObjective: ${goal.objective}\nAfter work, provide checkpoint evidence. Restore points are state-only; workspace files are not rolled back.`,
 		systemPrompt: `You are an ultragoal worker executing checkpointed task "${goal.title}" (id: ${goal.id}) under main goal "${status.mainGoal?.title ?? "Ultragoal"}". Complete only this task and provide checkpoint evidence.`,
 		tools: params.tools,

@@ -20,6 +20,8 @@ export * from "#agent/subagents/factory";
 export * from "#agent/subagents/manager";
 export * from "#agent/subagents/progress";
 export * from "#agent/subagents/receipts";
+export * from "#agent/subagents/thinking-level";
+export * from "#agent/subagents/tools";
 export * from "#agent/subagents/types";
 export * from "#agent/subagents/yield-result";
 export * from "#agent/tool/define";

@@ -1,7 +1,7 @@
 import type { SubagentManager, SubagentRunRequest } from "@tsuuanmi/pi-agent";
 import { describe, expect, it } from "vitest";
-import { registerSubagentTools } from "#workflows/subagents/tools";
 import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools";
+import { registerSubagentTools } from "#workflows/tools/subagent-tools";
 
 type RegisteredTool = {
 	name: string;
@@ -56,8 +56,11 @@ describe("subagent tools", () => {
 
 		const tool = collectRegisteredTools().get("subagent_spawn");
 		expect(tool).toBeDefined();
-		await tool?.execute("call-1", { prompt: "Plan", role: "planner" }, undefined, undefined, ctx);
+		const result = (await tool?.execute("call-1", { prompt: "Plan", role: "planner" }, undefined, undefined, ctx)) as
+			| { details: { ok: boolean } }
+			| undefined;
 
+		expect(result?.details.ok).toBe(true);
 		expect(spawnRequests).toHaveLength(1);
 		expect(spawnRequests[0]).toMatchObject({
 			role: "planner",
@@ -65,5 +68,17 @@ describe("subagent tools", () => {
 			parentSessionId: "session-1",
 			storageSessionId: "session-1",
 		});
+	});
+
+	it("rejects execution when the host has no subagent manager", async () => {
+		const tool = collectRegisteredTools().get("subagent_spawn");
+		const ctx = {
+			cwd: "/repo",
+			sessionManager: { getSessionId: () => "session-1" },
+		} as unknown as WorkflowContext;
+
+		await expect(tool?.execute("call-1", { prompt: "Plan" }, undefined, undefined, ctx)).rejects.toThrow(
+			"No subagent manager is available in this session.",
+		);
 	});
 });

@@ -19,9 +19,9 @@ The direction means higher layers may use lower layers. Lower layers must not de
 | Package | Owns | Must not own |
 | --- | --- | --- |
 | `@tsuuanmi/pi-ai` | Provider/model APIs, message content transport, streaming primitives | Agent loop, tools, orchestration, workflows, CLI/UI |
-| `@tsuuanmi/pi-agent` | Single-agent runtime, standard tool protocol, tool registry APIs, message state, subagent lifecycle contracts, tool receipts, Node process and shell primitives | Pi-specific Bash/output adapters, subagent sessions, tmux, multi-agent task scheduling, workflow state, CLI/UI |
+| `@tsuuanmi/pi-agent` | Single-agent runtime, standard tool protocol, tool registry APIs, message state, subagent lifecycle contracts and host-neutral lifecycle tools, thinking-level validation, tool receipts, Node process and shell primitives | Pi-specific Bash/output adapters, subagent sessions, tmux, multi-agent task scheduling, workflow state, CLI/UI |
 | `@tsuuanmi/pi-orchestrator` | Generic task DAG orchestration over `Agent`s: `Task`, `TaskQueue`, `Team`, scheduling, routing, checkpoints, task receipts | Pi workflow commands, skill UX, CLI session state, file artifacts |
-| `@tsuuanmi/pi-workflows` | Pi workflow skills, workflow tools, workflow commands, workflow runtime state, workflow-specific policies | Low-level agent loop, model provider transport, generic task engine internals |
+| `@tsuuanmi/pi-workflows` | Pi workflow skills, workflow tool adapters, workflow commands, workflow runtime state, workflow-specific policies | Low-level agent loop, model provider transport, generic subagent lifecycle behavior, generic task engine internals |
 | `@tsuuanmi/pi` | CLI, TUI integration, session manager, resource loading, extension runtime, built-in tools, Pi Bash/output adapters, concrete `SubagentManager` sessions, Pi-native subagent controls, and tmux integration | Generic process primitives, generic orchestration engine, workflow business logic, provider internals |
 
 ## Execution boundary
@@ -29,7 +29,7 @@ The direction means higher layers may use lower layers. Lower layers must not de
 | Operation | Owner | Allowed integration |
 | --- | --- | --- |
 | Run one agent and execute its tools | `@tsuuanmi/pi-agent` | Hosts provide models, tools, and runtime inputs |
-| Spawn or control one Pi-native subagent session | `@tsuuanmi/pi` through the `@tsuuanmi/pi-agent` manager contract | Workflow lifecycle tools may call the injected manager; Pi-native controls use Pi's host context directly |
+| Spawn or control one Pi-native subagent session | `@tsuuanmi/pi` through the `@tsuuanmi/pi-agent` manager contract | Agent owns host-neutral lifecycle tools; workflow adapters provide the injected manager; Pi-native controls use Pi's host context directly |
 | Schedule, route, retry, or coordinate multiple agents | `@tsuuanmi/pi-orchestrator` | Workflows provide `Agent` instances through workflow-owned adapters |
 | Enforce a named workflow's roles, gates, and artifacts | `@tsuuanmi/pi-workflows` | Use the manager only for a workflow-specific single-worker step |
 
@@ -37,7 +37,7 @@ A direct `SubagentManager` call is valid only for lifecycle control or a single 
 
 The semantic boundary checker allows direct manager calls only in these workflow adapters:
 
-- `packages/workflows/src/subagents/tools.ts` for workflow lifecycle tools;
+- `packages/workflows/src/tools/subagent-tools.ts` for the workflow adapter around agent-owned lifecycle tools;
 - `packages/workflows/src/skills/team/agent-adapter.ts` for the `Agent` bridge;
 - `packages/workflows/src/skills/ralplan/agent-adapter.ts` for Orchestrator-backed role execution;
 - `packages/workflows/src/skills/ultragoal/tools.ts` for one guarded goal worker.

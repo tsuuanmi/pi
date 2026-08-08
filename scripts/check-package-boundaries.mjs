@@ -51,13 +51,13 @@ const internalRules = [
 	{ directory: "packages/pi/src/package/loader.ts", forbidden: ["#pi/index"] },
 ];
 const workflowManagerCallers = new Set([
-	"packages/workflows/src/subagents/tools.ts",
+	"packages/workflows/src/tools/subagent-tools.ts",
 	"packages/workflows/src/skills/team/agent-adapter.ts",
 	"packages/workflows/src/skills/ralplan/agent-adapter.ts",
 	"packages/workflows/src/skills/ultragoal/tools.ts",
 ]);
 const workflowManagerCallPattern = /\.(spawn|resume|steer|pause|cancel|read|list|waitFor|inspect|attach|kill|dispose)\s*\(/g;
-const workflowManagerReferencePattern = /\bSubagentManager\b|\brequireSubagentManager\b/;
+const workflowManagerReferencePattern = /\bSubagentManager\b/;
 const teamExecutionPath = "packages/workflows/src/skills/team/execution.ts";
 const importPattern = /(?:import|export)\s+(?:type\s+)?(?:[^"'()]*?\s+from\s+)?["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)/g;
 const failures = [];

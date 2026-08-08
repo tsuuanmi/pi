@@ -133,5 +133,3 @@ export * from "#workflows/state/active-state";
 export * from "#workflows/state/state-schema";
 export * from "#workflows/state/state-writer";
 export * from "#workflows/state/workflow-state";
-export { requireSubagentManager } from "#workflows/subagents/manager";
-export { type AgentThinkingLevel, assertAgentThinkingLevel } from "#workflows/subagents/thinking-level";

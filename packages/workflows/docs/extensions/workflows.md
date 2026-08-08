@@ -17,7 +17,7 @@ Commands and tools may share lower-level workflow runtime and skill functions, b
 
 The default extension composes two independent registrars:
 
-- `registerWorkflowTools(host)` registers workflow-owned subagent lifecycle tools, Deep Interview state tools, and guarded workflow spawn tools.
+- `registerWorkflowTools(host)` registers the agent-owned subagent lifecycle tools through the workflow adapter, Deep Interview state tools, and guarded workflow spawn tools.
 - `registerWorkflowHooks(host)` from `@tsuuanmi/pi-workflows/hooks` registers HUD refresh hooks and the Deep Interview mutation guard for `edit`, `write`, and `bash` tool calls.
 
 `@tsuuanmi/pi-workflows/tools` remains the lower-level tool registration helper for custom hosts that need tools without workflow hook integration.

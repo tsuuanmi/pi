@@ -1,19 +1,29 @@
-# Subagents and Workflow Tools
+# Subagent Tools and Workflow Tools
 
-Workflow-owned subagent lifecycle tools and workflow-owned agent execution, plus the workflow-owned model-visible tool surface, registered by the workflow tool helper and package extension. Pi-native inspect, attach, and kill controls are registered by Pi separately.
+`@tsuuanmi/pi-agent` owns the reusable subagent contract and host-neutral lifecycle tool definitions. The workflow package owns the host adapter, workflow receipts, surface metadata, and workflow-specific agent execution. Pi-native inspect, attach, and kill controls remain registered by Pi separately.
 
-**Source:** `src/extension.ts`, `src/tools.ts`, `src/subagents/manager.ts`, `src/subagents/surface.ts`, `src/subagents/tools.ts`, `src/skills/deep-interview/tools.ts`, `src/skills/ralplan/agent-adapter.ts`, `src/skills/ralplan/surface.ts`, `src/skills/ralplan/tools.ts`, `src/skills/team/agent-adapter.ts`, `src/skills/team/coordinator.ts`, `src/skills/team/surface.ts`, `src/skills/team/tools.ts`, `src/skills/ultragoal/surface.ts`, `src/skills/ultragoal/tools.ts`
+**Sources:** `@tsuuanmi/pi-agent/src/subagents/`, `src/tools.ts`, `src/tools/subagent-tools.ts`, `src/tools/subagent-surface.ts`, and skill modules under `src/skills/*/`.
+
+## Ownership
+
+- `@tsuuanmi/pi-agent`: `SubagentManager`, run/record/result types, thinking-level validation, progress, receipts, and host-neutral lifecycle tools.
+- `src/tools/subagent-tools.ts`: maps the required agent `SubagentToolContext` to `WorkflowContext`, registers the core definitions, and wraps structured receipts in workflow receipts.
+- `src/tools/subagent-surface.ts`: publishes workflow surface metadata derived from the agent tool definitions.
+- `src/skills/*/`: owns workflow policy, role guards, artifact persistence, and orchestrator integration.
+- `@tsuuanmi/pi`: owns Pi-native inspect, attach, and kill controls separately.
+
+The workflow context keeps `subagents` optional because Pi can disable subagent support. The adapter checks that boundary before passing a required manager to an agent tool. Workflow code uses the injected `SubagentManager`; it does not construct or discover a second manager.
 
 ## Model-Visible Tools
 
-The workflow package extension registers these model-visible tools:
+The workflow extension registers these model-visible tools:
 
 | Tool | Purpose |
 |------|---------|
 | `subagent_spawn` | Spawn a generic Pi-native subagent from an agent profile or overrides. |
 | `subagent_status` | List or inspect durable subagent records. |
 | `subagent_await` | Await a live subagent or read its terminal result. |
-| `subagent_steer` | Steer a live/saved subagent. |
+| `subagent_steer` | Steer a live or saved subagent. |
 | `subagent_pause` | Pause a running subagent at a safe boundary. |
 | `subagent_resume` | Resume a persistent saved subagent context. |
 | `subagent_cancel` | Cancel a live or durable subagent record. |
@@ -23,25 +33,38 @@ The workflow package extension registers these model-visible tools:
 | `deep_interview_read_compact` | Read a compact Deep Interview state projection for resume or prompt budgeting. |
 | `deep_interview_closure_check` | Run the Deep Interview closure and acceptance guard. |
 | `deep_interview_restate_goal` | Record the one-sentence restated goal confirmation or adjustment. |
-| `deep_interview_write_spec` | Persist a finalized Deep Interview spec and optionally hand off to ralplan, ultragoal, or team. |
+| `deep_interview_write_spec` | Persist a finalized Deep Interview spec and optionally hand off to Ralplan, Ultragoal, or Team. |
 | `ralplan_run_agent` | Run the next legal Ralplan role agent and persist role artifacts. |
 | `team_execute` | Execute the next legal Team worker, reviewer, or prover through the orchestrator. |
 | `team_resume` | Resume Team execution from an orchestrator checkpoint. |
 | `ultragoal_spawn_goal_agent` | Spawn the next legal Ultragoal goal worker. |
 
-Direct `SubagentManager` calls are limited to workflow adapters: `src/subagents/tools.ts` for workflow lifecycle tools, `src/skills/team/agent-adapter.ts` for Team agents, `src/skills/ralplan/agent-adapter.ts` for Ralplan agents, and `src/skills/ultragoal/tools.ts` for one guarded goal worker. Ralplan and Team roles call the Orchestrator through workflow-owned adapters; the detached workflow owner is lifecycle-only. Workflows must use the Orchestrator for generic task dependencies, routing, retries, queues, or agent collaboration.
+Direct manager calls are limited to the workflow adapter and worker adapters: `src/tools/subagent-tools.ts`, `src/skills/team/agent-adapter.ts`, `src/skills/ralplan/agent-adapter.ts`, and `src/skills/ultragoal/tools.ts`. Ralplan and Team roles call the Orchestrator through workflow-owned adapters; the detached workflow owner is lifecycle-only. Workflows must use the Orchestrator for generic task dependencies, routing, retries, queues, or agent collaboration.
 
 ## Guarded Workflow Execution
 
 - Ralplan computes the legal next role/stage from its run artifacts before `ralplan_run_agent` proceeds.
-- Team computes the expected worker/reviewer/prover role before an execution tool proceeds and rejects off-sequence execution.
+- Team computes the expected worker/reviewer/prover role before a worker execution proceeds and rejects off-sequence execution.
 - Ultragoal computes the expected goal before `ultragoal_spawn_goal_agent` proceeds and rejects runtime model/tool overrides.
+
+## Context Boundary
+
+Core lifecycle tools receive:
+
+```typescript
+interface SubagentToolContext {
+  manager: SubagentManager;
+  sessionId: string;
+}
+```
+
+The workflow adapter constructs this required context from the optional `WorkflowContext.subagents` value. Core tools do not import workflow context or workflow receipt types. Workflow adapters add the workflow receipt envelope after core execution completes.
 
 ## Command Surface
 
 `pi workflow ...` is the external CLI control plane for state, artifacts, gates, receipts, compaction, status, approval, and runtime owner lifecycle. It parses CLI input and returns command status/output; it does not invoke model-visible tools.
 
-Model-visible tools are the separate in-process surface for the current Pi session. Tool implementations are skill-owned under `src/skills/<skill>/` or generic subagent tools under `src/subagents/`. `src/tools.ts` is the workflow tool contract and registration aggregator; it is not a second implementation directory.
+Model-visible tools are the separate in-process surface for the current Pi session. Agent-owned lifecycle tools are adapted under `src/tools/`; skill-specific tools remain under `src/skills/<skill>/`. `src/tools.ts` is the workflow tool contract and registration aggregator; it is not a second implementation directory.
 
 When a command and a tool expose related behavior, both may call the same lower-level runtime or skill function. The command and tool adapters do not call each other.
 
@@ -54,4 +77,4 @@ Generic `pi workflow subagent` / `subagents` command shims are removed. Spawn op
 - [Agents](../agents/agents.md)
 - [Workflow control plane](../workflow.md)
 - [Commands](../commands/workflow.md)
-- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/subagents/index.md) - Pi-native SubagentManager
+- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/subagents/index.md) - Pi-native `SubagentManager`

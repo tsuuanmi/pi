@@ -1,7 +1,8 @@
 import { spawnSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { isValidThinkingLevel, type ThinkingLevel } from "@tsuuanmi/pi-ai";
+import { parseThinkingLevel } from "@tsuuanmi/pi-agent";
+import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { createAgentSessionServices } from "#pi/runtime/agent-session-services";
 import { SubagentManager } from "#pi/subagents/manager";
 import { createRunIdentity } from "#pi/subagents/run-identity";
@@ -35,9 +36,11 @@ function optionalBoolean(value: unknown, field: string): boolean | undefined {
 }
 
 function optionalThinkingLevel(value: unknown, field: string): ThinkingLevel | undefined {
-	if (value === undefined) return undefined;
-	if (typeof value === "string" && isValidThinkingLevel(value)) return value;
-	throw new SubagentWorkerMetadataInvalidError(`${field} is invalid`);
+	try {
+		return parseThinkingLevel(value);
+	} catch {
+		throw new SubagentWorkerMetadataInvalidError(`${field} is invalid`);
+	}
 }
 
 function parseTmuxTarget(targetKind: "pane" | "session", raw: string | undefined): TmuxTarget {

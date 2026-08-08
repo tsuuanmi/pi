@@ -1,3 +1,4 @@
+import { parseThinkingLevel } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import {
@@ -15,8 +16,6 @@ import { planRalplanAgent, runRalplanStage } from "#workflows/skills/ralplan/orc
 import { readRalplanStatus } from "#workflows/skills/ralplan/runtime";
 import { assertRalplanStage, assertSafePathComponent } from "#workflows/state/state-schema";
 import { defaultWorkflowId, readWorkflowState } from "#workflows/state/workflow-state";
-import { requireSubagentManager } from "#workflows/subagents/manager";
-import { assertAgentThinkingLevel } from "#workflows/subagents/thinking-level";
 import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools";
 
 const ralplanRunAgentSchema = Type.Object({
@@ -52,7 +51,7 @@ type RalplanRunAgentInput = Static<typeof ralplanRunAgentSchema>;
 async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: WorkflowContext, signal?: AbortSignal) {
 	assertRalplanStage(params.stage);
 	assertRalplanRole(params.role);
-	assertAgentThinkingLevel(params.thinkingLevel);
+	const thinkingLevel = parseThinkingLevel(params.thinkingLevel);
 	if (
 		params.stage !== "pre-planner" &&
 		params.stage !== "planner" &&
@@ -113,7 +112,7 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Workflo
 		role,
 		agent: params.agent,
 		model: params.model,
-		thinkingLevel: params.thinkingLevel,
+		thinkingLevel,
 		tools: params.tools,
 		excludeTools: params.excludeTools,
 		task: params.task,
@@ -138,11 +137,13 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Workflo
 		};
 	}
 
+	const manager = ctx.subagents;
+	if (!manager) throw new Error("No subagent manager is available in this session.");
 	const result = await runRalplanStage({
 		...agentInput,
 		cwd: ctx.cwd,
 		sessionId,
-		manager: requireSubagentManager(ctx),
+		manager,
 		signal,
 		verifyArtifact: () => verifyRalplanArtifact(ctx.cwd, sessionId, selectorRunId, stage, params.stageN),
 	});
