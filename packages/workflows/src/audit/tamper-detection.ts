@@ -12,8 +12,8 @@ import { workflowEnvelopeContentSha256 } from "#workflows/state/state-writer";
  * {@link workflowEnvelopeContentSha256} entry point) and compares it to the
  * stored checksum. A mismatch means the file was edited out-of-band.
  *
- * Enforcement is Gajae-faithful: detect → append an `out_of_band_detected`
- * audit entry → **hard-block** the unforced write (throw). An internal `force`
+ * Enforcement is strict: detect → append an `out_of_band_detected` audit entry
+ * → **hard-block** the unforced write (throw). An internal `force`
  * flag bypasses the throw (the audit entry is appended regardless, with
  * `forced:true`); the caller re-stamps a fresh checksum and appends a
  * `force_overwrite` audit entry. Force is internal-only (no public verb).
@@ -71,7 +71,7 @@ export async function detectWorkflowEnvelopeIntegrityMismatch(
 
 /**
  * Detect an out-of-band edit; on mismatch, append an `out_of_band_detected`
- * audit entry and throw the Gajae-style message when the write is unforced.
+ * audit entry and throw the standard message when the write is unforced.
  *
  * The audit entry is appended **regardless** of force (so the detection is
  * durable even when the write is blocked, and recorded with `forced:true` when

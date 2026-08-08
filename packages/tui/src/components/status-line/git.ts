@@ -9,7 +9,7 @@ export interface GitStatusSummary {
 /**
  * Parse `git status --porcelain` output into staged/unstaged/untracked counts.
  *
- * Counting rules (ported from gajae-code `utils/git.ts:685`):
+ * Counting rules for Pi's status-line git summary:
  * - `??` (untracked) counts as 1 untracked and does NOT count toward
  *   staged/unstaged (it is not yet tracked by git).
  * - The first column (`x`) not space/`?` counts as 1 staged (includes renames

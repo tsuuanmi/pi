@@ -78,7 +78,7 @@ function isAggregateObjective(objective: string, plan: UltragoalPlan): boolean {
 }
 
 /**
- * Find the goal whose receipt is relevant to the current objective (Gajae parity).
+ * Find the goal whose receipt is relevant to the current objective.
  *
  * Uses the NARROWER aggregate condition (`plan.objective || DEFAULT || aliases`),
  * NOT `objectiveMatches` (which also matches any goal's objective). A story
@@ -103,7 +103,7 @@ function findReceiptGoal(
 /**
  * Read ultragoal verification state and classify it into a guard diagnostic.
  *
- * Classification order (matches Gajae precedence, adapted to the 9-state enum):
+ * Classification order for the 9-state enum:
  *  1. unreadable plan/ledger while an objective is active -> `unreadable_fail_closed`
  *  2. no plan / no current goal -> `inactive` or `unrelated_goal`
  *  3. active goal `review_blocked` -> recorded/unrecorded review-blocked state
@@ -221,7 +221,7 @@ export async function readUltragoalVerificationState(
 		const receipt = validateCompletionReceipt({ plan, ledger, goal, receiptKind });
 		return { state: receipt.state, message: receipt.message, goalId: receipt.goalId };
 	}
-	// Objective-driven classification (matches Gajae precedence).
+	// Objective-driven classification.
 	const currentObjective = input.currentObjective ?? plan.objective;
 	if (!objectiveMatches(currentObjective, plan)) {
 		return { state: "unrelated_goal", message: "Current goal is not an active ultragoal objective." };

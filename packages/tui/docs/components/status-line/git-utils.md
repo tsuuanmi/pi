@@ -1,6 +1,6 @@
 # Status Line Git Utils
 
-Parse `git status --porcelain` output into staged/unstaged/untracked counts. Ported from gajae-code `utils/git.ts`.
+Parse `git status --porcelain` output into staged/unstaged/untracked counts.
 
 ```typescript
 interface GitStatusSummary { staged: number; unstaged: number; untracked: number; }

@@ -266,8 +266,8 @@ async function persistWorkflowState(
 		sessionId,
 	});
 	// Force bypass: record that a forced write overwrote mode-state. Fires on
-	// every forced write (not only tamper repairs), mirroring Gajae's
-	// `forceOverwrite` audit category. Deliberately broader than Gajae's
+	// every forced write (not only tamper repairs), mirroring the
+	// `forceOverwrite` audit category. Deliberately broader than the
 	// separate raw-force surface (spec-controlling).
 	if (options.force) {
 		await safeAppendAuditEntry(cwd, sessionId, {

@@ -6,7 +6,7 @@
  * non-uniform imagery), automation transcripts (schema-versioned JSON with
  * monotonic timestamps), and PTY captures (terminal control sequences).
  *
- * Ports Gajae's structural-validation behavior with Pi-native field names and
+ * Provides structural-validation behavior with Pi-native field names and
  * Node-only I/O. Acyclic module graph: this module is a leaf. It imports only
  * `node:fs/promises` and `node:zlib`. It MUST NOT
  * import `runtime.ts`, `quality-gate.ts`, or
@@ -44,7 +44,7 @@ const JPEG_START_OF_IMAGE = 0xd8;
 const JPEG_END_OF_IMAGE = 0xd9;
 const JPEG_START_OF_SCAN = 0xda;
 const JPEG_STANDALONE_MARKERS = new Set([0x01, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7]);
-// Gajae parity: only baseline (SOF0), extended (SOF1), and progressive (SOF2)
+// Only baseline (SOF0), extended (SOF1), and progressive (SOF2)
 // frame markers carry dimensions; lossless/arithmetic variants are rejected.
 const JPEG_FRAME_MARKERS = new Set([0xc0, 0xc1, 0xc2]);
 
@@ -337,7 +337,7 @@ async function validateAutomationTranscriptArtifact(
 	}
 	if (transcript.schemaVersion !== 1)
 		throw new Error(`qualityGate ${fieldName} automation transcript schemaVersion must be 1`);
-	// Gajae parity: an absent/empty transcript surface is compatible with any
+	// An absent/empty transcript surface is compatible with any
 	// family; a present surface must match the row's surface family.
 	const surface = nonEmptyString(transcript.surface);
 	if (surface && options.surfaceFamily !== "unknown" && surfaceFamily(surface) !== options.surfaceFamily) {
@@ -445,7 +445,7 @@ export async function validateStructuralArtifact(
 	return validatePtyCaptureArtifact(cwd, row, fieldName);
 }
 
-/** Classify a surface token into a family (Gajae parity normalization). */
+/** Classify a surface token into a family. */
 export function surfaceFamily(value: string): SurfaceFamily {
 	const normalized = value.toLowerCase().replaceAll("_", "-").trim();
 	if (

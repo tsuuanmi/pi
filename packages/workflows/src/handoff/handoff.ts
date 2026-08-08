@@ -19,7 +19,7 @@ import { readWorkflowState, writeWorkflowState } from "#workflows/state/workflow
 /**
  * Generic, transaction-backed workflow handoff.
  *
- * Orchestrates a caller→callee handoff with Gajae-faithful durability: a
+ * Orchestrates a caller→callee handoff with durable transaction semantics: a
  * per-mutation journal under `.pi/{session}/state/transactions/<id>.json`, both-side
  * mode-state receipts sharing one `mutationId`, and the write order
  * callee → caller → active-state. The existing `applyHandoffToActiveState`

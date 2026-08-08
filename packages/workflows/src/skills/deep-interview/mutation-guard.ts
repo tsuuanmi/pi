@@ -7,8 +7,7 @@ import { readWorkflowActiveState } from "#workflows/state/active-state";
 /**
  * Deep-interview phase-boundary mutation guard.
  *
- * Ports the runtime-owned enforcement from gajae-code's
- * gajae-code's skill-state mutation guard, adapted to Pi's layout
+ * Enforces the runtime-owned skill-state mutation guard using Pi's layout
  * (`.pi/` session-scoped state, `readWorkflowActiveState`, the `tool_call`
  * extension hook) and Pi's tool set (`edit`, `write`, and shell `bash`; Pi has
  * no `ast_edit`, `apply_patch`, or `vim` edit modes).
@@ -266,7 +265,7 @@ function isMutatingBashCommand(input: Record<string, unknown>): boolean {
  * Resolve the mutation decision for one `edit`/`write` invocation.
  *
  * The always-on `.pi/**` rule is checked first (ahead of `forceOverride`, in
- * parity with gajae-code: a forced recovery must not reach `.pi/**` either),
+ * so a forced recovery must not reach `.pi/**` either),
  * then the pre-approval phase boundary.
  */
 export async function getDeepInterviewMutationDecision(input: MutationGuardInput): Promise<MutationGuardDecision> {

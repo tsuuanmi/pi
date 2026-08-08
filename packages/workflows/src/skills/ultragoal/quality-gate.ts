@@ -1,12 +1,12 @@
 /**
  * Full ultragoal completion quality-gate validation.
  *
- * Hard break: complete checkpoints must provide the full parity gate shape:
+ * Hard break: complete checkpoints must provide the full quality-gate shape:
  *   { architectReview, executorQa, iteration }
  *
  * Old Pi `{ executorQa, contractCoverage }` gates, legacy `codeReview`, and
- * unsupported top-level keys are rejected. Gajae-only hooks are adapted to Pi:
- * no GJC goal snapshots/sessions and no `gjc read|status` CLI replay allowlist.
+ * unsupported top-level keys are rejected. The gate is Pi-native and does not
+ * permit external goal snapshots/sessions or external CLI replay commands.
  *
  * Acyclic module graph: imports `artifacts.ts` only. MUST NOT import
  * `runtime.ts` or `receipt.ts`.
@@ -318,7 +318,7 @@ function isAllowedCliReplayCommand(command: readonly string[]): boolean {
 		return (args.length === 1 && args[0] === "--version") || (args.length === 1 && args[0] === "list");
 	}
 	if (executable === "git") return isAllowedGitReplayCommand(args);
-	// Pi-native adaptation: do not allow GJC-specific `gjc read|status`.
+	// Other executables are not allowed for CLI replay.
 	return false;
 }
 

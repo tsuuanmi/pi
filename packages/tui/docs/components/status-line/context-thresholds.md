@@ -1,6 +1,6 @@
 # Status Line Context Thresholds
 
-Context-usage level detection and the mapping from level to a Pi `ThemeColor`. Ported from gajae-code's `context-thresholds.ts`.
+Context-usage level detection and the mapping from level to a Pi `ThemeColor`.
 
 ```typescript
 type ContextUsageLevel = "normal" | "warning" | "purple" | "error";
@@ -27,7 +27,7 @@ Levels are checked `error` → `purple` → `warning` → `normal`, so the highe
 
 ## Theme color mapping
 
-Pi has no `statusLineContext` token (gajae uses one for `normal`), so the levels map to existing Pi colors:
+Pi has no `statusLineContext` token for `normal`, so the levels map to existing Pi colors:
 
 | Level | `ThemeColor` |
 |---|---|

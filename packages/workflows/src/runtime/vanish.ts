@@ -85,8 +85,8 @@ export function validateVanish(evidence: unknown): VanishValidation {
 		return { valid: false, reason: "vanish-forbidden-actions-missing" };
 	}
 	// Dirty deltas must be preserved, never clean-restarted, and must explicitly forbid the
-	// destructive actions (restart-clean/delete/reset). All three are required (Gajae-style
-	// defense-in-depth): a tampered receipt that keeps `restart-clean` but drops `delete`/`reset`
+	// destructive actions (restart-clean/delete/reset). All three are required for
+	// defense-in-depth: a tampered receipt that keeps `restart-clean` but drops `delete`/`reset`
 	// must still fail closed. `buildVanishEvidence` always emits all three for dirty deltas.
 	if (gitDelta === "dirty") {
 		if (classification === "restart-clean") {

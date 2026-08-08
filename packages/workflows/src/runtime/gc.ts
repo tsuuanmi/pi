@@ -58,8 +58,8 @@ export type GcSessionStatus = LeaseStatus | "malformed";
 /** Per-session GC classification result (the report's session entry). */
 export interface GcSessionRecord {
 	sessionId: string;
-	/** Root that owns this collected session. Matches Gajae's root-carrying GC records and prevents
-	 * multi-root duplicate session IDs from pruning/skipping the wrong root. */
+	/** Root that owns this collected session and prevents multi-root duplicate session IDs from
+	 * pruning or skipping the wrong root. */
 	root?: string;
 	status: GcSessionStatus;
 	removable: boolean;

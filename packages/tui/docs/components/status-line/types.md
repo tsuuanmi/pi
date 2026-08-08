@@ -38,7 +38,7 @@ interface StatusLineSegmentOptions {
   path?: {
     abbreviate?: boolean;           // default true — `~` for home
     maxLength?: number;             // default 40, in characters
-    stripWorkPrefix?: boolean;      // no-op in Pi (gajae-only), default false
+    stripWorkPrefix?: boolean;      // no-op in Pi, default false
   };
   git?: {
     showBranch?: boolean;           // default true

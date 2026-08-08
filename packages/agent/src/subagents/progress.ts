@@ -5,9 +5,8 @@
  * with no detail about what the subagent was doing. This module retains
  * deep-cloned progress snapshots so parents can inspect last-known state.
  *
- * Aligned with gajae-code's `AgentProgress` / `recordSubagentProgress` pattern
- * but Pi-native: subscribes to Pi's `AgentEvent` stream rather than gajae's
- * executor callbacks.
+ * Keeps progress snapshots Pi-native by subscribing to Pi's `AgentEvent` stream
+ * instead of relying on executor callbacks.
  */
 
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";

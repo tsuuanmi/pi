@@ -136,7 +136,7 @@ test("quality gate accepts the full architectReview/executorQa/iteration shape",
 	});
 });
 
-test("quality gate rejects failed statuses, non-empty blockers, and GJC CLI replay", async () => {
+test("quality gate rejects failed statuses, non-empty blockers, and external CLI replay", async () => {
 	await withDir(async (cwd) => {
 		await expect(
 			validateCompletionQualityGate(cwd, {
@@ -161,14 +161,14 @@ test("quality gate rejects failed statuses, non-empty blockers, and GJC CLI repl
 		const executorQa = gate.executorQa as Record<string, unknown>;
 		executorQa.artifactRefs = [
 			{
-				id: "gjc-cli",
+				id: "external-cli",
 				kind: "cli-replay",
-				description: "GJC-specific replay must not be accepted in Pi",
+				description: "External replay must not be accepted in Pi",
 				inlineEvidence: {
 					schemaVersion: 1,
 					kind: "cli-replay",
 					replaySafe: true,
-					command: ["gjc", "status"],
+					command: ["external-tool", "status"],
 					recordedStdout: "",
 				},
 			},
@@ -178,9 +178,9 @@ test("quality gate rejects failed statuses, non-empty blockers, and GJC CLI repl
 				id: "surface-cli",
 				surface: "cli",
 				contractRef: "contract#a",
-				invocation: "gjc status",
+				invocation: "external-tool status",
 				result: PASSED,
-				artifactRefs: ["gjc-cli"],
+				artifactRefs: ["external-cli"],
 			},
 		];
 		executorQa.adversarialCases = [
@@ -190,7 +190,7 @@ test("quality gate rejects failed statuses, non-empty blockers, and GJC CLI repl
 				scenario: "invalid input",
 				expectedBehavior: "reject cleanly",
 				result: PASSED,
-				artifactRefs: ["gjc-cli"],
+				artifactRefs: ["external-cli"],
 			},
 		];
 		executorQa.contractCoverage = [

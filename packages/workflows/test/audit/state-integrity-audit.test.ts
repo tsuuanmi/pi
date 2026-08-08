@@ -42,7 +42,7 @@ describe("state-integrity audit log (STATE-005)", () => {
 		await rm(cwd, { recursive: true, force: true });
 	});
 
-	it("audits every sanctioned mode-state write with the Gajae-faithful schema", async () => {
+	it("audits every sanctioned mode-state write with the canonical schema", async () => {
 		await writeWorkflowState(
 			cwd,
 			"ultragoal",

@@ -41,7 +41,7 @@ export function getContextUsageLevel(contextPercent: number | null, contextWindo
 
 /**
  * Map a context-usage level to a Pi `ThemeColor`. Pi has no `statusLineContext`
- * token (gajae uses one for the `normal` level), so `normal` maps to `dim`.
+ * token for the `normal` level, so `normal` maps to `dim`.
  * The other levels map to existing Pi colors:
  * `warning -> warning`, `purple -> thinkingHigh`, `error -> error`.
  */

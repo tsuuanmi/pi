@@ -287,8 +287,7 @@ export interface ApplyHandoffOptions {
  * for the session. All other entries are preserved. The write is atomic (single
  * file mutation) so no partial state is observable during the transition.
  *
- * (Aligned with gajae-code's `applyHandoffToActiveState` but simplified for
- * Pi's single-file active-state model.)
+ * This remains simplified for Pi's single-file active-state model.
  */
 export async function applyHandoffToActiveState(options: ApplyHandoffOptions): Promise<WorkflowActiveState> {
 	assertNonEmptySessionId(options.sessionId, "applyHandoffToActiveState");

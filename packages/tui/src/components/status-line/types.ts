@@ -39,7 +39,7 @@ export interface StatusLineSegmentOptions {
 		abbreviate?: boolean;
 		/** Maximum length before truncation, in characters (default: 40). */
 		maxLength?: number;
-		/** Strip a configured work-tree prefix (no-op in Pi; gajae-only; default: false). */
+		/** Strip a configured work-tree prefix (no-op in Pi; default: false). */
 		stripWorkPrefix?: boolean;
 	};
 	git?: {

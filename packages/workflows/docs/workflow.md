@@ -156,7 +156,7 @@ System prompt body for this profile.
 
 Supported fields are `name`, `description`, `model`, `thinkingLevel` (also `thinking-level` or `thinking`), `tools`, `excludeTools`, `systemPrompt`, `appendSystemPrompt`, and `persistent`. `tools` and `excludeTools` may be YAML arrays or comma-separated strings. `persistent` must be a boolean.
 
-Phase 1A recognizes but does not implement some Gajae-style fields. `forkContext`, `bashAllowedPrefixes`, and `spawns` fail closed and skip the profile because their behavior is safety-sensitive. `output`, `autoloadSkills`, `blocking`, and `hide` warn and are ignored.
+Phase 1A recognizes but does not implement some reserved fields. `forkContext`, `bashAllowedPrefixes`, and `spawns` fail closed and skip the profile because their behavior is safety-sensitive. `output`, `autoloadSkills`, `blocking`, and `hide` warn and are ignored.
 
 ### Legacy JSON profiles removed
 

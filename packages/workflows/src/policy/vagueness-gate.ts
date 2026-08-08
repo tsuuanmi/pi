@@ -6,8 +6,7 @@
  * `ralplan` with an explanatory message. Specific prompts pass through. A
  * `force:` or `!` prefix bypasses the gate.
  *
- * Aligned with gajae-code's vagueness-gate design but uses Pi-native
- * terminology and thresholds.
+ * Uses Pi-native vagueness-gate terminology and thresholds.
  */
 
 /** Minimum number of words before a prompt without concrete signals is gated. */

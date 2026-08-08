@@ -68,7 +68,7 @@ Critical: before running any `pi workflow ultragoal <action>` command, read [ref
 
 Complete checkpoints hard-break to the full `qualityGate` shape defined in [assets/schema.json](assets/schema.json). Do not keep or recreate inline legacy schemas in this file. Before a complete checkpoint, read the `checkpoint` action schema from `x-pi-actions["checkpoint"]` and the nested `qualityGate` definition from `$defs.qualityGate`.
 
-Important constraints still apply: top-level `contractCoverage`, legacy `codeReview`, old receipts, and unsupported keys fail closed. GJC-only goal/session/CLI mechanics are not part of Pi Ultragoal.
+Important constraints still apply: top-level `contractCoverage`, legacy `codeReview`, old receipts, and unsupported keys fail closed. External goal/session/CLI mechanics are not part of Pi Ultragoal.
 
 ## Quality Bar
 

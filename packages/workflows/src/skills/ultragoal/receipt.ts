@@ -1,11 +1,11 @@
 /**
  * Ultragoal completion-receipt model and stale-detection (UG-001/002/005/006/008).
  *
- * Ports Gajae's actual receipt/basis model to Pi-native field names and paths.
+ * Defines the Pi-native receipt/basis model and stale-detection rules.
  * This module is the foundation of the safety-enforced execution ledger: it owns
- * receipt kinds, the Gajae-faithful completion-verification shape, plan-generation
- * hashing, snapshot exclusion, receipt construction, pure receipt validation,
- * and the net-new fail-closed ledger reader.
+ * receipt kinds, the completion-verification shape, plan-generation hashing,
+ * snapshot exclusion, receipt construction, pure receipt validation, and the
+ * net-new fail-closed ledger reader.
  *
  * Acyclic module graph contract:
  * - This module MUST NOT import `runtime.ts` or `guard.ts`.
@@ -14,12 +14,8 @@
  *   `shared/state/state-writer.ts`, `shared/session/paths.ts`, and `node:crypto` / `node:fs/promises`.
  * - Node-only APIs for portability.
  *
- * Field-name mapping from Gajae (locked, do not re-litigate):
- *   gjcGoalMode        -> goalMode
- *   gjcObjective        -> objective
- *   gjcObjectiveAliases -> objectiveAliases
- *   gjcGoalSnapshotHash -> goalSnapshotHash
- *   event.gjcGoalJson   -> event.goalJson
+ * Receipt fields use Pi-native names: `goalMode`, `objective`,
+ * `objectiveAliases`, `goalSnapshotHash`, and `goalJson`.
  *
  * The ledger `goal_checkpointed` event gains additive `qualityGateJson` +
  * `goalJson` fields so `validateCompletionReceipt` can re-hash and compare.
@@ -80,7 +76,7 @@ export interface UltragoalPlan {
 }
 
 /**
- * Completion verification receipt (Gajae-faithful shape, Pi-native field names).
+ * Completion verification receipt (Pi-native field names).
  *
  * `planGeneration = hashStructuredValue(basis)` where `basis` is the 5-field object
  * below. `qualityGateHash` and `goalSnapshotHash` are content hashes of the
@@ -246,7 +242,7 @@ export function latestRelevantLedgerEventId(
  * `completionVerification`/`evidence`/`completedAt` changes do not enter the
  * snapshot, and the plan's own `updatedAt` bump is excluded.
  *
- * Ported verbatim from Gajae's `planSnapshotForReceipt` (Pi-native field names).
+ * Build the Pi-native plan snapshot used for receipt validation.
  */
 export function planSnapshotForReceipt(input: {
 	plan: UltragoalPlan;
@@ -436,7 +432,7 @@ function findLedgerReceiptEvent(
 }
 
 /**
- * Pure receipt validation (no I/O). Ported from Gajae's `validateCompletionReceipt`.
+ * Pure receipt validation (no I/O).
  *
  * Returns the diagnostic state for a goal's stored receipt against the current
  * plan and ledger. The guard wraps this with read-side state classification;
@@ -445,7 +441,7 @@ function findLedgerReceiptEvent(
  * taken from `receipt.checkpointLedgerEventId` so the receipt's own event is
  * excluded from the basis recomputation.
  *
- * State precedence (matches Gajae):
+ * State precedence:
  *  1. missing receipt -> `active_missing_final_receipt` (final-aggregate) or
  *     `active_missing_receipt`.
  *  2. malformed receipt / missing ledger event -> `active_stale_receipt`.

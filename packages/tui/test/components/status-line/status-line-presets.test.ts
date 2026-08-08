@@ -24,7 +24,7 @@ describe("STATUS_LINE_PRESETS.default", () => {
 		assert.equal(STATUS_LINE_PRESETS.default.segmentOptions?.model?.showProviderPrefix, true);
 	});
 
-	it("includes no dropped gajae segments (pr, jobs, cost, token_rate, usage, hostname)", () => {
+	it("includes no unsupported segments (pr, jobs, cost, token_rate, usage, hostname)", () => {
 		const all = [...STATUS_LINE_PRESETS.default.leftSegments, ...STATUS_LINE_PRESETS.default.rightSegments];
 		for (const dropped of ["pr", "jobs", "cost", "token_rate", "usage", "hostname", "icon", "time"]) {
 			assert.ok(!all.includes(dropped as never));

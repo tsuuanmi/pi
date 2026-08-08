@@ -6,12 +6,12 @@ import { auditLogPath } from "#workflows/session/paths";
 /**
  * State-integrity audit log.
  *
- * Session-scoped JSONL trail at `.pi/{session}/state/audit.jsonl` (mirrors
- * Gajae's session-scoped audit layout). This milestone implements the `state`-integrity
- * coverage seam: every workflow mode-state write/clear/handoff/reconcile,
- * plus `out_of_band_detected` (tamper), `invalid_transition_detected`, and
- * `force_overwrite`. The schema is Gajae-faithful so the deferred
- * `artifact`/`report`/`log`/`prune` categories slot in without a migration.
+ * Session-scoped JSONL trail at `.pi/{session}/state/audit.jsonl`. This milestone
+ * implements the `state`-integrity coverage seam: every workflow mode-state
+ * write/clear/handoff/reconcile, plus `out_of_band_detected` (tamper),
+ * `invalid_transition_detected`, and `force_overwrite`. The schema is stable so
+ * the deferred `artifact`/`report`/`log`/`prune` categories slot in without a
+ * migration.
  *
  * Best-effort: {@link appendAuditEntry} never throws out of a sanctioned write
  * path — callers wrap mutations in {@link safeAppendAuditEntry} so an audit
@@ -31,7 +31,7 @@ export type AuditStateVerb =
 	| "invalid_transition_detected"
 	| "force_overwrite";
 
-/** Gajae-faithful audit entry. `expected_sha256`/`actual_sha256` for tamper rows. */
+/** Audit entry. `expected_sha256`/`actual_sha256` are used for tamper rows. */
 export interface AuditEntry {
 	ts: string;
 	skill?: WorkflowSkill;
@@ -72,7 +72,7 @@ export async function safeAppendAuditEntry(cwd: string, sessionId: string, entry
 	}
 }
 
-/** Map a workflow state operation to the Gajae-faithful audit verb. */
+/** Map a workflow state operation to the canonical audit verb. */
 export function auditVerbForOperation(operation: string | undefined): AuditStateVerb {
 	switch (operation) {
 		case "clear":

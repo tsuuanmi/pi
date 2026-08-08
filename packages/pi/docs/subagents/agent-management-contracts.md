@@ -1,12 +1,12 @@
 # Agent Management Migration Contracts
 
-This document is the Phase 0 contract for making Pi's agent-management behavior converge with gajae-code. It is intentionally a contract, not an implementation plan. Later migration phases may change these contracts only by updating this document or a follow-up ADR before code changes land.
+This document is the Phase 0 contract for Pi's agent-management behavior. It is intentionally a contract, not an implementation plan. Later migration phases may change these contracts only by updating this document or a follow-up ADR before code changes land.
 
 ## Scope
 
 The contracts apply to future work on:
 
-- Gajae-style `.agent` / `.agents` discovery;
+- Standard `.agent` / `.agents` discovery;
 - markdown/frontmatter agent definitions;
 - generalized resource providers for agents, skills, prompts, rules, commands, context files, and system prompts;
 - live agent registries and peer messaging;
@@ -75,7 +75,7 @@ Project `.agent` and `.agents` resources load from project ancestors. User/globa
 
 ## Agent definition contract
 
-Markdown/frontmatter agent definitions should converge on Gajae-style behavior while fitting Pi's runtime.
+Markdown/frontmatter agent definitions should follow Pi's runtime behavior.
 
 Minimum fields:
 
@@ -87,7 +87,7 @@ Minimum fields:
 - optional `systemPrompt` or markdown body mapped to system prompt;
 - optional `persistent`.
 
-Gajae-parity fields reserved for later phases:
+Fields reserved for later phases:
 
 - `spawns`;
 - `output`;
@@ -101,7 +101,7 @@ A parser may accept reserved fields before their behavior exists, but unsupporte
 
 ## Scoped live registry contract
 
-A Gajae-like live registry may use process-level storage, but it must be scoped.
+A live registry may use process-level storage, but it must be scoped.
 
 Registry scope key must include:
 
@@ -153,13 +153,13 @@ A phase may remove or break old role-agent/subagent surfaces only when the same 
 - `team` worker spawning or its replacement;
 - `ultragoal` goal-worker spawning or its replacement.
 
-A phase fails if it adds Gajae-style user agents but prevents built-in workflows from dispatching the role agents needed to continue planning or execution.
+A phase fails if it adds user agents but prevents built-in workflows from dispatching the role agents needed to continue planning or execution.
 
 ## Direct-port adaptation checklist
 
-Before directly porting Gajae code, verify and document:
+Before directly porting external code, verify and document:
 
-- package imports are changed from `@gajae-code/*` to Pi packages or local modules;
+- package imports use Pi packages or local modules;
 - schema libraries match Pi conventions, preferably TypeBox for tools;
 - Runtime-specific text imports, APIs, or native helpers are replaced or explicitly justified;
 - filesystem paths use Pi config and resource resolution helpers;

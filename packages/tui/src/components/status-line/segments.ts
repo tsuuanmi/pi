@@ -75,8 +75,8 @@ export function computeUsageStats(session: SegmentContext["session"]): { input: 
 // ═══════════════════════════════════════════════════════════════════════════
 // Segment Implementations
 // ═══════════════════════════════════════════════════════════════════════════
-// Pi keeps the gajae segment shape but renders with Pi's existing theme tokens
-// and plain text where gajae has product-specific icons/colors.
+// Pi keeps this segment shape and renders with existing theme tokens and plain
+// text for product-neutral output.
 
 const modelSegment: StatusLineSegment = {
 	id: "model",

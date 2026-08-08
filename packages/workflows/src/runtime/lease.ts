@@ -187,7 +187,7 @@ export async function reapDeadOwnerSessions(
 	const status = classifyLeaseStatus(lease, { clock: opts.clock, probe: opts.probe });
 	if (status !== "dead") return { removed: false, status };
 	if (!opts.prune) return { removed: false, status: "dead" };
-	// Re-read + re-classify immediately before removal. This mirrors Gajae's owner/epoch guard at
+	// Re-read + re-classify immediately before removal. This mirrors the owner/epoch guard at
 	// the Pi Phase 3 seam boundary: if a fresh owner took over after collection/classification, keep
 	// the session fail-closed. A shared lease-dir lock is still deferred, so this narrows but does not
 	// eliminate the final race between this check and removeSession.
