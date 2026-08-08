@@ -9,36 +9,19 @@ export type RalplanStage =
 	| "final"
 	| "expert-stage";
 
-// ---------------------------------------------------------------------------
-// Re-exports from session-layout.ts (mandatory session-scoped isolation)
-//
-// All session-aware path builders live in session-layout.ts and require a
-// sessionId — there is no global fallback. This module re-exports them for
-// convenient imports. Callers that need the global `.pi/` root (audit, journal,
-// adopt) must use `piGlobalRoot` explicitly.
-// ---------------------------------------------------------------------------
-
+// Workflow path API. Shared roots and path-segment helpers live in root.ts.
 export {
-	assertNonEmptySessionId,
 	auditLogPath,
-	decodeSessionSegment,
 	deepInterviewIndexPath,
 	deepInterviewSpecPath,
-	encodeSessionSegment,
-	PI_SESSION_ACTIVITY_FILE,
-	piGlobalRoot,
-	piSessionRoot,
 	piSpecsDir,
 	piStateDir,
 	piWorkflowRoot,
+	ralplanCompletionLockPath,
 	ralplanGateArtifactPath,
 	ralplanIndexPath,
 	ralplanPendingApprovalPath,
 	ralplanStageArtifactPath,
-	sessionActivityPath,
-	sessionDirName,
-	sessionIdFromDirName,
-	sessionStateDir,
 	teamConfigPath,
 	teamDir,
 	teamEventsPath,

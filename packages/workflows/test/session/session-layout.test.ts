@@ -2,56 +2,55 @@ import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-	assertNonEmptySessionId,
 	assertSafePathComponent,
 	auditLogPath,
-	decodeSessionSegment,
-	detectLatestSession,
-	encodeSessionSegment,
-	piGlobalRoot,
-	piSessionRoot,
 	resolvePiSessionForRead,
 	resolvePiSessionForWrite,
-	sessionActivityPath,
-	sessionDirName,
-	sessionIdFromDirName,
 	transactionJournalPath,
 	workflowActiveStatePath,
 	workflowStatePath,
-	writeSessionActivityMarker,
 } from "@tsuuanmi/pi-workflows";
+import {
+	assertSessionId,
+	decodePathSegment,
+	encodePathSegment,
+	piGlobalRoot,
+	piSessionRoot,
+	sessionDirName,
+	sessionIdFromDirName,
+} from "@tsuuanmi/pi-workflows/session/root";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("session-layout", () => {
-	describe("encodeSessionSegment / decodeSessionSegment", () => {
+	describe("encodePathSegment / decodePathSegment", () => {
 		it("round-trips simple ASCII ids", () => {
 			const id = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
-			expect(decodeSessionSegment(encodeSessionSegment(id))).toBe(id);
+			expect(decodePathSegment(encodePathSegment(id))).toBe(id);
 		});
 
 		it("escapes dots to prevent path traversal", () => {
-			const encoded = encodeSessionSegment("a.b.c");
+			const encoded = encodePathSegment("a.b.c");
 			expect(encoded).not.toContain(".");
-			expect(decodeSessionSegment(encoded)).toBe("a.b.c");
+			expect(decodePathSegment(encoded)).toBe("a.b.c");
 		});
 
 		it("escapes special characters", () => {
 			const id = "hello world/test";
-			const encoded = encodeSessionSegment(id);
+			const encoded = encodePathSegment(id);
 			expect(encoded).not.toContain("/");
-			expect(decodeSessionSegment(encoded)).toBe(id);
+			expect(decodePathSegment(encoded)).toBe(id);
 		});
 	});
 
-	describe("assertNonEmptySessionId", () => {
+	describe("assertSessionId", () => {
 		it("accepts valid session ids", () => {
-			expect(() => assertNonEmptySessionId("abc123", "test")).not.toThrow();
+			expect(() => assertSessionId("abc123")).not.toThrow();
 		});
 
 		it("throws on blank session ids", () => {
-			expect(() => assertNonEmptySessionId("", "write")).toThrow(/No session ID/);
-			expect(() => assertNonEmptySessionId("  ", "write")).toThrow(/No session ID/);
-			expect(() => assertNonEmptySessionId(undefined, "write")).toThrow(/No session ID/);
+			expect(() => assertSessionId("")).toThrow(/No session ID/);
+			expect(() => assertSessionId("  ")).toThrow(/No session ID/);
+			expect(() => assertSessionId(undefined)).toThrow(/No session ID/);
 		});
 	});
 
@@ -76,7 +75,7 @@ describe("session-layout", () => {
 			expect(sessionDirName("abc")).toBe("abc");
 		});
 
-		it("round-trips through encodeSessionSegment", () => {
+		it("round-trips through encodePathSegment", () => {
 			const id = "test.session.id";
 			const dirName = sessionDirName(id);
 			expect(dirName).toBe("test%2Esession%2Eid");
@@ -149,7 +148,7 @@ describe("session-resolution", () => {
 
 	describe("resolveSessionIdFromSources", () => {
 		it("prefers flag over payload and env", async () => {
-			const result = await resolvePiSessionForRead(cwd, {
+			const result = resolvePiSessionForRead(cwd, {
 				flagValue: "flag-id",
 				payloadSessionId: "payload-id",
 				envSessionId: "env-id",
@@ -159,7 +158,7 @@ describe("session-resolution", () => {
 		});
 
 		it("prefers payload over env", async () => {
-			const result = await resolvePiSessionForRead(cwd, {
+			const result = resolvePiSessionForRead(cwd, {
 				payloadSessionId: "payload-id",
 				envSessionId: "env-id",
 			});
@@ -168,73 +167,24 @@ describe("session-resolution", () => {
 		});
 
 		it("uses env as last resort", async () => {
-			const result = await resolvePiSessionForRead(cwd, { envSessionId: "env-id" });
+			const result = resolvePiSessionForRead(cwd, { envSessionId: "env-id" });
 			expect(result?.sessionId).toBe("env-id");
 			expect(result?.source).toBe("env");
 		});
 
 		it("throws blank_flag on blank flag value", async () => {
-			await expect(resolvePiSessionForRead(cwd, { flagValue: "  " })).rejects.toThrow(/blank/);
+			expect(() => resolvePiSessionForRead(cwd, { flagValue: "  " })).toThrow(/blank/);
 		});
 	});
 
 	describe("resolvePiSessionForWrite", () => {
 		it("requires a session id for write", async () => {
-			await expect(resolvePiSessionForWrite(cwd, {})).rejects.toThrow(/No session ID/);
+			expect(() => resolvePiSessionForWrite(cwd, {})).toThrow(/No session ID/);
 		});
 
 		it("resolves from flag", async () => {
-			const result = await resolvePiSessionForWrite(cwd, { flagValue: "sess-1" });
+			const result = resolvePiSessionForWrite(cwd, { flagValue: "sess-1" });
 			expect(result?.sessionId).toBe("sess-1");
-		});
-	});
-
-	describe("detectLatestSession", () => {
-		it("returns undefined when no sessions exist", async () => {
-			const result = await detectLatestSession(cwd);
-			expect(result).toBeUndefined();
-		});
-
-		it("returns the latest session with an activity marker", async () => {
-			await mkdir(join(cwd, ".pi", "sess-1", "workflows"), { recursive: true });
-			await mkdir(join(cwd, ".pi", "sess-2", "workflows"), { recursive: true });
-			await writeSessionActivityMarker(cwd, "sess-1");
-			// Delay so sess-2 has a clearly newer timestamp (beyond tie window)
-			await new Promise((resolve) => setTimeout(resolve, 1100));
-			await writeSessionActivityMarker(cwd, "sess-2");
-
-			const result = await detectLatestSession(cwd);
-			expect(result?.sessionId).toBe("sess-2");
-		});
-
-		it("ignores sessions without activity markers", async () => {
-			await mkdir(join(cwd, ".pi", "sess-1", "workflows"), { recursive: true });
-			// No activity marker for sess-1
-
-			const result = await detectLatestSession(cwd);
-			expect(result).toBeUndefined();
-		});
-	});
-
-	describe("writeSessionActivityMarker", () => {
-		it("creates an activity marker file", async () => {
-			await writeSessionActivityMarker(cwd, "sess-1");
-			const path = sessionActivityPath(cwd, "sess-1");
-			const { readFile } = await import("node:fs/promises");
-			const content = JSON.parse(await readFile(path, "utf8"));
-			expect(content.session_id).toBe("sess-1");
-			expect(content.created_at).toBeDefined();
-		});
-
-		it("updates updated_at on subsequent writes", async () => {
-			await writeSessionActivityMarker(cwd, "sess-1");
-			await new Promise((resolve) => setTimeout(resolve, 10));
-			await writeSessionActivityMarker(cwd, "sess-1");
-			const path = sessionActivityPath(cwd, "sess-1");
-			const { readFile } = await import("node:fs/promises");
-			const content = JSON.parse(await readFile(path, "utf8"));
-			expect(content.created_at).toBeDefined();
-			expect(content.updated_at).not.toBe(content.created_at);
 		});
 	});
 });

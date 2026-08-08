@@ -9,7 +9,8 @@ import {
 } from "#workflows/audit/transaction-journal";
 import { initialWorkflowPhase } from "#workflows/registry/workflow-manifest";
 import type { WorkflowSkill } from "#workflows/session/paths";
-import { assertNonEmptySessionId, workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
+import { assertSessionId } from "#workflows/session/root";
+import { workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
 import { assertRalplanObstacle, writeRalplanObstacle } from "#workflows/skills/ralplan/obstacles";
 import { assertUltragoalObstacle, writeUltragoalObstacle } from "#workflows/skills/ultragoal/obstacles";
 import { applyHandoffToActiveState } from "#workflows/state/active-state";
@@ -168,7 +169,7 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		throw new Error(`handoff target must differ from caller (both are "${callerSkill}")`);
 	}
 
-	assertNonEmptySessionId(options.sessionId, "handoffWorkflow");
+	assertSessionId(options.sessionId);
 	const sessionId = options.sessionId.trim();
 	const handoffAt = options.nowIso ?? new Date().toISOString();
 	const mutationId = options.mutationId ?? `${callerSkill}:handoff:${calleeSkill}:${handoffAt}`;

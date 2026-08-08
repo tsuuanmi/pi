@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { DefaultResourceLoader } from "#pi/loader/resources";
-import { sessionStateDir } from "#pi/session/layout";
+import { sessionStateDir } from "#pi/session/root";
 import { SettingsManager } from "#pi/settings/settings-manager";
 import { SubagentManager, type SubagentRecord } from "#pi/subagents/manager";
 import { readSubagentWorkerRequest } from "#pi/subagents/tmux-worker";

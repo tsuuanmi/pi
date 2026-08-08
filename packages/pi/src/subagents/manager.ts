@@ -26,8 +26,8 @@ import {
 	createAgentSessionFromServices,
 	createAgentSessionServices,
 } from "#pi/runtime/agent-session-services";
-import { sessionStateDir } from "#pi/session/layout";
 import { SessionManager } from "#pi/session/manager";
+import { sessionStateDir } from "#pi/session/root";
 import { TmuxBackend, type TmuxBackendOptions } from "#pi/subagents/tmux-backend";
 import type {
 	AttachResult,

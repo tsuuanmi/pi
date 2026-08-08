@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
+import { piGlobalRoot } from "#workflows/session/root";
 
 /**
  * Canonical JSON serialization for deterministic hashing.
@@ -59,7 +60,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 function assertPiTargetPath(targetPath: string, cwd: string | undefined): void {
 	if (!cwd) return;
 	const projectRoot = resolve(cwd);
-	const piRoot = resolve(projectRoot, ".pi");
+	const piRoot = resolve(piGlobalRoot(projectRoot));
 	const target = resolve(targetPath);
 	const rel = relative(piRoot, target);
 	if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {

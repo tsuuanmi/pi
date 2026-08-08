@@ -9,6 +9,8 @@
 - **quality-gate**: CLI validation now accepts Node commands only; alternate-runtime command support was removed.
 - **exports**: Renamed workflow runtime and command implementation modules; direct runtime imports now use `runtime/fallback-commands` and `runtime/lifecycle`.
 - **exports**: Replaced `@tsuuanmi/pi-workflows/register` and `@tsuuanmi/pi-workflows/tools/workflow-tools` with `@tsuuanmi/pi-workflows/extension` and `@tsuuanmi/pi-workflows/tools`.
+- **session**: Removed implicit latest-session discovery and activity-marker writes; every workflow operation now requires an explicit session source.
+- **subagents**: Removed workflow-owned subagent contracts and thinking-level exports; lifecycle behavior now comes from `@tsuuanmi/pi-agent` through the workflow tool adapter.
 
 ### Added
 
@@ -17,6 +19,8 @@
 
 ### Changed
 
+- **session**: Centralized `.pi` root and path-segment primitives so Pi and workflows share one implementation; workflow-specific layout remains in the workflow package.
+- **subagents**: Moved reusable lifecycle tool execution to `@tsuuanmi/pi-agent`; workflows now retain only host adaptation, workflow receipts, and surface metadata.
 - **extensions**: The package manifest now exposes `src/extension.ts` as the extension adapter; Pi loads workflow tools and hooks through the package.
 - **extensions**: Split workflow tool registration and workflow hook registration into focused modules; the package extension now composes both registrars.
 - **team**: Moved manager acquisition into the Team agent adapter and added a fail-closed boundary check for direct `SubagentManager` calls.

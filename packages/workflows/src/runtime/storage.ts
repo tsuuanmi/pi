@@ -11,6 +11,7 @@ import type {
 	SessionState,
 	WorkflowRuntimeEvent,
 } from "#workflows/runtime/types";
+import { encodePathSegment, piGlobalRoot } from "#workflows/session/root";
 
 const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 
@@ -41,7 +42,7 @@ export function generateSessionId(prefix = "h"): string {
 
 function encodeSessionId(sessionId: string): string {
 	assertSafeSessionId(sessionId);
-	return encodeURIComponent(sessionId).replaceAll(".", "%2E");
+	return encodePathSegment(sessionId);
 }
 
 export function resolveHarnessRoot(opts?: { root?: string; cwd?: string; env?: NodeJS.ProcessEnv }): string {
@@ -49,7 +50,7 @@ export function resolveHarnessRoot(opts?: { root?: string; cwd?: string; env?: N
 	if (opts?.root) return resolve(opts.root);
 	const fromEnv = env.PI_HARNESS_STATE_ROOT;
 	if (fromEnv?.trim()) return resolve(fromEnv.trim());
-	return join(opts?.cwd ?? process.cwd(), ".pi", "state", "harness");
+	return join(piGlobalRoot(opts?.cwd ?? process.cwd()), "state", "harness");
 }
 
 export function sessionPaths(root: string, sessionId: string): SessionPaths {
@@ -75,7 +76,7 @@ function controlSocketPath(root: string, sessionId: string): string {
 
 function assertPiTargetPath(targetPath: string, cwd: string | undefined): void {
 	if (!cwd) return;
-	const piRoot = resolve(cwd, ".pi");
+	const piRoot = resolve(piGlobalRoot(cwd));
 	const target = resolve(targetPath);
 	const rel = relative(piRoot, target);
 	if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {

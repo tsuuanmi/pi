@@ -30,6 +30,10 @@
 			"types": "./dist/runtime/*.d.ts",
 			"import": "./dist/runtime/*.js"
 		},
+		"./session/root": {
+			"types": "./dist/session/root.d.ts",
+			"import": "./dist/session/root.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"imports": {

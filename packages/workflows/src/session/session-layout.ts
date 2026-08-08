@@ -1,8 +1,8 @@
 /**
  * Session-scoped artifact path layout for Pi workflow state.
  *
- * Pure, acyclic path module. Two root functions:
- *   - `piGlobalRoot(cwd)` → `.pi/` (legacy/global state + state-integrity logs)
+ * Pure, acyclic path module. Workflow paths compose the shared roots:
+ *   - `piGlobalRoot(cwd)` → `.pi/`
  *   - `piSessionRoot(cwd, sessionId)` → `.pi/{encoded}/`
  *
  * Runtime workflow artifacts require an explicit session id. The global `.pi/`
@@ -11,36 +11,7 @@
 
 import { join } from "node:path";
 import type { RalplanStage, WorkflowSkill } from "#workflows/session/paths";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** File name for the session activity marker within a session directory. */
-export const PI_SESSION_ACTIVITY_FILE = ".session-activity.json";
-
-// ---------------------------------------------------------------------------
-// Encoding / Decoding
-// ---------------------------------------------------------------------------
-
-/**
- * Encode a session id for use as a filesystem path segment.
- *
- * Uses `encodeURIComponent` with dots additionally escaped to `%2E` so that
- * the encoded form never contains `..` (path traversal) or `/` (separator).
- */
-export function encodeSessionSegment(id: string): string {
-	return encodeURIComponent(id).replaceAll(".", "%2E");
-}
-
-/**
- * Decode a session path segment back to the original session id.
- *
- * Inverse of {@link encodeSessionSegment}.
- */
-export function decodeSessionSegment(segment: string): string {
-	return decodeURIComponent(segment);
-}
+import { encodePathSegment, piGlobalRoot, piSessionRoot, sessionStateDir } from "#workflows/session/root";
 
 // ---------------------------------------------------------------------------
 // Validation
@@ -49,45 +20,9 @@ export function decodeSessionSegment(segment: string): string {
 /** Re-export the canonical assertSafePathComponent from state-schema.ts. */
 export { assertSafePathComponent } from "#workflows/state/state-schema";
 
-/**
- * Assert that a session id is non-empty and usable.
- * Throws with a descriptive message (including the source label) on failure.
- */
-export function assertNonEmptySessionId(value: unknown, source: string): asserts value is string {
-	if (typeof value !== "string" || value.trim().length === 0) {
-		throw new Error(`No session ID provided. Set PI_SESSION_ID env var or pass --session. (source: ${source})`);
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Session directory helpers
-// ---------------------------------------------------------------------------
-
-/** Return the directory name (not full path) for a session id, e.g. `20260627-143522`. */
-export function sessionDirName(id: string): string {
-	return encodeSessionSegment(id);
-}
-
-/** Extract the session id from a session directory name like `20260627-143522`. */
-export function sessionIdFromDirName(name: string): string | undefined {
-	try {
-		return decodeSessionSegment(name);
-	} catch {
-		return undefined;
-	}
-}
-
 // ---------------------------------------------------------------------------
 // Path builders — global root (audit + transaction journal only)
 // ---------------------------------------------------------------------------
-
-/**
- * Global `.pi/` root. Reserved for shared project config and explicitly global
- * state that is not owned by a workflow session.
- */
-export function piGlobalRoot(cwd: string): string {
-	return join(cwd, ".pi");
-}
 
 // Explicit global state directory for non-session-owned state.
 export function piStateDir(cwd: string): string {
@@ -99,37 +34,13 @@ export function auditLogPath(cwd: string, sessionId: string): string {
 }
 
 export function transactionJournalPath(cwd: string, sessionId: string, mutationId: string): string {
-	const encoded = encodeURIComponent(mutationId).replaceAll(".", "%2E");
+	const encoded = encodePathSegment(mutationId);
 	return join(sessionStateDir(cwd, sessionId), "transactions", `${encoded}.json`);
-}
-
-// ---------------------------------------------------------------------------
-// Path builders — session-scoped root (all workflow state)
-// ---------------------------------------------------------------------------
-
-/**
- * Full path to the workflow state root: `cwd/.pi/{encoded}/`.
- */
-export function piSessionRoot(cwd: string, sessionId: string): string {
-	assertNonEmptySessionId(sessionId, "piSessionRoot");
-	return join(cwd, ".pi", sessionDirName(sessionId.trim()));
-}
-
-/**
- * Path to the session activity marker file for a given session.
- * `.pi/{encoded}/.session-activity.json`
- */
-export function sessionActivityPath(cwd: string, sessionId: string): string {
-	return join(piSessionRoot(cwd, sessionId), PI_SESSION_ACTIVITY_FILE);
 }
 
 // ---------------------------------------------------------------------------
 // Session-aware path builders (sessionId required)
 // ---------------------------------------------------------------------------
-
-export function sessionStateDir(cwd: string, sessionId: string): string {
-	return join(piSessionRoot(cwd, sessionId), "state");
-}
 
 export function piWorkflowRoot(cwd: string, sessionId: string): string {
 	return join(piSessionRoot(cwd, sessionId), "workflows");
@@ -197,6 +108,10 @@ export function ralplanStageArtifactPath(
 
 export function ralplanPendingApprovalPath(cwd: string, runId: string, sessionId: string): string {
 	return join(ralplanRunDir(cwd, runId, sessionId), "pending-approval.md");
+}
+
+export function ralplanCompletionLockPath(cwd: string, runId: string, sessionId: string): string {
+	return join(ralplanRunDir(cwd, runId, sessionId), ".completion.lock");
 }
 
 /** Per-run ralplan obstacle ledger (Phase R-1). Run-scoped: each run's critic/architect obstacles live beside its index. */

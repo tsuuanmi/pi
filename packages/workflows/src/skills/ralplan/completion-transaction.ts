@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import { transactionJournalPath } from "#workflows/session/session-layout";
+import { ralplanCompletionLockPath, transactionJournalPath } from "#workflows/session/session-layout";
 import { nowIso, writeJsonAtomic } from "#workflows/state/state-writer";
 
 export const RALPLAN_COMPLETION_TRANSACTION_VERSION = 1;
@@ -197,15 +197,7 @@ export async function withRalplanCompletionLock<T>(
 	runId: string,
 	fn: () => Promise<T>,
 ): Promise<T> {
-	const lockPath = join(
-		cwd,
-		".pi",
-		encodeURIComponent(sessionId).replaceAll(".", "%2E"),
-		"plans",
-		"ralplan",
-		runId,
-		".completion.lock",
-	);
+	const lockPath = ralplanCompletionLockPath(cwd, runId, sessionId);
 	return withFileMutationQueue(lockPath, async () => fn());
 }
 
