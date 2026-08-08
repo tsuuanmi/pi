@@ -6,7 +6,6 @@ import type { AgentMessage, SubagentManager } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import type { KeyId } from "@tsuuanmi/pi-tui";
 import { type Theme, theme } from "@tsuuanmi/pi-tui";
-import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
 import type {
 	CompactOptions,
 	ContextUsage,
@@ -61,6 +60,7 @@ import type {
 	UserBashEvent,
 	UserBashEventResult,
 } from "#pi/hooks/events";
+import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
 import type { SessionManager } from "#pi/session/manager";

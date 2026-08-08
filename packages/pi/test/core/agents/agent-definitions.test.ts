@@ -2,7 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { loadAgentDefinitions } from "#pi/agent/definitions";
+import { loadAgentDefinitions } from "#pi/loader/agents/definitions";
 import type { ResolvedResource } from "#pi/resources/types";
 
 function agentMd(name: string, description = `${name} description`, body = `${name} body`): string {

@@ -13,8 +13,8 @@ import {
 } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Model, TextContent } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
-import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/guidance";
+import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import type { ExtensionRunner } from "#pi/runtime/extensions/runner";

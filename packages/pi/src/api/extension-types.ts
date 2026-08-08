@@ -2,7 +2,6 @@ import type { CustomMessage } from "@tsuuanmi/pi-agent";
 import type { Model, TextContent, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { AutocompleteItem, Component, KeyId, Theme } from "@tsuuanmi/pi-tui";
 import type { TSchema } from "typebox";
-import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
 import type {
 	CompactOptions,
 	ContextUsage,
@@ -16,6 +15,7 @@ import type { ProgramOptions, ProgramResult } from "#pi/execution/program";
 import type { ExtensionHookAPI } from "#pi/hooks/api";
 import type { EventBus } from "#pi/hooks/event-bus";
 import type { HookHandlerFn } from "#pi/hooks/register";
+import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 import type { SourceInfo } from "#pi/resources/source-info";
 import type { SessionManager } from "#pi/session/manager";
 

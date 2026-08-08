@@ -1,5 +1,4 @@
 import type { AgentMessage } from "@tsuuanmi/pi-agent";
-import type { BuildSystemPromptOptions } from "#pi/agent/system-prompt";
 import type { ExtensionContext } from "#pi/api/context-types";
 import type { Extension, ExtensionError } from "#pi/api/extension-types";
 import type {
@@ -25,6 +24,7 @@ import type {
 	UserBashEvent,
 	UserBashEventResult,
 } from "#pi/hooks/events";
+import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 
 export type HookErrorEmitter = (error: ExtensionError) => void;
 

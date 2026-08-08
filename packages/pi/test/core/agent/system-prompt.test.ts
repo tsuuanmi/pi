@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { buildSystemPrompt, formatSkillsForPrompt } from "#pi/agent/system-prompt";
+import { buildSystemPrompt, formatSkillsForPrompt } from "#pi/loader/agents/system-prompt";
 import type { Skill } from "#pi/loader/skill";
 import { createSyntheticSourceInfo } from "#pi/resources/source-info";
 

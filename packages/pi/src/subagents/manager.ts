@@ -18,8 +18,8 @@ import {
 } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { type Api, type AssistantMessage, isValidThinkingLevel, type Model, type ThinkingLevel } from "@tsuuanmi/pi-ai";
-import { type AgentProfile, loadAgentProfile } from "#pi/agent/profiles";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
+import { type AgentProfile, loadAgentProfile } from "#pi/loader/agents/profiles";
 import type { AgentSession } from "#pi/runtime/agent-session";
 import {
 	type AgentSessionServices,

@@ -16,14 +16,14 @@ The documentation is organized to mirror the top-level implementation areas in [
 
 ## Source-aligned reference
 
-- [`agent/`](agent/) - agent profiles and system-prompt definitions. See [Agent profiles](agent/profiles.md).
+- [Agent profiles](agent/profiles.md) - agent profile loading and system-prompt definitions.
 - [`api/`](api/) - public contracts, messages, RPC, JSON output, and SDK usage.
 - [`app/`](app/) - startup, settings, session, runtime, and mode orchestration. See [Application flow](app/index.md).
 - [`auth/`](auth/) - authentication storage, credentials, and provider guidance.
 - [`cli/`](cli/) - argument parsing, package commands, model listing, and terminal launch helpers.
 - [`execution/`](execution/) - command and shell execution boundaries.
 - [`extensions/`](extensions/) - extension loading, lifecycle hooks, tools, commands, and UI.
-- [`loader/`](loader/) - package identity, paths, resource discovery, and resource loading.
+- [`loader/`](loader/) - package identity, paths, resource discovery, resource loading, and agent definitions.
 - [`modes/`](modes/) - interactive, print, JSON, and RPC modes.
 - [`network/`](network/) - HTTP proxy and dispatcher configuration.
 - [`output/`](output/) - bounded output buffering, truncation, and sanitization.

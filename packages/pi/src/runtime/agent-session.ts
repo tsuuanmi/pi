@@ -23,7 +23,6 @@ import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AssistantMessage, Message, Model, TextContent, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { cleanupSessionResources, resetProviders, stream } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
-import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/agent/system-prompt";
 import { ApiUsageLogger } from "#pi/api/api-usage-logger";
 import { apiUsageLogPath } from "#pi/api/api-usage-utils";
 import type { SlashCommandInfo } from "#pi/api/extension-types";
@@ -49,6 +48,7 @@ import type {
 	TurnStartEvent,
 } from "#pi/extensions/index";
 import { installAgentToolHooks } from "#pi/hooks/agent-bridge";
+import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/loader/agents/system-prompt";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import type { ResourceExtensionPaths, ResourceLoader } from "#pi/loader/resources";

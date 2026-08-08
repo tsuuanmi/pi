@@ -11,7 +11,6 @@ export {
 	Theme,
 	type ThemeColor,
 } from "@tsuuanmi/pi-tui";
-export { formatSkillsForPrompt } from "#pi/agent/system-prompt";
 // Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
 export type { ReadonlyFooterDataProvider } from "#pi/api/ui-types";
 // Auth and model registry
@@ -28,6 +27,7 @@ export {
 export { type Args, parseArgs } from "#pi/cli/args";
 // Shell utilities
 export { resolveShell } from "#pi/execution/shell";
+export { formatSkillsForPrompt } from "#pi/loader/agents/system-prompt";
 // Loader exports
 export { CONFIG_DIR_NAME, VERSION } from "#pi/loader/app";
 export { loadProjectContextFiles } from "#pi/loader/context";

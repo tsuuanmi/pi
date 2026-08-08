@@ -1,7 +1,7 @@
 import type { Theme } from "@tsuuanmi/pi-tui";
-import type { AgentProfileLoadResult } from "#pi/agent/definitions";
 import type { ExtensionFactory, LoadExtensionsResult } from "#pi/api/extension-types";
 import type { EventBus } from "#pi/hooks/event-bus";
+import type { AgentProfileLoadResult } from "#pi/loader/agents/definitions";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import type { Skill } from "#pi/loader/skill";
 import type { CommandOutput } from "#pi/package-manager/types";

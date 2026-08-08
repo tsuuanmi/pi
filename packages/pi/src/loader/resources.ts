@@ -1,7 +1,11 @@
 import { existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Theme } from "@tsuuanmi/pi-tui";
-import { type AgentProfileLoadResult, type LoadedAgentProfile, loadAgentDefinitions } from "#pi/agent/definitions";
+import {
+	type AgentProfileLoadResult,
+	type LoadedAgentProfile,
+	loadAgentDefinitions,
+} from "#pi/loader/agents/definitions";
 import { findPromptFile, loadProjectContextFiles, resolvePrompt } from "#pi/loader/context";
 import { resolveResources } from "#pi/loader/discovery";
 import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
