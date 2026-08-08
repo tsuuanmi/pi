@@ -18,19 +18,22 @@ Ralplan coordinates durable planning passes and produces a pending-approval impl
 
 | Module | Description |
 |--------|-------------|
-| `agent.ts` | Role types, stage mapping, and prompt request construction. |
-| `agent-adapter.ts` | Workflow role request to Pi-native `Agent` adapter. |
+| `agent-adapter.ts` | Adapts workflow role requests to the Pi-native `Agent` interface. |
+| `agent-record.ts` | Durable role-agent run records. |
+| `agent-roles.ts` | Ralplan role definitions and stage-to-role mapping. |
+| `checkpoint-store.ts` | Session-scoped orchestrator checkpoint storage. |
 | `orchestrator.ts` | Guarded single-stage execution through `@tsuuanmi/pi-orchestrator`. |
-| `checkpoint.ts` | Session-scoped orchestrator checkpoint storage. |
-| `record.ts` | Durable role-agent run records. |
 | `compact.ts` | Prompt-efficient compact run projection. |
 | `completion-transaction.ts` | Journaled completion transaction: intent journal, stage artifact + index writes, obstacle ledger update, completion provenance sidecar, and committed/rolled-back markers. |
 | `expected-action.ts` | Pure `selectExpectedRalplanAction` over the orchestration snapshot; returns the next spawn/closed/blocked/no-action decision. |
 | `gates.ts` | Explorer/context gate validation and escalation handling. |
+| `guards.ts` | Ralplan handoff and approval-target validation. |
+| `help.ts` | Command action descriptions, typed arguments, and help metadata. |
 | `hud.ts` | HUD chip rendering for ralplan state. |
 | `obstacles.ts` | Obstacle ledger and critic agreement helpers. |
 | `orchestration-snapshot.ts` | Reads workflow state, run index, explorer gate, artifact hashes, completion provenance, transaction journals, and obstacle ledger without repairing them, then emits a versioned fingerprint over canonically ordered data. |
 | `runtime.ts` | Run status, artifact index, doctor, approval, and artifact writes. |
+| `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `tools.ts` | Registers `ralplan_run_agent`. |
 | `transitions.ts` | Skill transition table and expected-next role selection. |
 | `verdicts.ts` | Critic verdict parsing and approval enforcement helpers. |
@@ -62,8 +65,12 @@ The Orchestrator owns task execution, agent invocation, checkpointing, and task 
 |------|-------------|
 | `.pi/<sessionId>/workflows/ralplan/state.json` | Active workflow envelope. |
 | `.pi/<sessionId>/plans/ralplan/<run-id>/index.jsonl` | Append-only run index. |
-| `.pi/<sessionId>/workflows/ralplan/agents/` | Role-agent records. |
-| `.pi/<sessionId>/plans/ralplan/<run-id>/` | Plan artifacts and pending approval files. |
+| `.pi/<sessionId>/plans/ralplan/<run-id>/checkpoints/<stage-n>-<stage>.json` | Orchestrator checkpoint snapshots. |
+| `.pi/<sessionId>/plans/ralplan/<run-id>/stage-<stage-n>-<stage>.md` | Stage plan artifact. |
+| `.pi/<sessionId>/plans/ralplan/<run-id>/pending-approval.md` | Pending approval plan artifact. |
+| `.pi/<sessionId>/plans/ralplan/<run-id>/obstacles.json` | Per-run obstacle ledger. |
+| `.pi/<sessionId>/plans/ralplan/<run-id>/gates/explorer/attempt-<nn>.json` | Explorer gate artifact. |
+| `.pi/<sessionId>/workflows/ralplan/agents/<agent-run-id>.json` | Durable role-agent record. |
 
 ## Pending Approval
 

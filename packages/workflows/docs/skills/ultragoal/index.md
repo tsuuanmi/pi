@@ -21,11 +21,13 @@ Ultragoal manages goal-tracked execution under the current session root. One mai
 | `artifacts.ts` | Artifact tracking and validation. |
 | `compact.ts` | Prompt-efficient compact goal projection. |
 | `guard.ts` | Completion/blocker guard logic. |
+| `help.ts` | Command action descriptions, typed arguments, and help metadata. |
 | `hud.ts` | HUD chip rendering for goal progress. |
 | `obstacles.ts` | Obstacle/blocker ledger helpers. |
 | `quality-gate.ts` | Quality gate schema validation. |
 | `receipt.ts` | Receipt and ledger validation. |
 | `runtime.ts` | Plan/state I/O and goal transitions. |
+| `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `tools.ts` | Registers `ultragoal_spawn_goal_agent`. |
 | `transitions.ts` | Skill transition table, expected-next goal selection, fail-closed validators. |
 
@@ -67,6 +69,8 @@ Use `ultragoal_spawn_goal_agent` for worker execution. It is state guarded: the 
 | `.pi/<sessionId>/workflows/ultragoal/state.json` | Active workflow envelope. |
 | `.pi/<sessionId>/ultragoal/goals.json` | Goal plan. |
 | `.pi/<sessionId>/ultragoal/ledger.jsonl` | Goal receipt ledger. |
+| `.pi/<sessionId>/ultragoal/obstacles.json` | Session-scoped obstacle ledger. |
+| `.pi/<sessionId>/ultragoal/brief.md` | Approved goal brief. |
 | `.pi/<sessionId>/ultragoal/checkpoints/*.json` | State-only checkpoint snapshots for restore. |
 
 ## Gates

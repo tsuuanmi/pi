@@ -2,7 +2,7 @@
 
 Workflow-owned subagent lifecycle tools and workflow-owned agent execution, plus the workflow-owned model-visible tool surface, registered by the workflow tool helper and bundled workflow registration. Pi-native inspect, attach, and kill controls are registered by Pi separately.
 
-**Source:** `src/register.ts`, `src/subagents/tools.ts`, `src/skills/deep-interview/tools.ts`, `src/skills/ralplan/tools.ts`, `src/skills/team/tools.ts`, `src/skills/team/coordinator.ts`, `src/skills/ultragoal/tools.ts`, `src/tools/workflow-tools.ts`
+**Source:** `src/register.ts`, `src/tools/workflow-tools.ts`, `src/subagents/manager.ts`, `src/subagents/surface.ts`, `src/subagents/tools.ts`, `src/skills/deep-interview/tools.ts`, `src/skills/ralplan/agent-adapter.ts`, `src/skills/ralplan/surface.ts`, `src/skills/ralplan/tools.ts`, `src/skills/team/agent-adapter.ts`, `src/skills/team/coordinator.ts`, `src/skills/team/surface.ts`, `src/skills/team/tools.ts`, `src/skills/ultragoal/surface.ts`, `src/skills/ultragoal/tools.ts`
 
 ## Model-Visible Tools
 
@@ -29,7 +29,7 @@ The bundled workflow registration registers these model-visible tools:
 | `team_resume` | Resume Team execution from an orchestrator checkpoint. |
 | `ultragoal_spawn_goal_agent` | Spawn the next legal Ultragoal goal worker. |
 
-Direct `SubagentManager` calls are limited to workflow adapters: `src/subagents/tools.ts` for workflow lifecycle tools, `skills/team/agent-adapter.ts` for Team agents, `skills/ralplan/agent-adapter.ts` for Ralplan agents, and `skills/ultragoal/tools.ts` for one guarded goal worker. Ralplan and Team roles call the Orchestrator through workflow-owned adapters; the detached workflow owner is lifecycle-only. Workflows must use the Orchestrator for generic task dependencies, routing, retries, queues, or agent collaboration.
+Direct `SubagentManager` calls are limited to workflow adapters: `src/subagents/tools.ts` for workflow lifecycle tools, `src/skills/team/agent-adapter.ts` for Team agents, `src/skills/ralplan/agent-adapter.ts` for Ralplan agents, and `src/skills/ultragoal/tools.ts` for one guarded goal worker. Ralplan and Team roles call the Orchestrator through workflow-owned adapters; the detached workflow owner is lifecycle-only. Workflows must use the Orchestrator for generic task dependencies, routing, retries, queues, or agent collaboration.
 
 ## Guarded Workflow Execution
 
@@ -39,11 +39,15 @@ Direct `SubagentManager` calls are limited to workflow adapters: `src/subagents/
 
 ## Command Surface
 
-Agents drive state, artifacts, gates, receipts, compaction, status, approval, and runtime owner lifecycle through `pi workflow ...` commands. Tool implementations are skill-owned under `src/skills/<skill>/` (workflow-owned interview and execution tools) or generic subagent tools under `src/subagents/`. The package has no separate generic workflow tools directory in the current source tree.
+`pi workflow ...` is the external CLI control plane for state, artifacts, gates, receipts, compaction, status, approval, and runtime owner lifecycle. It parses CLI input and returns command status/output; it does not invoke model-visible tools.
+
+Model-visible tools are the separate in-process surface for the current Pi session. Tool implementations are skill-owned under `src/skills/<skill>/` or generic subagent tools under `src/subagents/`. `src/tools/workflow-tools.ts` is the registration aggregator and host contract; it is not a second implementation directory.
+
+When a command and a tool expose related behavior, both may call the same lower-level runtime or skill function. The command and tool adapters do not call each other.
 
 ## Command Layer Boundary
 
-Generic `pi workflow subagent` / `subagents` command shims are removed. Spawn operations are model-visible tools; non-spawn workflow operations remain `pi workflow ...` commands.
+Generic `pi workflow subagent` / `subagents` command shims are removed. Spawn operations are model-visible tools, while external state and control-plane operations remain `pi workflow ...` commands. A command may use workflow RPC or a no-owner fallback, but that is runtime communication, not a tool call.
 
 ## See Also
 

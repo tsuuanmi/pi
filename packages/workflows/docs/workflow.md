@@ -37,6 +37,39 @@ pi workflow retire --input '{"sessionId":"h-..."}' --json
 pi workflow ralplan status --input '{"sessionId":"h-..."}' --json
 ```
 
+## Command and tool boundary
+
+Workflows expose two independent host-facing surfaces. They are adapters over the workflow runtime, state, artifact, and policy code; neither surface invokes the other.
+
+| Surface | Entry point | Caller and context | Return contract |
+|---------|-------------|--------------------|-----------------|
+| CLI commands | `src/commands/workflow.ts` and `src/commands/workflow/` | User, shell script, CI, or recovery process. Receives argv, a working directory, and session-scoped input. | `status`, `stdout`, and `stderr`; suitable for scripting and machine-readable `--json` output. |
+| Model-visible tools | `src/register.ts`, `src/tools/workflow-tools.ts`, and skill-owned `tools.ts` modules | The model during an interactive Pi session. Receives typed parameters, `WorkflowContext`, cancellation, and an optional host subagent manager. | `AgentToolResult` content and structured workflow receipts. |
+
+The normal call paths are:
+
+```text
+pi workflow ...
+  -> package-command dispatcher
+  -> command parser and command handlers
+  -> workflow runtime/state/skill implementation
+
+model tool call
+  -> Pi tool loop
+  -> registered tool execute function
+  -> workflow runtime/state/orchestrator/subagent manager
+```
+
+Boundary rules:
+
+- Commands own CLI parsing, session and working-directory resolution, output formatting, exit status, external lifecycle, inspection, and recovery.
+- Tools own model-facing schemas, in-session context, cancellation, receipts, and interactive orchestration or subagent actions.
+- Shared workflow implementation belongs below these adapters. If a command and a tool need the same behavior, they call a shared runtime or skill function; they do not call or shell out to each other.
+- A command may route to a live `RuntimeOwner` through workflow RPC or use a no-owner fallback. That is runtime communication, not a tool invocation.
+- `src/tools/workflow-tools.ts` is a registration aggregator and host contract, not a second workflow runtime. Skill-specific tool behavior lives under `src/skills/*/tools.ts`.
+
+Use `pi workflow ...` for external control-plane operations and scripting. Use model-visible tools for actions that must run inside the current Pi session, especially guarded orchestration and subagent work.
+
 State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`.
 
 Most verbs route to a live runtime owner when one is running for the session (`start --detach` spawns a detached owner); otherwise they fall back to a primitive (no-owner) path so the CLI can inspect and drive sessions without a running owner.
@@ -133,7 +166,9 @@ Per-invocation overrides such as `model`, `thinkingLevel`, `tools`, and `exclude
 
 ## Model-visible workflow tools
 
-Model-visible execution tools and non-execution workflow commands are registered separately. Workflow tools (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, `ultragoal_spawn_goal_agent`) are registered by the bundled workflow registration. Team roles always execute through `@tsuuanmi/pi-orchestrator`; workflow code owns turn order, gates, and result-to-artifact handoff. Non-execution workflow operations (state, artifacts, gates, status, approve-plan, etc.) remain `pi workflow ...` commands.
+Model-visible workflow tools are registered separately from `pi workflow` commands. Workflow tools (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, `ultragoal_spawn_goal_agent`) are registered by the bundled workflow registration. Team roles always execute through `@tsuuanmi/pi-orchestrator`; workflow code owns turn order, gates, and result-to-artifact handoff.
+
+The command surface remains the external control plane for state, artifacts, gates, status, approval, lifecycle, inspection, and recovery. A command and a tool may expose related behavior, but a matching operation is implemented through shared runtime or skill functions rather than by invoking the other adapter. See [Command and tool boundary](#command-and-tool-boundary).
 
 ## Current-session command propagation
 

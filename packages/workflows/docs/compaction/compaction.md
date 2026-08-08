@@ -6,7 +6,7 @@ Prompt-budgeted compact state projections.
 
 ## Overview
 
-Each skill ships a `*-compact.ts` projection that reduces full skill state to a prompt-efficient summary for resume and budgeting. The shared compaction helper provides the common projection plumbing.
+The shared compaction helper registers and dispatches deterministic, prompt-efficient projections for each skill. Ralplan, Team, and Ultragoal provide dedicated `compact.ts` modules; Deep Interview provides its projection from `src/skills/deep-interview/state.ts`. The shared helper provides the common registration, dispatch, and budget plumbing.
 
 ## See Also
 

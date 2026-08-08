@@ -2,6 +2,24 @@
 
 Command entry points live under `src/commands/`.
 
+## Boundary
+
+This directory is the CLI adapter for the external `pi workflow ...` control plane. It does not register or invoke model-visible workflow tools.
+
+The package-command entry point parses command arguments and dispatches directly to command, runtime, state, and skill handlers:
+
+```text
+pi workflow ...
+  -> src/commands/workflow.ts
+  -> src/commands/workflow/index.ts
+  -> runtime.ts, state.ts, or skill-commands.ts
+  -> workflow runtime/state/skill implementation
+```
+
+Command handlers return a `WorkflowCommandResult` with an exit status and text output. They may route lifecycle operations to a live `RuntimeOwner` through workflow RPC or use a no-owner fallback, but they never create a tool call.
+
+Some command actions and model-visible tools use the same lower-level skill functions. That shared implementation is the boundary: commands and tools do not call each other. For the complete surface comparison, see [Command and tool boundary](../workflow.md#command-and-tool-boundary).
+
 ## Modules
 
 | Module | Description |

@@ -1,12 +1,12 @@
 # Runtime
 
-Session owner and primitive runtime for `pi workflow` commands.
+Session owner and primitive runtime shared by workflow command and tool adapters.
 
 **Source:** `src/runtime/`
 
 ## Overview
 
-The runtime owns workflow sessions, leases, RPC routing, fallback command execution, mutation receipts, state storage, preservation, GC, and finalization. It is the command/control substrate used by the `src/commands/workflow.ts` wrapper and `src/commands/workflow/` implementation modules; model-visible subagent spawns still run in-process through the main session's `SubagentManager`.
+The runtime owns workflow sessions, leases, RPC routing, fallback command execution, mutation receipts, state storage, preservation, GC, and finalization. Command adapters use it for the external control plane and owner/no-owner routing. Model-visible tools use shared workflow and skill runtime functions in-process; subagent spawns run through the main session's `SubagentManager` rather than through the detached runtime owner.
 
 ## Module Structure
 

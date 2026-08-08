@@ -4,6 +4,15 @@
 
 Pi's bundled extension is a thin adapter in `packages/pi/src/loader/extensions/loader.ts`; it imports `registerWorkflows` and passes the Pi extension API host through unchanged.
 
+## Command and tool registration
+
+The two host-facing surfaces are registered independently:
+
+- The package metadata exposes `src/commands/workflow.ts` through the `pi.commands` entry. Pi's package-command dispatcher loads it for external `pi workflow ...` invocations.
+- `registerWorkflows(host)` registers in-process workflow tools and hooks for an interactive Pi session. It does not register or invoke the CLI command.
+
+Commands and tools may share lower-level workflow runtime and skill functions, but neither adapter calls the other. See [Command and tool boundary](../workflow.md#command-and-tool-boundary) for ownership, context, and return-contract rules.
+
 ## Registration
 
 `registerWorkflows(host)` composes two independent registrars:

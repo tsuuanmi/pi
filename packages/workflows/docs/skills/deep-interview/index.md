@@ -18,17 +18,22 @@ Deep Interview manages Socratic requirements discovery, ambiguity scoring, closu
 
 | Module | Description |
 |--------|-------------|
+| `guards.ts` | Validates legal Deep Interview handoff targets. |
+| `help.ts` | Command action descriptions, typed arguments, and help metadata. |
 | `hud.ts` | HUD chip rendering for interview progress. |
 | `mutation-guard.ts` | Blocks product-code mutation while an unfinished interview is active. |
 | `runtime.ts` | Question planning, answer/scoring merges, closure, restatement, and spec finalization. |
-| `state.ts` | State types, transitions, and persistence. |
+| `state.ts` | State types, transitions, persistence, and compact projection. |
+| `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `tools.ts` | Registers the `deep_interview_*` model-visible tools (`plan-question`, `record-answer`, `record-scoring`, `read-compact`, `closure-check`, `restate-goal`, `write-spec`). |
 | `transitions.ts` | Skill transition table. |
 
 ## Runtime Route
 
-- Read/write envelope state through `pi workflow state deep-interview ...` with the current `sessionId`.
-- Drive interview state through `pi workflow deep-interview <plan-question|record-answer|record-scoring|read-compact|closure-check|restate-goal|write-spec>`.
+- External callers read/write envelope state through `pi workflow state deep-interview ...` with the current `sessionId`.
+- External callers use `pi workflow deep-interview <plan-question|record-answer|record-scoring|read-compact|closure-check|restate-goal|write-spec>` for the CLI action contract.
+- During an interactive Pi session, the model uses the corresponding `deep_interview_*` tools. Those tools call the workflow runtime in-process; they do not invoke the CLI commands.
+- The command actions and model-visible tools may share lower-level runtime functions, but neither adapter calls the other.
 - Use read-only subagents only when the skill instructions call for research or lateral review.
 - Direct `edit`/`write` mutations are blocked while an unfinished interview is active.
 
@@ -71,7 +76,7 @@ These tools are registered by bundled workflow registration and run in-process a
 
 ## Mutation Guard
 
-The bundled workflow registration calls `getDeepInterviewMutationDecision` before `edit`, `write`, and mutating `bash` tool execution. If a non-finished Deep Interview workflow is active, direct product-code edits are blocked; sanctioned workflow state/artifact writes must go through the command layer.
+The bundled workflow registration calls `getDeepInterviewMutationDecision` before `edit`, `write`, and mutating `bash` tool execution. If a non-finished Deep Interview workflow is active, direct product-code edits are blocked; sanctioned workflow state/artifact writes must go through a workflow-owned runtime adapter: the CLI command layer for command calls or the `deep_interview_*` tools for in-session calls.
 
 ## See Also
 

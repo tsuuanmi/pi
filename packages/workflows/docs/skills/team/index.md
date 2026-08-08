@@ -18,18 +18,33 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 
 | Module | Description |
 |--------|-------------|
+| `agent-adapter.ts` | Adapts Team role requests to the Pi-native agent interface. |
+| `checkpoint-store.ts` | Persists and validates session-scoped orchestrator checkpoints. |
 | `compact.ts` | Prompt-efficient compact state projection. |
-| `hud.ts` | HUD chip rendering for team status. |
-| `runtime.ts` | State I/O, task transitions, messages, gates, completion, and snapshot/read-compact operations. |
-| `tools.ts` | Registers `team_execute` and `team_resume`. |
-| `coordinator.ts` | Selects the legal role and submits its batch to Orchestrator. |
+| `coordinator.ts` | Selects the legal role and submits its batch to the Orchestrator. |
+| `event-mapper.ts` | Maps Orchestrator queue events to Team events and statuses. |
+| `event-store.ts` | Persists Team events with idempotent event keys. |
+| `execution-applier.ts` | Applies Orchestrator task updates and receipt references to a Team snapshot. |
+| `execution-failure.ts` | Builds durable failed execution state. |
+| `execution-store.ts` | Persists task execution state. |
+| `execution.ts` | Runs Team role execution and applies success or failure outcomes. |
+| `help.ts` | Command action descriptions, typed arguments, and help metadata. |
+| `hud.ts` | HUD chip rendering for Team status. |
+| `orchestrator-checkpoint.ts` | Serializes and validates Orchestrator checkpoint data. |
+| `orchestrator-events.ts` | Adapts Orchestrator events to a Team event sink. |
+| `orchestrator.ts` | Team integration with `@tsuuanmi/pi-orchestrator`. |
+| `receipt-mapper.ts` | Maps Orchestrator task receipts to Team receipt references. |
+| `receipt-store.ts` | Persists role receipts with idempotent keys. |
 | `role-contract.ts` | Validates required reviewer/prover workflow evidence. |
-| `role-run-store.ts` | Persists failures for synthetic and concrete role runs. |
+| `role-run-store.ts` | Persists failures and records for synthetic and concrete role runs. |
 | `role-tasks.ts` | Builds worker, reviewer, and prover task batches. |
 | `role-transitions.ts` | Applies workflow-owned transitions after successful role execution. |
-| `receipt-store.ts` | Persists role receipts with idempotent keys. |
-| `execution-failure.ts` | Builds durable failed execution state. |
-| `transitions.ts` | Skill transition table, expected-next worker selection, fail-closed gate validators. |
+| `runtime.ts` | State I/O, task transitions, messages, gates, completion, and snapshot/read-compact operations. |
+| `status-mapper.ts` | Maps Orchestrator task statuses to Team task statuses. |
+| `surface.ts` | Validated command and model-visible tool surface metadata. |
+| `task-mapper.ts` | Maps workflow task data to Orchestrator task inputs. |
+| `tools.ts` | Registers `team_execute` and `team_resume`. |
+| `transitions.ts` | Skill transition table, expected-next worker selection, and fail-closed gate validators. |
 
 ## Runtime Route
 
@@ -76,9 +91,14 @@ Role capability matching is exact. Missing capabilities and duplicate agent ids 
 | File | Description |
 |------|-------------|
 | `.pi/<session-id>/team/<teamId>/config.json` | Team coordination state. |
-| `.pi/<session-id>/team/<teamId>/tasks/` | Task definitions and evidence. |
-| `.pi/<session-id>/team/<teamId>/events.jsonl` | Event log. |
-| `.pi/<session-id>/team/<teamId>/mailbox/<recipient>.jsonl` | Per-recipient messages. |
+| `.pi/<session-id>/team/<teamId>/tasks/<task-id>.json` | Task definitions and execution evidence. |
+| `.pi/<session-id>/team/<teamId>/tasks/<task-id>/gates/review/attempt-<nn>.json` | Per-task review gate artifacts. |
+| `.pi/<session-id>/team/<teamId>/events.jsonl` | Idempotent Team event log. |
+| `.pi/<session-id>/team/<teamId>/receipts.jsonl` | Task execution receipt references. |
+| `.pi/<session-id>/team/<teamId>/checkpoints/<run-id>.json` | Orchestrator checkpoint snapshots. |
+| `.pi/<session-id>/team/<teamId>/runs/<run-id>.json` | Durable role-run records. |
+| `.pi/<session-id>/team/<teamId>/gates/completion/attempt-<nn>.json` | Team completion gate artifacts. |
+| `.pi/<session-id>/team/<teamId>/mailbox/<recipient>.jsonl` | Per-recipient coordination messages. |
 
 ## Gates
 
