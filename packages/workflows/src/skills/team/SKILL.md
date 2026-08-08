@@ -13,11 +13,11 @@ Team coordinates multiple implementation workstreams. Use it only after the user
 - Workflow command guide: [references/commands.md](references/commands.md)
 - JSON payload schema for `pi workflow team <action>`: [assets/schema.json](assets/schema.json)
 
-Critical: before running any `pi workflow team <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Do not guess `--input` or `--input-file` fields; select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
+Critical: before running any `pi workflow team <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Every action requires `--input` or `--input-file` with the current `sessionId`; do not guess fields. Select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
 
 ## Current-Session Command Propagation
 
-- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source) — do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution.
+- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source). Action payloads must include `sessionId`; `--session` applies only to the separate state command.
 - Keep all Team state, task records, messages, and gate artifacts under one session id for one logical team run. Do not scatter one run across multiple `.pi/<session-id>` buckets.
 - `team_execute` is the only fresh team execution tool. It computes the legal next role and runs that work through the orchestrator.
 - `team_resume` is the only recovery tool. It requires an existing non-completed orchestrator checkpoint. There is no direct subagent-spawn execution path.
@@ -33,7 +33,7 @@ Critical: before running any `pi workflow team <action>` command, read [referenc
 
 1. Read the approved plan or task.
 2. Read active state with `pi workflow state team read`. If no state exists, initialize it with `pi workflow state team write`: `active: true`, `phase: "approved-execution"`, `data.input` set to the plan path or task. For the exact CLI/session/input split, see [State commands](../../state/commands.md).
-3. Start or resume runtime coordination with `pi workflow team start`, then use `pi workflow team snapshot` or `pi workflow team read-compact` to inspect current state.
+3. Start or resume runtime coordination with `pi workflow team start --input '{"sessionId":"<current-session>","task":"approved plan..."}' --json`, then use `pi workflow team snapshot --input '{"sessionId":"<current-session>"}' --json` or `pi workflow team read-compact --input '{"sessionId":"<current-session>"}' --json` to inspect current state.
 4. Split work into independent workstreams with clear ownership, files, and verification.
 5. For each worker, define:
    - objective
@@ -48,7 +48,7 @@ Critical: before running any `pi workflow team <action>` command, read [referenc
 10. Reviewers must persist `review_report` with `pi workflow team record-review-gate` before task completion.
 11. Provers must persist `evidence_matrix` with `pi workflow team record-completion-gate` before `pi workflow team complete`.
 12. Merge results carefully, resolve conflicts, and run requested checks.
-13. Close the run with `pi workflow team complete` after integration/verification, then summarize completed work, changed files, verification, and remaining risks.
+13. Close the run with `pi workflow team complete --input '{"sessionId":"<current-session>","phase":"complete","summary":"..."}' --json` after integration/verification, then summarize completed work, changed files, verification, and remaining risks.
 
 ## Gate
 

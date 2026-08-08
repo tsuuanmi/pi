@@ -16,7 +16,7 @@
     "owner": { "type": "string" },
     "dependsOn": { "type": "array", "items": { "type": "string" } },
     "taskId": { "type": "string" },
-    "status": { "type": "string" },
+    "status": { "type": "string", "enum": ["pending", "blocked", "in_progress", "completed", "failed"] },
     "workerId": { "type": "string" },
     "evidence": { "type": "object", "additionalProperties": true },
     "from": { "type": "string" },
@@ -32,7 +32,7 @@
   "$defs": {
     "sessionId": {
       "type": "string",
-      "description": "Current Pi session id. Required in agent/runtime use even when the CLI can resolve fallback state."
+      "description": "Current Pi session id. Required by every workflow action; pass the id from the active interactive/runtime session."
     },
     "worker": {
       "type": "object",
@@ -46,7 +46,7 @@
     "startInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["task"],
+      "required": ["sessionId", "task"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "task": { "type": "string" },
@@ -57,6 +57,7 @@
     "snapshotInput": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["sessionId"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "teamId": { "type": "string" }
@@ -65,6 +66,7 @@
     "readCompactInput": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["sessionId"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "teamId": { "type": "string" }
@@ -73,7 +75,7 @@
     "createTaskInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["title", "description"],
+      "required": ["sessionId", "title", "description"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "teamId": { "type": "string" },
@@ -87,12 +89,12 @@
     "transitionTaskInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["taskId", "status"],
+      "required": ["sessionId", "taskId", "status"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "teamId": { "type": "string" },
         "taskId": { "type": "string" },
-        "status": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "blocked", "in_progress", "completed", "failed"] },
         "workerId": { "type": "string" },
         "evidence": { "type": "object", "additionalProperties": true }
       }
@@ -100,7 +102,7 @@
     "sendMessageInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["from", "to", "body"],
+      "required": ["sessionId", "from", "to", "body"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "teamId": { "type": "string" },
@@ -113,7 +115,7 @@
     "recordReviewGateInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["taskId", "reviewReport"],
+      "required": ["sessionId", "taskId", "reviewReport"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "teamId": { "type": "string" },
@@ -125,7 +127,7 @@
     "recordCompletionGateInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["evidenceMatrix"],
+      "required": ["sessionId", "evidenceMatrix"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "teamId": { "type": "string" },
@@ -136,6 +138,7 @@
     "completeInput": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["sessionId"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "teamId": { "type": "string" },
@@ -156,8 +159,8 @@
     "complete": { "$ref": "#/$defs/completeInput" }
   },
   "examples": [
-    { "sessionId": "h-...", "task": "Approved implementation plan..." },
-    { "sessionId": "h-...", "title": "Worker task", "description": "Implement scoped change" },
-    { "sessionId": "h-...", "taskId": "task-1", "reviewReport": { "verdict": "pass" } }
+    { "sessionId": "<session-id>", "task": "Approved implementation plan..." },
+    { "sessionId": "<session-id>", "title": "Worker task", "description": "Implement scoped change" },
+    { "sessionId": "<session-id>", "taskId": "task-1", "reviewReport": { "verdict": "pass" } }
   ]
 }

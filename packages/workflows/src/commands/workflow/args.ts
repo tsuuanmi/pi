@@ -84,7 +84,7 @@ export function usage(): string {
 	return `Usage:
   pi workflow <verb> [--input '{...}' | --input-file ./payload.json] [--json]
   pi workflow state <skill> <read|write|clear|handoff|doctor> [options]
-  pi workflow <deep-interview|ralplan|team|ultragoal> <action> [--input '{...}' | --input-file ./payload.json] [--json]
+  pi workflow <deep-interview|ralplan|team|ultragoal> <action> (--input '{...}' | --input-file ./payload.json) [--json]
   pi workflow <skill> --help
 
 Workflow verbs:
@@ -116,7 +116,7 @@ State root: PI_HARNESS_STATE_ROOT or <workspace>/.pi/state/harness
 export function skillUsage(skill: WorkflowSkill): string {
 	const manifest = getWorkflowManifest(skill);
 	return `Usage:
-  pi workflow ${skill} <action> [--input '{...}' | --input-file ./payload.json] [--json]
+  pi workflow ${skill} <action> (--input '{...}' | --input-file ./payload.json) [--json]
 
 ${manifest.graphLabel} agent flow:
 ${skillFlowHelp(skill)}

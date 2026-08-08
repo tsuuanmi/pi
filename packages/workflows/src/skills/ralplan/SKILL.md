@@ -13,7 +13,7 @@ Ralplan is Pi's consensus planning workflow. It produces a durable pending-appro
 - Workflow command guide: [references/commands.md](references/commands.md)
 - JSON payload schema for `pi workflow ralplan <action>`: [assets/schema.json](assets/schema.json)
 
-Critical: before running any `pi workflow ralplan <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Do not guess `--input` or `--input-file` fields; select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
+Critical: before running any `pi workflow ralplan <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Every action requires `--input` or `--input-file` with the current `sessionId`; do not guess fields. Select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
 
 ## Boundaries
 
@@ -25,7 +25,7 @@ Critical: before running any `pi workflow ralplan <action>` command, read [refer
 ## Workflow
 
 1. Read active state with `pi workflow state` for `skill: "ralplan"`. If no state exists, initialize it with `pi workflow state` `action: write`: `active: true`, `phase: "planner"`, `data.input` set to the task or spec path. A run ID will be assigned automatically on the first artifact write. For the exact CLI/session/input split, see [State commands](../../state/commands.md).
-2. Read run status with `pi workflow ralplan status`. If resuming an existing run or state appears inconsistent, run `pi workflow ralplan doctor` before writing new artifacts.
+2. Read run status with `pi workflow ralplan status --input '{"sessionId":"<current-session>"}' --json`. If resuming an existing run or state appears inconsistent, run `pi workflow ralplan doctor --input '{"sessionId":"<current-session>"}' --json` before writing new artifacts.
 3. If the explorer pre-planner gate is missing or retrying, run `ralplan_run_agent` with `role: "explorer"`, `stage: "pre-planner"`, and `stageN: 1`; the explorer must persist `context_map` with `pi workflow ralplan record-explorer-gate`.
 4. If the input is a file path, read it. If it is a task, inspect enough context to plan safely.
 5. Run the Planner with the `ralplan_run_agent` tool using `role: "planner"`, `stage: "planner"`, and `stageN: 1`. The role agent must create and persist a planner artifact containing:
@@ -54,7 +54,7 @@ Critical: before running any `pi workflow ralplan <action>` command, read [refer
 10. If workflow state selects `expert-stage`, run `ralplan_run_agent` with `role: "expert"`, `stage: "expert-stage"`, and the relevant artifacts; use the expert decision to revise, approve with caveats, or stop for human input.
 11. Persist the final pending-approval plan with `stage: "final"`. The tool also writes `pending-approval.md`.
 12. Stop and ask for explicit execution approval. Do not execute the plan until the user explicitly approves it.
-13. After explicit approval or rejection, call `pi workflow ralplan approve-plan` to close the gate. Default approved handoff is `target: "ultragoal"`; use `target: "team"` only when coordinated parallel workers are needed, or `target: "stop"` to record approval without starting another workflow.
+13. After explicit approval or rejection, call `pi workflow ralplan approve-plan --input '{"sessionId":"<current-session>","approved":true,"target":"ultragoal"}' --json` to close the gate. Default approved handoff is `target: "ultragoal"`; use `target: "team"` only when coordinated parallel workers are needed, or `target: "stop"` to record approval without starting another workflow.
 14. `pi workflow ralplan approve-plan` enforces the latest critic verdict: it refuses to approve when the latest critic verdict is REJECT (set `overrideCriticVerdict: true` to force approval), and warns when it is ITERATE (e.g. the plan was revised but not re-reviewed by the critic). `pi workflow ralplan doctor` surfaces the same signal as a warning while a plan is pending. Do not approve over a REJECT without an explicit override decision.
 
 ## Final Plan Shape
@@ -82,14 +82,14 @@ Include:
 
 ## Current-Session Command Propagation
 
-- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source) — do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution.
+- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source). Action payloads must include `sessionId`; `--session` applies only to the separate state command.
 - Keep all Ralplan state, plan artifacts, and pending-approval records under one session id for one logical planning run. Do not scatter one run across multiple `.pi/<session-id>` buckets.
 - Role-agent passes (`run-agent`) require a live runtime owner for the current session; a one-shot CLI command without a live owner will fail closed. Run consensus inside an interactive/runtime-owner session.
 
 ## Session-Scoped Isolation
 
 - Ralplan workflow state and plan artifacts are isolated per session. A fresh session starts with no prior plan state by construction.
-- A session id is required (resolved from the active session by the tools; `--session <id>` or `PI_SESSION_ID` for the CLI). There is no global `.pi/` fallback.
+- Every skill action requires `sessionId` in its JSON payload. The separate state command accepts `--session <id>`; skill actions do not use `--session` or `PI_SESSION_ID` fallback, and there is no global `.pi/` fallback.
 
 ## Corrupt-State Recovery
 

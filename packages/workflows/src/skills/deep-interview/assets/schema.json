@@ -34,12 +34,12 @@
   "$defs": {
     "sessionId": {
       "type": "string",
-      "description": "Current Pi session id. Required in agent/runtime use even when the CLI can resolve fallback state."
+      "description": "Current Pi session id. Required by every workflow action; pass the id from the active interactive/runtime session."
     },
     "planQuestionInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["round", "questionText"],
+      "required": ["sessionId", "round", "questionText"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "round": { "type": "number" },
@@ -54,6 +54,7 @@
     "recordAnswerInput": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["sessionId"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "interviewId": { "type": "string" },
@@ -72,7 +73,7 @@
     "recordScoringInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["round", "scores", "ambiguity"],
+      "required": ["sessionId", "round", "scores", "ambiguity"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "interviewId": { "type": "string" },
@@ -88,6 +89,7 @@
     "readCompactInput": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["sessionId"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "lastN": { "type": "number" }
@@ -96,6 +98,7 @@
     "closureCheckInput": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["sessionId"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" }
       }
@@ -103,7 +106,7 @@
     "restateGoalInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["restatedGoal", "confirm"],
+      "required": ["sessionId", "restatedGoal", "confirm"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "restatedGoal": { "type": "string" },
@@ -114,7 +117,7 @@
     "writeSpecInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["spec"],
+      "required": ["sessionId", "spec"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "slug": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
@@ -134,8 +137,8 @@
     "write-spec": { "$ref": "#/$defs/writeSpecInput" }
   },
   "examples": [
-    { "sessionId": "h-...", "round": 1, "questionText": "Which user outcome matters most?" },
-    { "sessionId": "h-...", "round": 1, "scores": { "goal": 0.4, "constraints": 0.2 }, "ambiguity": 0.3 },
-    { "sessionId": "h-...", "slug": "my-spec", "spec": "# Spec\n...", "handoff": "ralplan" }
+    { "sessionId": "<session-id>", "round": 1, "questionText": "Which user outcome matters most?" },
+    { "sessionId": "<session-id>", "round": 1, "scores": { "goal": 0.4, "constraints": 0.2 }, "ambiguity": 0.3 },
+    { "sessionId": "<session-id>", "slug": "my-spec", "spec": "# Spec\n...", "handoff": "ralplan" }
   ]
 }

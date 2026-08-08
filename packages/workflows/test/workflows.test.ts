@@ -159,7 +159,7 @@ describe("workflow runtime", () => {
 
 	it.each([
 		["deep-interview", "Deep Interview agent flow:", "questionText: string (required; exact one-question prompt)"],
-		["ralplan", "Ralplan agent flow:", "stage: planner|architect|critic|revision|expert-stage|final (required)"],
+		["ralplan", "Ralplan agent flow:", "stage: pre-planner|planner|architect|critic|revision|expert-stage|adr|final (required)"],
 		["team", "Team agent flow:", "reviewReport: object (required)"],
 		["ultragoal", "Ultragoal agent flow:", "qualityGate?: object (required for complete)"],
 	])("prints detailed workflow skill help for %s", async (skill, flowHeading, parameter) => {

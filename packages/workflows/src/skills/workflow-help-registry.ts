@@ -33,7 +33,7 @@ export function renderWorkflowCommandsReference(skill: WorkflowSkill): string {
 	const lines = [
 		`# ${help.label} workflow commands`,
 		"",
-		'Use these commands with `--input` JSON objects. For exact payload validation, read `../assets/schema.json` and select the schema under `x-pi-actions["<action>"]`.',
+		'Use these commands with JSON objects passed through `--input` or `--input-file`. Every skill action requires the current interactive/runtime `sessionId`; do not omit it. For exact payload validation, read `../assets/schema.json` and select the schema under `x-pi-actions["<action>"]`.',
 		"",
 		"Command order for agents:",
 		"",
@@ -62,5 +62,5 @@ export function renderWorkflowSkillHelp(skill: WorkflowSkill): string {
 		})
 		.join("\n\n");
 	const docs = help.docs.map((doc) => `  - ${doc}`).join("\n");
-	return `Usage:\n  pi workflow ${help.skill} <action> [--input '{...}' | --input-file ./payload.json] [--json]\n\n${help.label} agent flow:\n${help.agentFlow.map((step, index) => `  ${index + 1}. ${step}`).join("\n")}\n\n${help.label} actions:\n${skillActions}\n\nAction details and parameters:\n${actionDetails}\n\nInput rules:\n  - Commands accept a JSON object with --input or --input-file.\n  - Pass sessionId from the current interactive/runtime session; do not rely on fallback environment state in agents.\n  - Use pi workflow state ${help.skill} read|write|clear|handoff|doctor for envelope state; use the action commands below for workflow-safe merges.\n\nDocs:\n${docs}\n`;
+	return `Usage:\n  pi workflow ${help.skill} <action> (--input '{...}' | --input-file ./payload.json) [--json]\n\n${help.label} agent flow:\n${help.agentFlow.map((step, index) => `  ${index + 1}. ${step}`).join("\n")}\n\n${help.label} actions:\n${skillActions}\n\nAction details and parameters:\n${actionDetails}\n\nInput rules:\n  - Commands accept a JSON object with --input or --input-file.\n  - Every skill action requires sessionId from the current interactive/runtime session; do not rely on fallback environment state in agents.\n  - Use pi workflow state ${help.skill} read|write|clear|handoff|doctor for envelope state; use the action commands below for workflow-safe merges.\n\nDocs:\n${docs}\n`;
 }

@@ -1,16 +1,16 @@
 # Deep Interview workflow commands
 
-Use these commands with `--input` JSON objects. For exact payload validation, read `../assets/schema.json` and select the schema under `x-pi-actions["<action>"]`.
+Use these commands with JSON objects passed through `--input` or `--input-file`. Every skill action requires the current interactive/runtime `sessionId`; do not omit it. For exact payload validation, read `../assets/schema.json` and select the schema under `x-pi-actions["<action>"]`.
 
 Command order for agents:
 
-1. `pi workflow state deep-interview read --session <id> --json` to inspect state.
-2. `pi workflow deep-interview plan-question` before asking each single user-facing question.
-3. `pi workflow deep-interview record-answer` after the user answers.
-4. `pi workflow deep-interview record-scoring` after recording the answer.
-5. `pi workflow deep-interview read-compact` when resuming or budgeting prompt context.
-6. `pi workflow deep-interview closure-check` before final spec writing.
-7. `pi workflow deep-interview restate-goal` after closure passes.
-8. `pi workflow deep-interview write-spec` after the closure and restatement gates pass.
+1. `pi workflow state deep-interview read --session <session-id> --json` to inspect state.
+2. `pi workflow deep-interview plan-question --input '{"sessionId":"<session-id>","round":1,"questionText":"..."}' --json` before asking each single user-facing question.
+3. `pi workflow deep-interview record-answer --input '{"sessionId":"<session-id>","round":1,"customInput":"..."}' --json` after the user answers.
+4. `pi workflow deep-interview record-scoring --input '{"sessionId":"<session-id>","round":1,"scores":{"goal":0.6},"ambiguity":0.3}' --json` after recording the answer.
+5. `pi workflow deep-interview read-compact --input '{"sessionId":"<session-id>"}' --json` when resuming or budgeting prompt context.
+6. `pi workflow deep-interview closure-check --input '{"sessionId":"<session-id>"}' --json` before final spec writing.
+7. `pi workflow deep-interview restate-goal --input '{"sessionId":"<session-id>","restatedGoal":"...","confirm":"Yes"}' --json` after closure passes.
+8. `pi workflow deep-interview write-spec --input '{"sessionId":"<session-id>","spec":"# Spec..."}' --json` after the closure and restatement gates pass.
 
 Always pass the current session id as `sessionId` in action payloads. Do not directly edit `.pi/**` workflow state.

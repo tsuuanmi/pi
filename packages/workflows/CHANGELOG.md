@@ -28,6 +28,10 @@
 - **team**: Resume only interrupted `running` checkpoints; completed and aborted checkpoints are terminal.
 - **help**: Synchronize Team and Ultragoal command reference documents with generated workflow help.
 
+### Fixed
+
+- **commands**: Updated every skill action reference and schema to require the active session id, use executable `--input` examples, and match current stage, status, goal-mode, and blocker values.
+
 ## [0.2.2] - 2026-07-23
 
 ### Breaking Changes

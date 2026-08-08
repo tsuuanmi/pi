@@ -10,7 +10,7 @@
     "runId": { "type": "string" },
     "contextMap": { "type": "object", "additionalProperties": true },
     "recordedBy": { "type": "string" },
-    "stage": { "type": "string", "enum": ["planner", "architect", "critic", "revision", "expert-stage", "adr", "final"] },
+    "stage": { "type": "string", "enum": ["pre-planner", "planner", "architect", "critic", "revision", "expert-stage", "adr", "final"] },
     "stageN": { "type": "number" },
     "artifact": { "type": "string" },
     "plannerSubagentId": { "type": "string" },
@@ -23,12 +23,12 @@
   "$defs": {
     "sessionId": {
       "type": "string",
-      "description": "Current Pi session id. Required in agent/runtime use even when the CLI can resolve fallback state."
+      "description": "Current Pi session id. Required by every workflow action; pass the id from the active interactive/runtime session."
     },
     "recordExplorerGateInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["contextMap"],
+      "required": ["sessionId", "contextMap"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "runId": { "type": "string" },
@@ -39,11 +39,11 @@
     "writeArtifactInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["stage", "stageN", "artifact"],
+      "required": ["sessionId", "stage", "stageN", "artifact"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "runId": { "type": "string" },
-        "stage": { "type": "string", "enum": ["planner", "architect", "critic", "revision", "expert-stage", "adr", "final"] },
+        "stage": { "type": "string", "enum": ["pre-planner", "planner", "architect", "critic", "revision", "expert-stage", "adr", "final"] },
         "stageN": { "type": "number" },
         "artifact": { "type": "string", "description": "Markdown content or readable file path." },
         "plannerSubagentId": { "type": "string" },
@@ -53,6 +53,7 @@
     "statusInput": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["sessionId"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "runId": { "type": "string" }
@@ -61,6 +62,7 @@
     "readCompactInput": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["sessionId"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "runId": { "type": "string" }
@@ -69,6 +71,7 @@
     "doctorInput": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["sessionId"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "runId": { "type": "string" }
@@ -77,6 +80,7 @@
     "approvePlanInput": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["sessionId"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "runId": { "type": "string" },
@@ -96,8 +100,8 @@
     "approve-plan": { "$ref": "#/$defs/approvePlanInput" }
   },
   "examples": [
-    { "sessionId": "h-...", "stage": "planner", "stageN": 1, "artifact": "# Planner pass\n..." },
-    { "sessionId": "h-...", "runId": "ralplan-..." },
-    { "sessionId": "h-...", "approved": true, "target": "ultragoal" }
+    { "sessionId": "<session-id>", "stage": "planner", "stageN": 1, "artifact": "# Planner pass\n..." },
+    { "sessionId": "<session-id>", "runId": "ralplan-..." },
+    { "sessionId": "<session-id>", "approved": true, "target": "ultragoal" }
   ]
 }

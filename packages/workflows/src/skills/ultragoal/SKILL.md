@@ -13,11 +13,11 @@ Ultragoal executes one approved concrete main goal through smaller checkpointed 
 - Workflow command guide: [references/commands.md](references/commands.md)
 - JSON payload schema for `pi workflow ultragoal <action>`: [assets/schema.json](assets/schema.json)
 
-Critical: before running any `pi workflow ultragoal <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Do not guess `--input` or `--input-file` fields; select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
+Critical: before running any `pi workflow ultragoal <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Every action requires `--input` or `--input-file` with the current `sessionId`; do not guess fields. Select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
 
 ## Current-Session Command Propagation
 
-- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source) — do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution.
+- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source). Action payloads must include `sessionId`; `--session` applies only to the separate state command.
 - Keep all Ultragoal state, goal ledger, checkpoint receipts, checkpoint snapshots, and blocker records under one session id for one logical goal run. Do not scatter one run across multiple `.pi/<session-id>` buckets.
 - `ultragoal_spawn_goal_agent` is a guarded spawn tool that spawns an ultragoal worker as an ordinary subagent of the main session. The workflow computes the legal next goal and refuses off-script goal ids or runtime model/tool overrides. The spawn happens in-process in the main session; there is no `pi workflow` command for it.
 
@@ -32,8 +32,8 @@ Critical: before running any `pi workflow ultragoal <action>` command, read [ref
 
 1. Restate the approved goal and acceptance criteria.
 2. Read active state with `pi workflow state ultragoal read`. If no state exists and you have an approved plan, initialize it with `pi workflow state ultragoal write`: `active: true`, `phase: "approved-execution"`, `data.input` set to the plan path or task. For the exact CLI/session/input split, see [State commands](../../state/commands.md).
-3. Create or resume runtime goal state with `pi workflow ultragoal status`, `pi workflow ultragoal read-compact`, and `pi workflow ultragoal create-plan` when no plan exists. The plan keeps one main goal and decomposes execution into smaller task goals.
-4. Start the next runnable task goal with `pi workflow ultragoal start-next` before implementation.
+3. Create or resume runtime goal state with `pi workflow ultragoal status --input '{"sessionId":"<current-session>"}' --json`, `pi workflow ultragoal read-compact --input '{"sessionId":"<current-session>"}' --json`, and `pi workflow ultragoal create-plan --input '{"sessionId":"<current-session>","brief":"approved goal..."}' --json` when no plan exists. The plan keeps one main goal and decomposes execution into smaller task goals.
+4. Start the next runnable task goal with `pi workflow ultragoal start-next --input '{"sessionId":"<current-session>"}' --json` before implementation.
 5. Inspect relevant files before editing.
 6. Make the smallest complete set of changes.
 7. Keep a running checklist internally:
@@ -42,9 +42,9 @@ Critical: before running any `pi workflow ultragoal <action>` command, read [ref
    - verification
    - cleanup
 8. Run required checks and fix failures.
-9. Checkpoint each task goal with `pi workflow ultragoal checkpoint`. Each accepted checkpoint writes a restore snapshot of Ultragoal state. Complete checkpoints require substantive evidence and the full quality gate: `architectReview`, `executorQa`, and `iteration`. Old `executorQa + contractCoverage` top-level gates and free-form `{status}` gates are rejected.
-10. If a later task fails and you need to retry from the last successful task state, use `pi workflow ultragoal restore-checkpoint`. Restore is state-only: it restores Ultragoal plan/workflow state, but never rolls back workspace files.
-11. Use `pi workflow ultragoal record-review-blockers` when review/verification finds blockers that must become durable follow-up work, and `pi workflow ultragoal classify-blocker` only when a `failed`/`blocked` checkpoint is truly human-blocked.
+9. Checkpoint each task goal with `pi workflow ultragoal checkpoint --input '{"sessionId":"<current-session>","goalId":"goal-1","status":"active","evidence":"..."}' --json`. Each accepted checkpoint writes a restore snapshot of Ultragoal state. Complete checkpoints require substantive evidence and the full quality gate: `architectReview`, `executorQa`, and `iteration`. Old `executorQa + contractCoverage` top-level gates and free-form `{status}` gates are rejected.
+10. If a later task fails and you need to retry from the last successful task state, use `pi workflow ultragoal restore-checkpoint --input '{"sessionId":"<current-session>"}' --json`. Restore is state-only: it restores Ultragoal plan/workflow state, but never rolls back workspace files.
+11. Use `pi workflow ultragoal record-review-blockers` with the schema payload when review/verification finds blockers that must become durable follow-up work, and use `pi workflow ultragoal classify-blocker` with the schema payload only when a `failed`/`blocked` checkpoint is truly human-blocked.
 12. Report:
    - changed files
    - verification results

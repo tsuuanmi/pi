@@ -58,11 +58,11 @@ AI can build anything; the hard part is knowing what to build. Single-pass "what
 - Workflow command guide: [references/commands.md](references/commands.md)
 - JSON payload schema for `pi workflow deep-interview <action>`: [assets/schema.json](assets/schema.json)
 
-Critical: before running any `pi workflow deep-interview <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Do not guess `--input` or `--input-file` fields; select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
+Critical: before running any `pi workflow deep-interview <action>` command, read [references/commands.md](references/commands.md) for command order and read [assets/schema.json](assets/schema.json) for the exact JSON payload shape. Every action requires `--input` or `--input-file` with the current `sessionId`; do not guess fields. Select the action schema from `x-pi-actions["<action>"]` and construct payloads from that schema.
 
 ## Tools
 
-Pi has no `ask` tool. Ask each question as a single prose message. For option-bearing questions, present a short numbered option list in the same message, plus "free text". Explain every option in simple terms (what it means, when it fits, and the main tradeoff), then mark **Recommended:** with the best option and a concise reason. After the user responds, record the round with `pi workflow deep-interview record-answer` — `selectedOptions` for option picks, `customInput` for free text.
+Pi has no `ask` tool. Ask each question as a single prose message. For option-bearing questions, present a short numbered option list in the same message, plus "free text". Explain every option in simple terms (what it means, when it fits, and the main tradeoff), then mark **Recommended:** with the best option and a concise reason. After the user responds, record the round with `pi workflow deep-interview record-answer --input` using the current `sessionId` and the schema fields — `selectedOptions` for option picks, `customInput` for free text.
 
 - `pi workflow state` — read/write/clear deep-interview state (`skill: "deep-interview"`). Use `action: "write"` for initialization and envelope-level fields (`active`, `phase`, `restated_goal`, `closure_overrides`). Avoid `pi workflow state write` for mid-interview `state` patches: it shallow-merges `state` and can clobber `rounds`. Use the deep-interview runtime tools below for state-level updates — they merge safely. For the exact CLI/session/input split, see [State commands](../../state/commands.md).
 - `pi workflow deep-interview plan-question` — plan the next targeted question and mark the workflow `waiting_for_answer`.
@@ -152,7 +152,7 @@ Run exactly once after init and before any ambiguity scoring. Lock the **shape**
    > 4. **Free text** — describe the exact topology change in your own words.
    >
    > **Recommended:** choose **Looks right** if the list captures all independent outcomes, because it lets us start clarifying details without reshaping the scope later.
-3. Record the Round 0 answer with `pi workflow deep-interview record-answer` and lock topology by passing the confirmed `topology` object:
+3. Record the Round 0 answer with `pi workflow deep-interview record-answer --input` using the current `sessionId`, and lock topology by passing the confirmed `topology` object:
    ```json
    {
      "status": "confirmed",
@@ -202,7 +202,7 @@ When the next question is for a greenfield interview and is research-oriented, s
 
 #### Step 2b: Ask the question
 
-Plan it with `pi workflow deep-interview plan-question` first, then ask exactly that one question as prose, with the current ambiguity context:
+Plan it with `pi workflow deep-interview plan-question --input` using the current `sessionId` first, then ask exactly that one question as prose, with the current ambiguity context:
 
 > Round {n} | Component: {target} | Targeting: {weakest_dimension} | Why now: {one-sentence rationale} | Ambiguity: {score}%
 >
@@ -332,12 +332,12 @@ Even when ambiguity ≤ threshold, do not treat the math as completion. Run `pi 
 
 #### 4b. Restate gate
 
-Once closure passes, collapse the agreed answers into ONE sentence goal covering every active component, and confirm with a single question: "If someone read only this line, would they reach the same outcome you have in mind?" Options: **Yes, crystallize** / **Adjust wording** / **Missing scope** / free text. Call `pi workflow deep-interview restate-goal` with the candidate line and `confirm`: `"Yes"` crystallizes, `"Adjust"` re-scores with adjusted wording, `"Missing"` adds scope and re-scores. The tool enforces the two-loop cap and persists `restated_goal` (and, on Adjust/Missing, appends to `closure_overrides`) via the safe deep-interview envelope merge — never clobbers `rounds`. On **Adjust**/**Missing**, collect the exact correction with one follow-up, pass it as `adjustment`, route it back through scoring and established-facts maintenance (a correction can change ambiguity), re-run `pi workflow deep-interview closure-check`, then re-ask the restate gate. If the tool reports zero loops remaining without `"Yes"`, return to Phase 2 with a targeted question instead of forcing a goal line.
+Once closure passes, collapse the agreed answers into ONE sentence goal covering every active component, and confirm with a single question: "If someone read only this line, would they reach the same outcome you have in mind?" Options: **Yes, crystallize** / **Adjust wording** / **Missing scope** / free text. Call `pi workflow deep-interview restate-goal --input` with the current `sessionId`, candidate line, and `confirm`: `"Yes"` crystallizes, `"Adjust"` re-scores with adjusted wording, `"Missing"` adds scope and re-scores. The tool enforces the two-loop cap and persists `restated_goal` (and, on Adjust/Missing, appends to `closure_overrides`) via the safe deep-interview envelope merge — never clobbers `rounds`. On **Adjust**/**Missing**, collect the exact correction with one follow-up, pass it as `adjustment`, route it back through scoring and established-facts maintenance (a correction can change ambiguity), re-run `pi workflow deep-interview closure-check`, then re-ask the restate gate. If the tool reports zero loops remaining without `"Yes"`, return to Phase 2 with a targeted question instead of forcing a goal line.
 
 #### Generate and persist the spec
 
 1. Generate the specification using the prompt-safe transcript. If the full transcript or initial context is too large, include the summary plus all concrete decisions, acceptance criteria, unresolved gaps, and ontology snapshots; never overflow the prompt with raw oversized context. Apply `language.instruction` to user-facing spec prose; keep code identifiers, file paths, commands, and JSON/config keys unchanged. Apply the silent self-proofread once to newly generated spec prose.
-2. Persist the final spec with `pi workflow deep-interview write-spec`. Prefer passing the spec markdown inline as `spec`; only if it is too large to pass inline, stage it with `write` to a system temp directory outside the project tree and pass that path — never write scratch specs into the repo or `.pi/`. The spec path resolves to `.pi/<session-id>/specs/deep-interview-<slug>.md`.
+2. Persist the final spec with `pi workflow deep-interview write-spec --input` using the current `sessionId`. Prefer passing the spec markdown inline as `spec`; only if it is too large to pass inline, stage it with `write` to a system temp directory outside the project tree and pass that path — never write scratch specs into the repo or `.pi/`. The spec path resolves to `.pi/<session-id>/specs/deep-interview-<slug>.md`.
 
 ### Phase 5: Execution Bridge
 
@@ -453,14 +453,14 @@ The spec file body is Markdown. Generate it as rendered Markdown (the file conte
 
 ## Current-Session Command Propagation
 
-- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source) — do not rely on `PI_SESSION_ID`/`--session` fallback during skill execution.
+- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source). Action payloads must include `sessionId`; `--session` applies only to the separate state command.
 - Keep all Deep Interview state, active-state, specs, and handoff artifacts under one session id for one logical interview. Do not scatter one interview across multiple `.pi/<session-id>` buckets.
 - Missing current-session propagation is release-blocking: commands that fall back to a different session id will write state the interactive HUD cannot see.
 
 ## Session-Scoped Isolation
 
 - Deep Interview workflow state and specs are isolated per session. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions.
-- A session id is required (resolved from the active session by the tools; `--session <id>` or `PI_SESSION_ID` for the CLI). There is no global `.pi/` fallback.
+- Every skill action requires `sessionId` in its JSON payload. The separate state command accepts `--session <id>`; skill actions do not use `--session` or `PI_SESSION_ID` fallback, and there is no global `.pi/` fallback.
 
 ## Corrupt-State Recovery
 
@@ -469,7 +469,7 @@ The spec file body is Markdown. Generate it as rendered Markdown (the file conte
 
 ## Resume
 
-If interrupted, run `/skill:deep-interview` again. Resume from state via `pi workflow state` `action: "read"` or `pi workflow deep-interview read-compact`; do not edit `.pi` state files directly unless an explicit force override is active. The continuation prompt drives autonomous resume from orchestration status (`waiting_for_answer` → record the user's message; `pending_scoring` → score before the next question; no pending question and ambiguity above threshold → plan + ask one; ambiguity at/below threshold → restate + confirm before `pi workflow deep-interview write-spec`).
+If interrupted, run `/skill:deep-interview` again. Resume from state via `pi workflow state` `action: "read"` or `pi workflow deep-interview read-compact --input` with the current `sessionId`; do not edit `.pi` state files directly unless an explicit force override is active. The continuation prompt drives autonomous resume from orchestration status (`waiting_for_answer` → record the user's message; `pending_scoring` → score before the next question; no pending question and ambiguity above threshold → plan + ask one; ambiguity at/below threshold → restate + confirm before `pi workflow deep-interview write-spec`).
 
 ## Escalation and Stop Conditions
 
