@@ -24,7 +24,7 @@ These are the intended ownership boundaries. If implementation chooses different
 | Project resource loading | `packages/pi/src/settings/settings-manager.ts` and `src/loader/resources.ts` | `packages/pi/docs/app/security.md` |
 | Source metadata and diagnostics | `packages/pi/src/resources/source-info.ts` and `src/resources/diagnostics.ts` | resource-specific loaders |
 | Scoped live registry | `packages/pi/src/runtime/agent-session-services.ts` and `packages/pi/src/subagents/manager.ts` | `src/runtime/agent-session.ts`, `src/api/extension-types.ts` |
-| Durable subagent/task/receipt state | `packages/pi/src/subagents/manager.ts` and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |
+| Durable subagent/task/receipt state | `packages/pi/src/subagents/manager.ts`, `packages/pi/src/subagents/store.ts`, and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |
 | Self-hosting continuity | `pi:workflows` first-party package tools and skills | `packages/workflows/src/harness/*`, `packages/workflows/src/skills/*` |
 | Direct-port adaptation | each porting change owner | this document and code review checklist |
 | Worktree/tmux orchestration | `packages/pi/src/subagents/tmux.ts`, `run-identity.ts`, `tmux-launch.ts`, and `tmux-worker.ts` | Pi subagent tools and threat-model docs |

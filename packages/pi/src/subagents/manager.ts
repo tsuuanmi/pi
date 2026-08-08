@@ -1,6 +1,4 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { appendFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { createHash, randomBytes } from "node:crypto";
 import type {
 	AgentMessage,
 	SubagentAwaitOptions,
@@ -16,7 +14,6 @@ import {
 	type SubagentProgress,
 	SubagentProgressTracker,
 } from "@tsuuanmi/pi-agent";
-import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { type Api, type AssistantMessage, isValidThinkingLevel, type Model, type ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
 import { type AgentProfile, loadAgentProfile } from "#pi/loader/agents/profiles";
@@ -27,7 +24,7 @@ import {
 	createAgentSessionServices,
 } from "#pi/runtime/agent-session-services";
 import { SessionManager } from "#pi/session/manager";
-import { sessionStateDir } from "#pi/session/root";
+import { SubagentStore } from "#pi/subagents/store";
 import { TmuxBackend, type TmuxBackendOptions } from "#pi/subagents/tmux-backend";
 import type {
 	AttachResult,
@@ -82,36 +79,6 @@ function defaultSubagentId(): string {
 	const hh = date.getUTCHours().toString().padStart(2, "0");
 	const min = date.getUTCMinutes().toString().padStart(2, "0");
 	return `subagent-${yyyy}-${mm}-${dd}-${hh}${min}-${randomBytes(2).toString("hex")}`;
-}
-
-async function readJsonObject(path: string): Promise<Record<string, unknown> | undefined> {
-	try {
-		const raw = await readFile(path, "utf8");
-		const parsed = JSON.parse(raw) as unknown;
-		if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
-		throw new Error("JSON file must contain an object");
-	} catch (error) {
-		const err = error as NodeJS.ErrnoException;
-		if (err.code === "ENOENT") return undefined;
-		if (error instanceof SyntaxError) throw new Error(error.message);
-		throw error;
-	}
-}
-
-async function appendJsonlAtomic(path: string, value: Record<string, unknown>): Promise<void> {
-	await withFileMutationQueue(path, async () => {
-		await mkdir(dirname(path), { recursive: true });
-		await appendFile(path, `${JSON.stringify(value)}\n`, "utf8");
-	});
-}
-
-async function writeJsonAtomic(path: string, value: Record<string, unknown>): Promise<void> {
-	await withFileMutationQueue(path, async () => {
-		await mkdir(dirname(path), { recursive: true });
-		const tempPath = `${path}.${process.pid}.${Date.now()}.${randomUUID()}.tmp`;
-		await writeFile(tempPath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-		await rename(tempPath, path);
-	});
 }
 
 async function bindSubagentExtensions(session: AgentSession): Promise<void> {
@@ -258,18 +225,20 @@ function parseModelRef(ref: string): { provider: string; modelId: string } {
 export class SubagentManager implements SubagentManagerContract, SubagentControls {
 	private readonly live = new Map<string, LiveSubagent>();
 	private readonly services: AgentSessionServices;
+	private readonly store: SubagentStore;
 	private readonly tmuxBackend: TmuxBackend;
 	private readonly progressTracker = new SubagentProgressTracker();
 
 	constructor(services: AgentSessionServices, options: SubagentManagerOptions = {}) {
 		this.services = services;
+		this.store = new SubagentStore(services.cwd);
 		this.tmuxBackend = new TmuxBackend(
 			{
 				storageRoot: services.cwd,
-				recordPath: (id, sessionId) => this.recordPath(id, sessionId),
-				read: (id, sessionId) => this.read(id, sessionId),
-				writeRecord: (record, sessionId) => this.writeRecord(record, sessionId),
-				writeTerminal: (record, status, sessionId, extra) => this.writeTerminal(record, status, sessionId, extra),
+				recordPath: (id, sessionId) => this.store.recordPath(id, sessionId),
+				read: (id, sessionId) => this.store.read(id, sessionId),
+				writeRecord: (record, sessionId) => this.store.write(record, sessionId),
+				writeTerminal: (record, status, sessionId, extra) => this.store.terminal(record, status, sessionId, extra),
 			},
 			options.tmux,
 		);
@@ -296,88 +265,12 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 		return this.live.size;
 	}
 
-	private root(sessionId: string): string {
-		if (!sessionId.trim()) throw new Error("subagent records require a session id");
-		return join(sessionStateDir(this.services.cwd, sessionId), "subagents");
-	}
-
-	private recordPath(id: string, sessionId: string): string {
-		return join(this.root(sessionId), id, "record.json");
-	}
-
-	private artifactPath(id: string, sessionId: string): string {
-		return join(this.root(sessionId), id, "artifact.json");
-	}
-
-	private async writeArtifact(record: SubagentRecord, sessionId: string): Promise<void> {
-		const artifactPath = record.artifact_file ?? this.artifactPath(record.id, sessionId);
-		await writeJsonAtomic(artifactPath, {
-			version: 1,
-			subagentId: record.id,
-			status: record.status,
-			result_text: record.result_text,
-			error_text: record.error_text,
-			yield_result: record.yield_result,
-			completed_at: record.completed_at,
-		});
-	}
-
-	private async writeRecord(record: SubagentRecord, sessionId: string): Promise<SubagentRecord> {
-		await writeJsonAtomic(this.recordPath(record.id, sessionId), { ...record });
-		await appendJsonlAtomic(this.indexPath(sessionId), {
-			id: record.id,
-			role: record.role,
-			status: record.status,
-			updated_at: record.updated_at,
-			session_file: record.session_file,
-		});
-		return record;
-	}
-
-	private indexPath(sessionId: string): string {
-		return join(this.root(sessionId), "index.jsonl");
-	}
-
-	private sessionLogDir(sessionId: string): string {
-		return join(this.root(sessionId), "sessions");
-	}
-
-	private async writeTerminal(
-		record: SubagentRecord,
-		status: SubagentStatus,
-		sessionId: string,
-		extra?: Partial<SubagentRecord>,
-	): Promise<SubagentRecord> {
-		const terminalRecord = {
-			...record,
-			...extra,
-			artifact_file: record.artifact_file ?? this.artifactPath(record.id, sessionId),
-			status,
-			updated_at: nowIso(),
-			completed_at: nowIso(),
-		};
-		await this.writeArtifact(terminalRecord, sessionId);
-		return this.writeRecord(terminalRecord, sessionId);
-	}
-
 	async read(id: string, sessionId: string): Promise<SubagentRecord | undefined> {
-		const read = await readJsonObject(this.recordPath(id, sessionId));
-		return read as unknown as SubagentRecord | undefined;
+		return this.store.read(id, sessionId);
 	}
 
 	async list(sessionId: string): Promise<SubagentRecord[]> {
-		let entries: string[];
-		try {
-			entries = await readdir(this.root(sessionId));
-		} catch (error) {
-			const err = error as NodeJS.ErrnoException;
-			if (err.code === "ENOENT") return [];
-			throw error;
-		}
-		const records = await Promise.all(entries.map((entry) => this.read(entry, sessionId).catch(() => undefined)));
-		return records
-			.filter((record): record is SubagentRecord => record !== undefined)
-			.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+		return this.store.list(sessionId);
 	}
 
 	private async resolveRequest(request: SubagentRunRequest): Promise<ResolvedSubagentRequest> {
@@ -411,11 +304,11 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 		const storageSessionId = resolved.storageSessionId ?? resolved.parentSessionId;
 		if (!storageSessionId)
 			throw new Error("subagent spawn requires a session id (storageSessionId or parentSessionId)");
-		const artifactFile = this.artifactPath(id, storageSessionId);
+		const artifactFile = this.store.artifactPath(id, storageSessionId);
 		if (backendKind === "tmux") {
 			return this.tmuxBackend.spawn(id, resolved, storageSessionId, now, artifactFile, hashText(resolved.prompt));
 		}
-		const record = await this.writeRecord(
+		const record = await this.store.write(
 			{
 				id,
 				role: resolved.role,
@@ -510,9 +403,13 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 			? SessionManager.open(request.resumeSessionFile, undefined, record.cwd)
 			: request.persistent === false
 				? SessionManager.inMemory(record.cwd)
-				: SessionManager.create(record.cwd, storageSessionId ? this.sessionLogDir(storageSessionId) : undefined, {
-						id: record.id,
-					});
+				: SessionManager.create(
+						record.cwd,
+						storageSessionId ? this.store.sessionLogDir(storageSessionId) : undefined,
+						{
+							id: record.id,
+						},
+					);
 		// Subagents must not share the parent session's ResourceLoader: a ResourceLoader
 		// caches a single ExtensionRuntime and one set of Extension objects, and
 		// disposing a subagent session invalidates that shared runtime, which would
@@ -550,7 +447,7 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 		}
 		await bindSubagentExtensions(session);
 
-		await this.writeRecord(
+		await this.store.write(
 			{
 				...record,
 				status: "running",
@@ -576,7 +473,7 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 			// prompt() resolved normally but the agent stopped mid-run.
 			if (live?.pauseRequested) {
 				this.progressTracker.markTerminal(record.id, "paused");
-				const pausedRecord = await this.writeRecord(
+				const pausedRecord = await this.store.write(
 					{
 						...((await this.read(record.id, storageSessionId)) ?? record),
 						status: "paused",
@@ -599,7 +496,7 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 			const yieldResult = extractYieldFromMessages(messages);
 			const terminalStatus = errorText ? "failed" : "completed";
 			this.progressTracker.markTerminal(record.id, terminalStatus);
-			const completed = await this.writeTerminal(
+			const completed = await this.store.terminal(
 				(await this.read(record.id, storageSessionId)) ?? record,
 				terminalStatus,
 				storageSessionId,
@@ -619,7 +516,7 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 			const message = error instanceof Error ? error.message : String(error);
 			if (paused) {
 				this.progressTracker.markTerminal(record.id, "paused");
-				const pausedRecord = await this.writeRecord(
+				const pausedRecord = await this.store.write(
 					{
 						...((await this.read(record.id, storageSessionId)) ?? record),
 						status: "paused",
@@ -639,7 +536,7 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 			}
 			const failStatus = signal.aborted ? "cancelled" : "failed";
 			this.progressTracker.markTerminal(record.id, failStatus);
-			const failed = await this.writeTerminal(
+			const failed = await this.store.terminal(
 				(await this.read(record.id, storageSessionId)) ?? record,
 				failStatus,
 				storageSessionId,
@@ -772,7 +669,7 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 		const result: InspectResult = {
 			ok: true,
 			record,
-			artifactPath: record.artifact_file ?? this.artifactPath(id, sessionId),
+			artifactPath: record.artifact_file ?? this.store.artifactPath(id, sessionId),
 		};
 		return record.tmux ? { ...result, ...this.tmuxBackend.inspect(record) } : result;
 	}
@@ -795,7 +692,7 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 		const record = await this.read(id, sessionId);
 		if (!record) return undefined;
 		if (isTerminalStatus(record.status)) return record;
-		return this.writeTerminal(record, "cancelled", sessionId);
+		return this.store.terminal(record, "cancelled", sessionId);
 	}
 
 	/** Tear down the manager: abort all live subagents and clear the live map. Called by RuntimeOwner.stop(). */

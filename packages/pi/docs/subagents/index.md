@@ -2,7 +2,7 @@
 
 Pi ships a Pi-native `SubagentManager` that runs isolated agent sessions as subagents of the current session. It is exposed to extensions as `ctx.subagents` and to the agent through the `subagent_*` lifecycle tools. It owns session creation, durable records, native execution, and tmux controls; it is not the generic multi-agent scheduler. Team coordination uses `@tsuuanmi/pi-orchestrator` through a workflow-owned adapter.
 
-Pi-native control registration lives in `src/subagents/tools.ts`, concrete-manager access in `src/subagents/controls.ts`, and generic agent receipt attachment in `src/subagents/receipts.ts`.
+Pi-native control registration lives in `src/subagents/tools.ts`, concrete-manager access in `src/subagents/controls.ts`, durable record and artifact storage in `src/subagents/store.ts`, and generic agent receipt attachment in `src/subagents/receipts.ts`.
 
 ## Records and durability
 
