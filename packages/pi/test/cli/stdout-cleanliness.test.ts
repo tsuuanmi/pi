@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { ENV_AGENT_DIR } from "#pi/loader/config";
 
-const cliPath = resolve(__dirname, "../../../src/cli.ts");
+const cliPath = resolve(__dirname, "../../src/cli/cli.ts");
 
 const tempDirs: string[] = [];
 
@@ -59,7 +59,7 @@ async function runCli(args: string[]): Promise<{ stdout: string; stderr: string;
 			env: {
 				...process.env,
 				[ENV_AGENT_DIR]: agentDir,
-				TSX_TSCONFIG_PATH: resolve(__dirname, "../../../../tsconfig.json"),
+				TSX_TSCONFIG_PATH: resolve(__dirname, "../../../tsconfig.json"),
 			},
 			stdio: ["ignore", "pipe", "pipe"],
 		});

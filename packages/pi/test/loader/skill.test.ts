@@ -5,8 +5,8 @@ import { loadSkills, loadSkillsFromDir, type Skill } from "#pi/loader/skill";
 import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
 import type { ResolvedResource } from "#pi/resources/types";
 
-const fixturesDir = resolve(__dirname, "../../fixtures/skills");
-const collisionFixturesDir = resolve(__dirname, "../../fixtures/skills-collision");
+const fixturesDir = resolve(__dirname, "../fixtures/skills");
+const collisionFixturesDir = resolve(__dirname, "../fixtures/skills-collision");
 
 const resource = (path: string): ResolvedResource => ({
 	path,

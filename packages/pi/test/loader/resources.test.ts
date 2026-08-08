@@ -29,10 +29,10 @@ function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions
 	return extensions.filter(
 		(extension) =>
 			!extension.path.startsWith("<inline:") &&
-			!extension.path.endsWith("/src/packages/pi/extensions/workflows.ts") &&
-			!extension.path.endsWith("/dist/packages/pi/extensions/workflows.js") &&
-			!extension.path.includes("/pi/src/extensions/workflows.ts") &&
-			!extension.path.includes("/pi/dist/extensions/workflows.js"),
+			!extension.path.endsWith("/src/packages/pi/loader/extensions/workflows.ts") &&
+			!extension.path.endsWith("/dist/packages/pi/loader/extensions/workflows.js") &&
+			!extension.path.includes("/pi/src/loader/extensions/workflows.ts") &&
+			!extension.path.includes("/pi/dist/loader/extensions/workflows.js"),
 	);
 }
 
@@ -184,7 +184,7 @@ Project skill`,
 			);
 
 			const baseTheme = JSON.parse(
-				readFileSync(new URL("../../../../tui/src/theme/dark.json", import.meta.url), "utf-8"),
+				readFileSync(new URL("../../../tui/src/theme/dark.json", import.meta.url), "utf-8"),
 			) as {
 				name: string;
 				vars?: Record<string, string>;
@@ -413,7 +413,7 @@ Project skill content`,
 			);
 			writeFileSync(join(promptsDir, "project.md"), "Project prompt");
 			const themeData = JSON.parse(
-				readFileSync(new URL("../../../../tui/src/theme/dark.json", import.meta.url), "utf-8"),
+				readFileSync(new URL("../../../tui/src/theme/dark.json", import.meta.url), "utf-8"),
 			) as {
 				name: string;
 			};

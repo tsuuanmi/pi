@@ -7,7 +7,7 @@ Rules:
 - Use the test provider helper from `packages/pi/test/helpers/provider.ts`
 - Do not use real provider APIs, real API keys, network calls, or paid tokens
 - Keep these tests CI-safe and deterministic
-- Do not use or extend the legacy `test/unit-harness.ts` path unless a missing capability forces it
+- Use `test/helpers/unit-harness.ts` only when the suite harness lacks a required capability
 
 Organization:
 - Put broad lifecycle and characterization tests directly under `test/suite/`

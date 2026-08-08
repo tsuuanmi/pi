@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const repoRoot = join(import.meta.dirname, "../../../../../");
+const repoRoot = join(import.meta.dirname, "../../../../");
 
 async function readRepoFile(path: string): Promise<string> {
 	return readFile(join(repoRoot, path), "utf8");

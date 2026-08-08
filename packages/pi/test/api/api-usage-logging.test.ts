@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { apiUsageLogPath } from "#pi/api/api-usage-utils";
-import { createHarness } from "#pi-test/unit-harness";
+import { createHarness } from "#pi-test/helpers/unit-harness";
 
 async function waitForFile(path: string): Promise<string> {
 	for (let i = 0; i < 50; i++) {

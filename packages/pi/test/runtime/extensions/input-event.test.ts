@@ -3,7 +3,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
-import { discoverAndLoadExtensions } from "#pi/loader/extensions";
+import { discoverAndLoadExtensions } from "#pi/loader/extensions/loader";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { SessionManager } from "#pi/session/manager";

@@ -10,7 +10,7 @@ import type { ExtensionActions, ExtensionContextActions } from "#pi/api/extensio
 import type { ProviderConfig } from "#pi/api/provider-types";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
 import { AuthStorage } from "#pi/auth/storage";
-import { discoverAndLoadExtensions } from "#pi/loader/extensions";
+import { discoverAndLoadExtensions } from "#pi/loader/extensions/loader";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { createExtensionRuntime } from "#pi/runtime/extensions/api";
 import { ExtensionRunner } from "#pi/runtime/extensions/runner";
