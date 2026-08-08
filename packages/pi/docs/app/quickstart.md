@@ -157,6 +157,6 @@ Use `--mode json` for JSON event output or `--mode rpc` for process integration.
 - [Providers](../runtime/models/providers.md) - authentication and model setup.
 - [Settings](../settings/index.md) - global and project configuration.
 - [Keybindings](../modes/interactive/keybindings.md) - shortcuts and customization.
-- [Pi Packages](../package-manager/packages.md) - install shared extensions, skills, prompts, and themes.
+- [Pi Packages](../package/packages.md) - install shared extensions, skills, prompts, and themes.
 
 Platform notes: Pi supports Linux and macOS. For isolated or automated runs, see [Containerization](containerization.md).

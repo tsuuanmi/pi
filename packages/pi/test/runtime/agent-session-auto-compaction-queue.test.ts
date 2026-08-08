@@ -9,7 +9,7 @@ import { ModelRegistry } from "#pi/loader/model-registry";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { createTestResourceLoader } from "#pi-test/test-utils";
+import { createTestResourceLoader } from "#pi-test/helpers/resource-loader";
 
 vi.mock("#pi/session/compaction", () => ({
 	calculateContextTokens: (usage: {

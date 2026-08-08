@@ -41,14 +41,14 @@ const ignoredDirectories = new Set(["dist", "node_modules"]);
 const internalRules = [
 	{ directory: "packages/pi/src/api", forbidden: ["#pi/runtime/", "#pi/ui/"] },
 	{
-		directory: "packages/pi/src/package-manager",
+		directory: "packages/pi/src/package",
 		forbidden: ["#pi/cli/", "#pi/modes/", "#pi/ui/"],
 	},
 	{
 		directory: "packages/pi/src/subagents",
 		forbidden: ["#pi/cli/", "@tsuuanmi/pi-workflows", "#workflows/"],
 	},
-	{ directory: "packages/pi/src/package-manager/loader.ts", forbidden: ["#pi/index"] },
+	{ directory: "packages/pi/src/package/loader.ts", forbidden: ["#pi/index"] },
 ];
 const workflowManagerCallers = new Set([
 	"packages/workflows/src/subagents/tools.ts",

@@ -1,7 +1,7 @@
 import { basename, extname } from "node:path";
 import type { ExtensionFactory } from "#pi/api/extension-types";
 import { getAgentDir } from "#pi/loader/paths";
-import { DefaultPackageManager } from "#pi/package-manager/package-manager";
+import { DefaultPackageManager } from "#pi/package/manager";
 import type { ResolvedResource } from "#pi/resources/types";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
@@ -22,7 +22,7 @@ export interface PackageCommandContext {
  * module, and calls `handlePackageCommand(args, context)`.
  *
  * Note: this `handlePackageCommand` is the package-command dispatcher contract
- * and is unrelated to the `handlePackageCommand` in `cli/package-manager.ts`
+ * and is unrelated to the `handlePackageCommand` in `cli/package.ts`
  * (the install/remove/update/list handler). Same name, different modules.
  */
 export interface PackageCommandModule {

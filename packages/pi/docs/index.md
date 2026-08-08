@@ -27,7 +27,7 @@ The documentation is organized to mirror the top-level implementation areas in [
 - [`modes/`](modes/) - interactive, print, JSON, and RPC modes.
 - [`network/`](network/) - HTTP proxy and dispatcher configuration.
 - [`output/`](output/) - bounded output buffering, truncation, and sanitization.
-- [`package-manager/`](package-manager/) - Pi package installation, updates, and package resources.
+- [`package/`](package/) - Pi package installation, updates, and package resources.
 - [`resources/`](resources/) - resource types, diagnostics, and source tracking.
 - [`runtime/`](runtime/) - agent-session services, model control, lifecycle events, and telemetry.
 - [`session/`](session/) - session persistence, layout, navigation, and compaction.
@@ -49,7 +49,7 @@ The documentation is organized to mirror the top-level implementation areas in [
 - [Skills](loader/skills/index.md) - Agent Skills for reusable on-demand capabilities.
 - [Prompt templates](loader/prompt-templates.md) - reusable prompts that expand from slash commands.
 - [Themes](ui/theme/index.md) - built-in and custom terminal themes.
-- [Pi packages](package-manager/packages.md) - bundle and share extensions, skills, prompts, and themes.
+- [Pi packages](package/packages.md) - bundle and share extensions, skills, prompts, and themes.
 
 ## Workflows and subagents
 
@@ -78,7 +78,7 @@ Architecture records for these boundaries live in the repository-level [document
 - [Hook architecture](runtime/hooks.md) - package ownership, registration, and lifecycle boundaries.
 - [LSP](tools/lsp/index.md) - Language Server Protocol integration.
 - [Messages](api/messages.md) - agent message types.
-- [Package manager](package-manager/index.md) - Pi package distribution.
+- [Package manager](package/index.md) - Pi package distribution.
 - [Resources](resources/index.md) - resource loading and diagnostics.
 - [Tools](tools/index.md) - built-in tools and custom tool registration.
 - [Command execution](execution/index.md) - shell and command execution boundaries.

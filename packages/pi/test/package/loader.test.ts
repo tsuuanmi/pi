@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { loadPackage } from "#pi/package-manager/loader";
+import { loadPackage } from "#pi/package/loader";
 
 const roots: string[] = [];
 

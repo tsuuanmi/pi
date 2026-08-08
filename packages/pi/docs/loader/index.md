@@ -26,7 +26,7 @@ The loader handles these runtime-facing categories:
 | Themes | `loader/themes.ts` | [Themes](../ui/theme/index.md) |
 | Models | `loader/model-registry.ts` | [Models](../runtime/models/models.md) |
 | Context and prompts | `loader/context.ts` | [Using Pi](../app/usage.md#context-files) |
-| Packages | `loader/package.ts` and `loader/discovery.ts` | [Pi packages](../package-manager/packages.md) |
+| Packages | `package/loader.ts` and `loader/discovery.ts` | [Pi packages](../package/packages.md) |
 
 ## Resolution rules
 

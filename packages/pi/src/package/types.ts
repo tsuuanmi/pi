@@ -1,4 +1,4 @@
-import type { GitSource } from "#pi/package-manager/git";
+import type { GitSource } from "#pi/package/git";
 import type { ResolvedPaths, SourceScope } from "#pi/resources/types";
 import type { SettingsManager } from "#pi/settings/settings-manager";
 

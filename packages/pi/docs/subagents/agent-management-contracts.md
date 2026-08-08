@@ -19,7 +19,7 @@ These are the intended ownership boundaries. If implementation chooses different
 
 | Contract area | Primary owner | Related owners |
 | --- | --- | --- |
-| Resource/discovery ownership and provider precedence | `packages/pi/src/loader/resources.ts` | `src/loader/agents/profiles.ts`, `src/loader/skill.ts`, `src/loader/prompt-templates.ts`, `src/package-manager/package-manager.ts` |
+| Resource/discovery ownership and provider precedence | `packages/pi/src/loader/resources.ts` | `src/loader/agents/profiles.ts`, `src/loader/skill.ts`, `src/loader/prompt-templates.ts`, `src/package/manager.ts` |
 | Agent definition parsing | `packages/pi/src/loader/agents/definitions.ts` | `src/loader/agents/profiles.ts`, bundled role-agent prompt assets if added |
 | Project resource loading | `packages/pi/src/settings/settings-manager.ts` and `src/loader/resources.ts` | `packages/pi/docs/app/security.md` |
 | Source metadata and diagnostics | `packages/pi/src/resources/source-info.ts` and `src/resources/diagnostics.ts` | resource-specific loaders |

@@ -34,7 +34,7 @@ import type {
 	ResourceLoader,
 	ResourceLoaderReloadOptions,
 } from "#pi/loader/types";
-import { DefaultPackageManager } from "#pi/package-manager/package-manager";
+import { DefaultPackageManager } from "#pi/package/manager";
 import type { PathMetadata, ResolvedResource, ResourceType } from "#pi/resources/types";
 import { createExtensionRuntime } from "#pi/runtime/extensions/api";
 import { SettingsManager } from "#pi/settings/settings-manager";

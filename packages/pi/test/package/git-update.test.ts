@@ -11,8 +11,8 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { CommandRunner } from "#pi/package-manager/commands";
-import { DefaultPackageManager } from "#pi/package-manager/package-manager";
+import type { CommandRunner } from "#pi/package/commands";
+import { DefaultPackageManager } from "#pi/package/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
 // Helper to run git commands in a directory

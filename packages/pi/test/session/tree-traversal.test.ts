@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { type CustomEntry, SessionManager } from "#pi/session/manager";
-import { assistantMsg, userMsg } from "#pi-test/test-utils";
+import { assistantMsg, userMsg } from "#pi-test/helpers/messages";
 
 describe("SessionManager append and tree traversal", () => {
 	describe("append operations", () => {

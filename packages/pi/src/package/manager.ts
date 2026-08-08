@@ -4,7 +4,7 @@ import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { isLocalPath, markPathIgnoredByCloudSync, resolvePath } from "@tsuuanmi/pi-agent/node";
 import { maxSatisfying, rcompare, satisfies } from "semver";
 import { CONFIG_DIR_NAME } from "#pi/config";
-import { type GitSource, parseGitUrl } from "#pi/package-manager/git";
+import { type GitSource, parseGitUrl } from "#pi/package/git";
 import {
 	BUNDLED_DEFAULT_PACKAGES,
 	BUNDLED_PACKAGE_SOURCES,
@@ -16,7 +16,7 @@ import {
 	isOfflineModeEnabled,
 	NETWORK_TIMEOUT_MS,
 	UPDATE_CHECK_CONCURRENCY,
-} from "#pi/package-manager/utils";
+} from "#pi/package/utils";
 import { getHomeDir } from "#pi/resources/constants";
 import { addPaths, createResourceTable, type ResourceTable, toResolvedPaths } from "#pi/resources/paths";
 import type { PackageFilter, PathMetadata, ResolvedPaths, SourceScope } from "#pi/resources/types";

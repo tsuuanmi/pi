@@ -4,7 +4,7 @@ Resource loading, diagnostic reporting, and source tracking for extensions, skil
 
 ## Overview
 
-The resource loader provides a unified system for loading and validating resources from package and top-level sources. Package source resolution is owned by `package-manager/loader.ts`; general user and project discovery remains in this module. The loader tracks where resources come from and reports collisions and diagnostics.
+The resource loader provides a unified system for loading and validating resources from package and top-level sources. Package source resolution is owned by `package/loader.ts`; general user and project discovery remains in this module. The loader tracks where resources come from and reports collisions and diagnostics.
 
 ## Resolution Boundary
 

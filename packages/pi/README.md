@@ -377,7 +377,7 @@ Create a package by adding a `pi` key to `package.json`:
 
 Without a `pi` manifest, pi auto-discovers from conventional directories (`extensions/`, `skills/`, `prompts/`, `themes/`).
 
-See [docs/package-manager/packages.md](docs/package-manager/packages.md).
+See [docs/package/packages.md](docs/package/packages.md).
 
 ---
 

@@ -1,7 +1,7 @@
 import { dirname, join } from "node:path";
 import { resolvePath as resolveInput } from "@tsuuanmi/pi-agent/node";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
-import type { MissingSourceAction, PackageManager } from "#pi/package-manager/types";
+import type { MissingSourceAction, PackageManager } from "#pi/package/types";
 import { AGENTS_STANDARD_DIR_NAMES, getHomeDir, TOP_LEVEL_RESOURCE_TYPES } from "#pi/resources/constants";
 import { collectAutoExtensionEntries } from "#pi/resources/discovery";
 import {

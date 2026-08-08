@@ -1,10 +1,8 @@
 import chalk from "chalk";
-import type { ExtensionFactory } from "#pi/api/extension-types";
-import { selectConfig } from "#pi/cli/config-selector";
+import { reportSettingsErrors } from "#pi/cli/settings";
 import { APP_NAME, CONFIG_DIR_NAME } from "#pi/loader/app";
-import { resolveResources } from "#pi/loader/discovery";
 import { getAgentDir } from "#pi/loader/paths";
-import { DefaultPackageManager } from "#pi/package-manager/package-manager";
+import { DefaultPackageManager } from "#pi/package/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
 export type PackageCommand = "install" | "remove" | "update" | "list";
@@ -16,16 +14,6 @@ interface PackageCommandOptions {
 	help: boolean;
 	invalidOption?: string;
 	invalidArgument?: string;
-}
-
-function reportSettingsErrors(settingsManager: SettingsManager, context: string): void {
-	const errors = settingsManager.drainErrors();
-	for (const { scope, error } of errors) {
-		console.error(chalk.yellow(`Warning (${context}, ${scope} settings): ${error.message}`));
-		if (error.stack) {
-			console.error(chalk.dim(error.stack));
-		}
-	}
 }
 
 function getPackageCommandUsage(command: PackageCommand): string {
@@ -152,49 +140,7 @@ function parsePackageCommand(args: string[]): PackageCommandOptions | undefined 
 	};
 }
 
-export interface PackageCommandRuntimeOptions {
-	extensionFactories?: ExtensionFactory[];
-}
-
-export async function handleConfigCommand(
-	args: string[],
-	runtimeOptions: PackageCommandRuntimeOptions = {},
-): Promise<boolean> {
-	if (args[0] !== "config") {
-		return false;
-	}
-
-	const cwd = process.cwd();
-	const agentDir = getAgentDir();
-	void runtimeOptions;
-	const settingsManager = SettingsManager.create(cwd, agentDir);
-	reportSettingsErrors(settingsManager, "config command");
-	const packageManager = new DefaultPackageManager({
-		cwd,
-		agentDir,
-		settingsManager,
-		commandOutput: "inherit",
-	});
-	const resolvedPaths = await resolveResources(packageManager, {
-		cwd,
-		agentDir,
-		settingsManager,
-	});
-
-	await selectConfig({
-		resolvedPaths,
-		settingsManager,
-		cwd,
-		agentDir,
-	});
-
-	process.exit(0);
-}
-
-export async function handlePackageCommand(
-	args: string[],
-	runtimeOptions: PackageCommandRuntimeOptions = {},
-): Promise<boolean> {
+export async function handlePackageCommand(args: string[]): Promise<boolean> {
 	const options = parsePackageCommand(args);
 	if (!options) {
 		return false;
@@ -229,7 +175,6 @@ export async function handlePackageCommand(
 
 	const cwd = process.cwd();
 	const agentDir = getAgentDir();
-	void runtimeOptions;
 	const settingsManager = SettingsManager.create(cwd, agentDir);
 	reportSettingsErrors(settingsManager, "package command");
 

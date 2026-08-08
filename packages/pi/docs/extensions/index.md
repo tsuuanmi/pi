@@ -130,7 +130,7 @@ Additional paths via `settings.json`:
 }
 ```
 
-To share extensions via npm or git as pi packages, see [packages.md](../package-manager/packages.md).
+To share extensions via npm or git as pi packages, see [packages.md](../package/packages.md).
 
 ## Available Imports
 
@@ -156,10 +156,10 @@ Node.js built-ins (`node:fs`, `node:path`, etc.) are also available.
 The host loads an extension in one direction:
 
 ```text
-package-manager -> loader -> extension module -> runtime lifecycle + hooks
+package -> loader -> extension module -> runtime lifecycle + hooks
 ```
 
-- `src/package-manager/` resolves installed package resources only. It does not import or execute extension modules.
+- `src/package/` resolves installed package resources only. It does not import or execute extension modules.
 - `src/loader/extensions/loader.ts` discovers and imports project, user, and package extension modules, and contains bundled built-in extension adapters.
 - `src/runtime/extensions/` creates `ExtensionAPI` instances and owns extension activation, disposal, and registered-tool adaptation.
 - `src/hooks/` owns hook contracts, registration, dispatch, event ordering, transformations, errors, and the agent bridge.

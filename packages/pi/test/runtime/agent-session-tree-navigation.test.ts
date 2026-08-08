@@ -10,7 +10,8 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { API_KEY, createTestSession, type TestSessionContext } from "#pi-test/test-utils";
+import { API_KEY } from "#pi-test/helpers/messages";
+import { createTestSession, type TestSessionContext } from "#pi-test/helpers/session";
 
 describe.skipIf(!API_KEY)("AgentSession tree navigation e2e", () => {
 	let ctx: TestSessionContext;

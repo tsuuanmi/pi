@@ -22,7 +22,7 @@ import { ModelRegistry } from "#pi/loader/model-registry";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { createTestExtensionsResult, createTestResourceLoader } from "#pi-test/test-utils";
+import { createTestExtensionsResult, createTestResourceLoader } from "#pi-test/helpers/resource-loader";
 
 // Mock stream that mimics AssistantMessageEventStream
 class MockAssistantStream extends EventStream<AssistantMessageEvent, AssistantMessage> {

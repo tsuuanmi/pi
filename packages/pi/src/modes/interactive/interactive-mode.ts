@@ -55,7 +55,7 @@ import type {
 } from "#pi/loader/extensions/index";
 import { configureHttpDispatcher } from "#pi/network/http-dispatcher";
 import type { TruncationResult } from "#pi/output/truncation";
-import { parseGitUrl } from "#pi/package-manager/git";
+import { parseGitUrl } from "#pi/package/git";
 import type { SourceInfo } from "#pi/resources/source-info";
 import type { AgentSession } from "#pi/runtime/agent-session";
 import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";

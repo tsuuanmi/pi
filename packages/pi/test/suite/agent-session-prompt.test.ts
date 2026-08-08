@@ -9,8 +9,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import { createSyntheticSourceInfo } from "#pi/resources/source-info";
 import { testAssistantMessage, testToolCall } from "#pi-test/helpers/provider";
+import { createTestResourceLoader } from "#pi-test/helpers/resource-loader";
 import { createHarness, getMessageText, type Harness } from "#pi-test/suite/harness";
-import { createTestResourceLoader } from "#pi-test/test-utils";
 
 describe("AgentSession prompt characterization", () => {
 	const harnesses: Harness[] = [];

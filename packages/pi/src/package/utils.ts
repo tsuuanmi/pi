@@ -2,7 +2,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { valid, validRange } from "semver";
-import type { BundledPackageName } from "#pi/package-manager/types";
+import type { BundledPackageName } from "#pi/package/types";
 import type { PackageSource } from "#pi/settings/settings-manager";
 
 export const NETWORK_TIMEOUT_MS = 10000;

@@ -20,7 +20,8 @@ import { AgentSession } from "#pi/runtime/agent-session";
 import type { AgentSessionEvent } from "#pi/runtime/session/types";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { API_KEY, createTestResourceLoader } from "#pi-test/test-utils";
+import { API_KEY } from "#pi-test/helpers/messages";
+import { createTestResourceLoader } from "#pi-test/helpers/resource-loader";
 
 describe.skipIf(!API_KEY)("AgentSession compaction e2e", () => {
 	let session: AgentSession;

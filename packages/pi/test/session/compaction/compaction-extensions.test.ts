@@ -17,7 +17,7 @@ import { AgentSession } from "#pi/runtime/agent-session";
 import { createExtensionRuntime } from "#pi/runtime/extensions/api";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
-import { createTestResourceLoader } from "#pi-test/test-utils";
+import { createTestResourceLoader } from "#pi-test/helpers/resource-loader";
 
 const API_KEY = process.env.ANTHROPIC_OAUTH_TOKEN || process.env.ANTHROPIC_API_KEY;
 

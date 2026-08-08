@@ -80,14 +80,15 @@ packages/pi/src/
   modes/                 # interactive, print, JSON, and RPC modes
   network/               # HTTP transport configuration
   output/                # output buffering, sanitization, and truncation
-  package-manager/       # package discovery, installation, and diagnostics
+  package/               # package discovery, installation, and diagnostics
   resources/              # resource records and diagnostics
   runtime/                # agent-session services, context, prompts, and stats
   session/                # session persistence, layout, and compaction
   settings/               # settings and keybinding management
   subagents/              # subagent orchestration and tmux workers
   tools/                  # built-in tools and LSP support
-  ui/                     # interactive components and package-manager UI
+  ui/                     # interactive components
+    package/              # package configuration UI
 ```
 
 See [Application flow](index.md) for the startup sequence and [Resource loader](../loader/index.md) for filesystem and package discovery boundaries.

@@ -65,8 +65,8 @@ export {
 	runPrintMode,
 	runRpcMode,
 } from "#pi/modes/index";
-export { DefaultPackageManager } from "#pi/package-manager/package-manager";
-export type { PackageManager, ProgressCallback, ProgressEvent } from "#pi/package-manager/types";
+export { DefaultPackageManager } from "#pi/package/manager";
+export type { PackageManager, ProgressCallback, ProgressEvent } from "#pi/package/types";
 export { createSyntheticSourceInfo } from "#pi/resources/source-info";
 export type { PathMetadata, ResolvedPaths, ResolvedResource } from "#pi/resources/types";
 export { AgentSession } from "#pi/runtime/agent-session";

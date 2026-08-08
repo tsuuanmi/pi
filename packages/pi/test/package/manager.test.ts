@@ -5,8 +5,8 @@ import { join, relative } from "node:path";
 import { PassThrough } from "node:stream";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveResources } from "#pi/loader/discovery";
-import { DefaultPackageManager } from "#pi/package-manager/package-manager";
-import type { ProgressEvent } from "#pi/package-manager/types";
+import { DefaultPackageManager } from "#pi/package/manager";
+import type { ProgressEvent } from "#pi/package/types";
 import type { ResolvedResource } from "#pi/resources/types";
 import { SettingsManager } from "#pi/settings/settings-manager";
 

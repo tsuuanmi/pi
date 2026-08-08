@@ -4,7 +4,7 @@ import type { EventBus } from "#pi/hooks/event-bus";
 import type { AgentProfileLoadResult } from "#pi/loader/agents/definitions";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import type { Skill } from "#pi/loader/skill";
-import type { CommandOutput } from "#pi/package-manager/types";
+import type { CommandOutput } from "#pi/package/types";
 import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
 import type { PathMetadata } from "#pi/resources/types";
 import type { SettingsManager } from "#pi/settings/settings-manager";

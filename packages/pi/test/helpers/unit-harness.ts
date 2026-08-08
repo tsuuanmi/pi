@@ -39,7 +39,7 @@ import {
 	type CreateTestExtensionsResultInput,
 	createTestExtensionsResult,
 	createTestResourceLoader,
-} from "#pi-test/test-utils";
+} from "#pi-test/helpers/resource-loader";
 
 // ============================================================================
 // Test model
