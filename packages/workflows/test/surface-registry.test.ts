@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { registerWorkflows, type WorkflowHost } from "#workflows/register";
+import type { WorkflowHost } from "#workflows/extension";
+import workflowExtension from "#workflows/extension";
 import { PI_WORKFLOW_SKILLS } from "#workflows/registry/workflow-manifest";
 import { getWorkflowSkillHelp, renderWorkflowCommandsReference } from "#workflows/skills/workflow-help-registry";
 import {
@@ -10,7 +11,7 @@ import {
 	WORKFLOW_SKILL_SURFACES,
 	WORKFLOW_TOOL_SURFACES,
 } from "#workflows/skills/workflow-surface-registry";
-import { registerWorkflowTools } from "#workflows/tools/workflow-tools";
+import { registerWorkflowTools } from "#workflows/tools";
 
 describe("workflow surface registry", () => {
 	it("accepts repeated skill owners across multiple tool surfaces", () => {
@@ -109,7 +110,7 @@ describe("workflow surface registry", () => {
 				registeredHooks.push(event);
 			},
 		};
-		registerWorkflows(host);
+		workflowExtension(host);
 
 		expect(registeredTools.slice().sort()).toEqual(WORKFLOW_TOOL_SURFACES.map((tool) => tool.toolName).sort());
 		expect(registeredHooks).toEqual([

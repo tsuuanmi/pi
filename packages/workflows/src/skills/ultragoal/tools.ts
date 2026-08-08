@@ -5,7 +5,7 @@ import { expectedNextRoleForSkill } from "#workflows/registry/transition-registr
 import { getUltragoalStatus } from "#workflows/skills/ultragoal/runtime";
 import { requireSubagentManager } from "#workflows/subagents/manager";
 import { assertAgentThinkingLevel } from "#workflows/subagents/thinking-level";
-import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
+import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools";
 
 const ultragoalSpawnGoalAgentSchema = Type.Object({
 	goalId: Type.String({ description: "Goal id to assign to the subagent." }),

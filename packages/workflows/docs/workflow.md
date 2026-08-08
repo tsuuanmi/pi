@@ -44,7 +44,7 @@ Workflows expose two independent host-facing surfaces. They are adapters over th
 | Surface | Entry point | Caller and context | Return contract |
 |---------|-------------|--------------------|-----------------|
 | CLI commands | `src/commands/workflow.ts` and `src/commands/workflow/` | User, shell script, CI, or recovery process. Receives argv, a working directory, and session-scoped input. | `status`, `stdout`, and `stderr`; suitable for scripting and machine-readable `--json` output. |
-| Model-visible tools | `src/register.ts`, `src/tools/workflow-tools.ts`, and skill-owned `tools.ts` modules | The model during an interactive Pi session. Receives typed parameters, `WorkflowContext`, cancellation, and an optional host subagent manager. | `AgentToolResult` content and structured workflow receipts. |
+| Model-visible tools | `src/extension.ts`, `src/tools.ts`, and skill-owned `tools.ts` modules | The model during an interactive Pi session. Receives typed parameters, `WorkflowContext`, cancellation, and an optional host subagent manager. | `AgentToolResult` content and structured workflow receipts. |
 
 The normal call paths are:
 
@@ -66,7 +66,7 @@ Boundary rules:
 - Tools own model-facing schemas, in-session context, cancellation, receipts, and interactive orchestration or subagent actions.
 - Shared workflow implementation belongs below these adapters. If a command and a tool need the same behavior, they call a shared runtime or skill function; they do not call or shell out to each other.
 - A command may route to a live `RuntimeOwner` through workflow RPC or use a no-owner fallback. That is runtime communication, not a tool invocation.
-- `src/tools/workflow-tools.ts` is a registration aggregator and host contract, not a second workflow runtime. Skill-specific tool behavior lives under `src/skills/*/tools.ts`.
+- `src/tools.ts` is the workflow tool contract and registration aggregator, not a second workflow runtime. Skill-specific tool behavior lives under `src/skills/*/tools.ts`.
 
 Use `pi workflow ...` for external control-plane operations and scripting. Use model-visible tools for actions that must run inside the current Pi session, especially guarded orchestration and subagent work.
 
@@ -178,7 +178,7 @@ Team execution tools read the session id from `ctx.sessionManager.getSessionId()
 
 ## HUD visibility for command-created sessions
 
-The interactive status line reads session-scoped workflow active state (`.pi/<session-id>/workflows/active-state.json`) on a 1s refresh and renders the HUD for the current interactive session only. Workflow HUD synchronization is registered by `@tsuuanmi/pi-workflows/register` through `@tsuuanmi/pi-tui`; the status line is the single source of truth.
+The interactive status line reads session-scoped workflow active state (`.pi/<session-id>/workflows/active-state.json`) on a 1s refresh and renders the HUD for the current interactive session only. The package extension registers workflow HUD synchronization through `@tsuuanmi/pi-workflows/extension` and `@tsuuanmi/pi-tui`; the status line is the single source of truth.
 
 Behavior:
 - Only the active/attached interactive session shows its own workflow in the HUD.

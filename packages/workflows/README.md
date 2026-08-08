@@ -262,7 +262,7 @@ Key seams for contributors:
 
 - **Deferred-seam registry** (`runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
 - **`validateReceiptFamilyConsistency`** (`runtime/receipt-rules.ts`): a write-path guard inside `mutateRuntimeSession` that rejects receipts whose post-state lifecycle contradicts their family target. It throws before any write so a contradiction leaves zero orphan events/receipts/state. Conservative and pluggable; future receipt families register rules in `receiptFamilyConsistencyRules`.
-- **HUD rendering**: per-skill HUD builders live in the owning skill folders (`deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts`). Workflow HUD synchronization is registered by `@tsuuanmi/pi-workflows/register` through `@tsuuanmi/pi-tui`; workflow mirroring remains session-scoped because the status line reads active state directly.
+- **HUD rendering**: per-skill HUD builders live in the owning skill folders (`deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts`). Workflow HUD synchronization is registered by `@tsuuanmi/pi-workflows/extension` through `@tsuuanmi/pi-tui`; workflow mirroring remains session-scoped because the status line reads active state directly.
 
 ### Session Layout
 
@@ -312,7 +312,7 @@ type RalplanStage = "planner" | "architect" | "critic" | "revision" | "adr" | "f
 
 ## Public API
 
-The package entry point re-exports the workflow commands, the extension entry point, and the full harness runtime modules:
+The package entry point re-exports the workflow commands and full harness runtime modules. The package manifest exposes `src/extension.ts` as the Pi extension entry point:
 
 ```typescript
 import {
@@ -322,14 +322,14 @@ import {
 } from "@tsuuanmi/pi-workflows";
 ```
 
-`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools/workflow-tools`. It also exports pure team-to-orchestrator mapping helpers, workflow-owned checkpoint, event, and role-receipt stores, role-batch builders, and explicit fresh/resume execution boundaries. Pi hosts bundled workflow integration through `@tsuuanmi/pi-workflows/register`.
+`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools`. It also exports pure team-to-orchestrator mapping helpers, workflow-owned checkpoint, event, and role-receipt stores, role-batch builders, and explicit fresh/resume execution boundaries. Pi loads the bundled workflow extension from the package manifest; `@tsuuanmi/pi-workflows/extension` is the package host adapter.
 
 Subpath exports:
 
 - `@tsuuanmi/pi-workflows/hooks` — workflow extension-hook registration for custom hosts.
-- `@tsuuanmi/pi-workflows/register` — bundled workflow integration registration for Pi hosts.
+- `@tsuuanmi/pi-workflows/extension` — workflow tool and hook registration adapter for Pi hosts.
 - `@tsuuanmi/pi-workflows/commands/workflow` — the public `pi workflow` command entry, including `pi workflow state`.
-- `@tsuuanmi/pi-workflows/tools/workflow-tools` — workflow tool registration helper for custom hosts.
+- `@tsuuanmi/pi-workflows/tools` — workflow tool registration helper for custom hosts.
 - `@tsuuanmi/pi-workflows/runtime/*` — individual harness runtime modules (sessions, leases, RPC, GC, mutation, storage, receipt rules, etc.).
 
 See `src/index.ts` for the complete barrel.

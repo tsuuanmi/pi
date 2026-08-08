@@ -17,7 +17,7 @@ import { assertRalplanStage, assertSafePathComponent } from "#workflows/state/st
 import { defaultWorkflowId, readWorkflowState } from "#workflows/state/workflow-state";
 import { requireSubagentManager } from "#workflows/subagents/manager";
 import { assertAgentThinkingLevel } from "#workflows/subagents/thinking-level";
-import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
+import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools";
 
 const ralplanRunAgentSchema = Type.Object({
 	role: Type.Optional(

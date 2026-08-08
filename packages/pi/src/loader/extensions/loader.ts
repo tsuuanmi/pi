@@ -8,7 +8,6 @@ import { createRequire } from "node:module";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import { registerWorkflows } from "@tsuuanmi/pi-workflows/register";
 import { createJiti } from "jiti/static";
 import type {
 	Extension,
@@ -28,13 +27,12 @@ import { registerSubagentControls } from "#pi/subagents/tools";
 
 const require = createRequire(import.meta.url);
 
-function builtinWorkflowsExtension(pi: ExtensionAPI): void {
-	registerWorkflows(pi);
+function builtinSubagentControlsExtension(pi: ExtensionAPI): void {
 	registerSubagentControls(pi);
 }
 
 export function getBuiltinExtensionFactories(): ExtensionFactory[] {
-	return [builtinWorkflowsExtension];
+	return [builtinSubagentControlsExtension];
 }
 
 /** Get aliases for jiti extension imports. */

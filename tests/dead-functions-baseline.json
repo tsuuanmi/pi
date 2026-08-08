@@ -50,21 +50,87 @@
 			"kind": "exported"
 		},
 		{
+			"key": "packages/pi/src/api/tool-types.ts::defineTool",
+			"file": "packages/pi/src/api/tool-types.ts",
+			"name": "defineTool",
+			"kind": "exported"
+		},
+		{
 			"key": "packages/pi/src/cli/launch-tmux.ts::buildTmuxUnavailableReceipt",
 			"file": "packages/pi/src/cli/launch-tmux.ts",
 			"name": "buildTmuxUnavailableReceipt",
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/package-manager/extensions/hooks/event-types.ts::isGlobToolResult",
-			"file": "packages/pi/src/package-manager/extensions/hooks/event-types.ts",
+			"key": "packages/pi/src/hooks/events.ts::isBashToolResult",
+			"file": "packages/pi/src/hooks/events.ts",
+			"name": "isBashToolResult",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/hooks/events.ts::isEditToolResult",
+			"file": "packages/pi/src/hooks/events.ts",
+			"name": "isEditToolResult",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/hooks/events.ts::isFindToolResult",
+			"file": "packages/pi/src/hooks/events.ts",
+			"name": "isFindToolResult",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/hooks/events.ts::isGlobToolResult",
+			"file": "packages/pi/src/hooks/events.ts",
 			"name": "isGlobToolResult",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/hooks/events.ts::isGrepToolResult",
+			"file": "packages/pi/src/hooks/events.ts",
+			"name": "isGrepToolResult",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/hooks/events.ts::isLsToolResult",
+			"file": "packages/pi/src/hooks/events.ts",
+			"name": "isLsToolResult",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/hooks/events.ts::isReadToolResult",
+			"file": "packages/pi/src/hooks/events.ts",
+			"name": "isReadToolResult",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/hooks/events.ts::isToolCallEventType",
+			"file": "packages/pi/src/hooks/events.ts",
+			"name": "isToolCallEventType",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/hooks/events.ts::isWriteToolResult",
+			"file": "packages/pi/src/hooks/events.ts",
+			"name": "isWriteToolResult",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/loader/discovery.ts::resolveLocalResources",
+			"file": "packages/pi/src/loader/discovery.ts",
+			"name": "resolveLocalResources",
 			"kind": "exported"
 		},
 		{
 			"key": "packages/pi/src/modes/output-guard.ts::isStdoutTakenOver",
 			"file": "packages/pi/src/modes/output-guard.ts",
 			"name": "isStdoutTakenOver",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/src/runtime/extensions/tools.ts::wrapRegisteredTool",
+			"file": "packages/pi/src/runtime/extensions/tools.ts",
+			"name": "wrapRegisteredTool",
 			"kind": "exported"
 		},
 		{
@@ -89,6 +155,18 @@
 			"key": "packages/pi/test/helpers/provider.ts::testText",
 			"file": "packages/pi/test/helpers/provider.ts",
 			"name": "testText",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/pi/test/helpers/unit-harness.ts::createHarnessWithExtensions",
+			"file": "packages/pi/test/helpers/unit-harness.ts",
+			"name": "createHarnessWithExtensions",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/web-runtime/src/mcp/codec.ts::toJsonSchema",
+			"file": "packages/web-runtime/src/mcp/codec.ts",
+			"name": "toJsonSchema",
 			"kind": "exported"
 		},
 		{

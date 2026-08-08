@@ -7,7 +7,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | Source path | Purpose | Docs |
 |-------------|---------|------|
 | `src/index.ts` | Public package barrel. | [README Public API](../README.md#public-api) |
-| `src/register.ts` | Bundled Pi workflow integration registration. | [extensions/workflows.md](extensions/workflows.md) |
+| `src/extension.ts` | Pi package extension adapter and workflow registration composition. | [extensions/workflows.md](extensions/workflows.md) |
 | `src/hooks.ts` | Workflow hook registration, HUD refresh, and mutation policy guards. | [extensions/workflows.md](extensions/workflows.md) |
 | `src/agents/` | Bundled markdown agent profiles. | [agents/agents.md](agents/agents.md) |
 | `src/artifacts/` | Durable artifact writing and receipt helpers. | [artifacts/artifacts.md](artifacts/artifacts.md) |
@@ -25,7 +25,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | `src/skills/ultragoal/` | Ultragoal `SKILL.md` plus goal execution runtime, artifacts, obstacles, quality gates, receipts, help/surface metadata, tools, HUD, and compact view. | [skills/ultragoal/index.md](skills/ultragoal/index.md) |
 | `src/state/` | Active workflow state, state validation/writes, workflow ids, and base state models. | [state/state.md](state/state.md) |
 | `src/subagents/` | Generic subagent lifecycle tools, manager access, and execution-level validation. | [subagents/subagents.md](subagents/subagents.md) |
-| `src/tools/` | Model-visible workflow tool registration helpers and host contracts; it does not invoke CLI commands. | [extensions/workflows.md](extensions/workflows.md) |
+| `src/tools.ts` | Model-visible workflow tool definitions, registration helpers, and host contracts; it does not invoke CLI commands. | [extensions/workflows.md](extensions/workflows.md) |
 
 ## Generated Package Assets
 

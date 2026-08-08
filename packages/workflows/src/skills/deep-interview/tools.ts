@@ -17,7 +17,7 @@ import type { DeepInterviewAdvisoryMetadata, DeepInterviewRoundRecord } from "#w
 import { assertSafePathComponent } from "#workflows/state/state-schema";
 import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/state/state-writer";
 import { activeRalplanRunId, defaultWorkflowId } from "#workflows/state/workflow-state";
-import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
+import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools";
 
 const planQuestionSchema = Type.Object({
 	interviewId: Type.Optional(Type.String()),

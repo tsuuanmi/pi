@@ -31,6 +31,7 @@
 
 ### Changed
 
+- **packages**: Workflow tools and hooks are now loaded from the bundled `pi:workflows` package manifest instead of a Pi-specific built-in registration path.
 - **models**: Removed the external ChatGPT Web HTTP bridge and added first-party browser-runtime infrastructure without HTTP fallback.
 - **web-runtime**: Keep one isolated visible Chromium session per browser account and bound concurrent Temporary Chat turns to five tabs.
 - **web-runtime**: Route private browser tool calls through the official MCP SDK without exposing an HTTP, socket, or daemon transport.

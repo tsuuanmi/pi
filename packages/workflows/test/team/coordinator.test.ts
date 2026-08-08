@@ -13,7 +13,7 @@ import {
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { teamReceiptsPath } from "#workflows/session/session-layout";
-import type { WorkflowContext } from "#workflows/tools/workflow-tools";
+import type { WorkflowContext } from "#workflows/tools";
 import { createFakeManager } from "#workflows-test/team/fakes";
 
 const sessionId = "team-coordinator-session";

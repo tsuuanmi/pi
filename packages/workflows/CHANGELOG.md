@@ -8,16 +8,17 @@
 - **commands**: Removed the `@tsuuanmi/pi-workflows/commands/state-command` compatibility export; use `commands/workflow`.
 - **quality-gate**: CLI validation now accepts Node commands only; alternate-runtime command support was removed.
 - **exports**: Renamed workflow runtime and command implementation modules; direct runtime imports now use `runtime/fallback-commands` and `runtime/lifecycle`.
+- **exports**: Replaced `@tsuuanmi/pi-workflows/register` and `@tsuuanmi/pi-workflows/tools/workflow-tools` with `@tsuuanmi/pi-workflows/extension` and `@tsuuanmi/pi-workflows/tools`.
 
 ### Added
 
 - **extensions**: Added `@tsuuanmi/pi-workflows/hooks` with the focused `registerWorkflowHooks()` registrar alongside `registerWorkflowTools()`.
-- **extensions**: Added `@tsuuanmi/pi-workflows/register` as the bundled Pi workflow integration entry point.
 - **team**: Replaced direct team subagent spawning with explicit `team_execute` and `team_resume` orchestrator operations; role-task batching, fresh/resume checkpoint control, separate execution state, workflow-owned persistence, and no fallback execution path are enforced.
 
 ### Changed
 
-- **extensions**: Split workflow tool registration and workflow hook registration into focused modules; `registerWorkflows()` now composes both registrars.
+- **extensions**: The package manifest now exposes `src/extension.ts` as the extension adapter; Pi loads workflow tools and hooks through the package.
+- **extensions**: Split workflow tool registration and workflow hook registration into focused modules; the package extension now composes both registrars.
 - **team**: Moved manager acquisition into the Team agent adapter and added a fail-closed boundary check for direct `SubagentManager` calls.
 - **team**: Split task, status, event, receipt, checkpoint, and event-sink responsibilities into focused workflow-owned modules; no mixed adapter module is retained.
 - **team**: Team orchestrator adapter string fields now reject surrounding whitespace instead of normalizing values.

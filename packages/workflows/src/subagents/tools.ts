@@ -4,7 +4,7 @@ import { type Static, Type } from "typebox";
 import { workflowReceiptWithStructuredReceipt } from "#workflows/artifacts/artifacts";
 import { requireSubagentManager } from "#workflows/subagents/manager";
 import { assertAgentThinkingLevel } from "#workflows/subagents/thinking-level";
-import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
+import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools";
 
 const subagentSpawnSchema = Type.Object({
 	agent: Type.Optional(

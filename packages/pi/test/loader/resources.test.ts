@@ -25,8 +25,10 @@ const BUILT_IN_SUBAGENT_TOOLS = new Set([
 
 const BUILT_IN_WORKFLOW_AGENT_TOOLS = new Set(["team_execute", "team_resume", "ultragoal_spawn_goal_agent"]);
 
-function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions: T[]): T[] {
-	return extensions.filter((extension) => !extension.path.startsWith("<inline:"));
+function withoutBuiltinExtensions<T extends { path: string; sourceInfo: { source: string } }>(extensions: T[]): T[] {
+	return extensions.filter(
+		(extension) => !extension.path.startsWith("<inline:") && extension.sourceInfo.source !== "pi:workflows",
+	);
 }
 
 describe("DefaultResourceLoader", () => {
@@ -67,6 +69,12 @@ describe("DefaultResourceLoader", () => {
 			expect(skillNames.has("ultragoal")).toBe(true);
 
 			const extensionsResult = loader.getExtensions();
+			const workflowExtensions = extensionsResult.extensions.filter(
+				(extension) => extension.sourceInfo.source === "pi:workflows",
+			);
+			expect(workflowExtensions).toHaveLength(1);
+			expect(workflowExtensions[0]?.path).toMatch(/extension\.(js|ts)$/);
+
 			const sessionManager = SessionManager.inMemory();
 			const authStorage = AuthStorage.create(join(tempDir, "auth.json"));
 			const modelRegistry = ModelRegistry.create(authStorage);
@@ -228,7 +236,7 @@ Project skill`,
 			await loader.reload();
 
 			const extensionsResult = loader.getExtensions();
-			const loadedExtensions = withoutBuiltInWorkflowExtensions(extensionsResult.extensions);
+			const loadedExtensions = withoutBuiltinExtensions(extensionsResult.extensions);
 			expect(loadedExtensions).toHaveLength(1);
 			expect(extensionsResult.errors).toEqual([]);
 
@@ -275,7 +283,7 @@ Project skill`,
 			await loader.reload();
 
 			const extensionsResult = loader.getExtensions();
-			expect(withoutBuiltInWorkflowExtensions(extensionsResult.extensions)).toHaveLength(2);
+			expect(withoutBuiltinExtensions(extensionsResult.extensions)).toHaveLength(2);
 			expect(extensionsResult.errors.some((e) => e.error.includes('Command "/deploy" conflicts'))).toBe(false);
 
 			const sessionManager = SessionManager.inMemory();
@@ -422,7 +430,7 @@ Project skill content`,
 				true,
 			);
 			expect(loader.getAgentsFiles().agentsFiles.some((file) => file.path === join(cwd, "AGENTS.md"))).toBe(true);
-			expect(withoutBuiltInWorkflowExtensions(loader.getExtensions().extensions)).toHaveLength(1);
+			expect(withoutBuiltinExtensions(loader.getExtensions().extensions)).toHaveLength(1);
 			expect(loader.getExtensions().errors).toEqual([]);
 			expect(loader.getSkills().skills.some((skill) => skill.name === "project-skill")).toBe(true);
 			expect(loader.getPrompts().prompts.some((prompt) => prompt.name === "project")).toBe(true);

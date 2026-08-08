@@ -108,6 +108,14 @@ describe("DefaultPackageManager", () => {
 	describe("resolve", () => {
 		it("should include bundled first-party package defaults when no sources configured", async () => {
 			const result = await resolveAll();
+			expect(
+				result.extensions.some(
+					(r) =>
+						r.metadata.source === "pi:workflows" &&
+						r.enabled &&
+						(pathEndsWith(r.path, "extension.ts") || pathEndsWith(r.path, "extension.js")),
+				),
+			).toBe(true);
 			expect(result.agents.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
 			expect(result.commands.some((r) => r.metadata.source === "pi:workflows" && r.enabled)).toBe(true);
 			expect(result.prompts).toEqual([]);

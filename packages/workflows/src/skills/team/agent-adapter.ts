@@ -1,7 +1,7 @@
 import { Agent, type SubagentManager } from "@tsuuanmi/pi-agent";
 import { type AssistantMessage, AssistantMessageEventStream, type Context, type Model } from "@tsuuanmi/pi-ai";
 import { requireSubagentManager } from "#workflows/subagents/manager";
-import type { WorkflowContext } from "#workflows/tools/workflow-tools";
+import type { WorkflowContext } from "#workflows/tools";
 
 export interface TeamAgentSpec {
 	id: string;

@@ -1,12 +1,12 @@
 # Subagents and Workflow Tools
 
-Workflow-owned subagent lifecycle tools and workflow-owned agent execution, plus the workflow-owned model-visible tool surface, registered by the workflow tool helper and bundled workflow registration. Pi-native inspect, attach, and kill controls are registered by Pi separately.
+Workflow-owned subagent lifecycle tools and workflow-owned agent execution, plus the workflow-owned model-visible tool surface, registered by the workflow tool helper and package extension. Pi-native inspect, attach, and kill controls are registered by Pi separately.
 
-**Source:** `src/register.ts`, `src/tools/workflow-tools.ts`, `src/subagents/manager.ts`, `src/subagents/surface.ts`, `src/subagents/tools.ts`, `src/skills/deep-interview/tools.ts`, `src/skills/ralplan/agent-adapter.ts`, `src/skills/ralplan/surface.ts`, `src/skills/ralplan/tools.ts`, `src/skills/team/agent-adapter.ts`, `src/skills/team/coordinator.ts`, `src/skills/team/surface.ts`, `src/skills/team/tools.ts`, `src/skills/ultragoal/surface.ts`, `src/skills/ultragoal/tools.ts`
+**Source:** `src/extension.ts`, `src/tools.ts`, `src/subagents/manager.ts`, `src/subagents/surface.ts`, `src/subagents/tools.ts`, `src/skills/deep-interview/tools.ts`, `src/skills/ralplan/agent-adapter.ts`, `src/skills/ralplan/surface.ts`, `src/skills/ralplan/tools.ts`, `src/skills/team/agent-adapter.ts`, `src/skills/team/coordinator.ts`, `src/skills/team/surface.ts`, `src/skills/team/tools.ts`, `src/skills/ultragoal/surface.ts`, `src/skills/ultragoal/tools.ts`
 
 ## Model-Visible Tools
 
-The bundled workflow registration registers these model-visible tools:
+The workflow package extension registers these model-visible tools:
 
 | Tool | Purpose |
 |------|---------|
@@ -41,7 +41,7 @@ Direct `SubagentManager` calls are limited to workflow adapters: `src/subagents/
 
 `pi workflow ...` is the external CLI control plane for state, artifacts, gates, receipts, compaction, status, approval, and runtime owner lifecycle. It parses CLI input and returns command status/output; it does not invoke model-visible tools.
 
-Model-visible tools are the separate in-process surface for the current Pi session. Tool implementations are skill-owned under `src/skills/<skill>/` or generic subagent tools under `src/subagents/`. `src/tools/workflow-tools.ts` is the registration aggregator and host contract; it is not a second implementation directory.
+Model-visible tools are the separate in-process surface for the current Pi session. Tool implementations are skill-owned under `src/skills/<skill>/` or generic subagent tools under `src/subagents/`. `src/tools.ts` is the workflow tool contract and registration aggregator; it is not a second implementation directory.
 
 When a command and a tool expose related behavior, both may call the same lower-level runtime or skill function. The command and tool adapters do not call each other.
 

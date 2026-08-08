@@ -1,7 +1,7 @@
 import type { SubagentManager, SubagentRunRequest } from "@tsuuanmi/pi-agent";
 import { describe, expect, it } from "vitest";
 import { registerSubagentTools } from "#workflows/subagents/tools";
-import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools/workflow-tools";
+import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools";
 
 type RegisteredTool = {
 	name: string;
