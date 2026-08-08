@@ -18,6 +18,7 @@ import { AgentSession } from "#pi/runtime/agent-session";
 import { createExtensionRuntime } from "#pi/runtime/extensions/api";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
+import { WebProviderHost } from "#pi/web-providers/host";
 
 /**
  * API key for authenticated tests. Tests using this should be wrapped in
@@ -116,7 +117,9 @@ export function createTestResourceLoader(options: CreateTestResourceLoaderOption
 		runtime: createExtensionRuntime(),
 	};
 
+	const webProviderHost = new WebProviderHost();
 	return {
+		getWebProviderHost: () => webProviderHost,
 		getExtensions: () => extensionsResult,
 		getSkills: () => ({ skills: [], diagnostics: [] }),
 		getPrompts: () => ({ prompts: [], diagnostics: [] }),

@@ -2,7 +2,15 @@ import { homedir } from "node:os";
 import { sep } from "node:path";
 import type { ResourceType, TopLevelResourceType } from "./types.ts";
 
-export const RESOURCE_TYPES: ResourceType[] = ["extensions", "skills", "prompts", "themes", "commands", "agents"];
+export const RESOURCE_TYPES: ResourceType[] = [
+	"extensions",
+	"skills",
+	"prompts",
+	"themes",
+	"commands",
+	"agents",
+	"webProviders",
+];
 export const TOP_LEVEL_RESOURCE_TYPES: TopLevelResourceType[] = ["extensions", "skills", "prompts", "themes"];
 
 export const FILE_PATTERNS: Record<ResourceType, RegExp> = {
@@ -12,6 +20,7 @@ export const FILE_PATTERNS: Record<ResourceType, RegExp> = {
 	themes: /\.json$/,
 	commands: /\.(ts|js|mjs|cjs)$/,
 	agents: /\.md$/,
+	webProviders: /\.(ts|js)$/,
 };
 
 export const IGNORE_FILE_NAMES = [".gitignore", ".ignore", ".fdignore"];

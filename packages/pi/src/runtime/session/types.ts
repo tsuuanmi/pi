@@ -17,6 +17,7 @@ import type { ExtensionErrorListener, ExtensionRunner, ShutdownHandler } from "#
 import type { CompactionResult } from "#pi/session/compaction";
 import type { SessionManager } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { WebProviderRegistry } from "#pi/web-providers/registry";
 
 /** Session-specific events that extend the core AgentEvent. */
 export type AgentSessionEvent =
@@ -69,6 +70,7 @@ export interface AgentSessionConfig {
 	customTools?: ToolDefinition[];
 	/** Model registry for API key resolution and model discovery. */
 	modelRegistry: ModelRegistry;
+	webProviderRegistry?: WebProviderRegistry;
 	/** Initial active built-in tool names. */
 	initialActiveToolNames?: string[];
 	/** Optional allowlist of tool names. */

@@ -7,6 +7,7 @@ import { createSyntheticSourceInfo } from "#pi/resources/source-info";
 import { createAgentSession } from "#pi/runtime/agent-session-factory";
 import { createExtensionRuntime } from "#pi/runtime/extensions/api";
 import { SessionManager } from "#pi/session/manager";
+import { WebProviderHost } from "#pi/web-providers/host";
 
 describe("createAgentSession skills option", () => {
 	let tempDir: string;
@@ -52,6 +53,7 @@ This is a test skill.
 
 	it("should have empty skills when resource loader returns none", async () => {
 		const resourceLoader: ResourceLoader = {
+			getWebProviderHost: () => new WebProviderHost(),
 			getExtensions: () => ({ extensions: [], errors: [], runtime: createExtensionRuntime() }),
 			getSkills: () => ({ skills: [], diagnostics: [] }),
 			getPrompts: () => ({ prompts: [], diagnostics: [] }),
@@ -86,6 +88,7 @@ This is a test skill.
 		};
 
 		const resourceLoader: ResourceLoader = {
+			getWebProviderHost: () => new WebProviderHost(),
 			getExtensions: () => ({ extensions: [], errors: [], runtime: createExtensionRuntime() }),
 			getSkills: () => ({ skills: [customSkill], diagnostics: [] }),
 			getPrompts: () => ({ prompts: [], diagnostics: [] }),

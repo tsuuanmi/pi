@@ -19,6 +19,7 @@ import { resolve } from "node:path";
 
 const PACKAGES = {
 	workflows: { src: "../workflows/package.json", dest: "dist/packages/workflows/package.json" },
+	"web-runtime": { src: "../web-runtime/package.json", dest: "dist/packages/web-runtime/package.json" },
 };
 
 const names = process.argv.slice(2);

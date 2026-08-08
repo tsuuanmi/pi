@@ -1,4 +1,9 @@
-export type KnownApi = "openai-completions" | "openai-responses" | "openai-codex-responses" | "anthropic-messages";
+export type KnownApi =
+	| "openai-completions"
+	| "openai-responses"
+	| "openai-codex-responses"
+	| "anthropic-messages"
+	| "web";
 
 export type Api = KnownApi | (string & {});
 

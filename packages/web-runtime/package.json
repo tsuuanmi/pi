@@ -1,0 +1,46 @@
+{
+  "name": "@tsuuanmi/pi-web-runtime",
+  "version": "0.1.0",
+  "description": "Host-neutral browser runtime and web provider descriptors",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "shx rm -rf dist",
+    "build": "npm run clean && tsgo -p tsconfig.build.json",
+    "test": "vitest --run"
+  },
+  "pi": {
+    "webProviders": [
+      "src/providers/chatgpt/index.ts"
+    ]
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "playwright": "1.62.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.12.4",
+    "typescript": "5.9.3",
+    "vitest": "3.2.6"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tsuuanmi/pi.git",
+    "directory": "packages/web-runtime"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  }
+}

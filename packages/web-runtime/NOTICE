@@ -1,0 +1,5 @@
+This package adapts browser automation design and selector intent from
+codex-chatgpt-web (https://github.com/ryanb/codex-chatgpt-web), which is
+licensed under the MIT License. The original project is not bundled and its
+HTTP proxy, native Codex passthrough, Electron launcher, configuration
+mutation, and Codex-specific tool wrappers are not included.

@@ -1,0 +1,9 @@
+export const TEMPORARY_CHAT_URL = "https://chatgpt.com/?temporary-chat=true";
+export const COMPOSER_SELECTOR = '[data-testid="prompt-textarea"]';
+export const EFFORT_CONTROL_SELECTOR = 'button[aria-haspopup="menu"][data-tone="neutral"]';
+export const EFFORT_MENU_SELECTOR = '[data-testid="composer-intelligence-picker-content"]';
+export const EFFORT_ITEM_SELECTOR = '[role="menuitemradio"]';
+export const COMPLETION_SELECTOR = 'button[data-testid="copy-turn-action-button"]';
+export const ASSISTANT_TURN_SELECTOR = '[data-testid^="conversation-turn-"][data-turn="assistant"]';
+export const FILE_INPUT_SELECTOR = 'input[type="file"]';
+export const SEND_BUTTON_SELECTOR = 'button[data-testid="send-button"]';

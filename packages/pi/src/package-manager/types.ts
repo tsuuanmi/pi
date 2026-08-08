@@ -88,4 +88,4 @@ export interface GitUpdateTarget extends ConfiguredUpdateSource {
 	parsed: GitSource;
 }
 
-export type BundledPackageName = "workflows";
+export type BundledPackageName = "workflows" | "web-runtime";

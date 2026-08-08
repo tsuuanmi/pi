@@ -26,17 +26,23 @@
 
 ### Added
 
-- **models**: Added an opt-in native ChatGPT Web provider for local Responses bridges with fixed routes and no model fallback.
+- **web-runtime**: Added the bundled `pi:web-runtime` package and canonical `webProviders` package resource type for host-neutral browser provider descriptors.
 - **interactive**: Mermaid fenced diagrams now render as width-checked terminal Unicode diagrams in Markdown output.
 
 ### Changed
 
+- **models**: Removed the external ChatGPT Web HTTP bridge and added first-party browser-runtime infrastructure without HTTP fallback.
+- **web-runtime**: Keep one isolated visible Chromium session per browser account and bound concurrent Temporary Chat turns to five tabs.
+- **web-runtime**: Route private browser tool calls through the official MCP SDK without exposing an HTTP, socket, or daemon transport.
 - **api**: Removed the stale `serializeJsonLine` root export; node JSONL utilities are imported from `@tsuuanmi/pi-agent/node`.
 - **extensions**: Agent tool interception is now installed through `Agent.registerHook()`; Pi remains the host adapter and no longer assigns agent hook callbacks directly.
 - **models**: Custom provider model configs now accept image input metadata and `max`/`ultra` thinking-level mappings.
 
 ### Fixed
 
+- **web-runtime**: Reject malformed, empty, oversized, and excessive ChatGPT attachments before upload.
+- **web-runtime**: Stream only monotonic settled ChatGPT output and classify rate-limit, subscription, and upstream page failures.
+- **models**: Revalidate browser entitlement immediately before each web turn.
 - **runtime**: Preserve stable provider-bound context prefixes during retained tool-result optimization.
 - **interactive**: Prevent selecting stale session rows while the `/resume` scope is loading.
 - **interactive**: Load `/resume` sessions in pages of 50 with a Load more option.

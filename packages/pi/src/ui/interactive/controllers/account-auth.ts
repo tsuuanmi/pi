@@ -20,6 +20,7 @@ import { AccountSelectorComponent, type AccountSelectorOption } from "#pi/ui/int
 import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension";
 import { type AuthSelectorProvider, OAuthSelectorComponent } from "#pi/ui/interactive/components/selectors/oauth";
 import type { FooterDataProvider } from "#pi/ui/interactive/footer-data-provider";
+import { BrowserAccountStore } from "#pi/web-providers/accounts";
 
 function isUnknownModel(model: Model<any> | undefined): boolean {
 	return !!model && model.provider === "unknown" && model.id === "unknown" && model.api === "unknown";
@@ -236,6 +237,25 @@ export class AccountAuthController {
 	}
 
 	private async addProviderAccount(providerId: string, accountName?: string): Promise<void> {
+		if (providerId === "chatgpt-web") {
+			if (!accountName) {
+				this.showStatus("Usage: /account add chatgpt-web <name>");
+				return;
+			}
+			try {
+				await new BrowserAccountStore(this.session.modelRegistry.authStorage).add(
+					providerId,
+					accountName,
+					this.session.resourceLoader.getWebProviderHost(),
+					new AbortController().signal,
+				);
+				this.refreshAccountState();
+				this.showStatus(`Added ChatGPT Web account ${accountName}`);
+			} catch (error) {
+				this.showError(`ChatGPT Web login failed: ${error instanceof Error ? error.message : String(error)}`);
+			}
+			return;
+		}
 		const providerOption = this.findAccountProviderOption(providerId);
 		if (!providerOption) {
 			this.showError(`Unknown account provider: ${providerId}`);
@@ -338,15 +358,32 @@ export class AccountAuthController {
 		}
 	}
 
-	private switchProviderAccount(providerId: string, accountName: string): void {
+	private async switchProviderAccount(providerId: string, accountName: string): Promise<void> {
 		const authStorage = this.session.modelRegistry.authStorage;
 		const accounts = authStorage.getAccountNames(providerId);
-		if (!authStorage.switchAccount(providerId, accountName)) {
-			this.showError(`No account named "${accountName}" for ${providerId}. Available: ${accounts.join(", ")}`);
+		try {
+			if (providerId === "chatgpt-web") {
+				await new BrowserAccountStore(authStorage).activate(
+					providerId,
+					accountName,
+					this.session.resourceLoader.getWebProviderHost(),
+					new AbortController().signal,
+				);
+			} else if (!authStorage.switchAccount(providerId, accountName)) {
+				throw new Error(`No account named "${accountName}" for ${providerId}. Available: ${accounts.join(", ")}`);
+			}
+		} catch (error) {
+			if (providerId === "chatgpt-web") {
+				this.session.resourceLoader.getWebProviderHost().clearEntitlement(providerId);
+				this.session.modelRegistry.refresh();
+				this.syncWebModels();
+			}
+			this.showError(error instanceof Error ? error.message : String(error));
 			return;
 		}
 
 		this.session.modelRegistry.refresh();
+		this.syncWebModels();
 		this.footer.invalidate();
 		this.updateEditorBorderColor();
 		this.showStatus(`Switched ${providerId} to account ${accountName}`);
@@ -354,32 +391,68 @@ export class AccountAuthController {
 
 	private refreshAccountState(): void {
 		this.session.modelRegistry.refresh();
+		this.syncWebModels();
 		void this.updateAvailableProviderCount();
 		this.footer.invalidate();
 		this.updateEditorBorderColor();
 	}
 
-	private removeProviderAccount(providerId: string, accountName: string): void {
-		const authStorage = this.session.modelRegistry.authStorage;
-		const accounts = authStorage.getAccountNames(providerId);
-		if (!authStorage.removeAccount(providerId, accountName)) {
-			this.showError(`No account named "${accountName}" for ${providerId}. Available: ${accounts.join(", ")}`);
-			return;
+	private syncWebModels(): void {
+		try {
+			this.session.syncWebModels();
+		} catch (error) {
+			this.showError(error instanceof Error ? error.message : String(error));
 		}
-
-		this.refreshAccountState();
-		this.showStatus(`Removed ${providerId} account ${accountName}`);
 	}
 
-	private removeAllProviderAccounts(providerId: string): void {
+	private async removeProviderAccount(providerId: string, accountName: string): Promise<void> {
+		try {
+			const authStorage = this.session.modelRegistry.authStorage;
+			const accounts = authStorage.getAccountNames(providerId);
+			const removed =
+				providerId === "chatgpt-web"
+					? await new BrowserAccountStore(authStorage).remove(
+							providerId,
+							accountName,
+							this.session.resourceLoader.getWebProviderHost(),
+						)
+					: authStorage.removeAccount(providerId, accountName);
+			if (!removed) {
+				this.showError(`No account named "${accountName}" for ${providerId}. Available: ${accounts.join(", ")}`);
+				return;
+			}
+
+			this.refreshAccountState();
+			this.showStatus(`Removed ${providerId} account ${accountName}`);
+		} catch (error) {
+			this.showError(error instanceof Error ? error.message : String(error));
+		}
+	}
+
+	private async removeAllProviderAccounts(providerId: string): Promise<void> {
 		if (!this.session.modelRegistry.authStorage.has(providerId)) {
 			this.showError(`No stored accounts for ${providerId}.`);
 			return;
 		}
 
-		this.session.modelRegistry.authStorage.remove(providerId);
-		this.refreshAccountState();
-		this.showStatus(`Removed all stored accounts for ${providerId}`);
+		try {
+			if (providerId === "chatgpt-web") {
+				const accounts = this.session.modelRegistry.authStorage.getAccountNames(providerId);
+				const store = new BrowserAccountStore(this.session.modelRegistry.authStorage);
+				for (const accountName of accounts) {
+					if (!(await store.remove(providerId, accountName, this.session.resourceLoader.getWebProviderHost()))) {
+						this.showError(`Failed to remove ${providerId} account ${accountName}.`);
+						return;
+					}
+				}
+			} else {
+				this.session.modelRegistry.authStorage.remove(providerId);
+			}
+			this.refreshAccountState();
+			this.showStatus(`Removed all stored accounts for ${providerId}`);
+		} catch (error) {
+			this.showError(error instanceof Error ? error.message : String(error));
+		}
 	}
 
 	private showAccountSelector(providerId?: string): void {
@@ -521,10 +594,10 @@ export class AccountAuthController {
 				return;
 			}
 			if (!accountName) {
-				this.removeAllProviderAccounts(providerId);
+				await this.removeAllProviderAccounts(providerId);
 				return;
 			}
-			this.removeProviderAccount(providerId, accountName);
+			await this.removeProviderAccount(providerId, accountName);
 			return;
 		}
 
@@ -682,7 +755,7 @@ export class AccountAuthController {
 					done();
 					const providerOption = providerOptions[providerLabels.indexOf(option)];
 					if (providerOption) {
-						this.removeAllProviderAccounts(providerOption.id);
+						void this.removeAllProviderAccounts(providerOption.id);
 					}
 				},
 				() => {

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import type { SubagentManager } from "@tsuuanmi/pi-agent";
 import { Agent, convertToLlm, type LoopDetectionOptions } from "@tsuuanmi/pi-agent";
@@ -32,6 +33,8 @@ import {
 	createWriteTool,
 	type ToolName,
 } from "#pi/tools/default-tools";
+import { WebProviderRegistry } from "#pi/web-providers/registry";
+import { createWebStream, type WebToolExecutor } from "../web-providers/stream.ts";
 
 export interface CreateAgentSessionOptions {
 	/** Working directory for project-local discovery. Default: process.cwd() */
@@ -192,6 +195,19 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		await resourceLoader.reload();
 	}
 
+	let agent: Agent | undefined;
+	const webHost = resourceLoader.getWebProviderHost();
+	const executeWebTool: WebToolExecutor = async (name, input, signal) => {
+		const tool = agent?.state.tools.find((candidate) => candidate.name === name);
+		if (!tool) throw new Error(`unsupported web tool: ${name}`);
+		const parameters = tool.prepareArguments ? tool.prepareArguments(input) : input;
+		return tool.execute(randomUUID(), parameters as never, signal);
+	};
+	const webProviderRegistry = new WebProviderRegistry(webHost, authStorage, modelRegistry, (provider) =>
+		createWebStream(webHost, authStorage, provider, executeWebTool),
+	);
+	webProviderRegistry.sync();
+
 	// Check if session has existing data to restore
 	const existingSession = sessionManager.buildSessionContext();
 	const hasExistingSession = existingSession.messages.length > 0;
@@ -261,8 +277,6 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		]),
 	).filter((name) => !excludedToolNameSet?.has(name));
 
-	let agent: Agent;
-
 	const extensionRunnerRef: { current?: ExtensionRunner } = {};
 	const contextOptimizer = new ContextOptimizer();
 
@@ -275,6 +289,8 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		},
 		convertToLlm,
 		streamFn: async (model, context, options) => {
+			if (model.api === "web")
+				return createWebStream(webHost, authStorage, model.provider, executeWebTool)(model, context, options);
 			const auth = await modelRegistry.getApiKeyAndHeaders(model);
 			if (!auth.ok) {
 				throw new Error(auth.error);
@@ -347,6 +363,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		sessionManager.appendThinkingLevelChange(thinkingLevel);
 	}
 
+	if (!agent) throw new Error("agent initialization failed");
 	const session = new AgentSession({
 		agent,
 		sessionManager,
@@ -356,6 +373,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		resourceLoader,
 		customTools: options.customTools,
 		modelRegistry,
+		webProviderRegistry,
 		initialActiveToolNames,
 		allowedToolNames,
 		excludedToolNames,

@@ -11,9 +11,10 @@ export const GIT_UPDATE_CONCURRENCY = 4;
 
 export const BUNDLED_PACKAGE_SOURCES: Record<string, BundledPackageName> = {
 	"pi:workflows": "workflows",
+	"pi:web-runtime": "web-runtime",
 };
 
-export const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows"];
+export const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows", "pi:web-runtime"];
 
 export function getEnv(): NodeJS.ProcessEnv {
 	if (process.platform !== "linux" || Object.keys(process.env).length > 0) {
@@ -47,18 +48,13 @@ export function getExtensionTempFolder(agentDir: string): string {
 	return tempFolder;
 }
 
-export function getBundledPackageRoot(_name: BundledPackageName): string {
+export function getBundledPackageRoot(name: BundledPackageName): string {
 	const __dirname = dirname(fileURLToPath(import.meta.url));
-	const bundledDist = resolve(__dirname, "..", "packages", "workflows");
-	if (existsSync(resolve(bundledDist, "package.json"))) {
-		return bundledDist;
-	}
-	// Dev: the workflows package is a workspace sibling at packages/workflows
-	// (source layout with src/) before pi dist has been built.
-	const devWorkspace = resolve(__dirname, "..", "..", "..", "workflows");
-	if (existsSync(resolve(devWorkspace, "package.json"))) {
-		return devWorkspace;
-	}
+	const bundledDist = resolve(__dirname, "..", "packages", name);
+	if (existsSync(resolve(bundledDist, "package.json"))) return bundledDist;
+	// Dev: workspace siblings use source layout until their package is built.
+	const devWorkspace = resolve(__dirname, "..", "..", "..", name);
+	if (existsSync(resolve(devWorkspace, "package.json"))) return devWorkspace;
 	return bundledDist;
 }
 

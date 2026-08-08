@@ -30,7 +30,13 @@ export type OAuthCredential = {
 	type: "oauth";
 } & OAuthCredentials;
 
-export type AuthCredential = ApiKeyCredential | OAuthCredential;
+export type BrowserCredential = {
+	type: "browser";
+	profileId: string;
+	tunnelSecret: string;
+};
+
+export type AuthCredential = ApiKeyCredential | OAuthCredential | BrowserCredential;
 
 export type AuthAccountCollection = {
 	active?: string;
@@ -54,12 +60,27 @@ type LockResult<T> = {
 
 const AUTH_FILE_WRITE_OPTIONS = { encoding: "utf-8", mode: 0o600 } as const;
 
+function isBrowserCredential(value: unknown): value is BrowserCredential {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		"type" in value &&
+		value.type === "browser" &&
+		"profileId" in value &&
+		typeof value.profileId === "string" &&
+		/^[a-zA-Z0-9_-]{16,128}$/.test(value.profileId) &&
+		"tunnelSecret" in value &&
+		typeof value.tunnelSecret === "string" &&
+		value.tunnelSecret.length >= 32
+	);
+}
+
 function isAuthCredential(value: AuthStorageEntry | undefined): value is AuthCredential {
 	return (
 		typeof value === "object" &&
 		value !== null &&
 		"type" in value &&
-		(value.type === "api_key" || value.type === "oauth")
+		(value.type === "api_key" || value.type === "oauth" || isBrowserCredential(value))
 	);
 }
 
@@ -440,6 +461,11 @@ export class AuthStorage {
 	getProviderEnv(provider: string): Record<string, string> | undefined {
 		const cred = this.get(provider);
 		return cred?.type === "api_key" && cred.env ? { ...cred.env } : undefined;
+	}
+
+	getBrowserAccount(provider: string, accountName?: string): BrowserCredential | undefined {
+		const credential = accountName === undefined ? this.get(provider) : this.getAccount(provider, accountName);
+		return credential?.type === "browser" ? credential : undefined;
 	}
 
 	/**

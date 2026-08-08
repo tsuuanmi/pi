@@ -16,6 +16,7 @@ export function createResourceTable(): ResourceTable {
 		themes: new Map(),
 		commands: new Map(),
 		agents: new Map(),
+		webProviders: new Map(),
 	};
 }
 
@@ -54,6 +55,7 @@ export function toResolvedPaths(table: ResourceTable): ResolvedPaths {
 		themes: [...result.themes.values()],
 		commands: [...result.commands.values()],
 		agents: [...result.agents.values()],
+		webProviders: [...result.webProviders.values()],
 	};
 }
 

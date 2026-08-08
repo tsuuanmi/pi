@@ -148,6 +148,7 @@ export class AgentSession {
 
 	// Model registry for API key resolution
 	private _modelRegistry: ModelRegistry;
+	private readonly _webProviderRegistry?: AgentSessionConfig["webProviderRegistry"];
 
 	// Base system prompt (without extension appends) - used to apply fresh appends each turn
 	private _baseSystemPrompt = "";
@@ -158,6 +159,7 @@ export class AgentSession {
 		this.sessionManager = config.sessionManager;
 		this.settingsManager = config.settingsManager;
 		this._modelRegistry = config.modelRegistry;
+		this._webProviderRegistry = config.webProviderRegistry;
 		this._bash = new BashController({
 			agent: this.agent,
 			sessionManager: this.sessionManager,
@@ -273,6 +275,10 @@ export class AgentSession {
 	/** Model registry for API key resolution and model discovery */
 	get modelRegistry(): ModelRegistry {
 		return this._modelRegistry;
+	}
+
+	syncWebModels(): void {
+		this._webProviderRegistry?.sync();
 	}
 
 	private async _getRequiredRequestAuth(model: Model<any>): Promise<{
@@ -1206,6 +1212,7 @@ export class AgentSession {
 		this.syncQueueModesFromSettings();
 		resetProviders();
 		await this._resourceLoader.reload();
+		this.syncWebModels();
 		this._buildRuntime({
 			activeToolNames: this.getActiveToolNames(),
 			flagValues: previousFlagValues,
