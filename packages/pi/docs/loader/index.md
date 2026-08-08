@@ -20,7 +20,7 @@ The loader handles these runtime-facing categories:
 
 | Category | Loader boundary | Documentation |
 | --- | --- | --- |
-| Extensions | `loader/extensions.ts` | [Extensions](../extensions/index.md) |
+| Extensions | `loader/extensions/` | [Extensions](../extensions/index.md) |
 | Skills | `loader/skill.ts` | [Skills](skills/index.md) |
 | Prompt templates | `loader/prompt-templates.ts` | [Prompt templates](prompt-templates.md) |
 | Themes | `loader/themes.ts` | [Themes](../ui/theme/index.md) |

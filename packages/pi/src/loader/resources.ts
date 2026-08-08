@@ -21,9 +21,8 @@ export type { ResourceCollision, ResourceDiagnostic } from "#pi/resources/diagno
 
 import { canonicalizePath, isLocalPath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#pi/api/extension-types";
-import { getBuiltinExtensionFactories } from "#pi/extensions/builtins";
 import { createEventBus, type EventBus } from "#pi/hooks/event-bus";
-import { loadExtensionFromFactory, loadExtensions } from "#pi/loader/extensions";
+import { getBuiltinExtensionFactories, loadExtensionFromFactory, loadExtensions } from "#pi/loader/extensions/loader";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import { loadPromptTemplatesWithDiagnostics } from "#pi/loader/prompt-templates";
 import type { Skill } from "#pi/loader/skill";

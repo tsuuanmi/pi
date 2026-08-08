@@ -5,7 +5,7 @@
 		"outDir": "./dist",
 		"paths": {
 			"#pi/*": ["./src/*"],
-			"@tsuuanmi/pi/extensions": ["./src/extensions/index.ts"],
+			"@tsuuanmi/pi/extensions": ["./src/loader/extensions/index.ts"],
 			"@tsuuanmi/pi/loader/config": ["./src/loader/config.ts"],
 			"@tsuuanmi/pi-agent": ["../agent/dist/index.d.ts"],
 			"@tsuuanmi/pi-agent/*": ["../agent/dist/*.d.ts"],

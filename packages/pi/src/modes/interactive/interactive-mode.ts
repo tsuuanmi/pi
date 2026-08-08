@@ -46,13 +46,13 @@ import { readWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import chalk from "chalk";
 import { spawn } from "child_process";
 import { killTracked } from "#pi/execution/lifecycle";
+import { APP_NAME } from "#pi/loader/app";
 import type {
 	AutocompleteProviderFactory,
 	EditorFactory,
 	ExtensionContext,
 	ExtensionUIContext,
-} from "#pi/extensions/index";
-import { APP_NAME } from "#pi/loader/app";
+} from "#pi/loader/extensions/index";
 import { configureHttpDispatcher } from "#pi/network/http-dispatcher";
 import type { TruncationResult } from "#pi/output/truncation";
 import { parseGitUrl } from "#pi/package-manager/git";

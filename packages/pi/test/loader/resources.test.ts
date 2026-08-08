@@ -26,14 +26,7 @@ const BUILT_IN_SUBAGENT_TOOLS = new Set([
 const BUILT_IN_WORKFLOW_AGENT_TOOLS = new Set(["team_execute", "team_resume", "ultragoal_spawn_goal_agent"]);
 
 function withoutBuiltInWorkflowExtensions<T extends { path: string }>(extensions: T[]): T[] {
-	return extensions.filter(
-		(extension) =>
-			!extension.path.startsWith("<inline:") &&
-			!extension.path.endsWith("/src/packages/pi/loader/extensions/workflows.ts") &&
-			!extension.path.endsWith("/dist/packages/pi/loader/extensions/workflows.js") &&
-			!extension.path.includes("/pi/src/loader/extensions/workflows.ts") &&
-			!extension.path.includes("/pi/dist/loader/extensions/workflows.js"),
-	);
+	return extensions.filter((extension) => !extension.path.startsWith("<inline:"));
 }
 
 describe("DefaultResourceLoader", () => {

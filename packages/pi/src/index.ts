@@ -31,7 +31,7 @@ export { formatSkillsForPrompt } from "#pi/loader/agents/system-prompt";
 // Loader exports
 export { CONFIG_DIR_NAME, VERSION } from "#pi/loader/app";
 export { loadProjectContextFiles } from "#pi/loader/context";
-export { discoverAndLoadExtensions } from "#pi/loader/extensions";
+export { discoverAndLoadExtensions } from "#pi/loader/extensions/loader";
 export { parseFrontmatter, stripFrontmatter } from "#pi/loader/frontmatter";
 export { getDocsPath, getPackageDir, getReadmePath } from "#pi/loader/package";
 export { getAgentDir } from "#pi/loader/paths";

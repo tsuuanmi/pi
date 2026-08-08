@@ -10,7 +10,7 @@ import type {
 	InputSource,
 	SessionStartEvent,
 	ToolDefinition,
-} from "#pi/extensions/index";
+} from "#pi/loader/extensions/index";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceLoader } from "#pi/loader/resources";
 import type { ExtensionErrorListener, ExtensionRunner, ShutdownHandler } from "#pi/runtime/extensions/runner";

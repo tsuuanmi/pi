@@ -160,10 +160,10 @@ package-manager -> loader -> extension module -> runtime lifecycle + hooks
 ```
 
 - `src/package-manager/` resolves installed package resources only. It does not import or execute extension modules.
-- `src/loader/extensions.ts` discovers and imports project, user, and package extension modules.
+- `src/loader/extensions/loader.ts` discovers and imports project, user, and package extension modules, and contains bundled built-in extension adapters.
 - `src/runtime/extensions/` creates `ExtensionAPI` instances and owns extension activation, disposal, and registered-tool adaptation.
 - `src/hooks/` owns hook contracts, registration, dispatch, event ordering, transformations, errors, and the agent bridge.
-- `src/extensions/` contains concrete built-in extensions such as workflows and ChatGPT; it also contains the public `index.ts` entry point.
+- `src/loader/extensions/index.ts` contains the public extension entry point; bundled built-in adapters live in `loader.ts`.
 
 Only `@tsuuanmi/pi/extensions` is public. Internal paths in these directories are not supported imports.
 

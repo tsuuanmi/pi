@@ -1,4 +1,4 @@
-import type { ReplacedSessionContext, SessionShutdownEvent, SessionStartEvent } from "#pi/extensions/index";
+import type { ReplacedSessionContext, SessionShutdownEvent, SessionStartEvent } from "#pi/loader/extensions/index";
 import type { AgentSession } from "#pi/runtime/agent-session";
 import type { CreateAgentSessionResult } from "#pi/runtime/agent-session-factory";
 import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "#pi/runtime/agent-session-services";

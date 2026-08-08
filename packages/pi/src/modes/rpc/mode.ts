@@ -20,7 +20,7 @@ import type {
 	ExtensionUIDialogOptions,
 	ExtensionWidgetOptions,
 	WorkingIndicatorOptions,
-} from "#pi/extensions/index";
+} from "#pi/loader/extensions/index";
 import { flushRawStdout, takeOverStdout, waitForRawStdoutBackpressure, writeRawStdout } from "#pi/modes/output-guard";
 import type {
 	RpcCommand,

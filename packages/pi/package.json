@@ -21,8 +21,8 @@
 			"import": "./dist/index.js"
 		},
 		"./extensions": {
-			"types": "./dist/extensions/index.d.ts",
-			"import": "./dist/extensions/index.js"
+			"types": "./dist/loader/extensions/index.d.ts",
+			"import": "./dist/loader/extensions/index.js"
 		},
 		"./loader": {
 			"types": "./dist/loader/index.d.ts",

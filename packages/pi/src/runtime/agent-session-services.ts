@@ -3,7 +3,7 @@ import type { SubagentManager as SubagentManagerContract } from "@tsuuanmi/pi-ag
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/storage";
-import type { SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
+import type { SessionStartEvent, ToolDefinition } from "#pi/loader/extensions/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { getAgentDir } from "#pi/loader/paths";
 import {

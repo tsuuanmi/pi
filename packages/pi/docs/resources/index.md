@@ -10,7 +10,7 @@ The resource loader provides a unified system for loading and validating resourc
 
 Package resources are resolved from a package root using its `pi` manifest or convention directories. The package loader returns absolute resource paths and source metadata but does not parse or execute resources.
 
-This module resolves top-level user/project resources and passes both top-level and package descriptors to the type-specific loaders. Type-specific loaders parse Markdown, JSON, and modules; the package manager never performs those operations. Extension runtime code lives under `src/extensions/`, while module loading remains under `src/loader/extensions.ts`.
+This module resolves top-level user/project resources and passes both top-level and package descriptors to the type-specific loaders. Type-specific loaders parse Markdown, JSON, and modules; the package manager never performs those operations. Extension entrypoints and built-ins live under `src/loader/extensions/`, while module loading is implemented in `src/loader/extensions/loader.ts`.
 
 ## Resource Sources
 

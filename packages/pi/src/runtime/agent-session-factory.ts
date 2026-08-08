@@ -9,7 +9,7 @@ import { formatNoModelsAvailableMessage } from "#pi/auth/guidance";
 import { AuthStorage } from "#pi/auth/storage";
 import { findInitialModel } from "#pi/cli/model-resolver";
 import { DEFAULT_THINKING_LEVEL } from "#pi/cli/thinking-level";
-import type { LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "#pi/extensions/index";
+import type { LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "#pi/loader/extensions/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { getAgentDir } from "#pi/loader/paths";
 import type { ResourceLoader } from "#pi/loader/resources";
@@ -117,7 +117,7 @@ export type {
 	SlashCommandInfo,
 	SlashCommandSource,
 	ToolDefinition,
-} from "#pi/extensions/index";
+} from "#pi/loader/extensions/index";
 export type { PromptTemplate } from "#pi/loader/prompt-templates";
 export type { Skill } from "#pi/loader/skill";
 export type { Tool } from "#pi/tools/default-tools";

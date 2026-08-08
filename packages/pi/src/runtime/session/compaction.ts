@@ -2,7 +2,7 @@ import type { Agent } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { isContextOverflow, stream } from "@tsuuanmi/pi-ai";
 import { formatNoModelSelectedMessage } from "#pi/auth/guidance";
-import type { SessionBeforeCompactResult } from "#pi/extensions/index";
+import type { SessionBeforeCompactResult } from "#pi/loader/extensions/index";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import type { AgentSessionEvent } from "#pi/runtime/session/types";

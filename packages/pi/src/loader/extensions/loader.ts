@@ -8,8 +8,15 @@ import { createRequire } from "node:module";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
+import { registerWorkflows } from "@tsuuanmi/pi-workflows/register";
 import { createJiti } from "jiti/static";
-import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#pi/api/extension-types";
+import type {
+	Extension,
+	ExtensionAPI,
+	ExtensionFactory,
+	ExtensionRuntime,
+	LoadExtensionsResult,
+} from "#pi/api/extension-types";
 import { createEventBus, type EventBus } from "#pi/hooks/event-bus";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
 import { getAgentDir } from "#pi/loader/paths";
@@ -17,8 +24,18 @@ import { collectAutoExtensionEntries } from "#pi/resources/discovery";
 import { createSourceInfo } from "#pi/resources/source-info";
 import type { PathMetadata, ResolvedResource } from "#pi/resources/types";
 import { createExtensionAPI, createExtensionRuntime } from "#pi/runtime/extensions/api";
+import { registerSubagentControls } from "#pi/subagents/tools";
 
 const require = createRequire(import.meta.url);
+
+function builtinWorkflowsExtension(pi: ExtensionAPI): void {
+	registerWorkflows(pi);
+	registerSubagentControls(pi);
+}
+
+export function getBuiltinExtensionFactories(): ExtensionFactory[] {
+	return [builtinWorkflowsExtension];
+}
 
 /** Get aliases for jiti extension imports. */
 let _aliases: Record<string, string> | null = null;
@@ -27,13 +44,13 @@ function getAliases(): Record<string, string> {
 	if (_aliases) return _aliases;
 
 	const __dirname = path.dirname(fileURLToPath(import.meta.url));
-	const packageIndex = path.resolve(__dirname, "..", "index.js");
+	const packageIndex = path.resolve(__dirname, "..", "..", "index.js");
 
 	const typeboxEntry = require.resolve("typebox");
 	const typeboxCompileEntry = require.resolve("typebox/compile");
 	const typeboxValueEntry = require.resolve("typebox/value");
 
-	const packagesRoot = path.resolve(__dirname, "../../../");
+	const packagesRoot = path.resolve(__dirname, "../../../../");
 	// Resolve bare @tsuuanmi/* specifiers via ESM (import.meta.resolve) so the
 	// "import" condition in their package "exports" is honored. CJS
 	// require.resolve only sees "require"/"default" conditions, which these
@@ -47,8 +64,8 @@ function getAliases(): Record<string, string> {
 	};
 
 	const piEntry = packageIndex;
-	const piExtensionsEntry = path.resolve(__dirname, "..", "extensions", "index.js");
-	const piConfigEntry = path.resolve(__dirname, "config.js");
+	const piExtensionsEntry = path.resolve(__dirname, "index.js");
+	const piConfigEntry = path.resolve(__dirname, "..", "config.js");
 	const piAgentEntry = resolveWorkspaceOrImport("agent/dist/index.js", "@tsuuanmi/pi-agent");
 	const piAgentNodeEntry = resolveWorkspaceOrImport("agent/dist/node/node.js", "@tsuuanmi/pi-agent/node");
 	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@tsuuanmi/pi-tui");

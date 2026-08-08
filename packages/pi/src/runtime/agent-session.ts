@@ -29,6 +29,8 @@ import type { SlashCommandInfo } from "#pi/api/extension-types";
 import { formatNoApiKeyFoundMessage } from "#pi/auth/guidance";
 import type { BashOperations } from "#pi/execution/backend";
 import type { BashResult } from "#pi/execution/bash";
+import { installAgentToolHooks } from "#pi/hooks/agent-bridge";
+import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/loader/agents/system-prompt";
 import type {
 	ContextUsage,
 	ExtensionCommandContextActions,
@@ -46,9 +48,7 @@ import type {
 	ToolInfo,
 	TurnEndEvent,
 	TurnStartEvent,
-} from "#pi/extensions/index";
-import { installAgentToolHooks } from "#pi/hooks/agent-bridge";
-import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/loader/agents/system-prompt";
+} from "#pi/loader/extensions/index";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import type { ResourceExtensionPaths, ResourceLoader } from "#pi/loader/resources";
