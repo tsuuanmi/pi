@@ -58,7 +58,7 @@ import { registerWorkflowTools } from "#workflows/tools/workflow-tools";
 
 const sessionId = "test-session-id";
 const execFileAsync = promisify(execFile);
-const builtPiCliPath = fileURLToPath(new URL("../../pi/dist/cli.js", import.meta.url));
+const builtPiCliPath = fileURLToPath(new URL("../../pi/dist/cli/cli.js", import.meta.url));
 
 async function runBuiltPiWorkflow(
 	args: string[],

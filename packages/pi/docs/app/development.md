@@ -14,7 +14,7 @@ npm run build
 Run the CLI from source:
 
 ```bash
-npx tsx packages/pi/src/cli.ts --help
+npx tsx packages/pi/src/cli/cli.ts --help
 ```
 
 Run Pi's package tests with:
@@ -65,7 +65,7 @@ The source tree is organized by runtime boundary. This documentation uses the sa
 
 ```
 packages/pi/src/
-  cli.ts                 # CLI entry point
+  cli/                   # CLI entry point and command-line modules
   config.ts              # configuration value helpers
   main.ts                # startup and mode dispatch
   index.ts               # public package exports

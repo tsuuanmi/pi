@@ -5,7 +5,7 @@ import { main } from "#pi/main";
  * CLI entry point for the refactored AI agent.
  * Uses main.ts with AgentSession and new mode modules.
  *
- * Test with: npx tsx src/cli-new.ts [args...]
+ * Test with: npx tsx src/cli/cli.ts [args...]
  */
 import { configureHttpDispatcher } from "#pi/network/http-dispatcher";
 
