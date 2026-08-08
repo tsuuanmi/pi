@@ -3,7 +3,7 @@ import type { AssistantMessageEvent, Model, TextContent, ThinkingLevel, ToolResu
 import type { BashOperations } from "#pi/execution/backend";
 import type { BashResult } from "#pi/execution/bash";
 import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
-import type { CompactionPreparation, CompactionResult } from "#pi/session/compaction";
+import type { CompactionPreparation, CompactionResult } from "#pi/session/compaction/index";
 import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "#pi/session/manager";
 import type {
 	BashToolDetails,

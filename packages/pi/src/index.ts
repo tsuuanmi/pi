@@ -131,7 +131,7 @@ export {
 	getLastAssistantUsage,
 	prepareBranchEntries,
 	shouldCompact,
-} from "#pi/session/compaction";
+} from "#pi/session/compaction/index";
 export {
 	type BranchSummaryEntry,
 	buildSessionContext,

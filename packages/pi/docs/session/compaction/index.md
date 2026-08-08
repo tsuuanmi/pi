@@ -3,9 +3,13 @@
 LLMs have limited context windows. When conversations grow too long, pi uses compaction to summarize older content while preserving recent work. This page covers both auto-compaction and branch summarization.
 
 **Source files** ([pi](https://github.com/tsuuanmi/pi)):
-- [`packages/pi/src/session/compaction/session-compaction.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/session-compaction.ts) - Auto-compaction logic
-- [`packages/pi/src/session/compaction/branch-summarization.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch-summarization.ts) - Branch summarization
-- [`packages/agent/src/compaction/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/compaction/messages.ts) - Shared utilities (file tracking, serialization)
+- [`packages/pi/src/session/compaction/session.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/session.ts) - Session compaction preparation and summary creation
+- [`packages/pi/src/session/compaction/branch.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch.ts) - Branch entry collection and summaries
+- [`packages/pi/src/session/compaction/summarize.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/summarize.ts) - Shared LLM summarization request plumbing
+- [`packages/pi/src/session/compaction/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/messages.ts) - Session-entry message conversion
+- [`packages/pi/src/session/compaction/tokens.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/tokens.ts) - Token estimation and compaction thresholds
+- [`packages/pi/src/runtime/session/compaction.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/runtime/session/compaction.ts) - Manual and automatic compaction lifecycle
+- [`packages/agent/src/compaction/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/compaction/messages.ts) - Shared message utilities (file tracking, serialization)
 - [`packages/pi/src/session/manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/manager.ts) - Entry types (`CompactionEntry`, `BranchSummaryEntry`)
 - [`packages/pi/src/hooks/events.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/hooks/events.ts) - Extension event types
 
@@ -142,7 +146,7 @@ interface CompactionDetails {
 
 Extensions can store any JSON-serializable data in `details`. The default compaction tracks file operations, but custom extension implementations can use their own structure.
 
-See [`prepareCompaction()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/session-compaction.ts) and [`compact()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/session-compaction.ts) for the implementation.
+See [`prepareCompaction()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/session.ts) and [`compact()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/session.ts) for the implementation.
 
 ## Branch Summarization
 
@@ -199,7 +203,7 @@ interface BranchSummaryEntry<T = unknown> {
   details?: T;         // implementation-specific data
 }
 
-// Default branch summarization uses this for details (from branch-summarization.ts):
+// Default branch summarization uses this for details (from branch.ts):
 interface BranchSummaryDetails {
   readFiles: string[];
   modifiedFiles: string[];
@@ -208,7 +212,7 @@ interface BranchSummaryDetails {
 
 Same as compaction, extensions can store custom data in `details`.
 
-See [`collectEntriesForBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch-summarization.ts), [`prepareBranchEntries()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch-summarization.ts), and [`generateBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch-summarization.ts) for the implementation.
+See [`collectEntriesForBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch.ts), [`prepareBranchEntries()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch.ts), and [`generateBranchSummary()`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/compaction/branch.ts) for the implementation.
 
 ## Summary Format
 

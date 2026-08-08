@@ -84,7 +84,7 @@ import { expandSkillCommand } from "#pi/runtime/skill-expansion";
 import { computeContextUsage, computeSessionStats } from "#pi/runtime/stats-export";
 import { ToolManager } from "#pi/runtime/tool-manager";
 import { navigateTree as treeNavNavigateTree } from "#pi/runtime/tree-navigation";
-import type { CompactionResult } from "#pi/session/compaction";
+import type { CompactionResult } from "#pi/session/compaction/index";
 import type { BranchSummaryEntry, SessionManager } from "#pi/session/manager";
 import { CURRENT_SESSION_VERSION, type SessionHeader } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";

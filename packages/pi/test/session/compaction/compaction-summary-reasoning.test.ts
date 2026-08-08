@@ -1,7 +1,7 @@
 import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { type CompactionPreparation, compact, generateSummary } from "#pi/session/compaction";
+import { type CompactionPreparation, compact, generateSummary } from "#pi/session/compaction/index";
 
 const { completeMock } = vi.hoisted(() => ({
 	completeMock: vi.fn(),

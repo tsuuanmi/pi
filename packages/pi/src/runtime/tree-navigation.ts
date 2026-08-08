@@ -1,6 +1,6 @@
 import type { SessionBeforeTreeResult, TreePreparation } from "#pi/loader/extensions/index";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
-import { collectEntriesForBranchSummary, generateBranchSummary } from "#pi/session/compaction";
+import { collectEntriesForBranchSummary, generateBranchSummary } from "#pi/session/compaction/index";
 import type { BranchSummaryEntry } from "#pi/session/manager";
 
 export async function navigateTree(
