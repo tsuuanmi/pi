@@ -1,4 +1,4 @@
-import type { StatusLineHudChip, StatusLineHudEntry } from "#tui/components/status-line/types";
+import type { ActiveHudEntry, HudChip } from "#tui/components/hud/model";
 import { HUD_COLOR_PROFILE, type ThemeColor, theme } from "#tui/theme/theme";
 
 const ANSI_PATTERN = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
@@ -21,15 +21,15 @@ function sanitizeHudPart(value: string | undefined): string {
 		.trim();
 }
 
-function compareEntries(a: StatusLineHudEntry, b: StatusLineHudEntry): number {
+function compareEntries(a: ActiveHudEntry, b: ActiveHudEntry): number {
 	return a.id.localeCompare(b.id) || (a.phase ?? "").localeCompare(b.phase ?? "");
 }
 
-function compareChips(a: StatusLineHudChip, b: StatusLineHudChip): number {
+function compareChips(a: HudChip, b: HudChip): number {
 	return (a.priority ?? 50) - (b.priority ?? 50) || a.label.localeCompare(b.label);
 }
 
-function severityColor(chip: StatusLineHudChip): ThemeColor {
+function severityColor(chip: HudChip): ThemeColor {
 	if (chip.severity === "error") return HUD_COLOR_PROFILE.severity.error;
 	if (chip.severity === "blocked") return HUD_COLOR_PROFILE.severity.blocked;
 	if (chip.severity === "warning") return HUD_COLOR_PROFILE.severity.warning;
@@ -37,7 +37,7 @@ function severityColor(chip: StatusLineHudChip): ThemeColor {
 	return HUD_COLOR_PROFILE.severity.default;
 }
 
-function chipPrefix(chip: StatusLineHudChip): string {
+function chipPrefix(chip: HudChip): string {
 	if (chip.severity === "error") return "!";
 	if (chip.severity === "blocked") return "block";
 	if (chip.severity === "warning") return "warn";
@@ -56,7 +56,7 @@ function styleValue(value: string, color: ThemeColor = HUD_COLOR_PROFILE.value):
 	return theme.bold(theme.fg(color, value));
 }
 
-function formatChip(chip: StatusLineHudChip): string | null {
+function formatChip(chip: HudChip): string | null {
 	const label = sanitizeHudPart(chip.label);
 	const value = sanitizeHudPart(chip.value);
 	if (!label) return null;
@@ -66,7 +66,7 @@ function formatChip(chip: StatusLineHudChip): string | null {
 	return `${styleLabel(displayLabel)}=${styleValue(value, severityColor(chip))}`;
 }
 
-function formatEntry(entry: StatusLineHudEntry): string {
+function formatEntry(entry: ActiveHudEntry): string {
 	const id = sanitizeHudPart(entry.id);
 	const chips = [...(entry.hud?.chips ?? [])]
 		.sort(compareChips)
@@ -84,7 +84,7 @@ function formatEntry(entry: StatusLineHudEntry): string {
  * Returns the styled single line, or null when there are no visible active
  * entries (or width <= 0).
  */
-export function renderHudBar(entries: readonly StatusLineHudEntry[], width: number): string | null {
+export function renderHudBar(entries: readonly ActiveHudEntry[], width: number): string | null {
 	const visible = entries.filter((entry) => entry.active !== false);
 	const active = visible.filter((entry) => sanitizeHudPart(entry.id)).sort(compareEntries);
 	if (active.length === 0 || width <= 0) return null;
