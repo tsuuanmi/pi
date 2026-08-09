@@ -27,4 +27,4 @@ Artifact requirements:
 - Identify constraints, risks, rejected alternatives, and rationale.
 - Recommend one next action: revise, approve-with-caveats, or stop for human input.
 - Persist the artifact through `pi workflow ralplan write-artifact` using stage=expert-stage and the provided stageN.
-- Return only the receipt/path plus compact status after persistence.
+- Return only the receipt/path plus brief status after persistence.

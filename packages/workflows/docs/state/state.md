@@ -26,4 +26,3 @@ Active workflow state, state validation/writes, workflow ids, and base state mod
 - [State commands](commands.md)
 - [Workflow control plane](../workflow.md)
 - [Artifacts](../artifacts/artifacts.md)
-- [Compaction](../compaction/compaction.md)

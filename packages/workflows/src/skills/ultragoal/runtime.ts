@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import type { ObstacleRegression, ObstacleStatus } from "#workflows/audit/decision-ledger";
-import { projectCompactStateFor } from "#workflows/compaction/compaction";
 import {
 	ultragoalBriefPath,
 	ultragoalCheckpointPath,
@@ -40,7 +39,7 @@ import {
 	writeJsonAtomic,
 	writeTextArtifact,
 } from "#workflows/state/state-writer";
-import { readWorkflowState, writeWorkflowState } from "#workflows/state/workflow-state";
+import { writeWorkflowState } from "#workflows/state/workflow-state";
 
 export type {
 	UltragoalCompletionVerification,
@@ -759,16 +758,6 @@ export async function recordUltragoalBlockerClassification(
 		sessionId,
 	);
 	return event as UltragoalLedgerEvent;
-}
-
-export async function readUltragoalCompact(cwd: string, sessionId: string): Promise<Record<string, unknown>> {
-	const status = await getUltragoalStatus(cwd, sessionId);
-	const state = await readWorkflowState(cwd, "ultragoal", { sessionId }).catch(() => undefined);
-	return projectCompactStateFor<Record<string, unknown>>("ultragoal", {
-		status,
-		state,
-		statePath: workflowStatePath(cwd, "ultragoal", sessionId),
-	});
 }
 
 /**

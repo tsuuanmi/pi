@@ -128,11 +128,11 @@ describe("workflow runtime", () => {
 		await expect(writeTextArtifact(join(cwd, "outside.md"), "nope", { cwd })).rejects.toThrow(/\.pi/);
 	});
 
-	it("dispatches workflow commands through the built pi CLI", async () => {
+	it("dispatches active workflow commands through the built pi CLI", async () => {
 		const result = await runBuiltPiWorkflow(
 			[
 				"deep-interview",
-				"read-compact",
+				"closure-check",
 				"--input",
 				JSON.stringify({ workspace: cwd, sessionId: "cli-pipeline" }),
 				"--json",
@@ -142,11 +142,10 @@ describe("workflow runtime", () => {
 		expect(result.status).toBe(0);
 		const json = JSON.parse(result.stdout) as {
 			ok?: boolean;
-			body?: { statePath?: string; state?: { threshold?: number } };
+			body?: { ok?: boolean; gaps?: string[] };
 		};
 		expect(json.ok).toBe(true);
-		expect(json.body?.state?.threshold).toBe(0.05);
-		expect(json.body?.statePath).toContain(".pi/cli-pipeline/workflows/deep-interview/state.json");
+		expect(json.body).toEqual({ ok: true, gaps: [] });
 	});
 
 	it("prints detailed workflow help", async () => {
@@ -184,7 +183,7 @@ describe("workflow runtime", () => {
 	});
 
 	it("requires explicit session ids for workflow skill commands", async () => {
-		const result = await runWorkflowCommand(["deep-interview", "read-compact", "--input", "{}", "--json"], cwd);
+		const result = await runWorkflowCommand(["deep-interview", "closure-check", "--input", "{}", "--json"], cwd);
 		expect(result.status).toBe(1);
 		expect(result.stderr).toMatch(/sessionId is required/);
 	});
@@ -192,7 +191,7 @@ describe("workflow runtime", () => {
 	it("limits workflow gc flags to the gc verb", async () => {
 		const result = await runWorkflowCommand([
 			"deep-interview",
-			"read-compact",
+			"closure-check",
 			"--input",
 			JSON.stringify({ sessionId }),
 			"--prune",
@@ -204,17 +203,17 @@ describe("workflow runtime", () => {
 
 	it("supports file-backed input for workflow verbs", async () => {
 		const inputPath = join(cwd, "payload.json");
-		await writeFile(inputPath, JSON.stringify({ sessionId, lastN: 1 }), "utf8");
+		await writeFile(inputPath, JSON.stringify({ sessionId }), "utf8");
 
 		const relative = await runWorkflowCommand(
-			["deep-interview", "read-compact", "--input-file", "payload.json", "--json"],
+			["deep-interview", "closure-check", "--input-file", "payload.json", "--json"],
 			cwd,
 		);
 		expect(relative.status).toBe(0);
 		expect(JSON.parse(relative.stdout)).toMatchObject({ ok: true });
 
 		const absolute = await runWorkflowCommand(
-			["deep-interview", "read-compact", "--input-file", inputPath, "--json"],
+			["deep-interview", "closure-check", "--input-file", inputPath, "--json"],
 			cwd,
 		);
 		expect(absolute.status).toBe(0);
@@ -225,23 +224,23 @@ describe("workflow runtime", () => {
 		const scalarPath = join(cwd, "scalar.json");
 		await writeFile(scalarPath, "[]", "utf8");
 
-		const missingOperand = await runWorkflowCommand(["deep-interview", "read-compact", "--input-file"], cwd);
+		const missingOperand = await runWorkflowCommand(["deep-interview", "closure-check", "--input-file"], cwd);
 		expect(missingOperand.status).toBe(1);
 		expect(missingOperand.stderr).toMatch(/--input-file requires a value/);
 
 		const missingFile = await runWorkflowCommand(
-			["deep-interview", "read-compact", "--input-file", "missing.json"],
+			["deep-interview", "closure-check", "--input-file", "missing.json"],
 			cwd,
 		);
 		expect(missingFile.status).toBe(1);
 		expect(missingFile.stderr).toMatch(/ENOENT/);
 
-		const nonObject = await runWorkflowCommand(["deep-interview", "read-compact", "--input-file", scalarPath], cwd);
+		const nonObject = await runWorkflowCommand(["deep-interview", "closure-check", "--input-file", scalarPath], cwd);
 		expect(nonObject.status).toBe(1);
 		expect(nonObject.stderr).toMatch(/input must be a JSON object/);
 
 		const combined = await runWorkflowCommand(
-			["deep-interview", "read-compact", "--input", JSON.stringify({ sessionId }), "--input-file", scalarPath],
+			["deep-interview", "closure-check", "--input", JSON.stringify({ sessionId }), "--input-file", scalarPath],
 			cwd,
 		);
 		expect(combined.status).toBe(1);

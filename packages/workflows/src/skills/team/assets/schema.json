@@ -63,15 +63,6 @@
         "teamId": { "type": "string" }
       }
     },
-    "readCompactInput": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["sessionId"],
-      "properties": {
-        "sessionId": { "$ref": "#/$defs/sessionId" },
-        "teamId": { "type": "string" }
-      }
-    },
     "createTaskInput": {
       "type": "object",
       "additionalProperties": false,
@@ -150,7 +141,6 @@
   "x-pi-actions": {
     "start": { "$ref": "#/$defs/startInput" },
     "snapshot": { "$ref": "#/$defs/snapshotInput" },
-    "read-compact": { "$ref": "#/$defs/readCompactInput" },
     "create-task": { "$ref": "#/$defs/createTaskInput" },
     "transition-task": { "$ref": "#/$defs/transitionTaskInput" },
     "send-message": { "$ref": "#/$defs/sendMessageInput" },

@@ -20,5 +20,5 @@ Operating rules:
 
 Ralplan contract:
 - Persist the review with `pi workflow ralplan write-artifact` using the provided runId, stage, and stageN.
-- Include a compact verdict of APPROVE, ITERATE, or REJECT with concrete reasons.
-- Return only the receipt/path plus compact status after persistence.
+- Include a concise verdict of APPROVE, ITERATE, or REJECT with concrete reasons.
+- Return only the receipt/path plus brief status after persistence.

@@ -24,7 +24,6 @@ import {
 	enrichDeepInterviewRoundScoring,
 	finalizeDeepInterviewSpecState,
 	planDeepInterviewQuestion,
-	readDeepInterviewStateCompact,
 	restateGoalGate,
 	runClosureCheckForSession,
 } from "#workflows/skills/deep-interview/runtime";
@@ -34,14 +33,12 @@ import type { RalplanApprovalTarget } from "#workflows/skills/ralplan/runtime";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
-	readRalplanCompactStatus,
 	readRalplanStatus,
 	writeRalplanArtifact,
 } from "#workflows/skills/ralplan/runtime";
 import {
 	completeTeam,
 	createTeamTask,
-	readTeamCompact,
 	readTeamSnapshot,
 	recordTeamCompletionGateArtifact,
 	recordTeamReviewGateArtifact,
@@ -56,7 +53,6 @@ import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
 	getUltragoalStatus,
-	readUltragoalCompact,
 	recordUltragoalBlockerClassification,
 	recordUltragoalReviewBlockers,
 	restoreUltragoalCheckpoint,
@@ -129,10 +125,6 @@ export async function deepInterviewVerb(
 				},
 				sessionId,
 			);
-			break;
-		}
-		case "read-compact": {
-			body = await readDeepInterviewStateCompact(cwd, sessionId, optionalNumber(input, "lastN"));
 			break;
 		}
 		case "closure-check": {
@@ -247,10 +239,6 @@ export async function ralplanVerb(
 			body = await readRalplanStatus(cwd, sessionId, inputString(input, "runId"));
 			break;
 		}
-		case "read-compact": {
-			body = await readRalplanCompactStatus(cwd, sessionId, inputString(input, "runId"));
-			break;
-		}
 		case "doctor": {
 			body = await doctorRalplan(cwd, sessionId, inputString(input, "runId"));
 			break;
@@ -295,10 +283,6 @@ export async function teamVerb(
 		}
 		case "snapshot": {
 			body = await readTeamSnapshot(cwd, sessionId, inputString(input, "teamId"));
-			break;
-		}
-		case "read-compact": {
-			body = await readTeamCompact(cwd, sessionId, inputString(input, "teamId"));
 			break;
 		}
 		case "create-task": {
@@ -409,10 +393,6 @@ export async function ultragoalVerb(
 		}
 		case "status": {
 			body = await getUltragoalStatus(cwd, sessionId);
-			break;
-		}
-		case "read-compact": {
-			body = await readUltragoalCompact(cwd, sessionId);
 			break;
 		}
 		case "start-next": {

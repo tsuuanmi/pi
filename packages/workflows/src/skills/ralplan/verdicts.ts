@@ -1,7 +1,7 @@
 /**
  * Ralplan verdict parsing — R-1 prerequisite.
  *
- * Critic and architect role agents are prompted to emit a compact verdict in
+ * Critic and architect role agents are prompted to emit a concise verdict in
  * their persisted artifact:
  *   - critic:     APPROVE | ITERATE | REJECT
  *   - architect:  CLEAR | WATCH | BLOCK, plus APPROVE | COMMENT | REQUEST CHANGES

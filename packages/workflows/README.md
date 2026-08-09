@@ -43,7 +43,7 @@ npm install @tsuuanmi/pi-workflows
 
 ## Package Scope
 
-`@tsuuanmi/pi-workflows` ships the workflow runtime: the `pi workflow` CLI, the harness control plane (sessions, leases, RPC, GC), the four workflow skills and their model-visible tools, and the reusable role agent profiles. Application-level wiring (session persistence, compaction, system-prompt assembly) lives in `@tsuuanmi/pi`, which depends on this package.
+`@tsuuanmi/pi-workflows` ships the workflow runtime: the `pi workflow` CLI, the harness control plane (sessions, leases, RPC, GC), the four workflow skills and their model-visible tools, and the reusable role agent profiles. Application-level wiring (session persistence and system-prompt assembly) lives in `@tsuuanmi/pi`, which depends on this package.
 
 State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`. Runtime artifacts persist under the current session root, e.g. `.pi/<session-id>/workflows/<skill>/` and `.pi/<session-id>/state/`.
 
@@ -93,7 +93,7 @@ Deep Interview turns a vague idea into a concrete spec before any mutation start
 
 Score every active component independently; the overall dimension score is the minimum (or coverage-weighted weakest) across active components. Deferred components are excluded from the math but remain listed.
 
-**Control plane:** use `pi workflow state deep-interview <read|write|clear|doctor>` for envelope state and `pi workflow deep-interview <plan-question|record-answer|record-scoring|read-compact|closure-check|restate-goal|write-spec>` for runtime state and artifacts. Use `subagent_spawn`/`subagent_await` for read-only research, auto-research, auto-answer, and lateral-panel personas.
+**Control plane:** use `pi workflow state deep-interview <read|write|clear|doctor>` for envelope state and `pi workflow deep-interview <plan-question|record-answer|record-scoring|closure-check|restate-goal|write-spec>` for runtime state and artifacts. Use `subagent_spawn`/`subagent_await` for read-only research, auto-research, auto-answer, and lateral-panel personas.
 
 **Boundaries:** planning only — `edit`/`write` are runtime-blocked while a deep-interview workflow is active in a non-finished phase (only `.pi/**` is always blocked; only system-temp scratch outside the project is writable). Ask one question at a time. Do not proceed to execution until ambiguity ≤ threshold, closure passes, the restate is confirmed, and the user explicitly approves an execution path.
 
@@ -125,7 +125,7 @@ After explicit approval or rejection, call `pi workflow ralplan approve-plan`. D
 
 **Pre-execution vagueness gate:** when `team` or `ultragoal` is dispatched with a vague prompt (no concrete signals and ≤ 15 words), the workflow tools redirect to `ralplan` instead of starting execution. Concrete signals include file paths, issue references (`#123`), snake_case/CamelCase symbols, numbered steps, acceptance/criteria/must/should language, error/exception/traceback, and fenced code blocks. The gate checks specificity, not file existence. Prefix the prompt with `force:` or `!` to bypass.
 
-**Control plane:** use `pi workflow state ralplan ...` for envelope state; `pi workflow ralplan <record-explorer-gate|write-artifact|status|read-compact|doctor|approve-plan>` for non-spawn runtime operations; and `ralplan_run_agent` for guarded role-agent execution.
+**Control plane:** use `pi workflow state ralplan ...` for envelope state; `pi workflow ralplan <record-explorer-gate|write-artifact|status|doctor|approve-plan>` for non-spawn runtime operations; and `ralplan_run_agent` for guarded role-agent execution.
 
 **Boundaries:** planning only. Persist artifacts with `pi workflow ralplan write-artifact`; do not directly edit `.pi/<session-id>/plans` or `.pi/<session-id>/workflows` unless recovering with explicit user approval. Explorer/Planner/Architect/Critic/Expert passes must use `ralplan_run_agent` and follow workflow-selected order. Role agents persist durable output and return receipt-only summaries (run id, stage, stage_n, path).
 
@@ -138,7 +138,7 @@ After explicit approval or rejection, call `pi workflow ralplan approve-plan`. D
 Team coordinates multiple implementation workstreams as subagent sessions. Use it only after the user explicitly approves execution.
 
 1. Read the approved plan or task.
-2. Start runtime coordination with `pi workflow team start`; inspect with `pi workflow team snapshot` / `pi workflow team read-compact`.
+2. Start runtime coordination with `pi workflow team start`; inspect with `pi workflow team snapshot`.
 3. Split work into independent workstreams with clear ownership, files, and verification.
 4. Persist each workstream with `pi workflow team create-task`.
 5. Use `pi workflow team transition-task` for starts, blocking, failure, and completion. Completed tasks require completion evidence.
@@ -150,7 +150,7 @@ Team coordinates multiple implementation workstreams as subagent sessions. Use i
 
 **Gates:** completed tasks require a reviewer `review_report` (`pi workflow team record-review-gate`) and completion requires a prover `evidence_matrix` (`pi workflow team record-completion-gate`). Both are fail-closed validated; blocking artifacts escalate to `human_blocked` on the second blocking attempt (bounded retry).
 
-**Control plane:** use `pi workflow state team ...` for envelope state; `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>` for workflow state and gates; and `team_execute` / `team_resume` for all worker, reviewer, and prover execution through the orchestrator.
+**Control plane:** use `pi workflow state team ...` for envelope state; `pi workflow team <start|snapshot|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>` for workflow state and gates; and `team_execute` / `team_resume` for all worker, reviewer, and prover execution through the orchestrator.
 
 **Boundaries:** if the request is vague or lacks acceptance criteria, route to `/skill:ralplan` first. If a single autonomous worker is enough, prefer `/skill:ultragoal`. Keep workers scoped to non-overlapping files/components when possible.
 
@@ -163,7 +163,7 @@ Team coordinates multiple implementation workstreams as subagent sessions. Use i
 Ultragoal executes an approved concrete goal end-to-end with verification.
 
 1. Restate the approved goal and acceptance criteria.
-2. Create or resume runtime goal state with `pi workflow ultragoal status`, `pi workflow ultragoal read-compact`, and `pi workflow ultragoal create-plan` when no plan exists.
+2. Create or resume runtime goal state with `pi workflow ultragoal status` and `pi workflow ultragoal create-plan` when no plan exists.
 3. Start the next runnable goal with `pi workflow ultragoal start-next`.
 4. Inspect files, make the smallest complete set of changes, run required checks.
 5. Checkpoint each goal with `pi workflow ultragoal checkpoint`. Complete checkpoints require substantive evidence and the **full quality gate**: `architectReview`, `executorQa`, and `iteration`. Old `executorQa + contractCoverage` top-level gates and free-form `{status}` gates are rejected (fail closed).
@@ -172,7 +172,7 @@ Ultragoal executes an approved concrete goal end-to-end with verification.
 
 **Goal states:** `pending` → `active` → `completed` (or `failed` / `blocked` / `review_blocked`).
 
-**Control plane:** use `pi workflow state ultragoal ...` for envelope state; `pi workflow ultragoal <create-plan|status|read-compact|start-next|checkpoint|record-review-blockers|classify-blocker|guard>` for non-spawn runtime operations; and `ultragoal_spawn_goal_agent` for guarded worker execution.
+**Control plane:** use `pi workflow state ultragoal ...` for envelope state; `pi workflow ultragoal <create-plan|status|start-next|checkpoint|record-review-blockers|classify-blocker|guard>` for non-spawn runtime operations; and `ultragoal_spawn_goal_agent` for guarded worker execution.
 
 **Boundaries:** if the request is vague, run `/skill:deep-interview` or `/skill:ralplan` first. If no execution approval exists, stop and ask. Do not widen scope beyond the approved goal. If the plan proves wrong, stop and ask or route back to `/skill:ralplan` rather than improvising a larger scope.
 
@@ -252,11 +252,11 @@ Profiles are authored as markdown files with YAML frontmatter. Pi discovers them
 
 ## Model-Visible Tools
 
-Workflow-owned tools are model-visible and registered by the bundled workflow registration. Tools include `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, and `ultragoal_spawn_goal_agent`. Deep Interview also exposes first-class runtime tools: `deep_interview_plan_question`, `deep_interview_record_answer`, `deep_interview_record_scoring`, `deep_interview_read_compact`, `deep_interview_closure_check`, `deep_interview_restate_goal`, and `deep_interview_write_spec`. Team role agents are always invoked through `@tsuuanmi/pi-orchestrator`; workflow code owns turn order, gates, and result-to-artifact handoff. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
+Workflow-owned tools are model-visible and registered by the bundled workflow registration. Tools include `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, and `ultragoal_spawn_goal_agent`. Deep Interview also exposes first-class runtime tools: `deep_interview_plan_question`, `deep_interview_record_answer`, `deep_interview_record_scoring`, `deep_interview_closure_check`, `deep_interview_restate_goal`, and `deep_interview_write_spec`. Team role agents are always invoked through `@tsuuanmi/pi-orchestrator`; workflow code owns turn order, gates, and result-to-artifact handoff. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
 
 ## Harness Runtime
 
-The workflow runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives directly under `src/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `artifacts/`, `audit/`, `compaction/`, `orchestration/`, `registry/`, `session/`, `state/`, and `tools/` (adapters for agent-owned lifecycle tools). Skill-owned TypeScript and `SKILL.md` assets live together under `src/skills/<skill>/`.
+The workflow runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives directly under `src/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `artifacts/`, `audit/`, `orchestration/`, `registry/`, `session/`, `state/`, and `tools/` (adapters for agent-owned lifecycle tools). Skill-owned TypeScript and `SKILL.md` assets live together under `src/skills/<skill>/`.
 
 Key seams for contributors:
 
@@ -296,7 +296,6 @@ Top-level shared folders provide common utilities used by all four skills:
 |-----------|---------|-------------|
 | `artifacts/` | `artifacts.ts` | Durable artifact writes and receipt helpers. |
 | `audit/` | `audit-log.ts`, `decision-ledger.ts`, `tamper-detection.ts`, `transaction-journal.ts` | Append-only audit, decision, tamper, and transaction records. |
-| `compaction/` | `compaction.ts` | Prompt-budgeted compact workflow projections. |
 | Skill HUD modules | `deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts` | HUD chip formatting for each workflow skill, colocated with the owning skill folder. |
 | `policy/`, `handoff/` | `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Cross-workflow prompts, handoffs, gates, and expected-next checks. Skill-specific guards live with their skill; reusable subagent validation lives in `@tsuuanmi/pi-agent`. |
 | `registry/` | `transition-registry.ts`, `workflow-manifest.ts` | Workflow transition registry and manifest metadata. |
@@ -361,7 +360,7 @@ Workspace tests import packages from the gitignored `dist/`, so rebuild this pac
 - [docs/commands/workflow.md](docs/commands/workflow.md) — command entry points and supported verbs.
 - [docs/extensions/workflows.md](docs/extensions/workflows.md) — Pi integration boundaries and registered tools.
 - [docs/skills/](docs/skills/) — per-skill design and runtime docs.
-- [docs/runtime/](docs/runtime/), [docs/subagents/](docs/subagents/), [docs/state/](docs/state/), [docs/orchestration/](docs/orchestration/), [docs/artifacts/](docs/artifacts/), [docs/audit/](docs/audit/), [docs/compaction/](docs/compaction/), [docs/registry/](docs/registry/), [docs/session/](docs/session/) — per-source-directory module docs.
+- [docs/runtime/](docs/runtime/), [docs/subagents/](docs/subagents/), [docs/state/](docs/state/), [docs/orchestration/](docs/orchestration/), [docs/artifacts/](docs/artifacts/), [docs/audit/](docs/audit/), [docs/registry/](docs/registry/), [docs/session/](docs/session/) — per-source-directory module docs.
 - [CHANGELOG.md](CHANGELOG.md) — changes.
 - [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/loader/skills/index.md) — Pi skill format and installation paths.
 - [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/subagents/index.md) — Pi-native SubagentManager and subagent tools.

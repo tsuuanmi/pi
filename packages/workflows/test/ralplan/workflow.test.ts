@@ -7,7 +7,6 @@ import {
 	doctorRalplan,
 	planRalplanAgent,
 	ralplanIndexPath,
-	readRalplanCompactStatus,
 	readRalplanStatus,
 	readWorkflowActiveState,
 	readWorkflowState,
@@ -141,8 +140,6 @@ describe("ralplan workflow runtime", () => {
 
 		const status = await readRalplanStatus(cwd, sessionId, "run-4");
 		expect(status.invalid_index_lines).toHaveLength(2);
-		const compact = await readRalplanCompactStatus(cwd, sessionId, "run-4");
-		expect(compact.invalid_index_line_count).toBe(2);
 		const doctor = await doctorRalplan(cwd, sessionId, "run-4");
 		expect(doctor.ok).toBe(false);
 		expect(doctor.problems.filter((problem) => problem.includes("invalid index line"))).toHaveLength(2);

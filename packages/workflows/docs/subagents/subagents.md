@@ -30,7 +30,6 @@ The workflow extension registers these model-visible tools:
 | `deep_interview_plan_question` | Plan the next Deep Interview question and mark the workflow as waiting for an answer. |
 | `deep_interview_record_answer` | Record or replace a Deep Interview answer shell, including optional topology lock. |
 | `deep_interview_record_scoring` | Record scores, ambiguity, trigger metadata, and advisory counters for a round. |
-| `deep_interview_read_compact` | Read a compact Deep Interview state projection for resume or prompt budgeting. |
 | `deep_interview_closure_check` | Run the Deep Interview closure and acceptance guard. |
 | `deep_interview_restate_goal` | Record the one-sentence restated goal confirmation or adjustment. |
 | `deep_interview_write_spec` | Persist a finalized Deep Interview spec and optionally hand off to Ralplan, Ultragoal, or Team. |
@@ -62,7 +61,7 @@ The workflow adapter constructs this required context from the optional `Workflo
 
 ## Command Surface
 
-`pi workflow ...` is the external CLI control plane for state, artifacts, gates, receipts, compaction, status, approval, and runtime owner lifecycle. It parses CLI input and returns command status/output; it does not invoke model-visible tools.
+`pi workflow ...` is the external CLI control plane for state, artifacts, gates, receipts, status, approval, and runtime owner lifecycle. It parses CLI input and returns command status/output; it does not invoke model-visible tools.
 
 Model-visible tools are the separate in-process surface for the current Pi session. Agent-owned lifecycle tools are adapted under `src/tools/`; skill-specific tools remain under `src/skills/<skill>/`. `src/tools.ts` is the workflow tool contract and registration aggregator; it is not a second implementation directory.
 

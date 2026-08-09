@@ -11,7 +11,6 @@ export const RALPLAN_SKILL_HELP: WorkflowSkillHelp = {
 	commandOrder: [
 		"`pi workflow state ralplan read --session <session-id> --json` to inspect state.",
 		'`pi workflow ralplan status --input \'{"sessionId":"<session-id>"}\' --json` to inspect the active run.',
-		'`pi workflow ralplan read-compact --input \'{"sessionId":"<session-id>"}\' --json` when resuming or budgeting context.',
 		'`pi workflow ralplan doctor --input \'{"sessionId":"<session-id>"}\' --json` when resuming or when status looks inconsistent.',
 		'`pi workflow ralplan record-explorer-gate --input \'{"sessionId":"<session-id>","contextMap":{}}\' --json` after the explorer pre-planner gate.',
 		'`pi workflow ralplan write-artifact --input \'{"sessionId":"<session-id>","stage":"planner","stageN":1,"artifact":"# Plan..."}\' --json` for planner, architect, critic, revision, expert-stage, adr, and final artifacts.',
@@ -58,12 +57,6 @@ export const RALPLAN_SKILL_HELP: WorkflowSkillHelp = {
 			when: "Use before deciding the next planning role or before approval.",
 			input: ["sessionId: string (required; current session)", "runId?: string"],
 			example: `pi workflow ralplan status --input '{"sessionId":"<session-id>"}' --json`,
-		},
-		"read-compact": {
-			summary: "Read prompt-efficient ralplan status.",
-			when: "Use when resuming or before passing context to another agent.",
-			input: ["sessionId: string (required; current session)", "runId?: string"],
-			example: `pi workflow ralplan read-compact --input '{"sessionId":"<session-id>"}' --json`,
 		},
 		doctor: {
 			summary: "Diagnose stale, stuck, or inconsistent ralplan state.",

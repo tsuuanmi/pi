@@ -86,15 +86,6 @@
         "metadata": { "type": "object", "additionalProperties": true }
       }
     },
-    "readCompactInput": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["sessionId"],
-      "properties": {
-        "sessionId": { "$ref": "#/$defs/sessionId" },
-        "lastN": { "type": "number" }
-      }
-    },
     "closureCheckInput": {
       "type": "object",
       "additionalProperties": false,
@@ -131,7 +122,6 @@
     "plan-question": { "$ref": "#/$defs/planQuestionInput" },
     "record-answer": { "$ref": "#/$defs/recordAnswerInput" },
     "record-scoring": { "$ref": "#/$defs/recordScoringInput" },
-    "read-compact": { "$ref": "#/$defs/readCompactInput" },
     "closure-check": { "$ref": "#/$defs/closureCheckInput" },
     "restate-goal": { "$ref": "#/$defs/restateGoalInput" },
     "write-spec": { "$ref": "#/$defs/writeSpecInput" }

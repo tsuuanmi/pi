@@ -4,7 +4,6 @@ import { join } from "node:path";
 import {
 	completeTeam,
 	createTeamTask,
-	readTeamCompact,
 	readTeamSnapshot,
 	readWorkflowActiveState,
 	readWorkflowState,
@@ -29,7 +28,7 @@ describe("team workflow runtime", () => {
 		await rm(cwd, { recursive: true, force: true });
 	});
 
-	it("starts a team, tracks tasks, messages, compact status, and completion", async () => {
+	it("starts a team, tracks tasks, messages, and completion", async () => {
 		const started = await startTeam(cwd, { teamId: "team-1", task: "Approved plan" }, sessionId);
 		expect(started.team_id).toBe("team-1");
 		expect(started.workers).toHaveLength(2);
@@ -105,7 +104,6 @@ describe("team workflow runtime", () => {
 		const snapshot = await readTeamSnapshot(cwd, sessionId, "team-1");
 		expect(snapshot.phase).toBe("awaiting_integration");
 		expect(snapshot.task_counts.completed).toBe(1);
-		expect((await readTeamCompact(cwd, sessionId, "team-1")).tasks).toHaveLength(1);
 
 		await recordTeamCompletionGateArtifact(
 			cwd,

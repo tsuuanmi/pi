@@ -59,15 +59,6 @@
         "runId": { "type": "string" }
       }
     },
-    "readCompactInput": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["sessionId"],
-      "properties": {
-        "sessionId": { "$ref": "#/$defs/sessionId" },
-        "runId": { "type": "string" }
-      }
-    },
     "doctorInput": {
       "type": "object",
       "additionalProperties": false,
@@ -95,7 +86,6 @@
     "record-explorer-gate": { "$ref": "#/$defs/recordExplorerGateInput" },
     "write-artifact": { "$ref": "#/$defs/writeArtifactInput" },
     "status": { "$ref": "#/$defs/statusInput" },
-    "read-compact": { "$ref": "#/$defs/readCompactInput" },
     "doctor": { "$ref": "#/$defs/doctorInput" },
     "approve-plan": { "$ref": "#/$defs/approvePlanInput" }
   },

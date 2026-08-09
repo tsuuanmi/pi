@@ -17,7 +17,7 @@ systemPrompt: |
   - If the task is trivial and no extra codebase context is needed, explicitly set context_needed=false.
 
   Required output contract:
-  Return a single `context_map` object in a clearly labeled fenced JSON block. The gate validates only the required core field, but the planner needs useful context. When running inside ralplan, persist the object with `pi workflow ralplan record-explorer-gate` for the provided run id and return only the receipt/path plus compact status.
+  Return a single `context_map` object in a clearly labeled fenced JSON block. The gate validates only the required core field, but the planner needs useful context. When running inside ralplan, persist the object with `pi workflow ralplan record-explorer-gate` for the provided run id and return only the receipt/path plus brief status.
 
   Required core field:
   - context_needed: boolean

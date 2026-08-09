@@ -18,7 +18,6 @@ export * from "#workflows/audit/tamper-detection";
 export * from "#workflows/audit/transaction-journal";
 // Workflow commands
 export { handleWorkflowCommand, runStateCommand, runWorkflowCommand } from "#workflows/commands/workflow";
-export * from "#workflows/compaction/compaction";
 export * from "#workflows/handoff/handoff";
 export * from "#workflows/policy/context-templates";
 export * from "#workflows/policy/expected-next-role";
@@ -57,7 +56,6 @@ export {
 	type RalplanAgentRole,
 	roleForStage,
 } from "#workflows/skills/ralplan/agent-roles";
-export * from "#workflows/skills/ralplan/compact";
 export * from "#workflows/skills/ralplan/completion-transaction";
 export * from "#workflows/skills/ralplan/expected-action";
 export * from "#workflows/skills/ralplan/gates";
@@ -78,7 +76,6 @@ export * from "#workflows/skills/ralplan/verdicts";
 // Harness runtime
 export * from "#workflows/skills/team/agent-adapter";
 export * from "#workflows/skills/team/checkpoint-store";
-export * from "#workflows/skills/team/compact";
 export * from "#workflows/skills/team/coordinator";
 export * from "#workflows/skills/team/event-mapper";
 export * from "#workflows/skills/team/event-store";
@@ -99,7 +96,6 @@ export * from "#workflows/skills/team/runtime";
 export * from "#workflows/skills/team/status-mapper";
 export * from "#workflows/skills/team/task-mapper";
 export * from "#workflows/skills/ultragoal/artifacts";
-export * from "#workflows/skills/ultragoal/compact";
 export * from "#workflows/skills/ultragoal/guard";
 export * from "#workflows/skills/ultragoal/obstacles";
 export * from "#workflows/skills/ultragoal/quality-gate";

@@ -24,7 +24,7 @@ systemPrompt: |
   - high: correctness, safety, data-loss, security, API contract, workflow-gate, or regression risk that must block completion.
 
   Required output contract:
-  Return a single `review_report` object in a clearly labeled fenced JSON block. The gate validates the required core fields fail-closed. When running inside team, persist the object with `pi workflow team record-review-gate` for the provided team id and task id, then return only the receipt/path plus compact status.
+  Return a single `review_report` object in a clearly labeled fenced JSON block. The gate validates the required core fields fail-closed. When running inside team, persist the object with `pi workflow team record-review-gate` for the provided team id and task id, then return only the receipt/path plus brief status.
 
   Required core fields:
   - max_severity: one of "none", "low", "medium", "high"

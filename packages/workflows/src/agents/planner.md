@@ -20,4 +20,4 @@ Operating rules:
 
 Ralplan contract:
 - Persist the artifact with `pi workflow ralplan write-artifact` using the provided runId, stage, and stageN.
-- Return only the receipt/path plus compact status after persistence.
+- Return only the receipt/path plus brief status after persistence.

@@ -12,7 +12,6 @@ import {
 	handoffWorkflow,
 	normalizeDeepInterviewEnvelope,
 	planDeepInterviewQuestion,
-	readDeepInterviewStateCompact,
 	readWorkflowActiveState,
 	readWorkflowState,
 	runClosureAcceptanceGuard,
@@ -484,44 +483,5 @@ describe("deep-interview workflow runtime", () => {
 		expect(teamState?.active).toBe(true);
 		expect(teamState?.current_phase).toBe("approved-execution");
 		expect(teamState?.input).toBe(deepState?.spec_path);
-	});
-
-	it("returns compact state projection", async () => {
-		await appendOrMergeDeepInterviewRound(
-			cwd,
-			{
-				round: 1,
-				questionId: "q1",
-				questionText: "Goal?",
-				customInput: "A",
-			},
-			TEST_SESSION,
-		);
-		await enrichDeepInterviewRoundScoring(
-			cwd,
-			{
-				round: 1,
-				questionId: "q1",
-				scores: { goal: 0.6 },
-				ambiguity: 0.4,
-			},
-			TEST_SESSION,
-		);
-		await appendOrMergeDeepInterviewRound(
-			cwd,
-			{
-				round: 2,
-				questionId: "q2",
-				questionText: "Criteria?",
-				customInput: "pending",
-			},
-			TEST_SESSION,
-		);
-
-		const compact = await readDeepInterviewStateCompact(cwd, TEST_SESSION, 1);
-		expect(compact.state.current_ambiguity).toBe(0.4);
-		expect(compact.state.orchestration?.status).toBe("pending_scoring");
-		expect(compact.state.recent_scored_rounds).toHaveLength(1);
-		expect(compact.state.pending_shells).toHaveLength(1);
 	});
 });

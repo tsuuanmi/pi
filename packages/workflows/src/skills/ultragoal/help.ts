@@ -10,11 +10,11 @@ export const ULTRAGOAL_SKILL_HELP: WorkflowSkillHelp = {
 	],
 	commandOrder: [
 		"`pi workflow state ultragoal read --session <session-id> --json` to inspect state.",
-		'`pi workflow ultragoal status --input \'{"sessionId":"<session-id>"}\' --json` or `pi workflow ultragoal read-compact --input \'{"sessionId":"<session-id>"}\' --json` to inspect goals.',
+		'`pi workflow ultragoal status --input \'{"sessionId":"<session-id>"}\' --json` to inspect goals.',
 		'`pi workflow ultragoal create-plan --input \'{"sessionId":"<session-id>","brief":"approved goal..."}\' --json` when no goal plan exists.',
 		'`pi workflow ultragoal start-next --input \'{"sessionId":"<session-id>"}\' --json` before implementation.',
 		'`pi workflow ultragoal checkpoint --input \'{"sessionId":"<session-id>","goalId":"goal-1","status":"active","evidence":"..."}\' --json` after progress or completion evidence; each checkpoint writes a state-only restore snapshot.',
-		'`pi workflow ultragoal restore-checkpoint --input \'{"sessionId":"<session-id>"}\' --json` only after later-task failure when you need to restore Ultragoal state to the latest valid checkpoint. Pass `expectedPlanHash` from `status.planHash` or `read-compact.plan_hash` when available.',
+		'`pi workflow ultragoal restore-checkpoint --input \'{"sessionId":"<session-id>"}\' --json` only after later-task failure when you need to restore Ultragoal state to the latest valid checkpoint. Pass `expectedPlanHash` from `status.planHash` when available.',
 		'`pi workflow ultragoal record-review-blockers --input \'{"sessionId":"<session-id>","goalId":"goal-1","title":"...","objective":"...","evidence":"..."}\' --json` when review creates durable blockers.',
 		'`pi workflow ultragoal classify-blocker --input \'{"sessionId":"<session-id>","classification":"human_blocked","evidence":"..."}\' --json` only for policy-classified failed/blocked work.',
 		'`pi workflow ultragoal guard --input \'{"sessionId":"<session-id>"}\' --json` when readiness or quality is uncertain.',
@@ -44,12 +44,6 @@ export const ULTRAGOAL_SKILL_HELP: WorkflowSkillHelp = {
 			when: "Use before selecting the next action.",
 			input: ["sessionId: string (required; current session)"],
 			example: `pi workflow ultragoal status --input '{"sessionId":"<session-id>"}' --json`,
-		},
-		"read-compact": {
-			summary: "Read prompt-efficient ultragoal state.",
-			when: "Use when resuming or prompting a worker.",
-			input: ["sessionId: string (required; current session)"],
-			example: `pi workflow ultragoal read-compact --input '{"sessionId":"<session-id>"}' --json`,
 		},
 		"start-next": {
 			summary: "Start the next pending goal.",

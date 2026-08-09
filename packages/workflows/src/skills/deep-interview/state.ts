@@ -134,28 +134,6 @@ export interface DeepInterviewAdvisoryMetadata {
 	topology?: unknown;
 }
 
-export interface DeepInterviewCompactState {
-	threshold?: number;
-	threshold_source?: string;
-	current_ambiguity?: number;
-	topology_summary?: { active: number; deferred: number; components: string[] };
-	orchestration?: DeepInterviewOrchestrationState;
-	established_facts: DeepInterviewEstablishedFact[];
-	unresolved_triggers: DeepInterviewTriggerMetadata[];
-	recent_scored_rounds: DeepInterviewRoundRecord[];
-	pending_shells: DeepInterviewRoundRecord[];
-	auto_answer_streak?: number;
-	ambiguity_milestone?: string;
-	advisory_counters?: {
-		auto_researched_rounds: number;
-		auto_answered_rounds: number;
-		refined_rounds: number;
-		lateral_reviews: number;
-		lateral_panel_failures: number;
-		architect_failures: number;
-	};
-}
-
 export interface TransitionValidationResult {
 	ok: boolean;
 	violations: string[];
@@ -423,71 +401,4 @@ export function validateDeepInterviewScoredTransition(
 		priorPresent: prior !== undefined,
 	});
 	return { ok: result.ok, violations: formatDeepInterviewViolations(result.violations) };
-}
-
-function readRounds(envelope: DeepInterviewStateEnvelope): DeepInterviewRoundRecord[] {
-	const inner = (envelope.state ?? {}) as Record<string, unknown>;
-	return Array.isArray(inner.rounds) ? (inner.rounds as DeepInterviewRoundRecord[]) : [];
-}
-
-export function projectCompactState(value: unknown, options: { lastN?: number } = {}): DeepInterviewCompactState {
-	const lastN = options.lastN ?? 3;
-	const envelope = normalizeDeepInterviewEnvelope(value);
-	const inner = (envelope.state ?? {}) as Record<string, unknown>;
-	const rounds = readRounds(envelope);
-	const scored = rounds.filter((round) => round.lifecycle === "scored");
-	const pending = rounds.filter((round) => round.lifecycle !== "scored");
-	const latestScored = scored.at(-1);
-	const established = Array.isArray(inner.established_facts)
-		? (inner.established_facts as DeepInterviewEstablishedFact[])
-		: [];
-	const unresolved: DeepInterviewTriggerMetadata[] = [];
-	for (const round of scored) {
-		for (const trigger of round.triggers ?? []) {
-			if (trigger.status === "unresolved" || trigger.status === "disputed") unresolved.push(trigger);
-		}
-	}
-	const topology = inner.topology as { components?: Array<{ status?: string; name?: string }> } | undefined;
-	let topologySummary: DeepInterviewCompactState["topology_summary"];
-	if (topology && Array.isArray(topology.components)) {
-		const active = topology.components.filter((component) => component.status !== "deferred");
-		topologySummary = {
-			active: active.length,
-			deferred: topology.components.length - active.length,
-			components: topology.components.map((component) => component.name ?? "").filter(Boolean),
-		};
-	}
-	const advisoryCounters = {
-		auto_researched_rounds: Array.isArray(inner.auto_researched_rounds) ? inner.auto_researched_rounds.length : 0,
-		auto_answered_rounds: Array.isArray(inner.auto_answered_rounds) ? inner.auto_answered_rounds.length : 0,
-		refined_rounds: Array.isArray(inner.refined_rounds) ? inner.refined_rounds.length : 0,
-		lateral_reviews: Array.isArray(inner.lateral_reviews) ? inner.lateral_reviews.length : 0,
-		lateral_panel_failures: typeof inner.lateral_panel_failures === "number" ? inner.lateral_panel_failures : 0,
-		architect_failures: typeof inner.architect_failures === "number" ? inner.architect_failures : 0,
-	};
-	return {
-		threshold:
-			typeof envelope.threshold === "number"
-				? envelope.threshold
-				: ((inner.threshold as number | undefined) ?? DEFAULT_DEEP_INTERVIEW_THRESHOLD),
-		threshold_source:
-			typeof envelope.threshold_source === "string"
-				? envelope.threshold_source
-				: (inner.threshold_source as string | undefined),
-		current_ambiguity:
-			typeof latestScored?.ambiguity === "number"
-				? latestScored.ambiguity
-				: (inner.current_ambiguity as number | undefined),
-		topology_summary: topologySummary,
-		orchestration: isPlainObject(inner.orchestration)
-			? (inner.orchestration as unknown as DeepInterviewOrchestrationState)
-			: undefined,
-		established_facts: established,
-		unresolved_triggers: unresolved,
-		recent_scored_rounds: scored.slice(-lastN),
-		pending_shells: pending,
-		auto_answer_streak: typeof inner.auto_answer_streak === "number" ? inner.auto_answer_streak : undefined,
-		ambiguity_milestone: typeof inner.ambiguity_milestone === "string" ? inner.ambiguity_milestone : undefined,
-		advisory_counters: advisoryCounters,
-	};
 }

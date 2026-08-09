@@ -63,10 +63,10 @@ Every verb accepts `--json` where meaningful and `--input '<JSON object>'` for s
 
 | Skill | Actions |
 |-------|---------|
-| `deep-interview` | `plan-question`, `record-answer`, `record-scoring`, `read-compact`, `closure-check`, `restate-goal`, `write-spec` |
-| `ralplan` | `record-explorer-gate`, `write-artifact`, `status`, `read-compact`, `doctor`, `approve-plan` |
-| `team` | `start`, `snapshot`, `read-compact`, `create-task`, `transition-task`, `send-message`, `record-review-gate`, `record-completion-gate`, `complete` |
-| `ultragoal` | `create-plan`, `status`, `read-compact`, `start-next`, `checkpoint`, `record-review-blockers`, `classify-blocker`, `guard` |
+| `deep-interview` | `plan-question`, `record-answer`, `record-scoring`, `closure-check`, `restate-goal`, `write-spec` |
+| `ralplan` | `record-explorer-gate`, `write-artifact`, `status`, `doctor`, `approve-plan` |
+| `team` | `start`, `snapshot`, `create-task`, `transition-task`, `send-message`, `record-review-gate`, `record-completion-gate`, `complete` |
+| `ultragoal` | `create-plan`, `status`, `start-next`, `checkpoint`, `record-review-blockers`, `classify-blocker`, `guard` |
 
 Removed compatibility verbs (`ralplan run-agent`, `team spawn-task-agent`, `ultragoal spawn-goal-agent`) fail closed with guidance to use the model-visible tools. Generic `pi workflow subagent` / `subagents` command shims are removed; use the `subagent_*` model-visible tools.
 

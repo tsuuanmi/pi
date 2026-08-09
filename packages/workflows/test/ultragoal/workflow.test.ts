@@ -5,7 +5,6 @@ import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
 	getUltragoalStatus,
-	readUltragoalCompact,
 	readWorkflowActiveState,
 	restoreUltragoalCheckpoint,
 	startNextUltragoalGoal,
@@ -139,7 +138,6 @@ describe("ultragoal workflow runtime", () => {
 		const status = await getUltragoalStatus(cwd, sessionId);
 		expect(status.counts.complete).toBe(1);
 		expect(status.currentGoal?.id).toBe("G002");
-		expect((await readUltragoalCompact(cwd, sessionId)).current_goal).toMatchObject({ id: "G002" });
 	});
 
 	it("restores workflow state to the latest checkpoint without changing task identity", async () => {
@@ -180,9 +178,6 @@ describe("ultragoal workflow runtime", () => {
 		expect(status.currentGoal?.id).toBe("G002");
 		expect(status.currentGoal?.status).toBe("pending");
 		expect(status.counts.complete).toBe(1);
-		const compact = await readUltragoalCompact(cwd, sessionId);
-		expect(compact.plan_hash).toBeDefined();
-		expect(compact.last_checkpoint).toMatchObject({ goal_id: "G001" });
 	});
 
 	it("marks ultragoal complete and demotes active state", async () => {

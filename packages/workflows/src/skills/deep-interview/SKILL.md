@@ -68,7 +68,6 @@ Pi has no `ask` tool. Ask each question as a single prose message. For option-be
 - `pi workflow deep-interview plan-question` — plan the next targeted question and mark the workflow `waiting_for_answer`.
 - `pi workflow deep-interview record-answer` — record/replace one answered round; accepts an optional `topology` to lock the Round 0 topology safely (merged, never clobbers `rounds`).
 - `pi workflow deep-interview record-scoring` — enrich a round with per-dimension `scores`, `ambiguity`, `triggers`, and optional advisory `metadata` counters (merged safely). Invalid ambiguity-raising transitions are rejected.
-- `pi workflow deep-interview read-compact` — prompt-efficient compact projection (threshold, ambiguity, topology summary, orchestration, established facts, unresolved triggers, recent rounds, advisory counters). Use when resuming or when the transcript is large.
 - `pi workflow deep-interview closure-check` — run the closure/acceptance guard against current state; returns `ok` plus blocking gaps. Run before crystallizing.
 - `pi workflow deep-interview restate-goal` — confirm the one-sentence restated goal after closure passes; `confirm: "Yes"` crystallizes, `"Adjust"`/`"Missing"` route back through scoring, capped at two loops. Enforces the restate gate and records overrides safely (never clobbers `rounds`).
 - `pi workflow deep-interview write-spec` — persist the final spec under `.pi/<session-id>/specs` and update state; optionally hand off to `ralplan`/`ultragoal`/`team` or `stop`.
@@ -228,7 +227,7 @@ If the user opts out of answering or explicitly asks the agent to decide, spawn 
 
 When the user's answer is free-text carrying reasoning, constraints, or scope decisions, do not forward it to scoring as a lossy one-line label.
 
-1. Structure the raw answer into a compact interpretation with the canonical sections (omit empty ones): **Decision**, **Reasoning**, **Constraints (user-stated)**, **Out of scope (user-stated)**, **Codebase context (verified)**.
+1. Structure the raw answer into a concise interpretation with the canonical sections (omit empty ones): **Decision**, **Reasoning**, **Constraints (user-stated)**, **Out of scope (user-stated)**, **Codebase context (verified)**.
 2. Confirm with exactly one question that nothing is lost or misrepresented. Offer **Send as-is**, **Add a constraint**, **Mark something out of scope**, **Add context**, **Rewrite**, plus free text.
 3. If the user picks anything other than "Send as-is", collect the exact missing text with one follow-up question (never infer it from the option label). Explain each follow-up option in simple terms and recommend the best option with a brief reason, then fold the user's answer in and re-confirm. Do not advance to scoring while the user is still saying something is missing.
 4. Feed the confirmed structured interpretation — not the raw free text — into scoring and established-facts maintenance, and record it with `pi workflow deep-interview record-answer`.
@@ -469,7 +468,7 @@ The spec file body is Markdown. Generate it as rendered Markdown (the file conte
 
 ## Resume
 
-If interrupted, run `/skill:deep-interview` again. Resume from state via `pi workflow state` `action: "read"` or `pi workflow deep-interview read-compact --input` with the current `sessionId`; do not edit `.pi` state files directly unless an explicit force override is active. The continuation prompt drives autonomous resume from orchestration status (`waiting_for_answer` → record the user's message; `pending_scoring` → score before the next question; no pending question and ambiguity above threshold → plan + ask one; ambiguity at/below threshold → restate + confirm before `pi workflow deep-interview write-spec`).
+If interrupted, run `/skill:deep-interview` again. Resume from state via `pi workflow state` `action: "read"` with the current `sessionId`; do not edit `.pi` state files directly unless an explicit force override is active. The continuation prompt drives autonomous resume from orchestration status (`waiting_for_answer` → record the user's message; `pending_scoring` → score before the next question; no pending question and ambiguity above threshold → plan + ask one; ambiguity at/below threshold → restate + confirm before `pi workflow deep-interview write-spec`).
 
 ## Escalation and Stop Conditions
 

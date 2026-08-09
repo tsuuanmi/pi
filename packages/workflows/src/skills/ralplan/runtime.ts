@@ -2,7 +2,6 @@ import { readdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { writeStageArtifact } from "#workflows/artifacts/artifacts";
 import { type FailSoftError, recordFailSoftError } from "#workflows/audit/audit-log";
-import { projectCompactStateFor } from "#workflows/compaction/compaction";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
 import type { RalplanStage, WorkflowSkill } from "#workflows/session/paths";
 import {
@@ -113,17 +112,6 @@ export interface RalplanStatus {
 	latest?: RalplanIndexRow;
 	pending_approval_path?: string;
 	pending_approval: boolean;
-}
-
-export interface RalplanCompactStatus {
-	run_id?: string;
-	phase?: string;
-	iteration?: number;
-	stages: Partial<Record<RalplanStage, number>>;
-	latest?: Pick<RalplanIndexRow, "stage" | "stage_n" | "path" | "created_at">;
-	pending_approval: boolean;
-	pending_approval_path?: string;
-	invalid_index_line_count: number;
 }
 
 export type RalplanApprovalTarget = "ultragoal" | "team" | "stop";
@@ -344,15 +332,6 @@ export async function readRalplanStatus(cwd: string, sessionId: string, runIdInp
 			!isApprovalClosed(state?.current_phase) &&
 			(state?.current_phase === "pending-approval" || summary.latest?.stage === "final"),
 	};
-}
-
-export async function readRalplanCompactStatus(
-	cwd: string,
-	sessionId: string,
-	runId?: string,
-): Promise<RalplanCompactStatus> {
-	const status = await readRalplanStatus(cwd, sessionId, runId);
-	return projectCompactStateFor<RalplanCompactStatus>("ralplan", status);
 }
 
 function ralplanWriteFingerprint(value: unknown): string {

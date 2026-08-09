@@ -14,7 +14,7 @@ function chip(label: string, value: string | undefined, priority: number): HudCh
 	return value ? { label, value, priority } : undefined;
 }
 
-function compact(chips: Array<HudChip | undefined>): HudChip[] {
+function presentChips(chips: Array<HudChip | undefined>): HudChip[] {
 	return chips.filter((item): item is HudChip => item !== undefined);
 }
 
@@ -80,7 +80,7 @@ export function deriveDeepInterviewHud(
 	const specStatus = options.specStatus ?? (typeof payload.spec_status === "string" ? payload.spec_status : undefined);
 	return {
 		version: 1,
-		chips: compact([
+		chips: presentChips([
 			chip("phase", phase, 10),
 			chip("ambiguity", [percent(ambiguity), percent(threshold)].filter(Boolean).join("/"), 20),
 			chip("round", rounds ? String(rounds.length) : undefined, 30),

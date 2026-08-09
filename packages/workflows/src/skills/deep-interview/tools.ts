@@ -9,7 +9,6 @@ import {
 	enrichDeepInterviewRoundScoring,
 	finalizeDeepInterviewSpecState,
 	planDeepInterviewQuestion,
-	readDeepInterviewStateCompact,
 	restateGoalGate,
 	runClosureCheckForSession,
 } from "#workflows/skills/deep-interview/runtime";
@@ -55,10 +54,6 @@ const recordScoringSchema = Type.Object({
 	metadata: Type.Optional(Type.Any()),
 });
 
-const readCompactSchema = Type.Object({
-	lastN: Type.Optional(Type.Number({ description: "Number of recent scored rounds to include." })),
-});
-
 const restateGoalSchema = Type.Object({
 	restatedGoal: Type.String({ description: "One-sentence goal to confirm." }),
 	confirm: Type.String({ description: "Yes, Adjust, or Missing." }),
@@ -77,7 +72,6 @@ const writeSpecSchema = Type.Object({
 type PlanQuestionInput = Static<typeof planQuestionSchema>;
 type RecordAnswerInput = Static<typeof recordAnswerSchema>;
 type RecordScoringInput = Static<typeof recordScoringSchema>;
-type ReadCompactInput = Static<typeof readCompactSchema>;
 type RestateGoalInput = Static<typeof restateGoalSchema>;
 type WriteSpecInput = Static<typeof writeSpecSchema>;
 
@@ -178,17 +172,6 @@ export function registerDeepInterviewTools(pi: WorkflowToolHost): void {
 				sessionId(ctx),
 			);
 			return textResult("deep-interview scoring recorded", result);
-		},
-	});
-	pi.registerTool({
-		name: "deep_interview_read_compact",
-		label: "Deep Interview Read Compact",
-		description: "Read a compact Deep Interview state projection for resume or prompt budgeting.",
-		promptSnippet: "Read compact Deep Interview state when resuming or summarizing",
-		parameters: readCompactSchema,
-		execute: async (_id, params: ReadCompactInput, _signal, _onUpdate, ctx) => {
-			const result = await readDeepInterviewStateCompact(ctx.cwd, sessionId(ctx), params.lastN);
-			return textResult("deep-interview compact state", result);
 		},
 	});
 	pi.registerTool({

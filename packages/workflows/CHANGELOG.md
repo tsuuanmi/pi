@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **state-projections**: Removed workflow state projection APIs, their dedicated CLI actions, and the Deep Interview projection tool; use the regular state, status, and snapshot operations instead.
 - **registry**: Removed compatibility transition metadata, wildcard source-state matching, and legacy Ralplan phases; workflow state transitions now use explicit canonical states only.
 - **state**: Active-state persistence is now version 2 with mandatory session ownership; unsupported versions, global, malformed, and foreign-session entries are rejected without migration.
 - **handoff**: Transaction journals are version 2 and use one top-level session identity; per-side session compatibility fields were removed.
@@ -56,17 +57,17 @@
 
 ### Breaking Changes
 
-- **workflows**: Moved the remaining shared/runtime workflow infrastructure out of `src/harness/` into top-level `src/runtime`, `src/subagents`, `src/artifacts`, `src/audit`, `src/compaction`, `src/orchestration`, `src/registry`, `src/session`, and `src/state` paths; no `harness/*` compatibility wrappers are provided.
+- **workflows**: Moved the remaining shared/runtime workflow infrastructure out of `src/harness/` into top-level runtime, subagent, artifact, audit, orchestration, registry, session, and state paths; no `harness/*` compatibility wrappers are provided.
 - **workflows**: Moved skill-owned TypeScript from `src/harness/<skill>/` to `src/skills/<skill>/` and updated public barrel exports to the new `skills/<skill>` paths; no `harness/<skill>` compatibility wrappers are provided.
-- **workflows**: Moved tests from `test/harness/<category>/` to top-level `test/<src-dir>/` mirrors (`test/deep-interview`, `test/ralplan`, `test/runtime`, `test/team`, `test/ultragoal`, `test/session`, `test/audit`, `test/orchestration`, `test/state`, `test/compaction`, `test/registry`) and split `test/harness/team/team-ultragoal-workflow.test.ts` into `test/team/team-workflow.test.ts` and `test/ultragoal/ultragoal-workflow.test.ts`; no `test/harness/` directory remains.
+- **workflows**: Moved tests from `test/harness/<category>/` to top-level `test/<src-dir>/` mirrors (`test/deep-interview`, `test/ralplan`, `test/runtime`, `test/team`, `test/ultragoal`, `test/session`, `test/audit`, `test/orchestration`, `test/state`, `test/registry`) and split `test/harness/team/team-ultragoal-workflow.test.ts` into `test/team/team-workflow.test.ts` and `test/ultragoal/ultragoal-workflow.test.ts`; no `test/harness/` directory remains.
 
 ### Added
 
 - **ralplan**: Added a deterministic orchestration snapshot, pure expected-action selector, and journaled artifact completion transaction with provenance sidecars, idempotent same-hash handling, and doctor-visible journal health.
-- **deep-interview**: Added first-class model-visible tools for planning questions, recording answers/scoring, reading compact state, closure checks, restating goals, and writing specs with current-session propagation.
+- **deep-interview**: Added first-class model-visible tools for planning questions, recording answers/scoring, reading derived state, closure checks, restating goals, and writing specs with current-session propagation.
 - **subagents**: Workflow agent execution is exposed through model-visible tools (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, `ultragoal_spawn_goal_agent`). Generic and Ultragoal tools use the main session's `SubagentManager`; team roles execute through `@tsuuanmi/pi-orchestrator`. pi-agent owns runtime agents; pi-workflows owns turn order, guarded role checks, persistence, and result→artifact handoff. No circular dependency.
 - **agent**: Added `SubagentManagerFactory` registry (`registerSubagentManagerFactory`/`getSubagentManagerFactory`/`clearSubagentManagerFactoryForTests`) + `SubagentManagerFactoryContext` type, and `dispose(): Promise<void>` on the `SubagentManager` interface.
-- **workflows**: `pi workflow <skill> <action>` CLI verbs now drive the retained skill runtime directly, replacing the removed in-process tool surface: `pi workflow deep-interview <plan-question|record-answer|record-scoring|read-compact|closure-check|restate-goal|write-spec>`, `pi workflow ralplan <record-explorer-gate|write-artifact|status|read-compact|doctor|approve-plan>`, `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>`, `pi workflow ultragoal <create-plan|status|read-compact|start-next|checkpoint|record-review-blockers|classify-blocker|guard>`.
+- **workflows**: `pi workflow <skill> <action>` CLI verbs now drive the retained skill runtime directly, replacing the removed in-process tool surface; the supported actions are documented by each skill’s current help metadata.
 - **workflows**: Added a shared skill transition registry with per-skill transition tables.
 - **team**: Added prover and reviewer gates for team workflows, including `pi workflow team record-completion-gate`, `pi workflow team record-review-gate`, fail-closed `evidence_matrix` / `review_report` validation, bounded retry escalation, and deterministic gate artifact storage.
 - **ralplan**: Added an explorer pre-planner gate with `pi workflow ralplan record-explorer-gate`, fail-closed `context_map` validation, bounded retry escalation, and shared deterministic context-template builders for ralplan role prompts and tasks.
@@ -112,5 +113,5 @@
 ### Removed
 
 - **workflows**: Removed the write-only `carried_decisions` handoff field and `HandoffCarriedDecision` type (reverts an unreleased addition; no consumer read them).
-- **workflows**: Removed the unused `estimateCompactBytes` and `truncateLastN` compact-budget helpers (only referenced by their own tests; kept `CompactBudget`/`lastN`).
+- **workflows**: Removed unused byte-estimation and tail-truncation helpers that were referenced only by their own tests.
 - **workflows**: Removed the workflow tool-pruning feature and its legacy model-visible workflow tool registry: the `workflows.pruneInactiveTools` extension flag, the `applyWorkflowToolPruning` session/before-start handler logic in the workflows extension, and the `harness/shared/tool-groups.ts` pruning helpers (`selectWorkflowActiveTools`, `resolveActiveWorkflowSkills`, `sameToolSet`, `WORKFLOW_OWNED_TOOLS`, `WORKFLOW_SKILL_TOOLS`, and the per-skill tool arrays). Workflow-owned operations now use the canonical `pi workflow ...` control plane instead of registering `deep_interview_*`, `ralplan_*`, `team_*`, or `ultragoal_*` tools. The unrelated `pi workflow gc --prune` session-directory GC is unaffected.

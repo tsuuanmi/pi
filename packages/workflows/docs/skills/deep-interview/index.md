@@ -23,15 +23,15 @@ Deep Interview manages Socratic requirements discovery, ambiguity scoring, closu
 | `hud.ts` | HUD chip rendering for interview progress. |
 | `mutation-guard.ts` | Blocks product-code mutation while an unfinished interview is active. |
 | `runtime.ts` | Question planning, answer/scoring merges, closure, restatement, and spec finalization. |
-| `state.ts` | State types, transitions, persistence, and compact projection. |
+| `state.ts` | State types, transitions, and persistence. |
 | `surface.ts` | Validated command and model-visible tool surface metadata. |
-| `tools.ts` | Registers the `deep_interview_*` model-visible tools (`plan-question`, `record-answer`, `record-scoring`, `read-compact`, `closure-check`, `restate-goal`, `write-spec`). |
+| `tools.ts` | Registers the `deep_interview_*` model-visible tools (`plan-question`, `record-answer`, `record-scoring`, `closure-check`, `restate-goal`, `write-spec`). |
 | `transitions.ts` | Skill transition table. |
 
 ## Runtime Route
 
 - External callers read/write envelope state through `pi workflow state deep-interview ...` with the current `sessionId`.
-- External callers use `pi workflow deep-interview <plan-question|record-answer|record-scoring|read-compact|closure-check|restate-goal|write-spec>` for the CLI action contract.
+- External callers use `pi workflow deep-interview <plan-question|record-answer|record-scoring|closure-check|restate-goal|write-spec>` for the CLI action contract.
 - During an interactive Pi session, the model uses the corresponding `deep_interview_*` tools. Those tools call the workflow runtime in-process; they do not invoke the CLI commands.
 - The command actions and model-visible tools may share lower-level runtime functions, but neither adapter calls the other.
 - Use read-only subagents only when the skill instructions call for research or lateral review.
@@ -59,7 +59,6 @@ Use `pi workflow state deep-interview <read|write|clear|handoff|active|doctor>` 
 | `deep_interview_plan_question` | Plan the next question and mark the workflow as waiting for an answer. |
 | `deep_interview_record_answer` | Record or replace an answer shell, including optional topology lock. |
 | `deep_interview_record_scoring` | Record scores, ambiguity, trigger metadata, and advisory counters for a round. |
-| `deep_interview_read_compact` | Read a compact state projection for resume or prompt budgeting. |
 | `deep_interview_closure_check` | Run the closure and acceptance guard. |
 | `deep_interview_restate_goal` | Record the one-sentence restated goal confirmation or adjustment. |
 | `deep_interview_write_spec` | Persist a finalized spec and optionally hand off to ralplan, ultragoal, or team. |

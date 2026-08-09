@@ -11,7 +11,7 @@ export const TEAM_SKILL_HELP: WorkflowSkillHelp = {
 	commandOrder: [
 		"`pi workflow state team read --session <session-id> --json` to inspect state.",
 		'`pi workflow team start --input \'{"sessionId":"<session-id>","task":"approved plan..."}\' --json` with the approved task/plan.',
-		'`pi workflow team snapshot --input \'{"sessionId":"<session-id>"}\' --json` or `pi workflow team read-compact --input \'{"sessionId":"<session-id>"}\' --json` before assigning work.',
+		'`pi workflow team snapshot --input \'{"sessionId":"<session-id>"}\' --json` before assigning work.',
 		'`pi workflow team create-task --input \'{"sessionId":"<session-id>","title":"...","description":"..."}\' --json` for each independent workstream.',
 		'`pi workflow team transition-task --input \'{"sessionId":"<session-id>","taskId":"task-1","status":"in_progress"}\' --json` for start/block/fail/complete status changes.',
 		'`pi workflow team send-message --input \'{"sessionId":"<session-id>","from":"lead","to":"task-1","body":"..."}\' --json` for durable coordination.',
@@ -45,12 +45,6 @@ export const TEAM_SKILL_HELP: WorkflowSkillHelp = {
 			when: "Use before assigning, reviewing, or completing work.",
 			input: ["sessionId: string (required; current session)", "teamId?: string"],
 			example: `pi workflow team snapshot --input '{"sessionId":"<session-id>"}' --json`,
-		},
-		"read-compact": {
-			summary: "Read prompt-efficient team state.",
-			when: "Use when resuming or prompting a worker/reviewer/prover.",
-			input: ["sessionId: string (required; current session)", "teamId?: string"],
-			example: `pi workflow team read-compact --input '{"sessionId":"<session-id>"}' --json`,
 		},
 		"create-task": {
 			summary: "Create a worker task with ownership and dependencies.",

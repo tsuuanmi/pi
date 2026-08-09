@@ -1,6 +1,5 @@
 import { readdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import { projectCompactStateFor } from "#workflows/compaction/compaction";
 import {
 	type EvidenceMatrixVerdict,
 	evidenceMatrixPasses,
@@ -931,16 +930,4 @@ export async function completeTeam(
 	const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
 	await syncTeamState(cwd, snapshot, sessionId);
 	return snapshot;
-}
-
-export async function readTeamCompact(
-	cwd: string,
-	sessionId: string,
-	teamId?: string,
-): Promise<Record<string, unknown>> {
-	const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
-	const completionGate = snapshot.team_id
-		? (await readTeamConfig(cwd, snapshot.team_id, sessionId))?.completion_gate
-		: undefined;
-	return projectCompactStateFor<Record<string, unknown>>("team", { snapshot, completionGate });
 }

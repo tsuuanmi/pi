@@ -13,7 +13,6 @@ export const DEEP_INTERVIEW_SKILL_HELP: WorkflowSkillHelp = {
 		'`pi workflow deep-interview plan-question --input \'{"sessionId":"<session-id>","round":1,"questionText":"..."}\' --json` before asking each single user-facing question.',
 		'`pi workflow deep-interview record-answer --input \'{"sessionId":"<session-id>","round":1,"customInput":"..."}\' --json` after the user answers.',
 		'`pi workflow deep-interview record-scoring --input \'{"sessionId":"<session-id>","round":1,"scores":{"goal":0.6},"ambiguity":0.3}\' --json` after recording the answer.',
-		'`pi workflow deep-interview read-compact --input \'{"sessionId":"<session-id>"}\' --json` when resuming or budgeting prompt context.',
 		'`pi workflow deep-interview closure-check --input \'{"sessionId":"<session-id>"}\' --json` before final spec writing.',
 		'`pi workflow deep-interview restate-goal --input \'{"sessionId":"<session-id>","restatedGoal":"...","confirm":"Yes"}\' --json` after closure passes.',
 		'`pi workflow deep-interview write-spec --input \'{"sessionId":"<session-id>","spec":"# Spec..."}\' --json` after the closure and restatement gates pass.',
@@ -76,12 +75,6 @@ export const DEEP_INTERVIEW_SKILL_HELP: WorkflowSkillHelp = {
 				"metadata?: object",
 			],
 			example: `pi workflow deep-interview record-scoring --input '{"sessionId":"<session-id>","round":1,"scores":{"goal":0.6,"constraints":0.4,"criteria":0.3},"ambiguity":0.57}' --json`,
-		},
-		"read-compact": {
-			summary: "Read prompt-efficient interview state.",
-			when: "Use when resuming or before composing a prompt from large history.",
-			input: ["sessionId: string (required; current session)", "lastN?: number"],
-			example: `pi workflow deep-interview read-compact --input '{"sessionId":"<session-id>","lastN":3}' --json`,
 		},
 		"closure-check": {
 			summary: "Run the closure/acceptance guard before spec writing.",

@@ -20,7 +20,6 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 |--------|-------------|
 | `agent-adapter.ts` | Adapts Team role requests to the Pi-native agent interface. |
 | `checkpoint-store.ts` | Persists and validates session-scoped orchestrator checkpoints. |
-| `compact.ts` | Prompt-efficient compact state projection. |
 | `coordinator.ts` | Selects the legal role and submits its batch to the Orchestrator. |
 | `event-mapper.ts` | Maps Orchestrator queue events to Team events and statuses. |
 | `event-store.ts` | Persists Team events with idempotent event keys. |
@@ -39,7 +38,7 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 | `role-run-store.ts` | Persists failures and records for synthetic and concrete role runs. |
 | `role-tasks.ts` | Builds worker, reviewer, and prover task batches. |
 | `role-transitions.ts` | Applies workflow-owned transitions after successful role execution. |
-| `runtime.ts` | State I/O, task transitions, messages, gates, completion, and snapshot/read-compact operations. |
+| `runtime.ts` | State I/O, task transitions, messages, gates, completion, and snapshot operations. |
 | `status-mapper.ts` | Maps Orchestrator task statuses to Team task statuses. |
 | `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `task-mapper.ts` | Maps workflow task data to Orchestrator task inputs. |
@@ -49,7 +48,7 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 ## Runtime Route
 
 - Read/write envelope state through `pi workflow state team ...` with the current `sessionId`.
-- Manage the team board through `pi workflow team <start|snapshot|read-compact|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>`.
+- Manage the team board through `pi workflow team <start|snapshot|create-task|transition-task|send-message|record-review-gate|record-completion-gate|complete>`.
 - Execute workers through the model-visible `team_execute` tool.
 - Execute task reviewers through `team_execute`; reviewers persist `review_report` with `pi workflow team record-review-gate`.
 - Execute completion provers through `team_execute`; provers persist `evidence_matrix` with `pi workflow team record-completion-gate`.

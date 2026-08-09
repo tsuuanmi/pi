@@ -107,7 +107,7 @@ Examples:
   pi workflow observe --input '{"sessionId":"h-..."}' --json
   pi workflow gc --dry-run --json
   pi workflow ralplan status --input '{"sessionId":"h-..."}' --json
-  pi workflow deep-interview read-compact --input-file ./payload.json --json
+  pi workflow deep-interview closure-check --input-file ./payload.json --json
 
 State root: PI_HARNESS_STATE_ROOT or <workspace>/.pi/state/harness
 `;

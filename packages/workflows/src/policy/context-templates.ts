@@ -16,7 +16,7 @@ const RALPLAN_BASE_CONTRACT = [
 	"Ralplan workflow contract:",
 	"- Produce planning/review artifacts only. Do not edit product files or execute implementation.",
 	"- Persist the artifact by running `pi workflow ralplan write-artifact` with the provided runId, stage, stageN, and full markdown artifact as the command input.",
-	"- Return only the receipt/path plus compact status. Do not paste the full artifact after persistence.",
+	"- Return only the receipt/path plus brief status. Do not paste the full artifact after persistence.",
 ] as const;
 
 export function buildRalplanRoleSystemPrompt(role: ContextTemplateRalplanRole): string {
@@ -26,7 +26,7 @@ export function buildRalplanRoleSystemPrompt(role: ContextTemplateRalplanRole): 
 			"- Read only. Do not edit product files or execute implementation.",
 			"- Produce a structured context_map for the planner before planning starts.",
 			"- Record the context_map by running `pi workflow ralplan record-explorer-gate` with the provided runId and full JSON context_map.",
-			"- Return only the receipt/path plus compact status. Do not paste the full artifact after persistence.",
+			"- Return only the receipt/path plus brief status. Do not paste the full artifact after persistence.",
 			"- Include context_needed, summary, relevant_files, important_symbols, existing_patterns, risks, open_questions, and evidence when applicable.",
 		].join("\n");
 	}
@@ -40,14 +40,14 @@ export function buildRalplanRoleSystemPrompt(role: ContextTemplateRalplanRole): 
 		return [
 			...RALPLAN_BASE_CONTRACT,
 			"- Architect reviews must provide strongest steelman objection, tradeoff tensions, integration/ownership concerns, and synthesis or requested changes.",
-			"- Compact verdict must include CLEAR, WATCH, or BLOCK; and APPROVE, COMMENT, or REQUEST CHANGES.",
+			"- Concise verdict must include CLEAR, WATCH, or BLOCK; and APPROVE, COMMENT, or REQUEST CHANGES.",
 		].join("\n");
 	}
 	if (role === "critic") {
 		return [
 			...RALPLAN_BASE_CONTRACT,
 			"- Critic reviews must evaluate acceptance criteria quality, risk mitigation clarity, testability, fair alternatives, and concrete verification steps.",
-			"- Compact verdict must be APPROVE, ITERATE, or REJECT.",
+			"- Concise verdict must be APPROVE, ITERATE, or REJECT.",
 		].join("\n");
 	}
 	return [

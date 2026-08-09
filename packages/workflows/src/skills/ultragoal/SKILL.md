@@ -32,7 +32,7 @@ Critical: before running any `pi workflow ultragoal <action>` command, read [ref
 
 1. Restate the approved goal and acceptance criteria.
 2. Read active state with `pi workflow state ultragoal read`. If no state exists and you have an approved plan, initialize it with `pi workflow state ultragoal write`: `active: true`, `phase: "approved-execution"`, `data.input` set to the plan path or task. For the exact CLI/session/input split, see [State commands](../../state/commands.md).
-3. Create or resume runtime goal state with `pi workflow ultragoal status --input '{"sessionId":"<current-session>"}' --json`, `pi workflow ultragoal read-compact --input '{"sessionId":"<current-session>"}' --json`, and `pi workflow ultragoal create-plan --input '{"sessionId":"<current-session>","brief":"approved goal..."}' --json` when no plan exists. The plan keeps one main goal and decomposes execution into smaller task goals.
+3. Create or resume runtime goal state with `pi workflow ultragoal status --input '{"sessionId":"<current-session>"}' --json` and `pi workflow ultragoal create-plan --input '{"sessionId":"<current-session>","brief":"approved goal..."}' --json` when no plan exists. The plan keeps one main goal and decomposes execution into smaller task goals.
 4. Start the next runnable task goal with `pi workflow ultragoal start-next --input '{"sessionId":"<current-session>"}' --json` before implementation.
 5. Inspect relevant files before editing.
 6. Make the smallest complete set of changes.

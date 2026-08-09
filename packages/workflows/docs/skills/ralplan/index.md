@@ -23,7 +23,6 @@ Ralplan coordinates durable planning passes and produces a pending-approval impl
 | `agent-roles.ts` | Ralplan role definitions and stage-to-role mapping. |
 | `checkpoint-store.ts` | Session-scoped orchestrator checkpoint storage. |
 | `orchestrator.ts` | Guarded single-stage execution through `@tsuuanmi/pi-orchestrator`. |
-| `compact.ts` | Prompt-efficient compact run projection. |
 | `completion-transaction.ts` | Journaled completion transaction: intent journal, stage artifact + index writes, obstacle ledger update, completion provenance sidecar, and committed/rolled-back markers. |
 | `expected-action.ts` | Pure `selectExpectedRalplanAction` over the orchestration snapshot; returns the next spawn/closed/blocked/no-action decision. |
 | `gates.ts` | Explorer/context gate validation and escalation handling. |
@@ -43,7 +42,7 @@ Ralplan coordinates durable planning passes and produces a pending-approval impl
 - Read/write envelope state through `pi workflow state ralplan ...` with the current `sessionId`.
 - Run explorer, planner, architect, critic, revision, and expert-stage agents through the guarded model-visible `ralplan_run_agent` tool. The tool submits one admitted role task to the workflow-owned Orchestrator adapter.
 - Persist explorer context through `pi workflow ralplan record-explorer-gate` and role artifacts through `pi workflow ralplan write-artifact`.
-- Inspect and approve through `pi workflow ralplan <status|read-compact|doctor|approve-plan>`.
+- Inspect and approve through `pi workflow ralplan <status|doctor|approve-plan>`.
 
 Use `ralplan_run_agent` for role-agent execution. It is state guarded: the harness computes the legal next role/stage from Ralplan artifacts, refuses off-sequence execution, and verifies the current stage artifact before the task can complete.
 

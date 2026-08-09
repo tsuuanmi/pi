@@ -1,6 +1,6 @@
 import type { ExpectedNextRole, TeamSelectorSnapshot } from "#workflows/policy/expected-next-role";
 import { registerSkillTransitionTable, type SkillTransitionContext } from "#workflows/registry/transition-registry";
-import { readTeamCompact, readTeamSnapshot, type TeamSnapshot } from "#workflows/skills/team/runtime";
+import { readTeamSnapshot, type TeamSnapshot } from "#workflows/skills/team/runtime";
 
 function selectNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): ExpectedNextRole | undefined {
 	if (!snapshot?.team_id) return undefined;
@@ -53,13 +53,6 @@ function missingCompletedTaskReviewBlockers(snapshot: TeamSnapshot): string[] {
 		.map((task) => `team-review-gate-missing:${task.id}`);
 }
 
-function completionGatePassed(compact: Record<string, unknown>): boolean {
-	const gate = compact.completion_gate;
-	return Boolean(
-		gate && typeof gate === "object" && !Array.isArray(gate) && (gate as { passed?: unknown }).passed === true,
-	);
-}
-
 async function validateTeamGates(context: SkillTransitionContext<TeamSelectorSnapshot>): Promise<{
 	ok: boolean;
 	blockers: string[];
@@ -71,9 +64,8 @@ async function validateTeamGates(context: SkillTransitionContext<TeamSelectorSna
 	const teamId = context.state?.team_id;
 	const snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
 	const blockers = missingCompletedTaskReviewBlockers(snapshot);
-	if (snapshot.phase === "complete") {
-		const compact = await readTeamCompact(cwd, sessionId, teamId);
-		if (!completionGatePassed(compact)) blockers.push("team-completion-gate-missing");
+	if (snapshot.phase === "complete" && snapshot.completion_gate?.status !== "passed") {
+		blockers.push("team-completion-gate-missing");
 	}
 	return { ok: blockers.length === 0, blockers };
 }

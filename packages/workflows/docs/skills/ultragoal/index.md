@@ -19,7 +19,6 @@ Ultragoal manages goal-tracked execution under the current session root. One mai
 | Module | Description |
 |--------|-------------|
 | `artifacts.ts` | Artifact tracking and validation. |
-| `compact.ts` | Prompt-efficient compact goal projection. |
 | `guard.ts` | Completion/blocker guard logic. |
 | `help.ts` | Command action descriptions, typed arguments, and help metadata. |
 | `hud.ts` | HUD chip rendering for goal progress. |
@@ -34,7 +33,7 @@ Ultragoal manages goal-tracked execution under the current session root. One mai
 ## Runtime Route
 
 - Read/write envelope state through `pi workflow state ultragoal ...` with the current `sessionId`.
-- Create and inspect goal state through `pi workflow ultragoal <create-plan|status|read-compact>`.
+- Create and inspect goal state through `pi workflow ultragoal <create-plan|status>`.
 - Advance/checkpoint goals through `pi workflow ultragoal <start-next|checkpoint|restore-checkpoint|record-review-blockers|classify-blocker|guard>`.
 - Spawn workers through the guarded model-visible `ultragoal_spawn_goal_agent` tool.
 
@@ -79,7 +78,7 @@ Use `ultragoal_spawn_goal_agent` for worker execution. It is state guarded: the 
 - Completed goals must have valid completion receipts against the plan and ledger.
 - Checkpoint snapshot ledger rows are bookkeeping and do not change receipt freshness.
 - Blocked or failed goals remain human blockers until explicitly classified/resolved.
-- Checkpoint restore fails closed on missing/corrupt/tampered snapshots, stale expected plan hashes from `status.planHash` / `read-compact.plan_hash`, or main-goal/task identity drift. Restore never rolls back workspace files.
+- Checkpoint restore fails closed on missing/corrupt/tampered snapshots, stale expected plan hashes from `status.planHash`, or main-goal/task identity drift. Restore never rolls back workspace files.
 
 ## See Also
 

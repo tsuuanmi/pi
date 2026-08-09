@@ -1,11 +1,9 @@
-import { projectCompactStateFor } from "#workflows/compaction/compaction";
 import { workflowStatePath } from "#workflows/session/session-layout";
 import { deriveDeepInterviewHud } from "#workflows/skills/deep-interview/hud";
 import {
 	answerHash,
 	DEFAULT_DEEP_INTERVIEW_THRESHOLD,
 	type DeepInterviewAdvisoryMetadata,
-	type DeepInterviewCompactState,
 	type DeepInterviewEstablishedFact,
 	type DeepInterviewOrchestrationState,
 	type DeepInterviewPlannedQuestion,
@@ -405,17 +403,6 @@ export async function finalizeDeepInterviewSpecState(
 export async function runClosureCheckForSession(cwd: string, sessionId: string): Promise<ClosureResult> {
 	const envelope = await readDeepInterviewEnvelope(cwd, sessionId);
 	return runClosureAcceptanceGuard(envelope);
-}
-
-export async function readDeepInterviewStateCompact(cwd: string, sessionId: string, lastN?: number) {
-	return {
-		state: projectCompactStateFor<DeepInterviewCompactState>(
-			"deep-interview",
-			await readWorkflowState(cwd, "deep-interview", { sessionId }),
-			{ lastN },
-		),
-		statePath: workflowStatePath(cwd, "deep-interview", sessionId),
-	};
 }
 
 // ---------------------------------------------------------------------------
