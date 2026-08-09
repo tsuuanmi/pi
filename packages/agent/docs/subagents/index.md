@@ -25,7 +25,7 @@ interface SubagentManager {
 - `SubagentDelivery`: `steer` or `followUp`.
 - `SubagentResumeFailureReason`: `context_unavailable`, `not_found`, `no_runner`, `resume_failed`.
 - `SubagentRecord`: agent-run metadata, status, owner correlation id, timestamps, result/error text, and optional structured `yield_result`.
-- `SubagentRunRequest`: agent-run fields including profile, role, prompt, system prompt, tool filters, model, `ThinkingLevel`, persistence, detached mode, label, lifecycle signal, and owner correlation ids.
+- `SubagentRunRequest`: agent-run fields including an opaque profile identifier, role, prompt, system prompt, tool filters, model, `ThinkingLevel`, persistence, detached mode, label, lifecycle signal, and owner correlation ids. The concrete manager resolves the profile identifier.
 - `SubagentRunResult`: final record, messages, and text output.
 - `SubagentAwaitResult`: success with a run result, or `not_found`/`timeout` with optional record and retained progress.
 - `SubagentResumeResult`: success with a run result, or one of the resume failure reasons with optional record.
@@ -39,16 +39,6 @@ interface SubagentManager {
 `SUBAGENT_TOOLS` exposes host-neutral definitions for `subagent_spawn`, `subagent_status`, `subagent_await`, `subagent_steer`, `subagent_pause`, `subagent_resume`, and `subagent_cancel`. Each tool receives a required `SubagentToolContext` containing a `SubagentManager` and session id.
 
 Host packages adapt these definitions to their tool API. The adapter owns host context checks and host-specific result wrapping; the agent package has no dependency on workflow context or workflow receipts.
-
-## Factory registry
-
-```typescript
-registerSubagentManagerFactory(factory);
-const factory = getSubagentManagerFactory();
-clearSubagentManagerFactoryForTests();
-```
-
-`SubagentManagerFactoryContext` includes `cwd`, optional `agentDir`, extension flag values, resource-loader options, and an owner lifecycle abort signal. Host packages register a factory; runtime packages look it up without depending on the host implementation. The factory returns the host's concrete manager implementation; this package never constructs it.
 
 ## Progress tracking
 

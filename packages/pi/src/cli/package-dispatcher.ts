@@ -5,10 +5,6 @@ import { DefaultPackageManager } from "#pi/package/manager";
 import type { ResolvedResource } from "#pi/resources/types";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
-// Register the Pi SubagentManagerFactory for detached runtime owners.
-// This is the only Pi-side wiring path; workflows consume the injected contract.
-import "#pi/subagents/factory";
-
 export interface PackageCommandContext {
 	cwd: string;
 	agentDir: string;

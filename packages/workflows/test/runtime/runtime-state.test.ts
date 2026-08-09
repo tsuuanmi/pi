@@ -2,7 +2,6 @@ import { execFileSync } from "node:child_process";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { clearSubagentManagerFactoryForTests } from "@tsuuanmi/pi-agent";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
 import {
@@ -98,7 +97,6 @@ describe("harness control-plane phase 1", () => {
 	});
 
 	afterEach(async () => {
-		clearSubagentManagerFactoryForTests();
 		await rm(cwd, { recursive: true, force: true });
 	});
 

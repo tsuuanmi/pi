@@ -1,20 +1,18 @@
 import { type Static, Type } from "typebox";
 
 export const subagentSpawnSchema = Type.Object({
-	agent: Type.Optional(
-		Type.String({ description: "Agent profile name from .agent/agents, .agents/agents, or built-ins." }),
-	),
+	agent: Type.Optional(Type.String({ description: "Agent profile identifier resolved by the host." })),
 	role: Type.Optional(
 		Type.String({ description: "Subagent role label. Defaults to agent profile name or subagent." }),
 	),
 	prompt: Type.String({ description: "User task prompt for the subagent." }),
-	model: Type.Optional(Type.String({ description: "Override agent profile model as provider/model." })),
-	thinkingLevel: Type.Optional(Type.String({ description: "Override agent profile thinking level." })),
+	model: Type.Optional(Type.String({ description: "Override the selected model as provider/model." })),
+	thinkingLevel: Type.Optional(Type.String({ description: "Override the selected thinking level." })),
 	systemPrompt: Type.Optional(Type.String({ description: "Additional role/system instructions." })),
 	tools: Type.Optional(Type.Array(Type.String({ description: "Allowed tool names for this subagent." }))),
 	excludeTools: Type.Optional(Type.Array(Type.String({ description: "Tool names to disable for this subagent." }))),
 	persistent: Type.Optional(
-		Type.Boolean({ description: "Defaults to profile or true. False uses an in-memory session." }),
+		Type.Boolean({ description: "Defaults to the selected profile or true. False uses an in-memory session." }),
 	),
 	detached: Type.Optional(Type.Boolean({ description: "Return immediately after spawning." })),
 	label: Type.Optional(Type.String({ description: "Human-readable subagent label." })),

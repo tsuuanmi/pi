@@ -16,7 +16,6 @@ export type {
 } from "#agent/runtime/hooks";
 export * from "#agent/runtime/runtime";
 export type { AgentRunOptions, AgentRunResult } from "#agent/runtime/types";
-export * from "#agent/subagents/factory";
 export * from "#agent/subagents/manager";
 export * from "#agent/subagents/progress";
 export * from "#agent/subagents/receipts";

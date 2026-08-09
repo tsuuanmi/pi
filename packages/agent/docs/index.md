@@ -29,7 +29,7 @@ The docs tree follows the source domain folders under `packages/agent/src`, incl
 - [`agent/runtime/types.md`](agent/runtime/types.md) - `src/runtime/types.ts`: `Agent.run()` option and result types.
 - [`node/index.md`](node/index.md) - `src/node/node.ts` and `src/node/*`: Node-only process, process-runtime, JSONL, path, and mutation-queue helpers.
 - [`node/env/nodejs.md`](node/env/nodejs.md) - `src/node/env/*`: `ExecutionEnv`, `FileSystem`, `Shell`, typed `Result`, `FileError`, `ExecutionError`, and `NodeExecutionEnv`.
-- [`subagents/index.md`](subagents/index.md) - `src/subagents/*`: `SubagentManager`, durable record/request/result types, thinking validation, lifecycle tools, factory registry, progress tracking, and yield-result extraction.
+- [`subagents/index.md`](subagents/index.md) - `src/subagents/*`: `SubagentManager`, durable record/request/result types, thinking validation, lifecycle tools, progress tracking, and yield-result extraction.
 - [`tool/registry.md`](tool/registry.md) - `src/tool/registry.ts` and `src/tool/policy.ts`: `createToolRegistry()`, `registerTool()`, and `Agent.registerTool()` for host-owned tools.
 
 Legacy compatibility docs and docs for removed source modules are intentionally not retained.

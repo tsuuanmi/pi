@@ -1,5 +1,6 @@
 import {
 	parseThinkingLevel,
+	SUBAGENT_TOOLS,
 	type SubagentManager,
 	type SubagentRunRequest,
 	subagentSpawnTool,
@@ -8,6 +9,14 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("subagent tools", () => {
+	it("keeps shared lifecycle metadata host-neutral", () => {
+		const metadata = JSON.stringify(SUBAGENT_TOOLS);
+
+		expect(metadata).not.toContain("Pi");
+		expect(metadata).not.toContain(".agent/agents");
+		expect(metadata).not.toContain(".agents/agents");
+	});
+
 	it("passes the complete thinking-level set to the manager", async () => {
 		const requests: SubagentRunRequest[] = [];
 		const manager = {
