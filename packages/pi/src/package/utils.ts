@@ -1,13 +1,9 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { valid, validRange } from "semver";
-import type { BundledPackageName } from "#pi/package/types";
+import { validRange } from "semver";
 import type { PackageSource } from "#pi/settings/types";
-
-export const NETWORK_TIMEOUT_MS = 10000;
-export const UPDATE_CHECK_CONCURRENCY = 4;
-export const GIT_UPDATE_CONCURRENCY = 4;
+import type { BundledPackageName } from "./types.ts";
 
 export const BUNDLED_PACKAGE_SOURCES: Record<string, BundledPackageName> = {
 	"pi:workflows": "workflows",
@@ -56,10 +52,6 @@ export function getBundledPackageRoot(name: BundledPackageName): string {
 	const devWorkspace = resolve(__dirname, "..", "..", "..", name);
 	if (existsSync(resolve(devWorkspace, "package.json"))) return devWorkspace;
 	return bundledDist;
-}
-
-export function isExactNpmVersion(version: string | undefined): boolean {
-	return valid(version ?? "") !== null;
 }
 
 export function getNpmVersionRange(version: string | undefined): string | undefined {

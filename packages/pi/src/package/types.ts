@@ -1,24 +1,17 @@
-import type { GitSource } from "#pi/package/git";
-import type { ResolvedPaths, SourceScope } from "#pi/resources/types";
+import type { ResolvedPaths } from "#pi/resources/types";
 import type { SettingsManager } from "#pi/settings/manager";
+import type { GitSource } from "./git.ts";
 
 export type MissingSourceAction = "install" | "skip" | "error";
 
 export interface ProgressEvent {
 	type: "start" | "progress" | "complete" | "error";
-	action: "install" | "remove" | "update" | "clone" | "pull";
+	action: "install" | "remove";
 	source: string;
 	message?: string;
 }
 
 export type ProgressCallback = (event: ProgressEvent) => void;
-
-export interface PackageUpdate {
-	source: string;
-	displayName: string;
-	type: "npm" | "git";
-	scope: Exclude<SourceScope, "temporary">;
-}
 
 export interface ConfiguredPackage {
 	source: string;
@@ -33,7 +26,6 @@ export interface PackageManager {
 	installAndPersist(source: string, options?: { local?: boolean }): Promise<void>;
 	remove(source: string, options?: { local?: boolean }): Promise<void>;
 	removeAndPersist(source: string, options?: { local?: boolean }): Promise<boolean>;
-	update(source?: string): Promise<void>;
 	listConfiguredPackages(): ConfiguredPackage[];
 	resolveSources(sources: string[], options?: { local?: boolean; temporary?: boolean }): Promise<ResolvedPaths>;
 	addSourceToSettings(source: string, options?: { local?: boolean }): boolean;
@@ -57,7 +49,6 @@ export type NpmSource = {
 	name: string;
 	version?: string;
 	range?: string;
-	pinned: boolean;
 };
 
 export type LocalSource = {
@@ -72,20 +63,5 @@ export type BundledSource = {
 };
 
 export type ParsedSource = NpmSource | GitSource | LocalSource | BundledSource;
-
-export type InstalledSourceScope = Exclude<SourceScope, "temporary">;
-
-export interface ConfiguredUpdateSource {
-	source: string;
-	scope: InstalledSourceScope;
-}
-
-export interface NpmUpdateTarget extends ConfiguredUpdateSource {
-	parsed: NpmSource;
-}
-
-export interface GitUpdateTarget extends ConfiguredUpdateSource {
-	parsed: GitSource;
-}
 
 export type BundledPackageName = "workflows" | "web-runtime";

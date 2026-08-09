@@ -80,7 +80,6 @@ Pi also supports several subcommands:
 |---------|-------------|
 | `pi install <source> [-l]` | Install a package source and add it to settings |
 | `pi remove <source> [-l]` | Remove a package source from settings |
-| `pi update [source]` | Update installed packages |
 | `pi list` | List installed packages from settings |
 | `pi config` | Open the package resource configuration TUI |
 | `pi workflow <verb>` | Pi workflow control plane (try `pi workflow --help`) |

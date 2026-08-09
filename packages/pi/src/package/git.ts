@@ -14,8 +14,6 @@ export type GitSource = {
 	path: string;
 	/** Git ref (branch, tag, commit) if specified */
 	ref?: string;
-	/** True if ref was specified (package won't be auto-updated) */
-	pinned: boolean;
 };
 
 function splitRef(url: string): { repo: string; ref?: string } {
@@ -119,7 +117,6 @@ function buildGitSource(args: { repo: string; host: string; path: string; ref?: 
 		host: args.host,
 		path: normalizedPath,
 		ref: args.ref,
-		pinned: Boolean(args.ref),
 	};
 }
 

@@ -27,7 +27,7 @@ The documentation is organized to mirror the top-level implementation areas in [
 - [`modes/`](modes/) - interactive, print, JSON, and RPC modes.
 - [`network/`](network/) - HTTP proxy and dispatcher configuration.
 - [`output/`](output/) - bounded output buffering, truncation, and sanitization.
-- [`package/`](package/) - Pi package installation, updates, and package resources.
+- [`package/`](package/) - Pi package installation and package resources.
 - [`resources/`](resources/) - resource types, diagnostics, and source tracking.
 - [`runtime/`](runtime/) - agent-session services, model control, lifecycle events, and telemetry.
 - [`session/`](session/) - session persistence, layout, navigation, and compaction.

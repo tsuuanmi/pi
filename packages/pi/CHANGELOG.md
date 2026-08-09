@@ -12,7 +12,7 @@
 - **resources**: Package resolution now accepts package directories only; explicit resource files are handled by the resource loader, and resource metadata/descriptors are owned by the resource boundary.
 - **extensions**: Removed the legacy `@tsuuanmi/pi/api/types` export; use `@tsuuanmi/pi/extensions` for the complete extension surface.
 - **extensions**: `@tsuuanmi/pi/extensions` is now the sole public extension entry point. The root extension exports, deep extension paths, `ExtensionRunner`, and tool wrappers were removed; use the cohesive `ExtensionAPI` contract instead.
-- **cli**: `pi update` now manages packages only; the self-update commands and public self-update exports were removed.
+- **packages**: Removed package update checks and commands, including `pi update`, `PackageManager.update()`, `DefaultPackageManager.checkForAvailableUpdates()`, automatic temporary Git refreshes, and update-only types.
 - **tools**: Replaced Pi's generic tool-definition surface with explicit `PiToolSpec` adapters, moved tool rendering/adapter code into `src/tool/`, and renamed built-in spec factories to `create*Spec`.
 - **sdk**: Renamed the session model fallback warning result from `modelFallbackMessage` to `modelStartupWarning`.
 - **sdk**: Removed the obsolete `migratedProviders` field from `InteractiveModeOptions`.

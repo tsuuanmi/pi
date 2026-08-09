@@ -4,7 +4,7 @@ Pi package management for installing and resolving package-provided extensions, 
 
 ## Overview
 
-Pi packages bundle distributable content (extensions, skills, prompts, themes, commands, and agents) that can be installed from npm, git, or local sources. The package manager handles package installation, updates, and package resource resolution. General user and project resource discovery remains in the resource loader.
+Pi packages bundle distributable content (extensions, skills, prompts, themes, commands, and agents) that can be installed from npm, git, or local sources. The package manager handles package installation and package resource resolution. General user and project resource discovery remains in the resource loader.
 
 ## Package Loader Boundary
 
@@ -106,7 +106,6 @@ interface PackageManager {
   installAndPersist(source: string, options?): Promise<void>;
   remove(source: string, options?): Promise<void>;
   removeAndPersist(source: string, options?): Promise<boolean>;
-  update(source?: string): Promise<void>;
   listConfiguredPackages(): ConfiguredPackage[];
   resolveSources(sources: string[], options?): Promise<ResolvedPaths>;
   addSourceToSettings(source: string, options?): boolean;
@@ -126,19 +125,18 @@ interface PackageManager {
 | `installAndPersist()` | Install and add to settings |
 | `remove()` | Remove a package from the local cache |
 | `removeAndPersist()` | Remove from cache and settings |
-| `update()` | Update one or all packages |
 | `listConfiguredPackages()` | List all configured packages with their status |
 | `addSourceToSettings()` | Add a source to project or user settings |
 | `removeSourceFromSettings()` | Remove a source from settings |
 
 ### Progress Callback
 
-Install/update operations report progress via callback:
+Install and removal operations report progress via callback:
 
 ```typescript
 interface ProgressEvent {
   type: "start" | "progress" | "complete" | "error";
-  action: "install" | "remove" | "update" | "clone" | "pull";
+  action: "install" | "remove";
   source: string;
   message?: string;
 }
@@ -161,7 +159,7 @@ The `npmCommand` setting can override the npm binary used for installations:
 
 ## Offline Mode
 
-Set `PI_OFFLINE=1` to disable npm registry lookups and other network package operations.
+Set `PI_OFFLINE=1` to disable automatic installation of missing npm and git package sources.
 
 ## See Also
 

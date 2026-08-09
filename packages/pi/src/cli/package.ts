@@ -5,7 +5,7 @@ import { getAgentDir } from "#pi/loader/paths";
 import { DefaultPackageManager } from "#pi/package/manager";
 import { SettingsManager } from "#pi/settings/manager";
 
-export type PackageCommand = "install" | "remove" | "update" | "list";
+export type PackageCommand = "install" | "remove" | "list";
 
 interface PackageCommandOptions {
 	command: PackageCommand;
@@ -22,8 +22,6 @@ function getPackageCommandUsage(command: PackageCommand): string {
 			return `${APP_NAME} install <source> [-l]`;
 		case "remove":
 			return `${APP_NAME} remove <source> [-l]`;
-		case "update":
-			return `${APP_NAME} update [source]`;
 		case "list":
 			return `${APP_NAME} list`;
 	}
@@ -64,18 +62,6 @@ Examples:
 `);
 			return;
 
-		case "update":
-			console.log(`${chalk.bold("Usage:")}
-  ${getPackageCommandUsage("update")}
-
-Update installed packages.
-
-Examples:
-  ${APP_NAME} update                Update all installed packages
-  ${APP_NAME} update <source>       Update one package
-`);
-			return;
-
 		case "list":
 			console.log(`${chalk.bold("Usage:")}
   ${getPackageCommandUsage("list")}
@@ -89,7 +75,7 @@ List installed packages from user and project settings.
 function parsePackageCommand(args: string[]): PackageCommandOptions | undefined {
 	const [rawCommand, ...rest] = args;
 	let command: PackageCommand | undefined;
-	if (rawCommand === "install" || rawCommand === "remove" || rawCommand === "update" || rawCommand === "list") {
+	if (rawCommand === "install" || rawCommand === "remove" || rawCommand === "list") {
 		command = rawCommand;
 	}
 	if (!command) {
@@ -244,11 +230,6 @@ export async function handlePackageCommand(args: string[]): Promise<boolean> {
 
 				return true;
 			}
-
-			case "update":
-				await packageManager.update(source);
-				console.log(chalk.green(source ? `Updated ${source}` : "Updated packages"));
-				return true;
 		}
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : "Unknown package command error";

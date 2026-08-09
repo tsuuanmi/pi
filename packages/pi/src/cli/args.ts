@@ -138,11 +138,10 @@ ${chalk.bold("Usage:")}
 ${chalk.bold("Commands:")}
   ${APP_NAME} install <source> [-l]     Install extension source and add to settings
   ${APP_NAME} remove <source> [-l]      Remove extension source from settings
-  ${APP_NAME} update [source]          Update installed extensions
   ${APP_NAME} list                      List installed extensions from settings
   ${APP_NAME} config                    Open TUI to enable/disable package resources
   ${APP_NAME} workflow <verb>           Pi workflow control plane (try 'pi workflow --help')
-  ${APP_NAME} <command> --help          Show help for install/remove/update/list
+  ${APP_NAME} <command> --help          Show help for install/remove/list
 
 ${chalk.bold("Options:")}
   --provider <name>              Provider name

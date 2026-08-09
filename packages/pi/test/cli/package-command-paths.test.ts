@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { handlePackageCommand } from "#pi/cli/package";
 import { ENV_AGENT_DIR } from "#pi/loader/config";
 import { main } from "#pi/main";
 
@@ -156,27 +157,7 @@ describe("package commands", () => {
 		}
 	});
 
-	it("suggests the configured source when update input omits the npm prefix", async () => {
-		const settingsPath = join(agentDir, "settings.json");
-		writeFileSync(settingsPath, JSON.stringify({ packages: ["npm:pi-formatter"] }, null, 2));
-
-		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-
-		try {
-			await expect(main(["update", "pi-formatter"])).resolves.toBeUndefined();
-
-			const stderr = errorSpy.mock.calls.map(([message]) => String(message)).join("\n");
-			const stdout = logSpy.mock.calls.map(([message]) => String(message)).join("\n");
-			expect(stderr).toContain("Did you mean npm:pi-formatter?");
-			expect(stdout).not.toContain("Updated pi-formatter");
-			expect(process.exitCode).toBe(1);
-
-			const settings = JSON.parse(readFileSync(settingsPath, "utf-8")) as { packages?: string[] };
-			expect(settings.packages).toContain("npm:pi-formatter");
-		} finally {
-			errorSpy.mockRestore();
-			logSpy.mockRestore();
-		}
+	it("does not handle update as a built-in package command", async () => {
+		await expect(handlePackageCommand(["update"])).resolves.toBe(false);
 	});
 });

@@ -19,7 +19,7 @@ export interface PackageCommandContext {
  *
  * Note: this `handlePackageCommand` is the package-command dispatcher contract
  * and is unrelated to the `handlePackageCommand` in `cli/package.ts`
- * (the install/remove/update/list handler). Same name, different modules.
+ * (the install/remove/list handler). Same name, different modules.
  */
 export interface PackageCommandModule {
 	handlePackageCommand?: (args: string[], context: PackageCommandContext) => Promise<boolean> | boolean;

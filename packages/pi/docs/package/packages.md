@@ -28,8 +28,6 @@ pi install ./relative/path/to/package
 
 pi remove npm:@foo/bar
 pi list                     # show installed packages from settings
-pi update                   # update packages and reconcile pinned git refs
-pi update npm:@foo/bar      # update one package
 ```
 
 These commands manage pi packages, not the pi CLI installation. To uninstall pi itself, see [Quickstart](../app/quickstart.md#uninstall).
@@ -38,7 +36,7 @@ By default, `install` and `remove` write to user settings (`~/.pi/agent/settings
 
 ## Package Sources
 
-Pi accepts package sources in settings and `pi install`. It also provides reserved first-party `pi:` sources as effective defaults, currently `pi:workflows`. Bundled sources resolve through the package host like normal package sources and can be listed, updated, configured, and filtered. Add an explicit object entry for the same source to filter it; an empty resource filter such as `"extensions": []` disables all resources of that type.
+Pi accepts package sources in settings and `pi install`. It also provides reserved first-party `pi:` sources as effective defaults, currently `pi:workflows`. Bundled sources resolve through the package host like normal package sources and can be listed, configured, and filtered. Add an explicit object entry for the same source to filter it; an empty resource filter such as `"extensions": []` disables all resources of that type.
 
 ### npm
 
@@ -47,7 +45,7 @@ npm:@scope/pkg@1.2.3
 npm:pkg
 ```
 
-- Versioned specs are pinned and skipped by package updates (`pi update`).
+- Versioned specs select the installed version or version range.
 - User installs go under `~/.pi/agent/npm/`.
 - Project installs go under `.pi/npm/`.
 - Set `npmCommand` in `settings.json` to pin npm package lookup and install operations to a specific wrapper command such as `mise` or `asdf`.
@@ -74,8 +72,8 @@ ssh://git@github.com/user/repo@v1
 - HTTPS and SSH URLs are both supported.
 - SSH URLs use your configured SSH keys automatically (respects `~/.ssh/config`).
 - For non-interactive runs (for example CI), you can set `GIT_TERMINAL_PROMPT=0` to disable credential prompts and set `GIT_SSH_COMMAND` (for example `ssh -o BatchMode=yes -o ConnectTimeout=5`) to fail fast.
-- Refs are pinned tags or commits. `pi update` does not move them to newer refs, but it does reconcile an existing clone to the configured ref.
-- Use `pi install git:host/user/repo@new-ref` to update settings and move an existing package to a new pinned ref.
+- Refs select an explicit branch, tag, or commit.
+- Use `pi install git:host/user/repo@new-ref` to change settings and reconcile an existing package to the new ref.
 - Cloned to `~/.pi/agent/git/<host>/<path>` (global) or `.pi/git/<host>/<path>` (project).
 - When reconciliation changes the checkout, pi resets and cleans the clone, then runs `npm install` if `package.json` exists.
 

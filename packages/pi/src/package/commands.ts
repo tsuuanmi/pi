@@ -1,8 +1,8 @@
 import type { ChildProcess, ChildProcessByStdio } from "node:child_process";
 import type { Readable } from "node:stream";
 import { spawnProcess } from "@tsuuanmi/pi-agent/node";
-import type { CommandOutput } from "#pi/package/types";
-import { getEnv } from "#pi/package/utils";
+import type { CommandOutput } from "./types.ts";
+import { getEnv } from "./utils.ts";
 
 export interface CommandOptions {
 	cwd?: string;
