@@ -120,13 +120,6 @@ Modifier combinations: `ctrl+shift+x`, `alt+ctrl+x`, `ctrl+shift+alt+x`, `ctrl+1
 | `app.tree.unfoldOrDown` | `ctrl+right`, `alt+right` | Unfold current branch segment, or jump to the next segment start or branch end |
 | `app.tree.editLabel` | `shift+l` | Edit the label on the selected tree node |
 | `app.tree.toggleLabelTimestamp` | `shift+t` | Toggle label timestamps in the tree |
-| `app.tree.filter.default` | `ctrl+d` | Set tree filter to default view |
-| `app.tree.filter.noTools` | `ctrl+t` | Toggle tree filter that hides tool results |
-| `app.tree.filter.userOnly` | `ctrl+u` | Toggle tree filter that shows only user messages |
-| `app.tree.filter.labeledOnly` | `ctrl+l` | Toggle tree filter that shows only labeled entries |
-| `app.tree.filter.all` | `ctrl+a` | Toggle tree filter that shows all entries |
-| `app.tree.filter.cycleForward` | `ctrl+o` | Cycle tree filter forward |
-| `app.tree.filter.cycleBackward` | `shift+ctrl+o` | Cycle tree filter backward |
 
 ## Custom Configuration
 

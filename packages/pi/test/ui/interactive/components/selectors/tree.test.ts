@@ -1,7 +1,13 @@
 import { stripVTControlCharacters } from "node:util";
 import { initTheme, setKeybindings, visibleWidth } from "@tsuuanmi/pi-tui";
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
-import type { ModelChangeEntry, SessionEntry, SessionMessageEntry, SessionTreeNode } from "#pi/session/manager";
+import type {
+	CustomMessageEntry,
+	ModelChangeEntry,
+	SessionEntry,
+	SessionMessageEntry,
+	SessionTreeNode,
+} from "#pi/session/manager";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import { TreeSelectorComponent } from "#pi/ui/interactive/components/selectors/tree";
 
@@ -52,7 +58,7 @@ function assistantMessage(id: string, parentId: string | null, text: string): Se
 	};
 }
 
-// Helper to create a tool-call-only assistant message (filtered out in default mode)
+// Helper to create a tool-call-only assistant message (not shown as a checkpoint)
 function toolCallOnlyAssistant(id: string, parentId: string | null): SessionMessageEntry {
 	return {
 		type: "message",
@@ -88,6 +94,35 @@ function modelChange(id: string, parentId: string | null): ModelChangeEntry {
 		timestamp: new Date().toISOString(),
 		provider: "anthropic",
 		modelId: "claude-sonnet-4",
+	};
+}
+
+function customMessage(id: string, parentId: string | null): CustomMessageEntry {
+	return {
+		type: "custom_message",
+		id,
+		parentId,
+		timestamp: new Date().toISOString(),
+		customType: "test",
+		content: "custom message",
+		display: true,
+	};
+}
+
+function toolResultMessage(id: string, parentId: string | null): SessionMessageEntry {
+	return {
+		type: "message",
+		id,
+		parentId,
+		timestamp: new Date().toISOString(),
+		message: {
+			role: "toolResult",
+			toolCallId: `tool-${id}`,
+			toolName: "read",
+			content: [{ type: "text", text: "tool result" }],
+			isError: false,
+			timestamp: Date.now(),
+		},
 	};
 }
 
@@ -180,15 +215,14 @@ describe("TreeSelectorComponent", () => {
 		});
 	});
 
-	describe("filter switching with parent traversal", () => {
-		test("switches to nearest visible user message when changing to user-only filter", () => {
-			// In user-only filter: [user-1, user-2, user-3]
+	describe("message checkpoints", () => {
+		test("shows only user and assistant message entries", () => {
 			const entries = [
 				userMessage("user-1", null, "hello"),
 				assistantMessage("asst-1", "user-1", "hi"),
-				userMessage("user-2", "asst-1", "active branch"),
-				assistantMessage("asst-2", "user-2", "response"),
-				userMessage("user-3", "asst-1", "sibling branch"),
+				toolResultMessage("tool-1", "asst-1"),
+				customMessage("custom-1", "tool-1"),
+				assistantMessage("asst-2", "custom-1", "response"),
 			];
 			const tree = buildTree(entries);
 
@@ -203,43 +237,8 @@ describe("TreeSelectorComponent", () => {
 			const list = selector.getTreeList();
 			expect(list.getSelectedNode()?.entry.id).toBe("asst-2");
 
-			// Simulate Ctrl+U (user-only filter)
-			selector.handleInput("\x15");
-
-			// Should now be on user-2 (the parent user message), not user-3
-			expect(list.getSelectedNode()?.entry.id).toBe("user-2");
-		});
-
-		test("returns to nearest visible ancestor when switching back to default filter", () => {
-			// Same branching structure
-			const entries = [
-				userMessage("user-1", null, "hello"),
-				assistantMessage("asst-1", "user-1", "hi"),
-				userMessage("user-2", "asst-1", "active branch"),
-				assistantMessage("asst-2", "user-2", "response"),
-				userMessage("user-3", "asst-1", "sibling branch"),
-			];
-			const tree = buildTree(entries);
-
-			const selector = new TreeSelectorComponent(
-				tree,
-				"asst-2",
-				24,
-				() => {},
-				() => {},
-			);
-
-			const list = selector.getTreeList();
-			expect(list.getSelectedNode()?.entry.id).toBe("asst-2");
-
-			// Switch to user-only
-			selector.handleInput("\x15"); // Ctrl+U
-			expect(list.getSelectedNode()?.entry.id).toBe("user-2");
-
-			// Switch back to default - should stay on user-2
-			// (since that's what we navigated to via parent traversal)
-			selector.handleInput("\x04"); // Ctrl+D
-			expect(list.getSelectedNode()?.entry.id).toBe("user-2");
+			selector.handleInput("\x1b[A");
+			expect(list.getSelectedNode()?.entry.id).toBe("asst-1");
 		});
 	});
 
@@ -258,8 +257,8 @@ describe("TreeSelectorComponent", () => {
 			const plainLines = selector.render(30).map(stripVTControlCharacters);
 			const plain = plainLines.join("\n");
 			expect(plain).toContain("branch");
-			expect(plain).toContain("filters");
-			expect(plain).toContain("cycle");
+			expect(plain).not.toContain("filters");
+			expect(plain).not.toContain("cycle");
 			expect(plain).toContain("label time");
 			expect(plain).not.toContain("...");
 			expect(plainLines.every((line) => visibleWidth(line) <= 30)).toBe(true);
@@ -293,73 +292,6 @@ describe("TreeSelectorComponent", () => {
 			render = list.render(200).join("\n");
 			expect(render).toContain("3/28 14:32");
 			expect(render).toContain("[+label time]");
-		});
-	});
-
-	describe("empty filter preservation", () => {
-		test("preserves selection when switching to empty labeled filter and back", () => {
-			// Tree with no labels
-			const entries = [
-				userMessage("user-1", null, "hello"),
-				assistantMessage("asst-1", "user-1", "hi"),
-				userMessage("user-2", "asst-1", "bye"),
-				assistantMessage("asst-2", "user-2", "goodbye"),
-			];
-			const tree = buildTree(entries);
-
-			const selector = new TreeSelectorComponent(
-				tree,
-				"asst-2",
-				24,
-				() => {},
-				() => {},
-			);
-
-			const list = selector.getTreeList();
-			expect(list.getSelectedNode()?.entry.id).toBe("asst-2");
-
-			// Switch to labeled-only filter (no labels exist, so empty result)
-			selector.handleInput("\x0c"); // Ctrl+L
-
-			// The list should be empty, getSelectedNode returns undefined
-			expect(list.getSelectedNode()).toBeUndefined();
-
-			// Switch back to default filter
-			selector.handleInput("\x04"); // Ctrl+D
-
-			// Should restore to asst-2 (the selection before we switched to empty filter)
-			expect(list.getSelectedNode()?.entry.id).toBe("asst-2");
-		});
-
-		test("preserves selection through multiple empty filter switches", () => {
-			const entries = [userMessage("user-1", null, "hello"), assistantMessage("asst-1", "user-1", "hi")];
-			const tree = buildTree(entries);
-
-			const selector = new TreeSelectorComponent(
-				tree,
-				"asst-1",
-				24,
-				() => {},
-				() => {},
-			);
-
-			const list = selector.getTreeList();
-			expect(list.getSelectedNode()?.entry.id).toBe("asst-1");
-
-			// Switch to labeled-only (empty) - Ctrl+L toggles labeled ↔ default
-			selector.handleInput("\x0c"); // Ctrl+L -> labeled-only
-			expect(list.getSelectedNode()).toBeUndefined();
-
-			// Switch to default, then back to labeled-only
-			selector.handleInput("\x0c"); // Ctrl+L -> default (toggle back)
-			expect(list.getSelectedNode()?.entry.id).toBe("asst-1");
-
-			selector.handleInput("\x0c"); // Ctrl+L -> labeled-only again
-			expect(list.getSelectedNode()).toBeUndefined();
-
-			// Switch back to default with Ctrl+D
-			selector.handleInput("\x04"); // Ctrl+D
-			expect(list.getSelectedNode()?.entry.id).toBe("asst-1");
 		});
 	});
 
@@ -626,36 +558,6 @@ describe("TreeSelectorComponent", () => {
 
 			selector.handleInput("b"); // search resets folds
 			selector.handleInput("\x1b"); // clear search
-
-			// Navigate to user-3a to verify fold was reset
-			let currentId = "";
-			for (let i = 0; i < 20; i++) {
-				selector.handleInput(DOWN);
-				currentId = list.getSelectedNode()?.entry.id ?? "";
-				if (currentId === "user-3a") break;
-			}
-			expect(currentId).toBe("user-3a");
-
-			selector.handleInput(DOWN); // user-3a → asst-3a (not user-3b)
-			expect(list.getSelectedNode()?.entry.id).toBe("asst-3a");
-		});
-
-		test("filter mode change resets fold state", () => {
-			const tree = buildBranchingTree();
-			const selector = new TreeSelectorComponent(
-				tree,
-				"asst-4a",
-				24,
-				() => {},
-				() => {},
-			);
-			const list = selector.getTreeList();
-
-			selector.handleInput(CTRL_LEFT); // asst-4a → user-3a
-			selector.handleInput(CTRL_LEFT); // fold user-3a
-
-			selector.handleInput("\x15"); // ctrl+u: user-only filter resets folds
-			selector.handleInput("\x04"); // ctrl+d: back to default
 
 			// Navigate to user-3a to verify fold was reset
 			let currentId = "";

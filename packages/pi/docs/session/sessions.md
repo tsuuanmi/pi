@@ -87,19 +87,18 @@ Example shape:
 | Shift+T | Toggle label timestamps |
 | Enter | Select entry |
 | Escape/Ctrl+C | Cancel |
-| Ctrl+O | Cycle filter mode |
 
-Filter modes are: default, no-tools, user-only, labeled-only, and all.
+`/tree` shows user and assistant message checkpoints only. Other session entries remain available in the session file but are not selectable from the tree.
 
 ### Selection Behavior
 
-Selecting a user or custom message:
+Selecting a user message:
 
 1. Moves the leaf to the selected message's parent.
 2. Places the selected message text in the editor.
 3. Lets you edit and resubmit, creating a new branch.
 
-Selecting an assistant, tool, compaction, or other non-user entry:
+Selecting an assistant message:
 
 1. Moves the leaf to that entry.
 2. Leaves the editor empty.

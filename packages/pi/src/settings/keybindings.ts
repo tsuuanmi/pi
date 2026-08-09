@@ -33,13 +33,6 @@ export interface AppKeybindings {
 	"app.session.rename": true;
 	"app.session.delete": true;
 	"app.session.deleteNoninvasive": true;
-	"app.tree.filter.default": true;
-	"app.tree.filter.noTools": true;
-	"app.tree.filter.userOnly": true;
-	"app.tree.filter.labeledOnly": true;
-	"app.tree.filter.all": true;
-	"app.tree.filter.cycleForward": true;
-	"app.tree.filter.cycleBackward": true;
 }
 
 export type AppKeybinding = keyof AppKeybindings;
@@ -116,34 +109,6 @@ const KEYBINDINGS = {
 	"app.session.deleteNoninvasive": {
 		defaultKeys: "ctrl+backspace",
 		description: "Delete session when query is empty",
-	},
-	"app.tree.filter.default": {
-		defaultKeys: "ctrl+d",
-		description: "Tree filter: default view",
-	},
-	"app.tree.filter.noTools": {
-		defaultKeys: "ctrl+t",
-		description: "Tree filter: hide tool results",
-	},
-	"app.tree.filter.userOnly": {
-		defaultKeys: "ctrl+u",
-		description: "Tree filter: user messages only",
-	},
-	"app.tree.filter.labeledOnly": {
-		defaultKeys: "ctrl+l",
-		description: "Tree filter: labeled entries only",
-	},
-	"app.tree.filter.all": {
-		defaultKeys: "ctrl+a",
-		description: "Tree filter: show all entries",
-	},
-	"app.tree.filter.cycleForward": {
-		defaultKeys: "ctrl+o",
-		description: "Tree filter: cycle forward",
-	},
-	"app.tree.filter.cycleBackward": {
-		defaultKeys: "shift+ctrl+o",
-		description: "Tree filter: cycle backward",
 	},
 } as const satisfies KeybindingDefinitions;
 

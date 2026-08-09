@@ -17,6 +17,7 @@ import {
 	wrapTextWithAnsi,
 } from "@tsuuanmi/pi-tui";
 import type { SessionTreeNode } from "#pi/session/manager";
+import { isMessageCheckpoint } from "#pi/ui/interactive/components/selectors/tree-checkpoint";
 
 /** Gutter info: position (displayIndent where connector was) and whether to show │ */
 interface GutterInfo {
@@ -92,9 +93,6 @@ function renderHorizontalViewport(rows: HorizontalViewportRow[], width: number):
 	});
 }
 
-/** Filter mode for tree display */
-export type FilterMode = "default" | "no-tools" | "user-only" | "labeled-only" | "all";
-
 /**
  * Tree list component with selection and ASCII art visualization
  */
@@ -110,7 +108,6 @@ class TreeList implements Component {
 	private selectedIndex = 0;
 	private currentLeafId: string | null;
 	private maxVisibleLines: number;
-	private filterMode: FilterMode = "default";
 	private searchQuery = "";
 	private toolCallMap: Map<string, ToolCallInfo> = new Map();
 	private multipleRoots = false;
@@ -130,11 +127,9 @@ class TreeList implements Component {
 		currentLeafId: string | null,
 		maxVisibleLines: number,
 		initialSelectedId?: string,
-		initialFilterMode?: FilterMode,
 	) {
 		this.currentLeafId = currentLeafId;
 		this.maxVisibleLines = maxVisibleLines;
-		this.filterMode = initialFilterMode ?? "default";
 		this.multipleRoots = tree.length > 1;
 		this.flatNodes = this.flattenTree(tree);
 		this.buildActivePath();
@@ -329,7 +324,7 @@ class TreeList implements Component {
 
 	private applyFilter(): void {
 		// Update lastSelectedId only when we have a valid selection (non-empty list)
-		// This preserves the selection when switching through empty filter results
+		// This preserves the selection when search returns no results
 		if (this.filteredNodes.length > 0) {
 			this.lastSelectedId = this.filteredNodes[this.selectedIndex]?.node.entry.id ?? this.lastSelectedId;
 		}
@@ -352,40 +347,7 @@ class TreeList implements Component {
 				}
 			}
 
-			// Apply filter mode
-			let passesFilter = true;
-			// Entry types hidden in default view (settings/bookkeeping)
-			const isSettingsEntry =
-				entry.type === "label" ||
-				entry.type === "custom" ||
-				entry.type === "model_change" ||
-				entry.type === "thinking_level_change" ||
-				entry.type === "session_info";
-
-			switch (this.filterMode) {
-				case "user-only":
-					// Just user messages
-					passesFilter = entry.type === "message" && entry.message.role === "user";
-					break;
-				case "no-tools":
-					// Default minus tool results
-					passesFilter = !isSettingsEntry && !(entry.type === "message" && entry.message.role === "toolResult");
-					break;
-				case "labeled-only":
-					// Just labeled entries
-					passesFilter = flatNode.node.label !== undefined;
-					break;
-				case "all":
-					// Show everything
-					passesFilter = true;
-					break;
-				default:
-					// Default mode: hide settings/bookkeeping entries
-					passesFilter = !isSettingsEntry;
-					break;
-			}
-
-			if (!passesFilter) return false;
+			if (!isMessageCheckpoint(entry)) return false;
 
 			// Apply search filter
 			if (searchTokens.length > 0) {
@@ -634,26 +596,8 @@ class TreeList implements Component {
 		}
 	}
 
-	private getStatusLabels(): string {
-		let labels = "";
-		switch (this.filterMode) {
-			case "no-tools":
-				labels += " [no-tools]";
-				break;
-			case "user-only":
-				labels += " [user]";
-				break;
-			case "labeled-only":
-				labels += " [labeled]";
-				break;
-			case "all":
-				labels += " [all]";
-				break;
-		}
-		if (this.showLabelTimestamps) {
-			labels += " [+label time]";
-		}
-		return labels;
+	private getStatus(): string {
+		return this.showLabelTimestamps ? " [+label time]" : "";
 	}
 
 	render(width: number): string[] {
@@ -661,7 +605,7 @@ class TreeList implements Component {
 
 		if (this.filteredNodes.length === 0) {
 			lines.push(truncateToWidth(theme.fg("muted", "  No entries found"), width));
-			lines.push(truncateToWidth(theme.fg("muted", `  (0/0)${this.getStatusLabels()}`), width));
+			lines.push(truncateToWidth(theme.fg("muted", `  (0/0)${this.getStatus()}`), width));
 			return lines;
 		}
 
@@ -752,7 +696,7 @@ class TreeList implements Component {
 		lines.push(...renderHorizontalViewport(renderedRows, width));
 		lines.push(
 			truncateToWidth(
-				theme.fg("muted", `  (${this.selectedIndex + 1}/${this.filteredNodes.length})${this.getStatusLabels()}`),
+				theme.fg("muted", `  (${this.selectedIndex + 1}/${this.filteredNodes.length})${this.getStatus()}`),
 				width,
 			),
 		);
@@ -999,45 +943,6 @@ class TreeList implements Component {
 			} else {
 				this.onCancel?.();
 			}
-		} else if (kb.matches(keyData, "app.tree.filter.default")) {
-			// Direct filter: default
-			this.filterMode = "default";
-			this.foldedNodes.clear();
-			this.applyFilter();
-		} else if (kb.matches(keyData, "app.tree.filter.noTools")) {
-			// Toggle filter: no-tools ↔ default
-			this.filterMode = this.filterMode === "no-tools" ? "default" : "no-tools";
-			this.foldedNodes.clear();
-			this.applyFilter();
-		} else if (kb.matches(keyData, "app.tree.filter.userOnly")) {
-			// Toggle filter: user-only ↔ default
-			this.filterMode = this.filterMode === "user-only" ? "default" : "user-only";
-			this.foldedNodes.clear();
-			this.applyFilter();
-		} else if (kb.matches(keyData, "app.tree.filter.labeledOnly")) {
-			// Toggle filter: labeled-only ↔ default
-			this.filterMode = this.filterMode === "labeled-only" ? "default" : "labeled-only";
-			this.foldedNodes.clear();
-			this.applyFilter();
-		} else if (kb.matches(keyData, "app.tree.filter.all")) {
-			// Toggle filter: all ↔ default
-			this.filterMode = this.filterMode === "all" ? "default" : "all";
-			this.foldedNodes.clear();
-			this.applyFilter();
-		} else if (kb.matches(keyData, "app.tree.filter.cycleBackward")) {
-			// Cycle filter backwards
-			const modes: FilterMode[] = ["default", "no-tools", "user-only", "labeled-only", "all"];
-			const currentIndex = modes.indexOf(this.filterMode);
-			this.filterMode = modes[(currentIndex - 1 + modes.length) % modes.length];
-			this.foldedNodes.clear();
-			this.applyFilter();
-		} else if (kb.matches(keyData, "app.tree.filter.cycleForward")) {
-			// Cycle filter forwards: default → no-tools → user-only → labeled-only → all → default
-			const modes: FilterMode[] = ["default", "no-tools", "user-only", "labeled-only", "all"];
-			const currentIndex = modes.indexOf(this.filterMode);
-			this.filterMode = modes[(currentIndex + 1) % modes.length];
-			this.foldedNodes.clear();
-			this.applyFilter();
 		} else if (kb.matches(keyData, "tui.editor.deleteCharBackward")) {
 			if (this.searchQuery.length > 0) {
 				this.searchQuery = this.searchQuery.slice(0, -1);
@@ -1183,18 +1088,6 @@ const TREE_HELP_ITEMS: Array<{ keys: Keybinding[]; label: string; labelFirst?: b
 	{ keys: ["app.tree.foldOrUp", "app.tree.unfoldOrDown"], label: "branch" },
 	{ keys: ["app.tree.editLabel"], label: "label" },
 	{ keys: ["app.tree.toggleLabelTimestamp"], label: "label time" },
-	{
-		keys: [
-			"app.tree.filter.default",
-			"app.tree.filter.noTools",
-			"app.tree.filter.userOnly",
-			"app.tree.filter.labeledOnly",
-			"app.tree.filter.all",
-		],
-		label: "filters",
-		labelFirst: true,
-	},
-	{ keys: ["app.tree.filter.cycleForward", "app.tree.filter.cycleBackward"], label: "cycle", labelFirst: true },
 ];
 
 function formatHelpKeys(keybindings: Keybinding[]): string {
@@ -1315,14 +1208,13 @@ export class TreeSelectorComponent extends Container implements Focusable {
 		onCancel: () => void,
 		onLabelChange?: (entryId: string, label: string | undefined) => void,
 		initialSelectedId?: string,
-		initialFilterMode?: FilterMode,
 	) {
 		super();
 
 		this.onLabelChangeCallback = onLabelChange;
 		const maxVisibleLines = Math.max(5, Math.floor(terminalHeight / 2));
 
-		this.treeList = new TreeList(tree, currentLeafId, maxVisibleLines, initialSelectedId, initialFilterMode);
+		this.treeList = new TreeList(tree, currentLeafId, maxVisibleLines, initialSelectedId);
 		this.treeList.onSelect = onSelect;
 		this.treeList.onCancel = onCancel;
 		this.treeList.onLabelEdit = (entryId, currentLabel) => this.showLabelInput(entryId, currentLabel);
