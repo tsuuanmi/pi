@@ -16,7 +16,7 @@ import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 import { MissingSessionCwdError } from "#pi/session/cwd";
 import { SessionManager } from "#pi/session/manager";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 import type { CustomEditor } from "#pi/ui/interactive/components/custom-editor";
 import { AssistantMessageComponent } from "#pi/ui/interactive/components/messages/assistant";
 import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session";

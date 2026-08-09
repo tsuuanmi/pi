@@ -155,13 +155,8 @@ export {
 	type SessionMessageEntry,
 	type ThinkingLevelChangeEntry,
 } from "#pi/session/manager";
-export {
-	type CompactionSettings,
-	type PackageSource,
-	type RetrySettings,
-	SettingsManager,
-	type SettingsManagerCreateOptions,
-} from "#pi/settings/settings-manager";
+export { SettingsManager } from "#pi/settings/manager";
+export type { CompactionSettings, PackageSource, RetrySettings } from "#pi/settings/types";
 export { SubagentManager } from "#pi/subagents/manager";
 // Tools
 export {

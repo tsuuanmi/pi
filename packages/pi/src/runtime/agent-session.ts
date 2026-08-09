@@ -86,7 +86,7 @@ import { navigateTree as treeNavNavigateTree } from "#pi/runtime/tree-navigation
 import type { CompactionResult } from "#pi/session/compaction/index";
 import type { BranchSummaryEntry, SessionManager } from "#pi/session/manager";
 import { CURRENT_SESSION_VERSION, type SessionHeader } from "#pi/session/manager";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 import type { ExtensionToolSpec, PiToolSpec } from "#pi/tool/spec";
 import { createToolSpecs } from "#pi/tools/index";
 

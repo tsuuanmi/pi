@@ -3,7 +3,7 @@ import type { AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import { isContextOverflow } from "@tsuuanmi/pi-ai";
 import { sleep } from "#pi/runtime/platform";
 import type { AgentSessionEvent } from "#pi/runtime/session/types";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 
 export interface RetryHost {
 	readonly agent: Agent;

@@ -14,7 +14,7 @@ import {
 	type SessionCwdIssue,
 } from "#pi/session/cwd";
 import { SessionManager } from "#pi/session/manager";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 
 export interface StartupSession {
 	sessionDir: string | undefined;

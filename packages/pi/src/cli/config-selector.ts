@@ -1,6 +1,6 @@
 import { initTheme, ProcessTerminal, TUI } from "@tsuuanmi/pi-tui";
 import type { ResolvedPaths } from "#pi/resources/types";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 import { ResourceSettingsComponent } from "#pi/ui/package/settings";
 
 export interface ConfigSelectorOptions {

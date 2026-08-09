@@ -14,7 +14,7 @@ import {
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
 import type { ResolvedPaths } from "#pi/resources/types";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 import { buildResourceGroups } from "./groups.ts";
 import { ResourceList } from "./list.ts";
 import { ResourceToggler } from "./toggle.ts";

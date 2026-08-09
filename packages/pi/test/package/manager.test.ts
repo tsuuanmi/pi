@@ -8,7 +8,7 @@ import { resolveResources } from "#pi/loader/discovery";
 import { DefaultPackageManager } from "#pi/package/manager";
 import type { ProgressEvent } from "#pi/package/types";
 import type { ResolvedResource } from "#pi/resources/types";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 
 function normalizeForMatch(value: string): string {
 	return value.replace(/\\/g, "/");

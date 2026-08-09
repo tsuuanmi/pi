@@ -1,6 +1,6 @@
 import { initTheme, ProcessTerminal, setKeybindings, TUI } from "@tsuuanmi/pi-tui";
 import { KeybindingsManager } from "#pi/settings/keybindings";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension";
 
 function createStartupTui(settingsManager: SettingsManager): TUI {

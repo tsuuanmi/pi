@@ -1,6 +1,6 @@
 import { getAgentDir } from "#pi/loader/paths";
 import { applyHttpProxySettings, configureHttpDispatcher } from "#pi/network/http-dispatcher";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 
 export interface StartupPaths {
 	cwd: string;

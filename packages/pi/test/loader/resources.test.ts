@@ -10,7 +10,7 @@ import type { Skill } from "#pi/loader/skill";
 import { createSyntheticSourceInfo } from "#pi/resources/source-info";
 import { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { SessionManager } from "#pi/session/manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 
 const BUILT_IN_WORKFLOW_COMMANDS = new Set(["deep-interview", "ralplan", "team", "ultragoal"]);
 const BUILT_IN_SUBAGENT_SPECS = new Set([

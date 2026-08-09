@@ -9,7 +9,7 @@ import { AuthStorage } from "#pi/auth/storage";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 import { createTestResourceLoader } from "#pi-test/helpers/resource-loader";
 
 class MockAssistantStream extends EventStream<AssistantMessageEvent, AssistantMessage> {

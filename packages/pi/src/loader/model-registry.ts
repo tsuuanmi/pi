@@ -34,7 +34,8 @@ import {
 	resolveConfigValueUncached,
 	resolveHeadersOrThrow,
 } from "#pi/loader/value";
-import type { ModelsSettings, SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
+import type { ModelsSettings } from "#pi/settings/types";
 
 const BUILT_IN_GENERATED_MODEL_PROVIDERS = new Set<string>(["ollama-cloud"]);
 

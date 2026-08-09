@@ -3,7 +3,7 @@ import { reportSettingsErrors } from "#pi/cli/settings";
 import { APP_NAME, CONFIG_DIR_NAME } from "#pi/loader/app";
 import { getAgentDir } from "#pi/loader/paths";
 import { DefaultPackageManager } from "#pi/package/manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 
 export type PackageCommand = "install" | "remove" | "update" | "list";
 

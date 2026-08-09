@@ -3,6 +3,7 @@
 ### Breaking Changes
 
 - **tree**: `/tree` now shows only user and assistant message checkpoints; tree filter modes and keybindings were removed.
+- **settings**: Removed legacy settings migration, split the manager into focused modules, and removed the old module path; use `settings/manager`.
 - **agent**: Updated Pi-facing agent and session contracts to use `AgentMessage` for agent-owned transcript messages; the LLM protocol `Message` remains owned by `@tsuuanmi/pi-ai`.
 - **execution**: Split process, shell, lifecycle, Bash, and program adapters into focused modules; renamed the local backend and shell resolver, removed the `sh` fallback, and standardized program results on `exitCode`, `signal`, and `reason`.
 - **rpc**: RPC JSONL now rejects CRLF input and unterminated records instead of accepting them.

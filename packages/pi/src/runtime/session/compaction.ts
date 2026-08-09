@@ -15,7 +15,7 @@ import {
 	shouldCompact,
 } from "#pi/session/compaction/index";
 import { type CompactionEntry, getLatestCompactionEntry, type SessionManager } from "#pi/session/manager";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 
 export interface CompactionHost {
 	readonly agent: Agent;

@@ -15,7 +15,7 @@ import type { ResourceLoader } from "#pi/loader/resources";
 import type { ExtensionErrorListener, ExtensionRunner, ShutdownHandler } from "#pi/runtime/extensions/runner";
 import type { CompactionResult } from "#pi/session/compaction/index";
 import type { SessionManager } from "#pi/session/manager";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 import type { WebProviderRegistry } from "#pi/web-providers/registry";
 
 /** Session-specific events that extend the core AgentEvent. */

@@ -37,7 +37,7 @@ import type {
 import { DefaultPackageManager } from "#pi/package/manager";
 import type { PathMetadata, ResolvedResource, ResourceType } from "#pi/resources/types";
 import { createExtensionRuntime } from "#pi/runtime/extensions/api";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 import { WebProviderHost } from "#pi/web-providers/host";
 
 export class DefaultResourceLoader implements ResourceLoader {

@@ -17,7 +17,7 @@ import {
 	createAgentSessionServices,
 } from "#pi/runtime/agent-session-services";
 import type { SessionManager } from "#pi/session/manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 
 export interface RuntimeOptions {
 	parsed: Args;

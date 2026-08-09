@@ -4,7 +4,7 @@ import {
 	type LoadedAgentProfile,
 	loadAgentDefinitions,
 } from "#pi/loader/agents/definitions";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 
 export interface AgentProfile {
 	name: string;

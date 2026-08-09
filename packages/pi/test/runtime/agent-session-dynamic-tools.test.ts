@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { DefaultResourceLoader } from "#pi/loader/resources";
 import { createAgentSession } from "#pi/runtime/agent-session-factory";
 import { SessionManager } from "#pi/session/manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 
 describe("AgentSession dynamic tool registration", () => {
 	let tempDir: string;

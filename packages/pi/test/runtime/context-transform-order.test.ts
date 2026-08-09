@@ -15,7 +15,7 @@ import { ModelRegistry } from "#pi/loader/model-registry";
 import { DefaultResourceLoader } from "#pi/loader/resources";
 import { createAgentSession } from "#pi/runtime/agent-session-factory";
 import { SessionManager } from "#pi/session/manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 
 function createModel(): Model<Api> {
 	return {

@@ -13,7 +13,7 @@ import { AuthStorage } from "#pi/auth/storage";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { createAgentSession } from "#pi/runtime/agent-session-factory";
 import { SessionManager } from "#pi/session/manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 
 describe("createAgentSession stream options", () => {
 	let tempDir: string;

@@ -33,8 +33,8 @@ import type { ResourceLoader } from "#pi/loader/resources";
 import { AgentSession } from "#pi/runtime/agent-session";
 import type { AgentSessionEvent } from "#pi/runtime/session/types";
 import { SessionManager } from "#pi/session/manager";
-import type { Settings } from "#pi/settings/settings-manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
+import type { Settings } from "#pi/settings/types";
 import {
 	type CreateTestExtensionsResultInput,
 	createTestExtensionsResult,

@@ -20,7 +20,8 @@ import {
 } from "#pi/resources/paths";
 import { applyPatterns, isEnabledByOverrides, splitPatterns } from "#pi/resources/patterns";
 import type { PathMetadata, ResolvedPaths, ResourceType } from "#pi/resources/types";
-import type { Settings, SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
+import type { Settings } from "#pi/settings/types";
 
 export interface ResolveOptions {
 	cwd: string;

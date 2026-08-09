@@ -3,7 +3,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { valid, validRange } from "semver";
 import type { BundledPackageName } from "#pi/package/types";
-import type { PackageSource } from "#pi/settings/settings-manager";
+import type { PackageSource } from "#pi/settings/types";
 
 export const NETWORK_TIMEOUT_MS = 10000;
 export const UPDATE_CHECK_CONCURRENCY = 4;

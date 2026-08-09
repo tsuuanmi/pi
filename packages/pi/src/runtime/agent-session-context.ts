@@ -5,7 +5,7 @@ import type { ResourceLoader } from "#pi/loader/resources";
 import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import type { AgentSessionEvent } from "#pi/runtime/session/types";
 import type { SessionManager } from "#pi/session/manager";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 
 /**
  * Type-only seam for Pi session runtime helpers.

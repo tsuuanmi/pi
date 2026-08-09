@@ -3,7 +3,7 @@ import type { ExtensionFactory } from "#pi/api/extension-types";
 import { getAgentDir } from "#pi/loader/paths";
 import { DefaultPackageManager } from "#pi/package/manager";
 import type { ResolvedResource } from "#pi/resources/types";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 
 export interface PackageCommandContext {
 	cwd: string;

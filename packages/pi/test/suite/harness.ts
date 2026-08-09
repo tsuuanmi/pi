@@ -16,8 +16,8 @@ import { AgentSession } from "#pi/runtime/agent-session";
 import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import type { AgentSessionEvent } from "#pi/runtime/session/types";
 import { SessionManager } from "#pi/session/manager";
-import type { Settings } from "#pi/settings/settings-manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
+import type { Settings } from "#pi/settings/types";
 import {
 	registerTestProvider,
 	type TestModelDefinition,

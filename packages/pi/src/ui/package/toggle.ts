@@ -4,7 +4,8 @@
 
 import { dirname, join, relative } from "node:path";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
-import type { PackageSource, SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
+import type { PackageSource } from "#pi/settings/types";
 import type { ResourceItem } from "./groups.ts";
 
 export class ResourceToggler {

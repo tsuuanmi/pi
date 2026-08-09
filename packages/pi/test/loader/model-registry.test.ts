@@ -7,7 +7,7 @@ import { getOAuthProvider } from "@tsuuanmi/pi-ai/oauth";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
 import { clearApiKeyCache, ModelRegistry, type ProviderConfigInput } from "#pi/loader/model-registry";
-import type { ModelsSettings } from "#pi/settings/settings-manager";
+import type { ModelsSettings } from "#pi/settings/types";
 
 describe("ModelRegistry", () => {
 	let tempDir: string;

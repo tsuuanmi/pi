@@ -1,6 +1,6 @@
 import type { GitSource } from "#pi/package/git";
 import type { ResolvedPaths, SourceScope } from "#pi/resources/types";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 
 export type MissingSourceAction = "install" | "skip" | "error";
 

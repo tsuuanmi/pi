@@ -17,7 +17,7 @@ import { AgentSession } from "#pi/runtime/agent-session";
 import { ContextOptimizer } from "#pi/runtime/context-optimizer";
 import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { getDefaultSessionDir, SessionManager } from "#pi/session/manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 import {
 	createBashTool,
 	createCodingTools,

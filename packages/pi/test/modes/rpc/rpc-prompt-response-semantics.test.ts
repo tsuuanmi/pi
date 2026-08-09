@@ -11,7 +11,7 @@ import { runRpcMode } from "#pi/modes/rpc/mode";
 import { AgentSession } from "#pi/runtime/agent-session";
 import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 import { SessionManager } from "#pi/session/manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 import { createTestResourceLoader } from "#pi-test/helpers/resource-loader";
 
 const rpcIo = vi.hoisted(() => ({

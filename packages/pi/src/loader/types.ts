@@ -7,7 +7,7 @@ import type { Skill } from "#pi/loader/skill";
 import type { CommandOutput } from "#pi/package/types";
 import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
 import type { PathMetadata } from "#pi/resources/types";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 import type { WebProviderHost } from "#pi/web-providers/host";
 
 export interface ResourceExtensionPaths {

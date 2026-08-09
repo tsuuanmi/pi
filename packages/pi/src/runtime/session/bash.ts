@@ -3,7 +3,7 @@ import type { BashOperations } from "#pi/execution/backend";
 import { type BashResult, runBash } from "#pi/execution/bash";
 import { createLocalBash } from "#pi/execution/local";
 import type { SessionManager } from "#pi/session/manager";
-import type { SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
 
 export interface BashHost {
 	readonly agent: Agent;

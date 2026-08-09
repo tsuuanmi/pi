@@ -20,7 +20,8 @@ import {
 import { getHomeDir } from "#pi/resources/constants";
 import { addPaths, createResourceTable, type ResourceTable, toResolvedPaths } from "#pi/resources/paths";
 import type { PackageFilter, PathMetadata, ResolvedPaths, SourceScope } from "#pi/resources/types";
-import type { PackageSource, SettingsManager } from "#pi/settings/settings-manager";
+import type { SettingsManager } from "#pi/settings/manager";
+import type { PackageSource } from "#pi/settings/types";
 import { CommandRunner } from "./commands.ts";
 import { loadPackage } from "./loader.ts";
 import type {

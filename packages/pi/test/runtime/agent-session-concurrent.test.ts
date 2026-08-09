@@ -21,7 +21,7 @@ import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
-import { SettingsManager } from "#pi/settings/settings-manager";
+import { SettingsManager } from "#pi/settings/manager";
 import { createTestExtensionsResult, createTestResourceLoader } from "#pi-test/helpers/resource-loader";
 
 // Mock stream that mimics AssistantMessageEventStream

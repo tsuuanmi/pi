@@ -4,7 +4,7 @@ import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
 import { ModelRegistry } from "#pi/loader/model-registry";
-import type { ModelsSettings } from "#pi/settings/settings-manager";
+import type { ModelsSettings } from "#pi/settings/types";
 
 describe("config value env var syntax migration", () => {
 	const tempDirs: string[] = [];
