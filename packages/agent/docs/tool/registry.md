@@ -64,6 +64,14 @@ Policies select tools; they do not create or register them.
 
 Pi and workflow adapters may add execution context or rendering metadata. They must convert their host-specific specs into `Tool` instances before registration. The core package does not depend on Pi, workflow, session, or UI types.
 
+## Extension boundary
+
+`@tsuuanmi/pi-agent` owns the generic `Tool` contract, validation, registry behavior, and execution. Host and workflow packages own concrete tool implementations and adapt their context before registering them. A package that needs to authorize a call or transform its result should register an `AgentHook`; it should not add host-specific policy to the core Tool contract.
+
+Specialized agents should normally be configured `Agent` instances, factories, or wrappers around the core Agent. They should reuse the core model/tool loop rather than define a second loop.
+
+See [Agent architecture](../architecture.md) for the complete ownership boundary.
+
 ## Package boundary
 
 - `@tsuuanmi/pi-agent`: `Tool`, `ToolSpec`, `ToolResult`, `ToolRegistry`, execution, policies, and receipts.

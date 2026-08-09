@@ -2,6 +2,8 @@
 
 The `Agent` class is the single standard Pi agent. It wraps the low-level runtime loop, owns persistent prompt history, supports isolated `run()` calls for task/orchestration bridges, emits lifecycle/status events, executes tools, and exposes queueing APIs for steering and follow-up messages.
 
+See [Agent architecture](../architecture.md) for the package ownership and extension boundary. `@tsuuanmi/pi-agent` defines and invokes the host-neutral `AgentHook` and `AgentEvent` contracts; higher-level packages register hooks, subscribe to events, provide concrete tools, and define their own task, session, or UI lifecycles without replacing the Agent loop.
+
 ## Creating an Agent
 
 ```typescript
@@ -201,7 +203,7 @@ const unsubscribe = agent.subscribe((event, signal) => {
 unsubscribe();
 ```
 
-Listener promises are awaited in subscription order. Listeners receive the active abort signal.
+Listener promises are awaited in subscription order. Loop events receive the active run abort signal; out-of-band status events receive a signal scoped to that emission. See [Agent events](../events.md) for subscription scope and listener failure behavior.
 
 `agent_end` is the final emitted event, but the agent doesn't become idle until all awaited `agent_end` listeners settle.
 

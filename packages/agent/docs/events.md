@@ -2,6 +2,12 @@
 
 `@tsuuanmi/pi-agent` currently exposes observability through structured agent lifecycle events and provider request observers. It does not export a standalone OpenTelemetry/Sentry abstraction.
 
+## Core event boundary
+
+`AgentEvent` is the host-neutral output contract for lifecycle points owned by the Agent: turns, messages, tool execution, status, traces, warnings, loop detection, and structured-output attempts. The Agent owns when events are emitted and in what order.
+
+Events are observational. Use `Agent.subscribe()` for UI, persistence, metrics, tracing, or progress. If a callback must block execution, transform a tool result, or update the next turn, use an [`AgentHook`](./hooks.md) instead. Do not add Pi-, orchestrator-, session-, or UI-specific members to the core `AgentEvent` union; define a package-local event and adapt the Agent events at that boundary. See [Agent architecture](./architecture.md).
+
 ## Agent events
 
 Subscribe with `Agent.subscribe()`:
@@ -14,7 +20,9 @@ const unsubscribe = agent.subscribe(async (event, signal) => {
 });
 ```
 
-Listeners are awaited in subscription order and receive the active abort signal.
+Listeners are awaited in subscription order. Loop events receive the active run abort signal; out-of-band status events receive a signal scoped to that emission. Agent does not isolate listener failures, so a thrown or rejected listener can affect the current lifecycle; observers that must not affect execution should handle their own errors.
+
+Subscriptions are scoped to the Agent instance and return a disposer. They are not copied into isolated `Agent.run()` instances.
 
 Core event categories:
 

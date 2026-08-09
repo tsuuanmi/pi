@@ -22,6 +22,7 @@ This package intentionally differs from monolithic config-driven agents: it cent
 
 The docs tree mirrors the source domain folders under `packages/agent/src`. Runtime contracts live at the package source root; agent behavior remains under `agent/`, message modeling under `messages/`, and host tools under `tool/`.
 
+- [`architecture.md`](architecture.md) - Package ownership and extension boundaries for `Agent`, `Tool`, `AgentHook`, and `AgentEvent`.
 - [`agent/index.md`](agent/index.md) - `src/agent/index.ts`: `Agent` class, state management, event subscription, message queues, and lifecycle control.
 - [`config.md`](config.md) - `src/config.ts`: loop/provider configuration and request observation.
 - [`context.md`](context.md) - `src/context.ts`: the host-neutral agent context passed to runtimes and loops.
