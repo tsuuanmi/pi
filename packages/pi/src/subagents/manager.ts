@@ -487,7 +487,7 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 				return {
 					record: pausedRecord,
 					messages: session.state.messages,
-					output: finalAssistantOutput(session.state.messages),
+					output: finalAgentOutput(session.state.messages),
 				};
 			}
 			const messages = session.state.messages;
@@ -531,7 +531,7 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 				return {
 					record: pausedRecord,
 					messages: session.state.messages,
-					output: finalAssistantOutput(session.state.messages),
+					output: finalAgentOutput(session.state.messages),
 				};
 			}
 			const failStatus = signal.aborted ? "cancelled" : "failed";
@@ -550,7 +550,7 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 			return {
 				record: failed,
 				messages: session.state.messages,
-				output: finalAssistantOutput(session.state.messages),
+				output: finalAgentOutput(session.state.messages),
 			};
 		}
 	}
