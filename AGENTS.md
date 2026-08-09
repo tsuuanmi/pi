@@ -22,6 +22,8 @@ Ask before proceeding when ambiguity affects correctness, data loss, public APIs
 
 Before implementation, read both relevant documentation and affected source code. Docs explain intent; source code is the ground truth. Read relevant docs when the task touches architecture, public APIs, CLI behavior, configuration, pipeline stages, data flow, schemas, generated outputs, or user-visible behavior. Read affected source files in full before editing them, making broad changes, investigating behavior, auditing correctness, or modifying files you have not fully inspected. Do not rely only on search snippets for broad or sensitive changes. If docs and source disagree, follow the source code and update the docs when documented behavior changes.
 
+When a package's `src/` directory structure changes, update its `docs/` and `test/` directory structures in the same change so they remain consistent over time. Move or add related documentation and tests under matching relative paths; do not let these layouts drift.
+
 ### LSP vs textual search
 
 Prefer the `lsp` tool over `grep`/`read` for **symbol** queries when a supported language server (TypeScript/JavaScript, Python, Rust) is available and warm: call sites (`references`), declarations (`definition`), types and docs (`hover`), file outlines (`documentSymbols`), and per-file type errors (`diagnostics`). LSP resolves imports, re-exports, and aliases that textual search cannot. If LSP tools are unavailable, use textual search plus the relevant typecheck/test command instead.
