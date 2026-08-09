@@ -11,7 +11,7 @@ const agent = new Agent({
   initialState: {
     systemPrompt: "You are a helpful assistant.",
     model: { id: "claude-4-sonnet", name: "Claude 4 Sonnet", api: "anthropic", provider: "anthropic", /* ... */ },
-    tools: [/* AgentTool instances */],
+    tools: [/* Tool instances */],
   },
   toolExecution: "parallel",
 });
@@ -53,7 +53,7 @@ const agent = new Agent({
 agent.state.systemPrompt  // System prompt string
 agent.state.model         // Current Model
 agent.state.thinkingLevel // Current ThinkingLevel
-agent.state.tools         // Available tools (assigning copies)
+agent.getTools()          // Snapshot of the active tools
 agent.state.messages      // Transcript (assigning copies)
 agent.state.isStreaming   // True while processing
 agent.state.streamingMessage  // Partial assistant message during streaming
@@ -61,7 +61,7 @@ agent.state.pendingToolCalls  // Set of tool call IDs currently executing
 agent.state.errorMessage   // Error message from last failed/aborted turn
 ```
 
-Assigning `state.tools` or `state.messages` copies the top-level array.
+Use `setTools()` to replace the active tools. `getTools()` returns a copy of the active tool list. Assigning `state.messages` copies the top-level array.
 
 ## Hooks
 

@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import { testAssistantMessage, testToolCall } from "#pi-test/helpers/provider";
@@ -7,7 +7,7 @@ import { createHarness, getAssistantTexts, getMessageText, getUserTexts, type Ha
 
 async function createWaitingHarness(
 	options: {
-		tools?: AgentTool[];
+		tools?: Tool[];
 		extensionFactories?: Harness["session"]["extensionRunner"] extends never
 			? never
 			: Array<(pi: ExtensionAPI) => void>;
@@ -22,7 +22,7 @@ async function createWaitingHarness(
 	const toolRelease = new Promise<void>((resolve) => {
 		releaseToolExecution = resolve;
 	});
-	const waitTool: AgentTool = {
+	const waitTool: Tool = {
 		name: "wait",
 		label: "Wait",
 		description: "Wait for release",

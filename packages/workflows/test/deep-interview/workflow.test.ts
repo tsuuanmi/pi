@@ -21,8 +21,8 @@ import {
 	writeWorkflowState,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { WorkflowToolHost } from "#workflows/tools";
-import { registerWorkflowTools } from "#workflows/tools";
+import type { WorkflowToolHost } from "#workflows/tool/index";
+import { registerWorkflowTools } from "#workflows/tool/index";
 
 const TEST_SESSION = "test-session-id";
 

@@ -16,7 +16,8 @@ import type { DeepInterviewAdvisoryMetadata, DeepInterviewRoundRecord } from "#w
 import { assertSafePathComponent } from "#workflows/state/state-schema";
 import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/state/state-writer";
 import { activeRalplanRunId, defaultWorkflowId } from "#workflows/state/workflow-state";
-import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools";
+import type { WorkflowContext } from "#workflows/tool/context";
+import type { WorkflowToolHost } from "#workflows/tool/host";
 
 const planQuestionSchema = Type.Object({
 	interviewId: Type.Optional(Type.String()),
@@ -132,8 +133,8 @@ async function executeWriteSpec(params: WriteSpecInput, ctx: WorkflowContext) {
 	});
 }
 
-export function registerDeepInterviewTools(pi: WorkflowToolHost): void {
-	pi.registerTool({
+export function registerDeepInterviewTools(host: WorkflowToolHost): void {
+	host.registerTool({
 		name: "deep_interview_plan_question",
 		label: "Deep Interview Plan Question",
 		description: "Plan the next Deep Interview question and mark the workflow as waiting for an answer.",
@@ -144,7 +145,7 @@ export function registerDeepInterviewTools(pi: WorkflowToolHost): void {
 			return textResult("deep-interview question planned", result);
 		},
 	});
-	pi.registerTool({
+	host.registerTool({
 		name: "deep_interview_record_answer",
 		label: "Deep Interview Record Answer",
 		description: "Record or replace a Deep Interview answer shell, including optional topology lock.",
@@ -155,7 +156,7 @@ export function registerDeepInterviewTools(pi: WorkflowToolHost): void {
 			return textResult(`deep-interview answer ${result.action}`, result);
 		},
 	});
-	pi.registerTool({
+	host.registerTool({
 		name: "deep_interview_record_scoring",
 		label: "Deep Interview Record Scoring",
 		description: "Record scores, ambiguity, trigger metadata, and advisory counters for a Deep Interview round.",
@@ -174,7 +175,7 @@ export function registerDeepInterviewTools(pi: WorkflowToolHost): void {
 			return textResult("deep-interview scoring recorded", result);
 		},
 	});
-	pi.registerTool({
+	host.registerTool({
 		name: "deep_interview_closure_check",
 		label: "Deep Interview Closure Check",
 		description: "Run the Deep Interview closure and acceptance guard.",
@@ -185,7 +186,7 @@ export function registerDeepInterviewTools(pi: WorkflowToolHost): void {
 			return textResult(result.ok ? "deep-interview closure passed" : "deep-interview closure blocked", result);
 		},
 	});
-	pi.registerTool({
+	host.registerTool({
 		name: "deep_interview_restate_goal",
 		label: "Deep Interview Restate Goal",
 		description: "Record the one-sentence restated goal confirmation or adjustment.",
@@ -207,7 +208,7 @@ export function registerDeepInterviewTools(pi: WorkflowToolHost): void {
 			);
 		},
 	});
-	pi.registerTool({
+	host.registerTool({
 		name: "deep_interview_write_spec",
 		label: "Deep Interview Write Spec",
 		description: "Persist a finalized Deep Interview spec and optionally hand off to ralplan, ultragoal, or team.",

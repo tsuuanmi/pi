@@ -13,11 +13,11 @@ import type {
 	AgentEvent,
 	AgentMessage,
 	AgentState,
-	AgentTool,
 	CustomMessage,
 	StructuredOutputOptions,
 	StructuredOutputResult,
 	SubagentManager,
+	Tool,
 } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { AssistantMessage, Message, Model, TextContent, ThinkingLevel } from "@tsuuanmi/pi-ai";
@@ -29,7 +29,7 @@ import type { SlashCommandInfo } from "#pi/api/extension-types";
 import { formatNoApiKeyFoundMessage } from "#pi/auth/guidance";
 import type { BashOperations } from "#pi/execution/backend";
 import type { BashResult } from "#pi/execution/bash";
-import { installAgentToolHooks } from "#pi/hooks/agent-bridge";
+import { installToolHooks } from "#pi/hooks/agent-bridge";
 import { type BuildSystemPromptOptions, buildSystemPrompt } from "#pi/loader/agents/system-prompt";
 import type {
 	ContextUsage,
@@ -41,7 +41,6 @@ import type {
 	MessageUpdateEvent,
 	ReplacedSessionContext,
 	SessionStartEvent,
-	ToolDefinition,
 	ToolExecutionEndEvent,
 	ToolExecutionStartEvent,
 	ToolExecutionUpdateEvent,
@@ -88,8 +87,8 @@ import type { CompactionResult } from "#pi/session/compaction/index";
 import type { BranchSummaryEntry, SessionManager } from "#pi/session/manager";
 import { CURRENT_SESSION_VERSION, type SessionHeader } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/settings-manager";
-import { createToolDefinitions } from "#pi/tools/default-tools";
-import { toToolDefinition } from "#pi/tools/utils";
+import type { ExtensionToolSpec, PiToolSpec } from "#pi/tool/spec";
+import { createToolSpecs } from "#pi/tools/index";
 
 // ============================================================================
 // Constants
@@ -127,11 +126,11 @@ export class AgentSession {
 
 	private _resourceLoader: ResourceLoader;
 	private _toolManager: ToolManager;
-	private _baseToolDefinitions: Map<string, ToolDefinition> = new Map();
+	private _baseTools: Map<string, PiToolSpec | Tool> = new Map();
 	private _cwd: string;
 	private _extensionRunnerRef?: { current?: ExtensionRunner };
 	private _initialActiveToolNames?: string[];
-	private _baseToolsOverride?: Record<string, AgentTool>;
+	private _baseToolsOverride?: Record<string, Tool>;
 	private _sessionStartEvent: SessionStartEvent;
 	private _skipWorkflowContinuation: boolean;
 	private _extraSystemPrompt?: string;
@@ -322,9 +321,9 @@ export class AgentSession {
 	}
 
 	/** Install the current extension bridge on the Agent instance. */
-	private _installAgentToolHooks(): void {
+	private _installToolHooks(): void {
 		this._agentToolHookDisposer?.();
-		this._agentToolHookDisposer = installAgentToolHooks(this.agent, this._extensionRunner);
+		this._agentToolHookDisposer = installToolHooks(this.agent, this._extensionRunner);
 	}
 
 	// =========================================================================
@@ -611,7 +610,7 @@ export class AgentSession {
 	 * Returns the names of tools currently set on the agent.
 	 */
 	getActiveToolNames(): string[] {
-		return this.agent.state.tools.map((t) => t.name);
+		return this.agent.getTools().map((t) => t.name);
 	}
 
 	/**
@@ -621,7 +620,7 @@ export class AgentSession {
 		return this._toolManager.getAll();
 	}
 
-	getToolDefinition(name: string): ToolDefinition | undefined {
+	getToolSpec(name: string): PiToolSpec | ExtensionToolSpec | undefined {
 		return this._toolManager.get(name);
 	}
 
@@ -685,8 +684,8 @@ export class AgentSession {
 		return this._resourceLoader.getPrompts().prompts;
 	}
 
-	private _applyActiveTools(toolNames: string[], tools: AgentTool[]): void {
-		this.agent.registerTool(tools, { replace: true });
+	private _applyActiveTools(toolNames: string[], tools: Tool[]): void {
+		this.agent.setTools(tools);
 		this._baseSystemPrompt = this._rebuildSystemPrompt(toolNames);
 		this.agent.state.systemPrompt = this._baseSystemPrompt;
 	}
@@ -1095,7 +1094,7 @@ export class AgentSession {
 				getAllTools: () => this.getAllTools(),
 				setActiveTools: (toolNames) => this.setActiveToolsByName(toolNames),
 				refreshTools: (options) =>
-					this._toolManager.refresh(this._baseToolDefinitions, this._extensionRunner, this.getActiveToolNames(), {
+					this._toolManager.refresh(this._baseTools, this._extensionRunner, this.getActiveToolNames(), {
 						includeAllExtensionTools: options?.includeAllExtensionTools,
 					}),
 				getCommands,
@@ -1157,17 +1156,17 @@ export class AgentSession {
 	}): void {
 		const shellCommandPrefix = this.settingsManager.getShellCommandPrefix();
 		const shellPath = this.settingsManager.getShellPath();
-		const baseToolDefinitions = this._baseToolsOverride
-			? Object.fromEntries(
-					Object.entries(this._baseToolsOverride).map(([name, tool]) => [name, toToolDefinition(tool)]),
-				)
-			: createToolDefinitions(this._cwd, {
-					bash: { commandPrefix: shellCommandPrefix, shellPath },
-				});
+		const baseTools = this._baseToolsOverride
+			? new Map(Object.entries(this._baseToolsOverride))
+			: new Map(
+					Object.entries(
+						createToolSpecs(this._cwd, {
+							bash: { commandPrefix: shellCommandPrefix, shellPath },
+						}),
+					),
+				);
 
-		this._baseToolDefinitions = new Map(
-			Object.entries(baseToolDefinitions).map(([name, tool]) => [name, tool as ToolDefinition]),
-		);
+		this._baseTools = baseTools;
 
 		const extensionsResult = this._resourceLoader.getExtensions();
 		if (options.flagValues) {
@@ -1188,7 +1187,7 @@ export class AgentSession {
 		if (this._extensionRunnerRef) {
 			this._extensionRunnerRef.current = this._extensionRunner;
 		}
-		this._installAgentToolHooks();
+		this._installToolHooks();
 		this._bindExtensionCore(this._extensionRunner);
 		this._applyExtensionBindings(this._extensionRunner);
 
@@ -1198,7 +1197,7 @@ export class AgentSession {
 		const baseActiveToolNames =
 			options.activeToolNames ??
 			Array.from(new Set([...defaultActiveToolNames, ...this._toolManager.customNames()]));
-		this._toolManager.refresh(this._baseToolDefinitions, this._extensionRunner, [], {
+		this._toolManager.refresh(this._baseTools, this._extensionRunner, [], {
 			activeNames: baseActiveToolNames,
 			includeAllExtensionTools: options.includeAllExtensionTools,
 		});

@@ -1,9 +1,9 @@
 import { stream } from "@tsuuanmi/pi-ai";
 import type { AgentMessage, AgentTraceEvent } from "#agent/messages/state";
 import type { AgentLoopConfig, StreamFn } from "#agent/runtime/config";
+import type { AgentContext } from "#agent/runtime/context";
 import type { AgentEvent } from "#agent/runtime/events";
 import { runAgentLoop, runAgentLoopContinue } from "#agent/runtime/loop";
-import type { AgentContext } from "#agent/tool/types";
 
 /** Receives events emitted by an agent backend or runtime. */
 export type EventSink = (event: AgentEvent) => Promise<void> | void;

@@ -1,16 +1,15 @@
 import {
+	createSubagentTools,
 	parseThinkingLevel,
-	SUBAGENT_TOOLS,
+	SUBAGENT_SPECS,
 	type SubagentManager,
 	type SubagentRunRequest,
-	subagentSpawnTool,
-	subagentSteerTool,
 } from "@tsuuanmi/pi-agent";
 import { describe, expect, it } from "vitest";
 
 describe("subagent tools", () => {
 	it("keeps shared lifecycle metadata host-neutral", () => {
-		const metadata = JSON.stringify(SUBAGENT_TOOLS);
+		const metadata = JSON.stringify(SUBAGENT_SPECS);
 
 		expect(metadata).not.toContain("Pi");
 		expect(metadata).not.toContain(".agent/agents");
@@ -36,11 +35,8 @@ describe("subagent tools", () => {
 				};
 			},
 		} as unknown as SubagentManager;
-		await subagentSpawnTool.execute(
-			"call-1",
-			{ prompt: "Plan", thinkingLevel: "ultra" },
-			{ manager, sessionId: "session-1" },
-		);
+		const tool = getTool(createSubagentTools({ manager, sessionId: "session-1" }), "subagent_spawn");
+		await tool.execute("call-1", { prompt: "Plan", thinkingLevel: "ultra" });
 
 		expect(requests[0]).toMatchObject({
 			prompt: "Plan",
@@ -57,13 +53,16 @@ describe("subagent tools", () => {
 				throw new Error("steer should not run");
 			},
 		} as unknown as SubagentManager;
+		const tool = getTool(createSubagentTools({ manager, sessionId: "session-1" }), "subagent_steer");
 
-		await expect(
-			subagentSteerTool.execute(
-				"call-2",
-				{ id: "subagent-1", message: "Stop", delivery: "invalid" },
-				{ manager, sessionId: "session-1" },
-			),
-		).rejects.toThrow("invalid subagent delivery: invalid");
+		await expect(tool.execute("call-2", { id: "subagent-1", message: "Stop", delivery: "invalid" })).rejects.toThrow(
+			"invalid subagent delivery: invalid",
+		);
 	});
 });
+
+function getTool<ToolType extends { name: string }>(tools: readonly ToolType[], name: string): ToolType {
+	const tool = tools.find((candidate) => candidate.name === name);
+	if (!tool) throw new Error(`Missing tool: ${name}`);
+	return tool;
+}

@@ -259,7 +259,7 @@ const state = session.agent.state;
 // state.model: Model - current model
 // state.thinkingLevel: ThinkingLevel - current thinking level
 // state.systemPrompt: string - system prompt
-// state.tools: AgentTool[] - available tools
+// state.tools: readonly Tool[] - available tools
 // state.streamingMessage?: AgentMessage - current partial assistant message
 // state.errorMessage?: string - latest assistant error
 
@@ -267,7 +267,10 @@ const state = session.agent.state;
 session.agent.state.messages = messages; // copies the top-level array
 
 // Replace tools
-session.agent.state.tools = tools; // copies the top-level array
+session.agent.setTools(tools);
+
+// Read a snapshot of the active tools
+const tools = session.agent.getTools();
 
 // Wait for agent to finish processing
 await session.agent.waitForIdle();
@@ -538,10 +541,10 @@ const { session } = await createAgentSession({
 ```typescript
 import { Type } from "typebox";
 import { createAgentSession } from "@tsuuanmi/pi";
-import { defineTool } from "@tsuuanmi/pi/extensions";
+import { Tool } from "@tsuuanmi/pi-agent";
 
 // Inline custom tool
-const myTool = defineTool({
+const myTool = Tool.define({
   name: "my_tool",
   label: "My Tool",
   description: "Does something useful",
@@ -560,7 +563,7 @@ const { session } = await createAgentSession({
 });
 ```
 
-Use `defineTool()` for standalone definitions and arrays like `customTools: [myTool]`. Inline `pi.registerTool({ ... })` already infers parameter types correctly.
+Use `Tool.define()` for standalone definitions and arrays like `customTools: [myTool]`. Inline `pi.registerTool({ ... })` already infers parameter types correctly.
 
 Custom tools passed via `customTools` are combined with extension-registered tools. Extensions loaded by the ResourceLoader can also register tools via `pi.registerTool()`.
 
@@ -876,6 +879,7 @@ interface LoadExtensionsResult {
 ## Complete Example
 
 ```typescript
+import { Tool } from "@tsuuanmi/pi-agent";
 import { getModel } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { ModelRegistry } from "@tsuuanmi/pi/loader";
@@ -883,7 +887,6 @@ import {
   AuthStorage,
   createAgentSession,
   DefaultResourceLoader,
-  defineTool,
   SessionManager,
   SettingsManager,
 } from "@tsuuanmi/pi";
@@ -900,7 +903,7 @@ if (process.env.MY_KEY) {
 const modelRegistry = ModelRegistry.create(authStorage);
 
 // Inline tool
-const statusTool = defineTool({
+const statusTool = Tool.define({
   name: "status",
   label: "Status",
   description: "Get system status",
@@ -1110,7 +1113,6 @@ createEventBus
 
 // Constants and helpers
 CONFIG_DIR_NAME
-defineTool
 getAgentDir
 getPackageDir
 getReadmePath
@@ -1131,10 +1133,9 @@ type CreateAgentSessionOptions
 type CreateAgentSessionResult
 type ExtensionFactory
 type ExtensionAPI
-type ToolDefinition
+type ExtensionToolSpec
 type Skill
 type PromptTemplate
-type Tool
 ```
 
 For extension types, see [extensions.md](../extensions/index.md) for the full API.

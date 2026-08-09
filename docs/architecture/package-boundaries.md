@@ -37,7 +37,7 @@ A direct `SubagentManager` call is valid only for lifecycle control or a single 
 
 The semantic boundary checker allows direct manager calls only in these workflow adapters:
 
-- `packages/workflows/src/tools/subagent-tools.ts` for the workflow adapter around agent-owned lifecycle tools;
+- `packages/workflows/src/tool/adapter.ts` for the workflow adapter around agent-owned lifecycle tools;
 - `packages/workflows/src/skills/team/agent-adapter.ts` for the `Agent` bridge;
 - `packages/workflows/src/skills/ralplan/agent-adapter.ts` for Orchestrator-backed role execution;
 - `packages/workflows/src/skills/ultragoal/tools.ts` for one guarded goal worker.

@@ -11,7 +11,7 @@ import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionFactory } from "@tsuuanmi/pi/extensions";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { Agent } from "@tsuuanmi/pi-agent";
 import type {
 	AssistantMessage,
@@ -331,9 +331,9 @@ export interface HarnessOptions {
 	/** System prompt. Default: "You are a test assistant." */
 	systemPrompt?: string;
 	/** Custom tools to register on the agent. */
-	tools?: AgentTool[];
+	tools?: Tool[];
 	/** Base tools override (replaces built-in read/bash/edit/write). */
-	baseToolsOverride?: Record<string, AgentTool>;
+	baseToolsOverride?: Record<string, Tool>;
 	/** Optional resource loader override. */
 	resourceLoader?: ResourceLoader;
 	/** Inline extensions to load into the session resource loader. */

@@ -93,7 +93,7 @@ function rejectionReasons(task: TaskSnapshot, agent: Agent): string[] {
 	const reasons: string[] = [];
 	const requirements = task.requires;
 	const capabilities = new Set(agent.capabilities);
-	const tools = new Set(agent.state.tools?.map((tool) => tool.name) ?? []);
+	const tools = new Set(agent.getTools().map((tool) => tool.name));
 	for (const capability of requirements.capabilities ?? []) {
 		if (!capabilities.has(capability)) reasons.push(`missing capability "${capability}"`);
 	}

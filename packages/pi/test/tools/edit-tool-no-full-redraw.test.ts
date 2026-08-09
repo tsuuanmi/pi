@@ -3,10 +3,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Container, initTheme, type Terminal, Text, TUI } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { ToolExecutionComponent } from "#pi/ui/interactive/components/tool-execution";
-import { createEditToolDefinition } from "#pi/tools/edit";
+import { createEditSpec } from "#pi/tools/edit";
 import { computeEditsDiff } from "#pi/tools/edit-diff";
 import type { Edit } from "#pi/tools/edit-operations";
+import { ToolExecutionComponent } from "#pi/ui/interactive/components/tool-execution";
 
 class FakeTerminal implements Terminal {
 	columns = 80;
@@ -104,7 +104,7 @@ describe("edit tool TUI rendering", () => {
 			"tool-call-1",
 			{ path: filePath, edits },
 			{},
-			createEditToolDefinition(process.cwd()),
+			createEditSpec(process.cwd()),
 			tui,
 			process.cwd(),
 		);
@@ -173,7 +173,7 @@ describe("edit tool TUI rendering", () => {
 			"tool-call-replay",
 			{ path: filePath, edits },
 			{},
-			createEditToolDefinition(process.cwd()),
+			createEditSpec(process.cwd()),
 			tui,
 			process.cwd(),
 		);
@@ -210,7 +210,7 @@ describe("edit tool TUI rendering", () => {
 			"tool-call-2",
 			{ path: filePath, edits: [{ oldText: "does not exist", newText: "replacement" }] },
 			{},
-			createEditToolDefinition(process.cwd()),
+			createEditSpec(process.cwd()),
 			tui,
 			process.cwd(),
 		);

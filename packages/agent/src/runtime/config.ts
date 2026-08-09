@@ -8,7 +8,8 @@ import type {
 	ToolResultMessage,
 } from "@tsuuanmi/pi-ai";
 import type { AgentMessage, TraceSpan } from "#agent/messages/state";
-import type { AgentContext, AgentToolResult } from "#agent/tool/types";
+import type { AgentContext } from "#agent/runtime/context";
+import type { ToolResult } from "#agent/tool/result";
 
 export type StreamFn = (
 	...args: Parameters<typeof stream>
@@ -53,10 +54,7 @@ export interface ProviderRequestObserver {
 
 export type QueueMode = "all" | "one-at-a-time";
 
-export type AgentToolCall = Extract<
-	import("@tsuuanmi/pi-ai").AssistantMessage["content"][number],
-	{ type: "toolCall" }
->;
+export type ToolCall = Extract<import("@tsuuanmi/pi-ai").AssistantMessage["content"][number], { type: "toolCall" }>;
 
 export interface BeforeToolCallResult {
 	block?: boolean;
@@ -72,16 +70,16 @@ export interface AfterToolCallResult {
 
 export interface BeforeToolCallContext {
 	assistantMessage: import("@tsuuanmi/pi-ai").AssistantMessage;
-	toolCall: AgentToolCall;
+	toolCall: ToolCall;
 	args: unknown;
 	context: AgentContext;
 }
 
 export interface AfterToolCallContext {
 	assistantMessage: import("@tsuuanmi/pi-ai").AssistantMessage;
-	toolCall: AgentToolCall;
+	toolCall: ToolCall;
 	args: unknown;
-	result: AgentToolResult<any>;
+	result: ToolResult<any>;
 	isError: boolean;
 	context: AgentContext;
 }

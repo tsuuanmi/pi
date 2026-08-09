@@ -1,16 +1,17 @@
 import { createInterface } from "node:readline";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import { spawn } from "child_process";
 import path from "path";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "#pi/output/truncation";
+import { toTool } from "#pi/tool/adapter";
+import { getTextOutput, invalidArgText, shortenPath, str } from "#pi/tool/output";
+import type { PiToolSpec, ToolRenderResultOptions } from "#pi/tool/spec";
 import { pathExists, resolveToCwd } from "#pi/tools/paths";
 import { ensureTool } from "#pi/tools/tool-installer";
-import { getTextOutput, invalidArgText, shortenPath, str, toAgentTool } from "#pi/tools/utils";
 
 function toPosixPath(value: string): string {
 	return value.split(path.sep).join("/");
@@ -104,10 +105,10 @@ function formatFindResult(
 	return text;
 }
 
-export function createFindToolDefinition(
+export function createFindSpec(
 	cwd: string,
 	options?: FindToolOptions,
-): ToolDefinition<typeof findSchema, FindToolDetails | undefined> {
+): PiToolSpec<typeof findSchema, FindToolDetails | undefined> {
 	const customOps = options?.operations;
 	return {
 		name: "find",
@@ -120,7 +121,6 @@ export function createFindToolDefinition(
 			{ pattern, path: searchDir, limit }: { pattern: string; path?: string; limit?: number },
 			signal?: AbortSignal,
 			_onUpdate?,
-			_ctx?,
 		) {
 			const startedAt = Date.now();
 			return new Promise((resolve, reject) => {
@@ -415,6 +415,6 @@ export function createFindToolDefinition(
 	};
 }
 
-export function createFindTool(cwd: string, options?: FindToolOptions): AgentTool<typeof findSchema> {
-	return toAgentTool(createFindToolDefinition(cwd, options));
+export function createFindTool(cwd: string, options?: FindToolOptions): Tool<typeof findSchema> {
+	return toTool(createFindSpec(cwd, options));
 }

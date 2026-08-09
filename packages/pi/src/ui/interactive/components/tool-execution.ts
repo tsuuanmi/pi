@@ -13,11 +13,13 @@ import {
 	type TUI,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import type { ToolDefinition, ToolRenderContext } from "#pi/api/tool-types";
-import { createToolDefinitions, type ToolName } from "#pi/tools/default-tools";
-import { getTextOutput as getRenderedTextOutput } from "#pi/tools/utils";
+import { getTextOutput as getRenderedTextOutput } from "#pi/tool/output";
+import type { ExtensionToolSpec, PiToolSpec, ToolRenderContext } from "#pi/tool/spec";
+import { createToolSpecs, type ToolName } from "#pi/tools/index";
 
 export interface ToolExecutionOptions {}
+
+type RenderSpec = PiToolSpec<any, any> | ExtensionToolSpec<any, any>;
 
 export class ToolExecutionComponent extends Container {
 	private contentBox: Box;
@@ -31,8 +33,8 @@ export class ToolExecutionComponent extends Container {
 	private args: any;
 	private expanded = false;
 	private isPartial = true;
-	private toolDefinition?: ToolDefinition<any, any>;
-	private builtInToolDefinition?: ToolDefinition<any, any>;
+	private toolDefinition?: RenderSpec;
+	private builtInPiToolSpec?: PiToolSpec<any, any>;
 	private ui: TUI;
 	private cwd: string;
 	private executionStarted = false;
@@ -49,7 +51,7 @@ export class ToolExecutionComponent extends Container {
 		toolCallId: string,
 		args: any,
 		options: ToolExecutionOptions = {},
-		toolDefinition: ToolDefinition<any, any> | undefined,
+		toolDefinition: RenderSpec | undefined,
 		ui: TUI,
 		cwd: string,
 	) {
@@ -59,7 +61,7 @@ export class ToolExecutionComponent extends Container {
 		this.args = args;
 		void options;
 		this.toolDefinition = toolDefinition;
-		this.builtInToolDefinition = createToolDefinitions(cwd)[toolName as ToolName];
+		this.builtInPiToolSpec = createToolSpecs(cwd)[toolName as ToolName];
 		this.ui = ui;
 		this.cwd = cwd;
 
@@ -81,38 +83,38 @@ export class ToolExecutionComponent extends Container {
 		this.updateDisplay();
 	}
 
-	private getCallRenderer(): ToolDefinition<any, any>["renderCall"] | undefined {
-		if (!this.builtInToolDefinition) {
+	private getCallRenderer(): PiToolSpec<any, any>["renderCall"] | undefined {
+		if (!this.builtInPiToolSpec) {
 			return this.toolDefinition?.renderCall;
 		}
 		if (!this.toolDefinition) {
-			return this.builtInToolDefinition.renderCall;
+			return this.builtInPiToolSpec.renderCall;
 		}
-		return this.toolDefinition.renderCall ?? this.builtInToolDefinition.renderCall;
+		return this.toolDefinition.renderCall ?? this.builtInPiToolSpec.renderCall;
 	}
 
-	private getResultRenderer(): ToolDefinition<any, any>["renderResult"] | undefined {
-		if (!this.builtInToolDefinition) {
+	private getResultRenderer(): PiToolSpec<any, any>["renderResult"] | undefined {
+		if (!this.builtInPiToolSpec) {
 			return this.toolDefinition?.renderResult;
 		}
 		if (!this.toolDefinition) {
-			return this.builtInToolDefinition.renderResult;
+			return this.builtInPiToolSpec.renderResult;
 		}
-		return this.toolDefinition.renderResult ?? this.builtInToolDefinition.renderResult;
+		return this.toolDefinition.renderResult ?? this.builtInPiToolSpec.renderResult;
 	}
 
 	private hasRendererDefinition(): boolean {
-		return this.builtInToolDefinition !== undefined || this.toolDefinition !== undefined;
+		return this.builtInPiToolSpec !== undefined || this.toolDefinition !== undefined;
 	}
 
 	private getRenderShell(): "default" | "self" {
-		if (!this.builtInToolDefinition) {
+		if (!this.builtInPiToolSpec) {
 			return this.toolDefinition?.renderShell ?? "default";
 		}
 		if (!this.toolDefinition) {
-			return this.builtInToolDefinition.renderShell ?? "default";
+			return this.builtInPiToolSpec.renderShell ?? "default";
 		}
-		return this.toolDefinition.renderShell ?? this.builtInToolDefinition.renderShell ?? "default";
+		return this.toolDefinition.renderShell ?? this.builtInPiToolSpec.renderShell ?? "default";
 	}
 
 	private getRenderContext(lastComponent: Component | undefined): ToolRenderContext {

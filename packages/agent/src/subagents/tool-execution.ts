@@ -1,5 +1,6 @@
 import type { StructuredReceipt } from "#agent/metadata/receipt";
 import { withStructuredReceipt } from "#agent/metadata/receipt";
+import type { SubagentContext, SubagentDetails } from "#agent/subagents/context";
 import { renderSubagentProgress } from "#agent/subagents/progress";
 import { createSubagentListReceipt, createSubagentReceipt } from "#agent/subagents/receipts";
 import { parseThinkingLevel } from "#agent/subagents/thinking-level";
@@ -11,7 +12,6 @@ import type {
 	SubagentStatusInput,
 	SubagentSteerInput,
 } from "#agent/subagents/tool-schemas";
-import type { SubagentDetails, SubagentToolContext } from "#agent/subagents/tool-types";
 import type { SubagentDelivery, SubagentRecord } from "#agent/subagents/types";
 
 const RECEIPT_MAX = 280;
@@ -22,7 +22,7 @@ type Verbosity = "receipt" | "preview" | "full";
 
 export async function spawn(
 	params: SubagentSpawnInput,
-	context: SubagentToolContext,
+	context: SubagentContext,
 	signal?: AbortSignal,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
 	const result = await context.manager.spawn({
@@ -61,7 +61,7 @@ export async function spawn(
 
 export async function status(
 	params: SubagentStatusInput,
-	context: SubagentToolContext,
+	context: SubagentContext,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
 	const verbosity = parseVerbosity(params.verbosity);
 	if (verbosity === "full" && !params.id) throw new Error("verbosity=full requires an explicit subagent id.");
@@ -94,7 +94,7 @@ export async function status(
 
 export async function awaitRun(
 	params: SubagentAwaitInput,
-	context: SubagentToolContext,
+	context: SubagentContext,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
 	const verbosity = parseVerbosity(params.verbosity);
 	const result = await context.manager.waitFor(params.id, {
@@ -130,7 +130,7 @@ export async function awaitRun(
 
 export async function resume(
 	params: SubagentResumeInput,
-	context: SubagentToolContext,
+	context: SubagentContext,
 	signal?: AbortSignal,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
 	const result = await context.manager.resume(params.id, params.message, {
@@ -157,7 +157,7 @@ export async function resume(
 
 export async function steer(
 	params: SubagentSteerInput,
-	context: SubagentToolContext,
+	context: SubagentContext,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
 	const delivery = parseDelivery(params.delivery);
 	const result = await context.manager.steer(params.id, params.message, delivery, context.sessionId);
@@ -181,7 +181,7 @@ export async function steer(
 
 export async function pause(
 	params: SubagentIdInput,
-	context: SubagentToolContext,
+	context: SubagentContext,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
 	const result = await context.manager.pause(params.id, context.sessionId);
 	return {
@@ -202,7 +202,7 @@ export async function pause(
 
 export async function cancel(
 	params: SubagentIdInput,
-	context: SubagentToolContext,
+	context: SubagentContext,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
 	const record = await context.manager.cancel(params.id, context.sessionId);
 	return {

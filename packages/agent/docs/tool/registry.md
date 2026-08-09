@@ -1,16 +1,16 @@
 # Tool Registration
 
-`@tsuuanmi/pi-agent` owns the generic tool protocol and registration helpers. Host packages such as `@tsuuanmi/pi` own concrete tool implementations and register them with the agent runtime.
+`@tsuuanmi/pi-agent` owns the core tool contract, tool construction, and tool registry. Host packages own concrete implementations and adapt host context before registering executable `Tool` instances.
 
 ## Defining tools
 
-Use `defineTool()` at the host boundary to validate required declaration fields before registration:
+Use `Tool.define()` to validate and create an immutable runtime tool:
 
 ```typescript
-import { defineTool } from "@tsuuanmi/pi-agent";
+import { Tool } from "@tsuuanmi/pi-agent";
 import { Type } from "typebox";
 
-const tool = defineTool({
+const tool = Tool.define({
   name: "tool",
   description: "Read a value",
   label: "Tool",
@@ -21,22 +21,21 @@ const tool = defineTool({
 });
 ```
 
-`defineTool()` validates `name`, `description`, and `label` without mutating the tool. Tools can declare `detailsSchema` to validate result details after execution and after `afterToolCall` replacements.
+`Tool.define()` validates the required declaration fields. Tools may also declare `detailsSchema` and `maxOutputChars`.
 
-## Registry helpers
+## Registry
 
 ```typescript
-import { createToolRegistry, registerTool } from "@tsuuanmi/pi-agent";
+import { ToolRegistry } from "@tsuuanmi/pi-agent";
 
-const registry = createToolRegistry();
-registerTool(registry, hostTools);
+const registry = new ToolRegistry();
+registry.register(tool);
+registry.registerMany(hostTools);
 
-agent.registerTool(registry.list(), { replace: true });
+agent.setTools(registry.list());
 ```
 
-`createToolRegistry(initialTools?)` returns a `ToolRegistry` keyed by tool name. Duplicate tool names throw so host integrations fail fast instead of silently changing the active tool contract.
-
-Use `registry.replace(tool)` or `registry.replaceMany(tools)` when replacement is intentional. `registerTool(registry, tools, options?)` registers a group of tools. Pass `{ replace: true }` to clear the registry before registration.
+`ToolRegistry` is keyed by tool name. Duplicate names throw so integrations fail fast instead of silently changing the active contract. Use `replace()` or `replaceMany()` only when replacement is intentional.
 
 ## Tool access policy
 
@@ -55,25 +54,18 @@ const activeTools = resolveToolSelection(allTools, previousActiveTools, {
 });
 ```
 
-Use `ToolAccessPolicy` and `ToolSelectionPolicy` to keep allow/exclude rules consistent across agent runtimes.
+Policies select tools; they do not create or register them.
 
-## Agent convenience method
+## Agent boundary
 
-```typescript
-agent.registerTool(hostTools);
-agent.registerTool(nextTools, { replace: true });
-```
+`Agent` owns messages, model state, lifecycle, and execution. It receives an active `Tool[]` snapshot through `setTools()` and exposes a copy with `getTools()`. It does not define tool schemas or registry policy.
 
-`Agent.registerTool()` updates `agent.state.tools` using the same name-keyed registry behavior and returns the active tool list. Duplicate names throw unless `{ replace: true }` clears the active set first.
+## Host adapters
 
-## Standard integration pattern
-
-Use one name-keyed registry at the host boundary, then pass `registry.list()` into the active agent state. Extensions and workflow packages should contribute `AgentTool` instances, not mutate the runtime loop directly.
-
-When tools change during a session, call `agent.registerTool(nextTools)` to add new tool names or `agent.registerTool(nextTools, { replace: true })` to replace the active set.
+Pi and workflow adapters may add execution context or rendering metadata. They must convert their host-specific specs into `Tool` instances before registration. The core package does not depend on Pi, workflow, session, or UI types.
 
 ## Package boundary
 
-- `@tsuuanmi/pi-agent`: `AgentTool`, tool execution orchestration, lifecycle events, policies, and registration helpers.
-- Host packages and Pi register concrete tools.
-- Optional protocol/runtime packages: may expose tools or `AgentRuntime` implementations, but should consume `@tsuuanmi/pi-agent` contracts instead of duplicating them.
+- `@tsuuanmi/pi-agent`: `Tool`, `ToolSpec`, `ToolResult`, `ToolRegistry`, execution, policies, and receipts.
+- Host packages: concrete implementations and context adapters.
+- `@tsuuanmi/pi-orchestrator`: consumes configured `Agent` instances; it does not own tools or a tool registry.

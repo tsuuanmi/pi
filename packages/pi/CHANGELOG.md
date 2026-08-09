@@ -10,7 +10,7 @@
 - **extensions**: Removed the legacy `@tsuuanmi/pi/api/types` export; use `@tsuuanmi/pi/extensions` for the complete extension surface.
 - **extensions**: `@tsuuanmi/pi/extensions` is now the sole public extension entry point. The root extension exports, deep extension paths, `ExtensionRunner`, and tool wrappers were removed; use the cohesive `ExtensionAPI` contract instead.
 - **cli**: `pi update` now manages packages only; the self-update commands and public self-update exports were removed.
-- **tools**: Renamed `createAllToolDefinitions` to `createToolDefinitions`, clarified the Pi tool definition boundary, and centralized built-in tool construction in the tool catalog.
+- **tools**: Replaced Pi's generic tool-definition surface with explicit `PiToolSpec` adapters, moved tool rendering/adapter code into `src/tool/`, and renamed built-in spec factories to `create*Spec`.
 - **sdk**: Renamed the session model fallback warning result from `modelFallbackMessage` to `modelStartupWarning`.
 - **sdk**: Removed the obsolete `migratedProviders` field from `InteractiveModeOptions`.
 - **tools**: Removed non-canonical `edit` tool argument forms; the tool now accepts only `path` plus `edits[]` and no longer normalizes alternate shapes.

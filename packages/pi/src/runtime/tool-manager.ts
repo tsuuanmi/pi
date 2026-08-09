@@ -1,13 +1,15 @@
-import type { AgentTool, ToolRegistry } from "@tsuuanmi/pi-agent";
-import { createToolRegistry, registerTool, resolveToolSelection } from "@tsuuanmi/pi-agent";
-import type { RegisteredTool, ToolInfo } from "#pi/api/extension-types";
-import type { ToolDefinition } from "#pi/api/tool-types";
+import { resolveToolSelection, Tool, ToolRegistry } from "@tsuuanmi/pi-agent";
+import type { ToolInfo } from "#pi/api/extension-types";
 import { createSyntheticSourceInfo, type SourceInfo } from "#pi/resources/source-info";
 import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
-import { wrapRegisteredTools } from "#pi/runtime/extensions/tools";
+import { toExtensionTool, toTool } from "#pi/tool/adapter";
+import type { ExtensionToolSpec, PiToolSpec } from "#pi/tool/spec";
+
+type BaseTool = PiToolSpec | Tool;
 
 interface ToolEntry {
-	definition: ToolDefinition;
+	tool: Tool;
+	spec?: PiToolSpec | ExtensionToolSpec;
 	sourceInfo: SourceInfo;
 }
 
@@ -17,18 +19,18 @@ export interface ToolPrompts {
 }
 
 export interface ToolManagerOptions {
-	customTools: ToolDefinition[];
+	customTools: Tool[];
 	allowedNames?: string[];
 	excludedNames?: string[];
-	apply(names: string[], tools: AgentTool[]): void;
+	apply(names: string[], tools: Tool[]): void;
 }
 
 export class ToolManager {
-	private readonly customTools: ToolDefinition[];
+	private readonly customTools: Tool[];
 	private readonly allowedNames?: Set<string>;
 	private readonly excludedNames?: Set<string>;
 	private readonly apply: ToolManagerOptions["apply"];
-	private registry: ToolRegistry = createToolRegistry();
+	private registry = new ToolRegistry();
 	private entries = new Map<string, ToolEntry>();
 	private snippets = new Map<string, string>();
 	private guidelines = new Map<string, string[]>();
@@ -41,69 +43,50 @@ export class ToolManager {
 	}
 
 	refresh(
-		baseTools: Map<string, ToolDefinition>,
+		baseTools: Map<string, BaseTool>,
 		runner: ExtensionRunner,
 		previousNames: string[],
 		options: { activeNames?: string[]; includeAllExtensionTools?: boolean } = {},
 	): void {
-		const extensionTools = runner.getAllRegisteredTools();
 		const entries = new Map<string, ToolEntry>();
-		for (const [name, definition] of baseTools) {
+		for (const [name, input] of baseTools) {
 			if (this.isAllowed(name)) {
-				entries.set(name, {
-					definition,
-					sourceInfo: createSyntheticSourceInfo(`<builtin:${name}>`, { source: "builtin" }),
+				addEntry(
+					entries,
+					name,
+					this.createBaseEntry(input, createSyntheticSourceInfo(`<builtin:${name}>`, { source: "builtin" })),
+				);
+			}
+		}
+		for (const tool of this.customTools) {
+			if (this.isAllowed(tool.name)) {
+				addEntry(entries, tool.name, {
+					tool,
+					sourceInfo: createSyntheticSourceInfo(`<sdk:${tool.name}>`, { source: "sdk" }),
 				});
 			}
 		}
-		for (const definition of this.customTools) {
-			if (this.isAllowed(definition.name)) {
-				entries.set(definition.name, {
-					definition,
-					sourceInfo: createSyntheticSourceInfo(`<sdk:${definition.name}>`, { source: "sdk" }),
-				});
-			}
-		}
-		for (const registered of extensionTools) {
+		for (const registered of runner.getAllRegisteredTools()) {
 			if (this.isAllowed(registered.definition.name)) {
-				entries.set(registered.definition.name, {
-					definition: registered.definition,
-					sourceInfo: registered.sourceInfo,
-				});
+				addEntry(
+					entries,
+					registered.definition.name,
+					this.createExtensionEntry(registered.definition, registered.sourceInfo, runner),
+				);
 			}
 		}
 
-		const wrappedBuiltIns = wrapRegisteredTools(
-			Array.from(entries.values())
-				.filter(({ sourceInfo }) => sourceInfo.source === "builtin")
-				.map(({ definition, sourceInfo }) => ({ definition, sourceInfo }) as RegisteredTool),
-			runner,
-		);
-		const wrappedCustom = wrapRegisteredTools(
-			Array.from(entries.values())
-				.filter(({ sourceInfo }) => sourceInfo.source === "sdk")
-				.map(({ definition, sourceInfo }) => ({ definition, sourceInfo }) as RegisteredTool),
-			runner,
-		);
-		const wrappedExtensions = wrapRegisteredTools(
-			Array.from(entries.values())
-				.filter(({ sourceInfo }) => sourceInfo.source !== "builtin" && sourceInfo.source !== "sdk")
-				.map(({ definition, sourceInfo }) => ({ definition, sourceInfo }) as RegisteredTool),
-			runner,
-		);
-		const registry = createToolRegistry(wrappedBuiltIns);
-		registerTool(registry, [...wrappedCustom, ...wrappedExtensions]);
-
+		const registry = new ToolRegistry(Array.from(entries.values(), ({ tool }) => tool));
 		this.entries = entries;
 		this.registry = registry;
 		this.snippets = new Map(
 			Array.from(entries.values())
-				.map(({ definition }) => [definition.name, normalizeSnippet(definition.promptSnippet)] as const)
+				.map(({ tool }) => [tool.name, normalizeSnippet(tool.promptSnippet)] as const)
 				.filter((entry): entry is readonly [string, string] => entry[1] !== undefined),
 		);
 		this.guidelines = new Map(
 			Array.from(entries.values())
-				.map(({ definition }) => [definition.name, normalizeGuidelines(definition.promptGuidelines)] as const)
+				.map(({ tool }) => [tool.name, normalizeGuidelines(tool.promptGuidelines)] as const)
 				.filter((entry) => entry[1].length > 0),
 		);
 
@@ -124,9 +107,7 @@ export class ToolManager {
 	}
 
 	setActiveNames(names: string[]): void {
-		const active = resolveToolSelection(this.registry.names(), undefined, {
-			activeToolNames: names,
-		});
+		const active = resolveToolSelection(this.registry.names(), undefined, { activeToolNames: names });
 		this.apply(
 			active,
 			active.flatMap((name) => {
@@ -141,25 +122,21 @@ export class ToolManager {
 	}
 
 	getAll(): ToolInfo[] {
-		return Array.from(this.entries.values()).map(({ definition, sourceInfo }) => ({
-			name: definition.name,
-			description: definition.description,
-			parameters: definition.parameters,
-			promptGuidelines: definition.promptGuidelines,
+		return Array.from(this.entries.values()).map(({ tool, sourceInfo }) => ({
+			name: tool.name,
+			description: tool.description,
+			parameters: tool.parameters,
+			promptGuidelines: tool.promptGuidelines,
 			sourceInfo,
 		}));
 	}
 
-	get(name: string): ToolDefinition | undefined {
-		return this.entries.get(name)?.definition;
+	get(name: string): PiToolSpec | ExtensionToolSpec | undefined {
+		return this.entries.get(name)?.spec;
 	}
 
 	has(name: string): boolean {
 		return this.registry.has(name);
-	}
-
-	private isAllowed(name: string): boolean {
-		return (!this.allowedNames || this.allowedNames.has(name)) && !this.excludedNames?.has(name);
 	}
 
 	getPrompts(names: string[]): ToolPrompts {
@@ -173,6 +150,49 @@ export class ToolManager {
 		}
 		return { snippets, guidelines };
 	}
+
+	private createBaseEntry(input: BaseTool, sourceInfo: SourceInfo): ToolEntry {
+		if (input instanceof Tool) return { tool: input, sourceInfo };
+		return { tool: toTool(input), spec: input, sourceInfo };
+	}
+
+	private createExtensionEntry(spec: ExtensionToolSpec, sourceInfo: SourceInfo, runner: ExtensionRunner): ToolEntry {
+		return {
+			tool: toExtensionTool(spec, () => runner.createContext()),
+			spec,
+			sourceInfo,
+		};
+	}
+
+	private isAllowed(name: string): boolean {
+		return (!this.allowedNames || this.allowedNames.has(name)) && !this.excludedNames?.has(name);
+	}
+}
+
+function addEntry(entries: Map<string, ToolEntry>, name: string, entry: ToolEntry): void {
+	const existing = entries.get(name);
+	if (!existing) {
+		entries.set(name, entry);
+		return;
+	}
+
+	const existingPriority = sourcePriority(existing.sourceInfo.source);
+	const entryPriority = sourcePriority(entry.sourceInfo.source);
+	if (entryPriority > existingPriority) {
+		entries.set(name, entry);
+		return;
+	}
+	if (entryPriority < existingPriority) {
+		throw new Error(`Tool "${name}" conflicts with a higher-priority registration`);
+	}
+	throw new Error(`Tool "${name}" is already registered`);
+}
+
+/** Custom and extension tools intentionally replace built-ins; all other duplicates fail. */
+function sourcePriority(source: string): number {
+	if (source === "builtin") return 0;
+	if (source === "sdk") return 1;
+	return 2;
 }
 
 function normalizeSnippet(text: string | undefined): string | undefined {
@@ -184,6 +204,6 @@ function normalizeSnippet(text: string | undefined): string | undefined {
 	return normalized || undefined;
 }
 
-function normalizeGuidelines(guidelines: string[] | undefined): string[] {
+function normalizeGuidelines(guidelines: readonly string[] | undefined): string[] {
 	return Array.from(new Set((guidelines ?? []).map((guideline) => guideline.trim()).filter(Boolean)));
 }

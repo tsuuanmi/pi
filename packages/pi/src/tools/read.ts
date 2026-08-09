@@ -1,12 +1,11 @@
 import { basename, dirname, isAbsolute, relative, resolve as resolvePath, sep } from "node:path";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import type { TextContent } from "@tsuuanmi/pi-ai";
 import { getLanguageFromPath, highlightCode, keyHint, keyText, Text, type Theme } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import { getReadmePath } from "#pi/loader/package";
 import {
 	DEFAULT_MAX_BYTES,
@@ -15,8 +14,10 @@ import {
 	type TruncationResult,
 	truncateHead,
 } from "#pi/output/truncation";
+import { toTool } from "#pi/tool/adapter";
+import { getTextOutput, renderToolPath, replaceTabs, str } from "#pi/tool/output";
+import type { PiToolSpec, ToolRenderResultOptions } from "#pi/tool/spec";
 import { formatPathRelativeToCwdOrAbsolute, resolveReadPathAsync, resolveToCwd } from "#pi/tools/paths";
-import { getTextOutput, renderToolPath, replaceTabs, str, toAgentTool } from "#pi/tools/utils";
 
 const readSchema = Type.Object({
 	path: Type.String({ description: "Path to the file to read (relative or absolute)" }),
@@ -206,10 +207,10 @@ function formatReadResult(
 	return text;
 }
 
-export function createReadToolDefinition(
+export function createReadSpec(
 	cwd: string,
 	options?: ReadToolOptions,
-): ToolDefinition<typeof readSchema, ReadToolDetails | undefined> {
+): PiToolSpec<typeof readSchema, ReadToolDetails | undefined> {
 	const ops = options?.operations ?? defaultReadOperations;
 	return {
 		name: "read",
@@ -223,7 +224,6 @@ export function createReadToolDefinition(
 			{ path, offset, limit }: { path: string; offset?: number; limit?: number },
 			signal?: AbortSignal,
 			_onUpdate?,
-			_ctx?,
 		) {
 			const startedAt = Date.now();
 			return new Promise<{ content: TextContent[]; details: ReadToolDetails | undefined }>((resolve, reject) => {
@@ -357,6 +357,6 @@ export function createReadToolDefinition(
 	};
 }
 
-export function createReadTool(cwd: string, options?: ReadToolOptions): AgentTool<typeof readSchema> {
-	return toAgentTool(createReadToolDefinition(cwd, options));
+export function createReadTool(cwd: string, options?: ReadToolOptions): Tool<typeof readSchema> {
+	return toTool(createReadSpec(cwd, options));
 }

@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionFactory } from "@tsuuanmi/pi/extensions";
-import type { AgentMessage, AgentTool } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, Tool } from "@tsuuanmi/pi-agent";
 import { Agent, convertToLlm } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/storage";
@@ -65,7 +65,7 @@ export interface HarnessOptions {
 	models?: TestModelDefinition[];
 	settings?: Partial<Settings>;
 	systemPrompt?: string;
-	tools?: AgentTool[];
+	tools?: Tool[];
 	initialActiveToolNames?: string[];
 	allowedToolNames?: string[];
 	excludedToolNames?: string[];

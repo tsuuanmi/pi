@@ -36,9 +36,9 @@ interface SubagentManager {
 
 ## Lifecycle tools
 
-`SUBAGENT_TOOLS` exposes host-neutral definitions for `subagent_spawn`, `subagent_status`, `subagent_await`, `subagent_steer`, `subagent_pause`, `subagent_resume`, and `subagent_cancel`. Each tool receives a required `SubagentToolContext` containing a `SubagentManager` and session id.
+`SUBAGENT_SPECS` describes the host-neutral lifecycle surface for `subagent_spawn`, `subagent_status`, `subagent_await`, `subagent_steer`, `subagent_pause`, `subagent_resume`, and `subagent_cancel`. `createSubagentTools()` binds a `SubagentContext` and returns executable `Tool` instances.
 
-Host packages adapt these definitions to their tool API. The adapter owns host context checks and host-specific result wrapping; the agent package has no dependency on workflow context or workflow receipts.
+Host packages adapt these specs to their tool API. The adapter owns host context checks and host-specific result wrapping; the agent package has no dependency on workflow context or workflow receipts.
 
 ## Progress tracking
 

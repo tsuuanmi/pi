@@ -2,10 +2,11 @@ import { spawnSync } from "node:child_process";
 import { readFile as fsReadFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { Text } from "@tsuuanmi/pi-tui";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition } from "#pi/api/tool-types";
+import { toTool } from "#pi/tool/adapter";
+import type { PiToolSpec } from "#pi/tool/spec";
 import { LspSession } from "#pi/tools/lsp/client";
 import { DEFAULT_LSP_SERVERS } from "#pi/tools/lsp/defaults";
 import {
@@ -29,7 +30,6 @@ import type {
 	SymbolInformation,
 } from "#pi/tools/lsp/types";
 import { resolveToCwd } from "#pi/tools/paths";
-import { toAgentTool } from "#pi/tools/utils";
 
 function str(value: unknown): string | null {
 	if (typeof value === "string") return value;
@@ -227,7 +227,7 @@ function formatLspCall(args: { action?: string; file?: string }): string {
 	return `lsp ${str(args.action)}${suffix}`;
 }
 
-export function createLspToolDefinition(cwd: string): ToolDefinition<typeof lspSchema, LspToolDetails | undefined> {
+export function createLspSpec(cwd: string): PiToolSpec<typeof lspSchema, LspToolDetails> {
 	return {
 		name: "lsp",
 		label: "lsp",
@@ -253,6 +253,6 @@ export function createLspToolDefinition(cwd: string): ToolDefinition<typeof lspS
 	};
 }
 
-export function createLspTool(cwd: string): AgentTool<typeof lspSchema> {
-	return toAgentTool(createLspToolDefinition(cwd));
+export function createLspTool(cwd: string): Tool<typeof lspSchema, LspToolDetails> {
+	return toTool(createLspSpec(cwd));
 }

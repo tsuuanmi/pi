@@ -757,8 +757,8 @@ export class InteractiveMode {
 	/**
 	 * Get a registered tool definition by name (for custom rendering).
 	 */
-	private getRegisteredToolDefinition(toolName: string) {
-		return this.session.getToolDefinition(toolName);
+	private getRegisteredPiToolSpec(toolName: string) {
+		return this.session.getToolSpec(toolName);
 	}
 
 	/**
@@ -1143,7 +1143,7 @@ export class InteractiveMode {
 									content.id,
 									content.arguments,
 									{},
-									this.getRegisteredToolDefinition(content.name),
+									this.getRegisteredPiToolSpec(content.name),
 									this.ui,
 									this.sessionManager.getCwd(),
 								);
@@ -1209,7 +1209,7 @@ export class InteractiveMode {
 						event.toolCallId,
 						event.args,
 						{},
-						this.getRegisteredToolDefinition(event.toolName),
+						this.getRegisteredPiToolSpec(event.toolName),
 						this.ui,
 						this.sessionManager.getCwd(),
 					);
@@ -1541,7 +1541,7 @@ export class InteractiveMode {
 							content.id,
 							content.arguments,
 							{},
-							this.getRegisteredToolDefinition(content.name),
+							this.getRegisteredPiToolSpec(content.name),
 							this.ui,
 							this.sessionManager.getCwd(),
 						);

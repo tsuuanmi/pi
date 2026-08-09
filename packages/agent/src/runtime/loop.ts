@@ -15,10 +15,12 @@ import {
 import { Compile } from "typebox/compile";
 import { LoopDetector, normalizeLoopDetectionOptions } from "#agent/agent/loop-detector";
 import type { AgentMessage, TraceSpan, TraceStatus } from "#agent/messages/state";
-import type { AgentLoopConfig, AgentToolCall, StreamFn } from "#agent/runtime/config";
+import type { AgentLoopConfig, StreamFn, ToolCall } from "#agent/runtime/config";
+import type { AgentContext } from "#agent/runtime/context";
 import type { AgentEvent, ToolExecutionMeta, ToolExecutionStatus } from "#agent/runtime/events";
 import { limitToolOutput, normalizeToolOutputLimit } from "#agent/tool/output";
-import type { AgentContext, AgentTool, AgentToolResult } from "#agent/tool/types";
+import type { ToolResult } from "#agent/tool/result";
+import type { Tool } from "#agent/tool/tool";
 
 const detailsValidatorCache = new WeakMap<object, ReturnType<typeof Compile>>();
 let providerRequestSequence = 0;
@@ -186,7 +188,7 @@ function normalizeMaxToolConcurrency(maxToolConcurrency: number | undefined): nu
 	return Math.max(1, Math.floor(maxToolConcurrency));
 }
 
-function getToolOutputLimit(config: AgentLoopConfig, tool: AgentTool<any> | undefined): number | undefined {
+function getToolOutputLimit(config: AgentLoopConfig, tool: Tool<any> | undefined): number | undefined {
 	return normalizeToolOutputLimit(tool?.maxOutputChars ?? config.maxToolOutputChars);
 }
 
@@ -479,7 +481,7 @@ async function streamAssistantResponse(
 	const llmContext: Context = {
 		systemPrompt: context.systemPrompt,
 		messages: llmMessages,
-		tools: context.tools,
+		tools: context.tools.slice(),
 	};
 
 	const streamFunction = streamFn || stream;
@@ -675,7 +677,7 @@ type ExecutedToolCallBatch = {
 async function executeToolCallsSequential(
 	currentContext: AgentContext,
 	assistantMessage: AssistantMessage,
-	toolCalls: AgentToolCall[],
+	toolCalls: ToolCall[],
 	config: AgentLoopConfig,
 	signal: AbortSignal | undefined,
 	emit: EventSink,
@@ -747,7 +749,7 @@ async function executeToolCallsSequential(
 async function executeToolCallsParallel(
 	currentContext: AgentContext,
 	assistantMessage: AssistantMessage,
-	toolCalls: AgentToolCall[],
+	toolCalls: ToolCall[],
 	config: AgentLoopConfig,
 	signal: AbortSignal | undefined,
 	emit: EventSink,
@@ -849,29 +851,29 @@ async function runFinalizers(
 
 type PreparedToolCall = {
 	kind: "prepared";
-	toolCall: AgentToolCall;
-	tool: AgentTool<any>;
+	toolCall: ToolCall;
+	tool: Tool<any>;
 	args: unknown;
 	startedAt: number;
 };
 
 type ImmediateToolCallOutcome = {
 	kind: "immediate";
-	result: AgentToolResult<any>;
+	result: ToolResult<any>;
 	isError: boolean;
 	status: ToolExecutionStatus;
 	startedAt: number;
 };
 
 type ExecutedToolCallOutcome = {
-	result: AgentToolResult<any>;
+	result: ToolResult<any>;
 	isError: boolean;
 	status: ToolExecutionStatus;
 };
 
 type FinalizedToolCallOutcome = {
-	toolCall: AgentToolCall;
-	result: AgentToolResult<any>;
+	toolCall: ToolCall;
+	result: ToolResult<any>;
 	isError: boolean;
 	meta: ToolExecutionMeta;
 	startedAt: number;
@@ -883,7 +885,7 @@ function shouldTerminateToolBatch(finalizedCalls: FinalizedToolCallOutcome[]): b
 	return finalizedCalls.length > 0 && finalizedCalls.every((finalized) => finalized.result.terminate === true);
 }
 
-function prepareToolCallArguments(tool: AgentTool<any>, toolCall: AgentToolCall): AgentToolCall {
+function prepareToolCallArguments(tool: Tool<any>, toolCall: ToolCall): ToolCall {
 	if (!tool.prepareArguments) {
 		return toolCall;
 	}
@@ -900,7 +902,7 @@ function prepareToolCallArguments(tool: AgentTool<any>, toolCall: AgentToolCall)
 async function prepareToolCall(
 	currentContext: AgentContext,
 	assistantMessage: AssistantMessage,
-	toolCall: AgentToolCall,
+	toolCall: ToolCall,
 	config: AgentLoopConfig,
 	signal: AbortSignal | undefined,
 ): Promise<PreparedToolCall | ImmediateToolCallOutcome> {
@@ -1089,7 +1091,7 @@ async function finalizeExecutedToolCall(
 	};
 }
 
-function validateToolDetails(result: AgentToolResult<any>, tool: AgentTool<any>): string | undefined {
+function validateToolDetails(result: ToolResult<any>, tool: Tool<any>): string | undefined {
 	if (!tool.detailsSchema) {
 		return undefined;
 	}
@@ -1111,7 +1113,7 @@ function validateToolDetails(result: AgentToolResult<any>, tool: AgentTool<any>)
 function limitFinalizedToolCall(
 	finalized: FinalizedToolCallOutcome,
 	config: AgentLoopConfig,
-	tool?: AgentTool<any>,
+	tool?: Tool<any>,
 ): FinalizedToolCallOutcome {
 	const maxChars = getToolOutputLimit(config, tool);
 	if (maxChars === undefined) {
@@ -1138,11 +1140,7 @@ function limitFinalizedToolCall(
 	};
 }
 
-function limitToolResult<T>(
-	result: AgentToolResult<T>,
-	config: AgentLoopConfig,
-	tool?: AgentTool<any>,
-): AgentToolResult<T> {
+function limitToolResult<T>(result: ToolResult<T>, config: AgentLoopConfig, tool?: Tool<any>): ToolResult<T> {
 	const maxChars = getToolOutputLimit(config, tool);
 	if (maxChars === undefined) {
 		return result;
@@ -1212,7 +1210,7 @@ function createToolExecutionMeta(status: ToolExecutionStatus, span: TraceSpan): 
 	return { status, span };
 }
 
-function createErrorToolResult(message: string): AgentToolResult<any> {
+function createErrorToolResult(message: string): ToolResult<any> {
 	return {
 		content: [{ type: "text", text: message }],
 		details: {},

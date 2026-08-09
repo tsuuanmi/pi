@@ -8,6 +8,7 @@ export * from "#agent/messages/messages";
 export * from "#agent/messages/state";
 export * from "#agent/metadata/receipt";
 export * from "#agent/runtime/config";
+export * from "#agent/runtime/context";
 export * from "#agent/runtime/events";
 export type {
 	AgentHook,
@@ -16,16 +17,18 @@ export type {
 } from "#agent/runtime/hooks";
 export * from "#agent/runtime/runtime";
 export type { AgentRunOptions, AgentRunResult } from "#agent/runtime/types";
+export * from "#agent/subagents/context";
 export * from "#agent/subagents/manager";
 export * from "#agent/subagents/progress";
 export * from "#agent/subagents/receipts";
+export * from "#agent/subagents/spec";
 export * from "#agent/subagents/thinking-level";
 export * from "#agent/subagents/tools";
 export * from "#agent/subagents/types";
 export * from "#agent/subagents/yield-result";
-export * from "#agent/tool/define";
 export * from "#agent/tool/output";
 export * from "#agent/tool/policy";
 export * from "#agent/tool/receipts";
 export * from "#agent/tool/registry";
-export * from "#agent/tool/types";
+export * from "#agent/tool/result";
+export * from "#agent/tool/tool";

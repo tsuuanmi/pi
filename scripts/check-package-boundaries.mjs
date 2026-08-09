@@ -51,7 +51,7 @@ const internalRules = [
 	{ directory: "packages/pi/src/package/loader.ts", forbidden: ["#pi/index"] },
 ];
 const workflowManagerCallers = new Set([
-	"packages/workflows/src/tools/subagent-tools.ts",
+	"packages/workflows/src/tool/adapter.ts",
 	"packages/workflows/src/skills/team/agent-adapter.ts",
 	"packages/workflows/src/skills/ralplan/agent-adapter.ts",
 	"packages/workflows/src/skills/ultragoal/tools.ts",

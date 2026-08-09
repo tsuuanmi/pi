@@ -2,14 +2,14 @@ import { join, resolve } from "node:path";
 import { initTheme, stripAnsi, Text, type TUI } from "@tsuuanmi/pi-tui";
 import { Type } from "typebox";
 import { beforeAll, describe, expect, test } from "vitest";
-import type { ToolDefinition } from "#pi/api/tool-types";
 import { getReadmePath } from "#pi/loader/config";
-import { type BashOperations, createBashToolDefinition } from "#pi/tools/bash";
-import { createReadTool, createReadToolDefinition } from "#pi/tools/read";
-import { createWriteToolDefinition } from "#pi/tools/write";
+import type { PiToolSpec } from "#pi/tool/spec";
+import { type BashOperations, createBashSpec } from "#pi/tools/bash";
+import { createReadSpec, createReadTool } from "#pi/tools/read";
+import { createWriteSpec } from "#pi/tools/write";
 import { ToolExecutionComponent } from "#pi/ui/interactive/components/tool-execution";
 
-function createBaseToolDefinition(name = "custom_tool"): ToolDefinition {
+function createBasePiToolSpec(name = "custom_tool"): PiToolSpec {
 	return {
 		name,
 		label: name,
@@ -34,8 +34,8 @@ describe("ToolExecutionComponent parity", () => {
 	});
 
 	test("stacks custom call and result renderers like the old implementation", () => {
-		const toolDefinition: ToolDefinition = {
-			...createBaseToolDefinition(),
+		const toolDefinition: PiToolSpec = {
+			...createBasePiToolSpec(),
 			renderCall: () => new Text("custom call", 0, 0),
 			renderResult: () => new Text("custom result", 0, 0),
 		};
@@ -66,8 +66,8 @@ describe("ToolExecutionComponent parity", () => {
 	});
 
 	test("self-rendered empty tool rows take no layout space", () => {
-		const toolDefinition: ToolDefinition = {
-			...createBaseToolDefinition(),
+		const toolDefinition: PiToolSpec = {
+			...createBasePiToolSpec(),
 			renderShell: "self",
 			renderCall: () => new Text("", 0, 0),
 			renderResult: () => new Text("", 0, 0),
@@ -97,8 +97,8 @@ describe("ToolExecutionComponent parity", () => {
 	});
 
 	test("uses built-in rendering for built-in overrides without custom renderers", () => {
-		const overrideDefinition: ToolDefinition = {
-			...createBaseToolDefinition("edit"),
+		const overrideDefinition: PiToolSpec = {
+			...createBasePiToolSpec("edit"),
 		};
 
 		const component = new ToolExecutionComponent(
@@ -125,13 +125,9 @@ describe("ToolExecutionComponent parity", () => {
 				return { exitCode: 0 };
 			},
 		};
-		const tool = createBashToolDefinition(process.cwd(), { operations });
-		const promise = tool.execute(
-			"tool-bash-1",
-			{ command: "sleep 10" },
-			undefined,
-			(update) => updates.push(update as { content: Array<{ type: string; text?: string }>; details?: unknown }),
-			{} as never,
+		const tool = createBashSpec(process.cwd(), { operations });
+		const promise = tool.execute("tool-bash-1", { command: "sleep 10" }, undefined, (update) =>
+			updates.push(update as { content: Array<{ type: string; text?: string }>; details?: unknown }),
 		);
 		expect(updates).toEqual([{ content: [], details: undefined }]);
 		await promise;
@@ -144,7 +140,7 @@ describe("ToolExecutionComponent parity", () => {
 			"tool-bash-long-command",
 			{ command: longCommand },
 			{},
-			createBashToolDefinition(process.cwd()),
+			createBashSpec(process.cwd()),
 			createFakeTui(),
 			process.cwd(),
 		);
@@ -167,14 +163,8 @@ describe("ToolExecutionComponent parity", () => {
 				return { exitCode: 0 };
 			},
 		};
-		const tool = createBashToolDefinition(process.cwd(), { operations });
-		const result = await tool.execute(
-			"tool-bash-1b",
-			{ command: "generate output" },
-			undefined,
-			undefined,
-			{} as never,
-		);
+		const tool = createBashSpec(process.cwd(), { operations });
+		const result = await tool.execute("tool-bash-1b", { command: "generate output" }, undefined, undefined);
 		const component = new ToolExecutionComponent(
 			"bash",
 			"tool-bash-1b",
@@ -201,7 +191,7 @@ describe("ToolExecutionComponent parity", () => {
 			"tool-4",
 			{ path: "README.md" },
 			{},
-			createReadToolDefinition(process.cwd()),
+			createReadSpec(process.cwd()),
 			createFakeTui(),
 			process.cwd(),
 		);
@@ -211,8 +201,8 @@ describe("ToolExecutionComponent parity", () => {
 	});
 
 	test("inherits missing built-in result renderer slot from the built-in tool", () => {
-		const overrideDefinition: ToolDefinition = {
-			...createBaseToolDefinition("read"),
+		const overrideDefinition: PiToolSpec = {
+			...createBasePiToolSpec("read"),
 			renderCall: () => new Text("override call", 0, 0),
 		};
 
@@ -233,8 +223,8 @@ describe("ToolExecutionComponent parity", () => {
 	});
 
 	test("inherits missing built-in call renderer slot from the built-in tool", () => {
-		const overrideDefinition: ToolDefinition = {
-			...createBaseToolDefinition("read"),
+		const overrideDefinition: PiToolSpec = {
+			...createBasePiToolSpec("read"),
 			renderResult: () => new Text("override result", 0, 0),
 		};
 
@@ -255,7 +245,7 @@ describe("ToolExecutionComponent parity", () => {
 	});
 
 	test("uses custom renderers for built-in overrides that reuse built-in definition parameters", () => {
-		const builtInDefinition = createReadToolDefinition(process.cwd());
+		const builtInDefinition = createReadSpec(process.cwd());
 		const component = new ToolExecutionComponent(
 			"read",
 			"tool-4d",
@@ -284,7 +274,7 @@ describe("ToolExecutionComponent parity", () => {
 			{ path: "README.md" },
 			{},
 			{
-				...createBaseToolDefinition("read"),
+				...createBasePiToolSpec("read"),
 				parameters: builtInTool.parameters,
 				renderCall: () => new Text("wrapped override call", 0, 0),
 				renderResult: () => new Text("wrapped override result", 0, 0),
@@ -300,8 +290,8 @@ describe("ToolExecutionComponent parity", () => {
 
 	test("shares renderer state across custom call and result slots", () => {
 		type RenderState = { token?: string };
-		const toolDefinition: ToolDefinition<any, unknown, RenderState> = {
-			...createBaseToolDefinition(),
+		const toolDefinition: PiToolSpec<any, unknown, RenderState> = {
+			...createBasePiToolSpec(),
 			renderCall: (_args, _theme, context) => {
 				context.state.token ??= "shared-token";
 				return new Text(`custom call ${context.state.token}`, 0, 0);
@@ -327,8 +317,8 @@ describe("ToolExecutionComponent parity", () => {
 	});
 
 	test("exposes args in render result context", () => {
-		const toolDefinition: ToolDefinition = {
-			...createBaseToolDefinition(),
+		const toolDefinition: PiToolSpec = {
+			...createBasePiToolSpec(),
 			renderCall: () => new Text("call", 0, 0),
 			renderResult: (_result, _options, _theme, context) =>
 				new Text(`arg:${String((context.args as { foo: string }).foo)}`, 0, 0),
@@ -349,8 +339,8 @@ describe("ToolExecutionComponent parity", () => {
 	});
 
 	test("falls back when custom renderers are absent", () => {
-		const toolDefinition: ToolDefinition = {
-			...createBaseToolDefinition(),
+		const toolDefinition: PiToolSpec = {
+			...createBasePiToolSpec(),
 		};
 
 		const component = new ToolExecutionComponent(
@@ -374,7 +364,7 @@ describe("ToolExecutionComponent parity", () => {
 			"tool-7",
 			{ path: "README.md", content: "one\ntwo\n" },
 			{},
-			createWriteToolDefinition(process.cwd()),
+			createWriteSpec(process.cwd()),
 			createFakeTui(),
 			process.cwd(),
 		);
@@ -390,7 +380,7 @@ describe("ToolExecutionComponent parity", () => {
 			"tool-8",
 			{ path: "notes.txt" },
 			{},
-			createReadToolDefinition(process.cwd()),
+			createReadSpec(process.cwd()),
 			createFakeTui(),
 			process.cwd(),
 		);
@@ -411,7 +401,7 @@ describe("ToolExecutionComponent parity", () => {
 			"tool-ordinary-read-collapsed",
 			{ path: "notes.txt" },
 			{},
-			createReadToolDefinition(process.cwd()),
+			createReadSpec(process.cwd()),
 			createFakeTui(),
 			process.cwd(),
 		);
@@ -470,7 +460,7 @@ describe("ToolExecutionComponent parity", () => {
 				`tool-compact-${scenario.title}`,
 				{ path: scenario.path },
 				{},
-				createReadToolDefinition(process.cwd()),
+				createReadSpec(process.cwd()),
 				createFakeTui(),
 				process.cwd(),
 			);
@@ -502,7 +492,7 @@ describe("ToolExecutionComponent parity", () => {
 				`tool-compact-range-${scenario.title}`,
 				{ path: scenario.path, offset: 120, limit: 210 },
 				{},
-				createReadToolDefinition(process.cwd()),
+				createReadSpec(process.cwd()),
 				createFakeTui(),
 				process.cwd(),
 			);

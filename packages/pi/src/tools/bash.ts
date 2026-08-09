@@ -1,4 +1,4 @@
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import { ExecutionError } from "@tsuuanmi/pi-agent/node";
 import {
@@ -11,13 +11,14 @@ import {
 	truncateToWidth,
 } from "@tsuuanmi/pi-tui";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import type { BashOperations } from "#pi/execution/backend";
 import { createLocalBash } from "#pi/execution/local";
 import { getShellEnv } from "#pi/execution/shell";
 import { OutputBuffer } from "#pi/output/buffer";
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "#pi/output/truncation";
-import { getTextOutput, invalidArgText, str, toAgentTool } from "#pi/tools/utils";
+import { toTool } from "#pi/tool/adapter";
+import { getTextOutput, invalidArgText, str } from "#pi/tool/output";
+import type { PiToolSpec, ToolRenderResultOptions } from "#pi/tool/spec";
 
 export type { BashOperations } from "#pi/execution/backend";
 export { createLocalBash };
@@ -197,10 +198,10 @@ function rebuildBashResultRenderComponent(
 	}
 }
 
-export function createBashToolDefinition(
+export function createBashSpec(
 	cwd: string,
 	options?: BashToolOptions,
-): ToolDefinition<typeof bashSchema, BashToolDetails | undefined, BashRenderState> {
+): PiToolSpec<typeof bashSchema, BashToolDetails | undefined, BashRenderState> {
 	const ops = options?.operations ?? createLocalBash({ shellPath: options?.shellPath });
 	const commandPrefix = options?.commandPrefix;
 	const spawnHook = options?.spawnHook;
@@ -215,7 +216,6 @@ export function createBashToolDefinition(
 			{ command, timeout }: { command: string; timeout?: number },
 			signal?: AbortSignal,
 			onUpdate?,
-			_ctx?,
 		) {
 			const resolvedCommand = commandPrefix ? `${commandPrefix}\n${command}` : command;
 			const spawnContext = resolveSpawnContext(resolvedCommand, cwd, spawnHook);
@@ -385,6 +385,6 @@ export function createBashToolDefinition(
 	};
 }
 
-export function createBashTool(cwd: string, options?: BashToolOptions): AgentTool<typeof bashSchema> {
-	return toAgentTool(createBashToolDefinition(cwd, options));
+export function createBashTool(cwd: string, options?: BashToolOptions): Tool<typeof bashSchema> {
+	return toTool(createBashSpec(cwd, options));
 }

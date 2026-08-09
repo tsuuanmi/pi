@@ -1,14 +1,15 @@
 import { readdir as fsReaddir, stat as fsStat } from "node:fs/promises";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import nodePath from "path";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
 import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "#pi/output/truncation";
+import { toTool } from "#pi/tool/adapter";
+import { getTextOutput, renderToolPath, str } from "#pi/tool/output";
+import type { PiToolSpec, ToolRenderResultOptions } from "#pi/tool/spec";
 import { pathExists, resolveToCwd } from "#pi/tools/paths";
-import { getTextOutput, renderToolPath, str, toAgentTool } from "#pi/tools/utils";
 
 const lsSchema = Type.Object({
 	path: Type.Optional(Type.String({ description: "Directory to list (default: current directory)" })),
@@ -90,10 +91,10 @@ function formatLsResult(
 	return text;
 }
 
-export function createLsToolDefinition(
+export function createLsSpec(
 	cwd: string,
 	options?: LsToolOptions,
-): ToolDefinition<typeof lsSchema, LsToolDetails | undefined> {
+): PiToolSpec<typeof lsSchema, LsToolDetails | undefined> {
 	const ops = options?.operations ?? defaultLsOperations;
 	return {
 		name: "ls",
@@ -101,13 +102,7 @@ export function createLsToolDefinition(
 		description: `List directory contents. Returns entries sorted alphabetically, with '/' suffix for directories. Includes dotfiles. Output is truncated to ${DEFAULT_LIMIT} entries or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first).`,
 		promptSnippet: "List directory contents",
 		parameters: lsSchema,
-		async execute(
-			toolCallId,
-			{ path, limit }: { path?: string; limit?: number },
-			signal?: AbortSignal,
-			_onUpdate?,
-			_ctx?,
-		) {
+		async execute(toolCallId, { path, limit }: { path?: string; limit?: number }, signal?: AbortSignal, _onUpdate?) {
 			const startedAt = Date.now();
 			return new Promise((resolve, reject) => {
 				if (signal?.aborted) {
@@ -249,6 +244,6 @@ export function createLsToolDefinition(
 	};
 }
 
-export function createLsTool(cwd: string, options?: LsToolOptions): AgentTool<typeof lsSchema> {
-	return toAgentTool(createLsToolDefinition(cwd, options));
+export function createLsTool(cwd: string, options?: LsToolOptions): Tool<typeof lsSchema> {
+	return toTool(createLsSpec(cwd, options));
 }

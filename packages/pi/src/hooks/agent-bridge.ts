@@ -2,7 +2,7 @@ import type { Agent } from "@tsuuanmi/pi-agent";
 import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 
 /** Install the agent bridge for extension tool hooks. */
-export function installAgentToolHooks(agent: Agent, runner: ExtensionRunner): () => void {
+export function installToolHooks(agent: Agent, runner: ExtensionRunner): () => void {
 	return agent.registerHook({
 		name: "pi.extensions",
 		beforeToolCall: async ({ toolCall, args }) => {

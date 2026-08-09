@@ -15,29 +15,36 @@ export {
 	type BashToolDetails,
 	type BashToolInput,
 	type BashToolOptions,
+	createBashSpec,
 	createBashTool,
-	createBashToolDefinition,
 	createLocalBash,
 } from "#pi/tools/bash";
 export {
+	createCodingTools,
+	createReadOnlyTools,
+	createToolSpecs,
+	type ToolName,
+	type ToolsOptions,
+} from "#pi/tools/catalog";
+export {
+	createEditSpec,
 	createEditTool,
-	createEditToolDefinition,
 	type EditOperations,
 	type EditToolDetails,
 	type EditToolInput,
 	type EditToolOptions,
 } from "#pi/tools/edit";
 export {
+	createFindSpec,
 	createFindTool,
-	createFindToolDefinition,
 	type FindOperations,
 	type FindToolDetails,
 	type FindToolInput,
 	type FindToolOptions,
 } from "#pi/tools/find";
 export {
+	createGlobSpec,
 	createGlobTool,
-	createGlobToolDefinition,
 	type GlobOperations,
 	type GlobToolDetails,
 	type GlobToolInput,
@@ -45,46 +52,38 @@ export {
 	matchesGlob,
 } from "#pi/tools/glob";
 export {
+	createGrepSpec,
 	createGrepTool,
-	createGrepToolDefinition,
 	type GrepOperations,
 	type GrepToolDetails,
 	type GrepToolInput,
 	type GrepToolOptions,
 } from "#pi/tools/grep";
 export {
+	createLsSpec,
 	createLsTool,
-	createLsToolDefinition,
 	type LsOperations,
 	type LsToolDetails,
 	type LsToolInput,
 	type LsToolOptions,
 } from "#pi/tools/ls";
 export {
+	createLspSpec,
 	createLspTool,
-	createLspToolDefinition,
 	type LspToolDetails,
 	type LspToolInput,
 } from "#pi/tools/lsp/index";
 export {
+	createReadSpec,
 	createReadTool,
-	createReadToolDefinition,
 	type ReadOperations,
 	type ReadToolDetails,
 	type ReadToolInput,
 	type ReadToolOptions,
 } from "#pi/tools/read";
 export {
-	createCodingTools,
-	createReadOnlyTools,
-	createToolDefinitions,
-	type Tool,
-	type ToolName,
-	type ToolsOptions,
-} from "#pi/tools/tool-catalog";
-export {
+	createWriteSpec,
 	createWriteTool,
-	createWriteToolDefinition,
 	type WriteOperations,
 	type WriteToolInput,
 	type WriteToolOptions,

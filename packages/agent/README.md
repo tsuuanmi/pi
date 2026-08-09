@@ -10,7 +10,7 @@ npm install @tsuuanmi/pi-agent
 
 ## Package Scope
 
-`@tsuuanmi/pi-agent` is the standard agent protocol/runtime package for Pi. It owns the `Agent` facade, transcript state, the default runtime loop, lifecycle events, the generic tool protocol, tool registration helpers, shared message/subagent contracts, and runtime/backend seams.
+`@tsuuanmi/pi-agent` is the standard agent protocol/runtime package for Pi. It owns the `Agent` facade, transcript state, the default runtime loop, lifecycle events, the `Tool` and `ToolRegistry` APIs, shared message/subagent contracts, and runtime/backend seams.
 
 Provider adapters and streaming transport live in `@tsuuanmi/pi-ai`. Concrete tools live in host packages; Pi registers those tools with the agent package.
 
@@ -21,8 +21,7 @@ See [Agent documentation](./docs/agent/index.md) and [Tool Registration](./docs/
 ## Quick Start
 
 ```typescript
-import { Agent, createToolRegistry, defineTool, registerTool } from "@tsuuanmi/pi-agent";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import { Agent, Tool, ToolRegistry } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 
@@ -34,8 +33,8 @@ const model: Model<any> = {
   contextWindow: 200_000,
 };
 
-const hostTools: AgentTool[] = [
-  defineTool({
+const hostTools: Tool[] = [
+  Tool.define({
     name: "example",
     description: "Example host-owned tool",
     label: "Example",
@@ -45,8 +44,7 @@ const hostTools: AgentTool[] = [
     },
   }),
 ];
-const registry = createToolRegistry();
-registerTool(registry, hostTools);
+const registry = new ToolRegistry(hostTools);
 
 const agent = new Agent({
   name: "planner",
@@ -68,7 +66,7 @@ High-level packages should integrate with `@tsuuanmi/pi-agent` by following thes
 
 1. Create or obtain a `Model` and stream transport from `@tsuuanmi/pi-ai`.
 2. Define concrete tools in the host package.
-3. Register tools with `createToolRegistry()`, `registerTool()`, or `Agent.registerTool()`.
+3. Register tools with `ToolRegistry.register()` and pass the active list to `Agent`.
 4. Subscribe to `AgentEvent` with `agent.subscribe()` for UI, logs, traces, metrics, and progress state.
 5. Use `Agent.run()` for isolated task/orchestration calls and `Agent.prompt()` / `Agent.continue()` for persistent interactive sessions.
 6. Provide a custom `AgentRuntime` only when replacing the default runtime with an external runtime.
@@ -80,9 +78,8 @@ This keeps agent behavior centralized while allowing applications, extensions, a
 
 - `Agent`: the single standard Pi agent facade. It wraps state, prompt history, the runtime seam, queues, lifecycle events, tools, and task-oriented `run()` execution.
 - `AgentRuntime`: the execution seam for the default LLM/tool loop or external backends. Runtime implementations stream events and finish with one done or error event.
-- `AgentTool`: the generic tool protocol implemented by host-owned tools, with optional per-tool output limits and details validation.
-- `defineTool`: validates required host-owned tool declaration fields without mutating the tool.
-- `ToolRegistry`: name-keyed tool registration for hosts and extensions.
+- `Tool`: validates and owns one executable tool declaration with optional output limits and details validation.
+- `ToolRegistry`: owns name-keyed tool registration for hosts and extensions.
 - `@tsuuanmi/pi-orchestrator`: owns task, team, and orchestration contracts built on top of `Agent`.
 
 ## Subagent and Orchestration Boundary
@@ -93,6 +90,6 @@ Use the manager contract for one-subagent lifecycle operations. Use `@tsuuanmi/p
 
 ## Runtime and Backend Boundary
 
-The default runtime uses `@tsuuanmi/pi-ai` streaming plus registered `AgentTool` instances supplied by the host package. External process, protocol, or ACP-style integrations should implement `AgentRuntime` and be supplied through `new Agent({ runtime })`.
+The default runtime uses `@tsuuanmi/pi-ai` streaming plus registered `Tool` instances supplied by the host package. External process, protocol, or ACP-style integrations should implement `AgentRuntime` and be supplied through `new Agent({ runtime })`.
 
 Node-specific runtime implementations belong under `@tsuuanmi/pi-agent/node` or in dedicated optional integration packages that depend on `@tsuuanmi/pi-agent` as their contract package. They should not force browser-safe core consumers to install Node-only or protocol-specific dependencies.

@@ -1,4 +1,4 @@
-import { Agent, type AgentEvent, type AgentTool } from "@tsuuanmi/pi-agent";
+import { Agent, type AgentEvent, type Tool } from "@tsuuanmi/pi-agent";
 import { Type } from "typebox";
 import { describe, expect, test } from "vitest";
 import { assistantText, assistantToolCall, doneStream, model, repeatTool } from "#agent-test/fixtures";
@@ -8,11 +8,14 @@ describe("tool output and execution", () => {
 		let streamCalls = 0;
 		const results: string[] = [];
 		const meta: AgentEvent[] = [];
-		const limitedTool = repeatTool("limited", async () => ({
-			content: [{ type: "text", text: "abcdefghijklmnopqrstuvwxyz" }],
-			details: {},
-		}));
-		limitedTool.maxOutputChars = 5;
+		const limitedTool = repeatTool(
+			"limited",
+			async () => ({
+				content: [{ type: "text", text: "abcdefghijklmnopqrstuvwxyz" }],
+				details: {},
+			}),
+			{ maxOutputChars: 5 },
+		);
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [limitedTool] },
 			maxToolOutputChars: 10,
@@ -61,11 +64,14 @@ describe("tool output and execution", () => {
 	test("validates tool result details when schema is declared", async () => {
 		let streamCalls = 0;
 		const results: Array<{ isError: boolean; text: string; status: string }> = [];
-		const tool = repeatTool("validated", async () => ({
-			content: [{ type: "text", text: "ok" }],
-			details: { count: 1 },
-		}));
-		tool.detailsSchema = Type.Object({ count: Type.Number() });
+		const tool = repeatTool(
+			"validated",
+			async () => ({
+				content: [{ type: "text", text: "ok" }],
+				details: { count: 1 },
+			}),
+			{ detailsSchema: Type.Object({ count: Type.Number() }) },
+		);
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [tool] },
 			streamFn: () => {
@@ -96,11 +102,14 @@ describe("tool output and execution", () => {
 	test("fails tool calls with invalid declared details", async () => {
 		let streamCalls = 0;
 		const results: Array<{ isError: boolean; text: string; status: string }> = [];
-		const tool = repeatTool("invalid", async () => ({
-			content: [{ type: "text", text: "bad" }],
-			details: { count: "one" },
-		}));
-		tool.detailsSchema = Type.Object({ count: Type.Number() });
+		const tool = repeatTool(
+			"invalid",
+			async () => ({
+				content: [{ type: "text", text: "bad" }],
+				details: { count: "one" },
+			}),
+			{ detailsSchema: Type.Object({ count: Type.Number() }) },
+		);
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [tool] },
 			streamFn: () => {
@@ -134,11 +143,14 @@ describe("tool output and execution", () => {
 	test("validates details replaced by afterToolCall", async () => {
 		let streamCalls = 0;
 		const statuses: string[] = [];
-		const tool = repeatTool("after-invalid", async () => ({
-			content: [{ type: "text", text: "ok" }],
-			details: { count: 1 },
-		}));
-		tool.detailsSchema = Type.Object({ count: Type.Number() });
+		const tool = repeatTool(
+			"after-invalid",
+			async () => ({
+				content: [{ type: "text", text: "ok" }],
+				details: { count: 1 },
+			}),
+			{ detailsSchema: Type.Object({ count: Type.Number() }) },
+		);
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [tool] },
 			hooks: [
@@ -220,7 +232,7 @@ describe("tool output and execution", () => {
 		let maxActiveTools = 0;
 		let streamCalls = 0;
 		const resultOrder: string[] = [];
-		const createDelayedTool = (name: string): AgentTool =>
+		const createDelayedTool = (name: string): Tool =>
 			repeatTool(name, async () => {
 				activeTools += 1;
 				maxActiveTools = Math.max(maxActiveTools, activeTools);

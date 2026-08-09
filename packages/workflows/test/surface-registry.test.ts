@@ -11,7 +11,7 @@ import {
 	WORKFLOW_SKILL_SURFACES,
 	WORKFLOW_TOOL_SURFACES,
 } from "#workflows/skills/workflow-surface-registry";
-import { registerWorkflowTools } from "#workflows/tools";
+import { registerWorkflowTools } from "#workflows/tool/index";
 
 describe("workflow surface registry", () => {
 	it("accepts repeated skill owners across multiple tool surfaces", () => {

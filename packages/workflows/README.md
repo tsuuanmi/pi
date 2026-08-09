@@ -256,7 +256,7 @@ Workflow-owned tools are model-visible and registered by the bundled workflow re
 
 ## Harness Runtime
 
-The workflow runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives directly under `src/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `artifacts/`, `audit/`, `orchestration/`, `registry/`, `session/`, `state/`, and `tools/` (adapters for agent-owned lifecycle tools). Skill-owned TypeScript and `SKILL.md` assets live together under `src/skills/<skill>/`.
+The workflow runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives directly under `src/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `artifacts/`, `audit/`, `orchestration/`, `registry/`, `session/`, `state/`, and `tool/` (workflow tool contracts, adapters, registration, and surface metadata). Skill-owned TypeScript and `SKILL.md` assets live together under `src/skills/<skill>/`.
 
 Key seams for contributors:
 
@@ -301,7 +301,7 @@ Top-level shared folders provide common utilities used by all four skills:
 | `registry/` | `transition-registry.ts`, `workflow-manifest.ts` | Workflow transition registry and manifest metadata. |
 | `session/` | `root.ts`, `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Shared session roots, workflow path builders, and session-id resolution. |
 | `state/` | `active-state.ts`, `state-schema.ts`, `state-writer.ts`, `workflow-state.ts` | Active-state, state validation/writes, workflow ids, and base state types. |
-| `tools/` | `subagent-tools.ts`, `subagent-surface.ts` | Adapts agent-owned subagent lifecycle tools to the workflow host and publishes their workflow surface metadata. |
+| `tool/` | `adapter.ts`, `subagent.ts`, `surface.ts` | Adapts and registers agent-owned subagent lifecycle tools and publishes workflow surface metadata. |
 
 Workflow types:
 
@@ -322,14 +322,14 @@ import {
 } from "@tsuuanmi/pi-workflows";
 ```
 
-`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tools`. It also exports pure team-to-orchestrator mapping helpers, workflow-owned checkpoint, event, and role-receipt stores, role-batch builders, and explicit fresh/resume execution boundaries. Pi loads the bundled workflow extension from the package manifest; `@tsuuanmi/pi-workflows/extension` is the package host adapter.
+`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tool`. It also exports pure team-to-orchestrator mapping helpers, workflow-owned checkpoint, event, and role-receipt stores, role-batch builders, and explicit fresh/resume execution boundaries. Pi loads the bundled workflow extension from the package manifest; `@tsuuanmi/pi-workflows/extension` is the package host adapter.
 
 Subpath exports:
 
 - `@tsuuanmi/pi-workflows/hooks` — workflow extension-hook registration for custom hosts.
 - `@tsuuanmi/pi-workflows/extension` — workflow tool and hook registration adapter for Pi hosts.
 - `@tsuuanmi/pi-workflows/commands/workflow` — the public `pi workflow` command entry, including `pi workflow state`.
-- `@tsuuanmi/pi-workflows/tools` — workflow tool registration helper for custom hosts.
+- `@tsuuanmi/pi-workflows/tool` — workflow tool registration helper for custom hosts.
 - `@tsuuanmi/pi-workflows/runtime/*` — individual harness runtime modules (sessions, leases, RPC, GC, mutation, storage, receipt rules, etc.).
 
 See `src/index.ts` for the complete barrel.

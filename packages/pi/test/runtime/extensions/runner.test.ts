@@ -313,7 +313,7 @@ describe("ExtensionRunner", () => {
 			expect(tools.map((t) => t.definition.name).sort()).toEqual(["tool_a", "tool_b"]);
 		});
 
-		it("keeps first tool when two extensions register the same name", async () => {
+		it("rejects duplicate tool names across extensions", async () => {
 			const first = `
 				import { Type } from "typebox";
 				export default function(pi) {
@@ -343,10 +343,7 @@ describe("ExtensionRunner", () => {
 
 			const result = await discoverAndLoadExtensions([], tempDir, tempDir);
 			const runner = new ExtensionRunner(result.extensions, result.runtime, tempDir, sessionManager, modelRegistry);
-			const tools = runner.getAllRegisteredTools();
-
-			expect(tools).toHaveLength(1);
-			expect(tools[0]?.definition.description).toBe("first");
+			expect(() => runner.getAllRegisteredTools()).toThrow('Tool "shared" is registered by multiple extensions.');
 		});
 	});
 

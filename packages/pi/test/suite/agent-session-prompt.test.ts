@@ -2,7 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { InputEvent } from "@tsuuanmi/pi/extensions";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
@@ -43,7 +43,7 @@ describe("AgentSession prompt characterization", () => {
 
 	it("handles a tool call turn and waits for the follow-up LLM response", async () => {
 		const toolRuns: string[] = [];
-		const echoTool: AgentTool = {
+		const echoTool: Tool = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo text back",
@@ -80,7 +80,7 @@ describe("AgentSession prompt characterization", () => {
 
 	it("executes multiple tool calls from one response and continues with a single follow-up response", async () => {
 		const toolRuns: string[] = [];
-		const makeTool = (name: string, delayMs: number): AgentTool => ({
+		const makeTool = (name: string, delayMs: number): Tool => ({
 			name,
 			label: name,
 			description: `${name} tool`,
@@ -258,7 +258,7 @@ describe("AgentSession prompt characterization", () => {
 			releaseToolExecution = resolve;
 		});
 		const inputEvents: InputEvent[] = [];
-		const waitTool: AgentTool = {
+		const waitTool: Tool = {
 			name: "wait",
 			label: "Wait",
 			description: "Wait for release",
@@ -311,7 +311,7 @@ describe("AgentSession prompt characterization", () => {
 		const toolRelease = new Promise<void>((resolve) => {
 			releaseToolExecution = resolve;
 		});
-		const waitTool: AgentTool = {
+		const waitTool: Tool = {
 			name: "wait",
 			label: "Wait",
 			description: "Wait for release",

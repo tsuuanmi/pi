@@ -1,4 +1,4 @@
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import { testAssistantMessage, testThinking, testToolCall } from "#pi-test/helpers/provider";
@@ -172,7 +172,7 @@ describe("AgentSession retry and event characterization", () => {
 
 	it("waits for the full loop when retry recovery produces tool calls", async () => {
 		const toolRuns: string[] = [];
-		const echoTool: AgentTool = {
+		const echoTool: Tool = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo text back",
@@ -261,7 +261,7 @@ describe("AgentSession retry and event characterization", () => {
 
 	it("emits the expected event order for a tool call turn", async () => {
 		const toolRuns: string[] = [];
-		const echoTool: AgentTool = {
+		const echoTool: Tool = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo text back",

@@ -54,7 +54,7 @@ import {
 	writeSessionState,
 } from "#workflows/runtime/storage";
 import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/runtime/types";
-import { registerWorkflowTools } from "#workflows/tools";
+import { registerWorkflowTools } from "#workflows/tool/index";
 
 const sessionId = "test-session-id";
 const execFileAsync = promisify(execFile);

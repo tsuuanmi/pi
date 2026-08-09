@@ -1,5 +1,5 @@
 import type { AgentMessage } from "#agent/messages/state";
-import type { AgentToolCall } from "#agent/runtime/config";
+import type { ToolCall } from "#agent/runtime/config";
 
 export interface AgentMessageTurn {
 	/** Messages that must be kept or dropped together to avoid orphaned tool calls/results. */
@@ -27,8 +27,8 @@ function isToolResultMessage(message: AgentMessage): message is Extract<AgentMes
 	return message.role === "toolResult";
 }
 
-function getToolCalls(message: Extract<AgentMessage, { role: "assistant" }>): AgentToolCall[] {
-	return message.content.filter((content): content is AgentToolCall => content.type === "toolCall");
+function getToolCalls(message: Extract<AgentMessage, { role: "assistant" }>): ToolCall[] {
+	return message.content.filter((content): content is ToolCall => content.type === "toolCall");
 }
 
 function createTurn(messages: AgentMessage[]): AgentMessageTurn {

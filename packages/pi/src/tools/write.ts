@@ -1,13 +1,14 @@
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { Container, getLanguageFromPath, highlightCode, keyHint, Text, type Theme } from "@tsuuanmi/pi-tui";
 import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname } from "path";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
+import { toTool } from "#pi/tool/adapter";
+import { normalizeDisplayText, renderToolPath, replaceTabs, str } from "#pi/tool/output";
+import type { PiToolSpec, ToolRenderResultOptions } from "#pi/tool/spec";
 import { resolveToCwd } from "#pi/tools/paths";
-import { normalizeDisplayText, renderToolPath, replaceTabs, str, toAgentTool } from "#pi/tools/utils";
 
 const writeSchema = Type.Object({
 	path: Type.String({ description: "Path to the file to write (relative or absolute)" }),
@@ -176,10 +177,7 @@ function formatWriteResult(
 	return `\n${theme.fg("error", output)}`;
 }
 
-export function createWriteToolDefinition(
-	cwd: string,
-	options?: WriteToolOptions,
-): ToolDefinition<typeof writeSchema, undefined> {
+export function createWriteSpec(cwd: string, options?: WriteToolOptions): PiToolSpec<typeof writeSchema, undefined> {
 	const ops = options?.operations ?? defaultWriteOperations;
 	return {
 		name: "write",
@@ -194,7 +192,6 @@ export function createWriteToolDefinition(
 			{ path, content }: { path: string; content: string },
 			signal?: AbortSignal,
 			_onUpdate?,
-			_ctx?,
 		) {
 			const absolutePath = resolveToCwd(path, cwd);
 			const dir = dirname(absolutePath);
@@ -275,6 +272,6 @@ export function createWriteToolDefinition(
 	};
 }
 
-export function createWriteTool(cwd: string, options?: WriteToolOptions): AgentTool<typeof writeSchema> {
-	return toAgentTool(createWriteToolDefinition(cwd, options));
+export function createWriteTool(cwd: string, options?: WriteToolOptions): Tool<typeof writeSchema> {
+	return toTool(createWriteSpec(cwd, options));
 }

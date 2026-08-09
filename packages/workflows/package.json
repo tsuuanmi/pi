@@ -14,9 +14,9 @@
 			"types": "./dist/commands/workflow.d.ts",
 			"import": "./dist/commands/workflow.js"
 		},
-		"./tools": {
-			"types": "./dist/tools.d.ts",
-			"import": "./dist/tools.js"
+		"./tool": {
+			"types": "./dist/tool/index.d.ts",
+			"import": "./dist/tool/index.js"
 		},
 		"./hooks": {
 			"types": "./dist/hooks.d.ts",

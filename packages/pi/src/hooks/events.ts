@@ -5,6 +5,7 @@ import type { BashResult } from "#pi/execution/bash";
 import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 import type { CompactionPreparation, CompactionResult } from "#pi/session/compaction/index";
 import type { BranchSummaryEntry, CompactionEntry, SessionEntry } from "#pi/session/manager";
+import type { EditToolDetails } from "#pi/tools/edit";
 import type {
 	BashToolDetails,
 	BashToolInput,
@@ -20,8 +21,7 @@ import type {
 	ReadToolDetails,
 	ReadToolInput,
 	WriteToolInput,
-} from "#pi/tools/default-tools";
-import type { EditToolDetails } from "#pi/tools/edit";
+} from "#pi/tools/index";
 
 // ============================================================================
 // Startup/Resource Events

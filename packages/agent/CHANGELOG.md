@@ -9,7 +9,7 @@
 - **hooks**: Replaced the individual `AgentOptions` lifecycle and tool hook callbacks with named `AgentHook` registrations through `Agent.registerHook()`.
 - **agent**: Collapsed the split simple/runtime Agent surface into one public runtime-capable `Agent`; `RuntimeAgent` is no longer exported.
 - **agent**: Standardized custom runtimes on `AgentRuntime.stream()` and removed split `runPrompt()`/`continue()` runtime methods.
-- **agent**: Standardized the public tool module on `src/tool`, with `createToolRegistry()`, `registerTool()`, `Agent.registerTool()`, and `RegisterToolOptions`.
+- **tool**: Replaced the split tool interfaces and helper functions with `Tool`, `ToolSpec`, and `ToolRegistry`; agents now manage active tools through `Agent.setTools()` and `Agent.getTools()`.
 - **node**: Renamed the process runtime public API to `ProcessRuntime` and `ProcessRuntimeOptions`.
 - **team**: Replaced the positional `Team` constructor with `new Team({ name, agents })`.
 - **task**: Replaced legacy sequential task IDs and permissive task metadata/dependency handling with UUID-backed IDs, strict metadata validation/redaction, skipped lifecycle state, and fail-fast dependency validation.
@@ -35,7 +35,7 @@
 - **agent**: Added provider request timeouts for deterministic stream aborts.
 - **agent**: Added structured tool execution metadata for final tool events.
 - **agent**: Added request and tool trace spans for runtime observability.
-- **tool**: Added `defineTool()` for validated TypeBox-native tool declarations.
+- **tool**: Added `Tool.define()` for validated TypeBox-native tool declarations.
 - **subagents**: Added host-neutral lifecycle tool definitions and centralized thinking-level parsing in `@tsuuanmi/pi-agent`.
 - **tool**: Added opt-in TypeBox validation for tool result details.
 - **agent**: Added context-pruning helpers for sliding-window transforms that preserve assistant tool calls with matching tool results.

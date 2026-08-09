@@ -9,7 +9,7 @@
 - **commands**: Removed the `@tsuuanmi/pi-workflows/commands/state-command` compatibility export; use `commands/workflow`.
 - **quality-gate**: CLI validation now accepts Node commands only; alternate-runtime command support was removed.
 - **exports**: Renamed workflow runtime and command implementation modules; direct runtime imports now use `runtime/fallback-commands` and `runtime/lifecycle`.
-- **exports**: Replaced `@tsuuanmi/pi-workflows/register` and `@tsuuanmi/pi-workflows/tools/workflow-tools` with `@tsuuanmi/pi-workflows/extension` and `@tsuuanmi/pi-workflows/tools`.
+- **exports**: Replaced the mixed workflow tool surface with `@tsuuanmi/pi-workflows/tool`; workflow specs now adapt to the core `Tool` contract.
 - **session**: Removed implicit latest-session discovery and activity-marker writes; every workflow operation now requires an explicit session source.
 - **subagents**: Removed workflow-owned subagent contracts and thinking-level exports; lifecycle behavior now comes from `@tsuuanmi/pi-agent` through the workflow tool adapter.
 

@@ -1,9 +1,9 @@
 import { join } from "node:path";
-import type { SubagentManager as SubagentManagerContract } from "@tsuuanmi/pi-agent";
+import type { SubagentManager as SubagentManagerContract, Tool } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/storage";
-import type { SessionStartEvent, ToolDefinition } from "#pi/loader/extensions/index";
+import type { SessionStartEvent } from "#pi/loader/extensions/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { getAgentDir } from "#pi/loader/paths";
 import {
@@ -67,7 +67,7 @@ export interface CreateAgentSessionFromServicesOptions {
 	tools?: string[];
 	excludeTools?: CreateAgentSessionOptions["excludeTools"];
 	noTools?: CreateAgentSessionOptions["noTools"];
-	customTools?: ToolDefinition[];
+	customTools?: Tool[];
 	skipWorkflowContinuation?: boolean;
 	/** Extra system prompt appended to this session's rebuilt base prompt. */
 	extraSystemPrompt?: string;

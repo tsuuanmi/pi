@@ -1,13 +1,14 @@
 import { lstat, readdir } from "node:fs/promises";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import type { Theme } from "@tsuuanmi/pi-tui";
 import { keyHint, Text } from "@tsuuanmi/pi-tui";
 import path from "path";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition, ToolRenderResultOptions } from "#pi/api/tool-types";
+import { toTool } from "#pi/tool/adapter";
+import { getTextOutput, invalidArgText, shortenPath, str } from "#pi/tool/output";
+import type { PiToolSpec, ToolRenderResultOptions } from "#pi/tool/spec";
 import { resolveToCwd } from "#pi/tools/paths";
-import { getTextOutput, invalidArgText, shortenPath, str, toAgentTool } from "#pi/tools/utils";
 
 const DEFAULT_MAX_FILES = 500;
 const SKIP_DIRS = new Set([".git", ".svn", ".hg", "node_modules", ".next", "dist", "build"]);
@@ -177,10 +178,10 @@ function formatGlobResult(
 	return text;
 }
 
-export function createGlobToolDefinition(
+export function createGlobSpec(
 	cwd: string,
 	options?: GlobToolOptions,
-): ToolDefinition<typeof globSchema, GlobToolDetails | undefined> {
+): PiToolSpec<typeof globSchema, GlobToolDetails | undefined> {
 	const ops = options?.operations ?? defaultGlobOperations;
 	return {
 		name: "glob",
@@ -194,7 +195,6 @@ export function createGlobToolDefinition(
 			{ path: inputPath, pattern, maxFiles }: { path?: string; pattern?: string; maxFiles?: number },
 			signal?: AbortSignal,
 			_onUpdate?,
-			_ctx?,
 		) {
 			if (signal?.aborted) throw new Error("Operation aborted");
 			const startedAt = Date.now();
@@ -260,6 +260,6 @@ export function createGlobToolDefinition(
 	};
 }
 
-export function createGlobTool(cwd: string, options?: GlobToolOptions): AgentTool<typeof globSchema> {
-	return toAgentTool(createGlobToolDefinition(cwd, options));
+export function createGlobTool(cwd: string, options?: GlobToolOptions): Tool<typeof globSchema> {
+	return toTool(createGlobSpec(cwd, options));
 }

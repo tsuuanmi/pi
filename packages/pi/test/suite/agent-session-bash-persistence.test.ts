@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import type { BashOperations } from "#pi/tools/bash";
@@ -40,7 +40,7 @@ describe("AgentSession bash and persistence characterization", () => {
 		const toolRelease = new Promise<void>((resolve) => {
 			releaseToolExecution = resolve;
 		});
-		const waitTool: AgentTool = {
+		const waitTool: Tool = {
 			name: "wait",
 			label: "Wait",
 			description: "Wait for release",
@@ -133,7 +133,7 @@ describe("AgentSession bash and persistence characterization", () => {
 	});
 
 	it("persists user, assistant, toolResult, and custom messages in order", async () => {
-		const echoTool: AgentTool = {
+		const echoTool: Tool = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo text back",

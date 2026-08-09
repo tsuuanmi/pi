@@ -2,13 +2,14 @@
 
 `@tsuuanmi/pi-agent` owns the reusable subagent contract and host-neutral lifecycle tool definitions. The workflow package owns the host adapter, workflow receipts, surface metadata, and workflow-specific agent execution. Pi-native inspect, attach, and kill controls remain registered by Pi separately.
 
-**Sources:** `@tsuuanmi/pi-agent/src/subagents/`, `src/tools.ts`, `src/tools/subagent-tools.ts`, `src/tools/subagent-surface.ts`, and skill modules under `src/skills/*/`.
+**Sources:** `@tsuuanmi/pi-agent/src/subagents/`, `src/tool/adapter.ts`, `src/tool/subagent.ts`, `src/tool/register.ts`, `src/tool/surface.ts`, and skill modules under `src/skills/*/`.
 
 ## Ownership
 
 - `@tsuuanmi/pi-agent`: `SubagentManager`, run/record/result types, thinking-level validation, progress, receipts, and host-neutral lifecycle tools.
-- `src/tools/subagent-tools.ts`: maps the required agent `SubagentToolContext` to `WorkflowContext`, registers the core definitions, and wraps structured receipts in workflow receipts.
-- `src/tools/subagent-surface.ts`: publishes workflow surface metadata derived from the agent tool definitions.
+- `src/tool/adapter.ts`: maps the required agent `SubagentContext` to `WorkflowContext` and wraps structured receipts in workflow receipts.
+- `src/tool/subagent.ts`: registers the adapted core lifecycle definitions.
+- `src/tool/surface.ts`: publishes workflow surface metadata derived from the agent tool definitions.
 - `src/skills/*/`: owns workflow policy, role guards, artifact persistence, and orchestrator integration.
 - `@tsuuanmi/pi`: owns Pi-native inspect, attach, and kill controls separately.
 
@@ -38,7 +39,7 @@ The workflow extension registers these model-visible tools:
 | `team_resume` | Resume Team execution from an orchestrator checkpoint. |
 | `ultragoal_spawn_goal_agent` | Spawn the next legal Ultragoal goal worker. |
 
-Direct manager calls are limited to the workflow adapter and worker adapters: `src/tools/subagent-tools.ts`, `src/skills/team/agent-adapter.ts`, `src/skills/ralplan/agent-adapter.ts`, and `src/skills/ultragoal/tools.ts`. Ralplan and Team roles call the Orchestrator through workflow-owned adapters; the detached workflow owner is lifecycle-only. Workflows must use the Orchestrator for generic task dependencies, routing, retries, queues, or agent collaboration.
+Direct manager calls are limited to the workflow adapter and worker adapters: `src/tool/adapter.ts`, `src/skills/team/agent-adapter.ts`, `src/skills/ralplan/agent-adapter.ts`, and `src/skills/ultragoal/tools.ts`. Ralplan and Team roles call the Orchestrator through workflow-owned adapters; the detached workflow owner is lifecycle-only. Workflows must use the Orchestrator for generic task dependencies, routing, retries, queues, or agent collaboration.
 
 ## Guarded Workflow Execution
 
@@ -51,7 +52,7 @@ Direct manager calls are limited to the workflow adapter and worker adapters: `s
 Core lifecycle tools receive:
 
 ```typescript
-interface SubagentToolContext {
+interface SubagentContext {
   manager: SubagentManager;
   sessionId: string;
 }
@@ -63,7 +64,7 @@ The workflow adapter constructs this required context from the optional `Workflo
 
 `pi workflow ...` is the external CLI control plane for state, artifacts, gates, receipts, status, approval, and runtime owner lifecycle. It parses CLI input and returns command status/output; it does not invoke model-visible tools.
 
-Model-visible tools are the separate in-process surface for the current Pi session. Agent-owned lifecycle tools are adapted under `src/tools/`; skill-specific tools remain under `src/skills/<skill>/`. `src/tools.ts` is the workflow tool contract and registration aggregator; it is not a second implementation directory.
+Model-visible tools are the separate in-process surface for the current Pi session. Agent-owned lifecycle tools are adapted under `src/tool/`; skill-specific tools remain under `src/skills/<skill>/`. `src/tool/spec.ts` and `src/tool/host.ts` define the workflow contract, while `src/tool/register.ts` aggregates registration.
 
 When a command and a tool expose related behavior, both may call the same lower-level runtime or skill function. The command and tool adapters do not call each other.
 

@@ -7,7 +7,7 @@ import { createRoleBatch } from "#workflows/skills/team/role-tasks";
 import { markWorkerInProgress } from "#workflows/skills/team/role-transitions";
 import { readTeamSnapshot, type TeamSnapshot } from "#workflows/skills/team/runtime";
 import { defaultWorkflowId } from "#workflows/state/workflow-state";
-import type { WorkflowContext } from "#workflows/tools";
+import type { WorkflowContext } from "#workflows/tool/context";
 
 export interface TeamExecuteInput {
 	teamId?: string;

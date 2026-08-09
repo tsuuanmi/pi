@@ -50,12 +50,6 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/api/tool-types.ts::defineTool",
-			"file": "packages/pi/src/api/tool-types.ts",
-			"name": "defineTool",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/pi/src/cli/launch-tmux.ts::buildTmuxUnavailableReceipt",
 			"file": "packages/pi/src/cli/launch-tmux.ts",
 			"name": "buildTmuxUnavailableReceipt",
@@ -128,12 +122,6 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/runtime/extensions/tools.ts::wrapRegisteredTool",
-			"file": "packages/pi/src/runtime/extensions/tools.ts",
-			"name": "wrapRegisteredTool",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/pi/src/runtime/platform.ts::getPiUserAgent",
 			"file": "packages/pi/src/runtime/platform.ts",
 			"name": "getPiUserAgent",
@@ -173,6 +161,24 @@
 			"key": "packages/workflows/src/commands/workflow/index.ts::handlePackageCommand",
 			"file": "packages/workflows/src/commands/workflow/index.ts",
 			"name": "handlePackageCommand",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/workflows/src/session/root.ts::decodePathSegment",
+			"file": "packages/workflows/src/session/root.ts",
+			"name": "decodePathSegment",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/workflows/src/session/root.ts::sessionDirName",
+			"file": "packages/workflows/src/session/root.ts",
+			"name": "sessionDirName",
+			"kind": "exported"
+		},
+		{
+			"key": "packages/workflows/src/session/root.ts::sessionIdFromDirName",
+			"file": "packages/workflows/src/session/root.ts",
+			"name": "sessionIdFromDirName",
 			"kind": "exported"
 		},
 		{

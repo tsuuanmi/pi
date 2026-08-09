@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
@@ -96,7 +96,7 @@ describe("AgentSession model and extension characterization", () => {
 	});
 
 	it("allows extension tool_call handlers to block tool execution", async () => {
-		const echoTool: AgentTool = {
+		const echoTool: Tool = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo text back",
@@ -138,7 +138,7 @@ describe("AgentSession model and extension characterization", () => {
 	});
 
 	it("allows extension tool_result handlers to modify tool results", async () => {
-		const echoTool: AgentTool = {
+		const echoTool: Tool = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo text back",

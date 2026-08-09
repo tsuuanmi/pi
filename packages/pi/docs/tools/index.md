@@ -4,9 +4,9 @@ Pi's built-in tool system providing file operations, shell execution, and code s
 
 ## Overview
 
-Pi ships with nine built-in tools that the agent can use to interact with the filesystem, execute commands, search code, and query language servers. Pi owns the concrete tool implementations and helper modules; `@tsuuanmi/pi-agent` owns the generic `AgentTool` protocol and registration APIs. Each tool follows a pluggable operations pattern that allows extensions to delegate execution to remote systems (for example SSH).
+Pi ships with nine built-in tools that the agent can use to interact with the filesystem, execute commands, search code, and query language servers. Pi owns the concrete tool implementations and helper modules; `@tsuuanmi/pi-agent` owns the generic `Tool` protocol and registration APIs. Each tool follows a pluggable operations pattern that allows extensions to delegate execution to remote systems (for example SSH).
 
-At runtime, Pi wraps built-in and extension tool definitions, registers the resulting `AgentTool` instances through `createToolRegistry()`/`registerTool()` from `@tsuuanmi/pi-agent`, and passes the active tool list to the agent.
+At runtime, Pi converts built-in `PiToolSpec` and extension `ExtensionToolSpec` values into `Tool` instances, registers them with a `ToolRegistry`, and passes the active tool list to the agent.
 
 Tools are grouped into two categories:
 
@@ -17,15 +17,15 @@ Tools are grouped into two categories:
 
 | Tool | Factory | Description |
 |------|---------|-------------|
-| `read` | `createReadTool` / `createReadToolDefinition` | Read file contents with optional offset/limit |
-| `bash` | `createBashTool` / `createBashToolDefinition` | Execute shell commands |
-| `edit` | `createEditTool` / `createEditToolDefinition` | Make surgical edits to files |
-| `write` | `createWriteTool` / `createWriteToolDefinition` | Create or overwrite files |
-| `lsp` | `createLspTool` / `createLspToolDefinition` | Query Language Server Protocol servers for diagnostics, symbols, hover, definitions, and references; prefer before grep/find for symbol-aware code intelligence |
-| `grep` | `createGrepTool` / `createGrepToolDefinition` | Search file contents with regex |
-| `find` | `createFindTool` / `createFindToolDefinition` | Search for files by name or pattern |
-| `glob` | `createGlobTool` / `createGlobToolDefinition` | List file paths by filename glob without reading contents |
-| `ls` | `createLsTool` / `createLsToolDefinition` | List directory contents |
+| `read` | `createReadTool` / `createReadSpec` | Read file contents with optional offset/limit |
+| `bash` | `createBashTool` / `createBashSpec` | Execute shell commands |
+| `edit` | `createEditTool` / `createEditSpec` | Make surgical edits to files |
+| `write` | `createWriteTool` / `createWriteSpec` | Create or overwrite files |
+| `lsp` | `createLspTool` / `createLspSpec` | Query Language Server Protocol servers for diagnostics, symbols, hover, definitions, and references; prefer before grep/find for symbol-aware code intelligence |
+| `grep` | `createGrepTool` / `createGrepSpec` | Search file contents with regex |
+| `find` | `createFindTool` / `createFindSpec` | Search for files by name or pattern |
+| `glob` | `createGlobTool` / `createGlobSpec` | List file paths by filename glob without reading contents |
+| `ls` | `createLsTool` / `createLsSpec` | List directory contents |
 
 ## Tool Parameters
 
@@ -116,19 +116,20 @@ Prefer `lsp` before `grep` or `find` for supported code intelligence tasks such 
 
 Each tool is composed of:
 
-1. **Definition** — Pi-specific TypeBox and TUI metadata, created by the `createXToolDefinition` function
-2. **Implementation** — Async function that executes the tool, created by the `createXTool` function
-3. **Display** — Optional TUI rendering for tool calls and results
+1. **PiToolSpec** — Pi-specific TypeBox and TUI metadata, created by `createXSpec`
+2. **ExtensionToolSpec** — Extension-facing specs that receive `ExtensionContext`
+3. **Tool** — The validated runtime tool created by `Tool.define()` in the Pi adapter
+4. **Display** — Optional TUI rendering for tool calls and results
 
-Pi converts these definitions into the runtime-standard `AgentTool` contract from `@tsuuanmi/pi-agent` before registration. The agent package owns execution and registration; Pi owns tool schemas, extension context, and TUI rendering.
+Pi converts each host spec into the runtime `Tool` contract from `@tsuuanmi/pi-agent` before registration. The agent package owns tool execution and registration; Pi owns extension context and TUI rendering.
 
 ### Factory Functions
 
 The tools module provides three factory functions for creating tool sets:
 
 ```typescript
-// Create all 9 tool definitions (for extension registration)
-const definitions = createToolDefinitions(cwd, options);
+// Create all 9 Pi tool specifications (for host registration)
+const specs = createToolSpecs(cwd, options);
 
 // Create default coding tool instances (read, bash, edit, write, lsp)
 const codingTools = createCodingTools(cwd, options);
@@ -273,21 +274,25 @@ function formatSize(bytes: number): string);
 
 ## Creating Custom Tools
 
-Extensions can register tools via the `tools` export:
+A Pi extension registers an `ExtensionToolSpec`. Pi binds the extension context and creates the runtime `Tool` before adding it to the agent registry:
 
 ```typescript
-export default {
-  tools: [
-    {
-      name: "my-tool",
-      description: "Does something useful",
-      parameters: { /* TypeBox schema */ },
-      execute: async (args) => {
-        return { content: [{ type: "text", text: "result" }] };
-      },
-    },
-  ],
-};
+import type { ExtensionAPI, ExtensionToolSpec } from "@tsuuanmi/pi/extensions";
+import { Type } from "typebox";
+
+export default function register(pi: ExtensionAPI): void {
+  const spec: ExtensionToolSpec = {
+    name: "my-tool",
+    label: "My Tool",
+    description: "Does something useful",
+    parameters: Type.Object({}),
+    execute: async (_toolCallId, _params, _signal, _onUpdate, _context) => ({
+      content: [{ type: "text", text: "result" }],
+      details: {},
+    }),
+  };
+  pi.registerTool(spec);
+}
 ```
 
 ## See Also

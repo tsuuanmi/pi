@@ -26,6 +26,7 @@ import type {
 	StreamFn,
 	ToolExecutionMode,
 } from "#agent/runtime/config";
+import type { AgentContext } from "#agent/runtime/context";
 import type { AgentEvent } from "#agent/runtime/events";
 import {
 	type AgentHook,
@@ -43,8 +44,8 @@ import {
 	type RunResult,
 } from "#agent/runtime/runtime";
 import type { AgentRunOptions, AgentRunResult } from "#agent/runtime/types";
-import { createToolRegistry, type RegisterToolOptions, registerTool as registerToolSet } from "#agent/tool/registry";
-import type { AgentContext, AgentTool } from "#agent/tool/types";
+import { ToolRegistry } from "#agent/tool/registry";
+import type { Tool } from "#agent/tool/tool";
 
 export type { QueueMode } from "#agent/runtime/config";
 
@@ -83,7 +84,11 @@ const DEFAULT_MODEL = {
 	maxTokens: 0,
 } satisfies Model<any>;
 
-type MutableAgentState = Omit<AgentState, "isStreaming" | "streamingMessage" | "pendingToolCalls" | "errorMessage"> & {
+type MutableAgentState = Omit<
+	AgentState,
+	"tools" | "isStreaming" | "streamingMessage" | "pendingToolCalls" | "errorMessage"
+> & {
+	tools: Tool[];
 	isStreaming: boolean;
 	streamingMessage?: AgentMessage;
 	pendingToolCalls: Set<string>;
@@ -93,19 +98,14 @@ type MutableAgentState = Omit<AgentState, "isStreaming" | "streamingMessage" | "
 function createMutableAgentState(
 	initialState?: Partial<Omit<AgentState, "pendingToolCalls" | "isStreaming" | "streamingMessage" | "errorMessage">>,
 ): MutableAgentState {
-	let tools = initialState?.tools?.slice() ?? [];
+	const tools = new ToolRegistry(initialState?.tools ?? []).list();
 	let messages = initialState?.messages?.slice() ?? [];
 
 	return {
 		systemPrompt: initialState?.systemPrompt ?? "",
 		model: initialState?.model ?? DEFAULT_MODEL,
 		thinkingLevel: initialState?.thinkingLevel ?? "off",
-		get tools() {
-			return tools;
-		},
-		set tools(nextTools: AgentTool<any>[]) {
-			tools = nextTools.slice();
-		},
+		tools,
 		get messages() {
 			return messages;
 		},
@@ -320,23 +320,23 @@ export class Agent {
 		return this.hookRegistry.register(hook);
 	}
 
-	/**
-	 * Current agent state.
-	 *
-	 * Assigning `state.tools` or `state.messages` copies the provided top-level array.
-	 */
+	/** Current agent state. */
 	get state(): AgentState {
 		return this._state;
 	}
 
-	/** Register tools by name. Duplicate names throw unless the active set is replaced first. */
-	registerTool(tools: Iterable<AgentTool>, options?: RegisterToolOptions): AgentTool[] {
+	/** Replace the active tool set with validated, name-unique tools. */
+	setTools(tools: Iterable<Tool>): Tool[] {
 		this.assertNotDisposed();
-		const registry = createToolRegistry(options?.replace ? [] : this._state.tools);
-		registerToolSet(registry, tools, options);
+		const registry = new ToolRegistry(tools);
 		const nextTools = registry.list();
 		this._state.tools = nextTools;
-		return nextTools;
+		return [...nextTools];
+	}
+
+	/** Return a snapshot of the active tools. */
+	getTools(): Tool[] {
+		return [...this._state.tools];
 	}
 
 	private assertNotDisposed(): void {

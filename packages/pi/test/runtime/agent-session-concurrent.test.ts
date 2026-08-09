@@ -16,7 +16,7 @@ import {
 import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
-import { installAgentToolHooks } from "#pi/hooks/agent-bridge";
+import { installToolHooks } from "#pi/hooks/agent-bridge";
 import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { AgentSession } from "#pi/runtime/agent-session";
@@ -480,10 +480,7 @@ describe("AgentSession concurrent prompt guard", () => {
 		};
 		// Replace the construction-time bridge with the mocked runner.
 		sessionWithRunner._agentToolHookDisposer?.();
-		installAgentToolHooks(
-			agent,
-			sessionWithRunner._extensionRunner as unknown as Parameters<typeof installAgentToolHooks>[1],
-		);
+		installToolHooks(agent, sessionWithRunner._extensionRunner as unknown as Parameters<typeof installToolHooks>[1]);
 
 		await session.prompt("hi");
 		await session.agent.waitForIdle();

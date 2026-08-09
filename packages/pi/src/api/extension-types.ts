@@ -10,7 +10,6 @@ import type {
 	ReplacedSessionContext,
 } from "#pi/api/context-types";
 import type { ProviderConfig } from "#pi/api/provider-types";
-import type { ToolDefinition } from "#pi/api/tool-types";
 import type { ProgramOptions, ProgramResult } from "#pi/execution/program";
 import type { ExtensionHookAPI } from "#pi/hooks/api";
 import type { EventBus } from "#pi/hooks/event-bus";
@@ -18,6 +17,7 @@ import type { HookHandlerFn } from "#pi/hooks/register";
 import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 import type { SourceInfo } from "#pi/resources/source-info";
 import type { SessionManager } from "#pi/session/manager";
+import type { ExtensionToolSpec } from "#pi/tool/spec";
 
 export interface MessageRenderOptions {
 	expanded: boolean;
@@ -52,7 +52,7 @@ export interface SlashCommandInfo {
 
 export interface ExtensionAPI extends ExtensionHookAPI {
 	registerTool<TParams extends TSchema = TSchema, TDetails = unknown, TState = any>(
-		tool: ToolDefinition<TParams, TDetails, TState>,
+		tool: ExtensionToolSpec<TParams, TDetails, TState>,
 	): void;
 	unregisterTool(name: string): void;
 	refreshTools(options?: { includeAllExtensionTools?: boolean }): void;
@@ -99,7 +99,7 @@ export interface ExtensionAPI extends ExtensionHookAPI {
 export type ExtensionFactory = (pi: ExtensionAPI) => void | Promise<void>;
 
 export interface RegisteredTool {
-	definition: ToolDefinition;
+	definition: ExtensionToolSpec;
 	sourceInfo: SourceInfo;
 }
 
@@ -132,7 +132,7 @@ export type AppendEntryHandler = <T = unknown>(customType: string, data?: T) => 
 export type SetSessionNameHandler = (name: string) => void;
 export type GetSessionNameHandler = () => string | undefined;
 export type GetActiveToolsHandler = () => string[];
-export type ToolInfo = Pick<ToolDefinition, "name" | "description" | "parameters" | "promptGuidelines"> & {
+export type ToolInfo = Pick<ExtensionToolSpec, "name" | "description" | "parameters" | "promptGuidelines"> & {
 	sourceInfo: SourceInfo;
 };
 export type GetAllToolsHandler = () => ToolInfo[];

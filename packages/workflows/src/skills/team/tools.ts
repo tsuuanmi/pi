@@ -1,6 +1,6 @@
 import { Type } from "typebox";
 import { executeRole, resumeRole } from "#workflows/skills/team/coordinator";
-import type { WorkflowToolHost } from "#workflows/tools";
+import type { WorkflowToolHost } from "#workflows/tool/host";
 
 const agentSchema = Type.Object({
 	id: Type.String({ description: "Unique runtime agent id." }),

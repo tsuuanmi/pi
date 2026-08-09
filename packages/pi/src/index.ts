@@ -171,14 +171,14 @@ export {
 	type BashToolDetails,
 	type BashToolInput,
 	type BashToolOptions,
-	createBashToolDefinition,
-	createEditToolDefinition,
-	createFindToolDefinition,
-	createGrepToolDefinition,
+	createBashSpec,
+	createEditSpec,
+	createFindSpec,
+	createGrepSpec,
 	createLocalBash,
-	createLsToolDefinition,
-	createReadToolDefinition,
-	createWriteToolDefinition,
+	createLsSpec,
+	createReadSpec,
+	createWriteSpec,
 	DEFAULT_MAX_BYTES,
 	DEFAULT_MAX_LINES,
 	type EditOperations,
@@ -211,7 +211,7 @@ export {
 	type WriteOperations,
 	type WriteToolInput,
 	type WriteToolOptions,
-} from "#pi/tools/default-tools";
+} from "#pi/tools/index";
 // UI components for extensions
 export {
 	AssistantMessageComponent,

@@ -4,7 +4,8 @@ import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { assertExpectedNextRole, assertNoGuardedSpawnOverrides } from "#workflows/policy/expected-next-role";
 import { expectedNextRoleForSkill } from "#workflows/registry/transition-registry";
 import { getUltragoalStatus } from "#workflows/skills/ultragoal/runtime";
-import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools";
+import type { WorkflowContext } from "#workflows/tool/context";
+import type { WorkflowToolHost } from "#workflows/tool/host";
 
 const ultragoalSpawnGoalAgentSchema = Type.Object({
 	goalId: Type.String({ description: "Goal id to assign to the subagent." }),
@@ -60,8 +61,8 @@ async function executeUltragoalSpawnGoalAgent(
 	};
 }
 
-export function registerUltragoalTools(pi: WorkflowToolHost): void {
-	pi.registerTool({
+export function registerUltragoalTools(host: WorkflowToolHost): void {
+	host.registerTool({
 		name: "ultragoal_spawn_goal_agent",
 		label: "Ultragoal Spawn Goal Agent",
 		description: "Spawn a subagent to achieve an ultragoal goal.",

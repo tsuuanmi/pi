@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
-import type { SubagentManager } from "@tsuuanmi/pi-agent";
-import { Agent, convertToLlm, type LoopDetectionOptions } from "@tsuuanmi/pi-agent";
+import { Agent, convertToLlm, type LoopDetectionOptions, type SubagentManager, type Tool } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { clampThinkingLevel, type Model, mergeHeaderSources, type ProviderResponse, stream } from "@tsuuanmi/pi-ai";
@@ -9,7 +8,7 @@ import { formatNoModelsAvailableMessage } from "#pi/auth/guidance";
 import { AuthStorage } from "#pi/auth/storage";
 import { findInitialModel } from "#pi/cli/model-resolver";
 import { DEFAULT_THINKING_LEVEL } from "#pi/cli/thinking-level";
-import type { LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "#pi/loader/extensions/index";
+import type { LoadExtensionsResult, SessionStartEvent } from "#pi/loader/extensions/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { getAgentDir } from "#pi/loader/paths";
 import type { ResourceLoader } from "#pi/loader/resources";
@@ -32,7 +31,7 @@ import {
 	createReadTool,
 	createWriteTool,
 	type ToolName,
-} from "#pi/tools/default-tools";
+} from "#pi/tools/index";
 import { WebProviderRegistry } from "#pi/web-providers/registry";
 import { createWebStream, type WebToolExecutor } from "../web-providers/stream.ts";
 
@@ -73,7 +72,7 @@ export interface CreateAgentSessionOptions {
 	/** Optional denylist of tool names to disable. Applies after `tools` when both are provided. */
 	excludeTools?: string[];
 	/** Custom tools to register (in addition to built-in tools). */
-	customTools?: ToolDefinition[];
+	customTools?: Tool[];
 	/** Detect repeated assistant turns. Pass true for conservative tool-call detection. Default: disabled. */
 	loopDetection?: boolean | LoopDetectionOptions;
 
@@ -116,11 +115,9 @@ export type {
 	ExtensionFactory,
 	SlashCommandInfo,
 	SlashCommandSource,
-	ToolDefinition,
 } from "#pi/loader/extensions/index";
 export type { PromptTemplate } from "#pi/loader/prompt-templates";
 export type { Skill } from "#pi/loader/skill";
-export type { Tool } from "#pi/tools/default-tools";
 
 export {
 	// Tool factories (for custom cwd)
@@ -198,7 +195,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	let agent: Agent | undefined;
 	const webHost = resourceLoader.getWebProviderHost();
 	const executeWebTool: WebToolExecutor = async (name, input, signal) => {
-		const tool = agent?.state.tools.find((candidate) => candidate.name === name);
+		const tool = agent?.getTools().find((candidate) => candidate.name === name);
 		if (!tool) throw new Error(`unsupported web tool: ${name}`);
 		const parameters = tool.prepareArguments ? tool.prepareArguments(input) : input;
 		return tool.execute(randomUUID(), parameters as never, signal);

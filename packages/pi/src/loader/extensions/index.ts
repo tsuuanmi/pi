@@ -8,8 +8,6 @@
 export type * from "#pi/api/context-types";
 export type * from "#pi/api/extension-types";
 export type * from "#pi/api/provider-types";
-export type * from "#pi/api/tool-types";
-export { defineTool } from "#pi/api/tool-types";
 export type * from "#pi/api/ui-types";
 export type * from "#pi/hooks/api";
 export type { EventBus, EventBusController } from "#pi/hooks/event-bus";
@@ -26,3 +24,4 @@ export {
 	isWriteToolResult,
 } from "#pi/hooks/events";
 export type { SourceInfo } from "#pi/resources/source-info";
+export type * from "#pi/tool/spec";

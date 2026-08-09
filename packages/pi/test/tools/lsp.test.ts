@@ -37,6 +37,8 @@ describe("lsp tool", () => {
 			if (symbolsContent?.type !== "text") throw new Error("Expected text symbols content");
 			expect(symbolsContent.text).toContain("Function add");
 			expect(symbolsContent.text).toContain("Constant total");
+			expect(symbols.details).toBeDefined();
+			if (!symbols.details) throw new Error("Expected LSP symbol details");
 			expect(symbols.details.serverName).toBe("typescript-language-server");
 
 			const pythonSymbols = await tool.execute("symbols", { action: "symbols", file: "main.py", timeout: 20 });
@@ -44,6 +46,8 @@ describe("lsp tool", () => {
 			expect(pythonSymbolsContent?.type).toBe("text");
 			if (pythonSymbolsContent?.type !== "text") throw new Error("Expected text Python symbols content");
 			expect(pythonSymbolsContent.text).toContain("Function greet");
+			expect(pythonSymbols.details).toBeDefined();
+			if (!pythonSymbols.details) throw new Error("Expected Python symbol details");
 			expect(pythonSymbols.details.serverName).toBe("pyright");
 		} finally {
 			await rm(cwd, { recursive: true, force: true });

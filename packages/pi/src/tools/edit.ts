@@ -1,4 +1,4 @@
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import type { Tool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type { Theme } from "@tsuuanmi/pi-tui";
@@ -6,18 +6,25 @@ import { Box, Container, renderDiff, Spacer, Text } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
 import { type Static, Type } from "typebox";
-import type { ToolDefinition } from "#pi/api/tool-types";
-import { computeEditsDiff, type EditDiffError, type EditDiffResult, generateDiffString, generateUnifiedPatch } from "#pi/tools/edit-diff";
+import { toTool } from "#pi/tool/adapter";
+import { renderToolPath, str } from "#pi/tool/output";
+import type { PiToolSpec } from "#pi/tool/spec";
+import {
+	computeEditsDiff,
+	type EditDiffError,
+	type EditDiffResult,
+	generateDiffString,
+	generateUnifiedPatch,
+} from "#pi/tools/edit-diff";
 import {
 	applyEditsToNormalizedContent,
 	detectLineEnding,
+	type Edit,
 	normalizeToLF,
 	restoreLineEndings,
 	stripBom,
-	type Edit,
 } from "#pi/tools/edit-operations";
 import { resolveToCwd } from "#pi/tools/paths";
-import { renderToolPath, str, toAgentTool } from "#pi/tools/utils";
 
 type EditPreview = EditDiffResult | EditDiffError;
 
@@ -237,10 +244,10 @@ function setEditPreview(
 	return changed;
 }
 
-export function createEditToolDefinition(
+export function createEditSpec(
 	cwd: string,
 	options?: EditToolOptions,
-): ToolDefinition<typeof editSchema, EditToolDetails | undefined, EditRenderState> {
+): PiToolSpec<typeof editSchema, EditToolDetails | undefined, EditRenderState> {
 	const ops = options?.operations ?? defaultEditOperations;
 	return {
 		name: "edit",
@@ -257,7 +264,7 @@ export function createEditToolDefinition(
 		],
 		parameters: editSchema,
 		renderShell: "self",
-		async execute(toolCallId, input: EditToolInput, signal?: AbortSignal, _onUpdate?, _ctx?) {
+		async execute(toolCallId, input: EditToolInput, signal?: AbortSignal, _onUpdate?) {
 			const { path, edits } = validateEditInput(input);
 			const absolutePath = resolveToCwd(path, cwd);
 
@@ -397,6 +404,6 @@ export function createEditToolDefinition(
 	};
 }
 
-export function createEditTool(cwd: string, options?: EditToolOptions): AgentTool<typeof editSchema> {
-	return toAgentTool(createEditToolDefinition(cwd, options));
+export function createEditTool(cwd: string, options?: EditToolOptions): Tool<typeof editSchema> {
+	return toTool(createEditSpec(cwd, options));
 }

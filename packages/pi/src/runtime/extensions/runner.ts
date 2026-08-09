@@ -336,28 +336,30 @@ export class ExtensionRunner {
 		return this.extensions.map((e) => e.path);
 	}
 
-	/** Get all registered tools from all extensions (first registration per name wins). */
+	/** Get all registered tools; only explicit CLI tools may replace lower-priority sources. */
 	getAllRegisteredTools(): RegisteredTool[] {
 		const toolsByName = new Map<string, RegisteredTool>();
 		for (const ext of this.extensions) {
 			for (const tool of ext.tools.values()) {
-				if (!toolsByName.has(tool.definition.name)) {
+				const existing = toolsByName.get(tool.definition.name);
+				if (!existing) {
 					toolsByName.set(tool.definition.name, tool);
+					continue;
 				}
+				if (isHigherPriority(tool, existing)) {
+					toolsByName.set(tool.definition.name, tool);
+					continue;
+				}
+				if (isHigherPriority(existing, tool)) continue;
+				throw new Error(`Tool "${tool.definition.name}" is registered by multiple extensions.`);
 			}
 		}
 		return Array.from(toolsByName.values());
 	}
 
-	/** Get a tool definition by name. Returns undefined if not found. */
-	getToolDefinition(toolName: string): RegisteredTool["definition"] | undefined {
-		for (const ext of this.extensions) {
-			const tool = ext.tools.get(toolName);
-			if (tool) {
-				return tool.definition;
-			}
-		}
-		return undefined;
+	/** Get a tool definition by name. */
+	getToolSpec(toolName: string): RegisteredTool["definition"] | undefined {
+		return this.getAllRegisteredTools().find((tool) => tool.definition.name === toolName)?.definition;
 	}
 
 	getFlags(): Map<string, ExtensionFlag> {
@@ -725,4 +727,8 @@ export class ExtensionRunner {
 	): Promise<InputEventResult> {
 		return emitInputHook(this.createHookDispatchState(), text, source, streamingBehavior);
 	}
+}
+
+function isHigherPriority(candidate: RegisteredTool, existing: RegisteredTool): boolean {
+	return candidate.sourceInfo.source === "cli" && existing.sourceInfo.source !== "cli";
 }

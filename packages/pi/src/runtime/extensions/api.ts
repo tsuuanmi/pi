@@ -8,11 +8,11 @@ import type {
 	RegisteredCommand,
 } from "#pi/api/extension-types";
 import type { ProviderConfig } from "#pi/api/provider-types";
-import type { ToolDefinition } from "#pi/api/tool-types";
 import type { ProgramOptions } from "#pi/execution/program";
 import { runProgram } from "#pi/execution/program";
 import type { EventBus } from "#pi/hooks/event-bus";
 import { type HookHandlerFn, registerExtensionHook } from "#pi/hooks/register";
+import type { ExtensionToolSpec } from "#pi/tool/spec";
 
 const STALE_CONTEXT_MESSAGE =
 	"This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession(), ctx.switchSession(), or ctx.reload(). For newSession and switchSession, move post-replacement work into withSession and use the ctx passed to withSession. For reload, do not use the old ctx after await ctx.reload().";
@@ -74,8 +74,11 @@ export function createExtensionAPI(
 		on(event: string, handler: HookHandlerFn): void {
 			registerExtensionHook(extension, runtime, event, handler);
 		},
-		registerTool(tool: ToolDefinition): void {
+		registerTool(tool: ExtensionToolSpec): void {
 			runtime.assertActive();
+			if (extension.tools.has(tool.name)) {
+				throw new Error(`Tool "${tool.name}" is already registered by this extension.`);
+			}
 			extension.tools.set(tool.name, { definition: tool, sourceInfo: extension.sourceInfo });
 			runtime.refreshTools();
 		},

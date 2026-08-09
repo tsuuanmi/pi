@@ -1,6 +1,6 @@
 /** Public contracts for the agent session runtime. */
 
-import type { Agent, AgentEvent, AgentMessage, AgentTool, SubagentManager } from "@tsuuanmi/pi-agent";
+import type { Agent, AgentEvent, AgentMessage, SubagentManager, Tool } from "@tsuuanmi/pi-agent";
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type {
 	ContextUsage,
@@ -9,7 +9,6 @@ import type {
 	ExtensionUIContext,
 	InputSource,
 	SessionStartEvent,
-	ToolDefinition,
 } from "#pi/loader/extensions/index";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceLoader } from "#pi/loader/resources";
@@ -67,7 +66,7 @@ export interface AgentSessionConfig {
 	/** Resource loader for skills, prompts, themes, context files, and system prompt. */
 	resourceLoader: ResourceLoader;
 	/** SDK custom tools registered outside extensions. */
-	customTools?: ToolDefinition[];
+	customTools?: Tool[];
 	/** Model registry for API key resolution and model discovery. */
 	modelRegistry: ModelRegistry;
 	webProviderRegistry?: WebProviderRegistry;
@@ -78,7 +77,7 @@ export interface AgentSessionConfig {
 	/** Optional denylist of tool names. */
 	excludedToolNames?: string[];
 	/** Override base tools for custom runtimes. */
-	baseToolsOverride?: Record<string, AgentTool>;
+	baseToolsOverride?: Record<string, Tool>;
 	/** Mutable ref used by Agent to access the current ExtensionRunner. */
 	extensionRunnerRef?: { current?: ExtensionRunner };
 	/** Session start event metadata emitted when extensions bind to this runtime. */

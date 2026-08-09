@@ -1,6 +1,6 @@
 import { Agent } from "@tsuuanmi/pi-agent";
 import { describe, expect, test } from "vitest";
-import { assistantText, doneStream, model, pendingStream } from "#agent-test/fixtures";
+import { assistantText, doneStream, model, pendingStream, repeatTool } from "#agent-test/fixtures";
 
 describe("agent lifecycle", () => {
 	test("runs registered lifecycle hooks in isolated runs", async () => {
@@ -28,6 +28,22 @@ describe("agent lifecycle", () => {
 
 		expect(result.success).toBe(true);
 		expect(phases).toEqual(["before", "after"]);
+	});
+
+	test("sets and snapshots active tools", () => {
+		const agent = new Agent({
+			initialState: { model, systemPrompt: "test", tools: [] },
+			streamFn: () => doneStream(assistantText("done")),
+		});
+		const tool = repeatTool("active");
+
+		const setToolsResult = agent.setTools([tool]);
+		expect(setToolsResult).toEqual([tool]);
+		setToolsResult.length = 0;
+		const tools = agent.getTools();
+		expect(tools).toEqual([tool]);
+		tools.length = 0;
+		expect(agent.getTools()).toEqual([tool]);
 	});
 
 	test("dispose is terminal and idempotent", async () => {

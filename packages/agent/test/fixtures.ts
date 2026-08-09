@@ -1,4 +1,4 @@
-import type { AgentTool } from "@tsuuanmi/pi-agent";
+import { Tool, type ToolSpec } from "@tsuuanmi/pi-agent";
 import {
 	type AssistantMessage,
 	type AssistantMessageEventStream,
@@ -57,14 +57,19 @@ export function assistantToolCall(
 	};
 }
 
-export function repeatTool(name = "repeat", execute?: AgentTool["execute"]): AgentTool {
-	return {
+export function repeatTool(
+	name = "repeat",
+	execute?: Tool["execute"],
+	options: Pick<ToolSpec<any, any>, "detailsSchema" | "maxOutputChars"> = {},
+): Tool {
+	return Tool.define({
 		name,
 		description: name,
 		label: name,
 		parameters: Type.Object({ value: Type.String() }),
 		execute: execute ?? (async () => ({ content: [{ type: "text", text: "same" }], details: {} })),
-	};
+		...options,
+	});
 }
 
 export function doneStream(message: AssistantMessage): AssistantMessageEventStream {

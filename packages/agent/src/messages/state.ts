@@ -1,5 +1,5 @@
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
-import type { AgentTool } from "#agent/tool/types";
+import type { Tool } from "#agent/tool/tool";
 
 export interface CustomAgentMessages {}
 
@@ -31,8 +31,7 @@ export interface AgentState {
 	systemPrompt: string;
 	model: Model<any>;
 	thinkingLevel: ThinkingLevel;
-	set tools(tools: AgentTool<any>[]);
-	get tools(): AgentTool<any>[];
+	readonly tools: readonly Tool[];
 	set messages(messages: AgentMessage[]);
 	get messages(): AgentMessage[];
 	readonly isStreaming: boolean;

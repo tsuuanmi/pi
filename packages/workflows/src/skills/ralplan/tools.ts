@@ -16,7 +16,8 @@ import { planRalplanAgent, runRalplanStage } from "#workflows/skills/ralplan/orc
 import { readRalplanStatus } from "#workflows/skills/ralplan/runtime";
 import { assertRalplanStage, assertSafePathComponent } from "#workflows/state/state-schema";
 import { defaultWorkflowId, readWorkflowState } from "#workflows/state/workflow-state";
-import type { WorkflowContext, WorkflowToolHost } from "#workflows/tools";
+import type { WorkflowContext } from "#workflows/tool/context";
+import type { WorkflowToolHost } from "#workflows/tool/host";
 
 const ralplanRunAgentSchema = Type.Object({
 	role: Type.Optional(
@@ -188,8 +189,8 @@ async function verifyRalplanArtifact(
 	);
 }
 
-export function registerRalplanTools(pi: WorkflowToolHost): void {
-	pi.registerTool({
+export function registerRalplanTools(host: WorkflowToolHost): void {
+	host.registerTool({
 		name: "ralplan_run_agent",
 		label: "Ralplan Role Agent",
 		description:

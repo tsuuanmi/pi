@@ -13,7 +13,7 @@ import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/settings-manager";
 
 const BUILT_IN_WORKFLOW_COMMANDS = new Set(["deep-interview", "ralplan", "team", "ultragoal"]);
-const BUILT_IN_SUBAGENT_TOOLS = new Set([
+const BUILT_IN_SUBAGENT_SPECS = new Set([
 	"subagent_spawn",
 	"subagent_status",
 	"subagent_await",
@@ -85,11 +85,11 @@ describe("DefaultResourceLoader", () => {
 				sessionManager,
 				modelRegistry,
 			);
-			for (const toolName of BUILT_IN_SUBAGENT_TOOLS) {
-				expect(runner.getToolDefinition(toolName)).toBeDefined();
+			for (const toolName of BUILT_IN_SUBAGENT_SPECS) {
+				expect(runner.getToolSpec(toolName)).toBeDefined();
 			}
 			for (const toolName of BUILT_IN_WORKFLOW_AGENT_TOOLS) {
-				expect(runner.getToolDefinition(toolName)).toBeDefined();
+				expect(runner.getToolSpec(toolName)).toBeDefined();
 			}
 		});
 
@@ -994,7 +994,7 @@ export default function(pi: ExtensionAPI) {
 
 			expect(runner.getCommand("deploy:1")?.description).toBe("explicit command");
 			expect(runner.getCommand("deploy:2")?.description).toBe("global command");
-			expect(runner.getToolDefinition("duplicate-tool")?.description).toBe("explicit tool");
+			expect(runner.getToolSpec("duplicate-tool")?.description).toBe("explicit tool");
 		});
 	});
 });
