@@ -13,6 +13,9 @@ Documentation is grouped by purpose:
 
 ## Architecture notes
 
+- [Package Overview](architecture/package-overview.md) - current package inventory, boundaries, dependencies, and runtime interactions
+- [Runtime Lifecycle](architecture/runtime-lifecycle.md) - startup, session, turn, workflow, and shutdown flow
+- [Package and Extension Authoring](architecture/package-and-extension-authoring.md) - package manifests, extension contracts, and authoring boundaries
 - [Orchestrator vs. Workflows](architecture/orchestrator-vs-workflows.md)
 - [Package Boundaries](architecture/package-boundaries.md)
 - [Package Overlap Audit](architecture/package-overlap-audit.md)
