@@ -1080,7 +1080,7 @@ Parse errors:
 
 Source files:
 - [`packages/ai/src/protocol/message.ts`](../../../ai/src/protocol/message.ts) - `UserMessage`, `AssistantMessage`, `ToolResultMessage`
-- [`packages/agent/src/messages/state.ts`](../../../agent/src/messages/state.ts) - `AgentMessage` and [`runtime/events.ts`](../../../agent/src/runtime/events.ts) - `AgentEvent`
+- [`packages/agent/src/messages/state.ts`](../../../agent/src/messages/state.ts) - `AgentMessage` and [`events.ts`](../../../agent/src/events.ts) - `AgentEvent`
 - [`packages/agent/src/messages/messages.ts`](../../../agent/src/messages/messages.ts) - `BashExecutionMessage`
 - [`src/modes/rpc/types.ts`](../../src/modes/rpc/types.ts) - RPC command/response types, extension UI request/response types
 

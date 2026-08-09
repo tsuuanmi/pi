@@ -16,7 +16,6 @@ import {
 	type StructuredOutputOptions,
 	type StructuredOutputResult,
 } from "#agent/agent/structured-output";
-import type { AgentMessage, AgentState } from "#agent/messages/state";
 import type {
 	AgentLoopConfig,
 	ProviderRequestObserver,
@@ -25,29 +24,26 @@ import type {
 	RuntimeClock,
 	StreamFn,
 	ToolExecutionMode,
-} from "#agent/runtime/config";
-import type { AgentContext } from "#agent/runtime/context";
-import type { AgentEvent } from "#agent/runtime/events";
-import {
-	type AgentHook,
-	AgentHookRegistry,
-	createLoopHooks,
-	runAfterHooks,
-	runBeforeHooks,
-} from "#agent/runtime/hooks";
-import {
-	type AgentRuntime,
-	type ContinueRequest,
-	DefaultAgentRuntime,
-	type PromptRequest,
-	type RunRequest,
-	type RunResult,
-} from "#agent/runtime/runtime";
-import type { AgentRunOptions, AgentRunResult } from "#agent/runtime/types";
+} from "#agent/config";
+import type { AgentContext } from "#agent/context";
+import { DefaultAgentRuntime } from "#agent/default-runtime";
+import type { AgentEvent } from "#agent/events";
+import { createLoopHooks } from "#agent/hook-adapter";
+import { type AgentHook, AgentHookRegistry, runAfterHooks, runBeforeHooks } from "#agent/hooks";
+import type { AgentMessage, AgentState } from "#agent/messages/state";
+import type {
+	AgentRunOptions,
+	AgentRunResult,
+	ContinueRequest,
+	PromptRequest,
+	RunRequest,
+	RunResult,
+} from "#agent/run";
+import type { AgentRuntime } from "#agent/runtime";
 import { ToolRegistry } from "#agent/tool/registry";
 import type { Tool } from "#agent/tool/tool";
 
-export type { QueueMode } from "#agent/runtime/config";
+export type { QueueMode } from "#agent/config";
 
 function defaultConvertToLlm(messages: AgentMessage[]): Message[] {
 	return messages.filter(

@@ -1,14 +1,9 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
+import type { RuntimeBackend } from "#agent/backend";
+import type { AgentEvent, RuntimeEvent, RuntimeWarning } from "#agent/events";
 import type { AgentMessage } from "#agent/messages/state";
-import type { AgentEvent } from "#agent/runtime/events";
-import type {
-	AgentRuntime,
-	RunRequest,
-	RunResult,
-	RuntimeBackend,
-	RuntimeEvent,
-	RuntimeWarning,
-} from "#agent/runtime/runtime";
+import type { RunRequest, RunResult } from "#agent/run";
+import type { AgentRuntime } from "#agent/runtime";
 
 export type ProcessRuntimeInputMode = "stdin" | "argument" | "none";
 

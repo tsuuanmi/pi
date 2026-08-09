@@ -23,7 +23,7 @@ Core event categories:
 - `message_start` / `message_update` / `message_end`
 - `tool_execution_start` / `tool_execution_update` / `tool_execution_end`
 
-Use these events to build logs, traces, metrics, UI state, or progress snapshots. See [Types](../../types.md) for related public types.
+Use these events to build logs, traces, metrics, UI state, or progress snapshots. See [Run contracts](./run.md) for related public types.
 
 ## Tool execution events
 
@@ -39,7 +39,7 @@ Tool events include stable identifiers and tool metadata:
 - final `meta.span` with tool id, name, timing, duration, and trace status
 - truncation metadata when output limits truncate tool text
 
-The subagent progress tracker in [`subagents/index.md`](../../subagents/index.md) consumes this same event shape to retain current tool, recent tools, and recent assistant output.
+The subagent progress tracker in [`subagents/index.md`](./subagents/index.md) consumes this same event shape to retain current tool, recent tools, and recent assistant output.
 
 ## Trace spans
 

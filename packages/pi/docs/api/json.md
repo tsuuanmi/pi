@@ -28,7 +28,7 @@ type AgentSessionEvent =
 
 `queue_update` emits the full pending steering and follow-up queues whenever they change. `session_info_changed` reports session name changes, and `thinking_level_changed` reports the active thinking level. `compaction_start` and `compaction_end` cover both manual and automatic compaction. `structured_output` reports structured-output validation attempts.
 
-Base events from [`AgentEvent`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/runtime/events.ts#L15):
+Base events from [`AgentEvent`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/events.ts#L15):
 
 ```typescript
 type AgentEvent =

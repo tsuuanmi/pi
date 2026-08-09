@@ -1,5 +1,5 @@
 import type { Static, TSchema } from "typebox";
-import type { ToolExecutionMode } from "#agent/runtime/config";
+import type { ToolExecutionMode } from "#agent/config";
 import type { ToolResult, ToolUpdate } from "#agent/tool/result";
 
 export interface ToolSpec<TParameters extends TSchema = TSchema, TDetails = unknown> {

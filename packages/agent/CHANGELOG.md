@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **runtime**: Flattened runtime contracts and implementations into `packages/agent/src/`, replaced wildcard runtime exports with explicit package-root exports, and removed the `src/runtime/` module paths.
 - **subagents**: Removed the unused `SubagentManagerFactory` registry; concrete hosts construct and inject managers directly.
 - **node**: Added the byte-preserving `runProcess()` API, changed Node shell resolution to fail when Bash is unavailable, and changed execution results to preserve `null` signal exits.
 - **tool**: Renamed structured tool receipt helpers from built-in-specific names to standard protocol names and changed receipt sources to generic `tool` and `session` values.

@@ -14,13 +14,14 @@ import {
 } from "@tsuuanmi/pi-ai";
 import { Compile } from "typebox/compile";
 import { LoopDetector, normalizeLoopDetectionOptions } from "#agent/agent/loop-detector";
+import type { AgentLoopConfig, StreamFn } from "#agent/config";
+import type { AgentContext } from "#agent/context";
+import type { AgentEvent, ToolExecutionMeta, ToolExecutionStatus } from "#agent/events";
 import type { AgentMessage, TraceSpan, TraceStatus } from "#agent/messages/state";
-import type { AgentLoopConfig, StreamFn, ToolCall } from "#agent/runtime/config";
-import type { AgentContext } from "#agent/runtime/context";
-import type { AgentEvent, ToolExecutionMeta, ToolExecutionStatus } from "#agent/runtime/events";
 import { limitToolOutput, normalizeToolOutputLimit } from "#agent/tool/output";
 import type { ToolResult } from "#agent/tool/result";
 import type { Tool } from "#agent/tool/tool";
+import type { ToolCall } from "#agent/tool-call";
 
 const detailsValidatorCache = new WeakMap<object, ReturnType<typeof Compile>>();
 let providerRequestSequence = 0;

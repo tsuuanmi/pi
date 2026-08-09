@@ -1,5 +1,6 @@
 import type { AssistantMessageEvent, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { LoopDetectionResult } from "#agent/agent/loop-detector";
+import type { RuntimeBackend } from "#agent/backend";
 import type { AgentMessage, AgentStatus, AgentTraceEvent, TraceSpan } from "#agent/messages/state";
 
 export type ToolExecutionStatus = "completed" | "failed" | "blocked" | "aborted";
@@ -12,11 +13,19 @@ export interface ToolExecutionMeta {
 	emittedChars?: number;
 }
 
+export interface RuntimeWarning {
+	code: string;
+	message: string;
+	details?: Record<string, unknown>;
+}
+
+export type RuntimeTrace = AgentTraceEvent;
+
 export type AgentEvent =
 	| { type: "agent_start" }
 	| { type: "agent_status"; status: AgentStatus; trace?: AgentTraceEvent }
 	| { type: "runtime_trace"; trace: AgentTraceEvent }
-	| { type: "runtime_warning"; warning: { code: string; message: string; details?: Record<string, unknown> } }
+	| { type: "runtime_warning"; warning: RuntimeWarning }
 	| { type: "agent_end"; messages: AgentMessage[] }
 	| { type: "turn_start" }
 	| { type: "turn_end"; message: AgentMessage; toolResults: ToolResultMessage[] }
@@ -43,3 +52,13 @@ export type AgentEvent =
 			isError: boolean;
 			meta: ToolExecutionMeta;
 	  };
+
+export type EventSink = (event: AgentEvent) => Promise<void> | void;
+
+export type RuntimeEvent =
+	| { type: "event"; event: AgentEvent }
+	| { type: "backend"; backend: RuntimeBackend }
+	| { type: "warning"; warning: RuntimeWarning }
+	| { type: "trace"; trace: RuntimeTrace }
+	| { type: "done"; result: import("#agent/run").RunResult }
+	| { type: "error"; error: unknown };

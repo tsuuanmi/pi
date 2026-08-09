@@ -1,15 +1,14 @@
+import type { Context, Message, Model, ProviderResponse, StreamOptions, stream } from "@tsuuanmi/pi-ai";
 import type {
-	Context,
-	Message,
-	Model,
-	ProviderResponse,
-	StreamOptions,
-	stream,
-	ToolResultMessage,
-} from "@tsuuanmi/pi-ai";
+	AfterToolCallContext,
+	AfterToolCallResult,
+	AgentLoopTurnUpdate,
+	BeforeToolCallContext,
+	BeforeToolCallResult,
+	PrepareNextTurnContext,
+	ShouldStopAfterTurnContext,
+} from "#agent/hooks";
 import type { AgentMessage, TraceSpan } from "#agent/messages/state";
-import type { AgentContext } from "#agent/runtime/context";
-import type { ToolResult } from "#agent/tool/result";
 
 export type StreamFn = (
 	...args: Parameters<typeof stream>
@@ -53,51 +52,6 @@ export interface ProviderRequestObserver {
 }
 
 export type QueueMode = "all" | "one-at-a-time";
-
-export type ToolCall = Extract<import("@tsuuanmi/pi-ai").AssistantMessage["content"][number], { type: "toolCall" }>;
-
-export interface BeforeToolCallResult {
-	block?: boolean;
-	reason?: string;
-}
-
-export interface AfterToolCallResult {
-	content?: import("@tsuuanmi/pi-ai").TextContent[];
-	details?: unknown;
-	isError?: boolean;
-	terminate?: boolean;
-}
-
-export interface BeforeToolCallContext {
-	assistantMessage: import("@tsuuanmi/pi-ai").AssistantMessage;
-	toolCall: ToolCall;
-	args: unknown;
-	context: AgentContext;
-}
-
-export interface AfterToolCallContext {
-	assistantMessage: import("@tsuuanmi/pi-ai").AssistantMessage;
-	toolCall: ToolCall;
-	args: unknown;
-	result: ToolResult<any>;
-	isError: boolean;
-	context: AgentContext;
-}
-
-export interface ShouldStopAfterTurnContext {
-	message: import("@tsuuanmi/pi-ai").AssistantMessage;
-	toolResults: ToolResultMessage[];
-	context: AgentContext;
-	newMessages: AgentMessage[];
-}
-
-export interface AgentLoopTurnUpdate {
-	context?: AgentContext;
-	model?: Model<any>;
-	thinkingLevel?: import("@tsuuanmi/pi-ai").ThinkingLevel;
-}
-
-export interface PrepareNextTurnContext extends ShouldStopAfterTurnContext {}
 
 export interface AgentLoopConfig extends StreamOptions {
 	model: Model<any>;

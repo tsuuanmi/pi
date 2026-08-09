@@ -20,13 +20,21 @@ This package intentionally differs from monolithic config-driven agents: it cent
 
 ## Documentation map
 
-The docs tree follows the source domain folders under `packages/agent/src`, including agent behavior in `agent/` and message modeling in `messages/`.
+The docs tree mirrors the source domain folders under `packages/agent/src`. Runtime contracts live at the package source root; agent behavior remains under `agent/`, message modeling under `messages/`, and host tools under `tool/`.
 
 - [`agent/index.md`](agent/index.md) - `src/agent/index.ts`: `Agent` class, state management, event subscription, message queues, and lifecycle control.
-- [`agent/runtime/loop.md`](agent/runtime/loop.md) - `src/runtime/loop.ts`: `agentLoop()`, `agentLoopContinue()`, turn execution, tool execution, steering, follow-up, and abort handling.
-- [`agent/runtime/events.md`](agent/runtime/events.md) - `src/runtime/events.ts`: lifecycle events and instrumentation points emitted by `Agent` and the loop.
+- [`config.md`](config.md) - `src/config.ts`: loop/provider configuration and request observation.
+- [`context.md`](context.md) - `src/context.ts`: the host-neutral agent context passed to runtimes and loops.
+- [`events.md`](events.md) - `src/events.ts`: agent lifecycle events, runtime stream events, warnings, and traces.
+- [`hooks.md`](hooks.md) - `src/hooks.ts`: public lifecycle and execution hook contracts.
+- [`hook-adapter.md`](hook-adapter.md) - `src/hook-adapter.ts`: adaptation from registered hooks to loop callbacks.
+- [`loop.md`](loop.md) - `src/loop.ts`: `agentLoop()`, `agentLoopContinue()`, turn execution, tool execution, steering, follow-up, and abort handling.
+- [`backend.md`](backend.md) - `src/backend.ts`: backend identity and process/protocol metadata.
+- [`runtime.md`](runtime.md) - `src/runtime.ts`: the custom runtime/backend stream contract.
+- [`default-runtime.md`](default-runtime.md) - `src/default-runtime.ts`: the standard LLM/tool-loop runtime implementation.
+- [`run.md`](run.md) - `src/run.ts`: runtime request/result contracts and `Agent.run()` options/results.
+- [`tool-call.md`](tool-call.md) - `src/tool-call.ts`: model-produced tool-call content used by loop and pruning code.
 - [`messages/messages.md`](messages/messages.md) - `src/messages/messages.ts`: non-LLM agent message roles and `convertToLlm()` conversion.
-- [`agent/runtime/types.md`](agent/runtime/types.md) - `src/runtime/types.ts`: `Agent.run()` option and result types.
 - [`node/index.md`](node/index.md) - `src/node/node.ts` and `src/node/*`: Node-only process, process-runtime, JSONL, path, and mutation-queue helpers.
 - [`node/env/nodejs.md`](node/env/nodejs.md) - `src/node/env/*`: `ExecutionEnv`, `FileSystem`, `Shell`, typed `Result`, `FileError`, `ExecutionError`, and `NodeExecutionEnv`.
 - [`subagents/index.md`](subagents/index.md) - `src/subagents/*`: `SubagentManager`, durable record/request/result types, thinking validation, lifecycle tools, progress tracking, and yield-result extraction.

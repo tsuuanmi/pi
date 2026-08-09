@@ -1,139 +1,11 @@
 import { stream } from "@tsuuanmi/pi-ai";
-import type { AgentMessage, AgentTraceEvent } from "#agent/messages/state";
-import type { AgentLoopConfig, StreamFn } from "#agent/runtime/config";
-import type { AgentContext } from "#agent/runtime/context";
-import type { AgentEvent } from "#agent/runtime/events";
-import { runAgentLoop, runAgentLoopContinue } from "#agent/runtime/loop";
-
-/** Receives events emitted by an agent backend or runtime. */
-export type EventSink = (event: AgentEvent) => Promise<void> | void;
-
-/** Shared request fields used by all agent backend executions. */
-export interface RuntimeRequest {
-	/** Snapshot of the transcript, tools, and system prompt visible to the backend. */
-	context: AgentContext;
-	/** Runtime loop/provider/tool configuration for this invocation. */
-	config: AgentLoopConfig;
-	/** Lifecycle/event sink owned by the Agent facade. */
-	emit: EventSink;
-	/** Abort signal scoped to the current invocation. */
-	signal: AbortSignal;
-	/** Optional stream implementation override for LLM-backed runtimes. */
-	streamFn?: StreamFn;
-}
-
-/** Request for starting a backend from newly supplied prompt messages. */
-export interface PromptRequest extends RuntimeRequest {
-	kind: "prompt";
-	/** Messages to append before the backend starts. */
-	messages: AgentMessage[];
-}
-
-/** Request for continuing from the transcript already present in context. */
-export interface ContinueRequest extends RuntimeRequest {
-	kind: "continue";
-}
-
-/** Unified runtime request accepted by the runtime stream seam. */
-export type RunRequest = PromptRequest | ContinueRequest;
-
-export type RunStatus = "completed" | "aborted" | "failed";
-
-export interface ProcessInfo {
-	pid?: number;
-	command?: string;
-	args?: readonly string[];
-	cwd?: string;
-	exitCode?: number | null;
-	signal?: string | null;
-}
-
-export interface ProtocolInfo {
-	name: string;
-	version?: string;
-	sessionId?: string;
-	stopReason?: string;
-}
-
-export interface RuntimeBackend {
-	kind: "llm" | "process" | "protocol" | "custom";
-	name: string;
-	modelId?: string;
-	provider?: string;
-	process?: ProcessInfo;
-	protocol?: ProtocolInfo;
-	details?: Record<string, unknown>;
-}
-
-export interface ToolCallSummary {
-	id: string;
-	name: string;
-	isError: boolean;
-}
-
-export interface RuntimeWarning {
-	code: string;
-	message: string;
-	details?: Record<string, unknown>;
-}
-
-export type RuntimeTrace = AgentTraceEvent;
-
-/** Aggregated result returned by every runtime invocation. */
-export interface RunResult {
-	/** Messages produced by this invocation. */
-	messages: AgentMessage[];
-	/** Final assistant text output, when available. */
-	output: string;
-	/** Assistant turns produced by this invocation. */
-	turns: number;
-	/** Backend identity and backend-specific metadata for this invocation. */
-	backend: RuntimeBackend;
-	/** Tool calls completed during this invocation. */
-	toolCalls: ToolCallSummary[];
-	/** Runtime warnings produced during this invocation. */
-	warnings: RuntimeWarning[];
-	/** Trace events produced during this invocation. */
-	traces: RuntimeTrace[];
-	/** True when runtime loop detection fired. */
-	loopDetected: boolean;
-	/** True when the runtime stopped because maxTurns was reached. */
-	maxTurnsReached: boolean;
-	/** Coarse completion status for host backends. */
-	status: RunStatus;
-	/** Invocation start timestamp in milliseconds since epoch. */
-	startedAt: number;
-	/** Invocation completion timestamp in milliseconds since epoch. */
-	completedAt: number;
-	/** Invocation duration in milliseconds. */
-	durationMs: number;
-	/** Optional backend error detail for failed invocations. */
-	error?: unknown;
-}
-
-export type RuntimeEvent =
-	| { type: "event"; event: AgentEvent }
-	| { type: "backend"; backend: RuntimeBackend }
-	| { type: "warning"; warning: RuntimeWarning }
-	| { type: "trace"; trace: RuntimeTrace }
-	| { type: "done"; result: RunResult }
-	| { type: "error"; error: unknown };
-
-/**
- * Runtime execution backend for an Agent.
- *
- * Implementations own how agent turns are produced. The default backend uses
- * the standard agent protocol/runtime loop, while Node-only packages can provide
- * process or protocol-backed implementations through `@tsuuanmi/pi-agent/node`.
- */
-export interface AgentBackend {
-	/** Stream runtime events and finish with one done or error event. */
-	stream(request: RunRequest): AsyncIterable<RuntimeEvent>;
-	dispose?(): Promise<void> | void;
-}
-
-/** Standard LLM/tool-loop runtime interface. */
-export interface AgentRuntime extends AgentBackend {}
+import type { RuntimeBackend } from "#agent/backend";
+import type { StreamFn } from "#agent/config";
+import type { AgentEvent, RuntimeEvent, RuntimeTrace, RuntimeWarning } from "#agent/events";
+import { runAgentLoop, runAgentLoopContinue } from "#agent/loop";
+import type { AgentMessage } from "#agent/messages/state";
+import type { RunRequest, RunResult, ToolCallSummary } from "#agent/run";
+import type { AgentRuntime } from "#agent/runtime";
 
 /** Default AgentRuntime backed by the package's low-level standard runtime loop. */
 export class DefaultAgentRuntime implements AgentRuntime {
@@ -321,7 +193,7 @@ function getAssistantText(message: { content: readonly { type: string; text?: st
 		.join("\n");
 }
 
-function getRunStatus(message: { stopReason?: string } | undefined): RunStatus {
+function getRunStatus(message: { stopReason?: string } | undefined): RunResult["status"] {
 	if (message?.stopReason === "aborted") {
 		return "aborted";
 	}
