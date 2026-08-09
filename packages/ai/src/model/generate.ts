@@ -3,15 +3,15 @@
 import { renameSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { fetchJson } from "#ai/model/generator/fetch";
+import type { CodexCatalog, ModelsDevCatalog } from "#ai/model/generator/schemas";
+import { serialize } from "#ai/model/generator/serialize";
+import { apiProviders, catalogUrls, codexProviderSpec } from "#ai/model/generator/sources";
+import { groupModels } from "#ai/model/generator/validate";
 import type { Model } from "#ai/model/index";
 import type { Api } from "#ai/protocol/ids";
-import { fromModelsDev } from "../provider/models-dev/catalog.ts";
-import { fromCodex } from "../provider/openai/codex/catalog.ts";
-import { fetchJson } from "./generator/fetch.ts";
-import type { CodexCatalog, ModelsDevCatalog } from "./generator/schemas.ts";
-import { serialize } from "./generator/serialize.ts";
-import { apiProviders, catalogUrls, codexProviderSpec } from "./generator/sources.ts";
-import { groupModels } from "./generator/validate.ts";
+import { fromModelsDev } from "#ai/provider/models-dev/catalog";
+import { fromCodex } from "#ai/provider/openai/codex/catalog";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

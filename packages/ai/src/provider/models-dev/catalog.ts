@@ -1,7 +1,7 @@
+import { inputFromModalities, thinkingMap } from "#ai/model/generator/normalize";
+import type { ModelsDevModel } from "#ai/model/generator/schemas";
 import type { Model } from "#ai/model/index";
 import type { Api } from "#ai/protocol/ids";
-import { inputFromModalities, thinkingMap } from "../../model/generator/normalize.ts";
-import type { ModelsDevModel } from "../../model/generator/schemas.ts";
 
 export interface ProviderSource {
 	models: Record<string, ModelsDevModel>;

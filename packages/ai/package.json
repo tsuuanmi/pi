@@ -39,6 +39,7 @@
 	"imports": {
 		"#ai/*": {
 			"types": "./dist/*.d.ts",
+			"source": "./src/*.ts",
 			"import": "./dist/*.js"
 		},
 		"#ai-test/*": {
@@ -53,7 +54,7 @@
 	],
 	"scripts": {
 		"clean": "shx rm -rf dist",
-		"generate-models": "node src/model/generate.ts",
+		"generate-models": "node --conditions=source src/model/generate.ts",
 		"build": "npm run generate-models && tsgo -p tsconfig.build.json",
 		"test": "vitest --run",
 		"prepublishOnly": "npm run clean && npm run build"

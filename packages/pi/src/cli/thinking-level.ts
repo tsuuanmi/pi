@@ -8,6 +8,8 @@ export const CLI_THINKING_LEVELS = [
 	"medium",
 	"high",
 	"xhigh",
+	"max",
+	"ultra",
 ] as const satisfies readonly ThinkingLevel[];
 
 export type CliThinkingLevel = (typeof CLI_THINKING_LEVELS)[number];

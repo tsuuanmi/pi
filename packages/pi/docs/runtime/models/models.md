@@ -215,7 +215,7 @@ Current behavior:
 
 ### Thinking Level Map
 
-Use `thinkingLevelMap` on a model to describe model-specific thinking controls. Keys are pi thinking levels: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`.
+Use `thinkingLevelMap` on a model to describe model-specific thinking controls. Keys are pi thinking levels: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`, `ultra`.
 
 Values are tristate:
 
@@ -232,14 +232,19 @@ Example for a model that only supports off, high, and max reasoning:
   "id": "custom-reasoning-model",
   "reasoning": true,
   "thinkingLevelMap": {
+    "off": "none",
     "minimal": null,
     "low": null,
     "medium": null,
     "high": "high",
-    "xhigh": "max"
+    "xhigh": null,
+    "max": "max",
+    "ultra": null
   }
 }
 ```
+
+Codex models are generated from the upstream Codex model catalog. Their supported levels are exact: Codex models do not support `off`; `max` is available on selected models; and `ultra` is currently available on `gpt-5.6-sol` and `gpt-5.6-terra`.
 
 Example for a model where thinking cannot be disabled:
 

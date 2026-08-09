@@ -72,7 +72,7 @@ describe("parseModelPattern", () => {
 		});
 
 		test("all valid thinking levels work", () => {
-			for (const level of ["off", "minimal", "low", "medium", "high", "xhigh"]) {
+			for (const level of ["off", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"]) {
 				const result = parseModelPattern(`sonnet:${level}`, allModels);
 				expect(result.model?.id).toBe("claude-sonnet-4-5");
 				expect(result.thinkingLevel).toBe(level);
@@ -153,14 +153,16 @@ describe("resolveCliModel", () => {
 			getAll: () => allModels,
 		} as unknown as Parameters<typeof resolveCliModel>[0]["modelRegistry"];
 
-		const result = resolveCliModel({
-			cliModel: "sonnet:high",
-			modelRegistry: registry,
-		});
+		for (const level of ["high", "max", "ultra"] as const) {
+			const result = resolveCliModel({
+				cliModel: `sonnet:${level}`,
+				modelRegistry: registry,
+			});
 
-		expect(result.error).toBeUndefined();
-		expect(result.model?.id).toBe("claude-sonnet-4-5");
-		expect(result.thinkingLevel).toBe("high");
+			expect(result.error).toBeUndefined();
+			expect(result.model?.id).toBe("claude-sonnet-4-5");
+			expect(result.thinkingLevel).toBe(level);
+		}
 	});
 
 	test("does not strip invalid :suffix as thinking level in --model (treat as raw id)", () => {
@@ -362,7 +364,7 @@ describe("resolveCliModel", () => {
 				getAll: () => modelsWithNeuralwatt,
 			} as unknown as Parameters<typeof resolveCliModel>[0]["modelRegistry"];
 
-			for (const level of ["off", "minimal", "low", "medium", "high", "xhigh"]) {
+			for (const level of ["off", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"]) {
 				const result = resolveCliModel({
 					cliModel: `neuralwatt/custom-org/model-fp8:${level}`,
 					modelRegistry: registry,

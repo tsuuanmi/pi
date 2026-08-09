@@ -25,6 +25,7 @@
 
 ### Fixed
 
+- **models**: Match Codex thinking levels to the upstream catalog, excluding unsupported `off` and `minimal` levels while preserving model-specific `max` and `ultra` support.
 - **models**: Restored generated provider compatibility metadata for Anthropic temperature/thinking behavior and current OpenAI reasoning levels.
 
 ## [0.2.2] - 2026-07-23

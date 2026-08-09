@@ -1,8 +1,9 @@
+import { inputFromModalities, thinkingMap } from "#ai/model/generator/normalize";
+import type { CodexCatalog, CodexCatalogModel, ThinkingLevelMap } from "#ai/model/generator/schemas";
+import type { ProviderSpec } from "#ai/model/generator/sources";
 import type { Model } from "#ai/model/index";
 import type { Api } from "#ai/protocol/ids";
-import { inputFromModalities, thinkingMap } from "../../../model/generator/normalize.ts";
-import type { CodexCatalog, CodexCatalogModel } from "../../../model/generator/schemas.ts";
-import type { ProviderSpec } from "../../../model/generator/sources.ts";
+import { THINKING_LEVELS } from "#ai/protocol/options";
 
 function contextWindow(model: CodexCatalogModel): number {
 	const value = model.max_context_window ?? model.context_window;
@@ -14,6 +15,17 @@ function contextWindow(model: CodexCatalogModel): number {
 
 function canBuildCodexModel(model: CodexCatalogModel, openAiModels: ReadonlyMap<string, Model<Api>>): boolean {
 	return model.visibility !== "hidden" && openAiModels.has(model.slug);
+}
+
+function exactThinkingMap(modelId: string, values: string[] | undefined): ThinkingLevelMap | undefined {
+	const mapped = thinkingMap(modelId, values);
+	if (!mapped) return undefined;
+
+	const exact: ThinkingLevelMap = {};
+	for (const level of THINKING_LEVELS) {
+		exact[level] = level === "off" ? null : (mapped[level] ?? null);
+	}
+	return exact;
 }
 
 export function fromCodex(
@@ -29,7 +41,7 @@ export function fromCodex(
 		const apiModel = openAiModels.get(sourceModel.slug);
 		if (!apiModel) throw new Error(`Missing OpenAI API metadata for Codex model ${sourceModel.slug}`);
 
-		const levelMap = thinkingMap(
+		const levelMap = exactThinkingMap(
 			sourceModel.slug,
 			sourceModel.supported_reasoning_levels?.map((level) => level.effort),
 		);

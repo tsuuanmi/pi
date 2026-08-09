@@ -1,4 +1,4 @@
-import type { ModelInput, ThinkingLevelMap } from "./schemas.ts";
+import type { ModelInput, ThinkingLevelMap } from "#ai/model/generator/schemas";
 
 const reasoningLevels = new Set(["off", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"]);
 
