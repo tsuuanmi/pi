@@ -1,11 +1,6 @@
 import { Agent, type SubagentManager, type SubagentRunResult } from "@tsuuanmi/pi-agent";
-import {
-	type AssistantMessage,
-	AssistantMessageEventStream,
-	type Context,
-	type Message,
-	type Model,
-} from "@tsuuanmi/pi-ai";
+import type { Message } from "@tsuuanmi/pi-ai";
+import { createSubagentStream } from "#workflows/orchestration/subagent-stream";
 import { type RalplanAgentRecord, writeRalplanAgentRecord } from "#workflows/skills/ralplan/agent-record";
 import type { RalplanAgentRequest } from "#workflows/skills/ralplan/agent-roles";
 
@@ -21,34 +16,11 @@ export function createRalplanAgent(input: RalplanAgentAdapterInput): Agent {
 	return new Agent({
 		name: input.request.role,
 		capabilities: [input.request.role],
-		stream: createStream(input),
+		stream: createSubagentStream(({ signal }) => runAgent(input, signal)),
 	});
 }
 
-function createStream(input: RalplanAgentAdapterInput) {
-	return async (model: Model, _context: Context, options?: { signal?: AbortSignal }) => {
-		const stream = new AssistantMessageEventStream();
-		try {
-			const record = await runAgent(input, options?.signal);
-			const message = createMessage(model, record.output ?? "");
-			stream.push({ type: "start", partial: message });
-			if (record.output) {
-				stream.push({ type: "text_start", contentIndex: 0, partial: message });
-				stream.push({ type: "text_delta", contentIndex: 0, delta: record.output, partial: message });
-				stream.push({ type: "text_end", contentIndex: 0, content: record.output, partial: message });
-			}
-			stream.push({ type: "done", reason: "stop", message });
-		} catch (error) {
-			const aborted = options?.signal?.aborted === true;
-			const message = createErrorMessage(model, error, aborted);
-			stream.push({ type: "start", partial: message });
-			stream.push({ type: "error", reason: aborted ? "aborted" : "error", error: message });
-		}
-		return stream;
-	};
-}
-
-async function runAgent(input: RalplanAgentAdapterInput, signal?: AbortSignal): Promise<RalplanAgentRecord> {
+async function runAgent(input: RalplanAgentAdapterInput, signal?: AbortSignal): Promise<string> {
 	const { request } = input;
 	let result: SubagentRunResult;
 	if (request.attemptResume === true) {
@@ -100,37 +72,6 @@ async function runAgent(input: RalplanAgentAdapterInput, signal?: AbortSignal): 
 	if (record.status !== "completed") {
 		throw new Error(record.stderr ?? `ralplan ${request.role} agent failed`);
 	}
-	return record;
-}
-
-function createMessage(model: Model, output: string): AssistantMessage {
-	return {
-		role: "assistant",
-		content: [{ type: "text", text: output }],
-		api: model.api,
-		provider: model.provider,
-		model: model.id,
-		usage: zeroUsage(),
-		stopReason: "stop",
-		timestamp: Date.now(),
-	};
-}
-
-function createErrorMessage(model: Model, error: unknown, aborted: boolean): AssistantMessage {
-	return {
-		...createMessage(model, ""),
-		stopReason: aborted ? "aborted" : "error",
-		errorMessage: error instanceof Error ? error.message : String(error),
-	};
-}
-
-function zeroUsage() {
-	return {
-		input: 0,
-		output: 0,
-		cacheRead: 0,
-		cacheWrite: 0,
-		totalTokens: 0,
-		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-	};
+	if (record.output === undefined) throw new Error(`ralplan ${request.role} agent completed without output`);
+	return record.output;
 }

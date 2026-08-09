@@ -10,6 +10,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | `src/extension.ts` | Pi package extension adapter and workflow registration composition. | [extensions/workflows.md](extensions/workflows.md) |
 | `src/hooks.ts` | Workflow hook registration, HUD refresh, and mutation policy guards. | [extensions/workflows.md](extensions/workflows.md) |
 | `src/agents/` | Bundled markdown agent profiles. | [agents/agents.md](agents/agents.md) |
+| `src/orchestration/` | Shared adapters from injected subagent operations to Agent/AI orchestration contracts. | [orchestration/subagent-stream.md](orchestration/subagent-stream.md) |
 | `src/artifacts/` | Durable artifact writing and receipt helpers. | [artifacts/artifacts.md](artifacts/artifacts.md) |
 | `src/audit/` | Append-only audit records, decision ledgers, tamper evidence, and mutation journals. | [audit/audit.md](audit/audit.md) |
 | `src/commands/` | CLI adapter for the external `pi workflow ...` control plane; it does not invoke model-visible tools. | [commands/workflow.md](commands/workflow.md) |
@@ -44,7 +45,7 @@ Tests live under `test/` and are grouped by capability and major source area. No
 | `test/ultragoal/` | Ultragoal goal runtime, obstacles, guard, quality gate, receipt evidence. |
 | `test/session/` | Session layout, session-scoped state propagation. |
 | `test/audit/` | Decision ledger, state integrity audit and tamper checks. |
-| `test/orchestration/` | Expected-next-role E2E, handoff carried obstacles, state-integrity handoff + crash injection, vagueness gate. |
+| `test/orchestration/` | Shared subagent stream adapter, expected-next-role E2E, handoff carried obstacles, state-integrity handoff + crash injection, vagueness gate. |
 | `test/state/` | Workflow handoff, receipts, session-state. |
 | `test/registry/` | Workflow manifest state validation. |
 | `test/tools/` | Workflow adapters and receipt behavior for agent-owned lifecycle tools. |

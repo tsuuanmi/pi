@@ -21,6 +21,17 @@ export interface ToolSpec<TParameters extends TSchema = TSchema, TDetails = unkn
 	) => Promise<ToolResult<TDetails>>;
 }
 
+export interface ContextToolSpec<TContext, TParameters extends TSchema = TSchema, TDetails = unknown>
+	extends Omit<ToolSpec<TParameters, TDetails>, "execute"> {
+	execute: (
+		toolCallId: string,
+		params: Static<TParameters>,
+		signal: AbortSignal | undefined,
+		onUpdate: ToolUpdate<TDetails> | undefined,
+		context: TContext,
+	) => Promise<ToolResult<TDetails>>;
+}
+
 export class Tool<TParameters extends TSchema = TSchema, TDetails = unknown> {
 	readonly name: string;
 	readonly label: string;

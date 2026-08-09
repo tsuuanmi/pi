@@ -33,6 +33,7 @@
 - **agent**: Added structured tool execution metadata for final tool events.
 - **agent**: Added request and tool trace spans for agent observability.
 - **tool**: Added `Tool.define()` for validated TypeBox-native tool declarations.
+- **tool**: Added `ContextToolSpec` as the canonical host-context extension of `ToolSpec`.
 - **subagents**: Added host-neutral lifecycle tool definitions and centralized thinking-level parsing in `@tsuuanmi/pi-agent`.
 - **tool**: Added opt-in TypeBox validation for tool result details.
 - **agent**: Added context-pruning helpers for sliding-window transforms that preserve assistant tool calls with matching tool results.

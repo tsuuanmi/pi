@@ -13,12 +13,21 @@ Documentation is grouped by purpose:
 
 ## Architecture notes
 
-- [Package Overview](architecture/package-overview.md) - current package inventory, boundaries, dependencies, and runtime interactions
+- [Package Overview](architecture/package-overview.md) - big-picture inventory, dependency graph, runtime interactions, and links to detailed component maps
+  - [AI package](architecture/packages/ai.md)
+  - [Agent package](architecture/packages/agent.md)
+  - [Orchestrator package](architecture/packages/orchestrator.md)
+  - [TUI package](architecture/packages/tui.md)
+  - [Web Runtime package](architecture/packages/web-runtime.md)
+  - [Workflows package](architecture/packages/workflows.md)
+  - [Pi package](architecture/packages/pi.md)
+- [Component Integration Map](architecture/component-integration-map.md) - canonical component owners and exact static-import, dynamic-load, injection, data-handoff, and bundling paths
 - [Runtime Lifecycle](architecture/runtime-lifecycle.md) - startup, session, turn, workflow, and shutdown flow
 - [Package and Extension Authoring](architecture/package-and-extension-authoring.md) - package manifests, extension contracts, and authoring boundaries
 - [Orchestrator vs. Workflows](architecture/orchestrator-vs-workflows.md)
 - [Package Boundaries](architecture/package-boundaries.md)
-- [Package Overlap Audit](architecture/package-overlap-audit.md)
+- [Package Overlap Audit](architecture/package-overlap-audit.md) - intentional adapters, duplicate/ambiguous seams, forbidden duplication, and cleanup priorities
+- [Package Overlap Implementation](architecture/package-overlap-implementation.md) - phased file-level changes, dependency order, and verification gates
 - [Persistence Boundaries](architecture/persistence-boundaries.md)
 - [Ralplan Orchestrator Contract](architecture/ralplan-orchestrator-contract.md)
 - [Receipt Boundaries](architecture/receipt-boundaries.md)

@@ -1,176 +1,252 @@
 # Package Boundaries
 
-This document defines the intended package boundaries for Pi and lists overlap cleanup tasks by ROI. See [`package-overlap-audit.md`](./package-overlap-audit.md) for concept-level cleanup decisions, [`workflow-orchestrator-overlap.md`](./workflow-orchestrator-overlap.md) for workflow-specific findings, [`receipt-boundaries.md`](./receipt-boundaries.md) for receipt ownership rules, and [`persistence-boundaries.md`](./persistence-boundaries.md) for state ownership rules.
+This document defines ownership and import direction for all seven Pi workspace packages. See [Package Overview](package-overview.md) for the big-picture runtime map and the package detail pages for component-level descriptions.
 
-## Layer model
+Related decisions:
 
-```text
-@tsuuanmi/pi-ai
-  -> @tsuuanmi/pi-agent
-    -> @tsuuanmi/pi-orchestrator
-      -> @tsuuanmi/pi-workflows
-        -> @tsuuanmi/pi
+- [Component Integration Map](component-integration-map.md)
+- [Package Overlap Audit](package-overlap-audit.md)
+- [Orchestrator vs. Workflows](orchestrator-vs-workflows.md)
+- [Workflow Orchestrator Overlap](workflow-orchestrator-overlap.md)
+- [Receipt Boundaries](receipt-boundaries.md)
+- [Persistence Boundaries](persistence-boundaries.md)
+
+## Core rule
+
+A lower-level package may expose contracts and callbacks. A higher-level package may depend on those contracts and provide implementations. The lower layer must not import the higher layer to call back upward.
+
+For dependency diagrams and tables in this document, an arrow points from consumer to dependency.
+
+## Current runtime dependency graph
+
+```mermaid
+flowchart TD
+  pi["@tsuuanmi/pi"]
+  workflows["@tsuuanmi/pi-workflows"]
+  web["@tsuuanmi/pi-web-runtime"]
+  tui["@tsuuanmi/pi-tui"]
+  orchestrator["@tsuuanmi/pi-orchestrator"]
+  agent["@tsuuanmi/pi-agent"]
+  ai["@tsuuanmi/pi-ai"]
+
+  pi --> ai
+  pi --> agent
+  pi --> tui
+  pi --> workflows
+  pi --> web
+  workflows --> ai
+  workflows --> agent
+  workflows --> orchestrator
+  workflows --> tui
+  orchestrator --> agent
+  agent --> ai
 ```
 
-The direction means higher layers may use lower layers. Lower layers must not depend on higher layers.
+The source-import graph and manifest runtime graph agree:
+
+| Consumer | Direct workspace dependencies | Why |
+|---|---|---|
+| `@tsuuanmi/pi-ai` | None | Lowest model/provider protocol |
+| `@tsuuanmi/pi-agent` | ai | Runs AI streams and validates model tool arguments |
+| `@tsuuanmi/pi-orchestrator` | agent | Schedules `Agent` instances and invokes `Agent.run()` |
+| `@tsuuanmi/pi-tui` | None | Independent terminal toolkit |
+| `@tsuuanmi/pi-web-runtime` | None | Independent Node browser runtime and provider contract |
+| `@tsuuanmi/pi-workflows` | ai, agent, orchestrator, tui | Adapts model/agent/orchestration contracts and produces HUD data |
+| `@tsuuanmi/pi` | ai, agent, tui, workflows, web-runtime | Product composition root |
+
+`@tsuuanmi/pi-orchestrator` has a development-only AI dependency for tests. It is not a runtime/source edge. There are no workspace peer dependencies and no runtime cycles.
 
 ## Package ownership
 
 | Package | Owns | Must not own |
-| --- | --- | --- |
-| `@tsuuanmi/pi-ai` | Provider/model APIs, message content transport, streaming primitives | Agent loop, tools, orchestration, workflows, CLI/UI |
-| `@tsuuanmi/pi-agent` | Single-agent runtime, standard tool protocol, tool registry APIs, message state, subagent lifecycle contracts and host-neutral lifecycle tools, thinking-level validation, tool receipts, Node process and shell primitives | Pi-specific Bash/output adapters, subagent sessions, tmux, multi-agent task scheduling, workflow state, CLI/UI |
-| `@tsuuanmi/pi-orchestrator` | Generic task DAG orchestration over `Agent`s: `Task`, `TaskQueue`, `Team`, scheduling, routing, checkpoints, task receipts | Pi workflow commands, skill UX, CLI session state, file artifacts |
-| `@tsuuanmi/pi-workflows` | Pi workflow skills, workflow tool adapters, workflow commands, workflow runtime state, workflow-specific policies | Low-level agent loop, model provider transport, generic subagent lifecycle behavior, generic task engine internals |
-| `@tsuuanmi/pi` | CLI, TUI integration, session manager, resource loading, extension runtime, built-in tools, Pi Bash/output adapters, concrete `SubagentManager` sessions, Pi-native subagent controls, and tmux integration | Generic process primitives, generic orchestration engine, workflow business logic, provider internals |
+|---|---|---|
+| [`@tsuuanmi/pi-ai`](packages/ai.md) | Model/message/tool/usage protocol, provider registry and adapters, model metadata, OAuth primitives, normalized streams | Agent loop, tool execution, credentials, sessions, workflows, CLI/UI |
+| [`@tsuuanmi/pi-agent`](packages/agent.md) | Single-agent state and turn loop, generic tools, hooks/events/traces, tool receipts, host-neutral subagent contracts, Node process primitives in `/node` | Provider implementations, concrete Pi sessions/tools/UI, task DAG scheduling, workflow policy |
+| [`@tsuuanmi/pi-orchestrator`](packages/orchestrator.md) | Generic task DAGs, Teams, routing, scheduling, retries, verification, budgets, task receipts, checkpoint contracts | Workflow phases/artifacts, Pi sessions/UI, provider transport, durable checkpoint location |
+| [`@tsuuanmi/pi-tui`](packages/tui.md) | Terminal I/O, component contracts, focus/overlays, differential rendering, editing/input, themes, ANSI/Unicode utilities | Models, agents, application commands, extension lifecycle, persistent settings/session/workflow state |
+| [`@tsuuanmi/pi-web-runtime`](packages/web-runtime.md) | Browser profile/session/worker mechanics, web-provider descriptors, private MCP worker bridge, ChatGPT Web automation | Pi auth/accounts, AI event adaptation, Agent, workflow/UI policy, host tool approval/execution |
+| [`@tsuuanmi/pi-workflows`](packages/workflows.md) | Named workflow policy, transitions/gates/handoffs, tools/commands, workflow state/artifacts/audit, workflow adapters | Generic agent loop, provider transport, generic task engine internals, concrete Pi subagent backend, Pi startup/session/UI composition |
+| [`@tsuuanmi/pi`](packages/pi.md) | CLI/SDK, startup, settings/auth, sessions, resources/packages, extensions, built-in tools, concrete subagents, mode/UI composition, browser account/model integration | Lower-layer provider, agent, orchestrator, TUI, workflow, or browser-runtime internals |
 
-## Execution boundary
+## Execution boundaries
 
-| Operation | Owner | Allowed integration |
-| --- | --- | --- |
-| Run one agent and execute its tools | `@tsuuanmi/pi-agent` | Hosts provide models, tools, and runtime inputs |
-| Spawn or control one Pi-native subagent session | `@tsuuanmi/pi` through the `@tsuuanmi/pi-agent` manager contract | Agent owns host-neutral lifecycle tools; workflow adapters provide the injected manager; Pi-native controls use Pi's host context directly |
-| Schedule, route, retry, or coordinate multiple agents | `@tsuuanmi/pi-orchestrator` | Workflows provide `Agent` instances through workflow-owned adapters |
-| Enforce a named workflow's roles, gates, and artifacts | `@tsuuanmi/pi-workflows` | Use the manager only for a workflow-specific single-worker step |
+| Operation | Owner | Integration rule |
+|---|---|---|
+| Normalize and stream one provider request | AI | Caller supplies model/context/options and consumes normalized events |
+| Run one agent and execute its requested tools | Agent | Host supplies models, stream/auth callbacks, tools, and hooks |
+| Spawn/control one concrete Pi subagent session | Pi through Agent's manager contract | Agent owns generic lifecycle types/tools; Pi owns records, isolated sessions, and native/tmux backends |
+| Schedule, route, retry, or verify multiple agent tasks | Orchestrator | Higher layer supplies Agents, task inputs, hooks, and checkpoint storage |
+| Enforce named workflow roles, phases, gates, and artifacts | Workflows | Workflow adapters may use Agent/SubagentManager or Orchestrator according to the operation |
+| Render terminal state | TUI | Host supplies component data and callbacks; TUI owns rendering and input mechanics |
+| Drive one browser-backed provider turn | Web Runtime | Pi supplies profile/account policy, entitlements, tool callback, and AI-event adaptation |
+| Compose the application | Pi | Pi imports public lower-layer APIs; lower packages do not import Pi |
 
-A direct `SubagentManager` call is valid only for lifecycle control or a single workflow-owned worker. Generic dependencies, queues, routing, retries, and multi-agent collaboration must use `@tsuuanmi/pi-orchestrator`.
+### Single-subagent versus multi-agent work
 
-The semantic boundary checker allows direct manager calls only in these workflow adapters:
+A direct `SubagentManager` call is valid for lifecycle control or one workflow-owned worker. Generic dependencies, queues, routing, retries, verification, and multi-agent collaboration must use Orchestrator.
 
-- `packages/workflows/src/tool/adapter.ts` for the workflow adapter around agent-owned lifecycle tools;
-- `packages/workflows/src/skills/team/agent-adapter.ts` for the `Agent` bridge;
-- `packages/workflows/src/skills/ralplan/agent-adapter.ts` for Orchestrator-backed role execution;
+The boundary checker allows direct manager operations in these workflow adapters:
+
+- `packages/workflows/src/tool/adapter.ts` for Agent-owned lifecycle tools.
+- `packages/workflows/src/skills/team/agent-adapter.ts` for the Agent bridge.
+- `packages/workflows/src/skills/ralplan/agent-adapter.ts` for Orchestrator-backed role execution.
 - `packages/workflows/src/skills/ultragoal/tools.ts` for one guarded goal worker.
 
-Unknown manager call sites fail the check instead of falling back to another execution engine.
+Team multi-agent execution must route through `runTeamOrchestrator`. Unknown manager call sites fail the check instead of falling back to another execution path.
 
-Pi-native controls in `packages/pi/src/subagents/` are host-owned, not workflow adapters. They may use the concrete Pi manager for inspection, attach, and kill, but must not import workflow tool contracts or workflow receipt assembly.
+Pi-native controls under `packages/pi/src/subagents/` may use the concrete Pi manager for inspect, attach, and kill operations. They must not import workflow tool contracts or assemble workflow receipts.
 
-## Hard boundary rules
+## Public API boundary
 
-- Each concept has one owner; do not add shared ownership, fallback ownership, or compatibility wrappers.
-- Higher layers may call lower layers only through public APIs.
-- Lower layers must not import higher layers.
-- Adapters live in the higher layer that needs the integration.
-- Names must identify the owning layer when a term overlaps, such as workflow team state versus orchestrator `Team`.
-- Do not create a second execution path for behavior already owned by `@tsuuanmi/pi-orchestrator`.
-- Keep process spawning, waiting, termination, and shell resolution in `@tsuuanmi/pi-agent/node`; keep Pi-specific Bash backends, output policy, and process lifecycle registration in `@tsuuanmi/pi`.
+- Import another package only through a path published by that package's `exports` map. TUI is the exception in form, not intent: it publishes only its root `main`/`types` entry and has no supported subpath API.
+- `#ai/*`, `#agent/*`, `#orchestrator/*`, `#tui/*`, `#workflows/*`, and `#pi/*` are private aliases for code inside the same package.
+- Do not import another package's `src/`, private `dist/` files, test helpers, or internal alias.
+- A direct source import requires a direct `dependencies` or `peerDependencies` declaration. A development dependency or transitive dependency is insufficient for runtime source.
+- Adapters belong to the higher layer. Examples: Workflows owns its Orchestrator adapters; Pi owns its web-to-AI stream adapter and extension-to-Agent bridge. An adapter translates and delegates; it must not reproduce the lower package's state machine or guarantees.
+- A package that declares `pi` resources should own their compiled files and manifest-relative paths. Pi currently has a Workflows-specific rewrite path; remove that host compensation when the producer-owned artifact is complete.
+- Package root barrels are compatibility surfaces. New exports should be intentional and documented; wildcard exports reduce the freedom to reorganize internals.
 
-## Dependency rules
+## Hard semantic rules
 
-The dependency rules are enforced by:
+- Each concept has one owner. Do not add fallback ownership, a second engine, or a compatibility facade in another package.
+- Lower layers do not import higher layers.
+- Workflows must not import `@tsuuanmi/pi` or any Pi subpath. Pi APIs are supplied through workflow-owned host contracts.
+- Orchestrator must not import workflow state, storage, gates, receipts, artifacts, or UI.
+- Agent must not import Orchestrator, Workflows, Pi, TUI, or Web Runtime.
+- AI, TUI, and Web Runtime remain independent workspace leaves unless an explicit architecture change is approved.
+- Pi should continue to reach generic multi-agent execution through Workflows adapters rather than adding product policy to Orchestrator or a duplicate orchestration path in Pi.
+- Generic process spawning, waiting, termination, and Bash resolution belong in `@tsuuanmi/pi-agent/node`; Pi owns application-specific Bash backends, output policy, and process registration.
+- Agent owns tool validation and execution semantics. Pi and Web Runtime may select, authorize and transport tool calls, but must not invoke a parallel Tool execution path.
+- Browser providers depend on Web Runtime contracts; Web Runtime must not depend on Pi auth, models, Agent, or extension types.
+- Names must identify the owning layer where concepts overlap, such as workflow Team state versus Orchestrator `Team`.
+
+## Mechanical enforcement
+
+Run:
 
 ```bash
 npm run check:package-boundaries
 ```
 
-The checker scans `packages/*/src/**/*.ts`, validates package and alias boundaries, and rejects workflow manager calls outside the explicit adapter allowlist. Update `scripts/check-package-boundaries.mjs` and this document together when a boundary intentionally changes.
+For the six configured packages, `scripts/check-package-boundaries.mjs`:
 
-Allowed direction:
+1. Scans production TypeScript imports under each package `src/` tree.
+2. Validates imports against the configured allowed dependency graph.
+3. Rejects cycles in that configured graph.
+4. Requires a direct runtime or peer dependency declaration for each cross-package source import.
+5. Requires build aliases to resolve beneath the dependency's `dist/` output.
+6. Rejects imports of package subpaths that are not published.
+7. Applies Pi-internal layering rules.
+8. Restricts direct workflow `SubagentManager` operations and Team execution paths.
 
-```text
-pi-agent -> pi-ai
-pi-orchestrator -> pi-agent
-pi-workflows -> pi-agent
-pi-workflows -> pi-orchestrator, when a workflow needs generic task/team orchestration
-pi -> pi-agent
-pi -> pi-workflows
-pi -> pi-ai
-pi -> pi-tui
-```
+The checker's configured maximum graph is broader than the current runtime graph:
 
-Forbidden dependencies:
+| Package | Checker permits imports from |
+|---|---|
+| AI | None |
+| Agent | AI |
+| Orchestrator | Agent, AI |
+| TUI | None |
+| Workflows | Agent, Orchestrator, AI, TUI |
+| Pi | Agent, Orchestrator, AI, TUI, Workflows |
 
-```text
-pi-agent -> pi-orchestrator
-pi-agent -> pi-workflows
-pi-orchestrator -> pi-workflows
-pi-orchestrator -> pi
-pi-workflows -> pi
-pi-workflows -> pi/*
-```
+The currently unused permitted edges are Orchestrator to AI and Pi to Orchestrator. Adding either would still require a direct manifest dependency and build alias. Treat either as an architecture change, not as pre-approved coupling.
 
-`@tsuuanmi/pi-workflows` must not import `@tsuuanmi/pi` or any `@tsuuanmi/pi/*` subpath. Pi app APIs must be passed into workflows through explicit workflow-owned seams instead of direct package imports. `@tsuuanmi/pi-orchestrator` must not import workflow code, workflow storage, workflow gates, workflow receipts, or workflow artifacts.
+### Pi-internal rules
 
-## Boundary diagram
+The same checker also enforces selected boundaries inside `packages/pi`:
 
-```text
-┌─────────────────────────────────────────────┐
-│ @tsuuanmi/pi                                │
-│ CLI, TUI, sessions, resource loading         │
-│ Wires extensions/tools/skills                │
-└─────────────────────▲───────────────────────┘
-                      │ uses
-┌─────────────────────┴───────────────────────┐
-│ @tsuuanmi/pi-workflows                      │
-│ Workflow skills, commands, tools, state      │
-│ Product-level automation                     │
-└──────────────▲────────────────────▲─────────┘
-               │ optional uses       │ uses
-┌──────────────┴─────────────┐  ┌───┴────────────────┐
-│ @tsuuanmi/pi-orchestrator  │  │ @tsuuanmi/pi-agent │
-│ Task DAG, team scheduling  │  │ Agent runtime/tools │
-│ checkpoints/task receipts  │  │ messages/subagents  │
-└──────────────▲─────────────┘  └───▲────────────────┘
-               │ uses               │ uses
-               └────────────────────┘
-                       │
-              ┌────────┴────────┐
-              │ @tsuuanmi/pi-ai │
-              │ Providers/models │
-              └─────────────────┘
-```
+- `src/api/` cannot import runtime or UI implementation modules.
+- `src/package/` cannot import CLI, modes, or UI.
+- `src/subagents/` cannot import CLI or workflow implementation surfaces.
+- Package loading cannot reach back through the broad `#pi/index` barrel.
 
-## Rule of thumb
+These rules keep public SDK/configuration code from depending on application-mode internals and prevent circular composition through broad barrels.
 
-- If it is about the standard tool protocol, registry, or one agent executing registered tools, it belongs in `@tsuuanmi/pi-agent`.
-- If it is about many agents executing a task DAG, it belongs in `@tsuuanmi/pi-orchestrator`.
-- If it is about a named Pi workflow or skill with user-facing state, it belongs in `@tsuuanmi/pi-workflows`; it may call the orchestrator through an adapter.
-- If it is about one subagent's lifecycle, it belongs behind the injected `SubagentManager` contract, not in the orchestrator.
-- If it is about concrete Pi tools, CLI, sessions, TUI, or resource loading, it belongs in `@tsuuanmi/pi`.
+## Current enforcement gap
+
+`@tsuuanmi/pi-web-runtime` is a real seventh workspace package and Pi directly imports it, but it is absent from the checker's `packageRoots` and `allowedImports` tables. Therefore the checker does **not** currently validate:
+
+- Web Runtime's leaf status.
+- Pi's direct declaration/build resolution/export use for that edge.
+- Cycles that would involve Web Runtime.
+- Future Web Runtime cross-package imports.
+
+The manifest and current source are consistent: Web Runtime has no workspace dependency and Pi declares/imports it directly. This is documented current state, not equivalent mechanical enforcement. Add Web Runtime to the checker before relying on the script to protect this boundary.
+
+The root build also builds Web Runtime indirectly during Pi's asset-copy phase rather than as an explicit top-level build step. See [Package Overview](package-overview.md#build-and-distribution-interactions).
+
+### Non-workspace alias drift
+
+The root `tsconfig.json` still contains `@tsuuanmi/pi-agent-old` aliases that point to a nonexistent `packages/agent-old/` directory. They are stale editor/typecheck configuration, not an eighth package and not an edge in the workspace graph. Remove them in a separate configuration cleanup.
 
 ## Receipt ownership
 
 | Receipt | Owner | Purpose | Boundary rule |
-| --- | --- | --- | --- |
-| Tool receipt | `@tsuuanmi/pi-agent` | Evidence for one tool execution inside one agent run | Must not own task routing or workflow state |
-| Task receipt | `@tsuuanmi/pi-orchestrator` | Evidence for one orchestrated task, including routing, retries, and metrics | Must not own workflow state or artifact layout |
-| Workflow receipt | `@tsuuanmi/pi-workflows` | Evidence for workflow actions and workflow state transitions | May reference tool/task receipt ids but must not own their schemas |
+|---|---|---|---|
+| Tool receipt | Agent | Evidence for one tool execution inside one agent run | Must not own task routing or workflow state |
+| Task receipt | Orchestrator | Evidence for one routed/retried/verified orchestrated task | Must not own workflow state or artifact layout |
+| Workflow receipt | Workflows | Evidence for workflow actions and state transitions | May reference lower-layer receipt ids without owning their schemas |
+
+Pi persists or transports receipts for its sessions, but persistence by the host does not transfer schema ownership.
 
 ## Persistence ownership
 
 | State | Owner | Contract |
-| --- | --- | --- |
-| Agent state | `@tsuuanmi/pi-agent` | Runtime message/tool state for one agent |
-| Orchestrator checkpoint | `@tsuuanmi/pi-orchestrator` | Strict versioned run checkpoint behind `OrchestratorCheckpointStore` |
-| Workflow state | `@tsuuanmi/pi-workflows` | Workflow/session state, runtime ownership, and workflow recovery |
-| Pi session state | `@tsuuanmi/pi` | CLI session, config, extension, and UI state |
+|---|---|---|
+| AI registry/session resources | AI | Process-local registries and explicit resource cleanup; no application persistence |
+| Agent state | Agent | In-memory message/tool/run state for one Agent |
+| Orchestrator checkpoint | Orchestrator | Strict versioned value behind caller-provided `OrchestratorCheckpointStore` |
+| TUI state | TUI | Process-local render/input/theme state; no application persistence |
+| Browser profile/session | Web Runtime mechanics, Pi-selected storage | Web Runtime owns profile locks/browser lifecycle; Pi owns account records and path policy |
+| Workflow state | Workflows | Explicit-session workflow state, artifacts, audit, receipts, runtime ownership, and recovery |
+| Pi application state | Pi | Settings, auth, sessions, extension state, subagent records, and mode/runtime state |
 
-Rules:
-
-- Orchestrator checkpoint stores are abstract interfaces.
-- Workflows may implement an orchestrator checkpoint store.
-- Orchestrator must not import workflow storage.
-- Pi must not interpret orchestrator checkpoint internals except through package APIs.
+Workflows may implement an Orchestrator checkpoint store. Orchestrator must not import workflow storage. Pi must not interpret Orchestrator checkpoint internals except through package APIs.
 
 ## Overlap map
 
-| Overlap area | Risk | Owner |
-| --- | --- | --- |
-| Team concepts | Generic `Team` can be confused with workflow team skill state | `pi-orchestrator` owns generic teams; `pi-workflows` owns workflow team behavior |
-| Task state | Generic DAG tasks can be confused with workflow task/status state | `pi-orchestrator` owns DAG tasks; `pi-workflows` owns workflow-specific state |
-| Checkpoints | Orchestrator run checkpoints can be confused with workflow session state | `pi-orchestrator` owns run checkpoints; `pi-workflows` owns workflow session state |
-| Receipts | Tool receipts, task receipts, and workflow receipts can overlap | `pi-agent` owns tool receipts; `pi-orchestrator` owns task receipts; `pi-workflows` owns workflow receipts |
-| Routing | Agent selection can overlap with workflow expected-role rules | `pi-orchestrator` owns generic routing; `pi-workflows` owns workflow role policy |
-| Events | Agent lifecycle, queue events, and workflow events can overlap | Each package owns events for its layer |
-| Artifacts | Task output can be confused with user-facing workflow artifacts | `pi-workflows` owns artifact storage and display semantics |
-| Governance | Dispatch/consequential gates can overlap with workflow gates | `pi-orchestrator` owns generic gates; `pi-workflows` owns workflow policy gates |
+| Overlap area | Risk | Ownership split |
+|---|---|---|
+| Messages/tools | AI protocol can be confused with Agent execution | AI owns provider wire-neutral values; Agent owns execution and agent-only roles |
+| Teams/tasks | Generic Orchestrator concepts can be confused with workflow skill state | Orchestrator owns generic DAG/team mechanics; Workflows owns named workflow behavior |
+| Routing | Agent selection can overlap expected-next workflow roles | Orchestrator owns generic eligibility/scoring; Workflows owns phase/role policy |
+| Checkpoints | Orchestrator run checkpoints can be confused with workflow state | Orchestrator owns checkpoint schema; Workflows owns storage and workflow recovery |
+| Receipts | Tool, task, and workflow evidence can overlap | Agent, Orchestrator, and Workflows each own their layer's schema |
+| UI/HUD | Workflow status can be confused with rendering | Workflows owns HUD data; Pi composes it; TUI renders it |
+| Browser models | Web provider mechanics can be confused with model/credential policy | Web Runtime owns automation; Pi owns accounts/models/event adaptation; AI owns normalized stream protocol |
+| Artifacts | Task output can be confused with user-facing workflow artifacts | Orchestrator returns task results; Workflows owns artifact layout and display semantics |
+| Governance | Generic dispatch/consequential gates can overlap workflow gates | Orchestrator owns generic execution gates; Workflows owns named workflow policy |
+
+## Rule of thumb
+
+- Provider request, response, model, OAuth primitive, or normalized stream: AI.
+- One Agent executing registered tools: Agent.
+- Many Agents executing a task DAG: Orchestrator.
+- Terminal component/input/rendering behavior: TUI.
+- Browser profile, worker, provider-page automation, or private MCP bridge: Web Runtime.
+- Named workflow phase, gate, handoff, artifact, or workflow tool: Workflows.
+- CLI, SDK, session, settings, auth, resources, extensions, concrete tools/subagents, or application UI composition: Pi.
+
+## Boundary-change checklist
+
+When a dependency or responsibility intentionally moves:
+
+1. Update the owning package's public API first.
+2. Put the adapter in the consuming/higher package.
+3. Add a direct manifest dependency and build alias if a new source edge is necessary.
+4. Update `scripts/check-package-boundaries.mjs`, including cycle and export coverage.
+5. Update this document, [Package Overview](package-overview.md), and the affected package detail pages.
+6. Rebuild lower-package `dist` artifacts before typecheck/tests.
+7. Run `npm run check:package-boundaries` and the affected package checks.
+
+Do not introduce a cross-layer import merely because the checker's current allow-list happens to permit it.
 
 ## Overlap cleanup tasks by ROI
 
 Completed guardrails:
 
-- Package ownership and execution direction are documented and enforced.
+- Package ownership and the configured six-package execution direction are documented and enforced; the Web Runtime gap is listed above.
 - Direct manager calls are limited to approved lifecycle adapters.
 - Team uses `Orchestrator` for multi-agent coordination.
 - Workflow manifest and transition compatibility paths have been removed.

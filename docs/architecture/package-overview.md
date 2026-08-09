@@ -1,133 +1,187 @@
 # Package Overview
 
-This page is the current source-level map of the packages under `packages/`. It covers every package directory with a `package.json` and excludes `dist/`, `node_modules/`, tests, and package-local documentation. It is an inventory and interaction guide; [`package-boundaries.md`](./package-boundaries.md) remains the detailed record of core execution-boundary rules.
+Pi is a seven-package TypeScript workspace. The packages separate provider transport, agent execution, task orchestration, terminal rendering, browser automation, workflow policy, and the final CLI/SDK composition root.
 
-The dependency graph below describes internal runtime package dependencies declared by the manifests. An arrow `A -> B` means that `A` depends on the published boundary of `B`; development-only dependencies are omitted.
+This page is the big-picture map. Detailed component maps are linked from the [package inventory](#package-inventory). [Component Integration Map](component-integration-map.md) shows exactly how each component is imported, dynamically loaded, injected, or handed off. Import policy and enforcement are documented in [Package Boundaries](package-boundaries.md), and duplicate/ambiguous ownership is tracked in [Package Overlap Audit](package-overlap-audit.md).
 
-## Dependency map
+## Reading the dependency graph
 
-```text
-@tsuuanmi/pi
-├── @tsuuanmi/pi-agent
-│   └── @tsuuanmi/pi-ai
-├── @tsuuanmi/pi-ai
-├── @tsuuanmi/pi-tui
-├── @tsuuanmi/pi-workflows
-│   ├── @tsuuanmi/pi-agent
-│   ├── @tsuuanmi/pi-ai
-│   ├── @tsuuanmi/pi-orchestrator
-│   │   └── @tsuuanmi/pi-agent
-│   └── @tsuuanmi/pi-tui
-└── @tsuuanmi/pi-web-runtime
+Arrows below point from a consumer to a direct runtime dependency. They do not represent event or callback direction.
 
-@tsuuanmi/pi-ai       (leaf)
-@tsuuanmi/pi-tui      (leaf)
-@tsuuanmi/pi-web-runtime (leaf)
+```mermaid
+flowchart TD
+  pi["@tsuuanmi/pi\nCLI, SDK, and composition root"]
+  workflows["@tsuuanmi/pi-workflows\nworkflow policy and durable state"]
+  web["@tsuuanmi/pi-web-runtime\nbrowser automation runtime"]
+  tui["@tsuuanmi/pi-tui\nterminal UI primitives"]
+  orchestrator["@tsuuanmi/pi-orchestrator\ntask and team orchestration"]
+  agent["@tsuuanmi/pi-agent\nagent loop and tool contracts"]
+  ai["@tsuuanmi/pi-ai\nmodel and provider protocol"]
+
+  pi --> ai
+  pi --> agent
+  pi --> tui
+  pi --> workflows
+  pi --> web
+  workflows --> ai
+  workflows --> agent
+  workflows --> orchestrator
+  workflows --> tui
+  orchestrator --> agent
+  agent --> ai
 ```
 
-The important architectural property is that `@tsuuanmi/pi` is the application host, while the lower packages remain reusable. `@tsuuanmi/pi-workflows` is loaded by the host as an extension package; it does not import `@tsuuanmi/pi`. `@tsuuanmi/pi-web-runtime` is also host-neutral; Pi maps its browser/provider events into the Pi model and agent runtime.
+The graph is acyclic. Three packages are workspace leaves:
 
-## Package inventory and boundaries
+- `@tsuuanmi/pi-ai` has no workspace dependency.
+- `@tsuuanmi/pi-tui` has no workspace dependency.
+- `@tsuuanmi/pi-web-runtime` has no workspace dependency.
 
-| Package | Boundary and primary responsibility | Does not own | Runtime dependencies |
-| --- | --- | --- | --- |
-| [`@tsuuanmi/pi-ai`](../../packages/ai/README.md) | Model definitions, provider registration, provider transports, message/context/tool protocols, and assistant event streams | Agent loops, tool execution, orchestration, sessions, CLI, TUI, and browser profile management | None of the internal packages |
-| [`@tsuuanmi/pi-agent`](../../packages/agent/README.md) | One-agent execution, message state and compaction, tool contracts/registry/policy, tool receipts, and host-neutral subagent lifecycle contracts | Pi sessions and tmux, Pi-specific tools/output, multi-agent scheduling, workflow state, and UI | `@tsuuanmi/pi-ai` |
-| [`@tsuuanmi/pi-orchestrator`](../../packages/orchestrator/README.md) | Generic task/team execution over `Agent` instances: planning, routing, scheduling, retries, checkpoints, metrics, and task receipts | Pi workflow commands and gates, concrete subagent process control, CLI/session state, and workflow artifacts | `@tsuuanmi/pi-agent` |
-| [`@tsuuanmi/pi-workflows`](../../packages/workflows/README.md) | User-facing workflow skills and commands, workflow state/audit/artifacts, workflow policies, and adapters for agent and orchestrator contracts | The Pi application API, the low-level agent loop, provider transport, and generic orchestrator internals | `@tsuuanmi/pi-agent`, `@tsuuanmi/pi-ai`, `@tsuuanmi/pi-orchestrator`, `@tsuuanmi/pi-tui` |
-| [`@tsuuanmi/pi`](../../packages/pi/README.md) | CLI/application host, resource and extension loading, auth/settings, model registry, session persistence, built-in tools, concrete subagent sessions, web-provider adapters, and TUI integration | Reusable agent/provider/orchestrator internals, workflow business logic, and browser-provider internals | `@tsuuanmi/pi-agent`, `@tsuuanmi/pi-ai`, `@tsuuanmi/pi-tui`, `@tsuuanmi/pi-workflows`, `@tsuuanmi/pi-web-runtime` |
-| [`@tsuuanmi/pi-tui`](../../packages/tui/README.md) | Terminal rendering, differential updates, components, input/editor behavior, overlays, themes, and terminal utilities | Pi sessions, agent state, workflow state, model/provider logic, and browser automation | None of the internal packages |
-| [`@tsuuanmi/pi-web-runtime`](../../packages/web-runtime/README.md) | Host-neutral browser sessions, Chromium/profile workers, MCP bridge, web-provider descriptors, and the ChatGPT web provider implementation | Pi auth/account policy, model registry, agent/tool contracts, session persistence, and terminal UI | None of the internal packages |
+`@tsuuanmi/pi` is the composition root and no workspace package imports it. In particular, Pi does **not** directly depend on `@tsuuanmi/pi-orchestrator`; workflow adapters connect the application to the generic orchestrator.
 
-## How the packages interact
+## Package inventory
 
-### 1. Application startup and resource loading
+| Package | Primary role | Direct workspace dependencies | Runtime dependents | Detail |
+|---|---|---|---|---|
+| `@tsuuanmi/pi-ai` | Normalized model, message, provider, OAuth, and streaming protocol | None | agent, workflows, pi | [Components and boundaries](packages/ai.md) |
+| `@tsuuanmi/pi-agent` | Stateful agent loop, tool execution, hooks/events, receipts, and subagent contracts | ai | orchestrator, workflows, pi | [Components and boundaries](packages/agent.md) |
+| `@tsuuanmi/pi-orchestrator` | Task DAGs, routing, concurrency, retries, verification, checkpoints, and teams | agent | workflows | [Components and boundaries](packages/orchestrator.md) |
+| `@tsuuanmi/pi-tui` | Terminal I/O, differential rendering, components, input, and themes | None | workflows, pi | [Components and boundaries](packages/tui.md) |
+| `@tsuuanmi/pi-web-runtime` | Visible Chromium profiles, browser workers, provider descriptors, and private MCP IPC | None | pi | [Components and boundaries](packages/web-runtime.md) |
+| `@tsuuanmi/pi-workflows` | Gated workflow policy, tools, commands, state, artifacts, audit, and host adapters | ai, agent, orchestrator, tui | pi | [Components and boundaries](packages/workflows.md) |
+| `@tsuuanmi/pi` | CLI, SDK, settings, sessions, loaders, extensions, tools, UI, and concrete subagents | ai, agent, tui, workflows, web-runtime | External users and extensions | [Components and boundaries](packages/pi.md) |
 
-`@tsuuanmi/pi` owns the host lifecycle. Its resource loader reads package manifests and resolves extensions, skills, agents, commands, themes, and web-provider descriptors. The two bundled default packages are:
+`@tsuuanmi/pi-orchestrator` also declares `@tsuuanmi/pi-ai` as a development dependency for tests; it has no direct runtime source import from AI.
 
-- `@tsuuanmi/pi-workflows`, which contributes an extension, workflow skills, agent definitions, and workflow commands.
-- `@tsuuanmi/pi-web-runtime`, which contributes web-provider descriptor modules through `pi.webProviders`.
+## Architectural planes
 
-The workflow package exposes a host-neutral factory from `packages/workflows/src/extension.ts`. Pi supplies a host implementing the workflow tool and hook interfaces, so the workflow package can register behavior without importing Pi internals.
+### Provider protocol
 
-### 2. Standard agent turn
+`@tsuuanmi/pi-ai` is the lowest model-facing layer. It defines normalized models, request context, messages, tools, usage, streaming events, provider registration, and built-in Anthropic/OpenAI-family adapters. It represents tool calls but does not execute them.
+
+### Agent execution
+
+`@tsuuanmi/pi-agent` consumes the AI stream contract and owns the model/tool turn loop. It manages agent state, queueing, hooks, events, tool execution, traces, pruning, structured output, and generic subagent interfaces. The root entry is host-neutral; Node-specific process and filesystem helpers are isolated in `@tsuuanmi/pi-agent/node`.
+
+`@tsuuanmi/pi-orchestrator` runs one level above an `Agent`. It owns task graphs, agent selection, scheduling, retries, verification, budgets, receipts, and checkpoint contracts. It delegates each actual model/tool run back to `Agent.run()` and delegates durable checkpoint storage to its caller.
+
+### Host adapters
+
+`@tsuuanmi/pi-tui` is the terminal presentation toolkit. It knows how to read terminal input, render component trees, manage focus and overlays, and produce differential output. It does not know about models, sessions, or application commands.
+
+`@tsuuanmi/pi-web-runtime` is a Node-side browser automation runtime, not browser-executed application code. It owns visible Playwright Chromium sessions, profile workers, provider descriptors, and a private MCP-over-worker-IPC bridge. It deliberately has no dependency on AI, agent, workflows, or Pi host types.
+
+### Workflow policy
+
+`@tsuuanmi/pi-workflows` owns Deep Interview, Ralplan, Team, and Ultragoal policy. It adds session-scoped workflow state, transitions, gates, artifacts, audit records, CLI commands, model-visible tools, and Pi extension hooks. It adapts generic agent and orchestrator capabilities; it does not reimplement their execution engines.
+
+### Application composition
+
+`@tsuuanmi/pi` is where the layers become a product. It loads settings and package resources, chooses a model, builds an `AgentSession`, registers coding tools and providers, persists sessions, hosts extensions, implements concrete subagents, and dispatches interactive, print, JSON, or RPC modes.
+
+## Main runtime interactions
+
+### Standard model turn
 
 ```text
-Pi session/runtime
-      │ creates and hosts
-      ▼
-@tsuuanmi/pi-agent
-      │ receives a stream function from the host
-      ▼
-@tsuuanmi/pi-ai ──> selected model provider ──> assistant event stream
-      ▲                                                   │
-      └──────── tool calls/results and next-turn context ┘
-
-Pi session persistence and @tsuuanmi/pi-tui render the resulting events.
+User / RPC input
+  -> @tsuuanmi/pi mode and AgentSession
+  -> @tsuuanmi/pi-agent Agent.prompt()
+  -> @tsuuanmi/pi-ai stream(model, context, options)
+  -> provider adapter / remote model
+  -> normalized stream events
+  -> agent tool execution and next turns
+  -> Pi session persistence plus TUI, JSON, or RPC output
 ```
 
-`@tsuuanmi/pi-agent` owns the loop and tool protocol. `@tsuuanmi/pi-ai` owns model/provider transport. `@tsuuanmi/pi` supplies concrete tools, session services, authentication/model selection, and the stream function, then persists and presents the result.
+Pi owns credentials, selected model, concrete tools, extension hooks, and persistence. Agent owns turn control and tool-call execution. AI owns provider dispatch and event normalization.
 
-### 3. Workflow and team execution
+### Workflow run
 
 ```text
-User command or skill
-        │
-        ▼
-Pi resource/extension host
-        │ loads and invokes
-        ▼
-@tsuuanmi/pi-workflows
-   ├── workflow tools, hooks, state, gates, and receipts
-   ├── @tsuuanmi/pi-agent adapters and subagent-manager contract
-   └── @tsuuanmi/pi-orchestrator
-          └── plans, routes, schedules, retries, and checkpoints Agent instances
-        │
-        ▼
-Pi session state, artifacts, receipts, and TUI output
+Workflow skill or tool
+  -> @tsuuanmi/pi-workflows guard and state transition
+  -> workflow adapter
+  -> @tsuuanmi/pi-orchestrator task/team run when generic orchestration is needed
+  -> injected @tsuuanmi/pi-agent SubagentManager or Agent
+  -> Pi concrete subagent/session backend
+  -> workflow receipts, artifacts, audit, and HUD state
 ```
 
-The `SubagentManager` contract is the lifecycle seam: `@tsuuanmi/pi-agent` defines the host-neutral contract, `@tsuuanmi/pi` supplies concrete Pi-native sessions, and workflow tools invoke it through explicit adapters. The orchestrator receives `Agent` instances and coordinates task execution; it does not spawn Pi sessions or own workflow state.
+Control returns through injected callbacks and interfaces. The lower packages never import Pi to call upward.
 
-### 4. Browser-backed web models
+### Browser-backed model turn
 
 ```text
 Pi resource loader
-      │ loads descriptor from
-      ▼
-@tsuuanmi/pi-web-runtime
-      │ descriptor + worker + browser/MCP execution
-      ▼
-Pi WebProviderHost / ProfileWorkerPool
-      │ auth, entitlement, model registration, and tool adapter
-      ▼
-@tsuuanmi/pi-ai model with api = "web"
-      │
-      ▼
-@tsuuanmi/pi-agent through Pi's stream function
+  -> web-provider descriptor from @tsuuanmi/pi-web-runtime
+  -> Pi WebProviderHost and AI stream adapter
+  -> per-profile web-runtime worker
+  -> visible persistent Chromium page
+  -> normalized WebTurnEvent values
+  -> Pi converts events to @tsuuanmi/pi-ai stream events
+  -> @tsuuanmi/pi-agent consumes the stream normally
 ```
 
-`@tsuuanmi/pi-web-runtime` uses its own provider and turn-event contracts so it remains independent of Pi's model and agent packages. Pi verifies browser accounts and entitlements, exposes entitled routes as models, converts web turn events to the `@tsuuanmi/pi-ai` event stream, and routes browser MCP tool calls back to Pi's tool executor.
+Pi owns account records, active entitlements, model registration, tool approval/execution, and conversion to AI events. Web runtime owns browser/profile/worker mechanics and provider automation.
 
-### 5. Terminal presentation
+### Terminal and workflow status
 
-`@tsuuanmi/pi-tui` is a presentation leaf. Pi composes its components and rendering primitives into the interactive CLI. Workflow HUDs may use the same published TUI primitives, but TUI does not know about workflows, sessions, or agents. This keeps terminal rendering reusable and prevents UI concerns from flowing into the execution packages.
+```text
+AgentSession and extension events
+  -> Pi interactive controllers and components
+  -> @tsuuanmi/pi-tui render tree
+  -> differential terminal output
 
-## Boundary rules to preserve
+Workflow state under .pi/<session-id>/workflows
+  -> workflow HUD summary
+  -> Pi status-line data provider
+  -> @tsuuanmi/pi-tui status-line component
+```
 
-- Keep model/provider transport in `@tsuuanmi/pi-ai`; adapt new provider types at the host boundary instead of adding Pi-specific state to AI protocols.
-- Keep one-agent execution and standard tool contracts in `@tsuuanmi/pi-agent`; keep concrete process/session control in `@tsuuanmi/pi`.
-- Use `@tsuuanmi/pi-orchestrator` for generic multi-agent task coordination. Workflow-specific gates, artifacts, and state remain in `@tsuuanmi/pi-workflows`.
-- Load workflows through the Pi extension/resource host. `@tsuuanmi/pi-workflows` must not import `@tsuuanmi/pi` or `@tsuuanmi/pi/*`.
-- Keep browser automation and MCP transport in `@tsuuanmi/pi-web-runtime`; keep Pi authentication, entitlement, model registration, and event adaptation in `@tsuuanmi/pi`.
-- Keep terminal rendering in `@tsuuanmi/pi-tui`; lower execution packages must not depend on it.
+## Public boundaries
 
-## Source anchors and detailed references
+- A package's `package.json` `exports` map and the public barrels referenced by it define the supported code surface. `@tsuuanmi/pi-tui` has only its root `main`/`types` entry and no subpath export map.
+- `#ai/*`, `#agent/*`, `#orchestrator/*`, `#tui/*`, `#workflows/*`, and `#pi/*` are package-internal aliases, not cross-package APIs.
+- Direct workspace imports must also be declared in `dependencies` or `peerDependencies`; a transitive dependency is not an API.
+- Host callbacks and interfaces are preferred over upward imports. Examples are `StreamFunction`, `SubagentManager`, `OrchestratorCheckpointStore`, TUI `Component`, workflow host interfaces, and `WebProviderDescriptor`.
+- Persistence is owned by the layer that defines the durable schema. Pi owns application settings, auth, and session records; workflows owns workflow state/artifacts; orchestrator only defines checkpoint contracts; AI and TUI do not persist application state.
 
-The main integration seams are:
+## Build and distribution interactions
 
-- [`packages/pi/src/loader/resources.ts`](../../packages/pi/src/loader/resources.ts) and [`packages/pi/src/loader/extensions/loader.ts`](../../packages/pi/src/loader/extensions/loader.ts) for package resource and extension loading.
-- [`packages/pi/src/runtime/agent-session-factory.ts`](../../packages/pi/src/runtime/agent-session-factory.ts) for host wiring of agents, models, tools, and web providers.
-- [`packages/workflows/src/extension.ts`](../../packages/workflows/src/extension.ts) for the workflow extension boundary.
-- [`packages/pi/src/web-providers/host.ts`](../../packages/pi/src/web-providers/host.ts) for web-provider descriptor loading and host ownership.
-- [`package-boundaries.md`](./package-boundaries.md), [`persistence-boundaries.md`](./persistence-boundaries.md), and [`workflow-orchestrator-overlap.md`](./workflow-orchestrator-overlap.md) for detailed boundary and state decisions.
+The logical build levels are:
+
+1. AI, TUI, and Web Runtime can build independently.
+2. Agent builds after AI.
+3. Orchestrator builds after Agent.
+4. Workflows builds after AI, Agent, Orchestrator, and TUI.
+5. Pi builds after AI, Agent, TUI, Workflows, and Web Runtime.
+
+The root build explicitly runs AI, Agent, Orchestrator, TUI, Workflows, and then Pi. Inside Pi's build, TypeScript compilation runs before the asset-copy phase; that phase builds Web Runtime and bundles compiled Workflows and Web Runtime assets into the published CLI distribution. Web Runtime is therefore not an explicit top-level build step even though Pi imports it. Build configurations consume lower-package `dist` declarations, so this ordering is a current build-coupling risk rather than a model to copy.
+
+## Enforcement status
+
+`scripts/check-package-boundaries.mjs` validates the configured AI, Agent, Orchestrator, TUI, Workflows, and Pi graph, direct dependency declarations, build aliases, exports, and selected internal seams. As of the current tree, Web Runtime is not in that script's package graph. Its `pi -> web-runtime` edge is real and declared, but is not yet covered by that mechanical boundary check. See [Package Boundaries](package-boundaries.md#current-enforcement-gap).
+
+## Where to make a change
+
+| Change | Owning package |
+|---|---|
+| Add or normalize an LLM provider/API protocol | `@tsuuanmi/pi-ai` |
+| Change the single-agent turn loop, generic tools, hooks, or subagent contracts | `@tsuuanmi/pi-agent` |
+| Change task scheduling, routing, retries, verification, or checkpoint contracts | `@tsuuanmi/pi-orchestrator` |
+| Change terminal rendering, component contracts, input, or themes | `@tsuuanmi/pi-tui` |
+| Change browser profiles, provider automation, worker IPC, or MCP bridge mechanics | `@tsuuanmi/pi-web-runtime` |
+| Change workflow phases, gates, tools, artifacts, audit, or handoff policy | `@tsuuanmi/pi-workflows` |
+| Change CLI/SDK startup, sessions, settings, extensions, resource loading, concrete tools, or UI composition | `@tsuuanmi/pi` |
+
+## Related architecture
+
+- [Component Integration Map](component-integration-map.md)
+- [Package Boundaries](package-boundaries.md)
+- [Runtime Lifecycle](runtime-lifecycle.md)
+- [Persistence Boundaries](persistence-boundaries.md)
+- [Orchestrator vs. Workflows](orchestrator-vs-workflows.md)
+- [Package and Extension Authoring](package-and-extension-authoring.md)
+- [Package Overlap Audit](package-overlap-audit.md)
+- [Package Overlap Implementation](package-overlap-implementation.md)

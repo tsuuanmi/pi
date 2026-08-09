@@ -36,6 +36,8 @@ A package declares Pi resources in `package.json` under `pi`:
 
 Manifest paths are relative to the package root. Entries may be files, directories, glob patterns, or exclusions. Use a manifest when the package has a non-standard layout or needs explicit resource selection.
 
+A published package must point at files included in its tarball. If source manifests use `src/*.ts`, the package build must generate a publishable manifest with compiled paths. The producer package owns that compiled layout; Pi's loader or bundle step should not rewrite another package's resource architecture.
+
 ### Supported resource types
 
 | Manifest key | Accepted files | Runtime role |
@@ -106,7 +108,7 @@ export const provider: WebProviderDescriptor = {
   id: "example-web",
   name: "Example Web",
   models: [],
-  worker: "example-web",
+  worker: "./worker",
   async verify(_profileDir, _signal) {
     return { routes: [] };
   },
@@ -118,6 +120,8 @@ export const provider: WebProviderDescriptor = {
 export default provider;
 ```
 
+Web-provider descriptor discovery is public, but the current package does not export the `startWorker()` bootstrap used by the bundled provider. Until a public worker-authoring API is exported, third-party providers must not deep-import `src/worker/entry.ts` and cannot rely on the bundled worker bootstrap as a supported API.
+
 The descriptor owns browser/provider behavior. Pi owns account records, entitlement checks, model registration, stream adaptation, and the bridge from browser MCP calls to Pi tools. Keep provider-specific selectors, routes, browser profiles, and worker protocols out of the Pi application package.
 
 ## Dependencies and package boundaries
@@ -128,7 +132,7 @@ The descriptor owns browser/provider behavior. Pi owns account records, entitlem
 - If a package ships another Pi package inside its tarball, declare the dependency and bundling explicitly and reference the bundled package's resources through its package path.
 - Keep internal dependency direction from the application host toward reusable layers: application -> workflows/orchestration -> agent -> AI. TUI and browser runtime remain infrastructure leaves.
 
-The package graph and ownership rules are documented in [Package Overview](./package-overview.md) and [Package Boundaries](./package-boundaries.md).
+The package graph and ownership rules are documented in [Package Overview](./package-overview.md), [Component Integration Map](./component-integration-map.md), and [Package Boundaries](./package-boundaries.md).
 
 ## Build and verification checklist
 
@@ -149,3 +153,5 @@ Before publishing or loading a package:
 - [Resource Loader](../../packages/pi/docs/loader/index.md) - discovery and resolution behavior.
 - [Web runtime README](../../packages/web-runtime/README.md) - browser runtime contracts and operational behavior.
 - [Package Overview](./package-overview.md) - all package boundaries and interactions.
+- [Component Integration Map](./component-integration-map.md) - exact static-import, runtime-load, injection, data-handoff, and bundling seams.
+- [Package Overlap Audit](./package-overlap-audit.md) - duplicate/ambiguous ownership and cleanup decisions.

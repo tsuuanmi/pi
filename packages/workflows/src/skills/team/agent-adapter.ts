@@ -1,5 +1,6 @@
 import { Agent, type SubagentManager } from "@tsuuanmi/pi-agent";
-import { type AssistantMessage, AssistantMessageEventStream, type Context, type Model } from "@tsuuanmi/pi-ai";
+import type { Context } from "@tsuuanmi/pi-ai";
+import { createSubagentStream } from "#workflows/orchestration/subagent-stream";
 import type { WorkflowContext } from "#workflows/tool/context";
 
 export interface TeamAgentSpec {
@@ -25,45 +26,28 @@ export function createTeamAgents(ctx: WorkflowContext, specs: readonly TeamAgent
 			return new Agent({
 				name: id,
 				capabilities: spec.capabilities,
-				stream: createStream(manager, sessionId, { ...spec, id, profile }),
+				stream: createTeamStream(manager, sessionId, { ...spec, id, profile }),
 			});
 		}),
 	);
 }
 
-function createStream(manager: SubagentManager, sessionId: string, spec: TeamAgentSpec) {
-	return async (model: Model, context: Context, options?: { signal?: AbortSignal }) => {
-		const stream = new AssistantMessageEventStream();
-		try {
-			const prompt = readPrompt(context);
-			const result = await manager.spawn({
-				agent: spec.profile,
-				role: spec.id,
-				prompt,
-				systemPrompt: context.systemPrompt,
-				model: `${model.api}/${model.id}`,
-				tools: spec.tools ? [...spec.tools] : undefined,
-				excludeTools: spec.excludeTools ? [...spec.excludeTools] : undefined,
-				parentSessionId: sessionId,
-				storageSessionId: sessionId,
-				signal: options?.signal,
-			});
-			const message = createMessage(model, result.output);
-			stream.push({ type: "start", partial: message });
-			if (result.output.length > 0) {
-				stream.push({ type: "text_start", contentIndex: 0, partial: message });
-				stream.push({ type: "text_delta", contentIndex: 0, delta: result.output, partial: message });
-				stream.push({ type: "text_end", contentIndex: 0, content: result.output, partial: message });
-			}
-			stream.push({ type: "done", reason: "stop", message });
-		} catch (error) {
-			const aborted = options?.signal?.aborted === true;
-			const message = createErrorMessage(model, error, aborted);
-			stream.push({ type: "start", partial: message });
-			stream.push({ type: "error", reason: aborted ? "aborted" : "error", error: message });
-		}
-		return stream;
-	};
+function createTeamStream(manager: SubagentManager, sessionId: string, spec: TeamAgentSpec) {
+	return createSubagentStream(async ({ model, context, signal }) => {
+		const result = await manager.spawn({
+			agent: spec.profile,
+			role: spec.id,
+			prompt: readPrompt(context),
+			systemPrompt: context.systemPrompt,
+			model: `${model.api}/${model.id}`,
+			tools: spec.tools ? [...spec.tools] : undefined,
+			excludeTools: spec.excludeTools ? [...spec.excludeTools] : undefined,
+			parentSessionId: sessionId,
+			storageSessionId: sessionId,
+			signal,
+		});
+		return result.output;
+	});
 }
 
 function readPrompt(context: Context): string {
@@ -79,38 +63,6 @@ function readPrompt(context: Context): string {
 		.join("\n");
 	if (prompt.trim().length === 0) throw new Error("team agent prompt is empty");
 	return prompt;
-}
-
-function createMessage(model: Model, output: string): AssistantMessage {
-	return {
-		role: "assistant",
-		content: [{ type: "text", text: output }],
-		api: model.api,
-		provider: model.provider,
-		model: model.id,
-		usage: zeroUsage(),
-		stopReason: "stop",
-		timestamp: Date.now(),
-	};
-}
-
-function createErrorMessage(model: Model, error: unknown, aborted: boolean): AssistantMessage {
-	return {
-		...createMessage(model, ""),
-		stopReason: aborted ? "aborted" : "error",
-		errorMessage: error instanceof Error ? error.message : String(error),
-	};
-}
-
-function zeroUsage() {
-	return {
-		input: 0,
-		output: 0,
-		cacheRead: 0,
-		cacheWrite: 0,
-		totalTokens: 0,
-		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-	};
 }
 
 function requiredString(value: unknown, field: string): string {

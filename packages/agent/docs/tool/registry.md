@@ -23,6 +23,24 @@ const tool = Tool.define({
 
 `Tool.define()` validates the required declaration fields. Tools may also declare `detailsSchema` and `maxOutputChars`.
 
+## Context-bound host specs
+
+`ContextToolSpec<TContext, TParameters, TDetails>` is the shared type for host declarations whose `execute` callback needs an injected host context. It extends `ToolSpec` without changing Agent execution semantics.
+
+```typescript
+import type { ContextToolSpec } from "@tsuuanmi/pi-agent";
+import { Type } from "typebox";
+
+interface HostContext {
+  cwd: string;
+}
+
+const parameters = Type.Object({ path: Type.String() });
+type HostToolSpec = ContextToolSpec<HostContext, typeof parameters>;
+```
+
+Hosts may add rendering metadata in their own derived interface. Before registration they must bind the context and adapt the declaration to a normal `ToolSpec`; `Tool` and Agent never depend on the host context type.
+
 ## Registry
 
 ```typescript

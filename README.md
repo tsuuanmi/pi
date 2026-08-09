@@ -20,15 +20,19 @@
 
 This is the home of the pi agent harness project including our self extensible AI agent.
 
-* **[@tsuuanmi/pi](packages/pi)**: Interactive Pi CLI
-* **[@tsuuanmi/pi-agent](packages/agent)**: Agent runtime with tool calling and state management
-* **[@tsuuanmi/pi-orchestrator](packages/orchestrator)**: Task, team, and multi-agent orchestration primitives
-* **[@tsuuanmi/pi-ai](packages/ai)**: Unified multi-provider LLM API (OpenAI, Anthropic, Google, …)
+* **[@tsuuanmi/pi-ai](packages/ai)**: Provider-neutral model and streaming protocol
+* **[@tsuuanmi/pi-agent](packages/agent)**: Single-agent runtime, tools, hooks, and subagent contracts
+* **[@tsuuanmi/pi-orchestrator](packages/orchestrator)**: Task, team, routing, and multi-agent orchestration primitives
+* **[@tsuuanmi/pi-tui](packages/tui)**: Terminal UI components and differential rendering
+* **[@tsuuanmi/pi-web-runtime](packages/web-runtime)**: Browser-provider profiles, workers, and automation runtime
+* **[@tsuuanmi/pi-workflows](packages/workflows)**: Gated workflow skills, state, tools, and orchestration adapters
+* **[@tsuuanmi/pi](packages/pi)**: Interactive CLI, SDK, sessions, extensions, and application composition
 
 To learn more about pi:
 
 * [Visit pi.dev](https://pi.dev), the project website with demos
 * [Read the documentation](https://pi.dev/docs/latest), but you can also ask the agent to explain itself
+* [See the current package architecture](docs/architecture/package-overview.md) for components, dependencies, boundaries, and runtime interactions
 
 ## Share your OSS Pi sessions
 
@@ -50,13 +54,15 @@ I regularly publish my own `pi-mono` work sessions here:
 
 | Package | Description |
 |---------|-------------|
-| **[@tsuuanmi/pi-ai](packages/ai)** | Unified multi-provider LLM API (OpenAI, Anthropic, Google, etc.) |
-| **[@tsuuanmi/pi-agent](packages/agent)** | Agent runtime with tool calling and state management |
-| **[@tsuuanmi/pi-orchestrator](packages/orchestrator)** | Task, team, and multi-agent orchestration primitives |
-| **[@tsuuanmi/pi](packages/pi)** | Interactive Pi CLI |
-| **[@tsuuanmi/pi-tui](packages/tui)** | Terminal UI library with differential rendering |
+| **[@tsuuanmi/pi-ai](packages/ai)** | Provider-neutral model, provider, OAuth, and streaming protocol |
+| **[@tsuuanmi/pi-agent](packages/agent)** | Single-agent runtime with tools, hooks, events, and subagent contracts |
+| **[@tsuuanmi/pi-orchestrator](packages/orchestrator)** | Task DAG, team, routing, retry, verification, and checkpoint primitives |
+| **[@tsuuanmi/pi-tui](packages/tui)** | Terminal UI library with components, input, themes, and differential rendering |
+| **[@tsuuanmi/pi-web-runtime](packages/web-runtime)** | Node-side browser-provider profiles, workers, MCP bridge, and automation |
+| **[@tsuuanmi/pi-workflows](packages/workflows)** | Deep Interview, Ralplan, Team, and Ultragoal workflow runtime |
+| **[@tsuuanmi/pi](packages/pi)** | Interactive CLI, SDK, sessions, extensions, tools, and application host |
 
-For Slack/chat automation and workflows see [tsuuanmi/pi](https://github.com/tsuuanmi/pi).
+See [Package Overview](docs/architecture/package-overview.md) for the dependency graph, [Component Integration Map](docs/architecture/component-integration-map.md) for exact import/load/use seams, and [Package Overlap Audit](docs/architecture/package-overlap-audit.md) for ownership and duplicate-logic findings.
 
 ## Permissions & Containerization
 

@@ -78,6 +78,7 @@ This keeps agent behavior centralized while allowing applications, extensions, a
 
 - `Agent`: the single standard Pi agent facade. It wraps state, prompt history, the model/tool loop, queues, lifecycle events, tools, and task-oriented `run()` execution.
 - `Tool`: validates and owns one executable tool declaration with optional output limits and details validation.
+- `ContextToolSpec`: lets hosts add a typed execution context without copying the canonical `ToolSpec` contract.
 - `ToolRegistry`: owns name-keyed tool registration for hosts and extensions.
 - `@tsuuanmi/pi-orchestrator`: owns task, team, and orchestration contracts built on top of `Agent`.
 
