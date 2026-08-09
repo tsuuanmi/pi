@@ -53,6 +53,7 @@
 
 ### Changed
 
+- **agent**: Use the canonical message conversion path for the default provider context.
 - **progress**: Omit incomplete tool diagnostics instead of emitting placeholder values.
 - **receipts**: Omit unavailable subagent visibility and failure metadata from structured receipts.
 - **agent**: Flattened core agent source modules from `src/agent/*` into `src/*`.

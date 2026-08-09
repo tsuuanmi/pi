@@ -26,7 +26,7 @@ const agent = new Agent({
 | `name` | `string` | `"agent"` | Stable name for teams, orchestrators, logs, and tracing |
 | `capabilities` | `readonly string[]` | `[]` | Capability labels for scheduling |
 | `initialState` | `Partial<AgentState>` | Empty | Initial system prompt, model, tools, messages |
-| `convertToLlm` | `(messages) => LlmMessage[]` | Filters to user/assistant/toolResult | Convert Message[] to provider-compatible messages |
+| `convertToLlm` | `(messages) => LlmMessage[]` | Canonical Message conversion | Convert Message[] to provider-compatible messages |
 | `transformContext` | `(messages, signal?) => Promise<Message[]>` | — | Transform context before convertToLlm |
 | `stream` | `StreamFunction` | `stream` from `@tsuuanmi/pi-ai` | Stream function for LLM calls |
 | `getApiKey` | `(provider) => string` | — | Dynamic API key resolution |
