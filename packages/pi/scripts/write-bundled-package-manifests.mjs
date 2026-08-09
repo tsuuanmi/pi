@@ -1,25 +1,21 @@
 /**
  * Writes dist-correct package.json manifests for the bundled packages.
  *
- * Bundled package source manifests declare `src/`-prefixed `.ts` paths because
- * the dev package roots are the workspace source dirs. When bundled into pi,
- * copy-assets flattens the compiled output into dist/packages/<name> with no
- * `src/` segment and `.js` extensions. The verbatim source manifest would
- * resolve to non-existent paths and load nothing in the published dist.
+ * Bundled package source manifests may point at workspace source files. The
+ * workflows bundle is flattened into dist/packages/workflows, so its manifest
+ * needs `src/` removed and `.ts` changed to `.js`. The web-runtime bundle keeps
+ * its compiled `dist/` directory, so its compiled manifest paths are preserved.
  *
- * This script reads each bundled package's source manifest, strips a leading
- * `src/` and maps `.ts` to `.js`, and writes the result so the dist
- * package.json matches the actual bundled layout. Dev keeps using the source
- * manifests directly, so no runtime fallback is needed. Run from the
- * pi package dir. Pass package names to rewrite a subset
- * (default: workflows).
+ * This script reads each bundled package's source manifest and writes the result
+ * so the dist package.json matches the bundled layout. Run from the pi package
+ * dir. Pass package names to rewrite a subset (default: all packages).
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const PACKAGES = {
-	workflows: { src: "../workflows/package.json", dest: "dist/packages/workflows/package.json" },
-	"web-runtime": { src: "../web-runtime/package.json", dest: "dist/packages/web-runtime/package.json" },
+	workflows: { src: "../workflows/package.json", dest: "dist/packages/workflows/package.json", flatten: true },
+	"web-runtime": { src: "../web-runtime/package.json", dest: "dist/packages/web-runtime/package.json", flatten: false },
 };
 
 const names = process.argv.slice(2);
@@ -51,6 +47,11 @@ for (const name of targets) {
 		throw new Error(`Unknown bundled package: ${name}. Known: ${Object.keys(PACKAGES).join(", ")}`);
 	}
 	const pkg = JSON.parse(readFileSync(resolve(cfg.src), "utf8"));
+	if (!cfg.flatten) {
+		writeFileSync(resolve(cfg.dest), `${JSON.stringify(pkg, null, "\t")}\n`);
+		console.log(`Wrote bundled ${name} package.json with dist manifest`);
+		continue;
+	}
 	if (pkg.pi && typeof pkg.pi === "object") {
 		pkg.pi = Object.fromEntries(
 			Object.entries(pkg.pi).map(([key, value]) => [

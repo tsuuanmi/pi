@@ -236,10 +236,15 @@ export class AccountAuthController {
 		return this.getAccountProviderOptions().find((provider) => provider.id === providerId);
 	}
 
+	private getWebProvider(providerId: string) {
+		return this.session.resourceLoader.getWebProviderHost().get(providerId);
+	}
+
 	private async addProviderAccount(providerId: string, accountName?: string): Promise<void> {
-		if (providerId === "chatgpt-web") {
+		const webProvider = this.getWebProvider(providerId);
+		if (webProvider) {
 			if (!accountName) {
-				this.showStatus("Usage: /account add chatgpt-web <name>");
+				this.showStatus(`Usage: /account add ${providerId} <name>`);
 				return;
 			}
 			try {
@@ -250,9 +255,11 @@ export class AccountAuthController {
 					new AbortController().signal,
 				);
 				this.refreshAccountState();
-				this.showStatus(`Added ChatGPT Web account ${accountName}`);
+				this.showStatus(`Added ${webProvider.name} account ${accountName}`);
 			} catch (error) {
-				this.showError(`ChatGPT Web login failed: ${error instanceof Error ? error.message : String(error)}`);
+				this.showError(
+					`${webProvider.name} login failed: ${error instanceof Error ? error.message : String(error)}`,
+				);
 			}
 			return;
 		}
@@ -361,8 +368,9 @@ export class AccountAuthController {
 	private async switchProviderAccount(providerId: string, accountName: string): Promise<void> {
 		const authStorage = this.session.modelRegistry.authStorage;
 		const accounts = authStorage.getAccountNames(providerId);
+		const webProvider = this.getWebProvider(providerId);
 		try {
-			if (providerId === "chatgpt-web") {
+			if (webProvider) {
 				await new BrowserAccountStore(authStorage).activate(
 					providerId,
 					accountName,
@@ -373,7 +381,7 @@ export class AccountAuthController {
 				throw new Error(`No account named "${accountName}" for ${providerId}. Available: ${accounts.join(", ")}`);
 			}
 		} catch (error) {
-			if (providerId === "chatgpt-web") {
+			if (webProvider) {
 				this.session.resourceLoader.getWebProviderHost().clearEntitlement(providerId);
 				this.session.modelRegistry.refresh();
 				this.syncWebModels();
@@ -409,14 +417,13 @@ export class AccountAuthController {
 		try {
 			const authStorage = this.session.modelRegistry.authStorage;
 			const accounts = authStorage.getAccountNames(providerId);
-			const removed =
-				providerId === "chatgpt-web"
-					? await new BrowserAccountStore(authStorage).remove(
-							providerId,
-							accountName,
-							this.session.resourceLoader.getWebProviderHost(),
-						)
-					: authStorage.removeAccount(providerId, accountName);
+			const removed = this.getWebProvider(providerId)
+				? await new BrowserAccountStore(authStorage).remove(
+						providerId,
+						accountName,
+						this.session.resourceLoader.getWebProviderHost(),
+					)
+				: authStorage.removeAccount(providerId, accountName);
 			if (!removed) {
 				this.showError(`No account named "${accountName}" for ${providerId}. Available: ${accounts.join(", ")}`);
 				return;
@@ -436,7 +443,7 @@ export class AccountAuthController {
 		}
 
 		try {
-			if (providerId === "chatgpt-web") {
+			if (this.getWebProvider(providerId)) {
 				const accounts = this.session.modelRegistry.authStorage.getAccountNames(providerId);
 				const store = new BrowserAccountStore(this.session.modelRegistry.authStorage);
 				for (const accountName of accounts) {

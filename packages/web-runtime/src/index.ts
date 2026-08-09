@@ -5,6 +5,7 @@ export { McpServerSession } from "./mcp/server.ts";
 export { RpcTransport } from "./mcp/transport.ts";
 export type { ProfileLease } from "./profiles.ts";
 export { acquireProfile, BrowserProfiles, ProfileError } from "./profiles.ts";
+export { CHATGPT_WEB_PROVIDER_ID, CHATGPT_WEB_PROVIDER_NAME } from "./providers/chatgpt/constants.ts";
 export { chatGptWebProvider } from "./providers/chatgpt/index.ts";
 export { BrowserSession, SessionError } from "./session.ts";
 export type {

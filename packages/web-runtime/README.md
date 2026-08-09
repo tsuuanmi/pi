@@ -2,6 +2,17 @@
 
 `@tsuuanmi/pi-web-runtime` is the host-neutral browser runtime for account-scoped web providers. It owns Chromium sessions, profile isolation, provider automation, and private worker communication. Pi owns accounts, entitlements, approvals, sandboxing, and tool execution.
 
+## Pi package loading
+
+This package is also a Pi package. Its `package.json` declares the compiled
+provider descriptor under `pi.webProviders`; Pi discovers it through the
+bundled `pi:web-runtime` package source and dynamically loads the descriptor
+and its adjacent worker. The runtime package therefore owns provider identity
+and automation, while Pi owns host integration and account state.
+
+The ChatGPT provider ID is centralized as `CHATGPT_WEB_PROVIDER_ID`
+(`chatgpt-web`) and its display name as `CHATGPT_WEB_PROVIDER_NAME`.
+
 ## Standard design
 
 The production boundary is:

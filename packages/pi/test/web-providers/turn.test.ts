@@ -1,3 +1,4 @@
+import { CHATGPT_WEB_PROVIDER_ID } from "@tsuuanmi/pi-web-runtime";
 import { describe, expect, test } from "vitest";
 import type { BrowserCredential } from "#pi/auth/storage";
 import { runWebTurn, type WebTurnRequest } from "#pi/web-providers/turn";
@@ -9,7 +10,7 @@ const credential: BrowserCredential = {
 };
 
 const request: WebTurnRequest = {
-	provider: "chatgpt-web",
+	provider: CHATGPT_WEB_PROVIDER_ID,
 	account: "work",
 	credential,
 	model: "high",

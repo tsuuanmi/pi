@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { CHATGPT_WEB_PROVIDER_ID } from "@tsuuanmi/pi-web-runtime";
 import { afterEach, describe, expect, test } from "vitest";
 import type { AuthStorage, BrowserCredential } from "#pi/auth/storage";
 import { BrowserAccountStore } from "#pi/web-providers/accounts";
@@ -35,12 +36,12 @@ describe("BrowserAccountStore", () => {
 			},
 		} as unknown as WebProviderHost;
 
-		await expect(store.add("chatgpt-web", "work", host, new AbortController().signal)).rejects.toThrow(
+		await expect(store.add(CHATGPT_WEB_PROVIDER_ID, "work", host, new AbortController().signal)).rejects.toThrow(
 			"verification failed",
 		);
 		expect(existsSync(root)).toBe(true);
 		expect(readdirSync(root)).toEqual([]);
-		expect(storage.getBrowserAccount("chatgpt-web", "work")).toBeUndefined();
+		expect(storage.getBrowserAccount(CHATGPT_WEB_PROVIDER_ID, "work")).toBeUndefined();
 	});
 
 	test("removes credentials and profiles when entitlement storage fails", async () => {
@@ -58,10 +59,10 @@ describe("BrowserAccountStore", () => {
 			},
 		} as unknown as WebProviderHost;
 
-		await expect(store.add("chatgpt-web", "work", host, new AbortController().signal)).rejects.toThrow(
+		await expect(store.add(CHATGPT_WEB_PROVIDER_ID, "work", host, new AbortController().signal)).rejects.toThrow(
 			"entitlement storage failed",
 		);
 		expect(readdirSync(root)).toEqual([]);
-		expect(storage.getBrowserAccount("chatgpt-web", "work")).toBeUndefined();
+		expect(storage.getBrowserAccount(CHATGPT_WEB_PROVIDER_ID, "work")).toBeUndefined();
 	});
 });

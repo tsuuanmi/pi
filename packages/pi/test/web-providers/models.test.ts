@@ -1,3 +1,4 @@
+import { CHATGPT_WEB_PROVIDER_ID } from "@tsuuanmi/pi-web-runtime";
 import { describe, expect, test } from "vitest";
 import type { AuthStorage, BrowserCredential } from "#pi/auth/storage";
 import { getEntitledWebModels } from "#pi/web-providers/models";
@@ -18,7 +19,7 @@ function getModels(routes: readonly string[]): ReturnType<typeof getEntitledWebM
 			getEntitlement: () => routes,
 			list: () => [
 				{
-					id: "chatgpt-web",
+					id: CHATGPT_WEB_PROVIDER_ID,
 					models: [
 						{ id: "light", name: "Light", contextWindow: 1, input: ["text"], output: ["text"] },
 						{ id: "high", name: "High", contextWindow: 1, input: ["text"], output: ["text"] },
@@ -33,7 +34,7 @@ function getModels(routes: readonly string[]): ReturnType<typeof getEntitledWebM
 describe("getEntitledWebModels", () => {
 	test("returns only active verified routes", () => {
 		expect(getModels(["high"])).toEqual([
-			expect.objectContaining({ provider: "chatgpt-web", model: expect.objectContaining({ id: "high" }) }),
+			expect.objectContaining({ provider: CHATGPT_WEB_PROVIDER_ID, model: expect.objectContaining({ id: "high" }) }),
 		]);
 	});
 

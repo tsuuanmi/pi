@@ -1,4 +1,5 @@
 import type { Context, Model } from "@tsuuanmi/pi-ai";
+import { CHATGPT_WEB_PROVIDER_ID } from "@tsuuanmi/pi-web-runtime";
 import { describe, expect, test } from "vitest";
 import type { AuthStorage, BrowserCredential } from "#pi/auth/storage";
 import type { WebProviderHost } from "#pi/web-providers/host";
@@ -15,7 +16,7 @@ const model: Model<"web"> = {
 	id: "route-high",
 	name: "Route High",
 	api: "web",
-	provider: "chatgpt-web",
+	provider: CHATGPT_WEB_PROVIDER_ID,
 	baseUrl: undefined,
 	reasoning: true,
 	input: ["text"],
@@ -46,7 +47,12 @@ describe("createWebStream", () => {
 			systemPrompt: "Be concise",
 			messages: [{ role: "user", content: "Say hello", timestamp: 1 }],
 		};
-		const stream = createWebStream(host(), authStorage("work"), "chatgpt-web", async () => undefined)(model, context);
+		const stream = createWebStream(
+			host(),
+			authStorage("work"),
+			CHATGPT_WEB_PROVIDER_ID,
+			async () => undefined,
+		)(model, context);
 
 		const result = await stream.result();
 		expect(result.stopReason).toBe("stop");
@@ -58,7 +64,7 @@ describe("createWebStream", () => {
 		const stream = createWebStream(
 			host(),
 			authStorage(undefined),
-			"chatgpt-web",
+			CHATGPT_WEB_PROVIDER_ID,
 			async () => undefined,
 		)(model, context);
 

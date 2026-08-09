@@ -22,7 +22,7 @@
   },
   "pi": {
     "webProviders": [
-      "src/providers/chatgpt/index.ts"
+      "dist/providers/chatgpt/index.js"
     ]
   },
   "dependencies": {

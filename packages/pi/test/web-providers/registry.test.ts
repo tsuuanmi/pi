@@ -1,3 +1,4 @@
+import { CHATGPT_WEB_PROVIDER_ID } from "@tsuuanmi/pi-web-runtime";
 import { describe, expect, test } from "vitest";
 import type { AuthStorage } from "#pi/auth/storage";
 import type { ProviderConfigInput } from "#pi/loader/model-registry";
@@ -13,7 +14,7 @@ describe("WebProviderRegistry", () => {
 		const host = {
 			getActiveModels: () => [
 				{
-					provider: "chatgpt-web",
+					provider: CHATGPT_WEB_PROVIDER_ID,
 					model: {
 						id: "high",
 						name: "High",
@@ -35,8 +36,8 @@ describe("WebProviderRegistry", () => {
 		);
 
 		registry.sync();
-		expect(registered.get("chatgpt-web")?.api).toBe("web");
-		expect(registered.get("chatgpt-web")?.models?.[0]?.id).toBe("high");
+		expect(registered.get(CHATGPT_WEB_PROVIDER_ID)?.api).toBe("web");
+		expect(registered.get(CHATGPT_WEB_PROVIDER_ID)?.models?.[0]?.id).toBe("high");
 		registry.clear();
 		expect(registered.size).toBe(0);
 	});

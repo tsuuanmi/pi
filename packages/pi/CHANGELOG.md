@@ -35,6 +35,7 @@
 - **models**: Removed the external ChatGPT Web HTTP bridge and added first-party browser-runtime infrastructure without HTTP fallback.
 - **web-runtime**: Keep one isolated visible Chromium session per browser account and bound concurrent Temporary Chat turns to five tabs.
 - **web-runtime**: Route private browser tool calls through the official MCP SDK without exposing an HTTP, socket, or daemon transport.
+- **packages**: Load the bundled web-runtime as a compiled Pi package and resolve browser account behavior from loaded provider descriptors.
 - **api**: Removed the stale `serializeJsonLine` root export; node JSONL utilities are imported from `@tsuuanmi/pi-agent/node`.
 - **extensions**: Agent tool interception is now installed through `Agent.registerHook()`; Pi remains the host adapter and no longer assigns agent hook callbacks directly.
 - **models**: Custom provider model configs now accept image input metadata and `max`/`ultra` thinking-level mappings.
