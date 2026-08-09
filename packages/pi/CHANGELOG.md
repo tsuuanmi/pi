@@ -42,6 +42,7 @@
 
 ### Fixed
 
+- **tools**: Activate extension-registered tools during initial session construction when the built-in tool set is explicitly selected.
 - **web-runtime**: Reject malformed, empty, oversized, and excessive ChatGPT attachments before upload.
 - **web-runtime**: Stream only monotonic settled ChatGPT output and classify rate-limit, subscription, and upstream page failures.
 - **models**: Revalidate browser entitlement immediately before each web turn.

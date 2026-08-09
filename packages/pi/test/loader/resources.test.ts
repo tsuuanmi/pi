@@ -23,7 +23,12 @@ const BUILT_IN_SUBAGENT_SPECS = new Set([
 	"subagent_pause",
 ]);
 
-const BUILT_IN_WORKFLOW_AGENT_TOOLS = new Set(["team_execute", "team_resume", "ultragoal_spawn_goal_agent"]);
+const BUILT_IN_WORKFLOW_AGENT_TOOLS = new Set([
+	"ralplan_run_agent",
+	"team_execute",
+	"team_resume",
+	"ultragoal_spawn_goal_agent",
+]);
 
 function withoutBuiltinExtensions<T extends { path: string; sourceInfo: { source: string } }>(extensions: T[]): T[] {
 	return extensions.filter(

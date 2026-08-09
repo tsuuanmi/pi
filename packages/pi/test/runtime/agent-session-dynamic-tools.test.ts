@@ -25,6 +25,47 @@ describe("AgentSession dynamic tool registration", () => {
 		}
 	});
 
+	it("activates extension tools during initial runtime construction", async () => {
+		const settingsManager = SettingsManager.create(tempDir, agentDir);
+		const sessionManager = SessionManager.inMemory();
+		const resourceLoader = new DefaultResourceLoader({
+			cwd: tempDir,
+			agentDir,
+			settingsManager,
+			extensionFactories: [
+				(pi) => {
+					pi.registerTool({
+						name: "initial_extension_tool",
+						label: "Initial Extension Tool",
+						description: "Tool registered before the session runtime is built",
+						parameters: Type.Object({}),
+						execute: async () => ({
+							content: [{ type: "text", text: "ok" }],
+							details: {},
+						}),
+					});
+				},
+			],
+		});
+		await resourceLoader.reload();
+
+		const { session } = await createAgentSession({
+			cwd: tempDir,
+			agentDir,
+			model: getModel("anthropic", "claude-sonnet-4-5")!,
+			settingsManager,
+			sessionManager,
+			resourceLoader,
+		});
+
+		expect(session.getAllTools().map((tool) => tool.name)).toContain("initial_extension_tool");
+		expect(session.getActiveToolNames()).toContain("initial_extension_tool");
+		expect(session.getAllTools().map((tool) => tool.name)).toContain("ralplan_run_agent");
+		expect(session.getActiveToolNames()).toContain("ralplan_run_agent");
+
+		session.dispose();
+	});
+
 	it("refreshes tool registry when tools are registered after initialization", async () => {
 		const settingsManager = SettingsManager.create(tempDir, agentDir);
 		const sessionManager = SessionManager.inMemory();

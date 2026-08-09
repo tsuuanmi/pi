@@ -90,12 +90,19 @@ export class ToolManager {
 				.filter((entry) => entry[1].length > 0),
 		);
 
+		const extensionNames = options.includeAllExtensionTools
+			? Array.from(entries.values())
+					.filter(({ sourceInfo }) => sourceInfo.source !== "builtin" && sourceInfo.source !== "sdk")
+					.map(({ tool }) => tool.name)
+			: [];
+		const activeToolNames = options.includeAllExtensionTools
+			? [...(options.activeNames ?? previousNames), ...extensionNames]
+			: options.activeNames;
 		const names = resolveToolSelection(this.registry.names(), previousNames, {
-			activeToolNames: options.activeNames,
+			activeToolNames,
 			allowedToolNames: this.allowedNames,
 			excludedToolNames: this.excludedNames,
-			includeNewlyRegisteredTools: !options.activeNames && !options.includeAllExtensionTools,
-			includeAllRegisteredTools: options.includeAllExtensionTools,
+			includeNewlyRegisteredTools: !activeToolNames,
 		});
 		this.apply(
 			names,
