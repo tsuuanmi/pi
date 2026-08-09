@@ -3,7 +3,7 @@ import type { LoopDetectionOptions } from "#agent/agent/loop-detector";
 import type { AgentState } from "#agent/agent/state";
 import type { Clock, ProviderRequestObserver, QueueMode, RequestIdFactory, ToolExecutionMode } from "#agent/config";
 import type { AgentHook } from "#agent/hooks";
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 import type { StreamFunction } from "#agent/stream";
 
 /** Options for constructing an {@link Agent}. */
@@ -13,8 +13,8 @@ export interface AgentOptions {
 	/** Capability labels used by team/orchestrator scheduling. */
 	capabilities?: readonly string[];
 	initialState?: Partial<Omit<AgentState, "pendingToolCalls" | "isStreaming" | "streamingMessage" | "errorMessage">>;
-	convertToLlm?: (messages: Message[]) => LlmMessage[] | Promise<LlmMessage[]>;
-	transformContext?: (messages: Message[], signal?: AbortSignal) => Promise<Message[]>;
+	convertToLlm?: (messages: AgentMessage[]) => LlmMessage[] | Promise<LlmMessage[]>;
+	transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
 	stream?: StreamFunction;
 	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
 	onPayload?: StreamOptions["onPayload"];

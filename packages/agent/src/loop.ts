@@ -5,18 +5,18 @@ import { executeToolCalls } from "#agent/agent/tool-execution";
 import type { AgentLoopConfig } from "#agent/config";
 import type { Context } from "#agent/context";
 import type { EventSink, Warning } from "#agent/events";
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 import type { StreamFunction } from "#agent/stream";
 
 export async function runPrompt(
-	prompts: Message[],
+	prompts: AgentMessage[],
 	context: Context,
 	config: AgentLoopConfig,
 	emit: EventSink,
 	signal?: AbortSignal,
 	stream?: StreamFunction,
-): Promise<Message[]> {
-	const newMessages: Message[] = [...prompts];
+): Promise<AgentMessage[]> {
+	const newMessages: AgentMessage[] = [...prompts];
 	const currentContext: Context = {
 		...context,
 		messages: [...context.messages, ...prompts],
@@ -39,7 +39,7 @@ export async function runContinue(
 	emit: EventSink,
 	signal?: AbortSignal,
 	stream?: StreamFunction,
-): Promise<Message[]> {
+): Promise<AgentMessage[]> {
 	if (context.messages.length === 0) {
 		throw new Error("Cannot continue: no messages in context");
 	}
@@ -48,7 +48,7 @@ export async function runContinue(
 		throw new Error("Cannot continue from message role: assistant");
 	}
 
-	const newMessages: Message[] = [];
+	const newMessages: AgentMessage[] = [];
 	const currentContext: Context = { ...context };
 
 	await emit({ type: "agent_start" });
@@ -83,7 +83,7 @@ function createMaxTurnsWarning(turns: number, maxTurns: number): Warning {
 
 async function runLoop(
 	initialContext: Context,
-	newMessages: Message[],
+	newMessages: AgentMessage[],
 	initialConfig: AgentLoopConfig,
 	signal: AbortSignal | undefined,
 	emit: EventSink,
@@ -97,7 +97,7 @@ async function runLoop(
 	const loopDetector = loopDetectionOptions ? new LoopDetector(loopDetectionOptions) : undefined;
 	let firstTurn = true;
 	// Check for steering messages at start (user may have typed while waiting)
-	let pendingMessages: Message[] = (await config.getSteeringMessages?.()) || [];
+	let pendingMessages: AgentMessage[] = (await config.getSteeringMessages?.()) || [];
 
 	// Outer loop: continues when queued follow-up messages arrive after agent would stop
 	while (true) {

@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionFactory } from "@tsuuanmi/pi/extensions";
-import type { Message, Tool } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, Tool } from "@tsuuanmi/pi-agent";
 import { Agent, convertToLlm } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/storage";
@@ -162,7 +162,7 @@ export async function createHarness(options: HarnessOptions = {}): Promise<Harne
 				headers: response.headers,
 			});
 		},
-		transformContext: async (messages: Message[]) => {
+		transformContext: async (messages: AgentMessage[]) => {
 			const runner = extensionRunnerRef.current;
 			if (!runner) return messages;
 			return runner.emitContext(messages);

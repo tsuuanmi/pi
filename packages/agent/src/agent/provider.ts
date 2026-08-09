@@ -165,13 +165,13 @@ export async function streamAgentResponse(
 	emit: EventSink,
 	stream?: StreamFunction,
 ): Promise<AssistantMessage> {
-	// Apply context transform if configured (Message[] → Message[])
+	// Apply context transform if configured (AgentMessage[] → AgentMessage[])
 	let messages = context.messages;
 	if (config.transformContext) {
 		messages = await config.transformContext(messages, signal);
 	}
 
-	// Convert to LLM-compatible messages (Message[] → Message[])
+	// Convert to LLM-compatible messages (AgentMessage[] → LLM Message[])
 	const llmMessages = await config.convertToLlm(messages);
 
 	// Build LLM context

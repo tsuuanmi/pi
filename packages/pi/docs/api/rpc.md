@@ -187,7 +187,7 @@ Response:
 }
 ```
 
-Messages are `Message` objects (see [Message Types](messages.md)).
+Messages are `AgentMessage` objects (see [Message Types](messages.md)).
 
 ### Model
 
@@ -678,7 +678,7 @@ A turn consists of one assistant response plus any resulting tool calls and resu
 
 ### message_start / message_end
 
-Emitted when a message begins and completes. The `message` field contains an `Message`.
+Emitted when a message begins and completes. The `message` field contains an `AgentMessage`.
 
 ```json
 {"type": "message_start", "message": {...}}
@@ -1080,8 +1080,8 @@ Parse errors:
 
 Source files:
 - [`packages/ai/src/protocol/message.ts`](../../../ai/src/protocol/message.ts) - `UserMessage`, `AssistantMessage`, `ToolResultMessage`
-- [`packages/agent/src/messages/state.ts`](../../../agent/src/messages/state.ts) - `Message` and [`events.ts`](../../../agent/src/events.ts) - `AgentEvent`
-- [`packages/agent/src/messages/messages.ts`](../../../agent/src/messages/messages.ts) - `BashExecutionMessage`
+- [`packages/agent/src/messages/types.ts`](../../../agent/src/messages/types.ts) - `AgentMessage` and [`events.ts`](../../../agent/src/events.ts) - `AgentEvent`
+- [`packages/agent/src/messages/messages.ts`](../../../agent/src/messages/messages.ts) - message construction and LLM conversion helpers
 - [`src/modes/rpc/types.ts`](../../src/modes/rpc/types.ts) - RPC command/response types, extension UI request/response types
 
 ### Model

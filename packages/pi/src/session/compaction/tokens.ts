@@ -1,4 +1,4 @@
-import type { Message } from "@tsuuanmi/pi-agent";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Usage } from "@tsuuanmi/pi-ai";
 import type { CompactionSettings, ContextUsageEstimate } from "#pi/session/compaction/types";
 import type { SessionEntry } from "#pi/session/manager";
@@ -8,7 +8,7 @@ export function calculateContextTokens(usage: Usage): number {
 	return usage.totalTokens || usage.input + usage.output + usage.cacheRead + usage.cacheWrite;
 }
 
-function assistantUsage(message: Message): Usage | undefined {
+function assistantUsage(message: AgentMessage): Usage | undefined {
 	if (message.role !== "assistant" || !("usage" in message)) return undefined;
 
 	const assistant = message as AssistantMessage;
@@ -28,7 +28,7 @@ export function getLastAssistantUsage(entries: SessionEntry[]): Usage | undefine
 	return undefined;
 }
 
-function lastUsage(messages: Message[]): { usage: Usage; index: number } | undefined {
+function lastUsage(messages: AgentMessage[]): { usage: Usage; index: number } | undefined {
 	for (let i = messages.length - 1; i >= 0; i--) {
 		const usage = assistantUsage(messages[i]);
 		if (usage) return { usage, index: i };
@@ -37,7 +37,7 @@ function lastUsage(messages: Message[]): { usage: Usage; index: number } | undef
 }
 
 /** Estimate context tokens, using the last native usage and estimating trailing messages. */
-export function estimateContextTokens(messages: Message[]): ContextUsageEstimate {
+export function estimateContextTokens(messages: AgentMessage[]): ContextUsageEstimate {
 	const usage = lastUsage(messages);
 	if (!usage) {
 		const tokens = messages.reduce((total, message) => total + estimateTokens(message), 0);
@@ -73,7 +73,7 @@ function textLength(content: string | Array<{ type: string; text?: string }>): n
 }
 
 /** Estimate a message's tokens using the conservative characters-per-four heuristic. */
-export function estimateTokens(message: Message): number {
+export function estimateTokens(message: AgentMessage): number {
 	let chars = 0;
 
 	switch (message.role) {

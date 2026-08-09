@@ -1,7 +1,7 @@
 import {
+	type AgentMessage,
 	createSlidingWindowContextTransform,
 	groupMessagesIntoTurns,
-	type Message,
 	pruneMessagesByTurns,
 } from "@tsuuanmi/pi-agent";
 import { describe, expect, test } from "vitest";
@@ -16,11 +16,11 @@ const usage = {
 	cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
 };
 
-function user(text: string): Message {
+function user(text: string): AgentMessage {
 	return { role: "user", content: [{ type: "text", text }], timestamp };
 }
 
-function assistant(text: string): Message {
+function assistant(text: string): AgentMessage {
 	return {
 		role: "assistant",
 		content: [{ type: "text", text }],
@@ -33,7 +33,7 @@ function assistant(text: string): Message {
 	};
 }
 
-function assistantToolCall(id: string): Message {
+function assistantToolCall(id: string): AgentMessage {
 	return {
 		role: "assistant",
 		content: [{ type: "toolCall", id, name: "lookup", arguments: { value: id } }],
@@ -46,7 +46,7 @@ function assistantToolCall(id: string): Message {
 	};
 }
 
-function toolResult(id: string): Message {
+function toolResult(id: string): AgentMessage {
 	return {
 		role: "toolResult",
 		toolCallId: id,

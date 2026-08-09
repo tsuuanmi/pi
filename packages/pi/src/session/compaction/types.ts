@@ -1,4 +1,4 @@
-import type { FileOperations, Message, StreamFunction } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, FileOperations, StreamFunction } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import type { SessionEntry } from "#pi/session/manager";
 
@@ -45,9 +45,9 @@ export interface CompactionPreparation {
 	/** UUID of first entry to keep. */
 	firstKeptEntryId: string;
 	/** Messages that will be summarized and discarded. */
-	messagesToSummarize: Message[];
+	messagesToSummarize: AgentMessage[];
 	/** Messages from the prefix of a split turn. */
-	turnPrefixMessages: Message[];
+	turnPrefixMessages: AgentMessage[];
 	/** Whether the cut is in the middle of a turn. */
 	isSplitTurn: boolean;
 	tokensBefore: number;
@@ -75,7 +75,7 @@ export interface BranchSummaryDetails {
 
 export interface BranchPreparation {
 	/** Messages extracted for summarization, in chronological order. */
-	messages: Message[];
+	messages: AgentMessage[];
 	/** File operations extracted from tool calls. */
 	fileOps: FileOperations;
 	/** Total estimated tokens in messages. */

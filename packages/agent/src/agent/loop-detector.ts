@@ -1,5 +1,5 @@
 import type { AssistantMessage, ToolResultMessage } from "@tsuuanmi/pi-ai";
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 
 export type LoopDetectionAction = "warn" | "stop";
 
@@ -29,7 +29,7 @@ export interface NormalizedLoopDetectionOptions {
 export interface LoopDetectionTurn {
 	message: AssistantMessage;
 	toolResults: ToolResultMessage[];
-	newMessages: Message[];
+	newMessages: AgentMessage[];
 }
 
 export interface LoopDetectionResult {

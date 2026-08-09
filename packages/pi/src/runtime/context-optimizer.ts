@@ -1,4 +1,4 @@
-import type { BashExecutionMessage, Message } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, BashExecutionMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, TextContent, ThinkingContent, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import { compressBashOutput } from "#pi/runtime/bash-output";
 import { optimizeToolResults, type SummaryLedger, type ToolResultOptions } from "#pi/runtime/tool-results";
@@ -67,28 +67,28 @@ function optionsKey(options: ContextOptions): string {
 	].join("\u0000");
 }
 
-function appendOnly(previous: Message[] | undefined, next: Message[]): boolean {
+function appendOnly(previous: AgentMessage[] | undefined, next: AgentMessage[]): boolean {
 	if (!previous || next.length < previous.length) return false;
 	return previous.every((message, index) => next[index] === message);
 }
 
 export class ContextOptimizer {
-	private previousMessages: Message[] | undefined;
+	private previousMessages: AgentMessage[] | undefined;
 	private previousOptionsKey: string | undefined;
 	private readonly ledger: SummaryLedger = new Map();
 
-	optimize(messages: Message[], options: ContextOptions): Message[] {
+	optimize(messages: AgentMessage[], options: ContextOptions): AgentMessage[] {
 		const key = optionsKey(options);
 		if (this.previousOptionsKey !== key || !appendOnly(this.previousMessages, messages)) {
 			this.ledger.clear();
 		}
 
 		let changed = false;
-		const optimized: Message[] = [];
+		const optimized: AgentMessage[] = [];
 		for (const message of messages) {
-			let next: Message | undefined = message;
+			let next: AgentMessage | undefined = message;
 			if (message.role === "assistant") {
-				next = optimizeAgent(message, options) as Message | undefined;
+				next = optimizeAgent(message, options) as AgentMessage | undefined;
 			} else if (message.role === "bashExecution") {
 				next = optimizeBashExecution(message, options);
 			} else if (message.role === "toolResult") {

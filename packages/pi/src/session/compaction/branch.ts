@@ -5,7 +5,7 @@
  * a summary of the branch being left so context isn't lost.
  */
 
-import type { Message } from "@tsuuanmi/pi-agent";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import { computeFileLists, createFileOps, extractFileOpsFromMessage, formatFileOperations } from "@tsuuanmi/pi-agent";
 import { entryToMessage } from "#pi/session/compaction/messages";
 import { summarize, summaryText } from "#pi/session/compaction/summarize";
@@ -77,7 +77,7 @@ export function collectEntriesForBranchSummary(
 
 /** Prepare branch messages, retaining the newest content within the token budget. */
 export function prepareBranchEntries(entries: SessionEntry[], tokenBudget = 0): BranchPreparation {
-	const messages: Message[] = [];
+	const messages: AgentMessage[] = [];
 	const fileOps = createFileOps();
 	let totalTokens = 0;
 

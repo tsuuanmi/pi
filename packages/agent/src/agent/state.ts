@@ -1,6 +1,6 @@
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { DEFAULT_MODEL } from "#agent/agent/defaults";
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 import { ToolRegistry } from "#agent/tool/registry";
 import type { Tool } from "#agent/tool/tool";
 
@@ -11,10 +11,10 @@ export interface AgentState {
 	model: Model<any>;
 	thinkingLevel: ThinkingLevel;
 	readonly tools: readonly Tool[];
-	set messages(messages: Message[]);
-	get messages(): Message[];
+	set messages(messages: AgentMessage[]);
+	get messages(): AgentMessage[];
 	readonly isStreaming: boolean;
-	readonly streamingMessage?: Message;
+	readonly streamingMessage?: AgentMessage;
 	readonly pendingToolCalls: ReadonlySet<string>;
 	readonly errorMessage?: string;
 }
@@ -25,7 +25,7 @@ export type MutableAgentState = Omit<
 > & {
 	tools: Tool[];
 	isStreaming: boolean;
-	streamingMessage?: Message;
+	streamingMessage?: AgentMessage;
 	pendingToolCalls: Set<string>;
 	errorMessage?: string;
 };
@@ -44,7 +44,7 @@ export function createAgentState(
 		get messages() {
 			return messages;
 		},
-		set messages(nextMessages: Message[]) {
+		set messages(nextMessages: AgentMessage[]) {
 			messages = nextMessages.slice();
 		},
 		isStreaming: false,

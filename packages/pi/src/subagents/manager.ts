@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import type {
-	Message,
+	AgentMessage,
 	SubagentAwaitOptions,
 	SubagentAwaitResult,
 	SubagentDelivery,
@@ -134,7 +134,7 @@ function textFromAgent(message: AssistantMessage): string {
 		.join("\n");
 }
 
-function finalAgentOutput(messages: readonly Message[]): string {
+function finalAgentOutput(messages: readonly AgentMessage[]): string {
 	for (let index = messages.length - 1; index >= 0; index--) {
 		const message = messages[index];
 		if (message?.role === "assistant") return textFromAgent(message as AssistantMessage);
@@ -142,7 +142,7 @@ function finalAgentOutput(messages: readonly Message[]): string {
 	return "";
 }
 
-function isAgentError(messages: readonly Message[]): string | undefined {
+function isAgentError(messages: readonly AgentMessage[]): string | undefined {
 	for (let index = messages.length - 1; index >= 0; index--) {
 		const message = messages[index];
 		if (message?.role !== "assistant") continue;

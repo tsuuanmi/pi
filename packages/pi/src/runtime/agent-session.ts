@@ -11,9 +11,9 @@ import { basename, dirname } from "node:path";
 import type {
 	Agent,
 	AgentEvent,
+	AgentMessage,
 	AgentState,
 	CustomMessage,
-	Message,
 	StructuredOutputOptions,
 	StructuredOutputResult,
 	SubagentManager,
@@ -396,7 +396,7 @@ export class AgentSession {
 	};
 
 	/** Extract text content from a message */
-	private _getUserMessageText(message: Message): string {
+	private _getUserMessageText(message: AgentMessage): string {
 		if (message.role !== "user") return "";
 		const content = message.content;
 		if (typeof content === "string") return content;
@@ -416,7 +416,7 @@ export class AgentSession {
 		return undefined;
 	}
 
-	private _replaceMessageInPlace(target: Message, replacement: Message): void {
+	private _replaceMessageInPlace(target: AgentMessage, replacement: AgentMessage): void {
 		// Agent-core stores the finalized message object in its state before emitting message_end.
 		// SessionManager persistence happens later in _handleAgentEvent() with event.message.
 		// Mutating this object in place keeps agent state, later turn/agent events, listeners,
@@ -640,7 +640,7 @@ export class AgentSession {
 	}
 
 	/** All messages including custom types like BashExecutionMessage */
-	get messages(): Message[] {
+	get messages(): AgentMessage[] {
 		return this.agent.state.messages;
 	}
 
@@ -721,7 +721,7 @@ export class AgentSession {
 	// Prompting
 	// =========================================================================
 
-	private async _runAgentPrompt(messages: Message | Message[]): Promise<void> {
+	private async _runAgentPrompt(messages: AgentMessage | AgentMessage[]): Promise<void> {
 		try {
 			await this.agent.prompt(messages);
 			while (await this._handlePostAgentRun()) {

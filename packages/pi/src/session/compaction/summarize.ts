@@ -1,11 +1,11 @@
-import type { Message, StreamFunction } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, StreamFunction } from "@tsuuanmi/pi-agent";
 import { convertToLlm, SUMMARIZATION_SYSTEM_PROMPT, serializeConversation } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Context, Model, StreamOptions, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { complete } from "@tsuuanmi/pi-ai";
 
 interface SummaryRequest {
 	model: Model<any>;
-	messages: Message[];
+	messages: AgentMessage[];
 	instructions: string;
 	maxTokens: number;
 	apiKey?: string;
@@ -144,7 +144,7 @@ export function summaryText(response: AssistantMessage): string {
 
 /** Generate the main iterative context summary. */
 export async function generateSummary(
-	messages: Message[],
+	messages: AgentMessage[],
 	model: Model<any>,
 	reserveTokens: number,
 	apiKey: string | undefined,
@@ -184,7 +184,7 @@ export async function generateSummary(
 
 /** Generate the summary for the retained suffix of a split turn. */
 export async function generateTurnPrefixSummary(
-	messages: Message[],
+	messages: AgentMessage[],
 	model: Model<any>,
 	reserveTokens: number,
 	apiKey: string | undefined,

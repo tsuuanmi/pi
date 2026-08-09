@@ -3,7 +3,7 @@
  */
 
 import type { Message as LlmMessage } from "@tsuuanmi/pi-ai";
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 
 // ============================================================================
 // File Operation Tracking
@@ -26,7 +26,7 @@ export function createFileOps(): FileOperations {
 /**
  * Extract file operations from tool calls in an assistant message.
  */
-export function extractFileOpsFromMessage(message: Message, fileOps: FileOperations): void {
+export function extractFileOpsFromMessage(message: AgentMessage, fileOps: FileOperations): void {
 	if (message.role !== "assistant") return;
 	if (!("content" in message) || !Array.isArray(message.content)) return;
 

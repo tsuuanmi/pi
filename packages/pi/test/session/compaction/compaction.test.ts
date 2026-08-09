@@ -1,4 +1,4 @@
-import type { Message } from "@tsuuanmi/pi-agent";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Usage } from "@tsuuanmi/pi-ai";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -47,7 +47,7 @@ function createMockUsage(input: number, output: number, cacheRead = 0, cacheWrit
 	};
 }
 
-function createUserMessage(text: string): Message {
+function createUserMessage(text: string): AgentMessage {
 	return { role: "user", content: text, timestamp: Date.now() };
 }
 
@@ -77,7 +77,7 @@ beforeEach(() => {
 	resetEntryCounter();
 });
 
-function createMessageEntry(message: Message): SessionMessageEntry {
+function createMessageEntry(message: AgentMessage): SessionMessageEntry {
 	const id = `test-id-${entryCounter++}`;
 	const entry: SessionMessageEntry = {
 		type: "message",
@@ -132,7 +132,7 @@ function createThinkingLevelEntry(thinkingLevel: string): ThinkingLevelChangeEnt
 	return entry;
 }
 
-function extractText(messages: Message[]): string {
+function extractText(messages: AgentMessage[]): string {
 	return messages
 		.map((message) => {
 			switch (message.role) {

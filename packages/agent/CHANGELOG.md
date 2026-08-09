@@ -3,7 +3,8 @@
 ### Breaking Changes
 
 - **stream**: Renamed the public `StreamFn` contract to `StreamFunction` and the agent stream injection property to `stream`.
-- **agent**: Renamed `AgentMessage` and `AgentContext` to `Message` and `Context`, and `RuntimeClock` to `Clock`, without compatibility aliases.
+- **agent**: Renamed `AgentContext` to `Context` and `RuntimeClock` to `Clock`, without compatibility aliases.
+- **agent**: Renamed the agent-owned `Message` type to `AgentMessage` to distinguish it from the LLM protocol `Message` in `@tsuuanmi/pi-ai`, without a compatibility alias.
 - **agent**: Removed public runtime and backend contracts; `Agent` now owns the internal model/tool loop.
 - **events**: Renamed `runtime_trace`/`runtime_warning` events to `trace`/`warning`.
 - **subagents**: Removed the unused `SubagentManagerFactory` registry; concrete hosts construct and inject managers directly.

@@ -1,6 +1,6 @@
 # Agent Messages
 
-`src/messages/types.ts` defines the message union and custom message roles. `src/messages/messages.ts` provides conversion helpers used before sending context to the provider.
+`src/messages/types.ts` defines the `AgentMessage` union and custom message roles. `src/messages/messages.ts` provides conversion helpers used before sending context to the provider.
 
 ## Message roles
 
@@ -69,6 +69,6 @@ Converted to a user message wrapped with the compaction-summary prefix/suffix co
 - `createBranchSummaryMessage(summary, fromId, timestamp)` creates a branch summary message from an ISO timestamp.
 - `createCompactionSummaryMessage(summary, tokensBefore, timestamp)` creates a compaction summary message from an ISO timestamp.
 - `createCustomMessage(customType, content, display, details, timestamp)` creates a custom message from an ISO timestamp.
-- `convertToLlm(messages)` converts `Message[]` to `@tsuuanmi/pi-ai` `Message[]` by handling the roles above, passing through `user`, `assistant`, and `toolResult`, and dropping unknown/omitted messages.
+- `convertToLlm(messages)` converts `AgentMessage[]` to `@tsuuanmi/pi-ai` `Message[]` by handling the roles above, passing through `user`, `assistant`, and `toolResult`, and dropping unknown/omitted messages.
 
-The built-in custom roles are part of the package `Message` union defined in `src/messages/types.ts`.
+The built-in custom roles are part of the package `AgentMessage` union defined in `src/messages/types.ts`.

@@ -1,4 +1,4 @@
-import type { Message } from "@tsuuanmi/pi-agent";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import type { ExtensionContext } from "#pi/api/context-types";
 import type { Extension, ExtensionError } from "#pi/api/extension-types";
 import type {
@@ -130,7 +130,7 @@ export async function emitExtensionHook<TEvent extends RunnerEmitEvent>(
 export async function emitMessageEndHook(
 	state: HookDispatchState,
 	event: MessageEndEvent,
-): Promise<Message | undefined> {
+): Promise<AgentMessage | undefined> {
 	if (state.isStale()) return undefined;
 	let currentMessage = event.message;
 	let modified = false;
@@ -251,7 +251,7 @@ export async function emitUserBashHook(
 	return undefined;
 }
 
-export async function emitContextHook(state: HookDispatchState, messages: Message[]): Promise<Message[]> {
+export async function emitContextHook(state: HookDispatchState, messages: AgentMessage[]): Promise<AgentMessage[]> {
 	if (state.isStale()) return messages;
 	let currentMessages = structuredClone(messages);
 

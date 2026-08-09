@@ -1,7 +1,7 @@
 import type {
 	Agent,
+	AgentMessage,
 	CustomMessage,
-	Message,
 	StructuredOutputOptions,
 	StructuredOutputResult,
 } from "@tsuuanmi/pi-agent";
@@ -41,7 +41,7 @@ export interface PromptHost {
 	readonly baseSystemPromptOptions: BuildSystemPromptOptions;
 	expandSkillCommand(text: string): string;
 	findLastAgentMessage(): AssistantMessage | undefined;
-	runAgentPrompt(messages: Message | Message[]): Promise<void>;
+	runAgentPrompt(messages: AgentMessage | AgentMessage[]): Promise<void>;
 	handlePostAgentRun(): Promise<boolean>;
 	checkCompaction(message: AssistantMessage, skipAbortedCheck?: boolean): Promise<boolean>;
 	flushBash(): void;
@@ -115,7 +115,7 @@ export class PromptController {
 	async prompt(text: string, options?: PromptOptions): Promise<void> {
 		const expandPromptTemplates = options?.expandPromptTemplates ?? true;
 		const preflightResult = options?.preflightResult;
-		let messages: Message[] | undefined;
+		let messages: AgentMessage[] | undefined;
 
 		try {
 			// Handle extension commands first (execute immediately, even during streaming)

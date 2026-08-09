@@ -5,7 +5,7 @@
  * and after compaction the session is reloaded.
  */
 
-import type { Message, StreamFunction } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, StreamFunction } from "@tsuuanmi/pi-agent";
 import {
 	computeFileLists,
 	createFileOps,
@@ -34,7 +34,7 @@ import { buildSessionContext, type CompactionEntry, type SessionEntry } from "#p
  * Extract file operations from messages and previous compaction entries.
  */
 function extractFileOperations(
-	messages: Message[],
+	messages: AgentMessage[],
 	entries: SessionEntry[],
 	prevCompactionIndex: number,
 ): FileOperations {
@@ -113,14 +113,14 @@ export function prepareCompaction(
 	const historyEnd = cutPoint.isSplitTurn ? cutPoint.turnStartIndex : cutPoint.firstKeptEntryIndex;
 
 	// Messages to summarize (will be discarded after summary)
-	const messagesToSummarize: Message[] = [];
+	const messagesToSummarize: AgentMessage[] = [];
 	for (let i = boundaryStart; i < historyEnd; i++) {
 		const msg = entryToMessage(pathEntries[i], { includeCompaction: false });
 		if (msg) messagesToSummarize.push(msg);
 	}
 
 	// Messages for turn prefix summary (if splitting a turn)
-	const turnPrefixMessages: Message[] = [];
+	const turnPrefixMessages: AgentMessage[] = [];
 	if (cutPoint.isSplitTurn) {
 		for (let i = cutPoint.turnStartIndex; i < cutPoint.firstKeptEntryIndex; i++) {
 			const msg = entryToMessage(pathEntries[i], { includeCompaction: false });

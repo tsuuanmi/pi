@@ -15,7 +15,7 @@ import type {
 	PrepareNextTurnContext,
 	ShouldStopAfterTurnContext,
 } from "#agent/hooks";
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 
 export type ToolExecutionMode = "sequential" | "parallel";
 
@@ -69,8 +69,8 @@ export interface AgentLoopConfig extends StreamOptions {
 	createRequestId?: RequestIdFactory;
 	/** Maximum duration for one provider request. Finite values are floored and clamped to at least 1. */
 	requestTimeoutMs?: number;
-	convertToLlm: (messages: Message[]) => LlmMessage[] | Promise<LlmMessage[]>;
-	transformContext?: (messages: Message[], signal?: AbortSignal) => Promise<Message[]>;
+	convertToLlm: (messages: AgentMessage[]) => LlmMessage[] | Promise<LlmMessage[]>;
+	transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
 	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
 	loopDetection?: boolean | import("#agent/agent/loop-detector").LoopDetectionOptions;
 	maxTurns?: number;
@@ -78,8 +78,8 @@ export interface AgentLoopConfig extends StreamOptions {
 	prepareNextTurn?: (
 		context: PrepareNextTurnContext,
 	) => AgentLoopTurnUpdate | undefined | Promise<AgentLoopTurnUpdate | undefined>;
-	getSteeringMessages?: () => Promise<Message[]>;
-	getFollowUpMessages?: () => Promise<Message[]>;
+	getSteeringMessages?: () => Promise<AgentMessage[]>;
+	getFollowUpMessages?: () => Promise<AgentMessage[]>;
 	toolExecution?: ToolExecutionMode;
 	/** Maximum concurrently executing tools for parallel tool batches. Finite values are floored and clamped to at least 1. */
 	maxToolConcurrency?: number;

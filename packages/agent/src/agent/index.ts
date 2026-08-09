@@ -37,7 +37,7 @@ import { createLoopHooks } from "#agent/hook-adapter";
 import type { AgentHook } from "#agent/hooks";
 import { runContinue, runPrompt } from "#agent/loop";
 import { convertToLlm } from "#agent/messages/messages";
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 import type { AgentRunOptions, AgentRunResult } from "#agent/run";
 import type { StreamFunction } from "#agent/stream";
 import { ToolRegistry } from "#agent/tool/registry";
@@ -63,8 +63,8 @@ export class Agent {
 	private readonly steeringQueue: MessageQueue;
 	private readonly followUpQueue: MessageQueue;
 
-	public convertToLlm: (messages: Message[]) => LlmMessage[] | Promise<LlmMessage[]>;
-	public transformContext?: (messages: Message[], signal?: AbortSignal) => Promise<Message[]>;
+	public convertToLlm: (messages: AgentMessage[]) => LlmMessage[] | Promise<LlmMessage[]>;
+	public transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
 	public stream: StreamFunction;
 	public getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
 	public onPayload?: StreamOptions["onPayload"];
@@ -192,13 +192,13 @@ export class Agent {
 	}
 
 	/** Queue a message to be injected after the current assistant turn finishes. */
-	steer(message: Message): void {
+	steer(message: AgentMessage): void {
 		this.assertNotDisposed();
 		this.steeringQueue.enqueue(message);
 	}
 
 	/** Queue a message to run only after the agent would otherwise stop. */
-	followUp(message: Message): void {
+	followUp(message: AgentMessage): void {
 		this.assertNotDisposed();
 		this.followUpQueue.enqueue(message);
 	}
@@ -287,7 +287,7 @@ export class Agent {
 	}
 
 	/** Return a transcript snapshot. */
-	getHistory(): Message[] {
+	getHistory(): AgentMessage[] {
 		return this._state.messages.slice();
 	}
 
@@ -336,9 +336,9 @@ export class Agent {
 	}
 
 	/** Start a new persistent prompt from text, a single message, or a batch of messages. */
-	async prompt(message: Message | Message[], options?: AgentRunOptions): Promise<void>;
+	async prompt(message: AgentMessage | AgentMessage[], options?: AgentRunOptions): Promise<void>;
 	async prompt(input: string, options?: AgentRunOptions): Promise<void>;
-	async prompt(input: string | Message | Message[], options: AgentRunOptions = {}): Promise<void> {
+	async prompt(input: string | AgentMessage | AgentMessage[], options: AgentRunOptions = {}): Promise<void> {
 		this.assertNotDisposed();
 		if (this.activeRun) {
 			throw new Error(
@@ -461,7 +461,7 @@ export class Agent {
 		}
 	}
 
-	private normalizePromptInput(input: string | Message | Message[]): Message[] {
+	private normalizePromptInput(input: string | AgentMessage | AgentMessage[]): AgentMessage[] {
 		if (Array.isArray(input)) {
 			return input;
 		}
@@ -474,7 +474,7 @@ export class Agent {
 	}
 
 	private async runPromptMessages(
-		messages: Message[],
+		messages: AgentMessage[],
 		options: { skipInitialSteeringPoll?: boolean; signal?: AbortSignal } = {},
 	): Promise<void> {
 		await this.runWithLifecycle(async (signal) => {
@@ -602,7 +602,7 @@ export class Agent {
 			stopReason: aborted ? "aborted" : "error",
 			errorMessage: error instanceof Error ? error.message : String(error),
 			timestamp: this.now(),
-		} satisfies Message;
+		} satisfies AgentMessage;
 		await this.events.process({ type: "message_start", message: failureMessage });
 		await this.events.process({ type: "message_end", message: failureMessage });
 		await this.events.process({ type: "turn_end", message: failureMessage, toolResults: [] });

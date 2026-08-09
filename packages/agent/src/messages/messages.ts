@@ -1,10 +1,10 @@
 import type { Message as LlmMessage, TextContent } from "@tsuuanmi/pi-ai";
 import type {
+	AgentMessage,
 	BashExecutionMessage,
 	BranchSummaryMessage,
 	CompactionSummaryMessage,
 	CustomMessage,
-	Message,
 } from "#agent/messages/types";
 
 export const COMPACTION_SUMMARY_PREFIX = `The conversation history before this point was compacted into the following summary:
@@ -79,7 +79,7 @@ export function createCustomMessage(
 	};
 }
 
-export function convertToLlm(messages: Message[]): LlmMessage[] {
+export function convertToLlm(messages: AgentMessage[]): LlmMessage[] {
 	return messages
 		.map((m): LlmMessage | undefined => {
 			switch (m.role) {

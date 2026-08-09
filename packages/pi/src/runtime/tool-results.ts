@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { isAbsolute, normalize, resolve } from "node:path";
-import type { Message } from "@tsuuanmi/pi-agent";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, ToolCall, ToolResultMessage } from "@tsuuanmi/pi-ai";
 
 export interface ToolResultOptions {
@@ -112,11 +112,11 @@ function keyOf(key: ReadKey): string {
 	return `${key.path}\u0000${key.offset ?? ""}\u0000${key.limit ?? ""}`;
 }
 
-function hasLaterAgent(messages: Message[], afterIndex: number): boolean {
+function hasLaterAgent(messages: AgentMessage[], afterIndex: number): boolean {
 	return messages.slice(afterIndex + 1).some((message) => message.role === "assistant");
 }
 
-function protectedIndices(messages: Message[]): Set<number> {
+function protectedIndices(messages: AgentMessage[]): Set<number> {
 	const batches: Array<{ resultIndices: number[]; lastResultIndex: number; consumed: boolean }> = [];
 	for (let index = 0; index < messages.length; index++) {
 		const message = messages[index];
@@ -141,7 +141,7 @@ function protectedIndices(messages: Message[]): Set<number> {
 	return protectedResults;
 }
 
-function records(messages: Message[], cwd: string | undefined): ToolResultRecord[] {
+function records(messages: AgentMessage[], cwd: string | undefined): ToolResultRecord[] {
 	const calls = new Map<string, ToolCallInfo>();
 	for (let index = 0; index < messages.length; index++) {
 		const message = messages[index];
@@ -273,19 +273,19 @@ function render(item: ToolResultRecord, policy: SummaryPolicy): string {
 }
 
 function applySummaries(
-	messages: Message[],
+	messages: AgentMessage[],
 	items: ToolResultRecord[],
 	summaries: Map<number, SummaryPolicy>,
-): Message[] {
+): AgentMessage[] {
 	if (summaries.size === 0) return messages;
 	const recordsByIndex = new Map(items.map((item) => [item.messageIndex, item]));
 	let changed = false;
-	const optimized = messages.map((message, index): Message => {
+	const optimized = messages.map((message, index): AgentMessage => {
 		const policy = summaries.get(index);
 		const item = recordsByIndex.get(index);
 		if (!policy || !item || message.role !== "toolResult") return message;
 		changed = true;
-		return { ...message, content: [{ type: "text", text: render(item, policy) }] } as Message;
+		return { ...message, content: [{ type: "text", text: render(item, policy) }] } as AgentMessage;
 	});
 	return changed ? optimized : messages;
 }
@@ -312,7 +312,11 @@ function remember(
 	}
 }
 
-export function optimizeToolResults(messages: Message[], options: ToolResultOptions, ledger: SummaryLedger): Message[] {
+export function optimizeToolResults(
+	messages: AgentMessage[],
+	options: ToolResultOptions,
+	ledger: SummaryLedger,
+): AgentMessage[] {
 	if (!options.dedupeReadResults && !options.summarizeStaleToolResults) return messages;
 	const items = records(messages, options.cwd);
 	if (items.length === 0) return messages;

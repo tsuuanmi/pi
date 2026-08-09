@@ -66,7 +66,7 @@ The loop emits these `AgentEvent` types:
 
 The loop applies transforms in order:
 
-1. **`transformContext`** operates on `Message[]` for pruning or injection and receives the abort signal.
+1. **`transformContext`** operates on `AgentMessage[]` for pruning or injection and receives the abort signal.
 2. **`convertToLlm`** converts agent messages into provider-compatible messages.
 
 These callbacks are owned by `Agent` configuration and run inside the agent boundary.

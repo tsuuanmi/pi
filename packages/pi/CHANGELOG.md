@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **agent**: Updated Pi-facing agent and session contracts to use `AgentMessage` for agent-owned transcript messages; the LLM protocol `Message` remains owned by `@tsuuanmi/pi-ai`.
 - **execution**: Split process, shell, lifecycle, Bash, and program adapters into focused modules; renamed the local backend and shell resolver, removed the `sh` fallback, and standardized program results on `exitCode`, `signal`, and `reason`.
 - **rpc**: RPC JSONL now rejects CRLF input and unterminated records instead of accepting them.
 - **loader**: Moved configuration and resource loading into `src/loader/`, renamed the public configuration path to `@tsuuanmi/pi/loader/config`, and removed the old paths.

@@ -2,7 +2,7 @@
  * Extension runner - executes extensions and manages their lifecycle.
  */
 
-import type { Message, SubagentManager } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, SubagentManager } from "@tsuuanmi/pi-agent";
 import type { Model } from "@tsuuanmi/pi-ai";
 import type { KeyId } from "@tsuuanmi/pi-tui";
 import { type Theme, theme } from "@tsuuanmi/pi-tui";
@@ -669,7 +669,7 @@ export class ExtensionRunner {
 		return emitExtensionHook(this.createHookDispatchState(), event);
 	}
 
-	async emitMessageEnd(event: MessageEndEvent): Promise<Message | undefined> {
+	async emitMessageEnd(event: MessageEndEvent): Promise<AgentMessage | undefined> {
 		return emitMessageEndHook(this.createHookDispatchState(), event);
 	}
 
@@ -685,7 +685,7 @@ export class ExtensionRunner {
 		return emitUserBashHook(this.createHookDispatchState(), event);
 	}
 
-	async emitContext(messages: Message[]): Promise<Message[]> {
+	async emitContext(messages: AgentMessage[]): Promise<AgentMessage[]> {
 		return emitContextHook(this.createHookDispatchState(), messages);
 	}
 

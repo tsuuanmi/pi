@@ -4,7 +4,7 @@ Agent message types, custom message construction, and context optimization for P
 
 ## Overview
 
-Pi uses the shared message type system from `@tsuuanmi/pi-agent`. Custom messages are transformed to LLM-compatible messages via `convertToLlm()` from `@tsuuanmi/pi-agent`.
+Pi uses the `AgentMessage` transcript type from `@tsuuanmi/pi-agent`. Custom messages are transformed to LLM-compatible `@tsuuanmi/pi-ai` messages via `convertToLlm()` from `@tsuuanmi/pi-agent`.
 
 ## Custom Message Types
 
@@ -93,7 +93,7 @@ const custom = createCustomMessage("myType", content, true, details, timestamp);
 
 ## LLM Conversion
 
-`convertToLlm(messages)` transforms an array of `Message` (including custom types) into an array of LLM-compatible `Message` objects:
+`convertToLlm(messages)` transforms an array of `AgentMessage` (including custom types) into an array of LLM-compatible `@tsuuanmi/pi-ai` `Message` objects:
 
 | Input Role | Output | Notes |
 |------------|--------|-------|

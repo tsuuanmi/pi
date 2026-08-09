@@ -15,7 +15,7 @@ Events are defined in [`AgentSessionEvent`](https://github.com/tsuuanmi/pi/blob/
 ```typescript
 type AgentSessionEvent =
   | Exclude<AgentEvent, { type: "agent_end" }>
-  | { type: "agent_end"; messages: Message[]; willRetry: boolean }
+  | { type: "agent_end"; messages: AgentMessage[]; willRetry: boolean }
   | { type: "queue_update"; steering: readonly string[]; followUp: readonly string[] }
   | { type: "compaction_start"; reason: "manual" | "threshold" | "overflow" }
   | { type: "session_info_changed"; name: string | undefined }
@@ -37,18 +37,18 @@ type AgentEvent =
   | { type: "agent_status"; status: AgentStatus; trace?: AgentTraceEvent }
   | { type: "trace"; trace: AgentTraceEvent }
   | { type: "warning"; warning: { code: string; message: string; details?: Record<string, unknown> } }
-  | { type: "agent_end"; messages: Message[] }
+  | { type: "agent_end"; messages: AgentMessage[] }
   | { type: "loop_detected"; result: LoopDetectionResult }
   | { type: "max_turns_reached"; turns: number; maxTurns: number }
   // Turn lifecycle
   | { type: "turn_start" }
-  | { type: "turn_end"; message: Message; toolResults: ToolResultMessage[] }
+  | { type: "turn_end"; message: AgentMessage; toolResults: ToolResultMessage[] }
   // Structured output
   | { type: "structured_output"; ok: boolean; attempt: number; error?: string; issues?: string[]; preview?: string }
   // Message lifecycle
-  | { type: "message_start"; message: Message }
-  | { type: "message_update"; message: Message; assistantMessageEvent: AssistantMessageEvent }
-  | { type: "message_end"; message: Message }
+  | { type: "message_start"; message: AgentMessage }
+  | { type: "message_update"; message: AgentMessage; assistantMessageEvent: AssistantMessageEvent }
+  | { type: "message_end"; message: AgentMessage }
   // Tool execution
   | { type: "tool_execution_start"; toolCallId: string; toolName: string; args: any }
   | { type: "tool_execution_update"; toolCallId: string; toolName: string; args: any; partialResult: any }
@@ -57,12 +57,12 @@ type AgentEvent =
 
 ## Message Types
 
-Base messages from [`packages/ai/src/protocol/message.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/protocol/message.ts):
+Base LLM messages from [`packages/ai/src/protocol/message.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/protocol/message.ts):
 - `UserMessage` (line 8)
 - `AssistantMessage` (line 14)
 - `ToolResultMessage` (line 30)
 
-Extended messages from [`packages/agent/src/messages/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/messages/messages.ts):
+Agent message roles from [`packages/agent/src/messages/types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/messages/types.ts):
 - `BashExecutionMessage`
 - `CustomMessage`
 - `BranchSummaryMessage`

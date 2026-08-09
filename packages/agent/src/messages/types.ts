@@ -42,4 +42,4 @@ export interface CustomMessages {
 	compactionSummary: CompactionSummaryMessage;
 }
 
-export type Message = LlmMessage | CustomMessages[keyof CustomMessages];
+export type AgentMessage = LlmMessage | CustomMessages[keyof CustomMessages];

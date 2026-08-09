@@ -6,7 +6,7 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { createCompactionSummaryMessage, type Message } from "@tsuuanmi/pi-agent";
+import { type AgentMessage, createCompactionSummaryMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import type { AutocompleteProvider, EditorComponent, KeyId, MarkdownTheme, SlashCommand } from "@tsuuanmi/pi-tui";
 import {
@@ -1381,7 +1381,7 @@ export class InteractiveMode {
 	}
 
 	/** Extract text content from a user message */
-	private getUserMessageText(message: Message): string {
+	private getUserMessageText(message: AgentMessage): string {
 		if (message.role !== "user") return "";
 		const textBlocks =
 			typeof message.content === "string"
@@ -1416,7 +1416,7 @@ export class InteractiveMode {
 		this.ui.requestRender();
 	}
 
-	private addMessageToChat(message: Message, options?: { populateHistory?: boolean }): void {
+	private addMessageToChat(message: AgentMessage, options?: { populateHistory?: boolean }): void {
 		switch (message.role) {
 			case "bashExecution": {
 				const component = new BashExecutionComponent(message.command, this.ui, message.excludeFromContext);

@@ -5,7 +5,7 @@
  */
 
 import { type ChildProcess, spawn } from "node:child_process";
-import type { AgentEvent, Message } from "@tsuuanmi/pi-agent";
+import type { AgentEvent, AgentMessage } from "@tsuuanmi/pi-agent";
 import { attachJsonlLineReader, serializeJsonLine } from "@tsuuanmi/pi-agent/node";
 import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { BashResult } from "#pi/execution/bash";
@@ -382,9 +382,9 @@ export class RpcClient {
 	/**
 	 * Get all messages in the session.
 	 */
-	async getMessages(): Promise<Message[]> {
+	async getMessages(): Promise<AgentMessage[]> {
 		const response = await this.send({ type: "get_messages" });
-		return this.getData<{ messages: Message[] }>(response).messages;
+		return this.getData<{ messages: AgentMessage[] }>(response).messages;
 	}
 
 	/**

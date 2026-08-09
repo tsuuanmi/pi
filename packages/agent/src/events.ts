@@ -2,7 +2,7 @@ import type { AssistantMessageEvent, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { LoopDetectionResult } from "#agent/agent/loop-detector";
 import type { AgentStatus } from "#agent/agent/state";
 import type { AgentTraceEvent, TraceSpan } from "#agent/agent/trace";
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 
 export type ToolExecutionStatus = "completed" | "failed" | "blocked" | "aborted";
 
@@ -25,9 +25,9 @@ export type AgentEvent =
 	| { type: "agent_status"; status: AgentStatus; trace?: AgentTraceEvent }
 	| { type: "trace"; trace: AgentTraceEvent }
 	| { type: "warning"; warning: Warning }
-	| { type: "agent_end"; messages: Message[] }
+	| { type: "agent_end"; messages: AgentMessage[] }
 	| { type: "turn_start" }
-	| { type: "turn_end"; message: Message; toolResults: ToolResultMessage[] }
+	| { type: "turn_end"; message: AgentMessage; toolResults: ToolResultMessage[] }
 	| { type: "loop_detected"; result: LoopDetectionResult }
 	| { type: "max_turns_reached"; turns: number; maxTurns: number }
 	| {
@@ -38,9 +38,9 @@ export type AgentEvent =
 			issues?: string[];
 			preview?: string;
 	  }
-	| { type: "message_start"; message: Message }
-	| { type: "message_update"; message: Message; assistantMessageEvent: AssistantMessageEvent }
-	| { type: "message_end"; message: Message }
+	| { type: "message_start"; message: AgentMessage }
+	| { type: "message_update"; message: AgentMessage; assistantMessageEvent: AssistantMessageEvent }
+	| { type: "message_end"; message: AgentMessage }
 	| { type: "tool_execution_start"; toolCallId: string; toolName: string; args: any }
 	| { type: "tool_execution_update"; toolCallId: string; toolName: string; args: any; partialResult: any }
 	| {

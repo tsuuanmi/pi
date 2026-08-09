@@ -1,11 +1,11 @@
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 import type { ToolCall } from "#agent/tool-call";
 
 export interface MessageTurn {
 	/** Messages that must be kept or dropped together to avoid orphaned tool calls/results. */
-	messages: Message[];
+	messages: AgentMessage[];
 	/** Assistant message for this turn, when present. */
-	assistantMessage?: Extract<Message, { role: "assistant" }>;
+	assistantMessage?: Extract<AgentMessage, { role: "assistant" }>;
 	/** Tool call ids requested by the assistant message in this turn. */
 	toolCallIds: string[];
 	/** Matching tool result ids included in this turn. */
@@ -19,19 +19,19 @@ export interface SlidingWindowContextOptions {
 	maxTurns: number;
 }
 
-function isAgentMessage(message: Message): message is Extract<Message, { role: "assistant" }> {
+function isAgentMessage(message: AgentMessage): message is Extract<AgentMessage, { role: "assistant" }> {
 	return message.role === "assistant";
 }
 
-function isToolResultMessage(message: Message): message is Extract<Message, { role: "toolResult" }> {
+function isToolResultMessage(message: AgentMessage): message is Extract<AgentMessage, { role: "toolResult" }> {
 	return message.role === "toolResult";
 }
 
-function getToolCalls(message: Extract<Message, { role: "assistant" }>): ToolCall[] {
+function getToolCalls(message: Extract<AgentMessage, { role: "assistant" }>): ToolCall[] {
 	return message.content.filter((content): content is ToolCall => content.type === "toolCall");
 }
 
-function createTurn(messages: Message[]): MessageTurn {
+function createTurn(messages: AgentMessage[]): MessageTurn {
 	const assistantMessage = messages.find(isAgentMessage);
 	const toolCallIds = assistantMessage ? getToolCalls(assistantMessage).map((toolCall) => toolCall.id) : [];
 	const toolCallIdSet = new Set(toolCallIds);
@@ -58,9 +58,9 @@ function createTurn(messages: Message[]): MessageTurn {
  * an assistant are attached to that assistant turn, so pruning by turns keeps the
  * user/context message that caused the preserved response.
  */
-export function groupMessagesIntoTurns(messages: Message[]): MessageTurn[] {
+export function groupMessagesIntoTurns(messages: AgentMessage[]): MessageTurn[] {
 	const turns: MessageTurn[] = [];
-	let current: Message[] = [];
+	let current: AgentMessage[] = [];
 	let currentToolCallIds = new Set<string>();
 	let currentHasAgent = false;
 
@@ -108,7 +108,7 @@ function hasOrphanToolResult(turn: MessageTurn): boolean {
  * Keep the newest assistant turns without splitting assistant tool calls from
  * their matching tool results.
  */
-export function pruneMessagesByTurns(messages: Message[], maxTurns: number): Message[] {
+export function pruneMessagesByTurns(messages: AgentMessage[], maxTurns: number): AgentMessage[] {
 	const turnLimit = normalizeTurnLimit(maxTurns);
 	if (turnLimit === Number.POSITIVE_INFINITY) return messages.slice();
 	if (turnLimit === 0) return [];
@@ -135,5 +135,5 @@ export function pruneMessagesByTurns(messages: Message[], maxTurns: number): Mes
 
 /** Create an AgentLoopConfig-compatible transformContext sliding window. */
 export function createSlidingWindowContextTransform(options: SlidingWindowContextOptions) {
-	return async (messages: Message[]): Promise<Message[]> => pruneMessagesByTurns(messages, options.maxTurns);
+	return async (messages: AgentMessage[]): Promise<AgentMessage[]> => pruneMessagesByTurns(messages, options.maxTurns);
 }

@@ -1,7 +1,7 @@
 import type { AssistantMessage, Model, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { Agent } from "#agent/agent";
 import type { Context } from "#agent/context";
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 import type { AgentRunResult } from "#agent/run";
 import type { ToolResult } from "#agent/tool/result";
 import type { ToolCall } from "#agent/tool-call";
@@ -38,7 +38,7 @@ export interface ShouldStopAfterTurnContext {
 	message: AssistantMessage;
 	toolResults: ToolResultMessage[];
 	context: Context;
-	newMessages: Message[];
+	newMessages: AgentMessage[];
 }
 
 export interface AgentLoopTurnUpdate {

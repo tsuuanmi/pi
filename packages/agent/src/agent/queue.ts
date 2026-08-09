@@ -1,15 +1,15 @@
 import type { QueueMode } from "#agent/config";
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 
 export class MessageQueue {
-	private messages: Message[] = [];
+	private messages: AgentMessage[] = [];
 	mode: QueueMode;
 
 	constructor(mode: QueueMode) {
 		this.mode = mode;
 	}
 
-	enqueue(message: Message): void {
+	enqueue(message: AgentMessage): void {
 		this.messages.push(message);
 	}
 
@@ -17,7 +17,7 @@ export class MessageQueue {
 		return this.messages.length > 0;
 	}
 
-	drain(): Message[] {
+	drain(): AgentMessage[] {
 		if (this.mode === "all") {
 			const messages = this.messages.slice();
 			this.messages = [];

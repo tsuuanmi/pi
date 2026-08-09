@@ -1,4 +1,4 @@
-import type { Message } from "@tsuuanmi/pi-agent";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import {
 	type BashExecutionMessage,
 	type CustomMessage,
@@ -50,7 +50,7 @@ export interface SessionEntryBase {
 
 export interface SessionMessageEntry extends SessionEntryBase {
 	type: "message";
-	message: Message;
+	message: AgentMessage;
 }
 
 export interface ThinkingLevelChangeEntry extends SessionEntryBase {
@@ -160,7 +160,7 @@ export interface SessionTreeNode {
 }
 
 export interface SessionContext {
-	messages: Message[];
+	messages: AgentMessage[];
 	thinkingLevel: string;
 	model: { provider: string; modelId: string } | null;
 }
@@ -390,7 +390,7 @@ export function buildSessionContext(
 	// 1. Emit summary first (entry = compaction)
 	// 2. Emit kept messages (from firstKeptEntryId up to compaction)
 	// 3. Emit messages after compaction
-	const messages: Message[] = [];
+	const messages: AgentMessage[] = [];
 
 	const appendMessage = (entry: SessionEntry) => {
 		if (entry.type === "message") {
@@ -564,9 +564,9 @@ export function findMostRecentSession(sessionDir: string, cwd?: string): string 
 	}
 }
 
-type MessageWithContent = Extract<Message, { content: unknown }>;
+type MessageWithContent = Extract<AgentMessage, { content: unknown }>;
 
-function isMessageWithContent(message: Message): message is MessageWithContent {
+function isMessageWithContent(message: AgentMessage): message is MessageWithContent {
 	return "content" in message;
 }
 
@@ -1014,7 +1014,7 @@ export class SessionManager {
 	 * so it is easier to find them.
 	 * These need to be appended via appendCompaction() and appendBranchSummary() methods.
 	 */
-	appendMessage(message: Message | CustomMessage | BashExecutionMessage): string {
+	appendMessage(message: AgentMessage | CustomMessage | BashExecutionMessage): string {
 		const entry: SessionMessageEntry = {
 			type: "message",
 			id: generateId(this.byId),

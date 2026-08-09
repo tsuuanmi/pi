@@ -10,7 +10,7 @@
  */
 
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
-import type { Message } from "#agent/messages/types";
+import type { AgentMessage } from "#agent/messages/types";
 
 /** Minimal event shape the tracker can consume (superset of AgentEvent). */
 interface TrackableEvent {
@@ -20,7 +20,7 @@ interface TrackableEvent {
 	args?: unknown;
 	result?: unknown;
 	isError?: boolean;
-	message?: Message;
+	message?: AgentMessage;
 }
 
 export interface SubagentProgress {
@@ -64,7 +64,7 @@ function truncateArgs(args: unknown): string | undefined {
 	}
 }
 
-function textFromAgent(message: Message): string {
+function textFromAgent(message: AgentMessage): string {
 	if (message.role !== "assistant") return "";
 	const agentMessage = message as AssistantMessage;
 	return agentMessage.content
