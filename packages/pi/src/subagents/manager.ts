@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import type {
-	AgentMessage,
+	Message,
 	SubagentAwaitOptions,
 	SubagentAwaitResult,
 	SubagentDelivery,
@@ -127,28 +127,28 @@ async function bindSubagentExtensions(session: AgentSession): Promise<void> {
 	});
 }
 
-function textFromAssistant(message: AssistantMessage): string {
+function textFromAgent(message: AssistantMessage): string {
 	return message.content
 		.filter((part) => part.type === "text")
 		.map((part) => part.text)
 		.join("\n");
 }
 
-function finalAssistantOutput(messages: readonly AgentMessage[]): string {
+function finalAgentOutput(messages: readonly Message[]): string {
 	for (let index = messages.length - 1; index >= 0; index--) {
 		const message = messages[index];
-		if (message?.role === "assistant") return textFromAssistant(message as AssistantMessage);
+		if (message?.role === "assistant") return textFromAgent(message as AssistantMessage);
 	}
 	return "";
 }
 
-function isAssistantError(messages: readonly AgentMessage[]): string | undefined {
+function isAgentError(messages: readonly Message[]): string | undefined {
 	for (let index = messages.length - 1; index >= 0; index--) {
 		const message = messages[index];
 		if (message?.role !== "assistant") continue;
-		const assistant = message as AssistantMessage;
-		if (assistant.stopReason === "error" || assistant.stopReason === "aborted") {
-			return assistant.errorMessage ?? assistant.stopReason;
+		const agentMessage = message as AssistantMessage;
+		if (agentMessage.stopReason === "error" || agentMessage.stopReason === "aborted") {
+			return agentMessage.errorMessage ?? agentMessage.stopReason;
 		}
 		return undefined;
 	}
@@ -491,8 +491,8 @@ export class SubagentManager implements SubagentManagerContract, SubagentControl
 				};
 			}
 			const messages = session.state.messages;
-			const errorText = isAssistantError(messages);
-			const output = finalAssistantOutput(messages);
+			const errorText = isAgentError(messages);
+			const output = finalAgentOutput(messages);
 			const yieldResult = extractYieldFromMessages(messages);
 			const terminalStatus = errorText ? "failed" : "completed";
 			this.progressTracker.markTerminal(record.id, terminalStatus);

@@ -32,13 +32,13 @@ Source on GitHub ([pi](https://github.com/tsuuanmi/pi)):
 - [`packages/pi/src/session/manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/manager.ts) - Session entry types and SessionManager
 - [`packages/agent/src/messages/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/messages/messages.ts) - Extended message types (BashExecutionMessage, CustomMessage, etc.)
 - [`packages/ai/src/protocol/message.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/protocol/message.ts) - Base message types (UserMessage, AssistantMessage, ToolResultMessage)
-- [`packages/agent/src/messages/state.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/messages/state.ts) - AgentMessage union type
+- [`packages/agent/src/messages/state.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/messages/state.ts) - Message union type
 
 For TypeScript definitions in your project, inspect `node_modules/@tsuuanmi/pi/dist/` and `node_modules/@tsuuanmi/pi-ai/dist/`.
 
 ## Message Types
 
-Session entries contain `AgentMessage` objects. Understanding these types is essential for parsing sessions and writing extensions.
+Session entries contain `Message` objects. Understanding these types is essential for parsing sessions and writing extensions.
 
 ### Content Blocks
 
@@ -150,10 +150,10 @@ interface CompactionSummaryMessage {
 }
 ```
 
-### AgentMessage Union
+### Message Union
 
 ```typescript
-type AgentMessage =
+type Message =
   | UserMessage
   | AssistantMessage
   | ToolResultMessage
@@ -188,7 +188,7 @@ First line of the file. Metadata only, not part of the tree (no `id`/`parentId`)
 
 ### SessionMessageEntry
 
-A message in the conversation. The `message` field contains an `AgentMessage`.
+A message in the conversation. The `message` field contains an `Message`.
 
 ```json
 {"type":"message","id":"a1b2c3d4","parentId":"prev1234","timestamp":"2024-12-03T14:00:01.000Z","message":{"role":"user","content":"Hello"}}

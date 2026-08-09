@@ -318,7 +318,7 @@ import { convertToLlm, serializeConversation } from "@tsuuanmi/pi-agent";
 pi.on("session_before_compact", async (event, ctx) => {
   const { preparation } = event;
   
-  // Convert AgentMessage[] to Message[], then serialize to text
+  // Convert Message[] to Message[], then serialize to text
   const conversationText = serializeConversation(
     convertToLlm(preparation.messagesToSummarize)
   );

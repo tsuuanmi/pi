@@ -1,11 +1,11 @@
-import type { AgentMessage, StreamFn } from "@tsuuanmi/pi-agent";
+import type { Message, StreamFunction } from "@tsuuanmi/pi-agent";
 import { convertToLlm, SUMMARIZATION_SYSTEM_PROMPT, serializeConversation } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Context, Model, StreamOptions, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { complete } from "@tsuuanmi/pi-ai";
 
 interface SummaryRequest {
 	model: Model<any>;
-	messages: AgentMessage[];
+	messages: Message[];
 	instructions: string;
 	maxTokens: number;
 	apiKey?: string;
@@ -13,7 +13,7 @@ interface SummaryRequest {
 	env?: Record<string, string>;
 	signal?: AbortSignal;
 	thinkingLevel?: ThinkingLevel;
-	streamFn?: StreamFn;
+	stream?: StreamFunction;
 }
 
 const SUMMARY_PROMPT = `The messages above are a conversation to summarize. Create a structured context checkpoint summary that another LLM will use to continue the work.
@@ -131,8 +131,8 @@ export async function summarize(request: SummaryRequest): Promise<AssistantMessa
 	const context: Context = { systemPrompt: SUMMARIZATION_SYSTEM_PROMPT, messages };
 	const options = optionsFor(request);
 
-	if (!request.streamFn) return complete(request.model, context, options);
-	return (await request.streamFn(request.model, context, options)).result();
+	if (!request.stream) return complete(request.model, context, options);
+	return (await request.stream(request.model, context, options)).result();
 }
 
 export function summaryText(response: AssistantMessage): string {
@@ -144,7 +144,7 @@ export function summaryText(response: AssistantMessage): string {
 
 /** Generate the main iterative context summary. */
 export async function generateSummary(
-	messages: AgentMessage[],
+	messages: Message[],
 	model: Model<any>,
 	reserveTokens: number,
 	apiKey: string | undefined,
@@ -153,7 +153,7 @@ export async function generateSummary(
 	customInstructions?: string,
 	previousSummary?: string,
 	thinkingLevel?: ThinkingLevel,
-	streamFn?: StreamFn,
+	stream?: StreamFunction,
 	env?: Record<string, string>,
 ): Promise<string> {
 	const maxTokens = Math.min(
@@ -174,7 +174,7 @@ export async function generateSummary(
 		env,
 		signal,
 		thinkingLevel,
-		streamFn,
+		stream,
 	});
 	if (response.stopReason === "error") {
 		throw new Error(`Summarization failed: ${response.errorMessage || "Unknown error"}`);
@@ -184,7 +184,7 @@ export async function generateSummary(
 
 /** Generate the summary for the retained suffix of a split turn. */
 export async function generateTurnPrefixSummary(
-	messages: AgentMessage[],
+	messages: Message[],
 	model: Model<any>,
 	reserveTokens: number,
 	apiKey: string | undefined,
@@ -192,7 +192,7 @@ export async function generateTurnPrefixSummary(
 	env?: Record<string, string>,
 	signal?: AbortSignal,
 	thinkingLevel?: ThinkingLevel,
-	streamFn?: StreamFn,
+	stream?: StreamFunction,
 ): Promise<string> {
 	const maxTokens = Math.min(
 		Math.floor(0.5 * reserveTokens),
@@ -208,7 +208,7 @@ export async function generateTurnPrefixSummary(
 		env,
 		signal,
 		thinkingLevel,
-		streamFn,
+		stream,
 	});
 	if (response.stopReason === "error") {
 		throw new Error(`Turn prefix summarization failed: ${response.errorMessage || "Unknown error"}`);

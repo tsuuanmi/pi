@@ -1,4 +1,4 @@
-import type { AgentState, StreamFn } from "@tsuuanmi/pi-agent";
+import type { AgentState, StreamFunction } from "@tsuuanmi/pi-agent";
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceLoader } from "#pi/loader/resources";
@@ -29,7 +29,7 @@ export interface AgentSessionContext {
 
 	// --- Agent surface (narrow; NO whole `agent`) ---
 	readonly state: AgentState;
-	readonly streamFn: StreamFn;
+	readonly stream: StreamFunction;
 
 	// --- StatsExport (Step 1) ---
 	readonly sessionFile: string | undefined;

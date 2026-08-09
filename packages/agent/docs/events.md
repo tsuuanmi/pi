@@ -51,7 +51,7 @@ The subagent progress tracker in [`subagents/index.md`](./subagents/index.md) co
 
 ## Trace spans
 
-Runtime traces and final tool events carry additive `span` metadata:
+Provider traces and final tool events carry additive `span` metadata:
 
 - `kind`: `request` or `tool`
 - `id`: provider request id or tool call id
@@ -63,14 +63,13 @@ Spans are protocol-level observability data. Concrete tool implementations remai
 
 ## Provider request observation
 
-`AgentOptions.providerRequestObserver` is forwarded to the underlying AI stream options. Use it to observe provider request lifecycle details emitted by `@tsuuanmi/pi-ai` without coupling agent event listeners to provider internals. Completion events include the same request `span` emitted through runtime traces.
+`AgentOptions.providerRequestObserver` is forwarded to the underlying AI stream options. Use it to observe provider request lifecycle details emitted by `@tsuuanmi/pi-ai` without coupling agent event listeners to provider internals. Completion events include the same request `span` emitted through agent events.
 
 ## Recommended integration pattern
 
 - Subscribe once at the application boundary.
 - Convert events into your telemetry format outside this package.
-- Keep UI/progress state in higher-level packages by consuming `AgentEvent` rather than forking the runtime loop.
+- Keep UI/progress state in higher-level packages by consuming `AgentEvent` rather than forking the internal loop.
 - Observe provider request lifecycle with `providerRequestObserver` when provider-level details are needed.
-- Observe process/protocol/ACP-style runtimes through their `RuntimeEvent` backend, warning, trace, done, and error events.
 - Avoid storing raw prompt/tool payloads unless your privacy policy allows it.
 - Treat `agent_end` as the final event for a run; the agent becomes idle after all awaited `agent_end` listeners settle.

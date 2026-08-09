@@ -6,7 +6,7 @@
  */
 
 import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
-import type { AgentMessage } from "#agent/messages/state";
+import type { Message } from "#agent/messages/state";
 import type { SubagentProgress } from "#agent/subagents/progress";
 import type { YieldDetails } from "#agent/subagents/yield-result";
 
@@ -56,7 +56,7 @@ export interface SubagentRunRequest {
 
 export interface SubagentRunResult {
 	record: SubagentRecord;
-	messages: AgentMessage[];
+	messages: Message[];
 	output: string;
 }
 

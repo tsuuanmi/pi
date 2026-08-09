@@ -110,6 +110,10 @@ Do not create a global event bus or a universal hook type that contains every Ag
 The current implementation follows this boundary:
 
 - `src/agent/index.ts` owns Agent lifecycle and loop integration.
+- `src/loop.ts` owns turn orchestration.
+- `src/agent/provider.ts` owns provider response streaming.
+- `src/agent/tool-execution.ts` owns tool-call preparation and execution.
+- `src/agent/trace.ts` owns internal timing and trace-span helpers.
 - `src/hooks.ts` defines public Agent hook contracts.
 - `src/events.ts` defines public Agent events.
 - `src/hook-adapter.ts` combines registered hooks into loop callbacks.

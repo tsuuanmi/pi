@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@tsuuanmi/pi-agent";
+import type { Message } from "@tsuuanmi/pi-agent";
 import {
 	type BashExecutionMessage,
 	type CustomMessage,
@@ -7,7 +7,7 @@ import {
 	createCustomMessage,
 } from "@tsuuanmi/pi-agent";
 import { normalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { Message, TextContent } from "@tsuuanmi/pi-ai";
+import type { TextContent } from "@tsuuanmi/pi-ai";
 import { randomUUID } from "crypto";
 import {
 	appendFileSync,
@@ -50,7 +50,7 @@ export interface SessionEntryBase {
 
 export interface SessionMessageEntry extends SessionEntryBase {
 	type: "message";
-	message: AgentMessage;
+	message: Message;
 }
 
 export interface ThinkingLevelChangeEntry extends SessionEntryBase {
@@ -160,7 +160,7 @@ export interface SessionTreeNode {
 }
 
 export interface SessionContext {
-	messages: AgentMessage[];
+	messages: Message[];
 	thinkingLevel: string;
 	model: { provider: string; modelId: string } | null;
 }
@@ -390,7 +390,7 @@ export function buildSessionContext(
 	// 1. Emit summary first (entry = compaction)
 	// 2. Emit kept messages (from firstKeptEntryId up to compaction)
 	// 3. Emit messages after compaction
-	const messages: AgentMessage[] = [];
+	const messages: Message[] = [];
 
 	const appendMessage = (entry: SessionEntry) => {
 		if (entry.type === "message") {
@@ -564,11 +564,13 @@ export function findMostRecentSession(sessionDir: string, cwd?: string): string 
 	}
 }
 
-function isMessageWithContent(message: AgentMessage): message is Message {
-	return typeof (message as Message).role === "string" && "content" in message;
+type MessageWithContent = Extract<Message, { content: unknown }>;
+
+function isMessageWithContent(message: Message): message is MessageWithContent {
+	return "content" in message;
 }
 
-function extractTextContent(message: Message): string {
+function extractTextContent(message: MessageWithContent): string {
 	const content = message.content;
 	if (typeof content === "string") {
 		return content;

@@ -3,10 +3,10 @@ export { Agent } from "#agent/agent";
 export * from "#agent/agent/loop-detector";
 export * from "#agent/agent/pruning";
 export * from "#agent/agent/structured-output";
-export type { ProcessInfo, ProtocolInfo, RuntimeBackend } from "#agent/backend";
 export * from "#agent/compaction/messages";
 export type {
 	AgentLoopConfig,
+	Clock,
 	ProviderRequestObserver,
 	ProviderRequestObserverComplete,
 	ProviderRequestObserverPayload,
@@ -14,20 +14,15 @@ export type {
 	ProviderRequestObserverStart,
 	QueueMode,
 	RequestIdFactory,
-	RuntimeClock,
-	StreamFn,
 	ToolExecutionMode,
 } from "#agent/config";
-export type { AgentContext } from "#agent/context";
-export { DefaultAgentRuntime } from "#agent/default-runtime";
+export type { Context } from "#agent/context";
 export type {
 	AgentEvent,
 	EventSink,
-	RuntimeEvent,
-	RuntimeTrace,
-	RuntimeWarning,
 	ToolExecutionMeta,
 	ToolExecutionStatus,
+	Warning,
 } from "#agent/events";
 export type {
 	AfterToolCallContext,
@@ -44,18 +39,8 @@ export type {
 export * from "#agent/messages/messages";
 export * from "#agent/messages/state";
 export * from "#agent/metadata/receipt";
-export type {
-	AgentRunOptions,
-	AgentRunResult,
-	ContinueRequest,
-	PromptRequest,
-	RunRequest,
-	RunResult,
-	RunStatus,
-	RuntimeRequest,
-	ToolCallSummary,
-} from "#agent/run";
-export type { AgentBackend, AgentRuntime } from "#agent/runtime";
+export type { AgentRunOptions, AgentRunResult } from "#agent/run";
+export type { StreamFunction } from "#agent/stream";
 export * from "#agent/subagents/context";
 export * from "#agent/subagents/manager";
 export * from "#agent/subagents/progress";

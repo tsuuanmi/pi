@@ -265,7 +265,7 @@ function makeEvent(
 // Stream function factory
 // ============================================================================
 
-export interface TestStreamFnState {
+export interface TestStreamState {
 	/** Number of times the stream function has been called. */
 	callCount: number;
 	/** The context passed to each call, in order. */
@@ -280,17 +280,17 @@ export interface TestStreamFnState {
  *
  * Returns the stream function and a state object for inspection.
  */
-function createTestStreamFn(responses: TestResponseInput[]): {
-	streamFn: (model: Model<any>, context: Context, options?: StreamOptions) => AssistantMessageEventStream;
-	state: TestStreamFnState;
+function createTestStream(responses: TestResponseInput[]): {
+	stream: (model: Model<any>, context: Context, options?: StreamOptions) => AssistantMessageEventStream;
+	state: TestStreamState;
 } {
 	if (responses.length === 0) {
-		throw new Error("createTestStreamFn requires at least one response");
+		throw new Error("createTestStream requires at least one response");
 	}
 
-	const state: TestStreamFnState = { callCount: 0, contexts: [] };
+	const state: TestStreamState = { callCount: 0, contexts: [] };
 
-	const streamFn = (_model: Model<any>, context: Context, _options?: StreamOptions) => {
+	const stream = (_model: Model<any>, context: Context, _options?: StreamOptions) => {
 		const index = state.callCount % responses.length;
 		state.callCount++;
 		state.contexts.push(context);
@@ -312,7 +312,7 @@ function createTestStreamFn(responses: TestResponseInput[]): {
 		return stream;
 	};
 
-	return { streamFn, state };
+	return { stream, state };
 }
 
 // ============================================================================
@@ -350,7 +350,7 @@ export interface Harness {
 	sessionManager: SessionManager;
 	settingsManager: SettingsManager;
 	/** Test stream function state (call count, captured contexts). */
-	provider: TestStreamFnState;
+	provider: TestStreamState;
 	/** All events emitted by the session, in order. */
 	events: AgentSessionEvent[];
 	/** Filter captured events by type. */
@@ -375,7 +375,7 @@ function createHarnessWithResourceLoader(
 	const baseModel = options.model ?? testModel;
 	const model: Model<any> = options.contextWindow ? { ...baseModel, contextWindow: options.contextWindow } : baseModel;
 
-	const { streamFn, state: testState } = createTestStreamFn(options.responses ?? ["ok"]);
+	const { stream, state: testState } = createTestStream(options.responses ?? ["ok"]);
 
 	const agent = new Agent({
 		getApiKey: () => "test-key",
@@ -384,7 +384,7 @@ function createHarnessWithResourceLoader(
 			systemPrompt: options.systemPrompt ?? "You are a test assistant.",
 			tools: options.tools ?? [],
 		},
-		streamFn,
+		stream,
 	});
 
 	const sessionManager = options.sessionId

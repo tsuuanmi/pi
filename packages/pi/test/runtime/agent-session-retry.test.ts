@@ -78,7 +78,7 @@ describe("AgentSession retry", () => {
 		const agent = new Agent({
 			getApiKey: () => "test-key",
 			initialState: { model, systemPrompt: "Test", tools: [] },
-			streamFn: () => {
+			stream: () => {
 				callCount++;
 				const stream = new MockAssistantStream();
 				queueMicrotask(() => {
@@ -173,7 +173,7 @@ describe("AgentSession retry", () => {
 	it("retries provider network_error failures", async () => {
 		const created = createSession({ failCount: 0 });
 		let callCount = 0;
-		const streamFn = () => {
+		const stream = () => {
 			callCount++;
 			const stream = new MockAssistantStream();
 			queueMicrotask(() => {
@@ -199,7 +199,7 @@ describe("AgentSession retry", () => {
 		const agent = new Agent({
 			getApiKey: () => "test-key",
 			initialState: { model, systemPrompt: "Test", tools: [] },
-			streamFn,
+			stream,
 		});
 		const sessionManager = SessionManager.inMemory();
 		const settingsManager = SettingsManager.create(tempDir, tempDir);
@@ -251,7 +251,7 @@ describe("AgentSession retry", () => {
 		const agent = new Agent({
 			getApiKey: () => "test-key",
 			initialState: { model, systemPrompt: "Test", tools: [] },
-			streamFn: () => {
+			stream: () => {
 				callCount++;
 				const stream = new MockAssistantStream();
 				queueMicrotask(() => {

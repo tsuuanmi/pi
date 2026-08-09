@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@tsuuanmi/pi-agent";
+import type { Message } from "@tsuuanmi/pi-agent";
 import { createBranchSummaryMessage, createCompactionSummaryMessage, createCustomMessage } from "@tsuuanmi/pi-agent";
 import type { SessionEntry } from "#pi/session/manager";
 
@@ -8,7 +8,7 @@ export interface EntryMessageOptions {
 }
 
 /** Convert a persisted session entry into an agent message when it contributes to context. */
-export function entryToMessage(entry: SessionEntry, options: EntryMessageOptions = {}): AgentMessage | undefined {
+export function entryToMessage(entry: SessionEntry, options: EntryMessageOptions = {}): Message | undefined {
 	const { includeCompaction = true, includeToolResults = true } = options;
 
 	switch (entry.type) {

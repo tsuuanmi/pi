@@ -4,7 +4,7 @@
 
 ## Defining tools
 
-Use `Tool.define()` to validate and create an immutable runtime tool:
+Use `Tool.define()` to validate and create an immutable agent tool:
 
 ```typescript
 import { Tool } from "@tsuuanmi/pi-agent";

@@ -46,9 +46,9 @@ function createAssistant(
 	};
 }
 
-function useSummaryStreamFn(harness: Harness, summary: string): () => number {
+function useSummaryStream(harness: Harness, summary: string): () => number {
 	let callCount = 0;
-	harness.session.agent.streamFn = (model) => {
+	harness.session.agent.stream = (model) => {
 		callCount++;
 		const stream = createAssistantMessageEventStream();
 		queueMicrotask(() => {
@@ -137,11 +137,11 @@ describe("AgentSession compaction characterization", () => {
 		await expect(harness.session.compact()).rejects.toThrow(`No API key found for ${harness.getModel().provider}.`);
 	});
 
-	it("manually compacts with a custom streamFn when registry auth is absent", async () => {
+	it("manually compacts with a custom stream when registry auth is absent", async () => {
 		const harness = await createHarness({ withConfiguredAuth: false });
 		harnesses.push(harness);
 		seedCompactableSession(harness);
-		const getStreamCallCount = useSummaryStreamFn(harness, "summary from custom stream");
+		const getStreamCallCount = useSummaryStream(harness, "summary from custom stream");
 
 		const result = await harness.session.compact();
 
@@ -149,11 +149,11 @@ describe("AgentSession compaction characterization", () => {
 		expect(getStreamCallCount()).toBe(1);
 	});
 
-	it("auto-compacts with a custom streamFn when registry auth is absent", async () => {
+	it("auto-compacts with a custom stream when registry auth is absent", async () => {
 		const harness = await createHarness({ withConfiguredAuth: false });
 		harnesses.push(harness);
 		seedCompactableSession(harness);
-		const getStreamCallCount = useSummaryStreamFn(harness, "auto summary from custom stream");
+		const getStreamCallCount = useSummaryStream(harness, "auto summary from custom stream");
 		const compaction = getCompaction(harness.session);
 
 		await compaction.runAutoCompaction("threshold", false);

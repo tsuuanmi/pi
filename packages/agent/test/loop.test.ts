@@ -15,7 +15,7 @@ describe("agent runtime loop", () => {
 					starts.push(requestId);
 				},
 			},
-			streamFn: () => doneStream(assistantText("done")),
+			stream: () => doneStream(assistantText("done")),
 		});
 
 		await agent.prompt("start");
@@ -36,7 +36,7 @@ describe("agent runtime loop", () => {
 					completions.push({ error, aborted, span });
 				},
 			},
-			streamFn: () =>
+			stream: () =>
 				({
 					[Symbol.asyncIterator]: () => ({
 						next: () => new Promise<IteratorResult<AssistantMessageEvent>>(() => {}),
@@ -45,7 +45,7 @@ describe("agent runtime loop", () => {
 				}) as unknown as AssistantMessageEventStream,
 		});
 		agent.subscribe((event) => {
-			if (event.type === "runtime_trace") {
+			if (event.type === "trace") {
 				traces.push(event);
 			}
 		});
@@ -61,8 +61,8 @@ describe("agent runtime loop", () => {
 		);
 		expect(agent.state.errorMessage).toBe("Provider request timed out after 1ms");
 		expect(traces).toHaveLength(1);
-		expect(traces[0]?.type).toBe("runtime_trace");
-		if (traces[0]?.type !== "runtime_trace") throw new Error("Request trace was not emitted");
+		expect(traces[0]?.type).toBe("trace");
+		if (traces[0]?.type !== "trace") throw new Error("Request trace was not emitted");
 		expect(traces[0].trace.span).toEqual(
 			expect.objectContaining({ kind: "request", status: "timeout", name: "request" }),
 		);

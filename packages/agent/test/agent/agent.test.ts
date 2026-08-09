@@ -7,7 +7,7 @@ describe("agent lifecycle", () => {
 		const phases: string[] = [];
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [] },
-			streamFn: () => doneStream(assistantText("done")),
+			stream: () => doneStream(assistantText("done")),
 		});
 		const hook = {
 			name: "lifecycle",
@@ -33,7 +33,7 @@ describe("agent lifecycle", () => {
 	test("sets and snapshots active tools", () => {
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [] },
-			streamFn: () => doneStream(assistantText("done")),
+			stream: () => doneStream(assistantText("done")),
 		});
 		const tool = repeatTool("active");
 
@@ -49,7 +49,7 @@ describe("agent lifecycle", () => {
 	test("dispose is terminal and idempotent", async () => {
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [] },
-			streamFn: () => doneStream(assistantText("done")),
+			stream: () => doneStream(assistantText("done")),
 		});
 
 		const first = agent.dispose();
@@ -69,7 +69,7 @@ describe("agent lifecycle", () => {
 	test("dispose settles active prompt and run work", async () => {
 		const promptAgent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [] },
-			streamFn: () => pendingStream(assistantText("done")),
+			stream: () => pendingStream(assistantText("done")),
 		});
 
 		const promptPromise = promptAgent.prompt("start");
@@ -81,7 +81,7 @@ describe("agent lifecycle", () => {
 
 		const runAgent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [] },
-			streamFn: () => pendingStream(assistantText("done")),
+			stream: () => pendingStream(assistantText("done")),
 		});
 
 		const runPromise = runAgent.run("start");

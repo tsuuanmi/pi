@@ -285,7 +285,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 			tools: [],
 		},
 		convertToLlm,
-		streamFn: async (model, context, options) => {
+		stream: async (model, context, options) => {
 			if (model.api === "web")
 				return createWebStream(webHost, authStorage, model.provider, executeWebTool)(model, context, options);
 			const auth = await modelRegistry.getApiKeyAndHeaders(model);

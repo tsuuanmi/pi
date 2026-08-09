@@ -1,4 +1,4 @@
-import type { AgentMessage, CustomMessage, LoopDetectionResult } from "@tsuuanmi/pi-agent";
+import type { CustomMessage, LoopDetectionResult, Message } from "@tsuuanmi/pi-agent";
 import type { AssistantMessageEvent, Model, TextContent, ThinkingLevel, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { BashOperations } from "#pi/execution/backend";
 import type { BashResult } from "#pi/execution/bash";
@@ -132,7 +132,7 @@ export type SessionEvent =
 /** Fired before each LLM call. Can modify messages. */
 export interface ContextEvent {
 	type: "context";
-	messages: AgentMessage[];
+	messages: Message[];
 }
 
 /** Fired before a provider request is sent. Can replace the payload. */
@@ -167,7 +167,7 @@ export interface AgentStartEvent {
 /** Fired when an agent loop ends */
 export interface AgentEndEvent {
 	type: "agent_end";
-	messages: AgentMessage[];
+	messages: Message[];
 }
 
 /** Fired at the start of each turn */
@@ -181,27 +181,27 @@ export interface TurnStartEvent {
 export interface TurnEndEvent {
 	type: "turn_end";
 	turnIndex: number;
-	message: AgentMessage;
+	message: Message;
 	toolResults: ToolResultMessage[];
 }
 
 /** Fired when a message starts (user, assistant, or toolResult) */
 export interface MessageStartEvent {
 	type: "message_start";
-	message: AgentMessage;
+	message: Message;
 }
 
 /** Fired during assistant message streaming with token-by-token updates */
 export interface MessageUpdateEvent {
 	type: "message_update";
-	message: AgentMessage;
+	message: Message;
 	assistantMessageEvent: AssistantMessageEvent;
 }
 
 /** Fired when a message ends */
 export interface MessageEndEvent {
 	type: "message_end";
-	message: AgentMessage;
+	message: Message;
 }
 
 /** Fired when a tool starts executing */
@@ -533,7 +533,7 @@ export type ExtensionEvent =
 // ============================================================================
 
 export interface ContextEventResult {
-	messages?: AgentMessage[];
+	messages?: Message[];
 }
 
 export type BeforeProviderRequestEventResult = unknown;
@@ -560,7 +560,7 @@ export interface ToolResultEventResult {
 
 export interface MessageEndEventResult {
 	/** Replace the finalized message. The replacement must keep the original message role. */
-	message?: AgentMessage;
+	message?: Message;
 }
 
 export interface BeforeAgentStartEventResult {

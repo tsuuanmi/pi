@@ -1,7 +1,7 @@
 import type {
 	Agent,
-	AgentMessage,
 	CustomMessage,
+	Message,
 	StructuredOutputOptions,
 	StructuredOutputResult,
 } from "@tsuuanmi/pi-agent";
@@ -22,7 +22,7 @@ import { expandPromptTemplate } from "#pi/runtime/prompt-expansion";
 import type { AgentSessionEvent, PromptOptions } from "#pi/runtime/session/types";
 import type { SessionManager } from "#pi/session/manager";
 
-function getAssistantText(message: AssistantMessage): string {
+function getAgentText(message: AssistantMessage): string {
 	return message.content
 		.filter((content) => content.type === "text")
 		.map((content) => content.text)
@@ -40,8 +40,8 @@ export interface PromptHost {
 	readonly baseSystemPrompt: string;
 	readonly baseSystemPromptOptions: BuildSystemPromptOptions;
 	expandSkillCommand(text: string): string;
-	findLastAssistantMessage(): AssistantMessage | undefined;
-	runAgentPrompt(messages: AgentMessage | AgentMessage[]): Promise<void>;
+	findLastAgentMessage(): AssistantMessage | undefined;
+	runAgentPrompt(messages: Message | Message[]): Promise<void>;
 	handlePostAgentRun(): Promise<boolean>;
 	checkCompaction(message: AssistantMessage, skipAbortedCheck?: boolean): Promise<boolean>;
 	flushBash(): void;
@@ -92,8 +92,8 @@ export class PromptController {
 
 		for (let attempt = 0; attempt <= retryLimit; attempt += 1) {
 			await this.prompt(prompt, options);
-			const assistant = this.host.findLastAssistantMessage();
-			const rawText = assistant ? getAssistantText(assistant) : "";
+			const agentMessage = this.host.findLastAgentMessage();
+			const rawText = agentMessage ? getAgentText(agentMessage) : "";
 			result = parseStructuredOutput(rawText, options.schema);
 			const event = {
 				type: "structured_output" as const,
@@ -115,7 +115,7 @@ export class PromptController {
 	async prompt(text: string, options?: PromptOptions): Promise<void> {
 		const expandPromptTemplates = options?.expandPromptTemplates ?? true;
 		const preflightResult = options?.preflightResult;
-		let messages: AgentMessage[] | undefined;
+		let messages: Message[] | undefined;
 
 		try {
 			// Handle extension commands first (execute immediately, even during streaming)
@@ -190,8 +190,8 @@ export class PromptController {
 			}
 
 			// Check if we need to compact before sending (catches aborted responses)
-			const lastAssistant = this.host.findLastAssistantMessage();
-			if (lastAssistant && (await this.host.checkCompaction(lastAssistant, false))) {
+			const lastAgent = this.host.findLastAgentMessage();
+			if (lastAgent && (await this.host.checkCompaction(lastAgent, false))) {
 				try {
 					await this.host.agent.continue();
 					while (await this.host.handlePostAgentRun()) {

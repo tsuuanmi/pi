@@ -19,7 +19,7 @@ describe("tool output and execution", () => {
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [limitedTool] },
 			maxToolOutputChars: 10,
-			streamFn: () => {
+			stream: () => {
 				streamCalls += 1;
 				return doneStream(
 					streamCalls === 1
@@ -74,7 +74,7 @@ describe("tool output and execution", () => {
 		);
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [tool] },
-			streamFn: () => {
+			stream: () => {
 				streamCalls += 1;
 				return doneStream(
 					streamCalls === 1
@@ -112,7 +112,7 @@ describe("tool output and execution", () => {
 		);
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [tool] },
-			streamFn: () => {
+			stream: () => {
 				streamCalls += 1;
 				return doneStream(
 					streamCalls === 1
@@ -159,7 +159,7 @@ describe("tool output and execution", () => {
 					afterToolCall: async () => ({ details: { count: "one" } }),
 				},
 			],
-			streamFn: () => {
+			stream: () => {
 				streamCalls += 1;
 				return doneStream(
 					streamCalls === 1
@@ -194,7 +194,7 @@ describe("tool output and execution", () => {
 					}),
 				],
 			},
-			streamFn: () => {
+			stream: () => {
 				streamCalls += 1;
 				return doneStream(
 					streamCalls === 1
@@ -247,7 +247,7 @@ describe("tool output and execution", () => {
 				tools: [createDelayedTool("first"), createDelayedTool("second")],
 			},
 			maxToolConcurrency: 1,
-			streamFn: () => {
+			stream: () => {
 				streamCalls += 1;
 				return doneStream(
 					streamCalls === 1

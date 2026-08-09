@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@tsuuanmi/pi-agent";
+import type { Message } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Model } from "@tsuuanmi/pi-ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type CompactionPreparation, compact, generateSummary } from "#pi/session/compaction/index";
@@ -48,7 +48,7 @@ const mockSummaryResponse: AssistantMessage = {
 	timestamp: Date.now(),
 };
 
-const messages: AgentMessage[] = [{ role: "user", content: "Summarize this.", timestamp: Date.now() }];
+const messages: Message[] = [{ role: "user", content: "Summarize this.", timestamp: Date.now() }];
 
 describe("generateSummary reasoning options", () => {
 	beforeEach(() => {

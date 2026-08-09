@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@tsuuanmi/pi-agent";
+import type { Message } from "@tsuuanmi/pi-agent";
 import {
 	extractYieldFromMessages,
 	renderSubagentProgress,
@@ -60,7 +60,7 @@ describe("SubagentProgressTracker", () => {
 		tracker.startTracking("sub-1", createSubscribe());
 		emit({
 			type: "turn_end",
-			message: { role: "assistant", content: [{ type: "text", text: "done" }] } as AgentMessage,
+			message: { role: "assistant", content: [{ type: "text", text: "done" }] } as Message,
 			toolResults: [],
 		});
 		const progress = tracker.getProgress("sub-1");
@@ -184,7 +184,7 @@ describe("renderSubagentProgress", () => {
 });
 
 describe("extractYieldFromMessages", () => {
-	function makeToolResult(toolName: string, details: unknown): AgentMessage {
+	function makeToolResult(toolName: string, details: unknown): Message {
 		return {
 			role: "toolResult",
 			toolCallId: "tc-1",
@@ -193,11 +193,11 @@ describe("extractYieldFromMessages", () => {
 			details,
 			isError: false,
 			timestamp: Date.now(),
-		} as unknown as AgentMessage;
+		} as unknown as Message;
 	}
 
 	it("extracts yield details from messages", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			makeToolResult("yield", { data: { result: 42 }, status: "success" } as YieldDetails),
 		];
 		const result = extractYieldFromMessages(messages);
@@ -206,12 +206,12 @@ describe("extractYieldFromMessages", () => {
 	});
 
 	it("returns undefined when no yield tool result exists", () => {
-		const messages: AgentMessage[] = [makeToolResult("read", undefined)];
+		const messages: Message[] = [makeToolResult("read", undefined)];
 		expect(extractYieldFromMessages(messages)).toBeUndefined();
 	});
 
 	it("returns the most recent yield result", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			makeToolResult("yield", { data: "first", status: "success" } as YieldDetails),
 			makeToolResult("yield", { data: "second", status: "success" } as YieldDetails),
 		];
@@ -220,7 +220,7 @@ describe("extractYieldFromMessages", () => {
 	});
 
 	it("extracts error yields", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			makeToolResult("yield", { data: undefined, status: "aborted", error: "something went wrong" } as YieldDetails),
 		];
 		const result = extractYieldFromMessages(messages);

@@ -1,4 +1,4 @@
-import type { AgentMessage } from "#agent/messages/state";
+import type { Message } from "#agent/messages/state";
 
 export interface YieldDetails {
 	data: unknown;
@@ -11,7 +11,7 @@ export interface YieldDetails {
  * Returns the extracted YieldDetails if found, undefined otherwise.
  * Used by SubagentManager to detect structured completion.
  */
-export function extractYieldFromMessages(messages: readonly AgentMessage[]): YieldDetails | undefined {
+export function extractYieldFromMessages(messages: readonly Message[]): YieldDetails | undefined {
 	// Walk messages in reverse to find the most recent yield tool result
 	for (let i = messages.length - 1; i >= 0; i--) {
 		const msg = messages[i];

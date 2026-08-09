@@ -17,7 +17,7 @@ describe("structured output", () => {
 	test("promptStructured returns validated model output", async () => {
 		const agent = new Agent({
 			initialState: { model, systemPrompt: "test", tools: [] },
-			streamFn: () => doneStream(assistantText('{"answer":"ok"}')),
+			stream: () => doneStream(assistantText('{"answer":"ok"}')),
 		});
 		const events: string[] = [];
 		agent.subscribe((event: AgentEvent) => {

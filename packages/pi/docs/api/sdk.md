@@ -101,7 +101,7 @@ interface AgentSession {
   agent: Agent;
   model: Model | undefined;
   thinkingLevel: ThinkingLevel;
-  messages: AgentMessage[];
+  messages: Message[];
   isStreaming: boolean;
 
   // In-place tree navigation within the current session file
@@ -255,12 +255,12 @@ The `Agent` class (from `@tsuuanmi/pi-agent`) handles the core LLM interaction. 
 // Access current state
 const state = session.agent.state;
 
-// state.messages: AgentMessage[] - conversation history
+// state.messages: Message[] - conversation history
 // state.model: Model - current model
 // state.thinkingLevel: ThinkingLevel - current thinking level
 // state.systemPrompt: string - system prompt
 // state.tools: readonly Tool[] - available tools
-// state.streamingMessage?: AgentMessage - current partial assistant message
+// state.streamingMessage?: Message - current partial assistant message
 // state.errorMessage?: string - latest assistant error
 
 // Replace messages (useful for branching or restoration)

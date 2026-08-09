@@ -10,7 +10,7 @@
  */
 
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
-import type { AgentMessage } from "#agent/messages/state";
+import type { Message } from "#agent/messages/state";
 
 /** Minimal event shape the tracker can consume (superset of AgentEvent). */
 interface TrackableEvent {
@@ -20,7 +20,7 @@ interface TrackableEvent {
 	args?: unknown;
 	result?: unknown;
 	isError?: boolean;
-	message?: AgentMessage;
+	message?: Message;
 }
 
 export interface SubagentProgress {
@@ -64,10 +64,10 @@ function truncateArgs(args: unknown): string | undefined {
 	}
 }
 
-function textFromAssistant(message: AgentMessage): string {
+function textFromAgent(message: Message): string {
 	if (message.role !== "assistant") return "";
-	const assistant = message as AssistantMessage;
-	return assistant.content
+	const agentMessage = message as AssistantMessage;
+	return agentMessage.content
 		.filter((part) => part.type === "text")
 		.map((part) => part.text)
 		.join("\n")
@@ -145,7 +145,7 @@ export class SubagentProgressTracker {
 			}
 			case "turn_end": {
 				snapshot.turnCount++;
-				const text = event.message ? textFromAssistant(event.message) : "";
+				const text = event.message ? textFromAgent(event.message) : "";
 				if (text) {
 					const lines = text.split("\n").filter((l) => l.trim());
 					snapshot.recentOutput = [...lines.slice(-MAX_RECENT_OUTPUT_LINES), ...snapshot.recentOutput].slice(
@@ -157,7 +157,7 @@ export class SubagentProgressTracker {
 			}
 			case "message_end": {
 				if (event.message && event.message.role === "assistant") {
-					const text = textFromAssistant(event.message);
+					const text = textFromAgent(event.message);
 					if (text) {
 						const lines = text
 							.split("\n")

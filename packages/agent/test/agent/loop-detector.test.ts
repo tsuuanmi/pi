@@ -11,7 +11,7 @@ describe("loop detection", () => {
 				systemPrompt: "test",
 				tools: [repeatTool()],
 			},
-			streamFn: () => doneStream(assistantToolCall()),
+			stream: () => doneStream(assistantToolCall()),
 			loopDetection: { maxRepeats: 2, action: "stop" },
 		});
 		agent.subscribe((event: AgentEvent) => {

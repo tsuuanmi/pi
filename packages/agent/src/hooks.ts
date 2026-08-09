@@ -1,7 +1,7 @@
 import type { AssistantMessage, Model, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { Agent } from "#agent/agent";
-import type { AgentContext } from "#agent/context";
-import type { AgentMessage } from "#agent/messages/state";
+import type { Context } from "#agent/context";
+import type { Message } from "#agent/messages/state";
 import type { AgentRunResult } from "#agent/run";
 import type { ToolResult } from "#agent/tool/result";
 import type { ToolCall } from "#agent/tool-call";
@@ -22,7 +22,7 @@ export interface BeforeToolCallContext {
 	assistantMessage: AssistantMessage;
 	toolCall: ToolCall;
 	args: unknown;
-	context: AgentContext;
+	context: Context;
 }
 
 export interface AfterToolCallContext {
@@ -31,18 +31,18 @@ export interface AfterToolCallContext {
 	args: unknown;
 	result: ToolResult<any>;
 	isError: boolean;
-	context: AgentContext;
+	context: Context;
 }
 
 export interface ShouldStopAfterTurnContext {
 	message: AssistantMessage;
 	toolResults: ToolResultMessage[];
-	context: AgentContext;
-	newMessages: AgentMessage[];
+	context: Context;
+	newMessages: Message[];
 }
 
 export interface AgentLoopTurnUpdate {
-	context?: AgentContext;
+	context?: Context;
 	model?: Model<any>;
 	thinkingLevel?: import("@tsuuanmi/pi-ai").ThinkingLevel;
 }

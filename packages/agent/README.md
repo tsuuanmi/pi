@@ -1,6 +1,6 @@
 # @tsuuanmi/pi-agent
 
-Standard agent behavior, runtime, tool, message, and subagent contracts for Pi. Built on `@tsuuanmi/pi-ai` provider/model transport contracts.
+Standard agent behavior, tool, message, and subagent contracts for Pi. Built on `@tsuuanmi/pi-ai` provider/model transport contracts.
 
 ## Installation
 
@@ -10,7 +10,7 @@ npm install @tsuuanmi/pi-agent
 
 ## Package Scope
 
-`@tsuuanmi/pi-agent` is the standard agent protocol/runtime package for Pi. It owns the `Agent` facade, transcript state, the default runtime loop, lifecycle events, the `Tool` and `ToolRegistry` APIs, shared message/subagent contracts, and runtime/backend seams.
+`@tsuuanmi/pi-agent` is the standard agent package for Pi. It owns the `Agent` facade, transcript state, the model/tool loop, lifecycle events, the `Tool` and `ToolRegistry` APIs, and shared message/subagent contracts.
 
 Provider adapters and streaming transport live in `@tsuuanmi/pi-ai`. Concrete tools live in host packages; Pi registers those tools with the agent package.
 
@@ -69,15 +69,14 @@ High-level packages should integrate with `@tsuuanmi/pi-agent` by following thes
 3. Register tools with `ToolRegistry.register()` and pass the active list to `Agent`.
 4. Subscribe to `AgentEvent` with `agent.subscribe()` for UI, logs, traces, metrics, and progress state.
 5. Use `Agent.run()` for isolated task/orchestration calls and `Agent.prompt()` / `Agent.continue()` for persistent interactive sessions.
-6. Provide a custom `AgentRuntime` only when replacing the default runtime with an external runtime.
+6. Provide a custom `stream` function only when replacing the provider transport.
 7. Import `@tsuuanmi/pi-agent/node` only from Node-specific code.
 
-This keeps agent behavior centralized while allowing applications, extensions, and workflow packages to supply their own tools and runtime integrations.
+This keeps agent behavior centralized while allowing applications, extensions, and workflow packages to supply their own tools and provider stream function.
 
 ## Core Concepts
 
-- `Agent`: the single standard Pi agent facade. It wraps state, prompt history, the runtime seam, queues, lifecycle events, tools, and task-oriented `run()` execution.
-- `AgentRuntime`: the execution seam for the default LLM/tool loop or external backends. Runtime implementations stream events and finish with one done or error event.
+- `Agent`: the single standard Pi agent facade. It wraps state, prompt history, the model/tool loop, queues, lifecycle events, tools, and task-oriented `run()` execution.
 - `Tool`: validates and owns one executable tool declaration with optional output limits and details validation.
 - `ToolRegistry`: owns name-keyed tool registration for hosts and extensions.
 - `@tsuuanmi/pi-orchestrator`: owns task, team, and orchestration contracts built on top of `Agent`.
@@ -88,8 +87,8 @@ This package defines the `SubagentManager` lifecycle contract and shared subagen
 
 Use the manager contract for one-subagent lifecycle operations. Use `@tsuuanmi/pi-orchestrator` for task dependencies, routing, retries, queues, and agent collaboration.
 
-## Runtime and Backend Boundary
+## Execution Boundary
 
-The default runtime uses `@tsuuanmi/pi-ai` streaming plus registered `Tool` instances supplied by the host package. External process, protocol, or ACP-style integrations should implement `AgentRuntime` and be supplied through `new Agent({ runtime })`.
+`Agent` owns the complete model/tool loop. It calls `@tsuuanmi/pi-ai` through its configured `stream` function, executes the registered tools, updates the transcript, and emits lifecycle events. There is no public runtime or backend injection layer.
 
-Node-specific runtime implementations belong under `@tsuuanmi/pi-agent/node` or in dedicated optional integration packages that depend on `@tsuuanmi/pi-agent` as their contract package. They should not force browser-safe core consumers to install Node-only or protocol-specific dependencies.
+The `@tsuuanmi/pi-agent/node` entry point contains only Node-specific process, shell, path, JSONL, and file-mutation utilities. It does not replace the agent loop.

@@ -6,9 +6,8 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentMessage } from "@tsuuanmi/pi-agent";
-import { createCompactionSummaryMessage } from "@tsuuanmi/pi-agent";
-import type { AssistantMessage, Message } from "@tsuuanmi/pi-ai";
+import { createCompactionSummaryMessage, type Message } from "@tsuuanmi/pi-agent";
+import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import type { AutocompleteProvider, EditorComponent, KeyId, MarkdownTheme, SlashCommand } from "@tsuuanmi/pi-tui";
 import {
 	CombinedAutocompleteProvider,
@@ -1417,7 +1416,7 @@ export class InteractiveMode {
 		this.ui.requestRender();
 	}
 
-	private addMessageToChat(message: AgentMessage, options?: { populateHistory?: boolean }): void {
+	private addMessageToChat(message: Message, options?: { populateHistory?: boolean }): void {
 		switch (message.role) {
 			case "bashExecution": {
 				const component = new BashExecutionComponent(message.command, this.ui, message.excludeFromContext);

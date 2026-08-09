@@ -1,4 +1,4 @@
-import { Agent, type AgentOptions, type StreamFn } from "@tsuuanmi/pi-agent";
+import { Agent, type AgentOptions, type StreamFunction } from "@tsuuanmi/pi-agent";
 import {
 	type AssistantMessage,
 	type AssistantMessageEventStream,
@@ -85,7 +85,7 @@ class EchoStream {
 		this.fail = options.fail ?? false;
 	}
 
-	readonly stream: StreamFn = (_model, context, options) => {
+	readonly stream: StreamFunction = (_model, context, options) => {
 		const content = promptText(context.messages.at(-1)?.content);
 		const stream = createAssistantMessageEventStream();
 		void (async () => {
@@ -126,7 +126,7 @@ class EchoStream {
 class StructuredStream {
 	readonly calls: string[] = [];
 
-	readonly stream: StreamFn = (_model, context) => {
+	readonly stream: StreamFunction = (_model, context) => {
 		const prompt = promptText(context.messages.at(-1)?.content);
 		this.calls.push(prompt);
 		return doneStream(assistantText('{"value":42}'));
@@ -141,7 +141,7 @@ class PlannerStream {
 		this.output = output;
 	}
 
-	readonly stream: StreamFn = (_model, context) => {
+	readonly stream: StreamFunction = (_model, context) => {
 		const prompt = promptText(context.messages.at(-1)?.content);
 		this.calls.push(prompt);
 		return doneStream(assistantText(this.output));
@@ -156,7 +156,7 @@ class JudgeStream {
 		this.output = output;
 	}
 
-	readonly stream: StreamFn = (_model, context) => {
+	readonly stream: StreamFunction = (_model, context) => {
 		const prompt = promptText(context.messages.at(-1)?.content);
 		this.calls.push(prompt);
 		return doneStream(assistantText(this.output));
@@ -165,14 +165,14 @@ class JudgeStream {
 
 function agentConfig(
 	name: string,
-	stream: { stream: StreamFn } = new EchoStream(),
+	stream: { stream: StreamFunction } = new EchoStream(),
 	capabilities: string[] = [],
 ): AgentOptions {
 	return {
 		name,
 		capabilities,
 		initialState: { model, systemPrompt: "Be direct.", tools: [] },
-		streamFn: stream.stream,
+		stream: stream.stream,
 		extractStructured: (output: string) => {
 			try {
 				return JSON.parse(output);
@@ -1163,7 +1163,7 @@ describe("multi-agent primitives", () => {
 	it("serializes overlapping task prompts for the same agent instance", async () => {
 		const timeline: string[] = [];
 		class TimingStream {
-			readonly stream: StreamFn = (_model, context) => {
+			readonly stream: StreamFunction = (_model, context) => {
 				const prompt = promptText(context.messages.at(-1)?.content);
 				const title = prompt.match(/Task: (.*)/)?.[1] ?? "unknown";
 				const stream = createAssistantMessageEventStream();

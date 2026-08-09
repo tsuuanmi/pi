@@ -1,91 +1,49 @@
 # Agent Loop
 
-The low-level agent loop that processes prompts through the LLM and executes tool calls.
+The loop is an internal implementation detail of `Agent`. It sends prompts to the provider, executes tool calls, updates the transcript, and emits lifecycle events. Callers use `Agent.prompt()`, `Agent.continue()`, or `Agent.run()` rather than invoking the loop directly.
 
-## Core Functions
+## Core behavior
 
-### `agentLoop()`
+### Outer and inner loops
 
-Start an agent loop with a new prompt message:
+The agent uses two nested loops:
 
-```typescript
-import { agentLoop } from "@tsuuanmi/pi-agent";
+1. **Inner loop:** processes tool calls and steering messages until no more are pending.
+2. **Outer loop:** checks for follow-up messages after the agent would otherwise stop.
 
-const stream = agentLoop(
-  prompts,    // AgentMessage[]
-  context,    // AgentContext
-  config,     // AgentLoopConfig
-  signal,     // AbortSignal (optional)
-  streamFn,   // StreamFn (optional)
-);
-```
+### Steering messages
 
-Returns an `EventStream<AgentEvent, AgentMessage[]>`. The prompt is added to the context and events are emitted for it.
+Steering messages are injected after tool calls finish. `Agent` polls its steering queue at loop entry and after each turn's tool calls.
 
-### `agentLoopContinue()`
+### Follow-up messages
 
-Continue an agent loop from the current context without adding a new message. Used for retries — context already has user message or tool results.
+Follow-up messages are checked only after the agent would otherwise stop. If any exist, the loop starts another turn.
 
-```typescript
-import { agentLoopContinue } from "@tsuuanmi/pi-agent";
+### Tool execution
 
-const stream = agentLoopContinue(context, config, signal, streamFn);
-```
+Tool calls from an assistant message are executed according to `toolExecution`:
 
-**Important:** The last message in context must convert to a `user` or `toolResult` message via `convertToLlm`. If it doesn't, the LLM provider will reject the request. `agentLoopContinue()` also throws synchronously if the context is empty or if the last context message has role `assistant`; it cannot validate `convertToLlm` output since that runs once per turn.
+- **`parallel`** (default): preflight calls sequentially, then execute allowed tools concurrently. `maxToolConcurrency` bounds concurrency.
+- **`sequential`**: prepare, execute, and finalize each call before starting the next.
 
-## Loop Behavior
+A tool can override the mode with `tool.executionMode = "sequential"`. If any call in a batch targets a sequential tool, the batch runs sequentially.
 
-### Outer and Inner Loops
+`maxToolOutputChars` limits retained text from each tool result. A tool can set `maxOutputChars` for its own limit. Truncated text receives a deterministic marker and the final tool event reports truncation counts.
 
-The agent loop has two nested loops:
+### Abort handling
 
-1. **Inner loop**: Processes tool calls and steering messages until no more tool calls or steering messages are pending.
-2. **Outer loop**: After the inner loop completes, checks for follow-up messages. If any exist, re-enters the inner loop.
+When the active signal aborts:
 
-### Steering Messages
+- Tool execution checks the signal before and during execution.
+- Aborted calls return an error tool result with `Operation aborted`.
+- Provider aborts produce an assistant message with `stopReason: "aborted"`.
+- The loop emits `turn_end` and `agent_end` without executing more tools or polling queues.
 
-Steering messages are injected mid-run after tool calls finish:
+Terminal shutdown is owned by `Agent`. After `dispose()`, new work is rejected.
 
-```typescript
-config.getSteeringMessages = async () => steeringQueue.drain();
-```
+### Error handling
 
-On the first turn of a `prompt()` call, steering is polled once at loop entry (so messages queued while waiting are injected before the first assistant response), then again after the first turn's tool calls finish.
-
-### Follow-Up Messages
-
-Follow-up messages are only checked after the agent would otherwise stop:
-
-```typescript
-config.getFollowUpMessages = async () => followUpQueue.drain();
-```
-
-### Tool Execution
-
-Tool calls from an assistant message are executed based on `toolExecution` mode:
-
-- **`"parallel"`** (default): Preflight tool calls sequentially, then execute allowed tools concurrently. Set `maxToolConcurrency` to bound concurrency for production hosts. `tool_execution_end` events fire in completion order after each tool is finalized; tool-result message artifacts are emitted later in assistant source order.
-- **`"sequential"`**: Each tool call is prepared, executed, and finalized before the next one starts.
-
-Individual tools can override this with `tool.executionMode = "sequential"`. If any tool call in the message targets a sequential-mode tool, the whole batch runs sequentially.
-
-Set `maxToolOutputChars` to keep at most that many original text characters from each tool result. A tool can set `maxOutputChars` to use a stricter or looser per-tool limit. Truncated text receives a deterministic marker that includes the kept and original character counts. The final `tool_execution_end` event also reports truncation counts in `meta`.
-
-### Abort Handling
-
-When an `AbortSignal` is provided:
-- Tool execution checks the signal before and during execution
-- Aborted tool calls return an error tool result with message "Operation aborted"
-- Provider aborts are encoded as assistant messages with `stopReason: "aborted"`
-- When an assistant message finishes with `stopReason: "error"` or `"aborted"`, the loop emits `turn_end` (with empty tool results) and `agent_end`, then returns without executing tools or polling queues
-- Otherwise the loop still emits `agent_end` with the accumulated new messages
-
-Terminal shutdown is owned by the `Agent` boundary. After `dispose()`, new work is rejected instead of restarted.
-
-### Error Handling
-
-Provider errors are encoded in the stream via protocol events. The loop does not throw for request/model/runtime failures — failures produce an `AssistantMessage` with `stopReason: "error"` and `errorMessage`.
+Provider failures produce an assistant message with `stopReason: "error"` and `errorMessage`. The loop emits the normal terminal events so `Agent` can update its state and notify listeners.
 
 ## Events
 
@@ -94,60 +52,47 @@ The loop emits these `AgentEvent` types:
 | Event | Description |
 |-------|-------------|
 | `agent_start` | Loop begins |
-| `agent_end` | Loop finishes, includes all new messages |
-| `turn_start` | A new assistant turn begins |
-| `turn_end` | Turn completes with message and tool results |
-| `message_start` | A message enters the context |
-| `message_update` | Streaming content delta for assistant messages |
-| `message_end` | A message is finalized |
-| `tool_execution_start` | Tool call begins executing |
+| `agent_end` | Loop finishes and includes new messages |
+| `turn_start` | Assistant turn begins |
+| `turn_end` | Turn completes with its message and tool results |
+| `message_start` | Message enters the context |
+| `message_update` | Streaming assistant delta |
+| `message_end` | Message is finalized |
+| `tool_execution_start` | Tool call begins |
 | `tool_execution_update` | Partial tool result update |
 | `tool_execution_end` | Tool call finishes |
 
-## Context Transforms
+## Context transforms
 
 The loop applies transforms in order:
 
-1. **`transformContext`** — Operates on `AgentMessage[]` level (pruning, injection); receives the abort signal.
-2. **`convertToLlm`** — Converts `AgentMessage[]` to `Message[]` for the LLM provider.
+1. **`transformContext`** operates on `Message[]` for pruning or injection and receives the abort signal.
+2. **`convertToLlm`** converts agent messages into provider-compatible messages.
 
-Both must not throw or reject. Return safe fallback values instead.
+These callbacks are owned by `Agent` configuration and run inside the agent boundary.
 
-## Runtime Determinism
+## Determinism and provider observation
 
-Pass `now` to control runtime timestamps, trace spans, and `createRequestId` to create provider request ids from the monotonic request sequence and request start timestamp. Defaults use `Date.now()` and the standard `llm_<timestamp>_<sequence>` id format.
+Pass `now` to control timestamps and trace spans. `createRequestId` controls provider request ids. Defaults use `Date.now()` and the `llm_<timestamp>_<sequence>` format.
 
-Set `requestTimeoutMs` to bound each provider request. The timeout aborts the active provider stream and reports a deterministic timeout error through the existing run failure path. Request completion emits a protocol-level trace span with timing and status.
+`requestTimeoutMs` bounds each provider request. `providerRequestObserver` receives request start, payload, response, and completion callbacks. Observer failures do not affect the run.
 
-## Provider Request Observer
+## Execution hooks
 
-The `providerRequestObserver` config option receives lifecycle events:
-
-| Method | When called |
-|--------|-------------|
-| `onRequestStart` | Before the LLM call |
-| `onRequestPayload` | After payload transformation |
-| `onRequestResponse` | After the provider responds |
-| `onRequestComplete` | After the response completes (success or error) |
-
-Observer failures are silently ignored and do not affect the loop.
-
-## Registered execution hooks
-
-Hooks are registered with `Agent.registerHook()` and run in registration order. A hook can observe or control an execution phase without exposing host or extension types to the agent runtime.
+Hooks are registered with `Agent.registerHook()` and run in registration order. They observe or control execution without exposing the internal loop.
 
 ### `prepareNextTurn`
 
-Called after `turn_end` and before the loop decides whether another provider request should start. Return an `AgentLoopTurnUpdate` to replace the context, model, and/or thinking level for the next turn; return `undefined` to keep the current values. `reasoning` is derived from `thinkingLevel` (`undefined` when `"off"`).
+Runs after `turn_end` and before the next provider request. It can replace the context, model, or thinking level for the next turn.
 
 ### `beforeToolCall`
 
-Called after arguments are validated but before execution:
+Runs after arguments are validated and before execution:
 
 ```typescript
 agent.registerHook({
   name: "policy",
-  beforeToolCall: async (context, signal) => {
+  beforeToolCall: async (context) => {
     if (isDangerous(context.toolCall.name)) {
       return { block: true, reason: "Dangerous operation blocked" };
     }
@@ -156,22 +101,8 @@ agent.registerHook({
 });
 ```
 
-Return `{ block: true }` to prevent execution. The loop emits an error tool result with `reason` (or a default blocked message) instead. If the abort signal fires during the hook, the loop emits an aborted error tool result.
+Returning `{ block: true }` prevents execution and produces a blocked error tool result.
 
 ### `afterToolCall`
 
-Called after a tool finishes executing, before `tool_execution_end` and tool-result message events are emitted. If the tool declares `detailsSchema`, details are validated after this hook applies any replacement. Invalid details produce a deterministic failed tool result. Final tool events include a protocol-level span with tool call timing and status; concrete tool implementations stay in host packages and are only registered with this runtime.
-
-```typescript
-agent.registerHook({
-  name: "result-policy",
-  afterToolCall: async (context, signal) => ({
-    content: overrideContent,  // Replace content array
-    details: overrideDetails,  // Replace details
-    isError: false,             // Override error flag
-    terminate: false,           // Override early-termination hint
-  }),
-});
-```
-
-Omitted fields keep their original values. No deep merge is performed. If the hook itself throws, the loop replaces the result with an error tool result and marks it `isError`.
+Runs after a tool finishes and before the final tool event and result message are emitted. It can replace content, details, error state, or the termination hint. Invalid details produce a deterministic failed tool result. Hook failures also become error tool results.

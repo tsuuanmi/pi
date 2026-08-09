@@ -11,16 +11,16 @@ import { basename, dirname } from "node:path";
 import type {
 	Agent,
 	AgentEvent,
-	AgentMessage,
 	AgentState,
 	CustomMessage,
+	Message,
 	StructuredOutputOptions,
 	StructuredOutputResult,
 	SubagentManager,
 	Tool,
 } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { AssistantMessage, Message, Model, TextContent, ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { AssistantMessage, Model, TextContent, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { cleanupSessionResources, resetProviders, stream } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
 import { ApiUsageLogger } from "#pi/api/api-usage-logger";
@@ -232,7 +232,7 @@ export class AgentSession {
 				return session._baseSystemPromptOptions;
 			},
 			expandSkillCommand: (text) => expandSkillCommand(text, this._ctx()),
-			findLastAssistantMessage: () => this._findLastAssistantMessage(),
+			findLastAgentMessage: () => this._findLastAgentMessage(),
 			runAgentPrompt: (messages) => this._runAgentPrompt(messages),
 			handlePostAgentRun: () => this._handlePostAgentRun(),
 			checkCompaction: (message, skipAbortedCheck) => this._compaction.check(message, skipAbortedCheck),
@@ -312,7 +312,7 @@ export class AgentSession {
 		headers?: Record<string, string>;
 		env?: Record<string, string>;
 	}> {
-		if (this.agent.streamFn === stream) {
+		if (this.agent.stream === stream) {
 			return this._getRequiredRequestAuth(model);
 		}
 
@@ -338,7 +338,7 @@ export class AgentSession {
 	}
 
 	// Track last assistant message for auto-compaction check
-	private _lastAssistantMessage: AssistantMessage | undefined = undefined;
+	private _lastAgentMessage: AssistantMessage | undefined = undefined;
 
 	/** Internal handler for agent events - shared by subscribe and reconnect */
 	private _handleAgentEvent = async (event: AgentEvent): Promise<void> => {
@@ -381,16 +381,16 @@ export class AgentSession {
 
 			// Track assistant message for auto-compaction (checked on agent_end)
 			if (event.message.role === "assistant") {
-				this._lastAssistantMessage = event.message;
+				this._lastAgentMessage = event.message;
 
-				const assistantMsg = event.message as AssistantMessage;
-				if (assistantMsg.stopReason !== "error") {
+				const agentMessage = event.message as AssistantMessage;
+				if (agentMessage.stopReason !== "error") {
 					this._compaction.resetOverflowRecovery();
 				}
 
 				// Reset retry counter immediately on successful assistant response
 				// This prevents accumulation across multiple LLM calls within a turn
-				this._retry.resetAfterSuccess(assistantMsg);
+				this._retry.resetAfterSuccess(agentMessage);
 			}
 		}
 	};
@@ -405,7 +405,7 @@ export class AgentSession {
 	}
 
 	/** Find the last assistant message in agent state (including aborted ones) */
-	private _findLastAssistantMessage(): AssistantMessage | undefined {
+	private _findLastAgentMessage(): AssistantMessage | undefined {
 		const messages = this.agent.state.messages;
 		for (let i = messages.length - 1; i >= 0; i--) {
 			const msg = messages[i];
@@ -416,7 +416,7 @@ export class AgentSession {
 		return undefined;
 	}
 
-	private _replaceMessageInPlace(target: AgentMessage, replacement: AgentMessage): void {
+	private _replaceMessageInPlace(target: Message, replacement: Message): void {
 		// Agent-core stores the finalized message object in its state before emitting message_end.
 		// SessionManager persistence happens later in _handleAgentEvent() with event.message.
 		// Mutating this object in place keeps agent state, later turn/agent events, listeners,
@@ -640,7 +640,7 @@ export class AgentSession {
 	}
 
 	/** All messages including custom types like BashExecutionMessage */
-	get messages(): AgentMessage[] {
+	get messages(): Message[] {
 		return this.agent.state.messages;
 	}
 
@@ -721,7 +721,7 @@ export class AgentSession {
 	// Prompting
 	// =========================================================================
 
-	private async _runAgentPrompt(messages: AgentMessage | AgentMessage[]): Promise<void> {
+	private async _runAgentPrompt(messages: Message | Message[]): Promise<void> {
 		try {
 			await this.agent.prompt(messages);
 			while (await this._handlePostAgentRun()) {
@@ -733,8 +733,8 @@ export class AgentSession {
 	}
 
 	private async _handlePostAgentRun(): Promise<boolean> {
-		const msg = this._lastAssistantMessage;
-		this._lastAssistantMessage = undefined;
+		const msg = this._lastAgentMessage;
+		this._lastAgentMessage = undefined;
 		if (!msg) {
 			return false;
 		}
@@ -1433,7 +1433,7 @@ export class AgentSession {
 			extensionRunner: self.extensionRunner,
 			emit: (event: AgentSessionEvent) => self._emit(event),
 			state: self.state,
-			streamFn: self.agent.streamFn,
+			stream: self.agent.stream,
 			sessionFile: self.sessionFile,
 			sessionId: self.sessionId,
 			get model() {

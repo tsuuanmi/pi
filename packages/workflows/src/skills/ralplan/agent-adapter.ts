@@ -21,7 +21,7 @@ export function createRalplanAgent(input: RalplanAgentAdapterInput): Agent {
 	return new Agent({
 		name: input.request.role,
 		capabilities: [input.request.role],
-		streamFn: createStream(input),
+		stream: createStream(input),
 	});
 }
 

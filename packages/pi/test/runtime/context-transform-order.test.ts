@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AgentMessage } from "@tsuuanmi/pi-agent";
+import type { Message } from "@tsuuanmi/pi-agent";
 import {
 	type Api,
 	type AssistantMessage,
@@ -100,7 +100,7 @@ describe("SDK context transform ordering", () => {
 							(message) =>
 								message.role === "assistant" && message.content.some((block) => block.type === "thinking"),
 						);
-						const injected: AgentMessage = {
+						const injected: Message = {
 							role: "assistant",
 							content: [
 								{ type: "thinking", thinking: "extension reasoning" },

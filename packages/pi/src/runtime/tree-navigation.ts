@@ -100,7 +100,7 @@ export async function navigateTree(
 				customInstructions,
 				replaceInstructions,
 				reserveTokens: branchSummarySettings.reserveTokens,
-				streamFn: ctx.streamFn,
+				stream: ctx.stream,
 			});
 			if (result.aborted) {
 				return { cancelled: true, aborted: true };

@@ -23,6 +23,7 @@
 - **models**: Moved `ModelRegistry` to `@tsuuanmi/pi/loader`, removed the root and legacy model exports, removed path-based construction, and moved CLI resolution to `src/cli/model-resolver.ts`; pass a `SettingsManager` or use `createFromModelsConfig()`.
 - **keybindings**: Removed pre-namespaced keybinding IDs and automatic keybinding config migration; use namespaced IDs.
 - **changelog**: Removed rewriting of links from the legacy `pi-mono` repository.
+- **agent**: Renamed Agent trace and warning events to `trace` and `warning`; removed runtime/backend injection from the agent boundary.
 
 ### Added
 

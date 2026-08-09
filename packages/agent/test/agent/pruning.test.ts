@@ -1,8 +1,8 @@
 import {
-	type AgentMessage,
 	createSlidingWindowContextTransform,
-	groupAgentMessagesIntoTurns,
-	pruneAgentMessagesByTurns,
+	groupMessagesIntoTurns,
+	type Message,
+	pruneMessagesByTurns,
 } from "@tsuuanmi/pi-agent";
 import { describe, expect, test } from "vitest";
 
@@ -16,11 +16,11 @@ const usage = {
 	cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
 };
 
-function user(text: string): AgentMessage {
+function user(text: string): Message {
 	return { role: "user", content: [{ type: "text", text }], timestamp };
 }
 
-function assistant(text: string): AgentMessage {
+function assistant(text: string): Message {
 	return {
 		role: "assistant",
 		content: [{ type: "text", text }],
@@ -33,7 +33,7 @@ function assistant(text: string): AgentMessage {
 	};
 }
 
-function assistantToolCall(id: string): AgentMessage {
+function assistantToolCall(id: string): Message {
 	return {
 		role: "assistant",
 		content: [{ type: "toolCall", id, name: "lookup", arguments: { value: id } }],
@@ -46,7 +46,7 @@ function assistantToolCall(id: string): AgentMessage {
 	};
 }
 
-function toolResult(id: string): AgentMessage {
+function toolResult(id: string): Message {
 	return {
 		role: "toolResult",
 		toolCallId: id,
@@ -60,7 +60,7 @@ function toolResult(id: string): AgentMessage {
 
 describe("context pruning", () => {
 	test("groups assistant tool calls with matching tool results", () => {
-		const turns = groupAgentMessagesIntoTurns([
+		const turns = groupMessagesIntoTurns([
 			user("one"),
 			assistantToolCall("call-1"),
 			toolResult("call-1"),
@@ -86,7 +86,7 @@ describe("context pruning", () => {
 			toolResult("new-call"),
 		];
 
-		const pruned = pruneAgentMessagesByTurns(messages, 1);
+		const pruned = pruneMessagesByTurns(messages, 1);
 
 		expect(pruned.map((message) => message.role)).toEqual(["user", "assistant", "toolResult"]);
 		expect(pruned[0]).toMatchObject({ role: "user" });
@@ -97,7 +97,7 @@ describe("context pruning", () => {
 	test("drops orphan tool results at the pruning boundary", () => {
 		const messages = [toolResult("orphan"), user("new"), assistant("answer")];
 
-		expect(pruneAgentMessagesByTurns(messages, 1).map((message) => message.role)).toEqual(["user", "assistant"]);
+		expect(pruneMessagesByTurns(messages, 1).map((message) => message.role)).toEqual(["user", "assistant"]);
 	});
 
 	test("creates a transformContext sliding window", async () => {

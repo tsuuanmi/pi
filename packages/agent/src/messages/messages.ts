@@ -1,5 +1,11 @@
-import type { Message, TextContent } from "@tsuuanmi/pi-ai";
-import type { AgentMessage } from "#agent/messages/state";
+import type { Message as LlmMessage, TextContent } from "@tsuuanmi/pi-ai";
+import type {
+	BashExecutionMessage,
+	BranchSummaryMessage,
+	CompactionSummaryMessage,
+	CustomMessage,
+	Message,
+} from "#agent/messages/types";
 
 export const COMPACTION_SUMMARY_PREFIX = `The conversation history before this point was compacted into the following summary:
 
@@ -15,50 +21,6 @@ export const BRANCH_SUMMARY_PREFIX = `The following is a summary of a branch tha
 `;
 
 export const BRANCH_SUMMARY_SUFFIX = `</summary>`;
-
-export interface BashExecutionMessage {
-	role: "bashExecution";
-	command: string;
-	output: string;
-	exitCode: number | undefined;
-	cancelled: boolean;
-	truncated: boolean;
-	fullOutputPath?: string;
-	timestamp: number;
-	excludeFromContext?: boolean;
-}
-
-export interface CustomMessage<T = unknown> {
-	role: "custom";
-	customType: string;
-	content: string | TextContent[];
-	display: boolean;
-	details?: T;
-	timestamp: number;
-}
-
-export interface BranchSummaryMessage {
-	role: "branchSummary";
-	summary: string;
-	fromId: string;
-	timestamp: number;
-}
-
-export interface CompactionSummaryMessage {
-	role: "compactionSummary";
-	summary: string;
-	tokensBefore: number;
-	timestamp: number;
-}
-
-declare module "#agent/messages/state" {
-	interface CustomAgentMessages {
-		bashExecution: BashExecutionMessage;
-		custom: CustomMessage;
-		branchSummary: BranchSummaryMessage;
-		compactionSummary: CompactionSummaryMessage;
-	}
-}
 
 export function bashExecutionToText(msg: BashExecutionMessage): string {
 	let text = `Ran \`${msg.command}\`\n`;
@@ -117,9 +79,9 @@ export function createCustomMessage(
 	};
 }
 
-export function convertToLlm(messages: AgentMessage[]): Message[] {
+export function convertToLlm(messages: Message[]): LlmMessage[] {
 	return messages
-		.map((m): Message | undefined => {
+		.map((m): LlmMessage | undefined => {
 			switch (m.role) {
 				case "bashExecution":
 					if (m.excludeFromContext) {
@@ -160,5 +122,5 @@ export function convertToLlm(messages: AgentMessage[]): Message[] {
 					return undefined;
 			}
 		})
-		.filter((m): m is Message => m !== undefined);
+		.filter((m): m is LlmMessage => m !== undefined);
 }

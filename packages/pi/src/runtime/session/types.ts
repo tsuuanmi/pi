@@ -1,6 +1,6 @@
 /** Public contracts for the agent session runtime. */
 
-import type { Agent, AgentEvent, AgentMessage, SubagentManager, Tool } from "@tsuuanmi/pi-agent";
+import type { Agent, AgentEvent, Message, SubagentManager, Tool } from "@tsuuanmi/pi-agent";
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type {
 	ContextUsage,
@@ -23,7 +23,7 @@ export type AgentSessionEvent =
 	| Exclude<AgentEvent, { type: "agent_end" }>
 	| {
 			type: "agent_end";
-			messages: AgentMessage[];
+			messages: Message[];
 			willRetry: boolean;
 	  }
 	| {

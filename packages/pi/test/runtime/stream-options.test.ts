@@ -105,7 +105,7 @@ describe("createAgentSession stream options", () => {
 		});
 
 		try {
-			await session.agent.streamFn(model, { messages: [] }, requestOptions);
+			await session.agent.stream(model, { messages: [] }, requestOptions);
 			return capturedOptions;
 		} finally {
 			session.dispose();

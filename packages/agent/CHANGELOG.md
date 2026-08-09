@@ -2,16 +2,16 @@
 
 ### Breaking Changes
 
-- **runtime**: Flattened runtime contracts and implementations into `packages/agent/src/`, replaced wildcard runtime exports with explicit package-root exports, and removed the `src/runtime/` module paths.
+- **stream**: Renamed the public `StreamFn` contract to `StreamFunction` and the agent stream injection property to `stream`.
+- **agent**: Renamed `AgentMessage` and `AgentContext` to `Message` and `Context`, and `RuntimeClock` to `Clock`, without compatibility aliases.
+- **agent**: Removed public runtime and backend contracts; `Agent` now owns the internal model/tool loop.
+- **events**: Renamed `runtime_trace`/`runtime_warning` events to `trace`/`warning`.
 - **subagents**: Removed the unused `SubagentManagerFactory` registry; concrete hosts construct and inject managers directly.
 - **node**: Added the byte-preserving `runProcess()` API, changed Node shell resolution to fail when Bash is unavailable, and changed execution results to preserve `null` signal exits.
 - **tool**: Renamed structured tool receipt helpers from built-in-specific names to standard protocol names and changed receipt sources to generic `tool` and `session` values.
 - **extensions**: Removed the shared extension contract surface from `@tsuuanmi/pi-agent`; the public Pi extension API now owns extension hook registration and actions.
 - **hooks**: Replaced the individual `AgentOptions` lifecycle and tool hook callbacks with named `AgentHook` registrations through `Agent.registerHook()`.
-- **agent**: Collapsed the split simple/runtime Agent surface into one public runtime-capable `Agent`; `RuntimeAgent` is no longer exported.
-- **agent**: Standardized custom runtimes on `AgentRuntime.stream()` and removed split `runPrompt()`/`continue()` runtime methods.
 - **tool**: Replaced the split tool interfaces and helper functions with `Tool`, `ToolSpec`, and `ToolRegistry`; agents now manage active tools through `Agent.setTools()` and `Agent.getTools()`.
-- **node**: Renamed the process runtime public API to `ProcessRuntime` and `ProcessRuntimeOptions`.
 - **team**: Replaced the positional `Team` constructor with `new Team({ name, agents })`.
 - **task**: Replaced legacy sequential task IDs and permissive task metadata/dependency handling with UUID-backed IDs, strict metadata validation/redaction, skipped lifecycle state, and fail-fast dependency validation.
 - **orchestrator**: Moved task, team, and orchestrator contracts out of `@tsuuanmi/pi-agent` into `@tsuuanmi/pi-orchestrator`.
@@ -23,19 +23,14 @@
 
 ### Added
 
-- **agent**: Added `AgentBackend` and `AgentRuntime` as the standard execution seam for swapping the built-in loop with external backends.
-- **agent**: Added optional runtime teardown via `Agent.dispose()` and `AgentRuntime.dispose()` for external backend cleanup.
 - **agent**: Made `Agent.dispose()` terminal and idempotent, and rejected new work after disposal.
-- **agent**: Added `AgentRuntime.stream()` as the backend seam for prompt and continuation runs, with runtime event, done, and error stream events.
-- **agent**: Added `RunResult` for structured runtime completion metadata, backend metadata, warnings, traces, and loop/max-turn flags.
-- **node**: Added `ProcessRuntime` as the standard Node process backend seam.
 - **agent**: Added `ToolAccessPolicy` and `ToolSelectionPolicy` helpers for shared tool gating and active-tool resolution.
 - **agent**: Added a `maxTurns` guard for graceful agent-loop termination before runaway provider calls.
-- **agent**: Added deterministic runtime clock/request-id hooks and bounded parallel tool execution with `maxToolConcurrency`.
+- **agent**: Added deterministic loop clock/request-id hooks and bounded parallel tool execution with `maxToolConcurrency`.
 - **agent**: Added opt-in tool output limits with deterministic truncation markers.
 - **agent**: Added provider request timeouts for deterministic stream aborts.
 - **agent**: Added structured tool execution metadata for final tool events.
-- **agent**: Added request and tool trace spans for runtime observability.
+- **agent**: Added request and tool trace spans for agent observability.
 - **tool**: Added `Tool.define()` for validated TypeBox-native tool declarations.
 - **subagents**: Added host-neutral lifecycle tool definitions and centralized thinking-level parsing in `@tsuuanmi/pi-agent`.
 - **tool**: Added opt-in TypeBox validation for tool result details.
@@ -67,11 +62,9 @@
 
 ### Fixed
 
-- **docs**: Reorganized package docs to mirror `src/`, removed legacy/unused docs, and updated package, agent, tool, and observability docs to reflect the current `AgentOptions`, runtime seam, tool registration, and optional protocol-runtime boundaries.
+- **docs**: Reorganized package docs to mirror `src/`, removed legacy/unused docs, and updated package, agent, tool, and observability docs to reflect the current `Agent` boundary and tool registration.
 - **exports**: Restored shared public exports from `@tsuuanmi/pi-agent`, including structured receipt helpers and the Node helper subpath.
-- **runtime**: Waited for lifecycle event consumers before continuing tool execution, preserving persisted event order.
-- **agent**: Split the monolithic agent type module into focused runtime, task, and orchestrator type modules, and moved message helpers under agent state.
-- **agent**: Refactored the public `Agent` to route prompt and continuation execution through the new runtime seam without changing behavior.
+- **agent**: Waited for lifecycle event consumers before continuing tool execution, preserving persisted event order.
 - **pi**: Centralized active-tool selection in the shared tool policy helpers.
 
 ## [0.2.2] - 2026-07-23

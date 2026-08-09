@@ -1,6 +1,6 @@
 # Agent
 
-The `Agent` class is the single standard Pi agent. It wraps the low-level runtime loop, owns persistent prompt history, supports isolated `run()` calls for task/orchestration bridges, emits lifecycle/status events, executes tools, and exposes queueing APIs for steering and follow-up messages.
+The `Agent` class is the single standard Pi agent. It owns persistent prompt history, runs the model/tool loop, supports isolated `run()` calls for task/orchestration bridges, emits lifecycle/status events, executes tools, and exposes queueing APIs for steering and follow-up messages.
 
 See [Agent architecture](../architecture.md) for the package ownership and extension boundary. `@tsuuanmi/pi-agent` defines and invokes the host-neutral `AgentHook` and `AgentEvent` contracts; higher-level packages register hooks, subscribe to events, provide concrete tools, and define their own task, session, or UI lifecycles without replacing the Agent loop.
 
@@ -26,22 +26,21 @@ const agent = new Agent({
 | `name` | `string` | `"agent"` | Stable name for teams, orchestrators, logs, and tracing |
 | `capabilities` | `readonly string[]` | `[]` | Capability labels for scheduling |
 | `initialState` | `Partial<AgentState>` | Empty | Initial system prompt, model, tools, messages |
-| `convertToLlm` | `(messages) => Message[]` | Filters to user/assistant/toolResult | Convert AgentMessage[] to LLM-compatible Message[] |
-| `transformContext` | `(messages, signal?) => Promise<AgentMessage[]>` | — | Transform context before convertToLlm |
-| `streamFn` | `StreamFn` | `stream` from `@tsuuanmi/pi-ai` | Stream function for LLM calls |
-| `runtime` | `AgentRuntime` | default runtime | Execution runtime used to produce turns |
+| `convertToLlm` | `(messages) => LlmMessage[]` | Filters to user/assistant/toolResult | Convert Message[] to provider-compatible messages |
+| `transformContext` | `(messages, signal?) => Promise<Message[]>` | — | Transform context before convertToLlm |
+| `stream` | `StreamFunction` | `stream` from `@tsuuanmi/pi-ai` | Stream function for LLM calls |
 | `getApiKey` | `(provider) => string` | — | Dynamic API key resolution |
 | `onPayload` | `StreamOptions["onPayload"]` | — | Payload transform hook |
 | `onResponse` | `StreamOptions["onResponse"]` | — | Response hook |
 | `providerRequestObserver` | `ProviderRequestObserver` | — | Observer for LLM request lifecycle |
-| `now` | `() => number` | `Date.now` | Clock for agent-created timestamps and runtime request timestamps |
+| `now` | `() => number` | `Date.now` | Clock for agent-created timestamps |
 | `createRequestId` | `(sequence, startedAt) => string` | Standard `llm_*` ids | Provider request id factory |
 | `requestTimeoutMs` | `number` | — | Maximum duration for one provider request |
 | `hooks` | `readonly AgentHook[]` | `[]` | Agent lifecycle and execution hooks, applied in registration order |
 | `extractStructured` | `(output) => unknown` | — | Optional extraction for structured task/orchestration payloads |
 | `steeringMode` | `"all" \| "one-at-a-time"` | `"one-at-a-time"` | How steering messages are drained |
 | `followUpMode` | `"all" \| "one-at-a-time"` | `"one-at-a-time"` | How follow-up messages are drained |
-| `sessionId` | `string` | — | Session identifier for cache-aware backends |
+| `sessionId` | `string` | — | Session identifier for provider/session caching |
 | `transport` | `Transport` | `"auto"` | Preferred transport |
 | `maxRetryDelayMs` | `number` | — | Cap for provider-requested retry delays |
 | `toolExecution` | `"sequential" \| "parallel"` | `"parallel"` | Default tool execution strategy |
@@ -128,17 +127,9 @@ await agent.continue();
 
 When the last message is an assistant message, `continue()` first drains queued steering messages; if none are queued, it drains queued follow-up messages. If both queues are empty it throws `Cannot continue from message role: assistant`.
 
-## Runner / backend seam
+## Execution under `Agent`
 
-`Agent` delegates turn production through an `AgentRuntime`.
-
-- Use the default runtime for the standard agent protocol loop.
-- Provide a custom runtime when you want to swap in external backends.
-- Implement `stream()` as the single runtime execution seam; split `runPrompt()`/`continue()` and run-to-completion wrapper methods are intentionally not part of the standard contract.
-- Emit runtime backend, warning, and trace stream events, then finish with a single done or error event.
-- Return a `RunResult` with backend metadata, produced messages, final output text, assistant turn count, completed tool-call summaries, warnings, traces, loop/max-turn flags, timing, and coarse status.
-- Runtime implementations may expose `dispose()` for teardown of external resources.
-- Node-specific backend implementations belong under `@tsuuanmi/pi-agent/node`; protocol-specific integrations such as ACP can also live in optional packages that implement `AgentRuntime` and depend on `@tsuuanmi/pi-agent` for shared contracts.
+`Agent` owns the complete execution loop. It calls the configured provider `stream` function, converts and transforms the context, executes tools, updates the transcript, and emits lifecycle events. The loop is internal; callers use `prompt()`, `continue()`, or `run()` instead of invoking an execution runner directly.
 
 ## Message Queuing
 
@@ -213,8 +204,8 @@ Listener promises are awaited in subscription order. Loop events receive the act
 agent.signal;                // Active abort signal for the current run, or undefined
 agent.abort();                // Abort the current run
 agent.waitForIdle();          // Promise that resolves after the current run and awaited agent_end listeners settle
-agent.reset();                // Clear transcript, runtime state, and queued messages
-agent.dispose();              // Terminal shutdown: abort current work, wait for active work to settle, then tear down the runtime
+agent.reset();                // Clear transcript and queued messages
+agent.dispose();              // Terminal shutdown: abort current work and wait for active work to settle
 ```
 
 `dispose()` is terminal and idempotent. After disposal, the agent rejects new prompts, isolated runs, queue mutations, and resets.

@@ -1,8 +1,8 @@
-import type { AgentMessage } from "#agent/messages/state";
+import type { Message } from "#agent/messages/state";
 import type { Tool } from "#agent/tool/tool";
 
-export interface AgentContext {
+export interface Context {
 	systemPrompt: string;
-	messages: AgentMessage[];
+	messages: Message[];
 	tools: readonly Tool[];
 }

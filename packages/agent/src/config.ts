@@ -1,4 +1,10 @@
-import type { Context, Message, Model, ProviderResponse, StreamOptions, stream } from "@tsuuanmi/pi-ai";
+import type {
+	Context as LlmContext,
+	Message as LlmMessage,
+	Model,
+	ProviderResponse,
+	StreamOptions,
+} from "@tsuuanmi/pi-ai";
 import type {
 	AfterToolCallContext,
 	AfterToolCallResult,
@@ -8,22 +14,18 @@ import type {
 	PrepareNextTurnContext,
 	ShouldStopAfterTurnContext,
 } from "#agent/hooks";
-import type { AgentMessage, TraceSpan } from "#agent/messages/state";
-
-export type StreamFn = (
-	...args: Parameters<typeof stream>
-) => ReturnType<typeof stream> | Promise<ReturnType<typeof stream>>;
+import type { Message, TraceSpan } from "#agent/messages/state";
 
 export type ToolExecutionMode = "sequential" | "parallel";
 
-export type RuntimeClock = () => number;
+export type Clock = () => number;
 export type RequestIdFactory = (sequence: number, startedAt: number) => string;
 
 export interface ProviderRequestObserverStart {
 	requestId: string;
 	requestSequence: number;
 	model: Model<any>;
-	context: Context;
+	context: LlmContext;
 	startedAt: number;
 }
 
@@ -60,14 +62,14 @@ export interface AgentLoopConfig extends StreamOptions {
 	onPayload?: StreamOptions["onPayload"];
 	onResponse?: StreamOptions["onResponse"];
 	providerRequestObserver?: ProviderRequestObserver;
-	/** Clock used for runtime timestamps. Defaults to Date.now. */
-	now?: RuntimeClock;
+	/** Clock used for loop timestamps. Defaults to Date.now. */
+	now?: Clock;
 	/** Creates provider request ids from the monotonic in-process sequence and start timestamp. */
 	createRequestId?: RequestIdFactory;
 	/** Maximum duration for one provider request. Finite values are floored and clamped to at least 1. */
 	requestTimeoutMs?: number;
-	convertToLlm: (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
-	transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
+	convertToLlm: (messages: Message[]) => LlmMessage[] | Promise<LlmMessage[]>;
+	transformContext?: (messages: Message[], signal?: AbortSignal) => Promise<Message[]>;
 	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
 	loopDetection?: boolean | import("#agent/agent/loop-detector").LoopDetectionOptions;
 	maxTurns?: number;
@@ -75,8 +77,8 @@ export interface AgentLoopConfig extends StreamOptions {
 	prepareNextTurn?: (
 		context: PrepareNextTurnContext,
 	) => AgentLoopTurnUpdate | undefined | Promise<AgentLoopTurnUpdate | undefined>;
-	getSteeringMessages?: () => Promise<AgentMessage[]>;
-	getFollowUpMessages?: () => Promise<AgentMessage[]>;
+	getSteeringMessages?: () => Promise<Message[]>;
+	getFollowUpMessages?: () => Promise<Message[]>;
 	toolExecution?: ToolExecutionMode;
 	/** Maximum concurrently executing tools for parallel tool batches. Finite values are floored and clamped to at least 1. */
 	maxToolConcurrency?: number;

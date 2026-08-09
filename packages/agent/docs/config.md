@@ -1,10 +1,10 @@
-# Runtime Configuration
+# Agent Loop Configuration
 
-`src/config.ts` contains the configuration contracts for the low-level agent loop and provider requests.
+`src/config.ts` contains the internal configuration contracts for the agent loop and provider requests. The provider stream function contract is defined separately in `src/stream.ts`.
 
 - `AgentLoopConfig` controls model calls, context conversion, queue handling, tool execution, observers, limits, and lifecycle callbacks.
 - `ProviderRequestObserver` receives provider request start, payload, response, and completion events.
 - `ToolExecutionMode` selects sequential or parallel tool execution.
 - `QueueMode` controls message queue draining.
 
-Configuration is passed into `agentLoop()`, `agentLoopContinue()`, and runtime requests.
+`Agent` creates this configuration for each prompt or continuation run.

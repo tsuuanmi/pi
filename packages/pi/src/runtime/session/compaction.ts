@@ -147,7 +147,7 @@ export class CompactionController {
 				customInstructions,
 				signal,
 				this.host.thinkingLevel,
-				this.host.agent.streamFn,
+				this.host.agent.stream,
 				auth.env,
 			);
 		}
@@ -344,7 +344,7 @@ export class CompactionController {
 	}
 
 	private async getAutoAuth(model: Model<any>): Promise<RequestAuth | undefined> {
-		if (this.host.agent.streamFn === stream) {
+		if (this.host.agent.stream === stream) {
 			const auth = await this.host.modelRegistry.getApiKeyAndHeaders(model);
 			if (!auth.ok || !auth.apiKey) return undefined;
 			return { apiKey: auth.apiKey, headers: auth.headers, env: auth.env };

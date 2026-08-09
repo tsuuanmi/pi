@@ -1,7 +1,7 @@
 {
 	"name": "@tsuuanmi/pi-agent",
 	"version": "0.2.3",
-	"description": "Standard agent runtime, tool, message, and subagent contracts for Pi",
+	"description": "Standard agent, tool, message, and subagent contracts for Pi",
 	"type": "module",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",

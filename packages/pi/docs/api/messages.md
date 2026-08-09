@@ -93,7 +93,7 @@ const custom = createCustomMessage("myType", content, true, details, timestamp);
 
 ## LLM Conversion
 
-`convertToLlm(messages)` transforms an array of `AgentMessage` (including custom types) into an array of LLM-compatible `Message` objects:
+`convertToLlm(messages)` transforms an array of `Message` (including custom types) into an array of LLM-compatible `Message` objects:
 
 | Input Role | Output | Notes |
 |------------|--------|-------|

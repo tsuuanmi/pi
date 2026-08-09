@@ -1,9 +1,15 @@
 import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { Message } from "#agent/messages/types";
 import type { Tool } from "#agent/tool/tool";
 
-export interface CustomAgentMessages {}
-
-export type AgentMessage = import("@tsuuanmi/pi-ai").Message | CustomAgentMessages[keyof CustomAgentMessages];
+export type {
+	BashExecutionMessage,
+	BranchSummaryMessage,
+	CompactionSummaryMessage,
+	CustomMessage,
+	CustomMessages,
+	Message,
+} from "#agent/messages/types";
 
 export type AgentStatus = "idle" | "running" | "paused" | "aborted" | "failed";
 
@@ -32,10 +38,10 @@ export interface AgentState {
 	model: Model<any>;
 	thinkingLevel: ThinkingLevel;
 	readonly tools: readonly Tool[];
-	set messages(messages: AgentMessage[]);
-	get messages(): AgentMessage[];
+	set messages(messages: Message[]);
+	get messages(): Message[];
 	readonly isStreaming: boolean;
-	readonly streamingMessage?: AgentMessage;
+	readonly streamingMessage?: Message;
 	readonly pendingToolCalls: ReadonlySet<string>;
 	readonly errorMessage?: string;
 }

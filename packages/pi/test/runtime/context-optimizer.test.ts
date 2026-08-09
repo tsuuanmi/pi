@@ -1,4 +1,4 @@
-import type { AgentMessage, BashExecutionMessage } from "@tsuuanmi/pi-agent";
+import type { BashExecutionMessage, Message } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import { describe, expect, it } from "vitest";
 import { compressBashOutput } from "#pi/runtime/bash-output";
@@ -24,9 +24,9 @@ const defaultOptions = {
 };
 
 function runOptimizer(
-	messages: AgentMessage[],
+	messages: Message[],
 	options: Parameters<ContextOptimizer["optimize"]>[1] = defaultOptions,
-): AgentMessage[] {
+): Message[] {
 	return new ContextOptimizer().optimize(messages, options);
 }
 
@@ -67,18 +67,18 @@ function toolResult(
 	};
 }
 
-function consumedToolBatch(id: string, name: string, args: Record<string, unknown>, text: string): AgentMessage[] {
+function consumedToolBatch(id: string, name: string, args: Record<string, unknown>, text: string): Message[] {
 	return [toolCall(id, name, args), toolResult(id, name, text), textAssistant(`consumed ${id}`)];
 }
 
-function protectionFillers(): AgentMessage[] {
+function protectionFillers(): Message[] {
 	return [
 		...consumedToolBatch("call_filler_1", "read", { path: "f1.ts" }, "filler 1"),
 		...consumedToolBatch("call_filler_2", "read", { path: "f2.ts" }, "filler 2"),
 	];
 }
 
-function textOf(message: AgentMessage): string {
+function textOf(message: Message): string {
 	expect(message.role).toBe("toolResult");
 	return (message as ToolResultMessage).content.map((block) => block.text).join("");
 }
@@ -174,7 +174,7 @@ describe("context optimizer", () => {
 	});
 
 	it("compresses bash tool result text and preserves IDs/metadata", () => {
-		const message: AgentMessage = toolResult("call_bash", "bash", "x".repeat(10_000));
+		const message: Message = toolResult("call_bash", "bash", "x".repeat(10_000));
 
 		const optimized = runOptimizer([message], {
 			...defaultOptions,
@@ -184,13 +184,13 @@ describe("context optimizer", () => {
 			summarizeStaleToolResults: false,
 		});
 
-		const optimizedMessage = optimized[0] as Extract<AgentMessage, { role: "toolResult" }>;
+		const optimizedMessage = optimized[0] as Extract<Message, { role: "toolResult" }>;
 		expect(optimizedMessage).toMatchObject({ role: "toolResult", toolCallId: "call_bash", toolName: "bash" });
 		expect(Buffer.byteLength(optimizedMessage.content[0].text, "utf8")).toBeLessThanOrEqual(2048);
 	});
 
 	it("leaves non-bash tool results unchanged when Tier 2 is disabled", () => {
-		const message: AgentMessage = toolResult("call_read", "read", "x".repeat(10_000));
+		const message: Message = toolResult("call_read", "read", "x".repeat(10_000));
 
 		const optimized = runOptimizer([message], {
 			...defaultOptions,
@@ -213,7 +213,7 @@ describe("context optimizer", () => {
 	});
 
 	it("summarizes older duplicate reads only when key and content identity match", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			...consumedToolBatch("call_old", "read", { path: "src/a.ts" }, "same content"),
 			...consumedToolBatch("call_new", "read", { path: "src/a.ts" }, "same content"),
 			...protectionFillers(),
@@ -229,7 +229,7 @@ describe("context optimizer", () => {
 	});
 
 	it("does not dedupe same read key with different content", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			...consumedToolBatch("call_old", "read", { path: "src/a.ts" }, "old content"),
 			...consumedToolBatch("call_new", "read", { path: "src/a.ts" }, "new content"),
 			...protectionFillers(),
@@ -242,7 +242,7 @@ describe("context optimizer", () => {
 	});
 
 	it("does not let bash between different read outputs cause unsafe dedupe", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			...consumedToolBatch("call_old", "read", { path: "src/a.ts" }, "old content"),
 			...consumedToolBatch("call_bash", "bash", { command: "printf change > src/a.ts" }, "changed"),
 			...consumedToolBatch("call_new", "read", { path: "src/a.ts" }, "new content"),
@@ -256,7 +256,7 @@ describe("context optimizer", () => {
 	});
 
 	it("allows identical read output after an intervening bash command", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			...consumedToolBatch("call_old", "read", { path: "src/a.ts" }, "same content"),
 			...consumedToolBatch("call_bash", "bash", { command: "true" }, "ok"),
 			...consumedToolBatch("call_new", "read", { path: "src/a.ts" }, "same content"),
@@ -272,7 +272,7 @@ describe("context optimizer", () => {
 	});
 
 	it("does not dedupe across successful edit invalidation", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			...consumedToolBatch("call_old", "read", { path: "src/a.ts" }, "same content"),
 			...consumedToolBatch("call_edit", "edit", { path: "src/a.ts", edits: [] }, "Successfully replaced 1 block"),
 			...consumedToolBatch("call_new", "read", { path: "src/a.ts" }, "same content"),
@@ -286,7 +286,7 @@ describe("context optimizer", () => {
 	});
 
 	it("failed edit does not invalidate identical read dedupe", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			...consumedToolBatch("call_old", "read", { path: "src/a.ts" }, "same content"),
 			toolCall("call_edit", "edit", { path: "src/a.ts", edits: [] }),
 			toolResult("call_edit", "edit", "edit failed", { isError: true }),
@@ -302,7 +302,7 @@ describe("context optimizer", () => {
 	});
 
 	it("keeps error tool results raw", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			...consumedToolBatch("call_old", "read", { path: "src/a.ts" }, "same content"),
 			toolCall("call_error", "read", { path: "src/a.ts" }),
 			toolResult("call_error", "read", "read failed", { isError: true }),
@@ -316,7 +316,7 @@ describe("context optimizer", () => {
 	});
 
 	it("fails open for malformed read args", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			...consumedToolBatch("call_old", "read", { path: "src/a.ts", offset: null }, "same content"),
 			...consumedToolBatch("call_new", "read", { path: "src/a.ts", offset: null }, "same content"),
 			...protectionFillers(),
@@ -328,7 +328,7 @@ describe("context optimizer", () => {
 	});
 
 	it("does not treat a user message after a tool result as consumed", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			toolCall("call_current", "read", { path: "src/current.ts" }),
 			toolResult("call_current", "read", "x".repeat(3000)),
 			{ role: "user", content: "next", timestamp: 1 },
@@ -341,7 +341,7 @@ describe("context optimizer", () => {
 
 	it("applies stale budget summaries only to old unprotected eligible bytes", () => {
 		const large = "x".repeat(3000);
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			...consumedToolBatch("call_old_read", "read", { path: "old.ts" }, large),
 			...consumedToolBatch("call_old_bash", "bash", { command: "yes" }, large),
 			...consumedToolBatch("call_recent_1", "read", { path: "recent1.ts" }, large),
@@ -358,7 +358,7 @@ describe("context optimizer", () => {
 
 	it("keeps the incremental summary ledger stable across append-only context", () => {
 		const optimizer = new ContextOptimizer();
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			...consumedToolBatch("call_old", "read", { path: "src/a.ts" }, "same content"),
 			...consumedToolBatch("call_new", "read", { path: "src/a.ts" }, "same content"),
 			...protectionFillers(),
@@ -377,13 +377,13 @@ describe("context optimizer", () => {
 		const branch = [
 			toolCall("call_old", "read", { path: "src/a.ts" }),
 			toolResult("call_old", "read", "same content"),
-			{ role: "user", content: "branch", timestamp: 2 } as AgentMessage,
+			{ role: "user", content: "branch", timestamp: 2 } as Message,
 		];
 		expect(textOf(optimizer.optimize(branch, defaultOptions)[1])).toBe("same content");
 	});
 
 	it("preserves multi-tool-call ordering, outer metadata, idempotence, and raw duplicate targets", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			assistant([
 				{ type: "toolCall", id: "call_old", name: "read", arguments: { path: "src/a.ts" } },
 				{ type: "toolCall", id: "call_other", name: "bash", arguments: { command: "pwd" } },
@@ -410,7 +410,7 @@ describe("context optimizer", () => {
 	});
 
 	it("respects Tier 2 opt-outs", () => {
-		const messages: AgentMessage[] = [
+		const messages: Message[] = [
 			...consumedToolBatch("call_old", "read", { path: "src/a.ts" }, "same content"),
 			...consumedToolBatch("call_new", "read", { path: "src/a.ts" }, "same content"),
 			...protectionFillers(),

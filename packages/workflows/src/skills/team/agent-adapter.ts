@@ -25,7 +25,7 @@ export function createTeamAgents(ctx: WorkflowContext, specs: readonly TeamAgent
 			return new Agent({
 				name: id,
 				capabilities: spec.capabilities,
-				streamFn: createStream(manager, sessionId, { ...spec, id, profile }),
+				stream: createStream(manager, sessionId, { ...spec, id, profile }),
 			});
 		}),
 	);

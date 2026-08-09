@@ -220,8 +220,8 @@ const orchestrator = new Orchestrator({
 const team = new Team({
   name: "builders",
   agents: [
-    new Agent({ name: "writer", capabilities: ["write"], initialState: { model, systemPrompt, tools }, streamFn }),
-    new Agent({ name: "reviewer", capabilities: ["review"], initialState: { model, systemPrompt, tools }, streamFn }),
+    new Agent({ name: "writer", capabilities: ["write"], initialState: { model, systemPrompt, tools }, stream }),
+    new Agent({ name: "reviewer", capabilities: ["review"], initialState: { model, systemPrompt, tools }, stream }),
   ],
 });
 

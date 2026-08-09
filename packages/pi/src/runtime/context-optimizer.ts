@@ -1,4 +1,4 @@
-import type { AgentMessage, BashExecutionMessage } from "@tsuuanmi/pi-agent";
+import type { BashExecutionMessage, Message } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, TextContent, ThinkingContent, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import { compressBashOutput } from "#pi/runtime/bash-output";
 import { optimizeToolResults, type SummaryLedger, type ToolResultOptions } from "#pi/runtime/tool-results";
@@ -13,7 +13,7 @@ function removableThinking(block: ThinkingContent): boolean {
 	return !block.redacted && !block.thinkingSignature;
 }
 
-function optimizeAssistant(message: AssistantMessage, options: ContextOptions): AssistantMessage | undefined {
+function optimizeAgent(message: AssistantMessage, options: ContextOptions): AssistantMessage | undefined {
 	if (!options.stripThinking) return message;
 	let changed = false;
 	const content = message.content.filter((block) => {
@@ -67,28 +67,28 @@ function optionsKey(options: ContextOptions): string {
 	].join("\u0000");
 }
 
-function appendOnly(previous: AgentMessage[] | undefined, next: AgentMessage[]): boolean {
+function appendOnly(previous: Message[] | undefined, next: Message[]): boolean {
 	if (!previous || next.length < previous.length) return false;
 	return previous.every((message, index) => next[index] === message);
 }
 
 export class ContextOptimizer {
-	private previousMessages: AgentMessage[] | undefined;
+	private previousMessages: Message[] | undefined;
 	private previousOptionsKey: string | undefined;
 	private readonly ledger: SummaryLedger = new Map();
 
-	optimize(messages: AgentMessage[], options: ContextOptions): AgentMessage[] {
+	optimize(messages: Message[], options: ContextOptions): Message[] {
 		const key = optionsKey(options);
 		if (this.previousOptionsKey !== key || !appendOnly(this.previousMessages, messages)) {
 			this.ledger.clear();
 		}
 
 		let changed = false;
-		const optimized: AgentMessage[] = [];
+		const optimized: Message[] = [];
 		for (const message of messages) {
-			let next: AgentMessage | undefined = message;
+			let next: Message | undefined = message;
 			if (message.role === "assistant") {
-				next = optimizeAssistant(message, options) as AgentMessage | undefined;
+				next = optimizeAgent(message, options) as Message | undefined;
 			} else if (message.role === "bashExecution") {
 				next = optimizeBashExecution(message, options);
 			} else if (message.role === "toolResult") {

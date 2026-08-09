@@ -1,6 +1,6 @@
 import {
 	type AssistantMessage,
-	type Message,
+	type Message as LlmMessage,
 	type Model,
 	type StreamOptions,
 	stream,
@@ -18,40 +18,32 @@ import {
 } from "#agent/agent/structured-output";
 import type {
 	AgentLoopConfig,
+	Clock,
 	ProviderRequestObserver,
 	QueueMode,
 	RequestIdFactory,
-	RuntimeClock,
-	StreamFn,
 	ToolExecutionMode,
 } from "#agent/config";
-import type { AgentContext } from "#agent/context";
-import { DefaultAgentRuntime } from "#agent/default-runtime";
+import type { Context } from "#agent/context";
 import type { AgentEvent } from "#agent/events";
 import { createLoopHooks } from "#agent/hook-adapter";
 import { type AgentHook, AgentHookRegistry, runAfterHooks, runBeforeHooks } from "#agent/hooks";
-import type { AgentMessage, AgentState } from "#agent/messages/state";
-import type {
-	AgentRunOptions,
-	AgentRunResult,
-	ContinueRequest,
-	PromptRequest,
-	RunRequest,
-	RunResult,
-} from "#agent/run";
-import type { AgentRuntime } from "#agent/runtime";
+import { runContinue, runPrompt } from "#agent/loop";
+import type { AgentState, Message } from "#agent/messages/state";
+import type { AgentRunOptions, AgentRunResult } from "#agent/run";
+import type { StreamFunction } from "#agent/stream";
 import { ToolRegistry } from "#agent/tool/registry";
 import type { Tool } from "#agent/tool/tool";
 
 export type { QueueMode } from "#agent/config";
 
-function defaultConvertToLlm(messages: AgentMessage[]): Message[] {
+function defaultConvertToLlm(messages: Message[]): LlmMessage[] {
 	return messages.filter(
 		(message) => message.role === "user" || message.role === "assistant" || message.role === "toolResult",
 	);
 }
 
-function getAssistantText(message: AssistantMessage): string {
+function getAgentText(message: AssistantMessage): string {
 	return message.content
 		.filter((content) => content.type === "text")
 		.map((content) => content.text)
@@ -86,7 +78,7 @@ type MutableAgentState = Omit<
 > & {
 	tools: Tool[];
 	isStreaming: boolean;
-	streamingMessage?: AgentMessage;
+	streamingMessage?: Message;
 	pendingToolCalls: Set<string>;
 	errorMessage?: string;
 };
@@ -105,7 +97,7 @@ function createMutableAgentState(
 		get messages() {
 			return messages;
 		},
-		set messages(nextMessages: AgentMessage[]) {
+		set messages(nextMessages: Message[]) {
 			messages = nextMessages.slice();
 		},
 		isStreaming: false,
@@ -122,18 +114,16 @@ export interface AgentOptions {
 	/** Capability labels used by team/orchestrator scheduling. */
 	capabilities?: readonly string[];
 	initialState?: Partial<Omit<AgentState, "pendingToolCalls" | "isStreaming" | "streamingMessage" | "errorMessage">>;
-	convertToLlm?: (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
-	transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
-	streamFn?: StreamFn;
-	/** Agent runtime used to produce turns. Defaults to the standard runtime. */
-	runtime?: AgentRuntime;
+	convertToLlm?: (messages: Message[]) => LlmMessage[] | Promise<LlmMessage[]>;
+	transformContext?: (messages: Message[], signal?: AbortSignal) => Promise<Message[]>;
+	stream?: StreamFunction;
 	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
 	onPayload?: StreamOptions["onPayload"];
 	onResponse?: StreamOptions["onResponse"];
 	providerRequestObserver?: ProviderRequestObserver;
-	/** Clock used for agent-created timestamps and runtime request timestamps. Defaults to Date.now. */
-	now?: RuntimeClock;
-	/** Creates provider request ids from the runtime request sequence and timestamp. */
+	/** Clock used for agent-created timestamps. Defaults to Date.now. */
+	now?: Clock;
+	/** Creates provider request ids from the request sequence and timestamp. */
 	createRequestId?: RequestIdFactory;
 	/** Maximum duration for one provider request. */
 	requestTimeoutMs?: number;
@@ -159,14 +149,14 @@ export interface AgentOptions {
 }
 
 class PendingMessageQueue {
-	private messages: AgentMessage[] = [];
+	private messages: Message[] = [];
 	public mode: QueueMode;
 
 	constructor(mode: QueueMode) {
 		this.mode = mode;
 	}
 
-	enqueue(message: AgentMessage): void {
+	enqueue(message: Message): void {
 		this.messages.push(message);
 	}
 
@@ -174,7 +164,7 @@ class PendingMessageQueue {
 		return this.messages.length > 0;
 	}
 
-	drain(): AgentMessage[] {
+	drain(): Message[] {
 		if (this.mode === "all") {
 			const drained = this.messages.slice();
 			this.messages = [];
@@ -212,7 +202,7 @@ type ActiveRun = {
 };
 
 /**
- * Stateful agent facade over a pluggable runtime stream.
+ * Stateful agent facade over the model and tool loop.
  *
  * `Agent` owns the current transcript, emits lifecycle events, executes tools,
  * and exposes queueing APIs for steering and follow-up messages.
@@ -229,15 +219,14 @@ export class Agent {
 	private readonly steeringQueue: PendingMessageQueue;
 	private readonly followUpQueue: PendingMessageQueue;
 
-	public convertToLlm: (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
-	public transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
-	public streamFn: StreamFn;
-	public runtime: AgentRuntime;
+	public convertToLlm: (messages: Message[]) => LlmMessage[] | Promise<LlmMessage[]>;
+	public transformContext?: (messages: Message[], signal?: AbortSignal) => Promise<Message[]>;
+	public stream: StreamFunction;
 	public getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
 	public onPayload?: StreamOptions["onPayload"];
 	public onResponse?: StreamOptions["onResponse"];
 	public providerRequestObserver?: ProviderRequestObserver;
-	public now: RuntimeClock;
+	public now: Clock;
 	public createRequestId?: RequestIdFactory;
 	public requestTimeoutMs?: number;
 	public extractStructured?: AgentOptions["extractStructured"];
@@ -245,7 +234,7 @@ export class Agent {
 	private disposed = false;
 	private disposePromise?: Promise<void>;
 	private readonly disposeController = new AbortController();
-	/** Session identifier forwarded to providers for cache-aware backends. */
+	/** Session identifier forwarded to providers for cache-aware requests. */
 	public sessionId?: string;
 	/** Preferred transport forwarded to the stream function. */
 	public transport: Transport;
@@ -272,8 +261,7 @@ export class Agent {
 		this._state = createMutableAgentState(options.initialState);
 		this.convertToLlm = options.convertToLlm ?? defaultConvertToLlm;
 		this.transformContext = options.transformContext;
-		this.streamFn = options.streamFn ?? stream;
-		this.runtime = options.runtime ?? new DefaultAgentRuntime(this.streamFn);
+		this.stream = options.stream ?? stream;
 		this.getApiKey = options.getApiKey;
 		this.onPayload = options.onPayload;
 		this.onResponse = options.onResponse;
@@ -360,13 +348,13 @@ export class Agent {
 	}
 
 	/** Queue a message to be injected after the current assistant turn finishes. */
-	steer(message: AgentMessage): void {
+	steer(message: Message): void {
 		this.assertNotDisposed();
 		this.steeringQueue.enqueue(message);
 	}
 
 	/** Queue a message to run only after the agent would otherwise stop. */
-	followUp(message: AgentMessage): void {
+	followUp(message: Message): void {
 		this.assertNotDisposed();
 		this.followUpQueue.enqueue(message);
 	}
@@ -414,7 +402,7 @@ export class Agent {
 		return this.activeRun?.promise ?? Promise.resolve();
 	}
 
-	/** Clear transcript state, runtime state, and queued messages. */
+	/** Clear transcript state and queued messages. */
 	reset(): void {
 		this.assertNotDisposed();
 		this._state.messages = [];
@@ -426,11 +414,7 @@ export class Agent {
 		this.clearSteeringQueue();
 	}
 
-	/**
-	 * Tear down the current runtime after the active run settles.
-	 *
-	 * Custom runtimes can release external processes, sockets, or protocol sessions here.
-	 */
+	/** Tear down the agent after the active run settles. */
 	async dispose(): Promise<void> {
 		if (this.disposePromise) {
 			return this.disposePromise;
@@ -445,7 +429,6 @@ export class Agent {
 			try {
 				await this.waitForIdle();
 				await this.taskRunQueue;
-				await this.runtime.dispose?.();
 			} finally {
 				this.hookRegistry.clear();
 				this.listeners.clear();
@@ -460,7 +443,7 @@ export class Agent {
 	}
 
 	/** Return a transcript snapshot. */
-	getHistory(): AgentMessage[] {
+	getHistory(): Message[] {
 		return this._state.messages.slice();
 	}
 
@@ -478,8 +461,8 @@ export class Agent {
 			let failed = false;
 			try {
 				await clone.prompt(input, { signal });
-				const assistant = clone.findLastAssistantMessage();
-				const output = assistant ? getAssistantText(assistant) : "";
+				const agentMessage = clone.findLastAgentMessage();
+				const output = agentMessage ? getAgentText(agentMessage) : "";
 				const structured = this.extractStructured?.(output);
 				result = {
 					success: !clone.state.errorMessage,
@@ -509,9 +492,9 @@ export class Agent {
 	}
 
 	/** Start a new persistent prompt from text, a single message, or a batch of messages. */
-	async prompt(message: AgentMessage | AgentMessage[], options?: AgentRunOptions): Promise<void>;
+	async prompt(message: Message | Message[], options?: AgentRunOptions): Promise<void>;
 	async prompt(input: string, options?: AgentRunOptions): Promise<void>;
-	async prompt(input: string | AgentMessage | AgentMessage[], options: AgentRunOptions = {}): Promise<void> {
+	async prompt(input: string | Message | Message[], options: AgentRunOptions = {}): Promise<void> {
 		this.assertNotDisposed();
 		if (this.activeRun) {
 			throw new Error(
@@ -533,8 +516,8 @@ export class Agent {
 
 		for (let attempt = 0; attempt <= retryLimit; attempt += 1) {
 			await this.prompt(prompt);
-			const assistant = this.findLastAssistantMessage();
-			const rawText = assistant ? getAssistantText(assistant) : "";
+			const agentMessage = this.findLastAgentMessage();
+			const rawText = agentMessage ? getAgentText(agentMessage) : "";
 			result = parseStructuredOutput(rawText, options.schema);
 			await this.emitOutOfBand({
 				type: "structured_output",
@@ -596,8 +579,7 @@ export class Agent {
 			},
 			convertToLlm: this.convertToLlm,
 			transformContext: this.transformContext,
-			streamFn: this.streamFn,
-			runtime: this.runtime,
+			stream: this.stream,
 			getApiKey: this.getApiKey,
 			onPayload: this.onPayload,
 			onResponse: this.onResponse,
@@ -635,7 +617,7 @@ export class Agent {
 		}
 	}
 
-	private normalizePromptInput(input: string | AgentMessage | AgentMessage[]): AgentMessage[] {
+	private normalizePromptInput(input: string | Message | Message[]): Message[] {
 		if (Array.isArray(input)) {
 			return input;
 		}
@@ -648,61 +630,34 @@ export class Agent {
 	}
 
 	private async runPromptMessages(
-		messages: AgentMessage[],
+		messages: Message[],
 		options: { skipInitialSteeringPoll?: boolean; signal?: AbortSignal } = {},
 	): Promise<void> {
 		await this.runWithLifecycle(async (signal) => {
-			const request: PromptRequest = {
-				kind: "prompt",
+			await runPrompt(
 				messages,
-				context: this.createContextSnapshot(),
-				config: this.createLoopConfig(options),
-				emit: async () => {},
+				this.createContextSnapshot(),
+				this.createLoopConfig(options),
+				(event) => this.processEvents(event),
 				signal,
-				streamFn: this.streamFn,
-			};
-			await this.runRuntime(request);
+				this.stream,
+			);
 		}, options.signal);
 	}
 
 	private async runContinuation(): Promise<void> {
 		await this.runWithLifecycle(async (signal) => {
-			const request: ContinueRequest = {
-				kind: "continue",
-				context: this.createContextSnapshot(),
-				config: this.createLoopConfig(),
-				emit: async () => {},
+			await runContinue(
+				this.createContextSnapshot(),
+				this.createLoopConfig(),
+				(event) => this.processEvents(event),
 				signal,
-				streamFn: this.streamFn,
-			};
-			await this.runRuntime(request);
+				this.stream,
+			);
 		});
 	}
 
-	private async runRuntime(request: RunRequest): Promise<RunResult> {
-		let result: RunResult | undefined;
-		for await (const event of this.runtime.stream(request)) {
-			if (event.type === "event") {
-				await this.processEvents(event.event);
-			} else if (event.type === "backend") {
-				void event.backend;
-			} else if (event.type === "warning") {
-				await this.processEvents({ type: "runtime_warning", warning: event.warning });
-			} else if (event.type === "trace") {
-				await this.processEvents({ type: "runtime_trace", trace: event.trace });
-			} else if (event.type === "done") {
-				result = event.result;
-			} else {
-				throw event.error;
-			}
-		}
-		if (!result) {
-			throw new Error("Agent runtime stream ended without a done event");
-		}
-		return result;
-	}
-
-	private createContextSnapshot(): AgentContext {
+	private createContextSnapshot(): Context {
 		return {
 			systemPrompt: this._state.systemPrompt,
 			messages: this._state.messages.slice(),
@@ -803,7 +758,7 @@ export class Agent {
 			stopReason: aborted ? "aborted" : "error",
 			errorMessage: error instanceof Error ? error.message : String(error),
 			timestamp: this.now(),
-		} satisfies AgentMessage;
+		} satisfies Message;
 		await this.processEvents({ type: "message_start", message: failureMessage });
 		await this.processEvents({ type: "message_end", message: failureMessage });
 		await this.processEvents({ type: "turn_end", message: failureMessage, toolResults: [] });
@@ -823,9 +778,9 @@ export class Agent {
 	 *
 	 * `agent_end` only means no further loop events will be emitted. The run is
 	 * considered idle later, after all awaited listeners for `agent_end` finish
-	 * and `finishRun()` clears runtime-owned state.
+	 * and `finishRun()` clears run state.
 	 */
-	private findLastAssistantMessage(): AssistantMessage | undefined {
+	private findLastAgentMessage(): AssistantMessage | undefined {
 		for (let index = this._state.messages.length - 1; index >= 0; index -= 1) {
 			const message = this._state.messages[index];
 			if (message?.role === "assistant") return message;
