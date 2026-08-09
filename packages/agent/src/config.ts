@@ -5,6 +5,7 @@ import type {
 	ProviderResponse,
 	StreamOptions,
 } from "@tsuuanmi/pi-ai";
+import type { TraceSpan } from "#agent/agent/trace";
 import type {
 	AfterToolCallContext,
 	AfterToolCallResult,
@@ -14,7 +15,7 @@ import type {
 	PrepareNextTurnContext,
 	ShouldStopAfterTurnContext,
 } from "#agent/hooks";
-import type { Message, TraceSpan } from "#agent/messages/state";
+import type { Message } from "#agent/messages/types";
 
 export type ToolExecutionMode = "sequential" | "parallel";
 

@@ -1,13 +1,20 @@
 import {
 	type AssistantMessage,
 	type Message as LlmMessage,
-	type Model,
 	type StreamOptions,
 	stream,
 	type Transport,
 } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
+import { EMPTY_USAGE } from "#agent/agent/defaults";
+import { AgentEventDispatcher, type AgentListener } from "#agent/agent/event-dispatcher";
+import { AgentHookRegistry, runAfterHooks, runBeforeHooks } from "#agent/agent/hook-registry";
+import { type ActiveRun, combineSignals } from "#agent/agent/lifecycle";
 import type { LoopDetectionOptions } from "#agent/agent/loop-detector";
+import type { AgentOptions } from "#agent/agent/options";
+import { MessageQueue } from "#agent/agent/queue";
+import type { AgentState } from "#agent/agent/state";
+import { createAgentState, type MutableAgentState } from "#agent/agent/state";
 import {
 	createStructuredOutputPrompt,
 	createStructuredOutputRepairPrompt,
@@ -16,6 +23,7 @@ import {
 	type StructuredOutputOptions,
 	type StructuredOutputResult,
 } from "#agent/agent/structured-output";
+import { textOf } from "#agent/agent/text";
 import type {
 	AgentLoopConfig,
 	Clock,
@@ -25,181 +33,17 @@ import type {
 	ToolExecutionMode,
 } from "#agent/config";
 import type { Context } from "#agent/context";
-import type { AgentEvent } from "#agent/events";
 import { createLoopHooks } from "#agent/hook-adapter";
-import { type AgentHook, AgentHookRegistry, runAfterHooks, runBeforeHooks } from "#agent/hooks";
+import type { AgentHook } from "#agent/hooks";
 import { runContinue, runPrompt } from "#agent/loop";
-import type { AgentState, Message } from "#agent/messages/state";
+import { convertToLlm } from "#agent/messages/messages";
+import type { Message } from "#agent/messages/types";
 import type { AgentRunOptions, AgentRunResult } from "#agent/run";
 import type { StreamFunction } from "#agent/stream";
 import { ToolRegistry } from "#agent/tool/registry";
 import type { Tool } from "#agent/tool/tool";
 
 export type { QueueMode } from "#agent/config";
-
-function defaultConvertToLlm(messages: Message[]): LlmMessage[] {
-	return messages.filter(
-		(message) => message.role === "user" || message.role === "assistant" || message.role === "toolResult",
-	);
-}
-
-function getAgentText(message: AssistantMessage): string {
-	return message.content
-		.filter((content) => content.type === "text")
-		.map((content) => content.text)
-		.join("\n");
-}
-
-const EMPTY_USAGE = {
-	input: 0,
-	output: 0,
-	cacheRead: 0,
-	cacheWrite: 0,
-	totalTokens: 0,
-	cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-};
-
-const DEFAULT_MODEL = {
-	id: "unknown",
-	name: "unknown",
-	api: "unknown",
-	provider: "unknown",
-	baseUrl: "",
-	reasoning: false,
-	input: [],
-	cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-	contextWindow: 0,
-	maxTokens: 0,
-} satisfies Model<any>;
-
-type MutableAgentState = Omit<
-	AgentState,
-	"tools" | "isStreaming" | "streamingMessage" | "pendingToolCalls" | "errorMessage"
-> & {
-	tools: Tool[];
-	isStreaming: boolean;
-	streamingMessage?: Message;
-	pendingToolCalls: Set<string>;
-	errorMessage?: string;
-};
-
-function createMutableAgentState(
-	initialState?: Partial<Omit<AgentState, "pendingToolCalls" | "isStreaming" | "streamingMessage" | "errorMessage">>,
-): MutableAgentState {
-	const tools = new ToolRegistry(initialState?.tools ?? []).list();
-	let messages = initialState?.messages?.slice() ?? [];
-
-	return {
-		systemPrompt: initialState?.systemPrompt ?? "",
-		model: initialState?.model ?? DEFAULT_MODEL,
-		thinkingLevel: initialState?.thinkingLevel ?? "off",
-		tools,
-		get messages() {
-			return messages;
-		},
-		set messages(nextMessages: Message[]) {
-			messages = nextMessages.slice();
-		},
-		isStreaming: false,
-		streamingMessage: undefined,
-		pendingToolCalls: new Set<string>(),
-		errorMessage: undefined,
-	};
-}
-
-/** Options for constructing an {@link Agent}. */
-export interface AgentOptions {
-	/** Stable name used by teams, orchestrators, logs, and tracing. */
-	name?: string;
-	/** Capability labels used by team/orchestrator scheduling. */
-	capabilities?: readonly string[];
-	initialState?: Partial<Omit<AgentState, "pendingToolCalls" | "isStreaming" | "streamingMessage" | "errorMessage">>;
-	convertToLlm?: (messages: Message[]) => LlmMessage[] | Promise<LlmMessage[]>;
-	transformContext?: (messages: Message[], signal?: AbortSignal) => Promise<Message[]>;
-	stream?: StreamFunction;
-	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
-	onPayload?: StreamOptions["onPayload"];
-	onResponse?: StreamOptions["onResponse"];
-	providerRequestObserver?: ProviderRequestObserver;
-	/** Clock used for agent-created timestamps. Defaults to Date.now. */
-	now?: Clock;
-	/** Creates provider request ids from the request sequence and timestamp. */
-	createRequestId?: RequestIdFactory;
-	/** Maximum duration for one provider request. */
-	requestTimeoutMs?: number;
-	/** Initial agent lifecycle and execution hooks. */
-	hooks?: readonly AgentHook[];
-	extractStructured?: (output: string) => unknown;
-	steeringMode?: QueueMode;
-	followUpMode?: QueueMode;
-	sessionId?: string;
-	transport?: Transport;
-	maxRetryDelayMs?: number;
-	toolExecution?: ToolExecutionMode;
-	/** Maximum concurrently executing tools for parallel tool batches. */
-	maxToolConcurrency?: number;
-	/** Maximum text characters emitted from each tool result. */
-	maxToolOutputChars?: number;
-	/** Detect repeated assistant turns. Disabled by default; pass true for conservative tool-call detection. */
-	loopDetection?: boolean | LoopDetectionOptions;
-	/** Maximum assistant turns for each prompt/continuation run. Finite values are floored and clamped to at least 1. */
-	maxTurns?: number;
-	/** Cooperative pause callback. Checked after each turn; when true the agent stops gracefully. */
-	shouldPause?: () => boolean;
-}
-
-class PendingMessageQueue {
-	private messages: Message[] = [];
-	public mode: QueueMode;
-
-	constructor(mode: QueueMode) {
-		this.mode = mode;
-	}
-
-	enqueue(message: Message): void {
-		this.messages.push(message);
-	}
-
-	hasItems(): boolean {
-		return this.messages.length > 0;
-	}
-
-	drain(): Message[] {
-		if (this.mode === "all") {
-			const drained = this.messages.slice();
-			this.messages = [];
-			return drained;
-		}
-
-		const first = this.messages[0];
-		if (!first) {
-			return [];
-		}
-		this.messages = this.messages.slice(1);
-		return [first];
-	}
-
-	clear(): void {
-		this.messages = [];
-	}
-}
-
-function createAbortSignal(signals: Array<AbortSignal | undefined>): AbortSignal | undefined {
-	const activeSignals = signals.filter((signal): signal is AbortSignal => signal !== undefined);
-	if (activeSignals.length === 0) {
-		return undefined;
-	}
-	if (activeSignals.length === 1) {
-		return activeSignals[0];
-	}
-	return AbortSignal.any(activeSignals);
-}
-
-type ActiveRun = {
-	promise: Promise<void>;
-	resolve: () => void;
-	abortController: AbortController;
-};
 
 /**
  * Stateful agent facade over the model and tool loop.
@@ -209,15 +53,15 @@ type ActiveRun = {
  */
 export class Agent {
 	private _state: MutableAgentState;
-	private readonly listeners = new Set<(event: AgentEvent, signal: AbortSignal) => Promise<void> | void>();
+	private readonly events: AgentEventDispatcher;
 	private readonly initialOptions: AgentOptions;
 	private readonly hookRegistry: AgentHookRegistry;
 	private taskRunQueue: Promise<void> = Promise.resolve();
 
 	readonly name: string;
 	readonly capabilities: readonly string[];
-	private readonly steeringQueue: PendingMessageQueue;
-	private readonly followUpQueue: PendingMessageQueue;
+	private readonly steeringQueue: MessageQueue;
+	private readonly followUpQueue: MessageQueue;
 
 	public convertToLlm: (messages: Message[]) => LlmMessage[] | Promise<LlmMessage[]>;
 	public transformContext?: (messages: Message[], signal?: AbortSignal) => Promise<Message[]>;
@@ -258,8 +102,9 @@ export class Agent {
 		this.hookRegistry = new AgentHookRegistry(options.hooks);
 		this.name = options.name ?? "agent";
 		this.capabilities = options.capabilities?.slice() ?? [];
-		this._state = createMutableAgentState(options.initialState);
-		this.convertToLlm = options.convertToLlm ?? defaultConvertToLlm;
+		this._state = createAgentState(options.initialState);
+		this.events = new AgentEventDispatcher(this._state, () => this.activeRun?.abortController.signal);
+		this.convertToLlm = options.convertToLlm ?? convertToLlm;
 		this.transformContext = options.transformContext;
 		this.stream = options.stream ?? stream;
 		this.getApiKey = options.getApiKey;
@@ -270,8 +115,8 @@ export class Agent {
 		this.createRequestId = options.createRequestId;
 		this.requestTimeoutMs = options.requestTimeoutMs;
 		this.extractStructured = options.extractStructured;
-		this.steeringQueue = new PendingMessageQueue(options.steeringMode ?? "one-at-a-time");
-		this.followUpQueue = new PendingMessageQueue(options.followUpMode ?? "one-at-a-time");
+		this.steeringQueue = new MessageQueue(options.steeringMode ?? "one-at-a-time");
+		this.followUpQueue = new MessageQueue(options.followUpMode ?? "one-at-a-time");
 		this.sessionId = options.sessionId;
 		this.transport = options.transport ?? "auto";
 		this.maxRetryDelayMs = options.maxRetryDelayMs;
@@ -293,9 +138,8 @@ export class Agent {
 	 * `agent_end` is the final emitted event for a run, but the agent does not
 	 * become idle until all awaited listeners for that event have settled.
 	 */
-	subscribe(listener: (event: AgentEvent, signal: AbortSignal) => Promise<void> | void): () => void {
-		this.listeners.add(listener);
-		return () => this.listeners.delete(listener);
+	subscribe(listener: AgentListener): () => void {
+		return this.events.subscribe(listener);
 	}
 
 	/** Register an agent lifecycle or execution hook. */
@@ -431,7 +275,7 @@ export class Agent {
 				await this.taskRunQueue;
 			} finally {
 				this.hookRegistry.clear();
-				this.listeners.clear();
+				this.events.clear();
 			}
 		})();
 		return this.disposePromise;
@@ -453,7 +297,7 @@ export class Agent {
 		const execute = async (): Promise<AgentRunResult> => {
 			this.assertNotDisposed();
 			const clone = this.createIsolatedRunAgent();
-			const signal = createAbortSignal([options.signal, this.disposeController.signal]);
+			const signal = combineSignals([options.signal, this.disposeController.signal]);
 			const hooks = clone.hookRegistry.snapshot();
 			await runBeforeHooks(hooks, { agent: clone, input, metadata: options.metadata }, signal);
 
@@ -462,7 +306,7 @@ export class Agent {
 			try {
 				await clone.prompt(input, { signal });
 				const agentMessage = clone.findLastAgentMessage();
-				const output = agentMessage ? getAgentText(agentMessage) : "";
+				const output = agentMessage ? textOf(agentMessage) : "";
 				const structured = this.extractStructured?.(output);
 				result = {
 					success: !clone.state.errorMessage,
@@ -517,9 +361,9 @@ export class Agent {
 		for (let attempt = 0; attempt <= retryLimit; attempt += 1) {
 			await this.prompt(prompt);
 			const agentMessage = this.findLastAgentMessage();
-			const rawText = agentMessage ? getAgentText(agentMessage) : "";
+			const rawText = agentMessage ? textOf(agentMessage) : "";
 			result = parseStructuredOutput(rawText, options.schema);
-			await this.emitOutOfBand({
+			await this.events.emitOutOfBand({
 				type: "structured_output",
 				ok: result.ok,
 				attempt: attempt + 1,
@@ -638,7 +482,7 @@ export class Agent {
 				messages,
 				this.createContextSnapshot(),
 				this.createLoopConfig(options),
-				(event) => this.processEvents(event),
+				(event) => this.events.process(event),
 				signal,
 				this.stream,
 			);
@@ -650,7 +494,7 @@ export class Agent {
 			await runContinue(
 				this.createContextSnapshot(),
 				this.createLoopConfig(),
-				(event) => this.processEvents(event),
+				(event) => this.events.process(event),
 				signal,
 				this.stream,
 			);
@@ -728,14 +572,14 @@ export class Agent {
 		this._state.errorMessage = undefined;
 
 		try {
-			await this.emitOutOfBand({
+			await this.events.emitOutOfBand({
 				type: "agent_status",
 				status: "running",
 				trace: this.createTrace("agent.run.start"),
 			});
 			await executor(abortController.signal);
 		} catch (error) {
-			await this.emitOutOfBand({
+			await this.events.emitOutOfBand({
 				type: "agent_status",
 				status: abortController.signal.aborted ? "aborted" : "failed",
 				trace: this.createTrace("agent.run.error"),
@@ -759,10 +603,10 @@ export class Agent {
 			errorMessage: error instanceof Error ? error.message : String(error),
 			timestamp: this.now(),
 		} satisfies Message;
-		await this.processEvents({ type: "message_start", message: failureMessage });
-		await this.processEvents({ type: "message_end", message: failureMessage });
-		await this.processEvents({ type: "turn_end", message: failureMessage, toolResults: [] });
-		await this.processEvents({ type: "agent_end", messages: [failureMessage] });
+		await this.events.process({ type: "message_start", message: failureMessage });
+		await this.events.process({ type: "message_end", message: failureMessage });
+		await this.events.process({ type: "turn_end", message: failureMessage, toolResults: [] });
+		await this.events.process({ type: "agent_end", messages: [failureMessage] });
 	}
 
 	private finishRun(): void {
@@ -773,13 +617,7 @@ export class Agent {
 		this.activeRun = undefined;
 	}
 
-	/**
-	 * Reduce internal state for a loop event, then await listeners.
-	 *
-	 * `agent_end` only means no further loop events will be emitted. The run is
-	 * considered idle later, after all awaited listeners for `agent_end` finish
-	 * and `finishRun()` clears run state.
-	 */
+	/** Find the latest assistant message in the transcript. */
 	private findLastAgentMessage(): AssistantMessage | undefined {
 		for (let index = this._state.messages.length - 1; index >= 0; index -= 1) {
 			const message = this._state.messages[index];
@@ -795,61 +633,5 @@ export class Agent {
 		details?: Record<string, unknown>;
 	} {
 		return { type: "trace", name, timestamp: this.now(), details: { agent: this.name } };
-	}
-
-	private async emitOutOfBand(event: AgentEvent): Promise<void> {
-		const abortController = new AbortController();
-		for (const listener of this.listeners) {
-			await listener(event, abortController.signal);
-		}
-	}
-
-	private async processEvents(event: AgentEvent): Promise<void> {
-		switch (event.type) {
-			case "message_start":
-				this._state.streamingMessage = event.message;
-				break;
-
-			case "message_update":
-				this._state.streamingMessage = event.message;
-				break;
-
-			case "message_end":
-				this._state.streamingMessage = undefined;
-				this._state.messages.push(event.message);
-				break;
-
-			case "tool_execution_start": {
-				const pendingToolCalls = new Set(this._state.pendingToolCalls);
-				pendingToolCalls.add(event.toolCallId);
-				this._state.pendingToolCalls = pendingToolCalls;
-				break;
-			}
-
-			case "tool_execution_end": {
-				const pendingToolCalls = new Set(this._state.pendingToolCalls);
-				pendingToolCalls.delete(event.toolCallId);
-				this._state.pendingToolCalls = pendingToolCalls;
-				break;
-			}
-
-			case "turn_end":
-				if (event.message.role === "assistant" && event.message.errorMessage) {
-					this._state.errorMessage = event.message.errorMessage;
-				}
-				break;
-
-			case "agent_end":
-				this._state.streamingMessage = undefined;
-				break;
-		}
-
-		const signal = this.activeRun?.abortController.signal;
-		if (!signal) {
-			throw new Error("Agent listener invoked outside active run");
-		}
-		for (const listener of this.listeners) {
-			await listener(event, signal);
-		}
 	}
 }

@@ -1,6 +1,8 @@
 import type { AssistantMessageEvent, ToolResultMessage } from "@tsuuanmi/pi-ai";
 import type { LoopDetectionResult } from "#agent/agent/loop-detector";
-import type { AgentStatus, AgentTraceEvent, Message, TraceSpan } from "#agent/messages/state";
+import type { AgentStatus } from "#agent/agent/state";
+import type { AgentTraceEvent, TraceSpan } from "#agent/agent/trace";
+import type { Message } from "#agent/messages/types";
 
 export type ToolExecutionStatus = "completed" | "failed" | "blocked" | "aborted";
 

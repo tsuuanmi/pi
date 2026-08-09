@@ -131,6 +131,19 @@ When the last message is an assistant message, `continue()` first drains queued 
 
 `Agent` owns the complete execution loop. It calls the configured provider `stream` function, converts and transforms the context, executes tools, updates the transcript, and emits lifecycle events. The loop is internal; callers use `prompt()`, `continue()`, or `run()` instead of invoking an execution runner directly.
 
+## Internal module boundaries
+
+The public facade remains in `src/agent/index.ts`. Internal responsibilities are split by ownership:
+
+- `options.ts`: construction options.
+- `state.ts`: mutable Agent state creation.
+- `queue.ts`: steering and follow-up message queues.
+- `hook-registry.ts`: hook registration and run-lifecycle dispatch.
+- `event-dispatcher.ts`: event subscriptions, state projection, and listener dispatch.
+- `text.ts`, `defaults.ts`, and `lifecycle.ts`: Agent-local text extraction, defaults, and signal/run primitives.
+
+These modules are internal implementation details. Integrations use the public `Agent`, `AgentHook`, `AgentEvent`, and `Tool` APIs.
+
 ## Message Queuing
 
 ### Steering (mid-run injection)

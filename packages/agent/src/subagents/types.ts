@@ -6,7 +6,7 @@
  */
 
 import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
-import type { Message } from "#agent/messages/state";
+import type { Message } from "#agent/messages/types";
 import type { SubagentProgress } from "#agent/subagents/progress";
 import type { YieldDetails } from "#agent/subagents/yield-result";
 

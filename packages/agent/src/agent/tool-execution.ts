@@ -1,10 +1,10 @@
 import { type AssistantMessage, type ToolResultMessage, validateToolArguments } from "@tsuuanmi/pi-ai";
 import { Compile } from "typebox/compile";
+import type { TraceSpan, TraceStatus } from "#agent/agent/trace";
 import { createTraceSpan, getNow } from "#agent/agent/trace";
 import type { AgentLoopConfig } from "#agent/config";
 import type { Context } from "#agent/context";
 import type { EventSink, ToolExecutionMeta, ToolExecutionStatus } from "#agent/events";
-import type { TraceSpan, TraceStatus } from "#agent/messages/state";
 import { limitToolOutput, normalizeToolOutputLimit } from "#agent/tool/output";
 import type { ToolResult } from "#agent/tool/result";
 import type { Tool } from "#agent/tool/tool";

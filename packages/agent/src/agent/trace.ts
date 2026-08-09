@@ -1,5 +1,24 @@
 import type { AgentLoopConfig } from "#agent/config";
-import type { TraceSpan, TraceStatus } from "#agent/messages/state";
+
+export type TraceStatus = "ok" | "error" | "aborted" | "timeout" | "blocked";
+
+export interface TraceSpan {
+	kind: "request" | "tool";
+	id: string;
+	name?: string;
+	startedAt: number;
+	endedAt: number;
+	durationMs: number;
+	status: TraceStatus;
+}
+
+export interface AgentTraceEvent {
+	type: "trace";
+	name: string;
+	timestamp: number;
+	details?: Record<string, unknown>;
+	span?: TraceSpan;
+}
 
 export function getNow(config: AgentLoopConfig): () => number {
 	return config.now ?? Date.now;

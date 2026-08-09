@@ -1,4 +1,4 @@
-import type { Message } from "#agent/messages/state";
+import type { Message } from "#agent/messages/types";
 import type { ToolCall } from "#agent/tool-call";
 
 export interface MessageTurn {

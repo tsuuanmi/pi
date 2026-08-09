@@ -1,8 +1,10 @@
-export type { AgentOptions } from "#agent/agent";
 export { Agent } from "#agent/agent";
 export * from "#agent/agent/loop-detector";
+export type { AgentOptions } from "#agent/agent/options";
 export * from "#agent/agent/pruning";
+export type { AgentState, AgentStatus } from "#agent/agent/state";
 export * from "#agent/agent/structured-output";
+export type { AgentTraceEvent, TraceSpan, TraceStatus } from "#agent/agent/trace";
 export * from "#agent/compaction/messages";
 export type {
 	AgentLoopConfig,
@@ -37,7 +39,7 @@ export type {
 	ShouldStopAfterTurnContext,
 } from "#agent/hooks";
 export * from "#agent/messages/messages";
-export * from "#agent/messages/state";
+export * from "#agent/messages/types";
 export * from "#agent/metadata/receipt";
 export type { AgentRunOptions, AgentRunResult } from "#agent/run";
 export type { StreamFunction } from "#agent/stream";

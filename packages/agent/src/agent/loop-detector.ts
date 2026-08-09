@@ -1,5 +1,5 @@
 import type { AssistantMessage, ToolResultMessage } from "@tsuuanmi/pi-ai";
-import type { Message } from "#agent/messages/state";
+import type { Message } from "#agent/messages/types";
 
 export type LoopDetectionAction = "warn" | "stop";
 

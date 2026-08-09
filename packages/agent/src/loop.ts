@@ -5,7 +5,7 @@ import { executeToolCalls } from "#agent/agent/tool-execution";
 import type { AgentLoopConfig } from "#agent/config";
 import type { Context } from "#agent/context";
 import type { EventSink, Warning } from "#agent/events";
-import type { Message } from "#agent/messages/state";
+import type { Message } from "#agent/messages/types";
 import type { StreamFunction } from "#agent/stream";
 
 export async function runPrompt(

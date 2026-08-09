@@ -3,7 +3,7 @@
  */
 
 import type { Message as LlmMessage } from "@tsuuanmi/pi-ai";
-import type { Message } from "#agent/messages/state";
+import type { Message } from "#agent/messages/types";
 
 // ============================================================================
 // File Operation Tracking
