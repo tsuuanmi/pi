@@ -82,7 +82,9 @@ describe("package commands", () => {
 
 	it("loads project package settings", async () => {
 		mkdirSync(join(projectDir, ".pi"), { recursive: true });
-		writeFileSync(join(projectDir, ".pi", "settings.json"), JSON.stringify({ packages: ["npm:@project/pkg"] }));
+		writeFileSync(join(projectDir, ".pi", "settings.json"), JSON.stringify({ packages: ["npm:@project/pkg"] }), {
+			mode: 0o600,
+		});
 		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
 		try {

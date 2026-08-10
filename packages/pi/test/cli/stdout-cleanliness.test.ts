@@ -50,7 +50,7 @@ async function runCli(args: string[]): Promise<{ stdout: string; stderr: string;
 			null,
 			2,
 		),
-		"utf-8",
+		{ encoding: "utf-8", mode: 0o600 },
 	);
 
 	return await new Promise((resolvePromise, reject) => {

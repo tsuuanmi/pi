@@ -20,9 +20,9 @@ vi.mock("#pi/session/compaction/index", () => ({
 		totalTokens?: number;
 	}) => usage.totalTokens ?? usage.input + usage.output + usage.cacheRead + usage.cacheWrite,
 	collectEntriesForBranchSummary: () => ({ entries: [], commonAncestorId: null }),
-	compact: async () => ({
+	compact: async (preparation: { firstKeptEntryId: string }) => ({
 		summary: "compacted",
-		firstKeptEntryId: "entry-1",
+		firstKeptEntryId: preparation.firstKeptEntryId,
 		tokensBefore: 100,
 		details: {},
 	}),
@@ -45,7 +45,10 @@ vi.mock("#pi/session/compaction/index", () => ({
 		return { tokens: 0, usageTokens: 0, trailingTokens: 0, lastUsageIndex: null };
 	},
 	generateBranchSummary: async () => ({ summary: "", aborted: false, readFiles: [], modifiedFiles: [] }),
-	prepareCompaction: () => ({ dummy: true }),
+	prepareCompaction: (pathEntries: Array<{ id: string }>) => {
+		const firstEntry = pathEntries[0];
+		return firstEntry ? { dummy: true, firstKeptEntryId: firstEntry.id } : undefined;
+	},
 	shouldCompact: (
 		contextTokens: number,
 		contextWindow: number,
@@ -106,6 +109,11 @@ describe("AgentSession auto-compaction queue resume", () => {
 	});
 
 	it("should resume after threshold compaction when only agent-level queued messages exist", async () => {
+		sessionManager.appendMessage({
+			role: "user",
+			content: [{ type: "text", text: "Existing session message" }],
+			timestamp: Date.now(),
+		});
 		session.agent.followUp({
 			role: "custom",
 			customType: "test",
