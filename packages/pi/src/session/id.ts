@@ -18,7 +18,7 @@ export function isEntryId(id: string): boolean {
 
 export function createSessionId(now = new Date()): string {
 	const timestamp = now.toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
-	return `${timestamp}-${randomBytes(4).toString("hex")}`;
+	return timestamp;
 }
 
 export function generateId(existingIds: { has(id: string): boolean }): string {

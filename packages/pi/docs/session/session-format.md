@@ -184,7 +184,7 @@ interface SessionEntryBase {
 First line of the file. Metadata only, not part of the tree (no `id`/`parentId`).
 
 ```json
-{"type":"session","version":4,"id":"20241203-140000-a1b2c3d4","timestamp":"2024-12-03T14:00:00.000Z","cwd":"/path/to/project"}
+{"type":"session","version":4,"id":"20241203-140000","timestamp":"2024-12-03T14:00:00.000Z","cwd":"/path/to/project"}
 ```
 
 ### SessionMessageEntry
@@ -364,6 +364,6 @@ Key methods for working with sessions programmatically.
 - `getSessionName()` - Get display name from latest session_info entry
 - `getCwd()` - Working directory
 - `getSessionDir()` - Session storage directory
-- `getSessionId()` - Session UUID
+- `getSessionId()` - Session ID (`YYYYMMDD-HHMMSS`)
 - `getSessionFile()` - Session file path (undefined for in-memory)
 - `isPersisted()` - Whether session is saved to disk

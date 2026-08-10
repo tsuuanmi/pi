@@ -4,7 +4,7 @@ import { basename, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SessionManager } from "#pi/session/manager";
 
-const SESSION_ID_RE = /^\d{8}-\d{6}-[0-9a-f]{8}$/;
+const SESSION_ID_RE = /^\d{8}-\d{6}$/;
 
 describe("SessionManager.newSession with custom id", () => {
 	it("uses the provided id instead of generating one", () => {
@@ -30,7 +30,7 @@ describe("SessionManager.newSession with custom id", () => {
 		}
 	});
 
-	it("generates a unique id when none is provided", () => {
+	it("generates a timestamp id when none is provided", () => {
 		const session = SessionManager.inMemory();
 		session.newSession();
 		const id = session.getSessionId();
@@ -44,7 +44,7 @@ describe("SessionManager.newSession with custom id", () => {
 		expect(session.getHeader().id).toBe("header-test-id");
 	});
 
-	it("generates an id when constructed without an explicit id", () => {
+	it("generates a timestamp id when constructed without an explicit id", () => {
 		const session = SessionManager.inMemory();
 		expect(session.getSessionId()).toMatch(SESSION_ID_RE);
 		expect(session.getHeader().id).toBe(session.getSessionId());

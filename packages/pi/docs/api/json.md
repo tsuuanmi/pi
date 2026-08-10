@@ -73,7 +73,7 @@ Agent message roles from [`packages/agent/src/messages/types.ts`](https://github
 Each line is a JSON object. The first line is the session header:
 
 ```json
-{"type":"session","version":4,"id":"20260627-143522-a1b2c3d4","timestamp":"...","cwd":"/path"}
+{"type":"session","version":4,"id":"20260627-143522","timestamp":"...","cwd":"/path"}
 ```
 
 Followed by events as they occur:
