@@ -94,27 +94,6 @@ When a custom provider also has `apiKey` in `settings.json`, `auth.json` wins. T
 
 Custom providers can be added with `/provider add` or through `settings.json`; see [models.md](models.md) and [custom-provider.md](custom-provider.md). For providers that need custom API implementations or OAuth flows, create an extension; see [custom-provider.md](custom-provider.md).
 
-### ChatGPT Web runtime
-
-Pi bundles the first-party `pi:web-runtime` package. It loads host-neutral browser provider
-descriptors and manages their named browser credentials without an HTTP bridge, daemon, or
-environment-variable endpoint. Browser profiles are stored outside `auth.json`; browser credential
-records contain only an opaque profile ID and per-account tunnel secret.
-
-ChatGPT browser accounts use the canonical named-account commands:
-
-```text
-/account add chatgpt-web <name>
-/account chatgpt-web <name>
-/account remove chatgpt-web <name>
-```
-
-Account creation opens Pi-managed visible Playwright Chromium and stores the credential only after
-browser-session verification succeeds. Authentication and browser failures are reported directly;
-Pi does not fall back to an API provider or HTTP transport. Active turns for one account share a
-Pi-managed visible Chromium context and use separate Temporary Chat tabs, with a maximum of five
-concurrent tabs. Private tool calls use the bundled MCP SDK over worker-owned IPC. ChatGPT uploads are validated before browser upload and are limited to ten files and 50 MiB per turn.
-
 ## Resolution Order
 
 When resolving credentials for a provider:

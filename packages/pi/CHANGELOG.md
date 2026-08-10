@@ -35,19 +35,15 @@
 - **keybindings**: Removed pre-namespaced keybinding IDs and automatic keybinding config migration; use namespaced IDs.
 - **changelog**: Removed rewriting of links from the legacy `pi-mono` repository.
 - **agent**: Renamed Agent trace and warning events to `trace` and `warning`; removed runtime/backend injection from the agent boundary.
+- **web-providers**: Removed the `web` API and browser-based web-provider subsystem entirely: deleted `packages/pi/src/web-providers/`, the `@tsuuanmi/pi-web-runtime` dependency and bundled `pi:web-runtime` package, the `webProviders` package resource type, `BrowserCredential` and its `browser` account/auth path, web model registry validation, web stream/turn execution, and the profile worker pool. `Model.baseUrl` is now always a string.
 
 ### Added
 
-- **web-runtime**: Added the bundled `pi:web-runtime` package and canonical `webProviders` package resource type for host-neutral browser provider descriptors.
 - **interactive**: Mermaid fenced diagrams now render as width-checked terminal Unicode diagrams in Markdown output.
 
 ### Changed
 
 - **packages**: Workflow tools and hooks are now loaded from the bundled `pi:workflows` package manifest instead of a Pi-specific built-in registration path.
-- **models**: Removed the external ChatGPT Web HTTP bridge and added first-party browser-runtime infrastructure without HTTP fallback.
-- **web-runtime**: Keep one isolated visible Chromium session per browser account and bound concurrent Temporary Chat turns to five tabs.
-- **web-runtime**: Route private browser tool calls through the official MCP SDK without exposing an HTTP, socket, or daemon transport.
-- **packages**: Load the bundled web-runtime as a compiled Pi package and resolve browser account behavior from loaded provider descriptors.
 - **api**: Removed the stale `serializeJsonLine` root export; node JSONL utilities are imported from `@tsuuanmi/pi-agent/node`.
 - **extensions**: Agent tool interception is now installed through `Agent.registerHook()`; Pi remains the host adapter and no longer assigns agent hook callbacks directly.
 - **models**: Custom provider model configs now accept image input metadata and `max`/`ultra` thinking-level mappings.
@@ -56,9 +52,6 @@
 
 - **models**: Match Codex thinking-level menus to the upstream catalog and expose `max`/`ultra` model suffixes in CLI resolution.
 - **tools**: Activate extension-registered tools during initial session construction when the built-in tool set is explicitly selected.
-- **web-runtime**: Reject malformed, empty, oversized, and excessive ChatGPT attachments before upload.
-- **web-runtime**: Stream only monotonic settled ChatGPT output and classify rate-limit, subscription, and upstream page failures.
-- **models**: Revalidate browser entitlement immediately before each web turn.
 - **runtime**: Preserve stable provider-bound context prefixes during retained tool-result optimization.
 - **interactive**: Prevent selecting stale session rows while the `/resume` scope is loading.
 - **interactive**: Load `/resume` sessions in pages of 50 with a Load more option.

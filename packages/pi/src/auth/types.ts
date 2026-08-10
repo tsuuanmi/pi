@@ -8,13 +8,7 @@ export interface ApiKeyCredential {
 
 export type OAuthCredential = { type: "oauth" } & OAuthCredentials;
 
-export interface BrowserCredential {
-	type: "browser";
-	profileId: string;
-	tunnelSecret: string;
-}
-
-export type AuthCredential = ApiKeyCredential | OAuthCredential | BrowserCredential;
+export type AuthCredential = ApiKeyCredential | OAuthCredential;
 
 export interface AuthAccountCollection {
 	active: string;

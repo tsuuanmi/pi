@@ -5,7 +5,6 @@ import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "#pi/ru
 import { emitSessionShutdownEvent } from "#pi/runtime/extensions/runner";
 import { assertSessionCwdExists } from "#pi/session/cwd";
 import { SessionManager } from "#pi/session/manager";
-import { closeWebWorkers } from "#pi/web-providers/workers";
 
 /**
  * Result returned by runtime creation.
@@ -121,7 +120,6 @@ export class AgentSessionRuntime {
 			reason,
 			targetSessionFile,
 		});
-		await closeWebWorkers();
 		this.beforeSessionInvalidate?.();
 		this.session.dispose();
 	}
@@ -206,7 +204,6 @@ export class AgentSessionRuntime {
 			type: "session_shutdown",
 			reason: "quit",
 		});
-		await closeWebWorkers();
 		this.beforeSessionInvalidate?.();
 		this.session.dispose();
 	}

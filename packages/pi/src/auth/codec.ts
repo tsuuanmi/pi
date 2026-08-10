@@ -4,7 +4,6 @@ import type {
 	AuthCredential,
 	AuthStorageData,
 	AuthStorageEntry,
-	BrowserCredential,
 	OAuthCredential,
 } from "#pi/auth/types";
 
@@ -67,14 +66,6 @@ function credential(value: unknown, path: string): AuthCredential {
 		}
 		return result;
 	}
-	if (type === "browser") {
-		exact(item, ["type", "profileId", "tunnelSecret"], path);
-		const profileId = string(item.profileId, `${path}.profileId`);
-		if (!/^[a-zA-Z0-9_-]{16,128}$/.test(profileId)) fail(`${path}.profileId`, "has an invalid format");
-		const tunnelSecret = string(item.tunnelSecret, `${path}.tunnelSecret`);
-		if (tunnelSecret.length < 32) fail(`${path}.tunnelSecret`, "must contain at least 32 characters");
-		return { type, profileId, tunnelSecret };
-	}
 	if (type === "oauth") {
 		exact(item, ["type", "refresh", "access", "expires", "accountId"], path);
 		if (typeof item.expires !== "number" || !Number.isFinite(item.expires) || item.expires < 0) {
@@ -112,14 +103,6 @@ function collection(value: JsonObject, path: string): AuthAccountCollection {
 function entry(value: unknown, path: string): AuthStorageEntry {
 	const item = object(value, path);
 	return "type" in item ? credential(item, path) : collection(item, path);
-}
-
-export function isBrowserCredential(value: unknown): value is BrowserCredential {
-	try {
-		return credential(value, "credential").type === "browser";
-	} catch {
-		return false;
-	}
 }
 
 export function isAuthCredential(value: AuthStorageEntry | undefined): value is AuthCredential {

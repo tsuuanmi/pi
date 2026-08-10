@@ -43,7 +43,7 @@ export interface Model<TApi extends Api = Api> {
 	name: string;
 	api: TApi;
 	provider: ProviderId;
-	baseUrl: TApi extends "web" ? undefined : string;
+	baseUrl: string;
 	reasoning: boolean;
 	thinkingLevelMap?: ThinkingLevelMap;
 	input: ("text" | "image")[];

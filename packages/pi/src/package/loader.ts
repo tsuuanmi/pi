@@ -30,7 +30,7 @@ export function loadPackage({ root, metadata, filter }: PackageLoadOptions): Res
 			const entries = manifest?.[type as keyof PiManifest];
 			if (patterns === undefined) {
 				if (entries === undefined) {
-					if (type !== "webProviders") loadDefaults(table, root, type, metadata);
+					loadDefaults(table, root, type, metadata);
 				} else {
 					loadManifest(table, root, type, entries, metadata);
 				}
@@ -49,7 +49,6 @@ export function loadPackage({ root, metadata, filter }: PackageLoadOptions): Res
 	}
 
 	for (const type of RESOURCE_TYPES) {
-		if (type === "webProviders") continue;
 		if (existsSync(join(root, type))) loadDefaults(table, root, type, metadata);
 	}
 
@@ -104,7 +103,6 @@ function loadManifestPaths(root: string, type: ResourceType, entries: string[] |
 		return overrides.length > 0 ? [...applyPatterns(paths, overrides, root)] : paths;
 	}
 
-	if (type === "webProviders") return [];
 	const directory = join(root, type);
 	return existsSync(directory) ? collectResourceFiles(directory, type) : [];
 }

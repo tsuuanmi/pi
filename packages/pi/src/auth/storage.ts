@@ -23,7 +23,6 @@ import type {
 	AuthStatus,
 	AuthStorageData,
 	AuthStorageEntry,
-	BrowserCredential,
 	OAuthCredential,
 } from "#pi/auth/types";
 import { getAgentDir } from "#pi/loader/paths";
@@ -345,11 +344,6 @@ export class AuthStorage {
 	getProviderEnv(provider: string): Record<string, string> | undefined {
 		const cred = this.get(provider);
 		return cred?.type === "api_key" && cred.env ? { ...cred.env } : undefined;
-	}
-
-	getBrowserAccount(provider: string, accountName?: string): BrowserCredential | undefined {
-		const credential = accountName === undefined ? this.get(provider) : this.getAccount(provider, accountName);
-		return credential?.type === "browser" ? credential : undefined;
 	}
 
 	/**

@@ -27,7 +27,6 @@ It is a workspace leaf: it has no dependency on another Pi package.
 - API-key, OAuth-token, or account persistence; Pi owns credential storage.
 - Model selection defaults, availability filtering, settings, or extension lifecycle; Pi owns those policies.
 - Application sessions, workflow state, UI, or CLI behavior.
-- Browser-provider host policy. The protocol can represent `api: "web"`, but Pi registers the implementation.
 
 ## Public entry points
 
@@ -96,7 +95,7 @@ The package also uses Web APIs such as `fetch`, `AbortSignal`, streams, headers,
 |---|---|
 | `@tsuuanmi/pi-agent` | Converts `AgentMessage[]` to AI `Context`, calls an injected or default `StreamFunction`, consumes assistant events, validates tool arguments, and executes tools outside AI |
 | `@tsuuanmi/pi-workflows` | Uses model and event-stream types for workflow-backed agent adapters |
-| `@tsuuanmi/pi` | Uses catalogs and provider/OAuth registries, supplies credentials and settings, registers extension and web providers, and exposes selected model APIs through the SDK |
+| `@tsuuanmi/pi` | Uses catalogs and provider/OAuth registries, supplies credentials and settings, registers extension providers, and exposes selected model APIs through the SDK |
 | `@tsuuanmi/pi-orchestrator` | Uses AI only in package tests; runtime orchestration reaches models through Agent |
 
 ## State and lifecycle

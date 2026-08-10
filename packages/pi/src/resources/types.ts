@@ -18,12 +18,11 @@ export interface ResolvedPaths {
 	themes: ResolvedResource[];
 	commands: ResolvedResource[];
 	agents: ResolvedResource[];
-	webProviders: ResolvedResource[];
 }
 
 export type SourceScope = "user" | "project" | "temporary";
 export type SourceOrigin = "package" | "top-level";
-export type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands" | "agents" | "webProviders";
+export type ResourceType = "extensions" | "skills" | "prompts" | "themes" | "commands" | "agents";
 export type TopLevelResourceType = "extensions" | "skills" | "prompts" | "themes";
 export type SkillDiscoveryMode = "pi" | "agents";
 
@@ -34,7 +33,6 @@ export interface PiManifest {
 	themes?: string[];
 	commands?: string[];
 	agents?: string[];
-	webProviders?: string[];
 }
 
 export interface PackageFilter {
@@ -44,5 +42,4 @@ export interface PackageFilter {
 	themes?: string[];
 	commands?: string[];
 	agents?: string[];
-	webProviders?: string[];
 }

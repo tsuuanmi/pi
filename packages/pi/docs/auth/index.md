@@ -76,7 +76,7 @@ type OAuthCredential = {
   accountId?: string;       // Optional, written by the Codex OAuth provider
 };
 
-type AuthCredential = ApiKeyCredential | OAuthCredential | BrowserCredential;
+type AuthCredential = ApiKeyCredential | OAuthCredential;
 ```
 
 ### Account Collections
@@ -178,7 +178,6 @@ Auth files are created with mode `0600` (owner read/write only). Parent director
 - Provider and account names must be non-empty, trimmed, and free of path separators and prototype-inherited keys
 - `api_key` credentials: `key` is required and non-empty; `env` keys must be valid environment variable names
 - `oauth` credentials: `access`, `refresh`, and `expires` are required and validated
-- `browser` credentials: `profileId` must match `^[a-zA-Z0-9_-]{16,128}$` and `tunnelSecret` must be at least 32 characters
 - `AuthAccountCollection`: `active` must reference an existing account; `accounts` must contain at least one entry
 - Unknown fields are rejected
 

@@ -18,7 +18,6 @@ Documentation is grouped by purpose:
   - [Agent package](architecture/packages/agent.md)
   - [Orchestrator package](architecture/packages/orchestrator.md)
   - [TUI package](architecture/packages/tui.md)
-  - [Web Runtime package](architecture/packages/web-runtime.md)
   - [Workflows package](architecture/packages/workflows.md)
   - [Pi package](architecture/packages/pi.md)
 - [Component Integration Map](architecture/component-integration-map.md) - canonical component owners and exact static-import, dynamic-load, injection, data-handoff, and bundling paths

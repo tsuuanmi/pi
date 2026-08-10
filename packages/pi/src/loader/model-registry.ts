@@ -621,10 +621,6 @@ export class ModelRegistry {
 	}
 
 	private validateProviderConfig(providerName: string, config: ProviderConfigInput): void {
-		if (config.api === "web") {
-			this.validateWebProviderConfig(providerName, config);
-			return;
-		}
 		if (config.stream && !config.api) {
 			throw new Error(`Provider ${providerName}: "api" is required when registering stream.`);
 		}
@@ -644,24 +640,6 @@ export class ModelRegistry {
 			const api = modelDef.api || config.api;
 			if (!api) {
 				throw new Error(`Provider ${providerName}, model ${modelDef.id}: no "api" specified.`);
-			}
-		}
-	}
-
-	private validateWebProviderConfig(providerName: string, config: ProviderConfigInput): void {
-		if (!config.stream) throw new Error(`Provider ${providerName}: "stream" is required for web models.`);
-		if (config.baseUrl || config.apiKey || config.headers || config.authHeader || config.oauth) {
-			throw new Error(`Provider ${providerName}: web models cannot configure HTTP transport or authentication.`);
-		}
-		if (!config.models || config.models.length === 0) {
-			throw new Error(`Provider ${providerName}: web providers require models.`);
-		}
-		for (const model of config.models) {
-			if (model.api && model.api !== "web") {
-				throw new Error(`Provider ${providerName}, model ${model.id}: web providers require api "web".`);
-			}
-			if (model.baseUrl || model.headers || model.compat) {
-				throw new Error(`Provider ${providerName}, model ${model.id}: web models cannot configure HTTP transport.`);
 			}
 		}
 	}
@@ -704,7 +682,7 @@ export class ModelRegistry {
 					name: modelDef.name,
 					api: api as Api,
 					provider: providerName,
-					baseUrl: api === "web" ? undefined : (modelDef.baseUrl ?? config.baseUrl!),
+					baseUrl: modelDef.baseUrl ?? config.baseUrl!,
 					reasoning: modelDef.reasoning,
 					thinkingLevelMap: modelDef.thinkingLevelMap,
 					input: modelDef.input as "text"[],

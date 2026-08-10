@@ -18,12 +18,10 @@ This plan turns the findings in [Package Overlap Audit](package-overlap-audit.md
 |---|---|---|
 | 1 | Shared context tool contract and manager-backed Agent stream | Implemented in current tree |
 | 2 | Workflows-owned compiled package artifact | Concurrent implementation present; validate, do not overwrite |
-| 3 | Agent-owned web tool execution | Blocked by concurrent edits in Pi web/session factory files |
-| 4 | Session root and session-id ownership | Blocked by concurrent Pi session refactor |
-| 5 | Workflow transition initialization/private alias removal | Blocked by concurrent transition/runtime cleanup |
-| 6 | HUD provider, sanitization, and explicit invalidation | Blocked by concurrent interactive-mode edits |
-| 7 | Web capability/worker authoring boundary | Blocked by concurrent Web Runtime provider refactor |
-| 8 | TUI repository state and global keybinding state | Planned after higher-priority boundaries |
+| 3 | Session root and session-id ownership | Blocked by concurrent Pi session refactor |
+| 4 | Workflow transition initialization/private alias removal | Blocked by concurrent transition/runtime cleanup |
+| 5 | HUD provider, sanitization, and explicit invalidation | Blocked by concurrent interactive-mode edits |
+| 6 | TUI repository state and global keybinding state | Planned after higher-priority boundaries |
 
 ## Phase 1 - shared contracts and stream adapter
 
@@ -64,7 +62,7 @@ One self-contained Workflows package is used for standalone publication and Pi b
 |---|---|---|
 | Update | `packages/workflows/package.json` | `pi` resources point to shipped `dist/` files; `files` contains the self-contained artifact only |
 | Create/update | `packages/workflows/scripts/copy-assets.mjs` | Workflows alone copies skill/state/agent assets into `dist/` |
-| Update | `packages/pi/scripts/copy-assets.mjs` | Copy Workflows and Web Runtime `package.json` plus `dist/` without flattening or rewriting |
+| Update | `packages/pi/scripts/copy-assets.mjs` | Copy Workflows `package.json` and `dist/` without flattening or rewriting |
 | Delete | `packages/pi/scripts/write-bundled-package-manifests.mjs` | Remove host-owned package-specific rewrite logic |
 | Update | Manifest/package tests and docs | Verify every manifest path exists in a packed/bundled layout |
 
@@ -75,39 +73,7 @@ One self-contained Workflows package is used for standalone publication and Pi b
 - No duplicate Pi copy of Workflows source assets exists.
 - No Workflows-specific manifest rewrite remains in Pi.
 
-## Phase 3 - Agent-owned web tool execution
-
-### Goal
-
-Pi may authorize and transport a browser tool call, but Agent owns validation, hooks, policy, execution, details validation, output limiting, receipts, and lifecycle events.
-
-### Required design
-
-Split the current mixed Agent tool module into:
-
-- `packages/agent/src/tool/executor.ts`: canonical reusable execution of one prepared tool call with injected hook/event context;
-- `packages/agent/src/agent/tool-execution.ts`: Agent-loop batch scheduling, transcript message ordering, and continuation behavior built on the executor.
-
-Expose one concise Agent-owned entry for externally transported calls. Do not expose Agent internals or add a second executor in Pi.
-
-### Files
-
-| Action | File | Change |
-|---|---|---|
-| Create | `packages/agent/src/tool/executor.ts` | Extract single-call validation/policy/hook/execute/limit/details/receipt lifecycle |
-| Update | `packages/agent/src/agent/tool-execution.ts` | Delegate each batch item to the canonical executor |
-| Update | `packages/agent/src/agent/index.ts` and public types | Add the reviewed external-call entry using the same configured hooks/events/tools |
-| Update | `packages/pi/src/runtime/agent-session-factory.ts` | Replace direct `Tool.prepareArguments()`/`Tool.execute()` with Agent-owned execution |
-| Update | `packages/pi/src/web-providers/stream.ts` | Keep only WebTool conversion and transport/result mapping |
-| Update | Agent and Pi tests/docs/changelogs | Prove identical policy, hooks, limits, details, receipts, and events for model and browser calls |
-
-### Completion gate
-
-- No Pi/Web Runtime call site invokes `Tool.execute()` directly.
-- Browser tool calls cannot bypass Agent policy or lifecycle evidence.
-- No synthetic transcript inconsistency is introduced; external calls use an explicit non-transcript execution contract unless a real assistant tool-call message exists.
-
-## Phase 4 - session identity and root ownership
+## Phase 3 - session identity and root ownership
 
 ### Goal
 
@@ -127,7 +93,7 @@ Do not create an extra package solely for a few path functions. Retain the exist
 
 `packages/pi/src/session/`, `packages/workflows/src/session/root.ts`, their public barrels, session tests, docs, and changelogs.
 
-## Phase 5 - transition initialization and private runtime aliases
+## Phase 4 - transition initialization and private runtime aliases
 
 ### Goal
 
@@ -141,12 +107,12 @@ Every workflow tool loads its required transition/policy implementation through 
 
 ### Completion gate
 
-- `ralplan_run_agent` works from the dynamically loaded extension without another import registering side effects first.
+- `ralplan_run_agent` works from the package-owned extension factory invoked directly through Pi's `ExtensionAPI` without another import registering side effects first.
 - Pi contains no `#workflows/*` alias.
 - Workflows compiled entry resolves only its own package imports/relative modules.
 - Removed transitions/fallback commands have no import, export, test, doc, or asset references.
 
-## Phase 6 - HUD ownership
+## Phase 5 - HUD ownership
 
 ### Goal
 
@@ -166,22 +132,7 @@ Workflows owns workflow HUD data; TUI owns normalized presentation; Pi owns prov
 - Register a HUD reader/provider through Pi composition instead of embedding workflow policy in TUI.
 - Keep workflow freshness/visibility in Workflows and ANSI/layout in TUI.
 
-## Phase 7 - Web Runtime capability boundary
-
-### Goal
-
-Advertised model capabilities equal implemented behavior, and third-party worker authoring uses only public APIs.
-
-### Required changes
-
-- Do not advertise tool/image/file capability through Pi until conversion and connector transport exist.
-- Pi owns AI-message-to-attachment conversion; Web Runtime owns browser upload.
-- Export a reviewed worker bootstrap or keep provider workers internal and remove claims of turnkey third-party authoring.
-- Scope worker pools and entitlement re-verification explicitly for session/resource reload.
-
-This phase must follow the active Web Runtime provider refactor and Phase 3 tool execution.
-
-## Phase 8 - TUI host state
+## Phase 6 - TUI host state
 
 ### Goal
 

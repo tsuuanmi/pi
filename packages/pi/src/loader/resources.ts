@@ -38,7 +38,6 @@ import { DefaultPackageManager } from "#pi/package/manager";
 import type { PathMetadata, ResolvedResource, ResourceType } from "#pi/resources/types";
 import { createExtensionRuntime } from "#pi/runtime/extensions/api";
 import { SettingsManager } from "#pi/settings/manager";
-import { WebProviderHost } from "#pi/web-providers/host";
 
 export class DefaultResourceLoader implements ResourceLoader {
 	private cwd: string;
@@ -46,7 +45,6 @@ export class DefaultResourceLoader implements ResourceLoader {
 	private settingsManager: SettingsManager;
 	private eventBus: EventBus;
 	private packageManager: DefaultPackageManager;
-	private webProviderHost = new WebProviderHost();
 	private additionalExtensionPaths: string[];
 	private additionalSkillPaths: string[];
 	private additionalPromptTemplatePaths: string[];
@@ -150,10 +148,6 @@ export class DefaultResourceLoader implements ResourceLoader {
 		return this.extensionsResult;
 	}
 
-	getWebProviderHost(): WebProviderHost {
-		return this.webProviderHost;
-	}
-
 	getSkills(): { skills: Skill[]; diagnostics: ResourceDiagnostic[] } {
 		return { skills: this.skills, diagnostics: this.skillDiagnostics };
 	}
@@ -216,8 +210,6 @@ export class DefaultResourceLoader implements ResourceLoader {
 		const enabledPrompts = enabled(resolvedPaths.prompts);
 		const enabledThemes = enabled(resolvedPaths.themes);
 		const enabledAgentProfiles = enabled(resolvedPaths.agents);
-		const enabledWebProviders = enabled(resolvedPaths.webProviders);
-		await this.webProviderHost.load(enabledWebProviders);
 		const cliExtensions = enabled(this.extraResources(this.additionalExtensionPaths, "extensions"));
 
 		const extensionResources = this.noExtensions

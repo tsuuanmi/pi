@@ -14,10 +14,10 @@ Pi uses five integration mechanisms. They are not interchangeable.
 | Mechanism | Meaning | Example |
 |---|---|---|
 | Static package import | Compile-time/runtime ESM import through a published package root or subpath | Workflows imports `Orchestrator` from `@tsuuanmi/pi-orchestrator` |
-| Dynamic resource load | Pi discovers a file through a package `pi` manifest and loads it at runtime | Pi loads Workflows' extension with Jiti and a web descriptor with native `import()` |
+| Dynamic resource load | Pi discovers a file through a package `pi` manifest and loads it at runtime | Pi loads Workflows' extension with Jiti |
 | Dependency injection | A lower package defines a contract; a higher package supplies an implementation or callback | Agent defines `SubagentManager`; Pi supplies the concrete manager |
 | Data handoff | One package writes or returns an owned schema; another reads/maps it without taking ownership | Workflows writes active state; Pi maps it to TUI HUD input |
-| Build-time bundling | Pi copies another package's compiled artifact into the CLI distribution | Pi bundles Workflows and Web Runtime under `dist/packages/` |
+| Build-time bundling | Pi copies another package's compiled artifact into the CLI distribution | Pi bundles Workflows under `dist/packages/` |
 
 Build-time bundling does not make package internals public. Dynamic loading does not authorize source deep imports. Dependency injection does not transfer ownership of the interface to the implementation package.
 
@@ -29,7 +29,6 @@ Build-time bundling does not make package internals public. Dynamic loading does
 | `@tsuuanmi/pi-agent` | Orchestrator, Workflows, Pi | No | `AgentOptions`, `ToolSpec`, `SubagentManager` |
 | `@tsuuanmi/pi-orchestrator` | Workflows | No | Agents, hooks, `OrchestratorCheckpointStore` |
 | `@tsuuanmi/pi-tui` | Workflows, Pi | Theme assets are loaded by Pi, not the package module | Components, data providers, editor/theme contracts |
-| `@tsuuanmi/pi-web-runtime` | Pi | Yes: `pi.webProviders` descriptor | Provider callbacks, worker protocol, MCP bridge |
 | `@tsuuanmi/pi-workflows` | Pi | Yes: extension, skills, agents, command | Structural workflow host, injected `SubagentManager`, active-state handoff |
 | `@tsuuanmi/pi` | None | It is the host | External SDK and extension consumers |
 
@@ -40,10 +39,10 @@ Canonical source: [`packages/ai/src/`](../../packages/ai/src). Public access: `@
 | Canonical component | Consumers and access | How it is used | Consumer-owned adapter | Must not be duplicated |
 |---|---|---|---|---|
 | `Model`, model catalog, compatibility and cost helpers | Agent, Workflows, Pi import `@tsuuanmi/pi-ai` | Agent runs a selected model; Workflows constructs role adapters; Pi merges settings/auth/availability | Pi `ModelRegistry` adds application configuration and user-facing availability | Model shape, built-in catalog, compatibility merge, or equality rules |
-| Wire `Message`, `Context`, tool-call and usage protocol | Agent, Workflows, Pi import root | Provider-neutral request/response values | Agent converts `AgentMessage` to AI messages; Pi converts web route data to AI values | Provider wire protocol or provider transforms |
-| Provider registry and `stream()` | Pi imports the registry/stream APIs; Agent imports protocol types and receives an injected `StreamFunction` | Pi resolves `model.api` through AI's registry; Agent invokes the host-supplied stream function | Pi registers extension/web streams and supplies auth/options | A second API-to-stream registry or dispatch path |
-| `AssistantMessageEventStream` | Agent, Workflows, Pi import root | One normalized streaming contract | Workflows wraps subagent output; Pi wraps Web Runtime events | Another event queue/final-message protocol |
-| Tool schema validation | Agent imports root | Validates model-produced tool arguments before execution | None; higher packages supply Tool implementations only | JSON-schema validation/coercion in Pi, Workflows, or Web Runtime |
+| Wire `Message`, `Context`, tool-call and usage protocol | Agent, Workflows, Pi import root | Provider-neutral request/response values | Agent converts `AgentMessage` to AI messages; Pi maps application data to AI values | Provider wire protocol or provider transforms |
+| Provider registry and `stream()` | Pi imports the registry/stream APIs; Agent imports protocol types and receives an injected `StreamFunction` | Pi resolves `model.api` through AI's registry; Agent invokes the host-supplied stream function | Pi registers extension streams and supplies auth/options | A second API-to-stream registry or dispatch path |
+| `AssistantMessageEventStream` | Agent, Workflows, Pi import root | One normalized streaming contract | Workflows wraps subagent output; Pi adapts provider streams | Another event queue/final-message protocol |
+| Tool schema validation | Agent imports root | Validates model-produced tool arguments before execution | None; higher packages supply Tool implementations only | JSON-schema validation/coercion in Pi or Workflows |
 | OAuth algorithms and registry | Pi imports `@tsuuanmi/pi-ai/oauth` | Login, refresh, PKCE/device-code, provider token derivation | Pi owns account UI, auth storage, locking, and active-account policy | OAuth protocol logic or OAuth-provider registry in Pi |
 
 ### AI load behavior
@@ -114,35 +113,6 @@ Canonical source: [`packages/tui/src/`](../../packages/tui/src). Public access: 
 
 TUI receives data through structural providers and callbacks. It must not import Pi or Workflows.
 
-## Web Runtime components
-
-Canonical source: [`packages/web-runtime/src/`](../../packages/web-runtime/src). Static public access: `@tsuuanmi/pi-web-runtime`. Dynamic access: package `pi.webProviders` entries.
-
-| Canonical component | Pi access | Pi-owned adapter/policy | Must not be duplicated |
-|---|---|---|---|
-| `WebProviderDescriptor`, route model and turn/event contracts | Static import of root types; dynamic import of the descriptor's default export | Descriptor validation, entitlement filtering, conversion to AI models/events | Browser-specific contract in AI or a second descriptor registry |
-| Browser profile lease, Chromium context and `BrowserSession` | Used internally by Web Runtime workers; Pi supplies profile paths and account policy but does not import these primitives directly | Account name, profile-root placement, active account and deletion policy | Playwright/profile locking in Pi |
-| `ProfileWorkerPool`, worker protocol and provider worker | Pi statically imports `ProfileWorkerPool` from the public root and passes the descriptor-relative worker file resolved by `WebProviderHost`; worker internals remain package-private | Pi owns pool scope and shutdown calls | Worker IPC, crash routing, or provider runner in Pi |
-| MCP client/server transport and turn capabilities | Static root APIs used by Pi/Web Runtime bridge | Pi selects allowed Agent tools and supplies execution callback | MCP transport/capability security in Agent or Pi |
-| ChatGPT verification/routes/page automation | Dynamic descriptor/worker load | Pi decides which verified routes become selectable AI models | Selectors, route discovery, uploads, or page completion logic in Pi |
-
-### Web descriptor load flow
-
-```text
-pi:web-runtime source
-  -> package manager resolves bundled package root
-  -> package loader reads package.json pi.webProviders
-  -> resource loader produces an enabled descriptor path
-  -> WebProviderHost uses native import(fileURL)
-  -> validates default WebProviderDescriptor
-  -> resolves descriptor.worker beside the descriptor
-  -> ProfileWorkerPool starts/reuses the profile worker
-```
-
-The static root import provides shared classes/types. The manifest entry selects the concrete provider implementation. These are complementary mechanisms, not duplicate loading paths.
-
-The public root does not currently export the internal `startWorker()` bootstrap used by the bundled ChatGPT worker. Descriptor discovery is public, but turnkey third-party worker authoring remains an incomplete public seam and must not rely on a private `src/worker/entry.ts` import.
-
 ## Workflows components
 
 Canonical source: [`packages/workflows/src/`](../../packages/workflows/src). Static access uses declared `@tsuuanmi/pi-workflows` exports. Runtime resources use the package `pi` manifest.
@@ -186,7 +156,6 @@ Canonical source: [`packages/pi/src/`](../../packages/pi/src). No workspace pack
 | Concrete `SubagentManager` | Agent/Workflow contracts through injection | Structural implementation of `@tsuuanmi/pi-agent` interface | Isolated Pi sessions, worker/tmux execution, durable records |
 | Model/auth configuration | Agent stream callback and UI | Pi `ModelRegistry`/auth storage over AI APIs | Credential storage or user availability policy in AI/Agent |
 | Coding tools and renderers | Agent and interactive UI | Pi adapts `PiToolSpec`/extension specs to Agent `Tool` | Agent's generic tool execution engine |
-| Web model/account adapter | AI Agent stream and Web Runtime | Converts route/events/tools and owns account/entitlement policy | Browser runtime in Pi or user policy in Web Runtime |
 
 External code imports Pi's documented root, `/extensions`, `/loader`, or `/loader/config` surfaces. Workspace packages communicate upward only through callbacks, structural host objects, and data values.
 
@@ -206,7 +175,6 @@ Examples of valid adapters:
 - Pi `ToolManager` converts host specs to Agent `Tool` values but Agent executes them.
 - Workflows maps `TeamTask` to Orchestrator `TaskInput` but Orchestrator schedules it.
 - Workflows implements `OrchestratorCheckpointStore` but does not define checkpoint semantics.
-- Pi maps `WebTurnEvent` to AI assistant events but Web Runtime drives Chromium.
 - Pi maps workflow active state to TUI HUD input but Workflows owns state and TUI renders it.
 
 A duplicate is present or being introduced when a consumer adds a second registry, queue, state machine, retry loop, schema with the same guarantee, process backend, renderer, or persistence format already owned below it.

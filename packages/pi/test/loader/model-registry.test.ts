@@ -921,38 +921,6 @@ describe("ModelRegistry", () => {
 			expect(() => registry.refresh()).not.toThrow();
 		});
 
-		test("registers web models only with a custom stream and no HTTP transport", () => {
-			const registry = createRegistry();
-			const stream = () => {
-				throw new Error("web stream invoked");
-			};
-			registry.registerProvider("web-provider", {
-				api: "web",
-				stream,
-				models: [
-					{
-						id: "browser-route",
-						name: "Browser Route",
-						reasoning: false,
-						input: ["text"],
-						cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-						contextWindow: 128000,
-						maxTokens: 16384,
-					},
-				],
-			});
-
-			expect(registry.find("web-provider", "browser-route")).toMatchObject({ api: "web", baseUrl: undefined });
-			expect(() =>
-				registry.registerProvider("invalid-web-provider", {
-					api: "web",
-					stream,
-					baseUrl: "https://bridge.invalid",
-					models: [],
-				}),
-			).toThrow("web models cannot configure HTTP transport or authentication");
-		});
-
 		test("failed registerProvider does not remove existing provider models", () => {
 			const registry = createRegistry();
 

@@ -44,7 +44,6 @@ The application package, `@tsuuanmi/pi`, owns this lifecycle. The lower packages
 - `@tsuuanmi/pi-agent` runs the agent loop and tool protocol.
 - `@tsuuanmi/pi-workflows` contributes host-loaded workflow behavior.
 - `@tsuuanmi/pi-tui` renders interactive output.
-- `@tsuuanmi/pi-web-runtime` provides browser-backed provider execution behind Pi adapters.
 
 ## Startup phases
 
@@ -88,9 +87,9 @@ Resource and extension failures are collected as diagnostics. Invalid optional r
 
 ### 5. Load packages and resources
 
-The resource loader resolves project, user, built-in, and package resources. Package manifests under the `pi` key can contribute extensions, skills, prompts, themes, commands, agent profiles, and web-provider descriptors.
+The resource loader resolves project, user, built-in, and package resources. Package manifests under the `pi` key can contribute extensions, skills, prompts, themes, commands, and agent profiles.
 
-The default workflow package is loaded as an extension/resource package. The browser runtime contributes provider descriptors, while Pi remains responsible for authentication, entitlement, model registration, and host adapters.
+The default workflow package is loaded as an extension/resource package.
 
 See [Package and Extension Authoring](./package-and-extension-authoring.md) for the manifest and host contracts.
 
@@ -105,7 +104,7 @@ The runtime creates an `AgentSession` from the services and selected session man
 - extension hooks and the host event bus; and
 - session persistence and diagnostics.
 
-The stream function is a host seam. Standard models are routed to `@tsuuanmi/pi-ai`; web models are routed through Pi's web-provider adapter, which converts browser turn events into the AI event-stream contract.
+The stream function is a host seam. Models are routed to `@tsuuanmi/pi-ai`, which provides the normalized event-stream contract.
 
 ## Turn lifecycle
 
@@ -136,19 +135,13 @@ Agent events -> session log, hooks, mode output, and TUI
 
 `@tsuuanmi/pi-ai` does not know about sessions or the TUI. `@tsuuanmi/pi-agent` does not know which Pi mode is presenting its events.
 
-## Workflow and web-provider insertion points
+## Workflow insertion points
 
 ### Workflows
 
 The resource loader discovers the workflow package's extension, skills, agent profiles, and commands. The extension registers tools and hooks against the host supplied by Pi. Workflow tools can use the host-neutral subagent manager contract from `@tsuuanmi/pi-agent` and the task/team primitives from `@tsuuanmi/pi-orchestrator`.
 
 Pi supplies concrete subagent sessions and session services. Workflow state, gates, artifacts, and workflow receipts remain owned by `@tsuuanmi/pi-workflows`.
-
-### Browser-backed models
-
-The resource loader discovers web-provider descriptors from `@tsuuanmi/pi-web-runtime`. Pi verifies browser accounts and entitlements, starts or reuses profile workers, exposes entitled routes as models, and adapts web events to the `@tsuuanmi/pi-ai` stream interface.
-
-Browser MCP calls cross back into Pi through the host's tool adapter. Browser profiles, workers, and provider-specific browser behavior stay in `@tsuuanmi/pi-web-runtime`; Pi authentication, account policy, and session/tool ownership stay in `@tsuuanmi/pi`.
 
 ## Mode and shutdown behavior
 
@@ -158,7 +151,7 @@ All four modes share the same `AgentSession` core:
 - Print and JSON modes submit finite input and restore stdout after completion.
 - RPC mode keeps the session alive behind a JSON-RPC transport.
 
-Session switching, reload, and shutdown must invalidate the old session-bound extension context before a replacement context is used. Runtime services are recreated when the effective session working directory changes. Cleanup closes mode resources, flushes session state, and releases provider/browser workers owned by the host.
+Session switching, reload, and shutdown must invalidate the old session-bound extension context before a replacement context is used. Runtime services are recreated when the effective session working directory changes. Cleanup closes mode resources and flushes session state.
 
 ## Ownership rules
 
@@ -171,7 +164,6 @@ Session switching, reload, and shutdown must invalidate the old session-bound ex
 | Generic task/team scheduling | `@tsuuanmi/pi-orchestrator` |
 | Workflow state, gates, artifacts, and workflow receipts | `@tsuuanmi/pi-workflows` |
 | Terminal rendering and input | `@tsuuanmi/pi-tui` |
-| Browser profiles, workers, MCP bridge, and web-provider execution | `@tsuuanmi/pi-web-runtime` |
 
 ## Source anchors
 

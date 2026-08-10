@@ -2,7 +2,7 @@
 
 # Pi Packages
 
-Pi packages bundle extensions, skills, prompt templates, themes, pre-session commands, reusable agent profiles, and web-provider descriptors so you can share them through npm or git. A package can declare resources in `package.json` under the `pi` key, or use conventional directories where supported.
+Pi packages bundle extensions, skills, prompt templates, themes, pre-session commands, and reusable agent profiles so you can share them through npm or git. A package can declare resources in `package.json` under the `pi` key, or use conventional directories where supported.
 
 ## Table of Contents
 
@@ -39,7 +39,6 @@ By default, `install` and `remove` write to user settings (`~/.pi/agent/settings
 Pi accepts package sources in settings and `pi install`. It also provides reserved first-party `pi:` sources as effective defaults:
 
 - `pi:workflows` provides the workflow extension, skills, role profiles, and `pi workflow` command.
-- `pi:web-runtime` provides browser-provider descriptors and adjacent workers.
 
 Bundled sources resolve through the package host like normal package sources and can be listed, configured, and filtered. Add an explicit object entry for the same source to filter it; an empty resource filter such as `"extensions": []` disables all resources of that type.
 
@@ -117,13 +116,12 @@ Add a `pi` manifest to `package.json` or use conventional directories. Include t
     "prompts": ["./prompts"],
     "themes": ["./themes"],
     "commands": ["./commands"],
-    "agents": ["./agents"],
-    "webProviders": ["./web-providers/provider.js"]
+    "agents": ["./agents"]
   }
 }
 ```
 
-Paths are relative to the package root. Arrays support glob patterns and `!exclusions`. Web-provider descriptors must be listed explicitly in `pi.webProviders`; Pi does not convention-discover them.
+Paths are relative to the package root. Arrays support glob patterns and `!exclusions`.
 
 ### Gallery Metadata
 
@@ -152,7 +150,6 @@ If both are set, video takes precedence.
 
 - **Extensions** are loaded by Jiti and must default-export an extension factory. Pi injects the extension host API.
 - **Commands** are dynamically imported before session startup and export `handlePackageCommand(args, context)`.
-- **Web-provider descriptors** are dynamically imported by file URL and must default-export a valid descriptor. The descriptor names an adjacent worker module. Descriptor discovery is public, but the bundled worker bootstrap is currently internal, so turnkey third-party worker authoring is not yet a complete public API.
 - **Skills, prompts, agents, and themes** are read as Markdown or JSON resources by their owning loaders; they are not JavaScript package imports.
 
 Static imports such as `@tsuuanmi/pi-agent` remain governed by package exports and dependency declarations. Resource discovery does not make private source paths public. See the repository [Component Integration Map](../../../../docs/architecture/component-integration-map.md) for first-party package flows.
@@ -168,13 +165,11 @@ If no `pi` manifest is present, pi auto-discovers resources from these directori
 - `commands/` loads `.ts`, `.js`, `.mjs`, and `.cjs` files as pre-session package commands
 - `agents/` loads `.md` files as reusable agent profiles
 
-There is no conventional `webProviders/` fallback. Declare each descriptor through `pi.webProviders` so executable browser automation is always explicit.
-
 Package command files dispatch `pi <command>` before session startup. The command name is the file basename without extension, and the module must export `handlePackageCommand(args, context)` returning `true` when it handled the command.
 
 ## Dependencies
 
-Third party runtime dependencies belong in `dependencies` in `package.json`. Dependencies that do not register extensions, skills, prompt templates, themes, package commands, agent profiles, or web-provider descriptors also belong in `dependencies`. When pi installs a package from npm or git, it runs `npm install`, so those dependencies are installed automatically.
+Third party runtime dependencies belong in `dependencies` in `package.json`. Dependencies that do not register extensions, skills, prompt templates, themes, package commands, or agent profiles also belong in `dependencies`. When pi installs a package from npm or git, it runs `npm install`, so those dependencies are installed automatically.
 
 Pi bundles core packages for extensions and skills. If you import any of these, list them in `peerDependencies` with a `"*"` range and do not bundle them: `tsuuanmi` (imported as `@tsuuanmi/pi-ai`), `@tsuuanmi/pi-agent`, `@tsuuanmi/pi`, `@tsuuanmi/pi-tui`, `typebox`.
 
@@ -210,8 +205,7 @@ Filter what a package loads using the object form in settings:
       "prompts": ["prompts/review.md"],
       "themes": ["+themes/legacy.json"],
       "commands": [],
-      "agents": ["agents/planner.md"],
-      "webProviders": ["*"]
+      "agents": ["agents/planner.md"]
     }
   ]
 }
@@ -228,7 +222,7 @@ Filter what a package loads using the object form in settings:
 
 ## Enable and Disable Resources
 
-Use `pi config` to enable or disable extensions, skills, prompt templates, themes, commands, agent profiles, and web providers from installed packages, bundled `pi:` sources, and local directories. Works for both global (`~/.pi/agent`) and project (`.pi/`) scopes.
+Use `pi config` to enable or disable extensions, skills, prompt templates, themes, commands, and agent profiles from installed packages, bundled `pi:` sources, and local directories. Works for both global (`~/.pi/agent`) and project (`.pi/`) scopes.
 
 ## Scope and Deduplication
 

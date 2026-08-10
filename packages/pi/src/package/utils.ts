@@ -7,10 +7,9 @@ import type { BundledPackageName } from "./types.ts";
 
 export const BUNDLED_PACKAGE_SOURCES: Record<string, BundledPackageName> = {
 	"pi:workflows": "workflows",
-	"pi:web-runtime": "web-runtime",
 };
 
-export const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows", "pi:web-runtime"];
+export const BUNDLED_DEFAULT_PACKAGES: PackageSource[] = ["pi:workflows"];
 
 export function getEnv(): NodeJS.ProcessEnv {
 	if (process.platform !== "linux" || Object.keys(process.env).length > 0) {

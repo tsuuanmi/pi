@@ -152,12 +152,6 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/web-runtime/src/mcp/codec.ts::toJsonSchema",
-			"file": "packages/web-runtime/src/mcp/codec.ts",
-			"name": "toJsonSchema",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/workflows/src/commands/workflow/index.ts::handlePackageCommand",
 			"file": "packages/workflows/src/commands/workflow/index.ts",
 			"name": "handlePackageCommand",

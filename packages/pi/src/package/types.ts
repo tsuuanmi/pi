@@ -64,4 +64,4 @@ export type BundledSource = {
 
 export type ParsedSource = NpmSource | GitSource | LocalSource | BundledSource;
 
-export type BundledPackageName = "workflows" | "web-runtime";
+export type BundledPackageName = "workflows";

@@ -10,6 +10,7 @@
 - **runtime**: Provider OAuth and WebSocket paths are now Node-only; alternate-runtime compatibility branches were removed.
 - **model**: Canonicalized `ThinkingLevel` across agent and provider APIs, and made pure model-pattern parsing public from `@tsuuanmi/pi-ai`.
 - **model**: Removed unused OpenAI Codex compatibility metadata that had no runtime consumer.
+- **api**: Removed the `"web"` value from `KnownApi` and the `TApi extends "web"` conditional on `Model.baseUrl`; `baseUrl` is now always a string. The host-neutral browser provider implementation lived in `@tsuuanmi/pi` and has been deleted.
 
 ### Changed
 

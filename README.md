@@ -24,7 +24,6 @@ This is the home of the pi agent harness project including our self extensible A
 * **[@tsuuanmi/pi-agent](packages/agent)**: Single-agent runtime, tools, hooks, and subagent contracts
 * **[@tsuuanmi/pi-orchestrator](packages/orchestrator)**: Task, team, routing, and multi-agent orchestration primitives
 * **[@tsuuanmi/pi-tui](packages/tui)**: Terminal UI components and differential rendering
-* **[@tsuuanmi/pi-web-runtime](packages/web-runtime)**: Browser-provider profiles, workers, and automation runtime
 * **[@tsuuanmi/pi-workflows](packages/workflows)**: Gated workflow skills, state, tools, and orchestration adapters
 * **[@tsuuanmi/pi](packages/pi)**: Interactive CLI, SDK, sessions, extensions, and application composition
 
@@ -58,7 +57,6 @@ I regularly publish my own `pi-mono` work sessions here:
 | **[@tsuuanmi/pi-agent](packages/agent)** | Single-agent runtime with tools, hooks, events, and subagent contracts |
 | **[@tsuuanmi/pi-orchestrator](packages/orchestrator)** | Task DAG, team, routing, retry, verification, and checkpoint primitives |
 | **[@tsuuanmi/pi-tui](packages/tui)** | Terminal UI library with components, input, themes, and differential rendering |
-| **[@tsuuanmi/pi-web-runtime](packages/web-runtime)** | Node-side browser-provider profiles, workers, MCP bridge, and automation |
 | **[@tsuuanmi/pi-workflows](packages/workflows)** | Deep Interview, Ralplan, Team, and Ultragoal workflow runtime |
 | **[@tsuuanmi/pi](packages/pi)** | Interactive CLI, SDK, sessions, extensions, tools, and application host |
 

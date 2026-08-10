@@ -9,7 +9,6 @@ This guide describes how to add reusable Pi behavior without crossing package bo
 | Add a tool, hook, command, shortcut, renderer, or provider registration to a Pi host | Extension | `@tsuuanmi/pi` extension API |
 | Ship skills, prompts, themes, agent profiles, or multiple extensions | Pi package | Package manifest and resource loader |
 | Add workflow tools, gates, artifacts, or team/plan skills | Workflow package contribution | `@tsuuanmi/pi-workflows` host contracts |
-| Add a browser-backed provider | Web-provider descriptor | `@tsuuanmi/pi-web-runtime` descriptor, hosted by `@tsuuanmi/pi` |
 | Add a normal model provider | AI provider/model integration | `@tsuuanmi/pi-ai`, or a Pi extension for host-specific auth/config |
 
 Do not add a new package when an extension or resource package is sufficient. Do not put Pi session or CLI behavior into reusable lower-level packages.
@@ -28,8 +27,7 @@ A package declares Pi resources in `package.json` under `pi`:
     "prompts": ["src/prompts/*.md"],
     "themes": ["src/themes/*.json"],
     "commands": ["src/commands/*.{ts,js,mjs,cjs}"],
-    "agents": ["src/agents/*.md"],
-    "webProviders": ["src/providers/**/*.ts"]
+    "agents": ["src/agents/*.md"]
   }
 }
 ```
@@ -48,9 +46,8 @@ A published package must point at files included in its tarball. If source manif
 | `themes` | `.json` | TUI themes |
 | `commands` | `.ts`, `.js`, `.mjs`, `.cjs` | Package commands handled before session startup |
 | `agents` | `.md` | Reusable agent profiles |
-| `webProviders` | `.ts`, `.js` | Host-neutral browser-provider descriptors |
 
-If a package has no `pi` manifest, Pi conventionally discovers `extensions/`, `skills/`, `prompts/`, `themes/`, `commands/`, and `agents/` directories. `webProviders` is manifest-driven and should be declared explicitly.
+If a package has no `pi` manifest, Pi conventionally discovers `extensions/`, `skills/`, `prompts/`, `themes/`, `commands/`, and `agents/` directories.
 
 Resource filters in user or project settings can narrow a package's resources. Omitting a filter key loads the package's declared resources; an empty filter disables that resource type.
 
@@ -97,40 +94,13 @@ Workflow code may depend on:
 
 Workflow code must not import `@tsuuanmi/pi` or `@tsuuanmi/pi/*`. Concrete Pi sessions, persistence, authentication, and host services belong in the application adapter.
 
-## Web-provider boundary
-
-A browser-backed provider is declared through `webProviders` and exports a `WebProviderDescriptor` from `@tsuuanmi/pi-web-runtime`:
-
-```ts
-import type { WebProviderDescriptor } from "@tsuuanmi/pi-web-runtime";
-
-export const provider: WebProviderDescriptor = {
-  id: "example-web",
-  name: "Example Web",
-  models: [],
-  worker: "./worker",
-  async verify(_profileDir, _signal) {
-    return { routes: [] };
-  },
-  async runTurn(_turn, _emit) {
-    // Browser-specific work stays in the web-runtime package.
-  },
-};
-
-export default provider;
-```
-
-Web-provider descriptor discovery is public, but the current package does not export the `startWorker()` bootstrap used by the bundled provider. Until a public worker-authoring API is exported, third-party providers must not deep-import `src/worker/entry.ts` and cannot rely on the bundled worker bootstrap as a supported API.
-
-The descriptor owns browser/provider behavior. Pi owns account records, entitlement checks, model registration, stream adaptation, and the bridge from browser MCP calls to Pi tools. Keep provider-specific selectors, routes, browser profiles, and worker protocols out of the Pi application package.
-
 ## Dependencies and package boundaries
 
 - Put runtime third-party dependencies in `dependencies`.
 - Import Pi public packages through their published exports. Do not import source aliases such as `#pi/*`, `#agent/*`, or `#workflows/*` from an external package.
 - For packages that consume host-provided Pi libraries, use the repository's peer-dependency and bundling policy rather than shipping a second copy of the host runtime.
 - If a package ships another Pi package inside its tarball, declare the dependency and bundling explicitly and reference the bundled package's resources through its package path.
-- Keep internal dependency direction from the application host toward reusable layers: application -> workflows/orchestration -> agent -> AI. TUI and browser runtime remain infrastructure leaves.
+- Keep internal dependency direction from the application host toward reusable layers: application -> workflows/orchestration -> agent -> AI. TUI remains an infrastructure leaf.
 
 The package graph and ownership rules are documented in [Package Overview](./package-overview.md), [Component Integration Map](./component-integration-map.md), and [Package Boundaries](./package-boundaries.md).
 
@@ -151,7 +121,6 @@ Before publishing or loading a package:
 - [Pi Packages](../../packages/pi/docs/package/packages.md) - installation, package sources, filters, and dependency handling.
 - [Extensions](../../packages/pi/docs/extensions/index.md) - extension API, hooks, lifecycle, and context rules.
 - [Resource Loader](../../packages/pi/docs/loader/index.md) - discovery and resolution behavior.
-- [Web runtime README](../../packages/web-runtime/README.md) - browser runtime contracts and operational behavior.
 - [Package Overview](./package-overview.md) - all package boundaries and interactions.
 - [Component Integration Map](./component-integration-map.md) - exact static-import, runtime-load, injection, data-handoff, and bundling seams.
 - [Package Overlap Audit](./package-overlap-audit.md) - duplicate/ambiguous ownership and cleanup decisions.

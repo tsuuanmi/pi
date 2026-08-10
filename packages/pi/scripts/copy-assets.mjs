@@ -7,7 +7,7 @@ const dist = join(root, "dist");
 const packages = join(dist, "packages");
 const workspace = join(root, "..");
 
-for (const name of ["workflows", "web-runtime"]) {
+for (const name of ["workflows"]) {
 	const source = join(workspace, name);
 	const target = join(packages, name);
 	await rm(target, { recursive: true, force: true });

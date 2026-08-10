@@ -116,7 +116,6 @@ describe("package public imports", () => {
 			  "@tsuuanmi/pi-ai./openai-responses",
 			  "@tsuuanmi/pi-orchestrator.",
 			  "@tsuuanmi/pi-tui.",
-			  "@tsuuanmi/pi-web-runtime.",
 			  "@tsuuanmi/pi-workflows.",
 			  "@tsuuanmi/pi-workflows./commands/workflow",
 			  "@tsuuanmi/pi-workflows./extension",

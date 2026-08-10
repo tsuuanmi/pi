@@ -3,7 +3,6 @@ import { createEventBus } from "@tsuuanmi/pi/extensions";
 import { loadExtensionFromFactory } from "#pi/loader/extensions/loader";
 import type { ResourceLoader } from "#pi/loader/resources";
 import { createExtensionRuntime } from "#pi/runtime/extensions/api";
-import { WebProviderHost } from "#pi/web-providers/host";
 
 export interface CreateTestExtensionsResultInput {
 	factory: ExtensionFactory;
@@ -40,9 +39,7 @@ export function createTestResourceLoader(options: CreateTestResourceLoaderOption
 		runtime: createExtensionRuntime(),
 	};
 
-	const webProviderHost = new WebProviderHost();
 	return {
-		getWebProviderHost: () => webProviderHost,
 		getExtensions: () => extensionsResult,
 		getSkills: () => ({ skills: [], diagnostics: [] }),
 		getPrompts: () => ({ prompts: [], diagnostics: [] }),

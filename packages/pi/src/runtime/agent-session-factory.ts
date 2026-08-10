@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { Agent, convertToLlm, type LoopDetectionOptions, type SubagentManager, type Tool } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
@@ -16,8 +15,8 @@ import { DefaultResourceLoader } from "#pi/loader/resources";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { ContextOptimizer } from "#pi/runtime/context-optimizer";
 import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
-import { SessionManager } from "#pi/session/manager";
 import { getDefaultSessionDir } from "#pi/session/list";
+import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
 import {
 	createBashTool,
@@ -33,8 +32,6 @@ import {
 	createWriteTool,
 	type ToolName,
 } from "#pi/tools/index";
-import { WebProviderRegistry } from "#pi/web-providers/registry";
-import { createWebStream, type WebToolExecutor } from "../web-providers/stream.ts";
 
 export interface CreateAgentSessionOptions {
 	/** Working directory for project-local discovery. Default: process.cwd() */
@@ -194,17 +191,6 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	}
 
 	let agent: Agent | undefined;
-	const webHost = resourceLoader.getWebProviderHost();
-	const executeWebTool: WebToolExecutor = async (name, input, signal) => {
-		const tool = agent?.getTools().find((candidate) => candidate.name === name);
-		if (!tool) throw new Error(`unsupported web tool: ${name}`);
-		const parameters = tool.prepareArguments ? tool.prepareArguments(input) : input;
-		return tool.execute(randomUUID(), parameters as never, signal);
-	};
-	const webProviderRegistry = new WebProviderRegistry(webHost, authStorage, modelRegistry, (provider) =>
-		createWebStream(webHost, authStorage, provider, executeWebTool),
-	);
-	webProviderRegistry.sync();
 
 	// Check if session has existing data to restore
 	const existingSession = sessionManager.buildSessionContext();
@@ -287,8 +273,6 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		},
 		convertToLlm,
 		stream: async (model, context, options) => {
-			if (model.api === "web")
-				return createWebStream(webHost, authStorage, model.provider, executeWebTool)(model, context, options);
 			const auth = await modelRegistry.getApiKeyAndHeaders(model);
 			if (!auth.ok) {
 				throw new Error(auth.error);
@@ -371,7 +355,6 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		resourceLoader,
 		customTools: options.customTools,
 		modelRegistry,
-		webProviderRegistry,
 		initialActiveToolNames,
 		allowedToolNames,
 		excludedToolNames,

@@ -13,7 +13,7 @@ import type { AuthStatus } from "#pi/auth/types";
 export type AuthSelectorProvider = {
 	id: string;
 	name: string;
-	authType: "oauth" | "api_key" | "browser";
+	authType: "oauth" | "api_key";
 };
 
 type OAuthSelectorMode = "add" | "remove";
@@ -95,11 +95,7 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 				id: "type",
 				label: "Type",
 				widthPercent: 16,
-				render: (provider) =>
-					theme.fg(
-						"muted",
-						provider.authType === "oauth" ? "OAuth" : provider.authType === "browser" ? "Browser" : "API key",
-					),
+				render: (provider) => theme.fg("muted", provider.authType === "oauth" ? "OAuth" : "API key"),
 			},
 			{
 				id: "status",
@@ -119,12 +115,7 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 		const credential = this.authStorage.get(provider.id);
 		if (credential?.type === provider.authType) return theme.fg("success", " ✓ configured");
 		if (credential) {
-			const label =
-				credential.type === "oauth"
-					? "subscription configured"
-					: credential.type === "browser"
-						? "browser account configured"
-						: "API key configured";
+			const label = credential.type === "oauth" ? "subscription configured" : "API key configured";
 			return theme.fg("muted", " • ") + theme.fg("warning", label);
 		}
 		if (provider.authType !== "api_key") return theme.fg("muted", " • unconfigured");
