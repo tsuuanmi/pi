@@ -1,5 +1,5 @@
-import type { AgentMessage } from "@tsuuanmi/pi-agent";
-import type { AssistantMessage, Model } from "@tsuuanmi/pi-ai";
+import type { AgentMessage, Model } from "@tsuuanmi/pi-agent";
+import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type CompactionPreparation, compact, generateSummary } from "#pi/session/compaction/index";
 

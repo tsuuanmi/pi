@@ -1,8 +1,8 @@
-import type { SubagentManager } from "#agent/subagents/manager";
+import type { SubagentManagerApi } from "#pi/subagents/manager-api";
 
 export type SubagentDetails = Record<string, unknown>;
 
 export interface SubagentContext {
-	manager: SubagentManager;
+	manager: SubagentManagerApi;
 	sessionId: string;
 }

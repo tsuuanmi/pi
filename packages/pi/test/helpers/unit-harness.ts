@@ -11,14 +11,13 @@ import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionFactory } from "@tsuuanmi/pi/extensions";
-import type { Tool } from "@tsuuanmi/pi-agent";
+import type { Model, Tool } from "@tsuuanmi/pi-agent";
 import { Agent } from "@tsuuanmi/pi-agent";
 import type {
 	AssistantMessage,
 	AssistantMessageEvent,
 	AssistantMessageEventStream,
 	Context,
-	Model,
 	StopReason,
 	StreamOptions,
 	TextContent,

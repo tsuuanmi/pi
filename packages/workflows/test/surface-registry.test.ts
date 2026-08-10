@@ -96,13 +96,17 @@ describe("workflow surface registry", () => {
 			},
 		} as never);
 
-		expect(registeredTools.slice().sort()).toEqual(WORKFLOW_TOOL_SURFACES.map((tool) => tool.toolName).sort());
+		expect(registeredTools.slice().sort()).toEqual(
+			WORKFLOW_TOOL_SURFACES.filter((tool) => tool.skill !== "subagent")
+				.map((tool) => tool.toolName)
+				.sort(),
+		);
 	});
 
 	it("registers bundled workflow tools and hooks through one host entry point", () => {
 		const registeredTools: string[] = [];
-		const hudProviders: unknown[] = [];
 		const registeredHooks: string[] = [];
+		const hudProviders: unknown[] = [];
 		const host: WorkflowHost = {
 			registerTool(tool) {
 				registeredTools.push(tool.name);
@@ -116,7 +120,11 @@ describe("workflow surface registry", () => {
 		};
 		workflowExtension(host);
 
-		expect(registeredTools.slice().sort()).toEqual(WORKFLOW_TOOL_SURFACES.map((tool) => tool.toolName).sort());
+		expect(registeredTools.slice().sort()).toEqual(
+			WORKFLOW_TOOL_SURFACES.filter((tool) => tool.skill !== "subagent")
+				.map((tool) => tool.toolName)
+				.sort(),
+		);
 		expect(hudProviders).toHaveLength(1);
 		expect(registeredHooks).toEqual([
 			"session_start",

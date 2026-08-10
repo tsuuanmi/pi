@@ -87,12 +87,12 @@ The public extension contracts are exported from [`@tsuuanmi/pi/extensions`](../
 
 Workflow code may depend on:
 
-- `@tsuuanmi/pi-agent` for agent and subagent contracts;
+- `@tsuuanmi/pi-agent` for generic Agent, tool, model, and thinking contracts;
 - `@tsuuanmi/pi-orchestrator` for generic task/team coordination;
 - `@tsuuanmi/pi-ai` for AI protocol types; and
 - `@tsuuanmi/pi-tui` for workflow presentation primitives.
 
-Workflow code must not import `@tsuuanmi/pi` or `@tsuuanmi/pi/*`. Concrete Pi sessions, persistence, authentication, and host services belong in the application adapter.
+Workflow code may import published `@tsuuanmi/pi` APIs for session and subagent capabilities, but must not import Pi private aliases or internal source paths. Concrete session construction, persistence, authentication, and host service composition remain Pi-owned.
 
 ## Dependencies and package boundaries
 
@@ -100,7 +100,7 @@ Workflow code must not import `@tsuuanmi/pi` or `@tsuuanmi/pi/*`. Concrete Pi se
 - Import Pi public packages through their published exports. Do not import source aliases such as `#pi/*`, `#agent/*`, or `#workflows/*` from an external package.
 - For packages that consume host-provided Pi libraries, use the repository's peer-dependency and bundling policy rather than shipping a second copy of the host runtime.
 - If a package ships another Pi package inside its tarball, declare the dependency and bundling explicitly and reference the bundled package's resources through its package path.
-- Keep internal dependency direction from the application host toward reusable layers: application -> workflows/orchestration -> agent -> AI. TUI remains an infrastructure leaf.
+- Keep source dependency direction acyclic: workflows may consume Pi's published host APIs, while Pi source does not import workflows; generic layers continue downward through orchestrator -> agent -> AI. TUI remains an infrastructure leaf.
 
 The package graph and ownership rules are documented in [Package Overview](./package-overview.md), [Component Integration Map](./component-integration-map.md), and [Package Boundaries](./package-boundaries.md).
 

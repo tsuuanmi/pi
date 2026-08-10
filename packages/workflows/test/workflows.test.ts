@@ -250,7 +250,7 @@ describe("workflow runtime", () => {
 		}
 	});
 
-	it("registers model-visible workflow spawn tools", () => {
+	it("registers model-visible workflow tools while Pi owns subagent tools", () => {
 		const registeredTools: string[] = [];
 		registerWorkflowTools({
 			registerTool(tool: { name: string }) {
@@ -259,14 +259,9 @@ describe("workflow runtime", () => {
 		} as never);
 
 		expect(registeredTools).toEqual(
-			expect.arrayContaining([
-				"subagent_spawn",
-				"ralplan_run_agent",
-				"team_execute",
-				"team_resume",
-				"ultragoal_spawn_goal_agent",
-			]),
+			expect.arrayContaining(["ralplan_run_agent", "team_execute", "team_resume", "ultragoal_spawn_goal_agent"]),
 		);
+		expect(registeredTools).not.toContain("subagent_spawn");
 	});
 
 	it("keeps built agent assets synchronized with source agent assets", async () => {

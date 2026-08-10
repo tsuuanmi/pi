@@ -1,9 +1,13 @@
-import type { SubagentManager, SubagentRecord, SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi-agent";
+import type { SubagentManagerApi, SubagentRecord, SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi";
 import type { WorkflowContext } from "#workflows/tool/index";
 
 export type SpawnAction = (request: SubagentRunRequest) => void | Promise<void>;
 
-export function createTeamContext(manager: SubagentManager, sessionId = "test-session", cwd = "test"): WorkflowContext {
+export function createTeamContext(
+	manager: SubagentManagerApi,
+	sessionId = "test-session",
+	cwd = "test",
+): WorkflowContext {
 	return {
 		cwd,
 		sessionManager: { getSessionId: () => sessionId },
@@ -11,7 +15,7 @@ export function createTeamContext(manager: SubagentManager, sessionId = "test-se
 	};
 }
 
-export function createFakeManager(action: SpawnAction): SubagentManager {
+export function createFakeManager(action: SpawnAction): SubagentManagerApi {
 	const unavailable = async (): Promise<never> => {
 		throw new Error("fake subagent operation is not configured");
 	};
@@ -43,6 +47,7 @@ function fakeRecord(request: SubagentRunRequest): SubagentRecord {
 	return {
 		id: `fake-${role}`,
 		role,
+		cwd: "test",
 		status: "completed",
 		resumable: false,
 		created_at: now,

@@ -2,7 +2,7 @@
  * CLI argument parsing and help display
  */
 
-import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import chalk from "chalk";
 import type { ExtensionFlag } from "#pi/api/extension-types";
 import { CLI_THINKING_LEVELS, isValidCliThinkingLevel } from "#pi/cli/thinking-level";

@@ -1,4 +1,4 @@
-import { parseThinkingLevel } from "@tsuuanmi/pi-agent";
+import { parseThinkingLevel } from "@tsuuanmi/pi";
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import {
@@ -139,7 +139,6 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Workflo
 	}
 
 	const manager = ctx.subagents;
-	if (!manager) throw new Error("No subagent manager is available in this session.");
 	const result = await runRalplanStage({
 		...agentInput,
 		cwd: ctx.cwd,

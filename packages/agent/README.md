@@ -1,6 +1,6 @@
 # @tsuuanmi/pi-agent
 
-Standard agent behavior, tool, message, and subagent contracts for Pi. Built on `@tsuuanmi/pi-ai` provider/model transport contracts.
+Standard agent behavior, tool, and message contracts for Pi. Built on `@tsuuanmi/pi-ai` provider/model transport contracts.
 
 ## Installation
 
@@ -10,7 +10,7 @@ npm install @tsuuanmi/pi-agent
 
 ## Package Scope
 
-`@tsuuanmi/pi-agent` is the standard agent package for Pi. It owns the `Agent` facade, transcript state, the model/tool loop, lifecycle events, the `Tool` and `ToolRegistry` APIs, and shared message/subagent contracts.
+`@tsuuanmi/pi-agent` is the standard agent package for Pi. It owns the `Agent` facade, transcript state, the model/tool loop, lifecycle events, the `Tool` and `ToolRegistry` APIs, and shared message/tool contracts.
 
 Provider adapters and streaming transport live in `@tsuuanmi/pi-ai`. Concrete tools live in host packages; Pi registers those tools with the agent package.
 
@@ -21,8 +21,7 @@ See [Agent documentation](./docs/agent/index.md) and [Tool Registration](./docs/
 ## Quick Start
 
 ```typescript
-import { Agent, Tool, ToolRegistry } from "@tsuuanmi/pi-agent";
-import type { Model } from "@tsuuanmi/pi-ai";
+import { Agent, Tool, ToolRegistry, type Model } from "@tsuuanmi/pi-agent";
 import { Type } from "typebox";
 
 const model: Model<any> = {
@@ -64,7 +63,7 @@ console.log(agent.state.messages.at(-1));
 
 High-level packages should integrate with `@tsuuanmi/pi-agent` by following these boundaries:
 
-1. Create or obtain a `Model` and stream transport from `@tsuuanmi/pi-ai`.
+1. Create or obtain a `Model` and stream transport from `@tsuuanmi/pi-agent` and `@tsuuanmi/pi-ai`.
 2. Define concrete tools in the host package.
 3. Register tools with `ToolRegistry.register()` and pass the active list to `Agent`.
 4. Subscribe to `AgentEvent` with `agent.subscribe()` for UI, logs, traces, metrics, and progress state.
@@ -84,9 +83,7 @@ This keeps agent behavior centralized while allowing applications, extensions, a
 
 ## Subagent and Orchestration Boundary
 
-This package defines the `SubagentManager` lifecycle contract and shared subagent records. It does not create Pi sessions, persist Pi-native subagent records, launch tmux workers, or schedule multiple agents. Those responsibilities belong to the Pi host and `@tsuuanmi/pi-orchestrator`, respectively.
-
-Use the manager contract for one-subagent lifecycle operations. Use `@tsuuanmi/pi-orchestrator` for task dependencies, routing, retries, queues, and agent collaboration.
+Subagent sessions are Pi-host responsibilities. Use `@tsuuanmi/pi` for session-aware subagent execution and lifecycle controls. Use `@tsuuanmi/pi-orchestrator` for task dependencies, routing, retries, queues, and agent collaboration.
 
 ## Execution Boundary
 

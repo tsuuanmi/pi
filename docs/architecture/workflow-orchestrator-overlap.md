@@ -8,7 +8,7 @@ This document audits where `@tsuuanmi/pi-workflows` overlaps with `@tsuuanmi/pi-
 - `@tsuuanmi/pi-workflows` owns named Pi workflow UX, state, gates, artifacts, and command/tool control planes.
 - `@tsuuanmi/pi-workflows` may import `@tsuuanmi/pi-orchestrator` only through workflow-owned adapters when a workflow needs generic DAG/team execution.
 - `@tsuuanmi/pi-orchestrator` must not import workflows.
-- `@tsuuanmi/pi-workflows` must not import `@tsuuanmi/pi` or `@tsuuanmi/pi/*`.
+- `@tsuuanmi/pi-workflows` may import published `@tsuuanmi/pi` APIs for session and subagent capabilities, but must not import Pi private `#pi/*` aliases or internal source paths.
 - Integration code must reject unsupported shapes instead of adding fallback, alias, or compatibility paths.
 
 ## Summary table
@@ -160,7 +160,7 @@ Decision:
 
 ## Direct manager exception
 
-Workflow code may call `SubagentManager` directly only when the operation controls one subagent or runs one workflow-owned worker. The workflow host adapter is `packages/workflows/src/tool/adapter.ts`; registration lives in `packages/workflows/src/tool/subagent.ts`. Worker adapters are `packages/workflows/src/skills/team/agent-adapter.ts`, `packages/workflows/src/skills/ralplan/agent-adapter.ts`, and `packages/workflows/src/skills/ultragoal/tools.ts`. A workflow must use the orchestrator for task dependencies, agent assignment, retries, queue execution, or agent collaboration. Pi-native controls in `packages/pi/src/subagents/tools.ts` are host-owned and are not workflow adapters; they must not import workflow contracts or receipt assembly. Unknown manager call sites fail the package boundary check.
+Workflow code may call Pi's public `SubagentManagerApi` directly only when the operation controls one subagent or runs one workflow-owned worker. The structural workflow context is `packages/workflows/src/tool/context.ts`; registration lives in `packages/workflows/src/tool/register.ts`. Worker adapters are `packages/workflows/src/skills/team/agent-adapter.ts`, `packages/workflows/src/skills/ralplan/agent-adapter.ts`, and `packages/workflows/src/skills/ultragoal/tools.ts`. A workflow must use the orchestrator for task dependencies, agent assignment, retries, queue execution, or agent collaboration. Pi-native controls in `packages/pi/src/subagents/tools.ts` are host-owned and are not workflow adapters; they must not import workflow contracts or receipt assembly. Unknown manager call sites fail the package boundary check.
 
 ## Adapter acceptance criteria
 

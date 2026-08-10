@@ -256,7 +256,7 @@ Workflow-owned tools are model-visible and registered by the bundled workflow re
 
 ## Harness Runtime
 
-The workflow runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives directly under `src/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `artifacts/`, `audit/`, `orchestration/`, `registry/`, `session/`, `state/`, and `tool/` (workflow tool contracts, adapters, registration, and surface metadata). Skill-owned TypeScript and `SKILL.md` assets live together under `src/skills/<skill>/`.
+The workflow runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives directly under `src/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `artifacts/`, `audit/`, `orchestration/`, `registry/`, `session/`, `state/`, and `tool/` (workflow tool contracts, registration, and surface metadata). Skill-owned TypeScript and `SKILL.md` assets live together under `src/skills/<skill>/`.
 
 Key seams for contributors:
 
@@ -297,11 +297,11 @@ Top-level shared folders provide common utilities used by all four skills:
 | `artifacts/` | `artifacts.ts` | Durable artifact writes and receipt helpers. |
 | `audit/` | `audit-log.ts`, `decision-ledger.ts`, `tamper-detection.ts`, `transaction-journal.ts` | Append-only audit, decision, tamper, and transaction records. |
 | Skill HUD modules | `deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts` | HUD chip formatting for each workflow skill, colocated with the owning skill folder. |
-| `policy/`, `handoff/` | `skill-policy.ts`, `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Immutable skill policies, cross-workflow prompts, handoffs, gates, and expected-next checks. Skill-specific guards live with their skill; reusable subagent validation lives in `@tsuuanmi/pi-agent`. |
+| `policy/`, `handoff/` | `skill-policy.ts`, `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Immutable skill policies, cross-workflow prompts, handoffs, gates, expected-next checks, and workflow evidence validation. Skill-specific guards live with their skill; Pi owns session-aware subagent contracts and execution. |
 | `registry/` | `workflow-manifest.ts` and runtime/action manifest modules | Workflow phase, action, and tool metadata. |
 | `session/` | `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Workflow path builders and session-id resolution; shared roots come from `@tsuuanmi/pi/session/root`. |
 | `state/` | `active-state.ts`, `state-schema.ts`, `state-writer.ts`, `workflow-state.ts` | Active-state, state validation/writes, workflow ids, and base state types. |
-| `tool/` | `adapter.ts`, `subagent.ts`, `surface.ts` | Adapts and registers agent-owned subagent lifecycle tools and publishes workflow surface metadata. |
+| `tool/` | `context.ts`, `host.ts`, `register.ts`, `spec.ts`, `surface.ts` | Defines workflow tool contracts and context; Pi registers the session-aware subagent lifecycle and control tools. |
 
 Workflow types:
 

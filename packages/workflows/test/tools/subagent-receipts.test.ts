@@ -1,10 +1,6 @@
-import type { SubagentRecord } from "@tsuuanmi/pi-agent";
-import {
-	createSubagentListReceipt,
-	createSubagentReceipt,
-	getStructuredReceipt,
-	isStructuredReceipt,
-} from "@tsuuanmi/pi-agent";
+import type { SubagentRecord } from "@tsuuanmi/pi";
+import { createSubagentListReceipt, createSubagentReceipt } from "@tsuuanmi/pi";
+import { getStructuredReceipt, isStructuredReceipt } from "@tsuuanmi/pi-agent";
 import { describe, expect, test } from "vitest";
 import { workflowReceiptWithStructuredReceipt } from "#workflows/artifacts/artifacts";
 
@@ -13,6 +9,7 @@ describe("subagent structured receipts", () => {
 		const record: SubagentRecord = {
 			id: "subagent-1",
 			role: "planner",
+			cwd: "/tmp/project",
 			status: "running",
 			resumable: true,
 			created_at: "2026-07-20T15:00:00.000Z",
@@ -42,6 +39,7 @@ describe("subagent structured receipts", () => {
 		const record: SubagentRecord = {
 			id: "subagent-2",
 			role: "worker",
+			cwd: "/tmp/project",
 			status: "failed",
 			resumable: false,
 			created_at: "2026-07-20T15:00:00.000Z",

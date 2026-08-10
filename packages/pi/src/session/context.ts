@@ -1,6 +1,5 @@
-import type { AgentMessage } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { createBranchSummaryMessage, createCompactionSummaryMessage, createCustomMessage } from "@tsuuanmi/pi-agent";
-import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { CompactionEntry, SessionContext, SessionEntry } from "#pi/session/types";
 
 export function getLatestCompactionEntry(entries: readonly SessionEntry[]): CompactionEntry | null {

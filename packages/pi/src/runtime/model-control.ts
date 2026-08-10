@@ -1,11 +1,5 @@
-import {
-	clampThinkingLevel,
-	getSupportedThinkingLevels,
-	type Model,
-	modelsAreEqual,
-	THINKING_LEVELS,
-	type ThinkingLevel,
-} from "@tsuuanmi/pi-ai";
+import type { Model, ThinkingLevel } from "@tsuuanmi/pi-agent";
+import { clampThinkingLevel, getSupportedThinkingLevels, modelsAreEqual, THINKING_LEVELS } from "@tsuuanmi/pi-ai";
 import { DEFAULT_THINKING_LEVEL } from "#pi/cli/thinking-level";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
 import type { ModelCycleResult } from "#pi/runtime/session/types";

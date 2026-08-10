@@ -20,7 +20,8 @@
 - **exports**: Renamed workflow runtime and command implementation modules; direct runtime imports now use `runtime/fallback-commands` and `runtime/lifecycle`.
 - **exports**: Replaced the mixed workflow tool surface with `@tsuuanmi/pi-workflows/tool`; workflow specs now adapt to the core `Tool` contract.
 - **session**: Removed implicit latest-session discovery and activity-marker writes; every workflow operation now requires an explicit session source.
-- **subagents**: Removed workflow-owned subagent contracts and thinking-level exports; lifecycle behavior now comes from `@tsuuanmi/pi-agent` through the workflow tool adapter.
+- **subagents**: Removed workflow-owned subagent contracts and thinking-level exports; lifecycle behavior now comes from explicit providers through the workflow tool adapter.
+- **subagents**: Workflow tools now consume the complete session-aware subagent API from `@tsuuanmi/pi`; workflows no longer define a parallel subagent contract or adapter.
 
 ### Added
 

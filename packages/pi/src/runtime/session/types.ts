@@ -1,7 +1,6 @@
 /** Public contracts for the agent session runtime. */
 
-import type { Agent, AgentEvent, AgentMessage, SubagentManager, Tool } from "@tsuuanmi/pi-agent";
-import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { Agent, AgentEvent, AgentMessage, Model, ThinkingLevel, Tool } from "@tsuuanmi/pi-agent";
 import type {
 	ContextUsage,
 	ExtensionCommandContextActions,
@@ -16,6 +15,7 @@ import type { ExtensionErrorListener, ExtensionRunner, ShutdownHandler } from "#
 import type { CompactionResult } from "#pi/session/compaction/index";
 import type { SessionManager } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/manager";
+import type { SubagentManager } from "#pi/subagents/manager";
 
 /** Session-specific events that extend the core AgentEvent. */
 export type AgentSessionEvent =

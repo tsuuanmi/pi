@@ -1,9 +1,8 @@
-import type { StructuredReceipt } from "#agent/metadata/receipt";
-import { withStructuredReceipt } from "#agent/metadata/receipt";
-import type { SubagentContext, SubagentDetails } from "#agent/subagents/context";
-import { renderSubagentProgress } from "#agent/subagents/progress";
-import { createSubagentListReceipt, createSubagentReceipt } from "#agent/subagents/receipts";
-import { parseThinkingLevel } from "#agent/subagents/thinking-level";
+import { type StructuredReceipt, withStructuredReceipt } from "@tsuuanmi/pi-agent";
+import type { SubagentContext, SubagentDetails } from "#pi/subagents/context";
+import { renderSubagentProgress } from "#pi/subagents/progress";
+import { createSubagentListReceipt, createSubagentReceipt } from "#pi/subagents/receipts";
+import { parseThinkingLevel } from "#pi/subagents/thinking-level";
 import type {
 	SubagentAwaitInput,
 	SubagentIdInput,
@@ -11,8 +10,8 @@ import type {
 	SubagentSpawnInput,
 	SubagentStatusInput,
 	SubagentSteerInput,
-} from "#agent/subagents/tool-schemas";
-import type { SubagentDelivery, SubagentRecord } from "#agent/subagents/types";
+} from "#pi/subagents/tool-schemas";
+import type { SubagentDelivery, SubagentRecord } from "#pi/subagents/types";
 
 const RECEIPT_MAX = 280;
 const PREVIEW_MAX = 2000;

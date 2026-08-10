@@ -1,9 +1,10 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { Model } from "@tsuuanmi/pi-agent";
 import { Agent } from "@tsuuanmi/pi-agent";
 import type * as AgentNode from "@tsuuanmi/pi-agent/node";
-import { type AssistantMessage, type AssistantMessageEvent, EventStream, getModel, type Model } from "@tsuuanmi/pi-ai";
+import { type AssistantMessage, type AssistantMessageEvent, EventStream, getModel } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
 import { ModelRegistry } from "#pi/loader/model-registry";

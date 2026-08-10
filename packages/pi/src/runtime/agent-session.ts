@@ -14,13 +14,14 @@ import type {
 	AgentMessage,
 	AgentState,
 	CustomMessage,
+	Model,
 	StructuredOutputOptions,
 	StructuredOutputResult,
-	SubagentManager,
+	ThinkingLevel,
 	Tool,
 } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { AssistantMessage, Model, TextContent, ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { AssistantMessage, TextContent } from "@tsuuanmi/pi-ai";
 import { cleanupSessionResources, resetProviders, stream } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
 import { ApiUsageLogger } from "#pi/api/api-usage-logger";
@@ -87,6 +88,7 @@ import type { CompactionResult } from "#pi/session/compaction/index";
 import type { SessionManager } from "#pi/session/manager";
 import { type BranchSummaryEntry, SESSION_VERSION, type SessionHeader } from "#pi/session/types";
 import type { SettingsManager } from "#pi/settings/manager";
+import type { SubagentManager } from "#pi/subagents/manager";
 import type { ExtensionToolSpec, PiToolSpec } from "#pi/tool/spec";
 import { createToolSpecs } from "#pi/tools/index";
 

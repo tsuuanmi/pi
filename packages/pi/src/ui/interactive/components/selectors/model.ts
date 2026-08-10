@@ -1,4 +1,5 @@
-import { type Model, modelsAreEqual } from "@tsuuanmi/pi-ai";
+import type { Model } from "@tsuuanmi/pi-agent";
+import { modelsAreEqual } from "@tsuuanmi/pi-ai";
 import {
 	Container,
 	DynamicBorder,

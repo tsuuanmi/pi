@@ -1,13 +1,8 @@
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-	type Api,
-	type AssistantMessage,
-	createAssistantMessageEventStream,
-	type Model,
-	type StreamOptions,
-} from "@tsuuanmi/pi-ai";
+import type { Api, Model } from "@tsuuanmi/pi-agent";
+import { type AssistantMessage, createAssistantMessageEventStream, type StreamOptions } from "@tsuuanmi/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
 import { ModelRegistry } from "#pi/loader/model-registry";

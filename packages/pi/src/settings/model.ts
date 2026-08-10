@@ -1,4 +1,4 @@
-import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { SettingsStore } from "#pi/settings/store";
 import type { ModelProviderSettings, ModelsSettings } from "#pi/settings/types";
 

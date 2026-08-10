@@ -15,7 +15,7 @@
 - Agent messages, provider conversion, lifecycle events, hooks, traces, warnings, and loop detection.
 - Generic tool contracts, registry, policies, output limiting, details validation, and receipts.
 - Structured-output validation, pruning, and compaction message helpers.
-- Host-neutral subagent manager, record, request, result, lifecycle-tool, progress, thinking-level, and receipt contracts.
+- Canonical generic Agent model, API, and thinking-level types used by host runtimes.
 - An explicitly separate Node utility entry for execution environments, processes, shell lookup, paths, JSONL, and mutation queues.
 
 **Does not own**
@@ -23,13 +23,13 @@
 - Provider adapters, model catalogs, or canonical provider transport; AI owns them.
 - Credentials, persistent sessions, concrete coding tools, extension loading, or UI; Pi owns them.
 - Task DAGs, agent routing, retries across tasks, verification, team policy, or checkpoint storage; Orchestrator and Workflows own those concerns.
-- A concrete subagent worker, durable record store, isolated Pi session, or tmux backend. A host implements `SubagentManager`.
+- Session-aware subagents, durable records, isolated sessions, lifecycle tools, or tmux backends. Pi owns those concerns.
 
 ## Public entry points
 
 | Import | Surface |
 |---|---|
-| `@tsuuanmi/pi-agent` | `Agent`, run/state/config contracts, messages, events, hooks, traces, `ToolSpec`/`ContextToolSpec`, receipts, pruning, structured output, and subagent contracts/tools |
+| `@tsuuanmi/pi-agent` | `Agent`, run/state/config contracts, messages, events, hooks, traces, `ToolSpec`/`ContextToolSpec`, receipts, pruning, structured output, and canonical Agent model/thinking types |
 | `@tsuuanmi/pi-agent/node` | All root exports plus `NodeExecutionEnv`, process/shell/path helpers, JSONL utilities, and file mutation queues |
 | `@tsuuanmi/pi-agent/package.json` | Package metadata |
 
@@ -47,7 +47,7 @@ The root entry avoids Node built-ins and is the host-neutral API. Browser-capabl
 | Events and hooks | [`src/events.ts`](../../../packages/agent/src/events.ts), [`src/hooks.ts`](../../../packages/agent/src/hooks.ts) | Observable lifecycle plus ordered policy/control points |
 | Messages and compaction | [`src/messages/`](../../../packages/agent/src/messages), [`src/compaction/`](../../../packages/agent/src/compaction) | Custom agent roles, provider conversion, serialization, and file-operation extraction |
 | Tool contracts | [`src/tool/`](../../../packages/agent/src/tool) | `Tool`, `ToolSpec`, `ContextToolSpec`, `ToolRegistry`, policy, result, output, and receipt types |
-| Subagent contracts | [`src/subagents/`](../../../packages/agent/src/subagents) | Host interface, durable record types, lifecycle tool specs, progress, receipts, and yield parsing |
+| Host boundary | [`src/agent/`](../../../packages/agent/src/agent) | Generic Agent state and loop supplied to Pi's session-aware subagent runtime |
 | Node adapters | [`src/node/`](../../../packages/agent/src/node) | Typed filesystem/process execution, Bash resolution, paths, JSONL, and serialized mutations |
 
 ## Turn data flow
@@ -92,14 +92,14 @@ Node built-ins are confined to the `/node` implementation modules.
 | Consumer | Contract |
 |---|---|
 | `@tsuuanmi/pi-orchestrator` | Treats `Agent` instances as schedulable workers and invokes `Agent.run()` for individual tasks |
-| `@tsuuanmi/pi-workflows` | Uses generic agent/subagent/tool/receipt contracts and injects workflow policy through adapters rather than changing the agent loop |
+| `@tsuuanmi/pi-workflows` | Uses generic Agent/tool/receipt contracts and Pi's public session-aware subagent API for workflow execution |
 | `@tsuuanmi/pi` | Constructs and configures Agent, supplies model/auth/stream callbacks and coding tools, persists events, bridges extensions, and implements the concrete `SubagentManager` |
 
 ## State and persistence
 
 The `Agent` holds in-memory state and a transcript. Its state snapshots are values, not Pi session storage. Agent does not choose a persistence format or filesystem location.
 
-Subagent types describe durable records and operations, but their store and execution backend belong to the host. Pi's implementation persists records and creates isolated Pi sessions; workflows consumes the same injected manager.
+Pi owns subagent records, operations, stores, execution backends, and isolated sessions. Workflows consumes the public Pi manager API; Agent remains the generic execution kernel.
 
 ## Extension points
 
@@ -108,7 +108,7 @@ Subagent types describe durable records and operations, but their store and exec
 - `Agent.subscribe()` for lifecycle, message, tool, trace, warning, loop, and request events.
 - `ToolRegistry` and `Tool`/`ToolSpec` for host capabilities.
 - `StreamFunction` for an alternate AI-compatible model backend.
-- `SubagentManager` for a host-specific durable worker implementation.
+- Pi's `SubagentManager` wraps `Agent` with session-aware durable execution.
 - `NodeExecutionEnv` and lower-level `/node` utilities for Node hosts.
 
 ## Runtime constraints

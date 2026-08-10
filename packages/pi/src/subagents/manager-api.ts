@@ -1,20 +1,14 @@
-/**
- * Minimal subagent manager contract.
- *
- * @tsuuanmi/pi's `SubagentManager` class satisfies this interface
- * structurally; higher-level packages program against this lower-layer
- * contract so they do not depend on the pi package.
- */
 import type {
 	SubagentAwaitOptions,
 	SubagentAwaitResult,
+	SubagentDelivery,
 	SubagentRecord,
 	SubagentResumeResult,
 	SubagentRunRequest,
 	SubagentRunResult,
-} from "#agent/subagents/types";
+} from "#pi/subagents/types";
 
-export interface SubagentManager {
+export interface SubagentManagerApi {
 	spawn(request: SubagentRunRequest): Promise<SubagentRunResult>;
 	resume(
 		id: string,
@@ -24,13 +18,12 @@ export interface SubagentManager {
 			"agent" | "systemPrompt" | "tools" | "excludeTools" | "model" | "thinkingLevel" | "signal" | "storageSessionId"
 		>,
 	): Promise<SubagentResumeResult>;
-	steer(id: string, message: string, delivery: "steer" | "followUp", sessionId: string): Promise<SubagentResumeResult>;
+	steer(id: string, message: string, delivery: SubagentDelivery, sessionId: string): Promise<SubagentResumeResult>;
 	pause(id: string, sessionId: string): Promise<{ ok: boolean; reason?: string; record?: SubagentRecord }>;
 	cancel(id: string, sessionId: string): Promise<SubagentRecord | undefined>;
 	read(id: string, sessionId: string): Promise<SubagentRecord | undefined>;
 	list(sessionId: string): Promise<SubagentRecord[]>;
 	waitFor(id: string, options: SubagentAwaitOptions): Promise<SubagentAwaitResult>;
 	getActiveCount(): number;
-	/** Tear down the manager: cancel all live subagents, dispose per-spawn sessions, clear the live map. Called by RuntimeOwner.stop(). */
 	dispose(): Promise<void>;
 }

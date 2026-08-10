@@ -1,9 +1,8 @@
-import { Tool, type ToolSpec } from "@tsuuanmi/pi-agent";
+import { type Model, Tool, type ToolSpec } from "@tsuuanmi/pi-agent";
 import {
 	type AssistantMessage,
 	type AssistantMessageEventStream,
 	createAssistantMessageEventStream,
-	type Model,
 } from "@tsuuanmi/pi-ai";
 import { Type } from "typebox";
 

@@ -1,5 +1,4 @@
-import type { AgentState, StreamFunction } from "@tsuuanmi/pi-agent";
-import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { AgentState, Model, StreamFunction, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceLoader } from "#pi/loader/resources";
 import type { ExtensionRunner } from "#pi/runtime/extensions/runner";

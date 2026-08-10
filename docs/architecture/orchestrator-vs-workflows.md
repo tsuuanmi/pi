@@ -9,17 +9,15 @@
 | `@tsuuanmi/pi-orchestrator` | Generic task DAG execution, dependency scheduling, agent routing, retries, checkpoints, task receipts, and runtime team messaging | Run a set of `Agent`s against a dependency-aware task graph |
 | `@tsuuanmi/pi-workflows` | Named Pi skills, workflow commands and tools, session state, role policy, approval gates, handoffs, artifacts, and workflow receipts | Run `deep-interview`, `ralplan`, `team`, or `ultragoal` with Pi-specific rules |
 
-The dependency direction is one-way:
+The execution dependencies are one-way:
 
 ```text
-@tsuuanmi/pi-workflows
-        -> workflow adapter
-@tsuuanmi/pi-orchestrator
-        ->
-@tsuuanmi/pi-agent
-        ->
-@tsuuanmi/pi-ai
+@tsuuanmi/pi-workflows -> @tsuuanmi/pi-orchestrator -> @tsuuanmi/pi-agent -> @tsuuanmi/pi-ai
+@tsuuanmi/pi-workflows -> @tsuuanmi/pi (public session/subagent API)
+@tsuuanmi/pi            -> @tsuuanmi/pi-orchestrator -> @tsuuanmi/pi-agent
 ```
+
+Pi loads Workflows as a resource extension at runtime; Pi source does not import Workflows, so the public Workflows-to-Pi API dependency does not form a source-package cycle.
 
 The orchestrator must not import workflows. Workflows may use the orchestrator when a workflow needs generic multi-agent task execution.
 
@@ -55,6 +53,6 @@ Use `@tsuuanmi/pi-workflows` when the problem is about:
 - workflow/session state, leases, handoffs, or artifacts;
 - user-facing workflow receipts and recovery behavior.
 
-For a single agent run or one subagent's lifecycle, use the `@tsuuanmi/pi-agent` and `SubagentManager` contracts instead of adding that behavior to the orchestrator.
+For a single generic agent run, use `@tsuuanmi/pi-agent`. For one Pi-hosted subagent's lifecycle, use the published `SubagentManagerApi` from `@tsuuanmi/pi` instead of adding that behavior to the orchestrator.
 
 For the complete package ownership rules, see [`package-boundaries.md`](./package-boundaries.md). For the detailed Ralplan contract, see [`ralplan-orchestrator-contract.md`](./ralplan-orchestrator-contract.md). For the Team adapter contract, see [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md). Ralplan keeps the same adapter boundary: the workflow chooses and verifies the role task, while the engine executes it.

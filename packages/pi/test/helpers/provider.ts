@@ -1,9 +1,9 @@
+import type { Model } from "@tsuuanmi/pi-agent";
 import type {
 	AssistantMessage,
 	AssistantMessageEventStream,
 	Context,
 	Message,
-	Model,
 	StreamFunction,
 	StreamOptions,
 	TextContent,

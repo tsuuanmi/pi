@@ -30,7 +30,7 @@ The current tree has one canonical core engine for each major responsibility:
 | Terminal input/component/render loop | `@tsuuanmi/pi-tui` | No |
 | Named workflow policy/state/artifacts | `@tsuuanmi/pi-workflows` | No |
 | CLI/SDK/session/extension application host | `@tsuuanmi/pi` | No |
-| Concrete Pi subagent manager and worker backends | Contract in Agent; implementation in Pi | No second implementation found |
+| Concrete Pi subagent manager and worker backends | Pi, using generic Agent contracts | No second implementation found |
 
 The primary architecture is therefore sound: higher packages generally import or inject lower-package components instead of copying their engines.
 
@@ -61,7 +61,7 @@ The audit did find smaller duplicate shapes, ambiguous ownership, packaging comp
 | Messages | AI `Message`; Agent `AgentMessage`; Pi session entries | AI owns wire messages; Agent owns custom roles and conversion; Pi owns persistence tree | Pi reconstructs/imports Agent messages; Agent calls `convertToLlm()` | Message conversion or provider transforms in Pi/Workflows |
 | Context | AI provider `Context`; Agent `Context`; Pi context hooks/optimizer | Each owns a different stage: wire request, Agent loop snapshot, application policy | Pi supplies Agent transforms; Agent constructs AI Context | Parallel wire-context builder in Pi or workflow code |
 | Agent | Agent core; Pi `AgentSession`; workflow proxy Agents; Orchestrator Team | Agent owns the loop; Pi hosts it; Workflows adapts subagent work into Agent streams; Orchestrator only schedules Agents | Construct/configure Agent and call public run APIs | Alternate model/tool loop or Agent lifecycle engine |
-| Subagents | Agent contract/specs; Pi manager/backends; Workflow tools | Agent owns interface/lifecycle specs; Pi owns concrete execution/store; Workflows owns guarded policy and receipt adaptation | Inject Pi manager structurally into Workflow context | Workflow/Orchestrator manager, process backend, store or lifecycle spec copies |
+| Subagents | Pi manager/backends; generic Agent contracts; Workflow tools | Agent owns the generic Agent loop and tool contracts; Pi owns subagent API, lifecycle specs, concrete execution/store; Workflows owns guarded policy and receipt adaptation | Inject Pi `SubagentManagerApi` into Workflow context | Workflow/Orchestrator manager, process backend, store or lifecycle spec copies |
 | Queues | Agent steering queue; Orchestrator `TaskQueue`; workflow persisted task lists | Separate scopes: conversation input, runtime DAG, durable workflow projection | Explicit mapping between workflow task records and Orchestrator tasks | Workflow DAG scheduler or use of Agent queue for tasks |
 | Team | Orchestrator `Team`; Workflow Team skill state | Orchestrator owns live roster/message bus; Workflows owns role policy, durable board/events/artifacts | Build Orchestrator Team after workflow admission | Second live Team executor or MessageBus in Workflows |
 | Routing | Orchestrator task selection; Workflow expected-next roles; workflow runtime endpoint routing | Orchestrator owns task routing; Workflows owns role policy and control-plane RPC routing | Workflow passes explicit requirements/routes downward | Agent-scoring/scheduling in workflow task mappers |
@@ -137,7 +137,7 @@ Healthy examples in the current tree:
 - Pi `ModelRegistry` configures and registers AI providers.
 - Pi `ToolManager` adapts Pi/extension specs into Agent `Tool` values.
 - Pi's Agent bridge maps Agent events into extension/session events.
-- Workflows adapts Agent subagent lifecycle specs and adds Workflow receipt metadata.
+- Workflows consumes Pi subagent lifecycle results and adds Workflow receipt metadata.
 - Workflows maps `TeamTask` to Orchestrator `TaskInput`.
 - Workflows implements `OrchestratorCheckpointStore`.
 - Pi maps Workflow active state into TUI HUD input.
@@ -155,7 +155,7 @@ Healthy examples in the current tree:
 - No model/tool Agent loop outside Agent.
 - No second Tool registry or execution pipeline.
 - No copied AgentMessage conversion.
-- No second SubagentManager contract or lifecycle spec set.
+- No second subagent manager, contract, or lifecycle spec set outside Pi.
 
 ### Orchestrator
 

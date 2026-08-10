@@ -1,7 +1,7 @@
 import { join, resolve } from "node:path";
-import type { AgentMessage, BashExecutionMessage, CustomMessage } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, BashExecutionMessage, CustomMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { normalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { TextContent, ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { TextContent } from "@tsuuanmi/pi-ai";
 import { buildSessionContext } from "#pi/session/context";
 import { assertPiSessionId, createSessionId, generateId } from "#pi/session/id";
 import {

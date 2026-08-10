@@ -1,5 +1,5 @@
-import type { CustomMessage } from "@tsuuanmi/pi-agent";
-import type { Model, TextContent, ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { CustomMessage, Model, ThinkingLevel } from "@tsuuanmi/pi-agent";
+import type { TextContent } from "@tsuuanmi/pi-ai";
 import type { AutocompleteItem, Component, KeyId, Theme } from "@tsuuanmi/pi-tui";
 import type { TSchema } from "typebox";
 import type {

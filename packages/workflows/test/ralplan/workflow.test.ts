@@ -1,7 +1,7 @@
 import { appendFile, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import type { SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi-agent";
+import type { SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
@@ -200,6 +200,7 @@ describe("ralplan workflow runtime", () => {
 			record: {
 				id: "subagent-planner-1",
 				role: "ralplan:planner",
+				cwd,
 				status: "completed",
 				resumable: true,
 				created_at: "2026-01-01T00:00:00.000Z",

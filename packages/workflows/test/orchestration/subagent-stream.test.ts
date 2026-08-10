@@ -1,4 +1,5 @@
-import type { AssistantMessageEvent, Context, Model } from "@tsuuanmi/pi-ai";
+import type { Model } from "@tsuuanmi/pi-agent";
+import type { AssistantMessageEvent, Context } from "@tsuuanmi/pi-ai";
 import { describe, expect, it, vi } from "vitest";
 import { createSubagentStream } from "#workflows/orchestration/subagent-stream";
 

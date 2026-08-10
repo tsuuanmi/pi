@@ -1,4 +1,5 @@
-import type { ThinkingLevel, Transport } from "@tsuuanmi/pi-ai";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
+import type { Transport } from "@tsuuanmi/pi-ai";
 import type { StatusLineSettings } from "@tsuuanmi/pi-tui";
 
 export type { StatusLineSettings } from "@tsuuanmi/pi-tui";

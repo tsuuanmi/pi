@@ -18,8 +18,8 @@
 - **orchestrator**: Moved task, team, and orchestrator contracts out of `@tsuuanmi/pi-agent` into `@tsuuanmi/pi-orchestrator`.
 - **orchestrator**: Standardized orchestrator options on `schedulingStrategy` and `abortSignal`, removed `runTeam`, removed `onTaskFail`, removed scheduler fallback assignment, and made explicit task assignees fail fast when they do not match the team roster.
 - **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
-- **subagents**: Moved Pi execution, tmux, and run-identity details out of `@tsuuanmi/pi-agent`; the package now exports only the backend-neutral manager contract and run data.
-- **model**: Removed the agent-owned `ThinkingLevel` type; consumers must import the canonical type from `@tsuuanmi/pi-ai`.
+- **subagents**: Removed all subagent contracts, lifecycle tools, persistence, tmux, and run-identity modules; session-aware subagents are owned by `@tsuuanmi/pi`.
+- **model**: Re-exported canonical `Api`, `Model`, and `ThinkingLevel` types and `isValidThinkingLevel` for generic agent consumers.
 - **jsonl**: `attachJsonlLineReader()` now requires an error callback and rejects CRLF or unterminated records.
 
 ### Added

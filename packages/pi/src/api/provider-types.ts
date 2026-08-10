@@ -1,4 +1,5 @@
-import type { Api, AssistantMessageEventStream, Context, Model, StreamOptions } from "@tsuuanmi/pi-ai";
+import type { Api, Model } from "@tsuuanmi/pi-agent";
+import type { AssistantMessageEventStream, Context, StreamOptions } from "@tsuuanmi/pi-ai";
 import type { OAuthCredentials, OAuthLoginCallbacks } from "@tsuuanmi/pi-ai/oauth";
 
 // ============================================================================

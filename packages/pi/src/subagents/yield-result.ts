@@ -1,4 +1,4 @@
-import type { AgentMessage } from "#agent/messages/types";
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 
 export interface YieldDetails {
 	data: unknown;

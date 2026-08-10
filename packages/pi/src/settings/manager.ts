@@ -1,4 +1,4 @@
-import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { getAgentDir } from "#pi/loader/paths";
 import { BehaviorSettings } from "#pi/settings/behavior";
 import { ModelSettings } from "#pi/settings/model";

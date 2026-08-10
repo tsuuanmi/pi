@@ -51,15 +51,10 @@ The documentation is organized to mirror the top-level implementation areas in [
 - [Themes](ui/theme/index.md) - built-in and custom terminal themes.
 - [Pi packages](package/packages.md) - bundle and share extensions, skills, prompts, and themes.
 
-## Workflows and subagents
+## Subagents
 
 - [Subagents](subagents/index.md) - Pi-native `SubagentManager` for isolated agent workers.
-- [Agent management contracts](subagents/agent-management-contracts.md) - phase-gated contracts for agent management migration.
-
-Architecture records for these boundaries live in the repository-level [documentation hub](../../../docs/index.md):
-
-- [Pi Workflow Task Lifecycle SRS](../../../docs/srs/pi-workflow-task-lifecycle-srs.md)
-- [Harness-Owned Task Contract ADR](../../../docs/adr/general-team-system-framework-adr.md)
+- [Agent management contracts](subagents/agent-management-contracts.md) - contracts for agent management and package integration.
 - [Worktree and tmux Threat Model ADR](../../../docs/adr/tmux-worktree-threat-model-adr.md)
 
 ## Programmatic usage
@@ -89,10 +84,3 @@ Architecture records for these boundaries live in the repository-level [document
 - [Application architecture](app/index.md) - startup order and mode dispatch.
 - [Development](app/development.md) - local setup, project structure, and contribution guidance.
 - [CLI](cli/index.md) - command-line interface.
-
-## Skills
-
-- [Deep Interview](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/deep-interview/index.md)
-- [Ralplan](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/ralplan/index.md)
-- [Team](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/team/index.md)
-- [Ultragoal](https://github.com/tsuuanmi/pi/tree/main/packages/workflows/docs/skills/ultragoal/index.md)

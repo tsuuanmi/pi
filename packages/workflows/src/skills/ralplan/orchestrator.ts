@@ -1,4 +1,4 @@
-import type { SubagentManager } from "@tsuuanmi/pi-agent";
+import type { SubagentManagerApi } from "@tsuuanmi/pi";
 import {
 	Orchestrator,
 	type RunTeamResult,
@@ -18,7 +18,7 @@ import { assertSafePathComponent } from "#workflows/state/state-schema";
 export interface RalplanStageInput extends RalplanAgentInput {
 	cwd: string;
 	sessionId: string;
-	manager: Pick<SubagentManager, "spawn" | "resume">;
+	manager: Pick<SubagentManagerApi, "spawn" | "resume">;
 	verifyArtifact: () => boolean | Promise<boolean>;
 	signal?: AbortSignal;
 }

@@ -1,6 +1,6 @@
 # Workflow Policy
 
-Cross-workflow prompts, handoffs, gates, and expected-next guards. Generic multi-agent execution belongs to `@tsuuanmi/pi-orchestrator`; reusable subagent validation lives in `@tsuuanmi/pi-agent`.
+Cross-workflow prompts, handoffs, gates, and expected-next guards. Generic multi-agent execution belongs to `@tsuuanmi/pi-orchestrator`; session-aware subagent execution belongs to `@tsuuanmi/pi`.
 
 **Source:** `src/policy/`, `src/handoff/`, and skill guard modules under `src/skills/*/guards.ts`.
 
@@ -13,7 +13,7 @@ Cross-workflow prompts, handoffs, gates, and expected-next guards. Generic multi
 | `policy/gate-verdicts.ts` | Gate verdict types shared across skills. |
 | `policy/vagueness-gate.ts` | Vagueness gating helpers. |
 | `handoff/handoff.ts` | Handoff types for workflow transitions and spec handoff. |
-| `@tsuuanmi/pi-agent` | Subagent manager contract and thinking-level validation. |
+| `@tsuuanmi/pi` | Session-aware subagent manager, lifecycle, and thinking-level validation. |
 | `skills/deep-interview/guards.ts` | Deep Interview handoff validation. |
 | `skills/ralplan/guards.ts` | Ralplan role and approval-target validation. |
 

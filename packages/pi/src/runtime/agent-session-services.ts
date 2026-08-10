@@ -1,7 +1,6 @@
 import { join } from "node:path";
-import type { SubagentManager as SubagentManagerContract, Tool } from "@tsuuanmi/pi-agent";
+import type { Model, ThinkingLevel, Tool } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { AuthStorage } from "#pi/auth/storage";
 import type { SessionStartEvent } from "#pi/loader/extensions/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
@@ -74,7 +73,7 @@ export interface CreateAgentSessionFromServicesOptions {
 	/** Optional override for API-usage log routing. Defaults to the session id. */
 	apiUsageSessionId?: string;
 	/** Explicitly set to null to prevent subagent nesting. Omit to create a default manager. */
-	subagentManager?: SubagentManagerContract | null;
+	subagentManager?: SubagentManager | null;
 }
 
 /**

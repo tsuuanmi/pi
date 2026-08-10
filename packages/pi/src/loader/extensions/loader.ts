@@ -23,11 +23,13 @@ import { collectAutoExtensionEntries } from "#pi/resources/discovery";
 import { createSourceInfo } from "#pi/resources/source-info";
 import type { PathMetadata, ResolvedResource } from "#pi/resources/types";
 import { createExtensionAPI, createExtensionRuntime } from "#pi/runtime/extensions/api";
+import { registerSubagentTools } from "#pi/subagents/lifecycle-tools";
 import { registerSubagentControls } from "#pi/subagents/tools";
 
 const require = createRequire(import.meta.url);
 
 function builtinSubagentControlsExtension(pi: ExtensionAPI): void {
+	registerSubagentTools(pi);
 	registerSubagentControls(pi);
 }
 

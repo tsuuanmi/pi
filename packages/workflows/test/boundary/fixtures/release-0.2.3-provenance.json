@@ -1,0 +1,26 @@
+{
+  "@tsuuanmi/pi-ai@0.2.3": {
+    "url": "https://registry.npmjs.org/@tsuuanmi/pi-ai/-/pi-ai-0.2.3.tgz",
+    "sha512": "eYlkkEHAufINfgM7z1/RBXSDoXmskrQVhu4bTBcDD5jSYClQvphFFYWqlM6vTg2BgTS/1VphAXDzP3EsWyEdGg=="
+  },
+  "@tsuuanmi/pi-agent@0.2.3": {
+    "url": "https://registry.npmjs.org/@tsuuanmi/pi-agent/-/pi-agent-0.2.3.tgz",
+    "sha512": "mt3EzMMZ+O0mireiezWrrXGsgmxtc0fMkEy8HX6BeJIZGGFhVOIrRb8zMYD7o0Ut6z5t5ws7vhcIc5VbVQQD+A=="
+  },
+  "@tsuuanmi/pi-orchestrator@0.2.3": {
+    "url": "https://registry.npmjs.org/@tsuuanmi/pi-orchestrator/-/pi-orchestrator-0.2.3.tgz",
+    "sha512": "FtSyFaqgV5wkYueTYgE9N6pE+G7069pmft6M6Pyx46KHE1BZ1LoCYYBlQHH3t3s8O7O6oLqTXPwOINOlimbppg=="
+  },
+  "@tsuuanmi/pi-tui@0.2.3": {
+    "url": "https://registry.npmjs.org/@tsuuanmi/pi-tui/-/pi-tui-0.2.3.tgz",
+    "sha512": "JR3uQnaz69ol2PdPCduKpBbRq2wmGIl6m1rQ13ho8+RjY0/xbQ4ecvWoolxMeTDsm5HUz/diL4pMAc2fazRxJA=="
+  },
+  "@tsuuanmi/pi-workflows@0.2.3": {
+    "url": "https://registry.npmjs.org/@tsuuanmi/pi-workflows/-/pi-workflows-0.2.3.tgz",
+    "sha512": "heyzyKssMCqd+sJ7BI+hy6EKCxXY+DfJorTVqzqIsgNrhV82MJm300EEU74Vy+XF0ZozJAIadEKjQ58+QEncVw=="
+  },
+  "@tsuuanmi/pi@0.2.3": {
+    "url": "https://registry.npmjs.org/@tsuuanmi/pi/-/pi-0.2.3.tgz",
+    "sha512": "0KTmyX87gIcs1M7XCtNa+QyFyzd936zBJlaANj8vEHb/2V0nidx8fEtRXiDALpN94PeQAvdo2ttkund6QGWBRA=="
+  }
+}

@@ -2,15 +2,8 @@
  * Model resolution, scoping, and initial selection
  */
 
-import {
-	type Api,
-	type KnownProviderId,
-	type Model,
-	modelsAreEqual,
-	parseModelPattern,
-	type ScopedModel,
-	type ThinkingLevel,
-} from "@tsuuanmi/pi-ai";
+import type { Api, Model, ThinkingLevel } from "@tsuuanmi/pi-agent";
+import { type KnownProviderId, modelsAreEqual, parseModelPattern, type ScopedModel } from "@tsuuanmi/pi-ai";
 import chalk from "chalk";
 import { minimatch } from "minimatch";
 import { CLI_THINKING_LEVELS, DEFAULT_THINKING_LEVEL, isValidCliThinkingLevel } from "#pi/cli/thinking-level";

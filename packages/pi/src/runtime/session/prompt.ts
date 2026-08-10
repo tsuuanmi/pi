@@ -2,6 +2,7 @@ import type {
 	Agent,
 	AgentMessage,
 	CustomMessage,
+	Model,
 	StructuredOutputOptions,
 	StructuredOutputResult,
 } from "@tsuuanmi/pi-agent";
@@ -11,7 +12,7 @@ import {
 	getStructuredOutputRetryLimit,
 	parseStructuredOutput,
 } from "@tsuuanmi/pi-agent";
-import type { AssistantMessage, Model, TextContent } from "@tsuuanmi/pi-ai";
+import type { AssistantMessage, TextContent } from "@tsuuanmi/pi-ai";
 import type { Static, TSchema } from "typebox";
 import { formatNoApiKeyFoundMessage, formatNoModelSelectedMessage } from "#pi/auth/guidance";
 import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";

@@ -1,8 +1,8 @@
 # Subagents
 
-Pi ships a Pi-native `SubagentManager` that runs isolated agent sessions as subagents of the current session. It is exposed to extensions as `ctx.subagents` and to the agent through the `subagent_*` lifecycle tools. It owns session creation, durable records, native execution, and tmux controls; it is not the generic multi-agent scheduler. Team coordination uses `@tsuuanmi/pi-orchestrator` through a workflow-owned adapter.
+Pi ships a Pi-native `SubagentManager` that wraps the generic `Agent` from `@tsuuanmi/pi-agent` with isolated sessions, persistence, resource loading, native execution, and tmux controls. It is exposed to extensions as `ctx.subagents` and to the agent through the `subagent_*` lifecycle tools. It is not the generic multi-agent scheduler. Package extensions own higher-level coordination policy.
 
-Pi-native control registration lives in `src/subagents/tools.ts`, concrete-manager access in `src/subagents/controls.ts`, durable record and artifact storage in `src/subagents/store.ts`, and generic agent receipt attachment in `src/subagents/receipts.ts`.
+The complete subagent boundary lives under `src/subagents/`: `manager.ts` owns the public manager and runtime, `types.ts` owns requests/records/results, `context.ts` and `spec.ts` own tool integration, `progress.ts` and `yield-result.ts` own agent-loop observations, `receipts.ts` owns subagent receipts, and `tools.ts`/`lifecycle-tools.ts` own Pi tool registration.
 
 ## Records and durability
 
@@ -24,7 +24,7 @@ A `SubagentRecord` carries: `id`, `role`, `label`, `agent_profile`, `model`, `th
 
 ## Subagent lifecycle tools
 
-All lifecycle tools are registered by the built-in workflows extension and operate on the parent session's `SubagentManager` via `ctx.subagents`.
+All lifecycle tools are registered by Pi's built-in extension and operate on the parent session's `SubagentManager` via `ctx.subagents`.
 
 ### `subagent_spawn`
 
@@ -131,7 +131,7 @@ Cancel a live or durable subagent record.
 { "id": "subagent-..." }
 ```
 
-Cancels a live subagent by aborting its controller; writes a `cancelled` terminal record if the current status is not already terminal.
+Cancels a live subagent by aborting its controller and waiting for execution to settle; the manager writes a `cancelled` terminal record if the current status is not already terminal.
 
 ## Cooperative pause at turn boundaries
 
@@ -139,29 +139,20 @@ Cancels a live subagent by aborting its controller; writes a `cancelled` termina
 
 ## Nesting guard
 
-Subagent sessions do **not** receive their own `SubagentManager`. A subagent cannot spawn further subagents; orchestration stays in the parent. The `subagent_*` tools are filtered out of a subagent's tool set. Use the parent orchestrator coordinator (or `ultragoal_spawn_goal_agent` for Ultragoal) to dispatch more workers.
+Subagent sessions do **not** receive their own `SubagentManager`. A subagent cannot spawn further subagents; orchestration stays in the parent. The `subagent_*` tools are filtered out of a subagent's tool set. Use the parent coordinator to dispatch more workers.
 
-Subagent sessions also set `ctx.skipWorkflowContinuation = true` (exposed on `ExtensionContext`), which prevents workflow continuation prompts from leaking into the subagent. Extensions that drive workflows should honor this flag so they do not re-prompt from inside a subagent.
+Subagent sessions set `ctx.skipAutomaticContinuation = true` (exposed on `ExtensionContext`) so package extensions do not re-prompt from inside a subagent.
 
 ## Lifecycle and orchestration boundary
 
-The shared `SubagentManager` contract owns one-subagent lifecycle operations: spawn, await, steer, pause, resume, and cancel. Pi's concrete `SubagentManager` adds inspection, attach, and kill controls for its execution backends. `@tsuuanmi/pi-orchestrator` owns task dependencies, agent routing, retries, queues, and collaboration. Workflow adapters connect the two without making the orchestrator depend on Pi.
-
-## Team and Ultragoal execution linking
-
-Team roles execute through `@tsuuanmi/pi-orchestrator`, which uses the parent session's agent runtime through the workflow-owned adapter. Ultragoal continues to use its dedicated goal tool:
-
-- **`team_execute` / `team_resume`** - execute or resume worker, reviewer, and prover roles through the orchestrator.
-- **`ultragoal_spawn_goal_agent`** - spawn an ultragoal goal agent.
-
-Team and Ultragoal records remain visible in the parent session and are persisted under the current session state. After a mutation, workflow state-mutating tools call `syncWorkflowHudUi` to keep the interactive HUD in sync.
+Pi's `SubagentManagerApi` owns one-subagent lifecycle operations: spawn, await, steer, pause, resume, and cancel. Pi's concrete `SubagentManager` adds inspection, attach, and kill controls for its execution backends. `@tsuuanmi/pi-orchestrator` owns task dependencies, agent routing, retries, queues, and collaboration. Higher-level package extensions consume this public Pi API.
 
 ## Structured receipts and current-session visibility
 
-Subagent tools attach a `details.receipt` (`StructuredReceipt`) to their tool results. Pi-native inspect, attach, and kill controls preserve their control result fields and attach the generic `@tsuuanmi/pi-agent` receipt without workflow `final_package` fields. Workflow-owned lifecycle tools may add workflow receipt fields separately.
+Subagent tools attach a `details.receipt` (`StructuredReceipt`) to their tool results. Pi-native inspect, attach, and kill controls preserve their control result fields and attach the generic agent receipt without package-specific result fields. Package extensions may add domain-specific receipt fields to their own results.
 
 A subagent receipt includes the owning `sessionId`, `subagentId`, role, status, resumability, timing when known, and output/error previews. Pi inspection returns execution paths and backend metadata separately. Persistent subagent conversation logs are written under the same current-session bucket at `.pi/<session-id>/state/subagents/sessions/`, while lifecycle records live under `.pi/<session-id>/state/subagents/<subagent-id>/record.json` and terminal artifacts live under `.pi/<session-id>/state/subagents/<subagent-id>/artifact.json`. Listing subagents also returns per-record receipts plus an aggregate list receipt. This makes subagents visible from the parent/current session instead of behaving like black-box detached work.
 
 Before a subagent session starts, Pi injects an observability instruction into that subagent's system prompt. The injected guidance includes the parent/current session id when available, the subagent id, and the execution cwd. Backend selection is a Pi runtime decision; the shared agent contract does not expose it. Long-running work should prefer explicit tmux sessions over hidden detached background processes. When tmux-backed work is used, Pi stores the run identity, storage paths, worker metadata, and pane/session target in its own runtime record.
 
-Pi chooses native or tmux execution from its runtime request and environment. Generic workflow tools do not select a backend. Tmux-backed subagents expose bounded live controls through `subagent_inspect`, `subagent_attach`, and `subagent_kill`. Inspect returns durable record/artifact/worker paths plus tmux metadata. Attach returns the exact target-specific command: pane-backed workers use a recorded pane id and `select-pane`, while session-backed workers use the recorded session target and `attach-session`. Kill validates Pi's run identity metadata in the record and worker metadata before cleanup, then uses `kill-pane` for pane targets or `kill-session` for session targets. Invalid identity or tmux command metadata fails closed. Pause, resume, and heartbeat controls remain deferred.
+Pi chooses native or tmux execution from its runtime request and environment. Package tools do not select a backend. Tmux-backed subagents expose bounded live controls through `subagent_inspect`, `subagent_attach`, and `subagent_kill`. Inspect returns durable record/artifact/worker paths plus tmux metadata. Attach returns the exact target-specific command: pane-backed workers use a recorded pane id and `select-pane`, while session-backed workers use the recorded session target and `attach-session`. Kill validates Pi's run identity metadata in the record and worker metadata before cleanup, then uses `kill-pane` for pane targets or `kill-session` for session targets. Invalid identity or tmux command metadata fails closed. Pause, resume, and heartbeat controls remain deferred.

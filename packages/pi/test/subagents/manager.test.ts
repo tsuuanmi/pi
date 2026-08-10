@@ -256,6 +256,37 @@ describe("SubagentManager live spawn and resume", () => {
 		});
 	});
 
+	it("scopes live controls to the storage session", async () => {
+		let resolveResponse: ((message: ReturnType<typeof testAssistantMessage>) => void) | undefined;
+		const response = new Promise<ReturnType<typeof testAssistantMessage>>((resolve) => {
+			resolveResponse = resolve;
+		});
+		testProvider.setResponses([() => response]);
+		const started = await manager.spawn({
+			role: "planner",
+			prompt: "Wait for control",
+			cwd,
+			storageSessionId: TEST_SESSION,
+			persistent: false,
+			detached: true,
+		});
+
+		expect(await manager.pause(started.record.id, "other-session")).toMatchObject({
+			ok: false,
+			reason: "not_running",
+		});
+		expect(await manager.waitFor(started.record.id, { sessionId: "other-session" })).toMatchObject({
+			ok: false,
+			reason: "not_found",
+		});
+		expect(await manager.cancel(started.record.id, "other-session")).toBeUndefined();
+		expect(manager.getActiveCount()).toBe(1);
+
+		const cancellation = manager.cancel(started.record.id, TEST_SESSION);
+		resolveResponse?.(testAssistantMessage("late response"));
+		expect((await cancellation)?.status).toBe("cancelled");
+	});
+
 	it("persists parent session ids on spawned records", async () => {
 		testProvider.setResponses([testAssistantMessage("child done")]);
 		const result = await manager.spawn({

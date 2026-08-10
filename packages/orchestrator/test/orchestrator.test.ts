@@ -1,9 +1,8 @@
-import { Agent, type AgentOptions, type StreamFunction } from "@tsuuanmi/pi-agent";
+import { Agent, type AgentOptions, type Model, type StreamFunction } from "@tsuuanmi/pi-agent";
 import {
 	type AssistantMessage,
 	type AssistantMessageEventStream,
 	createAssistantMessageEventStream,
-	type Model,
 } from "@tsuuanmi/pi-ai";
 import {
 	createConsensusVerifier,

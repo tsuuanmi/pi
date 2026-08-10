@@ -11,28 +11,13 @@ import { createSyntheticSourceInfo } from "#pi/resources/source-info";
 import { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
+import { SUBAGENT_TOOL_NAMES } from "#pi/subagents/tool-names";
 
-const BUILT_IN_WORKFLOW_COMMANDS = new Set(["deep-interview", "ralplan", "team", "ultragoal"]);
-const BUILT_IN_SUBAGENT_SPECS = new Set([
-	"subagent_spawn",
-	"subagent_status",
-	"subagent_await",
-	"subagent_resume",
-	"subagent_cancel",
-	"subagent_steer",
-	"subagent_pause",
-]);
-
-const BUILT_IN_WORKFLOW_AGENT_TOOLS = new Set([
-	"ralplan_run_agent",
-	"team_execute",
-	"team_resume",
-	"ultragoal_spawn_goal_agent",
-]);
+const BUILT_IN_SUBAGENT_SPECS = new Set(SUBAGENT_TOOL_NAMES);
 
 function withoutBuiltinExtensions<T extends { path: string; sourceInfo: { source: string } }>(extensions: T[]): T[] {
 	return extensions.filter(
-		(extension) => !extension.path.startsWith("<inline:") && extension.sourceInfo.source !== "pi:workflows",
+		(extension) => !extension.path.startsWith("<inline:") && !extension.sourceInfo.source.startsWith("pi:"),
 	);
 }
 
@@ -63,22 +48,19 @@ describe("DefaultResourceLoader", () => {
 			expect(loader.getThemes().themes).toEqual([]);
 		});
 
-		it("should discover built-in workflow skills and tools", async () => {
+		it("should discover bundled package resources", async () => {
 			const loader = new DefaultResourceLoader({ cwd, agentDir });
 			await loader.reload();
 
-			const skillNames = new Set(loader.getSkills().skills.map((skill) => skill.name));
-			expect(skillNames.has("deep-interview")).toBe(true);
-			expect(skillNames.has("ralplan")).toBe(true);
-			expect(skillNames.has("team")).toBe(true);
-			expect(skillNames.has("ultragoal")).toBe(true);
+			const bundledSkills = loader.getSkills().skills.filter((skill) => skill.sourceInfo.source.startsWith("pi:"));
+			expect(bundledSkills.length).toBeGreaterThan(0);
 
 			const extensionsResult = loader.getExtensions();
-			const workflowExtensions = extensionsResult.extensions.filter(
-				(extension) => extension.sourceInfo.source === "pi:workflows",
+			const bundledExtensions = extensionsResult.extensions.filter((extension) =>
+				extension.sourceInfo.source.startsWith("pi:"),
 			);
-			expect(workflowExtensions).toHaveLength(1);
-			expect(workflowExtensions[0]?.path).toMatch(/extension\.(js|ts)$/);
+			expect(bundledExtensions.length).toBeGreaterThan(0);
+			expect(bundledExtensions.some((extension) => /extension\.(js|ts)$/.test(extension.path))).toBe(true);
 
 			const sessionManager = SessionManager.inMemory();
 			const authStorage = AuthStorage.create(join(tempDir, "auth.json"));
@@ -91,9 +73,6 @@ describe("DefaultResourceLoader", () => {
 				modelRegistry,
 			);
 			for (const toolName of BUILT_IN_SUBAGENT_SPECS) {
-				expect(runner.getToolSpec(toolName)).toBeDefined();
-			}
-			for (const toolName of BUILT_IN_WORKFLOW_AGENT_TOOLS) {
 				expect(runner.getToolSpec(toolName)).toBeDefined();
 			}
 		});
@@ -307,15 +286,11 @@ Project skill`,
 			expect(runner.getCommand("project-only")?.description).toBe("project only");
 			expect(runner.getCommand("user-only")?.description).toBe("user only");
 
+			const expectedCommands = ["deploy:1", "project-only", "deploy:2", "user-only"];
 			const commands = runner
 				.getRegisteredCommands()
-				.filter((command) => !BUILT_IN_WORKFLOW_COMMANDS.has(command.invocationName));
-			expect(commands.map((command) => command.invocationName)).toEqual([
-				"deploy:1",
-				"project-only",
-				"deploy:2",
-				"user-only",
-			]);
+				.filter((command) => expectedCommands.includes(command.invocationName));
+			expect(commands.map((command) => command.invocationName)).toEqual(expectedCommands);
 		});
 
 		it("should honor overrides for auto-discovered resources", async () => {

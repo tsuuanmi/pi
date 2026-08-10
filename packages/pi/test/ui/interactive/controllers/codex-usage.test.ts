@@ -1,5 +1,6 @@
 import { Buffer } from "node:buffer";
-import { type Api, fetchOpenAICodexUsageSummary, type Model, type OpenAICodexUsageAuthProvider } from "@tsuuanmi/pi-ai";
+import type { Api, Model } from "@tsuuanmi/pi-agent";
+import { fetchOpenAICodexUsageSummary, type OpenAICodexUsageAuthProvider } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const originalFetch = globalThis.fetch;

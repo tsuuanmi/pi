@@ -124,7 +124,7 @@ Workflow state under .pi/<session-id>/workflows
 - A package's `package.json` `exports` map and the public barrels referenced by it define the supported code surface. `@tsuuanmi/pi-tui` has only its root `main`/`types` entry and no subpath export map.
 - `#ai/*`, `#agent/*`, `#orchestrator/*`, `#tui/*`, `#workflows/*`, and `#pi/*` are package-internal aliases, not cross-package APIs.
 - Direct workspace imports must also be declared in `dependencies` or `peerDependencies`; a transitive dependency is not an API.
-- Host callbacks and interfaces are preferred over upward imports. Examples are `StreamFunction`, `SubagentManager`, `OrchestratorCheckpointStore`, TUI `Component`, and workflow host interfaces.
+- Host callbacks and interfaces are preferred over upward imports. Examples are `StreamFunction`, Pi's `SubagentManagerApi`, `OrchestratorCheckpointStore`, TUI `Component`, and workflow host interfaces.
 - Persistence is owned by the layer that defines the durable schema. Pi owns application settings, auth, and session records; workflows owns workflow state/artifacts; orchestrator only defines checkpoint contracts; AI and TUI do not persist application state.
 
 ## Build and distribution interactions

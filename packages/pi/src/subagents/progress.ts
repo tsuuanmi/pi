@@ -9,8 +9,8 @@
  * to the agent event stream.
  */
 
+import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
-import type { AgentMessage } from "#agent/messages/types";
 
 /** Minimal event shape the tracker can consume (superset of AgentEvent). */
 interface TrackableEvent {

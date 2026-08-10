@@ -47,7 +47,7 @@ Tool events include stable identifiers and tool metadata:
 - final `meta.span` with tool id, name, timing, duration, and trace status
 - truncation metadata when output limits truncate tool text
 
-The subagent progress tracker in [`subagents/index.md`](./subagents/index.md) consumes this same event shape to retain current tool, recent tools, and recent assistant output.
+Pi's subagent progress tracker consumes this same event shape to retain current tool, recent tools, and recent assistant output.
 
 ## Trace spans
 

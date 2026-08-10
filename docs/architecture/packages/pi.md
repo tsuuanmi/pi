@@ -24,7 +24,7 @@ Pi supplies concrete policy, resources, storage, UI, process integration, and th
 **Does not own**
 
 - Provider-neutral model and stream protocols; AI owns them.
-- The generic agent loop and reusable tool/subagent contracts; Agent owns them.
+- The generic Agent loop and reusable tool contracts; Agent owns them. Pi owns session-aware subagent contracts and execution.
 - Generic task/team scheduling, routing, retries, or checkpoint contracts; Orchestrator owns them and is reached through Workflows.
 - Workflow phases, gates, artifacts, and handoff policy; Workflows owns them.
 - Terminal rendering primitives; TUI owns them.
@@ -104,7 +104,7 @@ AgentSession is the high-coupling integration point. Agent still owns turn contr
 | Dependency | Contract used |
 |---|---|
 | `@tsuuanmi/pi-ai` | Models, providers, OAuth, normalized streams/events, usage, schema validation, and custom-provider registration |
-| `@tsuuanmi/pi-agent` | Agent loop, tools, events/hooks, messages, receipts, compaction helpers, subagent contracts, and Node execution helpers |
+| `@tsuuanmi/pi-agent` | Agent loop, tools, events/hooks, messages, receipts, compaction helpers, canonical model/thinking types, and Node execution helpers |
 | `@tsuuanmi/pi-orchestrator` | Runtime dependency required by bundled package artifacts; Pi does not import its APIs |
 | `@tsuuanmi/pi-tui` | Terminal runtime, components, editor/input, themes, overlays, status/HUD, and render utilities |
 
@@ -140,11 +140,11 @@ Resource loading can report partial diagnostics; not every bad optional resource
 
 ## Subagent interaction
 
-Pi implements the structural `SubagentManager` from Agent:
+Pi owns the session-aware `SubagentManager` and publishes its structural `SubagentManagerApi` for workflow consumers:
 
 ```text
-subagent tool / workflow adapter
-  -> Pi SubagentManager
+subagent lifecycle tool / workflow tool
+  -> Pi SubagentManagerApi and concrete SubagentManager
   -> durable record and run identity
   -> isolated resource loader and extension runtime
   -> isolated AgentSession
@@ -152,7 +152,7 @@ subagent tool / workflow adapter
   -> status, result, receipt, and saved context
 ```
 
-Subagents share resolved auth/model/settings inputs as designed but receive isolated session and extension runtime state. Nested subagents are disabled. Workflows must use this injected manager rather than constructing another one.
+Subagents share resolved auth/model/settings inputs as designed but receive isolated session and extension runtime state. Nested subagents are disabled. Workflows must use the public Pi manager API rather than constructing another manager.
 
 ## Persistence boundaries
 

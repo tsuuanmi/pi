@@ -1,11 +1,11 @@
 import { spawnSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { parseThinkingLevel } from "@tsuuanmi/pi-agent";
-import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { createAgentSessionServices } from "#pi/runtime/agent-session-services";
 import { SubagentManager } from "#pi/subagents/manager";
 import { createRunIdentity } from "#pi/subagents/run-identity";
+import { parseThinkingLevel } from "#pi/subagents/thinking-level";
 import { buildTmuxCommands, type TmuxTarget } from "#pi/subagents/tmux";
 import { PI_SUBAGENT_TMUX_TARGET_KIND_ENV, PI_SUBAGENT_WORKER_REQUEST_ENV } from "#pi/subagents/tmux-launch";
 import type { WorkerRequest } from "#pi/subagents/types";

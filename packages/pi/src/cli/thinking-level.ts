@@ -1,4 +1,4 @@
-import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { ThinkingLevel } from "@tsuuanmi/pi-agent";
 
 export const DEFAULT_THINKING_LEVEL: ThinkingLevel = "medium";
 export const CLI_THINKING_LEVELS = [

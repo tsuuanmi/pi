@@ -1,5 +1,5 @@
-import type { AgentMessage } from "@tsuuanmi/pi-agent";
-import type { TextContent, ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
+import type { TextContent } from "@tsuuanmi/pi-ai";
 
 export const SESSION_VERSION = 4;
 

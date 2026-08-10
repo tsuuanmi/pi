@@ -1,4 +1,4 @@
-import { isValidThinkingLevel } from "@tsuuanmi/pi-ai";
+import { isValidThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { Settings } from "#pi/settings/types";
 
 type JsonObject = Record<string, unknown>;

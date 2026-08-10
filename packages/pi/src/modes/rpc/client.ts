@@ -5,9 +5,8 @@
  */
 
 import { type ChildProcess, spawn } from "node:child_process";
-import type { AgentEvent, AgentMessage } from "@tsuuanmi/pi-agent";
+import type { AgentEvent, AgentMessage, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { attachJsonlLineReader, serializeJsonLine } from "@tsuuanmi/pi-agent/node";
-import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
 import type { BashResult } from "#pi/execution/bash";
 import type { RpcCommand, RpcResponse, RpcSessionState, RpcSlashCommand } from "#pi/modes/rpc/types";
 import type { SessionStats } from "#pi/runtime/session/types";

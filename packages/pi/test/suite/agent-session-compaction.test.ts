@@ -1,4 +1,5 @@
-import { type AssistantMessage, createAssistantMessageEventStream, type Model } from "@tsuuanmi/pi-ai";
+import type { Model } from "@tsuuanmi/pi-agent";
+import { type AssistantMessage, createAssistantMessageEventStream } from "@tsuuanmi/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { testAssistantMessage } from "#pi-test/helpers/provider";
 import { createHarness, type Harness } from "#pi-test/suite/harness";

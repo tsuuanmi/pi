@@ -29,8 +29,10 @@
 - **sdk**: Removed the obsolete `migratedProviders` field from `InteractiveModeOptions`.
 - **tools**: Removed non-canonical `edit` tool argument forms; the tool now accepts only `path` plus `edits[]` and no longer normalizes alternate shapes.
 - **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
-- **subagents**: `SubagentManager` is now the Pi implementation of the manager contract from `@tsuuanmi/pi-agent`; Pi owns execution, persistence, tmux workers, run identity, and live controls.
+- **subagents**: Ported the complete subagent boundary from `@tsuuanmi/pi-agent`; Pi now owns the Agent-backed session manager, requests/records/results, progress, receipts, yield extraction, native/tmux execution, and lifecycle controls.
+- **subagents**: Added the root `registerSubagentTools()` and `registerSubagentControls()` registrars; Pi owns all executable lifecycle tools and controls.
 - **subagents**: Pi-native inspect, attach, and kill controls no longer depend on workflow tool contracts or emit workflow `final_package` fields; they use Pi context and generic agent receipts.
+- **subagents**: Continuation suppression is exposed only as `skipAutomaticContinuation` on `AgentSession` and `ExtensionContext`; package-specific aliases were removed.
 - **subagents**: Tmux run identity now uses only the canonical nested target session name.
 - **runtime**: Pi is now Node-only; removed alternate-runtime detection and package-manager branches.
 - **cli**: Removed the `pi uninstall` alias; use `pi remove`.
@@ -46,7 +48,7 @@
 
 ### Changed
 
-- **packages**: Workflow tools and hooks are now loaded from the bundled `pi:workflows` package manifest instead of a Pi-specific built-in registration path.
+- **packages**: Workflow tools, hooks, and commands are loaded through the generic package manifest and resource dispatch paths.
 - **api**: Removed the stale `serializeJsonLine` root export; node JSONL utilities are imported from `@tsuuanmi/pi-agent/node`.
 - **extensions**: Agent tool interception is now installed through `Agent.registerHook()`; Pi remains the host adapter and no longer assigns agent hook callbacks directly.
 - **models**: Custom provider model configs now accept image input metadata and `max`/`ultra` thinking-level mappings.
@@ -64,6 +66,7 @@
 - **auth**: Accept the optional `accountId` field on OAuth credentials written by the Codex OAuth provider, so stored tokens reload instead of failing validation.
 - **tmux**: Preserve the Node loader arguments when relaunching the TypeScript CLI inside tmux.
 - **build**: Retain compiled subagent modules required by the CLI and tmux runtime.
+- **subagents**: Scope live controls to their owning session, await cancellation before returning, and dispose active managers during session replacement.
 
 ### Removed
 
@@ -178,7 +181,6 @@
 - Added `team_execute` and `team_resume` tools for Orchestrator-backed worker, reviewer, and prover role execution, alongside `ultragoal_spawn_goal_agent` for Ultragoal goal agents.
 - Added `ultragoal_record_review_blockers` and `ultragoal_classify_blocker` tools. Review blockers become durable blocker-resolution goals; completing a blocker-resolution goal supersedes the original `review_blocked` goal, and `failed`/`blocked` checkpoints require an immediate latest `human_blocked` classification.
 - Added reusable agent profiles (`planner`, `architect`, `critic`, `worker`) with project/global JSON overrides for per-agent model, thinking level, tools, system prompt, and persistence defaults.
-- Added `skipWorkflowContinuation` flag on `AgentSession`/`ExtensionContext` to prevent workflow continuation prompts from leaking into subagent sessions.
 - Subagent sessions no longer receive a `SubagentManager` to prevent unbounded nesting; orchestration stays in the parent.
 - Added live spawn, resume, pause, cancel, and await tests using the test provider.
 - **deep-interview**: Added a phase-boundary mutation guard that runtime-blocks the `edit` and `write` tools while a deep-interview workflow is active in a non-finished phase, always blocks direct `.pi/**` edits regardless of phase, and allows only system-temp scratch outside the project. Wired through the `tool_call` extension hook so it runs before tool execution.

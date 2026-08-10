@@ -17,7 +17,22 @@ const aliasOwners = {
 	"#pi/": "@tsuuanmi/pi",
 };
 
-const allowedImports = {
+const INTENDED_PACKAGE_DAG = [
+	["@tsuuanmi/pi-agent", "@tsuuanmi/pi-ai"],
+	["@tsuuanmi/pi-orchestrator", "@tsuuanmi/pi-agent"],
+	["@tsuuanmi/pi-orchestrator", "@tsuuanmi/pi-ai"],
+	["@tsuuanmi/pi-workflows", "@tsuuanmi/pi-agent"],
+	["@tsuuanmi/pi-workflows", "@tsuuanmi/pi-orchestrator"],
+	["@tsuuanmi/pi-workflows", "@tsuuanmi/pi-ai"],
+	["@tsuuanmi/pi-workflows", "@tsuuanmi/pi-tui"],
+	["@tsuuanmi/pi-workflows", "@tsuuanmi/pi"],
+	["@tsuuanmi/pi", "@tsuuanmi/pi-agent"],
+	["@tsuuanmi/pi", "@tsuuanmi/pi-ai"],
+	["@tsuuanmi/pi", "@tsuuanmi/pi-orchestrator"],
+	["@tsuuanmi/pi", "@tsuuanmi/pi-tui"],
+];
+
+const ALLOWED_SOURCE_IMPORT_GRAPH = {
 	"@tsuuanmi/pi-ai": new Set(),
 	"@tsuuanmi/pi-agent": new Set(["@tsuuanmi/pi-ai"]),
 	"@tsuuanmi/pi-orchestrator": new Set(["@tsuuanmi/pi-agent", "@tsuuanmi/pi-ai"]),
@@ -37,6 +52,13 @@ const allowedImports = {
 	]),
 };
 
+const FORBIDDEN_SOURCE_IMPORT_EDGES = [
+	{ from: "@tsuuanmi/pi-workflows", to: ["#pi/*"] },
+	{ from: "packages/pi/src/subagents/**", to: ["@tsuuanmi/pi-workflows", "@tsuuanmi/pi-workflows/*", "#workflows/*"] },
+	{ from: "@tsuuanmi/pi-agent", to: ["@tsuuanmi/pi-workflows", "@tsuuanmi/pi-workflows/*", "#workflows/*", "@tsuuanmi/pi", "@tsuuanmi/pi/*", "#pi/*"] },
+];
+
+const allowedImports = ALLOWED_SOURCE_IMPORT_GRAPH;
 const ignoredDirectories = new Set(["dist", "node_modules"]);
 const internalRules = [
 	{ directory: "packages/pi/src/api", forbidden: ["#pi/runtime/", "#pi/ui/"] },
@@ -51,13 +73,13 @@ const internalRules = [
 	{ directory: "packages/pi/src/package/loader.ts", forbidden: ["#pi/index"] },
 ];
 const workflowManagerCallers = new Set([
-	"packages/workflows/src/tool/adapter.ts",
+	"packages/workflows/src/tool/context.ts",
 	"packages/workflows/src/skills/team/agent-adapter.ts",
 	"packages/workflows/src/skills/ralplan/agent-adapter.ts",
 	"packages/workflows/src/skills/ultragoal/tools.ts",
 ]);
 const workflowManagerCallPattern = /\.(spawn|resume|steer|pause|cancel|read|list|waitFor|inspect|attach|kill|dispose)\s*\(/g;
-const workflowManagerReferencePattern = /\bSubagentManager\b/;
+const workflowManagerReferencePattern = /\bSubagentManager(?:Api)?\b/;
 const teamExecutionPath = "packages/workflows/src/skills/team/execution.ts";
 const importPattern = /(?:import|export)\s+(?:type\s+)?(?:[^"'()]*?\s+from\s+)?["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)/g;
 const failures = [];
@@ -92,6 +114,7 @@ if (failures.length > 0) {
 
 function checkFile(owner, file) {
 	const text = readFileSync(file, "utf8");
+	checkForbiddenSourceEdges(owner, file, text);
 	for (const specifier of importSpecifiers(text)) {
 		const target = targetPackage(specifier);
 		if (!target || target === owner) continue;
@@ -155,7 +178,33 @@ function checkWorkflowExecution(file) {
 	}
 }
 
+function checkForbiddenSourceEdges(owner, file, text) {
+	const relativeFile = relative(process.cwd(), file).replaceAll("\\\\", "/");
+	for (const rule of FORBIDDEN_SOURCE_IMPORT_EDGES) {
+		const fromMatches = rule.from.startsWith("packages/")
+			? (rule.from.endsWith("/**") ? relativeFile.startsWith(rule.from.slice(0, -3)) : relativeFile === rule.from)
+			: owner === rule.from;
+		if (!fromMatches) continue;
+		for (const specifier of importSpecifiers(text)) {
+			if (rule.to.some((pattern) => pattern.endsWith("/*") ? specifier.startsWith(pattern.slice(0, -1)) : specifier === pattern)) {
+				failures.push(`${relativeFile}: ${specifier} is forbidden by package ownership rules`);
+			}
+		}
+	}
+}
+
 function checkAllowedGraph() {
+	checkDAGCycles(INTENDED_PACKAGE_DAG);
+	const intendedEdges = new Set(INTENDED_PACKAGE_DAG.map(([from, to]) => `${from}->${to}`));
+	const allowedEdges = new Set(
+		Object.entries(allowedImports).flatMap(([from, targets]) => [...targets].map((to) => `${from}->${to}`)),
+	);
+	for (const edge of intendedEdges) {
+		if (!allowedEdges.has(edge)) failures.push(`intended package graph allows undeclared edge: ${edge}`);
+	}
+	for (const edge of allowedEdges) {
+		if (!intendedEdges.has(edge)) failures.push(`allowed package graph is missing intended edge: ${edge}`);
+	}
 	const visiting = new Set();
 	const visited = new Set();
 	const stack = [];
@@ -178,6 +227,25 @@ function checkAllowedGraph() {
 	}
 
 	for (const owner of Object.keys(packageRoots)) visit(owner);
+}
+
+function checkDAGCycles(edges) {
+	const graph = new Map();
+	for (const [from, to] of edges) graph.set(from, [...(graph.get(from) ?? []), to]);
+	const visiting = new Set();
+	const visited = new Set();
+	function visit(node) {
+		if (visiting.has(node)) {
+			failures.push(`intended package DAG contains a cycle at ${node}`);
+			return;
+		}
+		if (visited.has(node)) return;
+		visiting.add(node);
+		for (const next of graph.get(node) ?? []) visit(next);
+		visiting.delete(node);
+		visited.add(node);
+	}
+	for (const node of graph.keys()) visit(node);
 }
 
 function hasPathAlias(config, specifier) {

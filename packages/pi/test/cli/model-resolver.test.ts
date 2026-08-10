@@ -1,4 +1,5 @@
-import { type Model, parseModelPattern } from "@tsuuanmi/pi-ai";
+import type { Model } from "@tsuuanmi/pi-agent";
+import { parseModelPattern } from "@tsuuanmi/pi-ai";
 import { describe, expect, test } from "vitest";
 import { defaultModelPerProvider, findInitialModel, resolveCliModel } from "#pi/cli/model-resolver";
 

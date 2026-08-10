@@ -1,10 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { appendFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { SubagentStatus } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { sessionStateDir } from "#pi/session/root";
-import type { SubagentRecord } from "#pi/subagents/types";
+import type { SubagentRecord, SubagentStatus } from "#pi/subagents/types";
 
 export class SubagentStore {
 	private readonly cwd: string;

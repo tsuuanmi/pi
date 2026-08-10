@@ -1,4 +1,4 @@
-import { parseThinkingLevel } from "@tsuuanmi/pi-agent";
+import { parseThinkingLevel } from "@tsuuanmi/pi";
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { assertExpectedNextRole, assertNoGuardedSpawnOverrides } from "#workflows/policy/expected-next-role";
@@ -39,7 +39,6 @@ async function executeUltragoalSpawnGoalAgent(
 	});
 	assertNoGuardedSpawnOverrides(params);
 	const manager = ctx.subagents;
-	if (!manager) throw new Error("No subagent manager is available in this session.");
 	const result = await manager.spawn({
 		agent: params.agent ?? "worker",
 		role: `ultragoal-worker-${goal.id}`,

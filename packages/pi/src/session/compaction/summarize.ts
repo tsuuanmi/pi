@@ -1,6 +1,6 @@
-import type { AgentMessage, StreamFunction } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, Model, StreamFunction, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import { convertToLlm, SUMMARIZATION_SYSTEM_PROMPT, serializeConversation } from "@tsuuanmi/pi-agent";
-import type { AssistantMessage, Context, Model, StreamOptions, ThinkingLevel } from "@tsuuanmi/pi-ai";
+import type { AssistantMessage, Context, StreamOptions } from "@tsuuanmi/pi-ai";
 import { complete } from "@tsuuanmi/pi-ai";
 
 interface SummaryRequest {

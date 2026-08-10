@@ -2,9 +2,9 @@
  * Model registry - manages built-in and custom models, provides API key resolution.
  */
 
+import type { Api, Model } from "@tsuuanmi/pi-agent";
 import { normalizePath } from "@tsuuanmi/pi-agent/node";
 import {
-	type Api,
 	type AssistantMessageEventStream,
 	applyModelOverride,
 	BUILT_IN_PROVIDER_DISPLAY_NAMES,
@@ -13,7 +13,6 @@ import {
 	getModelProviders,
 	getModels,
 	type KnownProviderId,
-	type Model,
 	type ModelOverride,
 	type ModelsConfig,
 	mergeModelCompat,

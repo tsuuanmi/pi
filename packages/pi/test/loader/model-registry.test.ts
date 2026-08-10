@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AnthropicMessagesCompat, Api, Context, Model, OpenAICompletionsCompat } from "@tsuuanmi/pi-ai";
+import type { Api, Model } from "@tsuuanmi/pi-agent";
+import type { AnthropicMessagesCompat, Context, OpenAICompletionsCompat } from "@tsuuanmi/pi-ai";
 import { getProvider } from "@tsuuanmi/pi-ai";
 import { getOAuthProvider } from "@tsuuanmi/pi-ai/oauth";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";

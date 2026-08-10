@@ -1,4 +1,5 @@
-import { Agent, type SubagentManager } from "@tsuuanmi/pi-agent";
+import type { SubagentManagerApi } from "@tsuuanmi/pi";
+import { Agent } from "@tsuuanmi/pi-agent";
 import type { Context } from "@tsuuanmi/pi-ai";
 import { createSubagentStream } from "#workflows/orchestration/subagent-stream";
 import type { WorkflowContext } from "#workflows/tool/context";
@@ -14,7 +15,6 @@ export interface TeamAgentSpec {
 export function createTeamAgents(ctx: WorkflowContext, specs: readonly TeamAgentSpec[]): readonly Agent[] {
 	if (specs.length === 0) throw new Error("team agent roster requires at least one agent");
 	const manager = ctx.subagents;
-	if (!manager) throw new Error("No subagent manager is available in this session.");
 	const sessionId = ctx.sessionManager.getSessionId();
 	const ids = new Set<string>();
 	return Object.freeze(
@@ -32,7 +32,7 @@ export function createTeamAgents(ctx: WorkflowContext, specs: readonly TeamAgent
 	);
 }
 
-function createTeamStream(manager: SubagentManager, sessionId: string, spec: TeamAgentSpec) {
+function createTeamStream(manager: SubagentManagerApi, sessionId: string, spec: TeamAgentSpec) {
 	return createSubagentStream(async ({ model, context, signal }) => {
 		const result = await manager.spawn({
 			agent: spec.profile,

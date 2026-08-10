@@ -1,9 +1,9 @@
-import type { SubagentManager } from "@tsuuanmi/pi-agent";
+import type { SubagentManagerApi } from "@tsuuanmi/pi";
 
 export interface WorkflowContext {
 	cwd: string;
 	sessionManager: {
 		getSessionId(): string;
 	};
-	subagents?: SubagentManager;
+	subagents: SubagentManagerApi;
 }

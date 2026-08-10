@@ -22,14 +22,28 @@ describe("pi public agent boundary", () => {
 		expect(source).not.toContain("resolvePath");
 	});
 
-	it("keeps only the pi-owned subagent runtime implementation on the pi root", async () => {
+	it("exports the complete pi-owned subagent API", async () => {
 		const source = await readRepoFile("packages/pi/src/index.ts");
 
 		expect(source).toContain('export { SubagentManager } from "#pi/subagents/manager"');
-		expect(source).not.toContain("type SubagentRunRequest");
-		expect(source).not.toContain("type SubagentRunResult");
-		expect(source).not.toContain("type SubagentRecord");
-		expect(source).not.toContain("type SubagentAwaitOptions");
+		expect(source).toContain('export type { SubagentManagerApi } from "#pi/subagents/manager-api"');
+		expect(source).toContain('export { registerSubagentTools, SUBAGENT_SPECS } from "#pi/subagents/lifecycle-tools"');
+		expect(source).toContain('export { registerSubagentControls } from "#pi/subagents/tools"');
+		expect(source).toContain('export * from "#pi/subagents/context"');
+		expect(source).toContain('export * from "#pi/subagents/progress"');
+		expect(source).toContain('export * from "#pi/subagents/receipts"');
+		expect(source).toContain('export * from "#pi/subagents/spec"');
+		expect(source).toContain('export * from "#pi/subagents/thinking-level"');
+		expect(source).toContain('export * from "#pi/subagents/types"');
+		expect(source).toContain('export * from "#pi/subagents/yield-result"');
+	});
+
+	it("does not retain subagent ownership in Agent", async () => {
+		const source = await readRepoFile("packages/agent/src/index.ts");
+
+		expect(source).not.toContain("#agent/subagents");
+		expect(source).not.toContain("SubagentManager");
+		expect(source).not.toContain("SUBAGENT_");
 	});
 
 	it("does not expose sdk/messages as a compatibility subpath", async () => {

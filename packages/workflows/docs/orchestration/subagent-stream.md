@@ -11,7 +11,7 @@
 
 Skill adapters retain domain behavior:
 
-- Team extracts its task prompt and constructs the `SubagentManager.spawn()` request.
+- Team extracts its task prompt and constructs the Pi `SubagentManagerApi.spawn()` request.
 - Ralplan chooses spawn versus resume and persists its agent record.
 
-This module does not own Agent lifecycle, subagent execution, workflow admission, role policy, or persistence. Those remain in Agent, Pi's concrete `SubagentManager`, and the skill-specific adapters respectively.
+This module does not own the generic Agent loop, Pi subagent execution, workflow admission, role policy, or persistence. Those remain in `@tsuuanmi/pi`, Pi's concrete `SubagentManager`, and the skill-specific adapters respectively.

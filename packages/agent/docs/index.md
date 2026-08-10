@@ -1,6 +1,6 @@
 # @tsuuanmi/pi-agent Documentation
 
-`@tsuuanmi/pi-agent` contains the lower-layer standard agent: the `Agent` class, its model/tool loop, shared message/tool/event types, execution-environment abstractions, reusable subagent lifecycle behavior, and small Node-only utilities. Higher-level packages configure the agent, register host-specific tools, and attach UI/telemetry without reimplementing agent behavior.
+`@tsuuanmi/pi-agent` contains the lower-layer standard agent: the `Agent` class, its model/tool loop, shared message/tool/event types, execution-environment abstractions, and small Node-only utilities. Higher-level packages configure the agent, register host-specific tools, and attach UI/telemetry without reimplementing agent behavior.
 
 ## Package entry points
 
@@ -9,7 +9,7 @@
 
 ## Standard package boundary
 
-- `@tsuuanmi/pi-agent` owns agent behavior, message/event/tool contracts, shared subagent contracts, thinking-level validation, and host-neutral subagent lifecycle tools.
+- `@tsuuanmi/pi-agent` owns generic agent behavior, message/event/tool contracts, and canonical model/thinking-level types.
 - `@tsuuanmi/pi-orchestrator` owns task, team, and orchestration contracts built on `Agent`.
 - `@tsuuanmi/pi-ai` owns provider/model transport, streaming adapters, and the canonical `ThinkingLevel` type.
 - Host packages such as `@tsuuanmi/pi` own concrete tools and register them with `Tool` / `ToolRegistry` APIs; workflow packages own host adapters and workflow policy.
@@ -38,7 +38,7 @@ The docs tree mirrors the source domain folders under `packages/agent/src`. The 
 - [`messages/messages.md`](messages/messages.md) - `src/messages/types.ts` and `src/messages/messages.ts`: message roles and `convertToLlm()` conversion.
 - [`node/index.md`](node/index.md) - `src/node/node.ts` and `src/node/*`: Node-only process, JSONL, path, and mutation-queue helpers.
 - [`node/env/nodejs.md`](node/env/nodejs.md) - `src/node/env/*`: `ExecutionEnv`, `FileSystem`, `Shell`, typed `Result`, `FileError`, `ExecutionError`, and `NodeExecutionEnv`.
-- [`subagents/index.md`](subagents/index.md) - `src/subagents/*`: `SubagentManager`, durable record/request/result types, thinking validation, lifecycle tools, progress tracking, and yield-result extraction.
+- Pi owns session-aware subagents, lifecycle tools, persistence, progress tracking, and yield-result extraction under `packages/pi/src/subagents/*`.
 - [`tool/registry.md`](tool/registry.md) - `src/tool/tool.ts`, `src/tool/registry.ts`, and `src/tool/policy.ts`: `Tool.define()`, `ContextToolSpec`, `ToolRegistry`, and `Agent.setTools()` for host-owned tools.
 
 Legacy compatibility docs and docs for removed source modules are intentionally not retained.

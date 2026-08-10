@@ -79,11 +79,11 @@ The source-import graph and package dependency graph agree for static imports. T
 
 ### Single-subagent versus multi-agent work
 
-A direct `SubagentManager` call is valid for lifecycle control or one workflow-owned worker. Generic dependencies, queues, routing, retries, verification, and multi-agent collaboration must use Orchestrator.
+A direct Pi `SubagentManagerApi` call is valid for lifecycle control or one workflow-owned worker. Generic dependencies, queues, routing, retries, verification, and multi-agent collaboration must use Orchestrator.
 
 The boundary checker allows direct manager operations in these workflow adapters:
 
-- `packages/workflows/src/tool/adapter.ts` for Agent-owned lifecycle tools.
+- `packages/workflows/src/tool/context.ts` for the structural Pi subagent capability exposed to workflow tools.
 - `packages/workflows/src/skills/team/agent-adapter.ts` for the Agent bridge.
 - `packages/workflows/src/skills/ralplan/agent-adapter.ts` for Orchestrator-backed role execution.
 - `packages/workflows/src/skills/ultragoal/tools.ts` for one guarded goal worker.
@@ -106,7 +106,7 @@ Pi-native controls under `packages/pi/src/subagents/` use the concrete Pi manage
 
 - Each concept has one owner. Do not add fallback ownership, a second engine, or a compatibility facade in another package.
 - Lower layers do not import higher layers.
-- Workflows must not import `@tsuuanmi/pi` or any Pi subpath. Pi APIs are supplied through workflow-owned host contracts.
+- Workflows may import the published `@tsuuanmi/pi` root for session and subagent contracts, but must not import Pi private `#pi/*` aliases or internal source paths.
 - Orchestrator must not import workflow state, storage, gates, receipts, artifacts, or UI.
 - Agent must not import Orchestrator, Workflows, Pi, or TUI.
 - AI and TUI remain independent workspace leaves unless an explicit architecture change is approved.
@@ -132,7 +132,7 @@ For the six configured packages, `scripts/check-package-boundaries.mjs`:
 5. Requires build aliases to resolve beneath the dependency's `dist/` output.
 6. Rejects imports of package subpaths that are not published.
 7. Applies Pi-internal layering rules.
-8. Restricts direct workflow `SubagentManager` operations and Team execution paths.
+8. Restricts direct workflow `SubagentManagerApi` operations and Team execution paths.
 
 The checker's configured maximum graph is broader than the current runtime graph:
 

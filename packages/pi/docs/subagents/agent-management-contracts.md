@@ -1,10 +1,10 @@
 # Agent Management Migration Contracts
 
-This document is the Phase 0 contract for Pi's agent-management behavior. It is intentionally a contract, not an implementation plan. Later migration phases may change these contracts only by updating this document or a follow-up ADR before code changes land.
+This document defines the current contract for Pi's session-aware subagent management. It describes the public boundary and invariants implemented under `packages/pi/src/subagents/`.
 
 ## Scope
 
-The contracts apply to future work on:
+The contracts apply to the following Pi-owned surfaces:
 
 - Standard `.agent` / `.agents` discovery;
 - markdown/frontmatter agent definitions;

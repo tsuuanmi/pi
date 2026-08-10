@@ -1,7 +1,6 @@
+import type { ToolResult, ToolSpec, ToolUpdate } from "@tsuuanmi/pi-agent";
 import type { Static, TSchema } from "typebox";
-import type { SubagentContext, SubagentDetails } from "#agent/subagents/context";
-import type { ToolResult, ToolUpdate } from "#agent/tool/result";
-import type { ToolSpec } from "#agent/tool/tool";
+import type { SubagentContext, SubagentDetails } from "#pi/subagents/context";
 
 export interface SubagentSpec<TParameters extends TSchema = TSchema, TDetails extends SubagentDetails = SubagentDetails>
 	extends Omit<ToolSpec<TParameters, TDetails>, "execute"> {

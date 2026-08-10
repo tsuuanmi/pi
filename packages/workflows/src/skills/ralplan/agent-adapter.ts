@@ -1,4 +1,5 @@
-import { Agent, type SubagentManager, type SubagentRunResult } from "@tsuuanmi/pi-agent";
+import type { SubagentManagerApi, SubagentRunResult } from "@tsuuanmi/pi";
+import { Agent } from "@tsuuanmi/pi-agent";
 import type { Message } from "@tsuuanmi/pi-ai";
 import { createSubagentStream } from "#workflows/orchestration/subagent-stream";
 import { type RalplanAgentRecord, writeRalplanAgentRecord } from "#workflows/skills/ralplan/agent-record";
@@ -7,7 +8,7 @@ import type { RalplanAgentRequest } from "#workflows/skills/ralplan/agent-roles"
 export interface RalplanAgentAdapterInput {
 	cwd: string;
 	sessionId: string;
-	manager: Pick<SubagentManager, "spawn" | "resume">;
+	manager: Pick<SubagentManagerApi, "spawn" | "resume">;
 	request: RalplanAgentRequest;
 	onRecord?: (record: RalplanAgentRecord) => void;
 }

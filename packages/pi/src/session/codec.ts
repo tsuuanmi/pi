@@ -1,5 +1,5 @@
 import { isAbsolute } from "node:path";
-import { isValidThinkingLevel } from "@tsuuanmi/pi-ai";
+import { isValidThinkingLevel } from "@tsuuanmi/pi-agent";
 import { assertPiSessionId, isEntryId } from "#pi/session/id";
 import { type FileEntry, SESSION_VERSION, type SessionEntry, type SessionHeader } from "#pi/session/types";
 

@@ -2,7 +2,6 @@ import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { SubagentStatus } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { createRunIdentity, isRunIdentity, type RunIdentity, recordMatchesIdentity } from "#pi/subagents/run-identity";
 import { buildTmuxCommands, type TmuxMetadata, type TmuxTarget } from "#pi/subagents/tmux";
@@ -19,6 +18,7 @@ import type {
 	ResolvedSubagentRequest,
 	SubagentRecord,
 	SubagentRunResult,
+	SubagentStatus,
 	WorkerRequest,
 } from "#pi/subagents/types";
 

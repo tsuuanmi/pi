@@ -1,8 +1,14 @@
 import { join } from "node:path";
-import { Agent, convertToLlm, type LoopDetectionOptions, type SubagentManager, type Tool } from "@tsuuanmi/pi-agent";
+import {
+	Agent,
+	convertToLlm,
+	type LoopDetectionOptions,
+	type Model,
+	type ThinkingLevel,
+	type Tool,
+} from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import type { ThinkingLevel } from "@tsuuanmi/pi-ai";
-import { clampThinkingLevel, type Model, mergeHeaderSources, type ProviderResponse, stream } from "@tsuuanmi/pi-ai";
+import { clampThinkingLevel, mergeHeaderSources, type ProviderResponse, stream } from "@tsuuanmi/pi-ai";
 import { formatNoModelsAvailableMessage } from "#pi/auth/guidance";
 import { AuthStorage } from "#pi/auth/storage";
 import { findInitialModel } from "#pi/cli/model-resolver";
@@ -18,6 +24,7 @@ import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { getDefaultSessionDir } from "#pi/session/list";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
+import type { SubagentManager } from "#pi/subagents/manager";
 import {
 	createBashTool,
 	createCodingTools,

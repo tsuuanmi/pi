@@ -1,11 +1,12 @@
-import type { CustomMessage, SubagentManager } from "@tsuuanmi/pi-agent";
-import type { Model, TextContent } from "@tsuuanmi/pi-ai";
+import type { CustomMessage, Model } from "@tsuuanmi/pi-agent";
+import type { TextContent } from "@tsuuanmi/pi-ai";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
 import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { CompactionResult } from "#pi/session/compaction/index";
 import type { SessionManager } from "#pi/session/manager";
 import type { SessionView } from "#pi/session/types";
+import type { SubagentManager } from "#pi/subagents/manager";
 
 export interface ContextUsage {
 	tokens: number | null;

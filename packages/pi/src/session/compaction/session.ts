@@ -5,7 +5,7 @@
  * and after compaction the session is reloaded.
  */
 
-import type { AgentMessage, StreamFunction } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, Model, StreamFunction, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import {
 	computeFileLists,
 	createFileOps,
@@ -13,7 +13,6 @@ import {
 	type FileOperations,
 	formatFileOperations,
 } from "@tsuuanmi/pi-agent";
-import type { Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { findCutPoint } from "#pi/session/compaction/cut";
 import { entryToMessage } from "#pi/session/compaction/messages";
 import { generateSummary, generateTurnPrefixSummary } from "#pi/session/compaction/summarize";
