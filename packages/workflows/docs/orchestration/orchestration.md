@@ -24,6 +24,7 @@ Cross-workflow prompts, handoffs, gates, and expected-next guards. Generic multi
 
 ## See Also
 
+- [Subagent stream adapter](subagent-stream.md)
 - [Workflow control plane](../workflow.md)
 - [Runtime](../runtime/runtime.md)
 - [Subagents](../subagents/subagents.md)

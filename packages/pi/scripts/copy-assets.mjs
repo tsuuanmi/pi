@@ -17,6 +17,5 @@ for (const name of ["workflows", "web-runtime"]) {
 }
 
 const subagents = join(dist, "subagents");
-await rm(subagents, { recursive: true, force: true });
 await mkdir(subagents, { recursive: true });
 await cp(join(root, "src", "subagents", "run-identity.schema.json"), join(subagents, "run-identity.schema.json"));
