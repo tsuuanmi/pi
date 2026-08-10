@@ -41,7 +41,6 @@ import {
 	theme,
 	UserMessageComponent,
 } from "@tsuuanmi/pi-tui";
-import { readWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import chalk from "chalk";
 import { spawn } from "child_process";
 import { killTracked } from "#pi/execution/lifecycle";
@@ -290,10 +289,7 @@ export class InteractiveMode {
 			this.settingsManager,
 			() => this.ui.requestRender(),
 			{
-				readHudEntries: async ({ cwd, sessionId }) => {
-					const state = await readWorkflowActiveState(cwd, { sessionId });
-					return state?.active_workflows.map(({ skill, ...entry }) => ({ id: skill, ...entry }));
-				},
+				readHudEntries: (options) => this.session.extensionRunner.getHudEntries(options),
 			},
 		);
 		this.footer.setAutoCompactEnabled(this.session.autoCompactionEnabled);

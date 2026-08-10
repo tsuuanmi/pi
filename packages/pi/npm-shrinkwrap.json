@@ -11,8 +11,8 @@
 			"dependencies": {
 				"@tsuuanmi/pi-agent": "^0.2.3",
 				"@tsuuanmi/pi-ai": "^0.2.3",
+				"@tsuuanmi/pi-orchestrator": "^0.2.3",
 				"@tsuuanmi/pi-tui": "^0.2.3",
-				"@tsuuanmi/pi-workflows": "^0.2.3",
 				"chalk": "5.6.2",
 				"diff": "8.0.4",
 				"glob": "13.0.6",
@@ -128,21 +128,6 @@
 				"darwin",
 				"linux"
 			]
-		},
-		"node_modules/@tsuuanmi/pi-workflows": {
-			"version": "0.2.3",
-			"resolved": "https://registry.npmjs.org/@tsuuanmi/pi-workflows/-/pi-workflows-0.2.3.tgz",
-			"license": "MIT",
-			"dependencies": {
-				"@tsuuanmi/pi-agent": "^0.2.3",
-				"@tsuuanmi/pi-ai": "^0.2.3",
-				"@tsuuanmi/pi-orchestrator": "^0.2.3",
-				"@tsuuanmi/pi-tui": "^0.2.3",
-				"typebox": "1.1.38"
-			},
-			"engines": {
-				"node": ">=22.19.0"
-			}
 		},
 		"node_modules/balanced-match": {
 			"version": "4.0.4",

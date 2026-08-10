@@ -7,6 +7,7 @@
 - **runtime**: Removed fallback-harness execution, `seams.ts`, and the `fallback-harness-exec` recovery classification. Owner-bound operations (validate, finalize, operate, retire) now require a live owner instead of executing locally. Recovery acquires a lease and never falls back to synthetic writer state.
 - **state**: Removed generic `state write` and `state handoff` commands; workflow mutations belong to skill actions. Removed `force`/`force-repair` bypass paths from state writes, transition validation, and tamper detection. Out-of-band edits now hard-block without a force override.
 - **session**: Removed `session-resolution.ts` and `PI_SESSION_ID` environment fallback; session identity comes only from `--session` (CLI), `sessionId` (payload), or host context.
+- **exports**: Removed the `@tsuuanmi/pi-workflows/session/root` export; shared `.pi` root and session path primitives now come from `@tsuuanmi/pi/session/root`.
 - **ralplan**: Approval requires an APPROVE verdict from the latest critic pass; `overrideCriticVerdict` was removed. Obstacle-ledger agreement is always enforced (no dev/production split). Fail-soft obstacle dual-write was replaced with strict writes.
 - **ultragoal**: Removed `replayExempt` and `fallbackArtifactRefs` from the quality gate; all artifact proofs must resolve to live evidence.
 - **deep-interview**: Removed `allowEarlyExit` from spec finalization; above-threshold ambiguity always blocks.
@@ -23,15 +24,16 @@
 
 ### Added
 
+- **extension**: Workflow extensions now register active workflow HUD data through Pi's generic `registerHudProvider` feature.
 - **extensions**: Added `@tsuuanmi/pi-workflows/hooks` with the focused `registerWorkflowHooks()` registrar alongside `registerWorkflowTools()`.
 - **team**: Replaced direct team subagent spawning with explicit `team_execute` and `team_resume` orchestrator operations; role-task batching, fresh/resume checkpoint control, separate execution state, workflow-owned persistence, and no fallback execution path are enforced.
 
 ### Changed
 
 - **build**: Workflows now copies its own runtime assets through a package-owned build script and can be bundled without reconstructing its package layout.
-- **session**: Centralized `.pi` root and path-segment primitives so Pi and workflows share one implementation; workflow-specific layout remains in the workflow package.
+- **session**: Workflow-specific layout remains in Workflows while shared `.pi` root and path-segment primitives are provided by `@tsuuanmi/pi/session/root`.
 - **subagents**: Moved reusable lifecycle tool execution to `@tsuuanmi/pi-agent`; workflows now retain only host adaptation, workflow receipts, and surface metadata.
-- **extensions**: The package manifest now exposes `src/extension.ts` as the extension adapter; Pi loads workflow tools and hooks through the package.
+- **extensions**: The package extension adapter is discovered from the package manifest and invoked through Pi's generic `ExtensionAPI` loader.
 - **extensions**: Split workflow tool registration and workflow hook registration into focused modules; the package extension now composes both registrars.
 - **team**: Moved manager acquisition into the Team agent adapter and added a fail-closed boundary check for direct `SubagentManager` calls.
 - **team**: Split task, status, event, receipt, checkpoint, and event-sink responsibilities into focused workflow-owned modules; no mixed adapter module is retained.

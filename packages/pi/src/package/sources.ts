@@ -1,10 +1,12 @@
 import { existsSync, statSync } from "node:fs";
 import { relative } from "node:path";
 import { isLocalPath } from "@tsuuanmi/pi-agent/node";
+import { validRange } from "semver";
 import { addPaths, createResourceTable, type ResourceTable, toResolvedPaths } from "#pi/resources/paths";
 import type { PackageFilter, PathMetadata, ResolvedPaths, SourceScope } from "#pi/resources/types";
 import type { SettingsManager } from "#pi/settings/manager";
 import type { PackageSource } from "#pi/settings/types";
+import { findBundledPackage, getBundledPackages } from "./bundled.ts";
 import { parseGitUrl } from "./git.ts";
 import type { GitManager } from "./git-manager.ts";
 import { loadPackage } from "./loader.ts";
@@ -12,12 +14,6 @@ import type { NpmManager } from "./npm.ts";
 import type { PackagePaths } from "./paths.ts";
 import type { ProgressReporter } from "./progress.ts";
 import type { ConfiguredPackage, LocalSource, MissingSourceAction, ParsedSource } from "./types.ts";
-import {
-	BUNDLED_DEFAULT_PACKAGES,
-	BUNDLED_PACKAGE_SOURCES,
-	getBundledPackageRoot,
-	getNpmVersionRange,
-} from "./utils.ts";
 
 type PackageEntry = { pkg: PackageSource; scope: SourceScope };
 
@@ -117,9 +113,8 @@ export class SourceManager {
 				installedPath: this.installedPath(source, "project"),
 			});
 		}
-		for (const entry of BUNDLED_DEFAULT_PACKAGES) {
-			const source = this.sourceString(entry);
-			if (seen.has(this.identity(source, "user")) || configured.has(source.trim())) continue;
+		for (const { source } of getBundledPackages()) {
+			if (seen.has(this.identity(source, "user")) || configured.has(source)) continue;
 			result.push({
 				source,
 				scope: "user",
@@ -168,7 +163,7 @@ export class SourceManager {
 		const packages: PackageEntry[] = [];
 		for (const pkg of project.packages ?? []) packages.push({ pkg, scope: "project" });
 		for (const pkg of global.packages ?? []) packages.push({ pkg, scope: "user" });
-		for (const pkg of BUNDLED_DEFAULT_PACKAGES) packages.push({ pkg, scope: "user" });
+		for (const { source } of getBundledPackages()) packages.push({ pkg: source, scope: "user" });
 		return this.resolve(this.dedupe(packages), onMissing);
 	}
 
@@ -179,9 +174,10 @@ export class SourceManager {
 
 	parse(source: string): ParsedSource {
 		const trimmed = source.trim();
-		const bundledName = BUNDLED_PACKAGE_SOURCES[trimmed];
-		if (bundledName) {
-			return { type: "bundled", name: bundledName, path: getBundledPackageRoot(bundledName) };
+		if (trimmed.startsWith("pi:")) {
+			const bundled = findBundledPackage(trimmed);
+			if (!bundled) throw new Error(`Unknown bundled package source: ${trimmed}`);
+			return { type: "bundled", name: bundled.name, path: bundled.root };
 		}
 		if (trimmed.startsWith("npm:")) {
 			const spec = trimmed.slice("npm:".length).trim();
@@ -191,7 +187,7 @@ export class SourceManager {
 				spec,
 				name,
 				version,
-				range: getNpmVersionRange(version),
+				range: version ? (validRange(version) ?? undefined) : undefined,
 			};
 		}
 		if (isLocalPath(source)) return { type: "local", path: source };

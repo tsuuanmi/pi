@@ -94,6 +94,10 @@ export function createExtensionAPI(
 			runtime.assertActive();
 			extension.commands.set(name, { name, sourceInfo: extension.sourceInfo, ...options });
 		},
+		registerHudProvider(provider): void {
+			runtime.assertActive();
+			extension.hudProviders.push(provider);
+		},
 		registerShortcut(
 			shortcut: KeyId,
 			options: { description?: string; handler: (ctx: ExtensionContext) => Promise<void> | void },

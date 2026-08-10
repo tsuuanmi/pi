@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { chmodSync, mkdirSync } from "node:fs";
 import { join, resolve as resolvePathname, sep } from "node:path";
 import { resolvePath as resolveConfiguredPath } from "@tsuuanmi/pi-agent/node";
 import { CONFIG_DIR_NAME } from "#pi/config";
@@ -6,7 +7,6 @@ import { getHomeDir } from "#pi/resources/constants";
 import type { SourceScope } from "#pi/resources/types";
 import type { GitSource } from "./git.ts";
 import type { NpmSource } from "./types.ts";
-import { getExtensionTempFolder } from "./utils.ts";
 
 export class PackagePaths {
 	readonly cwd: string;
@@ -53,7 +53,7 @@ export class PackagePaths {
 	}
 
 	tempDir(prefix: string, suffix?: string): string {
-		const root = this.managed(getExtensionTempFolder(this.agentDir), prefix);
+		const root = this.managed(this.tempRoot(), prefix);
 		const hash = createHash("sha256")
 			.update(`${prefix}-${suffix ?? ""}`)
 			.digest("hex")
@@ -77,6 +77,13 @@ export class PackagePaths {
 
 	resolveFrom(input: string, baseDir: string): string {
 		return resolveConfiguredPath(input, baseDir, { homeDir: getHomeDir(), trim: true });
+	}
+
+	private tempRoot(): string {
+		const root = join(this.agentDir, "tmp", "extensions");
+		mkdirSync(root, { recursive: true, mode: 0o700 });
+		chmodSync(root, 0o700);
+		return root;
 	}
 
 	private managed(root: string, ...parts: string[]): string {

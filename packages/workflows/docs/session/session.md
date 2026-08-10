@@ -9,8 +9,9 @@ Session-scoped path builders and session id resolution.
 | Module | Description |
 |--------|-------------|
 | `paths.ts` | Session-scoped path builders for state, artifacts, specs, plans, and ledgers. |
-| `root.ts` | Canonical `.pi/` root, path-segment encoding, and shared session-state primitives used by Pi and workflows. |
 | `session-layout.ts` | Workflow-owned layout helpers for workflow, specs, plans, and audit paths. |
+
+Shared `.pi` root and session path primitives are provided by `@tsuuanmi/pi/session/root`; this package owns only workflow-specific paths and state below those roots.
 
 ## Important Contracts
 

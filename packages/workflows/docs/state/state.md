@@ -8,7 +8,8 @@ Active workflow state, internal state persistence, workflow ids, and base state 
 
 | Module | Description |
 |--------|-------------|
-| `active-state.ts` | Active workflow state read by the interactive HUD. |
+| `active-state.ts` | Active workflow state read by workflow features. |
+| `hud.ts` | Adapts active workflow state to Pi's generic status-line HUD provider. |
 | `state-schema.ts` | State schema and validation. |
 | `state-writer.ts` | Atomic state writes and JSON helpers. |
 | `workflow-state.ts` | Workflow ids and base state models. |

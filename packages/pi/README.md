@@ -435,7 +435,7 @@ Pi stays minimal, but ships a small set of built-in features so common workflows
 - **`lsp` tool** - minimal Language Server Protocol support (TypeScript/JavaScript, Python, Rust) for status, diagnostics, symbols, hover, definitions, and references.
 - **`pi --tmux`** - launch interactive startup inside a new tmux session.
 - **Account profiles** - store multiple accounts per provider and switch between them with `/account add`, `/account`, `/account <provider> <account>`, `/provider add`, and `/account remove`. See [Account profiles](docs/runtime/models/custom-provider.md#account-profiles) in the Custom Providers docs.
-- **Pi workflow + skills** - a `pi workflow` control plane plus the built-in `deep-interview`, `ralplan`, `team`, and `ultragoal` skills for planning and parallel execution. See [workflows/docs/workflow.md](../workflows/docs/workflow.md).
+- **Bundled Workflows package** - supplies the `pi workflow` control plane plus the `deep-interview`, `ralplan`, `team`, and `ultragoal` skills for planning and parallel execution. Pi discovers these resources from the package manifest. See [workflows/docs/workflow.md](../workflows/docs/workflow.md).
 - **Subagents** - a Pi-native `SubagentManager` with lifecycle and tmux controls for isolated agent workers. Generic multi-agent coordination belongs to `@tsuuanmi/pi-orchestrator`. See [docs/subagents/index.md](docs/subagents/index.md).
 
 ---

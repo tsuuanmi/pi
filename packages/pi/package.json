@@ -31,6 +31,10 @@
 		"./loader/config": {
 			"types": "./dist/loader/config.d.ts",
 			"import": "./dist/loader/config.js"
+		},
+		"./session/root": {
+			"types": "./dist/session/root.d.ts",
+			"import": "./dist/session/root.js"
 		}
 	},
 	"imports": {
@@ -50,7 +54,8 @@
 	],
 	"scripts": {
 		"clean": "shx rm -rf dist",
-		"build": "tsgo -p tsconfig.build.json && shx chmod +x dist/cli/cli.js && npm run copy-assets",
+		"build:ts": "tsgo -p tsconfig.build.json && shx chmod +x dist/cli/cli.js",
+		"build": "npm run build:ts && npm run copy-assets",
 		"copy-assets": "node scripts/copy-assets.mjs",
 		"test": "vitest --run",
 		"shrinkwrap": "node scripts/generate-shrinkwrap.mjs",
@@ -59,8 +64,8 @@
 	"dependencies": {
 		"@tsuuanmi/pi-agent": "^0.2.3",
 		"@tsuuanmi/pi-ai": "^0.2.3",
+		"@tsuuanmi/pi-orchestrator": "^0.2.3",
 		"@tsuuanmi/pi-tui": "^0.2.3",
-		"@tsuuanmi/pi-workflows": "^0.2.3",
 		"chalk": "5.6.2",
 		"diff": "8.0.4",
 		"glob": "13.0.6",

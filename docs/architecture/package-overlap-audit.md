@@ -72,44 +72,36 @@ The audit did find smaller duplicate shapes, ambiguous ownership, packaging comp
 | Receipts | Agent structured/tool receipts; Orchestrator task receipts; Workflow runtime/artifact receipts | Each layer owns its guarantee; higher receipts reference lower ids/metadata | Explicit receipt mapper/reference | Copies of lower receipt schemas in higher layers |
 | HUD | TUI HUD model/rendering; Workflow HUD state/policy; Pi composition | TUI owns generic presentation; Workflows owns domain data/persistence; Pi owns provider registration/composition | Workflows returns `HudSummary`; Pi injects reader into TUI | Workflow state in TUI or HUD rendering in Workflows |
 | Terminal UI | TUI components/runtime; Pi controllers/dialogs/extension UI | TUI owns reusable mechanics; Pi owns product composition | Pi constructs and adapts components | Raw terminal/render/editor mechanics in Pi |
-| Persistence roots | Workflows shared root helpers; Pi session paths; workflow layouts | Shared root ownership needs cleanup; each domain still owns its state below the root | Import one canonical encoder/root helper | Multiple session-id/path encoders |
+| Persistence roots | Pi shared root helpers; Pi session paths; workflow layouts | Pi owns shared root helpers; Workflows extends the layout below those roots | Import one canonical encoder/root helper | Multiple session-id/path encoders |
 
 ## Current overlap findings
 
-### P0 - fix before relying on the affected boundary
+### Resolved packaging boundary
 
-#### 1. Workflows artifact/manifest ownership is compensated by Pi
-
-**Current path:** Workflows' source manifest points `pi.extensions`, `pi.skills`, `pi.agents` and `pi.commands` at `src/`, while its published `files` contain `dist`, `skills` and `agents`, not `src`. Pi rewrites and flattens the manifest in [`packages/pi/scripts/write-bundled-package-manifests.mjs`](../../packages/pi/scripts/write-bundled-package-manifests.mjs), and Pi's build repeats some Workflow asset copies.
-
-**Overlap:** The producer and host both decide the runtime package layout. A standalone published Workflows package cannot rely on Pi's private rewrite step.
-
-**Decision:** Workflows owns one compiled, publishable manifest and all of its assets. Pi should build/copy that package artifact without rewriting its architecture or recopying source assets. Keep manifest discovery as Pi's loading mechanism; keep `@tsuuanmi/pi-workflows/extension` only as an explicit custom-host API.
+Workflows owns its compiled manifest and package assets. Pi discovers and bundles every workspace package with a valid `pi` manifest, preserves the package-relative `dist/` layout, and rejects unknown `pi:` sources instead of falling back to local-path resolution.
 
 ### P1 - consolidate duplicate adapters and contracts
 
-#### 2. Shared session-root ownership is inverted and validation is ambiguous
+#### 1. Shared session-root ownership and validation are explicit
 
-**Current path:** Pi re-exports `piSessionRoot` and `sessionStateDir` from `@tsuuanmi/pi-workflows/session/root`. The current working tree also has a Pi session-id assertion with stricter syntax than Workflows' non-empty assertion.
+**Current path:** Pi owns `@tsuuanmi/pi/session/root`, which provides `.pi` roots, path-segment helpers, and the shared `requireSessionId` precondition. Pi also owns its stricter persisted-session syntax validator, `assertPiSessionId`; Workflows extends the layout with workflow-specific paths and state.
 
-**Overlap:** Generic Pi-native session identity/path rules live in the higher product workflow layer, and two `assertSessionId` meanings can coexist.
+**Decision:** Keep one canonical root/encoder implementation in Pi. Workflows may consume the public Pi session-root contract; Agent remains focused on agent behavior and contracts. Pi must not import Workflows.
 
-**Decision:** Move the generic `.pi` root, path-segment encoding and shared session-id contract to a genuinely lower shared package, or keep Pi as owner and inject/precompute the root for Workflows without a Workflows-to-Pi import. Workflows should own only paths beneath the shared root. Until moved, Pi and Workflows must import the existing canonical root helpers and must not add another encoder.
+#### 2. HUD ownership is explicit
 
-#### 3. HUD sanitization and refresh signaling cross ownership
+- TUI owns `HudSummary` normalization, sanitization, and rendering.
+- Workflows owns workflow state, freshness, visibility, and HUD entry production.
+- Pi owns generic provider registration, aggregation, error isolation, and status-line composition.
+- Pi does not import the Workflows active-state reader.
 
-- TUI owns `HudSummary` normalization/sanitization/rendering.
-- Workflows owns workflow state, freshness and visibility, but also has local text sanitization.
-- `refreshHudUi()` uses a private `__hud_refresh__` extension-status key to trigger Pi redraw.
-- Pi directly imports Workflows' active-state reader when constructing the status line.
+**Decision:** Keep domain HUD production in Workflows and generic composition in Pi/TUI. Do not add workflow-specific status keys, sentinel messages, or duplicate text-limit rules.
 
-**Decision:** TUI owns generic HUD normalization/rendering; Workflows owns domain state and produces the canonical HUD value; Pi owns registration/composition and should expose an explicit UI invalidation/provider seam. Do not add more magic status keys or duplicate text-limit rules.
+#### 3. Private Workflows aliases stay inside the package
 
-#### 4. Private Workflows aliases participate in Pi runtime loading
+Pi's Jiti extension loader does not provide a `#workflows/*` alias. The compiled Workflows extension resolves private imports through its own package manifest.
 
-Pi's Jiti extension loader maps `#workflows/*` directly into Workflows source or dist so the dynamically loaded extension can resolve its private internal imports.
-
-**Decision:** This is a special packaging bridge, not a public import. Prefer a self-contained compiled extension or package-owned supported runtime entry so Pi does not need a wildcard alias into another package. No other package may use `#workflows/*`.
+**Decision:** Keep private package imports inside their owning package. No package loader alias may point into another package's private source tree.
 
 ### P2 - clarify or simplify adjacent ownership
 
@@ -185,7 +177,7 @@ Healthy examples in the current tree:
 ### Pi
 
 - No lower-package business logic copied into the composition root.
-- Pi may load the package-owned workflow factory through `ExtensionAPI`; it must not reimplement workflow registration or policy.
+- No hardcoded workflow registration that bypasses package resources.
 
 ## Workflow integration checklist
 
@@ -215,11 +207,11 @@ If any answer is no, keep the behavior in Workflows until the generic path is cl
 
 | Rank | Task | ROI | Exit criteria |
 |---:|---|---|---|
-| 1 | Make Workflows own one publishable compiled manifest/artifact | Critical | Standalone and Pi-bundled loading use the same package-owned paths; Pi no longer rewrites or duplicates assets |
-| 2 | Resolve shared session-root/session-id ownership | High | One encoder/root contract and unambiguous validation; Workflows owns only workflow-relative layout |
+| 1 | Make Workflows own one publishable compiled manifest/artifact | Complete | Standalone and Pi-bundled loading use the same package-owned paths; Pi discovers packages without rewriting or duplicating assets |
+| 2 | Resolve shared session-root/session-id ownership | Complete | Pi owns one encoder/root contract; Workflows extends it with workflow-relative layout and scoped validation |
 | 3 | Reconcile Team dependency and recovery semantics with `TaskQueue` | High | One dependency owner; deterministic blocked states and recovery parity |
 | 4 | Remove remaining Ultragoal legacy/dual-write paths | High | One canonical obstacle, quality-gate and receipt write path |
-| 5 | Replace HUD magic refresh and duplicate sanitization with explicit host seams | Medium-high | One HUD normalization policy and explicit provider/invalidation integration |
+| 5 | Replace HUD magic refresh and duplicate sanitization with explicit host seams | Complete | One HUD normalization policy and generic provider integration; host refresh remains outside workflow state |
 | 6 | Complete receipt reference boundaries | Medium-high | Workflows references task/tool ids without copying lower schemas |
 | 7 | Prove workflow-owned checkpoint recovery parity | Medium-high | Restart/interrupted recovery is idempotent and independent of workflow state |
 | 8 | Normalize cross-layer event documentation and mappings | Medium | Every bridge has one source event and explicit adapter |

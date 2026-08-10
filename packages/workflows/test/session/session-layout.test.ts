@@ -1,6 +1,7 @@
 import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { piGlobalRoot, piSessionRoot } from "@tsuuanmi/pi/session/root";
 import {
 	assertSafePathComponent,
 	auditLogPath,
@@ -8,50 +9,9 @@ import {
 	workflowActiveStatePath,
 	workflowStatePath,
 } from "@tsuuanmi/pi-workflows";
-import {
-	assertSessionId,
-	decodePathSegment,
-	encodePathSegment,
-	piGlobalRoot,
-	piSessionRoot,
-	sessionDirName,
-	sessionIdFromDirName,
-} from "@tsuuanmi/pi-workflows/session/root";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("session-layout", () => {
-	describe("encodePathSegment / decodePathSegment", () => {
-		it("round-trips simple ASCII ids", () => {
-			const id = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
-			expect(decodePathSegment(encodePathSegment(id))).toBe(id);
-		});
-
-		it("escapes dots to prevent path traversal", () => {
-			const encoded = encodePathSegment("a.b.c");
-			expect(encoded).not.toContain(".");
-			expect(decodePathSegment(encoded)).toBe("a.b.c");
-		});
-
-		it("escapes special characters", () => {
-			const id = "hello world/test";
-			const encoded = encodePathSegment(id);
-			expect(encoded).not.toContain("/");
-			expect(decodePathSegment(encoded)).toBe(id);
-		});
-	});
-
-	describe("assertSessionId", () => {
-		it("accepts valid session ids", () => {
-			expect(() => assertSessionId("abc123")).not.toThrow();
-		});
-
-		it("throws on blank session ids", () => {
-			expect(() => assertSessionId("")).toThrow(/No session ID/);
-			expect(() => assertSessionId("  ")).toThrow(/No session ID/);
-			expect(() => assertSessionId(undefined)).toThrow(/No session ID/);
-		});
-	});
-
 	describe("assertSafePathComponent", () => {
 		it("accepts valid components", () => {
 			expect(() => assertSafePathComponent("ralplan", "skill")).not.toThrow();
@@ -65,23 +25,6 @@ describe("session-layout", () => {
 
 		it("rejects empty strings", () => {
 			expect(() => assertSafePathComponent("", "label")).toThrow();
-		});
-	});
-
-	describe("sessionDirName / sessionIdFromDirName", () => {
-		it("produces bare encoded directory names", () => {
-			expect(sessionDirName("abc")).toBe("abc");
-		});
-
-		it("round-trips through encodePathSegment", () => {
-			const id = "test.session.id";
-			const dirName = sessionDirName(id);
-			expect(dirName).toBe("test%2Esession%2Eid");
-			expect(sessionIdFromDirName(dirName)).toBe(id);
-		});
-
-		it("returns undefined for invalid encoded directory names", () => {
-			expect(sessionIdFromDirName("%E0%A4%A")).toBeUndefined();
 		});
 	});
 

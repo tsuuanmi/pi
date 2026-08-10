@@ -10,8 +10,8 @@
  */
 
 import { join } from "node:path";
+import { encodePathSegment, piGlobalRoot, piSessionRoot, sessionStateDir } from "@tsuuanmi/pi/session/root";
 import type { RalplanStage, WorkflowSkill } from "#workflows/session/paths";
-import { encodePathSegment, piGlobalRoot, piSessionRoot, sessionStateDir } from "#workflows/session/root";
 
 // ---------------------------------------------------------------------------
 // Validation

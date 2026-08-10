@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { requireSessionId } from "@tsuuanmi/pi/session/root";
 import type { ObstacleInput, ObstacleTrigger } from "#workflows/audit/decision-ledger";
 import {
 	beginWorkflowTransactionJournal,
@@ -8,7 +9,6 @@ import {
 } from "#workflows/audit/transaction-journal";
 import { initialWorkflowPhase } from "#workflows/registry/workflow-manifest";
 import type { WorkflowSkill } from "#workflows/session/paths";
-import { assertSessionId } from "#workflows/session/root";
 import { workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
 import { assertRalplanObstacle, writeRalplanObstacle } from "#workflows/skills/ralplan/obstacles";
 import { assertUltragoalObstacle, writeUltragoalObstacle } from "#workflows/skills/ultragoal/obstacles";
@@ -103,7 +103,7 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		throw new Error(`handoff target must differ from caller (both are "${callerSkill}")`);
 	}
 
-	assertSessionId(options.sessionId);
+	requireSessionId(options.sessionId);
 	const sessionId = options.sessionId;
 	const handoffAt = options.nowIso ?? new Date().toISOString();
 	const mutationId = options.mutationId ?? `${callerSkill}:handoff:${calleeSkill}:${handoffAt}`;

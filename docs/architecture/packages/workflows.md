@@ -39,7 +39,6 @@ It composes generic Agent and Orchestrator capabilities. It does not replace eit
 | `@tsuuanmi/pi-workflows/hooks` | Workflow hook registration and HUD refresh |
 | `@tsuuanmi/pi-workflows/extension` | Default Pi extension factory |
 | `@tsuuanmi/pi-workflows/runtime/*` | Published runtime modules through a wildcard subpath |
-| `@tsuuanmi/pi-workflows/session/root` | Canonical `.pi` root and session path primitives shared with Pi |
 | `@tsuuanmi/pi-workflows/package.json` | Package metadata |
 
 The root barrel imports transition modules for registration side effects. `#workflows/*` aliases are internal.
@@ -105,6 +104,7 @@ The CLI and tool paths share lower-level state and policy modules, but neither i
 
 | Dependency | Contract used |
 |---|---|
+| `@tsuuanmi/pi` | Public `.pi` roots and base session layout extended by workflow paths |
 | `@tsuuanmi/pi-ai` | Model/context/event stream types used by workflow agent adapters |
 | `@tsuuanmi/pi-agent` | Agent, SubagentManager, tool, thinking-level, receipt, Node path/JSONL, and mutation contracts |
 | `@tsuuanmi/pi-orchestrator` | Task/team scheduling, checkpoints, verification, routing, events, metrics, and receipts |
@@ -120,12 +120,12 @@ The package also uses Node filesystem, path, process, crypto, socket, and timing
 
 ## Interaction with Pi
 
-Workflows does not import `@tsuuanmi/pi`. Integration uses host-shaped contracts and published seams:
+Workflows imports only Pi's public session-root contract. Runtime integration otherwise uses host-shaped contracts and published seams:
 
 - Pi's package/resource loader discovers the bundled Workflows extension, skills, agent profiles, and command.
 - Pi supplies tool registration, event hooks, current session context, UI refresh, and its one concrete `SubagentManager`.
 - Workflows registers tools and hooks through `workflowExtension`.
-- Pi imports `session/root` primitives so application and workflow paths share the same session identity.
+- Workflows imports the public `.pi` root primitives from `@tsuuanmi/pi/session/root` so its skill paths extend Pi's base session layout.
 - Pi's interactive mode reads strict session-owned active workflow state for the status line.
 - Workflows adapts Pi-provided Agents/subagents into Orchestrator without importing Pi internals.
 

@@ -9,7 +9,7 @@ export type RalplanStage =
 	| "final"
 	| "expert-stage";
 
-// Workflow path API. Shared roots and path-segment helpers live in root.ts.
+// Workflow path API. Shared roots and path-segment helpers live in @tsuuanmi/pi/session/root.
 export {
 	auditLogPath,
 	deepInterviewIndexPath,

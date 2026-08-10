@@ -481,6 +481,27 @@ export class ExtensionRunner {
 		return undefined;
 	}
 
+	async getHudEntries(options: StatusLineHudEntryReaderOptions): Promise<readonly StatusLineHudEntry[]> {
+		const entries: StatusLineHudEntry[] = [];
+		for (const extension of this.extensions) {
+			for (const provider of extension.hudProviders) {
+				try {
+					const provided = await provider(options);
+					if (provided) entries.push(...provided);
+				} catch (error) {
+					const message = error instanceof Error ? error.message : String(error);
+					this.emitError({
+						extensionPath: extension.path,
+						event: "hud",
+						error: message,
+						stack: error instanceof Error ? error.stack : undefined,
+					});
+				}
+			}
+		}
+		return entries;
+	}
+
 	private resolveRegisteredCommands(): ResolvedCommand[] {
 		const commands: RegisteredCommand[] = [];
 		const counts = new Map<string, number>();

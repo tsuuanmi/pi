@@ -108,7 +108,7 @@ Canonical source: [`packages/tui/src/`](../../packages/tui/src). Public access: 
 | `Component`, `EditorComponent`, input/editor primitives | Pi imports root | Pi builds application dialogs/controllers and exposes selected types to extensions | Text editing, focus, autocomplete, or overlay mechanics in Pi |
 | Theme types, parsing and rendering projections | Pi imports root | Pi discovers theme files and persists the selected theme | Theme parser/schema or component color projections |
 | Generic keybinding definitions/matching | Pi imports root | Pi adds application actions and loads keybinding settings | Another generic matcher or TUI key vocabulary |
-| `HudSummary`, normalization and rendering | Workflows and Pi import root | Workflows produces domain HUD data; Pi injects the workflow reader and composes the status area | Workflow state/persistence in TUI or ANSI HUD rendering in Workflows |
+| `HudSummary`, normalization and rendering | Workflows registers a generic provider; Pi/TUI import root | Workflows produces domain HUD data; Pi composes the status area and TUI renders it | Workflow state/persistence in TUI or ANSI HUD rendering in Workflows |
 | Status-line provider contracts | Pi imports root | Pi supplies session/footer/HUD data | Session/model/provider logic inside TUI |
 
 TUI receives data through structural providers and callbacks. It must not import Pi or Workflows.
@@ -119,8 +119,7 @@ Canonical source: [`packages/workflows/src/`](../../packages/workflows/src). Sta
 
 | Canonical component | Pi access | How Pi uses it | Must not be duplicated |
 |---|---|---|---|
-| Active workflow state | Static `readWorkflowActiveState` import from root | Maps workflow entries into the interactive HUD reader | Workflow visibility/freshness/state rules in Pi or TUI |
-| Shared session-root primitives | Static import from `@tsuuanmi/pi-workflows/session/root` | Pi re-exports `piSessionRoot` and `sessionStateDir` | A second encoding/root implementation; ownership is under review in the overlap audit |
+| Active workflow state | Workflows registers a generic HUD provider through its extension | Pi aggregates provider entries into the interactive status line | Workflow visibility/freshness/state rules in Pi or TUI |
 | Extension composition | `pi.extensions` manifest resource; Jiti loads default factory | Injects structural host with `registerTool` and `on` | Hardcoded workflow tool/hook registration in Pi |
 | Skills | `pi.skills` Markdown/resource discovery | Loads Deep Interview, Ralplan, Team and Ultragoal instructions/assets | Skill policy or transitions in Pi |
 | Agent profiles | `pi.agents` Markdown/resource discovery | Loads workflow role profiles into Pi's agent registry | Duplicate role definitions in Pi |
@@ -139,17 +138,18 @@ pi:workflows source
   -> extensions: Jiti imports the default extension factory
   -> skills/agents: resource loader reads Markdown and adjacent assets
   -> commands: startup dispatcher imports the selected command module
-  -> host injection supplies structural WorkflowHost capabilities, session-scoped tool context and the concrete SubagentManager; Workflows does not receive or import Pi internals
+  -> host injection supplies structural WorkflowHost capabilities, session-scoped tool context and the concrete SubagentManager; Workflows imports only Pi's public session-root contract
 ```
 
 The `/extension` public export is a custom-host API. Pi's normal runtime identity is the manifest resource path, not a hardcoded static import of that subpath.
 
 ## Pi components
 
-Canonical source: [`packages/pi/src/`](../../packages/pi/src). No workspace package imports Pi.
+Canonical source: [`packages/pi/src/`](../../packages/pi/src). Workflow packages may consume Pi's public host/session contracts; Pi source does not import workflow implementation code.
 
 | Canonical component | Consumer | Access | Must not be duplicated below Pi |
 |---|---|---|---|
+| `.pi` roots and base session layout | Workflow paths, session services/runtime, CLI modes, and SDK users | `@tsuuanmi/pi/session/root` | A second root/encoder or workflow policy in Pi |
 | `AgentSession`, session services/runtime | CLI modes and external SDK users | Internal composition or `@tsuuanmi/pi` SDK | Session persistence, prompt/compaction/retry coordination |
 | `DefaultResourceLoader` and package manager | Pi startup and external SDK users | Internal use or public loader APIs | Package discovery, filtering, diagnostics, or bundled-source policy in lower packages |
 | Extension API/runner/UI context | Dynamically loaded extensions | Pi injects a host object; extensions register capabilities | Extension lifecycle/event bus/application UI in Workflows/TUI |
@@ -157,7 +157,7 @@ Canonical source: [`packages/pi/src/`](../../packages/pi/src). No workspace pack
 | Model/auth configuration | Agent stream callback and UI | Pi `ModelRegistry`/auth storage over AI APIs | Credential storage or user availability policy in AI/Agent |
 | Coding tools and renderers | Agent and interactive UI | Pi adapts `PiToolSpec`/extension specs to Agent `Tool` | Agent's generic tool execution engine |
 
-External code imports Pi's documented root, `/extensions`, `/loader`, or `/loader/config` surfaces. Workspace packages communicate upward only through callbacks, structural host objects, and data values.
+External code imports Pi's documented root, `/extensions`, `/loader`, `/loader/config`, or `/session/root` surfaces. Workspace packages communicate upward only through callbacks, structural host objects, and data values.
 
 ## Adapter versus duplicate logic
 

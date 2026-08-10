@@ -30,10 +30,6 @@
 			"types": "./dist/runtime/*.d.ts",
 			"import": "./dist/runtime/*.js"
 		},
-		"./session/root": {
-			"types": "./dist/session/root.d.ts",
-			"import": "./dist/session/root.js"
-		},
 		"./package.json": "./package.json"
 	},
 	"imports": {
@@ -70,6 +66,7 @@
 		]
 	},
 	"dependencies": {
+		"@tsuuanmi/pi": "^0.2.3",
 		"@tsuuanmi/pi-agent": "^0.2.3",
 		"@tsuuanmi/pi-ai": "^0.2.3",
 		"@tsuuanmi/pi-orchestrator": "^0.2.3",

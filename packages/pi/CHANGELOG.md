@@ -2,6 +2,9 @@
 
 ### Changed
 
+- **packages**: Bundled package discovery and asset copying now derive from compiled `pi` manifests; unknown `pi:` sources fail instead of falling back to local paths. The orchestrator dependency remains in Pi's runtime closure for dynamically loaded bundled packages, without a static Pi import.
+- **sessions**: Pi now owns the public `.pi` root and session path primitives at `@tsuuanmi/pi/session/root`; Workflows extends that layout without Pi importing Workflows.
+- **extensions**: Added `ExtensionAPI.registerHudProvider()` so packages can contribute domain-owned status-line data without Pi importing package-specific state.
 - **tsconfig**: Enabled `noFallthroughCasesInSwitch`, `noImplicitOverride`, and `noImplicitReturns` repo-wide; added `override` modifiers to overriding UI component members and an explicit return path in a session-switch test.
 - **tsconfig**: Bumped `target` and `lib` from `ES2022` to `ES2024` (unlocks the RegExp `/v` flag and ES2024 library APIs; Node >=22.19 already supports them). Bumped `@typescript/native-preview` to `7.0.0-dev.20260707.2`.
 

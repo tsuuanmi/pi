@@ -10,6 +10,7 @@ import type {
 	ReplacedSessionContext,
 } from "#pi/api/context-types";
 import type { ProviderConfig } from "#pi/api/provider-types";
+import type { ExtensionHudProvider } from "#pi/api/ui-types";
 import type { ProgramOptions, ProgramResult } from "#pi/execution/program";
 import type { ExtensionHookAPI } from "#pi/hooks/api";
 import type { EventBus } from "#pi/hooks/event-bus";
@@ -57,6 +58,7 @@ export interface ExtensionAPI extends ExtensionHookAPI {
 	unregisterTool(name: string): void;
 	refreshTools(options?: { includeAllExtensionTools?: boolean }): void;
 	registerCommand(name: string, options: Omit<RegisteredCommand, "name" | "sourceInfo">): void;
+	registerHudProvider(provider: ExtensionHudProvider): void;
 	registerShortcut(
 		shortcut: KeyId,
 		options: {
@@ -212,6 +214,7 @@ export interface Extension {
 	commands: Map<string, RegisteredCommand>;
 	flags: Map<string, ExtensionFlag>;
 	shortcuts: Map<KeyId, ExtensionShortcut>;
+	hudProviders: ExtensionHudProvider[];
 }
 
 export interface LoadExtensionsResult {

@@ -101,6 +101,7 @@ describe("workflow surface registry", () => {
 
 	it("registers bundled workflow tools and hooks through one host entry point", () => {
 		const registeredTools: string[] = [];
+		const hudProviders: unknown[] = [];
 		const registeredHooks: string[] = [];
 		const host: WorkflowHost = {
 			registerTool(tool) {
@@ -109,10 +110,14 @@ describe("workflow surface registry", () => {
 			on(event) {
 				registeredHooks.push(event);
 			},
+			registerHudProvider(provider) {
+				hudProviders.push(provider);
+			},
 		};
 		workflowExtension(host);
 
 		expect(registeredTools.slice().sort()).toEqual(WORKFLOW_TOOL_SURFACES.map((tool) => tool.toolName).sort());
+		expect(hudProviders).toHaveLength(1);
 		expect(registeredHooks).toEqual([
 			"session_start",
 			"turn_end",

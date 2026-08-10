@@ -1,8 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { piGlobalRoot } from "@tsuuanmi/pi/session/root";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import { piGlobalRoot } from "#workflows/session/root";
 
 /**
  * Canonical JSON serialization for deterministic hashing.

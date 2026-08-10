@@ -3,7 +3,7 @@ import type { AgentMessage, BashExecutionMessage, CustomMessage } from "@tsuuanm
 import { normalizePath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { TextContent, ThinkingLevel } from "@tsuuanmi/pi-ai";
 import { buildSessionContext } from "#pi/session/context";
-import { assertSessionId, createSessionId, generateId } from "#pi/session/id";
+import { assertPiSessionId, createSessionId, generateId } from "#pi/session/id";
 import {
 	findMostRecentSession,
 	getDefaultSessionDir,
@@ -100,7 +100,7 @@ export class SessionManager {
 	}
 
 	newSession(options?: NewSessionOptions): string | undefined {
-		if (options?.id !== undefined) assertSessionId(options.id);
+		if (options?.id !== undefined) assertPiSessionId(options.id);
 		this.sessionId = options?.id ?? createSessionId();
 		const timestamp = new Date().toISOString();
 		const header: SessionHeader = {

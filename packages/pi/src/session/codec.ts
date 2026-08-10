@@ -1,6 +1,6 @@
 import { isAbsolute } from "node:path";
 import { isValidThinkingLevel } from "@tsuuanmi/pi-ai";
-import { assertSessionId, isEntryId } from "#pi/session/id";
+import { assertPiSessionId, isEntryId } from "#pi/session/id";
 import { type FileEntry, SESSION_VERSION, type SessionEntry, type SessionHeader } from "#pi/session/types";
 
 type JsonObject = Record<string, unknown>;
@@ -363,7 +363,7 @@ export function decodeHeader(value: unknown, source = "<session>", line = 1): Se
 	}
 	const id = string(header.id, source, line, "header.id");
 	try {
-		assertSessionId(id);
+		assertPiSessionId(id);
 	} catch (error) {
 		fail(source, line, error instanceof Error ? error.message : String(error));
 	}

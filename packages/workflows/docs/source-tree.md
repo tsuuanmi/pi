@@ -17,7 +17,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | `src/policy/`, `src/handoff/` | Immutable skill policies, cross-workflow prompts, gates, expected-next checks, and workflow handoffs. | [orchestration/orchestration.md](orchestration/orchestration.md) |
 | `src/registry/` | Workflow phase, action, and tool manifest metadata. | [registry/registry.md](registry/registry.md) |
 | `src/runtime/` | Runtime owner, RPC, leases, GC, mutation, storage, receipts. | [runtime/runtime.md](runtime/runtime.md) |
-| `src/session/` | Canonical shared session-root primitives, workflow-owned path builders, and session id resolution. | [session/session.md](session/session.md) |
+| `src/session/` | Workflow-owned path builders and session resolution. Shared `.pi` roots come from `@tsuuanmi/pi/session/root`. | [session/session.md](session/session.md) |
 | `src/skills/` | Bundled skill folders, shared help/surface registries, and skill-owned TypeScript implementation. | [Workflow overview](workflow.md) |
 | `src/skills/deep-interview/` | Deep Interview `SKILL.md` plus runtime, state, policy, handoff guards, help/surface metadata, HUD, mutation guard, and tool registration. | [skills/deep-interview/index.md](skills/deep-interview/index.md) |
 | `src/skills/ralplan/` | Ralplan `SKILL.md` plus role definitions and request construction, Pi-agent and Orchestrator adapters, checkpoint and agent-record persistence, planning runtime, policy, guards, gates, obstacles, verdicts, help/surface metadata, tools, HUD, orchestration snapshots, expected-action selection, and journaled completion transactions. | [skills/ralplan/index.md](skills/ralplan/index.md) |

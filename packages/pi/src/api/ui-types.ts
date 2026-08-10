@@ -6,10 +6,13 @@ import type {
 	EditorTheme,
 	OverlayHandle,
 	OverlayOptions,
+	StatusLineHudEntryReader,
 	Theme,
 	TUI,
 } from "@tsuuanmi/pi-tui";
 import type { KeybindingsManager } from "#pi/settings/keybindings";
+
+export type ExtensionHudProvider = StatusLineHudEntryReader;
 
 export interface ReadonlyFooterDataProvider {
 	getGitBranch(): string | null;

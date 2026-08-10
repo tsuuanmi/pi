@@ -135,12 +135,12 @@ describe("package public imports", () => {
 			  "@tsuuanmi/pi-workflows./runtime/storage",
 			  "@tsuuanmi/pi-workflows./runtime/types",
 			  "@tsuuanmi/pi-workflows./runtime/vanish",
-			  "@tsuuanmi/pi-workflows./session/root",
 			  "@tsuuanmi/pi-workflows./tool",
 			  "@tsuuanmi/pi.",
 			  "@tsuuanmi/pi./extensions",
 			  "@tsuuanmi/pi./loader",
 			  "@tsuuanmi/pi./loader/config",
+			  "@tsuuanmi/pi./session/root",
 			]
 		`);
 	});

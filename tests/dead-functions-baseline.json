@@ -158,24 +158,6 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/workflows/src/session/root.ts::decodePathSegment",
-			"file": "packages/workflows/src/session/root.ts",
-			"name": "decodePathSegment",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/session/root.ts::sessionDirName",
-			"file": "packages/workflows/src/session/root.ts",
-			"name": "sessionDirName",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/session/root.ts::sessionIdFromDirName",
-			"file": "packages/workflows/src/session/root.ts",
-			"name": "sessionIdFromDirName",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/workflows/src/skills/workflow-help-registry.ts::renderWorkflowSkillHelp",
 			"file": "packages/workflows/src/skills/workflow-help-registry.ts",
 			"name": "renderWorkflowSkillHelp",

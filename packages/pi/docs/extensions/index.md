@@ -1309,6 +1309,18 @@ Remove a dynamically registered tool by name. This is useful for package-owned r
 pi.unregisterTool("my_dynamic_tool");
 ```
 
+### pi.registerHudProvider(provider)
+
+Register an extension-owned status-line HUD provider. Pi supplies the current working directory and session id, while the extension supplies domain-specific entries. Pi owns normalization and rendering.
+
+```typescript
+pi.registerHudProvider(async ({ cwd, sessionId }) => [
+  { id: "service", active: true, phase: "ready" },
+]);
+```
+
+Providers that fail are reported through the extension error channel and do not break the status line.
+
 ### pi.sendMessage(message, options?)
 
 Inject a custom message into the session.

@@ -6,7 +6,7 @@
 
 `@tsuuanmi/pi` is the workspace composition root. It is simultaneously the `pi` CLI, an embeddable SDK, the application/session host, the package and extension host, the interactive terminal application, and the concrete runtime for coding tools and Pi-native subagents.
 
-No workspace package imports Pi. Lower layers expose contracts; Pi supplies concrete policy, resources, storage, UI, and process integration.
+Pi supplies concrete policy, resources, storage, UI, process integration, and the base session contract. Workflow packages consume only its public host/session surfaces; Pi does not import workflow implementation code.
 
 ## Boundary
 
@@ -40,6 +40,7 @@ The `src/app/` layer itself is orchestration only. Behavior should remain in CLI
 | `@tsuuanmi/pi/extensions` | Supported extension contracts and helper types; private extension loader/runner internals are excluded |
 | `@tsuuanmi/pi/loader` | `ModelRegistry` and provider-loading types |
 | `@tsuuanmi/pi/loader/config` | Loader configuration contracts |
+| `@tsuuanmi/pi/session/root` | Canonical `.pi` roots, base session layout, path-segment encoding, and `requireSessionId` |
 
 `#pi/*` aliases are internal. External extensions should use the documented `@tsuuanmi/pi/extensions` surface rather than source or `dist` deep imports.
 
@@ -104,10 +105,10 @@ AgentSession is the high-coupling integration point. Agent still owns turn contr
 |---|---|
 | `@tsuuanmi/pi-ai` | Models, providers, OAuth, normalized streams/events, usage, schema validation, and custom-provider registration |
 | `@tsuuanmi/pi-agent` | Agent loop, tools, events/hooks, messages, receipts, compaction helpers, subagent contracts, and Node execution helpers |
+| `@tsuuanmi/pi-orchestrator` | Runtime dependency required by bundled package artifacts; Pi does not import its APIs |
 | `@tsuuanmi/pi-tui` | Terminal runtime, components, editor/input, themes, overlays, status/HUD, and render utilities |
-| `@tsuuanmi/pi-workflows` | Bundled extension/skills/commands, workflow active state, and shared session-root primitives |
 
-Pi has no direct dependency on `@tsuuanmi/pi-orchestrator`. Workflows owns that integration.
+Pi has no direct dependency on `@tsuuanmi/pi-workflows`. Bundled package resources are discovered from compiled manifests at runtime.
 
 ## External dependency groups
 
@@ -133,7 +134,7 @@ Global/project settings + built-in defaults
   -> AgentSession
 ```
 
-Pi ships `pi:workflows` as a bundled default package source. During `packages/pi` build, compiled Workflows assets are copied into `dist/packages/` for the distribution layout. Pi loads the package-owned workflow extension factory through `ExtensionAPI` and dispatches its CLI handler directly; package resource discovery supplies the workflow skills and role profiles.
+Pi ships compiled packages that declare `pi` resources; the current distribution includes `pi:workflows`. During `packages/pi` build, each declared package artifact is copied into `dist/packages/<package-directory>` without manifest rewriting. The generic resource loader discovers each manifest and loads its extension, command, skills, and role profiles.
 
 Resource loading can report partial diagnostics; not every bad optional resource aborts all startup. Extension code is executable code and runs with the Pi process's user permissions.
 

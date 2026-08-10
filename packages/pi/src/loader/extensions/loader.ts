@@ -48,31 +48,19 @@ function getAliases(): Record<string, string> {
 	const typeboxCompileEntry = require.resolve("typebox/compile");
 	const typeboxValueEntry = require.resolve("typebox/value");
 
-	const packagesRoot = path.resolve(__dirname, "../../../../");
-	// Resolve bare @tsuuanmi/* specifiers via ESM (import.meta.resolve) so the
-	// "import" condition in their package "exports" is honored. CJS
-	// require.resolve only sees "require"/"default" conditions, which these
-	// packages do not define, raising "No \"exports\" main defined".
-	const resolveWorkspaceOrImport = (workspaceRelativePath: string, specifier: string): string => {
-		const workspacePath = path.join(packagesRoot, workspaceRelativePath);
-		if (fs.existsSync(workspacePath)) {
-			return workspacePath;
-		}
-		return fileURLToPath(import.meta.resolve(specifier));
+	const resolvePackageEntry = (specifier: string): string => {
+		const resolve = require.resolve as unknown as (module: string, options: { conditions: Set<string> }) => string;
+		return resolve(specifier, { conditions: new Set(["node", "import"]) });
 	};
 
 	const piEntry = packageIndex;
 	const piExtensionsEntry = path.resolve(__dirname, "index.js");
 	const piConfigEntry = path.resolve(__dirname, "..", "config.js");
-	const piAgentEntry = resolveWorkspaceOrImport("agent/dist/index.js", "@tsuuanmi/pi-agent");
-	const piAgentNodeEntry = resolveWorkspaceOrImport("agent/dist/node/node.js", "@tsuuanmi/pi-agent/node");
-	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@tsuuanmi/pi-tui");
-	const piAiEntry = resolveWorkspaceOrImport("ai/dist/index.js", "@tsuuanmi/pi-ai");
-	const piAiOauthEntry = resolveWorkspaceOrImport("ai/dist/auth/oauth/index.js", "@tsuuanmi/pi-ai/oauth");
-	const piWorkflowsEntry = resolveWorkspaceOrImport("workflows/dist/index.js", "@tsuuanmi/pi-workflows");
-	const piWorkflowsInternal = fs.existsSync(path.join(packagesRoot, "workflows/src"))
-		? path.join(packagesRoot, "workflows/src/*")
-		: path.join(packagesRoot, "workflows/dist/*");
+	const piAgentEntry = resolvePackageEntry("@tsuuanmi/pi-agent");
+	const piAgentNodeEntry = resolvePackageEntry("@tsuuanmi/pi-agent/node");
+	const piTuiEntry = resolvePackageEntry("@tsuuanmi/pi-tui");
+	const piAiEntry = resolvePackageEntry("@tsuuanmi/pi-ai");
+	const piAiOauthEntry = resolvePackageEntry("@tsuuanmi/pi-ai/oauth");
 
 	_aliases = {
 		"@tsuuanmi/pi/extensions": piExtensionsEntry,
@@ -83,8 +71,6 @@ function getAliases(): Record<string, string> {
 		"@tsuuanmi/pi-tui": piTuiEntry,
 		"@tsuuanmi/pi-ai": piAiEntry,
 		"@tsuuanmi/pi-ai/oauth": piAiOauthEntry,
-		"@tsuuanmi/pi-workflows": piWorkflowsEntry,
-		"#workflows/*": piWorkflowsInternal,
 		typebox: typeboxEntry,
 		"typebox/compile": typeboxCompileEntry,
 		"typebox/value": typeboxValueEntry,
@@ -121,6 +107,7 @@ function createExtension(extensionPath: string, resolvedPath: string, metadata: 
 		commands: new Map(),
 		flags: new Map(),
 		shortcuts: new Map(),
+		hudProviders: [],
 	};
 }
 

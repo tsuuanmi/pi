@@ -75,7 +75,7 @@ registerWorkflowHooks(extensionHost);
 
 `src/extension.ts` is the package extension entry point and composes the workflow tool and hook registrars. Workflow hooks own workflow behavior such as the Deep Interview mutation guard and HUD refresh. The Pi host supplies the session and UI context.
 
-Workflow packages do not import Pi's application implementation. Pi's central resource loader resolves the package manifest, and the extension loader passes the workflow host interfaces to the package entry point.
+Workflow packages do not import Pi's application implementation. Pi's central resource loader resolves the package manifest, and the extension loader passes the workflow host interfaces to the package entry point. Workflow extensions can register domain-owned status data through `ExtensionAPI.registerHudProvider`; Pi remains responsible for composition and rendering.
 
 ## Orchestration hooks
 

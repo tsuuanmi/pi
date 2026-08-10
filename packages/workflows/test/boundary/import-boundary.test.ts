@@ -23,14 +23,21 @@ async function listTypeScriptFiles(dir: string): Promise<string[]> {
 }
 
 describe("workflow package import boundary", () => {
-	it("does not statically import pi host internals", async () => {
+	it("imports only the public Pi package boundary", async () => {
 		const files = await listTypeScriptFiles(workflowsSrc);
 		const offenders: string[] = [];
+		const importPattern = /from\s+["']([^"']+)["']/g;
 
 		for (const file of files) {
 			const source = await readFile(file, "utf8");
-			if (/from\s+["'](?:@tsuuanmi\/pi(?:\/[^"']*)?|#pi\/[^"']+)["']/.test(source)) {
-				offenders.push(file.replace(`${repoRoot}/`, ""));
+			for (const match of source.matchAll(importPattern)) {
+				const target = match[1];
+				if (
+					target.startsWith("#pi/") ||
+					(target.startsWith("@tsuuanmi/pi/") && target !== "@tsuuanmi/pi/session/root")
+				) {
+					offenders.push(`${file.replace(`${repoRoot}/`, "")}: ${target}`);
+				}
 			}
 		}
 

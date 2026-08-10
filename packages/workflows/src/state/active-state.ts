@@ -1,6 +1,6 @@
+import { requireSessionId } from "@tsuuanmi/pi/session/root";
 import { applyHudStatusFlags, type HudSummary, normalizeHudSummary } from "@tsuuanmi/pi-tui";
 import type { WorkflowSkill } from "#workflows/session/paths";
-import { assertSessionId } from "#workflows/session/root";
 import { workflowActiveStatePath } from "#workflows/session/session-layout";
 import { isEntryStale, readExistingStateForMutation, writeJsonAtomic } from "#workflows/state/state-writer";
 
@@ -167,7 +167,7 @@ export async function readWorkflowActiveState(
 	cwd: string,
 	options: SessionScopedOptions,
 ): Promise<WorkflowActiveState | undefined> {
-	assertSessionId(options.sessionId);
+	requireSessionId(options.sessionId);
 	const sessionId = options.sessionId.trim();
 	const entries = await readAllEntries(workflowActiveStatePath(cwd, sessionId), sessionId);
 	if (entries === undefined) return undefined;
@@ -185,7 +185,7 @@ export async function syncWorkflowActiveState(
 	entry: Omit<WorkflowActiveEntry, "updated_at" | "session_id"> & { updated_at?: string },
 	options: SessionScopedOptions,
 ): Promise<WorkflowActiveState> {
-	assertSessionId(options.sessionId);
+	requireSessionId(options.sessionId);
 	const sessionId = options.sessionId.trim();
 	const now = entry.updated_at ?? new Date().toISOString();
 	const nextEntry: WorkflowActiveEntry = {
@@ -291,7 +291,7 @@ export interface ApplyHandoffOptions {
  * This remains simplified for Pi's single-file active-state model.
  */
 export async function applyHandoffToActiveState(options: ApplyHandoffOptions): Promise<WorkflowActiveState> {
-	assertSessionId(options.sessionId);
+	requireSessionId(options.sessionId);
 	const now = options.nowIso ?? new Date().toISOString();
 	const sessionId = options.sessionId.trim();
 	const tag = { session_id: sessionId };

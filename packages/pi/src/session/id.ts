@@ -4,7 +4,7 @@ const SESSION_ID_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$/;
 const ENTRY_ID_PATTERN = /^[0-9a-f]{8}$/;
 const MAX_ID_ATTEMPTS = 100;
 
-export function assertSessionId(id: string): void {
+export function assertPiSessionId(id: string): void {
 	if (!SESSION_ID_PATTERN.test(id)) {
 		throw new Error(
 			"Session id must start and end with an alphanumeric character and contain only alphanumeric characters, dots, underscores, or hyphens.",

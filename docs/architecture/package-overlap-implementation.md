@@ -17,10 +17,10 @@ This plan turns the findings in [Package Overlap Audit](package-overlap-audit.md
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Shared context tool contract and manager-backed Agent stream | Implemented in current tree |
-| 2 | Workflows-owned compiled package artifact | Concurrent implementation present; validate, do not overwrite |
-| 3 | Session root and session-id ownership | Blocked by concurrent Pi session refactor |
-| 4 | Workflow transition initialization/private alias removal | Blocked by concurrent transition/runtime cleanup |
-| 5 | HUD provider, sanitization, and explicit invalidation | Blocked by concurrent interactive-mode edits |
+| 2 | Generic bundled package artifact discovery | Implemented; validate compiled package manifests and paths |
+| 3 | Session root and session-id ownership | Implemented in the current package boundary |
+| 4 | Workflow transition initialization/private alias removal | Implemented through the package manifest and public runtime entry |
+| 5 | Generic HUD provider and status-line composition | Implemented; status-line refresh remains host-owned |
 | 6 | TUI repository state and global keybinding state | Planned after higher-priority boundaries |
 
 ## Phase 1 - shared contracts and stream adapter
@@ -50,28 +50,31 @@ Remove duplicated host-context tool signatures and duplicated Team/Ralplan assis
 - Agent package build/tests pass.
 - Workflows helper, Team adapter, Team execution, and Ralplan workflow tests pass.
 
-## Phase 2 - Workflows artifact ownership
+## Phase 2 - bundled package artifact ownership
 
 ### Goal
 
-One self-contained Workflows package is used for standalone publication and Pi bundling.
+Each package that declares a `pi` manifest is published as a self-contained compiled artifact and is bundled by Pi without package-specific code.
 
-### Files under concurrent implementation
+### Files
 
 | Action | File | Required end state |
 |---|---|---|
-| Update | `packages/workflows/package.json` | `pi` resources point to shipped `dist/` files; `files` contains the self-contained artifact only |
-| Create/update | `packages/workflows/scripts/copy-assets.mjs` | Workflows alone copies skill/state/agent assets into `dist/` |
-| Update | `packages/pi/scripts/copy-assets.mjs` | Copy Workflows `package.json` and `dist/` without flattening or rewriting |
-| Delete | `packages/pi/scripts/write-bundled-package-manifests.mjs` | Remove host-owned package-specific rewrite logic |
-| Update | Manifest/package tests and docs | Verify every manifest path exists in a packed/bundled layout |
+| Update | `packages/workflows/package.json` | `pi` resources point to shipped `dist/` files; `files` contains the compiled artifact and required assets |
+| Update | `packages/workflows/scripts/copy-assets.mjs` | Workflow-owned assets are copied into the package's compiled layout |
+| Update | `packages/pi/scripts/copy-assets.mjs` | Discover workspace packages from `package.json.pi` and copy their manifests and `dist/` trees without flattening or rewriting |
+| Update | `packages/pi/src/package/bundled.ts` | Discover bundled package directories and derive `pi:<directory>` sources from compiled manifests |
+| Update | `packages/pi/src/package/sources.ts` | Resolve discovered bundled sources and reject unknown `pi:` sources instead of treating them as local paths |
+| Delete | `packages/pi/scripts/write-bundled-package-manifests.mjs` | Keep package-specific manifest rewriting removed |
+| Update | Manifest/package tests and docs | Verify every manifest path exists in standalone and bundled layouts |
 
 ### Completion gate
 
-- Standalone Workflows package resources all exist under published `files`.
-- Pi bundle preserves the same package-relative paths.
-- No duplicate Pi copy of Workflows source assets exists.
-- No Workflows-specific manifest rewrite remains in Pi.
+- Standalone package resources all exist under published `files`.
+- Pi bundles every workspace package with a valid `pi` manifest.
+- Bundled packages preserve their package-relative paths.
+- Bundled package runtime dependencies are present in the host dependency closure.
+- No package-specific catalog, copy list, source fallback, or manifest rewrite remains in Pi.
 
 ## Phase 3 - session identity and root ownership
 
@@ -81,17 +84,16 @@ Keep one path encoder/root implementation and give differently scoped validators
 
 ### Decision
 
-Do not create an extra package solely for a few path functions. Retain the existing one-way dependency while making the contract explicit:
+Keep the host session contract in Pi and let Workflows extend it:
 
-- Workflows' public `session/root` subpath owns shared `.pi` root and path-segment encoding used by both packages.
-- Pi owns generated Pi session-id syntax and entry-id generation.
-- Rename the Pi syntax validator to `assertPiSessionId`.
-- Rename Workflows' non-empty path precondition to `requireSessionId`.
-- Remove any duplicate encoder or ambiguous `assertSessionId` export.
+- `@tsuuanmi/pi/session/root` owns `.pi` roots, path-segment encoding, and the shared `requireSessionId` precondition.
+- Pi owns generated Pi session-id syntax and entry-id generation through `assertPiSessionId`.
+- Workflows owns workflow-specific path builders and state below the Pi session roots.
+- No duplicate encoder or ambiguous `assertSessionId` export remains.
 
-### Files under concurrent edits
+### Files
 
-`packages/pi/src/session/`, `packages/workflows/src/session/root.ts`, their public barrels, session tests, docs, and changelogs.
+`packages/pi/src/session/`, `packages/workflows/src/session/`, their package exports, session tests, docs, and changelogs. Agent has no session-root implementation.
 
 ## Phase 4 - transition initialization and private runtime aliases
 
@@ -99,7 +101,7 @@ Do not create an extra package solely for a few path functions. Retain the exist
 
 Every workflow tool loads its required transition/policy implementation through package-owned public runtime code; Pi does not inject `#workflows/*` aliases.
 
-### Files under concurrent edits
+### Files
 
 - `packages/workflows/src/extension.ts`, tool registration, runtime/skill transition modules, and root exports.
 - `packages/pi/src/loader/extensions/loader.ts`.
@@ -107,8 +109,8 @@ Every workflow tool loads its required transition/policy implementation through 
 
 ### Completion gate
 
-- `ralplan_run_agent` works from the package-owned extension factory invoked directly through Pi's `ExtensionAPI` without another import registering side effects first.
-- Pi contains no `#workflows/*` alias.
+- `ralplan_run_agent` works when the generic resource loader discovers the package extension and invokes its factory through Pi's `ExtensionAPI`.
+- Pi contains no workflow-specific extension import or `#workflows/*` alias.
 - Workflows compiled entry resolves only its own package imports/relative modules.
 - Removed transitions/fallback commands have no import, export, test, doc, or asset references.
 
@@ -116,21 +118,21 @@ Every workflow tool loads its required transition/policy implementation through 
 
 ### Goal
 
-Workflows owns workflow HUD data; TUI owns normalized presentation; Pi owns provider composition and explicit invalidation.
+Workflows owns workflow HUD data; TUI owns normalized presentation; Pi owns provider composition and host-controlled refresh.
 
 ### Files
 
 - TUI HUD model/render contracts.
 - Workflows active-state and skill HUD producers.
-- Pi extension UI context/controller and interactive status composition.
+- Pi extension API/runner and interactive status composition.
 - Workflow hooks and HUD tests/docs.
 
 ### Required changes
 
-- Remove Workflows' duplicate render sanitization; produce canonical `HudSummary` values.
-- Add an explicit Pi UI invalidation capability and delete the `__hud_refresh__` sentinel.
-- Register a HUD reader/provider through Pi composition instead of embedding workflow policy in TUI.
-- Keep workflow freshness/visibility in Workflows and ANSI/layout in TUI.
+- Produce canonical `HudSummary` values in Workflows.
+- Register HUD readers through Pi's generic `ExtensionAPI.registerHudProvider()` feature.
+- Keep status-line refresh, error isolation, ANSI, and layout in Pi/TUI.
+- Do not reintroduce workflow-specific status keys, sentinel messages, or package imports in Pi.
 
 ## Phase 6 - TUI host state
 
@@ -151,9 +153,10 @@ TUI renders injected state and does not own application repository processes or 
 3. Build packages in dependency order: AI if changed, Agent, Orchestrator if changed, TUI if changed, Workflows, Pi.
 4. Run full tests for every package whose shared/public behavior changed.
 5. Run focused consumer tests for each adapter.
-6. Run `npx tsgo --noEmit` from the repository root.
+6. Run `npm exec -- tsgo --noEmit` from the repository root.
 7. Run `npm run check:package-boundaries`.
-8. Validate package resource paths against the actual packed/bundled layouts.
-9. Review `git diff`, lockfile changes, generated files, docs, changelogs, and final status.
+8. Compile Pi before Workflows, build Workflows against Pi's public session contract, then run Pi's asset-copy phase and validate packed/bundled paths.
+9. Run the full tests for Workflows and Pi; report unrelated pre-existing failures separately.
+10. Review `git diff`, lockfile changes, generated files, docs, changelogs, and final status.
 
 A phase with failures caused by another active workstream remains blocked; it is not completed through a fallback or by reverting that workstream.

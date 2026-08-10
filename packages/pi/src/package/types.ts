@@ -58,10 +58,8 @@ export type LocalSource = {
 
 export type BundledSource = {
 	type: "bundled";
-	name: BundledPackageName;
+	name: string;
 	path: string;
 };
 
 export type ParsedSource = NpmSource | GitSource | LocalSource | BundledSource;
-
-export type BundledPackageName = "workflows";

@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { appendFile, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { encodePathSegment, piGlobalRoot } from "@tsuuanmi/pi/session/root";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type {
 	RuntimeLogDiagnostic,
@@ -11,7 +12,6 @@ import type {
 	SessionState,
 	WorkflowRuntimeEvent,
 } from "#workflows/runtime/types";
-import { encodePathSegment, piGlobalRoot } from "#workflows/session/root";
 
 const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 

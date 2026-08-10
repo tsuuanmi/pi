@@ -563,6 +563,26 @@ describe("ExtensionRunner", () => {
 		});
 	});
 
+	describe("HUD providers", () => {
+		it("collects entries from extension providers", async () => {
+			fs.writeFileSync(
+				path.join(extensionsDir, "hud.ts"),
+				`export default function(pi) {
+					pi.registerHudProvider(async () => [{ id: "workflow", active: true }]);
+				}
+				`,
+			);
+
+			const result = await discoverAndLoadExtensions([], tempDir, tempDir);
+			expect(result.errors).toEqual([]);
+			const runner = new ExtensionRunner(result.extensions, result.runtime, tempDir, sessionManager, modelRegistry);
+
+			expect(await runner.getHudEntries({ cwd: tempDir, sessionId: "session-1" })).toEqual([
+				{ id: "workflow", active: true },
+			]);
+		});
+	});
+
 	describe("flags", () => {
 		it("collects flags from extensions", async () => {
 			const extCode = `

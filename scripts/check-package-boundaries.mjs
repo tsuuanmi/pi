@@ -23,6 +23,7 @@ const allowedImports = {
 	"@tsuuanmi/pi-orchestrator": new Set(["@tsuuanmi/pi-agent", "@tsuuanmi/pi-ai"]),
 	"@tsuuanmi/pi-tui": new Set(),
 	"@tsuuanmi/pi-workflows": new Set([
+		"@tsuuanmi/pi",
 		"@tsuuanmi/pi-agent",
 		"@tsuuanmi/pi-orchestrator",
 		"@tsuuanmi/pi-ai",
@@ -33,7 +34,6 @@ const allowedImports = {
 		"@tsuuanmi/pi-agent",
 		"@tsuuanmi/pi-orchestrator",
 		"@tsuuanmi/pi-tui",
-		"@tsuuanmi/pi-workflows",
 	]),
 };
 
