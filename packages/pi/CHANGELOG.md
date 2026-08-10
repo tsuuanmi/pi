@@ -3,6 +3,7 @@
 ### Changed
 
 - **tsconfig**: Enabled `noFallthroughCasesInSwitch`, `noImplicitOverride`, and `noImplicitReturns` repo-wide; added `override` modifiers to overriding UI component members and an explicit return path in a session-switch test.
+- **tsconfig**: Bumped `target` and `lib` from `ES2022` to `ES2024` (unlocks the RegExp `/v` flag and ES2024 library APIs; Node >=22.19 already supports them). Bumped `@typescript/native-preview` to `7.0.0-dev.20260707.2`.
 
 ### Breaking Changes
 

@@ -4,10 +4,10 @@
 	// noEmit: false, to emit declarations and sourcemaps during builds. They are
 	// inert under this root config's noEmit typecheck.
 	"compilerOptions": {
-		"target": "ES2022",
+		"target": "ES2024",
 		"module": "Node16",
 		"lib": [
-			"ES2022"
+			"ES2024"
 		],
 		"strict": true,
 		"noFallthroughCasesInSwitch": true,

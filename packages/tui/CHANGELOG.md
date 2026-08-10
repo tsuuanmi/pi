@@ -5,6 +5,7 @@
 ### Changed
 
 - **lifecycle**: Added `override` modifiers to `dispose()` and `render()` overrides to satisfy `noImplicitOverride`.
+- **tsconfig**: Bumped `target` and `lib` from `ES2022` to `ES2024` so the Unicode property-escape regexes in `src/utilities/text.ts` (which use the `/v` flag) type-check cleanly.
 
 ### Added
 
