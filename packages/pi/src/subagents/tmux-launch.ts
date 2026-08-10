@@ -103,12 +103,17 @@ export function isTmuxCommandAvailable(command: string): boolean {
 	return commandAvailable(command);
 }
 
-export function resolvePiCommand(context: { cwd: string; argv: string[]; execPath: string }): string[] {
+export function resolvePiCommand(context: {
+	cwd: string;
+	argv: string[];
+	execPath: string;
+	execArgv?: string[];
+}): string[] {
 	const entrypoint = context.argv[1];
 	if (!entrypoint) return ["pi"];
 	const resolvedEntrypoint = path.isAbsolute(entrypoint) ? entrypoint : path.resolve(context.cwd, entrypoint);
 	if (entrypoint.endsWith(".ts") || entrypoint.endsWith(".js") || entrypoint.endsWith(".mjs")) {
-		return [context.execPath, resolvedEntrypoint];
+		return [context.execPath, ...(context.execArgv ?? process.execArgv), resolvedEntrypoint];
 	}
 	return [resolvedEntrypoint];
 }

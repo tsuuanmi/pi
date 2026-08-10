@@ -9,6 +9,7 @@ import {
 import {
 	buildTmuxSubagentLaunchPlan,
 	PI_SUBAGENT_TMUX_TARGET_KIND_ENV,
+	resolvePiCommand,
 	type TmuxSpawnOptions,
 	type TmuxSpawnResult,
 } from "#pi/subagents/tmux-launch";
@@ -37,6 +38,17 @@ describe("tmux launch", () => {
 			"/repo/project",
 			"exec env PI_TMUX_LAUNCHED=1 '/usr/local/bin/pi' '--tmux'",
 		]);
+	});
+
+	test("preserves the runtime loader when rebuilding the pi command", () => {
+		expect(
+			resolvePiCommand({
+				cwd: "/repo/project",
+				argv: ["/usr/bin/node", "/repo/packages/pi/src/cli/cli.ts"],
+				execPath: "/usr/bin/node",
+				execArgv: ["--import", "tsx/loader"],
+			}),
+		).toEqual(["/usr/bin/node", "--import", "tsx/loader", "/repo/packages/pi/src/cli/cli.ts"]);
 	});
 
 	test("builds a visible subagent worker pane without prompt or tool payload argv", () => {
