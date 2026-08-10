@@ -11,7 +11,7 @@ import {
 	type StdioPipe,
 } from "node:child_process";
 import type { Readable } from "node:stream";
-import { ExecutionError, toError } from "#agent/node/env/types";
+import { ExecutionError, toError } from "#agent/node/env/runtime";
 
 const EXIT_STDIO_GRACE_MS = 100;
 const TERMINATE_GRACE_MS = 5000;

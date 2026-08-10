@@ -10,7 +10,7 @@ import {
 	sessionIdFromInput,
 	workflowVerbSet,
 } from "#workflows/commands/workflow/command-utils";
-import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
+import type { WorkflowCommandResult } from "#workflows/commands/workflow/index";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
 import type { RalplanStage } from "#workflows/session/paths";
 import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";

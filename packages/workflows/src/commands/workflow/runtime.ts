@@ -6,7 +6,7 @@ import {
 	output,
 	sessionIdFromInput,
 } from "#workflows/commands/workflow/command-utils";
-import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
+import type { WorkflowCommandResult } from "#workflows/commands/workflow/index";
 import { callEndpoint } from "#workflows/runtime/endpoint";
 import type { GcContext } from "#workflows/runtime/gc";
 import { collectGcReport, computeGcExitCode, gcPidProbe, HarnessLeasesGcStoreAdapter } from "#workflows/runtime/gc";

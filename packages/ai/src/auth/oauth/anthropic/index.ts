@@ -6,9 +6,9 @@
  */
 
 import type { Server } from "node:http";
+import { generatePKCE, parseOAuthAuthorizationInput } from "#ai/auth/oauth/helpers";
 import { oauthErrorHtml, oauthSuccessHtml } from "#ai/auth/oauth/oauth-page";
 import type { OAuthCredentials, OAuthLoginCallbacks, OAuthPrompt, OAuthProviderInterface } from "#ai/auth/oauth/types";
-import { generatePKCE, parseOAuthAuthorizationInput } from "#ai/auth/oauth/types";
 import { getProviderEnvValue } from "#ai/provider/config";
 
 type CallbackServerInfo = {

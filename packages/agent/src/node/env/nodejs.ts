@@ -5,17 +5,8 @@ import { tmpdir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { TextDecoder } from "node:util";
-import {
-	type ExecutionEnv,
-	ExecutionError,
-	err,
-	FileError,
-	type FileInfo,
-	type FileKind,
-	ok,
-	type Result,
-	toError,
-} from "#agent/node/env/types";
+import { ExecutionError, err, FileError, ok, toError } from "#agent/node/env/runtime";
+import type { ExecutionEnv, FileInfo, FileKind, Result } from "#agent/node/env/types";
 import { runProcess } from "#agent/node/process";
 import { resolveShell } from "#agent/node/shell";
 

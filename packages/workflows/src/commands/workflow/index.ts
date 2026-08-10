@@ -23,7 +23,11 @@ import {
 } from "#workflows/commands/workflow/runtime";
 import { deepInterviewVerb, ralplanVerb, teamVerb, ultragoalVerb } from "#workflows/commands/workflow/skill-commands";
 import { runStateCommand } from "#workflows/commands/workflow/state";
-import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
+export interface WorkflowCommandResult {
+	status: number;
+	stdout: string;
+	stderr: string;
+}
 
 export { runStateCommand } from "#workflows/commands/workflow/state";
 

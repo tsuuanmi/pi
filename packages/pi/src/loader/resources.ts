@@ -11,12 +11,6 @@ import { resolveResources } from "#pi/loader/discovery";
 import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
 import { collectResourcePaths } from "#pi/resources/paths";
 
-export type {
-	DefaultResourceLoaderOptions,
-	ResourceExtensionPaths,
-	ResourceLoader,
-	ResourceLoaderReloadOptions,
-} from "#pi/loader/types";
 export type { ResourceCollision, ResourceDiagnostic } from "#pi/resources/diagnostics";
 
 import { canonicalizePath, isLocalPath, resolvePath } from "@tsuuanmi/pi-agent/node";
@@ -28,16 +22,73 @@ import { loadPromptTemplatesWithDiagnostics } from "#pi/loader/prompt-templates"
 import type { Skill } from "#pi/loader/skill";
 import { loadSkills } from "#pi/loader/skill";
 import { loadThemes } from "#pi/loader/themes";
-import type {
-	DefaultResourceLoaderOptions,
-	ResourceExtensionPaths,
-	ResourceLoader,
-	ResourceLoaderReloadOptions,
-} from "#pi/loader/types";
 import { DefaultPackageManager } from "#pi/package/manager";
+import type { CommandOutput } from "#pi/package/types";
 import type { PathMetadata, ResolvedResource, ResourceType } from "#pi/resources/types";
 import { createExtensionRuntime } from "#pi/runtime/extensions/api";
 import { SettingsManager } from "#pi/settings/manager";
+
+export interface ResourceExtensionPaths {
+	skillPaths?: Array<{ path: string; metadata: PathMetadata }>;
+	promptPaths?: Array<{ path: string; metadata: PathMetadata }>;
+	themePaths?: Array<{ path: string; metadata: PathMetadata }>;
+}
+
+export interface ResourceLoaderReloadOptions {
+	skipMissingInstalls?: boolean;
+}
+
+export interface ResourceLoader {
+	getExtensions(): LoadExtensionsResult;
+	getSkills(): { skills: Skill[]; diagnostics: ResourceDiagnostic[] };
+	getPrompts(): { prompts: PromptTemplate[]; diagnostics: ResourceDiagnostic[] };
+	getThemes(): { themes: Theme[]; diagnostics: ResourceDiagnostic[] };
+	getAgentsFiles(): { agentsFiles: Array<{ path: string; content: string }> };
+	getAgentProfiles(): AgentProfileLoadResult;
+	getSystemPrompt(): string | undefined;
+	getAppendSystemPrompt(): string[];
+	extendResources(paths: ResourceExtensionPaths): void;
+	reload(options?: ResourceLoaderReloadOptions): Promise<void>;
+}
+
+export interface DefaultResourceLoaderOptions {
+	cwd: string;
+	agentDir: string;
+	commandOutput?: CommandOutput;
+	settingsManager?: SettingsManager;
+	eventBus?: EventBus;
+	additionalExtensionPaths?: string[];
+	additionalSkillPaths?: string[];
+	additionalPromptTemplatePaths?: string[];
+	additionalThemePaths?: string[];
+	extensionFactories?: ExtensionFactory[];
+	noExtensions?: boolean;
+	noSkills?: boolean;
+	noPromptTemplates?: boolean;
+	noThemes?: boolean;
+	noContextFiles?: boolean;
+	systemPrompt?: string;
+	appendSystemPrompt?: string[];
+	extensionsOverride?: (base: LoadExtensionsResult) => LoadExtensionsResult;
+	skillsOverride?: (base: { skills: Skill[]; diagnostics: ResourceDiagnostic[] }) => {
+		skills: Skill[];
+		diagnostics: ResourceDiagnostic[];
+	};
+	promptsOverride?: (base: { prompts: PromptTemplate[]; diagnostics: ResourceDiagnostic[] }) => {
+		prompts: PromptTemplate[];
+		diagnostics: ResourceDiagnostic[];
+	};
+	themesOverride?: (base: { themes: Theme[]; diagnostics: ResourceDiagnostic[] }) => {
+		themes: Theme[];
+		diagnostics: ResourceDiagnostic[];
+	};
+	agentsFilesOverride?: (base: { agentsFiles: Array<{ path: string; content: string }> }) => {
+		agentsFiles: Array<{ path: string; content: string }>;
+	};
+	agentProfilesOverride?: (base: AgentProfileLoadResult) => AgentProfileLoadResult;
+	systemPromptOverride?: (base: string | undefined) => string | undefined;
+	appendSystemPromptOverride?: (base: string[]) => string[];
+}
 
 export class DefaultResourceLoader implements ResourceLoader {
 	private cwd: string;

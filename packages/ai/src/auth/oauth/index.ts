@@ -9,6 +9,7 @@
 // Anthropic
 export { anthropicOAuthProvider, loginAnthropic, refreshAnthropicToken } from "#ai/auth/oauth/anthropic/index";
 export * from "#ai/auth/oauth/device-code";
+export * from "#ai/auth/oauth/helpers";
 // OpenAI Codex (ChatGPT OAuth)
 export {
 	loginOpenAICodex,
@@ -18,7 +19,6 @@ export {
 	openaiCodexOAuthProvider,
 	refreshOpenAICodexToken,
 } from "#ai/auth/oauth/openai-codex/index";
-
 export * from "#ai/auth/oauth/types";
 
 // ============================================================================

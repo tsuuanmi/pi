@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseOAuthAuthorizationInput } from "#ai/auth/oauth/types";
+import { parseOAuthAuthorizationInput } from "#ai/auth/oauth/index";
 
 describe("parseOAuthAuthorizationInput", () => {
 	it("returns no fields for blank input", () => {

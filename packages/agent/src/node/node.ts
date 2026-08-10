@@ -1,5 +1,6 @@
 export * from "#agent/index";
 export { NodeExecutionEnv } from "#agent/node/env/nodejs";
+export * from "#agent/node/env/runtime";
 export * from "#agent/node/env/types";
 export * from "#agent/node/jsonl";
 export * from "#agent/node/mutation-queue";
