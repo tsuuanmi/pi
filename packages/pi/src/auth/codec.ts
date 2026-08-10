@@ -5,6 +5,7 @@ import type {
 	AuthStorageData,
 	AuthStorageEntry,
 	BrowserCredential,
+	OAuthCredential,
 } from "#pi/auth/types";
 
 type JsonObject = Record<string, unknown>;
@@ -75,16 +76,20 @@ function credential(value: unknown, path: string): AuthCredential {
 		return { type, profileId, tunnelSecret };
 	}
 	if (type === "oauth") {
-		exact(item, ["type", "refresh", "access", "expires"], path);
+		exact(item, ["type", "refresh", "access", "expires", "accountId"], path);
 		if (typeof item.expires !== "number" || !Number.isFinite(item.expires) || item.expires < 0) {
 			fail(`${path}.expires`, "must be a non-negative number");
 		}
-		return {
+		const credential: OAuthCredential = {
 			type,
 			refresh: string(item.refresh, `${path}.refresh`),
 			access: string(item.access, `${path}.access`),
 			expires: item.expires,
 		};
+		if ("accountId" in item) {
+			credential.accountId = string(item.accountId, `${path}.accountId`);
+		}
+		return credential;
 	}
 	return fail(`${path}.type`, `"${type}" is not supported`);
 }

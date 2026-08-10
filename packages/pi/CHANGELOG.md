@@ -60,6 +60,7 @@
 - **interactive**: Accept tmux/Kitty LF Enter input when confirming a session selection.
 - **auth**: Preserve the OpenAI Codex OAuth callback URL paste input after selecting a login method.
 - **cli**: Surface invalid settings, auth, and session files as a clean error and non-zero exit instead of an unhandled stack trace.
+- **auth**: Accept the optional `accountId` field on OAuth credentials written by the Codex OAuth provider, so stored tokens reload instead of failing validation.
 
 ### Removed
 

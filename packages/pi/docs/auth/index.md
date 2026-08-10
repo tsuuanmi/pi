@@ -73,6 +73,7 @@ type OAuthCredential = {
   access: string;
   refresh: string;
   expires: number;
+  accountId?: string;       // Optional, written by the Codex OAuth provider
 };
 
 type AuthCredential = ApiKeyCredential | OAuthCredential | BrowserCredential;
