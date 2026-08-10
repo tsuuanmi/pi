@@ -17,7 +17,7 @@ Critical: before running any `pi workflow ultragoal <action>` command, read [ref
 
 ## Current-Session Command Propagation
 
-- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source). Action payloads must include `sessionId`; `--session` applies only to the separate state command.
+- Before constructing any `pi workflow ...` command, obtain the current session id by calling `ctx.sessionManager.getSessionId()`. Use that returned value as `sessionId` in every action payload; never inspect `PI_SESSION_ID`, infer an id from `.pi`, or substitute a placeholder. `--session` applies only to the separate state command.
 - Keep all Ultragoal state, goal ledger, checkpoint receipts, checkpoint snapshots, and blocker records under one session id for one logical goal run. Do not scatter one run across multiple `.pi/<session-id>` buckets.
 - `ultragoal_spawn_goal_agent` is a guarded spawn tool that spawns an ultragoal worker as an ordinary subagent of the main session. The workflow computes the legal next goal and refuses off-script goal ids or runtime model/tool overrides. The spawn happens in-process in the main session; there is no `pi workflow` command for it.
 

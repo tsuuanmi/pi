@@ -17,7 +17,7 @@ Critical: before running any `pi workflow team <action>` command, read [referenc
 
 ## Current-Session Command Propagation
 
-- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source). Action payloads must include `sessionId`; `--session` applies only to the separate state command.
+- Before constructing any `pi workflow ...` command, obtain the current session id by calling `ctx.sessionManager.getSessionId()`. Use that returned value as `sessionId` in every action payload; never inspect `PI_SESSION_ID`, infer an id from `.pi`, or substitute a placeholder. `--session` applies only to the separate state command.
 - Keep all Team state, task records, messages, and gate artifacts under one session id for one logical team run. Do not scatter one run across multiple `.pi/<session-id>` buckets.
 - `team_execute` is the only fresh team execution tool. It computes the legal next role and runs that work through the orchestrator.
 - `team_resume` is the only recovery tool. It requires an existing non-completed orchestrator checkpoint. There is no direct subagent-spawn execution path.

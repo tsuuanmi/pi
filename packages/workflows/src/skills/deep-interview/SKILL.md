@@ -452,7 +452,7 @@ The spec file body is Markdown. Generate it as rendered Markdown (the file conte
 
 ## Current-Session Command Propagation
 
-- When running inside an interactive Pi session, pass the current session id into every `pi workflow ...` command input as `sessionId`. Use `ctx.sessionManager.getSessionId()` (or the equivalent session source). Action payloads must include `sessionId`; `--session` applies only to the separate state command.
+- Before constructing any `pi workflow ...` command, obtain the current session id by calling `ctx.sessionManager.getSessionId()`. Use that returned value as `sessionId` in every action payload; never inspect `PI_SESSION_ID`, infer an id from `.pi`, or substitute a placeholder. `--session` applies only to the separate state command.
 - Keep all Deep Interview state, active-state, specs, and handoff artifacts under one session id for one logical interview. Do not scatter one interview across multiple `.pi/<session-id>` buckets.
 - Missing current-session propagation is release-blocking: commands that fall back to a different session id will write state the interactive HUD cannot see.
 
