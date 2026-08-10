@@ -59,7 +59,6 @@ async function runBuiltPiWorkflow(
 	try {
 		const result = await execFileAsync(process.execPath, [builtPiCliPath, "workflow", ...args], {
 			cwd,
-			env: { ...process.env, PI_OFFLINE: "1" },
 			maxBuffer: 1024 * 1024,
 		});
 		return { status: 0, stdout: result.stdout, stderr: result.stderr };

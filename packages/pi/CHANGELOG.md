@@ -64,6 +64,7 @@
 
 ### Removed
 
+- **packages**: Removed the package and tool installation opt-out behavior and its environment configuration.
 - **interactive**: Removed the `/changelog` command and its changelog parser.
 - **interactive**: Removed `/fork`, `/hotkeys`, and `/import` plus the session-forking, cloning, import-runtime, and related extension/RPC APIs.
 - **startup**: Removed legacy startup migrations; Pi now assumes current installation paths and formats.

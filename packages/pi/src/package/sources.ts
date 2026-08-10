@@ -17,7 +17,6 @@ import {
 	BUNDLED_PACKAGE_SOURCES,
 	getBundledPackageRoot,
 	getNpmVersionRange,
-	isOfflineModeEnabled,
 } from "./utils.ts";
 
 type PackageEntry = { pkg: PackageSource; scope: SourceScope };
@@ -245,7 +244,6 @@ export class SourceManager {
 			}
 
 			const installMissing = async (): Promise<boolean> => {
-				if (isOfflineModeEnabled()) return false;
 				if (!onMissing) {
 					await this.installParsed(parsed, scope);
 					return true;

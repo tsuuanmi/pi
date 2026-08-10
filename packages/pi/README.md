@@ -554,7 +554,6 @@ pi --thinking high "Solve this complex problem"
 | `PI_AGENT_DIR` | Override config directory (default: `~/.pi/agent`) |
 | `PI_SESSION_DIR` | Override session storage directory |
 | `PI_PACKAGE_DIR` | Override package directory (useful for Nix/Guix where store paths tokenize poorly) |
-| `PI_OFFLINE` | Disable package registry lookups and other network package operations |
 | `PI_CACHE_RETENTION` | Set to `long` for extended prompt cache (Anthropic: 1h, OpenAI: 24h) |
 | `VISUAL`, `EDITOR` | External editor for Ctrl+G |
 

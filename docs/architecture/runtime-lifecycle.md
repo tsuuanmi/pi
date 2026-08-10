@@ -49,7 +49,7 @@ The application package, `@tsuuanmi/pi`, owns this lifecycle. The lower packages
 
 ### 1. Bootstrap the process
 
-`packages/pi/src/main.ts` calls `bootstrapStartup()` first. This resolves the working directory and agent directory, normalizes offline mode, applies HTTP proxy settings, and configures the HTTP dispatcher.
+`packages/pi/src/main.ts` calls `bootstrapStartup()` first. This resolves the working directory and agent directory, applies HTTP proxy settings, and configures the HTTP dispatcher.
 
 Startup commands are handled before a session is created. This covers package/configuration commands and worker entry points that must not enter the normal agent runtime.
 

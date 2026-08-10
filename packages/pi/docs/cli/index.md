@@ -92,7 +92,6 @@ Pi also supports several subcommands:
 | `PI_AGENT_DIR` | Override default agent directory (`~/.pi/agent`) |
 | `PI_SESSION_DIR` | Override session storage directory |
 | `PI_PACKAGE_DIR` | Override package directory (for Nix/Guix store paths) |
-| `PI_OFFLINE` | Disable package registry lookups and other network package operations (`1`, `true`, or `yes`) |
 | `ANTHROPIC_API_KEY` | Anthropic API key |
 | `ANTHROPIC_OAUTH_TOKEN` | Anthropic OAuth token (alternative to API key) |
 | `OPENAI_API_KEY` | OpenAI API key |

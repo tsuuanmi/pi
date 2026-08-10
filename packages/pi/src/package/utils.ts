@@ -30,12 +30,6 @@ export function getEnv(): NodeJS.ProcessEnv {
 	}
 }
 
-export function isOfflineModeEnabled(): boolean {
-	const value = process.env.PI_OFFLINE;
-	if (!value) return false;
-	return value === "1" || value.toLowerCase() === "true" || value.toLowerCase() === "yes";
-}
-
 export function getExtensionTempFolder(agentDir: string): string {
 	const tempFolder = join(agentDir, "tmp", "extensions");
 	mkdirSync(tempFolder, { recursive: true, mode: 0o700 });

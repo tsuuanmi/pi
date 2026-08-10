@@ -4,7 +4,7 @@ The `src/app/` layer coordinates startup without owning the lower-level agent, s
 
 ## Startup order
 
-1. `bootstrapStartup()` resolves the working directory and agent directory, applies offline and proxy settings, and configures the HTTP dispatcher.
+1. `bootstrapStartup()` resolves the working directory and agent directory, applies proxy settings, and configures the HTTP dispatcher.
 2. `runStartupCommands()` handles worker entry points and package/configuration commands that must run before a session is created.
 3. `parseArgs()` parses CLI arguments and `resolveStartupMode()` chooses interactive, print, JSON, or RPC mode.
 4. `createStartupSession()` resolves the selected or resumed session. Session selection happens before project-bound resources and models are loaded so the final session working directory controls resolution.

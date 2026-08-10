@@ -204,6 +204,5 @@ ${chalk.bold("Environment Variables:")}
   ${ENV_AGENT_DIR.padEnd(32)} - Config directory (default: ~/${CONFIG_DIR_NAME}/agent)
   ${ENV_SESSION_DIR.padEnd(32)} - Session storage directory
   PI_PACKAGE_DIR                   - Override package directory (for Nix/Guix store paths)
-  PI_OFFLINE                       - Disable package network operations when set to 1/true/yes
 `);
 }

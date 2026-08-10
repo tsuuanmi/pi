@@ -51,7 +51,6 @@ describe("DefaultPackageManager", () => {
 	let agentDir: string;
 	let settingsManager: SettingsManager;
 	let packageManager: DefaultPackageManager;
-	let previousOfflineEnv: string | undefined;
 
 	const resolveAll = (
 		manager: DefaultPackageManager = packageManager,
@@ -61,8 +60,6 @@ describe("DefaultPackageManager", () => {
 	) => resolveResources(manager, { cwd, agentDir: baseDir, settingsManager: managerSettings });
 
 	beforeEach(() => {
-		previousOfflineEnv = process.env.PI_OFFLINE;
-		delete process.env.PI_OFFLINE;
 		tempDir = join(tmpdir(), `pm-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		mkdirSync(tempDir, { recursive: true });
 		agentDir = join(tempDir, "agent");
@@ -77,11 +74,6 @@ describe("DefaultPackageManager", () => {
 	});
 
 	afterEach(() => {
-		if (previousOfflineEnv === undefined) {
-			delete process.env.PI_OFFLINE;
-		} else {
-			process.env.PI_OFFLINE = previousOfflineEnv;
-		}
 		vi.restoreAllMocks();
 		vi.unstubAllGlobals();
 		rmSync(tempDir, { recursive: true, force: true });
@@ -1803,19 +1795,7 @@ export default function(api) { api.registerTool({ name: "test", description: "te
 		});
 	});
 
-	describe("offline mode", () => {
-		it("should skip installing missing package sources when offline", async () => {
-			process.env.PI_OFFLINE = "1";
-			settingsManager.setProjectPackages(["npm:missing-package", "git:github.com/example/missing-repo"]);
-
-			const installParsedSourceSpy = vi.spyOn((packageManager as any).sources, "installParsed");
-
-			const result = await resolveAll();
-			const allResources = [...result.extensions, ...result.skills, ...result.prompts, ...result.themes];
-			expect(allResources.some((r) => r.metadata.source === "npm:missing-package")).toBe(false);
-			expect(installParsedSourceSpy).not.toHaveBeenCalled();
-		});
-
+	describe("package resolution", () => {
 		it("should not refresh cached temporary git packages", async () => {
 			const gitSource = "git:github.com/example/repo";
 			const parsedGitSource = (packageManager as any).sources.parse(gitSource);

@@ -157,10 +157,6 @@ The `npmCommand` setting can override the npm binary used for installations:
 }
 ```
 
-## Offline Mode
-
-Set `PI_OFFLINE=1` to disable automatic installation of missing npm and git package sources.
-
 ## See Also
 
 - [Pi Packages](packages.md) - Full package management documentation
