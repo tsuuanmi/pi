@@ -82,7 +82,6 @@ Pi also supports several subcommands:
 | `pi remove <source> [-l]` | Remove a package source from settings |
 | `pi list` | List installed packages from settings |
 | `pi config` | Open the package resource configuration TUI |
-| `pi workflow <verb>` | Pi workflow control plane (try `pi workflow --help`) |
 | `pi <command> --help` | Show package-command help |
 
 ## Environment Variables

@@ -10,14 +10,12 @@ Pi uses separate hook layers for agent execution, orchestration, and host extens
 @tsuuanmi/pi-agent
         |
 @tsuuanmi/pi-orchestrator
-        |
-@tsuuanmi/pi-workflows
 
 @tsuuanmi/pi is the composition root. It integrates these packages and owns
 extension loading, session state, and UI context.
 ```
 
-Lower-level packages do not import `@tsuuanmi/pi`.
+Pi exposes only public host contracts to package extensions. Pi source does not import package implementations.
 
 ## Ownership
 
@@ -25,7 +23,6 @@ Lower-level packages do not import `@tsuuanmi/pi`.
 | --- | --- | --- |
 | `@tsuuanmi/pi-agent` | Agent lifecycle and execution hooks | `Agent.registerHook()` and `Agent.subscribe()` |
 | `@tsuuanmi/pi-orchestrator` | Task, team, retry, verification, progress, and trace hooks | Orchestrator configuration and events |
-| `@tsuuanmi/pi-workflows` | Workflow tools and workflow policy | `registerWorkflowTools()` and `registerWorkflowHooks()` |
 | `@tsuuanmi/pi` | Extension loading, session/UI context, and dynamic extension events | Public `ExtensionAPI` from `@tsuuanmi/pi/extensions`; private lifecycle and hook subsystems |
 
 ## Agent hooks
@@ -64,18 +61,11 @@ Pi bridges extension tool events into the agent with an agent hook registration.
 
 Extension events that require host context remain in Pi, including session lifecycle, UI updates, resource discovery, and extension loading. The private hook subsystem owns dynamic handler registration, ordering, transformation, and errors; the private lifecycle runner owns activation and disposal.
 
-## Workflow registration
+## Package registration
 
-Workflow code is registered through narrow capability interfaces:
+Package code registers domain capabilities through the public `ExtensionAPI` contract. The package manifest declares the compiled entry point and resources; Pi's resource loader resolves the manifest and invokes the extension factory without knowing the package's policy.
 
-```typescript
-registerWorkflowTools(toolHost);
-registerWorkflowHooks(extensionHost);
-```
-
-`src/extension.ts` is the package extension entry point and composes the workflow tool and hook registrars. Workflow hooks own workflow behavior such as the Deep Interview mutation guard and HUD refresh. The Pi host supplies the session and UI context.
-
-Workflow packages do not import Pi's application implementation. Pi's central resource loader resolves the package manifest, and the extension loader passes the workflow host interfaces to the package entry point. Workflow extensions can register domain-owned status data through `ExtensionAPI.registerHudProvider`; Pi remains responsible for composition and rendering.
+Package extensions can register domain-owned status data through `ExtensionAPI.registerHudProvider`; Pi remains responsible for aggregation and rendering.
 
 ## Orchestration hooks
 
@@ -96,5 +86,5 @@ They must not depend on `ExtensionAPI`, `ExtensionRunner`, session managers, or 
 
 - `pi-agent` is not an extension registry.
 - `pi-orchestrator` is not a general-purpose hook package.
-- `pi-workflows` does not own Pi session or UI infrastructure.
-- Pi does not move workflow policy into the core agent runtime.
+- Package extensions do not own Pi session or UI infrastructure.
+- Pi does not move package policy into the core agent runtime.

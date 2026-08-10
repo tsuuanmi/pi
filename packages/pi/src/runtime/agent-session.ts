@@ -134,7 +134,7 @@ export class AgentSession {
 	private _initialActiveToolNames?: string[];
 	private _baseToolsOverride?: Record<string, Tool>;
 	private _sessionStartEvent: SessionStartEvent;
-	private _skipWorkflowContinuation: boolean;
+	private _skipAutomaticContinuation: boolean;
 	private _extraSystemPrompt?: string;
 	private _apiUsageSessionId?: string;
 	private _subagentManager?: SubagentManager;
@@ -205,7 +205,7 @@ export class AgentSession {
 			apply: (names, tools) => this._applyActiveTools(names, tools),
 		});
 		this._sessionStartEvent = config.sessionStartEvent ?? { type: "session_start", reason: "startup" };
-		this._skipWorkflowContinuation = config.skipWorkflowContinuation ?? false;
+		this._skipAutomaticContinuation = config.skipAutomaticContinuation ?? false;
 		this._extraSystemPrompt = config.extraSystemPrompt;
 		this._apiUsageSessionId = config.apiUsageSessionId;
 		this._subagentManager = config.subagentManager ?? undefined;
@@ -1178,7 +1178,7 @@ export class AgentSession {
 			this.sessionManager,
 			this._modelRegistry,
 			this._subagentManager,
-			this._skipWorkflowContinuation,
+			this._skipAutomaticContinuation,
 		);
 		if (this._extensionRunnerRef) {
 			this._extensionRunnerRef.current = this._extensionRunner;

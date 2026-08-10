@@ -93,8 +93,8 @@ export interface CreateAgentSessionOptions {
 	sessionStartEvent?: SessionStartEvent;
 	/** Optional Pi-native subagent manager for extensions/tools. Set to null to explicitly disable. */
 	subagentManager?: SubagentManager | null;
-	/** Skip workflow continuation prompts (set for subagent sessions). */
-	skipWorkflowContinuation?: boolean;
+	/** Skip automatic continuation prompts (set for subagent sessions). */
+	skipAutomaticContinuation?: boolean;
 	/** Extra system prompt appended to this session's rebuilt base prompt. */
 	extraSystemPrompt?: string;
 	/** Optional override for API-usage log routing. Defaults to the session id. */
@@ -368,7 +368,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		extensionRunnerRef,
 		sessionStartEvent: options.sessionStartEvent,
 		subagentManager: options.subagentManager ?? undefined,
-		skipWorkflowContinuation: options.skipWorkflowContinuation,
+		skipAutomaticContinuation: options.skipAutomaticContinuation,
 		extraSystemPrompt: options.extraSystemPrompt,
 		apiUsageSessionId: options.apiUsageSessionId,
 	});

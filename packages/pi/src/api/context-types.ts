@@ -32,7 +32,6 @@ export interface ExtensionContext {
 	model: Model<any> | undefined;
 	subagents?: SubagentManager;
 	skipAutomaticContinuation: boolean;
-	skipWorkflowContinuation: boolean;
 	isIdle(): boolean;
 	signal: AbortSignal | undefined;
 	abort(): void;

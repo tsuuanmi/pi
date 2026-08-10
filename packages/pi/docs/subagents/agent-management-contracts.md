@@ -24,8 +24,8 @@ These are the intended ownership boundaries. If implementation chooses different
 | Project resource loading | `packages/pi/src/settings/manager.ts` and `src/loader/resources.ts` | `packages/pi/docs/app/security.md` |
 | Source metadata and diagnostics | `packages/pi/src/resources/source-info.ts` and `src/resources/diagnostics.ts` | resource-specific loaders |
 | Scoped live registry | `packages/pi/src/runtime/agent-session-services.ts` and `packages/pi/src/subagents/manager.ts` | `src/runtime/agent-session.ts`, `src/api/extension-types.ts` |
-| Durable subagent/task/receipt state | `packages/pi/src/subagents/manager.ts`, `packages/pi/src/subagents/store.ts`, and future task modules | `.pi/<session-id>/state/subagents/`, workflow runtimes |
-| Self-hosting continuity | `pi:workflows` first-party package tools and skills | `packages/workflows/src/harness/*`, `packages/workflows/src/skills/*` |
+| Durable subagent/task/receipt state | `packages/pi/src/subagents/manager.ts`, `packages/pi/src/subagents/store.ts`, and future task modules | `.pi/<session-id>/state/subagents/`, task runtimes |
+| Bundled package continuity | Compiled package manifests and package-owned resources | Package resource loaders and tests |
 | Direct-port adaptation | each porting change owner | this document and code review checklist |
 | Worktree/tmux orchestration | `packages/pi/src/subagents/tmux.ts`, `run-identity.ts`, `tmux-launch.ts`, and `tmux-worker.ts` | Pi subagent tools and threat-model docs |
 
@@ -120,7 +120,7 @@ Live registry entries must include:
 - created and last-activity timestamps;
 - an optional live session reference.
 
-The registry is not durable authority. Durable records remain owned by session, subagent, workflow, or future task state stores. Stale durable records must not reappear as live peers unless an owner session reattaches them explicitly.
+The registry is not durable authority. Durable records remain owned by session, subagent, or task state stores. Stale durable records must not reappear as live peers unless an owner session reattaches them explicitly.
 
 Required negative cases:
 
@@ -143,17 +143,16 @@ Minimum durable-state requirements:
 - cleanup behavior for abandoned or stale live references;
 - documentation for user-visible reset/recovery commands when invalidation is chosen.
 
-## Self-hosting continuity contract
+## Package continuity contract
 
-Pi may drop old compatibility, but it must not strand itself mid-migration.
+Pi loads only compiled package resources declared by package manifests. A package change is complete when its manifest, compiled entry points, resource paths, and package-scoped tests agree.
 
-A phase may remove or break old role-agent/subagent surfaces only when the same phase verifies replacements for:
+A package resource change must verify:
 
-- `ralplan` planner, architect, critic role dispatch;
-- `team` worker spawning or its replacement;
-- `ultragoal` goal-worker spawning or its replacement.
-
-A phase fails if it adds user agents but prevents built-in workflows from dispatching the role agents needed to continue planning or execution.
+- the manifest points only to compiled artifacts;
+- package resources resolve through the generic loader;
+- package-owned behavior is isolated from Pi's core runtime; and
+- package tests cover registration and resource discovery.
 
 ## Direct-port adaptation checklist
 

@@ -457,7 +457,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentControls {
 			thinkingLevel: request.thinkingLevel,
 			tools: excludeNestedSubagentTools(request.tools),
 			excludeTools: request.excludeTools,
-			skipWorkflowContinuation: true,
+			skipAutomaticContinuation: true,
 			extraSystemPrompt: appendSystemPrompt(request.resolvedSystemPrompt, observabilityPrompt),
 			// Subagent sessions do not get their own SubagentManager to prevent unbounded nesting.
 			// A subagent cannot spawn further subagents; use the parent manager for orchestration.

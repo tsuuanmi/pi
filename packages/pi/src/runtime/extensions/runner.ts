@@ -185,7 +185,7 @@ export class ExtensionRunner {
 	private sessionManager: SessionManager;
 	private modelRegistry: ModelRegistry;
 	private subagentManager: SubagentManager | undefined;
-	private skipWorkflowContinuation: boolean;
+	private skipAutomaticContinuation: boolean;
 	private errorListeners: Set<ExtensionErrorListener> = new Set();
 	private getModel: () => Model<any> | undefined = () => undefined;
 	private isIdleFn: () => boolean = () => true;
@@ -213,7 +213,7 @@ export class ExtensionRunner {
 		sessionManager: SessionManager,
 		modelRegistry: ModelRegistry,
 		subagentManager?: SubagentManager,
-		skipWorkflowContinuation?: boolean,
+		skipAutomaticContinuation?: boolean,
 	) {
 		this.extensions = extensions;
 		this.runtime = runtime;
@@ -222,7 +222,7 @@ export class ExtensionRunner {
 		this.sessionManager = sessionManager;
 		this.modelRegistry = modelRegistry;
 		this.subagentManager = subagentManager;
-		this.skipWorkflowContinuation = skipWorkflowContinuation ?? false;
+		this.skipAutomaticContinuation = skipAutomaticContinuation ?? false;
 	}
 
 	bindCore(
@@ -599,13 +599,9 @@ export class ExtensionRunner {
 				runner.assertActive();
 				return runner.subagentManager;
 			},
-			get skipWorkflowContinuation() {
-				runner.assertActive();
-				return runner.skipWorkflowContinuation;
-			},
 			get skipAutomaticContinuation() {
 				runner.assertActive();
-				return runner.skipWorkflowContinuation;
+				return runner.skipAutomaticContinuation;
 			},
 			isIdle: () => {
 				runner.assertActive();

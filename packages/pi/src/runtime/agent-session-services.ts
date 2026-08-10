@@ -67,7 +67,7 @@ export interface CreateAgentSessionFromServicesOptions {
 	excludeTools?: CreateAgentSessionOptions["excludeTools"];
 	noTools?: CreateAgentSessionOptions["noTools"];
 	customTools?: Tool[];
-	skipWorkflowContinuation?: boolean;
+	skipAutomaticContinuation?: boolean;
 	/** Extra system prompt appended to this session's rebuilt base prompt. */
 	extraSystemPrompt?: string;
 	/** Optional override for API-usage log routing. Defaults to the session id. */
@@ -229,7 +229,7 @@ export async function createAgentSessionFromServices(
 			options.subagentManager === null
 				? undefined
 				: (options.subagentManager ?? new SubagentManager(options.services)),
-		skipWorkflowContinuation: options.skipWorkflowContinuation ?? false,
+		skipAutomaticContinuation: options.skipAutomaticContinuation ?? false,
 		extraSystemPrompt: options.extraSystemPrompt,
 		apiUsageSessionId: options.apiUsageSessionId,
 	});

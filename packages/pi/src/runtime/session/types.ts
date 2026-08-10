@@ -82,8 +82,8 @@ export interface AgentSessionConfig {
 	sessionStartEvent?: SessionStartEvent;
 	/** Optional Pi-native subagent manager. */
 	subagentManager?: SubagentManager | null;
-	/** Skip workflow continuation prompt injection. */
-	skipWorkflowContinuation?: boolean;
+	/** Skip automatic continuation prompt injection. */
+	skipAutomaticContinuation?: boolean;
 	/** Extra system prompt appended to the rebuilt base prompt. */
 	extraSystemPrompt?: string;
 	/** Optional override for API-usage log routing. */

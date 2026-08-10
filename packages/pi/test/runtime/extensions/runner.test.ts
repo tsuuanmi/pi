@@ -447,6 +447,7 @@ describe("ExtensionRunner", () => {
 			const ctx = runner.createContext();
 			expect(ctx.mode).toBe("print");
 			expect(ctx.hasUI).toBe(false);
+			expect(ctx.skipAutomaticContinuation).toBe(false);
 		});
 
 		it("exposes rpc mode with hasUI true when an RPC UI context is provided", async () => {
@@ -568,7 +569,7 @@ describe("ExtensionRunner", () => {
 			fs.writeFileSync(
 				path.join(extensionsDir, "hud.ts"),
 				`export default function(pi) {
-					pi.registerHudProvider(async () => [{ id: "workflow", active: true }]);
+					pi.registerHudProvider(async () => [{ id: "status", active: true }]);
 				}
 				`,
 			);
@@ -578,7 +579,7 @@ describe("ExtensionRunner", () => {
 			const runner = new ExtensionRunner(result.extensions, result.runtime, tempDir, sessionManager, modelRegistry);
 
 			expect(await runner.getHudEntries({ cwd: tempDir, sessionId: "session-1" })).toEqual([
-				{ id: "workflow", active: true },
+				{ id: "status", active: true },
 			]);
 		});
 	});

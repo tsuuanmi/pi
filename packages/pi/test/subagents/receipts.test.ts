@@ -13,7 +13,7 @@ const RECORD: SubagentRecord = {
 };
 
 describe("Pi subagent control receipts", () => {
-	it("attaches an agent receipt without a workflow final package", () => {
+	it("attaches an agent receipt without a package-specific final field", () => {
 		const result = attachControlReceipt({ ok: true, record: RECORD }, "session-1");
 
 		expect(result).toMatchObject({
