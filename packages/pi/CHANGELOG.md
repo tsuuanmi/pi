@@ -59,6 +59,7 @@
 - **interactive**: Load `/resume` sessions in pages of 50 with a Load more option.
 - **interactive**: Accept tmux/Kitty LF Enter input when confirming a session selection.
 - **auth**: Preserve the OpenAI Codex OAuth callback URL paste input after selecting a login method.
+- **cli**: Surface invalid settings, auth, and session files as a clean error and non-zero exit instead of an unhandled stack trace.
 
 ### Removed
 
