@@ -1,37 +1,28 @@
-import type { Page } from "playwright";
 import type { WebTurn, WebTurnEvent } from "../../types.ts";
 import { uploadAttachments, validateAttachments } from "./attachments.ts";
-import { readAssistantText, waitForCompletion } from "./completion.ts";
+import { activeComposer, setPrompt } from "./composer.ts";
+import { selectEffort } from "./effort.ts";
 import { checkPage } from "./errors.ts";
 import { assertTemporaryChat } from "./login.ts";
 import { getChatGptRoute } from "./routes.ts";
-import { selectRoute } from "./select.ts";
-import { COMPOSER_SELECTOR, SEND_BUTTON_SELECTOR, TEMPORARY_CHAT_URL } from "./selectors.ts";
+import { TEMP_CHAT_URL } from "./selectors.ts";
+import { streamResponse } from "./stream.ts";
+import { submit } from "./submit.ts";
+import { abortable, throwIfAborted } from "./wait.ts";
 
-export async function runChatGptTurn(turn: WebTurn, emit: (event: WebTurnEvent) => Promise<void>): Promise<void> {
+export async function runChatGptTurn(turn: WebTurn, emit: (event: WebTurnEvent) => Promise<unknown>): Promise<void> {
 	const route = getChatGptRoute(turn.model);
-	if (turn.signal.aborted) throw turn.signal.reason;
-	const page: Page = turn.page;
 	validateAttachments(route, turn.attachments);
-	await page.goto(TEMPORARY_CHAT_URL, { waitUntil: "domcontentloaded" });
-	assertTemporaryChat(page);
-	await checkPage(page);
-	await selectRoute(page, route, turn.signal);
-	await uploadAttachments(page, route, turn.attachments, turn.signal);
-	if (turn.signal.aborted) throw turn.signal.reason;
-	await page.locator(COMPOSER_SELECTOR).fill(turn.prompt);
-	await page.locator(SEND_BUTTON_SELECTOR).click();
-	let emitted = "";
-	await waitForCompletion(page, turn.signal, async (delta) => {
-		emitted += delta;
-		await emit({ type: "text", text: delta });
-	});
-	const text = await readAssistantText(page, turn.signal);
-	if (text.length < emitted.length || !text.startsWith(emitted)) {
-		throw new Error("ChatGPT final output did not match streamed output");
-	}
-	if (turn.signal.aborted) throw turn.signal.reason;
-	if (text.length > emitted.length) await emit({ type: "text", text: text.slice(emitted.length) });
-	if (turn.signal.aborted) throw turn.signal.reason;
+	throwIfAborted(turn.signal);
+	await abortable(turn.page.goto(TEMP_CHAT_URL, { waitUntil: "domcontentloaded", timeout: 60_000 }), turn.signal);
+	await activeComposer(turn.page, turn.signal);
+	assertTemporaryChat(turn.page);
+	await checkPage(turn.page);
+	await selectEffort(turn.page, route, turn.signal);
+	await setPrompt(turn.page, turn.prompt, turn.signal);
+	await uploadAttachments(turn.page, route, turn.attachments, turn.signal);
+	const response = await submit(turn.page, turn.signal);
+	await streamResponse(turn.page, response, turn.signal, emit);
+	throwIfAborted(turn.signal);
 	await emit({ type: "done" });
 }

@@ -1,7 +1,7 @@
 import type { WebProviderModel } from "../../types.ts";
 
 export interface ChatGptRoute extends WebProviderModel {
-	effortIndex: number;
+	readonly effortIndex: 0 | 1 | 2 | 3 | 4;
 }
 
 export const CHATGPT_ROUTES: readonly ChatGptRoute[] = [
@@ -10,7 +10,7 @@ export const CHATGPT_ROUTES: readonly ChatGptRoute[] = [
 		name: "ChatGPT Instant",
 		contextWindow: 150_000,
 		input: ["text", "image", "file"],
-		output: ["text", "reasoning", "tool"],
+		output: ["text", "reasoning"],
 		effortIndex: 0,
 	},
 	{
@@ -18,7 +18,7 @@ export const CHATGPT_ROUTES: readonly ChatGptRoute[] = [
 		name: "ChatGPT Medium",
 		contextWindow: 150_000,
 		input: ["text", "image", "file"],
-		output: ["text", "reasoning", "tool"],
+		output: ["text", "reasoning"],
 		effortIndex: 1,
 	},
 	{
@@ -26,7 +26,7 @@ export const CHATGPT_ROUTES: readonly ChatGptRoute[] = [
 		name: "ChatGPT High",
 		contextWindow: 185_000,
 		input: ["text", "image", "file"],
-		output: ["text", "reasoning", "tool"],
+		output: ["text", "reasoning"],
 		effortIndex: 2,
 	},
 	{
@@ -34,7 +34,7 @@ export const CHATGPT_ROUTES: readonly ChatGptRoute[] = [
 		name: "ChatGPT Extra High",
 		contextWindow: 256_000,
 		input: ["text", "image", "file"],
-		output: ["text", "reasoning", "tool"],
+		output: ["text", "reasoning"],
 		effortIndex: 3,
 	},
 	{
@@ -42,7 +42,7 @@ export const CHATGPT_ROUTES: readonly ChatGptRoute[] = [
 		name: "ChatGPT Pro",
 		contextWindow: 272_000,
 		input: ["text", "image", "file"],
-		output: ["text", "reasoning", "tool"],
+		output: ["text", "reasoning"],
 		effortIndex: 4,
 	},
 ];

@@ -15,9 +15,12 @@ import type { WebTurnRequest } from "./turn.ts";
 
 export type WebToolExecutor = (name: string, input: unknown, signal: AbortSignal) => Promise<unknown>;
 
+type ContentKind = "text" | "thinking";
+
 interface EventState {
 	text: string;
 	thinking: string;
+	order: ContentKind[];
 	completed: boolean;
 }
 
@@ -45,7 +48,7 @@ async function runStream(
 	executeTool: WebToolExecutor,
 ): Promise<void> {
 	const signal = options?.signal ?? new AbortController().signal;
-	const state: EventState = { text: "", thinking: "", completed: false };
+	const state: EventState = { text: "", thinking: "", order: [], completed: false };
 	stream.push({ type: "start", partial: message(model, state) });
 	try {
 		if (model.api !== "web") throw new Error(`web stream received non-web model: ${model.api}`);
@@ -62,7 +65,7 @@ async function runStream(
 			model: model.id,
 			prompt: serializeContext(context),
 			attachments: [],
-			tools: toWebTools(context),
+			tools: toWebTools(host, provider, model.id, context),
 			executeTool: (name, input) => executeTool(name, input, signal),
 			onEvent: (event) => pushEvent(stream, model, state, event),
 			signal,
@@ -86,33 +89,39 @@ async function pushEvent(
 	event: WebTurnEvent,
 ): Promise<void> {
 	if (event.type === "text") {
+		if (event.text.length === 0) return;
 		const first = state.text.length === 0;
 		state.text += event.text;
+		if (first) state.order.push("text");
+		const contentIndex = state.order.indexOf("text");
 		const partial = message(model, state);
-		if (first) stream.push({ type: "text_start", contentIndex: 0, partial });
-		stream.push({ type: "text_delta", contentIndex: 0, delta: event.text, partial });
+		if (first) stream.push({ type: "text_start", contentIndex, partial });
+		stream.push({ type: "text_delta", contentIndex, delta: event.text, partial });
 		return;
 	}
 	if (event.type === "reasoning") {
+		if (event.text.length === 0) return;
 		const first = state.thinking.length === 0;
 		state.thinking += event.text;
+		if (first) state.order.push("thinking");
+		const contentIndex = state.order.indexOf("thinking");
 		const partial = message(model, state);
-		const contentIndex = state.text.length > 0 ? 1 : 0;
 		if (first) stream.push({ type: "thinking_start", contentIndex, partial });
 		stream.push({ type: "thinking_delta", contentIndex, delta: event.text, partial });
 		return;
 	}
 	if (event.type === "done") {
-		if (state.text.length > 0) {
-			stream.push({ type: "text_end", contentIndex: 0, content: state.text, partial: message(model, state) });
-		}
-		if (state.thinking.length > 0) {
-			stream.push({
-				type: "thinking_end",
-				contentIndex: state.text.length > 0 ? 1 : 0,
-				content: state.thinking,
-				partial: message(model, state),
-			});
+		for (const [contentIndex, kind] of state.order.entries()) {
+			if (kind === "text") {
+				stream.push({ type: "text_end", contentIndex, content: state.text, partial: message(model, state) });
+			} else {
+				stream.push({
+					type: "thinking_end",
+					contentIndex,
+					content: state.thinking,
+					partial: message(model, state),
+				});
+			}
 		}
 		state.completed = true;
 		stream.push({ type: "done", reason: "stop", message: message(model, state) });
@@ -122,7 +131,12 @@ async function pushEvent(
 	throw new Error(`unsupported web event: ${event.type}`);
 }
 
-function toWebTools(context: Context): readonly WebTool[] {
+function toWebTools(host: WebProviderHost, provider: string, modelId: string, context: Context): readonly WebTool[] {
+	const descriptor = host.get(provider);
+	if (!descriptor) throw new Error(`web provider is not registered: ${provider}`);
+	const model = descriptor.models.find((candidate) => candidate.id === modelId);
+	if (!model) throw new Error(`web model is not registered: ${provider}/${modelId}`);
+	if (!model.output.includes("tool")) return [];
 	return (context.tools ?? []).map((tool) => ({
 		name: tool.name,
 		description: tool.description,
@@ -161,8 +175,10 @@ function message(
 	stopReason: AssistantMessage["stopReason"] = "stop",
 ): AssistantMessage {
 	const content: AssistantMessage["content"] = [];
-	if (state.text) content.push({ type: "text", text: state.text });
-	if (state.thinking) content.push({ type: "thinking", thinking: state.thinking });
+	for (const kind of state.order) {
+		if (kind === "text" && state.text) content.push({ type: "text", text: state.text });
+		if (kind === "thinking" && state.thinking) content.push({ type: "thinking", thinking: state.thinking });
+	}
 	return {
 		role: "assistant",
 		content,

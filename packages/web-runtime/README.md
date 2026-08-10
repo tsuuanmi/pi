@@ -1,128 +1,96 @@
 # Pi Web Runtime
 
-`@tsuuanmi/pi-web-runtime` is the host-neutral browser runtime for account-scoped web providers. It owns Chromium sessions, profile isolation, provider automation, and private worker communication. Pi owns accounts, entitlements, approvals, sandboxing, and tool execution.
+`@tsuuanmi/pi-web-runtime` is Pi's host-neutral browser runtime for account-scoped web providers. It owns Chromium provisioning, profile isolation, worker lifecycle, and provider page automation. Pi owns accounts, entitlements, model registration, policy, and tool execution.
 
-## Pi package loading
+## Package loading
 
-This package is also a Pi package. Its `package.json` declares the compiled
-provider descriptor under `pi.webProviders`; Pi discovers it through the
-bundled `pi:web-runtime` package source and dynamically loads the descriptor
-and its adjacent worker. The runtime package therefore owns provider identity
-and automation, while Pi owns host integration and account state.
+The package declares its compiled provider descriptor in `package.json` under `pi.webProviders`. Pi loads that descriptor and its adjacent worker from the bundled `pi:web-runtime` package source.
 
-The ChatGPT provider ID is centralized as `CHATGPT_WEB_PROVIDER_ID`
-(`chatgpt-web`) and its display name as `CHATGPT_WEB_PROVIDER_NAME`.
+The built-in provider ID is `chatgpt-web`. Its routes are:
 
-## Standard design
+- `light` — ChatGPT Instant
+- `medium` — ChatGPT Medium
+- `high` — ChatGPT High
+- `extra-high` — ChatGPT Extra High
+- `pro` — ChatGPT Pro
 
-The production boundary is:
+Login verification derives the entitled route set from one canonical effort menu shape. Unknown menu shapes fail closed.
+
+## Runtime boundary
 
 ```text
-ChatGPT native MCP client
-        |
-        | one authenticated, connector-visible MCP transport
-        v
-Per-turn Pi MCP gateway
+Pi account and turn host
         |
         | private typed worker IPC
         v
 Profile worker
         |
+        | one isolated page per turn
         v
-Visible Chromium context -> provider page
-
-Pi tool policy and executor are attached to the per-turn gateway.
+Visible persistent Chromium context -> ChatGPT Temporary Chat
 ```
 
-The browser page is a UI automation surface. It must not parse prompt text to invent tool calls. ChatGPT-native tool calls must use ChatGPT's supported connector and MCP protocol.
+- **Pi host**: account lifecycle, ephemeral entitlements, model registration, policy, and tool execution.
+- **Web provider descriptor**: login verification, route selection, prompt and attachment submission, response streaming, and provider errors.
+- **Profile worker**: one persistent visible Chromium context for one browser profile, with up to five isolated turn pages.
+- **Worker IPC**: typed process-local messages. It is not a network endpoint and is not visible to ChatGPT.
 
-### Responsibilities
+The provider receives a `Page` and turn-scoped inputs. It does not receive a `BrowserContext`, profile lease, account storage, or another turn.
 
-- **Pi host**: account lifecycle, ephemeral entitlements, model registration, approvals, sandboxing, and tool execution.
-- **Web provider descriptor**: provider-specific login, route selection, page automation, completion detection, and provider errors.
-- **Profile worker**: one persistent visible Chromium context for one browser profile, with isolated turn pages.
-- **Turn MCP gateway**: one tool allowlist and capability for one turn; validates calls and routes them to Pi.
-- **Worker IPC**: private typed messages between Pi and the profile worker. It is not a connector endpoint for ChatGPT.
+## ChatGPT turn contract
 
-## Turn lifecycle
+Each turn uses one canonical ChatGPT DOM contract and follows these stages:
 
-1. Pi selects an active browser account and an entitled web model.
-2. Pi creates one turn capability and one tool allowlist.
-3. The profile worker leases a Temporary Chat page.
-4. ChatGPT's native connector is selected and verified when tools are enabled.
-5. The provider submits the prompt through the browser UI.
-6. ChatGPT invokes tools through the native MCP connector.
-7. The turn gateway validates the turn, tool name, schema, size, and capability before Pi executes the tool once.
-8. The MCP result returns to ChatGPT, which continues the same response.
-9. The provider waits for a response-scoped terminal state and streams the final output.
-10. The page, MCP session, capability, and worker turn handler are closed or revoked on every exit path.
+1. Open a fresh Temporary Chat page and require exactly one visible composer.
+2. Select the entitled effort item and require semantic `aria-checked` confirmation.
+3. Insert the complete prompt through Playwright in bounded chunks and verify it byte-for-byte.
+4. Upload validated attachments and require one visible ready group for every unique file.
+5. Submit once and require a new user turn, assistant turn, or active-generation control as acceptance evidence.
+6. Scope all response observation to the newly created assistant turn.
+7. Stream stable visible reasoning and append-only GFM blocks.
+8. Complete only after generation stops, response text is non-empty, the completed-turn action is visible, and text plus HTML remain stable.
+9. Close the turn page on success, cancellation, browser failure, selector drift, or provider error.
 
-## Transport rule
+There is no alternate selector set, retry submission, prompt parser, stale-text recovery, provider fallback, model fallback, transport fallback, legacy path, or compatibility alias. Unexpected DOM and state transitions fail closed with a stage-specific error.
 
-ChatGPT Web is a remote MCP client. A process-local `McpServerSession` connected over worker IPC is not visible to ChatGPT. A complete native-tool implementation therefore requires one explicit connector-visible MCP transport:
+## ChatGPT output boundary
 
-- **Streamable HTTP** is the standard transport for a remote MCP server.
-- **stdio** is the standard transport for a locally launched MCP server.
+The built-in ChatGPT provider advertises text and visible reasoning. It does not advertise tool output.
 
-Only one approved transport may be used for a deployment. There is no retry, fallback, compatibility transport, shared daemon, or generic HTTP bridge.
+`src/mcp/` provides a private turn-capability bridge for descriptors that can directly observe and represent a provider-native tool call. That bridge does not make Pi's MCP server reachable from the remote ChatGPT page. A connector-visible network ingress is intentionally outside this package, so the ChatGPT descriptor does not select a connector, infer tool calls from text, or silently execute Pi tools.
 
-If no connector-visible transport is approved, the web provider is text-only. It must not advertise tool capability or silently execute Pi tools behind a text response.
+## Source layout
+
+```text
+src/chromium.ts                    Chromium provisioning and launch
+src/profiles.ts                    Profile paths and exclusive leases
+src/session.ts                     Persistent context and isolated turn pages
+src/worker/                        Worker lifecycle, protocol, and typed IPC
+src/mcp/                           Private turn capability and MCP sessions
+src/providers/chatgpt/composer.ts  Active composer and exact prompt insertion
+src/providers/chatgpt/effort.ts    Effort discovery and selection
+src/providers/chatgpt/attachments.ts Attachment validation and readiness
+src/providers/chatgpt/submit.ts    Single submission and acceptance evidence
+src/providers/chatgpt/response.ts  Response-scoped DOM snapshot
+src/providers/chatgpt/markdown.ts  Append-only GFM serialization
+src/providers/chatgpt/trace.ts     Visible reasoning stabilization
+src/providers/chatgpt/completion.ts Completion and DOM health state
+src/providers/chatgpt/stream.ts    Response event stream
+src/providers/chatgpt/turn.ts      Provider turn coordinator
+```
+
+Pi-specific integration remains under `packages/pi/src/web-providers/`.
 
 ## Security invariants
 
-- Browser credentials contain only an opaque profile ID and tunnel secret.
-- Entitlements are in-memory and account-scoped; they are not persisted in `auth.json`.
-- A capability is bound to one profile and one turn, expires, and is revoked during cleanup.
-- The browser page receives no Pi process handle, profile object, browser context, or unrelated turn.
-- Tool names and schemas are allowlisted per turn.
-- Unknown tools, malformed arguments, expired capabilities, connector failures, browser crashes, and selector drift fail closed.
-- Tool calls execute exactly once; the browser provider and Pi must not both execute the same call.
-- No prompt/XML tool-call parsing is used.
-- No provider, model, or transport fallback is used.
+- Browser credentials contain only an opaque profile ID and worker handshake secret.
+- Entitlements are in memory and account scoped.
+- A capability is bound to one turn, expires, and is revoked during cleanup.
+- Profile directories are private, exclusively leased, and never exposed to provider code.
+- Unknown routes, malformed attachments, browser crashes, page closure, ambiguous DOM, and selector drift fail closed.
+- Prompt text is never parsed to invent tool calls.
+- No HTTP proxy, socket broker, tunnel daemon, shared browser daemon, Electron launcher, Codex passthrough, or configuration mutation is included.
 
-## Package boundaries
+## Attribution
 
-```text
-src/chromium.ts       Chromium provisioning and launch
-src/profiles.ts       Profile paths and exclusive leases
-src/session.ts        One persistent context and turn pages
-src/worker/           Profile worker lifecycle and typed IPC
-src/mcp/              Official MCP client/server sessions and codecs
-src/providers/        Host-neutral provider descriptors
-src/providers/chatgpt/ChatGPT page automation
-```
-
-Pi-specific integration belongs outside this package:
-
-```text
-packages/pi/src/web-providers/  accounts, entitlements, model registration,
-                                Pi tool execution, and turn orchestration
-```
-
-Provider modules receive a `Page` and a bound MCP bridge only. They do not receive `BrowserContext`, profile leases, account storage, or other turns.
-
-## Current implementation status
-
-Implemented in this package:
-
-- one visible persistent Chromium context per profile;
-- up to five isolated Temporary Chat pages;
-- exclusive profile leases and worker handshakes;
-- fail-closed worker crash and path/secret checks;
-- official MCP SDK sessions over private worker IPC;
-- attachment validation and bounded ChatGPT page automation;
-- cancellation checks and settled text output handling.
-
-Not implemented yet:
-
-- a connector-visible MCP ingress that ChatGPT Web can call;
-- ChatGPT-native connector selection and tool-call/result handling;
-- end-to-end browser tool-call fixtures and authenticated smoke coverage.
-
-The internal MCP session is therefore not evidence that ChatGPT-native tools are available. Until the connector ingress exists, ChatGPT web models must remain text-only from Pi's public model capability perspective.
-
-## Explicit exclusions
-
-This runtime does not include the former `codex-chatgpt-web` HTTP bridge, socket broker, tunnel daemon, Electron launcher, Codex passthrough, prompt history/XML contract, retry path, fallback provider, fallback model, or compatibility export.
-
-Any future connector integration must preserve the boundaries and invariants above rather than reintroducing those paths.
+The ChatGPT browser-turn state machine adapts MIT-licensed logic from `codex-chatgpt-web`. See `NOTICE` for the required copyright and license text.

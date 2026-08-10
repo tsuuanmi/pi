@@ -23,8 +23,9 @@ describe("ChatGPT attachments", () => {
 		expect(() => validateAttachments(CHATGPT_ROUTES[0], [file(MAX_ATTACHMENT_BYTES + 1)])).toThrow("exceed");
 	});
 
-	test("rejects malformed attachment metadata", () => {
+	test("rejects malformed or duplicate attachment metadata", () => {
 		expect(() => validateAttachments(CHATGPT_ROUTES[0], [{ ...file(1), name: "../notes.txt" }])).toThrow("name");
+		expect(() => validateAttachments(CHATGPT_ROUTES[0], [file(1), file(1)])).toThrow("duplicate");
 		expect(() => validateAttachments(CHATGPT_ROUTES[0], [{ ...file(1), mediaType: "text" }])).toThrow("media type");
 	});
 });

@@ -1,5 +1,5 @@
 import type { Context, Model } from "@tsuuanmi/pi-ai";
-import { CHATGPT_WEB_PROVIDER_ID } from "@tsuuanmi/pi-web-runtime";
+import { CHATGPT_WEB_PROVIDER_ID, type WebTurnEvent } from "@tsuuanmi/pi-web-runtime";
 import { describe, expect, test } from "vitest";
 import type { AuthStorage, BrowserCredential } from "#pi/auth/storage";
 import type { WebProviderHost } from "#pi/web-providers/host";
@@ -32,11 +32,11 @@ function authStorage(account: string | undefined): AuthStorage {
 	} as unknown as AuthStorage;
 }
 
-function host(): WebProviderHost {
+function host(events: readonly WebTurnEvent[] = [{ type: "text", text: "hello" }, { type: "done" }]): WebProviderHost {
 	return {
+		get: () => ({ models: [{ id: model.id, output: ["text", "reasoning"] }] }),
 		runTurn: async (request: WebTurnRequest) => {
-			await request.onEvent({ type: "text", text: "hello" });
-			await request.onEvent({ type: "done" });
+			for (const event of events) await request.onEvent(event);
 		},
 	} as unknown as WebProviderHost;
 }
@@ -57,6 +57,24 @@ describe("createWebStream", () => {
 		const result = await stream.result();
 		expect(result.stopReason).toBe("stop");
 		expect(result.content).toEqual([{ type: "text", text: "hello" }]);
+	});
+
+	test("preserves reasoning-before-text content order", async () => {
+		const context: Context = {
+			messages: [{ role: "user", content: "Explain", timestamp: 1 }],
+		};
+		const stream = createWebStream(
+			host([{ type: "reasoning", text: "Checking" }, { type: "text", text: "answer" }, { type: "done" }]),
+			authStorage("work"),
+			CHATGPT_WEB_PROVIDER_ID,
+			async () => undefined,
+		)(model, context);
+
+		const result = await stream.result();
+		expect(result.content).toEqual([
+			{ type: "thinking", thinking: "Checking" },
+			{ type: "text", text: "answer" },
+		]);
 	});
 
 	test("fails when no browser account is active", async () => {
