@@ -210,6 +210,7 @@ describe("AgentSessionRuntime characterization", () => {
 				if (event.reason === cancelReason) {
 					return { cancel: true };
 				}
+				return;
 			});
 			pi.on("session_start", (event) => {
 				events.push(event);

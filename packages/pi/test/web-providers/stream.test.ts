@@ -1,7 +1,8 @@
 import type { Context, Model } from "@tsuuanmi/pi-ai";
 import { CHATGPT_WEB_PROVIDER_ID, type WebTurnEvent } from "@tsuuanmi/pi-web-runtime";
 import { describe, expect, test } from "vitest";
-import type { AuthStorage, BrowserCredential } from "#pi/auth/storage";
+import type { AuthStorage } from "#pi/auth/storage";
+import type { BrowserCredential } from "#pi/auth/types";
 import type { WebProviderHost } from "#pi/web-providers/host";
 import { createWebStream } from "#pi/web-providers/stream";
 import type { WebTurnRequest } from "#pi/web-providers/turn";

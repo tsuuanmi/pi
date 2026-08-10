@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Changed
+
+- **tsconfig**: Enabled `noFallthroughCasesInSwitch`, `noImplicitOverride`, and `noImplicitReturns` repo-wide; added `override` modifiers to overriding UI component members and an explicit return path in a session-switch test.
+
 ### Breaking Changes
 
 - **sessions**: Session files now require strict version 4 JSONL and private permissions; removed older-version migration, malformed-record recovery, compatibility fields, implicit recent-session creation, and the `continueRecent()` API.

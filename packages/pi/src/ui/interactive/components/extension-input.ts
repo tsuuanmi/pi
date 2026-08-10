@@ -95,7 +95,7 @@ export class ExtensionInputComponent extends Container implements Focusable {
 		}
 	}
 
-	dispose(): void {
+	override dispose(): void {
 		this.countdown?.dispose();
 	}
 }

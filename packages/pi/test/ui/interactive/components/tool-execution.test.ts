@@ -245,17 +245,15 @@ describe("ToolExecutionComponent parity", () => {
 	});
 
 	test("uses custom renderers for built-in overrides that reuse built-in definition parameters", () => {
-		const builtInDefinition = createReadSpec(process.cwd());
+		const toolDefinition = createReadSpec(process.cwd());
+		toolDefinition.renderCall = () => new Text("override call", 0, 0);
+		toolDefinition.renderResult = () => new Text("override result", 0, 0);
 		const component = new ToolExecutionComponent(
 			"read",
 			"tool-4d",
 			{ path: "README.md" },
 			{},
-			{
-				...builtInDefinition,
-				renderCall: () => new Text("override call", 0, 0),
-				renderResult: () => new Text("override result", 0, 0),
-			},
+			toolDefinition,
 			createFakeTui(),
 			process.cwd(),
 		);

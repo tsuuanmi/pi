@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **lifecycle**: Added `override` modifiers to `dispose()` and `render()` overrides to satisfy `noImplicitOverride`.
+
 ### Added
 
 - **selection**: Added a reusable searchable table selector for domain-specific selector adapters, including initial queries, wrapped navigation, selected-item details, and key-based selection.

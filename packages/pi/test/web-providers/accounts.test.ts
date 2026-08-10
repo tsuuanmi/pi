@@ -3,7 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CHATGPT_WEB_PROVIDER_ID } from "@tsuuanmi/pi-web-runtime";
 import { afterEach, describe, expect, test } from "vitest";
-import type { AuthStorage, BrowserCredential } from "#pi/auth/storage";
+import type { AuthStorage } from "#pi/auth/storage";
+import type { BrowserCredential } from "#pi/auth/types";
 import { BrowserAccountStore } from "#pi/web-providers/accounts";
 import type { WebProviderHost } from "#pi/web-providers/host";
 

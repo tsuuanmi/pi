@@ -113,7 +113,7 @@ export class ExtensionSelectorComponent extends Container {
 		}
 	}
 
-	dispose(): void {
+	override dispose(): void {
 		this.countdown?.dispose();
 	}
 }

@@ -46,7 +46,7 @@ export class Loader extends Text {
 		this.setIndicator(indicator);
 	}
 
-	render(width: number): string[] {
+	override render(width: number): string[] {
 		return [...Array.from({ length: LAYOUT_SECTION_GAP_Y }, () => ""), ...super.render(width)];
 	}
 

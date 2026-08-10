@@ -1,4 +1,8 @@
 {
+	// The emit-related options below (declaration, declarationMap, sourceMap,
+	// inlineSources) are inherited by packages/*/tsconfig.build.json, which set
+	// noEmit: false, to emit declarations and sourcemaps during builds. They are
+	// inert under this root config's noEmit typecheck.
 	"compilerOptions": {
 		"target": "ES2022",
 		"module": "Node16",
@@ -6,6 +10,9 @@
 			"ES2022"
 		],
 		"strict": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitOverride": true,
+		"noImplicitReturns": true,
 		"erasableSyntaxOnly": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
