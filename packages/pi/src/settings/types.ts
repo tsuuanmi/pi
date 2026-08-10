@@ -119,10 +119,7 @@ export interface Settings {
 export type SettingsScope = "global" | "project";
 
 export interface SettingsStorage {
-	withLock(scope: SettingsScope, fn: (current: string | undefined) => string | undefined): void;
+	read(scope: SettingsScope): string | undefined;
+	update(scope: SettingsScope, update: (current: string | undefined) => string): void;
 }
 
-export interface SettingsError {
-	scope: SettingsScope;
-	error: Error;
-}

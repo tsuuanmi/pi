@@ -1,7 +1,7 @@
 import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage, Usage } from "@tsuuanmi/pi-ai";
 import type { CompactionSettings, ContextUsageEstimate } from "#pi/session/compaction/types";
-import type { SessionEntry } from "#pi/session/manager";
+import type { SessionEntry } from "#pi/session/types";
 
 /** Calculate context tokens from native usage fields. */
 export function calculateContextTokens(usage: Usage): number {

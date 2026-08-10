@@ -1,16 +1,14 @@
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
 import { getAgentDir } from "#pi/loader/paths";
 import type { SettingsScope, SettingsStorage } from "#pi/settings/types";
+import { assertPrivateFile, ensurePrivateDir, writePrivateFile } from "#pi/storage/file";
 
-function lockWithRetry(path: string): () => void {
+function lock(path: string): () => void {
 	const attempts = 10;
-	const delayMs = 20;
-	let lastError: unknown;
-
 	for (let attempt = 1; attempt <= attempts; attempt++) {
 		try {
 			return lockfile.lockSync(path, { realpath: false });
@@ -19,19 +17,12 @@ function lockWithRetry(path: string): () => void {
 				typeof error === "object" && error !== null && "code" in error
 					? String((error as { code?: unknown }).code)
 					: undefined;
-			if (code !== "ELOCKED" || attempt === attempts) {
-				throw error;
-			}
-			lastError = error;
+			if (code !== "ELOCKED" || attempt === attempts) throw error;
 			const started = Date.now();
-			while (Date.now() - started < delayMs) {
-				// Keep the synchronous storage contract while waiting for the lock.
+			while (Date.now() - started < 20) {
+				// Settings storage is synchronous; retry only while another writer owns the lock.
 			}
 		}
-	}
-
-	if (lastError !== undefined) {
-		throw lastError;
 	}
 	throw new Error(`Failed to acquire settings lock: ${path}`);
 }
@@ -48,32 +39,28 @@ export class FileStorage implements SettingsStorage {
 		};
 	}
 
-	withLock(scope: SettingsScope, fn: (current: string | undefined) => string | undefined): void {
+	read(scope: SettingsScope): string | undefined {
 		const path = this.paths[scope];
-		const dir = dirname(path);
-		const fileExists = existsSync(path);
-		let release: (() => void) | undefined;
-
+		if (!existsSync(path)) return undefined;
+		assertPrivateFile(path);
+		const release = lock(path);
 		try {
-			if (fileExists) {
-				release = lockWithRetry(path);
-			}
-
-			const current = fileExists ? readFileSync(path, "utf-8") : undefined;
-			const next = fn(current);
-			if (next === undefined) {
-				return;
-			}
-
-			if (!existsSync(dir)) {
-				mkdirSync(dir, { recursive: true });
-			}
-			if (!release) {
-				release = lockWithRetry(path);
-			}
-			writeFileSync(path, next, "utf-8");
+			return readFileSync(path, "utf8");
 		} finally {
-			release?.();
+			release();
+		}
+	}
+
+	update(scope: SettingsScope, update: (current: string | undefined) => string): void {
+		const path = this.paths[scope];
+		ensurePrivateDir(dirname(path));
+		const release = lock(path);
+		try {
+			if (existsSync(path)) assertPrivateFile(path);
+			const current = existsSync(path) ? readFileSync(path, "utf8") : undefined;
+			writePrivateFile(path, update(current));
+		} finally {
+			release();
 		}
 	}
 }
@@ -84,10 +71,11 @@ export class MemoryStorage implements SettingsStorage {
 		project: undefined,
 	};
 
-	withLock(scope: SettingsScope, fn: (current: string | undefined) => string | undefined): void {
-		const next = fn(this.values[scope]);
-		if (next !== undefined) {
-			this.values[scope] = next;
-		}
+	read(scope: SettingsScope): string | undefined {
+		return this.values[scope];
+	}
+
+	update(scope: SettingsScope, update: (current: string | undefined) => string): void {
+		this.values[scope] = update(this.values[scope]);
 	}
 }

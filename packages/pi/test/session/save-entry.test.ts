@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { type CustomEntry, SessionManager } from "#pi/session/manager";
+import { SessionManager } from "#pi/session/manager";
+import type { CustomEntry } from "#pi/session/types";
 
 describe("SessionManager.saveCustomEntry", () => {
 	it("saves custom entries and includes them in tree traversal", () => {

@@ -7,7 +7,7 @@ import {
 	type WorkerMessage,
 	type WorkerTurn,
 } from "@tsuuanmi/pi-web-runtime";
-import type { BrowserCredential } from "#pi/auth/storage";
+import type { BrowserCredential } from "#pi/auth/types";
 import { getBrowserProfilePath } from "#pi/web-providers/accounts";
 import { webWorkers } from "./workers.ts";
 

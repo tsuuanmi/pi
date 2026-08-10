@@ -1,7 +1,12 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
-import { join } from "path";
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync as writeFile } from "node:fs";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { SettingsManager } from "#pi/settings/manager";
+
+function writeSettings(path: string, content: string): void {
+	writeFile(path, content, { encoding: "utf8", mode: 0o600 });
+	if (process.platform !== "win32") chmodSync(path, 0o600);
+}
 
 /**
  * Tests for the fix to a bug where external file changes to arrays were overwritten.
@@ -34,11 +39,11 @@ describe("SettingsManager - External Edit Preservation", () => {
 		}
 	});
 
-	it("should preserve file changes to packages array when changing unrelated setting", async () => {
+	it("should preserve file changes to packages array when changing unrelated setting", () => {
 		const settingsPath = join(agentDir, "settings.json");
 
 		// Initial state: packages has one item
-		writeFileSync(
+		writeSettings(
 			settingsPath,
 			JSON.stringify({
 				theme: "dark",
@@ -55,14 +60,13 @@ describe("SettingsManager - External Edit Preservation", () => {
 		// User externally edits settings.json to remove the package
 		const currentSettings = JSON.parse(readFileSync(settingsPath, "utf-8"));
 		currentSettings.packages = []; // User wants to remove this!
-		writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2));
+		writeSettings(settingsPath, JSON.stringify(currentSettings, null, 2));
 
 		// Verify file was changed
 		expect(JSON.parse(readFileSync(settingsPath, "utf-8")).packages).toEqual([]);
 
 		// User changes an UNRELATED setting via UI (this triggers save)
 		manager.setTheme("light");
-		await manager.flush();
 
 		// With the fix, packages should be preserved as [] (not reverted to startup value)
 		const savedSettings = JSON.parse(readFileSync(settingsPath, "utf-8"));
@@ -71,10 +75,10 @@ describe("SettingsManager - External Edit Preservation", () => {
 		expect(savedSettings.theme).toBe("light");
 	});
 
-	it("should preserve file changes to extensions array when changing unrelated setting", async () => {
+	it("should preserve file changes to extensions array when changing unrelated setting", () => {
 		const settingsPath = join(agentDir, "settings.json");
 
-		writeFileSync(
+		writeSettings(
 			settingsPath,
 			JSON.stringify({
 				theme: "dark",
@@ -87,11 +91,10 @@ describe("SettingsManager - External Edit Preservation", () => {
 		// User externally updates extensions
 		const currentSettings = JSON.parse(readFileSync(settingsPath, "utf-8"));
 		currentSettings.extensions = ["/new/extension.ts"];
-		writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2));
+		writeSettings(settingsPath, JSON.stringify(currentSettings, null, 2));
 
 		// Change unrelated setting
 		manager.setDefaultThinkingLevel("high");
-		await manager.flush();
 
 		const savedSettings = JSON.parse(readFileSync(settingsPath, "utf-8"));
 
@@ -99,9 +102,9 @@ describe("SettingsManager - External Edit Preservation", () => {
 		expect(savedSettings.extensions).toEqual(["/new/extension.ts"]);
 	});
 
-	it("should preserve external project settings changes when updating unrelated project field", async () => {
+	it("should preserve external project settings changes when updating unrelated project field", () => {
 		const projectSettingsPath = join(projectDir, ".pi", "settings.json");
-		writeFileSync(
+		writeSettings(
 			projectSettingsPath,
 			JSON.stringify({
 				extensions: ["./old-extension.ts"],
@@ -113,19 +116,18 @@ describe("SettingsManager - External Edit Preservation", () => {
 
 		const currentProjectSettings = JSON.parse(readFileSync(projectSettingsPath, "utf-8"));
 		currentProjectSettings.prompts = ["./new-prompt.md"];
-		writeFileSync(projectSettingsPath, JSON.stringify(currentProjectSettings, null, 2));
+		writeSettings(projectSettingsPath, JSON.stringify(currentProjectSettings, null, 2));
 
 		manager.setProjectExtensionPaths(["./updated-extension.ts"]);
-		await manager.flush();
 
 		const savedProjectSettings = JSON.parse(readFileSync(projectSettingsPath, "utf-8"));
 		expect(savedProjectSettings.prompts).toEqual(["./new-prompt.md"]);
 		expect(savedProjectSettings.extensions).toEqual(["./updated-extension.ts"]);
 	});
 
-	it("should let in-memory project changes override external changes for the same project field", async () => {
+	it("should let in-memory project changes override external changes for the same project field", () => {
 		const projectSettingsPath = join(projectDir, ".pi", "settings.json");
-		writeFileSync(
+		writeSettings(
 			projectSettingsPath,
 			JSON.stringify({
 				extensions: ["./initial-extension.ts"],
@@ -136,10 +138,9 @@ describe("SettingsManager - External Edit Preservation", () => {
 
 		const currentProjectSettings = JSON.parse(readFileSync(projectSettingsPath, "utf-8"));
 		currentProjectSettings.extensions = ["./external-extension.ts"];
-		writeFileSync(projectSettingsPath, JSON.stringify(currentProjectSettings, null, 2));
+		writeSettings(projectSettingsPath, JSON.stringify(currentProjectSettings, null, 2));
 
 		manager.setProjectExtensionPaths(["./in-memory-extension.ts"]);
-		await manager.flush();
 
 		const savedProjectSettings = JSON.parse(readFileSync(projectSettingsPath, "utf-8"));
 		expect(savedProjectSettings.extensions).toEqual(["./in-memory-extension.ts"]);

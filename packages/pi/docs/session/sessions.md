@@ -4,10 +4,12 @@ Pi saves conversations as sessions so you can continue work, branch from earlier
 
 ## Session Storage
 
-Sessions auto-save to `~/.pi/agent/sessions/`, organized by working directory. Each session is a JSONL file with a tree structure.
+Sessions auto-save to `~/.pi/agent/sessions/`, organized by working directory. Each session is a JSONL file with a tree structure. Session directories use mode `0700` and files use mode `0600` on POSIX systems.
+
+Pi accepts only the current session format. Missing files, malformed JSONL, unsupported versions, invalid tree links, and insecure file permissions stop loading with an error. Pi does not skip records, rewrite damaged files, or migrate older formats.
 
 ```bash
-pi -c                  # Continue most recent session
+pi -c                  # Open the most recent session; error if none exists
 pi -r                  # Browse and select from past sessions
 pi --name "my task"    # Set session display name at startup
 pi --session <path|id> # Use a specific session file or partial session ID

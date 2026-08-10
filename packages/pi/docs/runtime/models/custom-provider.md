@@ -177,7 +177,7 @@ pi.registerProvider("my-llm", {
 pi.unregisterProvider("my-llm");
 ```
 
-Unregistering removes that provider's dynamic models, API key fallback, OAuth provider registration, and custom stream handler registrations. Any built-in models or provider behavior that were overridden are restored.
+Unregistering removes that provider's dynamic models, custom API key resolution, OAuth provider registration, and custom stream handler registrations. Any built-in models or provider behavior that were overridden are restored.
 
 Calls made after the initial extension load phase are applied immediately, so no `/reload` is required.
 

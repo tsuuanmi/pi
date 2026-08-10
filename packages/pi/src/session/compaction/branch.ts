@@ -17,7 +17,7 @@ import type {
 	CollectEntriesResult,
 	GenerateBranchSummaryOptions,
 } from "#pi/session/compaction/types";
-import type { ReadonlySessionManager, SessionEntry } from "#pi/session/manager";
+import type { SessionEntry, SessionView } from "#pi/session/types";
 
 // ============================================================================
 // Entry Collection
@@ -36,7 +36,7 @@ import type { ReadonlySessionManager, SessionEntry } from "#pi/session/manager";
  * @returns Entries to summarize and the common ancestor
  */
 export function collectEntriesForBranchSummary(
-	session: ReadonlySessionManager,
+	session: SessionView,
 	oldLeafId: string | null,
 	targetId: string,
 ): CollectEntriesResult {
@@ -82,7 +82,7 @@ export function prepareBranchEntries(entries: SessionEntry[], tokenBudget = 0): 
 	let totalTokens = 0;
 
 	for (const entry of entries) {
-		if (entry.type !== "branch_summary" || entry.fromHook || !entry.details) continue;
+		if (entry.type !== "branch_summary" || typeof entry.details !== "object" || entry.details === null) continue;
 		const details = entry.details as BranchSummaryDetails;
 		if (Array.isArray(details.readFiles)) {
 			for (const file of details.readFiles) fileOps.read.add(file);

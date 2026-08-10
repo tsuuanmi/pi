@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 import { getMissingSessionCwdIssue, MissingSessionCwdError } from "#pi/session/cwd";
 import { SessionManager } from "#pi/session/manager";
+import { SESSION_VERSION } from "#pi/session/types";
 
 function createTempDir(name: string): string {
 	const dir = join(tmpdir(), `${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -17,11 +18,12 @@ function writeSessionFile(path: string, cwd: string): void {
 		path,
 		`${JSON.stringify({
 			type: "session",
-			version: 3,
+			version: SESSION_VERSION,
 			id: "session-id",
 			timestamp: new Date().toISOString(),
 			cwd,
 		})}\n`,
+		{ mode: 0o600 },
 	);
 }
 

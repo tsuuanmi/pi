@@ -16,7 +16,8 @@ import { DefaultResourceLoader } from "#pi/loader/resources";
 import { AgentSession } from "#pi/runtime/agent-session";
 import { ContextOptimizer } from "#pi/runtime/context-optimizer";
 import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
-import { getDefaultSessionDir, SessionManager } from "#pi/session/manager";
+import { SessionManager } from "#pi/session/manager";
+import { getDefaultSessionDir } from "#pi/session/list";
 import { SettingsManager } from "#pi/settings/manager";
 import {
 	createBashTool,

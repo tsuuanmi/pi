@@ -1,5 +1,4 @@
 import { selectConfig } from "#pi/cli/config-selector";
-import { reportSettingsErrors } from "#pi/cli/settings";
 import { resolveResources } from "#pi/loader/discovery";
 import { getAgentDir } from "#pi/loader/paths";
 import { DefaultPackageManager } from "#pi/package/manager";
@@ -13,7 +12,6 @@ export async function handleConfigCommand(args: string[]): Promise<boolean> {
 	const cwd = process.cwd();
 	const agentDir = getAgentDir();
 	const settingsManager = SettingsManager.create(cwd, agentDir);
-	reportSettingsErrors(settingsManager, "config command");
 	const packageManager = new DefaultPackageManager({
 		cwd,
 		agentDir,

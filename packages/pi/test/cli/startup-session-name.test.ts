@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { ENV_AGENT_DIR } from "#pi/loader/config";
+import { SESSION_VERSION } from "#pi/session/types";
 
 const cliPath = resolve(__dirname, "../../src/cli/cli.ts");
 const tempDirs: string[] = [];
@@ -36,21 +37,32 @@ function createSessionFile(projectDir: string, sessionFile: string): void {
 	const timestamp = new Date().toISOString();
 	writeFileSync(
 		sessionFile,
-		`${JSON.stringify({ type: "session", version: 3, id: "existing-session", timestamp, cwd: projectDir })}\n${JSON.stringify(
+		`${JSON.stringify({ type: "session", version: SESSION_VERSION, id: "existing-session", timestamp, cwd: projectDir })}\n${JSON.stringify(
 			{
 				type: "message",
-				id: "assistant-1",
+				id: "00000001",
 				parentId: null,
 				timestamp,
 				message: {
 					role: "assistant",
 					content: [{ type: "text", text: "hello" }],
+					api: "anthropic-messages",
 					provider: "anthropic",
 					model: "claude-sonnet-4-5",
+					usage: {
+						input: 1,
+						output: 1,
+						cacheRead: 0,
+						cacheWrite: 0,
+						totalTokens: 2,
+						cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+					},
+					stopReason: "stop",
 					timestamp: Date.now(),
 				},
 			},
 		)}\n`,
+		{ mode: 0o600 },
 	);
 }
 

@@ -7,7 +7,8 @@ import {
 	Spacer,
 	theme,
 } from "@tsuuanmi/pi-tui";
-import type { AuthStatus, AuthStorage } from "#pi/auth/storage";
+import type { AuthStorage } from "#pi/auth/storage";
+import type { AuthStatus } from "#pi/auth/types";
 
 export type AuthSelectorProvider = {
 	id: string;
@@ -134,8 +135,6 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 				return theme.fg("success", ` ✓ env: ${status.label ?? "API key"}`);
 			case "runtime":
 				return theme.fg("success", " ✓ runtime API key");
-			case "fallback":
-				return theme.fg("success", " ✓ custom API key");
 			case "settings_json_key":
 				return theme.fg("success", " ✓ key in settings.json");
 			case "settings_json_command":

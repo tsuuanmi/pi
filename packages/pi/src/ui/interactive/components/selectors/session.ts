@@ -22,12 +22,7 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
-import {
-	SESSION_PAGE_SIZE,
-	type SessionInfo,
-	type SessionListPage,
-	type SessionListProgress,
-} from "#pi/session/manager";
+import { SESSION_PAGE_SIZE, type SessionInfo, type SessionListPage, type SessionListProgress } from "#pi/session/types";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 
 type SessionScope = "current" | "all";

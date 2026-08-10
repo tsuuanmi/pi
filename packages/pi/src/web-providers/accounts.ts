@@ -1,7 +1,8 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { rmSync } from "node:fs";
 import { join } from "node:path";
-import type { AuthStorage, BrowserCredential } from "#pi/auth/storage";
+import type { AuthStorage } from "#pi/auth/storage";
+import type { BrowserCredential } from "#pi/auth/types";
 import { getAgentDir } from "#pi/loader/paths";
 import type { WebProviderHost } from "#pi/web-providers/host";
 import { closeWebProfile } from "./workers.ts";
@@ -57,20 +58,18 @@ export class BrowserAccountStore {
 		);
 		if (signal.aborted) throw signal.reason;
 		if (entitlement.routes.length === 0) throw new Error("browser account has no entitled routes");
-		if (!this.authStorage.switchAccount(provider, name))
-			throw new Error(`unable to activate browser account: ${name}`);
+		this.authStorage.switchAccount(provider, name);
 		host.clearEntitlement(provider);
 		host.setEntitlement(provider, name, entitlement.routes);
 	}
 
-	async remove(provider: string, name: string, host: WebProviderHost): Promise<boolean> {
+	async remove(provider: string, name: string, host: WebProviderHost): Promise<void> {
 		const credential = this.authStorage.getBrowserAccount(provider, name);
-		if (!credential) return false;
+		if (!credential) throw new Error(`Unknown browser account: ${name}`);
 		const active = this.authStorage.getActiveAccount(provider) === name;
 		await closeWebProfile(credential.profileId);
 		rmSync(getBrowserProfilePath(credential.profileId, this.profileRoot), { recursive: true, force: true });
-		const removed = this.authStorage.removeAccount(provider, name);
-		if (removed && active) host.clearEntitlement(provider);
-		return removed;
+		this.authStorage.removeAccount(provider, name);
+		if (active) host.clearEntitlement(provider);
 	}
 }

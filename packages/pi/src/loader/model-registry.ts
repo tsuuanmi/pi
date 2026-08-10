@@ -24,7 +24,8 @@ import {
 	validateModelsConfig,
 } from "@tsuuanmi/pi-ai";
 import { type OAuthProviderInterface, registerOAuthProvider, resetOAuthProviders } from "@tsuuanmi/pi-ai/oauth";
-import type { AuthStatus, AuthStorage } from "#pi/auth/storage";
+import type { AuthStorage } from "#pi/auth/storage";
+import type { AuthStatus } from "#pi/auth/types";
 import {
 	clearConfigValueCache,
 	getConfigValueEnvVarNames,
@@ -456,7 +457,7 @@ export class ModelRegistry {
 		try {
 			const providerConfig = this.providerRequestConfigs.get(model.provider);
 			const providerEnv = this.authStorage.getProviderEnv(model.provider);
-			const apiKeyFromAuthStorage = await this.authStorage.getApiKey(model.provider, { includeFallback: false });
+			const apiKeyFromAuthStorage = await this.authStorage.getApiKey(model.provider);
 			const apiKey =
 				apiKeyFromAuthStorage ??
 				(providerConfig?.apiKey
@@ -553,7 +554,7 @@ export class ModelRegistry {
 	 * Get API key for a provider.
 	 */
 	async getApiKeyForProvider(provider: string): Promise<string | undefined> {
-		const apiKey = await this.authStorage.getApiKey(provider, { includeFallback: false });
+		const apiKey = await this.authStorage.getApiKey(provider);
 		if (apiKey !== undefined) {
 			return apiKey;
 		}

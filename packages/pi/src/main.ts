@@ -12,7 +12,7 @@ import { bootstrapStartup } from "#pi/app/bootstrap";
 import { runStartupCommands } from "#pi/app/commands";
 import { applyStdoutMode, prepareInput, resolveStartupMode } from "#pi/app/input";
 import { runAppMode } from "#pi/app/modes";
-import { collectSettingsDiagnostics, createAppRuntime } from "#pi/app/runtime";
+import { createAppRuntime } from "#pi/app/runtime";
 import { createStartupSession } from "#pi/app/session";
 import { parseArgs, printHelp } from "#pi/cli/args";
 import { launchDefaultTmuxIfNeeded } from "#pi/cli/launch-tmux";
@@ -67,7 +67,6 @@ export async function main(args: string[], options?: MainOptions) {
 	}
 
 	const startupSettingsManager = SettingsManager.create(cwd, agentDir);
-	reportDiagnostics(collectSettingsDiagnostics(startupSettingsManager, "startup session lookup"));
 
 	// Decide the final runtime cwd before creating cwd-bound runtime services.
 	// --session and --resume may select a session from another project, so project-local

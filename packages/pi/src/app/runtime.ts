@@ -26,16 +26,6 @@ export interface RuntimeOptions {
 	extensionFactories?: ExtensionFactory[];
 }
 
-export function collectSettingsDiagnostics(
-	settingsManager: SettingsManager,
-	context: string,
-): AgentSessionRuntimeDiagnostic[] {
-	return settingsManager.drainErrors().map(({ scope, error }) => ({
-		type: "warning",
-		message: `(${context}, ${scope} settings) ${error.message}`,
-	}));
-}
-
 function buildSessionOptions(
 	parsed: Args,
 	scopedModels: ScopedModel[],
@@ -124,7 +114,6 @@ export async function createAppRuntime(options: RuntimeOptions): Promise<AgentSe
 		const { settingsManager, modelRegistry, resourceLoader } = services;
 		const diagnostics: AgentSessionRuntimeDiagnostic[] = [
 			...services.diagnostics,
-			...collectSettingsDiagnostics(settingsManager, "runtime creation"),
 			...resourceLoader.getExtensions().errors.map(({ path, error }) => ({
 				type: "error" as const,
 				message: `Failed to load extension "${path}": ${error}`,

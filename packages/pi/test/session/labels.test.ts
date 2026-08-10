@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { type LabelEntry, SessionManager } from "#pi/session/manager";
+import { SessionManager } from "#pi/session/manager";
+import type { LabelEntry } from "#pi/session/types";
 
 describe("SessionManager labels", () => {
 	it("sets and gets labels", () => {

@@ -13,20 +13,21 @@ Settings are resolved in order of priority (highest wins):
 
 Nested objects are deep-merged. For example, project `compaction.reserveTokens` overrides the global value while preserving other compaction settings.
 
+Settings use a strict schema. Invalid JSON, unknown fields, invalid values, and insecure permissions stop startup. Setters complete their lock-protected atomic write before returning.
+
 ## Settings File
 
 ```json
 {
-  "model": "claude-4-sonnet",
-  "thinkingLevel": "medium",
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-sonnet-4-5",
+  "defaultThinkingLevel": "medium",
   "steeringMode": "one-at-a-time",
   "followUpMode": "one-at-a-time",
-  "customTools": ["my-tool"],
-  "excludeTools": [],
   "extensions": ["./my-extension.ts"],
   "skills": ["./my-skill.md"],
   "prompts": ["./my-prompt.md"],
-  "themes": ["./my-theme.ts"]
+  "themes": ["./my-theme.json"]
 }
 ```
 

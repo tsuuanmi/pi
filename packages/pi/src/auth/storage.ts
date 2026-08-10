@@ -6,94 +6,34 @@
  * try to refresh tokens simultaneously.
  */
 
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { normalizePath } from "@tsuuanmi/pi-agent/node";
 import {
 	getOAuthProvider,
 	getOAuthProviders,
-	type OAuthCredentials,
 	type OAuthLoginCallbacks,
 	type OAuthProviderId,
 } from "@tsuuanmi/pi-ai/oauth";
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
+import { assertAuthName, isAuthAccountCollection, isAuthCredential, parseAuth, serializeAuth } from "#pi/auth/codec";
+import type {
+	AuthAccountCollection,
+	AuthCredential,
+	AuthStatus,
+	AuthStorageData,
+	AuthStorageEntry,
+	BrowserCredential,
+	OAuthCredential,
+} from "#pi/auth/types";
 import { getAgentDir } from "#pi/loader/paths";
 import { resolveConfigValue } from "#pi/loader/value";
-
-export type ApiKeyCredential = {
-	type: "api_key";
-	key: string;
-	env?: Record<string, string>;
-};
-
-export type OAuthCredential = {
-	type: "oauth";
-} & OAuthCredentials;
-
-export type BrowserCredential = {
-	type: "browser";
-	profileId: string;
-	tunnelSecret: string;
-};
-
-export type AuthCredential = ApiKeyCredential | OAuthCredential | BrowserCredential;
-
-export type AuthAccountCollection = {
-	active?: string;
-	accounts: Record<string, AuthCredential>;
-};
-
-export type AuthStorageEntry = AuthCredential | AuthAccountCollection;
-
-export type AuthStorageData = Record<string, AuthStorageEntry>;
-
-export type AuthStatus = {
-	configured: boolean;
-	source?: "stored" | "runtime" | "environment" | "fallback" | "settings_json_key" | "settings_json_command";
-	label?: string;
-};
+import { assertPrivateFile, ensurePrivateDir, writePrivateFile } from "#pi/storage/file";
 
 type LockResult<T> = {
 	result: T;
 	next?: string;
 };
-
-const AUTH_FILE_WRITE_OPTIONS = { encoding: "utf-8", mode: 0o600 } as const;
-
-function isBrowserCredential(value: unknown): value is BrowserCredential {
-	return (
-		typeof value === "object" &&
-		value !== null &&
-		"type" in value &&
-		value.type === "browser" &&
-		"profileId" in value &&
-		typeof value.profileId === "string" &&
-		/^[a-zA-Z0-9_-]{16,128}$/.test(value.profileId) &&
-		"tunnelSecret" in value &&
-		typeof value.tunnelSecret === "string" &&
-		value.tunnelSecret.length >= 32
-	);
-}
-
-function isAuthCredential(value: AuthStorageEntry | undefined): value is AuthCredential {
-	return (
-		typeof value === "object" &&
-		value !== null &&
-		"type" in value &&
-		(value.type === "api_key" || value.type === "oauth" || isBrowserCredential(value))
-	);
-}
-
-function isAuthAccountCollection(value: AuthStorageEntry | undefined): value is AuthAccountCollection {
-	return (
-		typeof value === "object" &&
-		value !== null &&
-		!("type" in value) &&
-		"accounts" in value &&
-		typeof value.accounts === "object" &&
-		value.accounts !== null
-	);
-}
 
 export interface AuthStorageBackend {
 	withLock<T>(fn: (current: string | undefined) => LockResult<T>): T;
@@ -107,18 +47,8 @@ export class FileAuthStorageBackend implements AuthStorageBackend {
 		this.authPath = normalizePath(authPath);
 	}
 
-	private ensureParentDir(): void {
-		const dir = dirname(this.authPath);
-		if (!existsSync(dir)) {
-			mkdirSync(dir, { recursive: true, mode: 0o700 });
-		}
-	}
-
-	private ensureFileExists(): void {
-		if (!existsSync(this.authPath)) {
-			writeFileSync(this.authPath, "{}", AUTH_FILE_WRITE_OPTIONS);
-			chmodSync(this.authPath, 0o600);
-		}
+	private ensureDirectory(): void {
+		ensurePrivateDir(dirname(this.authPath));
 	}
 
 	private acquireLockSyncWithRetry(path: string): () => void {
@@ -149,30 +79,21 @@ export class FileAuthStorageBackend implements AuthStorageBackend {
 	}
 
 	withLock<T>(fn: (current: string | undefined) => LockResult<T>): T {
-		this.ensureParentDir();
-		this.ensureFileExists();
-
-		let release: (() => void) | undefined;
+		this.ensureDirectory();
+		const release = this.acquireLockSyncWithRetry(this.authPath);
 		try {
-			release = this.acquireLockSyncWithRetry(this.authPath);
-			const current = existsSync(this.authPath) ? readFileSync(this.authPath, "utf-8") : undefined;
+			if (existsSync(this.authPath)) assertPrivateFile(this.authPath);
+			const current = existsSync(this.authPath) ? readFileSync(this.authPath, "utf8") : undefined;
 			const { result, next } = fn(current);
-			if (next !== undefined) {
-				writeFileSync(this.authPath, next, AUTH_FILE_WRITE_OPTIONS);
-				chmodSync(this.authPath, 0o600);
-			}
+			if (next !== undefined) writePrivateFile(this.authPath, next);
 			return result;
 		} finally {
-			if (release) {
-				release();
-			}
+			release();
 		}
 	}
 
 	async withLockAsync<T>(fn: (current: string | undefined) => Promise<LockResult<T>>): Promise<T> {
-		this.ensureParentDir();
-		this.ensureFileExists();
-
+		this.ensureDirectory();
 		let release: (() => Promise<void>) | undefined;
 		let lockCompromised = false;
 		let lockCompromisedError: Error | undefined;
@@ -199,23 +120,15 @@ export class FileAuthStorageBackend implements AuthStorageBackend {
 			});
 
 			throwIfCompromised();
-			const current = existsSync(this.authPath) ? readFileSync(this.authPath, "utf-8") : undefined;
+			if (existsSync(this.authPath)) assertPrivateFile(this.authPath);
+			const current = existsSync(this.authPath) ? readFileSync(this.authPath, "utf8") : undefined;
 			const { result, next } = await fn(current);
 			throwIfCompromised();
-			if (next !== undefined) {
-				writeFileSync(this.authPath, next, AUTH_FILE_WRITE_OPTIONS);
-				chmodSync(this.authPath, 0o600);
-			}
+			if (next !== undefined) writePrivateFile(this.authPath, next);
 			throwIfCompromised();
 			return result;
 		} finally {
-			if (release) {
-				try {
-					await release();
-				} catch {
-					// Ignore unlock errors when lock is compromised.
-				}
-			}
+			if (release) await release();
 		}
 	}
 }
@@ -245,15 +158,22 @@ export class InMemoryAuthStorageBackend implements AuthStorageBackend {
  */
 export class AuthStorage {
 	private data: AuthStorageData = {};
-	private runtimeOverrides: Map<string, string> = new Map();
-	private fallbackResolver?: (provider: string) => string | undefined;
-	private loadError: Error | null = null;
-	private errors: Error[] = [];
+	private readonly runtimeOverrides = new Map<string, string>();
 	private readonly storage: AuthStorageBackend;
 
 	private constructor(storage: AuthStorageBackend) {
 		this.storage = storage;
 		this.reload();
+	}
+
+	private entry(provider: string): AuthStorageEntry | undefined {
+		return Object.hasOwn(this.data, provider) ? this.data[provider] : undefined;
+	}
+
+	private static copyCredential(credential: AuthCredential): AuthCredential {
+		return credential.type === "api_key" && credential.env
+			? { ...credential, env: { ...credential.env } }
+			: { ...credential };
 	}
 
 	static create(authPath?: string): AuthStorage {
@@ -266,7 +186,7 @@ export class AuthStorage {
 
 	static inMemory(data: AuthStorageData = {}): AuthStorage {
 		const storage = new InMemoryAuthStorageBackend();
-		storage.withLock(() => ({ result: undefined, next: JSON.stringify(data, null, 2) }));
+		storage.withLock(() => ({ result: undefined, next: serializeAuth(data) }));
 		return AuthStorage.fromStorage(storage);
 	}
 
@@ -274,6 +194,10 @@ export class AuthStorage {
 	 * Set a runtime API key override (not persisted to disk).
 	 */
 	setRuntimeApiKey(provider: string, apiKey: string): void {
+		if (!provider || provider.trim() !== provider || /[\x00/\\]/.test(provider)) {
+			throw new Error("Provider name is invalid.");
+		}
+		if (!apiKey) throw new Error("Runtime API key must not be empty.");
 		this.runtimeOverrides.set(provider, apiKey);
 	}
 
@@ -281,33 +205,11 @@ export class AuthStorage {
 	 * Remove a runtime API key override.
 	 */
 	removeRuntimeApiKey(provider: string): void {
-		this.runtimeOverrides.delete(provider);
-	}
-
-	/**
-	 * Set a fallback resolver for API keys not found in auth.json or env vars.
-	 * Used for custom provider keys from settings.json.
-	 */
-	setFallbackResolver(resolver: (provider: string) => string | undefined): void {
-		this.fallbackResolver = resolver;
-	}
-
-	private recordError(error: unknown): void {
-		const normalizedError = error instanceof Error ? error : new Error(String(error));
-		this.errors.push(normalizedError);
-	}
-
-	private parseStorageData(content: string | undefined): AuthStorageData {
-		if (!content) {
-			return {};
-		}
-		return JSON.parse(content) as AuthStorageData;
+		if (!this.runtimeOverrides.delete(provider)) throw new Error(`No runtime API key for ${provider}.`);
 	}
 
 	private getActiveAccountName(entry: AuthStorageEntry | undefined): string | undefined {
-		if (!isAuthAccountCollection(entry)) return undefined;
-		if (entry.active && entry.accounts[entry.active]) return entry.active;
-		return Object.keys(entry.accounts)[0];
+		return isAuthAccountCollection(entry) ? entry.active : undefined;
 	}
 
 	private getActiveCredential(entry: AuthStorageEntry | undefined): AuthCredential | undefined {
@@ -330,12 +232,11 @@ export class AuthStorage {
 		credential: AuthCredential,
 		accountName?: string,
 	): AuthStorageEntry {
-		if (!accountName) {
+		if (accountName === undefined) {
 			if (isAuthAccountCollection(entry)) {
-				const activeAccount = this.getActiveAccountName(entry) ?? "default";
 				return {
-					active: activeAccount,
-					accounts: { ...entry.accounts, [activeAccount]: credential },
+					active: entry.active,
+					accounts: { ...entry.accounts, [entry.active]: credential },
 				};
 			}
 			return credential;
@@ -360,9 +261,9 @@ export class AuthStorage {
 		accountName?: string,
 	): AuthStorageEntry {
 		if (!isAuthAccountCollection(entry)) return credential;
-		const targetAccount = accountName ?? this.getActiveAccountName(entry) ?? "default";
+		const targetAccount = accountName ?? entry.active;
 		return {
-			active: accountName ? entry.active : targetAccount,
+			active: entry.active,
 			accounts: { ...entry.accounts, [targetAccount]: credential },
 		};
 	}
@@ -371,60 +272,43 @@ export class AuthStorage {
 	 * Reload credentials from storage.
 	 */
 	reload(): void {
-		let content: string | undefined;
-		try {
-			this.storage.withLock((current) => {
-				content = current;
-				return { result: undefined };
-			});
-			this.data = this.parseStorageData(content);
-			this.loadError = null;
-		} catch (error) {
-			this.loadError = error as Error;
-			this.recordError(error);
-		}
+		const data = this.storage.withLock((current) => ({
+			result: parseAuth(current ?? "{}", "auth"),
+		}));
+		this.data = data;
 	}
 
-	private persistProviderChange(provider: string, entry: AuthStorageEntry | undefined): void {
-		if (this.loadError) {
-			return;
-		}
-
-		try {
-			this.storage.withLock((current) => {
-				const currentData = this.parseStorageData(current);
-				const merged: AuthStorageData = { ...currentData };
-				if (entry) {
-					merged[provider] = entry;
-				} else {
-					delete merged[provider];
-				}
-				return { result: undefined, next: JSON.stringify(merged, null, 2) };
-			});
-		} catch (error) {
-			this.recordError(error);
-		}
+	private persistProviderChange(provider: string, entry: AuthStorageEntry | undefined): AuthStorageData {
+		return this.storage.withLock((current) => {
+			const data = parseAuth(current ?? "{}", "auth");
+			if (entry) data[provider] = entry;
+			else delete data[provider];
+			const next = serializeAuth(data);
+			return { result: parseAuth(next, "auth"), next };
+		});
 	}
 
 	/**
 	 * Get credential for a provider.
 	 */
 	get(provider: string): AuthCredential | undefined {
-		return this.getActiveCredential(this.data[provider]);
+		const credential = this.getActiveCredential(this.entry(provider));
+		return credential ? AuthStorage.copyCredential(credential) : undefined;
 	}
 
 	/**
 	 * Get credential for a specific stored account.
 	 */
 	getAccount(provider: string, accountName: string): AuthCredential | undefined {
-		return this.getAccountCredential(this.data[provider], accountName);
+		const credential = this.getAccountCredential(this.entry(provider), accountName);
+		return credential ? AuthStorage.copyCredential(credential) : undefined;
 	}
 
 	/**
 	 * Get names for stored accounts for a provider.
 	 */
 	getAccountNames(provider: string): string[] {
-		const entry = this.data[provider];
+		const entry = this.entry(provider);
 		if (isAuthAccountCollection(entry)) return Object.keys(entry.accounts);
 		if (isAuthCredential(entry)) return ["default"];
 		return [];
@@ -434,7 +318,7 @@ export class AuthStorage {
 	 * Get the active stored account name for a provider.
 	 */
 	getActiveAccount(provider: string): string | undefined {
-		const entry = this.data[provider];
+		const entry = this.entry(provider);
 		if (isAuthAccountCollection(entry)) return this.getActiveAccountName(entry);
 		if (isAuthCredential(entry)) return "default";
 		return undefined;
@@ -443,16 +327,16 @@ export class AuthStorage {
 	/**
 	 * Switch the active account for a provider.
 	 */
-	switchAccount(provider: string, accountName: string): boolean {
-		const entry = this.data[provider];
-		if (isAuthAccountCollection(entry)) {
-			if (!entry.accounts[accountName]) return false;
-			const nextEntry: AuthAccountCollection = { ...entry, active: accountName };
-			this.data[provider] = nextEntry;
-			this.persistProviderChange(provider, nextEntry);
-			return true;
+	switchAccount(provider: string, accountName: string): void {
+		assertAuthName(accountName, "account name");
+		const entry = this.entry(provider);
+		if (isAuthCredential(entry)) {
+			if (accountName !== "default") throw new Error(`Account ${accountName} not found for ${provider}.`);
+			return;
 		}
-		return accountName === "default" && isAuthCredential(entry);
+		if (!entry?.accounts[accountName]) throw new Error(`Account ${accountName} not found for ${provider}.`);
+		const nextEntry: AuthAccountCollection = { ...entry, active: accountName };
+		this.data = this.persistProviderChange(provider, nextEntry);
 	}
 
 	/**
@@ -472,46 +356,43 @@ export class AuthStorage {
 	 * Set credential for a provider.
 	 */
 	set(provider: string, credential: AuthCredential, accountName?: string): void {
-		const entry = this.setCredentialInEntry(this.data[provider], credential, accountName);
-		this.data[provider] = entry;
-		this.persistProviderChange(provider, entry);
+		if (accountName !== undefined) assertAuthName(accountName, "account name");
+		const entry = this.setCredentialInEntry(this.entry(provider), credential, accountName);
+		this.data = this.persistProviderChange(provider, entry);
 	}
 
 	/**
 	 * Remove credential for a provider.
 	 */
 	remove(provider: string): void {
-		delete this.data[provider];
-		this.persistProviderChange(provider, undefined);
+		if (!Object.hasOwn(this.data, provider)) throw new Error(`No credentials stored for ${provider}.`);
+		this.data = this.persistProviderChange(provider, undefined);
 	}
 
 	/**
 	 * Remove one named account for a provider.
 	 */
-	removeAccount(provider: string, accountName: string): boolean {
-		const entry = this.data[provider];
+	removeAccount(provider: string, accountName: string): void {
+		assertAuthName(accountName, "account name");
+		const entry = this.entry(provider);
 		if (isAuthCredential(entry)) {
-			if (accountName !== "default") return false;
+			if (accountName !== "default") throw new Error(`Account ${accountName} not found for ${provider}.`);
 			this.remove(provider);
-			return true;
+			return;
 		}
-		if (!isAuthAccountCollection(entry) || !entry.accounts[accountName]) return false;
-
+		if (!entry?.accounts[accountName]) throw new Error(`Account ${accountName} not found for ${provider}.`);
+		const accountNames = Object.keys(entry.accounts);
+		if (entry.active === accountName && accountNames.length > 1) {
+			throw new Error(`Switch ${provider} to another account before removing ${accountName}.`);
+		}
+		if (accountNames.length === 1) {
+			this.remove(provider);
+			return;
+		}
 		const accounts = { ...entry.accounts };
 		delete accounts[accountName];
-		const remainingAccountNames = Object.keys(accounts);
-		if (remainingAccountNames.length === 0) {
-			this.remove(provider);
-			return true;
-		}
-
-		const nextEntry: AuthAccountCollection = {
-			active: entry.active === accountName ? remainingAccountNames[0] : entry.active,
-			accounts,
-		};
-		this.data[provider] = nextEntry;
-		this.persistProviderChange(provider, nextEntry);
-		return true;
+		const nextEntry: AuthAccountCollection = { active: entry.active, accounts };
+		this.data = this.persistProviderChange(provider, nextEntry);
 	}
 
 	/**
@@ -525,7 +406,7 @@ export class AuthStorage {
 	 * Check if credentials exist for a provider in auth.json.
 	 */
 	has(provider: string): boolean {
-		return provider in this.data;
+		return Object.hasOwn(this.data, provider);
 	}
 
 	/**
@@ -533,26 +414,19 @@ export class AuthStorage {
 	 * Unlike getApiKey(), this doesn't refresh OAuth tokens.
 	 */
 	hasAuth(provider: string): boolean {
-		if (this.runtimeOverrides.has(provider)) return true;
-		if (this.data[provider]) return true;
-		if (this.fallbackResolver?.(provider)) return true;
-		return false;
+		return this.runtimeOverrides.has(provider) || Object.hasOwn(this.data, provider);
 	}
 
 	/**
 	 * Return auth status without exposing credential values or refreshing tokens.
 	 */
 	getAuthStatus(provider: string): AuthStatus {
-		if (this.data[provider]) {
-			return { configured: true, source: "stored" };
-		}
-
 		if (this.runtimeOverrides.has(provider)) {
-			return { configured: false, source: "runtime", label: "runtime API key" };
+			return { configured: true, source: "runtime", label: "runtime API key" };
 		}
 
-		if (this.fallbackResolver?.(provider)) {
-			return { configured: false, source: "fallback", label: "custom provider config" };
+		if (Object.hasOwn(this.data, provider)) {
+			return { configured: true, source: "stored" };
 		}
 
 		return { configured: false };
@@ -565,15 +439,9 @@ export class AuthStorage {
 		const credentials: Record<string, AuthCredential> = {};
 		for (const [provider, entry] of Object.entries(this.data)) {
 			const credential = this.getActiveCredential(entry);
-			if (credential) credentials[provider] = credential;
+			if (credential) credentials[provider] = AuthStorage.copyCredential(credential);
 		}
 		return credentials;
-	}
-
-	drainErrors(): Error[] {
-		const drained = [...this.errors];
-		this.errors = [];
-		return drained;
 	}
 
 	/**
@@ -603,46 +471,33 @@ export class AuthStorage {
 	private async refreshOAuthTokenWithLock(
 		providerId: OAuthProviderId,
 		accountName?: string,
-	): Promise<{ apiKey: string; newCredentials: OAuthCredentials } | null> {
+	): Promise<{ apiKey: string; newCredentials: OAuthCredential } | null> {
 		const provider = getOAuthProvider(providerId);
-		if (!provider) {
-			return null;
-		}
+		if (!provider) throw new Error(`Unknown OAuth provider: ${providerId}`);
 
-		const result = await this.storage.withLockAsync(async (current) => {
-			const currentData = this.parseStorageData(current);
-			this.data = currentData;
-			this.loadError = null;
-
-			const cred = this.getAccountCredential(currentData[providerId], accountName);
-			if (cred?.type !== "oauth") {
-				return { result: null };
-			}
-
-			if (Date.now() < cred.expires) {
-				return { result: { apiKey: provider.getApiKey(cred), newCredentials: cred } };
-			}
-
-			const newCredentials = await provider.refreshToken(cred);
-			const refreshed = { apiKey: provider.getApiKey(newCredentials), newCredentials };
-
-			const merged: AuthStorageData = {
-				...currentData,
-				[providerId]: this.replaceCredentialInEntry(
-					currentData[providerId],
-					{
-						type: "oauth",
-						...refreshed.newCredentials,
+		const outcome = await this.storage.withLockAsync<{
+			data: AuthStorageData;
+			refreshed: { apiKey: string; newCredentials: OAuthCredential } | null;
+		}>(async (current) => {
+			const data = parseAuth(current ?? "{}", "auth");
+			const credential = this.getAccountCredential(data[providerId], accountName);
+			if (credential?.type !== "oauth") return { result: { data, refreshed: null } };
+			if (Date.now() < credential.expires) {
+				return {
+					result: {
+						data,
+						refreshed: { apiKey: provider.getApiKey(credential), newCredentials: credential },
 					},
-					accountName,
-				),
-			};
-			this.data = merged;
-			this.loadError = null;
-			return { result: refreshed, next: JSON.stringify(merged, null, 2) };
-		});
+				};
+			}
 
-		return result;
+			const nextCredentials: OAuthCredential = { type: "oauth", ...(await provider.refreshToken(credential)) };
+			const refreshed = { apiKey: provider.getApiKey(nextCredentials), newCredentials: nextCredentials };
+			data[providerId] = this.replaceCredentialInEntry(data[providerId], nextCredentials, accountName);
+			return { result: { data, refreshed }, next: serializeAuth(data) };
+		});
+		this.data = outcome.data;
+		return outcome.refreshed;
 	}
 
 	/**
@@ -651,67 +506,40 @@ export class AuthStorage {
 	 * 1. Runtime override
 	 * 2. API key from auth.json
 	 * 3. OAuth token from auth.json (auto-refreshed with locking)
-	 * 4. Fallback resolver (settings.json custom providers)
 	 */
-	async getApiKey(
-		providerId: string,
-		options?: { includeFallback?: boolean; accountName?: string },
-	): Promise<string | undefined> {
+	async getApiKey(providerId: string, options?: { accountName?: string }): Promise<string | undefined> {
 		// Runtime override takes highest priority
 		const runtimeKey = this.runtimeOverrides.get(providerId);
 		if (runtimeKey) {
 			return runtimeKey;
 		}
 
-		const cred = options?.accountName ? this.getAccount(providerId, options.accountName) : this.get(providerId);
+		const cred =
+			options?.accountName !== undefined ? this.getAccount(providerId, options.accountName) : this.get(providerId);
 
 		if (cred?.type === "api_key") {
-			return resolveConfigValue(cred.key, cred.env);
+			const resolved = resolveConfigValue(cred.key, cred.env);
+			if (resolved === undefined) {
+				throw new Error(`${providerId} API key could not be resolved.`);
+			}
+			return resolved;
 		}
 
 		if (cred?.type === "oauth") {
 			const provider = getOAuthProvider(providerId);
-			if (!provider) {
-				// Unknown OAuth provider, can't get API key
-				return undefined;
-			}
+			if (!provider) throw new Error(`Unknown OAuth provider: ${providerId}`);
 
 			// Check if token needs refresh
 			const needsRefresh = Date.now() >= cred.expires;
 
 			if (needsRefresh) {
-				// Use locked refresh to prevent race conditions
-				try {
-					const result = await this.refreshOAuthTokenWithLock(providerId, options?.accountName);
-					if (result) {
-						return result.apiKey;
-					}
-				} catch (error) {
-					this.recordError(error);
-					// Refresh failed - re-read file to check if another instance succeeded
-					this.reload();
-					const updatedCred = options?.accountName
-						? this.getAccount(providerId, options.accountName)
-						: this.get(providerId);
-
-					if (updatedCred?.type === "oauth" && Date.now() < updatedCred.expires) {
-						// Another instance refreshed successfully, use those credentials
-						return provider.getApiKey(updatedCred);
-					}
-
-					// Refresh truly failed - return undefined so model discovery skips this provider
-					// User can /account add to re-authenticate (credentials preserved for retry)
-					return undefined;
-				}
+				const result = await this.refreshOAuthTokenWithLock(providerId, options?.accountName);
+				if (!result) throw new Error(`OAuth credentials for ${providerId} changed during refresh.`);
+				return result.apiKey;
 			} else {
 				// Token not expired, use current access token
 				return provider.getApiKey(cred);
 			}
-		}
-
-		// Fall back to custom resolver (e.g., settings.json custom providers)
-		if (options?.includeFallback !== false) {
-			return this.fallbackResolver?.(providerId) ?? undefined;
 		}
 
 		return undefined;

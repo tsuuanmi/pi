@@ -13,27 +13,33 @@ import {
 	prepareCompaction,
 	shouldCompact,
 } from "#pi/session/compaction/index";
-import {
-	buildSessionContext,
-	type CompactionEntry,
-	type ModelChangeEntry,
-	migrateSessionEntries,
-	parseSessionEntries,
-	type SessionEntry,
-	type SessionMessageEntry,
-	type ThinkingLevelChangeEntry,
-} from "#pi/session/manager";
+import { buildSessionContext as resolveContext } from "#pi/session/context";
+import type {
+	CompactionEntry,
+	ModelChangeEntry,
+	SessionEntry,
+	SessionMessageEntry,
+	ThinkingLevelChangeEntry,
+} from "#pi/session/types";
 
 // ============================================================================
 // Test fixtures
 // ============================================================================
 
+function buildSessionContext(entries: SessionEntry[], leafId = entries.at(-1)?.id ?? null) {
+	return resolveContext(entries, leafId);
+}
+
 function loadLargeSessionEntries(): SessionEntry[] {
 	const sessionPath = join(__dirname, "../../fixtures/large-session.jsonl");
-	const content = readFileSync(sessionPath, "utf-8");
-	const entries = parseSessionEntries(content);
-	migrateSessionEntries(entries); // Add id/parentId for v1 fixtures
-	return entries.filter((e): e is SessionEntry => e.type !== "session");
+	const lines = readFileSync(sessionPath, "utf-8").trim().split("\n").slice(1);
+	let parentId: string | null = null;
+	return lines.map((line, index) => {
+		const id = index.toString(16).padStart(8, "0");
+		const entry = { ...(JSON.parse(line) as Record<string, unknown>), id, parentId } as unknown as SessionEntry;
+		parentId = id;
+		return entry;
+	});
 }
 
 function createMockUsage(input: number, output: number, cacheRead = 0, cacheWrite = 0): Usage {
@@ -119,7 +125,7 @@ function createModelChangeEntry(provider: string, modelId: string): ModelChangeE
 	return entry;
 }
 
-function createThinkingLevelEntry(thinkingLevel: string): ThinkingLevelChangeEntry {
+function createThinkingLevelEntry(thinkingLevel: ThinkingLevelChangeEntry["thinkingLevel"]): ThinkingLevelChangeEntry {
 	const id = `test-id-${entryCounter++}`;
 	const entry: ThinkingLevelChangeEntry = {
 		type: "thinking_level_change",

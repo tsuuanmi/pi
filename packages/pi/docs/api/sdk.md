@@ -710,7 +710,7 @@ const { session: persisted } = await createAgentSession({
 
 // Continue most recent
 const { session: continued, modelStartupWarning } = await createAgentSession({
-  sessionManager: SessionManager.continueRecent(process.cwd()),
+  sessionManager: SessionManager.openRecent(process.cwd()),
 });
 if (modelStartupWarning) {
   console.log("Note:", modelStartupWarning);
@@ -827,8 +827,7 @@ Project overrides global. Nested objects merge keys. Setters modify global setti
 
 - Settings getters/setters are synchronous for in-memory state.
 - Setters enqueue persistence writes asynchronously.
-- Call `await settingsManager.flush()` when you need a durability boundary (for example, before process exit or before asserting file contents in tests).
-- `SettingsManager` does not print settings I/O errors. Use `settingsManager.drainErrors()` and report them in your app layer.
+Settings setters persist synchronously and return only after the atomic write completes. Loading, validation, locking, and persistence errors are thrown to the caller.
 
 ## ResourceLoader
 

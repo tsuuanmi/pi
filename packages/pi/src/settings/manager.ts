@@ -11,7 +11,6 @@ import type {
 	ModelsSettings,
 	PackageSource,
 	Settings,
-	SettingsError,
 	SettingsStorage,
 	StatusLineSettings,
 	TransportSetting,
@@ -29,7 +28,6 @@ export type {
 	RetainedContextSettings,
 	RetrySettings,
 	Settings,
-	SettingsError,
 	SettingsScope,
 	SettingsStorage,
 	StatusLineSettings,
@@ -71,20 +69,12 @@ export class SettingsManager {
 		return this.store.getProjectSettings();
 	}
 
-	async reload(): Promise<void> {
-		await this.store.reload();
+	reload(): void {
+		this.store.reload();
 	}
 
 	applyOverrides(overrides: Partial<Settings>): void {
 		this.store.applyOverrides(overrides);
-	}
-
-	async flush(): Promise<void> {
-		await this.store.flush();
-	}
-
-	drainErrors(): SettingsError[] {
-		return this.store.drainErrors();
 	}
 
 	getSessionDir(): string | undefined {

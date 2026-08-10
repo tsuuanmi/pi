@@ -1,21 +1,21 @@
-import { writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { initTheme } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { SessionHeader } from "#pi/session/manager";
 import { SessionManager } from "#pi/session/manager";
+import { SESSION_VERSION, type SessionHeader } from "#pi/session/types";
 
 function createSessionFile(path: string): void {
 	const header: SessionHeader = {
 		type: "session",
 		id: "test-session",
-		version: 3,
+		version: SESSION_VERSION,
 		timestamp: new Date(0).toISOString(),
-		cwd: "/tmp",
+		cwd: dirname(path),
 	};
-	writeFileSync(path, `${JSON.stringify(header)}\n`, "utf8");
+	writeFileSync(path, `${JSON.stringify(header)}\n`, { encoding: "utf8", mode: 0o600 });
 
 	// SessionManager only persists once it has seen at least one assistant message.
 	// Add a minimal assistant entry so subsequent appends are persisted.
@@ -40,14 +40,19 @@ function createSessionFile(path: string): void {
 }
 
 describe("SessionInfo.modified", () => {
+	let dir: string | undefined;
+
 	beforeAll(() => initTheme("dark"));
 
 	afterEach(() => {
 		vi.restoreAllMocks();
+		if (dir) rmSync(dir, { recursive: true, force: true });
+		dir = undefined;
 	});
 
 	it("uses last user/assistant message timestamp instead of file mtime", async () => {
-		const filePath = join(tmpdir(), `pi-session-${Date.now()}-modified.jsonl`);
+		dir = mkdtempSync(join(tmpdir(), "pi-session-info-"));
+		const filePath = join(dir, "session.jsonl");
 		createSessionFile(filePath);
 
 		const before = await stat(filePath);
@@ -74,7 +79,7 @@ describe("SessionInfo.modified", () => {
 			timestamp: msgTime,
 		});
 
-		const sessions = await SessionManager.list("/tmp", dirname(filePath));
+		const sessions = await SessionManager.list(dir, dir);
 		const s = sessions.find((x) => x.path === filePath);
 		expect(s).toBeDefined();
 		expect(s!.modified.getTime()).toBe(msgTime);

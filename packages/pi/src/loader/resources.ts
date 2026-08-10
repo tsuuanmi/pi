@@ -202,7 +202,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 	}
 
 	async reload(options?: ResourceLoaderReloadOptions): Promise<void> {
-		await this.settingsManager.reload();
+		this.settingsManager.reload();
 		const onMissing = options?.skipMissingInstalls ? async () => "skip" as const : undefined;
 		const resolvedPaths = await resolveResources(this.packageManager, {
 			cwd: this.cwd,

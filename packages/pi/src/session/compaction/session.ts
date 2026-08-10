@@ -24,7 +24,8 @@ import type {
 	CompactionResult,
 	CompactionSettings,
 } from "#pi/session/compaction/types";
-import { buildSessionContext, type CompactionEntry, type SessionEntry } from "#pi/session/manager";
+import { buildSessionContext } from "#pi/session/context";
+import type { CompactionEntry, SessionEntry } from "#pi/session/types";
 
 // ============================================================================
 // File Operation Tracking
@@ -43,14 +44,13 @@ function extractFileOperations(
 	// Collect from previous compaction's details (if pi-generated)
 	if (prevCompactionIndex >= 0) {
 		const prevCompaction = entries[prevCompactionIndex] as CompactionEntry;
-		if (!prevCompaction.fromHook && prevCompaction.details) {
-			// fromHook field kept for session file compatibility
-			const details = prevCompaction.details as CompactionDetails;
+		if (typeof prevCompaction.details === "object" && prevCompaction.details !== null) {
+			const details = prevCompaction.details as Partial<CompactionDetails>;
 			if (Array.isArray(details.readFiles)) {
-				for (const f of details.readFiles) fileOps.read.add(f);
+				for (const file of details.readFiles) fileOps.read.add(file);
 			}
 			if (Array.isArray(details.modifiedFiles)) {
-				for (const f of details.modifiedFiles) fileOps.edited.add(f);
+				for (const file of details.modifiedFiles) fileOps.edited.add(file);
 			}
 		}
 	}
@@ -95,19 +95,19 @@ export function prepareCompaction(
 		const prevCompaction = pathEntries[prevCompactionIndex] as CompactionEntry;
 		previousSummary = prevCompaction.summary;
 		const firstKeptEntryIndex = pathEntries.findIndex((entry) => entry.id === prevCompaction.firstKeptEntryId);
-		boundaryStart = firstKeptEntryIndex >= 0 ? firstKeptEntryIndex : prevCompactionIndex + 1;
+		if (firstKeptEntryIndex < 0)
+			throw new Error(`Compaction entry ${prevCompaction.id} has an invalid first kept entry`);
+		boundaryStart = firstKeptEntryIndex;
 	}
 	const boundaryEnd = pathEntries.length;
 
-	const tokensBefore = estimateContextTokens(buildSessionContext(pathEntries).messages).tokens;
+	const leafId = pathEntries.at(-1)?.id ?? null;
+	const tokensBefore = estimateContextTokens(buildSessionContext(pathEntries, leafId).messages).tokens;
 
 	const cutPoint = findCutPoint(pathEntries, boundaryStart, boundaryEnd, settings.keepRecentTokens);
 
-	// Get UUID of first kept entry
 	const firstKeptEntry = pathEntries[cutPoint.firstKeptEntryIndex];
-	if (!firstKeptEntry?.id) {
-		return undefined; // Session needs migration
-	}
+	if (!firstKeptEntry) throw new Error("Compaction cut point does not reference an entry");
 	const firstKeptEntryId = firstKeptEntry.id;
 
 	const historyEnd = cutPoint.isSplitTurn ? cutPoint.turnStartIndex : cutPoint.firstKeptEntryIndex;
@@ -238,10 +238,6 @@ export async function compact(
 	// Compute file lists and append to summary
 	const { readFiles, modifiedFiles } = computeFileLists(fileOps);
 	summary += formatFileOperations(readFiles, modifiedFiles);
-
-	if (!firstKeptEntryId) {
-		throw new Error("First kept entry has no UUID - session may need migration");
-	}
 
 	return {
 		summary,

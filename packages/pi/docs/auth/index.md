@@ -6,6 +6,8 @@ Credential storage, account management, and OAuth flows for LLM providers.
 
 Pi supports two authentication methods for LLM providers: API keys and OAuth tokens. Credentials are stored in `~/.pi/agent/auth.json` with file locking to prevent race conditions when multiple Pi instances run concurrently.
 
+Credential files use strict permissions: directories are `0700` and files are `0600` on POSIX. Malformed JSON, unknown fields, invalid references, and insecure permissions throw rather than fail open.
+
 ## Authentication Methods
 
 ### 1. API Key Authentication
@@ -31,7 +33,9 @@ API key credentials support environment variable interpolation:
 }
 ```
 
-The `env` field stores provider-specific environment variables that are set when the key is resolved.
+The `env` field stores provider-specific environment variables that are set when the key is resolved. Environment variable names must match `^[A-Za-z_][A-Za-z0-9_]*$`.
+
+API key resolution fails closed: if a command (`!`-prefixed) exits non-zero, produces empty output, or a referenced environment variable is unset, `getApiKey` throws rather than returning `undefined`.
 
 ### 2. OAuth Authentication
 
@@ -66,31 +70,36 @@ type ApiKeyCredential = {
 
 type OAuthCredential = {
   type: "oauth";
-} & OAuthCredentials;             // access_token, refresh_token, expires, etc.
+  access: string;
+  refresh: string;
+  expires: number;
+};
 
-type AuthCredential = ApiKeyCredential | OAuthCredential;
+type AuthCredential = ApiKeyCredential | OAuthCredential | BrowserCredential;
 ```
 
 ### Account Collections
 
-Providers can have multiple accounts with an active selection:
+Providers can have multiple accounts with a required active selection:
 
 ```typescript
 type AuthAccountCollection = {
-  active?: string;                          // Active account name
+  active: string;                            // Active account name (required)
   accounts: Record<string, AuthCredential>; // Named accounts
 };
 ```
+
+The `active` field must reference an existing account. Account and provider names must be non-empty, trimmed, and free of path separators or prototype-inherited keys.
 
 ### Key Resolution Priority
 
 `getApiKey(providerId)` resolves API keys in order. Pass `accountName` to resolve a specific stored account instead of the active account.
 
 1. **Runtime override** — Set via `setRuntimeApiKey()`, not persisted to disk
-2. **API key from auth.json** — Resolved with `resolveConfigValue()` for interpolation
+2. **API key from auth.json** — Resolved with `resolveConfigValueOrThrow()` for interpolation
 3. **OAuth token from auth.json** — Auto-refreshed with file locking
-4. **Environment variable** — Provider-specific env vars (e.g., `ANTHROPIC_API_KEY`)
-5. **Fallback resolver** — Custom provider keys from settings.json
+
+Custom provider keys from `settings.json` are resolved directly by the model registry, not via a fallback resolver on `AuthStorage`.
 
 ### Auth Status
 
@@ -99,7 +108,7 @@ type AuthAccountCollection = {
 ```typescript
 type AuthStatus = {
   configured: boolean;
-  source?: "stored" | "runtime" | "environment" | "fallback" | "settings_json_key" | "settings_json_command";
+  source?: "stored" | "runtime" | "environment" | "settings_json_key" | "settings_json_command";
   label?: string;
 };
 ```
@@ -134,7 +143,7 @@ Two implementations:
 - **Sync path** (`withLock`): Retries up to 10 times with 20ms busy-wait delay
 - **Async path** (`withLockAsync`): Retries with exponential backoff (10 retries, 100ms–10s), 30s stale lock detection
 
-Auth files are created with mode `0o600` (owner read/write only). Parent directories are created with mode `0o700`.
+Auth files are created with mode `0600` (owner read/write only). Parent directories are created with mode `0700`. Existing files with insecure permissions are rejected on read and write.
 
 ## API Reference
 
@@ -142,25 +151,35 @@ Auth files are created with mode `0o600` (owner read/write only). Parent directo
 
 | Method | Description |
 |--------|-------------|
-| `get(provider)` | Get the active credential for a provider |
+| `get(provider)` | Get the active credential for a provider (returns a copy) |
 | `set(provider, credential, accountName?)` | Store a credential |
-| `remove(provider)` | Remove all credentials for a provider |
-| `removeAccount(provider, accountName)` | Remove a named account |
+| `remove(provider)` | Remove all credentials for a provider (throws if none stored) |
+| `removeAccount(provider, accountName)` | Remove a named account (throws if active and others remain) |
 | `has(provider)` | Check if auth.json has credentials for a provider |
 | `hasAuth(provider)` | Check if any auth is configured (including env vars) |
 | `getApiKey(providerId)` | Resolve API key with full priority chain |
 | `getAuthStatus(provider)` | Get auth status without exposing credentials |
 | `getAccountNames(provider)` | List account names for a provider |
 | `getActiveAccount(provider)` | Get active account name |
-| `switchAccount(provider, name)` | Switch active account |
-| `getAll()` | Get all active credentials |
+| `switchAccount(provider, name)` | Switch active account (throws if not found) |
+| `getAll()` | Get all active credentials (returns copies) |
 | `login(providerId, callbacks, accountName?)` | Start OAuth login |
 | `logout(provider)` | Remove credentials |
 | `setRuntimeApiKey(provider, key)` | Set non-persisted override |
-| `removeRuntimeApiKey(provider)` | Remove runtime override |
-| `setFallbackResolver(resolver)` | Set custom provider key resolver |
+| `removeRuntimeApiKey(provider)` | Remove runtime override (throws if none) |
 | `reload()` | Re-read credentials from storage |
-| `drainErrors()` | Drain accumulated errors |
+
+### Credential Validation
+
+`AuthStorage` validates all credentials on load and on write via `parseAuth` and `serializeAuth`:
+
+- JSON must be a valid object
+- Provider and account names must be non-empty, trimmed, and free of path separators and prototype-inherited keys
+- `api_key` credentials: `key` is required and non-empty; `env` keys must be valid environment variable names
+- `oauth` credentials: `access`, `refresh`, and `expires` are required and validated
+- `browser` credentials: `profileId` must match `^[a-zA-Z0-9_-]{16,128}$` and `tunnelSecret` must be at least 32 characters
+- `AuthAccountCollection`: `active` must reference an existing account; `accounts` must contain at least one entry
+- Unknown fields are rejected
 
 ## See Also
 

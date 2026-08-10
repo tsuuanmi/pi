@@ -338,10 +338,7 @@ export class AccountAuthController {
 		return {
 			isUsingOAuth: () => true,
 			getApiKeyAndHeaders: async () => {
-				const apiKey = await this.session.modelRegistry.authStorage.getApiKey("openai-codex", {
-					includeFallback: false,
-					accountName,
-				});
+				const apiKey = await this.session.modelRegistry.authStorage.getApiKey("openai-codex", { accountName });
 				return apiKey ? { ok: true, apiKey } : { ok: false, error: "No OAuth token for account" };
 			},
 		};
@@ -367,7 +364,7 @@ export class AccountAuthController {
 
 	private async switchProviderAccount(providerId: string, accountName: string): Promise<void> {
 		const authStorage = this.session.modelRegistry.authStorage;
-		const accounts = authStorage.getAccountNames(providerId);
+		const _accounts = authStorage.getAccountNames(providerId);
 		const webProvider = this.getWebProvider(providerId);
 		try {
 			if (webProvider) {
@@ -377,8 +374,8 @@ export class AccountAuthController {
 					this.session.resourceLoader.getWebProviderHost(),
 					new AbortController().signal,
 				);
-			} else if (!authStorage.switchAccount(providerId, accountName)) {
-				throw new Error(`No account named "${accountName}" for ${providerId}. Available: ${accounts.join(", ")}`);
+			} else {
+				authStorage.switchAccount(providerId, accountName);
 			}
 		} catch (error) {
 			if (webProvider) {
@@ -416,17 +413,15 @@ export class AccountAuthController {
 	private async removeProviderAccount(providerId: string, accountName: string): Promise<void> {
 		try {
 			const authStorage = this.session.modelRegistry.authStorage;
-			const accounts = authStorage.getAccountNames(providerId);
-			const removed = this.getWebProvider(providerId)
-				? await new BrowserAccountStore(authStorage).remove(
-						providerId,
-						accountName,
-						this.session.resourceLoader.getWebProviderHost(),
-					)
-				: authStorage.removeAccount(providerId, accountName);
-			if (!removed) {
-				this.showError(`No account named "${accountName}" for ${providerId}. Available: ${accounts.join(", ")}`);
-				return;
+			const _accounts = authStorage.getAccountNames(providerId);
+			if (this.getWebProvider(providerId)) {
+				await new BrowserAccountStore(authStorage).remove(
+					providerId,
+					accountName,
+					this.session.resourceLoader.getWebProviderHost(),
+				);
+			} else {
+				authStorage.removeAccount(providerId, accountName);
 			}
 
 			this.refreshAccountState();
@@ -444,13 +439,13 @@ export class AccountAuthController {
 
 		try {
 			if (this.getWebProvider(providerId)) {
-				const accounts = this.session.modelRegistry.authStorage.getAccountNames(providerId);
-				const store = new BrowserAccountStore(this.session.modelRegistry.authStorage);
+				const authStorage = this.session.modelRegistry.authStorage;
+				const activeAccount = authStorage.getActiveAccount(providerId);
+				const accounts = authStorage.getAccountNames(providerId).filter((account) => account !== activeAccount);
+				if (activeAccount) accounts.push(activeAccount);
+				const store = new BrowserAccountStore(authStorage);
 				for (const accountName of accounts) {
-					if (!(await store.remove(providerId, accountName, this.session.resourceLoader.getWebProviderHost()))) {
-						this.showError(`Failed to remove ${providerId} account ${accountName}.`);
-						return;
-					}
+					await store.remove(providerId, accountName, this.session.resourceLoader.getWebProviderHost());
 				}
 			} else {
 				this.session.modelRegistry.authStorage.remove(providerId);

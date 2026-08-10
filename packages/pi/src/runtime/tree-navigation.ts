@@ -1,7 +1,7 @@
 import type { SessionBeforeTreeResult, TreePreparation } from "#pi/loader/extensions/index";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
 import { collectEntriesForBranchSummary, generateBranchSummary } from "#pi/session/compaction/index";
-import type { BranchSummaryEntry } from "#pi/session/manager";
+import type { BranchSummaryEntry } from "#pi/session/types";
 
 export async function navigateTree(
 	targetId: string,
@@ -146,7 +146,7 @@ export async function navigateTree(
 		let summaryEntry: BranchSummaryEntry | undefined;
 		if (summaryText) {
 			// Create summary at target position (can be null for root)
-			const summaryId = ctx.sessionManager.branchWithSummary(newLeafId, summaryText, summaryDetails, fromExtension);
+			const summaryId = ctx.sessionManager.branchWithSummary(newLeafId, summaryText, summaryDetails);
 			summaryEntry = ctx.sessionManager.getEntry(summaryId) as BranchSummaryEntry;
 
 			// Attach label to the summary entry

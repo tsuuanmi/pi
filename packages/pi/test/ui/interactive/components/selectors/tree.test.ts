@@ -7,7 +7,7 @@ import type {
 	SessionEntry,
 	SessionMessageEntry,
 	SessionTreeNode,
-} from "#pi/session/manager";
+} from "#pi/session/types";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import { TreeSelectorComponent } from "#pi/ui/interactive/components/selectors/tree";
 
@@ -196,7 +196,7 @@ describe("TreeSelectorComponent", () => {
 					id: "thinking-1",
 					parentId: "user-2",
 					timestamp: new Date().toISOString(),
-					thinkingLevel: "high",
+					thinkingLevel: "high" as const,
 				},
 				userMessage("user-3", "asst-1", "sibling branch"),
 			];

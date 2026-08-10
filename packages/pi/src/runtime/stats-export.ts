@@ -3,7 +3,7 @@ import type { ContextUsage } from "#pi/loader/extensions/index";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
 import type { SessionStats } from "#pi/runtime/session/types";
 import { calculateContextTokens, estimateContextTokens } from "#pi/session/compaction/index";
-import { getLatestCompactionEntry } from "#pi/session/manager";
+import { getLatestCompactionEntry } from "#pi/session/context";
 
 export function computeSessionStats(ctx: AgentSessionContext): SessionStats {
 	const state = ctx.state;

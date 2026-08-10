@@ -1,6 +1,6 @@
 import { initTheme, setKeybindings } from "@tsuuanmi/pi-tui";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { SessionInfo } from "#pi/session/manager";
+import type { SessionInfo } from "#pi/session/types";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session";
 

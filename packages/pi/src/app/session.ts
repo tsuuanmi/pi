@@ -61,7 +61,7 @@ async function createSessionManager(
 		return SessionManager.open(selectedPath, sessionDir);
 	}
 
-	if (parsed.continue) return SessionManager.continueRecent(cwd, sessionDir);
+	if (parsed.continue) return SessionManager.openRecent(cwd, sessionDir);
 	return SessionManager.create(cwd, sessionDir);
 }
 

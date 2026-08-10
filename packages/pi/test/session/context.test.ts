@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
-import {
-	type BranchSummaryEntry,
-	buildSessionContext,
-	type CompactionEntry,
-	type ModelChangeEntry,
-	type SessionEntry,
-	type SessionMessageEntry,
-	type ThinkingLevelChangeEntry,
-} from "#pi/session/manager";
+import { buildSessionContext as resolveContext } from "#pi/session/context";
+import type {
+	BranchSummaryEntry,
+	CompactionEntry,
+	ModelChangeEntry,
+	SessionEntry,
+	SessionMessageEntry,
+	ThinkingLevelChangeEntry,
+} from "#pi/session/types";
+
+function buildSessionContext(entries: SessionEntry[], leafId = entries.at(-1)?.id ?? null) {
+	return resolveContext(entries, leafId);
+}
 
 function msg(id: string, parentId: string | null, role: "user" | "assistant", text: string): SessionMessageEntry {
 	const base = { type: "message" as const, id, parentId, timestamp: "2025-01-01T00:00:00Z" };
@@ -52,7 +56,11 @@ function branchSummary(id: string, parentId: string | null, summary: string, fro
 	return { type: "branch_summary", id, parentId, timestamp: "2025-01-01T00:00:00Z", summary, fromId };
 }
 
-function thinkingLevel(id: string, parentId: string | null, level: string): ThinkingLevelChangeEntry {
+function thinkingLevel(
+	id: string,
+	parentId: string | null,
+	level: ThinkingLevelChangeEntry["thinkingLevel"],
+): ThinkingLevelChangeEntry {
 	return { type: "thinking_level_change", id, parentId, timestamp: "2025-01-01T00:00:00Z", thinkingLevel: level };
 }
 
@@ -248,21 +256,15 @@ describe("buildSessionContext", () => {
 		});
 	});
 
-	describe("edge cases", () => {
-		it("uses last entry when leafId not found", () => {
+	describe("invalid trees", () => {
+		it("rejects an unknown leaf", () => {
 			const entries: SessionEntry[] = [msg("1", null, "user", "hello"), msg("2", "1", "assistant", "hi")];
-			const ctx = buildSessionContext(entries, "nonexistent");
-			expect(ctx.messages).toHaveLength(2);
+			expect(() => buildSessionContext(entries, "nonexistent")).toThrow("Entry nonexistent not found");
 		});
 
-		it("handles orphaned entries gracefully", () => {
-			const entries: SessionEntry[] = [
-				msg("1", null, "user", "hello"),
-				msg("2", "missing", "assistant", "orphan"), // parent doesn't exist
-			];
-			const ctx = buildSessionContext(entries, "2");
-			// Should only get the orphan since parent chain is broken
-			expect(ctx.messages).toHaveLength(1);
+		it("rejects a missing parent", () => {
+			const entries: SessionEntry[] = [msg("1", null, "user", "hello"), msg("2", "missing", "assistant", "orphan")];
+			expect(() => buildSessionContext(entries, "2")).toThrow("Parent entry missing not found");
 		});
 	});
 });

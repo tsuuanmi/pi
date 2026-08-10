@@ -1,5 +1,4 @@
 import chalk from "chalk";
-import { reportSettingsErrors } from "#pi/cli/settings";
 import { APP_NAME, CONFIG_DIR_NAME } from "#pi/loader/app";
 import { getAgentDir } from "#pi/loader/paths";
 import { DefaultPackageManager } from "#pi/package/manager";
@@ -162,7 +161,6 @@ export async function handlePackageCommand(args: string[]): Promise<boolean> {
 	const cwd = process.cwd();
 	const agentDir = getAgentDir();
 	const settingsManager = SettingsManager.create(cwd, agentDir);
-	reportSettingsErrors(settingsManager, "package command");
 
 	const packageManager = new DefaultPackageManager({
 		cwd,

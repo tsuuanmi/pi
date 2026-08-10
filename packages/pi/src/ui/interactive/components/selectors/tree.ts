@@ -16,7 +16,7 @@ import {
 	visibleWidth,
 	wrapTextWithAnsi,
 } from "@tsuuanmi/pi-tui";
-import type { SessionTreeNode } from "#pi/session/manager";
+import type { SessionTreeNode } from "#pi/session/types";
 import { isMessageCheckpoint } from "#pi/ui/interactive/components/selectors/tree-checkpoint";
 
 /** Gutter info: position (displayIndent where connector was) and whether to show │ */

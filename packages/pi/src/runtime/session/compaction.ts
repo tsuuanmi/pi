@@ -14,7 +14,9 @@ import {
 	prepareCompaction,
 	shouldCompact,
 } from "#pi/session/compaction/index";
-import { type CompactionEntry, getLatestCompactionEntry, type SessionManager } from "#pi/session/manager";
+import { getLatestCompactionEntry } from "#pi/session/context";
+import type { SessionManager } from "#pi/session/manager";
+import type { CompactionEntry } from "#pi/session/types";
 import type { SettingsManager } from "#pi/settings/manager";
 
 export interface CompactionHost {
@@ -159,7 +161,6 @@ export class CompactionController {
 			result.firstKeptEntryId,
 			result.tokensBefore,
 			result.details,
-			fromExtension,
 		);
 		const entries = this.host.sessionManager.getEntries();
 		this.host.agent.state.messages = this.host.sessionManager.buildSessionContext().messages;

@@ -3,7 +3,7 @@
  */
 
 import { ProcessTerminal, setKeybindings, TUI } from "@tsuuanmi/pi-tui";
-import type { SessionInfo, SessionListPage, SessionListProgress } from "#pi/session/manager";
+import type { SessionInfo, SessionListPage, SessionListProgress } from "#pi/session/types";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session";
 

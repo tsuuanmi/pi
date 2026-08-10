@@ -1,6 +1,6 @@
 import type { AgentMessage } from "@tsuuanmi/pi-agent";
 import { createBranchSummaryMessage, createCompactionSummaryMessage, createCustomMessage } from "@tsuuanmi/pi-agent";
-import type { SessionEntry } from "#pi/session/manager";
+import type { SessionEntry } from "#pi/session/types";
 
 export interface EntryMessageOptions {
 	includeCompaction?: boolean;

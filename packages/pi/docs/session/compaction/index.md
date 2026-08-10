@@ -122,7 +122,7 @@ Never cut at tool results (they must stay with their tool call).
 
 ### CompactionEntry Structure
 
-Defined in [`manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/manager.ts):
+Defined in [`types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/types.ts):
 
 ```typescript
 interface CompactionEntry<T = unknown> {
@@ -133,7 +133,6 @@ interface CompactionEntry<T = unknown> {
   summary: string;
   firstKeptEntryId: string;
   tokensBefore: number;
-  fromHook?: boolean;  // true if provided by extension (legacy field name)
   details?: T;         // implementation-specific data
 }
 
@@ -189,7 +188,7 @@ This means file tracking accumulates across multiple compactions or nested branc
 
 ### BranchSummaryEntry Structure
 
-Defined in [`manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/manager.ts):
+Defined in [`types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/types.ts):
 
 ```typescript
 interface BranchSummaryEntry<T = unknown> {
@@ -199,7 +198,6 @@ interface BranchSummaryEntry<T = unknown> {
   timestamp: number;
   summary: string;
   fromId: string;      // Entry we navigated from
-  fromHook?: boolean;  // true if provided by extension (legacy field name)
   details?: T;         // implementation-specific data
 }
 

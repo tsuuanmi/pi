@@ -4,7 +4,7 @@ import { basename, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SessionManager } from "#pi/session/manager";
 
-const TIMESTAMP_SESSION_ID_RE = /^\d{8}-\d{6}$/;
+const SESSION_ID_RE = /^\d{8}-\d{6}-[0-9a-f]{8}$/;
 
 describe("SessionManager.newSession with custom id", () => {
 	it("uses the provided id instead of generating one", () => {
@@ -25,33 +25,29 @@ describe("SessionManager.newSession with custom id", () => {
 		for (const id of invalidIds) {
 			const session = SessionManager.inMemory();
 			expect(() => session.newSession({ id })).toThrow(
-				"Session id must be non-empty, contain only alphanumeric characters",
+				"Session id must start and end with an alphanumeric character",
 			);
 		}
 	});
 
-	it("generates a timestamp id when no id is provided", () => {
+	it("generates a unique id when none is provided", () => {
 		const session = SessionManager.inMemory();
 		session.newSession();
 		const id = session.getSessionId();
-		expect(id).toBeDefined();
-		expect(id).not.toBe("");
-		expect(id).toMatch(TIMESTAMP_SESSION_ID_RE);
+		expect(id).toMatch(SESSION_ID_RE);
 	});
 
 	it("includes the custom id in the session header", () => {
 		const session = SessionManager.inMemory();
 		session.newSession({ id: "header-test-id" });
 
-		const header = session.getHeader();
-		expect(header).not.toBeNull();
-		expect(header!.id).toBe("header-test-id");
+		expect(session.getHeader().id).toBe("header-test-id");
 	});
 
-	it("generates a timestamp id when constructed without an explicit id", () => {
+	it("generates an id when constructed without an explicit id", () => {
 		const session = SessionManager.inMemory();
-		expect(session.getSessionId()).toMatch(TIMESTAMP_SESSION_ID_RE);
-		expect(session.getHeader()!.id).toBe(session.getSessionId());
+		expect(session.getSessionId()).toMatch(SESSION_ID_RE);
+		expect(session.getHeader().id).toBe(session.getSessionId());
 	});
 
 	it("uses the provided id when creating a persisted session", () => {
@@ -59,7 +55,7 @@ describe("SessionManager.newSession with custom id", () => {
 		const session = SessionManager.create(tempDir, tempDir, { id: "created-session-id" });
 
 		expect(session.getSessionId()).toBe("created-session-id");
-		expect(session.getHeader()!.id).toBe("created-session-id");
+		expect(session.getHeader().id).toBe("created-session-id");
 		const sessionFile = session.getSessionFile()!;
 		expect(sessionFile).toContain("created-session-id");
 		expect(basename(sessionFile)).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z_created-session-id\.jsonl$/);

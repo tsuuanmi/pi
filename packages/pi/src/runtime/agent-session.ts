@@ -84,8 +84,8 @@ import { computeContextUsage, computeSessionStats } from "#pi/runtime/stats-expo
 import { ToolManager } from "#pi/runtime/tool-manager";
 import { navigateTree as treeNavNavigateTree } from "#pi/runtime/tree-navigation";
 import type { CompactionResult } from "#pi/session/compaction/index";
-import type { BranchSummaryEntry, SessionManager } from "#pi/session/manager";
-import { CURRENT_SESSION_VERSION, type SessionHeader } from "#pi/session/manager";
+import type { SessionManager } from "#pi/session/manager";
+import { type BranchSummaryEntry, SESSION_VERSION, type SessionHeader } from "#pi/session/types";
 import type { SettingsManager } from "#pi/settings/manager";
 import type { ExtensionToolSpec, PiToolSpec } from "#pi/tool/spec";
 import { createToolSpecs } from "#pi/tools/index";
@@ -1206,7 +1206,7 @@ export class AgentSession {
 	async reload(): Promise<void> {
 		const previousFlagValues = this._extensionRunner.getFlagValues();
 		await emitSessionShutdownEvent(this._extensionRunner, { type: "session_shutdown", reason: "reload" });
-		await this.settingsManager.reload();
+		this.settingsManager.reload();
 		this._installApiUsageLogger();
 		this.syncQueueModesFromSettings();
 		resetProviders();
@@ -1339,7 +1339,7 @@ export class AgentSession {
 
 		const header: SessionHeader = {
 			type: "session",
-			version: CURRENT_SESSION_VERSION,
+			version: SESSION_VERSION,
 			id: this.sessionManager.getSessionId(),
 			timestamp: new Date().toISOString(),
 			cwd: this.sessionManager.getCwd(),

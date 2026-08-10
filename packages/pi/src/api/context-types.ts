@@ -4,7 +4,8 @@ import type { ExtensionUIContext } from "#pi/api/ui-types";
 import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { CompactionResult } from "#pi/session/compaction/index";
-import type { ReadonlySessionManager, SessionManager } from "#pi/session/manager";
+import type { SessionManager } from "#pi/session/manager";
+import type { SessionView } from "#pi/session/types";
 
 export interface ContextUsage {
 	tokens: number | null;
@@ -25,7 +26,7 @@ export interface ExtensionContext {
 	mode: ExtensionMode;
 	hasUI: boolean;
 	cwd: string;
-	sessionManager: ReadonlySessionManager;
+	sessionManager: SessionView;
 	modelRegistry: ModelRegistry;
 	model: Model<any> | undefined;
 	subagents?: SubagentManager;

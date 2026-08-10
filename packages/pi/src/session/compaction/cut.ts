@@ -1,6 +1,6 @@
 import { estimateTokens } from "#pi/session/compaction/tokens";
 import type { CutPointResult } from "#pi/session/compaction/types";
-import type { SessionEntry } from "#pi/session/manager";
+import type { SessionEntry } from "#pi/session/types";
 
 function validCutPoints(entries: SessionEntry[], start: number, end: number): number[] {
 	const points: number[] = [];

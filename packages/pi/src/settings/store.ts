@@ -2,29 +2,22 @@ import { parseSettings, serializeSettings } from "#pi/settings/codec";
 import { loadSettings } from "#pi/settings/load";
 import { mergeChanged, mergeSettings } from "#pi/settings/merge";
 import { MemoryStorage } from "#pi/settings/storage";
-import type { Settings, SettingsError, SettingsScope, SettingsStorage } from "#pi/settings/types";
+import type { Settings, SettingsScope, SettingsStorage } from "#pi/settings/types";
 
 type Field = keyof Settings;
-
 type Update = (settings: Settings) => void;
 
 function fields(value: Field | readonly Field[]): readonly Field[] {
-	if (Array.isArray(value)) {
-		return value as readonly Field[];
-	}
-	return [value as Field];
+	return Array.isArray(value) ? (value as readonly Field[]) : [value as Field];
 }
 
-function copyNested(source: Map<Field, Set<string>>): Map<Field, Set<string>> {
-	const copy = new Map<Field, Set<string>>();
-	for (const [field, keys] of source) {
-		copy.set(field, new Set(keys));
+function changes(field: Field | readonly Field[], nestedKey?: string): [Set<Field>, Map<Field, Set<string>>] {
+	const modified = new Set(fields(field));
+	const nested = new Map<Field, Set<string>>();
+	if (nestedKey) {
+		for (const name of modified) nested.set(name, new Set([nestedKey]));
 	}
-	return copy;
-}
-
-function errorFrom(value: unknown): Error {
-	return value instanceof Error ? value : new Error(String(value));
+	return [modified, nested];
 }
 
 export class SettingsStore {
@@ -32,48 +25,21 @@ export class SettingsStore {
 	private globalSettings: Settings;
 	private projectSettings: Settings;
 	private settings: Settings;
-	private globalLoadError: Error | null;
-	private projectLoadError: Error | null;
-	private readonly modified = new Set<Field>();
-	private readonly modifiedNested = new Map<Field, Set<string>>();
-	private readonly modifiedProject = new Set<Field>();
-	private readonly modifiedProjectNested = new Map<Field, Set<string>>();
-	private writeQueue: Promise<void> = Promise.resolve();
-	private errors: SettingsError[];
 
-	private constructor(
-		storage: SettingsStorage,
-		globalSettings: Settings,
-		projectSettings: Settings,
-		globalLoadError: Error | null,
-		projectLoadError: Error | null,
-		initialErrors: SettingsError[],
-	) {
+	private constructor(storage: SettingsStorage, globalSettings: Settings, projectSettings: Settings) {
 		this.storage = storage;
 		this.globalSettings = globalSettings;
 		this.projectSettings = projectSettings;
 		this.settings = mergeSettings(globalSettings, projectSettings);
-		this.globalLoadError = globalLoadError;
-		this.projectLoadError = projectLoadError;
-		this.errors = [...initialErrors];
 	}
 
 	static fromStorage(storage: SettingsStorage): SettingsStore {
-		const global = loadSettings(storage, "global");
-		const project = loadSettings(storage, "project");
-		const errors: SettingsError[] = [];
-		if (global.error) {
-			errors.push({ scope: "global", error: global.error });
-		}
-		if (project.error) {
-			errors.push({ scope: "project", error: project.error });
-		}
-		return new SettingsStore(storage, global.settings, project.settings, global.error, project.error, errors);
+		return new SettingsStore(storage, loadSettings(storage, "global"), loadSettings(storage, "project"));
 	}
 
 	static inMemory(settings: Partial<Settings> = {}): SettingsStore {
 		const storage = new MemoryStorage();
-		storage.withLock("global", () => serializeSettings(structuredClone(settings)));
+		storage.update("global", () => serializeSettings(structuredClone(settings)));
 		return SettingsStore.fromStorage(storage);
 	}
 
@@ -93,97 +59,30 @@ export class SettingsStore {
 		this.settings = mergeSettings(this.settings, overrides);
 	}
 
-	async reload(): Promise<void> {
-		await this.writeQueue;
-
-		const global = loadSettings(this.storage, "global");
-		if (global.error) {
-			this.globalLoadError = global.error;
-			this.recordError("global", global.error);
-		} else {
-			this.globalSettings = global.settings;
-			this.globalLoadError = null;
-		}
-
-		this.modified.clear();
-		this.modifiedNested.clear();
-		this.modifiedProject.clear();
-		this.modifiedProjectNested.clear();
-
-		const project = loadSettings(this.storage, "project");
-		if (project.error) {
-			this.projectLoadError = project.error;
-			this.recordError("project", project.error);
-		} else {
-			this.projectSettings = project.settings;
-			this.projectLoadError = null;
-		}
-
-		this.settings = mergeSettings(this.globalSettings, this.projectSettings);
+	reload(): void {
+		const globalSettings = loadSettings(this.storage, "global");
+		const projectSettings = loadSettings(this.storage, "project");
+		this.globalSettings = globalSettings;
+		this.projectSettings = projectSettings;
+		this.settings = mergeSettings(globalSettings, projectSettings);
 	}
 
 	updateGlobal(field: Field | readonly Field[], update: Update, nestedKey?: string): void {
 		const next = structuredClone(this.globalSettings);
 		update(next);
+		const [modified, nested] = changes(field, nestedKey);
+		this.persist("global", next, modified, nested);
 		this.globalSettings = next;
-		for (const name of fields(field)) {
-			this.mark("global", name, nestedKey);
-		}
-		this.saveGlobal();
+		this.settings = mergeSettings(this.globalSettings, this.projectSettings);
 	}
 
 	updateProject(field: Field, update: Update): void {
 		const next = structuredClone(this.projectSettings);
 		update(next);
+		const [modified, nested] = changes(field);
+		this.persist("project", next, modified, nested);
 		this.projectSettings = next;
-		this.mark("project", field);
-		this.saveProject();
-	}
-
-	async flush(): Promise<void> {
-		await this.writeQueue;
-	}
-
-	drainErrors(): SettingsError[] {
-		const errors = [...this.errors];
-		this.errors = [];
-		return errors;
-	}
-
-	private mark(scope: SettingsScope, field: Field, nestedKey?: string): void {
-		const modified = scope === "global" ? this.modified : this.modifiedProject;
-		const nested = scope === "global" ? this.modifiedNested : this.modifiedProjectNested;
-		modified.add(field);
-		if (nestedKey) {
-			const keys = nested.get(field) ?? new Set<string>();
-			keys.add(nestedKey);
-			nested.set(field, keys);
-		}
-	}
-
-	private recordError(scope: SettingsScope, error: unknown): void {
-		this.errors.push({ scope, error: errorFrom(error) });
-	}
-
-	private clearModified(scope: SettingsScope): void {
-		if (scope === "global") {
-			this.modified.clear();
-			this.modifiedNested.clear();
-		} else {
-			this.modifiedProject.clear();
-			this.modifiedProjectNested.clear();
-		}
-	}
-
-	private enqueue(scope: SettingsScope, task: () => void): void {
-		this.writeQueue = this.writeQueue
-			.then(() => {
-				task();
-				this.clearModified(scope);
-			})
-			.catch((error) => {
-				this.recordError(scope, error);
-			});
+		this.settings = mergeSettings(this.globalSettings, this.projectSettings);
 	}
 
 	private persist(
@@ -192,34 +91,9 @@ export class SettingsStore {
 		modified: Set<Field>,
 		nested: Map<Field, Set<string>>,
 	): void {
-		this.storage.withLock(scope, (current) => {
-			const currentSettings = current === undefined ? {} : parseSettings(current);
-			const merged = mergeChanged(currentSettings, snapshot, modified, nested);
-			return serializeSettings(merged);
+		this.storage.update(scope, (current) => {
+			const stored = current === undefined ? {} : parseSettings(current, `${scope} settings`);
+			return serializeSettings(mergeChanged(stored, snapshot, modified, nested));
 		});
-	}
-
-	private saveGlobal(): void {
-		this.settings = mergeSettings(this.globalSettings, this.projectSettings);
-		if (this.globalLoadError) {
-			return;
-		}
-
-		const snapshot = structuredClone(this.globalSettings);
-		const modified = new Set(this.modified);
-		const nested = copyNested(this.modifiedNested);
-		this.enqueue("global", () => this.persist("global", snapshot, modified, nested));
-	}
-
-	private saveProject(): void {
-		this.settings = mergeSettings(this.globalSettings, this.projectSettings);
-		if (this.projectLoadError) {
-			return;
-		}
-
-		const snapshot = structuredClone(this.projectSettings);
-		const modified = new Set(this.modifiedProject);
-		const nested = copyNested(this.modifiedProjectNested);
-		this.enqueue("project", () => this.persist("project", snapshot, modified, nested));
 	}
 }

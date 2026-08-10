@@ -266,13 +266,7 @@ describe("AgentSession compaction characterization", () => {
 		});
 		harness.sessionManager.appendMessage(staleAssistant);
 		const firstKeptEntryId = harness.sessionManager.getEntries()[0]!.id;
-		harness.sessionManager.appendCompaction(
-			"summary",
-			firstKeptEntryId,
-			staleAssistant.usage.totalTokens,
-			undefined,
-			false,
-		);
+		harness.sessionManager.appendCompaction("summary", firstKeptEntryId, staleAssistant.usage.totalTokens);
 		harness.sessionManager.appendMessage({
 			role: "user",
 			content: [{ type: "text", text: "after compaction" }],
@@ -353,13 +347,7 @@ describe("AgentSession compaction characterization", () => {
 		});
 		harness.sessionManager.appendMessage(keptAssistant);
 		const firstKeptEntryId = harness.sessionManager.getEntries()[0]!.id;
-		harness.sessionManager.appendCompaction(
-			"summary",
-			firstKeptEntryId,
-			keptAssistant.usage.totalTokens,
-			undefined,
-			false,
-		);
+		harness.sessionManager.appendCompaction("summary", firstKeptEntryId, keptAssistant.usage.totalTokens);
 
 		const errorAssistant = createAssistant(harness, {
 			stopReason: "error",

@@ -15,15 +15,12 @@ export {
 export type { ReadonlyFooterDataProvider } from "#pi/api/ui-types";
 // Auth and model registry
 export {
-	type ApiKeyCredential,
-	type AuthCredential,
-	type AuthStatus,
 	AuthStorage,
 	type AuthStorageBackend,
 	FileAuthStorageBackend,
 	InMemoryAuthStorageBackend,
-	type OAuthCredential,
 } from "#pi/auth/storage";
+export type { ApiKeyCredential, AuthCredential, AuthStatus, OAuthCredential } from "#pi/auth/types";
 export { type Args, parseArgs } from "#pi/cli/args";
 // Shell utilities
 export { resolveShell } from "#pi/execution/shell";
@@ -112,6 +109,7 @@ export type {
 	PromptOptions,
 	SessionStats,
 } from "#pi/runtime/session/types";
+export { decodeSession, SessionFormatError } from "#pi/session/codec";
 export {
 	type BranchPreparation,
 	type BranchSummaryResult,
@@ -132,29 +130,27 @@ export {
 	prepareBranchEntries,
 	shouldCompact,
 } from "#pi/session/compaction/index";
+export { buildSessionContext, getLatestCompactionEntry } from "#pi/session/context";
+export { SessionManager } from "#pi/session/manager";
 export {
 	type BranchSummaryEntry,
-	buildSessionContext,
 	type CompactionEntry,
-	CURRENT_SESSION_VERSION,
 	type CustomEntry,
 	type CustomMessageEntry,
 	type FileEntry,
-	getLatestCompactionEntry,
 	type ModelChangeEntry,
-	migrateSessionEntries,
 	type NewSessionOptions,
-	parseSessionEntries,
+	SESSION_VERSION,
 	type SessionContext,
 	type SessionEntry,
 	type SessionEntryBase,
 	type SessionHeader,
 	type SessionInfo,
 	type SessionInfoEntry,
-	SessionManager,
 	type SessionMessageEntry,
+	type SessionView,
 	type ThinkingLevelChangeEntry,
-} from "#pi/session/manager";
+} from "#pi/session/types";
 export { SettingsManager } from "#pi/settings/manager";
 export type { CompactionSettings, PackageSource, RetrySettings } from "#pi/settings/types";
 export { SubagentManager } from "#pi/subagents/manager";
