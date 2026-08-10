@@ -124,7 +124,6 @@ export function createWorkflowReceipt(input: {
 	command: string;
 	mutatedAt: string;
 	mutationId?: string;
-	forced?: boolean;
 	operation?: string;
 }): Record<string, unknown> {
 	const freshUntil = new Date(Date.parse(input.mutatedAt) + WORKFLOW_RECEIPT_FRESH_MS).toISOString();
@@ -139,7 +138,6 @@ export function createWorkflowReceipt(input: {
 		fresh_until: freshUntil,
 		status: "fresh" as WorkflowReceiptStatus,
 		mutation_id: input.mutationId ?? randomUUID(),
-		...(input.forced ? { forced: true } : {}),
 		...(input.operation ? { operation: input.operation } : {}),
 	};
 }

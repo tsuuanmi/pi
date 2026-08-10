@@ -69,7 +69,6 @@ describe("workflow manifest state validation", () => {
 			isValidWorkflowTransition("team", "unknown-phase", "handoff", {
 				operation: "handoff-receive",
 				command: "test",
-				force: false,
 			}),
 		).toBe(false);
 	});
@@ -186,26 +185,6 @@ describe("workflow manifest state validation", () => {
 		expect(repaired.current_phase).toBe("complete");
 	});
 
-	it("keeps force internal and writer-generated", async () => {
-		await writeWorkflowState(cwd, "ralplan", { current_phase: "planner" }, "pi workflow state write", { sessionId });
-		await expect(
-			writeWorkflowState(
-				cwd,
-				"ralplan",
-				{ current_phase: "rejected", receipt: { forced: true } },
-				"pi workflow state write",
-				{ sessionId },
-			),
-		).rejects.toThrow(/transition is not allowed/);
-		const forced = await writeWorkflowState(cwd, "ralplan", { current_phase: "rejected" }, "force repair", {
-			force: true,
-			operation: "force-repair",
-			sessionId,
-		});
-		expect(forced.current_phase).toBe("rejected");
-		expect(forced.receipt).toMatchObject({ forced: true, operation: "force-repair" });
-	});
-
 	it("rejects skill mismatch before coercion hides it", async () => {
 		await expect(
 			writeWorkflowState(cwd, "ralplan", { skill: "team", current_phase: "planner" }, "pi workflow state write", {
@@ -214,27 +193,19 @@ describe("workflow manifest state validation", () => {
 		).rejects.toThrow(/skill mismatch/);
 	});
 
-	it("rejects typo phases through the CLI state command", async () => {
+	it("rejects generic CLI state mutation", async () => {
+		const result = await runWorkflowCommand(["state", "ralplan", "write", "--session", sessionId, "--json"], cwd);
+		expect(result.status).toBe(1);
+		expect(result.stderr).toContain("unknown state action: write");
+	});
+
+	it("rejects generic CLI handoff", async () => {
 		const result = await runWorkflowCommand(
-			["state", "ralplan", "write", "--input", '{"phase":"plannner"}', "--session", sessionId, "--json"],
+			["state", "deep-interview", "handoff", "--session", sessionId, "--json"],
 			cwd,
 		);
 		expect(result.status).toBe(1);
-		expect(result.stderr).toContain("unknown next phase");
-	});
-
-	it("accepts canonical handoff transitions", async () => {
-		const result = await runWorkflowCommand(
-			["state", "deep-interview", "handoff", "--to", "ralplan", "--session", sessionId, "--json"],
-			cwd,
-		);
-		expect(result.status).toBe(0);
-		const json = JSON.parse(result.stdout) as {
-			state: { current_phase: string };
-			target_state: { current_phase: string };
-		};
-		expect(json.state.current_phase).toBe("handoff");
-		expect(json.target_state.current_phase).toBe("handoff");
+		expect(result.stderr).toContain("unknown state action: handoff");
 	});
 
 	it("allows documented reinitialization flows after terminal states", async () => {

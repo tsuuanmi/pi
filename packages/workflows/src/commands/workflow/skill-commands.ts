@@ -1,12 +1,9 @@
-import "#workflows/skills/deep-interview/transitions";
-import "#workflows/skills/ralplan/transitions";
-import "#workflows/skills/team/transitions";
-import "#workflows/skills/ultragoal/transitions";
 import {
 	inputString,
 	optionalNumber,
 	optionalStringArray,
 	output,
+	requiredBoolean,
 	requiredNumber,
 	requiredObject,
 	requiredString,
@@ -144,7 +141,7 @@ export async function deepInterviewVerb(
 			break;
 		}
 		case "write-spec": {
-			await assertDeepInterviewSpecReady(cwd, sessionId, { allowEarlyExit: input.allowEarlyExit === true });
+			await assertDeepInterviewSpecReady(cwd, sessionId);
 			const slug = inputString(input, "slug")?.trim() || defaultWorkflowId("spec");
 			assertSafePathComponent(slug, "slug");
 			const handoff = inputString(input, "handoff");
@@ -246,10 +243,9 @@ export async function ralplanVerb(
 		case "approve-plan": {
 			body = await approveRalplanPlan(cwd, {
 				runId: inputString(input, "runId"),
-				target: inputString(input, "target") as RalplanApprovalTarget | undefined,
-				approved: input.approved !== false,
+				target: requiredString(input, "target") as RalplanApprovalTarget,
+				approved: requiredBoolean(input, "approved"),
 				note: inputString(input, "note"),
-				overrideCriticVerdict: input.overrideCriticVerdict === true,
 				sessionId,
 			});
 			break;

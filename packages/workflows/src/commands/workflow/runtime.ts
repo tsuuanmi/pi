@@ -8,31 +8,26 @@ import {
 } from "#workflows/commands/workflow/command-utils";
 import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
 import { callEndpoint } from "#workflows/runtime/endpoint";
-import {
-	buildClassificationInput,
-	buildWorkspaceMarker,
-	classifyPrimitive,
-	finalizePrimitive,
-	recoverPrimitive,
-	validatePrimitive,
-} from "#workflows/runtime/fallback-commands";
 import type { GcContext } from "#workflows/runtime/gc";
 import { collectGcReport, computeGcExitCode, gcPidProbe, HarnessLeasesGcStoreAdapter } from "#workflows/runtime/gc";
+import { acquireLease, releaseLease } from "#workflows/runtime/lease";
 import { buildResponse, submitUnavailableReason } from "#workflows/runtime/lifecycle";
 import { mutateRuntimeSession } from "#workflows/runtime/mutation";
+import {
+	buildWorkspaceMarker,
+	classify as classifySession,
+	recover as recoverSession,
+} from "#workflows/runtime/operations";
 import { RuntimeOwner, resolveOwner } from "#workflows/runtime/owner";
-import { type HarnessRpc, PiRpc } from "#workflows/runtime/rpc";
-import { operate } from "#workflows/runtime/runner";
+import { PiRpc } from "#workflows/runtime/rpc";
 import {
 	canonicalWorkspacePath,
 	defaultRepoName,
 	readEvents,
 	readRuntimeReceipts,
 	readSessionState,
-	removeSession,
 	resolveHarnessRoot,
 	sessionPaths,
-	writeSessionState,
 } from "#workflows/runtime/storage";
 import {
 	type Observation,
@@ -55,7 +50,7 @@ function buildHandle(input: Record<string, unknown>, root: string, sessionId: st
 		workspace,
 		branch: branch && branch !== "HEAD" ? branch : null,
 		base,
-		issueOrPr: inputString(input, "issueOrPr") ?? inputString(input, "pr") ?? inputString(input, "issue") ?? null,
+		issueOrPr: inputString(input, "issueOrPr") ?? null,
 		processHandle: { kind: "runtime-owner", ownerId: null, pid: null },
 		rpcHandle: { kind: "rpc-subprocess", pid: null, sessionDir: paths.piSessionDir },
 		ownerHandle: { leasePath: paths.lease, endpoint: null, heartbeatAt: null },
@@ -84,7 +79,7 @@ function spawnDetachedOwner(input: Record<string, unknown>): number | null {
 }
 
 export async function start(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
-	assertDetachedInteractiveAllowed(input, input.detach === true);
+	assertDetachedInteractiveAllowed(input, true);
 	const workspace = canonicalWorkspacePath(inputString(input, "workspace") ?? process.cwd());
 	const root = resolveHarnessRoot({ root: inputString(input, "root"), cwd: workspace });
 	const sessionId = sessionIdFromInput(input);
@@ -101,16 +96,30 @@ export async function start(input: Record<string, unknown>, json: boolean): Prom
 		createdAt: now,
 		updatedAt: now,
 	};
-	const mutation = await mutateRuntimeSession({
-		root,
-		sessionId,
-		verb: "start",
-		writer: { ownerId: "workflow-cli", leaseEpoch: 0 },
-		nextState: state,
-		events: [{ kind: "workflow_started", evidence: { sessionId, workspace } }],
-		evidence: { handle, root },
+	const ownerId = `workflow-bootstrap:${process.pid}`;
+	const { lease } = await acquireLease(root, sessionId, {
+		ownerId,
+		pid: process.pid,
+		ttlMs: 30_000,
+		eventsPath: sessionPaths(root, sessionId).events,
 	});
-	const ownerPid = input.detach === true ? spawnDetachedOwner({ ...input, workspace, root, sessionId }) : null;
+	const mutation = await (async () => {
+		try {
+			return await mutateRuntimeSession({
+				root,
+				sessionId,
+				verb: "start",
+				writer: lease.writer,
+				ownerLive: true,
+				nextState: state,
+				events: [{ kind: "workflow_started", evidence: { sessionId, workspace } }],
+				evidence: { handle, root },
+			});
+		} finally {
+			await releaseLease(root, sessionId, ownerId);
+		}
+	})();
+	const ownerPid = spawnDetachedOwner({ ...input, workspace, root, sessionId });
 	return {
 		status: 0,
 		stdout: output(buildResponse(state, false, { handle, root, ownerPid, receipt: mutation.receipt }), json),
@@ -163,28 +172,20 @@ async function routeToOwner(
 	return callEndpoint(owner.socketPath, { verb, input });
 }
 
+async function requireOwner(
+	root: string,
+	state: SessionState,
+	verb: string,
+	input: Record<string, unknown>,
+): Promise<unknown> {
+	const response = await routeToOwner(root, state, verb, input);
+	if (response === undefined) throw new Error(`workflow owner is not running for session ${state.sessionId}`);
+	return response;
+}
+
 function primitiveStatus(response: unknown): number {
 	if (!response || typeof response !== "object" || Array.isArray(response)) return 1;
 	return (response as { ok?: unknown }).ok === false ? 1 : 0;
-}
-
-class NoopRpc implements HarnessRpc {
-	async getState() {
-		return { isStreaming: false, steeringQueueDepth: 0, followupQueueDepth: 0 };
-	}
-	async sendPrompt(): Promise<{ commandId: string; ack: boolean }> {
-		return { commandId: "noop", ack: false };
-	}
-	eventCursor(): number {
-		return 0;
-	}
-	async waitForAgentStart(): Promise<{ cursor: number } | null> {
-		return null;
-	}
-	async close(): Promise<void> {}
-	isLive(): boolean {
-		return false;
-	}
 }
 
 async function waitForOwnerLive(root: string, sessionId: string, timeoutMs = 2_000): Promise<boolean> {
@@ -199,7 +200,7 @@ async function waitForOwnerLive(root: string, sessionId: string, timeoutMs = 2_0
 
 export async function observe(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
-	const ownerResponse = await routeToOwner(root, state, "observe", input).catch(() => undefined);
+	const ownerResponse = await routeToOwner(root, state, "observe", input);
 	if (ownerResponse) return { status: 0, stdout: output(ownerResponse, json), stderr: "" };
 	const observation = observeState(state);
 	return {
@@ -214,7 +215,7 @@ export async function observe(input: Record<string, unknown>, json: boolean): Pr
 
 export async function submit(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
-	const ownerResponse = await routeToOwner(root, state, "submit", input).catch(() => undefined);
+	const ownerResponse = await routeToOwner(root, state, "submit", input);
 	if (ownerResponse)
 		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
 	const reason = "owner-not-live";
@@ -227,111 +228,66 @@ export async function submit(input: Record<string, unknown>, json: boolean): Pro
 
 export async function classify(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
-	const ownerResponse = await routeToOwner(root, state, "classify", input).catch(() => undefined);
-	if (ownerResponse)
-		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
+	const owner = await resolveOwner(root, state.sessionId);
 	const receipts = await readRuntimeReceipts(root, state.sessionId);
-	const response = await classifyPrimitive({ state, ownerLive: false, input, receipts: receipts.rows });
+	const response = await classifySession({ state, ownerLive: owner.live, input, receipts: receipts.rows });
 	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
 }
 
 export async function recover(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
-	const ownerResponse = await routeToOwner(root, state, "recover", input).catch(() => undefined);
-	if (ownerResponse)
-		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
-	const receipts = await readRuntimeReceipts(root, state.sessionId);
-	const response = await recoverPrimitive({
-		root,
-		state,
-		ownerLive: false,
-		input,
-		receipts: receipts.rows,
-		writer: { ownerId: "workflow-cli", leaseEpoch: 0 },
-		spawnOwner: async () => {
-			spawnDetachedOwner({ ...input, root, workspace: state.handle.workspace, sessionId: state.sessionId });
-			return waitForOwnerLive(root, state.sessionId);
-		},
+	const currentOwner = await resolveOwner(root, state.sessionId);
+	if (currentOwner.live) throw new Error(`workflow owner is still running for session ${state.sessionId}`);
+	const ownerId = `workflow-recovery:${process.pid}`;
+	const { lease } = await acquireLease(root, state.sessionId, {
+		ownerId,
+		pid: process.pid,
+		ttlMs: 30_000,
+		eventsPath: sessionPaths(root, state.sessionId).events,
 	});
-	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
+	let leaseHeld = true;
+	const release = async (): Promise<void> => {
+		if (!leaseHeld) return;
+		await releaseLease(root, state.sessionId, ownerId);
+		leaseHeld = false;
+	};
+	try {
+		const receipts = await readRuntimeReceipts(root, state.sessionId);
+		const response = await recoverSession({
+			root,
+			state,
+			ownerLive: true,
+			input,
+			receipts: receipts.rows,
+			writer: lease.writer,
+			spawnOwner: async () => {
+				await release();
+				spawnDetachedOwner({ ...input, root, workspace: state.handle.workspace, sessionId: state.sessionId });
+				return waitForOwnerLive(root, state.sessionId);
+			},
+		});
+		return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
+	} finally {
+		await release();
+	}
 }
 
 export async function validate(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
-	const ownerResponse = await routeToOwner(root, state, "validate", input).catch(() => undefined);
-	if (ownerResponse)
-		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
-	const response = await validatePrimitive({
-		root,
-		state,
-		ownerLive: false,
-		input,
-		writer: { ownerId: "workflow-cli", leaseEpoch: 0 },
-	});
+	const response = await requireOwner(root, state, "validate", input);
 	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
 }
 
 export async function finalize(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
-	const ownerResponse = await routeToOwner(root, state, "finalize", input).catch(() => undefined);
-	if (ownerResponse)
-		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
-	const receipts = await readRuntimeReceipts(root, state.sessionId);
-	const response = await finalizePrimitive({
-		root,
-		state,
-		ownerLive: false,
-		input,
-		receipts: receipts.rows,
-		writer: { ownerId: "workflow-cli", leaseEpoch: 0 },
-	});
+	const response = await requireOwner(root, state, "finalize", input);
 	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
 }
 
 export async function operateCmd(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
-	const ownerResponse = await routeToOwner(root, state, "operate", input).catch(() => undefined);
-	if (ownerResponse)
-		return { status: primitiveStatus(ownerResponse), stdout: output(ownerResponse, json), stderr: "" };
-	const goal = inputString(input, "goal");
-	if (!goal)
-		return {
-			status: 1,
-			stdout: output(
-				buildResponse(state, false, { accepted: false, reason: "empty-goal" }, false, "empty-goal"),
-				json,
-			),
-			stderr: "",
-		};
-	const maxIterations = typeof input.maxIterations === "number" ? input.maxIterations : undefined;
-	const acceptanceTimeoutMs = typeof input.acceptanceTimeoutMs === "number" ? input.acceptanceTimeoutMs : undefined;
-	const result = await operate({
-		root,
-		sessionId: state.sessionId,
-		goal,
-		ownerLive: false,
-		writer: { ownerId: "workflow-cli", leaseEpoch: 0 },
-		rpc: new NoopRpc(),
-		spawnOwner: async () => {
-			const owner = await resolveOwner(root, state.sessionId);
-			if (owner.live) return true;
-			spawnDetachedOwner({ ...input, root, workspace: state.handle.workspace, sessionId: state.sessionId });
-			return waitForOwnerLive(root, state.sessionId);
-		},
-		observe: async (sessionState) => {
-			const owner = await resolveOwner(root, sessionState.sessionId);
-			const receipts = await readRuntimeReceipts(root, sessionState.sessionId);
-			return buildClassificationInput({
-				state: sessionState,
-				ownerLive: owner.live,
-				receipts: receipts.rows,
-				input,
-			});
-		},
-		maxIterations,
-		acceptanceTimeoutMs,
-	});
-	return { status: result.completed ? 0 : 1, stdout: output(result, json), stderr: "" };
+	const response = await requireOwner(root, state, "operate", input);
+	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
 }
 
 export async function events(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
@@ -343,22 +299,8 @@ export async function events(input: Record<string, unknown>, json: boolean): Pro
 
 export async function retire(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
-	const ownerResponse = await routeToOwner(root, state, "retire", input).catch(() => undefined);
-	if (ownerResponse) return { status: 0, stdout: output(ownerResponse, json), stderr: "" };
-	const now = new Date().toISOString();
-	const next: SessionState = {
-		...state,
-		lifecycle: "retired",
-		updatedAt: now,
-		handle: { ...state.handle, updatedAt: now },
-	};
-	await writeSessionState(root, next);
-	if (input.remove === true) await removeSession(root, next.sessionId);
-	return {
-		status: 0,
-		stdout: output(buildResponse(next, false, { retired: true, removed: input.remove === true }), json),
-		stderr: "",
-	};
+	const response = await requireOwner(root, state, "retire", input);
+	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
 }
 
 export async function runOwner(input: Record<string, unknown>): Promise<WorkflowCommandResult> {

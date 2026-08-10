@@ -297,8 +297,8 @@ Top-level shared folders provide common utilities used by all four skills:
 | `artifacts/` | `artifacts.ts` | Durable artifact writes and receipt helpers. |
 | `audit/` | `audit-log.ts`, `decision-ledger.ts`, `tamper-detection.ts`, `transaction-journal.ts` | Append-only audit, decision, tamper, and transaction records. |
 | Skill HUD modules | `deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts` | HUD chip formatting for each workflow skill, colocated with the owning skill folder. |
-| `policy/`, `handoff/` | `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Cross-workflow prompts, handoffs, gates, and expected-next checks. Skill-specific guards live with their skill; reusable subagent validation lives in `@tsuuanmi/pi-agent`. |
-| `registry/` | `transition-registry.ts`, `workflow-manifest.ts` | Workflow transition registry and manifest metadata. |
+| `policy/`, `handoff/` | `skill-policy.ts`, `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Immutable skill policies, cross-workflow prompts, handoffs, gates, and expected-next checks. Skill-specific guards live with their skill; reusable subagent validation lives in `@tsuuanmi/pi-agent`. |
+| `registry/` | `workflow-manifest.ts` and runtime/action manifest modules | Workflow phase, action, and tool metadata. |
 | `session/` | `root.ts`, `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Shared session roots, workflow path builders, and session-id resolution. |
 | `state/` | `active-state.ts`, `state-schema.ts`, `state-writer.ts`, `workflow-state.ts` | Active-state, state validation/writes, workflow ids, and base state types. |
 | `tool/` | `adapter.ts`, `subagent.ts`, `surface.ts` | Adapts and registers agent-owned subagent lifecycle tools and publishes workflow surface metadata. |
@@ -312,7 +312,7 @@ type RalplanStage = "planner" | "architect" | "critic" | "revision" | "adr" | "f
 
 ## Public API
 
-The package entry point re-exports the workflow commands and full harness runtime modules. The package manifest exposes `src/extension.ts` as the Pi extension entry point:
+The package entry point re-exports the workflow commands and full harness runtime modules. The package manifest resolves the compiled `dist/extension.js` entry point and all bundled resources from the package-owned `dist/` tree:
 
 ```typescript
 import {

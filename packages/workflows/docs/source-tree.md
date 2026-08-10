@@ -14,14 +14,14 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | `src/artifacts/` | Durable artifact writing and receipt helpers. | [artifacts/artifacts.md](artifacts/artifacts.md) |
 | `src/audit/` | Append-only audit records, decision ledgers, tamper evidence, and mutation journals. | [audit/audit.md](audit/audit.md) |
 | `src/commands/` | CLI adapter for the external `pi workflow ...` control plane; it does not invoke model-visible tools. | [commands/workflow.md](commands/workflow.md) |
-| `src/policy/`, `src/handoff/` | Cross-workflow prompts, gates, expected-next checks, and workflow handoffs. | [orchestration/orchestration.md](orchestration/orchestration.md) |
-| `src/registry/` | Workflow transition registry and workflow manifest metadata. | [registry/registry.md](registry/registry.md) |
+| `src/policy/`, `src/handoff/` | Immutable skill policies, cross-workflow prompts, gates, expected-next checks, and workflow handoffs. | [orchestration/orchestration.md](orchestration/orchestration.md) |
+| `src/registry/` | Workflow phase, action, and tool manifest metadata. | [registry/registry.md](registry/registry.md) |
 | `src/runtime/` | Runtime owner, RPC, leases, GC, mutation, storage, receipts. | [runtime/runtime.md](runtime/runtime.md) |
 | `src/session/` | Canonical shared session-root primitives, workflow-owned path builders, and session id resolution. | [session/session.md](session/session.md) |
 | `src/skills/` | Bundled skill folders, shared help/surface registries, and skill-owned TypeScript implementation. | [Workflow overview](workflow.md) |
-| `src/skills/deep-interview/` | Deep Interview `SKILL.md` plus runtime, state, transitions, handoff guards, help/surface metadata, HUD, mutation guard, and tool registration. | [skills/deep-interview/index.md](skills/deep-interview/index.md) |
-| `src/skills/ralplan/` | Ralplan `SKILL.md` plus role definitions and request construction, Pi-agent and Orchestrator adapters, checkpoint and agent-record persistence, planning runtime, transitions, guards, gates, obstacles, verdicts, help/surface metadata, tools, HUD, orchestration snapshots, expected-action selection, and journaled completion transactions. | [skills/ralplan/index.md](skills/ralplan/index.md) |
-| `src/skills/team/` | Team `SKILL.md` plus coordination runtime, role/task execution and event adapters, checkpoint/receipt stores, help/surface metadata, tools, transitions, and HUD. | [skills/team/index.md](skills/team/index.md) |
+| `src/skills/deep-interview/` | Deep Interview `SKILL.md` plus runtime, state, policy, handoff guards, help/surface metadata, HUD, mutation guard, and tool registration. | [skills/deep-interview/index.md](skills/deep-interview/index.md) |
+| `src/skills/ralplan/` | Ralplan `SKILL.md` plus role definitions and request construction, Pi-agent and Orchestrator adapters, checkpoint and agent-record persistence, planning runtime, policy, guards, gates, obstacles, verdicts, help/surface metadata, tools, HUD, orchestration snapshots, expected-action selection, and journaled completion transactions. | [skills/ralplan/index.md](skills/ralplan/index.md) |
+| `src/skills/team/` | Team `SKILL.md` plus coordination runtime, role/task execution and event adapters, checkpoint/receipt stores, help/surface metadata, tools, policy, and HUD. | [skills/team/index.md](skills/team/index.md) |
 | `src/skills/ultragoal/` | Ultragoal `SKILL.md` plus goal execution runtime, artifacts, obstacles, quality gates, receipts, help/surface metadata, tools, and HUD. | [skills/ultragoal/index.md](skills/ultragoal/index.md) |
 | `src/state/` | Active workflow state, state validation/writes, workflow ids, and base state models. | [state/state.md](state/state.md) |
 | `src/tool/` | Workflow context, host/spec contracts, agent-tool adapters, registration, and workflow surface metadata. | [subagents/subagents.md](subagents/subagents.md) |
@@ -30,7 +30,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 
 ## Generated Package Assets
 
-`npm run build` compiles TypeScript to `dist/` and `npm run copy-assets` overlays `src/skills/*/SKILL.md`, skill assets/references, `src/state/assets/`, and `src/agents/*.md` into package assets without deleting compiled `dist/skills/<skill>/*.js`/`*.d.ts`. Do not edit `dist/` directly.
+`npm run build` compiles TypeScript to `dist/` and the package-owned `scripts/copy-assets.mjs` copies `SKILL.md`, skill assets/references/scripts, state schemas, and agent profiles into the same self-contained `dist/` tree. Do not edit `dist/` directly.
 
 ## Test Layout
 

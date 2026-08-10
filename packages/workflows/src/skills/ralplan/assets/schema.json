@@ -17,8 +17,7 @@
     "plannerResumable": { "type": "boolean" },
     "approved": { "type": "boolean" },
     "target": { "type": "string", "enum": ["ultragoal", "team", "stop"] },
-    "note": { "type": "string" },
-    "overrideCriticVerdict": { "type": "boolean" }
+    "note": { "type": "string" }
   },
   "$defs": {
     "sessionId": {
@@ -71,14 +70,13 @@
     "approvePlanInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sessionId"],
+      "required": ["sessionId", "target", "approved"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "runId": { "type": "string" },
         "target": { "type": "string", "enum": ["ultragoal", "team", "stop"] },
-        "approved": { "type": "boolean", "default": true },
-        "note": { "type": "string" },
-        "overrideCriticVerdict": { "type": "boolean" }
+        "approved": { "type": "boolean" },
+        "note": { "type": "string" }
       }
     }
   },

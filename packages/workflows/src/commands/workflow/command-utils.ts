@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { isBlockingQuestionPhaseForSkill } from "#workflows/registry/transition-registry";
+import { isBlockingQuestionPhase } from "#workflows/policy/skill-policy";
 import type { WorkflowSkill } from "#workflows/session/paths";
 import { getWorkflowSkillCommandNames } from "#workflows/skills/workflow-help-registry";
 
@@ -37,6 +37,12 @@ export function requiredNumber(input: Record<string, unknown>, key: string): num
 	return value;
 }
 
+export function requiredBoolean(input: Record<string, unknown>, key: string): boolean {
+	const value = input[key];
+	if (typeof value !== "boolean") throw new Error(`${key} must be a boolean`);
+	return value;
+}
+
 export function optionalStringArray(input: Record<string, unknown>, key: string): string[] | undefined {
 	const value = input[key];
 	if (!Array.isArray(value)) return undefined;
@@ -63,15 +69,15 @@ export function assertDetachedInteractiveAllowed(input: Record<string, unknown>,
 	if (!detachRequested) return;
 	const skill = inputWorkflowSkill(input);
 	if (!skill) return;
-	const phase = inputString(input, "phase") ?? inputString(input, "current_phase") ?? inputString(input, "status");
-	if (!isBlockingQuestionPhaseForSkill(skill, phase)) return;
+	const phase = inputString(input, "currentPhase");
+	if (!isBlockingQuestionPhase(skill, phase)) return;
 	throw new Error(
 		`detached workflow refused: skill ${skill} is interactive and phase ${phase} requires a blocking user question; run attached or clear the blocking phase`,
 	);
 }
 
 export function sessionIdFromInput(input: Record<string, unknown>): string {
-	const sessionId = inputString(input, "sessionId") ?? inputString(input, "session");
+	const sessionId = inputString(input, "sessionId");
 	if (!sessionId) throw new Error("sessionId is required");
 	return sessionId;
 }

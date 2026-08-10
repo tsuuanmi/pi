@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { type FailSoftError, recordFailSoftError } from "#workflows/audit/audit-log";
 import type { ObstacleInput, ObstacleTrigger } from "#workflows/audit/decision-ledger";
 import {
 	beginWorkflowTransactionJournal,
@@ -17,34 +16,9 @@ import { applyHandoffToActiveState } from "#workflows/state/active-state";
 import { assertWorkflowSkill, type WorkflowStateEnvelope } from "#workflows/state/state-schema";
 import { readWorkflowState, writeWorkflowState } from "#workflows/state/workflow-state";
 
-/**
- * Generic, transaction-backed workflow handoff.
- *
- * Orchestrates a caller→callee handoff with durable transaction semantics: a
- * per-mutation journal under `.pi/{session}/state/transactions/<id>.json`, both-side
- * mode-state receipts sharing one `mutationId`, and the write order
- * callee → caller → active-state. The existing `applyHandoffToActiveState`
- * (with its `handoff-receive` active-state operation) is preserved for HUD
- * continuity, layered on top of the new both-side mode-state receipts.
- *
- * Internal-only: no public tool/CLI verb invokes this. The two production
- * handoff sites (`executeDeepInterviewWriteSpec`, `approveRalplanPlan`) are
- * refactored to call it.
- *
- * Crash-injection contract: when
- * `PI_WORKFLOW_HANDOFF_FAIL_AFTER_CALLER=<mutationId>` is set, the handoff
- * throws after the caller mode-state write and before the active-state apply,
- * leaving a `status:"pending"` journal with `callee-mode-state` + `caller-mode-state`
- * done and `active-state` pending. Orphan detection/repair is deferred to
- * STATE-007.
- */
-
 export interface HandoffSidePatch {
 	skill: WorkflowSkill;
-	/** Skill-specific envelope fields (input, run_id, spec_slug, carried_obstacles, ...). */
-	patch: Record<string, unknown> & {
-		carried_obstacles?: ObstacleInput[];
-	};
+	patch: Record<string, unknown> & { carried_obstacles?: ObstacleInput[] };
 }
 
 export interface HandoffWorkflowOptions {
@@ -52,11 +26,7 @@ export interface HandoffWorkflowOptions {
 	caller: HandoffSidePatch;
 	callee: HandoffSidePatch;
 	command: string;
-	/** Shared mutation id (receipts + journal + audit). Defaults to a timestamped id. */
 	mutationId?: string;
-	/** Internal force flag (bypasses tamper hard-block). No public surface. */
-	force?: boolean;
-	/** Session id for session-scoped path resolution. */
 	sessionId: string;
 	nowIso?: string;
 }
@@ -65,7 +35,7 @@ export interface HandoffWorkflowResult {
 	mutationId: string;
 	callerState: WorkflowStateEnvelope;
 	calleeState: WorkflowStateEnvelope;
-	carriedObstacleFailures: FailSoftError[];
+	carriedObstacleCount: number;
 }
 
 const HANDOFF_STEPS = ["callee-mode-state", "caller-mode-state", "active-state"] as const;
@@ -87,31 +57,18 @@ function toObstacleTrigger(
 	};
 }
 
-async function ingestCarriedObstacles(input: {
+async function ingestObstacles(input: {
 	cwd: string;
 	sessionId: string;
 	calleeSkill: WorkflowSkill;
 	callerSkill: WorkflowSkill;
-	calleeState: WorkflowStateEnvelope;
 	calleePatch: HandoffSidePatch["patch"];
 	nowIso: string;
-}): Promise<FailSoftError[]> {
+}): Promise<number> {
 	const carried = input.calleePatch.carried_obstacles;
-	if (!Array.isArray(carried) || carried.length === 0) return [];
-	// No ingest handler for this callee skill: record once (not per-obstacle) and
-	// return, so a handoff carrying N obstacles to a skill with no handler (e.g.
-	// team) produces one fail-soft row instead of N.
+	if (!Array.isArray(carried) || carried.length === 0) return 0;
 	if (input.calleeSkill !== "ralplan" && input.calleeSkill !== "ultragoal") {
-		const msg = `no ingest handler for callee skill ${input.calleeSkill}`;
-		console.warn(`handoff carried obstacle ingest skipped (fail-soft): ${msg}`);
-		return [
-			await recordFailSoftError(
-				input.cwd,
-				input.sessionId,
-				{ site: "handoff-no-ingest-handler", message: msg, skill: input.calleeSkill },
-				input.nowIso,
-			),
-		];
+		throw new Error(`handoff target ${input.calleeSkill} cannot accept carried obstacles`);
 	}
 	const originRef =
 		typeof input.calleePatch.handoff_ref === "string"
@@ -119,46 +76,23 @@ async function ingestCarriedObstacles(input: {
 			: typeof input.calleePatch.input === "string"
 				? input.calleePatch.input
 				: `${input.callerSkill}:handoff`;
-	const failures: FailSoftError[] = [];
+	let count = 0;
 	for (const obstacle of carried) {
-		try {
-			const trigger = toObstacleTrigger(obstacle, input.callerSkill, originRef, input.nowIso);
-			if (input.calleeSkill === "ralplan") {
-				assertRalplanObstacle(trigger);
-				const runId =
-					typeof input.calleeState.run_id === "string"
-						? input.calleeState.run_id
-						: typeof input.calleePatch.run_id === "string"
-							? input.calleePatch.run_id
-							: undefined;
-				if (runId) await writeRalplanObstacle(input.cwd, runId, input.sessionId, trigger);
-			} else if (input.calleeSkill === "ultragoal") {
-				assertUltragoalObstacle(trigger);
-				await writeUltragoalObstacle(input.cwd, input.sessionId, trigger);
-			}
-		} catch (error) {
-			const msg = error instanceof Error ? error.message : String(error);
-			console.warn(`handoff carried obstacle ingest failed (fail-soft): ${msg}`);
-			failures.push(
-				await recordFailSoftError(
-					input.cwd,
-					input.sessionId,
-					{ site: "handoff-carried-obstacle", message: msg, skill: input.calleeSkill },
-					input.nowIso,
-				),
-			);
+		const trigger = toObstacleTrigger(obstacle, input.callerSkill, originRef, input.nowIso);
+		if (input.calleeSkill === "ralplan") {
+			assertRalplanObstacle(trigger);
+			const runId = typeof input.calleePatch.run_id === "string" ? input.calleePatch.run_id : undefined;
+			if (!runId) throw new Error("ralplan handoff with carried obstacles requires run_id");
+			await writeRalplanObstacle(input.cwd, runId, input.sessionId, trigger);
+		} else {
+			assertUltragoalObstacle(trigger);
+			await writeUltragoalObstacle(input.cwd, input.sessionId, trigger);
 		}
+		count += 1;
 	}
-	return failures;
+	return count;
 }
 
-/**
- * Execute a transaction-backed caller→callee handoff.
- *
- * @throws when the caller is not active, the callee equals the caller, either
- *   mode-state is corrupt, the callee already holds an active handoff from
- *   this caller, or a tampered mode-state is encountered unforced.
- */
 export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<HandoffWorkflowResult> {
 	const cwd = options.cwd;
 	const callerSkill = options.caller.skill;
@@ -170,42 +104,26 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 	}
 
 	assertSessionId(options.sessionId);
-	const sessionId = options.sessionId.trim();
+	const sessionId = options.sessionId;
 	const handoffAt = options.nowIso ?? new Date().toISOString();
 	const mutationId = options.mutationId ?? `${callerSkill}:handoff:${calleeSkill}:${handoffAt}`;
-	const force = options.force ?? false;
-
-	// Validation: caller must be the active workflow; callee must not already
-	// hold an active handoff from this caller.
 	const callerExisting = await readWorkflowState(cwd, callerSkill, { sessionId });
 	if (!callerExisting || callerExisting.active !== true) {
 		throw new Error(
-			`handoff caller ${callerSkill} is not active (no active mode-state at ${workflowStatePath(cwd, callerSkill, sessionId)})`,
+			`handoff caller ${callerSkill} is not active (no active state at ${workflowStatePath(cwd, callerSkill, sessionId)})`,
 		);
 	}
-	const calleeExisting = await readWorkflowState(cwd, calleeSkill, { sessionId }).catch(() => undefined);
-	if (
-		calleeExisting &&
-		calleeExisting.active === true &&
-		typeof calleeExisting.handoff_from === "string" &&
-		calleeExisting.handoff_from === callerSkill
-	) {
+	const calleeExisting = await readWorkflowState(cwd, calleeSkill, { sessionId });
+	if (calleeExisting?.active === true && calleeExisting.handoff_from === callerSkill) {
 		throw new Error(`handoff callee ${calleeSkill} already holds an active handoff from ${callerSkill}`);
 	}
 
 	const calleePath = workflowStatePath(cwd, calleeSkill, sessionId);
 	const callerPath = workflowStatePath(cwd, callerSkill, sessionId);
-	const activeStatePath = workflowActiveStatePath(cwd, sessionId);
-
-	const callerSide: WorkflowTransactionSide = {
-		skill: callerSkill,
-		phase: "handoff",
-	};
+	const activePath = workflowActiveStatePath(cwd, sessionId);
+	const callerSide: WorkflowTransactionSide = { skill: callerSkill, phase: "handoff" };
 	const calleeInitial = initialWorkflowPhase(calleeSkill);
-	const calleeSide: WorkflowTransactionSide = {
-		skill: calleeSkill,
-		phase: calleeInitial,
-	};
+	const calleeSide: WorkflowTransactionSide = { skill: calleeSkill, phase: calleeInitial };
 
 	await beginWorkflowTransactionJournal({
 		cwd,
@@ -213,11 +131,10 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		mutationId,
 		caller: callerSide,
 		callee: calleeSide,
-		paths: [calleePath, callerPath, activeStatePath],
+		paths: [calleePath, callerPath, activePath],
 		stepNames: HANDOFF_STEPS,
 	});
 
-	// 1. Write callee mode-state (promote).
 	const calleeState = await writeWorkflowState(
 		cwd,
 		calleeSkill,
@@ -229,20 +146,18 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 			handoff_at: handoffAt,
 		},
 		options.command,
-		{ operation: "handoff-receive", force, mutationId, sessionId },
+		{ operation: "handoff-receive", mutationId, sessionId },
 	);
-	const carriedObstacleFailures = await ingestCarriedObstacles({
+	const carriedObstacleCount = await ingestObstacles({
 		cwd,
 		sessionId,
 		calleeSkill,
 		callerSkill,
-		calleeState,
 		calleePatch: options.callee.patch,
 		nowIso: handoffAt,
 	});
 	await updateWorkflowTransactionJournal(cwd, sessionId, mutationId, HANDOFF_STEPS[0]);
 
-	// 2. Write caller mode-state (demote).
 	const callerState = await writeWorkflowState(
 		cwd,
 		callerSkill,
@@ -254,39 +169,25 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 			handoff_at: handoffAt,
 		},
 		options.command,
-		{ operation: "handoff-send", force, mutationId, sessionId },
+		{ operation: "handoff-send", mutationId, sessionId },
 	);
 	await updateWorkflowTransactionJournal(cwd, sessionId, mutationId, HANDOFF_STEPS[1]);
 
-	// 3. Crash-injection
-	if (process.env.PI_WORKFLOW_HANDOFF_FAIL_AFTER_CALLER === mutationId) {
+	// Test-only crash-injection seam: STATE-006. Never set in production.
+	const crashAfterCaller = process.env.PI_WORKFLOW_HANDOFF_FAIL_AFTER_CALLER;
+	if (crashAfterCaller === mutationId) {
 		throw new Error(`injected handoff failure after caller write for ${mutationId}`);
 	}
 
-	// 4. Apply the active-state handoff
 	await applyHandoffToActiveState({
 		cwd,
-		caller: {
-			skill: callerSkill,
-			phase: "handoff",
-			state_path: callerPath,
-		},
-		callee: {
-			skill: calleeSkill,
-			phase: calleeInitial,
-			state_path: calleePath,
-		},
+		caller: { skill: callerSkill, phase: "handoff", state_path: callerPath },
+		callee: { skill: calleeSkill, phase: calleeInitial, state_path: calleePath },
 		sessionId,
 		nowIso: handoffAt,
 	});
 	await updateWorkflowTransactionJournal(cwd, sessionId, mutationId, HANDOFF_STEPS[2]);
-
 	await completeWorkflowTransactionJournal(cwd, sessionId, mutationId);
 
-	return {
-		mutationId,
-		callerState,
-		calleeState,
-		carriedObstacleFailures,
-	};
+	return { mutationId, callerState, calleeState, carriedObstacleCount };
 }

@@ -6,14 +6,14 @@
  * written + re-read + revalidated from disk BEFORE the destructive action proceeds; an invalid
  * or missing vanish receipt blocks recovery immediately and never proceeds.
  *
- * Vanish is internal-only: written by `recoverPrimitive` / the `operate` loop before destructive
+ * Vanish is internal-only: written by `recover` or the operate loop before destructive
  * actions, never exposed as a standalone CLI verb.
  */
 import type { PreserveResult, UntrackedEntry } from "#workflows/runtime/preservation";
 import type { GitDelta } from "#workflows/runtime/types";
 
 /** Classifications that require a vanish receipt before any destructive action. */
-export type VanishClassification = "restart-clean" | "restart-preserve-delta" | "fallback-harness-exec";
+export type VanishClassification = "restart-clean" | "restart-preserve-delta";
 
 export interface VanishEvidence extends Record<string, unknown> {
 	schemaVersion: 1;
@@ -28,11 +28,7 @@ export interface VanishEvidence extends Record<string, unknown> {
 	forbiddenActions: string[];
 }
 
-const VANISH_CLASSIFICATIONS: ReadonlySet<VanishClassification> = new Set([
-	"restart-clean",
-	"restart-preserve-delta",
-	"fallback-harness-exec",
-]);
+const VANISH_CLASSIFICATIONS: ReadonlySet<VanishClassification> = new Set(["restart-clean", "restart-preserve-delta"]);
 
 /** True iff the classification requires a vanish receipt before acting. */
 export function requiresVanishBeforeAction(classification: string): classification is VanishClassification {
@@ -106,7 +102,7 @@ export function validateVanish(evidence: unknown): VanishValidation {
 
 /**
  * Build uniform vanish evidence for any destructive classification. Dirty deltas carry real
- * preservation evidence (stash ref + manifest); clean/zero-delta/fallback carry empty preservation
+ * preservation evidence (stash ref + manifest); clean and zero-delta carry empty preservation
  * evidence (nothing to preserve). Operates on `RuntimeReceipt.evidence` directly.
  */
 export function buildVanishEvidence(
@@ -130,7 +126,7 @@ export function buildVanishEvidence(
 			forbiddenActions: ["restart-clean", "delete", "reset"],
 		};
 	}
-	// clean / zero-delta / fallback-harness-exec: nothing to preserve.
+	// Clean and zero-delta workspaces have nothing to preserve.
 	return {
 		schemaVersion: 1,
 		verb: "vanish",

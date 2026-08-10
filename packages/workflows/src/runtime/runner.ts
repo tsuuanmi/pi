@@ -1,9 +1,8 @@
 /**
  * operate(goal, opts) — autonomous owner-driven lifecycle integrating the recovery loop.
  *
- * start -> submit(single-flight) -> [observe -> recoverPrimitive]* -> finalize(validation-gated).
- * Destructive recovery (restart-clean / restart-preserve-delta / fallback-harness-exec) writes a
- * valid vanish receipt BEFORE acting (delegated to the shared `recoverPrimitive`). Dirty/unknown
+ * start -> submit(single-flight) -> [observe -> recover]* -> finalize(validation-gated).
+ * Destructive recovery writes a valid vanish receipt before acting. Dirty or unknown
  * deltas are preserved, never clean-restarted. The loop is bounded by `maxIterations` and the
  * per-classification retry budgets persisted in `state.retries` (single budget source).
  *
@@ -14,15 +13,15 @@
  * unit/e2e-testable with a fake harness (no real provider/tokens).
  */
 
+import { isTerminal } from "#workflows/runtime/lifecycle";
 import {
 	type ClassificationInput,
-	finalizePrimitive,
-	loadStateOrThrow,
+	finalize,
+	loadState,
 	type RecoveryDecision,
 	type RecoveryDecisionKind,
-	recoverPrimitive,
-} from "#workflows/runtime/fallback-commands";
-import { isTerminal } from "#workflows/runtime/lifecycle";
+	recover,
+} from "#workflows/runtime/operations";
 import { type HarnessRpc, singleFlightAccept } from "#workflows/runtime/rpc";
 import { readRuntimeReceipts } from "#workflows/runtime/storage";
 import type { HarnessLifecycle, PrimitiveResponse, RuntimeWriter, SessionState } from "#workflows/runtime/types";
@@ -44,8 +43,8 @@ export interface OperateOptions {
 	maxIterations?: number;
 	/** Injected event emitter (production owner passes the lease-guarded single-writer emit). */
 	emit?: (kind: string, evidence: Record<string, unknown>) => Promise<void>;
-	/** Injectable shared recovery primitive (defaults to recoverPrimitive; AC4 spy hook). */
-	recover?: typeof recoverPrimitive;
+	/** Injectable recovery operation. */
+	recover?: typeof recover;
 }
 
 export interface OperateResult {
@@ -63,8 +62,8 @@ const DEFAULT_MAX_ITERATIONS = 10;
 const DEFAULT_ACCEPTANCE_TIMEOUT_MS = 30_000;
 
 /**
- * Run the full autonomous loop. `recoverPrimitive` is the shared vanish-gated recovery primitive
- * (AC4): both standalone `pi workflow recover` and this loop call it, so the classify -> vanish ->
+ * Run the full autonomous loop. `recover` is the shared vanish-gated operation:
+ * both standalone recovery and this loop call it, so the classify -> vanish ->
  * act -> budget path is exercised identically.
  */
 export async function operate(opts: OperateOptions): Promise<OperateResult> {
@@ -75,7 +74,7 @@ export async function operate(opts: OperateOptions): Promise<OperateResult> {
 	const vanishReceiptIds: string[] = [];
 	const blockers: string[] = [];
 
-	let state = await loadStateOrThrow(opts.root, opts.sessionId);
+	let state = await loadState(opts.root, opts.sessionId);
 
 	// Terminal check at loop entry: never submit, recover, or finalize a completed/retired session.
 	if (isTerminal(state.lifecycle)) {
@@ -106,8 +105,8 @@ export async function operate(opts: OperateOptions): Promise<OperateResult> {
 			break;
 		}
 
-		const recover = opts.recover ?? recoverPrimitive;
-		const response = await recover({
+		const recoverSession = opts.recover ?? recover;
+		const response = await recoverSession({
 			root: opts.root,
 			state,
 			ownerLive: opts.ownerLive,
@@ -118,7 +117,7 @@ export async function operate(opts: OperateOptions): Promise<OperateResult> {
 			classificationInput,
 		});
 		lastResponse = response;
-		state = await loadStateOrThrow(opts.root, opts.sessionId);
+		state = await loadState(opts.root, opts.sessionId);
 		const decision = (response.evidence as { decision: RecoveryDecision }).decision;
 		classifications.push(decision.classification);
 		const vanishId = (response.evidence as { vanishReceiptId?: string }).vanishReceiptId;
@@ -167,7 +166,7 @@ export async function operate(opts: OperateOptions): Promise<OperateResult> {
 	}
 
 	const receipts = await readRuntimeReceipts(opts.root, opts.sessionId);
-	const finalizeResponse = await finalizePrimitive({
+	const finalizeResponse = await finalize({
 		root: opts.root,
 		state,
 		ownerLive: opts.ownerLive,

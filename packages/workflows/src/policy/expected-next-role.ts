@@ -1,4 +1,4 @@
-import { expectedNextRoleForSkill } from "#workflows/registry/transition-registry";
+import { nextRoleForSkill } from "#workflows/policy/skill-policy";
 import type { WorkflowSkill } from "#workflows/session/paths";
 
 export interface ExpectedNextRole {
@@ -63,9 +63,8 @@ export function assertExpectedNextRole(
 // Deterministic table-driven selectors
 //
 // These exports are deterministic selectors used by tests and runtime helpers.
-// Phase logic is registered by per-skill transition sidecars (for example,
-// skills/ralplan/transitions.ts), so this module does not duplicate a
-// hardcoded transition engine.
+// Phase logic comes from immutable per-skill policies, so this module does
+// not duplicate a transition engine.
 // ---------------------------------------------------------------------------
 
 /** Ralplan verdict slice accepted by the selector (architect or critic). */
@@ -102,7 +101,7 @@ export function expectedNextRalplanRole(
 	state: RalplanSelectorState | undefined,
 	runId: string,
 ): ExpectedNextRole | undefined {
-	return expectedNextRoleForSkill({ skill: "ralplan", state, runId });
+	return nextRoleForSkill({ skill: "ralplan", state, runId });
 }
 
 /** Team task slice accepted by the selector. */
@@ -121,7 +120,7 @@ export interface TeamSelectorSnapshot {
 }
 
 export function expectedNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): ExpectedNextRole | undefined {
-	return expectedNextRoleForSkill({ skill: "team", state: snapshot });
+	return nextRoleForSkill({ skill: "team", state: snapshot });
 }
 
 export function assertNoGuardedSpawnOverrides(input: {

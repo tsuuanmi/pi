@@ -1,6 +1,6 @@
 # Team workflow commands
 
-Use these commands with JSON objects passed through `--input` or `--input-file`. Every skill action requires the current interactive/runtime `sessionId`; do not omit it. For exact payload validation, read `../assets/schema.json` and select the schema under `x-pi-actions["<action>"]`.
+Use these commands with JSON objects passed through `--input` or `--input-file`. Every skill action requires the canonical `sessionId`; tools obtain it from the host session context. For exact payload validation, read `../assets/schema.json` and select the schema under `x-pi-actions["<action>"]`.
 
 Command order for agents:
 

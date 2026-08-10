@@ -101,7 +101,6 @@ export const DEEP_INTERVIEW_SKILL_HELP: WorkflowSkillHelp = {
 				"spec: string (required; markdown content or readable file path)",
 				"slug?: string",
 				"handoff?: ralplan|team|ultragoal|stop",
-				"allowEarlyExit?: boolean",
 			],
 			example: `pi workflow deep-interview write-spec --input '{"sessionId":"<session-id>","slug":"my-spec","spec":"# Spec...","handoff":"ralplan"}' --json`,
 		},

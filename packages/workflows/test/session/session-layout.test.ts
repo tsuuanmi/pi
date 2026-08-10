@@ -1,11 +1,9 @@
-import { mkdir, rm } from "node:fs/promises";
+import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
 	assertSafePathComponent,
 	auditLogPath,
-	resolvePiSessionForRead,
-	resolvePiSessionForWrite,
 	transactionJournalPath,
 	workflowActiveStatePath,
 	workflowStatePath,
@@ -130,61 +128,6 @@ describe("session-layout", () => {
 			expect(transactionJournalPath(cwd, "sess-1", "mut-1")).toBe(
 				join(cwd, ".pi", "sess-1", "state", "transactions", "mut-1.json"),
 			);
-		});
-	});
-});
-
-describe("session-resolution", () => {
-	let cwd: string;
-
-	beforeEach(async () => {
-		cwd = join(tmpdir(), `pi-session-res-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-		await mkdir(cwd, { recursive: true });
-	});
-
-	afterEach(async () => {
-		await rm(cwd, { recursive: true, force: true });
-	});
-
-	describe("resolveSessionIdFromSources", () => {
-		it("prefers flag over payload and env", async () => {
-			const result = resolvePiSessionForRead(cwd, {
-				flagValue: "flag-id",
-				payloadSessionId: "payload-id",
-				envSessionId: "env-id",
-			});
-			expect(result?.sessionId).toBe("flag-id");
-			expect(result?.source).toBe("flag");
-		});
-
-		it("prefers payload over env", async () => {
-			const result = resolvePiSessionForRead(cwd, {
-				payloadSessionId: "payload-id",
-				envSessionId: "env-id",
-			});
-			expect(result?.sessionId).toBe("payload-id");
-			expect(result?.source).toBe("payload");
-		});
-
-		it("uses env as last resort", async () => {
-			const result = resolvePiSessionForRead(cwd, { envSessionId: "env-id" });
-			expect(result?.sessionId).toBe("env-id");
-			expect(result?.source).toBe("env");
-		});
-
-		it("throws blank_flag on blank flag value", async () => {
-			expect(() => resolvePiSessionForRead(cwd, { flagValue: "  " })).toThrow(/blank/);
-		});
-	});
-
-	describe("resolvePiSessionForWrite", () => {
-		it("requires a session id for write", async () => {
-			expect(() => resolvePiSessionForWrite(cwd, {})).toThrow(/No session ID/);
-		});
-
-		it("resolves from flag", async () => {
-			const result = resolvePiSessionForWrite(cwd, { flagValue: "sess-1" });
-			expect(result?.sessionId).toBe("sess-1");
 		});
 	});
 });

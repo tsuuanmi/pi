@@ -1,7 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { writeStageArtifact } from "#workflows/artifacts/artifacts";
-import { type FailSoftError, recordFailSoftError } from "#workflows/audit/audit-log";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
 import type { RalplanStage, WorkflowSkill } from "#workflows/session/paths";
 import {
@@ -86,8 +85,6 @@ export interface RalplanWriteArtifactResult {
 	plannerState?: RalplanPlannerStateUpdate;
 	/** Parsed critic/architect verdict, when the stage produced one (R-1 prerequisite). */
 	verdict?: RalplanVerdict;
-	/** Fail-soft errors collected during the R-1 obstacle dual-write (durable copies in the audit log). */
-	failSoftErrors?: FailSoftError[];
 	/** Completion transaction journal path retained as deterministic commit evidence. */
 	journalPath?: string;
 	/** Completion provenance sidecar path. */
@@ -125,12 +122,6 @@ export interface RalplanApproveResult {
 	targetState?: Record<string, unknown>;
 	/** Latest critic verdict at approval time, if a critic stage recorded one. */
 	critic_verdict?: RalplanCriticVerdictKind;
-	/** True when approval proceeded despite a REJECT verdict via `overrideCriticVerdict`. */
-	critic_verdict_overridden?: boolean;
-	/** Soft warning surfaced at approval (e.g. latest critic verdict is ITERATE). */
-	approval_warning?: string;
-	/** Fail-soft errors collected during the approval handoff ingest (durable copies in the audit log). */
-	failSoftErrors?: FailSoftError[];
 }
 
 export interface RalplanDoctorResult {
@@ -351,7 +342,7 @@ export async function writeRalplanArtifact(
 		const plannerState = plannerStateUpdate(input);
 		const verdict =
 			input.stage === "critic" || input.stage === "architect" ? parseRalplanVerdict(input.stage, body) : undefined;
-		const previousState = await readWorkflowState(cwd, "ralplan", { sessionId }).catch(() => undefined);
+		const previousState = await readWorkflowState(cwd, "ralplan", { sessionId });
 		const index = await readRalplanIndex(cwd, runId, sessionId);
 		if (index.invalidLines.length > 0) {
 			throw new Error(
@@ -449,7 +440,7 @@ export async function writeRalplanArtifact(
 		});
 		const rollbackRemovablePaths: string[] = [];
 		try {
-			const currentState = await readWorkflowState(cwd, "ralplan", { sessionId }).catch(() => undefined);
+			const currentState = await readWorkflowState(cwd, "ralplan", { sessionId });
 			const currentIndex = await readRalplanIndex(cwd, runId, sessionId);
 			if (
 				ralplanWriteFingerprint({
@@ -485,24 +476,11 @@ export async function writeRalplanArtifact(
 				await writeTextArtifact(pendingApprovalPath, body, { cwd });
 			}
 			await markRalplanCompletionStep(cwd, sessionId, mutationId, "pending_approval");
-			const failSoftErrors: FailSoftError[] = [];
 			if (verdict) {
 				const obstacle = ralplanObstacleFromVerdict(verdict, artifact.path, artifact.createdAt);
 				if (obstacle) {
-					try {
-						assertRalplanObstacle(obstacle);
-						await writeRalplanObstacle(cwd, runId, sessionId, obstacle);
-					} catch (error) {
-						const msg = error instanceof Error ? error.message : String(error);
-						console.warn(`ralplan obstacle dual-write failed (R-1 fail-soft): ${msg}`);
-						failSoftErrors.push(
-							await recordFailSoftError(cwd, sessionId, {
-								site: "ralplan-obstacle-dual-write",
-								message: msg,
-								skill: "ralplan",
-							}),
-						);
-					}
+					assertRalplanObstacle(obstacle);
+					await writeRalplanObstacle(cwd, runId, sessionId, obstacle);
 				}
 			}
 			await markRalplanCompletionStep(cwd, sessionId, mutationId, "obstacle_ledger");
@@ -565,7 +543,6 @@ export async function writeRalplanArtifact(
 				journalPath,
 				completionProvenancePath,
 				...(verdict ? { verdict } : {}),
-				...(failSoftErrors.length ? { failSoftErrors } : {}),
 			};
 		} catch (error) {
 			await recordRalplanRollback({ cwd, sessionId, mutationId, paths: rollbackRemovablePaths, error });
@@ -629,16 +606,14 @@ export async function approveRalplanPlan(
 	cwd: string,
 	options: {
 		runId?: string;
-		target?: RalplanApprovalTarget;
-		approved?: boolean;
+		target: RalplanApprovalTarget;
+		approved: boolean;
 		note?: string;
-		overrideCriticVerdict?: boolean;
 		sessionId: string;
 	},
 ): Promise<RalplanApproveResult> {
 	const sessionId = options.sessionId;
-	const target = options.target ?? "ultragoal";
-	const approved = options.approved !== false;
+	const { target, approved } = options;
 	const status = await readRalplanStatus(cwd, sessionId, options.runId);
 	if (!status.run_id)
 		throw new Error(
@@ -649,45 +624,16 @@ export async function approveRalplanPlan(
 	}
 	await readFile(status.pending_approval_path, "utf8");
 
-	// Critic-verdict gate (R-2): refuse to approve a plan the latest critic explicitly
-	// REJECTed, unless `overrideCriticVerdict` is set. ITERATE produces a soft warning
-	// (the plan was not re-reviewed after the last revision). APPROVE and no-critic
-	// runs proceed silently (backward compat). Rejections (approved === false) bypass
-	// the gate entirely.
 	const criticPass = latestCriticPass(status.rows);
 	const criticVerdict = criticPass?.verdict;
-	let criticVerdictOverridden = false;
-	let approvalWarning: string | undefined;
-	if (approved) {
-		if (criticVerdict === "reject") {
-			if (!options.overrideCriticVerdict) {
-				throw new Error(
-					"cannot approve ralplan: the latest critic verdict is REJECT. Revise and re-run the critic, or set overrideCriticVerdict to force approval.",
-				);
-			}
-			criticVerdictOverridden = true;
-		} else if (criticVerdict === "iterate") {
-			approvalWarning =
-				"latest critic verdict is ITERATE; the plan was not re-reviewed by the critic after the last revision.";
-		}
+	if (approved && criticVerdict !== "approve") {
+		throw new Error("cannot approve ralplan without an APPROVE verdict from the latest critic pass");
 	}
-
-	// R-2 obstacle-ledger agreement (mirror of B-1): the R-1 dual-write should
-	// keep the obstacle ledger in sync with the latest critic verdict for the
-	// latest critic pass (scoped by planRef so stale earlier-pass obstacles do not
-	// read as divergence). Divergence = a dual-write bug or a corrupt ledger.
-	// Assert in dev/test, warn in production. Only checked when the ledger is
-	// non-empty (a missing/empty ledger is the pre-R-1 / fail-soft case, not a
-	// divergence) and a critic pass exists.
 	if (criticPass) {
 		const ledger = await readRalplanObstacleLedger(cwd, status.run_id, sessionId);
-		if (ledger.obstacles.length > 0) {
-			const agreement = criticObstacleAgreement(criticPass, ledger);
-			if (!agreement.agree) {
-				const msg = `ralplan critic/obstacle divergence for ${criticPass.planRef}: ${agreement.reason}`;
-				if (process.env.NODE_ENV !== "production") throw new Error(msg);
-				console.warn(msg);
-			}
+		const agreement = criticObstacleAgreement(criticPass, ledger);
+		if (!agreement.agree) {
+			throw new Error(`ralplan critic/obstacle divergence for ${criticPass.planRef}: ${agreement.reason}`);
 		}
 	}
 	const now = new Date().toISOString();
@@ -699,7 +645,6 @@ export async function approveRalplanPlan(
 	}));
 	let ralplanState: Record<string, unknown>;
 	let targetState: Record<string, unknown> | undefined;
-	let approvalFailSoftErrors: FailSoftError[] | undefined;
 	if (approved && target !== "stop") {
 		// Handoff branch: delegate the caller demote + callee promote + active-state
 		// apply to `handoffWorkflow` (transaction journal + both-side receipts +
@@ -733,7 +678,6 @@ export async function approveRalplanPlan(
 		});
 		ralplanState = result.callerState;
 		targetState = result.calleeState;
-		approvalFailSoftErrors = result.carriedObstacleFailures;
 	} else {
 		// No handoff target (stop / rejected): just deactivate ralplan.
 		ralplanState = await writeWorkflowState(
@@ -772,9 +716,6 @@ export async function approveRalplanPlan(
 		ralplanState,
 		targetState,
 		...(criticVerdict ? { critic_verdict: criticVerdict } : {}),
-		...(criticVerdictOverridden ? { critic_verdict_overridden: true } : {}),
-		...(approvalWarning ? { approval_warning: approvalWarning } : {}),
-		...(approvalFailSoftErrors?.length ? { failSoftErrors: approvalFailSoftErrors } : {}),
 	};
 }
 

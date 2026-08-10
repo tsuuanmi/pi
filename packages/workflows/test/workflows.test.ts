@@ -4,10 +4,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import "#workflows/skills/deep-interview/transitions";
-import "#workflows/skills/ralplan/transitions";
-import "#workflows/skills/team/transitions";
-import "#workflows/skills/ultragoal/transitions";
 import {
 	appendJsonlIdempotent,
 	assertExpectedNextRole,
@@ -39,11 +35,7 @@ import {
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
-import {
-	isBlockingQuestionPhaseForSkill,
-	skillGateValidators,
-	skillTerminalDetectors,
-} from "#workflows/registry/transition-registry";
+import { getGateValidators, getTerminalDetectors, isBlockingQuestionPhase } from "#workflows/policy/skill-policy";
 import { buildResponse } from "#workflows/runtime/lifecycle";
 import {
 	generateSessionId,
@@ -290,24 +282,19 @@ describe("workflow runtime", () => {
 		expect(distAgents).toEqual(sourceAgents);
 	});
 
-	it("supports pi workflow state as the centralized state command", async () => {
-		const written = await runWorkflowCommand(
-			[
-				"state",
-				"ralplan",
-				"write",
-				"--input",
-				'{"phase":"planner","active":true,"run_id":"run-2"}',
-				"--session",
-				sessionId,
-				"--json",
-			],
+	it("supports strict centralized workflow state reads", async () => {
+		await writeWorkflowState(
 			cwd,
+			"ralplan",
+			{ active: true, current_phase: "planner", run_id: "run-2" },
+			"test setup",
+			{ sessionId },
 		);
-		expect(written.status).toBe(0);
-		const writtenJson = JSON.parse(written.stdout) as { state: { current_phase?: string; run_id?: string } };
-		expect(writtenJson.state.current_phase).toBe("planner");
-		expect(writtenJson.state.run_id).toBe("run-2");
+		const result = await runWorkflowCommand(["state", "ralplan", "read", "--session", sessionId, "--json"], cwd);
+		expect(result.status).toBe(0);
+		const body = JSON.parse(result.stdout) as { state: { current_phase?: string; run_id?: string } };
+		expect(body.state.current_phase).toBe("planner");
+		expect(body.state.run_id).toBe("run-2");
 	});
 
 	it("escalates pending-question active HUD entries to blocked", async () => {
@@ -339,7 +326,7 @@ describe("workflow runtime", () => {
 				sessionId: "h-blocking-question",
 				detach: true,
 				skill: "deep-interview",
-				phase: "waiting_for_answer",
+				currentPhase: "waiting_for_answer",
 			}),
 			"--json",
 		]);
@@ -348,47 +335,38 @@ describe("workflow runtime", () => {
 	});
 
 	it("exposes transition metadata for fail-closed harness checks", () => {
-		expect(isBlockingQuestionPhaseForSkill("deep-interview", "waiting_for_answer")).toBe(true);
-		expect(skillTerminalDetectors("deep-interview")).toContainEqual(
+		expect(isBlockingQuestionPhase("deep-interview", "waiting_for_answer")).toBe(true);
+		expect(getTerminalDetectors("deep-interview")).toContainEqual(
 			expect.objectContaining({ id: "deep-interview-spec-artifact-present", kind: "filesystem" }),
 		);
-		expect(skillTerminalDetectors("ralplan")).toContainEqual(
+		expect(getTerminalDetectors("ralplan")).toContainEqual(
 			expect.objectContaining({ id: "ralplan-final-artifact-receipt", kind: "receipt" }),
 		);
-		expect(skillTerminalDetectors("team")).toContainEqual(
+		expect(getTerminalDetectors("team")).toContainEqual(
 			expect.objectContaining({ id: "team-completion-state-or-gate", kind: "state" }),
 		);
-		expect(skillGateValidators("ultragoal")).toContainEqual(
+		expect(getGateValidators("ultragoal")).toContainEqual(
 			expect.objectContaining({ id: "ultragoal-guard-and-blocker-classification" }),
 		);
 	});
 
-	it("supports pi workflow state handoff and active snapshot updates", async () => {
-		const handoff = await runWorkflowCommand(
-			["state", "deep-interview", "handoff", "--to", "ralplan", "--session", sessionId, "--json"],
+	it("keeps workflow mutations out of the generic state adapter", async () => {
+		const write = await runWorkflowCommand(
+			["state", "deep-interview", "write", "--session", sessionId, "--json"],
 			cwd,
 		);
-		expect(handoff.status).toBe(0);
-		const handoffJson = JSON.parse(handoff.stdout) as {
-			state: { active?: boolean };
-			target_state: { active?: boolean };
-		};
-		expect(handoffJson.state.active).toBe(false);
-		expect(handoffJson.target_state.active).toBe(true);
+		expect(write.status).toBe(1);
+		expect(write.stderr).toContain("unknown state action: write");
+
+		const handoff = await runWorkflowCommand(
+			["state", "deep-interview", "handoff", "--session", sessionId, "--json"],
+			cwd,
+		);
+		expect(handoff.status).toBe(1);
+		expect(handoff.stderr).toContain("unknown state action: handoff");
 
 		const active = await runWorkflowCommand(["state", "active", "--session", sessionId, "--json"], cwd);
 		expect(active.status).toBe(0);
-		const activeJson = JSON.parse(active.stdout) as { state: { active_workflows?: Array<{ skill: string }> } };
-		expect(activeJson.state.active_workflows).toEqual([
-			{
-				skill: "ralplan",
-				active: true,
-				phase: "handoff",
-				session_id: sessionId,
-				state_path: expect.any(String),
-				updated_at: expect.any(String),
-			},
-		]);
 	});
 
 	it("appends JSONL idempotently", async () => {

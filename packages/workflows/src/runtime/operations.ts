@@ -1,13 +1,12 @@
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { evaluateSkillGateValidators, evaluateSkillTerminalDetectors } from "#workflows/registry/transition-registry";
+import { evaluateGates, evaluateTerminalDetectors } from "#workflows/policy/skill-policy";
 import { buildResponse } from "#workflows/runtime/lifecycle";
 import { mutateRuntimeSession } from "#workflows/runtime/mutation";
 import { preserveDirtyWorktree } from "#workflows/runtime/preservation";
 import type { HarnessRpc } from "#workflows/runtime/rpc";
 import { singleFlightAccept } from "#workflows/runtime/rpc";
-import { seamUnsupported } from "#workflows/runtime/seams";
 import { readRuntimeReceipts, readSessionState } from "#workflows/runtime/storage";
 import type {
 	GitDelta,
@@ -33,7 +32,6 @@ export type RecoveryDecisionKind =
 	| "reinject-prompt"
 	| "restart-clean"
 	| "restart-preserve-delta"
-	| "fallback-harness-exec"
 	| "finalize-blocked"
 	| "human-check"
 	| "blocked";
@@ -395,12 +393,12 @@ export function classifyRecovery(input: ClassificationInput): RecoveryDecision {
 				};
 			}
 			return {
-				classification: "fallback-harness-exec",
+				classification: "blocked",
 				reason: "zero-delta-vanish-budget-exhausted",
 				severity: "critical",
-				ownerRequired: true,
-				blocked: false,
-				blockers: [],
+				ownerRequired: false,
+				blocked: true,
+				blockers: ["zero-delta-vanish-budget-exhausted"],
 			};
 		case "dirty":
 			if (input.retryBudget.dirtyVanishPreserve > 0) {
@@ -414,12 +412,12 @@ export function classifyRecovery(input: ClassificationInput): RecoveryDecision {
 				};
 			}
 			return {
-				classification: "fallback-harness-exec",
+				classification: "blocked",
 				reason: "dirty-vanish-preserve-budget-exhausted",
 				severity: "critical",
-				ownerRequired: true,
-				blocked: false,
-				blockers: [],
+				ownerRequired: false,
+				blocked: true,
+				blockers: ["dirty-vanish-preserve-budget-exhausted"],
 			};
 		default:
 			return {
@@ -456,7 +454,7 @@ export function consumeBudget(state: SessionState, decision: RecoveryDecision, g
 	return { ...state, retries: { ...state.retries, [key]: (state.retries[key] ?? 0) + 1 } };
 }
 
-export async function classifyPrimitive(opts: {
+export async function classify(opts: {
 	state: SessionState;
 	ownerLive: boolean;
 	input?: Record<string, unknown>;
@@ -507,7 +505,7 @@ async function writeVanishReceipt(opts: {
 	return { receipt: vanishMutation.receipt, revalidated, vanishOk };
 }
 
-export async function recoverPrimitive(opts: {
+export async function recover(opts: {
 	root: string;
 	state: SessionState;
 	ownerLive: boolean;
@@ -523,7 +521,31 @@ export async function recoverPrimitive(opts: {
 	const decision = classifyRecovery(classificationInput);
 	const gitDelta = classificationInput.workspace.gitDelta;
 
-	if (decision.blocked) return buildResponse(opts.state, opts.ownerLive, { decision, accepted: false }, false);
+	if (decision.blocked) {
+		const next: SessionState = {
+			...opts.state,
+			lifecycle: "blocked",
+			blockers: decision.blockers,
+			updatedAt: new Date().toISOString(),
+		};
+		const mutation = await mutateRuntimeSession({
+			root: opts.root,
+			sessionId: opts.state.sessionId,
+			verb: "recover",
+			writer: opts.writer,
+			accepted: false,
+			nextState: next,
+			ownerLive: opts.ownerLive,
+			events: [{ kind: "recovery_blocked", severity: "critical", evidence: { reason: decision.reason } }],
+			evidence: { decision, accepted: false },
+		});
+		return buildResponse(
+			mutation.state,
+			opts.ownerLive,
+			{ decision, accepted: false, receipt: mutation.receipt },
+			false,
+		);
+	}
 
 	if (decision.classification === "continue") {
 		// No destructive action. Consume validationRepair only when repairing a validation failure.
@@ -593,7 +615,7 @@ export async function recoverPrimitive(opts: {
 	}
 
 	if (requiresVanishBeforeAction(decision.classification)) {
-		const classification = decision.classification as VanishClassification;
+		const _classification = decision.classification as VanishClassification;
 		const vanish = await writeVanishReceipt({
 			root: opts.root,
 			state: opts.state,
@@ -631,54 +653,6 @@ export async function recoverPrimitive(opts: {
 				mutation.state,
 				opts.ownerLive,
 				{ decision, accepted: false, reason: "invalid-vanish-receipt", vanishReceiptId: vanish.receipt.receiptId },
-				false,
-			);
-		}
-
-		if (classification === "fallback-harness-exec") {
-			// Provider-agnostic fallback resolves to blocked in Phase 2 (no real cross-harness exec).
-			// Surface the permanently-blocked seam by name (no silent degrade) while preserving the
-			// Phase 1/2 observable output (reason + blockers unchanged).
-			const seam = seamUnsupported("cross-harness-omx-fallback");
-			const next: SessionState = {
-				...opts.state,
-				lifecycle: "blocked",
-				blockers: decision.blockers,
-				updatedAt: new Date().toISOString(),
-			};
-			const mutation = await mutateRuntimeSession({
-				root: opts.root,
-				sessionId: opts.state.sessionId,
-				verb: "recover",
-				writer: opts.writer,
-				accepted: false,
-				nextState: next,
-				ownerLive: opts.ownerLive,
-				events: [
-					{
-						kind: "recovery_blocked",
-						severity: "critical",
-						evidence: { reason: "fallback-harness-exec-requested", seam: seam.evidence },
-					},
-				],
-				evidence: {
-					decision,
-					accepted: false,
-					reason: "fallback-harness-exec-requested",
-					vanishReceiptId: vanish.receipt.receiptId,
-					seam: seam,
-				},
-			});
-			return buildResponse(
-				mutation.state,
-				opts.ownerLive,
-				{
-					decision,
-					accepted: false,
-					reason: "fallback-harness-exec-requested",
-					vanishReceiptId: vanish.receipt.receiptId,
-					seam: seam,
-				},
 				false,
 			);
 		}
@@ -804,7 +778,7 @@ function parseChecks(input: Record<string, unknown>): ValidationCheckInput[] {
 	});
 }
 
-export async function validatePrimitive(opts: {
+export async function validate(opts: {
 	root: string;
 	state: SessionState;
 	ownerLive: boolean;
@@ -892,7 +866,7 @@ function findValidationReceipt(
 	return summarizeLatestValidation(passing, state.sessionId);
 }
 
-export async function finalizePrimitive(opts: {
+export async function finalize(opts: {
 	root: string;
 	state: SessionState;
 	ownerLive: boolean;
@@ -910,7 +884,7 @@ export async function finalizePrimitive(opts: {
 		if (!workspace) {
 			blockers.push("gate-read-error:missing-workspace");
 		} else {
-			const terminal = evaluateSkillTerminalDetectors({
+			const terminal = evaluateTerminalDetectors({
 				skill,
 				state: undefined,
 				sessionId: opts.state.sessionId,
@@ -923,7 +897,7 @@ export async function finalizePrimitive(opts: {
 			const skillState = await readWorkflowState(workspace, skill, { sessionId: opts.state.sessionId }).catch(
 				() => undefined,
 			);
-			const gates = await evaluateSkillGateValidators({
+			const gates = await evaluateGates({
 				skill,
 				state: skillState,
 				sessionId: opts.state.sessionId,
@@ -984,7 +958,7 @@ export async function finalizePrimitive(opts: {
 	});
 }
 
-export async function loadStateOrThrow(root: string, sessionId: string): Promise<SessionState> {
+export async function loadState(root: string, sessionId: string): Promise<SessionState> {
 	const state = await readSessionState(root, sessionId);
 	if (!state) throw new Error(`session_not_found:${sessionId}`);
 	return state;

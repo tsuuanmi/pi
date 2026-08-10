@@ -220,7 +220,6 @@ export function isValidWorkflowTransition(
 	to: string,
 	context: WorkflowStateValidationContext,
 ): boolean {
-	if (context.force) return true;
 	return getWorkflowRuntimeManifest(skill).transitions.some(
 		(item) => item.from === from && item.to === to && item.operations.includes(context.operation),
 	);

@@ -7,8 +7,7 @@ export type WorkflowStateOperation =
 	| "clear"
 	| "handoff-send"
 	| "handoff-receive"
-	| "runtime-sync"
-	| "force-repair";
+	| "runtime-sync";
 
 export interface WorkflowTransition {
 	from: string;
@@ -55,5 +54,4 @@ export type WorkflowRuntimeManifest = Omit<WorkflowManifest, "verbs" | "typedArg
 export interface WorkflowStateValidationContext {
 	operation: WorkflowStateOperation;
 	command: string;
-	force: boolean;
 }

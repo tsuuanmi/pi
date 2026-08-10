@@ -35,15 +35,6 @@ const ACCEPTED_PROOF_STATUSES = new Set([COVERED_STATUS, PASSED_STATUS, VERIFIED
 const CLEAN_ARCHITECT_STATUS = "CLEAR";
 const APPROVE_RECOMMENDATION = "APPROVE";
 const CLI_REPLAY_TIMEOUT_MS = 5000;
-const CLI_REPLAY_EXEMPT_REASON_CODES = new Set([
-	"unsafe_side_effect",
-	"requires_credentials",
-	"requires_network",
-	"non_deterministic_external",
-	"destructive",
-	"interactive_only",
-	"platform_unavailable",
-]);
 const MANDATORY_COMPUTER_CASE_IDS = [
 	"kill-switch-bypass",
 	"suspended-enforcement",
@@ -62,7 +53,6 @@ export interface ArtifactRef {
 	inlineEvidence?: unknown;
 	verifiedReceipt?: VerifiedReceipt;
 	receipt?: unknown;
-	replayExempt?: unknown;
 }
 
 export interface SurfaceEvidenceRow {
@@ -394,25 +384,6 @@ async function validateCliReplayArtifact(cwd: string, row: Row, fieldName: strin
 	return true;
 }
 
-function validateReplayExempt(row: Row, artifactRefs: Map<string, Row>, fieldName: string): string[] | null {
-	if (row.replayExempt === undefined) return null;
-	const exempt = requireObject(row.replayExempt, `${fieldName}.replayExempt`);
-	const reasonCode = requiredStringField(exempt, "reasonCode", `${fieldName}.replayExempt`);
-	if (!CLI_REPLAY_EXEMPT_REASON_CODES.has(reasonCode)) {
-		throw new Error(`qualityGate ${fieldName}.replayExempt.reasonCode is unsupported`);
-	}
-	if (requiredStringField(exempt, "reason", `${fieldName}.replayExempt`).split(/\s+/).length < 4) {
-		throw new Error(`qualityGate ${fieldName}.replayExempt.reason must be substantive`);
-	}
-	requiredStringField(exempt, "approvedBy", `${fieldName}.replayExempt`);
-	const fallbackRefs = requireStringLinks(
-		exempt.fallbackArtifactRefs,
-		`${fieldName}.replayExempt.fallbackArtifactRefs`,
-	);
-	requireResolvedLinks(fallbackRefs, artifactRefs, `${fieldName}.replayExempt.fallbackArtifactRefs`);
-	return fallbackRefs;
-}
-
 async function artifactHasLiveProof(cwd: string, row: Row, family: SurfaceFamily): Promise<boolean> {
 	if (await hasExistingNonEmptyArtifact(cwd, row.path)) return true;
 	if (family === "cli" && (await validateCliReplayArtifact(cwd, row, "executorQa.artifactRefs.cliReplay")))
@@ -563,16 +534,7 @@ async function validateSurfaceEvidence(
 			requiredStringField(row, "result", fieldName);
 		const artifactIds = requireStringLinks(row.artifactRefs, `${fieldName}.artifactRefs`);
 		requireResolvedLinks(artifactIds, artifactRefs, `${fieldName}.artifactRefs`);
-		const exemptFallbacks: string[] = [];
-		for (const artifactId of artifactIds) {
-			const fallback = validateReplayExempt(
-				artifactRefs.get(artifactId)!,
-				artifactRefs,
-				`executorQa.artifactRefs.${artifactId}`,
-			);
-			if (fallback) exemptFallbacks.push(...fallback);
-		}
-		const proofIds = exemptFallbacks.length > 0 ? exemptFallbacks : artifactIds;
+		const proofIds = artifactIds;
 		await validateLiveSurfaceProofPresence(cwd, family, proofIds, artifactRefs);
 		validateSurfaceArtifactCompatibility(surface, proofIds, artifactRefs, `${fieldName}.artifactRefs`);
 		await validateSurfaceStructuralRequirement(cwd, family, proofIds, artifactRefs, `${fieldName}.artifactRefs`);

@@ -1,13 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { ControlServer, type EndpointRequest } from "#workflows/runtime/endpoint";
 import {
-	buildClassificationInput,
-	classifyPrimitive,
-	finalizePrimitive,
-	recoverPrimitive,
-	validatePrimitive,
-} from "#workflows/runtime/fallback-commands";
-import {
 	acquireLease,
 	canWriteEvents,
 	classifyLeaseStatus,
@@ -22,6 +15,7 @@ import {
 	nextAllowedActions,
 	submitUnavailableReason,
 } from "#workflows/runtime/lifecycle";
+import { buildClassificationInput, classify, finalize, recover, validate } from "#workflows/runtime/operations";
 import { type HarnessRpc, singleFlightAccept } from "#workflows/runtime/rpc";
 import { operate } from "#workflows/runtime/runner";
 import {
@@ -195,7 +189,7 @@ export class RuntimeOwner {
 	async #classify(input: Record<string, unknown>): Promise<PrimitiveResponse> {
 		const state = await this.#loadState();
 		const receipts = await readRuntimeReceipts(this.#root, this.#sessionId);
-		return classifyPrimitive({
+		return classify({
 			state,
 			ownerLive: true,
 			input,
@@ -208,7 +202,7 @@ export class RuntimeOwner {
 	async #recover(input: Record<string, unknown>): Promise<PrimitiveResponse> {
 		const state = await this.#loadState();
 		const receipts = await readRuntimeReceipts(this.#root, this.#sessionId);
-		return recoverPrimitive({
+		return recover({
 			root: this.#root,
 			state,
 			ownerLive: true,
@@ -221,7 +215,7 @@ export class RuntimeOwner {
 
 	async #validate(input: Record<string, unknown>): Promise<PrimitiveResponse> {
 		const state = await this.#loadState();
-		return validatePrimitive({
+		return validate({
 			root: this.#root,
 			state,
 			ownerLive: true,
@@ -233,7 +227,7 @@ export class RuntimeOwner {
 	async #finalize(input: Record<string, unknown>): Promise<PrimitiveResponse> {
 		const state = await this.#loadState();
 		const receipts = await readRuntimeReceipts(this.#root, this.#sessionId);
-		return finalizePrimitive({
+		return finalize({
 			root: this.#root,
 			state,
 			ownerLive: true,

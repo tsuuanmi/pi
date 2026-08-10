@@ -1,5 +1,5 @@
 import type { ExpectedNextRole } from "#workflows/policy/expected-next-role";
-import { registerSkillTransitionTable, type SkillTransitionContext } from "#workflows/registry/transition-registry";
+import type { SkillPolicy, SkillPolicyContext } from "#workflows/policy/skill-policy";
 import { chooseReceiptKind, readUltragoalLedger, validateCompletionReceipt } from "#workflows/skills/ultragoal/receipt";
 import { getUltragoalStatus, readUltragoalPlan } from "#workflows/skills/ultragoal/runtime";
 
@@ -28,7 +28,7 @@ function selectNextUltragoalRole(state: UltragoalSelectorState | undefined): Exp
 	};
 }
 
-async function validateUltragoalGates(context: SkillTransitionContext<UltragoalSelectorState>): Promise<{
+async function validateUltragoalGates(context: SkillPolicyContext<UltragoalSelectorState>): Promise<{
 	ok: boolean;
 	blockers: string[];
 }> {
@@ -67,7 +67,7 @@ async function validateUltragoalGates(context: SkillTransitionContext<UltragoalS
 	return { ok: blockers.length === 0, blockers };
 }
 
-registerSkillTransitionTable<UltragoalSelectorState>({
+export const ultragoalPolicy = {
 	skill: "ultragoal",
 	terminalDetectors: [
 		{
@@ -84,4 +84,4 @@ registerSkillTransitionTable<UltragoalSelectorState>({
 		},
 	],
 	selectNextRole: ({ state }) => selectNextUltragoalRole(state),
-});
+} satisfies SkillPolicy<UltragoalSelectorState>;

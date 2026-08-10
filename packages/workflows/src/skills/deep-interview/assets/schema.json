@@ -28,8 +28,7 @@
     "adjustment": { "type": "string" },
     "slug": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
     "spec": { "type": "string" },
-    "handoff": { "type": "string", "enum": ["ralplan", "team", "ultragoal", "stop"] },
-    "allowEarlyExit": { "type": "boolean" }
+    "handoff": { "type": "string", "enum": ["ralplan", "team", "ultragoal", "stop"] }
   },
   "$defs": {
     "sessionId": {
@@ -113,8 +112,7 @@
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "slug": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
         "spec": { "type": "string" },
-        "handoff": { "type": "string", "enum": ["ralplan", "team", "ultragoal", "stop"] },
-        "allowEarlyExit": { "type": "boolean" }
+        "handoff": { "type": "string", "enum": ["ralplan", "team", "ultragoal", "stop"] }
       }
     }
   },

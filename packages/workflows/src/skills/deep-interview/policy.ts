@@ -1,4 +1,4 @@
-import { registerSkillTransitionTable } from "#workflows/registry/transition-registry";
+import type { SkillPolicy } from "#workflows/policy/skill-policy";
 import { runClosureCheckForSession } from "#workflows/skills/deep-interview/runtime";
 
 function hasPendingQuestion(state: unknown): boolean {
@@ -14,7 +14,7 @@ function hasPendingQuestion(state: unknown): boolean {
 	return typeof question === "string" && question.trim().length > 0;
 }
 
-registerSkillTransitionTable({
+export const deepInterviewPolicy = {
 	skill: "deep-interview",
 	interactive: true,
 	blockingQuestionPhases: ["waiting_for_answer", "questioning"],
@@ -41,4 +41,4 @@ registerSkillTransitionTable({
 	],
 	selectNextRole: () => undefined,
 	isQuestionBlocked: hasPendingQuestion,
-});
+} satisfies SkillPolicy;

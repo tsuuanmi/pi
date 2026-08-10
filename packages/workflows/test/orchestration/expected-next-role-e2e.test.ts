@@ -1,13 +1,9 @@
-import {
-	assertExpectedNextRole,
-	assertNoGuardedSpawnOverrides,
-	expectedNextRoleForSkill,
-} from "@tsuuanmi/pi-workflows";
+import { assertExpectedNextRole, assertNoGuardedSpawnOverrides, nextRoleForSkill } from "@tsuuanmi/pi-workflows";
 import { describe, expect, it } from "vitest";
 
-describe("expected-next-role registry", () => {
-	it("routes ralplan through the registered deterministic transition table", () => {
-		const expected = expectedNextRoleForSkill({
+describe("expected-next-role policy", () => {
+	it("routes ralplan through the deterministic policy", () => {
+		const expected = nextRoleForSkill({
 			skill: "ralplan",
 			runId: "run-registry",
 			state: { explorerGate: { status: "passed" }, latest: { stage: "planner" } },
@@ -22,8 +18,8 @@ describe("expected-next-role registry", () => {
 		});
 	});
 
-	it("routes team through the registered deterministic transition table", () => {
-		const expected = expectedNextRoleForSkill({
+	it("routes team through the deterministic policy", () => {
+		const expected = nextRoleForSkill({
 			skill: "team",
 			state: {
 				team_id: "team-registry",
@@ -36,8 +32,8 @@ describe("expected-next-role registry", () => {
 		expect(expected).toMatchObject({ skill: "team", taskId: "task-a", role: "worker" });
 	});
 
-	it("routes ultragoal active goals through the registered transition table", () => {
-		const expected = expectedNextRoleForSkill({
+	it("routes ultragoal active goals through the deterministic policy", () => {
+		const expected = nextRoleForSkill({
 			skill: "ultragoal",
 			state: { current_goal_id: "G001", goals: [{ id: "G001", status: "active" }] },
 		});

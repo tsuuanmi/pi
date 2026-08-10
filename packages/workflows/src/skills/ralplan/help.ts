@@ -69,11 +69,10 @@ export const RALPLAN_SKILL_HELP: WorkflowSkillHelp = {
 			when: "Use only after the user explicitly approves or rejects the pending plan.",
 			input: [
 				"sessionId: string (required; current session)",
-				"approved?: boolean (default true)",
-				"target?: ultragoal|team|stop",
+				"approved: boolean (required)",
+				"target: ultragoal|team|stop (required)",
 				"runId?: string",
 				"note?: string",
-				"overrideCriticVerdict?: boolean",
 			],
 			example: `pi workflow ralplan approve-plan --input '{"sessionId":"<session-id>","approved":true,"target":"ultragoal"}' --json`,
 		},

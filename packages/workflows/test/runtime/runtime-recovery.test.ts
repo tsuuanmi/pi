@@ -12,8 +12,9 @@ import {
 	consumeBudget,
 	isRuntimeReceiptValid,
 	type RecoveryDecision,
-	recoverPrimitive,
-} from "#workflows/runtime/fallback-commands";
+	recover as recoverSession,
+	validate,
+} from "#workflows/runtime/operations";
 import { preserveDirtyWorktree } from "#workflows/runtime/preservation";
 import type { HarnessRpc, RpcStateSnapshot } from "#workflows/runtime/rpc";
 import { operate } from "#workflows/runtime/runner";
@@ -176,7 +177,6 @@ describe("harness control-plane phase 2 — preserve + vanish", () => {
 		// requiresVanishBeforeAction covers exactly the destructive kinds.
 		expect(requiresVanishBeforeAction("restart-clean")).toBe(true);
 		expect(requiresVanishBeforeAction("restart-preserve-delta")).toBe(true);
-		expect(requiresVanishBeforeAction("fallback-harness-exec")).toBe(true);
 		expect(requiresVanishBeforeAction("continue")).toBe(false);
 	});
 
@@ -193,7 +193,7 @@ describe("harness control-plane phase 2 — preserve + vanish", () => {
 	});
 });
 
-describe("harness control-plane phase 2 — destructive recovery (recoverPrimitive)", () => {
+describe("harness control-plane phase 2 — destructive recovery (recover)", () => {
 	let cwd: string;
 	let root: string;
 	const sessionId = "h-phase2-rec";
@@ -215,7 +215,7 @@ describe("harness control-plane phase 2 — destructive recovery (recoverPrimiti
 		input?: Record<string, unknown>;
 	}) {
 		if (!opts.state) throw new Error(`recover: state not found for ${sessionId}`);
-		return recoverPrimitive({
+		return recoverSession({
 			root,
 			state: opts.state,
 			ownerLive: false,
@@ -257,7 +257,7 @@ describe("harness control-plane phase 2 — destructive recovery (recoverPrimiti
 		expect(after?.retries.zeroDeltaVanish).toBe(1);
 	});
 
-	it("zero-delta budget exhausted -> fallback-harness-exec blocked", async () => {
+	it("zero-delta budget exhaustion blocks without an alternate executor", async () => {
 		await writeFile(join(cwd, "file.txt"), "changed\n", "utf8");
 		execFileSync("git", ["add", "file.txt"], { cwd, stdio: "ignore" });
 		execFileSync("git", ["commit", "-m", "c2"], { cwd, stdio: "ignore" });
@@ -267,11 +267,11 @@ describe("harness control-plane phase 2 — destructive recovery (recoverPrimiti
 		await writeSessionState(root, exhausted);
 		const res = await recover({ state: exhausted });
 		const decision = (res.evidence as { decision: RecoveryDecision }).decision;
-		expect(decision.classification).toBe("fallback-harness-exec");
+		expect(decision.classification).toBe("blocked");
+		expect(decision.blockers).toEqual(["zero-delta-vanish-budget-exhausted"]);
 		expect(res.ok).toBe(false);
-		expect((res.evidence as { reason?: string }).reason).toBe("fallback-harness-exec-requested");
-		// fallback still writes a vanish receipt (uniform gate) but never executes a cross-harness exec.
-		expect(typeof (res.evidence as { vanishReceiptId?: string }).vanishReceiptId).toBe("string");
+		expect(res.state.lifecycle).toBe("blocked");
+		expect((res.evidence as { vanishReceiptId?: string }).vanishReceiptId).toBeUndefined();
 	});
 
 	it("dirty + budget -> restart-preserve-delta with stash vanish; dirty never restart-clean", async () => {
@@ -294,7 +294,7 @@ describe("harness control-plane phase 2 — destructive recovery (recoverPrimiti
 		expect(vanishEv?.stashRef).not.toBeNull();
 	});
 
-	it("dirty budget exhausted -> fallback-harness-exec blocked (no spawn called)", async () => {
+	it("dirty recovery budget exhaustion blocks without spawning", async () => {
 		await writeFile(join(cwd, "file.txt"), "dirty tracked change\n", "utf8");
 		const state = await readSessionState(root, sessionId);
 		const exhausted = { ...state, retries: { dirtyVanishPreserve: 1 } } as SessionState;
@@ -308,8 +308,11 @@ describe("harness control-plane phase 2 — destructive recovery (recoverPrimiti
 			},
 		});
 		expect(res.ok).toBe(false);
-		expect((res.evidence as { decision: RecoveryDecision }).decision.classification).toBe("fallback-harness-exec");
-		expect(spawned).toBe(false); // no cross-harness exec / respawn on fallback
+		expect((res.evidence as { decision: RecoveryDecision }).decision).toMatchObject({
+			classification: "blocked",
+			blockers: ["dirty-vanish-preserve-budget-exhausted"],
+		});
+		expect(spawned).toBe(false);
 	});
 
 	it("unknown / not-git delta -> human-check blocked (never destructive)", async () => {
@@ -318,7 +321,7 @@ describe("harness control-plane phase 2 — destructive recovery (recoverPrimiti
 		try {
 			const ngState = makeState(nonGit, sessionId, null);
 			await writeSessionState(root, ngState);
-			const res = await recoverPrimitive({
+			const res = await recoverSession({
 				root,
 				state: ngState,
 				ownerLive: false,
@@ -342,7 +345,7 @@ describe("harness control-plane phase 2 — destructive recovery (recoverPrimiti
 			await writeFile(join(fresh, "untracked.txt"), "x", "utf8");
 			const fState = makeState(fresh, sessionId, null);
 			await writeSessionState(root, fState);
-			const res = await recoverPrimitive({
+			const res = await recoverSession({
 				root,
 				state: fState,
 				ownerLive: false,
@@ -414,15 +417,15 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 	});
 
 	async function validatePassing() {
-		await runWorkflowCommand(
-			[
-				"validate",
-				"--input",
-				JSON.stringify({ workspace: cwd, sessionId, checks: [{ name: "ok", command: "true" }] }),
-				"--json",
-			],
-			cwd,
-		);
+		const state = await readSessionState(root, sessionId);
+		if (!state) throw new Error(`missing test session: ${sessionId}`);
+		await validate({
+			root,
+			state,
+			ownerLive: false,
+			writer: WRITER,
+			input: { checks: [{ name: "ok", command: "true" }] },
+		});
 	}
 
 	it("AC3: completion via observed 'completed' signal -> finalize -> completed", async () => {
@@ -505,7 +508,7 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 		expect(result.iterations).toBe(3);
 	});
 
-	it("AC3: budget exhaustion -> block (dirty: restart-preserve-delta then fallback-harness-exec)", async () => {
+	it("AC3: dirty recovery budget exhaustion blocks after one preservation attempt", async () => {
 		await writeFile(join(cwd, "file.txt"), "dirty tracked change\n", "utf8");
 		const rpc = new FakeRpc();
 		const result = await operate({
@@ -527,17 +530,17 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 		expect(result.completed).toBe(false);
 		expect(result.lifecycle).toBe("blocked");
 		expect(result.classifications).toContain("restart-preserve-delta");
-		expect(result.classifications).toContain("fallback-harness-exec");
+		expect(result.classifications).toContain("blocked");
 		// a vanish receipt was written before each destructive action.
 		expect(result.vanishReceiptIds.length).toBeGreaterThanOrEqual(1);
 	});
 
-	it("AC4: operate reuses the shared recoverPrimitive (spy/counter)", async () => {
+	it("AC4: operate reuses the shared recover (spy/counter)", async () => {
 		const rpc = new FakeRpc();
 		let calls = 0;
-		const spy = async (opts: Parameters<typeof recoverPrimitive>[0]) => {
+		const spy = async (opts: Parameters<typeof recoverSession>[0]) => {
 			calls++;
-			return recoverPrimitive(opts);
+			return recoverSession(opts);
 		};
 		await operate({
 			root,
@@ -561,9 +564,9 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 		// completion is observed before any recover call, so the spy is not hit on the success path;
 		// verify the spy wiring by running a non-completing loop and asserting it IS called.
 		let calls2 = 0;
-		const spy2 = async (opts: Parameters<typeof recoverPrimitive>[0]) => {
+		const spy2 = async (opts: Parameters<typeof recoverSession>[0]) => {
 			calls2++;
-			return recoverPrimitive(opts);
+			return recoverSession(opts);
 		};
 		const result = await operate({
 			root,
@@ -590,11 +593,11 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 		expect(calls).toBe(0);
 	});
 
-	it("AC5: fallback-harness-exec resolves to blocked with no real cross-harness exec", async () => {
+	it("AC5: exhausted recovery remains blocked without another executor", async () => {
 		await writeFile(join(cwd, "file.txt"), "dirty tracked change\n", "utf8");
 		const state = (await readSessionState(root, sessionId)) as SessionState;
 		await writeSessionState(root, { ...state, retries: { dirtyVanishPreserve: 1 } });
-		const res = await recoverPrimitive({
+		const res = await recoverSession({
 			root,
 			state: { ...state, retries: { dirtyVanishPreserve: 1 } },
 			ownerLive: false,
@@ -604,8 +607,10 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 		});
 		expect(res.ok).toBe(false);
 		const decision = (res.evidence as { decision: RecoveryDecision }).decision;
-		expect(decision.classification).toBe("fallback-harness-exec");
-		expect((res.evidence as { reason?: string }).reason).toBe("fallback-harness-exec-requested");
+		expect(decision).toMatchObject({
+			classification: "blocked",
+			reason: "dirty-vanish-preserve-budget-exhausted",
+		});
 		expect(res.state.lifecycle).toBe("blocked");
 	});
 
@@ -664,7 +669,7 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 		expect(result.iterations).toBe(0);
 	});
 
-	it("edge: base=null legacy session -> clean (not zero-delta)", async () => {
+	it("edge: base=null reports a clean workspace without zero-delta classification", async () => {
 		const state = (await readSessionState(root, sessionId)) as SessionState;
 		await writeSessionState(root, { ...state, handle: { ...state.handle, base: null } });
 		const marker = buildWorkspaceMarker(cwd, null);
@@ -711,27 +716,24 @@ describe("harness control-plane phase 2 — CLI operate verb + JSON contract", (
 		expect(parsed.nextAllowedActions.some((a) => a.verb === "operate" && a.available)).toBe(true);
 	});
 
-	it("AC6: operate offline best-effort blocks (no live owner, no-op rpc) without finalizing", async () => {
+	it("AC6: operate rejects a missing owner instead of executing locally", async () => {
 		const result = await runWorkflowCommand(
 			["operate", "--input", JSON.stringify({ workspace: cwd, sessionId, goal: "x", maxIterations: 1 }), "--json"],
 			cwd,
 		);
 		expect(result.status).toBe(1);
-		const parsed = JSON.parse(result.stdout) as { completed: boolean; lifecycle: string; blockers: string[] };
-		expect(parsed.completed).toBe(false);
-		expect(parsed.lifecycle).toBe("blocked");
-		// offline operate never finalizes; the specific blocker is environment-dependent
-		// (spawned owner may or may not come live in the test harness), so only assert
-		// the safe never-completes contract.
-		expect(parsed.blockers.length).toBeGreaterThan(0);
+		expect(result.stdout).toBe("");
+		expect(result.stderr).toContain("workflow owner is not running");
 	});
 
-	it("AC6: operate requires a goal", async () => {
+	it("AC6: all owner-bound operations reject a missing owner", async () => {
 		const result = await runWorkflowCommand(
 			["operate", "--input", JSON.stringify({ workspace: cwd, sessionId }), "--json"],
 			cwd,
 		);
 		expect(result.status).toBe(1);
+		expect(result.stdout).toBe("");
+		expect(result.stderr).toContain("workflow owner is not running");
 	});
 });
 

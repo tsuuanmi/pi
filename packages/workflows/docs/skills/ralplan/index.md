@@ -34,7 +34,7 @@ Ralplan coordinates durable planning passes and produces a pending-approval impl
 | `runtime.ts` | Run status, artifact index, doctor, approval, and artifact writes. |
 | `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `tools.ts` | Registers `ralplan_run_agent`. |
-| `transitions.ts` | Skill transition table and expected-next role selection. |
+| `policy.ts` | Immutable skill policy and expected-next role selection. |
 | `verdicts.ts` | Critic verdict parsing and approval enforcement helpers. |
 
 ## Runtime Route

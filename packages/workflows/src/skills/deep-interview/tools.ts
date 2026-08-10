@@ -65,9 +65,6 @@ const writeSpecSchema = Type.Object({
 	slug: Type.Optional(Type.String({ description: "Safe spec slug. Defaults to generated spec id." })),
 	spec: Type.String({ description: "Markdown spec content or a readable path to spec content." }),
 	handoff: Type.Optional(Type.String({ description: "ralplan, ultragoal, team, or stop." })),
-	allowEarlyExit: Type.Optional(
-		Type.Boolean({ description: "Allow above-threshold ambiguity after explicit early exit." }),
-	),
 });
 
 type PlanQuestionInput = Static<typeof planQuestionSchema>;
@@ -85,7 +82,7 @@ function textResult(text: string, details: unknown) {
 }
 
 async function executeWriteSpec(params: WriteSpecInput, ctx: WorkflowContext) {
-	await assertDeepInterviewSpecReady(ctx.cwd, sessionId(ctx), { allowEarlyExit: params.allowEarlyExit === true });
+	await assertDeepInterviewSpecReady(ctx.cwd, sessionId(ctx));
 	const slug = params.slug?.trim() || defaultWorkflowId("spec");
 	assertSafePathComponent(slug, "slug");
 	assertDeepInterviewHandoff(params.handoff);

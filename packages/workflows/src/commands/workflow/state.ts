@@ -1,320 +1,106 @@
-import { readFile } from "node:fs/promises";
-import { isAbsolute, resolve } from "node:path";
 import type { WorkflowCommandResult } from "#workflows/commands/workflow/types";
+import { clearWorkflowPhase, PI_WORKFLOW_SKILLS } from "#workflows/registry/workflow-manifest";
 import type { WorkflowSkill } from "#workflows/session/paths";
-import { workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
-import { readWorkflowActiveState, syncWorkflowActiveState } from "#workflows/state/active-state";
-import { assertWorkflowSkill, isWorkflowSkill } from "#workflows/state/state-schema";
-import { clearWorkflowState, readWorkflowState, writeWorkflowState } from "#workflows/state/workflow-state";
+import { readWorkflowActiveState } from "#workflows/state/active-state";
+import { assertWorkflowSkill } from "#workflows/state/state-schema";
+import { clearWorkflowState, readWorkflowState } from "#workflows/state/workflow-state";
 
-interface ParsedStateCommand {
-	action: string;
+const ACTIONS = new Set(["read", "clear", "active", "doctor"]);
+
+interface StateArgs {
 	skill?: WorkflowSkill;
-	input?: string;
-	to?: WorkflowSkill;
+	action: "read" | "clear" | "active" | "doctor";
+	sessionId: string;
 	json: boolean;
-	help: boolean;
-	force: boolean;
-	session?: string;
 }
 
-const STATE_ACTIONS = new Set(["read", "write", "clear", "handoff", "active", "doctor"]);
-
-function stateUsage(): string {
-	return `Usage:
-  pi workflow state <skill> read [--session <id>] [--json]
-  pi workflow state <skill> write --input '{...}' [--force] [--session <id>] [--json]
-  pi workflow state <skill> clear [--force] [--session <id>] [--json]
-  pi workflow state <skill> handoff --to <skill> [--session <id>] [--json]
-  pi workflow state active [--session <id>] [--json]
-  pi workflow state <skill> doctor [--session <id>] [--json]
-
-State guide: packages/workflows/docs/state/commands.md
-Schema: packages/workflows/src/state/assets/schema.json
-
-Skills: deep-interview, ralplan, team, ultragoal
-Session: --session <id> or PI_SESSION_ID env var scopes state to a session.
-         If omitted, the command errors out; there is no global fallback.
-Force: use --force to clear or overwrite terminal/corrupt state.
-Input: only write/clear accept JSON input; handoff uses --to <skill>.
-`;
+function usage(): string {
+	return [
+		"Usage:",
+		"  pi workflow state <skill> read --session <id> [--json]",
+		"  pi workflow state <skill> clear --session <id> [--json]",
+		"  pi workflow state <skill> doctor --session <id> [--json]",
+		"  pi workflow state active --session <id> [--json]",
+		"",
+		`Skills: ${PI_WORKFLOW_SKILLS.join(", ")}`,
+	].join("\n");
 }
 
-function parseStateArgs(args: string[]): ParsedStateCommand {
-	const parsed: ParsedStateCommand = { action: "read", json: false, help: false, force: false };
-	let actionSet = false;
-
-	for (let i = 0; i < args.length; i++) {
-		const arg = args[i];
-		if (arg === "--help" || arg === "-h") {
-			parsed.help = true;
-			continue;
-		}
+function parseArgs(args: string[]): StateArgs {
+	if (args.length === 0) throw new Error(usage());
+	const positional: string[] = [];
+	let sessionId: string | undefined;
+	let json = false;
+	for (let index = 0; index < args.length; index += 1) {
+		const arg = args[index];
 		if (arg === "--json") {
-			parsed.json = true;
-			continue;
-		}
-		if (arg === "--force" || arg === "-f") {
-			parsed.force = true;
-			continue;
-		}
-		if (arg === "--skill" || arg === "--mode") {
-			const value = args[++i];
-			if (!value) throw new Error(`${arg} requires a value`);
-			assertWorkflowSkill(value);
-			parsed.skill = value;
-			continue;
-		}
-		if (arg === "--input") {
-			const value = args[++i];
-			if (value === undefined) throw new Error("--input requires a value");
-			parsed.input = value;
-			continue;
-		}
-		if (arg === "--input-file") {
-			const value = args[++i];
-			if (!value) throw new Error("--input-file requires a value");
-			parsed.input = `@${value}`;
-			continue;
-		}
-		if (arg === "--to") {
-			const value = args[++i];
-			if (!value) throw new Error("--to requires a value");
-			assertWorkflowSkill(value);
-			parsed.to = value;
+			json = true;
 			continue;
 		}
 		if (arg === "--session") {
-			const value = args[++i];
-			if (!value) throw new Error("--session requires a value");
-			parsed.session = value;
+			const value = args[index + 1];
+			if (!value || value.startsWith("--")) throw new Error("--session requires a value");
+			sessionId = value;
+			index += 1;
 			continue;
 		}
-		if (arg.startsWith("-")) throw new Error(`unknown state option: ${arg}`);
-		if (isWorkflowSkill(arg) && !parsed.skill) {
-			parsed.skill = arg;
-			continue;
-		}
-		if (STATE_ACTIONS.has(arg) && !actionSet) {
-			parsed.action = arg;
-			actionSet = true;
-			continue;
-		}
-		throw new Error(`unknown state argument: ${arg}`);
+		if (arg.startsWith("--")) throw new Error(`unknown state option: ${arg}`);
+		positional.push(arg);
 	}
-
-	return parsed;
-}
-
-async function resolveInput(raw: string | undefined, cwd: string): Promise<Record<string, unknown>> {
-	if (!raw) return {};
-	const text = raw.startsWith("@")
-		? await readFile(isAbsolute(raw.slice(1)) ? raw.slice(1) : resolve(cwd, raw.slice(1)), "utf8")
-		: raw;
-	const parsed = JSON.parse(text) as unknown;
-	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-		throw new Error("state input must be a JSON object");
+	if (!sessionId) throw new Error("--session is required");
+	if (positional[0] === "active") {
+		if (positional.length !== 1) throw new Error(usage());
+		return { action: "active", sessionId, json };
 	}
-	const record = parsed as Record<string, unknown>;
-	const state = record.state;
-	if (state && typeof state === "object" && !Array.isArray(state)) {
-		return normalizePatch(state as Record<string, unknown>);
-	}
-	return normalizePatch(record);
+	if (positional.length !== 2) throw new Error(usage());
+	const [skillName, actionName] = positional;
+	assertWorkflowSkill(skillName);
+	if (!ACTIONS.has(actionName) || actionName === "active") throw new Error(`unknown state action: ${actionName}`);
+	return { skill: skillName, action: actionName as StateArgs["action"], sessionId, json };
 }
 
-function normalizePatch(input: Record<string, unknown>): Record<string, unknown> {
-	const patch = { ...input };
-	if (typeof patch.phase === "string" && typeof patch.current_phase !== "string") {
-		patch.current_phase = patch.phase;
-	}
-	return patch;
+function print(value: unknown, json: boolean): string {
+	return json ? `${JSON.stringify(value, null, 2)}\n` : `${JSON.stringify(value)}\n`;
 }
 
-function textOutput(action: string, payload: Record<string, unknown>): string {
-	if (action === "read") return `${JSON.stringify(payload.state ?? null, null, 2)}\n`;
-	if (action === "doctor") return `OK ${payload.state_path}\n`;
-	return `${action} ${payload.skill ?? "state"}: ${payload.state_path ?? ""}\n`;
-}
-
-function formatOutput(action: string, payload: Record<string, unknown>, json: boolean): string {
-	return json ? `${JSON.stringify(payload, null, 2)}\n` : textOutput(action, payload);
-}
-
-function requireSkill(skill: WorkflowSkill | undefined, action: string): WorkflowSkill {
-	if (!skill) throw new Error(`state ${action} requires --skill <skill> or positional <skill>`);
-	return skill;
-}
-
-export async function runStateCommand(args: string[], cwd = process.cwd()): Promise<WorkflowCommandResult> {
+export async function runStateCommand(args: string[], cwd: string): Promise<WorkflowCommandResult> {
 	try {
-		const parsed = parseStateArgs(args);
-		if (parsed.help) return { status: 0, stdout: stateUsage(), stderr: "" };
-
-		const envSessionId = process.env.PI_SESSION_ID?.trim();
-		const sessionId = parsed.session?.trim() || envSessionId || undefined;
-
-		if (!sessionId) {
-			throw new Error("No session ID provided. Set PI_SESSION_ID env var or pass --session <id>.");
-		}
-
+		const parsed = parseArgs(args);
 		if (parsed.action === "active") {
-			const state = (await readWorkflowActiveState(cwd, { sessionId })) ?? null;
-			return {
-				status: 0,
-				stdout: formatOutput(
-					"read",
-					{
-						state,
-						state_path: workflowActiveStatePath(cwd, sessionId),
-					},
-					parsed.json,
-				),
-				stderr: "",
-			};
+			const state = await readWorkflowActiveState(cwd, { sessionId: parsed.sessionId });
+			return { status: 0, stdout: print({ ok: true, state }, parsed.json), stderr: "" };
 		}
-
-		const skill = requireSkill(parsed.skill, parsed.action);
-
+		const skill = parsed.skill;
+		if (!skill) throw new Error("state skill is required");
 		if (parsed.action === "read") {
-			const state = (await readWorkflowState(cwd, skill, { sessionId })) ?? null;
-			return {
-				status: 0,
-				stdout: formatOutput(
-					"read",
-					{ ok: true, skill, state_path: workflowStatePath(cwd, skill, sessionId), state },
-					parsed.json,
-				),
-				stderr: "",
-			};
-		}
-		if (parsed.action === "write") {
-			const patch = await resolveInput(parsed.input, cwd);
-			const state = await writeWorkflowState(cwd, skill, patch, "pi state write", {
-				force: parsed.force,
-				sessionId,
-			});
-			await syncWorkflowActiveState(
-				cwd,
-				{
-					skill,
-					active: state.active,
-					phase: state.current_phase,
-					state_path: workflowStatePath(cwd, skill, sessionId),
-				},
-				{ sessionId },
-			);
-			return {
-				status: 0,
-				stdout: formatOutput(
-					"write",
-					{ ok: true, skill, state_path: workflowStatePath(cwd, skill, sessionId), state },
-					parsed.json,
-				),
-				stderr: "",
-			};
-		}
-		if (parsed.action === "clear") {
-			const state = await clearWorkflowState(cwd, skill, parsed.input ? await resolveInput(parsed.input, cwd) : {}, {
-				force: parsed.force,
-				sessionId,
-			});
-			await syncWorkflowActiveState(
-				cwd,
-				{
-					skill,
-					active: state.active,
-					phase: state.current_phase,
-					state_path: workflowStatePath(cwd, skill, sessionId),
-				},
-				{ sessionId },
-			);
-			return {
-				status: 0,
-				stdout: formatOutput(
-					"clear",
-					{ ok: true, skill, state_path: workflowStatePath(cwd, skill, sessionId), state },
-					parsed.json,
-				),
-				stderr: "",
-			};
-		}
-		if (parsed.action === "handoff") {
-			if (!parsed.to) throw new Error("state handoff requires --to <skill>");
-			const state = await writeWorkflowState(
-				cwd,
-				skill,
-				{ active: false, current_phase: "handoff", handoff_to: parsed.to },
-				"pi state handoff",
-				{ operation: "handoff-send", sessionId },
-			);
-			await syncWorkflowActiveState(
-				cwd,
-				{ skill, active: false, phase: "handoff", state_path: workflowStatePath(cwd, skill, sessionId) },
-				{ sessionId },
-			);
-			const targetState = await writeWorkflowState(
-				cwd,
-				parsed.to,
-				{ active: true, current_phase: "handoff", handoff_from: skill },
-				"pi state handoff receive",
-				{ operation: "handoff-receive", sessionId },
-			);
-			await syncWorkflowActiveState(
-				cwd,
-				{
-					skill: parsed.to,
-					active: true,
-					phase: "handoff",
-					state_path: workflowStatePath(cwd, parsed.to, sessionId),
-				},
-				{ sessionId },
-			);
-			return {
-				status: 0,
-				stdout: formatOutput(
-					"handoff",
-					{
-						ok: true,
-						skill,
-						to: parsed.to,
-						state_path: workflowStatePath(cwd, skill, sessionId),
-						state,
-						target_state_path: workflowStatePath(cwd, parsed.to, sessionId),
-						target_state: targetState,
-					},
-					parsed.json,
-				),
-				stderr: "",
-			};
+			const state = await readWorkflowState(cwd, skill, { sessionId: parsed.sessionId });
+			return { status: 0, stdout: print({ ok: true, skill, state }, parsed.json), stderr: "" };
 		}
 		if (parsed.action === "doctor") {
-			try {
-				await readWorkflowState(cwd, skill, { sessionId });
-			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
-				if (message.includes("corrupt")) {
-					return {
-						status: 1,
-						stdout: "",
-						stderr: `CORRUPT ${workflowStatePath(cwd, skill, sessionId)}: ${message}\nHint: use --force to recover: pi workflow state ${skill} clear --force --session ${sessionId}\n`,
-					};
-				}
-				throw error;
-			}
+			const state = await readWorkflowState(cwd, skill, { sessionId: parsed.sessionId });
+			const active = await readWorkflowActiveState(cwd, { sessionId: parsed.sessionId });
+			const activeEntry = active?.active_workflows.find((entry) => entry.skill === skill);
+			const issues: string[] = [];
+			if (state?.active === true && !activeEntry) issues.push("active-state-entry-missing");
+			if (state?.active !== true && activeEntry) issues.push("active-state-entry-stale");
 			return {
-				status: 0,
-				stdout: formatOutput(
-					"doctor",
-					{ ok: true, skill, state_path: workflowStatePath(cwd, skill, sessionId), session_id: sessionId },
-					parsed.json,
-				),
+				status: issues.length === 0 ? 0 : 1,
+				stdout: print({ ok: issues.length === 0, skill, state, active_entry: activeEntry, issues }, parsed.json),
 				stderr: "",
 			};
 		}
-		throw new Error(`unknown state action: ${parsed.action}`);
+		const existing = await readWorkflowState(cwd, skill, { sessionId: parsed.sessionId });
+		if (!existing) throw new Error(`workflow state not found: ${skill}`);
+		const state = await clearWorkflowState(
+			cwd,
+			skill,
+			{ current_phase: clearWorkflowPhase(skill) },
+			{
+				sessionId: parsed.sessionId,
+			},
+		);
+		return { status: 0, stdout: print({ ok: true, skill, state }, parsed.json), stderr: "" };
 	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		return { status: 1, stdout: "", stderr: `Error: ${message}\n` };
+		return { status: 1, stdout: "", stderr: `${error instanceof Error ? error.message : String(error)}\n` };
 	}
 }

@@ -2,7 +2,7 @@ import { parseThinkingLevel } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { assertExpectedNextRole, assertNoGuardedSpawnOverrides } from "#workflows/policy/expected-next-role";
-import { expectedNextRoleForSkill } from "#workflows/registry/transition-registry";
+import { nextRoleForSkill } from "#workflows/policy/skill-policy";
 import { getUltragoalStatus } from "#workflows/skills/ultragoal/runtime";
 import type { WorkflowContext } from "#workflows/tool/context";
 import type { WorkflowToolHost } from "#workflows/tool/host";
@@ -26,7 +26,7 @@ async function executeUltragoalSpawnGoalAgent(
 	const status = await getUltragoalStatus(ctx.cwd, ctx.sessionManager.getSessionId());
 	const goal = status.goals.find((g) => g.id === params.goalId);
 	if (!goal) throw new Error(`ultragoal goal not found: ${params.goalId}`);
-	const expected = expectedNextRoleForSkill({ skill: "ultragoal", state: status });
+	const expected = nextRoleForSkill({ skill: "ultragoal", state: status });
 	if (!expected) {
 		throw new Error("no legal next ultragoal goal to spawn: all goals are completed or none are actionable");
 	}

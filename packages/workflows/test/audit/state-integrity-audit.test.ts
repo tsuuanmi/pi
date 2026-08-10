@@ -88,7 +88,6 @@ describe("state-integrity audit log (STATE-005)", () => {
 		expect(invalid?.skill).toBe("ultragoal");
 		expect(invalid?.from_phase).toBe("approved-execution");
 		expect(invalid?.to_phase).toBe("complete");
-		expect(invalid?.forced).toBe(false);
 		// The blocked write did NOT emit a `write` audit for the second attempt.
 		const writes = entries.filter((e) => e.verb === "write");
 		expect(writes).toHaveLength(1);

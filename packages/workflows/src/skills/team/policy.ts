@@ -1,5 +1,5 @@
 import type { ExpectedNextRole, TeamSelectorSnapshot } from "#workflows/policy/expected-next-role";
-import { registerSkillTransitionTable, type SkillTransitionContext } from "#workflows/registry/transition-registry";
+import type { SkillPolicy, SkillPolicyContext } from "#workflows/policy/skill-policy";
 import { readTeamSnapshot, type TeamSnapshot } from "#workflows/skills/team/runtime";
 
 function selectNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): ExpectedNextRole | undefined {
@@ -53,7 +53,7 @@ function missingCompletedTaskReviewBlockers(snapshot: TeamSnapshot): string[] {
 		.map((task) => `team-review-gate-missing:${task.id}`);
 }
 
-async function validateTeamGates(context: SkillTransitionContext<TeamSelectorSnapshot>): Promise<{
+async function validateTeamGates(context: SkillPolicyContext<TeamSelectorSnapshot>): Promise<{
 	ok: boolean;
 	blockers: string[];
 }> {
@@ -70,7 +70,7 @@ async function validateTeamGates(context: SkillTransitionContext<TeamSelectorSna
 	return { ok: blockers.length === 0, blockers };
 }
 
-registerSkillTransitionTable<TeamSelectorSnapshot>({
+export const teamPolicy = {
 	skill: "team",
 	terminalDetectors: [
 		{
@@ -87,4 +87,4 @@ registerSkillTransitionTable<TeamSelectorSnapshot>({
 		},
 	],
 	selectNextRole: ({ state }) => selectNextTeamRole(state),
-});
+} satisfies SkillPolicy<TeamSelectorSnapshot>;

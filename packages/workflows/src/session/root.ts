@@ -26,7 +26,7 @@ export function decodePathSegment(segment: string): string {
 /** Assert that a session id is non-empty and usable. */
 export function assertSessionId(value: unknown): asserts value is string {
 	if (typeof value !== "string" || value.trim().length === 0) {
-		throw new Error("No session ID provided. Set PI_SESSION_ID env var or pass --session.");
+		throw new Error("No session ID provided. CLI commands require --session; runtime payloads require sessionId.");
 	}
 }
 

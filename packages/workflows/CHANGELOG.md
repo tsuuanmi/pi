@@ -2,6 +2,14 @@
 
 ### Breaking Changes
 
+- **packaging**: Pi resources now resolve exclusively from the compiled `dist` tree; source-path package metadata and host-side manifest rewriting were removed.
+- **policy**: Removed mutable, side-effect-registered transition tables; workflow policies are immutable and loaded explicitly.
+- **runtime**: Removed fallback-harness execution, `seams.ts`, and the `fallback-harness-exec` recovery classification. Owner-bound operations (validate, finalize, operate, retire) now require a live owner instead of executing locally. Recovery acquires a lease and never falls back to synthetic writer state.
+- **state**: Removed generic `state write` and `state handoff` commands; workflow mutations belong to skill actions. Removed `force`/`force-repair` bypass paths from state writes, transition validation, and tamper detection. Out-of-band edits now hard-block without a force override.
+- **session**: Removed `session-resolution.ts` and `PI_SESSION_ID` environment fallback; session identity comes only from `--session` (CLI), `sessionId` (payload), or host context.
+- **ralplan**: Approval requires an APPROVE verdict from the latest critic pass; `overrideCriticVerdict` was removed. Obstacle-ledger agreement is always enforced (no dev/production split). Fail-soft obstacle dual-write was replaced with strict writes.
+- **ultragoal**: Removed `replayExempt` and `fallbackArtifactRefs` from the quality gate; all artifact proofs must resolve to live evidence.
+- **deep-interview**: Removed `allowEarlyExit` from spec finalization; above-threshold ambiguity always blocks.
 - **state-projections**: Removed workflow state projection APIs, their dedicated CLI actions, and the Deep Interview projection tool; use the regular state, status, and snapshot operations instead.
 - **registry**: Removed compatibility transition metadata, wildcard source-state matching, and legacy Ralplan phases; workflow state transitions now use explicit canonical states only.
 - **state**: Active-state persistence is now version 2 with mandatory session ownership; unsupported versions, global, malformed, and foreign-session entries are rejected without migration.
@@ -20,6 +28,7 @@
 
 ### Changed
 
+- **build**: Workflows now copies its own runtime assets through a package-owned build script and can be bundled without reconstructing its package layout.
 - **session**: Centralized `.pi` root and path-segment primitives so Pi and workflows share one implementation; workflow-specific layout remains in the workflow package.
 - **subagents**: Moved reusable lifecycle tool execution to `@tsuuanmi/pi-agent`; workflows now retain only host adaptation, workflow receipts, and surface metadata.
 - **extensions**: The package manifest now exposes `src/extension.ts` as the extension adapter; Pi loads workflow tools and hooks through the package.

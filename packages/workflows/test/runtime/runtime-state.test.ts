@@ -4,11 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
-import {
-	buildClassificationInput,
-	classifyRecovery,
-	isRuntimeReceiptValid,
-} from "#workflows/runtime/fallback-commands";
+import { mutateRuntimeSession } from "#workflows/runtime/mutation";
+import { buildClassificationInput, classifyRecovery, isRuntimeReceiptValid } from "#workflows/runtime/operations";
 import { RuntimeOwner } from "#workflows/runtime/owner";
 import type { HarnessRpc, RpcStateSnapshot } from "#workflows/runtime/rpc";
 import {
@@ -19,6 +16,8 @@ import {
 	writeSessionState,
 } from "#workflows/runtime/storage";
 import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/runtime/types";
+
+const TEST_WRITER = { ownerId: "test", leaseEpoch: 0 };
 
 class FakeRpc implements HarnessRpc {
 	started = false;
@@ -133,130 +132,176 @@ describe("harness control-plane phase 1", () => {
 		expect((await readRuntimeReceipts(root, sessionId)).rows).toHaveLength(0);
 	});
 
-	it("validates checks, writes a receipt, and finalizes with fresh evidence", async () => {
-		const validation = await runWorkflowCommand(
-			[
-				"validate",
-				"--input",
-				JSON.stringify({ workspace: cwd, sessionId, checks: [{ name: "ok", command: "true" }] }),
-				"--json",
-			],
-			cwd,
-		);
-		expect(validation.status).toBe(0);
-		const receipts = await readRuntimeReceipts(root, sessionId);
-		expect(receipts.rows.some((receipt) => receipt.verb === "validate" && isRuntimeReceiptValid(receipt))).toBe(true);
+	it("validates checks through the owner and finalizes with fresh evidence", async () => {
+		const owner = new RuntimeOwner({ root, sessionId, rpc: new FakeRpc(), heartbeatMs: 60_000 });
+		await owner.start();
+		try {
+			const validation = await runWorkflowCommand(
+				[
+					"validate",
+					"--input",
+					JSON.stringify({ workspace: cwd, sessionId, checks: [{ name: "ok", command: "true" }] }),
+					"--json",
+				],
+				cwd,
+			);
+			expect(validation.status).toBe(0);
+			const receipts = await readRuntimeReceipts(root, sessionId);
+			expect(receipts.rows.some((receipt) => receipt.verb === "validate" && isRuntimeReceiptValid(receipt))).toBe(
+				true,
+			);
 
-		const finalized = await runWorkflowCommand(
-			["finalize", "--input", JSON.stringify({ workspace: cwd, sessionId }), "--json"],
-			cwd,
-		);
-		expect(finalized.status).toBe(0);
-		const parsed = JSON.parse(finalized.stdout) as { state: { lifecycle: string }; evidence: { completed: boolean } };
-		expect(parsed.state.lifecycle).toBe("completed");
-		expect(parsed.evidence.completed).toBe(true);
+			const finalized = await runWorkflowCommand(
+				["finalize", "--input", JSON.stringify({ workspace: cwd, sessionId }), "--json"],
+				cwd,
+			);
+			expect(finalized.status).toBe(0);
+			const parsed = JSON.parse(finalized.stdout) as {
+				state: { lifecycle: string };
+				evidence: { completed: boolean };
+			};
+			expect(parsed.state.lifecycle).toBe("completed");
+			expect(parsed.evidence.completed).toBe(true);
+		} finally {
+			await owner.stop();
+		}
 	});
 
 	it("fails closed when skill finalization lacks a terminal detector", async () => {
 		const skillSessionId = "h-skill-terminal";
 		await writeSessionState(root, makeState(cwd, skillSessionId));
-		const validation = await runWorkflowCommand(
-			[
-				"validate",
-				"--input",
-				JSON.stringify({ workspace: cwd, sessionId: skillSessionId, checks: [{ name: "ok", command: "true" }] }),
-				"--json",
-			],
-			cwd,
-		);
-		expect(validation.status).toBe(0);
+		const owner = new RuntimeOwner({ root, sessionId: skillSessionId, rpc: new FakeRpc(), heartbeatMs: 60_000 });
+		await owner.start();
+		try {
+			const validation = await runWorkflowCommand(
+				[
+					"validate",
+					"--input",
+					JSON.stringify({ workspace: cwd, sessionId: skillSessionId, checks: [{ name: "ok", command: "true" }] }),
+					"--json",
+				],
+				cwd,
+			);
+			expect(validation.status).toBe(0);
 
-		const blocked = await runWorkflowCommand(
-			[
-				"finalize",
-				"--input",
-				JSON.stringify({ workspace: cwd, sessionId: skillSessionId, skill: "ralplan" }),
-				"--json",
-			],
-			cwd,
-		);
-		expect(blocked.status).toBe(1);
-		const parsed = JSON.parse(blocked.stdout) as { state: { lifecycle: string }; evidence: { blockers: string[] } };
-		expect(parsed.state.lifecycle).toBe("blocked");
-		expect(parsed.evidence.blockers).toContain("terminal-detector-missing:ralplan-final-artifact-receipt");
+			const blocked = await runWorkflowCommand(
+				[
+					"finalize",
+					"--input",
+					JSON.stringify({ workspace: cwd, sessionId: skillSessionId, skill: "ralplan" }),
+					"--json",
+				],
+				cwd,
+			);
+			expect(blocked.status).toBe(1);
+			const parsed = JSON.parse(blocked.stdout) as {
+				state: { lifecycle: string };
+				evidence: { blockers: string[] };
+			};
+			expect(parsed.state.lifecycle).toBe("blocked");
+			expect(parsed.evidence.blockers).toContain("terminal-detector-missing:ralplan-final-artifact-receipt");
+		} finally {
+			await owner.stop();
+		}
 	});
 
-	it("allows skill finalization when terminal detector evidence is explicit", async () => {
+	it("allows skill finalization with a valid terminal receipt", async () => {
 		const skillSessionId = "h-skill-terminal-ok";
-		await writeSessionState(root, makeState(cwd, skillSessionId));
-		const validation = await runWorkflowCommand(
-			[
-				"validate",
-				"--input",
-				JSON.stringify({ workspace: cwd, sessionId: skillSessionId, checks: [{ name: "ok", command: "true" }] }),
-				"--json",
-			],
-			cwd,
-		);
-		expect(validation.status).toBe(0);
+		const state = makeState(cwd, skillSessionId);
+		await writeSessionState(root, state);
+		await mutateRuntimeSession({
+			root,
+			sessionId: skillSessionId,
+			verb: "recover",
+			writer: TEST_WRITER,
+			accepted: true,
+			nextState: state,
+			evidence: { terminalDetectorId: "ralplan-final-artifact-receipt" },
+		});
+		const owner = new RuntimeOwner({ root, sessionId: skillSessionId, rpc: new FakeRpc(), heartbeatMs: 60_000 });
+		await owner.start();
+		try {
+			const validation = await runWorkflowCommand(
+				[
+					"validate",
+					"--input",
+					JSON.stringify({ workspace: cwd, sessionId: skillSessionId, checks: [{ name: "ok", command: "true" }] }),
+					"--json",
+				],
+				cwd,
+			);
+			expect(validation.status).toBe(0);
 
-		const finalized = await runWorkflowCommand(
-			[
-				"finalize",
-				"--input",
-				JSON.stringify({
-					workspace: cwd,
-					sessionId: skillSessionId,
-					skill: "ralplan",
-					terminalDetectorIds: ["ralplan-final-artifact-receipt"],
-				}),
-				"--json",
-			],
-			cwd,
-		);
-		expect(finalized.status).toBe(0);
-		const parsed = JSON.parse(finalized.stdout) as {
-			state: { lifecycle: string };
-			evidence: { terminalMatched: string[] };
-		};
-		expect(parsed.state.lifecycle).toBe("completed");
-		expect(parsed.evidence.terminalMatched).toContain("ralplan-final-artifact-receipt");
+			const finalized = await runWorkflowCommand(
+				[
+					"finalize",
+					"--input",
+					JSON.stringify({ workspace: cwd, sessionId: skillSessionId, skill: "ralplan" }),
+					"--json",
+				],
+				cwd,
+			);
+			expect(finalized.status).toBe(0);
+			const parsed = JSON.parse(finalized.stdout) as {
+				state: { lifecycle: string };
+				evidence: { terminalMatched: string[] };
+			};
+			expect(parsed.state.lifecycle).toBe("completed");
+			expect(parsed.evidence.terminalMatched).toContain("ralplan-final-artifact-receipt");
+		} finally {
+			await owner.stop();
+		}
 	});
 
-	it("routes new verbs to a live owner", async () => {
+	it("routes owner-bound verbs to a live owner", async () => {
 		const rpc = new FakeRpc();
 		const owner = new RuntimeOwner({ root, sessionId, rpc, heartbeatMs: 60_000 });
 		await owner.start();
 		try {
 			const result = await runWorkflowCommand(
-				["classify", "--input", JSON.stringify({ workspace: cwd, sessionId }), "--json"],
+				[
+					"validate",
+					"--input",
+					JSON.stringify({ workspace: cwd, sessionId, checks: [{ name: "ok", command: "true" }] }),
+					"--json",
+				],
 				cwd,
 			);
 			expect(result.status).toBe(0);
-			const parsed = JSON.parse(result.stdout) as { evidence: { ownerRouted?: boolean } };
-			expect(parsed.evidence.ownerRouted).toBe(true);
+			const parsed = JSON.parse(result.stdout) as { state: { ownerLive: boolean } };
+			expect(parsed.state.ownerLive).toBe(true);
 		} finally {
 			await owner.stop();
 		}
 	});
 
 	it("fails validation with bounded evidence and nonzero status", async () => {
-		const result = await runWorkflowCommand(
-			[
-				"validate",
-				"--input",
-				JSON.stringify({ workspace: cwd, sessionId, checks: [{ name: "bad", command: "printf nope; exit 2" }] }),
-				"--json",
-			],
-			cwd,
-		);
-		expect(result.status).toBe(1);
-		const parsed = JSON.parse(result.stdout) as {
-			ok: boolean;
-			evidence: { validation: { checks: Array<{ exitCode: number; stdoutSummary: string; passed: boolean }> } };
-		};
-		expect(parsed.ok).toBe(false);
-		expect(parsed.evidence.validation.checks[0]).toMatchObject({ exitCode: 2, stdoutSummary: "nope", passed: false });
+		const owner = new RuntimeOwner({ root, sessionId, rpc: new FakeRpc(), heartbeatMs: 60_000 });
+		await owner.start();
+		try {
+			const result = await runWorkflowCommand(
+				[
+					"validate",
+					"--input",
+					JSON.stringify({ workspace: cwd, sessionId, checks: [{ name: "bad", command: "printf nope; exit 2" }] }),
+					"--json",
+				],
+				cwd,
+			);
+			expect(result.status).toBe(1);
+			const parsed = JSON.parse(result.stdout) as {
+				ok: boolean;
+				evidence: { validation: { checks: Array<{ exitCode: number; stdoutSummary: string; passed: boolean }> } };
+			};
+			expect(parsed.ok).toBe(false);
+			expect(parsed.evidence.validation.checks[0]).toMatchObject({
+				exitCode: 2,
+				stdoutSummary: "nope",
+				passed: false,
+			});
+		} finally {
+			await owner.stop();
+		}
 	});
 
 	it("classifier handles prompt-not-accepted and validation budget cases", async () => {

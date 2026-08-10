@@ -1,11 +1,10 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { existsSync, writeFileSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
-import { type RecoveryDecision, recoverPrimitive } from "#workflows/runtime/fallback-commands";
 import {
 	collectGcReport,
 	computeGcExitCode,
@@ -26,20 +25,7 @@ import {
 	receiptFamilyConsistencyRules,
 	validateReceiptFamilyConsistency,
 } from "#workflows/runtime/receipt-rules";
-import {
-	DEFERRED_SEAMS,
-	DeferredSeamRegistry,
-	deferredSeamRegistry,
-	isHarnessSupported,
-	seamUnsupported,
-} from "#workflows/runtime/seams";
-import {
-	readRuntimeReceipts,
-	readSessionState,
-	resolveHarnessRoot,
-	sessionPaths,
-	writeSessionState,
-} from "#workflows/runtime/storage";
+import { readRuntimeReceipts, readSessionState, resolveHarnessRoot, sessionPaths } from "#workflows/runtime/storage";
 import {
 	type HarnessLifecycle,
 	type RuntimeReceipt,
@@ -583,89 +569,6 @@ describe("phase 3 — GC e2e synthetic-tree sweep", () => {
 		// the event written by the concurrent mutation is intact (not partially deleted).
 		const eventsLog = await readFile(sessionPaths(root, sessionId).events, "utf8");
 		expect(eventsLog).toContain("concurrent_mutation_event");
-	});
-});
-
-describe("phase 3 — deferred-seam registry", () => {
-	it("seamUnsupported emits a named seam_unsupported:<name> token for each deferred seam", () => {
-		for (const entry of DEFERRED_SEAMS) {
-			const result = seamUnsupported(entry.name);
-			expect(result.ok).toBe(false);
-			expect(result.error).toBe(`seam_unsupported:${entry.name}`);
-			expect(result.evidence.seam).toBe(true);
-			expect(result.evidence.name).toBe(entry.name);
-			expect(result.evidence.supported).toBe(false);
-			expect(result.evidence.status).toBe(entry.status);
-		}
-	});
-
-	it("cross-harness-omx-fallback is permanentlyBlocked (deferred:false)", () => {
-		const result = seamUnsupported("cross-harness-omx-fallback");
-		expect(result.evidence.status).toBe("permanentlyBlocked");
-		expect(result.evidence.deferred).toBe(false);
-	});
-
-	it("tmux-session-orchestration and git-worktree-isolation are deferred (deferred:true)", () => {
-		expect(seamUnsupported("tmux-session-orchestration").evidence.deferred).toBe(true);
-		expect(seamUnsupported("git-worktree-isolation").evidence.deferred).toBe(true);
-	});
-
-	it("isHarnessSupported: pi true, others false", () => {
-		expect(isHarnessSupported("pi")).toBe(true);
-	});
-
-	it("registry is extensible: register a new seam, lookup returns it", () => {
-		const registry = new DeferredSeamRegistry([]);
-		registry.register("custom-future-seam", "not-built", "future extension");
-		const entry = registry.lookup("custom-future-seam");
-		expect(entry?.status).toBe("not-built");
-		expect(seamUnsupported("custom-future-seam", registry).evidence.status).toBe("not-built");
-	});
-
-	it("the default registry is seeded with the Pi-native DEFERRED_SEAMS set", () => {
-		const names = deferredSeamRegistry.list().map((entry) => entry.name);
-		expect(names).toContain("tmux-session-orchestration");
-		expect(names).toContain("git-worktree-isolation");
-		expect(names).toContain("cross-harness-omx-fallback");
-		expect(names).toContain("remote-transport");
-		expect(names).toContain("global-daemon");
-		expect(names).toContain("capability-token-auth");
-	});
-
-	it("integration: recoverPrimitive fallback-harness-exec folds the seam token into evidence AND preserves reason + blockers (no silent degrade)", async () => {
-		const cwd = join(tmpdir(), `pi-seam-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-		await mkdir(cwd, { recursive: true });
-		try {
-			// git repo with a dirty worktree + exhausted dirtyVanishPreserve -> fallback-harness-exec.
-			execFileSync("git", ["init"], { cwd, stdio: "ignore" });
-			execFileSync("git", ["config", "user.email", "t@t"], { cwd, stdio: "ignore" });
-			execFileSync("git", ["config", "user.name", "t"], { cwd, stdio: "ignore" });
-			await writeFile(join(cwd, "file.txt"), "initial\n", "utf8");
-			execFileSync("git", ["add", "file.txt"], { cwd, stdio: "ignore" });
-			execFileSync("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
-			await writeFile(join(cwd, "file.txt"), "dirty\n", "utf8");
-			const root = harnessRoot(cwd);
-			const state = makeState(root, cwd, "h-seam-int");
-			await writeSessionState(root, state);
-			const exhausted = { ...state, retries: { dirtyVanishPreserve: 1 } };
-			const res = await recoverPrimitive({
-				root,
-				state: exhausted,
-				ownerLive: false,
-				writer: WRITER,
-				spawnOwner: async () => true,
-				receipts: (await readRuntimeReceipts(root, "h-seam-int")).rows,
-			});
-			expect(res.ok).toBe(false);
-			const evidence = res.evidence as { reason?: string; seam?: { error: string }; decision: RecoveryDecision };
-			expect(evidence.reason).toBe("fallback-harness-exec-requested");
-			expect(evidence.seam?.error).toBe("seam_unsupported:cross-harness-omx-fallback");
-			expect((evidence as { decision: RecoveryDecision }).decision.classification).toBe("fallback-harness-exec");
-			// blockers preserved exactly (Phase 1/2 observable output unchanged).
-			expect((evidence as { decision: RecoveryDecision }).decision.blockers).toEqual([]);
-		} finally {
-			await rm(cwd, { recursive: true, force: true });
-		}
 	});
 });
 

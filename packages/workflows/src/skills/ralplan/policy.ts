@@ -1,5 +1,5 @@
 import type { ExpectedNextRole, RalplanSelectorState } from "#workflows/policy/expected-next-role";
-import { registerSkillTransitionTable } from "#workflows/registry/transition-registry";
+import type { SkillPolicy } from "#workflows/policy/skill-policy";
 import { assertRalplanExplorerGatePassed } from "#workflows/skills/ralplan/gates";
 import { readRalplanStatus } from "#workflows/skills/ralplan/runtime";
 
@@ -66,7 +66,7 @@ function selectNextRalplanRole(state: RalplanSelectorState | undefined, runId: s
 	}
 }
 
-registerSkillTransitionTable<RalplanSelectorState>({
+export const ralplanPolicy = {
 	skill: "ralplan",
 	terminalDetectors: [
 		{
@@ -107,4 +107,4 @@ registerSkillTransitionTable<RalplanSelectorState>({
 		const resolvedRunId = runId ?? (typeof record.run_id === "string" ? record.run_id : "unknown");
 		return selectNextRalplanRole(state, resolvedRunId);
 	},
-});
+} satisfies SkillPolicy<RalplanSelectorState>;

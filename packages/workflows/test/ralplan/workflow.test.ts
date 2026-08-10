@@ -146,20 +146,21 @@ describe("ralplan workflow runtime", () => {
 	});
 
 	it("approval gate demotes ralplan and promotes the approved target workflow", async () => {
+		await writeRalplanArtifact(
+			cwd,
+			{ runId: "run-5", stage: "critic", stageN: 1, artifact: "## Verdict\nAPPROVE\n" },
+			sessionId,
+		);
 		const final = await writeRalplanArtifact(
 			cwd,
-			{
-				runId: "run-5",
-				stage: "final",
-				stageN: 1,
-				artifact: "# Approved Plan",
-			},
+			{ runId: "run-5", stage: "final", stageN: 2, artifact: "# Approved Plan" },
 			sessionId,
 		);
 
 		const result = await approveRalplanPlan(cwd, {
 			runId: "run-5",
 			target: "ultragoal",
+			approved: true,
 			note: "approved",
 			sessionId,
 		});

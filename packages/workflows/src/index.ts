@@ -5,12 +5,6 @@
  * (including @tsuuanmi/pi) and test suites import.
  */
 
-// Register built-in skill transition tables for selector/gate helpers exported below.
-import "#workflows/skills/deep-interview/transitions";
-import "#workflows/skills/ralplan/transitions";
-import "#workflows/skills/team/transitions";
-import "#workflows/skills/ultragoal/transitions";
-
 export * from "#workflows/artifacts/artifacts";
 export * from "#workflows/audit/audit-log";
 export * from "#workflows/audit/decision-ledger";
@@ -22,27 +16,25 @@ export * from "#workflows/handoff/handoff";
 export * from "#workflows/policy/context-templates";
 export * from "#workflows/policy/expected-next-role";
 export * from "#workflows/policy/gate-verdicts";
+export * from "#workflows/policy/skill-policy";
 export * from "#workflows/policy/vagueness-gate";
-export * from "#workflows/registry/transition-registry";
 export * from "#workflows/registry/workflow-manifest";
 export * from "#workflows/runtime/endpoint";
-export * from "#workflows/runtime/fallback-commands";
 export * from "#workflows/runtime/gc";
 export * from "#workflows/runtime/lease";
 export * from "#workflows/runtime/lifecycle";
 export * from "#workflows/runtime/mutation";
+export * from "#workflows/runtime/operations";
 export * from "#workflows/runtime/owner";
 export * from "#workflows/runtime/preservation";
 export * from "#workflows/runtime/receipt-rules";
 export * from "#workflows/runtime/rpc";
 export * from "#workflows/runtime/runner";
-export * from "#workflows/runtime/seams";
 export * from "#workflows/runtime/storage";
 export * from "#workflows/runtime/types";
 export * from "#workflows/runtime/vanish";
 export * from "#workflows/session/paths";
 export * from "#workflows/session/session-layout";
-export * from "#workflows/session/session-resolution";
 export { assertDeepInterviewHandoff, type DeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
 export * from "#workflows/skills/deep-interview/mutation-guard";
 export * from "#workflows/skills/deep-interview/runtime";

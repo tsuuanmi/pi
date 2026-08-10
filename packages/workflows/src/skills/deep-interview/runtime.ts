@@ -331,34 +331,28 @@ export async function enrichDeepInterviewRoundScoring(
 	return { record, statePath: workflowStatePath(cwd, "deep-interview", sessionId) };
 }
 
-export async function assertDeepInterviewSpecReady(
-	cwd: string,
-	sessionId: string,
-	options: { allowEarlyExit?: boolean } = {},
-): Promise<void> {
+export async function assertDeepInterviewSpecReady(cwd: string, sessionId: string): Promise<void> {
 	const envelope = await readDeepInterviewEnvelope(cwd, sessionId);
 	const closure = runClosureAcceptanceGuard(envelope);
 	if (!closure.ok) throw new Error(`deep-interview closure check failed: ${closure.gaps.join("; ")}`);
 	if (typeof envelope.restated_goal !== "string" || envelope.restated_goal.trim() === "") {
 		throw new Error("deep-interview restated goal is required before write-spec");
 	}
-	if (!options.allowEarlyExit) {
-		const inner = (envelope.state ?? {}) as Record<string, unknown>;
-		const rounds: DeepInterviewRoundRecord[] = Array.isArray(inner.rounds)
-			? (inner.rounds as DeepInterviewRoundRecord[])
-			: [];
-		const latestScored = rounds.filter((round) => round.lifecycle === "scored").at(-1);
-		const ambiguity =
-			typeof latestScored?.ambiguity === "number"
-				? latestScored.ambiguity
-				: (inner.current_ambiguity as number | undefined);
-		const threshold =
-			typeof envelope.threshold === "number"
-				? envelope.threshold
-				: ((inner.threshold as number | undefined) ?? DEFAULT_DEEP_INTERVIEW_THRESHOLD);
-		if (typeof ambiguity !== "number" || !Number.isFinite(ambiguity) || ambiguity > threshold) {
-			throw new Error(`deep-interview ambiguity ${ambiguity ?? "unknown"} is above threshold ${threshold}`);
-		}
+	const inner = (envelope.state ?? {}) as Record<string, unknown>;
+	const rounds: DeepInterviewRoundRecord[] = Array.isArray(inner.rounds)
+		? (inner.rounds as DeepInterviewRoundRecord[])
+		: [];
+	const latestScored = rounds.filter((round) => round.lifecycle === "scored").at(-1);
+	const ambiguity =
+		typeof latestScored?.ambiguity === "number"
+			? latestScored.ambiguity
+			: (inner.current_ambiguity as number | undefined);
+	const threshold =
+		typeof envelope.threshold === "number"
+			? envelope.threshold
+			: ((inner.threshold as number | undefined) ?? DEFAULT_DEEP_INTERVIEW_THRESHOLD);
+	if (typeof ambiguity !== "number" || !Number.isFinite(ambiguity) || ambiguity > threshold) {
+		throw new Error(`deep-interview ambiguity ${ambiguity ?? "unknown"} is above threshold ${threshold}`);
 	}
 }
 

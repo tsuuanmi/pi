@@ -43,7 +43,7 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 | `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `task-mapper.ts` | Maps workflow task data to Orchestrator task inputs. |
 | `tools.ts` | Registers `team_execute` and `team_resume`. |
-| `transitions.ts` | Skill transition table, expected-next worker selection, and fail-closed gate validators. |
+| `policy.ts` | Immutable skill policy, expected-next worker selection, and fail-closed gate validators. |
 
 ## Runtime Route
 

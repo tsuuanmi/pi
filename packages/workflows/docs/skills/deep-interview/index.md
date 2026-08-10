@@ -26,7 +26,7 @@ Deep Interview manages Socratic requirements discovery, ambiguity scoring, closu
 | `state.ts` | State types, transitions, and persistence. |
 | `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `tools.ts` | Registers the `deep_interview_*` model-visible tools (`plan-question`, `record-answer`, `record-scoring`, `closure-check`, `restate-goal`, `write-spec`). |
-| `transitions.ts` | Skill transition table. |
+| `policy.ts` | Immutable skill policy. |
 
 ## Runtime Route
 

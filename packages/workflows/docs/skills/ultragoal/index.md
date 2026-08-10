@@ -28,7 +28,7 @@ Ultragoal manages goal-tracked execution under the current session root. One mai
 | `runtime.ts` | Plan/state I/O and goal transitions. |
 | `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `tools.ts` | Registers `ultragoal_spawn_goal_agent`. |
-| `transitions.ts` | Skill transition table, expected-next goal selection, fail-closed validators. |
+| `policy.ts` | Immutable skill policy, expected-next goal selection, and fail-closed validators. |
 
 ## Runtime Route
 

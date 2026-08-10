@@ -1,6 +1,6 @@
 # State
 
-Active workflow state, state validation/writes, workflow ids, and base state models.
+Active workflow state, internal state persistence, workflow ids, and base state models.
 
 **Source:** `src/state/`
 
@@ -19,7 +19,7 @@ Active workflow state, state validation/writes, workflow ids, and base state mod
 - Workflow writes use atomic state/artifact helpers and append receipts or audit entries where applicable.
 - The interactive status line reads active-state schema version 2 from the session-owned path (`.pi/<session-id>/workflows/active-state.json`) directly on a 1s refresh.
 - Every active-state entry requires a `session_id` that exactly matches the owning session. Missing, foreign, malformed, and unsupported-version active-state files fail closed; they are not migrated or merged as global state.
-- State command contract metadata ships as `src/state/assets/schema.json` and is copied to `dist/state/assets/schema.json` during package builds, matching the skill-local JSON schema assets. The schema documents that state commands require `--session <id>` and that `handoff` uses `--to <skill>` rather than JSON input.
+- State command contract metadata ships as `src/state/assets/schema.json` and is copied to `dist/state/assets/schema.json` during package builds. Generic commands only read, diagnose, or clear canonical state; skill actions own workflow mutations and handoffs.
 
 ## See Also
 

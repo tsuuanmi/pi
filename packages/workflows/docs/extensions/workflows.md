@@ -2,13 +2,13 @@
 
 `src/extension.ts` is the package extension entry point for Pi hosts. It defines the workflow host contract and the default adapter. The package owns workflow tools and workflow policy; Pi supplies the host capabilities and context.
 
-The package manifest declares this entry point alongside its skills, agents, and commands. Pi's central resource loader resolves the package and its extension loader passes the Pi extension API host through unchanged.
+The package manifest declares compiled `dist/` entry points for the extension, skills, agents, and command. Pi copies the self-contained package layout without rewriting those paths, and its extension loader passes the Pi extension API host through unchanged.
 
 ## Command and tool registration
 
 The two host-facing surfaces are registered independently:
 
-- The package metadata exposes `src/commands/workflow.ts` through the `pi.commands` entry. Pi's package-command dispatcher loads it for external `pi workflow ...` invocations.
+- The package metadata exposes `dist/commands/workflow.js` through the `pi.commands` entry. Pi's package-command dispatcher loads it for external `pi workflow ...` invocations.
 - The default extension registers in-process workflow tools and hooks for an interactive Pi session. It does not register or invoke the CLI command.
 
 Commands and tools may share lower-level workflow runtime and skill functions, but neither adapter calls the other. See [Command and tool boundary](../workflow.md#command-and-tool-boundary) for ownership, context, and return-contract rules.

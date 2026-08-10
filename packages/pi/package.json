@@ -51,7 +51,7 @@
 	"scripts": {
 		"clean": "shx rm -rf dist",
 		"build": "tsgo -p tsconfig.build.json && shx chmod +x dist/cli/cli.js && npm run copy-assets",
-		"copy-assets": "npm run build --prefix ../web-runtime && shx mkdir -p dist/packages/workflows dist/packages/web-runtime && shx cp -r ../workflows/dist/* dist/packages/workflows/ && shx cp -r ../web-runtime/dist dist/packages/web-runtime/ && node scripts/write-bundled-package-manifests.mjs && shx mkdir -p dist/packages/workflows/skills/deep-interview dist/packages/workflows/skills/ralplan dist/packages/workflows/skills/team dist/packages/workflows/skills/ultragoal && shx cp ../workflows/src/skills/deep-interview/SKILL.md dist/packages/workflows/skills/deep-interview/ && shx cp ../workflows/src/skills/ralplan/SKILL.md dist/packages/workflows/skills/ralplan/ && shx cp ../workflows/src/skills/team/SKILL.md dist/packages/workflows/skills/team/ && shx cp ../workflows/src/skills/ultragoal/SKILL.md dist/packages/workflows/skills/ultragoal/ && shx mkdir -p dist/packages/workflows/agents && shx cp ../workflows/src/agents/*.md dist/packages/workflows/agents/ && shx mkdir -p dist/subagents && shx cp src/subagents/run-identity.schema.json dist/subagents/",
+		"copy-assets": "npm run build --prefix ../web-runtime && node scripts/copy-assets.mjs",
 		"test": "vitest --run",
 		"shrinkwrap": "node scripts/generate-shrinkwrap.mjs",
 		"prepublishOnly": "npm run clean && npm run build && npm run shrinkwrap"
