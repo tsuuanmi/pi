@@ -7,7 +7,6 @@ import {
 	withOrchestration,
 } from "#workflows/skills/deep-interview/store";
 import type {
-	DeepInterviewOrchestrationState,
 	DeepInterviewPlannedQuestion,
 	DeepInterviewQuestionPlanInput,
 } from "#workflows/skills/deep-interview/types";
@@ -27,10 +26,12 @@ export async function planDeepInterviewQuestion(
 	if (!input.questionId || input.questionId.trim() !== input.questionId) {
 		throw new Error("deep-interview question id must be a non-empty, trimmed string");
 	}
+	if (!input.rationale || input.rationale.trim() !== input.rationale) {
+		throw new Error("deep-interview question rationale must be a non-empty, trimmed string");
+	}
 	for (const [field, value] of [
 		["component", input.component],
 		["dimension", input.dimension],
-		["rationale", input.rationale],
 	] as const) {
 		if (value !== undefined && (!value || value.trim() !== value)) {
 			throw new Error(`deep-interview question ${field} must be a non-empty, trimmed string`);
@@ -52,7 +53,15 @@ export async function planDeepInterviewQuestion(
 		rationale: input.rationale,
 		planned_at: new Date().toISOString(),
 	};
-	const existing = envelope.state?.orchestration as DeepInterviewOrchestrationState | undefined;
+	const existing = envelope.state.orchestration;
+	if (existing?.next_question) throw new Error("deep-interview question is already waiting for an answer");
+	if (
+		existing?.question_plan.some(
+			(planned) => planned.round === question.round || planned.question_id === question.question_id,
+		)
+	) {
+		throw new Error("deep-interview question round and id must be unique");
+	}
 	const questionPlan = existing ? [...existing.question_plan, question] : [question];
 	const orchestrated = withOrchestration(envelope, {
 		status: "waiting_for_answer",

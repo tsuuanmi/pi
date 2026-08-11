@@ -7,9 +7,9 @@
   "additionalProperties": false,
   "properties": {
     "sessionId": { "$ref": "#/$defs/sessionId" },
-    "round": { "type": "number" },
-    "questionId": { "type": "string" },
-    "questionText": { "type": "string" },
+    "round": { "type": "integer", "minimum": 1 },
+    "questionId": { "type": "string", "minLength": 1 },
+    "questionText": { "type": "string", "minLength": 1 },
     "component": { "type": "string" },
     "dimension": { "type": "string" },
     "ambiguity": { "type": "number", "minimum": 0, "maximum": 1 },
@@ -17,11 +17,10 @@
     "round_id": { "type": "string" },
     "selectedOptions": { "type": "array", "items": { "type": "string" } },
     "customInput": { "type": "string" },
-    "topology": { "type": "object", "additionalProperties": true },
-    "scores": { "type": "object", "additionalProperties": { "type": "number" } },
-    "triggers": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
-    "metadata": { "type": "object", "additionalProperties": true },
-    "lastN": { "type": "number" },
+    "topology": { "$ref": "#/$defs/topology" },
+    "scores": { "type": "object", "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 } },
+    "triggers": { "type": "array", "items": { "$ref": "#/$defs/trigger" } },
+    "metadata": { "$ref": "#/$defs/advisoryMetadata" },
     "restatedGoal": { "type": "string" },
     "confirm": { "type": "string", "enum": ["Yes", "Adjust", "Missing"] },
     "adjustment": { "type": "string" },
@@ -33,15 +32,132 @@
   "$defs": {
     "sessionId": {
       "type": "string",
+      "minLength": 1,
       "description": "Current Pi session id. Required by every workflow action; pass the id from the active interactive/runtime session."
+    },
+    "topology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "components", "deferrals"],
+      "properties": {
+        "status": { "type": "string", "enum": ["pending", "confirmed"] },
+        "confirmed_at": { "type": "string", "format": "date-time" },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "description", "status", "evidence"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "name": { "type": "string", "minLength": 1 },
+              "description": { "type": "string", "minLength": 1 },
+              "status": { "type": "string", "enum": ["active", "deferred"] },
+              "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "clarity_scores": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "goal": { "type": "number", "minimum": 0, "maximum": 1 },
+                  "constraints": { "type": "number", "minimum": 0, "maximum": 1 },
+                  "criteria": { "type": "number", "minimum": 0, "maximum": 1 },
+                  "context": { "type": "number", "minimum": 0, "maximum": 1 }
+                }
+              },
+              "weakest_dimension": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "deferrals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["component_id", "reason", "confirmed_at"],
+            "properties": {
+              "component_id": { "type": "string", "minLength": 1 },
+              "reason": { "type": "string", "minLength": 1 },
+              "confirmed_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "last_targeted_component_id": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "confirmed" } } },
+          "then": {
+            "required": ["confirmed_at"],
+            "properties": { "components": { "minItems": 1 } }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "const": "pending" } } },
+          "then": {
+            "properties": {
+              "components": { "maxItems": 0 },
+              "deferrals": { "maxItems": 0 }
+            },
+            "not": { "anyOf": [{ "required": ["confirmed_at"] }, { "required": ["last_targeted_component_id"] }] }
+          }
+        }
+      ]
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "status", "component", "dimension", "rationale"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["A", "B", "C", "D"] },
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["active", "disputed", "unresolved"] },
+        "component": { "type": "string", "minLength": 1 },
+        "dimension": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "string", "minLength": 1 },
+        "contradictedFactId": { "type": "string", "minLength": 1 },
+        "priorAmbiguity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "newAmbiguity": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "establishedFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "statement", "round", "disputed"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "statement": { "type": "string", "minLength": 1 },
+        "round": { "type": "integer", "minimum": 1 },
+        "component": { "type": "string", "minLength": 1 },
+        "dimension": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "string", "minLength": 1 },
+        "disputed": { "type": "boolean" }
+      }
+    },
+    "advisoryMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "auto_answer_streak": { "type": "integer", "minimum": 0 },
+        "refined_rounds": { "type": "array", "items": { "type": "integer", "minimum": 1 } },
+        "ambiguity_milestone": { "type": "string", "minLength": 1 },
+        "lateral_reviews": { "type": "array" },
+        "lateral_panel_failures": { "type": "integer", "minimum": 0 },
+        "auto_researched_rounds": { "type": "array", "items": { "type": "integer", "minimum": 1 } },
+        "auto_answered_rounds": { "type": "array", "items": { "type": "integer", "minimum": 1 } },
+        "architect_failures": { "type": "integer", "minimum": 0 },
+        "established_facts": { "type": "array", "items": { "$ref": "#/$defs/establishedFact" } },
+        "ontology_snapshots": { "type": "array" },
+        "topology": { "$ref": "#/$defs/topology" }
+      }
     },
     "planQuestionInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sessionId", "round", "questionId", "questionText"],
+      "required": ["sessionId", "round", "questionId", "questionText", "rationale"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
-        "round": { "type": "number" },
+        "round": { "type": "integer", "minimum": 1 },
         "questionId": { "type": "string" },
         "questionText": { "type": "string" },
         "component": { "type": "string" },
@@ -56,7 +172,7 @@
       "required": ["sessionId", "round", "questionId", "questionText"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
-        "round": { "type": "number" },
+        "round": { "type": "integer", "minimum": 1 },
         "round_id": { "type": "string" },
         "questionId": { "type": "string" },
         "questionText": { "type": "string" },
@@ -65,7 +181,7 @@
         "ambiguity": { "type": "number", "minimum": 0, "maximum": 1 },
         "selectedOptions": { "type": "array", "items": { "type": "string" } },
         "customInput": { "type": "string" },
-        "topology": { "type": "object", "additionalProperties": true }
+        "topology": { "$ref": "#/$defs/topology" }
       }
     },
     "recordScoringInput": {
@@ -74,13 +190,13 @@
       "required": ["sessionId", "round", "questionId", "scores", "ambiguity"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
-        "round": { "type": "number" },
+        "round": { "type": "integer", "minimum": 1 },
         "round_id": { "type": "string" },
         "questionId": { "type": "string" },
-        "scores": { "type": "object", "additionalProperties": { "type": "number" } },
+        "scores": { "type": "object", "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 } },
         "ambiguity": { "type": "number", "minimum": 0, "maximum": 1 },
-        "triggers": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
-        "metadata": { "type": "object", "additionalProperties": true }
+        "triggers": { "type": "array", "items": { "$ref": "#/$defs/trigger" } },
+        "metadata": { "$ref": "#/$defs/advisoryMetadata" }
       }
     },
     "closureCheckInput": {
@@ -126,7 +242,7 @@
     "write-spec": { "$ref": "#/$defs/writeSpecInput" }
   },
   "examples": [
-    { "sessionId": "<session-id>", "round": 1, "questionId": "q1", "questionText": "Which user outcome matters most?" },
+    { "sessionId": "<session-id>", "round": 1, "questionId": "q1", "questionText": "Which user outcome matters most?", "rationale": "The primary outcome is still ambiguous." },
     { "sessionId": "<session-id>", "round": 1, "questionId": "q1", "scores": { "goal": 0.4, "constraints": 0.2 }, "ambiguity": 0.3 },
     { "sessionId": "<session-id>", "slug": "my-spec", "spec": "# Spec\n...", "handoff": "ralplan", "runId": "ralplan-my-spec" }
   ]

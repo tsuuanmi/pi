@@ -23,7 +23,11 @@ import {
 	enrichDeepInterviewRoundScoring,
 } from "#workflows/skills/deep-interview/rounds";
 import { assertDeepInterviewSpecReady, finalizeDeepInterviewSpecState } from "#workflows/skills/deep-interview/spec";
-import type { DeepInterviewAdvisoryMetadata, DeepInterviewRoundRecord } from "#workflows/skills/deep-interview/types";
+import type {
+	DeepInterviewAdvisoryMetadata,
+	DeepInterviewRoundRecord,
+	DeepInterviewTopology,
+} from "#workflows/skills/deep-interview/types";
 import { approveRalplanPlan } from "#workflows/skills/ralplan/approval";
 import { writeRalplanArtifact } from "#workflows/skills/ralplan/artifacts";
 import { doctorRalplan } from "#workflows/skills/ralplan/doctor";
@@ -73,7 +77,7 @@ export async function deepInterviewVerb(
 					component: inputString(input, "component"),
 					dimension: inputString(input, "dimension"),
 					ambiguity: optionalNumber(input, "ambiguity"),
-					rationale: inputString(input, "rationale"),
+					rationale: requiredString(input, "rationale"),
 				},
 				sessionId,
 			);
@@ -92,7 +96,7 @@ export async function deepInterviewVerb(
 					ambiguity: optionalNumber(input, "ambiguity"),
 					selectedOptions: optionalStringArray(input, "selectedOptions"),
 					customInput: inputString(input, "customInput"),
-					topology: input.topology,
+					topology: input.topology as DeepInterviewTopology | undefined,
 				},
 				sessionId,
 			);

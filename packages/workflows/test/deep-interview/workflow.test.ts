@@ -17,6 +17,7 @@ import {
 	questionHash,
 	readWorkflowActiveState,
 	readWorkflowState,
+	restateGoalGate,
 	runClosureAcceptanceGuard,
 	syncWorkflowActiveState,
 	workflowActiveStatePath,
@@ -114,19 +115,50 @@ describe("deep-interview workflow runtime", () => {
 
 		const normalized = normalizeDeepInterviewEnvelope({
 			active: true,
+			current_phase: "interviewing",
 			threshold: 0.5,
-			state: { rounds: [], established_facts: [] },
+			state: { interview_id: "canonical-test", rounds: [], established_facts: [] },
 		});
 		expect(normalized.threshold).toBe(0.5);
-		expect(normalized.state?.rounds).toEqual([]);
-		expect(normalized.state?.established_facts).toEqual([]);
+		expect(normalized.state.rounds).toEqual([]);
+		expect(normalized.state.established_facts).toEqual([]);
+		expect(() => normalizeDeepInterviewEnvelope({ ...normalized, auto_answer_streak: 1 })).toThrow(
+			"deep-interview field must be nested under state: auto_answer_streak",
+		);
+		expect(() =>
+			normalizeDeepInterviewEnvelope({
+				...normalized,
+				state: {
+					...normalized.state,
+					topology: { components: [{ id: "core", name: "Core", status: "active" }] },
+				},
+			}),
+		).toThrow("deep-interview state.topology requires components and deferrals arrays");
+	});
+
+	it("persists restated-goal corrections under canonical fields", async () => {
+		await expect(
+			restateGoalGate(
+				cwd,
+				{
+					restatedGoal: "Ship the workflow.",
+					confirm: "Adjust",
+					adjustment: "Include strict topology validation.",
+				},
+				TEST_SESSION,
+			),
+		).resolves.toMatchObject({ ok: false, loops_remaining: 1 });
+		const persisted = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
+		expect(persisted?.goal_adjustments).toEqual(["Adjust: Include strict topology validation."]);
+		expect(persisted?.closure_overrides).toBeUndefined();
+		expect((persisted?.state as { restate_loops?: number }).restate_loops).toBe(1);
 	});
 
 	it("rejects workflow actions before canonical initialization", async () => {
 		await expect(
 			planDeepInterviewQuestion(
 				cwd,
-				{ round: 1, questionId: "q1", questionText: "What is the goal?" },
+				{ round: 1, questionId: "q1", questionText: "What is the goal?", rationale: "Goal is unknown" },
 				"uninitialized-session",
 			),
 		).rejects.toThrow("workflow is not initialized");
@@ -146,7 +178,7 @@ describe("deep-interview workflow runtime", () => {
 
 		await planDeepInterviewQuestion(
 			cwd,
-			{ round: 1, questionId: "q1", questionText: "What is the goal?" },
+			{ round: 1, questionId: "q1", questionText: "What is the goal?", rationale: "Goal is unknown" },
 			TEST_SESSION,
 		);
 		const first = await appendOrMergeDeepInterviewRound(
@@ -255,7 +287,13 @@ describe("deep-interview workflow runtime", () => {
 		);
 		await planDeepInterviewQuestion(
 			cwd,
-			{ round: 2, questionId: "q2", questionText: "Which constraint is fixed?", dimension: "constraints" },
+			{
+				round: 2,
+				questionId: "q2",
+				questionText: "Which constraint is fixed?",
+				dimension: "constraints",
+				rationale: "Constraints are unknown",
+			},
 			TEST_SESSION,
 		);
 
@@ -298,7 +336,11 @@ describe("deep-interview workflow runtime", () => {
 	});
 
 	it("rejects invalid ambiguity-raising trigger transitions", async () => {
-		await planDeepInterviewQuestion(cwd, { round: 1, questionId: "q1", questionText: "Goal?" }, TEST_SESSION);
+		await planDeepInterviewQuestion(
+			cwd,
+			{ round: 1, questionId: "q1", questionText: "Goal?", rationale: "Goal is unknown" },
+			TEST_SESSION,
+		);
 		await appendOrMergeDeepInterviewRound(
 			cwd,
 			{
@@ -319,7 +361,11 @@ describe("deep-interview workflow runtime", () => {
 			},
 			TEST_SESSION,
 		);
-		await planDeepInterviewQuestion(cwd, { round: 2, questionId: "q2", questionText: "Constraint?" }, TEST_SESSION);
+		await planDeepInterviewQuestion(
+			cwd,
+			{ round: 2, questionId: "q2", questionText: "Constraint?", rationale: "Constraints are unknown" },
+			TEST_SESSION,
+		);
 		await appendOrMergeDeepInterviewRound(
 			cwd,
 			{
@@ -412,7 +458,11 @@ describe("deep-interview workflow runtime", () => {
 	});
 
 	it("runtime spec finalization writes spec and seeds ralplan handoff", async () => {
-		await planDeepInterviewQuestion(cwd, { round: 1, questionId: "q1", questionText: "Goal?" }, TEST_SESSION);
+		await planDeepInterviewQuestion(
+			cwd,
+			{ round: 1, questionId: "q1", questionText: "Goal?", rationale: "Goal is unknown" },
+			TEST_SESSION,
+		);
 		await appendOrMergeDeepInterviewRound(
 			cwd,
 			{
@@ -463,7 +513,20 @@ describe("deep-interview workflow runtime", () => {
 				state: {
 					interview_id: "readiness-test",
 					type: "greenfield",
-					topology: { components: [{ id: "core", name: "Core", status: "active" }] },
+					topology: {
+						status: "confirmed",
+						confirmed_at: "2026-01-01T00:00:00.000Z",
+						components: [
+							{
+								id: "core",
+								name: "Core",
+								description: "Safe workflow runtime",
+								status: "active",
+								evidence: ["test requirement"],
+							},
+						],
+						deferrals: [],
+					},
 					rounds: [
 						{
 							round_key: deriveRoundKey("readiness-test", { round: 1, questionId: "q1" }),
@@ -493,12 +556,27 @@ describe("deep-interview workflow runtime", () => {
 
 	it("closure rejects below-floor scored coverage", () => {
 		const closure = normalizeDeepInterviewEnvelope({
+			active: true,
+			current_phase: "interviewing",
 			restated_goal: "Ship a safe workflow runtime.",
 			threshold: 0.05,
 			state: {
 				interview_id: "closure-test",
 				type: "greenfield",
-				topology: { components: [{ id: "core", name: "Core", status: "active" }] },
+				topology: {
+					status: "confirmed",
+					confirmed_at: "2026-01-01T00:00:00.000Z",
+					components: [
+						{
+							id: "core",
+							name: "Core",
+							description: "Safe workflow runtime",
+							status: "active",
+							evidence: ["test requirement"],
+						},
+					],
+					deferrals: [],
+				},
 				rounds: [
 					{
 						round_key: deriveRoundKey("closure-test", { round: 1, questionId: "q1" }),

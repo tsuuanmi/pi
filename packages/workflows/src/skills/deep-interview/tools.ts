@@ -1,4 +1,3 @@
-import { type Static, Type } from "typebox";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
 import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";
 import { restateGoalGate, runClosureCheckForSession } from "#workflows/skills/deep-interview/closure";
@@ -8,65 +7,25 @@ import {
 	appendOrMergeDeepInterviewRound,
 	enrichDeepInterviewRoundScoring,
 } from "#workflows/skills/deep-interview/rounds";
+import {
+	emptySchema,
+	type PlanQuestionInput,
+	planQuestionSchema,
+	type RecordAnswerInput,
+	type RecordScoringInput,
+	type RestateGoalInput,
+	recordAnswerSchema,
+	recordScoringSchema,
+	restateGoalSchema,
+	type WriteSpecInput,
+	writeSpecSchema,
+} from "#workflows/skills/deep-interview/schemas";
 import { assertDeepInterviewSpecReady, finalizeDeepInterviewSpecState } from "#workflows/skills/deep-interview/spec";
-import type { DeepInterviewAdvisoryMetadata, DeepInterviewRoundRecord } from "#workflows/skills/deep-interview/types";
 import { assertSafePathComponent } from "#workflows/state/state-schema";
 import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/state/state-writer";
 import type { WorkflowContext } from "#workflows/tool/context";
 import { workflowToolDetails } from "#workflows/tool/details";
 import type { WorkflowToolHost } from "#workflows/tool/host";
-
-const planQuestionSchema = Type.Object({
-	round: Type.Number({ description: "Question round number." }),
-	questionId: Type.String({ description: "Stable question id." }),
-	questionText: Type.String({ description: "The exact one-question prompt to ask." }),
-	component: Type.Optional(Type.String({ description: "Target topology component id or name." })),
-	dimension: Type.Optional(Type.String({ description: "Target clarity dimension." })),
-	ambiguity: Type.Optional(Type.Number({ description: "Ambiguity at ask time." })),
-	rationale: Type.Optional(Type.String({ description: "Why this component/dimension is the bottleneck." })),
-});
-
-const recordAnswerSchema = Type.Object({
-	round: Type.Number(),
-	round_id: Type.Optional(Type.String()),
-	questionId: Type.String(),
-	questionText: Type.String(),
-	component: Type.Optional(Type.String()),
-	dimension: Type.Optional(Type.String()),
-	ambiguity: Type.Optional(Type.Number()),
-	selectedOptions: Type.Optional(Type.Array(Type.String())),
-	customInput: Type.Optional(Type.String()),
-	topology: Type.Optional(Type.Any()),
-});
-
-const recordScoringSchema = Type.Object({
-	round: Type.Number(),
-	round_id: Type.Optional(Type.String()),
-	questionId: Type.String(),
-	scores: Type.Record(Type.String(), Type.Number()),
-	ambiguity: Type.Number(),
-	triggers: Type.Optional(Type.Array(Type.Any())),
-	metadata: Type.Optional(Type.Any()),
-});
-
-const restateGoalSchema = Type.Object({
-	restatedGoal: Type.String({ description: "One-sentence goal to confirm." }),
-	confirm: Type.String({ description: "Yes, Adjust, or Missing." }),
-	adjustment: Type.Optional(Type.String()),
-});
-
-const writeSpecSchema = Type.Object({
-	slug: Type.String({ description: "Safe spec slug." }),
-	spec: Type.String({ description: "Markdown spec content or a readable path to spec content." }),
-	handoff: Type.String({ description: "ralplan, ultragoal, team, or stop." }),
-	runId: Type.Optional(Type.String({ description: "Required when handing off to ralplan." })),
-});
-
-type PlanQuestionInput = Static<typeof planQuestionSchema>;
-type RecordAnswerInput = Static<typeof recordAnswerSchema>;
-type RecordScoringInput = Static<typeof recordScoringSchema>;
-type RestateGoalInput = Static<typeof restateGoalSchema>;
-type WriteSpecInput = Static<typeof writeSpecSchema>;
 
 function sessionId(ctx: WorkflowContext): string {
 	return ctx.sessionManager.getSessionId();
@@ -79,11 +38,21 @@ function textResult(text: string, details: unknown) {
 	};
 }
 
+function requireRalplanRunId(value: string | undefined): string {
+	const runId = value?.trim();
+	if (!runId) throw new Error("deep-interview ralplan handoff requires runId");
+	return runId;
+}
+
 async function executeWriteSpec(params: WriteSpecInput, ctx: WorkflowContext) {
 	await assertDeepInterviewSpecReady(ctx.cwd, sessionId(ctx));
 	const slug = params.slug.trim();
 	assertSafePathComponent(slug, "slug");
 	assertDeepInterviewHandoff(params.handoff);
+	const handoff =
+		params.handoff === "ralplan"
+			? { target: params.handoff, runId: requireRalplanRunId(params.runId) }
+			: { target: params.handoff };
 	const content = await readFileOrLiteral(params.spec, ctx.cwd);
 	const specPath = deepInterviewSpecPath(ctx.cwd, slug, sessionId(ctx));
 	const result = await writeTextArtifact(specPath, content, { cwd: ctx.cwd });
@@ -92,10 +61,7 @@ async function executeWriteSpec(params: WriteSpecInput, ctx: WorkflowContext) {
 		{ slug, path: result.path, sha256: result.sha256, created_at: result.createdAt },
 		{ cwd: ctx.cwd },
 	);
-	const handoffTarget = params.handoff === "stop" ? undefined : params.handoff;
-	if (handoffTarget === "ralplan" && !params.runId?.trim()) {
-		throw new Error("deep-interview ralplan handoff requires runId");
-	}
+	const handoffTarget = handoff.target === "stop" ? undefined : handoff.target;
 	if (handoffTarget === "ralplan" || handoffTarget === "team" || handoffTarget === "ultragoal") {
 		await finalizeDeepInterviewSpecState(
 			ctx.cwd,
@@ -103,7 +69,7 @@ async function executeWriteSpec(params: WriteSpecInput, ctx: WorkflowContext) {
 			sessionId(ctx),
 		);
 		const calleePatch =
-			handoffTarget === "ralplan" ? { run_id: params.runId?.trim(), input: result.path } : { input: result.path };
+			handoff.target === "ralplan" ? { input: result.path, run_id: handoff.runId } : { input: result.path };
 		await handoffWorkflow({
 			cwd: ctx.cwd,
 			caller: { skill: "deep-interview", patch: {} },
@@ -156,15 +122,7 @@ export function registerDeepInterviewTools(host: WorkflowToolHost): void {
 		promptSnippet: "Record Deep Interview scoring after each answer",
 		parameters: recordScoringSchema,
 		execute: async (_id, params: RecordScoringInput, _signal, _onUpdate, ctx) => {
-			const result = await enrichDeepInterviewRoundScoring(
-				ctx.cwd,
-				{
-					...params,
-					triggers: params.triggers as DeepInterviewRoundRecord["triggers"],
-					metadata: params.metadata as DeepInterviewAdvisoryMetadata | undefined,
-				},
-				sessionId(ctx),
-			);
+			const result = await enrichDeepInterviewRoundScoring(ctx.cwd, params, sessionId(ctx));
 			return textResult("deep-interview scoring recorded", result);
 		},
 	});
@@ -173,7 +131,7 @@ export function registerDeepInterviewTools(host: WorkflowToolHost): void {
 		label: "Deep Interview Closure Check",
 		description: "Run the Deep Interview closure and acceptance guard.",
 		promptSnippet: "Run closure-check before crystallizing a Deep Interview spec",
-		parameters: Type.Object({}),
+		parameters: emptySchema,
 		execute: async (_id, _params, _signal, _onUpdate, ctx) => {
 			const result = await runClosureCheckForSession(ctx.cwd, sessionId(ctx));
 			return textResult(result.ok ? "deep-interview closure passed" : "deep-interview closure blocked", result);
@@ -186,15 +144,7 @@ export function registerDeepInterviewTools(host: WorkflowToolHost): void {
 		promptSnippet: "Confirm the Deep Interview one-sentence goal before write-spec",
 		parameters: restateGoalSchema,
 		execute: async (_id, params: RestateGoalInput, _signal, _onUpdate, ctx) => {
-			const result = await restateGoalGate(
-				ctx.cwd,
-				{
-					restatedGoal: params.restatedGoal,
-					confirm: params.confirm as "Yes" | "Adjust" | "Missing",
-					adjustment: params.adjustment,
-				},
-				sessionId(ctx),
-			);
+			const result = await restateGoalGate(ctx.cwd, params, sessionId(ctx));
 			return textResult(
 				result.ok ? "deep-interview goal confirmed" : "deep-interview goal needs adjustment",
 				result,

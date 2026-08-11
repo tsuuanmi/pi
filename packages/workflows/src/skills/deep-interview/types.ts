@@ -38,7 +38,7 @@ export interface DeepInterviewPlannedQuestion {
 	component?: string;
 	dimension?: string;
 	ambiguity_at_ask?: number;
-	rationale?: string;
+	rationale: string;
 	planned_at: string;
 }
 
@@ -73,14 +73,68 @@ export interface DeepInterviewRoundRecord {
 	triggers?: DeepInterviewTriggerMetadata[];
 }
 
+export interface DeepInterviewTopologyComponent {
+	id: string;
+	name: string;
+	description: string;
+	status: "active" | "deferred";
+	evidence: string[];
+	clarity_scores?: Partial<Record<"goal" | "constraints" | "criteria" | "context", number>>;
+	weakest_dimension?: string;
+}
+
+export interface DeepInterviewTopologyDeferral {
+	component_id: string;
+	reason: string;
+	confirmed_at: string;
+}
+
+export interface DeepInterviewPendingTopology {
+	status: "pending";
+	components: DeepInterviewTopologyComponent[];
+	deferrals: DeepInterviewTopologyDeferral[];
+}
+
+export interface DeepInterviewConfirmedTopology {
+	status: "confirmed";
+	confirmed_at: string;
+	components: DeepInterviewTopologyComponent[];
+	deferrals: DeepInterviewTopologyDeferral[];
+	last_targeted_component_id?: string;
+}
+
+export type DeepInterviewTopology = DeepInterviewPendingTopology | DeepInterviewConfirmedTopology;
+
+export interface DeepInterviewState extends Record<string, unknown> {
+	interview_id: string;
+	rounds: DeepInterviewRoundRecord[];
+	established_facts: DeepInterviewEstablishedFact[];
+	type?: "greenfield" | "brownfield";
+	orchestration?: DeepInterviewOrchestrationState;
+	topology?: DeepInterviewTopology;
+	current_ambiguity?: number;
+	auto_answer_streak?: number;
+	refined_rounds?: number[];
+	ambiguity_milestone?: string;
+	lateral_reviews?: unknown[];
+	lateral_panel_failures?: number;
+	auto_researched_rounds?: number[];
+	auto_answered_rounds?: number[];
+	architect_failures?: number;
+	ontology_snapshots?: unknown[];
+	restate_loops?: number;
+}
+
 export interface DeepInterviewStateEnvelope {
-	threshold?: number;
+	active: boolean;
+	current_phase: string;
+	threshold: number;
 	threshold_source?: string;
-	state?: Record<string, unknown>;
+	state: DeepInterviewState;
 	/** Restated one-sentence goal covering all active components. Set via restate-goal gate. */
 	restated_goal?: string;
-	/** Closure override reasons when closure was accepted despite gaps. */
-	closure_overrides?: string[];
+	/** User-requested corrections from the restated-goal gate. */
+	goal_adjustments?: string[];
 	[key: string]: unknown;
 }
 
@@ -99,22 +153,22 @@ export interface DeepInterviewStateEnvelope {
  *    weakest_dimension` and `topology.last_targeted_component_id`, and the spec
  *    reports ontology convergence from `ontology_snapshots`.
  */
-export interface DeepInterviewAdvisoryMetadata {
-	auto_answer_streak?: number;
-	refined_rounds?: number[];
-	ambiguity_milestone?: string;
-	lateral_reviews?: unknown[];
-	lateral_panel_failures?: number;
-	auto_researched_rounds?: number[];
-	auto_answered_rounds?: number[];
-	architect_failures?: number;
-	/** Complete replacement list consumed by the closure guard. */
-	established_facts?: DeepInterviewEstablishedFact[];
-	/** Full-list replacement of ontology snapshots; feeds spec convergence reporting. */
-	ontology_snapshots?: unknown[];
-	/** Full-list replacement; the HUD reads per-component weakest_dimension + last_targeted_component_id. */
-	topology?: unknown;
-}
+export type DeepInterviewAdvisoryMetadata = Partial<
+	Pick<
+		DeepInterviewState,
+		| "auto_answer_streak"
+		| "refined_rounds"
+		| "ambiguity_milestone"
+		| "lateral_reviews"
+		| "lateral_panel_failures"
+		| "auto_researched_rounds"
+		| "auto_answered_rounds"
+		| "architect_failures"
+		| "established_facts"
+		| "ontology_snapshots"
+		| "topology"
+	>
+>;
 
 export interface TransitionValidationResult {
 	ok: boolean;
@@ -131,7 +185,7 @@ export interface DeepInterviewAnswerInput {
 	ambiguity?: number;
 	selectedOptions?: string[];
 	customInput?: string;
-	topology?: unknown;
+	topology?: DeepInterviewTopology;
 }
 
 export interface DeepInterviewQuestionPlanInput {
@@ -141,7 +195,7 @@ export interface DeepInterviewQuestionPlanInput {
 	component?: string;
 	dimension?: string;
 	ambiguity?: number;
-	rationale?: string;
+	rationale: string;
 }
 
 export interface DeepInterviewScoringInput {

@@ -4,20 +4,12 @@ import {
 	readDeepInterviewEnvelope,
 	readRounds,
 } from "#workflows/skills/deep-interview/store";
-import type {
-	DeepInterviewEstablishedFact,
-	DeepInterviewStateEnvelope,
-	DeepInterviewTriggerMetadata,
-} from "#workflows/skills/deep-interview/types";
+import type { DeepInterviewStateEnvelope, DeepInterviewTriggerMetadata } from "#workflows/skills/deep-interview/types";
 
 export async function runClosureCheckForSession(cwd: string, sessionId: string): Promise<ClosureResult> {
 	const envelope = await readDeepInterviewEnvelope(cwd, sessionId);
 	return runClosureAcceptanceGuard(envelope);
 }
-
-// ---------------------------------------------------------------------------
-// Closure/Acceptance Guard + Restate-Goal Gate (Step 4)
-// ---------------------------------------------------------------------------
 
 export interface ClosureResult {
 	ok: boolean;
@@ -35,15 +27,14 @@ export interface ClosureResult {
  * of coverage.
  */
 export function runClosureAcceptanceGuard(envelope: DeepInterviewStateEnvelope): ClosureResult {
-	if (!envelope.state) throw new Error("deep-interview closure requires envelope.state");
-	const inner = envelope.state as Record<string, unknown>;
-	const established = inner.established_facts as DeepInterviewEstablishedFact[];
+	const inner = envelope.state;
+	const established = inner.established_facts;
 	const scoredRounds = readRounds(envelope).filter((round) => round.lifecycle === "scored");
 
-	// Check for unresolved/disputed triggers on material paths
 	const unresolvedTriggers: DeepInterviewTriggerMetadata[] = [];
 	for (const round of scoredRounds) {
-		for (const trigger of round.triggers ?? []) {
+		if (!round.triggers) continue;
+		for (const trigger of round.triggers) {
 			if (trigger.status === "unresolved" || trigger.status === "disputed") {
 				unresolvedTriggers.push(trigger);
 			}
@@ -52,7 +43,6 @@ export function runClosureAcceptanceGuard(envelope: DeepInterviewStateEnvelope):
 
 	const gaps: string[] = [];
 
-	// Unresolved/disputed triggers block closure
 	for (const trigger of unresolvedTriggers) {
 		gaps.push(
 			`unresolved ${trigger.status} trigger ${trigger.kind} on ${trigger.component}/${trigger.dimension}: ${trigger.rationale}`,
@@ -60,39 +50,30 @@ export function runClosureAcceptanceGuard(envelope: DeepInterviewStateEnvelope):
 	}
 
 	const coverageFloor = 0.75;
-	// Get active (non-deferred) components
-	const topology = inner.topology as
-		| { components?: Array<{ id?: string; status?: string; name?: string; dimensions?: string[] }> }
-		| undefined;
+	const topology = inner.topology;
 	const isBrownfield = inner.type === "brownfield";
 	const dimensions = ["goal", "constraints", "criteria"];
 	if (isBrownfield) dimensions.push("context");
 
-	if (!topology || !Array.isArray(topology.components)) {
-		gaps.push("topology: components are required before closure");
+	if (!topology || topology.status !== "confirmed") {
+		gaps.push("topology: confirmed components are required before closure");
 		return { ok: false, gaps };
 	}
-	const activeComponents = topology.components.filter((component) => component.status !== "deferred");
+	const activeComponents = topology.components.filter((component) => component.status === "active");
 	if (activeComponents.length === 0) {
 		gaps.push("topology: at least one active component is required");
 		return { ok: false, gaps };
 	}
 
 	for (const component of activeComponents) {
-		if (!component.id || !component.name) {
-			gaps.push("topology: active component requires an id and name");
-			continue;
-		}
 		const componentName = component.name;
 		const componentKeys = new Set([component.id, component.name]);
 		const matchesComponent = (value: string | undefined): boolean => value !== undefined && componentKeys.has(value);
 		for (const dimension of dimensions) {
-			// Check (i): matching established_facts entry
 			const hasFact = established.some(
 				(fact) => !fact.disputed && matchesComponent(fact.component) && fact.dimension === dimension,
 			);
 
-			// Check (ii): scored round with finite score for this dimension at a useful coverage floor
 			const hasScoredRound = scoredRounds.some(
 				(r) =>
 					r.scores &&
@@ -134,15 +115,8 @@ export async function restateGoalGate(
 		throw new Error(`deep-interview ${input.confirm.toLowerCase()} requires an adjustment`);
 	}
 	const envelope = await readDeepInterviewEnvelope(cwd, sessionId);
-	if (!envelope.state) throw new Error("deep-interview restate requires envelope.state");
-	const inner = envelope.state as Record<string, unknown>;
-	let currentLoops = 0;
-	if (inner.restate_loops !== undefined) {
-		if (!Number.isInteger(inner.restate_loops) || (inner.restate_loops as number) < 0) {
-			throw new Error("deep-interview state.restate_loops must be a non-negative integer");
-		}
-		currentLoops = inner.restate_loops as number;
-	}
+	const inner = envelope.state;
+	const currentLoops = inner.restate_loops === undefined ? 0 : inner.restate_loops;
 	if (currentLoops >= 2) {
 		return { ok: false, loops_remaining: 0 };
 	}
@@ -156,14 +130,11 @@ export async function restateGoalGate(
 	}
 
 	if (input.confirm === "Adjust" || input.confirm === "Missing") {
-		if (envelope.closure_overrides !== undefined && !Array.isArray(envelope.closure_overrides)) {
-			throw new Error("deep-interview closure_overrides must be an array");
-		}
-		const closureOverrides = envelope.closure_overrides === undefined ? [] : [...envelope.closure_overrides];
-		closureOverrides.push(`${input.confirm}: ${input.adjustment}`);
+		const goalAdjustments = envelope.goal_adjustments === undefined ? [] : [...envelope.goal_adjustments];
+		goalAdjustments.push(`${input.confirm}: ${input.adjustment}`);
 		const next = mergeDeepInterviewEnvelope(envelope, {
 			restated_goal: input.restatedGoal,
-			closure_overrides: closureOverrides,
+			goal_adjustments: goalAdjustments,
 			state: { restate_loops: currentLoops + 1 },
 		});
 		await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview restate-goal", sessionId);

@@ -13,7 +13,6 @@ import type {
 	AppendOrMergeAction,
 	AppendOrMergeResult,
 	DeepInterviewAnswerInput,
-	DeepInterviewOrchestrationState,
 	DeepInterviewRoundRecord,
 	DeepInterviewScoringInput,
 } from "#workflows/skills/deep-interview/types";
@@ -97,6 +96,9 @@ function enrichRoundWithScoring(
 	const index = next.findIndex((round) => round.round_key === roundKey);
 	if (index < 0) throw new Error(`deep-interview scoring requires an answered round: ${roundKey}`);
 	const answered = next[index];
+	if (answered.round !== input.round || answered.question_id !== input.questionId) {
+		throw new Error(`deep-interview scoring identity does not match answered round: ${roundKey}`);
+	}
 	if (!answered.question_hash || !answered.answer_hash) {
 		throw new Error(`deep-interview scoring requires a complete answer shell: ${roundKey}`);
 	}
@@ -138,8 +140,16 @@ export async function appendOrMergeDeepInterviewRound(
 	const pending = plannedQuestionOf(envelope);
 	const interviewId = readInterviewId(envelope);
 	const roundKey = deriveRoundKey(interviewId, input);
-	const existingRound = readRounds(envelope).some((round) => round.round_key === roundKey);
+	const existingRound = readRounds(envelope).find((round) => round.round_key === roundKey);
 	if (!pending && !existingRound) throw new Error("deep-interview answer requires a planned question");
+	if (
+		existingRound &&
+		(existingRound.round !== input.round ||
+			existingRound.question_id !== input.questionId ||
+			existingRound.question_text !== input.questionText)
+	) {
+		throw new Error("deep-interview replacement identity does not match the existing round");
+	}
 	if (
 		pending &&
 		(pending.round !== input.round ||
@@ -157,8 +167,7 @@ export async function appendOrMergeDeepInterviewRound(
 	const shell = buildAnswerShell(interviewId, input);
 	const result = appendOrMergeRound(readRounds(envelope), shell);
 	if (result.action !== "noop") {
-		const inner = envelope.state as Record<string, unknown>;
-		const existing = inner.orchestration as DeepInterviewOrchestrationState | undefined;
+		const existing = envelope.state.orchestration;
 		if (!existing) throw new Error("deep-interview answer requires orchestration state");
 		const next = mergeDeepInterviewEnvelope(envelope, {
 			state: {
@@ -182,6 +191,20 @@ export async function appendOrMergeDeepInterviewRound(
 	};
 }
 
+const ADVISORY_METADATA_FIELDS = new Set([
+	"auto_answer_streak",
+	"refined_rounds",
+	"ambiguity_milestone",
+	"lateral_reviews",
+	"lateral_panel_failures",
+	"auto_researched_rounds",
+	"auto_answered_rounds",
+	"architect_failures",
+	"established_facts",
+	"ontology_snapshots",
+	"topology",
+]);
+
 export async function enrichDeepInterviewRoundScoring(
 	cwd: string,
 	input: DeepInterviewScoringInput,
@@ -191,6 +214,12 @@ export async function enrichDeepInterviewRoundScoring(
 	const interviewId = readInterviewId(envelope);
 	const rounds = readRounds(envelope);
 	const { rounds: nextRounds, record } = enrichRoundWithScoring(interviewId, rounds, input);
+	if (input.metadata) {
+		const unsupported = Object.keys(input.metadata).filter((field) => !ADVISORY_METADATA_FIELDS.has(field));
+		if (unsupported.length > 0) {
+			throw new Error(`deep-interview scoring metadata has unsupported fields: ${unsupported.join(", ")}`);
+		}
+	}
 	const validation = validateDeepInterviewScoredTransition(
 		latestPriorScoredRound(rounds, record.round_key, record.round),
 		record,
@@ -200,23 +229,21 @@ export async function enrichDeepInterviewRoundScoring(
 			`deep-interview scored transition for round ${record.round} is invalid and was refused: ${validation.violations.join("; ")}`,
 		);
 	}
-	const state = envelope.state as Record<string, unknown>;
-	const existing = state.orchestration as DeepInterviewOrchestrationState | undefined;
+	const existing = envelope.state.orchestration;
 	if (!existing) throw new Error("deep-interview scoring requires orchestration state");
-	const next = mergeDeepInterviewEnvelope(envelope, {
-		state: {
-			rounds: nextRounds,
-			current_ambiguity: input.ambiguity,
-			...(input.metadata ?? {}),
-			orchestration: {
-				status: "interviewing",
-				next_dimension: record.dimension,
-				question_plan: existing.question_plan,
-				last_answered_question_id: existing.last_answered_question_id,
-				last_scored_question_id: record.question_id,
-			},
+	const statePatch: Record<string, unknown> = {
+		rounds: nextRounds,
+		current_ambiguity: input.ambiguity,
+		orchestration: {
+			status: "interviewing",
+			next_dimension: record.dimension,
+			question_plan: existing.question_plan,
+			last_answered_question_id: existing.last_answered_question_id,
+			last_scored_question_id: record.question_id,
 		},
-	});
+	};
+	if (input.metadata) Object.assign(statePatch, input.metadata);
+	const next = mergeDeepInterviewEnvelope(envelope, { state: statePatch });
 	await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview score-round", sessionId);
 	return { record, statePath: workflowStatePath(cwd, "deep-interview", sessionId) };
 }

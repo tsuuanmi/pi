@@ -15,7 +15,7 @@
 - **ralplan**: Approval requires an APPROVE verdict from the latest critic pass; `overrideCriticVerdict` was removed. Obstacle-ledger agreement is always enforced, writes validate persisted records, and malformed ledgers fail closed.
 - **ultragoal**: Removed `replayExempt` and `fallbackArtifactRefs` from the quality gate; all artifact proofs must resolve to live evidence.
 - **deep-interview**: Removed `allowEarlyExit` from spec finalization; above-threshold ambiguity always blocks.
-- **deep-interview**: Removed generated question/spec identities and optional handoff defaults; planning, answers, scoring, spec slugs, handoff targets, and Ralplan run IDs are now explicit, and malformed persisted interview state fails closed.
+- **deep-interview**: Removed generated identities, optional handoff defaults, inferred project classification, and permissive topology records; question identity, confirmed topology, spec slugs, handoff targets, and Ralplan run IDs are now explicit, and malformed persisted interview state fails closed.
 - **state-projections**: Removed workflow state projection APIs, their dedicated CLI actions, and the Deep Interview projection tool; use the regular state, status, and snapshot operations instead.
 - **registry**: Removed compatibility transition metadata, wildcard source-state matching, and legacy Ralplan phases; workflow state transitions now use explicit canonical states only.
 - **state**: Active-state persistence is now version 2 with mandatory session ownership; unsupported versions, global, malformed, and foreign-session entries are rejected without migration.

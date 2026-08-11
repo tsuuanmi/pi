@@ -29,6 +29,7 @@ Deep Interview manages Socratic requirements discovery, ambiguity scoring, closu
 | `mutation-targets.ts` | Extracts targets from edit, write, and shell inputs. |
 | `questions.ts` | Question planning and waiting-state transitions. |
 | `rounds.ts` | Answer-shell persistence and scored-round transitions. |
+| `schemas.ts` | Strict model-visible tool schemas and inferred adapter input types. |
 | `spec.ts` | Spec readiness and finalized-state persistence. |
 | `store.ts` | Session-scoped state persistence and active-state synchronization. |
 | `transitions.ts` | Obstacle-aware scored-transition validation. |
@@ -46,12 +47,12 @@ Deep Interview manages Socratic requirements discovery, ambiguity scoring, closu
 - Use read-only subagents only when the skill instructions call for research or lateral review.
 - Direct `edit`/`write` mutations are blocked while an unfinished interview is active.
 
-Persisted state uses one canonical nested `state` object. Flattened transcript fields, malformed arrays, unplanned answers, missing answer shells during scoring, and inferred brownfield state are rejected rather than repaired. Question planning, answer recording, and scoring require the same explicit question identity. Spec writes require an explicit slug and handoff; Ralplan handoffs also require an explicit run ID.
+Persisted state uses one canonical nested `state` object. Flattened transcript fields, malformed arrays, unplanned answers, missing answer shells during scoring, and inferred project classification are rejected rather than repaired. Confirmed topology records require explicit component descriptions, evidence, statuses, and deferrals. Question planning requires an explicit bottleneck rationale, and planning, answer recording, and scoring require the same explicit question identity. Spec writes require an explicit slug and handoff; Ralplan handoffs also require an explicit run ID.
 
 ## Workflow
 
 1. Emit the threshold marker and initialize state.
-2. Classify greenfield/brownfield context.
+2. Classify greenfield/brownfield context; stop if repository exploration cannot establish the classification.
 3. Enumerate top-level components before deep questioning.
 4. Ask one question per round and record the answer.
 5. Score ambiguity and contradictions after each answer.

@@ -9,7 +9,9 @@ export function questionHash(questionText: string): string {
 }
 
 export function answerHash(selectedOptions: string[] | undefined, customInput: string | undefined): string {
-	return hashContent(JSON.stringify({ selected: selectedOptions ?? [], custom: customInput ?? null }));
+	const selected = selectedOptions === undefined ? [] : selectedOptions;
+	const custom = customInput === undefined ? null : customInput;
+	return hashContent(JSON.stringify({ selected, custom }));
 }
 
 export function deriveRoundKey(

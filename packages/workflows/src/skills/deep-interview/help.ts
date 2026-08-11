@@ -10,7 +10,7 @@ export const DEEP_INTERVIEW_SKILL_HELP: WorkflowSkillHelp = {
 	],
 	commandOrder: [
 		"`pi workflow state deep-interview read --session <session-id> --json` to inspect state.",
-		'`pi workflow deep-interview plan-question --input \'{"sessionId":"<session-id>","round":1,"questionId":"q1","questionText":"..."}\' --json` before asking each single user-facing question.',
+		'`pi workflow deep-interview plan-question --input \'{"sessionId":"<session-id>","round":1,"questionId":"q1","questionText":"...","rationale":"..."}\' --json` before asking each single user-facing question.',
 		'`pi workflow deep-interview record-answer --input \'{"sessionId":"<session-id>","round":1,"questionId":"q1","questionText":"...","customInput":"..."}\' --json` after the user answers.',
 		'`pi workflow deep-interview record-scoring --input \'{"sessionId":"<session-id>","round":1,"questionId":"q1","scores":{"goal":0.6},"ambiguity":0.3}\' --json` after recording the answer.',
 		'`pi workflow deep-interview closure-check --input \'{"sessionId":"<session-id>"}\' --json` before final spec writing.',
@@ -38,9 +38,9 @@ export const DEEP_INTERVIEW_SKILL_HELP: WorkflowSkillHelp = {
 				"component?: string",
 				"dimension?: string",
 				"ambiguity?: number",
-				"rationale?: string",
+				"rationale: string (required; bottleneck reason)",
 			],
-			example: `pi workflow deep-interview plan-question --input '{"sessionId":"<session-id>","round":1,"questionId":"q1","questionText":"..."}' --json`,
+			example: `pi workflow deep-interview plan-question --input '{"sessionId":"<session-id>","round":1,"questionId":"q1","questionText":"...","rationale":"..."}' --json`,
 		},
 		"record-answer": {
 			summary: "Record or replace an answered round, including optional topology lock.",
@@ -77,7 +77,7 @@ export const DEEP_INTERVIEW_SKILL_HELP: WorkflowSkillHelp = {
 		},
 		"closure-check": {
 			summary: "Run the closure/acceptance guard before spec writing.",
-			when: "Use only when ambiguity is at/below threshold or the user explicitly exits early.",
+			when: "Use only when ambiguity is at or below the threshold.",
 			input: ["sessionId: string (required; current session)"],
 			example: `pi workflow deep-interview closure-check --input '{"sessionId":"<session-id>"}' --json`,
 		},
@@ -94,7 +94,7 @@ export const DEEP_INTERVIEW_SKILL_HELP: WorkflowSkillHelp = {
 		},
 		"write-spec": {
 			summary: "Persist the finalized spec and apply the explicit handoff decision.",
-			when: "Use only after `closure-check` and `restate-goal` gates pass, unless explicitly allowing early exit.",
+			when: "Use only after `closure-check` and `restate-goal` gates pass.",
 			input: [
 				"sessionId: string (required; current session)",
 				"slug: string (required)",

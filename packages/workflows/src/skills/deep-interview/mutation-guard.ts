@@ -18,12 +18,9 @@ export interface MutationGuardInput {
 	enforceWorkflowState?: boolean;
 }
 
-export interface MutationGuardDecision {
-	blocked: boolean;
-	message?: string;
-	targets: string[];
-	reason?: string;
-}
+export type MutationGuardDecision =
+	| { blocked: false; targets: string[] }
+	| { blocked: true; message: string; targets: string[]; reason: string };
 
 async function hasActiveInterview(cwd: string, sessionId: string): Promise<boolean> {
 	const state = await readWorkflowActiveState(cwd, { sessionId });
@@ -80,5 +77,5 @@ export async function getDeepInterviewMutationDecision(input: MutationGuardInput
 
 export async function assertDeepInterviewMutationAllowed(input: MutationGuardInput): Promise<void> {
 	const decision = await getDeepInterviewMutationDecision(input);
-	if (decision.blocked) throw new Error(decision.message ?? DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE);
+	if (decision.blocked) throw new Error(decision.message);
 }

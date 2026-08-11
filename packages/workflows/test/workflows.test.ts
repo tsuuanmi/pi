@@ -221,7 +221,13 @@ describe("workflow runtime", () => {
 		const inputPath = join(cwd, "payload.json");
 		await writeFile(
 			inputPath,
-			JSON.stringify({ sessionId, round: 1, questionId: "q1", questionText: "What should ship?" }),
+			JSON.stringify({
+				sessionId,
+				round: 1,
+				questionId: "q1",
+				questionText: "What should ship?",
+				rationale: "The delivery goal is unknown",
+			}),
 			"utf8",
 		);
 
@@ -232,6 +238,30 @@ describe("workflow runtime", () => {
 		expect(relative.status).toBe(0);
 		expect(JSON.parse(relative.stdout)).toMatchObject({ ok: true });
 
+		const absoluteSession = `${sessionId}-absolute`;
+		await writeWorkflowState(
+			cwd,
+			"deep-interview",
+			{
+				active: true,
+				current_phase: "interviewing",
+				threshold: 0.05,
+				state: { interview_id: "file-input-absolute", rounds: [], established_facts: [] },
+			},
+			"pi test setup",
+			{ sessionId: absoluteSession },
+		);
+		await writeFile(
+			inputPath,
+			JSON.stringify({
+				sessionId: absoluteSession,
+				round: 1,
+				questionId: "q1",
+				questionText: "What should ship?",
+				rationale: "The delivery goal is unknown",
+			}),
+			"utf8",
+		);
 		const absolute = await runWorkflowCommand(
 			["deep-interview", "plan-question", "--input-file", inputPath, "--json"],
 			cwd,

@@ -44,7 +44,7 @@ export async function finalizeDeepInterviewSpecState(
 		spec_sha256: input.sha256,
 		handoff: input.handoff,
 	});
-	const state = await replaceWorkflowState(cwd, "deep-interview", next, "pi deep-interview write-spec", { sessionId });
+	await replaceWorkflowState(cwd, "deep-interview", next, "pi deep-interview write-spec", { sessionId });
 	// Target handoffs update active state atomically through applyHandoffToActiveState.
 	if (input.handoff === "stop") {
 		await syncWorkflowActiveState(
@@ -52,11 +52,11 @@ export async function finalizeDeepInterviewSpecState(
 			{
 				skill: "deep-interview",
 				active: false,
-				phase: state.current_phase,
+				phase: next.current_phase,
 				state_path: workflowStatePath(cwd, "deep-interview", sessionId),
-				hud: deriveDeepInterviewHud(state, {
-					phase: state.current_phase,
+				hud: deriveDeepInterviewHud(next, {
 					specStatus: "persisted",
+					updatedAt: new Date().toISOString(),
 				}),
 			},
 			{ sessionId },

@@ -81,7 +81,8 @@ export function validateDeepInterviewScoredTransition(
 	prior: DeepInterviewRoundRecord | undefined,
 	next: DeepInterviewRoundRecord,
 ): TransitionValidationResult {
-	const { obstacles, skillCtx } = mapDeepInterviewTriggersToObstacles(next.triggers ?? [], prior, next);
+	const triggers = next.triggers === undefined ? [] : next.triggers;
+	const { obstacles, skillCtx } = mapDeepInterviewTriggersToObstacles(triggers, prior, next);
 	const result = validateObstacles(obstacles, deepInterviewObstacleValidator, skillCtx, {
 		priorPresent: prior !== undefined,
 	});
