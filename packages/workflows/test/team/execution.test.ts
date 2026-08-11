@@ -99,7 +99,7 @@ describe("team execution boundary", () => {
 			persistIds: ["task-1"],
 			agents,
 			routes: { "task-1": { capabilities: ["worker"] } },
-			options: { abortSignal: controller.signal },
+			signal: controller.signal,
 		});
 
 		await started;
@@ -147,7 +147,7 @@ describe("team execution boundary", () => {
 				persistIds: ["task-1"],
 				agents,
 				routes: { "task-1": { capabilities: ["worker"] } },
-				options: { abortSignal: controller.signal },
+				signal: controller.signal,
 			}),
 		).rejects.toThrow();
 

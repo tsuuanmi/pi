@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **team**: Team Orchestrator runs now enforce strict checkpoint persistence, replace the generic Orchestrator options bag with a direct `signal`, and reject caller-controlled execution policies.
 - **receipts**: Renamed generic workflow runtime receipt APIs to `WorkflowRuntimeReceipt`, `readWorkflowRuntimeReceipts`, `appendWorkflowRuntimeReceipt`, and `isWorkflowRuntimeReceiptValid`; replaced the misnamed workflow receipt helper with `WorkflowToolDetails`/`workflowToolDetails`; removed the mutable receipt-family rule registry, and stopped inferring final-package sections from legacy aliases.
 - **ultragoal**: Replaced `record-review-blockers` with the typed `record-obstacle` action and removed the legacy review-blocker writer/event path.
 - **packaging**: Pi resources now resolve exclusively from the compiled `dist` tree; source-path package metadata and host-side manifest rewriting were removed.

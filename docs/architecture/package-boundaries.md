@@ -234,10 +234,10 @@ Completed guardrails:
 
 | Rank | Task | ROI | Target package(s) | Exit criteria |
 | ---: | --- | --- | --- | --- |
-| 1 | Reconcile Team dependency and recovery semantics with `TaskQueue` | High | `pi-workflows`, `pi-orchestrator` | One owner for `depends_on`/`blocked_by`; resume and failure recovery are deterministic |
+| 1 | Reconcile Team dependency and recovery semantics with `TaskQueue` | Complete | `pi-workflows`, `pi-orchestrator` | One owner for `depends_on`/`blocked_by`; resume and failure recovery are deterministic |
 | 2 | Remove remaining Ultragoal legacy/dual-write paths | Complete | `pi-workflows` | Typed obstacle recording, blocker projection, guard decisions and resolution use one canonical transition |
 | 3 | Complete receipt reference boundaries | Complete | all packages | Public receipt names identify their owning layer; workflow details are distinct from durable receipts; lower receipt schemas are not copied |
-| 4 | Prove workflow-owned checkpoint recovery parity | Medium-high | `pi-workflows`, `pi-orchestrator` | Restart and interrupted-task recovery are idempotent and package-independent |
+| 4 | Prove workflow-owned checkpoint recovery parity | Complete | `pi-workflows`, `pi-orchestrator` | Restart and interrupted-task recovery are idempotent; duplicate events are suppressed; checkpoint writes fail strictly |
 | 5 | Normalize event ownership and adapter documentation | Medium | all packages | Cross-layer event mappings are explicit and layer-owned |
 | 6 | Define approved Ralplan output adapters | Medium-low | `pi-workflows`, `pi-orchestrator` | Approved plans map to task inputs without moving planning policy |
 | 7 | Evaluate Ultragoal integration only for a real generic DAG | Low-medium | `pi-workflows`, `pi-orchestrator` | No adapter exists without independent goals and generic dependencies |
@@ -246,5 +246,5 @@ Completed guardrails:
 ## Recommended next steps
 
 1. Keep `npm run check:package-boundaries` passing as package relationships evolve.
-2. Audit Team dependency and recovery semantics before changing any workflow-to-orchestrator mapping.
+2. Keep cross-layer event ownership explicit as new adapters are added.
 3. Keep `pi` as the integration shell and avoid adding orchestration or workflow business logic there.

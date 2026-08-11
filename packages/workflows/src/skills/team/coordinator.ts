@@ -78,7 +78,7 @@ function createExecutionInput(
 		persistIds: role.batch.persistIds,
 		agents: role.agents,
 		routes: role.batch.routes,
-		options: { abortSignal: signal },
+		signal,
 	};
 }
 

@@ -310,6 +310,41 @@ Completed. Public receipt names identify their owning layer, workflow tool paylo
 - Receipt integrity and lifecycle consistency have one immutable implementation.
 - No lower-layer receipt schema is copied into Workflows and no speculative shared reference type is added.
 
+## Phase 9 - Team checkpoint recovery parity
+
+### Goal
+
+Make workflow-owned Team recovery deterministic across restart, duplicate events, interrupted tasks, and checkpoint persistence failures without copying Orchestrator checkpoint logic.
+
+### Canonical contract
+
+- Orchestrator owns checkpoint schema validation, interrupted-task reset, resume execution, and checkpoint failure policy semantics.
+- Workflows owns session-scoped checkpoint storage, fresh/resume admission, failure projection, and event deduplication.
+- Team runs always use strict checkpoint persistence; workflow callers cannot downgrade to best-effort writes.
+- No recovery path falls back to a second execution engine or mutates checkpoint internals.
+
+### File-level changes
+
+| Area | Change |
+|---|---|
+| `skills/team/orchestrator.ts` | Remove the generic Orchestrator options bag, expose cancellation as `signal`, and force strict persistence |
+| `test/team/orchestrator.test.ts` | Prove a dynamic best-effort override cannot suppress a checkpoint-save failure or start an agent |
+| Team/runtime architecture docs | Record restart, duplicate-event, interrupted-task, and strict save-failure ownership and coverage |
+| Boundary roadmap and changelog | Mark recovery parity complete and document the public option removal |
+
+### Result
+
+Completed. The Team adapter preserves Orchestrator-owned checkpoint behavior while enforcing workflow-required durability. Existing restart, resume, interrupted-task and event-idempotency coverage combines with the strict adapter failure test to close the recovery matrix.
+
+### Acceptance criteria
+
+- `TeamOrchestratorInput` does not expose a generic Orchestrator options bag; cancellation uses `signal`.
+- Runtime input cannot override the adapter's strict checkpoint policy.
+- A checkpoint-save failure rejects before agent execution.
+- Fresh execution still rejects an existing checkpoint and resume still rejects missing or terminal checkpoints.
+- Duplicate Team events remain idempotent across repeated persistence.
+- No checkpoint schema, compatibility reader, fallback engine or migration path is added to Workflows.
+
 ## Verification order
 
 1. Confirm no in-repo backups and review scoped status.

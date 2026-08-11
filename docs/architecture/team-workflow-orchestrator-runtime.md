@@ -94,7 +94,7 @@ team_execute / team_resume
 | task failure | map to workflow task failure |
 | task skipped | map to workflow skip event without inventing status |
 | checkpoint load error | fail before run |
-| checkpoint save error | governed by explicit `checkpointFailurePolicy` |
+| checkpoint save error | strict failure; workflow callers cannot downgrade persistence |
 | workflow gate failure | workflow-owned failure after orchestrator run |
 | adapter write failure | fail visibly |
 
@@ -133,7 +133,7 @@ These seams live in `@tsuuanmi/pi-workflows`.
 | B | Add focused mapping, checkpoint, event, runner, execution-state, and persistence seams | Done; the composed execution boundary preserves workflow gates |
 | C | Add explicit fresh/resume operations | Done; checkpoint reuse is explicit |
 | D | Build role task batches | Implemented; worker, reviewer, and prover batches use the orchestrator |
-| E | Add parity and recovery tests | In progress; admission, persistence, and role-batch coverage is complete |
+| E | Add parity and recovery tests | Done; restart, duplicate-event, interrupted-task, and checkpoint-save failure paths are covered |
 | F | Remove duplicate generic DAG logic | Done; team has one Orchestrator execution boundary |
 
 ## Future test plan
@@ -145,7 +145,7 @@ These seams live in `@tsuuanmi/pi-workflows`.
 | every team operation calls orchestrator | one orchestrator execution path |
 | orchestrator failure does not fall back | visible failure |
 | queue event updates workflow state | mapped event |
-| checkpoint store load/save called | strict payload |
+| checkpoint store load/save called | strict payload; save failures always surface |
 | workflow gates still run after task completion | gate-owned behavior |
 | no eligible agent emits warning | warning captured |
 | invalid operation input fails validation | no run |

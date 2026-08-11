@@ -70,7 +70,7 @@ workflow team state
 | `execution-failure.ts` | Build persisted failure state for aborted or failed runs |
 | `orchestrator.ts` | Run an explicitly configured team through `Orchestrator.run()` |
 
-`execution.ts` is the workflow-owned composition boundary for a persisted role run. `executeTeam()` requires a new run id and fresh pending role tasks; `resumeTeam()` requires an existing non-completed checkpoint. Both operations reject unresolved workflow blockers, persist failure state, deduplicate event records, and write execution fields without changing workflow status. Review and completion gates remain authoritative. Mapping modules do not own orchestration policy.
+`execution.ts` is the workflow-owned composition boundary for a persisted role run. `executeTeam()` requires a new run id and fresh pending role tasks; `resumeTeam()` requires an existing non-completed checkpoint. Both operations reject unresolved workflow blockers, persist failure state, deduplicate event records, enforce strict checkpoint saves, and write execution fields without changing workflow status. Review and completion gates remain authoritative. Mapping modules do not own orchestration policy.
 
 Names stay concise and workflow-owned. Orchestrator does not define workflow adapter names.
 
@@ -151,6 +151,7 @@ Rules:
 4. Do not mutate checkpoint internals.
 5. Let orchestrator validation reject invalid checkpoints.
 6. Keep workflow recovery metadata outside the orchestrator checkpoint.
+7. Always surface checkpoint-save failures; workflow callers cannot select best-effort persistence.
 
 ```text
 workflow storage path
@@ -203,4 +204,4 @@ Team workflow command/tool
 
 ## Remaining runtime work
 
-The focused adapter modules, explicit role coordinator, and fresh/resume operations are implemented. Each role batch has its own checkpoint; failed results are persisted and event writes are idempotent. Gate decisions remain workflow-owned. Do not integrate this team DAG into ultragoal, ralplan, or deep-interview without a separate requirement.
+The focused adapter modules, explicit role coordinator, and fresh/resume operations are implemented. Each role batch has its own strictly persisted checkpoint; failed results are persisted and event writes are idempotent. Gate decisions remain workflow-owned. Do not integrate this team DAG into ultragoal, ralplan, or deep-interview without a separate requirement.

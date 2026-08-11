@@ -1,11 +1,5 @@
 import type { Agent, AgentOptions } from "@tsuuanmi/pi-agent";
-import {
-	Orchestrator,
-	type OrchestratorCheckpointStore,
-	type RunTeamOptions,
-	type RunTeamResult,
-	Team,
-} from "@tsuuanmi/pi-orchestrator";
+import { Orchestrator, type OrchestratorCheckpointStore, type RunTeamResult, Team } from "@tsuuanmi/pi-orchestrator";
 import { mapQueueEvent, type TeamEvent } from "#workflows/skills/team/event-mapper";
 import { mapTaskReceipt, type TeamTaskReceiptRef } from "#workflows/skills/team/receipt-mapper";
 import { mapTaskExecution, mapTeamTasks, type TeamTaskRoute } from "#workflows/skills/team/task-mapper";
@@ -17,8 +11,8 @@ export interface TeamOrchestratorInput {
 	tasks: readonly TeamTask[];
 	routes?: Readonly<Record<string, TeamTaskRoute>>;
 	checkpointStore?: OrchestratorCheckpointStore;
+	signal?: AbortSignal;
 	onEvent?: (event: TeamEvent) => void;
-	options?: Omit<RunTeamOptions, "checkpointStore" | "onQueueEvent">;
 }
 
 export interface TeamOrchestratorOutput {
@@ -35,7 +29,8 @@ export async function runTeamOrchestrator(input: TeamOrchestratorInput): Promise
 	const mapped = mapTeamTasks({ tasks: input.tasks, routes: input.routes });
 	const team = new Team({ name, agents: input.agents });
 	const result = await new Orchestrator().run(team, mapped.tasks, {
-		...input.options,
+		abortSignal: input.signal,
+		checkpointFailurePolicy: "strict",
 		checkpointStore: input.checkpointStore,
 		onQueueEvent: input.onEvent ? (event) => input.onEvent?.(mapQueueEvent(event)) : undefined,
 	});

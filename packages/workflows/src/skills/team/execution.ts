@@ -78,7 +78,7 @@ async function runExecution(
 	input: TeamExecutionInput,
 	checkpointStore: ReturnType<typeof createSessionCheckpointStore>,
 ) {
-	const { cwd, sessionId, runId, role, snapshot: initial, tasks, persistIds, onEvent, options } = input;
+	const { cwd, sessionId, runId, role, snapshot: initial, tasks, persistIds, onEvent, signal } = input;
 	const teamId = requiredTeamId(initial.team_id);
 	const events: TeamEvent[] = [];
 	let output: TeamOrchestratorOutput;
@@ -89,7 +89,7 @@ async function runExecution(
 			tasks,
 			routes: input.routes,
 			checkpointStore,
-			options,
+			signal,
 			onEvent: (event) => {
 				events.push(event);
 				onEvent?.(event);
