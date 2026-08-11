@@ -4,9 +4,8 @@
 
 - **interactive**: Moved repository discovery, branch watching, status polling, and cached snapshots into a dedicated Pi-owned repository-state service.
 - **tools**: Tool renderers now use neutral expansion copy instead of consulting UI-host keybindings outside the interactive component boundary.
-
 - **subagents**: The model-visible `subagent_spawn` tool now requires a registered `agent` profile and no longer accepts an inventable `role` label; the spawned subagent's role is always the loaded agent profile name, so only known agent profiles (from `.agent/agents`, `.agents/agents`, user agents, or bundled package agents) can be spawned.
-- **ui**: Interactive assistant thinking blocks now render in full by default instead of a one-line preview; `Ctrl+T` still hides thinking and `Ctrl+O` still collapses/expands details.
+- **ui**: Interactive assistant thinking blocks now render in full by default instead of a one-line preview; `Ctrl+T` still hides thinking. `Ctrl+O` now only collapses/expands tool output and no longer affects thinking.
 - **sessions**: The session loader accepts legacy version 3 JSONL files (and their `compaction.fromHook` field) on read so existing sessions open again; new files continue to be written at version 4.
 - **storage**: Removed dedicated POSIX permission handling from session, auth, settings, and package directories; regular-file validation and atomic writes remain.
 - **packages**: Bundled package discovery and asset copying now derive from compiled `pi` manifests; unknown `pi:` sources fail instead of falling back to local paths. The orchestrator dependency remains in Pi's runtime closure for dynamically loaded bundled packages, without a static Pi import.
@@ -18,7 +17,6 @@
 ### Breaking Changes
 
 - **extensions**: Configured key hint helpers now require the injected host `KeybindingsManager`; `ReadonlyFooterDataProvider` adds `getGitStatus()` and replaces `onBranchChange()` with `onChange()`.
-
 - **sessions**: Session files now require strict version 4 JSONL; removed older-version migration, malformed-record recovery, compatibility fields, implicit recent-session creation, and the `continueRecent()` API.
 - **settings**: Settings now use strict schema validation and synchronous atomic persistence; invalid files throw instead of loading empty settings, and `flush()`, `drainErrors()`, and settings diagnostics were removed.
 - **auth**: Credential storage now fails closed: `auth.json` is validated with a strict schema on load and write, files use atomic writes, malformed files throw, and `setFallbackResolver()`, `drainErrors()`, deferred `loadError`/`errors`, and the `"fallback"` auth source were removed. `switchAccount()` and `removeAccount()` return `void` and throw on missing accounts; `removeAccount()` requires switching before removing the active account; API key resolution throws on command failure, empty output, or unset environment variables instead of returning `undefined`.

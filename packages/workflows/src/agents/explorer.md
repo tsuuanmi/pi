@@ -1,7 +1,7 @@
 ---
 name: explorer
 description: Read-only context explorer and research agent. Produces a structured context_map for ralplan planning, or a concise research report for general read-only investigation. Use for gathering information before deep-interview questions, before ralplan planning, or any read-only codebase research where a report is needed.
-model: openai-coex/gpt-5.6-luna
+model: openai-codex/gpt-5.6-luna
 thinkingLevel: low
 tools:
   - read

@@ -44,6 +44,7 @@ const ARCHITECT_CLARITY_RE = /\b(clear|watch|block)\b/i;
 const ARCHITECT_REC_PHRASE_RE = /\brequest[ _-]changes\b/i;
 const ARCHITECT_REC_RE = /\b(approve|comment)\b/i;
 const RATIONALE_RE = /^\s*(rationale|because|reason)\s*[:-]\s*(.+?)\s*$/i;
+const RATIONALE_INLINE_RE = /\|\s*rationale\s*:\s*(.+?)\s*$/i;
 
 /**
  * Build a search window from lines that look like a verdict/recommendation
@@ -65,16 +66,62 @@ function verdictWindow(text: string): string {
 
 function extractRationale(text: string): string | undefined {
 	for (const line of text.split(/\r?\n/)) {
+		const inline = RATIONALE_INLINE_RE.exec(line);
+		if (inline) return inline[1];
 		const match = RATIONALE_RE.exec(line);
 		if (match) return match[2];
 	}
 	return undefined;
 }
 
+/**
+ * An explicit verdict label line, e.g. `Verdict: ITERATE`, `## Verdict\nAPPROVE`,
+ * or `Verdict: critic | verdict: iterate | rationale: ...`. Role prompts emit the
+ * authoritative verdict in this form at the end of the artifact.
+ */
+const CRITIC_LABEL_RE = /^\s*#*\s*verdict\b/i;
+
+/**
+ * Extract the critic verdict from an explicit `Verdict:` label line, preferring
+ * the token on the same line after the separator and falling back to the next
+ * non-empty line (`## Verdict\nAPPROVE` layouts). Returns the LAST such match
+ * (the authoritative verdict section sits at the end of the artifact).
+ */
+function parseCriticVerdictFromLabels(text: string): RalplanCriticVerdict | undefined {
+	const lines = text.split(/\r?\n/);
+	let found: RalplanCriticVerdict | undefined;
+	for (let i = 0; i < lines.length; i++) {
+		if (!CRITIC_LABEL_RE.test(lines[i])) continue;
+		const sameLine = CRITIC_RE.exec(lines[i]);
+		if (sameLine) {
+			found = { role: "critic", verdict: sameLine[1].toLowerCase() as RalplanCriticVerdictKind };
+			continue;
+		}
+		for (let j = i + 1; j < lines.length; j++) {
+			if (lines[j].trim() === "") continue;
+			const nextLine = CRITIC_RE.exec(lines[j]);
+			if (nextLine) {
+				found = { role: "critic", verdict: nextLine[1].toLowerCase() as RalplanCriticVerdictKind };
+			}
+			break;
+		}
+	}
+	if (found) {
+		const rationale = extractRationale(text);
+		return { ...found, ...(rationale ? { rationale } : {}) };
+	}
+	return undefined;
+}
+
 function parseCriticVerdict(text: string): RalplanCriticVerdict | undefined {
-	// Prefer the verdict-context window; fall back to the full text. "iterate"
-	// and "reject" are distinctive, and a false "approve" is harmless (approve
-	// produces no obstacle), so the full-text fallback is acceptable for critic.
+	// Prefer explicit `Verdict:` label lines, which role prompts emit at the end
+	// of the artifact and which anchor the authoritative verdict. Prose can use
+	// "approve"/"iterate"/"reject" before that line (e.g. "Use `approve` only if"),
+	// so a free-text first match can misread the verdict — and a false "approve"
+	// falsely closes the run, not harmless. Only fall back to the verdict-context
+	// window / full text when no label is present.
+	const labeled = parseCriticVerdictFromLabels(text);
+	if (labeled) return labeled;
 	const window = verdictWindow(text);
 	let match = window ? CRITIC_RE.exec(window) : null;
 	if (!match) match = CRITIC_RE.exec(text);

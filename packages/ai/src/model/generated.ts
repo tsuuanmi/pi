@@ -57,40 +57,6 @@ export const MODELS = {
 			contextWindow: 200000,
 			maxTokens: 64000,
 		} satisfies Model<"anthropic-messages">,
-		"claude-opus-4-1": {
-			id: "claude-opus-4-1",
-			name: "Claude Opus 4.1 (latest)",
-			api: "anthropic-messages",
-			provider: "anthropic",
-			baseUrl: "https://api.anthropic.com",
-			reasoning: true,
-			input: ["text", "image"],
-			cost: {
-				input: 15,
-				output: 75,
-				cacheRead: 1.5,
-				cacheWrite: 18.75,
-			},
-			contextWindow: 200000,
-			maxTokens: 32000,
-		} satisfies Model<"anthropic-messages">,
-		"claude-opus-4-1-20250805": {
-			id: "claude-opus-4-1-20250805",
-			name: "Claude Opus 4.1",
-			api: "anthropic-messages",
-			provider: "anthropic",
-			baseUrl: "https://api.anthropic.com",
-			reasoning: true,
-			input: ["text", "image"],
-			cost: {
-				input: 15,
-				output: 75,
-				cacheRead: 1.5,
-				cacheWrite: 18.75,
-			},
-			contextWindow: 200000,
-			maxTokens: 32000,
-		} satisfies Model<"anthropic-messages">,
 		"claude-opus-4-5": {
 			id: "claude-opus-4-5",
 			name: "Claude Opus 4.5 (latest)",
@@ -1310,7 +1276,7 @@ export const MODELS = {
 			provider: "openai-codex",
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
-			thinkingLevelMap: { low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { off: null, minimal: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: null, ultra: null },
 			input: ["text", "image"],
 			cost: {
 				input: 0,
@@ -1328,7 +1294,7 @@ export const MODELS = {
 			provider: "openai-codex",
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
-			thinkingLevelMap: { low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { off: null, minimal: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: null, ultra: null },
 			input: ["text", "image"],
 			cost: {
 				input: 0,
@@ -1346,7 +1312,7 @@ export const MODELS = {
 			provider: "openai-codex",
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
-			thinkingLevelMap: { low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { off: null, minimal: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: null, ultra: null },
 			input: ["text", "image"],
 			cost: {
 				input: 0,
@@ -1364,7 +1330,7 @@ export const MODELS = {
 			provider: "openai-codex",
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
-			thinkingLevelMap: { low: "low", medium: "medium", high: "high", xhigh: "xhigh" },
+			thinkingLevelMap: { off: null, minimal: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: null, ultra: null },
 			input: ["text", "image"],
 			cost: {
 				input: 0,
@@ -1382,7 +1348,7 @@ export const MODELS = {
 			provider: "openai-codex",
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
-			thinkingLevelMap: { low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max" },
+			thinkingLevelMap: { off: null, minimal: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max", ultra: null },
 			input: ["text", "image"],
 			cost: {
 				input: 0,
@@ -1400,7 +1366,7 @@ export const MODELS = {
 			provider: "openai-codex",
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
-			thinkingLevelMap: { low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max", ultra: "ultra" },
+			thinkingLevelMap: { off: null, minimal: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max", ultra: "ultra" },
 			input: ["text", "image"],
 			cost: {
 				input: 0,
@@ -1418,7 +1384,7 @@ export const MODELS = {
 			provider: "openai-codex",
 			baseUrl: "https://chatgpt.com/backend-api",
 			reasoning: true,
-			thinkingLevelMap: { low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max", ultra: "ultra" },
+			thinkingLevelMap: { off: null, minimal: null, low: "low", medium: "medium", high: "high", xhigh: "xhigh", max: "max", ultra: "ultra" },
 			input: ["text", "image"],
 			cost: {
 				input: 0,

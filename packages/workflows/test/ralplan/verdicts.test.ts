@@ -52,6 +52,29 @@ describe("ralplan verdict parser", () => {
 		it("does not match 'rejected' as REJECT (word boundary)", () => {
 			expect(parseRalplanVerdict("critic", "I rejected the earlier draft.")).toBeUndefined();
 		});
+
+		it("prefers the explicit Verdict label over prose 'approve' earlier in the text (regression)", () => {
+			// Real-world critic artifact: prose says "Use `approve` only if..." before
+			// the authoritative `Verdict:` line says iterate. The parser must anchor to
+			// the labeled verdict line, not the first free-text match.
+			const text = [
+				"# Critic pass 2",
+				"",
+				"Use `approve` ONLY if all required changes are resolved.",
+				"",
+				"## Verdict: critic | verdict: iterate | rationale: CHANGE 1 is partial.",
+			].join("\n");
+			expect(parseRalplanVerdict("critic", text)).toEqual({
+				role: "critic",
+				verdict: "iterate",
+				rationale: "CHANGE 1 is partial.",
+			});
+		});
+
+		it("takes the last explicit Verdict label when multiple are present", () => {
+			const text = ["## Verdict", "APPROVE", "", "## Verdict", "REJECT"].join("\n");
+			expect(parseRalplanVerdict("critic", text)).toEqual({ role: "critic", verdict: "reject" });
+		});
 	});
 
 	describe("architect", () => {
