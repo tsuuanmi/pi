@@ -109,8 +109,15 @@ interface StatusLineSessionLike {
   subagentManager?: { getActiveCount(): number };
 }
 
+interface GitStatusSummary {
+  staged: number;
+  unstaged: number;
+  untracked: number;
+}
+
 interface StatusLineDataProvider {
   getGitBranch(): string | null;
+  getGitStatus(): GitStatusSummary | null;
   getExtensionStatuses(): ReadonlyMap<string, string>;
   getAvailableProviderCount(): number;
 }

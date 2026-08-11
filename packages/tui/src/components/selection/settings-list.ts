@@ -1,7 +1,7 @@
 import type { Component } from "#tui/components/component";
 import { Input } from "#tui/components/inputs/input";
 import { fuzzyFilter } from "#tui/editor/completion/fuzzy";
-import { getKeybindings } from "#tui/input/keyboard/keybindings";
+import type { KeybindingsManager } from "#tui/input/keyboard/keybindings";
 import { truncateToWidth, visibleWidth, wrapTextWithAnsi } from "#tui/utilities/text";
 
 export interface SettingItem {
@@ -40,6 +40,7 @@ export class SettingsList implements Component {
 	private onChange: (id: string, newValue: string) => void;
 	private onCancel: () => void;
 	private searchInput?: Input;
+	private readonly keybindings: KeybindingsManager;
 	private searchEnabled: boolean;
 
 	// Submenu state
@@ -47,6 +48,7 @@ export class SettingsList implements Component {
 	private submenuItemIndex: number | null = null;
 
 	constructor(
+		keybindings: KeybindingsManager,
 		items: SettingItem[],
 		maxVisible: number,
 		theme: SettingsListTheme,
@@ -54,6 +56,7 @@ export class SettingsList implements Component {
 		onCancel: () => void,
 		options: SettingsListOptions = {},
 	) {
+		this.keybindings = keybindings;
 		this.items = items;
 		this.filteredItems = items;
 		this.maxVisible = maxVisible;
@@ -62,7 +65,7 @@ export class SettingsList implements Component {
 		this.onCancel = onCancel;
 		this.searchEnabled = options.enableSearch ?? false;
 		if (this.searchEnabled) {
-			this.searchInput = new Input();
+			this.searchInput = new Input(keybindings);
 		}
 	}
 
@@ -174,7 +177,7 @@ export class SettingsList implements Component {
 		}
 
 		// Main list input handling
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 		const displayItems = this.searchEnabled ? this.filteredItems : this.items;
 		if (kb.matches(data, "tui.select.up")) {
 			if (displayItems.length === 0) return;
@@ -182,7 +185,7 @@ export class SettingsList implements Component {
 		} else if (kb.matches(data, "tui.select.down")) {
 			if (displayItems.length === 0) return;
 			this.selectedIndex = this.selectedIndex === displayItems.length - 1 ? 0 : this.selectedIndex + 1;
-		} else if (kb.matches(data, "tui.select.confirm") || data === " ") {
+		} else if (kb.matches(data, "tui.select.confirm")) {
 			this.activateItem();
 		} else if (kb.matches(data, "tui.select.cancel")) {
 			this.onCancel();

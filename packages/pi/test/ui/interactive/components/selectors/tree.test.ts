@@ -1,6 +1,6 @@
 import { stripVTControlCharacters } from "node:util";
-import { initTheme, setKeybindings, visibleWidth } from "@tsuuanmi/pi-tui";
-import { beforeAll, beforeEach, describe, expect, test } from "vitest";
+import { initTheme, visibleWidth } from "@tsuuanmi/pi-tui";
+import { beforeAll, describe, expect, test } from "vitest";
 import type {
 	CustomMessageEntry,
 	ModelChangeEntry,
@@ -11,13 +11,10 @@ import type {
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import { TreeSelectorComponent } from "#pi/ui/interactive/components/selectors/tree";
 
+const keybindings = new KeybindingsManager();
+
 beforeAll(() => {
 	initTheme("dark");
-});
-
-beforeEach(() => {
-	// Ensure test isolation: keybindings are a global singleton
-	setKeybindings(new KeybindingsManager());
 });
 
 // Helper to create a user message entry
@@ -173,6 +170,7 @@ describe("TreeSelectorComponent", () => {
 			const tree = buildTree(entries);
 
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"model-1", // currentLeafId is the model_change entry
 				24,
@@ -203,6 +201,7 @@ describe("TreeSelectorComponent", () => {
 			const tree = buildTree(entries);
 
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"thinking-1",
 				24,
@@ -227,6 +226,7 @@ describe("TreeSelectorComponent", () => {
 			const tree = buildTree(entries);
 
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"asst-2",
 				24,
@@ -247,6 +247,7 @@ describe("TreeSelectorComponent", () => {
 			const entries = [userMessage("user-1", null, "hello"), assistantMessage("asst-1", "user-1", "hi")];
 			const tree = buildTree(entries);
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"asst-1",
 				24,
@@ -274,6 +275,7 @@ describe("TreeSelectorComponent", () => {
 			tree[0]!.labelTimestamp = labelDate.toISOString();
 
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"asst-1",
 				24,
@@ -342,6 +344,7 @@ describe("TreeSelectorComponent", () => {
 		test("ctrl+right unfolds a folded node, then does segment jump when unfolded", () => {
 			const tree = buildBranchingTree();
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"asst-4a",
 				24,
@@ -378,6 +381,7 @@ describe("TreeSelectorComponent", () => {
 		test("alt+left/right are aliases for fold and unfold navigation", () => {
 			const tree = buildBranchingTree();
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"asst-4a",
 				24,
@@ -402,6 +406,7 @@ describe("TreeSelectorComponent", () => {
 		test("folding root hides entire subtree, nested fold preserved on unfold", () => {
 			const tree = buildBranchingTree();
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"asst-4a",
 				24,
@@ -438,6 +443,7 @@ describe("TreeSelectorComponent", () => {
 		test("fold and navigate on non-active branch", () => {
 			const tree = buildBranchingTree();
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"asst-4a",
 				24,
@@ -479,6 +485,7 @@ describe("TreeSelectorComponent", () => {
 			];
 			const tree = buildTree(entries);
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"asst-1",
 				24,
@@ -521,6 +528,7 @@ describe("TreeSelectorComponent", () => {
 			];
 			const tree = buildTree(entries);
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"asst-2",
 				24,
@@ -542,6 +550,7 @@ describe("TreeSelectorComponent", () => {
 		test("search resets fold state", () => {
 			const tree = buildBranchingTree();
 			const selector = new TreeSelectorComponent(
+				keybindings,
 				tree,
 				"asst-4a",
 				24,

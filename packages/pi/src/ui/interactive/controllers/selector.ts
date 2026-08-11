@@ -194,6 +194,7 @@ export class SelectorController {
 			.sort((a, b) => a.label.localeCompare(b.label));
 		this.showSelector((done) => {
 			const selector = new SettingsSelectorComponent(
+				this.keybindings,
 				{
 					autoCompact: this.session.autoCompactionEnabled,
 					enableSkillCommands: this.settingsManager.getEnableSkillCommands(),
@@ -322,6 +323,7 @@ export class SelectorController {
 
 		this.showSelector((done) => {
 			const selector = new TreeSelectorComponent(
+				this.keybindings,
 				tree,
 				realLeafId,
 				this.ui.terminal.rows,
@@ -384,7 +386,7 @@ export class SelectorController {
 							this.ui,
 							(spinner) => theme.fg("accent", spinner),
 							(text) => theme.fg("muted", text),
-							`Summarizing branch... (${keyText("app.interrupt")} to cancel)`,
+							`Summarizing branch... (${keyText(this.keybindings, "app.interrupt")} to cancel)`,
 						);
 						this.statusContainer.addChild(summaryLoader);
 						this.ui.requestRender();

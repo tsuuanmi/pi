@@ -35,7 +35,7 @@ const ALL_SEGMENT_IDS: StatusLineSegmentId[];
 
 ### `git`
 
-`branch` comes from the data provider; `status` (staged/unstaged/untracked counts) comes from the porcelain cache. The segment is `warning`-colored when dirty, `dim` when clean. Indicators: `*` unstaged, `+` staged, `?` untracked, shown only when the corresponding count is > 0 and the option is enabled.
+`branch` and `status` (staged/unstaged/untracked counts) are host-provided snapshots. The segment is `warning`-colored when dirty, `dim` when clean. Indicators: `*` unstaged, `+` staged, `?` untracked, shown only when the corresponding count is > 0 and the option is enabled.
 
 ### `context_pct`
 

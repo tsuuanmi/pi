@@ -108,9 +108,9 @@ Canonical source: [`packages/tui/src/`](../../packages/tui/src). Public access: 
 | `Terminal`, `ProcessTerminal`, `TUI`, render/focus/overlay loop | Pi imports root | Pi constructs the interactive application and controls lifecycle | Raw mode, keyboard protocol, frame diff, cursor, or terminal render loop |
 | `Component`, `EditorComponent`, input/editor primitives | Pi imports root | Pi builds application dialogs/controllers and exposes selected types to extensions | Text editing, focus, autocomplete, or overlay mechanics in Pi |
 | Theme types, parsing and rendering projections | Pi imports root | Pi discovers theme files and persists the selected theme | Theme parser/schema or component color projections |
-| Generic keybinding definitions/matching | Pi imports root | Pi adds application actions and loads keybinding settings | Another generic matcher or TUI key vocabulary |
+| Generic keybinding definitions/matching | Pi imports root | Pi creates one manager per UI host, adds application actions, loads settings and injects the manager into interactive components | A mutable active-manager singleton, fallback manager or second matcher |
 | `HudSummary`, normalization and rendering | Workflows registers a generic provider; Pi/TUI import root | Workflows produces domain HUD data; Pi composes the status area and TUI renders it | Workflow state/persistence in TUI or ANSI HUD rendering in Workflows |
-| Status-line provider contracts | Pi imports root | Pi supplies session/footer/HUD data | Session/model/provider logic inside TUI |
+| Status-line provider contracts | Pi imports root | Pi acquires/caches repository state and supplies session/footer/HUD snapshots | Git processes, repository watchers/pollers, or session/model/provider logic inside TUI |
 
 TUI receives data through structural providers and callbacks. It must not import Pi or Workflows.
 

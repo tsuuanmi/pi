@@ -1,7 +1,7 @@
 import type { Tool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import { Container, getLanguageFromPath, highlightCode, keyHint, Text, type Theme } from "@tsuuanmi/pi-tui";
+import { Container, getLanguageFromPath, highlightCode, Text, type Theme } from "@tsuuanmi/pi-tui";
 import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname } from "path";
 import { type Static, Type } from "typebox";
@@ -153,7 +153,7 @@ function formatWriteCall(
 		const remaining = lines.length - maxLines;
 		text += `\n\n${displayLines.map((line) => (lang ? line : theme.fg("toolOutput", replaceTabs(line)))).join("\n")}`;
 		if (remaining > 0) {
-			text += `${theme.fg("muted", `\n... (${remaining} more lines, ${totalLines} total,`)} ${keyHint("app.tools.expand", "to expand")}${theme.fg("muted", ")")}`;
+			text += `${theme.fg("muted", `\n... (${remaining} more lines, ${totalLines} total,`)} ${theme.fg("muted", " expand for details)")}`;
 		}
 	}
 

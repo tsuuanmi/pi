@@ -1,5 +1,6 @@
 import { initTheme, ProcessTerminal, TUI } from "@tsuuanmi/pi-tui";
 import type { ResolvedPaths } from "#pi/resources/types";
+import { KeybindingsManager } from "#pi/settings/keybindings";
 import type { SettingsManager } from "#pi/settings/manager";
 import { ResourceSettingsComponent } from "#pi/ui/package/settings";
 
@@ -15,11 +16,13 @@ export async function selectConfig(options: ConfigSelectorOptions): Promise<void
 
 	return new Promise((resolve) => {
 		const ui = new TUI(new ProcessTerminal());
+		const keybindings = KeybindingsManager.create(options.agentDir);
 		let resolved = false;
 
 		const selector = new ResourceSettingsComponent(
 			options.resolvedPaths,
 			options.settingsManager,
+			keybindings,
 			options.cwd,
 			options.agentDir,
 			() => {

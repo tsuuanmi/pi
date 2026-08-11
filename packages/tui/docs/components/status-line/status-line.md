@@ -22,7 +22,7 @@ class StatusLineComponent implements Component {
 ## Construction
 
 - `session` — the host session (model, thinking level, session manager, context usage, subagents).
-- `dataProvider` — the host data provider (git branch via `.git/HEAD` watch, extension statuses, provider count). The component does **not** own the `.git/HEAD` watcher.
+- `dataProvider` — host-owned repository, extension-status, and provider-count snapshots. The component does not execute Git, watch repository files, or poll repository state.
 - `settingsSource` — a live handle to the current `StatusLineSettings`; read on every render so config changes take effect immediately.
 - `requestRender` — called from background refresh callbacks when a cache updates.
 - `options.readHudEntries` — optional async HUD entry reader (see [Types](types.md)).
@@ -33,12 +33,9 @@ class StatusLineComponent implements Component {
 
 ## Background refresh
 
-The component owns two caches, both error-resilient (never throw on the render path):
+The component owns only the HUD cache: `readHudEntries({ cwd, sessionId })` is refreshed every second. On failure the cache remains unchanged (initially `[]` until a valid read). Repository failures and refresh timing are owned by the host data provider.
 
-- **Git porcelain cache** — `git status --porcelain` counts, refreshed every 10s. Session changes invalidate results from an older refresh.
-- **HUD cache** — `readHudEntries({ cwd, sessionId })`, refreshed every 1s. On failure the cache is left unchanged (initially `[]` until a valid read).
-
-Each refresh callback calls `requestRender()` when the cache value changed so the host redraws.
+A changed HUD cache calls `requestRender()` so the host redraws.
 
 ## Rail assembly
 

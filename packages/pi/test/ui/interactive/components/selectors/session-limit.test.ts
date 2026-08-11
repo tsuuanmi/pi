@@ -1,5 +1,5 @@
-import { initTheme, setKeybindings } from "@tsuuanmi/pi-tui";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { initTheme } from "@tsuuanmi/pi-tui";
+import { beforeAll, describe, expect, it } from "vitest";
 import type { SessionInfo } from "#pi/session/types";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session";
@@ -32,10 +32,6 @@ describe("session selector result limit", () => {
 
 	beforeAll(() => {
 		initTheme("dark");
-	});
-
-	beforeEach(() => {
-		setKeybindings(new KeybindingsManager());
 	});
 
 	it("loads 50 sessions initially and can load the next page", async () => {

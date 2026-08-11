@@ -1,6 +1,7 @@
 import { Container } from "#tui/components/component";
 import { DynamicBorder } from "#tui/components/layout/border";
 import { type SelectItem, SelectList, type SelectListLayoutOptions } from "#tui/components/selection/select-list";
+import type { KeybindingsManager } from "#tui/input/keyboard/keybindings";
 import { getAvailableThemes, getSelectListTheme } from "#tui/theme/theme";
 
 const THEME_SELECT_LIST_LAYOUT: SelectListLayoutOptions = {
@@ -16,6 +17,7 @@ export class ThemeSelectorComponent extends Container {
 	private onPreview: (themeName: string) => void;
 
 	constructor(
+		keybindings: KeybindingsManager,
 		currentTheme: string,
 		onSelect: (themeName: string) => void,
 		onCancel: () => void,
@@ -36,7 +38,7 @@ export class ThemeSelectorComponent extends Container {
 		this.addChild(new DynamicBorder());
 
 		// Create selector
-		this.selectList = new SelectList(themeItems, 10, getSelectListTheme(), THEME_SELECT_LIST_LAYOUT);
+		this.selectList = new SelectList(keybindings, themeItems, 10, getSelectListTheme(), THEME_SELECT_LIST_LAYOUT);
 
 		// Preselect current theme
 		const currentIndex = themes.indexOf(currentTheme);

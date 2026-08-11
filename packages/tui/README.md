@@ -40,19 +40,28 @@ Boundary rules:
 ## Quick Start
 
 ```typescript
-import { TUI, Text, Editor, ProcessTerminal, matchesKey } from "@tsuuanmi/pi-tui";
+import {
+  Editor,
+  KeybindingsManager,
+  matchesKey,
+  ProcessTerminal,
+  Text,
+  TUI,
+  TUI_KEYBINDINGS,
+} from "@tsuuanmi/pi-tui";
 
 // Create terminal
 const terminal = new ProcessTerminal();
 
-// Create TUI
+// Create host-scoped input state and TUI
+const keybindings = new KeybindingsManager(TUI_KEYBINDINGS);
 const tui = new TUI(terminal);
 
 // Add components
 tui.addChild(new Text("Welcome to my app!"));
 
 import { defaultEditorTheme as editorTheme } from './test/support/test-themes.ts';
-const editor = new Editor(tui, editorTheme);
+const editor = new Editor(tui, editorTheme, keybindings);
 editor.onSubmit = (text) => {
   console.log("Submitted:", text);
   tui.addChild(new Text(`You said: ${text}`));
@@ -231,9 +240,9 @@ class SearchDialog extends Container implements Focusable {
     this.searchInput.focused = value;
   }
 
-  constructor() {
+  constructor(keybindings: KeybindingsManager) {
     super();
-    this.searchInput = new Input();
+    this.searchInput = new Input(keybindings);
     this.addChild(this.searchInput);
   }
 }
@@ -299,7 +308,7 @@ const truncated = new TruncatedText(
 Single-line text input with horizontal scrolling.
 
 ```typescript
-const input = new Input();
+const input = new Input(keybindings);
 input.onSubmit = (value) => console.log(value);
 input.setValue("initial");
 input.getValue();
@@ -325,7 +334,7 @@ interface EditorTheme {
   selectList: SelectListTheme;
 }
 
-const editor = new Editor(tui, theme);  // tui is required for height-aware scrolling
+const editor = new Editor(tui, theme, keybindings);  // keybindings is the host's manager
 editor.onSubmit = (text) => console.log(text);
 editor.onChange = (text) => console.log("Changed:", text);
 editor.disableSubmit = true; // Disable submit temporarily
@@ -429,7 +438,8 @@ const loader = new CancellableLoader(
   tui,                              // TUI instance for render updates
   (s) => chalk.cyan(s),            // spinner color function
   (s) => chalk.gray(s),            // message color function
-  "Working..."                      // message
+  "Working...",                     // message
+  keybindings                         // host manager
 );
 loader.onAbort = () => done(null); // Called when user presses Escape
 doAsyncWork(loader.signal).then(done);
@@ -460,6 +470,7 @@ interface SelectListTheme {
 }
 
 const list = new SelectList(
+  keybindings,
   [
     { value: "opt1", label: "Option 1", description: "First option" },
     { value: "opt2", label: "Option 2", description: "Second option" },
@@ -489,7 +500,7 @@ interface SettingItem {
   label: string;
   description?: string;
   currentValue: string;
-  values?: string[];  // If provided, Enter/Space cycles through these
+  values?: string[];  // If provided, confirm cycles through these
   submenu?: (currentValue: string, done: (selectedValue?: string) => void) => Component;
 }
 
@@ -502,6 +513,7 @@ interface SettingsListTheme {
 }
 
 const settings = new SettingsList(
+  keybindings,
   [
     { id: "theme", label: "Theme", currentValue: "dark", values: ["dark", "light"] },
     { id: "model", label: "Model", currentValue: "gpt-4", submenu: (val, done) => modelSelector },
@@ -516,7 +528,7 @@ settings.updateValue("theme", "light");
 
 **Controls:**
 - Arrow keys: Navigate
-- Enter/Space: Activate (cycle value or open submenu)
+- Enter: Activate (cycle value or open submenu)
 - Escape: Cancel
 
 ### Spacer

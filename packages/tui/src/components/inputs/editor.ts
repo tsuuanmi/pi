@@ -4,7 +4,7 @@ import { SelectList, type SelectListLayoutOptions, type SelectListTheme } from "
 import type { AutocompleteProvider, AutocompleteSuggestions } from "#tui/editor/completion/autocomplete";
 import { UndoStack } from "#tui/editor/history/undo";
 import { findWordBackward, findWordForward } from "#tui/editor/navigation/word";
-import { getKeybindings } from "#tui/input/keyboard/keybindings";
+import type { KeybindingsManager } from "#tui/input/keyboard/keybindings";
 import { decodePrintableKey, matchesKey } from "#tui/input/keyboard/keys";
 import type { TUI } from "#tui/tui";
 import {
@@ -258,6 +258,7 @@ export class Editor implements Component, Focusable {
 
 	protected tui: TUI;
 	private theme: EditorTheme;
+	protected readonly keybindings: KeybindingsManager;
 
 	// Store last render width for cursor navigation
 	private lastWidth: number = 80;
@@ -318,9 +319,10 @@ export class Editor implements Component, Focusable {
 	public onChange?: (text: string) => void;
 	public disableSubmit: boolean = false;
 
-	constructor(tui: TUI, theme: EditorTheme) {
+	constructor(tui: TUI, theme: EditorTheme, keybindings: KeybindingsManager) {
 		this.tui = tui;
 		this.theme = theme;
+		this.keybindings = keybindings;
 		this.borderColor = theme.borderColor;
 	}
 
@@ -547,7 +549,7 @@ export class Editor implements Component, Focusable {
 	}
 
 	handleInput(data: string): void {
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 
 		// Handle character jump mode (awaiting next character to jump to)
 		if (this.jumpMode !== null) {
@@ -1180,7 +1182,7 @@ export class Editor implements Component, Focusable {
 		}
 	}
 
-	private shouldSubmitOnBackslashEnter(data: string, kb: ReturnType<typeof getKeybindings>): boolean {
+	private shouldSubmitOnBackslashEnter(data: string, kb: KeybindingsManager): boolean {
 		if (this.disableSubmit) return false;
 		if (!matchesKey(data, "enter")) return false;
 		const submitKeys = kb.getKeys("tui.input.submit");
@@ -1895,7 +1897,7 @@ export class Editor implements Component, Focusable {
 		items: Array<{ value: string; label: string; description?: string }>,
 	): SelectList {
 		const layout = prefix.startsWith("/") ? SLASH_COMMAND_SELECT_LIST_LAYOUT : undefined;
-		return new SelectList(items, this.autocompleteVisibleItemLimit, this.theme.selectList, layout);
+		return new SelectList(this.keybindings, items, this.autocompleteVisibleItemLimit, this.theme.selectList, layout);
 	}
 
 	private tryTriggerAutocomplete(explicitTab: boolean = false): void {

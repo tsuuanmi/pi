@@ -9,7 +9,6 @@ import {
 	DynamicBorder,
 	type Focusable,
 	filterAndSortSearchableSessions,
-	getKeybindings,
 	hasSearchableSessionName,
 	Input,
 	keyHint,
@@ -23,7 +22,7 @@ import {
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
 import { SESSION_PAGE_SIZE, type SessionInfo, type SessionListPage, type SessionListProgress } from "#pi/session/types";
-import { KeybindingsManager } from "#pi/settings/keybindings";
+import type { KeybindingsManager } from "#pi/settings/keybindings";
 
 type SessionScope = "current" | "all";
 
@@ -73,13 +72,16 @@ class SessionSelectorHeader implements Component {
 	private statusMessage: { type: "info" | "error"; message: string } | null = null;
 	private statusTimeout: ReturnType<typeof setTimeout> | null = null;
 	private showRenameHint = false;
+	private readonly keybindings: KeybindingsManager;
 
 	constructor(
+		keybindings: KeybindingsManager,
 		scope: SessionScope,
 		sortMode: SessionSortMode,
 		nameFilter: SessionNameFilter,
 		requestRender: () => void,
 	) {
+		this.keybindings = keybindings;
 		this.scope = scope;
 		this.sortMode = sortMode;
 		this.nameFilter = nameFilter;
@@ -169,7 +171,7 @@ class SessionSelectorHeader implements Component {
 		let hintLine1: string;
 		let hintLine2: string;
 		if (this.confirmingDeletePath !== null) {
-			const confirmHint = `Delete session? ${keyHint("tui.select.confirm", "confirm")} · ${keyHint("tui.select.cancel", "cancel")}`;
+			const confirmHint = `Delete session? ${keyHint(this.keybindings, "tui.select.confirm", "confirm")} · ${keyHint(this.keybindings, "tui.select.cancel", "cancel")}`;
 			hintLine1 = theme.fg("error", truncateToWidth(confirmHint, width, "…"));
 			hintLine2 = "";
 		} else if (this.statusMessage) {
@@ -180,15 +182,17 @@ class SessionSelectorHeader implements Component {
 			const pathState = this.showPath ? "(on)" : "(off)";
 			const sep = theme.fg("muted", " · ");
 			const hint1 =
-				keyHint("tui.input.tab", "scope") + sep + theme.fg("muted", 're:<pattern> regex · "phrase" exact');
+				keyHint(this.keybindings, "tui.input.tab", "scope") +
+				sep +
+				theme.fg("muted", 're:<pattern> regex · "phrase" exact');
 			const hint2Parts = [
-				keyHint("app.session.toggleSort", "sort"),
-				keyHint("app.session.toggleNamedFilter", "named"),
-				keyHint("app.session.delete", "delete"),
-				keyHint("app.session.togglePath", `path ${pathState}`),
+				keyHint(this.keybindings, "app.session.toggleSort", "sort"),
+				keyHint(this.keybindings, "app.session.toggleNamedFilter", "named"),
+				keyHint(this.keybindings, "app.session.delete", "delete"),
+				keyHint(this.keybindings, "app.session.togglePath", `path ${pathState}`),
 			];
 			if (this.showRenameHint) {
-				hint2Parts.push(keyHint("app.session.rename", "rename"));
+				hint2Parts.push(keyHint(this.keybindings, "app.session.rename", "rename"));
 			}
 			const hint2 = hint2Parts.join(sep);
 			hintLine1 = truncateToWidth(hint1, width, "…");
@@ -254,7 +258,7 @@ class SessionList implements Component, Focusable {
 	) {
 		this.allSessions = sortSessionsByLatest(sessions);
 		this.filteredSessions = [];
-		this.searchInput = new Input();
+		this.searchInput = new Input(keybindings);
 		this.showCwd = showCwd;
 		this.sortMode = sortMode;
 		this.nameFilter = nameFilter;
@@ -344,7 +348,7 @@ class SessionList implements Component, Focusable {
 		if (this.filteredSessions.length === 0 && !this.hasMore) {
 			let emptyMessage: string;
 			if (this.nameFilter === "named") {
-				const toggleKey = keyText("app.session.toggleNamedFilter");
+				const toggleKey = keyText(this.keybindings, "app.session.toggleNamedFilter");
 				if (this.showCwd) {
 					emptyMessage = `  No named sessions found. Press ${toggleKey} to show all.`;
 				} else {
@@ -452,9 +456,9 @@ class SessionList implements Component, Focusable {
 	}
 
 	handleInput(keyData: string): void {
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 		// tmux/Kitty can report Enter as a bare LF while keyboard protocol mode is active.
-		const isConfirmKey = kb.matches(keyData, "tui.select.confirm") || keyData === "\n";
+		const isConfirmKey = kb.matches(keyData, "tui.select.confirm");
 
 		// Handle delete confirmation state first - intercept all keys
 		if (this.confirmingDeletePath !== null) {
@@ -622,7 +626,7 @@ async function deleteSessionFile(
 export class SessionSelectorComponent extends Container implements Focusable {
 	handleInput(data: string): void {
 		if (this.mode === "rename") {
-			const kb = getKeybindings();
+			const kb = this.keybindings;
 			if (kb.matches(data, "tui.select.cancel")) {
 				this.exitRenameMode();
 				return;
@@ -656,7 +660,7 @@ export class SessionSelectorComponent extends Container implements Focusable {
 	private allLoadSeq = 0;
 
 	private mode: "list" | "rename" = "list";
-	private renameInput = new Input();
+	private renameInput: Input;
 	private renameTargetPath: string | null = null;
 
 	// Focusable implementation - propagate to sessionList for IME cursor positioning
@@ -694,23 +698,30 @@ export class SessionSelectorComponent extends Container implements Focusable {
 		onCancel: () => void,
 		onExit: () => void,
 		requestRender: () => void,
-		options?: {
+		options: {
+			keybindings: KeybindingsManager;
 			renameSession?: (sessionPath: string, currentName: string | undefined) => Promise<void>;
 			showRenameHint?: boolean;
-			keybindings?: KeybindingsManager;
 		},
 		currentSessionFilePath?: string,
 	) {
 		super();
-		this.keybindings = options?.keybindings ?? KeybindingsManager.create();
+		this.keybindings = options.keybindings;
+		this.renameInput = new Input(this.keybindings);
 		this.currentSessionsLoader = currentSessionsLoader;
 		this.allSessionsLoader = allSessionsLoader;
 		this.requestRender = requestRender;
-		this.header = new SessionSelectorHeader(this.scope, this.sortMode, this.nameFilter, this.requestRender);
-		const renameSession = options?.renameSession;
+		this.header = new SessionSelectorHeader(
+			this.keybindings,
+			this.scope,
+			this.sortMode,
+			this.nameFilter,
+			this.requestRender,
+		);
+		const renameSession = options.renameSession;
 		this.renameSession = renameSession;
 		this.canRename = !!renameSession;
-		this.header.setShowRenameHint(options?.showRenameHint ?? this.canRename);
+		this.header.setShowRenameHint(options.showRenameHint ?? this.canRename);
 
 		// Create session list (starts empty, will be populated after load)
 		this.sessionList = new SessionList(
@@ -825,7 +836,10 @@ export class SessionSelectorComponent extends Container implements Focusable {
 		panel.addChild(new Spacer(1));
 		panel.addChild(
 			new Text(
-				theme.fg("muted", `${keyText("tui.select.confirm")} to save · ${keyText("tui.select.cancel")} to cancel`),
+				theme.fg(
+					"muted",
+					`${keyText(this.keybindings, "tui.select.confirm")} to save · ${keyText(this.keybindings, "tui.select.cancel")} to cancel`,
+				),
 				1,
 				0,
 			),

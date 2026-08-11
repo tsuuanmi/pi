@@ -4,6 +4,7 @@ import type {
 	Component,
 	EditorComponent,
 	EditorTheme,
+	GitStatusSummary,
 	OverlayHandle,
 	OverlayOptions,
 	StatusLineHudEntryReader,
@@ -16,10 +17,11 @@ export type ExtensionHudProvider = StatusLineHudEntryReader;
 
 export interface ReadonlyFooterDataProvider {
 	getGitBranch(): string | null;
+	getGitStatus(): GitStatusSummary | null;
 	getExtensionStatuses(): ReadonlyMap<string, string>;
 	getAvailableProviderCount(): number;
 	getCodexUsageSummary(): OpenAICodexUsageSummary | null;
-	onBranchChange(callback: () => void): () => void;
+	onChange(callback: () => void): () => void;
 }
 
 // ============================================================================

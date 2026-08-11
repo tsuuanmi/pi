@@ -1,13 +1,4 @@
-import {
-	Box,
-	getMarkdownTheme,
-	keyText,
-	LAYOUT_EDGE_X,
-	Markdown,
-	type MarkdownTheme,
-	Text,
-	theme,
-} from "@tsuuanmi/pi-tui";
+import { Box, getMarkdownTheme, LAYOUT_EDGE_X, Markdown, type MarkdownTheme, Text, theme } from "@tsuuanmi/pi-tui";
 import type { ParsedSkillBlock } from "#pi/runtime/session/skill-block";
 
 /**
@@ -55,7 +46,7 @@ export class SkillInvocationMessageComponent extends Box {
 			const line =
 				theme.fg("customMessageLabel", `\x1b[1m[skill]\x1b[22m `) +
 				theme.fg("customMessageText", this.skillBlock.name) +
-				theme.fg("dim", ` (${keyText("app.tools.expand")} to expand)`);
+				theme.fg("dim", " (expand for details)");
 			this.addChild(new Text(line, 0, 0));
 		}
 	}

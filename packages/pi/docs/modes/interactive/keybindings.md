@@ -2,7 +2,7 @@
 
 All keyboard shortcuts can be customized via `~/.pi/agent/keybindings.json`. Each action can be bound to one or more keys.
 
-The config file uses the same namespaced keybinding ids that pi uses internally and that extension authors use in `keyHint()` and injected `keybindings` managers.
+The config file uses the same namespaced keybinding ids that Pi passes through its host-scoped `KeybindingsManager`. Extension custom UI callbacks receive that manager and pass it to `keyHint(keybindings, action, description)`, `keyText(keybindings, action)`, and nested interactive components. There is no process-global active manager.
 
 After editing `keybindings.json`, run `/reload` in pi to apply the changes without restarting the session.
 

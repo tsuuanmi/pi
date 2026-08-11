@@ -2,7 +2,7 @@
  * Utilities for formatting keybinding hints in terminal UI.
  */
 
-import { getKeybindings, type Keybinding } from "#tui/input/keyboard/keybindings";
+import type { Keybinding, KeybindingsManager } from "#tui/input/keyboard/keybindings";
 import type { KeyId } from "#tui/input/keyboard/keys";
 import { theme } from "#tui/theme/theme";
 
@@ -32,16 +32,16 @@ function formatKeys(keys: KeyId[], options: KeyTextFormatOptions = {}): string {
 	return formatKeyText(keys.join("/"), options);
 }
 
-export function keyText(keybinding: Keybinding): string {
-	return formatKeys(getKeybindings().getKeys(keybinding));
+export function keyText(keybindings: KeybindingsManager, keybinding: Keybinding): string {
+	return formatKeys(keybindings.getKeys(keybinding));
 }
 
-export function keyDisplayText(keybinding: Keybinding): string {
-	return formatKeys(getKeybindings().getKeys(keybinding), { capitalize: true });
+export function keyDisplayText(keybindings: KeybindingsManager, keybinding: Keybinding): string {
+	return formatKeys(keybindings.getKeys(keybinding), { capitalize: true });
 }
 
-export function keyHint(keybinding: Keybinding, description: string): string {
-	return theme.fg("dim", keyText(keybinding)) + theme.fg("muted", ` ${description}`);
+export function keyHint(keybindings: KeybindingsManager, keybinding: Keybinding, description: string): string {
+	return theme.fg("dim", keyText(keybindings, keybinding)) + theme.fg("muted", ` ${description}`);
 }
 
 export function rawKeyHint(key: string, description: string): string {

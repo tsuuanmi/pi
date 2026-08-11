@@ -7,7 +7,7 @@ import {
 	Container,
 	CountdownTimer,
 	DynamicBorder,
-	getKeybindings,
+	type KeybindingsManager,
 	keyHint,
 	rawKeyHint,
 	Spacer,
@@ -17,6 +17,7 @@ import {
 } from "@tsuuanmi/pi-tui";
 
 export interface ExtensionSelectorOptions {
+	keybindings: KeybindingsManager;
 	tui?: TUI;
 	timeout?: number;
 	onToggleToolsExpanded?: () => void;
@@ -32,20 +33,22 @@ export class ExtensionSelectorComponent extends Container {
 	private baseTitle: string;
 	private countdown: CountdownTimer | undefined;
 	private onToggleToolsExpanded: (() => void) | undefined;
+	private readonly keybindings: KeybindingsManager;
 
 	constructor(
 		title: string,
 		options: string[],
 		onSelect: (option: string) => void,
 		onCancel: () => void,
-		opts?: ExtensionSelectorOptions,
+		opts: ExtensionSelectorOptions,
 	) {
 		super();
 
 		this.options = options;
 		this.onSelectCallback = onSelect;
 		this.onCancelCallback = onCancel;
-		this.onToggleToolsExpanded = opts?.onToggleToolsExpanded;
+		this.onToggleToolsExpanded = opts.onToggleToolsExpanded;
+		this.keybindings = opts.keybindings;
 		this.baseTitle = title;
 
 		this.addChild(new DynamicBorder());
@@ -55,7 +58,7 @@ export class ExtensionSelectorComponent extends Container {
 		this.addChild(this.titleText);
 		this.addChild(new Spacer(1));
 
-		if (opts?.timeout && opts.timeout > 0 && opts.tui) {
+		if (opts.timeout && opts.timeout > 0 && opts.tui) {
 			this.countdown = new CountdownTimer(
 				opts.timeout,
 				opts.tui,
@@ -71,9 +74,9 @@ export class ExtensionSelectorComponent extends Container {
 			new Text(
 				rawKeyHint("↑↓", "navigate") +
 					"  " +
-					keyHint("tui.select.confirm", "select") +
+					keyHint(this.keybindings, "tui.select.confirm", "select") +
 					"  " +
-					keyHint("tui.select.cancel", "cancel"),
+					keyHint(this.keybindings, "tui.select.cancel", "cancel"),
 				1,
 				0,
 			),
@@ -96,16 +99,16 @@ export class ExtensionSelectorComponent extends Container {
 	}
 
 	handleInput(keyData: string): void {
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 		if (kb.matches(keyData, "app.tools.expand")) {
 			this.onToggleToolsExpanded?.();
-		} else if (kb.matches(keyData, "tui.select.up") || keyData === "k") {
+		} else if (kb.matches(keyData, "tui.select.up")) {
 			this.selectedIndex = Math.max(0, this.selectedIndex - 1);
 			this.updateList();
-		} else if (kb.matches(keyData, "tui.select.down") || keyData === "j") {
+		} else if (kb.matches(keyData, "tui.select.down")) {
 			this.selectedIndex = Math.min(this.options.length - 1, this.selectedIndex + 1);
 			this.updateList();
-		} else if (kb.matches(keyData, "tui.select.confirm") || keyData === "\n") {
+		} else if (kb.matches(keyData, "tui.select.confirm")) {
 			const selected = this.options[this.selectedIndex];
 			if (selected) this.onSelectCallback(selected);
 		} else if (kb.matches(keyData, "tui.select.cancel")) {

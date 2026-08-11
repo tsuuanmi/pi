@@ -1,5 +1,5 @@
-import { initTheme, setKeybindings } from "@tsuuanmi/pi-tui";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { initTheme } from "@tsuuanmi/pi-tui";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { SessionInfo } from "#pi/session/types";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session";
@@ -30,11 +30,6 @@ const CTRL_R = "\x1b[114;5u";
 describe("session selector rename", () => {
 	beforeAll(() => {
 		initTheme("dark");
-	});
-
-	beforeEach(() => {
-		// Ensure test isolation: keybindings are a global singleton
-		setKeybindings(new KeybindingsManager());
 	});
 
 	it("shows rename hint in interactive /resume picker configuration", async () => {

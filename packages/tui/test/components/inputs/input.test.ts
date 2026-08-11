@@ -1,11 +1,14 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { Input } from "#tui/components/inputs/input";
+import { KeybindingsManager, TUI_KEYBINDINGS } from "#tui/input/keyboard/keybindings";
 import { visibleWidth } from "#tui/utilities/text";
+
+const keybindings = new KeybindingsManager(TUI_KEYBINDINGS);
 
 describe("Input component", () => {
 	it("submits value including backslash on Enter", () => {
-		const input = new Input();
+		const input = new Input(keybindings);
 		let submitted: string | undefined;
 
 		input.onSubmit = (value) => {
@@ -26,7 +29,7 @@ describe("Input component", () => {
 	});
 
 	it("inserts backslash as regular character", () => {
-		const input = new Input();
+		const input = new Input(keybindings);
 
 		input.handleInput("\\");
 		input.handleInput("x");
@@ -56,7 +59,7 @@ describe("Input component", () => {
 
 			for (const text of cases) {
 				for (const { label, move } of cursorPositions) {
-					const input = new Input();
+					const input = new Input(keybindings);
 					input.setValue(text);
 					input.focused = true;
 					move(input);
@@ -69,7 +72,7 @@ describe("Input component", () => {
 		});
 
 		it("keeps the cursor visible when horizontally scrolling wide text", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 			const width = 20;
 			const text = "가나다라마바사아자차카타파하";
 			input.setValue(text);
@@ -85,14 +88,14 @@ describe("Input component", () => {
 
 	describe("Undo", () => {
 		it("does nothing when undo stack is empty", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 
 			input.handleInput("\x1b[45;5u"); // Ctrl+- (undo)
 			assert.strictEqual(input.getValue(), "");
 		});
 
 		it("coalesces consecutive word characters into one undo unit", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 
 			input.handleInput("h");
 			input.handleInput("e");
@@ -117,7 +120,7 @@ describe("Input component", () => {
 		});
 
 		it("undoes spaces one at a time", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 
 			input.handleInput("h");
 			input.handleInput("e");
@@ -139,7 +142,7 @@ describe("Input component", () => {
 		});
 
 		it("undoes backspace", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 
 			input.handleInput("h");
 			input.handleInput("e");
@@ -154,7 +157,7 @@ describe("Input component", () => {
 		});
 
 		it("undoes forward delete", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 
 			input.handleInput("h");
 			input.handleInput("e");
@@ -171,7 +174,7 @@ describe("Input component", () => {
 		});
 
 		it("undoes Ctrl+W (delete word backward)", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 
 			input.handleInput("h");
 			input.handleInput("e");
@@ -194,7 +197,7 @@ describe("Input component", () => {
 		});
 
 		it("undoes Ctrl+K (delete to line end)", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 
 			input.handleInput("h");
 			input.handleInput("e");
@@ -218,7 +221,7 @@ describe("Input component", () => {
 		});
 
 		it("undoes Ctrl+U (delete to line start)", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 
 			input.handleInput("h");
 			input.handleInput("e");
@@ -242,7 +245,7 @@ describe("Input component", () => {
 		});
 
 		it("undoes paste atomically", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 
 			input.setValue("hello world");
 			input.handleInput("\x01"); // Ctrl+A
@@ -258,7 +261,7 @@ describe("Input component", () => {
 		});
 
 		it("undoes Alt+D (delete word forward)", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 
 			input.setValue("hello world");
 			input.handleInput("\x01"); // Ctrl+A
@@ -271,7 +274,7 @@ describe("Input component", () => {
 		});
 
 		it("cursor movement starts new undo unit", () => {
-			const input = new Input();
+			const input = new Input(keybindings);
 
 			input.handleInput("a");
 			input.handleInput("b");

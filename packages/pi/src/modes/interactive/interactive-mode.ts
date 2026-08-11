@@ -30,7 +30,6 @@ import {
 	ProcessTerminal,
 	Spacer,
 	StatusLineComponent,
-	setKeybindings,
 	setRegisteredThemes,
 	setTheme,
 	setThemeInstance,
@@ -277,7 +276,6 @@ export class InteractiveMode {
 		this.pendingMessagesContainer = new Container();
 		this.statusContainer = new Container();
 		this.keybindings = KeybindingsManager.create();
-		setKeybindings(this.keybindings);
 		this.defaultEditor = new CustomEditor(this.ui, getEditorTheme(), this.keybindings);
 		this.editor = this.defaultEditor;
 		this.editorContainer = new Container();
@@ -320,6 +318,7 @@ export class InteractiveMode {
 		});
 		this._accountAuthController = new AccountAuthController({
 			ui: this.ui,
+			keybindings: this.keybindings,
 			editorContainer: this.editorContainer,
 			footer: this.footer,
 			footerDataProvider: this.footerDataProvider,
@@ -566,8 +565,8 @@ export class InteractiveMode {
 			this.ui.requestRender();
 		});
 
-		// Set up git branch watcher (uses provider instead of footer)
-		this.footerDataProvider.onBranchChange(() => {
+		// Re-render when the repository branch or working-tree status changes.
+		this.footerDataProvider.onChange(() => {
 			this.footer.invalidate();
 			this.ui.requestRender();
 		});
@@ -886,7 +885,9 @@ export class InteractiveMode {
 		this.workingVisible = true;
 		this.setWorkingIndicator();
 		if (this.loadingAnimation) {
-			this.loadingAnimation.setMessage(`${this.defaultWorkingMessage} (${keyText("app.interrupt")} to interrupt)`);
+			this.loadingAnimation.setMessage(
+				`${this.defaultWorkingMessage} (${keyText(this.keybindings, "app.interrupt")} to interrupt)`,
+			);
 		}
 		this.setHiddenThinkingLabel();
 	}
@@ -1261,7 +1262,7 @@ export class InteractiveMode {
 					this.session.abortCompaction();
 				};
 				this.statusContainer.clear();
-				const cancelHint = `(${keyText("app.interrupt")} to cancel)`;
+				const cancelHint = `(${keyText(this.keybindings, "app.interrupt")} to cancel)`;
 				const label =
 					event.reason === "manual"
 						? `Compacting context... ${cancelHint}`
@@ -1327,7 +1328,7 @@ export class InteractiveMode {
 				this.statusContainer.clear();
 				this.retryCountdown?.dispose();
 				const retryMessage = (seconds: number) =>
-					`Retrying (${event.attempt}/${event.maxAttempts}) in ${seconds}s... (${keyText("app.interrupt")} to cancel)`;
+					`Retrying (${event.attempt}/${event.maxAttempts}) in ${seconds}s... (${keyText(this.keybindings, "app.interrupt")} to cancel)`;
 				this.retryLoader = new Loader(
 					this.ui,
 					(spinner) => theme.fg("warning", spinner),
@@ -1414,7 +1415,12 @@ export class InteractiveMode {
 	private addMessageToChat(message: AgentMessage, options?: { populateHistory?: boolean }): void {
 		switch (message.role) {
 			case "bashExecution": {
-				const component = new BashExecutionComponent(message.command, this.ui, message.excludeFromContext);
+				const component = new BashExecutionComponent(
+					message.command,
+					this.ui,
+					this.keybindings,
+					message.excludeFromContext,
+				);
 				if (message.output) {
 					component.appendOutput(message.output);
 				}
@@ -2207,7 +2213,7 @@ export class InteractiveMode {
 	 * Get capitalized display string for an app keybinding action.
 	 */
 	private getAppKeyDisplay(action: AppKeybinding): string {
-		return keyDisplayText(action);
+		return keyDisplayText(this.keybindings, action);
 	}
 
 	private async handleClearCommand(): Promise<void> {
@@ -2246,7 +2252,7 @@ export class InteractiveMode {
 			const result = eventResult.result;
 
 			// Create UI component for display
-			this.bashComponent = new BashExecutionComponent(command, this.ui, excludeFromContext);
+			this.bashComponent = new BashExecutionComponent(command, this.ui, this.keybindings, excludeFromContext);
 			if (this.session.isStreaming) {
 				this.pendingMessagesContainer.addChild(this.bashComponent);
 				this.pendingBashComponents.push(this.bashComponent);
@@ -2274,7 +2280,7 @@ export class InteractiveMode {
 
 		// Normal execution path (possibly with custom operations)
 		const isDeferred = this.session.isStreaming;
-		this.bashComponent = new BashExecutionComponent(command, this.ui, excludeFromContext);
+		this.bashComponent = new BashExecutionComponent(command, this.ui, this.keybindings, excludeFromContext);
 
 		if (isDeferred) {
 			// Show in pending area when agent is streaming

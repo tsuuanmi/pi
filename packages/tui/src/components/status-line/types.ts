@@ -108,8 +108,15 @@ export interface StatusLineSessionLike {
 	subagentManager?: { getActiveCount(): number };
 }
 
+export interface GitStatusSummary {
+	staged: number;
+	unstaged: number;
+	untracked: number;
+}
+
 export interface StatusLineDataProvider {
 	getGitBranch(): string | null;
+	getGitStatus(): GitStatusSummary | null;
 	getExtensionStatuses(): ReadonlyMap<string, string>;
 	getAvailableProviderCount(): number;
 }
@@ -161,10 +168,10 @@ export interface SegmentContext {
 	subagentCount: number;
 	/** Number of providers with available models (drives the `(provider)` prefix). */
 	availableProviderCount: number;
-	/** Git state from the shared provider + porcelain cache. */
+	/** Repository snapshot supplied by the host. */
 	git: {
 		branch: string | null;
-		status: { staged: number; unstaged: number; untracked: number } | null;
+		status: GitStatusSummary | null;
 	};
 	/** Active HUD phase, undefined when no HUD entry is active. */
 	hudPhase?: string;

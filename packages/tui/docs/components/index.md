@@ -1,6 +1,6 @@
 # Components
 
-Built-in components for common terminal UI patterns.
+Built-in components for common terminal UI patterns. Examples using interactive components assume a host-created `KeybindingsManager` named `keybindings`.
 
 > Display, feedback, inputs, layout, and selection components are documented here. The HUD and status line modules have their own sub-sections: [HUD](hud/index.md) and [Status Line](status-line/index.md).
 
@@ -48,7 +48,7 @@ Single-line text input with horizontal scrolling:
 ```typescript
 import { Input } from "@tsuuanmi/pi-tui";
 
-const input = new Input();
+const input = new Input(keybindings);
 input.onSubmit = (value) => console.log("Submitted:", value);
 input.setValue("initial");
 input.getValue();
@@ -82,7 +82,7 @@ interface EditorTheme {
   selectList: SelectListTheme;
 }
 
-const editor = new Editor(tui, theme);
+const editor = new Editor(tui, theme, keybindings);
 editor.onSubmit = (text) => console.log("Submitted:", text);
 editor.onChange = (text) => console.log("Changed:", text);
 editor.disableSubmit = true; // Disable submit temporarily
@@ -210,7 +210,8 @@ const loader = new CancellableLoader(
   tui,
   (s) => chalk.cyan(s),
   (s) => chalk.gray(s),
-  "Working..."
+  "Working...",
+  keybindings
 );
 loader.onAbort = () => done(null);
 doAsyncWork(loader.signal).then(done);
@@ -246,6 +247,7 @@ interface SelectListTheme {
 }
 
 const list = new SelectList(
+  keybindings,
   [
     { value: "opt1", label: "Option 1", description: "First option" },
     { value: "opt2", label: "Option 2", description: "Second option" },
@@ -274,7 +276,7 @@ interface SettingItem {
   label: string;
   description?: string;
   currentValue: string;
-  values?: string[];  // If provided, Enter/Space cycles through these
+  values?: string[];  // If provided, confirm cycles through these
   submenu?: (currentValue: string, done: (selectedValue?: string) => void) => Component;
 }
 
@@ -287,6 +289,7 @@ interface SettingsListTheme {
 }
 
 const settings = new SettingsList(
+  keybindings,
   [
     { id: "theme", label: "Theme", currentValue: "dark", values: ["dark", "light"] },
     { id: "model", label: "Model", currentValue: "gpt-4", submenu: (val, done) => modelSelector },
@@ -300,7 +303,7 @@ const settings = new SettingsList(
 settings.updateValue("theme", "light");
 ```
 
-**Controls:** Arrow keys to navigate, Enter/Space to activate (cycle value or open submenu), Escape to cancel.
+**Controls:** Arrow keys to navigate, Enter to activate (cycle value or open submenu), Escape to cancel.
 
 ## Layout Spacing
 

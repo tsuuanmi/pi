@@ -225,16 +225,3 @@ export class KeybindingsManager {
 		return resolved;
 	}
 }
-
-let globalKeybindings: KeybindingsManager | null = null;
-
-export function setKeybindings(keybindings: KeybindingsManager): void {
-	globalKeybindings = keybindings;
-}
-
-export function getKeybindings(): KeybindingsManager {
-	if (!globalKeybindings) {
-		globalKeybindings = new KeybindingsManager(TUI_KEYBINDINGS);
-	}
-	return globalKeybindings;
-}

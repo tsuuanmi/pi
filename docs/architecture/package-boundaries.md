@@ -179,7 +179,7 @@ Pi persists or transports receipts for its sessions, but persistence by the host
 | AI registry/session resources | AI | Process-local registries and explicit resource cleanup; no application persistence |
 | Agent state | Agent | In-memory message/tool/run state for one Agent |
 | Orchestrator checkpoint | Orchestrator | Strict versioned value behind caller-provided `OrchestratorCheckpointStore` |
-| TUI state | TUI | Process-local render/input/theme state; no application persistence |
+| TUI state | TUI | Process-local render/input/theme mechanics; active application keybindings and repository snapshots are injected by Pi; no application persistence |
 | Workflow state | Workflows | Explicit-session workflow state, artifacts, audit, receipts, runtime ownership, and recovery |
 | Pi application state | Pi | Settings, auth, sessions, extension state, subagent records, and mode/runtime state |
 
@@ -203,7 +203,8 @@ Workflows may implement an Orchestrator checkpoint store. Orchestrator must not 
 - Provider request, response, model, OAuth primitive, or normalized stream: AI.
 - One Agent executing registered tools: Agent.
 - Many Agents executing a task DAG: Orchestrator.
-- Terminal component/input/rendering behavior: TUI.
+- Terminal component/input/rendering behavior and generic key matching: TUI.
+- Active application keybindings and repository acquisition/cache lifecycle: Pi.
 - Named workflow phase, gate, handoff, artifact, or workflow tool: Workflows.
 - CLI, SDK, session, settings, auth, resources, extensions, concrete tools/subagents, or application UI composition: Pi.
 

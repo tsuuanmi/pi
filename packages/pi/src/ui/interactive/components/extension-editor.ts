@@ -13,7 +13,6 @@ import {
 	Editor,
 	type Focusable,
 	getEditorTheme,
-	getKeybindings,
 	keyHint,
 	LAYOUT_EDGE_X,
 	LAYOUT_SECTION_GAP_Y,
@@ -64,7 +63,7 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 
 		// Create editor
-		this.editor = new Editor(tui, getEditorTheme());
+		this.editor = new Editor(tui, getEditorTheme(), keybindings);
 		if (prefill) {
 			this.editor.setText(prefill);
 		}
@@ -79,12 +78,12 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 		// Add hint
 		const hasExternalEditor = !!(process.env.VISUAL || process.env.EDITOR);
 		const hint =
-			keyHint("tui.select.confirm", "submit") +
+			keyHint(keybindings, "tui.select.confirm", "submit") +
 			"  " +
-			keyHint("tui.input.newLine", "newline") +
+			keyHint(keybindings, "tui.input.newLine", "newline") +
 			"  " +
-			keyHint("tui.select.cancel", "cancel") +
-			(hasExternalEditor ? `  ${keyHint("app.editor.external", "external editor")}` : "");
+			keyHint(keybindings, "tui.select.cancel", "cancel") +
+			(hasExternalEditor ? `  ${keyHint(keybindings, "app.editor.external", "external editor")}` : "");
 		this.addChild(new Text(hint, LAYOUT_EDGE_X, 0));
 
 		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
@@ -94,7 +93,7 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 	}
 
 	handleInput(keyData: string): void {
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 		// Escape or Ctrl+C to cancel
 		if (kb.matches(keyData, "tui.select.cancel")) {
 			this.onCancelCallback();

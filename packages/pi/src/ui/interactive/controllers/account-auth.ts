@@ -14,6 +14,7 @@ import type { Component, Container, EditorComponent, StatusLineComponent, TUI } 
 import { defaultModelPerProvider } from "#pi/cli/model-resolver";
 import { getAuthPath } from "#pi/loader/paths";
 import type { AgentSession } from "#pi/runtime/agent-session";
+import type { KeybindingsManager } from "#pi/settings/keybindings";
 import { LoginDialogComponent } from "#pi/ui/interactive/components/login-dialog";
 import { AccountSelectorComponent, type AccountSelectorOption } from "#pi/ui/interactive/components/selectors/account";
 import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension";
@@ -57,6 +58,7 @@ export class AccountAuthController {
 	private readonly showStatus: (message: string) => void;
 	private readonly showSelector: (create: (done: () => void) => { component: Component; focus: Component }) => void;
 	private readonly updateEditorBorderColor: () => void;
+	private readonly keybindings: KeybindingsManager;
 
 	private get session(): AgentSession {
 		return this.getSession();
@@ -67,6 +69,7 @@ export class AccountAuthController {
 
 	constructor(opts: {
 		ui: TUI;
+		keybindings: KeybindingsManager;
 		editorContainer: Container;
 		footer: StatusLineComponent;
 		footerDataProvider: FooterDataProvider;
@@ -80,6 +83,7 @@ export class AccountAuthController {
 		updateEditorBorderColor: () => void;
 	}) {
 		this.ui = opts.ui;
+		this.keybindings = opts.keybindings;
 		this.editorContainer = opts.editorContainer;
 		this.footer = opts.footer;
 		this.footerDataProvider = opts.footerDataProvider;
@@ -395,6 +399,7 @@ export class AccountAuthController {
 
 		this.showSelector((done) => {
 			const selector = new AccountSelectorComponent(
+				this.keybindings,
 				options,
 				(option) => {
 					done();
@@ -431,6 +436,7 @@ export class AccountAuthController {
 						done();
 						resolve(false);
 					},
+					{ keybindings: this.keybindings },
 				);
 				return { component: selector, focus: selector };
 			});
@@ -621,6 +627,7 @@ export class AccountAuthController {
 					done();
 					this.ui.requestRender();
 				},
+				{ keybindings: this.keybindings },
 			);
 			return { component: selector, focus: selector };
 		});
@@ -637,6 +644,7 @@ export class AccountAuthController {
 
 		this.showSelector((done) => {
 			const selector = new OAuthSelectorComponent(
+				this.keybindings,
 				"add",
 				this.session.modelRegistry.authStorage,
 				providerOptions,
@@ -689,6 +697,7 @@ export class AccountAuthController {
 					done();
 					this.ui.requestRender();
 				},
+				{ keybindings: this.keybindings },
 			);
 			return { component: selector, focus: selector };
 		});
@@ -754,6 +763,7 @@ export class AccountAuthController {
 
 		const dialog = new LoginDialogComponent(
 			this.ui,
+			this.keybindings,
 			providerId,
 			(_success, _message) => {
 				// Completion handled below
@@ -812,6 +822,7 @@ export class AccountAuthController {
 					restoreDialog();
 					resolve(undefined);
 				},
+				{ keybindings: this.keybindings },
 			);
 			// Keep the dialog alive while the provider-specific login method is selected.
 			// Clearing the container would dispose it, so the callback URL and paste input
@@ -834,6 +845,7 @@ export class AccountAuthController {
 		// Create login dialog component
 		const dialog = new LoginDialogComponent(
 			this.ui,
+			this.keybindings,
 			providerId,
 			(_success, _message) => {
 				// Completion handled below

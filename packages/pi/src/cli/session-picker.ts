@@ -2,7 +2,7 @@
  * TUI session selector for --resume flag
  */
 
-import { ProcessTerminal, setKeybindings, TUI } from "@tsuuanmi/pi-tui";
+import { ProcessTerminal, TUI } from "@tsuuanmi/pi-tui";
 import type { SessionInfo, SessionListPage, SessionListProgress } from "#pi/session/types";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session";
@@ -21,7 +21,6 @@ export async function selectSession(
 	return new Promise((resolve) => {
 		const ui = new TUI(new ProcessTerminal());
 		const keybindings = KeybindingsManager.create();
-		setKeybindings(keybindings);
 		let resolved = false;
 
 		const selector = new SessionSelectorComponent(

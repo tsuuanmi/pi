@@ -124,7 +124,7 @@ When a `Focusable` component has focus, TUI:
 When a container component contains an `Input` or `Editor` child, the container must implement `Focusable` and propagate focus to the child:
 
 ```typescript
-import { Container, type Focusable, Input } from "@tsuuanmi/pi-tui";
+import { Container, type Focusable, Input, type KeybindingsManager } from "@tsuuanmi/pi-tui";
 
 class SearchDialog extends Container implements Focusable {
   private searchInput: Input;
@@ -136,9 +136,9 @@ class SearchDialog extends Container implements Focusable {
     this.searchInput.focused = value;
   }
 
-  constructor() {
+  constructor(keybindings: KeybindingsManager) {
     super();
-    this.searchInput = new Input();
+    this.searchInput = new Input(keybindings);
     this.addChild(this.searchInput);
   }
 }

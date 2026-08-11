@@ -1,6 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { SelectList } from "#tui/components/selection/select-list";
+import { KeybindingsManager, TUI_KEYBINDINGS } from "#tui/input/keyboard/keybindings";
 import { visibleWidth } from "#tui/utilities/text";
 
 const testTheme = {
@@ -17,6 +18,8 @@ const visibleIndexOf = (line: string, text: string): number => {
 	return visibleWidth(line.slice(0, index));
 };
 
+const keybindings = new KeybindingsManager(TUI_KEYBINDINGS);
+
 describe("SelectList", () => {
 	it("normalizes multiline descriptions to single line", () => {
 		const items = [
@@ -27,7 +30,7 @@ describe("SelectList", () => {
 			},
 		];
 
-		const list = new SelectList(items, 5, testTheme);
+		const list = new SelectList(keybindings, items, 5, testTheme);
 		const rendered = list.render(100);
 
 		assert.ok(rendered.length > 0);
@@ -45,7 +48,7 @@ describe("SelectList", () => {
 			},
 		];
 
-		const list = new SelectList(items, 5, testTheme);
+		const list = new SelectList(keybindings, items, 5, testTheme);
 		const rendered = list.render(80);
 
 		assert.equal(visibleIndexOf(rendered[0], "short description"), visibleIndexOf(rendered[1], "long description"));
@@ -57,7 +60,7 @@ describe("SelectList", () => {
 			{ value: "bb", label: "bb", description: "second" },
 		];
 
-		const list = new SelectList(items, 5, testTheme, {
+		const list = new SelectList(keybindings, items, 5, testTheme, {
 			minPrimaryColumnWidth: 12,
 			maxPrimaryColumnWidth: 20,
 		});
@@ -77,7 +80,7 @@ describe("SelectList", () => {
 			{ value: "short", label: "short", description: "second" },
 		];
 
-		const list = new SelectList(items, 5, testTheme, {
+		const list = new SelectList(keybindings, items, 5, testTheme, {
 			minPrimaryColumnWidth: 12,
 			maxPrimaryColumnWidth: 20,
 		});
@@ -97,7 +100,7 @@ describe("SelectList", () => {
 			{ value: "short", label: "short", description: "second" },
 		];
 
-		const list = new SelectList(items, 5, testTheme, {
+		const list = new SelectList(keybindings, items, 5, testTheme, {
 			minPrimaryColumnWidth: 12,
 			maxPrimaryColumnWidth: 12,
 			truncatePrimary: ({ text, maxWidth }) => {

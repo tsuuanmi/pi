@@ -1,39 +1,34 @@
 # Keybinding Hints
 
-Formatting helpers for keybinding hints and labels in the terminal UI.
+Formatting helpers for host-scoped keybinding hints and labels.
 
 ```typescript
 interface KeyTextFormatOptions { capitalize?: boolean; }
 
 function formatKeyText(key: string, options?: KeyTextFormatOptions): string;
-function keyText(keybinding: Keybinding): string;
-function keyDisplayText(keybinding: Keybinding): string;
-function keyHint(keybinding: Keybinding, description: string): string;
+function keyText(keybindings: KeybindingsManager, keybinding: Keybinding): string;
+function keyDisplayText(keybindings: KeybindingsManager, keybinding: Keybinding): string;
+function keyHint(keybindings: KeybindingsManager, keybinding: Keybinding, description: string): string;
 function rawKeyHint(key: string, description: string): string;
 ```
 
 ## Behavior
 
-Key strings use `/` to separate sequential keys and `+` to combine chords (e.g. `ctrl+k/enter`). `formatKeyText` splits on both and formats each part.
+Key strings use `/` to separate alternatives and `+` to combine chord parts, such as `ctrl+k/enter`. `formatKeyText` formats each part; on macOS, `alt` is displayed as `option`.
 
-- On macOS, the `alt` part is displayed as `option`.
-- `capitalize` uppercases the first letter of each part.
+`keyText`, `keyDisplayText`, and `keyHint` require the host's `KeybindingsManager`. They never consult global state:
 
-## Resolving keybindings
+```typescript
+const label = keyText(keybindings, "app.open");
+const displayLabel = keyDisplayText(keybindings, "app.open");
+const hint = keyHint(keybindings, "tui.select.cancel", "cancel");
+```
 
-`keyText` and `keyDisplayText` resolve a `Keybinding` name to its concrete keys via the active `KeybindingsManager` (see [Keybindings](./keybindings.md)):
+`rawKeyHint` formats a literal key string when no action lookup is needed.
 
-- `keyText(keybinding)` — lowercase key text.
-- `keyDisplayText(keybinding)` — capitalized key text.
+Both hint helpers render a dim key followed by a muted description through the active [theme](../../theme/index.md).
 
-## Hint helpers
+## See also
 
-Both produce a dim key followed by a muted description, colored via the active [Theme](../../theme/index.md):
-
-- `keyHint(keybinding, description)` — resolves the keybinding then formats.
-- `rawKeyHint(key, description)` — formats a raw key string without resolution.
-
-## See Also
-
-- [Keybindings](./keybindings.md) — `getKeybindings`, `Keybinding`, `KeybindingsManager`.
-- [Key Detection](./keys.md) — `KeyId`, `Key`.
+- [Keybindings](keybindings.md)
+- [Key detection](keys.md)

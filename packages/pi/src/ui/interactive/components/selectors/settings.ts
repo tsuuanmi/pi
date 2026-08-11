@@ -4,10 +4,10 @@ import {
 	Container,
 	DynamicBorder,
 	fuzzyFilter,
-	getKeybindings,
 	getSelectListTheme,
 	getSettingsListTheme,
 	Input,
+	type KeybindingsManager,
 	keyDisplayText,
 	keyHint,
 	type SelectItem,
@@ -106,8 +106,10 @@ class RoleModelPickerSubmenu extends Container {
 	private readonly allowProfileDefault: boolean;
 	private readonly onSelect: (modelRef: string | undefined) => void;
 	private readonly onCancel: () => void;
+	private readonly keybindings: KeybindingsManager;
 
 	constructor(
+		keybindings: KeybindingsManager,
 		models: AgentSettingsModelOption[],
 		currentModel: string | undefined,
 		allowProfileDefault: boolean,
@@ -115,6 +117,7 @@ class RoleModelPickerSubmenu extends Container {
 		onCancel: () => void,
 	) {
 		super();
+		this.keybindings = keybindings;
 		this.models = models;
 		this.currentModel = currentModel;
 		this.allowProfileDefault = allowProfileDefault;
@@ -125,10 +128,10 @@ class RoleModelPickerSubmenu extends Container {
 		this.addChild(new Text(theme.bold(theme.fg("accent", "Role model")), 0, 0));
 		this.addChild(new Spacer(1));
 		this.addChild(new Text(theme.fg("muted", "Search models and press Enter to select."), 0, 0));
-		this.addChild(new Text(keyHint("tui.select.cancel", "back"), 0, 0));
+		this.addChild(new Text(keyHint(keybindings, "tui.select.cancel", "back"), 0, 0));
 		this.addChild(new Spacer(1));
 
-		this.searchInput = new Input();
+		this.searchInput = new Input(keybindings);
 		this.searchInput.onSubmit = () => this.selectCurrent();
 		this.addChild(this.searchInput);
 		this.addChild(new Spacer(1));
@@ -195,7 +198,7 @@ class RoleModelPickerSubmenu extends Container {
 	}
 
 	handleInput(keyData: string): void {
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 		if (kb.matches(keyData, "tui.select.up")) {
 			const options = this.options;
 			if (options.length === 0) return;
@@ -219,6 +222,7 @@ class RoleModelPickerSubmenu extends Container {
 
 class RoleDetailSubmenu extends Container {
 	private settingsList: SettingsList;
+	private readonly keybindings: KeybindingsManager;
 	private model: string | undefined;
 	private thinkingLevel: ThinkingLevel | undefined;
 	private readonly role: RoleSettingsEntry;
@@ -228,6 +232,7 @@ class RoleDetailSubmenu extends Container {
 	private readonly onThinkingLevelChange: (level: ThinkingLevel | undefined) => void;
 
 	constructor(
+		keybindings: KeybindingsManager,
 		role: RoleSettingsEntry,
 		models: AgentSettingsModelOption[],
 		availableThinkingLevels: ThinkingLevel[],
@@ -236,6 +241,7 @@ class RoleDetailSubmenu extends Container {
 		onCancel: () => void,
 	) {
 		super();
+		this.keybindings = keybindings;
 		this.role = role;
 		this.models = models;
 		this.availableThinkingLevels = availableThinkingLevels;
@@ -243,9 +249,17 @@ class RoleDetailSubmenu extends Container {
 		this.onThinkingLevelChange = onThinkingLevelChange;
 		this.model = role.model;
 		this.thinkingLevel = role.thinkingLevel;
-		this.settingsList = new SettingsList(this.createItems(), 2, getSettingsListTheme(), () => undefined, onCancel, {
-			enableSearch: false,
-		});
+		this.settingsList = new SettingsList(
+			keybindings,
+			this.createItems(),
+			2,
+			getSettingsListTheme(),
+			() => undefined,
+			onCancel,
+			{
+				enableSearch: false,
+			},
+		);
 		this.addChild(this.settingsList);
 	}
 
@@ -268,6 +282,7 @@ class RoleDetailSubmenu extends Container {
 				currentValue: this.modelValue(),
 				submenu: (_currentValue, done) =>
 					new RoleModelPickerSubmenu(
+						this.keybindings,
 						this.models,
 						this.model,
 						!this.role.isMain,
@@ -288,6 +303,7 @@ class RoleDetailSubmenu extends Container {
 				currentValue: this.thinkingValue(),
 				submenu: (_currentValue, done) =>
 					new SelectSubmenu(
+						this.keybindings,
 						"Thinking Level",
 						"Select reasoning depth for thinking-capable models",
 						[
@@ -326,6 +342,7 @@ class RoleDetailSubmenu extends Container {
 
 class RoleSettingsSubmenu extends Container {
 	private settingsList: SettingsList;
+	private readonly keybindings: KeybindingsManager;
 	private readonly roles: RoleSettingsEntry[];
 	private readonly models: AgentSettingsModelOption[];
 	private readonly availableThinkingLevels: ThinkingLevel[];
@@ -335,6 +352,7 @@ class RoleSettingsSubmenu extends Container {
 	private readonly onAgentThinkingLevelChange: (agentName: string, level: ThinkingLevel | undefined) => void;
 
 	constructor(
+		keybindings: KeybindingsManager,
 		mainRole: RoleSettingsEntry,
 		agents: RoleSettingsEntry[],
 		models: AgentSettingsModelOption[],
@@ -346,6 +364,7 @@ class RoleSettingsSubmenu extends Container {
 		onCancel: () => void,
 	) {
 		super();
+		this.keybindings = keybindings;
 		this.roles = [mainRole, ...agents];
 		this.models = models;
 		this.availableThinkingLevels = availableThinkingLevels;
@@ -360,6 +379,7 @@ class RoleSettingsSubmenu extends Container {
 			currentValue: `${role.model ?? (role.isMain ? "current" : "profile default")} / ${role.thinkingLevel ?? (role.isMain ? "current" : "profile default")}`,
 			submenu: (_currentValue, done) =>
 				new RoleDetailSubmenu(
+					this.keybindings,
 					role,
 					this.models,
 					this.availableThinkingLevels,
@@ -387,6 +407,7 @@ class RoleSettingsSubmenu extends Container {
 		}));
 
 		this.settingsList = new SettingsList(
+			keybindings,
 			items,
 			Math.min(items.length, 10),
 			getSettingsListTheme(),
@@ -405,9 +426,15 @@ class RoleSettingsSubmenu extends Container {
 class SettingsCategorySubmenu extends Container {
 	private settingsList: SettingsList;
 
-	constructor(items: SettingItem[], onChange: (id: string, newValue: string) => void, onCancel: () => void) {
+	constructor(
+		keybindings: KeybindingsManager,
+		items: SettingItem[],
+		onChange: (id: string, newValue: string) => void,
+		onCancel: () => void,
+	) {
 		super();
 		this.settingsList = new SettingsList(
+			keybindings,
 			items,
 			Math.min(items.length, 10),
 			getSettingsListTheme(),
@@ -427,6 +454,7 @@ class SelectSubmenu extends Container {
 	private selectList: SelectList;
 
 	constructor(
+		keybindings: KeybindingsManager,
 		title: string,
 		description: string,
 		options: SelectItem[],
@@ -451,6 +479,7 @@ class SelectSubmenu extends Container {
 
 		// Select list
 		this.selectList = new SelectList(
+			keybindings,
 			options,
 			Math.min(options.length, 10),
 			getSelectListTheme(),
@@ -493,10 +522,10 @@ class SelectSubmenu extends Container {
 export class SettingsSelectorComponent extends Container {
 	private settingsList: SettingsList;
 
-	constructor(config: SettingsConfig, callbacks: SettingsCallbacks) {
+	constructor(keybindings: KeybindingsManager, config: SettingsConfig, callbacks: SettingsCallbacks) {
 		super();
 
-		const followUpKey = keyDisplayText("app.message.followUp");
+		const followUpKey = keyDisplayText(keybindings, "app.message.followUp");
 
 		const handleSettingChange = (id: string, newValue: string): void => {
 			switch (id) {
@@ -539,6 +568,7 @@ export class SettingsSelectorComponent extends Container {
 				currentValue: "configure",
 				submenu: (_currentValue, done) =>
 					new RoleSettingsSubmenu(
+						keybindings,
 						{
 							name: "Main",
 							description: "Current main chat session",
@@ -609,6 +639,7 @@ export class SettingsSelectorComponent extends Container {
 				currentValue: config.currentTheme,
 				submenu: (currentValue, done) =>
 					new SelectSubmenu(
+						keybindings,
 						"Theme",
 						"Select color theme",
 						config.availableThemes.map((t) => ({ value: t, label: t })),
@@ -657,7 +688,8 @@ export class SettingsSelectorComponent extends Container {
 				label: "Model & thinking",
 				description: "Default thinking and per-agent role models",
 				currentValue: "open",
-				submenu: (_currentValue, done) => new SettingsCategorySubmenu(modelSettings, handleSettingChange, done),
+				submenu: (_currentValue, done) =>
+					new SettingsCategorySubmenu(keybindings, modelSettings, handleSettingChange, done),
 			},
 			{
 				id: "interaction",
@@ -665,7 +697,7 @@ export class SettingsSelectorComponent extends Container {
 				description: "Compaction, skill commands, steering, and follow-up behavior",
 				currentValue: "open",
 				submenu: (_currentValue, done) =>
-					new SettingsCategorySubmenu(interactionSettings, handleSettingChange, done),
+					new SettingsCategorySubmenu(keybindings, interactionSettings, handleSettingChange, done),
 			},
 			{
 				id: "appearance",
@@ -673,14 +705,15 @@ export class SettingsSelectorComponent extends Container {
 				description: "Theme, editor, cursor, startup, and terminal display settings",
 				currentValue: "open",
 				submenu: (_currentValue, done) =>
-					new SettingsCategorySubmenu(appearanceSettings, handleSettingChange, done),
+					new SettingsCategorySubmenu(keybindings, appearanceSettings, handleSettingChange, done),
 			},
 			{
 				id: "network",
 				label: "Network",
 				description: "Transport and HTTP timeout settings",
 				currentValue: "open",
-				submenu: (_currentValue, done) => new SettingsCategorySubmenu(networkSettings, handleSettingChange, done),
+				submenu: (_currentValue, done) =>
+					new SettingsCategorySubmenu(keybindings, networkSettings, handleSettingChange, done),
 			},
 		];
 
@@ -688,6 +721,7 @@ export class SettingsSelectorComponent extends Container {
 		this.addChild(new DynamicBorder());
 
 		this.settingsList = new SettingsList(
+			keybindings,
 			items,
 			Math.min(items.length, 10),
 			getSettingsListTheme(),

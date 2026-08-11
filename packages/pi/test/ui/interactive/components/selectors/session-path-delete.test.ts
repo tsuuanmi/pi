@@ -1,8 +1,8 @@
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { initTheme, setKeybindings, setKittyProtocolActive } from "@tsuuanmi/pi-tui";
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { initTheme, setKittyProtocolActive } from "@tsuuanmi/pi-tui";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { SessionInfo } from "#pi/session/types";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import { SessionSelectorComponent } from "#pi/ui/interactive/components/selectors/session";
@@ -88,11 +88,6 @@ describe("session selector path/delete interactions", () => {
 		for (const dir of tempDirs.splice(0)) {
 			rmSync(dir, { recursive: true, force: true });
 		}
-	});
-
-	beforeEach(() => {
-		// Ensure test isolation: keybindings are a global singleton
-		setKeybindings(new KeybindingsManager());
 	});
 
 	beforeAll(() => {
@@ -196,7 +191,7 @@ describe("session selector path/delete interactions", () => {
 
 		setKittyProtocolActive(true);
 		try {
-			selector.getSessionList().handleInput("\n");
+			selector.getSessionList().handleInput("\r");
 		} finally {
 			setKittyProtocolActive(false);
 		}

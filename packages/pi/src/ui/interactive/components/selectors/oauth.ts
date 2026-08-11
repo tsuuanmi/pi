@@ -2,6 +2,7 @@ import {
 	Container,
 	DynamicBorder,
 	type Focusable,
+	type KeybindingsManager,
 	type SearchableTableColumn,
 	SearchableTableSelector,
 	Spacer,
@@ -37,6 +38,7 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 	private allProviders: AuthSelectorProvider[];
 
 	constructor(
+		keybindings: KeybindingsManager,
 		mode: OAuthSelectorMode,
 		authStorage: AuthStorage,
 		providers: AuthSelectorProvider[],
@@ -54,6 +56,7 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 		this.addChild(new DynamicBorder());
 		this.addChild(new Spacer(1));
 		this.selector = new SearchableTableSelector({
+			keybindings,
 			items: providers,
 			columns: this.getColumns(),
 			getSearchText: getProviderSearchText,

@@ -14,6 +14,7 @@ import {
 	visibleWidth,
 } from "@tsuuanmi/pi-tui";
 import type { ResolvedPaths } from "#pi/resources/types";
+import type { KeybindingsManager } from "#pi/settings/keybindings";
 import type { SettingsManager } from "#pi/settings/manager";
 import { buildResourceGroups } from "./groups.ts";
 import { ResourceList } from "./list.ts";
@@ -52,6 +53,7 @@ export class ResourceSettingsComponent extends Container implements Focusable {
 	constructor(
 		resolvedPaths: ResolvedPaths,
 		settingsManager: SettingsManager,
+		keybindings: KeybindingsManager,
 		cwd: string,
 		agentDir: string,
 		onClose: () => void,
@@ -72,7 +74,7 @@ export class ResourceSettingsComponent extends Container implements Focusable {
 		this.addChild(new Spacer(1));
 
 		// Resource list
-		this.resourceList = new ResourceList(groups, resourceToggler, terminalHeight);
+		this.resourceList = new ResourceList(groups, resourceToggler, keybindings, terminalHeight);
 		this.resourceList.onCancel = onClose;
 		this.resourceList.onExit = onExit;
 		this.resourceList.onToggle = () => requestRender();

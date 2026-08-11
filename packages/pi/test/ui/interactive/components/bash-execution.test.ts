@@ -4,6 +4,7 @@
  */
 import { initTheme, visibleWidth } from "@tsuuanmi/pi-tui";
 import { beforeAll, describe, expect, it } from "vitest";
+import { KeybindingsManager } from "#pi/settings/keybindings";
 import { BashExecutionComponent } from "#pi/ui/interactive/components/bash-execution";
 
 /** Minimal TUI stub that only exposes terminal.columns */
@@ -26,6 +27,8 @@ function createTuiStub(columns: number): { columns: number; stub: any } {
 	return { columns: state.columns, stub };
 }
 
+const keybindings = new KeybindingsManager();
+
 describe("BashExecutionComponent width handling (#2569)", () => {
 	beforeAll(() => {
 		initTheme();
@@ -34,7 +37,7 @@ describe("BashExecutionComponent width handling (#2569)", () => {
 	it("collapses long command headers until expanded", () => {
 		const { stub } = createTuiStub(120);
 		const command = Array.from({ length: 80 }, (_, i) => `word-${i}`).join(" ");
-		const component = new BashExecutionComponent(command, stub);
+		const component = new BashExecutionComponent(command, stub, keybindings);
 
 		const collapsed = component.render(80).join("\n");
 		expect(collapsed).toContain("...");
@@ -50,7 +53,7 @@ describe("BashExecutionComponent width handling (#2569)", () => {
 		const narrowWidth = 80;
 
 		const { stub } = createTuiStub(wideWidth);
-		const component = new BashExecutionComponent("pwd", stub);
+		const component = new BashExecutionComponent("pwd", stub, keybindings);
 
 		// Add output with long lines that will wrap differently at different widths
 		const longLine = "x".repeat(150);
@@ -71,7 +74,7 @@ describe("BashExecutionComponent width handling (#2569)", () => {
 
 	it("re-computes lines when width changes between renders", () => {
 		const { stub } = createTuiStub(200);
-		const component = new BashExecutionComponent("echo hello", stub);
+		const component = new BashExecutionComponent("echo hello", stub, keybindings);
 
 		const longLine = "abcdefghij".repeat(20); // 200 chars
 		component.appendOutput(`${longLine}\n`);

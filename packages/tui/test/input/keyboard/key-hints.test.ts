@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { before, describe, it } from "node:test";
 import { initTheme } from "#tui/index";
 import { formatKeyText, keyDisplayText, keyHint, keyText, rawKeyHint } from "#tui/input/keyboard/key-hints";
+import { KeybindingsManager, TUI_KEYBINDINGS } from "#tui/input/keyboard/keybindings";
 
 const ANSI_PATTERN = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 function strip(text: string): string {
@@ -11,6 +12,8 @@ function strip(text: string): string {
 before(() => {
 	initTheme("dark");
 });
+
+const keybindings = new KeybindingsManager(TUI_KEYBINDINGS);
 
 describe("formatKeyText", () => {
 	it("splits chords on + and sequences on /", () => {
@@ -25,13 +28,13 @@ describe("formatKeyText", () => {
 describe("keyText / keyDisplayText", () => {
 	it("resolves a keybinding name to its bound keys via the global manager", () => {
 		// tui.input.submit is a known TUI keybinding bound to `enter`.
-		const plain = keyText("tui.input.submit");
+		const plain = keyText(keybindings, "tui.input.submit");
 		assert.equal(plain, "enter");
 		assert.equal(strip(plain), plain);
 	});
 
 	it("keyDisplayText capitalizes the resolved keys", () => {
-		const plain = keyDisplayText("tui.input.submit");
+		const plain = keyDisplayText(keybindings, "tui.input.submit");
 		assert.equal(strip(plain), "Enter");
 		assert.ok(/^[A-Z]/.test(strip(plain)), `expected capitalized key, got ${plain}`);
 	});
@@ -47,7 +50,7 @@ describe("keyHint / rawKeyHint", () => {
 	});
 
 	it("keyHint resolves the keybinding and appends the description", () => {
-		const out = keyHint("tui.input.submit", "Submit input");
+		const out = keyHint(keybindings, "tui.input.submit", "Submit input");
 		const plain = strip(out);
 		assert.ok(plain.endsWith(" Submit input"));
 		assert.ok(out.includes("\x1b["));

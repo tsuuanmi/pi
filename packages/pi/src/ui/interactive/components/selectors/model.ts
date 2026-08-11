@@ -4,8 +4,8 @@ import {
 	Container,
 	DynamicBorder,
 	type Focusable,
-	getKeybindings,
 	type Input,
+	type KeybindingsManager,
 	keyHint,
 	type SearchableTableColumn,
 	SearchableTableSelector,
@@ -57,9 +57,11 @@ export class ModelSelectorComponent extends Container implements Focusable {
 	private scope: ModelScope = "all";
 	private scopeText?: Text;
 	private scopeHintText?: Text;
+	private readonly keybindings: KeybindingsManager;
 
 	constructor(
 		tui: TUI,
+		keybindings: KeybindingsManager,
 		currentModel: Model<any> | undefined,
 		settingsManager: SettingsManager,
 		modelRegistry: ModelRegistry,
@@ -71,6 +73,7 @@ export class ModelSelectorComponent extends Container implements Focusable {
 		super();
 
 		this.tui = tui;
+		this.keybindings = keybindings;
 		this.currentModel = currentModel;
 		this.settingsManager = settingsManager;
 		this.modelRegistry = modelRegistry;
@@ -93,6 +96,7 @@ export class ModelSelectorComponent extends Container implements Focusable {
 		this.addChild(new Spacer(1));
 
 		this.selector = new SearchableTableSelector({
+			keybindings,
 			items: [],
 			columns: this.getColumns(),
 			getSearchText: ({ id, provider, model }) => getModelSearchText({ id, provider, name: model.name }),
@@ -204,7 +208,7 @@ export class ModelSelectorComponent extends Container implements Focusable {
 	}
 
 	private getScopeHintText(): string {
-		return keyHint("tui.input.tab", "scope") + theme.fg("muted", " (all/scoped)");
+		return keyHint(this.keybindings, "tui.input.tab", "scope") + theme.fg("muted", " (all/scoped)");
 	}
 
 	private setScope(scope: ModelScope): void {
@@ -233,7 +237,7 @@ export class ModelSelectorComponent extends Container implements Focusable {
 	}
 
 	handleInput(keyData: string): void {
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 		if (this.scopedModelItems.length > 0 && kb.matches(keyData, "tui.input.tab")) {
 			const nextScope: ModelScope = this.scope === "all" ? "scoped" : "all";
 			this.setScope(nextScope);

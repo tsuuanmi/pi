@@ -4,7 +4,7 @@ import { Input } from "#tui/components/inputs/input";
 import { Spacer } from "#tui/components/layout/spacer";
 import { fuzzyFilter } from "#tui/editor/completion/fuzzy";
 import { keyHint, rawKeyHint } from "#tui/input/keyboard/key-hints";
-import { getKeybindings } from "#tui/input/keyboard/keybindings";
+import type { KeybindingsManager } from "#tui/input/keyboard/keybindings";
 import { theme } from "#tui/theme/theme";
 import { truncateToWidth, visibleWidth } from "#tui/utilities/text";
 
@@ -22,6 +22,7 @@ export interface SearchableTableColumn<T> {
 }
 
 export interface SearchableTableSelectorOptions<T> {
+	keybindings: KeybindingsManager;
 	items: T[];
 	columns: SearchableTableColumn<T>[];
 	getSearchText: (item: T) => string;
@@ -91,7 +92,7 @@ export class SearchableTableSelector<T> extends Container implements Focusable {
 			this.addChild(new Spacer(1));
 		}
 
-		this.searchInput = new Input();
+		this.searchInput = new Input(options.keybindings);
 		if (options.initialQuery) {
 			this.searchInput.setValue(options.initialQuery);
 		}
@@ -106,9 +107,9 @@ export class SearchableTableSelector<T> extends Container implements Focusable {
 			new TruncatedText(
 				rawKeyHint("↑↓", "navigate") +
 					"  " +
-					keyHint("tui.select.confirm", "select") +
+					keyHint(options.keybindings, "tui.select.confirm", "select") +
 					"  " +
-					keyHint("tui.select.cancel", "cancel"),
+					keyHint(options.keybindings, "tui.select.cancel", "cancel"),
 				1,
 				0,
 			),
@@ -170,7 +171,7 @@ export class SearchableTableSelector<T> extends Container implements Focusable {
 	}
 
 	handleInput(keyData: string): void {
-		const kb = getKeybindings();
+		const kb = this.options.keybindings;
 		if (kb.matches(keyData, "tui.select.up")) {
 			if (this.filteredItems.length === 0) return;
 			this.selectedIndex =

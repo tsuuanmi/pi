@@ -2,7 +2,7 @@ import { basename, dirname, isAbsolute, relative, resolve as resolvePath, sep } 
 import type { Tool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import type { TextContent } from "@tsuuanmi/pi-ai";
-import { getLanguageFromPath, highlightCode, keyHint, keyText, Text, type Theme } from "@tsuuanmi/pi-tui";
+import { getLanguageFromPath, highlightCode, Text, type Theme } from "@tsuuanmi/pi-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";
@@ -149,7 +149,7 @@ function formatCompactReadCall(
 	args: ReadRenderArgs | undefined,
 	theme: Theme,
 ): string {
-	const expandHint = theme.fg("dim", ` (${keyText("app.tools.expand")} to expand)`);
+	const expandHint = theme.fg("dim", " (to expand)");
 	if (classification.kind === "skill") {
 		return (
 			theme.fg("customMessageLabel", `\x1b[1m[skill]\x1b[22m `) +
@@ -191,7 +191,7 @@ function formatReadResult(
 	const remaining = lines.length - maxLines;
 	let text = `\n${displayLines.map((line) => (lang ? replaceTabs(line) : theme.fg("toolOutput", replaceTabs(line)))).join("\n")}`;
 	if (remaining > 0) {
-		text += `${theme.fg("muted", `\n... (${remaining} more lines,`)} ${keyHint("app.tools.expand", "to expand")}${theme.fg("muted", ")")}`;
+		text += `${theme.fg("muted", `\n... (${remaining} more lines,`)} ${theme.fg("muted", " to expand)")}`;
 	}
 
 	const truncation = result.details?.truncation;

@@ -21,7 +21,7 @@ This plan turns the findings in [Package Overlap Audit](package-overlap-audit.md
 | 3 | Session root and session-id ownership | Implemented in the current package boundary |
 | 4 | Workflow transition initialization/private alias removal | Implemented through the package manifest and public runtime entry |
 | 5 | Generic HUD provider and status-line composition | Implemented; status-line refresh remains host-owned |
-| 6 | TUI repository state and global keybinding state | Planned after higher-priority boundaries |
+| 6 | TUI repository state and global keybinding state | Complete; repository acquisition and active keybindings are host-scoped |
 
 ## Phase 1 - shared contracts and stream adapter
 
@@ -140,11 +140,82 @@ Workflows owns workflow HUD data; TUI owns normalized presentation; Pi owns prov
 
 TUI renders injected state and does not own application repository processes or duplicate global/injected configuration.
 
-### Required changes
+### 6A - Repository-state acquisition
 
-- Move Git status acquisition/cache to Pi's footer data service; TUI receives a summary.
-- Replace global keybinding lookup with host-scoped injection.
-- Keep generic key matching and theme rendering in TUI; keep app actions, persistence, and discovery in Pi.
+**Pi ownership**
+
+- Add a focused `RepositoryState` service under `packages/pi/src/ui/interactive/`.
+- Move Git metadata discovery, branch resolution, filesystem watchers, watcher retry/debounce, porcelain execution/parsing, status polling, cache invalidation and disposal into that service.
+- Keep `FooterDataProvider` focused on composing repository snapshots with extension status, provider count and account usage data.
+- Delegate cwd changes and lifecycle cleanup from `FooterDataProvider` to `RepositoryState`.
+- Expose one repository-change subscription so branch and status updates request a render without separate timer paths.
+
+**TUI ownership**
+
+- Extend `StatusLineDataProvider` with a synchronous Git status snapshot getter.
+- Build segment context only from injected branch/status snapshots.
+- Remove child-process imports, Git parsing/execution helpers, status cache state and Git refresh timing from `StatusLineComponent`.
+- Remove the obsolete TUI Git utility module, exports, tests and documentation after their Pi replacements exist.
+
+**State and failure rules**
+
+- `null` means repository state is unavailable or still unresolved; zero counts represent a clean repository.
+- Repository reads remain error-isolated and never throw through a render path.
+- A cwd change clears stale branch/status snapshots before starting acquisition for the new directory.
+- Disposal closes all watchers and timers and prevents late asynchronous results from publishing.
+
+### 6B - Host-scoped keybindings
+
+**TUI ownership**
+
+- Keep generic action definitions, normalization and matching in `KeybindingsManager`.
+- Pass a manager explicitly to interactive input, editor, selection, cancellation and key-hint APIs.
+- Store the injected manager on the component that handles input; nested components receive the same instance.
+- Remove the mutable module-level manager and the `getKeybindings()`/`setKeybindings()` exports. Do not retain a default-manager fallback or compatibility alias.
+
+**Pi ownership**
+
+- Create one effective `KeybindingsManager` for each interactive/startup/session-picker host.
+- Pass that manager through application dialogs, selectors, editor factories and TUI primitives.
+- Keep application actions, user configuration loading and persistence in `packages/pi/src/settings/keybindings.ts`.
+- Keep extension custom/editor factory injection on the same host manager so displayed hints and handled input cannot diverge.
+
+### File-level decomposition
+
+| Area | Change |
+|---|---|
+| `packages/pi/src/ui/interactive/git-status.ts` | Porcelain execution/parsing and error isolation |
+| `packages/pi/src/ui/interactive/repository-state.ts` | Repository discovery, cached snapshots, watchers, polling and lifecycle |
+| `packages/pi/src/ui/interactive/footer-data-provider.ts` | Repository delegation plus non-repository footer data only |
+| `packages/tui/src/components/status-line/` | Rendering, layout and injected snapshot contracts only |
+| `packages/tui/src/input/keyboard/keybindings.ts` | Definitions and manager implementation only; no active global instance |
+| TUI interactive components | Required constructor/options dependency for the manager they use |
+| Pi interactive components and CLI hosts | Per-host manager creation and explicit propagation |
+| Mirrored docs/tests | Move repository tests to Pi and document required keybinding injection |
+
+### Migration order
+
+1. Introduce `RepositoryState`, move existing branch tests, and move porcelain tests from TUI to Pi.
+2. Delegate `FooterDataProvider` and extend the status-line provider snapshot contract.
+3. Remove TUI Git acquisition/cache code and its obsolete exports/files.
+4. Change TUI keybinding consumers and hint helpers to require an injected manager.
+5. Propagate the Pi manager from each host through nested dialogs/selectors and remove global installation calls.
+6. Update package docs, architecture maps, API docs and changelogs for the breaking TUI API change.
+7. Build TUI before Pi, run both packages' full tests, run root type checking and package-boundary checks, then inspect packed public exports.
+
+### Result
+
+Completed. Pi now owns a dedicated repository-state service; TUI consumes synchronous repository snapshots. Keybinding-aware components require the host manager, and the mutable TUI manager registry was deleted without compatibility exports or fallback construction.
+
+### Acceptance criteria
+
+- TUI status-line source has no Git process import and no repository polling/watcher timer.
+- TUI source has no mutable active keybinding singleton or global keybinding accessor.
+- Every keybinding-aware component uses the manager supplied by its host, including hint rendering.
+- Pi owns all Git acquisition and publishes only narrow branch/status snapshots to TUI.
+- Session cwd changes cannot display repository data from the previous cwd.
+- Watchers, polling timers and in-flight updates are inert after disposal.
+- No legacy exports, fallback managers or compatibility aliases remain.
 
 ## Verification order
 

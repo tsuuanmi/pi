@@ -6,6 +6,7 @@ import {
 	type Component,
 	Container,
 	DynamicBorder,
+	type KeybindingsManager,
 	keyHint,
 	keyText,
 	LAYOUT_EDGE_X,
@@ -64,10 +65,12 @@ export class BashExecutionComponent extends Container {
 	private contentContainer: Container;
 	private readonly colorKey: "bashMode" | "dim";
 	private commandHeader: BashCommandHeaderComponent;
+	private readonly keybindings: KeybindingsManager;
 
-	constructor(command: string, ui: TUI, excludeFromContext = false) {
+	constructor(command: string, ui: TUI, keybindings: KeybindingsManager, excludeFromContext = false) {
 		super();
 		this.command = command;
+		this.keybindings = keybindings;
 
 		// Use dim border for excluded-from-context commands (!! prefix)
 		this.colorKey = excludeFromContext ? "dim" : "bashMode";
@@ -92,7 +95,7 @@ export class BashExecutionComponent extends Container {
 			ui,
 			(spinner) => theme.fg(this.colorKey, spinner),
 			(text) => theme.fg("muted", text),
-			`Running... (${keyText("tui.select.cancel")} to cancel)`, // Plain text for loader
+			`Running... (${keyText(keybindings, "tui.select.cancel")} to cancel)`, // Plain text for loader
 		);
 		this.contentContainer.addChild(this.loader);
 
@@ -213,11 +216,11 @@ export class BashExecutionComponent extends Container {
 			if (hiddenLineCount > 0) {
 				if (this.expanded) {
 					statusParts.push(
-						`${theme.fg("muted", "(")}${keyHint("app.tools.expand", "to collapse")}${theme.fg("muted", ")")}`,
+						`${theme.fg("muted", "(")}${keyHint(this.keybindings, "app.tools.expand", "to collapse")}${theme.fg("muted", ")")}`,
 					);
 				} else {
 					statusParts.push(
-						`${theme.fg("muted", `... ${hiddenLineCount} more lines (`)}${keyHint("app.tools.expand", "to expand")}${theme.fg("muted", ")")}`,
+						`${theme.fg("muted", `... ${hiddenLineCount} more lines (`)}${keyHint(this.keybindings, "app.tools.expand", "to expand")}${theme.fg("muted", ")")}`,
 					);
 				}
 			}

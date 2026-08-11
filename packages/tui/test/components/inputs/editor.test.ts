@@ -4,6 +4,7 @@ import { stripVTControlCharacters } from "node:util";
 import { Editor, wordWrapLine } from "#tui/components/inputs/editor";
 import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import { type AutocompleteProvider, CombinedAutocompleteProvider } from "#tui/editor/completion/autocomplete";
+import { KeybindingsManager, TUI_KEYBINDINGS } from "#tui/input/keyboard/keybindings";
 import { TUI } from "#tui/tui";
 import { visibleWidth } from "#tui/utilities/text";
 import { defaultEditorTheme } from "#tui-test/support/test-themes";
@@ -39,10 +40,12 @@ async function flushAutocomplete(): Promise<void> {
 	await new Promise((resolve) => setImmediate(resolve));
 }
 
+const keybindings = new KeybindingsManager(TUI_KEYBINDINGS);
+
 describe("Editor component", () => {
 	describe("Prompt history navigation", () => {
 		it("does nothing on Up arrow when history is empty", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("\x1b[A"); // Up arrow
 
@@ -50,7 +53,7 @@ describe("Editor component", () => {
 		});
 
 		it("shows most recent history entry on Up arrow when editor is empty", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("first prompt");
 			editor.addToHistory("second prompt");
@@ -61,7 +64,7 @@ describe("Editor component", () => {
 		});
 
 		it("cycles through history entries on repeated Up arrow", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("first");
 			editor.addToHistory("second");
@@ -81,7 +84,7 @@ describe("Editor component", () => {
 		});
 
 		it("jumps to start before entering history from a non-empty draft", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("prompt");
 			editor.setText("draft");
@@ -101,7 +104,7 @@ describe("Editor component", () => {
 		});
 
 		it("navigates forward through history with Down arrow", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("first");
 			editor.addToHistory("second");
@@ -126,7 +129,7 @@ describe("Editor component", () => {
 		});
 
 		it("exits history mode when typing a character", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("old prompt");
 
@@ -137,7 +140,7 @@ describe("Editor component", () => {
 		});
 
 		it("exits history mode on setText", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("first");
 			editor.addToHistory("second");
@@ -151,7 +154,7 @@ describe("Editor component", () => {
 		});
 
 		it("does not add empty strings to history", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("");
 			editor.addToHistory("   ");
@@ -166,7 +169,7 @@ describe("Editor component", () => {
 		});
 
 		it("does not add consecutive duplicates to history", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("same");
 			editor.addToHistory("same");
@@ -180,7 +183,7 @@ describe("Editor component", () => {
 		});
 
 		it("allows non-consecutive duplicates in history", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("first");
 			editor.addToHistory("second");
@@ -197,7 +200,7 @@ describe("Editor component", () => {
 		});
 
 		it("uses cursor movement instead of history when editor has content", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("history item");
 			editor.setText("line1\nline2");
@@ -213,7 +216,7 @@ describe("Editor component", () => {
 		});
 
 		it("limits history to 100 entries", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Add 105 entries
 			for (let i = 0; i < 105; i++) {
@@ -234,7 +237,7 @@ describe("Editor component", () => {
 		});
 
 		it("places cursor at start after browsing history upward", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("older entry");
 			editor.addToHistory("line1\nline2\nline3");
@@ -249,7 +252,7 @@ describe("Editor component", () => {
 		});
 
 		it("places cursor at end after browsing history downward", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("older entry");
 			editor.addToHistory("line1\nline2\nline3");
@@ -268,7 +271,7 @@ describe("Editor component", () => {
 		});
 
 		it("allows opposite-direction cursor movement within multi-line history entry", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.addToHistory("line1\nline2\nline3");
 
@@ -287,7 +290,7 @@ describe("Editor component", () => {
 
 	describe("public state accessors", () => {
 		it("returns cursor position", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			assert.deepStrictEqual(editor.getCursor(), { line: 0, col: 0 });
 
@@ -302,7 +305,7 @@ describe("Editor component", () => {
 		});
 
 		it("returns lines as a defensive copy", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			editor.setText("a\nb");
 
 			const lines = editor.getLines();
@@ -315,7 +318,7 @@ describe("Editor component", () => {
 
 	describe("Backslash+Enter newline workaround", () => {
 		it("inserts backslash immediately (no buffering)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("\\");
 
@@ -324,7 +327,7 @@ describe("Editor component", () => {
 		});
 
 		it("converts standalone backslash to newline on Enter", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("\\");
 			editor.handleInput("\r");
@@ -333,7 +336,7 @@ describe("Editor component", () => {
 		});
 
 		it("inserts backslash normally when followed by other characters", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("\\");
 			editor.handleInput("x");
@@ -342,7 +345,7 @@ describe("Editor component", () => {
 		});
 
 		it("does not trigger newline when backslash is not immediately before cursor", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			let submitted = false;
 
 			editor.onSubmit = () => {
@@ -358,7 +361,7 @@ describe("Editor component", () => {
 		});
 
 		it("only removes one backslash when multiple are present", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("\\");
 			editor.handleInput("\\");
@@ -373,7 +376,7 @@ describe("Editor component", () => {
 
 	describe("Kitty CSI-u handling", () => {
 		it("ignores printable CSI-u sequences with unsupported modifiers", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("\x1b[99;9u");
 
@@ -381,7 +384,7 @@ describe("Editor component", () => {
 		});
 
 		it("inserts shifted CSI-u letters as text", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("\x1b[69;2u");
 
@@ -389,7 +392,7 @@ describe("Editor component", () => {
 		});
 
 		it("inserts shifted xterm modifyOtherKeys letters as text", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("\x1b[27;2;69~");
 
@@ -399,7 +402,7 @@ describe("Editor component", () => {
 
 	describe("Unicode text editing behavior", () => {
 		it("inserts mixed ASCII, umlauts, and emojis as literal text", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("H");
 			editor.handleInput("e");
@@ -418,7 +421,7 @@ describe("Editor component", () => {
 		});
 
 		it("deletes single-code-unit unicode characters (umlauts) with Backspace", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("ä");
 			editor.handleInput("ö");
@@ -432,7 +435,7 @@ describe("Editor component", () => {
 		});
 
 		it("deletes multi-code-unit emojis with single Backspace", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("😀");
 			editor.handleInput("👍");
@@ -445,7 +448,7 @@ describe("Editor component", () => {
 		});
 
 		it("inserts characters at the correct position after cursor movement over umlauts", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("ä");
 			editor.handleInput("ö");
@@ -463,7 +466,7 @@ describe("Editor component", () => {
 		});
 
 		it("moves cursor across multi-code-unit emojis with single arrow key", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("😀");
 			editor.handleInput("👍");
@@ -483,7 +486,7 @@ describe("Editor component", () => {
 		});
 
 		it("preserves umlauts across line breaks", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("ä");
 			editor.handleInput("ö");
@@ -498,7 +501,7 @@ describe("Editor component", () => {
 		});
 
 		it("replaces the entire document with unicode text via setText (paste simulation)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Simulate bracketed paste / programmatic replacement
 			editor.setText("Hällö Wörld! 😀 äöüÄÖÜß");
@@ -508,7 +511,7 @@ describe("Editor component", () => {
 		});
 
 		it("moves cursor to document start on Ctrl+A and inserts at the beginning", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("a");
 			editor.handleInput("b");
@@ -520,7 +523,7 @@ describe("Editor component", () => {
 		});
 
 		it("deletes words correctly with Ctrl+W and Alt+Backspace", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Basic word deletion
 			editor.setText("foo bar baz");
@@ -570,7 +573,7 @@ describe("Editor component", () => {
 		});
 
 		it("navigates words correctly with Ctrl+Left/Right", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("foo bar... baz");
 			// Cursor at end
@@ -624,7 +627,7 @@ describe("Editor component", () => {
 		});
 
 		it("stops at fullwidth Chinese punctuation (issue #4972)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// 你好，世界 = 你好(0-2) ，(2-3) 世界(3-5)
 			editor.setText("你好，世界");
@@ -656,7 +659,7 @@ describe("Editor component", () => {
 		});
 
 		it("handles mixed CJK and ASCII word movement", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// "hello你好，world世界" = hello(0-5) 你好(5-7) ，(7-8) world(8-13) 世界(13-15)
 			editor.setText("hello你好，world世界");
@@ -702,7 +705,7 @@ describe("Editor component", () => {
 
 	describe("Grapheme-aware text wrapping", () => {
 		it("wraps lines correctly when text contains wide emojis", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 20;
 
 			// ✅ is 2 columns wide, so "Hello ✅ World" is 14 columns
@@ -717,7 +720,7 @@ describe("Editor component", () => {
 		});
 
 		it("wraps long text with emojis at correct positions", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 10;
 
 			// Each ✅ is 2 columns. "✅✅✅✅✅" = 10 columns, fits exactly
@@ -735,7 +738,7 @@ describe("Editor component", () => {
 
 		it("renders isolated Thai and Lao AM clusters without width drift", () => {
 			for (const text of ["ำabc", "ຳabc"]) {
-				const editor = new Editor(createTestTUI(), defaultEditorTheme);
+				const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 				const width = 8;
 				editor.setText(text);
 
@@ -746,7 +749,7 @@ describe("Editor component", () => {
 		});
 
 		it("wraps CJK characters correctly (each is 2 columns wide)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 10 + 1 + LAYOUT_EDGE_X * 2; // content width plus cursor and gutters
 
 			// Each CJK char is 2 columns. "日本語テスト" = 6 chars = 12 columns
@@ -766,7 +769,7 @@ describe("Editor component", () => {
 		});
 
 		it("handles mixed ASCII and wide characters in wrapping", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 15 + 1 + LAYOUT_EDGE_X * 2; // content width plus cursor and gutters
 
 			// "Test ✅ OK 日本" = 4 + 1 + 2 + 1 + 2 + 1 + 4 = 15 columns (fits in width-1=15)
@@ -782,7 +785,7 @@ describe("Editor component", () => {
 		});
 
 		it("renders cursor correctly on wide characters", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 20;
 
 			editor.setText("A✅B");
@@ -798,7 +801,7 @@ describe("Editor component", () => {
 		});
 
 		it("does not exceed terminal width with emoji at wrap boundary", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 11;
 
 			// "0123456789✅" = 10 ASCII + 2-wide emoji = 12 columns
@@ -814,7 +817,7 @@ describe("Editor component", () => {
 
 		it("shows cursor at end of line before wrap, wraps on next char", () => {
 			const width = 10 + LAYOUT_EDGE_X * 2;
-			const editor = new Editor(createTestTUI(width), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(width), defaultEditorTheme, keybindings);
 
 			// Type 9 chars → fills layoutWidth exactly, cursor at end on same line
 			for (const ch of "aaaaaaaaa") editor.handleInput(ch);
@@ -833,7 +836,7 @@ describe("Editor component", () => {
 
 	describe("Word wrapping", () => {
 		it("wraps at word boundaries instead of mid-word", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 40;
 
 			editor.setText("Hello world this is a test of word wrapping functionality");
@@ -855,7 +858,7 @@ describe("Editor component", () => {
 		});
 
 		it("does not start lines with leading whitespace after word wrap", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 20;
 
 			editor.setText("Word1 Word2 Word3 Word4 Word5 Word6");
@@ -876,7 +879,7 @@ describe("Editor component", () => {
 		});
 
 		it("breaks long words (URLs) at character level", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 30;
 
 			editor.setText("Check https://example.com/very/long/path/that/exceeds/width here");
@@ -890,7 +893,7 @@ describe("Editor component", () => {
 		});
 
 		it("preserves multiple spaces within words on same line", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 50;
 
 			editor.setText("Word1   Word2    Word3");
@@ -902,7 +905,7 @@ describe("Editor component", () => {
 		});
 
 		it("handles empty string", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 40;
 
 			editor.setText("");
@@ -913,7 +916,7 @@ describe("Editor component", () => {
 		});
 
 		it("handles single word that fits exactly", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const width = 10 + 1 + LAYOUT_EDGE_X * 2; // content width plus cursor and gutters
 
 			editor.setText("1234567890");
@@ -1156,14 +1159,14 @@ describe("Editor component", () => {
 
 	describe("Undo", () => {
 		it("does nothing when undo stack is empty", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("\x1b[45;5u"); // Ctrl+- (undo)
 			assert.strictEqual(editor.getText(), "");
 		});
 
 		it("coalesces consecutive word characters into one undo unit", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("h");
 			editor.handleInput("e");
@@ -1188,7 +1191,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes spaces one at a time", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("h");
 			editor.handleInput("e");
@@ -1210,7 +1213,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes newlines and signals next word to capture state", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("h");
 			editor.handleInput("e");
@@ -1236,7 +1239,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes backspace", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("h");
 			editor.handleInput("e");
@@ -1251,7 +1254,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes forward delete", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("h");
 			editor.handleInput("e");
@@ -1268,7 +1271,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes Ctrl+W (delete word backward)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("h");
 			editor.handleInput("e");
@@ -1291,7 +1294,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes Ctrl+K (delete to line end)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("h");
 			editor.handleInput("e");
@@ -1318,7 +1321,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes Ctrl+U (delete to line start)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("h");
 			editor.handleInput("e");
@@ -1342,7 +1345,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes single-line paste atomically", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -1361,7 +1364,7 @@ describe("Editor component", () => {
 		});
 
 		it("does not trigger autocomplete during single-line paste", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			let suggestionCalls = 0;
 
 			const mockProvider: AutocompleteProvider = {
@@ -1381,7 +1384,7 @@ describe("Editor component", () => {
 		});
 
 		it("decodes CSI-u Ctrl+letter sequences inside bracketed paste (tmux popup)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// tmux popups with extended-keys-format=csi-u re-encode \n in pastes as
 			// \x1b[106;5u (Ctrl+J). Without decoding, the per-char filter strips ESC
@@ -1391,7 +1394,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes multi-line paste atomically", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -1410,7 +1413,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes insertTextAtCursor atomically", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -1429,7 +1432,7 @@ describe("Editor component", () => {
 		});
 
 		it("insertTextAtCursor handles multiline text", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -1450,7 +1453,7 @@ describe("Editor component", () => {
 		});
 
 		it("insertTextAtCursor normalizes CRLF and CR line endings", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("");
 
@@ -1467,7 +1470,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes setText to empty string", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("h");
 			editor.handleInput("e");
@@ -1490,7 +1493,7 @@ describe("Editor component", () => {
 		});
 
 		it("clears undo stack on submit", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			let submitted = "";
 			editor.onSubmit = (text) => {
 				submitted = text;
@@ -1512,7 +1515,7 @@ describe("Editor component", () => {
 		});
 
 		it("exits history browsing mode on undo", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Add "hello" to history
 			editor.addToHistory("hello");
@@ -1544,7 +1547,7 @@ describe("Editor component", () => {
 		});
 
 		it("undo restores to pre-history state even after multiple history navigations", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Add history entries
 			editor.addToHistory("first");
@@ -1583,7 +1586,7 @@ describe("Editor component", () => {
 		});
 
 		it("cursor movement starts new undo unit", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("h");
 			editor.handleInput("e");
@@ -1616,7 +1619,7 @@ describe("Editor component", () => {
 		});
 
 		it("no-op delete operations do not push undo snapshots", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.handleInput("h");
 			editor.handleInput("e");
@@ -1637,7 +1640,7 @@ describe("Editor component", () => {
 		});
 
 		it("undoes autocomplete", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Create a mock autocomplete provider
 			const mockProvider: AutocompleteProvider = {
@@ -1676,7 +1679,7 @@ describe("Editor component", () => {
 
 	describe("Autocomplete", () => {
 		it("continues after a provider failure", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			let calls = 0;
 			const provider: AutocompleteProvider = {
 				getSuggestions: async () => {
@@ -1704,7 +1707,7 @@ describe("Editor component", () => {
 		});
 
 		it("auto-applies single force-file suggestion without showing menu", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			const mockProvider: AutocompleteProvider = {
 				getSuggestions: async (lines, _cursorLine, cursorCol, options) => {
@@ -1745,7 +1748,7 @@ describe("Editor component", () => {
 		});
 
 		it("shows menu when force-file has multiple suggestions", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			const mockProvider: AutocompleteProvider = {
 				getSuggestions: async (lines, _cursorLine, cursorCol, options) => {
@@ -1789,7 +1792,7 @@ describe("Editor component", () => {
 		});
 
 		it("keeps suggestions open when typing in force mode (Tab-triggered)", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			const allFiles = [
 				{ value: "readme.md", label: "readme.md" },
@@ -1841,7 +1844,7 @@ describe("Editor component", () => {
 		});
 
 		it("debounces @ autocomplete while typing", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			let suggestionCalls = 0;
 
 			const mockProvider: AutocompleteProvider = {
@@ -1880,7 +1883,7 @@ describe("Editor component", () => {
 			// called updateAutocomplete(), so `/cmd ` (argument menu) + Left kept
 			// displaying the arguments against a `/cmd` prefix — and a Tab there
 			// would concatenate the stale suggestion onto the partial command name.
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			const mockProvider: AutocompleteProvider = {
 				getSuggestions: async (lines, _cursorLine, cursorCol) => {
@@ -1933,7 +1936,7 @@ describe("Editor component", () => {
 		});
 
 		it("debounces # autocomplete while typing", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			let suggestionCalls = 0;
 
 			const mockProvider: AutocompleteProvider = {
@@ -1966,7 +1969,7 @@ describe("Editor component", () => {
 		});
 
 		it("debounces custom triggerCharacters autocomplete while typing", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			let suggestionCalls = 0;
 
 			editor.setAutocompleteProvider({
@@ -1992,7 +1995,7 @@ describe("Editor component", () => {
 		});
 
 		it("resets custom triggerCharacters when provider changes", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			let suggestionCalls = 0;
 
 			editor.setAutocompleteProvider({
@@ -2018,7 +2021,7 @@ describe("Editor component", () => {
 		});
 
 		it("aborts active @ autocomplete when typing continues", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			let aborts = 0;
 
 			const mockProvider: AutocompleteProvider = {
@@ -2055,7 +2058,7 @@ describe("Editor component", () => {
 		});
 
 		it("hides autocomplete when backspacing slash command to empty", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Mock provider with slash commands
 			const mockProvider: AutocompleteProvider = {
@@ -2095,7 +2098,7 @@ describe("Editor component", () => {
 		});
 
 		it("applies exact typed slash-argument value on Enter even when first item is highlighted", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Mock provider for /argtest command with argument completions
 			const mockProvider: AutocompleteProvider = {
@@ -2151,7 +2154,7 @@ describe("Editor component", () => {
 		});
 
 		it("selects first prefix match on Enter when typed arg is not exact match", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Mock provider for /argtest command with argument completions
 			const mockProvider: AutocompleteProvider = {
@@ -2202,7 +2205,7 @@ describe("Editor component", () => {
 		});
 
 		it("highlights unique prefix match as user types (before full exact match)", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Mock provider that returns all items unfiltered (like real extensions do)
 			const mockProvider: AutocompleteProvider = {
@@ -2251,7 +2254,7 @@ describe("Editor component", () => {
 		});
 
 		it("selects first prefix match when multiple items match", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Mock provider that returns all items unfiltered
 			const mockProvider: AutocompleteProvider = {
@@ -2297,7 +2300,7 @@ describe("Editor component", () => {
 		});
 
 		it("works for built-in-style command argument completion path (model-like)", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Mock provider for /model command with model completions
 			const mockProvider: AutocompleteProvider = {
@@ -2360,7 +2363,7 @@ describe("Editor component", () => {
 		});
 
 		it("awaits async slash command argument completions", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const provider = new CombinedAutocompleteProvider(
 				[
 					{
@@ -2385,7 +2388,7 @@ describe("Editor component", () => {
 		});
 
 		it("ignores invalid slash command argument completion results", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const provider = new CombinedAutocompleteProvider(
 				[
 					{
@@ -2408,7 +2411,7 @@ describe("Editor component", () => {
 		});
 
 		it("does not show argument completions when command has no argument completer", async () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const provider = new CombinedAutocompleteProvider(
 				[
 					{ name: "help", description: "Show help" },
@@ -2436,7 +2439,7 @@ describe("Editor component", () => {
 
 	describe("Character jump (Ctrl+])", () => {
 		it("jumps forward to first occurrence of character on same line", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -2449,7 +2452,7 @@ describe("Editor component", () => {
 		});
 
 		it("jumps forward to next occurrence after cursor", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -2464,7 +2467,7 @@ describe("Editor component", () => {
 		});
 
 		it("jumps forward across multiple lines", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("abc\ndef\nghi");
 			// Cursor is at end (line 2, col 3). Move to line 0 via up arrows, then Ctrl+A
@@ -2480,7 +2483,7 @@ describe("Editor component", () => {
 		});
 
 		it("jumps backward to first occurrence before cursor on same line", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			// Cursor at end (col 11)
@@ -2493,7 +2496,7 @@ describe("Editor component", () => {
 		});
 
 		it("jumps backward across multiple lines", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("abc\ndef\nghi");
 			// Cursor at end of line 3
@@ -2506,7 +2509,7 @@ describe("Editor component", () => {
 		});
 
 		it("does nothing when character is not found (forward)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -2519,7 +2522,7 @@ describe("Editor component", () => {
 		});
 
 		it("does nothing when character is not found (backward)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			// Cursor at end
@@ -2532,7 +2535,7 @@ describe("Editor component", () => {
 		});
 
 		it("is case-sensitive", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("Hello World");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -2552,7 +2555,7 @@ describe("Editor component", () => {
 		});
 
 		it("cancels jump mode when Ctrl+] is pressed again", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -2567,7 +2570,7 @@ describe("Editor component", () => {
 		});
 
 		it("cancels jump mode on Escape and processes the Escape", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -2585,7 +2588,7 @@ describe("Editor component", () => {
 		});
 
 		it("cancels backward jump mode when Ctrl+Alt+] is pressed again", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			// Cursor at end
@@ -2600,7 +2603,7 @@ describe("Editor component", () => {
 		});
 
 		it("searches for special characters", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("foo(bar) = baz;");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -2620,7 +2623,7 @@ describe("Editor component", () => {
 		});
 
 		it("handles empty text gracefully", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("");
 			assert.deepStrictEqual(editor.getCursor(), { line: 0, col: 0 });
@@ -2632,7 +2635,7 @@ describe("Editor component", () => {
 		});
 
 		it("resets lastAction when jumping", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world");
 			editor.handleInput("\x01"); // Ctrl+A - go to start
@@ -2668,7 +2671,7 @@ describe("Editor component", () => {
 		}
 
 		it("preserves target column when moving up through a shorter line", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Line 0: "2222222222x222" (x at col 10)
 			// Line 1: "" (empty)
@@ -2691,7 +2694,7 @@ describe("Editor component", () => {
 		});
 
 		it("preserves target column when moving down through a shorter line", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("1111111111_111\n\n2222222222x222222222222");
 
@@ -2712,7 +2715,7 @@ describe("Editor component", () => {
 		});
 
 		it("resets sticky column on horizontal movement (left arrow)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("1234567890\n\n1234567890");
 
@@ -2737,7 +2740,7 @@ describe("Editor component", () => {
 		});
 
 		it("resets sticky column on horizontal movement (right arrow)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("1234567890\n\n1234567890");
 
@@ -2764,7 +2767,7 @@ describe("Editor component", () => {
 		});
 
 		it("resets sticky column on typing", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("1234567890\n\n1234567890");
 
@@ -2788,7 +2791,7 @@ describe("Editor component", () => {
 		});
 
 		it("resets sticky column on backspace", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("1234567890\n\n1234567890");
 
@@ -2812,7 +2815,7 @@ describe("Editor component", () => {
 		});
 
 		it("resets sticky column on Ctrl+A (move to line start)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("1234567890\n\n1234567890");
 
@@ -2833,7 +2836,7 @@ describe("Editor component", () => {
 		});
 
 		it("resets sticky column on Ctrl+E (move to line end)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("12345\n\n1234567890");
 
@@ -2857,7 +2860,7 @@ describe("Editor component", () => {
 		});
 
 		it("resets sticky column on word movement (Ctrl+Left)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world\n\nhello world");
 
@@ -2880,7 +2883,7 @@ describe("Editor component", () => {
 		});
 
 		it("resets sticky column on word movement (Ctrl+Right)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("hello world\n\nhello world");
 
@@ -2906,7 +2909,7 @@ describe("Editor component", () => {
 		});
 
 		it("resets sticky column on undo", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("1234567890\n\n1234567890");
 
@@ -2944,7 +2947,7 @@ describe("Editor component", () => {
 		});
 
 		it("handles multiple consecutive up/down movements", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("1234567890\nab\ncd\nef\n1234567890");
 
@@ -2970,7 +2973,7 @@ describe("Editor component", () => {
 
 		it("moves correctly through wrapped visual lines without getting stuck", () => {
 			const tui = createTestTUI(15, 24); // Narrow terminal
-			const editor = new Editor(tui, defaultEditorTheme);
+			const editor = new Editor(tui, defaultEditorTheme, keybindings);
 
 			// Line 0: short
 			// Line 1: 30 chars = wraps to 3 visual lines at width 10 (after padding)
@@ -2993,7 +2996,7 @@ describe("Editor component", () => {
 		});
 
 		it("handles setText resetting sticky column", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			editor.setText("1234567890\n\n1234567890");
 
@@ -3013,7 +3016,7 @@ describe("Editor component", () => {
 		});
 
 		it("sets preferredVisualCol when pressing right at end of prompt (last line)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Line 0: 20 chars with 'x' at col 10
 			// Line 1: empty
@@ -3044,7 +3047,7 @@ describe("Editor component", () => {
 		it("handles editor resizes when preferredVisualCol is on the same line", () => {
 			// Create editor with wider terminal
 			const tui = createTestTUI(80, 24);
-			const editor = new Editor(tui, defaultEditorTheme);
+			const editor = new Editor(tui, defaultEditorTheme, keybindings);
 
 			editor.setText("12345678901234567890\n\n12345678901234567890");
 
@@ -3068,7 +3071,7 @@ describe("Editor component", () => {
 
 		it("handles editor resizes when preferredVisualCol is on a different line", () => {
 			const tui = createTestTUI(80, 24);
-			const editor = new Editor(tui, defaultEditorTheme);
+			const editor = new Editor(tui, defaultEditorTheme, keybindings);
 
 			// Create a line that wraps into multiple visual lines at width 10
 			// "12345678901234567890" = 20 chars, wraps to 2 visual lines at width 10
@@ -3106,7 +3109,7 @@ describe("Editor component", () => {
 
 		it("rewrapped lines: target fits current visual column", () => {
 			const tui = createTestTUI(80, 24);
-			const editor = new Editor(tui, defaultEditorTheme);
+			const editor = new Editor(tui, defaultEditorTheme, keybindings);
 			editor.setText("abcdefghijklmnopqr\n123456789012345678");
 
 			positionCursor(editor, 0, 18);
@@ -3132,7 +3135,7 @@ describe("Editor component", () => {
 
 		it("rewrapped lines: target shorter than current visual column", () => {
 			const tui = createTestTUI(80, 24);
-			const editor = new Editor(tui, defaultEditorTheme);
+			const editor = new Editor(tui, defaultEditorTheme, keybindings);
 			editor.setText("abcdefghijklmnopqr\n123456789012345678\nab");
 
 			positionCursor(editor, 0, 18);
@@ -3167,13 +3170,13 @@ describe("Editor component", () => {
 		}
 
 		it("creates a paste marker for large pastes", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const text = pasteWithMarker(editor);
 			assert.match(text, /\[paste #\d+ \+\d+ lines\]/);
 		});
 
 		it("treats paste marker as single unit for right arrow", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			editor.handleInput("A");
 			pasteWithMarker(editor);
 			editor.handleInput("B");
@@ -3198,7 +3201,7 @@ describe("Editor component", () => {
 		});
 
 		it("treats paste marker as single unit for left arrow", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			editor.handleInput("A");
 			pasteWithMarker(editor);
 			editor.handleInput("B");
@@ -3220,7 +3223,7 @@ describe("Editor component", () => {
 		});
 
 		it("treats paste marker as single unit for backspace", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			editor.handleInput("A");
 			pasteWithMarker(editor);
 			editor.handleInput("B");
@@ -3242,7 +3245,7 @@ describe("Editor component", () => {
 		});
 
 		it("treats paste marker as single unit for forward delete", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			editor.handleInput("A");
 			pasteWithMarker(editor);
 			editor.handleInput("B");
@@ -3258,7 +3261,7 @@ describe("Editor component", () => {
 		});
 
 		it("treats paste marker as single unit for word movement", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			editor.handleInput("X");
 			editor.handleInput(" ");
 			pasteWithMarker(editor);
@@ -3282,7 +3285,7 @@ describe("Editor component", () => {
 		});
 
 		it("undo restores marker after backspace deletion", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			editor.handleInput("A");
 			pasteWithMarker(editor);
 			editor.handleInput("B");
@@ -3304,7 +3307,7 @@ describe("Editor component", () => {
 		});
 
 		it("handles multiple paste markers in same line", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			pasteWithMarker(editor);
 			editor.handleInput(" ");
 			pasteWithMarker(editor);
@@ -3333,7 +3336,7 @@ describe("Editor component", () => {
 		});
 
 		it("does not treat manually typed marker-like text as atomic (no valid paste ID)", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			// Type text that matches the pattern but was typed manually (no paste entry)
 			const fakeMarker = "[paste #99 +5 lines]";
 			for (const ch of fakeMarker) editor.handleInput(ch);
@@ -3350,7 +3353,7 @@ describe("Editor component", () => {
 		it("does not crash when paste marker is wider than terminal width", () => {
 			// Reproduce: terminal width 8, paste marker "[paste #1 +47 lines]" (21 chars)
 			const tui = createTestTUI();
-			const editor = new Editor(tui, defaultEditorTheme);
+			const editor = new Editor(tui, defaultEditorTheme, keybindings);
 			const bigContent = "line\n".repeat(47).trimEnd();
 			editor.handleInput(`\x1b[200~${bigContent}\x1b[201~`);
 
@@ -3375,7 +3378,7 @@ describe("Editor component", () => {
 			// Cursor lands on the paste marker after word-wrap, causing the rendered line
 			// to be 55 visible chars (1 over the width).
 			const tui = createTestTUI();
-			const editor = new Editor(tui, defaultEditorTheme);
+			const editor = new Editor(tui, defaultEditorTheme, keybindings);
 
 			// Type 35 'b' characters
 			for (let i = 0; i < 35; i++) editor.handleInput("b");
@@ -3410,7 +3413,7 @@ describe("Editor component", () => {
 			// layoutWidth=53. After wrapping at the space, the remaining 35 b's + marker = 55
 			// must trigger a second force-break instead of silently overflowing.
 			const tui = createTestTUI();
-			const editor = new Editor(tui, defaultEditorTheme);
+			const editor = new Editor(tui, defaultEditorTheme, keybindings);
 
 			// Type a space, then 35 b's
 			editor.handleInput(" ");
@@ -3435,7 +3438,7 @@ describe("Editor component", () => {
 		});
 
 		it("expands large pasted content literally in getExpandedText", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const pastedText = [
 				"line 1",
 				"line 2",
@@ -3457,7 +3460,7 @@ describe("Editor component", () => {
 		});
 
 		it("snaps to the paste marker start when navigating down into it", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 
 			// Line 0: long enough text to establish a sticky column
 			editor.setText("12345678901234567890\n\nhello ");
@@ -3493,7 +3496,7 @@ describe("Editor component", () => {
 
 		it("preserves sticky column when navigating through paste marker line", () => {
 			const tui = createTestTUI(30, 24);
-			const editor = new Editor(tui, defaultEditorTheme);
+			const editor = new Editor(tui, defaultEditorTheme, keybindings);
 
 			// Build:
 			// Line 0: "1234567890123456" (16 chars)
@@ -3535,7 +3538,7 @@ describe("Editor component", () => {
 
 		it("does not get stuck moving down from a multi-visual-line paste marker", () => {
 			const tui = createTestTUI(20, 24);
-			const editor = new Editor(tui, defaultEditorTheme);
+			const editor = new Editor(tui, defaultEditorTheme, keybindings);
 
 			// Build:
 			// Logical line 0: "abcdefgh" + marker(21 chars) + "ijklmnopqr"
@@ -3596,7 +3599,7 @@ describe("Editor component", () => {
 
 		it("skips marker continuation VLs when preferred col falls in marker tail", () => {
 			const tui = createTestTUI(20, 24);
-			const editor = new Editor(tui, defaultEditorTheme);
+			const editor = new Editor(tui, defaultEditorTheme, keybindings);
 
 			// Same layout. Start at col 3 ("d"). Preferred col 3 maps to VL3
 			// visual col 3 which is inside the "lines]" marker tail.
@@ -3636,7 +3639,7 @@ describe("Editor component", () => {
 		});
 
 		it("submits large pasted content literally", () => {
-			const editor = new Editor(createTestTUI(), defaultEditorTheme);
+			const editor = new Editor(createTestTUI(), defaultEditorTheme, keybindings);
 			const pastedText = [
 				"line 1",
 				"line 2",

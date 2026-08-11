@@ -40,6 +40,8 @@ The audit did find smaller duplicate shapes, ambiguous ownership, packaging comp
 
 - Agent now exports `ContextToolSpec`; Pi and Workflows extend that canonical context-bound contract instead of copying its execute signature.
 - Workflows now owns one `createSubagentStream()` adapter; Team and Ralplan retain only skill-specific request, persistence, and validation behavior.
+- Pi now owns repository discovery, branch watching, porcelain acquisition, polling and cached snapshots; TUI renders the injected repository summary.
+- TUI keybinding-aware components now require the host manager; the mutable global manager and compatibility accessors are removed.
 - The Workflows artifact-layout change is planned and is being handled by a concurrent workstream; it is not included in this commit.
 
 ## Ownership decision rules
@@ -105,19 +107,7 @@ Pi's Jiti extension loader does not provide a `#workflows/*` alias. The compiled
 
 ### P2 - clarify or simplify adjacent ownership
 
-#### 5. Repository-state acquisition is split between Pi and TUI
-
-Pi's footer data provider watches branch metadata, while TUI's status line runs/caches `git status --porcelain` itself.
-
-**Decision:** Prefer Pi-owned repository acquisition/caching with a narrow TUI data provider. TUI should render repository state, not execute Git or own application refresh timers.
-
-#### 6. Keybinding state is both injected and global
-
-TUI owns generic keybinding matching and a mutable global registry. Pi creates the effective manager, retains it and also installs it globally.
-
-**Decision:** TUI owns definitions/matching; Pi owns app bindings and persistence. Prefer explicit host-scoped injection and avoid adding a second registry.
-
-#### 7. Public names hide different scopes
+#### 4. Public names hide different scopes
 
 Examples include AI and Agent types both named `Context`, AI and Pi methods both named `registerProvider`, and multiple layers using `Receipt`, `Team`, `Task`, `Event` and `Retry` terminology.
 
@@ -215,7 +205,7 @@ If any answer is no, keep the behavior in Workflows until the generic path is cl
 | 6 | Complete receipt reference boundaries | Medium-high | Workflows references task/tool ids without copying lower schemas |
 | 7 | Prove workflow-owned checkpoint recovery parity | Medium-high | Restart/interrupted recovery is idempotent and independent of workflow state |
 | 8 | Normalize cross-layer event documentation and mappings | Medium | Every bridge has one source event and explicit adapter |
-| 9 | Move repository-state acquisition out of TUI and reduce global UI state | Medium | TUI receives repository/keybinding/theme state through host-scoped providers |
+| 9 | Move repository-state acquisition out of TUI and reduce global UI state | Repository/keybinding complete; theme remains | TUI receives repository snapshots and active keybindings through host-scoped providers; theme scoping is tracked separately |
 | 10 | Define approved Ralplan output adapters | Medium-low | Approved plans map to tasks without moving planning policy |
 | 11 | Evaluate Ultragoal Orchestrator use only for a real generic DAG | Low-medium | No adapter without independent goals and generic dependencies |
 | 12 | Defer shared memory and new delegation APIs | Low | No speculative cross-package state or alternate lifecycle facade |

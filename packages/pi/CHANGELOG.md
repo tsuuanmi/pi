@@ -2,6 +2,9 @@
 
 ### Changed
 
+- **interactive**: Moved repository discovery, branch watching, status polling, and cached snapshots into a dedicated Pi-owned repository-state service.
+- **tools**: Tool renderers now use neutral expansion copy instead of consulting UI-host keybindings outside the interactive component boundary.
+
 - **subagents**: The model-visible `subagent_spawn` tool now requires a registered `agent` profile and no longer accepts an inventable `role` label; the spawned subagent's role is always the loaded agent profile name, so only known agent profiles (from `.agent/agents`, `.agents/agents`, user agents, or bundled package agents) can be spawned.
 - **ui**: Interactive assistant thinking blocks now render in full by default instead of a one-line preview; `Ctrl+T` still hides thinking and `Ctrl+O` still collapses/expands details.
 - **sessions**: The session loader accepts legacy version 3 JSONL files (and their `compaction.fromHook` field) on read so existing sessions open again; new files continue to be written at version 4.
@@ -13,6 +16,8 @@
 - **tsconfig**: Bumped `target` and `lib` from `ES2022` to `ES2024` (unlocks the RegExp `/v` flag and ES2024 library APIs; Node >=22.19 already supports them). Bumped `@typescript/native-preview` to `7.0.0-dev.20260707.2`.
 
 ### Breaking Changes
+
+- **extensions**: Configured key hint helpers now require the injected host `KeybindingsManager`; `ReadonlyFooterDataProvider` adds `getGitStatus()` and replaces `onBranchChange()` with `onChange()`.
 
 - **sessions**: Session files now require strict version 4 JSONL; removed older-version migration, malformed-record recovery, compatibility fields, implicit recent-session creation, and the `continueRecent()` API.
 - **settings**: Settings now use strict schema validation and synchronous atomic persistence; invalid files throw instead of loading empty settings, and `flush()`, `drainErrors()`, and settings diagnostics were removed.

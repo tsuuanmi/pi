@@ -1,11 +1,10 @@
-import { Editor, type EditorTheme, type TUI } from "@tsuuanmi/pi-tui";
-import type { AppKeybinding, KeybindingsManager } from "#pi/settings/keybindings";
+import { Editor } from "@tsuuanmi/pi-tui";
+import type { AppKeybinding } from "#pi/settings/keybindings";
 
 /**
  * Custom editor that handles app-level keybindings for pi.
  */
 export class CustomEditor extends Editor {
-	private keybindings: KeybindingsManager;
 	public actionHandlers: Map<AppKeybinding, () => void> = new Map();
 
 	// Special handlers that can be dynamically replaced
@@ -13,11 +12,6 @@ export class CustomEditor extends Editor {
 	public onCtrlD?: () => void;
 	/** Handler for extension-registered shortcuts. Returns true if handled. */
 	public onExtensionShortcut?: (data: string) => boolean;
-
-	constructor(tui: TUI, theme: EditorTheme, keybindings: KeybindingsManager) {
-		super(tui, theme);
-		this.keybindings = keybindings;
-	}
 
 	/**
 	 * Register a handler for an app action.

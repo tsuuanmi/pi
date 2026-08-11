@@ -2,7 +2,7 @@ import { readdir as fsReaddir, stat as fsStat } from "node:fs/promises";
 import type { Tool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import type { Theme } from "@tsuuanmi/pi-tui";
-import { keyHint, Text } from "@tsuuanmi/pi-tui";
+import { Text } from "@tsuuanmi/pi-tui";
 import nodePath from "path";
 import { type Static, Type } from "typebox";
 import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "#pi/output/truncation";
@@ -76,7 +76,7 @@ function formatLsResult(
 		const remaining = lines.length - maxLines;
 		text += `\n${displayLines.map((line) => theme.fg("toolOutput", line)).join("\n")}`;
 		if (remaining > 0) {
-			text += `${theme.fg("muted", `\n... (${remaining} more lines,`)} ${keyHint("app.tools.expand", "to expand")}${theme.fg("muted", ")")}`;
+			text += `${theme.fg("muted", `\n... (${remaining} more lines,`)} ${theme.fg("muted", " expand for details)")}`;
 		}
 	}
 

@@ -1,5 +1,5 @@
 import type { Component } from "#tui/components/component";
-import { getKeybindings } from "#tui/input/keyboard/keybindings";
+import type { KeybindingsManager } from "#tui/input/keyboard/keybindings";
 import { truncateToWidth, visibleWidth } from "#tui/utilities/text";
 
 const DEFAULT_PRIMARY_COLUMN_WIDTH = 32;
@@ -44,12 +44,20 @@ export class SelectList implements Component {
 	private maxVisible: number = 5;
 	private theme: SelectListTheme;
 	private layout: SelectListLayoutOptions;
+	private readonly keybindings: KeybindingsManager;
 
 	public onSelect?: (item: SelectItem) => void;
 	public onCancel?: () => void;
 	public onSelectionChange?: (item: SelectItem) => void;
 
-	constructor(items: SelectItem[], maxVisible: number, theme: SelectListTheme, layout: SelectListLayoutOptions = {}) {
+	constructor(
+		keybindings: KeybindingsManager,
+		items: SelectItem[],
+		maxVisible: number,
+		theme: SelectListTheme,
+		layout: SelectListLayoutOptions = {},
+	) {
+		this.keybindings = keybindings;
 		this.items = items;
 		this.filteredItems = items;
 		this.maxVisible = maxVisible;
@@ -110,7 +118,7 @@ export class SelectList implements Component {
 	}
 
 	handleInput(keyData: string): void {
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 		// Up arrow - wrap to bottom when at top
 		if (kb.matches(keyData, "tui.select.up")) {
 			this.selectedIndex = this.selectedIndex === 0 ? this.filteredItems.length - 1 : this.selectedIndex - 1;

@@ -2,7 +2,7 @@ import { type Component, CURSOR_MARKER, type Focusable } from "#tui/components/c
 import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
 import { UndoStack } from "#tui/editor/history/undo";
 import { findWordBackward, findWordForward } from "#tui/editor/navigation/word";
-import { getKeybindings } from "#tui/input/keyboard/keybindings";
+import type { KeybindingsManager } from "#tui/input/keyboard/keybindings";
 import { decodeKittyPrintable } from "#tui/input/keyboard/keys";
 import { getGraphemeSegmenter, isWhitespaceChar, sliceByColumn, visibleWidth } from "#tui/utilities/text";
 
@@ -35,6 +35,11 @@ export class Input implements Component, Focusable {
 
 	// Undo support
 	private undoStack = new UndoStack<InputState>();
+	private readonly keybindings: KeybindingsManager;
+
+	constructor(keybindings: KeybindingsManager) {
+		this.keybindings = keybindings;
+	}
 
 	getValue(): string {
 		return this.value;
@@ -83,7 +88,7 @@ export class Input implements Component, Focusable {
 			return;
 		}
 
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 
 		// Escape/Cancel
 		if (kb.matches(data, "tui.select.cancel")) {
@@ -98,7 +103,7 @@ export class Input implements Component, Focusable {
 		}
 
 		// Submit
-		if (kb.matches(data, "tui.input.submit") || data === "\n") {
+		if (kb.matches(data, "tui.input.submit")) {
 			if (this.onSubmit) this.onSubmit(this.value);
 			return;
 		}

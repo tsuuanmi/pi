@@ -3,8 +3,8 @@ import {
 	Container,
 	DynamicBorder,
 	type Focusable,
-	getKeybindings,
 	Input,
+	type KeybindingsManager,
 	keyHint,
 	LAYOUT_EDGE_X,
 	LAYOUT_SECTION_GAP_Y,
@@ -26,6 +26,7 @@ export class LoginDialogComponent extends Container implements Focusable {
 	private inputResolver?: (value: string) => void;
 	private inputRejecter?: (error: Error) => void;
 	private onComplete: (success: boolean, message?: string) => void;
+	private readonly keybindings: KeybindingsManager;
 
 	// Focusable implementation - propagate to input for IME cursor positioning
 	private _focused = false;
@@ -39,6 +40,7 @@ export class LoginDialogComponent extends Container implements Focusable {
 
 	constructor(
 		tui: TUI,
+		keybindings: KeybindingsManager,
 		providerId: string,
 		onComplete: (success: boolean, message?: string) => void,
 		providerNameOverride?: string,
@@ -46,6 +48,7 @@ export class LoginDialogComponent extends Container implements Focusable {
 	) {
 		super();
 		this.tui = tui;
+		this.keybindings = keybindings;
 		this.onComplete = onComplete;
 
 		const providerInfo = getOAuthProviders().find((p) => p.id === providerId);
@@ -63,7 +66,7 @@ export class LoginDialogComponent extends Container implements Focusable {
 		this.addChild(this.contentContainer);
 
 		// Input (always present, used when needed)
-		this.input = new Input();
+		this.input = new Input(keybindings);
 		this.input.onSubmit = () => {
 			if (this.inputResolver) {
 				const value = this.input.getValue();
@@ -149,7 +152,9 @@ export class LoginDialogComponent extends Container implements Focusable {
 		this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		this.contentContainer.addChild(new Text(theme.fg("dim", prompt), LAYOUT_EDGE_X, 0));
 		this.contentContainer.addChild(this.input);
-		this.contentContainer.addChild(new Text(`(${keyHint("tui.select.cancel", "to cancel")})`, LAYOUT_EDGE_X, 0));
+		this.contentContainer.addChild(
+			new Text(`(${keyHint(this.keybindings, "tui.select.cancel", "to cancel")})`, LAYOUT_EDGE_X, 0),
+		);
 		this.tui.requestRender();
 
 		return new Promise((resolve, reject) => {
@@ -171,7 +176,7 @@ export class LoginDialogComponent extends Container implements Focusable {
 		this.contentContainer.addChild(this.input);
 		this.contentContainer.addChild(
 			new Text(
-				`(${keyHint("tui.select.cancel", "to cancel,")} ${keyHint("tui.select.confirm", "to submit")})`,
+				`(${keyHint(this.keybindings, "tui.select.cancel", "to cancel,")} ${keyHint(this.keybindings, "tui.select.confirm", "to submit")})`,
 				LAYOUT_EDGE_X,
 				0,
 			),
@@ -196,7 +201,9 @@ export class LoginDialogComponent extends Container implements Focusable {
 			this.contentContainer.addChild(new Text(line, LAYOUT_EDGE_X, 0));
 		}
 		this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
-		this.contentContainer.addChild(new Text(`(${keyHint("tui.select.cancel", "to close")})`, LAYOUT_EDGE_X, 0));
+		this.contentContainer.addChild(
+			new Text(`(${keyHint(this.keybindings, "tui.select.cancel", "to close")})`, LAYOUT_EDGE_X, 0),
+		);
 		this.tui.requestRender();
 	}
 
@@ -206,7 +213,9 @@ export class LoginDialogComponent extends Container implements Focusable {
 	showWaiting(message: string): void {
 		this.contentContainer.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		this.contentContainer.addChild(new Text(theme.fg("dim", message), LAYOUT_EDGE_X, 0));
-		this.contentContainer.addChild(new Text(`(${keyHint("tui.select.cancel", "to cancel")})`, LAYOUT_EDGE_X, 0));
+		this.contentContainer.addChild(
+			new Text(`(${keyHint(this.keybindings, "tui.select.cancel", "to cancel")})`, LAYOUT_EDGE_X, 0),
+		);
 		this.tui.requestRender();
 	}
 
@@ -219,7 +228,7 @@ export class LoginDialogComponent extends Container implements Focusable {
 	}
 
 	handleInput(data: string): void {
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 
 		if (kb.matches(data, "tui.select.cancel")) {
 			this.cancel();

@@ -1,12 +1,14 @@
-import { initTheme, ProcessTerminal, setKeybindings, TUI } from "@tsuuanmi/pi-tui";
+import { initTheme, ProcessTerminal, TUI } from "@tsuuanmi/pi-tui";
 import { KeybindingsManager } from "#pi/settings/keybindings";
 import type { SettingsManager } from "#pi/settings/manager";
 import { ExtensionSelectorComponent } from "#pi/ui/interactive/components/selectors/extension";
 
-function createStartupTui(settingsManager: SettingsManager): TUI {
+function createStartupTui(settingsManager: SettingsManager): { ui: TUI; keybindings: KeybindingsManager } {
 	initTheme(settingsManager.getTheme());
-	setKeybindings(KeybindingsManager.create());
-	return new TUI(new ProcessTerminal(), settingsManager.getShowHardwareCursor());
+	return {
+		ui: new TUI(new ProcessTerminal(), settingsManager.getShowHardwareCursor()),
+		keybindings: KeybindingsManager.create(),
+	};
 }
 
 async function clearStartupTui(ui: TUI): Promise<void> {
@@ -21,7 +23,7 @@ export async function showStartupSelector<T>(
 	options: Array<{ label: string; value: T }>,
 ): Promise<T | undefined> {
 	return new Promise((resolve) => {
-		const ui = createStartupTui(settingsManager);
+		const { ui, keybindings } = createStartupTui(settingsManager);
 
 		let settled = false;
 		const finish = async (result: T | undefined) => {
@@ -39,7 +41,7 @@ export async function showStartupSelector<T>(
 			options.map((option) => option.label),
 			(option) => void finish(options.find((entry) => entry.label === option)?.value),
 			() => void finish(undefined),
-			{ tui: ui },
+			{ tui: ui, keybindings },
 		);
 		ui.addChild(selector);
 		ui.setFocus(selector);

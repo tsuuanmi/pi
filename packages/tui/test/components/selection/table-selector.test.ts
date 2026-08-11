@@ -1,6 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { SearchableTableSelector } from "#tui/components/selection/table-selector";
+import { KeybindingsManager, TUI_KEYBINDINGS } from "#tui/input/keyboard/keybindings";
 import { initTheme } from "#tui/theme/theme";
 
 interface TestItem {
@@ -16,6 +17,7 @@ const ITEMS: TestItem[] = [
 
 function createSelector(onSelect: (item: TestItem) => void): SearchableTableSelector<TestItem> {
 	return new SearchableTableSelector({
+		keybindings,
 		items: ITEMS,
 		columns: [
 			{ id: "name", label: "Name", widthPercent: 70, render: (item) => item.name },
@@ -27,6 +29,8 @@ function createSelector(onSelect: (item: TestItem) => void): SearchableTableSele
 		minTableWidth: 40,
 	});
 }
+
+const keybindings = new KeybindingsManager(TUI_KEYBINDINGS);
 
 describe("SearchableTableSelector", () => {
 	it("renders a searchable table and selects the filtered item", () => {
@@ -57,6 +61,7 @@ describe("SearchableTableSelector", () => {
 	it("supports initial query, selected details, key selection, and wrapped navigation", () => {
 		initTheme("dark");
 		const selector = new SearchableTableSelector({
+			keybindings,
 			items: ITEMS,
 			columns: [
 				{ id: "name", label: "Name", widthPercent: 70, render: (item) => item.name },

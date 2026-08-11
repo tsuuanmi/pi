@@ -1,99 +1,81 @@
 # Keybindings
 
-The TUI framework provides a global keybinding registry with declaration merging support.
-
-## Default Keybindings
-
-`TUI_KEYBINDINGS` defines the default keybinding map:
-
-| Keybinding | Default Keys | Description |
-|-----------|-------------|-------------|
-| `tui.editor.cursorUp` | `up` | Move cursor up |
-| `tui.editor.cursorDown` | `down` | Move cursor down |
-| `tui.editor.cursorLeft` | `left`, `ctrl+b` | Move cursor left |
-| `tui.editor.cursorRight` | `right`, `ctrl+f` | Move cursor right |
-| `tui.editor.cursorWordLeft` | `alt+left`, `ctrl+left`, `alt+b` | Move cursor word left |
-| `tui.editor.cursorWordRight` | `alt+right`, `ctrl+right`, `alt+f` | Move cursor word right |
-| `tui.editor.cursorLineStart` | `home`, `ctrl+a` | Move to line start |
-| `tui.editor.cursorLineEnd` | `end`, `ctrl+e` | Move to line end |
-| `tui.editor.jumpForward` | `ctrl+]` | Jump forward to character |
-| `tui.editor.jumpBackward` | `ctrl+alt+]` | Jump backward to character |
-| `tui.editor.pageUp` | `pageUp` | Page up |
-| `tui.editor.pageDown` | `pageDown` | Page down |
-| `tui.editor.deleteCharBackward` | `backspace` | Delete character backward |
-| `tui.editor.deleteCharForward` | `delete`, `ctrl+d` | Delete character forward |
-| `tui.editor.deleteWordBackward` | `ctrl+w`, `alt+backspace` | Delete word backward |
-| `tui.editor.deleteWordForward` | `alt+d`, `alt+delete` | Delete word forward |
-| `tui.editor.deleteToLineStart` | `ctrl+u` | Delete to line start |
-| `tui.editor.deleteToLineEnd` | `ctrl+k` | Delete to line end |
-| `tui.editor.undo` | `ctrl+-` | Undo |
-| `tui.input.newLine` | `shift+enter` | Insert newline |
-| `tui.input.submit` | `enter` | Submit input |
-| `tui.input.tab` | `tab` | Tab / autocomplete |
-| `tui.input.copy` | `ctrl+c` | Copy selection |
-| `tui.select.up` | `up` | Move selection up |
-| `tui.select.down` | `down` | Move selection down |
-| `tui.select.pageUp` | `pageUp` | Selection page up |
-| `tui.select.pageDown` | `pageDown` | Selection page down |
-| `tui.select.confirm` | `enter` | Confirm selection |
-| `tui.select.cancel` | `escape` | Cancel selection |
-
-## Custom Keybindings
-
-Downstream packages can add keybindings via declaration merging:
+Typed, host-scoped keybinding definitions and matching for terminal components.
 
 ```typescript
-import { type KeybindingDefinitions } from "@tsuuanmi/pi-tui";
+import {
+  KeybindingsManager,
+  TUI_KEYBINDINGS,
+  type Keybinding,
+  type KeybindingDefinitions,
+  type KeybindingsConfig,
+} from "@tsuuanmi/pi-tui";
+```
 
+## Definitions
+
+`TUI_KEYBINDINGS` contains the shared `tui.*` actions used by reusable components. Each definition has a description, default keys, and optional category.
+
+```typescript
+const definitions = {
+  ...TUI_KEYBINDINGS,
+  "app.open": { defaultKeys: "ctrl+o", description: "Open" },
+} satisfies KeybindingDefinitions;
+```
+
+Applications can extend the compile-time registry through declaration merging:
+
+```typescript
 declare module "@tsuuanmi/pi-tui" {
   interface Keybindings {
-    "myApp.submit": true;
-    "myApp.cancel": true;
+    "app.open": null;
   }
 }
 ```
 
-## `KeybindingsManager`
+## Manager
+
+Each UI host creates its own manager and injects the same instance into components that handle input or render configured hints.
 
 ```typescript
-import { KeybindingsManager } from "@tsuuanmi/pi-tui";
+const keybindings = new KeybindingsManager(definitions, userBindings);
 
-const manager = new KeybindingsManager();
-
-// Get current keybindings
-const keybindings = manager.getKeybindings();
-
-// Set custom keybindings
-manager.setKeybindings({
-  "tui.editor.deleteWordBackward": ["ctrl+w"],
-  "tui.input.submit": ["enter", "ctrl+s"],
-});
-
-// Check for conflicts
-const conflicts = manager.getConflicts();
+keybindings.matches(data, "tui.select.cancel");
+keybindings.getKeys("app.open");
+keybindings.getDefinition("app.open");
+keybindings.getConflicts();
 ```
 
-## Getting and Setting Keybindings
+There is no active global manager. TUI does not export `getKeybindings()` or `setKeybindings()`, and interactive components do not create fallback managers.
+
+## User bindings
+
+`KeybindingsConfig` maps action ids to one key, multiple keys, or an empty array to unbind the action.
 
 ```typescript
-import { getKeybindings, setKeybindings } from "@tsuuanmi/pi-tui";
+const userBindings: KeybindingsConfig = {
+  "app.open": ["ctrl+p", "f2"],
+  "tui.select.cancel": [],
+};
 
-// Get the current keybinding configuration
-const bindings = getKeybindings();
-
-// Set keybinding overrides
-setKeybindings({
-  "tui.editor.deleteWordBackward": "ctrl+w",
-});
+keybindings.setUserBindings(userBindings);
 ```
 
-## Keybinding Definition Interface
+The manager normalizes aliases, resolves user overrides against defaults, and reports conflicts where one key maps to multiple actions.
+
+## Component injection
+
+Interactive primitives require the manager they use:
 
 ```typescript
-interface KeybindingDefinition {
-  defaultKeys: KeyId | KeyId[];
-  description?: string;
-}
-
-type KeybindingsConfig = Record<string, KeyId | KeyId[] | undefined>;
+const input = new Input(keybindings);
+const editor = new Editor(tui, editorTheme, keybindings);
+const list = new SelectList(keybindings, items, 10, listTheme);
 ```
+
+Application adapters should accept a manager in their constructor or options and pass it unchanged to nested TUI primitives. This keeps handled input and displayed hints scoped to one host.
+
+## See also
+
+- [Keybinding hints](keybinding-hints.md)
+- [Key detection](keys.md)

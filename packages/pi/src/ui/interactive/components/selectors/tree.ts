@@ -4,9 +4,9 @@ import {
 	DynamicBorder,
 	type Focusable,
 	formatKeyText,
-	getKeybindings,
 	Input,
 	type Keybinding,
+	type KeybindingsManager,
 	keyHint,
 	Spacer,
 	sliceByColumn,
@@ -121,13 +121,16 @@ class TreeList implements Component {
 	public onSelect?: (entryId: string) => void;
 	public onCancel?: () => void;
 	public onLabelEdit?: (entryId: string, currentLabel: string | undefined) => void;
+	private readonly keybindings: KeybindingsManager;
 
 	constructor(
+		keybindings: KeybindingsManager,
 		tree: SessionTreeNode[],
 		currentLeafId: string | null,
 		maxVisibleLines: number,
 		initialSelectedId?: string,
 	) {
+		this.keybindings = keybindings;
 		this.currentLeafId = currentLeafId;
 		this.maxVisibleLines = maxVisibleLines;
 		this.multipleRoots = tree.length > 1;
@@ -903,7 +906,7 @@ class TreeList implements Component {
 	}
 
 	handleInput(keyData: string): void {
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 		if (kb.matches(keyData, "tui.select.up")) {
 			this.selectedIndex = this.selectedIndex === 0 ? this.filteredNodes.length - 1 : this.selectedIndex - 1;
 		} else if (kb.matches(keyData, "tui.select.down")) {
@@ -1044,11 +1047,17 @@ class SearchLine implements Component {
 
 /** Component that renders tree help as semantic rows with chunk-aware wrapping */
 class TreeHelp implements Component {
+	private readonly keybindings: KeybindingsManager;
+
+	constructor(keybindings: KeybindingsManager) {
+		this.keybindings = keybindings;
+	}
+
 	invalidate(): void {}
 
 	render(width: number): string[] {
 		const items = TREE_HELP_ITEMS.map(({ keys, label, labelFirst }) => {
-			const text = formatHelpKeys(keys);
+			const text = formatHelpKeys(this.keybindings, keys);
 			if (!text) return label;
 			return labelFirst ? `${label} ${text}` : `${text} ${label}`;
 		});
@@ -1090,10 +1099,10 @@ const TREE_HELP_ITEMS: Array<{ keys: Keybinding[]; label: string; labelFirst?: b
 	{ keys: ["app.tree.toggleLabelTimestamp"], label: "label time" },
 ];
 
-function formatHelpKeys(keybindings: Keybinding[]): string {
+function formatHelpKeys(manager: KeybindingsManager, keybindings: Keybinding[]): string {
 	const keys: string[] = [];
 	for (const keybinding of keybindings) {
-		const key = getKeybindings().getKeys(keybinding)[0];
+		const key = manager.getKeys(keybinding)[0];
 		if (key !== undefined) keys.push(key);
 	}
 	if (keys.length === 0) return "";
@@ -1126,6 +1135,7 @@ function compactRawKeys(keys: string[]): string {
 class LabelInput implements Component, Focusable {
 	private input: Input;
 	private entryId: string;
+	private readonly keybindings: KeybindingsManager;
 	public onSubmit?: (entryId: string, label: string | undefined) => void;
 	public onCancel?: () => void;
 
@@ -1139,9 +1149,10 @@ class LabelInput implements Component, Focusable {
 		this.input.focused = value;
 	}
 
-	constructor(entryId: string, currentLabel: string | undefined) {
+	constructor(keybindings: KeybindingsManager, entryId: string, currentLabel: string | undefined) {
+		this.keybindings = keybindings;
 		this.entryId = entryId;
-		this.input = new Input();
+		this.input = new Input(keybindings);
 		if (currentLabel) {
 			this.input.setValue(currentLabel);
 		}
@@ -1157,7 +1168,7 @@ class LabelInput implements Component, Focusable {
 		lines.push(...this.input.render(availableWidth).map((line) => truncateToWidth(`${indent}${line}`, width)));
 		lines.push(
 			truncateToWidth(
-				`${indent}${keyHint("tui.select.confirm", "save")}  ${keyHint("tui.select.cancel", "cancel")}`,
+				`${indent}${keyHint(this.keybindings, "tui.select.confirm", "save")}  ${keyHint(this.keybindings, "tui.select.cancel", "cancel")}`,
 				width,
 			),
 		);
@@ -1165,7 +1176,7 @@ class LabelInput implements Component, Focusable {
 	}
 
 	handleInput(keyData: string): void {
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 		if (kb.matches(keyData, "tui.select.confirm")) {
 			const value = this.input.getValue().trim();
 			this.onSubmit?.(this.entryId, value || undefined);
@@ -1186,6 +1197,7 @@ export class TreeSelectorComponent extends Container implements Focusable {
 	private labelInputContainer: Container;
 	private treeContainer: Container;
 	private onLabelChangeCallback?: (entryId: string, label: string | undefined) => void;
+	private readonly keybindings: KeybindingsManager;
 
 	// Focusable implementation - propagate to labelInput when active for IME cursor positioning
 	private _focused = false;
@@ -1201,6 +1213,7 @@ export class TreeSelectorComponent extends Container implements Focusable {
 	}
 
 	constructor(
+		keybindings: KeybindingsManager,
 		tree: SessionTreeNode[],
 		currentLeafId: string | null,
 		terminalHeight: number,
@@ -1211,10 +1224,11 @@ export class TreeSelectorComponent extends Container implements Focusable {
 	) {
 		super();
 
+		this.keybindings = keybindings;
 		this.onLabelChangeCallback = onLabelChange;
 		const maxVisibleLines = Math.max(5, Math.floor(terminalHeight / 2));
 
-		this.treeList = new TreeList(tree, currentLeafId, maxVisibleLines, initialSelectedId);
+		this.treeList = new TreeList(keybindings, tree, currentLeafId, maxVisibleLines, initialSelectedId);
 		this.treeList.onSelect = onSelect;
 		this.treeList.onCancel = onCancel;
 		this.treeList.onLabelEdit = (entryId, currentLabel) => this.showLabelInput(entryId, currentLabel);
@@ -1227,7 +1241,7 @@ export class TreeSelectorComponent extends Container implements Focusable {
 		this.addChild(new Spacer(1));
 		this.addChild(new DynamicBorder());
 		this.addChild(new Text(theme.bold("  Session Tree"), 1, 0));
-		this.addChild(new TreeHelp());
+		this.addChild(new TreeHelp(keybindings));
 		this.addChild(new SearchLine(this.treeList));
 		this.addChild(new DynamicBorder());
 		this.addChild(new Spacer(1));
@@ -1242,7 +1256,7 @@ export class TreeSelectorComponent extends Container implements Focusable {
 	}
 
 	private showLabelInput(entryId: string, currentLabel: string | undefined): void {
-		this.labelInput = new LabelInput(entryId, currentLabel);
+		this.labelInput = new LabelInput(this.keybindings, entryId, currentLabel);
 		this.labelInput.onSubmit = (id, label) => {
 			this.treeList.updateNodeLabel(id, label);
 			this.onLabelChangeCallback?.(id, label);

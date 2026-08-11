@@ -2103,32 +2103,31 @@ If a slot intentionally has no visible content, return an empty `Component` such
 
 #### Keybinding Hints
 
-Use `keyHint()` to display keybinding hints that respect the active keybinding configuration:
+Custom editors and `ctx.ui.custom()` components receive the host's `keybindings: KeybindingsManager`. Pass that manager to hint helpers and nested interactive components:
 
 ```typescript
-import { keyHint } from "@tsuuanmi/pi";
-
-renderResult(result, { expanded }, theme, context) {
-  let text = theme.fg("success", "✓ Done");
-  if (!expanded) {
-    text += ` (${keyHint("app.tools.expand", "to expand")})`;
-  }
-  return new Text(text, 0, 0);
-}
+ctx.ui.custom((tui, theme, keybindings, done) => {
+  const hint = keyHint(keybindings, "tui.select.cancel", "cancel");
+  return {
+    render: () => [hint],
+    handleInput: (data) => {
+      if (keybindings.matches(data, "tui.select.cancel")) done();
+    },
+  };
+});
 ```
 
 Available functions:
-- `keyHint(keybinding, description)` - Formats a configured keybinding id such as `"app.tools.expand"` or `"tui.select.confirm"`
-- `keyText(keybinding)` - Returns the raw configured key text for a keybinding id
-- `rawKeyHint(key, description)` - Format a raw key string
+- `keyHint(keybindings, keybinding, description)` - Formats a configured action such as `"app.tools.expand"` or `"tui.select.confirm"`
+- `keyText(keybindings, keybinding)` - Returns the configured key text for an action
+- `keyDisplayText(keybindings, keybinding)` - Returns capitalized configured key text
+- `rawKeyHint(key, description)` - Formats a literal key string without action lookup
 
-Use namespaced keybinding ids:
-- Coding-agent ids use the `app.*` namespace, for example `app.tools.expand`, `app.editor.external`, `app.session.rename`
-- Shared TUI ids use the `tui.*` namespace, for example `tui.select.confirm`, `tui.select.cancel`, `tui.input.tab`
+Tool `renderCall` and `renderResult` callbacks do not receive UI-host keybindings. Use neutral copy such as `"expand for details"` there rather than resolving an application shortcut.
 
-For the exhaustive list of keybinding ids and defaults, see [keybindings.md](../modes/interactive/keybindings.md). `keybindings.json` uses those same namespaced ids.
+Use namespaced keybinding ids: coding-agent actions use `app.*`, while reusable TUI actions use `tui.*`. For the exhaustive list and defaults, see [keybindings.md](../modes/interactive/keybindings.md).
 
-Custom editors and `ctx.ui.custom()` components receive `keybindings: KeybindingsManager` as an injected argument. They should use that injected manager directly instead of calling `getKeybindings()` or `setKeybindings()`.
+There is no process-global keybinding manager. Pass the injected manager unchanged instead of creating a fallback manager.
 
 #### Best Practices
 

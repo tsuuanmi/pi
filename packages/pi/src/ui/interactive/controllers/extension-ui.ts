@@ -348,7 +348,12 @@ export class ExtensionUIController {
 					this.hideExtensionSelector();
 					resolve(undefined);
 				},
-				{ tui: this.ui, timeout: opts?.timeout, onToggleToolsExpanded: () => this.toggleToolOutputExpansion() },
+				{
+					keybindings: this.keybindings,
+					tui: this.ui,
+					timeout: opts?.timeout,
+					onToggleToolsExpanded: () => this.toggleToolOutputExpansion(),
+				},
 			);
 
 			this.editorContainer.clear();
@@ -411,7 +416,7 @@ export class ExtensionUIController {
 					this.hideExtensionInput();
 					resolve(undefined);
 				},
-				{ tui: this.ui, timeout: opts?.timeout },
+				{ keybindings: this.keybindings, tui: this.ui, timeout: opts?.timeout },
 			);
 
 			this.editorContainer.clear();

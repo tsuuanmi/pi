@@ -1,7 +1,6 @@
 import type { Component } from "#tui/components/component";
 import { renderHudBar } from "#tui/components/hud/render";
 import { LAYOUT_EDGE_X } from "#tui/components/layout/spacing";
-import { type GitStatusSummary, runGitStatusPorcelain } from "#tui/components/status-line/git";
 import { getPreset } from "#tui/components/status-line/presets";
 import { computeUsageStats, renderSegment, sanitizeStatusText } from "#tui/components/status-line/segments";
 import { getSeparator } from "#tui/components/status-line/separators";
@@ -20,25 +19,15 @@ import { truncateToWidth, visibleWidth } from "#tui/utilities/text";
 
 /** Minimum gap (columns) between the left and right rail groups. */
 const MIN_PADDING = 2;
-/** Background-refresh interval for the git porcelain cache. */
-const GIT_STATUS_REFRESH_MS = 10_000;
 /** Background-refresh interval for the HUD cache. */
 const HUD_REFRESH_MS = 1000;
-
-function areGitStatusSummariesEqual(a: GitStatusSummary | null, b: GitStatusSummary | null): boolean {
-	return (
-		a === b || Boolean(a && b && a.staged === b.staged && a.unstaged === b.unstaged && a.untracked === b.untracked)
-	);
-}
 
 /**
  * Status line component: renders the configurable segment rail and appends HUD
  * and hook status details inline when present.
  *
- * Uses the host data provider for the git branch (`.git/HEAD` watch), extension
- * statuses, and available provider count — it does NOT re-implement the git watcher.
- * The only background refresh it owns is the
- * `git status --porcelain` counts cache (10s refresh) and the HUD entry
+ * Uses the host data provider for repository snapshots, extension statuses,
+ * and available provider count. Its only background refresh is the HUD entry
  * cache (1s refresh, error-resilient).
  */
 export class StatusLineComponent implements Component {
@@ -48,12 +37,6 @@ export class StatusLineComponent implements Component {
 	#requestRender: (() => void) | null;
 	#readHudEntries: StatusLineComponentOptions["readHudEntries"];
 	#autoCompactEnabled = true;
-
-	// Git porcelain counts cache (10s refresh). `null` until the first fetch.
-	#cachedGitStatus: GitStatusSummary | null = null;
-	#cachedGitStatusCwd: string | null = null;
-	#gitStatusLastFetch = 0;
-	#gitStatusInFlight = false;
 
 	// HUD cache (1s refresh). `[]` until the first successful read.
 	#hudEntries: StatusLineHudEntry[] = [];
@@ -78,10 +61,6 @@ export class StatusLineComponent implements Component {
 	setSession(session: StatusLineSessionLike): void {
 		this.#session = session;
 		this.#refreshGeneration += 1;
-		this.#cachedGitStatus = null;
-		this.#cachedGitStatusCwd = null;
-		this.#gitStatusLastFetch = 0;
-		this.#gitStatusInFlight = false;
 		this.#hudEntries = [];
 		this.#hudLastFetch = 0;
 		this.#hudInFlight = false;
@@ -92,13 +71,10 @@ export class StatusLineComponent implements Component {
 		this.#autoCompactEnabled = enabled;
 	}
 
-	/** Keep git porcelain refreshes time-based; callers invalidate the surrounding TUI render separately. */
 	invalidate(): void {}
 
 	dispose(): void {
-		// No watcher to close — the host data provider owns the .git/HEAD watcher.
 		this.#refreshGeneration += 1;
-		this.#gitStatusInFlight = false;
 		this.#hudInFlight = false;
 		this.#requestRender = null;
 	}
@@ -109,7 +85,6 @@ export class StatusLineComponent implements Component {
 
 		// Keep HUD, rail, and hook status compacted onto one bottom line.
 		this.#refreshHudInBackground();
-		this.#refreshGitStatusInBackground();
 		const edgeX = Math.min(LAYOUT_EDGE_X, Math.max(0, Math.floor((width - 1) / 2)));
 		const contentWidth = Math.max(1, width - edgeX * 2);
 		if (settings.showHud !== false) {
@@ -135,40 +110,6 @@ export class StatusLineComponent implements Component {
 	// ═══════════════════════════════════════════════════════════════════════════
 	// Background refresh
 	// ═══════════════════════════════════════════════════════════════════════════
-
-	/**
-	 * Kick a background `git status --porcelain` fetch if the cache is stale
-	 * (10s refresh) and none is in flight. `runGitStatusPorcelain` is
-	 * error-resilient, so this cannot throw on the render path.
-	 */
-	#refreshGitStatusInBackground(): void {
-		const cwd = this.#session.sessionManager.getCwd();
-		if (this.#cachedGitStatusCwd !== null && this.#cachedGitStatusCwd !== cwd) {
-			this.#cachedGitStatus = null;
-			this.#cachedGitStatusCwd = null;
-			this.#gitStatusLastFetch = 0;
-		}
-		if (this.#gitStatusInFlight || Date.now() - this.#gitStatusLastFetch < GIT_STATUS_REFRESH_MS) {
-			return;
-		}
-		this.#gitStatusInFlight = true;
-		const generation = this.#refreshGeneration;
-		void (async () => {
-			try {
-				const result = await runGitStatusPorcelain(cwd);
-				if (generation !== this.#refreshGeneration) return;
-				const shouldRender = !areGitStatusSummariesEqual(this.#cachedGitStatus, result);
-				this.#cachedGitStatus = result;
-				this.#cachedGitStatusCwd = cwd;
-				this.#gitStatusLastFetch = Date.now();
-				if (shouldRender) this.#requestRender?.();
-			} catch {
-				// The Git reader owns its error boundary.
-			} finally {
-				if (generation === this.#refreshGeneration) this.#gitStatusInFlight = false;
-			}
-		})();
-	}
 
 	/**
 	 * Kick a background HUD entry read if the HUD cache is stale (1s refresh)
@@ -245,7 +186,7 @@ export class StatusLineComponent implements Component {
 			availableProviderCount: this.#dataProvider.getAvailableProviderCount(),
 			git: {
 				branch: this.#dataProvider.getGitBranch(),
-				status: this.#cachedGitStatus,
+				status: this.#dataProvider.getGitStatus(),
 			},
 			hudPhase: this.#hudEntries[0]?.phase,
 		};

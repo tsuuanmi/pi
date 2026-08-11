@@ -88,11 +88,6 @@ export {
 	getContextUsageLevel,
 	getContextUsageThemeColor,
 } from "#tui/components/status-line/context-levels";
-export {
-	type GitStatusSummary,
-	parseStatusPorcelain,
-	runGitStatusPorcelain,
-} from "#tui/components/status-line/git";
 export { getPreset, STATUS_LINE_PRESETS } from "#tui/components/status-line/presets";
 export {
 	ALL_SEGMENT_IDS,
@@ -106,6 +101,7 @@ export {
 export { getSeparator } from "#tui/components/status-line/separators";
 export { StatusLineComponent } from "#tui/components/status-line/status-line";
 export type {
+	GitStatusSummary,
 	PresetDef,
 	RenderedSegment,
 	SegmentContext,
@@ -147,7 +143,6 @@ export {
 } from "#tui/input/keyboard/key-hints";
 // Keybindings
 export {
-	getKeybindings,
 	type Keybinding,
 	type KeybindingConflict,
 	type KeybindingDefinition,
@@ -155,7 +150,6 @@ export {
 	type Keybindings,
 	type KeybindingsConfig,
 	KeybindingsManager,
-	setKeybindings,
 	TUI_KEYBINDINGS,
 } from "#tui/input/keyboard/keybindings";
 // Keyboard input handling

@@ -1,5 +1,6 @@
 import { Loader } from "#tui/components/feedback/loader";
-import { getKeybindings } from "#tui/input/keyboard/keybindings";
+import type { KeybindingsManager } from "#tui/input/keyboard/keybindings";
+import type { TUI } from "#tui/tui";
 
 /**
  * Loader that can be cancelled with Escape.
@@ -12,6 +13,18 @@ import { getKeybindings } from "#tui/input/keyboard/keybindings";
  */
 export class CancellableLoader extends Loader {
 	private abortController = new AbortController();
+	private readonly keybindings: KeybindingsManager;
+
+	constructor(
+		tui: TUI,
+		spinnerColor: (text: string) => string,
+		messageColor: (text: string) => string,
+		message: string,
+		keybindings: KeybindingsManager,
+	) {
+		super(tui, spinnerColor, messageColor, message);
+		this.keybindings = keybindings;
+	}
 
 	/** Called when user presses Escape */
 	onAbort?: () => void;
@@ -28,7 +41,7 @@ export class CancellableLoader extends Loader {
 
 	handleInput(data: string): void {
 		if (this.aborted) return;
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 		if (kb.matches(data, "tui.select.cancel")) {
 			this.abortController.abort();
 			this.onAbort?.();

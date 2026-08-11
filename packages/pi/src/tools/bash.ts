@@ -1,15 +1,7 @@
 import type { Tool } from "@tsuuanmi/pi-agent";
 import { attachToolReceipt, createToolReceipt } from "@tsuuanmi/pi-agent";
 import { ExecutionError } from "@tsuuanmi/pi-agent/node";
-import {
-	type Component,
-	Container,
-	keyHint,
-	Text,
-	theme,
-	truncateToVisualLines,
-	truncateToWidth,
-} from "@tsuuanmi/pi-tui";
+import { type Component, Container, Text, theme, truncateToVisualLines, truncateToWidth } from "@tsuuanmi/pi-tui";
 import { type Static, Type } from "typebox";
 import type { BashOperations } from "#pi/execution/backend";
 import { createLocalBash } from "#pi/execution/local";
@@ -160,7 +152,7 @@ function rebuildBashResultRenderComponent(
 					if (state.cachedSkipped && state.cachedSkipped > 0) {
 						const hint =
 							theme.fg("muted", `... (${state.cachedSkipped} earlier lines,`) +
-							` ${keyHint("app.tools.expand", "to expand")}${theme.fg("muted", ")")}`;
+							theme.fg("muted", " expand for details)");
 						return ["", truncateToWidth(hint, width, "..."), ...(state.cachedLines ?? [])];
 					}
 					return ["", ...(state.cachedLines ?? [])];

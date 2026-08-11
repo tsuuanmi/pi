@@ -3,6 +3,7 @@ import {
 	Container,
 	DynamicBorder,
 	getSelectListTheme,
+	type KeybindingsManager,
 	type SelectItem,
 	SelectList,
 	type SelectListLayoutOptions,
@@ -31,6 +32,7 @@ export class ThinkingSelectorComponent extends Container {
 	private selectList: SelectList;
 
 	constructor(
+		keybindings: KeybindingsManager,
 		currentLevel: ThinkingLevel,
 		availableLevels: ThinkingLevel[],
 		onSelect: (level: ThinkingLevel) => void,
@@ -49,6 +51,7 @@ export class ThinkingSelectorComponent extends Container {
 
 		// Create selector
 		this.selectList = new SelectList(
+			keybindings,
 			thinkingLevels,
 			thinkingLevels.length,
 			getSelectListTheme(),

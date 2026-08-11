@@ -2,6 +2,7 @@ import {
 	Container,
 	DynamicBorder,
 	type Focusable,
+	type KeybindingsManager,
 	type SearchableTableColumn,
 	SearchableTableSelector,
 	Spacer,
@@ -63,6 +64,7 @@ export class AccountSelectorComponent extends Container implements Focusable {
 	private selector: SearchableTableSelector<AccountSelectorOption>;
 
 	constructor(
+		keybindings: KeybindingsManager,
 		options: AccountSelectorOption[],
 		onSelect: (option: AccountSelectorOption) => void,
 		onCancel: () => void,
@@ -72,6 +74,7 @@ export class AccountSelectorComponent extends Container implements Focusable {
 		this.addChild(new DynamicBorder());
 		this.addChild(new Spacer(1));
 		this.selector = new SearchableTableSelector({
+			keybindings,
 			items: options,
 			columns: ACCOUNT_COLUMNS,
 			getSearchText: getAccountSearchText,

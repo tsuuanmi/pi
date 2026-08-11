@@ -12,7 +12,6 @@ The module lives under `src/components/status-line/` and is re-exported from the
 - [Context Thresholds](context-thresholds.md) — context-usage level thresholds and theme color mapping.
 - [Presets](presets.md) — `default` and `custom` presets.
 - [Separators](separators.md) — separator glyph resolution.
-- [Git Utils](git-utils.md) — `git status --porcelain` parsing.
 
 ## Public surface (package root)
 
@@ -23,8 +22,7 @@ The package re-exports the module's public API. Notable members:
 - `SEGMENTS`, `ALL_SEGMENT_IDS`, `renderSegment`
 - `getSeparator`
 - `getContextUsageLevel`, `getContextUsageThemeColor`
-- `parseStatusPorcelain`, `runGitStatusPorcelain`
-- Type aliases: `StatusLineSettings`, `StatusLineSegmentId`, `StatusLineSegmentOptions`, `StatusLinePreset`, `SegmentContext`, `RenderedSegment`, `StatusLineHudEntry`, `StatusLineHudEntryReader`, ...
+- Type aliases: `GitStatusSummary`, `StatusLineSettings`, `StatusLineSegmentId`, `StatusLineSegmentOptions`, `StatusLinePreset`, `SegmentContext`, `RenderedSegment`, `StatusLineHudEntry`, `StatusLineHudEntryReader`, ...
 
 ## Layout
 

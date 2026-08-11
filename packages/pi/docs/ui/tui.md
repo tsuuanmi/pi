@@ -85,7 +85,7 @@ The cursor remains hidden by default. This keeps the fake cursor rendering, whil
 When a container component (dialog, selector, etc.) contains an `Input` or `Editor` child, the container must implement `Focusable` and propagate the focus state to the child. Otherwise, the hardware cursor won't be positioned correctly for IME input.
 
 ```typescript
-import { Container, type Focusable, Input } from "@tsuuanmi/pi-tui";
+import { Container, type Focusable, Input, type KeybindingsManager } from "@tsuuanmi/pi-tui";
 
 class SearchDialog extends Container implements Focusable {
   private searchInput: Input;
@@ -100,9 +100,9 @@ class SearchDialog extends Container implements Focusable {
     this.searchInput.focused = value;
   }
 
-  constructor() {
+  constructor(keybindings: KeybindingsManager) {
     super();
-    this.searchInput = new Input();
+    this.searchInput = new Input(keybindings);
     this.addChild(this.searchInput);
   }
 }
@@ -628,7 +628,7 @@ pi.registerCommand("pick", {
       container.addChild(new Text(theme.fg("accent", theme.bold("Pick an Option")), 1, 0));
 
       // SelectList with theme
-      const selectList = new SelectList(items, Math.min(items.length, 10), {
+      const selectList = new SelectList(keybindings, items, Math.min(items.length, 10), {
         selectedPrefix: (t) => theme.fg("accent", t),
         selectedText: (t) => theme.fg("accent", t),
         description: (t) => theme.fg("muted", t),
@@ -670,8 +670,8 @@ import { BorderedLoader } from "@tsuuanmi/pi";
 
 pi.registerCommand("fetch", {
   handler: async (_args, ctx) => {
-    const result = await ctx.ui.custom<string | null>((tui, theme, _kb, done) => {
-      const loader = new BorderedLoader(tui, theme, "Fetching data...");
+    const result = await ctx.ui.custom<string | null>((tui, theme, keybindings, done) => {
+      const loader = new BorderedLoader(tui, theme, "Fetching data...", keybindings);
       loader.onAbort = () => done(null);
 
       // Do async work
@@ -708,11 +708,12 @@ pi.registerCommand("settings", {
       { id: "color", label: "Color output", currentValue: "on", values: ["on", "off"] },
     ];
 
-    await ctx.ui.custom((_tui, theme, _kb, done) => {
+    await ctx.ui.custom((_tui, theme, keybindings, done) => {
       const container = new Container();
       container.addChild(new Text(theme.fg("accent", theme.bold("Settings")), 1, 1));
 
       const settingsList = new SettingsList(
+        keybindings,
         items,
         Math.min(items.length + 2, 15),
         getSettingsListTheme(),
@@ -823,7 +824,7 @@ ctx.ui.setFooter((tui, theme, footerData) => ({
     // footerData.getExtensionStatuses(): ReadonlyMap<string, string>
     return [`${ctx.model?.id} (${footerData.getGitBranch() || "no git"})`];
   },
-  dispose: footerData.onBranchChange(() => tui.requestRender()), // reactive
+  dispose: footerData.onChange(() => tui.requestRender()), // reactive
 }));
 
 ctx.ui.setFooter(undefined); // restore default

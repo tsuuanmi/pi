@@ -37,7 +37,7 @@ vi.mock("child_process", () => ({
 	}),
 }));
 
-import { FooterDataProvider } from "#pi/ui/interactive/footer-data-provider";
+import { RepositoryState } from "#pi/ui/interactive/repository-state";
 
 type WorktreeFixture = {
 	worktreeDir: string;
@@ -87,7 +87,7 @@ async function waitFor(condition: () => boolean, timeoutMs = 3000): Promise<void
 	}
 }
 
-describe("FooterDataProvider reftable branch detection", () => {
+describe("RepositoryState branch detection", () => {
 	let originalCwd: string;
 	let tempDir: string;
 
@@ -112,9 +112,9 @@ describe("FooterDataProvider reftable branch detection", () => {
 		mkdirSync(nestedDir, { recursive: true });
 		process.chdir(nestedDir);
 
-		const provider = new FooterDataProvider(nestedDir);
+		const provider = new RepositoryState(nestedDir);
 		try {
-			expect(provider.getGitBranch()).toBe("main");
+			expect(provider.getBranch()).toBe("main");
 			expect(vi.mocked(spawnSync)).not.toHaveBeenCalled();
 		} finally {
 			provider.dispose();
@@ -125,9 +125,9 @@ describe("FooterDataProvider reftable branch detection", () => {
 		const repoDir = createPlainReftableRepo(tempDir);
 		process.chdir(repoDir);
 
-		const provider = new FooterDataProvider(repoDir);
+		const provider = new RepositoryState(repoDir);
 		try {
-			expect(provider.getGitBranch()).toBe("main");
+			expect(provider.getBranch()).toBe("main");
 			expect(vi.mocked(spawnSync)).toHaveBeenCalledWith(
 				"git",
 				["--no-optional-locks", "symbolic-ref", "--quiet", "--short", "HEAD"],
@@ -146,9 +146,9 @@ describe("FooterDataProvider reftable branch detection", () => {
 		const { worktreeDir } = createReftableWorktree(tempDir);
 		process.chdir(worktreeDir);
 
-		const provider = new FooterDataProvider(worktreeDir);
+		const provider = new RepositoryState(worktreeDir);
 		try {
-			expect(provider.getGitBranch()).toBe("main");
+			expect(provider.getBranch()).toBe("main");
 		} finally {
 			provider.dispose();
 		}
@@ -159,9 +159,9 @@ describe("FooterDataProvider reftable branch detection", () => {
 		process.chdir(repoDir);
 		resolvedBranch = "";
 
-		const provider = new FooterDataProvider(repoDir);
+		const provider = new RepositoryState(repoDir);
 		try {
-			expect(provider.getGitBranch()).toBe("detached");
+			expect(provider.getBranch()).toBe("detached");
 		} finally {
 			provider.dispose();
 		}
@@ -171,20 +171,20 @@ describe("FooterDataProvider reftable branch detection", () => {
 		const { worktreeDir, reftableDir } = createReftableWorktree(tempDir);
 		process.chdir(worktreeDir);
 
-		const provider = new FooterDataProvider(worktreeDir);
+		const provider = new RepositoryState(worktreeDir);
 		try {
-			expect(provider.getGitBranch()).toBe("main");
+			expect(provider.getBranch()).toBe("main");
 			vi.mocked(spawnSync).mockClear();
-			const onBranchChange = vi.fn();
-			provider.onBranchChange(onBranchChange);
+			const onChange = vi.fn();
+			provider.onChange(onChange);
 
 			writeFileSync(join(reftableDir, "tables.list"), "1\n");
 			await waitFor(() => vi.mocked(execFile).mock.calls.length === 1);
 
 			expect(vi.mocked(execFile)).toHaveBeenCalledTimes(1);
 			expect(vi.mocked(spawnSync)).not.toHaveBeenCalled();
-			expect(provider.getGitBranch()).toBe("main");
-			expect(onBranchChange).not.toHaveBeenCalled();
+			expect(provider.getBranch()).toBe("main");
+			expect(onChange).not.toHaveBeenCalled();
 		} finally {
 			provider.dispose();
 		}
@@ -194,9 +194,9 @@ describe("FooterDataProvider reftable branch detection", () => {
 		const { worktreeDir, reftableDir } = createReftableWorktree(tempDir);
 		process.chdir(worktreeDir);
 
-		const provider = new FooterDataProvider(worktreeDir);
+		const provider = new RepositoryState(worktreeDir);
 		try {
-			expect(provider.getGitBranch()).toBe("main");
+			expect(provider.getBranch()).toBe("main");
 			vi.mocked(execFile).mockClear();
 
 			writeFileSync(join(reftableDir, "tables.list"), "1\n");
@@ -215,20 +215,20 @@ describe("FooterDataProvider reftable branch detection", () => {
 		const { worktreeDir, reftableDir } = createReftableWorktree(tempDir);
 		process.chdir(worktreeDir);
 
-		const provider = new FooterDataProvider(worktreeDir);
+		const provider = new RepositoryState(worktreeDir);
 		try {
-			expect(provider.getGitBranch()).toBe("main");
+			expect(provider.getBranch()).toBe("main");
 			resolvedBranch = "foo";
-			const onBranchChange = vi.fn();
-			provider.onBranchChange(onBranchChange);
+			const onChange = vi.fn();
+			provider.onChange(onChange);
 
 			writeFileSync(join(reftableDir, "tables.list"), "1\n");
 			await waitFor(() => vi.mocked(execFile).mock.calls.length === 1);
-			await waitFor(() => provider.getGitBranch() === "foo");
+			await waitFor(() => provider.getBranch() === "foo");
 
 			expect(vi.mocked(execFile)).toHaveBeenCalledTimes(1);
-			expect(provider.getGitBranch()).toBe("foo");
-			expect(onBranchChange).toHaveBeenCalledTimes(1);
+			expect(provider.getBranch()).toBe("foo");
+			expect(onChange).toHaveBeenCalledTimes(1);
 		} finally {
 			provider.dispose();
 		}
@@ -239,7 +239,7 @@ describe("FooterDataProvider reftable branch detection", () => {
 		const repoDir = createPlainRepo(tempDir);
 		process.chdir(repoDir);
 
-		const provider = new FooterDataProvider(repoDir);
+		const provider = new RepositoryState(repoDir);
 		try {
 			const providerWithInternals = provider as unknown as {
 				headWatcher: FSWatcher | null;

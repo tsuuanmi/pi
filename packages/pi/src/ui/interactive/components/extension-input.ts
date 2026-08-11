@@ -7,8 +7,8 @@ import {
 	CountdownTimer,
 	DynamicBorder,
 	type Focusable,
-	getKeybindings,
 	Input,
+	type KeybindingsManager,
 	keyHint,
 	LAYOUT_EDGE_X,
 	LAYOUT_SECTION_GAP_Y,
@@ -19,6 +19,7 @@ import {
 } from "@tsuuanmi/pi-tui";
 
 export interface ExtensionInputOptions {
+	keybindings: KeybindingsManager;
 	tui?: TUI;
 	timeout?: number;
 }
@@ -30,6 +31,7 @@ export class ExtensionInputComponent extends Container implements Focusable {
 	private titleText: Text;
 	private baseTitle: string;
 	private countdown: CountdownTimer | undefined;
+	private readonly keybindings: KeybindingsManager;
 
 	// Focusable implementation - propagate to input for IME cursor positioning
 	private _focused = false;
@@ -46,10 +48,11 @@ export class ExtensionInputComponent extends Container implements Focusable {
 		_placeholder: string | undefined,
 		onSubmit: (value: string) => void,
 		onCancel: () => void,
-		opts?: ExtensionInputOptions,
+		opts: ExtensionInputOptions,
 	) {
 		super();
 
+		this.keybindings = opts.keybindings;
 		this.onSubmitCallback = onSubmit;
 		this.onCancelCallback = onCancel;
 		this.baseTitle = title;
@@ -61,7 +64,7 @@ export class ExtensionInputComponent extends Container implements Focusable {
 		this.addChild(this.titleText);
 		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 
-		if (opts?.timeout && opts.timeout > 0 && opts.tui) {
+		if (opts.timeout && opts.timeout > 0 && opts.tui) {
 			this.countdown = new CountdownTimer(
 				opts.timeout,
 				opts.tui,
@@ -70,12 +73,12 @@ export class ExtensionInputComponent extends Container implements Focusable {
 			);
 		}
 
-		this.input = new Input();
+		this.input = new Input(this.keybindings);
 		this.addChild(this.input);
 		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		this.addChild(
 			new Text(
-				`${keyHint("tui.select.confirm", "submit")}  ${keyHint("tui.select.cancel", "cancel")}`,
+				`${keyHint(this.keybindings, "tui.select.confirm", "submit")}  ${keyHint(this.keybindings, "tui.select.cancel", "cancel")}`,
 				LAYOUT_EDGE_X,
 				0,
 			),
@@ -85,8 +88,8 @@ export class ExtensionInputComponent extends Container implements Focusable {
 	}
 
 	handleInput(keyData: string): void {
-		const kb = getKeybindings();
-		if (kb.matches(keyData, "tui.select.confirm") || keyData === "\n") {
+		const kb = this.keybindings;
+		if (kb.matches(keyData, "tui.select.confirm")) {
 			this.onSubmitCallback(this.input.getValue());
 		} else if (kb.matches(keyData, "tui.select.cancel")) {
 			this.onCancelCallback();

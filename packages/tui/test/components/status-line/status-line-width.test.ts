@@ -71,6 +71,7 @@ function createSession(options: {
 function createFooterData(providerCount: number): StatusLineDataProvider {
 	return {
 		getGitBranch: () => "main",
+		getGitStatus: () => null,
 		getExtensionStatuses: () => new Map<string, string>(),
 		getAvailableProviderCount: () => providerCount,
 	};

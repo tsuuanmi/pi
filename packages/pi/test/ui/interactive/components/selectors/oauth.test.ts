@@ -1,6 +1,6 @@
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "@tsuuanmi/pi-ai";
-import { initTheme, setKeybindings, stripAnsi } from "@tsuuanmi/pi-tui";
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { initTheme, stripAnsi } from "@tsuuanmi/pi-tui";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { isApiKeyAccountProvider } from "#pi/modes/interactive/interactive-mode";
@@ -8,14 +8,11 @@ import { KeybindingsManager } from "#pi/settings/keybindings";
 import { OAuthSelectorComponent } from "#pi/ui/interactive/components/selectors/oauth";
 
 const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
+const keybindings = new KeybindingsManager();
 
 describe("OAuthSelectorComponent", () => {
 	beforeAll(() => {
 		initTheme("dark");
-	});
-
-	beforeEach(() => {
-		setKeybindings(new KeybindingsManager());
 	});
 
 	afterEach(() => {
@@ -47,6 +44,7 @@ describe("OAuthSelectorComponent", () => {
 			},
 		});
 		const selector = new OAuthSelectorComponent(
+			keybindings,
 			"add",
 			authStorage,
 			[{ id: "anthropic", name: "Anthropic", authType: "api_key" }],
@@ -72,6 +70,7 @@ describe("OAuthSelectorComponent", () => {
 			},
 		});
 		const selector = new OAuthSelectorComponent(
+			keybindings,
 			"add",
 			authStorage,
 			[{ id: "openai", name: "OpenAI", authType: "api_key" }],
@@ -90,6 +89,7 @@ describe("OAuthSelectorComponent", () => {
 	it("shows custom provider environment API key auth from status resolver", () => {
 		const authStorage = AuthStorage.inMemory();
 		const selector = new OAuthSelectorComponent(
+			keybindings,
 			"add",
 			authStorage,
 			[{ id: "ollama", name: "ollama", authType: "api_key" }],
@@ -108,6 +108,7 @@ describe("OAuthSelectorComponent", () => {
 	it("shows settings.json API key auth as configured", () => {
 		const authStorage = AuthStorage.inMemory();
 		const selector = new OAuthSelectorComponent(
+			keybindings,
 			"add",
 			authStorage,
 			[{ id: "local-proxy", name: "local-proxy", authType: "api_key" }],
@@ -126,6 +127,7 @@ describe("OAuthSelectorComponent", () => {
 	it("shows settings.json command auth as configured", () => {
 		const authStorage = AuthStorage.inMemory();
 		const selector = new OAuthSelectorComponent(
+			keybindings,
 			"add",
 			authStorage,
 			[{ id: "op-proxy", name: "op-proxy", authType: "api_key" }],

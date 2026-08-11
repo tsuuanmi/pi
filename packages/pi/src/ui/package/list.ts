@@ -1,12 +1,5 @@
-import {
-	type Component,
-	type Focusable,
-	getKeybindings,
-	Input,
-	matchesKey,
-	theme,
-	truncateToWidth,
-} from "@tsuuanmi/pi-tui";
+import { type Component, type Focusable, Input, theme, truncateToWidth } from "@tsuuanmi/pi-tui";
+import type { KeybindingsManager } from "#pi/settings/keybindings";
 import type { ResourceGroup, ResourceItem, ResourceSubgroup } from "./groups.ts";
 import type { ResourceToggler } from "./toggle.ts";
 
@@ -23,6 +16,7 @@ export class ResourceList implements Component, Focusable {
 	private searchInput: Input;
 	private maxVisible: number;
 	private readonly resourceToggler: ResourceToggler;
+	private readonly keybindings: KeybindingsManager;
 
 	public onCancel?: () => void;
 	public onExit?: () => void;
@@ -37,10 +31,16 @@ export class ResourceList implements Component, Focusable {
 		this.searchInput.focused = value;
 	}
 
-	constructor(groups: ResourceGroup[], resourceToggler: ResourceToggler, terminalHeight?: number) {
+	constructor(
+		groups: ResourceGroup[],
+		resourceToggler: ResourceToggler,
+		keybindings: KeybindingsManager,
+		terminalHeight?: number,
+	) {
 		this.groups = groups;
 		this.resourceToggler = resourceToggler;
-		this.searchInput = new Input();
+		this.keybindings = keybindings;
+		this.searchInput = new Input(keybindings);
 		// 8 lines of chrome: top spacer + top border + spacer + header (2 lines) + spacer + bottom spacer + bottom border
 		const chrome = 8;
 		this.maxVisible = Math.max(5, (terminalHeight ?? 24) - chrome);
@@ -200,7 +200,7 @@ export class ResourceList implements Component, Focusable {
 	}
 
 	handleInput(data: string): void {
-		const kb = getKeybindings();
+		const kb = this.keybindings;
 
 		if (kb.matches(data, "tui.select.up")) {
 			this.selectedIndex = this.findNextItem(this.selectedIndex, -1);
@@ -236,7 +236,7 @@ export class ResourceList implements Component, Focusable {
 			this.onCancel?.();
 			return;
 		}
-		if (matchesKey(data, "ctrl+c")) {
+		if (kb.matches(data, "app.interrupt")) {
 			this.onExit?.();
 			return;
 		}

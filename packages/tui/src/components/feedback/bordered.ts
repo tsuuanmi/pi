@@ -6,6 +6,7 @@ import { DynamicBorder } from "#tui/components/layout/border";
 import { Spacer } from "#tui/components/layout/spacer";
 import { LAYOUT_EDGE_X, LAYOUT_SECTION_GAP_Y } from "#tui/components/layout/spacing";
 import { keyHint } from "#tui/input/keyboard/key-hints";
+import type { KeybindingsManager } from "#tui/input/keyboard/keybindings";
 import type { Theme } from "#tui/theme/theme";
 import type { TUI } from "#tui/tui";
 
@@ -15,7 +16,13 @@ export class BorderedLoader extends Container {
 	private cancellable: boolean;
 	private signalController?: AbortController;
 
-	constructor(tui: TUI, theme: Theme, message: string, options?: { cancellable?: boolean }) {
+	constructor(
+		tui: TUI,
+		theme: Theme,
+		message: string,
+		keybindings: KeybindingsManager,
+		options?: { cancellable?: boolean },
+	) {
 		super();
 		this.cancellable = options?.cancellable ?? true;
 		const borderColor = (s: string) => theme.fg("border", s);
@@ -26,6 +33,7 @@ export class BorderedLoader extends Container {
 				(s) => theme.fg("accent", s),
 				(s) => theme.fg("muted", s),
 				message,
+				keybindings,
 			);
 		} else {
 			this.signalController = new AbortController();
@@ -39,7 +47,7 @@ export class BorderedLoader extends Container {
 		this.addChild(this.loader);
 		if (this.cancellable) {
 			this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
-			this.addChild(new Text(keyHint("tui.select.cancel", "cancel"), LAYOUT_EDGE_X, 0));
+			this.addChild(new Text(keyHint(keybindings, "tui.select.cancel", "cancel"), LAYOUT_EDGE_X, 0));
 		}
 		this.addChild(new Spacer(LAYOUT_SECTION_GAP_Y));
 		this.addChild(new DynamicBorder(borderColor));
