@@ -2,7 +2,8 @@
  * Typed Ultragoal obstacle records and durable ledger operations.
  *
  * This leaf module owns obstacle validation and serialization. Goal-graph
- * projection stays in `runtime.ts`, which imports this module and not the reverse.
+ * projection belongs to `obstacle-service.ts`, which imports this module and not
+ * the reverse.
  */
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";

@@ -29,11 +29,7 @@ import {
 	readRalplanIndex,
 	readRalplanStatus,
 } from "#workflows/skills/ralplan/index-store";
-import {
-	assertRalplanObstacle,
-	ralplanObstacleFromVerdict,
-	writeRalplanObstacle,
-} from "#workflows/skills/ralplan/obstacles";
+import { ralplanObstacleFromVerdict, writeRalplanObstacle } from "#workflows/skills/ralplan/obstacles";
 import type { RalplanWriteArtifactInput, RalplanWriteArtifactResult } from "#workflows/skills/ralplan/types";
 import { parseRalplanVerdict } from "#workflows/skills/ralplan/verdicts";
 import { syncWorkflowActiveState } from "#workflows/state/active-state";
@@ -164,10 +160,7 @@ export async function writeRalplanArtifact(
 			await markRalplanCompletionStep(cwd, sessionId, mutationId, "pending_approval");
 			if (verdict) {
 				const obstacle = ralplanObstacleFromVerdict(verdict, artifact.path, artifact.createdAt);
-				if (obstacle) {
-					assertRalplanObstacle(obstacle);
-					await writeRalplanObstacle(cwd, runId, sessionId, obstacle);
-				}
+				if (obstacle) await writeRalplanObstacle(cwd, runId, sessionId, obstacle);
 			}
 			await markRalplanCompletionStep(cwd, sessionId, mutationId, "obstacle_ledger");
 			const state = await writeWorkflowState(

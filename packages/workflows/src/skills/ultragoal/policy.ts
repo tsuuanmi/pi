@@ -1,7 +1,7 @@
 import type { ExpectedNextRole } from "#workflows/policy/expected-next-role";
 import type { SkillPolicy, SkillPolicyContext } from "#workflows/policy/skill-policy";
+import { getUltragoalStatus, readUltragoalPlan } from "#workflows/skills/ultragoal/plan";
 import { chooseReceiptKind, readUltragoalLedger, validateCompletionReceipt } from "#workflows/skills/ultragoal/receipt";
-import { getUltragoalStatus, readUltragoalPlan } from "#workflows/skills/ultragoal/runtime";
 
 interface UltragoalSelectorGoal {
 	id: string;

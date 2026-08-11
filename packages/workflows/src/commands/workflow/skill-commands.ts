@@ -15,17 +15,15 @@ import type { WorkflowCommandResult } from "#workflows/commands/workflow/index";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
 import type { RalplanStage } from "#workflows/session/paths";
 import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";
+import { restateGoalGate, runClosureCheckForSession } from "#workflows/skills/deep-interview/closure";
 import { assertDeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
+import { planDeepInterviewQuestion } from "#workflows/skills/deep-interview/questions";
 import {
 	appendOrMergeDeepInterviewRound,
-	assertDeepInterviewSpecReady,
 	enrichDeepInterviewRoundScoring,
-	finalizeDeepInterviewSpecState,
-	planDeepInterviewQuestion,
-	restateGoalGate,
-	runClosureCheckForSession,
-} from "#workflows/skills/deep-interview/runtime";
-import type { DeepInterviewAdvisoryMetadata, DeepInterviewRoundRecord } from "#workflows/skills/deep-interview/state";
+} from "#workflows/skills/deep-interview/rounds";
+import { assertDeepInterviewSpecReady, finalizeDeepInterviewSpecState } from "#workflows/skills/deep-interview/spec";
+import type { DeepInterviewAdvisoryMetadata, DeepInterviewRoundRecord } from "#workflows/skills/deep-interview/types";
 import { approveRalplanPlan } from "#workflows/skills/ralplan/approval";
 import { writeRalplanArtifact } from "#workflows/skills/ralplan/artifacts";
 import { doctorRalplan } from "#workflows/skills/ralplan/doctor";
@@ -40,22 +38,18 @@ import {
 import { sendTeamMessage } from "#workflows/skills/team/messages";
 import { readTeamSnapshot, startTeam } from "#workflows/skills/team/state";
 import { createTeamTask, transitionTeamTask } from "#workflows/skills/team/tasks";
+import { checkpointUltragoalGoal, restoreUltragoalCheckpoint } from "#workflows/skills/ultragoal/checkpoints";
 import { ultragoalGuard } from "#workflows/skills/ultragoal/guard";
-import type { UltragoalResolvableObstacleKind } from "#workflows/skills/ultragoal/obstacles";
-import type { UltragoalGoalMode } from "#workflows/skills/ultragoal/receipt";
-import type { UltragoalBlockerClassification } from "#workflows/skills/ultragoal/runtime";
 import {
-	checkpointUltragoalGoal,
-	createUltragoalPlan,
-	getUltragoalStatus,
 	recordUltragoalBlockerClassification,
 	recordUltragoalObstacle,
-	restoreUltragoalCheckpoint,
-	startNextUltragoalGoal,
-} from "#workflows/skills/ultragoal/runtime";
+} from "#workflows/skills/ultragoal/obstacle-service";
+import type { UltragoalResolvableObstacleKind } from "#workflows/skills/ultragoal/obstacles";
+import { createUltragoalPlan, getUltragoalStatus, startNextUltragoalGoal } from "#workflows/skills/ultragoal/plan";
+import type { UltragoalGoalMode } from "#workflows/skills/ultragoal/receipt";
+import type { UltragoalBlockerClassification } from "#workflows/skills/ultragoal/types";
 import { assertSafePathComponent } from "#workflows/state/state-schema";
 import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/state/state-writer";
-import { activeRalplanRunId, defaultWorkflowId } from "#workflows/state/workflow-state";
 
 export async function deepInterviewVerb(
 	action: string | undefined,
@@ -74,7 +68,7 @@ export async function deepInterviewVerb(
 				cwd,
 				{
 					round: requiredNumber(input, "round"),
-					questionId: inputString(input, "questionId"),
+					questionId: requiredString(input, "questionId"),
 					questionText: requiredString(input, "questionText"),
 					component: inputString(input, "component"),
 					dimension: inputString(input, "dimension"),
@@ -89,11 +83,10 @@ export async function deepInterviewVerb(
 			body = await appendOrMergeDeepInterviewRound(
 				cwd,
 				{
-					interviewId: inputString(input, "interviewId"),
-					round: optionalNumber(input, "round"),
+					round: requiredNumber(input, "round"),
 					round_id: inputString(input, "round_id"),
-					questionId: inputString(input, "questionId"),
-					questionText: inputString(input, "questionText"),
+					questionId: requiredString(input, "questionId"),
+					questionText: requiredString(input, "questionText"),
 					component: inputString(input, "component"),
 					dimension: inputString(input, "dimension"),
 					ambiguity: optionalNumber(input, "ambiguity"),
@@ -109,13 +102,12 @@ export async function deepInterviewVerb(
 			body = await enrichDeepInterviewRoundScoring(
 				cwd,
 				{
-					interviewId: inputString(input, "interviewId"),
 					round: requiredNumber(input, "round"),
 					round_id: inputString(input, "round_id"),
-					questionId: inputString(input, "questionId"),
+					questionId: requiredString(input, "questionId"),
 					scores: requiredObject(input, "scores") as Record<string, number>,
 					ambiguity: requiredNumber(input, "ambiguity"),
-					triggers: (input.triggers as DeepInterviewRoundRecord["triggers"]) ?? [],
+					triggers: input.triggers as DeepInterviewRoundRecord["triggers"],
 					metadata: input.metadata as DeepInterviewAdvisoryMetadata | undefined,
 				},
 				sessionId,
@@ -140,10 +132,10 @@ export async function deepInterviewVerb(
 		}
 		case "write-spec": {
 			await assertDeepInterviewSpecReady(cwd, sessionId);
-			const slug = inputString(input, "slug")?.trim() || defaultWorkflowId("spec");
+			const slug = requiredString(input, "slug").trim();
 			assertSafePathComponent(slug, "slug");
-			const handoff = inputString(input, "handoff");
-			if (handoff) assertDeepInterviewHandoff(handoff);
+			const handoff = requiredString(input, "handoff");
+			assertDeepInterviewHandoff(handoff);
 			const content = await readFileOrLiteral(requiredString(input, "spec"), cwd);
 			const specPath = deepInterviewSpecPath(cwd, slug, sessionId);
 			const result = await writeTextArtifact(specPath, content, { cwd });
@@ -157,7 +149,11 @@ export async function deepInterviewVerb(
 				},
 				{ cwd },
 			);
-			const handoffTarget = handoff as "ralplan" | "ultragoal" | "team" | undefined;
+			const handoffTarget = handoff === "stop" ? undefined : handoff;
+			const runId = inputString(input, "runId")?.trim();
+			if (handoffTarget === "ralplan" && !runId) {
+				throw new Error("deep-interview ralplan handoff requires runId");
+			}
 			if (handoffTarget === "ralplan" || handoffTarget === "team" || handoffTarget === "ultragoal") {
 				await finalizeDeepInterviewSpecState(
 					cwd,
@@ -165,12 +161,7 @@ export async function deepInterviewVerb(
 					sessionId,
 				);
 				const calleePatch =
-					handoffTarget === "ralplan"
-						? {
-								run_id: (await activeRalplanRunId(cwd, sessionId)) ?? defaultWorkflowId("ralplan"),
-								input: result.path,
-							}
-						: { input: result.path };
+					handoffTarget === "ralplan" ? { run_id: runId, input: result.path } : { input: result.path };
 				await handoffWorkflow({
 					cwd,
 					caller: { skill: "deep-interview", patch: {} },
@@ -181,7 +172,7 @@ export async function deepInterviewVerb(
 			} else {
 				await finalizeDeepInterviewSpecState(
 					cwd,
-					{ slug, path: result.path, sha256: result.sha256, handoff: handoff ?? "stop" },
+					{ slug, path: result.path, sha256: result.sha256, handoff },
 					sessionId,
 				);
 			}

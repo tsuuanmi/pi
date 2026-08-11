@@ -13,18 +13,19 @@
  * unit/e2e-testable with a fake harness (no real provider/tokens).
  */
 
+import { finalize } from "#workflows/runtime/finalization";
 import { isTerminal } from "#workflows/runtime/lifecycle";
-import {
-	type ClassificationInput,
-	finalize,
-	loadState,
-	type RecoveryDecision,
-	type RecoveryDecisionKind,
-	recover,
-} from "#workflows/runtime/operations";
+import { recover } from "#workflows/runtime/recovery";
+import type { ClassificationInput, RecoveryDecision, RecoveryDecisionKind } from "#workflows/runtime/recovery-policy";
 import { type HarnessRpc, singleFlightAccept } from "#workflows/runtime/rpc";
-import { readWorkflowRuntimeReceipts } from "#workflows/runtime/storage";
+import { readSessionState, readWorkflowRuntimeReceipts } from "#workflows/runtime/storage";
 import type { HarnessLifecycle, PrimitiveResponse, RuntimeWriter, SessionState } from "#workflows/runtime/types";
+
+async function loadState(root: string, sessionId: string): Promise<SessionState> {
+	const state = await readSessionState(root, sessionId);
+	if (!state) throw new Error(`session_not_found:${sessionId}`);
+	return state;
+}
 
 export interface OperateOptions {
 	root: string;

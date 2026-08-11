@@ -65,14 +65,14 @@ Boundary rules:
 - Commands own CLI parsing, session and working-directory resolution, output formatting, exit status, external lifecycle, inspection, and recovery.
 - Workflow adapters own host-facing registration, in-session context, cancellation, and model-visible `WorkflowToolDetails`. Pi-owned lifecycle tools provide subagent actions; skill tools own workflow orchestration and policy.
 - Shared workflow implementation belongs below these adapters. If a command and a tool need the same behavior, they call a shared runtime or skill function; they do not call or shell out to each other.
-- A command may route to a live `RuntimeOwner` through workflow RPC or use a no-owner fallback. That is runtime communication, not a tool invocation.
+- Lifecycle mutations route to a live `RuntimeOwner` through workflow RPC. Read-only inspection and explicitly leased recovery may run without an owner; neither path is a tool invocation.
 - `src/tool/host.ts` and `src/tool/spec.ts` define the workflow tool contract. `src/tool/register.ts` aggregates registration. Skill-specific tool behavior lives under `src/skills/*/tools.ts`.
 
 Use `pi workflow ...` for external control-plane operations and scripting. Use model-visible tools for actions that must run inside the current Pi session, especially guarded orchestration and subagent work.
 
 State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`.
 
-Most verbs route to a live runtime owner when one is running for the session (`start --detach` spawns a detached owner); otherwise they fall back to a primitive (no-owner) path so the CLI can inspect and drive sessions without a running owner.
+Lifecycle mutations route to the live runtime owner (`start --detach` spawns one). Read-only inspection is owner-independent, and recovery acquires its own lease before mutating state or restarting an owner.
 
 ### `pi workflow gc`
 
@@ -196,8 +196,7 @@ Ralplan role completion is accepted through a local deterministic harness slice.
 
 The v1 repair allowlist is intentionally narrow: same-hash duplicate handling and missing completion-provenance sidecar backfill. Artifact markdown, verdicts, stage/run/phase/approval/gate semantics, mismatched hashes, influential invalid JSONL, ambiguous gates, closed state, and mixed repairable/non-repairable issues are not repaired by this slice. Full replay tooling and shared orchestration engines for team, ultragoal, and deep-interview are deferred.
 
-A few internals are noted here so contributors can extend the control plane without grepping for seams:
+Key control-plane internals:
 
-- **Deferred-seam registry** (`runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. The registry is wired live into `recoverPrimitive`'s `fallback-harness-exec` branch. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
 - **Workflow runtime receipts** (`runtime/types.ts`, `runtime/receipt-rules.ts`): `WorkflowRuntimeReceipt` is the durable mutation record. Receipt rules own hash validation and immutable lifecycle consistency checks; contradictions throw before any event, receipt, or state write.
 - **Workflow HUD builders**: per-skill HUD modules (`deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts`) build active-state summaries in the owning harness folder. Extension-side HUD refresh is provided through `@tsuuanmi/pi-tui`.

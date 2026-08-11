@@ -1,16 +1,12 @@
 import { teamTaskPath } from "#workflows/session/session-layout";
 import { assertTeamDependencies } from "#workflows/skills/team/dependencies";
 import { passingReviewGate, writeReviewGateBlock } from "#workflows/skills/team/gates";
+import { assertSafeId } from "#workflows/skills/team/ids";
+import { createTeamCompletionEvidence, createTeamTaskRecord } from "#workflows/skills/team/records";
 import { readTeamSnapshot, syncTeamState } from "#workflows/skills/team/state";
 import { appendTeamEvent, listTasks, readJsonObject, resolveTeamId } from "#workflows/skills/team/store";
 import type { TeamCompletionEvidence, TeamTask } from "#workflows/skills/team/types";
-import {
-	assertSafeId,
-	createTeamCompletionEvidence,
-	createTeamTaskRecord,
-	parseTeamTask,
-	parseTeamTaskStatus,
-} from "#workflows/skills/team/validation";
+import { parseTeamTask, parseTeamTaskStatus } from "#workflows/skills/team/validation";
 import { nowIso, sha256, writeJsonAtomic } from "#workflows/state/state-writer";
 
 export async function createTeamTask(

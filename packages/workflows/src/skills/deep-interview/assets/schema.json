@@ -14,7 +14,6 @@
     "dimension": { "type": "string" },
     "ambiguity": { "type": "number", "minimum": 0, "maximum": 1 },
     "rationale": { "type": "string" },
-    "interviewId": { "type": "string" },
     "round_id": { "type": "string" },
     "selectedOptions": { "type": "array", "items": { "type": "string" } },
     "customInput": { "type": "string" },
@@ -28,7 +27,8 @@
     "adjustment": { "type": "string" },
     "slug": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
     "spec": { "type": "string" },
-    "handoff": { "type": "string", "enum": ["ralplan", "team", "ultragoal", "stop"] }
+    "handoff": { "type": "string", "enum": ["ralplan", "team", "ultragoal", "stop"] },
+    "runId": { "type": "string" }
   },
   "$defs": {
     "sessionId": {
@@ -38,7 +38,7 @@
     "planQuestionInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sessionId", "round", "questionText"],
+      "required": ["sessionId", "round", "questionId", "questionText"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "round": { "type": "number" },
@@ -53,10 +53,9 @@
     "recordAnswerInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sessionId"],
+      "required": ["sessionId", "round", "questionId", "questionText"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
-        "interviewId": { "type": "string" },
         "round": { "type": "number" },
         "round_id": { "type": "string" },
         "questionId": { "type": "string" },
@@ -72,10 +71,9 @@
     "recordScoringInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sessionId", "round", "scores", "ambiguity"],
+      "required": ["sessionId", "round", "questionId", "scores", "ambiguity"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
-        "interviewId": { "type": "string" },
         "round": { "type": "number" },
         "round_id": { "type": "string" },
         "questionId": { "type": "string" },
@@ -107,13 +105,16 @@
     "writeSpecInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sessionId", "spec"],
+      "required": ["sessionId", "slug", "spec", "handoff"],
       "properties": {
         "sessionId": { "$ref": "#/$defs/sessionId" },
         "slug": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
         "spec": { "type": "string" },
-        "handoff": { "type": "string", "enum": ["ralplan", "team", "ultragoal", "stop"] }
-      }
+        "handoff": { "type": "string", "enum": ["ralplan", "team", "ultragoal", "stop"] },
+        "runId": { "type": "string" }
+      },
+      "if": { "properties": { "handoff": { "const": "ralplan" } }, "required": ["handoff"] },
+      "then": { "required": ["runId"] }
     }
   },
   "x-pi-actions": {
@@ -125,8 +126,8 @@
     "write-spec": { "$ref": "#/$defs/writeSpecInput" }
   },
   "examples": [
-    { "sessionId": "<session-id>", "round": 1, "questionText": "Which user outcome matters most?" },
-    { "sessionId": "<session-id>", "round": 1, "scores": { "goal": 0.4, "constraints": 0.2 }, "ambiguity": 0.3 },
-    { "sessionId": "<session-id>", "slug": "my-spec", "spec": "# Spec\n...", "handoff": "ralplan" }
+    { "sessionId": "<session-id>", "round": 1, "questionId": "q1", "questionText": "Which user outcome matters most?" },
+    { "sessionId": "<session-id>", "round": 1, "questionId": "q1", "scores": { "goal": 0.4, "constraints": 0.2 }, "ambiguity": 0.3 },
+    { "sessionId": "<session-id>", "slug": "my-spec", "spec": "# Spec\n...", "handoff": "ralplan", "runId": "ralplan-my-spec" }
   ]
 }

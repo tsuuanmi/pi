@@ -12,16 +12,17 @@
 - **state**: Removed generic `state write` and `state handoff` commands; workflow mutations belong to skill actions. Removed `force`/`force-repair` bypass paths from state writes, transition validation, and tamper detection. Out-of-band edits now hard-block without a force override.
 - **session**: Removed `session-resolution.ts` and `PI_SESSION_ID` environment fallback; session identity comes only from `--session` (CLI), `sessionId` (payload), or host context.
 - **exports**: Removed the `@tsuuanmi/pi-workflows/session/root` export; shared `.pi` root and session path primitives now come from `@tsuuanmi/pi/session/root`.
-- **ralplan**: Approval requires an APPROVE verdict from the latest critic pass; `overrideCriticVerdict` was removed. Obstacle-ledger agreement is always enforced (no dev/production split). Fail-soft obstacle dual-write was replaced with strict writes.
+- **ralplan**: Approval requires an APPROVE verdict from the latest critic pass; `overrideCriticVerdict` was removed. Obstacle-ledger agreement is always enforced, writes validate persisted records, and malformed ledgers fail closed.
 - **ultragoal**: Removed `replayExempt` and `fallbackArtifactRefs` from the quality gate; all artifact proofs must resolve to live evidence.
 - **deep-interview**: Removed `allowEarlyExit` from spec finalization; above-threshold ambiguity always blocks.
+- **deep-interview**: Removed generated question/spec identities and optional handoff defaults; planning, answers, scoring, spec slugs, handoff targets, and Ralplan run IDs are now explicit, and malformed persisted interview state fails closed.
 - **state-projections**: Removed workflow state projection APIs, their dedicated CLI actions, and the Deep Interview projection tool; use the regular state, status, and snapshot operations instead.
 - **registry**: Removed compatibility transition metadata, wildcard source-state matching, and legacy Ralplan phases; workflow state transitions now use explicit canonical states only.
 - **state**: Active-state persistence is now version 2 with mandatory session ownership; unsupported versions, global, malformed, and foreign-session entries are rejected without migration.
 - **handoff**: Transaction journals are version 2 and use one top-level session identity; per-side session compatibility fields were removed.
 - **commands**: Removed the `@tsuuanmi/pi-workflows/commands/state-command` compatibility export; use `commands/workflow`.
-- **quality-gate**: CLI validation now accepts Node commands only; alternate-runtime command support was removed.
-- **exports**: Renamed workflow runtime and command implementation modules; direct runtime imports now use `runtime/fallback-commands` and `runtime/lifecycle`.
+- **quality-gate**: CLI validation now accepts Node commands only; alternate-runtime command support and the deprecated `validateExecutorQaEvidence` alias were removed.
+- **exports**: Removed the mixed `runtime/operations`, `skills/ultragoal/runtime`, and `skills/ultragoal/quality-gate` modules and the unrestricted `./runtime/*` package subpath. Runtime recovery, policy, validation, finalization, workspace markers, Ultragoal plans, checkpoints, obstacles, and quality-gate validation now have responsibility-owned modules.
 - **exports**: Replaced the mixed workflow tool surface with `@tsuuanmi/pi-workflows/tool`; workflow specs now adapt to the core `Tool` contract.
 - **session**: Removed implicit latest-session discovery and activity-marker writes; every workflow operation now requires an explicit session source.
 - **subagents**: Removed workflow-owned subagent contracts and thinking-level exports; lifecycle behavior now comes from explicit providers through the workflow tool adapter.

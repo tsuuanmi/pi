@@ -18,16 +18,22 @@ Ultragoal manages goal-tracked execution under the current session root. One mai
 
 | Module | Description |
 |--------|-------------|
-| `artifacts.ts` | Artifact tracking and validation. |
-| `guard.ts` | Completion/blocker guard logic. |
+| `artifacts.ts` | Artifact tracking and structural proof validation. |
+| `checkpoints.ts` | Goal checkpoint transitions and checkpoint restoration. |
+| `goal-selection.ts` | Goal scheduling and terminal-state policy. |
+| `guard.ts` | Completion and blocker diagnostics. |
 | `help.ts` | Command action descriptions, typed arguments, and help metadata. |
 | `hud.ts` | HUD chip rendering for goal progress. |
-| `obstacles.ts` | Obstacle/blocker ledger helpers. |
-| `quality-gate.ts` | Quality gate schema validation. |
-| `receipt.ts` | Receipt and ledger validation. |
-| `runtime.ts` | Plan/state I/O and goal transitions. |
+| `obstacle-service.ts` | Obstacle recording and blocker classification. |
+| `obstacles.ts` | Authoritative obstacle-ledger model and persistence. |
+| `plan-model.ts` | Plan parsing and normalization. |
+| `plan-store.ts` | Plan, checkpoint, ledger, and workflow-state persistence. |
+| `plan.ts` | Plan creation, status, reads, and goal activation. |
+| `quality-gate/` | Typed completion-gate validation; see [Quality gate](quality-gate/). |
+| `receipt.ts` | Completion receipts and ledger validation. |
 | `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `tools.ts` | Registers `ultragoal_spawn_goal_agent`. |
+| `types.ts` | Shared Ultragoal application types. |
 | `policy.ts` | Immutable skill policy, expected-next goal selection, and fail-closed validators. |
 
 ## Runtime Route

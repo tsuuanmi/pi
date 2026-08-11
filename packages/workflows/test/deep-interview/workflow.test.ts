@@ -2,16 +2,19 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+	answerHash,
 	appendOrMergeDeepInterviewRound,
 	assertDeepInterviewHandoff,
 	assertDeepInterviewSpecReady,
 	deepInterviewSpecPath,
+	deriveRoundKey,
 	enrichDeepInterviewRoundScoring,
 	finalizeDeepInterviewSpecState,
 	getDeepInterviewMutationDecision,
 	handoffWorkflow,
 	normalizeDeepInterviewEnvelope,
 	planDeepInterviewQuestion,
+	questionHash,
 	readWorkflowActiveState,
 	readWorkflowState,
 	runClosureAcceptanceGuard,
@@ -39,21 +42,11 @@ function collectRegisteredToolNames(): string[] {
 
 async function writeDeepInterviewSpecAndHandoff(
 	cwd: string,
-	input: { slug: string; spec: string; handoff?: "ralplan" | "ultragoal" | "team" | "stop" },
+	input: { slug: string; spec: string; handoff: "ralplan" | "ultragoal" | "team" | "stop" },
 ): Promise<string> {
 	const specPath = deepInterviewSpecPath(cwd, input.slug, TEST_SESSION);
-	const existing = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
-	if (!existing?.active) {
-		await writeWorkflowState(
-			cwd,
-			"deep-interview",
-			{ active: true, current_phase: "interviewing", state: { rounds: [], established_facts: [] } },
-			"pi test",
-			{ sessionId: TEST_SESSION },
-		);
-	}
 	const artifact = await writeTextArtifact(specPath, `${input.spec}\n`, { cwd });
-	if (input.handoff && input.handoff !== "stop") {
+	if (input.handoff !== "stop") {
 		await handoffWorkflow({
 			cwd,
 			sessionId: TEST_SESSION,
@@ -67,6 +60,7 @@ async function writeDeepInterviewSpecAndHandoff(
 				patch: {
 					active: true,
 					current_phase: input.handoff === "ralplan" ? "planner" : "approved-execution",
+					...(input.handoff === "ralplan" ? { run_id: "test-ralplan-run" } : {}),
 					input: artifact.path,
 				},
 			},
@@ -84,26 +78,58 @@ async function writeDeepInterviewSpecAndHandoff(
 describe("deep-interview workflow runtime", () => {
 	let cwd: string;
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		cwd = join(tmpdir(), `pi-deep-interview-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+		await writeWorkflowState(
+			cwd,
+			"deep-interview",
+			{
+				active: true,
+				current_phase: "interviewing",
+				threshold: 0.05,
+				state: {
+					interview_id: "test-interview",
+					type: "greenfield",
+					rounds: [],
+					established_facts: [],
+				},
+			},
+			"pi test setup",
+			{ sessionId: TEST_SESSION },
+		);
 	});
 
 	afterEach(async () => {
 		await rm(cwd, { recursive: true, force: true });
 	});
 
-	it("normalizes legacy flattened state into canonical nested state", () => {
+	it("rejects flattened state and accepts the canonical envelope", () => {
+		expect(() =>
+			normalizeDeepInterviewEnvelope({
+				active: true,
+				rounds: [{ round: 1 }],
+				established_facts: [{ id: "F1" }],
+			}),
+		).toThrow("deep-interview field must be nested under state: rounds");
+
 		const normalized = normalizeDeepInterviewEnvelope({
 			active: true,
-			rounds: [{ round: 1 }],
-			established_facts: [{ id: "F1" }],
 			threshold: 0.5,
+			state: { rounds: [], established_facts: [] },
 		});
+		expect(normalized.threshold).toBe(0.5);
+		expect(normalized.state?.rounds).toEqual([]);
+		expect(normalized.state?.established_facts).toEqual([]);
+	});
 
-		expect(normalized.rounds).toBeUndefined();
-		expect(normalized.state?.rounds as unknown[]).toHaveLength(1);
-		expect(normalized.state?.established_facts as unknown[]).toHaveLength(1);
-		expect(normalized.state?.threshold).toBe(0.5);
+	it("rejects workflow actions before canonical initialization", async () => {
+		await expect(
+			planDeepInterviewQuestion(
+				cwd,
+				{ round: 1, questionId: "q1", questionText: "What is the goal?" },
+				"uninitialized-session",
+			),
+		).rejects.toThrow("workflow is not initialized");
 	});
 
 	it("records, deduplicates, and replaces answer shells", async () => {
@@ -118,6 +144,11 @@ describe("deep-interview workflow runtime", () => {
 			{ sessionId: TEST_SESSION },
 		);
 
+		await planDeepInterviewQuestion(
+			cwd,
+			{ round: 1, questionId: "q1", questionText: "What is the goal?" },
+			TEST_SESSION,
+		);
 		const first = await appendOrMergeDeepInterviewRound(
 			cwd,
 			{
@@ -177,7 +208,19 @@ describe("deep-interview workflow runtime", () => {
 			TEST_SESSION,
 		);
 
-		await appendOrMergeDeepInterviewRound(cwd, { customInput: "Fast feedback" }, TEST_SESSION);
+		await appendOrMergeDeepInterviewRound(
+			cwd,
+			{
+				round: 1,
+				questionId: "q1",
+				questionText: "What outcome matters most?",
+				component: "goal",
+				dimension: "goal",
+				ambiguity: 0.9,
+				customInput: "Fast feedback",
+			},
+			TEST_SESSION,
+		);
 		let state = await readWorkflowState(cwd, "deep-interview", { sessionId: TEST_SESSION });
 		const answeredOrchestration = (
 			state?.state as { orchestration?: { status?: string; last_answered_question_id?: string } }
@@ -224,7 +267,38 @@ describe("deep-interview workflow runtime", () => {
 		expect(orchestration?.next_question?.question_id).toBe("q2");
 	});
 
+	it("rejects answers without a planned question", async () => {
+		await expect(
+			appendOrMergeDeepInterviewRound(
+				cwd,
+				{
+					round: 1,
+					questionId: "q1",
+					questionText: "What is the goal?",
+					customInput: "Ship safely.",
+				},
+				TEST_SESSION,
+			),
+		).rejects.toThrow("answer requires a planned question");
+	});
+
+	it("rejects scoring without an answered round", async () => {
+		await expect(
+			enrichDeepInterviewRoundScoring(
+				cwd,
+				{
+					round: 1,
+					questionId: "q1",
+					scores: { goal: 0.8 },
+					ambiguity: 0.2,
+				},
+				TEST_SESSION,
+			),
+		).rejects.toThrow("scoring requires an answered round");
+	});
+
 	it("rejects invalid ambiguity-raising trigger transitions", async () => {
+		await planDeepInterviewQuestion(cwd, { round: 1, questionId: "q1", questionText: "Goal?" }, TEST_SESSION);
 		await appendOrMergeDeepInterviewRound(
 			cwd,
 			{
@@ -245,6 +319,7 @@ describe("deep-interview workflow runtime", () => {
 			},
 			TEST_SESSION,
 		);
+		await planDeepInterviewQuestion(cwd, { round: 2, questionId: "q2", questionText: "Constraint?" }, TEST_SESSION);
 		await appendOrMergeDeepInterviewRound(
 			cwd,
 			{
@@ -271,6 +346,7 @@ describe("deep-interview workflow runtime", () => {
 							status: "active",
 							component: "core",
 							dimension: "goal",
+							rationale: "The second answer contradicts the first.",
 						},
 					],
 				},
@@ -286,8 +362,24 @@ describe("deep-interview workflow runtime", () => {
 			{
 				active: true,
 				current_phase: "interviewing",
-				rounds: [{ round: 1, round_key: "legacy", lifecycle: "answered" }],
-				state: { interview_id: "interview-1", established_facts: [{ id: "F1" }] },
+				threshold: 0.05,
+				state: {
+					interview_id: "interview-1",
+					rounds: [
+						{
+							round: 1,
+							round_key: deriveRoundKey("interview-1", { round: 1, questionId: "q1" }),
+							question_id: "q1",
+							question_text: "Is the goal fixed?",
+							question_hash: questionHash("Is the goal fixed?"),
+							answer_hash: answerHash(["Yes"], undefined),
+							selected_options: ["Yes"],
+							lifecycle: "answered",
+							answered_at: "2026-01-01T00:00:00.000Z",
+						},
+					],
+					established_facts: [{ id: "F1", statement: "The goal is fixed.", round: 1, disputed: false }],
+				},
 			},
 			"pi test",
 			{ sessionId: TEST_SESSION },
@@ -298,7 +390,7 @@ describe("deep-interview workflow runtime", () => {
 			{
 				slug: "final",
 				path: join(cwd, ".pi", "specs", "deep-interview-final.md"),
-				sha256: "abc",
+				sha256: "a".repeat(64),
 				handoff: "stop",
 			},
 			TEST_SESSION,
@@ -320,6 +412,7 @@ describe("deep-interview workflow runtime", () => {
 	});
 
 	it("runtime spec finalization writes spec and seeds ralplan handoff", async () => {
+		await planDeepInterviewQuestion(cwd, { round: 1, questionId: "q1", questionText: "Goal?" }, TEST_SESSION);
 		await appendOrMergeDeepInterviewRound(
 			cwd,
 			{
@@ -368,16 +461,21 @@ describe("deep-interview workflow runtime", () => {
 				threshold: 0.05,
 				restated_goal: "Ship a safe workflow runtime.",
 				state: {
+					interview_id: "readiness-test",
 					type: "greenfield",
 					topology: { components: [{ id: "core", name: "Core", status: "active" }] },
 					rounds: [
 						{
-							round_key: "r1",
+							round_key: deriveRoundKey("readiness-test", { round: 1, questionId: "q1" }),
 							round: 1,
-							question_hash: "q",
-							answer_hash: "a",
+							question_id: "q1",
+							question_text: "What should ship?",
+							question_hash: questionHash("What should ship?"),
+							answer_hash: answerHash(undefined, "A safe workflow runtime."),
+							custom_input: "A safe workflow runtime.",
 							lifecycle: "scored",
-							answered_at: "now",
+							answered_at: "2026-01-01T00:00:00.000Z",
+							scored_at: "2026-01-01T00:00:01.000Z",
 							component: "core",
 							scores: { goal: 0.98, constraints: 0.98, criteria: 0.98 },
 							ambiguity: 0.02,
@@ -398,16 +496,21 @@ describe("deep-interview workflow runtime", () => {
 			restated_goal: "Ship a safe workflow runtime.",
 			threshold: 0.05,
 			state: {
+				interview_id: "closure-test",
 				type: "greenfield",
 				topology: { components: [{ id: "core", name: "Core", status: "active" }] },
 				rounds: [
 					{
-						round_key: "r1",
+						round_key: deriveRoundKey("closure-test", { round: 1, questionId: "q1" }),
 						round: 1,
-						question_hash: "q",
-						answer_hash: "a",
+						question_id: "q1",
+						question_text: "What coverage is sufficient?",
+						question_hash: questionHash("What coverage is sufficient?"),
+						answer_hash: answerHash(undefined, "Use the current floor."),
+						custom_input: "Use the current floor.",
 						lifecycle: "scored",
-						answered_at: "now",
+						answered_at: "2026-01-01T00:00:00.000Z",
+						scored_at: "2026-01-01T00:00:01.000Z",
 						component: "core",
 						scores: { goal: 0.7, constraints: 0.8, criteria: 0.8 },
 						ambiguity: 0.1,

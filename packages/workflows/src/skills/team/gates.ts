@@ -10,6 +10,7 @@ import {
 	teamTaskGateArtifactPath,
 	teamTaskPath,
 } from "#workflows/session/session-layout";
+import { assertSafeId } from "#workflows/skills/team/ids";
 import { readTeamSnapshot, syncTeamState } from "#workflows/skills/team/state";
 import { appendTeamEvent, readJsonObject, readTeamConfig, resolveTeamId } from "#workflows/skills/team/store";
 import type {
@@ -20,7 +21,7 @@ import type {
 	TeamSnapshot,
 	TeamTask,
 } from "#workflows/skills/team/types";
-import { assertSafeId, parseTeamTask } from "#workflows/skills/team/validation";
+import { parseTeamTask } from "#workflows/skills/team/validation";
 import { nowIso, writeJsonAtomic } from "#workflows/state/state-writer";
 
 function parseRecorder(value: string): string {

@@ -21,26 +21,36 @@ export * from "#workflows/policy/skill-policy";
 export * from "#workflows/policy/vagueness-gate";
 export * from "#workflows/registry/workflow-manifest";
 export * from "#workflows/runtime/endpoint";
+export * from "#workflows/runtime/finalization";
 export * from "#workflows/runtime/gc";
 export * from "#workflows/runtime/lease";
 export * from "#workflows/runtime/lifecycle";
 export * from "#workflows/runtime/mutation";
-export * from "#workflows/runtime/operations";
 export * from "#workflows/runtime/owner";
 export * from "#workflows/runtime/preservation";
 export * from "#workflows/runtime/receipt-rules";
+export * from "#workflows/runtime/recovery";
+export * from "#workflows/runtime/recovery-policy";
 export * from "#workflows/runtime/rpc";
 export * from "#workflows/runtime/runner";
 export * from "#workflows/runtime/storage";
 export * from "#workflows/runtime/types";
+export * from "#workflows/runtime/validation";
 export * from "#workflows/runtime/vanish";
+export * from "#workflows/runtime/workspace-marker";
 export * from "#workflows/session/paths";
 export * from "#workflows/session/session-layout";
+export * from "#workflows/skills/deep-interview/closure";
+export * from "#workflows/skills/deep-interview/envelope";
 export { assertDeepInterviewHandoff, type DeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
+export * from "#workflows/skills/deep-interview/identity";
 export * from "#workflows/skills/deep-interview/mutation-guard";
-export * from "#workflows/skills/deep-interview/runtime";
-export * from "#workflows/skills/deep-interview/state";
+export * from "#workflows/skills/deep-interview/questions";
+export * from "#workflows/skills/deep-interview/rounds";
+export * from "#workflows/skills/deep-interview/spec";
 export * from "#workflows/skills/deep-interview/tools";
+export * from "#workflows/skills/deep-interview/transitions";
+export * from "#workflows/skills/deep-interview/types";
 export type { RalplanAgentRecord } from "#workflows/skills/ralplan/agent-record";
 export {
 	createRalplanAgentRequest,
@@ -106,10 +116,26 @@ export * from "#workflows/skills/team/task-mapper";
 export * from "#workflows/skills/team/tasks";
 export * from "#workflows/skills/team/types";
 export * from "#workflows/skills/ultragoal/artifacts";
+export {
+	checkpointUltragoalGoal,
+	restoreUltragoalCheckpoint,
+	type UltragoalCheckpointInput,
+} from "#workflows/skills/ultragoal/checkpoints";
 export * from "#workflows/skills/ultragoal/guard";
+export {
+	type RecordUltragoalObstacleInput,
+	recordUltragoalBlockerClassification,
+	recordUltragoalObstacle,
+} from "#workflows/skills/ultragoal/obstacle-service";
 export * from "#workflows/skills/ultragoal/obstacles";
-export * from "#workflows/skills/ultragoal/quality-gate";
-// Receipt module: avoid re-exporting requiredGoals (conflicts with runtime).
+export {
+	createUltragoalPlan,
+	getUltragoalStatus,
+	readUltragoalPlan,
+	startNextUltragoalGoal,
+} from "#workflows/skills/ultragoal/plan";
+export * from "#workflows/skills/ultragoal/quality-gate/types";
+export * from "#workflows/skills/ultragoal/quality-gate/validation";
 export {
 	buildCompletionReceipt,
 	chooseReceiptKind,
@@ -133,8 +159,12 @@ export {
 	type UltragoalReceiptKind,
 	validateCompletionReceipt,
 } from "#workflows/skills/ultragoal/receipt";
-export * from "#workflows/skills/ultragoal/runtime";
-// Runtime modules — re-export everything for external consumers
+export type {
+	UltragoalBlockerClassification,
+	UltragoalCheckpointSummary,
+	UltragoalStatus,
+} from "#workflows/skills/ultragoal/types";
+// Shared workflow-state SDK
 export * from "#workflows/state/active-state";
 export * from "#workflows/state/state-schema";
 export * from "#workflows/state/state-writer";

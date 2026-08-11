@@ -1,3 +1,5 @@
+import { requiredTrimmedString } from "#workflows/skills/team/fields";
+import { assertSafeId } from "#workflows/skills/team/ids";
 import type {
 	TeamCompletionEvidence,
 	TeamCompletionGate,
@@ -10,7 +12,6 @@ import type {
 	TeamTaskStatus,
 	TeamWorker,
 } from "#workflows/skills/team/types";
-import { nowIso } from "#workflows/state/state-writer";
 
 const TEAM_TASK_STATUSES = ["pending", "blocked", "in_progress", "completed", "failed"] as const;
 const TEAM_PHASES = ["starting", "running", "awaiting_integration", "complete", "failed", "cancelled"] as const;
@@ -19,24 +20,6 @@ const REVIEW_GATE_STATUSES = ["passed", "blocked", "retry_requested", "human_blo
 const REVIEW_SEVERITIES = ["none", "low", "medium", "high"] as const;
 const COMPLETION_SHIP_DECISIONS = ["ship", "ship_with_caveats", "blocked"] as const;
 const COMPLETION_ESCALATIONS = ["none", "retry", "human_blocked"] as const;
-
-export function assertSafeId(label: string, value: string): void {
-	if (!/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/.test(value) || value.includes("..")) {
-		throw new Error(`invalid ${label}: ${value}`);
-	}
-}
-
-export function slugifyTeamId(value: string): string {
-	const slug = value
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/-+/g, "-")
-		.replace(/^-|-$/g, "")
-		.slice(0, 40)
-		.replace(/-$/, "");
-	if (!slug) throw new Error("team task must contain characters usable in a team id");
-	return slug;
-}
 
 function isObject(value: unknown): value is Record<string, unknown> {
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -60,12 +43,6 @@ function optionalString(value: unknown, context: string): string | undefined {
 		throw new Error(`invalid persisted ${context}: expected a non-empty string`);
 	}
 	return value;
-}
-
-function requiredTrimmedString(value: unknown, context: string): string {
-	const result = requiredString(value, context);
-	if (result.trim() !== result) throw new Error(`invalid persisted ${context}: must not have surrounding whitespace`);
-	return result;
 }
 
 function requiredInteger(value: unknown, context: string, minimum = 0): number {
@@ -299,68 +276,7 @@ export function parseTeamConfig(raw: unknown, expectedTeamId?: string): TeamConf
 	};
 }
 
-function normalizeInputList(value: readonly string[] | undefined, context: string): string[] | undefined {
-	if (value === undefined) return undefined;
-	const items = value.map((item, index) => requiredTrimmedString(item, `${context}[${index}]`));
-	const unique = [...new Set(items)].sort();
-	return unique.length > 0 ? unique : undefined;
-}
-
-export function createTeamTaskRecord(input: {
-	id: string;
-	title: string;
-	description: string;
-	owner?: string;
-	depends_on?: readonly string[];
-	created_at: string;
-	updated_at: string;
-}): TeamTask {
-	assertSafeId("task_id", input.id);
-	const dependsOn = normalizeInputList(input.depends_on, "team task depends_on");
-	const title = requiredTrimmedString(input.title, "team task title");
-	if (!input.description.trim()) throw new Error("team task description must not be empty");
-	return {
-		id: input.id,
-		title,
-		description: input.description,
-		status: "pending",
-		...(input.owner !== undefined ? { owner: requiredTrimmedString(input.owner, "team task owner") } : {}),
-		...(dependsOn !== undefined ? { depends_on: dependsOn } : {}),
-		version: 1,
-		created_at: input.created_at,
-		updated_at: input.updated_at,
-	};
-}
-
 export function parseTeamTaskStatus(value: string): TeamTaskStatus {
 	if (TEAM_TASK_STATUSES.includes(value as TeamTaskStatus)) return value as TeamTaskStatus;
 	throw new Error(`invalid team task status: ${value}`);
-}
-
-export function createTeamCompletionEvidence(
-	taskId: string,
-	input: Omit<TeamCompletionEvidence, "recorded_at">,
-	recordedAt = nowIso(),
-): TeamCompletionEvidence {
-	const summary = input.summary.trim();
-	if (summary.length < 16) throw new Error(`invalid completion evidence for ${taskId}: summary is too short`);
-	const files = normalizeInputList(input.files, "completion evidence files");
-	const verification = normalizeInputList(input.verification, "completion evidence verification");
-	return {
-		summary,
-		...(files !== undefined ? { files } : {}),
-		...(verification !== undefined ? { verification } : {}),
-		recorded_by: requiredTrimmedString(input.recorded_by, "completion evidence recorded_by"),
-		recorded_at: recordedAt,
-	};
-}
-
-export function emptyTaskCounts(): Record<TeamTaskStatus, number> {
-	return { pending: 0, blocked: 0, in_progress: 0, completed: 0, failed: 0 };
-}
-
-export function countTeamTasks(tasks: readonly TeamTask[]): Record<TeamTaskStatus, number> {
-	const counts = emptyTaskCounts();
-	for (const task of tasks) counts[task.status] += 1;
-	return counts;
 }

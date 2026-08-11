@@ -5,9 +5,10 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
 import { mutateRuntimeSession } from "#workflows/runtime/mutation";
-import { buildClassificationInput, classifyRecovery } from "#workflows/runtime/operations";
 import { RuntimeOwner } from "#workflows/runtime/owner";
 import { isWorkflowRuntimeReceiptValid } from "#workflows/runtime/receipt-rules";
+import { buildClassificationInput } from "#workflows/runtime/recovery";
+import { classifyRecovery } from "#workflows/runtime/recovery-policy";
 import type { HarnessRpc, RpcStateSnapshot } from "#workflows/runtime/rpc";
 import {
 	readSessionState,

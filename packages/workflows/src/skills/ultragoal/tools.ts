@@ -2,7 +2,7 @@ import { parseThinkingLevel } from "@tsuuanmi/pi";
 import { type Static, Type } from "typebox";
 import { assertExpectedNextRole, assertNoGuardedSpawnOverrides } from "#workflows/policy/expected-next-role";
 import { nextRoleForSkill } from "#workflows/policy/skill-policy";
-import { getUltragoalStatus } from "#workflows/skills/ultragoal/runtime";
+import { getUltragoalStatus } from "#workflows/skills/ultragoal/plan";
 import type { WorkflowContext } from "#workflows/tool/context";
 import { workflowToolDetails } from "#workflows/tool/details";
 import type { WorkflowToolHost } from "#workflows/tool/host";

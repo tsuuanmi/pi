@@ -6,11 +6,8 @@
  * non-uniform imagery), automation transcripts (schema-versioned JSON with
  * monotonic timestamps), and PTY captures (terminal control sequences).
  *
- * Provides structural-validation behavior with Pi-native field names and
- * Node-only I/O. Acyclic module graph: this module is a leaf. It imports only
- * `node:fs/promises` and `node:zlib`. It MUST NOT
- * import `runtime.ts`, `quality-gate.ts`, or
- * `receipt.ts`.
+ * Provides structural validation with Pi-native field names and Node-only I/O.
+ * This leaf module does not import plan, quality-gate, receipt, or state services.
  *
  * Portability: use `node:fs/promises.readFile` + `node:zlib.inflateSync`
  * only. ENOENT is handled consistently with `state-writer.ts`'s

@@ -16,7 +16,7 @@ pi workflow ...
   -> workflow runtime/state/skill implementation
 ```
 
-Command handlers return a `WorkflowCommandResult` with an exit status and text output. They may route lifecycle operations to a live `RuntimeOwner` through workflow RPC or use a no-owner fallback, but they never create a tool call.
+Command handlers return a `WorkflowCommandResult` with an exit status and text output. Lifecycle mutations route to a live `RuntimeOwner` through workflow RPC; read-only inspection and explicitly leased recovery remain available without an owner. Commands never create tool calls.
 
 Some command actions and model-visible tools use the same lower-level skill functions. That shared implementation is the boundary: commands and tools do not call each other. For the complete surface comparison, see [Command and tool boundary](../workflow.md#command-and-tool-boundary).
 
@@ -27,7 +27,7 @@ Some command actions and model-visible tools use the same lower-level skill func
 | `workflow.ts` | Public workflow command entry and dispatcher adapter. |
 | `workflow/args.ts` | Shared parsing for `pi workflow ...` command arguments and structured input. |
 | `workflow/index.ts` | Public command dispatcher and package-command contract entry point. |
-| `workflow/runtime.ts` | Lifecycle, owner, primitive runtime, GC, event, and retire verb handlers. |
+| `workflow/runtime.ts` | Lifecycle, owner routing, explicit recovery, GC, event, and retire verb handlers. |
 | `workflow/skill-commands.ts` | Deep Interview, ralplan, team, and ultragoal skill command handlers. |
 | `workflow/state.ts` | `pi workflow state <skill> <read|write|clear|handoff|active|doctor>` implementation and state contract help. |
 | `workflow/types.ts` | Shared workflow command result type. |

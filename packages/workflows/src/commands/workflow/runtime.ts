@@ -13,12 +13,8 @@ import { collectGcReport, computeGcExitCode, gcPidProbe, HarnessLeasesGcStoreAda
 import { acquireLease, releaseLease } from "#workflows/runtime/lease";
 import { buildResponse, submitUnavailableReason } from "#workflows/runtime/lifecycle";
 import { mutateRuntimeSession } from "#workflows/runtime/mutation";
-import {
-	buildWorkspaceMarker,
-	classify as classifySession,
-	recover as recoverSession,
-} from "#workflows/runtime/operations";
 import { RuntimeOwner, resolveOwner } from "#workflows/runtime/owner";
+import { classify as classifySession, recover as recoverSession } from "#workflows/runtime/recovery";
 import { PiRpc } from "#workflows/runtime/rpc";
 import {
 	canonicalWorkspacePath,
@@ -35,6 +31,7 @@ import {
 	type SessionHandle,
 	type SessionState,
 } from "#workflows/runtime/types";
+import { buildWorkspaceMarker } from "#workflows/runtime/workspace-marker";
 
 function buildHandle(input: Record<string, unknown>, root: string, sessionId: string, now: string): SessionHandle {
 	const workspace = canonicalWorkspacePath(inputString(input, "workspace") ?? process.cwd());

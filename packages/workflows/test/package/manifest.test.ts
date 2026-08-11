@@ -42,8 +42,9 @@ describe("package manifest", () => {
 		expect((await readdir(resolve(root, "dist/agents"))).filter((name) => name.endsWith(".md"))).not.toHaveLength(0);
 	});
 
-	it("does not publish source-only package imports", async () => {
+	it("does not publish source-only or runtime implementation imports", async () => {
 		const source = await readFile(resolve(root, "package.json"), "utf8");
 		expect(source).not.toContain('"src/extension.ts"');
+		expect(source).not.toContain('"./runtime/*"');
 	});
 });

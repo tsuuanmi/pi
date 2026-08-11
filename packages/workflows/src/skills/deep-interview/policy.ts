@@ -1,17 +1,14 @@
 import type { SkillPolicy } from "#workflows/policy/skill-policy";
-import { runClosureCheckForSession } from "#workflows/skills/deep-interview/runtime";
+import { runClosureCheckForSession } from "#workflows/skills/deep-interview/closure";
 
 function hasPendingQuestion(state: unknown): boolean {
 	if (!state || typeof state !== "object" || Array.isArray(state)) return false;
 	const record = state as Record<string, unknown>;
-	if (record.has_pending_question === true || record.pending_question === true) return true;
-	const orchestration =
-		record.orchestration && typeof record.orchestration === "object" && !Array.isArray(record.orchestration)
-			? (record.orchestration as Record<string, unknown>)
-			: undefined;
-	if (orchestration?.status === "waiting_for_answer") return true;
-	const question = record.question ?? record.next_question ?? record.current_question;
-	return typeof question === "string" && question.trim().length > 0;
+	if (record.orchestration === undefined) return false;
+	if (!record.orchestration || typeof record.orchestration !== "object" || Array.isArray(record.orchestration)) {
+		throw new Error("deep-interview orchestration state must be an object");
+	}
+	return (record.orchestration as Record<string, unknown>).status === "waiting_for_answer";
 }
 
 export const deepInterviewPolicy = {

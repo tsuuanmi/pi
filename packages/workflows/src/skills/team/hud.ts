@@ -2,14 +2,7 @@ import type { HudSummary } from "@tsuuanmi/pi-tui";
 import { progressChip } from "@tsuuanmi/pi-tui";
 import type { TeamSnapshot } from "#workflows/skills/team/types";
 
-/**
- * Build the HUD summary for an active team run.
- *
- * Extracted mechanically from `runtime.ts` (behavior-preserving): the
- * `TeamSnapshot` type is imported type-only, so there is no runtime import
- * cycle. `new Date().toISOString()` is inlined (matching the original
- * `nowIso()`).
- */
+/** Build the HUD summary for an active Team run. */
 export function buildTeamHud(snapshot: TeamSnapshot): HudSummary {
 	return {
 		version: 1,

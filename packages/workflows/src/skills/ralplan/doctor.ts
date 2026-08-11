@@ -55,7 +55,6 @@ export async function doctorRalplan(cwd: string, sessionId: string, runId?: stri
 			warnings.push(
 				"pending approval but the latest critic verdict is ITERATE (not re-reviewed after last revision)",
 			);
-		// R-2 obstacle-ledger agreement warning (mirror of the approve dev-assert).
 		// Doctor surfaces divergence (including an empty ledger against a blocker
 		// verdict) as a warning rather than throwing.
 		const pass = latestCriticPass(status.rows);
@@ -63,9 +62,7 @@ export async function doctorRalplan(cwd: string, sessionId: string, runId?: stri
 			const ledger = await readRalplanObstacleLedger(cwd, status.run_id, sessionId);
 			if (ledger.obstacles.length === 0) {
 				if (pass.verdict === "reject" || pass.verdict === "iterate")
-					warnings.push(
-						`latest critic verdict is ${pass.verdict.toUpperCase()} but the obstacle ledger is empty (dual-write may have failed or run predates R-1)`,
-					);
+					warnings.push(`latest critic verdict is ${pass.verdict.toUpperCase()} but the obstacle ledger is empty`);
 			} else {
 				const agreement = criticObstacleAgreement(pass, ledger);
 				if (!agreement.agree) warnings.push(`critic/obstacle divergence: ${agreement.reason}`);

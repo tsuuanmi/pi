@@ -6,7 +6,7 @@ Session owner and primitive runtime shared by workflow command and tool adapters
 
 ## Overview
 
-The runtime owns workflow sessions, leases, RPC routing, fallback command execution, mutation receipts, state storage, preservation, GC, and finalization. Command adapters use it for the external control plane and owner/no-owner routing. Model-visible tools use shared workflow and skill runtime functions in-process; subagent spawns run through the main session's `SubagentManager` rather than through the detached runtime owner.
+The runtime owns workflow sessions, leases, RPC routing, mutation receipts, state storage, preservation, GC, recovery, validation, and finalization. Command adapters use it for the external control plane and explicit owner or recovery routing. Model-visible tools use shared workflow and skill runtime functions in-process; subagent spawns run through the main session's `SubagentManager` rather than through the detached runtime owner.
 
 ## Module Structure
 
@@ -14,23 +14,26 @@ The runtime owns workflow sessions, leases, RPC routing, fallback command execut
 |--------|-------------|
 | `endpoint.ts` | Runtime endpoint helpers. |
 | `gc.ts` | Liveness-only lease garbage collection. |
+| `finalization.ts` | Validation-gated workflow completion. |
 | `lease.ts` | Owner lease model and liveness classification. |
+| `lifecycle.ts` | Runtime lifecycle state and response helpers. |
 | `mutation.ts` | Runtime mutation path and receipt consistency guard. |
 | `owner.ts` | Detached runtime owner lifecycle. |
-| `preservation.ts` | State/artifact preservation helpers. |
-| `fallback-commands.ts` | No-owner fallback command implementations. |
+| `preservation.ts` | State and artifact preservation helpers. |
 | `receipt-rules.ts` | Receipt-family post-state consistency rules. |
+| `recovery-policy.ts` | Pure recovery classification and retry-budget policy. |
+| `recovery.ts` | Recovery context and action orchestration. |
 | `rpc.ts` | Runtime owner RPC client/server protocol. |
-| `runner.ts` | Runtime command runner helpers. |
-| `seams.ts` | Deferred-seam registry for designed-not-built extensions. |
-| `lifecycle.ts` | Runtime lifecycle state and response helpers. |
+| `runner.ts` | Owner-driven lifecycle loop. |
 | `storage.ts` | Runtime storage adapters and session paths. |
 | `types.ts` | Runtime command, receipt, and state types. |
-| `vanish.ts` | Session retire/vanish helpers. |
+| `validation.ts` | Validation command execution and receipt selection. |
+| `vanish.ts` | Session retire and vanish evidence helpers. |
+| `workspace-marker.ts` | Git workspace identity and delta classification. |
 
-## Owner vs Primitive Paths
+## Owner and Recovery Paths
 
-Most verbs route to a live runtime owner when one is running for the target session. If no owner is available, the command layer falls back to primitive implementations for inspection and safe progress/recovery so stale owners do not lock users out of state.
+Lifecycle mutations route to the live runtime owner. Read-only inspection remains available without an owner, while recovery explicitly acquires its own lease before changing state or restarting an owner. These are separate command paths rather than fallback implementations.
 
 ## See Also
 

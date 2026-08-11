@@ -4,18 +4,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
+import { preserveDirtyWorktree } from "#workflows/runtime/preservation";
+import { isWorkflowRuntimeReceiptValid } from "#workflows/runtime/receipt-rules";
+import { buildClassificationInput, recover as recoverSession } from "#workflows/runtime/recovery";
 import {
-	buildClassificationInput,
-	buildWorkspaceMarker,
 	type ClassificationInput,
 	classifyRecovery,
 	consumeBudget,
 	type RecoveryDecision,
-	recover as recoverSession,
-	validate,
-} from "#workflows/runtime/operations";
-import { preserveDirtyWorktree } from "#workflows/runtime/preservation";
-import { isWorkflowRuntimeReceiptValid } from "#workflows/runtime/receipt-rules";
+} from "#workflows/runtime/recovery-policy";
 import type { HarnessRpc, RpcStateSnapshot } from "#workflows/runtime/rpc";
 import { operate } from "#workflows/runtime/runner";
 import {
@@ -26,7 +23,9 @@ import {
 	writeSessionState,
 } from "#workflows/runtime/storage";
 import { SESSION_SCHEMA_VERSION, type SessionState } from "#workflows/runtime/types";
+import { validate } from "#workflows/runtime/validation";
 import { buildVanishEvidence, requiresVanishBeforeAction, validateVanish } from "#workflows/runtime/vanish";
+import { buildWorkspaceMarker } from "#workflows/runtime/workspace-marker";
 
 const WRITER = { ownerId: "test", leaseEpoch: 0 };
 

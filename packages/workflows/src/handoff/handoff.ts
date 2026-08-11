@@ -10,7 +10,7 @@ import {
 import { initialWorkflowPhase } from "#workflows/registry/workflow-manifest";
 import type { WorkflowSkill } from "#workflows/session/paths";
 import { workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
-import { assertRalplanObstacle, writeRalplanObstacle } from "#workflows/skills/ralplan/obstacles";
+import { writeRalplanObstacle } from "#workflows/skills/ralplan/obstacles";
 import { appendUltragoalObstacle } from "#workflows/skills/ultragoal/obstacles";
 import { applyHandoffToActiveState } from "#workflows/state/active-state";
 import { assertWorkflowSkill, type WorkflowStateEnvelope } from "#workflows/state/state-schema";
@@ -80,7 +80,6 @@ async function ingestObstacles(input: {
 	for (const obstacle of carried) {
 		const trigger = toObstacleTrigger(obstacle, input.callerSkill, originRef, input.nowIso);
 		if (input.calleeSkill === "ralplan") {
-			assertRalplanObstacle(trigger);
 			const runId = typeof input.calleePatch.run_id === "string" ? input.calleePatch.run_id : undefined;
 			if (!runId) throw new Error("ralplan handoff with carried obstacles requires run_id");
 			await writeRalplanObstacle(input.cwd, runId, input.sessionId, trigger);

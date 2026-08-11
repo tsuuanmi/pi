@@ -5,15 +5,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const sessionId = "test-session-id";
 
-/**
- * Phase R-1 dual-write integration: `writeRalplanArtifact` maps each parsed
- * critic/architect verdict to a typed obstacle and appends it to the per-run
- * ledger ALONGSIDE the durable index-row verdict. The artifact/index write path
- * is unchanged (fail-soft). The targeted approval gate (R-2 targeted) still
- * reads the verdict off the index row; this ledger is additive scaffolding for
- * R-2+ (authoritative obstacles).
- */
-describe("ralplan obstacle dual-write (R-1 integration)", () => {
+/** Artifact completion atomically persists each verdict and its obstacle projection. */
+describe("ralplan obstacle completion transaction", () => {
 	let cwd: string;
 
 	beforeEach(() => {
@@ -25,7 +18,7 @@ describe("ralplan obstacle dual-write (R-1 integration)", () => {
 		await rm(cwd, { recursive: true, force: true });
 	});
 
-	it("dual-writes a plan_rejected obstacle when a critic REJECT artifact is written", async () => {
+	it("persists a plan_rejected obstacle for a critic REJECT artifact", async () => {
 		const result = await writeRalplanArtifact(
 			cwd,
 			{ runId: "run-1", stage: "critic", stageN: 1, artifact: "## Verdict\nREJECT\n" },
@@ -39,7 +32,7 @@ describe("ralplan obstacle dual-write (R-1 integration)", () => {
 		expect(ledger.obstacles[0].status).toBe("active");
 	});
 
-	it("dual-writes a revision_required obstacle when a critic ITERATE artifact is written", async () => {
+	it("persists a revision_required obstacle for a critic ITERATE artifact", async () => {
 		const result = await writeRalplanArtifact(
 			cwd,
 			{ runId: "run-2", stage: "critic", stageN: 1, artifact: "## Verdict\nITERATE\n" },
@@ -51,7 +44,7 @@ describe("ralplan obstacle dual-write (R-1 integration)", () => {
 		expect(ledger.obstacles[0].kind).toBe("revision_required");
 	});
 
-	it("dual-writes an architect_block obstacle when an architect BLOCK artifact is written", async () => {
+	it("persists an architect_block obstacle for an architect BLOCK artifact", async () => {
 		const result = await writeRalplanArtifact(
 			cwd,
 			{
@@ -89,7 +82,7 @@ describe("ralplan obstacle dual-write (R-1 integration)", () => {
 		expect(ledger.obstacles).toEqual([]);
 	});
 
-	it("does NOT double-write on dedup (identical re-write is a no-op for the ledger too)", async () => {
+	it("does not append an obstacle when an identical artifact is deduplicated", async () => {
 		const artifact = "## Verdict\nREJECT\n";
 		const first = await writeRalplanArtifact(
 			cwd,
@@ -104,7 +97,6 @@ describe("ralplan obstacle dual-write (R-1 integration)", () => {
 		expect(second.deduplicated).toBe(true);
 		expect(second.path).toBe(first.path);
 		const ledger = await readRalplanObstacleLedger(cwd, "run-6", sessionId);
-		// Dedup returns before the dual-write block, so only the first write appended.
 		expect(ledger.obstacles).toHaveLength(1);
 	});
 

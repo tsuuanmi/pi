@@ -1,8 +1,9 @@
 import { readdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import { teamConfigPath, teamEventsPath, teamTaskPath } from "#workflows/session/session-layout";
+import { assertSafeId } from "#workflows/skills/team/ids";
 import type { TeamConfig, TeamTask } from "#workflows/skills/team/types";
-import { assertSafeId, parseTeamConfig, parseTeamTask } from "#workflows/skills/team/validation";
+import { parseTeamConfig, parseTeamTask } from "#workflows/skills/team/validation";
 import { appendJsonl, nowIso, readExistingStateForMutation } from "#workflows/state/state-writer";
 import { defaultWorkflowId, readWorkflowState } from "#workflows/state/workflow-state";
 

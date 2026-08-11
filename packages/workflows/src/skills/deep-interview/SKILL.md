@@ -62,15 +62,15 @@ Critical: before running any `pi workflow deep-interview <action>` command, read
 
 ## Tools
 
-Pi has no `ask` tool. Ask each question as a single prose message. For option-bearing questions, present a short numbered option list in the same message, plus "free text". Explain every option in simple terms (what it means, when it fits, and the main tradeoff), then mark **Recommended:** with the best option and a concise reason. After the user responds, record the round with `pi workflow deep-interview record-answer --input` using the current `sessionId` and the schema fields — `selectedOptions` for option picks, `customInput` for free text.
+Pi has no `ask` tool. Ask each question as a single prose message. For option-bearing questions, present a short numbered option list in the same message, plus "free text". Explain every option in simple terms (what it means, when it fits, and the main tradeoff), then mark **Recommended:** with the best option and a concise reason. Plan every question with an explicit `questionId` before asking it. After the user responds, record the round with the same `round`, `questionId`, and `questionText`; use `selectedOptions` for option picks and `customInput` for free text.
 
-- `pi workflow state` — read/write/clear deep-interview state (`skill: "deep-interview"`). Use `action: "write"` for initialization and envelope-level fields (`active`, `phase`, `restated_goal`, `closure_overrides`). Avoid `pi workflow state write` for mid-interview `state` patches: it shallow-merges `state` and can clobber `rounds`. Use the deep-interview runtime tools below for state-level updates — they merge safely. For the exact CLI/session/input split, see [State commands](../../state/commands.md).
+- `pi workflow state` — initialize, read, replace, clear, hand off, or diagnose Deep Interview envelope state. Initialization writes the complete canonical nested `state`; round-level mutations use the Deep Interview actions below.
 - `pi workflow deep-interview plan-question` — plan the next targeted question and mark the workflow `waiting_for_answer`.
-- `pi workflow deep-interview record-answer` — record/replace one answered round; accepts an optional `topology` to lock the Round 0 topology safely (merged, never clobbers `rounds`).
+- `pi workflow deep-interview record-answer` — record/replace the planned round identified by explicit `round`, `questionId`, and `questionText`; accepts an optional `topology` to lock the Round 0 topology.
 - `pi workflow deep-interview record-scoring` — enrich a round with per-dimension `scores`, `ambiguity`, `triggers`, and optional advisory `metadata` counters (merged safely). Invalid ambiguity-raising transitions are rejected.
 - `pi workflow deep-interview closure-check` — run the closure/acceptance guard against current state; returns `ok` plus blocking gaps. Run before crystallizing.
 - `pi workflow deep-interview restate-goal` — confirm the one-sentence restated goal after closure passes; `confirm: "Yes"` crystallizes, `"Adjust"`/`"Missing"` route back through scoring, capped at two loops. Enforces the restate gate and records overrides safely (never clobbers `rounds`).
-- `pi workflow deep-interview write-spec` — persist the final spec under `.pi/<session-id>/specs` and update state; optionally hand off to `ralplan`/`ultragoal`/`team` or `stop`.
+- `pi workflow deep-interview write-spec` — persist the final spec under `.pi/<session-id>/specs` using an explicit `slug` and `handoff`; a `ralplan` handoff also requires an explicit `runId`.
 - the `subagent_spawn` tool / `subagent_await` — read-only research, auto-research, auto-answer, and lateral-panel personas (see Internal Auto-Mode Protocol).
 
 ## Workflow
@@ -99,7 +99,7 @@ Read any `language` object from active deep-interview state and carry `language.
    - `data.state`:
      ```json
      {
-       "interview_id": "<uuid>",
+       "interview_id": "<current-session-id>",
        "type": "greenfield|brownfield",
        "initial_idea": "<prompt-safe summary or user input>",
        "initial_context_summary": "<summary if oversized, else null>",
@@ -108,8 +108,6 @@ Read any `language` object from active deep-interview state and carry `language.
        "rounds": [],
        "established_facts": [],
        "current_ambiguity": 1.0,
-       "threshold": 0.05,
-       "threshold_source": "default",
        "topology": { "status": "pending", "confirmed_at": null, "components": [], "deferrals": [], "last_targeted_component_id": null },
        "ontology_snapshots": [],
        "auto_researched_rounds": [],
@@ -163,7 +161,7 @@ Run exactly once after init and before any ambiguity scoring. Lock the **shape**
      "last_targeted_component_id": null
    }
    ```
-4. **Legacy migration:** when resuming a state that lacks `topology`, treat it as `"legacy_missing"`; if no final spec exists yet, run Round 0 before the next scoring pass.
+4. **Topology requirement:** reject resumed state that lacks `topology`; initialize Round 0 before any scoring pass.
 5. **Single-component pass-through:** if the user confirms one active component, proceed while still carrying `topology.components[0]` into scoring and spec output.
 6. **Multi-component fixture:** for an idea like "ingest CSVs, normalize records, provide a reviewer UI with inline comments/approvals, and export audit-ready reports", Round 0 must surface all four — `Ingestion`, `Normalization`, `Review UI`, `Export` — even though `Review UI` is the detailed one. The detailed component must not collapse or stand in for less-detailed siblings. Phase 2 must follow up until every active component has sufficient goal/constraint/criteria clarity.
 
@@ -197,7 +195,7 @@ If any prompt input is too large, summarize it first; never ask, score, or hand 
 
 #### Step 2a′: Auto-Research Greenfield Questions (optional)
 
-When the next question is for a greenfield interview and is research-oriented, spawn a read-only `architect` subagent (the `subagent_spawn` tool, agent `architect`) with only the tagged question, locked topology summary, prompt-safe initial idea, trimmed prior decisions/gaps, and relevant constraints. It must return 2–3 ranked candidates with rationale, confidence, and fallback notes. Validate the shape; if valid, fold the candidates as concise options/context for the single user-facing question and append the round number to `auto_researched_rounds`. On failure/invalid response, fall back silently to the normal generated question and increment `architect_failures`. Auto-research must never alter the one-question-per-round rule and never mutate code or `.pi/**`.
+When the next question is for a greenfield interview and is research-oriented, spawn a read-only `architect` subagent (the `subagent_spawn` tool, agent `architect`) with only the tagged question, locked topology summary, prompt-safe initial idea, trimmed prior decisions/gaps, and relevant constraints. It must return 2–3 ranked candidates with rationale, confidence, and limitations. Validate the shape; if valid, fold the candidates as concise options/context for the single user-facing question and append the round number to `auto_researched_rounds`. On failure or invalid output, increment `architect_failures`, record the blocked round, and stop before asking a question. Auto-research must never alter the one-question-per-round rule and never mutate code or `.pi/**`.
 
 #### Step 2b: Ask the question
 
@@ -319,7 +317,7 @@ A transition occurs whenever the band changes vs the prior scored round — in e
 
 **Ontology escalation:** if ambiguity stalls or stays > 0.30 after 8 rounds, instruct the panel (especially `contrarian` + `architect`) to ask "What IS this, really?" and identify the core entity vs supporting views from the latest ontology snapshot before returning to feature questions.
 
-**Bookkeeping:** record each convened panel in `lateral_reviews` (round, milestone transition or pre-answer trigger, personas dispatched, findings folded). On panel spawn/validation failure, fall back silently to the normal generated question and increment `lateral_panel_failures`; do not expose tool noise unless it changes the next user-facing question. Summarize oversized context before dispatch.
+**Bookkeeping:** record each convened panel in `lateral_reviews` (round, milestone transition or pre-answer trigger, personas dispatched, findings folded). On panel spawn or validation failure, increment `lateral_panel_failures`, record the blocked round, and stop before asking a question. Summarize oversized context before dispatch.
 
 ### Phase 4: Crystallize Spec
 
@@ -327,7 +325,7 @@ When ambiguity ≤ threshold (or hard cap / early exit), two gates must pass, in
 
 #### 4a. Closure / Acceptance Guard
 
-Even when ambiguity ≤ threshold, do not treat the math as completion. Run `pi workflow deep-interview closure-check`. It confirms every active topology component has goal/constraint/criteria coverage (+ context when brownfield), no unresolved or disputed trigger remains on a material path, and no low-confidence auto-answer stands in for user-confirmed truth above the clarity cap. If it refuses, explicitly override to the user — "The math says ready, but I am not accepting it yet because {gap}" — ask the single highest-impact follow-up, and return to Phase 2. Record any override in `closure_overrides` (envelope-level; safe via `pi workflow state write` with `data: { closure_overrides: [...] }`).
+Even when ambiguity ≤ threshold, do not treat the math as completion. Run `pi workflow deep-interview closure-check`. It confirms every active topology component has goal/constraint/criteria coverage (+ context when brownfield), no unresolved or disputed trigger remains on a material path, and no low-confidence auto-answer stands in for user-confirmed truth above the clarity cap. If it refuses, explicitly override to the user — "The math says ready, but I am not accepting it yet because {gap}" — ask the single highest-impact follow-up, and return to Phase 2. Record adjustments through `pi workflow deep-interview restate-goal`; that action owns `closure_overrides`.
 
 #### 4b. Restate gate
 
@@ -352,7 +350,7 @@ After the spec is written, mark it `pending approval` and present execution opti
 >
 > **Recommended:** **Refine with ralplan consensus** — it adds an independent feasibility check before any execution approval.
 
-On selection, hand off via `pi workflow deep-interview write-spec` with the matching `handoff` (`ralplan`/`ultragoal`/`team`), or `stop`. If oversized initial context was summarized, pass the spec and prompt-safe summary forward, not the raw oversized source. Implementation handoff defaults to ralplan; reserve team for when parallel workers are genuinely useful. The deep-interview agent is a requirements agent, not an execution agent — never implement directly.
+On selection, hand off via `pi workflow deep-interview write-spec` with the explicit matching `handoff` (`ralplan`/`ultragoal`/`team`), or `stop`; provide `runId` for Ralplan. If oversized initial context was summarized, pass the spec and prompt-safe summary forward, not the raw oversized source. Recommend Ralplan for implementation planning and reserve Team for genuinely parallel work, but never infer the selection. The deep-interview agent is a requirements agent, not an execution agent — never implement directly.
 
 **Approval-gated pipeline:** deep-interview (clarity gate) → ralplan (feasibility gate) → separate approval (consent gate). Skipping a stage is possible but reduces quality assurance.
 
@@ -360,8 +358,8 @@ On selection, hand off via `pi workflow deep-interview write-spec` with the matc
 
 - Auto-research (Step 2a′), auto-answer (Step 2b′), and the lateral-review panel (Phase 3) are internal, on-demand protocols using the `subagent_spawn` tool. They are never user-facing entrypoints, never slash-command/discoverable, and never mutate code or `.pi/**`.
 - Spawn only for the specific hook that needs them, with read-only context kept prompt-budgeted; summarize active interview context before spawning if the payload is large.
-- Validate every subagent response before using it: required sections present, candidates/answer match the requested shape, rationale cites available context, confidence explicit, insufficient-context fallbacks honored.
-- On spawn/validation failure, continue the normal manual interview path silently and increment `architect_failures` (auto-modes) or `lateral_panel_failures` (panel); do not expose tool noise unless it changes the next user-facing question.
+- Validate every subagent response before using it: required sections present, candidates or answers match the requested shape, rationale cites available context, confidence is explicit, and insufficient context is reported directly.
+- On spawn or validation failure, increment `architect_failures` (auto-modes) or `lateral_panel_failures` (panel), record the blocked round, and stop before asking a question.
 - Track `auto_researched_rounds`, `auto_answered_rounds`, `lateral_reviews`, `auto_answer_streak`, `refined_rounds`, `architect_failures`, and `lateral_panel_failures` via `pi workflow deep-interview record-scoring` `metadata`; surface them in the final spec metadata.
 
 ## Final Spec Shape
@@ -459,7 +457,7 @@ The spec file body is Markdown. Generate it as rendered Markdown (the file conte
 ## Session-Scoped Isolation
 
 - Deep Interview workflow state and specs are isolated per session. A fresh session sees an empty per-session bucket by construction — no state leaks from prior sessions.
-- Every skill action requires `sessionId` in its JSON payload. The separate state command accepts `--session <id>`; skill actions do not use `--session` or `PI_SESSION_ID` fallback, and there is no global `.pi/` fallback.
+- Every skill action requires `sessionId` in its JSON payload. The separate state command accepts `--session <id>`; skill actions do not read `--session`, `PI_SESSION_ID`, or a global `.pi/` root.
 
 ## Corrupt-State Recovery
 

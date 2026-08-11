@@ -121,7 +121,7 @@ test("buildCompletionReceipt then validateCompletionReceipt is verified (self-st
 	assert.strictEqual(receipt.goalSnapshotHash, hashStructuredValue(goalJson));
 	assert.strictEqual(receipt.qualityGateHash, hashStructuredValue(qualityGateJson));
 	// After checkpoint, the goal's status/updatedAt match the snapshot and the
-	// checkpoint event is in the ledger carrying the additive qualityGateJson/goalJson.
+	// checkpoint event is in the ledger carrying canonical qualityGateJson/goalJson.
 	const completedGoal: UltragoalGoal = {
 		...g1,
 		status: "complete",

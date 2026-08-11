@@ -6,10 +6,9 @@
  * current objective, and delegates receipt validation to the pure
  * `validateCompletionReceipt` in `receipt.ts`.
  *
- * Acyclic module graph: imports `validateCompletionReceipt` + `readUltragoalLedger`
- * from `receipt.ts` and `readUltragoalPlan` + `requiredGoals` from
- * `runtime.ts`. Runtime MUST NOT import this module (the runtime
- * enforces at the write boundary; the guard is advisory). No back-edge.
+ * Acyclic module graph: receipt validation and required-goal selection come
+ * from `receipt.ts`; plan reads come from `plan.ts`. Mutation services do not
+ * import this advisory guard, so there is no back-edge.
  *
  * `active_review_blocked_recorded` requires both an unresolved typed obstacle
  * and its active blocker-resolution goal. Missing or malformed state fails closed.
@@ -21,6 +20,7 @@ import {
 	type UltragoalObstacleLedger,
 	unresolvedUltragoalObstacles,
 } from "#workflows/skills/ultragoal/obstacles";
+import { readUltragoalPlan } from "#workflows/skills/ultragoal/plan";
 import {
 	readUltragoalLedger,
 	requiredGoals,
@@ -31,7 +31,6 @@ import {
 	type UltragoalReceiptKind,
 	validateCompletionReceipt,
 } from "#workflows/skills/ultragoal/receipt";
-import { readUltragoalPlan } from "#workflows/skills/ultragoal/runtime";
 
 export type UltragoalGuardState =
 	| "inactive"

@@ -7,17 +7,14 @@
  * snapshot exclusion, receipt construction, pure receipt validation, and the
  * net-new fail-closed ledger reader.
  *
- * Acyclic module graph contract:
- * - This module MUST NOT import `runtime.ts` or `guard.ts`.
- *   Runtime imports this module (`runtime -> receipt`); guard imports this module
- *   plus runtime (`guard -> receipt + runtime`). Receipt only depends on
- *   `shared/state/state-writer.ts`, `shared/session/paths.ts`, and `node:crypto` / `node:fs/promises`.
- * - Node-only APIs for portability.
+ * Acyclic module graph contract: receipt validation does not import plan,
+ * checkpoint, obstacle, guard, or quality-gate application services. It depends
+ * only on state/session persistence primitives and Node APIs.
  *
  * Receipt fields use Pi-native names: `goalMode`, `objective`,
  * `objectiveAliases`, `goalSnapshotHash`, and `goalJson`.
  *
- * The ledger `goal_checkpointed` event gains additive `qualityGateJson` +
+ * The ledger `goal_checkpointed` event carries canonical `qualityGateJson` and
  * `goalJson` fields so `validateCompletionReceipt` can re-hash and compare.
  */
 import { createHash, randomUUID } from "node:crypto";
@@ -110,8 +107,8 @@ export interface UltragoalCompletionVerification {
 
 /**
  * Ledger event row (JSONL). The index signature keeps it structurally compatible
- * with `Record<string, unknown>` so the runtime's `appendLedger` can pass through
- * additive `qualityGateJson` / `goalJson` fields without a dedicated write path.
+ * with `Record<string, unknown>` so event-specific evidence remains typed at
+ * each write site without duplicating the common ledger envelope.
  */
 export interface UltragoalLedgerEvent {
 	eventId?: string;
@@ -362,8 +359,8 @@ export function chooseReceiptKind(
  * Build a completion-verification receipt.
  *
  * `qualityGateJson` and `goalJson` are the validated typed quality-gate object
- * and the goal JSON that will be stored (additively) in the checkpoint ledger
- * event. Their content hashes are captured here so `validateCompletionReceipt`
+ * and the goal JSON stored in the checkpoint ledger event. Their content hashes
+ * are captured here so `validateCompletionReceipt`
  * can re-hash the stored event and detect drift.
  *
  * `excludeEventId = checkpointLedgerEventId` is passed so the receipt's own

@@ -20,7 +20,7 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 |--------|-------------|
 | `agent-adapter.ts` | Adapts Team role requests to the Pi-native agent interface. |
 | `checkpoint-store.ts` | Persists and validates session-scoped orchestrator checkpoints. |
-| `validation.ts` | Strictly parses persisted Team records and validates new task/evidence inputs. |
+| `validation.ts` | Strictly parses persisted Team configuration, tasks, gates, and execution state. |
 | `coordinator.ts` | Selects the legal role and submits its batch to the Orchestrator. |
 | `dependencies.ts` | Validates the durable task graph through Orchestrator primitives and admits ready tasks. |
 | `event-mapper.ts` | Maps Orchestrator `TaskQueueEvent` values to workflow-owned `TeamWorkflowEvent` projections. |
@@ -29,14 +29,18 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 | `execution-failure.ts` | Builds durable failed execution state. |
 | `execution-store.ts` | Persists task execution state. |
 | `execution.ts` | Runs Team role execution and applies success or failure outcomes. |
+| `fields.ts` | Shared strict field validators. |
 | `help.ts` | Command action descriptions, typed arguments, and help metadata. |
 | `gates.ts` | Records review/completion evidence and enforces gate-controlled transitions. |
 | `hud.ts` | HUD chip rendering for Team status. |
+| `ids.ts` | Safe identifier validation and Team slug generation. |
 | `messages.ts` | Persists Team mailbox messages. |
+| `metrics.ts` | Counts task states for snapshots and HUD state. |
 | `orchestrator-checkpoint.ts` | Serializes and validates Orchestrator checkpoint data. |
 | `orchestrator.ts` | Team integration with `@tsuuanmi/pi-orchestrator`. |
 | `receipt-mapper.ts` | Maps Orchestrator task receipts to Team receipt references. |
 | `receipt-store.ts` | Persists role receipts with idempotent keys. |
+| `records.ts` | Validates and creates new Team task and evidence records. |
 | `role-contract.ts` | Validates required reviewer/prover workflow evidence. |
 | `role-run-store.ts` | Persists failures and records for synthetic and concrete role runs. |
 | `role-tasks.ts` | Builds worker, reviewer, and prover task batches. |

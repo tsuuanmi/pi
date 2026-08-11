@@ -1,9 +1,4 @@
 import type { HudChip, HudSummary } from "@tsuuanmi/pi-tui";
-import { DEFAULT_DEEP_INTERVIEW_THRESHOLD } from "#workflows/skills/deep-interview/state";
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 function percent(value: number | undefined): string | undefined {
 	if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
@@ -14,79 +9,53 @@ function chip(label: string, value: string | undefined, priority: number): HudCh
 	return value ? { label, value, priority } : undefined;
 }
 
-function presentChips(chips: Array<HudChip | undefined>): HudChip[] {
+function present(chips: Array<HudChip | undefined>): HudChip[] {
 	return chips.filter((item): item is HudChip => item !== undefined);
-}
-
-function latestScoredAmbiguity(rounds: unknown): number | undefined {
-	if (!Array.isArray(rounds)) return undefined;
-	for (let index = rounds.length - 1; index >= 0; index--) {
-		const round = rounds[index];
-		if (isPlainObject(round) && round.lifecycle === "scored" && typeof round.ambiguity === "number") {
-			return round.ambiguity;
-		}
-	}
-	return undefined;
-}
-
-function weakestDimensionFromTopology(
-	topology: Record<string, unknown>,
-	targetComponent: string | undefined,
-): string | undefined {
-	if (!Array.isArray(topology.components)) return undefined;
-	const components = topology.components.filter(isPlainObject);
-	const dimensionOf = (component: Record<string, unknown>): string | undefined =>
-		typeof component.weakest_dimension === "string" && component.weakest_dimension.trim()
-			? component.weakest_dimension
-			: undefined;
-	if (targetComponent) {
-		const targeted = components.find((component) => component.id === targetComponent && dimensionOf(component));
-		if (targeted) return dimensionOf(targeted);
-	}
-	const active = components.find((component) => component.status !== "deferred" && dimensionOf(component));
-	if (active) return dimensionOf(active);
-	const any = components.find((component) => dimensionOf(component));
-	return any ? dimensionOf(any) : undefined;
 }
 
 export function deriveDeepInterviewHud(
 	payload: Record<string, unknown>,
 	options: { phase?: string; specStatus?: string; updatedAt?: string } = {},
 ): HudSummary {
-	const state = isPlainObject(payload.state) ? payload.state : {};
-	const pickNumber = (key: string): number | undefined => {
-		const value = state[key] ?? payload[key];
-		return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-	};
-	const phase = options.phase ?? (typeof payload.current_phase === "string" ? payload.current_phase : undefined);
-	const rounds = Array.isArray(state.rounds)
-		? state.rounds
-		: Array.isArray(payload.rounds)
-			? payload.rounds
+	if (!payload.state || typeof payload.state !== "object" || Array.isArray(payload.state)) {
+		throw new Error("deep-interview HUD requires an object state");
+	}
+	const state = payload.state as Record<string, unknown>;
+	if (!Array.isArray(state.rounds)) {
+		throw new Error("deep-interview HUD requires state.rounds to be an array");
+	}
+	const rounds = state.rounds as Array<Record<string, unknown>>;
+	if (
+		state.current_ambiguity !== undefined &&
+		(typeof state.current_ambiguity !== "number" || !Number.isFinite(state.current_ambiguity))
+	) {
+		throw new Error("deep-interview HUD current ambiguity must be finite");
+	}
+	if (typeof payload.threshold !== "number" || !Number.isFinite(payload.threshold)) {
+		throw new Error("deep-interview HUD threshold must be finite");
+	}
+	const ambiguity = state.current_ambiguity as number | undefined;
+	const threshold = payload.threshold;
+	const topology =
+		state.topology && typeof state.topology === "object" && !Array.isArray(state.topology)
+			? (state.topology as Record<string, unknown>)
 			: undefined;
-	const ambiguity = pickNumber("current_ambiguity") ?? latestScoredAmbiguity(rounds);
-	const threshold = pickNumber("threshold") ?? DEFAULT_DEEP_INTERVIEW_THRESHOLD;
-	const rawTopology = isPlainObject(state.topology)
-		? state.topology
-		: isPlainObject(payload.topology)
-			? payload.topology
-			: undefined;
-	const topology = rawTopology && rawTopology.status !== "legacy_missing" ? rawTopology : undefined;
-	const targetComponent =
+	const target =
 		topology && typeof topology.last_targeted_component_id === "string"
 			? topology.last_targeted_component_id
 			: undefined;
-	const weakestDimension = topology ? weakestDimensionFromTopology(topology, targetComponent) : undefined;
-	const specStatus = options.specStatus ?? (typeof payload.spec_status === "string" ? payload.spec_status : undefined);
 	return {
 		version: 1,
-		chips: presentChips([
-			chip("phase", phase, 10),
+		chips: present([
+			chip(
+				"phase",
+				options.phase ?? (typeof payload.current_phase === "string" ? payload.current_phase : undefined),
+				10,
+			),
 			chip("ambiguity", [percent(ambiguity), percent(threshold)].filter(Boolean).join("/"), 20),
-			chip("round", rounds ? String(rounds.length) : undefined, 30),
-			chip("target", targetComponent, 40),
-			chip("weakest", weakestDimension, 50),
-			chip("spec", specStatus, 60),
+			chip("round", String(rounds.length), 30),
+			chip("target", target, 40),
+			chip("spec", options.specStatus, 60),
 		]),
 		updated_at: options.updatedAt ?? new Date().toISOString(),
 	};

@@ -1,13 +1,7 @@
 import { type HudSummary, hudChip, progressChip } from "@tsuuanmi/pi-tui";
 import type { RalplanStatus } from "#workflows/skills/ralplan/types";
 
-/**
- * Build the HUD summary for an active ralplan run.
- *
- * Extracted mechanically from `runtime.ts` (behavior-preserving): the
- * `RalplanStatus` type is imported type-only, so there is no runtime import
- * cycle. `new Date().toISOString()` is inlined (matching the original).
- */
+/** Build the HUD summary for an active Ralplan run. */
 export function buildRalplanHud(status: RalplanStatus): HudSummary {
 	const stage =
 		status.latest?.stage ??

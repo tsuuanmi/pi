@@ -114,7 +114,7 @@ export function ralplanCompletionLockPath(cwd: string, runId: string, sessionId:
 	return join(ralplanRunDir(cwd, runId, sessionId), ".completion.lock");
 }
 
-/** Per-run ralplan obstacle ledger (Phase R-1). Run-scoped: each run's critic/architect obstacles live beside its index. */
+/** Per-run Ralplan obstacle ledger stored beside the run index. */
 export function ralplanObstacleLedgerPath(cwd: string, runId: string, sessionId: string): string {
 	return join(ralplanRunDir(cwd, runId, sessionId), "obstacles.json");
 }

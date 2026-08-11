@@ -5,13 +5,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const sessionId = "test-session-id";
 
-/**
- * R-1 prerequisite integration: writing a critic/architect artifact parses the
- * verdict onto the durable index row (and the write result); planner and
- * verdict-less critic artifacts stay undefined (fail-open). Dedup preserves
- * the verdict from the first write.
- */
-describe("ralplan writeRalplanArtifact — verdict wiring (R-1 prereq)", () => {
+/** Artifact completion persists explicit verdict evidence on the durable index row. */
+describe("ralplan artifact verdict persistence", () => {
 	let cwd: string;
 
 	beforeEach(() => {

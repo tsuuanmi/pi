@@ -1,27 +1,10 @@
 /**
- * Ralplan typed-obstacle ledger (Phase R-1, additive dual-write).
+ * Ralplan typed-obstacle model and durable per-run ledger.
  *
- * Ships the ralplan obstacle kinds, the ralplan skill validator, a per-run
- * obstacle ledger (`<run-dir>/obstacles.json`), and the verdict->obstacle
- * mapping. `writeRalplanArtifact` (in `runtime.ts`) is the dual-write
- * that maps each parsed critic/architect verdict to an obstacle and appends it
- * ALONGSIDE the durable index-row verdict (the R-1 prerequisite). Nothing here
- * is read by the approval/doctor path yet (that is R-2 onward), so existing
- * behavior and tests are unaffected.
- *
- * The integrity wall (`validateObstacles`, from `shared/audit/decision-ledger.ts`)
- * gates every insert. All ralplan kinds are qualitative (`needsRegression:
- * false`), so the wall skips the regression-metrics requirement and runs only
- * the ralplan skill validator: the kind must be known, and ref-citing kinds
- * (`plan_rejected`/`scope_drift`/`contract_contradiction`) must cite a `planRef`.
- * The full "the cited defect must exist and be quotable in the artifact" check
- * (the design's `ctx.indexHas`/`ctx.artifactContains`) is an R-2+ concern; it is
- * intentionally NOT enforced here, mirroring the B-0 subset-validator approach.
- *
- * Acyclic module graph: this is a LEAF module. It imports only
- * `shared/audit/decision-ledger.ts`, `shared/session/session-layout.ts`, `shared/state/state-writer.ts`,
- * its sibling `verdicts.ts` (a pure leaf), and node built-ins. It MUST
- * NOT import `runtime.ts` (runtime imports this module, not the reverse).
+ * Artifact completion maps architect and critic verdicts to validated obstacles
+ * inside the completion transaction. Approval, doctor, and orchestration reads
+ * consume the same authoritative ledger. This leaf depends only on audit,
+ * session, state-writer, verdict, and Node primitives.
  */
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -59,16 +42,7 @@ export const RALPLAN_OBSTACLE_KINDS: ObstacleKindRegistry = {
 /** Kinds that must cite a stage artifact via `scope.planRef`. */
 const REF_KINDS = new Set(["plan_rejected", "scope_drift", "contract_contradiction"]);
 
-/**
- * Ralplan skill validator (Phase R-1 subset, no context provider). Enforces the
- * structural invariants that need no index/artifact reads:
- *   - the kind must be a known ralplan kind
- *   - ref-citing kinds must carry a `scope.planRef`
- *
- * The "cited stage artifact exists and quotes the finding" check (the design's
- * `ctx.indexHas`/`ctx.artifactContains`) is R-2+, wired once obstacles become
- * authoritative; intentionally NOT enforced here.
- */
+/** Validate the skill-owned obstacle kind and required artifact reference. */
 export const ralplanObstacleValidator: ObstacleValidator<void> = {
 	validateActive(obstacle: ObstacleInput): ObstacleViolation[] {
 		const violations: ObstacleViolation[] = [];
@@ -80,17 +54,12 @@ export const ralplanObstacleValidator: ObstacleValidator<void> = {
 	},
 };
 
-/** On-disk ledger shape. `facts` is added in R-4 (cross-skill contract). */
+/** On-disk obstacle-ledger shape. */
 export interface RalplanObstacleLedger {
 	obstacles: ObstacleTrigger[];
 }
 
-/**
- * Read the per-run ralplan obstacle ledger. Missing file -> empty ledger. A
- * present but malformed file also yields an empty ledger rather than throwing,
- * so a corrupt obstacle ledger can never block the existing write/approval
- * path (R-1 keeps those paths unchanged).
- */
+/** Read the per-run obstacle ledger. Missing state is empty; malformed state fails closed. */
 export async function readRalplanObstacleLedger(
 	cwd: string,
 	runId: string,
@@ -109,12 +78,17 @@ export async function readRalplanObstacleLedger(
 	try {
 		parsed = JSON.parse(raw);
 	} catch {
-		return { obstacles: [] };
+		throw new Error("invalid ralplan obstacle ledger: malformed JSON");
 	}
-	if (!parsed || typeof parsed !== "object" || !Array.isArray((parsed as { obstacles?: unknown }).obstacles)) {
-		return { obstacles: [] };
+	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+		throw new Error("invalid ralplan obstacle ledger: expected an object");
 	}
-	return { obstacles: (parsed as RalplanObstacleLedger).obstacles };
+	const obstacles = (parsed as { obstacles?: unknown }).obstacles;
+	if (!Array.isArray(obstacles)) {
+		throw new Error("invalid ralplan obstacle ledger: obstacles must be an array");
+	}
+	for (const obstacle of obstacles) assertStoredRalplanObstacle(obstacle);
+	return { obstacles };
 }
 
 /** Input to build a durable ralplan obstacle record. */
@@ -182,24 +156,42 @@ export function assertRalplanObstacle(obstacle: ObstacleInput): void {
 	}
 }
 
-/** Write-only append of an already-validated obstacle (no re-validation). */
+const OBSTACLE_STATUSES = new Set<ObstacleStatus>(["active", "disputed", "unresolved", "resolved"]);
+const OBSTACLE_ORIGIN_SKILLS = new Set(["deep-interview", "ralplan", "team", "ultragoal"]);
+
+function assertStoredRalplanObstacle(value: unknown): asserts value is ObstacleTrigger {
+	if (!value || typeof value !== "object" || Array.isArray(value)) {
+		throw new Error("invalid ralplan obstacle ledger: obstacle must be an object");
+	}
+	const obstacle = value as Partial<ObstacleTrigger>;
+	for (const field of ["id", "kind", "name", "originRef", "createdAt"] as const) {
+		if (typeof obstacle[field] !== "string" || obstacle[field].trim().length === 0) {
+			throw new Error(`invalid ralplan obstacle ledger: obstacle.${field} is required`);
+		}
+	}
+	if (!obstacle.originSkill || !OBSTACLE_ORIGIN_SKILLS.has(obstacle.originSkill)) {
+		throw new Error("invalid ralplan obstacle ledger: obstacle.originSkill is invalid");
+	}
+	if (!obstacle.status || !OBSTACLE_STATUSES.has(obstacle.status)) {
+		throw new Error("invalid ralplan obstacle ledger: obstacle.status is invalid");
+	}
+	assertRalplanObstacle(obstacle as ObstacleTrigger);
+}
+
+/** Validate and append one persisted obstacle. */
 export async function writeRalplanObstacle(
 	cwd: string,
 	runId: string,
 	sessionId: string,
 	obstacle: ObstacleTrigger,
 ): Promise<void> {
+	assertStoredRalplanObstacle(obstacle);
 	const ledger = await readRalplanObstacleLedger(cwd, runId, sessionId);
 	ledger.obstacles.push(obstacle);
 	await writeJsonAtomic(ralplanObstacleLedgerPath(cwd, runId, sessionId), { obstacles: ledger.obstacles }, { cwd });
 }
 
-/**
- * The integrity-gated insert: build + validate + append. Throws on violation
- * (the wall). Returns the new obstacle. Callers that go through the
- * `writeRalplanArtifact` dual-write instead get the fail-soft path (see
- * `runtime.ts`).
- */
+/** Build, validate, and append one obstacle; integrity violations fail closed. */
 export async function appendRalplanObstacle(
 	cwd: string,
 	runId: string,
@@ -208,7 +200,6 @@ export async function appendRalplanObstacle(
 	now: string,
 ): Promise<ObstacleTrigger> {
 	const obstacle = buildRalplanObstacle(input, now);
-	assertRalplanObstacle(obstacle);
 	await writeRalplanObstacle(cwd, runId, sessionId, obstacle);
 	return obstacle;
 }
@@ -255,12 +246,7 @@ export function ralplanObstacleFromVerdict(
 	);
 }
 
-/**
- * Closure query (R-2 will wire this into the approval/doctor path). Returns
- * obstacles that are NOT resolved, optionally filtered by scope. A resolved
- * obstacle never blocks. This is the ralplan analogue of deep-interview's
- * closure-guard query and ultragoal's `unresolvedUltragoalObstacles`.
- */
+/** Return unresolved obstacles, optionally restricted to one artifact scope. */
 export function unresolvedRalplanObstacles(
 	ledger: RalplanObstacleLedger,
 	filter?: { scope?: Partial<NonNullable<ObstacleInput["scope"]>> },

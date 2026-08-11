@@ -18,13 +18,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const sessionId = "test-session-id";
 
-/**
- * Phase R-1 unit tests for the ralplan obstacle leaf module: kind registry,
- * skill validator (subset), verdict->obstacle mapping, ledger I/O, and the
- * closure query. The dual-write integration with `writeRalplanArtifact` lives in
- * `ralplan-obstacles-dualwrite.test.ts`.
- */
-describe("ralplan obstacles (R-1)", () => {
+/** Ralplan obstacle model, validation, persistence, and closure queries. */
+describe("ralplan obstacles", () => {
 	let cwd: string;
 
 	beforeEach(() => {
@@ -47,7 +42,7 @@ describe("ralplan obstacles (R-1)", () => {
 		});
 	});
 
-	describe("skill validator (R-1 subset)", () => {
+	describe("skill validator", () => {
 		it("rejects an unknown kind", () => {
 			const v = ralplanObstacleValidator.validateActive?.({ kind: "bogus", status: "active" });
 			expect(v).toContainEqual(expect.objectContaining({ code: "unknown_kind", kind: "bogus" }));
@@ -196,16 +191,17 @@ describe("ralplan obstacles (R-1)", () => {
 			expect(unresolvedRalplanObstacles(ledger)).toHaveLength(1);
 		});
 
-		it("a malformed ledger reads back empty (fail-soft, never blocks)", async () => {
+		it("rejects malformed ledger state", async () => {
 			const { writeFile, mkdir } = await import("node:fs/promises");
 			const { ralplanObstacleLedgerPath } = await import("@tsuuanmi/pi-workflows");
 			await mkdir(join(cwd, ".pi/test-session-id/plans/ralplan/run-1"), { recursive: true });
 			await writeFile(ralplanObstacleLedgerPath(cwd, "run-1", sessionId), "{not json", "utf8");
-			const ledger = await readRalplanObstacleLedger(cwd, "run-1", sessionId);
-			expect(ledger.obstacles).toEqual([]);
+			await expect(readRalplanObstacleLedger(cwd, "run-1", sessionId)).rejects.toThrow(
+				"invalid ralplan obstacle ledger: malformed JSON",
+			);
 		});
 
-		it("writeRalplanObstacle appends without re-validating and preserves prior entries", async () => {
+		it("writeRalplanObstacle validates and preserves prior entries", async () => {
 			const now = "2026-01-01T00:00:00.000Z";
 			const a = buildRalplanObstacle(
 				{ kind: "plan_rejected", name: "r1", status: "active", scope: { planRef: "p1" }, originRef: "p1" },

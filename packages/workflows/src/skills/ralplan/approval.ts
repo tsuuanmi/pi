@@ -34,12 +34,9 @@ export function latestCriticVerdict(rows: readonly RalplanIndexRow[]): RalplanCr
 }
 
 /**
- * Phase R-2 agreement check: does the obstacle ledger reflect the latest critic
- * verdict for the latest critic pass? Scoped to the latest pass's artifact
- * (`scope.planRef`) so stale active obstacles from EARLIER revision passes (R-1
- * never resolves obstacles) do not read as divergence. By construction R-1 writes
- * exactly the right obstacle (or none for APPROVE), so disagreement means a
- * dual-write bug or a corrupt ledger.
+ * Verify that the latest critic verdict and its unresolved obstacle projection
+ * agree for the same artifact. Divergence indicates inconsistent persisted
+ * evidence and fails approval closed.
  */
 export function criticObstacleAgreement(
 	pass: { verdict: RalplanCriticVerdictKind; planRef: string },

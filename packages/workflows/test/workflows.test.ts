@@ -120,6 +120,18 @@ describe("workflow runtime", () => {
 	});
 
 	it("dispatches active workflow commands through the built pi CLI", async () => {
+		await writeWorkflowState(
+			cwd,
+			"deep-interview",
+			{
+				active: true,
+				current_phase: "interviewing",
+				threshold: 0.05,
+				state: { interview_id: "cli-pipeline", rounds: [], established_facts: [] },
+			},
+			"pi test setup",
+			{ sessionId: "cli-pipeline" },
+		);
 		const result = await runBuiltPiWorkflow(
 			[
 				"deep-interview",
@@ -136,7 +148,8 @@ describe("workflow runtime", () => {
 			body?: { ok?: boolean; gaps?: string[] };
 		};
 		expect(json.ok).toBe(true);
-		expect(json.body).toEqual({ ok: true, gaps: [] });
+		expect(json.body?.ok).toBe(false);
+		expect(json.body?.gaps).not.toHaveLength(0);
 	});
 
 	it("prints detailed workflow help", async () => {
@@ -193,18 +206,34 @@ describe("workflow runtime", () => {
 	});
 
 	it("supports file-backed input for workflow verbs", async () => {
+		await writeWorkflowState(
+			cwd,
+			"deep-interview",
+			{
+				active: true,
+				current_phase: "interviewing",
+				threshold: 0.05,
+				state: { interview_id: "file-input-test", rounds: [], established_facts: [] },
+			},
+			"pi test setup",
+			{ sessionId },
+		);
 		const inputPath = join(cwd, "payload.json");
-		await writeFile(inputPath, JSON.stringify({ sessionId }), "utf8");
+		await writeFile(
+			inputPath,
+			JSON.stringify({ sessionId, round: 1, questionId: "q1", questionText: "What should ship?" }),
+			"utf8",
+		);
 
 		const relative = await runWorkflowCommand(
-			["deep-interview", "closure-check", "--input-file", "payload.json", "--json"],
+			["deep-interview", "plan-question", "--input-file", "payload.json", "--json"],
 			cwd,
 		);
 		expect(relative.status).toBe(0);
 		expect(JSON.parse(relative.stdout)).toMatchObject({ ok: true });
 
 		const absolute = await runWorkflowCommand(
-			["deep-interview", "closure-check", "--input-file", inputPath, "--json"],
+			["deep-interview", "plan-question", "--input-file", inputPath, "--json"],
 			cwd,
 		);
 		expect(absolute.status).toBe(0);

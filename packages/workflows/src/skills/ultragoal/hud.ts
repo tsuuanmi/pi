@@ -1,11 +1,7 @@
 import { type HudSummary, hudChip, progressChip } from "@tsuuanmi/pi-tui";
-import type { UltragoalStatus } from "#workflows/skills/ultragoal/runtime";
+import type { UltragoalStatus } from "#workflows/skills/ultragoal/types";
 
-/**
- * Remaining (non-terminal) goal count: pending + active + failed + blocked +
- * review_blocked. Moved here from `runtime.ts` because it is only used
- * by `buildUltragoalHud`.
- */
+/** Remaining goals across every non-terminal status. */
 function remainingGoalCount(status: UltragoalStatus): number {
 	return (
 		status.counts.pending +
@@ -16,14 +12,7 @@ function remainingGoalCount(status: UltragoalStatus): number {
 	);
 }
 
-/**
- * Build the HUD summary for an active ultragoal run.
- *
- * Extracted mechanically from `runtime.ts` (behavior-preserving): the
- * `UltragoalStatus` type is imported type-only, so there is no runtime import
- * cycle. `new Date().toISOString()` is inlined (matching the original
- * `nowIso()`).
- */
+/** Build the HUD summary for an active Ultragoal run. */
 export function buildUltragoalHud(status: UltragoalStatus): HudSummary {
 	return {
 		version: 1,

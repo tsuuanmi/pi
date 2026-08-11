@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { ControlServer, type EndpointRequest } from "#workflows/runtime/endpoint";
+import { finalize } from "#workflows/runtime/finalization";
 import {
 	acquireLease,
 	canWriteEvents,
@@ -15,7 +16,7 @@ import {
 	nextAllowedActions,
 	submitUnavailableReason,
 } from "#workflows/runtime/lifecycle";
-import { buildClassificationInput, classify, finalize, recover, validate } from "#workflows/runtime/operations";
+import { buildClassificationInput, classify, recover } from "#workflows/runtime/recovery";
 import { type HarnessRpc, singleFlightAccept } from "#workflows/runtime/rpc";
 import { operate } from "#workflows/runtime/runner";
 import {
@@ -27,6 +28,7 @@ import {
 	writeSessionState,
 } from "#workflows/runtime/storage";
 import type { Observation, PrimitiveResponse, SessionState } from "#workflows/runtime/types";
+import { validate } from "#workflows/runtime/validation";
 
 const DEFAULT_TTL_MS = 30_000;
 const DEFAULT_HEARTBEAT_MS = 10_000;

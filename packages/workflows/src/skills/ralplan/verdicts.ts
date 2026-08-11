@@ -1,20 +1,11 @@
 /**
- * Ralplan verdict parsing — R-1 prerequisite.
+ * Structured Ralplan verdict parsing.
  *
- * Critic and architect role agents are prompted to emit a concise verdict in
- * their persisted artifact:
- *   - critic:     APPROVE | ITERATE | REJECT
- *   - architect:  CLEAR | WATCH | BLOCK, plus APPROVE | COMMENT | REQUEST CHANGES
- *
- * The runtime never parsed these — the verdicts lived only in role text. R-1
- * dual-writes typed obstacles from them, so we need a structured verdict first.
- *
- * The parser is FAIL-OPEN and PRECISION-BIASED: it never throws, and when it
- * cannot confidently identify the verdict it returns `undefined`. A false
- * negative (missed verdict) is safe — R-1 simply won't dual-write an obstacle;
- * a false positive (wrong verdict) could create a wrong obstacle, so the parser
- * biases toward precision. It is a pure leaf module with no harness
- * dependencies so it can be unit-tested in isolation.
+ * Critic and architect artifacts carry explicit verdict labels. Artifact
+ * completion persists the parsed verdict and its obstacle projection in one
+ * transaction. Missing or ambiguous labels return `undefined`; workflow policy
+ * treats that as unavailable evidence rather than inferring approval. This is a
+ * pure leaf module with no harness dependencies.
  */
 
 export type RalplanCriticVerdictKind = "approve" | "iterate" | "reject";

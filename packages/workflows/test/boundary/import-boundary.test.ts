@@ -22,6 +22,10 @@ async function listTypeScriptFiles(dir: string): Promise<string[]> {
 	return files.flat();
 }
 
+function importedModules(source: string): string[] {
+	return [...source.matchAll(/from\s+["']([^"']+)["']/g)].map((match) => match[1]);
+}
+
 describe("workflow package import boundary", () => {
 	it("imports only the public Pi package boundary", async () => {
 		const files = await listTypeScriptFiles(workflowsSrc);
@@ -79,6 +83,36 @@ describe("workflow package import boundary", () => {
 		expect(source).not.toMatch(
 			/\.(spawn|resume|steer|pause|cancel|read|list|waitFor|inspect|attach|kill|dispose)\s*\(/,
 		);
+	});
+
+	it("keeps runtime policy and Ultragoal validation free of state mutation dependencies", async () => {
+		const policySource = await readFile(join(workflowsSrc, "runtime/recovery-policy.ts"), "utf8");
+		expect(importedModules(policySource)).not.toEqual(
+			expect.arrayContaining([
+				"#workflows/runtime/mutation",
+				"#workflows/runtime/storage",
+				"#workflows/runtime/owner",
+			]),
+		);
+
+		const qualityGateFiles = await listTypeScriptFiles(join(workflowsSrc, "skills/ultragoal/quality-gate"));
+		const forbiddenPrefixes = [
+			"#workflows/state/",
+			"#workflows/skills/ultragoal/checkpoints",
+			"#workflows/skills/ultragoal/obstacle-service",
+			"#workflows/skills/ultragoal/plan",
+			"#workflows/skills/ultragoal/plan-store",
+		];
+		const offenders: string[] = [];
+		for (const file of qualityGateFiles) {
+			const source = await readFile(file, "utf8");
+			for (const target of importedModules(source)) {
+				if (forbiddenPrefixes.some((prefix) => target.startsWith(prefix))) {
+					offenders.push(`${file.replace(`${repoRoot}/`, "")}: ${target}`);
+				}
+			}
+		}
+		expect(offenders).toEqual([]);
 	});
 
 	it("passes the package and semantic boundary checker", async () => {

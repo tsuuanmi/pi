@@ -1,23 +1,10 @@
 /**
- * Shared decision-ledger primitives: the integrity wall behind deep-interview's
- * bidirectional ambiguity scoring, generalized so other workflow skills
- * (ralplan, ultragoal) can adopt the same guarantees:
+ * Shared typed-obstacle integrity primitives.
  *
- *   - disputed / unresolved obstacles must carry a non-empty rationale
- *   - resolved obstacles are always accepted
- *   - active obstacles must prove a real regression (a metric moved the wrong
- *     way, or a weak metric failed to improve), then the skill validator adds
- *     its own checks
- *
- * Phase A scope: deep-interview's `validateDeepInterviewScoredTransition`
- * delegates its active-trigger checks to `validateObstacles` via an adapter,
- * preserving exact behavior and message strings. No storage or ledger is
- * introduced yet (Tier 1 per-skill ledger and Tier 2 cross-skill contract
- * ledger are later phases).
- *
- * This module is deliberately standalone: it imports nothing from any skill so
- * it cannot form an import cycle with `deep-interview/` (which already imports
- * from `shared/`).
+ * Disputed and unresolved obstacles require rationale, resolved obstacles are
+ * terminal, and active obstacles prove a measurable regression before a
+ * skill-owned validator applies domain rules. This module imports no skill code,
+ * keeping per-skill obstacle ledgers acyclic.
  */
 
 /** Lifecycle of a typed obstacle. `resolved` is the terminal success state. */
@@ -49,9 +36,6 @@ export interface ObstacleInput {
 	regression?: ObstacleRegression;
 	/** Target scope the obstacle blocks (e.g. a clarity dimension, a quality-gate criterion, a plan reference). */
 	scope?: { dimension?: string; component?: string; criterion?: string; goalId?: string; planRef?: string };
-	/** Fallback metric values carried on the obstacle when the transition context lacks them. */
-	fallbackPriorValue?: number;
-	fallbackNewValue?: number;
 }
 
 /**

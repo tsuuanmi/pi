@@ -211,7 +211,7 @@ pi workflow events --input '{"sessionId":"h-..."}' --json
 pi workflow retire --input '{"sessionId":"h-..."}' --json
 ```
 
-Most verbs route to a live runtime owner when one is running for the session (`start --detach` spawns a detached owner); otherwise they fall back to a primitive (no-owner) path so the CLI can inspect and drive sessions without a running owner.
+Lifecycle mutations route to the live runtime owner (`start --detach` spawns one). Read-only inspection is owner-independent, and recovery acquires its own lease before mutating state or restarting an owner.
 
 ### `pi workflow gc`
 
@@ -263,9 +263,8 @@ Workflow-owned tools are model-visible and registered by the bundled workflow re
 
 The workflow runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives directly under `src/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `artifacts/`, `audit/`, `orchestration/`, `registry/`, `session/`, `state/`, and `tool/` (workflow tool contracts, registration, and surface metadata). Skill-owned TypeScript and `SKILL.md` assets live together under `src/skills/<skill>/`.
 
-Key seams for contributors:
+Key runtime boundaries for contributors:
 
-- **Deferred-seam registry** (`runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
 - **Workflow runtime receipts** (`runtime/types.ts`, `runtime/receipt-rules.ts`): `WorkflowRuntimeReceipt` is the durable mutation record. Receipt rules own hash validation and immutable lifecycle consistency checks; contradictions throw before any event, receipt, or state write.
 - **HUD rendering**: per-skill HUD builders live in the owning skill folders (`deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts`). Workflow HUD synchronization is registered by `@tsuuanmi/pi-workflows/extension` through `@tsuuanmi/pi-tui`; workflow mirroring remains session-scoped because the status line reads active state directly.
 
@@ -335,9 +334,8 @@ Subpath exports:
 - `@tsuuanmi/pi-workflows/extension` — workflow tool and hook registration adapter for Pi hosts.
 - `@tsuuanmi/pi-workflows/commands/workflow` — the public `pi workflow` command entry, including `pi workflow state`.
 - `@tsuuanmi/pi-workflows/tool` — workflow tool registration helper for custom hosts.
-- `@tsuuanmi/pi-workflows/runtime/*` — individual harness runtime modules (sessions, leases, RPC, GC, mutation, storage, receipt rules, etc.).
 
-See `src/index.ts` for the complete barrel.
+Direct runtime module subpaths are package-private; supported runtime APIs are exposed through the root SDK surface in `src/index.ts`.
 
 ## Development
 

@@ -19,7 +19,7 @@ export interface RalplanIndexRow {
 	path: string;
 	sha256: string;
 	created_at: string;
-	/** Parsed critic/architect verdict (R-1 prerequisite). Omitted for planner/revision/adr/final and when no confident verdict is found. */
+	/** Parsed critic or architect verdict; omitted for stages without verdict evidence. */
 	verdict?: RalplanVerdict;
 }
 
@@ -33,7 +33,7 @@ export interface RalplanWriteArtifactResult {
 	pendingApprovalPath?: string;
 	deduplicated: boolean;
 	plannerState?: RalplanPlannerStateUpdate;
-	/** Parsed critic/architect verdict, when the stage produced one (R-1 prerequisite). */
+	/** Parsed critic or architect verdict when the stage produced one. */
 	verdict?: RalplanVerdict;
 	/** Completion transaction journal path retained as deterministic commit evidence. */
 	journalPath?: string;
