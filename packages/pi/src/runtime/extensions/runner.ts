@@ -3,7 +3,7 @@
  */
 
 import type { AgentMessage, Model } from "@tsuuanmi/pi-agent";
-import type { KeyId } from "@tsuuanmi/pi-tui";
+import type { KeyId, StatusLineHudEntry, StatusLineHudEntryReaderOptions } from "@tsuuanmi/pi-tui";
 import { type Theme, theme } from "@tsuuanmi/pi-tui";
 import type {
 	CompactOptions,

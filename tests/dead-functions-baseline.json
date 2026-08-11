@@ -2,18 +2,6 @@
 	"version": 1,
 	"deadFunctions": [
 		{
-			"key": "packages/agent/src/loop.ts::agentLoop",
-			"file": "packages/agent/src/loop.ts",
-			"name": "agentLoop",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/agent/src/loop.ts::agentLoopContinue",
-			"file": "packages/agent/src/loop.ts",
-			"name": "agentLoopContinue",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/ai/src/auth/oauth/index.ts::getOAuthApiKey",
 			"file": "packages/ai/src/auth/oauth/index.ts",
 			"name": "getOAuthApiKey",

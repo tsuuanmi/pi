@@ -308,6 +308,7 @@ TypeScript modules that extend pi with custom tools, commands, keyboard shortcut
 export default function (pi: ExtensionAPI) {
   pi.registerTool({ name: "deploy", ... });
   pi.registerCommand("stats", { ... });
+  pi.registerHudProvider(async ({ cwd, sessionId }) => []);
   pi.on("tool_call", async (event, ctx) => { ... });
 }
 ```
@@ -320,7 +321,7 @@ The default export can also be `async`. pi waits for async extension factories b
 - Custom compaction and summarization
 - Permission gates and path protection
 - Custom editors and UI components
-- Status lines, headers, footers
+- Status-line HUD providers, headers, and footers
 - Git checkpointing and auto-commit
 - SSH and sandbox execution
 - Make pi look like Claude Code

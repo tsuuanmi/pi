@@ -9,7 +9,10 @@ export interface BundledPackage {
 	root: string;
 }
 
-const BUNDLED_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "packages");
+const MODULE_ROOT = dirname(fileURLToPath(import.meta.url));
+const COMPILED_BUNDLED_ROOT = resolve(MODULE_ROOT, "..", "packages");
+const WORKSPACE_BUNDLED_ROOT = resolve(MODULE_ROOT, "..", "..", "..");
+const BUNDLED_ROOT = existsSync(COMPILED_BUNDLED_ROOT) ? COMPILED_BUNDLED_ROOT : WORKSPACE_BUNDLED_ROOT;
 
 export function getBundledPackages(): BundledPackage[] {
 	return readdirSync(BUNDLED_ROOT, { withFileTypes: true })
