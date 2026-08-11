@@ -1,0 +1,73 @@
+{
+	"name": "@tsuuanmi/pi-internet",
+	"version": "0.1.0",
+	"description": "Pi package that exposes ChatGPT Web (and, post-MVP, Claude / Gemini) as model backends via the codex-chatgpt-web daemon and native provider adapters.",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./extension": {
+			"types": "./dist/extension.d.ts",
+			"import": "./dist/extension.js"
+		},
+		"./tool": {
+			"types": "./dist/tool/index.d.ts",
+			"import": "./dist/tool/index.js"
+		},
+		"./hooks": {
+			"types": "./dist/hooks.d.ts",
+			"import": "./dist/hooks.js"
+		},
+		"./runtime/*": {
+			"types": "./dist/runtime/*.d.ts",
+			"import": "./dist/runtime/*.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"imports": {
+		"#internet/*": {
+			"types": "./dist/*.d.ts",
+			"import": "./dist/*.js"
+		},
+		"#internet-test/*": {
+			"types": "./test/*.ts",
+			"import": "./test/*.ts"
+		}
+	},
+	"files": [
+		"dist",
+		"README.md"
+	],
+	"pi": {
+		"extensions": [
+			"dist/extension.js"
+		],
+		"skills": [
+			"dist/skills/**/SKILL.md"
+		]
+	},
+	"engines": {
+		"node": ">=22.19.0"
+	},
+	"scripts": {
+		"clean": "shx rm -rf dist",
+		"build": "npm run clean && tsgo -p tsconfig.build.json && npm run copy-assets",
+		"copy-assets": "node scripts/copy-assets.mjs",
+		"test": "vitest --run"
+	},
+	"dependencies": {
+		"@sinclair/typebox": "*",
+		"@tsuuanmi/pi": "*",
+		"@tsuuanmi/pi-tui": "*"
+	},
+	"devDependencies": {
+		"shx": "*",
+		"tsgo": "*",
+		"typescript": "*",
+		"vitest": "*"
+	}
+}
