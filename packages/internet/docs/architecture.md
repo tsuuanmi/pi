@@ -4,6 +4,10 @@ This document is the detailed architecture for the `internet` Pi package. It ass
 with how codex-chatgpt-web itself is built (the standalone bridge in
 `/home/superman/workspaces/codex-chatgpt-web`). `internet` reuses that engine and exposes it to Pi.
 
+> **Source:** read the engine at `/home/superman/workspaces/codex-chatgpt-web/src` (`server.ts`,
+> `bridge.ts`, `responses/parser.ts`, `adapters/chatgpt-web/index.ts`, `turn-broker.ts`,
+> `environment.ts`, `prompt.ts`). See [source-repositories.md](source-repositories.md) for the full map.
+
 > **MVP scope note:** start with [MVP Review & Brainstorm](review-and-brainstorm.md). The MVP is
 > **model routing only** — register the daemon as a Pi `openai-responses` provider plus a thin tool
 > surface. The full-mode **tool bridge** described in §4–§5 and the Codex / Claude Code backends are

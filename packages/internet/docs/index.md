@@ -7,6 +7,9 @@ into that turn, run **compaction**, and **control the daemon** — all from insi
 This docs folder is the isolated home for the package. It describes the intended architecture, the
 suggested source layout, how the package works, and how it plugs into the current Pi ecosystem.
 
+> **Find the source:** see [Source Repositories](source-repositories.md) for a map of every concept
+> to the exact files in the two reference repos (`codex-chatgpt-web` daemon and `prometheus`).
+
 > Status: **scaffolded.** The `src/` tree is populated with empty stubs and the package config
 > follows the Pi package standard (so it can be linked into Pi). No behavior yet.
 
@@ -14,6 +17,17 @@ suggested source layout, how the package works, and how it plugs into the curren
 
 - [MVP Review & Brainstorm](review-and-brainstorm.md) — **start here.** Reviews the design against
 the MVP constraint (works with current Pi as-is) and locks the scope.
+- [Source Repositories](source-repositories.md) — a map of every concept to the exact source files in
+the two reference repos (`codex-chatgpt-web` daemon and `prometheus`), plus the Pi host APIs.
+- [Feature Brainstorm](features-brainstorm.md) — what to add next: web search + fetch (fills a
+  real Pi gap), multi-account, daemon lifecycle/doctor, and the full-mode tool bridge.
+- [Comparison: Prometheus](comparison-prometheus.md) — how internet compares to the Prometheus
+  project (same idea: browser-based AI backends), with a feature table and lessons learned.
+- [Best of Both: Hybrid Capture + Fusion](best-of-both.md) — network interception as primary
+  capture with DOM fallback, and the fusion "ask all" feature (one synthesized answer across
+  backends).
+- [Browser Design](browser-design.md) — which browser the package uses (system Chrome via
+  Playwright, owned by the daemon), its lifecycle, security, and production-readiness checklist.
 - [Multi-Account & Multi-Backend Brainstorm](multi-account-and-backends.md) — how multiple accounts
   per provider map onto Pi (account = daemon instance), and the backend-adapter seam for future
   Claude / Gemini backends.

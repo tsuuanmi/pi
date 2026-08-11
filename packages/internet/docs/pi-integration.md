@@ -3,6 +3,11 @@
 How the `internet` package plugs into the current Pi ecosystem, using the exact extension APIs and
 conventions present in this monorepo (`packages/pi`, `packages/agent`, `packages/workflows`).
 
+> **Source:** the Pi host APIs live in `/home/superman/workspaces/pi/packages/pi/src`
+> (`api/extension-types.ts`, `tool/spec.ts`, `api/provider-types.ts`, `hooks/api.ts`,
+> `hooks/events.ts`, `loader/extensions/loader.ts`) and `packages/ai/src/provider/openai/responses/`.
+> See [source-repositories.md](source-repositories.md).
+
 ---
 
 ## 1. The extension contract

@@ -4,6 +4,12 @@ This document brainstorms how `internet` supports **multiple accounts per provid
 future-proof for **Claude and Gemini** backends, while keeping the MVP minimal and not changing
 the Pi ecosystem.
 
+> **Source:** the account = daemon-instance model is grounded in
+> `/home/superman/workspaces/codex-chatgpt-web/src/config.ts` (`CODEX_CHATGPT_WEB_HOME`, `port`,
+> `storageStatePath`, `brokerSocketPath`, `controlToken`) and the Pi provider API
+> `/home/superman/workspaces/pi/packages/pi/src/api/provider-types.ts`.
+> See [source-repositories.md](source-repositories.md).
+
 - **MVP:** ChatGPT Web via one codex-chatgpt-web daemon. Works with current Pi as-is.
 - **Next:** multiple ChatGPT accounts.
 - **Future:** Claude and Gemini backends behind the same abstraction.
