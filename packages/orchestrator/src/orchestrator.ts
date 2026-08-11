@@ -33,8 +33,10 @@ export class Orchestrator {
 	private readonly scheduler: Scheduler;
 	private readonly maxConcurrency: number;
 	private readonly onProgress?: OrchestratorConfig["onProgress"];
+	private readonly onTrace?: OrchestratorConfig["onTrace"];
 	private readonly onTaskVerify?: OrchestratorConfig["onTaskVerify"];
 	private readonly onTaskConsequential?: OrchestratorConfig["onTaskConsequential"];
+	private readonly onTaskRetryClassify?: OrchestratorConfig["onTaskRetryClassify"];
 	private readonly onTaskFailure?: OrchestratorConfig["onTaskFailure"];
 	private readonly runBudget?: OrchestratorConfig["runBudget"];
 	private readonly checkpointStore?: OrchestratorConfig["checkpointStore"];
@@ -50,8 +52,10 @@ export class Orchestrator {
 		});
 		this.maxConcurrency = config.maxConcurrency ?? 4;
 		this.onProgress = config.onProgress;
+		this.onTrace = config.onTrace;
 		this.onTaskVerify = config.onTaskVerify;
 		this.onTaskConsequential = config.onTaskConsequential;
+		this.onTaskRetryClassify = config.onTaskRetryClassify;
 		this.onTaskFailure = config.onTaskFailure;
 		this.runBudget = resolveRunBudget(config.runBudget);
 		this.checkpointStore = config.checkpointStore;
@@ -91,8 +95,10 @@ export class Orchestrator {
 			runFacts,
 			defaultMaxConcurrency: this.maxConcurrency,
 			defaultOnProgress: this.onProgress,
+			defaultOnTrace: this.onTrace,
 			defaultOnTaskVerify: this.onTaskVerify,
 			defaultOnTaskConsequential: this.onTaskConsequential,
+			defaultOnTaskRetryClassify: this.onTaskRetryClassify,
 			defaultOnTaskFailure: this.onTaskFailure,
 			checkpointStore: options.checkpointStore ?? this.checkpointStore,
 			runBudget: normalizedRunBudget,

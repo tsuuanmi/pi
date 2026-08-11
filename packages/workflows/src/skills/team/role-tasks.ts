@@ -1,6 +1,7 @@
 import type { ExpectedNextRole } from "#workflows/policy/expected-next-role";
-import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/runtime";
+import { createRunnableTask } from "#workflows/skills/team/dependencies";
 import type { TeamTaskRoute } from "#workflows/skills/team/task-mapper";
+import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/types";
 
 export interface RoleBatch {
 	tasks: readonly TeamTask[];
@@ -22,7 +23,7 @@ export function createRoleBatch(snapshot: TeamSnapshot, role: ExpectedNextRole, 
 }
 
 function createWorkerBatch(snapshot: TeamSnapshot, role: ExpectedNextRole): RoleBatch {
-	const task = findTask(snapshot, role.taskId);
+	const task = createRunnableTask(findTask(snapshot, role.taskId), snapshot.tasks);
 	if (task.execution && !["failed", "blocked", "skipped"].includes(task.execution.status)) {
 		throw new Error(`worker task already has successful execution state: ${task.id}`);
 	}

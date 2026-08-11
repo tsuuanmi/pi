@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { createTeamTask, readTeamSnapshot, startTeam } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { saveTeamExecution } from "#workflows/skills/team/execution-store";
-import type { TeamSnapshot, TeamTaskExecution } from "#workflows/skills/team/runtime";
+import type { TeamSnapshot, TeamTaskExecution } from "#workflows/skills/team/types";
 
 const cwdPrefix = "pi-team-execution-store-";
 const sessionId = "execution-store-test";

@@ -1,6 +1,6 @@
 import type { TaskInput, TaskSnapshot } from "@tsuuanmi/pi-orchestrator";
-import type { TeamTask } from "#workflows/skills/team/runtime";
 import { mapExecutionStatus } from "#workflows/skills/team/status-mapper";
+import type { TeamTask } from "#workflows/skills/team/types";
 
 export interface TeamTaskRoute {
 	assignee?: string;

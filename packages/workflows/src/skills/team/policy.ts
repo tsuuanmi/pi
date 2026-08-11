@@ -1,9 +1,12 @@
 import type { ExpectedNextRole, TeamSelectorSnapshot } from "#workflows/policy/expected-next-role";
 import type { SkillPolicy, SkillPolicyContext } from "#workflows/policy/skill-policy";
-import { readTeamSnapshot, type TeamSnapshot } from "#workflows/skills/team/runtime";
+import { assertTeamDependencies, isTeamTaskReady } from "#workflows/skills/team/dependencies";
+import { readTeamSnapshot } from "#workflows/skills/team/state";
+import type { TeamSnapshot } from "#workflows/skills/team/types";
 
 function selectNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): ExpectedNextRole | undefined {
 	if (!snapshot?.team_id) return undefined;
+	assertTeamDependencies(snapshot.tasks);
 	const inReview = snapshot.tasks
 		.filter((task) => task.status === "in_progress" && task.review_gate?.status !== "passed")
 		.sort((a, b) => a.id.localeCompare(b.id))[0];
@@ -18,7 +21,7 @@ function selectNextTeamRole(snapshot: TeamSelectorSnapshot | undefined): Expecte
 		};
 	}
 	const pending = snapshot.tasks
-		.filter((task) => task.status === "pending")
+		.filter((task) => isTeamTaskReady(task, snapshot.tasks))
 		.sort((a, b) => a.id.localeCompare(b.id))[0];
 	if (pending) {
 		return {

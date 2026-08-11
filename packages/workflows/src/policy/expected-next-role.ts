@@ -108,6 +108,8 @@ export function expectedNextRalplanRole(
 export interface TeamSelectorTask {
 	id: string;
 	status: string;
+	depends_on?: readonly string[];
+	blocked_by?: readonly string[];
 	review_gate?: { status?: string };
 }
 

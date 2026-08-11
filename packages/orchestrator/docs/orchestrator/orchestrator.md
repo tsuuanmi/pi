@@ -130,6 +130,8 @@ Use `createConsensusVerifier({ judges, minApprovals })` when verification should
 
 Use `onTaskFailure` to classify failed attempts as `retry`, `fail`, `skip`, or `abort`. This is the only hook that controls failure policy.
 
+Hooks configured on the `Orchestrator` constructor are run defaults. A hook supplied to `run()` overrides the corresponding constructor hook for that run, including `onTrace` and `onTaskRetryClassify`.
+
 Use `onTrace` for structured planning/execution telemetry, `onProgress` for user-facing production observability, and `onQueueEvent` for task-queue lifecycle events. Task routing is exposed through the `routeReadyTasks` boundary and the exported `Scheduler` / `AgentSelector` routing primitives. `Scheduler.scheduleTask()` schedules one task with explicit selection data for incremental execution. Routing decisions are emitted as `routing_decision` trace events with a `TaskRoutingDecision` payload.
 
 ```typescript

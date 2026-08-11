@@ -40,7 +40,7 @@ systemPrompt: |
     "context_needed": true,
     "summary": "Planner should account for the team completion seam and the existing ultragoal completion gate; avoid double-gating.",
     "evidence": [
-      { "kind": "file", "ref": "packages/workflows/src/skills/team/runtime.ts", "note": "completeTeam completion gate seam." },
+      { "kind": "file", "ref": "packages/workflows/src/skills/team/gates.ts", "note": "completeTeam completion gate seam." },
       { "kind": "file", "ref": "packages/workflows/src/skills/ultragoal/gate.ts", "note": "Existing ultragoal completion gate." }
     ]
   }

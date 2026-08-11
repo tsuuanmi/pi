@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { assertRoleResult } from "#workflows/skills/team/role-contract";
-import type { TeamSnapshot } from "#workflows/skills/team/runtime";
+import type { TeamSnapshot } from "#workflows/skills/team/types";
 
 const base: TeamSnapshot = {
 	team_id: "team-1",

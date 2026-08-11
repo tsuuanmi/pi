@@ -4,7 +4,7 @@ import {
 	validateEvidenceMatrixVerdict,
 	validateReviewReportVerdict,
 } from "#workflows/policy/gate-verdicts";
-import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/runtime";
+import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/types";
 
 export function assertRoleResult(snapshot: TeamSnapshot, role: string, taskId?: string): void {
 	switch (role) {

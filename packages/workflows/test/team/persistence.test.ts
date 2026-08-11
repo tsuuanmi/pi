@@ -1,12 +1,18 @@
-import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createTeamTask, executeTeam, readTeamSnapshot, startTeam } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { teamEventsPath, teamReceiptsPath, teamRoleRunPath, teamTaskPath } from "#workflows/session/session-layout";
+import {
+	teamConfigPath,
+	teamEventsPath,
+	teamReceiptsPath,
+	teamRoleRunPath,
+	teamTaskPath,
+} from "#workflows/session/session-layout";
 import { createTeamAgents } from "#workflows/skills/team/agent-adapter";
 import { saveTeamExecution } from "#workflows/skills/team/execution-store";
-import type { TeamSnapshot, TeamTaskExecution } from "#workflows/skills/team/runtime";
+import type { TeamSnapshot, TeamTaskExecution } from "#workflows/skills/team/types";
 import { createFakeManager, createTeamContext } from "#workflows-test/team/fakes";
 
 const sessionId = "persistence-test";
@@ -33,6 +39,28 @@ describe("team persistence failures", () => {
 
 	afterEach(async () => {
 		await rm(cwd, { recursive: true, force: true });
+	});
+
+	it("rejects malformed persisted task state instead of applying defaults", async () => {
+		const path = teamTaskPath(cwd, teamId, "task-1", sessionId);
+		const task = JSON.parse(await readFile(path, "utf8")) as Record<string, unknown>;
+		delete task.status;
+		await writeFile(path, JSON.stringify(task), "utf8");
+
+		await expect(readTeamSnapshot(cwd, sessionId, teamId)).rejects.toThrow(
+			"invalid persisted team task task-1.status",
+		);
+	});
+
+	it("rejects malformed persisted team configuration instead of applying defaults", async () => {
+		const path = teamConfigPath(cwd, teamId, sessionId);
+		const config = JSON.parse(await readFile(path, "utf8")) as Record<string, unknown>;
+		config.workers = "invalid";
+		await writeFile(path, JSON.stringify(config), "utf8");
+
+		await expect(readTeamSnapshot(cwd, sessionId, teamId)).rejects.toThrow(
+			"invalid persisted team config team-1.workers",
+		);
 	});
 
 	it("does not report success when receipt persistence fails", async () => {

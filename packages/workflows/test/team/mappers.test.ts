@@ -2,9 +2,9 @@ import type { TaskExecutionReceipt, TaskQueueEvent, TaskSnapshot } from "@tsuuan
 import { describe, expect, it } from "vitest";
 import { mapQueueEvent, type TeamEvent } from "#workflows/skills/team/event-mapper";
 import { mapTaskReceipt } from "#workflows/skills/team/receipt-mapper";
-import type { TeamTask } from "#workflows/skills/team/runtime";
 import { mapTaskStatus } from "#workflows/skills/team/status-mapper";
 import { mapTaskExecution, mapTeamTask, mapTeamTasks } from "#workflows/skills/team/task-mapper";
+import type { TeamTask } from "#workflows/skills/team/types";
 
 const teamTask: TeamTask = {
 	version: 1,

@@ -8,8 +8,8 @@ import {
 } from "@tsuuanmi/pi-orchestrator";
 import { mapQueueEvent, type TeamEvent } from "#workflows/skills/team/event-mapper";
 import { mapTaskReceipt, type TeamTaskReceiptRef } from "#workflows/skills/team/receipt-mapper";
-import type { TeamTask } from "#workflows/skills/team/runtime";
 import { mapTaskExecution, mapTeamTasks, type TeamTaskRoute } from "#workflows/skills/team/task-mapper";
+import type { TeamTask } from "#workflows/skills/team/types";
 
 export interface TeamOrchestratorInput {
 	name: string;

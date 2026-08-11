@@ -562,13 +562,13 @@ describe("workflow runtime", () => {
 			};
 			const first = await recordTeamReviewGateArtifact(
 				cwd,
-				{ teamId: "review-block-team", taskId: "task-c", reviewReport: blocking },
+				{ teamId: "review-block-team", taskId: "task-c", reviewReport: blocking, recordedBy: "reviewer" },
 				sessionId,
 			);
 			expect(first.status).toBe("blocked");
 			const second = await recordTeamReviewGateArtifact(
 				cwd,
-				{ teamId: "review-block-team", taskId: "task-c", reviewReport: blocking },
+				{ teamId: "review-block-team", taskId: "task-c", reviewReport: blocking, recordedBy: "reviewer" },
 				sessionId,
 			);
 			expect(second.status).toBe("human_blocked");
@@ -591,6 +591,7 @@ describe("workflow runtime", () => {
 						needs_changes: true,
 						summary: "Medium issue recorded but non-blocking in v1.",
 					},
+					recordedBy: "reviewer",
 				},
 				sessionId,
 			);
@@ -643,6 +644,7 @@ describe("workflow runtime", () => {
 						summary: "Verification passed for all required team work.",
 						evidence: [{ kind: "command", ref: "npm test", note: "passed" }],
 					},
+					recordedBy: "prover",
 				},
 				sessionId,
 			);
@@ -661,13 +663,13 @@ describe("workflow runtime", () => {
 			};
 			const first = await recordTeamCompletionGateArtifact(
 				cwd,
-				{ teamId: "blocking-team", evidenceMatrix: blocking },
+				{ teamId: "blocking-team", evidenceMatrix: blocking, recordedBy: "prover" },
 				sessionId,
 			);
 			expect(first.status).toBe("blocked");
 			const second = await recordTeamCompletionGateArtifact(
 				cwd,
-				{ teamId: "blocking-team", evidenceMatrix: blocking },
+				{ teamId: "blocking-team", evidenceMatrix: blocking, recordedBy: "prover" },
 				sessionId,
 			);
 			expect(second.status).toBe("human_blocked");

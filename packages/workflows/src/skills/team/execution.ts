@@ -12,7 +12,7 @@ import {
 import { mapTaskReceipt, type TeamTaskReceiptRef } from "#workflows/skills/team/receipt-mapper";
 import { saveTeamReceipts } from "#workflows/skills/team/receipt-store";
 import { saveRoleFailure } from "#workflows/skills/team/role-run-store";
-import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/runtime";
+import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/types";
 import { nowIso } from "#workflows/state/state-writer";
 
 export interface TeamExecutionInput

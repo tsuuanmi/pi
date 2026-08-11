@@ -1,6 +1,6 @@
 import type { HudSummary } from "@tsuuanmi/pi-tui";
 import { progressChip } from "@tsuuanmi/pi-tui";
-import type { TeamSnapshot } from "#workflows/skills/team/runtime";
+import type { TeamSnapshot } from "#workflows/skills/team/types";
 
 /**
  * Build the HUD summary for an active team run.

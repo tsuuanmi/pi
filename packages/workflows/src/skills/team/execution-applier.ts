@@ -1,5 +1,5 @@
 import type { TeamOrchestratorOutput } from "#workflows/skills/team/orchestrator";
-import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/runtime";
+import type { TeamSnapshot, TeamTask } from "#workflows/skills/team/types";
 
 export function applyTeamExecution(snapshot: TeamSnapshot, output: TeamOrchestratorOutput): TeamSnapshot {
 	const updates = new Map(output.taskUpdates.map((update) => [update.id, update]));

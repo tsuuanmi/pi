@@ -63,7 +63,21 @@ export {
 	type RalplanStageResult,
 	runRalplanStage,
 } from "#workflows/skills/ralplan/orchestrator";
-export * from "#workflows/skills/ralplan/runtime";
+export { approveRalplanPlan } from "#workflows/skills/ralplan/approval";
+export { writeRalplanArtifact } from "#workflows/skills/ralplan/artifacts";
+export { doctorRalplan } from "#workflows/skills/ralplan/doctor";
+export { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
+export type {
+	RalplanApprovalTarget,
+	RalplanApproveResult,
+	RalplanDoctorResult,
+	RalplanIndexRow,
+	RalplanInvalidIndexLine,
+	RalplanPlannerStateUpdate,
+	RalplanStatus,
+	RalplanWriteArtifactInput,
+	RalplanWriteArtifactResult,
+} from "#workflows/skills/ralplan/types";
 export * from "#workflows/skills/ralplan/verdicts";
 // Harness runtime
 export * from "#workflows/skills/team/agent-adapter";
@@ -84,7 +98,11 @@ export * from "#workflows/skills/team/role-contract";
 export * from "#workflows/skills/team/role-run-store";
 export * from "#workflows/skills/team/role-tasks";
 export * from "#workflows/skills/team/role-transitions";
-export * from "#workflows/skills/team/runtime";
+export * from "#workflows/skills/team/gates";
+export * from "#workflows/skills/team/messages";
+export * from "#workflows/skills/team/state";
+export * from "#workflows/skills/team/tasks";
+export * from "#workflows/skills/team/types";
 export * from "#workflows/skills/team/status-mapper";
 export * from "#workflows/skills/team/task-mapper";
 export * from "#workflows/skills/ultragoal/artifacts";

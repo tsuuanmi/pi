@@ -1,13 +1,14 @@
-import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { assertExpectedNextRole, expectedNextTeamRole } from "#workflows/policy/expected-next-role";
 import { createTeamAgents, type TeamAgentSpec } from "#workflows/skills/team/agent-adapter";
 import { executeTeam, failTeamExecution, resumeTeam, type TeamExecutionInput } from "#workflows/skills/team/execution";
 import { assertRoleResult } from "#workflows/skills/team/role-contract";
 import { createRoleBatch } from "#workflows/skills/team/role-tasks";
 import { markWorkerInProgress } from "#workflows/skills/team/role-transitions";
-import { readTeamSnapshot, type TeamSnapshot } from "#workflows/skills/team/runtime";
+import { readTeamSnapshot } from "#workflows/skills/team/state";
+import type { TeamSnapshot } from "#workflows/skills/team/types";
 import { defaultWorkflowId } from "#workflows/state/workflow-state";
 import type { WorkflowContext } from "#workflows/tool/context";
+import { workflowReceipt } from "#workflows/artifacts/artifacts";
 
 export interface TeamExecuteInput {
 	teamId?: string;

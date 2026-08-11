@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ExpectedNextRole } from "#workflows/policy/expected-next-role";
 import { createRoleBatch } from "#workflows/skills/team/role-tasks";
-import type { TeamSnapshot } from "#workflows/skills/team/runtime";
+import type { TeamSnapshot } from "#workflows/skills/team/types";
 
 const snapshot: TeamSnapshot = {
 	team_id: "team-1",

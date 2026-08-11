@@ -1,4 +1,5 @@
-import { isTaskReady, Task, validateTaskDependencies } from "#orchestrator/task/task";
+import { isTaskReady, validateTaskDependencies } from "#orchestrator/task/dependencies";
+import { Task } from "#orchestrator/task/task";
 import type {
 	TaskInput,
 	TaskQueueEvent,

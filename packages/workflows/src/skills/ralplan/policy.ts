@@ -1,7 +1,7 @@
 import type { ExpectedNextRole, RalplanSelectorState } from "#workflows/policy/expected-next-role";
 import type { SkillPolicy } from "#workflows/policy/skill-policy";
 import { assertRalplanExplorerGatePassed } from "#workflows/skills/ralplan/gates";
-import { readRalplanStatus } from "#workflows/skills/ralplan/runtime";
+import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 
 const RALPLAN_CLOSED_PHASES = new Set(["pending-approval", "approved", "handoff", "complete", "failed", "cancelled"]);
 

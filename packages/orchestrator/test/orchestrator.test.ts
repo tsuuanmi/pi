@@ -776,6 +776,29 @@ describe("multi-agent primitives", () => {
 		});
 	});
 
+	it("uses constructor trace and retry callbacks as run defaults", async () => {
+		const traces: string[] = [];
+		const classifications: string[] = [];
+		const orchestrator = new Orchestrator({
+			onTrace: (event) => traces.push(event.type),
+			onTaskRetryClassify: (context) => {
+				classifications.push(context.task.id);
+				return "transient";
+			},
+			onTaskFailure: async (context) => (context.attempt === 1 ? "retry" : "fail"),
+		});
+		const result = await orchestrator.run(
+			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream({ fail: true }))] }),
+			[{ id: "a", title: "A", description: "A", maxRetries: 1, retryDelayMs: 0 }],
+		);
+
+		expect(result.success).toBe(false);
+		expect(classifications).toEqual(["a"]);
+		expect(traces).toContain("run_start");
+		expect(traces).toContain("task_retry");
+		expect(result.receipts.a?.retryClassification).toBe("transient");
+	});
+
 	it("continues after checkpoint save failures by default", async () => {
 		const events: string[] = [];
 		const traces: string[] = [];

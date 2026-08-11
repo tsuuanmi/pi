@@ -93,10 +93,10 @@ export const TEAM_SKILL_HELP: WorkflowSkillHelp = {
 				"sessionId: string (required; current session)",
 				"taskId: string (required)",
 				"reviewReport: object (required)",
+				"recordedBy: string (required)",
 				"teamId?: string",
-				"recordedBy?: string",
 			],
-			example: `pi workflow team record-review-gate --input '{"sessionId":"<session-id>","taskId":"task-1","reviewReport":{}}' --json`,
+			example: `pi workflow team record-review-gate --input '{"sessionId":"<session-id>","taskId":"task-1","reviewReport":{},"recordedBy":"reviewer"}' --json`,
 		},
 		"record-completion-gate": {
 			summary: "Persist final completion evidence.",
@@ -104,10 +104,10 @@ export const TEAM_SKILL_HELP: WorkflowSkillHelp = {
 			input: [
 				"sessionId: string (required; current session)",
 				"evidenceMatrix: object (required)",
+				"recordedBy: string (required)",
 				"teamId?: string",
-				"recordedBy?: string",
 			],
-			example: `pi workflow team record-completion-gate --input '{"sessionId":"<session-id>","evidenceMatrix":{}}' --json`,
+			example: `pi workflow team record-completion-gate --input '{"sessionId":"<session-id>","evidenceMatrix":{},"recordedBy":"prover"}' --json`,
 		},
 		complete: {
 			summary: "Complete, fail, or cancel a team run.",

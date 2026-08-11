@@ -13,7 +13,7 @@ import { normalizeRalplanExplorerGate } from "#workflows/skills/ralplan/gates";
 import { assertRalplanRole } from "#workflows/skills/ralplan/guards";
 import { buildRalplanOrchestrationSnapshot } from "#workflows/skills/ralplan/orchestration-snapshot";
 import { planRalplanAgent, runRalplanStage } from "#workflows/skills/ralplan/orchestrator";
-import { readRalplanStatus } from "#workflows/skills/ralplan/runtime";
+import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 import { assertRalplanStage, assertSafePathComponent } from "#workflows/state/state-schema";
 import { defaultWorkflowId, readWorkflowState } from "#workflows/state/workflow-state";
 import type { WorkflowContext } from "#workflows/tool/context";

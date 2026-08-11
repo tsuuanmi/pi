@@ -69,6 +69,7 @@ describe("team workflow runtime", () => {
 				teamId: "team-1",
 				taskId: "task-1",
 				reviewReport: { max_severity: "none", needs_changes: false, summary: "No review blockers." },
+				recordedBy: "reviewer",
 			},
 			sessionId,
 		);
@@ -114,6 +115,7 @@ describe("team workflow runtime", () => {
 					escalation: "none",
 					summary: "Team work verified for completion.",
 				},
+				recordedBy: "prover",
 			},
 			sessionId,
 		);

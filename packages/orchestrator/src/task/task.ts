@@ -1,10 +1,8 @@
 // Architecture adapted from open-multi-agent (MIT).
 import { randomUUID } from "node:crypto";
-import type { AgentRunResult } from "@tsuuanmi/pi-agent";
 import { validateTaskMetadata } from "#orchestrator/task/metadata";
-import { cloneRequirements, formatRequirements, normalizeRequirements } from "#orchestrator/task/requirements";
+import { cloneRequirements, normalizeRequirements } from "#orchestrator/task/requirements";
 import type {
-	DependencyPayload,
 	TaskInput,
 	TaskMetadata,
 	TaskPriority,
@@ -19,21 +17,6 @@ const TASK_STATUSES: readonly TaskStatus[] = ["pending", "in_progress", "complet
 const TASK_MEMORY_SCOPES = ["dependencies", "all"] as const;
 const DEPENDENCY_PAYLOADS = ["output", "structured", "both"] as const;
 const TASK_PRIORITIES: readonly TaskPriority[] = ["low", "normal", "high", "critical"];
-
-export interface FormatTaskPromptOptions {
-	task: TaskSnapshot;
-	completedDependencies: readonly TaskSnapshot[];
-}
-
-export interface TaskBridgeResult {
-	output: string;
-	structured?: unknown;
-}
-
-export interface TaskDependencyValidationResult {
-	valid: boolean;
-	errors: readonly string[];
-}
 
 function nowIso(): string {
 	return new Date().toISOString();
@@ -124,18 +107,6 @@ function truncateText(value: string, limit = MAX_FORMATTED_BLOCK_LENGTH): string
 	return `${value.slice(0, limit)}\n[truncated ${value.length - limit} characters]`;
 }
 
-function stringifyBounded(value: unknown): string {
-	try {
-		return truncateText(JSON.stringify(value, null, 2));
-	} catch {
-		return "[unserializable value]";
-	}
-}
-
-function snapshotOf(task: Task | TaskSnapshot): TaskSnapshot {
-	return task instanceof Task ? task.snapshot() : task;
-}
-
 export class Task {
 	private snapshotValue: TaskSnapshot;
 
@@ -202,6 +173,9 @@ export class Task {
 
 	get id(): string {
 		return this.snapshotValue.id;
+	}
+	get title(): string {
+		return this.snapshotValue.title;
 	}
 	get status(): TaskStatus {
 		return this.snapshotValue.status;
@@ -289,150 +263,4 @@ function requireValidIsoDate(value: string, field: string): string {
 	const timestamp = Date.parse(value);
 	if (Number.isNaN(timestamp)) throw new Error(`Task snapshot ${field} must be a valid ISO date.`);
 	return new Date(timestamp).toISOString();
-}
-
-export function isTaskReady(task: Task | TaskSnapshot, allTasks: readonly (Task | TaskSnapshot)[]): boolean {
-	const snapshot = snapshotOf(task);
-	if (snapshot.status !== "pending") return false;
-	if (snapshot.dependsOn.length === 0) return true;
-	const taskById = new Map(
-		allTasks.map((candidate) => {
-			const candidateSnapshot = snapshotOf(candidate);
-			return [candidateSnapshot.id, candidateSnapshot] as const;
-		}),
-	);
-	return snapshot.dependsOn.every((id) => taskById.get(id)?.status === "completed");
-}
-
-export function getTaskDependencyOrder(tasks: readonly Task[]): Task[] {
-	if (tasks.length === 0) return [];
-	const validation = validateTaskDependencies(tasks);
-	if (!validation.valid) throw new Error(`Invalid task dependency graph:\n${validation.errors.join("\n")}`);
-	const taskById = new Map(tasks.map((task) => [task.id, task]));
-	const inDegree = new Map<string, number>();
-	const successors = new Map<string, string[]>();
-
-	for (const task of tasks) {
-		inDegree.set(task.id, inDegree.get(task.id) ?? 0);
-		successors.set(task.id, successors.get(task.id) ?? []);
-		for (const depId of task.dependsOn) {
-			if (!taskById.has(depId)) continue;
-			inDegree.set(task.id, (inDegree.get(task.id) ?? 0) + 1);
-			successors.get(depId)!.push(task.id);
-		}
-	}
-
-	const queue = [...inDegree.entries()]
-		.filter(([, degree]) => degree === 0)
-		.map(([id]) => id)
-		.sort();
-	const ordered: Task[] = [];
-	while (queue.length > 0) {
-		const id = queue.shift()!;
-		const task = taskById.get(id);
-		if (task) ordered.push(task);
-		for (const successorId of successors.get(id) ?? []) {
-			const nextDegree = (inDegree.get(successorId) ?? 0) - 1;
-			inDegree.set(successorId, nextDegree);
-			if (nextDegree === 0) queue.push(successorId);
-		}
-		queue.sort();
-	}
-	return ordered;
-}
-
-export function validateTaskDependencies(tasks: readonly (Task | TaskSnapshot)[]): TaskDependencyValidationResult {
-	const snapshots = tasks.map(snapshotOf);
-	const taskById = new Map<string, TaskSnapshot>();
-	const errors: string[] = [];
-	for (const task of snapshots) {
-		if (taskById.has(task.id)) errors.push(`Duplicate task id: ${task.id}`);
-		taskById.set(task.id, task);
-	}
-
-	for (const task of snapshots) {
-		for (const depId of task.dependsOn) {
-			if (depId === task.id) {
-				errors.push(`Task "${task.title}" (${task.id}) depends on itself.`);
-				continue;
-			}
-			if (!taskById.has(depId)) {
-				errors.push(`Task "${task.title}" (${task.id}) references unknown dependency "${depId}".`);
-			}
-		}
-	}
-
-	const colour = new Map<string, 0 | 1 | 2>(snapshots.map((task) => [task.id, 0]));
-	const visit = (id: string, path: readonly string[]): void => {
-		if (colour.get(id) === 2) return;
-		if (colour.get(id) === 1) {
-			const cycleStart = path.indexOf(id);
-			const cycle = [...path.slice(cycleStart), id];
-			errors.push(`Cyclic dependency detected: ${cycle.join(" -> ")}`);
-			return;
-		}
-		colour.set(id, 1);
-		const task = taskById.get(id);
-		for (const depId of task?.dependsOn ?? []) {
-			if (taskById.has(depId)) visit(depId, [...path, id]);
-		}
-		colour.set(id, 2);
-	};
-	for (const task of snapshots) {
-		if (colour.get(task.id) === 0) visit(task.id, []);
-	}
-
-	return { valid: errors.length === 0, errors };
-}
-
-function formatDependencyPayload(dependency: TaskSnapshot, payload: DependencyPayload): string {
-	const lines = [`- ${dependency.id}: ${dependency.title}`];
-	if (payload === "output" || payload === "both") {
-		lines.push(`  Output: ${truncateText(dependency.result ?? "")}`);
-	}
-	if ((payload === "structured" || payload === "both") && dependency.structured !== undefined) {
-		lines.push(`  Structured: ${stringifyBounded(dependency.structured)}`);
-	}
-	return lines.join("\n");
-}
-
-function formatHeaderLines(task: TaskSnapshot): string[] {
-	const lines = [`Task: ${task.title}`];
-	if (task.role) lines.push(`Role: ${task.role}`);
-	if (task.priority) lines.push(`Priority: ${task.priority}`);
-	if (task.memoryScope) lines.push(`Memory scope: ${task.memoryScope}`);
-	if (task.attempts > 1) lines.push(`Attempt: ${task.attempts}`);
-	return lines;
-}
-
-export function formatTaskPrompt({ task, completedDependencies }: FormatTaskPromptOptions): string {
-	const payload = task.dependencyPayload ?? "output";
-	const dependencyBlock = completedDependencies.length
-		? completedDependencies.map((dependency) => formatDependencyPayload(dependency, payload)).join("\n")
-		: "None";
-	const metadataBlock = task.metadata ? `Metadata:\n${stringifyBounded(validateTaskMetadata(task.metadata))}` : "";
-	const requirements = formatRequirements(task.requires);
-	const requirementBlock = requirements.length > 0 ? `Requirements:\n- ${requirements.join("\n- ")}` : "";
-	return [
-		...formatHeaderLines(task),
-		"",
-		"Description:",
-		truncateText(task.description),
-		metadataBlock,
-		requirementBlock,
-		"",
-		"Completed dependencies:",
-		dependencyBlock,
-		"",
-		"Return the task result clearly and concisely.",
-	]
-		.filter((part) => part.length > 0)
-		.join("\n");
-}
-
-export function extractTaskBridgeResult(result: AgentRunResult): TaskBridgeResult {
-	return {
-		output: result.output,
-		...(result.structured !== undefined ? { structured: result.structured } : {}),
-	};
 }

@@ -20,7 +20,9 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 |--------|-------------|
 | `agent-adapter.ts` | Adapts Team role requests to the Pi-native agent interface. |
 | `checkpoint-store.ts` | Persists and validates session-scoped orchestrator checkpoints. |
+| `validation.ts` | Strictly parses persisted Team records and validates new task/evidence inputs. |
 | `coordinator.ts` | Selects the legal role and submits its batch to the Orchestrator. |
+| `dependencies.ts` | Validates the durable task graph through Orchestrator primitives and admits ready tasks. |
 | `event-mapper.ts` | Maps Orchestrator queue events to Team events and statuses. |
 | `event-store.ts` | Persists Team events with idempotent event keys. |
 | `execution-applier.ts` | Applies Orchestrator task updates and receipt references to a Team snapshot. |
@@ -28,7 +30,9 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 | `execution-store.ts` | Persists task execution state. |
 | `execution.ts` | Runs Team role execution and applies success or failure outcomes. |
 | `help.ts` | Command action descriptions, typed arguments, and help metadata. |
+| `gates.ts` | Records review/completion evidence and enforces gate-controlled transitions. |
 | `hud.ts` | HUD chip rendering for Team status. |
+| `messages.ts` | Persists Team mailbox messages. |
 | `orchestrator-checkpoint.ts` | Serializes and validates Orchestrator checkpoint data. |
 | `orchestrator-events.ts` | Adapts Orchestrator events to a Team event sink. |
 | `orchestrator.ts` | Team integration with `@tsuuanmi/pi-orchestrator`. |
@@ -38,11 +42,14 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 | `role-run-store.ts` | Persists failures and records for synthetic and concrete role runs. |
 | `role-tasks.ts` | Builds worker, reviewer, and prover task batches. |
 | `role-transitions.ts` | Applies workflow-owned transitions after successful role execution. |
-| `runtime.ts` | State I/O, task transitions, messages, gates, completion, and snapshot operations. |
+| `state.ts` | Starts teams and synchronizes workflow snapshots and HUD state. |
 | `status-mapper.ts` | Maps Orchestrator task statuses to Team task statuses. |
+| `store.ts` | Owns Team configuration, task, event, and active-team persistence. |
 | `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `task-mapper.ts` | Maps workflow task data to Orchestrator task inputs. |
+| `tasks.ts` | Creates tasks and enforces task lifecycle transitions. |
 | `tools.ts` | Registers `team_execute` and `team_resume`. |
+| `types.ts` | Defines Team domain models and persisted contracts. |
 | `policy.ts` | Immutable skill policy, expected-next worker selection, and fail-closed gate validators. |
 
 ## Runtime Route
@@ -83,7 +90,7 @@ Use `team_execute` for worker, reviewer, and prover execution, and `team_resume`
 | reviewer | `reviewer` |
 | prover | `prover` |
 
-Role capability matching is exact. Missing capabilities and duplicate agent ids fail before execution; no alternate agent or capability is selected.
+Role capability matching is exact. Missing capabilities and duplicate agent ids fail before execution; no alternate agent or capability is selected. A worker task is admitted only after every `depends_on` task is complete and `blocked_by` is empty. Because each Team role run contains one admitted task, completed historical dependencies are not copied into that Orchestrator run.
 
 ## State Files
 
@@ -104,6 +111,7 @@ Role capability matching is exact. Missing capabilities and duplicate agent ids 
 - Completed tasks must have a passing review gate.
 - Completed teams must have a passing completion evidence gate.
 - Transition validators fail closed when required state, session, or gate evidence is missing.
+- Persisted Team records are parsed strictly; malformed or incomplete records are rejected rather than repaired with defaults.
 
 ## See Also
 

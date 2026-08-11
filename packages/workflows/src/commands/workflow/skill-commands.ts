@@ -26,23 +26,19 @@ import {
 } from "#workflows/skills/deep-interview/runtime";
 import type { DeepInterviewAdvisoryMetadata, DeepInterviewRoundRecord } from "#workflows/skills/deep-interview/state";
 import { recordRalplanExplorerGateArtifact } from "#workflows/skills/ralplan/gates";
-import type { RalplanApprovalTarget } from "#workflows/skills/ralplan/runtime";
-import {
-	approveRalplanPlan,
-	doctorRalplan,
-	readRalplanStatus,
-	writeRalplanArtifact,
-} from "#workflows/skills/ralplan/runtime";
+import { approveRalplanPlan } from "#workflows/skills/ralplan/approval";
+import { writeRalplanArtifact } from "#workflows/skills/ralplan/artifacts";
+import { doctorRalplan } from "#workflows/skills/ralplan/doctor";
+import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
+import type { RalplanApprovalTarget } from "#workflows/skills/ralplan/types";
 import {
 	completeTeam,
-	createTeamTask,
-	readTeamSnapshot,
 	recordTeamCompletionGateArtifact,
 	recordTeamReviewGateArtifact,
-	sendTeamMessage,
-	startTeam,
-	transitionTeamTask,
-} from "#workflows/skills/team/runtime";
+} from "#workflows/skills/team/gates";
+import { sendTeamMessage } from "#workflows/skills/team/messages";
+import { readTeamSnapshot, startTeam } from "#workflows/skills/team/state";
+import { createTeamTask, transitionTeamTask } from "#workflows/skills/team/tasks";
 import { ultragoalGuard } from "#workflows/skills/ultragoal/guard";
 import type { UltragoalGoalMode } from "#workflows/skills/ultragoal/receipt";
 import type { UltragoalBlockerClassification } from "#workflows/skills/ultragoal/runtime";
@@ -331,7 +327,7 @@ export async function teamVerb(
 					teamId: inputString(input, "teamId"),
 					taskId: requiredString(input, "taskId"),
 					reviewReport: requiredObject(input, "reviewReport"),
-					recordedBy: inputString(input, "recordedBy"),
+					recordedBy: requiredString(input, "recordedBy"),
 				},
 				sessionId,
 			);
@@ -343,7 +339,7 @@ export async function teamVerb(
 				{
 					teamId: inputString(input, "teamId"),
 					evidenceMatrix: requiredObject(input, "evidenceMatrix"),
-					recordedBy: inputString(input, "recordedBy"),
+					recordedBy: requiredString(input, "recordedBy"),
 				},
 				sessionId,
 			);

@@ -31,7 +31,11 @@ Ralplan coordinates durable planning passes and produces a pending-approval impl
 | `hud.ts` | HUD chip rendering for ralplan state. |
 | `obstacles.ts` | Obstacle ledger and critic agreement helpers. |
 | `orchestration-snapshot.ts` | Reads workflow state, run index, explorer gate, artifact hashes, completion provenance, transaction journals, and obstacle ledger without repairing them, then emits a versioned fingerprint over canonically ordered data. |
-| `runtime.ts` | Run status, artifact index, doctor, approval, and artifact writes. |
+| `types.ts` | Ralplan domain contracts. |
+| `index-store.ts` | Run index parsing, persistence, and status reads. |
+| `artifacts.ts` | Stage artifact validation and persistence. |
+| `approval.ts` | Pending-plan approval and handoff. |
+| `doctor.ts` | Ralplan diagnostics and consistency checks. |
 | `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `tools.ts` | Registers `ralplan_run_agent`. |
 | `policy.ts` | Immutable skill policy and expected-next role selection. |
@@ -41,7 +45,7 @@ Ralplan coordinates durable planning passes and produces a pending-approval impl
 
 - Read/write envelope state through `pi workflow state ralplan ...` with the current `sessionId`.
 - Run explorer, planner, architect, critic, revision, and expert-stage agents through the guarded model-visible `ralplan_run_agent` tool. The tool submits one admitted role task to the workflow-owned Orchestrator adapter.
-- Persist explorer context through `pi workflow ralplan record-explorer-gate` and role artifacts through `pi workflow ralplan write-artifact`.
+- Persist explorer context through `pi workflow ralplan record-explorer-gate` and role artifacts through `pi workflow ralplan write-artifact`. Artifact writes require an explicit `runId` or active run and fail if an existing artifact is missing its completion provenance; they do not repair legacy state.
 - Inspect and approve through `pi workflow ralplan <status|doctor|approve-plan>`.
 
 Use `ralplan_run_agent` for role-agent execution. It always spawns the standard bundled agent profile derived from the role (explorer/planner/architect/critic/expert). It is state guarded: the harness computes the legal next role/stage from Ralplan artifacts, refuses off-sequence execution, and verifies the current stage artifact before the task can complete.

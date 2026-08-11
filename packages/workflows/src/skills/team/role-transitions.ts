@@ -1,4 +1,5 @@
-import { type TeamTask, transitionTeamTask } from "#workflows/skills/team/runtime";
+import { transitionTeamTask } from "#workflows/skills/team/tasks";
+import type { TeamTask } from "#workflows/skills/team/types";
 
 export function markWorkerInProgress(
 	cwd: string,

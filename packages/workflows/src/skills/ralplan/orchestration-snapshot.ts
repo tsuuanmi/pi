@@ -3,9 +3,9 @@ import { dirname } from "node:path";
 import type { WorkflowTransactionJournal } from "#workflows/audit/transaction-journal";
 import { transactionJournalPath, workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
 import type { RalplanExplorerGate } from "#workflows/skills/ralplan/gates";
+import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 import { readRalplanObstacleLedger, unresolvedRalplanObstacles } from "#workflows/skills/ralplan/obstacles";
-import type { RalplanIndexRow, RalplanInvalidIndexLine, RalplanStatus } from "#workflows/skills/ralplan/runtime";
-import { readRalplanStatus } from "#workflows/skills/ralplan/runtime";
+import type { RalplanIndexRow, RalplanInvalidIndexLine, RalplanStatus } from "#workflows/skills/ralplan/types";
 import { canonicalizeJson, sha256, workflowReceiptStatus } from "#workflows/state/state-writer";
 
 export const RALPLAN_ORCHESTRATION_SNAPSHOT_VERSION = 1;

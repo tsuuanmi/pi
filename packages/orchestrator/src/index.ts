@@ -26,13 +26,14 @@ export { assertResumeFacts, createRunFacts, normalizeRunFacts } from "#orchestra
 export type { RunIdentity } from "#orchestrator/runtime/identity";
 export { createRunIdentity, normalizeRunIdentity } from "#orchestrator/runtime/identity";
 export type { TaskConsequentialReceipt, TaskExecutionReceipt } from "#orchestrator/runtime/receipt";
-export { TaskQueue } from "#orchestrator/task/queue";
 export type {
-	FormatTaskPromptOptions,
-	TaskBridgeResult,
-	TaskDependencyValidationResult,
-} from "#orchestrator/task/task";
-export { getTaskDependencyOrder, isTaskReady, Task, validateTaskDependencies } from "#orchestrator/task/task";
+	TaskDependencyNode,
+	TaskDependencyState,
+	TaskDependencyValidation,
+} from "#orchestrator/task/dependencies";
+export { getTaskDependencyOrder, isTaskReady, validateTaskDependencies } from "#orchestrator/task/dependencies";
+export { TaskQueue } from "#orchestrator/task/queue";
+export { Task } from "#orchestrator/task/task";
 export type {
 	DependencyPayload,
 	TaskInput,

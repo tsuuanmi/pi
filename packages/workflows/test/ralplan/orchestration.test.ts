@@ -59,22 +59,54 @@ describe("ralplan deterministic orchestration harness", () => {
 		await expect(readFile(artifactPath, "utf8")).rejects.toThrow();
 	});
 
-	it("deduplicates same-hash writes and repairs missing completion sidecars", async () => {
+	it("rejects incomplete or malformed persisted index rows", async () => {
+		const indexPath = ralplanIndexPath(cwd, "run-invalid", sessionId);
+		await mkdir(dirname(indexPath), { recursive: true });
+		const base = {
+			stage: "planner",
+			stage_n: 1,
+			path: ".pi/test-plan.md",
+			sha256: "a".repeat(64),
+			created_at: "2026-01-01T00:00:00.000Z",
+		};
+		await writeFile(
+			indexPath,
+			[
+				{ ...base, stage_n: 0 },
+				{ ...base, path: "" },
+				{ ...base, sha256: "invalid" },
+				{ ...base, created_at: "invalid" },
+				{ ...base, verdict: { role: "critic", verdict: "unknown" } },
+			]
+				.map((row) => JSON.stringify(row))
+				.join("\n"),
+			"utf8",
+		);
+
+		const status = await readRalplanStatus(cwd, sessionId, "run-invalid");
+		expect(status.rows).toHaveLength(0);
+		expect(status.invalid_index_lines).toHaveLength(5);
+	});
+
+	it("requires an active run or explicit run id", async () => {
+		await expect(
+			writeRalplanArtifact(cwd, { stage: "planner", stageN: 1, artifact: "# Plan" }, sessionId),
+		).rejects.toThrow("requires an active run or explicit runId");
+	});
+
+	it("fails closed when a deduplicated artifact has no completion sidecar", async () => {
 		const first = await writeRalplanArtifact(
 			cwd,
 			{ runId: "run-3", stage: "planner", stageN: 1, artifact: "# Plan" },
 			sessionId,
 		);
 		await unlink(ralplanCompletionProvenancePath(first.path));
-		const duplicate = await writeRalplanArtifact(
-			cwd,
-			{ runId: "run-3", stage: "planner", stageN: 1, artifact: "# Plan" },
-			sessionId,
-		);
 
-		expect(duplicate.deduplicated).toBe(true);
-		expect(JSON.parse(await readFile(ralplanCompletionProvenancePath(first.path), "utf8"))).toMatchObject({
-			artifact_sha256: first.sha256,
+		await expect(
+			writeRalplanArtifact(cwd, { runId: "run-3", stage: "planner", stageN: 1, artifact: "# Plan" }, sessionId),
+		).rejects.toMatchObject({ code: "ENOENT" });
+		await expect(readFile(ralplanCompletionProvenancePath(first.path), "utf8")).rejects.toMatchObject({
+			code: "ENOENT",
 		});
 		expect((await readRalplanStatus(cwd, sessionId, "run-3")).rows).toHaveLength(1);
 	});
@@ -99,8 +131,20 @@ describe("ralplan deterministic orchestration harness", () => {
 		await writeFile(
 			indexPath,
 			[
-				{ stage: "pre-planner", stage_n: 1, path: "/tmp/explorer.md", sha256: "a", created_at: "now" },
-				{ stage: "expert-stage", stage_n: 2, path: "/tmp/expert.md", sha256: "b", created_at: "now" },
+				{
+					stage: "pre-planner",
+					stage_n: 1,
+					path: "/tmp/explorer.md",
+					sha256: "a".repeat(64),
+					created_at: "2026-01-01T00:00:00.000Z",
+				},
+				{
+					stage: "expert-stage",
+					stage_n: 2,
+					path: "/tmp/expert.md",
+					sha256: "b".repeat(64),
+					created_at: "2026-01-01T00:00:01.000Z",
+				},
 			]
 				.map((row) => JSON.stringify(row))
 				.join("\n"),
