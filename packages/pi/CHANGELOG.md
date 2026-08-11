@@ -226,7 +226,7 @@
 - Fixed interactive hide controls so thinking visibility updates in place and long bash command headers collapse with tool output expansion.
 - Aligned assistant text and bash tool card padding with the compact shared TUI gutter.
 - Reduced status-line flicker by refreshing git dirty counts every 10 seconds and skipping unchanged git-status re-renders.
-- Fixed bundled extension loading for imports from `@tsuuanmi/pi-agent/node`.
+- Fixed bundled extension startup when `tsx` resolves imports from `@tsuuanmi/pi-agent/node` by adding explicit source and build path mappings.
 - Fixed stale extension runners from emitting handlers after session replacement or reload, preventing stale context errors on later prompts.
 - Fixed spurious "Extension … error: This extension ctx is stale …" messages when an async event handler (e.g. a workflow HUD handler) resumed after an `await` that straddled session replacement/reload. The stale-ctx throw is now treated as a benign lifecycle race (the owning session is gone) and no longer surfaces as an extension error via `ExtensionRunner.emitError`.
 - Fixed subagent sessions sharing the parent session's `ResourceLoader` (and therefore its `ExtensionRuntime` and `Extension` objects), so disposing a completed subagent no longer invalidates the parent's shared extension runtime and stale-ifies the parent's captured extension API on the next `before_agent_start`. This affected every subagent-spawning workflow tool (deep-interview, ralplan, team, ultragoal) and any `subagent_spawn` call. Subagents now build an isolated `ResourceLoader` mirroring the parent's extension configuration while reusing the parent's settings manager to preserve active settings state.

@@ -9,6 +9,7 @@
 			"@tsuuanmi/pi": ["../pi/dist/index.d.ts"],
 			"@tsuuanmi/pi/*": ["../pi/dist/*.d.ts"],
 			"@tsuuanmi/pi-agent": ["../agent/dist/index.d.ts"],
+			"@tsuuanmi/pi-agent/node": ["../agent/dist/node/node.d.ts"],
 			"@tsuuanmi/pi-agent/*": ["../agent/dist/*.d.ts"],
 			"@tsuuanmi/pi-ai": ["../ai/dist/index.d.ts"],
 			"@tsuuanmi/pi-ai/*": ["../ai/dist/*.d.ts", "../ai/dist/providers/*.d.ts"],

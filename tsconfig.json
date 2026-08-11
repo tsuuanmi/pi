@@ -85,6 +85,9 @@
 			"@tsuuanmi/pi-agent": [
 				"./packages/agent/src/index.ts"
 			],
+			"@tsuuanmi/pi-agent/node": [
+				"./packages/agent/src/node/node.ts"
+			],
 			"@tsuuanmi/pi-agent/*": [
 				"./packages/agent/src/*"
 			],
