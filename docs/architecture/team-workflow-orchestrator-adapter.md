@@ -203,4 +203,4 @@ Team workflow command/tool
 
 ## Remaining runtime work
 
-The focused adapter modules, explicit role coordinator, and fresh/resume operations are implemented. Each role batch has its own strictly persisted checkpoint; failed results are persisted and event writes are idempotent. Gate decisions remain workflow-owned. Do not integrate this team DAG into ultragoal, ralplan, or deep-interview without a separate requirement.
+The focused adapter modules, explicit role coordinator, and fresh/resume operations are implemented. Each role batch has its own strictly persisted checkpoint; failed results are persisted and event writes are idempotent. Gate decisions remain workflow-owned. Ralplan approved plans map to Team or Ultragoal through the workflow-owned `approved-output.ts` adapter. Do not integrate this team DAG into ultragoal, ralplan, or deep-interview without a separate requirement.

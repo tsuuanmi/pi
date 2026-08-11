@@ -35,7 +35,7 @@ workflow TeamTask[]
 
 The workflow decides which role may run, validates workflow gates, owns persistence paths, and maps results back to workflow state. The orchestrator handles task dependencies, routing, retries, execution, and generic run checkpoints. A workflow-owned checkpoint store may persist an orchestrator checkpoint, but the checkpoint schema remains owned by the orchestrator.
 
-`ralplan` remains workflow-specific in policy, state, artifacts, verdicts, and approval, but its admitted role-agent execution runs through a workflow-owned Orchestrator adapter. The initial integration executes one stage per Orchestrator run so revision and expert branches remain workflow-controlled. `deep-interview` remains workflow-owned because its next step is driven by interactive answers rather than task scheduling. `ultragoal` should use the orchestrator only if it acquires a genuine generic multi-goal DAG; its goals and quality gates are otherwise workflow concepts.
+`ralplan` remains workflow-specific in policy, state, artifacts, verdicts, and approval, but its admitted role-agent execution runs through a workflow-owned Orchestrator adapter. The initial integration executes one stage per Orchestrator run so revision and expert branches remain workflow-controlled. `deep-interview` remains workflow-owned because its next step is driven by interactive answers rather than task scheduling. `ultragoal` remains workflow-owned: its goals and quality gates are workflow concepts, and the package-boundary check rejects Orchestrator imports until it acquires a genuine generic multi-goal DAG.
 
 ## Choosing the package
 

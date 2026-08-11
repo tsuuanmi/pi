@@ -75,7 +75,7 @@ Decision:
 
 - Keep ultragoal-owned goals and quality gates in workflows.
 - Do not map every goal to `Task` by default; ultragoal goals include workflow-specific gate and evidence semantics.
-- Consider orchestrator only if ultragoal gains explicit multi-agent or dependency-DAG execution for independent goals.
+- The package-boundary check rejects Orchestrator imports from Ultragoal; revisit only if ultragoal gains explicit multi-agent or dependency-DAG execution for independent goals.
 
 Do not move into orchestrator:
 
