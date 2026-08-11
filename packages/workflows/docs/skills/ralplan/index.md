@@ -44,7 +44,7 @@ Ralplan coordinates durable planning passes and produces a pending-approval impl
 - Persist explorer context through `pi workflow ralplan record-explorer-gate` and role artifacts through `pi workflow ralplan write-artifact`.
 - Inspect and approve through `pi workflow ralplan <status|doctor|approve-plan>`.
 
-Use `ralplan_run_agent` for role-agent execution. It is state guarded: the harness computes the legal next role/stage from Ralplan artifacts, refuses off-sequence execution, and verifies the current stage artifact before the task can complete.
+Use `ralplan_run_agent` for role-agent execution. It always spawns the standard bundled agent profile derived from the role (explorer/planner/architect/critic/expert). It is state guarded: the harness computes the legal next role/stage from Ralplan artifacts, refuses off-sequence execution, and verifies the current stage artifact before the task can complete.
 
 The Orchestrator owns task execution, agent invocation, checkpointing, and task receipts. Ralplan owns role selection, critic verdicts, revision and expert branching, artifact transactions, approval, and workflow receipts. The first integration executes one admitted stage per Orchestrator run so conditional Ralplan loops remain workflow policy.
 

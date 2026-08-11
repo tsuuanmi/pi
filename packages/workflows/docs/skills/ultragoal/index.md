@@ -37,7 +37,7 @@ Ultragoal manages goal-tracked execution under the current session root. One mai
 - Advance/checkpoint goals through `pi workflow ultragoal <start-next|checkpoint|restore-checkpoint|record-review-blockers|classify-blocker|guard>`.
 - Spawn workers through the guarded model-visible `ultragoal_spawn_goal_agent` tool.
 
-Use `ultragoal_spawn_goal_agent` for worker execution. It is state guarded: the harness computes the legal next goal from ultragoal state and refuses off-sequence spawns or runtime model/tool overrides.
+Use `ultragoal_spawn_goal_agent` for worker execution. It always spawns the standard `worker` agent profile. It is state guarded: the harness computes the legal next goal from ultragoal state and refuses off-sequence spawns or runtime model/tool overrides.
 
 ## Workflow
 

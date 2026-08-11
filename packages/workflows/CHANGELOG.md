@@ -31,6 +31,7 @@
 
 ### Changed
 
+- **agents**: Guarded workflow spawns now use standard bundled agent profiles only. `ralplan_run_agent` removed its optional `agent` override and derives the profile from the legal role (explorer/planner/architect/critic/expert); `ultragoal_spawn_goal_agent` removed its optional `agent` override and always spawns the `worker` profile, using `worker` as the subagent role instead of the invented `ultragoal-worker-<goal-id>` label. `assertNoGuardedSpawnOverrides` no longer lists `agent` as an accepted guard input.
 - **agents**: The `explorer` profile is now a general read-only research agent: it pins `model: openai-coex/gpt-5.6-luna` to run bulk reading/reporting on a cheaper model, keeps read-only tools (`read`, `bash`), and supports two modes — ralplan skill mode (persists a `context_map` via the workflow tool) and general research mode (returns a concise cited report for use before deep-interview questions or other read-only investigation). System prompt and description updated accordingly.
 - **build**: Workflows now copies its own runtime assets through a package-owned build script and can be bundled without reconstructing its package layout.
 - **session**: Workflow-specific layout remains in Workflows while shared `.pi` root and path-segment primitives are provided by `@tsuuanmi/pi/session/root`.

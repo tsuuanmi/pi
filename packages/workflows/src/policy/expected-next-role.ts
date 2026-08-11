@@ -124,14 +124,12 @@ export function expectedNextTeamRole(snapshot: TeamSelectorSnapshot | undefined)
 }
 
 export function assertNoGuardedSpawnOverrides(input: {
-	agent?: string;
 	model?: string;
 	thinkingLevel?: string;
 	tools?: readonly string[];
 	excludeTools?: readonly string[];
 }): void {
 	const overrides = [
-		input.agent ? "agent" : undefined,
 		input.model ? "model" : undefined,
 		input.thinkingLevel ? "thinkingLevel" : undefined,
 		input.tools ? "tools" : undefined,

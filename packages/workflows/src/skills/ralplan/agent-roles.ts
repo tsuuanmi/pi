@@ -7,7 +7,6 @@ export type RalplanAgentRole = "explorer" | "planner" | "architect" | "critic" |
 
 export interface RalplanAgentInput {
 	role: RalplanAgentRole;
-	agent?: string;
 	model?: string;
 	thinkingLevel?: ThinkingLevel;
 	tools?: readonly string[];
@@ -60,7 +59,7 @@ export function createRalplanAgentRequest(input: RalplanAgentInput): RalplanAgen
 		throw new Error(`ralplan ${input.stage} stage requires the ${expectedRole} role`);
 	}
 
-	const profile = input.agent === undefined ? input.role : requiredString(input.agent, "agent");
+	const profile = input.role;
 	const excludeTools = input.role === "expert" ? mergeExpertTools(input.excludeTools) : copyTools(input.excludeTools);
 	return Object.freeze({
 		agentRunId: `ralagent-${randomUUID()}`,

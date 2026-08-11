@@ -2,7 +2,8 @@
 
 ### Changed
 
-- **ui**: Interactive assistant thinking blocks now render in full by default instead of a one-line preview; `Ctrl+T` still hides thinking. `Ctrl+O` now only collapses/expands tool output and no longer affects thinking.
+- **subagents**: The model-visible `subagent_spawn` tool now requires a registered `agent` profile and no longer accepts an inventable `role` label; the spawned subagent's role is always the loaded agent profile name, so only known agent profiles (from `.agent/agents`, `.agents/agents`, user agents, or bundled package agents) can be spawned.
+- **ui**: Interactive assistant thinking blocks now render in full by default instead of a one-line preview; `Ctrl+T` still hides thinking and `Ctrl+O` still collapses/expands details.
 - **sessions**: The session loader accepts legacy version 3 JSONL files (and their `compaction.fromHook` field) on read so existing sessions open again; new files continue to be written at version 4.
 - **storage**: Removed dedicated POSIX permission handling from session, auth, settings, and package directories; regular-file validation and atomic writes remain.
 - **packages**: Bundled package discovery and asset copying now derive from compiled `pi` manifests; unknown `pi:` sources fail instead of falling back to local paths. The orchestrator dependency remains in Pi's runtime closure for dynamically loaded bundled packages, without a static Pi import.

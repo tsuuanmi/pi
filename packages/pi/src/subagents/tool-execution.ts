@@ -26,7 +26,6 @@ export async function spawn(
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
 	const result = await context.manager.spawn({
 		agent: params.agent,
-		role: params.role,
 		prompt: params.prompt,
 		model: params.model,
 		thinkingLevel: parseThinkingLevel(params.thinkingLevel),
@@ -44,7 +43,7 @@ export async function spawn(
 	const agent = result.record.agent_profile ?? params.agent ?? "default";
 	lines.push(`agent: ${agent}`);
 	if (result.record.model ?? params.model) lines.push(`model: ${result.record.model ?? params.model}`);
-	const role = result.record.role ?? params.role;
+	const role = result.record.role;
 	if (role) lines.push(`role: ${role}`);
 	if (result.record.label ?? params.label) lines.push(`label: ${result.record.label ?? params.label}`);
 	if (params.detached) lines.push("detached: true");

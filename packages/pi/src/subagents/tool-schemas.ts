@@ -1,10 +1,10 @@
 import { type Static, Type } from "typebox";
 
 export const subagentSpawnSchema = Type.Object({
-	agent: Type.Optional(Type.String({ description: "Agent profile identifier resolved by the host." })),
-	role: Type.Optional(
-		Type.String({ description: "Subagent role label. Defaults to agent profile name or subagent." }),
-	),
+	agent: Type.String({
+		description:
+			"Required agent profile identifier. Must be a registered agent profile loaded by the host (from .agent/agents, .agents/agents, user agents, or enabled package agents such as the bundled workflows profiles).",
+	}),
 	prompt: Type.String({ description: "User task prompt for the subagent." }),
 	model: Type.Optional(Type.String({ description: "Override the selected model as provider/model." })),
 	thinkingLevel: Type.Optional(Type.String({ description: "Override the selected thinking level." })),

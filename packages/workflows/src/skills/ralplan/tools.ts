@@ -23,7 +23,6 @@ const ralplanRunAgentSchema = Type.Object({
 	role: Type.Optional(
 		Type.String({ description: "explorer, planner, architect, critic, or expert. Defaults from stage." }),
 	),
-	agent: Type.Optional(Type.String({ description: "Agent profile name. Defaults to the role name." })),
 	model: Type.Optional(Type.String({ description: "Override agent profile model as provider/model." })),
 	thinkingLevel: Type.Optional(Type.String({ description: "Override agent profile thinking level." })),
 	tools: Type.Optional(Type.Array(Type.String({ description: "Override agent profile tools." }))),
@@ -111,7 +110,6 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Workflo
 	assertNoGuardedSpawnOverrides(params);
 	const agentInput = {
 		role,
-		agent: params.agent,
 		model: params.model,
 		thinkingLevel,
 		tools: params.tools,

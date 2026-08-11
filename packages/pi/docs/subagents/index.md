@@ -32,8 +32,7 @@ Spawn an isolated agent session.
 
 ```jsonc
 {
-  "agent": "worker",                 // optional: markdown agent profile name from .agent/agents, .agents/agents, or built-ins
-  "role": "implementer",             // optional: role label; defaults to profile name or "subagent"
+  "agent": "worker",                 // required: registered agent profile name (.agent/agents, .agents/agents, user agents, or bundled package agents)
   "prompt": "Fix the failing tests",  // required: task prompt
   "model": "anthropic/claude-...",    // optional: provider/model override
   "thinkingLevel": "medium",          // optional: off|minimal|low|medium|high
