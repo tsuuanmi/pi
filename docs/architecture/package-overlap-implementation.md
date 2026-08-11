@@ -218,6 +218,8 @@ Completed. Pi now owns a dedicated repository-state service; TUI consumes synchr
 - Watchers, polling timers and in-flight updates are inert after disposal.
 - No legacy exports, fallback managers or compatibility aliases remain.
 
+Theme mechanics remain TUI-owned and process-local under the package boundary contract. Host-scoped theme injection is not part of this phase; reopen it only for a concrete multi-host requirement with a defined provider API.
+
 ## Phase 7 - Ultragoal obstacle transition convergence
 
 ### Goal

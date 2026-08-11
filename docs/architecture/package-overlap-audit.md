@@ -207,7 +207,9 @@ If any answer is no, keep the behavior in Workflows until the generic path is cl
 | 6 | Complete receipt reference boundaries | Complete | Layer-specific public receipt names are explicit; workflow tool details are not mislabeled as receipts; Workflows references lower receipt ids without copying schemas |
 | 7 | Prove workflow-owned checkpoint recovery parity | Complete | Restart/interrupted recovery is idempotent and independent of workflow state |
 | 8 | Normalize cross-layer event documentation and mappings | Complete | Every bridge has one source event and explicit adapter |
-| 9 | Move repository-state acquisition out of TUI and reduce global UI state | Repository/keybinding complete; theme remains | TUI receives repository snapshots and active keybindings through host-scoped providers; theme scoping is tracked separately |
+| 9 | Move repository-state acquisition out of TUI and scope keybindings to each host | Complete | TUI receives repository snapshots and active keybindings through host-scoped providers |
 | 10 | Define approved Ralplan output adapters | Complete | Approved plans map to downstream workflow inputs without moving planning policy |
 | 11 | Evaluate Ultragoal Orchestrator use only for a real generic DAG | Complete — no adapter | Ultragoal has an ordered goal sequence, not independent goals with generic dependencies; a boundary check prevents accidental Orchestrator coupling |
 | 12 | Defer shared memory and new delegation APIs | Deferred | No speculative cross-package state or alternate lifecycle facade |
+
+Theme mechanics remain TUI-owned and process-local under the package boundary contract. Host-scoped theme injection is outside this package-overlap roadmap and should be reopened only for a concrete multi-host requirement with a defined provider API.
