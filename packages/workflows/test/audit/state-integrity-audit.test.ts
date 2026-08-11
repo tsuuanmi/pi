@@ -121,7 +121,7 @@ describe("state-integrity audit log (STATE-005)", () => {
 			// No new audit line could be appended (file read-only).
 			expect(after).toHaveLength(1);
 		} finally {
-			await chmod(auditFile, 0o600);
+			await chmod(auditFile, 0o644);
 		}
 	});
 });

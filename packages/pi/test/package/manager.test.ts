@@ -1,4 +1,4 @@
-import { mkdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -935,7 +935,6 @@ Content`,
 			expect(pathEndsWith(installPath, "node_modules/left-pad")).toBe(true);
 			expect(relative(tempRoot, installPath).startsWith("..")).toBe(false);
 			expect(installPath.startsWith(join(tmpdir(), "pi-extensions"))).toBe(false);
-			expect(statSync(tempRoot).mode & 0o777).toBe(0o700);
 		});
 	});
 

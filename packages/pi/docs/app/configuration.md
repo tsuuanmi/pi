@@ -13,7 +13,7 @@ Settings are resolved in order of priority (highest wins):
 
 Nested objects are deep-merged. For example, project `compaction.reserveTokens` overrides the global value while preserving other compaction settings.
 
-Settings use a strict schema. Invalid JSON, unknown fields, invalid values, and insecure permissions stop startup. Setters complete their lock-protected atomic write before returning.
+Settings use a strict schema. Invalid JSON, unknown fields, and invalid values stop startup. Setters complete their lock-protected atomic write before returning.
 
 ## Settings File
 

@@ -1,4 +1,4 @@
-import { chmodSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -24,15 +24,10 @@ describe("settings storage", () => {
 		expect(existsSync(join(cwd, ".pi"))).toBe(false);
 	});
 
-	it("writes private files atomically", () => {
+	it("writes files atomically", () => {
 		const storage = new FileStorage(cwd, agentDir);
 		storage.update("global", () => "{}\n");
-		const path = join(agentDir, "settings.json");
 		expect(storage.read("global")).toBe("{}\n");
-		if (process.platform !== "win32") {
-			expect(statSync(agentDir).mode & 0o777).toBe(0o700);
-			expect(statSync(path).mode & 0o777).toBe(0o600);
-		}
 		expect(readdirSync(agentDir).filter((name) => name.endsWith(".tmp"))).toEqual([]);
 	});
 
@@ -46,13 +41,13 @@ describe("settings storage", () => {
 		expect(storage.read("global")).toBe('{"theme":"light"}\n');
 	});
 
-	it("rejects insecure files", () => {
+	it("reads files regardless of POSIX permission mode", () => {
 		if (process.platform === "win32") return;
 		mkdirSync(agentDir, { recursive: true });
 		const path = join(agentDir, "settings.json");
-		writeFileSync(path, "{}\n", { encoding: "utf8", mode: 0o600 });
+		writeFileSync(path, "{}\n", { encoding: "utf8" });
 		chmodSync(path, 0o644);
 		const storage = new FileStorage(cwd, agentDir);
-		expect(() => storage.read("global")).toThrow("permissions must be 0600");
+		expect(storage.read("global")).toBe("{}\n");
 	});
 });

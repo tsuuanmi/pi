@@ -27,7 +27,7 @@ import type {
 } from "#pi/auth/types";
 import { getAgentDir } from "#pi/loader/paths";
 import { resolveConfigValue } from "#pi/loader/value";
-import { assertPrivateFile, ensurePrivateDir, writePrivateFile } from "#pi/storage/file";
+import { assertRegularFile, ensureDir, writeFile } from "#pi/storage/file";
 
 type LockResult<T> = {
 	result: T;
@@ -47,7 +47,7 @@ export class FileAuthStorageBackend implements AuthStorageBackend {
 	}
 
 	private ensureDirectory(): void {
-		ensurePrivateDir(dirname(this.authPath));
+		ensureDir(dirname(this.authPath));
 	}
 
 	private acquireLockSyncWithRetry(path: string): () => void {
@@ -81,10 +81,10 @@ export class FileAuthStorageBackend implements AuthStorageBackend {
 		this.ensureDirectory();
 		const release = this.acquireLockSyncWithRetry(this.authPath);
 		try {
-			if (existsSync(this.authPath)) assertPrivateFile(this.authPath);
+			if (existsSync(this.authPath)) assertRegularFile(this.authPath);
 			const current = existsSync(this.authPath) ? readFileSync(this.authPath, "utf8") : undefined;
 			const { result, next } = fn(current);
-			if (next !== undefined) writePrivateFile(this.authPath, next);
+			if (next !== undefined) writeFile(this.authPath, next);
 			return result;
 		} finally {
 			release();
@@ -119,11 +119,11 @@ export class FileAuthStorageBackend implements AuthStorageBackend {
 			});
 
 			throwIfCompromised();
-			if (existsSync(this.authPath)) assertPrivateFile(this.authPath);
+			if (existsSync(this.authPath)) assertRegularFile(this.authPath);
 			const current = existsSync(this.authPath) ? readFileSync(this.authPath, "utf8") : undefined;
 			const { result, next } = await fn(current);
 			throwIfCompromised();
-			if (next !== undefined) writePrivateFile(this.authPath, next);
+			if (next !== undefined) writeFile(this.authPath, next);
 			throwIfCompromised();
 			return result;
 		} finally {

@@ -15,7 +15,7 @@ function createSessionFile(path: string): void {
 		timestamp: new Date(0).toISOString(),
 		cwd: dirname(path),
 	};
-	writeFileSync(path, `${JSON.stringify(header)}\n`, { encoding: "utf8", mode: 0o600 });
+	writeFileSync(path, `${JSON.stringify(header)}\n`, { encoding: "utf8" });
 
 	// SessionManager only persists once it has seen at least one assistant message.
 	// Add a minimal assistant entry so subsequent appends are persisted.

@@ -6,7 +6,7 @@ Credential storage, account management, and OAuth flows for LLM providers.
 
 Pi supports two authentication methods for LLM providers: API keys and OAuth tokens. Credentials are stored in `~/.pi/agent/auth.json` with file locking to prevent race conditions when multiple Pi instances run concurrently.
 
-Credential files use strict permissions: directories are `0700` and files are `0600` on POSIX. Malformed JSON, unknown fields, invalid references, and insecure permissions throw rather than fail open.
+Credential files use strict schemas. Malformed JSON, unknown fields, and invalid references throw rather than fail open.
 
 ## Authentication Methods
 
@@ -144,7 +144,7 @@ Two implementations:
 - **Sync path** (`withLock`): Retries up to 10 times with 20ms busy-wait delay
 - **Async path** (`withLockAsync`): Retries with exponential backoff (10 retries, 100ms–10s), 30s stale lock detection
 
-Auth files are created with mode `0600` (owner read/write only). Parent directories are created with mode `0700`. Existing files with insecure permissions are rejected on read and write.
+Auth files and their parent directories are created as needed. Existing files are validated on read and write.
 
 ## API Reference
 

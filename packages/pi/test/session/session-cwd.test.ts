@@ -23,7 +23,7 @@ function writeSessionFile(path: string, cwd: string): void {
 			timestamp: new Date().toISOString(),
 			cwd,
 		})}\n`,
-		{ mode: 0o600 },
+		{ encoding: "utf8" },
 	);
 }
 

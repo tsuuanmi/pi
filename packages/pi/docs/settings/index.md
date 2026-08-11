@@ -7,7 +7,7 @@ Pi uses JSON settings files with project settings overriding global settings.
 | `~/.pi/agent/settings.json` | Global (all projects) |
 | `.pi/settings.json` | Project (current directory) |
 
-Edit directly or use `/settings` for common options. Only documented fields are accepted. Invalid JSON, unknown fields, invalid values, and insecure permissions stop startup. Writes are synchronous, lock-protected, atomic, and use mode `0600` on POSIX systems.
+Edit directly or use `/settings` for common options. Only documented fields are accepted. Invalid JSON, unknown fields, and invalid values stop startup. Writes are synchronous, lock-protected, and atomic.
 
 ## All Settings
 

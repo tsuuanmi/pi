@@ -1,11 +1,10 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync as writeFile } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync as writeFile } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { SettingsManager } from "#pi/settings/manager";
 
 function writeSettings(path: string, content: string): void {
-	writeFile(path, content, { encoding: "utf8", mode: 0o600 });
-	if (process.platform !== "win32") chmodSync(path, 0o600);
+	writeFile(path, content, { encoding: "utf8" });
 }
 
 /**

@@ -4,6 +4,7 @@
 
 - **ui**: Interactive assistant thinking blocks now render in full by default instead of a one-line preview; `Ctrl+T` still hides thinking and `Ctrl+O` still collapses/expands details.
 - **sessions**: The session loader accepts legacy version 3 JSONL files (and their `compaction.fromHook` field) on read so existing sessions open again; new files continue to be written at version 4.
+- **storage**: Removed dedicated POSIX permission handling from session, auth, settings, and package directories; regular-file validation and atomic writes remain.
 - **packages**: Bundled package discovery and asset copying now derive from compiled `pi` manifests; unknown `pi:` sources fail instead of falling back to local paths. The orchestrator dependency remains in Pi's runtime closure for dynamically loaded bundled packages, without a static Pi import.
 - **sessions**: Pi now owns the public `.pi` root and session path primitives at `@tsuuanmi/pi/session/root`; Workflows extends that layout without Pi importing Workflows.
 - **extensions**: Added `ExtensionAPI.registerHudProvider()` so packages can contribute domain-owned status-line data without Pi importing package-specific state.
@@ -12,9 +13,9 @@
 
 ### Breaking Changes
 
-- **sessions**: Session files now require strict version 4 JSONL and private permissions; removed older-version migration, malformed-record recovery, compatibility fields, implicit recent-session creation, and the `continueRecent()` API.
-- **settings**: Settings now use strict schema validation and synchronous atomic persistence; invalid files and insecure permissions throw instead of loading empty settings, and `flush()`, `drainErrors()`, and settings diagnostics were removed.
-- **auth**: Credential storage now fails closed: `auth.json` is validated with a strict schema on load and write, files use atomic private writes (`0700` directories, `0600` files), malformed files and insecure permissions throw, and `setFallbackResolver()`, `drainErrors()`, deferred `loadError`/`errors`, and the `"fallback"` auth source were removed. `switchAccount()` and `removeAccount()` return `void` and throw on missing accounts; `removeAccount()` requires switching before removing the active account; API key resolution throws on command failure, empty output, or unset environment variables instead of returning `undefined`.
+- **sessions**: Session files now require strict version 4 JSONL; removed older-version migration, malformed-record recovery, compatibility fields, implicit recent-session creation, and the `continueRecent()` API.
+- **settings**: Settings now use strict schema validation and synchronous atomic persistence; invalid files throw instead of loading empty settings, and `flush()`, `drainErrors()`, and settings diagnostics were removed.
+- **auth**: Credential storage now fails closed: `auth.json` is validated with a strict schema on load and write, files use atomic writes, malformed files throw, and `setFallbackResolver()`, `drainErrors()`, deferred `loadError`/`errors`, and the `"fallback"` auth source were removed. `switchAccount()` and `removeAccount()` return `void` and throw on missing accounts; `removeAccount()` requires switching before removing the active account; API key resolution throws on command failure, empty output, or unset environment variables instead of returning `undefined`.
 - **tree**: `/tree` now shows only user and assistant message checkpoints; tree filter modes and keybindings were removed.
 - **settings**: Removed legacy settings migration, split the manager into focused modules, and removed the old module path; use `settings/manager`.
 - **agent**: Updated Pi-facing agent and session contracts to use `AgentMessage` for agent-owned transcript messages; the LLM protocol `Message` remains owned by `@tsuuanmi/pi-ai`.

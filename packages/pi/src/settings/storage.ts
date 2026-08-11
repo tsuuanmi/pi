@@ -5,7 +5,7 @@ import lockfile from "proper-lockfile";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
 import { getAgentDir } from "#pi/loader/paths";
 import type { SettingsScope, SettingsStorage } from "#pi/settings/types";
-import { assertPrivateFile, ensurePrivateDir, writePrivateFile } from "#pi/storage/file";
+import { assertRegularFile, ensureDir, writeFile } from "#pi/storage/file";
 
 function lock(path: string): () => void {
 	const attempts = 10;
@@ -42,7 +42,7 @@ export class FileStorage implements SettingsStorage {
 	read(scope: SettingsScope): string | undefined {
 		const path = this.paths[scope];
 		if (!existsSync(path)) return undefined;
-		assertPrivateFile(path);
+		assertRegularFile(path);
 		const release = lock(path);
 		try {
 			return readFileSync(path, "utf8");
@@ -53,12 +53,12 @@ export class FileStorage implements SettingsStorage {
 
 	update(scope: SettingsScope, update: (current: string | undefined) => string): void {
 		const path = this.paths[scope];
-		ensurePrivateDir(dirname(path));
+		ensureDir(dirname(path));
 		const release = lock(path);
 		try {
-			if (existsSync(path)) assertPrivateFile(path);
+			if (existsSync(path)) assertRegularFile(path);
 			const current = existsSync(path) ? readFileSync(path, "utf8") : undefined;
-			writePrivateFile(path, update(current));
+			writeFile(path, update(current));
 		} finally {
 			release();
 		}

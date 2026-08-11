@@ -1,4 +1,4 @@
-import { chmodSync, mkdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -17,7 +17,7 @@ describe("session listing", () => {
 
 	beforeEach(() => {
 		dir = join(tmpdir(), `pi-session-list-${process.pid}-${Date.now()}`);
-		mkdirSync(dir, { recursive: true, mode: 0o700 });
+		mkdirSync(dir, { recursive: true });
 	});
 
 	afterEach(() => rmSync(dir, { recursive: true, force: true }));
@@ -35,8 +35,7 @@ describe("session listing", () => {
 
 	it("fails instead of skipping an invalid session", () => {
 		const path = join(dir, "invalid.jsonl");
-		writeFileSync(path, "not-json\n", { encoding: "utf8", mode: 0o600 });
-		if (process.platform !== "win32") chmodSync(path, 0o600);
+		writeFileSync(path, "not-json\n", { encoding: "utf8" });
 		expect(() => findMostRecentSession(dir, resolve(dir))).toThrow();
 	});
 

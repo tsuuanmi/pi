@@ -1,4 +1,4 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { registerOAuthProvider } from "@tsuuanmi/pi-ai/oauth";
@@ -14,8 +14,7 @@ describe("AuthStorage", () => {
 
 	beforeEach(() => {
 		tempDir = join(tmpdir(), `pi-test-auth-storage-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-		mkdirSync(tempDir, { recursive: true, mode: 0o700 });
-		if (process.platform !== "win32") chmodSync(tempDir, 0o700);
+		mkdirSync(tempDir, { recursive: true });
 		authJsonPath = join(tempDir, "auth.json");
 	});
 
@@ -28,8 +27,7 @@ describe("AuthStorage", () => {
 	});
 
 	function writeAuthJson(data: Record<string, unknown>) {
-		writeFileSync(authJsonPath, JSON.stringify(data), { encoding: "utf8", mode: 0o600 });
-		if (process.platform !== "win32") chmodSync(authJsonPath, 0o600);
+		writeFileSync(authJsonPath, JSON.stringify(data), { encoding: "utf8" });
 	}
 
 	function toShPath(value: string): string {

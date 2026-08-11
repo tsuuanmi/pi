@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { chmodSync, mkdirSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { join, resolve as resolvePathname, sep } from "node:path";
 import { resolvePath as resolveConfiguredPath } from "@tsuuanmi/pi-agent/node";
 import { CONFIG_DIR_NAME } from "#pi/config";
@@ -81,8 +81,7 @@ export class PackagePaths {
 
 	private tempRoot(): string {
 		const root = join(this.agentDir, "tmp", "extensions");
-		mkdirSync(root, { recursive: true, mode: 0o700 });
-		chmodSync(root, 0o700);
+		mkdirSync(root, { recursive: true });
 		return root;
 	}
 

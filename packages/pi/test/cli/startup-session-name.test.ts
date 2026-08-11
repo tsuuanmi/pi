@@ -62,7 +62,7 @@ function createSessionFile(projectDir: string, sessionFile: string): void {
 				},
 			},
 		)}\n`,
-		{ mode: 0o600 },
+		{ encoding: "utf8" },
 	);
 }
 

@@ -20,7 +20,7 @@ Pi also supports deleting sessions interactively from `/resume` (select a sessio
 
 New sessions are written at version 4. The loader also accepts legacy version 3 files so existing sessions keep opening; missing, v1/v2, and newer-than-4 versions are rejected. Pi does not migrate or rewrite sessions — it reads them as-is.
 
-Every line is validated before a session is opened. Blank lines, malformed JSON, unknown entry types or fields, duplicate IDs, missing parents, and invalid references stop loading with a line-specific error. On POSIX systems, session files must use mode `0600`.
+Every line is validated before a session is opened. Blank lines, malformed JSON, unknown entry types or fields, duplicate IDs, missing parents, and invalid references stop loading with a line-specific error.
 
 ## Source Files
 

@@ -1,8 +1,6 @@
 import {
-	chmodSync,
 	closeSync,
 	existsSync,
-	fchmodSync,
 	fsyncSync,
 	lstatSync,
 	mkdirSync,
@@ -15,17 +13,12 @@ import { dirname } from "node:path";
 import { decodeHeader, decodeSession, SessionFormatError } from "#pi/session/codec";
 import type { FileEntry, SessionEntry, SessionHeader } from "#pi/session/types";
 
-const DIRECTORY_MODE = 0o700;
-const FILE_MODE = 0o600;
 const HEADER_CHUNK_SIZE = 4096;
 const MAX_HEADER_BYTES = 64 * 1024;
 
 function assertRegularFile(path: string): void {
 	const stat = lstatSync(path);
 	if (!stat.isFile()) throw new Error(`Session path is not a regular file: ${path}`);
-	if (process.platform !== "win32" && (stat.mode & 0o077) !== 0) {
-		throw new Error(`Session file permissions must be 0600: ${path}`);
-	}
 }
 
 function line(entry: FileEntry): string {
@@ -33,8 +26,7 @@ function line(entry: FileEntry): string {
 }
 
 export function ensureSessionDir(path: string): void {
-	mkdirSync(path, { recursive: true, mode: DIRECTORY_MODE });
-	if (process.platform !== "win32") chmodSync(path, DIRECTORY_MODE);
+	mkdirSync(path, { recursive: true });
 }
 
 export function readSessionFile(path: string): FileEntry[] {
@@ -89,9 +81,8 @@ export function createSessionFile(path: string, entries: readonly FileEntry[]): 
 	}
 	if (existsSync(path)) throw new Error(`Session file already exists: ${path}`);
 	ensureSessionDir(dirname(path));
-	const fd = openSync(path, "wx", FILE_MODE);
+	const fd = openSync(path, "wx");
 	try {
-		if (process.platform !== "win32") fchmodSync(fd, FILE_MODE);
 		for (const entry of entries) writeFileSync(fd, line(entry));
 		fsyncSync(fd);
 	} finally {
