@@ -5,7 +5,7 @@ export const SESSION_VERSION = 4;
 
 export interface SessionHeader {
 	type: "session";
-	version: typeof SESSION_VERSION;
+	version: number;
 	id: string;
 	timestamp: string;
 	cwd: string;

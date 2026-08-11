@@ -60,13 +60,19 @@ describe("session store", () => {
 		for (const [name, content] of [
 			["empty.jsonl", ""],
 			["malformed.jsonl", "not-json\n"],
-			["old.jsonl", `${JSON.stringify({ ...header("old", resolve(dir)), version: 3 })}\n`],
 		] as const) {
 			const path = join(dir, name);
 			writePrivate(path, content);
 			expect(() => SessionManager.open(path, dir)).toThrow();
 			expect(readFileSync(path, "utf8")).toBe(content);
 		}
+
+		// Legacy version 3 sessions are accepted on read without being rewritten.
+		const legacyPath = join(dir, "old.jsonl");
+		const legacyContent = `${JSON.stringify({ ...header("old", resolve(dir)), version: 3 })}\n`;
+		writePrivate(legacyPath, legacyContent);
+		expect(() => SessionManager.open(legacyPath, dir)).not.toThrow();
+		expect(readFileSync(legacyPath, "utf8")).toBe(legacyContent);
 	});
 
 	it("rejects files readable by other users", () => {

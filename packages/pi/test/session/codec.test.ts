@@ -33,9 +33,15 @@ describe("decodeSession", () => {
 		expect((entries[0] as SessionHeader).version).toBe(SESSION_VERSION);
 	});
 
-	it.each([undefined, 1, 2, 3, 5])("rejects unsupported version %s", (version) => {
+	it.each([undefined, 1, 2, 5])("rejects unsupported version %s", (version) => {
 		const value = { ...header(), version } as unknown as FileEntry;
 		expect(() => decodeSession(encode([value]))).toThrow(SessionFormatError);
+	});
+
+	it("accepts legacy version 3 session headers", () => {
+		const value = { ...header(), version: 3 } as unknown as FileEntry;
+		const entries = decodeSession(encode([value]));
+		expect((entries[0] as SessionHeader).version).toBe(3);
 	});
 
 	it("rejects malformed JSON without skipping the line", () => {

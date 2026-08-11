@@ -3,6 +3,9 @@ import { isValidThinkingLevel } from "@tsuuanmi/pi-agent";
 import { assertPiSessionId, isEntryId } from "#pi/session/id";
 import { type FileEntry, SESSION_VERSION, type SessionEntry, type SessionHeader } from "#pi/session/types";
 
+/** Session header versions accepted on read; new files are always written at SESSION_VERSION. */
+const SUPPORTED_SESSION_VERSIONS = new Set([3, SESSION_VERSION]);
+
 type JsonObject = Record<string, unknown>;
 
 const ENTRY_KEYS = ["type", "id", "parentId", "timestamp"] as const;
@@ -296,7 +299,7 @@ function decodeEntry(value: JsonObject, source: string, line: number): SessionEn
 			break;
 		case "compaction":
 			required.push("summary", "firstKeptEntryId", "tokensBefore");
-			optional = ["details"];
+			optional = ["details", "fromHook"];
 			keys(value, required, optional, source, line, "entry");
 			entryBase(value, source, line);
 			string(value.summary, source, line, "entry.summary");
@@ -307,7 +310,7 @@ function decodeEntry(value: JsonObject, source: string, line: number): SessionEn
 			break;
 		case "branch_summary":
 			required.push("fromId", "summary");
-			optional = ["details"];
+			optional = ["details", "fromHook"];
 			keys(value, required, optional, source, line, "entry");
 			entryBase(value, source, line);
 			string(value.fromId, source, line, "entry.fromId");
@@ -358,7 +361,7 @@ export function decodeHeader(value: unknown, source = "<session>", line = 1): Se
 	const header = object(value, source, line, "header");
 	keys(header, ["type", "version", "id", "timestamp", "cwd"], [], source, line, "header");
 	if (header.type !== "session") fail(source, line, "first entry must be a session header");
-	if (header.version !== SESSION_VERSION) {
+	if (!SUPPORTED_SESSION_VERSIONS.has(header.version as number)) {
 		fail(source, line, `session version ${String(header.version)} is unsupported; expected ${SESSION_VERSION}`);
 	}
 	const id = string(header.id, source, line, "header.id");

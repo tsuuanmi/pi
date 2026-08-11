@@ -3,6 +3,7 @@
 ### Changed
 
 - **ui**: Interactive assistant thinking blocks now render in full by default instead of a one-line preview; `Ctrl+T` still hides thinking and `Ctrl+O` still collapses/expands details.
+- **sessions**: The session loader accepts legacy version 3 JSONL files (and their `compaction.fromHook` field) on read so existing sessions open again; new files continue to be written at version 4.
 - **packages**: Bundled package discovery and asset copying now derive from compiled `pi` manifests; unknown `pi:` sources fail instead of falling back to local paths. The orchestrator dependency remains in Pi's runtime closure for dynamically loaded bundled packages, without a static Pi import.
 - **sessions**: Pi now owns the public `.pi` root and session path primitives at `@tsuuanmi/pi/session/root`; Workflows extends that layout without Pi importing Workflows.
 - **extensions**: Added `ExtensionAPI.registerHudProvider()` so packages can contribute domain-owned status-line data without Pi importing package-specific state.
