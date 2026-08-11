@@ -15,7 +15,7 @@ export const ULTRAGOAL_SKILL_HELP: WorkflowSkillHelp = {
 		'`pi workflow ultragoal start-next --input \'{"sessionId":"<session-id>"}\' --json` before implementation.',
 		'`pi workflow ultragoal checkpoint --input \'{"sessionId":"<session-id>","goalId":"goal-1","status":"active","evidence":"..."}\' --json` after progress or completion evidence; each checkpoint writes a state-only restore snapshot.',
 		'`pi workflow ultragoal restore-checkpoint --input \'{"sessionId":"<session-id>"}\' --json` only after later-task failure when you need to restore Ultragoal state to the latest valid checkpoint. Pass `expectedPlanHash` from `status.planHash` when available.',
-		'`pi workflow ultragoal record-review-blockers --input \'{"sessionId":"<session-id>","goalId":"goal-1","title":"...","objective":"...","evidence":"..."}\' --json` when review creates durable blockers.',
+		'`pi workflow ultragoal record-obstacle --input \'{"sessionId":"<session-id>","goalId":"goal-1","kind":"evidence_missing","title":"...","objective":"...","evidence":"...","rationale":"..."}\' --json` when review creates a typed durable obstacle.',
 		'`pi workflow ultragoal classify-blocker --input \'{"sessionId":"<session-id>","classification":"human_blocked","evidence":"..."}\' --json` only for policy-classified failed/blocked work.',
 		'`pi workflow ultragoal guard --input \'{"sessionId":"<session-id>"}\' --json` when readiness or quality is uncertain.',
 	],
@@ -26,7 +26,7 @@ export const ULTRAGOAL_SKILL_HELP: WorkflowSkillHelp = {
 		"Use only for approved concrete execution; route vague requests to deep-interview or ralplan.",
 		"Create/resume the plan, `start-next` before implementation, then edit and verify.",
 		"Use `checkpoint` with substantive evidence; complete checkpoints need the full nested qualityGate and create state-only restore points.",
-		"Use review-blocker/classify commands only for durable blockers; do not widen scope.",
+		"Use record-obstacle/classify-blocker only for durable blockers; do not widen scope.",
 	],
 	actions: {
 		"create-plan": {
@@ -69,17 +69,21 @@ export const ULTRAGOAL_SKILL_HELP: WorkflowSkillHelp = {
 			input: ["sessionId: string (required; current session)", "checkpointId?: string", "expectedPlanHash?: string"],
 			example: `pi workflow ultragoal restore-checkpoint --input '{"sessionId":"<session-id>"}' --json`,
 		},
-		"record-review-blockers": {
-			summary: "Record review blockers as durable follow-up work.",
-			when: "Use when review/verification finds resolvable blockers.",
+		"record-obstacle": {
+			summary: "Record a typed obstacle and its blocker-resolution goal.",
+			when: "Use when review or verification finds a durable resolvable obstacle.",
 			input: [
 				"sessionId: string (required; current session)",
 				"goalId: string (required)",
+				"kind: review_failure|evidence_missing|scope_drift|contract_contradiction (required)",
 				"title: string (required)",
 				"objective: string (required)",
 				"evidence: string (required)",
+				"rationale: string (required)",
+				"criterion?: string (required for review_failure and scope_drift)",
+				"regression?: object (required by regression-sensitive kinds)",
 			],
-			example: `pi workflow ultragoal record-review-blockers --input '{"sessionId":"<session-id>","goalId":"goal-1","title":"...","objective":"...","evidence":"..."}' --json`,
+			example: `pi workflow ultragoal record-obstacle --input '{"sessionId":"<session-id>","goalId":"goal-1","kind":"evidence_missing","title":"...","objective":"...","evidence":"...","rationale":"..."}' --json`,
 		},
 		"classify-blocker": {
 			summary: "Classify a blocker before a failed/blocked checkpoint can close work.",

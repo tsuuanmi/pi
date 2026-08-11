@@ -39,8 +39,8 @@ import { getGateValidators, getTerminalDetectors, isBlockingQuestionPhase } from
 import { buildResponse } from "#workflows/runtime/lifecycle";
 import {
 	generateSessionId,
-	readRuntimeReceipts,
 	readSessionState,
+	readWorkflowRuntimeReceipts,
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
@@ -399,7 +399,7 @@ describe("workflow runtime", () => {
 		expect(startedJson.state).toMatchObject({ sessionId: "h-test", lifecycle: "started", ownerLive: false });
 		expect(startedJson.evidence.handle).toMatchObject({ harness: "pi", workspace: cwd });
 		expect(startedJson.evidence.handle?.rpcHandle?.sessionDir).toContain(".pi/state/harness");
-		const receipts = await readRuntimeReceipts(resolveHarnessRoot({ cwd }), "h-test");
+		const receipts = await readWorkflowRuntimeReceipts(resolveHarnessRoot({ cwd }), "h-test");
 		expect(receipts.rows).toHaveLength(1);
 		expect(receipts.rows[0]).toMatchObject({ verb: "start", accepted: true, sessionId: "h-test" });
 

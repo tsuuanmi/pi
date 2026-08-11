@@ -8,9 +8,9 @@ import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type {
 	RuntimeLogDiagnostic,
 	RuntimeLogReadResult,
-	RuntimeReceipt,
 	SessionState,
 	WorkflowRuntimeEvent,
+	WorkflowRuntimeReceipt,
 } from "#workflows/runtime/types";
 
 const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
@@ -141,7 +141,11 @@ export async function appendRuntimeEvent(root: string, sessionId: string, event:
 	await appendJsonl(sessionPaths(root, sessionId).events, event);
 }
 
-export async function appendRuntimeReceipt(root: string, sessionId: string, receipt: RuntimeReceipt): Promise<void> {
+export async function appendWorkflowRuntimeReceipt(
+	root: string,
+	sessionId: string,
+	receipt: WorkflowRuntimeReceipt,
+): Promise<void> {
 	await appendJsonl(sessionPaths(root, sessionId).receipts, receipt);
 }
 
@@ -196,13 +200,13 @@ export async function readEvents(root: string, sessionId: string, afterCursor = 
 	return (await readRuntimeEvents(root, sessionId, afterCursor)).rows.map((row) => ({ ...row }));
 }
 
-export async function readRuntimeReceipts(
+export async function readWorkflowRuntimeReceipts(
 	root: string,
 	sessionId: string,
-): Promise<RuntimeLogReadResult<RuntimeReceipt>> {
+): Promise<RuntimeLogReadResult<WorkflowRuntimeReceipt>> {
 	const path = sessionPaths(root, sessionId).receipts;
 	try {
-		return readJsonlShape<RuntimeReceipt>(path, await readFile(path, "utf8"), -1);
+		return readJsonlShape<WorkflowRuntimeReceipt>(path, await readFile(path, "utf8"), -1);
 	} catch (error) {
 		const err = error as NodeJS.ErrnoException;
 		if (err.code === "ENOENT") return { rows: [], diagnostics: [], maxCursor: 0 };

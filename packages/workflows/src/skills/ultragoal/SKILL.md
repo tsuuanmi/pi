@@ -44,7 +44,7 @@ Critical: before running any `pi workflow ultragoal <action>` command, read [ref
 8. Run required checks and fix failures.
 9. Checkpoint each task goal with `pi workflow ultragoal checkpoint --input '{"sessionId":"<current-session>","goalId":"goal-1","status":"active","evidence":"..."}' --json`. Each accepted checkpoint writes a restore snapshot of Ultragoal state. Complete checkpoints require substantive evidence and the full quality gate: `architectReview`, `executorQa`, and `iteration`. Old `executorQa + contractCoverage` top-level gates and free-form `{status}` gates are rejected.
 10. If a later task fails and you need to retry from the last successful task state, use `pi workflow ultragoal restore-checkpoint --input '{"sessionId":"<current-session>"}' --json`. Restore is state-only: it restores Ultragoal plan/workflow state, but never rolls back workspace files.
-11. Use `pi workflow ultragoal record-review-blockers` with the schema payload when review/verification finds blockers that must become durable follow-up work, and use `pi workflow ultragoal classify-blocker` with the schema payload only when a `failed`/`blocked` checkpoint is truly human-blocked.
+11. Use `pi workflow ultragoal record-obstacle` with typed evidence when review/verification finds a durable obstacle that must become follow-up work, and use `pi workflow ultragoal classify-blocker` with the schema payload only when a `failed`/`blocked` checkpoint is truly human-blocked.
 12. Report:
    - changed files
    - verification results
@@ -59,8 +59,8 @@ Critical: before running any `pi workflow ultragoal <action>` command, read [ref
 
 ## Review blockers and blocked checkpoints
 
-- `pi workflow ultragoal record-review-blockers` marks the current goal `review_blocked`, appends a pending blocker-resolution goal, and records the blocker in the ledger.
-- Completing that blocker-resolution goal supersedes the original `review_blocked` goal when verification passes.
+- `pi workflow ultragoal record-obstacle` validates and records a typed obstacle, marks the current goal `review_blocked`, and appends one pending blocker-resolution goal.
+- Completing that blocker-resolution goal supersedes the original `review_blocked` goal and resolves its matching obstacle when verification passes.
 - `pi workflow ultragoal checkpoint` with `status: "failed"` or `status: "blocked"` is fail-closed unless the immediate latest ledger event is `blocker_classified` with `classification: "human_blocked"` for the same/current active goal. `resolvable` never authorizes giving up.
 - Rejected complete/failed/blocked checkpoints must not mutate goals, ledger, receipts, HUD, or workflow state.
 

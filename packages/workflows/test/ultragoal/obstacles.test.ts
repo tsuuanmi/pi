@@ -1,14 +1,12 @@
-import { access } from "node:fs/promises";
+import { access, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
 	createUltragoalPlan,
-	getUltragoalStatus,
 	readUltragoalLedger,
 	readUltragoalObstacleLedger,
 	readUltragoalPlan,
 	recordUltragoalObstacle,
-	recordUltragoalReviewBlockers,
 	startNextUltragoalGoal,
 	ULTRAGOAL_OBSTACLE_KINDS,
 	ultragoalObstacleLedgerPath,
@@ -18,12 +16,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const sessionId = "test-session-id";
 
-/**
- * Phase B-0 tests for the ultragoal typed-obstacle dual-write. These verify the
- * NEW additive path only; the existing review-blocker model is exercised by the
- * team-ultragoal workflow test (one coexistence check here confirms it still works).
- */
-describe("ultragoal obstacles — Phase B-0 dual-write", () => {
+describe("ultragoal obstacle transition", () => {
 	let cwd: string;
 
 	beforeEach(() => {
@@ -41,7 +34,7 @@ describe("ultragoal obstacles — Phase B-0 dual-write", () => {
 		return started.goal?.id ?? "G001";
 	}
 
-	it("dual-writes: review_blocked goal + steering blocker goal + ledger event + obstacle ledger entry", async () => {
+	it("records one typed obstacle and projects one blocker goal", async () => {
 		const goalId = await seedActiveGoal();
 
 		const plan = await recordUltragoalObstacle(
@@ -52,6 +45,7 @@ describe("ultragoal obstacles — Phase B-0 dual-write", () => {
 				title: "Architect review found defects",
 				objective: "Re-work the review-failed criterion then re-run the gate.",
 				evidence: "architect review found defects in criterion architectReview.recommendation",
+				rationale: "The review criterion regressed and must be repaired.",
 				criterion: "architectReview.recommendation",
 				regression: {
 					metric: "qualityGate:architectReview.recommendation",
@@ -63,17 +57,17 @@ describe("ultragoal obstacles — Phase B-0 dual-write", () => {
 			sessionId,
 		);
 
-		// Legacy half (unchanged): blocked goal + steering blocker goal.
+		// Goal-graph projection.
 		const blockedGoal = plan.goals.find((goal) => goal.id === goalId);
 		expect(blockedGoal?.status).toBe("review_blocked");
 		const blockerGoal = plan.goals.find((goal) => goal.steering?.kind === "review_blocker");
 		expect(blockerGoal?.steering?.blockedGoalId).toBe(goalId);
 
-		// Legacy ledger event.
+		// Canonical transition receipt.
 		const ledger = await readUltragoalLedger(cwd, sessionId);
-		expect(ledger.some((event) => event.event === "review_blockers_recorded" && event.goalId === goalId)).toBe(true);
+		expect(ledger.some((event) => event.event === "obstacle_recorded" && event.goalId === goalId)).toBe(true);
 
-		// New half: obstacle ledger entry.
+		// Typed obstacle record.
 		const obstacleLedger = await readUltragoalObstacleLedger(cwd, sessionId);
 		expect(obstacleLedger.obstacles).toHaveLength(1);
 		const obstacle = obstacleLedger.obstacles[0];
@@ -98,12 +92,13 @@ describe("ultragoal obstacles — Phase B-0 dual-write", () => {
 					title: "Bad obstacle",
 					objective: "Should not be written",
 					evidence: "missing criterion and regression",
+					rationale: "Invalid fixture must fail before writes.",
 				},
 				sessionId,
 			),
 		).rejects.toThrow(/invalid ultragoal obstacle/);
 
-		// Goal is still active (legacy path untouched).
+		// Goal is still active.
 		const plan = await readUltragoalPlan(cwd, sessionId);
 		expect(plan?.goals.find((goal) => goal.id === goalId)?.status).toBe("active");
 		expect(plan?.goals.some((goal) => goal.steering?.kind === "review_blocker")).toBe(false);
@@ -111,45 +106,27 @@ describe("ultragoal obstacles — Phase B-0 dual-write", () => {
 		// No obstacle ledger file was created.
 		await expect(access(ultragoalObstacleLedgerPath(cwd, sessionId))).rejects.toThrow();
 
-		// No review_blockers_recorded ledger event.
+		// No obstacle transition receipt.
 		const ledger = await readUltragoalLedger(cwd, sessionId);
-		expect(ledger.some((event) => event.event === "review_blockers_recorded")).toBe(false);
+		expect(ledger.some((event) => event.event === "obstacle_recorded")).toBe(false);
 	});
 
-	it("human_blocked (needsRegression:false) is accepted without a regression", async () => {
-		const goalId = await seedActiveGoal();
-		await recordUltragoalObstacle(
-			cwd,
-			{
-				goalId,
-				kind: "human_blocked",
-				title: "Human-only blocker",
-				objective: "Escalate to a human; no automated resolution.",
-				evidence: "requires credentials only a human can provide",
-			},
-			sessionId,
-		);
-		const obstacleLedger = await readUltragoalObstacleLedger(cwd, sessionId);
-		expect(obstacleLedger.obstacles[0].kind).toBe("human_blocked");
-		expect(obstacleLedger.obstacles[0].regression).toBeUndefined();
-	});
-
-	it("human_blocked with a regression is rejected by the wall", async () => {
+	it("rejects human-only blockers from the resolvable obstacle transition", async () => {
 		const goalId = await seedActiveGoal();
 		await expect(
 			recordUltragoalObstacle(
 				cwd,
 				{
 					goalId,
-					kind: "human_blocked",
+					kind: "human_blocked" as never,
 					title: "Human-only blocker",
-					objective: "Escalate.",
-					evidence: "requires human",
-					regression: { metric: "x", priorValue: 1, newValue: 0, direction: "fall" },
+					objective: "Escalate to a human.",
+					evidence: "requires human credentials",
+					rationale: "Only a human can provide the credential.",
 				},
 				sessionId,
 			),
-		).rejects.toThrow(/human_blocked_no_regression/);
+		).rejects.toThrow(/use classify-blocker/);
 	});
 
 	it("review_failure with a regression that did not regress is rejected (no_regression)", async () => {
@@ -163,6 +140,7 @@ describe("ultragoal obstacles — Phase B-0 dual-write", () => {
 					title: "Review failure",
 					objective: "Re-work.",
 					evidence: "criterion did not actually regress",
+					rationale: "The claimed regression is inconsistent with its metrics.",
 					criterion: "executorQa.status",
 					// direction "fall" but newValue >= priorValue -> not proved
 					regression: { metric: "qualityGate:executorQa.status", priorValue: 0, newValue: 1, direction: "fall" },
@@ -182,6 +160,7 @@ describe("ultragoal obstacles — Phase B-0 dual-write", () => {
 				title: "Review failure",
 				objective: "Re-work.",
 				evidence: "criterion regressed",
+				rationale: "The criterion regressed and blocks completion.",
 				criterion: "architectReview.recommendation",
 				regression: {
 					metric: "qualityGate:architectReview.recommendation",
@@ -210,33 +189,23 @@ describe("ultragoal obstacles — Phase B-0 dual-write", () => {
 		await expect(
 			recordUltragoalObstacle(
 				cwd,
-				{ goalId, kind: "not_a_real_kind", title: "x", objective: "y", evidence: "z" },
+				{
+					goalId,
+					kind: "not_a_real_kind" as never,
+					title: "x",
+					objective: "y",
+					evidence: "z",
+					rationale: "invalid",
+				},
 				sessionId,
 			),
 		).rejects.toThrow(/unknown ultragoal obstacle kind/);
 	});
 
-	it("coexistence: the existing recordUltragoalReviewBlockers path still works and writes no obstacle ledger", async () => {
-		const goalId = await seedActiveGoal();
-		const plan = await recordUltragoalReviewBlockers(
-			cwd,
-			{
-				goalId,
-				title: "Legacy blocker",
-				objective: "Resolve via the legacy path.",
-				evidence: "legacy review blockers still work alongside the obstacle ledger",
-			},
-			sessionId,
-		);
-		expect(plan.goals.find((goal) => goal.id === goalId)?.status).toBe("review_blocked");
-		// The legacy path does NOT write the obstacle ledger.
-		const obstacleLedger = await readUltragoalObstacleLedger(cwd, sessionId);
-		expect(obstacleLedger.obstacles).toHaveLength(0);
-		// And the obstacle ledger file was not created.
-		await expect(access(ultragoalObstacleLedgerPath(cwd, sessionId))).rejects.toThrow();
-		// Status reflects the blocker.
-		const status = await getUltragoalStatus(cwd, sessionId);
-		expect(status.counts.review_blocked).toBe(1);
+	it("rejects malformed obstacle ledger state instead of treating it as empty", async () => {
+		await seedActiveGoal();
+		await writeFile(ultragoalObstacleLedgerPath(cwd, sessionId), "{", "utf8");
+		await expect(readUltragoalObstacleLedger(cwd, sessionId)).rejects.toThrow(/malformed JSON/);
 	});
 
 	it("ULTRAGOAL_OBSTACLE_KINDS ships the five design kinds with correct needsRegression flags", () => {

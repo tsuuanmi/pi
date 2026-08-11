@@ -23,7 +23,7 @@ import {
 	recover,
 } from "#workflows/runtime/operations";
 import { type HarnessRpc, singleFlightAccept } from "#workflows/runtime/rpc";
-import { readRuntimeReceipts } from "#workflows/runtime/storage";
+import { readWorkflowRuntimeReceipts } from "#workflows/runtime/storage";
 import type { HarnessLifecycle, PrimitiveResponse, RuntimeWriter, SessionState } from "#workflows/runtime/types";
 
 export interface OperateOptions {
@@ -165,7 +165,7 @@ export async function operate(opts: OperateOptions): Promise<OperateResult> {
 		};
 	}
 
-	const receipts = await readRuntimeReceipts(opts.root, opts.sessionId);
+	const receipts = await readWorkflowRuntimeReceipts(opts.root, opts.sessionId);
 	const finalizeResponse = await finalize({
 		root: opts.root,
 		state,

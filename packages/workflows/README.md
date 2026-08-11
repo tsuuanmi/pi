@@ -14,6 +14,7 @@ Each stage can be skipped, but skipping reduces quality assurance. Workflows are
 
 - [Installation](#installation)
 - [Package Scope](#package-scope)
+- [Receipt and Tool Detail Boundaries](#receipt-and-tool-detail-boundaries)
 - [Built-in Skills](#built-in-skills)
   - [deep-interview](#deep-interview)
   - [ralplan](#ralplan)
@@ -48,6 +49,10 @@ npm install @tsuuanmi/pi-workflows
 State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`. Runtime artifacts persist under the current session root, e.g. `.pi/<session-id>/workflows/<skill>/` and `.pi/<session-id>/state/`.
 
 Workflow policy helpers live under `src/policy/`, handoff logic lives under `src/handoff/`, and workflow-to-orchestrator bridges live under `src/skills/team/`.
+
+## Receipt and Tool Detail Boundaries
+
+`WorkflowRuntimeReceipt` is the durable, hash-verified record of a workflow runtime mutation. `WorkflowToolDetails` is the model-visible result payload returned by workflow tools; it is not a receipt and owns no identity, timing, provenance, or persistence contract. Workflows may embed stable identifiers from Agent structured receipts or Orchestrator task receipts, but it does not copy their schemas.
 
 ## Built-in Skills
 
@@ -167,12 +172,12 @@ Ultragoal executes an approved concrete goal end-to-end with verification.
 3. Start the next runnable goal with `pi workflow ultragoal start-next`.
 4. Inspect files, make the smallest complete set of changes, run required checks.
 5. Checkpoint each goal with `pi workflow ultragoal checkpoint`. Complete checkpoints require substantive evidence and the **full quality gate**: `architectReview`, `executorQa`, and `iteration`. Old `executorQa + contractCoverage` top-level gates and free-form `{status}` gates are rejected (fail closed).
-6. Use `pi workflow ultragoal record-review-blockers` when review/verification finds blockers that must become durable follow-up work; use `pi workflow ultragoal classify-blocker` only when a `failed`/`blocked` checkpoint is truly human-blocked.
+6. Use `pi workflow ultragoal record-obstacle` with typed evidence when review/verification finds a durable obstacle that requires follow-up work; use `pi workflow ultragoal classify-blocker` only when a `failed`/`blocked` checkpoint is truly human-blocked.
 7. Use `pi workflow ultragoal guard` before treating a stored completion receipt as complete — it reports stale/missing/dirty receipts and fail-closed unreadable state.
 
 **Goal states:** `pending` → `active` → `completed` (or `failed` / `blocked` / `review_blocked`).
 
-**Control plane:** use `pi workflow state ultragoal ...` for envelope state; `pi workflow ultragoal <create-plan|status|start-next|checkpoint|record-review-blockers|classify-blocker|guard>` for non-spawn runtime operations; and `ultragoal_spawn_goal_agent` for guarded worker execution.
+**Control plane:** use `pi workflow state ultragoal ...` for envelope state; `pi workflow ultragoal <create-plan|status|start-next|checkpoint|record-obstacle|classify-blocker|guard>` for non-spawn runtime operations; and `ultragoal_spawn_goal_agent` for guarded worker execution.
 
 **Boundaries:** if the request is vague, run `/skill:deep-interview` or `/skill:ralplan` first. If no execution approval exists, stop and ask. Do not widen scope beyond the approved goal. If the plan proves wrong, stop and ask or route back to `/skill:ralplan` rather than improvising a larger scope.
 
@@ -261,7 +266,7 @@ The workflow runtime backs the `pi workflow` CLI and the four skills. Shared inf
 Key seams for contributors:
 
 - **Deferred-seam registry** (`runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
-- **`validateReceiptFamilyConsistency`** (`runtime/receipt-rules.ts`): a write-path guard inside `mutateRuntimeSession` that rejects receipts whose post-state lifecycle contradicts their family target. It throws before any write so a contradiction leaves zero orphan events/receipts/state. Conservative and pluggable; future receipt families register rules in `receiptFamilyConsistencyRules`.
+- **Workflow runtime receipts** (`runtime/types.ts`, `runtime/receipt-rules.ts`): `WorkflowRuntimeReceipt` is the durable mutation record. Receipt rules own hash validation and immutable lifecycle consistency checks; contradictions throw before any event, receipt, or state write.
 - **HUD rendering**: per-skill HUD builders live in the owning skill folders (`deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts`). Workflow HUD synchronization is registered by `@tsuuanmi/pi-workflows/extension` through `@tsuuanmi/pi-tui`; workflow mirroring remains session-scoped because the status line reads active state directly.
 
 ### Session Layout
@@ -322,7 +327,7 @@ import {
 } from "@tsuuanmi/pi-workflows";
 ```
 
-`@tsuuanmi/pi-workflows` exports workflow runtime helpers and model-visible tool registration at `@tsuuanmi/pi-workflows/tool`. It also exports pure team-to-orchestrator mapping helpers, workflow-owned checkpoint, event, and role-receipt stores, role-batch builders, and explicit fresh/resume execution boundaries. Pi loads the bundled workflow extension from the package manifest; `@tsuuanmi/pi-workflows/extension` is the package host adapter.
+`@tsuuanmi/pi-workflows` exports `WorkflowRuntimeReceipt`, `readWorkflowRuntimeReceipts`, `WorkflowToolDetails`, `workflowToolDetails`, workflow runtime helpers, and model-visible tool registration at `@tsuuanmi/pi-workflows/tool`. It also exports pure team-to-orchestrator mapping helpers, workflow-owned checkpoint, event, and role-receipt stores, role-batch builders, and explicit fresh/resume execution boundaries. Pi loads the bundled workflow extension from the package manifest; `@tsuuanmi/pi-workflows/extension` is the package host adapter.
 
 Subpath exports:
 

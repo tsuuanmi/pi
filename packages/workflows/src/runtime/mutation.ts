@@ -1,10 +1,14 @@
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import { assertTransition, buildStateView, nextAllowedActions } from "#workflows/runtime/lifecycle";
-import { ReceiptConsistencyError, validateReceiptFamilyConsistency } from "#workflows/runtime/receipt-rules";
+import {
+	ReceiptConsistencyError,
+	validateReceiptFamilyConsistency,
+	workflowRuntimeReceiptHash,
+} from "#workflows/runtime/receipt-rules";
 import {
 	appendRuntimeEvent,
-	appendRuntimeReceipt,
+	appendWorkflowRuntimeReceipt,
 	readRuntimeEvents,
 	readSessionState,
 	sessionPaths,
@@ -12,11 +16,11 @@ import {
 } from "#workflows/runtime/storage";
 import type {
 	HarnessVerb,
-	RuntimeReceipt,
 	RuntimeSeverity,
 	RuntimeWriter,
 	SessionState,
 	WorkflowRuntimeEvent,
+	WorkflowRuntimeReceipt,
 } from "#workflows/runtime/types";
 
 interface RuntimeMutationEventInput {
@@ -40,11 +44,7 @@ export interface RuntimeMutationInput {
 export interface RuntimeMutationResult {
 	state: SessionState;
 	events: WorkflowRuntimeEvent[];
-	receipt: RuntimeReceipt;
-}
-
-function sha256Json(value: unknown): string {
-	return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+	receipt: WorkflowRuntimeReceipt;
 }
 
 export async function mutateRuntimeSession(input: RuntimeMutationInput): Promise<RuntimeMutationResult> {
@@ -93,17 +93,17 @@ export async function mutateRuntimeSession(input: RuntimeMutationInput): Promise
 				events.length > 0 ? { from: events[0]?.cursor ?? cursor, to: events.at(-1)?.cursor ?? cursor } : undefined,
 			evidence: input.evidence ?? {},
 		};
-		const receipt: RuntimeReceipt = { ...receiptSeed, contentSha256: sha256Json(receiptSeed) };
+		const receipt: WorkflowRuntimeReceipt = {
+			...receiptSeed,
+			contentSha256: workflowRuntimeReceiptHash(receiptSeed),
+		};
 
-		// Phase 3 receipt lifecycle-target consistency guard. Runs AFTER the in-memory receipt is
-		// constructed and BEFORE any write so a contradiction throws with zero orphan writes (no
-		// events/receipts/state are appended for an invalid receipt). Write-path only; pre-Phase-3
-		// receipts are grandfathered and not re-validated on read.
+		// Validate lifecycle-target consistency before any event, receipt, or state write.
 		const consistency = validateReceiptFamilyConsistency(receipt);
 		if (!consistency.valid) throw new ReceiptConsistencyError(receipt, consistency.contradiction ?? "unknown");
 
 		for (const event of events) await appendRuntimeEvent(input.root, input.sessionId, event);
-		await appendRuntimeReceipt(input.root, input.sessionId, receipt);
+		await appendWorkflowRuntimeReceipt(input.root, input.sessionId, receipt);
 		await writeSessionState(input.root, input.nextState);
 		return { state: input.nextState, events, receipt };
 	});

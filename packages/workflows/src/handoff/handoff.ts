@@ -11,7 +11,7 @@ import { initialWorkflowPhase } from "#workflows/registry/workflow-manifest";
 import type { WorkflowSkill } from "#workflows/session/paths";
 import { workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
 import { assertRalplanObstacle, writeRalplanObstacle } from "#workflows/skills/ralplan/obstacles";
-import { assertUltragoalObstacle, writeUltragoalObstacle } from "#workflows/skills/ultragoal/obstacles";
+import { appendUltragoalObstacle } from "#workflows/skills/ultragoal/obstacles";
 import { applyHandoffToActiveState } from "#workflows/state/active-state";
 import { assertWorkflowSkill, type WorkflowStateEnvelope } from "#workflows/state/state-schema";
 import { readWorkflowState, writeWorkflowState } from "#workflows/state/workflow-state";
@@ -85,8 +85,7 @@ async function ingestObstacles(input: {
 			if (!runId) throw new Error("ralplan handoff with carried obstacles requires run_id");
 			await writeRalplanObstacle(input.cwd, runId, input.sessionId, trigger);
 		} else {
-			assertUltragoalObstacle(trigger);
-			await writeUltragoalObstacle(input.cwd, input.sessionId, trigger);
+			await appendUltragoalObstacle(input.cwd, input.sessionId, trigger);
 		}
 		count += 1;
 	}

@@ -8,7 +8,7 @@ Receipts are audit records. Each package owns receipts for its own layer and mus
 | --- | --- | --- | --- |
 | Tool receipt | `@tsuuanmi/pi-agent` | One tool execution inside one agent run | Task routing, workflow state, workflow artifact layout |
 | Task receipt | `@tsuuanmi/pi-orchestrator` | One orchestrated task execution, including routing, retry, metrics, and consequential approval | Workflow state, workflow gates, workflow artifact layout |
-| Workflow receipt | `@tsuuanmi/pi-workflows` | One workflow action or workflow state transition, including persisted role receipt references | Agent tool receipt schema, orchestrator task receipt schema |
+| Workflow runtime receipt | `@tsuuanmi/pi-workflows` | One hash-verified workflow runtime mutation, including persisted lower-receipt references | Agent tool receipt schema, orchestrator task receipt schema |
 | Session receipt | `@tsuuanmi/pi` when needed | CLI/session integration evidence | Agent, task, or workflow internal schemas |
 
 ## Dependency rule
@@ -16,7 +16,7 @@ Receipts are audit records. Each package owns receipts for its own layer and mus
 Receipt references may point downward, but schemas do not move upward.
 
 ```text
-workflow receipt
+workflow runtime receipt
   may reference taskReceiptId or toolReceiptId
   must not copy task/tool receipt schema
 
@@ -40,7 +40,7 @@ interface ReceiptRef {
 }
 ```
 
-The owning package decides whether such a reference is public API. Other packages must not define alternate copies of another package's receipt schema.
+This is a boundary rule, not a shared public type. The higher layer owns its small serialized reference shape. It must not export a second definition of the lower package's receipt. A shared `ReceiptRef` is unnecessary until multiple package APIs exchange the same reference contract.
 
 ## Layer-specific rules
 
@@ -80,11 +80,11 @@ Does not own:
 
 Owns:
 
-- workflow action receipts
-- workflow gate receipts
+- `WorkflowRuntimeReceipt` and its hash/lifecycle validation
+- workflow action and gate audit records
 - workflow transaction journals
-- workflow artifact receipts
-- role receipt index and event references
+- workflow artifact write receipts
+- role receipt indexes and lower-receipt references
 
 Does not own:
 
@@ -92,11 +92,22 @@ Does not own:
 - orchestrator task receipt schema
 - Pi session receipt schema
 
-Workflow receipts may reference lower-layer receipt IDs and summarize user-facing outcomes, but the full lower-layer receipt remains owned by its package.
+Workflow runtime receipts may reference lower-layer receipt IDs and summarize user-facing outcomes, but the full lower-layer receipt remains owned by its package. `WorkflowToolDetails` is a model-visible result payload, not a receipt; it owns no receipt identity, timing, provenance, or persistence contract.
 
 ### `@tsuuanmi/pi`
 
 Owns only app/session integration records when needed. It should render or route package receipts through public package APIs instead of interpreting private schemas.
+
+## Public names
+
+| Package | Public receipt contract |
+| --- | --- |
+| Agent | `StructuredReceipt`, `createToolReceipt`, structured receipt accessors |
+| Orchestrator | `TaskExecutionReceipt`, `TaskConsequentialReceipt` |
+| Workflows | `WorkflowRuntimeReceipt`, `readWorkflowRuntimeReceipts`, `appendWorkflowRuntimeReceipt`, `isWorkflowRuntimeReceiptValid` |
+| Pi | Host/session-specific receipt builders only; no copied lower schemas |
+
+Generic names such as `RuntimeReceipt` or result payloads named `WorkflowReceipt` are prohibited because they hide ownership and conflate model-visible details with durable audit records.
 
 ## Overlap risks
 
@@ -112,11 +123,11 @@ Owns only app/session integration records when needed. It should render or route
 | Rank | Task | ROI | Owner |
 | ---: | --- | --- | --- |
 | 1 | Ensure workflow role receipts reference task receipts by id instead of embedding schemas | Done | `pi-workflows` |
-| 2 | Audit existing receipt type names and exports across packages | In progress | all packages |
-| 3 | Document package-level receipt exports in each package README/docs | In progress | all packages |
-| 4 | Add a shared `ReceiptRef` only if multiple packages need a stable public reference | Deferred | design follow-up |
-| 5 | Add receipt rendering adapters at package boundaries | Medium | `pi`, package owners |
-| 6 | Add cryptographic integrity helpers only after receipt ownership is stable | Low-medium | package owners |
+| 2 | Audit existing receipt type names and exports across packages | Done | all packages |
+| 3 | Document package-level receipt exports and tool-detail distinction | Done | package owners |
+| 4 | Add a shared `ReceiptRef` only if multiple package APIs exchange one contract | Not needed | design follow-up |
+| 5 | Add receipt rendering adapters at package boundaries | Deferred until a concrete UI consumer exists | `pi`, package owners |
+| 6 | Keep cryptographic integrity at the schema-owning layer | Done for workflow runtime receipts | package owners |
 
 ## Acceptance criteria for future receipt changes
 

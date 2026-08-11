@@ -1,7 +1,7 @@
 /**
  * Vanish receipt family (Phase 2 fail-closed data-loss gate).
  *
- * A `vanish` receipt is a `RuntimeReceipt` (verb `"vanish"`) whose `evidence` is a
+ * A `vanish` receipt is a `WorkflowRuntimeReceipt` (verb `"vanish"`) whose `evidence` is a
  * `VanishEvidence`. Every destructive recovery classification requires a valid vanish receipt
  * written + re-read + revalidated from disk BEFORE the destructive action proceeds; an invalid
  * or missing vanish receipt blocks recovery immediately and never proceeds.
@@ -103,7 +103,7 @@ export function validateVanish(evidence: unknown): VanishValidation {
 /**
  * Build uniform vanish evidence for any destructive classification. Dirty deltas carry real
  * preservation evidence (stash ref + manifest); clean and zero-delta carry empty preservation
- * evidence (nothing to preserve). Operates on `RuntimeReceipt.evidence` directly.
+ * evidence (nothing to preserve). Operates on `WorkflowRuntimeReceipt.evidence` directly.
  */
 export function buildVanishEvidence(
 	gitDelta: GitDelta,

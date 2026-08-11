@@ -4,8 +4,9 @@ import { join } from "node:path";
 import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
+	readUltragoalObstacleLedger,
 	recordUltragoalBlockerClassification,
-	recordUltragoalReviewBlockers,
+	recordUltragoalObstacle,
 	startNextUltragoalGoal,
 	ultragoalGoalsPath,
 	ultragoalGuard,
@@ -15,6 +16,22 @@ import {
 import { assert, expect, test } from "vitest";
 
 const sessionId = "test-session-id";
+
+async function recordReviewObstacle(
+	cwd: string,
+	input: { goalId: string; title: string; objective: string; evidence: string },
+	sessionId: string,
+) {
+	return recordUltragoalObstacle(
+		cwd,
+		{
+			...input,
+			kind: "evidence_missing",
+			rationale: "Review evidence requires durable follow-up work.",
+		},
+		sessionId,
+	);
+}
 const PASSED = "passed";
 
 async function withDir<T>(fn: (cwd: string) => Promise<T>): Promise<T> {
@@ -276,11 +293,11 @@ test("old schema completion receipts cannot prove completion", async () => {
 	});
 });
 
-test("record-review-blockers creates blocker goal and guard reports recorded blocker", async () => {
+test("record-obstacle creates blocker goal and guard reports recorded blocker", async () => {
 	await withDir(async (cwd) => {
 		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
 		await startNextUltragoalGoal(cwd, false, sessionId);
-		const plan = await recordUltragoalReviewBlockers(
+		const plan = await recordReviewObstacle(
 			cwd,
 			{
 				goalId: "G001",
@@ -298,14 +315,14 @@ test("record-review-blockers creates blocker goal and guard reports recorded blo
 	});
 });
 
-test("record-review-blockers rejects invalid and duplicate targets before mutation", async () => {
+test("record-obstacle rejects invalid and duplicate targets before mutation", async () => {
 	await withDir(async (cwd) => {
 		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
 		await startNextUltragoalGoal(cwd, false, sessionId);
 		const goalsBefore = await readIfExists(ultragoalGoalsPath(cwd, sessionId));
 		const ledgerBefore = await readIfExists(ultragoalLedgerPath(cwd, sessionId));
 		await expect(
-			recordUltragoalReviewBlockers(
+			recordReviewObstacle(
 				cwd,
 				{ goalId: "G999", title: "Fix", objective: "Fix it", evidence: "review evidence" },
 				sessionId,
@@ -314,7 +331,7 @@ test("record-review-blockers rejects invalid and duplicate targets before mutati
 		assert.strictEqual(await readIfExists(ultragoalGoalsPath(cwd, sessionId)), goalsBefore);
 		assert.strictEqual(await readIfExists(ultragoalLedgerPath(cwd, sessionId)), ledgerBefore);
 
-		await recordUltragoalReviewBlockers(
+		await recordReviewObstacle(
 			cwd,
 			{
 				goalId: "G001",
@@ -327,7 +344,7 @@ test("record-review-blockers rejects invalid and duplicate targets before mutati
 		const goalsAfterRecord = await readIfExists(ultragoalGoalsPath(cwd, sessionId));
 		const ledgerAfterRecord = await readIfExists(ultragoalLedgerPath(cwd, sessionId));
 		await expect(
-			recordUltragoalReviewBlockers(
+			recordReviewObstacle(
 				cwd,
 				{
 					goalId: "G001",
@@ -477,7 +494,7 @@ test("completing a blocker-resolution goal supersedes original review_blocked go
 	await withDir(async (cwd) => {
 		await createUltragoalPlan(cwd, { brief: "@goal A\nDo A." }, sessionId);
 		await startNextUltragoalGoal(cwd, false, sessionId);
-		await recordUltragoalReviewBlockers(
+		await recordReviewObstacle(
 			cwd,
 			{
 				goalId: "G001",
@@ -501,6 +518,9 @@ test("completing a blocker-resolution goal supersedes original review_blocked go
 		assert.strictEqual(blocker.completionVerification?.receiptKind, "final-aggregate");
 		const goalsJson = JSON.parse(await readFile(ultragoalGoalsPath(cwd, sessionId), "utf8"));
 		assert.strictEqual(goalsJson.goals[0].status, "superseded");
+		const obstacleLedger = await readUltragoalObstacleLedger(cwd, sessionId);
+		assert.strictEqual(obstacleLedger.obstacles[0]?.status, "resolved");
+		assert.match(obstacleLedger.obstacles[0]?.resolution ?? "", /Resolved by verification blocker story G002/);
 		const diag = await ultragoalGuard(cwd, sessionId);
 		assert.strictEqual(diag.state, "active_verified_complete", diag.message);
 	});

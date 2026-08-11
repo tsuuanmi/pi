@@ -34,7 +34,7 @@ Ultragoal manages goal-tracked execution under the current session root. One mai
 
 - Read/write envelope state through `pi workflow state ultragoal ...` with the current `sessionId`.
 - Create and inspect goal state through `pi workflow ultragoal <create-plan|status>`.
-- Advance/checkpoint goals through `pi workflow ultragoal <start-next|checkpoint|restore-checkpoint|record-review-blockers|classify-blocker|guard>`.
+- Advance/checkpoint goals through `pi workflow ultragoal <start-next|checkpoint|restore-checkpoint|record-obstacle|classify-blocker|guard>`.
 - Spawn workers through the guarded model-visible `ultragoal_spawn_goal_agent` tool.
 
 Use `ultragoal_spawn_goal_agent` for worker execution. It always spawns the standard `worker` agent profile. It is state guarded: the harness computes the legal next goal from ultragoal state and refuses off-sequence spawns or runtime model/tool overrides.
@@ -47,7 +47,7 @@ Use `ultragoal_spawn_goal_agent` for worker execution. It always spawns the stan
 4. Implement the goal.
 5. Checkpoint with durable evidence and quality-gate data; accepted checkpoints write state-only restore snapshots.
 6. If later work fails, optionally restore Ultragoal state to the latest valid checkpoint with `restore-checkpoint`.
-7. Resolve blockers or review blockers when present.
+7. Record typed obstacles and complete their blocker-resolution goals when present.
 8. Complete only when all non-superseded goals have valid completion receipts.
 
 ## Goal States
@@ -68,7 +68,7 @@ Use `ultragoal_spawn_goal_agent` for worker execution. It always spawns the stan
 | `.pi/<sessionId>/workflows/ultragoal/state.json` | Active workflow envelope. |
 | `.pi/<sessionId>/ultragoal/goals.json` | Goal plan. |
 | `.pi/<sessionId>/ultragoal/ledger.jsonl` | Goal receipt ledger. |
-| `.pi/<sessionId>/ultragoal/obstacles.json` | Session-scoped obstacle ledger. |
+| `.pi/<sessionId>/ultragoal/obstacles.json` | Authoritative typed obstacle ledger; malformed state fails closed. |
 | `.pi/<sessionId>/ultragoal/brief.md` | Approved goal brief. |
 | `.pi/<sessionId>/ultragoal/checkpoints/*.json` | State-only checkpoint snapshots for restore. |
 

@@ -1,5 +1,5 @@
 import type { ExpectedNextRole } from "#workflows/policy/expected-next-role";
-import type { RuntimeReceipt } from "#workflows/runtime/types";
+import type { WorkflowRuntimeReceipt } from "#workflows/runtime/types";
 import type { WorkflowSkill } from "#workflows/session/paths";
 import { deepInterviewPolicy } from "#workflows/skills/deep-interview/policy";
 import { ralplanPolicy } from "#workflows/skills/ralplan/policy";
@@ -18,7 +18,7 @@ export interface SkillPolicyContext<State = unknown> {
 	sessionId?: string;
 	cwd?: string;
 	input?: Record<string, unknown>;
-	receipts?: readonly RuntimeReceipt[];
+	receipts?: readonly WorkflowRuntimeReceipt[];
 }
 
 export interface TerminalDetector<State = unknown> {
@@ -83,7 +83,7 @@ export function getGateValidators(skill: WorkflowSkill): readonly GateValidator[
 	return getSkillPolicy(skill).gateValidators ?? [];
 }
 
-function receiptMatchesDetector(receipt: RuntimeReceipt, detectorId: string): boolean {
+function receiptMatchesDetector(receipt: WorkflowRuntimeReceipt, detectorId: string): boolean {
 	const evidence = receipt.evidence as Record<string, unknown>;
 	return (
 		receipt.accepted === true &&

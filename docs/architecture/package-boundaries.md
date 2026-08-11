@@ -168,7 +168,7 @@ The root `tsconfig.json` still contains `@tsuuanmi/pi-agent-old` aliases that po
 |---|---|---|---|
 | Tool receipt | Agent | Evidence for one tool execution inside one agent run | Must not own task routing or workflow state |
 | Task receipt | Orchestrator | Evidence for one routed/retried/verified orchestrated task | Must not own workflow state or artifact layout |
-| Workflow receipt | Workflows | Evidence for workflow actions and state transitions | May reference lower-layer receipt ids without owning their schemas |
+| Workflow runtime receipt | Workflows | `WorkflowRuntimeReceipt` evidence for workflow actions and state transitions | May reference lower-layer receipt ids without owning their schemas |
 
 Pi persists or transports receipts for its sessions, but persistence by the host does not transfer schema ownership.
 
@@ -235,8 +235,8 @@ Completed guardrails:
 | Rank | Task | ROI | Target package(s) | Exit criteria |
 | ---: | --- | --- | --- | --- |
 | 1 | Reconcile Team dependency and recovery semantics with `TaskQueue` | High | `pi-workflows`, `pi-orchestrator` | One owner for `depends_on`/`blocked_by`; resume and failure recovery are deterministic |
-| 2 | Remove remaining Ultragoal legacy/dual-write paths | High | `pi-workflows` | Obstacle, quality-gate, and receipt state use one canonical schema and write path |
-| 3 | Complete receipt reference boundaries | Medium-high | all packages | Workflow receipts reference task/tool IDs without importing lower-layer schemas |
+| 2 | Remove remaining Ultragoal legacy/dual-write paths | Complete | `pi-workflows` | Typed obstacle recording, blocker projection, guard decisions and resolution use one canonical transition |
+| 3 | Complete receipt reference boundaries | Complete | all packages | Public receipt names identify their owning layer; workflow details are distinct from durable receipts; lower receipt schemas are not copied |
 | 4 | Prove workflow-owned checkpoint recovery parity | Medium-high | `pi-workflows`, `pi-orchestrator` | Restart and interrupted-task recovery are idempotent and package-independent |
 | 5 | Normalize event ownership and adapter documentation | Medium | all packages | Cross-layer event mappings are explicit and layer-owned |
 | 6 | Define approved Ralplan output adapters | Medium-low | `pi-workflows`, `pi-orchestrator` | Approved plans map to task inputs without moving planning policy |

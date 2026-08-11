@@ -6,6 +6,7 @@
  */
 
 export * from "#workflows/artifacts/artifacts";
+export * from "#workflows/artifacts/final-package";
 export * from "#workflows/audit/audit-log";
 export * from "#workflows/audit/decision-ledger";
 export * from "#workflows/audit/tamper-detection";
@@ -48,13 +49,17 @@ export {
 	type RalplanAgentRole,
 	roleForStage,
 } from "#workflows/skills/ralplan/agent-roles";
+export { approveRalplanPlan } from "#workflows/skills/ralplan/approval";
+export { writeRalplanArtifact } from "#workflows/skills/ralplan/artifacts";
 export * from "#workflows/skills/ralplan/completion-transaction";
+export { doctorRalplan } from "#workflows/skills/ralplan/doctor";
 export * from "#workflows/skills/ralplan/expected-action";
 export * from "#workflows/skills/ralplan/gates";
 export {
 	assertRalplanApprovalTarget,
 	assertRalplanRole,
 } from "#workflows/skills/ralplan/guards";
+export { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 export * from "#workflows/skills/ralplan/obstacles";
 export * from "#workflows/skills/ralplan/orchestration-snapshot";
 export {
@@ -63,10 +68,6 @@ export {
 	type RalplanStageResult,
 	runRalplanStage,
 } from "#workflows/skills/ralplan/orchestrator";
-export { approveRalplanPlan } from "#workflows/skills/ralplan/approval";
-export { writeRalplanArtifact } from "#workflows/skills/ralplan/artifacts";
-export { doctorRalplan } from "#workflows/skills/ralplan/doctor";
-export { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 export type {
 	RalplanApprovalTarget,
 	RalplanApproveResult,
@@ -89,6 +90,8 @@ export * from "#workflows/skills/team/execution";
 export * from "#workflows/skills/team/execution-applier";
 export * from "#workflows/skills/team/execution-failure";
 export * from "#workflows/skills/team/execution-store";
+export * from "#workflows/skills/team/gates";
+export * from "#workflows/skills/team/messages";
 export * from "#workflows/skills/team/orchestrator";
 export * from "#workflows/skills/team/orchestrator-checkpoint";
 export * from "#workflows/skills/team/orchestrator-events";
@@ -98,13 +101,11 @@ export * from "#workflows/skills/team/role-contract";
 export * from "#workflows/skills/team/role-run-store";
 export * from "#workflows/skills/team/role-tasks";
 export * from "#workflows/skills/team/role-transitions";
-export * from "#workflows/skills/team/gates";
-export * from "#workflows/skills/team/messages";
 export * from "#workflows/skills/team/state";
-export * from "#workflows/skills/team/tasks";
-export * from "#workflows/skills/team/types";
 export * from "#workflows/skills/team/status-mapper";
 export * from "#workflows/skills/team/task-mapper";
+export * from "#workflows/skills/team/tasks";
+export * from "#workflows/skills/team/types";
 export * from "#workflows/skills/ultragoal/artifacts";
 export * from "#workflows/skills/ultragoal/guard";
 export * from "#workflows/skills/ultragoal/obstacles";
@@ -139,3 +140,4 @@ export * from "#workflows/state/active-state";
 export * from "#workflows/state/state-schema";
 export * from "#workflows/state/state-writer";
 export * from "#workflows/state/workflow-state";
+export * from "#workflows/tool/details";

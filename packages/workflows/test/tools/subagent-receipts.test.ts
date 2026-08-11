@@ -1,8 +1,8 @@
 import type { SubagentRecord } from "@tsuuanmi/pi";
 import { createSubagentListReceipt, createSubagentReceipt } from "@tsuuanmi/pi";
-import { getStructuredReceipt, isStructuredReceipt } from "@tsuuanmi/pi-agent";
+import { getStructuredReceipt, isStructuredReceipt, withStructuredReceipt } from "@tsuuanmi/pi-agent";
 import { describe, expect, test } from "vitest";
-import { workflowReceiptWithStructuredReceipt } from "#workflows/artifacts/artifacts";
+import { workflowToolDetails } from "#workflows/tool/details";
 
 describe("subagent structured receipts", () => {
 	test("projects current-session subagent records into inspectable receipts", () => {
@@ -53,12 +53,12 @@ describe("subagent structured receipts", () => {
 		expect(receipt.errorSummary).toBeUndefined();
 	});
 
-	test("attaches aggregate list receipts without changing workflow receipt shape", () => {
+	test("attaches aggregate list receipts to workflow tool details", () => {
 		const receipt = createSubagentListReceipt("session-1", 2);
-		const envelope = workflowReceiptWithStructuredReceipt({ records: [] }, receipt);
+		const envelope = workflowToolDetails(withStructuredReceipt({ records: [], summary: "list completed" }, receipt));
 
 		expect(envelope.ok).toBe(true);
-		expect(envelope.final_package).toBeDefined();
+		expect(envelope.final_package).toEqual({ report: null, changelog: null, handoff: null });
 		expect(getStructuredReceipt(envelope)).toMatchObject({
 			source: "subagent",
 			status: "completed",

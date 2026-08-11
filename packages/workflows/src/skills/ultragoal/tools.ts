@@ -1,10 +1,10 @@
 import { parseThinkingLevel } from "@tsuuanmi/pi";
 import { type Static, Type } from "typebox";
-import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { assertExpectedNextRole, assertNoGuardedSpawnOverrides } from "#workflows/policy/expected-next-role";
 import { nextRoleForSkill } from "#workflows/policy/skill-policy";
 import { getUltragoalStatus } from "#workflows/skills/ultragoal/runtime";
 import type { WorkflowContext } from "#workflows/tool/context";
+import { workflowToolDetails } from "#workflows/tool/details";
 import type { WorkflowToolHost } from "#workflows/tool/host";
 
 const ultragoalSpawnGoalAgentSchema = Type.Object({
@@ -55,7 +55,7 @@ async function executeUltragoalSpawnGoalAgent(
 	});
 	return {
 		content: [{ type: "text" as const, text: `Spawned subagent ${result.record.id} for goal ${goal.id}` }],
-		details: workflowReceipt({ goal, subagent: result.record }),
+		details: workflowToolDetails({ goal, subagent: result.record }),
 	};
 }
 

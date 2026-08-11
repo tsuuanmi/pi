@@ -11,14 +11,10 @@
  * `runtime.ts`. Runtime MUST NOT import this module (the runtime
  * enforces at the write boundary; the guard is advisory). No back-edge.
  *
- * 10-state enum: `active_review_blocked_recorded` is produced when a
- * `review_blocked` goal has a matching durable blocker-resolution goal and
- * `review_blockers_recorded` ledger event; `active_review_blocked_unrecorded`
- * covers manual/legacy review-blocked state. `unreadable_fail_closed` covers
- * unreadable plan/ledger while an objective is active.
+ * `active_review_blocked_recorded` requires both an unresolved typed obstacle
+ * and its active blocker-resolution goal. Missing or malformed state fails closed.
  */
 
-import type { ObstacleTrigger } from "#workflows/audit/decision-ledger";
 import { ultragoalGoalsPath, ultragoalLedgerPath } from "#workflows/session/session-layout";
 import {
 	readUltragoalObstacleLedger,
@@ -110,21 +106,9 @@ function findReceiptGoal(
  *  4. receipt validation via `validateCompletionReceipt` -> map receipt states
  *     to guard states (missing/stale/dirty/verified; final-aggregate distinct).
  */
-function hasRecordedReviewBlocker(
-	plan: UltragoalPlan,
-	ledger: readonly UltragoalLedgerEvent[],
-	blockedGoalId: string,
-): boolean {
-	const event = ledger.find(
-		(row) =>
-			row.event === "review_blockers_recorded" &&
-			row.goalId === blockedGoalId &&
-			typeof row.blockerGoalId === "string",
-	);
-	if (!event || typeof event.blockerGoalId !== "string") return false;
+function hasActiveBlockerGoal(plan: UltragoalPlan, blockedGoalId: string): boolean {
 	return plan.goals.some(
 		(goal) =>
-			goal.id === event.blockerGoalId &&
 			goal.steering?.kind === "review_blocker" &&
 			goal.steering.blockedGoalId === blockedGoalId &&
 			goal.status !== "complete" &&
@@ -134,14 +118,11 @@ function hasRecordedReviewBlocker(
 
 function reviewBlockedDiagnostic(
 	plan: UltragoalPlan,
-	ledger: readonly UltragoalLedgerEvent[],
 	obstacleLedger: UltragoalObstacleLedger,
 	goal: UltragoalGoal,
 ): UltragoalGuardDiagnostic {
-	const recorded = hasRecordedReviewBlocker(plan, ledger, goal.id);
 	const obstacles = unresolvedUltragoalObstacles(obstacleLedger, { scope: { goalId: goal.id } });
-	assertObstacleAgreement(goal.id, recorded, obstacles);
-	if (recorded) {
+	if (obstacles.length > 0 && hasActiveBlockerGoal(plan, goal.id)) {
 		return {
 			state: "active_review_blocked_recorded",
 			message: `Ultragoal ${goal.id} has recorded review blockers; complete blocker work and rerun verification.`,
@@ -153,26 +134,6 @@ function reviewBlockedDiagnostic(
 		message: `Ultragoal ${goal.id} is review-blocked without a recorded blocker goal; record and resolve blocker work, then rerun verification.`,
 		goalId: goal.id,
 	};
-}
-
-/**
- * Phase B-1: verify the obstacle ledger agrees with the graph-walk, but ONLY
- * when the obstacle ledger has spoken (non-empty unresolved obstacles for this
- * goal). The legacy `recordUltragoalReviewBlockers` path writes no obstacle, so
- * an empty ledger is normal and the graph-walk stays authoritative. The B-0
- * dual-write (`recordUltragoalObstacle`) writes both, so they must agree; a
- * divergence here is a bug. In dev/test we throw (catch it early); in production
- * we log so the advisory guard never breaks the run.
- */
-function assertObstacleAgreement(goalId: string, recorded: boolean, obstacles: readonly ObstacleTrigger[]): void {
-	if (obstacles.length === 0 || recorded) return;
-	const message =
-		`ultragoal obstacle/graph-walk divergence on ${goalId}: ` +
-		`obstacle ledger has ${obstacles.length} unresolved obstacle(s) but no recorded review-blocker goal`;
-	if (process.env.NODE_ENV !== "production") {
-		throw new Error(message);
-	}
-	console.warn(message);
 }
 
 export async function readUltragoalVerificationState(
@@ -201,13 +162,14 @@ export async function readUltragoalVerificationState(
 			message: `Unable to read ultragoal ledger at ${ultragoalLedgerPath(cwd, sessionId)}: ${error instanceof Error ? error.message : String(error)}`,
 		};
 	}
-	// Phase B-1: read the obstacle ledger alongside the graph-walk. Fail-soft to
-	// empty so the obstacle ledger can never break the existing guard path.
 	let obstacleLedger: UltragoalObstacleLedger;
 	try {
 		obstacleLedger = await readUltragoalObstacleLedger(cwd, sessionId);
-	} catch {
-		obstacleLedger = { obstacles: [] };
+	} catch (error) {
+		return {
+			state: "unreadable_fail_closed",
+			message: `Unable to read ultragoal obstacle ledger: ${error instanceof Error ? error.message : String(error)}`,
+		};
 	}
 	if (!plan) return { state: "inactive", message: "No ultragoal plan exists." };
 	// Focused per-goal inspection: when a specific goalId is requested, classify
@@ -216,7 +178,7 @@ export async function readUltragoalVerificationState(
 	if (input.goalId) {
 		const goal = plan.goals.find((item) => item.id === input.goalId);
 		if (!goal) return { state: "unrelated_goal", message: `No ultragoal goal found for ${input.goalId}.` };
-		if (goal.status === "review_blocked") return reviewBlockedDiagnostic(plan, ledger, obstacleLedger, goal);
+		if (goal.status === "review_blocked") return reviewBlockedDiagnostic(plan, obstacleLedger, goal);
 		const receiptKind: UltragoalReceiptKind = goal.completionVerification?.receiptKind ?? "per-goal";
 		const receipt = validateCompletionReceipt({ plan, ledger, goal, receiptKind });
 		return { state: receipt.state, message: receipt.message, goalId: receipt.goalId };
@@ -227,7 +189,7 @@ export async function readUltragoalVerificationState(
 		return { state: "unrelated_goal", message: "Current goal is not an active ultragoal objective." };
 	}
 	const reviewBlocked = plan.goals.find((goal) => goal.status === "review_blocked");
-	if (reviewBlocked) return reviewBlockedDiagnostic(plan, ledger, obstacleLedger, reviewBlocked);
+	if (reviewBlocked) return reviewBlockedDiagnostic(plan, obstacleLedger, reviewBlocked);
 	const target = findReceiptGoal(plan, currentObjective);
 	if (!target) {
 		return {

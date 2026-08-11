@@ -21,8 +21,8 @@ import { operate } from "#workflows/runtime/runner";
 import {
 	appendEvent,
 	readEvents,
-	readRuntimeReceipts,
 	readSessionState,
+	readWorkflowRuntimeReceipts,
 	sessionPaths,
 	writeSessionState,
 } from "#workflows/runtime/storage";
@@ -188,7 +188,7 @@ export class RuntimeOwner {
 
 	async #classify(input: Record<string, unknown>): Promise<PrimitiveResponse> {
 		const state = await this.#loadState();
-		const receipts = await readRuntimeReceipts(this.#root, this.#sessionId);
+		const receipts = await readWorkflowRuntimeReceipts(this.#root, this.#sessionId);
 		return classify({
 			state,
 			ownerLive: true,
@@ -201,7 +201,7 @@ export class RuntimeOwner {
 
 	async #recover(input: Record<string, unknown>): Promise<PrimitiveResponse> {
 		const state = await this.#loadState();
-		const receipts = await readRuntimeReceipts(this.#root, this.#sessionId);
+		const receipts = await readWorkflowRuntimeReceipts(this.#root, this.#sessionId);
 		return recover({
 			root: this.#root,
 			state,
@@ -226,7 +226,7 @@ export class RuntimeOwner {
 
 	async #finalize(input: Record<string, unknown>): Promise<PrimitiveResponse> {
 		const state = await this.#loadState();
-		const receipts = await readRuntimeReceipts(this.#root, this.#sessionId);
+		const receipts = await readWorkflowRuntimeReceipts(this.#root, this.#sessionId);
 		return finalize({
 			root: this.#root,
 			state,
@@ -253,7 +253,7 @@ export class RuntimeOwner {
 			// Owner is in-process and live; the vanished branch (which calls spawnOwner) is unreachable here.
 			spawnOwner: async () => true,
 			observe: async (sessionState) => {
-				const receipts = await readRuntimeReceipts(this.#root, this.#sessionId);
+				const receipts = await readWorkflowRuntimeReceipts(this.#root, this.#sessionId);
 				return buildClassificationInput({
 					state: sessionState,
 					ownerLive: true,

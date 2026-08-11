@@ -10,17 +10,17 @@ import {
 	type ClassificationInput,
 	classifyRecovery,
 	consumeBudget,
-	isRuntimeReceiptValid,
 	type RecoveryDecision,
 	recover as recoverSession,
 	validate,
 } from "#workflows/runtime/operations";
 import { preserveDirtyWorktree } from "#workflows/runtime/preservation";
+import { isWorkflowRuntimeReceiptValid } from "#workflows/runtime/receipt-rules";
 import type { HarnessRpc, RpcStateSnapshot } from "#workflows/runtime/rpc";
 import { operate } from "#workflows/runtime/runner";
 import {
-	readRuntimeReceipts,
 	readSessionState,
+	readWorkflowRuntimeReceipts,
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
@@ -110,7 +110,7 @@ async function classificationInput(
 	sessionId: string,
 	ownerLive = false,
 ): Promise<ClassificationInput> {
-	const receipts = await readRuntimeReceipts(root, sessionId);
+	const receipts = await readWorkflowRuntimeReceipts(root, sessionId);
 	return buildClassificationInput({ state, ownerLive, receipts: receipts.rows });
 }
 
@@ -222,7 +222,7 @@ describe("harness control-plane phase 2 — destructive recovery (recover)", () 
 			input: opts.input ?? {},
 			writer: WRITER,
 			spawnOwner: opts.spawnOwner ?? (async () => true),
-			receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+			receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 		});
 	}
 
@@ -236,9 +236,9 @@ describe("harness control-plane phase 2 — destructive recovery (recover)", () 
 		const after = await readSessionState(root, sessionId);
 		expect(after?.retries.zeroDeltaVanish).toBeUndefined(); // clean consumes nothing
 		// a vanish receipt was written + is valid.
-		const receipts = await readRuntimeReceipts(root, sessionId);
+		const receipts = await readWorkflowRuntimeReceipts(root, sessionId);
 		const vanish = receipts.rows.find((r) => r.verb === "vanish");
-		expect(vanish && isRuntimeReceiptValid(vanish)).toBe(true);
+		expect(vanish && isWorkflowRuntimeReceiptValid(vanish)).toBe(true);
 	});
 
 	it("zero-delta + budget -> restart-clean consuming zeroDeltaVanish", async () => {
@@ -288,7 +288,7 @@ describe("harness control-plane phase 2 — destructive recovery (recover)", () 
 		const after = await readSessionState(root, sessionId);
 		expect(after?.retries.dirtyVanishPreserve).toBe(1);
 		// the vanish receipt recorded a stash ref (real preservation).
-		const receipts = await readRuntimeReceipts(root, sessionId);
+		const receipts = await readWorkflowRuntimeReceipts(root, sessionId);
 		const vanish = receipts.rows.find((r) => r.verb === "vanish");
 		const vanishEv = vanish?.evidence as { stashRef?: string | null } | undefined;
 		expect(vanishEv?.stashRef).not.toBeNull();
@@ -327,7 +327,7 @@ describe("harness control-plane phase 2 — destructive recovery (recover)", () 
 				ownerLive: false,
 				writer: WRITER,
 				spawnOwner: async () => true,
-				receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+				receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 			});
 			const decision = (res.evidence as { decision: RecoveryDecision }).decision;
 			expect(decision.classification).toBe("human-check");
@@ -351,7 +351,7 @@ describe("harness control-plane phase 2 — destructive recovery (recover)", () 
 				ownerLive: false,
 				writer: WRITER,
 				spawnOwner: async () => true,
-				receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+				receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 			});
 			// dirty + budget -> restart-preserve-delta, but stash impossible -> vanish invalid -> blocked.
 			expect(res.ok).toBe(false);
@@ -392,11 +392,11 @@ describe("harness control-plane phase 2 — destructive recovery (recover)", () 
 		]);
 		expect(a.ok).toBe(true);
 		expect(b.ok).toBe(true);
-		const log = await readRuntimeReceipts(root, sessionId);
+		const log = await readWorkflowRuntimeReceipts(root, sessionId);
 		expect(log.diagnostics).toHaveLength(0);
 		const vanish = log.rows.filter((r) => r.verb === "vanish");
 		expect(vanish).toHaveLength(2);
-		expect(vanish.every((r) => isRuntimeReceiptValid(r))).toBe(true);
+		expect(vanish.every((r) => isWorkflowRuntimeReceiptValid(r))).toBe(true);
 	});
 });
 
@@ -446,7 +446,7 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 					ownerLive: true,
 					rpc,
 					input: { signals: ["completed"] },
-					receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+					receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 				}),
 		});
 		expect(result.completed).toBe(true);
@@ -475,7 +475,7 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 					state: st,
 					ownerLive: true,
 					rpc,
-					receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+					receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 				}),
 		});
 		expect(result.completed).toBe(true);
@@ -499,7 +499,7 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 					state: st,
 					ownerLive: true,
 					rpc,
-					receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+					receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 				}),
 		});
 		expect(result.completed).toBe(false);
@@ -524,7 +524,7 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 				buildClassificationInput({
 					state: st,
 					ownerLive: false,
-					receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+					receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 				}),
 		});
 		expect(result.completed).toBe(false);
@@ -558,7 +558,7 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 					ownerLive: true,
 					rpc,
 					input: { signals: ["completed"] },
-					receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+					receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 				}),
 		});
 		// completion is observed before any recover call, so the spy is not hit on the success path;
@@ -583,7 +583,7 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 					state: st,
 					ownerLive: true,
 					rpc,
-					receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+					receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 				}),
 		});
 		expect(calls2).toBe(2);
@@ -603,7 +603,7 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 			ownerLive: false,
 			writer: WRITER,
 			spawnOwner: async () => true,
-			receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+			receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 		});
 		expect(res.ok).toBe(false);
 		const decision = (res.evidence as { decision: RecoveryDecision }).decision;
@@ -633,7 +633,7 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 					state: st,
 					ownerLive: true,
 					rpc,
-					receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+					receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 				}),
 		});
 		// singleFlightAccept would mark submitted; detect via rpc.started flag.
@@ -660,7 +660,7 @@ describe("harness control-plane phase 2 — operate loop (fake harness e2e)", ()
 					state: st,
 					ownerLive: true,
 					rpc,
-					receipts: (await readRuntimeReceipts(root, sessionId)).rows,
+					receipts: (await readWorkflowRuntimeReceipts(root, sessionId)).rows,
 				}),
 		});
 		expect(result.completed).toBe(false);

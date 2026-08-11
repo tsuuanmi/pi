@@ -1,6 +1,5 @@
 import { parseThinkingLevel } from "@tsuuanmi/pi";
 import { type Static, Type } from "typebox";
-import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import {
 	assertExpectedNextRole,
 	assertNoGuardedSpawnOverrides,
@@ -11,12 +10,13 @@ import { ralplanGateArtifactPath } from "#workflows/session/session-layout";
 import { type RalplanAgentInput, roleForStage } from "#workflows/skills/ralplan/agent-roles";
 import { normalizeRalplanExplorerGate } from "#workflows/skills/ralplan/gates";
 import { assertRalplanRole } from "#workflows/skills/ralplan/guards";
+import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 import { buildRalplanOrchestrationSnapshot } from "#workflows/skills/ralplan/orchestration-snapshot";
 import { planRalplanAgent, runRalplanStage } from "#workflows/skills/ralplan/orchestrator";
-import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 import { assertRalplanStage, assertSafePathComponent } from "#workflows/state/state-schema";
 import { defaultWorkflowId, readWorkflowState } from "#workflows/state/workflow-state";
 import type { WorkflowContext } from "#workflows/tool/context";
+import { workflowToolDetails } from "#workflows/tool/details";
 import type { WorkflowToolHost } from "#workflows/tool/host";
 
 const ralplanRunAgentSchema = Type.Object({
@@ -132,7 +132,7 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Workflo
 					text: `${planned.role} agent ${planned.status} for ralplan ${planned.stage} stage ${planned.stage_n}`,
 				},
 			],
-			details: workflowReceipt({ ...planned }),
+			details: workflowToolDetails({ ...planned }),
 		};
 	}
 
@@ -152,7 +152,7 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Workflo
 				text: `${result.agent.role} agent ${result.agent.status} for ralplan ${result.agent.stage} stage ${result.agent.stage_n}`,
 			},
 		],
-		details: workflowReceipt({
+		details: workflowToolDetails({
 			...result.agent,
 			orchestrator_run_id: result.run.runIdentity.runId,
 			orchestrator_task_id: result.task.id,

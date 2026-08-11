@@ -22,6 +22,7 @@ This plan turns the findings in [Package Overlap Audit](package-overlap-audit.md
 | 4 | Workflow transition initialization/private alias removal | Implemented through the package manifest and public runtime entry |
 | 5 | Generic HUD provider and status-line composition | Implemented; status-line refresh remains host-owned |
 | 6 | TUI repository state and global keybinding state | Complete; repository acquisition and active keybindings are host-scoped |
+| 7 | Ultragoal obstacle transition convergence | Complete; typed obstacles are authoritative through resolution |
 
 ## Phase 1 - shared contracts and stream adapter
 
@@ -216,6 +217,98 @@ Completed. Pi now owns a dedicated repository-state service; TUI consumes synchr
 - Session cwd changes cannot display repository data from the previous cwd.
 - Watchers, polling timers and in-flight updates are inert after disposal.
 - No legacy exports, fallback managers or compatibility aliases remain.
+
+## Phase 7 - Ultragoal obstacle transition convergence
+
+### Goal
+
+Use one typed obstacle transition for review failures, blocker-goal projection, guard decisions and resolution. Remove the legacy review-blocker writer and all fail-open compatibility behavior.
+
+### Canonical transition
+
+- Replace the public `record-review-blockers` action with `record-obstacle`.
+- Require the obstacle kind, rationale and applicable regression evidence in the action schema; do not infer defaults.
+- Validate and build the typed obstacle before mutating the goal graph or either ledger.
+- In one runtime transition, mark the reviewed goal superseded, append one pending `review_blocker` goal, persist the typed obstacle and append an `obstacle_recorded` transition receipt.
+- Keep artifact-specific serialization in `obstacles.ts`; keep goal-graph orchestration in `runtime.ts`.
+
+### Guard and resolution rules
+
+- A `review_blocked` goal is recorded only when both an unresolved typed obstacle and its active blocker goal exist.
+- Remove the empty-ledger graph fallback and the `review_blockers_recorded` compatibility event lookup.
+- Treat a malformed obstacle ledger as corrupt state instead of an empty ledger.
+- Completing a `review_blocker` goal resolves matching obstacles for its parent goal with durable resolution metadata.
+- Keep unresolved obstacles append-only in identity; status transitions update the same durable obstacle record rather than adding aliases.
+
+### File-level changes
+
+| Area | Change |
+|---|---|
+| `ultragoal/runtime.ts` | Own the single typed obstacle/goal transition and blocker-resolution hook |
+| `ultragoal/obstacles.ts` | Strict ledger reads, typed build/write, unresolved lookup and resolution |
+| `ultragoal/guard.ts` | Typed obstacle plus active blocker-goal agreement; no legacy event fallback |
+| Ultragoal schema/help/skill docs | Replace the old action and document required typed evidence |
+| Ultragoal obstacle/guard tests | Delete compatibility-path cases; cover strict corruption, canonical recording and resolution |
+
+### Result
+
+Completed. `record-obstacle` is the only review-obstacle transition, guards require typed-ledger and blocker-goal agreement, malformed ledgers fail closed, and blocker completion resolves matching obstacles.
+
+### Acceptance criteria
+
+- `recordUltragoalReviewBlockers`, `record-review-blockers` and `review_blockers_recorded` no longer exist.
+- Only `recordUltragoalObstacle` can create a review blocker projection.
+- Invalid obstacle evidence writes no plan, transition ledger or obstacle ledger.
+- A missing/corrupt typed obstacle cannot be accepted through graph-only fallback behavior.
+- Completing the blocker goal leaves no matching unresolved obstacle.
+
+## Phase 8 - Receipt ownership and naming
+
+### Goal
+
+Expose layer-specific receipt contracts and keep model-visible workflow tool details separate from durable audit records. Remove generic names, copied concepts and mutable receipt-rule extension points.
+
+### Canonical contracts
+
+- Agent owns `StructuredReceipt` and tool-execution receipt construction.
+- Orchestrator owns `TaskExecutionReceipt` and `TaskConsequentialReceipt`.
+- Workflows owns `WorkflowRuntimeReceipt`, its hash/lifecycle validation and its storage helpers.
+- `WorkflowToolDetails` is a model-visible result payload, not a receipt.
+- Higher layers retain only stable lower-receipt identifiers and workflow-specific metadata; no package-wide shared `ReceiptRef` is introduced without an exchanged public contract.
+
+### File-level changes
+
+| Area | Change |
+|---|---|
+| `runtime/types.ts` | Rename the generic runtime record to `WorkflowRuntimeReceipt` |
+| `runtime/receipt-rules.ts` | Own receipt hashing, integrity validation and direct lifecycle consistency rules; remove the mutable rule registry |
+| `runtime/storage.ts` and consumers | Rename receipt read/write APIs explicitly and remove old exports |
+| `artifacts/final-package.ts` | Own deterministic final-package assembly |
+| `tool/details.ts` | Own `WorkflowToolDetails` and `workflowToolDetails` |
+| `artifacts/artifacts.ts` | Retain only atomic stage-artifact writing |
+| Package exports, tests and docs | Replace all old names and document receipt ownership at each package boundary |
+
+### Migration order
+
+1. Split final-package assembly and tool details from stage-artifact writing.
+2. Replace the misnamed workflow tool receipt helper at every tool boundary.
+3. Rename the workflow runtime receipt type and storage/integrity APIs.
+4. Collapse mutable family-rule registration into direct schema-owner validation.
+5. Update tests, package exports, package READMEs, architecture docs and changelog.
+6. Rebuild Workflows, run receipt/runtime/tool tests, then run the full package and root gates.
+
+### Result
+
+Completed. Public receipt names identify their owning layer, workflow tool payloads are no longer labeled as receipts, receipt hashing lives with receipt rules, and the mutable family-rule registry and old APIs were removed without aliases.
+
+### Acceptance criteria
+
+- `RuntimeReceipt`, `WorkflowReceipt`, `workflowReceipt`, `readRuntimeReceipts`, `appendRuntimeReceipt` and `isRuntimeReceiptValid` no longer exist.
+- `WorkflowRuntimeReceipt` is the only workflow runtime receipt contract.
+- `WorkflowToolDetails` owns no receipt identity, timing, provenance or persistence behavior.
+- Stage-artifact writing, final-package assembly and tool-detail construction live in separate cohesive modules.
+- Receipt integrity and lifecycle consistency have one immutable implementation.
+- No lower-layer receipt schema is copied into Workflows and no speculative shared reference type is added.
 
 ## Verification order
 

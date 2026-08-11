@@ -1,3 +1,4 @@
+import type { ObstacleRegression } from "#workflows/audit/decision-ledger";
 import {
 	inputString,
 	optionalNumber,
@@ -25,10 +26,10 @@ import {
 	runClosureCheckForSession,
 } from "#workflows/skills/deep-interview/runtime";
 import type { DeepInterviewAdvisoryMetadata, DeepInterviewRoundRecord } from "#workflows/skills/deep-interview/state";
-import { recordRalplanExplorerGateArtifact } from "#workflows/skills/ralplan/gates";
 import { approveRalplanPlan } from "#workflows/skills/ralplan/approval";
 import { writeRalplanArtifact } from "#workflows/skills/ralplan/artifacts";
 import { doctorRalplan } from "#workflows/skills/ralplan/doctor";
+import { recordRalplanExplorerGateArtifact } from "#workflows/skills/ralplan/gates";
 import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 import type { RalplanApprovalTarget } from "#workflows/skills/ralplan/types";
 import {
@@ -40,6 +41,7 @@ import { sendTeamMessage } from "#workflows/skills/team/messages";
 import { readTeamSnapshot, startTeam } from "#workflows/skills/team/state";
 import { createTeamTask, transitionTeamTask } from "#workflows/skills/team/tasks";
 import { ultragoalGuard } from "#workflows/skills/ultragoal/guard";
+import type { UltragoalResolvableObstacleKind } from "#workflows/skills/ultragoal/obstacles";
 import type { UltragoalGoalMode } from "#workflows/skills/ultragoal/receipt";
 import type { UltragoalBlockerClassification } from "#workflows/skills/ultragoal/runtime";
 import {
@@ -47,7 +49,7 @@ import {
 	createUltragoalPlan,
 	getUltragoalStatus,
 	recordUltragoalBlockerClassification,
-	recordUltragoalReviewBlockers,
+	recordUltragoalObstacle,
 	restoreUltragoalCheckpoint,
 	startNextUltragoalGoal,
 } from "#workflows/skills/ultragoal/runtime";
@@ -415,14 +417,34 @@ export async function ultragoalVerb(
 			);
 			break;
 		}
-		case "record-review-blockers": {
-			body = await recordUltragoalReviewBlockers(
+		case "record-obstacle": {
+			const regressionInput = input.regression;
+			if (
+				regressionInput !== undefined &&
+				(!regressionInput || typeof regressionInput !== "object" || Array.isArray(regressionInput))
+			) {
+				throw new Error("regression must be an object");
+			}
+			const regressionObject = regressionInput as Record<string, unknown> | undefined;
+			const regression: ObstacleRegression | undefined = regressionObject
+				? {
+						metric: requiredString(regressionObject, "metric"),
+						priorValue: requiredNumber(regressionObject, "priorValue"),
+						newValue: requiredNumber(regressionObject, "newValue"),
+						direction: requiredString(regressionObject, "direction") as ObstacleRegression["direction"],
+					}
+				: undefined;
+			body = await recordUltragoalObstacle(
 				cwd,
 				{
 					goalId: requiredString(input, "goalId"),
+					kind: requiredString(input, "kind") as UltragoalResolvableObstacleKind,
 					title: requiredString(input, "title"),
 					objective: requiredString(input, "objective"),
 					evidence: requiredString(input, "evidence"),
+					rationale: requiredString(input, "rationale"),
+					criterion: inputString(input, "criterion"),
+					regression,
 				},
 				sessionId,
 			);

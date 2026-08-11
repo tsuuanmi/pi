@@ -480,15 +480,17 @@
         }
       }
     },
-    "recordReviewBlockersInput": {
+    "recordObstacleInput": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "sessionId",
         "goalId",
+        "kind",
         "title",
         "objective",
-        "evidence"
+        "evidence",
+        "rationale"
       ],
       "properties": {
         "sessionId": {
@@ -496,6 +498,10 @@
         },
         "goalId": {
           "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["review_failure", "evidence_missing", "scope_drift", "contract_contradiction"]
         },
         "title": {
           "type": "string"
@@ -505,6 +511,26 @@
         },
         "evidence": {
           "type": "string"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "criterion": {
+          "type": "string"
+        },
+        "regression": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["metric", "priorValue", "newValue", "direction"],
+          "properties": {
+            "metric": { "type": "string" },
+            "priorValue": { "type": "number" },
+            "newValue": { "type": "number" },
+            "direction": {
+              "type": "string",
+              "enum": ["rise", "fall", "unchanged-weak"]
+            }
+          }
         }
       }
     },
@@ -578,8 +604,8 @@
     "checkpoint": {
       "$ref": "#/$defs/checkpointInput"
     },
-    "record-review-blockers": {
-      "$ref": "#/$defs/recordReviewBlockersInput"
+    "record-obstacle": {
+      "$ref": "#/$defs/recordObstacleInput"
     },
     "classify-blocker": {
       "$ref": "#/$defs/classifyBlockerInput"

@@ -5,16 +5,17 @@ import { evaluateGates, evaluateTerminalDetectors } from "#workflows/policy/skil
 import { buildResponse } from "#workflows/runtime/lifecycle";
 import { mutateRuntimeSession } from "#workflows/runtime/mutation";
 import { preserveDirtyWorktree } from "#workflows/runtime/preservation";
+import { isWorkflowRuntimeReceiptValid } from "#workflows/runtime/receipt-rules";
 import type { HarnessRpc } from "#workflows/runtime/rpc";
 import { singleFlightAccept } from "#workflows/runtime/rpc";
-import { readRuntimeReceipts, readSessionState } from "#workflows/runtime/storage";
+import { readSessionState, readWorkflowRuntimeReceipts } from "#workflows/runtime/storage";
 import type {
 	GitDelta,
 	HarnessLifecycle,
 	PrimitiveResponse,
-	RuntimeReceipt,
 	RuntimeWriter,
 	SessionState,
+	WorkflowRuntimeReceipt,
 } from "#workflows/runtime/types";
 import {
 	buildVanishEvidence,
@@ -199,15 +200,6 @@ function parseRetryBudget(input: Record<string, unknown>, state: SessionState): 
 	};
 }
 
-function receiptHash(seed: Omit<RuntimeReceipt, "contentSha256">): string {
-	return createHash("sha256").update(JSON.stringify(seed)).digest("hex");
-}
-
-export function isRuntimeReceiptValid(receipt: RuntimeReceipt): boolean {
-	const { contentSha256, ...seed } = receipt;
-	return receiptHash(seed) === contentSha256;
-}
-
 function isValidationEvidence(value: unknown, sessionId: string): value is ValidationEvidence {
 	if (!value || typeof value !== "object" || Array.isArray(value)) return false;
 	const record = value as Record<string, unknown>;
@@ -220,11 +212,14 @@ function isValidationEvidence(value: unknown, sessionId: string): value is Valid
 	);
 }
 
-function summarizeLatestValidation(receipts: RuntimeReceipt[], sessionId: string): ValidationReceiptSummary | null {
+function summarizeLatestValidation(
+	receipts: WorkflowRuntimeReceipt[],
+	sessionId: string,
+): ValidationReceiptSummary | null {
 	for (let index = receipts.length - 1; index >= 0; index--) {
 		const receipt = receipts[index];
 		if (receipt?.verb !== "validate" || receipt.sessionId !== sessionId) continue;
-		const valid = isRuntimeReceiptValid(receipt) && isValidationEvidence(receipt.evidence, sessionId);
+		const valid = isWorkflowRuntimeReceiptValid(receipt) && isValidationEvidence(receipt.evidence, sessionId);
 		return {
 			receiptId: receipt.receiptId,
 			contentSha256: receipt.contentSha256,
@@ -240,7 +235,7 @@ export async function buildClassificationInput(opts: {
 	ownerLive: boolean;
 	input?: Record<string, unknown>;
 	rpc?: HarnessRpc;
-	receipts?: RuntimeReceipt[];
+	receipts?: WorkflowRuntimeReceipt[];
 }): Promise<ClassificationInput> {
 	let rpcLive: boolean | null = null;
 	let rpcIdle: boolean | null = null;
@@ -459,7 +454,7 @@ export async function classify(opts: {
 	ownerLive: boolean;
 	input?: Record<string, unknown>;
 	rpc?: HarnessRpc;
-	receipts?: RuntimeReceipt[];
+	receipts?: WorkflowRuntimeReceipt[];
 	extraEvidence?: Record<string, unknown>;
 }): Promise<PrimitiveResponse> {
 	const classificationInput = await buildClassificationInput(opts);
@@ -474,7 +469,7 @@ async function writeVanishReceipt(opts: {
 	writer: RuntimeWriter;
 	decision: RecoveryDecision;
 	gitDelta: GitDelta;
-}): Promise<{ receipt: RuntimeReceipt; revalidated: boolean; vanishOk: boolean }> {
+}): Promise<{ receipt: WorkflowRuntimeReceipt; revalidated: boolean; vanishOk: boolean }> {
 	const classification = opts.decision.classification as VanishClassification;
 	const preserve = preserveDirtyWorktree(opts.state.handle.workspace);
 	const evidence = buildVanishEvidence(opts.gitDelta, preserve, classification);
@@ -496,9 +491,9 @@ async function writeVanishReceipt(opts: {
 	});
 	// Re-read + revalidate the just-written vanish receipt from disk (fail-closed: closes the
 	// tamper-after-write + receipt-log-corruption gap that mutateRuntimeSession does not catch).
-	const reread = await readRuntimeReceipts(opts.root, opts.state.sessionId);
+	const reread = await readWorkflowRuntimeReceipts(opts.root, opts.state.sessionId);
 	const row = [...reread.rows].reverse().find((receipt) => receipt.receiptId === vanishMutation.receipt.receiptId);
-	const hashOk = row ? isRuntimeReceiptValid(row) : false;
+	const hashOk = row ? isWorkflowRuntimeReceiptValid(row) : false;
 	const vanishOk = row ? validateVanish(row.evidence).valid : false;
 	// A corrupt receipt log (malformed line) is fail-closed: never proceed over an untrustworthy log.
 	const revalidated = reread.diagnostics.length === 0 && row !== undefined && hashOk;
@@ -513,7 +508,7 @@ export async function recover(opts: {
 	rpc?: HarnessRpc;
 	writer: RuntimeWriter;
 	spawnOwner?: () => Promise<boolean>;
-	receipts?: RuntimeReceipt[];
+	receipts?: WorkflowRuntimeReceipt[];
 	/** Injected by the operate loop to skip buildClassificationInput (no double git I/O). */
 	classificationInput?: ClassificationInput;
 }): Promise<PrimitiveResponse> {
@@ -841,7 +836,7 @@ function markersMatch(current: WorkspaceMarker, prior: WorkspaceMarker): boolean
 }
 
 function findValidationReceipt(
-	receipts: RuntimeReceipt[],
+	receipts: WorkflowRuntimeReceipt[],
 	state: SessionState,
 	input: Record<string, unknown>,
 ): ValidationReceiptSummary | null {
@@ -858,7 +853,7 @@ function findValidationReceipt(
 	}
 	const passing = candidates.filter(
 		(receipt) =>
-			isRuntimeReceiptValid(receipt) &&
+			isWorkflowRuntimeReceiptValid(receipt) &&
 			isValidationEvidence(receipt.evidence, state.sessionId) &&
 			receipt.evidence.overallPassed,
 	);
@@ -872,7 +867,7 @@ export async function finalize(opts: {
 	ownerLive: boolean;
 	input: Record<string, unknown>;
 	writer: RuntimeWriter;
-	receipts: RuntimeReceipt[];
+	receipts: WorkflowRuntimeReceipt[];
 }): Promise<PrimitiveResponse> {
 	const selected = findValidationReceipt(opts.receipts, opts.state, opts.input);
 	const currentMarker = buildWorkspaceMarker(opts.state.handle.workspace, opts.state.handle.base);

@@ -1,15 +1,9 @@
-# Artifacts
+# Stage Artifacts
 
-Durable artifact writing and receipt helpers.
+Durable stage-artifact writing for workflow-owned files.
 
 **Source:** `src/artifacts/artifacts.ts`
 
-## Overview
+`writeStageArtifact()` delegates to the shared atomic text writer, preserving path confinement and durability without owning workflow-specific artifact schemas.
 
-Workflow artifacts are written through atomic helpers that append receipts and audit entries where applicable. Artifact paths and receipts are shared by Deep Interview, Ralplan, Team, and Ultragoal.
-
-## See Also
-
-- [Workflow control plane](../workflow.md)
-- [Audit](../audit/audit.md)
-- [State](../state/state.md)
+Final-package assembly lives in [final-package.md](final-package.md). Model-visible tool result details live in [../tool/details.md](../tool/details.md). Neither is a durable receipt.

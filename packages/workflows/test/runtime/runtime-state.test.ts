@@ -5,12 +5,13 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runWorkflowCommand } from "#workflows/commands/workflow";
 import { mutateRuntimeSession } from "#workflows/runtime/mutation";
-import { buildClassificationInput, classifyRecovery, isRuntimeReceiptValid } from "#workflows/runtime/operations";
+import { buildClassificationInput, classifyRecovery } from "#workflows/runtime/operations";
 import { RuntimeOwner } from "#workflows/runtime/owner";
+import { isWorkflowRuntimeReceiptValid } from "#workflows/runtime/receipt-rules";
 import type { HarnessRpc, RpcStateSnapshot } from "#workflows/runtime/rpc";
 import {
-	readRuntimeReceipts,
 	readSessionState,
+	readWorkflowRuntimeReceipts,
 	resolveHarnessRoot,
 	sessionPaths,
 	writeSessionState,
@@ -111,7 +112,7 @@ describe("harness control-plane phase 1", () => {
 		expect(parsed.evidence.decision.classification).toBe("restart-clean");
 		expect(parsed.evidence.decision.classification).not.toBe("respawn-owner");
 		expect(await readSessionState(root, sessionId)).toEqual(before);
-		expect((await readRuntimeReceipts(root, sessionId)).rows).toHaveLength(0);
+		expect((await readWorkflowRuntimeReceipts(root, sessionId)).rows).toHaveLength(0);
 	});
 
 	it("classifies dirty owner-vanished workspace as restart-preserve-delta, never restart-clean", async () => {
@@ -129,7 +130,7 @@ describe("harness control-plane phase 1", () => {
 		expect(parsed.evidence.decision.classification).toBe("restart-preserve-delta");
 		expect(parsed.evidence.decision.classification).not.toBe("restart-clean");
 		expect(parsed.evidence.decision.blocked).toBe(false);
-		expect((await readRuntimeReceipts(root, sessionId)).rows).toHaveLength(0);
+		expect((await readWorkflowRuntimeReceipts(root, sessionId)).rows).toHaveLength(0);
 	});
 
 	it("validates checks through the owner and finalizes with fresh evidence", async () => {
@@ -146,10 +147,10 @@ describe("harness control-plane phase 1", () => {
 				cwd,
 			);
 			expect(validation.status).toBe(0);
-			const receipts = await readRuntimeReceipts(root, sessionId);
-			expect(receipts.rows.some((receipt) => receipt.verb === "validate" && isRuntimeReceiptValid(receipt))).toBe(
-				true,
-			);
+			const receipts = await readWorkflowRuntimeReceipts(root, sessionId);
+			expect(
+				receipts.rows.some((receipt) => receipt.verb === "validate" && isWorkflowRuntimeReceiptValid(receipt)),
+			).toBe(true);
 
 			const finalized = await runWorkflowCommand(
 				["finalize", "--input", JSON.stringify({ workspace: cwd, sessionId }), "--json"],

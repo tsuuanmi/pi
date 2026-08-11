@@ -24,8 +24,8 @@ import {
 	canonicalWorkspacePath,
 	defaultRepoName,
 	readEvents,
-	readRuntimeReceipts,
 	readSessionState,
+	readWorkflowRuntimeReceipts,
 	resolveHarnessRoot,
 	sessionPaths,
 } from "#workflows/runtime/storage";
@@ -229,7 +229,7 @@ export async function submit(input: Record<string, unknown>, json: boolean): Pro
 export async function classify(input: Record<string, unknown>, json: boolean): Promise<WorkflowCommandResult> {
 	const { root, state } = await loadState(input);
 	const owner = await resolveOwner(root, state.sessionId);
-	const receipts = await readRuntimeReceipts(root, state.sessionId);
+	const receipts = await readWorkflowRuntimeReceipts(root, state.sessionId);
 	const response = await classifySession({ state, ownerLive: owner.live, input, receipts: receipts.rows });
 	return { status: primitiveStatus(response), stdout: output(response, json), stderr: "" };
 }
@@ -252,7 +252,7 @@ export async function recover(input: Record<string, unknown>, json: boolean): Pr
 		leaseHeld = false;
 	};
 	try {
-		const receipts = await readRuntimeReceipts(root, state.sessionId);
+		const receipts = await readWorkflowRuntimeReceipts(root, state.sessionId);
 		const response = await recoverSession({
 			root,
 			state,

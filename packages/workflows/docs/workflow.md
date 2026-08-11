@@ -44,7 +44,7 @@ Workflows expose two independent host-facing surfaces. They are adapters over th
 | Surface | Entry point | Caller and context | Return contract |
 |---------|-------------|--------------------|-----------------|
 | CLI commands | `src/commands/workflow.ts` and `src/commands/workflow/` | User, shell script, CI, or recovery process. Receives argv, a working directory, and session-scoped input. | `status`, `stdout`, and `stderr`; suitable for scripting and machine-readable `--json` output. |
-| Model-visible tools | `src/extension.ts`, `src/tool/register.ts`, and skill-owned `tools.ts` modules | The model during an interactive Pi session. Receives typed parameters, `WorkflowContext`, cancellation, and the Pi-owned subagent manager. | `ToolResult` content and structured workflow receipts. |
+| Model-visible tools | `src/extension.ts`, `src/tool/register.ts`, and skill-owned `tools.ts` modules | The model during an interactive Pi session. Receives typed parameters, `WorkflowContext`, cancellation, and the Pi-owned subagent manager. | `ToolResult` content and `WorkflowToolDetails`; durable runtime receipts remain internal to runtime mutations. |
 
 The normal call paths are:
 
@@ -63,7 +63,7 @@ model tool call
 Boundary rules:
 
 - Commands own CLI parsing, session and working-directory resolution, output formatting, exit status, external lifecycle, inspection, and recovery.
-- Workflow adapters own host-facing registration, in-session context, cancellation, and workflow receipts. Pi-owned lifecycle tools provide subagent actions; skill tools own workflow orchestration and policy.
+- Workflow adapters own host-facing registration, in-session context, cancellation, and model-visible `WorkflowToolDetails`. Pi-owned lifecycle tools provide subagent actions; skill tools own workflow orchestration and policy.
 - Shared workflow implementation belongs below these adapters. If a command and a tool need the same behavior, they call a shared runtime or skill function; they do not call or shell out to each other.
 - A command may route to a live `RuntimeOwner` through workflow RPC or use a no-owner fallback. That is runtime communication, not a tool invocation.
 - `src/tool/host.ts` and `src/tool/spec.ts` define the workflow tool contract. `src/tool/register.ts` aggregates registration. Skill-specific tool behavior lives under `src/skills/*/tools.ts`.
@@ -199,5 +199,5 @@ The v1 repair allowlist is intentionally narrow: same-hash duplicate handling an
 A few internals are noted here so contributors can extend the control plane without grepping for seams:
 
 - **Deferred-seam registry** (`runtime/seams.ts`): an explicit, extensible list of designed-not-built harness extensions (`tmux-session-orchestration`, `git-worktree-isolation`, `cross-harness-omx-fallback` [permanently blocked], `remote-transport`, `global-daemon`, `capability-token-auth`). Requesting an unsupported seam fails closed with a self-documenting `seam_unsupported:<name>` token instead of a silent no-op. The registry is wired live into `recoverPrimitive`'s `fallback-harness-exec` branch. Add entries via `DeferredSeamRegistry.register` without changing the orchestrator.
-- **`validateReceiptFamilyConsistency`** (`runtime/receipt-rules.ts`): a write-path guard inside `mutateRuntimeSession` that rejects receipts whose post-state lifecycle contradicts their family target (e.g. a `finalize` receipt that is `accepted` but does not land on `completed`, or a passing `validate` receipt that does not land on `validating`). It throws before any write so a contradiction leaves zero orphan events/receipts/state. Conservative and pluggable: blocked variants pass, pre-Phase-3 receipts are grandfathered (write-path only), and future receipt families register rules in `receiptFamilyConsistencyRules` without touching the mutation path.
+- **Workflow runtime receipts** (`runtime/types.ts`, `runtime/receipt-rules.ts`): `WorkflowRuntimeReceipt` is the durable mutation record. Receipt rules own hash validation and immutable lifecycle consistency checks; contradictions throw before any event, receipt, or state write.
 - **Workflow HUD builders**: per-skill HUD modules (`deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts`) build active-state summaries in the owning harness folder. Extension-side HUD refresh is provided through `@tsuuanmi/pi-tui`.

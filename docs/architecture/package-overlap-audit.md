@@ -42,6 +42,7 @@ The audit did find smaller duplicate shapes, ambiguous ownership, packaging comp
 - Workflows now owns one `createSubagentStream()` adapter; Team and Ralplan retain only skill-specific request, persistence, and validation behavior.
 - Pi now owns repository discovery, branch watching, porcelain acquisition, polling and cached snapshots; TUI renders the injected repository summary.
 - TUI keybinding-aware components now require the host manager; the mutable global manager and compatibility accessors are removed.
+- Ultragoal now has one typed obstacle transition for recording, blocker-goal projection, guard decisions and resolution; graph-only and malformed-ledger fallbacks are removed.
 - The Workflows artifact-layout change is planned and is being handled by a concurrent workstream; it is not included in this commit.
 
 ## Ownership decision rules
@@ -200,9 +201,9 @@ If any answer is no, keep the behavior in Workflows until the generic path is cl
 | 1 | Make Workflows own one publishable compiled manifest/artifact | Complete | Standalone and Pi-bundled loading use the same package-owned paths; Pi discovers packages without rewriting or duplicating assets |
 | 2 | Resolve shared session-root/session-id ownership | Complete | Pi owns one encoder/root contract; Workflows extends it with workflow-relative layout and scoped validation |
 | 3 | Reconcile Team dependency and recovery semantics with `TaskQueue` | High | One dependency owner; deterministic blocked states and recovery parity |
-| 4 | Remove remaining Ultragoal legacy/dual-write paths | High | One canonical obstacle, quality-gate and receipt write path |
+| 4 | Remove remaining Ultragoal legacy/dual-write paths | Complete | One canonical typed obstacle, blocker projection, guard and resolution path |
 | 5 | Replace HUD magic refresh and duplicate sanitization with explicit host seams | Complete | One HUD normalization policy and generic provider integration; host refresh remains outside workflow state |
-| 6 | Complete receipt reference boundaries | Medium-high | Workflows references task/tool ids without copying lower schemas |
+| 6 | Complete receipt reference boundaries | Complete | Layer-specific public receipt names are explicit; workflow tool details are not mislabeled as receipts; Workflows references lower receipt ids without copying schemas |
 | 7 | Prove workflow-owned checkpoint recovery parity | Medium-high | Restart/interrupted recovery is idempotent and independent of workflow state |
 | 8 | Normalize cross-layer event documentation and mappings | Medium | Every bridge has one source event and explicit adapter |
 | 9 | Move repository-state acquisition out of TUI and reduce global UI state | Repository/keybinding complete; theme remains | TUI receives repository snapshots and active keybindings through host-scoped providers; theme scoping is tracked separately |

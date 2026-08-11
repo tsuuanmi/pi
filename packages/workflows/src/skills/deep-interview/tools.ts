@@ -1,5 +1,4 @@
 import { type Static, Type } from "typebox";
-import { workflowReceipt } from "#workflows/artifacts/artifacts";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
 import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";
 import { assertDeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
@@ -17,6 +16,7 @@ import { assertSafePathComponent } from "#workflows/state/state-schema";
 import { appendJsonl, readFileOrLiteral, writeTextArtifact } from "#workflows/state/state-writer";
 import { activeRalplanRunId, defaultWorkflowId } from "#workflows/state/workflow-state";
 import type { WorkflowContext } from "#workflows/tool/context";
+import { workflowToolDetails } from "#workflows/tool/details";
 import type { WorkflowToolHost } from "#workflows/tool/host";
 
 const planQuestionSchema = Type.Object({
@@ -78,7 +78,10 @@ function sessionId(ctx: WorkflowContext): string {
 }
 
 function textResult(text: string, details: unknown) {
-	return { content: [{ type: "text" as const, text }], details: workflowReceipt(details as Record<string, unknown>) };
+	return {
+		content: [{ type: "text" as const, text }],
+		details: workflowToolDetails(details as Record<string, unknown>),
+	};
 }
 
 async function executeWriteSpec(params: WriteSpecInput, ctx: WorkflowContext) {

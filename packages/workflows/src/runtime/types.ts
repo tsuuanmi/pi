@@ -101,7 +101,7 @@ export interface WorkflowRuntimeEvent<E = Record<string, unknown>> {
 	writer: RuntimeWriter;
 }
 
-export interface RuntimeReceipt<E = Record<string, unknown>> {
+export interface WorkflowRuntimeReceipt<E = Record<string, unknown>> {
 	schemaVersion: 1;
 	receiptId: string;
 	sessionId: string;

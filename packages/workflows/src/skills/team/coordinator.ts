@@ -8,7 +8,7 @@ import { readTeamSnapshot } from "#workflows/skills/team/state";
 import type { TeamSnapshot } from "#workflows/skills/team/types";
 import { defaultWorkflowId } from "#workflows/state/workflow-state";
 import type { WorkflowContext } from "#workflows/tool/context";
-import { workflowReceipt } from "#workflows/artifacts/artifacts";
+import { workflowToolDetails } from "#workflows/tool/details";
 
 export interface TeamExecuteInput {
 	teamId?: string;
@@ -100,7 +100,7 @@ async function completeRole(
 		}
 		return {
 			content: [{ type: "text" as const, text: `Team ${next.team_id} role ${role} execution completed.` }],
-			details: workflowReceipt({ team: next, role, operation, taskId }),
+			details: workflowToolDetails({ team: next, role, operation, taskId }),
 		};
 	} catch (error) {
 		const current = await readTeamSnapshot(ctx.cwd, input.sessionId, snapshot.team_id);

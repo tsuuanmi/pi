@@ -1,25 +1,22 @@
+import { writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
 	createUltragoalPlan,
 	readUltragoalObstacleLedger,
+	readUltragoalPlan,
 	readUltragoalVerificationState,
 	recordUltragoalObstacle,
-	recordUltragoalReviewBlockers,
 	startNextUltragoalGoal,
 	ultragoalGoalsPath,
+	ultragoalObstacleLedgerPath,
 	writeJsonAtomic,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const sessionId = "test-session-id";
 
-/**
- * Phase B-1: the guard reads the obstacle ledger alongside the graph-walk and
- * asserts they agree ONLY when the obstacle ledger has spoken. The diagnostic
- * state stays graph-walk-driven (unchanged); a divergence is a dev-only throw.
- */
-describe("ultragoal guard — Phase B-1 obstacle/graph-walk agreement", () => {
+describe("ultragoal typed obstacle guard", () => {
 	let cwd: string;
 
 	beforeEach(() => {
@@ -37,16 +34,16 @@ describe("ultragoal guard — Phase B-1 obstacle/graph-walk agreement", () => {
 		return started.goal?.id ?? "G001";
 	}
 
-	it("B-0 dual-write path: graph-walk recorded + obstacle present agree -> recorded state, no throw", async () => {
-		const goalId = await seedActiveGoal();
+	async function recordReviewFailure(goalId: string): Promise<void> {
 		await recordUltragoalObstacle(
 			cwd,
 			{
 				goalId,
 				kind: "review_failure",
 				title: "Architect review found defects",
-				objective: "Re-work the criterion then re-run the gate.",
-				evidence: "architect review found defects",
+				objective: "Repair the criterion and rerun verification.",
+				evidence: "Architect review found defects.",
+				rationale: "The review recommendation regressed and blocks completion.",
 				criterion: "architectReview.recommendation",
 				regression: {
 					metric: "qualityGate:architectReview.recommendation",
@@ -57,64 +54,30 @@ describe("ultragoal guard — Phase B-1 obstacle/graph-walk agreement", () => {
 			},
 			sessionId,
 		);
+	}
 
-		// Obstacle ledger has spoken.
+	it("accepts only matching unresolved obstacle and active blocker-goal state", async () => {
+		const goalId = await seedActiveGoal();
+		await recordReviewFailure(goalId);
+
 		const obstacleLedger = await readUltragoalObstacleLedger(cwd, sessionId);
 		expect(obstacleLedger.obstacles).toHaveLength(1);
-
-		// Guard agrees: recorded state, no divergence throw.
-		const diag = await readUltragoalVerificationState(cwd, sessionId, { goalId });
-		expect(diag.state).toBe("active_review_blocked_recorded");
+		const diagnostic = await readUltragoalVerificationState(cwd, sessionId, { goalId });
+		expect(diagnostic.state).toBe("active_review_blocked_recorded");
 	});
 
-	it("legacy recordUltragoalReviewBlockers path: empty obstacle ledger -> graph-walk authoritative -> recorded state, no throw", async () => {
+	it("rejects graph-only blocker state when the typed obstacle is missing", async () => {
 		const goalId = await seedActiveGoal();
-		await recordUltragoalReviewBlockers(
-			cwd,
-			{
-				goalId,
-				title: "Legacy blocker",
-				objective: "Resolve via the legacy path.",
-				evidence: "legacy review blockers still work",
-			},
-			sessionId,
-		);
+		await recordReviewFailure(goalId);
+		await writeJsonAtomic(ultragoalObstacleLedgerPath(cwd, sessionId), { obstacles: [] }, { cwd });
 
-		// Legacy path writes no obstacle.
-		const obstacleLedger = await readUltragoalObstacleLedger(cwd, sessionId);
-		expect(obstacleLedger.obstacles).toHaveLength(0);
-
-		// Guard still returns the recorded state (graph-walk authoritative, no
-		// divergence check because the obstacle ledger is empty).
-		const diag = await readUltragoalVerificationState(cwd, sessionId, { goalId });
-		expect(diag.state).toBe("active_review_blocked_recorded");
+		const diagnostic = await readUltragoalVerificationState(cwd, sessionId, { goalId });
+		expect(diagnostic.state).toBe("active_review_blocked_unrecorded");
 	});
 
-	it("divergence: obstacle present but graph-walk not recorded -> dev-only throw", async () => {
+	it("rejects obstacle-only state when the blocker goal is no longer active", async () => {
 		const goalId = await seedActiveGoal();
-		await recordUltragoalObstacle(
-			cwd,
-			{
-				goalId,
-				kind: "review_failure",
-				title: "Architect review found defects",
-				objective: "Re-work the criterion then re-run the gate.",
-				evidence: "architect review found defects",
-				criterion: "architectReview.recommendation",
-				regression: {
-					metric: "qualityGate:architectReview.recommendation",
-					priorValue: 1,
-					newValue: 0,
-					direction: "fall",
-				},
-			},
-			sessionId,
-		);
-
-		// Forge an inconsistent state: complete the blocker-resolution goal (so the
-		// graph-walk no longer sees a recorded blocker) while the blocked goal stays
-		// review_blocked and the obstacle ledger still has the active obstacle.
-		const { readUltragoalPlan } = await import("@tsuuanmi/pi-workflows");
+		await recordReviewFailure(goalId);
 		const plan = await readUltragoalPlan(cwd, sessionId);
 		if (!plan) throw new Error("plan missing");
 		const tampered = {
@@ -127,9 +90,15 @@ describe("ultragoal guard — Phase B-1 obstacle/graph-walk agreement", () => {
 			cwd,
 		});
 
-		// Graph-walk now says "not recorded"; obstacle ledger says "blocked" -> divergence.
-		await expect(readUltragoalVerificationState(cwd, sessionId, { goalId })).rejects.toThrow(
-			/obstacle\/graph-walk divergence/,
-		);
+		const diagnostic = await readUltragoalVerificationState(cwd, sessionId, { goalId });
+		expect(diagnostic.state).toBe("active_review_blocked_unrecorded");
+	});
+
+	it("fails closed when the typed obstacle ledger is malformed", async () => {
+		const goalId = await seedActiveGoal();
+		await writeFile(ultragoalObstacleLedgerPath(cwd, sessionId), "{", "utf8");
+		const diagnostic = await readUltragoalVerificationState(cwd, sessionId, { goalId });
+		expect(diagnostic.state).toBe("unreadable_fail_closed");
+		expect(diagnostic.message).toContain("malformed JSON");
 	});
 });

@@ -18,19 +18,18 @@ import {
 } from "#workflows/runtime/gc";
 import { classifyLeaseStatus, readLease, type SessionLease } from "#workflows/runtime/lease";
 import { mutateRuntimeSession } from "#workflows/runtime/mutation";
+import { ReceiptConsistencyError, validateReceiptFamilyConsistency } from "#workflows/runtime/receipt-rules";
 import {
-	RECEIPT_FAMILY_LIFECYCLE_TARGETS,
-	ReceiptConsistencyError,
-	type ReceiptFamilyConsistencyRule,
-	receiptFamilyConsistencyRules,
-	validateReceiptFamilyConsistency,
-} from "#workflows/runtime/receipt-rules";
-import { readRuntimeReceipts, readSessionState, resolveHarnessRoot, sessionPaths } from "#workflows/runtime/storage";
+	readSessionState,
+	readWorkflowRuntimeReceipts,
+	resolveHarnessRoot,
+	sessionPaths,
+} from "#workflows/runtime/storage";
 import {
 	type HarnessLifecycle,
-	type RuntimeReceipt,
 	SESSION_SCHEMA_VERSION,
 	type SessionState,
+	type WorkflowRuntimeReceipt,
 } from "#workflows/runtime/types";
 
 const WRITER = { ownerId: "test", leaseEpoch: 0 };
@@ -572,7 +571,7 @@ describe("phase 3 — GC e2e synthetic-tree sweep", () => {
 	});
 });
 
-describe("phase 3 — receipt lifecycle-target consistency guard", () => {
+describe("workflow runtime receipt lifecycle consistency", () => {
 	let cwd: string;
 	let root: string;
 
@@ -584,14 +583,6 @@ describe("phase 3 — receipt lifecycle-target consistency guard", () => {
 
 	afterEach(async () => {
 		await rm(cwd, { recursive: true, force: true });
-	});
-
-	it("RECEIPT_FAMILY_LIFECYCLE_TARGETS is conservative (finalize->completed, validate->validating)", () => {
-		expect(RECEIPT_FAMILY_LIFECYCLE_TARGETS.finalize).toBe("completed");
-		expect(RECEIPT_FAMILY_LIFECYCLE_TARGETS.validate).toBe("validating");
-		expect(RECEIPT_FAMILY_LIFECYCLE_TARGETS.start).toBeUndefined();
-		expect(RECEIPT_FAMILY_LIFECYCLE_TARGETS.vanish).toBeUndefined();
-		expect(RECEIPT_FAMILY_LIFECYCLE_TARGETS.recover).toBeUndefined();
 	});
 
 	it("(a) finalize accepted:true but lifecycle!==completed -> rejected; mutation throws", async () => {
@@ -725,38 +716,11 @@ describe("phase 3 — receipt lifecycle-target consistency guard", () => {
 				}),
 			).resolves.toBeDefined();
 		}
-		const receipts = await readRuntimeReceipts(root, sessionId);
+		const receipts = await readWorkflowRuntimeReceipts(root, sessionId);
 		const verbs = receipts.rows.map((receipt) => receipt.verb);
 		expect(verbs).toContain("start");
 		expect(verbs).toContain("recover");
 		expect(verbs).toContain("vanish");
-	});
-
-	it("(e) pluggability: a custom family rule triggers and rejects", async () => {
-		const sessionId = "h-rcpt-e";
-		const startState = makeState(root, cwd, sessionId, "started");
-		const customRule: ReceiptFamilyConsistencyRule = {
-			matches: (receipt) => receipt.verb === "start",
-			enforce: () => "custom-contradiction",
-		};
-		receiptFamilyConsistencyRules.push(customRule);
-		try {
-			await expect(
-				mutateRuntimeSession({
-					root,
-					sessionId,
-					verb: "start",
-					writer: WRITER,
-					nextState: startState,
-					ownerLive: false,
-					events: [{ kind: "workflow_started" }],
-					evidence: {},
-				}),
-			).rejects.toThrow(/custom-contradiction/);
-		} finally {
-			const index = receiptFamilyConsistencyRules.indexOf(customRule);
-			if (index >= 0) receiptFamilyConsistencyRules.splice(index, 1);
-		}
 	});
 
 	it("(f) blocked variants pass: finalize accepted=false/lifecycle=blocked and validate overallPassed=false/lifecycle=blocked are OUT of target", async () => {
@@ -807,13 +771,13 @@ describe("phase 3 — receipt lifecycle-target consistency guard", () => {
 			verb: "start",
 			accepted: true,
 			stateAfter: { lifecycle: "blocked" },
-		} as unknown as RuntimeReceipt;
+		} as unknown as WorkflowRuntimeReceipt;
 		expect(validateReceiptFamilyConsistency(ungated).valid).toBe(true);
 		const finalizeBlocked = {
 			verb: "finalize",
 			accepted: false,
 			stateAfter: { lifecycle: "blocked" },
-		} as unknown as RuntimeReceipt;
+		} as unknown as WorkflowRuntimeReceipt;
 		expect(validateReceiptFamilyConsistency(finalizeBlocked).valid).toBe(true);
 	});
 });

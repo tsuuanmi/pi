@@ -1,24 +1,8 @@
 /**
- * Ultragoal typed-obstacle ledger (Phase B-0, additive dual-write).
+ * Typed Ultragoal obstacle records and durable ledger operations.
  *
- * Ships the ultragoal obstacle kinds, the ultragoal skill validator, and a
- * per-skill session-scoped obstacle ledger (`.pi/<session-id>/ultragoal/obstacles.json`)
- * ALONGSIDE — not replacing — the existing review-blocker model (the steering
- * `review_blocker` goal + the `review_blockers_recorded` ledger event). Nothing
- * here is read by the guard or checkpoint path yet (that is Phase B-1/B-2), so
- * existing behavior and tests are unaffected.
- *
- * The integrity wall (`validateObstacles`, from `shared/audit/decision-ledger.ts`) gates
- * every obstacle insert: an active `review_failure`/`scope_drift`/`contract_contradiction`
- * kind must prove a regression, and the ultragoal validator adds structural checks
- * (criterion-naming kinds must name a criterion; `human_blocked` must not carry a
- * regression). `recordUltragoalObstacle` (in `runtime.ts`) is the dual-write
- * that runs this wall before touching the legacy path.
- *
- * Acyclic module graph: this is a LEAF module. It imports only
- * `shared/audit/decision-ledger.ts`, `shared/session/session-layout.ts`, `shared/state/state-writer.ts`,
- * and node built-ins. It MUST NOT import `runtime.ts` (runtime imports
- * this module, not the reverse) — mirrors the `receipt.ts` contract.
+ * This leaf module owns obstacle validation and serialization. Goal-graph
+ * projection stays in `runtime.ts`, which imports this module and not the reverse.
  */
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -42,27 +26,21 @@ import { writeJsonAtomic } from "#workflows/state/state-writer";
  * integrity wall then skips the regression-metrics requirement for them and runs
  * only the skill validator.
  */
-export const ULTRAGOAL_OBSTACLE_KINDS: ObstacleKindRegistry = {
+export const ULTRAGOAL_OBSTACLE_KINDS = {
 	review_failure: { label: "architect/executor review found defects", needsRegression: true },
 	evidence_missing: { label: "claimed completion lacks evidence", needsRegression: false },
 	scope_drift: { label: "implementation diverged from approved plan", needsRegression: true },
 	contract_contradiction: { label: "work contradicts an approved decision", needsRegression: true },
 	human_blocked: { label: "genuinely human-only blocker", needsRegression: false },
-};
+} satisfies ObstacleKindRegistry;
+
+export type UltragoalObstacleKind = keyof typeof ULTRAGOAL_OBSTACLE_KINDS;
+export type UltragoalResolvableObstacleKind = Exclude<UltragoalObstacleKind, "human_blocked">;
 
 /** Kinds that must name a quality-gate criterion as their scope. */
 const CRITERION_KINDS = new Set(["review_failure", "scope_drift"]);
 
-/**
- * Ultragoal skill validator (Phase B-0 subset). Enforces the two structural
- * invariants from the design that need no metric provider:
- *   - `review_failure` / `scope_drift` must name the criterion they block
- *   - `human_blocked` must not carry a regression (no metric to regress)
- *
- * The numeric "did the criterion actually regress?" check (the design's
- * `ctx.prior/next.metricValue`) is a Phase B-1/B-2 concern, wired once the
- * quality-gate metric provider exists; it is intentionally NOT enforced here.
- */
+/** Enforce Ultragoal-specific obstacle structure after shared validation. */
 export const ultragoalObstacleValidator: ObstacleValidator<void> = {
 	validateActive(obstacle: ObstacleInput): ObstacleViolation[] {
 		const violations: ObstacleViolation[] = [];
@@ -81,17 +59,12 @@ export function ultragoalObstacleLedgerPath(cwd: string, sessionId: string): str
 	return join(ultragoalDir(cwd, sessionId), "obstacles.json");
 }
 
-/** On-disk ledger shape. `facts` is added in Phase B-4 (cross-skill contract). */
+/** On-disk obstacle ledger envelope. */
 export interface UltragoalObstacleLedger {
 	obstacles: ObstacleTrigger[];
 }
 
-/**
- * Read the ultragoal obstacle ledger. Missing file -> empty ledger. A present
- * but malformed file (not `{ obstacles: [] }`) also yields an empty ledger rather
- * than throwing, so a corrupt obstacle ledger can never block the existing gate
- * (B-0 keeps the gate unchanged).
- */
+/** Read the obstacle ledger. Missing state is empty; malformed state fails closed. */
 export async function readUltragoalObstacleLedger(cwd: string, sessionId: string): Promise<UltragoalObstacleLedger> {
 	const path = ultragoalObstacleLedgerPath(cwd, sessionId);
 	let raw: string;
@@ -106,12 +79,17 @@ export async function readUltragoalObstacleLedger(cwd: string, sessionId: string
 	try {
 		parsed = JSON.parse(raw);
 	} catch {
-		return { obstacles: [] };
+		throw new Error("invalid ultragoal obstacle ledger: malformed JSON");
 	}
-	if (!parsed || typeof parsed !== "object" || !Array.isArray((parsed as { obstacles?: unknown }).obstacles)) {
-		return { obstacles: [] };
+	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+		throw new Error("invalid ultragoal obstacle ledger: expected an object");
 	}
-	return { obstacles: (parsed as UltragoalObstacleLedger).obstacles };
+	const obstacles = (parsed as { obstacles?: unknown }).obstacles;
+	if (!Array.isArray(obstacles)) {
+		throw new Error("invalid ultragoal obstacle ledger: obstacles must be an array");
+	}
+	for (const obstacle of obstacles) assertUltragoalObstacle(obstacle as ObstacleTrigger);
+	return { obstacles: obstacles as ObstacleTrigger[] };
 }
 
 /** Input to build a durable ultragoal obstacle record. */
@@ -177,36 +155,40 @@ export function assertUltragoalObstacle(obstacle: ObstacleInput): void {
 	}
 }
 
-/** Write-only append of an already-validated obstacle (no re-validation). */
-export async function writeUltragoalObstacle(cwd: string, sessionId: string, obstacle: ObstacleTrigger): Promise<void> {
+/** Validate and append one obstacle through the canonical ledger writer. */
+export async function appendUltragoalObstacle(
+	cwd: string,
+	sessionId: string,
+	obstacle: ObstacleTrigger,
+): Promise<void> {
+	assertUltragoalObstacle(obstacle);
 	const ledger = await readUltragoalObstacleLedger(cwd, sessionId);
 	ledger.obstacles.push(obstacle);
 	await writeJsonAtomic(ultragoalObstacleLedgerPath(cwd, sessionId), { obstacles: ledger.obstacles }, { cwd });
 }
 
-/**
- * The integrity-gated insert: build + validate + append to the ledger. Throws on
- * violation (the wall). Returns the new obstacle. Self-contained: callers that
- * go through `recordUltragoalObstacle` instead get the dual-write (legacy path too).
- */
-export async function appendUltragoalObstacle(
+export async function resolveUltragoalObstacles(
 	cwd: string,
 	sessionId: string,
-	input: UltragoalObstacleInput,
-	now: string,
-): Promise<ObstacleTrigger> {
-	const obstacle = buildUltragoalObstacle(input, now);
-	assertUltragoalObstacle(obstacle);
-	await writeUltragoalObstacle(cwd, sessionId, obstacle);
-	return obstacle;
+	goalId: string,
+	resolution: string,
+	resolvedAt = new Date().toISOString(),
+): Promise<ObstacleTrigger[]> {
+	const ledger = await readUltragoalObstacleLedger(cwd, sessionId);
+	const resolved: ObstacleTrigger[] = [];
+	const obstacles = ledger.obstacles.map((obstacle) => {
+		if (obstacle.scope?.goalId !== goalId || obstacle.status === "resolved") return obstacle;
+		const next = { ...obstacle, status: "resolved" as const, resolvedAt, resolution };
+		resolved.push(next);
+		return next;
+	});
+	if (resolved.length > 0) {
+		await writeJsonAtomic(ultragoalObstacleLedgerPath(cwd, sessionId), { obstacles }, { cwd });
+	}
+	return resolved;
 }
 
-/**
- * Closure query (Phase B-1 will wire this into the guard alongside
- * `activeRecordedBlocker`). Returns obstacles that are NOT resolved, optionally
- * filtered by scope. A resolved obstacle never blocks. This is the ultragoal
- * analogue of deep-interview's closure-guard query.
- */
+/** Return unresolved obstacles, optionally filtered by scope. */
 export function unresolvedUltragoalObstacles(
 	ledger: UltragoalObstacleLedger,
 	filter?: { scope?: Partial<NonNullable<ObstacleInput["scope"]>> },
