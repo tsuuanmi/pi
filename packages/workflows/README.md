@@ -261,7 +261,7 @@ Workflow-owned tools are model-visible and registered by the bundled workflow re
 
 ## Harness Runtime
 
-The workflow runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives directly under `src/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner), `artifacts/`, `audit/`, `orchestration/`, `registry/`, `session/`, `state/`, and `tool/` (workflow tool contracts, registration, and surface metadata). Skill-owned TypeScript and `SKILL.md` assets live together under `src/skills/<skill>/`.
+The workflow runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives directly under `src/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner, recovery policy/orchestration, validation, finalization, workspace markers), `artifacts/`, `audit/`, `orchestration/`, `registry/`, `session/`, `state/`, and `tool/` (workflow tool contracts, registration, and surface metadata). Skill-owned TypeScript and `SKILL.md` assets live together under `src/skills/<skill>/`.
 
 Key runtime boundaries for contributors:
 
