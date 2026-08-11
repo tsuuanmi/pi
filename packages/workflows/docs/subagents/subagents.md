@@ -45,10 +45,11 @@ interface WorkflowContext {
   cwd: string;
   sessionManager: { getSessionId(): string };
   subagents: SubagentManagerApi;
+  model?: Model;
 }
 ```
 
-`WorkflowContext.subagents` is the Pi-owned `SubagentManagerApi` supplied by the host. Workflow code may use it for an approved agent operation, but it must not create, discover, or replace the manager.
+`WorkflowContext.subagents` is the Pi-owned `SubagentManagerApi` supplied by the host. Workflow code may use it for an approved agent operation, but it must not create, discover, or replace the manager. Team execution also requires the host's active `model`; it fails before orchestration when no model is available.
 
 ## Package Boundary
 

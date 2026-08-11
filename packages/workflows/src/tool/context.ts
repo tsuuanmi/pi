@@ -1,4 +1,5 @@
 import type { SubagentManagerApi } from "@tsuuanmi/pi";
+import type { Model } from "@tsuuanmi/pi-agent";
 
 export interface WorkflowContext {
 	cwd: string;
@@ -6,4 +7,5 @@ export interface WorkflowContext {
 		getSessionId(): string;
 	};
 	subagents: SubagentManagerApi;
+	model?: Model;
 }

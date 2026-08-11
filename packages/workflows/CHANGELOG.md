@@ -51,6 +51,7 @@
 ### Fixed
 
 - **commands**: Updated every skill action reference and schema to require the active session id, use executable `--input` examples, and match current stage, status, goal-mode, and blocker values.
+- **team**: Team orchestrator agents now require the active host model and forward its canonical `provider/model` reference instead of the generic agent fallback model.
 
 ## [0.2.2] - 2026-07-23
 

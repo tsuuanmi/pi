@@ -13,8 +13,7 @@ import {
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { teamReceiptsPath } from "#workflows/session/session-layout";
-import type { WorkflowContext } from "#workflows/tool/index";
-import { createFakeManager } from "#workflows-test/team/fakes";
+import { createFakeManager, createTeamContext } from "#workflows-test/team/fakes";
 
 const sessionId = "team-coordinator-session";
 const teamId = "team-coordinator";
@@ -43,10 +42,12 @@ describe("team coordinator", () => {
 
 	it("progresses a task through worker, reviewer, and prover roles", async () => {
 		const roles: string[] = [];
+		const modelRefs: Array<string | undefined> = [];
 		const manager = createFakeManager(async (request) => {
 			const role = request.role;
 			if (!role) throw new Error("team role request is missing a role");
 			roles.push(role);
+			modelRefs.push(request.model);
 			if (role === "reviewer") {
 				await recordTeamReviewGateArtifact(
 					cwd,
@@ -88,7 +89,7 @@ describe("team coordinator", () => {
 				);
 			}
 		});
-		const context: WorkflowContext = { cwd, sessionManager: { getSessionId: () => sessionId }, subagents: manager };
+		const context = createTeamContext(manager, sessionId, cwd);
 
 		await executeRole({ teamId, agents }, context, undefined);
 		let snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
@@ -104,6 +105,7 @@ describe("team coordinator", () => {
 		snapshot = await readTeamSnapshot(cwd, sessionId, teamId);
 		expect(snapshot.completion_gate?.status).toBe("passed");
 		expect(roles).toEqual(["worker", "reviewer", "prover"]);
+		expect(modelRefs).toEqual(["test/test-model", "test/test-model", "test/test-model"]);
 
 		const receipts = (await readFile(teamReceiptsPath(cwd, teamId, sessionId), "utf8"))
 			.trim()

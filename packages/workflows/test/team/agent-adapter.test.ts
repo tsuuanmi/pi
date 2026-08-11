@@ -16,6 +16,19 @@ describe("team agent adapter", () => {
 		expect(() => createTeamAgents(context(), [])).toThrow("team agent roster requires at least one agent");
 	});
 
+	it("requires an active host model", () => {
+		expect(() => createTeamAgents({ ...context(), model: undefined }, [{ id: "worker", profile: "worker" }])).toThrow(
+			"team execution requires an active host model",
+		);
+	});
+
+	it("seeds every agent with the host model", () => {
+		const agents = createTeamAgents(context(), [{ id: "worker", profile: "worker" }]);
+
+		expect(agents[0]?.state.model.id).toBe("test-model");
+		expect(agents[0]?.state.model.provider).toBe("test");
+	});
+
 	it("rejects duplicate agent ids", () => {
 		expect(() =>
 			createTeamAgents(context(), [

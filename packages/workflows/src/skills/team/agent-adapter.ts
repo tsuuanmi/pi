@@ -16,6 +16,8 @@ export function createTeamAgents(ctx: WorkflowContext, specs: readonly TeamAgent
 	if (specs.length === 0) throw new Error("team agent roster requires at least one agent");
 	const manager = ctx.subagents;
 	const sessionId = ctx.sessionManager.getSessionId();
+	const model = ctx.model;
+	if (!model) throw new Error("team execution requires an active host model");
 	const ids = new Set<string>();
 	return Object.freeze(
 		specs.map((spec) => {
@@ -26,6 +28,7 @@ export function createTeamAgents(ctx: WorkflowContext, specs: readonly TeamAgent
 			return new Agent({
 				name: id,
 				capabilities: spec.capabilities,
+				initialState: { model },
 				stream: createTeamStream(manager, sessionId, { ...spec, id, profile }),
 			});
 		}),
@@ -39,7 +42,7 @@ function createTeamStream(manager: SubagentManagerApi, sessionId: string, spec: 
 			role: spec.id,
 			prompt: readPrompt(context),
 			systemPrompt: context.systemPrompt,
-			model: `${model.api}/${model.id}`,
+			model: `${model.provider}/${model.id}`,
 			tools: spec.tools ? [...spec.tools] : undefined,
 			excludeTools: spec.excludeTools ? [...spec.excludeTools] : undefined,
 			parentSessionId: sessionId,

@@ -1,7 +1,21 @@
 import type { SubagentManagerApi, SubagentRecord, SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi";
+import type { Model } from "@tsuuanmi/pi-agent";
 import type { WorkflowContext } from "#workflows/tool/index";
 
 export type SpawnAction = (request: SubagentRunRequest) => void | Promise<void>;
+
+const hostModel = {
+	id: "test-model",
+	name: "Test model",
+	api: "openai-completions",
+	provider: "test",
+	baseUrl: "",
+	reasoning: false,
+	input: ["text"],
+	cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+	contextWindow: 128_000,
+	maxTokens: 1_000,
+} satisfies Model;
 
 export function createTeamContext(
 	manager: SubagentManagerApi,
@@ -12,6 +26,7 @@ export function createTeamContext(
 		cwd,
 		sessionManager: { getSessionId: () => sessionId },
 		subagents: manager,
+		model: hostModel,
 	};
 }
 
