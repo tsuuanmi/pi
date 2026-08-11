@@ -44,7 +44,7 @@ team_execute / team_resume
         -> select the legal workflow role
         -> map role tasks to TaskInput[]
         -> build orchestrator Team from explicit Agents
-        -> create TeamCheckpointStore and event sink
+        -> create TeamCheckpointStore and map queue events
         -> Orchestrator.run(team, tasks, options)
         -> map RunTeamResult to execution state
         -> evaluate workflow gates
@@ -64,7 +64,7 @@ team_execute / team_resume
 | required tools | `TaskRequirements.tools` | workflow adapter |
 | dependencies | `TaskInput.dependsOn` | workflow adapter |
 | workflow checkpoint file | `TeamCheckpointStore` | workflows |
-| queue event | `TeamEventSink` | workflows |
+| queue event projection | `TeamWorkflowEvent` | workflows |
 | task receipt | `TeamTaskReceiptRef` | workflows |
 
 ## Parity matrix
@@ -115,7 +115,7 @@ Runtime seams are explicit and workflow-owned:
 | failure state | Converts failed/aborted execution into durable workflow execution state | Implemented by `execution-failure.ts` and `role-run-store.ts` |
 | orchestrator runner | Calls `Orchestrator.run()` for every team execution | Implemented by `orchestrator.ts` |
 | checkpoint store factory | Creates `TeamCheckpointStore` from workflow storage | Implemented by `orchestrator-checkpoint.ts` |
-| event sink factory | Maps queue events for workflow persistence | Implemented by `event-mapper.ts` and `event-store.ts` |
+| queue event adapter | `mapTaskQueueEvent()` projects queue events for `saveTeamWorkflowEvents()` | Implemented by `event-mapper.ts` and `event-store.ts` |
 | task mapper | Converts workflow tasks to `TaskInput[]` | Implemented by `task-mapper.ts` |
 | result mapper | Converts `RunTeamResult` into execution-only workflow state | Implemented by `execution-applier.ts` and receipt mappers |
 | execution store | Persists execution fields without changing workflow status; rejects stale or conflicting writes | Implemented by `execution-store.ts` |

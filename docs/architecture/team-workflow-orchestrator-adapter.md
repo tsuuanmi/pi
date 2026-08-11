@@ -52,10 +52,9 @@ workflow team state
 | --- | --- |
 | `task-mapper.ts` | Convert workflow task state and snapshots to and from orchestrator task types |
 | `status-mapper.ts` | Convert orchestrator task statuses to workflow task statuses |
-| `event-mapper.ts` | Convert queue events to workflow event/HUD updates |
+| `event-mapper.ts` | Convert `TaskQueueEvent` to the workflow-owned `TeamWorkflowEvent` projection |
 | `receipt-mapper.ts` | Convert task receipts to workflow receipt references |
 | `orchestrator-checkpoint.ts` | Store orchestrator checkpoints through workflow-owned persistence |
-| `orchestrator-events.ts` | Deliver mapped queue events to workflow-owned sinks |
 | `agent-adapter.ts` | Convert explicit subagent profiles into orchestrator agents |
 | `execution-applier.ts` | Apply execution state without changing workflow gate status |
 | `execution-store.ts` | Persist execution fields without overwriting workflow status |
@@ -171,7 +170,7 @@ Team workflow command/tool
   -> build runtime Team from Agent roster
   -> create TeamCheckpointStore
   -> Orchestrator.run(team, tasks, options)
-       onQueueEvent -> mapQueueEvent
+       onQueueEvent -> mapTaskQueueEvent -> saveTeamWorkflowEvents
        onSchedulingWarning -> workflow warning event
        onTrace -> workflow trace/audit hook
   -> map RunTeamResult to workflow state
@@ -185,7 +184,7 @@ Team workflow command/tool
 | --- | --- | --- |
 | A | Add focused mapping modules and mapping tests | Done; no mixed adapter module remains |
 | B | Add `TeamCheckpointStore` | Done; stores strict orchestrator checkpoint JSON through workflow-owned callbacks |
-| C | Add queue event sink | Done; maps orchestrator queue events to workflow-owned events |
+| C | Add queue event adapter | Done; maps Orchestrator queue events directly to workflow-owned events |
 | D | Add explicit team orchestrator runner | Done; `runTeamOrchestrator` requires agents and tasks and never falls back |
 | E | Remove alternate direct spawn execution | Done; all team roles enter through the orchestrator tools |
 | F | Build role task batches and gate progression | Done; coordinator submits worker, reviewer, and prover tasks through the orchestrator |

@@ -1,6 +1,6 @@
 import { createSessionCheckpointStore } from "#workflows/skills/team/checkpoint-store";
-import type { TeamEvent } from "#workflows/skills/team/event-mapper";
-import { saveTeamEvents } from "#workflows/skills/team/event-store";
+import type { TeamWorkflowEvent } from "#workflows/skills/team/event-mapper";
+import { saveTeamWorkflowEvents } from "#workflows/skills/team/event-store";
 import { applyTeamExecution } from "#workflows/skills/team/execution-applier";
 import { applyExecutionFailure } from "#workflows/skills/team/execution-failure";
 import { saveTeamExecution } from "#workflows/skills/team/execution-store";
@@ -24,7 +24,7 @@ export interface TeamExecutionInput
 	snapshot: TeamSnapshot;
 	tasks: readonly TeamTask[];
 	persistIds: readonly string[];
-	onEvent?: (event: TeamEvent) => void;
+	onEvent?: (event: TeamWorkflowEvent) => void;
 }
 
 export async function executeTeam(input: TeamExecutionInput): Promise<TeamSnapshot> {
@@ -80,7 +80,7 @@ async function runExecution(
 ) {
 	const { cwd, sessionId, runId, role, snapshot: initial, tasks, persistIds, onEvent, signal } = input;
 	const teamId = requiredTeamId(initial.team_id);
-	const events: TeamEvent[] = [];
+	const events: TeamWorkflowEvent[] = [];
 	let output: TeamOrchestratorOutput;
 	try {
 		output = await runTeamOrchestrator({
@@ -114,7 +114,7 @@ async function runExecution(
 				);
 		await saveTeamExecution(cwd, sessionId, snapshot);
 		await saveTeamReceipts(cwd, teamId, sessionId, runId, role, persisted.receiptRefs);
-		await saveTeamEvents(cwd, teamId, sessionId, runId, events);
+		await saveTeamWorkflowEvents(cwd, teamId, sessionId, runId, events);
 		if (!output.result.success) throw executionFailure(output);
 		return snapshot;
 	} catch (error) {
@@ -127,7 +127,7 @@ async function runExecution(
 async function persistFailure(
 	input: TeamExecutionInput,
 	teamId: string,
-	events: readonly TeamEvent[],
+	events: readonly TeamWorkflowEvent[],
 	message: string,
 	receipts: readonly TeamTaskReceiptRef[] = [],
 ): Promise<void> {
@@ -136,7 +136,7 @@ async function persistFailure(
 		await saveRoleFailure(input.cwd, teamId, input.sessionId, input.runId, input.role, message);
 		await saveTeamExecution(input.cwd, input.sessionId, failed);
 		await saveTeamReceipts(input.cwd, teamId, input.sessionId, input.runId, input.role, receipts);
-		await saveTeamEvents(input.cwd, teamId, input.sessionId, input.runId, events);
+		await saveTeamWorkflowEvents(input.cwd, teamId, input.sessionId, input.runId, events);
 	} catch (error) {
 		throw new Error(`team execution failure persistence failed: ${errorMessage(error)}`, { cause: error });
 	}

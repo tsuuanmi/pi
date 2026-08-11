@@ -9,6 +9,7 @@ Related decisions:
 - [Orchestrator vs. Workflows](orchestrator-vs-workflows.md)
 - [Workflow Orchestrator Overlap](workflow-orchestrator-overlap.md)
 - [Receipt Boundaries](receipt-boundaries.md)
+- [Event Boundaries](event-boundaries.md)
 - [Persistence Boundaries](persistence-boundaries.md)
 
 ## Core rule
@@ -238,7 +239,7 @@ Completed guardrails:
 | 2 | Remove remaining Ultragoal legacy/dual-write paths | Complete | `pi-workflows` | Typed obstacle recording, blocker projection, guard decisions and resolution use one canonical transition |
 | 3 | Complete receipt reference boundaries | Complete | all packages | Public receipt names identify their owning layer; workflow details are distinct from durable receipts; lower receipt schemas are not copied |
 | 4 | Prove workflow-owned checkpoint recovery parity | Complete | `pi-workflows`, `pi-orchestrator` | Restart and interrupted-task recovery are idempotent; duplicate events are suppressed; checkpoint writes fail strictly |
-| 5 | Normalize event ownership and adapter documentation | Medium | all packages | Cross-layer event mappings are explicit and layer-owned |
+| 5 | Normalize event ownership and adapter documentation | Complete | all packages | Cross-layer event mappings are explicit and layer-owned; workflow queue projections have distinct names and one mapper/store path |
 | 6 | Define approved Ralplan output adapters | Medium-low | `pi-workflows`, `pi-orchestrator` | Approved plans map to task inputs without moving planning policy |
 | 7 | Evaluate Ultragoal integration only for a real generic DAG | Low-medium | `pi-workflows`, `pi-orchestrator` | No adapter exists without independent goals and generic dependencies |
 | 8 | Defer shared memory and new delegation APIs | Low | all packages | No speculative shared state or lifecycle facade is added |

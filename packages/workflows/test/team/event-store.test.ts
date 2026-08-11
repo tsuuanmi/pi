@@ -3,8 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { teamEventsPath } from "#workflows/session/session-layout";
-import type { TeamEvent } from "#workflows/skills/team/event-mapper";
-import { saveTeamEvents } from "#workflows/skills/team/event-store";
+import type { TeamWorkflowEvent } from "#workflows/skills/team/event-mapper";
+import { saveTeamWorkflowEvents } from "#workflows/skills/team/event-store";
 
 describe("team event persistence", () => {
 	let cwd: string;
@@ -18,16 +18,18 @@ describe("team event persistence", () => {
 	});
 
 	it("does not duplicate the same event on repeated persistence", async () => {
-		const event: TeamEvent = {
+		const event: TeamWorkflowEvent = {
 			type: "team_task_started",
 			taskId: "task-1",
 			status: "in_progress",
 			timestamp: "2026-08-02T00:00:00.000Z",
 		};
 
-		await saveTeamEvents(cwd, "team-1", "session-1", "run-1", [event]);
-		await saveTeamEvents(cwd, "team-1", "session-1", "run-1", [{ ...event, timestamp: "2026-08-02T00:00:02.000Z" }]);
-		await saveTeamEvents(cwd, "team-1", "session-1", "run-1", [{ ...event, attempt: 1 }]);
+		await saveTeamWorkflowEvents(cwd, "team-1", "session-1", "run-1", [event]);
+		await saveTeamWorkflowEvents(cwd, "team-1", "session-1", "run-1", [
+			{ ...event, timestamp: "2026-08-02T00:00:02.000Z" },
+		]);
+		await saveTeamWorkflowEvents(cwd, "team-1", "session-1", "run-1", [{ ...event, attempt: 1 }]);
 
 		const rows = (await readFile(teamEventsPath(cwd, "team-1", "session-1"), "utf8"))
 			.trim()

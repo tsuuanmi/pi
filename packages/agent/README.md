@@ -16,6 +16,8 @@ Provider adapters and streaming transport live in `@tsuuanmi/pi-ai`. Concrete to
 
 Node-only helpers are available from the `@tsuuanmi/pi-agent/node` subpath.
 
+`AgentEvent` and `EventSink` are the public agent-loop event contracts. Hosts may consume or map them, but session, task-queue, workflow, and UI events remain owned by their respective layers.
+
 Receipt ownership is execution-scoped: `StructuredReceipt` is the public envelope and `createToolReceipt()` creates tool-execution evidence. These contracts do not include task routing, retries, workflow gates, or workflow artifact state.
 
 See [Agent documentation](./docs/agent/index.md) and [Tool Registration](./docs/tool/registry.md) for the standard integration patterns. Task, team, and orchestration contracts live in `@tsuuanmi/pi-orchestrator`.

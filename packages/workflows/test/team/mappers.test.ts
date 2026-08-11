@@ -1,6 +1,6 @@
 import type { TaskExecutionReceipt, TaskQueueEvent, TaskSnapshot } from "@tsuuanmi/pi-orchestrator";
 import { describe, expect, it } from "vitest";
-import { mapQueueEvent, type TeamEvent } from "#workflows/skills/team/event-mapper";
+import { mapTaskQueueEvent, type TeamWorkflowEvent } from "#workflows/skills/team/event-mapper";
 import { mapTaskReceipt } from "#workflows/skills/team/receipt-mapper";
 import { mapTaskStatus } from "#workflows/skills/team/status-mapper";
 import { mapTaskExecution, mapTeamTask, mapTeamTasks } from "#workflows/skills/team/task-mapper";
@@ -100,21 +100,21 @@ describe("team orchestrator mappers", () => {
 			timestamp: "2026-01-01T00:10:00.000Z",
 		};
 
-		expect(mapQueueEvent(event)).toEqual({
+		expect(mapTaskQueueEvent(event)).toEqual({
 			type: "team_task_completed",
 			taskId: "draft",
 			status: "completed",
 			attempt: 1,
 			timestamp: "2026-01-01T00:10:00.000Z",
-		} satisfies TeamEvent);
-		expect(mapQueueEvent({ type: "all_complete", timestamp: event.timestamp })).toEqual({
+		} satisfies TeamWorkflowEvent);
+		expect(mapTaskQueueEvent({ type: "all_complete", timestamp: event.timestamp })).toEqual({
 			type: "team_all_complete",
 			timestamp: event.timestamp,
 		});
 	});
 
 	it("maps skipped queue events without inventing a team status", () => {
-		const event = mapQueueEvent({
+		const event = mapTaskQueueEvent({
 			type: "task_skip",
 			task: { ...taskSnapshot, status: "skipped" },
 			message: "not needed",

@@ -16,6 +16,7 @@ Workflow-specific detail remains in:
 - [Ralplan Orchestrator Contract](ralplan-orchestrator-contract.md)
 - [Team Workflow Orchestrator Adapter](team-workflow-orchestrator-adapter.md)
 - [Receipt Boundaries](receipt-boundaries.md)
+- [Event Boundaries](event-boundaries.md)
 - [Persistence Boundaries](persistence-boundaries.md)
 
 ## Executive conclusion

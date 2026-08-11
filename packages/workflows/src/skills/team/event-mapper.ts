@@ -2,7 +2,7 @@ import type { TaskQueueEvent } from "@tsuuanmi/pi-orchestrator";
 import { mapTaskStatus } from "#workflows/skills/team/status-mapper";
 import type { TeamTaskStatus } from "#workflows/skills/team/types";
 
-export interface TeamEvent {
+export interface TeamWorkflowEvent {
 	type:
 		| "team_task_ready"
 		| "team_task_started"
@@ -18,7 +18,7 @@ export interface TeamEvent {
 	timestamp: string;
 }
 
-export function mapQueueEvent(event: TaskQueueEvent): TeamEvent {
+export function mapTaskQueueEvent(event: TaskQueueEvent): TeamWorkflowEvent {
 	const taskId = event.task?.id;
 	const status = event.task && event.task.status !== "skipped" ? mapTaskStatus(event.task.status) : undefined;
 	const base = {

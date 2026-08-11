@@ -188,4 +188,4 @@ A duplicate is present or being introduced when a consumer adds a second registr
 - A dynamic extension receives Pi capabilities through its host object; it must not import Pi internals.
 - Keep one runtime loading identity for each resource. Public programmatic exports may coexist only when their custom-host purpose is explicit.
 - The package that publishes a resource owns its compiled layout and manifest paths. Pi should discover and copy artifacts, not rewrite another package's architecture.
-- Keep event, receipt, checkpoint, model and message conversions in explicit adapter files so ownership is visible in source.
+- Keep event, receipt, checkpoint, model and message conversions in explicit adapter files so ownership is visible in source. See [Event Boundaries](event-boundaries.md) and [Receipt Boundaries](receipt-boundaries.md).

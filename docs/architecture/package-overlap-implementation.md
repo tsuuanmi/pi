@@ -345,6 +345,43 @@ Completed. The Team adapter preserves Orchestrator-owned checkpoint behavior whi
 - Duplicate Team events remain idempotent across repeated persistence.
 - No checkpoint schema, compatibility reader, fallback engine or migration path is added to Workflows.
 
+## Phase 10 - Cross-layer event ownership
+
+### Goal
+
+Give each package an explicit event vocabulary, keep cross-layer conversions in consuming adapters, and remove ambiguous or unused workflow event surfaces.
+
+### Canonical contracts
+
+- AI owns provider/model streaming events.
+- Agent owns `AgentEvent` and `EventSink` for the generic agent loop.
+- Orchestrator owns `TaskQueueEvent`, `OrchestratorEvent`, `OrchestratorTraceEvent`, and runtime messaging `TeamEvent`.
+- Workflows owns `WorkflowRuntimeEvent` and the mapped `TeamWorkflowEvent` projection.
+- Pi owns `AgentSessionEvent`, extension hook events, and UI invalidation.
+
+### File-level changes
+
+| Area | Change |
+|---|---|
+| `skills/team/event-mapper.ts` | Rename the workflow projection to `TeamWorkflowEvent` and the conversion to `mapTaskQueueEvent` |
+| `skills/team/event-store.ts` | Rename persistence to `saveTeamWorkflowEvents` and accept only the workflow-owned event type |
+| `skills/team/orchestrator-events.ts` | Delete the unused sink wrapper; production already maps queue events directly in the adapter |
+| Team execution/tests/exports | Update all names, remove sink-only tests, and retain idempotent persistence coverage |
+| `event-boundaries.md` and package docs | Document event ownership, mapping direction, persistence, and prohibited copies/fallbacks |
+
+### Result
+
+Completed. The workflow Team projection no longer conflicts with Orchestrator's distinct `TeamEvent`, queue conversion and persistence have one authoritative path, and the unused sink abstraction was removed without an alias.
+
+### Acceptance criteria
+
+- Workflows exports `TeamWorkflowEvent`, `mapTaskQueueEvent`, and `saveTeamWorkflowEvents` only.
+- The ambiguous Workflows `TeamEvent`, `mapQueueEvent`, and `saveTeamEvents` names no longer exist.
+- `orchestrator-events.ts`, `TeamEventSink`, and their sink-only test no longer exist.
+- Replayed queue events still persist idempotently through deterministic workflow event ids.
+- No package copies or re-exports another layer's event schema.
+- Event ownership and mapping direction are documented for AI, Agent, Orchestrator, Workflows, and Pi.
+
 ## Verification order
 
 1. Confirm no in-repo backups and review scoped status.

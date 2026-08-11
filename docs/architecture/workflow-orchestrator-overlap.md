@@ -153,7 +153,7 @@ Decision:
 | 3 | Remove Ultragoal legacy and dual-write paths | High | Implemented | Obstacle, review-blocker, quality-gate, and receipt writes have one canonical path |
 | 4 | Complete package-level receipt boundary documentation | Medium-high | Implemented | Workflow receipts reference task IDs without copying task receipt schemas |
 | 5 | Complete checkpoint recovery parity tests | Medium-high | Implemented | Restart, duplicate event, interrupted task, and checkpoint-save failure cases are covered |
-| 6 | Normalize event ownership and adapter documentation | Medium | Planned | Agent, queue, workflow, and Pi UI events have explicit owners and mappings |
+| 6 | Normalize event ownership and adapter documentation | Medium | Implemented | Agent, queue, workflow, and Pi UI events have explicit owners and mappings |
 | 7 | Define approved Ralplan output adapters | Medium-low | Planned | Approved plans map into downstream task inputs without moving planning policy |
 | 8 | Evaluate Ultragoal orchestrator integration only for a real DAG | Low-medium | Decision gate | No adapter is added without independent goals and generic dependencies |
 | 9 | Keep Ralplan policy and Deep-interview workflow-owned | Low | Guardrail | No policy, artifact, verdict, or approval logic moves into orchestrator |
@@ -176,4 +176,4 @@ Any workflow-to-orchestrator adapter must satisfy:
 
 ## Remaining runtime work
 
-The Team adapter, Ralplan role adapter, explicit role coordinators, failure persistence, dependency/recovery parity, and idempotent event stores are implemented. Remaining work is event-ownership documentation and approved downstream Ralplan output adapters. Do not integrate Ultragoal or Deep-interview without a separate generic DAG requirement.
+The Team adapter, Ralplan role adapter, explicit role coordinators, failure persistence, dependency/recovery parity, and idempotent event stores are implemented. Remaining work is approved downstream Ralplan output adapters and the Ultragoal DAG decision gate. Do not integrate Ultragoal or Deep-interview without a separate generic DAG requirement.

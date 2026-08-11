@@ -23,8 +23,8 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 | `validation.ts` | Strictly parses persisted Team records and validates new task/evidence inputs. |
 | `coordinator.ts` | Selects the legal role and submits its batch to the Orchestrator. |
 | `dependencies.ts` | Validates the durable task graph through Orchestrator primitives and admits ready tasks. |
-| `event-mapper.ts` | Maps Orchestrator queue events to Team events and statuses. |
-| `event-store.ts` | Persists Team events with idempotent event keys. |
+| `event-mapper.ts` | Maps Orchestrator `TaskQueueEvent` values to workflow-owned `TeamWorkflowEvent` projections. |
+| `event-store.ts` | Persists `TeamWorkflowEvent` records with deterministic idempotency keys. |
 | `execution-applier.ts` | Applies Orchestrator task updates and receipt references to a Team snapshot. |
 | `execution-failure.ts` | Builds durable failed execution state. |
 | `execution-store.ts` | Persists task execution state. |
@@ -34,7 +34,6 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 | `hud.ts` | HUD chip rendering for Team status. |
 | `messages.ts` | Persists Team mailbox messages. |
 | `orchestrator-checkpoint.ts` | Serializes and validates Orchestrator checkpoint data. |
-| `orchestrator-events.ts` | Adapts Orchestrator events to a Team event sink. |
 | `orchestrator.ts` | Team integration with `@tsuuanmi/pi-orchestrator`. |
 | `receipt-mapper.ts` | Maps Orchestrator task receipts to Team receipt references. |
 | `receipt-store.ts` | Persists role receipts with idempotent keys. |

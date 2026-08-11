@@ -1,6 +1,6 @@
 import type { Agent, AgentOptions } from "@tsuuanmi/pi-agent";
 import { Orchestrator, type OrchestratorCheckpointStore, type RunTeamResult, Team } from "@tsuuanmi/pi-orchestrator";
-import { mapQueueEvent, type TeamEvent } from "#workflows/skills/team/event-mapper";
+import { mapTaskQueueEvent, type TeamWorkflowEvent } from "#workflows/skills/team/event-mapper";
 import { mapTaskReceipt, type TeamTaskReceiptRef } from "#workflows/skills/team/receipt-mapper";
 import { mapTaskExecution, mapTeamTasks, type TeamTaskRoute } from "#workflows/skills/team/task-mapper";
 import type { TeamTask } from "#workflows/skills/team/types";
@@ -12,7 +12,7 @@ export interface TeamOrchestratorInput {
 	routes?: Readonly<Record<string, TeamTaskRoute>>;
 	checkpointStore?: OrchestratorCheckpointStore;
 	signal?: AbortSignal;
-	onEvent?: (event: TeamEvent) => void;
+	onEvent?: (event: TeamWorkflowEvent) => void;
 }
 
 export interface TeamOrchestratorOutput {
@@ -32,7 +32,7 @@ export async function runTeamOrchestrator(input: TeamOrchestratorInput): Promise
 		abortSignal: input.signal,
 		checkpointFailurePolicy: "strict",
 		checkpointStore: input.checkpointStore,
-		onQueueEvent: input.onEvent ? (event) => input.onEvent?.(mapQueueEvent(event)) : undefined,
+		onQueueEvent: input.onEvent ? (event) => input.onEvent?.(mapTaskQueueEvent(event)) : undefined,
 	});
 
 	return Object.freeze({
