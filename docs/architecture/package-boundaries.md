@@ -134,6 +134,7 @@ For the six configured packages, `scripts/check-package-boundaries.mjs`:
 6. Rejects imports of package subpaths that are not published.
 7. Applies Pi-internal layering rules.
 8. Restricts direct workflow `SubagentManagerApi` operations and Team execution paths.
+9. Rejects Orchestrator imports from Ultragoal while the skill has no generic dependency DAG.
 
 The checker's configured maximum graph is broader than the current runtime graph:
 
@@ -240,9 +241,9 @@ Completed guardrails:
 | 3 | Complete receipt reference boundaries | Complete | all packages | Public receipt names identify their owning layer; workflow details are distinct from durable receipts; lower receipt schemas are not copied |
 | 4 | Prove workflow-owned checkpoint recovery parity | Complete | `pi-workflows`, `pi-orchestrator` | Restart and interrupted-task recovery are idempotent; duplicate events are suppressed; checkpoint writes fail strictly |
 | 5 | Normalize event ownership and adapter documentation | Complete | all packages | Cross-layer event mappings are explicit and layer-owned; workflow queue projections have distinct names and one mapper/store path |
-| 6 | Define approved Ralplan output adapters | Medium-low | `pi-workflows`, `pi-orchestrator` | Approved plans map to task inputs without moving planning policy |
-| 7 | Evaluate Ultragoal integration only for a real generic DAG | Low-medium | `pi-workflows`, `pi-orchestrator` | No adapter exists without independent goals and generic dependencies |
-| 8 | Defer shared memory and new delegation APIs | Low | all packages | No speculative shared state or lifecycle facade is added |
+| 6 | Define approved Ralplan output adapters | Complete | `pi-workflows`, `pi-orchestrator` | Approved plans map to downstream workflow inputs without moving planning policy |
+| 7 | Evaluate Ultragoal integration only for a real generic DAG | Complete — no adapter | `pi-workflows`, `pi-orchestrator` | Ultragoal remains workflow-owned until it has independent goals and generic dependencies; the checker rejects accidental Orchestrator imports |
+| 8 | Defer shared memory and new delegation APIs | Deferred | all packages | No speculative shared state or lifecycle facade is added |
 
 ## Recommended next steps
 

@@ -382,6 +382,64 @@ Completed. The workflow Team projection no longer conflicts with Orchestrator's 
 - No package copies or re-exports another layer's event schema.
 - Event ownership and mapping direction are documented for AI, Agent, Orchestrator, Workflows, and Pi.
 
+## Phase 11 - Approved Ralplan output adapter
+
+### Goal
+
+Translate an explicitly approved Ralplan artifact into the canonical downstream workflow input without moving approval, planning policy, or execution into the adapter.
+
+### File-level changes
+
+| Area | Change |
+|---|---|
+| `skills/ralplan/approved-output.ts` | Own the pending-plan, source-run, and carried-obstacle mapping for Team and Ultragoal |
+| `skills/ralplan/approval.ts` | Use the adapter instead of constructing downstream state inline; retain approval and handoff transaction ownership |
+| Ralplan tests and docs | Cover both approved targets and document the translation boundary |
+
+### Result
+
+Completed. Approval has one production-used output translation path. The adapter maps provenance and obstacle context only; it does not infer tasks from planning prose, schedule execution, or duplicate Team/Ultragoal policy.
+
+### Acceptance criteria
+
+- Team and Ultragoal approved outputs use the same typed adapter.
+- Approval contains no duplicate downstream patch construction.
+- `stop` and rejected decisions do not enter the execution adapter.
+- Planning prose is not parsed into a speculative task graph.
+- Carried obstacle inputs are copied rather than shared mutably.
+
+## Phase 12 - Ultragoal Orchestrator decision gate
+
+### Goal
+
+Integrate Ultragoal with Orchestrator only when its goals form a generic dependency DAG rather than a workflow-owned ordered sequence.
+
+### Decision
+
+Completed with no adapter. Ultragoal goals are selected by workflow-owned sequence and status; they do not expose independent generic dependencies. Importing Orchestrator would add an execution facade without removing workflow policy.
+
+### Enforcement
+
+- `scripts/check-package-boundaries.mjs` rejects Orchestrator imports under `skills/ultragoal/`.
+- Ultragoal keeps direct single-worker execution through its approved workflow adapter.
+- A future DAG proposal must add explicit goal dependencies, independent scheduling semantics, and an architecture review before relaxing the boundary.
+
+### Acceptance criteria
+
+- Ultragoal contains no Orchestrator import or adapter.
+- The package-boundary check fails if such an import is introduced.
+- The no-adapter decision and its reopening criteria are documented.
+
+## Phase 13 - Shared memory and delegation APIs
+
+### Decision
+
+Deferred by design. Existing package-owned state, workflow handoffs, Pi subagent lifecycle APIs, and Orchestrator task execution already cover the required boundaries. No shared-memory service, alternate delegation facade, compatibility wrapper, or speculative cross-package schema is added.
+
+### Reopening criteria
+
+Reopen only with a concrete exchanged contract that cannot be represented by an existing package-owned state or lifecycle API, named producers and consumers, persistence and failure semantics, and measurable duplication removed by the new boundary.
+
 ## Verification order
 
 1. Confirm no in-repo backups and review scoped status.

@@ -58,6 +58,10 @@ Every stage execution is identified by:
 
 Checkpoints are stored under the session-scoped Ralplan run directory. A completed checkpoint cannot be reused for another stage execution.
 
+## Approved output
+
+After explicit approval, `approved-output.ts` maps the pending plan artifact, source run, and carried obstacles into one downstream workflow input for Team or Ultragoal. Approval owns the decision and handoff transaction; the adapter only translates the approved output. It does not parse planning prose into an inferred task graph, schedule tasks, or move Ralplan policy into Orchestrator.
+
 ## Future batching
 
 A deterministic segment such as `Planner -> Architect -> Critic` may later be submitted as one task graph. That optimization must preserve workflow artifact verification after every task. Revision and Expert branches must remain workflow-created tasks; no unbounded loop belongs in the generic engine.

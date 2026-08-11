@@ -71,6 +71,10 @@ const internalRules = [
 		forbidden: ["#pi/cli/", "@tsuuanmi/pi-workflows", "#workflows/"],
 	},
 	{ directory: "packages/pi/src/package/loader.ts", forbidden: ["#pi/index"] },
+	{
+		directory: "packages/workflows/src/skills/ultragoal",
+		forbidden: ["@tsuuanmi/pi-orchestrator", "#orchestrator/"],
+	},
 ];
 const workflowManagerCallers = new Set([
 	"packages/workflows/src/tool/context.ts",

@@ -201,13 +201,13 @@ If any answer is no, keep the behavior in Workflows until the generic path is cl
 |---:|---|---|---|
 | 1 | Make Workflows own one publishable compiled manifest/artifact | Complete | Standalone and Pi-bundled loading use the same package-owned paths; Pi discovers packages without rewriting or duplicating assets |
 | 2 | Resolve shared session-root/session-id ownership | Complete | Pi owns one encoder/root contract; Workflows extends it with workflow-relative layout and scoped validation |
-| 3 | Reconcile Team dependency and recovery semantics with `TaskQueue` | High | One dependency owner; deterministic blocked states and recovery parity |
+| 3 | Reconcile Team dependency and recovery semantics with `TaskQueue` | Complete | One dependency owner; deterministic blocked states and recovery parity |
 | 4 | Remove remaining Ultragoal legacy/dual-write paths | Complete | One canonical typed obstacle, blocker projection, guard and resolution path |
 | 5 | Replace HUD magic refresh and duplicate sanitization with explicit host seams | Complete | One HUD normalization policy and generic provider integration; host refresh remains outside workflow state |
 | 6 | Complete receipt reference boundaries | Complete | Layer-specific public receipt names are explicit; workflow tool details are not mislabeled as receipts; Workflows references lower receipt ids without copying schemas |
-| 7 | Prove workflow-owned checkpoint recovery parity | Medium-high | Restart/interrupted recovery is idempotent and independent of workflow state |
-| 8 | Normalize cross-layer event documentation and mappings | Medium | Every bridge has one source event and explicit adapter |
+| 7 | Prove workflow-owned checkpoint recovery parity | Complete | Restart/interrupted recovery is idempotent and independent of workflow state |
+| 8 | Normalize cross-layer event documentation and mappings | Complete | Every bridge has one source event and explicit adapter |
 | 9 | Move repository-state acquisition out of TUI and reduce global UI state | Repository/keybinding complete; theme remains | TUI receives repository snapshots and active keybindings through host-scoped providers; theme scoping is tracked separately |
-| 10 | Define approved Ralplan output adapters | Medium-low | Approved plans map to tasks without moving planning policy |
-| 11 | Evaluate Ultragoal Orchestrator use only for a real generic DAG | Low-medium | No adapter without independent goals and generic dependencies |
-| 12 | Defer shared memory and new delegation APIs | Low | No speculative cross-package state or alternate lifecycle facade |
+| 10 | Define approved Ralplan output adapters | Complete | Approved plans map to downstream workflow inputs without moving planning policy |
+| 11 | Evaluate Ultragoal Orchestrator use only for a real generic DAG | Complete — no adapter | Ultragoal has an ordered goal sequence, not independent goals with generic dependencies; a boundary check prevents accidental Orchestrator coupling |
+| 12 | Defer shared memory and new delegation APIs | Deferred | No speculative cross-package state or alternate lifecycle facade |

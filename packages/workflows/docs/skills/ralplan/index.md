@@ -35,6 +35,7 @@ Ralplan coordinates durable planning passes and produces a pending-approval impl
 | `index-store.ts` | Run index parsing, persistence, and status reads. |
 | `artifacts.ts` | Stage artifact validation and persistence. |
 | `approval.ts` | Pending-plan approval and handoff. |
+| `approved-output.ts` | Maps an approved plan and its provenance to the canonical downstream workflow input. |
 | `doctor.ts` | Ralplan diagnostics and consistency checks. |
 | `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `tools.ts` | Registers `ralplan_run_agent`. |
@@ -77,7 +78,7 @@ The Orchestrator owns task execution, agent invocation, checkpointing, and task 
 
 ## Pending Approval
 
-Final plans remain pending until `pi workflow ralplan approve-plan` records an explicit approval, rejection, or handoff decision. Approval refuses a latest Critic `REJECT` unless an explicit override is supplied.
+Final plans remain pending until `pi workflow ralplan approve-plan` records an explicit approval, rejection, or handoff decision. Approval requires the latest Critic verdict to be `APPROVE` and maps the plan to Team or Ultragoal through the workflow-owned approved-output adapter.
 
 ## See Also
 

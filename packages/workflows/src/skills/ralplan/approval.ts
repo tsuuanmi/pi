@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
-import type { WorkflowSkill } from "#workflows/session/paths";
 import { workflowStatePath } from "#workflows/session/session-layout";
+import { adaptApprovedRalplanOutput } from "#workflows/skills/ralplan/approved-output";
 import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 import {
 	type RalplanObstacleLedger,
@@ -111,7 +111,6 @@ export async function approveRalplanPlan(
 		// apply to `handoffWorkflow` (transaction journal + both-side receipts +
 		// callee->caller->active-state write order). The ralplan approval metadata
 		// travels in the caller patch; the callee gets the plan input.
-		const targetSkill: WorkflowSkill = target;
 		const result = await handoffWorkflow({
 			cwd,
 			caller: {
@@ -125,15 +124,12 @@ export async function approveRalplanPlan(
 					approved_at: now,
 				},
 			},
-			callee: {
-				skill: targetSkill,
-				patch: {
-					input: status.pending_approval_path,
-					source_workflow: "ralplan",
-					source_run_id: status.run_id,
-					carried_obstacles: carriedObstacles,
-				},
-			},
+			callee: adaptApprovedRalplanOutput({
+				target,
+				planPath: status.pending_approval_path,
+				runId: status.run_id,
+				carriedObstacles,
+			}),
 			command: "pi ralplan approve",
 			sessionId,
 		});

@@ -35,6 +35,7 @@
 
 ### Changed
 
+- **ralplan**: Approved plans now map to Team or Ultragoal through one workflow-owned output adapter instead of constructing downstream state inline.
 - **ultragoal**: Typed obstacles are now authoritative for guard decisions, malformed obstacle ledgers fail closed, and completing a blocker goal resolves its matching obstacles.
 - **agents**: Guarded workflow spawns now use standard bundled agent profiles only. `ralplan_run_agent` removed its optional `agent` override and derives the profile from the legal role (explorer/planner/architect/critic/expert); `ultragoal_spawn_goal_agent` removed its optional `agent` override and always spawns the `worker` profile, using `worker` as the subagent role instead of the invented `ultragoal-worker-<goal-id>` label. `assertNoGuardedSpawnOverrides` no longer lists `agent` as an accepted guard input.
 - **agents**: The `explorer` profile is now a general read-only research agent: it pins `model: openai-codex/gpt-5.6-luna` to run bulk reading/reporting on a cheaper model, keeps read-only tools (`read`, `bash`), and supports two modes — ralplan skill mode (persists a `context_map` via the workflow tool) and general research mode (returns a concise cited report for use before deep-interview questions or other read-only investigation). System prompt and description updated accordingly.
