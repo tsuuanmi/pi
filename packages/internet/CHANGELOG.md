@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Removed
+
+- Remove the unused `codex-turn` skill and its package asset-copy step.
+
+### Fixed
+
+- Export a valid no-op extension factory so Pi can load the scaffolded package without a startup error.
+
 ### Added
 
 - Scaffold the `packages/internet` package layout following the Pi package standard (so it can be
