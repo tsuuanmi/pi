@@ -7,7 +7,6 @@ import {
 	type MarkdownTheme,
 	Spacer,
 	Text,
-	TruncatedText,
 	theme,
 } from "@tsuuanmi/pi-tui";
 
@@ -23,7 +22,6 @@ export class AssistantMessageComponent extends Container {
 	private hideThinkingBlock: boolean;
 	private markdownTheme: MarkdownTheme;
 	private hiddenThinkingLabel: string;
-	private thinkingExpanded = true;
 	private lastMessage?: AssistantMessage;
 	private hasToolCalls = false;
 
@@ -64,13 +62,6 @@ export class AssistantMessageComponent extends Container {
 
 	setHiddenThinkingLabel(label: string): void {
 		this.hiddenThinkingLabel = label;
-		if (this.lastMessage) {
-			this.updateContent(this.lastMessage);
-		}
-	}
-
-	setExpanded(expanded: boolean): void {
-		this.thinkingExpanded = expanded;
 		if (this.lastMessage) {
 			this.updateContent(this.lastMessage);
 		}
@@ -123,21 +114,13 @@ export class AssistantMessageComponent extends Container {
 					if (hasVisibleContentAfter) {
 						this.contentContainer.addChild(new Spacer(1));
 					}
-				} else if (this.thinkingExpanded) {
+				} else {
 					// Thinking traces in thinkingText color, italic
 					this.contentContainer.addChild(
 						new Markdown(content.thinking.trim(), LAYOUT_EDGE_X, 0, this.markdownTheme, {
 							color: (text: string) => theme.fg("thinkingText", text),
 							italic: true,
 						}),
-					);
-					if (hasVisibleContentAfter) {
-						this.contentContainer.addChild(new Spacer(1));
-					}
-				} else {
-					// Keep thinking visible by default, but only as a one-line preview.
-					this.contentContainer.addChild(
-						new TruncatedText(theme.italic(theme.fg("thinkingText", content.thinking.trim())), LAYOUT_EDGE_X, 0),
 					);
 					if (hasVisibleContentAfter) {
 						this.contentContainer.addChild(new Spacer(1));
