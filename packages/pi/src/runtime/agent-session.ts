@@ -27,6 +27,7 @@ import type { Static, TSchema } from "typebox";
 import { ApiUsageLogger } from "#pi/api/api-usage-logger";
 import { apiUsageLogPath } from "#pi/api/api-usage-utils";
 import type { SlashCommandInfo } from "#pi/api/extension-types";
+import type { AgentSessionServices } from "#pi/api/session-services";
 import { formatNoApiKeyFoundMessage } from "#pi/auth/guidance";
 import type { BashOperations } from "#pi/execution/backend";
 import type { BashResult } from "#pi/execution/bash";
@@ -88,7 +89,6 @@ import type { CompactionResult } from "#pi/session/compaction/index";
 import type { SessionManager } from "#pi/session/manager";
 import { type BranchSummaryEntry, SESSION_VERSION, type SessionHeader } from "#pi/session/types";
 import type { SettingsManager } from "#pi/settings/manager";
-import type { SubagentManager } from "#pi/subagents/manager";
 import type { ExtensionToolSpec, PiToolSpec } from "#pi/tool/spec";
 import { createToolSpecs } from "#pi/tools/index";
 
@@ -137,7 +137,7 @@ export class AgentSession {
 	private _skipAutomaticContinuation: boolean;
 	private _extraSystemPrompt?: string;
 	private _apiUsageSessionId?: string;
-	private _subagentManager?: SubagentManager;
+	private _sessionServices: AgentSessionServices;
 	private _apiUsageLogger?: ApiUsageLogger;
 	private _extensionUIContext?: ExtensionUIContext;
 	private _extensionMode: ExtensionMode = "print";
@@ -208,7 +208,7 @@ export class AgentSession {
 		this._skipAutomaticContinuation = config.skipAutomaticContinuation ?? false;
 		this._extraSystemPrompt = config.extraSystemPrompt;
 		this._apiUsageSessionId = config.apiUsageSessionId;
-		this._subagentManager = config.subagentManager ?? undefined;
+		this._sessionServices = config.sessionServices;
 		this._prompt = new PromptController({
 			agent: this.agent,
 			sessionManager: this.sessionManager,
@@ -271,9 +271,14 @@ export class AgentSession {
 		this.agent.providerRequestObserver = this._apiUsageLogger;
 	}
 
-	/** Model registry for API key resolution and model discovery */
+	/** Model registry for API key resolution and model discovery. */
 	get modelRegistry(): ModelRegistry {
 		return this._modelRegistry;
+	}
+
+	/** Coherent services used to create related sessions. */
+	get sessionServices(): AgentSessionServices {
+		return this._sessionServices;
 	}
 
 	private async _getRequiredRequestAuth(model: Model<any>): Promise<{
@@ -1177,7 +1182,7 @@ export class AgentSession {
 			this._cwd,
 			this.sessionManager,
 			this._modelRegistry,
-			this._subagentManager,
+			this._sessionServices,
 			this._skipAutomaticContinuation,
 		);
 		if (this._extensionRunnerRef) {
@@ -1444,10 +1449,5 @@ export class AgentSession {
 			},
 			getRequiredRequestAuth: (model) => self._getRequiredRequestAuth(model),
 		};
-	}
-
-	/** Subagent manager (undefined when subagents are disabled). */
-	get subagentManager(): SubagentManager | undefined {
-		return this._subagentManager;
 	}
 }

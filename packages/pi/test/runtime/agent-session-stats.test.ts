@@ -7,6 +7,7 @@ import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
 import { createTestResourceLoader } from "#pi-test/helpers/resource-loader";
+import { createTestAgentSessionServices } from "#pi-test/helpers/services";
 
 const model = getModel("anthropic", "claude-sonnet-4-5")!;
 
@@ -53,6 +54,9 @@ function createSession() {
 	const sessionManager = SessionManager.inMemory();
 	const authStorage = AuthStorage.inMemory();
 	authStorage.setRuntimeApiKey("anthropic", "test-key");
+	const modelRegistry = ModelRegistry.inMemory(authStorage);
+	const resourceLoader = createTestResourceLoader();
+	const cwd = process.cwd();
 	const session = new AgentSession({
 		agent: new Agent({
 			getApiKey: () => "test-key",
@@ -65,9 +69,10 @@ function createSession() {
 		}),
 		sessionManager,
 		settingsManager,
-		cwd: process.cwd(),
-		modelRegistry: ModelRegistry.inMemory(authStorage),
-		resourceLoader: createTestResourceLoader(),
+		cwd,
+		modelRegistry,
+		resourceLoader,
+		sessionServices: createTestAgentSessionServices({ cwd, modelRegistry, resourceLoader, settingsManager }),
 	});
 
 	return { session, sessionManager };

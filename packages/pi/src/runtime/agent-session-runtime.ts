@@ -1,7 +1,7 @@
+import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "#pi/api/session-services";
 import type { ReplacedSessionContext, SessionShutdownEvent, SessionStartEvent } from "#pi/loader/extensions/index";
 import type { AgentSession } from "#pi/runtime/agent-session";
 import type { CreateAgentSessionResult } from "#pi/runtime/agent-session-factory";
-import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "#pi/runtime/agent-session-services";
 import { emitSessionShutdownEvent } from "#pi/runtime/extensions/runner";
 import { assertSessionCwdExists } from "#pi/session/cwd";
 import { SessionManager } from "#pi/session/manager";
@@ -121,7 +121,6 @@ export class AgentSessionRuntime {
 			targetSessionFile,
 		});
 		this.beforeSessionInvalidate?.();
-		await this.session.subagentManager?.dispose();
 		this.session.dispose();
 	}
 
@@ -206,7 +205,6 @@ export class AgentSessionRuntime {
 			reason: "quit",
 		});
 		this.beforeSessionInvalidate?.();
-		await this.session.subagentManager?.dispose();
 		this.session.dispose();
 	}
 }

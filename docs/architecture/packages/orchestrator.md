@@ -4,9 +4,9 @@
 
 ## Role
 
-`@tsuuanmi/pi-orchestrator` is the generic multi-agent execution-policy layer above `@tsuuanmi/pi-agent`. It turns a validated task graph and an Agent roster into routed, concurrent, observable, retryable, and resumable work.
+`@tsuuanmi/pi-orchestrator` is the multi-agent execution layer above the Pi and Agent cores. It provides generic task/team orchestration and the complete session-aware subagent runtime.
 
-It is intentionally workflow-agnostic. Workflow packages translate their domain state into orchestrator tasks and translate results back.
+It is workflow-agnostic. Workflow packages translate domain state into orchestrator tasks or subagent requests and translate results back.
 
 ## Boundary
 
@@ -20,6 +20,7 @@ It is intentionally workflow-agnostic. Workflow packages translate their domain 
 - Run metrics, traces, receipts, immutable run facts, and checkpoint schema/restore validation.
 - Team rosters and an in-memory direct/broadcast message bus.
 - Optional LLM task planning and consensus verification utilities.
+- Pi-hosted subagent manager contracts, isolated sessions, persistence, lifecycle tools, receipts, and native/tmux execution.
 
 **Does not own**
 
@@ -27,7 +28,8 @@ It is intentionally workflow-agnostic. Workflow packages translate their domain 
 - Workflow-specific phases, approvals, artifacts, handoffs, or HUD policy.
 - A durable checkpoint database or filesystem location; callers implement `OrchestratorCheckpointStore`.
 - A cross-process team message transport or persistent message retention.
-- CLI, UI, extension loading, or Pi session management.
+- The main Pi application session, CLI, UI, resource loading, settings, or auth ownership.
+- Workflow-specific registration and product composition policy.
 
 ## Public entry point
 
@@ -39,6 +41,7 @@ It is intentionally workflow-agnostic. Workflow packages translate their domain 
 - `Scheduler`, `AgentSelector`, routing criteria, strategies, decisions, and warnings.
 - Checkpoint, run-fact, run-identity, receipt, and restore contracts.
 - Consensus verification helpers.
+- `SubagentManager`, `SubagentManagerApi`, request/result/record contracts, lifecycle registration, progress, receipts, and runtime composition.
 
 `#orchestrator/*` aliases are internal; no implementation subpath is published.
 
@@ -57,6 +60,7 @@ It is intentionally workflow-agnostic. Workflow packages translate their domain 
 | Checkpoints | [`src/runtime/checkpoint.ts`](../../../packages/orchestrator/src/runtime/checkpoint.ts) | Strict checkpoint schema, normalization, identity/fact validation, and persistence interface |
 | Team/message bus | [`src/team/`](../../../packages/orchestrator/src/team) | Named Agent roster plus process-local direct/broadcast messaging |
 | Planning/consensus | [`src/planning/`](../../../packages/orchestrator/src/planning) | Strict model-generated task plans and sequential consensus judging |
+| Subagents | [`src/subagents/`](../../../packages/orchestrator/src/subagents) | Session-aware manager, persistence, lifecycle tools, registry, receipts, native/tmux backends, and worker command |
 
 ## Run data flow
 
@@ -82,23 +86,22 @@ Eligibility is checked before strategy scoring. Requirements can constrain capab
 
 | Dependency | Contract used |
 |---|---|
-| `@tsuuanmi/pi-agent` | `Agent`, `AgentOptions`, tool/capability/model state, and isolated `Agent.run()` results |
+| `@tsuuanmi/pi` | Public session factories/services, session manager, extension contracts, agent profiles, session roots, and Pi/tmux host utilities |
+| `@tsuuanmi/pi-agent` | `Agent`, tool/capability/model state, thinking levels, structured receipts, and isolated `Agent.run()` results |
+| `@tsuuanmi/pi-ai` | Assistant message contracts used for progress and yield handling |
+| `typebox` | Subagent lifecycle tool schemas |
 
-### Development only
-
-`@tsuuanmi/pi-ai` is a development dependency used by tests. The current runtime source does not import it directly.
-
-The package has no third-party runtime dependency beyond Agent. It uses Node APIs and requires Node.js 22.19 or newer.
+The package uses Node APIs and requires Node.js 22.19 or newer.
 
 ## Interactions with other packages
 
-`@tsuuanmi/pi-workflows` is the only workspace runtime consumer.
+Pi extensions and `@tsuuanmi/pi-workflows` are runtime consumers.
 
 - Team workflow maps its durable tasks and configured agent profiles to `TaskInput[]` and `Team`, runs `Orchestrator`, then maps queue events, checkpoints, receipts, and results back into workflow state.
 - Ralplan runs one admitted planning stage as a one-agent, one-task orchestrator run with strict checkpoint policy, explicit run identity, abort propagation, and artifact verification.
 - Workflow-specific phase order, approval, handoff, and artifact rules remain outside Orchestrator.
 
-Pi does not import Orchestrator directly. It loads Workflows, and Workflows injects Pi's concrete Agent/subagent capabilities into its orchestrator adapters.
+Pi does not import Orchestrator. The bundled Workflows extension installs `registerSubagentRuntime`, and orchestrator resolves its manager from Pi's generic `ExtensionContext.sessionServices` boundary.
 
 ## State and persistence
 
@@ -107,6 +110,7 @@ Pi does not import Orchestrator directly. It loads Workflows, and Workflows inje
 - `OrchestratorCheckpointStore` delegates `load` and `save` to the caller. Workflows supplies filesystem-backed stores in its own session layout.
 - Checkpoint restore validates version, run identity, immutable facts, queue partitions, metrics, and receipts. There is no implicit migration of incompatible versions.
 - `MessageBus` is in-memory. It can produce a snapshot but does not itself persist or transport messages.
+- Subagent records, identities, artifacts, and worker metadata persist under the owning Pi session's state root.
 
 ## Extension points
 
@@ -117,6 +121,7 @@ Pi does not import Orchestrator directly. It loads Workflows, and Workflows inje
 - `OrchestratorCheckpointStore` plus best-effort or strict checkpoint failure policy.
 - Planner coordinator Agent and consensus judge Agents.
 - Caller-defined task requirements, routing metadata, and opaque verification payloads.
+- Native or tmux subagent execution selected per request.
 
 ## Runtime constraints
 

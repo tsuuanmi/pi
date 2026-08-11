@@ -229,14 +229,6 @@ const sessionNameSegment: StatusLineSegment = {
 	},
 };
 
-const subagentsSegment: StatusLineSegment = {
-	id: "subagents",
-	render(ctx) {
-		if (ctx.subagentCount === 0) return { content: "", visible: false };
-		return { content: theme.fg(TUI_COLOR_PROFILE.statusLine.subagents, `↳${ctx.subagentCount}`), visible: true };
-	},
-};
-
 // ═══════════════════════════════════════════════════════════════════════════
 // Segment Registry
 // ═══════════════════════════════════════════════════════════════════════════
@@ -251,7 +243,6 @@ export const SEGMENTS: Record<StatusLineSegmentId, StatusLineSegment> = {
 	token_in: tokenInSegment,
 	token_out: tokenOutSegment,
 	session_name: sessionNameSegment,
-	subagents: subagentsSegment,
 };
 
 export function renderSegment(id: StatusLineSegmentId, ctx: SegmentContext): RenderedSegment {

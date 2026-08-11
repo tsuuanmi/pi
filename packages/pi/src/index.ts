@@ -11,6 +11,7 @@ export {
 	Theme,
 	type ThemeColor,
 } from "@tsuuanmi/pi-tui";
+export type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "#pi/api/session-services";
 // Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
 export type { ReadonlyFooterDataProvider } from "#pi/api/ui-types";
 // Auth and model registry
@@ -92,8 +93,6 @@ export {
 	createAgentSessionRuntime,
 } from "#pi/runtime/agent-session-runtime";
 export {
-	type AgentSessionRuntimeDiagnostic,
-	type AgentSessionServices,
 	type CreateAgentSessionFromServicesOptions,
 	type CreateAgentSessionServicesOptions,
 	createAgentSessionFromServices,
@@ -153,18 +152,6 @@ export {
 } from "#pi/session/types";
 export { SettingsManager } from "#pi/settings/manager";
 export type { CompactionSettings, PackageSource, RetrySettings } from "#pi/settings/types";
-export * from "#pi/subagents/context";
-export { registerSubagentTools, SUBAGENT_SPECS } from "#pi/subagents/lifecycle-tools";
-export { SubagentManager } from "#pi/subagents/manager";
-export type { SubagentManagerApi } from "#pi/subagents/manager-api";
-export * from "#pi/subagents/progress";
-export * from "#pi/subagents/receipts";
-export * from "#pi/subagents/spec";
-export * from "#pi/subagents/thinking-level";
-export * from "#pi/subagents/tool-names";
-export { registerSubagentControls } from "#pi/subagents/tools";
-export * from "#pi/subagents/types";
-export * from "#pi/subagents/yield-result";
 // Tools
 export {
 	type BashOperations,

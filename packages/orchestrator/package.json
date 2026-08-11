@@ -24,12 +24,21 @@
 	],
 	"scripts": {
 		"clean": "shx rm -rf dist",
-		"build": "tsgo -p tsconfig.build.json",
+		"build": "npm run clean && tsgo -p tsconfig.build.json && npm run copy-assets",
+		"copy-assets": "node scripts/copy-assets.mjs",
 		"test": "vitest --run",
-		"prepublishOnly": "npm run clean && npm run build"
+		"prepublishOnly": "npm run build"
+	},
+	"pi": {
+		"commands": [
+			"dist/subagents/subagent-worker.js"
+		]
 	},
 	"dependencies": {
-		"@tsuuanmi/pi-agent": "^0.2.3"
+		"@tsuuanmi/pi": "0.2.3",
+		"@tsuuanmi/pi-agent": "^0.2.3",
+		"@tsuuanmi/pi-ai": "^0.2.3",
+		"typebox": "1.1.38"
 	},
 	"keywords": [
 		"ai",

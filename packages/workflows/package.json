@@ -62,7 +62,7 @@
 		]
 	},
 	"dependencies": {
-		"@tsuuanmi/pi": "^0.2.3",
+		"@tsuuanmi/pi": "0.2.3",
 		"@tsuuanmi/pi-agent": "^0.2.3",
 		"@tsuuanmi/pi-ai": "^0.2.3",
 		"@tsuuanmi/pi-orchestrator": "^0.2.3",

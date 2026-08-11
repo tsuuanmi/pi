@@ -1,5 +1,7 @@
 # Package Overlap Audit
 
+> Note: subagent ownership findings in this historical audit are superseded by the implemented [Subagents to Orchestrator Migration](subagents-to-orchestrator-migration.md).
+
 This audit identifies similar concepts across all seven workspace packages and decides whether each similarity is:
 
 - **canonical ownership** - one package owns the implementation;

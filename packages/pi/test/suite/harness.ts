@@ -28,6 +28,7 @@ import {
 	createTestExtensionsResult,
 	createTestResourceLoader,
 } from "#pi-test/helpers/resource-loader";
+import { createTestAgentSessionServices } from "#pi-test/helpers/services";
 
 type MessageTextPart = { type: "text"; text: string };
 
@@ -180,6 +181,12 @@ export async function createHarness(options: HarnessOptions = {}): Promise<Harne
 		cwd: tempDir,
 		modelRegistry,
 		resourceLoader,
+		sessionServices: createTestAgentSessionServices({
+			cwd: tempDir,
+			modelRegistry,
+			resourceLoader,
+			settingsManager,
+		}),
 		baseToolsOverride: toolMap,
 		initialActiveToolNames: options.initialActiveToolNames,
 		allowedToolNames: options.allowedToolNames,

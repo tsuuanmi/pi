@@ -39,6 +39,7 @@ import {
 	createTestExtensionsResult,
 	createTestResourceLoader,
 } from "#pi-test/helpers/resource-loader";
+import { createTestAgentSessionServices } from "#pi-test/helpers/services";
 
 // ============================================================================
 // Test model
@@ -406,6 +407,12 @@ function createHarnessWithResourceLoader(
 		cwd: tempDir,
 		modelRegistry,
 		resourceLoader,
+		sessionServices: createTestAgentSessionServices({
+			cwd: tempDir,
+			modelRegistry,
+			resourceLoader,
+			settingsManager,
+		}),
 		baseToolsOverride: options.baseToolsOverride,
 		apiUsageSessionId: options.apiUsageSessionId,
 	});

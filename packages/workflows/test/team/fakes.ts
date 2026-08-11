@@ -1,5 +1,10 @@
-import type { SubagentManagerApi, SubagentRecord, SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi";
 import type { Model } from "@tsuuanmi/pi-agent";
+import type {
+	SubagentManagerApi,
+	SubagentRecord,
+	SubagentRunRequest,
+	SubagentRunResult,
+} from "@tsuuanmi/pi-orchestrator";
 import type { WorkflowContext } from "#workflows/tool/index";
 
 export type SpawnAction = (request: SubagentRunRequest) => void | Promise<void>;

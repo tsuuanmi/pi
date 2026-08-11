@@ -1,4 +1,4 @@
-import type { SubagentManagerApi } from "@tsuuanmi/pi";
+import type { SubagentManagerApi } from "@tsuuanmi/pi-orchestrator";
 import {
 	Orchestrator,
 	type RunTeamResult,

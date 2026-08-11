@@ -10,7 +10,6 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | `src/extension.ts` | Pi package extension adapter and workflow registration composition. | [extensions/workflows.md](extensions/workflows.md) |
 | `src/hooks.ts` | Workflow hook registration, HUD refresh, and mutation policy guards. | [extensions/workflows.md](extensions/workflows.md) |
 | `src/agents/` | Bundled markdown agent profiles. | [agents/agents.md](agents/agents.md) |
-| `src/orchestration/` | Shared adapters from injected subagent operations to Agent/AI orchestration contracts. | [orchestration/subagent-stream.md](orchestration/subagent-stream.md) |
 | `src/artifacts/` | Durable stage-artifact writing and deterministic final-package assembly. | [artifacts/artifacts.md](artifacts/artifacts.md), [artifacts/final-package.md](artifacts/final-package.md) |
 | `src/audit/` | Append-only audit records, decision ledgers, tamper evidence, and mutation journals. | [audit/audit.md](audit/audit.md) |
 | `src/commands/` | CLI adapter for the external `pi workflow ...` control plane; it does not invoke model-visible tools. | [commands/workflow.md](commands/workflow.md) |

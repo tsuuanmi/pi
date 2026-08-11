@@ -9,13 +9,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { createJiti } from "jiti/static";
-import type {
-	Extension,
-	ExtensionAPI,
-	ExtensionFactory,
-	ExtensionRuntime,
-	LoadExtensionsResult,
-} from "#pi/api/extension-types";
+import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#pi/api/extension-types";
 import { createEventBus, type EventBus } from "#pi/hooks/event-bus";
 import { CONFIG_DIR_NAME } from "#pi/loader/app";
 import { getAgentDir } from "#pi/loader/paths";
@@ -23,18 +17,23 @@ import { collectAutoExtensionEntries } from "#pi/resources/discovery";
 import { createSourceInfo } from "#pi/resources/source-info";
 import type { PathMetadata, ResolvedResource } from "#pi/resources/types";
 import { createExtensionAPI, createExtensionRuntime } from "#pi/runtime/extensions/api";
-import { registerSubagentTools } from "#pi/subagents/lifecycle-tools";
-import { registerSubagentControls } from "#pi/subagents/tools";
 
 const require = createRequire(import.meta.url);
 
-function builtinSubagentControlsExtension(pi: ExtensionAPI): void {
-	registerSubagentTools(pi);
-	registerSubagentControls(pi);
-}
-
-export function getBuiltinExtensionFactories(): ExtensionFactory[] {
-	return [builtinSubagentControlsExtension];
+function getBundledPackageAliases(packagesDir: string): Record<string, string> {
+	if (!fs.existsSync(packagesDir)) return {};
+	const aliases: Record<string, string> = {};
+	for (const entry of fs.readdirSync(packagesDir, { withFileTypes: true })) {
+		if (!entry.isDirectory()) continue;
+		const packageDir = path.join(packagesDir, entry.name);
+		const manifest = JSON.parse(fs.readFileSync(path.join(packageDir, "package.json"), "utf8")) as {
+			name?: unknown;
+			main?: unknown;
+		};
+		if (typeof manifest.name !== "string" || typeof manifest.main !== "string") continue;
+		aliases[manifest.name] = path.resolve(packageDir, manifest.main);
+	}
+	return aliases;
 }
 
 /** Get aliases for jiti extension imports. */
@@ -45,6 +44,7 @@ function getAliases(): Record<string, string> {
 
 	const __dirname = path.dirname(fileURLToPath(import.meta.url));
 	const packageIndex = path.resolve(__dirname, "..", "..", "index.js");
+	const bundledPackageAliases = getBundledPackageAliases(path.resolve(__dirname, "..", "..", "packages"));
 
 	const typeboxEntry = require.resolve("typebox");
 	const typeboxCompileEntry = require.resolve("typebox/compile");
@@ -65,6 +65,7 @@ function getAliases(): Record<string, string> {
 	const piAiOauthEntry = resolvePackageEntry("@tsuuanmi/pi-ai/oauth");
 
 	_aliases = {
+		...bundledPackageAliases,
 		"@tsuuanmi/pi/extensions": piExtensionsEntry,
 		"@tsuuanmi/pi/loader/config": piConfigEntry,
 		"@tsuuanmi/pi": piEntry,

@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import type { Model, ThinkingLevel, Tool } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
+import type { AgentSessionRuntimeDiagnostic, AgentSessionServices } from "#pi/api/session-services";
 import { AuthStorage } from "#pi/auth/storage";
 import type { SessionStartEvent } from "#pi/loader/extensions/index";
 import { ModelRegistry } from "#pi/loader/model-registry";
@@ -18,19 +19,6 @@ import {
 } from "#pi/runtime/agent-session-factory";
 import type { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
-import { SubagentManager } from "#pi/subagents/manager";
-
-/**
- * Non-fatal issues collected while creating services or sessions.
- *
- * Runtime creation returns diagnostics to the caller instead of printing or
- * exiting. The app layer decides whether warnings should be shown and whether
- * errors should abort startup.
- */
-export interface AgentSessionRuntimeDiagnostic {
-	type: "info" | "warning" | "error";
-	message: string;
-}
 
 /**
  * Inputs for creating cwd-bound runtime services.
@@ -72,33 +60,6 @@ export interface CreateAgentSessionFromServicesOptions {
 	extraSystemPrompt?: string;
 	/** Optional override for API-usage log routing. Defaults to the session id. */
 	apiUsageSessionId?: string;
-	/** Explicitly set to null to prevent subagent nesting. Omit to create a default manager. */
-	subagentManager?: SubagentManager | null;
-}
-
-/**
- * Coherent cwd-bound runtime services for one effective session cwd.
- *
- * This is infrastructure only. The AgentSession itself is created separately so
- * session options can be resolved against these services first.
- */
-export interface AgentSessionServices {
-	cwd: string;
-	agentDir: string;
-	authStorage: AuthStorage;
-	settingsManager: SettingsManager;
-	modelRegistry: ModelRegistry;
-	resourceLoader: ResourceLoader;
-	diagnostics: AgentSessionRuntimeDiagnostic[];
-	/**
-	 * Options used to build the resource loader (extension factories, noSkills,
-	 * etc.). Stored so isolated sub-sessions can build their own resource loader
-	 * with the same extension configuration instead of sharing this session's
-	 * mutable extension runtime and extension objects.
-	 */
-	resourceLoaderOptions?: Omit<DefaultResourceLoaderOptions, "cwd" | "agentDir" | "settingsManager">;
-	/** CLI/session-provided extension flag overrides applied to this session. */
-	extensionFlagValues?: Map<string, boolean | string>;
 }
 
 function applyExtensionFlagValues(
@@ -225,10 +186,7 @@ export async function createAgentSessionFromServices(
 		noTools: options.noTools,
 		customTools: options.customTools,
 		sessionStartEvent: options.sessionStartEvent,
-		subagentManager:
-			options.subagentManager === null
-				? undefined
-				: (options.subagentManager ?? new SubagentManager(options.services)),
+		sessionServices: options.services,
 		skipAutomaticContinuation: options.skipAutomaticContinuation ?? false,
 		extraSystemPrompt: options.extraSystemPrompt,
 		apiUsageSessionId: options.apiUsageSessionId,

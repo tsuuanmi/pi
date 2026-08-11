@@ -1,5 +1,15 @@
+import { isValidThinkingLevel, type ThinkingLevel } from "@tsuuanmi/pi-ai";
+
 export type { Api, Model, ThinkingLevel } from "@tsuuanmi/pi-ai";
 export { isValidThinkingLevel } from "@tsuuanmi/pi-ai";
+
+export function parseThinkingLevel(value: unknown): ThinkingLevel | undefined {
+	if (value === undefined) return undefined;
+	if (typeof value !== "string" || !isValidThinkingLevel(value)) {
+		throw new Error(`invalid thinkingLevel: ${String(value)}`);
+	}
+	return value;
+}
 export { Agent } from "#agent/agent";
 export * from "#agent/agent/loop-detector";
 export type { AgentOptions } from "#agent/agent/options";

@@ -26,6 +26,20 @@ export { assertResumeFacts, createRunFacts, normalizeRunFacts } from "#orchestra
 export type { RunIdentity } from "#orchestrator/runtime/identity";
 export { createRunIdentity, normalizeRunIdentity } from "#orchestrator/runtime/identity";
 export type { TaskConsequentialReceipt, TaskExecutionReceipt } from "#orchestrator/runtime/receipt";
+export type * from "#orchestrator/subagents/context";
+export { registerSubagentTools, SUBAGENT_SPECS } from "#orchestrator/subagents/lifecycle-tools";
+export { SubagentManager } from "#orchestrator/subagents/manager";
+export type { SubagentManagerApi } from "#orchestrator/subagents/manager-api";
+export * from "#orchestrator/subagents/progress";
+export * from "#orchestrator/subagents/receipts";
+export { getSubagentManager } from "#orchestrator/subagents/registry";
+export { registerSubagentRuntime } from "#orchestrator/subagents/runtime";
+export type * from "#orchestrator/subagents/spec";
+export { createSubagentStream } from "#orchestrator/subagents/stream";
+export * from "#orchestrator/subagents/tool-names";
+export { registerSubagentControls } from "#orchestrator/subagents/tools";
+export type * from "#orchestrator/subagents/types";
+export * from "#orchestrator/subagents/yield-result";
 export type {
 	TaskDependencyNode,
 	TaskDependencyState,

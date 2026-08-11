@@ -26,7 +26,7 @@
 - **exports**: Replaced the mixed workflow tool surface with `@tsuuanmi/pi-workflows/tool`; workflow specs now adapt to the core `Tool` contract.
 - **session**: Removed implicit latest-session discovery and activity-marker writes; every workflow operation now requires an explicit session source.
 - **subagents**: Removed workflow-owned subagent contracts and thinking-level exports; lifecycle behavior now comes from explicit providers through the workflow tool adapter.
-- **subagents**: Workflow tools now consume the complete session-aware subagent API from `@tsuuanmi/pi`; workflows no longer define a parallel subagent contract or adapter.
+- **subagents**: Workflow tools consume the complete session-aware subagent API from `@tsuuanmi/pi-orchestrator`; workflows do not define a parallel contract or manager.
 
 ### Added
 
@@ -36,6 +36,8 @@
 
 ### Changed
 
+- **extension**: The bundled extension installs Orchestrator's subagent runtime and adapts Pi's generic extension context into workflow tool context.
+- **subagents**: Moved the generic subagent-to-Agent stream adapter and its tests to Orchestrator; workflow adapters consume the public export.
 - **ralplan**: Approved plans now map to Team or Ultragoal through one workflow-owned output adapter instead of constructing downstream state inline.
 - **ultragoal**: Typed obstacles are now authoritative for guard decisions, malformed obstacle ledgers fail closed, and completing a blocker goal resolves its matching obstacles.
 - **agents**: Guarded workflow spawns now use standard bundled agent profiles only. `ralplan_run_agent` removed its optional `agent` override and derives the profile from the legal role (explorer/planner/architect/critic/expert); `ultragoal_spawn_goal_agent` removed its optional `agent` override and always spawns the `worker` profile, using `worker` as the subagent role instead of the invented `ultragoal-worker-<goal-id>` label. `assertNoGuardedSpawnOverrides` no longer lists `agent` as an accepted guard input.

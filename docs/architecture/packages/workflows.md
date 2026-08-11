@@ -23,7 +23,7 @@ It composes generic Agent and Orchestrator capabilities. It does not replace eit
 **Does not own**
 
 - The provider protocol or model streaming; AI owns it.
-- The generic single-agent loop or tool protocol; Agent owns those contracts. Pi owns the concrete session-aware subagent backend.
+- The generic single-agent loop or tool protocol; Agent owns those contracts. Orchestrator owns the concrete session-aware subagent backend.
 - Generic task routing, retries, verification, concurrency, or checkpoint schema; Orchestrator owns those primitives.
 - Terminal rendering primitives; TUI owns them.
 - Pi startup, package/resource loading, session prompt assembly, settings, or concrete UI.
@@ -52,7 +52,6 @@ The root barrel imports transition modules for registration side effects. `#work
 | CLI control plane | [`src/commands/workflow/`](../../../packages/workflows/src/commands/workflow) | Parses and dispatches lifecycle, state, and skill commands without calling model-visible tools |
 | Registry/manifests | [`src/registry/`](../../../packages/workflows/src/registry) | Runtime phases, transitions, retention, help/action metadata, and validated surfaces |
 | Policy/handoffs | [`src/policy/`](../../../packages/workflows/src/policy), [`src/handoff/`](../../../packages/workflows/src/handoff) | Cross-workflow prompts, expected-next guards, gate verdicts, and legal handoffs |
-| Orchestration adapters | [`src/orchestration/`](../../../packages/workflows/src/orchestration) | Shared adapters from injected subagent operations to Agent/AI stream contracts |
 | Session paths | [`src/session/`](../../../packages/workflows/src/session) | Explicit session resolution and canonical paths for state, artifacts, specs, plans, and ledgers |
 | State | [`src/state/`](../../../packages/workflows/src/state) | Workflow ids, schemas, atomic writes, active HUD state, and validation |
 | Artifacts/audit | [`src/artifacts/`](../../../packages/workflows/src/artifacts), [`src/audit/`](../../../packages/workflows/src/audit) | Durable artifacts, receipts, append-only audit, decisions, tamper evidence, and transaction journals |
@@ -69,7 +68,7 @@ The root barrel imports transition modules for registration side effects. `#work
 | Team | Durable task board, role selection, messages, gates, Orchestrator adapter, worker/reviewer/prover execution | Completed team result and receipts |
 | Ultragoal | Approved goal plan, autonomous goal agents, checkpoints, quality gates, blockers, and completion receipts | Completed goal run |
 
-Skill-local source owns domain policy. Shared orchestration belongs in Orchestrator; session-aware subagent contracts and execution belong in Pi.
+Skill-local source owns domain policy. Shared orchestration and session-aware subagent execution belong in Orchestrator; the main application session belongs in Pi.
 
 ## Two execution surfaces
 
@@ -120,14 +119,14 @@ The package also uses Node filesystem, path, process, crypto, socket, and timing
 
 ## Interaction with Pi
 
-Workflows imports Pi's public session-root and subagent contracts. Runtime integration otherwise uses host-shaped contracts and published seams:
+Workflows imports Pi's public host/session contracts and orchestrator's public subagent contracts. Runtime integration otherwise uses host-shaped contracts and published seams:
 
 - Pi's package/resource loader discovers the bundled Workflows extension, skills, agent profiles, and command.
-- Pi supplies tool registration, event hooks, current session context, UI refresh, and its one concrete `SubagentManager`.
-- Workflows registers tools and hooks through `workflowExtension`.
-- Workflows imports the published Pi session-root and subagent APIs so its skill paths extend Pi's base session layout without using Pi private aliases.
+- Pi supplies tool registration, event hooks, current session context, generic session services, and UI refresh.
+- `workflowExtension` installs the orchestrator subagent runtime, then registers workflow tools and hooks.
+- Workflows imports published Pi session-root APIs so skill paths extend Pi's base session layout without private aliases.
 - Pi's interactive mode reads strict session-owned active workflow state for the status line.
-- Workflows consumes Pi-provided Agents/subagents through public package exports and adapts them into Orchestrator without importing Pi internals.
+- Workflows consumes orchestrator-provided subagents through public package exports and never imports Pi or orchestrator internals.
 
 ## Persistence boundaries
 
@@ -142,7 +141,7 @@ Writes use the mechanism appropriate to each schema: serialized mutation queues,
 
 ## Detached runtime boundary
 
-`RuntimeOwner` owns external lifecycle state and RPC routing over a local socket. It can submit, recover, validate, finalize, operate, and retire workflow runs. It intentionally has no `SubagentManager`; interactive host execution remains the only path for starting Pi subagents.
+`RuntimeOwner` owns external lifecycle state and RPC routing over a local socket. It can submit, recover, validate, finalize, operate, and retire workflow runs. It intentionally has no `SubagentManager`; extension-host execution remains the path for starting subagents.
 
 `mutateRuntimeSession()` serializes and validates lifecycle mutations before writing state, events, and receipt-family updates. `operate()` performs a bounded observe/recover loop and only finalizes after explicit completion evidence.
 
@@ -150,7 +149,7 @@ Writes use the mechanism appropriate to each schema: serialized mutation queues,
 
 - `WorkflowToolHost`, `WorkflowToolSpec`, and `registerWorkflowTools()` for compatible hosts.
 - Skill transition tables, runtime manifests, help/action metadata, and validated tool surfaces.
-- Pi-provided `SubagentManagerApi` and workflow-specific Agent/Orchestrator adapters.
+- Orchestrator-provided `SubagentManagerApi` and workflow-specific Agent/Orchestrator adapters.
 - Runtime storage roots, clocks, owner/lease settings, mutation observers, and registered receipt rules.
 - Deferred seam registry for explicitly designed but unavailable runtime capabilities; unregistered use fails closed.
 

@@ -1,58 +1,53 @@
-# Orchestrator and Workflows
+# Orchestrator vs. Workflows
 
-`@tsuuanmi/pi-orchestrator` and `@tsuuanmi/pi-workflows` are adjacent layers, not interchangeable packages.
+`@tsuuanmi/pi-orchestrator` and `@tsuuanmi/pi-workflows` are separate layers.
 
-## At a glance
+## `@tsuuanmi/pi-orchestrator`
 
-| Package | Owns | Typical use |
-| --- | --- | --- |
-| `@tsuuanmi/pi-orchestrator` | Generic task DAG execution, dependency scheduling, agent routing, retries, checkpoints, task receipts, and runtime team messaging | Run a set of `Agent`s against a dependency-aware task graph |
-| `@tsuuanmi/pi-workflows` | Named Pi skills, workflow commands and tools, session state, role policy, approval gates, handoffs, artifacts, and workflow receipts | Run `deep-interview`, `ralplan`, `team`, or `ultragoal` with Pi-specific rules |
+Owns reusable execution mechanisms:
 
-The execution dependencies are one-way:
+- task graphs, queues, teams, routing, checkpoints, and consensus verification;
+- session-aware `SubagentManager` contracts and implementation;
+- subagent persistence, lifecycle tools, progress, receipts, native execution, and tmux execution;
+- the `subagent-worker` package command;
+- generic adapters over Pi's public session services and `Agent` runtime.
+
+Orchestrator depends on public `@tsuuanmi/pi` session APIs plus `@tsuuanmi/pi-agent`. It must not import Pi private aliases or workflow policy.
+
+## `@tsuuanmi/pi-workflows`
+
+Owns product policy and user-facing procedures:
+
+- Deep Interview;
+- Ralplan;
+- Team;
+- Ultragoal;
+- workflow state, approvals, role ordering, artifacts, command dispatch, and hooks;
+- composition of the orchestrator subagent runtime into the bundled Pi extension.
+
+Workflows consume public Pi and orchestrator APIs. They must not define a second subagent manager, task scheduler, checkpoint format, or orchestration primitive.
+
+## `@tsuuanmi/pi`
+
+Pi remains the core application/session host:
+
+- `AgentSession`, `SessionManager`, auth, settings, model registry, resources, tools, modes, CLI, and TUI integration;
+- generic `AgentSessionServices` exposed through `ExtensionContext.sessionServices`;
+- generic Pi/tmux host utilities.
+
+Pi does not depend on orchestrator or workflows and has no subagent-specific manager, worker dispatch, tools, storage, or exports.
+
+## Dependency direction
 
 ```text
-@tsuuanmi/pi-workflows -> @tsuuanmi/pi-orchestrator -> @tsuuanmi/pi-agent -> @tsuuanmi/pi-ai
-@tsuuanmi/pi-workflows -> @tsuuanmi/pi (public session/subagent API)
-@tsuuanmi/pi            -> @tsuuanmi/pi-orchestrator -> @tsuuanmi/pi-agent
+workflows -> orchestrator -> pi -> agent -> ai
+          -> pi -> tui
 ```
 
-Pi loads Workflows as a resource extension at runtime; Pi source does not import Workflows, so the public Workflows-to-Pi API dependency does not form a source-package cycle.
+Each arrow means "depends on." Workflows also depend directly on the lower-level packages whose public types they use.
 
-The orchestrator must not import workflows. Workflows may use the orchestrator when a workflow needs generic multi-agent task execution.
+## Rule of thumb
 
-## How the team workflow uses the orchestrator
-
-The `team` skill keeps its workflow state and policy in `@tsuuanmi/pi-workflows`, then maps admitted role tasks into the generic engine:
-
-```text
-workflow TeamTask[]
-  -> TaskInput[] and runtime Team
-  -> Orchestrator.run()
-  -> task results, queue events, and task receipt references
-  -> workflow state, gates, HUD, and artifacts
-```
-
-The workflow decides which role may run, validates workflow gates, owns persistence paths, and maps results back to workflow state. The orchestrator handles task dependencies, routing, retries, execution, and generic run checkpoints. A workflow-owned checkpoint store may persist an orchestrator checkpoint, but the checkpoint schema remains owned by the orchestrator.
-
-`ralplan` remains workflow-specific in policy, state, artifacts, verdicts, and approval, but its admitted role-agent execution runs through a workflow-owned Orchestrator adapter. The initial integration executes one stage per Orchestrator run so revision and expert branches remain workflow-controlled. `deep-interview` remains workflow-owned because its next step is driven by interactive answers rather than task scheduling. `ultragoal` remains workflow-owned: its goals and quality gates are workflow concepts, and the package-boundary check rejects Orchestrator imports until it acquires a genuine generic multi-goal DAG.
-
-## Choosing the package
-
-Use `@tsuuanmi/pi-orchestrator` when the problem is about:
-
-- scheduling or routing multiple agents;
-- task dependencies and DAG validation;
-- retries, aborts, budgets, or concurrent execution;
-- generic task receipts and resumable run checkpoints.
-
-Use `@tsuuanmi/pi-workflows` when the problem is about:
-
-- a named Pi skill or workflow command/tool;
-- expected role order, approval, review, or completion gates;
-- workflow/session state, leases, handoffs, or artifacts;
-- user-facing workflow receipts and recovery behavior.
-
-For a single generic agent run, use `@tsuuanmi/pi-agent`. For one Pi-hosted subagent's lifecycle, use the published `SubagentManagerApi` from `@tsuuanmi/pi` instead of adding that behavior to the orchestrator.
-
-For the complete package ownership rules, see [`package-boundaries.md`](./package-boundaries.md). For the detailed Ralplan contract, see [`ralplan-orchestrator-contract.md`](./ralplan-orchestrator-contract.md). For the Team adapter contract, see [`team-workflow-orchestrator-adapter.md`](./team-workflow-orchestrator-adapter.md). Ralplan keeps the same adapter boundary: the workflow chooses and verifies the role task, while the engine executes it.
+- If code defines reusable execution mechanics, it belongs in orchestrator.
+- If code defines a named workflow's policy or procedure, it belongs in workflows.
+- If code hosts the main application session or generic extension boundary, it belongs in Pi.

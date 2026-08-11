@@ -11,7 +11,6 @@
 			"dependencies": {
 				"@tsuuanmi/pi-agent": "^0.2.3",
 				"@tsuuanmi/pi-ai": "^0.2.3",
-				"@tsuuanmi/pi-orchestrator": "^0.2.3",
 				"@tsuuanmi/pi-tui": "^0.2.3",
 				"chalk": "5.6.2",
 				"diff": "8.0.4",
@@ -92,17 +91,6 @@
 				"openai": "6.26.0",
 				"partial-json": "0.1.7",
 				"typebox": "1.1.38"
-			},
-			"engines": {
-				"node": ">=22.19.0"
-			}
-		},
-		"node_modules/@tsuuanmi/pi-orchestrator": {
-			"version": "0.2.3",
-			"resolved": "https://registry.npmjs.org/@tsuuanmi/pi-orchestrator/-/pi-orchestrator-0.2.3.tgz",
-			"license": "MIT",
-			"dependencies": {
-				"@tsuuanmi/pi-agent": "^0.2.3"
 			},
 			"engines": {
 				"node": ">=22.19.0"

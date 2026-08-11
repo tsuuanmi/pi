@@ -7,7 +7,6 @@ describe("STATUS_LINE_PRESETS.default", () => {
 		assert.deepEqual(STATUS_LINE_PRESETS.default.leftSegments, ["model", "mode", "git", "path"]);
 		assert.deepEqual(STATUS_LINE_PRESETS.default.rightSegments, [
 			"session_name",
-			"subagents",
 			"token_in",
 			"token_out",
 			"context_pct",

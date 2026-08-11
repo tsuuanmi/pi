@@ -32,7 +32,6 @@ The documentation is organized to mirror the top-level implementation areas in [
 - [`runtime/`](runtime/) - agent-session services, model control, lifecycle events, and telemetry.
 - [`session/`](session/) - session persistence, layout, navigation, and compaction.
 - [`settings/`](settings/) - settings and keybinding management.
-- [`subagents/`](subagents/) - native subagent orchestration and tmux workers.
 - [`tools/`](tools/) - built-in tools, tool registration, and LSP support.
 - [`ui/`](ui/) - interactive UI, rendering, and themes.
 
@@ -50,12 +49,6 @@ The documentation is organized to mirror the top-level implementation areas in [
 - [Prompt templates](loader/prompt-templates.md) - reusable prompts that expand from slash commands.
 - [Themes](ui/theme/index.md) - built-in and custom terminal themes.
 - [Pi packages](package/packages.md) - bundle and share extensions, skills, prompts, and themes.
-
-## Subagents
-
-- [Subagents](subagents/index.md) - Pi-native `SubagentManager` for isolated agent workers.
-- [Agent management contracts](subagents/agent-management-contracts.md) - contracts for agent management and package integration.
-- [Worktree and tmux Threat Model ADR](../../../docs/adr/tmux-worktree-threat-model-adr.md)
 
 ## Programmatic usage
 

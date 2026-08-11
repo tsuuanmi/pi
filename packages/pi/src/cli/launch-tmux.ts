@@ -12,7 +12,7 @@ import {
 	type TmuxSpawnOptions,
 	type TmuxSpawnResult,
 	type TmuxSpawnSync,
-} from "#pi/subagents/tmux-launch";
+} from "#pi/cli/tmux";
 
 const PI_DEFAULT_TMUX_SESSION = "pi";
 const PI_TMUX_SESSION_PREFIX = `${PI_DEFAULT_TMUX_SESSION}_`;

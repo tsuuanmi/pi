@@ -51,7 +51,6 @@ const STATUS_SEGMENTS = new Set([
 	"token_in",
 	"token_out",
 	"session_name",
-	"subagents",
 ]);
 
 export class SettingsFormatError extends Error {

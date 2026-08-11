@@ -44,7 +44,6 @@ function makeSession(overrides?: {
 			getCwd: () => overrides?.cwd ?? "/tmp/project",
 		},
 		getContextUsage: () => ({ contextWindow: 200_000, percent: 12.3 }),
-		subagentManager: { getActiveCount: () => 0 },
 	};
 }
 
@@ -57,7 +56,6 @@ function makeCtx(overrides?: Partial<SegmentContext>): SegmentContext {
 		contextPercent: 12.3,
 		contextWindow: 200_000,
 		autoCompactEnabled: false,
-		subagentCount: 0,
 		availableProviderCount: 1,
 		git: { branch: null, status: null },
 		...overrides,
@@ -254,16 +252,6 @@ describe("session_name segment", () => {
 		const ctx = makeCtx({ session: makeSession({ sessionName: "\x1b[31mred\x1b[0m\x07name" }) });
 		// ANSI stripped + BEL (0x07) replaced with a space, then collapsed/trimmed.
 		assert.equal(stripAnsi(renderSegment("session_name", ctx).content), "red name");
-	});
-});
-
-describe("subagents segment", () => {
-	it("is hidden when the count is 0", () => {
-		assert.deepEqual(renderSegment("subagents", makeCtx({ subagentCount: 0 })), { content: "", visible: false });
-	});
-
-	it("renders the count with the ↳ prefix when > 0", () => {
-		assert.equal(stripAnsi(renderSegment("subagents", makeCtx({ subagentCount: 3 })).content), "↳3");
 	});
 });
 

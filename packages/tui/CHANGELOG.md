@@ -10,6 +10,7 @@
 
 ### Breaking Changes
 
+- **status-line**: Removed the subagent-specific segment and session-manager coupling; orchestration packages now contribute active subagent state through HUD providers.
 - **keybindings**: Interactive components and configured hint helpers now require an injected `KeybindingsManager`; removed the process-global `getKeybindings()` and `setKeybindings()` APIs.
 - **status-line**: Removed TUI Git execution/parsing exports; hosts must supply `getGitStatus()` through `StatusLineDataProvider`.
 

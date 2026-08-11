@@ -13,19 +13,20 @@ flowchart TD
   pi["@tsuuanmi/pi\nCLI, SDK, and composition root"]
   workflows["@tsuuanmi/pi-workflows\nworkflow policy and durable state"]
   tui["@tsuuanmi/pi-tui\nterminal UI primitives"]
-  orchestrator["@tsuuanmi/pi-orchestrator\ntask and team orchestration"]
+  orchestrator["@tsuuanmi/pi-orchestrator\ntask, team, and subagent orchestration"]
   agent["@tsuuanmi/pi-agent\nagent loop and tool contracts"]
   ai["@tsuuanmi/pi-ai\nmodel and provider protocol"]
 
   pi --> ai
   pi --> agent
   pi --> tui
-  pi --> orchestrator
   workflows --> ai
   workflows --> agent
   workflows --> orchestrator
   workflows --> tui
   workflows --> pi
+  orchestrator --> pi
+  orchestrator --> ai
   orchestrator --> agent
   agent --> ai
 ```
@@ -35,7 +36,7 @@ The graph is acyclic. Two packages are workspace leaves:
 - `@tsuuanmi/pi-ai` has no workspace dependency.
 - `@tsuuanmi/pi-tui` has no workspace dependency.
 
-`@tsuuanmi/pi` is the composition root. Pi does not statically import Workflows; Workflows consumes only Pi's public host/session contracts. Pi retains `@tsuuanmi/pi-orchestrator` in its runtime dependency closure because the bundled Workflows artifact uses it, but Pi does not import orchestrator APIs or workflow policy.
+`@tsuuanmi/pi` is the core application/session host. Pi statically imports neither orchestrator nor workflows. Orchestrator builds on Pi's public session APIs, and workflows compose Pi and orchestrator through a dynamically loaded extension.
 
 ## Package inventory
 
@@ -43,12 +44,12 @@ The graph is acyclic. Two packages are workspace leaves:
 |---|---|---|---|---|
 | `@tsuuanmi/pi-ai` | Normalized model, message, provider, OAuth, and streaming protocol | None | agent, workflows, pi | [Components and boundaries](packages/ai.md) |
 | `@tsuuanmi/pi-agent` | Stateful generic agent loop, tool execution, hooks/events, receipts, and canonical Agent model/thinking types | ai | orchestrator, workflows, pi | [Components and boundaries](packages/agent.md) |
-| `@tsuuanmi/pi-orchestrator` | Task DAGs, routing, concurrency, retries, verification, checkpoints, and teams | agent | workflows | [Components and boundaries](packages/orchestrator.md) |
+| `@tsuuanmi/pi-orchestrator` | Task DAGs, teams, routing, checkpoints, and complete session-aware subagent execution | ai, agent, pi | workflows | [Components and boundaries](packages/orchestrator.md) |
 | `@tsuuanmi/pi-tui` | Terminal I/O, differential rendering, components, input, and themes | None | workflows, pi | [Components and boundaries](packages/tui.md) |
 | `@tsuuanmi/pi-workflows` | Gated workflow policy, tools, commands, state, artifacts, audit, and host adapters | ai, agent, orchestrator, tui, pi | pi | [Components and boundaries](packages/workflows.md) |
-| `@tsuuanmi/pi` | CLI, SDK, settings, `.pi` roots and base session layout, loaders, extensions, tools, UI, and concrete subagents | ai, agent, orchestrator, tui | External users and dynamically loaded packages | [Components and boundaries](packages/pi.md) |
+| `@tsuuanmi/pi` | CLI, SDK, main sessions, settings, `.pi` roots, loaders, extensions, tools, and UI | ai, agent, tui | orchestrator, workflows, external users, and dynamically loaded packages | [Components and boundaries](packages/pi.md) |
 
-`@tsuuanmi/pi-orchestrator` also declares `@tsuuanmi/pi-ai` as a development dependency for tests; it has no direct runtime source import from AI.
+Orchestrator imports Pi only through published package entry points; it never imports `#pi/*` internals.
 
 ## Architectural planes
 
@@ -58,9 +59,9 @@ The graph is acyclic. Two packages are workspace leaves:
 
 ### Agent execution
 
-`@tsuuanmi/pi-agent` consumes the AI stream contract and owns the model/tool turn loop. It manages agent state, queueing, hooks, events, tool execution, traces, pruning, structured output, and canonical Agent model/thinking types. The root entry is host-neutral; Node-specific process and filesystem helpers are isolated in `@tsuuanmi/pi-agent/node`. Session-aware subagents are Pi-owned.
+`@tsuuanmi/pi-agent` consumes the AI stream contract and owns the model/tool turn loop. It manages agent state, queueing, hooks, events, tool execution, traces, pruning, structured output, and canonical Agent model/thinking types. The root entry is host-neutral; Node-specific process and filesystem helpers are isolated in `@tsuuanmi/pi-agent/node`. Session-aware subagents are orchestrator-owned.
 
-`@tsuuanmi/pi-orchestrator` runs one level above an `Agent`. It owns task graphs, agent selection, scheduling, retries, verification, budgets, receipts, and checkpoint contracts. It delegates each actual model/tool run back to `Agent.run()` and delegates durable checkpoint storage to its caller.
+`@tsuuanmi/pi-orchestrator` runs one level above an `Agent`. It owns task graphs, agent selection, scheduling, retries, verification, budgets, receipts, checkpoint contracts, and the complete Pi-hosted subagent runtime. Generic orchestration delegates model/tool runs to `Agent.run()`; subagents create isolated sessions through Pi's public session services.
 
 ### Host adapters
 
@@ -68,11 +69,11 @@ The graph is acyclic. Two packages are workspace leaves:
 
 ### Workflow policy
 
-`@tsuuanmi/pi-workflows` owns Deep Interview, Ralplan, Team, and Ultragoal policy. It adds session-scoped workflow state, transitions, gates, artifacts, audit records, CLI commands, model-visible tools, and Pi extension hooks. It consumes Pi's public session-aware subagent API and does not reimplement Agent or subagent execution engines.
+`@tsuuanmi/pi-workflows` owns Deep Interview, Ralplan, Team, and Ultragoal policy. It adds session-scoped workflow state, transitions, gates, artifacts, audit records, CLI commands, model-visible tools, and Pi extension hooks. It consumes orchestrator's public session-aware subagent API and does not reimplement Agent or subagent execution engines.
 
 ### Application composition
 
-`@tsuuanmi/pi` is where the layers become a product. It loads settings and package resources, chooses a model, builds an `AgentSession`, registers coding tools and providers, persists sessions, hosts extensions, implements concrete subagents, and dispatches interactive, print, JSON, or RPC modes.
+`@tsuuanmi/pi` hosts the core product runtime. It loads settings and package resources, chooses a model, builds an `AgentSession`, registers coding tools and providers, persists sessions, hosts extensions, and dispatches interactive, print, JSON, or RPC modes. The bundled workflows extension installs orchestrator-owned subagents.
 
 ## Main runtime interactions
 
@@ -98,12 +99,12 @@ Workflow skill or tool
   -> @tsuuanmi/pi-workflows guard and state transition
   -> workflow policy and state transition
   -> @tsuuanmi/pi-orchestrator task/team run when generic orchestration is needed
-  -> injected @tsuuanmi/pi SubagentManagerApi or generic Agent
-  -> Pi concrete subagent/session backend
+  -> injected @tsuuanmi/pi-orchestrator SubagentManagerApi or generic Agent
+  -> orchestrator subagent backend using public Pi session services
   -> workflow receipts, artifacts, audit, and HUD state
 ```
 
-Control returns through injected callbacks and interfaces. The lower packages never import Pi to call upward.
+Control returns through injected callbacks and public interfaces. Orchestrator imports Pi as a declared lower-level host dependency; Pi never imports orchestrator or workflows.
 
 ### Terminal and workflow status
 

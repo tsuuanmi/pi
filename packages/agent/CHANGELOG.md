@@ -18,7 +18,7 @@
 - **orchestrator**: Moved task, team, and orchestrator contracts out of `@tsuuanmi/pi-agent` into `@tsuuanmi/pi-orchestrator`.
 - **orchestrator**: Standardized orchestrator options on `schedulingStrategy` and `abortSignal`, removed `runTeam`, removed `onTaskFail`, removed scheduler fallback assignment, and made explicit task assignees fail fast when they do not match the team roster.
 - **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
-- **subagents**: Removed all subagent contracts, lifecycle tools, persistence, tmux, and run-identity modules; session-aware subagents are owned by `@tsuuanmi/pi`.
+- **subagents**: Removed all subagent contracts, lifecycle tools, persistence, tmux, and run-identity modules; session-aware subagents are owned by `@tsuuanmi/pi-orchestrator`.
 - **model**: Re-exported canonical `Api`, `Model`, and `ThinkingLevel` types and `isValidThinkingLevel` for generic agent consumers.
 - **jsonl**: `attachJsonlLineReader()` now requires an error callback and rejects CRLF or unterminated records.
 
@@ -34,7 +34,7 @@
 - **agent**: Added request and tool trace spans for agent observability.
 - **tool**: Added `Tool.define()` for validated TypeBox-native tool declarations.
 - **tool**: Added `ContextToolSpec` as the canonical host-context extension of `ToolSpec`.
-- **subagents**: Added host-neutral lifecycle tool definitions and centralized thinking-level parsing in `@tsuuanmi/pi-agent`.
+- **thinking**: Added centralized `parseThinkingLevel()` validation for Agent consumers.
 - **tool**: Added opt-in TypeBox validation for tool result details.
 - **agent**: Added context-pruning helpers for sliding-window transforms that preserve assistant tool calls with matching tool results.
 - **agent**: Added isolated `run()`, state/history accessors, lifecycle run hooks, status tracing events, capabilities, and per-agent task serialization.

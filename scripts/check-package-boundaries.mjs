@@ -21,6 +21,7 @@ const INTENDED_PACKAGE_DAG = [
 	["@tsuuanmi/pi-agent", "@tsuuanmi/pi-ai"],
 	["@tsuuanmi/pi-orchestrator", "@tsuuanmi/pi-agent"],
 	["@tsuuanmi/pi-orchestrator", "@tsuuanmi/pi-ai"],
+	["@tsuuanmi/pi-orchestrator", "@tsuuanmi/pi"],
 	["@tsuuanmi/pi-workflows", "@tsuuanmi/pi-agent"],
 	["@tsuuanmi/pi-workflows", "@tsuuanmi/pi-orchestrator"],
 	["@tsuuanmi/pi-workflows", "@tsuuanmi/pi-ai"],
@@ -28,14 +29,13 @@ const INTENDED_PACKAGE_DAG = [
 	["@tsuuanmi/pi-workflows", "@tsuuanmi/pi"],
 	["@tsuuanmi/pi", "@tsuuanmi/pi-agent"],
 	["@tsuuanmi/pi", "@tsuuanmi/pi-ai"],
-	["@tsuuanmi/pi", "@tsuuanmi/pi-orchestrator"],
 	["@tsuuanmi/pi", "@tsuuanmi/pi-tui"],
 ];
 
 const ALLOWED_SOURCE_IMPORT_GRAPH = {
 	"@tsuuanmi/pi-ai": new Set(),
 	"@tsuuanmi/pi-agent": new Set(["@tsuuanmi/pi-ai"]),
-	"@tsuuanmi/pi-orchestrator": new Set(["@tsuuanmi/pi-agent", "@tsuuanmi/pi-ai"]),
+	"@tsuuanmi/pi-orchestrator": new Set(["@tsuuanmi/pi", "@tsuuanmi/pi-agent", "@tsuuanmi/pi-ai"]),
 	"@tsuuanmi/pi-tui": new Set(),
 	"@tsuuanmi/pi-workflows": new Set([
 		"@tsuuanmi/pi",
@@ -44,17 +44,11 @@ const ALLOWED_SOURCE_IMPORT_GRAPH = {
 		"@tsuuanmi/pi-ai",
 		"@tsuuanmi/pi-tui",
 	]),
-	"@tsuuanmi/pi": new Set([
-		"@tsuuanmi/pi-ai",
-		"@tsuuanmi/pi-agent",
-		"@tsuuanmi/pi-orchestrator",
-		"@tsuuanmi/pi-tui",
-	]),
+	"@tsuuanmi/pi": new Set(["@tsuuanmi/pi-ai", "@tsuuanmi/pi-agent", "@tsuuanmi/pi-tui"]),
 };
 
 const FORBIDDEN_SOURCE_IMPORT_EDGES = [
 	{ from: "@tsuuanmi/pi-workflows", to: ["#pi/*"] },
-	{ from: "packages/pi/src/subagents/**", to: ["@tsuuanmi/pi-workflows", "@tsuuanmi/pi-workflows/*", "#workflows/*"] },
 	{ from: "@tsuuanmi/pi-agent", to: ["@tsuuanmi/pi-workflows", "@tsuuanmi/pi-workflows/*", "#workflows/*", "@tsuuanmi/pi", "@tsuuanmi/pi/*", "#pi/*"] },
 ];
 
@@ -67,8 +61,8 @@ const internalRules = [
 		forbidden: ["#pi/cli/", "#pi/modes/", "#pi/ui/"],
 	},
 	{
-		directory: "packages/pi/src/subagents",
-		forbidden: ["#pi/cli/", "@tsuuanmi/pi-workflows", "#workflows/"],
+		directory: "packages/orchestrator/src/subagents",
+		forbidden: ["#pi/", "@tsuuanmi/pi-workflows", "#workflows/"],
 	},
 	{ directory: "packages/pi/src/package/loader.ts", forbidden: ["#pi/index"] },
 	{

@@ -7,6 +7,9 @@ import { discoverAndLoadExtensions } from "#pi/loader/extensions/loader";
 import { ModelRegistry } from "#pi/loader/model-registry";
 import { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { SessionManager } from "#pi/session/manager";
+import { SettingsManager } from "#pi/settings/manager";
+import { createTestResourceLoader } from "#pi-test/helpers/resource-loader";
+import { createTestAgentSessionServices } from "#pi-test/helpers/services";
 
 describe("Input Event", () => {
 	let tempDir: string;
@@ -30,7 +33,13 @@ describe("Input Event", () => {
 		const result = await discoverAndLoadExtensions([], tempDir, tempDir);
 		const sm = SessionManager.inMemory();
 		const mr = ModelRegistry.create(AuthStorage.create(path.join(tempDir, "auth.json")));
-		return new ExtensionRunner(result.extensions, result.runtime, tempDir, sm, mr);
+		const services = createTestAgentSessionServices({
+			cwd: tempDir,
+			modelRegistry: mr,
+			resourceLoader: createTestResourceLoader(),
+			settingsManager: SettingsManager.create(tempDir, tempDir),
+		});
+		return new ExtensionRunner(result.extensions, result.runtime, tempDir, sm, mr, services);
 	}
 
 	it("returns continue when no handlers, undefined return, or explicit continue", async () => {

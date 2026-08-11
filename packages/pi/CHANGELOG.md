@@ -8,7 +8,7 @@
 - **ui**: Interactive assistant thinking blocks now render in full by default instead of a one-line preview; `Ctrl+T` still hides thinking. `Ctrl+O` now only collapses/expands tool output and no longer affects thinking.
 - **sessions**: The session loader accepts legacy version 3 JSONL files (and their `compaction.fromHook` field) on read so existing sessions open again; new files continue to be written at version 4.
 - **storage**: Removed dedicated POSIX permission handling from session, auth, settings, and package directories; regular-file validation and atomic writes remain.
-- **packages**: Bundled package discovery and asset copying now derive from compiled `pi` manifests; unknown `pi:` sources fail instead of falling back to local paths. The orchestrator dependency remains in Pi's runtime closure for dynamically loaded bundled packages, without a static Pi import.
+- **packages**: Bundled package discovery and asset copying now derive from compiled `pi` manifests; unknown `pi:` sources fail instead of falling back to local paths. Pi has no direct orchestrator dependency or source import.
 - **sessions**: Pi now owns the public `.pi` root and session path primitives at `@tsuuanmi/pi/session/root`; Workflows extends that layout without Pi importing Workflows.
 - **extensions**: Added `ExtensionAPI.registerHudProvider()` so packages can contribute domain-owned status-line data without Pi importing package-specific state.
 - **tsconfig**: Enabled `noFallthroughCasesInSwitch`, `noImplicitOverride`, and `noImplicitReturns` repo-wide; added `override` modifiers to overriding UI component members and an explicit return path in a session-switch test.
@@ -36,11 +36,10 @@
 - **sdk**: Removed the obsolete `migratedProviders` field from `InteractiveModeOptions`.
 - **tools**: Removed non-canonical `edit` tool argument forms; the tool now accepts only `path` plus `edits[]` and no longer normalizes alternate shapes.
 - **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
-- **subagents**: Ported the complete subagent boundary from `@tsuuanmi/pi-agent`; Pi now owns the Agent-backed session manager, requests/records/results, progress, receipts, yield extraction, native/tmux execution, and lifecycle controls.
-- **subagents**: Added the root `registerSubagentTools()` and `registerSubagentControls()` registrars; Pi owns all executable lifecycle tools and controls.
-- **subagents**: Pi-native inspect, attach, and kill controls no longer depend on workflow tool contracts or emit workflow `final_package` fields; they use Pi context and generic agent receipts.
-- **subagents**: Continuation suppression is exposed only as `skipAutomaticContinuation` on `AgentSession` and `ExtensionContext`; package-specific aliases were removed.
-- **subagents**: Tmux run identity now uses only the canonical nested target session name.
+- **subagents**: Removed the complete subagent API and implementation from Pi; `@tsuuanmi/pi-orchestrator` now owns the manager, contracts, lifecycle tools, persistence, receipts, and native/tmux execution.
+- **extensions**: Replaced `ExtensionContext.subagents` with generic `sessionServices` so external orchestration packages can create isolated sessions without Pi importing them.
+- **tmux**: Published generic Pi command and tmux process utilities through `@tsuuanmi/pi/tmux`; worker dispatch now uses package commands instead of a Pi startup special case.
+- **subagents**: Inspect, attach, kill, tmux identity, and continuation policy moved with the authoritative implementation to `@tsuuanmi/pi-orchestrator`.
 - **runtime**: Pi is now Node-only; removed alternate-runtime detection and package-manager branches.
 - **cli**: Removed the `pi uninstall` alias; use `pi remove`.
 - **models**: Moved `ModelRegistry` to `@tsuuanmi/pi/loader`, removed the root and legacy model exports, removed path-based construction, and moved CLI resolution to `src/cli/model-resolver.ts`; pass a `SettingsManager` or use `createFromModelsConfig()`.

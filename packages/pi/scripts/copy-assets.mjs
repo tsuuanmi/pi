@@ -33,7 +33,3 @@ for (const entry of await readdir(workspace, { withFileTypes: true })) {
 	await cp(manifestPath, join(target, "package.json"));
 	await cp(compiled, join(target, "dist"), { recursive: true });
 }
-
-const subagents = join(dist, "subagents");
-await mkdir(subagents, { recursive: true });
-await cp(join(root, "src", "subagents", "run-identity.schema.json"), join(subagents, "run-identity.schema.json"));

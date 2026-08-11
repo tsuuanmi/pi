@@ -1,4 +1,4 @@
-import { parseThinkingLevel } from "@tsuuanmi/pi";
+import { parseThinkingLevel } from "@tsuuanmi/pi-agent";
 import { type Static, Type } from "typebox";
 import {
 	assertExpectedNextRole,

@@ -11,6 +11,7 @@ import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
 import { API_KEY } from "./messages.ts";
 import { createTestResourceLoader } from "./resource-loader.ts";
+import { createTestAgentSessionServices } from "./services.ts";
 
 export interface TestSessionOptions {
 	inMemory?: boolean;
@@ -48,13 +49,20 @@ export function createTestSession(options: TestSessionOptions = {}): TestSession
 
 	const authStorage = AuthStorage.create(join(tempDir, "auth.json"));
 	const modelRegistry = ModelRegistry.create(authStorage, settingsManager);
+	const resourceLoader = createTestResourceLoader();
 	const session = new AgentSession({
 		agent,
 		sessionManager,
 		settingsManager,
 		cwd: tempDir,
 		modelRegistry,
-		resourceLoader: createTestResourceLoader(),
+		resourceLoader,
+		sessionServices: createTestAgentSessionServices({
+			cwd: tempDir,
+			modelRegistry,
+			resourceLoader,
+			settingsManager,
+		}),
 	});
 
 	session.subscribe(() => {});

@@ -17,8 +17,7 @@ export type StatusLineSegmentId =
 	| "context_total"
 	| "token_in"
 	| "token_out"
-	| "session_name"
-	| "subagents";
+	| "session_name";
 
 /** Status line separator visual style. */
 export type StatusLineSeparatorStyle = "slash";
@@ -105,7 +104,6 @@ export interface StatusLineSessionLike {
 		getCwd(): string;
 	};
 	getContextUsage(): { contextWindow?: number; percent?: number | null } | null | undefined;
-	subagentManager?: { getActiveCount(): number };
 }
 
 export interface GitStatusSummary {
@@ -164,8 +162,6 @@ export interface SegmentContext {
 	contextWindow: number;
 	/** Whether auto-compaction is enabled (drives the `(auto)` indicator). */
 	autoCompactEnabled: boolean;
-	/** Count of live (running + paused) subagents. */
-	subagentCount: number;
 	/** Number of providers with available models (drives the `(provider)` prefix). */
 	availableProviderCount: number;
 	/** Repository snapshot supplied by the host. */

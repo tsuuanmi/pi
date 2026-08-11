@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { describe, expect, it } from "vitest";
-import type { WorkflowHost } from "#workflows/extension";
 import workflowExtension from "#workflows/extension";
 import { PI_WORKFLOW_SKILLS } from "#workflows/registry/workflow-manifest";
 import { getWorkflowSkillHelp, renderWorkflowCommandsReference } from "#workflows/skills/workflow-help-registry";
@@ -107,26 +107,23 @@ describe("workflow surface registry", () => {
 		const registeredTools: string[] = [];
 		const registeredHooks: string[] = [];
 		const hudProviders: unknown[] = [];
-		const host: WorkflowHost = {
-			registerTool(tool) {
+		const host = {
+			registerTool(tool: { name: string }) {
 				registeredTools.push(tool.name);
 			},
-			on(event) {
+			on(event: string) {
 				registeredHooks.push(event);
 			},
-			registerHudProvider(provider) {
+			registerHudProvider(provider: unknown) {
 				hudProviders.push(provider);
 			},
-		};
+		} as unknown as ExtensionAPI;
 		workflowExtension(host);
 
-		expect(registeredTools.slice().sort()).toEqual(
-			WORKFLOW_TOOL_SURFACES.filter((tool) => tool.skill !== "subagent")
-				.map((tool) => tool.toolName)
-				.sort(),
-		);
-		expect(hudProviders).toHaveLength(1);
+		expect(registeredTools.slice().sort()).toEqual(WORKFLOW_TOOL_SURFACES.map((tool) => tool.toolName).sort());
+		expect(hudProviders).toHaveLength(2);
 		expect(registeredHooks).toEqual([
+			"session_shutdown",
 			"session_start",
 			"turn_end",
 			"tool_execution_end",

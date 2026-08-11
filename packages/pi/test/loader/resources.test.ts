@@ -11,9 +11,7 @@ import { createSyntheticSourceInfo } from "#pi/resources/source-info";
 import { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
-import { SUBAGENT_TOOL_NAMES } from "#pi/subagents/tool-names";
-
-const BUILT_IN_SUBAGENT_SPECS = new Set(SUBAGENT_TOOL_NAMES);
+import { createTestAgentSessionServices } from "#pi-test/helpers/services";
 
 function withoutBuiltinExtensions<T extends { path: string; sourceInfo: { source: string } }>(extensions: T[]): T[] {
 	return extensions.filter(
@@ -65,16 +63,19 @@ describe("DefaultResourceLoader", () => {
 			const sessionManager = SessionManager.inMemory();
 			const authStorage = AuthStorage.create(join(tempDir, "auth.json"));
 			const modelRegistry = ModelRegistry.create(authStorage);
-			const runner = new ExtensionRunner(
+			new ExtensionRunner(
 				extensionsResult.extensions,
 				extensionsResult.runtime,
 				cwd,
 				sessionManager,
 				modelRegistry,
+				createTestAgentSessionServices({
+					cwd,
+					modelRegistry,
+					resourceLoader: loader,
+					settingsManager: SettingsManager.create(cwd, agentDir),
+				}),
 			);
-			for (const toolName of BUILT_IN_SUBAGENT_SPECS) {
-				expect(runner.getToolSpec(toolName)).toBeDefined();
-			}
 		});
 
 		it("should discover skills from agentDir", async () => {
@@ -279,6 +280,12 @@ Project skill`,
 				cwd,
 				sessionManager,
 				modelRegistry,
+				createTestAgentSessionServices({
+					cwd,
+					modelRegistry,
+					resourceLoader: loader,
+					settingsManager: SettingsManager.create(cwd, agentDir),
+				}),
 			);
 
 			expect(runner.getCommand("deploy:1")?.description).toBe("project deploy");
@@ -970,6 +977,12 @@ export default function(pi: ExtensionAPI) {
 				cwd,
 				sessionManager,
 				modelRegistry,
+				createTestAgentSessionServices({
+					cwd,
+					modelRegistry,
+					resourceLoader: loader,
+					settingsManager: SettingsManager.create(cwd, agentDir),
+				}),
 			);
 
 			expect(runner.getCommand("deploy:1")?.description).toBe("explicit command");

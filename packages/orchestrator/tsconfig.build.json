@@ -5,8 +5,15 @@
 		"outDir": "./dist",
 		"paths": {
 			"#orchestrator/*": ["./src/*"],
+			"@tsuuanmi/pi": ["../pi/dist/index.d.ts"],
+			"@tsuuanmi/pi/extensions": ["../pi/dist/loader/extensions/index.d.ts"],
+			"@tsuuanmi/pi/loader": ["../pi/dist/loader/index.d.ts"],
+			"@tsuuanmi/pi/session/root": ["../pi/dist/session/root.d.ts"],
+			"@tsuuanmi/pi/tmux": ["../pi/dist/cli/tmux.d.ts"],
 			"@tsuuanmi/pi-agent": ["../agent/dist/index.d.ts"],
-			"@tsuuanmi/pi-agent/*": ["../agent/dist/*.d.ts"]
+			"@tsuuanmi/pi-agent/*": ["../agent/dist/*.d.ts"],
+			"@tsuuanmi/pi-ai": ["../ai/dist/index.d.ts"],
+			"@tsuuanmi/pi-ai/*": ["../ai/dist/*.d.ts", "../ai/dist/providers/*.d.ts"]
 		},
 		"rootDir": "./src"
 	},

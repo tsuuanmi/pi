@@ -1,7 +1,7 @@
-import type { SubagentManagerApi } from "@tsuuanmi/pi";
 import { Agent } from "@tsuuanmi/pi-agent";
 import type { Context } from "@tsuuanmi/pi-ai";
-import { createSubagentStream } from "#workflows/orchestration/subagent-stream";
+import type { SubagentManagerApi } from "@tsuuanmi/pi-orchestrator";
+import { createSubagentStream } from "@tsuuanmi/pi-orchestrator";
 import type { WorkflowContext } from "#workflows/tool/context";
 
 export interface TeamAgentSpec {

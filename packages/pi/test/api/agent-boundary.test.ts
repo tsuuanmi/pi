@@ -22,22 +22,6 @@ describe("pi public agent boundary", () => {
 		expect(source).not.toContain("resolvePath");
 	});
 
-	it("exports the complete pi-owned subagent API", async () => {
-		const source = await readRepoFile("packages/pi/src/index.ts");
-
-		expect(source).toContain('export { SubagentManager } from "#pi/subagents/manager"');
-		expect(source).toContain('export type { SubagentManagerApi } from "#pi/subagents/manager-api"');
-		expect(source).toContain('export { registerSubagentTools, SUBAGENT_SPECS } from "#pi/subagents/lifecycle-tools"');
-		expect(source).toContain('export { registerSubagentControls } from "#pi/subagents/tools"');
-		expect(source).toContain('export * from "#pi/subagents/context"');
-		expect(source).toContain('export * from "#pi/subagents/progress"');
-		expect(source).toContain('export * from "#pi/subagents/receipts"');
-		expect(source).toContain('export * from "#pi/subagents/spec"');
-		expect(source).toContain('export * from "#pi/subagents/thinking-level"');
-		expect(source).toContain('export * from "#pi/subagents/types"');
-		expect(source).toContain('export * from "#pi/subagents/yield-result"');
-	});
-
 	it("does not retain subagent ownership in Agent", async () => {
 		const source = await readRepoFile("packages/agent/src/index.ts");
 

@@ -8,6 +8,7 @@ const repoRoot = join(import.meta.dirname, "../../../../");
 const execFileAsync = promisify(execFile);
 const workflowsSrc = join(repoRoot, "packages/workflows/src");
 const allowedAgentNodeImports = new Set(["resolvePath", "serializeJsonLine", "withFileMutationQueue"]);
+const allowedPiImports = new Set(["@tsuuanmi/pi/extensions", "@tsuuanmi/pi/session/root"]);
 
 async function listTypeScriptFiles(dir: string): Promise<string[]> {
 	const entries = await readdir(dir, { withFileTypes: true });
@@ -36,10 +37,7 @@ describe("workflow package import boundary", () => {
 			const source = await readFile(file, "utf8");
 			for (const match of source.matchAll(importPattern)) {
 				const target = match[1];
-				if (
-					target.startsWith("#pi/") ||
-					(target.startsWith("@tsuuanmi/pi/") && target !== "@tsuuanmi/pi/session/root")
-				) {
+				if (target.startsWith("#pi/") || (target.startsWith("@tsuuanmi/pi/") && !allowedPiImports.has(target))) {
 					offenders.push(`${file.replace(`${repoRoot}/`, "")}: ${target}`);
 				}
 			}

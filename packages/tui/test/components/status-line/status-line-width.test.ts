@@ -41,7 +41,6 @@ function createSession(options: {
 	thinkingLevel?: string;
 	contextWindow?: number;
 	usage?: AssistantUsage | null;
-	subagentCount?: number;
 	sessionId?: string;
 }): StatusLineSessionLike {
 	const usage = options.usage ?? null;
@@ -64,7 +63,6 @@ function createSession(options: {
 		},
 		sessionId: options.sessionId ?? "status-line-test-session",
 		getContextUsage: () => ({ contextWindow: options.contextWindow ?? 200_000, percent: 12.3 }),
-		subagentManager: { getActiveCount: () => options.subagentCount ?? 0 },
 	};
 }
 

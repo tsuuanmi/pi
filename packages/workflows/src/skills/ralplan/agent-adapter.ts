@@ -1,7 +1,7 @@
-import type { SubagentManagerApi, SubagentRunResult } from "@tsuuanmi/pi";
 import { Agent } from "@tsuuanmi/pi-agent";
 import type { Message } from "@tsuuanmi/pi-ai";
-import { createSubagentStream } from "#workflows/orchestration/subagent-stream";
+import type { SubagentManagerApi, SubagentRunResult } from "@tsuuanmi/pi-orchestrator";
+import { createSubagentStream } from "@tsuuanmi/pi-orchestrator";
 import { type RalplanAgentRecord, writeRalplanAgentRecord } from "#workflows/skills/ralplan/agent-record";
 import type { RalplanAgentRequest } from "#workflows/skills/ralplan/agent-roles";
 

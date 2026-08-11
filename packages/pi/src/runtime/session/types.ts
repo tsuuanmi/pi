@@ -1,6 +1,7 @@
 /** Public contracts for the agent session runtime. */
 
 import type { Agent, AgentEvent, AgentMessage, Model, ThinkingLevel, Tool } from "@tsuuanmi/pi-agent";
+import type { AgentSessionServices } from "#pi/api/session-services";
 import type {
 	ContextUsage,
 	ExtensionCommandContextActions,
@@ -15,7 +16,6 @@ import type { ExtensionErrorListener, ExtensionRunner, ShutdownHandler } from "#
 import type { CompactionResult } from "#pi/session/compaction/index";
 import type { SessionManager } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/manager";
-import type { SubagentManager } from "#pi/subagents/manager";
 
 /** Session-specific events that extend the core AgentEvent. */
 export type AgentSessionEvent =
@@ -80,8 +80,8 @@ export interface AgentSessionConfig {
 	extensionRunnerRef?: { current?: ExtensionRunner };
 	/** Session start event metadata emitted when extensions bind to this runtime. */
 	sessionStartEvent?: SessionStartEvent;
-	/** Optional Pi-native subagent manager. */
-	subagentManager?: SubagentManager | null;
+	/** Coherent session services exposed through extension contexts. */
+	sessionServices: AgentSessionServices;
 	/** Skip automatic continuation prompt injection. */
 	skipAutomaticContinuation?: boolean;
 	/** Extra system prompt appended to the rebuilt base prompt. */

@@ -1,5 +1,5 @@
-import type { SubagentManagerApi } from "@tsuuanmi/pi";
 import type { Model } from "@tsuuanmi/pi-agent";
+import type { SubagentManagerApi } from "@tsuuanmi/pi-orchestrator";
 
 export interface WorkflowContext {
 	cwd: string;

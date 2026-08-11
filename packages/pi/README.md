@@ -437,7 +437,6 @@ Pi stays minimal, but ships a small set of built-in features so common workflows
 - **`pi --tmux`** - launch interactive startup inside a new tmux session.
 - **Account profiles** - store multiple accounts per provider and switch between them with `/account add`, `/account`, `/account <provider> <account>`, `/provider add`, and `/account remove`. See [Account profiles](docs/runtime/models/custom-provider.md#account-profiles) in the Custom Providers docs.
 - **Bundled packages** - Pi discovers compiled package resources from package manifests, including extensions, commands, skills, and agent profiles.
-- **Subagents** - a Pi-native `SubagentManager` with lifecycle and tmux controls for isolated agent workers. Generic multi-agent coordination belongs to `@tsuuanmi/pi-orchestrator`. See [docs/subagents/index.md](docs/subagents/index.md).
 
 ---
 

@@ -11,6 +11,7 @@ import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
 import { createTestResourceLoader } from "#pi-test/helpers/resource-loader";
+import { createTestAgentSessionServices } from "#pi-test/helpers/services";
 
 class MockAssistantStream extends EventStream<AssistantMessageEvent, AssistantMessage> {
 	constructor() {
@@ -113,6 +114,12 @@ describe("AgentSession retry", () => {
 			cwd: tempDir,
 			modelRegistry,
 			resourceLoader: createTestResourceLoader(),
+			sessionServices: createTestAgentSessionServices({
+				cwd: tempDir,
+				modelRegistry,
+				resourceLoader: createTestResourceLoader(),
+				settingsManager,
+			}),
 		});
 
 		if (delayAssistantMessageEndMs > 0) {
@@ -214,6 +221,12 @@ describe("AgentSession retry", () => {
 			cwd: tempDir,
 			modelRegistry,
 			resourceLoader: createTestResourceLoader(),
+			sessionServices: createTestAgentSessionServices({
+				cwd: tempDir,
+				modelRegistry,
+				resourceLoader: createTestResourceLoader(),
+				settingsManager,
+			}),
 		});
 
 		const events: string[] = [];
@@ -300,6 +313,12 @@ describe("AgentSession retry", () => {
 			cwd: tempDir,
 			modelRegistry,
 			resourceLoader: createTestResourceLoader(),
+			sessionServices: createTestAgentSessionServices({
+				cwd: tempDir,
+				modelRegistry,
+				resourceLoader: createTestResourceLoader(),
+				settingsManager,
+			}),
 			baseToolsOverride: { echo: echoTool },
 		});
 

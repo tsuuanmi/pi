@@ -931,6 +931,10 @@ ctx.sessionManager.getLeafId()        // Current leaf entry ID
 
 Access to models and API keys.
 
+### ctx.sessionServices
+
+Coherent auth, settings, model-registry, resource-loader, and path inputs for packages that create related isolated sessions. Use this host boundary instead of importing Pi runtime internals or rebuilding session configuration independently.
+
 ### ctx.signal
 
 The current agent abort signal, or `undefined` when no agent turn is active.

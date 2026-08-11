@@ -4,7 +4,7 @@
 
 ## Role
 
-`@tsuuanmi/pi` is the workspace composition root. It is simultaneously the `pi` CLI, an embeddable SDK, the application/session host, the package and extension host, the interactive terminal application, and the concrete runtime for coding tools and Pi-native subagents.
+`@tsuuanmi/pi` is the core application hub. It is the `pi` CLI, an embeddable SDK, the application/session host, the package and extension host, the interactive terminal application, and the concrete runtime for coding tools.
 
 Pi supplies concrete policy, resources, storage, UI, process integration, and the base session contract. Workflow packages consume only its public host/session surfaces; Pi does not import workflow implementation code.
 
@@ -19,13 +19,12 @@ Pi supplies concrete policy, resources, storage, UI, process integration, and th
 - Built-in read/bash/edit/write/LSP and related coding tools, process execution, output sanitation, and truncation.
 - Interactive TUI composition plus print, JSON, and stdio RPC modes.
 - Extension contracts, lifecycle, hooks, commands, tools, custom providers, and UI context.
-- Concrete subagent persistence, isolated sessions, worker lifecycle, and optional tmux execution.
 
 **Does not own**
 
 - Provider-neutral model and stream protocols; AI owns them.
-- The generic Agent loop and reusable tool contracts; Agent owns them. Pi owns session-aware subagent contracts and execution.
-- Generic task/team scheduling, routing, retries, or checkpoint contracts; Orchestrator owns them and is reached through Workflows.
+- The generic Agent loop and reusable tool contracts; Agent owns them.
+- Generic task/team scheduling, routing, checkpoints, and session-aware subagent execution; Orchestrator owns them.
 - Workflow phases, gates, artifacts, and handoff policy; Workflows owns them.
 - Terminal rendering primitives; TUI owns them.
 
@@ -36,11 +35,12 @@ The `src/app/` layer itself is orchestration only. Behavior should remain in CLI
 | Entry | Surface |
 |---|---|
 | `pi` binary | [`src/cli/cli.ts`](../../../packages/pi/src/cli/cli.ts) process entry and [`src/main.ts`](../../../packages/pi/src/main.ts) application startup |
-| `@tsuuanmi/pi` | Broad SDK barrel: `main`, session/runtime factories, `AgentSession`, settings/package helpers, tools, subagents, compaction, modes, and selected TUI APIs |
+| `@tsuuanmi/pi` | Broad SDK barrel: `main`, session/runtime factories, `AgentSession`, settings/package helpers, tools, compaction, modes, and selected TUI APIs |
 | `@tsuuanmi/pi/extensions` | Supported extension contracts and helper types; private extension loader/runner internals are excluded |
-| `@tsuuanmi/pi/loader` | `ModelRegistry` and provider-loading types |
+| `@tsuuanmi/pi/loader` | `ModelRegistry`, provider-loading types, and agent-profile loading |
 | `@tsuuanmi/pi/loader/config` | Loader configuration contracts |
 | `@tsuuanmi/pi/session/root` | Canonical `.pi` roots, base session layout, path-segment encoding, and `requireSessionId` |
+| `@tsuuanmi/pi/tmux` | Generic Pi command reconstruction and tmux process utilities |
 
 `#pi/*` aliases are internal. External extensions should use the documented `@tsuuanmi/pi/extensions` surface rather than source or `dist` deep imports.
 
@@ -60,7 +60,6 @@ The `src/app/` layer itself is orchestration only. Behavior should remain in CLI
 | Session persistence | [`src/session/`](../../../packages/pi/src/session) | Append-only JSONL session tree, reconstruction, branching, metadata, and storage paths |
 | Modes/UI | [`src/modes/`](../../../packages/pi/src/modes), [`src/ui/`](../../../packages/pi/src/ui) | Interactive, print/JSON, RPC behavior and Pi-specific TUI components/controllers |
 | Tools/execution | [`src/tools/`](../../../packages/pi/src/tools), [`src/execution/`](../../../packages/pi/src/execution) | Concrete coding tools, Bash/program adapters, policy, buffering, sanitation, and truncation |
-| Subagents | [`src/subagents/`](../../../packages/pi/src/subagents) | Concrete `SubagentManager`, records, worker/session creation, native/tmux execution, and runtime identity |
 | Package manager | [`src/package/`](../../../packages/pi/src/package) | Package sources, install/update/remove/config behavior, and bundled package resolution |
 
 ## Startup flow
@@ -105,10 +104,9 @@ AgentSession is the high-coupling integration point. Agent still owns turn contr
 |---|---|
 | `@tsuuanmi/pi-ai` | Models, providers, OAuth, normalized streams/events, usage, schema validation, and custom-provider registration |
 | `@tsuuanmi/pi-agent` | Agent loop, tools, events/hooks, messages, receipts, compaction helpers, canonical model/thinking types, and Node execution helpers |
-| `@tsuuanmi/pi-orchestrator` | Runtime dependency required by bundled package artifacts; Pi does not import its APIs |
 | `@tsuuanmi/pi-tui` | Terminal runtime, components, editor/input, themes, overlays, status/HUD, and render utilities |
 
-Pi has no direct dependency on `@tsuuanmi/pi-workflows`. Bundled package resources are discovered from compiled manifests at runtime.
+Pi has no direct dependency on orchestrator or workflows. Bundled package resources are discovered from compiled manifests at runtime.
 
 ## External dependency groups
 
@@ -138,21 +136,9 @@ Pi ships compiled packages that declare `pi` resources; the current distribution
 
 Resource loading can report partial diagnostics; not every bad optional resource aborts all startup. Extension code is executable code and runs with the Pi process's user permissions.
 
-## Subagent interaction
+## Orchestrator integration
 
-Pi owns the session-aware `SubagentManager` and publishes its structural `SubagentManagerApi` for workflow consumers:
-
-```text
-subagent lifecycle tool / workflow tool
-  -> Pi SubagentManagerApi and concrete SubagentManager
-  -> durable record and run identity
-  -> isolated resource loader and extension runtime
-  -> isolated AgentSession
-  -> native in-process or tmux-backed worker
-  -> status, result, receipt, and saved context
-```
-
-Subagents share resolved auth/model/settings inputs as designed but receive isolated session and extension runtime state. Nested subagents are disabled. Workflows must use the public Pi manager API rather than constructing another manager.
+Pi exposes coherent `AgentSessionServices` through extension contexts. The bundled workflows extension uses that generic host boundary to install orchestrator-owned subagents. Pi neither imports orchestrator nor defines subagent-specific lifecycle behavior.
 
 ## Persistence boundaries
 
@@ -161,7 +147,7 @@ Subagents share resolved auth/model/settings inputs as designed but receive isol
 | Global/project settings | Pi settings storage |
 | API/OAuth account records | Pi auth storage |
 | Conversation history and extension session state | Pi append-only session JSONL |
-| Subagent records, run identity, and isolated logs | Pi subagent/session storage |
+| Subagent records, run identity, and isolated logs | Orchestrator under the Pi session state root |
 | Workflow state, artifacts, audit, and receipts | Workflows under the explicit Pi session root |
 | Orchestrator checkpoints used by workflows | Workflows-provided checkpoint store |
 

@@ -14,6 +14,7 @@ import type { AgentSessionRuntime } from "#pi/runtime/agent-session-runtime";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
 import { createTestResourceLoader } from "#pi-test/helpers/resource-loader";
+import { createTestAgentSessionServices } from "#pi-test/helpers/services";
 
 const rpcIo = vi.hoisted(() => ({
 	outputLines: [] as string[],
@@ -146,6 +147,12 @@ function createRuntimeHost(options: { withAuth: boolean; responseDelayMs: number
 		cwd: tempDir,
 		modelRegistry,
 		resourceLoader: createTestResourceLoader(),
+		sessionServices: createTestAgentSessionServices({
+			cwd: tempDir,
+			modelRegistry,
+			resourceLoader: createTestResourceLoader(),
+			settingsManager,
+		}),
 	});
 
 	const runtimeHost = {

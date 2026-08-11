@@ -9,6 +9,7 @@ import {
 } from "@tsuuanmi/pi-agent";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { clampThinkingLevel, mergeHeaderSources, type ProviderResponse, stream } from "@tsuuanmi/pi-ai";
+import type { AgentSessionServices } from "#pi/api/session-services";
 import { formatNoModelsAvailableMessage } from "#pi/auth/guidance";
 import { AuthStorage } from "#pi/auth/storage";
 import { findInitialModel } from "#pi/cli/model-resolver";
@@ -24,7 +25,6 @@ import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import { getDefaultSessionDir } from "#pi/session/list";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
-import type { SubagentManager } from "#pi/subagents/manager";
 import {
 	createBashTool,
 	createCodingTools,
@@ -91,9 +91,9 @@ export interface CreateAgentSessionOptions {
 	settingsManager?: SettingsManager;
 	/** Session start event metadata for extension runtime startup. */
 	sessionStartEvent?: SessionStartEvent;
-	/** Optional Pi-native subagent manager for extensions/tools. Set to null to explicitly disable. */
-	subagentManager?: SubagentManager | null;
-	/** Skip automatic continuation prompts (set for subagent sessions). */
+	/** Coherent services exposed to extensions that create isolated sessions. */
+	sessionServices?: AgentSessionServices;
+	/** Skip automatic continuation prompts (set for isolated sessions). */
 	skipAutomaticContinuation?: boolean;
 	/** Extra system prompt appended to this session's rebuilt base prompt. */
 	extraSystemPrompt?: string;
@@ -367,7 +367,17 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		excludedToolNames,
 		extensionRunnerRef,
 		sessionStartEvent: options.sessionStartEvent,
-		subagentManager: options.subagentManager ?? undefined,
+		sessionServices:
+			options.sessionServices ??
+			({
+				cwd,
+				agentDir,
+				authStorage,
+				settingsManager,
+				modelRegistry,
+				resourceLoader,
+				diagnostics: [],
+			} satisfies AgentSessionServices),
 		skipAutomaticContinuation: options.skipAutomaticContinuation,
 		extraSystemPrompt: options.extraSystemPrompt,
 		apiUsageSessionId: options.apiUsageSessionId,

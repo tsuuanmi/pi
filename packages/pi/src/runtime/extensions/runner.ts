@@ -28,6 +28,7 @@ import type {
 	ResolvedCommand,
 } from "#pi/api/extension-types";
 import type { ProviderConfig } from "#pi/api/provider-types";
+import type { AgentSessionServices } from "#pi/api/session-services";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
 import {
 	type BeforeAgentStartCombinedResult,
@@ -64,7 +65,6 @@ import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
 import type { SessionManager } from "#pi/session/manager";
 import type { KeybindingsConfig } from "#pi/settings/keybindings";
-import type { SubagentManager } from "#pi/subagents/manager";
 
 // Extension shortcuts compete with canonical keybinding ids from keybindings.json.
 // Only editor-global shortcuts are reserved here. Picker-specific bindings are not.
@@ -184,7 +184,7 @@ export class ExtensionRunner {
 	private cwd: string;
 	private sessionManager: SessionManager;
 	private modelRegistry: ModelRegistry;
-	private subagentManager: SubagentManager | undefined;
+	private sessionServices: AgentSessionServices;
 	private skipAutomaticContinuation: boolean;
 	private errorListeners: Set<ExtensionErrorListener> = new Set();
 	private getModel: () => Model<any> | undefined = () => undefined;
@@ -212,7 +212,7 @@ export class ExtensionRunner {
 		cwd: string,
 		sessionManager: SessionManager,
 		modelRegistry: ModelRegistry,
-		subagentManager?: SubagentManager,
+		sessionServices: AgentSessionServices,
 		skipAutomaticContinuation?: boolean,
 	) {
 		this.extensions = extensions;
@@ -221,7 +221,7 @@ export class ExtensionRunner {
 		this.cwd = cwd;
 		this.sessionManager = sessionManager;
 		this.modelRegistry = modelRegistry;
-		this.subagentManager = subagentManager;
+		this.sessionServices = sessionServices;
 		this.skipAutomaticContinuation = skipAutomaticContinuation ?? false;
 	}
 
@@ -318,10 +318,6 @@ export class ExtensionRunner {
 	setUIContext(uiContext?: ExtensionUIContext, mode: ExtensionMode = "print"): void {
 		this.uiContext = uiContext ?? noOpUIContext;
 		this.mode = mode;
-	}
-
-	setSubagentManager(subagentManager: SubagentManager | undefined): void {
-		this.subagentManager = subagentManager;
 	}
 
 	getUIContext(): ExtensionUIContext {
@@ -595,9 +591,9 @@ export class ExtensionRunner {
 				runner.assertActive();
 				return getModel();
 			},
-			get subagents() {
+			get sessionServices() {
 				runner.assertActive();
-				return runner.subagentManager;
+				return runner.sessionServices;
 			},
 			get skipAutomaticContinuation() {
 				runner.assertActive();

@@ -44,7 +44,7 @@ npm install @tsuuanmi/pi-workflows
 
 ## Package Scope
 
-`@tsuuanmi/pi-workflows` ships the workflow runtime: the `pi workflow` CLI, the harness control plane (sessions, leases, RPC, GC), the four workflow skills and their model-visible tools, and the reusable role agent profiles. Session persistence, system-prompt assembly, and session-aware subagents live in `@tsuuanmi/pi`; this package consumes its public subagent API.
+`@tsuuanmi/pi-workflows` ships the workflow runtime: the `pi workflow` CLI, the harness control plane (sessions, leases, RPC, GC), the four workflow skills and their model-visible tools, and the reusable role agent profiles. Main-session persistence and system-prompt assembly live in `@tsuuanmi/pi`; session-aware subagents live in `@tsuuanmi/pi-orchestrator`, whose public API this package consumes.
 
 State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`. Runtime artifacts persist under the current session root, e.g. `.pi/<session-id>/workflows/<skill>/` and `.pi/<session-id>/state/`.
 
@@ -257,7 +257,7 @@ Profiles are authored as markdown files with YAML frontmatter. Pi discovers them
 
 ## Model-Visible Tools
 
-Workflow-owned tools are model-visible and registered by the bundled workflow registration. Tools include `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, and `ultragoal_spawn_goal_agent`. Deep Interview also exposes first-class runtime tools: `deep_interview_plan_question`, `deep_interview_record_answer`, `deep_interview_record_scoring`, `deep_interview_closure_check`, `deep_interview_restate_goal`, and `deep_interview_write_spec`. Team role agents are always invoked through `@tsuuanmi/pi-orchestrator`; workflow code owns turn order, gates, and result-to-artifact handoff. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
+The bundled workflow extension registers workflow-owned tools and installs Orchestrator-owned subagent tools. The combined model-visible tools include `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, and `ultragoal_spawn_goal_agent`. Deep Interview also exposes first-class runtime tools: `deep_interview_plan_question`, `deep_interview_record_answer`, `deep_interview_record_scoring`, `deep_interview_closure_check`, `deep_interview_restate_goal`, and `deep_interview_write_spec`. Team role agents are always invoked through `@tsuuanmi/pi-orchestrator`; workflow code owns turn order, gates, and result-to-artifact handoff. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
 
 ## Harness Runtime
 
@@ -301,11 +301,11 @@ Top-level shared folders provide common utilities used by all four skills:
 | `artifacts/` | `artifacts.ts` | Durable artifact writes and receipt helpers. |
 | `audit/` | `audit-log.ts`, `decision-ledger.ts`, `tamper-detection.ts`, `transaction-journal.ts` | Append-only audit, decision, tamper, and transaction records. |
 | Skill HUD modules | `deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts` | HUD chip formatting for each workflow skill, colocated with the owning skill folder. |
-| `policy/`, `handoff/` | `skill-policy.ts`, `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Immutable skill policies, cross-workflow prompts, handoffs, gates, expected-next checks, and workflow evidence validation. Skill-specific guards live with their skill; Pi owns session-aware subagent contracts and execution. |
+| `policy/`, `handoff/` | `skill-policy.ts`, `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Immutable skill policies, cross-workflow prompts, handoffs, gates, expected-next checks, and workflow evidence validation. Skill-specific guards live with their skill; Orchestrator owns session-aware subagent contracts and execution. |
 | `registry/` | `workflow-manifest.ts` and runtime/action manifest modules | Workflow phase, action, and tool metadata. |
 | `session/` | `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Workflow path builders and session-id resolution; shared roots come from `@tsuuanmi/pi/session/root`. |
 | `state/` | `active-state.ts`, `state-schema.ts`, `state-writer.ts`, `workflow-state.ts` | Active-state, state validation/writes, workflow ids, and base state types. |
-| `tool/` | `context.ts`, `host.ts`, `register.ts`, `spec.ts`, `surface.ts` | Defines workflow tool contracts and context; Pi registers the session-aware subagent lifecycle and control tools. |
+| `tool/` | `context.ts`, `host.ts`, `register.ts`, `spec.ts`, `surface.ts` | Defines workflow tool contracts and context; the workflow extension installs Orchestrator's subagent lifecycle and control tools. |
 
 Workflow types:
 
@@ -366,7 +366,7 @@ Workspace tests import packages from the gitignored `dist/`, so rebuild this pac
 - [docs/runtime/](docs/runtime/), [docs/subagents/](docs/subagents/), [docs/state/](docs/state/), [docs/orchestration/](docs/orchestration/), [docs/artifacts/](docs/artifacts/), [docs/audit/](docs/audit/), [docs/registry/](docs/registry/), [docs/session/](docs/session/) — per-source-directory module docs.
 - [CHANGELOG.md](CHANGELOG.md) — changes.
 - [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/loader/skills/index.md) — Pi skill format and installation paths.
-- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/subagents/index.md) — Pi-native SubagentManager and subagent tools.
+- [Subagents](https://github.com/tsuuanmi/pi/tree/main/packages/orchestrator/docs/subagents/index.md) — Orchestrator-owned SubagentManager and lifecycle tools.
 
 ## License
 

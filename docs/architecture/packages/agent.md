@@ -99,7 +99,7 @@ Node built-ins are confined to the `/node` implementation modules.
 
 The `Agent` holds in-memory state and a transcript. Its state snapshots are values, not Pi session storage. Agent does not choose a persistence format or filesystem location.
 
-Pi owns subagent records, operations, stores, execution backends, and isolated sessions. Workflows consumes the public Pi manager API; Agent remains the generic execution kernel.
+Orchestrator owns subagent records, operations, stores, execution backends, and isolated Pi sessions. Workflows consumes the public Orchestrator manager API; Agent remains the generic execution kernel.
 
 ## Extension points
 

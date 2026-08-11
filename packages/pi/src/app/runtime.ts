@@ -1,5 +1,6 @@
 import { modelsAreEqual, type ScopedModel } from "@tsuuanmi/pi-ai";
 import type { ExtensionFactory } from "#pi/api/extension-types";
+import type { AgentSessionRuntimeDiagnostic } from "#pi/api/session-services";
 import { AuthStorage } from "#pi/auth/storage";
 import type { Args } from "#pi/cli/args";
 import { resolveCliModel, resolveModelScope } from "#pi/cli/model-resolver";
@@ -11,11 +12,7 @@ import {
 	type CreateAgentSessionRuntimeFactory,
 	createAgentSessionRuntime,
 } from "#pi/runtime/agent-session-runtime";
-import {
-	type AgentSessionRuntimeDiagnostic,
-	createAgentSessionFromServices,
-	createAgentSessionServices,
-} from "#pi/runtime/agent-session-services";
+import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/runtime/agent-session-services";
 import type { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
 

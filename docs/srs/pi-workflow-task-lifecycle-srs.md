@@ -23,7 +23,7 @@ This SRS establishes the minimum contract for:
 - making bounded subagent execution durable and visible; and
 - providing safe, explicit controls for Pi-owned tmux workers.
 
-The requirements complement the package-boundary and runtime notes in [`orchestrator-vs-workflows.md`](../architecture/orchestrator-vs-workflows.md), [`team-workflow-orchestrator-runtime.md`](../architecture/team-workflow-orchestrator-runtime.md), and the [Pi subagent documentation](../../packages/pi/docs/subagents/index.md).
+The requirements complement the package-boundary and runtime notes in [`orchestrator-vs-workflows.md`](../architecture/orchestrator-vs-workflows.md), [`team-workflow-orchestrator-runtime.md`](../architecture/team-workflow-orchestrator-runtime.md), and the [Orchestrator subagent documentation](../../packages/orchestrator/docs/subagents/index.md).
 
 ## 2. System context
 
@@ -42,7 +42,7 @@ User goal and acceptance criteria
  dependencies, task checkpoints
               |
               v
-       Pi subagent runtime
+       Orchestrator subagent runtime
  lifecycle records, artifacts,
  native or tmux execution
               |
@@ -50,7 +50,7 @@ User goal and acceptance criteria
        Evidence and receipts
 ```
 
-The dependency direction is one-way: workflows may use the generic orchestrator through an adapter; the orchestrator must not depend on Pi workflows. A single-subagent lifecycle belongs to Pi's subagent runtime, not to the generic task scheduler.
+The dependency direction is one-way: workflows may use the generic orchestrator through an adapter; the orchestrator must not depend on Pi workflows. A single-subagent lifecycle belongs to Orchestrator's subagent runtime, not to workflow policy or the generic task scheduler.
 
 ## 3. Scope
 
@@ -83,7 +83,7 @@ The dependency direction is one-way: workflows may use the generic orchestrator 
 | Pi workflow harness | Intent, role policy, approval gates, workflow state, artifacts, and workflow receipts | Generic scheduler internals |
 | Workflow-owned adapter | Maps admitted workflow tasks and results to the generic task contract | Unapproved roles, fallback execution, or hidden task shapes |
 | Generic orchestrator | Dependencies, routing, queues, retries, generic checkpoints, and task receipts | Pi workflow gates, artifacts, storage, or package knowledge |
-| Pi subagent runtime | Single-subagent lifecycle, durable records, terminal artifacts, and backend controls | Generic multi-agent DAG policy |
+| Orchestrator subagent runtime | Single-subagent lifecycle, isolated Pi sessions, durable records, terminal artifacts, and backend controls | Workflow-specific policy |
 | tmux | Runs an explicitly owned pane/session target | Ownership decisions or unowned-resource cleanup |
 
 ## 5. Functional requirements
@@ -108,7 +108,7 @@ The dependency direction is one-way: workflows may use the generic orchestrator 
 - **SRS-FR-010 — Durable lifecycle record.** Persistent subagents MUST have a durable record that identifies the subagent, role, status, execution context, parent/current session, resumability, and terminal result or error.
 - **SRS-FR-011 — Terminal artifact.** Terminal output MUST be available as a durable artifact or equivalent inspectable result without requiring the parent to replay the entire subagent conversation.
 - **SRS-FR-012 — Current-session visibility.** Parent-session inspection MUST expose bounded status, result/error previews, timing when known, and relevant execution paths. Detached work MUST NOT become an untraceable black box.
-- **SRS-FR-013 — Lifecycle boundary.** A single-subagent lifecycle MAY support spawn, await, steer, pause, resume, and cancel according to the shared contract. Backend-specific inspection, attach, and kill controls MUST remain in the Pi runtime layer.
+- **SRS-FR-013 — Lifecycle boundary.** A single-subagent lifecycle MAY support spawn, await, steer, pause, resume, and cancel according to the shared contract. Backend-specific inspection, attach, and kill controls MUST remain in the Orchestrator subagent runtime.
 
 ### 5.4 Tmux safety and live controls
 
@@ -138,8 +138,8 @@ An implementation satisfies this SRS only when all applicable requirements are c
 | Workflow lifecycle and approval | `packages/workflows/src/runtime/`, workflow skill tests, and [the task-contract ADR](../adr/general-team-system-framework-adr.md) |
 | Workflow/orchestrator ownership | [Orchestrator and Workflows](../architecture/orchestrator-vs-workflows.md) and `packages/workflows/src/runtime/` |
 | Fresh/resume and failure behavior | [Team Workflow Orchestrator Runtime](../architecture/team-workflow-orchestrator-runtime.md) and team workflow tests |
-| Subagent records and receipts | [Subagent documentation](../../packages/pi/docs/subagents/index.md), `packages/pi/src/subagents/`, and subagent tests |
-| Tmux identity and live controls | [Worktree and tmux Threat Model ADR](../adr/tmux-worktree-threat-model-adr.md), `packages/pi/src/subagents/`, and subagent tool tests |
+| Subagent records and receipts | [Subagent documentation](../../packages/orchestrator/docs/subagents/index.md), `packages/orchestrator/src/subagents/`, and orchestrator subagent tests |
+| Tmux identity and live controls | [Worktree and tmux Threat Model ADR](../adr/tmux-worktree-threat-model-adr.md), `packages/orchestrator/src/subagents/`, and subagent tool tests |
 | Package ownership | [Package boundaries](../architecture/package-boundaries.md) and boundary checks |
 
 ## 8. Deferred decisions

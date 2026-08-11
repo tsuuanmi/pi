@@ -1,6 +1,6 @@
 # @tsuuanmi/pi-orchestrator
 
-Task, team, and multi-agent orchestration primitives for Pi. Built on the `Agent` runtime contract from `@tsuuanmi/pi-agent`.
+Task, team, subagent, and multi-agent orchestration for Pi. Built on the core `@tsuuanmi/pi` session host and `@tsuuanmi/pi-agent` runtime.
 
 ## Installation
 
@@ -10,17 +10,17 @@ npm install @tsuuanmi/pi-orchestrator
 
 ## Package Scope
 
-`@tsuuanmi/pi-orchestrator` owns the standard `Task`, `TaskQueue`, `Team`, `MessageBus`, `Orchestrator`, routing, checkpoint, consensus verification, and task execution contracts.
+`@tsuuanmi/pi-orchestrator` owns the standard `Task`, `TaskQueue`, `Team`, `MessageBus`, `Orchestrator`, routing, checkpoint, consensus verification, task execution, and session-aware subagent contracts.
 
-It coordinates generic `Agent` instances; it is not a subagent lifecycle manager. It must not create Pi sessions, persist Pi-native subagent records, launch tmux workers, or import workflow policy. Hosts and workflow adapters provide the `Agent` instances it runs.
+It coordinates generic `Agent` instances and provides Pi-hosted `SubagentManager` execution with isolated sessions, persistence, lifecycle tools, and native/tmux backends. It imports only public Pi session APIs and never imports workflow policy or Pi private modules.
 
 Task requirements are structured and strict: `capabilities`, `tools`, `provider`, `api`, and `model` are hard constraints. `TaskQueueEvent` reports queue lifecycle through `TaskQueue.subscribe()` and `run(..., { onQueueEvent })`; `OrchestratorEvent` reports run progress, and `TeamEvent` is reserved for runtime team messaging. Workflow projections use their own event names and schemas.
 
 `TaskExecutionReceipt` and `TaskConsequentialReceipt` are the public task-execution receipt contracts. They own routing, retry, verification, approval, and metrics evidence, but not workflow state, gates, or artifact paths.
 
-Agent behavior, runtime execution, tool protocol, and subagent contracts remain in `@tsuuanmi/pi-agent`.
+Agent behavior, the single-agent turn loop, and tool protocol remain in `@tsuuanmi/pi-agent`. Pi owns the application session host; orchestrator owns subagent execution.
 
-See [Orchestrator documentation](./docs/orchestrator/orchestrator.md) for the standard integration patterns.
+See [Orchestrator documentation](./docs/orchestrator/orchestrator.md) and [Subagents](./docs/subagents/index.md) for integration patterns.
 
 ## Quick Start
 

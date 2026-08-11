@@ -16,7 +16,7 @@ export type { ResourceCollision, ResourceDiagnostic } from "#pi/resources/diagno
 import { canonicalizePath, isLocalPath, resolvePath } from "@tsuuanmi/pi-agent/node";
 import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "#pi/api/extension-types";
 import { createEventBus, type EventBus } from "#pi/hooks/event-bus";
-import { getBuiltinExtensionFactories, loadExtensionFromFactory, loadExtensions } from "#pi/loader/extensions/loader";
+import { loadExtensionFromFactory, loadExtensions } from "#pi/loader/extensions/loader";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import { loadPromptTemplatesWithDiagnostics } from "#pi/loader/prompt-templates";
 import type { Skill } from "#pi/loader/skill";
@@ -159,10 +159,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 		this.additionalSkillPaths = options.additionalSkillPaths ?? [];
 		this.additionalPromptTemplatePaths = options.additionalPromptTemplatePaths ?? [];
 		this.additionalThemePaths = options.additionalThemePaths ?? [];
-		this.extensionFactories = [
-			...(options.noExtensions ? [] : getBuiltinExtensionFactories()),
-			...(options.extensionFactories ?? []),
-		];
+		this.extensionFactories = options.extensionFactories ?? [];
 		this.noExtensions = options.noExtensions ?? false;
 		this.noSkills = options.noSkills ?? false;
 		this.noPromptTemplates = options.noPromptTemplates ?? false;

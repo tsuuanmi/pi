@@ -8,6 +8,7 @@
 import { initTheme } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import type { ExtensionFactory } from "#pi/api/extension-types";
+import type { AgentSessionRuntimeDiagnostic } from "#pi/api/session-services";
 import { bootstrapStartup } from "#pi/app/bootstrap";
 import { runStartupCommands } from "#pi/app/commands";
 import { applyStdoutMode, prepareInput, resolveStartupMode } from "#pi/app/input";
@@ -18,7 +19,6 @@ import { parseArgs, printHelp } from "#pi/cli/args";
 import { launchDefaultTmuxIfNeeded } from "#pi/cli/launch-tmux";
 import { listModels } from "#pi/cli/list-models";
 import { VERSION } from "#pi/loader/app";
-import type { AgentSessionRuntimeDiagnostic } from "#pi/runtime/agent-session-services";
 import { SettingsManager } from "#pi/settings/manager";
 
 function reportDiagnostics(diagnostics: readonly AgentSessionRuntimeDiagnostic[]): void {

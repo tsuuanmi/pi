@@ -188,7 +188,6 @@ export interface StatusLineColorProfile {
 	contextTotal: ThemeColor;
 	usage: ThemeColor;
 	sessionName: ThemeColor;
-	subagents: ThemeColor;
 	separator: ThemeColor;
 	thinking: {
 		off: ThemeColor;
@@ -236,7 +235,6 @@ export const TUI_COLOR_PROFILE: TuiColorProfile = {
 		contextTotal: "dim",
 		usage: "muted",
 		sessionName: "accent",
-		subagents: "muted",
 		separator: "dim",
 		thinking: {
 			off: "thinkingOff",

@@ -32,12 +32,13 @@ flowchart TD
   pi --> ai
   pi --> agent
   pi --> tui
-  pi --> orchestrator
   workflows --> ai
   workflows --> agent
   workflows --> orchestrator
   workflows --> tui
   workflows --> pi
+  orchestrator --> pi
+  orchestrator --> ai
   orchestrator --> agent
   agent --> ai
 ```
@@ -48,23 +49,23 @@ The source-import graph and package dependency graph agree for static imports. T
 |---|---|---|
 | `@tsuuanmi/pi-ai` | None | Lowest model/provider protocol |
 | `@tsuuanmi/pi-agent` | ai | Runs AI streams and validates model tool arguments |
-| `@tsuuanmi/pi-orchestrator` | agent | Schedules `Agent` instances and invokes `Agent.run()` |
+| `@tsuuanmi/pi-orchestrator` | ai, agent, pi | Schedules Agents and owns session-aware subagent execution |
 | `@tsuuanmi/pi-tui` | None | Independent terminal toolkit |
 | `@tsuuanmi/pi-workflows` | ai, agent, orchestrator, tui, pi | Adapts model/agent/orchestration contracts, extends Pi session paths, and produces HUD data |
-| `@tsuuanmi/pi` | ai, agent, orchestrator, tui | Product composition root and bundled package host |
+| `@tsuuanmi/pi` | ai, agent, tui | Core application/session host and bundled package host |
 
-`@tsuuanmi/pi-orchestrator` has a development-only AI dependency for tests. It is not a runtime/source edge. There are no workspace peer dependencies and no runtime cycles.
+There are no workspace peer dependencies and no runtime cycles. Orchestrator imports Pi only through published APIs; Pi does not import orchestrator.
 
 ## Package ownership
 
 | Package | Owns | Must not own |
 |---|---|---|
 | [`@tsuuanmi/pi-ai`](packages/ai.md) | Model/message/tool/usage protocol, provider registry and adapters, model metadata, OAuth primitives, normalized streams | Agent loop, tool execution, credentials, sessions, workflows, CLI/UI |
-| [`@tsuuanmi/pi-agent`](packages/agent.md) | Single-agent state and turn loop, generic tools, hooks/events/traces, tool receipts, canonical Agent model/thinking types, Node process primitives in `/node` | Provider implementations, concrete Pi sessions/subagents/tools/UI, task DAG scheduling, workflow policy, `.pi` ownership |
-| [`@tsuuanmi/pi-orchestrator`](packages/orchestrator.md) | Generic task DAGs, Teams, routing, scheduling, retries, verification, budgets, task receipts, checkpoint contracts | Workflow phases/artifacts, Pi sessions/UI, provider transport, durable checkpoint location |
+| [`@tsuuanmi/pi-agent`](packages/agent.md) | Single-agent state and turn loop, generic tools, hooks/events/traces, tool receipts, canonical Agent model/thinking types, Node process primitives in `/node` | Provider implementations, Pi sessions/tools/UI, subagent management, task DAG scheduling, workflow policy, `.pi` ownership |
+| [`@tsuuanmi/pi-orchestrator`](packages/orchestrator.md) | Generic task DAGs, Teams, routing, scheduling, retries, verification, checkpoint contracts, and complete Pi-hosted subagent execution | Workflow phases/artifacts, the main Pi session/UI, provider transport, durable workflow checkpoint location |
 | [`@tsuuanmi/pi-tui`](packages/tui.md) | Terminal I/O, component contracts, focus/overlays, differential rendering, editing/input, themes, ANSI/Unicode utilities | Models, agents, application commands, extension lifecycle, persistent settings/session/workflow state |
-| [`@tsuuanmi/pi-workflows`](packages/workflows.md) | Named workflow policy, transitions/gates/handoffs, tools/commands, workflow state/artifacts/audit, public Pi subagent integration | Generic agent loop, provider transport, generic task engine internals, concrete subagent implementation, Pi startup/session/UI composition |
-| [`@tsuuanmi/pi`](packages/pi.md) | CLI/SDK, startup, settings/auth, `.pi` roots and base session layout, resources/packages, extensions, built-in tools, concrete subagents, mode/UI composition | Lower-layer provider, agent, orchestrator, TUI, or workflow policy internals |
+| [`@tsuuanmi/pi-workflows`](packages/workflows.md) | Named workflow policy, transitions/gates/handoffs, tools/commands, workflow state/artifacts/audit, and orchestrator composition | Generic agent loop, provider transport, generic task engine internals, concrete subagent implementation, Pi startup/session/UI composition |
+| [`@tsuuanmi/pi`](packages/pi.md) | CLI/SDK, startup, main sessions, settings/auth, `.pi` roots, resources/packages, extensions, built-in tools, and mode/UI composition | Provider, agent, orchestrator, TUI, workflow policy, or subagent implementation internals |
 
 ## Execution boundaries
 
@@ -72,26 +73,26 @@ The source-import graph and package dependency graph agree for static imports. T
 |---|---|---|
 | Normalize and stream one provider request | AI | Caller supplies model/context/options and consumes normalized events |
 | Run one agent and execute its requested tools | Agent | Host supplies models, stream/auth callbacks, tools, and hooks |
-| Spawn/control one concrete Pi subagent session | Pi | Agent owns the generic Agent loop and model/tool contracts; Pi owns records, isolated sessions, lifecycle, persistence, and native/tmux backends |
+| Spawn/control one Pi-hosted subagent session | Orchestrator | Agent owns the loop; Pi exposes generic session services; Orchestrator owns records, isolated sessions, lifecycle, persistence, and native/tmux backends |
 | Schedule, route, retry, or verify multiple agent tasks | Orchestrator | Higher layer supplies Agents, task inputs, hooks, and checkpoint storage |
-| Enforce named workflow roles, phases, gates, and artifacts | Workflows | Workflow tools consume Pi's public `SubagentManagerApi` or Orchestrator according to the operation |
+| Enforce named workflow roles, phases, gates, and artifacts | Workflows | Workflow tools consume Orchestrator's public `SubagentManagerApi` or generic orchestration primitives |
 | Render terminal state | TUI | Host supplies component data and callbacks; TUI owns rendering and input mechanics |
 | Compose the application | Pi | Pi imports public lower-layer APIs; workflow packages may import only Pi's public host/session contracts |
 
 ### Single-subagent versus multi-agent work
 
-A direct Pi `SubagentManagerApi` call is valid for lifecycle control or one workflow-owned worker. Generic dependencies, queues, routing, retries, verification, and multi-agent collaboration must use Orchestrator.
+A direct Orchestrator `SubagentManagerApi` call is valid for lifecycle control or one workflow-owned worker. Generic dependencies, queues, routing, retries, verification, and multi-agent collaboration must use Orchestrator.
 
 The boundary checker allows direct manager operations in these workflow adapters:
 
-- `packages/workflows/src/tool/context.ts` for the structural Pi subagent capability exposed to workflow tools.
+- `packages/workflows/src/tool/context.ts` for the structural orchestrator subagent capability exposed to workflow tools.
 - `packages/workflows/src/skills/team/agent-adapter.ts` for the Agent bridge.
 - `packages/workflows/src/skills/ralplan/agent-adapter.ts` for Orchestrator-backed role execution.
 - `packages/workflows/src/skills/ultragoal/tools.ts` for one guarded goal worker.
 
 Team multi-agent execution must route through `runTeamOrchestrator`. Unknown manager call sites fail the check instead of falling back to another execution path.
 
-Pi-native controls under `packages/pi/src/subagents/` use the concrete Pi manager for inspect, attach, and kill operations. They must not import workflow tool contracts or assemble workflow receipts.
+Orchestrator controls under `packages/orchestrator/src/subagents/` use the concrete manager for inspect, attach, and kill operations. They must not import Pi private modules or workflow contracts.
 
 ## Public API boundary
 
@@ -107,8 +108,8 @@ Pi-native controls under `packages/pi/src/subagents/` use the concrete Pi manage
 
 - Each concept has one owner. Do not add fallback ownership, a second engine, or a compatibility facade in another package.
 - Lower layers do not import higher layers.
-- Workflows may import the published `@tsuuanmi/pi` root for session and subagent contracts, but must not import Pi private `#pi/*` aliases or internal source paths.
-- Orchestrator must not import workflow state, storage, gates, receipts, artifacts, or UI.
+- Workflows may import published Pi session APIs and orchestrator subagent APIs, but must not import private aliases or source paths.
+- Orchestrator may import published Pi host APIs but must not import Pi private aliases or workflow state, gates, receipts, artifacts, or UI.
 - Agent must not import Orchestrator, Workflows, Pi, or TUI.
 - AI and TUI remain independent workspace leaves unless an explicit architecture change is approved.
 - Bundled workflow adapters may use Orchestrator, but Pi must not duplicate workflow policy or orchestration paths. Pi loads workflow adapters through package manifests.
@@ -155,7 +156,7 @@ The same checker also enforces selected boundaries inside `packages/pi`:
 
 - `src/api/` cannot import runtime or UI implementation modules.
 - `src/package/` cannot import CLI, modes, or UI.
-- `src/subagents/` cannot import CLI or workflow implementation surfaces.
+- Orchestrator `src/subagents/` cannot import Pi private aliases or workflow implementation surfaces.
 - Package loading cannot reach back through the broad `#pi/index` barrel.
 
 These rules keep public SDK/configuration code from depending on application-mode internals and prevent circular composition through broad barrels.
@@ -183,7 +184,8 @@ Pi persists or transports receipts for its sessions, but persistence by the host
 | Orchestrator checkpoint | Orchestrator | Strict versioned value behind caller-provided `OrchestratorCheckpointStore` |
 | TUI state | TUI | Process-local render/input/theme mechanics; active application keybindings and repository snapshots are injected by Pi; no application persistence |
 | Workflow state | Workflows | Explicit-session workflow state, artifacts, audit, receipts, runtime ownership, and recovery |
-| Pi application state | Pi | Settings, auth, sessions, extension state, subagent records, and mode/runtime state |
+| Pi application state | Pi | Settings, auth, main sessions, extension state, and mode/runtime state |
+| Subagent state | Orchestrator | Records, artifacts, identities, and worker metadata under the Pi session state root |
 
 Workflows may implement an Orchestrator checkpoint store. Orchestrator must not import workflow storage. Pi must not interpret Orchestrator checkpoint internals except through package APIs.
 
@@ -208,7 +210,8 @@ Workflows may implement an Orchestrator checkpoint store. Orchestrator must not 
 - Terminal component/input/rendering behavior and generic key matching: TUI.
 - Active application keybindings and repository acquisition/cache lifecycle: Pi.
 - Named workflow phase, gate, handoff, artifact, or workflow tool: Workflows.
-- CLI, SDK, session, settings, auth, resources, extensions, concrete tools/subagents, or application UI composition: Pi.
+- CLI, SDK, main session, settings, auth, resources, extensions, concrete coding tools, or application UI composition: Pi.
+- Subagent contracts, manager, lifecycle tools, records, receipts, workers, and native/tmux backends: Orchestrator.
 
 ## Boundary-change checklist
 

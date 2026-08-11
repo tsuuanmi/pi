@@ -23,6 +23,7 @@ import { AgentSession } from "#pi/runtime/agent-session";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
 import { createTestExtensionsResult, createTestResourceLoader } from "#pi-test/helpers/resource-loader";
+import { createTestAgentSessionServices } from "#pi-test/helpers/services";
 
 // Mock stream that mimics AssistantMessageEventStream
 class MockAssistantStream extends EventStream<AssistantMessageEvent, AssistantMessage> {
@@ -122,6 +123,12 @@ describe("AgentSession concurrent prompt guard", () => {
 			cwd: tempDir,
 			modelRegistry,
 			resourceLoader: createTestResourceLoader(),
+			sessionServices: createTestAgentSessionServices({
+				cwd: tempDir,
+				modelRegistry,
+				resourceLoader: createTestResourceLoader(),
+				settingsManager,
+			}),
 		});
 
 		return session;
@@ -261,6 +268,12 @@ describe("AgentSession concurrent prompt guard", () => {
 			cwd: tempDir,
 			modelRegistry,
 			resourceLoader: createTestResourceLoader({ extensionsResult }),
+			sessionServices: createTestAgentSessionServices({
+				cwd: tempDir,
+				modelRegistry,
+				resourceLoader: createTestResourceLoader({ extensionsResult }),
+				settingsManager,
+			}),
 		});
 		session.subscribe((event) => {
 			if (event.type === "queue_update") {
@@ -328,6 +341,12 @@ describe("AgentSession concurrent prompt guard", () => {
 			cwd: tempDir,
 			modelRegistry,
 			resourceLoader: createTestResourceLoader(),
+			sessionServices: createTestAgentSessionServices({
+				cwd: tempDir,
+				modelRegistry,
+				resourceLoader: createTestResourceLoader(),
+				settingsManager,
+			}),
 		});
 
 		// First prompt completes
@@ -434,6 +453,12 @@ describe("AgentSession concurrent prompt guard", () => {
 			cwd: tempDir,
 			modelRegistry,
 			resourceLoader: createTestResourceLoader(),
+			sessionServices: createTestAgentSessionServices({
+				cwd: tempDir,
+				modelRegistry,
+				resourceLoader: createTestResourceLoader(),
+				settingsManager,
+			}),
 			baseToolsOverride: { dummy: tool },
 		});
 
@@ -586,6 +611,12 @@ describe("AgentSession concurrent prompt guard", () => {
 			cwd: tempDir,
 			modelRegistry,
 			resourceLoader: createTestResourceLoader(),
+			sessionServices: createTestAgentSessionServices({
+				cwd: tempDir,
+				modelRegistry,
+				resourceLoader: createTestResourceLoader(),
+				settingsManager,
+			}),
 			baseToolsOverride: { dummy: tool },
 		});
 

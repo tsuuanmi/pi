@@ -139,9 +139,9 @@ Agent events -> session log, hooks, mode output, and TUI
 
 ### Workflows
 
-The resource loader discovers the workflow package's extension, skills, agent profiles, and commands. The extension registers tools and hooks against the host supplied by Pi. Workflow tools can use Pi's published `SubagentManagerApi` and the task/team primitives from `@tsuuanmi/pi-orchestrator`.
+The resource loader discovers the workflow package's extension, skills, agent profiles, and commands. The extension installs `registerSubagentRuntime`, then registers workflow tools and hooks against the host supplied by Pi. Workflow tools use Orchestrator's published `SubagentManagerApi` and task/team primitives.
 
-Pi supplies concrete subagent sessions and session services. Workflow state, gates, artifacts, and workflow receipts remain owned by `@tsuuanmi/pi-workflows`.
+Pi supplies generic session services and the main application session. Orchestrator creates and owns isolated subagent sessions. Workflow state, gates, artifacts, and workflow receipts remain owned by `@tsuuanmi/pi-workflows`.
 
 ## Mode and shutdown behavior
 

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createTeamAgents } from "#workflows/skills/team/agent-adapter";
 import { runTeamOrchestrator } from "#workflows/skills/team/orchestrator";
 import type { TeamTask } from "#workflows/skills/team/types";
-import { createFakeManager, createTeamContext } from "./fakes.js";
+import { createFakeManager, createTeamContext } from "./fakes.ts";
 
 const task: TeamTask = {
 	version: 1,

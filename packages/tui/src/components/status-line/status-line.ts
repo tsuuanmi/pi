@@ -182,7 +182,6 @@ export class StatusLineComponent implements Component {
 			contextPercent: contextUsage?.percent ?? null,
 			contextWindow,
 			autoCompactEnabled: this.#autoCompactEnabled,
-			subagentCount: session.subagentManager?.getActiveCount() ?? 0,
 			availableProviderCount: this.#dataProvider.getAvailableProviderCount(),
 			git: {
 				branch: this.#dataProvider.getGitBranch(),
