@@ -23,7 +23,7 @@ export class AssistantMessageComponent extends Container {
 	private hideThinkingBlock: boolean;
 	private markdownTheme: MarkdownTheme;
 	private hiddenThinkingLabel: string;
-	private thinkingExpanded = false;
+	private thinkingExpanded = true;
 	private lastMessage?: AssistantMessage;
 	private hasToolCalls = false;
 
