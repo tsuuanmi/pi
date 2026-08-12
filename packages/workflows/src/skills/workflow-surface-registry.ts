@@ -1,4 +1,3 @@
-import type { WorkflowSkill } from "#workflows/session/paths";
 import { DEEP_INTERVIEW_SURFACE } from "#workflows/skills/deep-interview/surface";
 import { RALPLAN_SURFACE } from "#workflows/skills/ralplan/surface";
 import { TEAM_SURFACE } from "#workflows/skills/team/surface";
@@ -17,20 +16,6 @@ export const WORKFLOW_TOOL_SURFACES: readonly WorkflowToolSurface[] = [
 	...WORKFLOW_SKILL_SURFACES.flatMap((surface) => surface.tools),
 	...SUBAGENT_SURFACES,
 ] as const;
-
-export function getWorkflowSkillSurface(skill: WorkflowSkill): WorkflowSkillSurface {
-	const surface = WORKFLOW_SKILL_SURFACES.find((item) => item.skill === skill);
-	if (!surface) throw new Error(`missing workflow surface metadata for skill: ${skill}`);
-	return surface;
-}
-
-export function getWorkflowSkillCommandNames(skill: WorkflowSkill): readonly string[] {
-	return getWorkflowSkillSurface(skill).commands.map((command) => command.commandName);
-}
-
-export function getWorkflowToolNames(): readonly string[] {
-	return WORKFLOW_TOOL_SURFACES.map((tool) => tool.toolName);
-}
 
 export function validateWorkflowSurfaceRegistry(
 	surfaces: readonly WorkflowSkillSurface[] = WORKFLOW_SKILL_SURFACES,

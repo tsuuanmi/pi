@@ -83,24 +83,6 @@ export function buildTmuxGuidanceReceipt(
 	};
 }
 
-export function buildTmuxUnavailableReceipt(input: {
-	tmuxCommand: string;
-	cwd: string;
-	errorSummary: string;
-}): StructuredReceipt {
-	return {
-		version: STRUCTURED_RECEIPT_VERSION,
-		id: `tmux:${input.tmuxCommand}:unavailable`,
-		source: "session",
-		actionSummary: "tmux launch guidance unavailable",
-		status: "failed",
-		location: { cwd: input.cwd, tmuxCommand: input.tmuxCommand },
-		timing: {},
-		inspect: [{ label: "setup", kind: "command", value: `command -v -- ${shellQuote(input.tmuxCommand)}` }],
-		errorSummary: input.errorSummary,
-	};
-}
-
 interface TmuxProfileCommand {
 	description: string;
 	args: string[];

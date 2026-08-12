@@ -1,7 +1,3 @@
-export function getPiUserAgent(version: string): string {
-	return `pi/${version} (${process.platform}; node/${process.version}; ${process.arch})`;
-}
-
 /**
  * Sleep helper that respects abort signal.
  */

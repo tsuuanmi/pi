@@ -458,9 +458,6 @@ export function isGrepToolResult(e: ToolResultEvent): e is GrepToolResultEvent {
 export function isFindToolResult(e: ToolResultEvent): e is FindToolResultEvent {
 	return e.toolName === "find";
 }
-export function isGlobToolResult(e: ToolResultEvent): e is GlobToolResultEvent {
-	return e.toolName === "glob";
-}
 export function isLsToolResult(e: ToolResultEvent): e is LsToolResultEvent {
 	return e.toolName === "ls";
 }

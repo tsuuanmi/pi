@@ -22,10 +22,6 @@ export function initializeBudgetState(taskStarts: number): BudgetState {
 	};
 }
 
-export function recordTaskStart(state: BudgetState): void {
-	state.taskStarts += 1;
-}
-
 export function isRunBudgetExceeded(context: OrchestratorRunContext): string | undefined {
 	const budget = context.runBudget;
 	if (budget?.maxTaskStarts !== undefined && context.budget.taskStarts >= budget.maxTaskStarts) {

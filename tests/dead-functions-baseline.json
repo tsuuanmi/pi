@@ -32,18 +32,6 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/orchestrator/src/runtime/budget.ts::recordTaskStart",
-			"file": "packages/orchestrator/src/runtime/budget.ts",
-			"name": "recordTaskStart",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/pi/src/cli/launch-tmux.ts::buildTmuxUnavailableReceipt",
-			"file": "packages/pi/src/cli/launch-tmux.ts",
-			"name": "buildTmuxUnavailableReceipt",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/pi/src/hooks/events.ts::isBashToolResult",
 			"file": "packages/pi/src/hooks/events.ts",
 			"name": "isBashToolResult",
@@ -59,12 +47,6 @@
 			"key": "packages/pi/src/hooks/events.ts::isFindToolResult",
 			"file": "packages/pi/src/hooks/events.ts",
 			"name": "isFindToolResult",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/pi/src/hooks/events.ts::isGlobToolResult",
-			"file": "packages/pi/src/hooks/events.ts",
-			"name": "isGlobToolResult",
 			"kind": "exported"
 		},
 		{
@@ -110,18 +92,6 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/modes/output-guard.ts::isStdoutTakenOver",
-			"file": "packages/pi/src/modes/output-guard.ts",
-			"name": "isStdoutTakenOver",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/pi/src/runtime/platform.ts::getPiUserAgent",
-			"file": "packages/pi/src/runtime/platform.ts",
-			"name": "getPiUserAgent",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/pi/src/session/root.ts::sessionStateDir",
 			"file": "packages/pi/src/session/root.ts",
 			"name": "sessionStateDir",
@@ -137,12 +107,6 @@
 			"key": "packages/pi/test/helpers/provider.ts::testText",
 			"file": "packages/pi/test/helpers/provider.ts",
 			"name": "testText",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/pi/test/helpers/unit-harness.ts::createHarnessWithExtensions",
-			"file": "packages/pi/test/helpers/unit-harness.ts",
-			"name": "createHarnessWithExtensions",
 			"kind": "exported"
 		},
 		{
@@ -263,36 +227,6 @@
 			"key": "packages/workflows/src/skills/ultragoal/quality-gate/rows.ts::rowOutcomeStatuses",
 			"file": "packages/workflows/src/skills/ultragoal/quality-gate/rows.ts",
 			"name": "rowOutcomeStatuses",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/workflow-help-registry.ts::renderWorkflowSkillHelp",
-			"file": "packages/workflows/src/skills/workflow-help-registry.ts",
-			"name": "renderWorkflowSkillHelp",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/workflow-help-registry.ts::typedArgsForWorkflowVerb",
-			"file": "packages/workflows/src/skills/workflow-help-registry.ts",
-			"name": "typedArgsForWorkflowVerb",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/workflow-surface-registry.ts::getWorkflowSkillCommandNames",
-			"file": "packages/workflows/src/skills/workflow-surface-registry.ts",
-			"name": "getWorkflowSkillCommandNames",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/workflow-surface-registry.ts::getWorkflowSkillSurface",
-			"file": "packages/workflows/src/skills/workflow-surface-registry.ts",
-			"name": "getWorkflowSkillSurface",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/workflow-surface-registry.ts::getWorkflowToolNames",
-			"file": "packages/workflows/src/skills/workflow-surface-registry.ts",
-			"name": "getWorkflowToolNames",
 			"kind": "exported"
 		}
 	]

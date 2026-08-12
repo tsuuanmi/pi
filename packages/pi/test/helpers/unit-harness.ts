@@ -10,7 +10,6 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ExtensionFactory } from "@tsuuanmi/pi/extensions";
 import type { Model, Tool } from "@tsuuanmi/pi-agent";
 import { Agent } from "@tsuuanmi/pi-agent";
 import type {
@@ -34,11 +33,7 @@ import type { AgentSessionEvent } from "#pi/runtime/session/types";
 import { SessionManager } from "#pi/session/manager";
 import { SettingsManager } from "#pi/settings/manager";
 import type { Settings } from "#pi/settings/types";
-import {
-	type CreateTestExtensionsResultInput,
-	createTestExtensionsResult,
-	createTestResourceLoader,
-} from "#pi-test/helpers/resource-loader";
+import { createTestResourceLoader } from "#pi-test/helpers/resource-loader";
 import { createTestAgentSessionServices } from "#pi-test/helpers/services";
 
 // ============================================================================
@@ -336,8 +331,6 @@ export interface HarnessOptions {
 	baseToolsOverride?: Record<string, Tool>;
 	/** Optional resource loader override. */
 	resourceLoader?: ResourceLoader;
-	/** Inline extensions to load into the session resource loader. */
-	extensionFactories?: Array<ExtensionFactory | CreateTestExtensionsResultInput>;
 	/** Optional session id override for the harness session manager. */
 	sessionId?: string;
 	/** Optional API-usage telemetry session id override. */
@@ -445,17 +438,6 @@ function createHarnessWithResourceLoader(
 }
 
 export function createHarness(options: HarnessOptions = {}): Harness {
-	if (options.extensionFactories?.length) {
-		throw new Error("createHarness does not support extensionFactories. Use createHarnessWithExtensions().");
-	}
-
 	const tempDir = createTempDir();
 	return createHarnessWithResourceLoader(options, options.resourceLoader ?? createTestResourceLoader(), tempDir);
-}
-
-export async function createHarnessWithExtensions(options: HarnessOptions = {}): Promise<Harness> {
-	const tempDir = createTempDir();
-	const extensionsResult = await createTestExtensionsResult(options.extensionFactories ?? [], tempDir);
-	const resourceLoader = options.resourceLoader ?? createTestResourceLoader({ extensionsResult });
-	return createHarnessWithResourceLoader(options, resourceLoader, tempDir);
 }
