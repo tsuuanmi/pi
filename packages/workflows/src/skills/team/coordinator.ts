@@ -1,6 +1,11 @@
 import { assertExpectedNextRole, expectedNextTeamRole } from "#workflows/policy/expected-next-role";
 import { createTeamAgents, type TeamAgentSpec } from "#workflows/skills/team/agent-adapter";
-import { executeTeam, failTeamExecution, resumeTeam, type TeamExecutionInput } from "#workflows/skills/team/execution";
+import {
+	executeTeam,
+	failTeamExecution,
+	resumeTeam,
+	type TeamExecutionInput,
+} from "#workflows/skills/team/execution-runner";
 import { assertRoleResult } from "#workflows/skills/team/role-contract";
 import { createRoleBatch } from "#workflows/skills/team/role-tasks";
 import { markWorkerInProgress } from "#workflows/skills/team/role-transitions";

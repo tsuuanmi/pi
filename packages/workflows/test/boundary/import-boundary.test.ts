@@ -75,7 +75,7 @@ describe("workflow package import boundary", () => {
 	});
 
 	it("routes Team execution through the orchestrator", async () => {
-		const source = await readFile(join(workflowsSrc, "skills/team/execution.ts"), "utf8");
+		const source = await readFile(join(workflowsSrc, "skills/team/execution-runner.ts"), "utf8");
 
 		expect(source).toContain("runTeamOrchestrator");
 		expect(source).not.toMatch(
@@ -97,7 +97,7 @@ describe("workflow package import boundary", () => {
 		const forbiddenPrefixes = [
 			"#workflows/state/",
 			"#workflows/skills/ultragoal/checkpoints",
-			"#workflows/skills/ultragoal/obstacle-service",
+			"#workflows/skills/ultragoal/obstacles-service",
 			"#workflows/skills/ultragoal/plan",
 			"#workflows/skills/ultragoal/plan-store",
 		];

@@ -31,7 +31,7 @@ Deep Interview manages Socratic requirements discovery, ambiguity scoring, closu
 | `rounds.ts` | Answer-shell persistence and scored-round transitions. |
 | `schemas.ts` | Strict model-visible tool schemas and inferred adapter input types. |
 | `spec.ts` | Spec readiness and finalized-state persistence. |
-| `store.ts` | Session-scoped state persistence and active-state synchronization. |
+| `deep-interview-store.ts` | Session-scoped state persistence and active-state synchronization. |
 | `transitions.ts` | Obstacle-aware scored-transition validation. |
 | `types.ts` | Canonical domain and operation contracts. |
 | `surface.ts` | Validated command and model-visible tool surface metadata. |

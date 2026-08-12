@@ -28,7 +28,7 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 | `execution-applier.ts` | Applies Orchestrator task updates and receipt references to a Team snapshot. |
 | `execution-failure.ts` | Builds durable failed execution state. |
 | `execution-store.ts` | Persists task execution state. |
-| `execution.ts` | Runs Team role execution and applies success or failure outcomes. |
+| `execution-runner.ts` | Runs Team role execution and applies success or failure outcomes. |
 | `fields.ts` | Shared strict field validators. |
 | `help.ts` | Command action descriptions, typed arguments, and help metadata. |
 | `gates.ts` | Records review/completion evidence and enforces gate-controlled transitions. |
@@ -47,7 +47,7 @@ Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It
 | `role-transitions.ts` | Applies workflow-owned transitions after successful role execution. |
 | `state.ts` | Starts teams and synchronizes workflow snapshots and HUD state. |
 | `status-mapper.ts` | Maps Orchestrator task statuses to Team task statuses. |
-| `store.ts` | Owns Team configuration, task, event, and active-team persistence. |
+| `team-store.ts` | Owns Team configuration, task, event, and active-team persistence. |
 | `surface.ts` | Validated command and model-visible tool surface metadata. |
 | `task-mapper.ts` | Maps workflow task data to Orchestrator task inputs. |
 | `tasks.ts` | Creates tasks and enforces task lifecycle transitions. |

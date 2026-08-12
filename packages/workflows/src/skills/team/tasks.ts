@@ -4,7 +4,7 @@ import { passingReviewGate, writeReviewGateBlock } from "#workflows/skills/team/
 import { assertSafeId } from "#workflows/skills/team/ids";
 import { createTeamCompletionEvidence, createTeamTaskRecord } from "#workflows/skills/team/records";
 import { readTeamSnapshot, syncTeamState } from "#workflows/skills/team/state";
-import { appendTeamEvent, listTasks, readJsonObject, resolveTeamId } from "#workflows/skills/team/store";
+import { appendTeamEvent, listTasks, readJsonObject, resolveTeamId } from "#workflows/skills/team/team-store";
 import type { TeamCompletionEvidence, TeamTask } from "#workflows/skills/team/types";
 import { parseTeamTask, parseTeamTaskStatus } from "#workflows/skills/team/validation";
 import { nowIso, sha256, writeJsonAtomic } from "#workflows/state/state-writer";

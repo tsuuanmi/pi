@@ -1,11 +1,11 @@
 import { workflowStatePath } from "#workflows/session/session-layout";
-import { mergeDeepInterviewEnvelope } from "#workflows/skills/deep-interview/envelope";
 import {
 	persistDeepInterviewEnvelope,
 	readDeepInterviewEnvelope,
 	readInterviewId,
 	withOrchestration,
-} from "#workflows/skills/deep-interview/store";
+} from "#workflows/skills/deep-interview/deep-interview-store";
+import { mergeDeepInterviewEnvelope } from "#workflows/skills/deep-interview/envelope";
 import type {
 	DeepInterviewPlannedQuestion,
 	DeepInterviewQuestionPlanInput,

@@ -1,9 +1,9 @@
-import { mergeDeepInterviewEnvelope } from "#workflows/skills/deep-interview/envelope";
 import {
 	persistDeepInterviewEnvelope,
 	readDeepInterviewEnvelope,
 	readRounds,
-} from "#workflows/skills/deep-interview/store";
+} from "#workflows/skills/deep-interview/deep-interview-store";
+import { mergeDeepInterviewEnvelope } from "#workflows/skills/deep-interview/envelope";
 import type { DeepInterviewStateEnvelope, DeepInterviewTriggerMetadata } from "#workflows/skills/deep-interview/types";
 
 export async function runClosureCheckForSession(cwd: string, sessionId: string): Promise<ClosureResult> {

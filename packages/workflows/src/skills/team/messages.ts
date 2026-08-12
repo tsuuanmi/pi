@@ -1,6 +1,6 @@
 import { teamMailboxPath } from "#workflows/session/session-layout";
 import { assertSafeId } from "#workflows/skills/team/ids";
-import { appendTeamEvent, resolveTeamId } from "#workflows/skills/team/store";
+import { appendTeamEvent, resolveTeamId } from "#workflows/skills/team/team-store";
 import { appendJsonl, nowIso, sha256 } from "#workflows/state/state-writer";
 
 export async function sendTeamMessage(

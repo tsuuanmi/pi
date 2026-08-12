@@ -43,12 +43,12 @@ import { sendTeamMessage } from "#workflows/skills/team/messages";
 import { readTeamSnapshot, startTeam } from "#workflows/skills/team/state";
 import { createTeamTask, transitionTeamTask } from "#workflows/skills/team/tasks";
 import { checkpointUltragoalGoal, restoreUltragoalCheckpoint } from "#workflows/skills/ultragoal/checkpoints";
-import { ultragoalGuard } from "#workflows/skills/ultragoal/guard";
+import { ultragoalGuard } from "#workflows/skills/ultragoal/guard-diagnostics";
+import type { UltragoalResolvableObstacleKind } from "#workflows/skills/ultragoal/obstacles";
 import {
 	recordUltragoalBlockerClassification,
 	recordUltragoalObstacle,
-} from "#workflows/skills/ultragoal/obstacle-service";
-import type { UltragoalResolvableObstacleKind } from "#workflows/skills/ultragoal/obstacles";
+} from "#workflows/skills/ultragoal/obstacles-service";
 import { createUltragoalPlan, getUltragoalStatus, startNextUltragoalGoal } from "#workflows/skills/ultragoal/plan";
 import type { UltragoalGoalMode } from "#workflows/skills/ultragoal/receipt";
 import type { UltragoalBlockerClassification } from "#workflows/skills/ultragoal/types";

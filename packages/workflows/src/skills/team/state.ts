@@ -2,7 +2,7 @@ import { teamConfigPath, teamDir, workflowStatePath } from "#workflows/session/s
 import { buildTeamHud } from "#workflows/skills/team/hud";
 import { assertSafeId, slugifyTeamId } from "#workflows/skills/team/ids";
 import { countTeamTasks, emptyTaskCounts } from "#workflows/skills/team/metrics";
-import { activeTeamId, appendTeamEvent, listTasks, readTeamConfig } from "#workflows/skills/team/store";
+import { activeTeamId, appendTeamEvent, listTasks, readTeamConfig } from "#workflows/skills/team/team-store";
 import type { TeamConfig, TeamSnapshot, TeamWorker } from "#workflows/skills/team/types";
 import { syncWorkflowActiveState } from "#workflows/state/active-state";
 import { nowIso, readFileOrLiteral, sha256, writeJsonAtomic } from "#workflows/state/state-writer";

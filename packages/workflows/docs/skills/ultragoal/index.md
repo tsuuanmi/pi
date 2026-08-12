@@ -21,10 +21,10 @@ Ultragoal manages goal-tracked execution under the current session root. One mai
 | `artifacts.ts` | Artifact tracking and structural proof validation. |
 | `checkpoints.ts` | Goal checkpoint transitions and checkpoint restoration. |
 | `goal-selection.ts` | Goal scheduling and terminal-state policy. |
-| `guard.ts` | Completion and blocker diagnostics. |
+| `guard-diagnostics.ts` | Completion and blocker diagnostics. |
 | `help.ts` | Command action descriptions, typed arguments, and help metadata. |
 | `hud.ts` | HUD chip rendering for goal progress. |
-| `obstacle-service.ts` | Obstacle recording and blocker classification. |
+| `obstacles-service.ts` | Obstacle recording and blocker classification. |
 | `obstacles.ts` | Authoritative obstacle-ledger model and persistence. |
 | `plan-model.ts` | Plan parsing and normalization. |
 | `plan-store.ts` | Plan, checkpoint, ledger, and workflow-state persistence. |

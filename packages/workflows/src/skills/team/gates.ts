@@ -12,7 +12,7 @@ import {
 } from "#workflows/session/session-layout";
 import { assertSafeId } from "#workflows/skills/team/ids";
 import { readTeamSnapshot, syncTeamState } from "#workflows/skills/team/state";
-import { appendTeamEvent, readJsonObject, readTeamConfig, resolveTeamId } from "#workflows/skills/team/store";
+import { appendTeamEvent, readJsonObject, readTeamConfig, resolveTeamId } from "#workflows/skills/team/team-store";
 import type {
 	TeamCompletionGate,
 	TeamConfig,
