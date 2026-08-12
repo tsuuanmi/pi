@@ -27,6 +27,7 @@ export type { RunIdentity } from "#orchestrator/runtime/identity";
 export { createRunIdentity, normalizeRunIdentity } from "#orchestrator/runtime/identity";
 export type { TaskConsequentialReceipt, TaskExecutionReceipt } from "#orchestrator/runtime/receipt";
 export type * from "#orchestrator/subagent/context";
+export { registerSubagentInspection } from "#orchestrator/subagent/inspection";
 export { registerSubagentTools, SUBAGENT_SPECS } from "#orchestrator/subagent/lifecycle-tools";
 export { SubagentManager } from "#orchestrator/subagent/manager";
 export type { SubagentManagerApi } from "#orchestrator/subagent/manager-api";
@@ -37,7 +38,6 @@ export { registerSubagentRuntime } from "#orchestrator/subagent/runtime";
 export type * from "#orchestrator/subagent/spec";
 export { createSubagentStream } from "#orchestrator/subagent/stream";
 export * from "#orchestrator/subagent/tool-names";
-export { registerSubagentControls } from "#orchestrator/subagent/tools";
 export type * from "#orchestrator/subagent/types";
 export * from "#orchestrator/subagent/yield-result";
 export type {

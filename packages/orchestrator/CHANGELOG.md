@@ -7,7 +7,7 @@
 
 ### Added
 
-- **subagent**: Added isolated Pi sessions, persistence, lifecycle/control tools, receipts, active HUD data, native/tmux backends, and the `subagent-worker` package command.
+- **subagent**: Added isolated Pi sessions, persistence, lifecycle tools, durable inspection, receipts, and active HUD data.
 - **orchestrator**: Added `@tsuuanmi/pi-orchestrator` as the isolated package for task, team, and orchestrator contracts previously hosted in `@tsuuanmi/pi-agent`.
 
 ### Changed
@@ -17,6 +17,10 @@
 - **orchestrator**: Made checkpoint save failures best-effort by default with an explicit strict policy.
 - **orchestrator**: Added queue lifecycle events and single-task scheduling for incremental execution.
 - **orchestrator**: Bumped checkpoints to version 6 with resume metadata and rich routing receipt metadata.
+
+### Removed
+
+- **subagent**: Removed the tmux execution backend, worker command, attach/kill controls, and tmux run-identity metadata; native execution and durable inspection are now authoritative.
 
 ### Fixed
 

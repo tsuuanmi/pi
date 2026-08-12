@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { describe, expect, it } from "vitest";
+import { registerSubagentInspection } from "#orchestrator/subagent/inspection";
 import { registerSubagentTools } from "#orchestrator/subagent/lifecycle-tools";
-import { registerSubagentControls } from "#orchestrator/subagent/tools";
 
 describe("orchestrator subagent lifecycle registration", () => {
 	it("registers the seven lifecycle tools", () => {
@@ -32,8 +32,8 @@ describe("orchestrator subagent lifecycle registration", () => {
 	});
 });
 
-describe("orchestrator subagent controls", () => {
-	it("registers host-owned live controls", () => {
+describe("orchestrator subagent inspection", () => {
+	it("registers durable-state inspection", () => {
 		const names: string[] = [];
 		const host = {
 			registerTool(tool: { name: string }) {
@@ -41,8 +41,8 @@ describe("orchestrator subagent controls", () => {
 			},
 		} as Pick<ExtensionAPI, "registerTool">;
 
-		registerSubagentControls(host);
+		registerSubagentInspection(host);
 
-		expect(names).toEqual(["subagent_inspect", "subagent_attach", "subagent_kill"]);
+		expect(names).toEqual(["subagent_inspect"]);
 	});
 });

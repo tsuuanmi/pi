@@ -8,8 +8,7 @@ Owns reusable execution mechanisms:
 
 - task graphs, queues, teams, routing, checkpoints, and consensus verification;
 - session-aware `SubagentManager` contracts and implementation;
-- subagent persistence, lifecycle tools, progress, receipts, native execution, and tmux execution;
-- the `subagent-worker` package command;
+- subagent persistence, lifecycle tools, progress, receipts, native execution, and durable inspection;
 - generic adapters over Pi's public session services and `Agent` runtime.
 
 Orchestrator depends on public `@tsuuanmi/pi` session APIs plus `@tsuuanmi/pi-agent`. It must not import Pi private aliases or workflow policy.

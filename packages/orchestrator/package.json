@@ -24,15 +24,9 @@
 	],
 	"scripts": {
 		"clean": "shx rm -rf dist",
-		"build": "npm run clean && tsgo -p tsconfig.build.json && npm run copy-assets",
-		"copy-assets": "node scripts/copy-assets.mjs",
+		"build": "npm run clean && tsgo -p tsconfig.build.json",
 		"test": "vitest --run",
 		"prepublishOnly": "npm run build"
-	},
-	"pi": {
-		"commands": [
-			"dist/subagent/subagent-worker.js"
-		]
 	},
 	"dependencies": {
 		"@tsuuanmi/pi": "0.2.3",

@@ -1,8 +1,8 @@
 # Subagent
 
-Orchestrator provides a Pi-hosted `SubagentManager` that wraps the generic `Agent` from `@tsuuanmi/pi-agent` with isolated sessions, persistence, resource loading, native execution, and tmux controls. Extensions install it with `registerSubagentRuntime`; workflow tools resolve it from Pi's generic `ctx.sessionServices`. It is separate from the generic task scheduler, and package extensions own higher-level coordination policy.
+Orchestrator provides a Pi-hosted `SubagentManager` that wraps the generic `Agent` from `@tsuuanmi/pi-agent` with isolated sessions, persistence, resource loading, native execution, and durable inspection. Extensions install it with `registerSubagentRuntime`; workflow tools resolve it from Pi's generic `ctx.sessionServices`. It is separate from the generic task scheduler, and package extensions own higher-level coordination policy.
 
-The complete subagent boundary lives under `src/subagent/`: `manager.ts` owns the public manager and runtime, `types.ts` owns requests/records/results, `context.ts` and `spec.ts` own tool integration, `progress.ts` and `yield-result.ts` own agent-loop observations, `receipts.ts` owns subagent receipts, and `tools.ts`/`lifecycle-tools.ts` own Pi tool registration.
+The complete subagent boundary lives under `src/subagent/`: `manager.ts` owns the public manager and runtime, `types.ts` owns requests/records/results, `context.ts` and `spec.ts` own tool integration, `progress.ts` and `yield-result.ts` own agent-loop observations, `receipts.ts` owns subagent receipts, `inspection.ts` owns durable inspection, and `lifecycle-tools.ts` owns lifecycle tool registration.
 
 ## Records and durability
 
@@ -132,6 +132,16 @@ Cancel a live or durable subagent record.
 
 Cancels a live subagent by aborting its controller and waiting for execution to settle; the manager writes a `cancelled` terminal record if the current status is not already terminal.
 
+### `subagent_inspect`
+
+Inspect a subagent's durable state and artifact location.
+
+```jsonc
+{ "id": "subagent-..." }
+```
+
+Returns the durable `SubagentRecord` and terminal artifact path. Inspection works for running and terminal native subagents and does not require a separate worker process or terminal backend.
+
 ## Cooperative pause at turn boundaries
 
 `pause()` does not abort the subagent mid-prompt. The agent loop reads `AgentOptions.shouldPause` at turn boundaries; when `pauseRequested` is set, the loop exits gracefully after the current turn and the subagent lands in `paused` with its saved context intact. `subagent_resume` continues from that context.
@@ -144,14 +154,12 @@ Subagent sessions set `ctx.skipAutomaticContinuation = true` (exposed on `Extens
 
 ## Lifecycle and orchestration boundary
 
-Orchestrator's `SubagentManagerApi` owns one-subagent lifecycle operations: spawn, await, steer, pause, resume, and cancel. Orchestrator's concrete `SubagentManager` adds inspection, attach, and kill controls for its execution backends. `@tsuuanmi/pi-orchestrator` owns task dependencies, agent routing, retries, queues, and collaboration. Higher-level package extensions consume this public orchestrator API.
+Orchestrator's `SubagentManagerApi` owns one-subagent lifecycle operations: spawn, await, steer, pause, resume, and cancel. Orchestrator's concrete `SubagentManager` adds durable inspection. `@tsuuanmi/pi-orchestrator` owns task dependencies, agent routing, retries, queues, and collaboration. Higher-level package extensions consume this public orchestrator API.
 
 ## Structured receipts and current-session visibility
 
-Subagent tools attach a `details.receipt` (`StructuredReceipt`) to their tool results. Orchestrator-owned inspect, attach, and kill controls preserve their control result fields and attach the generic agent receipt without package-specific result fields. Package extensions may add domain-specific receipt fields to their own results.
+Subagent tools attach a `details.receipt` (`StructuredReceipt`) to their tool results. The orchestrator-owned inspect control preserves its durable-state result and attaches the generic agent receipt. Package extensions may add domain-specific receipt fields to their own results.
 
-A subagent receipt includes the owning `sessionId`, `subagentId`, role, status, resumability, timing when known, and output/error previews. Pi inspection returns execution paths and backend metadata separately. Persistent subagent conversation logs are written under the same current-session bucket at `.pi/<session-id>/state/subagent/sessions/`, while lifecycle records live under `.pi/<session-id>/state/subagent/<subagent-id>/record.json` and terminal artifacts live under `.pi/<session-id>/state/subagent/<subagent-id>/artifact.json`. Listing subagent records also returns per-record receipts plus an aggregate list receipt. This makes the subagent visible from the parent/current session instead of behaving like black-box detached work.
+A subagent receipt includes the owning `sessionId`, `subagentId`, role, status, resumability, timing when known, and output/error previews. Persistent subagent conversation logs are written under the same current-session bucket at `.pi/<session-id>/state/subagent/sessions/`, lifecycle records live under `.pi/<session-id>/state/subagent/<subagent-id>/record.json`, and terminal artifacts live under `.pi/<session-id>/state/subagent/<subagent-id>/artifact.json`. `subagent_inspect` returns the record and artifact path directly. Listing subagent records also returns per-record receipts plus an aggregate list receipt. This makes subagent work visible from the parent/current session instead of behaving like black-box detached work.
 
-Before a subagent session starts, orchestrator injects an observability instruction into that subagent's system prompt. The injected guidance includes the parent/current session id when available, the subagent id, and the execution cwd. Backend selection is an orchestrator runtime decision; the shared agent contract does not expose it. Long-running work should prefer explicit tmux sessions over hidden detached background processes. When tmux-backed work is used, orchestrator stores the run identity, storage paths, worker metadata, and pane/session target in the subagent record.
-
-Orchestrator chooses native or tmux execution from its runtime request and environment. Package tools do not select a backend. A tmux-backed subagent exposes bounded live controls through `subagent_inspect`, `subagent_attach`, and `subagent_kill`. Inspect returns durable record/artifact/worker paths plus tmux metadata. Attach returns the exact target-specific command: pane-backed workers use a recorded pane id and `select-pane`, while session-backed workers use the recorded session target and `attach-session`. Kill validates orchestrator's run identity metadata in the record and worker metadata before cleanup, then uses `kill-pane` for pane targets or `kill-session` for session targets. Invalid identity or tmux command metadata fails closed. Pause, resume, and heartbeat controls remain deferred.
+Before a subagent session starts, orchestrator injects an observability instruction into its system prompt. The guidance includes the parent/current session id when available, subagent id, execution cwd, and a requirement to use Pi-native receipts, status, progress, and durable artifacts. The core in-process agent session is the single execution backend: lifecycle controls operate directly on the live session, while records and artifacts provide durable transparency. Long-running work must remain attributable to the subagent rather than being hidden in detached background processes.

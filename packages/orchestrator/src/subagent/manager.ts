@@ -8,7 +8,7 @@ import {
 } from "@tsuuanmi/pi";
 import type { ExtensionUIContext } from "@tsuuanmi/pi/extensions";
 import { type AgentProfile, loadAgentProfile } from "@tsuuanmi/pi/loader";
-import { type AgentMessage, type Api, isValidThinkingLevel, type Model, type ThinkingLevel } from "@tsuuanmi/pi-agent";
+import type { AgentMessage, Api, Model } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import type { SubagentManagerApi } from "#orchestrator/subagent/manager-api";
 import {
@@ -17,34 +17,24 @@ import {
 	SubagentProgressTracker,
 } from "#orchestrator/subagent/progress";
 import { SubagentStore } from "#orchestrator/subagent/store";
-import { TmuxBackend, type TmuxBackendOptions } from "#orchestrator/subagent/tmux-backend";
 import { SUBAGENT_TOOL_NAMES } from "#orchestrator/subagent/tool-names";
 import type {
-	AttachResult,
-	BackendKind,
 	InspectResult,
-	KillResult,
 	ResolvedSubagentRequest,
 	SubagentRecord as RuntimeRecord,
 	SubagentRunResult as RuntimeResult,
 	SubagentAwaitOptions,
 	SubagentAwaitResult,
-	SubagentControls,
 	SubagentDelivery,
+	SubagentInspection,
 	SubagentRequest,
 	SubagentResumeResult,
 	SubagentStatus,
-	Visibility,
-	WorkerRequest,
 } from "#orchestrator/subagent/types";
 import { extractYieldFromMessages } from "#orchestrator/subagent/yield-result";
 
 export type {
-	AttachResult,
-	BackendKind,
 	InspectResult,
-	KillFailureReason,
-	KillResult,
 	SubagentAwaitOptions,
 	SubagentAwaitResult,
 	SubagentDelivery,
@@ -53,7 +43,6 @@ export type {
 	SubagentResumeResult,
 	SubagentRunResult,
 	SubagentStatus,
-	Visibility,
 } from "#orchestrator/subagent/types";
 
 type SubagentRecord = RuntimeRecord;
@@ -172,18 +161,6 @@ function excludeNestedSubagentTools(tools: string[] | undefined): string[] | und
 	return tools?.filter((tool) => !tool.startsWith("subagent_"));
 }
 
-function resolveBackend(visibility: Visibility | undefined): BackendKind {
-	return visibility === "tmux" ? "tmux" : "native";
-}
-
-function isThinkingLevel(value: unknown): value is ThinkingLevel {
-	return typeof value === "string" && isValidThinkingLevel(value);
-}
-
-interface SubagentManagerOptions {
-	tmux?: TmuxBackendOptions;
-}
-
 function mergeSystemPrompt(profile: AgentProfile | undefined, request: SubagentRunRequest): string | undefined {
 	const parts = [profile?.systemPrompt, profile?.appendSystemPrompt, request.systemPrompt].filter(
 		(part): part is string => typeof part === "string" && part.trim().length > 0,
@@ -195,23 +172,16 @@ function buildSubagentObservabilityPrompt(input: {
 	parentSessionId?: string;
 	subagentId: string;
 	cwd: string;
-	visibility?: Visibility;
 }): string {
 	const sessionLine = input.parentSessionId
 		? `Parent/current session id: ${input.parentSessionId}. Keep status and final summaries attributable to this session.`
 		: "Parent/current session id: unavailable. Include enough status context for the caller to inspect this run.";
-	const visibility = input.visibility ?? "native";
-	const visibilityLine =
-		visibility === "tmux"
-			? "Visibility requested: tmux. If this task needs live terminal work, create or use an explicit tmux session/pane and report its attach/list/inspect/cleanup commands."
-			: "Visibility requested: native. Use Pi-native receipts/status for normal subagent work; use explicit tmux only if long-running terminal work is necessary.";
 	return [
 		"Subagent observability contract:",
 		sessionLine,
 		`Subagent id: ${input.subagentId}. Working directory: ${input.cwd}.`,
-		visibilityLine,
-		"Do not hide long-running work. For dev servers, watchers, debuggers, REPLs, and log tails, prefer an explicit tmux session over a detached background process.",
-		"When you start or recommend tmux-backed work, surface the session name, command summary, cwd, attach command, inspect/list command, and cleanup command so the parent session can render a structured receipt.",
+		"Use Pi-native receipts, status, progress, and durable artifacts so the parent session can inspect this run.",
+		"Do not hide long-running work in detached background processes. Keep work attributable to this subagent and report commands, paths, and terminal state in status and final summaries.",
 	].join("\n");
 }
 
@@ -227,26 +197,15 @@ function parseModelRef(ref: string): { provider: string; modelId: string } {
 	return { provider: ref.slice(0, slash), modelId: ref.slice(slash + 1) };
 }
 
-export class SubagentManager implements SubagentManagerApi, SubagentControls {
+export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 	private readonly live = new Map<string, LiveSubagent>();
 	private readonly services: AgentSessionServices;
 	private readonly store: SubagentStore;
-	private readonly tmuxBackend: TmuxBackend;
 	private readonly progressTracker = new SubagentProgressTracker();
 
-	constructor(services: AgentSessionServices, options: SubagentManagerOptions = {}) {
+	constructor(services: AgentSessionServices) {
 		this.services = services;
 		this.store = new SubagentStore(services.cwd);
-		this.tmuxBackend = new TmuxBackend(
-			{
-				storageRoot: services.cwd,
-				recordPath: (id, sessionId) => this.store.recordPath(id, sessionId),
-				read: (id, sessionId) => this.store.read(id, sessionId),
-				writeRecord: (record, sessionId) => this.store.write(record, sessionId),
-				writeTerminal: (record, status, sessionId, extra) => this.store.terminal(record, status, sessionId, extra),
-			},
-			options.tmux,
-		);
 	}
 
 	/** Get the retained progress snapshot for a subagent. */
@@ -307,7 +266,6 @@ export class SubagentManager implements SubagentManagerApi, SubagentControls {
 	}
 
 	async spawn(request: SubagentRunRequest): Promise<SubagentRunResult> {
-		const backendKind = resolveBackend(request.visibility);
 		const resolved = await this.resolveRequest(request);
 		const id = defaultSubagentId();
 		const now = nowIso();
@@ -315,9 +273,6 @@ export class SubagentManager implements SubagentManagerApi, SubagentControls {
 		if (!storageSessionId)
 			throw new Error("subagent spawn requires a session id (storageSessionId or parentSessionId)");
 		const artifactFile = this.store.artifactPath(id, storageSessionId);
-		if (backendKind === "tmux") {
-			return this.tmuxBackend.spawn(id, resolved, storageSessionId, now, artifactFile, hashText(resolved.prompt));
-		}
 		const record = await this.store.write(
 			{
 				id,
@@ -329,7 +284,6 @@ export class SubagentManager implements SubagentManagerApi, SubagentControls {
 				status: "queued",
 				cwd: resolved.cwd ?? this.services.cwd,
 				parent_session_id: resolved.parentSessionId,
-				visibility: resolved.visibility ?? "native",
 				resumable: resolved.persistent !== false,
 				created_at: now,
 				updated_at: now,
@@ -344,22 +298,6 @@ export class SubagentManager implements SubagentManagerApi, SubagentControls {
 			return { record: (await this.read(id, storageSessionId)) ?? record, messages: [], output: "" };
 		}
 		return run;
-	}
-
-	async runWorkerRequest(worker: WorkerRequest): Promise<SubagentRunResult> {
-		if (worker.storageRoot !== this.services.cwd) {
-			throw new Error(`worker storageRoot mismatch: ${worker.storageRoot}`);
-		}
-		const record = await this.read(worker.subagentId, worker.storageSessionId);
-		if (!record) throw new Error(`subagent record not found: ${worker.subagentId}`);
-		const thinkingLevel = worker.request.thinkingLevel;
-		const resolved = await this.resolveRequest({
-			...worker.request,
-			thinkingLevel: isThinkingLevel(thinkingLevel) ? thinkingLevel : undefined,
-			visibility: "native",
-			storageSessionId: worker.storageSessionId,
-		});
-		return this.runRecord(record, resolved);
 	}
 
 	private async runRecord(record: SubagentRecord, request: ResolvedSubagentRequest): Promise<SubagentRunResult> {
@@ -453,7 +391,6 @@ export class SubagentManager implements SubagentManagerApi, SubagentControls {
 			parentSessionId: request.parentSessionId,
 			subagentId: record.id,
 			cwd: record.cwd,
-			visibility: request.visibility,
 		});
 		const created = await createAgentSessionFromServices({
 			services,
@@ -707,19 +644,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentControls {
 			record,
 			artifactPath: record.artifact_file ?? this.store.artifactPath(id, sessionId),
 		};
-		return record.tmux ? { ...result, ...this.tmuxBackend.inspect(record) } : result;
-	}
-
-	async attach(id: string, sessionId: string): Promise<AttachResult> {
-		const record = await this.read(id, sessionId);
-		if (!record) return { ok: false, reason: "not_found" };
-		return this.tmuxBackend.attach(record);
-	}
-
-	async kill(id: string, sessionId: string): Promise<KillResult> {
-		const record = await this.read(id, sessionId);
-		if (!record) return { ok: false, reason: "not_found" };
-		return this.tmuxBackend.kill(record, sessionId);
+		return result;
 	}
 
 	async cancel(id: string, sessionId: string): Promise<SubagentRecord | undefined> {

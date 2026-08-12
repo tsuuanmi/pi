@@ -1,6 +1,6 @@
 import { isStructuredReceipt } from "@tsuuanmi/pi-agent";
 import { describe, expect, it } from "vitest";
-import { attachControlReceipt, createSubagentReceipt } from "#orchestrator/subagent/receipts";
+import { attachInspectionReceipt, createSubagentReceipt } from "#orchestrator/subagent/receipts";
 import type { InspectResult, SubagentRecord } from "#orchestrator/subagent/types";
 
 const RECORD: SubagentRecord = {
@@ -46,7 +46,7 @@ describe("orchestrator subagent receipts", () => {
 	});
 
 	it("attaches an agent receipt without a package-specific final field", () => {
-		const result = attachControlReceipt({ ok: true, record: RECORD }, "session-1");
+		const result = attachInspectionReceipt({ ok: true, record: RECORD }, "session-1");
 
 		expect(result).toMatchObject({
 			ok: true,
@@ -61,6 +61,6 @@ describe("orchestrator subagent receipts", () => {
 	it("preserves results without a record unchanged", () => {
 		const result: InspectResult = { ok: false, reason: "not_found" };
 
-		expect(attachControlReceipt(result, "session-1")).toBe(result);
+		expect(attachInspectionReceipt(result, "session-1")).toBe(result);
 	});
 });

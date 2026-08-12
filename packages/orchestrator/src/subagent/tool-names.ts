@@ -7,6 +7,4 @@ export const SUBAGENT_TOOL_NAMES = [
 	"subagent_resume",
 	"subagent_cancel",
 	"subagent_inspect",
-	"subagent_attach",
-	"subagent_kill",
 ] as const;

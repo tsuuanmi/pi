@@ -38,18 +38,6 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/orchestrator/src/subagent/subagent-worker.ts::handlePackageCommand",
-			"file": "packages/orchestrator/src/subagent/subagent-worker.ts",
-			"name": "handlePackageCommand",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/orchestrator/src/subagent/subagent-worker.ts::runSubagentWorkerRequest",
-			"file": "packages/orchestrator/src/subagent/subagent-worker.ts",
-			"name": "runSubagentWorkerRequest",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/pi/src/cli/launch-tmux.ts::buildTmuxUnavailableReceipt",
 			"file": "packages/pi/src/cli/launch-tmux.ts",
 			"name": "buildTmuxUnavailableReceipt",

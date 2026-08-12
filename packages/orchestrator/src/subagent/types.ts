@@ -1,11 +1,6 @@
 import type { AgentMessage, Api, Model, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { SubagentProgress } from "#orchestrator/subagent/progress";
-import type { RunIdentity } from "#orchestrator/subagent/run-identity";
-import type { TmuxMetadata } from "#orchestrator/subagent/tmux";
 import type { YieldDetails } from "#orchestrator/subagent/yield-result";
-
-export type Visibility = "native" | "tmux";
-export type BackendKind = Visibility;
 export type SubagentStatus = "queued" | "running" | "paused" | "completed" | "failed" | "cancelled";
 export type SubagentResumeFailureReason = "context_unavailable" | "not_found" | "no_runner" | "resume_failed";
 export type SubagentDelivery = "steer" | "followUp";
@@ -31,7 +26,6 @@ export interface SubagentRequest extends SubagentRunRequest {
 	cwd?: string;
 	storageRoot?: string;
 	resumeSessionFile?: string;
-	visibility?: Visibility;
 }
 
 export interface SubagentRecord {
@@ -55,9 +49,6 @@ export interface SubagentRecord {
 	session_id?: string;
 	session_file?: string;
 	artifact_file?: string;
-	visibility?: Visibility;
-	tmux?: TmuxMetadata;
-	identity?: RunIdentity;
 	yield_result?: YieldDetails;
 }
 
@@ -97,62 +88,13 @@ export interface ResolvedSubagentRequest extends SubagentRequest {
 	resolvedSystemPrompt?: string;
 }
 
-export interface WorkerRequest {
-	version: 1;
-	subagentId: string;
-	storageSessionId: string;
-	storageRoot: string;
-	request: {
-		prompt: string;
-		role?: string;
-		agent?: string;
-		systemPrompt?: string;
-		cwd?: string;
-		tools?: string[];
-		excludeTools?: string[];
-		model?: string;
-		thinkingLevel?: ThinkingLevel;
-		persistent?: boolean;
-		detached?: boolean;
-		label?: string;
-		parentSessionId?: string;
-	};
-}
-
 export interface InspectResult {
 	ok: boolean;
 	record?: SubagentRecord;
 	artifactPath?: string;
-	workerMetadataPath?: string;
-	meta?: { tmux?: TmuxMetadata; identity?: RunIdentity };
 	reason?: "not_found";
 }
 
-export interface AttachResult {
-	ok: boolean;
-	record?: SubagentRecord;
-	tmuxTarget?: string;
-	attachCommand?: string;
-	reason?: "not_found" | "not_tmux" | "invalid_identity" | "invalid_metadata" | "identity_mismatch";
-}
-
-export type KillFailureReason =
-	| "not_found"
-	| "not_tmux"
-	| "invalid_identity"
-	| "invalid_metadata"
-	| "identity_mismatch"
-	| "already_terminal"
-	| "tmux_pane_not_found"
-	| "worker_stale"
-	| "kill_failed";
-
-export type KillResult =
-	| { ok: true; record: SubagentRecord; tmuxTarget: string }
-	| { ok: false; reason: KillFailureReason; record?: SubagentRecord; tmuxTarget?: string };
-
-export interface SubagentControls {
+export interface SubagentInspection {
 	inspect(id: string, sessionId: string): Promise<InspectResult>;
-	attach(id: string, sessionId: string): Promise<AttachResult>;
-	kill(id: string, sessionId: string): Promise<KillResult>;
 }

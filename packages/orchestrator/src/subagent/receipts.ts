@@ -63,7 +63,7 @@ export function createSubagentReceipt(record: SubagentRecord, sessionId: string)
 	};
 }
 
-export function attachControlReceipt<TDetails extends { record?: SubagentRecord }>(
+export function attachInspectionReceipt<TDetails extends { record?: SubagentRecord }>(
 	details: TDetails,
 	sessionId: string,
 ): TDetails {

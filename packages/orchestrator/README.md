@@ -12,7 +12,7 @@ npm install @tsuuanmi/pi-orchestrator
 
 `@tsuuanmi/pi-orchestrator` owns the standard `Task`, `TaskQueue`, `Team`, `MessageBus`, `Orchestrator`, routing, checkpoint, consensus verification, task execution, and session-aware subagent contracts.
 
-It coordinates generic `Agent` instances and provides Pi-hosted `SubagentManager` execution with isolated sessions, persistence, lifecycle tools, and native/tmux backends. It imports only public Pi session APIs and never imports workflow policy or Pi private modules.
+It coordinates generic `Agent` instances and provides Pi-hosted `SubagentManager` execution with isolated sessions, persistence, lifecycle tools, and durable inspection. Subagents run through one native in-process backend; records, receipts, progress snapshots, and artifacts provide transparent state without a separate terminal worker. It imports only public Pi session APIs and never imports workflow policy or Pi private modules.
 
 Task requirements are structured and strict: `capabilities`, `tools`, `provider`, `api`, and `model` are hard constraints. `TaskQueueEvent` reports queue lifecycle through `TaskQueue.subscribe()` and `run(..., { onQueueEvent })`; `OrchestratorEvent` reports run progress, and `TeamEvent` is reserved for runtime team messaging. Workflow projections use their own event names and schemas.
 

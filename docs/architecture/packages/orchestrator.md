@@ -20,7 +20,7 @@ It is workflow-agnostic. Workflow packages translate domain state into orchestra
 - Run metrics, traces, receipts, immutable run facts, and checkpoint schema/restore validation.
 - Team rosters and an in-memory direct/broadcast message bus.
 - Optional LLM task planning and consensus verification utilities.
-- Pi-hosted subagent manager contracts, isolated sessions, persistence, lifecycle tools, receipts, and native/tmux execution.
+- Pi-hosted subagent manager contracts, isolated sessions, persistence, lifecycle tools, receipts, native execution, and durable inspection.
 
 **Does not own**
 
@@ -60,7 +60,7 @@ It is workflow-agnostic. Workflow packages translate domain state into orchestra
 | Checkpoints | [`src/runtime/checkpoint.ts`](../../../packages/orchestrator/src/runtime/checkpoint.ts) | Strict checkpoint schema, normalization, identity/fact validation, and persistence interface |
 | Team/message bus | [`src/team/`](../../../packages/orchestrator/src/team) | Named Agent roster plus process-local direct/broadcast messaging |
 | Planning/consensus | [`src/planning/`](../../../packages/orchestrator/src/planning) | Strict model-generated task plans and sequential consensus judging |
-| Subagent | [`src/subagent/`](../../../packages/orchestrator/src/subagent) | Session-aware manager, persistence, lifecycle tools, registry, receipts, native/tmux backends, and worker command |
+| Subagent | [`src/subagent/`](../../../packages/orchestrator/src/subagent) | Session-aware manager, persistence, lifecycle tools, registry, receipts, native execution, and durable inspection |
 
 ## Run data flow
 
@@ -86,7 +86,7 @@ Eligibility is checked before strategy scoring. Requirements can constrain capab
 
 | Dependency | Contract used |
 |---|---|
-| `@tsuuanmi/pi` | Public session factories/services, session manager, extension contracts, agent profiles, session roots, and Pi/tmux host utilities |
+| `@tsuuanmi/pi` | Public session factories/services, session manager, extension contracts, agent profiles, and session roots |
 | `@tsuuanmi/pi-agent` | `Agent`, tool/capability/model state, thinking levels, structured receipts, and isolated `Agent.run()` results |
 | `@tsuuanmi/pi-ai` | Assistant message contracts used for progress and yield handling |
 | `typebox` | Subagent lifecycle tool schemas |
@@ -110,7 +110,7 @@ Pi does not import Orchestrator. The bundled Workflows extension installs `regis
 - `OrchestratorCheckpointStore` delegates `load` and `save` to the caller. Workflows supplies filesystem-backed stores in its own session layout.
 - Checkpoint restore validates version, run identity, immutable facts, queue partitions, metrics, and receipts. There is no implicit migration of incompatible versions.
 - `MessageBus` is in-memory. It can produce a snapshot but does not itself persist or transport messages.
-- Subagent records, identities, artifacts, and worker metadata persist under the owning Pi session's state root.
+- Subagent records, session logs, and artifacts persist under the owning Pi session's state root.
 
 ## Extension points
 
@@ -121,7 +121,7 @@ Pi does not import Orchestrator. The bundled Workflows extension installs `regis
 - `OrchestratorCheckpointStore` plus best-effort or strict checkpoint failure policy.
 - Planner coordinator Agent and consensus judge Agents.
 - Caller-defined task requirements, routing metadata, and opaque verification payloads.
-- Native or tmux subagent execution selected per request.
+- Native subagent execution with direct lifecycle control and durable inspection.
 
 ## Runtime constraints
 

@@ -27,7 +27,7 @@ Build-time bundling does not make package internals public. Dynamic loading does
 |---|---|---|---|
 | `@tsuuanmi/pi-ai` | Agent, Workflows, Pi | No | `StreamFunction`, provider registry, normalized events |
 | `@tsuuanmi/pi-agent` | Orchestrator, Workflows, Pi | No | `AgentOptions`, `ToolSpec`, `Model`, `ThinkingLevel` |
-| `@tsuuanmi/pi-orchestrator` | Workflows | Yes: hidden worker command | Agents, public Pi session services, hooks, checkpoint stores |
+| `@tsuuanmi/pi-orchestrator` | Workflows | No | Agents, public Pi session services, hooks, checkpoint stores |
 | `@tsuuanmi/pi-tui` | Workflows, Pi | Theme assets are loaded by Pi, not the package module | Components, data providers, editor/theme contracts |
 | `@tsuuanmi/pi-workflows` | Pi | Yes: extension, skills, agents, command | Structural workflow host, public Orchestrator `SubagentManagerApi`, active-state handoff |
 | `@tsuuanmi/pi` | Orchestrator, Workflows | It is the core host | Public session services, SDK, and extension contracts |
@@ -60,7 +60,7 @@ Canonical source: [`packages/agent/src/`](../../packages/agent/src). Public acce
 | `ToolSpec`, `ContextToolSpec`, `Tool`, `ToolRegistry`, tool results and updates | Workflows and Pi import root | Workflows specializes `ContextToolSpec` with workflow context; Pi specializes it with extension context/renderers and adapts declarations to `Tool` | Context/render metadata in the consuming package | Tool registry, validation/execution ordering, output limiting, or result-message creation |
 | Agent events/hooks/traces | Pi imports root; Workflows uses selected contracts | Pi bridges Agent lifecycle to extension/session events | Pi's event bridge maps but does not redefine source semantics | Another Agent dispatcher or hook pipeline |
 | Structured/tool/subagent receipt envelope | Orchestrator, Workflows, Pi import root | Lower-layer provenance is referenced or rendered | Orchestrator and Workflows add their own layer-specific receipt schemas | Copies of Agent receipt schemas in higher layers |
-| Session-aware subagent manager, records, and lifecycle tool specs | Orchestrator owns and exports the public API; Workflows composes it | Workflows invokes `SubagentManagerApi`; Orchestrator implements manager and tools over public Pi session services | Orchestrator owns records, isolated sessions, native/tmux backends, persistence, and lifecycle execution; Workflows adds policy | A second manager, process backend, live-run map, durable subagent store, or lifecycle spec set |
+| Session-aware subagent manager, records, and lifecycle tool specs | Orchestrator owns and exports the public API; Workflows composes it | Workflows invokes `SubagentManagerApi`; Orchestrator implements manager and tools over public Pi session services | Orchestrator owns records, isolated sessions, native execution, durable inspection, persistence, and lifecycle execution; Workflows adds policy | A second manager, process backend, live-run map, durable subagent store, or lifecycle spec set |
 | Node process/path/JSONL/mutation utilities | Workflows and Pi import `/node` | Shared process/path/storage primitives | Application-specific output/policy remains in Pi; workflow file layout remains in Workflows | Copies of generic process termination, Bash resolution, path canonicalization, or file mutation queue |
 
 ### Direct Agent use
@@ -154,7 +154,7 @@ Canonical source: [`packages/pi/src/`](../../packages/pi/src). Workflow packages
 | `AgentSession`, session services/runtime | CLI modes and external SDK users | Internal composition or `@tsuuanmi/pi` SDK | Session persistence, prompt/compaction/retry coordination |
 | `DefaultResourceLoader` and package manager | Pi startup and external SDK users | Internal use or public loader APIs | Package discovery, filtering, diagnostics, or bundled-source policy in lower packages |
 | Extension API/runner/UI context | Dynamically loaded extensions | Pi injects a host object; extensions register capabilities | Extension lifecycle/event bus/application UI in Workflows/TUI |
-| Concrete `SubagentManager` | Workflows through Orchestrator's public package boundary | Public `SubagentManagerApi` plus Pi's generic `AgentSessionServices` host contract | Isolated Pi sessions, worker/tmux execution, durable records |
+| Concrete `SubagentManager` | Workflows through Orchestrator's public package boundary | Public `SubagentManagerApi` plus Pi's generic `AgentSessionServices` host contract | Isolated Pi sessions, native lifecycle execution, durable records and artifacts |
 | Model/auth configuration | Agent stream callback and UI | Pi `ModelRegistry`/auth storage over AI APIs | Credential storage or user availability policy in AI/Agent |
 | Coding tools and renderers | Agent and interactive UI | Pi adapts `PiToolSpec`/extension specs to Agent `Tool` | Agent's generic tool execution engine |
 

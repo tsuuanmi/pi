@@ -73,7 +73,7 @@ There are no workspace peer dependencies and no runtime cycles. Orchestrator imp
 |---|---|---|
 | Normalize and stream one provider request | AI | Caller supplies model/context/options and consumes normalized events |
 | Run one agent and execute its requested tools | Agent | Host supplies models, stream/auth callbacks, tools, and hooks |
-| Spawn/control one Pi-hosted subagent session | Orchestrator | Agent owns the loop; Pi exposes generic session services; Orchestrator owns records, isolated sessions, lifecycle, persistence, and native/tmux backends |
+| Spawn/control one Pi-hosted subagent session | Orchestrator | Agent owns the loop; Pi exposes generic session services; Orchestrator owns records, isolated sessions, lifecycle, persistence, native execution, and durable inspection |
 | Schedule, route, retry, or verify multiple agent tasks | Orchestrator | Higher layer supplies Agents, task inputs, hooks, and checkpoint storage |
 | Enforce named workflow roles, phases, gates, and artifacts | Workflows | Workflow tools consume Orchestrator's public `SubagentManagerApi` or generic orchestration primitives |
 | Render terminal state | TUI | Host supplies component data and callbacks; TUI owns rendering and input mechanics |
@@ -211,7 +211,7 @@ Workflows may implement an Orchestrator checkpoint store. Orchestrator must not 
 - Active application keybindings and repository acquisition/cache lifecycle: Pi.
 - Named workflow phase, gate, handoff, artifact, or workflow tool: Workflows.
 - CLI, SDK, main session, settings, auth, resources, extensions, concrete coding tools, or application UI composition: Pi.
-- Subagent contracts, manager, lifecycle tools, records, receipts, workers, and native/tmux backends: Orchestrator.
+- Subagent contracts, manager, lifecycle tools, records, receipts, native execution, and durable inspection: Orchestrator.
 
 ## Boundary-change checklist
 

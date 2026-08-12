@@ -11,7 +11,7 @@ The contracts apply to the following orchestrator-owned surfaces:
 - generalized resource providers for agents, skills, prompts, rules, commands, context files, and system prompts;
 - live agent registries and peer messaging;
 - task spawning, receipts, and fork-context policies;
-- worktree/tmux worker orchestration.
+- native subagent execution and durable inspection.
 
 ## Owning modules
 
@@ -27,7 +27,7 @@ These are the intended ownership boundaries. If implementation chooses different
 | Durable subagent/task/receipt state | `packages/orchestrator/src/subagent/manager.ts`, `packages/orchestrator/src/subagent/store.ts`, and future task modules | `.pi/<session-id>/state/subagent/`, task runtimes |
 | Bundled package continuity | Compiled package manifests and package-owned resources | Package resource loaders and tests |
 | Direct-port adaptation | each porting change owner | this document and code review checklist |
-| Worktree/tmux orchestration | `packages/orchestrator/src/subagent/tmux.ts`, `run-identity.ts`, `tmux-launch.ts`, and `subagent-worker.ts` | Orchestrator subagent tools and threat-model docs |
+| Native subagent execution and durable inspection | `packages/orchestrator/src/subagent/manager.ts`, `store.ts`, and `inspection.ts` | Orchestrator subagent lifecycle tools and receipts |
 
 ## Resource discovery contract
 
@@ -167,24 +167,13 @@ Before directly porting external code, verify and document:
 - tests are adapted to Pi's runner and package layout;
 - no broad dependency or lockfile change is introduced without an explicit rationale.
 
-Pure modules such as spawn gates, concurrency helpers, receipt shaping, ROI reconciliation, and small registry data structures are likely port candidates. Session wiring, tool registration, worktree/tmux ownership, notifications, computer-use, and memory/hindsight should default to orchestrator-owned rewrites unless a later ADR proves a direct port is safer.
+Pure modules such as spawn gates, concurrency helpers, receipt shaping, ROI reconciliation, and small registry data structures are likely port candidates. Session wiring, tool registration, execution ownership, notifications, computer-use, and memory/hindsight should default to orchestrator-owned rewrites unless a later ADR proves a direct port is safer.
 
-## Worktree/tmux gate
+## Native execution contract
 
-Worktree and tmux orchestration must not begin until a threat-model ADR exists. The accepted ADR is [ADR: Worktree and tmux Threat Model](../../../../docs/adr/tmux-worktree-threat-model-adr.md). It covers:
+Subagents execute through the core in-process `AgentSession` owned by `SubagentManager`. The manager isolates resource loading, binds non-interactive extension services, controls cancellation and cooperative pause directly, and persists lifecycle state through `SubagentStore`. No terminal multiplexer, external worker command, or secondary execution identity is part of the subagent contract.
 
-- worker owner identity and cleanup authority;
-- parent-checkout protection;
-- dirty parent checkout behavior;
-- pre-existing path/worktree collisions;
-- nested repositories and worktrees;
-- manual edits in worker checkouts;
-- worker crash and orphaned tmux sessions;
-- patch application and merge conflict rules;
-- cleanup idempotency and permission failures;
-- tmux absence or version mismatch.
-
-The ADR is accepted, satisfying this phase gate. A tmux-backed subagent now exposes bounded live controls for `inspect`, `attach`, and `kill`: inspect returns the durable record and paths, attach returns target-specific command guidance without attaching automatically, and kill validates orchestrator-owned run identity metadata plus worker metadata before target-specific cleanup (`kill-pane` or `kill-session`). Invalid identity or tmux command metadata fails closed. `pause`, `resume`, and `heartbeat` live controls remain deferred. `git-worktree-isolation` remains a deferred seam until implementation lands and passes the ADR controls. `cross-harness-omx-fallback` remains permanently blocked unless a later approved plan reverses that policy.
+Transparency comes from current-session records, receipts, retained progress, session logs, and terminal artifacts. `subagent_inspect` remains the focused inspection surface and returns the durable record plus artifact path. Live lifecycle operations use `await`, `steer`, `pause`, `resume`, and `cancel` against the manager-owned session.
 
 ## Phase-gate summary
 
@@ -196,5 +185,4 @@ The ADR is accepted, satisfying this phase gate. A tmux-backed subagent now expo
 | 3 | Registry isolation passes; `awaitReply` remains gated until side-channel semantics are documented and tested. |
 | 4 | Canonical model-facing task API is selected: `task`, evolved `subagent_*`, or temporary dual surface. |
 | 5 | Task receipt shape and hidden/custom/system-message context policy are stable. |
-| 6 | Worktree/tmux threat-model ADR is accepted: [ADR: Worktree and tmux Threat Model](../../../../docs/adr/tmux-worktree-threat-model-adr.md). |
-| 7 | Mandatory surrounding surfaces for a final parity claim are enumerated by ADR/ROI score. |
+| 6 | Mandatory surrounding surfaces for a final parity claim are enumerated by ADR/ROI score. |

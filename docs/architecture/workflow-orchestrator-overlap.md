@@ -160,7 +160,7 @@ Decision:
 
 ## Direct manager exception
 
-Workflow code may call Orchestrator's public `SubagentManagerApi` directly only when the operation controls one subagent or runs one workflow-owned worker. The structural workflow context is `packages/workflows/src/tool/context.ts`; registration lives in `packages/workflows/src/tool/register.ts`. Worker adapters are `packages/workflows/src/skills/team/agent-adapter.ts`, `packages/workflows/src/skills/ralplan/agent-adapter.ts`, and `packages/workflows/src/skills/ultragoal/tools.ts`. A workflow must use generic orchestration for task dependencies, agent assignment, retries, queue execution, or agent collaboration. Subagent controls in `packages/orchestrator/src/subagent/tools.ts` are runtime-owned and must not import workflow contracts or receipt assembly. Unknown manager call sites fail the package boundary check.
+Workflow code may call Orchestrator's public `SubagentManagerApi` directly only when the operation controls one subagent or runs one workflow-owned worker. The structural workflow context is `packages/workflows/src/tool/context.ts`; registration lives in `packages/workflows/src/tool/register.ts`. Worker adapters are `packages/workflows/src/skills/team/agent-adapter.ts`, `packages/workflows/src/skills/ralplan/agent-adapter.ts`, and `packages/workflows/src/skills/ultragoal/tools.ts`. A workflow must use generic orchestration for task dependencies, agent assignment, retries, queue execution, or agent collaboration. Subagent inspection in `packages/orchestrator/src/subagent/inspection.ts` is runtime-owned and must not import workflow contracts or receipt assembly. Unknown manager call sites fail the package boundary check.
 
 ## Adapter acceptance criteria
 

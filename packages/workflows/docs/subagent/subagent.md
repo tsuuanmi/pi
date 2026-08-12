@@ -1,6 +1,6 @@
 # Workflow and Subagent Integration
 
-`@tsuuanmi/pi-orchestrator` owns the complete session-aware subagent boundary. A Pi-hosted subagent wraps the generic `Agent` from `@tsuuanmi/pi-agent` with an isolated `AgentSession`, persistence, resource loading, lifecycle controls, and native/tmux execution.
+`@tsuuanmi/pi-orchestrator` owns the complete session-aware subagent boundary. A Pi-hosted subagent wraps the generic `Agent` from `@tsuuanmi/pi-agent` with an isolated `AgentSession`, persistence, resource loading, lifecycle controls, native execution, and durable inspection.
 
 The workflow package owns workflow policy, role guards, artifact persistence, and runtime composition. It consumes `SubagentManagerApi` and related request/result types from `@tsuuanmi/pi-orchestrator`. It does not define a second subagent contract, manager, or fallback path.
 
@@ -8,7 +8,7 @@ The workflow package owns workflow policy, role guards, artifact persistence, an
 
 - `@tsuuanmi/pi-agent`: generic `Agent`, model/thinking-level types, messages, tools, and agent-loop contracts.
 - `@tsuuanmi/pi`: the main application session, session services, resource loading, settings, auth, and extension host.
-- `@tsuuanmi/pi-orchestrator`: `SubagentManager`, records/requests/results, lifecycle schemas and execution, receipts, progress, yield extraction, persistence, native/tmux backends, and controls.
+- `@tsuuanmi/pi-orchestrator`: `SubagentManager`, records/requests/results, lifecycle schemas and execution, receipts, progress, yield extraction, persistence, native execution, and durable inspection.
 - `src/tool/context.ts`: workflow context with the orchestrator-provided `SubagentManagerApi`.
 - `src/skills/*/`: workflow policy, role guards, artifact persistence, and orchestrator integration.
 - `src/tool/surface.ts`: static workflow discoverability for orchestrator-owned lifecycle tools.
