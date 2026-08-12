@@ -20,4 +20,8 @@ export interface InternetAccountInput {
 	enabled?: boolean;
 }
 
+export interface InternetSettings {
+	autoLogin: boolean;
+}
+
 export type InternetControlAction = "drain" | "resume" | "shutdown" | "cancel-browser-turns";

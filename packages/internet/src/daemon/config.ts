@@ -33,6 +33,11 @@ export interface OwnedDaemonConfigOptions {
 	runtimeCommand?: string[];
 }
 
+export interface DaemonCapabilities {
+	solAvailable: boolean;
+	proAvailable: boolean;
+}
+
 export function daemonConfigPath(account: InternetAccount): string {
 	return join(account.configDir, "config.json");
 }
@@ -53,6 +58,17 @@ export async function daemonLoginExists(account: InternetAccount): Promise<boole
 		);
 	} catch {
 		return false;
+	}
+}
+
+export async function readOwnedDaemonCapabilities(account: InternetAccount): Promise<DaemonCapabilities> {
+	try {
+		const config = JSON.parse(await readFile(daemonConfigPath(account), "utf8")) as OwnedDaemonConfig;
+		validateOwnedConfig(config, account);
+		return { solAvailable: config.solAvailable, proAvailable: config.proAvailable };
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code === "ENOENT") return { solAvailable: true, proAvailable: false };
+		throw error;
 	}
 }
 

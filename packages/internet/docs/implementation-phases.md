@@ -13,7 +13,7 @@ Prometheus source. The result is Linux-first, package-owned, and intentionally M
 - First authentication is interactive, but executable/config/profile/lifecycle are package-owned.
 - Use a dedicated Chrome profile and loopback-only private config.
 - Keep Pi's Responses transport and daemon replay ownership; do not duplicate either.
-- Keep model-metadata corrections as separate work.
+- Model-metadata corrections were completed in the R1–R3 milestone.
 
 ## Phase 0 — Existing provider/client MVP (complete)
 
@@ -57,4 +57,5 @@ Provider routing, account registry, daemon HTTP auth/client/status, tools, HUD, 
 - Model metadata correction documented in `review/implementation-review.md`.
 - Prometheus-inspired hybrid network capture with DOM fallback.
 - Runtime artifacts for non-Linux platforms/architectures.
-- Web search/fetch, native Codex tool bridge, and additional backends.
+- Native Codex tool bridge and additional backends. Public web search/fetch were completed in the
+  R1–R3 milestone.

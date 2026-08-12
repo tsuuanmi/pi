@@ -30,14 +30,17 @@ the bundled CLI, Playwright runtime dependencies, and a launcher.
 ## First use
 
 1. Build and load Pi normally. The package is auto-discovered through its `pi.extensions` manifest.
-2. Select `chatgpt-web/high` or `chatgpt-web/luna`, or run `internet_daemon` with `action: "login"`.
+2. Select one of the capability-scoped `chatgpt-web/*` routes, or run `internet_daemon` with
+   `action: "login"`.
 3. The package opens Google Chrome with a dedicated profile under
    `$PI_AGENT_DIR/internet/accounts/default/browser/`.
 4. Sign in to ChatGPT and leave the browser open until the login process confirms completion.
 5. The package starts its daemon and waits for `/healthz` before inference continues.
 
 On later Pi loads, authenticated enabled accounts start automatically. Pi `session_shutdown` stops
-only child daemons owned by that Pi process.
+only child daemons owned by that Pi process. To require explicit login, call `internet_settings`
+with `{ "autoLogin": false }`; first-use model requests then keep Chrome closed and instruct
+interactive users to run `internet_daemon` with action `login`.
 
 ## Runtime flow
 
@@ -74,6 +77,9 @@ Account registry changes require a Pi reload because provider registration is st
 | `internet_accounts` | List account routing metadata. |
 | `internet_account_add` | Add an isolated account config directory and loopback endpoint. |
 | `internet_account_set_enabled` | Enable or disable an account. |
+| `internet_settings` | Inspect or update package settings such as automatic login. |
+| `internet_search` | Search the public web and return source URLs with snippets. |
+| `internet_fetch` | Fetch readable text from a bounded public HTTP/HTTPS page. |
 
 `internet_daemon` controls the child-process lifecycle. `internet_control` controls the running
 server's administrative state. Destructive control calls require Pi's interactive approval hook.
@@ -81,10 +87,12 @@ server's administrative state. Destructive control calls require Pi's interactiv
 ## Security
 
 - Chrome uses a package-owned `--user-data-dir`; the user's normal browser profile is never used.
-- Config, cookies, storage state, and control tokens stay under each private account directory.
+- Config, settings, cookies, storage state, and control tokens stay under private package paths.
 - Only `127.0.0.1` is accepted. Inference routes intentionally rely on the local same-user trust
   boundary, so another process running as the same user could drive the browser-backed model.
-- Admin bearer credentials are sent only to `/admin/*`, never to inference routes.
+- Admin bearer credentials are sent only to `/admin/*`, never to inference or public web routes.
+- Web fetch blocks URL credentials, non-HTTP schemes, private/reserved destinations, unsafe
+  redirects, binary responses, oversized bodies, and long-running requests.
 - The vendored snapshot is fixed at the commit recorded in
   `vendor/codex-chatgpt-web/SNAPSHOT.md`; upstream synchronization is intentionally out of scope.
 - This is unofficial browser automation and can break when ChatGPT Web changes. It must not be used
@@ -115,6 +123,5 @@ pinned Bun toolchain and is intentionally excluded from Pi's TypeScript/Biome so
 
 ## Deferred
 
-The model-metadata mismatch documented in the implementation review is intentionally deferred.
-Hybrid network-interception/DOM capture inspired by Prometheus, web search/fetch tools, native Codex
-tool bridging, and non-Linux runtime artifacts are separate future work.
+Hybrid network-interception/DOM capture inspired by Prometheus, daemon doctor integration, native
+Codex tool bridging, multi-backend fusion, and non-Linux runtime artifacts remain future work.

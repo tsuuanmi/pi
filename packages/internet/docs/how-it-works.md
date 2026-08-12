@@ -11,7 +11,7 @@ the complete runtime to `dist/daemon/runtime/`. Runtime users do not install or 
 1. Pi loads `dist/extension.js`.
 2. The registry returns configured accounts or synthesizes the private default account.
 3. `OwnedDaemonManager` is created and passed to providers, tools, and hooks.
-4. Enabled providers, seven tools, hooks, and the HUD are registered.
+4. Enabled providers, ten tools, hooks, and the HUD are registered.
 5. Accounts with verified login state auto-start and health-gate. Accounts without login remain
    idle, so loading Pi never unexpectedly opens Chrome.
 
@@ -29,7 +29,8 @@ select chatgpt-web model
 ```
 
 The login itself necessarily remains interactive. The package owns the executable, config,
-invocation, isolated browser profile, and subsequent daemon lifecycle.
+invocation, isolated browser profile, and subsequent daemon lifecycle. With `autoLogin:false`, the
+readiness hook leaves Chrome closed and notifies interactive users to run `internet_daemon login`.
 
 ## Config and accounts
 
@@ -39,7 +40,8 @@ config, control token, storage-state path, broker socket, and bundled runtime co
 config must match the account endpoint and current config schema; there is no legacy migration path.
 
 Additional accounts require distinct config directories and ports. Registry changes activate after
-Pi reload because providers are startup-scoped.
+Pi reload because providers are startup-scoped. `$PI_AGENT_DIR/internet/settings.json` stores the
+private package settings, including `autoLogin`.
 
 ## Lifecycle control
 
@@ -53,6 +55,15 @@ Pi reload because providers are startup-scoped.
 
 `internet_control` is separate: it changes the running server's drain/resume/turn state rather than
 owning its process.
+
+## Web access
+
+`internet_search` queries a keyless public RSS search endpoint and returns bounded result metadata.
+It deliberately does not call the daemon's `/v1/alpha/search`: that endpoint forwards a native
+Codex bearer credential upstream, while browser-only accounts do not own such a credential and the
+admin control token must never be forwarded. `internet_fetch` follows only validated public
+HTTP/HTTPS redirects and returns bounded text after blocking private/reserved destinations and
+unsupported content.
 
 ## Compaction, status, and shutdown
 

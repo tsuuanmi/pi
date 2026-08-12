@@ -7,9 +7,10 @@ Pi loads `dist/extension.js`. The async factory uses public extension APIs only:
 ```ts
 const accounts = await new AccountRegistry().list();
 const manager = new OwnedDaemonManager(accounts);
-registerOpenAiProviders(pi, accounts);
-registerInternetTools(pi, manager);
-registerInternetHooks(pi, manager, accounts);
+const settings = new InternetSettingsStore();
+await registerOpenAiProviders(pi, accounts);
+registerInternetTools(pi, manager, settings);
+registerInternetHooks(pi, manager, accounts, settings);
 pi.registerHudProvider(readDaemonStatus);
 await manager.autoStart();
 ```
@@ -22,7 +23,9 @@ contract directly.
 Provider config uses Pi's built-in `openai-responses` API, loopback `/v1`, `authHeader: false`, and
 model metadata. `before_provider_request` receives the active `context.model`; the extension maps
 only its registered provider names to accounts and calls `manager.ensureReady(account.id)`. Unrelated
-providers are untouched.
+providers are untouched. With `autoLogin:false`, the hook suppresses browser launch and notifies
+interactive users; Pi's hook dispatcher does not expose request cancellation, so the provider
+transport remains the authoritative failure until explicit login.
 
 This hook boundary is necessary because Pi's custom stream registry is keyed by API type, not
 provider name. Registering a custom `openai-responses` stream here would globally replace transport
@@ -47,11 +50,15 @@ Tools use TypeBox `parameters` and Pi's five-argument execute signature. Registe
 - `internet_accounts`
 - `internet_account_add`
 - `internet_account_set_enabled`
+- `internet_settings`
+- `internet_search`
+- `internet_fetch`
 
 ## Hooks and HUD
 
 - `tool_call`: fail-closed approval for daemon admin control and future bridged `codex_*` tools.
-- `before_provider_request`: readiness for this extension's provider names only.
+- `before_provider_request`: readiness for this extension's provider names only, honoring
+  `autoLogin`.
 - `turn_end`: refresh the HUD.
 - `session_shutdown`: gracefully stop package-owned child daemons.
 
@@ -69,4 +76,6 @@ The package manifest exposes `dist/extension.js` through `pi.extensions` and pub
 - `OwnedDaemonManager` owns child processes and login lifecycle.
 - The bundled daemon owns browser/session/replay behavior.
 - Pi AI owns Responses transport and event decoding.
+- `web/*` owns public search/fetch transport and SSRF/size/content safeguards; it never receives the
+  daemon admin token.
 - Do not add a second browser owner, HTTP Responses parser, replay cache, or external daemon fallback.

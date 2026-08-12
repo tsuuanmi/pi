@@ -8,6 +8,7 @@ Pi process (Node)
 ├── account registry and private config bootstrap
 ├── daemon lifecycle manager
 ├── daemon HTTP tools and HUD
+├── settings plus public web search/fetch
 └── session_shutdown cleanup
 
 Bundled child runtime (embedded Bun)
@@ -28,8 +29,11 @@ The daemon is a fixed vendored snapshot, not a second repository dependency. We 
 - `hooks.ts` readiness-gates only registered ChatGPT Web providers through
   `before_provider_request`; Pi's built-in `openai-responses` transport remains unchanged.
 - `backends/openai/daemon/*` owns HTTP config/auth/client/status concerns, not processes.
-- Tools depend on the registry, daemon HTTP client, or lifecycle manager; the manager does not depend
-  on Pi extension APIs.
+- `settings.ts` owns private package settings persistence.
+- `web/*` owns public search/fetch transport and its SSRF, redirect, content, timeout, and size
+  safeguards. It never receives daemon credentials.
+- Tools depend on the registry, settings store, daemon HTTP client, lifecycle manager, or web
+  modules; those services do not depend on Pi extension APIs.
 
 The package imports only public `@tsuuanmi/pi*` entry points. Pi does not depend on this package.
 
@@ -37,7 +41,7 @@ The package imports only public `@tsuuanmi/pi*` entry points. Pi does not depend
 
 At load, authenticated enabled accounts auto-start. Accounts without verified login do not open a
 browser during Pi startup. Their first model request, or explicit `internet_daemon login`, launches
-the bundled `login` command with a dedicated profile. After authentication, the manager starts
+the bundled `login` command with a dedicated profile unless `autoLogin` is disabled. After authentication, the manager starts
 `serve`, waits for `/healthz`, and only then delegates inference to Pi.
 
 Operations are serialized per account. A healthy daemon already bound to the account endpoint is
@@ -51,18 +55,22 @@ One enabled account registers `chatgpt-web`; multiple enabled accounts register
 readiness without replacing Pi's API-wide Responses stream registry.
 
 Pi owns request conversion and SSE decoding. The daemon owns browser-turn replay/dedup. The package
-contains no duplicate Responses parser or replay cache.
+contains no duplicate Responses parser or replay cache. Models mirror the daemon's fixed-effort
+routes and are capability-scoped: Luna is exclusive to Luna accounts and Pro routes require the
+cached `proAvailable` capability.
 
 ## Security and storage
 
 The default private account directory is `$PI_AGENT_DIR/internet/accounts/default/`. The package
 writes `config.json` with `0600` permissions, generates a base64url control token, binds
 `127.0.0.1`, and sets an isolated storage-state/profile path. Account routing metadata remains in
-`$PI_AGENT_DIR/internet/accounts.json` with atomic `0600` writes.
+`$PI_AGENT_DIR/internet/accounts.json` with atomic `0600` writes. Package settings use
+`$PI_AGENT_DIR/internet/settings.json`, also written atomically with `0600` permissions.
 
 Chrome login is interactive but package-owned: it never uses the user's normal browser profile.
 Inference routes rely on a local same-user trust boundary, so another process running as the same
-user could drive the browser-backed model. Admin authorization is sent only to `/admin/*` routes.
+user could drive the browser-backed model. Admin authorization is sent only to `/admin/*` routes;
+it is never sent to public web endpoints or the daemon's native Codex passthrough.
 
 ## Best of both repositories
 

@@ -11,6 +11,7 @@ packages/internet/
 │   ├── extension.ts
 │   ├── hooks.ts
 │   ├── index.ts
+│   ├── settings.ts
 │   ├── accounts/registry.ts
 │   ├── daemon/
 │   │   ├── config.ts
@@ -23,7 +24,8 @@ packages/internet/
 │   │   ├── daemon/{auth,client,routes,status}.ts
 │   │   └── turn/model.ts
 │   ├── core/{errors,types}.ts
-│   └── tools/{accounts,compact,control,daemon,register,status}.ts
+│   ├── tools/{accounts,compact,control,daemon,register,settings,status,web}.ts
+│   └── web/{fetch,search}.ts
 ├── test/                       # mirrors package-owned source responsibilities
 ├── vendor/codex-chatgpt-web/
 │   ├── SNAPSHOT.md
@@ -45,9 +47,11 @@ packages/internet/
 - `daemon/runtime.ts`: bundled artifact resolution and platform validation.
 - `daemon/health.ts`: startup health polling.
 - `daemon/manager.ts`: the single lifecycle/process owner.
-- `backends/openai/provider.ts`: provider configuration and naming.
-- `hooks.ts`: provider-name-scoped readiness gate plus approvals, HUD refresh, and shutdown cleanup.
+- `backends/openai/provider.ts`: capability-scoped provider configuration and naming.
+- `hooks.ts`: provider-name-scoped readiness gate plus approvals, settings, HUD refresh, and cleanup.
+- `settings.ts`: atomic private package settings.
 - `backends/openai/daemon/*`: HTTP auth/client/status boundaries.
+- `web/*`: public web transport with network and response safety checks.
 - `tools/*`: direct Pi extension tools; no redundant custom context/tool abstraction.
 - `vendor/*`: third-party fixed source snapshot, built by its own pinned Bun toolchain.
 

@@ -5,37 +5,31 @@ codex-chatgpt-web daemon already provides and what Pi currently lacks. It builds
 [review-and-brainstorm.md](review-and-brainstorm.md) (MVP = model routing) and
 [multi-account-and-backends.md](multi-account-and-backends.md) (multi-account + Claude/Gemini).
 
-Status: **proposal.** Nothing is implemented.
+Status: **partially implemented.** Model routing, lifecycle, multi-account management, and public
+web search/fetch are implemented; remaining items are proposals.
 
 ---
 
 ## 1. What Pi is missing (the gap)
 
-Pi has **no built-in web search, browse, or fetch tools** — only UI utilities (`open-browser.ts`,
-`model-search.ts`). The `internet` package can fill this gap by exposing the daemon's web-search
-capability and adding a native fetch/browse tool. This is the highest-value feature beyond model
-routing.
-
-The daemon already has:
-- `POST /v1/alpha/search` — native Codex search passthrough (`src/server.ts`).
-- A **web-search sidecar** (`src/web-search/synthetic-tool.ts`) that executes `web_search` calls via
-  a gpt-mini model and returns sources.
-- `web_search_call_begin` / `web_search_call_end` lifecycle events surfaced in the bridge.
+Pi has no built-in public web search/fetch tools. The Internet package now fills that gap with a
+safe package-owned transport. Source review showed that the daemon's `POST /v1/alpha/search` is a
+native Codex credential passthrough and the vendored synthetic sidecar has no executor, so neither
+is used by browser-only accounts.
 
 ---
 
 ## 2. Feature list (grouped)
 
-### 2.1 Model routing (MVP — already agreed)
-- Register the daemon as a Pi `openai-responses` provider (`gpt-5.6-sol` / `gpt-5.6-luna`).
+### 2.1 Model routing (implemented)
+- Register capability-scoped fixed-effort `chatgpt-web/*` routes through Pi's native
+  `openai-responses` provider.
 - `internet_status` (daemon health/turns), `internet_compact` (context summarization), HUD.
 
-### 2.2 Web search (new — fills the Pi gap)
-- **`internet_search`** — a Pi tool that calls the daemon's `/v1/alpha/search` (or the web-search
-  sidecar) and returns results + sources. This gives Pi agents native web search without a third-party
-  API key.
-- **`internet_fetch`** — fetch a URL and return its text/markdown (via the daemon or a direct
-  fetch). Useful for reading pages found by search.
+### 2.2 Web search (implemented — fills the Pi gap)
+- **`internet_search`** — query a keyless public RSS endpoint and return source URLs/snippets.
+- **`internet_fetch`** — fetch bounded readable public HTTP/HTTPS text with SSRF and redirect
+  protections.
 - **`internet_browse`** — (post-MVP) drive the daemon's browser to a URL and return the rendered
   content, for JS-heavy pages.
 
@@ -61,40 +55,28 @@ The daemon already has:
 | Priority | Feature | Why |
 |----------|---------|-----|
 | P0 (MVP) | Model routing + `internet_status` + `internet_compact` + HUD | The agreed MVP; makes ChatGPT Web usable. |
-| P1 | **`internet_search` + `internet_fetch`** | Fills a real Pi gap (no web tools); high value, low effort via the daemon. |
+| P1 (done) | **`internet_search` + `internet_fetch`** | Fills a real Pi gap through a safe package-owned public web boundary. |
 | P2 | Multi-account + backend seam | Enables multiple ChatGPT accounts; future Claude/Gemini. |
 | P3 | Daemon lifecycle + `internet_doctor` | Better UX; diagnose failures. |
 | P4 | Full-mode tool bridge | Powerful but needs the approval gate; highest risk. |
 
+> **Grounded, detail-expanded version:** see [roi-roadmap.md](roi-roadmap.md), which ranks
+> correctness (R1 model metadata, R2 `autoLogin` opt-out), web access (R3 search/fetch),
+> diagnostics (R4), hybrid capture (R5), fusion (R6), and tool bridge (R7) by impact/effort/risk.
+
 ---
 
-## 4. Web search design sketch
+## 4. Web search implementation
 
-```ts
-// src/tools/search.ts
-import { T } from "@sinclair/typebox";
+Source review rejected the original daemon-client sketch: `/v1/alpha/search` forwards the incoming
+native Codex Bearer token upstream, so using the daemon admin control token would both fail
+authentication and disclose an administrative secret. The vendored synthetic sidecar is also not
+executed by this snapshot.
 
-const searchParams = T.Object({
-  query: T.String({ minLength: 1 }),
-  limit: T.Optional(T.Integer({ minimum: 1, maximum: 20, default: 5 })),
-});
-
-export function registerSearchTool(host: InternetToolHost): void {
-  host.registerTool({
-    name: "internet_search",
-    description: "Search the web and return results with sources.",
-    params: searchParams,
-    details: { destructive: false, openWorld: true },
-    async execute(params, ctx) {
-      // POST /v1/alpha/search via the daemon client
-      return daemonSearch(ctx, params.query, params.limit);
-    },
-  });
-}
-```
-
-The daemon's `/v1/alpha/search` requires a Bearer token (it forwards to the native Codex backend),
-so `internet_search` uses the daemon's control token — unlike `/v1/responses` which is unauthenticated.
+The implemented `web/search.ts` uses one keyless public RSS search transport. `web/fetch.ts` owns the
+shared HTTP security boundary: public HTTP/HTTPS only, DNS and redirect revalidation, private and
+reserved address blocking, timeout, content-type checks, and response-size limits. Search/fetch are
+read-only Pi tools and receive no daemon credential.
 
 ---
 
@@ -102,16 +84,16 @@ so `internet_search` uses the daemon's control token — unlike `/v1/responses` 
 
 | Risk / question | Note |
 |-----------------|------|
-| `/v1/alpha/search` needs the control token | Unlike `/v1/responses`, search forwards to the native backend and requires auth. Confirm the exact header. |
-| Web-search sidecar availability | The sidecar runs only when Codex enables `web_search`; `internet_search` may need to enable it or fall back to `/v1/alpha/search`. |
-| Fetch/browse scope | `internet_fetch` should be read-only and rate-limited; `internet_browse` (browser) is heavier and post-MVP. |
-| Daemon lifecycle ownership | Starting/stopping the daemon from Pi must not conflict with a user-managed daemon. Make it opt-in. |
+| Native daemon search | Deferred until the daemon owns a legitimate upstream credential or complete browser-side executor; never forward the admin token. |
+| Fetch/browse scope | `internet_fetch` is bounded and read-only; rendered `internet_browse` remains heavier, post-MVP work. |
+| Public search availability | The keyless RSS transport can change or throttle; errors remain explicit, with no hidden fallback. |
+| Daemon lifecycle ownership | Implemented manager stops only processes owned by the Pi session. |
 | Doctor checks | The daemon's doctor is a CLI command; exposing it as a Pi tool requires parsing its output. |
 
 ---
 
 ## 6. Bottom line
 
-The MVP is model routing (agreed). The **next highest-value feature is web search + fetch**, because
-Pi currently has no web tools and the daemon already provides the search capability. After that,
-multi-account, daemon lifecycle/doctor, and the full-mode tool bridge round out the package.
+Model routing and safe public web search/fetch are implemented. The next candidates are daemon
+doctor integration and hybrid capture, followed by multi-backend fusion and the full-mode tool
+bridge.

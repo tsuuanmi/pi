@@ -11,6 +11,7 @@ import { providerName } from "#internet/backends/openai/provider";
 import type { InternetAccount } from "#internet/core/types";
 import { daemonLoginExists } from "#internet/daemon/config";
 import type { OwnedDaemonManager } from "#internet/daemon/manager";
+import type { InternetSettingsService } from "#internet/settings";
 
 const BRIDGED_TOOLS = new Set(["codex_tool_call", "codex_exec", "codex_apply_patch"]);
 
@@ -25,6 +26,7 @@ export function registerInternetHooks(
 	host: InternetHookHost,
 	manager: OwnedDaemonManager,
 	accounts: InternetAccount[],
+	settings: InternetSettingsService,
 ): void {
 	const providerAccounts = new Map(
 		accounts.filter((account) => account.enabled).map((account) => [providerName(account), account.id]),
@@ -52,7 +54,17 @@ export function registerInternetHooks(
 		const accountId = context.model ? providerAccounts.get(context.model.provider) : undefined;
 		if (accountId) {
 			const account = accounts.find((candidate) => candidate.id === accountId);
-			if (account && !(await daemonLoginExists(account)) && context.hasUI) {
+			const loginExists = account ? await daemonLoginExists(account) : false;
+			if (!loginExists && !(await settings.get()).autoLogin) {
+				if (context.hasUI) {
+					context.ui.notify(
+						"Automatic ChatGPT login is disabled. Run internet_daemon with action login, then retry.",
+						"warning",
+					);
+				}
+				return event.payload;
+			}
+			if (!loginExists && context.hasUI) {
 				context.ui.notify(
 					"Opening an isolated Chrome profile for ChatGPT login. Complete sign-in to continue.",
 					"info",

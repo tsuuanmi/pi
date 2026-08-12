@@ -14,6 +14,8 @@
   persistence; status, compact, control, and account tools; HUD status; and lifecycle hooks.
 - Add focused tests for provider composition, daemon boundaries, account persistence, tools, hooks,
   and the extension entrypoint.
+- Add keyless public web search plus bounded, SSRF-aware page fetching.
+- Add private `autoLogin` settings and the `internet_settings` tool.
 
 ### Changed
 
@@ -25,6 +27,8 @@
   Responses streaming while the daemon owns browser automation and replay.
 - Update package dependencies, exports, README, and architecture/runtime/integration documentation
   to match current public APIs and implemented behavior.
+- Mirror the daemon's fixed-effort model routes, capability-gate Luna/Pro availability, and use a
+  conservative documented output ceiling.
 
 ### Removed
 

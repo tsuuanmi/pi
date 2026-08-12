@@ -30,6 +30,9 @@ describe("internetExtension", () => {
 				"internet_control",
 				"internet_compact",
 				"internet_daemon",
+				"internet_settings",
+				"internet_search",
+				"internet_fetch",
 			]);
 			expect(hooks).toEqual(["tool_call", "before_provider_request", "turn_end", "session_shutdown"]);
 			expect(autoStart).toHaveBeenCalledOnce();

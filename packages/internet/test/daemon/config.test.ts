@@ -2,7 +2,12 @@ import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { InternetAccount } from "#internet/core/types";
-import { daemonLoginExists, daemonLoginMarkerPath, ensureOwnedDaemonConfig } from "#internet/daemon/config";
+import {
+	daemonLoginExists,
+	daemonLoginMarkerPath,
+	ensureOwnedDaemonConfig,
+	readOwnedDaemonCapabilities,
+} from "#internet/daemon/config";
 
 function account(configDir: string): InternetAccount {
 	return {
@@ -17,6 +22,14 @@ function account(configDir: string): InternetAccount {
 }
 
 describe("owned daemon config", () => {
+	it("uses the daemon's default Sol capability before config exists", async () => {
+		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-capabilities-missing-"));
+		await expect(readOwnedDaemonCapabilities(account(configDir))).resolves.toEqual({
+			solAvailable: true,
+			proAvailable: false,
+		});
+	});
+
 	it("creates a private loopback config with an isolated browser profile", async () => {
 		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-config-"));
 		const created = await ensureOwnedDaemonConfig(account(configDir), {
@@ -33,6 +46,19 @@ describe("owned daemon config", () => {
 		expect(created.storageStatePath).toBe(join(configDir, "browser", "storage-state.json"));
 		expect((await stat(join(configDir, "config.json"))).mode & 0o777).toBe(0o600);
 		expect(JSON.parse(await readFile(join(configDir, "config.json"), "utf8"))).toEqual(created);
+	});
+
+	it("reads model capabilities from the owned daemon config", async () => {
+		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-capabilities-"));
+		const target = account(configDir);
+		await ensureOwnedDaemonConfig(target, {
+			releaseVersion: "2.1.8",
+			runtimeCommand: ["/runtime/bin/daemon"],
+		});
+		await expect(readOwnedDaemonCapabilities(target)).resolves.toEqual({
+			solAvailable: true,
+			proAvailable: false,
+		});
 	});
 
 	it("recognizes only authenticated login markers", async () => {

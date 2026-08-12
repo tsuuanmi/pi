@@ -7,23 +7,18 @@ package-owned daemon implementation.
 
 The package now vendors a fixed codex-chatgpt-web snapshot, builds its embedded-Bun Linux runtime,
 owns isolated login/start/stop lifecycle, and retains Pi's built-in `openai-responses` transport.
-Build, package tests, Biome, and root typecheck pass.
+Model metadata, automatic-login settings, and read-only web access are implemented. The current
+verification status is recorded with each implementation change.
 
-## Deferred: model metadata does not match daemon route semantics
+## Resolved: fixed-effort model metadata
 
-`src/backends/openai/models.ts` names `chatgpt-web/high` as "GPT-5.6 Sol" and
-`chatgpt-web/luna` as "GPT-5.6 Luna", with multi-level thinking maps. The vendored daemon's route
-catalog defines immutable efforts: `high` is a high-effort Codex route and `luna` is low-effort.
-The current names/maps may therefore send unsupported reasoning efforts.
+The package now exposes separate daemon route models with daemon display names and exactly one
+supported Pi thinking level each. Luna is mutually exclusive with Sol; Extra High and Pro are
+capability-gated. Route context windows come from the daemon catalog.
 
-This correction is explicitly out of scope for the owned-daemon phase and remains the next
-correctness task. Either expose each route's one immutable effort and daemon display name, or expose
-the complete route set with faithful metadata.
-
-## Deferred: speculative `maxTokens`
-
-The current 90,000/128,000 `maxTokens` values are not sourced from the daemon. Context windows are
-sourced, but output limits should be sourced or clearly documented when model metadata is corrected.
+The daemon does not define a model output-token ceiling: its auto-compaction, browser-message, and
+composer limits have different meanings. `maxTokens` therefore uses a documented conservative
+16,384 output ceiling rather than the previous speculative context-derived values.
 
 ## Resolved: stable provider names
 
