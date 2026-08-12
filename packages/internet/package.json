@@ -1,7 +1,7 @@
 {
 	"name": "@tsuuanmi/pi-internet",
 	"version": "0.1.0",
-	"description": "Pi package that exposes ChatGPT Web (and, post-MVP, Claude / Gemini) as model backends via the codex-chatgpt-web daemon and native provider adapters.",
+	"description": "Linux-first Pi extension that ships an isolated ChatGPT Web browser runtime and model provider.",
 	"type": "module",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -13,10 +13,6 @@
 		"./extension": {
 			"types": "./dist/extension.d.ts",
 			"import": "./dist/extension.js"
-		},
-		"./tool": {
-			"types": "./dist/tool/index.d.ts",
-			"import": "./dist/tool/index.js"
 		},
 		"./hooks": {
 			"types": "./dist/hooks.d.ts",
@@ -48,7 +44,8 @@
 	},
 	"scripts": {
 		"clean": "shx rm -rf dist",
-		"build": "npm run clean && tsgo -p tsconfig.build.json",
+		"build:daemon": "node scripts/build-daemon.mjs",
+		"build": "npm run clean && tsgo -p tsconfig.build.json && npm run build:daemon",
 		"test": "vitest --run"
 	},
 	"dependencies": {

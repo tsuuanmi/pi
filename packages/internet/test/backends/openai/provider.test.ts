@@ -18,12 +18,13 @@ describe("OpenAI provider registration", () => {
 			baseUrl: "http://127.0.0.1:18001/v1",
 			authHeader: false,
 		});
+		expect(createOpenAiProviderConfig(account)).not.toHaveProperty("stream");
 	});
 
-	it("uses the canonical provider name for a single enabled account", () => {
+	it("uses stable account-based provider names", () => {
 		const registrations: string[] = [];
 		registerOpenAiProviders({ registerProvider: (name) => registrations.push(name) }, [account]);
-		expect(registrations).toEqual(["chatgpt-web"]);
-		expect(providerName(account)).toBe("chatgpt-web-work");
+		expect(registrations).toEqual(["chatgpt-web-work"]);
+		expect(providerName({ ...account, id: "default" })).toBe("chatgpt-web");
 	});
 });

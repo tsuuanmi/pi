@@ -7,7 +7,7 @@ describe("internet_compact", () => {
 	it("refuses Luna compaction", async () => {
 		const tool = captureTools(registerCompactTools).get("internet_compact");
 		await expect(
-			tool?.execute("call", { model: "chatgpt-web/luna", input: [{}] }, undefined, undefined, { cwd: "/tmp" }),
+			tool?.execute("call", { model: "chatgpt-web/luna", input: [{}] }, undefined, undefined, {} as never),
 		).rejects.toThrow("disabled for Luna");
 	});
 
@@ -18,9 +18,13 @@ describe("internet_compact", () => {
 			compact: async () => ({ output }),
 		} as unknown as DaemonClient);
 		const tool = captureTools(registerCompactTools).get("internet_compact");
-		const result = await tool?.execute("call", { model: "chatgpt-web/high", input: [{}] }, undefined, undefined, {
-			cwd: "/tmp",
-		});
+		const result = await tool?.execute(
+			"call",
+			{ model: "chatgpt-web/high", input: [{}] },
+			undefined,
+			undefined,
+			{} as never,
+		);
 		expect(result?.details).toEqual({ output });
 	});
 });

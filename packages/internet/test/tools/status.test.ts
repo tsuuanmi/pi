@@ -11,7 +11,7 @@ describe("internet_status", () => {
 			health: async () => ({ status: "ok", accepting_turns: true, active_http_turns: 1, active_browser_turns: 2 }),
 		} as DaemonClient);
 		const tool = captureTools(registerStatusTools).get("internet_status");
-		const result = await tool?.execute("call", {}, undefined, undefined, { cwd: "/tmp" });
+		const result = await tool?.execute("call", {}, undefined, undefined, {} as never);
 		expect(result?.details).toMatchObject({ active_http_turns: 1, active_browser_turns: 2 });
 	});
 });

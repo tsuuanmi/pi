@@ -20,8 +20,4 @@ export interface InternetAccountInput {
 	enabled?: boolean;
 }
 
-export interface InternetContext {
-	cwd: string;
-}
-
 export type InternetControlAction = "drain" | "resume" | "shutdown" | "cancel-browser-turns";

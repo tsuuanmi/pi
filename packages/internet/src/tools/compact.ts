@@ -1,10 +1,10 @@
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 import { AccountRegistry } from "#internet/accounts/registry";
 import { DaemonClient } from "#internet/backends/openai/daemon/client";
 import { isLunaModel } from "#internet/backends/openai/turn/model";
-import type { InternetToolHost } from "#internet/tool/host";
 
-export function registerCompactTools(host: InternetToolHost): void {
+export function registerCompactTools(host: Pick<ExtensionAPI, "registerTool">): void {
 	host.registerTool({
 		name: "internet_compact",
 		label: "Internet Compact",

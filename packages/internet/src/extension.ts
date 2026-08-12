@@ -1,35 +1,17 @@
-import type { ExtensionAPI, ExtensionContext, ExtensionToolSpec } from "@tsuuanmi/pi/extensions";
-import type { TSchema } from "typebox";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { AccountRegistry } from "#internet/accounts/registry";
 import { readDaemonStatus } from "#internet/backends/openai/daemon/status";
 import { registerOpenAiProviders } from "#internet/backends/openai/provider";
-import type { InternetContext } from "#internet/core/types";
+import { OwnedDaemonManager } from "#internet/daemon/manager";
 import { registerInternetHooks } from "#internet/hooks";
-import type { InternetToolHost } from "#internet/tool/host";
-import type { InternetToolSpec } from "#internet/tool/spec";
 import { registerInternetTools } from "#internet/tools/register";
-
-function internetContext(context: ExtensionContext): InternetContext {
-	return { cwd: context.cwd };
-}
-
-function internetToolHost(host: ExtensionAPI): InternetToolHost {
-	return {
-		registerTool<TParams extends TSchema, TDetails>(tool: InternetToolSpec<TParams, TDetails>) {
-			const extensionTool: ExtensionToolSpec<TParams, TDetails> = {
-				...tool,
-				execute: (id, params, signal, onUpdate, context) =>
-					tool.execute(id, params, signal, onUpdate, internetContext(context)),
-			};
-			host.registerTool(extensionTool);
-		},
-	};
-}
 
 export default async function internetExtension(host: ExtensionAPI): Promise<void> {
 	const accounts = await new AccountRegistry().list();
+	const manager = new OwnedDaemonManager(accounts);
 	registerOpenAiProviders(host, accounts);
-	registerInternetTools(internetToolHost(host));
-	registerInternetHooks(host);
+	registerInternetTools(host, manager);
+	registerInternetHooks(host, manager, accounts);
 	host.registerHudProvider(readDaemonStatus);
+	await manager.autoStart();
 }

@@ -1,9 +1,9 @@
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 import { AccountRegistry } from "#internet/accounts/registry";
 import { DaemonClient } from "#internet/backends/openai/daemon/client";
-import type { InternetToolHost } from "#internet/tool/host";
 
-export function registerControlTools(host: InternetToolHost): void {
+export function registerControlTools(host: Pick<ExtensionAPI, "registerTool">): void {
 	host.registerTool({
 		name: "internet_control",
 		label: "Internet Control",

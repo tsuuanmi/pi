@@ -11,8 +11,14 @@ export { readDaemonStatus, readDaemonStatusSnapshot } from "#internet/backends/o
 export { CHATGPT_WEB_MODELS, registerOpenAiProviders } from "#internet/backends/openai/index";
 export { InternetError, isInternetError } from "#internet/core/errors";
 export type * from "#internet/core/types";
+export {
+	daemonConfigPath,
+	daemonLoginExists,
+	ensureOwnedDaemonConfig,
+	syncOwnedDaemonCapabilities,
+} from "#internet/daemon/config";
+export { OwnedDaemonManager } from "#internet/daemon/manager";
+export { resolveDaemonRuntime } from "#internet/daemon/runtime";
 export { registerInternetHooks } from "#internet/hooks";
-export type { InternetToolHost } from "#internet/tool/host";
-export type { InternetToolSpec } from "#internet/tool/spec";
 export { registerInternetTools } from "#internet/tools/register";
 export { VERSION } from "#internet/version";

@@ -1,4 +1,5 @@
 import type { ExtensionHudProvider } from "@tsuuanmi/pi/extensions";
+import { AccountRegistry } from "#internet/accounts/registry";
 import { DaemonClient } from "#internet/backends/openai/daemon/client";
 import type { DaemonHealth } from "#internet/backends/openai/daemon/routes";
 
@@ -11,7 +12,8 @@ export interface DaemonStatus {
 
 export async function readDaemonStatusSnapshot(): Promise<DaemonStatus> {
 	try {
-		const client = await DaemonClient.create();
+		const account = await new AccountRegistry().get();
+		const client = await DaemonClient.forAccount(account);
 		return { available: true, endpoint: client.baseUrl(), health: await client.health() };
 	} catch (error) {
 		return { available: false, error: error instanceof Error ? error.message : String(error) };

@@ -1,77 +1,62 @@
 # Internet — Implemented Layout
 
-The package uses the smallest layout that represents the current MVP. Deferred backends and a
-custom Responses stream adapter are intentionally absent.
-
-```
+```text
 packages/internet/
 ├── package.json
-├── tsconfig.build.json
-├── vitest.config.ts
 ├── README.md
 ├── CHANGELOG.md
 ├── docs/
+├── scripts/
 ├── src/
 │   ├── extension.ts
 │   ├── hooks.ts
 │   ├── index.ts
-│   ├── version.ts
-│   ├── accounts/
-│   │   └── registry.ts
+│   ├── accounts/registry.ts
+│   ├── daemon/
+│   │   ├── config.ts
+│   │   ├── health.ts
+│   │   ├── manager.ts
+│   │   └── runtime.ts
 │   ├── backends/openai/
-│   │   ├── index.ts
-│   │   ├── models.ts
 │   │   ├── provider.ts
-│   │   ├── daemon/
-│   │   │   ├── auth.ts
-│   │   │   ├── client.ts
-│   │   │   ├── routes.ts
-│   │   │   └── status.ts
-│   │   └── turn/
-│   │       └── model.ts
-│   ├── core/
-│   │   ├── errors.ts
-│   │   └── types.ts
-│   ├── tool/
-│   │   ├── host.ts
-│   │   ├── index.ts
-│   │   └── spec.ts
-│   └── tools/
-│       ├── accounts.ts
-│       ├── compact.ts
-│       ├── control.ts
-│       ├── register.ts
-│       └── status.ts
-├── test/                   # mirrors retained source responsibilities
-└── dist/                   # gitignored build output
+│   │   ├── models.ts
+│   │   ├── daemon/{auth,client,routes,status}.ts
+│   │   └── turn/model.ts
+│   ├── core/{errors,types}.ts
+│   └── tools/{accounts,compact,control,daemon,register,status}.ts
+├── test/                       # mirrors package-owned source responsibilities
+├── vendor/codex-chatgpt-web/
+│   ├── SNAPSHOT.md
+│   ├── LICENSE
+│   ├── package.json
+│   ├── bun.lock
+│   ├── scripts/build-runtime-bundle.ts
+│   └── src/                    # fixed daemon MVP snapshot
+└── dist/                       # gitignored build output
+    ├── daemon/*.js             # package-owned lifecycle modules
+    └── daemon/runtime/         # embedded Bun + daemon app + launcher
 ```
 
 ## Responsibilities
 
-- `extension.ts`: translates Pi's `ExtensionContext` into the narrow `InternetContext`, registers
-  providers/tools/hooks/HUD.
-- `accounts/registry.ts`: validates and atomically persists account routing metadata.
-- `backends/openai/provider.ts`: creates and registers Pi `openai-responses` providers.
-- `backends/openai/models.ts`: canonical Sol/Luna model metadata.
-- `backends/openai/daemon/auth.ts`: secure daemon config and control-token handling.
-- `backends/openai/daemon/client.ts`: typed health, compaction, and control HTTP calls.
-- `backends/openai/daemon/status.ts`: non-throwing status snapshot and HUD projection.
-- `tools/*`: narrow TypeBox tool surfaces over accounts and the daemon client.
-- `hooks.ts`: future bridged-tool approval guard and HUD refresh.
+- `extension.ts`: composition root only.
+- `accounts/registry.ts`: account routing metadata and atomic persistence.
+- `daemon/config.ts`: package-owned private daemon/browser configuration.
+- `daemon/runtime.ts`: bundled artifact resolution and platform validation.
+- `daemon/health.ts`: startup health polling.
+- `daemon/manager.ts`: the single lifecycle/process owner.
+- `backends/openai/provider.ts`: provider configuration and naming.
+- `hooks.ts`: provider-name-scoped readiness gate plus approvals, HUD refresh, and shutdown cleanup.
+- `backends/openai/daemon/*`: HTTP auth/client/status boundaries.
+- `tools/*`: direct Pi extension tools; no redundant custom context/tool abstraction.
+- `vendor/*`: third-party fixed source snapshot, built by its own pinned Bun toolchain.
 
-## Removed scaffold seams
+The vendor snapshot excludes upstream tests, docs, Electron launcher, generated output,
+`node_modules`, and sync machinery. Its source is not reformatted into Pi style.
 
-The initial scaffold included Anthropic/Google folders and custom turn adapter/replay files. They
-were removed because they had no current behavior and would duplicate Pi/daemon responsibilities.
-Future backends should add concrete modules and matching tests only when implemented.
-
-## Package integration
-
-The package manifest exposes `dist/extension.js` through the `pi.extensions` field. Internal imports
-use `#internet/*`; tests use `#internet-test/*`. Tests import built `dist`, so the required workflow
-is:
+## Build workflow
 
 ```bash
-npm run build
-npm test
+npm run build   # package TypeScript + self-contained daemon runtime
+npm test        # tests import the rebuilt dist
 ```

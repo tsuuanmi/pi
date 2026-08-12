@@ -1,8 +1,8 @@
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 import { AccountRegistry } from "#internet/accounts/registry";
-import type { InternetToolHost } from "#internet/tool/host";
 
-export function registerAccountsTools(host: InternetToolHost): void {
+export function registerAccountsTools(host: Pick<ExtensionAPI, "registerTool">): void {
 	host.registerTool({
 		name: "internet_accounts",
 		label: "Internet Accounts",

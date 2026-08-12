@@ -9,7 +9,7 @@ describe("internet_control", () => {
 		vi.spyOn(AccountRegistry.prototype, "get").mockResolvedValue({ id: "default" } as never);
 		vi.spyOn(DaemonClient, "forAccount").mockResolvedValue({ control } as unknown as DaemonClient);
 		const tool = captureTools(registerControlTools).get("internet_control");
-		await tool?.execute("call", { action: "drain" }, undefined, undefined, { cwd: "/tmp" });
+		await tool?.execute("call", { action: "drain" }, undefined, undefined, {} as never);
 		expect(control).toHaveBeenCalledWith("drain", undefined);
 	});
 });

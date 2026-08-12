@@ -1,58 +1,41 @@
 # Internet Package
 
-Internet is the Pi package that turns codex-chatgpt-web's browser-automation bridge into a
-first-class Pi capability: **run a Codex turn through ChatGPT Web**, bridge **native Codex tools**
-into that turn, run **compaction**, and **control the daemon** — all from inside a Pi agent.
+Internet is the Linux-first Pi package that ships an isolated ChatGPT Web browser runtime and
+registers it as a native Pi model provider. It vendors a fixed codex-chatgpt-web snapshot, embeds
+Bun in the build artifact, owns first login and daemon lifecycle, and requires no other repository
+at runtime.
 
-This docs folder is the isolated home for the package. It describes the intended architecture, the
-suggested source layout, how the package works, and how it plugs into the current Pi ecosystem.
+> Status: **owned-daemon MVP implemented.** The model-metadata correction in the implementation
+> review remains deliberately separate.
 
-> **Find the source:** see [Source Repositories](source-repositories.md) for a map of every concept
-> to the exact files in the two reference repos (`codex-chatgpt-web` daemon and `prometheus`).
+## Core documentation
 
-> Status: **MVP implemented.** The package registers ChatGPT Web providers, account-aware daemon
-> tools, lifecycle hooks, and a live HUD through Pi's current public extension APIs.
+- [Architecture](architecture.md) — process boundaries, lifecycle authority, security, and the
+  accepted ~15.6K-line vendoring tradeoff.
+- [How it works](how-it-works.md) — build, startup, first login, inference, and shutdown flows.
+- [Implemented Layout](layout.md) — package-owned modules, vendor snapshot, and build output.
+- [Pi Integration](pi-integration.md) — provider-scoped readiness stream, tools, hooks, and public
+  API boundaries.
+- [Implementation Phases](implementation-phases.md) — reviewed decisions and completed gates.
+- [Implementation Review](review/implementation-review.md) — remaining model metadata, naming, and
+  review findings.
+- [Daemon Ownership Decisions](daemon-ownership-brainstorm.md) — investigation history, Bun/Node
+  constraint, measured runtime footprint, and confirmed decisions.
 
-## Contents
+## Design research
 
-- [MVP Review & Brainstorm](review-and-brainstorm.md) — **start here.** Reviews the design against
-the MVP constraint (works with current Pi as-is) and locks the scope.
-- [Source Repositories](source-repositories.md) — a map of every concept to the exact source files in
-the two reference repos (`codex-chatgpt-web` daemon and `prometheus`), plus the Pi host APIs.
-- [Feature Brainstorm](features-brainstorm.md) — what to add next: web search + fetch (fills a
-  real Pi gap), multi-account, daemon lifecycle/doctor, and the full-mode tool bridge.
-- [Comparison: Prometheus](comparison-prometheus.md) — how internet compares to the Prometheus
-  project (same idea: browser-based AI backends), with a feature table and lessons learned.
-- [Best of Both: Hybrid Capture + Fusion](best-of-both.md) — network interception as primary
-  capture with DOM fallback, and the fusion "ask all" feature (one synthesized answer across
-  backends).
-- [Browser Design](browser-design.md) — which browser the package uses (system Chrome via
-  Playwright, owned by the daemon), its lifecycle, security, and production-readiness checklist.
-- [Multi-Account & Multi-Backend Brainstorm](multi-account-and-backends.md) — how multiple accounts
-  per provider map onto Pi (account = daemon instance), and the backend-adapter seam for future
-  Claude / Gemini backends.
-- [Architecture](architecture.md) — the design, the request path, the tool bridge, and the
-  security model.
-- [Suggested Layout](layout.md) — the proposed `packages/internet/` source tree, package.json
-  exports, and build.
-- [Implementation Phases](implementation-phases.md) — reviewed implementation decisions, completed
-  MVP phases, verification gates, and deliberately deferred work.
-- [How it works](how-it-works.md) — the runtime flow end to end (adapter → browser → broker →
-  bridge back to Responses SSE), plus the tool loop.
-- [Pi ecosystem integration](pi-integration.md) — how the package plugs into Pi: extension API,
-  tools, hooks, subagent support, and the daemon control surface.
-- [Implementation Review](review/implementation-review.md) — review-only findings on the
-  implemented MVP: model metadata, provider naming, dead code, and test-quality notes.
+- [Source Repositories](source-repositories.md) — source map for Pi, codex-chatgpt-web, and
+  Prometheus.
+- [Comparison: Prometheus](comparison-prometheus.md) — browser-backend comparison and lessons.
+- [Best of Both](best-of-both.md) — future hybrid network capture with DOM fallback and fusion.
+- [Browser Design](browser-design.md) — isolated browser behavior and security checklist.
+- [Multi-Account and Multi-Backend Brainstorm](multi-account-and-backends.md).
+- [Feature Brainstorm](features-brainstorm.md).
+- [Original MVP Review](review-and-brainstorm.md).
 
 ## Scope
 
-- **MVP backend: ChatGPT Web** via the codex-chatgpt-web daemon (`src/backends/openai/`). The MVP
-  registers the daemon as a Pi `openai-responses` provider plus a thin tool surface.
-- **Deferred:** Claude and Gemini backends. No inert source stubs are shipped; future backends add
-  concrete modules and tests when their contracts are implemented.
-
-## One-line summary
-
-`internet` lets a Pi agent run ChatGPT Web as a model backend (and, post-MVP, bridge Codex's native
-tools into that turn), using the same loopback Responses daemon and turn broker that
-codex-chatgpt-web already implements.
+Current production scope is ChatGPT Web through the bundled Responses daemon, including isolated
+login, auto-start for authenticated accounts, lifecycle control, compaction, health/HUD, admin
+control, and account routing. Claude/Gemini, hybrid capture, web tools, native Codex tool bridging,
+and non-Linux artifacts are deferred without inert production stubs.

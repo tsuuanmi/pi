@@ -1,13 +1,7 @@
 import { chmod, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
-import {
-	DEFAULT_DAEMON_HOST,
-	DEFAULT_DAEMON_PORT,
-	getDaemonConfigDir,
-	readDaemonConfig,
-} from "#internet/backends/openai/daemon/auth";
-import { InternetError } from "#internet/core/errors";
+import { DEFAULT_DAEMON_HOST, DEFAULT_DAEMON_PORT } from "#internet/backends/openai/daemon/auth";
 import type { InternetAccount, InternetAccountInput } from "#internet/core/types";
 
 const ACCOUNT_ID_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$/;
@@ -55,6 +49,9 @@ export class AccountRegistry {
 		if (accounts.some((existing) => existing.id === account.id)) {
 			throw new Error(`Internet account already exists: ${account.id}`);
 		}
+		if (accounts.some((existing) => existing.host === account.host && existing.port === account.port)) {
+			throw new Error(`Duplicate internet account endpoint: ${account.host}:${account.port}`);
+		}
 		accounts.push(account);
 		await this.write(accounts);
 		return account;
@@ -81,26 +78,16 @@ export class AccountRegistry {
 		if (parsed.version !== 1 || !Array.isArray(parsed.accounts)) {
 			throw new Error(`Invalid internet account registry: ${this.path}`);
 		}
-		return parsed.accounts.map(normalizeAccount);
+		return normalizeAccounts(parsed.accounts);
 	}
 
 	private async readDefaultAccount(): Promise<InternetAccount> {
-		const configDir = getDaemonConfigDir();
-		let host = DEFAULT_DAEMON_HOST;
-		let port = DEFAULT_DAEMON_PORT;
-		try {
-			const config = await readDaemonConfig(configDir);
-			host = config.host;
-			port = config.port;
-		} catch (error) {
-			if (!(error instanceof InternetError) || error.code !== "config_missing") throw error;
-		}
 		return normalizeAccount({
 			id: "default",
 			displayName: "ChatGPT Web",
-			configDir,
-			host,
-			port,
+			configDir: join(dirname(this.path), "accounts", "default"),
+			host: DEFAULT_DAEMON_HOST,
+			port: DEFAULT_DAEMON_PORT,
 			enabled: true,
 		});
 	}
@@ -123,9 +110,7 @@ function normalizeAccount(input: InternetAccountInput): InternetAccount {
 	const configDir = resolve(input.configDir);
 	const host = input.host?.trim() || DEFAULT_DAEMON_HOST;
 	const port = input.port ?? DEFAULT_DAEMON_PORT;
-	if (host !== "127.0.0.1" && host !== "localhost" && host !== "::1") {
-		throw new Error(`Internet account host must be loopback: ${host}`);
-	}
+	if (host !== DEFAULT_DAEMON_HOST) throw new Error(`Internet account host must be ${DEFAULT_DAEMON_HOST}.`);
 	if (!Number.isInteger(port) || port < 1 || port > 65_535) throw new Error(`Invalid internet account port: ${port}`);
 	return {
 		id,
@@ -136,4 +121,18 @@ function normalizeAccount(input: InternetAccountInput): InternetAccount {
 		port,
 		enabled: input.enabled ?? true,
 	};
+}
+
+function normalizeAccounts(accounts: InternetAccountInput[]): InternetAccount[] {
+	const ids = new Set<string>();
+	const endpoints = new Set<string>();
+	return accounts.map((account) => {
+		const normalized = normalizeAccount(account);
+		if (ids.has(normalized.id)) throw new Error(`Duplicate internet account id: ${normalized.id}`);
+		const endpoint = `${normalized.host}:${normalized.port}`;
+		if (endpoints.has(endpoint)) throw new Error(`Duplicate internet account endpoint: ${endpoint}`);
+		ids.add(normalized.id);
+		endpoints.add(endpoint);
+		return normalized;
+	});
 }

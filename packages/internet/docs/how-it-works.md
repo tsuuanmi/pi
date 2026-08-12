@@ -1,68 +1,61 @@
 # Internet — How It Works
 
+## Build and packaging
+
+`npm run build` first emits package-owned Node modules, then runs the fixed vendored daemon's pinned
+Bun builder. The builder bundles the CLI, installs production dependencies, embeds Bun, and copies
+the complete runtime to `dist/daemon/runtime/`. Runtime users do not install or run another repo.
+
 ## Startup
 
-1. Pi loads `dist/extension.js` and awaits the default extension factory.
-2. The account registry loads persisted records. If none exist, it synthesizes a `default` account
-   from daemon config, or from the documented loopback default (`127.0.0.1:17841`).
-3. Enabled accounts are registered as Pi `openai-responses` providers.
-4. The extension registers tools, hooks, and the HUD provider.
+1. Pi loads `dist/extension.js`.
+2. The registry returns configured accounts or synthesizes the private default account.
+3. `OwnedDaemonManager` is created and passed to providers, tools, and hooks.
+4. Enabled providers, seven tools, hooks, and the HUD are registered.
+5. Accounts with verified login state auto-start and health-gate. Accounts without login remain
+   idle, so loading Pi never unexpectedly opens Chrome.
 
-Provider registration does not require the daemon to be running. A model request or daemon tool
-returns a clear connection error if it is unavailable.
+## First login and inference
 
-## Model inference
-
-```
-Pi selects chatgpt-web/high or chatgpt-web/luna
-        │
-        ▼
-Pi's native openai-responses stream handler
-        │ POST http://127.0.0.1:17841/v1/responses
-        ▼
-codex-chatgpt-web daemon
-        │ browser turn + standard Responses SSE
-        ▼
-Pi's native handler streams assistant events
+```text
+select chatgpt-web model
+  -> scoped before_provider_request hook calls manager.ensureReady(account)
+  -> if login marker is absent: run bundled `login`
+  -> dedicated Chrome profile opens; user authenticates
+  -> run bundled `serve`
+  -> poll /healthz until ready
+  -> call Pi streamOpenAIResponses
+  -> POST /v1/responses and stream assistant events
 ```
 
-The package deliberately has no SSE adapter or replay module. Pi owns Responses decoding; the
-daemon owns browser-turn replay/dedup.
+The login itself necessarily remains interactive. The package owns the executable, config,
+invocation, isolated browser profile, and subsequent daemon lifecycle.
 
-## Status and HUD
+## Config and accounts
 
-`internet_status` resolves the requested account (or the first enabled account), validates its
-private daemon config, and calls `/healthz`. The HUD uses the default daemon and hides itself when
-configuration or connectivity is unavailable. On each Pi `turn_end`, the HUD is refreshed.
+The default account is `127.0.0.1:17841` with private data at
+`$PI_AGENT_DIR/internet/accounts/default/`. `daemon/config.ts` creates the daemon's browser-only
+config, control token, storage-state path, broker socket, and bundled runtime command. Existing
+config must match the account endpoint and current config schema; there is no legacy migration path.
 
-## Compaction
+Additional accounts require distinct config directories and ports. Registry changes activate after
+Pi reload because providers are startup-scoped.
 
-`internet_compact` sends `{ model, input, instructions? }` to `/v1/responses/compact` and returns
-the daemon's replacement history. Luna requests are rejected before I/O because Luna maintains a
-rolling checkpoint and the daemon disables separate compaction for it.
+## Lifecycle control
 
-## Control plane
+`internet_daemon` calls the manager:
 
-`internet_control` supports:
+- `login`: stop the owned process, open isolated login, verify authentication marker.
+- `start`: reuse a healthy endpoint or spawn `serve` and health-gate.
+- `stop`: request authenticated `/admin/shutdown`, then signal as fallback.
+- `restart`: stop then start.
+- `status`: report process/login state.
 
-| Action | Route |
-|---|---|
-| `drain` | `POST /admin/drain` |
-| `resume` | `POST /admin/resume` |
-| `shutdown` | `POST /admin/shutdown` |
-| `cancel-browser-turns` | `POST /admin/cancel-browser-turns` |
+`internet_control` is separate: it changes the running server's drain/resume/turn state rather than
+owning its process.
 
-Only these calls include `Authorization: Bearer <controlToken>`. A daemon refusal, including a 409
-shutdown refusal while turns are active, is surfaced as a typed `InternetError`.
+## Compaction, status, and shutdown
 
-## Accounts
-
-Account records identify an OpenAI/ChatGPT Web daemon by id, display name, config directory,
-loopback endpoint, and enabled state. Add/enable changes are persisted atomically and become
-provider registrations after Pi reloads.
-
-## Approval guard
-
-The fail-closed `tool_call` guard protects every daemon control action and the documented future
-`codex_tool_call`, `codex_exec`, and `codex_apply_patch` names. Noninteractive use is blocked;
-interactive use requires confirmation.
+`internet_status` and the HUD read `/healthz`. `internet_compact` calls
+`/v1/responses/compact`; Luna is rejected because it uses rolling checkpoints. `turn_end` refreshes
+the HUD. `session_shutdown` stops child processes created by this Pi session.

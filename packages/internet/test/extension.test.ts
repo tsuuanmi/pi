@@ -2,6 +2,7 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionToolSpec, ProviderConfig } from "@tsuuanmi/pi/extensions";
+import { OwnedDaemonManager } from "#internet/daemon/manager";
 import internetExtension from "#internet/extension";
 
 describe("internetExtension", () => {
@@ -12,6 +13,7 @@ describe("internetExtension", () => {
 		const tools: string[] = [];
 		const hooks: string[] = [];
 		const hud = vi.fn();
+		const autoStart = vi.spyOn(OwnedDaemonManager.prototype, "autoStart").mockResolvedValue();
 		try {
 			await internetExtension({
 				registerProvider: (name: string, _config: ProviderConfig) => providers.push(name),
@@ -27,8 +29,10 @@ describe("internetExtension", () => {
 				"internet_status",
 				"internet_control",
 				"internet_compact",
+				"internet_daemon",
 			]);
-			expect(hooks).toEqual(["tool_call", "turn_end"]);
+			expect(hooks).toEqual(["tool_call", "before_provider_request", "turn_end", "session_shutdown"]);
+			expect(autoStart).toHaveBeenCalledOnce();
 			expect(hud).toHaveBeenCalledOnce();
 		} finally {
 			if (previous === undefined) delete process.env.PI_AGENT_DIR;

@@ -20,7 +20,7 @@ describe("internet account tools", () => {
 				{ id: "work", configDir: "/tmp/work", port: 18001 },
 				undefined,
 				undefined,
-				{ cwd: "/tmp" },
+				{} as never,
 			);
 			expect(result?.details).toMatchObject({ id: "work", port: 18001 });
 		} finally {

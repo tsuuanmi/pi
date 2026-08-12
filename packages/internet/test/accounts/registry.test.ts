@@ -20,9 +20,21 @@ describe("AccountRegistry", () => {
 		expect((await stat(test.path)).mode & 0o777).toBe(0o600);
 	});
 
-	it("rejects duplicate ids", async () => {
+	it("rejects duplicate ids and endpoints", async () => {
 		const test = await registry();
-		await test.registry.add({ id: "work", configDir: "/tmp/work" });
-		await expect(test.registry.add({ id: "work", configDir: "/tmp/work-2" })).rejects.toThrow("already exists");
+		await test.registry.add({ id: "work", configDir: "/tmp/work", port: 18_001 });
+		await expect(test.registry.add({ id: "work", configDir: "/tmp/work-2", port: 18_002 })).rejects.toThrow(
+			"already exists",
+		);
+		await expect(test.registry.add({ id: "other", configDir: "/tmp/other", port: 18_001 })).rejects.toThrow(
+			"Duplicate internet account endpoint",
+		);
+	});
+
+	it("accepts only the package-owned IPv4 loopback host", async () => {
+		const test = await registry();
+		await expect(test.registry.add({ id: "work", configDir: "/tmp/work", host: "localhost" })).rejects.toThrow(
+			"must be 127.0.0.1",
+		);
 	});
 });
