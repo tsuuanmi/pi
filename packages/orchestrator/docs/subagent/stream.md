@@ -1,6 +1,6 @@
 # Subagent Stream Adapter
 
-`src/subagents/stream.ts` adapts an injected subagent operation to the `@tsuuanmi/pi-ai` assistant event-stream contract consumed by `@tsuuanmi/pi-agent`.
+`src/subagent/stream.ts` adapts an injected subagent operation to the `@tsuuanmi/pi-ai` assistant event-stream contract consumed by `@tsuuanmi/pi-agent`.
 
 `createSubagentStream(run)`:
 

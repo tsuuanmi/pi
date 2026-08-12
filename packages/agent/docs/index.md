@@ -38,7 +38,7 @@ The docs tree mirrors the source domain folders under `packages/agent/src`. The 
 - [`messages/messages.md`](messages/messages.md) - `src/messages/types.ts` and `src/messages/messages.ts`: message roles and `convertToLlm()` conversion.
 - [`node/index.md`](node/index.md) - `src/node/node.ts` and `src/node/*`: Node-only process, JSONL, path, and mutation-queue helpers.
 - [`node/env/nodejs.md`](node/env/nodejs.md) - `src/node/env/*`: `ExecutionEnv`, `FileSystem`, `Shell`, typed `Result`, `FileError`, `ExecutionError`, and `NodeExecutionEnv`.
-- Orchestrator owns session-aware subagents, lifecycle tools, persistence, progress tracking, and yield-result extraction under `packages/orchestrator/src/subagents/*`.
+- Orchestrator owns session-aware subagents, lifecycle tools, persistence, progress tracking, and yield-result extraction under `packages/orchestrator/src/subagent/*`.
 - [`tool/registry.md`](tool/registry.md) - `src/tool/tool.ts`, `src/tool/registry.ts`, and `src/tool/policy.ts`: `Tool.define()`, `ContextToolSpec`, `ToolRegistry`, and `Agent.setTools()` for host-owned tools.
 
 Legacy compatibility docs and docs for removed source modules are intentionally not retained.

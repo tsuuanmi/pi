@@ -14,7 +14,7 @@ function getPreset(name: StatusLinePreset | undefined): PresetDef;
 ```jsonc
 {
   "leftSegments":  ["model", "mode", "git", "path"],
-  "rightSegments": ["session_name", "subagents", "token_in", "token_out", "context_pct", "context_total"],
+  "rightSegments": ["session_name", "token_in", "token_out", "context_pct", "context_total"],
   "separator": "slash",
   "segmentOptions": {
     "model": { "showThinkingLevel": true, "showProviderPrefix": true },

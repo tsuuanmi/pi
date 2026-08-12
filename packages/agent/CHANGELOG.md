@@ -7,7 +7,7 @@
 - **agent**: Renamed the agent-owned `Message` type to `AgentMessage` to distinguish it from the LLM protocol `Message` in `@tsuuanmi/pi-ai`, without a compatibility alias.
 - **agent**: Removed public runtime and backend contracts; `Agent` now owns the internal model/tool loop.
 - **events**: Renamed `runtime_trace`/`runtime_warning` events to `trace`/`warning`.
-- **subagents**: Removed the unused `SubagentManagerFactory` registry; concrete hosts construct and inject managers directly.
+- **subagent**: Removed the unused `SubagentManagerFactory` registry; concrete hosts construct and inject managers directly.
 - **node**: Added the byte-preserving `runProcess()` API, changed Node shell resolution to fail when Bash is unavailable, and changed execution results to preserve `null` signal exits.
 - **tool**: Renamed structured tool receipt helpers from built-in-specific names to standard protocol names and changed receipt sources to generic `tool` and `session` values.
 - **extensions**: Removed the shared extension contract surface from `@tsuuanmi/pi-agent`; the public Pi extension API now owns extension hook registration and actions.
@@ -17,8 +17,8 @@
 - **task**: Replaced legacy sequential task IDs and permissive task metadata/dependency handling with UUID-backed IDs, strict metadata validation/redaction, skipped lifecycle state, and fail-fast dependency validation.
 - **orchestrator**: Moved task, team, and orchestrator contracts out of `@tsuuanmi/pi-agent` into `@tsuuanmi/pi-orchestrator`.
 - **orchestrator**: Standardized orchestrator options on `schedulingStrategy` and `abortSignal`, removed `runTeam`, removed `onTaskFail`, removed scheduler fallback assignment, and made explicit task assignees fail fast when they do not match the team roster.
-- **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
-- **subagents**: Removed all subagent contracts, lifecycle tools, persistence, tmux, and run-identity modules; session-aware subagents are owned by `@tsuuanmi/pi-orchestrator`.
+- **subagent**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
+- **subagent**: Removed all subagent contracts, lifecycle tools, persistence, tmux, and run-identity modules; session-aware subagents are owned by `@tsuuanmi/pi-orchestrator`.
 - **model**: Re-exported canonical `Api`, `Model`, and `ThinkingLevel` types and `isValidThinkingLevel` for generic agent consumers.
 - **jsonl**: `attachJsonlLineReader()` now requires an error callback and rejects CRLF or unterminated records.
 
@@ -76,21 +76,21 @@
 
 - **tool**: Added `createToolRegistry()`, `registerTool()`, and `Agent.registerTool()` as the standard registration seam for host-owned tool implementations.
 - **receipts**: Added `StructuredReceipt` helpers for attaching and validating machine-readable execution receipts.
-- **subagents**: Added shared subagent receipt/type exports, including `SubagentStatus`, `SubagentBackendKind`, `SubagentControlAction`, tmux metadata in `receipt.meta`, and the `visibility` contract (`native`, `tmux`, `auto`) for subagent run requests.
-- **subagents**: Added shared inspect, attach, and kill result types to the `SubagentManager` contract.
-- **subagents**: Added the shared `Subagent Run Identity` JSON schema and typed helpers for tmux-backed subagent owner/session/target metadata.
+- **subagent**: Added shared subagent receipt/type exports, including `SubagentStatus`, `SubagentBackendKind`, `SubagentControlAction`, tmux metadata in `receipt.meta`, and the `visibility` contract (`native`, `tmux`, `auto`) for subagent run requests.
+- **subagent**: Added shared inspect, attach, and kill result types to the `SubagentManager` contract.
+- **subagent**: Added the shared `Subagent Run Identity` JSON schema and typed helpers for tmux-backed subagent owner/session/target metadata.
 
 ### Breaking Changes
 
 - **extensions**: Renamed the extension context continuation-skip flag to `skipAutomaticContinuation` so the lower-layer contract stays feature-agnostic.
 - **tool**: Moved concrete Pi built-in tool helpers for edit diffing, path resolution, bounded output accumulation, shell-output capture, and truncation out of `@tsuuanmi/pi-agent` and into `@tsuuanmi/pi`; `@tsuuanmi/pi-agent` now owns only the generic tool protocol and registration APIs.
-- **agent**: Moved the remaining shared source modules out of `src/harness/` into focused `src/agent`, `src/subagents`, `src/node`, and `src/agent/state` paths; no `src/harness/` compatibility wrappers are provided.
+- **agent**: Moved the remaining shared source modules out of `src/harness/` into focused `src/agent`, `src/subagent`, `src/node`, and `src/agent/state` paths; no `src/harness/` compatibility wrappers are provided.
 
 ## [0.2.0] - 2026-07-20
 
 ### Added
 
-- **subagents**: Added a `SubagentManagerFactory` registry (`registerSubagentManagerFactory`/`getSubagentManagerFactory`/`clearSubagentManagerFactoryForTests`) + `SubagentManagerFactoryContext` type as the registration seam that lets higher-level packages obtain a `SubagentManager` without depending on `pi`. Added `dispose(): Promise<void>` to the `SubagentManager` interface for owner-lifecycle teardown.
+- **subagent**: Added a `SubagentManagerFactory` registry (`registerSubagentManagerFactory`/`getSubagentManagerFactory`/`clearSubagentManagerFactoryForTests`) + `SubagentManagerFactoryContext` type as the registration seam that lets higher-level packages obtain a `SubagentManager` without depending on `pi`. Added `dispose(): Promise<void>` to the `SubagentManager` interface for owner-lifecycle teardown.
 
 ### Breaking Changes
 

@@ -9,9 +9,9 @@ import {
 	isRunIdentity,
 	type RunIdentity,
 	recordMatchesIdentity,
-} from "#orchestrator/subagents/run-identity";
-import { buildTmuxCommands, type TmuxMetadata, type TmuxTarget } from "#orchestrator/subagents/tmux";
-import { buildTmuxSubagentLaunchPlan, isTmuxCommandAvailable } from "#orchestrator/subagents/tmux-launch";
+} from "#orchestrator/subagent/run-identity";
+import { buildTmuxCommands, type TmuxMetadata, type TmuxTarget } from "#orchestrator/subagent/tmux";
+import { buildTmuxSubagentLaunchPlan, isTmuxCommandAvailable } from "#orchestrator/subagent/tmux-launch";
 import type {
 	AttachResult,
 	InspectResult,
@@ -21,7 +21,7 @@ import type {
 	SubagentRunResult,
 	SubagentStatus,
 	WorkerRequest,
-} from "#orchestrator/subagents/types";
+} from "#orchestrator/subagent/types";
 
 export interface TmuxBackendOptions {
 	available?: (command: string) => boolean;

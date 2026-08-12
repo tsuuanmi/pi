@@ -60,7 +60,7 @@ It is workflow-agnostic. Workflow packages translate domain state into orchestra
 | Checkpoints | [`src/runtime/checkpoint.ts`](../../../packages/orchestrator/src/runtime/checkpoint.ts) | Strict checkpoint schema, normalization, identity/fact validation, and persistence interface |
 | Team/message bus | [`src/team/`](../../../packages/orchestrator/src/team) | Named Agent roster plus process-local direct/broadcast messaging |
 | Planning/consensus | [`src/planning/`](../../../packages/orchestrator/src/planning) | Strict model-generated task plans and sequential consensus judging |
-| Subagents | [`src/subagents/`](../../../packages/orchestrator/src/subagents) | Session-aware manager, persistence, lifecycle tools, registry, receipts, native/tmux backends, and worker command |
+| Subagent | [`src/subagent/`](../../../packages/orchestrator/src/subagent) | Session-aware manager, persistence, lifecycle tools, registry, receipts, native/tmux backends, and worker command |
 
 ## Run data flow
 

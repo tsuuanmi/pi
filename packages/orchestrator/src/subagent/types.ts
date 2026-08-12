@@ -1,8 +1,8 @@
 import type { AgentMessage, Api, Model, ThinkingLevel } from "@tsuuanmi/pi-agent";
-import type { SubagentProgress } from "#orchestrator/subagents/progress";
-import type { RunIdentity } from "#orchestrator/subagents/run-identity";
-import type { TmuxMetadata } from "#orchestrator/subagents/tmux";
-import type { YieldDetails } from "#orchestrator/subagents/yield-result";
+import type { SubagentProgress } from "#orchestrator/subagent/progress";
+import type { RunIdentity } from "#orchestrator/subagent/run-identity";
+import type { TmuxMetadata } from "#orchestrator/subagent/tmux";
+import type { YieldDetails } from "#orchestrator/subagent/yield-result";
 
 export type Visibility = "native" | "tmux";
 export type BackendKind = Visibility;

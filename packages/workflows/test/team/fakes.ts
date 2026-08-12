@@ -30,7 +30,7 @@ export function createTeamContext(
 	return {
 		cwd,
 		sessionManager: { getSessionId: () => sessionId },
-		subagents: manager,
+		subagent: manager,
 		model: hostModel,
 	};
 }

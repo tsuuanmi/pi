@@ -10,15 +10,15 @@ import type { ExtensionUIContext } from "@tsuuanmi/pi/extensions";
 import { type AgentProfile, loadAgentProfile } from "@tsuuanmi/pi/loader";
 import { type AgentMessage, type Api, isValidThinkingLevel, type Model, type ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
-import type { SubagentManagerApi } from "#orchestrator/subagents/manager-api";
+import type { SubagentManagerApi } from "#orchestrator/subagent/manager-api";
 import {
 	renderSubagentProgress,
 	type SubagentProgress,
 	SubagentProgressTracker,
-} from "#orchestrator/subagents/progress";
-import { SubagentStore } from "#orchestrator/subagents/store";
-import { TmuxBackend, type TmuxBackendOptions } from "#orchestrator/subagents/tmux-backend";
-import { SUBAGENT_TOOL_NAMES } from "#orchestrator/subagents/tool-names";
+} from "#orchestrator/subagent/progress";
+import { SubagentStore } from "#orchestrator/subagent/store";
+import { TmuxBackend, type TmuxBackendOptions } from "#orchestrator/subagent/tmux-backend";
+import { SUBAGENT_TOOL_NAMES } from "#orchestrator/subagent/tool-names";
 import type {
 	AttachResult,
 	BackendKind,
@@ -36,8 +36,8 @@ import type {
 	SubagentStatus,
 	Visibility,
 	WorkerRequest,
-} from "#orchestrator/subagents/types";
-import { extractYieldFromMessages } from "#orchestrator/subagents/yield-result";
+} from "#orchestrator/subagent/types";
+import { extractYieldFromMessages } from "#orchestrator/subagent/yield-result";
 
 export type {
 	AttachResult,
@@ -54,7 +54,7 @@ export type {
 	SubagentRunResult,
 	SubagentStatus,
 	Visibility,
-} from "#orchestrator/subagents/types";
+} from "#orchestrator/subagent/types";
 
 type SubagentRecord = RuntimeRecord;
 type SubagentRunRequest = SubagentRequest;
@@ -261,7 +261,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentControls {
 	}
 
 	/**
-	 * Count of currently-live (non-terminal) subagents: running plus paused. A
+	 * Count of currently-live (non-terminal) subagent runs: running plus paused. A
 	 * subagent enters `live` when its run starts and leaves when the run promise
 	 * settles (resolves or rejects); paused runs stay live until they are
 	 * resumed-and-resolved or cancelled.
@@ -740,7 +740,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentControls {
 		return this.store.terminal(record, "cancelled", sessionId);
 	}
 
-	/** Tear down the manager: abort all live subagents and wait for them to settle. */
+	/** Tear down the manager: abort all live subagent runs and wait for them to settle. */
 	async dispose(): Promise<void> {
 		const live = [...this.live.values()];
 		for (const run of live) run.controller.abort();

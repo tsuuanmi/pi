@@ -1,6 +1,6 @@
 # Package Overlap Implementation Plan
 
-> Note: subagent ownership steps in this historical plan are superseded by the implemented [Subagents to Orchestrator Migration](subagents-to-orchestrator-migration.md).
+> Note: subagent ownership steps in this historical plan are superseded by the implemented [Subagent to Orchestrator Migration](subagent-to-orchestrator-migration.md).
 
 This plan turns the findings in [Package Overlap Audit](package-overlap-audit.md) into production changes. It is intentionally phased so one package remains the canonical owner at every step and concurrent work is not overwritten.
 

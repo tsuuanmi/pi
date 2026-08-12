@@ -44,7 +44,7 @@ Workflows expose two independent host-facing surfaces. They are adapters over th
 | Surface | Entry point | Caller and context | Return contract |
 |---------|-------------|--------------------|-----------------|
 | CLI commands | `src/commands/workflow.ts` and `src/commands/workflow/` | User, shell script, CI, or recovery process. Receives argv, a working directory, and session-scoped input. | `status`, `stdout`, and `stderr`; suitable for scripting and machine-readable `--json` output. |
-| Model-visible tools | `src/extension.ts`, `src/tool/register.ts`, and skill-owned `tools.ts` modules | The model during an interactive Pi session. Receives typed parameters, `WorkflowContext`, cancellation, and the Pi-owned subagent manager. | `ToolResult` content and `WorkflowToolDetails`; durable runtime receipts remain internal to runtime mutations. |
+| Model-visible tools | `src/extension.ts`, `src/tool/register.ts`, and skill-owned `tools.ts` modules | The model during an interactive Pi session. Receives typed parameters, `WorkflowContext`, cancellation, and the orchestrator-owned subagent manager. | `ToolResult` content and `WorkflowToolDetails`; durable runtime receipts remain internal to runtime mutations. |
 
 The normal call paths are:
 
@@ -63,7 +63,7 @@ model tool call
 Boundary rules:
 
 - Commands own CLI parsing, session and working-directory resolution, output formatting, exit status, external lifecycle, inspection, and recovery.
-- Workflow adapters own host-facing registration, in-session context, cancellation, and model-visible `WorkflowToolDetails`. Pi-owned lifecycle tools provide subagent actions; skill tools own workflow orchestration and policy.
+- Workflow adapters own host-facing registration, in-session context, cancellation, and model-visible `WorkflowToolDetails`. Orchestrator-owned lifecycle tools provide subagent actions; skill tools own workflow orchestration and policy.
 - Shared workflow implementation belongs below these adapters. If a command and a tool need the same behavior, they call a shared runtime or skill function; they do not call or shell out to each other.
 - Lifecycle mutations route to a live `RuntimeOwner` through workflow RPC. Read-only inspection and explicitly leased recovery may run without an owner; neither path is a tool invocation.
 - `src/tool/host.ts` and `src/tool/spec.ts` define the workflow tool contract. `src/tool/register.ts` aggregates registration. Skill-specific tool behavior lives under `src/skills/*/tools.ts`.

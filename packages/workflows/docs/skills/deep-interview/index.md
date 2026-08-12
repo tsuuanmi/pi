@@ -90,5 +90,5 @@ The bundled workflow registration calls `getDeepInterviewMutationDecision` befor
 ## See Also
 
 - [Workflow control plane](../../workflow.md)
-- [Subagents and workflow tools](../../subagents/subagents.md)
+- [Subagent and workflow tools](../../subagent/subagent.md)
 - [Shared utilities](../../state/state.md)

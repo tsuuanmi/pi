@@ -17,26 +17,27 @@ Commands and tools may share lower-level workflow runtime and skill functions, b
 
 The default extension composes the workflow registrars:
 
-- `registerWorkflowTools(host)` registers workflow state, policy, and guarded workflow operation tools. Workflow execution uses the Pi `SubagentManagerApi` in its context; it does not register lifecycle tools.
+- `registerSubagentRuntime(host)` registers orchestrator-owned subagent lifecycle and control tools, HUD data, and shutdown cleanup.
+- `registerWorkflowTools(host)` registers workflow state, policy, and guarded workflow operation tools. Workflow execution uses the orchestrator `SubagentManagerApi` in its context.
 - `registerWorkflowHooks(host)` from `@tsuuanmi/pi-workflows/hooks` registers HUD refresh hooks and the Deep Interview mutation guard for `edit`, `write`, and `bash` tool calls.
 - The extension registers `readWorkflowHudEntries` through Pi's generic `registerHudProvider` feature. Workflows owns active-state data; Pi owns status-line composition and rendering.
 
 `@tsuuanmi/pi-workflows/tool` remains the lower-level tool registration helper for custom hosts that need tools without workflow hook integration.
 
-All Pi-native subagent lifecycle and control tools are registered by Pi. Workflow tools use the same Pi-owned manager and receipt types through the public `@tsuuanmi/pi` package boundary.
+Subagent lifecycle and control tools are registered by `@tsuuanmi/pi-orchestrator`. Workflow tools use the same orchestrator-owned manager and receipt types through its public package boundary.
 
 ## Model-Visible Tools
 
-Registered tools are documented in [subagents/subagents.md](../subagents/subagents.md).
+Registered tools are documented in [subagent/subagent.md](../subagent/subagent.md).
 
 ## Hook Actions
 
 Workflow hook actions live in `src/hooks.ts` and use `WorkflowHookHost`. They receive only workflow-relevant session and UI context. The generic agent hook mechanism lives in `@tsuuanmi/pi-agent`; workflow hooks do not move that host context into the agent package.
 
-The package extension passes the host context to workflow tool and hook registrars and does not implement workflow policy. Generic agent declarations come from `@tsuuanmi/pi-agent`; session-aware subagent declarations and execution come from `@tsuuanmi/pi`.
+The package extension passes the host context to workflow tool and hook registrars and does not implement workflow policy. Generic agent declarations come from `@tsuuanmi/pi-agent`; session-aware subagent declarations and execution come from `@tsuuanmi/pi-orchestrator`.
 
 ## See Also
 
 - [Workflow control plane](../workflow.md)
-- [Subagents and workflow tools](../subagents/subagents.md)
+- [Subagent and workflow tools](../subagent/subagent.md)
 - [State](../state/state.md)

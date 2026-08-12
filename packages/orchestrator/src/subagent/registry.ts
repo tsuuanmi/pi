@@ -1,6 +1,6 @@
 import type { AgentSessionServices } from "@tsuuanmi/pi";
 import type { ExtensionContext } from "@tsuuanmi/pi/extensions";
-import { SubagentManager } from "#orchestrator/subagents/manager";
+import { SubagentManager } from "#orchestrator/subagent/manager";
 
 interface RegisteredManager {
 	manager: SubagentManager;

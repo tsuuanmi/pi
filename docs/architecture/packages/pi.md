@@ -138,7 +138,7 @@ Resource loading can report partial diagnostics; not every bad optional resource
 
 ## Orchestrator integration
 
-Pi exposes coherent `AgentSessionServices` through extension contexts. The bundled workflows extension uses that generic host boundary to install orchestrator-owned subagents. Pi neither imports orchestrator nor defines subagent-specific lifecycle behavior.
+Pi exposes coherent `AgentSessionServices` through extension contexts. The bundled workflows extension uses that generic host boundary to install the orchestrator-owned subagent runtime. Pi neither imports orchestrator nor defines subagent-specific lifecycle behavior.
 
 ## Persistence boundaries
 

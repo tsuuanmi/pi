@@ -25,7 +25,6 @@ const ALL_SEGMENT_IDS: StatusLineSegmentId[];
 | `token_in` | `↑input` (muted) | no input usage |
 | `token_out` | `↓output` (muted) | no output usage |
 | `session_name` | sanitized session name (accent) | no session name |
-| `subagents` | `↳count` (muted) | `subagentCount === 0` |
 
 ### `model`
 

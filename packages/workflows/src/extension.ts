@@ -12,7 +12,7 @@ function workflowContext(context: ExtensionContext): WorkflowContext {
 	return {
 		cwd: context.cwd,
 		sessionManager: context.sessionManager,
-		subagents: getSubagentManager(context),
+		subagent: getSubagentManager(context),
 		model: context.model,
 	};
 }

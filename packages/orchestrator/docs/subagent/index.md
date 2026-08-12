@@ -1,15 +1,15 @@
-# Subagents
+# Subagent
 
 Orchestrator provides a Pi-hosted `SubagentManager` that wraps the generic `Agent` from `@tsuuanmi/pi-agent` with isolated sessions, persistence, resource loading, native execution, and tmux controls. Extensions install it with `registerSubagentRuntime`; workflow tools resolve it from Pi's generic `ctx.sessionServices`. It is separate from the generic task scheduler, and package extensions own higher-level coordination policy.
 
-The complete subagent boundary lives under `src/subagents/`: `manager.ts` owns the public manager and runtime, `types.ts` owns requests/records/results, `context.ts` and `spec.ts` own tool integration, `progress.ts` and `yield-result.ts` own agent-loop observations, `receipts.ts` owns subagent receipts, and `tools.ts`/`lifecycle-tools.ts` own Pi tool registration.
+The complete subagent boundary lives under `src/subagent/`: `manager.ts` owns the public manager and runtime, `types.ts` owns requests/records/results, `context.ts` and `spec.ts` own tool integration, `progress.ts` and `yield-result.ts` own agent-loop observations, `receipts.ts` owns subagent receipts, and `tools.ts`/`lifecycle-tools.ts` own Pi tool registration.
 
 ## Records and durability
 
 Each subagent is stored under the owning session's state tree:
 
 ```
-.pi/<session-id>/state/subagents/
+.pi/<session-id>/state/subagent/
   index.jsonl          # append-only audit log: one line per record write
   <subagent-id>/
     record.json        # full, atomically-written record (temp file + rename)
@@ -138,7 +138,7 @@ Cancels a live subagent by aborting its controller and waiting for execution to 
 
 ## Nesting guard
 
-Subagent sessions do **not** receive their own `SubagentManager`. A subagent cannot spawn further subagents; orchestration stays in the parent. The `subagent_*` tools are filtered out of a subagent's tool set. Use the parent coordinator to dispatch more workers.
+Subagent sessions do **not** receive their own `SubagentManager`. A subagent cannot spawn further subagent runs; orchestration stays in the parent. The `subagent_*` tools are filtered out of a subagent's tool set. Use the parent coordinator to dispatch more workers.
 
 Subagent sessions set `ctx.skipAutomaticContinuation = true` (exposed on `ExtensionContext`) so package extensions do not re-prompt from inside a subagent.
 
@@ -150,8 +150,8 @@ Orchestrator's `SubagentManagerApi` owns one-subagent lifecycle operations: spaw
 
 Subagent tools attach a `details.receipt` (`StructuredReceipt`) to their tool results. Orchestrator-owned inspect, attach, and kill controls preserve their control result fields and attach the generic agent receipt without package-specific result fields. Package extensions may add domain-specific receipt fields to their own results.
 
-A subagent receipt includes the owning `sessionId`, `subagentId`, role, status, resumability, timing when known, and output/error previews. Pi inspection returns execution paths and backend metadata separately. Persistent subagent conversation logs are written under the same current-session bucket at `.pi/<session-id>/state/subagents/sessions/`, while lifecycle records live under `.pi/<session-id>/state/subagents/<subagent-id>/record.json` and terminal artifacts live under `.pi/<session-id>/state/subagents/<subagent-id>/artifact.json`. Listing subagents also returns per-record receipts plus an aggregate list receipt. This makes subagents visible from the parent/current session instead of behaving like black-box detached work.
+A subagent receipt includes the owning `sessionId`, `subagentId`, role, status, resumability, timing when known, and output/error previews. Pi inspection returns execution paths and backend metadata separately. Persistent subagent conversation logs are written under the same current-session bucket at `.pi/<session-id>/state/subagent/sessions/`, while lifecycle records live under `.pi/<session-id>/state/subagent/<subagent-id>/record.json` and terminal artifacts live under `.pi/<session-id>/state/subagent/<subagent-id>/artifact.json`. Listing subagent records also returns per-record receipts plus an aggregate list receipt. This makes the subagent visible from the parent/current session instead of behaving like black-box detached work.
 
 Before a subagent session starts, orchestrator injects an observability instruction into that subagent's system prompt. The injected guidance includes the parent/current session id when available, the subagent id, and the execution cwd. Backend selection is an orchestrator runtime decision; the shared agent contract does not expose it. Long-running work should prefer explicit tmux sessions over hidden detached background processes. When tmux-backed work is used, orchestrator stores the run identity, storage paths, worker metadata, and pane/session target in the subagent record.
 
-Orchestrator chooses native or tmux execution from its runtime request and environment. Package tools do not select a backend. Tmux-backed subagents expose bounded live controls through `subagent_inspect`, `subagent_attach`, and `subagent_kill`. Inspect returns durable record/artifact/worker paths plus tmux metadata. Attach returns the exact target-specific command: pane-backed workers use a recorded pane id and `select-pane`, while session-backed workers use the recorded session target and `attach-session`. Kill validates orchestrator's run identity metadata in the record and worker metadata before cleanup, then uses `kill-pane` for pane targets or `kill-session` for session targets. Invalid identity or tmux command metadata fails closed. Pause, resume, and heartbeat controls remain deferred.
+Orchestrator chooses native or tmux execution from its runtime request and environment. Package tools do not select a backend. A tmux-backed subagent exposes bounded live controls through `subagent_inspect`, `subagent_attach`, and `subagent_kill`. Inspect returns durable record/artifact/worker paths plus tmux metadata. Attach returns the exact target-specific command: pane-backed workers use a recorded pane id and `select-pane`, while session-backed workers use the recorded session target and `attach-session`. Kill validates orchestrator's run identity metadata in the record and worker metadata before cleanup, then uses `kill-pane` for pane targets or `kill-session` for session targets. Invalid identity or tmux command metadata fails closed. Pause, resume, and heartbeat controls remain deferred.

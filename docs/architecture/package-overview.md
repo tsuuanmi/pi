@@ -61,7 +61,7 @@ Orchestrator imports Pi only through published package entry points; it never im
 
 `@tsuuanmi/pi-agent` consumes the AI stream contract and owns the model/tool turn loop. It manages agent state, queueing, hooks, events, tool execution, traces, pruning, structured output, and canonical Agent model/thinking types. The root entry is host-neutral; Node-specific process and filesystem helpers are isolated in `@tsuuanmi/pi-agent/node`. Session-aware subagents are orchestrator-owned.
 
-`@tsuuanmi/pi-orchestrator` runs one level above an `Agent`. It owns task graphs, agent selection, scheduling, retries, verification, budgets, receipts, checkpoint contracts, and the complete Pi-hosted subagent runtime. Generic orchestration delegates model/tool runs to `Agent.run()`; subagents create isolated sessions through Pi's public session services.
+`@tsuuanmi/pi-orchestrator` runs one level above an `Agent`. It owns task graphs, agent selection, scheduling, retries, verification, budgets, receipts, checkpoint contracts, and the complete Pi-hosted subagent runtime. Generic orchestration delegates model/tool runs to `Agent.run()`; a subagent creates isolated sessions through Pi's public session services.
 
 ### Host adapters
 
@@ -73,7 +73,7 @@ Orchestrator imports Pi only through published package entry points; it never im
 
 ### Application composition
 
-`@tsuuanmi/pi` hosts the core product runtime. It loads settings and package resources, chooses a model, builds an `AgentSession`, registers coding tools and providers, persists sessions, hosts extensions, and dispatches interactive, print, JSON, or RPC modes. The bundled workflows extension installs orchestrator-owned subagents.
+`@tsuuanmi/pi` hosts the core product runtime. It loads settings and package resources, chooses a model, builds an `AgentSession`, registers coding tools and providers, persists sessions, hosts extensions, and dispatches interactive, print, JSON, or RPC modes. The bundled workflows extension installs the orchestrator-owned subagent runtime.
 
 ## Main runtime interactions
 
@@ -154,7 +154,8 @@ The root build explicitly runs AI, Agent, Orchestrator, TUI, Pi TypeScript compi
 | Change task scheduling, routing, retries, verification, or checkpoint contracts | `@tsuuanmi/pi-orchestrator` |
 | Change terminal rendering, component contracts, input, or themes | `@tsuuanmi/pi-tui` |
 | Change workflow phases, gates, tools, artifacts, audit, or handoff policy | `@tsuuanmi/pi-workflows` |
-| Change CLI/SDK startup, sessions, settings, extensions, resource loading, concrete tools, UI composition, or session-aware subagents | `@tsuuanmi/pi` |
+| Change CLI/SDK startup, sessions, settings, extensions, resource loading, concrete tools, or UI composition | `@tsuuanmi/pi` |
+| Change session-aware subagents, lifecycle controls, persistence, or worker backends | `@tsuuanmi/pi-orchestrator` |
 
 ## Related architecture
 

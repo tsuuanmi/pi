@@ -26,4 +26,4 @@ Cross-workflow prompts, handoffs, gates, and expected-next guards. Generic multi
 
 - [Workflow control plane](../workflow.md)
 - [Runtime](../runtime/runtime.md)
-- [Subagents](../subagents/subagents.md)
+- [Subagent](../subagent/subagent.md)

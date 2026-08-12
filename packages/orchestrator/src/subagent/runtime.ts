@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
-import { registerSubagentTools } from "#orchestrator/subagents/lifecycle-tools";
-import { disposeSubagentManager, getActiveSubagentCount } from "#orchestrator/subagents/registry";
-import { registerSubagentControls } from "#orchestrator/subagents/tools";
+import { registerSubagentTools } from "#orchestrator/subagent/lifecycle-tools";
+import { disposeSubagentManager, getActiveSubagentCount } from "#orchestrator/subagent/registry";
+import { registerSubagentControls } from "#orchestrator/subagent/tools";
 
 export function registerSubagentRuntime(host: ExtensionAPI): void {
 	registerSubagentTools(host);
@@ -11,7 +11,7 @@ export function registerSubagentRuntime(host: ExtensionAPI): void {
 		if (count === 0) return undefined;
 		return [
 			{
-				id: "subagents",
+				id: "subagent",
 				active: true,
 				phase: "running",
 				hud: {

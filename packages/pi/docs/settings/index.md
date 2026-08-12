@@ -31,7 +31,7 @@ Edit directly or use `/settings` for common options. Only documented fields are 
 
 #### Status Line
 
-`statusLine` customizes the interactive status line. The default preset uses `model`, `mode`, `git`, and `path` on the left, and `session_name`, `subagents`, `token_in`, `token_out`, `context_pct`, and `context_total` on the right.
+`statusLine` customizes the interactive status line. The default preset uses `model`, `mode`, `git`, and `path` on the left, and `session_name`, `token_in`, `token_out`, `context_pct`, and `context_total` on the right.
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
@@ -41,7 +41,7 @@ Edit directly or use `/settings` for common options. Only documented fields are 
 | `statusLine.separator` | string | `"slash"` | Separator style: `"slash"`, `"pipe"`, `"dot"`, or `"space"` |
 | `statusLine.segmentOptions` | object | preset value | Per-segment options for `model`, `path`, and `git` |
 
-Segment IDs are `model`, `mode`, `git`, `path`, `context_pct`, `context_total`, `token_in`, `token_out`, `session_name`, and `subagents`. `thinking` is not a separate segment; use `segmentOptions.model.showThinkingLevel`.
+Segment IDs are `model`, `mode`, `git`, `path`, `context_pct`, `context_total`, `token_in`, `token_out`, and `session_name`. `thinking` is not a separate segment; use `segmentOptions.model.showThinkingLevel`.
 
 ```json
 {

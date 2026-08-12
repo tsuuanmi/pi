@@ -23,7 +23,7 @@ This SRS establishes the minimum contract for:
 - making bounded subagent execution durable and visible; and
 - providing safe, explicit controls for Pi-owned tmux workers.
 
-The requirements complement the package-boundary and runtime notes in [`orchestrator-vs-workflows.md`](../architecture/orchestrator-vs-workflows.md), [`team-workflow-orchestrator-runtime.md`](../architecture/team-workflow-orchestrator-runtime.md), and the [Orchestrator subagent documentation](../../packages/orchestrator/docs/subagents/index.md).
+The requirements complement the package-boundary and runtime notes in [`orchestrator-vs-workflows.md`](../architecture/orchestrator-vs-workflows.md), [`team-workflow-orchestrator-runtime.md`](../architecture/team-workflow-orchestrator-runtime.md), and the [Orchestrator subagent documentation](../../packages/orchestrator/docs/subagent/index.md).
 
 ## 2. System context
 
@@ -138,8 +138,8 @@ An implementation satisfies this SRS only when all applicable requirements are c
 | Workflow lifecycle and approval | `packages/workflows/src/runtime/`, workflow skill tests, and [the task-contract ADR](../adr/general-team-system-framework-adr.md) |
 | Workflow/orchestrator ownership | [Orchestrator and Workflows](../architecture/orchestrator-vs-workflows.md) and `packages/workflows/src/runtime/` |
 | Fresh/resume and failure behavior | [Team Workflow Orchestrator Runtime](../architecture/team-workflow-orchestrator-runtime.md) and team workflow tests |
-| Subagent records and receipts | [Subagent documentation](../../packages/orchestrator/docs/subagents/index.md), `packages/orchestrator/src/subagents/`, and orchestrator subagent tests |
-| Tmux identity and live controls | [Worktree and tmux Threat Model ADR](../adr/tmux-worktree-threat-model-adr.md), `packages/orchestrator/src/subagents/`, and subagent tool tests |
+| Subagent records and receipts | [Subagent documentation](../../packages/orchestrator/docs/subagent/index.md), `packages/orchestrator/src/subagent/`, and orchestrator subagent tests |
+| Tmux identity and live controls | [Worktree and tmux Threat Model ADR](../adr/tmux-worktree-threat-model-adr.md), `packages/orchestrator/src/subagent/`, and subagent tool tests |
 | Package ownership | [Package boundaries](../architecture/package-boundaries.md) and boundary checks |
 
 ## 8. Deferred decisions

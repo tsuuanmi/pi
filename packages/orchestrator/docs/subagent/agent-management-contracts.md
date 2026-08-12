@@ -1,6 +1,6 @@
 # Agent Management Migration Contracts
 
-This document defines the current contract for orchestrator-owned, Pi-hosted subagent management. It describes the public boundary and invariants implemented under `packages/orchestrator/src/subagents/`.
+This document defines the current contract for orchestrator-owned, Pi-hosted subagent management. It describes the public boundary and invariants implemented under `packages/orchestrator/src/subagent/`.
 
 ## Scope
 
@@ -23,11 +23,11 @@ These are the intended ownership boundaries. If implementation chooses different
 | Agent definition parsing | `packages/pi/src/loader/agents/definitions.ts` | `src/loader/agents/profiles.ts`, bundled role-agent prompt assets if added |
 | Project resource loading | `packages/pi/src/settings/manager.ts` and `src/loader/resources.ts` | `packages/pi/docs/app/security.md` |
 | Source metadata and diagnostics | `packages/pi/src/resources/source-info.ts` and `src/resources/diagnostics.ts` | resource-specific loaders |
-| Scoped live registry | `packages/orchestrator/src/subagents/registry.ts` and `manager.ts` | Pi `ExtensionContext.sessionServices` |
-| Durable subagent/task/receipt state | `packages/orchestrator/src/subagents/manager.ts`, `packages/orchestrator/src/subagents/store.ts`, and future task modules | `.pi/<session-id>/state/subagents/`, task runtimes |
+| Scoped live registry | `packages/orchestrator/src/subagent/registry.ts` and `manager.ts` | Pi `ExtensionContext.sessionServices` |
+| Durable subagent/task/receipt state | `packages/orchestrator/src/subagent/manager.ts`, `packages/orchestrator/src/subagent/store.ts`, and future task modules | `.pi/<session-id>/state/subagent/`, task runtimes |
 | Bundled package continuity | Compiled package manifests and package-owned resources | Package resource loaders and tests |
 | Direct-port adaptation | each porting change owner | this document and code review checklist |
-| Worktree/tmux orchestration | `packages/orchestrator/src/subagents/tmux.ts`, `run-identity.ts`, `tmux-launch.ts`, and `subagent-worker.ts` | Orchestrator subagent tools and threat-model docs |
+| Worktree/tmux orchestration | `packages/orchestrator/src/subagent/tmux.ts`, `run-identity.ts`, `tmux-launch.ts`, and `subagent-worker.ts` | Orchestrator subagent tools and threat-model docs |
 
 ## Resource discovery contract
 
@@ -133,7 +133,7 @@ Required negative cases:
 
 Future durable schemas for tasks, receipts, registry-derived ids, or subagent records must include a version field or an explicit invalidation/reset policy.
 
-Because this migration does not require backward compatibility, old `.pi/<session-id>/state/subagents` records may be ignored or invalidated if the phase documents that behavior. They must not be partially interpreted as new task/registry state without a tested migration path.
+Because this migration does not require backward compatibility, old `.pi/<session-id>/state/subagent` records may be ignored or invalidated if the phase documents that behavior. They must not be partially interpreted as new task/registry state without a tested migration path.
 
 Minimum durable-state requirements:
 
@@ -184,7 +184,7 @@ Worktree and tmux orchestration must not begin until a threat-model ADR exists. 
 - cleanup idempotency and permission failures;
 - tmux absence or version mismatch.
 
-The ADR is accepted, satisfying this phase gate. Tmux-backed subagents now expose bounded live controls for `inspect`, `attach`, and `kill`: inspect returns the durable record and paths, attach returns target-specific command guidance without attaching automatically, and kill validates orchestrator-owned run identity metadata plus worker metadata before target-specific cleanup (`kill-pane` or `kill-session`). Invalid identity or tmux command metadata fails closed. `pause`, `resume`, and `heartbeat` live controls remain deferred. `git-worktree-isolation` remains a deferred seam until implementation lands and passes the ADR controls. `cross-harness-omx-fallback` remains permanently blocked unless a later approved plan reverses that policy.
+The ADR is accepted, satisfying this phase gate. A tmux-backed subagent now exposes bounded live controls for `inspect`, `attach`, and `kill`: inspect returns the durable record and paths, attach returns target-specific command guidance without attaching automatically, and kill validates orchestrator-owned run identity metadata plus worker metadata before target-specific cleanup (`kill-pane` or `kill-session`). Invalid identity or tmux command metadata fails closed. `pause`, `resume`, and `heartbeat` live controls remain deferred. `git-worktree-isolation` remains a deferred seam until implementation lands and passes the ADR controls. `cross-harness-omx-fallback` remains permanently blocked unless a later approved plan reverses that policy.
 
 ## Phase-gate summary
 

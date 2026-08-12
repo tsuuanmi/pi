@@ -89,4 +89,4 @@ Use `ultragoal_spawn_goal_agent` for worker execution. It always spawns the stan
 ## See Also
 
 - [Workflow control plane](../../workflow.md)
-- [Subagents and workflow tools](../../subagents/subagents.md)
+- [Subagent and workflow tools](../../subagent/subagent.md)

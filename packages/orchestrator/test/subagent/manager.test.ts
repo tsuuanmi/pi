@@ -5,15 +5,15 @@ import { AuthStorage, DefaultResourceLoader, SettingsManager } from "@tsuuanmi/p
 import { ModelRegistry } from "@tsuuanmi/pi/loader";
 import { sessionStateDir } from "@tsuuanmi/pi/session/root";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { SubagentManager } from "#orchestrator/subagents/manager";
-import { readSubagentWorkerRequest } from "#orchestrator/subagents/subagent-worker";
-import type { SubagentRecord } from "#orchestrator/subagents/types";
+import { SubagentManager } from "#orchestrator/subagent/manager";
+import { readSubagentWorkerRequest } from "#orchestrator/subagent/subagent-worker";
+import type { SubagentRecord } from "#orchestrator/subagent/types";
 import { registerTestProvider, testAssistantMessage, testToolCall } from "../../../pi/test/helpers/provider.ts";
 
 const TEST_SESSION = "test-session";
 
 async function writeRecord(cwd: string, record: SubagentRecord): Promise<void> {
-	const path = join(sessionStateDir(cwd, TEST_SESSION), "subagents", record.id, "record.json");
+	const path = join(sessionStateDir(cwd, TEST_SESSION), "subagent", record.id, "record.json");
 	await mkdir(dirname(path), { recursive: true });
 	await writeFile(path, `${JSON.stringify({ parent_session_id: TEST_SESSION, ...record }, null, 2)}\n`, "utf8");
 }
@@ -29,7 +29,7 @@ describe("SubagentManager", () => {
 	let resourceLoader: DefaultResourceLoader;
 
 	beforeEach(async () => {
-		cwd = join(tmpdir(), `pi-subagents-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+		cwd = join(tmpdir(), `pi-subagent-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		const agentDir = join(cwd, "agent");
 		const settingsManager = SettingsManager.create(cwd, agentDir);
 		const authStorage = AuthStorage.create(join(agentDir, "auth.json"));
@@ -123,7 +123,7 @@ describe("SubagentManager", () => {
 			updated_at: "2026-01-01T00:00:00.000Z",
 		});
 		await manager.cancel("subagent-index", TEST_SESSION);
-		const index = await readFile(join(sessionStateDir(cwd, TEST_SESSION), "subagents", "index.jsonl"), "utf8");
+		const index = await readFile(join(sessionStateDir(cwd, TEST_SESSION), "subagent", "index.jsonl"), "utf8");
 		const lines = index.trim().split("\n");
 		expect(lines.length).toBeGreaterThanOrEqual(1);
 		const last = JSON.parse(lines[lines.length - 1] ?? "") as Record<string, unknown>;
@@ -150,7 +150,7 @@ describe("SubagentManager", () => {
 		if (terminal.ok) expect(terminal.result.output).toBe("ok");
 	});
 
-	it("pause rejects non-running subagents and steer falls back to resume", async () => {
+	it("pause rejects non-running subagent and steer falls back to resume", async () => {
 		const pause = await manager.pause("subagent-idle", TEST_SESSION);
 		expect(pause.ok).toBe(false);
 		if (!pause.ok) expect(pause.reason).toBe("not_running");
@@ -242,8 +242,8 @@ describe("SubagentManager live spawn and resume", () => {
 		// Durable record should match and stay under the host-owned session state dir.
 		const record = await manager.read(result.record.id, TEST_SESSION);
 		expect(record?.status).toBe("completed");
-		const recordPath = join(sessionStateDir(cwd, TEST_SESSION), "subagents", result.record.id, "record.json");
-		const artifactPath = join(sessionStateDir(cwd, TEST_SESSION), "subagents", result.record.id, "artifact.json");
+		const recordPath = join(sessionStateDir(cwd, TEST_SESSION), "subagent", result.record.id, "record.json");
+		const artifactPath = join(sessionStateDir(cwd, TEST_SESSION), "subagent", result.record.id, "artifact.json");
 		expect(JSON.parse(await readFile(recordPath, "utf8"))).toMatchObject({
 			id: result.record.id,
 			status: "completed",
@@ -418,7 +418,7 @@ PROFILE SYSTEM PROMPT`,
 		const inspected = await manager.inspect(result.record.id, TEST_SESSION);
 		expect(inspected).toMatchObject({
 			ok: true,
-			artifactPath: join(sessionStateDir(cwd, TEST_SESSION), "subagents", result.record.id, "artifact.json"),
+			artifactPath: join(sessionStateDir(cwd, TEST_SESSION), "subagent", result.record.id, "artifact.json"),
 			workerMetadataPath: result.record.tmux!.worker_metadata_file,
 			meta: { tmux: result.record.tmux, identity: result.record.identity },
 		});
@@ -664,7 +664,7 @@ Worker profile`,
 		});
 		expect(spawnResult.record.status).toBe("completed");
 		expect(spawnResult.record.session_file).toBeDefined();
-		expect(spawnResult.record.session_file).toContain(join(".pi", TEST_SESSION, "state", "subagents", "sessions"));
+		expect(spawnResult.record.session_file).toContain(join(".pi", TEST_SESSION, "state", "subagent", "sessions"));
 
 		// Resume with a new prompt
 		testProvider.setResponses([testAssistantMessage("refined design")]);

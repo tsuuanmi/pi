@@ -1,6 +1,6 @@
 import { resolvePiCommand } from "@tsuuanmi/pi/tmux";
 import { describe, expect, test } from "vitest";
-import { buildTmuxSubagentLaunchPlan, PI_SUBAGENT_TMUX_TARGET_KIND_ENV } from "#orchestrator/subagents/tmux-launch";
+import { buildTmuxSubagentLaunchPlan, PI_SUBAGENT_TMUX_TARGET_KIND_ENV } from "#orchestrator/subagent/tmux-launch";
 
 describe("subagent tmux launch", () => {
 	test("preserves the runtime loader when rebuilding the pi command", () => {
@@ -18,7 +18,7 @@ describe("subagent tmux launch", () => {
 		const plan = buildTmuxSubagentLaunchPlan({
 			cwd: "/repo/project",
 			subagentId: "subagent-demo",
-			requestPath: "/repo/project/.pi/session/state/subagents/subagent-demo/request.json",
+			requestPath: "/repo/project/.pi/session/state/subagent/subagent-demo/request.json",
 			env: { TMUX: "/tmp/tmux-1000/default,1,0" },
 			argv: ["/usr/bin/node", "/usr/local/bin/pi"],
 			execPath: "/usr/bin/node",

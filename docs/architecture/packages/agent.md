@@ -23,7 +23,7 @@
 - Provider adapters, model catalogs, or canonical provider transport; AI owns them.
 - Credentials, persistent sessions, concrete coding tools, extension loading, or UI; Pi owns them.
 - Task DAGs, agent routing, retries across tasks, verification, team policy, or checkpoint storage; Orchestrator and Workflows own those concerns.
-- Session-aware subagents, durable records, isolated sessions, lifecycle tools, or tmux backends. Pi owns those concerns.
+- Session-aware subagents, durable records, isolated sessions, lifecycle tools, or tmux backends. Orchestrator owns those concerns.
 
 ## Public entry points
 

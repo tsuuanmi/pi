@@ -1,5 +1,5 @@
-import type { TmuxTarget } from "#orchestrator/subagents/tmux";
-import type { SubagentRecord, SubagentStatus } from "#orchestrator/subagents/types";
+import type { TmuxTarget } from "#orchestrator/subagent/tmux";
+import type { SubagentRecord, SubagentStatus } from "#orchestrator/subagent/types";
 
 export interface RunIdentityOwner {
 	kind: "pi-subagent-worker";

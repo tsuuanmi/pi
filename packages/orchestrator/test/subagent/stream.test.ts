@@ -1,7 +1,7 @@
 import type { Model } from "@tsuuanmi/pi-agent";
 import type { AssistantMessageEvent, Context } from "@tsuuanmi/pi-ai";
 import { describe, expect, it, vi } from "vitest";
-import { createSubagentStream } from "#orchestrator/subagents/stream";
+import { createSubagentStream } from "#orchestrator/subagent/stream";
 
 const model: Model<"openai-responses"> = {
 	id: "test-model",

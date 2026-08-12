@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { describe, expect, it } from "vitest";
-import { registerSubagentTools } from "#orchestrator/subagents/lifecycle-tools";
-import { registerSubagentControls } from "#orchestrator/subagents/tools";
+import { registerSubagentTools } from "#orchestrator/subagent/lifecycle-tools";
+import { registerSubagentControls } from "#orchestrator/subagent/tools";
 
 describe("orchestrator subagent lifecycle registration", () => {
 	it("registers the seven lifecycle tools", () => {

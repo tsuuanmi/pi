@@ -4,7 +4,7 @@
 
 - **interactive**: Moved repository discovery, branch watching, status polling, and cached snapshots into a dedicated Pi-owned repository-state service.
 - **tools**: Tool renderers now use neutral expansion copy instead of consulting UI-host keybindings outside the interactive component boundary.
-- **subagents**: The model-visible `subagent_spawn` tool now requires a registered `agent` profile and no longer accepts an inventable `role` label; the spawned subagent's role is always the loaded agent profile name, so only known agent profiles (from `.agent/agents`, `.agents/agents`, user agents, or bundled package agents) can be spawned.
+- **subagent**: The model-visible `subagent_spawn` tool now requires a registered `agent` profile and no longer accepts an inventable `role` label; the spawned subagent's role is always the loaded agent profile name, so only known agent profiles (from `.agent/agents`, `.agents/agents`, user agents, or bundled package agents) can be spawned.
 - **ui**: Interactive assistant thinking blocks now render in full by default instead of a one-line preview; `Ctrl+T` still hides thinking. `Ctrl+O` now only collapses/expands tool output and no longer affects thinking.
 - **sessions**: The session loader accepts legacy version 3 JSONL files (and their `compaction.fromHook` field) on read so existing sessions open again; new files continue to be written at version 4.
 - **storage**: Removed dedicated POSIX permission handling from session, auth, settings, and package directories; regular-file validation and atomic writes remain.
@@ -35,11 +35,11 @@
 - **sdk**: Renamed the session model fallback warning result from `modelFallbackMessage` to `modelStartupWarning`.
 - **sdk**: Removed the obsolete `migratedProviders` field from `InteractiveModeOptions`.
 - **tools**: Removed non-canonical `edit` tool argument forms; the tool now accepts only `path` plus `edits[]` and no longer normalizes alternate shapes.
-- **subagents**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
-- **subagents**: Removed the complete subagent API and implementation from Pi; `@tsuuanmi/pi-orchestrator` now owns the manager, contracts, lifecycle tools, persistence, receipts, and native/tmux execution.
+- **subagent**: Removed tmux command fallback; invalid identity returns `invalid_identity` and missing tmux commands return `invalid_metadata`.
+- **subagent**: Removed the complete subagent API and implementation from Pi; `@tsuuanmi/pi-orchestrator` now owns the manager, contracts, lifecycle tools, persistence, receipts, and native/tmux execution.
 - **extensions**: Replaced `ExtensionContext.subagents` with generic `sessionServices` so external orchestration packages can create isolated sessions without Pi importing them.
 - **tmux**: Published generic Pi command and tmux process utilities through `@tsuuanmi/pi/tmux`; worker dispatch now uses package commands instead of a Pi startup special case.
-- **subagents**: Inspect, attach, kill, tmux identity, and continuation policy moved with the authoritative implementation to `@tsuuanmi/pi-orchestrator`.
+- **subagent**: Inspect, attach, kill, tmux identity, and continuation policy moved with the authoritative implementation to `@tsuuanmi/pi-orchestrator`.
 - **runtime**: Pi is now Node-only; removed alternate-runtime detection and package-manager branches.
 - **cli**: Removed the `pi uninstall` alias; use `pi remove`.
 - **models**: Moved `ModelRegistry` to `@tsuuanmi/pi/loader`, removed the root and legacy model exports, removed path-based construction, and moved CLI resolution to `src/cli/model-resolver.ts`; pass a `SettingsManager` or use `createFromModelsConfig()`.
@@ -73,7 +73,7 @@
 - **auth**: Accept the optional `accountId` field on OAuth credentials written by the Codex OAuth provider, so stored tokens reload instead of failing validation.
 - **tmux**: Preserve the Node loader arguments when relaunching the TypeScript CLI inside tmux.
 - **build**: Retain compiled subagent modules required by the CLI and tmux runtime.
-- **subagents**: Scope live controls to their owning session, await cancellation before returning, and dispose active managers during session replacement.
+- **subagent**: Scope live controls to their owning session, await cancellation before returning, and dispose active managers during session replacement.
 
 ### Removed
 
@@ -102,9 +102,9 @@
 - **tools**: Added a built-in Agent-registered `glob` tool for capped file listing with common bulky directory skips.
 - **tools**: Built-in tool results now attach `details.receipt` structured execution receipts and the TUI renders them consistently.
 - **tmux**: Added structured tmux launch guidance receipts for inspectable long-running workflow handoffs.
-- **subagents**: Explicit `visibility: "tmux"` now launches the Pi CLI in tmux worker mode using a session-local `request.json`, while `visibility: "auto"` still resolves to the native backend for this milestone.
-- **subagents**: Added tmux live controls for inspect, attach guidance, and kill with ordered failure reasons.
-- **subagents**: Tmux-backed subagents now record the shared `Subagent Run Identity` schema, capture pane/session targets from tmux output, and fail closed on legacy or mismatched cleanup metadata.
+- **subagent**: Explicit `visibility: "tmux"` now launches the Pi CLI in tmux worker mode using a session-local `request.json`, while `visibility: "auto"` still resolves to the native backend for this milestone.
+- **subagent**: Added tmux live controls for inspect, attach guidance, and kill with ordered failure reasons.
+- **subagent**: A tmux-backed subagent now records the shared `Subagent Run Identity` schema, captures pane/session targets from tmux output, and fails closed on legacy or mismatched cleanup metadata.
 - **account**: `/account` now shows OpenAI Codex reset credits with quota and can redeem one via `/account reset openai-codex [account]`.
 
 ### Changed
@@ -121,7 +121,7 @@
 - **models**: Ollama Cloud duplicate entries in `models.json` no longer replace generated model metadata from `@tsuuanmi/pi-ai`.
 - **settings**: Custom provider config now lives at top-level `providers` in `settings.json` instead of nested under `models.providers`.
 - **cli**: `--help` and `--list-models` no longer trigger installation of missing project packages; the resource loader skips missing-package installs for these metadata-only commands so help output stays clean and startup is faster.
-- **subagents**: API usage sidecars for subagent runs now route into the owning session bucket instead of creating top-level `.pi/subagent-*` directories.
+- **subagent**: API usage sidecars for subagent runs now route into the owning session bucket instead of creating top-level `.pi/subagent-*` directories.
 
 ## [0.2.1] - 2026-07-20
 

@@ -6,6 +6,6 @@ export interface WorkflowContext {
 	sessionManager: {
 		getSessionId(): string;
 	};
-	subagents: SubagentManagerApi;
+	subagent: SubagentManagerApi;
 	model?: Model;
 }

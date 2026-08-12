@@ -31,7 +31,7 @@
 	},
 	"pi": {
 		"commands": [
-			"dist/subagents/subagent-worker.js"
+			"dist/subagent/subagent-worker.js"
 		]
 	},
 	"dependencies": {

@@ -85,7 +85,6 @@ packages/pi/src/
   runtime/                # agent-session services, context, prompts, and stats
   session/                # session persistence, layout, and compaction
   settings/               # settings and keybinding management
-  subagents/              # subagent orchestration and tmux workers
   tools/                  # built-in tools and LSP support
   ui/                     # interactive components
     package/              # package configuration UI

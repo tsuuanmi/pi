@@ -33,7 +33,7 @@ Worktree orchestration and any new tmux-backed worker behavior must be Pi-native
 
 ### Worker owner identity and cleanup authority
 
-Each worker resource must have durable owner metadata including workspace root, parent session/runtime id, worker id, resource kind, exact pane/session target, created path/session name, creation timestamp, and intended cleanup command. Tmux-backed subagents must validate the shared `Subagent Run Identity` schema before cleanup. Cleanup may only remove resources whose metadata matches the active owner scope. If metadata is missing or mismatched, cleanup must refuse or require explicit user confirmation.
+Each worker resource must have durable owner metadata including workspace root, parent session/runtime id, worker id, resource kind, exact pane/session target, created path/session name, creation timestamp, and intended cleanup command. A tmux-backed subagent must validate the shared `Subagent Run Identity` schema before cleanup. Cleanup may only remove resources whose metadata matches the active owner scope. If metadata is missing or mismatched, cleanup must refuse or require explicit user confirmation.
 
 ### Parent-checkout protection
 

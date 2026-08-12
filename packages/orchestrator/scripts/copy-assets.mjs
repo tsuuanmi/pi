@@ -3,6 +3,6 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const subagents = join(root, "dist", "subagents");
-await mkdir(subagents, { recursive: true });
-await cp(join(root, "src", "subagents", "run-identity.schema.json"), join(subagents, "run-identity.schema.json"));
+const subagent = join(root, "dist", "subagent");
+await mkdir(subagent, { recursive: true });
+await cp(join(root, "src", "subagent", "run-identity.schema.json"), join(subagent, "run-identity.schema.json"));

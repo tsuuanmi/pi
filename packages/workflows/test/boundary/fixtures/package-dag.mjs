@@ -7,6 +7,6 @@ export const ALLOWED_SOURCE_IMPORT_FIXTURE = {
 
 export const FORBIDDEN_SOURCE_IMPORT_EDGES = [
 	["@tsuuanmi/pi-workflows", "#pi/*"],
-	["packages/orchestrator/src/subagents/**", "@tsuuanmi/pi-workflows"],
+	["packages/orchestrator/src/subagent/**", "@tsuuanmi/pi-workflows"],
 	["@tsuuanmi/pi-agent", "@tsuuanmi/pi"],
 ];

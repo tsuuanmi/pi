@@ -9,7 +9,7 @@ type StatusLineSegmentId =
   | "model" | "mode" | "git" | "path"
   | "context_pct" | "context_total"
   | "token_in" | "token_out"
-  | "session_name" | "subagents";
+  | "session_name";
 ```
 
 `thinking` is intentionally not a segment — it is folded into `model` via `segmentOptions.model.showThinkingLevel`. The 10 ids above are the only legal segment ids.
@@ -82,7 +82,6 @@ interface SegmentContext {
   contextPercent: number | null;       // null when unknown (e.g. after compaction)
   contextWindow: number;              // 0 when unknown
   autoCompactEnabled: boolean;         // drives the `(auto)` indicator
-  subagentCount: number;               // running + paused subagents
   availableProviderCount: number;      // drives the `(provider)` prefix
   git: { branch: string | null; status: GitStatusSummary | null };
   hudPhase?: string;                    // active HUD phase, undefined when none
@@ -106,7 +105,6 @@ interface StatusLineSessionLike {
     getCwd(): string;
   };
   getContextUsage(): { contextWindow?: number; percent?: number | null } | null | undefined;
-  subagentManager?: { getActiveCount(): number };
 }
 
 interface GitStatusSummary {

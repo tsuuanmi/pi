@@ -61,7 +61,7 @@ const internalRules = [
 		forbidden: ["#pi/cli/", "#pi/modes/", "#pi/ui/"],
 	},
 	{
-		directory: "packages/orchestrator/src/subagents",
+		directory: "packages/orchestrator/src/subagent",
 		forbidden: ["#pi/", "@tsuuanmi/pi-workflows", "#workflows/"],
 	},
 	{ directory: "packages/pi/src/package/loader.ts", forbidden: ["#pi/index"] },

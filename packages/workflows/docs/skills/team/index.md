@@ -119,4 +119,4 @@ Role capability matching is exact. Missing capabilities and duplicate agent ids 
 ## See Also
 
 - [Workflow control plane](../../workflow.md)
-- [Subagents and workflow tools](../../subagents/subagents.md)
+- [Subagent and workflow tools](../../subagent/subagent.md)

@@ -21,7 +21,7 @@ class StatusLineComponent implements Component {
 
 ## Construction
 
-- `session` — the host session (model, thinking level, session manager, context usage, subagents).
+- `session` — the host session (model, thinking level, session manager, and context usage).
 - `dataProvider` — host-owned repository, extension-status, and provider-count snapshots. The component does not execute Git, watch repository files, or poll repository state.
 - `settingsSource` — a live handle to the current `StatusLineSettings`; read on every render so config changes take effect immediately.
 - `requestRender` — called from background refresh callbacks when a cache updates.

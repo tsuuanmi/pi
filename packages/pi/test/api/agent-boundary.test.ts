@@ -25,7 +25,7 @@ describe("pi public agent boundary", () => {
 	it("does not retain subagent ownership in Agent", async () => {
 		const source = await readRepoFile("packages/agent/src/index.ts");
 
-		expect(source).not.toContain("#agent/subagents");
+		expect(source).not.toContain("#agent/subagent");
 		expect(source).not.toContain("SubagentManager");
 		expect(source).not.toContain("SUBAGENT_");
 	});

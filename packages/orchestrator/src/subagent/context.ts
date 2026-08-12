@@ -1,4 +1,4 @@
-import type { SubagentManagerApi } from "#orchestrator/subagents/manager-api";
+import type { SubagentManagerApi } from "#orchestrator/subagent/manager-api";
 
 export type SubagentDetails = Record<string, unknown>;
 

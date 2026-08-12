@@ -1,10 +1,10 @@
-# Subagents to Orchestrator Migration
+# Subagent to Orchestrator Migration
 
 Status: **Implemented**.
 
 ## Decision
 
-`@tsuuanmi/pi-orchestrator` owns the complete session-aware subagent feature. `@tsuuanmi/pi` remains the application/session host and exposes generic session services to extensions, but it does not import, construct, register, dispatch, persist, or export subagents.
+`@tsuuanmi/pi-orchestrator` owns the complete session-aware subagent feature. `@tsuuanmi/pi` remains the application/session host and exposes generic session services to extensions, but it does not import, construct, register, dispatch, persist, or export the subagent runtime.
 
 The dependency direction is:
 
@@ -20,7 +20,7 @@ More precisely, `pi` depends on `ai`, `agent`, and `tui`; `orchestrator` depends
 The original plan proposed moving contracts while leaving the concrete manager, store, worker, and lifecycle tools in Pi. That split was rejected during implementation because it would preserve two owners and leave the feature in Pi. The source also exposed two responsibilities that needed explicit separation:
 
 1. Generic Pi tmux command resolution and spawn types were mixed into the subagent launcher. They now live in `packages/pi/src/cli/tmux.ts` and are published through `@tsuuanmi/pi/tmux`.
-2. Extension contexts need coherent session construction inputs without knowing about subagents. `AgentSessionServices` is now an API-layer contract exposed as `ExtensionContext.sessionServices`.
+2. Extension contexts need coherent session construction inputs without knowing about subagent internals. `AgentSessionServices` is now an API-layer contract exposed as `ExtensionContext.sessionServices`.
 
 The tmux worker could not remain a Pi startup special case without coupling Pi to orchestrator. It is now an orchestrator package command named `subagent-worker`; tmux launch plans re-invoke the Pi binary through the normal package-command dispatcher. Pi's extension loader resolves bundled package entry points generically from their compiled manifests, so bundled workflows can import orchestrator without a Pi manifest dependency.
 
@@ -28,7 +28,7 @@ The tmux worker could not remain a Pi startup special case without coupling Pi t
 
 ### Orchestrator ownership
 
-All former `packages/pi/src/subagents/` modules moved to `packages/orchestrator/src/subagents/`:
+All former `packages/pi/src/subagent/` modules moved to `packages/orchestrator/src/subagent/`:
 
 - contracts and adapters: `context.ts`, `manager-api.ts`, `spec.ts`, `types.ts`, `stream.ts`
 - lifecycle: `manager.ts`, `registry.ts`, `runtime.ts`, `lifecycle-tools.ts`, `tools.ts`, `tool-execution.ts`, `tool-names.ts`, `tool-schemas.ts`
@@ -42,16 +42,16 @@ The orchestrator package now:
 
 - depends directly on `@tsuuanmi/pi`, `@tsuuanmi/pi-agent`, `@tsuuanmi/pi-ai`, and `typebox`;
 - publishes the manager, API, contracts, registration functions, progress, receipts, and result helpers;
-- declares `dist/subagents/subagent-worker.js` as a Pi package command;
-- copies the run-identity schema into its own `dist/subagents/`.
+- declares `dist/subagent/subagent-worker.js` as a Pi package command;
+- copies the run-identity schema into its own `dist/subagent/`.
 
-Subagent source, docs, and tests now have matching `packages/orchestrator/{src,docs,test}/subagents/` layouts.
+Subagent source, docs, and tests now have matching `packages/orchestrator/{src,docs,test}/subagent/` layouts.
 
 ### Pi host boundary
 
 Pi removed:
 
-- `src/subagents/`;
+- `src/subagent/`;
 - built-in subagent extension registration;
 - `AgentSession.subagentManager` and service/factory manager options;
 - `ExtensionContext.subagents`;
@@ -93,9 +93,9 @@ The root build order is `ai -> agent -> tui -> pi -> orchestrator -> workflows`,
 ## Runtime invariants
 
 - There is one authoritative `SubagentManager` implementation.
-- Subagent records remain under the owning Pi session root: `.pi/<session-id>/state/subagents/`.
+- Subagent records remain under the owning Pi session root: `.pi/<session-id>/state/subagent/`.
 - Subagent sessions reuse coherent Pi auth/settings/model/resource configuration while receiving isolated session and extension runtime state.
-- All `subagent_*` tools are excluded from child sessions, preventing nested subagents.
+- All `subagent_*` tools are excluded from child sessions, preventing nested subagent runs.
 - Native execution and tmux execution use the same manager/store contracts.
 - Worker dispatch uses a normal orchestrator package command; Pi has no subagent-specific command path.
 - Pi never imports orchestrator or workflows source.

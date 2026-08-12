@@ -1,6 +1,6 @@
 # Package Overlap Audit
 
-> Note: subagent ownership findings in this historical audit are superseded by the implemented [Subagents to Orchestrator Migration](subagents-to-orchestrator-migration.md).
+> Note: subagent ownership findings in this historical audit are superseded by the implemented [Subagent to Orchestrator Migration](subagent-to-orchestrator-migration.md).
 
 This audit identifies similar concepts across all seven workspace packages and decides whether each similarity is:
 
@@ -67,7 +67,7 @@ The audit did find smaller duplicate shapes, ambiguous ownership, packaging comp
 | Messages | AI `Message`; Agent `AgentMessage`; Pi session entries | AI owns wire messages; Agent owns custom roles and conversion; Pi owns persistence tree | Pi reconstructs/imports Agent messages; Agent calls `convertToLlm()` | Message conversion or provider transforms in Pi/Workflows |
 | Context | AI provider `Context`; Agent `Context`; Pi context hooks/optimizer | Each owns a different stage: wire request, Agent loop snapshot, application policy | Pi supplies Agent transforms; Agent constructs AI Context | Parallel wire-context builder in Pi or workflow code |
 | Agent | Agent core; Pi `AgentSession`; workflow proxy Agents; Orchestrator Team | Agent owns the loop; Pi hosts it; Workflows adapts subagent work into Agent streams; Orchestrator only schedules Agents | Construct/configure Agent and call public run APIs | Alternate model/tool loop or Agent lifecycle engine |
-| Subagents | Pi manager/backends; generic Agent contracts; Workflow tools | Agent owns the generic Agent loop and tool contracts; Pi owns subagent API, lifecycle specs, concrete execution/store; Workflows owns guarded policy and receipt adaptation | Inject Pi `SubagentManagerApi` into Workflow context | Workflow/Orchestrator manager, process backend, store or lifecycle spec copies |
+| Subagent | Pi manager/backends; generic Agent contracts; Workflow tools | Agent owns the generic Agent loop and tool contracts; Pi owns subagent API, lifecycle specs, concrete execution/store; Workflows owns guarded policy and receipt adaptation | Inject Pi `SubagentManagerApi` into Workflow context | Workflow/Orchestrator manager, process backend, store or lifecycle spec copies |
 | Queues | Agent steering queue; Orchestrator `TaskQueue`; workflow persisted task lists | Separate scopes: conversation input, runtime DAG, durable workflow projection | Explicit mapping between workflow task records and Orchestrator tasks | Workflow DAG scheduler or use of Agent queue for tasks |
 | Team | Orchestrator `Team`; Workflow Team skill state | Orchestrator owns live roster/message bus; Workflows owns role policy, durable board/events/artifacts | Build Orchestrator Team after workflow admission | Second live Team executor or MessageBus in Workflows |
 | Routing | Orchestrator task selection; Workflow expected-next roles; workflow runtime endpoint routing | Orchestrator owns task routing; Workflows owns role policy and control-plane RPC routing | Workflow passes explicit requirements/routes downward | Agent-scoring/scheduling in workflow task mappers |

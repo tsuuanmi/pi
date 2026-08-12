@@ -1,7 +1,7 @@
 import { isStructuredReceipt } from "@tsuuanmi/pi-agent";
 import { describe, expect, it } from "vitest";
-import { attachControlReceipt, createSubagentReceipt } from "#orchestrator/subagents/receipts";
-import type { InspectResult, SubagentRecord } from "#orchestrator/subagents/types";
+import { attachControlReceipt, createSubagentReceipt } from "#orchestrator/subagent/receipts";
+import type { InspectResult, SubagentRecord } from "#orchestrator/subagent/types";
 
 const RECORD: SubagentRecord = {
 	id: "subagent-1",

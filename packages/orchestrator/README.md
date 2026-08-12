@@ -20,7 +20,7 @@ Task requirements are structured and strict: `capabilities`, `tools`, `provider`
 
 Agent behavior, the single-agent turn loop, and tool protocol remain in `@tsuuanmi/pi-agent`. Pi owns the application session host; orchestrator owns subagent execution.
 
-See [Orchestrator documentation](./docs/orchestrator/orchestrator.md) and [Subagents](./docs/subagents/index.md) for integration patterns.
+See [Orchestrator documentation](./docs/orchestrator/orchestrator.md) and [Subagent](./docs/subagent/index.md) for integration patterns.
 
 ## Quick Start
 

@@ -14,7 +14,7 @@ export interface TeamAgentSpec {
 
 export function createTeamAgents(ctx: WorkflowContext, specs: readonly TeamAgentSpec[]): readonly Agent[] {
 	if (specs.length === 0) throw new Error("team agent roster requires at least one agent");
-	const manager = ctx.subagents;
+	const manager = ctx.subagent;
 	const sessionId = ctx.sessionManager.getSessionId();
 	const model = ctx.model;
 	if (!model) throw new Error("team execution requires an active host model");

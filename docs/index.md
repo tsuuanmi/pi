@@ -27,7 +27,7 @@ Documentation is grouped by purpose:
 - [Package Boundaries](architecture/package-boundaries.md)
 - [Package Overlap Audit](architecture/package-overlap-audit.md) - intentional adapters, duplicate/ambiguous seams, forbidden duplication, and cleanup priorities
 - [Package Overlap Implementation](architecture/package-overlap-implementation.md) - phased file-level changes, dependency order, and verification gates
-- [Subagents to Orchestrator Migration](architecture/subagents-to-orchestrator-migration.md) - implemented ownership, composition, and dependency changes
+- [Subagent to Orchestrator Migration](architecture/subagent-to-orchestrator-migration.md) - implemented ownership, composition, and dependency changes
 - [Persistence Boundaries](architecture/persistence-boundaries.md)
 - [Ralplan Orchestrator Contract](architecture/ralplan-orchestrator-contract.md)
 - [Receipt Boundaries](architecture/receipt-boundaries.md)

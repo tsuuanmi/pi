@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { type Static, Type } from "typebox";
-import { requireSubagentControls } from "#orchestrator/subagents/controls";
-import { attachControlReceipt } from "#orchestrator/subagents/receipts";
+import { requireSubagentControls } from "#orchestrator/subagent/controls";
+import { attachControlReceipt } from "#orchestrator/subagent/receipts";
 
 const subagentIdSchema = Type.Object({
 	id: Type.String({ description: "Subagent id." }),

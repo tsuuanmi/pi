@@ -31,5 +31,5 @@ Bundled profiles are wired into guarded workflow execution paths:
 
 ## See Also
 
-- [Subagents](../subagents/subagents.md)
+- [Subagent](../subagent/subagent.md)
 - [Workflow control plane](../workflow.md)

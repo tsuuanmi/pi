@@ -23,7 +23,7 @@ This document maps the tracked docs to the current `packages/workflows/src/` lay
 | `src/skills/team/` | Team `SKILL.md` plus strict domain validation, persistence, state, tasks, gates, messages, role execution adapters, Orchestrator integration, checkpoint/receipt stores, tools, policy, and HUD. | [skills/team/index.md](skills/team/index.md) |
 | `src/skills/ultragoal/` | Ultragoal `SKILL.md` plus plan lifecycle/storage, checkpoints, goal selection, artifacts, obstacles, layered quality gates, receipts, tools, and HUD. | [skills/ultragoal/index.md](skills/ultragoal/index.md) |
 | `src/state/` | Active workflow state, state validation/writes, workflow ids, and base state models. | [state/state.md](state/state.md) |
-| `src/tool/` | Workflow context, host/spec contracts, model-visible result details, registration, and surface metadata. | [tool/details.md](tool/details.md), [subagents/subagents.md](subagents/subagents.md) |
+| `src/tool/` | Workflow context, host/spec contracts, model-visible result details, registration, and surface metadata. | [tool/details.md](tool/details.md), [subagent/subagent.md](subagent/subagent.md) |
 | `src/tool/register.ts` | Registration aggregator for model-visible workflow tools; it does not invoke CLI commands. | [extensions/workflows.md](extensions/workflows.md) |
 
 ## Generated Package Assets

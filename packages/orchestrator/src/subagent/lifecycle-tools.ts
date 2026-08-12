@@ -1,8 +1,8 @@
 import type { ExtensionAPI, ExtensionContext, ExtensionToolSpec } from "@tsuuanmi/pi/extensions";
 import type { ToolResult, ToolUpdate } from "@tsuuanmi/pi-agent";
-import type { SubagentContext, SubagentDetails } from "#orchestrator/subagents/context";
-import { getSubagentManager } from "#orchestrator/subagents/registry";
-import { awaitRun, cancel, pause, resume, spawn, status, steer } from "#orchestrator/subagents/tool-execution";
+import type { SubagentContext, SubagentDetails } from "#orchestrator/subagent/context";
+import { getSubagentManager } from "#orchestrator/subagent/registry";
+import { awaitRun, cancel, pause, resume, spawn, status, steer } from "#orchestrator/subagent/tool-execution";
 import type {
 	SubagentAwaitInput,
 	SubagentIdInput,
@@ -10,7 +10,7 @@ import type {
 	SubagentSpawnInput,
 	SubagentStatusInput,
 	SubagentSteerInput,
-} from "#orchestrator/subagents/tool-schemas";
+} from "#orchestrator/subagent/tool-schemas";
 import {
 	subagentAwaitSchema,
 	subagentIdSchema,
@@ -19,7 +19,7 @@ import {
 	subagentSpawnSchema,
 	subagentStatusSchema,
 	subagentSteerSchema,
-} from "#orchestrator/subagents/tool-schemas";
+} from "#orchestrator/subagent/tool-schemas";
 
 export const SUBAGENT_SPECS = [
 	{

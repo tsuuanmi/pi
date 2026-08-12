@@ -87,7 +87,7 @@ This keeps agent behavior centralized while allowing applications, extensions, a
 
 ## Subagent and Orchestration Boundary
 
-Subagent sessions are Pi-host responsibilities. Use `@tsuuanmi/pi` for session-aware subagent execution and lifecycle controls. Use `@tsuuanmi/pi-orchestrator` for task dependencies, routing, retries, queues, and agent collaboration.
+Pi owns the main application session and supplies generic session services. Use `@tsuuanmi/pi-orchestrator` for session-aware subagent execution, lifecycle controls, task dependencies, routing, retries, queues, and agent collaboration.
 
 ## Execution Boundary
 

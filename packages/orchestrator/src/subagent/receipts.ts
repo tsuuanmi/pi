@@ -4,7 +4,7 @@ import {
 	type StructuredReceiptInspectEntry,
 	withStructuredReceipt,
 } from "@tsuuanmi/pi-agent";
-import type { SubagentRecord } from "#orchestrator/subagents/types";
+import type { SubagentRecord } from "#orchestrator/subagent/types";
 
 function truncatePreview(value: string | undefined, limit = 240): string | undefined {
 	if (!value) return undefined;

@@ -126,7 +126,7 @@ Workflows imports Pi's public host/session contracts and orchestrator's public s
 - `workflowExtension` installs the orchestrator subagent runtime, then registers workflow tools and hooks.
 - Workflows imports published Pi session-root APIs so skill paths extend Pi's base session layout without private aliases.
 - Pi's interactive mode reads strict session-owned active workflow state for the status line.
-- Workflows consumes orchestrator-provided subagents through public package exports and never imports Pi or orchestrator internals.
+- Workflows consumes orchestrator-provided subagent services through public package exports and never imports Pi or orchestrator internals.
 
 ## Persistence boundaries
 
@@ -141,7 +141,7 @@ Writes use the mechanism appropriate to each schema: serialized mutation queues,
 
 ## Detached runtime boundary
 
-`RuntimeOwner` owns external lifecycle state and RPC routing over a local socket. It can submit, recover, validate, finalize, operate, and retire workflow runs. It intentionally has no `SubagentManager`; extension-host execution remains the path for starting subagents.
+`RuntimeOwner` owns external lifecycle state and RPC routing over a local socket. It can submit, recover, validate, finalize, operate, and retire workflow runs. It intentionally has no `SubagentManager`; extension-host execution remains the path for starting a subagent.
 
 `mutateRuntimeSession()` serializes and validates lifecycle mutations before writing state, events, and receipt-family updates. `operate()` performs a bounded observe/recover loop and only finalizes after explicit completion evidence.
 

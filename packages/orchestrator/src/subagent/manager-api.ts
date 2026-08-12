@@ -6,7 +6,7 @@ import type {
 	SubagentResumeResult,
 	SubagentRunRequest,
 	SubagentRunResult,
-} from "#orchestrator/subagents/types";
+} from "#orchestrator/subagent/types";
 
 export interface SubagentManagerApi {
 	spawn(request: SubagentRunRequest): Promise<SubagentRunResult>;

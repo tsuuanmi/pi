@@ -1,5 +1,5 @@
 /**
- * Subagent progress snapshots — retained diagnostic state for running subagents.
+ * Subagent progress snapshots — retained diagnostic state for running subagent runs.
  *
  * When a subagent times out or fails, the parent only sees `status: failed`
  * with no detail about what the subagent was doing. This module retains

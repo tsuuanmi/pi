@@ -92,7 +92,7 @@ The boundary checker allows direct manager operations in these workflow adapters
 
 Team multi-agent execution must route through `runTeamOrchestrator`. Unknown manager call sites fail the check instead of falling back to another execution path.
 
-Orchestrator controls under `packages/orchestrator/src/subagents/` use the concrete manager for inspect, attach, and kill operations. They must not import Pi private modules or workflow contracts.
+Orchestrator controls under `packages/orchestrator/src/subagent/` use the concrete manager for inspect, attach, and kill operations. They must not import Pi private modules or workflow contracts.
 
 ## Public API boundary
 
@@ -156,7 +156,7 @@ The same checker also enforces selected boundaries inside `packages/pi`:
 
 - `src/api/` cannot import runtime or UI implementation modules.
 - `src/package/` cannot import CLI, modes, or UI.
-- Orchestrator `src/subagents/` cannot import Pi private aliases or workflow implementation surfaces.
+- Orchestrator `src/subagent/` cannot import Pi private aliases or workflow implementation surfaces.
 - Package loading cannot reach back through the broad `#pi/index` barrel.
 
 These rules keep public SDK/configuration code from depending on application-mode internals and prevent circular composition through broad barrels.

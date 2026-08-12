@@ -37,7 +37,7 @@ async function executeUltragoalSpawnGoalAgent(
 		taskId: goal.id,
 	});
 	assertNoGuardedSpawnOverrides(params);
-	const manager = ctx.subagents;
+	const manager = ctx.subagent;
 	const result = await manager.spawn({
 		agent: "worker",
 		role: "worker",

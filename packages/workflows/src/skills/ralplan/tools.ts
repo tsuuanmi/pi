@@ -136,7 +136,7 @@ async function executeRalplanRunAgent(params: RalplanRunAgentInput, ctx: Workflo
 		};
 	}
 
-	const manager = ctx.subagents;
+	const manager = ctx.subagent;
 	const result = await runRalplanStage({
 		...agentInput,
 		cwd: ctx.cwd,

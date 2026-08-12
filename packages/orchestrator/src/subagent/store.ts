@@ -3,7 +3,7 @@ import { appendFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs
 import { dirname, join } from "node:path";
 import { sessionStateDir } from "@tsuuanmi/pi/session/root";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import type { SubagentRecord, SubagentStatus } from "#orchestrator/subagents/types";
+import type { SubagentRecord, SubagentStatus } from "#orchestrator/subagent/types";
 
 export class SubagentStore {
 	private readonly cwd: string;
@@ -77,7 +77,7 @@ export class SubagentStore {
 
 	private root(sessionId: string): string {
 		if (!sessionId.trim()) throw new Error("subagent records require a session id");
-		return join(sessionStateDir(this.cwd, sessionId), "subagents");
+		return join(sessionStateDir(this.cwd, sessionId), "subagent");
 	}
 
 	private indexPath(sessionId: string): string {

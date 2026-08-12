@@ -2,12 +2,12 @@
 
 ### Breaking Changes
 
-- **subagents**: Moved the complete session-aware subagent API and implementation from `@tsuuanmi/pi`; consumers must import it from `@tsuuanmi/pi-orchestrator`.
+- **subagent**: Moved the complete session-aware subagent API and implementation from `@tsuuanmi/pi`; consumers must import it from `@tsuuanmi/pi-orchestrator`.
 - **orchestrator**: Replaced mixed task helper types with focused dependency graph contracts and removed internal prompt/result types from the package root.
 
 ### Added
 
-- **subagents**: Added isolated Pi sessions, persistence, lifecycle/control tools, receipts, active HUD data, native/tmux backends, and the `subagent-worker` package command.
+- **subagent**: Added isolated Pi sessions, persistence, lifecycle/control tools, receipts, active HUD data, native/tmux backends, and the `subagent-worker` package command.
 - **orchestrator**: Added `@tsuuanmi/pi-orchestrator` as the isolated package for task, team, and orchestrator contracts previously hosted in `@tsuuanmi/pi-agent`.
 
 ### Changed

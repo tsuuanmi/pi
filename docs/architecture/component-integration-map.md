@@ -55,7 +55,7 @@ Canonical source: [`packages/agent/src/`](../../packages/agent/src). Public acce
 
 | Canonical component | Consumers and access | How it is used | Consumer-owned adapter | Must not be duplicated |
 |---|---|---|---|---|
-| `Agent` and the model/tool turn loop | Orchestrator, Workflows, Pi import root | Pi constructs the primary session Agent; Orchestrator holds/runs Agents; Workflows creates proxy Agents backed by subagents | Pi supplies stream/auth/context/tool configuration; Workflows supplies manager-backed stream adapters | Model loop, tool-call continuation, steering/follow-up lifecycle, loop detection, or Agent state engine |
+| `Agent` and the model/tool turn loop | Orchestrator, Workflows, Pi import root | Pi constructs the primary session Agent; Orchestrator holds/runs Agents; Workflows creates proxy Agents backed by a subagent | Pi supplies stream/auth/context/tool configuration; Workflows supplies manager-backed stream adapters | Model loop, tool-call continuation, steering/follow-up lifecycle, loop detection, or Agent state engine |
 | `AgentMessage` and `convertToLlm()` | Pi imports root | Session entries and custom roles are converted before provider calls | Pi persists/reconstructs messages and supplies context hooks | Agent-message-to-AI conversion or custom-role formatting |
 | `ToolSpec`, `ContextToolSpec`, `Tool`, `ToolRegistry`, tool results and updates | Workflows and Pi import root | Workflows specializes `ContextToolSpec` with workflow context; Pi specializes it with extension context/renderers and adapts declarations to `Tool` | Context/render metadata in the consuming package | Tool registry, validation/execution ordering, output limiting, or result-message creation |
 | Agent events/hooks/traces | Pi imports root; Workflows uses selected contracts | Pi bridges Agent lifecycle to extension/session events | Pi's event bridge maps but does not redefine source semantics | Another Agent dispatcher or hook pipeline |
@@ -127,7 +127,7 @@ Canonical source: [`packages/workflows/src/`](../../packages/workflows/src). Sta
 | `pi workflow` command | `pi.commands` resource; native dynamic import by path | Dispatches package-owned CLI command before normal session mode | Workflow command parser/handler in Pi |
 | Workflow tools/hooks | Extension host injection | Registers workflow-owned ToolSpecs and lifecycle hooks | Copies of tool definitions in Pi |
 | Workflow state/artifacts/audit/receipts | Data handoff through explicit session paths | Pi shows state/results but does not mutate schemas directly | Workflow persistence or transaction logic in Pi/Orchestrator |
-| Shared subagent stream adapter | Public Orchestrator `src/subagents/stream.ts` using Agent/AI contracts | Team and Ralplan supply skill-specific subagent operations | Duplicate assistant event/message envelopes in workflow adapters |
+| Shared subagent stream adapter | Public Orchestrator `src/subagent/stream.ts` using Agent/AI contracts | Team and Ralplan supply skill-specific subagent operations | Duplicate assistant event/message envelopes in workflow adapters |
 | Orchestrator adapters | Internal Workflows components using public Orchestrator/Agent imports | Workflows resolves `SubagentManagerApi` from Pi session services through Orchestrator | Workflow-specific adapters in Pi or generic orchestration in Workflows |
 
 ### Workflows load flow

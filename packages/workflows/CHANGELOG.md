@@ -25,8 +25,8 @@
 - **exports**: Removed the mixed `runtime/operations`, `skills/ultragoal/runtime`, and `skills/ultragoal/quality-gate` modules and the unrestricted `./runtime/*` package subpath. Runtime recovery, policy, validation, finalization, workspace markers, Ultragoal plans, checkpoints, obstacles, and quality-gate validation now have responsibility-owned modules.
 - **exports**: Replaced the mixed workflow tool surface with `@tsuuanmi/pi-workflows/tool`; workflow specs now adapt to the core `Tool` contract.
 - **session**: Removed implicit latest-session discovery and activity-marker writes; every workflow operation now requires an explicit session source.
-- **subagents**: Removed workflow-owned subagent contracts and thinking-level exports; lifecycle behavior now comes from explicit providers through the workflow tool adapter.
-- **subagents**: Workflow tools consume the complete session-aware subagent API from `@tsuuanmi/pi-orchestrator`; workflows do not define a parallel contract or manager.
+- **subagent**: Removed workflow-owned subagent contracts and thinking-level exports; lifecycle behavior now comes from explicit providers through the workflow tool adapter.
+- **subagent**: Workflow tools consume the complete session-aware subagent API from `@tsuuanmi/pi-orchestrator`; workflows do not define a parallel contract or manager.
 
 ### Added
 
@@ -37,14 +37,14 @@
 ### Changed
 
 - **extension**: The bundled extension installs Orchestrator's subagent runtime and adapts Pi's generic extension context into workflow tool context.
-- **subagents**: Moved the generic subagent-to-Agent stream adapter and its tests to Orchestrator; workflow adapters consume the public export.
+- **subagent**: Moved the generic subagent-to-Agent stream adapter and its tests to Orchestrator; workflow adapters consume the public export.
 - **ralplan**: Approved plans now map to Team or Ultragoal through one workflow-owned output adapter instead of constructing downstream state inline.
 - **ultragoal**: Typed obstacles are now authoritative for guard decisions, malformed obstacle ledgers fail closed, and completing a blocker goal resolves its matching obstacles.
 - **agents**: Guarded workflow spawns now use standard bundled agent profiles only. `ralplan_run_agent` removed its optional `agent` override and derives the profile from the legal role (explorer/planner/architect/critic/expert); `ultragoal_spawn_goal_agent` removed its optional `agent` override and always spawns the `worker` profile, using `worker` as the subagent role instead of the invented `ultragoal-worker-<goal-id>` label. `assertNoGuardedSpawnOverrides` no longer lists `agent` as an accepted guard input.
 - **agents**: The `explorer` profile is now a general read-only research agent: it pins `model: openai-codex/gpt-5.6-luna` to run bulk reading/reporting on a cheaper model, keeps read-only tools (`read`, `bash`), and supports two modes — ralplan skill mode (persists a `context_map` via the workflow tool) and general research mode (returns a concise cited report for use before deep-interview questions or other read-only investigation). System prompt and description updated accordingly.
 - **build**: Workflows now copies its own runtime assets through a package-owned build script and can be bundled without reconstructing its package layout.
 - **session**: Workflow-specific layout remains in Workflows while shared `.pi` root and path-segment primitives are provided by `@tsuuanmi/pi/session/root`.
-- **subagents**: Moved reusable lifecycle tool execution to `@tsuuanmi/pi-agent`; workflows now retain only host adaptation, workflow receipts, and surface metadata.
+- **subagent**: Moved reusable lifecycle tool execution to `@tsuuanmi/pi-agent`; workflows now retain only host adaptation, workflow receipts, and surface metadata.
 - **extensions**: The package extension adapter is discovered from the package manifest and invoked through Pi's generic `ExtensionAPI` loader.
 - **extensions**: Split workflow tool registration and workflow hook registration into focused modules; the package extension now composes both registrars.
 - **team**: Moved manager acquisition into the Team agent adapter and added a fail-closed boundary check for direct `SubagentManager` calls.
@@ -73,9 +73,9 @@
 - **ultragoal**: Added checkpointed task execution under one main goal, including state-only checkpoint snapshots and `restore-checkpoint` recovery for the latest valid checkpoint.
 - **state**: Added a packaged JSON Schema for `pi workflow state <skill> <action>` payloads at `src/state/assets/schema.json`, copied to `dist/state/assets/schema.json` during builds.
 - **commands**: `pi workflow --help` and `pi workflow <skill> --help` now show detailed workflow verbs, skill actions, options, examples, docs, and skill-local JSON schema references.
-- **subagents**: Subagent tools now attach shared `@tsuuanmi/pi-agent` structured receipts for current-session status and inspection visibility.
-- **subagents**: `subagent_spawn` now forwards explicit `visibility` through to the shared subagent manager, while guarded spawns omit it and stay native.
-- **subagents**: Added `subagent_inspect`, `subagent_attach`, and `subagent_kill` tools for tmux-backed subagent live controls, including pane-aware attach targets surfaced from the shared manager contract.
+- **subagent**: Subagent tools now attach shared `@tsuuanmi/pi-agent` structured receipts for current-session status and inspection visibility.
+- **subagent**: `subagent_spawn` now forwards explicit `visibility` through to the shared subagent manager, while guarded spawns omit it and stay native.
+- **subagent**: Added `subagent_inspect`, `subagent_attach`, and `subagent_kill` tools for tmux-backed subagent live controls, including pane-aware attach targets surfaced from the shared manager contract.
 
 ## [0.2.0] - 2026-07-20
 
@@ -89,7 +89,7 @@
 
 - **ralplan**: Added a deterministic orchestration snapshot, pure expected-action selector, and journaled artifact completion transaction with provenance sidecars, idempotent same-hash handling, and doctor-visible journal health.
 - **deep-interview**: Added first-class model-visible tools for planning questions, recording answers/scoring, reading derived state, closure checks, restating goals, and writing specs with current-session propagation.
-- **subagents**: Workflow agent execution is exposed through model-visible tools (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, `ultragoal_spawn_goal_agent`). Generic and Ultragoal tools use the main session's `SubagentManager`; team roles execute through `@tsuuanmi/pi-orchestrator`. pi-agent owns runtime agents; pi-workflows owns turn order, guarded role checks, persistence, and result→artifact handoff. No circular dependency.
+- **subagent**: Workflow agent execution is exposed through model-visible tools (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, `ultragoal_spawn_goal_agent`). Generic and Ultragoal tools use the main session's `SubagentManager`; team roles execute through `@tsuuanmi/pi-orchestrator`. pi-agent owns runtime agents; pi-workflows owns turn order, guarded role checks, persistence, and result→artifact handoff. No circular dependency.
 - **agent**: Added `SubagentManagerFactory` registry (`registerSubagentManagerFactory`/`getSubagentManagerFactory`/`clearSubagentManagerFactoryForTests`) + `SubagentManagerFactoryContext` type, and `dispose(): Promise<void>` on the `SubagentManager` interface.
 - **workflows**: `pi workflow <skill> <action>` CLI verbs now drive the retained skill runtime directly, replacing the removed in-process tool surface; the supported actions are documented by each skill’s current help metadata.
 - **workflows**: Added a shared skill transition registry with per-skill transition tables.
@@ -129,7 +129,7 @@
 - **workflows**: The detached `RuntimeOwner` is lifecycle-only. It no longer constructs or holds a `SubagentManager` and no longer handles any spawn verb — spawns are model-visible tools on the main session. The owner keeps `observe`/`classify`/`recover`/`validate`/`finalize`/`operate`/`submit`/`retire`, leases, GC, and events.
 - **ralplan**: `ralplan_run_agent` now executes each guarded role stage through a workflow-owned `@tsuuanmi/pi-orchestrator` adapter. Ralplan retains role gates, artifact transactions, verdicts, and approval state; the adapter owns runtime agent execution, checkpoints, and task receipts.
 - **workflows**: Workflow extension registration is now harness-driven; per-skill workflow tool registration is removed from the agent-visible surface.
-- **subagents**: `subagent_spawn` now returns a multi-line receipt showing the agent profile, model, role, label, detached flag, and a truncated task prompt, instead of only the subagent id and status.
+- **subagent**: `subagent_spawn` now returns a multi-line receipt showing the agent profile, model, role, label, detached flag, and a truncated task prompt, instead of only the subagent id and status.
 - **ralplan**: `pi workflow ralplan approve-plan` now refuses to approve a plan whose latest critic verdict is REJECT; set `overrideCriticVerdict: true` to force approval. A latest critic verdict of ITERATE produces a soft warning instead of blocking, and the approval result now carries `critic_verdict`, `critic_verdict_overridden`, and `approval_warning`. `pi workflow ralplan doctor` warns when a pending plan's latest critic verdict is REJECT or ITERATE. This enforces the documented workflow intent that a final plan should not be approved over a critic REJECT.
 - **workflows**: Fail-soft handoff/obstacle ingest failures now record a durable `fail_soft_error` audit entry and surface `fail_soft_errors` on the ralplan approve receipt, instead of only logging to stderr. A new `handoff-no-ingest-handler` fail-soft site surfaces carried obstacles that have no ingest handler for the callee skill (e.g. team).
 - **commands**: Moved the workflow CLI command modules from `src/cli/{workflow-command,state-command}.ts` to `src/commands/workflow.ts` to match the declared `commands/` public layout. `package.json` `pi.commands` now registers only `src/commands/workflow.ts` (`pi workflow state` is a nested verb, not a top-level command). The workflow command module exports a `handlePackageCommand(args, ctx?)` alias (delegating to `handleWorkflowCommand`) to conform to `pi`'s package-command dispatcher contract; `handleWorkflowCommand`/`runWorkflowCommand`/`runStateCommand` remain exported unchanged.
