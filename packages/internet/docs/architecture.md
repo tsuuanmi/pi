@@ -25,15 +25,16 @@ The daemon is a fixed vendored snapshot, not a second repository dependency. We 
 - `extension.ts` composes package-owned services.
 - `daemon/config.ts` creates and validates private browser-only daemon config.
 - `daemon/runtime.ts` resolves and validates the bundled platform artifact.
-- `daemon/manager.ts` exclusively owns login/start/stop/restart and child processes.
+- `daemon/doctor.ts` owns bounded one-shot diagnostics and strict report validation.
+- `daemon/manager.ts` exclusively owns login/start/stop/restart and managed child processes.
 - `hooks.ts` readiness-gates only registered ChatGPT Web providers through
   `before_provider_request`; Pi's built-in `openai-responses` transport remains unchanged.
 - `backends/openai/daemon/*` owns HTTP config/auth/client/status concerns, not processes.
 - `settings.ts` owns private package settings persistence.
 - `web/*` owns public search/fetch transport and its SSRF, redirect, content, timeout, and size
   safeguards. It never receives daemon credentials.
-- Tools depend on the registry, settings store, daemon HTTP client, lifecycle manager, or web
-  modules; those services do not depend on Pi extension APIs.
+- Tools depend on the registry, settings store, daemon HTTP client, diagnostic runner, lifecycle
+  manager, or web modules; those services do not depend on Pi extension APIs.
 
 The package imports only public `@tsuuanmi/pi*` entry points. Pi does not depend on this package.
 

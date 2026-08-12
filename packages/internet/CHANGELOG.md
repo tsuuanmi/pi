@@ -16,6 +16,8 @@
   and the extension entrypoint.
 - Add keyless public web search plus bounded, SSRF-aware page fetching.
 - Add private `autoLogin` settings and the `internet_settings` tool.
+- Add account-scoped `internet_doctor` diagnostics backed by the bundled daemon's bounded,
+  cancellable `doctor --json` command.
 
 ### Changed
 

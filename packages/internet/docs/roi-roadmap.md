@@ -4,7 +4,7 @@ Grounded, prioritized features for `@tsuuanmi/pi-internet` after the owned-daemo
 lists the evidence (docs + repo source), design, effort, impact, risk, and acceptance criteria so
 the tradeoff is explicit before any code.
 
-> Status: **R1–R3 implemented.** R4–R7 remain proposals.
+> Status: **R1–R4 implemented.** R5–R7 remain proposals.
 
 Sources:
 - Daemon repo `/home/superman/workspaces/codex-chatgpt-web` (vendored at commit `bda266b4`).
@@ -39,42 +39,52 @@ feature is valuable.
 `extra-high` route. Sending a different reasoning effort would be rejected or silently mis-tuned on
 every inference. This is a real correctness bug, not a naming nit.
 
-**Evidence.** `review/implementation-review.md` (deferred item); daemon `chatgpt-web-models.ts:155-205`
-(route → immutable effort), `model-catalog.ts:28-42` (reasoning level per effort).
+**Evidence.** `review/implementation-review.md` ("Resolved: fixed-effort model metadata"); daemon
+`chatgpt-web-models.ts:155-205` (route → immutable effort), `model-catalog.ts:28-42` (reasoning level
+per effort).
 
-**Design.**
-- Read the daemon's `chatgpt-web-models.ts` and `model-catalog.ts`.
-- For each registered Pi model set exactly one `thinkingLevelMap` entry reflecting the route's
-  immutable effort, and the daemon's display name.
-- Source or document `maxTokens` from `resolveChatGptWebContextLimits` / transport limits instead of
-  the current speculative `90_000`/`128_000` (review deferred item #2).
+**Implemented design.**
+- `turn/model.ts` is the authoritative route catalog: `light`, `medium`, `high`, `extra-high`,
+  `pro`, and `luna`, each with a daemon display name, one immutable Pi reasoning level, and a
+  context window from the daemon catalog.
+- `models.ts` sets every thinking level to `null` except the route's single supported level, so Pi
+  never sends an unsupported reasoning effort.
+- `provider.ts` builds models per account from cached `solAvailable`/`proAvailable` capabilities.
+- The daemon does not define a model output ceiling (its auto-compaction, browser-message, and
+  composer limits have different meanings), so `maxTokens` uses a documented conservative `16_384`
+  output ceiling rather than the previous speculative `90_000`/`128_000`.
 
 **Effort:** Low. **Impact:** High (correctness on the primary path). **Risk:** Low.
 
-**Acceptance:** every registered model's reasoning maps to a route the daemon accepts; names match
-the daemon catalog; `maxTokens` is sourced or documented.
+**Acceptance:** every registered model exposes exactly one supported thinking level mapping to the
+route the daemon accepts; names match the daemon catalog; context windows are route-faithful;
+`maxTokens` is the documented conservative ceiling.
 
 ---
 
 ### R2. Add the `autoLogin` opt-out flag — **Implemented**
 
 **Problem.** `daemon-ownership-brainstorm.md` Q2 recommended lazy login be **opt-out via a flag**.
-The committed implementation has the **lazy trigger** but no opt-out: every first use of a ChatGPT
-Web model opens the isolated Chrome login window. Users who prefer to trigger login manually (via
-`internet_daemon login`) or who load Pi headless cannot suppress it.
+Before this milestone, every first use of a ChatGPT Web model opened the isolated Chrome login
+window with no way to suppress it. Users who prefer to trigger login manually (via
+`internet_daemon login`) or who load Pi headless could not opt out.
 
 **Evidence.** `daemon-ownership-brainstorm.md` §6 (Recommendation C), risk table "lazy trigger +
 `autoLogin` opt-out flag"; `src/hooks.ts` `before_provider_request` calls `manager.ensureReady()`.
 
-**Design.**
-- Add a small config surface (package settings) e.g. `autoLogin: boolean` (default true).
-- In `hooks.ts`, when the account lacks verified login and `autoLogin` is false, do **not** call
-  `ensureReady`; surface a clear error telling the agent to run `internet_daemon login`.
+**Implemented design.**
+- `settings.ts` persists `{ autoLogin: true }` under `$PI_AGENT_DIR/internet/settings.json` with
+  atomic `0600` writes.
+- `internet_settings` reads settings or toggles `autoLogin`.
+- In `hooks.ts`, when the account lacks verified login and `autoLogin` is false, the hook does **not**
+  call `ensureReady`; it suppresses Chrome and notifies interactive users to run
+  `internet_daemon login`. Pi's hook dispatcher does not expose request cancellation, so the provider
+  transport remains the authoritative failure until explicit login.
 
 **Effort:** Low. **Impact:** Medium (UX + headless safety). **Risk:** Low.
 
-**Acceptance:** with `autoLogin:false`, no Chrome window opens automatically and the first request
-fails with an actionable message; `internet_daemon login` still works.
+**Acceptance:** with `autoLogin:false`, no Chrome window opens automatically and interactive users get
+an actionable message; `internet_daemon login` still works.
 
 ---
 
@@ -93,21 +103,23 @@ snapshot, so neither path is safe or complete for this package.
 **Implemented design.**
 - `internet_search(query, limit)` uses one explicit, keyless public RSS search transport and returns
   bounded `{ title, url, snippet }` records.
-- `internet_fetch(url)` uses the shared public-web boundary with scheme/credential checks, DNS-based
-  private/reserved-address blocking, per-redirect validation, timeout, content-type validation, and
-  response-size limits.
+- `internet_fetch(url)` uses the shared public-web boundary: an allowlist of globally routable public
+  unicast IPv4/IPv6 resolved via DNS, per-redirect revalidation, an absolute deadline across DNS,
+  redirects, headers, and body consumption, content-type/encoding validation, response-size limits,
+  and body cancellation on every rejection.
 - Both tools are read-only and require no interactive approval.
 - The daemon control token remains scoped to `/admin/*`; it is never forwarded upstream.
 
-**Effort:** Low–Medium. **Impact:** High (gives Pi native live web). **Risk:** Medium (search auth
-surface; sidecar availability depends on account/capability).
+**Effort:** Low–Medium. **Impact:** High (gives Pi native live web). **Risk:** Medium (the keyless
+RSS transport can change or throttle; errors remain explicit with no hidden fallback).
 
 **Acceptance:** `internet_search` returns real sources without an API key; `internet_fetch` returns
-readable text; read-only actions are not gated behind interactive approval.
+readable text; read-only actions are not gated behind interactive approval; non-public or oversized
+fetch targets are rejected and the response body is cancelled.
 
 ---
 
-### R4. `internet_doctor` — failure diagnostics
+### R4. `internet_doctor` — failure diagnostics — **Implemented**
 
 **Problem.** When a turn fails (proxy, config, chrome, login), the agent has no way to diagnose it
 from within Pi.
@@ -115,14 +127,20 @@ from within Pi.
 **Evidence.** daemon `cli.ts:229,372` (`doctor` command), `doctor.ts` (`runDoctor` →
 `DoctorReport`, `formatDoctorReport` with `--json`).
 
-**Design.**
-- Run the bundled daemon `doctor --json` as a child process (reusing `manager` spawn conventions).
-- Parse `DoctorReport` and surface it as `internet_doctor`, returning structured checks
-  (proxy/config/browser-host/chrome/login/codex/service/tunnel) + pass/fail.
+**Implemented design.** See [implementation-plan-doctor.md](implementation-plan-doctor.md).
+- Run `[launcher, --home, configDir, doctor, --json]` with `execFile` (no shell), caller
+  cancellation, a 45-second timeout, and a 1 MiB output limit.
+- Strictly validate the typed report and return valid failing diagnostics despite the daemon's
+  documented exit status 1 when its aggregate is false.
+- Preserve all checks with explicit Pi/upstream scope, while computing Pi readiness from
+  config/browser/login/proxy checks rather than Codex CLI and OS-service checks.
+- Keep the read-only Pi tool separate from the process/validation boundary; command, runtime,
+  timeout, cancellation, and malformed-report failures use `daemon_doctor_failed`.
 
 **Effort:** Low. **Impact:** Medium (post-setup UX). **Risk:** Low.
 
-**Acceptance:** `internet_doctor` returns structured check results and a human-readable summary.
+**Acceptance:** `internet_doctor` returns structured check results and a human-readable summary;
+execution/malformed-report failures raise a typed, non-retryable error.
 
 ---
 
@@ -183,10 +201,9 @@ tool requires interactive approval.
 
 ## Recommendation
 
-Do **Tier 1 (R1 + R2) + R3** as the next milestone: cheap correctness/safety wins plus the highest
-new-value capability (web access), all reusing the already-vendored daemon surfaces. **R5** is the
-top medium-effort investment after that because it hardens the primary path. **R6/R7** are later,
-larger bets once the seam and approval surface are proven.
+R1–R4 are implemented: correctness/safety fixes, web access, and account diagnostics. **R5** is the
+top medium-effort investment next because it hardens the primary path. **R6/R7** are later, larger
+bets once the seam and approval surface are proven.
 
 ## Open questions
 
@@ -195,4 +212,3 @@ larger bets once the seam and approval surface are proven.
   control token.
 - Should hybrid capture live in the vendored daemon or be overridden at the Pi boundary? Prefer the
   daemon so DOM/SSE remain one owned path.
-- Do we fix model metadata and `maxTokens` together (they are coupled in `models.ts`)?

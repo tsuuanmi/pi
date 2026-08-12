@@ -27,6 +27,7 @@ describe("internetExtension", () => {
 				"internet_account_add",
 				"internet_account_set_enabled",
 				"internet_status",
+				"internet_doctor",
 				"internet_control",
 				"internet_compact",
 				"internet_daemon",

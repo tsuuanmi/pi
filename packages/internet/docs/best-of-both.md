@@ -126,11 +126,11 @@ The fused answer needs a "synthesizer." Three options:
 | Priority | Feature | Notes |
 |----------|---------|-------|
 | P0 | Model routing (ChatGPT Web) | MVP, agreed |
-| P1 | `internet_search` + `internet_fetch` | Browser-less, fills Pi gap |
-| P1.5 | **Hybrid capture** (interception primary + DOM fallback) | Improves robustness of the ChatGPT Web path |
-| P2 | Multi-account + backend seam | Claude/Gemini API backends |
-| P2.5 | **`internet_ask_all` (fusion)** | Fan out + synthesize; heuristic first, strong-model opt-in |
-| P3 | Daemon lifecycle + `internet_doctor` | Diagnose failures |
+| Implemented | `internet_search` + `internet_fetch` | Keyless RSS search plus bounded public-page fetch |
+| Implemented | Daemon lifecycle + `internet_doctor` | Account-scoped structured diagnostics |
+| Next | **Hybrid capture** (interception primary + DOM fallback) | Improves robustness of the ChatGPT Web path |
+| Later | Multi-account + backend seam | Claude/Gemini API backends |
+| Later | **`internet_ask_all` (fusion)** | Fan out + synthesize; heuristic first, strong-model opt-in |
 | P4 | Full-mode tool bridge | Needs approval gate |
 
 ---

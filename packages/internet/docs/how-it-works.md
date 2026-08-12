@@ -11,7 +11,7 @@ the complete runtime to `dist/daemon/runtime/`. Runtime users do not install or 
 1. Pi loads `dist/extension.js`.
 2. The registry returns configured accounts or synthesizes the private default account.
 3. `OwnedDaemonManager` is created and passed to providers, tools, and hooks.
-4. Enabled providers, ten tools, hooks, and the HUD are registered.
+4. Enabled providers, eleven tools, hooks, and the HUD are registered.
 5. Accounts with verified login state auto-start and health-gate. Accounts without login remain
    idle, so loading Pi never unexpectedly opens Chrome.
 
@@ -54,7 +54,9 @@ private package settings, including `autoLogin`.
 - `status`: report process/login state.
 
 `internet_control` is separate: it changes the running server's drain/resume/turn state rather than
-owning its process.
+owning its process. `internet_doctor` runs the account-scoped bundled `doctor --json` command with a
+bounded timeout/output limit and returns its structured checks. It does not start the daemon, open
+Chrome, or mutate account state.
 
 ## Web access
 
@@ -65,8 +67,12 @@ admin control token must never be forwarded. `internet_fetch` follows only valid
 HTTP/HTTPS redirects and returns bounded text after blocking private/reserved destinations and
 unsupported content.
 
-## Compaction, status, and shutdown
+## Diagnostics, compaction, status, and shutdown
 
-`internet_status` and the HUD read `/healthz`. `internet_compact` calls
+`internet_doctor` invokes the CLI because the daemon has no doctor HTTP route. A validated failing
+report is returned even though the CLI uses exit status 1 for failed checks. All checks are retained
+with Pi/upstream scope, while Pi readiness ignores native Codex-route and OS-service requirements.
+Command, timeout, cancellation, and malformed-report failures are typed separately. `internet_status` and the HUD
+read `/healthz`. `internet_compact` calls
 `/v1/responses/compact`; Luna is rejected because it uses rolling checkpoints. `turn_end` refreshes
 the HUD. `session_shutdown` stops child processes created by this Pi session.

@@ -5,8 +5,8 @@ codex-chatgpt-web daemon already provides and what Pi currently lacks. It builds
 [review-and-brainstorm.md](review-and-brainstorm.md) (MVP = model routing) and
 [multi-account-and-backends.md](multi-account-and-backends.md) (multi-account + Claude/Gemini).
 
-Status: **partially implemented.** Model routing, lifecycle, multi-account management, and public
-web search/fetch are implemented; remaining items are proposals.
+Status: **partially implemented.** Model routing, lifecycle, multi-account management, public web
+search/fetch, and account diagnostics are implemented; remaining items are proposals.
 
 ---
 
@@ -33,16 +33,17 @@ is used by browser-only accounts.
 - **`internet_browse`** — (post-MVP) drive the daemon's browser to a URL and return the rendered
   content, for JS-heavy pages.
 
-### 2.3 Account & backend management (next)
-- `internet_accounts`, `internet_account_add`, `internet_account_enable/disable` (from
-  multi-account-and-backends.md).
-- Backend seam for Claude / Gemini (future).
+### 2.3 Account management (implemented) and backend seam (future)
+- `internet_accounts`, `internet_account_add`, and `internet_account_set_enabled` manage isolated
+  ChatGPT Web daemon accounts.
+- Backend seam for Claude / Gemini remains future work.
 
-### 2.4 Daemon lifecycle (post-MVP)
-- **`internet_daemon_start` / `internet_daemon_stop`** — manage the codex-chatgpt-web daemon
-  lifecycle (start on demand, stop on Pi shutdown).
-- **`internet_doctor`** — surface the daemon's doctor checks (proxy, config, browser-host, chrome,
-  login, codex, service, tunnel) as a Pi tool so the agent can diagnose why a turn failed.
+### 2.4 Daemon lifecycle and diagnostics (implemented)
+- **`internet_daemon`** — login, start, stop, restart, or inspect package-owned daemon processes;
+  owned processes stop on Pi shutdown.
+- **`internet_doctor`** — run bounded account-scoped daemon checks and return validated structured
+  diagnostics. Checks retain explicit Pi/upstream scope so native Codex-route and OS-service
+  requirements do not falsely fail Pi readiness.
 
 ### 2.5 Full-mode tool bridge (post-MVP)
 - `codex_tool_call`, `codex_exec`, `codex_write_stdin`, `codex_apply_patch` wired through the
@@ -56,8 +57,8 @@ is used by browser-only accounts.
 |----------|---------|-----|
 | P0 (MVP) | Model routing + `internet_status` + `internet_compact` + HUD | The agreed MVP; makes ChatGPT Web usable. |
 | P1 (done) | **`internet_search` + `internet_fetch`** | Fills a real Pi gap through a safe package-owned public web boundary. |
-| P2 | Multi-account + backend seam | Enables multiple ChatGPT accounts; future Claude/Gemini. |
-| P3 | Daemon lifecycle + `internet_doctor` | Better UX; diagnose failures. |
+| P2 (done) | Multi-account + daemon lifecycle + `internet_doctor` | Isolated accounts, owned processes, and actionable diagnostics. |
+| P3 | Hybrid capture + backend seam/fusion | Harden ChatGPT capture, then add Claude/Gemini orchestration. |
 | P4 | Full-mode tool bridge | Powerful but needs the approval gate; highest risk. |
 
 > **Grounded, detail-expanded version:** see [roi-roadmap.md](roi-roadmap.md), which ranks
@@ -88,12 +89,11 @@ read-only Pi tools and receive no daemon credential.
 | Fetch/browse scope | `internet_fetch` is bounded and read-only; rendered `internet_browse` remains heavier, post-MVP work. |
 | Public search availability | The keyless RSS transport can change or throttle; errors remain explicit, with no hidden fallback. |
 | Daemon lifecycle ownership | Implemented manager stops only processes owned by the Pi session. |
-| Doctor checks | The daemon's doctor is a CLI command; exposing it as a Pi tool requires parsing its output. |
+| Doctor checks | Implemented adapter validates CLI output and separates Pi readiness from upstream-only checks. |
 
 ---
 
 ## 6. Bottom line
 
-Model routing and safe public web search/fetch are implemented. The next candidates are daemon
-doctor integration and hybrid capture, followed by multi-backend fusion and the full-mode tool
-bridge.
+Model routing, lifecycle, account management, diagnostics, and safe public web search/fetch are
+implemented. Hybrid capture is next, followed by the backend seam/fusion and full-mode tool bridge.

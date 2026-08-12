@@ -1,4 +1,9 @@
-export type InternetErrorCode = "config_missing" | "config_invalid" | "daemon_unavailable" | "daemon_rejected";
+export type InternetErrorCode =
+	| "config_missing"
+	| "config_invalid"
+	| "daemon_unavailable"
+	| "daemon_rejected"
+	| "daemon_doctor_failed";
 
 export interface InternetErrorOptions {
 	code: InternetErrorCode;

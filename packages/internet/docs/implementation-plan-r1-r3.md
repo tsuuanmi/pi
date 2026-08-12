@@ -5,7 +5,8 @@ Implemented scope for **R1 model metadata**, **R2 `autoLogin` opt-out**, and **R
 Pi hook, and vendored daemon source before implementation; source-derived corrections are recorded
 below.
 
-> Status: **implemented.** R4–R7 remain in `roi-roadmap.md`.
+> Status: **implemented.** R4 is documented in `implementation-plan-doctor.md`; R5–R7 remain in
+> `roi-roadmap.md`.
 
 ## Review corrections
 
@@ -78,10 +79,12 @@ below.
 
 - `src/web/fetch.ts` is the shared public HTTP boundary:
   - HTTP/HTTPS only; URL credentials rejected.
-  - DNS-resolved private, loopback, link-local, carrier-grade NAT, multicast, and reserved
-    destinations rejected.
-  - Every redirect target is revalidated.
-  - Timeout, redirect count, content type, content length, and actual body size are bounded.
+  - An allowlist of globally routable public unicast IPv4/IPv6, resolved via DNS, blocks private,
+    loopback, link-local, carrier-grade NAT, multicast, documentation, and reserved destinations;
+    every redirect target is revalidated against the same allowlist.
+  - One absolute deadline spans DNS, redirects, headers, and body consumption; every rejection and
+    redirect cancels the response body/socket.
+  - Content type, content encoding, content length, and actual body size are bounded.
   - Text, HTML, JSON, XML, and XHTML are accepted; HTML is reduced to readable text.
 - `src/web/search.ts` queries a keyless public RSS search endpoint and returns bounded
   `{ title, url, snippet }` records.
@@ -101,7 +104,6 @@ below.
 
 ## Out of scope
 
-- R4 `internet_doctor`.
 - R5 hybrid network/DOM capture.
 - R6 multi-backend/fusion.
 - R7 native tool bridge.

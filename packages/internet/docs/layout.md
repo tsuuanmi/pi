@@ -15,6 +15,7 @@ packages/internet/
 │   ├── accounts/registry.ts
 │   ├── daemon/
 │   │   ├── config.ts
+│   │   ├── doctor.ts
 │   │   ├── health.ts
 │   │   ├── manager.ts
 │   │   └── runtime.ts
@@ -24,7 +25,7 @@ packages/internet/
 │   │   ├── daemon/{auth,client,routes,status}.ts
 │   │   └── turn/model.ts
 │   ├── core/{errors,types}.ts
-│   ├── tools/{accounts,compact,control,daemon,register,settings,status,web}.ts
+│   ├── tools/{accounts,compact,control,daemon,doctor,register,settings,status,web}.ts
 │   └── web/{fetch,search}.ts
 ├── test/                       # mirrors package-owned source responsibilities
 ├── vendor/codex-chatgpt-web/
@@ -45,6 +46,7 @@ packages/internet/
 - `accounts/registry.ts`: account routing metadata and atomic persistence.
 - `daemon/config.ts`: package-owned private daemon/browser configuration.
 - `daemon/runtime.ts`: bundled artifact resolution and platform validation.
+- `daemon/doctor.ts`: bounded CLI diagnostics and strict report validation.
 - `daemon/health.ts`: startup health polling.
 - `daemon/manager.ts`: the single lifecycle/process owner.
 - `backends/openai/provider.ts`: capability-scoped provider configuration and naming.

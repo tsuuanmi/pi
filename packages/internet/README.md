@@ -72,6 +72,7 @@ Account registry changes require a Pi reload because provider registration is st
 |---|---|
 | `internet_daemon` | Login, start, stop, restart, or inspect the package-owned daemon. |
 | `internet_status` | Read daemon health and active turn counts. |
+| `internet_doctor` | Run account-scoped daemon diagnostics and return structured check results. |
 | `internet_compact` | Compact history; rejected for Luna because Luna uses rolling checkpoints. |
 | `internet_control` | Drain/resume/shutdown/cancel daemon browser turns through `/admin/*`. |
 | `internet_accounts` | List account routing metadata. |
@@ -83,6 +84,9 @@ Account registry changes require a Pi reload because provider registration is st
 
 `internet_daemon` controls the child-process lifecycle. `internet_control` controls the running
 server's administrative state. Destructive control calls require Pi's interactive approval hook.
+`internet_doctor` is read-only: it runs the bundled CLI's bounded `doctor --json` command without
+starting the daemon or opening Chrome. It retains every daemon check with explicit Pi/upstream scope
+and computes Pi readiness without requiring the daemon's native Codex route or OS service.
 
 ## Security
 
@@ -123,5 +127,5 @@ pinned Bun toolchain and is intentionally excluded from Pi's TypeScript/Biome so
 
 ## Deferred
 
-Hybrid network-interception/DOM capture inspired by Prometheus, daemon doctor integration, native
-Codex tool bridging, multi-backend fusion, and non-Linux runtime artifacts remain future work.
+Hybrid network-interception/DOM capture inspired by Prometheus, native Codex tool bridging,
+multi-backend fusion, and non-Linux runtime artifacts remain future work.

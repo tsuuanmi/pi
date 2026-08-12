@@ -45,6 +45,7 @@ Tools use TypeBox `parameters` and Pi's five-argument execute signature. Registe
 
 - `internet_daemon`
 - `internet_status`
+- `internet_doctor`
 - `internet_compact`
 - `internet_control`
 - `internet_accounts`
@@ -76,6 +77,8 @@ The package manifest exposes `dist/extension.js` through `pi.extensions` and pub
 - `OwnedDaemonManager` owns child processes and login lifecycle.
 - The bundled daemon owns browser/session/replay behavior.
 - Pi AI owns Responses transport and event decoding.
+- `daemon/doctor.ts` owns the bounded one-shot diagnostic process boundary and report validation;
+  `tools/doctor.ts` owns only Pi presentation.
 - `web/*` owns public search/fetch transport and SSRF/size/content safeguards; it never receives the
   daemon admin token.
 - Do not add a second browser owner, HTTP Responses parser, replay cache, or external daemon fallback.

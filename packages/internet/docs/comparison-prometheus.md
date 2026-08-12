@@ -53,8 +53,8 @@ This is the **biggest architectural difference**.
 | Network `fetch`/SSE interception | ✅ primary | ❌ |
 | DOM / rendered-content parsing | ❌ | ✅ primary |
 | Per-provider stream parser | ✅ (per-provider `interceptor.parser`) | ❌ (single ChatGPT DOM path) |
-| Robust to UI layout changes | ❌ (breaks when DOM/endpoints change) | ✅ (DOM is the contract) |
-| Robust to network/API changes | ✅ (reads the wire) | ❌ (breaks when endpoints change) |
+| Robust to UI layout changes | ✅ while endpoint/parser remain stable | ❌ DOM selectors/rendering can change |
+| Robust to network/API changes | ❌ endpoints/formats can change | ✅ while rendered-turn semantics remain stable |
 
 ### 2.2 Provider model
 
@@ -81,8 +81,9 @@ This is the **biggest architectural difference**.
   `/v1/models`, `/v1/functions`). It is a standalone service any MCP client can connect to.
 
 - **internet** is a **Pi package** that registers the daemon as a Pi `openai-responses` provider and
-  adds Pi tools (`internet_search`, `internet_fetch`, `internet_status`, `internet_compact`). It
-  plugs into the Pi agent, not a generic MCP/REST surface.
+  adds Pi tools (`internet_search`, `internet_fetch`, `internet_status`, `internet_doctor`,
+  `internet_compact`, and lifecycle/account tools). It plugs into the Pi agent, not a generic
+  MCP/REST surface.
 
 | | Prometheus | internet |
 |---|---|---|
@@ -116,11 +117,12 @@ This is the **biggest architectural difference**.
 | Use ChatGPT Web as a model | ✅ | ✅ (MVP) |
 | Use Claude / Gemini as a model | ✅ (browser) | 🔜 (future API) |
 | Use DeepSeek / Grok / Z.ai / Copilot / Meta AI / Qwen / Perplexity | ✅ | ❌ (not planned) |
-| Web search | ✅ (`deep_search`, `pro_search`, `youtube_search`, ...) | 🔜 (`internet_search` via daemon) |
-| Fetch a URL | ✅ (`summarize_url`) | 🔜 (`internet_fetch`) |
+| Web search | ✅ (`deep_search`, `pro_search`, `youtube_search`, ...) | ✅ (`internet_search`, keyless RSS transport) |
+| Fetch a URL | ✅ (`summarize_url`) | ✅ (`internet_fetch`, bounded public HTTP/HTTPS) |
 | Multi-provider routing | ✅ (`smart_query`, `ask_all_ais`, `compare_ais`) | ❌ (single backend MVP) |
-| Multi-account per provider | ✅ (browser partitions) | 🔜 (daemon instances) |
-| Compaction / context summarization | ✅ (`convo_history_summarize`) | 🔜 (`internet_compact`) |
+| Multi-account per provider | ✅ (browser partitions) | ✅ (isolated daemon instances) |
+| Compaction / context summarization | ✅ (`convo_history_summarize`) | ✅ (`internet_compact`) |
+| Failure diagnostics | App/provider health surfaces | ✅ (`internet_doctor`) |
 | Skills | ✅ (8 skills) | ❌ (MVP has no skill) |
 | MCP server | ✅ | ❌ |
 | REST API | ✅ | ❌ |
@@ -145,17 +147,18 @@ This is the **biggest architectural difference**.
    similar skill set later (e.g. `internet-research`, `internet-summarize`) once the MVP tool
    surface is stable.
 
-4. **Per-provider automation is fragile.** Prometheus's network-interception approach breaks when
-   endpoints change. internet's DOM-parsing approach (via the daemon) is more robust for ChatGPT;
-   keep that advantage rather than copying the interceptor model.
+4. **Both capture contracts are fragile.** Prometheus's endpoint/parser path can break on transport
+   changes; internet's DOM path can break on rendering/selector changes. The strongest port is
+   network interception as primary capture with the existing DOM parser as fallback.
 
 ## 5. What Prometheus can learn from internet
 
 1. **Pi integration.** Prometheus is a standalone app; registering as a Pi provider would let it
    serve as a model backend inside Pi, not just an MCP/REST service.
 
-2. **Browser-less search/fetch.** Prometheus's search is browser-based; a native API passthrough
-   (like internet's `/v1/alpha/search`) would be lighter.
+2. **Browser-less search/fetch.** internet uses a keyless RSS search transport plus a bounded,
+   SSRF-aware public-page fetcher. It intentionally does not use `/v1/alpha/search`, which forwards
+   a caller-owned native Codex bearer token upstream.
 
 3. **Backend seam.** Prometheus's provider catalog is monolithic; a per-backend folder seam (like
    internet's `src/backends/`) would make adding API-based providers cleaner.
