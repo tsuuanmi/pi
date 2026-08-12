@@ -17,29 +17,31 @@ ChatGPT Web result streamed back into the agent. It complements `architecture.md
 
 ---
 
-## 2. A Codex turn through ChatGPT Web
+## 2. ChatGPT Web as a model backend (the MVP path)
 
-The main path: the agent runs `codex_turn`.
+The MVP's primary path is **provider model routing**: the agent selects a ChatGPT Web model
+(`gpt-5.6-sol` / `gpt-5.6-luna`) and Pi streams inference through the daemon via its native
+`openai-responses` handler.
 
 ```
-agent ──tool_call──► codex_turn (tools/codex-turn.ts)
-        │  build Responses payload
+Pi agent selects gpt-5.6-sol (provider: chatgpt-web)
+        │  Pi's openai-responses handler builds the Responses request
         ▼
-daemon/client.ts  POST /v1/responses { model, input, stream:true }
+backends/openai/daemon/client.ts  POST /v1/responses { model, input, stream:true }
         │  Bearer controlToken
         ▼
 daemon (server.ts → parseRequest → adapter.runTurn)
         │  prompt compile → browser turn → DOM streaming
         ▼
 SSE: response.created / output_text.delta / ... / response.completed
-        │  adapter.ts converts frames → incremental tool output
+        │  turn/adapter.ts converts frames → incremental tool output
         ▼
-tool result text (and optional tool_call for full mode) back to Pi agent
+streamed answer back to the Pi agent
 ```
 
 ### 2.1 The SSE → tool-output mapping
 
-`turn/adapter.ts` subscribes to the daemon's SSE stream and emits:
+`turn/adapter.ts` (under the `openai` backend) subscribes to the daemon's SSE stream and emits:
 
 | SSE frame | Pi tool output |
 |-----------|----------------|
@@ -63,7 +65,7 @@ When the turn is tool-capable, the model may call `codex_*` tools. The daemon em
 Pi agent
    │ calls codex_tool_call({ turn_token, wire_name, arguments })
    ▼
-tools/codex-tool-call.ts  → POST /v1/responses with a function_call item
+codex-tool-call.ts (post-MVP full-mode tool bridge)  → POST /v1/responses with a function_call item
    ▼
 daemon → broker.claim(token) → broker.invoke(bindingId, wire_name)
    │   validates wire name against this turn's tool registry
@@ -73,6 +75,10 @@ queued to the active Codex round → nextToolBatch → tool result → completeT
 SSE back to Pi → adapter streams the tool result
 ```
 
+> **Note:** the full-mode tool bridge is **post-MVP** (see review-and-brainstorm.md). The
+> `codex-tool-call` / `codex-exec` / `codex-apply-patch` files are not part of the MVP `src/` tree;
+> they will be added under the appropriate location when that milestone lands.
+
 The **`tool_call` hook** (in `hooks.ts`) sits in front of these tools and requires human approval
 before a bridged native tool runs — the Pi analogue of the daemon's connector confirmation dialog.
 
@@ -80,10 +86,10 @@ before a bridged native tool runs — the Pi analogue of the daemon's connector 
 
 ## 4. Compaction
 
-Long tasks stay inside the context window by running `codex_compact`, which wraps the daemon's
+Long tasks stay inside the context window by running `internet_compact`, which wraps the daemon's
 `/v1/responses/compact` endpoint:
 
-1. The agent calls `codex_compact({ model, input })`.
+1. The agent calls `internet_compact({ model, input })`.
 2. The daemon runs a **dedicated summarization turn** that never binds the tool bridge.
 3. The returned summary becomes the next turn's replacement history.
 4. `internet` returns the summary to the agent and records it in the thread's session state for
@@ -96,17 +102,18 @@ Luna (free tier) instead uses the daemon's **rolling checkpoint** on every compl
 
 ## 5. Control plane
 
-`internet` exposes control tools that map to the daemon's `/admin/*` routes:
+`internet` exposes a single `internet_control` tool (from `tools/control.ts`) that maps to the
+daemon's `/admin/*` routes via an action parameter:
 
-| Tool | Daemon route | Effect |
-|------|--------------|--------|
-| `daemon_drain` | `POST /admin/drain` | Stop accepting new turns. |
-| `daemon_resume` | `POST /admin/resume` | Resume accepting turns. |
-| `daemon_shutdown` | `POST /admin/shutdown` | Refuse while active, else shut down. |
-| `daemon_status` | `GET /healthz` | Live turn counts, mode, draining. |
+| Tool | Action | Daemon route | Effect |
+|------|--------|--------------|--------|
+| `internet_control` | `drain` | `POST /admin/drain` | Stop accepting new turns. |
+| `internet_control` | `resume` | `POST /admin/resume` | Resume accepting turns. |
+| `internet_control` | `shutdown` | `POST /admin/shutdown` | Refuse while active, else shut down. |
+| `internet_status` | — | `GET /healthz` | Live turn counts, mode, draining. |
 
-All admin calls require the control token. `daemon_shutdown` is refused (HTTP 409) when there are
-active turns — the daemon enforces this, and `internet` surfaces it.
+All admin calls require the control token. `internet_control shutdown` is refused (HTTP 409) when
+there are active turns — the daemon enforces this, and `internet` surfaces it.
 
 ---
 

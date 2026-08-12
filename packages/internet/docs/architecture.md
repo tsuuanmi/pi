@@ -82,7 +82,6 @@ drives Chrome. This keeps one owner of the sensitive browser/session state.
 | **Google backend (future)** | Gemini via OpenAI-compat. Stub. | `src/backends/google/` |
 | **Account registry** | Multi-account mapping (id/backend/displayName/port/configDir/enabled). | `src/accounts/registry.ts` |
 | **Cross-backend tools** | `internet_accounts`, `internet_status`, `internet_compact`, `internet_control`. | `src/tools/` |
-| **Skill** | A `SKILL.md` describing when/how to run a Codex turn through the bridge. | `src/skills/codex-turn/SKILL.md` |
 | **Hooks** | Lifecycle hooks (`turn_end`, `tool_call`) that guard tool access. | `src/hooks.ts` |
 
 ---
@@ -91,7 +90,8 @@ drives Chrome. This keeps one owner of the sensitive browser/session state.
 
 A Pi agent runs a Codex turn through ChatGPT Web:
 
-1. The agent calls the `codex_turn` tool (or the skill drives it).
+1. The agent selects a ChatGPT Web model (`gpt-5.6-sol` / `gpt-5.6-luna`) via the registered
+   provider; Pi's `openai-responses` handler builds the Responses request.
 2. `backends/openai/turn/adapter.ts` builds a Responses payload: `{ model, input: [...], stream: true }`.
 3. `backends/openai/daemon/client.ts` `POST`s it to `/v1/responses` with the Bearer token and streams the SSE
    response.

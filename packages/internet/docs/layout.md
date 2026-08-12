@@ -74,11 +74,6 @@ src/
 │   ├── control.ts          # drain / resume / shutdown tools
 │   └── compact.ts          # internet_compact (context summarization)
 ├── hooks.ts                # registerInternetHooks(host) — tool_call guard, turn_end
-├── skill.ts                # skill metadata / discovery glue
-├── skills/
-│   └── codex-turn/
-│       ├── SKILL.md
-│       └── tools.ts        # registerCodexTurnTools(host)
 └── tool/
     ├── host.ts             # InternetToolHost (registerTool)
     └── spec.ts             # InternetToolSpec (TypeBox params + details)
@@ -90,24 +85,26 @@ src/
 
 ### 3.1 `src/extension.ts`
 
-The default export Pi loads. Mirrors `packages/workflows/src/extension.ts`:
+The default export Pi loads. Pi calls it with the `ExtensionAPI` (`@tsuuanmi/pi/extensions`). Because
+`ExtensionAPI` exposes `registerTool`, it structurally satisfies `InternetToolHost`, so the register
+functions and hooks take `pi` directly:
 
 ```ts
-import type { StatusLineHudEntryReader } from "@tsuuanmi/pi-tui";
-import { registerInternetTools, type InternetToolHost } from "./tools/register";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
+import { registerInternetTools } from "./tools/register";
 import { registerInternetHooks } from "./hooks";
-import { readDaemonStatus } from "./daemon/status";
+import { readDaemonStatus } from "./backends/openai/daemon/status";
 
-export interface InternetHost extends InternetToolHost {
-  registerHudProvider(provider: StatusLineHudEntryReader): void;
-}
-
-export default function internetExtension(host: InternetHost): void {
-  registerInternetTools(host);
-  registerInternetHooks(host);
-  host.registerHudProvider(readDaemonStatus);
+export default function internetExtension(pi: ExtensionAPI): void {
+  registerInternetTools(pi); // each register*Tools(host) accepts InternetToolHost; ExtensionAPI satisfies it
+  registerInternetHooks(pi); // hooks via pi.on(...)
+  pi.registerHudProvider(readDaemonStatus);
 }
 ```
+
+`readDaemonStatus` lives in the `openai` backend (`backends/openai/daemon/status.ts`); the MVP HUD
+reads the daemon `/healthz` snapshot. If the HUD later spans multiple backends, move it to a
+cross-backend module.
 
 ### 3.2 `src/tool/host.ts`
 
@@ -125,50 +122,54 @@ export interface InternetToolHost {
 
 ### 3.3 `src/tools/register.ts`
 
-Aggregates per-feature registration (mirrors `packages/workflows/src/tool/register.ts`):
+Aggregates the **MVP** per-feature registration (mirrors `packages/workflows/src/tool/register.ts`).
+It registers only the tools in the §2 tree and the MVP scope — **not** the post-MVP tool bridge
+(`codex-tool-call`, `codex-exec`, `codex-apply-patch`):
 
 ```ts
-import { registerCodexTurnTools } from "../skills/codex-turn/tools";
-import { registerCodexToolCallTool } from "./codex-tool-call";
-import { registerCodexExecTool } from "./codex-exec";
-import { registerCodexCompactTool } from "./codex-compact";
+import type { InternetToolHost } from "../tool/host";
+import { registerAccountsTools } from "./accounts";
+import { registerStatusTools } from "./status";
 import { registerControlTools } from "./control";
+import { registerCompactTools } from "./compact";
 
 export function registerInternetTools(host: InternetToolHost): void {
-  registerCodexTurnTools(host);
-  registerCodexToolCallTool(host);
-  registerCodexExecTool(host);
-  registerCodexCompactTool(host);
+  registerAccountsTools(host);
+  registerStatusTools(host);
   registerControlTools(host);
+  registerCompactTools(host);
 }
 ```
 
-### 3.4 `src/tools/codex-turn.ts`
+When the **full-mode tool bridge** lands (post-MVP), add `codex-tool-call` and `codex-exec` here;
+they are intentionally absent from the MVP.
 
-The core tool. It builds a Responses payload and streams the result:
+### 3.4 `src/tools/status.ts` (the MVP tool surface)
+
+The MVP exposes a thin tool surface on top of provider model routing. `status.ts` reads the daemon
+`/healthz` snapshot via the `openai` backend's daemon client:
 
 ```ts
 import { T } from "@sinclair/typebox";
+import type { InternetToolHost } from "../tool/host";
 
-const codexTurnParams = T.Object({
-  prompt: T.String({ minLength: 1 }),
-  model: T.Optional(T.String()),
-  stream: T.Optional(T.Boolean({ default: true })),
-});
-
-export function registerCodexTurnTools(host: InternetToolHost): void {
+export function registerStatusTools(host: InternetToolHost): void {
   host.registerTool({
-    name: "codex_turn",
-    description: "Run a Codex turn through the local ChatGPT Web bridge.",
-    params: codexTurnParams,
-    details: { destructive: false, openWorld: true },
-    async execute(params, ctx) {
+    name: "internet_status",
+    description: "Show the local ChatGPT Web daemon health and active turns.",
+    params: T.Object({}),
+    details: { destructive: false, openWorld: false },
+    async execute(_params, ctx) {
       const client = daemonClient(ctx);
-      return client.streamResponses({ model: params.model ?? "gpt-5.6-sol", input: [{ type: "input_text", text: params.prompt }], stream: true });
+      return client.health();
     },
   });
 }
 ```
+
+`daemonClient(ctx)` resolves the `openai` backend's `backends/openai/daemon/client.ts`. The MVP's
+primary path is **provider model routing** per review-and-brainstorm.md; the tools (`internet_status`,
+`internet_compact`, `internet_control`, `internet_accounts`) are a thin surface around it.
 
 ---
 
@@ -192,15 +193,11 @@ Modeled on `packages/workflows/package.json`:
   },
   "scripts": {
     "clean": "shx rm -rf dist",
-    "build": "npm run clean && tsgo -p tsconfig.build.json && npm run copy-assets",
-    "copy-assets": "node scripts/copy-assets.mjs",
+    "build": "npm run clean && tsgo -p tsconfig.build.json",
     "test": "vitest --run"
   }
 }
 ```
-
-The `copy-assets` step copies `src/skills/**/SKILL.md` into `dist/` so the skill is loadable from
-the built package.
 
 ---
 
@@ -261,12 +258,11 @@ To be loadable by Pi, the package follows the same standard as `packages/workflo
 ### 7.1 `pi` manifest field in `package.json`
 
 Pi reads a `pi` field in `package.json` (`packages/pi/src/resources/manifest.ts`) to discover which
-resources to load. `internet` declares its extension and skill:
+resources to load. `internet` declares its extension:
 
 ```jsonc
 "pi": {
-  "extensions": ["dist/extension.js"],
-  "skills": ["dist/skills/**/SKILL.md"]
+  "extensions": ["dist/extension.js"]
 }
 ```
 

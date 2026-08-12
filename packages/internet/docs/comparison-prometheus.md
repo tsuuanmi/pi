@@ -89,7 +89,7 @@ This is the **biggest architectural difference**.
 | MCP server | ✅ (stdio, ~56 tools) | ❌ (uses Pi's tool registry) |
 | REST API | ✅ (`/v1/chat/completions`) | ❌ (talks to the daemon's `/v1/responses`) |
 | Pi provider registration | ❌ | ✅ (`registerProvider("chatgpt-web", ...)`) |
-| Skills | ✅ (markdown files, `run_skill`) | ✅ (`codex-turn` skill) |
+| Skills | ✅ (markdown files, `run_skill`) | ❌ (MVP has no skill; tools only) |
 | Multi-account | Per-provider browser partitions | Per-account daemon instances |
 
 ### 2.4 Browser requirement
@@ -121,7 +121,7 @@ This is the **biggest architectural difference**.
 | Multi-provider routing | ✅ (`smart_query`, `ask_all_ais`, `compare_ais`) | ❌ (single backend MVP) |
 | Multi-account per provider | ✅ (browser partitions) | 🔜 (daemon instances) |
 | Compaction / context summarization | ✅ (`convo_history_summarize`) | 🔜 (`internet_compact`) |
-| Skills | ✅ (8 skills) | 🔜 (`codex-turn`) |
+| Skills | ✅ (8 skills) | ❌ (MVP has no skill) |
 | MCP server | ✅ | ❌ |
 | REST API | ✅ | ❌ |
 | Pi integration | ❌ | ✅ |
@@ -141,8 +141,9 @@ This is the **biggest architectural difference**.
    internet could add a `internet_ask_all` / `internet_compare` that fans a query across enabled
    backends and returns a comparison.
 
-3. **Skills are a proven pattern.** Prometheus ships 8 markdown skills. internet's `codex-turn`
-   skill should grow similarly (e.g. `internet-research`, `internet-summarize`).
+3. **Skills are a proven pattern.** Prometheus ships 8 markdown skills. internet could adopt a
+   similar skill set later (e.g. `internet-research`, `internet-summarize`) once the MVP tool
+   surface is stable.
 
 4. **Per-provider automation is fragile.** Prometheus's network-interception approach breaks when
    endpoints change. internet's DOM-parsing approach (via the daemon) is more robust for ChatGPT;

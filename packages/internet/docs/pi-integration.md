@@ -17,17 +17,14 @@ package exports a factory of type `ExtensionFactory = (pi: ExtensionAPI) => void
 
 ```ts
 // src/extension.ts
-import type { ExtensionAPI } from "@tsuuanmi/pi";
+import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { registerInternetTools } from "./tools/register";
 import { registerInternetHooks } from "./hooks";
-import { registerInternetCommands } from "./commands";
-import { registerInternetSkill } from "./skill";
 
 export default function internetExtension(pi: ExtensionAPI): void {
-  registerInternetTools(pi);     // tools
-  registerInternetHooks(pi);     // hooks
-  registerInternetCommands(pi);  // slash commands
-  registerInternetSkill(pi);     // skill metadata
+  registerInternetTools(pi); // tools
+  registerInternetHooks(pi); // hooks
+  pi.registerHudProvider(readDaemonStatus); // HUD
 }
 ```
 
@@ -35,7 +32,7 @@ export default function internetExtension(pi: ExtensionAPI): void {
 
 | Surface | Method | What internet uses it for |
 |---------|--------|---------------------------|
-| Tools | `registerTool`, `refreshTools`, `getAllTools`, `setActiveTools` | Register `codex_turn`, `codex_tool_call`, `codex_exec`, `codex_compact`, `daemon_*`. |
+| Tools | `registerTool`, `refreshTools`, `getAllTools`, `setActiveTools` | Register `internet_status`, `internet_compact`, `internet_control`, `internet_accounts` (MVP). Post-MVP adds `codex_tool_call` / `codex_exec`. |
 | Commands | `registerCommand` | Slash commands like `/internet` to run a turn or show status. |
 | Hooks | `ExtensionAPI extends ExtensionHookAPI` → `on(...)` | `tool_call` guard, `turn_end` bookkeeping. |
 | HUD | `registerHudProvider` | Live daemon status line (active turns, draining). |
@@ -76,28 +73,11 @@ native tool cannot run without policy approval.
 
 ---
 
-## 3. Skills
+## 3. Model provider registration (the MVP core)
 
-Pi packages ship self-contained skills — a `SKILL.md` plus `tools.ts` — following
-`packages/workflows/src/skills/<name>/`. `internet` ships a `codex-turn` skill:
-
-```
-src/skills/codex-turn/
-├── SKILL.md      # when to use: "run a Codex task through ChatGPT Web"
-└── tools.ts      # registerCodexTurnTools(host) → the codex_turn / codex_tool_call / codex_exec surface
-```
-
-`SKILL.md` front matter tells the agent when to load the skill. It describes the workflow:
-compile a turn, run it through the bridge, bridge native tools, run compaction when the context
-grows, and surface the connector approval gate.
-
----
-
-## 4. Model provider registration
-
-`internet` can register ChatGPT Web as a Pi model provider via `registerProvider(name, config)`.
-This lets the agent select `gpt-5.6-sol` / `gpt-5.6-luna` as its model and route inference through
-the bridge. The provider config is the same shape the daemon already builds (`providerConfig` in
+`internet` registers ChatGPT Web as a Pi model provider via `registerProvider(name, config)`. This
+lets the agent select `gpt-5.6-sol` / `gpt-5.6-luna` as its model and route inference through the
+bridge. The provider config is the same shape the daemon already builds (`providerConfig` in
 `codex-chatgpt-web/src/config.ts`):
 
 ```ts
@@ -110,20 +90,21 @@ pi.registerProvider("chatgpt-web", {
 });
 ```
 
-This is optional; `internet` works fine as a tool-only package if provider routing is not wanted.
+This is the **primary** MVP path (see review-and-brainstorm.md); the tools are a thin surface around
+it.
 
 ---
 
-## 5. Subagents and long-running work
+## 4. Subagent and long-running work
 
 The `team`/`ultragoal` skills in `packages/workflows` show the pattern for long-running work: a
 tool's `execute` returns a **receipt** while a durable subagent keeps the turn alive. `internet`
-can use the same shape — `codex_turn` returns an immediate receipt if the turn is long-running, and
-the result is delivered asynchronously via `sendMessage` when the bridge completes.
+can use the same shape for long-running inference — the result is delivered asynchronously via
+`sendMessage` when the bridge completes.
 
 ---
 
-## 6. HUD integration
+## 5. HUD integration
 
 `registerHudProvider` returns a status-line entry. `internet` renders:
 
@@ -136,7 +117,7 @@ provider in its extension entry.
 
 ---
 
-## 7. Discovery and loading
+## 6. Discovery and loading
 
 Pi discovers packages two ways (see `packages/pi/src/resources/discovery.ts` and the settings
 docs):
@@ -156,7 +137,7 @@ from `dist/`.
 
 ---
 
-## 8. Boundary rules
+## 7. Boundary rules
 
 Following the repo's package-boundary conventions (`packages/workflows/docs/...`):
 
@@ -171,14 +152,16 @@ Following the repo's package-boundary conventions (`packages/workflows/docs/...`
 
 ---
 
-## 9. What the agent can now do
+## 8. What the agent can now do (MVP)
 
 With `internet` loaded, a Pi agent gains:
 
-- run a **Codex turn through ChatGPT Web** (`codex_turn`);
-- bridge **native Codex tools** into that turn (`codex_tool_call`, `codex_exec`, `codex_apply_patch`);
-- run **compaction** (`codex_compact`) to keep long tasks inside the context window;
-- **control the daemon** (drain / resume / shutdown / status);
+- **ChatGPT Web model routing** via `registerProvider` (`gpt-5.6-sol` / `gpt-5.6-luna`);
+- run **compaction** (`internet_compact`) to keep long tasks inside the context window;
+- **control the daemon** (`internet_control`: drain / resume / shutdown / status);
 - a **HUD status line** with live turn counts;
-- the **connector approval gate** enforced through the `tool_call` hook;
-- optional **ChatGPT Web model routing** via `registerProvider`.
+- **multi-account** management (`internet_accounts`, ...).
+
+Post-MVP (full-mode tool bridge, see review-and-brainstorm.md):
+- bridge **native Codex tools** into a turn (`codex_tool_call`, `codex_exec`, `codex_apply_patch`);
+- the **connector approval gate** enforced through the `tool_call` hook.

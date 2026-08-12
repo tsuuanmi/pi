@@ -28,7 +28,7 @@ The daemon already has:
 
 ### 2.1 Model routing (MVP — already agreed)
 - Register the daemon as a Pi `openai-responses` provider (`gpt-5.6-sol` / `gpt-5.6-luna`).
-- `internet_status` (daemon health/turns), `internet_compact` (context summarization), HUD, skill.
+- `internet_status` (daemon health/turns), `internet_compact` (context summarization), HUD.
 
 ### 2.2 Web search (new — fills the Pi gap)
 - **`internet_search`** — a Pi tool that calls the daemon's `/v1/alpha/search` (or the web-search
@@ -60,7 +60,7 @@ The daemon already has:
 
 | Priority | Feature | Why |
 |----------|---------|-----|
-| P0 (MVP) | Model routing + `internet_status` + `internet_compact` + HUD + skill | The agreed MVP; makes ChatGPT Web usable. |
+| P0 (MVP) | Model routing + `internet_status` + `internet_compact` + HUD | The agreed MVP; makes ChatGPT Web usable. |
 | P1 | **`internet_search` + `internet_fetch`** | Fills a real Pi gap (no web tools); high value, low effort via the daemon. |
 | P2 | Multi-account + backend seam | Enables multiple ChatGPT accounts; future Claude/Gemini. |
 | P3 | Daemon lifecycle + `internet_doctor` | Better UX; diagnose failures. |

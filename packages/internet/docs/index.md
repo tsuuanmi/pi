@@ -38,7 +38,7 @@ the two reference repos (`codex-chatgpt-web` daemon and `prometheus`), plus the 
 - [How it works](how-it-works.md) — the runtime flow end to end (adapter → browser → broker →
   bridge back to Responses SSE), plus the tool loop.
 - [Pi ecosystem integration](pi-integration.md) — how the package plugs into Pi: extension API,
-  tools, hooks, skills, subagent support, and the daemon control surface.
+  tools, hooks, subagent support, and the daemon control surface.
 
 ## Scope
 

@@ -136,7 +136,7 @@ the browser. This keeps the browser logic in one place (the daemon) and the pack
 
 > **Key principle:** the package is a **thin client** over the daemon. The daemon owns the browser,
 > the login, the DOM parsing, and the concurrency. The package owns the Pi integration (provider,
-> tools, hooks, skill) and the cross-backend orchestration (fusion, search).
+> tools, hooks) and the cross-backend orchestration (fusion, search).
 
 ---
 

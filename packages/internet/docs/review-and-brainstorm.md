@@ -34,7 +34,6 @@ let Pi's own provider machinery do the streaming.
   `baseUrl: http://127.0.0.1:17841/v1`) so the agent can select `gpt-5.6-sol` / `gpt-5.6-luna`.
 - **A thin tool surface**: `internet_status` (daemon health/turns) and `internet_compact`
   (context summarization). Keep it to the tools that add value without duplicating Pi's provider.
-- **A skill** (`codex-turn`) that teaches the agent when/how to use the bridge.
 - **HUD** status line (active turns, draining, mode).
 - **One hook**: the `tool_call` approval gate for any destructive bridged action.
 - **Lifecycle**: ensure the daemon is reachable; start it if configured; fail with a clear error
@@ -69,7 +68,7 @@ let Pi's own provider machinery do the streaming.
 
 ```
 src/
-├── extension.ts       # registers provider + status/compact tools + HUD + skill
+├── extension.ts       # registers provider + status/compact tools + HUD
 ├── index.ts
 ├── daemon/
 │   └── client.ts      # health + control-token admin helpers (drain/resume/shutdown)
@@ -78,7 +77,6 @@ src/
 ├── tools/
 │   ├── status.ts      # internet_status
 │   └── compact.ts     # internet_compact
-├── skill.ts           # codex-turn SKILL.md glue
 └── version.ts
 ```
 - **Recommendation**: adopt this smaller layout for MVP; expand into the full tree only when the
@@ -195,7 +193,7 @@ shipping them now.
 ## 8. Bottom line
 
 The MVP should be **small**: register the daemon as a Pi `openai-responses` provider, add a
-`codex-turn` skill, a status tool, a compact tool, a HUD line, and one approval hook. Drop the
-custom SSE parser and the full tool bridge from the first milestone. That gives working ChatGPT Web
-routing in current Pi with minimal surface area, and it keeps the abstraction clean enough that
-Codex and Claude Code can be added later without rework.
+status tool, a compact tool, a HUD line, and one approval hook. Drop the custom SSE parser and the
+full tool bridge from the first milestone. That gives working ChatGPT Web routing in current Pi
+with minimal surface area, and it keeps the abstraction clean enough that Codex and Claude Code can
+be added later without rework.
