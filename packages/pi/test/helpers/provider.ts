@@ -43,7 +43,7 @@ export interface TestModelDefinition {
 
 export type TestContentBlock = TextContent | ThinkingContent | ToolCall;
 
-export function testText(text: string): TextContent {
+function testText(text: string): TextContent {
 	return { type: "text", text };
 }
 

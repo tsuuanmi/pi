@@ -51,7 +51,7 @@ export interface LocalResolveOptions {
 	project: Settings;
 }
 
-export function resolveLocalResources(options: LocalResolveOptions): ResolvedPaths {
+function resolveLocalResources(options: LocalResolveOptions): ResolvedPaths {
 	const table = createResourceTable();
 	const projectBase = join(options.cwd, CONFIG_DIR_NAME);
 

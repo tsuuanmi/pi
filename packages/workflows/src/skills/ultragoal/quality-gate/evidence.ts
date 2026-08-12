@@ -21,11 +21,11 @@ import {
 
 const CLI_REPLAY_TIMEOUT_MS = 5000;
 
-export function normalizeKind(row: Row): string {
+function normalizeKind(row: Row): string {
 	return typeof row.kind === "string" ? row.kind.toLowerCase().replaceAll("_", "-") : "";
 }
 
-export async function validateArtifactRef(row: Row, fieldName: string): Promise<void> {
+async function validateArtifactRef(row: Row, fieldName: string): Promise<void> {
 	requiredStringField(row, "kind", fieldName);
 	requiredStringField(row, "description", fieldName);
 }
@@ -40,32 +40,32 @@ export async function validateArtifactRefs(cwd: string, executorQa: Row): Promis
 	return idMap;
 }
 
-export function hasShellRedirectionToken(value: string): boolean {
+function hasShellRedirectionToken(value: string): boolean {
 	return /[|&;<>()`$]/.test(value) || value.includes("\n") || value.includes("\r");
 }
 
-export function basenameCommand(value: string): string {
+function basenameCommand(value: string): string {
 	return value.replaceAll("\\", "/").split("/").at(-1) ?? value;
 }
 
-export function isBareExecutableName(value: string): boolean {
+function isBareExecutableName(value: string): boolean {
 	return (
 		/^[a-z0-9._-]+$/.test(value) && !value.includes("/") && !value.includes("\\") && value === value.toLowerCase()
 	);
 }
 
-export function isDeterministicConsoleLogReplay(value: string): boolean {
+function isDeterministicConsoleLogReplay(value: string): boolean {
 	return /^console\.log\((?:"[A-Za-z0-9 .:_-]*"|'[A-Za-z0-9 .:_-]*')\);?$/.test(value.trim());
 }
 
-export function isAllowedGitReplayCommand(args: readonly string[]): boolean {
+function isAllowedGitReplayCommand(args: readonly string[]): boolean {
 	if (args.length === 0) return false;
 	const safe = new Set(["status", "rev-parse", "merge-base", "diff", "show", "log"]);
 	if (!safe.has(args[0]!)) return false;
 	return args.every((arg) => !hasShellRedirectionToken(arg) && !["--output", "-o"].includes(arg));
 }
 
-export function isAllowedCliReplayCommand(command: readonly string[]): boolean {
+function isAllowedCliReplayCommand(command: readonly string[]): boolean {
 	if (
 		command.length === 0 ||
 		command.some((arg) => arg.trim() !== arg || arg.length === 0 || hasShellRedirectionToken(arg))
@@ -87,7 +87,7 @@ export function isAllowedCliReplayCommand(command: readonly string[]): boolean {
 	return false;
 }
 
-export function cliReplayAllowlistDescription(): string {
+function cliReplayAllowlistDescription(): string {
 	return [
 		'`node --version` or deterministic `node -e "console.log(...)"`',
 		"`npm|pnpm|yarn --version` or `npm|pnpm|yarn list`",
@@ -95,7 +95,7 @@ export function cliReplayAllowlistDescription(): string {
 	].join("; ");
 }
 
-export async function runReplayCommand(command: string[], cwd: string): Promise<string> {
+async function runReplayCommand(command: string[], cwd: string): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const child = spawn(command[0]!, command.slice(1), { cwd, stdio: ["ignore", "pipe", "pipe"] });
 		let stdout = "";
@@ -122,7 +122,7 @@ export async function runReplayCommand(command: string[], cwd: string): Promise<
 	});
 }
 
-export async function readArtifactJson(cwd: string, row: Row, fieldName: string): Promise<Row | null> {
+async function readArtifactJson(cwd: string, row: Row, fieldName: string): Promise<Row | null> {
 	const rawPath = nonEmptyString(row.path);
 	if (!rawPath) return null;
 	const path = isAbsolute(rawPath) ? rawPath : resolve(cwd, rawPath);
@@ -134,7 +134,7 @@ export async function readArtifactJson(cwd: string, row: Row, fieldName: string)
 	}
 }
 
-export async function validateCliReplayArtifact(cwd: string, row: Row, fieldName: string): Promise<boolean> {
+async function validateCliReplayArtifact(cwd: string, row: Row, fieldName: string): Promise<boolean> {
 	const kind = normalizeKind(row);
 	if (!kind.includes("cli-replay") && !kind.includes("command-replay")) return false;
 	const record =
@@ -159,7 +159,7 @@ export async function validateCliReplayArtifact(cwd: string, row: Row, fieldName
 	return true;
 }
 
-export async function artifactHasLiveProof(cwd: string, row: Row, family: SurfaceFamily): Promise<boolean> {
+async function artifactHasLiveProof(cwd: string, row: Row, family: SurfaceFamily): Promise<boolean> {
 	if (await hasExistingNonEmptyArtifact(cwd, row.path)) return true;
 	if (family === "cli" && (await validateCliReplayArtifact(cwd, row, "executorQa.artifactRefs.cliReplay")))
 		return true;

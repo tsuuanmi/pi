@@ -68,7 +68,7 @@ export function parseGoalsFromBrief(brief: string): Array<{ title: string; objec
 	});
 }
 
-export function normalizeSteering(value: unknown): UltragoalGoal["steering"] | undefined {
+function normalizeSteering(value: unknown): UltragoalGoal["steering"] | undefined {
 	if (!isPlainObject(value)) return undefined;
 	const kind = typeof value.kind === "string" ? value.kind : undefined;
 	if (!kind) return undefined;

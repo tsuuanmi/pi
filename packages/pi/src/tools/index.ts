@@ -49,7 +49,6 @@ export {
 	type GlobToolDetails,
 	type GlobToolInput,
 	type GlobToolOptions,
-	matchesGlob,
 } from "#pi/tools/glob";
 export {
 	createGrepSpec,

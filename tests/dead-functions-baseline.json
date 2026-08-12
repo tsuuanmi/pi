@@ -86,147 +86,15 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/loader/discovery.ts::resolveLocalResources",
-			"file": "packages/pi/src/loader/discovery.ts",
-			"name": "resolveLocalResources",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/pi/src/session/root.ts::sessionStateDir",
 			"file": "packages/pi/src/session/root.ts",
 			"name": "sessionStateDir",
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/tools/glob.ts::matchesGlob",
-			"file": "packages/pi/src/tools/glob.ts",
-			"name": "matchesGlob",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/pi/test/helpers/provider.ts::testText",
-			"file": "packages/pi/test/helpers/provider.ts",
-			"name": "testText",
-			"kind": "exported"
-		},
-		{
 			"key": "packages/workflows/src/commands/workflow/index.ts::handlePackageCommand",
 			"file": "packages/workflows/src/commands/workflow/index.ts",
 			"name": "handlePackageCommand",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ralplan/index-store.ts::isApprovalClosed",
-			"file": "packages/workflows/src/skills/ralplan/index-store.ts",
-			"name": "isApprovalClosed",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ralplan/index-store.ts::parseRalplanIndexLine",
-			"file": "packages/workflows/src/skills/ralplan/index-store.ts",
-			"name": "parseRalplanIndexLine",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ralplan/index-store.ts::summarizeRows",
-			"file": "packages/workflows/src/skills/ralplan/index-store.ts",
-			"name": "summarizeRows",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/plan-model.ts::normalizeSteering",
-			"file": "packages/workflows/src/skills/ultragoal/plan-model.ts",
-			"name": "normalizeSteering",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::artifactHasLiveProof",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "artifactHasLiveProof",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::basenameCommand",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "basenameCommand",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::cliReplayAllowlistDescription",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "cliReplayAllowlistDescription",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::hasShellRedirectionToken",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "hasShellRedirectionToken",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::isAllowedCliReplayCommand",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "isAllowedCliReplayCommand",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::isAllowedGitReplayCommand",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "isAllowedGitReplayCommand",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::isBareExecutableName",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "isBareExecutableName",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::isDeterministicConsoleLogReplay",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "isDeterministicConsoleLogReplay",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::normalizeKind",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "normalizeKind",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::readArtifactJson",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "readArtifactJson",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::runReplayCommand",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "runReplayCommand",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::validateArtifactRef",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "validateArtifactRef",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts::validateCliReplayArtifact",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/evidence.ts",
-			"name": "validateCliReplayArtifact",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/rows.ts::requireProofStatus",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/rows.ts",
-			"name": "requireProofStatus",
-			"kind": "exported"
-		},
-		{
-			"key": "packages/workflows/src/skills/ultragoal/quality-gate/rows.ts::rowOutcomeStatuses",
-			"file": "packages/workflows/src/skills/ultragoal/quality-gate/rows.ts",
-			"name": "rowOutcomeStatuses",
 			"kind": "exported"
 		}
 	]

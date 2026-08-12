@@ -57,7 +57,7 @@ function toPosixPath(value: string): string {
 	return value.split(path.sep).join("/");
 }
 
-export function matchesGlob(filename: string, glob: string): boolean {
+function matchesGlob(filename: string, glob: string): boolean {
 	const normalizedGlob = glob.startsWith("**/") ? glob.slice(3) : glob;
 	const regexSource = normalizedGlob
 		.replace(/[.+^${}()|[\]\\]/g, "\\$&")

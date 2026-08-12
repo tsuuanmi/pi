@@ -34,7 +34,7 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
 	return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-export function parseRalplanIndexLine(line: string): { row?: RalplanIndexRow; error?: string } {
+function parseRalplanIndexLine(line: string): { row?: RalplanIndexRow; error?: string } {
 	const trimmed = line.trim();
 	if (!trimmed) return {};
 	let parsed: unknown;
@@ -138,9 +138,7 @@ export function latestForStageN(
 	return found;
 }
 
-export function summarizeRows(
-	rows: readonly RalplanIndexRow[],
-): Pick<RalplanStatus, "iteration" | "stages" | "latest"> {
+function summarizeRows(rows: readonly RalplanIndexRow[]): Pick<RalplanStatus, "iteration" | "stages" | "latest"> {
 	const stages: Partial<Record<RalplanStage, number>> = {};
 	let iteration = 0;
 	let latest: RalplanIndexRow | undefined;
@@ -211,7 +209,7 @@ export function plannerStatePatch(update: RalplanPlannerStateUpdate | undefined)
 	};
 }
 
-export function isApprovalClosed(phase: unknown): boolean {
+function isApprovalClosed(phase: unknown): boolean {
 	return phase === "approved" || phase === "handoff" || phase === "complete";
 }
 

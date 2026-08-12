@@ -75,7 +75,7 @@ export function requireResolvedLinks(ids: string[], map: Map<string, Row>, field
 	}
 }
 
-export function requireProofStatus(status: string, fieldName: string): void {
+function requireProofStatus(status: string, fieldName: string): void {
 	if (!ACCEPTED_PROOF_STATUSES.has(status) && status !== NOT_APPLICABLE_STATUS) {
 		throw new Error(`qualityGate ${fieldName}.status must be covered, passed, verified, or not_applicable`);
 	}
@@ -88,7 +88,7 @@ export function requireSuccessStatus(status: string, fieldName: string): void {
 	}
 }
 
-export function rowOutcomeStatuses(row: Row, fieldName: string): string[] {
+function rowOutcomeStatuses(row: Row, fieldName: string): string[] {
 	const statuses: string[] = [];
 	const status = optionalStatusField(row, fieldName);
 	if (status) statuses.push(status);
