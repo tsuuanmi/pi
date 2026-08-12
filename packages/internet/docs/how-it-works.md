@@ -1,139 +1,68 @@
 # Internet — How It Works
 
-This document walks the runtime flow of the `internet` package, from a Pi agent tool call to the
-ChatGPT Web result streamed back into the agent. It complements `architecture.md` (the design) and
-`pi-integration.md` (the ecosystem wiring).
+## Startup
 
----
+1. Pi loads `dist/extension.js` and awaits the default extension factory.
+2. The account registry loads persisted records. If none exist, it synthesizes a `default` account
+   from daemon config, or from the documented loopback default (`127.0.0.1:17841`).
+3. Enabled accounts are registered as Pi `openai-responses` providers.
+4. The extension registers tools, hooks, and the HUD provider.
 
-## 1. Startup / discovery
+Provider registration does not require the daemon to be running. A model request or daemon tool
+returns a clear connection error if it is unavailable.
 
-1. Pi loads the package and calls its default export (see `pi-integration.md`).
-2. The extension registers tools, hooks, and a HUD provider.
-3. The **daemon client** reads `runtime.json` to locate the loopback daemon (`127.0.0.1:17841`)
-   and the control token.
-4. If the daemon is not running, the package offers to start it (or surfaces a clear error telling
-   the user to run `codex-chatgpt-web`). It does **not** silently skip the health check.
-
----
-
-## 2. ChatGPT Web as a model backend (the MVP path)
-
-The MVP's primary path is **provider model routing**: the agent selects a ChatGPT Web model
-(`gpt-5.6-sol` / `gpt-5.6-luna`) and Pi streams inference through the daemon via its native
-`openai-responses` handler.
+## Model inference
 
 ```
-Pi agent selects gpt-5.6-sol (provider: chatgpt-web)
-        │  Pi's openai-responses handler builds the Responses request
+Pi selects chatgpt-web/high or chatgpt-web/luna
+        │
         ▼
-backends/openai/daemon/client.ts  POST /v1/responses { model, input, stream:true }
-        │  Bearer controlToken
+Pi's native openai-responses stream handler
+        │ POST http://127.0.0.1:17841/v1/responses
         ▼
-daemon (server.ts → parseRequest → adapter.runTurn)
-        │  prompt compile → browser turn → DOM streaming
+codex-chatgpt-web daemon
+        │ browser turn + standard Responses SSE
         ▼
-SSE: response.created / output_text.delta / ... / response.completed
-        │  turn/adapter.ts converts frames → incremental tool output
-        ▼
-streamed answer back to the Pi agent
+Pi's native handler streams assistant events
 ```
 
-### 2.1 The SSE → tool-output mapping
+The package deliberately has no SSE adapter or replay module. Pi owns Responses decoding; the
+daemon owns browser-turn replay/dedup.
 
-`turn/adapter.ts` (under the `openai` backend) subscribes to the daemon's SSE stream and emits:
+## Status and HUD
 
-| SSE frame | Pi tool output |
-|-----------|----------------|
-| `response.output_text.delta` | text delta |
-| `response.reasoning_summary_text.delta` | reasoning/thinking delta |
-| `response.function_call_arguments.delta` | tool-call argument delta |
-| `response.output_item.done` (message/tool_call) | committed item |
-| `response.completed` | final result, stopReason `stop` |
-| `response.incomplete` / `response.failed` | terminal error state |
+`internet_status` resolves the requested account (or the first enabled account), validates its
+private daemon config, and calls `/healthz`. The HUD uses the default daemon and hides itself when
+configuration or connectivity is unavailable. On each Pi `turn_end`, the HUD is refreshed.
 
-The adapter buffers and dedups so reconnects don't duplicate text.
+## Compaction
 
----
+`internet_compact` sends `{ model, input, instructions? }` to `/v1/responses/compact` and returns
+the daemon's replacement history. Luna requests are rejected before I/O because Luna maintains a
+rolling checkpoint and the daemon disables separate compaction for it.
 
-## 3. Full mode: the tool bridge loop
+## Control plane
 
-When the turn is tool-capable, the model may call `codex_*` tools. The daemon embeds a
-`turn_token` in the prompt and mints a per-turn `bindingId` when the turn is claimed.
+`internet_control` supports:
 
-```
-Pi agent
-   │ calls codex_tool_call({ turn_token, wire_name, arguments })
-   ▼
-codex-tool-call.ts (post-MVP full-mode tool bridge)  → POST /v1/responses with a function_call item
-   ▼
-daemon → broker.claim(token) → broker.invoke(bindingId, wire_name)
-   │   validates wire name against this turn's tool registry
-   ▼
-queued to the active Codex round → nextToolBatch → tool result → completeTool
-   ▼
-SSE back to Pi → adapter streams the tool result
-```
+| Action | Route |
+|---|---|
+| `drain` | `POST /admin/drain` |
+| `resume` | `POST /admin/resume` |
+| `shutdown` | `POST /admin/shutdown` |
+| `cancel-browser-turns` | `POST /admin/cancel-browser-turns` |
 
-> **Note:** the full-mode tool bridge is **post-MVP** (see review-and-brainstorm.md). The
-> `codex-tool-call` / `codex-exec` / `codex-apply-patch` files are not part of the MVP `src/` tree;
-> they will be added under the appropriate location when that milestone lands.
+Only these calls include `Authorization: Bearer <controlToken>`. A daemon refusal, including a 409
+shutdown refusal while turns are active, is surfaced as a typed `InternetError`.
 
-The **`tool_call` hook** (in `hooks.ts`) sits in front of these tools and requires human approval
-before a bridged native tool runs — the Pi analogue of the daemon's connector confirmation dialog.
+## Accounts
 
----
+Account records identify an OpenAI/ChatGPT Web daemon by id, display name, config directory,
+loopback endpoint, and enabled state. Add/enable changes are persisted atomically and become
+provider registrations after Pi reloads.
 
-## 4. Compaction
+## Approval guard
 
-Long tasks stay inside the context window by running `internet_compact`, which wraps the daemon's
-`/v1/responses/compact` endpoint:
-
-1. The agent calls `internet_compact({ model, input })`.
-2. The daemon runs a **dedicated summarization turn** that never binds the tool bridge.
-3. The returned summary becomes the next turn's replacement history.
-4. `internet` returns the summary to the agent and records it in the thread's session state for
-   `previous_response_id` replay.
-
-Luna (free tier) instead uses the daemon's **rolling checkpoint** on every completed turn, so
-`internet` disables separate compaction for Luna just like the daemon does.
-
----
-
-## 5. Control plane
-
-`internet` exposes a single `internet_control` tool (from `tools/control.ts`) that maps to the
-daemon's `/admin/*` routes via an action parameter:
-
-| Tool | Action | Daemon route | Effect |
-|------|--------|--------------|--------|
-| `internet_control` | `drain` | `POST /admin/drain` | Stop accepting new turns. |
-| `internet_control` | `resume` | `POST /admin/resume` | Resume accepting turns. |
-| `internet_control` | `shutdown` | `POST /admin/shutdown` | Refuse while active, else shut down. |
-| `internet_status` | — | `GET /healthz` | Live turn counts, mode, draining. |
-
-All admin calls require the control token. `internet_control shutdown` is refused (HTTP 409) when
-there are active turns — the daemon enforces this, and `internet` surfaces it.
-
----
-
-## 6. Lifecycle / durability
-
-- **Replay & dedup**: `turn/replay.ts` keys turns by thread id and reuses a settled outcome on
-  reconnect instead of re-running the browser (mirrors the daemon's own replay cache).
-- **Graceful close**: on Pi shutdown, `internet` drains and closes, never abandoning an in-flight
-  browser turn.
-- **State**: written atomically to `<config-dir>/internet/` (0600), never containing cookies or
-  model tokens.
-
----
-
-## 7. Error handling
-
-| Failure | Behavior |
-|---------|----------|
-| Daemon down | Clear error: start the service first; no partial run. |
-| Daemon busy / draining | 503 from the daemon surfaced as a retryable tool error. |
-| Tool not advertised in this turn | The daemon's `validateBatchTools` rejects it; `internet` relays the precise message. |
-| Stream interrupted | Adapter resumes from the last committed item or fails terminal with `reason`. |
-| Turn token expired/revoked | The broker returns a precise "turn already finished" error; surfaced verbatim. |
+The fail-closed `tool_call` guard protects every daemon control action and the documented future
+`codex_tool_call`, `codex_exec`, and `codex_apply_patch` names. Noninteractive use is blocked;
+interactive use requires confirmation.

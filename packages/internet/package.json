@@ -22,10 +22,6 @@
 			"types": "./dist/hooks.d.ts",
 			"import": "./dist/hooks.js"
 		},
-		"./runtime/*": {
-			"types": "./dist/runtime/*.d.ts",
-			"import": "./dist/runtime/*.js"
-		},
 		"./package.json": "./package.json"
 	},
 	"imports": {
@@ -56,14 +52,16 @@
 		"test": "vitest --run"
 	},
 	"dependencies": {
-		"@sinclair/typebox": "*",
-		"@tsuuanmi/pi": "*",
-		"@tsuuanmi/pi-tui": "*"
+		"@tsuuanmi/pi": "0.2.3",
+		"@tsuuanmi/pi-agent": "^0.2.3",
+		"@tsuuanmi/pi-tui": "^0.2.3",
+		"typebox": "1.1.38"
 	},
 	"devDependencies": {
-		"shx": "*",
-		"tsgo": "*",
-		"typescript": "*",
-		"vitest": "*"
+		"@types/node": "24.12.4",
+		"shx": "0.4.0",
+		"tsgo": "0.0.23",
+		"typescript": "5.9.3",
+		"vitest": "3.2.6"
 	}
 }

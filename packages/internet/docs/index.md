@@ -10,8 +10,8 @@ suggested source layout, how the package works, and how it plugs into the curren
 > **Find the source:** see [Source Repositories](source-repositories.md) for a map of every concept
 > to the exact files in the two reference repos (`codex-chatgpt-web` daemon and `prometheus`).
 
-> Status: **scaffolded.** The `src/` tree is populated with empty stubs and the package config
-> follows the Pi package standard (so it can be linked into Pi). No behavior yet.
+> Status: **MVP implemented.** The package registers ChatGPT Web providers, account-aware daemon
+> tools, lifecycle hooks, and a live HUD through Pi's current public extension APIs.
 
 ## Contents
 
@@ -35,17 +35,21 @@ the two reference repos (`codex-chatgpt-web` daemon and `prometheus`), plus the 
   security model.
 - [Suggested Layout](layout.md) — the proposed `packages/internet/` source tree, package.json
   exports, and build.
+- [Implementation Phases](implementation-phases.md) — reviewed implementation decisions, completed
+  MVP phases, verification gates, and deliberately deferred work.
 - [How it works](how-it-works.md) — the runtime flow end to end (adapter → browser → broker →
   bridge back to Responses SSE), plus the tool loop.
 - [Pi ecosystem integration](pi-integration.md) — how the package plugs into Pi: extension API,
   tools, hooks, subagent support, and the daemon control surface.
+- [Implementation Review](review/implementation-review.md) — review-only findings on the
+  implemented MVP: model metadata, provider naming, dead code, and test-quality notes.
 
 ## Scope
 
 - **MVP backend: ChatGPT Web** via the codex-chatgpt-web daemon (`src/backends/openai/`). The MVP
   registers the daemon as a Pi `openai-responses` provider plus a thin tool surface.
-- **Deferred:** Claude (`src/backends/anthropic/`) and Gemini (`src/backends/google/`) backends.
-  The per-backend folder structure keeps them additive without shipping them now.
+- **Deferred:** Claude and Gemini backends. No inert source stubs are shipped; future backends add
+  concrete modules and tests when their contracts are implemented.
 
 ## One-line summary
 
