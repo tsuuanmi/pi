@@ -7,7 +7,12 @@ import { sessionStateDir } from "@tsuuanmi/pi/session/root";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { SubagentManager } from "#orchestrator/subagent/manager";
 import type { SubagentRecord } from "#orchestrator/subagent/types";
-import { registerTestProvider, testAssistantMessage, testToolCall } from "../../../pi/test/helpers/provider.ts";
+import {
+	registerTestProvider,
+	testAssistantMessage,
+	testThinking,
+	testToolCall,
+} from "../../../pi/test/helpers/provider.ts";
 
 const TEST_SESSION = "test-session";
 
@@ -388,6 +393,31 @@ Worker profile`,
 
 		expect(result.record.thinking_level).toBe("low");
 		expect(captured[0]).toMatchObject({ reasoning: "low", tools: ["bash"] });
+	});
+
+	it("fails length-truncated runs and preserves their last text output", async () => {
+		testProvider.setResponses([
+			testAssistantMessage(
+				[
+					{ type: "text", text: "partial explorer report" },
+					testToolCall("bash", { command: "true" }, { id: "call-partial" }),
+				],
+				{ stopReason: "toolUse" },
+			),
+			testAssistantMessage(testThinking("unfinished reasoning"), { stopReason: "length" }),
+		]);
+		const result = await manager.spawn({
+			role: "explorer",
+			prompt: "Explore the package",
+			cwd,
+			storageSessionId: TEST_SESSION,
+			persistent: false,
+		});
+
+		expect(result.record.status).toBe("failed");
+		expect(result.record.result_text).toBe("partial explorer report");
+		expect(result.record.error_text).toBe("subagent response reached the output length limit");
+		expect(result.output).toBe("partial explorer report");
 	});
 
 	it("resumes a persisted subagent session with a follow-up prompt", async () => {

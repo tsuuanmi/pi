@@ -12,6 +12,12 @@ function truncatePreview(value: string | undefined, limit = 240): string | undef
 	return `${value.slice(0, limit - 1)}…`;
 }
 
+function sessionStorage(record: SubagentRecord): "durable" | "in-memory" | "initializing" | "unavailable" {
+	if (record.session_file) return "durable";
+	if (!record.resumable) return "in-memory";
+	return record.status === "queued" || record.status === "running" ? "initializing" : "unavailable";
+}
+
 export function createSubagentListReceipt(sessionId: string, count: number): StructuredReceipt {
 	return {
 		version: STRUCTURED_RECEIPT_VERSION,
@@ -59,6 +65,9 @@ export function createSubagentReceipt(record: SubagentRecord, sessionId: string)
 			model: record.model,
 			thinking_level: record.thinking_level,
 			last_prompt_sha256: record.last_prompt_sha256,
+			session_id: record.session_id,
+			session_file: record.session_file,
+			session_storage: sessionStorage(record),
 		},
 	};
 }

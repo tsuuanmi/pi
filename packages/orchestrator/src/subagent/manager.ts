@@ -131,7 +131,9 @@ function textFromAgent(message: AssistantMessage): string {
 function finalAgentOutput(messages: readonly AgentMessage[]): string {
 	for (let index = messages.length - 1; index >= 0; index--) {
 		const message = messages[index];
-		if (message?.role === "assistant") return textFromAgent(message as AssistantMessage);
+		if (message?.role !== "assistant") continue;
+		const output = textFromAgent(message as AssistantMessage);
+		if (output.trim().length > 0) return output;
 	}
 	return "";
 }
@@ -144,13 +146,16 @@ function isAgentError(messages: readonly AgentMessage[]): string | undefined {
 		if (agentMessage.stopReason === "error" || agentMessage.stopReason === "aborted") {
 			return agentMessage.errorMessage ?? agentMessage.stopReason;
 		}
+		if (agentMessage.stopReason === "length") {
+			return agentMessage.errorMessage ?? "subagent response reached the output length limit";
+		}
 		return undefined;
 	}
 	return undefined;
 }
 
 function recordOutput(record: SubagentRecord): string {
-	return record.result_text ?? record.error_text ?? "";
+	return record.result_text?.trim() ? record.result_text : (record.error_text ?? "");
 }
 
 function isTerminalStatus(status: SubagentStatus): boolean {
@@ -482,7 +487,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 				},
 			);
 			session.dispose();
-			return { record: completed, messages, output };
+			return { record: completed, messages, output: recordOutput(completed) };
 		} catch (error) {
 			const live = this.live.get(record.id);
 			const paused = live?.pauseRequested === true;
@@ -523,7 +528,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 			return {
 				record: failed,
 				messages: session.state.messages,
-				output: finalAgentOutput(session.state.messages),
+				output: recordOutput(failed),
 			};
 		}
 	}

@@ -25,9 +25,12 @@ export const SUBAGENT_SPECS = [
 	{
 		name: "subagent_spawn",
 		label: "Subagent Spawn",
-		description: "Spawn a subagent session with optional restricted tools and persistence.",
+		description: "Spawn a subagent session with optional restricted tools, persistence, and non-blocking execution.",
 		promptSnippet: "Spawn a durable subagent for isolated work",
-		promptGuidelines: ["Use subagent_spawn when work should run in an isolated agent context."],
+		promptGuidelines: [
+			"Use subagent_spawn when work should run in an isolated agent context.",
+			"For concurrent work, set detached=true, continue useful parent work, then poll with subagent_status or bounded subagent_await calls.",
+		],
 		parameters: subagentSpawnSchema,
 		execute: (
 			_id: string,
@@ -40,18 +43,22 @@ export const SUBAGENT_SPECS = [
 	{
 		name: "subagent_status",
 		label: "Subagent Status",
-		description: "Read one subagent record or list recent subagent records.",
+		description: "Read one subagent record or list recent subagent records, including session durability metadata.",
 		promptSnippet: "Inspect subagent records",
-		promptGuidelines: ["Use subagent_status before resuming or auditing subagent work."],
+		promptGuidelines: [
+			"Use subagent_status before resuming or auditing subagent work and to poll detached runs without blocking.",
+		],
 		parameters: subagentStatusSchema,
 		execute: (_id: string, p: SubagentStatusInput, c: SubagentContext) => status(p, c),
 	},
 	{
 		name: "subagent_await",
 		label: "Subagent Await",
-		description: "Await a live subagent or read its terminal result.",
+		description: "Await a live subagent or read its terminal result; use timeoutMs for bounded polling.",
 		promptSnippet: "Await subagent completion",
-		promptGuidelines: ["Use subagent_await to collect a detached subagent result before integrating it."],
+		promptGuidelines: [
+			"Use bounded subagent_await calls to poll a detached run when the parent has no useful work left, then integrate only its terminal result.",
+		],
 		parameters: subagentAwaitSchema,
 		execute: (_id: string, p: SubagentAwaitInput, c: SubagentContext) => awaitRun(p, c),
 	},

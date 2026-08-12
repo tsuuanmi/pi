@@ -38,11 +38,12 @@ describe("orchestrator subagent receipts", () => {
 		});
 	});
 
-	it("omits host execution metadata", () => {
+	it("identifies in-memory runs without implying a missing durable session", () => {
 		const receipt = createSubagentReceipt({ ...RECORD, status: "failed" }, "session-1");
 
 		expect(receipt.location).not.toHaveProperty("visibility");
 		expect(receipt.errorSummary).toBeUndefined();
+		expect(receipt.meta).toMatchObject({ session_storage: "in-memory" });
 	});
 
 	it("attaches an agent receipt without a package-specific final field", () => {

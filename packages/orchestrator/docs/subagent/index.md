@@ -18,9 +18,9 @@ Each subagent is stored under the owning session's state tree:
 
 `index.jsonl` gets one line per write with `id`, `role`, `status`, `updated_at`, and `session_file`, so the audit trail reconstructs the lifecycle without reading every `record.json`. `record.json` is written atomically (temp file + rename) and remains the lifecycle record, while `artifact.json` stores the terminal result artifact for artifact-first inspection.
 
-A `SubagentRecord` carries: `id`, `role`, `label`, `agent_profile`, `model`, `thinking_level`, `status`, `cwd`, `session_id`, `session_file`, `parent_session_id`, `resumable`, timestamps, `last_prompt_sha256`, `result_text`, `error_text`, and an optional structured `yield_result` (populated when the subagent calls the `yield` tool).
+A `SubagentRecord` carries: `id`, `role`, `label`, `agent_profile`, `model`, `thinking_level`, `status`, `cwd`, `session_id`, `session_file`, `parent_session_id`, `resumable`, timestamps, `last_prompt_sha256`, `result_text`, `error_text`, and an optional structured `yield_result` (populated when the subagent calls the `yield` tool). An intentionally in-memory run (`persistent: false`, `resumable: false`) has no durable `session_file`; status and receipts identify that state explicitly.
 
-`status` is one of `queued`, `running`, `paused`, `completed`, `failed`, `cancelled`.
+`status` is one of `queued`, `running`, `paused`, `completed`, `failed`, `cancelled`. A model response stopped by its output-length limit is recorded as `failed`, with any earlier text retained as partial `result_text`, rather than as an empty successful result.
 
 ## Subagent lifecycle tools
 
@@ -45,7 +45,7 @@ Spawn an isolated agent session.
 }
 ```
 
-`detached: true` returns the queued record immediately; collect the result later with `subagent_await`. Non-detached spawns block until the subagent reaches a terminal status.
+`detached: true` returns the queued record immediately. The parent should continue useful work, poll with `subagent_status` or bounded `subagent_await` calls (`timeoutMs`), and collect the terminal result before integrating it. Non-detached spawns block until the subagent reaches a terminal status.
 
 ### `subagent_status`
 
@@ -77,7 +77,7 @@ Await a live subagent or read its terminal result.
 }
 ```
 
-Timeout-aware: if the timeout elapses while the subagent is still running, the result is `{ ok: false, reason: "timeout", timedOut: true }` plus a retained progress snapshot for diagnostics. A timed-out subagent keeps running; await it again or steer/pause/cancel it.
+Timeout-aware: if the timeout elapses while the subagent is still running, the result is `{ ok: false, reason: "timeout", timedOut: true }` plus a retained progress snapshot for diagnostics. A timed-out subagent keeps running; the parent can continue other work and make another bounded await/status call later, or steer/pause/cancel it.
 
 ### `subagent_resume`
 

@@ -45,7 +45,8 @@ export async function spawn(
 	const role = result.record.role;
 	if (role) lines.push(`role: ${role}`);
 	if (result.record.label ?? params.label) lines.push(`label: ${result.record.label ?? params.label}`);
-	if (params.detached) lines.push("detached: true");
+	if (params.detached) lines.push("detached: true; poll with subagent_status or bounded subagent_await");
+	lines.push(`session: ${sessionDescription(result.record)}`);
 	lines.push(`task: ${truncate(params.prompt, "receipt")}`);
 	return {
 		content: [{ type: "text", text: lines.join("\n") }],
@@ -78,7 +79,9 @@ export async function status(
 		id: record.id,
 		role: record.role,
 		status: record.status,
-		output: truncate(record.result_text ?? record.error_text, verbosity),
+		resumable: record.resumable,
+		session_file: record.session_file,
+		output: truncate(record.result_text?.trim() ? record.result_text : record.error_text, verbosity),
 	}));
 	return {
 		content: [{ type: "text", text: JSON.stringify(summary, null, 2) }],
@@ -216,6 +219,13 @@ export async function cancel(
 	};
 }
 
+function sessionDescription(record: SubagentRecord): string {
+	if (record.session_file) return record.session_file;
+	if (!record.resumable) return "in-memory (no durable session file)";
+	if (record.status === "queued" || record.status === "running") return "initializing durable session";
+	return "durable session unavailable";
+}
+
 function parseVerbosity(value: string | undefined): Verbosity {
 	if (value === undefined || value === "receipt" || value === "preview" || value === "full") {
 		return value ?? "receipt";
@@ -235,12 +245,15 @@ function normalizeLimit(value: number | undefined): number {
 
 function formatRecord(record: SubagentRecord | undefined, verbosity: Verbosity): string {
 	if (!record) return "Subagent not found";
-	const output = truncate(record.result_text ?? record.error_text, verbosity);
+	const output = truncate(record.result_text?.trim() ? record.result_text : record.error_text, verbosity);
 	return JSON.stringify(
 		{
 			id: record.id,
 			role: record.role,
 			status: record.status,
+			resumable: record.resumable,
+			session_id: record.session_id,
+			session_file: record.session_file,
 			created_at: record.created_at,
 			updated_at: record.updated_at,
 			...(output ? { output } : {}),

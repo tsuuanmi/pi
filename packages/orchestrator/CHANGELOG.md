@@ -24,4 +24,5 @@
 
 ### Fixed
 
+- **subagent**: Report in-memory session storage explicitly, preserve partial text from length-truncated responses, and fail truncated runs instead of recording empty successful output.
 - **orchestrator**: Apply constructor-level trace and retry-classification hooks as run defaults.
