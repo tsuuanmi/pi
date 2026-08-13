@@ -15,6 +15,13 @@ export const subagentSpawnSchema = Type.Object({
 		Type.Boolean({ description: "Defaults to the selected profile or true. False uses an in-memory session." }),
 	),
 	detached: Type.Optional(Type.Boolean({ description: "Return immediately after spawning." })),
+	maxDurationMs: Type.Optional(
+		Type.Integer({
+			description: "Hard wall-clock run-time budget in milliseconds. The subagent fails when exceeded.",
+			minimum: 1,
+			maximum: Number.MAX_SAFE_INTEGER,
+		}),
+	),
 	label: Type.Optional(Type.String({ description: "Human-readable subagent label." })),
 });
 export type SubagentSpawnInput = Static<typeof subagentSpawnSchema>;
@@ -49,6 +56,13 @@ export type SubagentAwaitInput = Static<typeof subagentAwaitSchema>;
 export const subagentResumeSchema = Type.Object({
 	id: Type.String({ description: "Subagent id." }),
 	message: Type.String({ description: "Follow-up message to resume the saved subagent context." }),
+	maxDurationMs: Type.Optional(
+		Type.Integer({
+			description: "Hard wall-clock budget for this resumed run. Defaults to the stored budget.",
+			minimum: 1,
+			maximum: Number.MAX_SAFE_INTEGER,
+		}),
+	),
 });
 export type SubagentResumeInput = Static<typeof subagentResumeSchema>;
 

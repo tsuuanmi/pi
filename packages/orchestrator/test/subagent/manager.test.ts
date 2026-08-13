@@ -258,6 +258,51 @@ describe("SubagentManager live spawn and resume", () => {
 		});
 	});
 
+	it("enforces and persists the hard run-time budget", async () => {
+		let resolveResponse: ((message: ReturnType<typeof testAssistantMessage>) => void) | undefined;
+		const response = new Promise<ReturnType<typeof testAssistantMessage>>((resolve) => {
+			resolveResponse = resolve;
+		});
+		testProvider.setResponses([() => response]);
+
+		const result = await manager.spawn({
+			role: "planner",
+			prompt: "Do not run forever",
+			cwd,
+			storageSessionId: TEST_SESSION,
+			persistent: false,
+			maxDurationMs: 20,
+		});
+
+		expect(result.record).toMatchObject({
+			status: "failed",
+			max_duration_ms: 20,
+			error_text: "subagent exceeded max run time (20 ms)",
+		});
+		expect(result.output).toBe("subagent exceeded max run time (20 ms)");
+		expect((await manager.read(result.record.id, TEST_SESSION))?.status).toBe("failed");
+		expect(manager.getActiveCount()).toBe(0);
+		resolveResponse?.(testAssistantMessage("late response"));
+		await new Promise((resolve) => setTimeout(resolve, 10));
+		expect(await manager.read(result.record.id, TEST_SESSION)).toMatchObject({
+			status: "failed",
+			error_text: "subagent exceeded max run time (20 ms)",
+		});
+	});
+
+	it.each([0, -1, 1.5, Number.POSITIVE_INFINITY])("rejects invalid maxDurationMs %s", async (maxDurationMs) => {
+		await expect(
+			manager.spawn({
+				role: "planner",
+				prompt: "Invalid budget",
+				cwd,
+				storageSessionId: TEST_SESSION,
+				persistent: false,
+				maxDurationMs,
+			}),
+		).rejects.toThrow("subagent maxDurationMs must be a positive safe integer");
+	});
+
 	it("scopes live controls to the storage session", async () => {
 		let resolveResponse: ((message: ReturnType<typeof testAssistantMessage>) => void) | undefined;
 		const response = new Promise<ReturnType<typeof testAssistantMessage>>((resolve) => {
@@ -420,7 +465,7 @@ Worker profile`,
 		expect(result.output).toBe("partial explorer report");
 	});
 
-	it("resumes a persisted subagent session with a follow-up prompt", async () => {
+	it("resumes a persisted subagent session with a follow-up prompt and inherited run-time budget", async () => {
 		// Spawn with a persistent session so we can resume
 		testProvider.setResponses([testAssistantMessage("initial response")]);
 		const spawnResult = await manager.spawn({
@@ -430,8 +475,10 @@ Worker profile`,
 			storageSessionId: TEST_SESSION,
 			tools: ["read", "bash"],
 			persistent: true,
+			maxDurationMs: 1_000,
 		});
 		expect(spawnResult.record.status).toBe("completed");
+		expect(spawnResult.record.max_duration_ms).toBe(1_000);
 		expect(spawnResult.record.session_file).toBeDefined();
 		expect(spawnResult.record.session_file).toContain(join(".pi", TEST_SESSION, "state", "subagent", "sessions"));
 
@@ -444,8 +491,41 @@ Worker profile`,
 		expect(resumeResult.ok).toBe(true);
 		if (resumeResult.ok) {
 			expect(resumeResult.result.record.status).toBe("completed");
+			expect(resumeResult.result.record.max_duration_ms).toBe(1_000);
 			expect(resumeResult.result.output).toContain("refined design");
 		}
+	});
+
+	it("enforces an overridden run-time budget on resume", async () => {
+		testProvider.setResponses([testAssistantMessage("initial response")]);
+		const spawnResult = await manager.spawn({
+			role: "planner",
+			prompt: "Draft",
+			cwd,
+			storageSessionId: TEST_SESSION,
+			persistent: true,
+			maxDurationMs: 1_000,
+		});
+		let resolveResponse: ((message: ReturnType<typeof testAssistantMessage>) => void) | undefined;
+		const response = new Promise<ReturnType<typeof testAssistantMessage>>((resolve) => {
+			resolveResponse = resolve;
+		});
+		testProvider.setResponses([() => response]);
+
+		const resumeResult = await manager.resume(spawnResult.record.id, "Continue", {
+			maxDurationMs: 20,
+			storageSessionId: TEST_SESSION,
+		});
+
+		expect(resumeResult.ok).toBe(true);
+		if (resumeResult.ok) {
+			expect(resumeResult.result.record).toMatchObject({
+				status: "failed",
+				max_duration_ms: 20,
+				error_text: "subagent exceeded max run time (20 ms)",
+			});
+		}
+		resolveResponse?.(testAssistantMessage("late response"));
 	});
 
 	it("cooperatively pauses a running subagent", async () => {

@@ -33,6 +33,7 @@ export async function spawn(
 		excludeTools: params.excludeTools,
 		persistent: params.persistent,
 		detached: params.detached,
+		maxDurationMs: params.maxDurationMs,
 		label: params.label,
 		parentSessionId: context.sessionId,
 		storageSessionId: context.sessionId,
@@ -80,6 +81,7 @@ export async function status(
 		role: record.role,
 		status: record.status,
 		resumable: record.resumable,
+		max_duration_ms: record.max_duration_ms,
 		session_file: record.session_file,
 		output: truncate(record.result_text?.trim() ? record.result_text : record.error_text, verbosity),
 	}));
@@ -134,6 +136,7 @@ export async function resume(
 	signal?: AbortSignal,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
 	const result = await context.manager.resume(params.id, params.message, {
+		maxDurationMs: params.maxDurationMs,
 		signal,
 		storageSessionId: context.sessionId,
 	});
@@ -252,6 +255,7 @@ function formatRecord(record: SubagentRecord | undefined, verbosity: Verbosity):
 			role: record.role,
 			status: record.status,
 			resumable: record.resumable,
+			max_duration_ms: record.max_duration_ms,
 			session_id: record.session_id,
 			session_file: record.session_file,
 			created_at: record.created_at,

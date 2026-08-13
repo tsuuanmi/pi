@@ -20,6 +20,7 @@ describe("orchestrator subagent receipts", () => {
 			status: "running",
 			resumable: true,
 			parent_session_id: "session-1",
+			max_duration_ms: 120_000,
 			result_text: "still working",
 		};
 
@@ -35,6 +36,7 @@ describe("orchestrator subagent receipts", () => {
 				role: "worker",
 			},
 			outputPreview: "still working",
+			meta: { max_duration_ms: 120_000 },
 		});
 	});
 

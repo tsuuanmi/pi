@@ -16,6 +16,7 @@ export interface SubagentRunRequest {
 	thinkingLevel?: ThinkingLevel;
 	persistent?: boolean;
 	detached?: boolean;
+	maxDurationMs?: number;
 	label?: string;
 	parentSessionId?: string;
 	storageSessionId?: string;
@@ -35,6 +36,7 @@ export interface SubagentRecord {
 	agent_profile?: string;
 	model?: string;
 	thinking_level?: ThinkingLevel;
+	max_duration_ms?: number;
 	status: SubagentStatus;
 	cwd: string;
 	parent_session_id?: string;

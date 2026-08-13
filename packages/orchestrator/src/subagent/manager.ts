@@ -16,6 +16,7 @@ import {
 	type SubagentProgress,
 	SubagentProgressTracker,
 } from "#orchestrator/subagent/progress";
+import { normalizeMaxDurationMs, SubagentRunControl } from "#orchestrator/subagent/run-control";
 import { SubagentStore } from "#orchestrator/subagent/store";
 import { SUBAGENT_TOOL_NAMES } from "#orchestrator/subagent/tool-names";
 import type {
@@ -50,7 +51,7 @@ type SubagentRunRequest = SubagentRequest;
 type SubagentRunResult = RuntimeResult;
 
 interface LiveSubagent {
-	controller: AbortController;
+	control: SubagentRunControl;
 	promise: Promise<SubagentRunResult>;
 	session?: AgentSession;
 	pauseRequested: boolean;
@@ -266,6 +267,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 			modelObject,
 			thinkingLevel: request.thinkingLevel ?? profile?.thinkingLevel,
 			persistent: request.persistent ?? profile?.persistent,
+			maxDurationMs: normalizeMaxDurationMs(request.maxDurationMs),
 			resolvedSystemPrompt: mergeSystemPrompt(profile, request),
 		};
 	}
@@ -286,6 +288,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 				agent_profile: resolved.agent,
 				model: resolved.modelRef,
 				thinking_level: resolved.thinkingLevel,
+				max_duration_ms: resolved.maxDurationMs,
 				status: "queued",
 				cwd: resolved.cwd ?? this.services.cwd,
 				parent_session_id: resolved.parentSessionId,
@@ -308,25 +311,24 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 	private async runRecord(record: SubagentRecord, request: ResolvedSubagentRequest): Promise<SubagentRunResult> {
 		const storageSessionId = request.storageSessionId ?? request.parentSessionId ?? record.parent_session_id;
 		if (!storageSessionId) throw new Error("subagent run requires a session id");
-		const controller = new AbortController();
-		const abort = () => controller.abort();
-		if (request.signal?.aborted) abort();
-		else request.signal?.addEventListener("abort", abort, { once: true });
-		const promise = this.executeRecord(record, request, controller.signal).catch(async (error) => {
+		const control = new SubagentRunControl(request.maxDurationMs, request.signal);
+		const execution = this.executeRecord(record, request, control);
+		const promise = control.waitFor(execution).catch(async (error) => {
+			if (!control.signal.aborted) control.finish();
 			this.live.get(record.id)?.session?.dispose();
 			const current = await this.read(record.id, storageSessionId);
 			if (!current) throw error;
 			if (isTerminalStatus(current.status)) {
 				return { record: current, messages: [], output: recordOutput(current) };
 			}
-			const message = error instanceof Error ? error.message : String(error);
-			const status = controller.signal.aborted ? "cancelled" : "failed";
+			const status = control.reason === "timed_out" ? "failed" : control.signal.aborted ? "cancelled" : "failed";
+			const message = control.errorMessage(error);
 			this.progressTracker.markTerminal(record.id, status);
 			const failed = await this.store.terminal(current, status, storageSessionId, { error_text: message });
 			return { record: failed, messages: [], output: recordOutput(failed) };
 		});
 		this.live.set(record.id, {
-			controller,
+			control,
 			promise,
 			pauseRequested: false,
 			storageSessionId,
@@ -334,7 +336,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 		try {
 			return await promise;
 		} finally {
-			request.signal?.removeEventListener("abort", abort);
+			control.dispose();
 			this.live.delete(record.id);
 		}
 	}
@@ -366,8 +368,9 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 	private async executeRecord(
 		record: SubagentRecord,
 		request: ResolvedSubagentRequest,
-		signal: AbortSignal,
+		control: SubagentRunControl,
 	): Promise<SubagentRunResult> {
+		const signal = control.signal;
 		const storageSessionId = request.storageSessionId ?? request.parentSessionId ?? record.parent_session_id;
 		if (!storageSessionId)
 			throw new Error("subagent run requires a session id (storageSessionId or parentSessionId)");
@@ -446,7 +449,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 			} finally {
 				signal.removeEventListener("abort", abort);
 			}
-			if (signal.aborted) throw new Error("subagent aborted");
+			if (!control.finish()) throw new Error(control.errorMessage());
 			// Cooperative pause: shouldStopAfterTurn exited the loop gracefully.
 			// prompt() resolved normally but the agent stopped mid-run.
 			if (live?.pauseRequested) {
@@ -489,14 +492,27 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 			session.dispose();
 			return { record: completed, messages, output: recordOutput(completed) };
 		} catch (error) {
+			if (signal.aborted || !control.finish()) {
+				session.dispose();
+				throw new Error(control.errorMessage(error));
+			}
+			const current = (await this.read(record.id, storageSessionId)) ?? record;
+			if (isTerminalStatus(current.status)) {
+				session.dispose();
+				return {
+					record: current,
+					messages: session.state.messages,
+					output: recordOutput(current),
+				};
+			}
 			const live = this.live.get(record.id);
 			const paused = live?.pauseRequested === true;
-			const message = error instanceof Error ? error.message : String(error);
+			const message = control.errorMessage(error);
 			if (paused && !signal.aborted) {
 				this.progressTracker.markTerminal(record.id, "paused");
 				const pausedRecord = await this.store.write(
 					{
-						...((await this.read(record.id, storageSessionId)) ?? record),
+						...current,
 						status: "paused",
 						updated_at: nowIso(),
 						error_text: message,
@@ -512,18 +528,12 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 					output: finalAgentOutput(session.state.messages),
 				};
 			}
-			const failStatus = signal.aborted ? "cancelled" : "failed";
-			this.progressTracker.markTerminal(record.id, failStatus);
-			const failed = await this.store.terminal(
-				(await this.read(record.id, storageSessionId)) ?? record,
-				failStatus,
-				storageSessionId,
-				{
-					error_text: message,
-					session_file: session.sessionFile,
-					session_id: session.sessionId,
-				},
-			);
+			this.progressTracker.markTerminal(record.id, "failed");
+			const failed = await this.store.terminal(current, "failed", storageSessionId, {
+				error_text: message,
+				session_file: session.sessionFile,
+				session_id: session.sessionId,
+			});
 			session.dispose();
 			return {
 				record: failed,
@@ -590,7 +600,15 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 		message: string,
 		options: Pick<
 			SubagentRunRequest,
-			"agent" | "systemPrompt" | "tools" | "excludeTools" | "model" | "thinkingLevel" | "signal" | "storageSessionId"
+			| "agent"
+			| "systemPrompt"
+			| "tools"
+			| "excludeTools"
+			| "model"
+			| "thinkingLevel"
+			| "maxDurationMs"
+			| "signal"
+			| "storageSessionId"
 		>,
 	): Promise<SubagentResumeResult> {
 		if (!options.storageSessionId) throw new Error("subagent resume requires a session id (storageSessionId)");
@@ -611,11 +629,18 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 				excludeTools: options.excludeTools,
 				model: options.model ?? record.model,
 				thinkingLevel: options.thinkingLevel ?? record.thinking_level,
+				maxDurationMs: options.maxDurationMs ?? record.max_duration_ms,
 				signal: options.signal,
 				storageSessionId,
 			});
 			const result = await this.runRecord(
-				{ ...record, status: "queued", updated_at: nowIso(), last_prompt_sha256: hashText(message) },
+				{
+					...record,
+					status: "queued",
+					updated_at: nowIso(),
+					last_prompt_sha256: hashText(message),
+					max_duration_ms: resolved.maxDurationMs,
+				},
 				resolved,
 			);
 			return { ok: true, result };
@@ -655,7 +680,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 	async cancel(id: string, sessionId: string): Promise<SubagentRecord | undefined> {
 		const live = this.liveFor(id, sessionId);
 		if (live) {
-			live.controller.abort();
+			live.control.cancel();
 			try {
 				return (await live.promise).record;
 			} catch {
@@ -673,7 +698,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 	/** Tear down the manager: abort all live subagent runs and wait for them to settle. */
 	async dispose(): Promise<void> {
 		const live = [...this.live.values()];
-		for (const run of live) run.controller.abort();
+		for (const run of live) run.control.cancel();
 		await Promise.allSettled(live.map((run) => run.promise));
 		this.live.clear();
 	}

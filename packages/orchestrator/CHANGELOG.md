@@ -8,6 +8,7 @@
 ### Added
 
 - **subagent**: Added isolated Pi sessions, persistence, lifecycle tools, durable inspection, receipts, and active HUD data.
+- **subagent**: Added persisted `maxDurationMs` run budgets that abort overdue spawn and resume runs with diagnostic timeout failures.
 - **orchestrator**: Added `@tsuuanmi/pi-orchestrator` as the isolated package for task, team, and orchestrator contracts previously hosted in `@tsuuanmi/pi-agent`.
 
 ### Changed

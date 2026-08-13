@@ -41,11 +41,14 @@ Spawn an isolated agent session.
   "excludeTools": ["subagent_spawn"], // optional: tool names to disable
   "persistent": true,                 // optional: defaults to profile or true; false = in-memory session
   "detached": false,                 // optional: return immediately after spawning
+  "maxDurationMs": 120000,           // optional: hard wall-clock run-time budget in ms; the subagent is aborted if it does not finish in time
   "label": "test-fix"                 // optional: human-readable label
 }
 ```
 
 `detached: true` returns the queued record immediately. The parent should continue useful work, poll with `subagent_status` or bounded `subagent_await` calls (`timeoutMs`), and collect the terminal result before integrating it. Non-detached spawns block until the subagent reaches a terminal status.
+
+`maxDurationMs` sets a hard wall-clock run-time budget. If the subagent has not reached a terminal status when the budget expires, the manager aborts the run and records it as `failed` (see [Max run-time rule](#max-run-time-rule)).
 
 ### `subagent_status`
 
@@ -92,11 +95,14 @@ Resume a saved persistent subagent session with a follow-up message, replaying i
   "thinkingLevel": "high",      // optional: override thinking level
   "tools": [...],               // optional: override allowed tools
   "excludeTools": [...],        // optional: override disabled tools
-  "systemPrompt": "..."         // optional: override system prompt
+  "systemPrompt": "...",        // optional: override system prompt
+  "maxDurationMs": 120000,      // optional: hard wall-clock run-time budget in ms; re-armed for this resume
 }
 ```
 
 Returns `{ ok: false, reason: "context_unavailable" | "not_found" | "resume_failed" }` on failure. Resuming requires a persistent record with a saved `session_file`.
+
+`maxDurationMs` re-arms the run-time watchdog for this resume. If omitted, the budget from the original spawn is reused when available.
 
 ### `subagent_steer`
 
@@ -145,6 +151,17 @@ Returns the durable `SubagentRecord` and terminal artifact path. Inspection work
 ## Cooperative pause at turn boundaries
 
 `pause()` does not abort the subagent mid-prompt. The agent loop reads `AgentOptions.shouldPause` at turn boundaries; when `pauseRequested` is set, the loop exits gracefully after the current turn and the subagent lands in `paused` with its saved context intact. `subagent_resume` continues from that context.
+
+## Max run-time rule
+
+A subagent can be given a hard wall-clock run-time budget via `maxDurationMs` on `subagent_spawn` (and re-armed on `subagent_resume`). This is a **run-side deadline**: the subagent is not allowed to run forever, independent of how long the caller waits.
+
+- The manager arms a watchdog when the run starts. If the run has not reached a terminal status when the budget expires, the watchdog aborts the run and records it as `failed` with an error text such as `subagent exceeded max run time (maxDurationMs ms)`.
+- The retained progress snapshot (turns, current tool, recent output) is preserved on the timeout path so the parent can diagnose where the subagent was stuck.
+- The status enum is unchanged (`failed`); the timeout is distinguishable by the error text.
+- On `subagent_resume`, the watchdog is re-armed for the resume's `maxDurationMs`; if omitted, the original spawn budget is reused when available.
+
+This is distinct from `subagent_await`'s `timeoutMs`, which only stops the caller from waiting while the subagent keeps running. `maxDurationMs` stops the managed run and releases it from the live registry. It must be a positive safe integer. Because execution is in-process, synchronous JavaScript that blocks the Node event loop cannot be interrupted by a timer; model requests and supported tools are expected to honor abort.
 
 ## Nesting guard
 

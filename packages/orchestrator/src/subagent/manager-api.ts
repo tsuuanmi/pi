@@ -15,7 +15,15 @@ export interface SubagentManagerApi {
 		message: string,
 		options: Pick<
 			SubagentRunRequest,
-			"agent" | "systemPrompt" | "tools" | "excludeTools" | "model" | "thinkingLevel" | "signal" | "storageSessionId"
+			| "agent"
+			| "systemPrompt"
+			| "tools"
+			| "excludeTools"
+			| "model"
+			| "thinkingLevel"
+			| "maxDurationMs"
+			| "signal"
+			| "storageSessionId"
 		>,
 	): Promise<SubagentResumeResult>;
 	steer(id: string, message: string, delivery: SubagentDelivery, sessionId: string): Promise<SubagentResumeResult>;

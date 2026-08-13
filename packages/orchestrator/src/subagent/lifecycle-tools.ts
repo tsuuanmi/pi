@@ -25,7 +25,8 @@ export const SUBAGENT_SPECS = [
 	{
 		name: "subagent_spawn",
 		label: "Subagent Spawn",
-		description: "Spawn a subagent session with optional restricted tools, persistence, and non-blocking execution.",
+		description:
+			"Spawn a subagent session with optional restricted tools, persistence, a hard run-time budget, and non-blocking execution.",
 		promptSnippet: "Spawn a durable subagent for isolated work",
 		promptGuidelines: [
 			"Use subagent_spawn when work should run in an isolated agent context.",
@@ -83,7 +84,7 @@ export const SUBAGENT_SPECS = [
 	{
 		name: "subagent_resume",
 		label: "Subagent Resume",
-		description: "Resume a saved persistent subagent session with a follow-up message.",
+		description: "Resume a saved persistent subagent session with a follow-up message and optional run-time budget.",
 		promptSnippet: "Resume a subagent from saved context",
 		promptGuidelines: ["Use subagent_resume when a previous persistent subagent should continue from its context."],
 		parameters: subagentResumeSchema,

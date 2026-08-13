@@ -64,6 +64,7 @@ export function createSubagentReceipt(record: SubagentRecord, sessionId: string)
 			agent_profile: record.agent_profile,
 			model: record.model,
 			thinking_level: record.thinking_level,
+			max_duration_ms: record.max_duration_ms,
 			last_prompt_sha256: record.last_prompt_sha256,
 			session_id: record.session_id,
 			session_file: record.session_file,
