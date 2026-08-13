@@ -7,7 +7,7 @@ import { normalizePath } from "@tsuuanmi/pi-agent/node";
 import {
 	type AssistantMessageEventStream,
 	applyModelOverride,
-	BUILT_IN_PROVIDER_DISPLAY_NAMES,
+	PROVIDER_DISPLAY_NAMES,
 	type Context,
 	formatTypeBoxValidationPath,
 	getModelProviders,
@@ -544,7 +544,7 @@ export class ModelRegistry {
 			registeredProvider?.name ??
 			registeredProvider?.oauth?.name ??
 			oauthProvider?.name ??
-			BUILT_IN_PROVIDER_DISPLAY_NAMES[provider] ??
+			PROVIDER_DISPLAY_NAMES[provider] ??
 			provider
 		);
 	}

@@ -1,13 +1,13 @@
 # Status Line
 
-The status line is the configurable one-line bottom rail that can inline HUD and hook status details.
+The status line is the configurable bottom rail that renders HUD, model/context, and environment information on separate rows.
 
 The module lives under `src/components/status-line/` and is re-exported from the package root.
 
 ## Files
 
 - [Types](types.md) — `StatusLineSettings`, `StatusLineSegmentId`, segment/preset/separator definitions, and the host interfaces (`StatusLineSessionLike`, `StatusLineDataProvider`).
-- [Component](status-line.md) — `StatusLineComponent`: render lifecycle, background refresh caches, rail assembly.
+- [Component](status-line.md) — `StatusLineComponent`: render lifecycle, background refresh caches, and row assembly.
 - [Segments](segments.md) — the 10 built-in segment renderers and shared helpers (`formatTokens`, `formatCwd`, `computeUsageStats`, `sanitizeStatusText`).
 - [Context Thresholds](context-thresholds.md) — context-usage level thresholds and theme color mapping.
 - [Presets](presets.md) — `default` and `custom` presets.
@@ -26,9 +26,9 @@ The package re-exports the module's public API. Notable members:
 
 ## Layout
 
-Each render produces at most one line. Active HUD details lead the line when present, followed by the rail and hook status text when space allows; the combined line is truncated to the viewport width.
+Each render produces up to three rows. Active HUD details lead when present, followed by the model/context row and the Git/path environment row. Each row is truncated independently to the viewport width.
 
 ## See Also
 
-- [HUD](../hud/index.md) — the HUD model and rendering backing inline HUD output.
+- [HUD](../hud/index.md) — the HUD model and rendering backing the HUD row.
 - [Components](../index.md) — other built-in components.

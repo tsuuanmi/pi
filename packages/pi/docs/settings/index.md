@@ -31,24 +31,24 @@ Edit directly or use `/settings` for common options. Only documented fields are 
 
 #### Status Line
 
-`statusLine` customizes the interactive status line. The default preset uses `model`, `mode`, `git`, and `path` on the left, and `session_name`, `token_in`, `token_out`, `context_pct`, and `context_total` on the right.
+`statusLine` customizes the interactive status line. The default preset renders the model/context and environment groups on separate rows, with an optional HUD row above them. It uses `model`, `context_pct`, `token_in`, and `token_out` in the model row, and `git` and `path` in the environment row. Session name and mode remain available for custom layouts.
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
 | `statusLine.preset` | string | `"default"` | Built-in preset: `"default"` or `"custom"` |
-| `statusLine.leftSegments` | string[] | preset value | Left-side segment IDs |
-| `statusLine.rightSegments` | string[] | preset value | Right-side segment IDs |
+| `statusLine.modelSegments` | string[] | preset value | Model/context/token row segment IDs |
+| `statusLine.environmentSegments` | string[] | preset value | Session/environment row segment IDs |
 | `statusLine.separator` | string | `"slash"` | Separator style: `"slash"`, `"pipe"`, `"dot"`, or `"space"` |
 | `statusLine.segmentOptions` | object | preset value | Per-segment options for `model`, `path`, and `git` |
 
-Segment IDs are `model`, `mode`, `git`, `path`, `context_pct`, `context_total`, `token_in`, `token_out`, and `session_name`. `thinking` is not a separate segment; use `segmentOptions.model.showThinkingLevel`.
+Segment IDs are `model`, `mode`, `git`, `path`, `context_pct`, `context_total`, `token_in`, `token_out`, and `session_name`. The default omits `context_total` because `context_pct` already shows the window size, but it remains available for custom layouts. `thinking` is not a separate segment; use `segmentOptions.model.showThinkingLevel`.
 
 ```json
 {
   "statusLine": {
     "preset": "custom",
-    "leftSegments": ["model", "git", "path"],
-    "rightSegments": ["session_name", "context_pct"],
+    "modelSegments": ["model", "context_pct"],
+    "environmentSegments": ["git", "path"],
     "separator": "pipe",
     "segmentOptions": {
       "model": { "showThinkingLevel": true, "showProviderPrefix": true },

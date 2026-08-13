@@ -13,8 +13,8 @@ function getPreset(name: StatusLinePreset | undefined): PresetDef;
 
 ```jsonc
 {
-  "leftSegments":  ["model", "mode", "git", "path"],
-  "rightSegments": ["session_name", "token_in", "token_out", "context_pct", "context_total"],
+  "modelSegments":       ["model", "context_pct", "token_in", "token_out"],
+  "environmentSegments": ["git", "path"],
   "separator": "slash",
   "segmentOptions": {
     "model": { "showThinkingLevel": true, "showProviderPrefix": true },
@@ -26,7 +26,7 @@ function getPreset(name: StatusLinePreset | undefined): PresetDef;
 
 ## `custom`
 
-`custom` mirrors `default` exactly. It is the home for user overrides applied via the other `StatusLineSettings` fields (`leftSegments`/`rightSegments`/`separator`/`segmentOptions`). Selecting the `custom` preset without overriding any other field therefore looks identical to `default`.
+`custom` mirrors `default` exactly. It is the home for user overrides applied via the other `StatusLineSettings` fields (`modelSegments`/`environmentSegments`/`separator`/`segmentOptions`). Selecting the `custom` preset without overriding any other field therefore looks identical to `default`.
 
 ## See Also
 

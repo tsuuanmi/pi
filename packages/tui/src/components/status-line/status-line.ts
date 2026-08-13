@@ -17,14 +17,12 @@ import type {
 import { TUI_COLOR_PROFILE, theme } from "#tui/theme/theme";
 import { truncateToWidth, visibleWidth } from "#tui/utilities/text";
 
-/** Minimum gap (columns) between the left and right rail groups. */
-const MIN_PADDING = 2;
 /** Background-refresh interval for the HUD cache. */
 const HUD_REFRESH_MS = 1000;
 
 /**
- * Status line component: renders the configurable segment rail and appends HUD
- * and hook status details inline when present.
+ * Status line component: renders the configurable segment groups as separate
+ * rows, with HUD and hook status details kept apart from the model row.
  *
  * Uses the host data provider for repository snapshots, extension statuses,
  * and available provider count. Its only background refresh is the HUD entry
@@ -82,45 +80,25 @@ export class StatusLineComponent implements Component {
 	render(width: number): string[] {
 		const settings = this.#settingsSource.getStatusLine();
 
-		// Keep HUD, rail, and hook status compacted onto one bottom line.
+		// Keep HUD, repository/model information, and usage information on
+		// separate rows so long values cannot collide or hide one another.
 		this.#refreshHudInBackground();
 		const edgeX = Math.min(LAYOUT_EDGE_X, Math.max(0, Math.floor((width - 1) / 2)));
 		const contentWidth = Math.max(1, width - edgeX * 2);
 		const hud = settings.showHud !== false ? (renderHudBar(this.#hudEntries, contentWidth)?.trimEnd() ?? "") : "";
 		const groups = this.#buildStatusLineGroups(contentWidth, settings);
-		const leftWidth = visibleWidth(groups.leftGroup);
-		const rightWidth = visibleWidth(groups.rightGroup);
-		const hasRail = leftWidth > 0 || rightWidth > 0;
-		const railWidth = leftWidth > 0 && rightWidth > 0 ? leftWidth + MIN_PADDING + rightWidth : leftWidth + rightWidth;
-		const rail = hasRail ? this.#renderRail(groups.leftGroup, groups.rightGroup, railWidth) : "";
 		const hook = this.#buildHookLine(contentWidth);
 		const separator = theme.fg(TUI_COLOR_PROFILE.statusLine.separator, " │ ");
-		const parts = [hud, rail, hook].filter(Boolean);
-		const naturalContent = parts.join(separator);
+		const modelLine = groups.modelRow;
+		const environmentLine = [groups.environmentRow, hook].filter(Boolean).join(separator);
+		const contents = [hud, modelLine, environmentLine].filter(Boolean);
 
-		let content: string;
-		if (visibleWidth(naturalContent) <= contentWidth) {
-			content = naturalContent;
-		} else if (rightWidth > 0) {
-			// The right rail is the stable anchor. Shorten the combined prefix
-			// before allowing a long HUD/model/path value to hide it.
-			const prefix = [hud, groups.leftGroup].filter(Boolean).join(separator);
-			if (rightWidth >= contentWidth) {
-				content = truncateToWidth(groups.rightGroup, contentWidth, "");
-			} else {
-				const availablePrefix = Math.max(0, contentWidth - rightWidth - MIN_PADDING);
-				const fittedPrefix = prefix ? truncateToWidth(prefix, availablePrefix, "...") : "";
-				const prefixWidth = visibleWidth(fittedPrefix);
-				const padding = " ".repeat(Math.max(0, contentWidth - prefixWidth - rightWidth));
-				content = `${fittedPrefix}${padding}${groups.rightGroup}`;
-			}
-		} else {
-			content = truncateToWidth(naturalContent, contentWidth);
-		}
-
-		if (!content) return [];
-		const rightPadding = " ".repeat(Math.max(0, width - edgeX - visibleWidth(content)));
-		return [`${" ".repeat(edgeX)}${content}${rightPadding}`];
+		if (contents.length === 0) return [];
+		return contents.map((content) => {
+			const fitted = truncateToWidth(content, contentWidth);
+			const trailingPadding = " ".repeat(Math.max(0, width - edgeX - visibleWidth(fitted)));
+			return `${" ".repeat(edgeX)}${fitted}${trailingPadding}`;
+		});
 	}
 
 	// ═══════════════════════════════════════════════════════════════════════════
@@ -163,8 +141,8 @@ export class StatusLineComponent implements Component {
 	// ═══════════════════════════════════════════════════════════════════════════
 
 	#resolveSettings(settings: StatusLineSettings): {
-		leftSegments: StatusLineSegmentId[];
-		rightSegments: StatusLineSegmentId[];
+		modelSegments: StatusLineSegmentId[];
+		environmentSegments: StatusLineSegmentId[];
 		separator: ReturnType<typeof getSeparator>;
 		segmentOptions: StatusLineSegmentOptions;
 	} {
@@ -178,8 +156,8 @@ export class StatusLineComponent implements Component {
 			mergedOptions[segment as keyof StatusLineSegmentOptions] = { ...current, ...options };
 		}
 		return {
-			leftSegments: settings.leftSegments ?? presetDef.leftSegments,
-			rightSegments: settings.rightSegments ?? presetDef.rightSegments,
+			modelSegments: settings.modelSegments ?? presetDef.modelSegments,
+			environmentSegments: settings.environmentSegments ?? presetDef.environmentSegments,
 			separator: getSeparator(settings.separator ?? presetDef.separator),
 			segmentOptions: mergedOptions,
 		};
@@ -208,48 +186,28 @@ export class StatusLineComponent implements Component {
 	}
 
 	// ═══════════════════════════════════════════════════════════════════════════
-	// Rail assembly
+	// Row assembly
 	// ═══════════════════════════════════════════════════════════════════════════
 
-	#buildStatusLineGroups(width: number, settings: StatusLineSettings): { leftGroup: string; rightGroup: string } {
+	#buildStatusLineGroups(width: number, settings: StatusLineSettings): { modelRow: string; environmentRow: string } {
 		const resolved = this.#resolveSettings(settings);
 		const ctx = this.#buildSegmentContext(width, resolved.segmentOptions);
-		const sepRendered = theme.fg(TUI_COLOR_PROFILE.statusLine.separator, ` ${resolved.separator.left} `);
+		const sepRendered = theme.fg(TUI_COLOR_PROFILE.statusLine.separator, ` ${resolved.separator.before} `);
 
 		const join = (parts: string[]): string => parts.join(sepRendered);
-		const rightParts: string[] = [];
-		for (const segId of resolved.rightSegments) {
+		const modelParts: string[] = [];
+		for (const segId of resolved.modelSegments) {
 			const rendered = renderSegment(segId, ctx);
-			if (rendered.visible && rendered.content) rightParts.push(rendered.content);
+			if (rendered.visible && rendered.content) modelParts.push(rendered.content);
 		}
 
-		const leftParts: string[] = [];
-		for (const segId of resolved.leftSegments) {
+		const environmentParts: string[] = [];
+		for (const segId of resolved.environmentSegments) {
 			const rendered = renderSegment(segId, ctx);
-			if (rendered.visible && rendered.content) leftParts.push(rendered.content);
+			if (rendered.visible && rendered.content) environmentParts.push(rendered.content);
 		}
 
-		return { leftGroup: join(leftParts), rightGroup: join(rightParts) };
-	}
-
-	#renderRail(leftGroup: string, rightGroup: string, width: number): string {
-		if (width <= 0) return "";
-		const leftWidth = visibleWidth(leftGroup);
-		const rightWidth = visibleWidth(rightGroup);
-
-		if (rightWidth === 0) return truncateToWidth(leftGroup, width, "...");
-		if (rightWidth >= width) return truncateToWidth(rightGroup, width, "");
-		if (leftWidth === 0) return `${" ".repeat(width - rightWidth)}${rightGroup}`;
-
-		// The right group is protected; shorten the left group first when the
-		// rail is narrower than its natural contents.
-		const availableForLeft = width - MIN_PADDING - rightWidth;
-		if (availableForLeft <= 0) return `${" ".repeat(width - rightWidth)}${rightGroup}`;
-
-		const fittedLeft = truncateToWidth(leftGroup, availableForLeft, "...");
-		const fittedLeftWidth = visibleWidth(fittedLeft);
-		const padding = " ".repeat(Math.max(0, width - fittedLeftWidth - rightWidth));
-		return `${fittedLeft}${padding}${rightGroup}`;
+		return { modelRow: join(modelParts), environmentRow: join(environmentParts) };
 	}
 
 	// ═══════════════════════════════════════════════════════════════════════════

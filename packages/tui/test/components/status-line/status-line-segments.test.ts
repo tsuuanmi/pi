@@ -121,7 +121,7 @@ describe("model segment", () => {
 			availableProviderCount: 2,
 			options: { model: { showProviderPrefix: true } },
 		});
-		assert.equal(stripAnsi(renderSegment("model", ctx).content), "(anthropic) M");
+		assert.equal(stripAnsi(renderSegment("model", ctx).content), "(Anthropic) M");
 	});
 
 	it("omits the (provider) prefix when only one provider is available", () => {
@@ -133,6 +133,17 @@ describe("model segment", () => {
 			options: { model: { showProviderPrefix: true } },
 		});
 		assert.equal(stripAnsi(renderSegment("model", ctx).content), "M");
+	});
+
+	it("humanizes unknown provider ids", () => {
+		const ctx = makeCtx({
+			session: makeSession({
+				model: { id: "m", name: "M", provider: "example-provider", reasoning: false, contextWindow: 200_000 },
+			}),
+			availableProviderCount: 2,
+			options: { model: { showProviderPrefix: true } },
+		});
+		assert.equal(stripAnsi(renderSegment("model", ctx).content), "(Example Provider) M");
 	});
 });
 

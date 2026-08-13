@@ -1,4 +1,4 @@
-import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "@tsuuanmi/pi-ai";
+import { PROVIDER_DISPLAY_NAMES } from "@tsuuanmi/pi-ai";
 import { initTheme, stripAnsi } from "@tsuuanmi/pi-tui";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { AuthStorage } from "#pi/auth/storage";
@@ -28,7 +28,7 @@ describe("OAuthSelectorComponent", () => {
 		const builtInProviderIds = new Set(["anthropic", "openai"]);
 
 		expect(isApiKeyAccountProvider("anthropic", oauthProviderIds, builtInProviderIds)).toBe(true);
-		expect(BUILT_IN_PROVIDER_DISPLAY_NAMES.anthropic).toBe("Anthropic");
+		expect(PROVIDER_DISPLAY_NAMES.anthropic).toBe("Anthropic");
 		expect(isApiKeyAccountProvider("openai", oauthProviderIds, builtInProviderIds)).toBe(true);
 		expect(isApiKeyAccountProvider("custom-oauth", oauthProviderIds, builtInProviderIds)).toBe(false);
 		expect(isApiKeyAccountProvider("custom-api", oauthProviderIds, builtInProviderIds)).toBe(true);

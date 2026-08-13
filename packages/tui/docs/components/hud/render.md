@@ -1,6 +1,6 @@
 # HUD Rendering
 
-`renderHudBar` renders the active HUD entries as compact styled text that `StatusLineComponent` can append inline after the status rail.
+`renderHudBar` renders the active HUD entries as compact styled text for the HUD/state row rendered by `StatusLineComponent`.
 
 ```typescript
 function renderHudBar(entries: readonly StatusLineHudEntry[], width: number): string | null;

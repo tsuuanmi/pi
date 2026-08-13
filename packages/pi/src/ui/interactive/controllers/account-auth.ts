@@ -1,6 +1,6 @@
 import type { Api, Model } from "@tsuuanmi/pi-agent";
 import {
-	BUILT_IN_PROVIDER_DISPLAY_NAMES,
+	PROVIDER_DISPLAY_NAMES,
 	consumeOpenAICodexResetCredit,
 	fetchOpenAICodexResetCredits,
 	fetchOpenAICodexUsageSummary,
@@ -36,7 +36,7 @@ export function isApiKeyAccountProvider(
 	oauthProviderIds: ReadonlySet<string>,
 	builtInProviderIds: ReadonlySet<string> = BUILT_IN_MODEL_PROVIDERS,
 ): boolean {
-	if (BUILT_IN_PROVIDER_DISPLAY_NAMES[providerId]) {
+	if (PROVIDER_DISPLAY_NAMES[providerId]) {
 		return true;
 	}
 	if (builtInProviderIds.has(providerId)) {

@@ -1,6 +1,6 @@
 # Status Line Component
 
-`StatusLineComponent` renders the configurable segment rail with inline HUD and hook status details.
+`StatusLineComponent` renders the configurable status information as separate rows, with HUD and hook status details kept apart from the model/context and environment rows.
 
 ```typescript
 class StatusLineComponent implements Component {
@@ -29,7 +29,7 @@ class StatusLineComponent implements Component {
 
 ## Render lifecycle
 
-`render(width)` returns at most one line. HUD output from `renderHudBar` leads when present, then the rail and hook status text are appended inline. When the combined content is too wide, the right rail group is kept visible and the HUD/left content is shortened first. The HUD cache is refreshed in the background (1s interval).
+`render(width)` returns up to three lines: HUD output when present, the model/context row, and the environment row with hook status. Each row is independently truncated to the available width. The HUD cache is refreshed in the background (1s interval).
 
 ## Background refresh
 
@@ -37,16 +37,16 @@ The component owns only the HUD cache: `readHudEntries({ cwd, sessionId })` is r
 
 A changed HUD cache calls `requestRender()` so the host redraws.
 
-## Rail assembly
+## Row assembly
 
-- Visible right segments are collected first, then visible left segments.
-- Both groups are joined with the separator rendered as `dim " / "` (see [Separators](separators.md)).
-- A minimum gap of 2 columns is kept between the groups. If the combined line does not fit, HUD and left-side content are shortened before the right group, which remains right-aligned when possible. If the right group itself is wider than the viewport, it is clipped to the available width.
+- Model/context and environment segments are collected separately.
+- Each row is rendered independently, with segments joined using the configured separator (see [Separators](separators.md)).
+- Hook status text shares the environment row.
+- The default preset omits `context_total` because `context_pct` already includes the context-window size; this avoids output such as `0.0%/272k (auto) / 272k`.
 
-Hook status text is assembled from `dataProvider.getExtensionStatuses()`, sorted by key, joined with spaces, appended inline after the rail, and shortened when the combined line exceeds `width`.
 
 ## See Also
 
 - [Types](types.md) — settings and host interfaces.
 - [Segments](segments.md) — what each segment renders.
-- [HUD Rendering](../hud/render.md) — inline HUD output.
+- [HUD Rendering](../hud/render.md) — HUD row output.

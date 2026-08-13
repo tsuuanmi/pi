@@ -140,7 +140,7 @@ describe("StatusLineComponent width handling", () => {
 		for (const line of footer.render(8)) assert.ok(visibleWidth(line) <= 8);
 	});
 
-	it("keeps the right rail visible when a long HUD and left rail overflow", async () => {
+	it("keeps the model/context row visible when a long HUD and environment row overflow", async () => {
 		const entriesBySession = new Map<string, StatusLineHudEntry[]>([
 			[
 				"status-line-test-session",
@@ -172,9 +172,15 @@ describe("StatusLineComponent width handling", () => {
 		const lines = await waitForRender(footer, width, (rendered) =>
 			stripAnsi(rendered.join("\n")).includes("internet"),
 		);
-		const text = stripAnsi(lines.at(-1) ?? "");
+		const text = stripAnsi(lines.join("\n"));
+		const modelLine = stripAnsi(lines[1] ?? "");
 
-		assert.ok(visibleWidth(lines.at(-1) ?? "") <= width);
+		assert.equal(lines.length, 3);
+		for (const line of lines) assert.ok(visibleWidth(line) <= width);
+		assert.equal((text.match(/200k/g) ?? []).length, 1);
+		assert.match(modelLine, /200k/);
+		assert.ok(!modelLine.includes("ready"));
+		assert.match(text, /state=ready/);
 		assert.match(text, /↑3\.0k/);
 		assert.match(text, /↓400/);
 	});
@@ -184,17 +190,17 @@ describe("StatusLineComponent provider-prefix width", () => {
 	it("shows the (provider) prefix on a wide terminal", () => {
 		const session = createSession({ sessionName: "", modelName: "Claude", provider: "anthropic" });
 		const footer = makeComponent(session, 2);
-		const rail = stripAnsi(footer.render(120).at(-1) ?? "");
-		assert.match(rail, new RegExp(escapeRegExp("(anthropic) Claude")));
+		const rail = stripAnsi(footer.render(120).join("\n"));
+		assert.match(rail, new RegExp(escapeRegExp("(Anthropic) Claude")));
 	});
 
-	it("keeps the right rail on a narrow terminal", () => {
+	it("keeps the environment row on a narrow terminal", () => {
 		const session = createSession({ sessionName: "", modelName: "Claude", provider: "anthropic" });
 		const footer = makeComponent(session, 2);
-		const rail = stripAnsi(footer.render(20).at(-1) ?? "");
-		assert.match(rail, /12\.3%\/200k/);
-		assert.ok(!rail.includes("(anthropic)"));
-		assert.ok(visibleWidth(rail) <= 20);
+		const lines = footer.render(20);
+		const text = stripAnsi(lines.join("\n"));
+		assert.ok(text.includes("main"));
+		for (const line of lines) assert.ok(visibleWidth(line) <= 20);
 	});
 });
 
@@ -238,7 +244,7 @@ describe("StatusLineComponent HUD cache", () => {
 		assert.doesNotMatch(text, new RegExp(escapeRegExp("hidden")));
 	});
 
-	it("derives the mode segment from the first cached active HUD entry", async () => {
+	it("keeps the HUD phase in the HUD row", async () => {
 		const cwd = await makeTempCwd();
 		const entriesBySession = new Map<string, StatusLineHudEntry[]>([
 			[
@@ -258,9 +264,9 @@ describe("StatusLineComponent HUD cache", () => {
 		const lines = await waitForRender(footer, 120, (rendered) => stripAnsi(rendered.join("\n")).includes("runner"));
 		const text = stripAnsi(lines.join("\n"));
 
-		assert.equal(lines.length, 1);
+		assert.ok(lines.length >= 2);
 		assert.match(text, new RegExp(escapeRegExp("runner")));
 		assert.doesNotMatch(text, new RegExp(escapeRegExp("runner:execute")));
-		assert.match(text, new RegExp(escapeRegExp("execute")));
+		assert.doesNotMatch(text, new RegExp(escapeRegExp("execute")));
 	});
 });

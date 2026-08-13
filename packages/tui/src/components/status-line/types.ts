@@ -57,10 +57,10 @@ export interface StatusLineSegmentOptions {
 export interface StatusLineSettings {
 	/** Preset name (default: "default"). */
 	preset?: StatusLinePreset;
-	/** Left-group segment ids, rendered left-to-right. */
-	leftSegments?: StatusLineSegmentId[];
-	/** Right-group segment ids, rendered right-aligned. */
-	rightSegments?: StatusLineSegmentId[];
+	/** Model-row segment ids, rendered in configured order. */
+	modelSegments?: StatusLineSegmentId[];
+	/** Environment-row segment ids, rendered in configured order. */
+	environmentSegments?: StatusLineSegmentId[];
 	/** Separator style between segments (default: "slash"). */
 	separator?: StatusLineSeparatorStyle;
 	/** Per-segment options. */
@@ -190,15 +190,15 @@ export interface StatusLineSegment {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export interface SeparatorDef {
-	/** Separator glyph rendered between segments in the left group. */
-	left: string;
-	/** Separator glyph rendered between segments in the right group. */
-	right: string;
+	/** Separator glyph rendered before a segment. */
+	before: string;
+	/** Separator glyph rendered after a segment. */
+	after: string;
 }
 
 export interface PresetDef {
-	leftSegments: StatusLineSegmentId[];
-	rightSegments: StatusLineSegmentId[];
+	modelSegments: StatusLineSegmentId[];
+	environmentSegments: StatusLineSegmentId[];
 	separator: StatusLineSeparatorStyle;
 	segmentOptions?: StatusLineSegmentOptions;
 }

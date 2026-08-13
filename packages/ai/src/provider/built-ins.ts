@@ -6,12 +6,24 @@ import type { StreamOptions } from "#ai/protocol/options";
 import { clearProviders, registerProvider } from "#ai/provider/provider-registry";
 import { AssistantMessageEventStream } from "#ai/transport/event-stream";
 
-export const BUILT_IN_PROVIDER_DISPLAY_NAMES: Record<string, string> = {
+/** Human-readable labels for providers shown in user-facing interfaces. */
+export const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
 	anthropic: "Anthropic",
 	openai: "OpenAI",
 	"openai-codex": "OpenAI Codex",
 	"ollama-cloud": "Ollama Cloud",
 };
+
+/** Convert an internal provider id into a human-readable label. */
+export function formatProviderDisplayName(provider: string): string {
+	const knownName = PROVIDER_DISPLAY_NAMES[provider];
+	if (knownName) return knownName;
+	return provider
+		.split(/[-_]/)
+		.filter(Boolean)
+		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+		.join(" ");
+}
 
 interface ProviderModule<TApi extends Api, TOptions extends StreamOptions> {
 	stream: (model: Model<TApi>, context: Context, options?: TOptions) => AsyncIterable<AssistantMessageEvent>;

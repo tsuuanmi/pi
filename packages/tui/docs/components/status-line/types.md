@@ -19,21 +19,21 @@ type StatusLineSegmentId =
 ```typescript
 interface StatusLineSettings {
   preset?: StatusLinePreset;            // "default" | "custom"
-  leftSegments?: StatusLineSegmentId[];   // left-to-right
-  rightSegments?: StatusLineSegmentId[];  // right-aligned
+  modelSegments?: StatusLineSegmentId[];       // model/context row, in configured order
+  environmentSegments?: StatusLineSegmentId[]; // environment row, in configured order
   separator?: StatusLineSeparatorStyle;   // "slash"
   segmentOptions?: StatusLineSegmentOptions;
-  showHud?: boolean;                     // append HUD details inline when present (default true)
+  showHud?: boolean;                     // render a separate HUD row when present (default true)
 }
 ```
 
-When `leftSegments`/`rightSegments`/`separator`/`segmentOptions` are omitted, they fall back to the resolved preset. Per-segment options are merged over the preset's options (shallow merge per segment).
+When `modelSegments`/`environmentSegments`/`separator`/`segmentOptions` are omitted, they fall back to the resolved preset. Per-segment options are merged over the preset's options (shallow merge per segment).
 
 ```typescript
 interface StatusLineSegmentOptions {
   model?: {
     showThinkingLevel?: boolean;   // default true
-    showProviderPrefix?: boolean;  // default true — prepend `(provider)`
+    showProviderPrefix?: boolean;  // default true — prepend a provider name
   };
   path?: {
     abbreviate?: boolean;           // default true — `~` for home
@@ -59,11 +59,11 @@ interface StatusLineSegment {
   render(ctx: SegmentContext): RenderedSegment;
 }
 
-interface SeparatorDef { left: string; right: string; }
+interface SeparatorDef { before: string; after: string; }
 
 interface PresetDef {
-  leftSegments: StatusLineSegmentId[];
-  rightSegments: StatusLineSegmentId[];
+  modelSegments: StatusLineSegmentId[];
+  environmentSegments: StatusLineSegmentId[];
   separator: StatusLineSeparatorStyle;
   segmentOptions?: StatusLineSegmentOptions;
 }

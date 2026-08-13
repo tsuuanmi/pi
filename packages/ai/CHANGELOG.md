@@ -14,6 +14,7 @@
 
 ### Changed
 
+- **provider**: Added shared human-readable provider labels and formatting for user-facing interfaces.
 - **model**: Generate OpenAI Codex models from the official `openai/codex` catalog, including Codex-specific context windows, input modalities, and reasoning levels.
 - **model**: Moved model generator code into `src/model/` and provider-specific source parsing into `src/provider/`.
 - **api**: Reorganized source files under singular `model/` and `provider/` domains, split protocol types into explicit `protocol/*` files, removed trivial one-line re-export shims, and trimmed implementation-only docs.

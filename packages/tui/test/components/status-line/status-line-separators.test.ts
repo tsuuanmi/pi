@@ -4,7 +4,7 @@ import { getSeparator } from "#tui/components/status-line/separators";
 
 describe("getSeparator", () => {
 	it("returns slash glyphs for the slash style", () => {
-		assert.deepEqual(getSeparator("slash"), { left: "/", right: "/" });
+		assert.deepEqual(getSeparator("slash"), { before: "/", after: "/" });
 	});
 
 	it("rejects unsupported styles", () => {

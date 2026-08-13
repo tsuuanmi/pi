@@ -16,7 +16,7 @@ const ALL_SEGMENT_IDS: StatusLineSegmentId[];
 
 | id | Renders | Hidden when |
 |---|---|---|
-| `model` | `(provider) name • level` (dim) | never (falls back to `no-model`) |
+| `model` | `(Provider Name) name • level` (dim) | never (falls back to `no-model`) |
 | `mode` | the active HUD phase (accent) | no active HUD phase |
 | `git` | `branch *unstaged +staged ?untracked` (warning when dirty, dim when clean) | no branch and no status |
 | `path` | abbreviated cwd, truncated to `maxLength` (dim) | never |
@@ -29,7 +29,7 @@ const ALL_SEGMENT_IDS: StatusLineSegmentId[];
 ### `model`
 
 - `name` falls back to `id`, then `no-model`.
-- `(provider)` is prefixed only when `availableProviderCount > 1`, `showProviderPrefix !== false`, and a model is present. The complete rail is truncated when it exceeds the available width.
+- A human-readable provider name is prefixed only when `availableProviderCount > 1`, `showProviderPrefix !== false`, and a model is present. Known IDs such as `openai-codex` and `ollama-cloud` render as `OpenAI Codex` and `Ollama Cloud`; unknown IDs are title-cased. The segment is truncated when it exceeds the available width.
 - The thinking level is folded in (`name • level`) when `showThinkingLevel !== false` and the model has `reasoning`. `off` is not shown. Each level uses its own `thinking*` theme color (see [Context Thresholds](context-thresholds.md) for the level-to-color mapping of context, and the theme for thinking levels).
 
 ### `git`

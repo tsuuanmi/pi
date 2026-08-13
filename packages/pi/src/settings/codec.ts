@@ -183,11 +183,11 @@ function retry(value: unknown, path: string): void {
 
 function statusLine(value: unknown, path: string): void {
 	const status = object(value, path);
-	exact(status, ["preset", "leftSegments", "rightSegments", "separator", "segmentOptions", "showHud"], path);
+	exact(status, ["preset", "modelSegments", "environmentSegments", "separator", "segmentOptions", "showHud"], path);
 	if ("preset" in status && status.preset !== "default" && status.preset !== "custom") {
 		fail(`${path}.preset`, 'must be "default" or "custom"');
 	}
-	for (const key of ["leftSegments", "rightSegments"] as const) {
+	for (const key of ["modelSegments", "environmentSegments"] as const) {
 		if (!(key in status)) continue;
 		if (!Array.isArray(status[key])) fail(`${path}.${key}`, "must be an array");
 		status[key].forEach((segment, index) => {

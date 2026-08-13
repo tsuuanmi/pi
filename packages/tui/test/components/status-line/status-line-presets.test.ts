@@ -3,15 +3,9 @@ import { describe, it } from "node:test";
 import { getPreset, STATUS_LINE_PRESETS } from "#tui/index";
 
 describe("STATUS_LINE_PRESETS.default", () => {
-	it("uses the 10 Pi segment ids with the agreed left/right split", () => {
-		assert.deepEqual(STATUS_LINE_PRESETS.default.leftSegments, ["model", "mode", "git", "path"]);
-		assert.deepEqual(STATUS_LINE_PRESETS.default.rightSegments, [
-			"session_name",
-			"token_in",
-			"token_out",
-			"context_pct",
-			"context_total",
-		]);
+	it("uses the Pi segment ids with the agreed multi-row split", () => {
+		assert.deepEqual(STATUS_LINE_PRESETS.default.modelSegments, ["model", "context_pct", "token_in", "token_out"]);
+		assert.deepEqual(STATUS_LINE_PRESETS.default.environmentSegments, ["git", "path"]);
 	});
 
 	it("uses the slash separator", () => {
@@ -24,7 +18,7 @@ describe("STATUS_LINE_PRESETS.default", () => {
 	});
 
 	it("includes no unsupported segments (pr, jobs, cost, token_rate, usage, hostname)", () => {
-		const all = [...STATUS_LINE_PRESETS.default.leftSegments, ...STATUS_LINE_PRESETS.default.rightSegments];
+		const all = [...STATUS_LINE_PRESETS.default.modelSegments, ...STATUS_LINE_PRESETS.default.environmentSegments];
 		for (const dropped of ["pr", "jobs", "cost", "token_rate", "usage", "hostname", "icon", "time"]) {
 			assert.ok(!all.includes(dropped as never));
 		}
@@ -45,7 +39,7 @@ describe("getPreset", () => {
 	});
 
 	it("custom mirrors default so user overrides land on a known base", () => {
-		assert.deepEqual(STATUS_LINE_PRESETS.custom.leftSegments, STATUS_LINE_PRESETS.default.leftSegments);
-		assert.deepEqual(STATUS_LINE_PRESETS.custom.rightSegments, STATUS_LINE_PRESETS.default.rightSegments);
+		assert.deepEqual(STATUS_LINE_PRESETS.custom.modelSegments, STATUS_LINE_PRESETS.default.modelSegments);
+		assert.deepEqual(STATUS_LINE_PRESETS.custom.environmentSegments, STATUS_LINE_PRESETS.default.environmentSegments);
 	});
 });

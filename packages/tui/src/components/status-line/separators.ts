@@ -5,5 +5,5 @@ export function getSeparator(style: StatusLineSeparatorStyle): SeparatorDef {
 	if (style !== "slash") {
 		throw new RangeError(`Unsupported status-line separator: ${style}`);
 	}
-	return { left: "/", right: "/" };
+	return { before: "/", after: "/" };
 }
