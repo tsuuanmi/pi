@@ -301,7 +301,7 @@ Top-level shared folders provide common utilities used by all four skills:
 | `artifacts/` | `artifacts.ts` | Durable artifact writes and receipt helpers. |
 | `audit/` | `audit-log.ts`, `decision-ledger.ts`, `tamper-detection.ts`, `transaction-journal.ts` | Append-only audit, decision, tamper, and transaction records. |
 | Skill HUD modules | `deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts` | HUD chip formatting for each workflow skill, colocated with the owning skill folder. |
-| `policy/`, `handoff/` | `skill-policy.ts`, `context-templates.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Immutable skill policies, cross-workflow prompts, handoffs, gates, expected-next checks, and workflow evidence validation. Skill-specific guards live with their skill; Orchestrator owns session-aware subagent contracts and execution. |
+| `policy/`, `handoff/` | `skill-policy.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Immutable skill policies, cross-workflow prompts, handoffs, gates, expected-next checks, and workflow evidence validation. Skill-specific guards live with their skill; Orchestrator owns session-aware subagent contracts and execution. |
 | `registry/` | `workflow-manifest.ts` and runtime/action manifest modules | Workflow phase, action, and tool metadata. |
 | `session/` | `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Workflow path builders and session-id resolution; shared roots come from `@tsuuanmi/pi/session/root`. |
 | `state/` | `active-state.ts`, `state-schema.ts`, `state-writer.ts`, `workflow-state.ts` | Active-state, state validation/writes, workflow ids, and base state types. |

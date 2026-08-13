@@ -8,7 +8,6 @@ Cross-workflow prompts, handoffs, gates, and expected-next guards. Generic multi
 
 | Module | Description |
 |--------|-------------|
-| `policy/context-templates.ts` | Cross-workflow context prompt templates. |
 | `policy/expected-next-role.ts` | Expected-next role guards used by guarded spawn paths. |
 | `policy/gate-verdicts.ts` | Gate verdict types shared across skills. |
 | `policy/vagueness-gate.ts` | Vagueness gating helpers. |
