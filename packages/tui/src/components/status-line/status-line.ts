@@ -81,28 +81,44 @@ export class StatusLineComponent implements Component {
 
 	render(width: number): string[] {
 		const settings = this.#settingsSource.getStatusLine();
-		const parts: string[] = [];
 
 		// Keep HUD, rail, and hook status compacted onto one bottom line.
 		this.#refreshHudInBackground();
 		const edgeX = Math.min(LAYOUT_EDGE_X, Math.max(0, Math.floor((width - 1) / 2)));
 		const contentWidth = Math.max(1, width - edgeX * 2);
-		if (settings.showHud !== false) {
-			const hud = renderHudBar(this.#hudEntries, contentWidth);
-			if (hud) parts.push(hud.trimEnd());
+		const hud = settings.showHud !== false ? (renderHudBar(this.#hudEntries, contentWidth)?.trimEnd() ?? "") : "";
+		const groups = this.#buildStatusLineGroups(contentWidth, settings);
+		const leftWidth = visibleWidth(groups.leftGroup);
+		const rightWidth = visibleWidth(groups.rightGroup);
+		const hasRail = leftWidth > 0 || rightWidth > 0;
+		const railWidth = leftWidth > 0 && rightWidth > 0 ? leftWidth + MIN_PADDING + rightWidth : leftWidth + rightWidth;
+		const rail = hasRail ? this.#renderRail(groups.leftGroup, groups.rightGroup, railWidth) : "";
+		const hook = this.#buildHookLine(contentWidth);
+		const separator = theme.fg(TUI_COLOR_PROFILE.statusLine.separator, " │ ");
+		const parts = [hud, rail, hook].filter(Boolean);
+		const naturalContent = parts.join(separator);
+
+		let content: string;
+		if (visibleWidth(naturalContent) <= contentWidth) {
+			content = naturalContent;
+		} else if (rightWidth > 0) {
+			// The right rail is the stable anchor. Shorten the combined prefix
+			// before allowing a long HUD/model/path value to hide it.
+			const prefix = [hud, groups.leftGroup].filter(Boolean).join(separator);
+			if (rightWidth >= contentWidth) {
+				content = truncateToWidth(groups.rightGroup, contentWidth, "");
+			} else {
+				const availablePrefix = Math.max(0, contentWidth - rightWidth - MIN_PADDING);
+				const fittedPrefix = prefix ? truncateToWidth(prefix, availablePrefix, "...") : "";
+				const prefixWidth = visibleWidth(fittedPrefix);
+				const padding = " ".repeat(Math.max(0, contentWidth - prefixWidth - rightWidth));
+				content = `${fittedPrefix}${padding}${groups.rightGroup}`;
+			}
+		} else {
+			content = truncateToWidth(naturalContent, contentWidth);
 		}
 
-		const rail = this.#buildStatusLine(contentWidth, settings);
-		if (rail) parts.push(rail.trimEnd());
-
-		const hook = this.#buildHookLine(contentWidth);
-		if (hook) parts.push(hook);
-
-		if (parts.length === 0) return [];
-		const content = truncateToWidth(
-			parts.join(theme.fg(TUI_COLOR_PROFILE.statusLine.separator, " │ ")),
-			contentWidth,
-		);
+		if (!content) return [];
 		const rightPadding = " ".repeat(Math.max(0, width - edgeX - visibleWidth(content)));
 		return [`${" ".repeat(edgeX)}${content}${rightPadding}`];
 	}
@@ -195,58 +211,45 @@ export class StatusLineComponent implements Component {
 	// Rail assembly
 	// ═══════════════════════════════════════════════════════════════════════════
 
-	#buildStatusLine(width: number, settings: StatusLineSettings): string {
+	#buildStatusLineGroups(width: number, settings: StatusLineSettings): { leftGroup: string; rightGroup: string } {
 		const resolved = this.#resolveSettings(settings);
 		const ctx = this.#buildSegmentContext(width, resolved.segmentOptions);
-		const sep = resolved.separator;
-		const sepRendered = theme.fg(TUI_COLOR_PROFILE.statusLine.separator, ` ${sep.left} `);
+		const sepRendered = theme.fg(TUI_COLOR_PROFILE.statusLine.separator, ` ${resolved.separator.left} `);
 
-		// Collect visible right segments.
+		const join = (parts: string[]): string => parts.join(sepRendered);
 		const rightParts: string[] = [];
 		for (const segId of resolved.rightSegments) {
 			const rendered = renderSegment(segId, ctx);
 			if (rendered.visible && rendered.content) rightParts.push(rendered.content);
 		}
 
-		// Collect visible left segments.
 		const leftParts: string[] = [];
 		for (const segId of resolved.leftSegments) {
 			const rendered = renderSegment(segId, ctx);
 			if (rendered.visible && rendered.content) leftParts.push(rendered.content);
 		}
 
-		const join = (parts: string[]): string => parts.join(sepRendered);
-		let leftGroup = join(leftParts);
-		const rightGroup = join(rightParts);
+		return { leftGroup: join(leftParts), rightGroup: join(rightParts) };
+	}
 
-		let leftWidth = visibleWidth(leftGroup);
+	#renderRail(leftGroup: string, rightGroup: string, width: number): string {
+		if (width <= 0) return "";
+		const leftWidth = visibleWidth(leftGroup);
 		const rightWidth = visibleWidth(rightGroup);
 
-		// Truncate the left group if it alone exceeds the available width.
-		if (leftWidth > width) {
-			leftGroup = truncateToWidth(leftGroup, width, "...");
-			leftWidth = visibleWidth(leftGroup);
-		}
+		if (rightWidth === 0) return truncateToWidth(leftGroup, width, "...");
+		if (rightWidth >= width) return truncateToWidth(rightGroup, width, "");
+		if (leftWidth === 0) return `${" ".repeat(width - rightWidth)}${rightGroup}`;
 
-		// Omit the right group entirely when there is no room for the minimum gap.
-		if (width - leftWidth < MIN_PADDING || rightWidth === 0) {
-			return leftGroup;
-		}
+		// The right group is protected; shorten the left group first when the
+		// rail is narrower than its natural contents.
+		const availableForLeft = width - MIN_PADDING - rightWidth;
+		if (availableForLeft <= 0) return `${" ".repeat(width - rightWidth)}${rightGroup}`;
 
-		const totalNeeded = leftWidth + MIN_PADDING + rightWidth;
-		if (totalNeeded <= width) {
-			const padding = " ".repeat(width - leftWidth - rightWidth);
-			return leftGroup + padding + rightGroup;
-		}
-
-		// Right group too wide: truncate it to the available space.
-		const availableForRight = width - leftWidth - MIN_PADDING;
-		if (availableForRight > 0) {
-			const truncatedRight = truncateToWidth(rightGroup, availableForRight, "");
-			const padding = " ".repeat(Math.max(0, width - leftWidth - visibleWidth(truncatedRight)));
-			return leftGroup + padding + truncatedRight;
-		}
-		return leftGroup;
+		const fittedLeft = truncateToWidth(leftGroup, availableForLeft, "...");
+		const fittedLeftWidth = visibleWidth(fittedLeft);
+		const padding = " ".repeat(Math.max(0, width - fittedLeftWidth - rightWidth));
+		return `${fittedLeft}${padding}${rightGroup}`;
 	}
 
 	// ═══════════════════════════════════════════════════════════════════════════

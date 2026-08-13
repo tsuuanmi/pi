@@ -139,6 +139,45 @@ describe("StatusLineComponent width handling", () => {
 		const footer = makeComponent(session, 2);
 		for (const line of footer.render(8)) assert.ok(visibleWidth(line) <= 8);
 	});
+
+	it("keeps the right rail visible when a long HUD and left rail overflow", async () => {
+		const entriesBySession = new Map<string, StatusLineHudEntry[]>([
+			[
+				"status-line-test-session",
+				[
+					{
+						id: "internet",
+						active: true,
+						hud: {
+							version: 1,
+							chips: [
+								{ label: "state", value: "ready" },
+								{ label: "turns", value: "0" },
+							],
+						},
+					},
+				],
+			],
+		]);
+		const session = createSession({
+			sessionName: "",
+			modelName: "DeepSeek V4 Flash 0731",
+			provider: "ollama-cloud",
+			reasoning: true,
+			thinkingLevel: "high",
+			usage: { input: 3_000, output: 400 },
+		});
+		const footer = makeComponent(session, 2, {}, () => {}, entriesBySession);
+		const width = 100;
+		const lines = await waitForRender(footer, width, (rendered) =>
+			stripAnsi(rendered.join("\n")).includes("internet"),
+		);
+		const text = stripAnsi(lines.at(-1) ?? "");
+
+		assert.ok(visibleWidth(lines.at(-1) ?? "") <= width);
+		assert.match(text, /↑3\.0k/);
+		assert.match(text, /↓400/);
+	});
 });
 
 describe("StatusLineComponent provider-prefix width", () => {
@@ -149,12 +188,13 @@ describe("StatusLineComponent provider-prefix width", () => {
 		assert.match(rail, new RegExp(escapeRegExp("(anthropic) Claude")));
 	});
 
-	it("truncates the full provider-prefixed rail on a narrow terminal", () => {
+	it("keeps the right rail on a narrow terminal", () => {
 		const session = createSession({ sessionName: "", modelName: "Claude", provider: "anthropic" });
 		const footer = makeComponent(session, 2);
 		const rail = stripAnsi(footer.render(20).at(-1) ?? "");
-		assert.match(rail, new RegExp(escapeRegExp("(anthropic)")));
-		assert.ok(rail.includes("..."));
+		assert.match(rail, /12\.3%\/200k/);
+		assert.ok(!rail.includes("(anthropic)"));
+		assert.ok(visibleWidth(rail) <= 20);
 	});
 });
 

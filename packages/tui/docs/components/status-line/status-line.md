@@ -29,7 +29,7 @@ class StatusLineComponent implements Component {
 
 ## Render lifecycle
 
-`render(width)` returns at most one line. HUD output from `renderHudBar` leads when present, then the rail and hook status text are appended inline. The combined line is truncated to `width`; the HUD cache is refreshed in the background (1s interval).
+`render(width)` returns at most one line. HUD output from `renderHudBar` leads when present, then the rail and hook status text are appended inline. When the combined content is too wide, the right rail group is kept visible and the HUD/left content is shortened first. The HUD cache is refreshed in the background (1s interval).
 
 ## Background refresh
 
@@ -41,11 +41,9 @@ A changed HUD cache calls `requestRender()` so the host redraws.
 
 - Visible right segments are collected first, then visible left segments.
 - Both groups are joined with the separator rendered as `dim " / "` (see [Separators](separators.md)).
-- A minimum gap of 2 columns is kept between the groups. If the rail does not fit:
-  1. The left group is truncated (with `...`) if it alone exceeds the width.
-  2. The right group is omitted entirely when there is no room for the minimum gap, otherwise it is truncated to the available space.
+- A minimum gap of 2 columns is kept between the groups. If the combined line does not fit, HUD and left-side content are shortened before the right group, which remains right-aligned when possible. If the right group itself is wider than the viewport, it is clipped to the available width.
 
-Hook status text is assembled from `dataProvider.getExtensionStatuses()`, sorted by key, joined with spaces, appended inline after the rail, and truncated with the combined line to `width`.
+Hook status text is assembled from `dataProvider.getExtensionStatuses()`, sorted by key, joined with spaces, appended inline after the rail, and shortened when the combined line exceeds `width`.
 
 ## See Also
 
