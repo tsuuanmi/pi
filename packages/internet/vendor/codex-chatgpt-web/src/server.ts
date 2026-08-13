@@ -1,5 +1,10 @@
 import { createChatGptWebAdapter } from "./adapters/chatgpt-web";
-import { closeChatGptBrowserWorkers } from "./adapters/chatgpt-web/browser-worker";
+import { ChatGptBrowserWorker, closeChatGptBrowserWorkers } from "./adapters/chatgpt-web/browser-worker";
+import {
+  beginDurableConversationAuthority,
+  conversationAccountFingerprint,
+  writeDurableConversationAuthority,
+} from "./adapters/chatgpt-web/conversation-journal";
 import { closeTurnBrokers, TurnBroker } from "./adapters/chatgpt-web/turn-broker";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { chatGptTurnSessions } from "./adapters/chatgpt-web/turn-execution";
@@ -9,7 +14,6 @@ import { providerConfig } from "./config";
 import { AsyncEventQueue } from "./event-queue";
 import { readJsonRequestBody } from "./http-body";
 import { httpStatusFromTerminalError } from "./lib/errors";
-import { createHash } from "node:crypto";
 import { augmentNativeModelCatalog } from "./model-catalog";
 import { readCodexModelContextOverride, type CodexModelContextOverride } from "./codex-integration";
 import {
@@ -495,6 +499,38 @@ export function startServer(
         if (!controlAuthorized(req)) return new Response("Unauthorized", { status: 401 });
         draining = url.pathname === "/admin/drain";
         return Response.json({ status: "ok", accepting_turns: !draining, ...activity() });
+      }
+      if (req.method === "POST" && url.pathname === "/admin/conversation-canary") {
+        if (!controlAuthorized(req)) return new Response("Unauthorized", { status: 401 });
+        if (config.mode !== "browser-only" || config.conversationMode !== "durable") {
+          return Response.json({ status: "refused", reason: "durable_browser_only_required" }, { status: 409 });
+        }
+        return httpTurns.track(async () => {
+          const provider = providerConfig(config);
+          const stateDir = provider.chatgptWeb?.conversationStateDir;
+          const storageStatePath = provider.chatgptWeb?.storageStatePath;
+          const runtimeDigest = provider.chatgptWeb?.conversationRuntimeDigest;
+          if (!stateDir || !storageStatePath || !runtimeDigest) {
+            return Response.json({ status: "refused", reason: "conversation_state_not_configured" }, { status: 409 });
+          }
+          try {
+            const accountFingerprint = conversationAccountFingerprint(storageStatePath);
+            beginDurableConversationAuthority(stateDir, accountFingerprint, runtimeDigest);
+            const result = await ChatGptBrowserWorker.forProvider(provider).conversationCanary(req.signal);
+            writeDurableConversationAuthority(
+              stateDir,
+              accountFingerprint,
+              runtimeDigest,
+              result.conversationUrl,
+            );
+            return Response.json({ status: "passed" });
+          } catch (error) {
+            return Response.json(
+              { status: "failed", error: error instanceof Error ? error.message : String(error) },
+              { status: 502 },
+            );
+          }
+        });
       }
       if (req.method === "POST" && url.pathname === "/admin/cancel-browser-turns") {
         if (!controlAuthorized(req)) return new Response("Unauthorized", { status: 401 });

@@ -14,6 +14,9 @@ export const WORKFLOW_SKILL_SURFACES: readonly WorkflowSkillSurface[] = [
 
 export const WORKFLOW_TOOL_SURFACES: readonly WorkflowToolSurface[] = [
 	...WORKFLOW_SKILL_SURFACES.flatMap((surface) => surface.tools),
+	{ skill: "researcher", toolName: "researcher_spawn" },
+	{ skill: "researcher", toolName: "researcher_resume" },
+	{ skill: "researcher", toolName: "researcher_steer" },
 	...SUBAGENT_SURFACES,
 ] as const;
 

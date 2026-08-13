@@ -4,6 +4,8 @@
 
 ### Added
 
+- Add account-scoped, owner-private normal-chat bindings and canonical suffix synchronization for explicitly selected, canary-authorized browser-only durable mode.
+- Add `internet_account_conversation_mode`; accounts default to isolated Temporary Chat.
 - Vendor a fixed `codex-chatgpt-web` source snapshot and build its embedded-Bun Linux runtime inside
   the package, removing the runtime dependency on another repository or manually started daemon.
 - Add package-owned private config, isolated Chrome login, health-gated auto-start, serialized
@@ -35,20 +37,12 @@
   to match current public APIs and implemented behavior.
 - Mirror the daemon's fixed-effort model routes, capability-gate Luna/Pro availability, and use a
   conservative documented output ceiling.
-- Keep the headed daemon/browser reusable for five quiet minutes, use a compact 900×700 window, and
-  move browser/tunnel idle cleanup into the daemon instead of stopping it on every Pi session exit.
+- Keep the headed daemon/browser reusable for 60 quiet seconds, use a 700×500 window at `(0,0)`, and
+  keep browser/tunnel idle cleanup in the daemon instead of stopping it on every Pi session exit.
+- Keep Full harness on Temporary Chat; durable v1 rejects attachments and ambiguous, replayed, or diverged turns before another browser submit.
 - Document that upstream advanced to `9f74486` (a dead-code/test cleanup) and was deliberately not
   synced: the package depends on none of the removed code, and the turn-metadata, login, doctor, and
   model-catalog contracts it relies on are unchanged between v2.1.9 and `9f74486`.
-
-### Planned (refinement, not yet implemented)
-
-- Keep one ChatGPT conversation tab per Pi session ID so ChatGPT retains context in the chat, with
-  full-history replay retained as the correctness fallback.
-- Shorten the daemon idle shutdown to ~1 minute without a new request/message.
-- Anchor the headed Chrome window small in the top-left quarter.
-- Stop repeating the local-computer warning on browser-only turns; keep Full-harness onboarding
-  discoverable via `internet_harness` status/enable and connector guidance.
 
 ### Removed
 

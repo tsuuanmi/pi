@@ -6,9 +6,11 @@ import { readHarnessConfig } from "#internet/daemon/harness";
 
 const CONFIG_VERSION = 3;
 const APP_NAME = "Codex Native2";
-const BROWSER_IDLE_SHUTDOWN_MS = 5 * 60 * 1_000;
-const BROWSER_WINDOW_WIDTH = 900;
-const BROWSER_WINDOW_HEIGHT = 700;
+const BROWSER_IDLE_SHUTDOWN_MS = 60 * 1_000;
+const BROWSER_WINDOW_WIDTH = 700;
+const BROWSER_WINDOW_HEIGHT = 500;
+const BROWSER_WINDOW_POSITION_X = 0;
+const BROWSER_WINDOW_POSITION_Y = 0;
 
 interface OwnedTunnelConfig {
 	binaryPath: string;
@@ -34,7 +36,11 @@ export interface OwnedDaemonConfig {
 	headed: true;
 	browserWindowWidth: number;
 	browserWindowHeight: number;
+	browserWindowPositionX: number;
+	browserWindowPositionY: number;
 	idleShutdownMs: number;
+	conversationMode: "temporary" | "durable";
+	conversationStateDir: string;
 	solAvailable: boolean;
 	proAvailable: boolean;
 	autoApproveToolCalls: false;
@@ -120,7 +126,11 @@ export async function ensureOwnedDaemonConfig(
 			harnessMatches &&
 			existing.browserWindowWidth === BROWSER_WINDOW_WIDTH &&
 			existing.browserWindowHeight === BROWSER_WINDOW_HEIGHT &&
-			existing.idleShutdownMs === BROWSER_IDLE_SHUTDOWN_MS
+			existing.browserWindowPositionX === BROWSER_WINDOW_POSITION_X &&
+			existing.browserWindowPositionY === BROWSER_WINDOW_POSITION_Y &&
+			existing.idleShutdownMs === BROWSER_IDLE_SHUTDOWN_MS &&
+			existing.conversationMode === (harness.mode === "full" ? "temporary" : account.conversationMode) &&
+			existing.conversationStateDir === join(account.configDir, "conversations")
 		) {
 			return existing;
 		}
@@ -149,7 +159,11 @@ export async function ensureOwnedDaemonConfig(
 		headed: true,
 		browserWindowWidth: BROWSER_WINDOW_WIDTH,
 		browserWindowHeight: BROWSER_WINDOW_HEIGHT,
+		browserWindowPositionX: BROWSER_WINDOW_POSITION_X,
+		browserWindowPositionY: BROWSER_WINDOW_POSITION_Y,
 		idleShutdownMs: BROWSER_IDLE_SHUTDOWN_MS,
+		conversationMode: harness.mode === "full" ? "temporary" : account.conversationMode,
+		conversationStateDir: join(account.configDir, "conversations"),
 		solAvailable: existing?.solAvailable ?? true,
 		proAvailable: existing?.proAvailable ?? false,
 		autoApproveToolCalls: false,

@@ -10,6 +10,7 @@ describe("internet core types", () => {
 			host: "127.0.0.1",
 			port: 17841,
 			enabled: true,
+			conversationMode: "temporary",
 		};
 		const action: InternetControlAction = "drain";
 		expect(account.backend).toBe("openai");

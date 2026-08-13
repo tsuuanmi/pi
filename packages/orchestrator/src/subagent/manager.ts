@@ -17,6 +17,11 @@ import {
 	type SubagentProgress,
 	SubagentProgressTracker,
 } from "#orchestrator/subagent/progress";
+import {
+	assertProtectedAuthorization,
+	currentProtectedAuthorization,
+	isProtectedSubagentRequest,
+} from "#orchestrator/subagent/protected-policy";
 import { normalizeMaxDurationMs, SubagentRunControl } from "#orchestrator/subagent/run-control";
 import { SubagentStore } from "#orchestrator/subagent/store";
 import { SUBAGENT_TOOL_NAMES } from "#orchestrator/subagent/tool-names";
@@ -285,9 +290,17 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 	}
 
 	async spawn(request: SubagentRunRequest): Promise<SubagentRunResult> {
+		const protectedRequest = isProtectedSubagentRequest(request.agent, request.role);
 		const storageSessionId = request.storageSessionId ?? request.parentSessionId;
 		if (!storageSessionId)
 			throw new Error("subagent spawn requires a session id (storageSessionId or parentSessionId)");
+		const protectedAuthorization = protectedRequest
+			? assertProtectedAuthorization({
+					operation: "spawn",
+					sessionId: storageSessionId,
+					subject: { profile: request.agent ?? "", role: request.role ?? "" },
+				})
+			: undefined;
 		const resolved = await this.resolveRequest(request);
 		const id = defaultSubagentId();
 		const now = nowIso();
@@ -309,6 +322,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 				updated_at: now,
 				last_prompt_sha256: hashText(resolved.prompt),
 				artifact_file: artifactFile,
+				...(protectedAuthorization ? { protected_policy_id: protectedAuthorization.policyId } : {}),
 				execution_metadata: resolved.metadata,
 			},
 			storageSessionId,
@@ -633,6 +647,18 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 		const storageSessionId = options.storageSessionId;
 		const record = await this.read(id, storageSessionId);
 		if (!record) return { ok: false, reason: "not_found" };
+		if (record.agent_profile === "researcher" || record.role === "researcher") {
+			if (!record.protected_policy_id) throw new Error("protected_subagent_marker_missing");
+		}
+		if (record.protected_policy_id) {
+			const operation = currentProtectedAuthorization()?.operation === "steer" ? "steer" : "resume";
+			assertProtectedAuthorization({
+				operation,
+				sessionId: storageSessionId,
+				policyId: record.protected_policy_id,
+				subject: { subagentId: id },
+			});
+		}
 		if (!record.resumable || !record.session_file) return { ok: false, reason: "context_unavailable", record };
 		try {
 			const resolved = await this.resolveRequest({
@@ -673,6 +699,18 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 		delivery: SubagentDelivery = "steer",
 		sessionId: string,
 	): Promise<SubagentResumeResult> {
+		const stored = await this.read(id, sessionId);
+		if (stored && (stored.agent_profile === "researcher" || stored.role === "researcher")) {
+			if (!stored.protected_policy_id) throw new Error("protected_subagent_marker_missing");
+		}
+		if (stored?.protected_policy_id) {
+			assertProtectedAuthorization({
+				operation: "steer",
+				sessionId,
+				policyId: stored.protected_policy_id,
+				subject: { subagentId: id },
+			});
+		}
 		const live = this.liveFor(id, sessionId);
 		if (!live?.session) return this.resume(id, message, { storageSessionId: sessionId });
 		if (delivery === "followUp") await live.session.sendUserMessage(message, { deliverAs: "followUp" });

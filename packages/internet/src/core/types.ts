@@ -1,4 +1,5 @@
 export type InternetBackendId = "openai";
+export type InternetConversationMode = "temporary" | "durable";
 
 export interface InternetAccount {
 	id: string;
@@ -8,6 +9,7 @@ export interface InternetAccount {
 	host: string;
 	port: number;
 	enabled: boolean;
+	conversationMode: InternetConversationMode;
 }
 
 export interface InternetAccountInput {
@@ -18,6 +20,7 @@ export interface InternetAccountInput {
 	host?: string;
 	port?: number;
 	enabled?: boolean;
+	conversationMode?: InternetConversationMode;
 }
 
 export interface InternetSettings {

@@ -1,6 +1,6 @@
 import type { WorkflowSkill } from "#workflows/session/paths";
 
-export type WorkflowSurfaceSkill = WorkflowSkill | "subagent";
+export type WorkflowSurfaceSkill = WorkflowSkill | "researcher" | "subagent";
 
 export interface WorkflowCommandSurface {
 	skill: WorkflowSkill;

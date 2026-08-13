@@ -317,6 +317,12 @@ export interface CodexProviderConfig {
     threadEnvironmentStatePath?: string;
     /** Persisted exact-parent rolling checkpoints used only by Free/Luna turns. */
     lunaCheckpointStatePath?: string;
+    /** Browser-only conversation continuity policy. */
+    conversationMode?: "temporary" | "durable";
+    /** Owner-private durable conversation journal directory. */
+    conversationStateDir?: string;
+    /** Exact runtime/config authority digest required for durable admission. */
+    conversationRuntimeDigest?: string;
     /** Optional explicit safety ceiling. Browser turns have no absolute deadline by default. */
     turnTimeoutMs?: number;
     /** Keep the single controlled browser visible. */
@@ -325,6 +331,10 @@ export interface CodexProviderConfig {
     browserWindowWidth?: number;
     /** Headed browser window height in CSS pixels. */
     browserWindowHeight?: number;
+    /** Headed browser window top-left x position in screen pixels. */
+    browserWindowPositionX?: number;
+    /** Headed browser window top-left y position in screen pixels. */
+    browserWindowPositionY?: number;
     /** Attach the turn-bound Codex MCP capability for non-Pro efforts. */
     localToolsEnabled?: boolean;
     /** Account capability proven by the authenticated browser probe. */

@@ -26,7 +26,7 @@ packages/internet/
 │   │   ├── daemon/{auth,client,routes,status}.ts
 │   │   └── turn/{files,model,request}.ts
 │   ├── core/{errors,types}.ts
-│   ├── tools/{accounts,compact,control,daemon,doctor,harness,register,settings,status,web}.ts
+│   ├── tools/{accounts,compact,control,conversations,daemon,doctor,harness,register,settings,status,web}.ts
 │   └── web/{fetch,search}.ts
 ├── test/                       # mirrors package-owned source responsibilities
 ├── vendor/codex-chatgpt-web/
@@ -59,6 +59,8 @@ packages/internet/
 - `backends/openai/daemon/*`: HTTP auth/client/status boundaries.
 - `web/*`: public web transport with network and response safety checks.
 - `tools/*`: direct Pi extension tools; no redundant custom context/tool abstraction.
+- `vendor/*/conversation-sync.ts`: semantic history projection, authority fingerprints, acknowledgements, and suffix selection.
+- `vendor/*/conversation-journal.ts`: account-private fsynced conversation bindings, CAS state transitions, and canary authority.
 - `vendor/*`: third-party fixed source snapshot, built by its own pinned Bun toolchain.
 
 The vendor snapshot excludes upstream tests, docs, Electron launcher, generated output,

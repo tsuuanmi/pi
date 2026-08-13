@@ -39,9 +39,11 @@ the bundled CLI, Playwright runtime dependencies, and a launcher.
    verifies it independently in a second owned context.
 6. The package starts its daemon and waits for `/healthz` before inference continues.
 
-On later Pi loads, authenticated enabled accounts start automatically. The daemon keeps one ChatGPT
-conversation per Pi session ID and stays alive while that session is active, then shuts itself down
-~1 minute after the last request/message. To require explicit login, call `internet_settings`
+On later Pi loads, authenticated enabled accounts start automatically. Accounts default to isolated
+Temporary Chat turns. Browser-only accounts may explicitly select canary-gated durable mode, which
+binds one normal ChatGPT conversation to each stable Pi session ID after private runtime authority has
+been established. The daemon shuts itself down ~1 minute after the last request/message; durable
+conversation bindings survive that browser shutdown. To require explicit login, call `internet_settings`
 with `{ "autoLogin": false }`; first-use model requests then keep Chrome closed and instruct
 interactive users to run `internet_daemon` with action `login`.
 
@@ -71,7 +73,10 @@ One enabled account registers `chatgpt-web`; multiple enabled accounts register
 account uses `127.0.0.1:17841` and stores private daemon/browser data under
 `$PI_AGENT_DIR/internet/accounts/default/`.
 
-Account registry changes require a Pi reload because provider registration is startup-scoped.
+Account registry changes require a Pi reload because provider registration is startup-scoped. Durable
+mode is browser-only and fail-closed: it does not submit a retained-chat turn until a private,
+account-scoped authority receipt for the exact bundled runtime exists. Full harness always uses
+Temporary Chat. Durable v1 rejects image attachments before browser navigation or upload.
 
 ## Tools
 
@@ -86,6 +91,8 @@ Account registry changes require a Pi reload because provider registration is st
 | `internet_accounts` | List account routing metadata. |
 | `internet_account_add` | Add an isolated account config directory and loopback endpoint. |
 | `internet_account_set_enabled` | Enable or disable an account. |
+| `internet_account_conversation_mode` | Select isolated Temporary Chat or canary-gated durable browser-only conversations. |
+| `internet_conversation` | Inspect durable authority, run an explicitly confirmed retained-chat canary, or reset bindings. |
 | `internet_settings` | Inspect or update package settings such as automatic login. |
 | `internet_search` | Search the public web and return source URLs with snippets. |
 | `internet_fetch` | Fetch readable text from a bounded public HTTP/HTTPS page. |
@@ -101,7 +108,8 @@ and computes Pi readiness without requiring the daemon's native Codex route or O
 ## Security
 
 - Chrome uses a package-owned `--user-data-dir`; the user's normal browser profile is never used.
-- Config, settings, cookies, storage state, and control tokens stay under private package paths.
+- Config, settings, cookies, storage state, control tokens, and durable conversation journals stay under private package paths.
+- Durable journals contain hashes, state, and canonical `chatgpt.com/c/<id>` URLs only; they do not persist Pi prompts or assistant text.
 - Only `127.0.0.1` is accepted. Inference routes intentionally rely on the local same-user trust
   boundary, so another process running as the same user could drive the browser-backed model.
 - Admin bearer credentials are sent only to `/admin/*`, never to inference or public web routes.

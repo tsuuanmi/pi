@@ -17,6 +17,7 @@ describe("AccountRegistry", () => {
 		await test.registry.setEnabled("work", false);
 		const account = (await test.registry.list()).find((item) => item.id === "work");
 		expect(account?.enabled).toBe(false);
+		expect(account?.conversationMode).toBe("temporary");
 		expect((await stat(test.path)).mode & 0o777).toBe(0o600);
 	});
 
@@ -29,6 +30,18 @@ describe("AccountRegistry", () => {
 		await expect(test.registry.add({ id: "other", configDir: "/tmp/other", port: 18_001 })).rejects.toThrow(
 			"Duplicate internet account endpoint",
 		);
+	});
+
+	it("persists explicit durable conversation mode", async () => {
+		const test = await registry();
+		const account = await test.registry.add({
+			id: "research",
+			configDir: "/tmp/research",
+			port: 18_003,
+			conversationMode: "durable",
+		});
+		expect(account.conversationMode).toBe("durable");
+		expect((await test.registry.get("research")).conversationMode).toBe("durable");
 	});
 
 	it("accepts only the package-owned IPv4 loopback host", async () => {

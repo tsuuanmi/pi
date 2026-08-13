@@ -19,6 +19,7 @@ function account(configDir: string): InternetAccount {
 		host: "127.0.0.1",
 		port: 17841,
 		enabled: true,
+		conversationMode: "temporary",
 	};
 }
 
@@ -43,9 +44,13 @@ describe("owned daemon config", () => {
 			port: 17841,
 			browserHost: "managed-chrome",
 			headed: true,
-			browserWindowWidth: 900,
-			browserWindowHeight: 700,
-			idleShutdownMs: 300_000,
+			browserWindowWidth: 700,
+			browserWindowHeight: 500,
+			browserWindowPositionX: 0,
+			browserWindowPositionY: 0,
+			idleShutdownMs: 60_000,
+			conversationMode: "temporary",
+			conversationStateDir: join(configDir, "conversations"),
 			runtimeCommand: ["/runtime/bin/daemon"],
 		});
 		expect(created.storageStatePath).toBe(join(configDir, "browser", "storage-state.json"));
@@ -71,6 +76,7 @@ describe("owned daemon config", () => {
 		});
 		expect(created).toMatchObject({
 			mode: "full",
+			conversationMode: "temporary",
 			tunnel: {
 				binaryPath: tunnelClientPath,
 				tunnelId: `tunnel_${"a".repeat(32)}`,
@@ -78,6 +84,17 @@ describe("owned daemon config", () => {
 				alias: "pi-internet-default",
 			},
 		});
+	});
+
+	it("configures durable conversations only for browser-only accounts", async () => {
+		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-config-durable-"));
+		const target = { ...account(configDir), conversationMode: "durable" as const };
+		const config = await ensureOwnedDaemonConfig(target, {
+			releaseVersion: "2.1.8",
+			runtimeCommand: ["/runtime/bin/daemon"],
+		});
+		expect(config.conversationMode).toBe("durable");
+		expect(config.conversationStateDir).toBe(join(configDir, "conversations"));
 	});
 
 	it("reads model capabilities from the owned daemon config", async () => {

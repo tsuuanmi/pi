@@ -5,10 +5,20 @@ import { namespacedToolName, type AdapterEvent, type CodexContentPart, type Code
 import type { ProviderAdapter } from "../base";
 import { parseDataUrl } from "../image";
 import { ChatGptWebAdapterError } from "./adapter-error";
-import { ChatGptBrowserWorker } from "./browser-worker";
+import { ChatGptBrowserWorker, type BrowserConversationTurn } from "./browser-worker";
+import {
+  assertDurableConversationAuthority,
+  ConversationJournal,
+  conversationAccountFingerprint,
+} from "./conversation-journal";
+import {
+  acknowledgedConversationCheckpoint,
+  canonicalConversationEvents,
+  conversationSuffix,
+} from "./conversation-sync";
 import { extractChatGptTurnEnvironment, extractChatGptTurnIdentity } from "./environment";
 import { CHATGPT_WEB_LUNA_MODEL_ID, resolveChatGptWebModelMode, type ChatGptWebCapabilities } from "./model";
-import { chatGptReadOnlyContextWarning, compileChatGptWebPrompt } from "./prompt";
+import { chatGptFullModeContextWarning, compileChatGptWebPrompt } from "./prompt";
 import { TurnBroker, type BrokerToolRequest, type BrokerToolResult } from "./turn-broker";
 import { ChatGptTextFeed, ChatGptTraceFeed, chatGptCompactionSourceExecutionKey, chatGptTurnExecutionKey, chatGptTurnSessions, type ChatGptBrowserOutcome, type ChatGptTraceEvent, type ChatGptTurnRuntime, type ChatGptTurnSession } from "./turn-execution";
 import { estimateChatGptWebUsage } from "./usage";
@@ -122,12 +132,14 @@ function emitTextDeltas(deltas: string[], emit: (event: AdapterEvent) => void): 
   for (const text of deltas) emit({ type: "text_delta", text, phase: "final_answer" });
 }
 
-function emitProContextWarning(
+function emitFullModeContextWarning(
+  provider: CodexProviderConfig,
   parsed: CodexParsedRequest,
   capabilities: ChatGptWebCapabilities,
   emit: (event: AdapterEvent) => void,
 ): void {
-  const warning = chatGptReadOnlyContextWarning(parsed, capabilities);
+  if (provider.mode !== "full") return;
+  const warning = chatGptFullModeContextWarning(parsed, capabilities);
   if (!warning) return;
   emit({ type: "assistant_boundary" });
   emit({ type: "text_delta", text: warning, phase: "commentary" });
@@ -136,6 +148,89 @@ function emitProContextWarning(
 
 function replayEvents(events: AdapterEvent[], emit: (event: AdapterEvent) => void): void {
   for (const event of events) emit(event);
+}
+
+interface DurableConversationPlan {
+  messages: CodexParsedRequest["context"]["messages"];
+  conversation: BrowserConversationTurn;
+}
+
+function durableConversationPlan(
+  parsed: CodexParsedRequest,
+  provider: CodexProviderConfig,
+  threadId: string,
+): DurableConversationPlan | undefined {
+  if (provider.chatgptWeb?.conversationMode !== "durable") return undefined;
+  if (provider.mode !== "browser-only") throw new Error("Durable ChatGPT conversations are browser-only");
+  if (parsed.context.messages.some(message => Array.isArray(message.content) && message.content.some(part => part.type === "image"))) {
+    throw new Error("Durable ChatGPT conversations do not support image attachments yet");
+  }
+  const stateDir = provider.chatgptWeb.conversationStateDir;
+  const runtimeDigest = provider.chatgptWeb.conversationRuntimeDigest;
+  if (!stateDir || !provider.chatgptWeb.storageStatePath || !runtimeDigest) {
+    throw new Error("Durable ChatGPT conversation state is not configured");
+  }
+  const accountFingerprint = conversationAccountFingerprint(provider.chatgptWeb.storageStatePath);
+  assertDurableConversationAuthority(stateDir, accountFingerprint, runtimeDigest);
+  const journal = new ConversationJournal(stateDir, accountFingerprint);
+  const authorityDigest = createHash("sha256")
+    .update(JSON.stringify({
+      modelId: parsed.modelId,
+      reasoning: parsed.options.reasoning,
+      systemPrompt: parsed.context.systemPrompt,
+      tools: parsed.context.tools,
+    }))
+    .digest("hex");
+  const events = canonicalConversationEvents(parsed.context.messages);
+  const existing = journal.read(threadId);
+  if (existing?.status === "conflicted" || existing?.status === "click_attempted") {
+    throw new Error("ChatGPT conversation is conflicted and requires an explicit reset");
+  }
+  if (existing && existing.status !== "ready") {
+    throw new Error(`ChatGPT conversation cannot continue from ${existing.status}`);
+  }
+  const suffix = conversationSuffix(events, authorityDigest, existing?.checkpoint);
+  if (suffix.kind === "retry") throw new Error("ChatGPT conversation turn was already acknowledged");
+  if (suffix.kind === "diverged") throw new Error("Pi conversation history diverged from the bound ChatGPT conversation");
+  const sourceIndexes = new Set(suffix.events.map(event => event.sourceIndex));
+  const messages = parsed.context.messages.filter((message, index) =>
+    sourceIndexes.has(index) || (isGeneratedEnvironmentMessage(message) && sourceIndexes.has(index + 1))
+  );
+  let binding = existing
+    ? journal.markPrepared(threadId, existing.revision, suffix.prefixDigest, events.length)
+    : journal.create(threadId, suffix.prefixDigest, events.length);
+  return {
+    messages,
+    conversation: {
+      threadId,
+      kind: existing ? "continue" : "create",
+      conversationUrl: existing?.conversationUrl,
+      onClickAttempt: () => {
+        binding = journal.markClickAttempted(threadId, binding.revision);
+      },
+      onConversationReady: (conversationUrl, assistantText) => {
+        binding = journal.markReady(
+          threadId,
+          binding.revision,
+          conversationUrl,
+          acknowledgedConversationCheckpoint(
+            events,
+            authorityDigest,
+            { ordinal: events.length, text: assistantText },
+          ),
+        );
+      },
+      onConflict: () => {
+        if (binding.status === "creating") journal.cancelCreating(threadId, binding.revision);
+        else if (binding.status === "prepared") binding = journal.cancelPrepared(threadId, binding.revision);
+        else if (binding.status === "click_attempted") binding = journal.markConflicted(threadId, binding.revision);
+      },
+    },
+  };
+}
+
+function isGeneratedEnvironmentMessage(message: CodexParsedRequest["context"]["messages"][number]): boolean {
+  return typeof message.id === "string" && message.id.startsWith("environment_") && message.role === "user";
 }
 
 function currentToolResults(parsed: CodexParsedRequest, session: ChatGptTurnSession): CodexToolResultMessage[] {
@@ -200,6 +295,9 @@ export function createChatGptWebAdapter(provider: CodexProviderConfig): Provider
     const checkpointInput = captureLunaCheckpoint
       ? lunaCheckpointStore.apply(parsed)
       : { parsed, applied: false };
+    const durable = identity.threadId
+      ? durableConversationPlan(checkpointInput.parsed, provider, identity.threadId)
+      : undefined;
     if (captureLunaCheckpoint) {
       console.info(
         `[chatgpt-web] Luna rolling checkpoint applied=${checkpointInput.applied}${checkpointInput.reason ? ` reason=${checkpointInput.reason}` : ""}`,
@@ -230,12 +328,16 @@ export function createChatGptWebAdapter(provider: CodexProviderConfig): Provider
         modelId: parsed.modelId,
         reasoning: parsed.options.reasoning,
         capabilities: turnCapabilities,
+        ...(durable ? { conversation: durable.conversation } : {}),
         prepare: async () => ({
           ...compileChatGptWebPrompt(
             checkpointInput.parsed,
             turnCapabilities,
             undefined,
-            { captureLunaCheckpoint },
+            {
+              captureLunaCheckpoint,
+              ...(durable ? { messages: durable.messages, includeAuthority: durable.conversation.kind === "create" } : {}),
+            },
           ),
           release: () => {},
         }),
@@ -347,6 +449,7 @@ export function createChatGptWebAdapter(provider: CodexProviderConfig): Provider
       }
       const executionKey = `${executionNamespace}:${chatGptTurnExecutionKey(parsed)}`;
       await chatGptTurnSessions.waitForRetirement(executionKey);
+      if (!parsed._compactionRequest) emitFullModeContextWarning(provider, parsed, turnCapabilities, emit);
       const traceId = createHash("sha256").update(executionKey).digest("hex").slice(0, 12);
       const session = chatGptTurnSessions.getOrCreate(
         executionKey,
@@ -369,7 +472,6 @@ export function createChatGptWebAdapter(provider: CodexProviderConfig): Provider
                 events.push(event);
                 emit(event);
               };
-              if (!parsed._compactionRequest) emitProContextWarning(parsed, turnCapabilities, emitCaptured);
               const trace = session.runtime.trace.drain();
               reasoning = trace.map(event => event.text);
               emitTraceEvents(trace, emitCaptured);
@@ -424,7 +526,6 @@ export function createChatGptWebAdapter(provider: CodexProviderConfig): Provider
               emitTraceEvents(trace, emitRound);
             };
             const emitNewText = (deltas: string[]) => emitTextDeltas(deltas, emitRound);
-            if (!parsed._compactionRequest) emitProContextWarning(parsed, turnCapabilities, emitRound);
             emitNewTrace(session.runtime.trace.drain());
             emitNewText(session.runtime.text.drain());
             const nextTools = turnToken

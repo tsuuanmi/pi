@@ -32,6 +32,8 @@ export function createTeamContext(
 		sessionManager: { getSessionId: () => sessionId },
 		subagent: manager,
 		model: hostModel,
+		resolveModel: (provider, modelId) =>
+			provider === hostModel.provider && modelId === hostModel.id ? hostModel : undefined,
 	};
 }
 

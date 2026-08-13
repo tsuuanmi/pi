@@ -25,6 +25,8 @@ export interface SubagentOutputArtifact {
 export interface SubagentRunRequest {
 	agent?: string;
 	role?: string;
+	/** Internal-only snapshot binding used by a trusted guarded executor. */
+	capabilitySnapshotDigest?: string;
 	prompt?: string;
 	promptFile?: string;
 	systemPrompt?: string;
@@ -52,6 +54,8 @@ export interface SubagentRequest extends SubagentRunRequest {
 export interface SubagentRecord {
 	id: string;
 	role: string;
+	/** Internal policy marker used to protect legacy and guarded researcher records. */
+	protected_policy_id?: string;
 	label?: string;
 	agent_profile?: string;
 	model?: string;

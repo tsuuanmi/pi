@@ -4,6 +4,7 @@ import type { InternetSettingsService } from "#internet/settings";
 import { registerAccountsTools } from "#internet/tools/accounts";
 import { registerCompactTools } from "#internet/tools/compact";
 import { registerControlTools } from "#internet/tools/control";
+import { registerConversationTool } from "#internet/tools/conversations";
 import { registerDaemonTool } from "#internet/tools/daemon";
 import { registerDoctorTool } from "#internet/tools/doctor";
 import { registerHarnessTool } from "#internet/tools/harness";
@@ -22,6 +23,7 @@ export function registerInternetTools(
 	registerControlTools(host);
 	registerCompactTools(host);
 	registerDaemonTool(host, manager);
+	registerConversationTool(host, manager);
 	registerHarnessTool(host, manager);
 	registerSettingsTool(host, settings);
 	registerWebTools(host);

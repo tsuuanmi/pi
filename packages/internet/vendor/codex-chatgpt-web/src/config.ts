@@ -3,6 +3,7 @@ import { chmodSync, mkdirSync, openSync, closeSync, renameSync, rmSync, writeFil
 import { homedir } from "node:os";
 import { basename, delimiter, dirname, isAbsolute, join, resolve, sep, win32 } from "node:path";
 import { tmpdir } from "node:os";
+import { conversationRuntimeDigest } from "./adapters/chatgpt-web/conversation-journal";
 import type { CodexProviderConfig } from "./types";
 import { VERSION } from "./version";
 
@@ -66,7 +67,11 @@ export interface AppConfig {
   headed: boolean;
   browserWindowWidth: number;
   browserWindowHeight: number;
+  browserWindowPositionX: number;
+  browserWindowPositionY: number;
   idleShutdownMs: number;
+  conversationMode: "temporary" | "durable";
+  conversationStateDir: string;
   solAvailable: boolean;
   proAvailable: boolean;
   autoApproveToolCalls: boolean;
@@ -158,9 +163,13 @@ export function defaultConfig(mode: RuntimeMode = "browser-only"): AppConfig {
     storageStatePath: join(home, "browser", "storage-state.json"),
     brokerSocketPath: defaultBrokerEndpoint(home),
     headed: true,
-    browserWindowWidth: 900,
-    browserWindowHeight: 700,
-    idleShutdownMs: 5 * 60 * 1_000,
+    browserWindowWidth: 700,
+    browserWindowHeight: 500,
+    browserWindowPositionX: 0,
+    browserWindowPositionY: 0,
+    idleShutdownMs: 60 * 1_000,
+    conversationMode: "temporary",
+    conversationStateDir: join(home, "conversations"),
     solAvailable: true,
     proAvailable: false,
     autoApproveToolCalls: false,
@@ -321,14 +330,26 @@ function parseConfig(value: unknown, path: string): AppConfig {
     throw new Error(`Invalid contextWindow in ${path}`);
   }
   if (typeof parsed.headed !== "boolean") throw new Error(`Invalid headed in ${path}`);
-  if (!Number.isInteger(parsed.browserWindowWidth) || parsed.browserWindowWidth < 800 || parsed.browserWindowWidth > 3_840) {
+  if (!Number.isInteger(parsed.browserWindowWidth) || parsed.browserWindowWidth < 400 || parsed.browserWindowWidth > 3_840) {
     throw new Error(`Invalid browserWindowWidth in ${path}`);
   }
-  if (!Number.isInteger(parsed.browserWindowHeight) || parsed.browserWindowHeight < 600 || parsed.browserWindowHeight > 2_160) {
+  if (!Number.isInteger(parsed.browserWindowHeight) || parsed.browserWindowHeight < 300 || parsed.browserWindowHeight > 2_160) {
     throw new Error(`Invalid browserWindowHeight in ${path}`);
+  }
+  if (!Number.isInteger(parsed.browserWindowPositionX) || !Number.isInteger(parsed.browserWindowPositionY)) {
+    throw new Error(`Invalid browserWindowPosition in ${path}`);
   }
   if (!Number.isInteger(parsed.idleShutdownMs) || parsed.idleShutdownMs < 0 || parsed.idleShutdownMs > 24 * 60 * 60 * 1_000) {
     throw new Error(`Invalid idleShutdownMs in ${path}`);
+  }
+  if (parsed.conversationMode !== "temporary" && parsed.conversationMode !== "durable") {
+    throw new Error(`Invalid conversationMode in ${path}`);
+  }
+  if (typeof parsed.conversationStateDir !== "string" || !isAbsolute(expandUserPath(parsed.conversationStateDir))) {
+    throw new Error(`conversationStateDir must be absolute in ${path}`);
+  }
+  if (parsed.mode === "full" && parsed.conversationMode !== "temporary") {
+    throw new Error(`Full mode requires Temporary Chat in ${path}`);
   }
   if (typeof parsed.autoApproveToolCalls !== "boolean") {
     throw new Error(`Invalid autoApproveToolCalls in ${path}`);
@@ -427,9 +448,26 @@ export function providerConfig(config: AppConfig): CodexProviderConfig {
       brokerSocketPath: config.brokerSocketPath,
       threadEnvironmentStatePath: join(getConfigDir(), "runtime", "thread-environments.json"),
       lunaCheckpointStatePath: join(getConfigDir(), "runtime", "luna-checkpoints.json"),
+      conversationMode: config.conversationMode,
+      conversationStateDir: config.conversationStateDir,
+      conversationRuntimeDigest: conversationRuntimeDigest({
+        releaseVersion: config.releaseVersion,
+        runtimeCommand: config.runtimeCommand,
+        browserHost: config.browserHost,
+        window: [
+          config.browserWindowWidth,
+          config.browserWindowHeight,
+          config.browserWindowPositionX,
+          config.browserWindowPositionY,
+        ],
+        idleShutdownMs: config.idleShutdownMs,
+        policyVersion: 1,
+      }),
       headed: config.headed,
       browserWindowWidth: config.browserWindowWidth,
       browserWindowHeight: config.browserWindowHeight,
+      browserWindowPositionX: config.browserWindowPositionX,
+      browserWindowPositionY: config.browserWindowPositionY,
       localToolsEnabled: config.mode === "full",
       solAvailable: config.solAvailable,
       proAvailable: config.proAvailable,

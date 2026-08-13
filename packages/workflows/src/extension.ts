@@ -14,6 +14,7 @@ function workflowContext(context: ExtensionContext): WorkflowContext {
 		sessionManager: context.sessionManager,
 		subagent: getSubagentManager(context),
 		model: context.model,
+		resolveModel: (provider, modelId) => context.modelRegistry.find(provider, modelId),
 	};
 }
 

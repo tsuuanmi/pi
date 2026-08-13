@@ -1,6 +1,8 @@
 import { parseThinkingLevel, type StructuredReceipt, withStructuredReceipt } from "@tsuuanmi/pi-agent";
 import type { SubagentContext, SubagentDetails } from "#orchestrator/subagent/context";
 import { renderSubagentProgress } from "#orchestrator/subagent/progress";
+import { isProtectedSubagentRequest } from "#orchestrator/subagent/protected-policy";
+import { SubagentProtectionStore } from "#orchestrator/subagent/protection-store";
 import { createSubagentListReceipt, createSubagentReceipt } from "#orchestrator/subagent/receipts";
 import type {
 	SubagentAwaitInput,
@@ -23,6 +25,9 @@ export async function spawnSubagent(
 	context: SubagentContext,
 	signal?: AbortSignal,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
+	if (isProtectedSubagentRequest(params.agent, params.role)) {
+		throw new Error("protected_subagent_requires_guarded_surface");
+	}
 	const prompt = "prompt" in params.task ? params.task.prompt : undefined;
 	const promptFile = "promptFile" in params.task ? params.task.promptFile : undefined;
 	const result = await context.manager.spawn({
@@ -143,6 +148,9 @@ export async function resume(
 	context: SubagentContext,
 	signal?: AbortSignal,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
+	if (await new SubagentProtectionStore(context.cwd).isProtected(params.id, context.sessionId)) {
+		throw new Error("protected_subagent_requires_guarded_surface");
+	}
 	const result = await context.manager.resume(params.id, params.message, {
 		maxDurationMs: params.maxDurationMs,
 		signal,
@@ -170,6 +178,9 @@ export async function steer(
 	params: SubagentSteerInput,
 	context: SubagentContext,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
+	if (await new SubagentProtectionStore(context.cwd).isProtected(params.id, context.sessionId)) {
+		throw new Error("protected_subagent_requires_guarded_surface");
+	}
 	const delivery = parseDelivery(params.delivery);
 	const result = await context.manager.steer(params.id, params.message, delivery, context.sessionId);
 	if (!result.ok) {

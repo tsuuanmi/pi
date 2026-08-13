@@ -92,6 +92,25 @@ describe("SubagentManager", () => {
 		if (!result.ok) expect(result.reason).toBe("context_unavailable");
 	});
 
+	it("rejects legacy researcher records without a protected policy marker", async () => {
+		await writeRecord(cwd, {
+			id: "legacy-researcher",
+			role: "researcher",
+			agent_profile: "researcher",
+			status: "completed",
+			cwd,
+			resumable: true,
+			created_at: "2026-01-01T00:00:00.000Z",
+			updated_at: "2026-01-01T00:00:01.000Z",
+		});
+		await expect(manager.resume("legacy-researcher", "continue", { storageSessionId: TEST_SESSION })).rejects.toThrow(
+			"protected_subagent_marker_missing",
+		);
+		await expect(manager.steer("legacy-researcher", "continue", "steer", TEST_SESSION)).rejects.toThrow(
+			"protected_subagent_marker_missing",
+		);
+	});
+
 	it("returns terminal records from await", async () => {
 		await writeRecord(cwd, {
 			id: "subagent-c",

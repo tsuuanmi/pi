@@ -28,6 +28,7 @@ async function account(): Promise<InternetAccount> {
 		host: "127.0.0.1",
 		port: 18001,
 		enabled: true,
+		conversationMode: "temporary",
 	};
 }
 

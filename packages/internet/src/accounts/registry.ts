@@ -2,7 +2,7 @@ import { chmod, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { DEFAULT_DAEMON_HOST, DEFAULT_DAEMON_PORT } from "#internet/backends/openai/daemon/auth";
-import type { InternetAccount, InternetAccountInput } from "#internet/core/types";
+import type { InternetAccount, InternetAccountInput, InternetConversationMode } from "#internet/core/types";
 
 const ACCOUNT_ID_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$/;
 
@@ -58,10 +58,22 @@ export class AccountRegistry {
 	}
 
 	async setEnabled(id: string, enabled: boolean): Promise<InternetAccount> {
+		return this.update(id, (account) => {
+			account.enabled = enabled;
+		});
+	}
+
+	async setConversationMode(id: string, conversationMode: InternetConversationMode): Promise<InternetAccount> {
+		return this.update(id, (account) => {
+			account.conversationMode = conversationMode;
+		});
+	}
+
+	private async update(id: string, mutate: (account: InternetAccount) => void): Promise<InternetAccount> {
 		const accounts = await this.list();
 		const account = accounts.find((candidate) => candidate.id === id);
 		if (!account) throw new Error(`Internet account not found: ${id}`);
-		account.enabled = enabled;
+		mutate(account);
 		await this.write(accounts);
 		return account;
 	}
@@ -120,6 +132,7 @@ function normalizeAccount(input: InternetAccountInput): InternetAccount {
 		host,
 		port,
 		enabled: input.enabled ?? true,
+		conversationMode: input.conversationMode ?? "temporary",
 	};
 }
 

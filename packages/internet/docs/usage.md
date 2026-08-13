@@ -69,6 +69,25 @@ require interactive approval (a `tool_call` approval prompt) before they run. In
 
 ---
 
+### Conversation modes and research agents
+
+Accounts default to `temporary`: every turn uses an isolated Temporary Chat and replays Pi's canonical
+context. Use `internet_account_conversation_mode` to select `durable` for a browser-only research
+account. Durable mode maps the account and stable Pi session ID to one normal `chatgpt.com/c/<id>`
+conversation and sends only the verified unsynchronized history suffix. Persistent subagents have
+their own Pi session IDs, so each researcher receives an independent ChatGPT conversation.
+
+Durable mode remains fail-closed until `internet_conversation` runs the explicitly confirmed retained-chat
+canary and records a private authority receipt for the exact bundled runtime. `internet_conversation`
+also reports authority status and resets bindings after stopping the daemon. Missing or stale authority, retries, edited/rewound history, uncertain submit
+outcomes, wrong-account state, and image attachments are rejected before another browser submit.
+Full harness always uses Temporary Chat.
+
+The bundled Workflows `researcher_spawn` tool uses an explicitly registered ChatGPT Web model and a
+persistent read-only `researcher` profile. ChatGPT-native browsing is separate from Pi's
+`internet_search` and `internet_fetch` tools: ordinary Pi agents may call those tools, while
+browser-only ChatGPT cannot invoke them directly.
+
 ## 2. Full harness local tools (`codex_*`)
 
 Full mode gives the model **live local tool access** through the daemon's `codex-native` MCP server

@@ -8,6 +8,7 @@
 
 ### Added
 
+- **subagent protection**: Add provider-neutral, one-use in-process permits and manager enforcement for protected profiles such as the workflow `researcher` role.
 - **subagent**: Added opaque execution metadata and atomic caller-selected output artifacts with workspace confinement, create-only mode, and hash-guarded replacement.
 - **subagent**: Added isolated Pi sessions, persistence, lifecycle tools, durable inspection, receipts, and active HUD data.
 - **subagent**: Added persisted `maxDurationMs` run budgets that abort overdue spawn and resume runs with diagnostic timeout failures.

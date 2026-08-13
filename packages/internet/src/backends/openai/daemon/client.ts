@@ -57,6 +57,14 @@ export class DaemonClient {
 		return this.request<DaemonHealth>(DAEMON_ROUTES.health, { signal });
 	}
 
+	conversationCanary(signal?: AbortSignal): Promise<{ status: "passed" }> {
+		return this.request(DAEMON_ROUTES.conversationCanary, {
+			method: "POST",
+			headers: controlHeaders(this.config.controlToken),
+			signal,
+		});
+	}
+
 	compact(input: CompactRequest, signal?: AbortSignal): Promise<CompactResponse> {
 		return this.request<CompactResponse>(DAEMON_ROUTES.compact, {
 			method: "POST",

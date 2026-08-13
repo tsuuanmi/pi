@@ -31,6 +31,7 @@
 
 ### Added
 
+- **researcher**: Add a persistent, read-only `researcher` profile and guarded `researcher_spawn` tool for exact registered ChatGPT Web research models.
 - **extension**: Workflow extensions now register active workflow HUD data through Pi's generic `registerHudProvider` feature.
 - **extensions**: Added `@tsuuanmi/pi-workflows/hooks` with the focused `registerWorkflowHooks()` registrar alongside `registerWorkflowTools()`.
 - **team**: Replaced direct team subagent spawning with explicit `team_execute` and `team_resume` orchestrator operations; role-task batching, fresh/resume checkpoint control, separate execution state, workflow-owned persistence, and no fallback execution path are enforced.

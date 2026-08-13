@@ -8,4 +8,5 @@ export interface WorkflowContext {
 	};
 	subagent: SubagentManagerApi;
 	model?: Model;
+	resolveModel(provider: string, modelId: string): Model | undefined;
 }

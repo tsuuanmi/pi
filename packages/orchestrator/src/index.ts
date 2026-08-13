@@ -32,6 +32,11 @@ export { registerSubagentTools, SUBAGENT_SPECS } from "#orchestrator/subagent/li
 export { SubagentManager } from "#orchestrator/subagent/manager";
 export type { SubagentManagerApi } from "#orchestrator/subagent/manager-api";
 export * from "#orchestrator/subagent/progress";
+export {
+	type ProtectedPermit,
+	type ProtectedSubagentPolicyHandle,
+	registerProtectedSubagentPolicy,
+} from "#orchestrator/subagent/protected-policy";
 export * from "#orchestrator/subagent/receipts";
 export { getSubagentManager } from "#orchestrator/subagent/registry";
 export { registerSubagentRuntime } from "#orchestrator/subagent/runtime";
