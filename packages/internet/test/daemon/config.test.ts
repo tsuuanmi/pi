@@ -8,6 +8,7 @@ import {
 	ensureOwnedDaemonConfig,
 	readOwnedDaemonCapabilities,
 } from "#internet/daemon/config";
+import { enableFullHarness } from "#internet/daemon/harness";
 
 function account(configDir: string): InternetAccount {
 	return {
@@ -41,11 +42,42 @@ describe("owned daemon config", () => {
 			host: "127.0.0.1",
 			port: 17841,
 			browserHost: "managed-chrome",
+			headed: true,
+			browserWindowWidth: 900,
+			browserWindowHeight: 700,
+			idleShutdownMs: 300_000,
 			runtimeCommand: ["/runtime/bin/daemon"],
 		});
 		expect(created.storageStatePath).toBe(join(configDir, "browser", "storage-state.json"));
 		expect((await stat(join(configDir, "config.json"))).mode & 0o777).toBe(0o600);
 		expect(JSON.parse(await readFile(join(configDir, "config.json"), "utf8"))).toEqual(created);
+	});
+
+	it("derives Full-mode tunnel settings from private harness state", async () => {
+		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-config-full-"));
+		const tunnelClientPath = join(configDir, "tunnel-client");
+		const runtimeKeyFile = join(configDir, "source-key");
+		await writeFile(tunnelClientPath, "#!/bin/sh\n", { mode: 0o700 });
+		await writeFile(runtimeKeyFile, "private-key\n");
+		const target = account(configDir);
+		await enableFullHarness(target, {
+			tunnelClientPath,
+			tunnelId: `tunnel_${"a".repeat(32)}`,
+			runtimeKeyFile,
+		});
+		const created = await ensureOwnedDaemonConfig(target, {
+			releaseVersion: "2.1.8",
+			runtimeCommand: ["/runtime/bin/daemon"],
+		});
+		expect(created).toMatchObject({
+			mode: "full",
+			tunnel: {
+				binaryPath: tunnelClientPath,
+				tunnelId: `tunnel_${"a".repeat(32)}`,
+				profileName: "pi-internet-default",
+				alias: "pi-internet-default",
+			},
+		});
 	});
 
 	it("reads model capabilities from the owned daemon config", async () => {

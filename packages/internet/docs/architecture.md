@@ -9,7 +9,7 @@ Pi process (Node)
 ├── daemon lifecycle manager
 ├── daemon HTTP tools and HUD
 ├── settings plus public web search/fetch
-└── session_shutdown cleanup
+└── account-scoped Full-harness configuration
 
 Bundled child runtime (embedded Bun)
 └── codex-chatgpt-web: isolated Chrome, login/session, replay, compaction, SSE, turn ownership
@@ -23,12 +23,14 @@ The daemon is a fixed vendored snapshot, not a second repository dependency. We 
 ## Dependency boundaries
 
 - `extension.ts` composes package-owned services.
-- `daemon/config.ts` creates and validates private browser-only daemon config.
+- `daemon/config.ts` derives private daemon config from account and harness state.
+- `daemon/harness.ts` owns account-scoped browser-only/Full-mode configuration and private runtime-key storage.
 - `daemon/runtime.ts` resolves and validates the bundled platform artifact.
 - `daemon/doctor.ts` owns bounded one-shot diagnostics and strict report validation.
 - `daemon/manager.ts` exclusively owns login/start/stop/restart and managed child processes.
 - `hooks.ts` readiness-gates only registered ChatGPT Web providers through
   `before_provider_request`, then delegates payload adaptation to `backends/openai/turn/request.ts`.
+- `backends/openai/turn/files.ts` safely expands bounded workspace-local `@file` references.
 - `backends/openai/turn/request.ts` adds only the daemon-required stable identity and trusted
   read-only environment fields after Pi's standard Responses conversion.
 - `backends/openai/daemon/*` owns HTTP config/auth/client/status concerns, not processes.
@@ -50,7 +52,9 @@ obsolete false-positive markers are rejected. The manager then starts `serve`, w
 and only then delegates inference to Pi.
 
 Operations are serialized per account. A healthy daemon already bound to the account endpoint is
-reused; child processes started by this manager are gracefully shut down on Pi `session_shutdown`.
+reused. The daemon keeps one ChatGPT conversation per Pi session ID and stays alive while that
+session is active, then shuts itself down after ~1 minute without a new request/message; this
+preserves in-chat context without headed Chrome reopening for every short CLI command.
 
 ## Provider path
 
@@ -74,13 +78,13 @@ writes `config.json` with `0600` permissions, generates a base64url control toke
 `$PI_AGENT_DIR/internet/settings.json`, also written atomically with `0600` permissions.
 
 Chrome login is interactive but package-owned: it never uses the user's normal browser profile.
+Inference remains headed for Cloudflare/browser-check reliability, using a small top-left window.
 Inference routes rely on a local same-user trust boundary, so another process running as the same
 user could drive the browser-backed model. Admin authorization is sent only to `/admin/*` routes;
 it is never sent to public web endpoints or the daemon's native Codex passthrough.
 
 ## Best of both repositories
 
-The runtime uses codex-chatgpt-web because its Responses surface, isolated login, replay, and
-compaction already match Pi. Prometheus's hybrid network-capture plus DOM-fallback design remains a
-future robustness improvement; its generic MCP/multi-provider architecture is not copied into this
-Pi-native boundary.
+The runtime uses codex-chatgpt-web because its Responses surface, isolated login, replay,
+compaction, broker, and MCP server already match Pi. From Prometheus, the package adopts bounded
+static `@file` expansion; it does not duplicate Prometheus's generic MCP/multi-provider runtime.

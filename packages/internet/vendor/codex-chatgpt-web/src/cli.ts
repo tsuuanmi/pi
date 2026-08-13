@@ -20,7 +20,7 @@ import { runCommand } from "./process";
 import { startServer } from "./server";
 import { assertServiceIdle, cancelBrowserTurns, getServiceStatus, installService, restartService, startService, stopService, uninstallService } from "./service";
 import { existingFullSetupCredentials, setup, type SetupOptions } from "./setup";
-import { installRuntimeKeyBytes, managedRuntimeKeyPath, stopTunnel, tunnelStatus, waitForTunnelReady } from "./tunnel";
+import { connectTunnel, installRuntimeKeyBytes, managedRuntimeKeyPath, stopTunnel, tunnelStatus, waitForTunnelReady } from "./tunnel";
 import { getTunnelServiceStatus, restartTunnelService, startTunnelService, stopTunnelService, uninstallTunnelService } from "./tunnel-service";
 import { VERSION } from "./version";
 
@@ -38,7 +38,7 @@ Usage:
   codex-chatgpt-web serve
   codex-chatgpt-web mcp [--broker-socket PATH]
   codex-chatgpt-web service <status|install|start|restart|stop|cancel-turns>
-  codex-chatgpt-web tunnel <status|start|restart|stop|key-import>
+  codex-chatgpt-web tunnel <status|connect|disconnect|start|restart|stop|key-import>
   codex-chatgpt-web open <tunnels|runtime-keys|connectors>
   codex-chatgpt-web uninstall --yes
 
@@ -286,6 +286,18 @@ async function tunnelCommand(args: string[]): Promise<void> {
     return;
   }
   const config = loadConfig();
+  if (action === "connect") {
+    connectTunnel(config);
+    const status = await waitForTunnelReady(config);
+    stdout.write(`${JSON.stringify({ runtime: status }, null, 2)}\n`);
+    if (!status.ok) process.exitCode = 1;
+    return;
+  }
+  if (action === "disconnect") {
+    stopTunnel(config);
+    stdout.write(`${JSON.stringify({ runtime: tunnelStatus(config) }, null, 2)}\n`);
+    return;
+  }
   if (action === "start") startTunnelService();
   else if (action === "restart") {
     await assertServiceIdle(config);
@@ -386,9 +398,11 @@ async function main(): Promise<void> {
   } else if (command === "serve") {
     assertNoArgs(args);
     const config = loadConfig();
-    const server = startServer(config);
+    let resolveShutdown: () => void = () => {};
+    const shutdown = new Promise<void>(resolve => { resolveShutdown = resolve; });
+    const server = startServer(config, { onShutdown: resolveShutdown });
     stdout.write(`codex-chatgpt-web ${VERSION} listening on http://${config.host}:${server.port}/v1 (${config.mode})\n`);
-    await new Promise<void>(() => {});
+    await shutdown;
   } else if (command === "mcp") await runChatGptMcpMain(args);
   else if (command === "service") await serviceCommand(args);
   else if (command === "tunnel") await tunnelCommand(args);

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { AccountRegistry } from "#internet/accounts/registry";
 import { DaemonClient } from "#internet/backends/openai/daemon/client";
 import type { InternetAccount } from "#internet/core/types";
-import { daemonLoginMarkerPath } from "#internet/daemon/config";
+import { daemonConfigFingerprint, daemonLoginMarkerPath, ensureOwnedDaemonConfig } from "#internet/daemon/config";
 import { OwnedDaemonManager } from "#internet/daemon/manager";
 
 async function account(): Promise<InternetAccount> {
@@ -37,7 +37,11 @@ describe("OwnedDaemonManager", () => {
 		const target = await account();
 		await mkdir(join(target.configDir, "browser"));
 		await writeFile(daemonLoginMarkerPath(target), JSON.stringify(authenticatedMarker()));
-		const health = vi.fn(async () => ({ status: "ok" }));
+		const config = await ensureOwnedDaemonConfig(target, {
+			releaseVersion: "2.1.8",
+			runtimeCommand: ["/runtime/bin/daemon"],
+		});
+		const health = vi.fn(async () => ({ status: "ok", config_fingerprint: daemonConfigFingerprint(config) }));
 		const control = vi.fn(async () => ({ status: "ok" }));
 		vi.spyOn(DaemonClient, "forAccount").mockResolvedValue({ health, control } as unknown as DaemonClient);
 		const spawn = vi.fn();
@@ -52,7 +56,6 @@ describe("OwnedDaemonManager", () => {
 		await manager.start(target.id);
 		expect(spawn).not.toHaveBeenCalled();
 		await expect(manager.status(target.id)).resolves.toMatchObject([{ state: "running", owned: false }]);
-		await manager.stopOwned();
 		expect(control).not.toHaveBeenCalled();
 		await manager.stop(target.id);
 		expect(control).toHaveBeenCalledWith("shutdown");
@@ -65,6 +68,7 @@ describe("OwnedDaemonManager", () => {
 			exitCode: null as number | null,
 			killed: false,
 			kill: vi.fn(() => true),
+			unref: vi.fn(),
 		});
 		const health = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue({ status: "ok" });
 		vi.spyOn(DaemonClient, "forAccount").mockResolvedValue({ health } as unknown as DaemonClient);

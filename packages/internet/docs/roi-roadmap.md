@@ -104,6 +104,32 @@ an actionable message; `internet_daemon login` still works.
 
 ---
 
+### R2b. Conversation continuity + unobtrusive headed browser — **Refined target**
+
+**Problem.** Consecutive `--print` invocations appear to start fresh: each is a new process/session,
+so the daemon receives only the current message and cannot replay history. Within one session, the
+daemon opened a fresh Temporary Chat per turn, so continuity relied entirely on history replay.
+
+**Evidence.** `implementation-plan-conversation-continuity.md`; daemon
+`src/adapters/chatgpt-web/browser-worker.ts` (`pageForNewTurn` → fresh Temporary Chat) and
+`src/adapters/chatgpt-web/prompt.ts` (`compileChatGptWebPrompt` replays history); Prometheus
+`electron/provider-senders/chatgpt.cjs` (types into the already-open page for in-browser continuity).
+
+**Refined design.** Keep the stable Pi session thread ID and full-history replay as the correctness
+fallback, but also keep **one ChatGPT conversation tab per Pi session ID** so ChatGPT retains context
+in the chat. The daemon owns a **~1-minute idle shutdown** (no new request/message for 60 s) and
+launches headed Chrome at a **small top-left window**. Separate CLI runs continue by resuming the Pi
+session (`--continue`, `--resume`, or `--session`) rather than a duplicate package session database.
+
+**Effort:** Medium. **Impact:** High (removes repeated Chrome startup and keeps in-chat context while
+preserving browser-check reliability). **Risk:** Low–Medium (long-lived SPA DOM).
+
+**Acceptance:** the same Pi session reuses one ChatGPT conversation and a remembered value stays
+visible in the chat; the tab closes ~1 minute after the last request; a new Pi session starts a fresh
+conversation; the read-only warning no longer repeats in browser-only turns.
+
+---
+
 ## Tier 2 — New capability (fills the real Pi gap)
 
 ### R3. `internet_search` + `internet_fetch` (web access) — **Implemented**
@@ -157,6 +183,29 @@ from within Pi.
 
 **Acceptance:** `internet_doctor` returns structured check results and a human-readable summary;
 execution/malformed-report failures raise a typed, non-retryable error.
+
+---
+
+### R4b. Full harness / local file access (`@file` + local tools) — **Implemented**
+
+**Problem.** `@file` references are sent as attachment names only; the model cannot read local file
+contents. The daemon runs in `browser-only` mode, so the browser session has no local tool access.
+
+**Evidence.** `implementation-plan-full-harness.md`; daemon `src/config.ts` (`RuntimeMode`,
+`localToolsEnabled`), `src/setup.ts` (`connectorSetupRequired`), `src/adapters/chatgpt-web/turn-broker.ts`
+and `mcp-server.ts` (Full-mode local tools); Prometheus `src/mcp-server.js` (`readFileContents` inline
+`@file` expansion).
+
+**Implemented design.** Add account-scoped `internet_harness` status/enable/disable/restart. Full
+mode writes validated tunnel settings, copies runtime-key bytes into private `0600` storage, starts
+the daemon broker, and invokes the vendored tunnel/MCP path. Safe static `@file` expansion works in
+both modes with workspace confinement and count/size/text limits.
+
+**Effort:** Medium–High. **Impact:** High (real local file/tool access). **Risk:** Medium–High (Full
+mode grants local tool access; must stay approval-gated and loopback-only).
+
+**Acceptance:** in browser-only mode, `@README.md` inlines contents and the model can summarize them;
+in full mode, the model can read/edit a local file via bridged `codex_*` tools with approval prompts.
 
 ---
 

@@ -49,6 +49,7 @@ loopback binding; the real control token is used separately for `/admin/*`.
 Tools use TypeBox `parameters` and Pi's five-argument execute signature. Registered tools are:
 
 - `internet_daemon`
+- `internet_harness`
 - `internet_status`
 - `internet_doctor`
 - `internet_compact`
@@ -62,11 +63,11 @@ Tools use TypeBox `parameters` and Pi's five-argument execute signature. Registe
 
 ## Hooks and HUD
 
-- `tool_call`: fail-closed approval for daemon admin control and future bridged `codex_*` tools.
+- `tool_call`: fail-closed approval for daemon/harness control and bridged `codex_*` tools.
 - `before_provider_request`: readiness for this extension's provider names only, honoring
   `autoLogin`.
-- `turn_end`: refresh the HUD.
-- `session_shutdown`: gracefully stop package-owned child daemons.
+- `turn_end`: refresh the HUD. Daemon-owned idle shutdown keeps the session's ChatGPT conversation
+  alive and then closes browser/broker/tunnel state ~1 minute after the last request.
 
 The HUD remains non-throwing and hides itself when the default endpoint is unavailable.
 
@@ -82,7 +83,10 @@ The package manifest exposes `dist/extension.js` through `pi.extensions` and pub
 - `OwnedDaemonManager` owns child processes and login lifecycle.
 - The bundled daemon owns browser/session/replay behavior.
 - Pi AI owns standard Responses conversion, transport, and event decoding.
+- `backends/openai/turn/files.ts` owns bounded workspace-local `@file` expansion only.
 - `backends/openai/turn/request.ts` owns pure daemon-contract payload adaptation only.
+- `daemon/harness.ts` owns account-scoped Full-mode paths/private runtime-key storage; the vendored
+  daemon remains the only broker/MCP implementation.
 - `daemon/doctor.ts` owns the bounded one-shot diagnostic process boundary and report validation;
   `tools/doctor.ts` owns only Pi presentation.
 - `web/*` owns public search/fetch transport and SSRF/size/content safeguards; it never receives the

@@ -1,7 +1,7 @@
 import { createChatGptWebAdapter } from "./adapters/chatgpt-web";
 import { closeChatGptBrowserWorkers } from "./adapters/chatgpt-web/browser-worker";
 import { closeTurnBrokers, TurnBroker } from "./adapters/chatgpt-web/turn-broker";
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { chatGptTurnSessions } from "./adapters/chatgpt-web/turn-execution";
 import { bridgeToResponsesSSE, buildResponseJSON, formatErrorResponse } from "./bridge";
 import type { AppConfig } from "./config";
@@ -30,10 +30,13 @@ import { expandPreviousResponseInput, flushResponseState, rememberResponseState 
 import { namespacedToolName, type AdapterEvent, type CodexParsedRequest } from "./types";
 import type { CodexProviderConfig } from "./types";
 import type { ProviderAdapter } from "./adapters/base";
+import { stopTunnel } from "./tunnel";
 import { VERSION } from "./version";
 
 export class HttpTurnCounter {
   private active = 0;
+
+  constructor(private readonly onIdle?: () => void) {}
 
   count(): number {
     return this.active;
@@ -51,6 +54,7 @@ export class HttpTurnCounter {
       if (released) return;
       released = true;
       this.active -= 1;
+      if (this.active === 0) this.onIdle?.();
       if (signal && abortListener) {
         signal.removeEventListener("abort", abortListener);
         abortListener = undefined;
@@ -438,9 +442,10 @@ export async function compactRequest(
 
 export function startServer(
   config: AppConfig,
-  dependencies: { fetchUpstream?: NativeFetch } = {},
+  dependencies: { fetchUpstream?: NativeFetch; onShutdown?: () => void } = {},
 ): ReturnType<typeof Bun.serve> {
   const startedAt = Date.now();
+  const configFingerprint = createHash("sha256").update(JSON.stringify(config)).digest("hex");
   if (config.mode === "full") {
     void TurnBroker.forSocket(config.brokerSocketPath).listen().catch(error => {
       console.error(
@@ -450,9 +455,10 @@ export function startServer(
   }
   let draining = false;
   let shutdownPromise: Promise<void> | undefined;
+  let idleTimer: ReturnType<typeof setTimeout> | undefined;
   let successfulModelCatalogRequests = 0;
   let lastSuccessfulModelCatalogRequestAt: string | null = null;
-  const httpTurns = new HttpTurnCounter();
+  const httpTurns = new HttpTurnCounter(scheduleIdleShutdown);
   const activity = () => ({
     active_http_turns: httpTurns.count(),
     active_browser_turns: chatGptTurnSessions.activeCount(),
@@ -475,6 +481,7 @@ export function startServer(
           service: "codex-chatgpt-web",
           version: VERSION,
           mode: config.mode,
+          config_fingerprint: configFingerprint,
           pid: process.pid,
           port: config.port,
           uptime: (Date.now() - startedAt) / 1_000,
@@ -510,6 +517,7 @@ export function startServer(
         setTimeout(shutdown, 0);
         return Response.json({ status: "ok", accepting_turns: false, ...current });
       }
+      if (url.pathname.startsWith("/v1/")) scheduleIdleShutdown();
       if (req.method === "GET" && url.pathname === "/v1/models") {
         if (draining) {
           return formatErrorResponse(
@@ -553,8 +561,24 @@ export function startServer(
       return new Response("Not found", { status: 404 });
     },
   });
+  function scheduleIdleShutdown(): void {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = undefined;
+    if (config.idleShutdownMs === 0 || shutdownPromise) return;
+    idleTimer = setTimeout(() => {
+      const current = activity();
+      if (current.active_http_turns > 0 || current.active_browser_turns > 0) {
+        scheduleIdleShutdown();
+        return;
+      }
+      shutdown();
+    }, config.idleShutdownMs);
+    idleTimer.unref();
+  }
   function shutdown(): void {
     if (shutdownPromise) return;
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = undefined;
     draining = true;
     chatGptTurnSessions.clear();
     flushResponseState();
@@ -562,6 +586,7 @@ export function startServer(
       const results = await Promise.allSettled([
         closeChatGptBrowserWorkers(),
         closeTurnBrokers(),
+        config.mode === "full" ? Promise.resolve().then(() => stopTunnel(config)) : Promise.resolve(),
       ]);
       const failures = results
         .filter((result): result is PromiseRejectedResult => result.status === "rejected")
@@ -573,6 +598,7 @@ export function startServer(
         }
       }
       await server.stop(true);
+      dependencies.onShutdown?.();
     })().catch(error => {
       process.exitCode = 1;
       console.error(`[codex-chatgpt-web] server shutdown failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -580,5 +606,6 @@ export function startServer(
   }
   process.once("SIGINT", shutdown);
   process.once("SIGTERM", shutdown);
+  scheduleIdleShutdown();
   return server;
 }

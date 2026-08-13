@@ -1,13 +1,13 @@
 import type {
 	BeforeProviderRequestEvent,
 	ExtensionHandler,
-	SessionShutdownEvent,
 	ToolCallEvent,
 	ToolCallEventResult,
 	TurnEndEvent,
 } from "@tsuuanmi/pi/extensions";
 import { refreshHudUi } from "@tsuuanmi/pi-tui";
 import { providerName } from "#internet/backends/openai/provider";
+import { expandLocalFileReferences } from "#internet/backends/openai/turn/files";
 import { adaptChatGptWebRequest, rejectedChatGptWebRequest } from "#internet/backends/openai/turn/request";
 import type { InternetAccount } from "#internet/core/types";
 import { daemonLoginExists } from "#internet/daemon/config";
@@ -20,7 +20,6 @@ export interface InternetHookHost {
 	on(event: "tool_call", handler: ExtensionHandler<ToolCallEvent, ToolCallEventResult>): void;
 	on(event: "turn_end", handler: ExtensionHandler<TurnEndEvent>): void;
 	on(event: "before_provider_request", handler: ExtensionHandler<BeforeProviderRequestEvent, unknown>): void;
-	on(event: "session_shutdown", handler: ExtensionHandler<SessionShutdownEvent>): void;
 }
 
 export function registerInternetHooks(
@@ -35,11 +34,16 @@ export function registerInternetHooks(
 
 	host.on("tool_call", async (event, context) => {
 		const lifecycleAction =
-			event.toolName === "internet_control" || event.toolName === "internet_daemon" ? event.input.action : undefined;
+			event.toolName === "internet_control" ||
+			event.toolName === "internet_daemon" ||
+			event.toolName === "internet_harness"
+				? event.input.action
+				: undefined;
 		const requiresApproval =
 			BRIDGED_TOOLS.has(event.toolName) ||
 			event.toolName === "internet_control" ||
-			event.toolName === "internet_daemon";
+			event.toolName === "internet_daemon" ||
+			event.toolName === "internet_harness";
 		if (!requiresApproval) return undefined;
 		if (!context.hasUI) {
 			return { block: true, reason: "This internet tool requires interactive approval." };
@@ -73,7 +77,8 @@ export function registerInternetHooks(
 				);
 			}
 			await manager.ensureReady(accountId);
-			return adaptChatGptWebRequest(event.payload, {
+			const payload = await expandLocalFileReferences(event.payload, context.cwd);
+			return adaptChatGptWebRequest(payload, {
 				cwd: context.cwd,
 				sessionId: context.sessionManager.getSessionId(),
 				turnId: latestUserEntryId(context.sessionManager.getBranch()),
@@ -87,10 +92,6 @@ export function registerInternetHooks(
 
 	host.on("turn_end", async (_event, context) => {
 		await refreshHudUi(context);
-	});
-
-	host.on("session_shutdown", async () => {
-		await manager.stopOwned();
 	});
 }
 

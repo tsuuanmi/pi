@@ -39,8 +39,9 @@ the bundled CLI, Playwright runtime dependencies, and a launcher.
    verifies it independently in a second owned context.
 6. The package starts its daemon and waits for `/healthz` before inference continues.
 
-On later Pi loads, authenticated enabled accounts start automatically. Pi `session_shutdown` stops
-only child daemons owned by that Pi process. To require explicit login, call `internet_settings`
+On later Pi loads, authenticated enabled accounts start automatically. The daemon keeps one ChatGPT
+conversation per Pi session ID and stays alive while that session is active, then shuts itself down
+~1 minute after the last request/message. To require explicit login, call `internet_settings`
 with `{ "autoLogin": false }`; first-use model requests then keep Chrome closed and instruct
 interactive users to run `internet_daemon` with action `login`.
 
@@ -51,6 +52,7 @@ Pi before_provider_request hook (registered ChatGPT Web providers only)
   -> ensure verified login (interactive on first use)
   -> ensure package-owned daemon is healthy
   -> Pi openai-responses conversion
+  -> expand safe workspace-local @file references
   -> add stable session/turn identity and read-only environment metadata
   -> bundled daemon /v1/responses and Pi SSE decoding
   -> isolated Chrome profile and ChatGPT Web
@@ -76,6 +78,7 @@ Account registry changes require a Pi reload because provider registration is st
 | Tool | Purpose |
 |---|---|
 | `internet_daemon` | Login, start, stop, restart, or inspect the package-owned daemon. |
+| `internet_harness` | Inspect/configure account-scoped Full local-tools mode and tunnel paths. |
 | `internet_status` | Read daemon health and active turn counts. |
 | `internet_doctor` | Run account-scoped daemon diagnostics and return structured check results. |
 | `internet_compact` | Compact history; rejected for Luna because Luna uses rolling checkpoints. |
@@ -88,7 +91,9 @@ Account registry changes require a Pi reload because provider registration is st
 | `internet_fetch` | Fetch readable text from a bounded public HTTP/HTTPS page. |
 
 `internet_daemon` controls the child-process lifecycle. `internet_control` controls the running
-server's administrative state. Destructive control calls require Pi's interactive approval hook.
+server's administrative state. `internet_harness` enables/disables the vendored broker/MCP Full mode
+using an external tunnel client, tunnel ID, and private runtime-key file. Destructive/full-harness
+calls require Pi's interactive approval hook.
 `internet_doctor` is read-only: it runs the bundled CLI's bounded `doctor --json` command without
 starting the daemon or opening Chrome. It retains every daemon check with explicit Pi/upstream scope
 and computes Pi readiness without requiring the daemon's native Codex route or OS service.
@@ -102,6 +107,8 @@ and computes Pi readiness without requiring the daemon's native Codex route or O
 - Admin bearer credentials are sent only to `/admin/*`, never to inference or public web routes.
 - Web fetch blocks URL credentials, non-HTTP schemes, private/reserved destinations, unsafe
   redirects, binary responses, oversized bodies, and long-running requests.
+- Explicit `@file` references send the selected workspace file contents to ChatGPT; do not reference
+  secrets or files that should not leave the machine.
 - Snapshot provenance and the targeted upstream v2.1.9 login patch are recorded in
   `vendor/codex-chatgpt-web/SNAPSHOT.md`; general upstream synchronization remains out of scope.
 - This is unofficial browser automation and can break when ChatGPT Web changes. It must not be used
@@ -122,6 +129,8 @@ pinned Bun toolchain and is intentionally excluded from Pi's TypeScript/Biome so
 
 ## Documentation
 
+- [Usage Guide](docs/usage.md) — how to use `@file`, `internet_search`/`internet_fetch`, lifecycle
+  tools, and the Full-harness `codex_*` local tools.
 - [Architecture](docs/architecture.md)
 - [How it works](docs/how-it-works.md)
 - [Pi integration](docs/pi-integration.md)
@@ -129,8 +138,11 @@ pinned Bun toolchain and is intentionally excluded from Pi's TypeScript/Biome so
 - [Implementation phases](docs/implementation-phases.md)
 - [Daemon ownership decisions](docs/daemon-ownership-brainstorm.md)
 - [Implementation review](docs/review/implementation-review.md)
+- [Conversation Continuity and Browser Lifecycle](docs/implementation-plan-conversation-continuity.md)
+- [Full Harness and Local File Access](docs/implementation-plan-full-harness.md)
 
 ## Deferred
 
-Hybrid network-interception/DOM capture inspired by Prometheus, native Codex tool bridging,
-multi-backend fusion, and non-Linux runtime artifacts remain future work.
+Hybrid network-interception/DOM capture inspired by Prometheus, multi-backend fusion, and non-Linux
+runtime artifacts remain future work. Full-harness connector setup and tunnel credentials remain
+external prerequisites.

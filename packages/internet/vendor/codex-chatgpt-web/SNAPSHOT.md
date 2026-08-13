@@ -1,10 +1,14 @@
 Vendored from codex-chatgpt-web commit bda266b45c0e9d73c7a6e932a7c556954f9cea9c.
 
-`src/browser-login.ts` ports the durable login capture from upstream v2.1.9 commit 7d4e08c:
-normal Chrome sign-in, Keychain-aware persistent-profile capture, and independent stored-state
-verification. Its authentication checks retain the snapshot's polling across navigation and page
-replacement so transient Cloudflare challenge surfaces are waited out instead of accepted or failed
-prematurely.
+Targeted package patches:
+
+- `src/browser-login.ts` ports durable login capture from upstream v2.1.9 commit 7d4e08c and retains
+  polling across navigation/page replacement so transient Cloudflare challenge surfaces are waited
+  out instead of accepted or failed prematurely.
+- Config/browser/server patches add package-owned compact headed-window settings and bounded idle
+  shutdown. The daemon's existing singleton browser worker remains authoritative.
+- Tunnel CLI/server patches expose direct Linux `connect`/`disconnect` actions and stop Full-mode
+  tunnel runtime during daemon cleanup. The existing daemon broker/MCP implementation is unchanged.
 
 No other v2.1.9 changes are included. General upstream synchronization remains out of scope.
 

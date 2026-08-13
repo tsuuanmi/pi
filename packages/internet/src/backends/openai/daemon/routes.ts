@@ -11,6 +11,7 @@ export const DAEMON_ROUTES = {
 
 export interface DaemonHealth {
 	status: "ok";
+	config_fingerprint: string;
 	accepting_turns: boolean;
 	active_http_turns: number;
 	active_browser_turns: number;

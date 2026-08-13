@@ -2,7 +2,12 @@ import type { ChildProcess } from "node:child_process";
 import { spawn } from "node:child_process";
 import { DaemonClient } from "#internet/backends/openai/daemon/client";
 import type { InternetAccount } from "#internet/core/types";
-import { daemonLoginExists, ensureOwnedDaemonConfig, syncOwnedDaemonCapabilities } from "#internet/daemon/config";
+import {
+	daemonConfigFingerprint,
+	daemonLoginExists,
+	ensureOwnedDaemonConfig,
+	syncOwnedDaemonCapabilities,
+} from "#internet/daemon/config";
 import { waitForDaemonHealth } from "#internet/daemon/health";
 import type { DaemonRuntime } from "#internet/daemon/runtime";
 import { resolveDaemonRuntime } from "#internet/daemon/runtime";
@@ -77,13 +82,6 @@ export class OwnedDaemonManager {
 		);
 	}
 
-	stopOwned(): Promise<void> {
-		const accounts = [...this.accounts.values()].filter((account) => this.managedAccounts.has(account.id));
-		return Promise.all(accounts.map((account) => this.enqueue(account.id, () => this.stopAccount(account)))).then(
-			() => {},
-		);
-	}
-
 	restart(accountId: string): Promise<void> {
 		const account = this.account(accountId);
 		return this.enqueue(account.id, async () => {
@@ -115,6 +113,18 @@ export class OwnedDaemonManager {
 				};
 			}),
 		);
+	}
+
+	private async waitForOffline(client: Pick<DaemonClient, "health">): Promise<void> {
+		for (let attempt = 0; attempt < 50; attempt += 1) {
+			try {
+				await client.health();
+			} catch {
+				return;
+			}
+			await new Promise((resolve) => setTimeout(resolve, 100));
+		}
+		throw new Error("The stale ChatGPT Web daemon did not stop before restart.");
 	}
 
 	private account(id: string): InternetAccount {
@@ -165,12 +175,22 @@ export class OwnedDaemonManager {
 	private async startAccount(account: InternetAccount): Promise<void> {
 		const running = this.processes.get(account.id);
 		if (running && running.exitCode === null && !running.killed) return;
-		try {
-			await (await DaemonClient.forAccount(account)).health();
-			return;
-		} catch {}
-
 		const runtime = await this.resolveRuntime();
+		const config = await ensureOwnedDaemonConfig(account, {
+			releaseVersion: runtime.manifest.appVersion,
+			runtimeCommand: [runtime.launcher],
+		});
+		const client = await DaemonClient.forAccount(account);
+		let health: Awaited<ReturnType<DaemonClient["health"]>> | undefined;
+		try {
+			health = await client.health();
+		} catch {}
+		if (health) {
+			if (health.config_fingerprint === daemonConfigFingerprint(config)) return;
+			await client.control("shutdown");
+			await this.waitForOffline(client);
+		}
+
 		await ensureOwnedDaemonConfig(account, {
 			releaseVersion: runtime.manifest.appVersion,
 			runtimeCommand: [runtime.launcher],
@@ -181,17 +201,46 @@ export class OwnedDaemonManager {
 		});
 		this.processes.set(account.id, child);
 		this.managedAccounts.add(account.id);
+		child.unref();
 		child.once("exit", () => {
 			if (this.processes.get(account.id) === child) this.processes.delete(account.id);
 			this.managedAccounts.delete(account.id);
 		});
 		try {
 			await this.waitForHealth(await DaemonClient.forAccount(account));
+			const config = await ensureOwnedDaemonConfig(account, {
+				releaseVersion: runtime.manifest.appVersion,
+				runtimeCommand: [runtime.launcher],
+			});
+			if (config.mode === "full") await this.runTunnelAction(runtime, account, "connect");
 		} catch (error) {
 			child.kill("SIGTERM");
 			this.processes.delete(account.id);
 			throw error;
 		}
+	}
+
+	private async runTunnelAction(
+		runtime: DaemonRuntime,
+		account: InternetAccount,
+		action: "connect" | "disconnect",
+	): Promise<void> {
+		const child = this.spawnProcess(runtime.launcher, ["--home", account.configDir, "tunnel", action], {
+			stdio: ["ignore", "ignore", "inherit"],
+			env: { ...process.env, CODEX_CHATGPT_WEB_HOME: account.configDir },
+		});
+		await new Promise<void>((resolve, reject) => {
+			child.once("error", reject);
+			child.once("exit", (code, signal) => {
+				if (code === 0) resolve();
+				else
+					reject(
+						new Error(
+							`ChatGPT Web tunnel ${action} exited with ${signal ? `signal ${signal}` : `status ${code ?? "unknown"}`}.`,
+						),
+					);
+			});
+		});
 	}
 
 	private async stopAccount(account: InternetAccount): Promise<void> {

@@ -4,7 +4,6 @@ import { join } from "node:path";
 import type {
 	BeforeProviderRequestEvent,
 	ExtensionHandler,
-	SessionShutdownEvent,
 	ToolCallEvent,
 	ToolCallEventResult,
 	TurnEndEvent,
@@ -38,21 +37,19 @@ const autoLogin = (enabled: boolean) =>
 	}) as unknown as InternetSettingsStore;
 
 describe("registerInternetHooks", () => {
-	it("blocks bridged tools and stops only owned daemons on shutdown", async () => {
+	it("blocks bridged tools and registers request/turn hooks without eager daemon shutdown", async () => {
 		let toolCall: ExtensionHandler<ToolCallEvent, ToolCallEventResult> | undefined;
 		let turnEnd: ExtensionHandler<TurnEndEvent> | undefined;
-		let sessionShutdown: ExtensionHandler<SessionShutdownEvent> | undefined;
-		const stopOwned = vi.fn(async () => {});
+		const events: string[] = [];
 		registerInternetHooks(
 			{
-				on(event: "tool_call" | "turn_end" | "before_provider_request" | "session_shutdown", handler: unknown) {
+				on(event: "tool_call" | "turn_end" | "before_provider_request", handler: unknown) {
+					events.push(event);
 					if (event === "tool_call") toolCall = handler as ExtensionHandler<ToolCallEvent, ToolCallEventResult>;
 					else if (event === "turn_end") turnEnd = handler as ExtensionHandler<TurnEndEvent>;
-					else if (event === "session_shutdown")
-						sessionShutdown = handler as ExtensionHandler<SessionShutdownEvent>;
 				},
 			},
-			{ stopOwned } as unknown as OwnedDaemonManager,
+			{} as unknown as OwnedDaemonManager,
 			[await account()],
 			autoLogin(true),
 		);
@@ -61,8 +58,7 @@ describe("registerInternetHooks", () => {
 		} as never);
 		expect(result).toMatchObject({ block: true });
 		expect(turnEnd).toBeDefined();
-		await sessionShutdown?.({ type: "session_shutdown", reason: "quit" }, {} as never);
-		expect(stopOwned).toHaveBeenCalledOnce();
+		expect(events).not.toContain("session_shutdown");
 	});
 
 	it("readiness-gates only registered internet providers", async () => {

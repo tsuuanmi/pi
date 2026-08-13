@@ -64,6 +64,9 @@ export interface AppConfig {
   storageStatePath: string;
   brokerSocketPath: string;
   headed: boolean;
+  browserWindowWidth: number;
+  browserWindowHeight: number;
+  idleShutdownMs: number;
   solAvailable: boolean;
   proAvailable: boolean;
   autoApproveToolCalls: boolean;
@@ -155,6 +158,9 @@ export function defaultConfig(mode: RuntimeMode = "browser-only"): AppConfig {
     storageStatePath: join(home, "browser", "storage-state.json"),
     brokerSocketPath: defaultBrokerEndpoint(home),
     headed: true,
+    browserWindowWidth: 900,
+    browserWindowHeight: 700,
+    idleShutdownMs: 5 * 60 * 1_000,
     solAvailable: true,
     proAvailable: false,
     autoApproveToolCalls: false,
@@ -315,6 +321,15 @@ function parseConfig(value: unknown, path: string): AppConfig {
     throw new Error(`Invalid contextWindow in ${path}`);
   }
   if (typeof parsed.headed !== "boolean") throw new Error(`Invalid headed in ${path}`);
+  if (!Number.isInteger(parsed.browserWindowWidth) || parsed.browserWindowWidth < 800 || parsed.browserWindowWidth > 3_840) {
+    throw new Error(`Invalid browserWindowWidth in ${path}`);
+  }
+  if (!Number.isInteger(parsed.browserWindowHeight) || parsed.browserWindowHeight < 600 || parsed.browserWindowHeight > 2_160) {
+    throw new Error(`Invalid browserWindowHeight in ${path}`);
+  }
+  if (!Number.isInteger(parsed.idleShutdownMs) || parsed.idleShutdownMs < 0 || parsed.idleShutdownMs > 24 * 60 * 60 * 1_000) {
+    throw new Error(`Invalid idleShutdownMs in ${path}`);
+  }
   if (typeof parsed.autoApproveToolCalls !== "boolean") {
     throw new Error(`Invalid autoApproveToolCalls in ${path}`);
   }
@@ -413,6 +428,8 @@ export function providerConfig(config: AppConfig): CodexProviderConfig {
       threadEnvironmentStatePath: join(getConfigDir(), "runtime", "thread-environments.json"),
       lunaCheckpointStatePath: join(getConfigDir(), "runtime", "luna-checkpoints.json"),
       headed: config.headed,
+      browserWindowWidth: config.browserWindowWidth,
+      browserWindowHeight: config.browserWindowHeight,
       localToolsEnabled: config.mode === "full",
       solAvailable: config.solAvailable,
       proAvailable: config.proAvailable,

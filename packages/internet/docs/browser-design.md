@@ -49,20 +49,31 @@ internet_login
   only durable browser state the package keeps.
 - A **verified marker** proves the session is authenticated before any turn runs.
 
-### 2.2 Turn browser (per-turn, isolated)
+### 2.2 Turn browser (per Pi session, persistent conversation)
 
 ```
-internet_turn
+internet_turn (same Pi session ID)
   → ensure managed browser (launch once, reuse)
-  → newContext({ storageState })   # isolated context per turn
-  → newPage()                      # fresh Temporary Chat document
+  → reuse the session's ChatGPT conversation tab
+  → type/attach the turn into that conversation
   → run the turn
-  → close the page (and context)   # never reuse a transcript
+  → keep the tab open for the next turn
+
+internet_turn (new Pi session ID)
+  → ensure managed browser (reuse)
+  → open a fresh ChatGPT conversation tab
+  → run the turn
+  → keep the tab open (idle ~1 min then close)
 ```
 
-- **One fresh page per turn** — never reuses a transcript or autocomplete DOM.
+- **One ChatGPT conversation tab per Pi session ID** — the same session reuses the same page so
+  ChatGPT retains context in the chat; a new Pi session starts a fresh conversation.
+- **Full-history replay as fallback** — if a fresh conversation cannot be guaranteed, the compiled
+  prompt replays the complete accumulated context.
 - **Bounded concurrency** — at most `MAX_CHATGPT_BROWSER_TABS = 5` simultaneous turns (the daemon's
   constant). Unbounded fan-out would look like spam to the account.
+- **Idle cleanup** — a conversation tab stays open while the session is active; after ~1 minute
+  without a new request/message, the daemon closes it and exits.
 - **Graceful close** — on Pi shutdown, drain and close all browser workers; never abandon an
   in-flight turn.
 
@@ -70,7 +81,7 @@ internet_turn
 
 | Concern | Guarantee |
 |---------|-----------|
-| Page leak | Every page/context is closed in a `finally` block |
+| Page leak | Conversation tabs are closed on idle (~1 min) or session teardown, and always in a `finally` block on turn completion |
 | Browser leak | `close()` awaits all active runs + maintenance, then closes the browser |
 | CDP connection | `connectOverCDP` close releases the transport (does not kill the launcher process) |
 | Temp files | Login profile dir is removed after capture |
@@ -97,7 +108,7 @@ validated strictly (ownership, permissions, shape) before connecting.
 | Boundary | Enforcement |
 |-----------|------------|
 | Loopback only | CDP endpoint must be `127.0.0.1`; never a remote browser |
-| Session isolation | Per-turn context; never share a transcript |
+| Session isolation | One ChatGPT conversation tab per Pi session; never share a transcript across sessions |
 | Storage | `storageState` 0600 under 0700 dir; login profile removed |
 | Descriptor trust | Launcher descriptor validated (owner, perms, shape, token) |
 | Untrusted model | The model's answer never grants browser authority; only the trusted environment does |
@@ -109,12 +120,12 @@ validated strictly (ownership, permissions, shape) before connecting.
 
 - [ ] **No browser download** — use system Chrome/Chromium via `playwright-core`.
 - [ ] **Explicit login** — one-time, visible, verified marker; never silent.
-- [ ] **Per-turn isolation** — fresh page/context per turn; never reuse a transcript.
+- [ ] **Per-session conversation** — one ChatGPT conversation tab per Pi session; fresh page per new session.
 - [ ] **Bounded concurrency** — cap simultaneous turns (5).
 - [ ] **Graceful shutdown** — drain + close all workers on Pi shutdown.
 - [ ] **Atomic state** — `storageState` written atomically, 0600.
 - [ ] **Cleanup in `finally`** — no page/browser/connection leaks.
-- [ ] **Headless toggle** — `headed` config; headed for login, headless for turns.
+- [ ] **Headed only** — `headed` config retained for Cloudflare/browser-check reliability; no headless turn mode.
 - [ ] **Diagnostics** — on failure, capture a redacted DOM/screenshot snapshot (no credentials).
 - [ ] **Error mapping** — browser failures map to structured adapter errors (status/type/code/retryable).
 

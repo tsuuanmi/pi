@@ -125,7 +125,9 @@ Wiring changes:
 
 - `extension.ts` becomes async: locate bundled daemon → ensure login → spawn `serve` → health-gate →
   register provider/tools/HUD.
-- Add a `session_shutdown` hook to stop the daemon gracefully.
+- Originally planned: stop on `session_shutdown`. Superseded by daemon-owned idle
+  shutdown (~1 minute without a new request/message) so short CLI runs can reuse the headed browser
+  and keep one ChatGPT conversation per Pi session.
 - Add an `internet_daemon` tool (status/start/stop/restart) for explicit control.
 
 ---
@@ -249,7 +251,8 @@ serve.
 2. **On load:** if a login state exists → **auto-start** `serve` and health-gate (Q3: C).
 3. **On first real use** with no login state → **auto-run login** in an isolated Chrome window
    (Q2: C), then start `serve`.
-4. **On Pi shutdown** → gracefully stop the daemon.
+4. **After ~1 quiet minute** (no new request/message) → daemon-owned graceful browser/broker/tunnel
+   shutdown.
 5. **Explicit control** via an `internet_daemon` tool (status/start/stop/restart).
 
 ---
@@ -261,7 +264,7 @@ serve.
 | Vendored daemon size | ~15.6k lines + launcher + ~125MB deps; must be kept in sync with upstream. |
 | Bun runtime embedding | Adds a build step that downloads/embeds a Bun binary; must match the daemon's pinned Bun version. |
 | Login window at first use | Mitigated by lazy trigger + `autoLogin` opt-out flag. |
-| Orphan daemon process | Mitigated by `session_shutdown` graceful stop + `internet_daemon stop`. |
+| Orphan daemon process | Mitigated by daemon-owned idle shutdown + `internet_daemon stop`. |
 | Chrome not found | The daemon already resolves `/usr/bin/google-chrome`; surface its error. |
 | Model metadata mismatch | Unrelated to this phase; tracked separately in `review/implementation-review.md`. |
 

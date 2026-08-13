@@ -297,6 +297,8 @@ export interface ResolvedBrowserConfig {
   chromeExecutablePath: string;
   turnTimeoutMs?: number;
   headed: boolean;
+  browserWindowWidth: number;
+  browserWindowHeight: number;
   autoApproveToolCalls: boolean;
 }
 
@@ -676,6 +678,8 @@ export function resolveBrowserConfig(provider: CodexProviderConfig): ResolvedBro
     chromeExecutablePath: resolve(expandUserPath(configured.chromeExecutablePath?.trim() || defaultChromeExecutable())),
     ...(turnTimeoutMs !== undefined ? { turnTimeoutMs } : {}),
     headed: configured.headed !== false,
+    browserWindowWidth: configured.browserWindowWidth ?? 900,
+    browserWindowHeight: configured.browserWindowHeight ?? 700,
     autoApproveToolCalls: configured.autoApproveToolCalls === true,
   };
 }
@@ -852,8 +856,14 @@ export class ChatGptBrowserWorker {
     this.browser = await chromium.launch({
       executablePath: this.config.chromeExecutablePath,
       headless: !this.config.headed,
+      args: this.config.headed
+        ? [`--window-size=${this.config.browserWindowWidth},${this.config.browserWindowHeight}`]
+        : [],
     });
-    this.context = await this.browser.newContext({ storageState: this.config.storageStatePath });
+    this.context = await this.browser.newContext({
+      storageState: this.config.storageStatePath,
+      viewport: { width: this.config.browserWindowWidth, height: this.config.browserWindowHeight },
+    });
     this.page = await this.context.newPage();
     return this.page;
   }
@@ -870,8 +880,14 @@ export class ChatGptBrowserWorker {
       const browser = await chromium.launch({
         executablePath: this.config.chromeExecutablePath,
         headless: !this.config.headed,
+        args: this.config.headed
+          ? [`--window-size=${this.config.browserWindowWidth},${this.config.browserWindowHeight}`]
+          : [],
       });
-      const context = await browser.newContext({ storageState: this.config.storageStatePath });
+      const context = await browser.newContext({
+        storageState: this.config.storageStatePath,
+        viewport: { width: this.config.browserWindowWidth, height: this.config.browserWindowHeight },
+      });
       this.browser = browser;
       this.context = context;
       return { browser, context };

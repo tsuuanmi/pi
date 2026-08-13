@@ -35,8 +35,14 @@ at runtime.
   corrections for model metadata, `autoLogin`, and web search/fetch.
 - [Implemented Plan R4 – `internet_doctor`](implementation-plan-doctor.md) — reviewed implementation
   for surfacing the daemon's `doctor --json` diagnostics as a Pi tool.
+- [Usage Guide](usage.md) — how to use `@file`, web, lifecycle, and Full-harness `codex_*` tools.
 - [Implemented Pi Turn Metadata Adapter](implementation-plan-turn-metadata.md) — live-smoke fix for
   stable daemon browser replay identity after Pi's standard Responses conversion.
+- [Conversation Continuity and Browser Lifecycle](implementation-plan-conversation-continuity.md) —
+  one ChatGPT conversation tab per Pi session, full-history replay fallback, ~1-minute idle shutdown,
+  and a small top-left headed Chrome window.
+- [Full Harness and Local File Access](implementation-plan-full-harness.md) — account-scoped daemon
+  Full mode (MCP/turn broker) plus safe inline `@file` expansion.
 - [Original MVP Review](review-and-brainstorm.md).
 
 ## Scope

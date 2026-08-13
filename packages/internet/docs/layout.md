@@ -17,15 +17,16 @@ packages/internet/
 │   │   ├── config.ts
 │   │   ├── doctor.ts
 │   │   ├── health.ts
+│   │   ├── harness.ts
 │   │   ├── manager.ts
 │   │   └── runtime.ts
 │   ├── backends/openai/
 │   │   ├── provider.ts
 │   │   ├── models.ts
 │   │   ├── daemon/{auth,client,routes,status}.ts
-│   │   └── turn/{model,request}.ts
+│   │   └── turn/{files,model,request}.ts
 │   ├── core/{errors,types}.ts
-│   ├── tools/{accounts,compact,control,daemon,doctor,register,settings,status,web}.ts
+│   ├── tools/{accounts,compact,control,daemon,doctor,harness,register,settings,status,web}.ts
 │   └── web/{fetch,search}.ts
 ├── test/                       # mirrors package-owned source responsibilities
 ├── vendor/codex-chatgpt-web/
@@ -48,10 +49,12 @@ packages/internet/
 - `daemon/runtime.ts`: bundled artifact resolution and platform validation.
 - `daemon/doctor.ts`: bounded CLI diagnostics and strict report validation.
 - `daemon/health.ts`: startup health polling.
-- `daemon/manager.ts`: the single lifecycle/process owner.
+- `daemon/harness.ts`: account-scoped Full-mode paths and private runtime-key storage.
+- `daemon/manager.ts`: the single daemon/tunnel lifecycle owner.
 - `backends/openai/provider.ts`: capability-scoped provider configuration and naming.
+- `backends/openai/turn/files.ts`: bounded workspace-local `@file` expansion.
 - `backends/openai/turn/request.ts`: pure daemon identity/environment payload adaptation.
-- `hooks.ts`: provider-name-scoped readiness/adaptation gate plus approvals, HUD refresh, and cleanup.
+- `hooks.ts`: provider-name-scoped readiness/adaptation gate plus approvals and HUD refresh.
 - `settings.ts`: atomic private package settings.
 - `backends/openai/daemon/*`: HTTP auth/client/status boundaries.
 - `web/*`: public web transport with network and response safety checks.

@@ -321,6 +321,10 @@ export interface CodexProviderConfig {
     turnTimeoutMs?: number;
     /** Keep the single controlled browser visible. */
     headed?: boolean;
+    /** Headed browser window width in CSS pixels. */
+    browserWindowWidth?: number;
+    /** Headed browser window height in CSS pixels. */
+    browserWindowHeight?: number;
     /** Attach the turn-bound Codex MCP capability for non-Pro efforts. */
     localToolsEnabled?: boolean;
     /** Account capability proven by the authenticated browser probe. */

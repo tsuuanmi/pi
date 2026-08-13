@@ -18,6 +18,10 @@
 - Add private `autoLogin` settings and the `internet_settings` tool.
 - Add account-scoped `internet_doctor` diagnostics backed by the bundled daemon's bounded,
   cancellable `doctor --json` command.
+- Add safe workspace-local `@file` expansion and the account-scoped `internet_harness` tool for
+  browser-only/Full local-tools configuration through the vendored broker/MCP runtime.
+- Add `docs/usage.md` — a practical guide for `@file`, `internet_search`/`internet_fetch`, lifecycle
+  tools, and the approval-gated Full-harness `codex_*` local tools.
 
 ### Changed
 
@@ -31,9 +35,20 @@
   to match current public APIs and implemented behavior.
 - Mirror the daemon's fixed-effort model routes, capability-gate Luna/Pro availability, and use a
   conservative documented output ceiling.
+- Keep the headed daemon/browser reusable for five quiet minutes, use a compact 900×700 window, and
+  move browser/tunnel idle cleanup into the daemon instead of stopping it on every Pi session exit.
 - Document that upstream advanced to `9f74486` (a dead-code/test cleanup) and was deliberately not
   synced: the package depends on none of the removed code, and the turn-metadata, login, doctor, and
   model-catalog contracts it relies on are unchanged between v2.1.9 and `9f74486`.
+
+### Planned (refinement, not yet implemented)
+
+- Keep one ChatGPT conversation tab per Pi session ID so ChatGPT retains context in the chat, with
+  full-history replay retained as the correctness fallback.
+- Shorten the daemon idle shutdown to ~1 minute without a new request/message.
+- Anchor the headed Chrome window small in the top-left quarter.
+- Stop repeating the local-computer warning on browser-only turns; keep Full-harness onboarding
+  discoverable via `internet_harness` status/enable and connector guidance.
 
 ### Removed
 

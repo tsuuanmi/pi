@@ -6,6 +6,7 @@ import { registerCompactTools } from "#internet/tools/compact";
 import { registerControlTools } from "#internet/tools/control";
 import { registerDaemonTool } from "#internet/tools/daemon";
 import { registerDoctorTool } from "#internet/tools/doctor";
+import { registerHarnessTool } from "#internet/tools/harness";
 import { registerSettingsTool } from "#internet/tools/settings";
 import { registerStatusTools } from "#internet/tools/status";
 import { registerWebTools } from "#internet/tools/web";
@@ -21,6 +22,7 @@ export function registerInternetTools(
 	registerControlTools(host);
 	registerCompactTools(host);
 	registerDaemonTool(host, manager);
+	registerHarnessTool(host, manager);
 	registerSettingsTool(host, settings);
 	registerWebTools(host);
 }
