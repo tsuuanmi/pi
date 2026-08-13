@@ -39,7 +39,7 @@ replay.
 **Implemented design.** `backends/openai/turn/request.ts` adds the daemon's upstream-tested
 canonical metadata after Pi conversion: stable session/thread identity, active-user-entry turn
 identity, matching prompt-cache key, deterministic server-owned item IDs, and a read-only
-cwd-bound environment. See [implementation-plan-turn-metadata.md](implementation-plan-turn-metadata.md).
+cwd-bound environment. See [backends/openai/turn/request](../backends/openai/turn/request.md).
 
 **Acceptance:** package tests and direct upstream/vendored parser checks pass. Authenticated live
 smokes pass for light/high routes, and two-turn continuity preserves browser-session replay.
@@ -169,7 +169,7 @@ from within Pi.
 **Evidence.** daemon `cli.ts:229,372` (`doctor` command), `doctor.ts` (`runDoctor` →
 `DoctorReport`, `formatDoctorReport` with `--json`).
 
-**Implemented design.** See [implementation-plan-doctor.md](implementation-plan-doctor.md).
+**Implemented design.** See [daemon/doctor](../daemon/doctor.md).
 - Run `[launcher, --home, configDir, doctor, --json]` with `execFile` (no shell), caller
   cancellation, a 45-second timeout, and a 1 MiB output limit.
 - Strictly validate the typed report and return valid failing diagnostics despite the daemon's
@@ -191,7 +191,8 @@ execution/malformed-report failures raise a typed, non-retryable error.
 **Problem.** `@file` references are sent as attachment names only; the model cannot read local file
 contents. The daemon runs in `browser-only` mode, so the browser session has no local tool access.
 
-**Evidence.** `implementation-plan-full-harness.md`; daemon `src/config.ts` (`RuntimeMode`,
+**Evidence.** [`daemon/harness`](../daemon/harness.md) and
+[`backends/openai/turn/files`](../backends/openai/turn/files.md); daemon `src/config.ts` (`RuntimeMode`,
 `localToolsEnabled`), `src/setup.ts` (`connectorSetupRequired`), `src/adapters/chatgpt-web/turn-broker.ts`
 and `mcp-server.ts` (Full-mode local tools); Prometheus `src/mcp-server.js` (`readFileContents` inline
 `@file` expansion).

@@ -2,7 +2,7 @@
 
 This document brainstorms the features the `internet` package should add, grounded in what the
 codex-chatgpt-web daemon already provides and what Pi currently lacks. It builds on
-[review-and-brainstorm.md](review-and-brainstorm.md) (MVP = model routing) and
+[review/review-and-brainstorm](../review/review-and-brainstorm.md) (MVP = model routing) and
 [multi-account-and-backends.md](multi-account-and-backends.md) (multi-account + Claude/Gemini).
 
 Status: **partially implemented.** Model routing, lifecycle, multi-account management, public web
