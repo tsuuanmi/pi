@@ -10,6 +10,7 @@ import type { ExtensionUIContext } from "@tsuuanmi/pi/extensions";
 import { type AgentProfile, loadAgentProfile } from "@tsuuanmi/pi/loader";
 import type { AgentMessage, Api, Model } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
+import { readTaskPrompt, writeOutputArtifact } from "#orchestrator/subagent/artifact-output";
 import type { SubagentManagerApi } from "#orchestrator/subagent/manager-api";
 import {
 	renderSubagentProgress,
@@ -249,6 +250,15 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 	}
 
 	private async resolveRequest(request: SubagentRunRequest): Promise<ResolvedSubagentRequest> {
+		if ((request.prompt === undefined) === (request.promptFile === undefined)) {
+			throw new Error("subagent run requires exactly one of prompt or promptFile");
+		}
+		const cwd = request.cwd ?? process.cwd();
+		const prompt = request.promptFile ? await readTaskPrompt(cwd, request.promptFile) : request.prompt;
+		if (!prompt || prompt.trim().length === 0) throw new Error("subagent prompt must be non-empty");
+		if (request.outputArtifact?.mode === "replace" && !request.outputArtifact.expectedSha256) {
+			throw new Error("replace output artifact requires expectedSha256");
+		}
 		const profile = await loadAgentProfile(this.services, request.agent);
 		if (request.agent && !profile) throw new Error(`agent profile not found: ${request.agent}`);
 		const modelRef = request.model ?? profile?.model;
@@ -260,6 +270,8 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 		}
 		return {
 			...request,
+			cwd,
+			prompt,
 			role: request.role ?? profile?.name ?? "subagent",
 			tools: request.tools ?? profile?.tools,
 			excludeTools: request.excludeTools ?? profile?.excludeTools,
@@ -273,12 +285,12 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 	}
 
 	async spawn(request: SubagentRunRequest): Promise<SubagentRunResult> {
+		const storageSessionId = request.storageSessionId ?? request.parentSessionId;
+		if (!storageSessionId)
+			throw new Error("subagent spawn requires a session id (storageSessionId or parentSessionId)");
 		const resolved = await this.resolveRequest(request);
 		const id = defaultSubagentId();
 		const now = nowIso();
-		const storageSessionId = resolved.storageSessionId ?? resolved.parentSessionId;
-		if (!storageSessionId)
-			throw new Error("subagent spawn requires a session id (storageSessionId or parentSessionId)");
 		const artifactFile = this.store.artifactPath(id, storageSessionId);
 		const record = await this.store.write(
 			{
@@ -297,6 +309,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 				updated_at: now,
 				last_prompt_sha256: hashText(resolved.prompt),
 				artifact_file: artifactFile,
+				execution_metadata: resolved.metadata,
 			},
 			storageSessionId,
 		);
@@ -475,6 +488,10 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 			const errorText = isAgentError(messages);
 			const output = finalAgentOutput(messages);
 			const yieldResult = extractYieldFromMessages(messages);
+			const outputArtifact =
+				!errorText && request.outputArtifact
+					? await writeOutputArtifact(record.cwd, request.outputArtifact, output)
+					: undefined;
 			const terminalStatus = errorText ? "failed" : "completed";
 			this.progressTracker.markTerminal(record.id, terminalStatus);
 			const completed = await this.store.terminal(
@@ -484,6 +501,7 @@ export class SubagentManager implements SubagentManagerApi, SubagentInspection {
 				{
 					result_text: output,
 					error_text: errorText,
+					...(outputArtifact ? { output_artifact: outputArtifact } : {}),
 					...(yieldResult ? { yield_result: yieldResult } : {}),
 					session_file: session.sessionFile,
 					session_id: session.sessionId,

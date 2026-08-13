@@ -113,7 +113,7 @@ Score every active component independently; the overall dimension score is the m
 | `--interactive` | Require user approval at each stage |
 | `--deliberate` | Enable deeper deliberation passes |
 
-Ralplan produces a durable pending-approval plan through guarded role agents run as separate `ralplan_run_agent` invocations (not simulated inline):
+Ralplan produces a durable pending-approval plan through guarded role agents delegated to generic `subagent_spawn` (not simulated inline):
 
 1. **Explorer** (`stage: "pre-planner"`) — context map for the pre-planner gate when the gate is missing or retrying.
 2. **Planner** (`stage: "planner"`) — problem statement, principles, ≥2 viable options (or rationale for one), recommended approach, risks, verification plan, open questions.
@@ -130,9 +130,9 @@ After explicit approval or rejection, call `pi workflow ralplan approve-plan`. D
 
 **Pre-execution vagueness gate:** when `team` or `ultragoal` is dispatched with a vague prompt (no concrete signals and ≤ 15 words), the workflow tools redirect to `ralplan` instead of starting execution. Concrete signals include file paths, issue references (`#123`), snake_case/CamelCase symbols, numbered steps, acceptance/criteria/must/should language, error/exception/traceback, and fenced code blocks. The gate checks specificity, not file existence. Prefix the prompt with `force:` or `!` to bypass.
 
-**Control plane:** use `pi workflow state ralplan ...` for envelope state; `pi workflow ralplan <record-explorer-gate|write-artifact|status|doctor|approve-plan>` for non-spawn runtime operations; and `ralplan_run_agent` for guarded role-agent execution.
+**Control plane:** use `pi workflow state ralplan ...` for envelope state; `pi workflow ralplan <record-explorer-gate|write-artifact|status|doctor|approve-plan>` for workflow state/artifacts; and generic `subagent_spawn` with Ralplan-owned profile, prompts, and metadata for role execution.
 
-**Boundaries:** planning only. Persist artifacts with `pi workflow ralplan write-artifact`; do not directly edit `.pi/<session-id>/plans` or `.pi/<session-id>/workflows` unless recovering with explicit user approval. Explorer/Planner/Architect/Critic/Expert passes must use `ralplan_run_agent` and follow workflow-selected order. Role agents persist durable output and return receipt-only summaries (run id, stage, stage_n, path).
+**Boundaries:** planning only. Persist artifacts with `pi workflow ralplan write-artifact`; do not directly edit `.pi/<session-id>/plans` or `.pi/<session-id>/workflows` unless recovering with explicit user approval. Explorer/Planner/Architect/Critic/Expert passes use `subagent_spawn` with exact Ralplan metadata and follow workflow-selected order. Role agents persist durable output and return receipt-only summaries (run id, stage, stage_n, path).
 
 ### team
 
@@ -177,7 +177,7 @@ Ultragoal executes an approved concrete goal end-to-end with verification.
 
 **Goal states:** `pending` → `active` → `completed` (or `failed` / `blocked` / `review_blocked`).
 
-**Control plane:** use `pi workflow state ultragoal ...` for envelope state; `pi workflow ultragoal <create-plan|status|start-next|checkpoint|record-obstacle|classify-blocker|guard>` for non-spawn runtime operations; and `ultragoal_spawn_goal_agent` for guarded worker execution.
+**Control plane:** use `pi workflow state ultragoal ...` for envelope state; `pi workflow ultragoal <create-plan|status|start-next|checkpoint|record-obstacle|classify-blocker|guard>` for goal state; and generic `subagent_spawn` with the worker profile and exact active-goal metadata for execution.
 
 **Boundaries:** if the request is vague, run `/skill:deep-interview` or `/skill:ralplan` first. If no execution approval exists, stop and ask. Do not widen scope beyond the approved goal. If the plan proves wrong, stop and ask or route back to `/skill:ralplan` rather than improvising a larger scope.
 
@@ -251,13 +251,13 @@ Workflows dispatch isolated role agents using reusable agent profiles. This pack
 | `prover` | Produce the team completion `evidence_matrix`. | `low` | `read`, `bash` |
 | `reviewer` | Produce the team task `review_report`. | `medium` | `read`, `bash` |
 
-Bundled profiles with frontmatter set `persistent: true` when they need resumable context. The generic `subagent_spawn` tool requires a registered `agent` profile (no inventable role label), and guarded workflow execution always spawns a standard bundled profile: `ralplan_run_agent` derives the profile from its legal role (explorer/planner/architect/critic/expert) and `ultragoal_spawn_goal_agent` always spawns `worker`. Guarded workflow execution computes the legal role/task/goal first; team execution uses explicit `team_execute`/`team_resume` agent rosters. Runtime `agent`/`model`/`thinkingLevel`/`tools`/`excludeTools` overrides are refused on guarded spawns.
+Bundled profiles with frontmatter set `persistent: true` when they need resumable context. Generic `subagent_spawn` requires a registered profile and receives caller-owned role, prompt, task, metadata, and optional output-artifact contract. Ralplan selects explorer/planner/architect/critic/expert; Ultragoal selects worker. Their guards compute the legal role/task first and reject runtime model/thinking/tool overrides. Team uses explicit `team_execute`/`team_resume` rosters.
 
 Profiles are authored as markdown files with YAML frontmatter. Pi discovers them from user `~/.agent`/`~/.agents`, enabled package `agents/*.md` resources (including these), and trusted project `.agent`/`.agents` directories. Project ancestor profiles closest to the current directory win. See [docs/workflow.md](docs/workflow.md) for the full discovery rules, frontmatter fields, and the standard `.agent`/`.agents` resource layout.
 
 ## Model-Visible Tools
 
-The bundled workflow extension registers workflow-owned tools and installs Orchestrator-owned subagent tools. The combined model-visible tools include `subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, and `ultragoal_spawn_goal_agent`. Deep Interview also exposes first-class runtime tools: `deep_interview_plan_question`, `deep_interview_record_answer`, `deep_interview_record_scoring`, `deep_interview_closure_check`, `deep_interview_restate_goal`, and `deep_interview_write_spec`. Team role agents are always invoked through `@tsuuanmi/pi-orchestrator`; workflow code owns turn order, gates, and result-to-artifact handoff. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
+The bundled workflow extension registers workflow-owned tools and installs Orchestrator-owned execution tools. The combined model-visible tools include `subagent_spawn`, the `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel` lifecycle family, and `team_execute` / `team_resume`. Deep Interview also exposes first-class runtime tools: `deep_interview_plan_question`, `deep_interview_record_answer`, `deep_interview_record_scoring`, `deep_interview_closure_check`, `deep_interview_restate_goal`, and `deep_interview_write_spec`. Team role agents are always invoked through `@tsuuanmi/pi-orchestrator`; workflow code owns turn order, gates, and result-to-artifact handoff. Normal coding tools (`read`, `bash`, `edit`, `write`, `lsp`) remain available; hard filters such as explicit tool allowlists and `excludeTools` still take precedence.
 
 ## Harness Runtime
 

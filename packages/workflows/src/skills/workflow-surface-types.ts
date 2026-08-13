@@ -12,9 +12,6 @@ export interface WorkflowToolSurface {
 	skill: WorkflowSurfaceSkill;
 	toolName: string;
 	description?: string;
-	spawnOwner?: string;
-	toolOwnerId?: string;
-	guardedSpawn?: boolean;
 }
 
 export interface WorkflowSkillSurface {

@@ -9,6 +9,6 @@
 - emits start/error events with `error` or `aborted` stop reasons;
 - creates the zero-usage synthetic assistant message used by manager-backed Agents.
 
-Consumers retain domain behavior. For example, Team builds a `SubagentManagerApi.spawn()` request, while Ralplan chooses spawn versus resume and persists workflow-owned records.
+Consumers retain domain behavior. Team uses this adapter to connect its multi-task orchestrator agents to `SubagentManagerApi.spawn()`. Single-agent workflows call the generic `subagent_spawn` primitive instead of defining package-specific stream adapters.
 
-The adapter does not own the Agent loop, workflow admission, role policy, or workflow persistence. Agent owns the loop, Orchestrator owns subagent execution, and each workflow owns its policy and artifacts.
+The adapter does not own the Agent loop, workflow admission, role policy, or workflow persistence. Agent owns the loop, orchestrator owns generic execution, and each workflow owns its profile selection, prompts, state, and artifacts.

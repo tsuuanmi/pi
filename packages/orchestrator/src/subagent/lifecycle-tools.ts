@@ -2,7 +2,7 @@ import type { ExtensionAPI, ExtensionContext, ExtensionToolSpec } from "@tsuuanm
 import type { ToolResult, ToolUpdate } from "@tsuuanmi/pi-agent";
 import type { SubagentContext, SubagentDetails } from "#orchestrator/subagent/context";
 import { getSubagentManager } from "#orchestrator/subagent/registry";
-import { awaitRun, cancel, pause, resume, spawn, status, steer } from "#orchestrator/subagent/tool-execution";
+import { awaitRun, cancel, pause, resume, spawnSubagent, status, steer } from "#orchestrator/subagent/tool-execution";
 import type {
 	SubagentAwaitInput,
 	SubagentIdInput,
@@ -26,10 +26,10 @@ export const SUBAGENT_SPECS = [
 		name: "subagent_spawn",
 		label: "Subagent Spawn",
 		description:
-			"Spawn a subagent session with optional restricted tools, persistence, a hard run-time budget, and non-blocking execution.",
-		promptSnippet: "Spawn a durable subagent for isolated work",
+			"Execute a caller-configured subagent in an isolated session, optionally reading its task from a file and materializing its output as a workspace artifact.",
+		promptSnippet: "Execute a configured subagent",
 		promptGuidelines: [
-			"Use subagent_spawn when work should run in an isolated agent context.",
+			"Use subagent_spawn after the caller has resolved the agent profile, role, model, instructions, tools, task, and output contract.",
 			"For concurrent work, set detached=true, continue useful parent work, then poll with subagent_status or bounded subagent_await calls.",
 		],
 		parameters: subagentSpawnSchema,
@@ -39,7 +39,7 @@ export const SUBAGENT_SPECS = [
 			c: SubagentContext,
 			s?: AbortSignal,
 			_u?: ToolUpdate<SubagentDetails>,
-		) => spawn(p, c, s),
+		) => spawnSubagent(p, c, s),
 	},
 	{
 		name: "subagent_status",
@@ -108,7 +108,7 @@ export const SUBAGENT_SPECS = [
 ] as const;
 
 function contextOf(context: ExtensionContext): SubagentContext {
-	return { manager: getSubagentManager(context), sessionId: context.sessionManager.getSessionId() };
+	return { cwd: context.cwd, manager: getSubagentManager(context), sessionId: context.sessionManager.getSessionId() };
 }
 
 export function registerSubagentTools(host: Pick<ExtensionAPI, "registerTool">): void {

@@ -141,3 +141,14 @@ export function assertNoGuardedSpawnOverrides(input: {
 		throw new Error(`guarded workflow spawns do not accept runtime overrides: ${overrides.join(", ")}`);
 	}
 }
+
+export function guardedSpawnMetadata(expected: ExpectedNextRole): Record<string, string> {
+	return {
+		workflow: expected.skill,
+		stage: expected.stage,
+		role: expected.role,
+		owner: expected.owner,
+		...(expected.runId ? { runId: expected.runId } : {}),
+		...(expected.taskId ? { taskId: expected.taskId } : {}),
+	};
+}

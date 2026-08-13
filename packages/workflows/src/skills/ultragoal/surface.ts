@@ -9,13 +9,5 @@ export const ULTRAGOAL_SURFACE: WorkflowSkillSurface = {
 		skill: "ultragoal",
 		commandName,
 	})),
-	tools: [
-		{
-			skill: "ultragoal",
-			toolName: "ultragoal_spawn_goal_agent",
-			spawnOwner: "ultragoal_spawn_goal_agent",
-			toolOwnerId: "ultragoal_spawn_goal_agent",
-			guardedSpawn: true,
-		},
-	],
+	tools: [],
 };

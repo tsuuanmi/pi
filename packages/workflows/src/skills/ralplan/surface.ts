@@ -9,13 +9,5 @@ export const RALPLAN_SURFACE: WorkflowSkillSurface = {
 		skill: "ralplan",
 		commandName,
 	})),
-	tools: [
-		{
-			skill: "ralplan",
-			toolName: "ralplan_run_agent",
-			spawnOwner: "ralplan_run_agent",
-			toolOwnerId: "ralplan_run_agent",
-			guardedSpawn: true,
-		},
-	],
+	tools: [],
 };

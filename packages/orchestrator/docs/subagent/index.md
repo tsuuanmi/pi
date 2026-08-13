@@ -6,7 +6,7 @@ The complete subagent boundary lives under `src/subagent/`: `manager.ts` owns th
 
 ## Records and durability
 
-Each subagent is stored under the owning session's state tree:
+Each subagent is stored under the owning session's state tree (the canonical layout is owned by `@tsuuanmi/pi`; see [Canonical `.pi` Session Layout](../../../pi/docs/session/layout.md)):
 
 ```
 .pi/<session-id>/state/subagent/
@@ -18,7 +18,7 @@ Each subagent is stored under the owning session's state tree:
 
 `index.jsonl` gets one line per write with `id`, `role`, `status`, `updated_at`, and `session_file`, so the audit trail reconstructs the lifecycle without reading every `record.json`. `record.json` is written atomically (temp file + rename) and remains the lifecycle record, while `artifact.json` stores the terminal result artifact for artifact-first inspection.
 
-A `SubagentRecord` carries: `id`, `role`, `label`, `agent_profile`, `model`, `thinking_level`, `status`, `cwd`, `session_id`, `session_file`, `parent_session_id`, `resumable`, timestamps, `last_prompt_sha256`, `result_text`, `error_text`, and an optional structured `yield_result` (populated when the subagent calls the `yield` tool). An intentionally in-memory run (`persistent: false`, `resumable: false`) has no durable `session_file`; status and receipts identify that state explicitly.
+A `SubagentRecord` carries generic lifecycle fields plus optional opaque `execution_metadata` and `output_artifact` metadata. The manager persists caller metadata but never interprets workflow names, stages, roles, goals, or artifact formats. An intentionally in-memory run (`persistent: false`, `resumable: false`) has no durable `session_file`; status and receipts identify that state explicitly.
 
 `status` is one of `queued`, `running`, `paused`, `completed`, `failed`, `cancelled`. A model response stopped by its output-length limit is recorded as `failed`, with any earlier text retained as partial `result_text`, rather than as an empty successful result.
 
@@ -28,23 +28,28 @@ All lifecycle tools are registered by `registerSubagentRuntime` and resolve the 
 
 ### `subagent_spawn`
 
-Spawn an isolated agent session.
+Execute a caller-configured subagent in an isolated session.
 
 ```jsonc
 {
-  "agent": "worker",                 // required: registered agent profile name (.agent/agents, .agents/agents, user agents, or bundled package agents)
-  "prompt": "Fix the failing tests",  // required: task prompt
-  "model": "anthropic/claude-...",    // optional: provider/model override
-  "thinkingLevel": "medium",          // optional: off|minimal|low|medium|high
-  "systemPrompt": "...",              // optional: additional system instructions
-  "tools": ["read", "bash"],          // optional: allowed tool names
-  "excludeTools": ["subagent_spawn"], // optional: tool names to disable
-  "persistent": true,                 // optional: defaults to profile or true; false = in-memory session
-  "detached": false,                 // optional: return immediately after spawning
-  "maxDurationMs": 120000,           // optional: hard wall-clock run-time budget in ms; the subagent is aborted if it does not finish in time
-  "label": "test-fix"                 // optional: human-readable label
+  "agent": "worker",
+  "role": "implementation-worker",
+  "task": { "promptFile": ".pi/tasks/G001.md" },
+  "systemPrompt": "Execute only the assigned goal and report evidence.",
+  "persistent": true,
+  "detached": false,
+  "maxDurationMs": 120000,
+  "label": "goal-G001",
+  "metadata": { "workflow": "ultragoal", "taskId": "G001" },
+  "outputArtifact": {
+    "path": ".pi/reports/G001.md",
+    "mode": "create",
+    "mediaType": "text/markdown"
+  }
 }
 ```
+
+`task` contains exactly one of `prompt` or `promptFile`; file paths stay inside the workspace and cannot traverse symbolic links. `outputArtifact` is optional and separate from the runtime `artifact.json`. Create mode refuses an existing destination. Replace mode requires `expectedSha256` and fails if the current file changed. The resulting absolute path, SHA-256 digest, media type, and mode are recorded in `SubagentRecord.output_artifact`.
 
 `detached: true` returns the queued record immediately. The parent should continue useful work, poll with `subagent_status` or bounded `subagent_await` calls (`timeoutMs`), and collect the terminal result before integrating it. Non-detached spawns block until the subagent reaches a terminal status.
 
@@ -90,13 +95,7 @@ Resume a saved persistent subagent session with a follow-up message, replaying i
 {
   "id": "subagent-...",        // required
   "message": "Now also add a test", // required: follow-up message
-  "agent": "worker",           // optional: override profile
-  "model": "...",               // optional: override model
-  "thinkingLevel": "high",      // optional: override thinking level
-  "tools": [...],               // optional: override allowed tools
-  "excludeTools": [...],        // optional: override disabled tools
-  "systemPrompt": "...",        // optional: override system prompt
-  "maxDurationMs": 120000,      // optional: hard wall-clock run-time budget in ms; re-armed for this resume
+  "maxDurationMs": 120000      // optional: hard wall-clock run-time budget in ms; re-armed for this resume
 }
 ```
 
@@ -165,7 +164,7 @@ This is distinct from `subagent_await`'s `timeoutMs`, which only stops the calle
 
 ## Nesting guard
 
-Subagent sessions do **not** receive their own `SubagentManager`. A subagent cannot spawn further subagent runs; orchestration stays in the parent. The `subagent_*` tools are filtered out of a subagent's tool set. Use the parent coordinator to dispatch more workers.
+Subagent sessions do **not** receive their own `SubagentManager`. A subagent cannot spawn further subagent runs; orchestration stays in the parent. The generic execution/lifecycle tools, including `subagent_spawn` and `subagent_*`, are filtered out of a subagent's tool set. Use the parent coordinator to dispatch more workers.
 
 Subagent sessions set `ctx.skipAutomaticContinuation = true` (exposed on `ExtensionContext`) so package extensions do not re-prompt from inside a subagent.
 

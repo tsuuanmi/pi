@@ -18,7 +18,7 @@ function spawn(
 	return {
 		kind: "spawn",
 		reason,
-		expected: { skill: "ralplan", stage, role, owner: "ralplan_run_agent", runId: snapshot.runId },
+		expected: { skill: "ralplan", stage, role, owner: "ralplan", runId: snapshot.runId },
 	};
 }
 

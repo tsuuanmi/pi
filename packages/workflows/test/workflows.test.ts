@@ -8,14 +8,11 @@ import {
 	appendJsonlIdempotent,
 	assertExpectedNextRole,
 	assertNoGuardedSpawnOverrides,
-	buildRalplanRoleSystemPrompt,
-	buildRalplanTaskPrompt,
 	completeTeam,
 	createTeamTask,
 	expectedNextRalplanRole,
 	expectedNextTeamRole,
 	PI_WORKFLOW_MANIFEST,
-	planRalplanAgent,
 	type RalplanSelectorVerdict,
 	readExistingStateForMutation,
 	readFileOrLiteral,
@@ -317,9 +314,7 @@ describe("workflow runtime", () => {
 			},
 		} as never);
 
-		expect(registeredTools).toEqual(
-			expect.arrayContaining(["ralplan_run_agent", "team_execute", "team_resume", "ultragoal_spawn_goal_agent"]),
-		);
+		expect(registeredTools).toEqual(expect.arrayContaining(["team_execute", "team_resume"]));
 		expect(registeredTools).not.toContain("subagent_spawn");
 	});
 
@@ -526,55 +521,11 @@ describe("workflow runtime", () => {
 		it("refuses off-script workflow role spawns and runtime overrides", () => {
 			expect(() =>
 				assertExpectedNextRole(
-					{ skill: "ralplan", stage: "planner", role: "planner", owner: "ralplan_run_agent", runId: "run-1" },
-					{ skill: "ralplan", stage: "planner", role: "critic", owner: "ralplan_run_agent", runId: "run-1" },
+					{ skill: "ralplan", stage: "planner", role: "planner", owner: "ralplan", runId: "run-1" },
+					{ skill: "ralplan", stage: "planner", role: "critic", owner: "ralplan", runId: "run-1" },
 				),
 			).toThrow(/off-script spawn refused/);
 			expect(() => assertNoGuardedSpawnOverrides({ model: "provider/model" })).toThrow(/runtime overrides/);
-		});
-	});
-
-	describe("context templates", () => {
-		it("builds deterministic ralplan role prompts and tasks", () => {
-			const input = {
-				role: "planner" as const,
-				runId: "run-1",
-				stage: "planner",
-				stageN: 1,
-				deliberate: true,
-				contextArtifacts: ["b.md", "a.md"],
-				task: "Draft the plan",
-			};
-			expect(buildRalplanRoleSystemPrompt("planner")).toBe(buildRalplanRoleSystemPrompt("planner"));
-			expect(buildRalplanTaskPrompt(input)).toBe(buildRalplanTaskPrompt(input));
-			expect(buildRalplanTaskPrompt(input)).toContain("Context artifacts:\n- b.md\n- a.md");
-		});
-	});
-
-	describe("ralplan explorer gate", () => {
-		it("blocks planner until an explorer context_map is recorded", async () => {
-			const plannerInput = {
-				role: "planner" as const,
-				stage: "planner" as const,
-				stageN: 1,
-				runId: "explorer-run",
-				task: "Plan implementation",
-			};
-			await expect(planRalplanAgent(cwd, sessionId, plannerInput)).rejects.toThrow(/context_map/);
-			await expect(planRalplanAgent(cwd, sessionId, plannerInput)).rejects.toThrow(/human_blocked/);
-
-			const gate = await recordRalplanExplorerGateArtifact(
-				cwd,
-				{
-					runId: "explorer-run",
-					contextMap: { context_needed: false, summary: "Trivial task; bypass context." },
-				},
-				sessionId,
-			);
-			expect(gate.status).toBe("passed");
-
-			const result = await planRalplanAgent(cwd, sessionId, plannerInput);
-			expect(result.status).toBe("planned");
 		});
 	});
 
@@ -1024,7 +975,7 @@ describe("workflow runtime", () => {
 					skill: "ralplan",
 					stage: "critic",
 					role: "critic",
-					owner: "ralplan_run_agent",
+					owner: "ralplan",
 				}),
 			).toThrow(/off-script spawn refused.*role critic != architect/);
 		});

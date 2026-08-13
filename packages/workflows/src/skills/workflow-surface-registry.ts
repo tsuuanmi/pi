@@ -22,7 +22,6 @@ export function validateWorkflowSurfaceRegistry(
 	toolSurfaces: readonly WorkflowToolSurface[] = WORKFLOW_TOOL_SURFACES,
 ): void {
 	const seenToolNames = new Set<string>();
-	const seenGuardedSpawnOwners = new Set<string>();
 	for (const surface of surfaces) {
 		for (const command of surface.commands) {
 			if (!command.commandName.trim()) {
@@ -38,24 +37,5 @@ export function validateWorkflowSurfaceRegistry(
 			throw new Error(`duplicate workflow toolName registered: ${tool.toolName}`);
 		}
 		seenToolNames.add(tool.toolName);
-		if (!tool.guardedSpawn) {
-			if (tool.spawnOwner || tool.toolOwnerId) {
-				throw new Error(`unguarded workflow tool must not declare spawnOwner/toolOwnerId: ${tool.toolName}`);
-			}
-			continue;
-		}
-		if (!tool.spawnOwner) {
-			throw new Error(`guarded workflow tool is missing spawnOwner: ${tool.toolName}`);
-		}
-		if (!tool.toolOwnerId) {
-			throw new Error(`guarded workflow tool is missing toolOwnerId: ${tool.toolName}`);
-		}
-		if (tool.toolOwnerId !== tool.spawnOwner) {
-			throw new Error(`guarded workflow spawnOwner/toolOwnerId mismatch: ${tool.toolName}`);
-		}
-		if (seenGuardedSpawnOwners.has(tool.spawnOwner)) {
-			throw new Error(`duplicate guarded workflow spawnOwner registered: ${tool.spawnOwner}`);
-		}
-		seenGuardedSpawnOwners.add(tool.spawnOwner);
 	}
 }

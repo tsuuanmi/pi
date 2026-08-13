@@ -1,18 +1,14 @@
 import { appendFile, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import type { SubagentRunRequest, SubagentRunResult } from "@tsuuanmi/pi-orchestrator";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
-	planRalplanAgent,
 	ralplanIndexPath,
 	readRalplanStatus,
 	readWorkflowActiveState,
 	readWorkflowState,
-	recordRalplanExplorerGateArtifact,
 	roleForStage,
-	runRalplanStage,
 	writeRalplanArtifact,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -177,95 +173,10 @@ describe("ralplan workflow runtime", () => {
 		expect(active?.active_workflows.some((entry) => entry.skill === "ultragoal")).toBe(true);
 	});
 
-	it("records ralplan role-agent invocations", async () => {
+	it("maps workflow stages to caller-owned agent profiles", () => {
+		expect(roleForStage("pre-planner")).toBe("explorer");
 		expect(roleForStage("revision")).toBe("planner");
-		const result = await planRalplanAgent(cwd, sessionId, {
-			role: "architect",
-			runId: "run-6",
-			stage: "architect",
-			stageN: 2,
-			task: "Review the persisted planner artifact.",
-			contextArtifacts: [".pi/plans/ralplan/run-6/stage-01-planner.md"],
-		});
-
-		expect(result.status).toBe("planned");
-		expect(result.role).toBe("architect");
-		expect(result.record_path).toContain(".pi/test-session-id/workflows/ralplan/agents/");
-		expect(result.output).toContain("Context artifacts");
-	});
-
-	it("runs ralplan role agents through the subagent manager when available", async () => {
-		let spawnPrompt = "";
-		const subagentResult: SubagentRunResult = {
-			record: {
-				id: "subagent-planner-1",
-				role: "ralplan:planner",
-				cwd,
-				status: "completed",
-				resumable: true,
-				created_at: "2026-01-01T00:00:00.000Z",
-				updated_at: "2026-01-01T00:00:01.000Z",
-			},
-			messages: [],
-			output: "planner receipt",
-		};
-		await recordRalplanExplorerGateArtifact(
-			cwd,
-			{ runId: "run-subagent", contextMap: { context_needed: false, summary: "No extra context required." } },
-			sessionId,
-		);
-		const result = await runRalplanStage({
-			cwd,
-			sessionId,
-			role: "planner",
-			runId: "run-subagent",
-			stage: "planner",
-			stageN: 1,
-			task: "Plan it.",
-			manager: {
-				spawn: async (request: SubagentRunRequest) => {
-					spawnPrompt = request.prompt;
-					return subagentResult;
-				},
-				resume: async () => ({ ok: false, reason: "not_found" }),
-			},
-			verifyArtifact: async () => true,
-		});
-
-		expect(spawnPrompt).toContain("Run id: run-subagent");
-		expect(result.agent.status).toBe("completed");
-		expect(result.agent.planner_subagent_id).toBe("subagent-planner-1");
-		expect(result.agent.output).toBe("planner receipt");
-	});
-
-	it("fails clearly when planner resume is unavailable", async () => {
-		const calls: string[] = [];
-		await expect(
-			runRalplanStage({
-				cwd,
-				sessionId,
-				role: "planner",
-				runId: "run-resume",
-				stage: "revision",
-				stageN: 2,
-				task: "Revise it.",
-				plannerSubagentId: "old-planner",
-				attemptResume: true,
-				manager: {
-					resume: async () => {
-						calls.push("resume");
-						return { ok: false, reason: "context_unavailable" };
-					},
-					spawn: async () => {
-						calls.push("spawn");
-						throw new Error("spawn should not be called");
-					},
-				},
-				verifyArtifact: async () => true,
-			}),
-		).rejects.toThrow("ralplan planner resume failed: context_unavailable");
-
-		expect(calls).toEqual(["resume"]);
+		expect(roleForStage("expert-stage")).toBe("expert");
 	});
 
 	it("persists planner identity metadata", async () => {

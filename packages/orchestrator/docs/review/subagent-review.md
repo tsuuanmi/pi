@@ -87,7 +87,7 @@ dirs accumulate indefinitely.
 ### 3.7 Minor
 - `resume()` collapses errors into `resume_failed` with no root cause surfaced.
 - `pause()` after a run already completed still reports `ok: true` even though the record is `completed`.
-- Nested subagents are disabled by stripping `subagent_*` tools (safe, but no recursive fan-out by default).
+- Nested subagents are disabled by stripping `subagent_spawn` and `subagent_*` lifecycle tools (safe, but no recursive fan-out by default).
 
 ---
 
@@ -215,7 +215,7 @@ and system prompt. Spawning a subagent should follow that definition strictly fo
 merges its `systemPrompt`, `tools`, `model`, `thinkingLevel`, `persistent`. So the profile **is** applied.
 But it is applied **loosely**:
 - `request.tools`/`excludeTools`/`model`/`thinkingLevel`/`systemPrompt` can override the profile on every
-  spawn, and callers (e.g. the ralplan adapter) routinely override the system prompt and thinking level.
+  spawn; workflow callers deliberately provide per-stage instructions while generic execution remains policy-free.
 - Nothing validates that the chosen profile is a known role, or that requested overrides are compatible
   with the role's allowlist.
 - `role` and `agent` (profile) are independent fields; a spawn can name a role but use a different or no
@@ -254,10 +254,9 @@ Ship **B1 + B3 together** as the first strictness wave:
   role, closing the "prompt-only" gap.
 Then layer **B2 (role manifest / whitelist / scoped permissions)** on top for coordination policy.
 
-**Note on the ralplan adapter:** it currently overrides `systemPrompt` via `buildRalplanRoleSystemPrompt`
-and its own `tools`/`excludeTools`. Strict binding must preserve the ability for a **coordinator** to set
-the per-stage system prompt and tool set deliberately. Design B1 as "profile is the default; an explicit
-coordinator-approved override wins," so workflow orchestrators keep control.
+**Note on workflow callers:** guarded workflows provide explicit per-stage `systemPrompt` and task data to
+`subagent_spawn`. Strict binding must preserve the ability for a trusted workflow coordinator to set those
+instructions deliberately while rejecting untrusted runtime model/tool overrides.
 
 ---
 
@@ -285,8 +284,7 @@ coordinator-approved override wins," so workflow orchestrators keep control.
    goal ledger)? Who owns building/refreshing it?
 4. For B1, how strict should overrides be? Narrowing tools = allowed; widening tools = blocked unless an
    explicit `lockProfile: false`? Who is the trusted override caller (coordinator vs. raw user)?
-5. Does strict role binding need to apply to the workflow `agent-adapter.ts` spawn/resume path today, or
-   only to new spawns going forward?
+5. Should strict role binding be enforced by generic execution or only by workflow-owned pre-spawn policy?
 6. Should the role manifest live in `packages/orchestrator` (generic) or `packages/workflows`
    (domain roles)? Prefer workflows for the domain roles; orchestrator stays generic.
 
@@ -310,5 +308,5 @@ coordinator-approved override wins," so workflow orchestrators keep control.
 - `packages/orchestrator/CHANGELOG.md` — release notes
 - `packages/workflows/src/agents/*.md` — role agent definitions (worker, explorer, planner, architect,
   critic, expert, reviewer, prover)
-- `packages/workflows/src/skills/ralplan/agent-adapter.ts` — example spawn/resume consumer
-- `packages/workflows/src/skills/ralplan/agent-roles.ts` — role → profile mapping and task prompts
+- `packages/workflows/src/skills/ralplan/agent-execution.ts` — workflow-owned admission and terminal validation
+- `packages/workflows/src/skills/ralplan/agent-roles.ts` — stage-to-role mapping

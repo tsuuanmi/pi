@@ -22,7 +22,7 @@ describe("workflow extension composition", () => {
 
 		workflowExtension(host);
 
-		expect(tools).toContain("ralplan_run_agent");
+		expect(tools).toContain("subagent_spawn");
 		expect(hooks).toContain("tool_call");
 		expect(hudProviders).toHaveLength(2);
 		expect(

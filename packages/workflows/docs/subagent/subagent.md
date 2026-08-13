@@ -1,45 +1,36 @@
-# Workflow and Subagent Integration
+# Workflow and Agent Execution Integration
 
-`@tsuuanmi/pi-orchestrator` owns the complete session-aware subagent boundary. A Pi-hosted subagent wraps the generic `Agent` from `@tsuuanmi/pi-agent` with an isolated `AgentSession`, persistence, resource loading, lifecycle controls, native execution, and durable inspection.
+`@tsuuanmi/pi-orchestrator` owns the general session-aware agent execution core. It creates isolated `AgentSession` instances, persists generic lifecycle records, captures output, implements await/steer/pause/resume/cancel, and exposes durable inspection.
 
-The workflow package owns workflow policy, role guards, artifact persistence, and runtime composition. It consumes `SubagentManagerApi` and related request/result types from `@tsuuanmi/pi-orchestrator`. It does not define a second subagent contract, manager, or fallback path.
+`@tsuuanmi/pi-workflows` owns workflow meaning: legal role/goal selection, bundled profile choice, model/tool policy, system prompts, detailed tasks, semantic artifacts, completion validation, and workflow state transitions. It consumes the public orchestrator API and does not define a second manager or execution backend.
 
-## Ownership
-
-- `@tsuuanmi/pi-agent`: generic `Agent`, model/thinking-level types, messages, tools, and agent-loop contracts.
-- `@tsuuanmi/pi`: the main application session, session services, resource loading, settings, auth, and extension host.
-- `@tsuuanmi/pi-orchestrator`: `SubagentManager`, records/requests/results, lifecycle schemas and execution, receipts, progress, yield extraction, persistence, native execution, and durable inspection.
-- `src/tool/context.ts`: workflow context with the orchestrator-provided `SubagentManagerApi`.
-- `src/skills/*/`: workflow policy, role guards, artifact persistence, and orchestrator integration.
-- `src/tool/surface.ts`: static workflow discoverability for orchestrator-owned lifecycle tools.
-
-The workflow extension installs the authoritative orchestrator runtime with `registerSubagentRuntime`; it does not reimplement lifecycle tools. Workflow-specific tools receive the same manager through their `WorkflowContext`.
-
-## Model-Visible Tools
-
-The orchestrator runtime registers these lifecycle tools:
+## Model-visible execution tools
 
 | Tool | Purpose |
 |------|---------|
-| `subagent_spawn` | Spawn a Pi-native subagent. |
-| `subagent_status` | List or inspect durable subagent records. |
-| `subagent_await` | Await a live subagent or read its terminal result. |
-| `subagent_steer` | Steer a live or saved subagent. |
-| `subagent_pause` | Pause a running subagent at a safe boundary. |
-| `subagent_resume` | Resume a persistent saved subagent context. |
-| `subagent_cancel` | Cancel a live or durable subagent record. |
+| `subagent_spawn` | Execute a fully configured agent request. The task may be inline or loaded from a workspace file; captured assistant output may be written atomically to a caller-selected workspace path. |
+| `subagent_status` | List or inspect generic durable execution records. |
+| `subagent_await` | Await a live run or read its terminal result. |
+| `subagent_steer` | Steer a live or saved run. |
+| `subagent_pause` | Pause a running agent at a safe boundary. |
+| `subagent_resume` | Resume a persistent saved context. |
+| `subagent_cancel` | Cancel a live or durable record. |
+| `subagent_inspect` | Inspect generic durable execution state. |
 
-The workflow package registers only its workflow tools: Deep Interview, Ralplan, Team, and Ultragoal. Workflow tools that execute agents call the Pi manager in their `WorkflowContext`; they do not construct a manager.
+`subagent_spawn` accepts the already-resolved profile, role, model/thinking overrides, system prompt, tool policy, task, persistence, opaque metadata, and optional output-artifact contract. Orchestrator persists metadata but never interprets workflow names, stages, goals, or artifact formats.
 
-## Guarded Workflow Execution
+`outputArtifact` is separate from the orchestrator-owned runtime `artifact.json`. The runtime artifact always remains under `.pi/<session-id>/state/subagent/<id>/artifact.json`; caller-selected output is an additional text artifact whose path and SHA-256 digest are recorded in `SubagentRecord.output_artifact`. Create mode refuses existing paths. Replace mode requires the current SHA-256 digest. Paths must remain inside the workspace and may not traverse symbolic links.
 
-- Ralplan computes the legal next role/stage from its run artifacts before `ralplan_run_agent` proceeds.
-- Team computes the expected worker/reviewer/prover role before execution proceeds.
-- Ultragoal computes the expected goal before `ultragoal_spawn_goal_agent` proceeds.
+## Guarded workflow execution
 
-These guards are workflow policy. Subagent lifecycle, isolated session creation, persistence, and cancellation remain orchestrator responsibilities; the main application session remains Pi-owned.
+- Ralplan computes the legal next role and stage, selects the matching bundled profile, supplies Ralplan prompts/task metadata, and validates the terminal workflow artifact. Role agents persist canonical artifacts through `pi workflow ralplan record-explorer-gate` or `write-artifact`.
+- Ultragoal computes the legal active goal, selects the `worker` profile, supplies the goal prompt and metadata, and retains checkpoint state as its authority.
+- Team keeps `team_execute` and `team_resume` because they are multi-task orchestrator operations, not single-agent spawn aliases.
+- Deep Interview uses generic `subagent_spawn` for read-only research and lateral personas.
 
-## Context Boundary
+The workflow extension installs the authoritative orchestrator runtime and registers pre/post execution hooks. Pre-spawn hooks validate guarded Ralplan/Ultragoal metadata and reject runtime profile overrides. Post-result hooks persist workflow-owned execution records and fail closed when a completed Ralplan run did not produce a valid workflow artifact.
+
+## Package boundary
 
 ```typescript
 interface WorkflowContext {
@@ -50,8 +41,4 @@ interface WorkflowContext {
 }
 ```
 
-`WorkflowContext.subagent` is the orchestrator-owned `SubagentManagerApi` resolved from Pi's generic extension session services. Workflow code may use it for an approved agent operation, but it must not create, discover, or replace the manager. Team execution also requires the host's active `model`; it fails before orchestration when no model is available.
-
-## Package Boundary
-
-`@tsuuanmi/pi-workflows` depends on the public Pi and orchestrator package entry points. It must not import `#pi/*` or `#orchestrator/*` internals. Pi depends on neither orchestrator nor workflows; orchestrator depends on public Pi APIs, so the graph remains acyclic.
+Workflows depend only on public Pi and orchestrator package exports. They do not import orchestrator internals, create managers, or duplicate generic lifecycle state. Orchestrator does not import workflow policy, profiles, or artifact schemas.

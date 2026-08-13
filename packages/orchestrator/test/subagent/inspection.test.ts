@@ -4,7 +4,7 @@ import { registerSubagentInspection } from "#orchestrator/subagent/inspection";
 import { registerSubagentTools } from "#orchestrator/subagent/lifecycle-tools";
 
 describe("orchestrator subagent lifecycle registration", () => {
-	it("registers the seven lifecycle tools", () => {
+	it("registers the generic spawn and six lifecycle tools", () => {
 		const names: string[] = [];
 		const guidelines = new Map<string, string[]>();
 		const host = {

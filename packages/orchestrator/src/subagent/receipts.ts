@@ -33,6 +33,10 @@ export function createSubagentListReceipt(sessionId: string, count: number): Str
 
 export function createSubagentReceipt(record: SubagentRecord, sessionId: string): StructuredReceipt {
 	const inspect: StructuredReceiptInspectEntry[] = [{ label: "session", kind: "session", value: sessionId }];
+	if (record.artifact_file) inspect.push({ label: "runtime artifact", kind: "path", value: record.artifact_file });
+	if (record.output_artifact) {
+		inspect.push({ label: "output artifact", kind: "path", value: record.output_artifact.path });
+	}
 	const startedAt = record.started_at;
 	const endedAt = record.completed_at;
 	const started = startedAt ? Date.parse(startedAt) : undefined;
@@ -66,6 +70,8 @@ export function createSubagentReceipt(record: SubagentRecord, sessionId: string)
 			thinking_level: record.thinking_level,
 			max_duration_ms: record.max_duration_ms,
 			last_prompt_sha256: record.last_prompt_sha256,
+			output_artifact_sha256: record.output_artifact?.sha256,
+			output_artifact_media_type: record.output_artifact?.media_type,
 			session_id: record.session_id,
 			session_file: record.session_file,
 			session_storage: sessionStorage(record),

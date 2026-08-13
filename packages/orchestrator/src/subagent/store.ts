@@ -92,6 +92,8 @@ export class SubagentStore {
 			status: record.status,
 			result_text: record.result_text,
 			error_text: record.error_text,
+			output_artifact: record.output_artifact,
+			execution_metadata: record.execution_metadata,
 			yield_result: record.yield_result,
 			completed_at: record.completed_at,
 		});

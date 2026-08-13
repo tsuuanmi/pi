@@ -258,6 +258,30 @@ describe("SubagentManager live spawn and resume", () => {
 		});
 	});
 
+	it("reads task files and records caller-selected output artifacts", async () => {
+		testProvider.setResponses([testAssistantMessage("# Generated plan\n")]);
+		await writeFile(join(cwd, "task.md"), "Generate the plan", "utf8");
+		const result = await manager.spawn({
+			role: "planner",
+			promptFile: "task.md",
+			cwd,
+			storageSessionId: TEST_SESSION,
+			persistent: false,
+			metadata: { workflow: "ralplan", stage: "planner", stageN: 1 },
+			outputArtifact: { path: ".pi/generated/plan.md", mode: "create", mediaType: "text/markdown" },
+		});
+
+		expect(await readFile(join(cwd, ".pi/generated/plan.md"), "utf8")).toContain("# Generated plan");
+		expect(result.record.output_artifact).toMatchObject({
+			path: join(cwd, ".pi/generated/plan.md"),
+			media_type: "text/markdown",
+			mode: "create",
+		});
+		expect(result.record.execution_metadata).toEqual({ workflow: "ralplan", stage: "planner", stageN: 1 });
+		const runtimeArtifact = JSON.parse(await readFile(result.record.artifact_file!, "utf8"));
+		expect(runtimeArtifact.output_artifact).toEqual(result.record.output_artifact);
+	});
+
 	it("enforces and persists the hard run-time budget", async () => {
 		let resolveResponse: ((message: ReturnType<typeof testAssistantMessage>) => void) | undefined;
 		const response = new Promise<ReturnType<typeof testAssistantMessage>>((resolve) => {

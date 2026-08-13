@@ -16,12 +16,11 @@ function selectNextRalplanRole(state: RalplanSelectorState | undefined, runId: s
 		(typeof state?.iterateCount === "number" && state.iterateCount >= iterateCap)
 	) {
 		if (expertCount >= expertCap) return undefined;
-		return { skill: "ralplan", stage: "expert-stage", role: "expert", owner: "ralplan_run_agent", runId };
+		return { skill: "ralplan", stage: "expert-stage", role: "expert", owner: "ralplan", runId };
 	}
 
 	const explorer = state?.explorerGate;
-	if (!explorer)
-		return { skill: "ralplan", stage: "pre-planner", role: "explorer", owner: "ralplan_run_agent", runId };
+	if (!explorer) return { skill: "ralplan", stage: "pre-planner", role: "explorer", owner: "ralplan", runId };
 	if (explorer) {
 		if (explorer.status === "human_blocked") {
 			if (expertCount >= expertCap) return undefined;
@@ -29,34 +28,34 @@ function selectNextRalplanRole(state: RalplanSelectorState | undefined, runId: s
 				skill: "ralplan",
 				stage: "expert-stage",
 				role: "expert",
-				owner: "ralplan_run_agent",
+				owner: "ralplan",
 				runId,
 			};
 		}
 		if (explorer.status !== "passed") {
-			return { skill: "ralplan", stage: "pre-planner", role: "explorer", owner: "ralplan_run_agent", runId };
+			return { skill: "ralplan", stage: "pre-planner", role: "explorer", owner: "ralplan", runId };
 		}
 	}
 
 	const latest = state?.latest;
 	if (!latest) {
-		return { skill: "ralplan", stage: "planner", role: "planner", owner: "ralplan_run_agent", runId };
+		return { skill: "ralplan", stage: "planner", role: "planner", owner: "ralplan", runId };
 	}
 	switch (latest.stage) {
 		case "planner":
 		case "revision":
-			return { skill: "ralplan", stage: "architect", role: "architect", owner: "ralplan_run_agent", runId };
+			return { skill: "ralplan", stage: "architect", role: "architect", owner: "ralplan", runId };
 		case "architect":
-			return { skill: "ralplan", stage: "critic", role: "critic", owner: "ralplan_run_agent", runId };
+			return { skill: "ralplan", stage: "critic", role: "critic", owner: "ralplan", runId };
 		case "critic": {
 			const v = latest.verdict;
 			if (v?.role === "critic") {
 				if (v.verdict === "approve") return undefined;
 				if (v.verdict === "iterate" || v.verdict === "reject") {
-					return { skill: "ralplan", stage: "revision", role: "planner", owner: "ralplan_run_agent", runId };
+					return { skill: "ralplan", stage: "revision", role: "planner", owner: "ralplan", runId };
 				}
 			}
-			return { skill: "ralplan", stage: "critic", role: "critic", owner: "ralplan_run_agent", runId };
+			return { skill: "ralplan", stage: "critic", role: "critic", owner: "ralplan", runId };
 		}
 		case "adr":
 		case "final":

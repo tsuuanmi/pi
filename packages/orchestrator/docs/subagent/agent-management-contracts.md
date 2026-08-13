@@ -183,6 +183,6 @@ Transparency comes from current-session records, receipts, retained progress, se
 | 1B | Phase 1A has a working metadata/diagnostics implementation for agents. |
 | 2 | Scoped registry key and durable-state boundary are implemented or stubbed with tests. |
 | 3 | Registry isolation passes; `awaitReply` remains gated until side-channel semantics are documented and tested. |
-| 4 | Canonical model-facing task API is selected: `task`, evolved `subagent_*`, or temporary dual surface. |
+| 4 | Canonical single-agent execution surface is `subagent_spawn`; `subagent_*` remains the generic lifecycle family. |
 | 5 | Task receipt shape and hidden/custom/system-message context policy are stable. |
 | 6 | Mandatory surrounding surfaces for a final parity claim are enumerated by ADR/ROI score. |

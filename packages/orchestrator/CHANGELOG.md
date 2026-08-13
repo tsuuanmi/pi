@@ -2,11 +2,13 @@
 
 ### Breaking Changes
 
+- **subagent**: Changed `subagent_spawn` task input from `prompt` to `task.prompt` or `task.promptFile`.
 - **subagent**: Moved the complete session-aware subagent API and implementation from `@tsuuanmi/pi`; consumers must import it from `@tsuuanmi/pi-orchestrator`.
 - **orchestrator**: Replaced mixed task helper types with focused dependency graph contracts and removed internal prompt/result types from the package root.
 
 ### Added
 
+- **subagent**: Added opaque execution metadata and atomic caller-selected output artifacts with workspace confinement, create-only mode, and hash-guarded replacement.
 - **subagent**: Added isolated Pi sessions, persistence, lifecycle tools, durable inspection, receipts, and active HUD data.
 - **subagent**: Added persisted `maxDurationMs` run budgets that abort overdue spawn and resume runs with diagnostic timeout failures.
 - **orchestrator**: Added `@tsuuanmi/pi-orchestrator` as the isolated package for task, team, and orchestrator contracts previously hosted in `@tsuuanmi/pi-agent`.

@@ -14,7 +14,6 @@ export * from "#workflows/audit/transaction-journal";
 // Workflow commands
 export { handleWorkflowCommand, runStateCommand, runWorkflowCommand } from "#workflows/commands/workflow";
 export * from "#workflows/handoff/handoff";
-export * from "#workflows/policy/context-templates";
 export * from "#workflows/policy/expected-next-role";
 export * from "#workflows/policy/gate-verdicts";
 export * from "#workflows/policy/skill-policy";
@@ -51,33 +50,17 @@ export * from "#workflows/skills/deep-interview/spec";
 export * from "#workflows/skills/deep-interview/tools";
 export * from "#workflows/skills/deep-interview/transitions";
 export * from "#workflows/skills/deep-interview/types";
-export type { RalplanAgentRecord } from "#workflows/skills/ralplan/agent-record";
-export {
-	createRalplanAgentRequest,
-	type RalplanAgentInput,
-	type RalplanAgentRequest,
-	type RalplanAgentRole,
-	roleForStage,
-} from "#workflows/skills/ralplan/agent-roles";
+export { type RalplanAgentRole, roleForStage } from "#workflows/skills/ralplan/agent-roles";
 export { approveRalplanPlan } from "#workflows/skills/ralplan/approval";
 export { writeRalplanArtifact } from "#workflows/skills/ralplan/artifacts";
 export * from "#workflows/skills/ralplan/completion-transaction";
 export { doctorRalplan } from "#workflows/skills/ralplan/doctor";
 export * from "#workflows/skills/ralplan/expected-action";
 export * from "#workflows/skills/ralplan/gates";
-export {
-	assertRalplanApprovalTarget,
-	assertRalplanRole,
-} from "#workflows/skills/ralplan/guards";
+export { assertRalplanApprovalTarget } from "#workflows/skills/ralplan/guards";
 export { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 export * from "#workflows/skills/ralplan/obstacles";
 export * from "#workflows/skills/ralplan/orchestration-snapshot";
-export {
-	planRalplanAgent,
-	type RalplanStageInput,
-	type RalplanStageResult,
-	runRalplanStage,
-} from "#workflows/skills/ralplan/orchestrator";
 export type {
 	RalplanApprovalTarget,
 	RalplanApproveResult,

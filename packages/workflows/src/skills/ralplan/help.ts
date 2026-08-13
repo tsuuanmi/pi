@@ -22,7 +22,7 @@ export const RALPLAN_SKILL_HELP: WorkflowSkillHelp = {
 	],
 	agentFlow: [
 		"Read/initialize ralplan state, then `status`; run `doctor` if resuming or inconsistent.",
-		"Run Explorer/Planner/Architect/Critic via `ralplan_run_agent`; role agents persist artifacts with workflow commands.",
+		"Run Explorer/Planner/Architect/Critic through generic `subagent_spawn`; Ralplan selects profiles, prompts, metadata, and artifact commands.",
 		"Use `write-artifact` for planner/architect/critic/revision/expert/final artifacts.",
 		"Stop at pending approval; only call `approve-plan` after explicit user approval/rejection.",
 	],

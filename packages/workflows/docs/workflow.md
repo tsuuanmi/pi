@@ -162,11 +162,11 @@ Phase 1A recognizes but does not implement some reserved fields. `forkContext`, 
 
 Legacy JSON profile files such as `<agentDir>/agents/<name>.json` and `.pi/agents/<name>.json` are no longer loaded. Use markdown profiles under `.agent/agents` or `.agents/agents` instead.
 
-Per-invocation overrides such as `model`, `thinkingLevel`, `tools`, and `excludeTools` are accepted by the model-visible spawn tools when their schemas expose them. State-guarded ultragoal spawns refuse runtime overrides; team execution always enters the orchestrator coordinator so the harness can enforce the computed next role deterministically.
+Per-invocation overrides such as `model`, `thinkingLevel`, `tools`, and `excludeTools` are accepted by generic `subagent_spawn`. Guarded Ralplan and Ultragoal calls reject these runtime overrides because workflow-owned profiles define their execution policy. Team execution enters the orchestrator coordinator so the harness can enforce the computed next role deterministically.
 
 ## Model-visible workflow tools
 
-Model-visible workflow tools are registered separately from `pi workflow` commands. Workflow tools (`subagent_spawn` / `subagent_status` / `subagent_await` / `subagent_steer` / `subagent_pause` / `subagent_resume` / `subagent_cancel`, `ralplan_run_agent`, `team_execute`, `team_resume`, `ultragoal_spawn_goal_agent`) are registered by the bundled workflow registration. Team roles always execute through `@tsuuanmi/pi-orchestrator`; workflow code owns turn order, gates, and result-to-artifact handoff.
+The bundled extension registers orchestrator's generic `subagent_spawn` plus the `subagent_*` lifecycle family. Ralplan and Ultragoal no longer register single-agent spawn wrappers: they validate workflow metadata around generic execution. `team_execute` and `team_resume` remain workflow tools because they coordinate a full multi-task roster.
 
 The command surface remains the external control plane for state, artifacts, gates, status, approval, lifecycle, inspection, and recovery. A command and a tool may expose related behavior, but a matching operation is implemented through shared runtime or skill functions rather than by invoking the other adapter. See [Command and tool boundary](#command-and-tool-boundary).
 
@@ -178,7 +178,7 @@ Team execution tools read the session id from `ctx.sessionManager.getSessionId()
 
 ## HUD visibility for command-created sessions
 
-The interactive status line reads session-scoped workflow active state (`.pi/<session-id>/workflows/active-state.json`) on a 1s refresh and renders the HUD for the current interactive session only. The package extension registers workflow HUD synchronization through `@tsuuanmi/pi-workflows/extension` and `@tsuuanmi/pi-tui`; the status line is the single source of truth.
+The interactive status line reads session-scoped workflow active state (`.pi/<session-id>/skills/active-state.json` in the canonical layout) on a 1s refresh and renders the HUD for the current interactive session only. The package extension registers workflow HUD synchronization through `@tsuuanmi/pi-workflows/extension` and `@tsuuanmi/pi-tui`; the status line is the single source of truth.
 
 Behavior:
 - Only the active/attached interactive session shows its own workflow in the HUD.

@@ -19,7 +19,7 @@ Critical: before running any `pi workflow ultragoal <action>` command, read [ref
 
 - Before constructing any `pi workflow ...` command, obtain the current session id by calling `ctx.sessionManager.getSessionId()`. Use that returned value as `sessionId` in every action payload; never inspect `PI_SESSION_ID`, infer an id from `.pi`, or substitute a placeholder. `--session` applies only to the separate state command.
 - Keep all Ultragoal state, goal ledger, checkpoint receipts, checkpoint snapshots, and blocker records under one session id for one logical goal run. Do not scatter one run across multiple `.pi/<session-id>` buckets.
-- `ultragoal_spawn_goal_agent` is a guarded spawn tool that spawns an ultragoal worker as an ordinary subagent of the main session. The workflow computes the legal next goal and refuses off-script goal ids or runtime model/tool overrides. The spawn happens in-process in the main session; there is no `pi workflow` command for it.
+- Ultragoal delegates execution to generic `subagent_spawn` after the workflow selects the legal next goal. Use `agent: "worker"`, `role: "worker"`, an explicit Ultragoal `systemPrompt`, the complete goal task, and metadata `{ "workflow":"ultragoal", "owner":"ultragoal", "stage":"goal-worker", "role":"worker", "taskId":"<active-goal-id>" }`. The workflow guard refuses off-script goal ids or runtime model/tool overrides.
 
 ## Boundaries
 
@@ -34,18 +34,19 @@ Critical: before running any `pi workflow ultragoal <action>` command, read [ref
 2. Read active state with `pi workflow state ultragoal read`. If no state exists and you have an approved plan, initialize it with `pi workflow state ultragoal write`: `active: true`, `phase: "approved-execution"`, `data.input` set to the plan path or task. For the exact CLI/session/input split, see [State commands](../../state/commands.md).
 3. Create or resume runtime goal state with `pi workflow ultragoal status --input '{"sessionId":"<current-session>"}' --json` and `pi workflow ultragoal create-plan --input '{"sessionId":"<current-session>","brief":"approved goal..."}' --json` when no plan exists. The plan keeps one main goal and decomposes execution into smaller task goals.
 4. Start the next runnable task goal with `pi workflow ultragoal start-next --input '{"sessionId":"<current-session>"}' --json` before implementation.
-5. Inspect relevant files before editing.
-6. Make the smallest complete set of changes.
-7. Keep a running checklist internally:
+5. Delegate that active goal with `subagent_spawn` using the worker profile and exact Ultragoal metadata above. Do not set runtime `model`, `thinkingLevel`, `tools`, or `excludeTools` overrides; the workflow-owned worker profile defines them. `outputArtifact` may capture the worker's final report at a caller-selected workspace path, but checkpoints remain the authoritative goal state.
+6. The worker inspects relevant files before editing.
+7. Make the smallest complete set of changes.
+8. Keep a running checklist internally:
    - implementation
    - tests/docs as needed
    - verification
    - cleanup
-8. Run required checks and fix failures.
-9. Checkpoint each task goal with `pi workflow ultragoal checkpoint --input '{"sessionId":"<current-session>","goalId":"goal-1","status":"active","evidence":"..."}' --json`. Each accepted checkpoint writes a restore snapshot of Ultragoal state. Complete checkpoints require substantive evidence and the full quality gate: `architectReview`, `executorQa`, and `iteration`. Old `executorQa + contractCoverage` top-level gates and free-form `{status}` gates are rejected.
-10. If a later task fails and you need to retry from the last successful task state, use `pi workflow ultragoal restore-checkpoint --input '{"sessionId":"<current-session>"}' --json`. Restore is state-only: it restores Ultragoal plan/workflow state, but never rolls back workspace files.
-11. Use `pi workflow ultragoal record-obstacle` with typed evidence when review/verification finds a durable obstacle that must become follow-up work, and use `pi workflow ultragoal classify-blocker` with the schema payload only when a `failed`/`blocked` checkpoint is truly human-blocked.
-12. Report:
+9. Run required checks and fix failures.
+10. Checkpoint each task goal with `pi workflow ultragoal checkpoint --input '{"sessionId":"<current-session>","goalId":"goal-1","status":"active","evidence":"..."}' --json`. Each accepted checkpoint writes a restore snapshot of Ultragoal state. Complete checkpoints require substantive evidence and the full quality gate: `architectReview`, `executorQa`, and `iteration`. Old `executorQa + contractCoverage` top-level gates and free-form `{status}` gates are rejected.
+11. If a later task fails and you need to retry from the last successful task state, use `pi workflow ultragoal restore-checkpoint --input '{"sessionId":"<current-session>"}' --json`. Restore is state-only: it restores Ultragoal plan/workflow state, but never rolls back workspace files.
+12. Use `pi workflow ultragoal record-obstacle` with typed evidence when review/verification finds a durable obstacle that must become follow-up work, and use `pi workflow ultragoal classify-blocker` with the schema payload only when a `failed`/`blocked` checkpoint is truly human-blocked.
+13. Report:
    - changed files
    - verification results
    - any unresolved risks or follow-ups

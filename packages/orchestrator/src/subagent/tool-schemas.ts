@@ -3,14 +3,21 @@ import { type Static, Type } from "typebox";
 export const subagentSpawnSchema = Type.Object({
 	agent: Type.String({
 		description:
-			"Required agent profile identifier. Must be a registered agent profile loaded by the host (from .agent/agents, .agents/agents, user agents, or enabled package agents such as the bundled workflows profiles).",
+			"Required agent profile identifier. The caller resolves workflow role, model, instructions, and tool policy before spawning.",
 	}),
-	prompt: Type.String({ description: "User task prompt for the subagent." }),
+	role: Type.Optional(Type.String({ description: "Caller-defined execution role recorded with the generic run." })),
+	task: Type.Union([
+		Type.Object({ prompt: Type.String({ description: "Inline task prompt." }) }, { additionalProperties: false }),
+		Type.Object(
+			{ promptFile: Type.String({ description: "Workspace-relative path to a task prompt file." }) },
+			{ additionalProperties: false },
+		),
+	]),
 	model: Type.Optional(Type.String({ description: "Override the selected model as provider/model." })),
 	thinkingLevel: Type.Optional(Type.String({ description: "Override the selected thinking level." })),
-	systemPrompt: Type.Optional(Type.String({ description: "Additional role/system instructions." })),
-	tools: Type.Optional(Type.Array(Type.String({ description: "Allowed tool names for this subagent." }))),
-	excludeTools: Type.Optional(Type.Array(Type.String({ description: "Tool names to disable for this subagent." }))),
+	systemPrompt: Type.Optional(Type.String({ description: "Caller-defined system instructions." })),
+	tools: Type.Optional(Type.Array(Type.String({ description: "Allowed tool names for this agent." }))),
+	excludeTools: Type.Optional(Type.Array(Type.String({ description: "Tool names to disable for this agent." }))),
 	persistent: Type.Optional(
 		Type.Boolean({ description: "Defaults to the selected profile or true. False uses an in-memory session." }),
 	),
@@ -22,7 +29,22 @@ export const subagentSpawnSchema = Type.Object({
 			maximum: Number.MAX_SAFE_INTEGER,
 		}),
 	),
-	label: Type.Optional(Type.String({ description: "Human-readable subagent label." })),
+	label: Type.Optional(Type.String({ description: "Human-readable execution label." })),
+	outputArtifact: Type.Optional(
+		Type.Object({
+			path: Type.String({ description: "Workspace-relative destination for the captured assistant output." }),
+			mode: Type.Union([Type.Literal("create"), Type.Literal("replace")]),
+			mediaType: Type.Optional(Type.String({ description: "Caller-defined media type." })),
+			expectedSha256: Type.Optional(
+				Type.String({ description: "Required current SHA-256 digest when mode is replace." }),
+			),
+		}),
+	),
+	metadata: Type.Optional(
+		Type.Record(Type.String(), Type.Union([Type.String(), Type.Number(), Type.Boolean()]), {
+			description: "Opaque scalar caller metadata persisted with the generic execution record.",
+		}),
+	),
 });
 export type SubagentSpawnInput = Static<typeof subagentSpawnSchema>;
 

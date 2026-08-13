@@ -18,14 +18,18 @@ const FULL_MAX = 12000;
 
 type Verbosity = "receipt" | "preview" | "full";
 
-export async function spawn(
+export async function spawnSubagent(
 	params: SubagentSpawnInput,
 	context: SubagentContext,
 	signal?: AbortSignal,
 ): Promise<{ content: [{ type: "text"; text: string }]; details: SubagentDetails }> {
+	const prompt = "prompt" in params.task ? params.task.prompt : undefined;
+	const promptFile = "promptFile" in params.task ? params.task.promptFile : undefined;
 	const result = await context.manager.spawn({
 		agent: params.agent,
-		prompt: params.prompt,
+		role: params.role,
+		prompt,
+		promptFile,
 		model: params.model,
 		thinkingLevel: parseThinkingLevel(params.thinkingLevel),
 		systemPrompt: params.systemPrompt,
@@ -35,6 +39,9 @@ export async function spawn(
 		detached: params.detached,
 		maxDurationMs: params.maxDurationMs,
 		label: params.label,
+		outputArtifact: params.outputArtifact,
+		metadata: params.metadata,
+		cwd: context.cwd,
 		parentSessionId: context.sessionId,
 		storageSessionId: context.sessionId,
 		signal,
@@ -48,7 +55,8 @@ export async function spawn(
 	if (result.record.label ?? params.label) lines.push(`label: ${result.record.label ?? params.label}`);
 	if (params.detached) lines.push("detached: true; poll with subagent_status or bounded subagent_await");
 	lines.push(`session: ${sessionDescription(result.record)}`);
-	lines.push(`task: ${truncate(params.prompt, "receipt")}`);
+	lines.push(`task: ${promptFile ?? truncate(prompt, "receipt")}`);
+	if (result.record.output_artifact) lines.push(`output artifact: ${result.record.output_artifact.path}`);
 	return {
 		content: [{ type: "text", text: lines.join("\n") }],
 		details: withReceipt(

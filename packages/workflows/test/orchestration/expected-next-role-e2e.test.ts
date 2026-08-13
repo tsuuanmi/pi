@@ -13,7 +13,7 @@ describe("expected-next-role policy", () => {
 			skill: "ralplan",
 			stage: "architect",
 			role: "architect",
-			owner: "ralplan_run_agent",
+			owner: "ralplan",
 			runId: "run-registry",
 		});
 	});
@@ -41,7 +41,7 @@ describe("expected-next-role policy", () => {
 			skill: "ultragoal",
 			stage: "goal-worker",
 			role: "worker",
-			owner: "ultragoal_spawn_goal_agent",
+			owner: "ultragoal",
 			taskId: "G001",
 		});
 	});

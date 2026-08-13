@@ -22,6 +22,13 @@ describe("orchestrator subagent receipts", () => {
 			parent_session_id: "session-1",
 			max_duration_ms: 120_000,
 			result_text: "still working",
+			artifact_file: "/tmp/runtime.json",
+			output_artifact: {
+				path: "/tmp/report.md",
+				sha256: "output-sha",
+				media_type: "text/markdown",
+				mode: "create",
+			},
 		};
 
 		const receipt = createSubagentReceipt(record, "session-1");
@@ -36,8 +43,14 @@ describe("orchestrator subagent receipts", () => {
 				role: "worker",
 			},
 			outputPreview: "still working",
-			meta: { max_duration_ms: 120_000 },
+			meta: {
+				max_duration_ms: 120_000,
+				output_artifact_sha256: "output-sha",
+				output_artifact_media_type: "text/markdown",
+			},
 		});
+		expect(receipt.inspect).toContainEqual({ label: "runtime artifact", kind: "path", value: "/tmp/runtime.json" });
+		expect(receipt.inspect).toContainEqual({ label: "output artifact", kind: "path", value: "/tmp/report.md" });
 	});
 
 	it("identifies in-memory runs without implying a missing durable session", () => {

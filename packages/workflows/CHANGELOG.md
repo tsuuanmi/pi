@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **agent execution**: Removed `ralplan_run_agent` and `ultragoal_spawn_goal_agent`; Ralplan and Ultragoal now select profiles, prompts, metadata, and workflow artifacts around orchestrator-owned `subagent_spawn`.
 - **events**: Renamed the workflow Team queue projection to `TeamWorkflowEvent`, `mapTaskQueueEvent`, and `saveTeamWorkflowEvents`; removed the ambiguous old names and unused `TeamEventSink` wrapper.
 - **team**: Team Orchestrator runs now enforce strict checkpoint persistence, replace the generic Orchestrator options bag with a direct `signal`, and reject caller-controlled execution policies.
 - **receipts**: Renamed generic workflow runtime receipt APIs to `WorkflowRuntimeReceipt`, `readWorkflowRuntimeReceipts`, `appendWorkflowRuntimeReceipt`, and `isWorkflowRuntimeReceiptValid`; replaced the misnamed workflow receipt helper with `WorkflowToolDetails`/`workflowToolDetails`; removed the mutable receipt-family rule registry, and stopped inferring final-package sections from legacy aliases.
@@ -36,11 +37,12 @@
 
 ### Changed
 
+- **workflow boundary**: Moved guarded single-agent admission and Ralplan terminal artifact validation into focused workflow execution-policy modules while leaving generic lifecycle and output transport in orchestrator.
 - **extension**: The bundled extension installs Orchestrator's subagent runtime and adapts Pi's generic extension context into workflow tool context.
 - **subagent**: Moved the generic subagent-to-Agent stream adapter and its tests to Orchestrator; workflow adapters consume the public export.
 - **ralplan**: Approved plans now map to Team or Ultragoal through one workflow-owned output adapter instead of constructing downstream state inline.
 - **ultragoal**: Typed obstacles are now authoritative for guard decisions, malformed obstacle ledgers fail closed, and completing a blocker goal resolves its matching obstacles.
-- **agents**: Guarded workflow spawns now use standard bundled agent profiles only. `ralplan_run_agent` removed its optional `agent` override and derives the profile from the legal role (explorer/planner/architect/critic/expert); `ultragoal_spawn_goal_agent` removed its optional `agent` override and always spawns the `worker` profile, using `worker` as the subagent role instead of the invented `ultragoal-worker-<goal-id>` label. `assertNoGuardedSpawnOverrides` no longer lists `agent` as an accepted guard input.
+- **agents**: Guarded Ralplan and Ultragoal execution selects standard bundled profiles, constructs explicit workflow prompts and metadata, and rejects runtime model/thinking/tool overrides before delegating to `subagent_spawn`.
 - **agents**: The `explorer` profile is now a general read-only research agent: it pins `model: openai-codex/gpt-5.6-luna` to run bulk reading/reporting on a cheaper model, keeps read-only tools (`read`, `bash`), and supports two modes — ralplan skill mode (persists a `context_map` via the workflow tool) and general research mode (returns a concise cited report for use before deep-interview questions or other read-only investigation). System prompt and description updated accordingly.
 - **build**: Workflows now copies its own runtime assets through a package-owned build script and can be bundled without reconstructing its package layout.
 - **session**: Workflow-specific layout remains in Workflows while shared `.pi` root and path-segment primitives are provided by `@tsuuanmi/pi/session/root`.

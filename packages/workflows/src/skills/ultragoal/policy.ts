@@ -23,7 +23,7 @@ function selectNextUltragoalRole(state: UltragoalSelectorState | undefined): Exp
 		skill: "ultragoal",
 		stage: "goal-worker",
 		role: "worker",
-		owner: "ultragoal_spawn_goal_agent",
+		owner: "ultragoal",
 		taskId: goalId,
 	};
 }

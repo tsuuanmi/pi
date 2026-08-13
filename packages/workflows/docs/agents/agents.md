@@ -21,13 +21,13 @@ Pi discovers markdown profiles from user `.agent`/`.agents`, enabled package ass
 
 ## End-to-End Workflow Use
 
-Bundled profiles are wired into guarded workflow execution paths:
+Bundled profiles are wired into workflow-owned execution policy:
 
-- `ralplan_run_agent` routes `pre-planner` to `explorer`, then `planner`, `architect`, `critic`, revision back to `planner`, and `expert-stage` to `expert`.
-- `team_execute` routes the next legal team role through the orchestrator.
-- `team_resume` resumes the next legal team role from an orchestrator checkpoint.
-- Reviewer and prover agents remain responsible for `review_report` and `evidence_matrix` gate artifacts.
-- `ultragoal_spawn_goal_agent` routes active ultragoal goals to `worker`.
+- Ralplan selects `explorer`, `planner`, `architect`, `critic`, or `expert`, constructs the role instructions and metadata, then delegates execution to generic `subagent_spawn`.
+- Ultragoal selects the active goal and `worker` profile, constructs the goal instructions and metadata, then delegates execution to generic `subagent_spawn`.
+- `team_execute` routes the next legal team role through the multi-task orchestrator; `team_resume` resumes its checkpoint.
+- Reviewer and prover profiles remain responsible for `review_report` and `evidence_matrix` gate artifacts.
+- Orchestrator persists generic lifecycle state but does not select these profiles or interpret their outputs.
 
 ## See Also
 

@@ -5,10 +5,28 @@ export type SubagentStatus = "queued" | "running" | "paused" | "completed" | "fa
 export type SubagentResumeFailureReason = "context_unavailable" | "not_found" | "no_runner" | "resume_failed";
 export type SubagentDelivery = "steer" | "followUp";
 
+export type SubagentOutputArtifactMode = "create" | "replace";
+export type SubagentMetadataValue = string | number | boolean;
+
+export interface SubagentOutputArtifactRequest {
+	path: string;
+	mode: SubagentOutputArtifactMode;
+	mediaType?: string;
+	expectedSha256?: string;
+}
+
+export interface SubagentOutputArtifact {
+	path: string;
+	sha256: string;
+	media_type?: string;
+	mode: SubagentOutputArtifactMode;
+}
+
 export interface SubagentRunRequest {
 	agent?: string;
 	role?: string;
-	prompt: string;
+	prompt?: string;
+	promptFile?: string;
 	systemPrompt?: string;
 	tools?: string[];
 	excludeTools?: string[];
@@ -18,13 +36,15 @@ export interface SubagentRunRequest {
 	detached?: boolean;
 	maxDurationMs?: number;
 	label?: string;
+	outputArtifact?: SubagentOutputArtifactRequest;
+	metadata?: Record<string, SubagentMetadataValue>;
+	cwd?: string;
 	parentSessionId?: string;
 	storageSessionId?: string;
 	signal?: AbortSignal;
 }
 
 export interface SubagentRequest extends SubagentRunRequest {
-	cwd?: string;
 	storageRoot?: string;
 	resumeSessionFile?: string;
 }
@@ -51,6 +71,8 @@ export interface SubagentRecord {
 	session_id?: string;
 	session_file?: string;
 	artifact_file?: string;
+	output_artifact?: SubagentOutputArtifact;
+	execution_metadata?: Record<string, SubagentMetadataValue>;
 	yield_result?: YieldDetails;
 }
 
@@ -81,6 +103,7 @@ export type SubagentResumeResult =
 
 export interface ResolvedSubagentRequest extends SubagentRequest {
 	role: string;
+	prompt: string;
 	tools?: string[];
 	excludeTools?: string[];
 	modelRef?: string;

@@ -27,56 +27,6 @@ describe("workflow surface registry", () => {
 		).toThrow(/duplicate workflow toolName registered/);
 	});
 
-	it("rejects duplicate guarded spawn owners", () => {
-		expect(() =>
-			validateWorkflowSurfaceRegistry(WORKFLOW_SKILL_SURFACES, [
-				{
-					skill: "team",
-					toolName: "dup-a",
-					spawnOwner: "ralplan_run_agent",
-					toolOwnerId: "ralplan_run_agent",
-					guardedSpawn: true,
-				},
-				{
-					skill: "team",
-					toolName: "dup-b",
-					spawnOwner: "ralplan_run_agent",
-					toolOwnerId: "ralplan_run_agent",
-					guardedSpawn: true,
-				},
-			]),
-		).toThrow(/duplicate guarded workflow spawnOwner registered/);
-	});
-
-	it("rejects unguarded owner metadata and guarded owner mismatches", () => {
-		expect(() =>
-			validateWorkflowSurfaceRegistry(WORKFLOW_SKILL_SURFACES, [
-				{ skill: "team", toolName: "unguarded-owner", spawnOwner: "ralplan_run_agent" },
-			]),
-		).toThrow(/unguarded workflow tool must not declare spawnOwner\/toolOwnerId/);
-		expect(() =>
-			validateWorkflowSurfaceRegistry(WORKFLOW_SKILL_SURFACES, [
-				{
-					skill: "team",
-					toolName: "bad-owner",
-					spawnOwner: "ralplan_run_agent",
-					toolOwnerId: "different_owner",
-					guardedSpawn: true,
-				},
-			]),
-		).toThrow(/guarded workflow spawnOwner\/toolOwnerId mismatch/);
-	});
-
-	it("keeps guarded spawn owners aligned with expected role owner ids", () => {
-		const guardedOwners = WORKFLOW_TOOL_SURFACES.filter((tool) => tool.guardedSpawn).map((tool) => tool.spawnOwner);
-		expect(guardedOwners.slice().sort()).toEqual(["ralplan_run_agent", "ultragoal_spawn_goal_agent"].sort());
-		expect(
-			WORKFLOW_TOOL_SURFACES.filter((tool) => tool.guardedSpawn).every(
-				(tool) => tool.spawnOwner === tool.toolOwnerId,
-			),
-		).toBe(true);
-	});
-
 	it("validates command reference docs from skill help metadata", () => {
 		const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 		for (const skill of PI_WORKFLOW_SKILLS) {
@@ -128,6 +78,7 @@ describe("workflow surface registry", () => {
 			"turn_end",
 			"tool_execution_end",
 			"before_agent_start",
+			"tool_result",
 			"tool_call",
 		]);
 	});
