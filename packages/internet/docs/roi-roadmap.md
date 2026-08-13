@@ -30,6 +30,22 @@ feature is valuable.
 
 ## Tier 1 — Correctness & safety (cheapest, highest certainty)
 
+### Production hardening: Pi turn metadata adapter — **Implemented**
+
+**Problem.** The first authenticated live smoke reached a healthy daemon but Pi's standard
+Responses payload lacked the native Codex turn/environment fields required for browser-session
+replay.
+
+**Implemented design.** `backends/openai/turn/request.ts` adds the daemon's upstream-tested
+canonical metadata after Pi conversion: stable session/thread identity, active-user-entry turn
+identity, matching prompt-cache key, deterministic server-owned item IDs, and a read-only
+cwd-bound environment. See [implementation-plan-turn-metadata.md](implementation-plan-turn-metadata.md).
+
+**Acceptance:** package tests and direct upstream/vendored parser checks pass. Authenticated live
+smokes pass for light/high routes, and two-turn continuity preserves browser-session replay.
+
+---
+
 ### R1. Fix model metadata to the daemon's single-immutable-effort routes — **Implemented**
 
 **Problem.** `src/backends/openai/models.ts` names `chatgpt-web/high` "GPT-5.6 Sol" and
@@ -78,8 +94,8 @@ window with no way to suppress it. Users who prefer to trigger login manually (v
 - `internet_settings` reads settings or toggles `autoLogin`.
 - In `hooks.ts`, when the account lacks verified login and `autoLogin` is false, the hook does **not**
   call `ensureReady`; it suppresses Chrome and notifies interactive users to run
-  `internet_daemon login`. Pi's hook dispatcher does not expose request cancellation, so the provider
-  transport remains the authoritative failure until explicit login.
+  `internet_daemon login`. It returns a fixed content-free request with a reserved unknown local
+  route so Pi's swallowing hook dispatcher cannot forward the original unprepared request.
 
 **Effort:** Low. **Impact:** Medium (UX + headless safety). **Risk:** Low.
 

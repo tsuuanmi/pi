@@ -28,7 +28,9 @@ The daemon is a fixed vendored snapshot, not a second repository dependency. We 
 - `daemon/doctor.ts` owns bounded one-shot diagnostics and strict report validation.
 - `daemon/manager.ts` exclusively owns login/start/stop/restart and managed child processes.
 - `hooks.ts` readiness-gates only registered ChatGPT Web providers through
-  `before_provider_request`; Pi's built-in `openai-responses` transport remains unchanged.
+  `before_provider_request`, then delegates payload adaptation to `backends/openai/turn/request.ts`.
+- `backends/openai/turn/request.ts` adds only the daemon-required stable identity and trusted
+  read-only environment fields after Pi's standard Responses conversion.
 - `backends/openai/daemon/*` owns HTTP config/auth/client/status concerns, not processes.
 - `settings.ts` owns private package settings persistence.
 - `web/*` owns public search/fetch transport and its SSRF, redirect, content, timeout, and size
@@ -42,8 +44,10 @@ The package imports only public `@tsuuanmi/pi*` entry points. Pi does not depend
 
 At load, authenticated enabled accounts auto-start. Accounts without verified login do not open a
 browser during Pi startup. Their first model request, or explicit `internet_daemon login`, launches
-the bundled `login` command with a dedicated profile unless `autoLogin` is disabled. After authentication, the manager starts
-`serve`, waits for `/healthz`, and only then delegates inference to Pi.
+the bundled `login` command with a dedicated profile unless `autoLogin` is disabled. The upstream
+v2.1.9 login flow captures state from a Keychain-aware reopened profile and verifies it independently;
+obsolete false-positive markers are rejected. The manager then starts `serve`, waits for `/healthz`,
+and only then delegates inference to Pi.
 
 Operations are serialized per account. A healthy daemon already bound to the account endpoint is
 reused; child processes started by this manager are gracefully shut down on Pi `session_shutdown`.
@@ -55,10 +59,11 @@ One enabled account registers `chatgpt-web`; multiple enabled accounts register
 `authHeader: false`. A provider-name-scoped `before_provider_request` hook performs lifecycle
 readiness without replacing Pi's API-wide Responses stream registry.
 
-Pi owns request conversion and SSE decoding. The daemon owns browser-turn replay/dedup. The package
-contains no duplicate Responses parser or replay cache. Models mirror the daemon's fixed-effort
-routes and are capability-scoped: Luna is exclusive to Luna accounts and Pro routes require the
-cached `proAvailable` capability.
+Pi owns standard request conversion and SSE decoding. The package adds stable session/turn identity
+and a trusted read-only environment to the serialized request; the daemon owns browser-turn
+replay/dedup. The package contains no duplicate Responses parser or replay cache. Models mirror the
+daemon's fixed-effort routes and are capability-scoped: Luna is exclusive to Luna accounts and Pro
+routes require the cached `proAvailable` capability.
 
 ## Security and storage
 

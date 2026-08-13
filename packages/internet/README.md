@@ -34,8 +34,10 @@ the bundled CLI, Playwright runtime dependencies, and a launcher.
    `action: "login"`.
 3. The package opens Google Chrome with a dedicated profile under
    `$PI_AGENT_DIR/internet/accounts/default/browser/`.
-4. Sign in to ChatGPT and leave the browser open until the login process confirms completion.
-5. The package starts its daemon and waits for `/healthz` before inference continues.
+4. Sign in to ChatGPT, confirm the composer is visible, then close that dedicated Chrome instance.
+5. The daemon reopens the profile in a Keychain-aware Playwright context, captures state, and
+   verifies it independently in a second owned context.
+6. The package starts its daemon and waits for `/healthz` before inference continues.
 
 On later Pi loads, authenticated enabled accounts start automatically. Pi `session_shutdown` stops
 only child daemons owned by that Pi process. To require explicit login, call `internet_settings`
@@ -48,13 +50,16 @@ interactive users to run `internet_daemon` with action `login`.
 Pi before_provider_request hook (registered ChatGPT Web providers only)
   -> ensure verified login (interactive on first use)
   -> ensure package-owned daemon is healthy
-  -> Pi openai-responses transport
-  -> bundled daemon /v1/responses
+  -> Pi openai-responses conversion
+  -> add stable session/turn identity and read-only environment metadata
+  -> bundled daemon /v1/responses and Pi SSE decoding
   -> isolated Chrome profile and ChatGPT Web
 ```
 
-The daemon binds to loopback only. Its private config and generated control token live inside the
-account config directory with `0600` permissions.
+The request adapter uses Pi's stable session and active user-entry identities so daemon replay keeps
+the same turn across retries/tool rounds and starts a new turn for each new user revision. The daemon
+binds to loopback only. Its private config and generated control token live inside the account config
+directory with `0600` permissions.
 
 ## Providers and accounts
 
@@ -97,8 +102,8 @@ and computes Pi readiness without requiring the daemon's native Codex route or O
 - Admin bearer credentials are sent only to `/admin/*`, never to inference or public web routes.
 - Web fetch blocks URL credentials, non-HTTP schemes, private/reserved destinations, unsafe
   redirects, binary responses, oversized bodies, and long-running requests.
-- The vendored snapshot is fixed at the commit recorded in
-  `vendor/codex-chatgpt-web/SNAPSHOT.md`; upstream synchronization is intentionally out of scope.
+- Snapshot provenance and the targeted upstream v2.1.9 login patch are recorded in
+  `vendor/codex-chatgpt-web/SNAPSHOT.md`; general upstream synchronization remains out of scope.
 - This is unofficial browser automation and can break when ChatGPT Web changes. It must not be used
   to evade usage limits or access controls.
 

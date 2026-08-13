@@ -22,19 +22,24 @@ contract directly.
 
 Provider config uses Pi's built-in `openai-responses` API, loopback `/v1`, `authHeader: false`, and
 model metadata. `before_provider_request` receives the active `context.model`; the extension maps
-only its registered provider names to accounts and calls `manager.ensureReady(account.id)`. Unrelated
-providers are untouched. With `autoLogin:false`, the hook suppresses browser launch and notifies
-interactive users; Pi's hook dispatcher does not expose request cancellation, so the provider
-transport remains the authoritative failure until explicit login.
+only its registered provider names to accounts, calls `manager.ensureReady(account.id)`, and adds the
+daemon's canonical turn/environment fields to the serialized payload. Unrelated providers are
+untouched. With `autoLogin:false`, the hook suppresses browser launch and notifies interactive users.
+Because Pi's hook dispatcher swallows hook exceptions, readiness/adaptation failures return a fixed,
+content-free request with a reserved unknown local route; the original unadapted request is never
+forwarded.
 
 This hook boundary is necessary because Pi's custom stream registry is keyed by API type, not
 provider name. Registering a custom `openai-responses` stream here would globally replace transport
 for every provider using that API and would make multiple internet accounts overwrite each other.
-The extension therefore retains Pi's authoritative Responses request conversion and SSE decoding.
+The extension therefore retains Pi's authoritative standard Responses conversion and SSE decoding;
+the provider-scoped hook only adds daemon-required replay metadata after conversion.
 
-Pi records hook exceptions and then proceeds with the request. On the normal path the hook completes
-login/start before transport begins. If preparation fails, the loopback provider request is the
-user-visible authoritative failure rather than a global transport override.
+On the normal path the hook completes login/start and payload adaptation before transport begins.
+If preparation fails, the hook returns a fixed content-free request with a reserved unknown local
+`chatgpt-web/*` slug. The original payload is never forwarded: a reachable daemon rejects the slug
+with HTTP 400 before browser/native-upstream execution, while startup failure ends at loopback
+transport.
 
 The placeholder API key only satisfies the OpenAI client contract. Inference routes are protected by
 loopback binding; the real control token is used separately for `/admin/*`.
@@ -76,7 +81,8 @@ The package manifest exposes `dist/extension.js` through `pi.extensions` and pub
 - Pi process owns extension/provider/tool composition.
 - `OwnedDaemonManager` owns child processes and login lifecycle.
 - The bundled daemon owns browser/session/replay behavior.
-- Pi AI owns Responses transport and event decoding.
+- Pi AI owns standard Responses conversion, transport, and event decoding.
+- `backends/openai/turn/request.ts` owns pure daemon-contract payload adaptation only.
 - `daemon/doctor.ts` owns the bounded one-shot diagnostic process boundary and report validation;
   `tools/doctor.ts` owns only Pi presentation.
 - `web/*` owns public search/fetch transport and SSRF/size/content safeguards; it never receives the

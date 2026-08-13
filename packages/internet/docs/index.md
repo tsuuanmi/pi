@@ -35,6 +35,8 @@ at runtime.
   corrections for model metadata, `autoLogin`, and web search/fetch.
 - [Implemented Plan R4 – `internet_doctor`](implementation-plan-doctor.md) — reviewed implementation
   for surfacing the daemon's `doctor --json` diagnostics as a Pi tool.
+- [Implemented Pi Turn Metadata Adapter](implementation-plan-turn-metadata.md) — live-smoke fix for
+  stable daemon browser replay identity after Pi's standard Responses conversion.
 - [Original MVP Review](review-and-brainstorm.md).
 
 ## Scope

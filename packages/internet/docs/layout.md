@@ -23,7 +23,7 @@ packages/internet/
 │   │   ├── provider.ts
 │   │   ├── models.ts
 │   │   ├── daemon/{auth,client,routes,status}.ts
-│   │   └── turn/model.ts
+│   │   └── turn/{model,request}.ts
 │   ├── core/{errors,types}.ts
 │   ├── tools/{accounts,compact,control,daemon,doctor,register,settings,status,web}.ts
 │   └── web/{fetch,search}.ts
@@ -50,7 +50,8 @@ packages/internet/
 - `daemon/health.ts`: startup health polling.
 - `daemon/manager.ts`: the single lifecycle/process owner.
 - `backends/openai/provider.ts`: capability-scoped provider configuration and naming.
-- `hooks.ts`: provider-name-scoped readiness gate plus approvals, settings, HUD refresh, and cleanup.
+- `backends/openai/turn/request.ts`: pure daemon identity/environment payload adaptation.
+- `hooks.ts`: provider-name-scoped readiness/adaptation gate plus approvals, HUD refresh, and cleanup.
 - `settings.ts`: atomic private package settings.
 - `backends/openai/daemon/*`: HTTP auth/client/status boundaries.
 - `web/*`: public web transport with network and response safety checks.

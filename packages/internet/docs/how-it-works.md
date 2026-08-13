@@ -21,16 +21,21 @@ the complete runtime to `dist/daemon/runtime/`. Runtime users do not install or 
 select chatgpt-web model
   -> scoped before_provider_request hook calls manager.ensureReady(account)
   -> if login marker is absent: run bundled `login`
-  -> dedicated Chrome profile opens; user authenticates
+  -> dedicated Chrome profile opens; user authenticates and closes that Chrome instance
+  -> daemon reopens the profile, captures state, and independently verifies it
   -> run bundled `serve`
   -> poll /healthz until ready
-  -> call Pi streamOpenAIResponses
+  -> Pi converts the request to OpenAI Responses format
+  -> hook adds stable session/turn identity and trusted read-only environment
   -> POST /v1/responses and stream assistant events
 ```
 
 The login itself necessarily remains interactive. The package owns the executable, config,
-invocation, isolated browser profile, and subsequent daemon lifecycle. With `autoLogin:false`, the
-readiness hook leaves Chrome closed and notifies interactive users to run `internet_daemon login`.
+invocation, isolated browser profile, and subsequent daemon lifecycle. After Pi's standard request
+conversion, `backends/openai/turn/request.ts` derives thread identity from the Pi session and turn
+identity from the active branch's latest persisted user entry. This keeps retries/tool rounds stable
+while each new user revision starts a new browser turn. With `autoLogin:false`, the readiness hook
+leaves Chrome closed and notifies interactive users to run `internet_daemon login`.
 
 ## Config and accounts
 

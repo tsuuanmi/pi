@@ -8,6 +8,7 @@ import type {
 } from "@tsuuanmi/pi/extensions";
 import { refreshHudUi } from "@tsuuanmi/pi-tui";
 import { providerName } from "#internet/backends/openai/provider";
+import { adaptChatGptWebRequest, rejectedChatGptWebRequest } from "#internet/backends/openai/turn/request";
 import type { InternetAccount } from "#internet/core/types";
 import { daemonLoginExists } from "#internet/daemon/config";
 import type { OwnedDaemonManager } from "#internet/daemon/manager";
@@ -52,7 +53,8 @@ export function registerInternetHooks(
 
 	host.on("before_provider_request", async (event, context) => {
 		const accountId = context.model ? providerAccounts.get(context.model.provider) : undefined;
-		if (accountId) {
+		if (!accountId) return event.payload;
+		try {
 			const account = accounts.find((candidate) => candidate.id === accountId);
 			const loginExists = account ? await daemonLoginExists(account) : false;
 			if (!loginExists && !(await settings.get()).autoLogin) {
@@ -62,7 +64,7 @@ export function registerInternetHooks(
 						"warning",
 					);
 				}
-				return event.payload;
+				return rejectedChatGptWebRequest();
 			}
 			if (!loginExists && context.hasUI) {
 				context.ui.notify(
@@ -71,8 +73,16 @@ export function registerInternetHooks(
 				);
 			}
 			await manager.ensureReady(accountId);
+			return adaptChatGptWebRequest(event.payload, {
+				cwd: context.cwd,
+				sessionId: context.sessionManager.getSessionId(),
+				turnId: latestUserEntryId(context.sessionManager.getBranch()),
+			});
+		} catch {
+			if (context.hasUI)
+				context.ui.notify("ChatGPT Web request preparation failed; the request was blocked.", "error");
+			return rejectedChatGptWebRequest();
 		}
-		return event.payload;
 	});
 
 	host.on("turn_end", async (_event, context) => {
@@ -83,3 +93,13 @@ export function registerInternetHooks(
 		await manager.stopOwned();
 	});
 }
+
+function latestUserEntryId(entries: ReturnType<InternetHookContext["sessionManager"]["getBranch"]>): string {
+	for (let index = entries.length - 1; index >= 0; index -= 1) {
+		const entry = entries[index];
+		if (entry.type === "message" && entry.message.role === "user") return entry.id;
+	}
+	return "";
+}
+
+type InternetHookContext = Parameters<ExtensionHandler<BeforeProviderRequestEvent, unknown>>[1];

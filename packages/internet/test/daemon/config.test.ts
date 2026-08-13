@@ -61,11 +61,12 @@ describe("owned daemon config", () => {
 		});
 	});
 
-	it("recognizes only authenticated login markers", async () => {
+	it("recognizes only the verified durable login format", async () => {
 		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-login-"));
 		const target = account(configDir);
+		const browserDir = join(configDir, "browser");
 		await expect(daemonLoginExists(target)).resolves.toBe(false);
-		await mkdir(join(configDir, "browser"));
+		await mkdir(browserDir);
 		await writeFile(
 			daemonLoginMarkerPath(target),
 			JSON.stringify({
@@ -74,6 +75,12 @@ describe("owned daemon config", () => {
 				source: "authenticated-system-browser",
 				capturedAt: new Date().toISOString(),
 			}),
+		);
+		await writeFile(join(browserDir, "storage-state.json"), "{}\n");
+		await expect(daemonLoginExists(target)).resolves.toBe(false);
+		await writeFile(
+			daemonLoginMarkerPath(target),
+			JSON.stringify({ version: 1, authenticated: true, verifiedAt: new Date().toISOString() }),
 		);
 		await expect(daemonLoginExists(target)).resolves.toBe(true);
 	});

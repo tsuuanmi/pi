@@ -11,6 +11,10 @@ files that implement it.
 This is the standalone bridge that `internet` talks to over loopback HTTP. It owns the browser, the
 ChatGPT session, the Responses→prompt compilation, the turn broker, and the SSE framing.
 
+The vendored snapshot is pinned at `bda266b` (see `vendor/codex-chatgpt-web/SNAPSHOT.md`). Upstream
+has since advanced to `9f74486` (a dead-code/test cleanup); it was reviewed and deliberately not
+synced because the package depends on none of the removed code.
+
 | Concept | Source file |
 |---------|-------------|
 | Loopback HTTP daemon (routes) | `src/server.ts` |
@@ -27,13 +31,12 @@ ChatGPT session, the Responses→prompt compilation, the turn broker, and the SS
 | Reversible Codex `config.toml` edits | `src/codex-integration.ts` |
 | HTTP body limits | `src/http-body.ts` |
 | Adapter error classification | `src/lib/errors.ts` |
-| Web-search synthetic tool | `src/web-search/synthetic-tool.ts` |
 | Adapter base (`ProviderAdapter`) | `src/adapters/base.ts` |
 | ChatGPT Web adapter (runTurn) | `src/adapters/chatgpt-web/index.ts` |
 | Turn execution / sessions | `src/adapters/chatgpt-web/turn-execution.ts` |
 | Turn broker (token/binding/revoke) | `src/adapters/chatgpt-web/turn-broker.ts` |
 | **Browser automation** | `src/adapters/chatgpt-web/browser-worker.ts` |
-| **Browser login** | `src/browser-login.ts` |
+| **Browser login** | `src/browser-login.ts` (vendored snapshot carries the documented targeted v2.1.9 durable-capture patch) |
 | **ChatGPT session selectors / account caps** | `src/chatgpt-session.ts` |
 | Launcher browser host (CDP descriptor) | `src/launcher-browser-host.ts` |
 | MCP server (codex_* tools) | `src/adapters/chatgpt-web/mcp-server.ts` |

@@ -48,14 +48,9 @@ export function daemonLoginMarkerPath(account: InternetAccount): string {
 
 export async function daemonLoginExists(account: InternetAccount): Promise<boolean> {
 	try {
+		await stat(join(account.configDir, "browser", "storage-state.json"));
 		const marker = JSON.parse(await readFile(daemonLoginMarkerPath(account), "utf8")) as Record<string, unknown>;
-		if (marker.authenticated !== true) return false;
-		if (marker.version === 1) return typeof marker.verifiedAt === "string";
-		return (
-			marker.version === 2 &&
-			marker.source === "authenticated-system-browser" &&
-			typeof marker.capturedAt === "string"
-		);
+		return marker.version === 1 && marker.authenticated === true && typeof marker.verifiedAt === "string";
 	} catch {
 		return false;
 	}

@@ -79,14 +79,37 @@ describe("registerInternetHooks", () => {
 			[await account()],
 			autoLogin(true),
 		);
-		const payload = { input: "test" };
-		await expect(
-			beforeRequest?.({ type: "before_provider_request", payload }, { model: { provider: "chatgpt-web" } } as never),
-		).resolves.toBe(payload);
+		const payload = {
+			input: [{ type: "message", role: "user", content: [{ type: "input_text", text: "test" }] }],
+		};
+		const context = {
+			cwd: "/workspace/pi",
+			model: { provider: "chatgpt-web" },
+			sessionManager: {
+				getSessionId: () => "session-123",
+				getBranch: () => [
+					{
+						type: "message",
+						id: "user-entry-1",
+						message: { role: "user" },
+					},
+				],
+			},
+		};
+		const adapted = (await beforeRequest?.({ type: "before_provider_request", payload }, context as never)) as Record<
+			string,
+			unknown
+		>;
+		expect(adapted).not.toBe(payload);
+		expect(adapted.input).toHaveLength(2);
+		expect(adapted.client_metadata).toMatchObject({ "x-codex-turn-metadata": expect.any(String) });
 		expect(ensureReady).toHaveBeenCalledWith("default");
-		await beforeRequest?.({ type: "before_provider_request", payload }, {
-			model: { provider: "anthropic" },
-		} as never);
+		await expect(
+			beforeRequest?.({ type: "before_provider_request", payload }, {
+				...context,
+				model: { provider: "anthropic" },
+			} as never),
+		).resolves.toBe(payload);
 		expect(ensureReady).toHaveBeenCalledOnce();
 	});
 
@@ -107,15 +130,68 @@ describe("registerInternetHooks", () => {
 			autoLogin(false),
 		);
 		const notify = vi.fn();
-		const payload = { input: "test" };
-		await expect(
-			beforeRequest?.({ type: "before_provider_request", payload }, {
-				model: { provider: "chatgpt-web" },
-				hasUI: true,
-				ui: { notify },
-			} as never),
-		).resolves.toBe(payload);
+		const payload = { input: "sensitive user content" };
+		const result = await beforeRequest?.({ type: "before_provider_request", payload }, {
+			model: { provider: "chatgpt-web" },
+			hasUI: true,
+			ui: { notify },
+		} as never);
+		expectRejectedRequest(result);
 		expect(ensureReady).not.toHaveBeenCalled();
 		expect(notify).toHaveBeenCalledWith(expect.stringContaining("internet_daemon"), "warning");
 	});
+
+	it("fails closed when readiness or request adaptation fails", async () => {
+		let beforeRequest: ExtensionHandler<BeforeProviderRequestEvent, unknown> | undefined;
+		const ensureReady = vi.fn<() => Promise<void>>(async () => {
+			throw new Error("daemon unavailable");
+		});
+		registerInternetHooks(
+			{
+				on(event: string, handler: unknown) {
+					if (event === "before_provider_request")
+						beforeRequest = handler as ExtensionHandler<BeforeProviderRequestEvent, unknown>;
+				},
+			},
+			{ ensureReady } as unknown as OwnedDaemonManager,
+			[await account()],
+			autoLogin(true),
+		);
+		const notify = vi.fn();
+		const context = {
+			cwd: "/workspace/pi",
+			model: { provider: "chatgpt-web" },
+			hasUI: true,
+			ui: { notify },
+			sessionManager: { getSessionId: () => "session-123", getBranch: () => [] },
+		};
+		expectRejectedRequest(
+			await beforeRequest?.(
+				{ type: "before_provider_request", payload: { input: "sensitive user content" } },
+				context as never,
+			),
+		);
+		expect(notify).toHaveBeenCalledWith(expect.stringContaining("request preparation failed"), "error");
+
+		ensureReady.mockResolvedValueOnce(undefined);
+		expectRejectedRequest(
+			await beforeRequest?.(
+				{
+					type: "before_provider_request",
+					payload: { input: [{ type: "message", role: "user", content: "sensitive user content" }] },
+				},
+				context as never,
+			),
+		);
+	});
 });
+
+function expectRejectedRequest(value: unknown): void {
+	expect(value).toEqual({
+		model: "chatgpt-web/__request-rejected__",
+		input: [],
+		stream: true,
+		store: false,
+	});
+	expect(JSON.stringify(value)).not.toContain("sensitive user content");
+}

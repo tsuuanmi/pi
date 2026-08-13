@@ -31,6 +31,9 @@
   to match current public APIs and implemented behavior.
 - Mirror the daemon's fixed-effort model routes, capability-gate Luna/Pro availability, and use a
   conservative documented output ceiling.
+- Document that upstream advanced to `9f74486` (a dead-code/test cleanup) and was deliberately not
+  synced: the package depends on none of the removed code, and the turn-metadata, login, doctor, and
+  model-catalog contracts it relies on are unchanged between v2.1.9 and `9f74486`.
 
 ### Removed
 
@@ -41,6 +44,10 @@
 
 ### Fixed
 
+- Add the daemon-required stable turn identity and trusted read-only environment metadata to Pi's
+  serialized ChatGPT Web requests, enabling browser-session replay across retries and tool rounds.
+- Port the upstream v2.1.9 durable login capture flow so stored browser state is independently
+  verified before Pi treats an account as authenticated.
 - Export a working async extension factory instead of the scaffold's no-op factory.
 
 ### Historical scaffold

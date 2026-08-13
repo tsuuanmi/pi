@@ -13,7 +13,7 @@ Status: **proposal / brainstorm.** No code changes.
 > **Source:** the capture and multi-provider ideas below are grounded in the Prometheus repo
 > `/home/superman/workspaces/prometheus` (`src/provider-catalog.cjs`, `src/automation/*.cjs`,
 > `src/mcp-server.js`) and the daemon repo `/home/superman/workspaces/codex-chatgpt-web`
-> (`src/adapters/chatgpt-web/browser-worker.ts`, `src/web-search/synthetic-tool.ts`).
+> (`src/adapters/chatgpt-web/browser-worker.ts`).
 > See [source-repositories.md](source-repositories.md).
 
 ---
