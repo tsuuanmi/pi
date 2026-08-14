@@ -9,6 +9,10 @@ Targeted package patches:
   shutdown. The daemon's existing singleton browser worker remains authoritative.
 - Tunnel CLI/server patches expose direct Linux `connect`/`disconnect` actions and stop Full-mode
   tunnel runtime during daemon cleanup. The existing daemon broker/MCP implementation is unchanged.
+- Browser-only prompt patches omit the repeated local-computer warning while Full-mode adapter
+  guidance remains available for read-only model transitions.
+- Durable conversation canary calls explicitly declare browser-only capabilities, including disabled
+  local tools.
 
 No other v2.1.9 changes are included. General upstream synchronization remains out of scope.
 

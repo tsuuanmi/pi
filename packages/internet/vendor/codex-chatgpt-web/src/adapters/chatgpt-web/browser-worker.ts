@@ -1551,7 +1551,7 @@ export class ChatGptBrowserWorker {
         onConversationReady: (url) => { conversationUrl = url; },
         onConflict: () => {},
       },
-      capabilities: { solAvailable: true, proAvailable: false },
+      capabilities: { localToolsEnabled: false, solAvailable: true, proAvailable: false },
       prepare: async () => ({
         text: "Reply with exactly: PI_DURABLE_CONVERSATION_CANARY_OK",
         toolCalls: [],

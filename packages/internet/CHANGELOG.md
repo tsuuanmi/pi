@@ -53,6 +53,10 @@
 
 ### Fixed
 
+- Fix the durable conversation canary's capability metadata so browser-only checks include the required
+  local-tools flag.
+- Stop repeating the local-computer warning in browser-only ChatGPT Web prompt context while retaining
+  actionable Full-harness guidance.
 - Add the daemon-required stable turn identity and trusted read-only environment metadata to Pi's
   serialized ChatGPT Web requests, enabling browser-session replay across retries and tool rounds.
 - Port the upstream v2.1.9 durable login capture flow so stored browser state is independently
