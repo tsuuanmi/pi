@@ -1,5 +1,6 @@
 import type { ChildProcess } from "node:child_process";
 import { spawn } from "node:child_process";
+import type { AccountRegistry } from "#internet/accounts/registry";
 import { DaemonClient } from "#internet/backends/openai/daemon/client";
 import type { InternetAccount } from "#internet/core/types";
 import {
@@ -27,6 +28,7 @@ export interface OwnedDaemonManagerOptions {
 	resolveRuntime?: () => Promise<DaemonRuntime>;
 	spawn?: typeof spawn;
 	waitForHealth?: typeof waitForDaemonHealth;
+	registry?: AccountRegistry;
 }
 
 export class OwnedDaemonManager {
@@ -38,8 +40,11 @@ export class OwnedDaemonManager {
 	private readonly managedAccounts = new Set<string>();
 	private readonly operations = new Map<string, Promise<void>>();
 
+	private readonly registry: AccountRegistry | undefined;
+
 	constructor(accounts: InternetAccount[], options: OwnedDaemonManagerOptions = {}) {
 		this.accounts = new Map(accounts.map((account) => [account.id, account]));
+		this.registry = options.registry;
 		this.resolveRuntime = options.runtime
 			? async () => options.runtime!
 			: (options.resolveRuntime ?? resolveDaemonRuntime);
@@ -58,21 +63,23 @@ export class OwnedDaemonManager {
 	}
 
 	ensureReady(accountId: string): Promise<void> {
-		const account = this.account(accountId);
-		return this.enqueue(account.id, async () => {
+		return this.enqueue(accountId, async () => {
+			const account = await this.refreshAccount(accountId);
 			if (!(await daemonLoginExists(account))) await this.loginAccount(account);
 			await this.startAccount(account);
 		});
 	}
 
 	login(accountId: string): Promise<void> {
-		const account = this.account(accountId);
-		return this.enqueue(account.id, () => this.loginAccount(account));
+		return this.enqueue(accountId, async () => {
+			await this.loginAccount(await this.refreshAccount(accountId));
+		});
 	}
 
 	start(accountId: string): Promise<void> {
-		const account = this.account(accountId);
-		return this.enqueue(account.id, () => this.startAccount(account));
+		return this.enqueue(accountId, async () => {
+			await this.startAccount(await this.refreshAccount(accountId));
+		});
 	}
 
 	stop(accountId?: string): Promise<void> {
@@ -83,8 +90,8 @@ export class OwnedDaemonManager {
 	}
 
 	restart(accountId: string): Promise<void> {
-		const account = this.account(accountId);
-		return this.enqueue(account.id, async () => {
+		return this.enqueue(accountId, async () => {
+			const account = await this.refreshAccount(accountId);
 			await this.stopAccount(account);
 			await this.startAccount(account);
 		});
@@ -130,6 +137,14 @@ export class OwnedDaemonManager {
 	private account(id: string): InternetAccount {
 		const account = this.accounts.get(id);
 		if (!account) throw new Error(`Internet account not found: ${id}`);
+		return account;
+	}
+
+	/** Re-read the account from the registry so daemon config reflects live mode changes. */
+	private async refreshAccount(id: string): Promise<InternetAccount> {
+		if (!this.registry) return this.account(id);
+		const account = await this.registry.get(id);
+		this.accounts.set(id, account);
 		return account;
 	}
 

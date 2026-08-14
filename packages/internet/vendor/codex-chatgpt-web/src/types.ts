@@ -290,6 +290,8 @@ export interface CodexUsage {
 /** The only provider configuration supported by this focused runtime. */
 export interface CodexProviderConfig {
   adapter: "chatgpt-web";
+  /** Runtime surface the provider is served from. Durable conversations require browser-only. */
+  mode?: "browser-only" | "full";
   baseUrl: string;
   defaultModel?: string;
   models?: string[];

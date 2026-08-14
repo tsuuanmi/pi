@@ -1543,7 +1543,7 @@ export class ChatGptBrowserWorker {
     let conversationUrl = "";
     const response = await this.runBrowserTurn({
       traceId: `conversation-canary-${Date.now()}`,
-      modelId: "chatgpt-web/light",
+      modelId: CHATGPT_WEB_MODEL_ID,
       conversation: {
         threadId,
         kind: "create",
@@ -1554,10 +1554,12 @@ export class ChatGptBrowserWorker {
       capabilities: { localToolsEnabled: false, solAvailable: true, proAvailable: false },
       prepare: async () => ({
         text: "Reply with exactly: PI_DURABLE_CONVERSATION_CANARY_OK",
+        images: [],
         toolCalls: [],
         release: () => {},
       }),
       abortSignal,
+      onTextDelta: () => {},
     });
     if (response.trim() !== "PI_DURABLE_CONVERSATION_CANARY_OK" || !conversationUrl) {
       throw new Error("Durable conversation canary returned unexpected content or no conversation URL");

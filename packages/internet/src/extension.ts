@@ -8,8 +8,9 @@ import { InternetSettingsStore } from "#internet/settings";
 import { registerInternetTools } from "#internet/tools/register";
 
 export default async function internetExtension(host: ExtensionAPI): Promise<void> {
-	const accounts = await new AccountRegistry().list();
-	const manager = new OwnedDaemonManager(accounts);
+	const registry = new AccountRegistry();
+	const accounts = await registry.list();
+	const manager = new OwnedDaemonManager(accounts, { registry });
 	const settings = new InternetSettingsStore();
 	await registerOpenAiProviders(host, accounts);
 	registerInternetTools(host, manager, settings);

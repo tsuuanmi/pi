@@ -53,6 +53,11 @@
 
 ### Fixed
 
+- Fix durable conversation mode so it actually engages: propagate the runtime mode onto the provider
+  config (the browser-only guard previously always failed), and repair the canary's model id, prompt
+  images, and text-delta callback.
+- Re-read the account from the registry before generating daemon config so a conversation-mode change
+  survives daemon restarts without a Pi reload.
 - Fix the durable conversation canary's capability metadata so browser-only checks include the required
   local-tools flag.
 - Stop repeating the local-computer warning in browser-only ChatGPT Web prompt context while retaining

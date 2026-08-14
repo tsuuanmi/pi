@@ -430,6 +430,7 @@ export function providerConfig(config: AppConfig): CodexProviderConfig {
     : ["low"];
   return {
     adapter: "chatgpt-web",
+    mode: config.mode,
     baseUrl: "https://chatgpt.com",
     models,
     liveModels: false,
