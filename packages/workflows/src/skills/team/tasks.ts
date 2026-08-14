@@ -1,7 +1,7 @@
-import { teamTaskPath } from "#workflows/session/session-layout";
 import { assertTeamDependencies } from "#workflows/skills/team/dependencies";
 import { passingReviewGate, writeReviewGateBlock } from "#workflows/skills/team/gates";
 import { assertSafeId } from "#workflows/skills/team/ids";
+import { teamTaskPath } from "#workflows/skills/team/paths";
 import { createTeamCompletionEvidence, createTeamTaskRecord } from "#workflows/skills/team/records";
 import { readTeamSnapshot, syncTeamState } from "#workflows/skills/team/state";
 import { appendTeamEvent, listTasks, readJsonObject, resolveTeamId } from "#workflows/skills/team/team-store";

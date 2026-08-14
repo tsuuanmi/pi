@@ -1,10 +1,10 @@
-import { ultragoalBriefPath, ultragoalGoalsPath, ultragoalLedgerPath } from "#workflows/session/session-layout";
 import {
 	chooseNextGoal,
 	emptyCounts,
 	SCHEDULABLE_STATUSES,
 	TERMINAL_STATUSES,
 } from "#workflows/skills/ultragoal/goal-selection";
+import { ultragoalBriefPath, ultragoalGoalsPath, ultragoalLedgerPath } from "#workflows/skills/ultragoal/paths";
 import {
 	clampTitle,
 	firstNonEmptyLine,

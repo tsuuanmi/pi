@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
-import { workflowStatePath } from "#workflows/session/session-layout";
 import { adaptApprovedRalplanOutput } from "#workflows/skills/ralplan/approved-output";
 import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 import {
@@ -157,7 +157,7 @@ export async function approveRalplanPlan(
 				skill: "ralplan",
 				active: false,
 				phase: ralplanState.current_phase as string | undefined,
-				state_path: workflowStatePath(cwd, "ralplan", sessionId),
+				state_path: skillStatePath(cwd, "ralplan", sessionId),
 			},
 			{ sessionId },
 		);

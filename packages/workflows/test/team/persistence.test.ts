@@ -3,15 +3,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createTeamTask, executeTeam, readTeamSnapshot, startTeam } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { createTeamAgents } from "#workflows/skills/team/agent-adapter";
+import { saveTeamExecution } from "#workflows/skills/team/execution-store";
 import {
 	teamConfigPath,
 	teamEventsPath,
 	teamReceiptsPath,
 	teamRoleRunPath,
 	teamTaskPath,
-} from "#workflows/session/session-layout";
-import { createTeamAgents } from "#workflows/skills/team/agent-adapter";
-import { saveTeamExecution } from "#workflows/skills/team/execution-store";
+} from "#workflows/skills/team/paths";
 import type { TeamSnapshot, TeamTaskExecution } from "#workflows/skills/team/types";
 import { createFakeManager, createTeamContext } from "#workflows-test/team/fakes";
 

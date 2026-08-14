@@ -18,7 +18,9 @@ describe("ApiUsageLogger", () => {
 		try {
 			await harness.session.prompt("hello Bearer abcdefghijklmnopqrstuvwxyz");
 			const logPath = apiUsageLogPath(harness.tempDir, harness.sessionManager.getSessionId());
-			expect(logPath).toBe(join(harness.tempDir, ".pi", harness.sessionManager.getSessionId(), "api-usage.jsonl"));
+			expect(logPath).toBe(
+				join(harness.tempDir, ".pi", harness.sessionManager.getSessionId(), "state", "api-usage.jsonl"),
+			);
 			const content = await waitForFile(logPath!);
 			const lines = content.trim().split("\n");
 			expect(lines).toHaveLength(1);
@@ -44,8 +46,10 @@ describe("ApiUsageLogger", () => {
 			await harness.session.prompt("hello");
 			const parentLogPath = apiUsageLogPath(harness.tempDir, "parent-session-id");
 			const subagentLogPath = apiUsageLogPath(harness.tempDir, harness.sessionManager.getSessionId());
-			expect(parentLogPath).toBe(join(harness.tempDir, ".pi", "parent-session-id", "api-usage.jsonl"));
-			expect(subagentLogPath).toBe(join(harness.tempDir, ".pi", "subagent-2026-07-22-0741-3f04", "api-usage.jsonl"));
+			expect(parentLogPath).toBe(join(harness.tempDir, ".pi", "parent-session-id", "state", "api-usage.jsonl"));
+			expect(subagentLogPath).toBe(
+				join(harness.tempDir, ".pi", "subagent-2026-07-22-0741-3f04", "state", "api-usage.jsonl"),
+			);
 			const content = await waitForFile(parentLogPath!);
 			expect(existsSync(subagentLogPath!)).toBe(false);
 			const lines = content.trim().split("\n");

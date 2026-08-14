@@ -2,7 +2,7 @@ import { readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { teamRoleRunPath } from "#workflows/session/session-layout";
+import { teamRoleRunPath } from "#workflows/skills/team/paths";
 import { saveRoleFailure } from "#workflows/skills/team/role-run-store";
 
 describe("team role run persistence", () => {

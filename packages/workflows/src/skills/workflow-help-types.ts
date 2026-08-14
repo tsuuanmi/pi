@@ -1,5 +1,4 @@
-import type { WorkflowTypedArg } from "#workflows/registry/workflow-manifest-types";
-import type { WorkflowSkill } from "#workflows/session/paths";
+import type { WorkflowSkill, WorkflowTypedArg } from "#workflows/registry/workflow-manifest-types";
 
 export type { WorkflowTypedArg } from "#workflows/registry/workflow-manifest-types";
 

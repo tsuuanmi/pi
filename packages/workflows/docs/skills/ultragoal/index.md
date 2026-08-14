@@ -59,12 +59,12 @@ The workflow selects the legal goal and invokes `subagent_spawn` with `agent: "w
 
 | File | Description |
 |------|-------------|
-| `.pi/<sessionId>/workflows/ultragoal/state.json` | Active workflow envelope. |
-| `.pi/<sessionId>/ultragoal/goals.json` | Goal plan. |
-| `.pi/<sessionId>/ultragoal/ledger.jsonl` | Goal receipt ledger. |
-| `.pi/<sessionId>/ultragoal/obstacles.json` | Typed obstacle ledger. |
-| `.pi/<sessionId>/ultragoal/brief.md` | Approved goal brief. |
-| `.pi/<sessionId>/ultragoal/checkpoints/*.json` | State-only checkpoint snapshots. |
+| `.pi/<sessionId>/skills/ultragoal/state.json` | Active workflow envelope. |
+| `.pi/<sessionId>/skills/ultragoal/goals.json` | Goal plan. |
+| `.pi/<sessionId>/skills/ultragoal/ledger.jsonl` | Goal receipt ledger. |
+| `.pi/<sessionId>/skills/ultragoal/obstacles.json` | Typed obstacle ledger. |
+| `.pi/<sessionId>/skills/ultragoal/brief.md` | Approved goal brief. |
+| `.pi/<sessionId>/skills/ultragoal/checkpoints/*.json` | State-only checkpoint snapshots. |
 
 ## See also
 

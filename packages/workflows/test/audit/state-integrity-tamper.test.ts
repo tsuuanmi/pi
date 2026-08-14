@@ -1,20 +1,15 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-	type AuditEntry,
-	auditLogPath,
-	readWorkflowState,
-	workflowStatePath,
-	writeWorkflowState,
-} from "@tsuuanmi/pi-workflows";
+import { sessionAuditPath, skillStatePath } from "@tsuuanmi/pi/session/layout";
+import { type AuditEntry, readWorkflowState, writeWorkflowState } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const sessionId = "test-session-id";
 
 async function readAudit(cwd: string): Promise<AuditEntry[]> {
 	try {
-		const raw = await readFile(auditLogPath(cwd, sessionId), "utf8");
+		const raw = await readFile(sessionAuditPath(cwd, sessionId), "utf8");
 		return raw
 			.split(/\r?\n/)
 			.map((line) => line.trim())
@@ -32,7 +27,7 @@ async function tamperEnvelope(
 	skill: "ultragoal",
 	mutate: (value: Record<string, unknown>) => void,
 ): Promise<void> {
-	const filePath = workflowStatePath(cwd, skill, sessionId);
+	const filePath = skillStatePath(cwd, skill, sessionId);
 	const raw = await readFile(filePath, "utf8");
 	const parsed = JSON.parse(raw) as Record<string, unknown>;
 	mutate(parsed);

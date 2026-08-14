@@ -8,11 +8,11 @@ import {
 	readUltragoalVerificationState,
 	recordUltragoalObstacle,
 	startNextUltragoalGoal,
-	ultragoalGoalsPath,
 	ultragoalObstacleLedgerPath,
 	writeJsonAtomic,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { ultragoalGoalsPath } from "#workflows/skills/ultragoal/paths";
 
 const sessionId = "test-session-id";
 

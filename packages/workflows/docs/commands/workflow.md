@@ -49,6 +49,7 @@ pi workflow validate
 pi workflow finalize
 pi workflow operate
 pi workflow gc [--prune] [--dry-run]
+pi workflow migrate --input '{"sessionId":"..."}' [--dry-run]
 pi workflow events
 pi workflow retire
 pi workflow deep-interview <action>
@@ -69,6 +70,10 @@ Every verb accepts `--json` where meaningful and `--input '<JSON object>'` for s
 | `ultragoal` | `create-plan`, `status`, `start-next`, `checkpoint`, `record-obstacle`, `classify-blocker`, `guard` |
 
 Removed compatibility verbs (`ralplan run-agent`, `team spawn-task-agent`, `ultragoal spawn-goal-agent`) fail closed with guidance to use the model-visible tools. Generic `pi workflow subagent` / `subagents` command shims are removed; use the `subagent_*` model-visible tools.
+
+## Session layout migration
+
+`pi workflow migrate` preflights all legacy sources and canonical destinations before changing files. Existing destinations are conflicts. It relocates legacy workflow state, plans, specs, skill artifacts, ralplan execution metadata, and API-usage logs; writes an audit receipt; and is idempotent once no legacy sources remain. It does not use a layout version, dual reader, compatibility path, or migration marker.
 
 ## See Also
 

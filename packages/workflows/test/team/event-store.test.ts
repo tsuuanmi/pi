@@ -2,9 +2,9 @@ import { readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { teamEventsPath } from "#workflows/session/session-layout";
 import type { TeamWorkflowEvent } from "#workflows/skills/team/event-mapper";
 import { saveTeamWorkflowEvents } from "#workflows/skills/team/event-store";
+import { teamEventsPath } from "#workflows/skills/team/paths";
 
 describe("team event persistence", () => {
 	let cwd: string;

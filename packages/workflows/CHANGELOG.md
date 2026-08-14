@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **session layout**: Moved workflow state to `skills/`, plans/specs to `artifacts/`, and ralplan execution metadata to `skills/ralplan/executions/`; removed the workflow-owned session path API in favor of direct `@tsuuanmi/pi/session/layout` imports.
 - **agent execution**: Removed `ralplan_run_agent` and `ultragoal_spawn_goal_agent`; Ralplan and Ultragoal now select profiles, prompts, metadata, and workflow artifacts around orchestrator-owned `subagent_spawn`.
 - **events**: Renamed the workflow Team queue projection to `TeamWorkflowEvent`, `mapTaskQueueEvent`, and `saveTeamWorkflowEvents`; removed the ambiguous old names and unused `TeamEventSink` wrapper.
 - **team**: Team Orchestrator runs now enforce strict checkpoint persistence, replace the generic Orchestrator options bag with a direct `signal`, and reject caller-controlled execution policies.
@@ -31,6 +32,7 @@
 
 ### Added
 
+- **session layout**: Added `pi workflow migrate` with dry-run, strict conflict preflight, rollback-safe moves, execution-record normalization, audit receipts, and marker-free idempotency.
 - **researcher**: Add a persistent, read-only `researcher` profile and guarded `researcher_spawn` tool for exact registered ChatGPT Web research models.
 - **extension**: Workflow extensions now register active workflow HUD data through Pi's generic `registerHudProvider` feature.
 - **extensions**: Added `@tsuuanmi/pi-workflows/hooks` with the focused `registerWorkflowHooks()` registrar alongside `registerWorkflowTools()`.

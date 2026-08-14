@@ -14,12 +14,12 @@
  * and its active blocker-resolution goal. Missing or malformed state fails closed.
  */
 
-import { ultragoalGoalsPath, ultragoalLedgerPath } from "#workflows/session/session-layout";
 import {
 	readUltragoalObstacleLedger,
 	type UltragoalObstacleLedger,
 	unresolvedUltragoalObstacles,
 } from "#workflows/skills/ultragoal/obstacles";
+import { ultragoalGoalsPath, ultragoalLedgerPath } from "#workflows/skills/ultragoal/paths";
 import { readUltragoalPlan } from "#workflows/skills/ultragoal/plan";
 import {
 	readUltragoalLedger,

@@ -18,7 +18,7 @@ Active workflow state, internal state persistence, workflow ids, and base state 
 ## Important Contracts
 
 - Workflow writes use atomic state/artifact helpers and append receipts or audit entries where applicable.
-- The interactive status line reads active-state schema version 2 from the session-owned path (`.pi/<session-id>/workflows/active-state.json`) directly on a 1s refresh.
+- The interactive status line reads active-state schema version 2 from the session-owned path (`.pi/<session-id>/skills/active-state.json` in the canonical layout) directly on a 1s refresh. The canonical layout is owned by `@tsuuanmi/pi`; see [Canonical `.pi` Session Layout](../../../pi/docs/session/layout.md).
 - Every active-state entry requires a `session_id` that exactly matches the owning session. Missing, foreign, malformed, and unsupported-version active-state files fail closed; they are not migrated or merged as global state.
 - State command contract metadata ships as `src/state/assets/schema.json` and is copied to `dist/state/assets/schema.json` during package builds. Generic commands only read, diagnose, or clear canonical state; skill actions own workflow mutations and handoffs.
 

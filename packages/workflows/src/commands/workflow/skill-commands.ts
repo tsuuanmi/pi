@@ -13,10 +13,9 @@ import {
 } from "#workflows/commands/workflow/command-utils";
 import type { WorkflowCommandResult } from "#workflows/commands/workflow/index";
 import { handoffWorkflow } from "#workflows/handoff/handoff";
-import type { RalplanStage } from "#workflows/session/paths";
-import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";
 import { restateGoalGate, runClosureCheckForSession } from "#workflows/skills/deep-interview/closure";
 import { assertDeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
+import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/skills/deep-interview/paths";
 import { planDeepInterviewQuestion } from "#workflows/skills/deep-interview/questions";
 import {
 	appendOrMergeDeepInterviewRound,
@@ -33,7 +32,7 @@ import { writeRalplanArtifact } from "#workflows/skills/ralplan/artifacts";
 import { doctorRalplan } from "#workflows/skills/ralplan/doctor";
 import { recordRalplanExplorerGateArtifact } from "#workflows/skills/ralplan/gates";
 import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
-import type { RalplanApprovalTarget } from "#workflows/skills/ralplan/types";
+import type { RalplanApprovalTarget, RalplanStage } from "#workflows/skills/ralplan/types";
 import {
 	completeTeam,
 	recordTeamCompletionGateArtifact,

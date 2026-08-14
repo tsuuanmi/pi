@@ -1,7 +1,8 @@
-import { teamConfigPath, teamDir, workflowStatePath } from "#workflows/session/session-layout";
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
 import { buildTeamHud } from "#workflows/skills/team/hud";
 import { assertSafeId, slugifyTeamId } from "#workflows/skills/team/ids";
 import { countTeamTasks, emptyTaskCounts } from "#workflows/skills/team/metrics";
+import { teamConfigPath, teamDir } from "#workflows/skills/team/paths";
 import { activeTeamId, appendTeamEvent, listTasks, readTeamConfig } from "#workflows/skills/team/team-store";
 import type { TeamConfig, TeamSnapshot, TeamWorker } from "#workflows/skills/team/types";
 import { syncWorkflowActiveState } from "#workflows/state/active-state";
@@ -28,7 +29,7 @@ export async function syncTeamState(cwd: string, snapshot: TeamSnapshot, session
 			skill: "team",
 			active: state.active,
 			phase: state.current_phase,
-			state_path: workflowStatePath(cwd, "team", sessionId),
+			state_path: skillStatePath(cwd, "team", sessionId),
 			hud: buildTeamHud(snapshot),
 		},
 		{ sessionId },
@@ -110,7 +111,7 @@ export async function readTeamSnapshot(cwd: string, sessionId: string, teamId?: 
 	return {
 		team_id: teamIdResolved,
 		phase,
-		state_dir: teamDir(cwd, sessionId),
+		state_dir: teamDir(cwd, teamIdResolved, sessionId),
 		task_total: tasks.length,
 		task_counts: counts,
 		workers: config.workers,

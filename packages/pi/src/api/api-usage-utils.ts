@@ -1,6 +1,5 @@
-import { join } from "node:path";
 import type { AssistantMessage, Context, ProviderResponse, UsageProvenance } from "@tsuuanmi/pi-ai";
-import { piSessionRoot } from "#pi/session/root";
+import { sessionApiUsagePath } from "#pi/session/layout";
 
 const DEFAULT_MAX_DEPTH = 12;
 const DEFAULT_MAX_ARRAY = 200;
@@ -63,7 +62,7 @@ export type ApiUsagePendingRequest = {
 export function apiUsageLogPath(cwd: string, sessionId: string): string | undefined {
 	const trimmed = sessionId.trim();
 	if (!trimmed) return undefined;
-	return join(piSessionRoot(cwd, trimmed), "api-usage.jsonl");
+	return sessionApiUsagePath(cwd, trimmed);
 }
 
 export function redactValue<T>(value: T, metadata: RedactionMetadata, path = "$", key?: string): T {

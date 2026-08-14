@@ -1,7 +1,7 @@
+import { sessionActiveStatePath } from "@tsuuanmi/pi/session/layout";
 import { requireSessionId } from "@tsuuanmi/pi/session/root";
 import { applyHudStatusFlags, type HudSummary, normalizeHudSummary } from "@tsuuanmi/pi-tui";
-import type { WorkflowSkill } from "#workflows/session/paths";
-import { workflowActiveStatePath } from "#workflows/session/session-layout";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 import { isEntryStale, readExistingStateForMutation, writeJsonAtomic } from "#workflows/state/state-writer";
 
 const ACTIVE_STATE_VERSION = 2 as const;
@@ -169,7 +169,7 @@ export async function readWorkflowActiveState(
 ): Promise<WorkflowActiveState | undefined> {
 	requireSessionId(options.sessionId);
 	const sessionId = options.sessionId.trim();
-	const entries = await readAllEntries(workflowActiveStatePath(cwd, sessionId), sessionId);
+	const entries = await readAllEntries(sessionActiveStatePath(cwd, sessionId), sessionId);
 	if (entries === undefined) return undefined;
 	return buildActiveState(dedupeVisibleBySkill(entries));
 }
@@ -199,7 +199,7 @@ export async function syncWorkflowActiveState(
 		...(entry.has_pending_question === true ? { has_pending_question: true } : {}),
 	};
 
-	const filePath = workflowActiveStatePath(cwd, sessionId);
+	const filePath = sessionActiveStatePath(cwd, sessionId);
 	const prior = (await readAllEntries(filePath, sessionId)) ?? [];
 	const key = entryKey(nextEntry);
 	const merged = new Map<string, WorkflowActiveEntry>();
@@ -315,7 +315,7 @@ export async function applyHandoffToActiveState(options: ApplyHandoffOptions): P
 		...(options.callee.hud ? { hud: normalizeHudSummary(options.callee.hud) } : {}),
 	};
 
-	const filePath = workflowActiveStatePath(options.cwd, sessionId);
+	const filePath = sessionActiveStatePath(options.cwd, sessionId);
 	const prior = (await readAllEntries(filePath, sessionId)) ?? [];
 	const merged = new Map<string, WorkflowActiveEntry>();
 	for (const item of prior) merged.set(entryKey(item), item);

@@ -7,6 +7,7 @@ import {
 	skillUsage,
 	usage,
 } from "#workflows/commands/workflow/args";
+import { migrateSessionLayout } from "#workflows/commands/workflow/migrate";
 import {
 	classify,
 	events,
@@ -39,8 +40,11 @@ async function dispatch(parsed: ParsedWorkflowCommand, cwd: string): Promise<Wor
 		}
 		throw new Error(`unknown workflow skill or verb for help: ${parsed.verb}`);
 	}
-	if (parsed.verb !== "gc" && (parsed.prune || parsed.dryRun)) {
-		throw new Error(`--prune/--dry-run are only supported for pi workflow gc, not ${parsed.verb}`);
+	if (parsed.prune && parsed.verb !== "gc") {
+		throw new Error(`--prune is only supported for pi workflow gc, not ${parsed.verb}`);
+	}
+	if (parsed.dryRun && parsed.verb !== "gc" && parsed.verb !== "migrate") {
+		throw new Error(`--dry-run is only supported for pi workflow gc or migrate, not ${parsed.verb}`);
 	}
 	const input = await parseWorkflowInput(parsed, cwd);
 	if (parsed.verb === "start") return start(input, parsed.json);
@@ -53,6 +57,10 @@ async function dispatch(parsed: ParsedWorkflowCommand, cwd: string): Promise<Wor
 	if (parsed.verb === "finalize") return finalize(input, parsed.json);
 	if (parsed.verb === "operate") return operateCmd(input, parsed.json);
 	if (parsed.verb === "gc") return gc({ prune: parsed.prune, dryRun: parsed.dryRun, json: parsed.json, input, cwd });
+	if (parsed.verb === "migrate") {
+		const result = await migrateSessionLayout(input, { cwd, dryRun: parsed.dryRun });
+		return { status: 0, stdout: `${JSON.stringify(result, null, parsed.json ? 2 : undefined)}\n`, stderr: "" };
+	}
 	if (parsed.verb === "events") return events(input, parsed.json);
 	if (parsed.verb === "retire") return retire(input, parsed.json);
 	if (parsed.verb === "deep-interview") return deepInterviewVerb(parsed.subverb, input, parsed.json, cwd);

@@ -1,4 +1,5 @@
-import { dirname, join } from "node:path";
+import { join } from "node:path";
+import { skillExecutionsDir } from "@tsuuanmi/pi/session/layout";
 import type { SubagentMetadataValue, SubagentRecord } from "@tsuuanmi/pi-orchestrator";
 import {
 	assertExpectedNextRole,
@@ -7,11 +8,11 @@ import {
 	guardedSpawnMetadata,
 	type RalplanSelectorVerdict,
 } from "#workflows/policy/expected-next-role";
-import type { RalplanStage } from "#workflows/session/paths";
-import { ralplanGateArtifactPath, workflowStatePath } from "#workflows/session/session-layout";
 import { normalizeRalplanExplorerGate } from "#workflows/skills/ralplan/gates";
 import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 import { buildRalplanOrchestrationSnapshot } from "#workflows/skills/ralplan/orchestration-snapshot";
+import { ralplanGateArtifactPath } from "#workflows/skills/ralplan/paths";
+import type { RalplanStage } from "#workflows/skills/ralplan/types";
 import { assertRalplanStage, assertSafePathComponent } from "#workflows/state/state-schema";
 import { writeJsonAtomic } from "#workflows/state/state-writer";
 import { readWorkflowState } from "#workflows/state/workflow-state";
@@ -77,8 +78,7 @@ export async function recordRalplanAgentExecution(
 	const stageN = positiveIntegerMetadata(metadata, "stageN");
 	const validArtifact =
 		record.status === "completed" ? await verifyArtifact(cwd, sessionId, runId, stage, stageN) : false;
-	const workflowStatus = record.status === "completed" && !validArtifact ? "failed" : record.status;
-	const recordPath = join(dirname(workflowStatePath(cwd, "ralplan", sessionId)), "agents", `${record.id}.json`);
+	const recordPath = join(skillExecutionsDir(cwd, "ralplan", sessionId), `${record.id}.json`);
 	await writeJsonAtomic(
 		recordPath,
 		{
@@ -87,13 +87,9 @@ export async function recordRalplanAgentExecution(
 			run_id: runId,
 			stage,
 			stage_n: stageN,
-			status: workflowStatus,
-			record_path: recordPath,
-			runtime_artifact_path: record.artifact_file,
-			output_artifact_path: record.output_artifact?.path,
-			output: record.result_text,
-			error: record.error_text,
-			updated_at: record.updated_at,
+			validation: {
+				artifact: record.status === "completed" ? (validArtifact ? "valid" : "invalid") : "not-applicable",
+			},
 		},
 		{ cwd },
 	);

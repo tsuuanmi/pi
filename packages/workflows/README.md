@@ -46,7 +46,7 @@ npm install @tsuuanmi/pi-workflows
 
 `@tsuuanmi/pi-workflows` ships the workflow runtime: the `pi workflow` CLI, the harness control plane (sessions, leases, RPC, GC), the four workflow skills and their model-visible tools, and the reusable role agent profiles. Main-session persistence and system-prompt assembly live in `@tsuuanmi/pi`; session-aware subagents live in `@tsuuanmi/pi-orchestrator`, whose public API this package consumes.
 
-State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`. Runtime artifacts persist under the current session root, e.g. `.pi/<session-id>/workflows/<skill>/` and `.pi/<session-id>/state/`.
+State root: `PI_HARNESS_STATE_ROOT` or `<workspace>/.pi/state/harness`. Runtime artifacts persist under the current session root, e.g. `.pi/<session-id>/skills/<skill>/` and `.pi/<session-id>/state/`.
 
 Workflow policy helpers live under `src/policy/`, handoff logic lives under `src/handoff/`, and workflow-to-orchestrator bridges live under `src/skills/team/`.
 
@@ -86,7 +86,7 @@ Deep Interview turns a vague idea into a concrete spec before any mutation start
 2. **Round 0 — Topology enumeration gate**: lock 1–6 top-level components before depth-first questioning can overfit to the most-described component. Multi-component fixtures must surface every sibling (e.g. Ingestion, Normalization, Review UI, Export) even when one is detailed.
 3. **Interview loop**: ask ONE question per round, targeting the weakest component/dimension pair, rotating across active components. Score ambiguity after each answer.
 4. **Lateral review panel**: convene `researcher`, `contrarian`, `simplifier` (and `architect` when scope shape changed) as parallel read-only subagents at ambiguity-milestone transitions and before synthesizing agent-supplied answers.
-5. **Crystallize spec**: run `pi workflow deep-interview closure-check`, then `pi workflow deep-interview restate-goal` (two-loop cap on Adjust/Missing), then persist via `pi workflow deep-interview write-spec` to `.pi/<session-id>/specs/deep-interview-<slug>.md`.
+5. **Crystallize spec**: run `pi workflow deep-interview closure-check`, then `pi workflow deep-interview restate-goal` (two-loop cap on Adjust/Missing), then persist via `pi workflow deep-interview write-spec` to `.pi/<session-id>/artifacts/specs/deep-interview-<slug>.md`.
 6. **Execution bridge**: present options (ralplan / ultragoal / team / refine / stop) and hand off only after explicit selection.
 
 **Ambiguity is bidirectional and non-monotonic.** A later answer can raise ambiguity (contradiction, internal inconsistency, low-quality/evasive, or scope expansion). Triggers lower the affected dimension score; the weighted formula raises ambiguity — there is no separate penalty term. Raises are silent and surface via the per-round report and next-question targeting.
@@ -132,7 +132,7 @@ After explicit approval or rejection, call `pi workflow ralplan approve-plan`. D
 
 **Control plane:** use `pi workflow state ralplan ...` for envelope state; `pi workflow ralplan <record-explorer-gate|write-artifact|status|doctor|approve-plan>` for workflow state/artifacts; and generic `subagent_spawn` with Ralplan-owned profile, prompts, and metadata for role execution.
 
-**Boundaries:** planning only. Persist artifacts with `pi workflow ralplan write-artifact`; do not directly edit `.pi/<session-id>/plans` or `.pi/<session-id>/workflows` unless recovering with explicit user approval. Explorer/Planner/Architect/Critic/Expert passes use `subagent_spawn` with exact Ralplan metadata and follow workflow-selected order. Role agents persist durable output and return receipt-only summaries (run id, stage, stage_n, path).
+**Boundaries:** planning only. Persist artifacts with `pi workflow ralplan write-artifact`; do not directly edit `.pi/<session-id>/artifacts/plans` or `.pi/<session-id>/skills` unless recovering with explicit user approval. Explorer/Planner/Architect/Critic/Expert passes use `subagent_spawn` with exact Ralplan metadata and follow workflow-selected order. Role agents persist durable output and return receipt-only summaries (run id, stage, stage_n, path).
 
 ### team
 
@@ -190,7 +190,7 @@ Ultragoal executes an approved concrete goal end-to-end with verification.
 | Consent | (separate) | User explicitly approves before any execution skill runs |
 | Execution | team / ultragoal | Approved plan only; vagueness gate redirects underspecified prompts to ralplan |
 
-deep-interview persists its spec to `.pi/<session-id>/specs/deep-interview-<slug>.md`; ralplan persists plans under `.pi/<session-id>/plans/ralplan/<run-id>/`. Both stop for explicit approval rather than mutating product code.
+deep-interview persists its spec to `.pi/<session-id>/artifacts/specs/deep-interview-<slug>.md`; ralplan persists plans under `.pi/<session-id>/artifacts/plans/ralplan/<run-id>/`. Both stop for explicit approval rather than mutating product code.
 
 ## `pi workflow` Control Plane
 
@@ -261,7 +261,7 @@ The bundled workflow extension registers workflow-owned tools and installs Orche
 
 ## Harness Runtime
 
-The workflow runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives directly under `src/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner, recovery policy/orchestration, validation, finalization, workspace markers), `artifacts/`, `audit/`, `orchestration/`, `registry/`, `session/`, `state/`, and `tool/` (workflow tool contracts, registration, and surface metadata). Skill-owned TypeScript and `SKILL.md` assets live together under `src/skills/<skill>/`.
+The workflow runtime backs the `pi workflow` CLI and the four skills. Shared infrastructure lives directly under `src/` and is organized by concern: `runtime/` (sessions, leases, RPC, GC, mutation, storage, receipt rules, owner, recovery policy/orchestration, validation, finalization, workspace markers), `artifacts/`, `audit/`, `orchestration/`, `registry/`, `state/`, and `tool/` (workflow tool contracts, registration, and surface metadata). Skill-owned TypeScript, paths, and `SKILL.md` assets live together under `src/skills/<skill>/`; canonical session roots come from `@tsuuanmi/pi/session/layout`.
 
 Key runtime boundaries for contributors:
 
@@ -274,15 +274,15 @@ All session-aware path builders require a `sessionId` — there is no global fal
 
 | Path | Description |
 |------|-------------|
-| `.pi/{sessionId}/state/` | Session state directory |
-| `.pi/{sessionId}/workflows/{skill}/` | Workflow-specific state |
-| `.pi/{sessionId}/specs/` | Generated specs (deep-interview) |
-| `.pi/{sessionId}/plans/` | Generated plans (ralplan) |
-| `.pi/{sessionId}/activity.json` | Session activity file |
-| `.pi/{sessionId}/team/{teamId}/` | Team coordination state |
-| `.pi/audit.jsonl` | Global audit log (append-only JSONL) |
+| `.pi/{sessionId}/state/` | Shared session state, audit, transactions, subagents, and API usage |
+| `.pi/{sessionId}/artifacts/specs/` | Deep Interview specifications |
+| `.pi/{sessionId}/artifacts/plans/ralplan/{runId}/` | Ralplan plan artifacts |
+| `.pi/{sessionId}/skills/active-state.json` | Active workflow projection for the HUD |
+| `.pi/{sessionId}/skills/{skill}/state.json` | Skill workflow state |
+| `.pi/{sessionId}/skills/team/{teamId}/` | Team coordination state |
+| `.pi/{sessionId}/skills/ralplan/executions/{subagentId}.json` | Workflow-owned ralplan execution metadata |
 
-Team coordination state lives under `.pi/{sessionId}/team/{teamId}/`, scoped to the session that started the team run.
+`@tsuuanmi/pi/session/layout` owns these roots. Workflows define only skill-specific descendants. See [Canonical `.pi` Session Layout](../pi/docs/session/layout.md).
 
 ### Session-Scoped Isolation
 
@@ -303,7 +303,6 @@ Top-level shared folders provide common utilities used by all four skills:
 | Skill HUD modules | `deep-interview/hud.ts`, `ralplan/hud.ts`, `team/hud.ts`, `ultragoal/hud.ts` | HUD chip formatting for each workflow skill, colocated with the owning skill folder. |
 | `policy/`, `handoff/` | `skill-policy.ts`, `expected-next-role.ts`, `gate-verdicts.ts`, `vagueness-gate.ts`, and handoff modules | Immutable skill policies, cross-workflow prompts, handoffs, gates, expected-next checks, and workflow evidence validation. Skill-specific guards live with their skill; Orchestrator owns session-aware subagent contracts and execution. |
 | `registry/` | `workflow-manifest.ts` and runtime/action manifest modules | Workflow phase, action, and tool metadata. |
-| `session/` | `paths.ts`, `session-layout.ts`, `session-resolution.ts` | Workflow path builders and session-id resolution; shared roots come from `@tsuuanmi/pi/session/root`. |
 | `state/` | `active-state.ts`, `state-schema.ts`, `state-writer.ts`, `workflow-state.ts` | Active-state, state validation/writes, workflow ids, and base state types. |
 | `tool/` | `context.ts`, `host.ts`, `register.ts`, `spec.ts`, `surface.ts` | Defines workflow tool contracts and context; the workflow extension installs Orchestrator's subagent lifecycle and control tools. |
 
@@ -311,7 +310,15 @@ Workflow types:
 
 ```typescript
 type WorkflowSkill = "deep-interview" | "ralplan" | "team" | "ultragoal";
-type RalplanStage = "planner" | "architect" | "critic" | "revision" | "adr" | "final";
+type RalplanStage =
+  | "pre-planner"
+  | "planner"
+  | "architect"
+  | "critic"
+  | "revision"
+  | "adr"
+  | "final"
+  | "expert-stage";
 ```
 
 ## Public API
@@ -363,7 +370,7 @@ Workspace tests import packages from the gitignored `dist/`, so rebuild this pac
 - [docs/commands/workflow.md](docs/commands/workflow.md) — command entry points and supported verbs.
 - [docs/extensions/workflows.md](docs/extensions/workflows.md) — Pi integration boundaries and registered tools.
 - [docs/skills/](docs/skills/) — per-skill design and runtime docs.
-- [docs/runtime/](docs/runtime/), [docs/subagent/](docs/subagent/), [docs/state/](docs/state/), [docs/orchestration/](docs/orchestration/), [docs/artifacts/](docs/artifacts/), [docs/audit/](docs/audit/), [docs/registry/](docs/registry/), [docs/session/](docs/session/) — per-source-directory module docs.
+- [docs/runtime/](docs/runtime/), [docs/subagent/](docs/subagent/), [docs/state/](docs/state/), [docs/orchestration/](docs/orchestration/), [docs/artifacts/](docs/artifacts/), [docs/audit/](docs/audit/), [docs/registry/](docs/registry/) — per-source-directory module docs.
 - [CHANGELOG.md](CHANGELOG.md) — changes.
 - [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/loader/skills/index.md) — Pi skill format and installation paths.
 - [Subagent](https://github.com/tsuuanmi/pi/tree/main/packages/orchestrator/docs/subagent/index.md) — Orchestrator-owned SubagentManager and lifecycle tools.

@@ -1,4 +1,4 @@
-import type { RalplanStage } from "#workflows/session/paths";
+import type { RalplanStage } from "#workflows/skills/ralplan/types";
 
 export type RalplanAgentRole = "explorer" | "planner" | "architect" | "critic" | "expert";
 

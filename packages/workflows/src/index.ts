@@ -19,6 +19,7 @@ export * from "#workflows/policy/gate-verdicts";
 export * from "#workflows/policy/skill-policy";
 export * from "#workflows/policy/vagueness-gate";
 export * from "#workflows/registry/workflow-manifest";
+export type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 export * from "#workflows/runtime/endpoint";
 export * from "#workflows/runtime/finalization";
 export * from "#workflows/runtime/gc";
@@ -37,8 +38,6 @@ export * from "#workflows/runtime/types";
 export * from "#workflows/runtime/validation";
 export * from "#workflows/runtime/vanish";
 export * from "#workflows/runtime/workspace-marker";
-export * from "#workflows/session/paths";
-export * from "#workflows/session/session-layout";
 export * from "#workflows/skills/deep-interview/closure";
 export * from "#workflows/skills/deep-interview/envelope";
 export { assertDeepInterviewHandoff, type DeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
@@ -68,6 +67,7 @@ export type {
 	RalplanIndexRow,
 	RalplanInvalidIndexLine,
 	RalplanPlannerStateUpdate,
+	RalplanStage,
 	RalplanStatus,
 	RalplanWriteArtifactInput,
 	RalplanWriteArtifactResult,

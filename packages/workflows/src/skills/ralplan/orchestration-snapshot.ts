@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
+import { sessionActiveStatePath, sessionTransactionPath, skillStatePath } from "@tsuuanmi/pi/session/layout";
 import type { WorkflowTransactionJournal } from "#workflows/audit/transaction-journal";
-import { transactionJournalPath, workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
 import type { RalplanExplorerGate } from "#workflows/skills/ralplan/gates";
 import { readRalplanStatus } from "#workflows/skills/ralplan/index-store";
 import { readRalplanObstacleLedger, unresolvedRalplanObstacles } from "#workflows/skills/ralplan/obstacles";
@@ -108,7 +108,7 @@ async function readRalplanCompletionJournals(input: {
 	sessionId: string;
 	runId?: string;
 }): Promise<RalplanCompletionJournalLike[]> {
-	const dir = dirname(transactionJournalPath(input.cwd, input.sessionId, "probe"));
+	const dir = dirname(sessionTransactionPath(input.cwd, input.sessionId, "probe"));
 	try {
 		const files = await readdir(dir);
 		const journals: RalplanCompletionJournalLike[] = [];
@@ -169,8 +169,8 @@ export async function buildRalplanOrchestrationSnapshot(input: {
 		skill: "ralplan",
 		sessionId: input.sessionId,
 		runId: status.run_id,
-		statePath: workflowStatePath(input.cwd, "ralplan", input.sessionId),
-		activeStatePath: workflowActiveStatePath(input.cwd, input.sessionId),
+		statePath: skillStatePath(input.cwd, "ralplan", input.sessionId),
+		activeStatePath: sessionActiveStatePath(input.cwd, input.sessionId),
 		state: status.state,
 		phase: typeof status.state?.current_phase === "string" ? status.state.current_phase : undefined,
 		approval: {

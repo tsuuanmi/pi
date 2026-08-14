@@ -1,10 +1,10 @@
 import { evaluateGates, evaluateTerminalDetectors } from "#workflows/policy/skill-policy";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 import { buildResponse } from "#workflows/runtime/lifecycle";
 import { mutateRuntimeSession } from "#workflows/runtime/mutation";
 import type { PrimitiveResponse, RuntimeWriter, SessionState, WorkflowRuntimeReceipt } from "#workflows/runtime/types";
 import { findValidationReceipt, markersMatch } from "#workflows/runtime/validation";
 import { buildWorkspaceMarker } from "#workflows/runtime/workspace-marker";
-import type { WorkflowSkill } from "#workflows/session/paths";
 import { readWorkflowState } from "#workflows/state/workflow-state";
 
 function inputString(input: Record<string, unknown>, key: string): string | undefined {

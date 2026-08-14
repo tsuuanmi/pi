@@ -5,12 +5,12 @@ import {
 	approveRalplanPlan,
 	buildRalplanObstacle,
 	doctorRalplan,
-	ralplanObstacleLedgerPath,
 	readRalplanObstacleLedger,
 	writeRalplanArtifact,
 	writeRalplanObstacle,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { ralplanObstacleLedgerPath } from "#workflows/skills/ralplan/paths";
 
 const sessionId = "test-session-id";
 

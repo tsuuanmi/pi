@@ -15,6 +15,7 @@ import {
 	writeRalplanObstacle,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { ralplanObstacleLedgerPath } from "#workflows/skills/ralplan/paths";
 
 const sessionId = "test-session-id";
 
@@ -193,8 +194,7 @@ describe("ralplan obstacles", () => {
 
 		it("rejects malformed ledger state", async () => {
 			const { writeFile, mkdir } = await import("node:fs/promises");
-			const { ralplanObstacleLedgerPath } = await import("@tsuuanmi/pi-workflows");
-			await mkdir(join(cwd, ".pi/test-session-id/plans/ralplan/run-1"), { recursive: true });
+			await mkdir(join(cwd, ".pi/test-session-id/artifacts/plans/ralplan/run-1"), { recursive: true });
 			await writeFile(ralplanObstacleLedgerPath(cwd, "run-1", sessionId), "{not json", "utf8");
 			await expect(readRalplanObstacleLedger(cwd, "run-1", sessionId)).rejects.toThrow(
 				"invalid ralplan obstacle ledger: malformed JSON",

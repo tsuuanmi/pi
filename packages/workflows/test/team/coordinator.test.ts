@@ -12,7 +12,7 @@ import {
 	transitionTeamTask,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { teamReceiptsPath } from "#workflows/session/session-layout";
+import { teamReceiptsPath } from "#workflows/skills/team/paths";
 import { createFakeManager, createTeamContext } from "#workflows-test/team/fakes";
 
 const sessionId = "team-coordinator-session";

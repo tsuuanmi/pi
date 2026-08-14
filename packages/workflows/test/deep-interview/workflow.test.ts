@@ -1,12 +1,12 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { sessionActiveStatePath } from "@tsuuanmi/pi/session/layout";
 import {
 	answerHash,
 	appendOrMergeDeepInterviewRound,
 	assertDeepInterviewHandoff,
 	assertDeepInterviewSpecReady,
-	deepInterviewSpecPath,
 	deriveRoundKey,
 	enrichDeepInterviewRoundScoring,
 	finalizeDeepInterviewSpecState,
@@ -20,11 +20,11 @@ import {
 	restateGoalGate,
 	runClosureAcceptanceGuard,
 	syncWorkflowActiveState,
-	workflowActiveStatePath,
 	writeTextArtifact,
 	writeWorkflowState,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { deepInterviewSpecPath } from "#workflows/skills/deep-interview/paths";
 import type { WorkflowToolHost } from "#workflows/tool/index";
 import { registerWorkflowTools } from "#workflows/tool/index";
 
@@ -634,7 +634,7 @@ describe("deep-interview workflow runtime", () => {
 	});
 
 	it("fails closed for invalid active state", async () => {
-		const filePath = workflowActiveStatePath(cwd, TEST_SESSION);
+		const filePath = sessionActiveStatePath(cwd, TEST_SESSION);
 		await mkdir(join(filePath, ".."), { recursive: true });
 		await writeFile(
 			filePath,

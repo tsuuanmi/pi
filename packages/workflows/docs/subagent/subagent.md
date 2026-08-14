@@ -42,3 +42,11 @@ interface WorkflowContext {
 ```
 
 Workflows depend only on public Pi and orchestrator package exports. They do not import orchestrator internals, create managers, or duplicate generic lifecycle state. Orchestrator does not import workflow policy, profiles, or artifact schemas.
+
+## Subagent / workflow execution boundary
+
+The subagent lifecycle record and the workflow execution meaning are separate concerns with a strict ownership boundary (see [Canonical `.pi` Session Layout](../../../pi/docs/session/layout.md)):
+
+- **Subagent owns subagent things.** The orchestrator is the sole owner of the subagent lifecycle record under `state/subagent/<id>/`. The workflow never writes to `state/subagent/`.
+- **Workflow owns state and workflow meaning.** The workflow owns everything under `skills/<skill>/`, including its per-execution meaning at `skills/<skill>/executions/<subagent-id>.json`.
+- **Read via the public API, write only workflow fields.** The workflow reads subagent records through the orchestrator's public `SubagentStore.read/list` API and writes an execution record storing only workflow-owned fields (`run_id`, `stage`, `stage_n`, `role`, validation) plus a `subagent_id` reference. It does not copy status, result text, artifact, or any other subagent field.

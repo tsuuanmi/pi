@@ -20,7 +20,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { assembleFinalPackage, type WorkflowFinalPackage } from "#workflows/artifacts/final-package";
-import { ultragoalLedgerPath } from "#workflows/session/session-layout";
+import { ultragoalLedgerPath } from "#workflows/skills/ultragoal/paths";
 import { canonicalizeJson } from "#workflows/state/state-writer";
 
 export type UltragoalGoalStatus =

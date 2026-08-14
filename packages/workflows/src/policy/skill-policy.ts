@@ -1,6 +1,6 @@
 import type { ExpectedNextRole } from "#workflows/policy/expected-next-role";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 import type { WorkflowRuntimeReceipt } from "#workflows/runtime/types";
-import type { WorkflowSkill } from "#workflows/session/paths";
 import { deepInterviewPolicy } from "#workflows/skills/deep-interview/policy";
 import { ralplanPolicy } from "#workflows/skills/ralplan/policy";
 import { teamPolicy } from "#workflows/skills/team/policy";

@@ -1,11 +1,6 @@
 import { readFile } from "node:fs/promises";
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
 import { writeStageArtifact } from "#workflows/artifacts/artifacts";
-import {
-	ralplanIndexPath,
-	ralplanPendingApprovalPath,
-	ralplanStageArtifactPath,
-	workflowStatePath,
-} from "#workflows/session/session-layout";
 import {
 	beginRalplanCompletionJournal,
 	commitRalplanCompletionJournal,
@@ -30,6 +25,11 @@ import {
 	readRalplanStatus,
 } from "#workflows/skills/ralplan/index-store";
 import { ralplanObstacleFromVerdict, writeRalplanObstacle } from "#workflows/skills/ralplan/obstacles";
+import {
+	ralplanIndexPath,
+	ralplanPendingApprovalPath,
+	ralplanStageArtifactPath,
+} from "#workflows/skills/ralplan/paths";
 import type { RalplanWriteArtifactInput, RalplanWriteArtifactResult } from "#workflows/skills/ralplan/types";
 import { parseRalplanVerdict } from "#workflows/skills/ralplan/verdicts";
 import { syncWorkflowActiveState } from "#workflows/state/active-state";
@@ -108,7 +108,7 @@ export async function writeRalplanArtifact(
 			artifact_path: artifactPath,
 			artifact_sha256: contentSha,
 			snapshot_fingerprint: beforeFingerprint,
-			paths: [artifactPath, ralplanIndexPath(cwd, runId, sessionId), workflowStatePath(cwd, "ralplan", sessionId)],
+			paths: [artifactPath, ralplanIndexPath(cwd, runId, sessionId), skillStatePath(cwd, "ralplan", sessionId)],
 			steps: [
 				"stage_artifact",
 				"index_row",
@@ -201,7 +201,7 @@ export async function writeRalplanArtifact(
 					skill: "ralplan",
 					active: state.active,
 					phase: state.current_phase,
-					state_path: workflowStatePath(cwd, "ralplan", sessionId),
+					state_path: skillStatePath(cwd, "ralplan", sessionId),
 					hud: buildRalplanHud(status),
 				},
 				{ sessionId },

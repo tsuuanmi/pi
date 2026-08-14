@@ -1,6 +1,6 @@
 # Pi Workflow
 
-Pi ships workflow support as the package-shaped first-party `pi:workflows` bundle. It provides the `pi workflow` control plane and four bundled [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/loader/skills/index.md) for requirements gathering, planning, parallel execution, and goal-tracked execution. The control plane lives under `<workspace>/.pi/state/harness` (override with `PI_HARNESS_STATE_ROOT`) and workflow runtime artifacts persist under the current session root, e.g. `.pi/<session-id>/workflows/<skill>/` and `.pi/<session-id>/state/`.
+Pi ships workflow support as the package-shaped first-party `pi:workflows` bundle. It provides the `pi workflow` control plane and four bundled [Skills](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/loader/skills/index.md) for requirements gathering, planning, parallel execution, and goal-tracked execution. The control plane lives under `<workspace>/.pi/state/harness` (override with `PI_HARNESS_STATE_ROOT`). Workflow runtime artifacts persist under the current session root. The canonical session layout is owned by `@tsuuanmi/pi` and documented in [Canonical `.pi` Session Layout](../../pi/docs/session/layout.md); workflows consume pi's `session/layout` builders and never define their own session-root paths.
 
 ## Built-in skills
 

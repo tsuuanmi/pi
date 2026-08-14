@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import { transactionJournalPath } from "#workflows/session/session-layout";
+import { sessionTransactionPath } from "@tsuuanmi/pi/session/layout";
 import { criticObstacleAgreement, latestCriticPass, latestCriticVerdict } from "#workflows/skills/ralplan/approval";
 import { ralplanCompletionProvenancePath } from "#workflows/skills/ralplan/completion-transaction";
 import { isPlainObject, readRalplanStatus } from "#workflows/skills/ralplan/index-store";
@@ -70,7 +70,7 @@ export async function doctorRalplan(cwd: string, sessionId: string, runId?: stri
 		}
 	}
 	if (status.run_id) {
-		const txDir = dirname(transactionJournalPath(cwd, sessionId, "probe"));
+		const txDir = dirname(sessionTransactionPath(cwd, sessionId, "probe"));
 		try {
 			const files = await readdir(txDir);
 			for (const file of files.sort()) {

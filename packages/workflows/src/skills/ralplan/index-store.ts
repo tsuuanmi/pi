@@ -1,11 +1,12 @@
 import { readFile } from "node:fs/promises";
-import type { RalplanStage } from "#workflows/session/paths";
-import { ralplanIndexPath, ralplanPendingApprovalPath, workflowStatePath } from "#workflows/session/session-layout";
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
 import { roleForStage } from "#workflows/skills/ralplan/agent-roles";
+import { ralplanIndexPath, ralplanPendingApprovalPath } from "#workflows/skills/ralplan/paths";
 import type {
 	RalplanIndexRow,
 	RalplanInvalidIndexLine,
 	RalplanPlannerStateUpdate,
+	RalplanStage,
 	RalplanStatus,
 	RalplanWriteArtifactInput,
 } from "#workflows/skills/ralplan/types";
@@ -229,7 +230,7 @@ export async function readRalplanStatus(cwd: string, sessionId: string, runIdInp
 	const statePendingPath = typeof state?.pending_approval_path === "string" ? state.pending_approval_path : undefined;
 	return {
 		run_id: runId,
-		state_path: workflowStatePath(cwd, "ralplan", sessionId),
+		state_path: skillStatePath(cwd, "ralplan", sessionId),
 		state,
 		index_path: runId ? ralplanIndexPath(cwd, runId, sessionId) : undefined,
 		rows: index.rows,

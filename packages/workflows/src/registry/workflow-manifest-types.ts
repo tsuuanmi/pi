@@ -1,4 +1,4 @@
-import type { WorkflowSkill } from "#workflows/session/paths";
+export type WorkflowSkill = "deep-interview" | "ralplan" | "team" | "ultragoal";
 
 export type WorkflowStateOperation =
 	| "initialize"

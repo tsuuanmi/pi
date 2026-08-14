@@ -1,5 +1,5 @@
 import { nextRoleForSkill } from "#workflows/policy/skill-policy";
-import type { WorkflowSkill } from "#workflows/session/paths";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 
 export interface ExpectedNextRole {
 	skill: WorkflowSkill;

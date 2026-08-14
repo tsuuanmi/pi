@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
 import { appendAuditEntry, auditStateWrite, auditVerbForOperation } from "#workflows/audit/audit-log";
 import { assertStateIntegrity } from "#workflows/audit/tamper-detection";
 import {
@@ -8,8 +9,7 @@ import {
 	isValidWorkflowTransition,
 	type WorkflowStateOperation,
 } from "#workflows/registry/workflow-manifest";
-import type { WorkflowSkill } from "#workflows/session/paths";
-import { workflowStatePath } from "#workflows/session/session-layout";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 import { coerceWorkflowState, type WorkflowStateEnvelope } from "#workflows/state/state-schema";
 import {
 	createWorkflowReceipt,
@@ -53,7 +53,7 @@ export async function readWorkflowState(
 	skill: WorkflowSkill,
 	options: WorkflowStateReadOptions,
 ): Promise<Record<string, unknown> | undefined> {
-	const result = await readExistingStateForMutation(workflowStatePath(cwd, skill, options.sessionId));
+	const result = await readExistingStateForMutation(skillStatePath(cwd, skill, options.sessionId));
 	if (result.kind === "absent") return undefined;
 	if (result.kind === "corrupt") throw new Error(`workflow state is corrupt: ${result.error}`);
 	return result.value;
@@ -194,7 +194,7 @@ async function persistWorkflowState(
 	options: WorkflowStateWriteOptions,
 ): Promise<WorkflowStateEnvelope> {
 	const sessionId = options.sessionId;
-	const path = workflowStatePath(cwd, skill, sessionId);
+	const path = skillStatePath(cwd, skill, sessionId);
 	const mutatedAt = nowIso();
 	const mutationId = options.mutationId ?? randomUUID();
 	const next = coerceWorkflowState(skill, existingForMerge, patch, mutatedAt);
@@ -250,7 +250,7 @@ export async function writeWorkflowState(
 	options: WorkflowStateWriteOptions,
 ): Promise<WorkflowStateEnvelope> {
 	const sessionId = options.sessionId;
-	const path = workflowStatePath(cwd, skill, sessionId);
+	const path = skillStatePath(cwd, skill, sessionId);
 	const existingRead = await readExistingStateForMutation(path);
 	if (existingRead.kind === "corrupt") {
 		throw new Error(`workflow state is corrupt: ${existingRead.error}`);
@@ -277,7 +277,7 @@ export async function replaceWorkflowState(
 	options: WorkflowStateWriteOptions,
 ): Promise<WorkflowStateEnvelope> {
 	const sessionId = options.sessionId;
-	const path = workflowStatePath(cwd, skill, sessionId);
+	const path = skillStatePath(cwd, skill, sessionId);
 	const existingRead = await readExistingStateForMutation(path);
 	if (existingRead.kind === "corrupt") {
 		throw new Error(`workflow state is corrupt: ${existingRead.error}`);

@@ -1,14 +1,15 @@
 import { chmod, mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type AuditEntry, auditLogPath, writeWorkflowState } from "@tsuuanmi/pi-workflows";
+import { sessionAuditPath } from "@tsuuanmi/pi/session/layout";
+import { type AuditEntry, writeWorkflowState } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const sessionId = "test-session-id";
 
 async function readAudit(cwd: string): Promise<AuditEntry[]> {
 	try {
-		const raw = await readFile(auditLogPath(cwd, sessionId), "utf8");
+		const raw = await readFile(sessionAuditPath(cwd, sessionId), "utf8");
 		return raw
 			.split(/\r?\n/)
 			.map((line) => line.trim())
@@ -101,7 +102,7 @@ describe("state-integrity audit log (STATE-005)", () => {
 			"pi workflow state write",
 			{ sessionId },
 		);
-		const auditFile = auditLogPath(cwd, sessionId);
+		const auditFile = sessionAuditPath(cwd, sessionId);
 		const before = await readAudit(cwd);
 		expect(before).toHaveLength(1);
 

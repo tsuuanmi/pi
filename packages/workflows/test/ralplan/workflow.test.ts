@@ -4,7 +4,6 @@ import { dirname, join } from "node:path";
 import {
 	approveRalplanPlan,
 	doctorRalplan,
-	ralplanIndexPath,
 	readRalplanStatus,
 	readWorkflowActiveState,
 	readWorkflowState,
@@ -12,6 +11,7 @@ import {
 	writeRalplanArtifact,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { ralplanIndexPath } from "#workflows/skills/ralplan/paths";
 
 const sessionId = "test-session-id";
 

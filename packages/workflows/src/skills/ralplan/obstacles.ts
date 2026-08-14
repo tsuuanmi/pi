@@ -17,7 +17,7 @@ import {
 	type ObstacleViolation,
 	validateObstacles,
 } from "#workflows/audit/decision-ledger";
-import { ralplanObstacleLedgerPath } from "#workflows/session/session-layout";
+import { ralplanObstacleLedgerPath } from "#workflows/skills/ralplan/paths";
 import type {
 	RalplanArchitectVerdict,
 	RalplanCriticVerdict,

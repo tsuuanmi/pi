@@ -40,5 +40,5 @@ Lifecycle mutations route to the live runtime owner. Read-only inspection remain
 - [Workflow control plane](../workflow.md)
 - [Commands](../commands/workflow.md)
 - [State](../state/state.md)
-- [Session](../session/session.md)
+- [Canonical `.pi` Session Layout](../../../pi/docs/session/layout.md)
 - [Security](https://github.com/tsuuanmi/pi/tree/main/packages/pi/docs/app/security.md) - Sandbox boundaries

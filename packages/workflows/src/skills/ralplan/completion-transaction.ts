@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
+import { sessionTransactionPath } from "@tsuuanmi/pi/session/layout";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
-import { ralplanCompletionLockPath, transactionJournalPath } from "#workflows/session/session-layout";
+import { ralplanCompletionLockPath } from "#workflows/skills/ralplan/paths";
 import { nowIso, writeJsonAtomic } from "#workflows/state/state-writer";
 
 export const RALPLAN_COMPLETION_TRANSACTION_VERSION = 1;
@@ -64,7 +65,7 @@ export function ralplanCompletionMutationId(input: {
 }
 
 function journalPath(cwd: string, sessionId: string, mutationId: string): string {
-	return transactionJournalPath(cwd, sessionId, mutationId);
+	return sessionTransactionPath(cwd, sessionId, mutationId);
 }
 
 async function readJournal(path: string): Promise<RalplanCompletionJournal> {

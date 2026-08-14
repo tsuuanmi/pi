@@ -1,7 +1,7 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { WorkflowSkill } from "#workflows/session/paths";
-import { auditLogPath } from "#workflows/session/paths";
+import { sessionAuditPath } from "@tsuuanmi/pi/session/layout";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 
 export type AuditCategory = "state" | "artifact" | "report" | "log" | "prune";
 
@@ -29,7 +29,7 @@ export interface AuditEntry {
 }
 
 export async function appendAuditEntry(cwd: string, sessionId: string, entry: AuditEntry): Promise<void> {
-	const filePath = auditLogPath(cwd, sessionId);
+	const filePath = sessionAuditPath(cwd, sessionId);
 	await mkdir(dirname(filePath), { recursive: true });
 	await appendFile(filePath, `${JSON.stringify(entry)}\n`, "utf8");
 }

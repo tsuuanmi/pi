@@ -8,12 +8,11 @@ import {
 	recordUltragoalBlockerClassification,
 	recordUltragoalObstacle,
 	startNextUltragoalGoal,
-	ultragoalGoalsPath,
 	ultragoalGuard,
-	ultragoalLedgerPath,
 	validateCompletionQualityGate,
 } from "@tsuuanmi/pi-workflows";
 import { assert, expect, test } from "vitest";
+import { ultragoalGoalsPath, ultragoalLedgerPath } from "#workflows/skills/ultragoal/paths";
 
 const sessionId = "test-session-id";
 

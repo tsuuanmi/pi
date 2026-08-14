@@ -1,14 +1,8 @@
 import { mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-	clearWorkflowState,
-	handoffWorkflow,
-	readWorkflowState,
-	transactionJournalPath,
-	workflowActiveStatePath,
-	writeWorkflowState,
-} from "@tsuuanmi/pi-workflows";
+import { sessionActiveStatePath, sessionTransactionPath } from "@tsuuanmi/pi/session/layout";
+import { clearWorkflowState, handoffWorkflow, readWorkflowState, writeWorkflowState } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const TEST_SESSION = "test-session-id";
@@ -28,7 +22,7 @@ function receiptOf(envelope: Record<string, unknown>): Record<string, unknown> {
 
 async function journalExists(cwd: string, mutationId: string): Promise<boolean> {
 	try {
-		await readFile(transactionJournalPath(cwd, TEST_SESSION, mutationId), "utf8");
+		await readFile(sessionTransactionPath(cwd, TEST_SESSION, mutationId), "utf8");
 		return true;
 	} catch (error) {
 		const err = error as NodeJS.ErrnoException;
@@ -38,7 +32,7 @@ async function journalExists(cwd: string, mutationId: string): Promise<boolean> 
 }
 
 async function readActiveEntries(cwd: string, sessionId: string): Promise<Record<string, unknown>[]> {
-	const raw = JSON.parse(await readFile(workflowActiveStatePath(cwd, sessionId), "utf8"));
+	const raw = JSON.parse(await readFile(sessionActiveStatePath(cwd, sessionId), "utf8"));
 	return raw.active_workflows as Record<string, unknown>[];
 }
 

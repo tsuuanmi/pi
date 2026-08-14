@@ -1,5 +1,5 @@
-import { teamEventsPath } from "#workflows/session/session-layout";
 import type { TeamWorkflowEvent } from "#workflows/skills/team/event-mapper";
+import { teamEventsPath } from "#workflows/skills/team/paths";
 import { appendJsonlIdempotent, nowIso, sha256 } from "#workflows/state/state-writer";
 
 export async function saveTeamWorkflowEvents(

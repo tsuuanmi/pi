@@ -1,11 +1,11 @@
 import type {
 	WorkflowRetentionPolicy,
 	WorkflowRuntimeManifest,
+	WorkflowSkill,
 	WorkflowStateOperation,
 	WorkflowStateValidationContext,
 	WorkflowTransition,
 } from "#workflows/registry/workflow-manifest-types";
-import type { WorkflowSkill } from "#workflows/session/paths";
 
 const STATE_RETENTION: WorkflowRetentionPolicy = { category: "state", keep: 1 };
 const ARTIFACT_RETENTION: WorkflowRetentionPolicy = { category: "artifact" };

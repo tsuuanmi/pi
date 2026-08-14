@@ -1,7 +1,7 @@
 import { handoffWorkflow } from "#workflows/handoff/handoff";
-import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/session/session-layout";
 import { restateGoalGate, runClosureCheckForSession } from "#workflows/skills/deep-interview/closure";
 import { assertDeepInterviewHandoff } from "#workflows/skills/deep-interview/guards";
+import { deepInterviewIndexPath, deepInterviewSpecPath } from "#workflows/skills/deep-interview/paths";
 import { planDeepInterviewQuestion } from "#workflows/skills/deep-interview/questions";
 import {
 	appendOrMergeDeepInterviewRound,

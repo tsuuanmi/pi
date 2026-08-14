@@ -9,12 +9,16 @@ export type {
 	WorkflowVerb,
 } from "#workflows/registry/workflow-manifest-types";
 
-import type { WorkflowManifest, WorkflowTypedArg, WorkflowVerb } from "#workflows/registry/workflow-manifest-types";
+import type {
+	WorkflowManifest,
+	WorkflowSkill,
+	WorkflowTypedArg,
+	WorkflowVerb,
+} from "#workflows/registry/workflow-manifest-types";
 import {
 	getWorkflowRuntimeManifest,
 	PI_WORKFLOW_RUNTIME_MANIFEST,
 } from "#workflows/registry/workflow-runtime-manifest";
-import type { WorkflowSkill } from "#workflows/session/paths";
 import { WORKFLOW_SKILL_HELP } from "#workflows/skills/workflow-help-registry";
 
 export {

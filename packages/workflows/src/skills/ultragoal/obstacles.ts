@@ -18,7 +18,7 @@ import {
 	type ObstacleViolation,
 	validateObstacles,
 } from "#workflows/audit/decision-ledger";
-import { ultragoalDir } from "#workflows/session/session-layout";
+import { ultragoalDir } from "#workflows/skills/ultragoal/paths";
 import { writeJsonAtomic } from "#workflows/state/state-writer";
 
 /**

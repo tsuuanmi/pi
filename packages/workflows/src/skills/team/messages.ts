@@ -1,5 +1,5 @@
-import { teamMailboxPath } from "#workflows/session/session-layout";
 import { assertSafeId } from "#workflows/skills/team/ids";
+import { teamMailboxPath } from "#workflows/skills/team/paths";
 import { appendTeamEvent, resolveTeamId } from "#workflows/skills/team/team-store";
 import { appendJsonl, nowIso, sha256 } from "#workflows/state/state-writer";
 

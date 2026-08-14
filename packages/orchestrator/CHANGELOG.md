@@ -16,6 +16,7 @@
 
 ### Changed
 
+- **subagent**: Resolve the canonical session subagent directory through `@tsuuanmi/pi/session/layout`; the persisted path remains `state/subagent/`.
 - **orchestrator**: Split task graph, prompt formatting, execution failure, event, result, and verification responsibilities into focused modules.
 - **orchestrator**: Replaced task requirement strings with structured hard requirements and added typed scheduling warnings.
 - **orchestrator**: Made checkpoint save failures best-effort by default with an explicit strict policy.

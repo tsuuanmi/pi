@@ -1,6 +1,6 @@
 import type { WorkflowCommandResult } from "#workflows/commands/workflow/index";
 import { clearWorkflowPhase, PI_WORKFLOW_SKILLS } from "#workflows/registry/workflow-manifest";
-import type { WorkflowSkill } from "#workflows/session/paths";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 import { readWorkflowActiveState } from "#workflows/state/active-state";
 import { assertWorkflowSkill } from "#workflows/state/state-schema";
 import { clearWorkflowState, readWorkflowState } from "#workflows/state/workflow-state";

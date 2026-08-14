@@ -14,4 +14,4 @@ Command order for agents:
 8. `pi workflow ultragoal classify-blocker --input '{"sessionId":"<session-id>","classification":"human_blocked","evidence":"..."}' --json` only for policy-classified failed/blocked work.
 9. `pi workflow ultragoal guard --input '{"sessionId":"<session-id>"}' --json` when readiness or quality is uncertain.
 
-Always pass the current session id as `sessionId` in action payloads. Complete checkpoints require the nested `qualityGate` shape from `../assets/schema.json`. Restore is state-only: it restores `.pi/<session-id>/ultragoal/goals.json` and workflow state, but it never rolls back workspace files.
+Always pass the current session id as `sessionId` in action payloads. Complete checkpoints require the nested `qualityGate` shape from `../assets/schema.json`. Restore is state-only: it restores `.pi/<session-id>/skills/ultragoal/goals.json` and workflow state, but it never rolls back workspace files.

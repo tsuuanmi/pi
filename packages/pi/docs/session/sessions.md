@@ -19,6 +19,8 @@ Use `/session` in interactive mode to see the current session file, session ID, 
 
 For the JSONL file format and SessionManager API, see [Session Format](session-format.md).
 
+The `.pi/<session-id>/` artifact tree (workflow state, subagent records, audit, plans, specs) follows the canonical layout owned by pi; see [Canonical `.pi` Session Layout](layout.md).
+
 ## Session Commands
 
 | Command | Description |

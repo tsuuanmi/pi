@@ -12,7 +12,7 @@ Coordinate parallel implementation workers after an approved plan exists.
 
 ## Overview
 
-Team manages the coordination board under `.pi/<session-id>/team/<team-id>/`. It tracks tasks, worker messages, review gates, completion evidence, and guarded worker/reviewer/prover execution.
+Team manages the coordination board under `.pi/<session-id>/skills/team/<team-id>/`. It tracks tasks, worker messages, review gates, completion evidence, and guarded worker/reviewer/prover execution.
 
 ## Module Structure
 
@@ -99,15 +99,15 @@ Role capability matching is exact. Missing capabilities and duplicate agent ids 
 
 | File | Description |
 |------|-------------|
-| `.pi/<session-id>/team/<teamId>/config.json` | Team coordination state. |
-| `.pi/<session-id>/team/<teamId>/tasks/<task-id>.json` | Task definitions and execution evidence. |
-| `.pi/<session-id>/team/<teamId>/tasks/<task-id>/gates/review/attempt-<nn>.json` | Per-task review gate artifacts. |
-| `.pi/<session-id>/team/<teamId>/events.jsonl` | Idempotent Team event log. |
-| `.pi/<session-id>/team/<teamId>/receipts.jsonl` | Task execution receipt references. |
-| `.pi/<session-id>/team/<teamId>/checkpoints/<run-id>.json` | Orchestrator checkpoint snapshots. |
-| `.pi/<session-id>/team/<teamId>/runs/<run-id>.json` | Durable role-run records. |
-| `.pi/<session-id>/team/<teamId>/gates/completion/attempt-<nn>.json` | Team completion gate artifacts. |
-| `.pi/<session-id>/team/<teamId>/mailbox/<recipient>.jsonl` | Per-recipient coordination messages. |
+| `.pi/<session-id>/skills/team/<teamId>/config.json` | Team coordination state. |
+| `.pi/<session-id>/skills/team/<teamId>/tasks/<task-id>.json` | Task definitions and execution evidence. |
+| `.pi/<session-id>/skills/team/<teamId>/tasks/<task-id>/gates/review/attempt-<nn>.json` | Per-task review gate artifacts. |
+| `.pi/<session-id>/skills/team/<teamId>/events.jsonl` | Idempotent Team event log. |
+| `.pi/<session-id>/skills/team/<teamId>/receipts.jsonl` | Task execution receipt references. |
+| `.pi/<session-id>/skills/team/<teamId>/checkpoints/<run-id>.json` | Orchestrator checkpoint snapshots. |
+| `.pi/<session-id>/skills/team/<teamId>/runs/<run-id>.json` | Durable role-run records. |
+| `.pi/<session-id>/skills/team/<teamId>/gates/completion/attempt-<nn>.json` | Team completion gate artifacts. |
+| `.pi/<session-id>/skills/team/<teamId>/mailbox/<recipient>.jsonl` | Per-recipient coordination messages. |
 
 ## Gates
 

@@ -1,4 +1,4 @@
-import { workflowStatePath } from "#workflows/session/session-layout";
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
 import { runClosureAcceptanceGuard } from "#workflows/skills/deep-interview/closure";
 import { readDeepInterviewEnvelope, readRounds } from "#workflows/skills/deep-interview/deep-interview-store";
 import { mergeDeepInterviewEnvelope } from "#workflows/skills/deep-interview/envelope";
@@ -53,7 +53,7 @@ export async function finalizeDeepInterviewSpecState(
 				skill: "deep-interview",
 				active: false,
 				phase: next.current_phase,
-				state_path: workflowStatePath(cwd, "deep-interview", sessionId),
+				state_path: skillStatePath(cwd, "deep-interview", sessionId),
 				hud: deriveDeepInterviewHud(next, {
 					specStatus: "persisted",
 					updatedAt: new Date().toISOString(),
@@ -62,5 +62,5 @@ export async function finalizeDeepInterviewSpecState(
 			{ sessionId },
 		);
 	}
-	return { statePath: workflowStatePath(cwd, "deep-interview", sessionId) };
+	return { statePath: skillStatePath(cwd, "deep-interview", sessionId) };
 }

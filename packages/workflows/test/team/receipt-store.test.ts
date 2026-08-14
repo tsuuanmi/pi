@@ -2,7 +2,7 @@ import { readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { teamReceiptsPath } from "#workflows/session/session-layout";
+import { teamReceiptsPath } from "#workflows/skills/team/paths";
 import { mapTaskReceipt, type TeamTaskReceiptRef } from "#workflows/skills/team/receipt-mapper";
 import { saveTeamReceipts } from "#workflows/skills/team/receipt-store";
 

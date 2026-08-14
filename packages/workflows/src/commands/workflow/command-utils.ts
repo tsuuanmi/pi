@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { isBlockingQuestionPhase } from "#workflows/policy/skill-policy";
-import type { WorkflowSkill } from "#workflows/session/paths";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 import { getWorkflowSkillCommandNames } from "#workflows/skills/workflow-help-registry";
 
 export function gitOutput(workspace: string, args: string[]): string | null {

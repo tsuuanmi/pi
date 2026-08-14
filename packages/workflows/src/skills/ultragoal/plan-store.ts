@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
+import { buildUltragoalHud } from "#workflows/skills/ultragoal/hud";
 import {
 	ultragoalBriefPath,
 	ultragoalCheckpointPath,
 	ultragoalGoalsPath,
 	ultragoalLedgerPath,
-	workflowStatePath,
-} from "#workflows/session/session-layout";
-import { buildUltragoalHud } from "#workflows/skills/ultragoal/hud";
+} from "#workflows/skills/ultragoal/paths";
 import { normalizeGoalStatus, nowIso } from "#workflows/skills/ultragoal/plan-model";
 import {
 	hashStructuredValue,
@@ -150,7 +150,7 @@ export async function syncUltragoalState(cwd: string, status: UltragoalStatus, s
 			skill: "ultragoal",
 			active: state.active,
 			phase: state.current_phase,
-			state_path: workflowStatePath(cwd, "ultragoal", sessionId),
+			state_path: skillStatePath(cwd, "ultragoal", sessionId),
 			hud: buildUltragoalHud(status),
 		},
 		{ sessionId },

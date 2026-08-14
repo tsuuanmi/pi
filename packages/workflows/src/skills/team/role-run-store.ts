@@ -1,4 +1,4 @@
-import { teamRoleRunPath } from "#workflows/session/session-layout";
+import { teamRoleRunPath } from "#workflows/skills/team/paths";
 import { nowIso, writeJsonAtomic } from "#workflows/state/state-writer";
 
 export async function saveRoleFailure(

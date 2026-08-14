@@ -8,7 +8,11 @@ const repoRoot = join(import.meta.dirname, "../../../../");
 const execFileAsync = promisify(execFile);
 const workflowsSrc = join(repoRoot, "packages/workflows/src");
 const allowedAgentNodeImports = new Set(["resolvePath", "serializeJsonLine", "withFileMutationQueue"]);
-const allowedPiImports = new Set(["@tsuuanmi/pi/extensions", "@tsuuanmi/pi/session/root"]);
+const allowedPiImports = new Set([
+	"@tsuuanmi/pi/extensions",
+	"@tsuuanmi/pi/session/layout",
+	"@tsuuanmi/pi/session/root",
+]);
 
 async function listTypeScriptFiles(dir: string): Promise<string[]> {
 	const entries = await readdir(dir, { withFileTypes: true });

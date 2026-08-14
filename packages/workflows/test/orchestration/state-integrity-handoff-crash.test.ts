@@ -1,10 +1,10 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { sessionTransactionPath } from "@tsuuanmi/pi/session/layout";
 import {
 	beginWorkflowTransactionJournal,
 	handoffWorkflow,
-	transactionJournalPath,
 	updateWorkflowTransactionJournal,
 	type WorkflowTransactionJournal,
 	writeWorkflowState,
@@ -30,7 +30,7 @@ describe("state-integrity handoff crash-injection (STATE-006)", () => {
 
 	it("rejects unsupported journal versions", async () => {
 		const mutationId = "legacy-journal-test";
-		const filePath = transactionJournalPath(cwd, sessionId, mutationId);
+		const filePath = sessionTransactionPath(cwd, sessionId, mutationId);
 		await mkdir(join(filePath, ".."), { recursive: true });
 		await writeFile(filePath, JSON.stringify({ version: 99, session_id: sessionId }));
 
@@ -69,7 +69,7 @@ describe("state-integrity handoff crash-injection (STATE-006)", () => {
 		).rejects.toThrow(new RegExp(`injected handoff failure after caller write for ${mutationId}`));
 
 		// A pending journal remains (orphan — repair deferred to STATE-007).
-		const raw = await readFile(transactionJournalPath(cwd, sessionId, mutationId), "utf8");
+		const raw = await readFile(sessionTransactionPath(cwd, sessionId, mutationId), "utf8");
 		const journal = JSON.parse(raw) as WorkflowTransactionJournal;
 		expect(journal.version).toBe(2);
 		expect(journal.session_id).toBe(sessionId);

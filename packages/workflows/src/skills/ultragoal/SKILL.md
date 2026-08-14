@@ -53,7 +53,7 @@ Critical: before running any `pi workflow ultragoal <action>` command, read [ref
 
 ## Checkpoint restore
 
-- Checkpoints are task-level restore points under `.pi/<session-id>/ultragoal/checkpoints/`.
+- Checkpoints are task-level restore points under `.pi/<session-id>/skills/ultragoal/checkpoints/`.
 - `pi workflow ultragoal restore-checkpoint` restores only the latest valid checkpoint for the same main-goal/task identity.
 - Restore fails closed when snapshot hashes do not match, the snapshot is missing/corrupt, the current main goal or task identities drifted, or an optional `expectedPlanHash` is stale.
 - Restore does not roll back source files, generated files, dependencies, or any other workspace content. Treat it as workflow-state recovery only.

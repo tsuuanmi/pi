@@ -1,5 +1,6 @@
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
 import { validateContextMapVerdict } from "#workflows/policy/gate-verdicts";
-import { ralplanGateArtifactPath, workflowStatePath } from "#workflows/session/session-layout";
+import { ralplanGateArtifactPath } from "#workflows/skills/ralplan/paths";
 import { writeJsonAtomic } from "#workflows/state/state-writer";
 import {
 	activeRalplanRunId,
@@ -121,5 +122,5 @@ export async function assertRalplanExplorerGatePassed(cwd: string, runId: string
 }
 
 export function ralplanExplorerGateStatePath(cwd: string, sessionId: string): string {
-	return workflowStatePath(cwd, "ralplan", sessionId);
+	return skillStatePath(cwd, "ralplan", sessionId);
 }

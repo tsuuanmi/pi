@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import { getWorkflowManifest, PI_WORKFLOW_SKILLS } from "#workflows/registry/workflow-manifest";
-import type { WorkflowSkill } from "#workflows/session/paths";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 import { WORKFLOW_SKILL_HELP } from "#workflows/skills/workflow-help-registry";
 import type { WorkflowSkillHelp } from "#workflows/skills/workflow-help-types";
 
@@ -30,6 +30,7 @@ const WORKFLOW_VERB_DESCRIPTIONS: Record<string, string> = {
 	finalize: "Finalize a workflow session.",
 	operate: "Run the workflow operator loop toward a goal.",
 	gc: "Garbage-collect retired workflow runtime records.",
+	migrate: "Move one session to the canonical .pi layout.",
 	events: "Read workflow runtime event history.",
 	retire: "Retire workflow runtime state for a session.",
 };
@@ -100,12 +101,13 @@ Options:
   --input-file <path>  Read JSON object payload from a file
   --json               Pretty-print JSON output where supported
   --prune              Remove records during gc (gc only)
-  --dry-run            Preview gc without removing records (gc only)
+  --dry-run            Preview gc or migrate without changing files
   --help, -h           Show workflow or skill help
 
 Examples:
   pi workflow observe --input '{"sessionId":"h-..."}' --json
   pi workflow gc --dry-run --json
+  pi workflow migrate --input '{"sessionId":"20260812-035656"}' --dry-run --json
   pi workflow ralplan status --input '{"sessionId":"h-..."}' --json
   pi workflow deep-interview closure-check --input-file ./payload.json --json
 

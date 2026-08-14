@@ -1,19 +1,19 @@
 import { mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { sessionActiveStatePath } from "@tsuuanmi/pi/session/layout";
 import {
 	applyHandoffToActiveState,
 	readWorkflowActiveState,
 	syncWorkflowActiveState,
 	type WorkflowActiveEntry,
-	workflowActiveStatePath,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const TEST_SESSION = "test-session-id";
 
 async function readRawEntries(cwd: string, sessionId: string): Promise<WorkflowActiveEntry[]> {
-	const raw = JSON.parse(await readFile(workflowActiveStatePath(cwd, sessionId), "utf8"));
+	const raw = JSON.parse(await readFile(sessionActiveStatePath(cwd, sessionId), "utf8"));
 	return raw.active_workflows as WorkflowActiveEntry[];
 }
 

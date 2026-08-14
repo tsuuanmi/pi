@@ -1,4 +1,4 @@
-import { workflowStatePath } from "#workflows/session/session-layout";
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
 import {
 	persistDeepInterviewEnvelope,
 	readDeepInterviewEnvelope,
@@ -72,5 +72,5 @@ export async function planDeepInterviewQuestion(
 	});
 	const next = mergeDeepInterviewEnvelope(orchestrated, { state: { interview_id: interviewId } });
 	await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview plan-question", sessionId);
-	return { question, statePath: workflowStatePath(cwd, "deep-interview", sessionId) };
+	return { question, statePath: skillStatePath(cwd, "deep-interview", sessionId) };
 }

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { appendAuditEntry } from "#workflows/audit/audit-log";
-import type { WorkflowSkill } from "#workflows/session/paths";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 import { workflowEnvelopeContentSha256 } from "#workflows/state/state-writer";
 
 export interface WorkflowEnvelopeIntegrityMismatch {

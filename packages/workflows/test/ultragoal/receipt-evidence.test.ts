@@ -12,10 +12,10 @@ import {
 	type UltragoalLedgerEvent,
 	UltragoalLedgerUnreadable,
 	type UltragoalPlan,
-	ultragoalLedgerPath,
 	validateCompletionReceipt,
 } from "@tsuuanmi/pi-workflows";
 import { assert, test } from "vitest";
+import { ultragoalLedgerPath } from "#workflows/skills/ultragoal/paths";
 
 const sessionId = "test-session-id";
 

@@ -1,4 +1,4 @@
-import { workflowStatePath } from "#workflows/session/session-layout";
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
 import {
 	persistDeepInterviewEnvelope,
 	plannedQuestionOf,
@@ -187,7 +187,7 @@ export async function appendOrMergeDeepInterviewRound(
 	return {
 		action: result.action,
 		record: result.record,
-		statePath: workflowStatePath(cwd, "deep-interview", sessionId),
+		statePath: skillStatePath(cwd, "deep-interview", sessionId),
 	};
 }
 
@@ -245,5 +245,5 @@ export async function enrichDeepInterviewRoundScoring(
 	if (input.metadata) Object.assign(statePatch, input.metadata);
 	const next = mergeDeepInterviewEnvelope(envelope, { state: statePatch });
 	await persistDeepInterviewEnvelope(cwd, next, "pi deep-interview score-round", sessionId);
-	return { record, statePath: workflowStatePath(cwd, "deep-interview", sessionId) };
+	return { record, statePath: skillStatePath(cwd, "deep-interview", sessionId) };
 }

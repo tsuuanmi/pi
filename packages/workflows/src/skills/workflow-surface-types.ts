@@ -1,4 +1,4 @@
-import type { WorkflowSkill } from "#workflows/session/paths";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 
 export type WorkflowSurfaceSkill = WorkflowSkill | "researcher" | "subagent";
 

@@ -1,4 +1,4 @@
-import { teamReceiptsPath } from "#workflows/session/session-layout";
+import { teamReceiptsPath } from "#workflows/skills/team/paths";
 import type { TeamTaskReceiptRef } from "#workflows/skills/team/receipt-mapper";
 import { appendJsonlIdempotent, nowIso } from "#workflows/state/state-writer";
 

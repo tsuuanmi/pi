@@ -75,7 +75,7 @@ Segment IDs are `model`, `mode`, `git`, `path`, `context_pct`, `context_total`, 
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `apiUsageLogging.enabled` | boolean | `true` | Write redacted sidecar API usage records to `<cwd>/.pi/{encodedSessionId}/api-usage.jsonl` |
+| `apiUsageLogging.enabled` | boolean | `true` | Write redacted sidecar API usage records to `<cwd>/.pi/{encodedSessionId}/state/api-usage.jsonl` |
 
 See [API Usage Logging](../runtime/telemetry/api-usage-logging.md) for schema, privacy, and mode behavior.
 

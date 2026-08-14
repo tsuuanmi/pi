@@ -4,8 +4,8 @@ import { dirname, join } from "node:path";
 import type { OrchestratorCheckpoint } from "@tsuuanmi/pi-orchestrator";
 import { createTeamTask, executeTeam, readTeamSnapshot, resumeTeam, startTeam } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { teamCheckpointPath, teamReceiptsPath } from "#workflows/session/session-layout";
 import { createTeamAgents } from "#workflows/skills/team/agent-adapter";
+import { teamCheckpointPath, teamReceiptsPath } from "#workflows/skills/team/paths";
 import { createFakeManager, createTeamContext } from "#workflows-test/team/fakes";
 
 const sessionId = "execution-test";

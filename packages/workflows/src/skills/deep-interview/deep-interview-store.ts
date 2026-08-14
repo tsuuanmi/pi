@@ -1,4 +1,4 @@
-import { workflowStatePath } from "#workflows/session/session-layout";
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
 import { normalizeDeepInterviewEnvelope } from "#workflows/skills/deep-interview/envelope";
 import { deriveDeepInterviewHud } from "#workflows/skills/deep-interview/hud";
 import { answerHash, deriveRoundKey, questionHash } from "#workflows/skills/deep-interview/identity";
@@ -81,7 +81,7 @@ export async function persistDeepInterviewEnvelope(
 			skill: "deep-interview",
 			active: normalized.active,
 			phase: normalized.current_phase,
-			state_path: workflowStatePath(cwd, "deep-interview", sessionId),
+			state_path: skillStatePath(cwd, "deep-interview", sessionId),
 			hud: deriveDeepInterviewHud(normalized, { updatedAt: new Date().toISOString() }),
 		},
 		{ sessionId },

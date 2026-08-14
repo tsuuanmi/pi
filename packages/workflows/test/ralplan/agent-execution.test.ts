@@ -1,4 +1,4 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -84,6 +84,15 @@ describe("ralplan agent execution policy", () => {
 			},
 		});
 		expect(error).toMatch(/without a valid workflow artifact/);
+		const executionPath = join(cwd, ".pi", sessionId, "skills", "ralplan", "executions", "subagent-1.json");
+		expect(JSON.parse(await readFile(executionPath, "utf8"))).toEqual({
+			subagent_id: "subagent-1",
+			role: "explorer",
+			run_id: "run-1",
+			stage: "pre-planner",
+			stage_n: 1,
+			validation: { artifact: "invalid" },
+		});
 	});
 
 	it("accepts completed runs after the semantic artifact transaction", async () => {

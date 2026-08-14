@@ -4,13 +4,13 @@ import {
 	validateEvidenceMatrixVerdict,
 	validateReviewReportVerdict,
 } from "#workflows/policy/gate-verdicts";
+import { assertSafeId } from "#workflows/skills/team/ids";
 import {
 	teamConfigPath,
 	teamGateArtifactPath,
 	teamTaskGateArtifactPath,
 	teamTaskPath,
-} from "#workflows/session/session-layout";
-import { assertSafeId } from "#workflows/skills/team/ids";
+} from "#workflows/skills/team/paths";
 import { readTeamSnapshot, syncTeamState } from "#workflows/skills/team/state";
 import { appendTeamEvent, readJsonObject, readTeamConfig, resolveTeamId } from "#workflows/skills/team/team-store";
 import type {

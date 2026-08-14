@@ -1,5 +1,6 @@
 import { initialWorkflowPhase, PI_WORKFLOW_SKILLS } from "#workflows/registry/workflow-manifest";
-import type { RalplanStage, WorkflowSkill } from "#workflows/session/paths";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
+import type { RalplanStage } from "#workflows/skills/ralplan/types";
 
 const WORKFLOW_STATE_VERSION = 1;
 

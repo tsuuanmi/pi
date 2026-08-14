@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { sessionActiveStatePath, skillStatePath } from "@tsuuanmi/pi/session/layout";
 import { requireSessionId } from "@tsuuanmi/pi/session/root";
 import type { ObstacleInput, ObstacleTrigger } from "#workflows/audit/decision-ledger";
 import {
@@ -8,8 +9,7 @@ import {
 	type WorkflowTransactionSide,
 } from "#workflows/audit/transaction-journal";
 import { initialWorkflowPhase } from "#workflows/registry/workflow-manifest";
-import type { WorkflowSkill } from "#workflows/session/paths";
-import { workflowActiveStatePath, workflowStatePath } from "#workflows/session/session-layout";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 import { writeRalplanObstacle } from "#workflows/skills/ralplan/obstacles";
 import { appendUltragoalObstacle } from "#workflows/skills/ultragoal/obstacles";
 import { applyHandoffToActiveState } from "#workflows/state/active-state";
@@ -108,7 +108,7 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 	const callerExisting = await readWorkflowState(cwd, callerSkill, { sessionId });
 	if (!callerExisting || callerExisting.active !== true) {
 		throw new Error(
-			`handoff caller ${callerSkill} is not active (no active state at ${workflowStatePath(cwd, callerSkill, sessionId)})`,
+			`handoff caller ${callerSkill} is not active (no active state at ${skillStatePath(cwd, callerSkill, sessionId)})`,
 		);
 	}
 	const calleeExisting = await readWorkflowState(cwd, calleeSkill, { sessionId });
@@ -116,9 +116,9 @@ export async function handoffWorkflow(options: HandoffWorkflowOptions): Promise<
 		throw new Error(`handoff callee ${calleeSkill} already holds an active handoff from ${callerSkill}`);
 	}
 
-	const calleePath = workflowStatePath(cwd, calleeSkill, sessionId);
-	const callerPath = workflowStatePath(cwd, callerSkill, sessionId);
-	const activePath = workflowActiveStatePath(cwd, sessionId);
+	const calleePath = skillStatePath(cwd, calleeSkill, sessionId);
+	const callerPath = skillStatePath(cwd, callerSkill, sessionId);
+	const activePath = sessionActiveStatePath(cwd, sessionId);
 	const callerSide: WorkflowTransactionSide = { skill: callerSkill, phase: "handoff" };
 	const calleeInitial = initialWorkflowPhase(calleeSkill);
 	const calleeSide: WorkflowTransactionSide = { skill: calleeSkill, phase: calleeInitial };

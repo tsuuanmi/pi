@@ -1,4 +1,4 @@
-import type { WorkflowSkill } from "#workflows/session/paths";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 import { DEEP_INTERVIEW_SKILL_HELP } from "#workflows/skills/deep-interview/help";
 import { RALPLAN_SKILL_HELP } from "#workflows/skills/ralplan/help";
 import { TEAM_SKILL_HELP } from "#workflows/skills/team/help";

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { appendFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { sessionStateDir } from "@tsuuanmi/pi/session/root";
+import { sessionSubagentDir } from "@tsuuanmi/pi/session/layout";
 import { withFileMutationQueue } from "@tsuuanmi/pi-agent/node";
 import type { SubagentRecord, SubagentStatus } from "#orchestrator/subagent/types";
 
@@ -77,7 +77,7 @@ export class SubagentStore {
 
 	private root(sessionId: string): string {
 		if (!sessionId.trim()) throw new Error("subagent records require a session id");
-		return join(sessionStateDir(this.cwd, sessionId), "subagent");
+		return sessionSubagentDir(this.cwd, sessionId);
 	}
 
 	private indexPath(sessionId: string): string {

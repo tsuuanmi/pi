@@ -1,6 +1,7 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { skillStatePath } from "@tsuuanmi/pi/session/layout";
 import {
 	clearWorkflowState,
 	getWorkflowManifest,
@@ -10,7 +11,6 @@ import {
 	PI_WORKFLOW_SKILLS,
 	replaceWorkflowState,
 	type WorkflowSkill,
-	workflowStatePath,
 	writeWorkflowState,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -22,7 +22,7 @@ const sessionId = "test-session-id";
 const SKILLS: WorkflowSkill[] = ["deep-interview", "ralplan", "team", "ultragoal"];
 
 async function seedState(cwd: string, skill: WorkflowSkill, state: Record<string, unknown>): Promise<void> {
-	const path = workflowStatePath(cwd, skill, sessionId);
+	const path = skillStatePath(cwd, skill, sessionId);
 	await mkdir(join(path, ".."), { recursive: true });
 	await writeFile(
 		path,

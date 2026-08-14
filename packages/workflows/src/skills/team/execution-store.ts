@@ -1,4 +1,4 @@
-import { teamTaskPath } from "#workflows/session/session-layout";
+import { teamTaskPath } from "#workflows/skills/team/paths";
 import { syncTeamState } from "#workflows/skills/team/state";
 import type { TeamSnapshot, TeamTaskExecution } from "#workflows/skills/team/types";
 import { canonicalizeJson, readExistingStateForMutation, writeJsonAtomic } from "#workflows/state/state-writer";

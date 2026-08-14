@@ -20,7 +20,7 @@ export const ULTRAGOAL_SKILL_HELP: WorkflowSkillHelp = {
 		'`pi workflow ultragoal guard --input \'{"sessionId":"<session-id>"}\' --json` when readiness or quality is uncertain.',
 	],
 	referenceFooter: [
-		"Always pass the current session id as `sessionId` in action payloads. Complete checkpoints require the nested `qualityGate` shape from `../assets/schema.json`. Restore is state-only: it restores `.pi/<session-id>/ultragoal/goals.json` and workflow state, but it never rolls back workspace files.",
+		"Always pass the current session id as `sessionId` in action payloads. Complete checkpoints require the nested `qualityGate` shape from `../assets/schema.json`. Restore is state-only: it restores `.pi/<session-id>/skills/ultragoal/goals.json` and workflow state, but it never rolls back workspace files.",
 	],
 	agentFlow: [
 		"Use only for approved concrete execution; route vague requests to deep-interview or ralplan.",

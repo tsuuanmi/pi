@@ -1,5 +1,14 @@
-import type { RalplanStage } from "#workflows/session/paths";
 import type { RalplanCriticVerdictKind, RalplanVerdict } from "#workflows/skills/ralplan/verdicts";
+
+export type RalplanStage =
+	| "pre-planner"
+	| "planner"
+	| "architect"
+	| "critic"
+	| "revision"
+	| "adr"
+	| "final"
+	| "expert-stage";
 
 export interface RalplanPlannerStateUpdate {
 	plannerSubagentId?: string;

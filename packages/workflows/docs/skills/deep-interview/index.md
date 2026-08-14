@@ -12,7 +12,7 @@ Socratic requirements interview with ambiguity scoring before planning or execut
 
 ## Overview
 
-Deep Interview manages Socratic requirements discovery, ambiguity scoring, closure checks, mutation guards, and final spec writing under `.pi/<session-id>/workflows/deep-interview/`.
+Deep Interview manages Socratic requirements discovery, ambiguity scoring, closure checks, mutation guards, and final spec writing under `.pi/<session-id>/skills/deep-interview/`.
 
 ## Module Structure
 
@@ -57,7 +57,7 @@ Persisted state uses one canonical nested `state` object. Flattened transcript f
 4. Ask one question per round and record the answer.
 5. Score ambiguity and contradictions after each answer.
 6. Run closure and goal restatement checks when ambiguity is below threshold.
-7. Persist a final spec to `.pi/<session-id>/specs/`.
+7. Persist a final spec to `.pi/<session-id>/artifacts/specs/`.
 8. Offer handoff to Ralplan, Ultragoal, Team, refine, or stop.
 
 ## Model-Visible Tools
@@ -79,9 +79,9 @@ These tools are registered by bundled workflow registration and run in-process a
 
 | File | Description |
 |------|-------------|
-| `.pi/<sessionId>/workflows/deep-interview/state.json` | Current interview state. |
-| `.pi/<sessionId>/specs/deep-interview-index.jsonl` | Append-only spec index. |
-| `.pi/<sessionId>/specs/deep-interview-<slug>.md` | Final spec output. |
+| `.pi/<sessionId>/skills/deep-interview/state.json` | Current interview state. |
+| `.pi/<sessionId>/artifacts/specs/deep-interview-index.jsonl` | Append-only spec index. |
+| `.pi/<sessionId>/artifacts/specs/deep-interview-<slug>.md` | Final spec output. |
 
 ## Mutation Guard
 

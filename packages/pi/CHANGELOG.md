@@ -2,6 +2,7 @@
 
 ### Changed
 
+- **session**: Added the canonical `@tsuuanmi/pi/session/layout` API and moved session API-usage logs to `state/api-usage.jsonl`.
 - **interactive**: Moved repository discovery, branch watching, status polling, and cached snapshots into a dedicated Pi-owned repository-state service.
 - **tools**: Tool renderers now use neutral expansion copy instead of consulting UI-host keybindings outside the interactive component boundary.
 - **subagent**: The model-visible `subagent_spawn` tool now requires a registered `agent` profile and no longer accepts an inventable `role` label; the spawned subagent's role is always the loaded agent profile name, so only known agent profiles (from `.agent/agents`, `.agents/agents`, user agents, or bundled package agents) can be spawned.

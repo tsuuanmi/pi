@@ -18,7 +18,7 @@ Critical: before running any `pi workflow ralplan <action>` command, read [refer
 ## Boundaries
 
 - Planning only. Do not mutate product files, commit, push, or invoke execution until the user explicitly approves execution.
-- Persist planning artifacts with `pi workflow ralplan write-artifact`; do not directly edit `.pi/<session-id>/plans` or `.pi/<session-id>/workflows` unless recovering with explicit user approval.
+- Persist planning artifacts with `pi workflow ralplan write-artifact`; do not directly edit `.pi/<session-id>/artifacts/plans` or `.pi/<session-id>/skills` unless recovering with explicit user approval.
 - Explorer, Planner, Architect, Critic, and Expert passes must use the generic `subagent_spawn` tool; do not simulate workflow roles inline in the parent conversation.
 - Ralplan owns role selection, prompts, tool policy, artifact commands, and state. `subagent_spawn` only executes the fully configured agent and records its generic lifecycle.
 - Role passes must be sequential: explorer pre-planner gate first when required, then planner, architect, critic, revisions, and expert-stage escalation only when selected by workflow state.

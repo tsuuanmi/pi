@@ -1,18 +1,17 @@
 import { mkdir, readdir, readFile, rm, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { sessionTransactionPath } from "@tsuuanmi/pi/session/layout";
 import {
 	buildRalplanOrchestrationSnapshot,
 	doctorRalplan,
 	ralplanCompletionProvenancePath,
-	ralplanIndexPath,
-	ralplanStageArtifactPath,
 	readRalplanStatus,
 	selectExpectedRalplanAction,
-	transactionJournalPath,
 	writeRalplanArtifact,
 } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { ralplanIndexPath, ralplanStageArtifactPath } from "#workflows/skills/ralplan/paths";
 
 const sessionId = "test-session-id";
 
@@ -175,7 +174,7 @@ describe("ralplan deterministic orchestration harness", () => {
 	});
 
 	it("doctor and snapshots discover stale transaction journals from disk", async () => {
-		const path = transactionJournalPath(cwd, sessionId, "ralplan-orchestration-stale");
+		const path = sessionTransactionPath(cwd, sessionId, "ralplan-orchestration-stale");
 		await mkdir(dirname(path), { recursive: true });
 		await writeFile(
 			path,

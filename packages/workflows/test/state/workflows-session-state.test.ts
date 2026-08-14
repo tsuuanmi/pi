@@ -1,7 +1,8 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { readWorkflowActiveState, syncWorkflowActiveState, workflowActiveStatePath } from "@tsuuanmi/pi-workflows";
+import { sessionActiveStatePath } from "@tsuuanmi/pi/session/layout";
+import { readWorkflowActiveState, syncWorkflowActiveState } from "@tsuuanmi/pi-workflows";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("session-scoped workflow active state", () => {
@@ -128,7 +129,7 @@ describe("session-scoped workflow active state", () => {
 
 	it("rejects corrupt state files", async () => {
 		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
-		const filePath = workflowActiveStatePath(cwd, sessionId);
+		const filePath = sessionActiveStatePath(cwd, sessionId);
 		await mkdir(join(filePath, ".."), { recursive: true });
 		await writeFile(filePath, "{ not valid json");
 
@@ -137,7 +138,7 @@ describe("session-scoped workflow active state", () => {
 
 	it("rejects unsupported active-state versions", async () => {
 		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
-		const filePath = workflowActiveStatePath(cwd, sessionId);
+		const filePath = sessionActiveStatePath(cwd, sessionId);
 		await mkdir(join(filePath, ".."), { recursive: true });
 		await writeFile(
 			filePath,
@@ -154,7 +155,7 @@ describe("session-scoped workflow active state", () => {
 
 	it("rejects missing or foreign entry session identities", async () => {
 		const sessionId = "0192aaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
-		const filePath = workflowActiveStatePath(cwd, sessionId);
+		const filePath = sessionActiveStatePath(cwd, sessionId);
 		await mkdir(join(filePath, ".."), { recursive: true });
 		const base = { version: 2, active: true, updated_at: "2026-01-01T00:00:00.000Z" };
 

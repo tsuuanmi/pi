@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { teamCheckpointPath } from "#workflows/session/session-layout";
 import { createTeamCheckpointStore, type TeamCheckpointStore } from "#workflows/skills/team/orchestrator-checkpoint";
+import { teamCheckpointPath } from "#workflows/skills/team/paths";
 import { writeJsonAtomic } from "#workflows/state/state-writer";
 
 export function createSessionCheckpointStore(

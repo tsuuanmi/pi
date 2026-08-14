@@ -42,7 +42,7 @@ Ralplan owns role selection, prompts, artifact transactions, critic verdicts, re
 2. Read status/doctor output and compute the legal next role.
 3. Call `subagent_spawn` with the selected profile/role, explicit Ralplan system prompt and task, and exact metadata: `workflow`, `owner`, `runId`, `stage`, `stageN`, and `role`.
 4. The role agent persists semantic output through `pi workflow ralplan record-explorer-gate` or `pi workflow ralplan write-artifact` and returns a receipt-only summary.
-5. The workflow result hook records the generic run under `.pi/<sessionId>/workflows/ralplan/agents/` and rejects a completed run whose expected workflow artifact/provenance is incomplete.
+5. The workflow result hook records the generic run under `.pi/<sessionId>/skills/ralplan/executions/` and rejects a completed run whose expected workflow artifact/provenance is incomplete.
 6. Inspect and approve through `pi workflow ralplan <status|doctor|approve-plan>`.
 
 Generic `outputArtifact` may be used as an additional transport for captured assistant output, but it does not replace Ralplan's canonical transaction writer or index.
@@ -61,13 +61,13 @@ Generic `outputArtifact` may be used as an additional transport for captured ass
 
 | File | Description |
 |------|-------------|
-| `.pi/<sessionId>/workflows/ralplan/state.json` | Active workflow envelope. |
-| `.pi/<sessionId>/plans/ralplan/<run-id>/index.jsonl` | Append-only run index. |
-| `.pi/<sessionId>/plans/ralplan/<run-id>/stage-<stage-n>-<stage>.md` | Canonical stage artifact. |
-| `.pi/<sessionId>/plans/ralplan/<run-id>/pending-approval.md` | Pending approval plan. |
-| `.pi/<sessionId>/plans/ralplan/<run-id>/obstacles.json` | Obstacle ledger. |
-| `.pi/<sessionId>/plans/ralplan/<run-id>/gates/explorer/attempt-<nn>.json` | Explorer gate artifact. |
-| `.pi/<sessionId>/workflows/ralplan/agents/<subagent-id>.json` | Workflow-owned execution record linked to the generic subagent id. |
+| `.pi/<sessionId>/skills/ralplan/state.json` | Active workflow envelope. |
+| `.pi/<sessionId>/artifacts/plans/ralplan/<run-id>/index.jsonl` | Append-only run index. |
+| `.pi/<sessionId>/artifacts/plans/ralplan/<run-id>/stage-<stage-n>-<stage>.md` | Canonical stage artifact. |
+| `.pi/<sessionId>/artifacts/plans/ralplan/<run-id>/pending-approval.md` | Pending approval plan. |
+| `.pi/<sessionId>/artifacts/plans/ralplan/<run-id>/obstacles.json` | Obstacle ledger. |
+| `.pi/<sessionId>/artifacts/plans/ralplan/<run-id>/gates/explorer/attempt-<nn>.json` | Explorer gate artifact. |
+| `.pi/<sessionId>/skills/ralplan/executions/<subagent-id>.json` | Workflow-owned execution record linked to the generic subagent id. |
 
 ## See also
 

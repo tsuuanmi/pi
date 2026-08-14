@@ -101,8 +101,8 @@ describe("workflow runtime", () => {
 	});
 
 	it("reports corrupt state for mutation reads", async () => {
-		const path = join(cwd, ".pi", sessionId, "workflows", "ralplan", "state.json");
-		await mkdir(join(cwd, ".pi", sessionId, "workflows", "ralplan"), { recursive: true });
+		const path = join(cwd, ".pi", sessionId, "skills", "ralplan", "state.json");
+		await mkdir(join(cwd, ".pi", sessionId, "skills", "ralplan"), { recursive: true });
 		await writeFile(path, "not json", "utf8");
 
 		const result = await readExistingStateForMutation(path);
@@ -199,7 +199,7 @@ describe("workflow runtime", () => {
 			"--json",
 		]);
 		expect(result.status).toBe(1);
-		expect(result.stderr).toMatch(/--prune\/--dry-run are only supported for pi workflow gc/);
+		expect(result.stderr).toMatch(/--prune is only supported for pi workflow gc/);
 	});
 
 	it("supports file-backed input for workflow verbs", async () => {

@@ -1,7 +1,7 @@
 import { type FileHandle, mkdir, open, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { WorkflowSkill } from "#workflows/session/paths";
-import { transactionJournalPath } from "#workflows/session/paths";
+import { sessionTransactionPath } from "@tsuuanmi/pi/session/layout";
+import type { WorkflowSkill } from "#workflows/registry/workflow-manifest-types";
 
 /**
  * Per-mutation transaction journal for crash-recoverable workflow handoffs.
@@ -65,7 +65,7 @@ export async function beginWorkflowTransactionJournal(input: {
 		throw new Error("workflow transaction journal requires a session id");
 	}
 	const sessionId = input.sessionId.trim();
-	const filePath = transactionJournalPath(input.cwd, sessionId, input.mutationId);
+	const filePath = sessionTransactionPath(input.cwd, sessionId, input.mutationId);
 	const now = nowIso();
 	const journal: WorkflowTransactionJournal = {
 		version: JOURNAL_VERSION,
@@ -99,7 +99,7 @@ export async function beginWorkflowTransactionJournal(input: {
 }
 
 async function readJournal(cwd: string, sessionId: string, mutationId: string): Promise<WorkflowTransactionJournal> {
-	const filePath = transactionJournalPath(cwd, sessionId, mutationId);
+	const filePath = sessionTransactionPath(cwd, sessionId, mutationId);
 	const raw = await readFile(filePath, "utf8");
 	const journal = JSON.parse(raw) as Partial<WorkflowTransactionJournal>;
 	if (journal.version !== JOURNAL_VERSION) {
@@ -118,7 +118,7 @@ export async function updateWorkflowTransactionJournal(
 	mutationId: string,
 	stepName: string,
 ): Promise<string> {
-	const filePath = transactionJournalPath(cwd, sessionId, mutationId);
+	const filePath = sessionTransactionPath(cwd, sessionId, mutationId);
 	const current = await readJournal(cwd, sessionId, mutationId);
 	const now = nowIso();
 	const steps = current.steps.map((entry) =>
@@ -140,7 +140,7 @@ export async function completeWorkflowTransactionJournal(
 	sessionId: string,
 	mutationId: string,
 ): Promise<void> {
-	const filePath = transactionJournalPath(cwd, sessionId, mutationId);
+	const filePath = sessionTransactionPath(cwd, sessionId, mutationId);
 	const current = await readJournal(cwd, sessionId, mutationId);
 	const now = nowIso();
 	const next: WorkflowTransactionJournal = { ...current, status: "complete", updated_at: now };

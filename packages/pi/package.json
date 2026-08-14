@@ -32,6 +32,10 @@
 			"types": "./dist/loader/config.d.ts",
 			"import": "./dist/loader/config.js"
 		},
+		"./session/layout": {
+			"types": "./dist/session/layout.d.ts",
+			"import": "./dist/session/layout.js"
+		},
 		"./session/root": {
 			"types": "./dist/session/root.d.ts",
 			"import": "./dist/session/root.js"
