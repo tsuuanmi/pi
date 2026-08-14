@@ -20,10 +20,32 @@ describe("durable conversation synchronization", () => {
 		if (suffix.kind === "append") expect(suffix.events.map((event) => event.ordinal)).toEqual([2]);
 	});
 
+	it("continues a third turn after commentary, reasoning, and final-answer phases", () => {
+		const prior = canonicalConversationEvents([
+			{ type: "message", role: "developer", content: "instructions" },
+			{ type: "message", role: "user", content: "first question" },
+			{ type: "message", role: "assistant", content: "first answer" },
+			{ type: "message", role: "user", content: "second question" },
+		]);
+		const checkpoint = acknowledgedConversationCheckpoint(prior, authority, { ordinal: 4, text: "second answer" });
+		const third = canonicalConversationEvents([
+			{ type: "message", role: "developer", content: "instructions" },
+			{ type: "message", role: "user", content: "first question" },
+			{ type: "message", role: "assistant", content: "first answer" },
+			{ type: "message", role: "user", content: "second question" },
+			{ type: "message", role: "assistant", phase: "commentary", content: "working" },
+			{ type: "message", role: "assistant", content: [{ type: "thinking", thinking: "searching" }] },
+			{ type: "message", role: "assistant", phase: "final_answer", content: "second answer" },
+			{ type: "message", role: "user", content: "third question" },
+		]);
+		const suffix = conversationSuffix(third, authority, checkpoint);
+		expect(suffix.kind).toBe("append");
+		if (suffix.kind === "append") expect(suffix.events.map((event) => event.ordinal)).toEqual([7]);
+	});
+
 	it("keeps request-only environment blocks and generated user ids out of persistent identity", () => {
 		const first = canonicalConversationEvents([
 			{
-				id: "environment_turn1",
 				type: "message",
 				role: "user",
 				content: "<environment_context>one</environment_context>",
@@ -35,10 +57,9 @@ describe("durable conversation synchronization", () => {
 			{ type: "message", role: "user", content: "question" },
 			{ type: "message", role: "assistant", content: "answer" },
 			{
-				id: "environment_turn2",
 				type: "message",
 				role: "user",
-				content: "<environment_context>two</environment_context>",
+				content: [{ type: "text", text: "<environment_context>two</environment_context>" }],
 			},
 			{ id: "user_turn2", type: "message", role: "user", content: "follow-up" },
 		]);

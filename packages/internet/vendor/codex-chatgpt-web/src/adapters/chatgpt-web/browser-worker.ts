@@ -14,6 +14,7 @@ import {
 } from "../../config";
 import type { CodexProviderConfig } from "../../types";
 import { parseDataUrl } from "../image";
+import { CONVERSATION_CANARY_PROMPT, validateConversationCanary } from "./conversation-canary";
 import { ChatGptMarkdownBuffer, type ChatGptMarkdownSegment } from "./markdown";
 import {
   CHATGPT_WEB_LUNA_MODEL_ID,
@@ -1553,7 +1554,7 @@ export class ChatGptBrowserWorker {
       },
       capabilities: { localToolsEnabled: false, solAvailable: true, proAvailable: false },
       prepare: async () => ({
-        text: "Reply with exactly: PI_DURABLE_CONVERSATION_CANARY_OK",
+        text: CONVERSATION_CANARY_PROMPT,
         images: [],
         toolCalls: [],
         release: () => {},
@@ -1561,9 +1562,7 @@ export class ChatGptBrowserWorker {
       abortSignal,
       onTextDelta: () => {},
     });
-    if (response.trim() !== "PI_DURABLE_CONVERSATION_CANARY_OK" || !conversationUrl) {
-      throw new Error("Durable conversation canary returned unexpected content or no conversation URL");
-    }
+    conversationUrl = validateConversationCanary(response, conversationUrl);
     const submittedPage = this.conversationPages.get(threadId);
     if (!submittedPage || submittedPage.isClosed()) {
       throw new Error("Durable conversation canary lost its submitted page before reopen verification");

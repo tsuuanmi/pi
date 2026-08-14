@@ -19,8 +19,8 @@ const unsupportedThinkingLevels = {
 } as const;
 
 function contextWindow(route: ChatGptWebModelRoute, capabilities: DaemonCapabilities): number {
-	if (!capabilities.proAvailable || route.id === "chatgpt-web/luna") return route.contextWindow;
-	return route.id === "chatgpt-web/pro" ? 112_193 : 111_193;
+	if (!capabilities.proAvailable || route.id === "luna") return route.contextWindow;
+	return route.id === "pro" ? 112_193 : 111_193;
 }
 
 function providerModel(route: ChatGptWebModelRoute, capabilities: DaemonCapabilities): ProviderModelConfig {

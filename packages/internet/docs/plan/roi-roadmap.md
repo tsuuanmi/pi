@@ -48,8 +48,8 @@ smokes pass for light/high routes, and two-turn continuity preserves browser-ses
 
 ### R1. Fix model metadata to the daemon's single-immutable-effort routes — **Implemented**
 
-**Problem.** `src/backends/openai/models.ts` names `chatgpt-web/high` "GPT-5.6 Sol" and
-`chatgpt-web/luna` "GPT-5.6 Luna" with multi-level thinking maps. The vendored daemon catalog
+**Problem.** The original `src/backends/openai/models.ts` named the high and Luna routes "GPT-5.6
+Sol" and "GPT-5.6 Luna" with multi-level thinking maps. The vendored daemon catalog
 (`vendor/.../src/chatgpt-web-models.ts`) defines **one immutable effort per route**:
 `chatgpt-web/high` → `codexEffort/adapterEffort: "high"`, `chatgpt-web/luna` → low effort, plus an
 `extra-high` route. Sending a different reasoning effort would be rejected or silently mis-tuned on
@@ -60,9 +60,9 @@ every inference. This is a real correctness bug, not a naming nit.
 per effort).
 
 **Implemented design.**
-- `turn/model.ts` is the authoritative route catalog: `light`, `medium`, `high`, `extra-high`,
-  `pro`, and `luna`, each with a daemon display name, one immutable Pi reasoning level, and a
-  context window from the daemon catalog.
+- `turn/model.ts` is the authoritative route catalog: provider-local ids `light`, `medium`, `high`,
+  `extra-high`, `pro`, and `luna`, each mapped to its canonical `chatgpt-web/<id>` daemon route,
+  daemon display name, one immutable Pi reasoning level, and context window from the daemon catalog.
 - `models.ts` sets every thinking level to `null` except the route's single supported level, so Pi
   never sends an unsupported reasoning effort.
 - `provider.ts` builds models per account from cached `solAvailable`/`proAvailable` capabilities.

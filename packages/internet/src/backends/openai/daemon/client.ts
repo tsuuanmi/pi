@@ -13,6 +13,9 @@ import {
 import { InternetError } from "#internet/core/errors";
 import type { InternetAccount, InternetControlAction } from "#internet/core/types";
 
+const DEFAULT_TIMEOUT_MS = 5_000;
+const CONVERSATION_CANARY_TIMEOUT_MS = 120_000;
+
 export interface DaemonClientOptions {
 	config?: DaemonConfig;
 	configDir?: string;
@@ -28,7 +31,7 @@ export class DaemonClient {
 	private constructor(config: DaemonConfig, options: DaemonClientOptions) {
 		this.config = config;
 		this.fetch = options.fetch ?? globalThis.fetch;
-		this.timeoutMs = options.timeoutMs ?? 5_000;
+		this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 	}
 
 	static async create(options: DaemonClientOptions = {}): Promise<DaemonClient> {
@@ -58,11 +61,15 @@ export class DaemonClient {
 	}
 
 	conversationCanary(signal?: AbortSignal): Promise<{ status: "passed" }> {
-		return this.request(DAEMON_ROUTES.conversationCanary, {
-			method: "POST",
-			headers: controlHeaders(this.config.controlToken),
-			signal,
-		});
+		return this.request(
+			DAEMON_ROUTES.conversationCanary,
+			{
+				method: "POST",
+				headers: controlHeaders(this.config.controlToken),
+				signal,
+			},
+			CONVERSATION_CANARY_TIMEOUT_MS,
+		);
 	}
 
 	compact(input: CompactRequest, signal?: AbortSignal): Promise<CompactResponse> {
@@ -82,8 +89,8 @@ export class DaemonClient {
 		});
 	}
 
-	private async request<T>(path: string, init: RequestInit): Promise<T> {
-		const timeout = AbortSignal.timeout(this.timeoutMs);
+	private async request<T>(path: string, init: RequestInit, timeoutMs = this.timeoutMs): Promise<T> {
+		const timeout = AbortSignal.timeout(timeoutMs);
 		const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
 		let response: Response;
 		try {

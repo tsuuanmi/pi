@@ -4,7 +4,7 @@ const context = { cwd: "/workspace/pi", sessionId: "session-123", turnId: "entry
 
 function payload() {
 	return {
-		model: "chatgpt-web/light",
+		model: "light",
 		input: [
 			{ role: "user", content: [{ type: "input_text", text: "old" }] },
 			{ type: "message", role: "assistant", content: [{ type: "output_text", text: "answer" }] },
@@ -40,6 +40,7 @@ describe("adaptChatGptWebRequest", () => {
 		) as Record<string, unknown>;
 
 		expect(original.input).toHaveLength(3);
+		expect(adapted.model).toBe("chatgpt-web/light");
 		expect(input).toHaveLength(4);
 		expect(input[0]).toEqual(original.input[0]);
 		expect(input[1]).toEqual(original.input[1]);
@@ -126,7 +127,8 @@ describe("adaptChatGptWebRequest", () => {
 
 	it.each([
 		["request payload", null, context],
-		["current user message", { input: [] }, context],
+		["model", { ...payload(), model: "unknown" }, context],
+		["current user message", { model: "light", input: [] }, context],
 		["session turn identity", payload(), { ...context, turnId: "" }],
 		["absolute working directory", payload(), { ...context, cwd: "relative" }],
 		["XML-safe working directory", payload(), { ...context, cwd: "/tmp/a&b" }],

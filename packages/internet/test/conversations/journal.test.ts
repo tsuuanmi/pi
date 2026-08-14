@@ -67,6 +67,40 @@ describe("durable conversation journal", () => {
 		});
 	});
 
+	it("keeps one ChatGPT conversation identity across session turns", async () => {
+		const root = await mkdtemp(join(tmpdir(), "pi-internet-conversation-identity-"));
+		const journal = new ConversationJournal(root, conversationAccountFingerprint("/account/state.json"));
+		const firstEvents = canonicalConversationEvents([{ type: "message", role: "user", content: "first" }]);
+		const created = journal.create("thread-1", "a".repeat(64), 1);
+		const firstAttempt = journal.markClickAttempted("thread-1", created.revision);
+		const first = journal.markReady(
+			"thread-1",
+			firstAttempt.revision,
+			"https://chatgpt.com/c/conversation_123",
+			acknowledgedConversationCheckpoint(firstEvents, "authority", { ordinal: 1, text: "first answer" }),
+		);
+		const prepared = journal.markPrepared("thread-1", first.revision, "b".repeat(64), 2);
+		const secondAttempt = journal.markClickAttempted("thread-1", prepared.revision);
+		const second = journal.markReady(
+			"thread-1",
+			secondAttempt.revision,
+			"https://chatgpt.com/c/conversation_123",
+			acknowledgedConversationCheckpoint(firstEvents, "authority", { ordinal: 2, text: "second answer" }),
+		);
+		expect(second.conversationId).toBe("conversation_123");
+
+		const nextPrepared = journal.markPrepared("thread-1", second.revision, "c".repeat(64), 3);
+		const nextAttempt = journal.markClickAttempted("thread-1", nextPrepared.revision);
+		expect(() =>
+			journal.markReady(
+				"thread-1",
+				nextAttempt.revision,
+				"https://chatgpt.com/c/conversation_456",
+				acknowledgedConversationCheckpoint(firstEvents, "authority", { ordinal: 3, text: "wrong chat" }),
+			),
+		).toThrow("identity changed");
+	});
+
 	it("marks ambiguous clicks conflicted and does not permit continuation", async () => {
 		const root = await mkdtemp(join(tmpdir(), "pi-internet-conflict-"));
 		const journal = new ConversationJournal(root, conversationAccountFingerprint("/account/state.json"));

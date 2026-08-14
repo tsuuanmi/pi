@@ -77,6 +77,7 @@ describe("registerInternetHooks", () => {
 			autoLogin(true),
 		);
 		const payload = {
+			model: "high",
 			input: [{ type: "message", role: "user", content: [{ type: "input_text", text: "test" }] }],
 		};
 		const context = {

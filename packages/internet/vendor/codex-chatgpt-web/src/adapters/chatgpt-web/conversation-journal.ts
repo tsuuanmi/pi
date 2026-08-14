@@ -132,6 +132,9 @@ export class ConversationJournal {
     const conversation = parseConversationUrl(conversationUrl);
     return this.update(threadId, revision, current => {
       if (current.status !== "click_attempted") throw new Error(`Cannot acknowledge conversation from ${current.status}`);
+      if (current.conversationId && current.conversationId !== conversation.id) {
+        throw new Error("Durable conversation identity changed during continuation");
+      }
       return {
         ...current,
         status: "ready",

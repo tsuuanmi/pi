@@ -15,6 +15,7 @@ import {
   acknowledgedConversationCheckpoint,
   canonicalConversationEvents,
   conversationSuffix,
+  isGeneratedEnvironmentMessage,
 } from "./conversation-sync";
 import { extractChatGptTurnEnvironment, extractChatGptTurnIdentity } from "./environment";
 import { CHATGPT_WEB_LUNA_MODEL_ID, resolveChatGptWebModelMode, type ChatGptWebCapabilities } from "./model";
@@ -227,10 +228,6 @@ function durableConversationPlan(
       },
     },
   };
-}
-
-function isGeneratedEnvironmentMessage(message: CodexParsedRequest["context"]["messages"][number]): boolean {
-  return typeof message.id === "string" && message.id.startsWith("environment_") && message.role === "user";
 }
 
 function currentToolResults(parsed: CodexParsedRequest, session: ChatGptTurnSession): CodexToolResultMessage[] {

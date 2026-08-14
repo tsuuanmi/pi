@@ -37,6 +37,8 @@
   to match current public APIs and implemented behavior.
 - Mirror the daemon's fixed-effort model routes, capability-gate Luna/Pro availability, and use a
   conservative documented output ceiling.
+- Publish concise provider-local model ids so model selection renders as `chatgpt-web/high` instead
+  of `chatgpt-web/chatgpt-web/high`; map them to canonical daemon routes at the request boundary.
 - Keep the headed daemon/browser reusable for 60 quiet seconds, use a 700×500 window at `(0,0)`, and
   keep browser/tunnel idle cleanup in the daemon instead of stopping it on every Pi session exit.
 - Keep Full harness on Temporary Chat; durable v1 rejects attachments and ambiguous, replayed, or diverged turns before another browser submit.
@@ -53,6 +55,10 @@
 
 ### Fixed
 
+- Allow the durable conversation canary enough time to complete its browser turn, accept non-empty
+  model reply variance after validating and reopening the canonical conversation URL, exclude
+  request-only environment blocks from persistent history, acknowledge multi-phase assistant output
+  as one response, and keep each Pi session bound to one ChatGPT conversation id across turns.
 - Fix durable conversation mode so it actually engages: propagate the runtime mode onto the provider
   config (the browser-only guard previously always failed), and repair the canary's model id, prompt
   images, and text-delta callback.

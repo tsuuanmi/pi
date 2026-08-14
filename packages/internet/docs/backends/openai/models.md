@@ -4,7 +4,9 @@ Mirrors `src/backends/openai/models.ts`.
 
 Capability-scoped model metadata derived from daemon capabilities.
 
-All routes use zero cost and support `input: ["text", "image"]` with `reasoning: true`.
+All routes use concise provider-local ids (`light`, `medium`, `high`, `extra-high`, `pro`, or
+`luna`), zero cost, and `input: ["text", "image"]` with `reasoning: true`. Request adaptation maps
+the local id to the daemon's canonical `chatgpt-web/<id>` route.
 
 ## `chatGptWebModels`
 
@@ -21,8 +23,7 @@ chatGptWebModels(capabilities: DaemonCapabilities): ProviderModelConfig[]
 `contextWindow` for a route is:
 
 - `route.contextWindow` for the Luna route, or whenever `proAvailable` is false.
-- `112_193` for `chatgpt-web/pro`, otherwise `111_193` for the standard routes when `proAvailable`
-  is true.
+- `112_193` for `pro`, otherwise `111_193` for the standard routes when `proAvailable` is true.
 
 ### Thinking levels
 

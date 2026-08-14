@@ -16,6 +16,19 @@ describe("DaemonClient", () => {
 		expect(requests[1]?.init.headers).toEqual({ authorization: "Bearer secret" });
 	});
 
+	it("uses a browser-turn timeout for the conversation canary", async () => {
+		const timeout = vi.spyOn(AbortSignal, "timeout");
+		const fetch = async () => Response.json({ status: "passed" });
+		const client = await DaemonClient.create({ config, fetch: fetch as typeof globalThis.fetch });
+
+		await client.health();
+		await client.conversationCanary();
+
+		expect(timeout).toHaveBeenNthCalledWith(1, 5_000);
+		expect(timeout).toHaveBeenNthCalledWith(2, 120_000);
+		timeout.mockRestore();
+	});
+
 	it("classifies daemon errors", async () => {
 		const fetch = async () => new Response("draining", { status: 503 });
 		const client = await DaemonClient.create({ config, fetch: fetch as typeof globalThis.fetch });

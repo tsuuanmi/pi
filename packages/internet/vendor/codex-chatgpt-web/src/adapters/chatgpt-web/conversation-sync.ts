@@ -25,7 +25,7 @@ export type ConversationSuffix =
 export function canonicalConversationEvents(input: unknown[]): CanonicalConversationEvent[] {
   return input
     .map((value, sourceIndex) => ({ value, sourceIndex }))
-    .filter(({ value }) => !isGeneratedEnvironment(value))
+    .filter(({ value }) => !isGeneratedEnvironmentMessage(value))
     .map(({ value, sourceIndex }, ordinal) => ({
       ordinal,
       sourceIndex,
@@ -56,11 +56,9 @@ export function conversationSuffix(
     if (checkpoint.assistantOrdinal !== checkpoint.eventCount || !checkpoint.assistantDigest) {
       return { kind: "diverged", prefixDigest };
     }
-    const assistant = events[checkpoint.assistantOrdinal];
-    if (!assistant || !assistant.kind.endsWith(":assistant") || assistant.textDigest !== checkpoint.assistantDigest) {
-      return { kind: "diverged", prefixDigest };
-    }
-    suffixStart += 1;
+    const assistantEnd = acknowledgedAssistantEnd(events, checkpoint.assistantOrdinal, checkpoint.assistantDigest);
+    if (assistantEnd === undefined) return { kind: "diverged", prefixDigest };
+    suffixStart = assistantEnd;
   }
   if (events.length === suffixStart) return { kind: "retry", prefixDigest };
   return { kind: "append", events: events.slice(suffixStart), prefixDigest };
@@ -81,6 +79,21 @@ export function acknowledgedConversationCheckpoint(
   };
 }
 
+function acknowledgedAssistantEnd(
+  events: CanonicalConversationEvent[],
+  start: number,
+  expectedDigest: string,
+): number | undefined {
+  let index = start;
+  let finalTextDigest: string | undefined;
+  while (events[index]?.kind.endsWith(":assistant")) {
+    const textDigest = events[index]?.textDigest;
+    if (textDigest && textDigest !== EMPTY_TEXT_DIGEST) finalTextDigest = textDigest;
+    index += 1;
+  }
+  return finalTextDigest === expectedDigest ? index : undefined;
+}
+
 function semanticValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(semanticValue);
   if (!isRecord(value)) return value;
@@ -92,11 +105,17 @@ function semanticValue(value: unknown): unknown {
   );
 }
 
-function isGeneratedEnvironment(value: unknown): boolean {
-  return isRecord(value)
-    && typeof value.id === "string"
-    && value.id.startsWith("environment_")
-    && value.role === "user";
+export function isGeneratedEnvironmentMessage(value: unknown): boolean {
+  if (!isRecord(value) || value.role !== "user") return false;
+  if (typeof value.id === "string" && value.id.startsWith("environment_")) return true;
+  const content = messageText(value.content).trim();
+  return content.startsWith("<environment_context>") && content.endsWith("</environment_context>");
+}
+
+function messageText(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  return content.flatMap(part => isRecord(part) && typeof part.text === "string" ? [part.text] : []).join("\n");
 }
 
 function assistantText(value: unknown): string | undefined {
@@ -116,6 +135,8 @@ function eventKind(value: unknown): string {
   const role = typeof value.role === "string" ? value.role : undefined;
   return role ? `${type}:${role}` : type;
 }
+
+const EMPTY_TEXT_DIGEST = digest("");
 
 function digest(value: string): string {
   return createHash("sha256").update(value).digest("hex");

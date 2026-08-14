@@ -12,7 +12,12 @@ Targeted package patches:
 - Browser-only prompt patches omit the repeated local-computer warning while Full-mode adapter
   guidance remains available for read-only model transitions.
 - Durable conversation canary calls explicitly declare browser-only capabilities, including disabled
-  local tools.
+  local tools; accept non-empty model reply variance after validating and reopening the canonical
+  ChatGPT conversation URL.
+- Durable continuation canonicalization recognizes parsed `<environment_context>` blocks without
+  relying on stripped Responses item ids, acknowledges consecutive commentary/reasoning/final
+  assistant phases as one browser response, and rejects any change to an established ChatGPT
+  conversation id.
 
 No other v2.1.9 changes are included. General upstream synchronization remains out of scope.
 

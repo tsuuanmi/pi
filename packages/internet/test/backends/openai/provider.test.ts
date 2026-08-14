@@ -41,7 +41,7 @@ describe("OpenAI provider registration", () => {
 			baseUrl: "http://127.0.0.1:18001/v1",
 			authHeader: false,
 		});
-		expect(config.models?.map((model) => model.id)).toEqual(["chatgpt-web/luna"]);
+		expect(config.models?.map((model) => model.id)).toEqual(["luna"]);
 		expect(config).not.toHaveProperty("stream");
 	});
 
