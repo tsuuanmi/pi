@@ -1,143 +1,71 @@
-# Internet Package
+# Internet Documentation
 
-Internet is the Linux-first Pi package that ships an isolated ChatGPT Web browser runtime and
-registers it as a native Pi model provider. It vendors a fixed codex-chatgpt-web snapshot, embeds
-Bun in the build artifact, owns first login and daemon lifecycle, and requires no other repository
-at runtime.
+`@tsuuanmi/pi-internet` provides package-owned ChatGPT Web browser inference on Linux/macOS,
+Anthropic and Gemini API account providers, bounded council orchestration, Full-mode local-tool
+bridging, and safe public web access.
 
-> Status: **owned-daemon MVP plus R1–R4 implemented.** Fixed-effort models, explicit automatic-login
-> settings, read-only web search/fetch, and account diagnostics are current production scope.
+## User and architecture guides
 
-## Core documentation
+- [Usage](usage.md)
+- [Architecture](architecture.md)
+- [How it works](how-it-works.md)
+- [Implemented layout](layout.md)
+- [Pi integration](pi-integration.md)
+- [Settings](settings.md)
+- [Hooks](hooks.md)
+- [Extension composition](extension.md)
+- [Version](version.md)
 
-- [Architecture](architecture.md) — process boundaries, lifecycle authority, security, and the
-  accepted ~15.6K-line vendoring tradeoff.
-- [How it works](how-it-works.md) — build, startup, first login, inference, and shutdown flows.
-- [Implemented Layout](layout.md) — package-owned modules, vendor snapshot, and build output.
-- [Pi Integration](pi-integration.md) — provider-scoped readiness stream, tools, hooks, and public
-  API boundaries.
-- [Usage Guide](usage.md) — how to use `@file`, web, lifecycle, and Full-harness `codex_*` tools.
+## Source-mirrored reference
 
-## Source reference
+### Accounts and core
 
-Module docs mirror `packages/internet/src/` one-to-one; each page documents a matching source
-file's public exports and behavior. This is the source-of-truth reference for how the package owns
-its daemon, providers, tools, and web transport.
+- [`accounts/registry`](accounts/registry.md)
+- [`core/types`](core/types.md)
+- [`core/errors`](core/errors.md)
 
-### `src/index.ts` — package public API
+### Backends
 
-`src/index.ts` is the package entry point. It re-exports the extension-facing pieces and typed
-internals used by tests and other packages:
+- Shared [`backend`](backends/backend.md), [`names`](backends/names.md), and
+  [`registry`](backends/registry.md)
+- Anthropic [`index`](backends/anthropic/index.md), [`models`](backends/anthropic/models.md), and
+  [`provider`](backends/anthropic/provider.md)
+- Google [`index`](backends/google/index.md), [`models`](backends/google/models.md), and
+  [`provider`](backends/google/provider.md)
+- ChatGPT Web [`index`](backends/openai/index.md), [`models`](backends/openai/models.md), and
+  [`provider`](backends/openai/provider.md)
+- ChatGPT daemon [`auth`](backends/openai/daemon/auth.md),
+  [`client`](backends/openai/daemon/client.md), [`routes`](backends/openai/daemon/routes.md), and
+  [`status`](backends/openai/daemon/status.md)
+- ChatGPT turn [`files`](backends/openai/turn/files.md), [`model`](backends/openai/turn/model.md), and
+  [`request`](backends/openai/turn/request.md)
 
-- `AccountRegistry`, `getAccountRegistryPath` — account routing registry and its default path.
-- `DEFAULT_DAEMON_HOST`, `DEFAULT_DAEMON_PORT`, `daemonBaseUrl`, `getDaemonConfigDir`,
-  `readDaemonConfig` — daemon endpoint auth/base-URL helpers.
-- `DaemonClient` — HTTP daemon client class.
-- `readDaemonStatus`, `readDaemonStatusSnapshot` — daemon health/status readers and the HUD provider.
-- `chatGptWebModels`, `registerOpenAiProviders` — capability-scoped model metadata and provider
-  registration.
-- `InternetError`, `isInternetError` — typed error and type guard.
-- `daemonConfigPath`, `daemonLoginExists`, `ensureOwnedDaemonConfig`, `syncOwnedDaemonCapabilities` —
-  owned daemon configuration helpers.
-- `OwnedDaemonManager` — daemon/tunnel lifecycle owner class.
-- `resolveDaemonRuntime` — bundled runtime artifact resolution.
-- `registerInternetHooks` — extension hook registration.
-- `registerInternetTools` — extension tool registration.
-- `VERSION` — package version constant.
+### Runtime and orchestration
 
-The package re-exports `InternetSettingsService` as a type only; the concrete
-`InternetSettingsStore` class is not part of the public index surface.
+- Daemon [`config`](daemon/config.md), [`doctor`](daemon/doctor.md), [`harness`](daemon/harness.md),
+  [`health`](daemon/health.md), [`manager`](daemon/manager.md), and [`runtime`](daemon/runtime.md)
+- Council [`service`](council/service.md)
 
-### Module map
+### Tools and web
 
-- [extension](extension.md) — `src/extension.ts`, the extension composition root loaded by Pi.
-- [hooks](hooks.md) — `src/hooks.ts`, provider-scoped readiness/adaptation gate and HUD refresh.
-- [settings](settings.md) — `src/settings.ts`, atomic private package settings.
-- [version](version.md) — `src/version.ts`, the package version constant.
-- [accounts/registry](accounts/registry.md) — account routing metadata and atomic persistence.
-- [core/types](core/types.md) — shared account/settings/control types.
-- [core/errors](core/errors.md) — `InternetError` and type guard.
-- [daemon/config](daemon/config.md) — owned daemon/browser configuration, capabilities, login
-  markers, and secure atomic writes.
-- [daemon/runtime](daemon/runtime.md) — bundled artifact resolution and platform validation.
-- [daemon/harness](daemon/harness.md) — account-scoped Full-mode paths and private runtime-key
-  storage.
-- [daemon/manager](daemon/manager.md) — the single daemon/tunnel lifecycle owner.
-- [daemon/doctor](daemon/doctor.md) — bounded CLI diagnostics with strict report validation.
-- [daemon/health](daemon/health.md) — startup health polling.
-- [backends/openai/index](backends/openai/index.md) — backend barrel exports.
-- [backends/openai/provider](backends/openai/provider.md) — capability-scoped provider config and
-  naming.
-- [backends/openai/models](backends/openai/models.md) — capability-scoped model metadata.
-- [backends/openai/daemon/auth](backends/openai/daemon/auth.md) — daemon endpoint auth, base URL, and
-  config dir helpers.
-- [backends/openai/daemon/client](backends/openai/daemon/client.md) — HTTP daemon client.
-- [backends/openai/daemon/routes](backends/openai/daemon/routes.md) — daemon route and payload shapes.
-- [backends/openai/daemon/status](backends/openai/daemon/status.md) — daemon status snapshots and the
-  HUD provider.
-- [backends/openai/turn/model](backends/openai/turn/model.md) — model routes, reasoning levels, and
-  the Luna special case.
-- [backends/openai/turn/request](backends/openai/turn/request.md) — pure daemon identity/environment
-  payload adaptation.
-- [backends/openai/turn/files](backends/openai/turn/files.md) — bounded workspace-local `@file`
-  expansion.
-- [tools/register](tools/register.md) — the tool registration aggregator.
-- [tools/accounts](tools/accounts.md) — account listing/adding/enabling tools.
-- [tools/status](tools/status.md) — daemon health/status tool.
-- [tools/doctor](tools/doctor.md) — daemon diagnostics tool.
-- [tools/control](tools/control.md) — admin drain/resume/shutdown/cancel tool.
-- [tools/compact](tools/compact.md) — history compaction tool.
-- [tools/daemon](tools/daemon.md) — login/start/stop/restart/status tool.
-- [tools/harness](tools/harness.md) — Full-harness enable/disable/restart/status tool.
-- [tools/settings](tools/settings.md) — package settings inspection/update tool.
-- [tools/web](tools/web.md) — `internet_search` and `internet_fetch` tools.
-- [web/fetch](web/fetch.md) — bounded, SSRF-safe page fetching.
-- [web/search](web/search.md) — Bing RSS-backed web search.
+- Tools [`accounts`](tools/accounts.md), [`compact`](tools/compact.md),
+  [`control`](tools/control.md), [`conversations`](tools/conversations.md),
+  [`council`](tools/council.md), [`daemon`](tools/daemon.md), [`doctor`](tools/doctor.md),
+  [`harness`](tools/harness.md), [`register`](tools/register.md), [`settings`](tools/settings.md),
+  [`status`](tools/status.md), and [`web`](tools/web.md)
+- Public web [`fetch`](web/fetch.md) and [`search`](web/search.md)
 
-## Implementation reviews
+## Implementation and review records
 
-- [Architecture Review & Direction](review/architecture-review.md) — the five product principles
-  (Pi provider, best-of-three-repos, runtime design, Council-as-future, macOS+Linux) and the new
-  features landed since the MVP.
-- [Implementation Review](review/implementation-review.md) — review findings and dispositions.
-- [Original MVP Review](review/review-and-brainstorm.md) — MVP review and follow-on brainstorm.
+- [Completed implementation plan](plan/implementation-plan.md)
+- [Runtime architecture analysis](plan/runtime-architecture-brainstorm.md)
+- [MCP/tunnel broker analysis](plan/mcp-tunnel-broker.md)
+- [Multi-account sign-in analysis](plan/multi-account-signin.md)
+- [Council design](plan/council-via-orchestrator.md)
+- [Multi-account/backend design](plan/multi-account-and-backends.md)
+- [Architecture review](review/architecture-review.md)
+- [Implementation review](review/implementation-review.md)
+- [Durable canary failure analysis](review/durable-canary-failure.md)
 
-## Plans and design research
-
-Forward-looking plans, design research, and brainstorm docs live in [`plan/`](plan/), and are not yet
-production scope.
-
-- [Implementation Plan (ROI-Sorted)](plan/implementation-plan.md) — the execution-ready plan from
-  the brainstorm: macOS, hybrid capture, multi-account sign-in, multi-backend, and Council.
-- [Daemon Ownership Decisions](plan/daemon-ownership-brainstorm.md) — investigation history, Bun/Node
-  constraint, measured runtime footprint, and confirmed decisions.
-- [Source Repositories](plan/source-repositories.md) — source map for Pi, codex-chatgpt-web, and
-  Prometheus.
-- [Comparison: Prometheus](plan/comparison-prometheus.md) — browser-backend comparison and lessons.
-- [Best of Both](plan/best-of-both.md) — future hybrid network capture with DOM fallback and fusion.
-- [Browser Design](plan/browser-design.md) — isolated browser behavior and security checklist.
-- [Multi-Account and Multi-Backend Brainstorm](plan/multi-account-and-backends.md).
-- [Feature Brainstorm](plan/features-brainstorm.md).
-- [ROI Roadmap](plan/roi-roadmap.md) — grounded, prioritized next features by impact/effort/risk.
-- [Conversation Continuity and Browser Lifecycle](plan/implementation-plan-conversation-continuity.md)
-  — proposed one-tab-per-session, full-history replay fallback, ~1-minute idle shutdown, and a small
-  top-left headed Chrome window (refined target; the shipped idle is 5 minutes).
-- [Runtime Architecture Brainstorm](plan/runtime-architecture-brainstorm.md) — why vendor + embed
-  Bun is the best runtime design, and the target architecture as the package grows (macOS, hybrid
-  capture, backends).
-- [MCP, Tunnel, and the Turn Broker](plan/mcp-tunnel-broker.md) — what the daemon's MCP server,
-  tunnel, and turn broker are, and how Full mode uses them.
-- [Council vs. Current (Orchestrator + Internet)](plan/council-via-orchestrator.md) — whether the
-  current stack can provide Council-like multi-agent, the session model (one chat per provider per Pi
-  session), and the orchestrator as a model-agnostic dependency.
-- [Multi-Account Sign-In and Credential Automation](plan/multi-account-signin.md) — why raw
-  `account|password|2fa` automation is not reliable for ChatGPT Web, and the recommended
-  one-time-manual + session-reuse design.
-
-## Scope
-
-Current production scope is ChatGPT Web through the bundled Responses daemon, including isolated
-login, auto-start for authenticated accounts, fixed-effort model routing, lifecycle control,
-settings, compaction, health/HUD, account diagnostics, admin control, account routing, and read-only
-web search/fetch. Claude/Gemini, hybrid capture, native Codex tool bridging, and non-Linux artifacts are deferred
-without inert production stubs.
+The brainstorm/review files preserve design history. Source and the mirrored references above are the
+authoritative current behavior.

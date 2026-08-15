@@ -17,12 +17,16 @@ export function registerDaemonTool(host: Pick<ExtensionAPI, "registerTool">, man
 				Type.Literal("stop"),
 				Type.Literal("restart"),
 			]),
+			storageStatePath: Type.Optional(Type.String({ minLength: 1 })),
 		}),
 		async execute(_id, params) {
-			const account = await new AccountRegistry().get(params.account);
+			const account = await new AccountRegistry().getOpenAi(params.account);
+			if (params.storageStatePath && params.action !== "login") {
+				throw new Error("storageStatePath is only valid for the login action.");
+			}
 			switch (params.action) {
 				case "login":
-					await manager.login(account.id);
+					await manager.login(account.id, { storageStatePath: params.storageStatePath });
 					break;
 				case "start":
 					await manager.start(account.id);

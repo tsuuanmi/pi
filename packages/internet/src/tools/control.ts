@@ -18,7 +18,7 @@ export function registerControlTools(host: Pick<ExtensionAPI, "registerTool">): 
 			]),
 		}),
 		async execute(_id, params, signal) {
-			const account = await new AccountRegistry().get(params.account);
+			const account = await new AccountRegistry().getOpenAi(params.account);
 			const client = await DaemonClient.forAccount(account);
 			const result = await client.control(params.action, signal);
 			return {

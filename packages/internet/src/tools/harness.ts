@@ -22,7 +22,7 @@ export function registerHarnessTool(host: Pick<ExtensionAPI, "registerTool">, ma
 			runtimeKeyFile: Type.Optional(Type.String({ minLength: 1 })),
 		}),
 		async execute(_id, params) {
-			const account = await new AccountRegistry().get(params.account);
+			const account = await new AccountRegistry().getOpenAi(params.account);
 			if (params.action === "enable") {
 				if (!params.tunnelClientPath || !params.tunnelId || !params.runtimeKeyFile) {
 					throw new Error("Full harness enable requires tunnelClientPath, tunnelId, and runtimeKeyFile.");

@@ -11,7 +11,7 @@ import {
 	type DaemonHealth,
 } from "#internet/backends/openai/daemon/routes";
 import { InternetError } from "#internet/core/errors";
-import type { InternetAccount, InternetControlAction } from "#internet/core/types";
+import type { InternetControlAction, OpenAiInternetAccount } from "#internet/core/types";
 
 const DEFAULT_TIMEOUT_MS = 5_000;
 const CONVERSATION_CANARY_TIMEOUT_MS = 120_000;
@@ -40,7 +40,7 @@ export class DaemonClient {
 	}
 
 	static async forAccount(
-		account: InternetAccount,
+		account: OpenAiInternetAccount,
 		options: Omit<DaemonClientOptions, "config" | "configDir"> = {},
 	): Promise<DaemonClient> {
 		const config = await readDaemonConfig(account.configDir);

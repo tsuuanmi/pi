@@ -12,7 +12,7 @@ export interface DaemonStatus {
 
 export async function readDaemonStatusSnapshot(): Promise<DaemonStatus> {
 	try {
-		const account = await new AccountRegistry().get();
+		const account = await new AccountRegistry().getOpenAi();
 		const client = await DaemonClient.forAccount(account);
 		return { available: true, endpoint: client.baseUrl(), health: await client.health() };
 	} catch (error) {

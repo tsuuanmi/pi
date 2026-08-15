@@ -10,7 +10,7 @@ export function registerStatusTools(host: Pick<ExtensionAPI, "registerTool">): v
 		description: "Show ChatGPT Web daemon health and active turn counts.",
 		parameters: Type.Object({ account: Type.Optional(Type.String({ minLength: 1 })) }),
 		async execute(_id, params, signal) {
-			const account = await new AccountRegistry().get(params.account);
+			const account = await new AccountRegistry().getOpenAi(params.account);
 			const client = await DaemonClient.forAccount(account);
 			const health = await client.health(signal);
 			return {

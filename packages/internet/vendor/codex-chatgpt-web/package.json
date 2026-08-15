@@ -46,10 +46,10 @@
     "verify": "bun run scripts/verify.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "1.30.0",
     "chromium-bidi": "12.1.0",
-    "fflate": "^0.8.2",
-    "playwright-core": "^1.62.0",
+    "fflate": "0.8.3",
+    "playwright-core": "1.62.0",
     "tiktoken": "1.0.22",
     "turndown": "7.2.0",
     "turndown-plugin-gfm": "1.0.2",

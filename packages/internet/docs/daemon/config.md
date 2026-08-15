@@ -13,6 +13,12 @@ This is the config the package writes for the bundled daemon; it is distinct fro
 - `BROWSER_IDLE_SHUTDOWN_MS` — `5 * 60 * 1000`.
 - `BROWSER_WINDOW_WIDTH` / `BROWSER_WINDOW_HEIGHT` — `900` / `700`.
 
+## Platform defaults
+
+`defaultChromeExecutable()` selects `/usr/bin/google-chrome` on Linux and
+`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` on macOS. Other platforms are
+rejected.
+
 ## `OwnedDaemonConfig`
 
 The full owned config: version, release version, `mode` (`"browser-only"` or `"full"`), loopback
@@ -60,7 +66,7 @@ ensureOwnedDaemonConfig(account, options?): Promise<OwnedDaemonConfig>
 Reads the harness config and reuses an existing valid config if it still matches the harness mode
 and window/idle values. Otherwise it writes (atomically, `0700` dir / `0600` file) a new config
 derived from the account, harness, and options. Requires a `runtimeCommand` and `releaseVersion` for
-a fresh write. Chrome defaults to `/usr/bin/google-chrome`. In full mode it embeds the tunnel
+a fresh write. Chrome uses the platform default above. In full mode it embeds the tunnel
 client path, tunnel id, runtime-key file, and a `pi-internet-<account.id>` profile/alias.
 
 `validateOwnedConfig` enforces the version, mode, loopback endpoint matching the account, and a

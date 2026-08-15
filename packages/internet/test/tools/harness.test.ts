@@ -6,7 +6,7 @@ import { captureTools } from "#internet-test/tools/helpers";
 
 describe("internet_harness", () => {
 	it("enables Full mode and restarts the account daemon", async () => {
-		vi.spyOn(AccountRegistry.prototype, "get").mockResolvedValue({ id: "default" } as never);
+		vi.spyOn(AccountRegistry.prototype, "getOpenAi").mockResolvedValue({ id: "default" } as never);
 		const enable = vi.spyOn(harness, "enableFullHarness").mockResolvedValue({
 			mode: "full",
 			tunnelClientPath: "/usr/bin/tunnel-client",

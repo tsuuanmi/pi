@@ -1,10 +1,12 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
+import type { CouncilService } from "#internet/council/service";
 import type { OwnedDaemonManager } from "#internet/daemon/manager";
 import type { InternetSettingsService } from "#internet/settings";
 import { registerAccountsTools } from "#internet/tools/accounts";
 import { registerCompactTools } from "#internet/tools/compact";
 import { registerControlTools } from "#internet/tools/control";
 import { registerConversationTool } from "#internet/tools/conversations";
+import { registerCouncilTool } from "#internet/tools/council";
 import { registerDaemonTool } from "#internet/tools/daemon";
 import { registerDoctorTool } from "#internet/tools/doctor";
 import { registerHarnessTool } from "#internet/tools/harness";
@@ -16,6 +18,7 @@ export function registerInternetTools(
 	host: Pick<ExtensionAPI, "registerTool">,
 	manager: OwnedDaemonManager,
 	settings: InternetSettingsService,
+	council: CouncilService,
 ): void {
 	registerAccountsTools(host);
 	registerStatusTools(host);
@@ -24,6 +27,7 @@ export function registerInternetTools(
 	registerCompactTools(host);
 	registerDaemonTool(host, manager);
 	registerConversationTool(host, manager);
+	registerCouncilTool(host, council);
 	registerHarnessTool(host, manager);
 	registerSettingsTool(host, settings);
 	registerWebTools(host);

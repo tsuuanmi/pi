@@ -1,4 +1,6 @@
 export { AccountRegistry, getAccountRegistryPath } from "#internet/accounts/registry";
+export { anthropicModels } from "#internet/backends/anthropic/models";
+export { googleModels } from "#internet/backends/google/models";
 export {
 	DEFAULT_DAEMON_HOST,
 	DEFAULT_DAEMON_PORT,
@@ -8,9 +10,12 @@ export {
 } from "#internet/backends/openai/daemon/auth";
 export { DaemonClient } from "#internet/backends/openai/daemon/client";
 export { readDaemonStatus, readDaemonStatusSnapshot } from "#internet/backends/openai/daemon/status";
-export { chatGptWebModels, registerOpenAiProviders } from "#internet/backends/openai/index";
+export { chatGptWebModels } from "#internet/backends/openai/models";
+export { internetProviderName, registerInternetProviders } from "#internet/backends/registry";
 export { InternetError, isInternetError } from "#internet/core/errors";
 export type * from "#internet/core/types";
+export type { CouncilPreset, CouncilRequest, CouncilResult } from "#internet/council/service";
+export { CouncilService } from "#internet/council/service";
 export {
 	daemonConfigPath,
 	daemonLoginExists,

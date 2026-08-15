@@ -63,6 +63,7 @@ import {
   ChatGptLunaCheckpointStream,
   type CapturedChatGptLunaCheckpoint,
 } from "./rolling-checkpoint";
+import { ChatGptWireCapture } from "./wire-capture";
 
 export { MAX_CHATGPT_BROWSER_TABS } from "./concurrency";
 
@@ -1957,6 +1958,7 @@ export class ChatGptBrowserWorker {
     let turnConnection: Browser | undefined;
     let managedPage: Page | undefined;
     let diagnosticPage: Page | undefined;
+    let wireCapture: ChatGptWireCapture | undefined;
     try {
       if (turn.abortSignal?.aborted) throw new DOMException("ChatGPT web turn aborted", "AbortError");
       const estimatedInputTokens = estimateCompiledChatGptWebInputTokens(prepared, turn.modelId);
@@ -2043,6 +2045,7 @@ export class ChatGptBrowserWorker {
       const responseTurn = responseTurns.nth(initialResponseTurnCount);
       const userTurns = page.locator(CHATGPT_USER_TURN_SELECTOR);
       const initialUserTurnCount = await userTurns.count();
+      wireCapture = new ChatGptWireCapture(page);
       await this.runStage(turn.traceId, "send", browserStageTimeouts.send, async (stageSignal) => {
         const composer = await this.activeComposer(page);
         const sendButton = composer
@@ -2078,13 +2081,6 @@ export class ChatGptBrowserWorker {
       const sentAt = Date.now();
       const visibleTrace = new ChatGptVisibleTraceTracker();
       const markdownBuffer = new ChatGptMarkdownBuffer();
-      const checkpointStream = turn.captureLunaCheckpoint
-        ? new ChatGptLunaCheckpointStream()
-        : undefined;
-      const emitMarkdownDelta = (delta: string): void => {
-        const visible = checkpointStream ? checkpointStream.push(delta) : delta;
-        if (visible) turn.onTextDelta(visible);
-      };
       const completionTracker = new ChatGptCompletionTracker();
       const domHealthTracker = new ChatGptTurnDomHealthTracker();
       for (;;) {
@@ -2128,12 +2124,11 @@ export class ChatGptBrowserWorker {
             capturedResponse = true;
             await diagnostics.capture(page, "response-visible");
           }
-          const textDelta = markdownBuffer.observe(snapshot.markdownSegments);
+          markdownBuffer.observe(snapshot.markdownSegments);
           for (const trace of visibleTrace.observe(snapshot.traceBlocks, snapshot.completionActionVisible)) {
             if (trace.kind === "commentary") turn.onCommentary?.(trace.text, trace.continuation === true);
             else turn.onReasoningSummary?.(trace.text, trace.continuation === true);
           }
-          if (textDelta) emitMarkdownDelta(textDelta);
           const domError = domHealthTracker.update({
             responsePresent: snapshot.responsePresent,
             running,
@@ -2155,19 +2150,22 @@ export class ChatGptBrowserWorker {
             if (!final.markdown && snapshot.visibleText) {
               throw new Error("ChatGPT completed with visible text that could not be serialized as Markdown");
             }
-            if (final.delta) emitMarkdownDelta(final.delta);
-            if (checkpointStream) {
+            const wireText = await wireCapture.waitForText();
+            const capturedText = wireText ?? final.markdown;
+            console.info(`[chatgpt-web] browser turn ${turn.traceId} response capture=${wireText ? "wire" : "dom-fallback"}`);
+            if (turn.captureLunaCheckpoint) {
+              const checkpointStream = new ChatGptLunaCheckpointStream();
+              checkpointStream.push(capturedText);
               if (!checkpointStream.hasCheckpointMarker()) {
-                const remainder = checkpointStream.flushVisibleRemainder();
-                if (remainder) turn.onTextDelta(remainder);
                 throw new Error("ChatGPT Luna completed without the required private rolling checkpoint");
               }
               const completed = checkpointStream.finish(snapshot.visibleText);
               turn.onLunaCheckpoint!(completed.captured);
               finalText = completed.answer;
             } else {
-              finalText = final.markdown;
+              finalText = capturedText;
             }
+            if (finalText) turn.onTextDelta(finalText);
             break;
           }
           if (!loggedCompletionWait && Date.now() - sentAt >= 30_000) {
@@ -2207,6 +2205,7 @@ export class ChatGptBrowserWorker {
       }
       throw error;
     } finally {
+      wireCapture?.dispose();
       prepared.release();
       if (turnConnection) {
         await turnConnection.close().catch(error => {

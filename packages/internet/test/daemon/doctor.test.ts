@@ -1,10 +1,10 @@
 import type { ChildProcess, ExecFileException, ExecFileOptionsWithStringEncoding } from "node:child_process";
 import { InternetError } from "#internet/core/errors";
-import type { InternetAccount } from "#internet/core/types";
+import type { OpenAiInternetAccount } from "#internet/core/types";
 import { runDaemonDoctor } from "#internet/daemon/doctor";
 import type { DaemonRuntime } from "#internet/daemon/runtime";
 
-const account: InternetAccount = {
+const account: OpenAiInternetAccount = {
 	id: "default",
 	backend: "openai",
 	displayName: "ChatGPT Web",

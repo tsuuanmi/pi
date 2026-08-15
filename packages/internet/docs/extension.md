@@ -1,27 +1,15 @@
 # extension
 
-Mirrors `src/extension.ts`.
+Mirrors `src/extension.ts`, the package composition root.
 
-The extension composition root loaded by Pi. It is a pure composition function: it constructs the
-manager, settings store, and account list, registers providers/tools/hooks/HUD, then auto-starts
-authenticated daemons.
+1. Read normalized accounts from `AccountRegistry`.
+2. Narrow ChatGPT Web accounts and construct `OwnedDaemonManager`.
+3. Construct `InternetSettingsStore` and `CouncilService`.
+4. Register all enabled providers through `registerInternetProviders`.
+5. Register tools with explicit manager/settings/council dependencies.
+6. Register hooks with browser accounts only.
+7. Register daemon HUD status.
+8. Auto-start authenticated browser daemons.
 
-## Signature
-
-```ts
-export default async function internetExtension(host: ExtensionAPI): Promise<void>
-```
-
-## Composition order
-
-1. `new AccountRegistry().list()` — read current account routing metadata.
-2. `new OwnedDaemonManager(accounts)` — build the daemon/tunnel lifecycle owner.
-3. `new InternetSettingsStore()` — load private package settings.
-4. `registerOpenAiProviders(host, accounts)` — register capability-scoped `chatgpt-web/*` providers.
-5. `registerInternetTools(host, manager, settings)` — register all Pi tools.
-6. `registerInternetHooks(host, manager, accounts, settings)` — register readiness/adaptation hooks.
-7. `host.registerHudProvider(readDaemonStatus)` — register the daemon HUD provider.
-8. `manager.autoStart()` — start daemons for enabled accounts that already have verified login.
-
-All steps use public `ExtensionAPI` surface only. The manager and settings store are created here and
-shared by the tools and hooks they are passed to.
+API accounts never enter the daemon manager or browser hooks. All composition uses public
+`ExtensionAPI` methods.

@@ -10,12 +10,12 @@ Registers the extension's control hooks and event observer. The module owns the 
 registerInternetHooks(
   host: Pick<ExtensionAPI, "on" | "onHook">,
   manager: OwnedDaemonManager,
-  accounts: InternetAccount[],
+  accounts: OpenAiInternetAccount[],
   settings: InternetSettingsService,
 ): void
 ```
 
-Builds a map from enabled account provider names (`providerName(account)`) to account IDs, then
+Builds a map from enabled ChatGPT Web account provider names (`providerName(account)`) to account IDs, then
 registers two hooks with `onHook(...)` and one observation with `on(...)`.
 
 ### `tool_call` hook — interactive approval gate
@@ -33,7 +33,7 @@ Otherwise the user is asked to approve; an unapproved call returns
 ### `before_provider_request` hook — readiness and adaptation
 
 Runs only for requests whose `context.model.provider` is a registered ChatGPT Web provider. On other
-providers the original payload is returned untouched.
+providers, including Anthropic and Google API accounts, the original payload is returned untouched.
 
 For a matching provider:
 

@@ -1,44 +1,65 @@
 # Internet — Implementation Review
 
-This review records findings from the original provider/client MVP and their disposition after the
-package-owned daemon implementation.
+This review records the final disposition of the provider/client MVP and the completed cross-platform,
+provider-neutral implementation.
 
-## Current status
+## Runtime and browser boundary
 
-The package now vendors a fixed codex-chatgpt-web snapshot, builds its embedded-Bun Linux runtime,
-owns isolated login/start/stop lifecycle, and retains Pi's built-in `openai-responses` transport.
-Model metadata, automatic-login settings, and read-only web access are implemented. The current
-verification status is recorded with each implementation change.
+The package vendors one fixed `codex-chatgpt-web` snapshot and compiles a native self-contained
+runtime for Linux or macOS on x64/arm64. Runtime manifests are host-matched and launcher paths are
+contained/executable. Owned config chooses platform Chrome defaults; Chrome remains the only host
+browser dependency.
 
-## Resolved: fixed-effort model metadata
+Each ChatGPT account owns its config, auth state, loopback endpoint, serialized lifecycle, and
+optional Full-mode tunnel. Daemon modules accept only the narrowed ChatGPT account type.
 
-The package now exposes separate daemon route models with daemon display names and exactly one
-supported Pi thinking level each. Luna is mutually exclusive with Sol; Extra High and Pro are
-capability-gated. Route context windows come from the daemon catalog.
+## Response and login reliability
 
-The daemon does not define a model output-token ceiling: its auto-compaction, browser-message, and
-composer limits have different meanings. `maxTokens` therefore uses a documented conservative
-16,384 output ceiling rather than the previous speculative context-derived values.
+The browser worker now uses authenticated conversation wire payloads as the primary final-response
+source and logs capture provenance. The reviewed DOM parser remains the specified compatibility
+fallback because upstream wire shapes can vary.
 
-## Resolved: stable provider names
+Interactive owned-profile login remains authoritative. Optional Playwright storage-state import is
+bounded, rejects symlinks/non-files, filters unrelated domains, verifies in daemon-owned Chrome, and
+persists only after verification. No password/2FA collection path exists.
 
-The provider name is now account-based and stable: account `default` is `chatgpt-web`; every other
-account is `chatgpt-web-<account-id>`. Enabling/disabling unrelated accounts does not rename an
-existing provider.
+## Provider-neutral accounts
 
-## Resolved: dead abstractions and code
+Schema-2 account metadata is a discriminated union:
 
-Removed:
+- `openai` owns ChatGPT Web daemon configuration.
+- `anthropic` owns an Anthropic API-key environment reference.
+- `google` owns a Gemini API-key environment reference.
 
-- unused `request_failed` error code;
-- unused `InternetHookContext` export;
-- unused reduced `InternetContext` and custom tool host/spec adapter;
-- stale public `./tool` export.
+The generic backend registry is the only provider composition path. Stable account-derived provider
+names are shared with council model allowlisting. API secret values never enter account files or tool
+output.
 
-Tools now use Pi's current extension tool contract directly.
+## Model and orchestration surfaces
 
-## Remaining test-quality notes
+ChatGPT route metadata remains capability-scoped. Anthropic uses Pi's native messages transport and
+package-aligned model metadata. Gemini uses Google's documented OpenAI-compatible endpoint with
+explicit Flash/Pro mappings.
 
-Some focused unit tests still use narrow unsafe casts for partial host/account mocks. These do not
-affect production boundaries but can be tightened independently. The daemon client test's short
-literal token bypasses config validation intentionally because that test targets HTTP behavior.
+`CouncilService` composes 2–6 enabled internet models through `@tsuuanmi/pi-orchestrator`. Members are
+tool-free, single-turn, output-capped agents; the chair runs only after dependency outputs are ready.
+Concurrency, task starts, retries, wall-clock duration, provider scope, and cancellation are bounded.
+
+## Removed or superseded surfaces
+
+- Account registry schema 1 and optional/default backend creation semantics.
+- Direct package-root `registerOpenAiProviders` export; generic provider registration is authoritative.
+- Daemon operations on the undifferentiated account union.
+- Linux-only runtime rejection.
+- Add/enable-only account lifecycle; removal is now explicit.
+
+No compatibility aliases, migration readers, duplicate provider registries, alternate tool bridges,
+or unowned browser automation paths remain.
+
+## Verification boundary
+
+Automated verification covers package build/pack, runtime resolution, login-state filtering, wire
+parsing, backend configs, account lifecycle, councils, daemon behavior, public web safety, root
+typecheck, and formatting/lint. Credential-dependent browser/API/Full-mode smoke tests require a
+release environment with operator-owned accounts and are not replaced by mocks or fallback
+providers.

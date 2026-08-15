@@ -2,52 +2,21 @@
 
 Mirrors `src/core/types.ts`.
 
-Shared types used across the package.
-
-## `InternetBackendId`
+The account model is a discriminated union with backend-specific configuration.
 
 ```ts
-type InternetBackendId = "openai";
+type InternetBackendId = "openai" | "anthropic" | "google";
+type InternetConversationMode = "temporary" | "durable";
 ```
 
-The currently supported backend. Only ChatGPT Web (`openai`) exists today.
+- `OpenAiInternetAccount` owns `configDir`, loopback `host`/`port`, and `conversationMode` for the
+  bundled ChatGPT Web daemon.
+- `AnthropicInternetAccount` and `GoogleInternetAccount` own `apiKeyEnv`, the environment-variable
+  name used by Pi's provider registry. They never contain the credential value.
+- `InternetAccount` is the union of those normalized forms.
+- `InternetAccountInput` is the corresponding creation union. `backend` is required; the registry
+  supplies browser config directory, host, port, display name, and enabled defaults.
+- `isOpenAiAccount(account)` narrows daemon-only operations at their dependency boundary.
 
-## `InternetAccount`
-
-```ts
-interface InternetAccount {
-  id: string;
-  backend: InternetBackendId;
-  displayName: string;
-  configDir: string;
-  host: string;
-  port: number;
-  enabled: boolean;
-}
-```
-
-A fully-normalized account. `configDir` is the absolute private directory for daemon/browser data;
-`host` is always the loopback host and `port` the loopback endpoint.
-
-## `InternetAccountInput`
-
-The account creation input. `backend`, `displayName`, `host`, `port`, and `enabled` are optional and
-normalized with defaults by `AccountRegistry.add`. Only `id` and `configDir` are required.
-
-## `InternetSettings`
-
-```ts
-interface InternetSettings {
-  autoLogin: boolean;
-}
-```
-
-The package settings, currently just the automatic-login toggle.
-
-## `InternetControlAction`
-
-```ts
-type InternetControlAction = "drain" | "resume" | "shutdown" | "cancel-browser-turns";
-```
-
-The daemon admin actions accepted by `internet_control` and `DaemonClient.control`.
+`InternetSettings` contains the global `autoLogin` flag. `InternetControlAction` is the daemon admin
+action union (`drain`, `resume`, `shutdown`, or `cancel-browser-turns`).

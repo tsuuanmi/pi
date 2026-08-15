@@ -1,4 +1,4 @@
-import { validateConversationCanary } from "../../vendor/codex-chatgpt-web/src/adapters/chatgpt-web/conversation-canary.js";
+import { validateConversationCanary } from "#internet-vendor/adapters/chatgpt-web/conversation-canary";
 
 describe("durable conversation canary", () => {
 	it("accepts model reply variance when a durable conversation was created", () => {

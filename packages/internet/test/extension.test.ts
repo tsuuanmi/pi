@@ -27,6 +27,7 @@ describe("internetExtension", () => {
 			expect(tools).toEqual([
 				"internet_accounts",
 				"internet_account_add",
+				"internet_account_remove",
 				"internet_account_set_enabled",
 				"internet_account_conversation_mode",
 				"internet_status",
@@ -35,6 +36,7 @@ describe("internetExtension", () => {
 				"internet_compact",
 				"internet_daemon",
 				"internet_conversation",
+				"internet_council",
 				"internet_harness",
 				"internet_settings",
 				"internet_search",

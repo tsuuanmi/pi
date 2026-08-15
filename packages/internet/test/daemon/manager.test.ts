@@ -4,11 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AccountRegistry } from "#internet/accounts/registry";
 import { DaemonClient } from "#internet/backends/openai/daemon/client";
-import type { InternetAccount } from "#internet/core/types";
+import type { OpenAiInternetAccount } from "#internet/core/types";
 import { daemonConfigFingerprint, daemonLoginMarkerPath, ensureOwnedDaemonConfig } from "#internet/daemon/config";
 import { OwnedDaemonManager } from "#internet/daemon/manager";
 
-async function account(): Promise<InternetAccount> {
+async function account(): Promise<OpenAiInternetAccount> {
 	const configDir = await mkdtemp(join(tmpdir(), "pi-internet-manager-"));
 	return {
 		id: "default",
@@ -24,10 +24,9 @@ async function account(): Promise<InternetAccount> {
 
 function authenticatedMarker() {
 	return {
-		version: 2,
+		version: 1,
 		authenticated: true,
-		source: "authenticated-system-browser",
-		capturedAt: new Date().toISOString(),
+		verifiedAt: new Date().toISOString(),
 		solAvailable: true,
 		proAvailable: false,
 	};
@@ -87,10 +86,38 @@ describe("OwnedDaemonManager", () => {
 		expect(spawn).toHaveBeenCalledOnce();
 	});
 
-	it("uses the current default account path", async () => {
-		const registry = new AccountRegistry({
-			path: join(await mkdtemp(join(tmpdir(), "pi-internet-registry-")), "accounts.json"),
+	it("passes an absolute storage-state import path to daemon-owned login", async () => {
+		const target = await account();
+		const child = Object.assign(new EventEmitter(), { exitCode: null as number | null });
+		const spawn = vi.fn(() => {
+			queueMicrotask(async () => {
+				await mkdir(join(target.configDir, "browser"), { recursive: true });
+				await writeFile(join(target.configDir, "browser", "storage-state.json"), "{}\n");
+				await writeFile(daemonLoginMarkerPath(target), JSON.stringify(authenticatedMarker()));
+				child.emit("exit", 0, null);
+			});
+			return child;
 		});
-		await expect(registry.get()).resolves.toMatchObject({ id: "default" });
+		const manager = new OwnedDaemonManager([target], {
+			runtime: {
+				root: "/runtime",
+				launcher: "/runtime/bin/daemon",
+				manifest: { schemaVersion: 1, appVersion: "2.1.8", platform: "linux", arch: "x64", launcher: "bin/daemon" },
+			},
+			spawn: spawn as never,
+		});
+		await manager.login(target.id, { storageStatePath: "browser-state.json" });
+		expect(spawn).toHaveBeenCalledWith(
+			"/runtime/bin/daemon",
+			["--home", target.configDir, "login", "--import-storage-state", join(process.cwd(), "browser-state.json")],
+			expect.any(Object),
+		);
+	});
+
+	it("uses the current default account path", async () => {
+		const registry = new AccountRegistry(
+			join(await mkdtemp(join(tmpdir(), "pi-internet-registry-")), "accounts.json"),
+		);
+		await expect(registry.getOpenAi()).resolves.toMatchObject({ id: "default" });
 	});
 });

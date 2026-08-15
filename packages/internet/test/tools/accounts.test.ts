@@ -5,11 +5,12 @@ import { registerAccountsTools } from "#internet/tools/accounts";
 import { captureTools } from "#internet-test/tools/helpers";
 
 describe("internet account tools", () => {
-	it("registers list, add, enable, and conversation-mode tools", () => {
+	it("registers the complete account lifecycle", () => {
 		const tools = captureTools(registerAccountsTools);
 		expect([...tools.keys()]).toEqual([
 			"internet_accounts",
 			"internet_account_add",
+			"internet_account_remove",
 			"internet_account_set_enabled",
 			"internet_account_conversation_mode",
 		]);
@@ -22,7 +23,7 @@ describe("internet account tools", () => {
 			const tool = captureTools(registerAccountsTools).get("internet_account_add");
 			const result = await tool?.execute(
 				"call",
-				{ id: "work", configDir: "/tmp/work", port: 18001 },
+				{ id: "work", backend: "openai", configDir: "/tmp/work", port: 18001 },
 				undefined,
 				undefined,
 				{} as never,
@@ -43,7 +44,7 @@ describe("internet account tools", () => {
 				.get("internet_account_add")
 				?.execute(
 					"add",
-					{ id: "research", configDir: "/tmp/research", port: 18002 },
+					{ id: "research", backend: "openai", configDir: "/tmp/research", port: 18002 },
 					undefined,
 					undefined,
 					{} as never,

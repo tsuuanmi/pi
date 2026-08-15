@@ -7,7 +7,7 @@ import type {
 	ExtensionEventHandler,
 	ExtensionHookHandler,
 } from "@tsuuanmi/pi/extensions";
-import type { InternetAccount } from "#internet/core/types";
+import type { OpenAiInternetAccount } from "#internet/core/types";
 import type { OwnedDaemonManager } from "#internet/daemon/manager";
 import { registerInternetHooks } from "#internet/hooks";
 import type { InternetSettingsStore } from "#internet/settings";
@@ -37,7 +37,7 @@ function captureHandlers(captured: CapturedHandlers): Pick<ExtensionAPI, "on" | 
 	} as unknown as Pick<ExtensionAPI, "on" | "onHook">;
 }
 
-async function account(): Promise<InternetAccount> {
+async function account(): Promise<OpenAiInternetAccount> {
 	const configDir = await mkdtemp(join(tmpdir(), "pi-internet-hook-"));
 	await mkdir(join(configDir, "browser"), { recursive: true });
 	await writeFile(

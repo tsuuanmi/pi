@@ -5,7 +5,7 @@ import { captureTools } from "#internet-test/tools/helpers";
 
 describe("internet_doctor", () => {
 	it("returns structured diagnostics and a readable summary", async () => {
-		vi.spyOn(AccountRegistry.prototype, "get").mockResolvedValue({ id: "default" } as never);
+		vi.spyOn(AccountRegistry.prototype, "getOpenAi").mockResolvedValue({ id: "default" } as never);
 		vi.spyOn(doctor, "runDaemonDoctor").mockResolvedValue({
 			ok: false,
 			mode: "browser-only",

@@ -1,74 +1,33 @@
-# Internet — Implemented Layout
+# Implemented Layout
 
 ```text
 packages/internet/
-├── package.json
-├── README.md
-├── CHANGELOG.md
-├── docs/
-├── scripts/
 ├── src/
+│   ├── accounts/registry.ts
+│   ├── backends/
+│   │   ├── backend.ts
+│   │   ├── names.ts
+│   │   ├── registry.ts
+│   │   ├── anthropic/{index,models,provider}.ts
+│   │   ├── google/{index,models,provider}.ts
+│   │   └── openai/{index,models,provider,daemon/,turn/}
+│   ├── council/service.ts
+│   ├── core/{errors,types}.ts
+│   ├── daemon/{config,doctor,harness,health,manager,runtime}.ts
+│   ├── tools/{accounts,compact,control,conversations,council,daemon,doctor,harness,register,settings,status,web}.ts
+│   ├── web/{fetch,search}.ts
 │   ├── extension.ts
 │   ├── hooks.ts
 │   ├── index.ts
 │   ├── settings.ts
-│   ├── accounts/registry.ts
-│   ├── daemon/
-│   │   ├── config.ts
-│   │   ├── doctor.ts
-│   │   ├── health.ts
-│   │   ├── harness.ts
-│   │   ├── manager.ts
-│   │   └── runtime.ts
-│   ├── backends/openai/
-│   │   ├── provider.ts
-│   │   ├── models.ts
-│   │   ├── daemon/{auth,client,routes,status}.ts
-│   │   └── turn/{files,model,request}.ts
-│   ├── core/{errors,types}.ts
-│   ├── tools/{accounts,compact,control,conversations,daemon,doctor,harness,register,settings,status,web}.ts
-│   └── web/{fetch,search}.ts
-├── test/                       # mirrors package-owned source responsibilities
-├── vendor/codex-chatgpt-web/
-│   ├── SNAPSHOT.md
-│   ├── LICENSE
-│   ├── package.json
-│   ├── bun.lock
-│   ├── scripts/build-runtime-bundle.ts
-│   └── src/                    # fixed daemon MVP snapshot
-└── dist/                       # gitignored build output
-    ├── daemon/*.js             # package-owned lifecycle modules
-    └── daemon/runtime/         # embedded Bun + daemon app + launcher
+│   └── version.ts
+├── test/                    # mirrors changed src areas
+├── docs/                    # mirrors src modules plus architecture/usage/review records
+├── scripts/build-daemon.mjs
+└── vendor/codex-chatgpt-web/
 ```
 
-## Responsibilities
-
-- `extension.ts`: composition root only.
-- `accounts/registry.ts`: account routing metadata and atomic persistence.
-- `daemon/config.ts`: package-owned private daemon/browser configuration.
-- `daemon/runtime.ts`: bundled artifact resolution and platform validation.
-- `daemon/doctor.ts`: bounded CLI diagnostics and strict report validation.
-- `daemon/health.ts`: startup health polling.
-- `daemon/harness.ts`: account-scoped Full-mode paths and private runtime-key storage.
-- `daemon/manager.ts`: the single daemon/tunnel lifecycle owner.
-- `backends/openai/provider.ts`: capability-scoped provider configuration and naming.
-- `backends/openai/turn/files.ts`: bounded workspace-local `@file` expansion.
-- `backends/openai/turn/request.ts`: pure daemon identity/environment payload adaptation.
-- `hooks.ts`: provider-name-scoped readiness/adaptation gate plus approvals and HUD refresh.
-- `settings.ts`: atomic private package settings.
-- `backends/openai/daemon/*`: HTTP auth/client/status boundaries.
-- `web/*`: public web transport with network and response safety checks.
-- `tools/*`: direct Pi extension tools; no redundant custom context/tool abstraction.
-- `vendor/*/conversation-sync.ts`: semantic history projection, authority fingerprints, acknowledgements, and suffix selection.
-- `vendor/*/conversation-journal.ts`: account-private fsynced conversation bindings, CAS state transitions, and canary authority.
-- `vendor/*`: third-party fixed source snapshot, built by its own pinned Bun toolchain.
-
-The vendor snapshot excludes upstream tests, docs, Electron launcher, generated output,
-`node_modules`, and sync machinery. Its source is not reformatted into Pi style.
-
-## Build workflow
-
-```bash
-npm run build   # package TypeScript + self-contained daemon runtime
-npm test        # tests import the rebuilt dist
-```
+`dist/daemon/runtime/` is generated, ignored build output. It contains a native launcher, schema-1
+host manifest, source maps/application payload, license, snapshot record, and third-party notices.
+Vendored source is the only browser automation implementation; package modules own lifecycle and
+provider composition rather than duplicating it.

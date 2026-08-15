@@ -14,7 +14,7 @@ describe("internet_compact", () => {
 	it("returns replacement history through the canonical daemon model route", async () => {
 		const output = [{ type: "message", role: "user", content: [] }];
 		const compact = vi.fn(async () => ({ output }));
-		vi.spyOn(AccountRegistry.prototype, "get").mockResolvedValue({ id: "default" } as never);
+		vi.spyOn(AccountRegistry.prototype, "getOpenAi").mockResolvedValue({ id: "default" } as never);
 		vi.spyOn(DaemonClient, "forAccount").mockResolvedValue({ compact } as unknown as DaemonClient);
 		const tool = captureTools(registerCompactTools).get("internet_compact");
 		const result = await tool?.execute("call", { model: "high", input: [{}] }, undefined, undefined, {} as never);

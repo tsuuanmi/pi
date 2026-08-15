@@ -5,7 +5,7 @@ import { captureTools } from "#internet-test/tools/helpers";
 
 describe("internet_daemon", () => {
 	it("maps lifecycle actions to the package-owned manager", async () => {
-		vi.spyOn(AccountRegistry.prototype, "get").mockResolvedValue({ id: "default" } as never);
+		vi.spyOn(AccountRegistry.prototype, "getOpenAi").mockResolvedValue({ id: "default" } as never);
 		const manager = {
 			restart: vi.fn(async () => {}),
 			status: vi.fn(async () => [{ account: "default", state: "running", loginExists: true }]),

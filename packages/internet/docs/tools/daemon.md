@@ -2,8 +2,11 @@
 
 Mirrors `src/tools/daemon.ts`.
 
-Registers `internet_daemon` — logs in, starts, stops, restarts, or inspects the package-owned
-daemon. Parameters: optional `account` and a required `action` from
-`"status" | "login" | "start" | "stop" | "restart"`. Delegates to the `OwnedDaemonManager`
-(`login`, `start`, `stop`, `restart`; `status` reads state) and returns the resulting
-`OwnedDaemonStatus` as text and as `details`.
+`internet_daemon` owns ChatGPT Web login, start, stop, restart, and status operations. `account` is
+optional and defaults to the first enabled ChatGPT Web account.
+
+For `action: "login"`, optional `storageStatePath` imports a Playwright storage-state JSON file. The
+manager passes an absolute path to the bundled daemon, which retains only ChatGPT/OpenAI origins,
+verifies the session through its owned browser, and persists it only after successful verification.
+The field is rejected for every other action. Interactive headed login remains the normal path when
+no import is supplied.

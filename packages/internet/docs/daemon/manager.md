@@ -9,22 +9,25 @@ operations per account, and exposes login/start/stop/restart/status/auto-start.
 
 - `DaemonProcessState` — `"stopped" | "running" | "login-required"`.
 - `OwnedDaemonStatus` — `{ account, state, pid?, loginExists, owned }`.
+- `DaemonLoginOptions` — optional `storageStatePath` for verified browser-state import.
 - `OwnedDaemonManagerOptions` — injectable `runtime`, `resolveRuntime`, `spawn`, and `waitForHealth`
   (used by tests).
 
 ## `OwnedDaemonManager`
 
-Constructor takes the account list and optional overrides. It builds an id→account map and defaults
-runtime resolution to `resolveDaemonRuntime` and process spawn to Node `spawn`.
+Constructor takes only normalized ChatGPT Web accounts and optional overrides. API accounts never
+cross the daemon lifecycle boundary. It builds an id→account map and defaults runtime resolution to
+`resolveDaemonRuntime` and process spawn to Node `spawn`.
 
 ### Lifecycle
 
 - `autoStart()` — starts every enabled account that already has verified login.
 - `ensureReady(accountId)` — guarantees login (when needed) and a healthy daemon; used by the
   `before_provider_request` hook.
-- `login(accountId)` — stops any running daemon, writes the owned config, and runs the bundled
-  launcher `login` interactively (`stdio: inherit`). Verifies the login marker afterward and syncs
-  capabilities.
+- `login(accountId, options?)` — stops any running daemon, writes the owned config, and runs the
+  bundled launcher `login` interactively (`stdio: inherit`) or with an absolute storage-state import
+  path. The daemon validates imports before persisting them. Login marker and capabilities are then
+  verified and synchronized.
 - `start(accountId)` — spawns the launcher `serve` child. If a healthy daemon with a matching config
   fingerprint is already running, returns without spawning. If a stale daemon runs with a different
   fingerprint, it issues `shutdown` and waits for offline first. On successful health it connects the

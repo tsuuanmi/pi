@@ -5,7 +5,7 @@ import {
 	type ExecFileOptionsWithStringEncoding,
 } from "node:child_process";
 import { InternetError } from "#internet/core/errors";
-import type { InternetAccount } from "#internet/core/types";
+import type { OpenAiInternetAccount } from "#internet/core/types";
 import type { DaemonRuntime } from "#internet/daemon/runtime";
 import { resolveDaemonRuntime } from "#internet/daemon/runtime";
 
@@ -56,7 +56,7 @@ interface DoctorCommandResult {
 }
 
 export async function runDaemonDoctor(
-	account: InternetAccount,
+	account: OpenAiInternetAccount,
 	options: RunDaemonDoctorOptions = {},
 ): Promise<DoctorReport> {
 	let runtime: DaemonRuntime;
@@ -75,7 +75,7 @@ export async function runDaemonDoctor(
 
 function executeDoctor(
 	runtime: DaemonRuntime,
-	account: InternetAccount,
+	account: OpenAiInternetAccount,
 	options: RunDaemonDoctorOptions,
 ): Promise<DoctorCommandResult> {
 	const execFile = options.execFile ?? defaultExecFile;
@@ -101,7 +101,7 @@ function executeDoctor(
 }
 
 function commandError(
-	account: InternetAccount,
+	account: OpenAiInternetAccount,
 	result: DoctorCommandResult,
 	options: RunDaemonDoctorOptions,
 ): InternetError {

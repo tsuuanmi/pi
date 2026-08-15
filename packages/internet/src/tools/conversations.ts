@@ -24,7 +24,7 @@ export function registerConversationTool(host: Pick<ExtensionAPI, "registerTool"
 			confirm: Type.Optional(Type.Boolean()),
 		}),
 		async execute(_id, params, signal) {
-			const account = await new AccountRegistry().get(params.account);
+			const account = await new AccountRegistry().getOpenAi(params.account);
 			const stateDir = join(account.configDir, "conversations");
 			if (params.action === "status") {
 				const authority = await pathExists(join(stateDir, "authority.json"));

@@ -5,13 +5,26 @@
 ### Breaking Changes
 
 - Remove `InternetHookHost` and consume Pi's `Pick<ExtensionAPI, "on" | "onHook">` contract directly.
+- Require account registry schema 2 with an explicit `openai`, `anthropic`, or `google` backend;
+  schema-1 files are rejected rather than loaded through compatibility defaults.
+- Replace the package-root `registerOpenAiProviders` export with generic
+  `registerInternetProviders`.
 
 ### Added
 
+- Add native macOS (`x64`/`arm64`) daemon resolution, platform Chrome defaults, and Ubuntu/macOS
+  package CI.
+- Add verified ChatGPT/OpenAI-only browser storage-state import for daemon-owned login.
+- Use ChatGPT conversation wire payloads as the primary response source with explicit DOM fallback
+  provenance.
+- Add Anthropic and Gemini API account providers using environment-referenced credentials.
+- Add account removal, backend-specific validation, and automatic browser-port allocation.
+- Add bounded `internet_council` orchestration with tool-free members and dependency-aware synthesis.
+
 - Add account-scoped, owner-private normal-chat bindings and canonical suffix synchronization for explicitly selected, canary-authorized browser-only durable mode.
 - Add `internet_account_conversation_mode`; accounts default to isolated Temporary Chat.
-- Vendor a fixed `codex-chatgpt-web` source snapshot and build its embedded-Bun Linux runtime inside
-  the package, removing the runtime dependency on another repository or manually started daemon.
+- Vendor a fixed `codex-chatgpt-web` source snapshot and build its embedded-Bun host-native runtime
+  inside the package, removing the runtime dependency on another repository or manually started daemon.
 - Add package-owned private config, isolated Chrome login, health-gated auto-start, serialized
   lifecycle management, graceful shutdown, and the `internet_daemon` tool.
 - Implement ChatGPT Web provider registration through Pi's native `openai-responses` transport,
@@ -31,6 +44,7 @@
 
 ### Changed
 
+- Pin all direct vendored runtime dependencies to exact lockfile versions.
 - Mark Internet as optional for root Pi bundling so standard builds can omit its platform-specific runtime unless the package is built first.
 - Register provider/tool control through `onHook(...)` and HUD refresh through the observation-only `turn_end` event.
 - Gate registered ChatGPT Web providers through `before_provider_request` while retaining Pi's

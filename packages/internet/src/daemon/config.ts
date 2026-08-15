@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { chmod, mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { InternetAccount } from "#internet/core/types";
+import type { OpenAiInternetAccount } from "#internet/core/types";
 import { readHarnessConfig } from "#internet/daemon/harness";
 
 const CONFIG_VERSION = 3;
@@ -11,6 +11,12 @@ const BROWSER_WINDOW_WIDTH = 700;
 const BROWSER_WINDOW_HEIGHT = 500;
 const BROWSER_WINDOW_POSITION_X = 0;
 const BROWSER_WINDOW_POSITION_Y = 0;
+
+export function defaultChromeExecutable(platform: NodeJS.Platform = process.platform): string {
+	if (platform === "darwin") return "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+	if (platform === "linux") return "/usr/bin/google-chrome";
+	throw new Error(`The ChatGPT Web browser runtime does not support ${platform}.`);
+}
 
 interface OwnedTunnelConfig {
 	binaryPath: string;
@@ -65,15 +71,15 @@ export function daemonConfigFingerprint(config: OwnedDaemonConfig): string {
 	return createHash("sha256").update(JSON.stringify(config)).digest("hex");
 }
 
-export function daemonConfigPath(account: InternetAccount): string {
+export function daemonConfigPath(account: OpenAiInternetAccount): string {
 	return join(account.configDir, "config.json");
 }
 
-export function daemonLoginMarkerPath(account: InternetAccount): string {
+export function daemonLoginMarkerPath(account: OpenAiInternetAccount): string {
 	return `${join(account.configDir, "browser", "storage-state.json")}.verified.json`;
 }
 
-export async function daemonLoginExists(account: InternetAccount): Promise<boolean> {
+export async function daemonLoginExists(account: OpenAiInternetAccount): Promise<boolean> {
 	try {
 		await stat(join(account.configDir, "browser", "storage-state.json"));
 		const marker = JSON.parse(await readFile(daemonLoginMarkerPath(account), "utf8")) as Record<string, unknown>;
@@ -83,7 +89,7 @@ export async function daemonLoginExists(account: InternetAccount): Promise<boole
 	}
 }
 
-export async function readOwnedDaemonCapabilities(account: InternetAccount): Promise<DaemonCapabilities> {
+export async function readOwnedDaemonCapabilities(account: OpenAiInternetAccount): Promise<DaemonCapabilities> {
 	try {
 		const config = JSON.parse(await readFile(daemonConfigPath(account), "utf8")) as OwnedDaemonConfig;
 		validateOwnedConfig(config, account);
@@ -94,7 +100,7 @@ export async function readOwnedDaemonCapabilities(account: InternetAccount): Pro
 	}
 }
 
-export async function syncOwnedDaemonCapabilities(account: InternetAccount): Promise<void> {
+export async function syncOwnedDaemonCapabilities(account: OpenAiInternetAccount): Promise<void> {
 	const path = daemonConfigPath(account);
 	const config = JSON.parse(await readFile(path, "utf8")) as OwnedDaemonConfig;
 	validateOwnedConfig(config, account);
@@ -106,7 +112,7 @@ export async function syncOwnedDaemonCapabilities(account: InternetAccount): Pro
 }
 
 export async function ensureOwnedDaemonConfig(
-	account: InternetAccount,
+	account: OpenAiInternetAccount,
 	options: OwnedDaemonConfigOptions = {},
 ): Promise<OwnedDaemonConfig> {
 	const path = daemonConfigPath(account);
@@ -143,7 +149,7 @@ export async function ensureOwnedDaemonConfig(
 	const releaseVersion = options.releaseVersion ?? existing?.releaseVersion;
 	if (!releaseVersion) throw new Error("The bundled ChatGPT Web runtime version is required.");
 	const chromeExecutablePath =
-		options.chromeExecutablePath ?? existing?.chromeExecutablePath ?? "/usr/bin/google-chrome";
+		options.chromeExecutablePath ?? existing?.chromeExecutablePath ?? defaultChromeExecutable();
 	const config: OwnedDaemonConfig = {
 		version: CONFIG_VERSION,
 		releaseVersion,
@@ -187,7 +193,7 @@ export async function ensureOwnedDaemonConfig(
 	return config;
 }
 
-function validateOwnedConfig(config: OwnedDaemonConfig, account: InternetAccount): void {
+function validateOwnedConfig(config: OwnedDaemonConfig, account: OpenAiInternetAccount): void {
 	if (config.version !== CONFIG_VERSION || (config.mode !== "browser-only" && config.mode !== "full")) {
 		throw new Error(`Unsupported owned daemon configuration: ${daemonConfigPath(account)}`);
 	}

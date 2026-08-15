@@ -2,15 +2,16 @@
 
 Mirrors `src/tools/accounts.ts`.
 
-Registers three account tools:
+Account tools expose the complete routing lifecycle:
 
-- `internet_accounts` — lists configured accounts (`AccountRegistry.list()`), no parameters. Returns
-  the accounts JSON as text and as `details`.
-- `internet_account_add` — adds an account (`AccountRegistry.add`). Parameters: required `id` and
-  `configDir`, optional `displayName`, `host`, `port`. Emits a message to reload Pi to register the
-  new provider.
-- `internet_account_set_enabled` — enables/disables an account. Parameters: required `id` and boolean
-  `enabled`. Emits a reload-Pi message.
+- `internet_accounts` lists normalized browser and API accounts.
+- `internet_account_add` requires `id` and `backend`. ChatGPT Web (`openai`) accepts optional
+  `configDir`, loopback `host`/`port`, and conversation mode. `anthropic` and `google` require
+  `apiKeyEnv` and reject browser settings.
+- `internet_account_remove` removes routing metadata but deliberately leaves the private account
+  directory intact.
+- `internet_account_set_enabled` enables or disables an account.
+- `internet_account_conversation_mode` sets temporary or durable mode for ChatGPT Web accounts.
 
-The add/enable descriptions explicitly instruct reloading Pi after changing accounts, because the
-registered provider set is established at extension load.
+Provider registration occurs at extension load, so add/remove/enable operations require a Pi reload.
+API-key values are never accepted by these tools and never appear in their output.

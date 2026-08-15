@@ -11,6 +11,7 @@ import {
   detectChatGptAccountCapabilities,
 } from "./chatgpt-session";
 import type { ChatGptWebAccountCapabilities } from "./chatgpt-web-models";
+import { readChatGptStorageState } from "./login-state";
 
 export interface BrowserLoginResult {
   storageStatePath: string;
@@ -117,6 +118,25 @@ export function storedBrowserLoginCapabilities(
   } catch {
     return {};
   }
+}
+
+export async function importChatGptLogin(
+  config: AppConfig,
+  sourcePath: string,
+): Promise<BrowserLoginResult> {
+  if (!existsSync(config.chromeExecutablePath)) {
+    throw new Error(`Google Chrome was not found at ${config.chromeExecutablePath}. Pass --chrome with its executable path.`);
+  }
+  const state = readChatGptStorageState(sourcePath);
+  const inspected = await inspectStoredState(config, state);
+  atomicWriteFile(config.storageStatePath, `${JSON.stringify(state)}\n`);
+  writeVerificationMarker(config.storageStatePath, inspected);
+  return {
+    storageStatePath: config.storageStatePath,
+    accountSurfaceUrl: inspected.url,
+    solAvailable: inspected.solAvailable,
+    proAvailable: inspected.proAvailable,
+  };
 }
 
 export async function loginToChatGpt(

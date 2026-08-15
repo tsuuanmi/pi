@@ -1,7 +1,7 @@
 import { constants } from "node:fs";
 import { access, chmod, copyFile, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import type { InternetAccount } from "#internet/core/types";
+import type { OpenAiInternetAccount } from "#internet/core/types";
 
 export type HarnessConfig =
 	| { mode: "browser-only" }
@@ -14,11 +14,11 @@ export type HarnessConfig =
 
 const BROWSER_ONLY: HarnessConfig = { mode: "browser-only" };
 
-export function harnessConfigPath(account: InternetAccount): string {
+export function harnessConfigPath(account: OpenAiInternetAccount): string {
 	return join(account.configDir, "harness.json");
 }
 
-export async function readHarnessConfig(account: InternetAccount): Promise<HarnessConfig> {
+export async function readHarnessConfig(account: OpenAiInternetAccount): Promise<HarnessConfig> {
 	try {
 		const value = JSON.parse(await readFile(harnessConfigPath(account), "utf8")) as unknown;
 		return validateHarnessConfig(value);
@@ -29,7 +29,7 @@ export async function readHarnessConfig(account: InternetAccount): Promise<Harne
 }
 
 export async function enableFullHarness(
-	account: InternetAccount,
+	account: OpenAiInternetAccount,
 	input: { tunnelClientPath: string; tunnelId: string; runtimeKeyFile: string },
 ): Promise<HarnessConfig> {
 	const tunnelClientPath = resolve(input.tunnelClientPath);
@@ -58,7 +58,7 @@ export async function enableFullHarness(
 	}
 }
 
-export async function disableFullHarness(account: InternetAccount): Promise<HarnessConfig> {
+export async function disableFullHarness(account: OpenAiInternetAccount): Promise<HarnessConfig> {
 	const current = await readHarnessConfig(account);
 	await writePrivateJson(harnessConfigPath(account), BROWSER_ONLY);
 	if (current.mode === "full") await rm(current.runtimeKeyFile, { force: true });

@@ -1,16 +1,17 @@
 import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { InternetAccount } from "#internet/core/types";
+import type { OpenAiInternetAccount } from "#internet/core/types";
 import {
 	daemonLoginExists,
 	daemonLoginMarkerPath,
+	defaultChromeExecutable,
 	ensureOwnedDaemonConfig,
 	readOwnedDaemonCapabilities,
 } from "#internet/daemon/config";
 import { enableFullHarness } from "#internet/daemon/harness";
 
-function account(configDir: string): InternetAccount {
+function account(configDir: string): OpenAiInternetAccount {
 	return {
 		id: "default",
 		backend: "openai",
@@ -24,6 +25,11 @@ function account(configDir: string): InternetAccount {
 }
 
 describe("owned daemon config", () => {
+	it("selects the platform-owned Chrome executable", () => {
+		expect(defaultChromeExecutable("linux")).toBe("/usr/bin/google-chrome");
+		expect(defaultChromeExecutable("darwin")).toBe("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
+	});
+
 	it("uses the daemon's default Sol capability before config exists", async () => {
 		const configDir = await mkdtemp(join(tmpdir(), "pi-internet-capabilities-missing-"));
 		await expect(readOwnedDaemonCapabilities(account(configDir))).resolves.toEqual({

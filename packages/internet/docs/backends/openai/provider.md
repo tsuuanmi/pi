@@ -7,7 +7,7 @@ Provider naming and configuration for the ChatGPT Web backend.
 ## `providerName`
 
 ```ts
-providerName(account: InternetAccount): string
+providerName(account: Pick<OpenAiInternetAccount, "id">): string
 ```
 
 Returns `chatgpt-web` for the `default` account, else `chatgpt-web-<account.id>`.
@@ -15,7 +15,7 @@ Returns `chatgpt-web` for the `default` account, else `chatgpt-web-<account.id>`
 ## `createOpenAiProviderConfig`
 
 ```ts
-createOpenAiProviderConfig(account: InternetAccount): Promise<ProviderConfig>
+createOpenAiProviderConfig(account: OpenAiInternetAccount): Promise<ProviderConfig>
 ```
 
 Builds a Pi `ProviderConfig`:

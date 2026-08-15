@@ -2,9 +2,9 @@ import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createOpenAiProviderConfig, providerName, registerOpenAiProviders } from "#internet/backends/openai/provider";
-import type { InternetAccount } from "#internet/core/types";
+import type { OpenAiInternetAccount } from "#internet/core/types";
 
-async function account(): Promise<InternetAccount> {
+async function account(): Promise<OpenAiInternetAccount> {
 	const configDir = await mkdtemp(join(tmpdir(), "pi-internet-provider-"));
 	await mkdir(configDir, { recursive: true });
 	await writeFile(

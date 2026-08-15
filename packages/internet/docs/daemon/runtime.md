@@ -2,27 +2,13 @@
 
 Mirrors `src/daemon/runtime.ts`.
 
-Bundled artifact resolution and platform validation.
+`resolveDaemonRuntime()` locates `dist/daemon/runtime/manifest.json` beside the compiled module and
+returns its root, executable launcher, and validated manifest.
 
-## Types
+The schema-1 manifest supports native `linux` and `darwin` artifacts on `x64` and `arm64`. Resolution
+rejects unsupported platforms/architectures, mismatched host artifacts, absolute launcher paths,
+launcher paths that escape the runtime directory, and launchers that are not executable.
 
-- `RuntimeManifest` — `{ schemaVersion: 1, appVersion, platform, arch, launcher }`.
-- `DaemonRuntime` — `{ root, launcher, manifest }`.
-- `ResolveDaemonRuntimeOptions` — `{ platform?, arch?, moduleUrl? }` (defaults to the current
-  process values).
-
-## `resolveDaemonRuntime`
-
-```ts
-resolveDaemonRuntime(options?): Promise<DaemonRuntime>
-```
-
-Resolves the bundled runtime directory (relative to this module), reads `runtime/manifest.json`, and
-returns the root, launcher, and manifest. It throws unless:
-
-- The platform is `linux` (the bundled daemon is Linux-only).
-- The manifest `schemaVersion` is `1` and `platform`/`arch` match the requested values.
-- The launcher exists and is executable (`access(launcher, X_OK)`).
-
-`moduleUrl` lets callers override the module path used to locate the `runtime/` directory (used for
-tests and bundling).
+`moduleUrl`, `platform`, and `arch` overrides exist for deterministic tests. Release CI builds,
+tests, and dry-runs package contents independently on Ubuntu and macOS, so each package artifact
+contains a launcher matching its build host.

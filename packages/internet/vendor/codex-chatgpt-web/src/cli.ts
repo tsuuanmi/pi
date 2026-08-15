@@ -5,7 +5,7 @@ import { timingSafeEqual } from "node:crypto";
 import { existsSync, rmSync } from "node:fs";
 import { isAbsolute } from "node:path";
 import { stdin, stdout } from "node:process";
-import { checkBrowserEngine, loginToChatGpt } from "./browser-login";
+import { checkBrowserEngine, importChatGptLogin, loginToChatGpt } from "./browser-login";
 import { CHATGPT_CONNECTOR_NAME, defaultConfig, getConfigDir, getConfigPath, loadConfig, loadConfigForSetup } from "./config";
 import { inspectLauncherBrowserHost, readLauncherBrowserHostDescriptor } from "./launcher-browser-host";
 import {
@@ -31,7 +31,7 @@ Focused ChatGPT web-backed models for the native Codex harness.
 Usage:
   codex-chatgpt-web setup --browser-only [options]
   codex-chatgpt-web setup --full --tunnel-id ID --runtime-key-file PATH [options]
-  codex-chatgpt-web login
+  codex-chatgpt-web login [--import-storage-state PATH]
   codex-chatgpt-web doctor [--json]
   codex-chatgpt-web route <status|connect|disconnect>
   codex-chatgpt-web browser check
@@ -59,6 +59,9 @@ Setup options:
   --login                      Refresh the stored ChatGPT login even if one exists
   --auto-approve-tool-calls    Opt in to per-call browser clicks on "Allow once" prompts
   --acknowledge-unofficial     Accept the one-time unofficial-browser-automation notice
+
+Login options:
+  --import-storage-state PATH  Validate and import a Playwright browser storage-state export
 
 Global:
   --home PATH                  Override ~/.codex-chatgpt-web
@@ -133,16 +136,23 @@ function authorizeLauncherControl(operation: string): void {
 
 async function loginCommand(args: string[]): Promise<void> {
   const launcherControl = takeFlag(args, "--launcher-control");
+  const importStorageState = takeOption(args, "--import-storage-state");
   if (!launcherControl) {
     assertNoArgs(args);
     const config = loadConfig();
     if (config.browserHost === "launcher") {
       throw new Error("ChatGPT login is owned by the launcher; open Codex Web GPT and use its Sign in step");
     }
-    const result = await loginToChatGpt(config);
+    if (importStorageState && !isAbsolute(importStorageState)) {
+      throw new Error("Imported browser storage state requires an absolute path");
+    }
+    const result = importStorageState
+      ? await importChatGptLogin(config, importStorageState)
+      : await loginToChatGpt(config);
     stdout.write(`ChatGPT login stored at ${result.storageStatePath}\n`);
     return;
   }
+  if (importStorageState) throw new Error("Launcher-controlled login cannot import browser storage state");
 
   const chromeExecutablePath = takeOption(args, "--chrome");
   const storageStatePath = takeOption(args, "--storage-state");

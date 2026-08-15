@@ -1,90 +1,62 @@
-# Internet — Architecture
+# Internet Architecture
 
-`@tsuuanmi/pi-internet` contains two explicit runtime layers:
+## Boundaries
+
+Pi owns provider registration, request transport, model selection, tool approval, session model
+services, and HUD/tool presentation. Internet owns account routing, the ChatGPT Web process/browser
+boundary, API backend composition, public-web safety, and bounded council orchestration.
 
 ```text
-Pi process (Node)
-├── provider registration and provider-scoped readiness hook
-├── account registry and private config bootstrap
-├── daemon lifecycle manager
-├── daemon HTTP tools and HUD
-├── settings plus public web search/fetch
-└── account-scoped Full-harness configuration
-
-Bundled child runtime (embedded Bun)
-└── codex-chatgpt-web: isolated Chrome, login/session, replay, compaction, SSE, turn ownership
+Pi extension host
+  ├─ AccountRegistry (schema 2)
+  ├─ backend registry
+  │    ├─ openai -> per-account loopback Responses daemon
+  │    ├─ anthropic -> native anthropic-messages provider
+  │    └─ google -> Google OpenAI-compatible provider
+  ├─ OwnedDaemonManager (ChatGPT Web accounts only)
+  ├─ CouncilService -> @tsuuanmi/pi-orchestrator
+  └─ tools / hooks / HUD
 ```
 
-The daemon is a fixed vendored snapshot, not a second repository dependency. We copied its existing
-~15.6K lines instead of rewriting that mature browser/session behavior. The source snapshot is under
-`vendor/codex-chatgpt-web/`; its build produces a ~184MB platform-specific runtime under
-`dist/daemon/runtime/`.
+## ChatGPT Web runtime
 
-## Dependency boundaries
+The package vendors a reviewed `codex-chatgpt-web` snapshot and compiles it into a self-contained Bun
+launcher for Linux or macOS (`x64`/`arm64`). The host provides Google Chrome; no Playwright browser
+payload is downloaded at runtime. Runtime manifests and launcher containment/executable permissions
+are validated before spawn.
 
-- `extension.ts` composes package-owned services.
-- `daemon/config.ts` derives private daemon config from account and harness state.
-- `daemon/harness.ts` owns account-scoped browser-only/Full-mode configuration and private runtime-key storage.
-- `daemon/runtime.ts` resolves and validates the bundled platform artifact.
-- `daemon/doctor.ts` owns bounded one-shot diagnostics and strict report validation.
-- `daemon/manager.ts` exclusively owns login/start/stop/restart and managed child processes.
-- `hooks.ts` readiness-gates only registered ChatGPT Web providers through
-  `before_provider_request`, then delegates payload adaptation to `backends/openai/turn/request.ts`.
-- `backends/openai/turn/files.ts` safely expands bounded workspace-local `@file` references.
-- `backends/openai/turn/request.ts` adds only the daemon-required stable identity and trusted
-  read-only environment fields after Pi's standard Responses conversion.
-- `backends/openai/daemon/*` owns HTTP config/auth/client/status concerns, not processes.
-- `settings.ts` owns private package settings persistence.
-- `web/*` owns public search/fetch transport and its SSRF, redirect, content, timeout, and size
-  safeguards. It never receives daemon credentials.
-- Tools depend on the registry, settings store, daemon HTTP client, diagnostic runner, lifecycle
-  manager, or web modules; those services do not depend on Pi extension APIs.
+Each browser account owns one config directory, storage state, verification marker, loopback port,
+serialized lifecycle queue, and optional Full-mode tunnel. The manager accepts only narrowed
+`OpenAiInternetAccount` values, so API accounts cannot cross the process boundary.
 
-The package imports only public `@tsuuanmi/pi*` entry points. Pi does not depend on this package.
+Browser turns use wire response capture as the primary answer source. The existing DOM extraction is
+the explicit compatibility fallback when no valid authenticated conversation payload is available.
+The daemon remains authoritative for replay, durable conversation IDs, rolling checkpoints, browser
+health, and Full-mode broker operation.
 
-## Lifecycle
+## API backends
 
-At load, authenticated enabled accounts auto-start. Accounts without verified login do not open a
-browser during Pi startup. Their first model request, or explicit `internet_daemon login`, launches
-the bundled `login` command with a dedicated profile unless `autoLogin` is disabled. The upstream
-v2.1.9 login flow captures state from a Keychain-aware reopened profile and verifies it independently;
-obsolete false-positive markers are rejected. The manager then starts `serve`, waits for `/healthz`,
-and only then delegates inference to Pi.
+Anthropic and Google providers are pure registration adapters. They do not own processes or browser
+state. Registry entries contain an `apiKeyEnv` reference, and Pi resolves `$ENV_VAR` credentials at
+request time. Backend names, endpoint mappings, model metadata, and account provider naming are
+centralized under `src/backends/`.
 
-Operations are serialized per account. A healthy daemon already bound to the account endpoint is
-reused. The daemon keeps one ChatGPT conversation per Pi session ID and stays alive while that
-session is active, then shuts itself down after ~1 minute without a new request/message; this
-preserves in-chat context without headed Chrome reopening for every short CLI command.
+## Council
 
-## Provider path
+`CouncilService` only sees models whose providers belong to enabled internet accounts. It creates
+one tool-free Pi Agent per selected model, runs independent tasks with bounded concurrency, then
+runs one dependency-aware chair synthesis through `@tsuuanmi/pi-orchestrator`. Caps are fixed in
+production: 2–6 members, three concurrent tasks, one start per task, no retries, 4,096 output tokens
+per response, and a ten-minute run limit.
 
-One enabled account registers `chatgpt-web`; multiple enabled accounts register
-`chatgpt-web-<account-id>`. Each provider uses `api: "openai-responses"`, loopback `/v1`, a local placeholder API key, and
-`authHeader: false`. A provider-name-scoped `before_provider_request` hook performs lifecycle
-readiness without replacing Pi's API-wide Responses stream registry.
+## Security invariants
 
-Pi owns standard request conversion and SSE decoding. The package adds stable session/turn identity
-and a trusted read-only environment to the serialized request; the daemon owns browser-turn
-replay/dedup. The package contains no duplicate Responses parser or replay cache. Models mirror the
-daemon's fixed-effort routes and are capability-scoped: Luna is exclusive to Luna accounts and Pro
-routes require the cached `proAvailable` capability.
-
-## Security and storage
-
-The default private account directory is `$PI_AGENT_DIR/internet/accounts/default/`. The package
-writes `config.json` with `0600` permissions, generates a base64url control token, binds
-`127.0.0.1`, and sets an isolated storage-state/profile path. Account routing metadata remains in
-`$PI_AGENT_DIR/internet/accounts.json` with atomic `0600` writes. Package settings use
-`$PI_AGENT_DIR/internet/settings.json`, also written atomically with `0600` permissions.
-
-Chrome login is interactive but package-owned: it never uses the user's normal browser profile.
-Inference remains headed for Cloudflare/browser-check reliability, using a small top-left window.
-Inference routes rely on a local same-user trust boundary, so another process running as the same
-user could drive the browser-backed model. Admin authorization is sent only to `/admin/*` routes;
-it is never sent to public web endpoints or the daemon's native Codex passthrough.
-
-## Best of both repositories
-
-The runtime uses codex-chatgpt-web because its Responses surface, isolated login, replay,
-compaction, broker, and MCP server already match Pi. From Prometheus, the package adopts bounded
-static `@file` expansion; it does not duplicate Prometheus's generic MCP/multi-provider runtime.
+- Daemons bind only to `127.0.0.1`; browser endpoints must be unique.
+- Account/config/settings/auth files are private and atomically written.
+- Imported storage state must be a bounded regular file, is filtered to ChatGPT/OpenAI domains, and
+  is persisted only after browser verification.
+- API secret values are not stored in account metadata or tool output.
+- Public fetch rejects credentials, fragments, non-HTTP schemes, unsafe ports, and private/reserved
+  DNS results, including redirect revalidation.
+- Full-mode local tools remain account-scoped and approval-gated by Pi.
+- Council members receive no tools and cannot select models outside enabled internet providers.

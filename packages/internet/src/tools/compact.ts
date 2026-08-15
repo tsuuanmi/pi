@@ -21,7 +21,7 @@ export function registerCompactTools(host: Pick<ExtensionAPI, "registerTool">): 
 			}
 			const model = chatGptWebBackendModelId(params.model);
 			if (!model) throw new Error(`Unknown ChatGPT Web model: ${params.model}`);
-			const account = await new AccountRegistry().get(params.account);
+			const account = await new AccountRegistry().getOpenAi(params.account);
 			const client = await DaemonClient.forAccount(account);
 			const result = await client.compact({ model, input: params.input, instructions: params.instructions }, signal);
 			return {

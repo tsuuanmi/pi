@@ -3,7 +3,7 @@ import { refreshHudUi } from "@tsuuanmi/pi-tui";
 import { providerName } from "#internet/backends/openai/provider";
 import { expandLocalFileReferences } from "#internet/backends/openai/turn/files";
 import { adaptChatGptWebRequest, rejectedChatGptWebRequest } from "#internet/backends/openai/turn/request";
-import type { InternetAccount } from "#internet/core/types";
+import type { OpenAiInternetAccount } from "#internet/core/types";
 import { daemonLoginExists } from "#internet/daemon/config";
 import type { OwnedDaemonManager } from "#internet/daemon/manager";
 import type { InternetSettingsService } from "#internet/settings";
@@ -13,7 +13,7 @@ const BRIDGED_TOOLS = new Set(["codex_tool_call", "codex_exec", "codex_apply_pat
 export function registerInternetHooks(
 	host: Pick<ExtensionAPI, "on" | "onHook">,
 	manager: OwnedDaemonManager,
-	accounts: InternetAccount[],
+	accounts: OpenAiInternetAccount[],
 	settings: InternetSettingsService,
 ): void {
 	const providerAccounts = new Map(
