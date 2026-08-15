@@ -20,7 +20,7 @@ function account(configDir: string): OpenAiInternetAccount {
 		host: "127.0.0.1",
 		port: 17841,
 		enabled: true,
-		conversationMode: "temporary",
+		conversationMode: "durable",
 	};
 }
 
@@ -55,7 +55,7 @@ describe("owned daemon config", () => {
 			browserWindowPositionX: 0,
 			browserWindowPositionY: 0,
 			idleShutdownMs: 60_000,
-			conversationMode: "temporary",
+			conversationMode: "durable",
 			conversationStateDir: join(configDir, "conversations"),
 			runtimeCommand: ["/runtime/bin/daemon"],
 		});
@@ -70,7 +70,7 @@ describe("owned daemon config", () => {
 		const runtimeKeyFile = join(configDir, "source-key");
 		await writeFile(tunnelClientPath, "#!/bin/sh\n", { mode: 0o700 });
 		await writeFile(runtimeKeyFile, "private-key\n");
-		const target = account(configDir);
+		const target = { ...account(configDir), conversationMode: "temporary" as const };
 		await enableFullHarness(target, {
 			tunnelClientPath,
 			tunnelId: `tunnel_${"a".repeat(32)}`,

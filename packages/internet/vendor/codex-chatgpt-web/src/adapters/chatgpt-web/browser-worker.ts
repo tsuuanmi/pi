@@ -907,7 +907,19 @@ export class ChatGptBrowserWorker {
   }
 
   private async ensureManagedBrowser(): Promise<{ browser: Browser; context: BrowserContext }> {
-    if (this.managedBrowserReady) return this.managedBrowserReady;
+    if (this.managedBrowserReady) {
+      const cached = await this.managedBrowserReady;
+      // The cached browser may have been closed externally (idle shutdown, a restart, or the user
+      // closing the Chrome window) while the daemon stayed alive. Reusing it would make the next
+      // context.newPage() throw "Target page, context or browser has been closed", so drop the
+      // stale cache and relaunch instead of returning a dead browser.
+      if (cached.browser.isConnected()) return cached;
+      this.managedBrowserReady = undefined;
+      this.browser = undefined;
+      this.context = undefined;
+      this.page = undefined;
+      this.conversationPages.clear();
+    }
     const opening = (async () => {
       if (!existsSync(this.config.storageStatePath) || !existsSync(loginVerificationMarkerPath(this.config.storageStatePath))) {
         throw new Error(`ChatGPT web login state is missing: ${this.config.storageStatePath}`);
@@ -931,6 +943,15 @@ export class ChatGptBrowserWorker {
       });
       this.browser = browser;
       this.context = context;
+      // Clear the cached browser whenever it is closed externally so the next turn relaunches
+      // instead of calling newPage() on a dead browser.
+      browser.once("disconnected", () => {
+        if (this.managedBrowserReady === opening) this.managedBrowserReady = undefined;
+        if (this.browser === browser) this.browser = undefined;
+        if (this.context === context) this.context = undefined;
+        if (this.page && this.page.isClosed()) this.page = undefined;
+        this.conversationPages.clear();
+      });
       return { browser, context };
     })();
     this.managedBrowserReady = opening;

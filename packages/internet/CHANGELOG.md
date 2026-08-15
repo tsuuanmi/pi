@@ -22,7 +22,7 @@
 - Add bounded `internet_council` orchestration with tool-free members and dependency-aware synthesis.
 
 - Add account-scoped, owner-private normal-chat bindings and canonical suffix synchronization for explicitly selected, canary-authorized browser-only durable mode.
-- Add `internet_account_conversation_mode`; accounts default to isolated Temporary Chat.
+- Add `internet_account_conversation_mode`; accounts default to durable conversation mode.
 - Vendor a fixed `codex-chatgpt-web` source snapshot and build its embedded-Bun host-native runtime
   inside the package, removing the runtime dependency on another repository or manually started daemon.
 - Add package-owned private config, isolated Chrome login, health-gated auto-start, serialized

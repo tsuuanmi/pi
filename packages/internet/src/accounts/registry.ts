@@ -40,7 +40,7 @@ function defaultAccount(registryPath: string): OpenAiInternetAccount {
 		host: "127.0.0.1",
 		port: defaultPort,
 		enabled: true,
-		conversationMode: "temporary",
+		conversationMode: "durable",
 	};
 }
 
@@ -80,7 +80,7 @@ function normalizeCommon(value: Record<string, unknown>): Pick<InternetAccount, 
 }
 
 function normalizeConversationMode(value: unknown): InternetConversationMode {
-	if (value === undefined) return "temporary";
+	if (value === undefined) return "durable";
 	if (value !== "temporary" && value !== "durable") {
 		throw configError("Account conversationMode must be temporary or durable.");
 	}

@@ -11,7 +11,7 @@ describe("AccountRegistry", () => {
 	it("provides one isolated default ChatGPT Web account", async () => {
 		const accounts = await (await registry()).list();
 		expect(accounts).toMatchObject([
-			{ id: "default", backend: "openai", host: "127.0.0.1", port: 17841, conversationMode: "temporary" },
+			{ id: "default", backend: "openai", host: "127.0.0.1", port: 17841, conversationMode: "durable" },
 		]);
 	});
 

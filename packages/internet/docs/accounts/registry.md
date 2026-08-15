@@ -10,7 +10,7 @@ migrated implicitly.
 
 `getAccountRegistryPath()` resolves to `$PI_AGENT_DIR/internet/accounts.json`, or
 `~/.pi/agent/internet/accounts.json`. When the file is absent, `list()` returns one enabled
-`openai` account named `default` at `127.0.0.1:17841` with temporary conversation mode.
+`openai` account named `default` at `127.0.0.1:17841` with durable conversation mode.
 
 ## `AccountRegistry`
 
