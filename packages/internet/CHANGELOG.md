@@ -75,6 +75,7 @@
 
 ### Fixed
 
+- Prevent intermediate ChatGPT search-tool payloads from being returned as the final answer; wait for the actual Markdown response.
 - Allow the durable conversation canary enough time to complete its browser turn, accept non-empty
   model reply variance after validating and reopening the canonical conversation URL, exclude
   request-only environment blocks from persistent history, acknowledge multi-phase assistant output

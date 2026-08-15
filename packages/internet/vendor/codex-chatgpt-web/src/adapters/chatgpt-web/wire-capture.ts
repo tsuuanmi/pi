@@ -1,4 +1,5 @@
 import type { Page, Response } from "playwright-core";
+import { isChatGptSearchToolPayload } from "./tool-payload";
 import { parseChatGptWireResponse } from "./wire-response";
 
 function isConversationResponse(response: Response): boolean {
@@ -44,7 +45,7 @@ export class ChatGptWireCapture {
     void response.text()
       .then(parseChatGptWireResponse)
       .then(text => {
-        if (text) this.settle(text);
+        if (text && !isChatGptSearchToolPayload(text)) this.settle(text);
       })
       .catch(() => undefined);
   };

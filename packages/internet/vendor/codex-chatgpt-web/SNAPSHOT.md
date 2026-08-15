@@ -13,8 +13,9 @@ Targeted package patches:
   guidance remains available for read-only model transitions.
 - Login patches add bounded Playwright storage-state import, filter it to ChatGPT/OpenAI origins,
   validate it through daemon-owned Chrome, and persist only verified state.
-- Browser-turn patches capture authenticated conversation wire payloads as the primary final answer
-  while retaining the existing DOM extraction as the explicit compatibility fallback.
+- Browser-turn patches capture authenticated conversation wire payloads as the primary final answer,
+  ignore intermediate ChatGPT search-tool payloads, and require a final Markdown segment before
+  completing a browser turn.
 - Durable conversation canary calls explicitly declare browser-only capabilities, including disabled
   local tools; accept non-empty model reply variance after validating and reopening the canonical
   ChatGPT conversation URL.

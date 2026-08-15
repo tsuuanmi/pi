@@ -63,6 +63,7 @@ import {
   ChatGptLunaCheckpointStream,
   type CapturedChatGptLunaCheckpoint,
 } from "./rolling-checkpoint";
+import { isChatGptSearchToolPayload } from "./tool-payload";
 import { ChatGptWireCapture } from "./wire-capture";
 
 export { MAX_CHATGPT_BROWSER_TABS } from "./concurrency";
@@ -319,12 +320,14 @@ export interface ResolvedBrowserConfig {
 
 export function chatGptTurnIsComplete(state: {
   responsePresent: boolean;
+  finalAnswerPresent: boolean;
   running: boolean;
   currentText: string;
   currentHtml?: string;
   completionActionVisible: boolean;
 }): boolean {
   return state.responsePresent
+    && state.finalAnswerPresent
     && !state.running
     && state.currentText.length > 0
     && state.completionActionVisible;
@@ -2137,6 +2140,9 @@ export class ChatGptBrowserWorker {
         }
 
         const snapshot = await this.responseDomSnapshot(responseTurn);
+        const finalMarkdown = snapshot.markdownSegments.at(-1)?.text ?? "";
+        const finalAnswerPresent = snapshot.markdownSegments.length > 0
+          && !isChatGptSearchToolPayload(finalMarkdown);
         const stop = page.locator(CHATGPT_STOP_BUTTON_SELECTOR).last();
         const running = await stop.isVisible().catch(() => false);
         if (running) sawRunning = true;
@@ -2159,6 +2165,7 @@ export class ChatGptBrowserWorker {
           if (domError) throw new Error(domError);
           if (completionTracker.update({
             responsePresent: snapshot.responsePresent,
+            finalAnswerPresent,
             running,
             currentText: snapshot.visibleText,
             currentHtml: snapshot.fullHtml,
