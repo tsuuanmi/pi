@@ -5,8 +5,6 @@
 ### Breaking Changes
 
 - Remove `InternetHookHost` and consume Pi's `Pick<ExtensionAPI, "on" | "onHook">` contract directly.
-- Require account registry schema 3 with an explicit `openai`, `anthropic`, or `google` provider;
-  older files are rejected rather than loaded through compatibility defaults.
 - Replace the package-root `registerOpenAiProviders` export with generic
   `registerInternetProviders`.
 
@@ -75,6 +73,7 @@
 
 ### Fixed
 
+- Load account registries without rejecting older schema version values.
 - Prevent intermediate ChatGPT search-tool payloads from being returned as the final answer; wait for the actual Markdown response.
 - Allow the durable conversation canary enough time to complete its browser turn, accept non-empty
   model reply variance after validating and reopening the canonical conversation URL, exclude

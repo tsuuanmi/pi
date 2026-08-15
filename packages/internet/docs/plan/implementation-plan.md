@@ -47,7 +47,7 @@ No second tool bridge or automation controller was introduced.
 
 ### Tier 4 — provider-neutral accounts and API providers
 
-- Account schema version 2 is a discriminated union for `openai`, `anthropic`, and `google`.
+- Account records form a discriminated union for `openai`, `anthropic`, and `google`; the registry schema version is retained as metadata without gating loads.
 - The registry validates exact provider fields, allocates unique browser ports, stores API-key
   environment references rather than secrets, and supports list/add/remove/enable/disable plus
   ChatGPT conversation mode.

@@ -154,9 +154,6 @@ function parseRegistry(raw: string, registryPath: string): AccountRegistryFile {
 	}
 	const file = record(parsed, "Account registry");
 	assertKnownKeys(file, ["schemaVersion", "accounts"], "Account registry");
-	if (file.schemaVersion !== registryVersion) {
-		throw configError(`Unsupported account registry schema version: ${String(file.schemaVersion)}`);
-	}
 	if (!Array.isArray(file.accounts)) throw configError("Account registry accounts must be an array.");
 	const accounts = file.accounts.map((account) => normalizeAccount(account, registryPath));
 	validateAccounts(accounts);

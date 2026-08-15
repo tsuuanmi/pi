@@ -8,7 +8,7 @@ boundary, API provider composition, public-web safety, and bounded council orche
 
 ```text
 Pi extension host
-  ├─ AccountRegistry (schema 2)
+  ├─ AccountRegistry (versioned account metadata)
   ├─ provider registry
   │    ├─ openai -> per-account loopback Responses daemon
   │    ├─ anthropic -> native anthropic-messages provider

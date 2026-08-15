@@ -35,10 +35,10 @@ describe("AccountRegistry", () => {
 		await expect(target.list()).resolves.toEqual([]);
 	});
 
-	it("rejects legacy schemas and duplicate daemon endpoints", async () => {
+	it("loads legacy schemas and rejects duplicate daemon endpoints", async () => {
 		const target = await registry();
 		await writeFile(target.path, JSON.stringify({ schemaVersion: 2, accounts: [] }));
-		await expect(target.list()).rejects.toThrow("schema version");
+		await expect(target.list()).resolves.toEqual([]);
 
 		const next = await registry();
 		await expect(next.add({ id: "collision", provider: "openai", port: 17841 })).rejects.toThrow(

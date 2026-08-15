@@ -30,7 +30,7 @@ require Bun 1.3.14 to compile the vendored daemon.
 ## Accounts
 
 With no registry file, Pi exposes one `chatgpt-web` provider backed by the implicit `default`
-account at `127.0.0.1:17841`. Account metadata uses schema version 2.
+account at `127.0.0.1:17841`. Account metadata includes a schema version for persistence.
 
 Use `internet_account_add` with:
 

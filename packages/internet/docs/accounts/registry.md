@@ -3,8 +3,8 @@
 Mirrors `src/accounts/registry.ts`.
 
 Private, atomic routing metadata for browser and API accounts. The authoritative schema is
-`{ schemaVersion: 2, accounts: InternetAccount[] }`; earlier schemas are rejected rather than
-migrated implicitly.
+`{ schemaVersion, accounts: InternetAccount[] }`. The schema version is retained as persistence
+metadata; loading validates the registry and account shapes without gating on its value.
 
 ## Path and defaults
 

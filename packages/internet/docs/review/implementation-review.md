@@ -25,7 +25,7 @@ persists only after verification. No password/2FA collection path exists.
 
 ## Provider-neutral accounts
 
-Schema-2 account metadata is a discriminated union:
+Versioned account metadata is a discriminated union:
 
 - `openai` owns ChatGPT Web daemon configuration.
 - `anthropic` owns an Anthropic API-key environment reference.
@@ -47,7 +47,7 @@ Concurrency, task starts, retries, wall-clock duration, provider scope, and canc
 
 ## Removed or superseded surfaces
 
-- Account registry schema 1 and optional/default provider creation semantics.
+- Optional/default provider creation semantics; account registry loading no longer gates on schema version.
 - Direct package-root `registerOpenAiProviders` export; generic provider registration is authoritative.
 - Daemon operations on the undifferentiated account union.
 - Linux-only runtime rejection.
