@@ -132,7 +132,7 @@ Global/project settings + built-in defaults
   -> AgentSession
 ```
 
-Pi ships compiled packages that declare `pi` resources; the current distribution includes `pi:workflows`. During `packages/pi` build, each declared package artifact is copied into `dist/packages/<package-directory>` without manifest rewriting. The generic resource loader discovers each manifest and loads its extension, command, skills, and role profiles.
+Pi ships compiled packages that declare `pi` resources; the standard distribution includes `pi:workflows`. During `packages/pi` build, each declared package artifact is copied into `dist/packages/<package-directory>` without manifest rewriting. A workspace package marked with `pi.bundleOptional` may be absent when its platform-specific build has not run; all unmarked packages still require compiled output. The generic resource loader discovers each copied manifest and loads its extension, command, skills, and role profiles.
 
 Resource loading can report partial diagnostics; not every bad optional resource aborts all startup. Extension code is executable code and runs with the Pi process's user permissions.
 

@@ -65,6 +65,7 @@
 
 ### Fixed
 
+- **build**: Honor explicit `pi.bundleOptional` metadata while still rejecting missing output from required bundled packages.
 - **packages**: Discover bundled packages from workspace siblings when running the source launcher.
 - **models**: Match Codex thinking-level menus to the upstream catalog and expose `max`/`ultra` model suffixes in CLI resolution.
 - **tools**: Activate extension-registered tools during initial session construction when the built-in tool set is explicitly selected.

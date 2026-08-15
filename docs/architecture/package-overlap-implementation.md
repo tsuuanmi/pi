@@ -74,7 +74,7 @@ Each package that declares a `pi` manifest is published as a self-contained comp
 ### Completion gate
 
 - Standalone package resources all exist under published `files`.
-- Pi bundles every workspace package with a valid `pi` manifest.
+- Pi bundles every compiled workspace package with a valid `pi` manifest; only packages explicitly marked `pi.bundleOptional` may omit compiled output.
 - Bundled packages preserve their package-relative paths.
 - Bundled package runtime dependencies are present in the host dependency closure.
 - No package-specific catalog, copy list, source fallback, or manifest rewrite remains in Pi.

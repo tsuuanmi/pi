@@ -19,6 +19,10 @@ export function readManifest(root: string): PiManifest | undefined {
 		throw new Error(`Invalid pi manifest in ${path}`);
 	}
 
+	if ("bundleOptional" in value.pi && typeof value.pi.bundleOptional !== "boolean") {
+		throw new Error(`Invalid pi.bundleOptional manifest entry in ${path}`);
+	}
+
 	for (const type of RESOURCE_TYPES) {
 		const entries = (value.pi as Record<string, unknown>)[type];
 		if (entries !== undefined && (!Array.isArray(entries) || !entries.every((entry) => typeof entry === "string"))) {

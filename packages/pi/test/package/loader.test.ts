@@ -30,7 +30,7 @@ describe("loadPackage", () => {
 		writeFileSync(join(root, "README.md"), "not a resource\n");
 		writeFileSync(
 			join(root, "package.json"),
-			JSON.stringify({ pi: { extensions: ["extensions/main.ts"], skills: ["skills"] } }),
+			JSON.stringify({ pi: { bundleOptional: true, extensions: ["extensions/main.ts"], skills: ["skills"] } }),
 		);
 
 		const paths = loadPackage({ root, metadata: metadata(root) });
@@ -71,6 +71,15 @@ describe("loadPackage", () => {
 
 		expect(() => loadPackage({ root, metadata: metadata(root) })).toThrow(
 			`Invalid pi manifest in ${join(root, "package.json")}`,
+		);
+	});
+
+	it("rejects an invalid optional bundle marker", () => {
+		const root = createRoot();
+		writeFileSync(join(root, "package.json"), JSON.stringify({ pi: { bundleOptional: "yes" } }));
+
+		expect(() => loadPackage({ root, metadata: metadata(root) })).toThrow(
+			`Invalid pi.bundleOptional manifest entry in ${join(root, "package.json")}`,
 		);
 	});
 

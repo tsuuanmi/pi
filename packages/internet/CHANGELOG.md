@@ -31,6 +31,7 @@
 
 ### Changed
 
+- Mark Internet as optional for root Pi bundling so standard builds can omit its platform-specific runtime unless the package is built first.
 - Register provider/tool control through `onHook(...)` and HUD refresh through the observation-only `turn_end` event.
 - Gate registered ChatGPT Web providers through `before_provider_request` while retaining Pi's
   built-in OpenAI Responses transport for request conversion and SSE decoding.

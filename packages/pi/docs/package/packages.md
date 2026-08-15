@@ -36,7 +36,7 @@ By default, `install` and `remove` write to user settings (`~/.pi/agent/settings
 
 ## Package Sources
 
-Pi accepts package sources in settings and `pi install`. Compiled packages bundled with Pi use reserved `pi:<package-directory>` sources and are discovered from their package manifests. Their extensions, commands, skills, and role profiles are loaded like any other package.
+Pi accepts package sources in settings and `pi install`. Compiled packages bundled with Pi use reserved `pi:<package-directory>` sources and are discovered from their package manifests. Their extensions, commands, skills, and role profiles are loaded like any other package. Within this repository, `pi.bundleOptional: true` marks a platform-specific workspace package that the bundle step may omit when it has no compiled `dist/`; it does not alter installed-package loading.
 
 Bundled sources resolve through the package host like normal package sources and can be listed, configured, and filtered. Add an explicit object entry for the same source to filter it; an empty resource filter such as `"extensions": []` disables all resources of that type.
 

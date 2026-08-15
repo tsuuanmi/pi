@@ -36,6 +36,8 @@ Manifest paths are relative to the package root. Entries may be files, directori
 
 A published package must point at files included in its tarball. If source manifests use `src/*.ts`, the package build must generate a publishable manifest with compiled paths. The producer package owns that compiled layout; Pi's loader or bundle step should not rewrite another package's resource architecture.
 
+First-party workspace packages with platform-specific build prerequisites may set `pi.bundleOptional` to `true`. The Pi bundle step skips such a package only when its compiled `dist/` is absent; missing output from every unmarked package remains an error. This repository-only build marker does not make runtime resources optional or suppress loader diagnostics, and third-party packages do not need it.
+
 ### Supported resource types
 
 | Manifest key | Accepted files | Runtime role |

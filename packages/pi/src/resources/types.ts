@@ -27,6 +27,7 @@ export type TopLevelResourceType = "extensions" | "skills" | "prompts" | "themes
 export type SkillDiscoveryMode = "pi" | "agents";
 
 export interface PiManifest {
+	bundleOptional?: boolean;
 	extensions?: string[];
 	skills?: string[];
 	prompts?: string[];

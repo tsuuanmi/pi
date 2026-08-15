@@ -22,6 +22,7 @@ This is the home of the pi agent harness project including our self extensible A
 
 * **[@tsuuanmi/pi-ai](packages/ai)**: Provider-neutral model and streaming protocol
 * **[@tsuuanmi/pi-agent](packages/agent)**: Single-agent runtime, tools, hooks, and subagent contracts
+* **[@tsuuanmi/pi-internet](packages/internet)**: Optional Linux-first ChatGPT Web provider and isolated browser runtime
 * **[@tsuuanmi/pi-orchestrator](packages/orchestrator)**: Task, team, routing, and multi-agent orchestration primitives
 * **[@tsuuanmi/pi-tui](packages/tui)**: Terminal UI components and differential rendering
 * **[@tsuuanmi/pi-workflows](packages/workflows)**: Gated workflow skills, state, tools, and orchestration adapters
@@ -55,6 +56,7 @@ I regularly publish my own `pi-mono` work sessions here:
 |---------|-------------|
 | **[@tsuuanmi/pi-ai](packages/ai)** | Provider-neutral model, provider, OAuth, and streaming protocol |
 | **[@tsuuanmi/pi-agent](packages/agent)** | Single-agent runtime with tools, hooks, events, and subagent contracts |
+| **[@tsuuanmi/pi-internet](packages/internet)** | Optional Linux-first ChatGPT Web provider with an isolated browser runtime |
 | **[@tsuuanmi/pi-orchestrator](packages/orchestrator)** | Task DAG, team, routing, retry, verification, and checkpoint primitives |
 | **[@tsuuanmi/pi-tui](packages/tui)** | Terminal UI library with components, input, themes, and differential rendering |
 | **[@tsuuanmi/pi-workflows](packages/workflows)** | Deep Interview, Ralplan, Team, and Ultragoal workflow runtime |
@@ -77,7 +79,7 @@ If you need stronger boundaries, containerize or sandbox Pi. See [packages/pi/do
 
 ```bash
 npm install --ignore-scripts  # Install all dependencies without running lifecycle scripts
-npm run build        # Build all packages
+npm run build        # Build core packages and bundle any prebuilt optional packages
 npm run check        # Lint, format, and type check
 ./test.sh            # Run tests (skips LLM-dependent tests without API keys)
 ./pi.sh         # Run pi from sources (can be run from any directory)

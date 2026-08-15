@@ -1,6 +1,6 @@
 # Package Overview
 
-Pi is a six-package TypeScript workspace. The packages separate provider transport, agent execution, task orchestration, terminal rendering, workflow policy, and the final CLI/SDK composition root.
+Pi is a seven-package TypeScript workspace with six core packages and an optional Linux-first Internet extension. The packages separate provider transport, agent execution, task orchestration, terminal rendering, workflow policy, browser-provider integration, and the final CLI/SDK composition root.
 
 This page is the big-picture map. Detailed component maps are linked from the [package inventory](#package-inventory). [Component Integration Map](component-integration-map.md) shows exactly how each component is imported, dynamically loaded, injected, or handed off. Import policy and enforcement are documented in [Package Boundaries](package-boundaries.md), event mapping is documented in [Event Boundaries](event-boundaries.md), and duplicate/ambiguous ownership is tracked in [Package Overlap Audit](package-overlap-audit.md).
 
@@ -11,6 +11,7 @@ Arrows below point from a consumer to a direct runtime dependency. They do not r
 ```mermaid
 flowchart TD
   pi["@tsuuanmi/pi\nCLI, SDK, and composition root"]
+  internet["@tsuuanmi/pi-internet\noptional browser-provider integration"]
   workflows["@tsuuanmi/pi-workflows\nworkflow policy and durable state"]
   tui["@tsuuanmi/pi-tui\nterminal UI primitives"]
   orchestrator["@tsuuanmi/pi-orchestrator\ntask, team, and subagent orchestration"]
@@ -20,6 +21,9 @@ flowchart TD
   pi --> ai
   pi --> agent
   pi --> tui
+  internet --> agent
+  internet --> pi
+  internet --> tui
   workflows --> ai
   workflows --> agent
   workflows --> orchestrator
@@ -43,9 +47,10 @@ The graph is acyclic. Two packages are workspace leaves:
 | Package | Primary role | Direct workspace dependencies | Runtime dependents | Detail |
 |---|---|---|---|---|
 | `@tsuuanmi/pi-ai` | Normalized model, message, provider, OAuth, and streaming protocol | None | agent, workflows, pi | [Components and boundaries](packages/ai.md) |
-| `@tsuuanmi/pi-agent` | Stateful generic agent loop, tool execution, hooks/events, receipts, and canonical Agent model/thinking types | ai | orchestrator, workflows, pi | [Components and boundaries](packages/agent.md) |
+| `@tsuuanmi/pi-agent` | Stateful generic agent loop, tool execution, hooks/events, receipts, and canonical Agent model/thinking types | ai | internet, orchestrator, workflows, pi | [Components and boundaries](packages/agent.md) |
+| `@tsuuanmi/pi-internet` | Optional ChatGPT Web provider integration and isolated browser runtime | agent, tui, pi | pi when prebuilt and bundled | [Components and boundaries](../../packages/internet/docs/architecture.md) |
 | `@tsuuanmi/pi-orchestrator` | Task DAGs, teams, routing, checkpoints, and complete session-aware subagent execution | ai, agent, pi | workflows | [Components and boundaries](packages/orchestrator.md) |
-| `@tsuuanmi/pi-tui` | Terminal I/O, differential rendering, components, input, and themes | None | workflows, pi | [Components and boundaries](packages/tui.md) |
+| `@tsuuanmi/pi-tui` | Terminal I/O, differential rendering, components, input, and themes | None | internet, workflows, pi | [Components and boundaries](packages/tui.md) |
 | `@tsuuanmi/pi-workflows` | Gated workflow policy, tools, commands, state, artifacts, audit, and host adapters | ai, agent, orchestrator, tui, pi | pi | [Components and boundaries](packages/workflows.md) |
 | `@tsuuanmi/pi` | CLI, SDK, main sessions, settings, `.pi` roots, loaders, extensions, tools, and UI | ai, agent, tui | orchestrator, workflows, external users, and dynamically loaded packages | [Components and boundaries](packages/pi.md) |
 
@@ -139,7 +144,7 @@ The logical build levels are:
 5. Workflows builds after Pi, AI, Agent, Orchestrator, and TUI.
 6. Pi copies the compiled `pi` packages into its final distribution.
 
-The root build explicitly runs AI, Agent, Orchestrator, TUI, Pi TypeScript compilation, Workflows, and then Pi asset copying. The final Pi asset phase bundles every compiled package declaring `pi` resources into the published CLI distribution. Build configurations consume lower-package `dist` declarations, so this ordering is explicit and must remain synchronized.
+The root build explicitly runs AI, Agent, Orchestrator, TUI, Pi TypeScript compilation, Workflows, and then Pi asset copying. The final Pi asset phase bundles every compiled package declaring `pi` resources into the published CLI distribution. Internet is built separately because its source build requires Bun and produces a platform-specific runtime; its `pi.bundleOptional` marker allows the root build to omit it when no compiled artifact exists. Missing output from an unmarked package remains a build error. Build configurations consume lower-package `dist` declarations, so this ordering is explicit and must remain synchronized.
 
 ## Enforcement status
 
@@ -150,6 +155,7 @@ The root build explicitly runs AI, Agent, Orchestrator, TUI, Pi TypeScript compi
 | Change | Owning package |
 |---|---|
 | Add or normalize an LLM provider/API protocol | `@tsuuanmi/pi-ai` |
+| Change ChatGPT Web browser-provider integration or its isolated runtime | `@tsuuanmi/pi-internet` |
 | Change the single-agent turn loop, generic tools, hooks, or Agent model/thinking contracts | `@tsuuanmi/pi-agent` |
 | Change task scheduling, routing, retries, verification, or checkpoint contracts | `@tsuuanmi/pi-orchestrator` |
 | Change terminal rendering, component contracts, input, or themes | `@tsuuanmi/pi-tui` |

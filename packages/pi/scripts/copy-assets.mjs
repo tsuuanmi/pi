@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, readdir, rm } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,8 +27,23 @@ for (const entry of await readdir(workspace, { withFileTypes: true })) {
 	if (!manifest.pi || typeof manifest.pi !== "object" || Array.isArray(manifest.pi)) {
 		throw new Error(`Invalid pi manifest in ${manifestPath}`);
 	}
+	if ("bundleOptional" in manifest.pi && typeof manifest.pi.bundleOptional !== "boolean") {
+		throw new Error(`Invalid pi.bundleOptional manifest entry in ${manifestPath}`);
+	}
 
 	const compiled = join(source, "dist");
+	let compiledStats;
+	try {
+		compiledStats = await stat(compiled);
+	} catch (error) {
+		if (error?.code === "ENOENT") {
+			if (manifest.pi.bundleOptional === true) continue;
+			throw new Error(`Bundled package has no compiled dist: ${source}`, { cause: error });
+		}
+		throw new Error(`Unable to inspect compiled package: ${compiled}`, { cause: error });
+	}
+	if (!compiledStats.isDirectory()) throw new Error(`Compiled package path is not a directory: ${compiled}`);
+
 	const target = join(packages, entry.name);
 	await cp(manifestPath, join(target, "package.json"));
 	await cp(compiled, join(target, "dist"), { recursive: true });

@@ -12,7 +12,7 @@ import {
 	toResolvedPaths,
 } from "#pi/resources/paths";
 import { applyPatterns, hasGlobPattern, isOverridePattern } from "#pi/resources/patterns";
-import type { PackageFilter, PathMetadata, PiManifest, ResolvedPaths, ResourceType } from "#pi/resources/types";
+import type { PackageFilter, PathMetadata, ResolvedPaths, ResourceType } from "#pi/resources/types";
 
 export interface PackageLoadOptions {
 	root: string;
@@ -26,8 +26,8 @@ export function loadPackage({ root, metadata, filter }: PackageLoadOptions): Res
 
 	if (filter) {
 		for (const type of RESOURCE_TYPES) {
-			const patterns = filter[type as keyof PackageFilter];
-			const entries = manifest?.[type as keyof PiManifest];
+			const patterns = filter[type];
+			const entries = manifest?.[type];
 			if (patterns === undefined) {
 				if (entries === undefined) {
 					loadDefaults(table, root, type, metadata);
@@ -43,7 +43,7 @@ export function loadPackage({ root, metadata, filter }: PackageLoadOptions): Res
 
 	if (manifest) {
 		for (const type of RESOURCE_TYPES) {
-			loadManifest(table, root, type, manifest[type as keyof PiManifest], metadata);
+			loadManifest(table, root, type, manifest[type], metadata);
 		}
 		return toResolvedPaths(table);
 	}

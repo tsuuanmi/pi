@@ -14,14 +14,18 @@ const COMPILED_BUNDLED_ROOT = resolve(MODULE_ROOT, "..", "packages");
 const WORKSPACE_BUNDLED_ROOT = resolve(MODULE_ROOT, "..", "..", "..");
 const BUNDLED_ROOT = existsSync(COMPILED_BUNDLED_ROOT) ? COMPILED_BUNDLED_ROOT : WORKSPACE_BUNDLED_ROOT;
 
-export function getBundledPackages(): BundledPackage[] {
-	return readdirSync(BUNDLED_ROOT, { withFileTypes: true })
+export function getBundledPackages(bundledRoot = BUNDLED_ROOT): BundledPackage[] {
+	return readdirSync(bundledRoot, { withFileTypes: true })
 		.filter((entry) => entry.isDirectory())
 		.sort((a, b) => a.name.localeCompare(b.name))
 		.flatMap((entry) => {
-			const root = join(BUNDLED_ROOT, entry.name);
-			if (!readManifest(root)) return [];
-			if (!existsSync(join(root, "dist"))) throw new Error(`Bundled package has no compiled dist: ${root}`);
+			const root = join(bundledRoot, entry.name);
+			const manifest = readManifest(root);
+			if (!manifest) return [];
+			if (!existsSync(join(root, "dist"))) {
+				if (manifest.bundleOptional === true) return [];
+				throw new Error(`Bundled package has no compiled dist: ${root}`);
+			}
 			return [{ name: entry.name, source: `pi:${entry.name}`, root }];
 		});
 }

@@ -23,6 +23,8 @@ cd packages/internet
 npm run build
 ```
 
+The repository root build does not compile this platform-specific package. Its `pi.bundleOptional` marker lets the standard build omit Internet when `dist/` is absent; build Internet first and then run the root build to include it in Pi's bundled packages.
+
 The build compiles package integration code and builds the fixed vendored snapshot into
 `dist/daemon/runtime/`. The resulting self-contained daemon payload is about 184MB and includes Bun,
 the bundled CLI, Playwright runtime dependencies, and a launcher.

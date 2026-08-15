@@ -84,7 +84,7 @@ The audit did find smaller duplicate shapes, ambiguous ownership, packaging comp
 
 ### Resolved packaging boundary
 
-Workflows owns its compiled manifest and package assets. Pi discovers and bundles every workspace package with a valid `pi` manifest, preserves the package-relative `dist/` layout, and rejects unknown `pi:` sources instead of falling back to local-path resolution.
+Workflows owns its compiled manifest and package assets. Pi discovers and bundles every compiled workspace package with a valid `pi` manifest, preserves the package-relative `dist/` layout, and rejects unknown `pi:` sources instead of falling back to local-path resolution. A package must explicitly set `pi.bundleOptional` to permit an absent platform-specific build; missing output remains an error for every other package.
 
 ### P1 - consolidate duplicate adapters and contracts
 

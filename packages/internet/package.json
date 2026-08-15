@@ -35,6 +35,7 @@
 		"README.md"
 	],
 	"pi": {
+		"bundleOptional": true,
 		"extensions": [
 			"dist/extension.js"
 		]
@@ -57,7 +58,7 @@
 	"devDependencies": {
 		"@types/node": "24.12.4",
 		"shx": "0.4.0",
-		"tsgo": "0.0.23",
+		"@typescript/native-preview": "7.0.0-dev.20260707.2",
 		"typescript": "5.9.3",
 		"vitest": "3.2.6"
 	}
