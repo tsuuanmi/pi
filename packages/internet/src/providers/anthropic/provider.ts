@@ -24,7 +24,7 @@ export async function registerAnthropicProviders(
 	accounts: InternetAccount[],
 ): Promise<void> {
 	for (const account of accounts) {
-		if (!account.enabled || account.backend !== "anthropic") continue;
+		if (!account.enabled || account.provider !== "anthropic") continue;
 		host.registerProvider(anthropicProviderName(account), createAnthropicProviderConfig(account));
 	}
 }

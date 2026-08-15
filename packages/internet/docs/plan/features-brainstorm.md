@@ -3,7 +3,7 @@
 This document brainstorms the features the `internet` package should add, grounded in what the
 codex-chatgpt-web daemon already provides and what Pi currently lacks. It builds on
 [review/review-and-brainstorm](../review/review-and-brainstorm.md) (MVP = model routing) and
-[multi-account-and-backends.md](multi-account-and-backends.md) (multi-account + Claude/Gemini).
+[multi-account-and-providers.md](multi-account-and-providers.md) (multi-account + Claude/Gemini).
 
 Status: **partially implemented.** Model routing, lifecycle, multi-account management, public web
 search/fetch, and account diagnostics are implemented; remaining items are proposals.
@@ -33,10 +33,10 @@ is used by browser-only accounts.
 - **`internet_browse`** — (post-MVP) drive the daemon's browser to a URL and return the rendered
   content, for JS-heavy pages.
 
-### 2.3 Account management (implemented) and backend seam (future)
+### 2.3 Account management (implemented) and provider seam (future)
 - `internet_accounts`, `internet_account_add`, and `internet_account_set_enabled` manage isolated
   ChatGPT Web daemon accounts.
-- Backend seam for Claude / Gemini remains future work.
+- Provider seam for Claude / Gemini remains future work.
 
 ### 2.4 Daemon lifecycle and diagnostics (implemented)
 - **`internet_daemon`** — login, start, stop, restart, or inspect package-owned daemon processes;
@@ -58,7 +58,7 @@ is used by browser-only accounts.
 | P0 (MVP) | Model routing + `internet_status` + `internet_compact` + HUD | The agreed MVP; makes ChatGPT Web usable. |
 | P1 (done) | **`internet_search` + `internet_fetch`** | Fills a real Pi gap through a safe package-owned public web boundary. |
 | P2 (done) | Multi-account + daemon lifecycle + `internet_doctor` | Isolated accounts, owned processes, and actionable diagnostics. |
-| P3 | Hybrid capture + backend seam/fusion | Harden ChatGPT capture, then add Claude/Gemini orchestration. |
+| P3 | Hybrid capture + provider seam/fusion | Harden ChatGPT capture, then add Claude/Gemini orchestration. |
 | P4 | Full-mode tool bridge | Powerful but needs the approval gate; highest risk. |
 
 > **Grounded, detail-expanded version:** see [roi-roadmap.md](roi-roadmap.md), which ranks
@@ -96,4 +96,4 @@ read-only Pi tools and receive no daemon credential.
 ## 6. Bottom line
 
 Model routing, lifecycle, account management, diagnostics, and safe public web search/fetch are
-implemented. Hybrid capture is next, followed by the backend seam/fusion and full-mode tool bridge.
+implemented. Hybrid capture is next, followed by the provider seam/fusion and full-mode tool bridge.

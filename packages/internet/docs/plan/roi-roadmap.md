@@ -10,7 +10,7 @@ Sources:
 - Daemon repo `/home/superman/workspaces/codex-chatgpt-web` (vendored at commit `bda266b4`).
 - Prometheus `/home/superman/workspaces/prometheus`.
 - Docs: `features-brainstorm.md`, `best-of-both.md`, `review/implementation-review.md`,
-  `multi-account-and-backends.md`, `browser-design.md`, `source-repositories.md`.
+  `multi-account-and-providers.md`, `browser-design.md`, `source-repositories.md`.
 
 ---
 
@@ -238,18 +238,18 @@ fails; no double-parsing or duplicate parser.
 
 ## Tier 4 — Differentiators (larger, later)
 
-### R6. Multi-backend seam (Claude/Gemini) + Fusion "ask all"
+### R6. Multi-provider seam (Claude/Gemini) + Fusion "ask all"
 
-**Problem.** Single ChatGPT backend today. Multi-backend enables ensemble reasoning.
+**Problem.** Single ChatGPT provider today. Multi-provider enables ensemble reasoning.
 
-**Evidence.** `best-of-both.md` §3–§5 (fusion), `multi-account-and-backends.md`.
+**Evidence.** `best-of-both.md` §3–§5 (fusion), `multi-account-and-providers.md`.
 
-**Design.** Introduce an explicit backend interface, add API backends, then `internet_ask_all` fan-out
+**Design.** Introduce an explicit provider interface, add API providers, then `internet_ask_all` fan-out
 + synthesis (heuristic merge first, strongest-model opt-in).
 
 **Effort:** High. **Impact:** High (differentiator). **Risk:** Medium–High. **ROI:** Low now.
 
-**Acceptance:** N backends run concurrently; fused answer with attribution and disagreement list.
+**Acceptance:** N providers run concurrently; fused answer with attribution and disagreement list.
 
 ### R7. Full-mode tool bridge (`codex_tool_call`/`exec`/`apply_patch`)
 

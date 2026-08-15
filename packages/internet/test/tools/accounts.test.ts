@@ -23,7 +23,7 @@ describe("internet account tools", () => {
 			const tool = captureTools(registerAccountsTools).get("internet_account_add");
 			const result = await tool?.execute(
 				"call",
-				{ id: "work", backend: "openai", configDir: "/tmp/work", port: 18001 },
+				{ id: "work", provider: "openai", configDir: "/tmp/work", port: 18001 },
 				undefined,
 				undefined,
 				{} as never,
@@ -44,7 +44,7 @@ describe("internet account tools", () => {
 				.get("internet_account_add")
 				?.execute(
 					"add",
-					{ id: "research", backend: "openai", configDir: "/tmp/research", port: 18002 },
+					{ id: "research", provider: "openai", configDir: "/tmp/research", port: 18002 },
 					undefined,
 					undefined,
 					{} as never,

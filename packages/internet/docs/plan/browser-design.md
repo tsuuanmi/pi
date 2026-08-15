@@ -27,7 +27,7 @@ exactly as codex-chatgpt-web does. It does **not** download a browser.
 | Headless | Configurable (`headed`, default **headed**) | Headed for login/verification; headless for turns |
 
 The browser is **only required for the ChatGPT Web model-routing path**. `internet_search` /
-`internet_fetch` and the future Claude/Gemini API backends are browser-less.
+`internet_fetch` and the future Claude/Gemini API providers are browser-less.
 
 ---
 
@@ -133,7 +133,7 @@ validated strictly (ownership, permissions, shape) before connecting.
 
 ## 6. Where the browser lives in the package
 
-The browser is owned by the **`openai` backend** (ChatGPT Web path), not the whole package:
+The browser is owned by the **`openai` provider** (ChatGPT Web path), not the whole package:
 
 ```
 src/providers/openai/
@@ -147,14 +147,14 @@ the browser. This keeps the browser logic in one place (the daemon) and the pack
 
 > **Key principle:** the package is a **thin client** over the daemon. The daemon owns the browser,
 > the login, the DOM parsing, and the concurrency. The package owns the Pi integration (provider,
-> tools, hooks) and the cross-backend orchestration (fusion, search).
+> tools, hooks) and the cross-provider orchestration (fusion, search).
 
 ---
 
 ## 7. Bottom line
 
 - The browser is **system Chrome/Chromium via Playwright**, owned by the daemon, not the package.
-- It is **only required for ChatGPT Web model routing**; search/fetch and future API backends are
+- It is **only required for ChatGPT Web model routing**; search/fetch and future API providers are
   browser-less.
 - Production-readiness comes from: explicit login + verified marker, per-turn isolation, bounded
   concurrency (5), graceful shutdown, atomic state, `finally` cleanup, headless toggle, redacted

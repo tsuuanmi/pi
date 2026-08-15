@@ -6,7 +6,7 @@ import type { DaemonRuntime } from "#internet/daemon/runtime";
 
 const account: OpenAiInternetAccount = {
 	id: "default",
-	backend: "openai",
+	provider: "openai",
 	displayName: "ChatGPT Web",
 	configDir: "/tmp/internet/default",
 	host: "127.0.0.1",

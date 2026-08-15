@@ -3,7 +3,7 @@ import { anthropicProviderName, createAnthropicProviderConfig } from "#internet/
 
 const account: AnthropicInternetAccount = {
 	id: "research",
-	backend: "anthropic",
+	provider: "anthropic",
 	displayName: "Research",
 	enabled: true,
 	apiKeyEnv: "ANTHROPIC_RESEARCH_KEY",

@@ -4,7 +4,7 @@
 
 Pi owns provider registration, request transport, model selection, tool approval, session model
 services, and HUD/tool presentation. Internet owns account routing, the ChatGPT Web process/browser
-boundary, API backend composition, public-web safety, and bounded council orchestration.
+boundary, API provider composition, public-web safety, and bounded council orchestration.
 
 ```text
 Pi extension host
@@ -38,7 +38,7 @@ health, and Full-mode broker operation.
 
 Anthropic and Google providers are pure registration adapters. They do not own processes or browser
 state. Registry entries contain an `apiKeyEnv` reference, and Pi resolves `$ENV_VAR` credentials at
-request time. Backend names, endpoint mappings, model metadata, and account provider naming are
+request time. Provider names, endpoint mappings, model metadata, and account provider naming are
 centralized under `src/providers/`.
 
 ## Council

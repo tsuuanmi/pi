@@ -5,7 +5,7 @@ packages/internet/
 ├── src/
 │   ├── accounts/registry.ts
 │   ├── providers/
-│   │   ├── backend.ts
+│   │   ├── provider.ts
 │   │   ├── names.ts
 │   │   ├── registry.ts
 │   │   ├── anthropic/{index,models,provider}.ts

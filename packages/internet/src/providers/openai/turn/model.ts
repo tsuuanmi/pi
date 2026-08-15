@@ -2,12 +2,12 @@ export const CHATGPT_WEB_PROVIDER = "chatgpt-web";
 const CONSERVATIVE_MAX_OUTPUT_TOKENS = 16_384;
 
 export type ChatGptWebModelId = "light" | "medium" | "high" | "extra-high" | "pro" | "luna";
-export type ChatGptWebBackendModelId = `chatgpt-web/${ChatGptWebModelId}`;
+export type ChatGptWebProviderModelId = `chatgpt-web/${ChatGptWebModelId}`;
 export type ChatGptWebReasoningLevel = "low" | "medium" | "high" | "xhigh" | "ultra";
 
 export interface ChatGptWebModelRoute {
 	id: ChatGptWebModelId;
-	backendId: ChatGptWebBackendModelId;
+	providerId: ChatGptWebProviderModelId;
 	name: string;
 	reasoning: ChatGptWebReasoningLevel;
 	requiresPro: boolean;
@@ -18,7 +18,7 @@ export interface ChatGptWebModelRoute {
 export const CHATGPT_WEB_MODEL_ROUTES: readonly ChatGptWebModelRoute[] = [
 	{
 		id: "light",
-		backendId: "chatgpt-web/light",
+		providerId: "chatgpt-web/light",
 		name: "ChatGPT Web — Instant",
 		reasoning: "low",
 		requiresPro: false,
@@ -27,7 +27,7 @@ export const CHATGPT_WEB_MODEL_ROUTES: readonly ChatGptWebModelRoute[] = [
 	},
 	{
 		id: "medium",
-		backendId: "chatgpt-web/medium",
+		providerId: "chatgpt-web/medium",
 		name: "ChatGPT Web — Medium",
 		reasoning: "medium",
 		requiresPro: false,
@@ -36,7 +36,7 @@ export const CHATGPT_WEB_MODEL_ROUTES: readonly ChatGptWebModelRoute[] = [
 	},
 	{
 		id: "high",
-		backendId: "chatgpt-web/high",
+		providerId: "chatgpt-web/high",
 		name: "ChatGPT Web — High",
 		reasoning: "high",
 		requiresPro: false,
@@ -45,7 +45,7 @@ export const CHATGPT_WEB_MODEL_ROUTES: readonly ChatGptWebModelRoute[] = [
 	},
 	{
 		id: "extra-high",
-		backendId: "chatgpt-web/extra-high",
+		providerId: "chatgpt-web/extra-high",
 		name: "ChatGPT Web — Extra High",
 		reasoning: "xhigh",
 		requiresPro: true,
@@ -54,7 +54,7 @@ export const CHATGPT_WEB_MODEL_ROUTES: readonly ChatGptWebModelRoute[] = [
 	},
 	{
 		id: "pro",
-		backendId: "chatgpt-web/pro",
+		providerId: "chatgpt-web/pro",
 		name: "ChatGPT Web — Pro",
 		reasoning: "ultra",
 		requiresPro: true,
@@ -65,7 +65,7 @@ export const CHATGPT_WEB_MODEL_ROUTES: readonly ChatGptWebModelRoute[] = [
 
 export const CHATGPT_WEB_LUNA_MODEL_ROUTE: ChatGptWebModelRoute = {
 	id: "luna",
-	backendId: "chatgpt-web/luna",
+	providerId: "chatgpt-web/luna",
 	name: "ChatGPT Web — Luna",
 	reasoning: "low",
 	requiresPro: false,
@@ -73,14 +73,14 @@ export const CHATGPT_WEB_LUNA_MODEL_ROUTE: ChatGptWebModelRoute = {
 	maxTokens: CONSERVATIVE_MAX_OUTPUT_TOKENS,
 };
 
-export function chatGptWebBackendModelId(model: string): ChatGptWebBackendModelId | undefined {
+export function chatGptWebProviderModelId(model: string): ChatGptWebProviderModelId | undefined {
 	const luna = CHATGPT_WEB_LUNA_MODEL_ROUTE;
-	if (model === luna.id || model === luna.backendId) return luna.backendId;
-	const route = CHATGPT_WEB_MODEL_ROUTES.find((candidate) => model === candidate.id || model === candidate.backendId);
-	return route?.backendId;
+	if (model === luna.id || model === luna.providerId) return luna.providerId;
+	const route = CHATGPT_WEB_MODEL_ROUTES.find((candidate) => model === candidate.id || model === candidate.providerId);
+	return route?.providerId;
 }
 
 export function isLunaModel(model: string): boolean {
 	const luna = CHATGPT_WEB_LUNA_MODEL_ROUTE;
-	return model === luna.id || model === luna.backendId;
+	return model === luna.id || model === luna.providerId;
 }

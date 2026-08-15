@@ -2,7 +2,7 @@
 
 This document reviews the `internet` design against the constraint that the **MVP must work with
 current Pi as-is**, and it brainstorms the path forward. It also locks the scope: **ChatGPT Web via
-the codex-chatgpt-web daemon is the MVP backend.** Codex and Claude Code are **explicitly deferred** —
+the codex-chatgpt-web daemon is the MVP provider.** Codex and Claude Code are **explicitly deferred** —
 they are future work, not part of this package's first milestone.
 
 Status: **proposal**. This is a review of `architecture.md` / `layout.md` / `how-it-works.md` /
@@ -40,7 +40,7 @@ let Pi's own provider machinery do the streaming.
   otherwise.
 
 ### Explicitly out of scope (MVP)
-- **Codex and Claude Code backends** — deferred. The provider/tool abstraction must not block on
+- **Codex and Claude Code providers** — deferred. The provider/tool abstraction must not block on
   them.
 - **Re-implementing the Responses SSE parser** — use Pi's `openai-responses` handler instead.
 - **`codex_exec` / `codex_write_stdin` / `codex_apply_patch` native-tool bridging** into arbitrary
@@ -182,8 +182,8 @@ This is the smallest thing that makes ChatGPT Web usable as a Pi model. Everythi
    `codex_apply_patch`, wired through the `tool_call` approval hook. Requires the broker socket and
    the per-turn trusted environment.
 4. **Daemon lifecycle management** (start/stop on demand, config-gated).
-5. **Codex backend** — extend the provider/tool abstraction to talk to Codex natively. Deferred.
-6. **Claude Code backend** — same abstraction, `anthropic-messages` API. Deferred.
+5. **Codex provider** — extend the provider/tool abstraction to talk to Codex natively. Deferred.
+6. **Claude Code provider** — same abstraction, `anthropic-messages` API. Deferred.
 
 The provider + tool abstraction is the seam that keeps Codex / Claude Code future-proof without
 shipping them now.

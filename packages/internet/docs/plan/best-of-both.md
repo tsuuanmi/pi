@@ -5,7 +5,7 @@ multi-provider) with the strengths of `internet` (Pi-native, browser-optional, D
 
 1. **Hybrid capture** — use network interception as the primary model-output capture method, with
    DOM parsing as a resilient fallback.
-2. **Fusion "ask all"** — fan a query across all enabled backends and synthesize one coherent
+2. **Fusion "ask all"** — fan a query across all enabled providers and synthesize one coherent
    answer (not just a side-by-side comparison).
 
 Status: **proposal / brainstorm.** No code changes.
@@ -66,9 +66,9 @@ captureModelOutput(page, provider):
 - **Richer data** when interception works; **guaranteed answer** when it doesn't.
 
 ### 2.4 Mapping onto internet
-- The `openai` backend's daemon currently uses DOM parsing. Add an **interception layer** as the
+- The `openai` provider's daemon currently uses DOM parsing. Add an **interception layer** as the
   primary path, keeping DOM as fallback.
-- The future `anthropic` / `google` backends can use interception natively (they're API-based, so
+- The future `anthropic` / `google` providers can use interception natively (they're API-based, so
   no browser needed — but if a browser path is ever added, the same hybrid applies).
 
 ---
@@ -77,12 +77,12 @@ captureModelOutput(page, provider):
 
 ### 3.1 The feature
 
-`internet_ask_all(query)` fans a query across **all enabled backends** and returns **one fused
+`internet_ask_all(query)` fans a query across **all enabled providers** and returns **one fused
 answer**, not a side-by-side comparison.
 
 ```
 internet_ask_all(query)
-  → fan out to all enabled backends (parallel)
+  → fan out to all enabled providers (parallel)
   → collect answers
   → synthesize into ONE fused answer
   → return { fused, sources, disagreements }
@@ -94,12 +94,12 @@ The fused answer needs a "synthesizer." Three options:
 
 | Option | How | Pros | Cons |
 |--------|-----|------|------|
-| **Strongest backend** | Use the best backend (e.g. ChatGPT Pro) to merge the others | High quality | Costs a full turn on the strong model |
+| **Strongest provider** | Use the best provider (e.g. ChatGPT Pro) to merge the others | High quality | Costs a full turn on the strong model |
 | **Dedicated cheap model** | A small model merges the answers | Cheap | Lower quality |
 | **Heuristic merge** | Vote / longest / most-cited, no extra model call | Free, fast | No true synthesis |
 
 **Recommended:** start with **heuristic merge** (free, fast, no extra model call), then add
-**strongest-backend synthesis** as an opt-in for higher quality.
+**strongest-provider synthesis** as an opt-in for higher quality.
 
 ### 3.3 Return shape
 
@@ -107,17 +107,17 @@ The fused answer needs a "synthesizer." Three options:
 {
   "fused": "The synthesized answer...",
   "sources": [
-    { "backend": "chatgpt", "answer": "...", "agreement": "high" },
-    { "backend": "claude",  "answer": "...", "agreement": "low" }
+    { "provider": "chatgpt", "answer": "...", "agreement": "high" },
+    { "provider": "claude",  "answer": "...", "agreement": "low" }
   ],
-  "disagreements": ["Backend A says X, backend B says Y."]
+  "disagreements": ["Provider A says X, provider B says Y."]
 }
 ```
 
 ### 3.4 Why fusion > compare
 - **Ensemble reasoning** — multiple models cross-check each other, reducing hallucination.
 - **One answer** — the agent gets a single coherent result, not N to reconcile.
-- **Attribution** — the agent can cite which backend agreed/disagreed.
+- **Attribution** — the agent can cite which provider agreed/disagreed.
 
 ---
 
@@ -129,7 +129,7 @@ The fused answer needs a "synthesizer." Three options:
 | Implemented | `internet_search` + `internet_fetch` | Keyless RSS search plus bounded public-page fetch |
 | Implemented | Daemon lifecycle + `internet_doctor` | Account-scoped structured diagnostics |
 | Next | **Hybrid capture** (interception primary + DOM fallback) | Improves robustness of the ChatGPT Web path |
-| Later | Multi-account + backend seam | Claude/Gemini API backends |
+| Later | Multi-account + provider seam | Claude/Gemini API providers |
 | Later | **`internet_ask_all` (fusion)** | Fan out + synthesize; heuristic first, strong-model opt-in |
 | P4 | Full-mode tool bridge | Needs approval gate |
 
@@ -141,9 +141,9 @@ The fused answer needs a "synthesizer." Three options:
 |-----------------|------|
 | Interception fragility | Endpoints can be obfuscated or auth-gated; the fallback covers this. |
 | Fusion quality | Heuristic merge is crude; strong-model synthesis costs a turn. Make it opt-in. |
-| Rate limits | Fanning out to N backends multiplies usage; add a concurrency cap. |
+| Rate limits | Fanning out to N providers multiplies usage; add a concurrency cap. |
 | Attribution accuracy | "Agreement" is heuristic; don't over-claim. |
-| Where does fusion run? | In the `internet` package (orchestrates backends) or in the daemon? Prefer the package so it works across backends. |
+| Where does fusion run? | In the `internet` package (orchestrates providers) or in the daemon? Prefer the package so it works across providers. |
 
 ---
 
@@ -153,5 +153,5 @@ The fused answer needs a "synthesizer." Three options:
   the genuine "best of both."
 - **Fusion "ask all"** is a real differentiator: ensemble reasoning that returns one coherent answer
   with attribution, not a comparison table.
-- Both fit the `internet` package cleanly: hybrid capture improves the `openai` backend, and fusion
-  is a cross-backend orchestration feature in the package.
+- Both fit the `internet` package cleanly: hybrid capture improves the `openai` provider, and fusion
+  is a cross-provider orchestration feature in the package.

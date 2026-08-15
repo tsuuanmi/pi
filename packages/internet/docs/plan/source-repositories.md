@@ -55,7 +55,7 @@ synced because the package depends on none of the removed code.
 **Path:** `/home/superman/workspaces/prometheus`
 
 Prometheus is a **standalone Electron MCP/REST service** with the same core idea (browser-based AI
-backends). Read it to borrow multi-provider breadth, model aliases, and the network-interception
+providers). Read it to borrow multi-provider breadth, model aliases, and the network-interception
 capture pattern.
 
 | Concept | Source file |

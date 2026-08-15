@@ -1,7 +1,7 @@
-# Internet — Multi-Account & Multi-Backend Brainstorm
+# Internet — Multi-Account & Multi-Provider Brainstorm
 
 This document brainstorms how `internet` supports **multiple accounts per provider** and stays
-future-proof for **Claude and Gemini** backends, while keeping the MVP minimal and not changing
+future-proof for **Claude and Gemini** providers, while keeping the MVP minimal and not changing
 the Pi ecosystem.
 
 > **Source:** the account = daemon-instance model is grounded in
@@ -12,7 +12,7 @@ the Pi ecosystem.
 
 - **MVP:** ChatGPT Web via one codex-chatgpt-web daemon. Works with current Pi as-is.
 - **Next:** multiple ChatGPT accounts.
-- **Future:** Claude and Gemini backends behind the same abstraction.
+- **Future:** Claude and Gemini providers behind the same abstraction.
 
 Status: **proposal / brainstorm.** Nothing is implemented.
 
@@ -39,7 +39,7 @@ Account C  ──►  daemon@:17843   baseUrl=http://127.0.0.1:17843/v1
 ```
 
 Pi registers each as a provider (or as models under one provider). The abstraction between them is
-the **backend adapter** (see §4).
+the **provider adapter** (see §4).
 
 ---
 
@@ -121,7 +121,7 @@ A small config file under `<internet-config>/accounts.json`:
   "accounts": [
     {
       "id": "personal",
-      "backend": "openai",
+      "provider": "openai",
       "displayName": "Personal",
       "port": 17841,
       "configDir": "~/.codex-chatgpt-web",   // CODEX_CHATGPT_WEB_HOME
@@ -129,7 +129,7 @@ A small config file under `<internet-config>/accounts.json`:
     },
     {
       "id": "work",
-      "backend": "openai",
+      "provider": "openai",
       "displayName": "Work",
       "port": 17842,
       "configDir": "~/.codex-chatgpt-web-work",
@@ -139,7 +139,7 @@ A small config file under `<internet-config>/accounts.json`:
 }
 ```
 
-The `backend` field selects the adapter (`openai` / `anthropic` / `google`). Each backend's
+The `provider` field selects the adapter (`openai` / `anthropic` / `google`). Each provider's
 `register(pi, accounts)` maps its enabled accounts to `pi.registerProvider(...)` calls.
 
 ### 3.2 Package tools
@@ -158,22 +158,22 @@ the account is baked into the provider's `baseUrl` at registration time.
 
 ---
 
-## 4. The backend adapter seam (future Claude / Gemini)
+## 4. The provider adapter seam (future Claude / Gemini)
 
 The MVP registers a `chatgpt-web` provider directly. To keep Claude and Gemini future-proof without
-shipping them, introduce a thin **backend adapter** abstraction that the provider registration uses.
-Each backend lives in its own folder under `src/providers/`:
+shipping them, introduce a thin **provider adapter** abstraction that the provider registration uses.
+Each provider lives in its own folder under `src/providers/`:
 
 ```ts
-// src/providers/backend.ts
-export interface InternetBackend {
+// src/providers/provider.ts
+export interface InternetProvider {
   readonly providerName: string;   // "chatgpt-web" | "claude" | "gemini"
   readonly api: Api;               // "openai-responses" | "anthropic-messages" | "openai-completions"
   register(pi: ExtensionAPI, accounts: Account[]): void;
 }
 ```
 
-Each backend implements `register`, which calls `pi.registerProvider(...)` for each enabled account.
+Each provider implements `register`, which calls `pi.registerProvider(...)` for each enabled account.
 For MVP:
 
 - **`src/providers/openai/`** — `api: "openai-responses"`, `baseUrl` per account (daemon port), `authHeader: false`.
@@ -187,23 +187,23 @@ Pi ecosystem change — it uses the same `registerProvider` the MVP already uses
 
 - **Accounts are data** (the registry), not code. Adding an account = adding a row + registering a
   provider.
-- **Backends are adapters** behind one interface. MVP ships `src/providers/openai/`; Claude and
+- **Providers are adapters** behind one interface. MVP ships `src/providers/openai/`; Claude and
   Gemini are additive folders.
 - **Pi is untouched.** All of this uses `registerProvider` (and later `oauth`) exactly as Pi
   exposes them today.
 
 ---
 
-## 5. Auth per account, per backend
+## 5. Auth per account, per provider
 
-| Backend | Auth mechanism | MVP? |
+| Provider | Auth mechanism | MVP? |
 |---------|----------------|------|
 | chatgpt-web | None on `/v1/responses` (loopback). Control token only for `/admin/*`. `authHeader: false`. | Yes |
 | claude (future) | `apiKey` or `oauth` (Pi's `ProviderConfig.oauth` for `/account add`). | No |
 | gemini (future) | `apiKey` or `oauth`. | No |
 
 For chatgpt-web, `authHeader` stays `false` because the loopback daemon does not require a key on the
-inference path. For future backends, `internet` can read credentials from the account registry (env
+inference path. For future providers, `internet` can read credentials from the account registry (env
 interpolation or `!command` are both supported by Pi's `apiKey`).
 
 ---
@@ -217,7 +217,7 @@ interpolation or `!command` are both supported by Pi's `apiKey`).
 | **Distinct model ids** (Strategy B) require the daemon to route arbitrary slugs | Avoid Strategy B until `routeChatGptWebRequest` tolerates suffixed slugs. |
 | **Account switching is not dynamic** — it is baked into provider `baseUrl` at registration | Acceptable; re-register on config change. A "switch account on the fly" feature is post-MVP. |
 | **Claude/Gemini API shape** | Use Pi's native `anthropic-messages` and OpenAI-compat stream handlers; no custom SSE parser needed for the common case. |
-| **OAuth** for future backends | Pi already supports `ProviderConfig.oauth`; reuse it rather than building a login flow. |
+| **OAuth** for future providers | Pi already supports `ProviderConfig.oauth`; reuse it rather than building a login flow. |
 | **Daemon lifecycle per account** | MVP requires daemons to be running; auto-start/stop per account is a follow-up. |
 
 ---
@@ -230,10 +230,10 @@ interpolation or `!command` are both supported by Pi's `apiKey`).
    `registerProvider`. — next.
 3. **Full-mode tool bridge:** codex_tool_call/exec/apply_patch + approval hook. — post-MVP.
 4. **Daemon lifecycle per account** (auto start/stop). — post-MVP.
-5. **Claude backend** behind the `InternetBackend` seam (`anthropic-messages`). — deferred.
-6. **Gemini backend** behind the same seam. — deferred.
+5. **Claude provider** behind the `InternetProvider` seam (`anthropic-messages`). — deferred.
+6. **Gemini provider** behind the same seam. — deferred.
 
-The backend adapter + account registry are the two seams that make all of this additive: the MVP
+The provider adapter + account registry are the two seams that make all of this additive: the MVP
 uses a tiny slice, and Claude/Gemini plug in without touching Pi or reworking the chatgpt-web path.
 
 ---
@@ -241,6 +241,6 @@ uses a tiny slice, and Claude/Gemini plug in without touching Pi or reworking th
 ## 8. Bottom line
 
 - **Multi-account = multiple daemons = multiple Pi providers (Strategy A).** No Pi ecosystem change.
-- **Backend adapter seam** keeps Claude/Gemini future-proof without shipping them.
+- **Provider adapter seam** keeps Claude/Gemini future-proof without shipping them.
 - **Account registry as data** keeps adding accounts trivial.
 - The MVP stays exactly as agreed: model routing via `registerProvider`, nothing more invasive.

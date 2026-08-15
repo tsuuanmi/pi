@@ -2,7 +2,7 @@
 
 Mirrors `src/providers/openai/index.ts`.
 
-Barrel that re-exports the ChatGPT Web backend's public surface:
+Barrel that re-exports the ChatGPT Web provider's public surface:
 
 - `chatGptWebModels` from [`models.ts`](models.md).
 - `createOpenAiProviderConfig`, `providerName`, `registerOpenAiProviders` from

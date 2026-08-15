@@ -1,7 +1,7 @@
 import {
 	CHATGPT_WEB_LUNA_MODEL_ROUTE,
 	CHATGPT_WEB_MODEL_ROUTES,
-	chatGptWebBackendModelId,
+	chatGptWebProviderModelId,
 	isLunaModel,
 } from "#internet/providers/openai/turn/model";
 
@@ -14,7 +14,7 @@ describe("ChatGPT Web model resolution", () => {
 			"extra-high",
 			"pro",
 		]);
-		expect(CHATGPT_WEB_MODEL_ROUTES.map((route) => route.backendId)).toEqual([
+		expect(CHATGPT_WEB_MODEL_ROUTES.map((route) => route.providerId)).toEqual([
 			"chatgpt-web/light",
 			"chatgpt-web/medium",
 			"chatgpt-web/high",
@@ -22,13 +22,13 @@ describe("ChatGPT Web model resolution", () => {
 			"chatgpt-web/pro",
 		]);
 		expect(isLunaModel(CHATGPT_WEB_LUNA_MODEL_ROUTE.id)).toBe(true);
-		expect(isLunaModel(CHATGPT_WEB_LUNA_MODEL_ROUTE.backendId)).toBe(true);
+		expect(isLunaModel(CHATGPT_WEB_LUNA_MODEL_ROUTE.providerId)).toBe(true);
 		expect(isLunaModel("gpt-5.6-luna")).toBe(false);
 	});
 
-	it("maps provider-local and canonical daemon model identifiers to one backend route", () => {
-		expect(chatGptWebBackendModelId("high")).toBe("chatgpt-web/high");
-		expect(chatGptWebBackendModelId("chatgpt-web/high")).toBe("chatgpt-web/high");
-		expect(chatGptWebBackendModelId("unknown")).toBeUndefined();
+	it("maps provider-local and canonical daemon model identifiers to one provider route", () => {
+		expect(chatGptWebProviderModelId("high")).toBe("chatgpt-web/high");
+		expect(chatGptWebProviderModelId("chatgpt-web/high")).toBe("chatgpt-web/high");
+		expect(chatGptWebProviderModelId("unknown")).toBeUndefined();
 	});
 });

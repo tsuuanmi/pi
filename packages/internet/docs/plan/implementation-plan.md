@@ -45,10 +45,10 @@ The existing implementation remains authoritative:
 
 No second tool bridge or automation controller was introduced.
 
-### Tier 4 — provider-neutral accounts and API backends
+### Tier 4 — provider-neutral accounts and API providers
 
 - Account schema version 2 is a discriminated union for `openai`, `anthropic`, and `google`.
-- The registry validates exact backend fields, allocates unique browser ports, stores API-key
+- The registry validates exact provider fields, allocates unique browser ports, stores API-key
   environment references rather than secrets, and supports list/add/remove/enable/disable plus
   ChatGPT conversation mode.
 - Daemon modules accept only `OpenAiInternetAccount`, making the process boundary explicit.
@@ -78,13 +78,13 @@ AccountRegistry
 Enabled provider names -> CouncilService -> Orchestrator -> tool-free Pi Agents
 ```
 
-No backend imports daemon lifecycle through the generic backend contract. No account stores an API
+No provider imports daemon lifecycle through the generic provider contract. No account stores an API
 secret. No council member can select a provider outside the enabled internet account set.
 
 ## Verification contract
 
 Automated checks cover runtime resolution on Linux/macOS manifests, platform Chrome defaults,
-storage-state filtering, wire parsing, account schema/lifecycle, backend configs, council tool
+storage-state filtering, wire parsing, account schema/lifecycle, provider configs, council tool
 routing, package build, package contents, root typecheck, formatting/lint, and the full internet test
 suite.
 

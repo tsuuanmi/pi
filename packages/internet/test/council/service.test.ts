@@ -4,7 +4,7 @@ import { CouncilService } from "#internet/council/service";
 
 const account: OpenAiInternetAccount = {
 	id: "default",
-	backend: "openai",
+	provider: "openai",
 	displayName: "ChatGPT Web",
 	configDir: "/tmp/chatgpt",
 	host: "127.0.0.1",

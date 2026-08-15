@@ -22,7 +22,7 @@ async function account(): Promise<OpenAiInternetAccount> {
 	);
 	return {
 		id: "work",
-		backend: "openai",
+		provider: "openai",
 		displayName: "Work ChatGPT",
 		configDir,
 		host: "127.0.0.1",

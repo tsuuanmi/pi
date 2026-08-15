@@ -167,8 +167,8 @@ chat session:
 ChatGPT agent A ──► daemon@:17841 ──► ChatGPT conversation A
 ChatGPT agent B ──► daemon@:17842 ──► ChatGPT conversation B
 ChatGPT agent C ──► daemon@:17843 ──► ChatGPT conversation C
-Gemini agent    ──► gemini backend   ──► Gemini thread
-Claude agent    ──► claude backend   ──► Claude thread
+Gemini agent    ──► gemini provider   ──► Gemini thread
+Claude agent    ──► claude provider   ──► Claude thread
 ```
 
 So "run **multiple** persistent browser-backed ChatGPT conversations (one per agent)" is exactly

@@ -5,7 +5,7 @@ Mirrors `src/tools/accounts.ts`.
 Account tools expose the complete routing lifecycle:
 
 - `internet_accounts` lists normalized browser and API accounts.
-- `internet_account_add` requires `id` and `backend`. ChatGPT Web (`openai`) accepts optional
+- `internet_account_add` requires `id` and `provider`. ChatGPT Web (`openai`) accepts optional
   `configDir`, loopback `host`/`port`, and conversation mode. `anthropic` and `google` require
   `apiKeyEnv` and reject browser settings.
 - `internet_account_remove` removes routing metadata but deliberately leaves the private account

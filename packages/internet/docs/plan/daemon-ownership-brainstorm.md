@@ -151,7 +151,7 @@ This is the explicit, accepted tradeoff for "no other repo":
 
 ## 4.2 Best of both: what to take from each repo
 
-Both repos pursue the same idea (use browser-based AI as a model backend without API keys) but
+Both repos pursue the same idea (use browser-based AI as a model provider without API keys) but
 differ in capture strategy and integration surface. For the vendored daemon, we take the **best of
 both**:
 
@@ -160,7 +160,7 @@ both**:
 | Model-output capture | DOM parsing (rendered assistant turn) | Network interception (SSE/JSON wire) | **Hybrid**: interception primary, DOM fallback (see `best-of-both.md`) |
 | Browser isolation | Dedicated `--user-data-dir` profile | Per-provider browser partitions | **Dedicated isolated profile** (daemon) — never touches the user's browser |
 | Integration surface | HTTP `/v1/responses` + `/admin/*` | MCP server + REST `/v1/chat/completions` | **Pi provider + tools** (internet) — not a generic MCP/REST service |
-| Multi-provider | Single ChatGPT Web path | 11-provider catalog | **Backend seam** (internet) — future API backends, not browser-driven |
+| Multi-provider | Single ChatGPT Web path | 11-provider catalog | **Provider seam** (internet) — future API providers, not browser-driven |
 | Login flow | `login` subcommand (Linux-compatible) | Per-provider login check scripts | **Daemon's `login`** — isolated, Linux-first |
 | Compaction | Rolling checkpoints + `/compact` | `convo_history_summarize` | **Daemon's compaction** — already integrated with the Responses path |
 

@@ -10,7 +10,7 @@ Create API accounts with environment references, not secret values:
 ```text
 internet_account_add {
   id: "research",
-  backend: "anthropic",
+  provider: "anthropic",
   apiKeyEnv: "ANTHROPIC_RESEARCH_KEY"
 }
 ```
@@ -18,7 +18,7 @@ internet_account_add {
 ```text
 internet_account_add {
   id: "research-google",
-  backend: "google",
+  provider: "google",
   apiKeyEnv: "GEMINI_RESEARCH_KEY"
 }
 ```

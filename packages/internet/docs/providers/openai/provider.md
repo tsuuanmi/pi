@@ -2,7 +2,7 @@
 
 Mirrors `src/providers/openai/provider.ts`.
 
-Provider naming and configuration for the ChatGPT Web backend.
+Provider naming and configuration for the ChatGPT Web provider.
 
 ## `providerName`
 
@@ -34,5 +34,5 @@ Builds a Pi `ProviderConfig`:
 registerOpenAiProviders(pi, accounts): Promise<void>
 ```
 
-Registers a provider for each enabled account whose backend is `openai`, using
+Registers a provider for each enabled account whose provider is `openai`, using
 `providerName(account)` as the provider id.

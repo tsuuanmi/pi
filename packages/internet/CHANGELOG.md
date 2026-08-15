@@ -5,8 +5,8 @@
 ### Breaking Changes
 
 - Remove `InternetHookHost` and consume Pi's `Pick<ExtensionAPI, "on" | "onHook">` contract directly.
-- Require account registry schema 2 with an explicit `openai`, `anthropic`, or `google` backend;
-  schema-1 files are rejected rather than loaded through compatibility defaults.
+- Require account registry schema 3 with an explicit `openai`, `anthropic`, or `google` provider;
+  older files are rejected rather than loaded through compatibility defaults.
 - Replace the package-root `registerOpenAiProviders` export with generic
   `registerInternetProviders`.
 
@@ -18,7 +18,7 @@
 - Use ChatGPT conversation wire payloads as the primary response source with explicit DOM fallback
   provenance.
 - Add Anthropic and Gemini API account providers using environment-referenced credentials.
-- Add account removal, backend-specific validation, and automatic browser-port allocation.
+- Add account removal, provider-specific validation, and automatic browser-port allocation.
 - Add bounded `internet_council` orchestration with tool-free members and dependency-aware synthesis.
 
 - Add account-scoped, owner-private normal-chat bindings and canonical suffix synchronization for explicitly selected, canary-authorized browser-only durable mode.

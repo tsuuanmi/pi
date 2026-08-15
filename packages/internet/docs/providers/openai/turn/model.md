@@ -14,7 +14,7 @@ Provider-local model definitions and their canonical daemon route mapping.
 ## Types
 
 - `ChatGptWebModelId` — `"light" | "medium" | "high" | "extra-high" | "pro" | "luna"`.
-- `ChatGptWebBackendModelId` — the corresponding `chatgpt-web/<id>` daemon route.
+- `ChatGptWebProviderModelId` — the corresponding `chatgpt-web/<id>` daemon route.
 - `ChatGptWebReasoningLevel` — `"low" | "medium" | "high" | "xhigh" | "ultra"`.
 - `ChatGptWebModelRoute` — provider-local id, daemon id, name, reasoning level, `requiresPro`,
   `contextWindow`, and `maxTokens`.
@@ -33,12 +33,12 @@ The standard (non-Luna) routes:
 
 Pi combines the provider and provider-local model id when displaying a model, so the default high
 route is `chatgpt-web/high`, not the redundant `chatgpt-web/chatgpt-web/high`. Before a request is
-sent, `chatGptWebBackendModelId` maps the local id to the daemon's canonical route.
+sent, `chatGptWebProviderModelId` maps the local id to the daemon's canonical route.
 
-## `chatGptWebBackendModelId`
+## `chatGptWebProviderModelId`
 
 ```ts
-chatGptWebBackendModelId(model: string): ChatGptWebBackendModelId | undefined
+chatGptWebProviderModelId(model: string): ChatGptWebProviderModelId | undefined
 ```
 
 Resolves a provider-local id to its daemon route. It also accepts an already canonical daemon id so

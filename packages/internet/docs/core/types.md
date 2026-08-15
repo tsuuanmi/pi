@@ -2,10 +2,10 @@
 
 Mirrors `src/core/types.ts`.
 
-The account model is a discriminated union with backend-specific configuration.
+The account model is a discriminated union with provider-specific configuration.
 
 ```ts
-type InternetBackendId = "openai" | "anthropic" | "google";
+type InternetProviderId = "openai" | "anthropic" | "google";
 type InternetConversationMode = "temporary" | "durable";
 ```
 
@@ -14,7 +14,7 @@ type InternetConversationMode = "temporary" | "durable";
 - `AnthropicInternetAccount` and `GoogleInternetAccount` own `apiKeyEnv`, the environment-variable
   name used by Pi's provider registry. They never contain the credential value.
 - `InternetAccount` is the union of those normalized forms.
-- `InternetAccountInput` is the corresponding creation union. `backend` is required; the registry
+- `InternetAccountInput` is the corresponding creation union. `provider` is required; the registry
   supplies browser config directory, host, port, display name, and enabled defaults.
 - `isOpenAiAccount(account)` narrows daemon-only operations at their dependency boundary.
 

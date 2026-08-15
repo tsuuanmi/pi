@@ -1,16 +1,16 @@
-export type InternetBackendId = "openai" | "anthropic" | "google";
-export type InternetApiBackendId = Exclude<InternetBackendId, "openai">;
+export type InternetProviderId = "openai" | "anthropic" | "google";
+export type InternetApiProviderId = Exclude<InternetProviderId, "openai">;
 export type InternetConversationMode = "temporary" | "durable";
 
 interface InternetAccountBase {
 	id: string;
-	backend: InternetBackendId;
+	provider: InternetProviderId;
 	displayName: string;
 	enabled: boolean;
 }
 
 export interface OpenAiInternetAccount extends InternetAccountBase {
-	backend: "openai";
+	provider: "openai";
 	configDir: string;
 	host: string;
 	port: number;
@@ -18,16 +18,16 @@ export interface OpenAiInternetAccount extends InternetAccountBase {
 }
 
 interface ApiInternetAccountBase extends InternetAccountBase {
-	backend: InternetApiBackendId;
+	provider: InternetApiProviderId;
 	apiKeyEnv: string;
 }
 
 export interface AnthropicInternetAccount extends ApiInternetAccountBase {
-	backend: "anthropic";
+	provider: "anthropic";
 }
 
 export interface GoogleInternetAccount extends ApiInternetAccountBase {
-	backend: "google";
+	provider: "google";
 }
 
 export type ApiInternetAccount = AnthropicInternetAccount | GoogleInternetAccount;
@@ -40,7 +40,7 @@ interface InternetAccountInputBase {
 }
 
 export interface OpenAiInternetAccountInput extends InternetAccountInputBase {
-	backend: "openai";
+	provider: "openai";
 	configDir?: string;
 	host?: string;
 	port?: number;
@@ -48,12 +48,12 @@ export interface OpenAiInternetAccountInput extends InternetAccountInputBase {
 }
 
 export interface AnthropicInternetAccountInput extends InternetAccountInputBase {
-	backend: "anthropic";
+	provider: "anthropic";
 	apiKeyEnv: string;
 }
 
 export interface GoogleInternetAccountInput extends InternetAccountInputBase {
-	backend: "google";
+	provider: "google";
 	apiKeyEnv: string;
 }
 
@@ -69,5 +69,5 @@ export interface InternetSettings {
 export type InternetControlAction = "drain" | "resume" | "shutdown" | "cancel-browser-turns";
 
 export function isOpenAiAccount(account: InternetAccount): account is OpenAiInternetAccount {
-	return account.backend === "openai";
+	return account.provider === "openai";
 }

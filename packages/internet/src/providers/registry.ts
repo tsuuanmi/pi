@@ -1,15 +1,15 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
-import type { InternetAccount, InternetBackendId } from "#internet/core/types";
+import type { InternetAccount, InternetProviderId } from "#internet/core/types";
 import { anthropicProviderName, registerAnthropicProviders } from "#internet/providers/anthropic/provider";
-import type { InternetBackend } from "#internet/providers/backend";
 import { googleProviderName, registerGoogleProviders } from "#internet/providers/google/provider";
 import { providerName as openAiProviderName, registerOpenAiProviders } from "#internet/providers/openai/provider";
+import type { InternetProvider } from "#internet/providers/provider";
 
-const backends: Record<InternetBackendId, InternetBackend> = {
+const providers: Record<InternetProviderId, InternetProvider> = {
 	openai: {
 		id: "openai",
 		providerName(account) {
-			if (account.backend !== "openai") throw new Error(`Expected openai account, received ${account.backend}.`);
+			if (account.provider !== "openai") throw new Error(`Expected openai account, received ${account.provider}.`);
 			return openAiProviderName(account);
 		},
 		registerProviders: registerOpenAiProviders,
@@ -17,8 +17,8 @@ const backends: Record<InternetBackendId, InternetBackend> = {
 	anthropic: {
 		id: "anthropic",
 		providerName(account) {
-			if (account.backend !== "anthropic")
-				throw new Error(`Expected anthropic account, received ${account.backend}.`);
+			if (account.provider !== "anthropic")
+				throw new Error(`Expected anthropic account, received ${account.provider}.`);
 			return anthropicProviderName(account);
 		},
 		registerProviders: registerAnthropicProviders,
@@ -26,24 +26,24 @@ const backends: Record<InternetBackendId, InternetBackend> = {
 	google: {
 		id: "google",
 		providerName(account) {
-			if (account.backend !== "google") throw new Error(`Expected google account, received ${account.backend}.`);
+			if (account.provider !== "google") throw new Error(`Expected google account, received ${account.provider}.`);
 			return googleProviderName(account);
 		},
 		registerProviders: registerGoogleProviders,
 	},
 };
 
-export function getInternetBackend(id: InternetBackendId): InternetBackend {
-	return backends[id];
+export function getInternetProvider(id: InternetProviderId): InternetProvider {
+	return providers[id];
 }
 
 export function internetProviderName(account: InternetAccount): string {
-	return getInternetBackend(account.backend).providerName(account);
+	return getInternetProvider(account.provider).providerName(account);
 }
 
 export async function registerInternetProviders(
 	host: Pick<ExtensionAPI, "registerProvider">,
 	accounts: InternetAccount[],
 ): Promise<void> {
-	for (const backend of Object.values(backends)) await backend.registerProviders(host, accounts);
+	for (const provider of Object.values(providers)) await provider.registerProviders(host, accounts);
 }

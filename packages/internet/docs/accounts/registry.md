@@ -15,7 +15,7 @@ migrated implicitly.
 ## `AccountRegistry`
 
 - `list()` reads and validates all accounts.
-- `listBackend(backend)` returns accounts narrowed to one backend.
+- `listProvider(provider)` returns accounts narrowed to one provider.
 - `getOpenAi(id?)` returns only a ChatGPT Web account and rejects API accounts.
 - `add(input)` appends an account after validation. ChatGPT Web accounts receive the first unused
   loopback port from `17841` when no port is supplied.

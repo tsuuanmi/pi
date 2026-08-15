@@ -3,7 +3,7 @@ import { createGoogleProviderConfig, googleProviderName } from "#internet/provid
 
 const account: GoogleInternetAccount = {
 	id: "research",
-	backend: "google",
+	provider: "google",
 	displayName: "Research",
 	enabled: true,
 	apiKeyEnv: "GEMINI_RESEARCH_KEY",

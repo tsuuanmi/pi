@@ -1,11 +1,11 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 import { AccountRegistry } from "#internet/accounts/registry";
-import type { InternetAccountInput, InternetBackendId } from "#internet/core/types";
+import type { InternetAccountInput, InternetProviderId } from "#internet/core/types";
 
 interface AddAccountParams {
 	id: string;
-	backend: InternetBackendId;
+	provider: InternetProviderId;
 	displayName?: string;
 	configDir?: string;
 	host?: string;
@@ -17,22 +17,22 @@ interface AddAccountParams {
 
 function accountInput(params: AddAccountParams): InternetAccountInput {
 	const common = { id: params.id, displayName: params.displayName, enabled: params.enabled };
-	if (params.backend === "openai") {
+	if (params.provider === "openai") {
 		if (params.apiKeyEnv) throw new Error("apiKeyEnv is not valid for a ChatGPT Web account.");
 		return {
 			...common,
-			backend: params.backend,
+			provider: params.provider,
 			configDir: params.configDir,
 			host: params.host,
 			port: params.port,
 			conversationMode: params.conversationMode,
 		};
 	}
-	if (!params.apiKeyEnv) throw new Error(`${params.backend} accounts require apiKeyEnv.`);
+	if (!params.apiKeyEnv) throw new Error(`${params.provider} accounts require apiKeyEnv.`);
 	if (params.configDir || params.host || params.port || params.conversationMode) {
-		throw new Error(`Browser-daemon settings are not valid for ${params.backend} accounts.`);
+		throw new Error(`Browser-daemon settings are not valid for ${params.provider} accounts.`);
 	}
-	return { ...common, backend: params.backend, apiKeyEnv: params.apiKeyEnv };
+	return { ...common, provider: params.provider, apiKeyEnv: params.apiKeyEnv };
 }
 
 export function registerAccountsTools(host: Pick<ExtensionAPI, "registerTool">): void {
@@ -53,7 +53,7 @@ export function registerAccountsTools(host: Pick<ExtensionAPI, "registerTool">):
 		description: "Add an isolated browser or API account. Reload Pi after changing accounts.",
 		parameters: Type.Object({
 			id: Type.String({ minLength: 1 }),
-			backend: Type.Union([Type.Literal("openai"), Type.Literal("anthropic"), Type.Literal("google")]),
+			provider: Type.Union([Type.Literal("openai"), Type.Literal("anthropic"), Type.Literal("google")]),
 			displayName: Type.Optional(Type.String({ minLength: 1 })),
 			configDir: Type.Optional(Type.String({ minLength: 1 })),
 			host: Type.Optional(Type.String({ minLength: 1 })),

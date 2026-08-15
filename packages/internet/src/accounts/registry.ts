@@ -6,13 +6,13 @@ import { InternetError } from "#internet/core/errors";
 import {
 	type InternetAccount,
 	type InternetAccountInput,
-	type InternetBackendId,
 	type InternetConversationMode,
+	type InternetProviderId,
 	isOpenAiAccount,
 	type OpenAiInternetAccount,
 } from "#internet/core/types";
 
-const registryVersion = 2;
+const registryVersion = 3;
 const defaultPort = 17841;
 const accountIdPattern = /^[a-z0-9][a-z0-9-]{0,31}$/;
 const environmentNamePattern = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -34,7 +34,7 @@ function defaultConfigDir(registryPath: string, id: string): string {
 function defaultAccount(registryPath: string): OpenAiInternetAccount {
 	return {
 		id: "default",
-		backend: "openai",
+		provider: "openai",
 		displayName: "ChatGPT Web",
 		configDir: defaultConfigDir(registryPath, "default"),
 		host: "127.0.0.1",
@@ -89,12 +89,12 @@ function normalizeConversationMode(value: unknown): InternetConversationMode {
 
 function normalizeAccount(value: unknown, registryPath: string): InternetAccount {
 	const input = record(value, "Account");
-	const backend = requiredString(input.backend, "Account backend");
+	const provider = requiredString(input.provider, "Account provider");
 	const common = normalizeCommon(input);
-	if (backend === "openai") {
+	if (provider === "openai") {
 		assertKnownKeys(
 			input,
-			["id", "backend", "displayName", "enabled", "configDir", "host", "port", "conversationMode"],
+			["id", "provider", "displayName", "enabled", "configDir", "host", "port", "conversationMode"],
 			`Account ${common.id}`,
 		);
 		const host = input.host === undefined ? "127.0.0.1" : requiredString(input.host, "Account host");
@@ -105,7 +105,7 @@ function normalizeAccount(value: unknown, registryPath: string): InternetAccount
 		}
 		return {
 			...common,
-			backend,
+			provider,
 			configDir:
 				input.configDir === undefined
 					? defaultConfigDir(registryPath, common.id)
@@ -115,13 +115,13 @@ function normalizeAccount(value: unknown, registryPath: string): InternetAccount
 			conversationMode: normalizeConversationMode(input.conversationMode),
 		};
 	}
-	if (backend === "anthropic" || backend === "google") {
-		assertKnownKeys(input, ["id", "backend", "displayName", "enabled", "apiKeyEnv"], `Account ${common.id}`);
+	if (provider === "anthropic" || provider === "google") {
+		assertKnownKeys(input, ["id", "provider", "displayName", "enabled", "apiKeyEnv"], `Account ${common.id}`);
 		const apiKeyEnv = requiredString(input.apiKeyEnv, "Account apiKeyEnv");
 		if (!environmentNamePattern.test(apiKeyEnv)) throw configError(`Invalid API-key environment name: ${apiKeyEnv}`);
-		return { ...common, backend, apiKeyEnv };
+		return { ...common, provider, apiKeyEnv };
 	}
-	throw configError(`Unsupported internet backend: ${backend}`);
+	throw configError(`Unsupported internet provider: ${provider}`);
 }
 
 function nextDaemonPort(accounts: InternetAccount[]): number {
@@ -179,16 +179,16 @@ export class AccountRegistry {
 		}
 	}
 
-	async listBackend<TBackend extends InternetBackendId>(
-		backend: TBackend,
-	): Promise<Extract<InternetAccount, { backend: TBackend }>[]> {
+	async listProvider<TProvider extends InternetProviderId>(
+		provider: TProvider,
+	): Promise<Extract<InternetAccount, { provider: TProvider }>[]> {
 		return (await this.list()).filter(
-			(account): account is Extract<InternetAccount, { backend: TBackend }> => account.backend === backend,
+			(account): account is Extract<InternetAccount, { provider: TProvider }> => account.provider === provider,
 		);
 	}
 
 	async getOpenAi(id?: string): Promise<OpenAiInternetAccount> {
-		const accounts = await this.listBackend("openai");
+		const accounts = await this.listProvider("openai");
 		const account = id
 			? accounts.find((candidate) => candidate.id === id)
 			: accounts.find((candidate) => candidate.enabled);
@@ -201,7 +201,7 @@ export class AccountRegistry {
 	async add(input: InternetAccountInput): Promise<InternetAccount> {
 		const accounts = await this.list();
 		const normalizedInput =
-			input.backend === "openai" && input.port === undefined ? { ...input, port: nextDaemonPort(accounts) } : input;
+			input.provider === "openai" && input.port === undefined ? { ...input, port: nextDaemonPort(accounts) } : input;
 		const account = normalizeAccount(normalizedInput, this.path);
 		if (accounts.some((candidate) => candidate.id === account.id))
 			throw configError(`Account already exists: ${account.id}`);

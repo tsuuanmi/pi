@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { InternetError } from "#internet/core/errors";
-import { chatGptWebBackendModelId } from "#internet/providers/openai/turn/model";
+import { chatGptWebProviderModelId } from "#internet/providers/openai/turn/model";
 
 const TURN_METADATA_KEY = "x-codex-turn-metadata";
 
@@ -16,8 +16,8 @@ export function rejectedChatGptWebRequest(): Record<string, unknown> {
 
 export function adaptChatGptWebRequest(payload: unknown, context: ChatGptWebRequestContext): unknown {
 	if (!isRecord(payload) || !Array.isArray(payload.input)) throw invalidRequest("request payload");
-	const backendModel = typeof payload.model === "string" ? chatGptWebBackendModelId(payload.model) : undefined;
-	if (!backendModel) throw invalidRequest("model");
+	const providerModel = typeof payload.model === "string" ? chatGptWebProviderModelId(payload.model) : undefined;
+	if (!providerModel) throw invalidRequest("model");
 	if (!context.sessionId || !context.turnId) throw invalidRequest("session turn identity");
 	if (!context.cwd.startsWith("/") || /[<>&\u0000-\u001f]/.test(context.cwd))
 		throw invalidRequest("absolute XML-safe working directory");
@@ -39,7 +39,7 @@ export function adaptChatGptWebRequest(payload: unknown, context: ChatGptWebRequ
 
 	return {
 		...payload,
-		model: backendModel,
+		model: providerModel,
 		input,
 		prompt_cache_key: threadId,
 		client_metadata: {

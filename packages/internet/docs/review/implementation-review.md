@@ -31,7 +31,7 @@ Schema-2 account metadata is a discriminated union:
 - `anthropic` owns an Anthropic API-key environment reference.
 - `google` owns a Gemini API-key environment reference.
 
-The generic backend registry is the only provider composition path. Stable account-derived provider
+The generic provider registry is the only provider composition path. Stable account-derived provider
 names are shared with council model allowlisting. API secret values never enter account files or tool
 output.
 
@@ -47,7 +47,7 @@ Concurrency, task starts, retries, wall-clock duration, provider scope, and canc
 
 ## Removed or superseded surfaces
 
-- Account registry schema 1 and optional/default backend creation semantics.
+- Account registry schema 1 and optional/default provider creation semantics.
 - Direct package-root `registerOpenAiProviders` export; generic provider registration is authoritative.
 - Daemon operations on the undifferentiated account union.
 - Linux-only runtime rejection.
@@ -59,7 +59,7 @@ or unowned browser automation paths remain.
 ## Verification boundary
 
 Automated verification covers package build/pack, runtime resolution, login-state filtering, wire
-parsing, backend configs, account lifecycle, councils, daemon behavior, public web safety, root
+parsing, provider configs, account lifecycle, councils, daemon behavior, public web safety, root
 typecheck, and formatting/lint. Credential-dependent browser/API/Full-mode smoke tests require a
 release environment with operator-owned accounts and are not replaced by mocks or fallback
 providers.

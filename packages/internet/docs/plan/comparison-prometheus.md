@@ -3,7 +3,7 @@
 This document compares the `internet` Pi package (this repo) with
 [Prometheus](https://github.com/.../prometheus) (`/home/superman/workspaces/prometheus`), which
 pursues the same core idea: **use browser-based AI products (ChatGPT, Claude, Gemini, ...) as model
-backends without API keys.** The two projects overlap heavily in intent but differ sharply in
+providers without API keys.** The two projects overlap heavily in intent but differ sharply in
 architecture, scope, and integration surface.
 
 > **Source:** both repos are on disk for inspection:
@@ -20,14 +20,14 @@ Status: **analysis.** No code changes.
 
 ## 1. The shared idea
 
-Both projects answer the same question: *"How do I use ChatGPT/Claude/Gemini as a model backend
+Both projects answer the same question: *"How do I use ChatGPT/Claude/Gemini as a model provider
 without paying for an API key?"* The answer in both cases is: **drive a real browser session against
 the product's web UI and capture the model's streaming response.**
 
 | | Prometheus | internet |
 |---|---|---|
 | Core mechanism | Electron app drives browser sessions; intercepts `fetch`/SSE to capture model output | codex-chatgpt-web daemon drives Chrome; parses the rendered DOM to capture model output |
-| Model backends | ChatGPT, Claude, Gemini, GoogleAI, DeepSeek, Grok, Z.ai, Copilot, Meta AI, Qwen, Perplexity (11) | MVP: ChatGPT Web only. Future: Claude, Gemini (via API) |
+| Model providers | ChatGPT, Claude, Gemini, GoogleAI, DeepSeek, Grok, Z.ai, Copilot, Meta AI, Qwen, Perplexity (11) | MVP: ChatGPT Web only. Future: Claude, Gemini (via API) |
 | Integration surface | MCP server (stdio) + REST API (`/v1/chat/completions`) | Pi package (extension) — registers as a Pi provider + tools |
 | Host | Standalone Electron desktop app | Pi agent (extension) |
 
@@ -63,14 +63,14 @@ This is the **biggest architectural difference**.
   partition. Adding a provider = adding a catalog entry + a sender script
   (`electron/provider-senders/<provider>.cjs`).
 
-- **internet** has a **backend seam** (`src/providers/`) with per-backend folders. MVP ships
+- **internet** has a **provider seam** (`src/providers/`) with per-provider folders. MVP ships
   `openai/` (ChatGPT Web via the daemon); `anthropic/` and `google/` are stubs. The key difference:
-  internet's future Claude/Gemini backends are **API-based (browser-less)**, not browser-driven.
+  internet's future Claude/Gemini providers are **API-based (browser-less)**, not browser-driven.
 
 | | Prometheus | internet |
 |---|---|---|
-| Provider count | 11 (browser-driven) | 1 MVP (browser) + future API backends |
-| Adding a provider | Catalog entry + sender script + interceptor | Backend folder + `register(pi, accounts)` |
+| Provider count | 11 (browser-driven) | 1 MVP (browser) + future API providers |
+| Adding a provider | Catalog entry + sender script + interceptor | Provider folder + `register(pi, accounts)` |
 | Claude/Gemini | Browser-driven (claude.ai, gemini.google.com) | Future: API-based (browser-less) |
 | Browser required | Always (all providers) | Only for ChatGPT Web model routing |
 
@@ -99,14 +99,14 @@ This is the **biggest architectural difference**.
   browser-less path.
 
 - **internet** is **browser-optional**: only the ChatGPT Web model-routing path needs the daemon's
-  Chrome. `internet_search` / `internet_fetch` and the future Claude/Gemini API backends are
+  Chrome. `internet_search` / `internet_fetch` and the future Claude/Gemini API providers are
   browser-less.
 
 | | Prometheus | internet |
 |---|---|---|
 | Browser required for model routing | ✅ (all) | ✅ (ChatGPT Web only) |
 | Browser required for search/fetch | ✅ (browser-based) | ❌ (API passthrough) |
-| Browser-less future backends | ❌ | ✅ (Claude/Gemini API) |
+| Browser-less future providers | ❌ | ✅ (Claude/Gemini API) |
 
 ---
 
@@ -119,7 +119,7 @@ This is the **biggest architectural difference**.
 | Use DeepSeek / Grok / Z.ai / Copilot / Meta AI / Qwen / Perplexity | ✅ | ❌ (not planned) |
 | Web search | ✅ (`deep_search`, `pro_search`, `youtube_search`, ...) | ✅ (`internet_search`, keyless RSS transport) |
 | Fetch a URL | ✅ (`summarize_url`) | ✅ (`internet_fetch`, bounded public HTTP/HTTPS) |
-| Multi-provider routing | ✅ (`smart_query`, `ask_all_ais`, `compare_ais`) | ❌ (single backend MVP) |
+| Multi-provider routing | ✅ (`smart_query`, `ask_all_ais`, `compare_ais`) | ❌ (single provider MVP) |
 | Multi-account per provider | ✅ (browser partitions) | ✅ (isolated daemon instances) |
 | Compaction / context summarization | ✅ (`convo_history_summarize`) | ✅ (`internet_compact`) |
 | Failure diagnostics | App/provider health surfaces | ✅ (`internet_doctor`) |
@@ -136,12 +136,12 @@ This is the **biggest architectural difference**.
 ## 4. What internet can learn from Prometheus
 
 1. **Multi-provider is the killer feature.** Prometheus's 11-provider catalog is its main draw.
-   internet's backend seam already anticipates this; the roadmap should prioritize Claude/Gemini
+   internet's provider seam already anticipates this; the roadmap should prioritize Claude/Gemini
    (API-based) to match the breadth without the browser cost.
 
 2. **Model aliases + smart routing** (`ask_all_ais`, `compare_ais`, `smart_query`) are compelling.
    internet could add a `internet_ask_all` / `internet_compare` that fans a query across enabled
-   backends and returns a comparison.
+   providers and returns a comparison.
 
 3. **Skills are a proven pattern.** Prometheus ships 8 markdown skills. internet could adopt a
    similar skill set later (e.g. `internet-research`, `internet-summarize`) once the MVP tool
@@ -154,13 +154,13 @@ This is the **biggest architectural difference**.
 ## 5. What Prometheus can learn from internet
 
 1. **Pi integration.** Prometheus is a standalone app; registering as a Pi provider would let it
-   serve as a model backend inside Pi, not just an MCP/REST service.
+   serve as a model provider inside Pi, not just an MCP/REST service.
 
 2. **Browser-less search/fetch.** internet uses a keyless RSS search transport plus a bounded,
    SSRF-aware public-page fetcher. It intentionally does not use `/v1/alpha/search`, which forwards
    a caller-owned native Codex bearer token upstream.
 
-3. **Backend seam.** Prometheus's provider catalog is monolithic; a per-backend folder seam (like
+3. **Provider seam.** Prometheus's provider catalog is monolithic; a per-provider folder seam (like
    internet's `src/providers/`) would make adding API-based providers cleaner.
 
 ---
@@ -170,6 +170,6 @@ This is the **biggest architectural difference**.
 Prometheus and internet are **siblings** — same core idea, different execution. Prometheus is a
 **broad, browser-only, standalone MCP/REST service** (11 providers, network interception). internet
 is a **narrow, browser-optional, Pi-native package** (ChatGPT Web MVP, DOM parsing, future API
-backends). The two are complementary: internet could adopt Prometheus's multi-provider breadth and
+providers). The two are complementary: internet could adopt Prometheus's multi-provider breadth and
 smart-routing ideas, while Prometheus could adopt internet's Pi integration and browser-less
 search/fetch.

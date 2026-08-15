@@ -40,7 +40,7 @@ that provider. The full-mode `codex_*` local-tool bridge is approval-gated and a
 generic MCP/REST service.
 
 ### Direction
-Keep provider registration as the centerpiece. Any future backend (Claude/Gemini) must plug into the
+Keep provider registration as the centerpiece. Any future provider (Claude/Gemini) must plug into the
 same `src/providers/` seam and register as a Pi provider, never as a standalone MCP/REST surface.
 
 > See [plan/runtime-architecture-brainstorm.md](../plan/runtime-architecture-brainstorm.md) for the
@@ -62,7 +62,7 @@ what makes it unique.
 | Browser runtime / Responses surface | Electron + Playwright Council | Bun daemon, `/v1/responses`, isolated login, replay, compaction, broker, MCP | Electron + Playwright, 11 providers | **codex-chatgpt-web daemon** (vendored) |
 | Model-output capture | DOM (Council turns) | DOM parsing | Network interception (SSE/JSON) | **Hybrid** (interception primary, DOM fallback) — future |
 | Multi-agent Council | ✅ core feature | ❌ | ❌ | **Future** (see §4) |
-| Multi-provider breadth | ❌ | single ChatGPT path | 11-provider catalog | **Backend seam** — future API backends |
+| Multi-provider breadth | ❌ | single ChatGPT path | 11-provider catalog | **Provider seam** — future API providers |
 | Web search / fetch | ❌ | removed in `9f74486` | browser-based | **Keyless RSS + bounded SSRF-safe fetch** (unique) |
 | `@file` / local tools | Council MCP | Full-mode broker/MCP | inline `@file` expansion | **Bounded workspace-local `@file`** (from Prometheus) |
 | Integration surface | Electron app | HTTP daemon | MCP + REST | **Pi provider + tools** (unique) |
@@ -71,7 +71,7 @@ what makes it unique.
 ### What makes internet unique
 1. **Pi-native provider registration** — neither codexweb nor Prometheus registers as a Pi provider.
 2. **Browser-optional** — only ChatGPT Web model routing needs the daemon's Chrome. Search/fetch and
-   future API backends are browser-less.
+   future API providers are browser-less.
 3. **Self-contained** — vendors the daemon and embeds Bun; no other repo at runtime.
 4. **Keyless, SSRF-safe web access** — `internet_search`/`internet_fetch` are not browser-driven and
    never forward daemon credentials.
@@ -80,8 +80,8 @@ what makes it unique.
 ### Direction
 The "best of both" table in `architecture.md` and `plan/best-of-both.md` is the source of truth for
 what to take. The two highest-value future ports are **hybrid capture** (from Prometheus) and the
-**backend seam** (multi-provider). Do not duplicate Prometheus's generic MCP runtime or its
-browser-driven Claude/Gemini path; prefer API-based backends.
+**provider seam** (multi-provider). Do not duplicate Prometheus's generic MCP runtime or its
+browser-driven Claude/Gemini path; prefer API-based providers.
 
 ---
 
@@ -259,7 +259,7 @@ Since then the following have been implemented and are now production scope:
 ### Remaining roadmap (from `plan/roi-roadmap.md`)
 - **R5 — Hybrid capture** (interception primary, DOM fallback): top medium-effort investment to
   harden the core path against ChatGPT UI churn.
-- **R6 — Multi-backend seam + Fusion** (`internet_ask_all`): later, larger bet.
+- **R6 — Multi-provider seam + Fusion** (`internet_ask_all`): later, larger bet.
 - **R7 — Full-mode tool bridge** (`codex_tool_call`/`exec`/`apply_patch`): later, approval-gated.
 
 ---

@@ -14,7 +14,7 @@ import { enableFullHarness } from "#internet/daemon/harness";
 function account(configDir: string): OpenAiInternetAccount {
 	return {
 		id: "default",
-		backend: "openai",
+		provider: "openai",
 		displayName: "ChatGPT Web",
 		configDir,
 		host: "127.0.0.1",

@@ -26,7 +26,7 @@ bridging, and safe public web access.
 
 ### Providers
 
-- Shared [`backend`](providers/backend.md), [`names`](providers/names.md), and
+- Shared [`provider`](providers/provider.md), [`names`](providers/names.md), and
   [`registry`](providers/registry.md)
 - Anthropic [`index`](providers/anthropic/index.md), [`models`](providers/anthropic/models.md), and
   [`provider`](providers/anthropic/provider.md)
@@ -62,7 +62,7 @@ bridging, and safe public web access.
 - [MCP/tunnel broker analysis](plan/mcp-tunnel-broker.md)
 - [Multi-account sign-in analysis](plan/multi-account-signin.md)
 - [Council design](plan/council-via-orchestrator.md)
-- [Multi-account/backend design](plan/multi-account-and-backends.md)
+- [Multi-account/provider design](plan/multi-account-and-providers.md)
 - [Architecture review](review/architecture-review.md)
 - [Implementation review](review/implementation-review.md)
 - [Durable canary failure analysis](review/durable-canary-failure.md)

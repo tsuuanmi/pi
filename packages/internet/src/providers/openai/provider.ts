@@ -26,7 +26,7 @@ export async function registerOpenAiProviders(
 	accounts: InternetAccount[],
 ): Promise<void> {
 	for (const account of accounts) {
-		if (!account.enabled || account.backend !== "openai") continue;
+		if (!account.enabled || account.provider !== "openai") continue;
 		pi.registerProvider(providerName(account), await createOpenAiProviderConfig(account));
 	}
 }

@@ -12,7 +12,7 @@ async function account(): Promise<OpenAiInternetAccount> {
 	const configDir = await mkdtemp(join(tmpdir(), "pi-internet-manager-"));
 	return {
 		id: "default",
-		backend: "openai",
+		provider: "openai",
 		displayName: "ChatGPT Web",
 		configDir,
 		host: "127.0.0.1",

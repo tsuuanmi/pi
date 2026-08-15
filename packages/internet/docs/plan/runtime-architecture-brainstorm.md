@@ -7,7 +7,7 @@ brainstorm, not a settled spec: it lays out the options, the tradeoffs, and a re
 > Status: **decided + direction.** The runtime decision is **use the current runtime**: vendor the
 > daemon and embed Bun as an isolated child process. This document states that decision, gives the
 > canonical reason, and covers the target architecture as the package grows (macOS, hybrid capture,
-> backends, Council).
+> providers, Council).
 
 ---
 
@@ -104,7 +104,7 @@ the daemon over loopback HTTP and the broker socket.
 
 The package must stay a **thin client** over the daemon. The daemon owns: Chrome, login, session,
 DOM parsing, replay, compaction, SSE, concurrency, and the turn broker. The package owns: Pi provider
-registration, tools, hooks, lifecycle, and cross-backend orchestration. This keeps browser logic in
+registration, tools, hooks, lifecycle, and cross-provider orchestration. This keeps browser logic in
 one place and the package clean.
 
 ### 3.2 Platform portability (macOS is required, not optional)
@@ -175,7 +175,7 @@ Pi process (Node)
 ├── daemon HTTP tools + HUD
 ├── settings + public web search/fetch
 ├── account-scoped Full-harness config
-└── backend adapter seam (openai now; anthropic/google future)
+└── provider adapter seam (openai now; anthropic/google future)
 
 Bundled child runtime (embedded Bun, per platform)
 └── codex-chatgpt-web daemon
@@ -191,7 +191,7 @@ Bundled child runtime (embedded Bun, per platform)
 3. **Explicit, isolated runtime boundary** — the daemon is a separate child process with its own
    failure, credential, account, and version isolation; the package is a thin client over it.
 4. **Per-account isolation** — one daemon per account, one provider per account (Strategy A).
-5. **Backend seam** — future Claude/Gemini plug in behind `src/providers/`, not as new runtimes.
+5. **Provider seam** — future Claude/Gemini plug in behind `src/providers/`, not as new runtimes.
 6. **Platform artifacts** — build per host (linux-x64 now, darwin next); no cross-platform runtime
    hacks.
 7. **Use the current runtime** — vendor + embed Bun as a child process over system Chrome; no

@@ -4,7 +4,7 @@ describe("internet core types", () => {
 	it("represent a loopback account and supported control action", () => {
 		const account: InternetAccount = {
 			id: "default",
-			backend: "openai",
+			provider: "openai",
 			displayName: "ChatGPT Web",
 			configDir: "/tmp/chatgpt-web",
 			host: "127.0.0.1",
@@ -13,7 +13,7 @@ describe("internet core types", () => {
 			conversationMode: "temporary",
 		};
 		const action: InternetControlAction = "drain";
-		expect(account.backend).toBe("openai");
+		expect(account.provider).toBe("openai");
 		expect(action).toBe("drain");
 	});
 });

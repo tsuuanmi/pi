@@ -2,7 +2,7 @@ import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 import { AccountRegistry } from "#internet/accounts/registry";
 import { DaemonClient } from "#internet/providers/openai/daemon/client";
-import { chatGptWebBackendModelId, isLunaModel } from "#internet/providers/openai/turn/model";
+import { chatGptWebProviderModelId, isLunaModel } from "#internet/providers/openai/turn/model";
 
 export function registerCompactTools(host: Pick<ExtensionAPI, "registerTool">): void {
 	host.registerTool({
@@ -19,7 +19,7 @@ export function registerCompactTools(host: Pick<ExtensionAPI, "registerTool">): 
 			if (isLunaModel(params.model)) {
 				throw new Error("Separate compaction is disabled for Luna because it uses rolling checkpoints.");
 			}
-			const model = chatGptWebBackendModelId(params.model);
+			const model = chatGptWebProviderModelId(params.model);
 			if (!model) throw new Error(`Unknown ChatGPT Web model: ${params.model}`);
 			const account = await new AccountRegistry().getOpenAi(params.account);
 			const client = await DaemonClient.forAccount(account);

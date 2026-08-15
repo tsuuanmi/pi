@@ -34,10 +34,10 @@ account at `127.0.0.1:17841`. Account metadata uses schema version 2.
 
 Use `internet_account_add` with:
 
-- `backend: "openai"` for ChatGPT Web. `configDir`, `port`, and temporary/durable conversation mode
+- `provider: "openai"` for ChatGPT Web. `configDir`, `port`, and temporary/durable conversation mode
   are optional; omitted ports are allocated from `17841`.
-- `backend: "anthropic"` and `apiKeyEnv: "ANTHROPIC_API_KEY"` for Anthropic.
-- `backend: "google"` and `apiKeyEnv: "GEMINI_API_KEY"` for Gemini.
+- `provider: "anthropic"` and `apiKeyEnv: "ANTHROPIC_API_KEY"` for Anthropic.
+- `provider: "google"` and `apiKeyEnv: "GEMINI_API_KEY"` for Gemini.
 
 Set those environment variables before loading Pi. Provider names are stable:
 

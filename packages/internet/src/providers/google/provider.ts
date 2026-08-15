@@ -24,7 +24,7 @@ export async function registerGoogleProviders(
 	accounts: InternetAccount[],
 ): Promise<void> {
 	for (const account of accounts) {
-		if (!account.enabled || account.backend !== "google") continue;
+		if (!account.enabled || account.provider !== "google") continue;
 		host.registerProvider(googleProviderName(account), createGoogleProviderConfig(account));
 	}
 }

@@ -4,7 +4,7 @@ Internet uses public Pi extension APIs only.
 
 ## Providers
 
-`registerInternetProviders()` composes three backends:
+`registerInternetProviders()` composes three providers:
 
 - ChatGPT Web: Pi's built-in `openai-responses` transport targets the per-account loopback daemon.
 - Anthropic: `anthropic-messages` targets the native Anthropic API.
@@ -30,7 +30,7 @@ so it uses the current Pi auth/header resolution path and abort signal.
 
 ## Public API
 
-`src/index.ts` exports normalized account/runtime/client types, backend model catalogs and generic
+`src/index.ts` exports normalized account/runtime/client types, provider model catalogs and generic
 provider registration, `CouncilService`, hooks/tools registration, daemon lifecycle helpers, and
-`VERSION`. Backend-specific registration functions remain internal; the generic backend registry is
+`VERSION`. Provider-specific registration functions remain internal; the generic provider registry is
 the authoritative composition surface.
