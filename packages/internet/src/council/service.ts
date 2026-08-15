@@ -2,8 +2,8 @@ import type { AgentSessionServices } from "@tsuuanmi/pi";
 import { Agent } from "@tsuuanmi/pi-agent";
 import { type Api, type Model, stream as streamModel } from "@tsuuanmi/pi-ai";
 import { Orchestrator, type TaskInput, Team } from "@tsuuanmi/pi-orchestrator";
-import { internetProviderName } from "#internet/backends/registry";
 import type { InternetAccount } from "#internet/core/types";
+import { internetProviderName } from "#internet/providers/registry";
 
 export type CouncilPreset = "quick" | "balanced" | "deep";
 

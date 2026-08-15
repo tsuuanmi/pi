@@ -4,7 +4,7 @@ Mirrors `src/daemon/config.ts`.
 
 Package-owned daemon/browser configuration, login markers, capabilities, and secure atomic writes.
 This is the config the package writes for the bundled daemon; it is distinct from the daemon's own
-`config.json` read by [`backends/openai/daemon/auth.md`](../backends/openai/daemon/auth.md).
+`config.json` read by [`providers/openai/daemon/auth.md`](../providers/openai/daemon/auth.md).
 
 ## Constants
 

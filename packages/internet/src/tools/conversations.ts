@@ -3,8 +3,8 @@ import { join } from "node:path";
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 import { AccountRegistry } from "#internet/accounts/registry";
-import { DaemonClient } from "#internet/backends/openai/daemon/client";
 import type { OwnedDaemonManager } from "#internet/daemon/manager";
+import { DaemonClient } from "#internet/providers/openai/daemon/client";
 
 interface ConversationToolDetails {
 	account: string;

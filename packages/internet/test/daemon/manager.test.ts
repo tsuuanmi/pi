@@ -3,10 +3,10 @@ import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AccountRegistry } from "#internet/accounts/registry";
-import { DaemonClient } from "#internet/backends/openai/daemon/client";
 import type { OpenAiInternetAccount } from "#internet/core/types";
 import { daemonConfigFingerprint, daemonLoginMarkerPath, ensureOwnedDaemonConfig } from "#internet/daemon/config";
 import { OwnedDaemonManager } from "#internet/daemon/manager";
+import { DaemonClient } from "#internet/providers/openai/daemon/client";
 
 async function account(): Promise<OpenAiInternetAccount> {
 	const configDir = await mkdtemp(join(tmpdir(), "pi-internet-manager-"));

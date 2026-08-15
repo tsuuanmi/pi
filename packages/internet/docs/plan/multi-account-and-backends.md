@@ -162,10 +162,10 @@ the account is baked into the provider's `baseUrl` at registration time.
 
 The MVP registers a `chatgpt-web` provider directly. To keep Claude and Gemini future-proof without
 shipping them, introduce a thin **backend adapter** abstraction that the provider registration uses.
-Each backend lives in its own folder under `src/backends/`:
+Each backend lives in its own folder under `src/providers/`:
 
 ```ts
-// src/backends/backend.ts
+// src/providers/backend.ts
 export interface InternetBackend {
   readonly providerName: string;   // "chatgpt-web" | "claude" | "gemini"
   readonly api: Api;               // "openai-responses" | "anthropic-messages" | "openai-completions"
@@ -176,9 +176,9 @@ export interface InternetBackend {
 Each backend implements `register`, which calls `pi.registerProvider(...)` for each enabled account.
 For MVP:
 
-- **`src/backends/openai/`** — `api: "openai-responses"`, `baseUrl` per account (daemon port), `authHeader: false`.
-- **Future `src/backends/anthropic/`** — `api: "anthropic-messages"`, `apiKey`/`oauth` from account config, `baseUrl` to Anthropic or a local proxy.
-- **Future `src/backends/google/`** — `api: "openai-completions"` (Gemini's OpenAI-compat endpoint) or a dedicated stream, `apiKey`/`oauth`.
+- **`src/providers/openai/`** — `api: "openai-responses"`, `baseUrl` per account (daemon port), `authHeader: false`.
+- **Future `src/providers/anthropic/`** — `api: "anthropic-messages"`, `apiKey`/`oauth` from account config, `baseUrl` to Anthropic or a local proxy.
+- **Future `src/providers/google/`** — `api: "openai-completions"` (Gemini's OpenAI-compat endpoint) or a dedicated stream, `apiKey`/`oauth`.
 
 This seam is the single point where account → provider mapping happens. It does **not** require any
 Pi ecosystem change — it uses the same `registerProvider` the MVP already uses.
@@ -187,7 +187,7 @@ Pi ecosystem change — it uses the same `registerProvider` the MVP already uses
 
 - **Accounts are data** (the registry), not code. Adding an account = adding a row + registering a
   provider.
-- **Backends are adapters** behind one interface. MVP ships `src/backends/openai/`; Claude and
+- **Backends are adapters** behind one interface. MVP ships `src/providers/openai/`; Claude and
   Gemini are additive folders.
 - **Pi is untouched.** All of this uses `registerProvider` (and later `oauth`) exactly as Pi
   exposes them today.

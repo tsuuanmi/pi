@@ -41,7 +41,7 @@ generic MCP/REST service.
 
 ### Direction
 Keep provider registration as the centerpiece. Any future backend (Claude/Gemini) must plug into the
-same `src/backends/` seam and register as a Pi provider, never as a standalone MCP/REST surface.
+same `src/providers/` seam and register as a Pi provider, never as a standalone MCP/REST surface.
 
 > See [plan/runtime-architecture-brainstorm.md](../plan/runtime-architecture-brainstorm.md) for the
 > runtime design, [plan/mcp-tunnel-broker.md](../plan/mcp-tunnel-broker.md) for the MCP/tunnel/broker

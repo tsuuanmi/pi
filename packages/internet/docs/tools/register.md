@@ -8,4 +8,4 @@ bounded councils, Full harness, settings, and public web search/fetch.
 
 Only tools that need a stateful service receive it: daemon tools receive `OwnedDaemonManager`,
 settings receives `InternetSettingsService`, and `internet_council` receives `CouncilService`.
-Backend provider registration remains outside this module in `backends/registry.ts`.
+Backend provider registration remains outside this module in `providers/registry.ts`.

@@ -2,7 +2,6 @@ import type { ChildProcess } from "node:child_process";
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import type { AccountRegistry } from "#internet/accounts/registry";
-import { DaemonClient } from "#internet/backends/openai/daemon/client";
 import type { OpenAiInternetAccount } from "#internet/core/types";
 import {
 	daemonConfigFingerprint,
@@ -13,6 +12,7 @@ import {
 import { waitForDaemonHealth } from "#internet/daemon/health";
 import type { DaemonRuntime } from "#internet/daemon/runtime";
 import { resolveDaemonRuntime } from "#internet/daemon/runtime";
+import { DaemonClient } from "#internet/providers/openai/daemon/client";
 
 export type DaemonProcessState = "stopped" | "running" | "login-required";
 

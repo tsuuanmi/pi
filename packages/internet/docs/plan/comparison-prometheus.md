@@ -63,7 +63,7 @@ This is the **biggest architectural difference**.
   partition. Adding a provider = adding a catalog entry + a sender script
   (`electron/provider-senders/<provider>.cjs`).
 
-- **internet** has a **backend seam** (`src/backends/`) with per-backend folders. MVP ships
+- **internet** has a **backend seam** (`src/providers/`) with per-backend folders. MVP ships
   `openai/` (ChatGPT Web via the daemon); `anthropic/` and `google/` are stubs. The key difference:
   internet's future Claude/Gemini backends are **API-based (browser-less)**, not browser-driven.
 
@@ -161,7 +161,7 @@ This is the **biggest architectural difference**.
    a caller-owned native Codex bearer token upstream.
 
 3. **Backend seam.** Prometheus's provider catalog is monolithic; a per-backend folder seam (like
-   internet's `src/backends/`) would make adding API-based providers cleaner.
+   internet's `src/providers/`) would make adding API-based providers cleaner.
 
 ---
 

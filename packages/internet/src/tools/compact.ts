@@ -1,8 +1,8 @@
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 import { Type } from "typebox";
 import { AccountRegistry } from "#internet/accounts/registry";
-import { DaemonClient } from "#internet/backends/openai/daemon/client";
-import { chatGptWebBackendModelId, isLunaModel } from "#internet/backends/openai/turn/model";
+import { DaemonClient } from "#internet/providers/openai/daemon/client";
+import { chatGptWebBackendModelId, isLunaModel } from "#internet/providers/openai/turn/model";
 
 export function registerCompactTools(host: Pick<ExtensionAPI, "registerTool">): void {
 	host.registerTool({

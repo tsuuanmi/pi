@@ -48,7 +48,7 @@ For a matching provider:
 
 Any thrown error is caught: notify (when UI exists) and return `rejectedChatGptWebRequest()`, so the
 original unadapted payload is never forwarded. See
-[`backends/openai/turn/request.md`](backends/openai/turn/request.md) for what the rejected request
+[`providers/openai/turn/request.md`](providers/openai/turn/request.md) for what the rejected request
 is.
 
 ### `turn_end` event — HUD refresh

@@ -36,10 +36,10 @@ feature is valuable.
 Responses payload lacked the native Codex turn/environment fields required for browser-session
 replay.
 
-**Implemented design.** `backends/openai/turn/request.ts` adds the daemon's upstream-tested
+**Implemented design.** `providers/openai/turn/request.ts` adds the daemon's upstream-tested
 canonical metadata after Pi conversion: stable session/thread identity, active-user-entry turn
 identity, matching prompt-cache key, deterministic server-owned item IDs, and a read-only
-cwd-bound environment. See [backends/openai/turn/request](../backends/openai/turn/request.md).
+cwd-bound environment. See [providers/openai/turn/request](../providers/openai/turn/request.md).
 
 **Acceptance:** package tests and direct upstream/vendored parser checks pass. Authenticated live
 smokes pass for light/high routes, and two-turn continuity preserves browser-session replay.
@@ -48,7 +48,7 @@ smokes pass for light/high routes, and two-turn continuity preserves browser-ses
 
 ### R1. Fix model metadata to the daemon's single-immutable-effort routes — **Implemented**
 
-**Problem.** The original `src/backends/openai/models.ts` named the high and Luna routes "GPT-5.6
+**Problem.** The original `src/providers/openai/models.ts` named the high and Luna routes "GPT-5.6
 Sol" and "GPT-5.6 Luna" with multi-level thinking maps. The vendored daemon catalog
 (`vendor/.../src/chatgpt-web-models.ts`) defines **one immutable effort per route**:
 `chatgpt-web/high` → `codexEffort/adapterEffort: "high"`, `chatgpt-web/luna` → low effort, plus an
@@ -192,7 +192,7 @@ execution/malformed-report failures raise a typed, non-retryable error.
 contents. The daemon runs in `browser-only` mode, so the browser session has no local tool access.
 
 **Evidence.** [`daemon/harness`](../daemon/harness.md) and
-[`backends/openai/turn/files`](../backends/openai/turn/files.md); daemon `src/config.ts` (`RuntimeMode`,
+[`providers/openai/turn/files`](../providers/openai/turn/files.md); daemon `src/config.ts` (`RuntimeMode`,
 `localToolsEnabled`), `src/setup.ts` (`connectorSetupRequired`), `src/adapters/chatgpt-web/turn-broker.ts`
 and `mcp-server.ts` (Full-mode local tools); Prometheus `src/mcp-server.js` (`readFileContents` inline
 `@file` expansion).

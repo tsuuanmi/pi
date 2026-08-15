@@ -52,7 +52,7 @@ No second tool bridge or automation controller was introduced.
   environment references rather than secrets, and supports list/add/remove/enable/disable plus
   ChatGPT conversation mode.
 - Daemon modules accept only `OpenAiInternetAccount`, making the process boundary explicit.
-- `backends/registry.ts` is the sole provider composition path.
+- `providers/registry.ts` is the sole provider composition path.
 - Anthropic uses Pi's native `anthropic-messages` transport and package-aligned model metadata.
 - Gemini uses Google's documented OpenAI-compatible endpoint with explicit Flash/Pro metadata.
 

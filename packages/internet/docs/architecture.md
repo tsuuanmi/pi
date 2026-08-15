@@ -9,7 +9,7 @@ boundary, API backend composition, public-web safety, and bounded council orches
 ```text
 Pi extension host
   ├─ AccountRegistry (schema 2)
-  ├─ backend registry
+  ├─ provider registry
   │    ├─ openai -> per-account loopback Responses daemon
   │    ├─ anthropic -> native anthropic-messages provider
   │    └─ google -> Google OpenAI-compatible provider
@@ -34,12 +34,12 @@ the explicit compatibility fallback when no valid authenticated conversation pay
 The daemon remains authoritative for replay, durable conversation IDs, rolling checkpoints, browser
 health, and Full-mode broker operation.
 
-## API backends
+## API providers
 
 Anthropic and Google providers are pure registration adapters. They do not own processes or browser
 state. Registry entries contain an `apiKeyEnv` reference, and Pi resolves `$ENV_VAR` credentials at
 request time. Backend names, endpoint mappings, model metadata, and account provider naming are
-centralized under `src/backends/`.
+centralized under `src/providers/`.
 
 ## Council
 

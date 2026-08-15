@@ -1,11 +1,11 @@
 import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi/extensions";
 import { refreshHudUi } from "@tsuuanmi/pi-tui";
-import { providerName } from "#internet/backends/openai/provider";
-import { expandLocalFileReferences } from "#internet/backends/openai/turn/files";
-import { adaptChatGptWebRequest, rejectedChatGptWebRequest } from "#internet/backends/openai/turn/request";
 import type { OpenAiInternetAccount } from "#internet/core/types";
 import { daemonLoginExists } from "#internet/daemon/config";
 import type { OwnedDaemonManager } from "#internet/daemon/manager";
+import { providerName } from "#internet/providers/openai/provider";
+import { expandLocalFileReferences } from "#internet/providers/openai/turn/files";
+import { adaptChatGptWebRequest, rejectedChatGptWebRequest } from "#internet/providers/openai/turn/request";
 import type { InternetSettingsService } from "#internet/settings";
 
 const BRIDGED_TOOLS = new Set(["codex_tool_call", "codex_exec", "codex_apply_patch"]);

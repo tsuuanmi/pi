@@ -136,7 +136,7 @@ validated strictly (ownership, permissions, shape) before connecting.
 The browser is owned by the **`openai` backend** (ChatGPT Web path), not the whole package:
 
 ```
-src/backends/openai/
+src/providers/openai/
 ├── daemon/          # HTTP client over the daemon (no browser here)
 └── turn/            # turn adapter (talks to the daemon)
 ```

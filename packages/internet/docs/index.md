@@ -24,21 +24,21 @@ bridging, and safe public web access.
 - [`core/types`](core/types.md)
 - [`core/errors`](core/errors.md)
 
-### Backends
+### Providers
 
-- Shared [`backend`](backends/backend.md), [`names`](backends/names.md), and
-  [`registry`](backends/registry.md)
-- Anthropic [`index`](backends/anthropic/index.md), [`models`](backends/anthropic/models.md), and
-  [`provider`](backends/anthropic/provider.md)
-- Google [`index`](backends/google/index.md), [`models`](backends/google/models.md), and
-  [`provider`](backends/google/provider.md)
-- ChatGPT Web [`index`](backends/openai/index.md), [`models`](backends/openai/models.md), and
-  [`provider`](backends/openai/provider.md)
-- ChatGPT daemon [`auth`](backends/openai/daemon/auth.md),
-  [`client`](backends/openai/daemon/client.md), [`routes`](backends/openai/daemon/routes.md), and
-  [`status`](backends/openai/daemon/status.md)
-- ChatGPT turn [`files`](backends/openai/turn/files.md), [`model`](backends/openai/turn/model.md), and
-  [`request`](backends/openai/turn/request.md)
+- Shared [`backend`](providers/backend.md), [`names`](providers/names.md), and
+  [`registry`](providers/registry.md)
+- Anthropic [`index`](providers/anthropic/index.md), [`models`](providers/anthropic/models.md), and
+  [`provider`](providers/anthropic/provider.md)
+- Google [`index`](providers/google/index.md), [`models`](providers/google/models.md), and
+  [`provider`](providers/google/provider.md)
+- ChatGPT Web [`index`](providers/openai/index.md), [`models`](providers/openai/models.md), and
+  [`provider`](providers/openai/provider.md)
+- ChatGPT daemon [`auth`](providers/openai/daemon/auth.md),
+  [`client`](providers/openai/daemon/client.md), [`routes`](providers/openai/daemon/routes.md), and
+  [`status`](providers/openai/daemon/status.md)
+- ChatGPT turn [`files`](providers/openai/turn/files.md), [`model`](providers/openai/turn/model.md), and
+  [`request`](providers/openai/turn/request.md)
 
 ### Runtime and orchestration
 

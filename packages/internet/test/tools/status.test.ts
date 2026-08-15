@@ -1,5 +1,5 @@
 import { AccountRegistry } from "#internet/accounts/registry";
-import { DaemonClient } from "#internet/backends/openai/daemon/client";
+import { DaemonClient } from "#internet/providers/openai/daemon/client";
 import { registerStatusTools } from "#internet/tools/status";
 import { captureTools } from "#internet-test/tools/helpers";
 

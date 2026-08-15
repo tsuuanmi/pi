@@ -191,7 +191,7 @@ Bundled child runtime (embedded Bun, per platform)
 3. **Explicit, isolated runtime boundary** — the daemon is a separate child process with its own
    failure, credential, account, and version isolation; the package is a thin client over it.
 4. **Per-account isolation** — one daemon per account, one provider per account (Strategy A).
-5. **Backend seam** — future Claude/Gemini plug in behind `src/backends/`, not as new runtimes.
+5. **Backend seam** — future Claude/Gemini plug in behind `src/providers/`, not as new runtimes.
 6. **Platform artifacts** — build per host (linux-x64 now, darwin next); no cross-platform runtime
    hacks.
 7. **Use the current runtime** — vendor + embed Bun as a child process over system Chrome; no

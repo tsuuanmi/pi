@@ -1,4 +1,4 @@
-import type { DaemonClient } from "#internet/backends/openai/daemon/client";
+import type { DaemonClient } from "#internet/providers/openai/daemon/client";
 
 export interface WaitForHealthOptions {
 	timeoutMs?: number;

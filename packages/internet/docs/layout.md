@@ -4,7 +4,7 @@
 packages/internet/
 ├── src/
 │   ├── accounts/registry.ts
-│   ├── backends/
+│   ├── providers/
 │   │   ├── backend.ts
 │   │   ├── names.ts
 │   │   ├── registry.ts
