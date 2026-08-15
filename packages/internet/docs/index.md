@@ -96,6 +96,9 @@ The package re-exports `InternetSettingsService` as a type only; the concrete
 
 ## Implementation reviews
 
+- [Architecture Review & Direction](review/architecture-review.md) — the five product principles
+  (Pi provider, best-of-three-repos, runtime design, Council-as-future, macOS+Linux) and the new
+  features landed since the MVP.
 - [Implementation Review](review/implementation-review.md) — review findings and dispositions.
 - [Original MVP Review](review/review-and-brainstorm.md) — MVP review and follow-on brainstorm.
 
@@ -104,6 +107,8 @@ The package re-exports `InternetSettingsService` as a type only; the concrete
 Forward-looking plans, design research, and brainstorm docs live in [`plan/`](plan/), and are not yet
 production scope.
 
+- [Implementation Plan (ROI-Sorted)](plan/implementation-plan.md) — the execution-ready plan from
+  the brainstorm: macOS, hybrid capture, multi-account sign-in, multi-backend, and Council.
 - [Daemon Ownership Decisions](plan/daemon-ownership-brainstorm.md) — investigation history, Bun/Node
   constraint, measured runtime footprint, and confirmed decisions.
 - [Source Repositories](plan/source-repositories.md) — source map for Pi, codex-chatgpt-web, and
@@ -117,6 +122,17 @@ production scope.
 - [Conversation Continuity and Browser Lifecycle](plan/implementation-plan-conversation-continuity.md)
   — proposed one-tab-per-session, full-history replay fallback, ~1-minute idle shutdown, and a small
   top-left headed Chrome window (refined target; the shipped idle is 5 minutes).
+- [Runtime Architecture Brainstorm](plan/runtime-architecture-brainstorm.md) — why vendor + embed
+  Bun is the best runtime design, and the target architecture as the package grows (macOS, hybrid
+  capture, backends).
+- [MCP, Tunnel, and the Turn Broker](plan/mcp-tunnel-broker.md) — what the daemon's MCP server,
+  tunnel, and turn broker are, and how Full mode uses them.
+- [Council vs. Current (Orchestrator + Internet)](plan/council-via-orchestrator.md) — whether the
+  current stack can provide Council-like multi-agent, the session model (one chat per provider per Pi
+  session), and the orchestrator as a model-agnostic dependency.
+- [Multi-Account Sign-In and Credential Automation](plan/multi-account-signin.md) — why raw
+  `account|password|2fa` automation is not reliable for ChatGPT Web, and the recommended
+  one-time-manual + session-reuse design.
 
 ## Scope
 
