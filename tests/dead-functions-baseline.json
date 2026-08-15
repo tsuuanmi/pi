@@ -32,50 +32,50 @@
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/hooks/events.ts::isBashToolResult",
-			"file": "packages/pi/src/hooks/events.ts",
+			"key": "packages/pi/src/hooks/hook-types.ts::isBashToolResult",
+			"file": "packages/pi/src/hooks/hook-types.ts",
 			"name": "isBashToolResult",
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/hooks/events.ts::isEditToolResult",
-			"file": "packages/pi/src/hooks/events.ts",
+			"key": "packages/pi/src/hooks/hook-types.ts::isEditToolResult",
+			"file": "packages/pi/src/hooks/hook-types.ts",
 			"name": "isEditToolResult",
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/hooks/events.ts::isFindToolResult",
-			"file": "packages/pi/src/hooks/events.ts",
+			"key": "packages/pi/src/hooks/hook-types.ts::isFindToolResult",
+			"file": "packages/pi/src/hooks/hook-types.ts",
 			"name": "isFindToolResult",
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/hooks/events.ts::isGrepToolResult",
-			"file": "packages/pi/src/hooks/events.ts",
+			"key": "packages/pi/src/hooks/hook-types.ts::isGrepToolResult",
+			"file": "packages/pi/src/hooks/hook-types.ts",
 			"name": "isGrepToolResult",
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/hooks/events.ts::isLsToolResult",
-			"file": "packages/pi/src/hooks/events.ts",
+			"key": "packages/pi/src/hooks/hook-types.ts::isLsToolResult",
+			"file": "packages/pi/src/hooks/hook-types.ts",
 			"name": "isLsToolResult",
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/hooks/events.ts::isReadToolResult",
-			"file": "packages/pi/src/hooks/events.ts",
+			"key": "packages/pi/src/hooks/hook-types.ts::isReadToolResult",
+			"file": "packages/pi/src/hooks/hook-types.ts",
 			"name": "isReadToolResult",
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/hooks/events.ts::isToolCallEventType",
-			"file": "packages/pi/src/hooks/events.ts",
-			"name": "isToolCallEventType",
+			"key": "packages/pi/src/hooks/hook-types.ts::isToolCallHookType",
+			"file": "packages/pi/src/hooks/hook-types.ts",
+			"name": "isToolCallHookType",
 			"kind": "exported"
 		},
 		{
-			"key": "packages/pi/src/hooks/events.ts::isWriteToolResult",
-			"file": "packages/pi/src/hooks/events.ts",
+			"key": "packages/pi/src/hooks/hook-types.ts::isWriteToolResult",
+			"file": "packages/pi/src/hooks/hook-types.ts",
 			"name": "isWriteToolResult",
 			"kind": "exported"
 		},

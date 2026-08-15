@@ -25,6 +25,10 @@ Documentation is grouped by purpose:
 - [Package and Extension Authoring](architecture/package-and-extension-authoring.md) - package manifests, extension contracts, and authoring boundaries
 - [Orchestrator vs. Workflows](architecture/orchestrator-vs-workflows.md)
 - [Package Boundaries](architecture/package-boundaries.md)
+- [Hook vs. Event Boundaries](architecture/hook-vs-event-boundaries.md)
+- [Hooks and Events Reference](architecture/hooks-and-events-reference.md)
+- [Hook/Event Boundary Audit](architecture/hook-event-boundary-audit.md)
+- [Hook/Event Boundary Implementation Plan](architecture/hook-event-boundary-implementation-plan.md)
 - [Package Overlap Audit](architecture/package-overlap-audit.md) - intentional adapters, duplicate/ambiguous seams, forbidden duplication, and cleanup priorities
 - [Package Overlap Implementation](architecture/package-overlap-implementation.md) - phased file-level changes, dependency order, and verification gates
 - [Subagent to Orchestrator Migration](architecture/subagent-to-orchestrator-migration.md) - implemented ownership, composition, and dependency changes

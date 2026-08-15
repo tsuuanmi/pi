@@ -361,7 +361,7 @@ Give each package an explicit event vocabulary, keep cross-layer conversions in 
 - Agent owns `AgentEvent` and `EventSink` for the generic agent loop.
 - Orchestrator owns `TaskQueueEvent`, `OrchestratorEvent`, `OrchestratorTraceEvent`, and runtime messaging `TeamEvent`.
 - Workflows owns `WorkflowRuntimeEvent` and the mapped `TeamWorkflowEvent` projection.
-- Pi owns `AgentSessionEvent`, extension hook events, and UI invalidation.
+- Pi owns the narrow `AgentSessionEvent` host stream, extension observer events, extension control hooks, and UI invalidation.
 
 ### File-level changes
 

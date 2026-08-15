@@ -388,11 +388,11 @@ describe("extensions discovery", () => {
 		expect(allTools.has("tool-b")).toBe(true);
 	});
 
-	it("loads extension with event handlers", async () => {
+	it("loads extension with separate event and hook handlers", async () => {
 		const extCode = `
 			export default function(pi) {
 				pi.on("agent_start", async () => {});
-				pi.on("tool_call", async (event) => undefined);
+				pi.onHook("tool_call", async (event) => undefined);
 				pi.on("agent_end", async () => {});
 			}
 		`;
@@ -402,9 +402,9 @@ describe("extensions discovery", () => {
 
 		expect(result.errors).toHaveLength(0);
 		expect(result.extensions).toHaveLength(1);
-		expect(result.extensions[0].handlers.has("agent_start")).toBe(true);
-		expect(result.extensions[0].handlers.has("tool_call")).toBe(true);
-		expect(result.extensions[0].handlers.has("agent_end")).toBe(true);
+		expect(result.extensions[0].eventHandlers.has("agent_start")).toBe(true);
+		expect(result.extensions[0].hookHandlers.has("tool_call")).toBe(true);
+		expect(result.extensions[0].eventHandlers.has("agent_end")).toBe(true);
 	});
 
 	it("loads extension with shortcuts", async () => {

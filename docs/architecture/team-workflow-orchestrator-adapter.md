@@ -169,10 +169,10 @@ Team workflow command/tool
   -> mapTeamTask[]
   -> build runtime Team from Agent roster
   -> create TeamCheckpointStore
-  -> Orchestrator.run(team, tasks, options)
-       onQueueEvent -> mapTaskQueueEvent -> saveTeamWorkflowEvents
-       onSchedulingWarning -> workflow warning event
-       onTrace -> workflow trace/audit hook
+  -> Orchestrator.run(team, tasks, { events, hooks })
+       events.queue -> mapTaskQueueEvent -> saveTeamWorkflowEvents
+       events.schedulingWarning -> workflow warning event
+       events.trace -> workflow trace/audit event
   -> map RunTeamResult to workflow state
   -> evaluate workflow gates
   -> write workflow receipts/artifacts

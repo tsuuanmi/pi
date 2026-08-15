@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **extensions**: Removed workflow-owned hook host, handler, payload, and result declarations; lifecycle registration now consumes Pi's `on(...)` event and `onHook(...)` control contracts directly.
 - **session layout**: Moved workflow state to `skills/`, plans/specs to `artifacts/`, and ralplan execution metadata to `skills/ralplan/executions/`; removed the workflow-owned session path API in favor of direct `@tsuuanmi/pi/session/layout` imports.
 - **agent execution**: Removed `ralplan_run_agent` and `ultragoal_spawn_goal_agent`; Ralplan and Ultragoal now select profiles, prompts, metadata, and workflow artifacts around orchestrator-owned `subagent_spawn`.
 - **events**: Renamed the workflow Team queue projection to `TeamWorkflowEvent`, `mapTaskQueueEvent`, and `saveTeamWorkflowEvents`; removed the ambiguous old names and unused `TeamEventSink` wrapper.
@@ -40,6 +41,7 @@
 
 ### Changed
 
+- **team**: The Orchestrator adapter now registers queue observation through `events.queue`.
 - **workflow boundary**: Moved guarded single-agent admission and Ralplan terminal artifact validation into focused workflow execution-policy modules while leaving generic lifecycle and output transport in orchestrator.
 - **extension**: The bundled extension installs Orchestrator's subagent runtime and adapts Pi's generic extension context into workflow tool context.
 - **subagent**: Moved the generic subagent-to-Agent stream adapter and its tests to Orchestrator; workflow adapters consume the public export.

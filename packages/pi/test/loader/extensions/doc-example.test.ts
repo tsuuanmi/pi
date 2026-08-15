@@ -2,16 +2,16 @@
  * Verify the documentation example from extensions.md compiles and works.
  */
 
-import type { ExtensionAPI, SessionBeforeCompactEvent, SessionCompactEvent } from "@tsuuanmi/pi/extensions";
+import type { ExtensionAPI, SessionBeforeCompactHook, SessionCompactEvent } from "@tsuuanmi/pi/extensions";
 import { describe, expect, it } from "vitest";
 
 describe("Documentation example", () => {
 	it("custom compaction example should type-check correctly", () => {
 		// This is the example from extensions.md - verify it compiles
 		const exampleExtension = (pi: ExtensionAPI) => {
-			pi.on("session_before_compact", async (event: SessionBeforeCompactEvent, ctx) => {
-				// All these should be accessible on the event
-				const { preparation, branchEntries } = event;
+			pi.onHook("session_before_compact", async (hook: SessionBeforeCompactHook, ctx) => {
+				// All these should be accessible on the hook.
+				const { preparation, branchEntries } = hook;
 				// sessionManager, modelRegistry, and model come from ctx
 				const { sessionManager, modelRegistry } = ctx;
 				const { messagesToSummarize, turnPrefixMessages, tokensBefore, firstKeptEntryId, isSplitTurn } =

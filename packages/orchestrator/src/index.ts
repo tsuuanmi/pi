@@ -85,6 +85,8 @@ export type {
 	OrchestratorCheckpointSnapshot,
 	OrchestratorConfig,
 	OrchestratorEvent,
+	OrchestratorEventHandlers,
+	OrchestratorHooks,
 	OrchestratorTraceEvent,
 	PlanOptions,
 	PlanResult,

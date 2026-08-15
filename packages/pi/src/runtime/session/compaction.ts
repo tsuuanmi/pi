@@ -2,7 +2,7 @@ import type { Agent, Model, ThinkingLevel } from "@tsuuanmi/pi-agent";
 import type { AssistantMessage } from "@tsuuanmi/pi-ai";
 import { isContextOverflow, stream } from "@tsuuanmi/pi-ai";
 import { formatNoModelSelectedMessage } from "#pi/auth/guidance";
-import type { SessionBeforeCompactResult } from "#pi/loader/extensions/index";
+import type { SessionBeforeCompactHookResult } from "#pi/hooks/hook-types";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ExtensionRunner } from "#pi/runtime/extensions/runner";
 import type { AgentSessionEvent } from "#pi/runtime/session/types";
@@ -124,14 +124,14 @@ export class CompactionController {
 
 		let result: CompactionResult | undefined;
 		let fromExtension = false;
-		if (this.host.extensionRunner.hasHandlers("session_before_compact")) {
-			const extensionResult = (await this.host.extensionRunner.emit({
+		if (this.host.extensionRunner.hasHookHandlers("session_before_compact")) {
+			const extensionResult = (await this.host.extensionRunner.runSessionHook({
 				type: "session_before_compact",
 				preparation,
 				branchEntries: pathEntries,
 				customInstructions,
 				signal,
-			})) as SessionBeforeCompactResult | undefined;
+			})) as SessionBeforeCompactHookResult | undefined;
 
 			if (extensionResult?.cancel) return { cancelled: true };
 			if (extensionResult?.compaction) {
@@ -169,7 +169,7 @@ export class CompactionController {
 			| CompactionEntry
 			| undefined;
 		if (savedEntry) {
-			await this.host.extensionRunner.emit({
+			await this.host.extensionRunner.emitEvent({
 				type: "session_compact",
 				compactionEntry: savedEntry,
 				fromExtension,

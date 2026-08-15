@@ -38,17 +38,9 @@ import type {
 	ExtensionCommandContextActions,
 	ExtensionMode,
 	ExtensionUIContext,
-	MessageEndEvent,
-	MessageStartEvent,
-	MessageUpdateEvent,
 	ReplacedSessionContext,
 	SessionStartEvent,
-	ToolExecutionEndEvent,
-	ToolExecutionStartEvent,
-	ToolExecutionUpdateEvent,
 	ToolInfo,
-	TurnEndEvent,
-	TurnStartEvent,
 } from "#pi/loader/extensions/index";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { PromptTemplate } from "#pi/loader/prompt-templates";
@@ -72,14 +64,15 @@ import { BashController } from "#pi/runtime/session/bash";
 import { CompactionController } from "#pi/runtime/session/compaction";
 import { PromptController } from "#pi/runtime/session/prompt";
 import { RetryController } from "#pi/runtime/session/retry";
-import type {
-	AgentSessionConfig,
-	AgentSessionEvent,
-	AgentSessionEventListener,
-	ExtensionBindings,
-	ModelCycleResult,
-	PromptOptions,
-	SessionStats,
+import {
+	type AgentSessionConfig,
+	type AgentSessionEvent,
+	type AgentSessionEventListener,
+	type ExtensionBindings,
+	isSessionAgentEvent,
+	type ModelCycleResult,
+	type PromptOptions,
+	type SessionStats,
 } from "#pi/runtime/session/types";
 import { expandSkillCommand } from "#pi/runtime/skill-expansion";
 import { computeContextUsage, computeSessionStats } from "#pi/runtime/stats-export";
@@ -124,7 +117,6 @@ export class AgentSession {
 	// Extension system
 	private _extensionRunner!: ExtensionRunner;
 	private _agentToolHookDisposer?: () => void;
-	private _turnIndex = 0;
 
 	private _resourceLoader: ResourceLoader;
 	private _toolManager: ToolManager;
@@ -353,11 +345,14 @@ export class AgentSession {
 			}
 		}
 
-		// Emit to extensions first
-		await this._emitExtensionEvent(event);
+		// Run control hooks and notify extension observers before session listeners.
+		await this._forwardAgentEvent(event);
 
-		// Notify all listeners
-		this._emit(event.type === "agent_end" ? { ...event, willRetry: this._retry.willRetryAfterEnd(event) } : event);
+		if (event.type === "agent_end") {
+			this._emit({ ...event, willRetry: this._retry.willRetryAfterEnd(event) });
+		} else if (isSessionAgentEvent(event)) {
+			this._emit(event);
+		}
 
 		// Handle session persistence
 		if (event.type === "message_end") {
@@ -433,82 +428,13 @@ export class AgentSession {
 		Object.assign(targetRecord, replacement);
 	}
 
-	/** Emit extension events based on agent events */
-	private async _emitExtensionEvent(event: AgentEvent): Promise<void> {
-		if (event.type === "agent_start") {
-			this._turnIndex = 0;
-			await this._extensionRunner.emit({ type: "agent_start" });
-		} else if (event.type === "agent_end") {
-			await this._extensionRunner.emit({ type: "agent_end", messages: event.messages });
-		} else if (event.type === "turn_start") {
-			const extensionEvent: TurnStartEvent = {
-				type: "turn_start",
-				turnIndex: this._turnIndex,
-				timestamp: Date.now(),
-			};
-			await this._extensionRunner.emit(extensionEvent);
-		} else if (event.type === "turn_end") {
-			const extensionEvent: TurnEndEvent = {
-				type: "turn_end",
-				turnIndex: this._turnIndex,
-				message: event.message,
-				toolResults: event.toolResults,
-			};
-			await this._extensionRunner.emit(extensionEvent);
-			this._turnIndex++;
-		} else if (event.type === "message_start") {
-			const extensionEvent: MessageStartEvent = {
-				type: "message_start",
-				message: event.message,
-			};
-			await this._extensionRunner.emit(extensionEvent);
-		} else if (event.type === "message_update") {
-			const extensionEvent: MessageUpdateEvent = {
-				type: "message_update",
-				message: event.message,
-				assistantMessageEvent: event.assistantMessageEvent,
-			};
-			await this._extensionRunner.emit(extensionEvent);
-		} else if (event.type === "message_end") {
-			const extensionEvent: MessageEndEvent = {
-				type: "message_end",
-				message: event.message,
-			};
-			const replacement = await this._extensionRunner.emitMessageEnd(extensionEvent);
-			if (replacement) {
-				this._replaceMessageInPlace(event.message, replacement);
-			}
-		} else if (event.type === "tool_execution_start") {
-			const extensionEvent: ToolExecutionStartEvent = {
-				type: "tool_execution_start",
-				toolCallId: event.toolCallId,
-				toolName: event.toolName,
-				args: event.args,
-			};
-			await this._extensionRunner.emit(extensionEvent);
-		} else if (event.type === "tool_execution_update") {
-			const extensionEvent: ToolExecutionUpdateEvent = {
-				type: "tool_execution_update",
-				toolCallId: event.toolCallId,
-				toolName: event.toolName,
-				args: event.args,
-				partialResult: event.partialResult,
-			};
-			await this._extensionRunner.emit(extensionEvent);
-		} else if (event.type === "tool_execution_end") {
-			const extensionEvent: ToolExecutionEndEvent = {
-				type: "tool_execution_end",
-				toolCallId: event.toolCallId,
-				toolName: event.toolName,
-				result: event.result,
-				isError: event.isError,
-			};
-			await this._extensionRunner.emit(extensionEvent);
-		} else if (event.type === "loop_detected") {
-			await this._extensionRunner.emit({ type: "loop_detected", result: event.result });
-		} else if (event.type === "structured_output") {
-			await this._extensionRunner.emit(event);
+	private async _forwardAgentEvent(event: AgentEvent): Promise<void> {
+		if (event.type === "message_end" && this._extensionRunner.hasHookHandlers("message_end")) {
+			const replacement = await this._extensionRunner.runMessageEndHook(event);
+			if (replacement) this._replaceMessageInPlace(event.message, replacement);
 		}
+
+		await this._extensionRunner.emitEvent(event);
 	}
 
 	/**
@@ -952,16 +878,16 @@ export class AgentSession {
 		}
 
 		this._applyExtensionBindings(this._extensionRunner);
-		await this._extensionRunner.emit(this._sessionStartEvent);
+		await this._extensionRunner.emitEvent(this._sessionStartEvent);
 		await this.extendResourcesFromExtensions(this._sessionStartEvent.reason === "reload" ? "reload" : "startup");
 	}
 
 	private async extendResourcesFromExtensions(reason: "startup" | "reload"): Promise<void> {
-		if (!this._extensionRunner.hasHandlers("resources_discover")) {
+		if (!this._extensionRunner.hasHookHandlers("resources_discover")) {
 			return;
 		}
 
-		const { skillPaths, promptPaths, themePaths } = await this._extensionRunner.emitResourcesDiscover(
+		const { skillPaths, promptPaths, themePaths } = await this._extensionRunner.runResourcesDiscoverHook(
 			this._cwd,
 			reason,
 		);
@@ -1224,7 +1150,7 @@ export class AgentSession {
 			this._extensionShutdownHandler ||
 			this._extensionErrorListener;
 		if (hasBindings) {
-			await this._extensionRunner.emit({ type: "session_start", reason: "reload" });
+			await this._extensionRunner.emitEvent({ type: "session_start", reason: "reload" });
 			await this.extendResourcesFromExtensions("reload");
 		}
 	}
@@ -1405,13 +1331,6 @@ export class AgentSession {
 		context.sendMessage = (message, options) => this.sendCustomMessage(message, options);
 		context.sendUserMessage = (content, options) => this.sendUserMessage(content, options);
 		return context;
-	}
-
-	/**
-	 * Check if extensions have handlers for a specific event type.
-	 */
-	hasExtensionHandlers(eventType: string): boolean {
-		return this._extensionRunner.hasHandlers(eventType);
 	}
 
 	/**

@@ -27,6 +27,6 @@ This keeps hook ordering and result composition deterministic while keeping the 
 
 ## Package adapters
 
-A package can translate its own contract into an Agent hook. For example, a host extension layer can map an extension `tool_call` handler to `beforeToolCall` and an extension `tool_result` handler to `afterToolCall`. The host owns the extension payload and policy; the Agent owns the adapter boundary and execution timing.
+A package can translate its own contract into an Agent hook. For example, a host extension layer can map an extension `tool_call` hook to `beforeToolCall` and an extension `tool_result` hook to `afterToolCall`. The host owns the extension payload and policy; the Agent owns the adapter boundary and execution timing.
 
 If a package introduces a lifecycle that is not an Agent lifecycle, it should keep that hook local to the package and expose a separate adapter only where it intentionally crosses the Agent boundary. Do not add package-specific payloads to `AgentHook` merely to avoid writing an adapter.

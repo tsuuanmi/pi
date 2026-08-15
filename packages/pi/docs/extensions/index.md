@@ -32,13 +32,13 @@ Extensions are TypeScript modules that extend pi's behavior. They can subscribe 
 - [Available Imports](#available-imports)
 - [Writing an Extension](#writing-an-extension)
   - [Extension Styles](#extension-styles)
-- [Events](#events)
+- [Events and Hooks](#events-and-hooks)
   - [Lifecycle Overview](#lifecycle-overview)
-  - [Resource Events](#resource-events)
-  - [Session Events](#session-events)
-  - [Agent Events](#agent-events)
+  - [Resource Hooks](#resource-hooks)
+  - [Session Events and Hooks](#session-events-and-hooks)
+  - [Agent Events and Hooks](#agent-events-and-hooks)
   - [Model Events](#model-events)
-  - [Tool Events](#tool-events)
+  - [Tool Hooks](#tool-hooks)
 - [ExtensionContext](#extensioncontext)
 - [ExtensionCommandContext](#extensioncommandcontext)
 - [ExtensionAPI Methods](#extensionapi-methods)
@@ -63,8 +63,8 @@ export default function (pi: ExtensionAPI) {
     ctx.ui.notify("Extension loaded!", "info");
   });
 
-  pi.on("tool_call", async (event, ctx) => {
-    if (event.toolName === "bash" && event.input.command?.includes("rm -rf")) {
+  pi.onHook("tool_call", async (hook, ctx) => {
+    if (hook.toolName === "bash" && hook.input.command?.includes("rm -rf")) {
       const ok = await ctx.ui.confirm("Dangerous!", "Allow rm -rf?");
       if (!ok) return { block: true, reason: "Blocked by user" };
     }
@@ -181,8 +181,8 @@ An extension exports a default factory function that receives `ExtensionAPI`. Th
 import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
 
 export default function (pi: ExtensionAPI) {
-  // Subscribe to events
-  pi.on("event_name", async (event, ctx) => {
+  // Subscribe to observation events
+  pi.on("session_start", async (_event, ctx) => {
     // ctx.ui for user interaction
     const ok = await ctx.ui.confirm("Title", "Are you sure?");
     ctx.ui.notify("Done!", "info");
@@ -292,7 +292,11 @@ Defer background resource startup until `session_start` or the command/tool/even
 
 Run `npm install` in the extension directory, then imports from `node_modules/` work automatically.
 
-## Events
+## Events and Hooks
+
+Use `pi.on(type, handler)` for observation-only events. Event return values are ignored. Use `pi.onHook(type, handler)` for control points that can cancel, transform, replace, or handle host behavior. Events and hooks are stored and dispatched independently; the same lifecycle name may exist in both APIs when control runs before observation, as with `message_end`.
+
+Agent lifecycle events are the canonical `AgentEvent` payloads from `@tsuuanmi/pi-agent`; Pi forwards them unchanged. Pi owns session/host events and all extension hooks.
 
 ### Lifecycle Overview
 
@@ -300,30 +304,31 @@ Run `npm install` in the extension directory, then imports from `node_modules/` 
 pi starts
   │
   ├─► session_start { reason: "startup" }
-  └─► resources_discover { reason: "startup" }
+  └─► resources_discover hook { reason: "startup" }
       │
       ▼
 user sends prompt ─────────────────────────────────────────┐
   │                                                        │
   ├─► (extension commands checked first, bypass if found)  │
-  ├─► input (can intercept, transform, or handle)          │
+  ├─► input hook (can intercept, transform, or handle)     │
   ├─► (skill/template expansion if not handled)            │
-  ├─► before_agent_start (can inject message, modify system prompt)
+  ├─► before_agent_start hook (can inject message, modify system prompt)
   ├─► agent_start                                          │
-  ├─► message_start / message_update / message_end         │
+  ├─► message_start / message_update events                │
+  ├─► message_end hook, then message_end event              │
   │                                                        │
   │   ┌─── turn (repeats while LLM calls tools) ───┐       │
   │   │                                            │       │
   │   ├─► turn_start                               │       │
-  │   ├─► context (can modify messages)            │       │
-  │   ├─► before_provider_request (can inspect or replace payload)
+  │   ├─► context hook (can modify messages)       │       │
+  │   ├─► before_provider_request hook (can replace payload)
   │   ├─► after_provider_response (status + headers, before stream consume)
   │   │                                            │       │
   │   │   LLM responds, may call tools:            │       │
   │   │     ├─► tool_execution_start               │       │
-  │   │     ├─► tool_call (can block)              │       │
+  │   │     ├─► tool_call hook (can block)         │       │
   │   │     ├─► tool_execution_update              │       │
-  │   │     ├─► tool_result (can modify)           │       │
+  │   │     ├─► tool_result hook (can modify)      │       │
   │   │     └─► tool_execution_end                 │       │
   │   │                                            │       │
   │   └─► turn_end                                 │       │
@@ -333,17 +338,17 @@ user sends prompt ────────────────────�
 user sends another prompt ◄────────────────────────────────┘
 
 /new (new session) or /resume (switch session)
-  ├─► session_before_switch (can cancel)
+  ├─► session_before_switch hook (can cancel)
   ├─► session_shutdown
   ├─► session_start { reason: "new" | "resume", previousSessionFile? }
-  └─► resources_discover { reason: "startup" }
+  └─► resources_discover hook { reason: "startup" }
 
 /compact or auto-compaction
-  ├─► session_before_compact (can cancel or customize)
+  ├─► session_before_compact hook (can cancel or customize)
   └─► session_compact
 
 /tree navigation
-  ├─► session_before_tree (can cancel or customize)
+  ├─► session_before_tree hook (can cancel or customize)
   └─► session_tree
 
 model changes (`/settings`, extension APIs, or session restore)
@@ -357,19 +362,17 @@ exit (Ctrl+C, Ctrl+D, SIGHUP, SIGTERM)
   └─► session_shutdown
 ```
 
-### Startup Events
-
-### Resource Events
+### Resource Hooks
 
 #### resources_discover
 
-Fired after `session_start` so extensions can contribute additional skill, prompt, and theme paths.
+Runs after `session_start` so extensions can contribute additional skill, prompt, and theme paths.
 The startup path uses `reason: "startup"`. Reload uses `reason: "reload"`.
 
 ```typescript
-pi.on("resources_discover", async (event, _ctx) => {
-  // event.cwd - current working directory
-  // event.reason - "startup" | "reload"
+pi.onHook("resources_discover", async (hook, _ctx) => {
+  // hook.cwd - current working directory
+  // hook.reason - "startup" | "reload"
   return {
     skillPaths: ["/path/to/skills"],
     promptPaths: ["/path/to/prompts"],
@@ -378,7 +381,7 @@ pi.on("resources_discover", async (event, _ctx) => {
 });
 ```
 
-### Session Events
+### Session Events and Hooks
 
 See [Session Format](../session/session-format.md) for session storage internals and the SessionManager API.
 
@@ -396,14 +399,14 @@ pi.on("session_start", async (event, ctx) => {
 
 #### session_before_switch
 
-Fired before starting a new session (`/new`) or switching sessions (`/resume`).
+Runs before starting a new session (`/new`) or switching sessions (`/resume`).
 
 ```typescript
-pi.on("session_before_switch", async (event, ctx) => {
-  // event.reason - "new" or "resume"
-  // event.targetSessionFile - session we're switching to (only for "resume")
+pi.onHook("session_before_switch", async (hook, ctx) => {
+  // hook.reason - "new" or "resume"
+  // hook.targetSessionFile - session we're switching to (only for "resume")
 
-  if (event.reason === "new") {
+  if (hook.reason === "new") {
     const ok = await ctx.ui.confirm("Clear?", "Delete all messages?");
     if (!ok) return { cancel: true };
   }
@@ -415,11 +418,11 @@ Do cleanup work in `session_shutdown`, then reestablish any in-memory state in `
 
 #### session_before_compact / session_compact
 
-Fired on compaction. See [compaction.md](../session/compaction/index.md) for details.
+The hook runs before compaction; the event fires after compaction. See [compaction.md](../session/compaction/index.md) for details.
 
 ```typescript
-pi.on("session_before_compact", async (event, ctx) => {
-  const { preparation, branchEntries, customInstructions, signal } = event;
+pi.onHook("session_before_compact", async (hook, ctx) => {
+  const { preparation, branchEntries, customInstructions, signal } = hook;
 
   // Cancel:
   return { cancel: true };
@@ -442,11 +445,11 @@ pi.on("session_compact", async (event, ctx) => {
 
 #### session_before_tree / session_tree
 
-Fired on `/tree` navigation. See [Sessions](../session/sessions.md) for tree navigation concepts.
+The hook runs before `/tree` navigation; the event fires after navigation. See [Sessions](../session/sessions.md) for tree navigation concepts.
 
 ```typescript
-pi.on("session_before_tree", async (event, ctx) => {
-  const { preparation, signal } = event;
+pi.onHook("session_before_tree", async (hook, ctx) => {
+  const { preparation, signal } = hook;
   return { cancel: true };
   // OR provide custom summary:
   return { summary: { summary: "...", details: {} } };
@@ -469,18 +472,18 @@ pi.on("session_shutdown", async (event, ctx) => {
 });
 ```
 
-### Agent Events
+### Agent Events and Hooks
 
 #### before_agent_start
 
-Fired after user submits prompt, before agent loop. Can inject a message and/or modify the system prompt.
+Runs after prompt expansion and before the Agent loop. It can inject a message and/or modify the system prompt.
 
 ```typescript
-pi.on("before_agent_start", async (event, ctx) => {
-  // event.prompt - user's prompt text
-  // event.systemPrompt - current chained system prompt for this handler
-  //   (includes changes from earlier before_agent_start handlers)
-  // event.systemPromptOptions - structured options used to build the system prompt
+pi.onHook("before_agent_start", async (hook, ctx) => {
+  // hook.prompt - user's prompt text
+  // hook.systemPrompt - current chained system prompt for this handler
+  //   (includes changes from earlier before_agent_start hooks)
+  // hook.systemPromptOptions - structured options used to build the system prompt
   //   .customPrompt - any custom system prompt (from the SDK systemPrompt option, .pi/SYSTEM.md, or ~/.pi/agent/SYSTEM.md)
   //   .selectedTools - tools currently active in the prompt
   //   .toolSnippets - one-line descriptions for each tool
@@ -498,14 +501,14 @@ pi.on("before_agent_start", async (event, ctx) => {
       display: true,
     },
     // Replace the system prompt for this turn (chained across extensions)
-    systemPrompt: event.systemPrompt + "\n\nExtra instructions for this turn...",
+    systemPrompt: hook.systemPrompt + "\n\nExtra instructions for this turn...",
   };
 });
 ```
 
 The `systemPromptOptions` field gives extensions access to the same structured data Pi uses to build the system prompt. This lets you inspect what Pi has loaded — custom prompts, guidelines, tool snippets, context files, skills — without re-discovering resources or re-parsing flags. Use it when your extension needs to make deep, informed changes to the system prompt while respecting user-provided configuration.
 
-Inside `before_agent_start`, `event.systemPrompt` and `ctx.getSystemPrompt()` both reflect the chained system prompt as of the current handler. Later `before_agent_start` handlers can still modify it again.
+Inside `before_agent_start`, `hook.systemPrompt` and `ctx.getSystemPrompt()` both reflect the chained system prompt as of the current handler. Later `before_agent_start` hooks can still modify it again.
 
 #### agent_start / agent_end
 
@@ -521,17 +524,19 @@ pi.on("agent_end", async (event, ctx) => {
 
 #### turn_start / turn_end
 
-Fired for each turn (one LLM response + tool calls).
+Fired for each turn (one LLM response plus tool calls). These are canonical Agent events: `turn_start` contains only `type`; `turn_end` contains the finalized message and tool results.
 
 ```typescript
-pi.on("turn_start", async (event, ctx) => {
-  // event.turnIndex, event.timestamp
-});
+pi.on("turn_start", async (_event, ctx) => {});
 
 pi.on("turn_end", async (event, ctx) => {
-  // event.turnIndex, event.message, event.toolResults
+  // event.message, event.toolResults
 });
 ```
+
+#### agent_status / trace / warning
+
+Forwarded unchanged from the Agent observer stream. These events expose Agent status transitions, structured traces, and warnings without adding Pi session fields.
 
 #### loop_detected
 
@@ -542,6 +547,10 @@ pi.on("loop_detected", async (event, ctx) => {
   // event.result.reason, repeats, maxRepeats, action, preview
 });
 ```
+
+#### max_turns_reached
+
+Fired when an Agent run reaches its configured turn limit. The payload contains `turns` and `maxTurns`.
 
 #### structured_output
 
@@ -557,9 +566,9 @@ pi.on("structured_output", async (event, ctx) => {
 
 Fired for message lifecycle updates.
 
-- `message_start` and `message_end` fire for user, assistant, and toolResult messages.
+- `message_start` and `message_end` events fire for user, assistant, and toolResult messages.
 - `message_update` fires for assistant streaming updates.
-- `message_end` handlers can return `{ message }` to replace the finalized message. The replacement must keep the same `role`.
+- A `message_end` hook runs before the `message_end` event and can return `{ message }` to replace the finalized message. The replacement must keep the same `role`; event observers receive the replacement.
 
 ```typescript
 pi.on("message_start", async (event, ctx) => {
@@ -571,16 +580,16 @@ pi.on("message_update", async (event, ctx) => {
   // event.assistantMessageEvent (token-by-token stream event)
 });
 
-pi.on("message_end", async (event, ctx) => {
-  if (event.message.role !== "assistant") return;
+pi.onHook("message_end", async (hook, ctx) => {
+  if (hook.message.role !== "assistant") return;
 
   return {
     message: {
-      ...event.message,
+      ...hook.message,
       usage: {
-        ...event.message.usage,
+        ...hook.message.usage,
         cost: {
-          ...event.message.usage.cost,
+          ...hook.message.usage.cost,
           total: 0.123,
         },
       },
@@ -609,34 +618,34 @@ pi.on("tool_execution_update", async (event, ctx) => {
 });
 
 pi.on("tool_execution_end", async (event, ctx) => {
-  // event.toolCallId, event.toolName, event.result, event.isError
+  // event.toolCallId, event.toolName, event.result, event.isError, event.meta
 });
 ```
 
 #### context
 
-Fired before each LLM call. Modify messages non-destructively. See [Session Format](../session/session-format.md) for message types.
+Runs before each LLM call and can transform messages non-destructively. See [Session Format](../session/session-format.md) for message types.
 
 ```typescript
-pi.on("context", async (event, ctx) => {
-  // event.messages - deep copy, safe to modify
-  const filtered = event.messages.filter(m => !shouldPrune(m));
+pi.onHook("context", async (hook, ctx) => {
+  // hook.messages - deep copy, safe to modify
+  const filtered = hook.messages.filter(m => !shouldPrune(m));
   return { messages: filtered };
 });
 ```
 
 #### before_provider_request
 
-Fired after the provider-specific payload is built, right before the request is sent. Handlers run in extension load order. Returning `undefined` keeps the payload unchanged. Returning any other value replaces the payload for later handlers and for the actual request.
+Runs after the provider-specific payload is built, right before the request is sent. Hooks run in extension load order. Returning `undefined` keeps the payload unchanged. Returning any other value replaces the payload for later hooks and for the actual request.
 
 This hook can rewrite provider-level system instructions or remove them entirely. Those payload-level changes are not reflected by `ctx.getSystemPrompt()`, which reports Pi's system prompt string rather than the final serialized provider payload.
 
 ```typescript
-pi.on("before_provider_request", (event, ctx) => {
-  console.log(JSON.stringify(event.payload, null, 2));
+pi.onHook("before_provider_request", (hook, ctx) => {
+  console.log(JSON.stringify(hook.payload, null, 2));
 
   // Optional: replace payload
-  // return { ...event.payload, temperature: 0 };
+  // return { ...hook.payload, temperature: 0 };
 });
 ```
 
@@ -696,45 +705,45 @@ pi.on("thinking_level_select", async (event, ctx) => {
 
 Use this to update extension UI when `pi.setThinkingLevel()`, model changes, or built-in thinking-level controls change the active thinking level.
 
-### Tool Events
+### Tool Hooks
 
 #### tool_call
 
-Fired after `tool_execution_start`, before the tool executes. **Can block.** Use `isToolCallEventType` to narrow and get typed inputs.
+Runs after `tool_execution_start`, before the tool executes. **Can block.** Use `isToolCallHookType` to narrow and get typed inputs.
 
 Before `tool_call` runs, pi waits for previously emitted Agent events to finish draining through `AgentSession`. This means `ctx.sessionManager` is up to date through the current assistant tool-calling message.
 
 In the default parallel tool execution mode, sibling tool calls from the same assistant message are preflighted sequentially, then executed concurrently. `tool_call` is not guaranteed to see sibling tool results from that same assistant message in `ctx.sessionManager`.
 
-`event.input` is mutable. Mutate it in place to patch tool arguments before execution.
+`hook.input` is mutable. Mutate it in place to patch tool arguments before execution.
 
 Behavior guarantees:
-- Mutations to `event.input` affect the actual tool execution
-- Later `tool_call` handlers see mutations made by earlier handlers
+- Mutations to `hook.input` affect the actual tool execution
+- Later `tool_call` hooks see mutations made by earlier hooks
 - No re-validation is performed after your mutation
 - Return values from `tool_call` only control blocking via `{ block: true, reason?: string }`
 
 ```typescript
-import { isToolCallEventType } from "@tsuuanmi/pi/extensions";
+import { isToolCallHookType } from "@tsuuanmi/pi/extensions";
 
-pi.on("tool_call", async (event, ctx) => {
-  // event.toolName - "bash", "read", "write", "edit", etc.
-  // event.toolCallId
-  // event.input - tool parameters (mutable)
+pi.onHook("tool_call", async (hook, ctx) => {
+  // hook.toolName - "bash", "read", "write", "edit", etc.
+  // hook.toolCallId
+  // hook.input - tool parameters (mutable)
 
   // Built-in tools: no type params needed
-  if (isToolCallEventType("bash", event)) {
-    // event.input is { command: string; timeout?: number }
-    event.input.command = `source ~/.profile\n${event.input.command}`;
+  if (isToolCallHookType("bash", hook)) {
+    // hook.input is { command: string; timeout?: number }
+    hook.input.command = `source ~/.profile\n${hook.input.command}`;
 
-    if (event.input.command.includes("rm -rf")) {
+    if (hook.input.command.includes("rm -rf")) {
       return { block: true, reason: "Dangerous command" };
     }
   }
 
-  if (isToolCallEventType("read", event)) {
-    // event.input is { path: string; offset?: number; limit?: number }
-    console.log(`Reading: ${event.input.path}`);
+  if (isToolCallHookType("read", hook)) {
+    // hook.input is { path: string; offset?: number; limit?: number }
+    console.log(`Reading: ${hook.input.path}`);
   }
 });
 ```
@@ -748,48 +757,48 @@ Custom tools should export their input type:
 export type MyToolInput = Static<typeof myToolSchema>;
 ```
 
-Use `isToolCallEventType` with explicit type parameters:
+Use `isToolCallHookType` with explicit type parameters:
 
 ```typescript
-import { isToolCallEventType } from "@tsuuanmi/pi/extensions";
+import { isToolCallHookType } from "@tsuuanmi/pi/extensions";
 import type { MyToolInput } from "my-extension";
 
-pi.on("tool_call", (event) => {
-  if (isToolCallEventType<"my_tool", MyToolInput>("my_tool", event)) {
-    event.input.action;  // typed
+pi.onHook("tool_call", (hook) => {
+  if (isToolCallHookType<"my_tool", MyToolInput>("my_tool", hook)) {
+    hook.input.action;  // typed
   }
 });
 ```
 
 #### tool_result
 
-Fired after tool execution finishes and before `tool_execution_end` plus the final tool result message events are emitted. **Can modify result.**
+Runs after tool execution finishes and before `tool_execution_end` plus the final tool result message events are emitted. **Can modify result.**
 
 In parallel tool mode, `tool_result` and `tool_execution_end` may interleave in tool completion order, while final `toolResult` message events are still emitted later in assistant source order.
 
-`tool_result` handlers chain like middleware:
-- Handlers run in extension load order
-- Each handler sees the latest result after previous handler changes
-- Handlers can return partial patches (`content`, `details`, or `isError`); omitted fields keep their current values
+`tool_result` hooks chain like middleware:
+- Hooks run in extension load order
+- Each hook sees the latest result after previous hook changes
+- Hooks can return partial patches (`content`, `details`, or `isError`); omitted fields keep their current values
 
-Built-in tools and workflow subagent tools may attach `event.details.receipt` (`StructuredReceipt`). Treat it as an additive, machine-readable execution summary for UI, logs, JSON/RPC consumers, and custom renderers. It answers what ran, where it ran, status, timing, output preview, and how to inspect more detail. Extensions that patch `details` should preserve an existing `details.receipt` unless intentionally replacing the receipt with an equivalent structured summary.
+Built-in tools and workflow subagent tools may attach `hook.details.receipt` (`StructuredReceipt`). Treat it as an additive, machine-readable execution summary for UI, logs, JSON/RPC consumers, and custom renderers. It answers what ran, where it ran, status, timing, output preview, and how to inspect more detail. Extensions that patch `details` should preserve an existing `details.receipt` unless intentionally replacing the receipt with an equivalent structured summary.
 
 Use `ctx.signal` for nested async work inside the handler. This lets Esc cancel model calls, `fetch()`, and other abort-aware operations started by the extension.
 
 ```typescript
 import { isBashToolResult } from "@tsuuanmi/pi/extensions";
 
-pi.on("tool_result", async (event, ctx) => {
-  // event.toolName, event.toolCallId, event.input
-  // event.content, event.details, event.isError
+pi.onHook("tool_result", async (hook, ctx) => {
+  // hook.toolName, hook.toolCallId, hook.input
+  // hook.content, hook.details, hook.isError
 
-  if (isBashToolResult(event)) {
-    // event.details is typed as BashToolDetails
+  if (isBashToolResult(hook)) {
+    // hook.details is typed as BashToolDetails
   }
 
   const response = await fetch("https://example.com/summarize", {
     method: "POST",
-    body: JSON.stringify({ content: event.content }),
+    body: JSON.stringify({ content: hook.content }),
     signal: ctx.signal,
   });
 
@@ -798,19 +807,19 @@ pi.on("tool_result", async (event, ctx) => {
 });
 ```
 
-### User Bash Events
+### User Bash Hook
 
 #### user_bash
 
-Fired when user executes `!` or `!!` commands. **Can intercept.**
+Runs when the user executes `!` or `!!` commands. **Can intercept.**
 
 ```typescript
 import { createLocalBash } from "@tsuuanmi/pi";
 
-pi.on("user_bash", (event, ctx) => {
-  // event.command - the bash command
-  // event.excludeFromContext - true if !! prefix
-  // event.cwd - working directory
+pi.onHook("user_bash", (hook, ctx) => {
+  // hook.command - the bash command
+  // hook.excludeFromContext - true if !! prefix
+  // hook.cwd - working directory
 
   // Option 1: Provide custom operations (e.g., SSH)
   return { operations: remoteBashOps };
@@ -830,42 +839,42 @@ pi.on("user_bash", (event, ctx) => {
 });
 ```
 
-### Input Events
+### Input Hook
 
 #### input
 
-Fired when user input is received, after extension commands are checked but before skill and template expansion. The event sees the raw input text, so `/skill:foo` and `/template` are not yet expanded.
+Runs when user input is received, after extension commands are checked but before skill and template expansion. The hook sees the raw input text, so `/skill:foo` and `/template` are not yet expanded.
 
 **Processing order:**
-1. Extension commands (`/cmd`) checked first - if found, handler runs and input event is skipped
-2. `input` event fires - can intercept, transform, or handle
+1. Extension commands (`/cmd`) checked first - if found, the command runs and the input hook is skipped
+2. The `input` hook runs and can intercept, transform, or handle
 3. If not handled: skill commands (`/skill:name`) expanded to skill content
 4. If not handled: prompt templates (`/template`) expanded to template content
-5. Agent processing begins (`before_agent_start`, etc.)
+5. Agent processing begins (`before_agent_start` hook, etc.)
 
 ```typescript
-pi.on("input", async (event, ctx) => {
-  // event.text - raw input (before skill/template expansion)
-  // event.source - "interactive" (typed), "rpc" (API), or "extension" (via sendUserMessage)
-  // event.streamingBehavior - "steer" | "followUp" | undefined
+pi.onHook("input", async (hook, ctx) => {
+  // hook.text - raw input (before skill/template expansion)
+  // hook.source - "interactive" (typed), "rpc" (API), or "extension" (via sendUserMessage)
+  // hook.streamingBehavior - "steer" | "followUp" | undefined
   //   undefined when idle, "steer" for mid-stream interrupts,
   //   "followUp" for messages queued until the agent finishes
 
   // Transform: rewrite input before expansion
-  if (event.text.startsWith("?quick "))
-    return { action: "transform", text: `Respond briefly: ${event.text.slice(7)}` };
+  if (hook.text.startsWith("?quick "))
+    return { action: "transform", text: `Respond briefly: ${hook.text.slice(7)}` };
 
   // Handle: respond without LLM (extension shows its own feedback)
-  if (event.text === "ping") {
+  if (hook.text === "ping") {
     ctx.ui.notify("pong", "info");
     return { action: "handled" };
   }
 
   // Route by source: skip processing for extension-injected messages
-  if (event.source === "extension") return { action: "continue" };
+  if (hook.source === "extension") return { action: "continue" };
 
   // Intercept skill commands before expansion
-  if (event.text.startsWith("/skill:")) {
+  if (hook.text.startsWith("/skill:")) {
     // Could transform, block, or let pass through
   }
 
@@ -919,7 +928,7 @@ export default function (pi: ExtensionAPI) {
 
 Read-only access to session state. See [Session Format](../session/session-format.md) for the full SessionManager API and entry types.
 
-For `tool_call`, this state is synchronized through the current assistant message before handlers run. In parallel tool execution mode it is still not guaranteed to include sibling tool results from the same assistant message.
+For `tool_call`, this state is synchronized through the current assistant message before hooks run. In parallel tool execution mode it is still not guaranteed to include sibling tool results from the same assistant message.
 
 ```typescript
 ctx.sessionManager.getEntries()       // All entries
@@ -939,19 +948,19 @@ Coherent auth, settings, model-registry, resource-loader, and path inputs for pa
 
 The current agent abort signal, or `undefined` when no agent turn is active.
 
-Use this for abort-aware nested work started by extension handlers, for example:
+Use this for abort-aware nested work started by extension hooks or event handlers, for example:
 - `fetch(..., { signal: ctx.signal })`
 - model calls that accept `signal`
 - file or process helpers that accept `AbortSignal`
 
-`ctx.signal` is typically defined during active turn events such as `tool_call`, `tool_result`, `message_update`, and `turn_end`.
+`ctx.signal` is typically defined during active turn hooks/events such as `tool_call`, `tool_result`, `message_update`, and `turn_end`.
 It is usually `undefined` in idle or non-turn contexts such as session events, extension commands, and shortcuts fired while pi is idle.
 
 ```typescript
-pi.on("tool_result", async (event, ctx) => {
+pi.onHook("tool_result", async (hook, ctx) => {
   const response = await fetch("https://example.com/api", {
     method: "POST",
-    body: JSON.stringify(event),
+    body: JSON.stringify(hook),
     signal: ctx.signal,
   });
 
@@ -972,11 +981,11 @@ Request a graceful shutdown of pi.
 - **RPC mode:** Deferred until the next idle state (after completing the current command response, when waiting for the next command).
 - **Print mode:** No-op. The process exits automatically when all prompts are processed.
 
-Emits `session_shutdown` event to all extensions before exiting. Available in all contexts (event handlers, tools, commands, shortcuts).
+Emits `session_shutdown` to all extension event observers before exiting. Available in all extension contexts, tools, commands, and shortcuts.
 
 ```typescript
-pi.on("tool_call", (event, ctx) => {
-  if (isFatal(event.input)) {
+pi.onHook("tool_call", (hook, ctx) => {
+  if (isFatal(hook.input)) {
     ctx.shutdown();
   }
 });
@@ -1019,7 +1028,7 @@ Returns Pi's current system prompt string.
 - If later-loaded extensions run after yours, they can still change what is ultimately sent.
 
 ```typescript
-pi.on("before_agent_start", (event, ctx) => {
+pi.onHook("before_agent_start", (_hook, ctx) => {
   const prompt = ctx.getSystemPrompt();
   console.log(`System prompt length: ${prompt.length}`);
 });
@@ -1027,7 +1036,7 @@ pi.on("before_agent_start", (event, ctx) => {
 
 ## ExtensionCommandContext
 
-Command handlers receive `ExtensionCommandContext`, which extends `ExtensionContext` with session control methods. These are only available in commands because they can deadlock if called from event handlers.
+Command handlers receive `ExtensionCommandContext`, which extends `ExtensionContext` with session control methods. These are only available in commands because they can deadlock if called from extension lifecycle callbacks.
 
 ### ctx.getSystemPromptOptions()
 
@@ -1038,9 +1047,9 @@ const options = ctx.getSystemPromptOptions();
 const contextPaths = options.contextFiles?.map((file) => file.path) ?? [];
 ```
 
-This has the same shape and mutability as `before_agent_start` `event.systemPromptOptions`: custom prompt, active tools, tool snippets, prompt guidelines, appended system prompt text, cwd, loaded context files, and loaded skills. It may include full context file contents, so treat it as sensitive extension-local data and avoid exposing it through command lists, logs, or autocomplete metadata.
+This has the same shape and mutability as `before_agent_start` `hook.systemPromptOptions`: custom prompt, active tools, tool snippets, prompt guidelines, appended system prompt text, cwd, loaded context files, and loaded skills. It may include full context file contents, so treat it as sensitive extension-local data and avoid exposing it through command lists, logs, or autocomplete metadata.
 
-This reports the current base prompt inputs. It does not include per-turn `before_agent_start` chained system-prompt changes, later `context` event message mutations, or `before_provider_request` payload rewrites.
+This reports the current base prompt inputs. It does not include per-turn `before_agent_start` chained system-prompt changes, later `context` hook message mutations, or `before_provider_request` payload rewrites.
 
 ### ctx.waitForIdle()
 
@@ -1250,13 +1259,17 @@ export default function (pi: ExtensionAPI) {
 
 ### pi.on(event, handler)
 
-Subscribe to events. See [Events](#events) for event types and return values.
+Subscribe to observation-only events. Handlers run in extension load order and their return values are ignored. See [Events and Hooks](#events-and-hooks).
+
+### pi.onHook(hook, handler)
+
+Register a control hook. Hook result semantics are defined for each hook in [Events and Hooks](#events-and-hooks).
 
 ### pi.registerTool(definition)
 
 Register a custom tool callable by the LLM. See [Custom Tools](#custom-tools) for full details.
 
-`pi.registerTool()` works both during extension load and after startup. You can call it inside `session_start`, command handlers, or other event handlers. New tools are refreshed immediately in the same session, so they appear in `pi.getAllTools()` and are callable by the LLM without `/reload`.
+`pi.registerTool()` works both during extension load and after startup. You can call it inside `session_start`, command handlers, or other extension callbacks. New tools are refreshed immediately in the same session, so they appear in `pi.getAllTools()` and are callable by the LLM without `/reload`.
 
 Use `pi.setActiveTools()` to enable or disable tools (including dynamically added tools) at runtime. Use `pi.unregisterTool(name)` to remove a dynamically registered tool, for example when an extension-owned runtime disconnects from an external service.
 

@@ -146,17 +146,17 @@ export async function createHarness(options: HarnessOptions = {}): Promise<Harne
 		convertToLlm,
 		onPayload: async (payload) => {
 			const runner = extensionRunnerRef.current;
-			if (!runner?.hasHandlers("before_provider_request")) {
+			if (!runner?.hasHookHandlers("before_provider_request")) {
 				return payload;
 			}
-			return runner.emitBeforeProviderRequest(payload);
+			return runner.runBeforeProviderRequestHook(payload);
 		},
 		onResponse: async (response) => {
 			const runner = extensionRunnerRef.current;
-			if (!runner?.hasHandlers("after_provider_response")) {
+			if (!runner?.hasEventHandlers("after_provider_response")) {
 				return;
 			}
-			await runner.emit({
+			await runner.emitEvent({
 				type: "after_provider_response",
 				status: response.status,
 				headers: response.headers,
@@ -165,7 +165,7 @@ export async function createHarness(options: HarnessOptions = {}): Promise<Harne
 		transformContext: async (messages: AgentMessage[]) => {
 			const runner = extensionRunnerRef.current;
 			if (!runner) return messages;
-			return runner.emitContext(messages);
+			return runner.runContextHook(messages);
 		},
 	});
 	const extensionsResult = options.extensionFactories

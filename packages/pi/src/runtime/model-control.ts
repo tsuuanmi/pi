@@ -111,7 +111,7 @@ export function setThinkingLevel(level: ThinkingLevel, ctx: AgentSessionContext)
 			ctx.settingsManager.setDefaultThinkingLevel(effectiveLevel);
 		}
 		ctx.emit({ type: "thinking_level_changed", level: effectiveLevel });
-		void ctx.extensionRunner.emit({
+		void ctx.extensionRunner.emitEvent({
 			type: "thinking_level_select",
 			level: effectiveLevel,
 			previousLevel,
@@ -164,7 +164,7 @@ async function emitModelSelect(
 	ctx: AgentSessionContext,
 ): Promise<void> {
 	if (modelsAreEqual(previousModel, nextModel)) return;
-	await ctx.extensionRunner.emit({
+	await ctx.extensionRunner.emitEvent({
 		type: "model_select",
 		model: nextModel,
 		previousModel,

@@ -102,11 +102,11 @@ export class AgentSessionRuntime {
 		targetSessionFile?: string,
 	): Promise<{ cancelled: boolean }> {
 		const runner = this.session.extensionRunner;
-		if (!runner.hasHandlers("session_before_switch")) {
+		if (!runner.hasHookHandlers("session_before_switch")) {
 			return { cancelled: false };
 		}
 
-		const result = await runner.emit({
+		const result = await runner.runSessionHook({
 			type: "session_before_switch",
 			reason,
 			targetSessionFile,

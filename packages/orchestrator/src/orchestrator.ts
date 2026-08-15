@@ -22,6 +22,8 @@ import type { TaskInput } from "#orchestrator/task/types";
 import type { Team } from "#orchestrator/team/team";
 import type {
 	OrchestratorConfig,
+	OrchestratorEventHandlers,
+	OrchestratorHooks,
 	PlanOptions,
 	PlanResult,
 	RunResume,
@@ -32,18 +34,12 @@ import type {
 export class Orchestrator {
 	private readonly scheduler: Scheduler;
 	private readonly maxConcurrency: number;
-	private readonly onProgress?: OrchestratorConfig["onProgress"];
-	private readonly onTrace?: OrchestratorConfig["onTrace"];
-	private readonly onTaskVerify?: OrchestratorConfig["onTaskVerify"];
-	private readonly onTaskConsequential?: OrchestratorConfig["onTaskConsequential"];
-	private readonly onTaskRetryClassify?: OrchestratorConfig["onTaskRetryClassify"];
-	private readonly onTaskFailure?: OrchestratorConfig["onTaskFailure"];
+	private readonly events: OrchestratorEventHandlers;
+	private readonly hooks: OrchestratorHooks;
 	private readonly runBudget?: OrchestratorConfig["runBudget"];
 	private readonly checkpointStore?: OrchestratorConfig["checkpointStore"];
 	private readonly checkpointFailurePolicy?: OrchestratorConfig["checkpointFailurePolicy"];
 	private readonly runIdentity?: OrchestratorConfig["runIdentity"];
-	private readonly onQueueEvent?: OrchestratorConfig["onQueueEvent"];
-	private readonly onSchedulingWarning?: OrchestratorConfig["onSchedulingWarning"];
 
 	constructor(config: OrchestratorConfig = {}) {
 		this.scheduler = new Scheduler({
@@ -51,23 +47,20 @@ export class Orchestrator {
 			schedulingWeights: config.schedulingWeights,
 		});
 		this.maxConcurrency = config.maxConcurrency ?? 4;
-		this.onProgress = config.onProgress;
-		this.onTrace = config.onTrace;
-		this.onTaskVerify = config.onTaskVerify;
-		this.onTaskConsequential = config.onTaskConsequential;
-		this.onTaskRetryClassify = config.onTaskRetryClassify;
-		this.onTaskFailure = config.onTaskFailure;
+		this.events = { ...config.events };
+		this.hooks = { ...config.hooks };
 		this.runBudget = resolveRunBudget(config.runBudget);
 		this.checkpointStore = config.checkpointStore;
 		this.checkpointFailurePolicy = config.checkpointFailurePolicy;
 		this.runIdentity = config.runIdentity ? normalizeRunIdentity(config.runIdentity) : undefined;
-		this.onQueueEvent = config.onQueueEvent;
-		this.onSchedulingWarning = config.onSchedulingWarning;
 	}
 
 	async plan(team: Team, goal: string, options: PlanOptions): Promise<PlanResult> {
 		assertTeamCanRun(team);
-		return planTasks(team, goal, options);
+		return planTasks(team, goal, {
+			...options,
+			events: { trace: options.events?.trace ?? this.events.trace },
+		});
 	}
 
 	async run(team: Team, tasks: readonly (Task | TaskInput)[], options: RunTeamOptions = {}): Promise<RunTeamResult> {
@@ -83,8 +76,8 @@ export class Orchestrator {
 		const runOptions: RunTeamOptions = {
 			...options,
 			checkpointFailurePolicy: options.checkpointFailurePolicy ?? this.checkpointFailurePolicy,
-			onQueueEvent: options.onQueueEvent ?? this.onQueueEvent,
-			onSchedulingWarning: options.onSchedulingWarning ?? this.onSchedulingWarning,
+			events: { ...this.events, ...options.events },
+			hooks: { ...this.hooks, ...options.hooks },
 		};
 		const context = createRunContext({
 			team,
@@ -94,12 +87,6 @@ export class Orchestrator {
 			runIdentity,
 			runFacts,
 			defaultMaxConcurrency: this.maxConcurrency,
-			defaultOnProgress: this.onProgress,
-			defaultOnTrace: this.onTrace,
-			defaultOnTaskVerify: this.onTaskVerify,
-			defaultOnTaskConsequential: this.onTaskConsequential,
-			defaultOnTaskRetryClassify: this.onTaskRetryClassify,
-			defaultOnTaskFailure: this.onTaskFailure,
 			checkpointStore: options.checkpointStore ?? this.checkpointStore,
 			runBudget: normalizedRunBudget,
 			initialMetrics: checkpoint?.metrics,

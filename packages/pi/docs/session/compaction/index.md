@@ -11,7 +11,7 @@ LLMs have limited context windows. When conversations grow too long, pi uses com
 - [`packages/pi/src/runtime/session/compaction.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/runtime/session/compaction.ts) - Manual and automatic compaction lifecycle
 - [`packages/agent/src/compaction/messages.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/agent/src/compaction/messages.ts) - Shared message utilities (file tracking, serialization)
 - [`packages/pi/src/session/manager.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/session/manager.ts) - Entry types (`CompactionEntry`, `BranchSummaryEntry`)
-- [`packages/pi/src/hooks/events.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/hooks/events.ts) - Extension event types
+- [`packages/pi/src/hooks/hook-types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/hooks/hook-types.ts) - Extension hook types
 
 For TypeScript definitions in your project, inspect `node_modules/@tsuuanmi/pi/dist/`.
 
@@ -270,15 +270,15 @@ Tool results are truncated to 2000 characters during serialization. Content beyo
 
 ## Custom Summarization via Extensions
 
-Extensions can intercept and customize both compaction and branch summarization. See [`event-types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/hooks/events.ts) for event type definitions.
+Extensions can intercept and customize both compaction and branch summarization. See [`hook-types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/hooks/hook-types.ts) for hook definitions.
 
 ### session_before_compact
 
-Fired before auto-compaction or `/compact`. Can cancel or provide custom summary. See `SessionBeforeCompactEvent` and `CompactionPreparation` in the types file.
+Runs before auto-compaction or `/compact`. It can cancel or provide a custom summary. See `SessionBeforeCompactHook` and `CompactionPreparation` in the types file.
 
 ```typescript
-pi.on("session_before_compact", async (event, ctx) => {
-  const { preparation, branchEntries, customInstructions, signal } = event;
+pi.onHook("session_before_compact", async (hook, ctx) => {
+  const { preparation, branchEntries, customInstructions, signal } = hook;
 
   // preparation.messagesToSummarize - messages to summarize
   // preparation.turnPrefixMessages - split turn prefix (if isSplitTurn)
@@ -313,8 +313,8 @@ To generate a summary with your own model, convert messages to text using `seria
 ```typescript
 import { convertToLlm, serializeConversation } from "@tsuuanmi/pi-agent";
 
-pi.on("session_before_compact", async (event, ctx) => {
-  const { preparation } = event;
+pi.onHook("session_before_compact", async (hook, ctx) => {
+  const { preparation } = hook;
   
   // Convert AgentMessage[] to @tsuuanmi/pi-ai Message[], then serialize to text
   const conversationText = serializeConversation(
@@ -344,11 +344,11 @@ See `custom-compaction.ts` for a complete example using a different model.
 
 ### session_before_tree
 
-Fired before `/tree` navigation. Always fires regardless of whether user chose to summarize. Can cancel navigation or provide custom summary.
+Runs before `/tree` navigation regardless of whether the user chose to summarize. It can cancel navigation or provide a custom summary.
 
 ```typescript
-pi.on("session_before_tree", async (event, ctx) => {
-  const { preparation, signal } = event;
+pi.onHook("session_before_tree", async (hook, ctx) => {
+  const { preparation, signal } = hook;
 
   // preparation.targetId - where we're navigating to
   // preparation.oldLeafId - current position (being abandoned)
@@ -371,7 +371,7 @@ pi.on("session_before_tree", async (event, ctx) => {
 });
 ```
 
-See `SessionBeforeTreeEvent` and `TreePreparation` in the types file.
+See `SessionBeforeTreeHook` and `TreePreparation` in the types file.
 
 ## Settings
 

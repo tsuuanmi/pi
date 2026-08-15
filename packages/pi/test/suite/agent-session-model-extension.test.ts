@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@tsuuanmi/pi/extensions";
+import type { ExtensionAPI, ExtensionEvent } from "@tsuuanmi/pi/extensions";
 import type { Model, ThinkingLevel, Tool } from "@tsuuanmi/pi-agent";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
@@ -108,7 +108,7 @@ describe("AgentSession model and extension characterization", () => {
 			tools: [echoTool],
 			extensionFactories: [
 				(pi) => {
-					pi.on("tool_call", async () => ({ block: true, reason: "Blocked by test" }));
+					pi.onHook("tool_call", async () => ({ block: true, reason: "Blocked by test" }));
 				},
 			],
 		});
@@ -151,8 +151,8 @@ describe("AgentSession model and extension characterization", () => {
 			tools: [echoTool],
 			extensionFactories: [
 				(pi) => {
-					pi.on("tool_result", async () => ({
-						content: [{ type: "text", text: "patched result" }],
+					pi.onHook("tool_result", async () => ({
+						content: [{ type: "text" as const, text: "patched result" }],
 						details: { patched: true },
 					}));
 				},
@@ -182,14 +182,54 @@ describe("AgentSession model and extension characterization", () => {
 		).toBeDefined();
 	});
 
+	it("forwards canonical Agent event payloads to extension observers", async () => {
+		const turnStarts: Extract<ExtensionEvent, { type: "turn_start" }>[] = [];
+		const toolEnds: Extract<ExtensionEvent, { type: "tool_execution_end" }>[] = [];
+		const echoTool: Tool = {
+			name: "echo",
+			label: "Echo",
+			description: "Echo text back",
+			parameters: Type.Object({ text: Type.String() }),
+			execute: async () => ({ content: [{ type: "text", text: "ok" }], details: {} }),
+		};
+		const harness = await createHarness({
+			tools: [echoTool],
+			extensionFactories: [
+				(pi) => {
+					pi.on("turn_start", (event) => {
+						turnStarts.push(event);
+					});
+					pi.on("tool_execution_end", (event) => {
+						toolEnds.push(event);
+					});
+				},
+			],
+		});
+		harnesses.push(harness);
+		harness.setResponses([
+			testAssistantMessage([testToolCall("echo", { text: "hello" })], { stopReason: "toolUse" }),
+			testAssistantMessage("done"),
+		]);
+
+		await harness.session.prompt("hi");
+
+		expect(turnStarts).toEqual([{ type: "turn_start" }, { type: "turn_start" }]);
+		expect(toolEnds).toHaveLength(1);
+		expect(toolEnds[0]?.meta).toMatchObject({ status: "completed" });
+	});
+
 	it("allows extension context handlers to modify messages before the LLM call", async () => {
 		const harness = await createHarness({
 			extensionFactories: [
 				(pi) => {
-					pi.on("context", async (event) => ({
+					pi.onHook("context", async (event) => ({
 						messages: event.messages.map((message) =>
 							message.role === "user"
-								? { ...message, content: [{ type: "text", text: "rewritten" }], timestamp: message.timestamp }
+								? {
+										...message,
+										content: [{ type: "text" as const, text: "rewritten" }],
+										timestamp: message.timestamp,
+									}
 								: message,
 						),
 					}));
@@ -228,11 +268,11 @@ describe("AgentSession model and extension characterization", () => {
 			extensionFactories: [
 				(pi) => {
 					extensionApi = pi;
-					pi.on("input", async (event) => {
+					pi.onHook("input", async (event) => {
 						if (event.text === "ping") {
-							return { action: "handled" };
+							return { action: "handled" as const };
 						}
-						return { action: "transform", text: `transformed:${event.text}` };
+						return { action: "transform" as const, text: `transformed:${event.text}` };
 					});
 				},
 			],
@@ -293,7 +333,7 @@ describe("AgentSession model and extension characterization", () => {
 		const harness = await createHarness({
 			extensionFactories: [
 				(pi) => {
-					pi.on("before_agent_start", async (event) => ({
+					pi.onHook("before_agent_start", async (event) => ({
 						message: {
 							customType: "before-start",
 							content: "injected",

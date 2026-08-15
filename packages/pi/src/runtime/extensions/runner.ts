@@ -30,36 +30,37 @@ import type {
 import type { ProviderConfig } from "#pi/api/provider-types";
 import type { AgentSessionServices } from "#pi/api/session-services";
 import type { ExtensionUIContext } from "#pi/api/ui-types";
+import type { ExtensionDispatchState } from "#pi/hooks/dispatch-state";
+import { emitExtensionEvent, hasExtensionEventHandlers } from "#pi/hooks/event-dispatch";
+import type { ExtensionEvent, SessionShutdownEvent } from "#pi/hooks/events";
 import {
 	type BeforeAgentStartCombinedResult,
 	emitBeforeAgentStartHook,
 	emitBeforeProviderRequestHook,
 	emitContextHook,
-	emitExtensionHook,
 	emitInputHook,
 	emitMessageEndHook,
 	emitResourcesDiscoverHook,
+	emitSessionHook,
 	emitToolCallHook,
 	emitToolResultHook,
 	emitUserBashHook,
-	type HookDispatchState,
 	hasExtensionHookHandlers,
-	type RunnerEmitEvent,
-	type RunnerEmitResult,
-} from "#pi/hooks/dispatch";
+} from "#pi/hooks/hook-dispatch";
 import type {
-	InputEvent,
-	InputEventResult,
-	MessageEndEvent,
-	ResourcesDiscoverEvent,
-	SessionShutdownEvent,
-	ToolCallEvent,
-	ToolCallEventResult,
-	ToolResultEvent,
-	ToolResultEventResult,
-	UserBashEvent,
-	UserBashEventResult,
-} from "#pi/hooks/events";
+	ExtensionHookMap,
+	ExtensionHookType,
+	InputHook,
+	InputHookResult,
+	MessageEndHook,
+	ResourcesDiscoverHook,
+	ToolCallHook,
+	ToolCallHookResult,
+	ToolResultHook,
+	ToolResultHookResult,
+	UserBashHook,
+	UserBashHookResult,
+} from "#pi/hooks/hook-types";
 import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
@@ -136,8 +137,8 @@ export async function emitSessionShutdownEvent(
 	extensionRunner: ExtensionRunner,
 	event: SessionShutdownEvent,
 ): Promise<boolean> {
-	if (extensionRunner.hasHandlers("session_shutdown")) {
-		await extensionRunner.emit(event);
+	if (extensionRunner.hasEventHandlers("session_shutdown")) {
+		await extensionRunner.emitEvent(event);
 		return true;
 	}
 	return false;
@@ -463,8 +464,12 @@ export class ExtensionRunner {
 		}
 	}
 
-	hasHandlers(eventType: string): boolean {
-		return hasExtensionHookHandlers(this.extensions, () => this.isStale(), eventType);
+	hasEventHandlers(type: ExtensionEvent["type"]): boolean {
+		return hasExtensionEventHandlers(this.extensions, () => this.isStale(), type);
+	}
+
+	hasHookHandlers(type: ExtensionHookType): boolean {
+		return hasExtensionHookHandlers(this.extensions, () => this.isStale(), type);
 	}
 
 	getMessageRenderer(customType: string): MessageRenderer | undefined {
@@ -634,7 +639,7 @@ export class ExtensionRunner {
 		};
 	}
 
-	private createHookDispatchState(ctx: ExtensionContext = this.createContext()): HookDispatchState {
+	private createDispatchState(ctx: ExtensionContext = this.createContext()): ExtensionDispatchState {
 		return {
 			extensions: this.extensions,
 			ctx,
@@ -678,41 +683,47 @@ export class ExtensionRunner {
 		return context;
 	}
 
-	async emit<TEvent extends RunnerEmitEvent>(event: TEvent): Promise<RunnerEmitResult<TEvent>> {
-		return emitExtensionHook(this.createHookDispatchState(), event);
+	async emitEvent(event: ExtensionEvent): Promise<void> {
+		await emitExtensionEvent(this.createDispatchState(), event);
 	}
 
-	async emitMessageEnd(event: MessageEndEvent): Promise<AgentMessage | undefined> {
-		return emitMessageEndHook(this.createHookDispatchState(), event);
+	async runSessionHook<TType extends "session_before_switch" | "session_before_compact" | "session_before_tree">(
+		hook: ExtensionHookMap[TType]["hook"],
+	): Promise<ExtensionHookMap[TType]["result"] | undefined> {
+		return emitSessionHook(this.createDispatchState(), hook);
 	}
 
-	async emitToolResult(event: ToolResultEvent): Promise<ToolResultEventResult | undefined> {
-		return emitToolResultHook(this.createHookDispatchState(), event);
+	async runMessageEndHook(hook: MessageEndHook): Promise<AgentMessage | undefined> {
+		return emitMessageEndHook(this.createDispatchState(), hook);
 	}
 
-	async emitToolCall(event: ToolCallEvent): Promise<ToolCallEventResult | undefined> {
-		return emitToolCallHook(this.createHookDispatchState(), event);
+	async runToolResultHook(hook: ToolResultHook): Promise<ToolResultHookResult | undefined> {
+		return emitToolResultHook(this.createDispatchState(), hook);
 	}
 
-	async emitUserBash(event: UserBashEvent): Promise<UserBashEventResult | undefined> {
-		return emitUserBashHook(this.createHookDispatchState(), event);
+	async runToolCallHook(hook: ToolCallHook): Promise<ToolCallHookResult | undefined> {
+		return emitToolCallHook(this.createDispatchState(), hook);
 	}
 
-	async emitContext(messages: AgentMessage[]): Promise<AgentMessage[]> {
-		return emitContextHook(this.createHookDispatchState(), messages);
+	async runUserBashHook(hook: UserBashHook): Promise<UserBashHookResult | undefined> {
+		return emitUserBashHook(this.createDispatchState(), hook);
 	}
 
-	async emitBeforeProviderRequest(payload: unknown): Promise<unknown> {
-		return emitBeforeProviderRequestHook(this.createHookDispatchState(), payload);
+	async runContextHook(messages: AgentMessage[]): Promise<AgentMessage[]> {
+		return emitContextHook(this.createDispatchState(), messages);
 	}
 
-	async emitBeforeAgentStart(
+	async runBeforeProviderRequestHook(payload: unknown): Promise<unknown> {
+		return emitBeforeProviderRequestHook(this.createDispatchState(), payload);
+	}
+
+	async runBeforeAgentStartHook(
 		prompt: string,
 		systemPrompt: string,
 		systemPromptOptions: BuildSystemPromptOptions,
 	): Promise<BeforeAgentStartCombinedResult | undefined> {
 		return emitBeforeAgentStartHook({
-			state: this.createHookDispatchState(),
+			state: this.createDispatchState(),
 			prompt,
 			systemPrompt,
 			systemPromptOptions,
@@ -721,24 +732,23 @@ export class ExtensionRunner {
 		});
 	}
 
-	async emitResourcesDiscover(
+	async runResourcesDiscoverHook(
 		cwd: string,
-		reason: ResourcesDiscoverEvent["reason"],
+		reason: ResourcesDiscoverHook["reason"],
 	): Promise<{
 		skillPaths: Array<{ path: string; extensionPath: string }>;
 		promptPaths: Array<{ path: string; extensionPath: string }>;
 		themePaths: Array<{ path: string; extensionPath: string }>;
 	}> {
-		return emitResourcesDiscoverHook(this.createHookDispatchState(), cwd, reason);
+		return emitResourcesDiscoverHook(this.createDispatchState(), cwd, reason);
 	}
 
-	/** Emit input event. Transforms chain, "handled" short-circuits. */
-	async emitInput(
+	async runInputHook(
 		text: string,
-		source: InputEvent["source"],
+		source: InputHook["source"],
 		streamingBehavior?: "steer" | "followUp",
-	): Promise<InputEventResult> {
-		return emitInputHook(this.createHookDispatchState(), text, source, streamingBehavior);
+	): Promise<InputHookResult> {
+		return emitInputHook(this.createDispatchState(), text, source, streamingBehavior);
 	}
 }
 

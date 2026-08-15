@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- Remove `InternetHookHost` and consume Pi's `Pick<ExtensionAPI, "on" | "onHook">` contract directly.
+
 ### Added
 
 - Add account-scoped, owner-private normal-chat bindings and canonical suffix synchronization for explicitly selected, canary-authorized browser-only durable mode.
@@ -27,6 +31,7 @@
 
 ### Changed
 
+- Register provider/tool control through `onHook(...)` and HUD refresh through the observation-only `turn_end` event.
 - Gate registered ChatGPT Web providers through `before_provider_request` while retaining Pi's
   built-in OpenAI Responses transport for request conversion and SSE decoding.
 - Move the synthesized default account into `$PI_AGENT_DIR/internet/accounts/default` and remove

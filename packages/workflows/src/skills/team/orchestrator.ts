@@ -32,7 +32,7 @@ export async function runTeamOrchestrator(input: TeamOrchestratorInput): Promise
 		abortSignal: input.signal,
 		checkpointFailurePolicy: "strict",
 		checkpointStore: input.checkpointStore,
-		onQueueEvent: input.onEvent ? (event) => input.onEvent?.(mapTaskQueueEvent(event)) : undefined,
+		events: input.onEvent ? { queue: (event) => input.onEvent?.(mapTaskQueueEvent(event)) } : undefined,
 	});
 
 	return Object.freeze({

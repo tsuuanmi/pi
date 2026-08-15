@@ -14,7 +14,7 @@ npm install @tsuuanmi/pi-orchestrator
 
 It coordinates generic `Agent` instances and provides Pi-hosted `SubagentManager` execution with isolated sessions, persistence, lifecycle tools, and durable inspection. The generic `subagent_spawn` primitive executes a caller-resolved profile, prompt, and tool policy; it may read the task from a workspace file, persist opaque caller metadata, and atomically materialize captured assistant output at a caller-selected workspace path. The orchestrator-owned runtime artifact remains separate and authoritative for lifecycle evidence. Orchestrator never selects workflow roles or interprets workflow output.
 
-Task requirements are structured and strict: `capabilities`, `tools`, `provider`, `api`, and `model` are hard constraints. `TaskQueueEvent` reports queue lifecycle through `TaskQueue.subscribe()` and `run(..., { onQueueEvent })`; `OrchestratorEvent` reports run progress, and `TeamEvent` is reserved for runtime team messaging. Workflow projections use their own event names and schemas.
+Task requirements are structured and strict: `capabilities`, `tools`, `provider`, `api`, and `model` are hard constraints. `TaskQueueEvent` reports queue lifecycle through `TaskQueue.subscribe()` and `run(..., { events: { queue } })`; `OrchestratorEvent` reports run progress, and `TeamEvent` is reserved for runtime team messaging. Workflow projections use their own event names and schemas.
 
 `TaskExecutionReceipt` and `TaskConsequentialReceipt` are the public task-execution receipt contracts. They own routing, retry, verification, approval, and metrics evidence, but not workflow state, gates, or artifact paths.
 
@@ -59,8 +59,8 @@ All declared requirements are hard constraints. The orchestrator does not assign
 
 ```typescript
 await new Orchestrator().run(team, tasks, {
-  onQueueEvent: (event) => {
-    console.log(event.type, event.task?.id);
+  events: {
+    queue: (event) => console.log(event.type, event.task?.id),
   },
 });
 ```
@@ -83,9 +83,11 @@ Checkpoints are strict versioned payloads. Save failures are best-effort by defa
 
 ```typescript
 await new Orchestrator().run(team, tasks, {
-  onSchedulingWarning: (warning) => console.error(warning.message),
-  onTrace: (event) => {
-    if (event.type === "routing_decision") console.log(event.data);
+  events: {
+    schedulingWarning: (warning) => console.error(warning.message),
+    trace: (event) => {
+      if (event.type === "routing_decision") console.log(event.data);
+    },
   },
 });
 ```

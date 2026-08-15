@@ -12,9 +12,11 @@ import type {
 import type { ProviderConfig } from "#pi/api/provider-types";
 import type { ExtensionHudProvider } from "#pi/api/ui-types";
 import type { ProgramOptions, ProgramResult } from "#pi/execution/program";
-import type { ExtensionHookAPI } from "#pi/hooks/api";
+import type { ExtensionEventAPI, ExtensionHookAPI } from "#pi/hooks/api";
 import type { EventBus } from "#pi/hooks/event-bus";
-import type { HookHandlerFn } from "#pi/hooks/register";
+import type { ExtensionEvent } from "#pi/hooks/events";
+import type { ExtensionHookType } from "#pi/hooks/hook-types";
+import type { EventHandlerFn, HookHandlerFn } from "#pi/hooks/register";
 import type { BuildSystemPromptOptions } from "#pi/loader/agents/system-prompt";
 import type { SourceInfo } from "#pi/resources/source-info";
 import type { SessionManager } from "#pi/session/manager";
@@ -51,7 +53,7 @@ export interface SlashCommandInfo {
 	sourceInfo: SourceInfo;
 }
 
-export interface ExtensionAPI extends ExtensionHookAPI {
+export interface ExtensionAPI extends ExtensionEventAPI, ExtensionHookAPI {
 	registerTool<TParams extends TSchema = TSchema, TDetails = unknown, TState = any>(
 		tool: ExtensionToolSpec<TParams, TDetails, TState>,
 	): void;
@@ -208,7 +210,8 @@ export interface Extension {
 	path: string;
 	resolvedPath: string;
 	sourceInfo: SourceInfo;
-	handlers: Map<string, HookHandlerFn[]>;
+	eventHandlers: Map<ExtensionEvent["type"], EventHandlerFn[]>;
+	hookHandlers: Map<ExtensionHookType, HookHandlerFn[]>;
 	tools: Map<string, RegisteredTool>;
 	messageRenderers: Map<string, MessageRenderer>;
 	commands: Map<string, RegisteredCommand>;

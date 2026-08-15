@@ -255,7 +255,7 @@ describe("AgentSession concurrent prompt guard", () => {
 				(globalThis as typeof globalThis & { testExtensionApi?: unknown }).testExtensionApi = pi;
 			},
 			(pi) => {
-				pi.on("input", async (event) => {
+				pi.onHook("input", async (event) => {
 					lastInputSource = event.source;
 				});
 			},
@@ -467,17 +467,17 @@ describe("AgentSession concurrent prompt guard", () => {
 		const sessionWithRunner = session as unknown as {
 			_agentToolHookDisposer?: () => void;
 			_extensionRunner?: {
-				hasHandlers: (eventType: string) => boolean;
-				emit: (event: { type: string; message?: { role?: string } }) => Promise<void>;
-				emitMessageEnd: (event: { type: string; message?: { role?: string } }) => Promise<undefined>;
-				emitToolCall: (event: { type: string; toolCallId: string }) => Promise<undefined>;
-				emitInput: (
+				hasHookHandlers: (eventType: string) => boolean;
+				emitEvent: (event: { type: string; message?: { role?: string } }) => Promise<void>;
+				runMessageEndHook: (event: { type: string; message?: { role?: string } }) => Promise<undefined>;
+				runToolCallHook: (event: { type: string; toolCallId: string }) => Promise<undefined>;
+				runInputHook: (
 					text: string,
 					images: unknown,
 					source: "interactive" | "rpc" | "extension",
 					streamingBehavior?: "steer" | "followUp",
 				) => Promise<{ action: "continue" }>;
-				emitBeforeAgentStart: (
+				runBeforeAgentStartHook: (
 					prompt: string,
 					images: unknown,
 					systemPrompt: string,
@@ -487,10 +487,10 @@ describe("AgentSession concurrent prompt guard", () => {
 			};
 		};
 		sessionWithRunner._extensionRunner = {
-			hasHandlers: (eventType) => eventType === "tool_call",
-			emit: async () => {},
-			emitMessageEnd: async () => undefined,
-			emitToolCall: async () => {
+			hasHookHandlers: (eventType) => eventType === "tool_call",
+			emitEvent: async () => {},
+			runMessageEndHook: async () => undefined,
+			runToolCallHook: async () => {
 				snapshots.push(
 					sessionManager
 						.getEntries()
@@ -499,8 +499,8 @@ describe("AgentSession concurrent prompt guard", () => {
 				);
 				return undefined;
 			},
-			emitInput: async () => ({ action: "continue" }),
-			emitBeforeAgentStart: async () => undefined,
+			runInputHook: async () => ({ action: "continue" }),
+			runBeforeAgentStartHook: async () => undefined,
 			invalidate: () => {},
 		};
 		// Replace the construction-time bridge with the mocked runner.
@@ -622,16 +622,16 @@ describe("AgentSession concurrent prompt guard", () => {
 
 		const sessionWithRunner = session as unknown as {
 			_extensionRunner?: {
-				hasHandlers: (eventType: string) => boolean;
-				emit: (event: { type: string; message?: { role?: string } }) => Promise<void>;
-				emitMessageEnd: (event: { type: string; message?: { role?: string } }) => Promise<undefined>;
-				emitInput: (
+				hasHookHandlers: (eventType: string) => boolean;
+				emitEvent: (event: { type: string; message?: { role?: string } }) => Promise<void>;
+				runMessageEndHook: (event: { type: string; message?: { role?: string } }) => Promise<undefined>;
+				runInputHook: (
 					text: string,
 					images: unknown,
 					source: "interactive" | "rpc" | "extension",
 					streamingBehavior?: "steer" | "followUp",
 				) => Promise<{ action: "continue" }>;
-				emitBeforeAgentStart: (
+				runBeforeAgentStartHook: (
 					prompt: string,
 					images: unknown,
 					systemPrompt: string,
@@ -641,16 +641,16 @@ describe("AgentSession concurrent prompt guard", () => {
 			};
 		};
 		sessionWithRunner._extensionRunner = {
-			hasHandlers: () => false,
-			emit: async () => {},
-			emitMessageEnd: async (event) => {
+			hasHookHandlers: () => false,
+			emitEvent: async () => {},
+			runMessageEndHook: async (event) => {
 				if (event.type === "message_end" && event.message?.role === "assistant") {
 					await new Promise((resolve) => setTimeout(resolve, 40));
 				}
 				return undefined;
 			},
-			emitInput: async () => ({ action: "continue" }),
-			emitBeforeAgentStart: async () => undefined,
+			runInputHook: async () => ({ action: "continue" }),
+			runBeforeAgentStartHook: async () => undefined,
 			invalidate: () => {},
 		};
 

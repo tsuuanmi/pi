@@ -47,8 +47,8 @@ function createAssistantMessage(text: string, overrides?: Partial<AssistantMessa
 	};
 }
 
-type SessionWithExtensionEmitHook = {
-	_emitExtensionEvent: (event: AgentEvent) => Promise<void>;
+type SessionWithAgentEventForwarder = {
+	_forwardAgentEvent: (event: AgentEvent) => Promise<void>;
 };
 
 describe("AgentSession retry", () => {
@@ -123,9 +123,9 @@ describe("AgentSession retry", () => {
 		});
 
 		if (delayAssistantMessageEndMs > 0) {
-			const sessionWithHook = session as unknown as SessionWithExtensionEmitHook;
-			const original = sessionWithHook._emitExtensionEvent.bind(sessionWithHook);
-			sessionWithHook._emitExtensionEvent = async (event: AgentEvent) => {
+			const sessionWithForwarder = session as unknown as SessionWithAgentEventForwarder;
+			const original = sessionWithForwarder._forwardAgentEvent.bind(sessionWithForwarder);
+			sessionWithForwarder._forwardAgentEvent = async (event: AgentEvent) => {
 				if (event.type === "message_end" && event.message.role === "assistant") {
 					await new Promise((resolve) => setTimeout(resolve, delayAssistantMessageEndMs));
 				}

@@ -1,16 +1,33 @@
 # Events
 
-Pi's host event system for extensions and the TUI.
+Pi exposes two observation channels with different ownership:
 
-## Overview
+1. `ExtensionAPI.on(...)` subscribes to the typed Agent and Pi host lifecycles.
+2. `EventBus` is an untyped, extension-to-extension custom channel.
 
-The Pi event bus adapts agent lifecycle and tool execution events for extensions and UI components. The host bus owns session and UI context; the host does not replace the host-neutral `AgentEvent` stream or agent execution hooks provided by `@tsuuanmi/pi-agent`.
+Neither channel is a control point. Use `ExtensionAPI.onHook(...)` when a callback can block, transform, replace, cancel, or handle host behavior. See [Hooks](hooks.md).
 
-See [Hook architecture](hooks.md) for package ownership and registration boundaries.
+## Extension lifecycle events
+
+```typescript
+export default function (pi: ExtensionAPI) {
+  pi.on("agent_start", (_event, ctx) => {
+    ctx.ui.notify("Agent started", "info");
+  });
+
+  pi.on("session_start", (event) => {
+    console.log(event.reason);
+  });
+}
+```
+
+Agent-owned events reuse `AgentEvent` from `@tsuuanmi/pi-agent` unchanged. Pi adds only host-owned events for sessions, models, thinking levels, and provider responses. Event handlers run in extension load order, errors are isolated and reported, and return values are ignored.
+
+The complete typed lifecycle is documented in [Extensions](../extensions/index.md).
 
 ## EventBus
 
-The core event bus is created by `createEventBus()`:
+`createEventBus()` creates a custom channel for cooperating extensions:
 
 ```typescript
 interface EventBus {
@@ -23,42 +40,22 @@ interface EventBusController extends EventBus {
 }
 ```
 
-### Creating an Event Bus
-
 ```typescript
 import { createEventBus } from "@tsuuanmi/pi/extensions";
 
 const bus = createEventBus();
-
-// Subscribe to events — returns an unsubscribe function
-const unsubscribe = bus.on("message_end", (data) => {
-  console.log("Message completed:", data);
+const unsubscribe = bus.on("my-extension:complete", (data) => {
+  console.log(data);
 });
 
-// Emit events
-bus.emit("message_end", { message });
-
-// Clean up
-unsubscribe(); // Remove a single handler
-bus.clear();   // Remove all handlers
+bus.emit("my-extension:complete", { ok: true });
+unsubscribe();
+bus.clear();
 ```
 
-### Error Handling
+EventBus invokes handlers in registration order. `emit()` does not await asynchronous completion; rejected handlers are caught and logged independently. EventBus channels do not mirror Agent or session lifecycle events.
 
-Event handlers are wrapped with error isolation. If a handler throws, the error is logged to stderr but does not affect other handlers or the event emitter:
+## See also
 
-```
-Event handler error (message_end): <error>
-```
-
-### Async Handlers
-
-Handlers may be `async`. The bus awaits each handler in order. Errors in async handlers are caught and logged the same way as sync handler errors.
-
-## Event Channels
-
-Extensions subscribe to host events using the `ctx.on()` method. Agent-level policies use `Agent.registerHook()` instead. See the [Extensions](../extensions/index.md) documentation for the full list of event channels and hook signatures.
-
-## See Also
-
-- [Extensions](../extensions/index.md) - Extension API and event hooks
+- [Hooks](hooks.md)
+- [Extensions](../extensions/index.md)

@@ -1,10 +1,4 @@
-import type {
-	BeforeProviderRequestEvent,
-	ExtensionHandler,
-	ToolCallEvent,
-	ToolCallEventResult,
-	TurnEndEvent,
-} from "@tsuuanmi/pi/extensions";
+import type { ExtensionAPI, ExtensionContext } from "@tsuuanmi/pi/extensions";
 import { refreshHudUi } from "@tsuuanmi/pi-tui";
 import { providerName } from "#internet/backends/openai/provider";
 import { expandLocalFileReferences } from "#internet/backends/openai/turn/files";
@@ -16,14 +10,8 @@ import type { InternetSettingsService } from "#internet/settings";
 
 const BRIDGED_TOOLS = new Set(["codex_tool_call", "codex_exec", "codex_apply_patch"]);
 
-export interface InternetHookHost {
-	on(event: "tool_call", handler: ExtensionHandler<ToolCallEvent, ToolCallEventResult>): void;
-	on(event: "turn_end", handler: ExtensionHandler<TurnEndEvent>): void;
-	on(event: "before_provider_request", handler: ExtensionHandler<BeforeProviderRequestEvent, unknown>): void;
-}
-
 export function registerInternetHooks(
-	host: InternetHookHost,
+	host: Pick<ExtensionAPI, "on" | "onHook">,
 	manager: OwnedDaemonManager,
 	accounts: InternetAccount[],
 	settings: InternetSettingsService,
@@ -32,32 +20,32 @@ export function registerInternetHooks(
 		accounts.filter((account) => account.enabled).map((account) => [providerName(account), account.id]),
 	);
 
-	host.on("tool_call", async (event, context) => {
+	host.onHook("tool_call", async (hook, context) => {
 		const lifecycleAction =
-			event.toolName === "internet_control" ||
-			event.toolName === "internet_daemon" ||
-			event.toolName === "internet_harness"
-				? event.input.action
+			hook.toolName === "internet_control" ||
+			hook.toolName === "internet_daemon" ||
+			hook.toolName === "internet_harness"
+				? hook.input.action
 				: undefined;
 		const requiresApproval =
-			BRIDGED_TOOLS.has(event.toolName) ||
-			event.toolName === "internet_control" ||
-			event.toolName === "internet_daemon" ||
-			event.toolName === "internet_harness";
+			BRIDGED_TOOLS.has(hook.toolName) ||
+			hook.toolName === "internet_control" ||
+			hook.toolName === "internet_daemon" ||
+			hook.toolName === "internet_harness";
 		if (!requiresApproval) return undefined;
 		if (!context.hasUI) {
 			return { block: true, reason: "This internet tool requires interactive approval." };
 		}
 		const approved = await context.ui.confirm(
 			"Approve internet tool",
-			`Allow ${event.toolName}${typeof lifecycleAction === "string" ? ` (${lifecycleAction})` : ""} for this call?`,
+			`Allow ${hook.toolName}${typeof lifecycleAction === "string" ? ` (${lifecycleAction})` : ""} for this call?`,
 		);
 		return approved ? undefined : { block: true, reason: "Internet tool call was not approved." };
 	});
 
-	host.on("before_provider_request", async (event, context) => {
+	host.onHook("before_provider_request", async (hook, context) => {
 		const accountId = context.model ? providerAccounts.get(context.model.provider) : undefined;
-		if (!accountId) return event.payload;
+		if (!accountId) return hook.payload;
 		try {
 			const account = accounts.find((candidate) => candidate.id === accountId);
 			const loginExists = account ? await daemonLoginExists(account) : false;
@@ -77,7 +65,7 @@ export function registerInternetHooks(
 				);
 			}
 			await manager.ensureReady(accountId);
-			const payload = await expandLocalFileReferences(event.payload, context.cwd);
+			const payload = await expandLocalFileReferences(hook.payload, context.cwd);
 			return adaptChatGptWebRequest(payload, {
 				cwd: context.cwd,
 				sessionId: context.sessionManager.getSessionId(),
@@ -95,12 +83,10 @@ export function registerInternetHooks(
 	});
 }
 
-function latestUserEntryId(entries: ReturnType<InternetHookContext["sessionManager"]["getBranch"]>): string {
+function latestUserEntryId(entries: ReturnType<ExtensionContext["sessionManager"]["getBranch"]>): string {
 	for (let index = entries.length - 1; index >= 0; index -= 1) {
 		const entry = entries[index];
 		if (entry.type === "message" && entry.message.role === "user") return entry.id;
 	}
 	return "";
 }
-
-type InternetHookContext = Parameters<ExtensionHandler<BeforeProviderRequestEvent, unknown>>[1];

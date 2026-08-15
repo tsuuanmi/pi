@@ -1,6 +1,6 @@
 # Orchestrator
 
-The `Orchestrator` runs explicit task DAGs with dependency-aware scheduling, agent assignment, retries, abort handling, trace hooks, and production progress events. Its hooks are task and run policies; they are separate from agent execution hooks and Pi extension hooks. See [Hook architecture](../../../pi/docs/runtime/hooks.md) for the package boundary.
+The `Orchestrator` runs explicit task DAGs with dependency-aware scheduling, agent assignment, retries, abort handling, trace events, and production progress events. Observation handlers live under `events`; decision hooks live under `hooks`. Orchestrator hooks are separate from Agent execution hooks and Pi extension hooks. See [Hook architecture](../../../pi/docs/runtime/hooks.md) for the package boundary.
 
 ## Planning model
 
@@ -40,7 +40,7 @@ Composite scheduling uses weighted scoring:
 - `fit`: overall requirement-fit score
 - `load`: current agent load
 
-Task requirements are structured objects with optional `capabilities`, `tools`, `provider`, `api`, and `model` fields. All declared requirements are hard constraints. When no agent satisfies task requirements, scheduling emits `onSchedulingWarning` with rejected-agent reasons, fails fast, and does not start that task.
+Task requirements are structured objects with optional `capabilities`, `tools`, `provider`, `api`, and `model` fields. All declared requirements are hard constraints. When no agent satisfies task requirements, scheduling calls `events.schedulingWarning` with rejected-agent reasons, fails fast, and does not start that task.
 
 ```typescript
 await new Orchestrator().run(team, [
@@ -64,12 +64,12 @@ Routing diagnostics are available through warnings, trace events, and receipts.
 
 ## Retry and abort behavior
 
-Use `onTaskFailure` for failure decisions. It is the policy hook that decides whether a failed attempt should `retry`, `fail`, `skip`, or `abort`.
+Use `hooks.handleTaskFailure` for failure decisions. It decides whether a failed attempt should `retry`, `fail`, `skip`, or `abort`.
 
-- `maxRetries`, `retryDelayMs`, and `retryBackoff` are the default retry policy when `onTaskFailure` is not supplied.
-- `onTaskFailure` overrides that default policy for each failed attempt.
-- `onTaskStart` fires on every attempt.
-- `onTaskComplete` fires only on the final successful outcome.
+- `maxRetries`, `retryDelayMs`, and `retryBackoff` are the default retry policy when `hooks.handleTaskFailure` is not supplied.
+- `hooks.handleTaskFailure` overrides that default policy for each failed attempt.
+- `events.taskStart` fires on every attempt.
+- `events.taskComplete` fires only on the final successful outcome.
 - `abortSignal` is passed into `agent.run()` and abortable retry delays.
 - `runBudget.maxRunMs` creates an orchestrator-owned abort signal for in-flight agent calls.
 - Aborted pending tasks are marked `skipped`, and the result status is `aborted`.
@@ -120,26 +120,28 @@ if (result.resume.resumed) {
 
 ## Governance hooks
 
-Use `onTaskDispatch` to approve or reject task launch after scheduling but before execution. Returning `false` rejects the task, aborts further dispatch, skips pending tasks, and returns an aborted result.
+Use `hooks.approveTaskDispatch` to approve or reject task launch after scheduling but before execution. Returning `false` rejects the task, aborts further dispatch, skips pending tasks, and returns an aborted result.
 
-Use `onTaskVerify` to reject completed task output before it is finalized. Verification runs only for tasks that set `verify`.
+Use `hooks.verifyTask` to reject completed task output before it is finalized. Verification runs only for tasks that set `verify`.
 
-Use `onTaskConsequential` to approve or reject tasks that explicitly set `consequential: true`. Consequential tasks are blocked before execution when approval is missing or denied.
+Use `hooks.approveConsequentialTask` to approve or reject tasks that explicitly set `consequential: true`. Consequential tasks are blocked before execution when approval is missing or denied.
 
 Use `createConsensusVerifier({ judges, minApprovals })` when verification should require explicit judge agreement. Judges must be supplied explicitly, `minApprovals` must be set explicitly, and every judge must return strict JSON with exactly `approved` and `reason` fields. Malformed judge output fails verification.
 
-Use `onTaskFailure` to classify failed attempts as `retry`, `fail`, `skip`, or `abort`. This is the only hook that controls failure policy.
+Use `hooks.classifyTaskRetry` to attach a stable retry classification and `hooks.handleTaskFailure` to choose `retry`, `fail`, `skip`, or `abort`.
 
-Hooks configured on the `Orchestrator` constructor are run defaults. A hook supplied to `run()` overrides the corresponding constructor hook for that run, including `onTrace` and `onTaskRetryClassify`.
+`events` and `hooks` configured on the `Orchestrator` constructor are run defaults. Values supplied to `run()` override corresponding constructor values by key.
 
-Use `onTrace` for structured planning/execution telemetry, `onProgress` for user-facing production observability, and `onQueueEvent` for task-queue lifecycle events. Task routing is exposed through the `routeReadyTasks` boundary and the exported `Scheduler` / `AgentSelector` routing primitives. `Scheduler.scheduleTask()` schedules one task with explicit selection data for incremental execution. Routing decisions are emitted as `routing_decision` trace events with a `TaskRoutingDecision` payload.
+Use `events.trace` for structured planning/execution telemetry, `events.progress` for user-facing production observability, and `events.queue` for task-queue lifecycle events. Task routing is exposed through the `routeReadyTasks` boundary and the exported `Scheduler` / `AgentSelector` routing primitives. `Scheduler.scheduleTask()` schedules one task with explicit selection data for incremental execution. Routing decisions are emitted as `routing_decision` trace events with a `TaskRoutingDecision` payload.
 
 ```typescript
 await new Orchestrator().run(team, tasks, {
-  onQueueEvent: (event) => console.log(event.type, event.task?.id),
-  onSchedulingWarning: (warning) => console.error(warning.message),
-  onTrace: (event) => {
-    if (event.type === "routing_decision") console.log(event.data);
+  events: {
+    queue: (event) => console.log(event.type, event.task?.id),
+    schedulingWarning: (warning) => console.error(warning.message),
+    trace: (event) => {
+      if (event.type === "routing_decision") console.log(event.data);
+    },
   },
 });
 ```
@@ -183,7 +185,7 @@ Trace events include:
 - `budget_exceeded`
 - `error`
 
-`task_retry` includes a structured `retryDecision` payload with the exponential delay, jitter, and final wait duration. When `onTaskRetryClassify` is provided, `task_retry` also includes a stable retry classification.
+`task_retry` includes a structured `retryDecision` payload with the exponential delay, jitter, and final wait duration. When `hooks.classifyTaskRetry` is provided, `task_retry` also includes a stable retry classification.
 `task_consequential` includes an `approved` flag for explicit high-impact task approval.
 
 Progress events include:
@@ -216,7 +218,9 @@ import { Orchestrator, Team } from "@tsuuanmi/pi-orchestrator";
 
 const orchestrator = new Orchestrator({
   schedulingStrategy: "composite",
-  onProgress: (event) => console.log(event.type, event.taskId),
+  events: {
+    progress: (event) => console.log(event.type, event.taskId),
+  },
 });
 
 const team = new Team({

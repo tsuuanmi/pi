@@ -9,10 +9,11 @@ export async function planTasks(team: Team, goal: string, options: PlanOptions):
 	const coordinator = options.coordinator;
 	if (!coordinator) throw new Error("Planning requires an explicit coordinator agent.");
 	const prompt = buildPlannerPrompt(team, normalizedGoal);
-	options.onTrace?.({ type: "plan_start", timestamp: new Date().toISOString(), message: normalizedGoal });
+	const emitTrace = options.events?.trace;
+	emitTrace?.({ type: "plan_start", timestamp: new Date().toISOString(), message: normalizedGoal });
 	if (options.abortSignal?.aborted) {
 		const error = new OrchestratorAbortError();
-		options.onTrace?.({ type: "plan_abort", timestamp: new Date().toISOString(), message: error.message });
+		emitTrace?.({ type: "plan_abort", timestamp: new Date().toISOString(), message: error.message });
 		throw error;
 	}
 	let result: { success: boolean; output: string; structured?: unknown; error?: unknown };
@@ -24,25 +25,25 @@ export async function planTasks(team: Team, goal: string, options: PlanOptions):
 	} catch (error) {
 		if (options.abortSignal?.aborted || isAbortError(error)) {
 			const abortError = new OrchestratorAbortError();
-			options.onTrace?.({ type: "plan_abort", timestamp: new Date().toISOString(), message: abortError.message });
+			emitTrace?.({ type: "plan_abort", timestamp: new Date().toISOString(), message: abortError.message });
 			throw abortError;
 		}
 		const message = formatPlannerFailure(error, "");
-		options.onTrace?.({ type: "plan_error", timestamp: new Date().toISOString(), message });
+		emitTrace?.({ type: "plan_error", timestamp: new Date().toISOString(), message });
 		throw new Error(message);
 	}
 	if (!result.success) {
 		if (options.abortSignal?.aborted || isAbortError(result.error)) {
 			const error = new OrchestratorAbortError();
-			options.onTrace?.({ type: "plan_abort", timestamp: new Date().toISOString(), message: error.message });
+			emitTrace?.({ type: "plan_abort", timestamp: new Date().toISOString(), message: error.message });
 			throw error;
 		}
 		const message = formatPlannerFailure(result.error, result.output);
-		options.onTrace?.({ type: "plan_error", timestamp: new Date().toISOString(), message });
+		emitTrace?.({ type: "plan_error", timestamp: new Date().toISOString(), message });
 		throw new Error(message);
 	}
 	const tasks = parsePlanOutput(result.output, team);
-	options.onTrace?.({
+	emitTrace?.({
 		type: "plan_complete",
 		timestamp: new Date().toISOString(),
 		message: normalizedGoal,

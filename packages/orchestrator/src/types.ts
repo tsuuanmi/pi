@@ -129,10 +129,27 @@ export interface RunResume {
 	taskStarts?: number;
 }
 
+export interface OrchestratorEventHandlers {
+	progress?: (event: OrchestratorEvent) => void;
+	queue?: (event: TaskQueueEvent) => void;
+	schedulingWarning?: (warning: SchedulingWarning) => void;
+	trace?: (event: OrchestratorTraceEvent) => void;
+	taskStart?: (task: TaskSnapshot) => void;
+	taskComplete?: (task: TaskSnapshot) => void;
+}
+
+export interface OrchestratorHooks {
+	verifyTask?: (context: TaskVerificationContext) => boolean | Promise<boolean>;
+	approveConsequentialTask?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
+	classifyTaskRetry?: (context: TaskFailureContext) => TaskRetryClassification | Promise<TaskRetryClassification>;
+	handleTaskFailure?: (context: TaskFailureContext) => TaskFailureAction | Promise<TaskFailureAction>;
+	approveTaskDispatch?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
+}
+
 export interface PlanOptions {
 	coordinator: Agent;
 	abortSignal?: AbortSignal;
-	onTrace?: (event: OrchestratorTraceEvent) => void;
+	events?: Pick<OrchestratorEventHandlers, "trace">;
 }
 
 export interface PlanResult {
@@ -145,7 +162,7 @@ export interface ConsensusVerifierOptions {
 	judges: readonly Agent[];
 	minApprovals: number;
 	abortSignal?: AbortSignal;
-	onTrace?: (event: OrchestratorTraceEvent) => void;
+	events?: Pick<OrchestratorEventHandlers, "trace">;
 }
 
 export interface ConsensusVote {
@@ -170,14 +187,8 @@ export interface OrchestratorConfig {
 	checkpointStore?: OrchestratorCheckpointStore;
 	checkpointFailurePolicy?: CheckpointFailurePolicy;
 	runIdentity?: RunIdentity;
-	onProgress?: (event: OrchestratorEvent) => void;
-	onQueueEvent?: (event: TaskQueueEvent) => void;
-	onSchedulingWarning?: (warning: SchedulingWarning) => void;
-	onTrace?: (event: OrchestratorTraceEvent) => void;
-	onTaskVerify?: (context: TaskVerificationContext) => boolean | Promise<boolean>;
-	onTaskConsequential?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
-	onTaskRetryClassify?: (context: TaskFailureContext) => TaskRetryClassification | Promise<TaskRetryClassification>;
-	onTaskFailure?: (context: TaskFailureContext) => TaskFailureAction | Promise<TaskFailureAction>;
+	events?: OrchestratorEventHandlers;
+	hooks?: OrchestratorHooks;
 }
 
 export interface RunTeamOptions {
@@ -189,17 +200,8 @@ export interface RunTeamOptions {
 	checkpointFailurePolicy?: CheckpointFailurePolicy;
 	runIdentity?: RunIdentity;
 	abortSignal?: AbortSignal;
-	onProgress?: (event: OrchestratorEvent) => void;
-	onQueueEvent?: (event: TaskQueueEvent) => void;
-	onSchedulingWarning?: (warning: SchedulingWarning) => void;
-	onTrace?: (event: OrchestratorTraceEvent) => void;
-	onTaskVerify?: (context: TaskVerificationContext) => boolean | Promise<boolean>;
-	onTaskConsequential?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
-	onTaskRetryClassify?: (context: TaskFailureContext) => TaskRetryClassification | Promise<TaskRetryClassification>;
-	onTaskFailure?: (context: TaskFailureContext) => TaskFailureAction | Promise<TaskFailureAction>;
-	onTaskDispatch?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
-	onTaskStart?: (task: TaskSnapshot) => void;
-	onTaskComplete?: (task: TaskSnapshot) => void;
+	events?: OrchestratorEventHandlers;
+	hooks?: OrchestratorHooks;
 }
 
 export interface RunTeamResult {

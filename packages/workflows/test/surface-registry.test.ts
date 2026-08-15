@@ -55,6 +55,7 @@ describe("workflow surface registry", () => {
 
 	it("registers bundled workflow tools and hooks through one host entry point", () => {
 		const registeredTools: string[] = [];
+		const registeredEvents: string[] = [];
 		const registeredHooks: string[] = [];
 		const hudProviders: unknown[] = [];
 		const host = {
@@ -62,7 +63,10 @@ describe("workflow surface registry", () => {
 				registeredTools.push(tool.name);
 			},
 			on(event: string) {
-				registeredHooks.push(event);
+				registeredEvents.push(event);
+			},
+			onHook(hook: string) {
+				registeredHooks.push(hook);
 			},
 			registerHudProvider(provider: unknown) {
 				hudProviders.push(provider);
@@ -72,14 +76,7 @@ describe("workflow surface registry", () => {
 
 		expect(registeredTools.slice().sort()).toEqual(WORKFLOW_TOOL_SURFACES.map((tool) => tool.toolName).sort());
 		expect(hudProviders).toHaveLength(2);
-		expect(registeredHooks).toEqual([
-			"session_shutdown",
-			"session_start",
-			"turn_end",
-			"tool_execution_end",
-			"before_agent_start",
-			"tool_result",
-			"tool_call",
-		]);
+		expect(registeredEvents).toEqual(["session_shutdown", "session_start", "turn_end", "tool_execution_end"]);
+		expect(registeredHooks).toEqual(["before_agent_start", "tool_result", "tool_call"]);
 	});
 });

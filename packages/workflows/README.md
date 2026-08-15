@@ -337,8 +337,8 @@ import {
 
 Subpath exports:
 
-- `@tsuuanmi/pi-workflows/hooks` — workflow extension-hook registration for custom hosts.
-- `@tsuuanmi/pi-workflows/extension` — workflow tool and hook registration adapter for Pi hosts.
+- `@tsuuanmi/pi-workflows/hooks` — workflow event and control-hook registration against `Pick<ExtensionAPI, "on" | "onHook">`.
+- `@tsuuanmi/pi-workflows/extension` — workflow tool and lifecycle registration adapter for Pi hosts.
 - `@tsuuanmi/pi-workflows/commands/workflow` — the public `pi workflow` command entry, including `pi workflow state`.
 - `@tsuuanmi/pi-workflows/tool` — workflow tool registration helper for custom hosts.
 

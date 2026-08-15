@@ -2240,8 +2240,7 @@ export class InteractiveMode {
 	private async handleBashCommand(command: string, excludeFromContext = false): Promise<void> {
 		const extensionRunner = this.session.extensionRunner;
 
-		// Emit user_bash event to let extensions intercept
-		const eventResult = await extensionRunner.emitUserBash({
+		const hookResult = await extensionRunner.runUserBashHook({
 			type: "user_bash",
 			command,
 			excludeFromContext,
@@ -2249,8 +2248,8 @@ export class InteractiveMode {
 		});
 
 		// If extension returned a full result, use it directly
-		if (eventResult?.result) {
-			const result = eventResult.result;
+		if (hookResult?.result) {
+			const result = hookResult.result;
 
 			// Create UI component for display
 			this.bashComponent = new BashExecutionComponent(command, this.ui, this.keybindings, excludeFromContext);
@@ -2302,7 +2301,7 @@ export class InteractiveMode {
 						this.ui.requestRender();
 					}
 				},
-				{ excludeFromContext, operations: eventResult?.operations },
+				{ excludeFromContext, operations: hookResult?.operations },
 			);
 
 			if (this.bashComponent) {

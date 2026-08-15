@@ -16,7 +16,7 @@ export async function verifyTask(input: {
 	attempt: number;
 	startedAtMs: number;
 }): Promise<boolean> {
-	const verifier = input.context.options.onTaskVerify ?? input.context.defaultOnTaskVerify;
+	const verifier = input.context.options.hooks?.verifyTask;
 	if (!verifier || input.task.snapshot().verify === undefined) return true;
 	const snapshot = input.task.snapshot();
 	const verification: TaskVerificationContext = {

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type {
 	ExtensionFactory,
-	SessionBeforeSwitchEvent,
+	SessionBeforeSwitchHook,
 	SessionShutdownEvent,
 	SessionStartEvent,
 } from "@tsuuanmi/pi/extensions";
@@ -14,7 +14,7 @@ import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/
 import { SessionManager } from "#pi/session/manager";
 import { registerTestProvider, testAssistantMessage } from "#pi-test/helpers/provider";
 
-type RecordedSessionEvent = SessionBeforeSwitchEvent | SessionShutdownEvent | SessionStartEvent;
+type RecordedSessionEvent = SessionBeforeSwitchHook | SessionShutdownEvent | SessionStartEvent;
 
 describe("AgentSessionRuntime session lifecycle events", () => {
 	const cleanups: Array<() => Promise<void> | void> = [];
@@ -87,7 +87,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 	it("emits session_before_switch and session_start for new and resume flows", async () => {
 		const events: RecordedSessionEvent[] = [];
 		const { runtimeHost } = await createRuntimeHost((pi) => {
-			pi.on("session_before_switch", (event) => {
+			pi.onHook("session_before_switch", (event) => {
 				events.push(event);
 			});
 			pi.on("session_shutdown", (event) => {
@@ -131,7 +131,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 	it("honors session_before_switch cancellation", async () => {
 		const events: RecordedSessionEvent[] = [];
 		const { runtimeHost } = await createRuntimeHost((pi) => {
-			pi.on("session_before_switch", (event) => {
+			pi.onHook("session_before_switch", (event) => {
 				events.push(event);
 				return { cancel: true };
 			});
@@ -159,7 +159,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 			pi.on("session_shutdown", () => {
 				phases.push("session_shutdown");
 			});
-			pi.on("before_agent_start", () => {
+			pi.onHook("before_agent_start", () => {
 				beforeAgentStartCalls++;
 			});
 		});
@@ -175,9 +175,9 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 		await runtimeHost.newSession();
 
 		expect(phases).toEqual(["session_shutdown", "beforeSessionInvalidate", "rebindSession"]);
-		expect(oldSession.extensionRunner.hasHandlers("before_agent_start")).toBe(false);
+		expect(oldSession.extensionRunner.hasHookHandlers("before_agent_start")).toBe(false);
 		await expect(
-			oldSession.extensionRunner.emitBeforeAgentStart("hello", "system", {} as never),
+			oldSession.extensionRunner.runBeforeAgentStartHook("hello", "system", {} as never),
 		).resolves.toBeUndefined();
 		expect(beforeAgentStartCalls).toBe(0);
 		expect(() => oldSession.extensionRunner.createContext().cwd).toThrow(

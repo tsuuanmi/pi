@@ -68,7 +68,7 @@ export class Scheduler {
 			selection = this.selector.select(snapshot, candidates, input.allTasks, load, index, input.options, strategy);
 		} catch (error) {
 			if (error instanceof AgentSelectionError) {
-				input.options.onSchedulingWarning?.({
+				input.options.events?.schedulingWarning?.({
 					code: "no_eligible_agent",
 					message: error.message,
 					taskId: error.taskId,

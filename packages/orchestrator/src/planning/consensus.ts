@@ -20,7 +20,8 @@ export async function runConsensusVerification(
 	options: ConsensusVerifierOptions,
 ): Promise<ConsensusResult> {
 	validateConsensusOptions(options);
-	options.onTrace?.({
+	const emitTrace = options.events?.trace;
+	emitTrace?.({
 		type: "consensus_start",
 		timestamp: new Date().toISOString(),
 		taskId: context.task.id,
@@ -40,7 +41,7 @@ export async function runConsensusVerification(
 			vote = parseJudgeVote(judge.name, result.output);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
-			options.onTrace?.({
+			emitTrace?.({
 				type: "consensus_error",
 				timestamp: new Date().toISOString(),
 				taskId: context.task.id,
@@ -52,7 +53,7 @@ export async function runConsensusVerification(
 			throw error;
 		}
 		votes.push(vote);
-		options.onTrace?.({
+		emitTrace?.({
 			type: "consensus_vote",
 			timestamp: new Date().toISOString(),
 			taskId: context.task.id,
@@ -70,7 +71,7 @@ export async function runConsensusVerification(
 		approvals,
 		rejections,
 	};
-	options.onTrace?.({
+	emitTrace?.({
 		type: "consensus_complete",
 		timestamp: new Date().toISOString(),
 		taskId: context.task.id,

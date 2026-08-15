@@ -11,7 +11,14 @@ import type { ProviderConfig } from "#pi/api/provider-types";
 import type { ProgramOptions } from "#pi/execution/program";
 import { runProgram } from "#pi/execution/program";
 import type { EventBus } from "#pi/hooks/event-bus";
-import { type HookHandlerFn, registerExtensionHook } from "#pi/hooks/register";
+import type { ExtensionEvent } from "#pi/hooks/events";
+import type { ExtensionHookType } from "#pi/hooks/hook-types";
+import {
+	type EventHandlerFn,
+	type HookHandlerFn,
+	registerExtensionEvent,
+	registerExtensionHook,
+} from "#pi/hooks/register";
 import type { ExtensionToolSpec } from "#pi/tool/spec";
 
 const STALE_CONTEXT_MESSAGE =
@@ -71,8 +78,11 @@ export function createExtensionAPI(
 	eventBus: EventBus,
 ): ExtensionAPI {
 	const api = {
-		on(event: string, handler: HookHandlerFn): void {
-			registerExtensionHook(extension, runtime, event, handler);
+		on(type: ExtensionEvent["type"], handler: EventHandlerFn): void {
+			registerExtensionEvent(extension, runtime, type, handler);
+		},
+		onHook(type: ExtensionHookType, handler: HookHandlerFn): void {
+			registerExtensionHook(extension, runtime, type, handler);
 		},
 		registerTool(tool: ExtensionToolSpec): void {
 			runtime.assertActive();

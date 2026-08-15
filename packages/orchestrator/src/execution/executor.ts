@@ -63,7 +63,7 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 		task.start();
 		const attemptSnapshot = task.snapshot();
 		queue.emit({ type: "task_start", task: attemptSnapshot });
-		context.options.onTaskStart?.(attemptSnapshot);
+		context.options.events?.taskStart?.(attemptSnapshot);
 		context.emit({
 			type: "task_start",
 			taskId: attemptSnapshot.id,
@@ -124,7 +124,7 @@ export async function executeTask(task: Task, queue: TaskQueue, context: Orchest
 			task.complete(bridgeResult.output, bridgeResult.structured);
 			const completed = task.snapshot();
 			queue.emit({ type: "task_complete", task: completed });
-			context.options.onTaskComplete?.(completed);
+			context.options.events?.taskComplete?.(completed);
 			context.emit({
 				type: "task_complete",
 				taskId: completed.id,

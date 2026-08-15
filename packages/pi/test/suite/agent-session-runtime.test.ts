@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type {
 	ExtensionAPI,
 	ExtensionFactory,
-	SessionBeforeSwitchEvent,
+	SessionBeforeSwitchHook,
 	SessionShutdownEvent,
 	SessionStartEvent,
 } from "@tsuuanmi/pi/extensions";
@@ -15,7 +15,7 @@ import { createAgentSessionFromServices, createAgentSessionServices } from "#pi/
 import { SessionManager } from "#pi/session/manager";
 import { registerTestProvider, testAssistantMessage } from "#pi-test/helpers/provider";
 
-type RecordedSessionEvent = SessionBeforeSwitchEvent | SessionShutdownEvent | SessionStartEvent;
+type RecordedSessionEvent = SessionBeforeSwitchHook | SessionShutdownEvent | SessionStartEvent;
 
 describe("AgentSessionRuntime characterization", () => {
 	const cleanups: Array<() => Promise<void> | void> = [];
@@ -117,7 +117,7 @@ describe("AgentSessionRuntime characterization", () => {
 
 	it("persists message_end assistant replacements to the session manager", async () => {
 		const { runtime } = await createRuntimeForTest((pi: ExtensionAPI) => {
-			pi.on("message_end", (event) => {
+			pi.onHook("message_end", (event) => {
 				if (event.message.role !== "assistant") return;
 
 				return {
@@ -159,7 +159,7 @@ describe("AgentSessionRuntime characterization", () => {
 	it("emits session_before_switch and session_start for new and resume flows", async () => {
 		const events: RecordedSessionEvent[] = [];
 		const { runtime } = await createRuntimeForTest((pi: ExtensionAPI) => {
-			pi.on("session_before_switch", (event) => {
+			pi.onHook("session_before_switch", (event) => {
 				events.push(event);
 			});
 			pi.on("session_shutdown", (event) => {
@@ -205,7 +205,7 @@ describe("AgentSessionRuntime characterization", () => {
 		const events: RecordedSessionEvent[] = [];
 		let cancelReason: "new" | "resume" | undefined;
 		const { runtime } = await createRuntimeForTest((pi: ExtensionAPI) => {
-			pi.on("session_before_switch", (event) => {
+			pi.onHook("session_before_switch", (event) => {
 				events.push(event);
 				if (event.reason === cancelReason) {
 					return { cancel: true };

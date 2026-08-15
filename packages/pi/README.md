@@ -302,14 +302,14 @@ Place in `~/.pi/agent/skills/`, `~/.agents/skills/`, `.pi/skills/`, or `.agents/
 
 ### Extensions
 
-TypeScript modules that extend pi with custom tools, commands, keyboard shortcuts, event handlers, and UI components.
+TypeScript modules that extend pi with custom tools, commands, keyboard shortcuts, event observers, control hooks, and UI components.
 
 ```typescript
 export default function (pi: ExtensionAPI) {
   pi.registerTool({ name: "deploy", ... });
   pi.registerCommand("stats", { ... });
   pi.registerHudProvider(async ({ cwd, sessionId }) => []);
-  pi.on("tool_call", async (event, ctx) => { ... });
+  pi.onHook("tool_call", async (hook, ctx) => { ... });
 }
 ```
 

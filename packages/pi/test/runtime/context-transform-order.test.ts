@@ -89,7 +89,7 @@ describe("SDK context transform ordering", () => {
 			settingsManager,
 			extensionFactories: [
 				(pi) => {
-					pi.on("context", (event) => {
+					pi.onHook("context", (event) => {
 						extensionSawRawThinking = event.messages.some(
 							(message) =>
 								message.role === "assistant" && message.content.some((block) => block.type === "thinking"),
@@ -190,7 +190,7 @@ describe("SDK context transform ordering", () => {
 			settingsManager,
 			extensionFactories: [
 				(pi) => {
-					pi.on("context", (event) => {
+					pi.onHook("context", (event) => {
 						extensionSawRawDuplicate = event.messages.some(
 							(message) =>
 								message.role === "toolResult" &&

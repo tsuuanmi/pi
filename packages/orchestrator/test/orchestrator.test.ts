@@ -227,7 +227,7 @@ describe("multi-agent primitives", () => {
 
 		const plan = await new Orchestrator().plan(team, "Ship the article", {
 			coordinator,
-			onTrace: (event) => traces.push(event.type),
+			events: { trace: (event) => traces.push(event.type) },
 		});
 
 		expect(plan.goal).toBe("Ship the article");
@@ -486,7 +486,7 @@ describe("multi-agent primitives", () => {
 				{ id: "b", title: "B", description: "B" },
 				{ id: "c", title: "C", description: "C" },
 			],
-			{ maxConcurrency: 1, onTaskStart: (task) => starts.push(task.id) },
+			{ maxConcurrency: 1, events: { taskStart: (task) => starts.push(task.id) } },
 		);
 
 		expect(starts).toEqual(["a", "b", "c"]);
@@ -521,8 +521,10 @@ describe("multi-agent primitives", () => {
 			{
 				maxConcurrency: 1,
 				runBudget: { maxTaskStarts: 1 },
-				onProgress: (event) => {
-					if (event.type === "budget_exceeded") events.push(event.message ?? "");
+				events: {
+					progress: (event) => {
+						if (event.type === "budget_exceeded") events.push(event.message ?? "");
+					},
 				},
 			},
 		);
@@ -541,8 +543,10 @@ describe("multi-agent primitives", () => {
 			[{ id: "a", title: "A", description: "A" }],
 			{
 				runBudget: { maxRunMs: 1 },
-				onProgress: (event) => {
-					if (event.type === "budget_exceeded") budgetEvents.push(event.message ?? "");
+				events: {
+					progress: (event) => {
+						if (event.type === "budget_exceeded") budgetEvents.push(event.message ?? "");
+					},
 				},
 			},
 		);
@@ -561,9 +565,11 @@ describe("multi-agent primitives", () => {
 			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
 			[{ id: "a", title: "A", description: "A", verify: { required: true } }],
 			{
-				onTaskVerify: async () => false,
-				onProgress: (event) => {
-					if (event.type === "task_verify") events.push(event.message ?? "");
+				hooks: { verifyTask: async () => false },
+				events: {
+					progress: (event) => {
+						if (event.type === "task_verify") events.push(event.message ?? "");
+					},
 				},
 			},
 		);
@@ -602,7 +608,7 @@ describe("multi-agent primitives", () => {
 				new Agent(agentConfig("judge-c", new JudgeStream('{"approved":true,"reason":"ok"}'))),
 			],
 			minApprovals: 2,
-			onTrace: (event) => traces.push(event.type),
+			events: { trace: (event) => traces.push(event.type) },
 		});
 
 		expect(result.approved).toBe(true);
@@ -618,15 +624,17 @@ describe("multi-agent primitives", () => {
 		]);
 	});
 
-	it("uses consensus verifier through onTaskVerify", async () => {
+	it("uses a consensus verifier through the task verification hook", async () => {
 		const result = await new Orchestrator().run(
 			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
 			[{ id: "a", title: "A", description: "A", verify: { required: true } }],
 			{
-				onTaskVerify: createConsensusVerifier({
-					judges: [new Agent(agentConfig("judge", new JudgeStream('{"approved":true,"reason":"valid"}')))],
-					minApprovals: 1,
-				}),
+				hooks: {
+					verifyTask: createConsensusVerifier({
+						judges: [new Agent(agentConfig("judge", new JudgeStream('{"approved":true,"reason":"valid"}')))],
+						minApprovals: 1,
+					}),
+				},
 			},
 		);
 
@@ -676,7 +684,7 @@ describe("multi-agent primitives", () => {
 		const result = await new Orchestrator().run(
 			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
 			[{ id: "a", title: "A", description: "A" }],
-			{ onQueueEvent: (event) => events.push(event.type) },
+			{ events: { queue: (event) => events.push(event.type) } },
 		);
 
 		expect(result.success).toBe(true);
@@ -721,11 +729,13 @@ describe("multi-agent primitives", () => {
 					save: async () => undefined,
 				},
 				runIdentity,
-				onTaskVerify: async () => true,
-				onTrace: (event) => {
-					traceTypes.push(event.type);
-					traceRunIds.push(event.runIdentity?.runId ?? "missing");
-					if (event.type === "routing_decision") routingDecisions.push(event.data);
+				hooks: { verifyTask: async () => true },
+				events: {
+					trace: (event) => {
+						traceTypes.push(event.type);
+						traceRunIds.push(event.runIdentity?.runId ?? "missing");
+						if (event.type === "routing_decision") routingDecisions.push(event.data);
+					},
 				},
 			},
 		);
@@ -776,16 +786,18 @@ describe("multi-agent primitives", () => {
 		});
 	});
 
-	it("uses constructor trace and retry callbacks as run defaults", async () => {
+	it("uses constructor event handlers and hooks as run defaults", async () => {
 		const traces: string[] = [];
 		const classifications: string[] = [];
 		const orchestrator = new Orchestrator({
-			onTrace: (event) => traces.push(event.type),
-			onTaskRetryClassify: (context) => {
-				classifications.push(context.task.id);
-				return "transient";
+			events: { trace: (event) => traces.push(event.type) },
+			hooks: {
+				classifyTaskRetry: (context) => {
+					classifications.push(context.task.id);
+					return "transient";
+				},
+				handleTaskFailure: async (context) => (context.attempt === 1 ? "retry" : "fail"),
 			},
-			onTaskFailure: async (context) => (context.attempt === 1 ? "retry" : "fail"),
 		});
 		const result = await orchestrator.run(
 			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream({ fail: true }))] }),
@@ -797,6 +809,32 @@ describe("multi-agent primitives", () => {
 		expect(traces).toContain("run_start");
 		expect(traces).toContain("task_retry");
 		expect(result.receipts.a?.retryClassification).toBe("transient");
+	});
+
+	it("overrides constructor event handlers and hooks by key", async () => {
+		const defaultTraces: string[] = [];
+		const runTraces: string[] = [];
+		const defaultVerifier = vi.fn(async () => false);
+		const runVerifier = vi.fn(async () => true);
+		const orchestrator = new Orchestrator({
+			events: { trace: (event) => defaultTraces.push(event.type) },
+			hooks: { verifyTask: defaultVerifier },
+		});
+
+		const result = await orchestrator.run(
+			new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream())] }),
+			[{ id: "a", title: "A", description: "A", verify: { required: true } }],
+			{
+				events: { trace: (event) => runTraces.push(event.type) },
+				hooks: { verifyTask: runVerifier },
+			},
+		);
+
+		expect(result.success).toBe(true);
+		expect(defaultTraces).toEqual([]);
+		expect(runTraces).toContain("run_start");
+		expect(defaultVerifier).not.toHaveBeenCalled();
+		expect(runVerifier).toHaveBeenCalledOnce();
 	});
 
 	it("continues after checkpoint save failures by default", async () => {
@@ -812,8 +850,10 @@ describe("multi-agent primitives", () => {
 						throw new Error("store unavailable");
 					},
 				},
-				onProgress: (event) => events.push(event.type),
-				onTrace: (event) => traces.push(event.type),
+				events: {
+					progress: (event) => events.push(event.type),
+					trace: (event) => traces.push(event.type),
+				},
 			},
 		);
 
@@ -848,10 +888,14 @@ describe("multi-agent primitives", () => {
 				new Team({ name: "builders", agents: [agentConfig("worker", new EchoStream({ fail: true }))] }),
 				[{ id: "a", title: "A", description: "A", maxRetries: 1, retryDelayMs: 100, retryBackoff: 1 }],
 				{
-					onTaskRetryClassify: async () => "transient" as const,
-					onTaskFailure: async (context) => (context.attempt === 1 ? "retry" : "fail"),
-					onTrace: (event) => {
-						if (event.type === "task_retry") traces.push(event.data);
+					hooks: {
+						classifyTaskRetry: async () => "transient" as const,
+						handleTaskFailure: async (context) => (context.attempt === 1 ? "retry" : "fail"),
+					},
+					events: {
+						trace: (event) => {
+							if (event.type === "task_retry") traces.push(event.data);
+						},
 					},
 				},
 			);
@@ -883,7 +927,7 @@ describe("multi-agent primitives", () => {
 			new Team({ name: "builders", agents: [agentConfig("worker", stream)] }),
 			[{ id: "a", title: "A", description: "A", consequential: true }],
 			{
-				onTrace: (event) => traces.push(event.type),
+				events: { trace: (event) => traces.push(event.type) },
 			},
 		);
 
@@ -902,9 +946,11 @@ describe("multi-agent primitives", () => {
 			new Team({ name: "builders", agents: [agentConfig("worker", stream)] }),
 			[{ id: "a", title: "A", description: "A", consequential: true }],
 			{
-				onTaskConsequential: async (task) => {
-					approvals.push(task.id);
-					return true;
+				hooks: {
+					approveConsequentialTask: async (task) => {
+						approvals.push(task.id);
+						return true;
+					},
 				},
 			},
 		);
@@ -920,7 +966,7 @@ describe("multi-agent primitives", () => {
 		const result = await new Orchestrator().run(
 			new Team({ name: "builders", agents: [agentConfig("worker", stream)] }),
 			[{ id: "a", title: "A", description: "A", consequential: true }],
-			{ onTaskConsequential: async () => false },
+			{ hooks: { approveConsequentialTask: async () => false } },
 		);
 
 		expect(result.status).toBe("aborted");
@@ -937,11 +983,15 @@ describe("multi-agent primitives", () => {
 			new Team({ name: "builders", agents: [agentConfig("worker", stream)] }),
 			[{ id: "a", title: "A", description: "A", consequential: true }],
 			{
-				onTaskConsequential: async () => {
-					throw new Error("approval unavailable");
+				hooks: {
+					approveConsequentialTask: async () => {
+						throw new Error("approval unavailable");
+					},
 				},
-				onProgress: (event) => {
-					if (event.type === "error") errors.push(event.message ?? "");
+				events: {
+					progress: (event) => {
+						if (event.type === "error") errors.push(event.message ?? "");
+					},
 				},
 			},
 		);
@@ -964,8 +1014,8 @@ describe("multi-agent primitives", () => {
 			],
 			{
 				maxConcurrency: 1,
-				onTaskFailure: async (context) => (context.attempt === 1 ? "abort" : "fail"),
-				onTrace: (event) => traces.push(event.type),
+				hooks: { handleTaskFailure: async (context) => (context.attempt === 1 ? "abort" : "fail") },
+				events: { trace: (event) => traces.push(event.type) },
 			},
 		);
 
@@ -1223,7 +1273,7 @@ describe("multi-agent primitives", () => {
 					agents: [agentConfig("writer", new EchoStream(), ["write"])],
 				}),
 				[{ id: "missing", title: "Deploy", description: "Deploy", requires: { capabilities: ["deploy"] } }],
-				{ schedulingStrategy: "composite", onSchedulingWarning: (warning) => warnings.push(warning) },
+				{ schedulingStrategy: "composite", events: { schedulingWarning: (warning) => warnings.push(warning) } },
 			),
 		).rejects.toThrow('No eligible agent for task "Deploy" (missing): writer: missing capability "deploy"');
 		expect(warnings).toEqual([

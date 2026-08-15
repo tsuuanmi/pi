@@ -22,7 +22,7 @@ Higher-level packages add concrete capabilities and higher-level policy through 
 | Agent event | Agent -> subscriber | Observe execution | `tool_execution_end`, `message_end`, `agent_end` |
 | Tool contract | Agent -> registered tool | Execute a capability | A host-provided `bash` or `read` tool |
 
-A hook is a control input to the Agent. An event is an observation emitted by the Agent. If a callback must block or transform execution, it is a hook even if a higher-level package exposes it through an event-style API.
+A hook is a control input to the Agent. An event is an observation emitted by the Agent. If a callback must block or transform execution, it is a hook; higher-level packages should expose an explicit hook registration path rather than an event-style API.
 
 ## Package ownership
 
@@ -96,12 +96,12 @@ The core `AgentEvent` and `AgentHook` contracts should stay small, typed, and ho
 
 ```text
 AgentEvent
-  -> Pi session/extension events
+  -> unchanged Pi extension observation + selected Pi session events
   -> Orchestrator task/team events
   -> Application UI and telemetry events
 ```
 
-Adapters are the intended connection between these layers. For example, Pi can map extension `tool_call` and `tool_result` handlers to an Agent `beforeToolCall` or `afterToolCall` hook, and can map Agent events to session and extension events.
+Adapters are the intended connection between these layers. Pi maps extension `tool_call` and `tool_result` hooks to Agent `beforeToolCall` and `afterToolCall`, forwards canonical Agent events unchanged to extension observers, and selects only host-consumed Agent events for its session stream.
 
 Do not create a global event bus or a universal hook type that contains every Agent, session, task, team, and UI concern. Keep registration scoped to the owning Agent, session, orchestrator, or application.
 

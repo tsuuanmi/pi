@@ -491,7 +491,7 @@ describe("ExtensionRunner", () => {
 		it("calls error listeners when handler throws", async () => {
 			const extCode = `
 				export default function(pi) {
-					pi.on("context", async () => {
+					pi.onHook("context", async () => {
 						throw new Error("Handler error!");
 					});
 				}
@@ -507,7 +507,7 @@ describe("ExtensionRunner", () => {
 			});
 
 			// Emit context event which will trigger the throwing handler
-			await runner.emitContext([]);
+			await runner.runContextHook([]);
 
 			expect(errors.length).toBe(1);
 			expect(errors[0].error).toContain("Handler error!");
@@ -528,7 +528,7 @@ describe("ExtensionRunner", () => {
 
 			const extCode = `
 				export default function(pi) {
-					pi.on("context", async (_event, ctx) => {
+					pi.onHook("context", async (_event, ctx) => {
 						await (globalThis as any).__piReleaseGate;
 						void ctx.cwd; // throws stale once the runner is invalidated
 					});
@@ -545,7 +545,7 @@ describe("ExtensionRunner", () => {
 			});
 
 			// Start dispatch; the handler suspends on the gate.
-			const emitPromise = runner.emitContext([]);
+			const emitPromise = runner.runContextHook([]);
 			// Session is replaced/reloaded mid-await.
 			runner.invalidate("stale test");
 			// Now let the handler resume against the invalidated runner.
@@ -673,7 +673,7 @@ describe("ExtensionRunner", () => {
 		it("keeps ctx.getSystemPrompt() in sync with chained system prompt updates", async () => {
 			const extCode1 = `
 				export default function(pi) {
-					pi.on("before_agent_start", async (_event, ctx) => {
+					pi.onHook("before_agent_start", async (_event, ctx) => {
 						return {
 							systemPrompt: ctx.getSystemPrompt() + "\\nfirst",
 						};
@@ -682,7 +682,7 @@ describe("ExtensionRunner", () => {
 			`;
 			const extCode2 = `
 				export default function(pi) {
-					pi.on("before_agent_start", async (_event, ctx) => {
+					pi.onHook("before_agent_start", async (_event, ctx) => {
 						return {
 							systemPrompt: ctx.getSystemPrompt() + "\\nsecond",
 						};
@@ -700,7 +700,7 @@ describe("ExtensionRunner", () => {
 			runner.onError((error) => errors.push(error.error));
 			runner.bindCore(extensionActions, extensionContextActions);
 
-			const chained = await runner.emitBeforeAgentStart("hello", "base", {
+			const chained = await runner.runBeforeAgentStartHook("hello", "base", {
 				cwd: tempDir,
 			});
 
@@ -717,7 +717,7 @@ describe("ExtensionRunner", () => {
 		it("chains content modifications across handlers", async () => {
 			const extCode1 = `
 				export default function(pi) {
-					pi.on("tool_result", async (event) => {
+					pi.onHook("tool_result", async (event) => {
 						return {
 							content: [...event.content, { type: "text", text: "ext1" }],
 						};
@@ -726,7 +726,7 @@ describe("ExtensionRunner", () => {
 			`;
 			const extCode2 = `
 				export default function(pi) {
-					pi.on("tool_result", async (event) => {
+					pi.onHook("tool_result", async (event) => {
 						return {
 							content: [...event.content, { type: "text", text: "ext2" }],
 						};
@@ -739,7 +739,7 @@ describe("ExtensionRunner", () => {
 			const result = await discoverAndLoadExtensions([], tempDir, tempDir);
 			const runner = createRunner(result.extensions, result.runtime);
 
-			const chained = await runner.emitToolResult({
+			const chained = await runner.runToolResultHook({
 				type: "tool_result",
 				toolName: "my_tool",
 				toolCallId: "call-1",
@@ -764,7 +764,7 @@ describe("ExtensionRunner", () => {
 		it("preserves previous modifications when later handlers return partial patches", async () => {
 			const extCode1 = `
 				export default function(pi) {
-					pi.on("tool_result", async () => {
+					pi.onHook("tool_result", async () => {
 						return {
 							content: [{ type: "text", text: "first" }],
 							details: { source: "ext1" },
@@ -774,7 +774,7 @@ describe("ExtensionRunner", () => {
 			`;
 			const extCode2 = `
 				export default function(pi) {
-					pi.on("tool_result", async () => {
+					pi.onHook("tool_result", async () => {
 						return {
 							isError: true,
 						};
@@ -787,7 +787,7 @@ describe("ExtensionRunner", () => {
 			const result = await discoverAndLoadExtensions([], tempDir, tempDir);
 			const runner = createRunner(result.extensions, result.runtime);
 
-			const chained = await runner.emitToolResult({
+			const chained = await runner.runToolResultHook({
 				type: "tool_result",
 				toolName: "my_tool",
 				toolCallId: "call-2",
@@ -869,11 +869,12 @@ describe("ExtensionRunner", () => {
 		});
 	});
 
-	describe("hasHandlers", () => {
-		it("returns true when handlers exist for event type", async () => {
+	describe("handler registration", () => {
+		it("keeps event and hook handlers separate", async () => {
 			const extCode = `
 				export default function(pi) {
-					pi.on("tool_call", async () => undefined);
+					pi.on("agent_start", async () => {});
+					pi.onHook("tool_call", async () => undefined);
 				}
 			`;
 			fs.writeFileSync(path.join(extensionsDir, "handler.ts"), extCode);
@@ -881,8 +882,9 @@ describe("ExtensionRunner", () => {
 			const result = await discoverAndLoadExtensions([], tempDir, tempDir);
 			const runner = createRunner(result.extensions, result.runtime);
 
-			expect(runner.hasHandlers("tool_call")).toBe(true);
-			expect(runner.hasHandlers("agent_end")).toBe(false);
+			expect(runner.hasEventHandlers("agent_start")).toBe(true);
+			expect(runner.hasEventHandlers("agent_end")).toBe(false);
+			expect(runner.hasHookHandlers("tool_call")).toBe(true);
 		});
 	});
 });

@@ -10,6 +10,10 @@ Related decisions:
 - [Workflow Orchestrator Overlap](workflow-orchestrator-overlap.md)
 - [Receipt Boundaries](receipt-boundaries.md)
 - [Event Boundaries](event-boundaries.md)
+- [Hook vs. Event Boundaries](hook-vs-event-boundaries.md)
+- [Hooks and Events Reference](hooks-and-events-reference.md)
+- [Hook/Event Boundary Audit](hook-event-boundary-audit.md)
+- [Hook/Event Boundary Implementation](hook-event-boundary-implementation-plan.md)
 - [Persistence Boundaries](persistence-boundaries.md)
 
 ## Core rule

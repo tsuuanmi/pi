@@ -2,6 +2,8 @@
 
 ### Changed
 
+- **extensions**: Agent lifecycle observations now forward canonical `AgentEvent` payloads unchanged; event observers and control hooks use separate registries and dispatch paths.
+- **session**: Narrowed `AgentSessionEvent` to the Agent events consumed by Pi modes plus explicit Pi-owned host events.
 - **session**: Added the canonical `@tsuuanmi/pi/session/layout` API and moved session API-usage logs to `state/api-usage.jsonl`.
 - **interactive**: Moved repository discovery, branch watching, status polling, and cached snapshots into a dedicated Pi-owned repository-state service.
 - **tools**: Tool renderers now use neutral expansion copy instead of consulting UI-host keybindings outside the interactive component boundary.
@@ -17,6 +19,7 @@
 
 ### Breaking Changes
 
+- **extensions**: `ExtensionAPI.on()` now accepts observation events only; control callbacks use `onHook()`. Renamed hook-like `*Event` contracts to `*Hook`, removed the mixed handler registry and generic runner methods, and removed Pi-only `turnIndex`/`timestamp` Agent event enrichment.
 - **extensions**: Configured key hint helpers now require the injected host `KeybindingsManager`; `ReadonlyFooterDataProvider` adds `getGitStatus()` and replaces `onBranchChange()` with `onChange()`.
 - **sessions**: Session files now require strict version 4 JSONL; removed older-version migration, malformed-record recovery, compatibility fields, implicit recent-session creation, and the `continueRecent()` API.
 - **settings**: Settings now use strict schema validation and synchronous atomic persistence; invalid files throw instead of loading empty settings, and `flush()`, `drainErrors()`, and settings diagnostics were removed.

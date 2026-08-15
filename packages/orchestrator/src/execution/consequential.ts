@@ -9,7 +9,7 @@ export async function approveConsequentialTask(
 ): Promise<boolean> {
 	const snapshot = task.snapshot();
 	if (!snapshot.consequential) return true;
-	const approver = context.options.onTaskConsequential ?? context.defaultOnTaskConsequential;
+	const approver = context.options.hooks?.approveConsequentialTask;
 	if (!approver) {
 		context.recordTaskConsequential(snapshot.id, { required: true, approved: false });
 		const message = `Consequential task requires explicit approval: ${snapshot.id}`;

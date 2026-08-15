@@ -278,7 +278,7 @@ await session.agent.waitForIdle();
 
 ### Events
 
-Subscribe to events to receive streaming output and lifecycle notifications.
+Subscribe to the narrow `AgentSessionEvent` stream used by Pi run modes. It includes message/tool updates, `agent_start`, `turn_end`, structured-output attempts, an `agent_end` value with `willRetry`, and Pi-owned queue/compaction/retry/session events. For the complete canonical Agent observer stream (including status, trace, warning, loop, `turn_start`, and max-turn events), register an extension observer with `ExtensionAPI.on(...)`.
 
 ```typescript
 session.subscribe((event) => {
@@ -293,10 +293,7 @@ session.subscribe((event) => {
       }
       break;
     
-    // Reliability events
-    case "loop_detected":
-      console.warn(event.result.reason);
-      break;
+    // Structured-output validation
     case "structured_output":
       console.log(event.ok ? "structured output valid" : event.error);
       break;
@@ -328,9 +325,7 @@ session.subscribe((event) => {
       // Agent finished (event.messages contains new messages)
       break;
     
-    // Turn lifecycle (one LLM response + tool calls)
-    case "turn_start":
-      break;
+    // Completed turn (one LLM response + tool calls)
     case "turn_end":
       // event.message: assistant response
       // event.toolResults: tool results from this turn
@@ -591,7 +586,7 @@ await loader.reload();
 const { session } = await createAgentSession({ resourceLoader: loader });
 ```
 
-Extensions can register tools, subscribe to events, add commands, and more. See [extensions.md](../extensions/index.md) for the full API.
+Extensions can register tools, subscribe to observation events, register control hooks, add commands, and more. See [extensions.md](../extensions/index.md) for the full API.
 
 **Event Bus:** Extensions can communicate via `pi.events`. Pass a shared `eventBus` to `DefaultResourceLoader` if you need to emit or listen from outside:
 

@@ -522,7 +522,7 @@ Detection runs on the finalized assistant message:
 - `stopReason === "error"`
 - `errorMessage` matches one of pi's known overflow patterns (see [`packages/ai/src/model/response.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/ai/src/model/response.ts))
 
-If your provider returns overflow errors with a message pi does not recognize, normalize the error from the same extension that registers the provider. Use a `message_end` handler to rewrite the assistant message so its `errorMessage` starts with a phrase pi recognizes. The generic fallback `context_length_exceeded` is the safest choice.
+If your provider returns overflow errors with a message pi does not recognize, normalize the error from the same extension that registers the provider. Use a `message_end` hook to rewrite the assistant message so its `errorMessage` starts with a phrase pi recognizes. The generic fallback `context_length_exceeded` is the safest choice.
 
 ```typescript
 const MY_PROVIDER_OVERFLOW_PATTERN = /your provider's overflow phrase/i;
@@ -530,8 +530,8 @@ const MY_PROVIDER_OVERFLOW_PATTERN = /your provider's overflow phrase/i;
 export default function (pi: ExtensionAPI) {
   pi.registerProvider("my-provider", { /* ... */ });
 
-  pi.on("message_end", (event, ctx) => {
-    const message = event.message;
+  pi.onHook("message_end", (hook, ctx) => {
+    const message = hook.message;
     if (message.role !== "assistant") return;
     if (message.stopReason !== "error") return;
     if (

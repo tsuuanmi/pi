@@ -24,10 +24,7 @@ import type {
 	RunResume,
 	RunTeamOptions,
 	TaskExecutionMetrics,
-	TaskFailureAction,
-	TaskFailureContext,
 	TaskRetryClassification,
-	TaskVerificationContext,
 } from "#orchestrator/types";
 
 export interface CreateRunContextInput {
@@ -38,14 +35,6 @@ export interface CreateRunContextInput {
 	runIdentity: RunIdentity;
 	runFacts: RunFacts;
 	defaultMaxConcurrency: number;
-	defaultOnProgress?: (event: OrchestratorEvent) => void;
-	defaultOnTrace?: (event: OrchestratorTraceEvent) => void;
-	defaultOnTaskVerify?: (context: TaskVerificationContext) => boolean | Promise<boolean>;
-	defaultOnTaskConsequential?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
-	defaultOnTaskRetryClassify?: (
-		context: TaskFailureContext,
-	) => TaskRetryClassification | Promise<TaskRetryClassification>;
-	defaultOnTaskFailure?: (context: TaskFailureContext) => TaskFailureAction | Promise<TaskFailureAction>;
 	checkpointStore?: OrchestratorCheckpointStore;
 	runBudget?: RunBudget;
 	initialMetrics?: Readonly<Record<string, TaskExecutionMetrics>>;
@@ -70,14 +59,6 @@ export class OrchestratorRunContext {
 	readonly budget: BudgetState;
 	readonly executionSignal?: AbortSignal;
 
-	private readonly defaultOnProgress?: (event: OrchestratorEvent) => void;
-	readonly defaultOnTrace?: (event: OrchestratorTraceEvent) => void;
-	readonly defaultOnTaskVerify?: (context: TaskVerificationContext) => boolean | Promise<boolean>;
-	readonly defaultOnTaskConsequential?: (task: Readonly<TaskSnapshot>) => boolean | Promise<boolean>;
-	readonly defaultOnTaskRetryClassify?: (
-		context: TaskFailureContext,
-	) => TaskRetryClassification | Promise<TaskRetryClassification>;
-	readonly defaultOnTaskFailure?: (context: TaskFailureContext) => TaskFailureAction | Promise<TaskFailureAction>;
 	private readonly metrics = new Map<string, TaskExecutionMetrics>();
 	private readonly receipts = new Map<string, TaskExecutionReceipt>();
 	private readonly routingDecisions = new Map<string, TaskRoutingDecision>();
@@ -99,18 +80,12 @@ export class OrchestratorRunContext {
 		this.runIdentity = input.runIdentity;
 		this.runFacts = input.runFacts;
 		this.maxConcurrency = resolveMaxConcurrency(input.defaultMaxConcurrency, input.options.maxConcurrency);
-		this.defaultOnProgress = input.defaultOnProgress;
-		this.defaultOnTrace = input.options.onTrace ?? input.defaultOnTrace;
-		this.defaultOnTaskVerify = input.options.onTaskVerify ?? input.defaultOnTaskVerify;
-		this.defaultOnTaskConsequential = input.options.onTaskConsequential ?? input.defaultOnTaskConsequential;
-		this.defaultOnTaskRetryClassify = input.options.onTaskRetryClassify ?? input.defaultOnTaskRetryClassify;
-		this.defaultOnTaskFailure = input.options.onTaskFailure ?? input.defaultOnTaskFailure;
 		this.checkpointStore = input.options.checkpointStore ?? input.checkpointStore;
 		this.checkpointFailurePolicy = input.options.checkpointFailurePolicy ?? "best-effort";
 		this.resume = Object.freeze({ ...input.initialResume });
 		this.runBudget = input.options.runBudget ?? input.runBudget;
 		this.budget = initializeBudgetState(input.initialTaskStarts ?? 0);
-		if (input.options.onQueueEvent) this.disposers.push(this.queue.subscribe(input.options.onQueueEvent));
+		if (input.options.events?.queue) this.disposers.push(this.queue.subscribe(input.options.events.queue));
 		if (this.runBudget?.maxRunMs !== undefined) {
 			this.budgetController = new AbortController();
 			this.executionSignal = this.budgetController.signal;
@@ -172,8 +147,7 @@ export class OrchestratorRunContext {
 			timestamp: new Date().toISOString(),
 			runIdentity: this.runIdentity,
 		} satisfies OrchestratorEvent;
-		this.options.onProgress?.(timestamped);
-		if (this.defaultOnProgress !== this.options.onProgress) this.defaultOnProgress?.(timestamped);
+		this.options.events?.progress?.(timestamped);
 	}
 
 	private abortForRunBudget(): void {
@@ -199,8 +173,7 @@ export class OrchestratorRunContext {
 			timestamp: new Date().toISOString(),
 			runIdentity: this.runIdentity,
 		} satisfies OrchestratorTraceEvent;
-		this.options.onTrace?.(timestamped);
-		if (this.defaultOnTrace !== this.options.onTrace) this.defaultOnTrace?.(timestamped);
+		this.options.events?.trace?.(timestamped);
 	}
 
 	recordRoutingDecision(decision: TaskRoutingDecision): void {

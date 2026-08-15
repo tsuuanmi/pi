@@ -17,7 +17,7 @@ interface FailureInput {
 }
 
 export async function classifyRetry(input: FailureInput): Promise<TaskRetryClassification | undefined> {
-	const classifier = input.context.options.onTaskRetryClassify ?? input.context.defaultOnTaskRetryClassify;
+	const classifier = input.context.options.hooks?.classifyTaskRetry;
 	if (!classifier) return undefined;
 	const snapshot = input.task.snapshot();
 	try {
@@ -31,7 +31,7 @@ export async function classifyRetry(input: FailureInput): Promise<TaskRetryClass
 export async function resolveFailure(
 	input: FailureInput & { defaultAction: TaskFailureAction },
 ): Promise<FailureResolution> {
-	const handler = input.context.options.onTaskFailure ?? input.context.defaultOnTaskFailure;
+	const handler = input.context.options.hooks?.handleTaskFailure;
 	if (!handler) return { action: input.defaultAction, shortCircuit: false };
 	const snapshot = input.task.snapshot();
 	try {

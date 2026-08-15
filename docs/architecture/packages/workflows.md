@@ -17,7 +17,7 @@ It composes generic Agent and Orchestrator capabilities. It does not replace eit
 - Session-scoped workflow state, active HUD state, plans/specs/boards/goals, artifacts, receipts, audit logs, ledgers, and journals.
 - Workflow manifests, action/help metadata, tool surfaces, transition registry, and validation.
 - Workflow-specific Agent/Orchestrator adapters for role, task, team, and goal execution.
-- Pi extension registration and hooks, including HUD refresh and Deep Interview mutation restrictions.
+- Pi extension event and hook registration, including HUD refresh observers and Deep Interview mutation restrictions.
 - A detached lifecycle owner for lease/heartbeat/recovery/finalization of external workflow state.
 
 **Does not own**
@@ -36,7 +36,7 @@ It composes generic Agent and Orchestrator capabilities. It does not replace eit
 | `@tsuuanmi/pi-workflows` | Broad root API for workflow manifests, state/runtime contracts, audit/artifacts/policy, and substantial skill APIs |
 | `@tsuuanmi/pi-workflows/commands/workflow` | Package/workflow command handlers and result contract |
 | `@tsuuanmi/pi-workflows/tool` | Workflow context, host/tool specs, registration, and static subagent surfaces |
-| `@tsuuanmi/pi-workflows/hooks` | Workflow hook registration and HUD refresh |
+| `@tsuuanmi/pi-workflows/hooks` | Workflow event and control-hook registration |
 | `@tsuuanmi/pi-workflows/extension` | Default Pi extension factory |
 | `@tsuuanmi/pi-workflows/runtime/*` | Published runtime modules through a wildcard subpath |
 | `@tsuuanmi/pi-workflows/package.json` | Package metadata |
@@ -47,12 +47,12 @@ The root barrel imports transition modules for registration side effects. `#work
 
 | Component | Source | Responsibility |
 |---|---|---|
-| Extension adapter | [`src/extension.ts`](../../../packages/workflows/src/extension.ts) | Registers workflow tools and lifecycle hooks in a Pi-compatible host |
+| Extension adapter | [`src/extension.ts`](../../../packages/workflows/src/extension.ts) | Registers workflow tools, event observers, and control hooks in Pi |
 | Tool adapter | [`src/tool/`](../../../packages/workflows/src/tool) | Workflow tool contracts and registration for all four skills; Pi owns lifecycle registration |
 | CLI control plane | [`src/commands/workflow/`](../../../packages/workflows/src/commands/workflow) | Parses and dispatches lifecycle, state, and skill commands without calling model-visible tools |
 | Registry/manifests | [`src/registry/`](../../../packages/workflows/src/registry) | Runtime phases, transitions, retention, help/action metadata, and validated surfaces |
 | Policy/handoffs | [`src/policy/`](../../../packages/workflows/src/policy), [`src/handoff/`](../../../packages/workflows/src/handoff) | Cross-workflow prompts, expected-next guards, gate verdicts, and legal handoffs |
-| Session paths | [`src/session/`](../../../packages/workflows/src/session) | Explicit session resolution and canonical paths for state, artifacts, specs, plans, and ledgers |
+| Session paths | `@tsuuanmi/pi/session/root` and `@tsuuanmi/pi/session/layout` | Public Pi path primitives consumed by workflow state, artifacts, specs, plans, and ledgers |
 | State | [`src/state/`](../../../packages/workflows/src/state) | Workflow ids, schemas, atomic writes, active HUD state, and validation |
 | Artifacts/audit | [`src/artifacts/`](../../../packages/workflows/src/artifacts), [`src/audit/`](../../../packages/workflows/src/audit) | Durable artifacts, receipts, append-only audit, decisions, tamper evidence, and transaction journals |
 | Detached runtime | [`src/runtime/`](../../../packages/workflows/src/runtime) | Lifecycle owner, mutation transaction, storage, leases, events, recovery, runner, and deferred seams |
@@ -122,8 +122,8 @@ The package also uses Node filesystem, path, process, crypto, socket, and timing
 Workflows imports Pi's public host/session contracts and orchestrator's public subagent contracts. Runtime integration otherwise uses host-shaped contracts and published seams:
 
 - Pi's package/resource loader discovers the bundled Workflows extension, skills, agent profiles, and command.
-- Pi supplies tool registration, event hooks, current session context, generic session services, and UI refresh.
-- `workflowExtension` installs the orchestrator subagent runtime, then registers workflow tools and hooks.
+- Pi supplies tool registration, event observation, control hooks, current session context, generic session services, and UI refresh.
+- `workflowExtension` installs the orchestrator subagent runtime, then registers workflow tools, event observers, and hooks.
 - Workflows imports published Pi session-root APIs so skill paths extend Pi's base session layout without private aliases.
 - Pi's interactive mode reads strict session-owned active workflow state for the status line.
 - Workflows consumes orchestrator-provided subagent services through public package exports and never imports Pi or orchestrator internals.

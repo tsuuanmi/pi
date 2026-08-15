@@ -2,14 +2,13 @@
 
 Mirrors `src/hooks.ts`.
 
-Registers the extension's event hooks. The module owns the provider-scoped readiness/adaptation gate,
-the interactive approval gate for privileged tools, and HUD refresh on turn end.
+Registers the extension's control hooks and event observer. The module owns the provider-scoped readiness/adaptation gate, the interactive approval gate for privileged tools, and HUD refresh on turn end.
 
 ## `registerInternetHooks`
 
 ```ts
 registerInternetHooks(
-  host: InternetHookHost,
+  host: Pick<ExtensionAPI, "on" | "onHook">,
   manager: OwnedDaemonManager,
   accounts: InternetAccount[],
   settings: InternetSettingsService,
@@ -17,9 +16,9 @@ registerInternetHooks(
 ```
 
 Builds a map from enabled account provider names (`providerName(account)`) to account IDs, then
-registers three handlers on the host.
+registers two hooks with `onHook(...)` and one observation with `on(...)`.
 
-### `tool_call` — interactive approval gate
+### `tool_call` hook — interactive approval gate
 
 Determines whether a tool call requires interactive approval:
 
@@ -31,7 +30,7 @@ If the host has no UI, the call is blocked with `"This internet tool requires in
 Otherwise the user is asked to approve; an unapproved call returns
 `{ block: true, reason: "Internet tool call was not approved." }`.
 
-### `before_provider_request` — readiness and adaptation
+### `before_provider_request` hook — readiness and adaptation
 
 Runs only for requests whose `context.model.provider` is a registered ChatGPT Web provider. On other
 providers the original payload is returned untouched.
@@ -52,6 +51,6 @@ original unadapted payload is never forwarded. See
 [`backends/openai/turn/request.md`](backends/openai/turn/request.md) for what the rejected request
 is.
 
-### `turn_end` — HUD refresh
+### `turn_end` event — HUD refresh
 
 Calls `refreshHudUi(context)` after each turn so the daemon HUD reflects the latest status.

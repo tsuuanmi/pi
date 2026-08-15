@@ -11,6 +11,7 @@ describe("internetExtension", () => {
 		process.env.PI_AGENT_DIR = await mkdtemp(join(tmpdir(), "pi-internet-extension-"));
 		const providers: string[] = [];
 		const tools: string[] = [];
+		const events: string[] = [];
 		const hooks: string[] = [];
 		const hud = vi.fn();
 		const autoStart = vi.spyOn(OwnedDaemonManager.prototype, "autoStart").mockResolvedValue();
@@ -18,7 +19,8 @@ describe("internetExtension", () => {
 			await internetExtension({
 				registerProvider: (name: string, _config: ProviderConfig) => providers.push(name),
 				registerTool: (tool: ExtensionToolSpec) => tools.push(tool.name),
-				on: (event: string) => hooks.push(event),
+				on: (event: string) => events.push(event),
+				onHook: (hook: string) => hooks.push(hook),
 				registerHudProvider: hud,
 			} as unknown as ExtensionAPI);
 			expect(providers).toEqual(["chatgpt-web"]);
@@ -38,7 +40,8 @@ describe("internetExtension", () => {
 				"internet_search",
 				"internet_fetch",
 			]);
-			expect(hooks).toEqual(["tool_call", "before_provider_request", "turn_end"]);
+			expect(events).toEqual(["turn_end"]);
+			expect(hooks).toEqual(["tool_call", "before_provider_request"]);
 			expect(autoStart).toHaveBeenCalledOnce();
 			expect(hud).toHaveBeenCalledOnce();
 		} finally {

@@ -306,17 +306,17 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		},
 		onPayload: async (payload: unknown, _model: Model) => {
 			const runner = extensionRunnerRef.current;
-			if (!runner?.hasHandlers("before_provider_request")) {
+			if (!runner?.hasHookHandlers("before_provider_request")) {
 				return payload;
 			}
-			return runner.emitBeforeProviderRequest(payload);
+			return runner.runBeforeProviderRequestHook(payload);
 		},
 		onResponse: async (response: ProviderResponse, _model: Model) => {
 			const runner = extensionRunnerRef.current;
-			if (!runner?.hasHandlers("after_provider_response")) {
+			if (!runner?.hasEventHandlers("after_provider_response")) {
 				return;
 			}
-			await runner.emit({
+			await runner.emitEvent({
 				type: "after_provider_response",
 				status: response.status,
 				headers: response.headers,
@@ -325,7 +325,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		sessionId: sessionManager.getSessionId(),
 		transformContext: async (messages) => {
 			const runner = extensionRunnerRef.current;
-			const transformed = runner ? await runner.emitContext(messages) : messages;
+			const transformed = runner ? await runner.runContextHook(messages) : messages;
 			return contextOptimizer.optimize(transformed, {
 				...settingsManager.getRetainedContextSettings(),
 				cwd,

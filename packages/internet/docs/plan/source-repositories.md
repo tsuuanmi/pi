@@ -82,8 +82,9 @@ The `internet` package is a Pi extension. The relevant Pi APIs:
 | Extension API (`registerTool`, `registerProvider`, hooks, ...) | `packages/pi/src/api/extension-types.ts` |
 | Tool spec (`PiToolSpec`, `ExtensionToolSpec`) | `packages/pi/src/tool/spec.ts` |
 | Provider config (`ProviderConfig`, `ProviderModelConfig`) | `packages/pi/src/api/provider-types.ts` |
-| Hook API (`on("tool_call")`, ...) | `packages/pi/src/hooks/api.ts` |
-| Hook events (`ToolCallEventResult`) | `packages/pi/src/hooks/events.ts` |
+| Event/hook API (`on(...)`, `onHook(...)`) | `packages/pi/src/hooks/api.ts` |
+| Observer events (`ExtensionEvent`) | `packages/pi/src/hooks/events.ts` |
+| Control hooks (`ToolCallHookResult`, etc.) | `packages/pi/src/hooks/hook-types.ts` |
 | Extension loader (default-export factory) | `packages/pi/src/loader/extensions/loader.ts` |
 | Package manifest (`pi` field) | `packages/pi/src/resources/manifest.ts` |
 | Discovery / settings | `packages/pi/src/resources/discovery.ts`, `packages/pi/docs/settings/index.md` |

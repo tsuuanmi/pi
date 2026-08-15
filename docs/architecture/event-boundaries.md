@@ -10,14 +10,15 @@ Events are layer-owned observations, not a shared cross-package schema. A higher
 | `@tsuuanmi/pi-agent` | `AgentEvent`, `EventSink` | Agent loop, message, trace, warning, and tool-execution lifecycle |
 | `@tsuuanmi/pi-orchestrator` | `TaskQueueEvent`, `OrchestratorEvent`, `OrchestratorTraceEvent`, `TeamEvent` | Task scheduling, orchestration progress/trace, and runtime team messaging |
 | `@tsuuanmi/pi-workflows` | `WorkflowRuntimeEvent`, `TeamWorkflowEvent` | Workflow state transitions and mapped workflow Team task visibility |
-| `@tsuuanmi/pi` | `AgentSessionEvent`, extension hook events | Session lifecycle, host queues, compaction, retries, extensions, and UI invalidation |
+| `@tsuuanmi/pi` | `AgentSessionEvent`, `ExtensionEvent`, `ExtensionHookMap` | Narrow host/session lifecycle, canonical Agent observation, Pi control hooks, and UI invalidation |
 
 ## Mapping direction
 
 ```text
 provider stream event
   -> AgentEvent
-  -> AgentSessionEvent / host rendering
+  -> ExtensionEvent observer forwarding
+  -> selected AgentSessionEvent / host rendering
 
 TaskQueueEvent
   -> mapTaskQueueEvent()
@@ -25,7 +26,7 @@ TaskQueueEvent
   -> workflow event store / HUD state
 ```
 
-Mappings are one-way and live in the consuming package. Agent does not import Pi session events. Orchestrator does not import workflow events. Workflows does not expose Orchestrator queue events as its own public schema.
+Mappings are one-way and live in the consuming package. Pi forwards canonical Agent events to extension observers without mapping their payloads and selects only host-consumed Agent events for `AgentSessionEvent`. Agent does not import Pi session events. Orchestrator does not import workflow events. Workflows does not expose Orchestrator queue events as its own public schema.
 
 ## Team queue projection
 
@@ -51,3 +52,6 @@ The workflow projection keeps only workflow-relevant task identity, mapped statu
 4. Callback sinks remain at runtime boundaries; do not add wrappers without a production consumer.
 5. UI code consumes state or host events and does not become an event persistence owner.
 6. Compatibility aliases, dual emission, fallback mappings, and mutable global event registries are prohibited.
+7. Control callbacks use an owning package's hook contract and registration path; they are not modeled as observation events.
+
+See [Hook and Event Boundaries](hook-vs-event-boundaries.md) for the complete control/observation split.

@@ -19,10 +19,11 @@ export function assertKnownAssignees(queue: TaskQueue, team: Team): void {
 }
 
 export async function approveTaskDispatch(task: Task, context: OrchestratorRunContext): Promise<boolean> {
-	if (!context.options.onTaskDispatch) return true;
+	const approve = context.options.hooks?.approveTaskDispatch;
+	if (!approve) return true;
 	const snapshot = task.snapshot();
 	try {
-		const approved = await context.options.onTaskDispatch(snapshot);
+		const approved = await approve(snapshot);
 		context.emitTrace({
 			type: "task_dispatch",
 			runStatus: context.aborted ? "aborted" : "running",

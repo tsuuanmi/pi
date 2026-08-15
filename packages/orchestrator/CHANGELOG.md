@@ -2,6 +2,7 @@
 
 ### Breaking Changes
 
+- **orchestrator**: Replaced flat mixed lifecycle callbacks with `events` observation handlers and `hooks` decision callbacks in constructor, run, planning, and consensus options.
 - **subagent**: Changed `subagent_spawn` task input from `prompt` to `task.prompt` or `task.promptFile`.
 - **subagent**: Moved the complete session-aware subagent API and implementation from `@tsuuanmi/pi`; consumers must import it from `@tsuuanmi/pi-orchestrator`.
 - **orchestrator**: Replaced mixed task helper types with focused dependency graph contracts and removed internal prompt/result types from the package root.
@@ -16,6 +17,7 @@
 
 ### Changed
 
+- **orchestrator**: Run-level event handlers and decision hooks now override constructor defaults by key through one merged run contract.
 - **subagent**: Resolve the canonical session subagent directory through `@tsuuanmi/pi/session/layout`; the persisted path remains `state/subagent/`.
 - **orchestrator**: Split task graph, prompt formatting, execution failure, event, result, and verification responsibilities into focused modules.
 - **orchestrator**: Replaced task requirement strings with structured hard requirements and added typed scheduling warnings.

@@ -19,7 +19,7 @@ Common options:
 
 - **Commands**: JSON objects sent to stdin, one per line
 - **Responses**: JSON objects with `type: "response"` indicating command success/failure
-- **Events**: Agent events streamed to stdout as JSON lines
+- **Events**: Pi's narrow `AgentSessionEvent` stream written to stdout as JSON lines
 - **API usage logs**: written only to the sidecar file at `<cwd>/.pi/{encodedSessionId}/state/api-usage.jsonl` when enabled; never sent over stdout
 
 All commands support an optional `id` field for request/response correlation. If provided, the corresponding response will include the same `id`.
@@ -118,7 +118,7 @@ Response:
 
 #### new_session
 
-Start a fresh session. Can be cancelled by a `session_before_switch` extension event handler.
+Start a fresh session. It can be cancelled by a `session_before_switch` extension hook.
 
 ```json
 {"type": "new_session"}
@@ -517,7 +517,7 @@ Response:
 
 #### switch_session
 
-Load a different session file. Can be cancelled by a `session_before_switch` extension event handler.
+Load a different session file. It can be cancelled by a `session_before_switch` extension hook.
 
 ```json
 {"type": "switch_session", "sessionPath": "/path/to/session.jsonl"}
@@ -618,15 +618,14 @@ Use `sourceInfo` as the canonical provenance field; do not infer ownership from 
 
 ## Events
 
-Events are streamed to stdout as JSON lines during agent operation. Events do NOT include an `id` field (only responses do).
+`AgentSessionEvent` values are streamed to stdout as JSON lines during agent operation. They do not include an `id` field (only responses do). The RPC stream intentionally contains only Agent events consumed by Pi run modes plus Pi-owned queue, compaction, retry, session-info, and thinking-level events.
 
 ### Event Types
 
 | Event | Description |
 |-------|-------------|
 | `agent_start` | Agent begins processing |
-| `agent_end` | Agent completes (includes all generated messages) |
-| `turn_start` | New turn begins |
+| `agent_end` | Agent completes (includes generated messages and `willRetry`) |
 | `turn_end` | Turn completes (includes assistant message and tool results) |
 | `message_start` | Message begins |
 | `message_update` | Streaming update (text/thinking/toolcall deltas) |
@@ -639,6 +638,9 @@ Events are streamed to stdout as JSON lines during agent operation. Events do NO
 | `compaction_end` | Compaction completes |
 | `auto_retry_start` | Auto-retry begins (after transient error) |
 | `auto_retry_end` | Auto-retry completes (success or final failure) |
+| `structured_output` | Structured-output validation attempt completes |
+| `session_info_changed` | Session display name changes |
+| `thinking_level_changed` | Active thinking level changes |
 | `extension_error` | Extension threw an error |
 
 ### agent_start
@@ -651,22 +653,19 @@ Emitted when the agent begins processing a prompt.
 
 ### agent_end
 
-Emitted when the agent completes. Contains all messages generated during this run.
+Emitted when the Agent completes. Contains generated messages and whether Pi will retry the run.
 
 ```json
 {
   "type": "agent_end",
-  "messages": [...]
+  "messages": [...],
+  "willRetry": false
 }
 ```
 
-### turn_start / turn_end
+### turn_end
 
-A turn consists of one assistant response plus any resulting tool calls and results.
-
-```json
-{"type": "turn_start"}
-```
+A completed turn consists of one assistant response plus any resulting tool calls and results.
 
 ```json
 {
@@ -766,11 +765,15 @@ When complete:
     "content": [{"type": "text", "text": "total 48\n..."}],
     "details": {...}
   },
-  "isError": false
+  "isError": false,
+  "meta": {
+    "status": "completed",
+    "span": {...}
+  }
 }
 ```
 
-Use `toolCallId` to correlate events. The `partialResult` in `tool_execution_update` contains the accumulated output so far (not just the delta), allowing clients to simply replace their display on each update.
+Use `toolCallId` to correlate events. The `partialResult` in `tool_execution_update` contains the accumulated output so far (not just the delta), allowing clients to simply replace their display on each update. `tool_execution_end.meta` is the canonical Agent execution metadata, including status, trace span, and optional truncation counts.
 
 ### queue_update
 

@@ -6,12 +6,12 @@ export function installToolHooks(agent: Agent, runner: ExtensionRunner): () => v
 	return agent.registerHook({
 		name: "pi.extensions",
 		beforeToolCall: async ({ toolCall, args }) => {
-			if (!runner.hasHandlers("tool_call")) {
+			if (!runner.hasHookHandlers("tool_call")) {
 				return undefined;
 			}
 
 			try {
-				return await runner.emitToolCall({
+				return await runner.runToolCallHook({
 					type: "tool_call",
 					toolName: toolCall.name,
 					toolCallId: toolCall.id,
@@ -25,11 +25,11 @@ export function installToolHooks(agent: Agent, runner: ExtensionRunner): () => v
 			}
 		},
 		afterToolCall: async ({ toolCall, args, result, isError }) => {
-			if (!runner.hasHandlers("tool_result")) {
+			if (!runner.hasHookHandlers("tool_result")) {
 				return undefined;
 			}
 
-			const hookResult = await runner.emitToolResult({
+			const hookResult = await runner.runToolResultHook({
 				type: "tool_result",
 				toolName: toolCall.name,
 				toolCallId: toolCall.id,

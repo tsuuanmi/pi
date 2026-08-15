@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { InputEvent } from "@tsuuanmi/pi/extensions";
+import type { InputHook } from "@tsuuanmi/pi/extensions";
 import type { Model, Tool } from "@tsuuanmi/pi-agent";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
@@ -231,13 +231,13 @@ describe("AgentSession prompt characterization", () => {
 		expect(getMessageText(harness.session.messages[0]!)).toBe("from extension");
 	});
 
-	it("does not report streamingBehavior to input handlers while idle", async () => {
-		const inputEvents: InputEvent[] = [];
+	it("does not report streamingBehavior to input hooks while idle", async () => {
+		const inputHooks: InputHook[] = [];
 		const harness = await createHarness({
 			extensionFactories: [
 				(pi) => {
-					pi.on("input", (event) => {
-						inputEvents.push(event);
+					pi.onHook("input", (hook) => {
+						inputHooks.push(hook);
 					});
 				},
 			],
@@ -247,16 +247,16 @@ describe("AgentSession prompt characterization", () => {
 
 		await harness.session.prompt("idle", { streamingBehavior: "followUp" });
 
-		expect(inputEvents).toHaveLength(1);
-		expect(inputEvents[0]?.streamingBehavior).toBeUndefined();
+		expect(inputHooks).toHaveLength(1);
+		expect(inputHooks[0]?.streamingBehavior).toBeUndefined();
 	});
 
-	it("reports streamingBehavior to input handlers while streaming", async () => {
+	it("reports streamingBehavior to input hooks while streaming", async () => {
 		let releaseToolExecution: (() => void) | undefined;
 		const toolRelease = new Promise<void>((resolve) => {
 			releaseToolExecution = resolve;
 		});
-		const inputEvents: InputEvent[] = [];
+		const inputHooks: InputHook[] = [];
 		const waitTool: Tool = {
 			name: "wait",
 			label: "Wait",
@@ -274,8 +274,8 @@ describe("AgentSession prompt characterization", () => {
 			tools: [waitTool],
 			extensionFactories: [
 				(pi) => {
-					pi.on("input", (event) => {
-						inputEvents.push(event);
+					pi.onHook("input", (hook) => {
+						inputHooks.push(hook);
 					});
 				},
 			],
@@ -299,7 +299,7 @@ describe("AgentSession prompt characterization", () => {
 		await sawToolStart;
 		await harness.session.prompt("queued", { streamingBehavior: "followUp" });
 
-		expect(inputEvents.map((event) => event.streamingBehavior)).toEqual([undefined, "followUp"]);
+		expect(inputHooks.map((hook) => hook.streamingBehavior)).toEqual([undefined, "followUp"]);
 
 		releaseToolExecution?.();
 		await promptPromise;

@@ -1,4 +1,4 @@
-import type { SessionBeforeTreeResult, TreePreparation } from "#pi/loader/extensions/index";
+import type { SessionBeforeTreeHookResult, TreePreparation } from "#pi/hooks/hook-types";
 import type { AgentSessionContext } from "#pi/runtime/agent-session-context";
 import { collectEntriesForBranchSummary, generateBranchSummary } from "#pi/session/compaction/index";
 import type { BranchSummaryEntry } from "#pi/session/types";
@@ -55,13 +55,13 @@ export async function navigateTree(
 		let extensionSummary: { summary: string; details?: unknown } | undefined;
 		let fromExtension = false;
 
-		// Emit session_before_tree event
-		if (ctx.extensionRunner.hasHandlers("session_before_tree")) {
-			const result = (await ctx.extensionRunner.emit({
+		// Run the pre-navigation hook.
+		if (ctx.extensionRunner.hasHookHandlers("session_before_tree")) {
+			const result = (await ctx.extensionRunner.runSessionHook({
 				type: "session_before_tree",
 				preparation,
 				signal: ctx.branchSummaryAbortController.signal,
-			})) as SessionBeforeTreeResult | undefined;
+			})) as SessionBeforeTreeHookResult | undefined;
 
 			if (result?.cancel) {
 				return { cancelled: true };
@@ -170,8 +170,7 @@ export async function navigateTree(
 		const sessionContext = ctx.sessionManager.buildSessionContext();
 		ctx.state.messages = sessionContext.messages;
 
-		// Emit session_tree event
-		await ctx.extensionRunner.emit({
+		await ctx.extensionRunner.emitEvent({
 			type: "session_tree",
 			newLeafId: ctx.sessionManager.getLeafId(),
 			oldLeafId,

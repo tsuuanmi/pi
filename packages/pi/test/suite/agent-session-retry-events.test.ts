@@ -7,9 +7,6 @@ import { createHarness, type Harness } from "#pi-test/suite/harness";
 function normalizeEventOrder(events: Harness["events"]): string[] {
 	const normalized: string[] = [];
 	for (const event of events) {
-		// Status and trace events are observability signals, not lifecycle ordering points.
-		if (event.type === "agent_status" || event.type === "trace") continue;
-
 		const label =
 			event.type === "message_start" || event.type === "message_end"
 				? `${event.type}:${event.message.role}`
@@ -104,7 +101,7 @@ describe("AgentSession retry and event characterization", () => {
 			settings: { retry: { enabled: true, maxRetries: 3, baseDelayMs: 1 } },
 			extensionFactories: [
 				(pi) => {
-					pi.on("message_end", async (event) => {
+					pi.onHook("message_end", async (event) => {
 						if (event.message.role === "assistant") {
 							await new Promise((resolve) => setTimeout(resolve, 40));
 						}
@@ -203,13 +200,16 @@ describe("AgentSession retry and event characterization", () => {
 		expect(harness.provider.state.callCount).toBe(4);
 	});
 
-	it("emits extension events before public event subscribers", async () => {
+	it("runs control hooks before extension and session event observers", async () => {
 		const order: string[] = [];
 		const harness = await createHarness({
 			extensionFactories: [
 				(pi) => {
 					pi.on("message_start", async (event) => {
 						order.push(`extension:${event.type}:${event.message.role}`);
+					});
+					pi.onHook("message_end", async (hook) => {
+						order.push(`hook:${hook.type}:${hook.message.role}`);
 					});
 					pi.on("message_end", async (event) => {
 						order.push(`extension:${event.type}:${event.message.role}`);
@@ -230,10 +230,12 @@ describe("AgentSession retry and event characterization", () => {
 		expect(order).toEqual([
 			"extension:message_start:user",
 			"public:message_start:user",
+			"hook:message_end:user",
 			"extension:message_end:user",
 			"public:message_end:user",
 			"extension:message_start:assistant",
 			"public:message_start:assistant",
+			"hook:message_end:assistant",
 			"extension:message_end:assistant",
 			"public:message_end:assistant",
 		]);
@@ -248,7 +250,6 @@ describe("AgentSession retry and event characterization", () => {
 
 		expect(normalizeEventOrder(harness.events)).toEqual([
 			"agent_start",
-			"turn_start",
 			"message_start:user",
 			"message_end:user",
 			"message_start:assistant",
@@ -284,7 +285,6 @@ describe("AgentSession retry and event characterization", () => {
 		expect(toolRuns).toEqual(["hello"]);
 		expect(normalizeEventOrder(harness.events)).toEqual([
 			"agent_start",
-			"turn_start",
 			"message_start:user",
 			"message_end:user",
 			"message_start:assistant",
@@ -295,7 +295,6 @@ describe("AgentSession retry and event characterization", () => {
 			"message_start:toolResult",
 			"message_end:toolResult",
 			"turn_end",
-			"turn_start",
 			"message_start:assistant",
 			"message_update",
 			"message_end:assistant",

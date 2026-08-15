@@ -1,5 +1,11 @@
 import { readFileSync } from "node:fs";
-import type { ExtensionAPI, ExtensionContext, SessionStartEvent } from "@tsuuanmi/pi/extensions";
+import type {
+	ExtensionAPI,
+	ExtensionContext,
+	ExtensionHookAPI,
+	SessionStartEvent,
+	ToolCallHook,
+} from "@tsuuanmi/pi/extensions";
 import { createEventBus } from "@tsuuanmi/pi/extensions";
 import { describe, expect, it } from "vitest";
 
@@ -11,10 +17,12 @@ describe("public extension API", () => {
 		const _api: ExtensionAPI | undefined = undefined;
 		const _context: ExtensionContext | undefined = undefined;
 		const _event: SessionStartEvent | undefined = undefined;
+		const _hookApi: ExtensionHookAPI | undefined = undefined;
+		const _hook: ToolCallHook | undefined = undefined;
 
 		expect(bus).toBeDefined();
 		expect(unsubscribe).toBeTypeOf("function");
-		expect([_api, _context, _event]).toHaveLength(3);
+		expect([_api, _context, _event, _hookApi, _hook]).toHaveLength(5);
 	});
 
 	it("does not publish deep extension subpaths", () => {

@@ -7,7 +7,7 @@ Core abstraction for agent lifecycle, state management, and session persistence.
 `AgentSession` is the central class shared between all run modes (interactive, print, JSON, RPC). It encapsulates:
 
 - Agent state access (model, thinking level, messages)
-- Event subscription with automatic session persistence
+- A narrow session event stream for UI, JSON, RPC, and SDK consumers
 - Model and thinking level management
 - Compaction (manual and auto)
 - Bash execution with local and remote operations
@@ -43,23 +43,23 @@ interface ParsedSkillBlock {
 }
 ```
 
-### SessionBeforeCompactResult
+### SessionBeforeCompactHookResult
 
-Result of pre-compaction hooks from extensions. Defined in [`src/hooks/events.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/hooks/events.ts):
+Result of the pre-compaction extension hook. Defined in [`src/hooks/hook-types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/hooks/hook-types.ts):
 
 ```typescript
-interface SessionBeforeCompactResult {
+interface SessionBeforeCompactHookResult {
   cancel?: boolean;             // Abort the compaction
   compaction?: CompactionResult; // Provide a precomputed result instead of running compaction
 }
 ```
 
-### SessionBeforeTreeResult
+### SessionBeforeTreeHookResult
 
-Result of pre-tree-navigation hooks from extensions. Defined in [`src/hooks/events.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/hooks/events.ts):
+Result of the pre-tree-navigation extension hook. Defined in [`src/hooks/hook-types.ts`](https://github.com/tsuuanmi/pi/blob/main/packages/pi/src/hooks/hook-types.ts):
 
 ```typescript
-interface SessionBeforeTreeResult {
+interface SessionBeforeTreeHookResult {
   cancel?: boolean;
   summary?: {
     summary: string;
@@ -70,6 +70,10 @@ interface SessionBeforeTreeResult {
   label?: string;               // Override label to attach to the branch summary entry
 }
 ```
+
+### AgentSessionEvent
+
+`AgentSessionEvent` is a host-facing composition, not a copy of every `AgentEvent`. It includes the Agent events consumed by Pi modes (`agent_start`, `turn_end`, message and tool execution updates, `structured_output`), a Pi-adapted `agent_end` with `willRetry`, and Pi-owned queue, compaction, retry, session-info, and thinking-level events. Extensions receive the complete canonical `AgentEvent` stream separately through `ExtensionAPI.on(...)`.
 
 ## Session Services
 

@@ -1,15 +1,12 @@
 /** Public contracts for the agent session runtime. */
 
-import type { Agent, AgentEvent, AgentMessage, Model, ThinkingLevel, Tool } from "@tsuuanmi/pi-agent";
+import type { Agent, AgentEvent, Model, ThinkingLevel, Tool } from "@tsuuanmi/pi-agent";
+import type { ContextUsage, ExtensionMode } from "#pi/api/context-types";
+import type { ExtensionCommandContextActions } from "#pi/api/extension-types";
 import type { AgentSessionServices } from "#pi/api/session-services";
-import type {
-	ContextUsage,
-	ExtensionCommandContextActions,
-	ExtensionMode,
-	ExtensionUIContext,
-	InputSource,
-	SessionStartEvent,
-} from "#pi/loader/extensions/index";
+import type { ExtensionUIContext } from "#pi/api/ui-types";
+import type { SessionStartEvent } from "#pi/hooks/events";
+import type { InputSource } from "#pi/hooks/hook-types";
 import type { ModelRegistry } from "#pi/loader/model-registry";
 import type { ResourceLoader } from "#pi/loader/resources";
 import type { ExtensionErrorListener, ExtensionRunner, ShutdownHandler } from "#pi/runtime/extensions/runner";
@@ -17,14 +14,27 @@ import type { CompactionResult } from "#pi/session/compaction/index";
 import type { SessionManager } from "#pi/session/manager";
 import type { SettingsManager } from "#pi/settings/manager";
 
-/** Session-specific events that extend the core AgentEvent. */
+export type SessionAgentEvent = Extract<
+	AgentEvent,
+	{
+		type:
+			| "agent_start"
+			| "turn_end"
+			| "message_start"
+			| "message_update"
+			| "message_end"
+			| "tool_execution_start"
+			| "tool_execution_update"
+			| "tool_execution_end"
+			| "structured_output";
+	}
+>;
+
+export type AgentSessionEndEvent = Extract<AgentEvent, { type: "agent_end" }> & { willRetry: boolean };
+
 export type AgentSessionEvent =
-	| Exclude<AgentEvent, { type: "agent_end" }>
-	| {
-			type: "agent_end";
-			messages: AgentMessage[];
-			willRetry: boolean;
-	  }
+	| SessionAgentEvent
+	| AgentSessionEndEvent
 	| {
 			type: "queue_update";
 			steering: readonly string[];
@@ -42,15 +52,24 @@ export type AgentSessionEvent =
 			errorMessage?: string;
 	  }
 	| { type: "auto_retry_start"; attempt: number; maxAttempts: number; delayMs: number; errorMessage: string }
-	| { type: "auto_retry_end"; success: boolean; attempt: number; finalError?: string }
-	| {
-			type: "structured_output";
-			ok: boolean;
-			attempt: number;
-			error?: string;
-			issues?: string[];
-			preview?: string;
-	  };
+	| { type: "auto_retry_end"; success: boolean; attempt: number; finalError?: string };
+
+export function isSessionAgentEvent(event: AgentEvent): event is SessionAgentEvent {
+	switch (event.type) {
+		case "agent_start":
+		case "turn_end":
+		case "message_start":
+		case "message_update":
+		case "message_end":
+		case "tool_execution_start":
+		case "tool_execution_update":
+		case "tool_execution_end":
+		case "structured_output":
+			return true;
+		default:
+			return false;
+	}
+}
 
 /** Listener function for agent session events. */
 export type AgentSessionEventListener = (event: AgentSessionEvent) => void;

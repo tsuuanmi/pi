@@ -105,7 +105,7 @@ export class PromptController {
 					: { error: result.error, issues: result.issues, preview: rawText.slice(0, 240) }),
 			};
 			this.host.emit(event);
-			await this.host.extensionRunner.emit(event);
+			await this.host.extensionRunner.emitEvent(event);
 			if (result.ok || attempt === retryLimit) return result;
 			prompt = createStructuredOutputPrompt(createStructuredOutputRepairPrompt(result), options);
 		}
@@ -130,10 +130,10 @@ export class PromptController {
 				}
 			}
 
-			// Emit input event for extension interception (before skill/template expansion)
+			// Run the input hook before skill/template expansion.
 			let currentText = text;
-			if (this.host.extensionRunner.hasHandlers("input")) {
-				const inputResult = await this.host.extensionRunner.emitInput(
+			if (this.host.extensionRunner.hasHookHandlers("input")) {
+				const inputResult = await this.host.extensionRunner.runInputHook(
 					currentText,
 					options?.source ?? "interactive",
 					this.host.isStreaming ? options?.streamingBehavior : undefined,
@@ -219,8 +219,8 @@ export class PromptController {
 			}
 			this.pendingNextTurnMessages = [];
 
-			// Emit before_agent_start extension event
-			const result = await this.host.extensionRunner.emitBeforeAgentStart(
+			// Run extension hooks after prompt expansion and before the Agent starts.
+			const result = await this.host.extensionRunner.runBeforeAgentStartHook(
 				expandedText,
 				this.host.baseSystemPrompt,
 				this.host.baseSystemPromptOptions,

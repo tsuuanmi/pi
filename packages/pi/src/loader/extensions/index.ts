@@ -13,6 +13,7 @@ export type * from "#pi/hooks/api";
 export type { EventBus, EventBusController } from "#pi/hooks/event-bus";
 export { createEventBus } from "#pi/hooks/event-bus";
 export type * from "#pi/hooks/events";
+export type * from "#pi/hooks/hook-types";
 export {
 	isBashToolResult,
 	isEditToolResult,
@@ -20,8 +21,8 @@ export {
 	isGrepToolResult,
 	isLsToolResult,
 	isReadToolResult,
-	isToolCallEventType,
+	isToolCallHookType,
 	isWriteToolResult,
-} from "#pi/hooks/events";
+} from "#pi/hooks/hook-types";
 export type { SourceInfo } from "#pi/resources/source-info";
 export type * from "#pi/tool/spec";

@@ -12,8 +12,9 @@ describe("workflow extension composition", () => {
 			registerTool(tool: { name: string }) {
 				tools.push(tool.name);
 			},
-			on(event: string) {
-				hooks.push(event);
+			on() {},
+			onHook(hook: string) {
+				hooks.push(hook);
 			},
 			registerHudProvider(provider: unknown) {
 				hudProviders.push(provider);
