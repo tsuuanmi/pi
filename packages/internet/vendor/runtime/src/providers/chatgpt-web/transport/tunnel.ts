@@ -2,9 +2,9 @@ import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { unzipSync } from "fflate";
-import type { AppConfig, TunnelConfig } from "../lifecycle/config";
-import { atomicWriteFile, getConfigDir } from "../lifecycle/config";
-import { runCommand, runChecked } from "../../../core/process";
+import type { AppConfig, TunnelConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { atomicWriteFile, getConfigDir } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { runCommand, runChecked } from "#runtime/core/process";
 
 const TUNNEL_VERSION = "0.0.10";
 const RELEASE_BASE = `https://github.com/openai/tunnel-client/releases/download/v${TUNNEL_VERSION}`;

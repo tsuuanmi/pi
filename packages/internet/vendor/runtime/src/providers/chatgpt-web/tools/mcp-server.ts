@@ -2,9 +2,9 @@ import { createHash } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import * as z from "zod/v4";
-import { namespacedToolName, type Tool } from "../protocol/types";
-import type { ChatGptTurnEnvironment } from "../turn/environment";
-import { callTurnBroker, type BrokerToolResult } from "../turn/broker";
+import { namespacedToolName, type Tool } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { ChatGptTurnEnvironment } from "#runtime/providers/chatgpt-web/turn/environment";
+import { callTurnBroker, type BrokerToolResult } from "#runtime/providers/chatgpt-web/turn/broker";
 
 interface ClaimedTurn {
   bindingId: string;

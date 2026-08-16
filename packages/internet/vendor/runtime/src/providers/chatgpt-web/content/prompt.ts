@@ -1,6 +1,6 @@
-import type { AssistantContentPart, ContentPart, Message, ParsedRequest } from "../protocol/types";
-import { isOnePixelPngDataUrl } from "../protocol/responses/compaction";
-import { resolveChatGptWebModelMode, type ChatGptWebCapabilities } from "../models/model";
+import type { AssistantContentPart, ContentPart, Message, ParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
+import { isOnePixelPngDataUrl } from "#runtime/providers/chatgpt-web/protocol/responses/compaction";
+import { resolveChatGptWebModelMode, type ChatGptWebCapabilities } from "#runtime/providers/chatgpt-web/models/model";
 
 export interface ChatGptWebPromptImage {
   ref: string;

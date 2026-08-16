@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { homedir, userInfo } from "node:os";
 import { dirname, join } from "node:path";
-import type { AppConfig } from "../lifecycle/config";
-import { atomicWriteFile, getConfigDir } from "../lifecycle/config";
-import { runCommand, runChecked } from "../../../core/process";
+import type { AppConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { atomicWriteFile, getConfigDir } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { runCommand, runChecked } from "#runtime/core/process";
 
 const LABEL = "io.github.pi-internet-runtime.tunnel";
 

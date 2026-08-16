@@ -1,6 +1,6 @@
 import type { Page, Response } from "playwright-core";
-import { BrowserResponseCapture } from "../../../browser/response-capture";
-import { parseChatGptWireResponse } from "./wire-response";
+import { BrowserResponseCapture } from "#runtime/browser/response-capture";
+import { parseChatGptWireResponse } from "#runtime/providers/chatgpt-web/transport/wire-response";
 
 function isConversationResponse(response: Response): boolean {
   if (response.request().method() !== "POST") return false;

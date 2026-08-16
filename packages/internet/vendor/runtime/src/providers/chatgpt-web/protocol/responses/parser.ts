@@ -9,13 +9,13 @@ import type {
   ThinkingContent,
   Tool,
   ToolCall,
-} from "../types";
-import { namespacedToolName } from "../types";
-import { responsesRequestSchema } from "./schema";
-import { compactionItemToText } from "./compaction";
-import { previousResponseReplayPrefixLength } from "./state";
-import { decodeReasoningEnvelope } from "./reasoning-envelope";
-import { extractHostedWebSearch, WEB_SEARCH_TOOL_NAME } from "../../tools/web-search/synthetic-tool";
+} from "#runtime/providers/chatgpt-web/protocol/types";
+import { namespacedToolName } from "#runtime/providers/chatgpt-web/protocol/types";
+import { responsesRequestSchema } from "#runtime/providers/chatgpt-web/protocol/responses/schema";
+import { compactionItemToText } from "#runtime/providers/chatgpt-web/protocol/responses/compaction";
+import { previousResponseReplayPrefixLength } from "#runtime/providers/chatgpt-web/protocol/responses/state";
+import { decodeReasoningEnvelope } from "#runtime/providers/chatgpt-web/protocol/responses/reasoning-envelope";
+import { extractHostedWebSearch, WEB_SEARCH_TOOL_NAME } from "#runtime/providers/chatgpt-web/tools/web-search/synthetic-tool";
 
 function isObj(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);

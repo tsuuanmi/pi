@@ -1,6 +1,6 @@
 import { get_encoding, type Tiktoken } from "tiktoken";
-import { CHATGPT_WEB_PLATFORM_RESERVE_TOKENS } from "../models/models";
-import type { CompiledChatGptWebPrompt } from "./prompt";
+import { CHATGPT_WEB_PLATFORM_RESERVE_TOKENS } from "#runtime/providers/chatgpt-web/models/models";
+import type { CompiledChatGptWebPrompt } from "#runtime/providers/chatgpt-web/content/prompt";
 
 /** Token accounting for ChatGPT Web prompts. */
 const TOKENIZER_CHUNK_CHARS = 4_096;

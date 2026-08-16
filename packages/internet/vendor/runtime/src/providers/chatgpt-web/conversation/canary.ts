@@ -1,4 +1,4 @@
-import { parseConversationUrl } from "./journal.js";
+import { parseConversationUrl } from "#runtime/providers/chatgpt-web/conversation/journal";
 
 export const CONVERSATION_CANARY_PROMPT = "Reply briefly and include: PI_DURABLE_CONVERSATION_CANARY_OK";
 

@@ -2,8 +2,8 @@ import { randomBytes } from "node:crypto";
 import { chmodSync, existsSync, lstatSync, mkdirSync, unlinkSync } from "node:fs";
 import { createConnection, createServer, type Server, type Socket } from "node:net";
 import { dirname } from "node:path";
-import { isWindowsPipeEndpoint } from "../lifecycle/config";
-import type { ChatGptTurnEnvironment } from "./environment";
+import { isWindowsPipeEndpoint } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import type { ChatGptTurnEnvironment } from "#runtime/providers/chatgpt-web/turn/environment";
 
 interface PendingTurn extends ChatGptTurnEnvironment {
   expiresAt?: number;

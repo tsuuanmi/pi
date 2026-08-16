@@ -28,6 +28,10 @@
 		"#internet-test/*": {
 			"types": "./test/*.ts",
 			"import": "./test/*.ts"
+		},
+		"#runtime/*": {
+			"types": "./vendor/runtime/src/*.ts",
+			"import": "./vendor/runtime/src/*.ts"
 		}
 	},
 	"files": [

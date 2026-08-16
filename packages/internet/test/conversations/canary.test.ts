@@ -1,4 +1,4 @@
-import { validateConversationCanary } from "../../vendor/runtime/src/providers/chatgpt-web/conversation/canary.js";
+import { validateConversationCanary } from "#runtime/providers/chatgpt-web/conversation/canary";
 
 describe("durable conversation canary", () => {
 	it("accepts model reply variance when a durable conversation was created", () => {

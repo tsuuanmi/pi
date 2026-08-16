@@ -1,5 +1,5 @@
-import type { RuntimeServiceConfig } from "../../../core/config";
-import { requestControl } from "../../../core/service";
+import type { RuntimeServiceConfig } from "#runtime/core/config";
+import { requestControl } from "#runtime/core/service";
 
 export async function cancelBrowserTurns(config: RuntimeServiceConfig): Promise<number> {
   const result = await requestControl(config, "cancel-browser-turns");

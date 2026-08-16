@@ -1,6 +1,6 @@
 import { isAbsolute, relative, resolve } from "node:path";
-import { isReadableCompactionSummaryText, OPAQUE_COMPACTION_NOTE } from "../protocol/responses/compaction";
-import type { ContentPart, ParsedRequest, Tool } from "../protocol/types";
+import { isReadableCompactionSummaryText, OPAQUE_COMPACTION_NOTE } from "#runtime/providers/chatgpt-web/protocol/responses/compaction";
+import type { ContentPart, ParsedRequest, Tool } from "#runtime/providers/chatgpt-web/protocol/types";
 
 export type ChatGptSandboxPolicy =
   | { type: "dangerFullAccess" }

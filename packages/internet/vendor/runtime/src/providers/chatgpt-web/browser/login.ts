@@ -2,15 +2,15 @@ import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { chromium, type BrowserContext, type BrowserContextOptions, type Page } from "playwright-core";
-import type { AppConfig } from "../lifecycle/config";
-import { atomicWriteFile } from "../lifecycle/config";
+import type { AppConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { atomicWriteFile } from "#runtime/providers/chatgpt-web/lifecycle/config";
 import {
   isAuthenticatedChatGptHome,
   CHATGPT_HOME_URL,
   detectChatGptAccountCapabilities,
-} from "./session";
-import type { ChatGptWebAccountCapabilities } from "../models/models";
-import { readChatGptStorageState } from "./login-state";
+} from "#runtime/providers/chatgpt-web/browser/session";
+import type { ChatGptWebAccountCapabilities } from "#runtime/providers/chatgpt-web/models/models";
+import { readChatGptStorageState } from "#runtime/providers/chatgpt-web/browser/login-state";
 
 export interface BrowserLoginResult {
   storageStatePath: string;

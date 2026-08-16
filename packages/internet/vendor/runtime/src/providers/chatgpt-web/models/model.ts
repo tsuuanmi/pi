@@ -1,4 +1,4 @@
-import { CHATGPT_WEB_BACKEND_MODEL } from "./models";
+import { CHATGPT_WEB_BACKEND_MODEL } from "#runtime/providers/chatgpt-web/models/models";
 
 export const CHATGPT_WEB_MODEL_ID = CHATGPT_WEB_BACKEND_MODEL;
 

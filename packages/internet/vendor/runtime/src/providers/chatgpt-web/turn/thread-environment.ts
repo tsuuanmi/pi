@@ -1,14 +1,14 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
-import { atomicWriteFile } from "../lifecycle/config";
-import type { ParsedRequest } from "../protocol/types";
+import { atomicWriteFile } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import type { ParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
 import {
   extractChatGptTurnEnvironment,
   extractChatGptTurnIdentity,
   MissingTrustedCodexEnvironmentError,
   type ChatGptSandboxPolicy,
   type ChatGptTurnEnvironment,
-} from "./environment";
+} from "#runtime/providers/chatgpt-web/turn/environment";
 
 interface StoredThreadEnvironment {
   cwd: string;

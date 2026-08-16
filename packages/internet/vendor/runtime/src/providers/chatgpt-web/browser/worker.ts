@@ -7,21 +7,21 @@ import {
   defaultChromeExecutable,
   expandUserPath,
   getConfigDir,
-} from "../lifecycle/config";
-import type { ProviderConfig } from "../protocol/types";
-import { DEFAULT_CONNECTOR_NAME } from "../lifecycle/config";
-import { parseDataUrl } from "../content/image";
-import { CONVERSATION_CANARY_PROMPT, validateConversationCanary } from "../conversation/canary";
-import { ChatGptMarkdownBuffer, type ChatGptMarkdownSegment } from "../content/markdown";
+} from "#runtime/providers/chatgpt-web/lifecycle/config";
+import type { ProviderConfig } from "#runtime/providers/chatgpt-web/protocol/types";
+import { DEFAULT_CONNECTOR_NAME } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { parseDataUrl } from "#runtime/providers/chatgpt-web/content/image";
+import { CONVERSATION_CANARY_PROMPT, validateConversationCanary } from "#runtime/providers/chatgpt-web/conversation/canary";
+import { ChatGptMarkdownBuffer, type ChatGptMarkdownSegment } from "#runtime/providers/chatgpt-web/content/markdown";
 import {
   CHATGPT_WEB_MODEL_ID,
   resolveChatGptWebModelMode,
   type ChatGptWebCapabilities,
   type ChatGptWebModelMode,
-} from "../models/model";
-import { estimateCompiledChatGptWebMessageTokens } from "../content/tokens";
-import { CHATGPT_MAX_INPUT_IMAGES, type CompiledChatGptWebPrompt, type ChatGptWebPromptImage } from "../content/prompt";
-import { estimateCompiledChatGptWebInputTokens } from "../content/tokens";
+} from "#runtime/providers/chatgpt-web/models/model";
+import { estimateCompiledChatGptWebMessageTokens } from "#runtime/providers/chatgpt-web/content/tokens";
+import { CHATGPT_MAX_INPUT_IMAGES, type CompiledChatGptWebPrompt, type ChatGptWebPromptImage } from "#runtime/providers/chatgpt-web/content/prompt";
+import { estimateCompiledChatGptWebInputTokens } from "#runtime/providers/chatgpt-web/content/tokens";
 import {
   assertAuthenticatedChatGptPage,
   CHATGPT_ASSISTANT_TURN_SELECTOR,
@@ -37,16 +37,16 @@ import {
   MAX_CHATGPT_BROWSER_TABS,
   detectChatGptAccountCapabilities,
   parseChatGptEffortSliderState,
-} from "./session";
-import { loginVerificationMarkerPath } from "./login";
+} from "#runtime/providers/chatgpt-web/browser/session";
+import { loginVerificationMarkerPath } from "#runtime/providers/chatgpt-web/browser/login";
 import {
   resolveChatGptWebContextLimits,
   resolveChatGptWebTransportLimits,
-} from "../models/models";
-import { ChatGptWebAdapterError } from "../adapter-error";
-import { BrowserSession } from "../../../browser/session";
-import { BrowserTurnRunner, runBrowserStage } from "../../../browser/turn";
-import { ChatGptWireCapture } from "../transport/wire-capture";
+} from "#runtime/providers/chatgpt-web/models/models";
+import { ChatGptWebAdapterError } from "#runtime/providers/chatgpt-web/adapter-error";
+import { BrowserSession } from "#runtime/browser/session";
+import { BrowserTurnRunner, runBrowserStage } from "#runtime/browser/turn";
+import { ChatGptWireCapture } from "#runtime/providers/chatgpt-web/transport/wire-capture";
 
 const workers = new Map<string, ChatGptBrowserWorker>();
 

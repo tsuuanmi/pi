@@ -1,29 +1,29 @@
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
-import { defaultBrokerEndpoint, expandUserPath, resolveBrokerEndpoint } from "./lifecycle/config";
-import { namespacedToolName, type AdapterEvent, type ContentPart, type ParsedRequest, type ProviderConfig, type ToolResultMessage, type Usage } from "./protocol/types";
-import type { ProviderAdapter } from "./turn/adapter";
-import { parseDataUrl } from "./content/image";
-import { ChatGptWebAdapterError } from "./adapter-error";
-import { ChatGptBrowserWorker, type BrowserConversationTurn } from "./browser/worker";
+import { defaultBrokerEndpoint, expandUserPath, resolveBrokerEndpoint } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { namespacedToolName, type AdapterEvent, type ContentPart, type ParsedRequest, type ProviderConfig, type ToolResultMessage, type Usage } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { ProviderAdapter } from "#runtime/providers/chatgpt-web/turn/adapter";
+import { parseDataUrl } from "#runtime/providers/chatgpt-web/content/image";
+import { ChatGptWebAdapterError } from "#runtime/providers/chatgpt-web/adapter-error";
+import { ChatGptBrowserWorker, type BrowserConversationTurn } from "#runtime/providers/chatgpt-web/browser/worker";
 import {
   assertDurableConversationAuthority,
   ConversationJournal,
   conversationAccountFingerprint,
-} from "./conversation/journal";
+} from "#runtime/providers/chatgpt-web/conversation/journal";
 import {
   acknowledgedConversationCheckpoint,
   canonicalConversationEvents,
   conversationSuffix,
   isGeneratedEnvironmentMessage,
-} from "./conversation/sync";
-import { extractChatGptTurnEnvironment, extractChatGptTurnIdentity } from "./turn/environment";
-import { resolveChatGptWebModelMode, type ChatGptWebCapabilities } from "./models/model";
-import { chatGptFullModeContextWarning, compileChatGptWebPrompt } from "./content/prompt";
-import { TurnBroker, type BrokerToolRequest, type BrokerToolResult } from "./turn/broker";
-import { ChatGptTextFeed, ChatGptTraceFeed, chatGptCompactionSourceExecutionKey, chatGptTurnExecutionKey, chatGptTurnSessions, type ChatGptBrowserOutcome, type ChatGptTraceEvent, type ChatGptTurnRuntime, type ChatGptTurnSession } from "./turn/execution";
-import { estimateChatGptWebUsage } from "./content/usage";
-import { ChatGptThreadEnvironmentStore } from "./turn/thread-environment";
+} from "#runtime/providers/chatgpt-web/conversation/sync";
+import { extractChatGptTurnEnvironment, extractChatGptTurnIdentity } from "#runtime/providers/chatgpt-web/turn/environment";
+import { resolveChatGptWebModelMode, type ChatGptWebCapabilities } from "#runtime/providers/chatgpt-web/models/model";
+import { chatGptFullModeContextWarning, compileChatGptWebPrompt } from "#runtime/providers/chatgpt-web/content/prompt";
+import { TurnBroker, type BrokerToolRequest, type BrokerToolResult } from "#runtime/providers/chatgpt-web/turn/broker";
+import { ChatGptTextFeed, ChatGptTraceFeed, chatGptCompactionSourceExecutionKey, chatGptTurnExecutionKey, chatGptTurnSessions, type ChatGptBrowserOutcome, type ChatGptTraceEvent, type ChatGptTurnRuntime, type ChatGptTurnSession } from "#runtime/providers/chatgpt-web/turn/execution";
+import { estimateChatGptWebUsage } from "#runtime/providers/chatgpt-web/content/usage";
+import { ChatGptThreadEnvironmentStore } from "#runtime/providers/chatgpt-web/turn/thread-environment";
 
 function brokerSocketPath(provider: ProviderConfig): string {
   const configured = provider.chatgptWeb?.brokerSocketPath?.trim();

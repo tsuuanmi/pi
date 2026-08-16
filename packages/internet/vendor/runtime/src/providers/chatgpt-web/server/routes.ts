@@ -1,40 +1,40 @@
-import { createChatGptWebAdapter } from "../adapter";
-import { ChatGptBrowserWorker, closeChatGptBrowserWorkers } from "../browser/worker";
+import { createChatGptWebAdapter } from "#runtime/providers/chatgpt-web/adapter";
+import { ChatGptBrowserWorker, closeChatGptBrowserWorkers } from "#runtime/providers/chatgpt-web/browser/worker";
 import {
   beginDurableConversationAuthority,
   conversationAccountFingerprint,
   writeDurableConversationAuthority,
-} from "../conversation/journal";
-import { closeTurnBrokers, TurnBroker } from "../turn/broker";
+} from "#runtime/providers/chatgpt-web/conversation/journal";
+import { closeTurnBrokers, TurnBroker } from "#runtime/providers/chatgpt-web/turn/broker";
 import { createHash, timingSafeEqual } from "node:crypto";
-import { chatGptTurnSessions } from "../turn/execution";
-import { bridgeToResponsesSSE, buildResponseJSON, formatErrorResponse } from "../protocol/responses/bridge";
-import type { AppConfig } from "../lifecycle/config";
-import { providerConfig } from "../lifecycle/config";
-import { AsyncEventQueue } from "../../../core/event-queue";
-import { readJsonRequestBody } from "../../../core/http-body";
-import { httpStatusFromTerminalError } from "../protocol/responses/errors";
-import { augmentNativeModelCatalog } from "../models/catalog";
+import { chatGptTurnSessions } from "#runtime/providers/chatgpt-web/turn/execution";
+import { bridgeToResponsesSSE, buildResponseJSON, formatErrorResponse } from "#runtime/providers/chatgpt-web/protocol/responses/bridge";
+import type { AppConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { providerConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { AsyncEventQueue } from "#runtime/core/event-queue";
+import { readJsonRequestBody } from "#runtime/core/http-body";
+import { httpStatusFromTerminalError } from "#runtime/providers/chatgpt-web/protocol/responses/errors";
+import { augmentNativeModelCatalog } from "#runtime/providers/chatgpt-web/models/catalog";
 import {
   isChatGptWebModelSlug,
   requireChatGptWebModelRoute,
   type ChatGptWebModelRoute,
-} from "../models/models";
-import { forwardNativeCodexRequest, type NativeFetch } from "../transport/native-passthrough";
+} from "#runtime/providers/chatgpt-web/models/models";
+import { forwardNativeCodexRequest, type NativeFetch } from "#runtime/providers/chatgpt-web/transport/native-passthrough";
 import {
   buildCompactV1Output,
   COMPACT_PROMPT,
   decodeCompactionSummary,
   extractCompactUserMessages,
-} from "../protocol/responses/compaction";
-import { parseRequest } from "../protocol/responses/parser";
-import { expandPreviousResponseInput, flushResponseState, rememberResponseState } from "../protocol/responses/state";
-import { namespacedToolName, type AdapterEvent, type ParsedRequest } from "../protocol/types";
-import type { ProviderConfig } from "../protocol/types";
-import type { ProviderAdapter } from "../turn/adapter";
-import { stopTunnel } from "../transport/tunnel";
-import { startHttpServer } from "../../../core/server";
-import { VERSION } from "../../../core/config";
+} from "#runtime/providers/chatgpt-web/protocol/responses/compaction";
+import { parseRequest } from "#runtime/providers/chatgpt-web/protocol/responses/parser";
+import { expandPreviousResponseInput, flushResponseState, rememberResponseState } from "#runtime/providers/chatgpt-web/protocol/responses/state";
+import { namespacedToolName, type AdapterEvent, type ParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { ProviderConfig } from "#runtime/providers/chatgpt-web/protocol/types";
+import type { ProviderAdapter } from "#runtime/providers/chatgpt-web/turn/adapter";
+import { stopTunnel } from "#runtime/providers/chatgpt-web/transport/tunnel";
+import { startHttpServer } from "#runtime/core/server";
+import { VERSION } from "#runtime/core/config";
 
 export class HttpTurnCounter {
   private active = 0;

@@ -1,5 +1,5 @@
 import type { Locator, Page } from "playwright-core";
-import type { ChatGptWebAccountCapabilities } from "../models/models";
+import type { ChatGptWebAccountCapabilities } from "#runtime/providers/chatgpt-web/models/models";
 
 /** Maximum concurrent browser turns for one signed-in ChatGPT account. */
 export const MAX_CHATGPT_BROWSER_TABS = 5;

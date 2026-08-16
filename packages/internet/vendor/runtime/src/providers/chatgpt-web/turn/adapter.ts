@@ -1,4 +1,4 @@
-import type { AdapterEvent, ParsedRequest } from "../protocol/types";
+import type { AdapterEvent, ParsedRequest } from "#runtime/providers/chatgpt-web/protocol/types";
 
 /** Metadata about the caller's incoming request, for auth-forwarding adapters. */
 export interface IncomingMeta {

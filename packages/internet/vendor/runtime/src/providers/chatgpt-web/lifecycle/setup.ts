@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { createServer } from "node:net";
 import { join } from "node:path";
-import type { AppConfig, RuntimeMode } from "./config";
+import type { AppConfig, RuntimeMode } from "#runtime/providers/chatgpt-web/lifecycle/config";
 import {
   currentRuntimeCommand,
   defaultConfig,
@@ -10,22 +10,22 @@ import {
   loadConfigForSetup,
   resolveSetupConnectorName,
   saveConfig,
-} from "./config";
+} from "#runtime/providers/chatgpt-web/lifecycle/config";
 import {
   browserLoginStateExists,
   inspectBrowserLoginCapabilities,
   loginToChatGpt,
   storedBrowserLoginCapabilities,
-} from "../browser/login";
+} from "#runtime/providers/chatgpt-web/browser/login";
 import {
   assertServiceIdle,
   getServiceStatus,
   installService,
   restartService,
-} from "../../../core/service";
-import { connectTunnel, createTunnelConfig, installRuntimeKey, installRuntimeKeyBytes, installTunnelClient, managedRuntimeKeyPath, stopTunnel, waitForTunnelReady } from "../transport/tunnel";
-import { getTunnelServiceStatus, installTunnelService, restartTunnelService, stopTunnelService, tunnelServiceDefinitionMatches, uninstallTunnelService } from "../transport/tunnel-service";
-import { VERSION } from "../../../core/config";
+} from "#runtime/core/service";
+import { connectTunnel, createTunnelConfig, installRuntimeKey, installRuntimeKeyBytes, installTunnelClient, managedRuntimeKeyPath, stopTunnel, waitForTunnelReady } from "#runtime/providers/chatgpt-web/transport/tunnel";
+import { getTunnelServiceStatus, installTunnelService, restartTunnelService, stopTunnelService, tunnelServiceDefinitionMatches, uninstallTunnelService } from "#runtime/providers/chatgpt-web/transport/tunnel-service";
+import { VERSION } from "#runtime/core/config";
 
 export interface SetupOptions {
   mode: RuntimeMode;

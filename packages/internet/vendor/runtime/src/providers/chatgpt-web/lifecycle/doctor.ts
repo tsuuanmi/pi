@@ -1,10 +1,10 @@
 import { existsSync, statSync } from "node:fs";
-import type { AppConfig } from "./config";
-import { getConfigPath, loadConfig } from "./config";
-import { browserLoginStateExists, loginVerificationMarkerPath } from "../browser/login";
-import { getServiceStatus } from "../../../core/service";
-import { tunnelStatus } from "../transport/tunnel";
-import { getTunnelServiceStatus } from "../transport/tunnel-service";
+import type { AppConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { getConfigPath, loadConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
+import { browserLoginStateExists, loginVerificationMarkerPath } from "#runtime/providers/chatgpt-web/browser/login";
+import { getServiceStatus } from "#runtime/core/service";
+import { tunnelStatus } from "#runtime/providers/chatgpt-web/transport/tunnel";
+import { getTunnelServiceStatus } from "#runtime/providers/chatgpt-web/transport/tunnel-service";
 
 export type CheckStatus = "ok" | "warning" | "error";
 

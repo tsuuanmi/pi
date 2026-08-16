@@ -1,5 +1,5 @@
-import { readJsonRequestBody } from "../../../core/http-body";
-import { BRIDGE_REASONING_PREFIX } from "../protocol/responses/reasoning-envelope";
+import { readJsonRequestBody } from "#runtime/core/http-body";
+import { BRIDGE_REASONING_PREFIX } from "#runtime/providers/chatgpt-web/protocol/responses/reasoning-envelope";
 
 const CODEX_BACKEND = "https://chatgpt.com/backend-api/codex";
 const HOP_BY_HOP_HEADERS = new Set([

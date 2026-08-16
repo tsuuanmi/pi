@@ -9,9 +9,9 @@ import {
   getConfigDir,
   getConfigPath,
   VERSION,
-} from "../../../core/config";
-import { conversationRuntimeDigest } from "../conversation/journal";
-import type { ProviderConfig } from "../protocol/types";
+} from "#runtime/core/config";
+import { conversationRuntimeDigest } from "#runtime/providers/chatgpt-web/conversation/journal";
+import type { ProviderConfig } from "#runtime/providers/chatgpt-web/protocol/types";
 
 export {
   atomicWriteFile,

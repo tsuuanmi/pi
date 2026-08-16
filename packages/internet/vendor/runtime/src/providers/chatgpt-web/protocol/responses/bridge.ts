@@ -1,8 +1,8 @@
-import type { AdapterEvent, MessagePhase, ProviderContinuationState, Usage } from "../types";
-import { adapterFailureFromMessage, classifyError, type RuntimeErrorPayload } from "./errors";
-import { encodeCompactionSummary } from "./compaction";
-import { encodeReasoningEnvelope, type ReasoningEnvelope } from "./reasoning-envelope";
-import { usageDisplayTotalTokens } from "../../content/usage";
+import type { AdapterEvent, MessagePhase, ProviderContinuationState, Usage } from "#runtime/providers/chatgpt-web/protocol/types";
+import { adapterFailureFromMessage, classifyError, type RuntimeErrorPayload } from "#runtime/providers/chatgpt-web/protocol/responses/errors";
+import { encodeCompactionSummary } from "#runtime/providers/chatgpt-web/protocol/responses/compaction";
+import { encodeReasoningEnvelope, type ReasoningEnvelope } from "#runtime/providers/chatgpt-web/protocol/responses/reasoning-envelope";
+import { usageDisplayTotalTokens } from "#runtime/providers/chatgpt-web/content/usage";
 
 /** Seconds of silence before the Responses bridge reports an upstream stall. */
 const DEFAULT_STALL_TIMEOUT_SEC = 300;
@@ -64,7 +64,7 @@ function adapterFailureFromEvent(event: Extract<AdapterEvent, { type: "error" }>
   return { httpStatus, error };
 }
 
-export { adapterFailureFromMessage } from "./errors";
+export { adapterFailureFromMessage } from "#runtime/providers/chatgpt-web/protocol/responses/errors";
 
 /**
  * Build the native `WebSearchAction::Search` payload from the queries that ran. codex-rs prefers a

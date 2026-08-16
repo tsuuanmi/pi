@@ -1,10 +1,10 @@
-import type { AppConfig } from "../lifecycle/config";
+import type { AppConfig } from "#runtime/providers/chatgpt-web/lifecycle/config";
 import {
   availableChatGptWebModelRoutes,
   CHATGPT_WEB_MODEL_PREFIX,
   resolveChatGptWebContextLimits,
   type ChatGptWebModelRoute,
-} from "./models";
+} from "#runtime/providers/chatgpt-web/models/models";
 
 type JsonObject = Record<string, unknown>;
 
