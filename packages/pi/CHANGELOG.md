@@ -2,6 +2,7 @@
 
 ### Changed
 
+- **themes**: Moved built-in `dark` and `light` theme assets into Pi's loader and register them alongside discovered themes.
 - **extensions**: Agent lifecycle observations now forward canonical `AgentEvent` payloads unchanged; event observers and control hooks use separate registries and dispatch paths.
 - **session**: Narrowed `AgentSessionEvent` to the Agent events consumed by Pi modes plus explicit Pi-owned host events.
 - **session**: Added the canonical `@tsuuanmi/pi/session/layout` API and moved session API-usage logs to `state/api-usage.jsonl`.

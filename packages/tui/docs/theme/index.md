@@ -2,7 +2,7 @@
 
 Theme loading, the active theme instance, terminal-background detection, and per-component theme adapters.
 
-The module lives under `src/theme/` and is re-exported from the package root (`export * from "#tui/theme/theme"`). Built-in theme JSON files live alongside the source (`src/theme/dark.json`, `src/theme/light.json`) and the schema is `src/theme/theme-schema.json` (see [Theme Schema](theme-schema.md)).
+The module lives under `src/theme/` and is re-exported from the package root (`export * from "#tui/theme/theme"`). The schema is `src/theme/theme-schema.json` (see [Theme Schema](theme-schema.md)); Pi supplies the built-in themes from its loader.
 
 ## The active theme
 
@@ -34,7 +34,7 @@ function getThemeByName(name: string): Theme | undefined;
 function loadThemeFromPath(themePath: string, mode?: ColorMode): Theme;
 ```
 
-`ThemeInfo` exposes `{ name, path }`. Themes are discovered from the built-in directory and the themes registered by the host application.
+`ThemeInfo` exposes `{ name, path }`. Themes come from the host application's registered theme instances.
 
 ## Theme class
 

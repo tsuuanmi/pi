@@ -170,7 +170,7 @@ Project skill`,
 			);
 
 			const baseTheme = JSON.parse(
-				readFileSync(new URL("../../../tui/src/theme/dark.json", import.meta.url), "utf-8"),
+				readFileSync(new URL("../../src/loader/themes/dark.json", import.meta.url), "utf-8"),
 			) as {
 				name: string;
 				vars?: Record<string, string>;
@@ -401,7 +401,7 @@ Project skill content`,
 			);
 			writeFileSync(join(promptsDir, "project.md"), "Project prompt");
 			const themeData = JSON.parse(
-				readFileSync(new URL("../../../tui/src/theme/dark.json", import.meta.url), "utf-8"),
+				readFileSync(new URL("../../src/loader/themes/dark.json", import.meta.url), "utf-8"),
 			) as {
 				name: string;
 			};

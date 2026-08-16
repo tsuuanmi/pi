@@ -1,6 +1,4 @@
 import * as fs from "node:fs";
-import * as path from "node:path";
-import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 import { type Static, Type } from "typebox";
 import { Compile } from "typebox/compile";
@@ -18,13 +16,6 @@ export interface ThemeSourceInfo {
 	scope: "user" | "project" | "temporary";
 	origin: "package" | "top-level";
 	baseDir?: string;
-}
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-function getThemesDir(): string {
-	return path.join(__dirname);
 }
 
 // ============================================================================
@@ -523,21 +514,6 @@ export class Theme {
 // Theme Loading
 // ============================================================================
 
-let BUILTIN_THEMES: Record<string, ThemeJson> | undefined;
-
-function getBuiltinThemes(): Record<string, ThemeJson> {
-	if (!BUILTIN_THEMES) {
-		const themesDir = getThemesDir();
-		const darkPath = path.join(themesDir, "dark.json");
-		const lightPath = path.join(themesDir, "light.json");
-		BUILTIN_THEMES = {
-			dark: JSON.parse(fs.readFileSync(darkPath, "utf-8")) as ThemeJson,
-			light: JSON.parse(fs.readFileSync(lightPath, "utf-8")) as ThemeJson,
-		};
-	}
-	return BUILTIN_THEMES;
-}
-
 export function getAvailableThemes(): string[] {
 	return getAvailableThemesWithPaths().map(({ name }) => name);
 }
@@ -548,7 +524,6 @@ export interface ThemeInfo {
 }
 
 export function getAvailableThemesWithPaths(): ThemeInfo[] {
-	const themesDir = getThemesDir();
 	const result: ThemeInfo[] = [];
 	const seen = new Set<string>();
 	const addTheme = (themeInfo: ThemeInfo) => {
@@ -558,11 +533,6 @@ export function getAvailableThemesWithPaths(): ThemeInfo[] {
 		seen.add(themeInfo.name);
 		result.push(themeInfo);
 	};
-
-	// Built-in themes
-	for (const name of Object.keys(getBuiltinThemes())) {
-		addTheme({ name, path: path.join(themesDir, `${name}.json`) });
-	}
 
 	for (const [name, theme] of registeredThemes.entries()) {
 		addTheme({ name, path: theme.sourcePath });
@@ -620,14 +590,6 @@ function parseThemeJsonContent(label: string, content: string): ThemeJson {
 	return parseThemeJson(label, json);
 }
 
-function loadThemeJson(name: string): ThemeJson {
-	const builtinThemes = getBuiltinThemes();
-	if (name in builtinThemes) {
-		return builtinThemes[name];
-	}
-	throw new Error(`Theme not found: ${name}`);
-}
-
 function createTheme(themeJson: ThemeJson, mode?: ColorMode, sourcePath?: string): Theme {
 	const colorMode = mode ?? (getCapabilities().trueColor ? "truecolor" : "256color");
 	const resolvedColors = resolveThemeColors(themeJson.colors, themeJson.vars);
@@ -660,13 +622,12 @@ export function loadThemeFromPath(themePath: string, mode?: ColorMode): Theme {
 	return createTheme(themeJson, mode, themePath);
 }
 
-function loadTheme(name: string, mode?: ColorMode): Theme {
+function loadTheme(name: string): Theme {
 	const registeredTheme = registeredThemes.get(name);
 	if (registeredTheme) {
 		return registeredTheme;
 	}
-	const themeJson = loadThemeJson(name);
-	return createTheme(themeJson, mode);
+	throw new Error(`Theme not found: ${name}`);
 }
 
 export function getThemeByName(name: string): Theme | undefined {

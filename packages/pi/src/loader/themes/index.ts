@@ -1,9 +1,17 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { resolvePath } from "@tsuuanmi/pi-agent/node";
 import { loadThemeFromPath, type Theme } from "@tsuuanmi/pi-tui";
 import type { ResourceDiagnostic } from "#pi/resources/diagnostics";
 import type { ResolvedResource } from "#pi/resources/types";
+
+const LOADER_DIR = dirname(fileURLToPath(import.meta.url));
+const BUILTIN_THEME_NAMES = ["dark", "light"] as const;
+
+export function loadBuiltinThemes(): Theme[] {
+	return BUILTIN_THEME_NAMES.map((name) => loadThemeFromPath(join(LOADER_DIR, `${name}.json`)));
+}
 
 export interface ThemeResult {
 	themes: Theme[];

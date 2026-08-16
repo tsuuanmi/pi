@@ -50,6 +50,7 @@ import type {
 	ExtensionContext,
 	ExtensionUIContext,
 } from "#pi/loader/extensions/index";
+import { loadBuiltinThemes } from "#pi/loader/themes/index";
 import { configureHttpDispatcher } from "#pi/network/http-dispatcher";
 import type { TruncationResult } from "#pi/output/truncation";
 import { parseGitUrl } from "#pi/package/git";
@@ -296,7 +297,7 @@ export class InteractiveMode {
 		this.hideThinkingBlock = this.settingsManager.getHideThinkingBlock();
 
 		// Register themes from resource loader and initialize
-		setRegisteredThemes(this.session.resourceLoader.getThemes().themes);
+		setRegisteredThemes([...loadBuiltinThemes(), ...this.session.resourceLoader.getThemes().themes]);
 		initTheme(this.settingsManager.getTheme());
 
 		// Extension UI subsystem owns extension overlays/widgets/custom header/footer.
@@ -703,7 +704,7 @@ export class InteractiveMode {
 			},
 		});
 
-		setRegisteredThemes(this.session.resourceLoader.getThemes().themes);
+		setRegisteredThemes([...loadBuiltinThemes(), ...this.session.resourceLoader.getThemes().themes]);
 		this.setupAutocompleteProvider();
 
 		const extensionRunner = this.session.extensionRunner;
@@ -2183,7 +2184,7 @@ export class InteractiveMode {
 			if (isExpandable(activeHeader)) {
 				activeHeader.setExpanded(this.toolOutputExpanded);
 			}
-			setRegisteredThemes(this.session.resourceLoader.getThemes().themes);
+			setRegisteredThemes([...loadBuiltinThemes(), ...this.session.resourceLoader.getThemes().themes]);
 			this.hideThinkingBlock = this.settingsManager.getHideThinkingBlock();
 			const themeName = this.settingsManager.getTheme();
 			if (themeName) {

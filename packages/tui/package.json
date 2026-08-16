@@ -11,8 +11,8 @@
 	"scripts": {
 		"clean": "shx rm -rf dist",
 		"build": "tsgo -p tsconfig.build.json && npm run copy-assets",
-		"copy-assets": "shx mkdir -p dist/theme && shx cp src/theme/*.json dist/theme/",
-		"test": "node --test \"test/**/*.test.ts\"",
+		"copy-assets": "shx rm -f dist/theme/dark.json dist/theme/light.json && shx mkdir -p dist/theme && shx cp src/theme/theme-schema.json dist/theme/",
+		"test": "node --import ./test/setup.ts --test \"test/**/*.test.ts\"",
 		"prepublishOnly": "npm run clean && npm run build"
 	},
 	"files": [

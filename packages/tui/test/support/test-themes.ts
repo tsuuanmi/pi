@@ -3,9 +3,86 @@
  */
 
 import { Chalk } from "chalk";
-import type { EditorTheme, MarkdownTheme, SelectListTheme } from "#tui/index";
+import {
+	type EditorTheme,
+	type MarkdownTheme,
+	type SelectListTheme,
+	setRegisteredThemes,
+	Theme,
+	type ThemeBg,
+	type ThemeColor,
+} from "#tui/index";
 
 const chalk = new Chalk({ level: 3 });
+
+const testThemeColors: ThemeColor[] = [
+	"accent",
+	"border",
+	"borderAccent",
+	"borderMuted",
+	"success",
+	"error",
+	"warning",
+	"muted",
+	"dim",
+	"text",
+	"thinkingText",
+	"userMessageText",
+	"customMessageText",
+	"customMessageLabel",
+	"toolTitle",
+	"toolOutput",
+	"mdHeading",
+	"mdLink",
+	"mdLinkUrl",
+	"mdCode",
+	"mdCodeBlock",
+	"mdCodeBlockBorder",
+	"mdQuote",
+	"mdQuoteBorder",
+	"mdHr",
+	"mdListBullet",
+	"toolDiffAdded",
+	"toolDiffRemoved",
+	"toolDiffContext",
+	"syntaxComment",
+	"syntaxKeyword",
+	"syntaxFunction",
+	"syntaxVariable",
+	"syntaxString",
+	"syntaxNumber",
+	"syntaxType",
+	"syntaxOperator",
+	"syntaxPunctuation",
+	"thinkingOff",
+	"thinkingMinimal",
+	"thinkingLow",
+	"thinkingMedium",
+	"thinkingHigh",
+	"thinkingXhigh",
+	"bashMode",
+];
+const testThemeBackgrounds: ThemeBg[] = [
+	"selectedBg",
+	"userMessageBg",
+	"customMessageBg",
+	"toolPendingBg",
+	"toolSuccessBg",
+	"toolErrorBg",
+];
+
+function createTestTheme(name: string): Theme {
+	return new Theme(
+		Object.fromEntries(testThemeColors.map((color) => [color, "#ffffff"])) as Record<ThemeColor, string>,
+		Object.fromEntries(testThemeBackgrounds.map((color) => [color, "#000000"])) as Record<ThemeBg, string>,
+		"truecolor",
+		{ name },
+	);
+}
+
+export function registerTestThemes(): void {
+	setRegisteredThemes([createTestTheme("dark"), createTestTheme("light")]);
+}
 
 export const defaultSelectListTheme: SelectListTheme = {
 	selectedPrefix: (text: string) => chalk.blue(text),

@@ -9,6 +9,9 @@ const workspace = join(root, "..");
 
 await rm(packages, { recursive: true, force: true });
 await mkdir(packages, { recursive: true });
+await mkdir(join(dist, "loader", "themes"), { recursive: true });
+await cp(join(root, "src/loader/themes/dark.json"), join(dist, "loader/themes/dark.json"));
+await cp(join(root, "src/loader/themes/light.json"), join(dist, "loader/themes/light.json"));
 
 for (const entry of await readdir(workspace, { withFileTypes: true })) {
 	if (!entry.isDirectory()) continue;

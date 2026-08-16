@@ -1,6 +1,6 @@
 # Theme Schema
 
-The JSON schema every theme file must satisfy. Defined in `src/theme/theme-schema.json` (TypeBox) and shipped to `dist/theme/theme-schema.json`.
+The JSON schema every theme file must satisfy. Defined in `src/theme/theme-schema.json` (TypeBox) and shipped to `dist/theme/theme-schema.json`. Pi's built-in theme files live under `packages/pi/src/loader/themes/`.
 
 ## Top-level shape
 
@@ -34,10 +34,10 @@ All of the following keys are required. They mirror the `ThemeColor` and `ThemeB
 
 ## Built-in themes
 
-Two built-in themes ship as JSON and are copied to `dist/theme/` on build:
+Pi ships two built-in themes as JSON and copies them to `dist/loader/themes/` on build:
 
-- `src/theme/dark.json`
-- `src/theme/light.json`
+- `packages/pi/src/loader/themes/dark.json`
+- `packages/pi/src/loader/themes/light.json`
 
 ## See Also
 

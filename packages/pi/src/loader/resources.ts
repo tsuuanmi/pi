@@ -21,7 +21,7 @@ import type { PromptTemplate } from "#pi/loader/prompt-templates";
 import { loadPromptTemplatesWithDiagnostics } from "#pi/loader/prompt-templates";
 import type { Skill } from "#pi/loader/skill";
 import { loadSkills } from "#pi/loader/skill";
-import { loadThemes } from "#pi/loader/themes";
+import { loadThemes } from "#pi/loader/themes/index";
 import { DefaultPackageManager } from "#pi/package/manager";
 import type { CommandOutput } from "#pi/package/types";
 import type { PathMetadata, ResolvedResource, ResourceType } from "#pi/resources/types";

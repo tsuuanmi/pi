@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
 	getAvailableThemes,
 	getAvailableThemesWithPaths,
@@ -26,7 +27,10 @@ describe("theme picker", () => {
 		const agentDir = join(tempRoot, "agent");
 		vi.stubEnv("PI_AGENT_DIR", agentDir);
 		mkdirSync(join(agentDir, "themes"), { recursive: true });
-		setRegisteredThemes([]);
+		const builtinThemesDir = new URL("../../../src/loader/themes/", import.meta.url);
+		setRegisteredThemes(
+			["dark", "light"].map((name) => loadThemeFromPath(fileURLToPath(new URL(`${name}.json`, builtinThemesDir)))),
+		);
 	});
 
 	afterEach(() => {
@@ -45,7 +49,7 @@ describe("theme picker", () => {
 
 	it("uses custom theme content names instead of file names", () => {
 		const darkTheme = JSON.parse(
-			readFileSync(new URL("../../../../tui/src/theme/dark.json", import.meta.url), "utf-8"),
+			readFileSync(new URL("../../../src/loader/themes/dark.json", import.meta.url), "utf-8"),
 		) as ThemeFile;
 		const customTheme: ThemeFile = {
 			...darkTheme,

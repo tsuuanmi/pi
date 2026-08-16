@@ -27,7 +27,7 @@
 ### Changed
 
 - **lifecycle**: Components can release timers, requests, and listeners through optional `dispose()` cleanup.
-- **theme**: Custom theme discovery is owned by the host resource loader; TUI now loads only built-in and registered themes.
+- **theme**: Custom and built-in theme discovery is owned by the host resource loader; TUI now loads only registered themes.
 - **rendering**: ANSI parsing is shared across stripping, width measurement, wrapping, and status text sanitization.
 - **theme**: Thinking border colors accept the canonical extended levels `max` and `ultra`.
 
@@ -42,7 +42,7 @@
 
 - **debug**: Removed debug callbacks, key handling, log capture, redraw tracing, render dumps, and crash-file output.
 - **status-line**: Removed the obsolete `FooterComponent` and `formatCwdForFooter` aliases.
-- **theme**: Removed direct theme-directory watching and the `enableWatcher`/`stopThemeWatcher` API.
+- **theme**: Removed direct theme-directory watching and the `enableWatcher`/`stopThemeWatcher` API; hosts must register built-in and custom themes.
 
 ## [0.2.2] - 2026-07-23
 

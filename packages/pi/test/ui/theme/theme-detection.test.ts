@@ -1,13 +1,22 @@
+import { fileURLToPath } from "node:url";
 import {
 	detectTerminalBackgroundFromEnv,
 	detectTerminalBackgroundTheme,
 	getThemeByName,
 	getThemeForRgbColor,
+	loadThemeFromPath,
 	type RgbColor,
 	resetCapabilitiesCache,
 	setCapabilities,
+	setRegisteredThemes,
 } from "@tsuuanmi/pi-tui";
 import { afterEach, describe, expect, it } from "vitest";
+
+function registerDarkTheme(): void {
+	setRegisteredThemes([
+		loadThemeFromPath(fileURLToPath(new URL("../../../src/loader/themes/dark.json", import.meta.url))),
+	]);
+}
 
 afterEach(() => {
 	resetCapabilitiesCache();
@@ -102,12 +111,14 @@ describe("detectTerminalBackgroundTheme", () => {
 describe("theme color mode", () => {
 	it("uses terminal capabilities", () => {
 		setCapabilities({ trueColor: false, hyperlinks: false });
+		registerDarkTheme();
 		const ansi256Theme = getThemeByName("dark");
 		if (!ansi256Theme) throw new Error("dark theme not found");
 		expect(ansi256Theme.getColorMode()).toBe("256color");
 		expect(ansi256Theme.getFgAnsi("accent")).toMatch(/^\x1b\[38;5;\d+m$/);
 
 		setCapabilities({ trueColor: true, hyperlinks: false });
+		registerDarkTheme();
 		const truecolorTheme = getThemeByName("dark");
 		if (!truecolorTheme) throw new Error("dark theme not found");
 		expect(truecolorTheme.getColorMode()).toBe("truecolor");

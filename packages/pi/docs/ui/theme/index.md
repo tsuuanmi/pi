@@ -16,11 +16,12 @@ Themes are JSON files that define colors for the TUI.
 
 ## Locations
 
-Pi loads bundled themes from `@tsuuanmi/pi-tui`:
+Pi loads bundled themes from its loader:
 
 - Built-in: `dark`, `light`
+- Source: `packages/pi/src/loader/themes/`
 
-Custom theme directory loading is not enabled.
+Custom themes are loaded from the configured project and user resource directories.
 
 ## Selecting a Theme
 
@@ -36,7 +37,7 @@ On first run, pi detects your terminal background and defaults to `dark` or `lig
 
 ## Creating a Custom Theme
 
-Theme JSON files live with the TUI package. To add a bundled theme, define a theme with all required colors (see [Color Tokens](#color-tokens)):
+Theme JSON files live with Pi's theme loader. To add a bundled theme, define a theme with all required colors (see [Color Tokens](#color-tokens)):
 
 ```json
 {
@@ -265,5 +266,5 @@ echo $COLORTERM  # Should output "truecolor" or "24bit"
 ## Examples
 
 See the built-in themes:
-- [dark.json](../../../../tui/src/theme/dark.json)
-- [light.json](../../../../tui/src/theme/light.json)
+- [dark.json](../../../../pi/src/loader/themes/dark.json)
+- [light.json](../../../../pi/src/loader/themes/light.json)

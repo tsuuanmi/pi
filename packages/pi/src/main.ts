@@ -5,7 +5,7 @@
  * createAgentSession() options. The SDK does the heavy lifting.
  */
 
-import { initTheme } from "@tsuuanmi/pi-tui";
+import { initTheme, setRegisteredThemes } from "@tsuuanmi/pi-tui";
 import chalk from "chalk";
 import type { ExtensionFactory } from "#pi/api/extension-types";
 import type { AgentSessionRuntimeDiagnostic } from "#pi/api/session-services";
@@ -19,6 +19,7 @@ import { parseArgs, printHelp } from "#pi/cli/args";
 import { launchDefaultTmuxIfNeeded } from "#pi/cli/launch-tmux";
 import { listModels } from "#pi/cli/list-models";
 import { VERSION } from "#pi/loader/app";
+import { loadBuiltinThemes } from "#pi/loader/themes/index";
 import { SettingsManager } from "#pi/settings/manager";
 
 function reportDiagnostics(diagnostics: readonly AgentSessionRuntimeDiagnostic[]): void {
@@ -34,6 +35,7 @@ export interface MainOptions {
 }
 
 export async function main(args: string[], options?: MainOptions) {
+	setRegisteredThemes(loadBuiltinThemes());
 	const { cwd, agentDir } = bootstrapStartup();
 
 	if (await runStartupCommands(args, { extensionFactories: options?.extensionFactories })) return;
@@ -83,6 +85,7 @@ export async function main(args: string[], options?: MainOptions) {
 	});
 	const { services, modelStartupWarning } = runtime;
 	const { settingsManager, modelRegistry, resourceLoader } = services;
+	setRegisteredThemes([...loadBuiltinThemes(), ...resourceLoader.getThemes().themes]);
 
 	if (parsed.help) {
 		const extensionFlags = resourceLoader
